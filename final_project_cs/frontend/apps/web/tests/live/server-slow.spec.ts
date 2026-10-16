@@ -12,6 +12,9 @@ const PLAN = "10/1 09:00 경복궁 관람";
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 const banner = (page: Page) => page.getByRole("status").filter({ hasText: "서버 응답이 늦어지고 있어요" });
+// 늦게 답하는 접수 호출이 실제로 나간 때 — 화면은 이 호출이 나갈 때 기다림을 세기 시작한다(`beginWait`). 느린 CI 에서는 주소가 먼저 바뀌어,
+// 주소만 보고 시계를 건너뛰면 세기 전에 건너뛴 것이 된다(2026-10-16 CI 실행 38861330869 에서 실패).
+const intakeSent = (page: Page) => page.waitForRequest((r) => r.method() === "POST" && new URL(r.url()).pathname.endsWith("/v1/web/trip-intakes"));
 
 async function send(page: Page) {
   await page.goto("/trips/new");
@@ -31,8 +34,10 @@ test("서버가 답을 안 주고 10초가 넘으면 맨 위에 안내가 뜨고
   // 서버가 늦다: 접수에 답하는 데 실제 8초 — 그동안 화면 시계를 5초 · 11초로 건너뛰어 본다(첫 안내가 10초)
   await page.clock.install();
   await server.scenario({ intakeDelay: 8_000, readingPolls: 0 });
+  const sent = intakeSent(page);
   await send(page);
   await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await sent;
   await page.clock.fastForward(5_000);
   await page.waitForTimeout(300);
   await expect(banner(page)).toHaveCount(0);                                                           // 아직 5초 — 말할 때가 아니다
@@ -54,8 +59,10 @@ test("30초가 넘으면 더 강한 문장으로 바뀌고, 닫기를 누르면 
   await start(page);
   await page.clock.install();
   await server.scenario({ intakeDelay: 10_000, readingPolls: 0 });
+  const sent = intakeSent(page);
   await send(page);
-  await expect(page).toHaveURL(/\/intakes\/starting$/);                                              // 늦은 호출이 시작된 뒤에 건너뛴다
+  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await sent;                                                                                          // 늦은 호출이 나간 뒤에 건너뛴다
   await page.clock.fastForward(11_000);
   await expect(banner(page)).toBeVisible({ timeout: 5_000 });
   await page.clock.fastForward(20_000);
