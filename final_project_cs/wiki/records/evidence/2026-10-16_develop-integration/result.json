@@ -1,0 +1,49 @@
+{
+  "verified_at": "2026-10-16T19:21:13.242992+09:00",
+  "code_commit": "1aca7383654dd422cf01b0aa451a6275e2792fa2",
+  "inputs": {
+    "team_develop": "4c28ac7517b76f8bc8876bbedccadef9ac3c7477",
+    "team_manager": "2bee4df69",
+    "personal_develop": "2b1bdf6b27cc698fb27104a346528cd5b2eed934",
+    "local_completed_manager": "a9a674900"
+  },
+  "required_python": {
+    "tests": 8044,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 134,
+    "passed": 7910
+  },
+  "changed_db_tests": {
+    "tests": 232,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 232
+  },
+  "mock_browser": {
+    "web": 57,
+    "admin": 22
+  },
+  "frontend_unit": {
+    "web": 790,
+    "admin": 22
+  },
+  "dod": {
+    "passed": 26,
+    "total": 26,
+    "mvp_passed": 18,
+    "mvp_total": 18
+  },
+  "initial_failures": {
+    "missing_sparse_checkout_fixtures": 2,
+    "closed_port_timing": 1,
+    "server_credential_read_boundary": 1
+  },
+  "initial_failures_rechecked": true,
+  "partial_broad_db_trial": "stopped before completion; changed-file DB suite and required suite verified instead; full suite is GitHub CI",
+  "admin_trial_setup": "nonstandard test port trial invalidated; standard port trial 22/22",
+  "public_service_verification": false,
+  "personal_ci_preexisting_block": "GitHub account billing or spending limit prevented runners from starting",
+  "github_ci": "post-push confirmation pending"
+}
