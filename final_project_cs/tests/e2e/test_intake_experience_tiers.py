@@ -96,12 +96,15 @@ def test_an_indoor_exhibit_continues_with_other_exhibits(rv):  # noqa: F811
 
 
 def test_a_market_meal_shows_up_to_two_restaurants_not_only_markets(market_world):
-    for number, (name, lat, lon) in enumerate([("마장 시장", 37.5710, 127.0000), ("중부 시장", 37.5690, 126.9980), ("동대문 시장", 37.5700, 127.0020)]):
-        _row(market_world, f"95100{number}", "38", name, lat, lon, "SH", "SH06", "SH060200")
+    # ★`[2026-10-16]` 좌표는 시장 세계(`MARKET`, 서울 밖)에서 잰 상대 위치다 — 시장 세계가 원장 실데이터를 피해 옮겨졌다
+    lat0, lon0 = MARKET
+    for number, (name, dlat, dlon) in enumerate([("마장 시장", 0.0010, 0.0010), ("중부 시장", -0.0010, -0.0010), ("동대문 시장", 0.0, 0.0030)]):
+        _row(market_world, f"95100{number}", "38", name, lat0 + dlat, lon0 + dlon, "SH", "SH06", "SH060200")
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        for name, lat in (("시장 국밥집", 37.5704), ("시장 칼국수집", 37.5705)):
+        for name, dlat in (("시장 국밥집", 0.0004), ("시장 칼국수집", 0.0005)):
             cur.execute("INSERT INTO places (tenant_id, name, kind, latitude, longitude, source_name, attributes) "
-                        "VALUES (%s,%s,'dining',%s,126.9994,'dining_ledger','{\"source\": \"dining_ledger\"}')", (market_world["tenant"], name, lat))
+                        "VALUES (%s,%s,'dining',%s,%s,'dining_ledger','{\"source\": \"dining_ledger\"}')",
+                        (market_world["tenant"], name, lat0 + dlat, lon0 + 0.0004))
     review, item = _review()
     got = _alternatives(market_world, review, item)
     kinds = [c["place"]["kind"] for c in got["candidates"]]
@@ -255,8 +258,27 @@ def test_when_fewer_than_three_places_fit_the_time_the_experience_group_is_added
 def test_an_original_place_without_a_tour_number_is_linked_to_the_same_named_catalog_row_for_the_team_engine(park_world):
     """★x600 실서버 확인(2026-10-15): 우리 장소 목록에서 찾은 「경복궁」은 관광공사 번호가 비어 팀 엔진을 못 불렀다 — 같은 이름 목록 항목(한 곳일 때만)으로 잇는다."""
     _row(park_world, "960006", "12", "창덕궁", 37.5794, 126.9910, "HS", "HS01", "HS010100")
-    review, item = _palace_review()
-    item["place"] = {**item["place"], "content_id": None}
-    got = _alternatives(park_world, review, item)
+    # ★`[2026-10-16]` 팀 엔진은 활동 원장(`activity.ac_place`)을 읽는다 — 이은 번호(960001)와 후보(960006)를 원장에도 둔다
+    ids = ["960001", "960006"]
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES ('test', %s, 2) RETURNING load_id",
+                    ("0" * 64,))
+        load_id = cur.fetchone()[0]
+        for cid, name, (lat, lon) in zip(ids, ("경복궁", "창덕궁"), (PALACE, (37.5794, 126.9910))):
+            cur.execute("INSERT INTO activity.ac_place (content_id, content_type_id, name_ko, name_key, lat, lng, lcls1, lcls2, lcls3, load_id) "
+                        "VALUES (%s,'12',%s,%s,%s,%s,'HS','HS01','HS010100',%s)", (cid, name, name, lat, lon, load_id))
+    try:
+        review, item = _palace_review()
+        item["place"] = {**item["place"], "content_id": None}
+        got = _alternatives(park_world, review, item)
+        shown = [str(c["place"].get("content_id")) for c in got["candidates"]]
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT content_id FROM activity.ac_place WHERE content_id = ANY(%s)", (shown,))
+            in_ledger = {r[0] for r in cur.fetchall()}
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM activity.ac_place WHERE content_id = ANY(%s)", (ids,))
+            cur.execute("DELETE FROM activity.ac_load_meta WHERE load_id=%s", (load_id,))
     assert "team_ranked" in got["notes"], got["notes"]
-    assert any(c["place"]["name"] == "창덕궁" for c in got["candidates"]), got
+    # 후보가 팀 엔진(원장)에서 왔다 — 원장은 공용이라 근처 실제 궁궐이 가짜 「창덕궁」보다 앞설 수 있어 이름으로는 보지 않는다
+    assert got["candidates"] and set(shown) <= in_ledger, (shown, in_ledger)
