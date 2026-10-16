@@ -232,9 +232,10 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
 
 
 def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
-    """요식 판정 에이전트 **그림자** — 확인 화면으로 넘긴 **뒤에** 규칙 검사와 나란히 판정해 요식 표에만 기록한다. `[2026-10-13 · 설계 §10 단계 5]`
-    ★가드레일 `travel.dining.agent_shadow.enabled` 를 켜야 돈다(기본 꺼짐 — 꽂히지 않으면 아무것도 안 한다). 고객 결과 · 상태는 바꾸지 않고,
-      실패해도 접수에 영향이 없다(경고만 남긴다)."""
+    """요식 판정 에이전트 — 확인 화면으로 넘긴 **뒤에** 식사를 판정해 그 판의 검사 줄에 합친다(`instances/dining/judge.run`). `[2026-10-13 · 2026-10-16]`
+    ★`[2026-10-16 사용자 결정]` 그림자 모드(기록만)를 뺐다 — 규칙이 모르던 영업 · 휴무를 에이전트가 도구로 정했으면 그 줄을 바꾸고, 고객 조건 확인은
+      줄을 더한다. 화면 문장은 코드가 만든다. ★가드레일 `travel.dining.agent_shadow.enabled` 를 켜야 돈다(기본 꺼짐 · 이름은 옛 것).
+      실패해도 접수에 영향이 없다(그 줄은 규칙 검사 그대로 · 경고만 남긴다)."""
     from app.domains.travel_ops.components.team_hooks import dining_ledger
 
     runner = dining_ledger.agent_shadow_runner()

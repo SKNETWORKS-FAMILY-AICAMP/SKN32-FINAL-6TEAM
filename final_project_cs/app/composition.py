@@ -701,7 +701,9 @@ def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegi
 
 
 def _dining_agent_shadow():
-    """요식 판정 에이전트 그림자 운행 — 가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 실행기를 만든다(기본 꺼짐 → None). `[2026-10-13]`
+    """요식 판정 에이전트 — 가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 실행기를 만든다(기본 꺼짐 → None). `[2026-10-13]`
+    ★`[2026-10-16 사용자 결정 — 그림자 모드를 뺀다]` 실행기는 `instances/dining/judge.run` — 판정을 기록만 하지 않고 접수 확인 줄에 합친다
+      (화면 문장은 지금처럼 코드가 만든다). 함수 · 가드레일 이름의 「shadow」는 옛 이름이다.
 
     모델은 가드레일 `model` 로 고른다 — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
     ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(그림자는 없어도 되는 것이다 — 기동을 막지 않는다)."""
@@ -712,7 +714,7 @@ def _dining_agent_shadow():
         return None
     from functools import partial
 
-    from app.domains.travel_ops.instances.dining import shadow as dining_shadow
+    from app.domains.travel_ops.instances.dining import judge as dining_judge
     from app.infrastructure.llm.tool_chat import OllamaToolChat, OpenAIToolChat
 
     settings = get_settings()
@@ -731,7 +733,7 @@ def _dining_agent_shadow():
     from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
 
     tools_factory = partial(DiningTools, kakao=build_kakao_local(), google=build_google_places())
-    return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"],
+    return partial(dining_judge.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"],
                    tools_factory=tools_factory)
 
 
