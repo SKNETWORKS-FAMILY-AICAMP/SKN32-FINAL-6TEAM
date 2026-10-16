@@ -207,7 +207,8 @@ def rebind(card: dict, table: dict, origins: list[dict], used: set[str], at: dat
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tenant", default="demo")
-    parser.add_argument("--sample", type=int, default=300, help="다시 고를 원래 장소 표본 수")
+    # ★`[2026-10-16]` 300 → 800 — 카드 80장으로 늘린 뒤 300곳으로는 충돌 · 동점 카드 3장의 조건을 맞추는 원래 장소를 못 찾았다
+    parser.add_argument("--sample", type=int, default=800, help="다시 고를 원래 장소 표본 수")
     args = parser.parse_args()
     cards = [json.loads(line) for line in (HERE / "cards_llm_v0.jsonl").open(encoding="utf-8")]
     bound = [bind(card, args.tenant) for card in cards]
