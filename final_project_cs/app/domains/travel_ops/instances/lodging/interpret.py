@@ -56,6 +56,12 @@ def parse(raw: Any) -> Interpretation:
     cleaned = {key: (value.strip() or None) if isinstance(value, str) else value for key, value in raw.items()}
     if not isinstance(cleaned.get("other_requests"), list):
         cleaned["other_requests"] = []
+    price = cleaned.get("max_price_per_night")
+    if isinstance(price, (int, float)) and not isinstance(price, bool) and price <= 0:
+        # `[2026-10-16 평가 2차 I-05]` 「숙박비는 0원」 — 0 을 상한으로 내 해석 전체가 거절(escalate)됐다. 상한 없음으로 두고
+        #   그 말은 「반영 못 한 요청」으로 남긴다
+        cleaned["max_price_per_night"] = None
+        cleaned["other_requests"] = [*cleaned["other_requests"], "숙박비 0원"]
     rating = cleaned.get("min_rating")
     if isinstance(rating, (int, float)) and not isinstance(rating, bool) and 5 < rating <= 10:
         # ☆2026-10-11 16:13 playdata 사용자 문장 「평점 9.5 이상」 — 10점 만점 값을 그대로 내 해석 전체가 거절됐다. 5점 만점으로 바꾼다
@@ -194,4 +200,80 @@ def rule_dates(found: Interpretation, text: str, *, today: date) -> tuple[Interp
     return found.model_copy(update=update), True
 
 
-__all__ = ["CALENDAR_DAYS", "rule_dates", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
+#: `[2026-10-16 평가 2차]` 날짜 범위 표기 — 「12/24~26」 「1/23~25」 「12/18-12/20」 「1월 15~17일」 「11월 18일~19일」
+#:  「11월 29일 들어가서 12월 1일 나올」 「1월 9일 입실 11일 퇴실」. 모델이 체크아웃을 비우거나(근거 조각이 문장 글자와 달라 지워짐)
+#:  「1/11~13」을 11/1~11/13 으로 읽었다. 문장에 범위가 **하나**일 때만 쓴다
+_RANGE_SLASH = re.compile(r"(?<![\d/.])(\d{1,2})\s*[/.]\s*(\d{1,2})\s*(?:일)?\s*[~\-–]\s*(?:(\d{1,2})\s*[/.]\s*)?(\d{1,2})(?![\d/.])")
+_RANGE_KO = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일?\s*(?:부터)?\s*[~\-–]\s*(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일")
+_RANGE_WORDS = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:에\s*)?(?:들어가|입실|체크\s*인|드러가)[^0-9]{0,12}?"
+                          r"(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일\s*(?:에\s*)?(?:나오|나올|나가|퇴실|체크\s*아웃)")
+
+
+def _next_date(today: date, month: int, day: int) -> date | None:
+    try:
+        found = date(today.year, month, day)
+        return date(today.year + 1, month, day) if found < today else found
+    except ValueError:
+        return None
+
+
+def rule_ranges(found: Interpretation, text: str, *, today: date) -> tuple[Interpretation, bool]:
+    """문장의 날짜 범위가 하나로 정해지면 체크인 · 체크아웃을 그 값으로(모델 값이 다르거나 비었을 때). (해석, 고쳤나)"""
+    if found.task not in ("search", "my_stay"):
+        return found, False
+    hits = [m for pattern in (_RANGE_KO, _RANGE_WORDS, _RANGE_SLASH) for m in pattern.finditer(text or "")]
+    if len({tuple(m.groups()) for m in hits}) != 1:        # 없거나 둘 이상이면 모델 값 그대로
+        return found, False
+    month, day, end_month, end_day = hits[0].groups()
+    start = _next_date(today, int(month), int(day))
+    if start is None:
+        return found, False
+    month_out = int(end_month) if end_month else start.month
+    year_out = start.year + (1 if month_out < start.month else 0)
+    try:
+        end = date(year_out, month_out, int(end_day))
+    except ValueError:
+        return found, False
+    if not end_month and end <= start:              # 「12/30~2」 — 다음 달로 넘어간 날
+        nxt = (start.month % 12) + 1
+        try:
+            end = date(start.year + (1 if nxt == 1 else 0), nxt, int(end_day))
+        except ValueError:
+            return found, False
+    if end <= start or (end - start).days > 30:
+        return found, False
+    if found.check_in == start and found.check_out == end:
+        return found, False
+    return found.model_copy(update={"check_in": start, "check_out": end, "check_in_text": hits[0].group(0),
+                                    "check_out_text": hits[0].group(0)}), True
+
+
+#: `[2026-10-16 평가 2차]` 날 숫자도 · 정해진 날 말도 없는 근거(「주말」 「연말」 「11월 중」)는 날짜로 쓰지 않는다 — 「11월 중에 주말 2박」을 11/6~8 로 정했다
+_DAY_GIVEN = re.compile(r"\d+\s*일|\d+\s*[/.]\s*\d+|오늘|내일|모레|이번|다음|담주|금주|크리스마스|성탄|이브|새해|신정|첫날|마지막\s*날|말일|\d+\s*(?:st|nd|rd|th)|"
+                        r"jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec", re.I)
+#: 「오늘 · 내일」은 숙박 말과 붙어 있을 때만 날짜 — 「오늘 날씨 진짜 추운데」의 「오늘」을 체크인으로 읽었다(H-39)
+_RELATIVE_STAY = re.compile(r"(오늘|내일|모레)\s*(?:부터|밤|하룻밤|\d+\s*박|체크\s*인|입실|묵|숙박|자|들어|저녁|당일|1박)")
+#: 인원 근거 — 숫자 + 명 · 인, 혼자 · 둘 · 커플 · 부부 …. 없는데 모델이 인원을 냈으면 지운다(B-22 「부모님 모시고」를 2명으로)
+_PEOPLE = re.compile(r"\d+\s*(?:명|인|분|adults?|people|persons?|pax)|혼자|혼행|혼숙|한\s*명|두\s*명|세\s*명|네\s*명|다섯|여섯|"
+                     r"둘|셋|넷|성인|어른|부부|커플|연인|여자\s*친구|남자\s*친구|여친|남친|신혼|solo|couple|single", re.I)
+
+
+def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[str]]:
+    """모델 값 가운데 문장에 근거가 약한 것을 비운다(되묻게 된다). (해석, 비운 칸)"""
+    if found.task != "search":
+        return found, []
+    cleared, update = [], {}
+    quote = found.check_in_text or ""
+    if found.check_in is not None and quote and not _DAY_GIVEN.search(quote):
+        update.update(check_in=None, check_out=None)
+        cleared.append("check_in")
+    elif found.check_in is not None and re.search(r"오늘|내일|모레", quote) and not _RELATIVE_STAY.search(text or ""):
+        update.update(check_in=None, check_out=None)
+        cleared.append("check_in")
+    if found.adults is not None and not _PEOPLE.search(text or ""):
+        update["adults"] = None
+        cleared.append("adults")
+    return (found.model_copy(update=update), cleared) if update else (found, [])
+
+
+__all__ = ["CALENDAR_DAYS", "rule_dates", "rule_ranges", "rule_checks", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

@@ -81,7 +81,7 @@ class FakeTools:
         return value(arguments) if callable(value) else value
 
 
-def _run(reply, tools=None, *, text="다음 달 6일부터 3박 용산 호텔 찾아줘", capability="lodging.assist", state=None):
+def _run(reply, tools=None, *, text="다음 달 6일부터 3박 용산 호텔 성인 2명 찾아줘", capability="lodging.assist", state=None):
     llm, toolbox = FakeLLM(reply), FakeTools(tools or {})
     case_id = uuid4()
     pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id="lodging", tenant_id="t", knowledge_scope=["lodging"],
@@ -186,11 +186,11 @@ def test_the_server_recounts_what_is_missing_instead_of_trusting_the_model():
     day = TODAY - timedelta(days=3)
     quote = f"{day.year}년 {day.month}월 {day.day}일부터"
     result, _, tools = _run({**SEARCH, "check_in": day.isoformat(), "check_in_text": quote, "missing": []},
-                            text=f"{quote} 3박 용산 근처 호텔 찾아줘")
+                            text=f"{quote} 3박 용산 근처 호텔 찾아줘 2명")
     assert tools.calls == [] and result.decisions[0]["needs"] == ["check_in"]
     assert "체크인 날짜" in result.answer
     # `[2026-10-11]` 끝 근거가 박 수(「3박」)면 서버가 끝 = 시작 + 박 수로 다시 세므로, 끝 근거를 날로 적은 뒤집힌 날짜로 본다
-    result, _, tools = _run({**SEARCH, "check_out": IN, "check_out_text": "6일까지", "missing": []}, text="다음 달 6일부터 6일까지 용산 근처 호텔 찾아줘")
+    result, _, tools = _run({**SEARCH, "check_out": IN, "check_out_text": "6일까지", "missing": []}, text="다음 달 6일부터 6일까지 용산 근처 호텔 2명 찾아줘")
     assert tools.calls == [] and result.decisions[0]["needs"] == ["check_out"]
 
 
@@ -449,7 +449,7 @@ def test_the_prompt_key_is_registrable_and_the_file_exists():
 def test_a_rejected_date_is_shown_back():
     # `[2026-10-10]` 연도를 말하지 않으면 서버가 연도를 고치므로, 연도를 **말한** 지난 날짜로 본다
     result, _, _ = _run({**SEARCH, "check_in": "2023-11-06", "check_out": "2023-11-09", "check_in_text": "2023년 11월 6일부터"},
-                        text="2023년 11월 6일부터 3박 용산 근처 호텔 찾아줘")
+                        text="2023년 11월 6일부터 3박 용산 근처 호텔 찾아줘 2명")
     assert result.decisions[0]["needs"] == ["check_in"] and result.decisions[0]["year_fixed"] == []
     assert result.answer.startswith("체크인 날짜 2023-11-06(으)로 읽었는데")
 
@@ -984,7 +984,7 @@ def test_a_seoul_search_drops_other_cities_and_far_google_hotels():
     detail = lambda a: {**DETAIL, "gid": a["gid"], "latitude": 37.5440, "longitude": 127.0560}      # noqa: E731
     reply = {**SEARCH, "keyword": "성수", "max_price_per_night": 200000, "min_rating": None}
     result, _, tools = _run(reply, {"read.landmark": SEONGSU, "read.stay_search": listing, "read.stay_detail": detail,
-                                    "read.stay_google": google}, text="다음 달 6일부터 3박 성수 숙소")
+                                    "read.stay_google": google}, text="다음 달 6일부터 3박 성수 숙소 2명")
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [1, 3]
     assert result.decisions[0]["dropped"] == {"region": 1} and "다른 지역 1곳은 뺌" in result.answer
     assert "군산" not in result.answer.split("구글 호텔")[0] and "속초 마리나베이" not in result.answer and "서울숲 호텔" in result.answer
@@ -1002,7 +1002,7 @@ def test_wanted_kind_and_stars_filter_the_lists_and_unmet_ones_are_said():
     spot = {"source": "kakao", "found": True, "name": "경복궁", "latitude": 37.5796, "longitude": 126.9770}
     result, _, tools = _run(reply, {"read.landmark": spot, "read.stay_search": listing, "read.stay_google": google,
                                     "read.stay_detail": lambda a: {**DETAIL, "gid": a["gid"], "latitude": 37.5820, "longitude": 126.9830}},
-                            text="다음 달 6일부터 3박 경복궁 근처 한옥 숙소")
+                            text="다음 달 6일부터 3박 경복궁 근처 한옥 숙소 2명")
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [2], "한옥만"
     assert "반영한 조건: 한옥만 · 경복궁에서 직선 3km 안." in result.answer and "한옥 아님 2곳" in result.answer
     assert "북촌 한옥 담박재" in result.answer and "청춘재" not in result.answer and "광화문 호스텔" not in result.answer, \
@@ -1013,7 +1013,7 @@ def test_wanted_kind_and_stars_filter_the_lists_and_unmet_ones_are_said():
     five = _listing([(1, "3성 호텔", "3성급 · 호텔 · 용산 · 서울", 150000), (2, "5성 호텔", "5성급 · 호텔 · 용산 · 서울", 190000)])
     result, _, _ = _run({**SEARCH, "min_rating": None}, {"read.stay_search": five, "read.stay_detail": lambda a: None,
                                                          "read.stay_google": _google([("4성 호텔", 150000.0, 4, None, None)])},
-                        text="다음 달 6일부터 3박 용산 5성급 호텔")
+                        text="다음 달 6일부터 3박 용산 5성급 호텔 2명")
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [2] and "5성급 미만이거나 성급 모름 1곳" in result.answer
     assert "4성 호텔" not in result.answer
 
@@ -1023,13 +1023,13 @@ def test_cheap_requests_sort_by_price_inside_a_bigger_list_and_google_obeys_the_
     google = _google([("상한 넘음", 50135.0, 3, None, None), ("상한 안", 40000.0, 2, None, None)])
     reply = {**SEARCH, "keyword": "서울", "max_price_per_night": None, "min_rating": None}
     result, _, tools = _run(reply, {"read.stay_search": listing, "read.stay_detail": lambda a: None, "read.stay_google": google},
-                            text="다음 달 6일부터 3박 서울 아무 데나 싼 곳")
+                            text="다음 달 6일부터 3박 서울 아무 데나 싼 곳 2명")
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [2, 3, 1]
     assert "받은 3곳 안에서 1박 가격 낮은 순" in result.answer
     assert next(a for n, a in tools.calls if n == "read.booking_search_stays")["size"] == 50
     assert "read.landmark" not in [n for n, _ in tools.calls], "「서울」 전체면 기준점을 찾지 않는다(☆17:49 L12 「청계천에서 16km」)"
     capped = {**SEARCH, "keyword": "홍대", "max_price_per_night": 50000, "min_rating": None}
-    result, _, _ = _run(capped, {"read.stay_search": _listing([]), "read.stay_google": google}, text="다음 달 6일부터 3박 홍대 1박 5만 원 이하")
+    result, _, _ = _run(capped, {"read.stay_search": _listing([]), "read.stay_google": google}, text="다음 달 6일부터 3박 홍대 1박 5만 원 이하 2명")
     assert "상한 안" in result.answer and "상한 넘음" not in result.answer, "☆L05 50,135원 — 1박 상한을 넘으면 뺀다"
 
 
@@ -1145,7 +1145,7 @@ def test_walking_minutes_come_from_the_mobility_walk_planner_when_it_is_there(mo
     detail = lambda a: {**DETAIL, "gid": a["gid"], "latitude": coords[a["gid"]][0], "longitude": coords[a["gid"]][1]}   # noqa: E731
     reply = {**SEARCH, "keyword": "강남역", "adults": 1, "max_price_per_night": None, "min_rating": None}
     result, _, _ = _run(reply, {"read.landmark": GANGNAM, "read.stay_search": listing, "read.stay_detail": detail},
-                        text="다음 달 6일부터 3박 강남역 걸어서 갈 수 있는 호텔")
+                        text="다음 달 6일부터 3박 강남역 걸어서 갈 수 있는 호텔 2명")
     assert asked == [["walk"]]
     decision = result.decisions[0]
     assert [item["gid"] for item in decision["shown"]] == [2] and decision["skipped"][0]["walk_min"] == 22, \
@@ -1193,7 +1193,7 @@ def test_pets_get_their_own_guidance_and_google_says_dates_do_not_carry_over():
     result, _, _ = _run({**SEARCH, "keyword": "서울", "min_rating": None, "max_price_per_night": None},
                         {"read.stay_search": _listing([(1, "서울 호텔", "", 150000)]), "read.stay_detail": lambda a: None,
                          "read.stay_google": _google([("구글 호텔", 90000.0, 3, None, None)])},
-                        text="반려견 데리고 다음 달 6일부터 3박 서울 숙소")
+                        text="반려견 데리고 다음 달 6일부터 3박 서울 숙소 2명")
     assert "반려동물 동반은 숙소마다 달라요" in result.answer, "사용자 판정 L10"
     assert "구글 호텔 링크는 날짜 · 인원을 채워 엽니다" in result.answer and "&ts=" in result.answer, "사용자 판정 L01 · L12"
 
@@ -1202,7 +1202,7 @@ def test_wide_places_and_seoul_neighbours():
     """사용자 판정 L09 「한강」은 기준점으로 안 씀 · L08 「김포 · 강서는 코앞」 — 기준점이 있으면 맞닿은 시는 거리로 본다."""
     result, _, tools = _run({**SEARCH, "keyword": "한강", "min_rating": None, "max_price_per_night": None},
                             {"read.stay_search": _listing([(1, "군산 호텔", "호텔 · 군산", 90000), (2, "용산 호텔", "호텔 · 용산구 · 서울", 150000)]),
-                             "read.stay_detail": lambda a: None}, text="다음 달 6일부터 3박 한강 근처 호텔")
+                             "read.stay_detail": lambda a: None}, text="다음 달 6일부터 3박 한강 근처 호텔 2명")
     assert "read.landmark" not in [n for n, _ in tools.calls] and result.decisions[0]["dropped"] == {"region": 1}
     assert "「한강」은(는) 넓게 이어진 곳이라 거리 조건" in result.answer
     gimpo = {"source": "kakao", "found": True, "name": "김포국제공항 국내선", "latitude": 37.5622, "longitude": 126.8011}
@@ -1236,7 +1236,7 @@ def test_a_seoul_search_without_an_anchor_still_drops_places_outside_seoul():
     result, _, _ = _run({**SEARCH, "keyword": "한강", "min_rating": None, "max_price_per_night": None},
                         {"read.stay_search": _listing([(1, "용산 호텔", "5성급 · 호텔 · 용산구 · 서울", 250000)]),
                          "read.stay_detail": lambda a: None, "read.stay_google": google},
-                        text="다음 달 6일부터 3박 한강 5성급 호텔")
+                        text="다음 달 6일부터 3박 한강 5성급 호텔 2명")
     assert "김해" not in result.answer and "용산 5성 호텔" in result.answer
 
 
@@ -1288,3 +1288,42 @@ def test_hanok_search_keeps_foreign_named_hanok_rentals_and_records_dropped_name
     assert decision["dropped_names"] == [{"name": "인사동 호텔", "why": "kind"}]
     assert {"name": "Seoul Apartment", "why": "vacation_rental"} in decision["google_dropped"]
     assert {"name": "나인트리 인사동", "why": "kind"} in decision["google_dropped"]
+
+
+def test_date_ranges_people_and_vague_dates_are_read_by_rules():
+    """평가 2차(10-16) — 날짜 범위 표기 · 근거 없는 인원 · 정해지지 않은 날 · 무관한 「오늘」."""
+    from datetime import date as day
+
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, parse, rule_checks, rule_ranges
+
+    today = day(2026, 10, 16)
+    for text, start, end in (("12/24~26 커플", day(2026, 12, 24), day(2026, 12, 26)), ("1/11~13 성인 2명", day(2027, 1, 11), day(2027, 1, 13)),
+                             ("12/18-12/20 두 명", day(2026, 12, 18), day(2026, 12, 20)), ("1월 15~17일", day(2027, 1, 15), day(2027, 1, 17)),
+                             ("11월 29일 들어가서 12월 1일 나올", day(2026, 11, 29), day(2026, 12, 1)), ("12/30~2", day(2026, 12, 30), day(2027, 1, 2))):
+        found, fixed = rule_ranges(Interpretation(task="search"), text, today=today)
+        assert fixed and (found.check_in, found.check_out) == (start, end), text
+    assert rule_ranges(Interpretation(task="search"), "11월 14일부터 2박", today=today)[1] is False, "범위 표기가 없으면 손대지 않는다"
+    weather = Interpretation(task="search", check_in=today, check_out=day(2026, 10, 17), check_in_text="오늘", adults=1)
+    assert rule_checks(weather, "오늘 날씨 추운데 종로 1박 모텔")[1] == ["check_in", "adults"]
+    weekend = Interpretation(task="search", check_in=day(2026, 11, 6), check_out=day(2026, 11, 8), check_in_text="주말", adults=2)
+    assert rule_checks(weekend, "11월 중에 주말 2박 신촌 성인 둘")[1] == ["check_in"]
+    parents = Interpretation(task="search", check_in=day(2026, 12, 18), check_in_text="12월 18일", adults=2)
+    assert rule_checks(parents, "부모님 모시고 종로 한옥 12월 18일 1박")[1] == ["adults"]
+    assert parse({"task": "search", "max_price_per_night": 0}).max_price_per_night is None, "「0원」으로 해석 전체가 거절되지 않는다(I-05)"
+
+
+def test_price_band_walk_minutes_and_kind_spellings_are_read():
+    """평가 2차 — 「10만 원대」 아래 끝 · 「걸어서 10분」 · 「호탤」 「hotel」 「guesthouse」."""
+    assert (read_wants("1박 10만원대").min_price, read_wants("1박 십만원대").band_max) == (100000, 199999)
+    assert read_wants("1박 15만~20만 원").min_price == 150000 and read_wants("100,000~199,999 KRW").min_price == 100000
+    assert read_wants("홍대입구역 도보 5분 이내 호스텔").walk_min == 5 and read_wants("걸어서 십분 안에 가는 호탤").walk_min == 10
+    assert [read_wants(t).kind for t in ("호탤 찾아주세여", "Gangnam hotel", "guesthouse 찾아줘", "게스트하우쓰 잇나여")] == \
+        ["호텔", "호텔", "게스트하우스", "게스트하우스"]
+    listing = _listing([(1, "싼 호텔", "호텔 · 용산 · 서울", 70000), (2, "맞는 호텔", "호텔 · 용산 · 서울", 150000)])
+    google = _google([("너무 싼 호텔", 60000.0, 3, None, None), ("구간 안 호텔", 120000.0, 3, None, None)])
+    result, _, tools = _run({**SEARCH, "max_price_per_night": 100000, "min_rating": None},
+                            {"read.stay_search": listing, "read.stay_detail": lambda a: None, "read.stay_google": google},
+                            text="다음 달 6일부터 3박 용산 호텔 2명 1박 10만 원대")
+    assert [item["gid"] for item in result.decisions[0]["shown"]] == [2] and "1박 100,000원 미만 1곳" in result.answer
+    assert "구간 안 호텔" in result.answer and "너무 싼 호텔" not in result.answer
+    assert next(a for n, a in tools.calls if n == "read.booking_search_stays")["max_price"] == 199999, "구간 시작으로 낸 상한은 구간 끝으로"

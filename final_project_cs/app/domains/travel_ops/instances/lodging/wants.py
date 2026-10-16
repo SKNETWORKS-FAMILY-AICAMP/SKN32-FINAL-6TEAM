@@ -20,7 +20,10 @@ import re
 
 #: 유형 낱말(문장) → 유형. 앞에서부터 본다(「게스트하우스」를 「호텔」보다 먼저)
 _KIND_WORDS = (("한옥", "한옥"), ("게스트하우스", "게스트하우스"), ("게하", "게스트하우스"), ("호스텔", "호스텔"),
-               ("모텔", "모텔"), ("펜션", "펜션"), ("리조트", "리조트"), ("호텔", "호텔"))
+               ("모텔", "모텔"), ("펜션", "펜션"), ("리조트", "리조트"), ("호텔", "호텔"),
+               # `[2026-10-16 평가 2차]` 오타 · 영어 — 「호탤」 「hotel」 「guesthouse」 「게스트하우쓰」를 못 읽어 호텔 요청에 게스트하우스가 섞였다
+               ("hanok", "한옥"), ("게스트하우쓰", "게스트하우스"), ("게스트 하우스", "게스트하우스"), ("guesthouse", "게스트하우스"),
+               ("guest house", "게스트하우스"), ("hostel", "호스텔"), ("motel", "모텔"), ("호탤", "호텔"), ("hotel", "호텔"))
 #: 숙소 이름 · 설명에서 유형을 알아보는 낱말(영어 포함). 「호스텔」 · 「hostel」에는 「호텔」 · 「hotel」이 들어 있지 않다
 _STAY_KIND_WORDS = (("한옥", "한옥"), ("hanok", "한옥"), ("han-ok", "한옥"), ("韓屋", "한옥"), ("韩屋", "한옥"), ("ハノク", "한옥"), ("게스트하우스", "게스트하우스"), ("guesthouse", "게스트하우스"),
                     ("guest house", "게스트하우스"), ("호스텔", "호스텔"), ("hostel", "호스텔"), ("모텔", "모텔"), ("motel", "모텔"),
@@ -34,7 +37,7 @@ _NO_DORM = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|연
 #: 「반영 못 함」에서 지울 동행 말(호스텔 · 게스트하우스를 빼는 것으로 반영) — 「분위기 좋은」 「고급」은 숙소 성격이라 남긴다(☆10-15 17:32 검수 L01)
 _COMPANION = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|연인|신혼|허니문")
 _CHEAP = re.compile(r"(?<!비)싼|(?<!비)싸게|저렴|가성비|최저가")
-_WALK = re.compile(r"도보|걸어서|걸어\s*갈|걸어\s*다닐|걸을\s*수|역세권")
+_WALK = re.compile(r"도보|걸어서|걸어\s*갈|걸어\s*다닐|걸을\s*수|역세권|walk|on\s*foot", re.I)
 _NEAR = re.compile(r"근처|가까운|가까이|가깝|인근|주변|바로\s*앞")
 
 
@@ -101,6 +104,10 @@ class Wants:
     #: 읽은 말(「반영 못 한 요청」에서 지울 때 쓴다)
     words: tuple[str, ...] = field(default_factory=tuple)
     guest: Guest = field(default_factory=Guest)
+    #: `[2026-10-16]` 1박 아래 끝 · 「N만 원대」 위 끝 · 걸어서 N분(문장에 있을 때만)
+    min_price: int | None = None
+    band_max: int | None = None
+    walk_min: int | None = None
 
     @property
     def asks_guest(self) -> list[str]:
@@ -119,10 +126,11 @@ def read_wants(text: str | None) -> Wants:
     for match in _AVOID.finditer(text):
         avoid.add(dict(_KIND_WORDS)[match.group(1)])
         words.append(match.group(0))
-    rest = _AVOID.sub(" ", text)
+    rest = _AVOID.sub(" ", text).lower()
     kind = next((name for word, name in _KIND_WORDS if word in rest), None)
     if kind:
-        words += [word for word, name in _KIND_WORDS if name == kind and word in rest]
+        words += [match.group(0) for word, name in _KIND_WORDS if name == kind
+                  for match in re.finditer(re.escape(word), text, re.I)]
     star = _STARS.search(text)
     stars = float(star.group(1)) if star else None
     if star:
@@ -140,8 +148,55 @@ def read_wants(text: str | None) -> Wants:
     if kind in avoid:
         kind = None
     guest = read_guest(text)
+    low, high, price_words = read_price_band(text)
+    minutes, minute_word = read_walk_minutes(text) if near == "walk" else (None, None)
     return Wants(kind=kind, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
-                 words=tuple(words) + guest.words, guest=guest)
+                 words=tuple(words) + guest.words + price_words + ((minute_word,) if minute_word else ()), guest=guest,
+                 min_price=low, band_max=high, walk_min=minutes)
+
+
+#: `[2026-10-16 평가 2차]` 1박 가격의 아래 끝 — 해석 칸에 최저가가 없어 「10만 원대」 「15만~20만」에서 하한 아래 숙소가 나왔다
+_KO_TENS = {"십": 10, "이십": 20, "삼십": 30, "사십": 40, "오십": 50, "육십": 60, "칠십": 70, "팔십": 80, "구십": 90}
+_BAND_WORD = re.compile(r"(?<![\d만])(\d{1,3}|이십|삼십|사십|오십|육십|칠십|팔십|구십|십)\s*만\s*원?\s*대")
+_RANGE_MAN = re.compile(r"(?<![\d,])(\d{1,3})\s*만\s*(?:원)?\s*(?:~|-|에서|부터)\s*(\d{1,3})\s*만")
+_RANGE_WON = re.compile(r"(?<![\d,])(\d{1,3}(?:,\d{3})+|\d{5,7})\s*(?:원|krw)?\s*(?:~|-)\s*(\d{1,3}(?:,\d{3})+|\d{5,7})", re.I)
+_AT_LEAST = re.compile(r"(?:최소\s*)?(\d{1,3})\s*만\s*원?\s*(?:이상|부터|넘는)")
+
+
+def read_price_band(text: str | None) -> tuple[int | None, int | None, tuple[str, ...]]:
+    """문장의 1박 가격 아래 끝(과 「N만 원대」의 위 끝). (최저, 구간 상한, 읽은 말). 하나로 정해지지 않으면 `None`."""
+    text = str(text or "")
+    ranges = _RANGE_MAN.findall(text)
+    if len(ranges) == 1:
+        low, high = int(ranges[0][0]) * 10000, int(ranges[0][1]) * 10000
+        return (low, high, (_RANGE_MAN.search(text).group(0),)) if low < high else (None, None, ())
+    won = _RANGE_WON.findall(text)
+    if len(won) == 1:
+        low, high = (int(value.replace(",", "")) for value in won[0])
+        return (low, high, (_RANGE_WON.search(text).group(0),)) if low < high else (None, None, ())
+    bands = _BAND_WORD.findall(text)
+    if len(bands) == 1:
+        n = _KO_TENS.get(bands[0]) or int(bands[0])
+        return n * 10000, n * 10000 + (99999 if n % 10 == 0 else 9999), (_BAND_WORD.search(text).group(0),)
+    least = _AT_LEAST.findall(text)
+    if len(least) == 1:
+        return int(least[0]) * 10000, None, (_AT_LEAST.search(text).group(0),)
+    return None, None, ()
+
+
+#: `[2026-10-16 평가 2차]` 「걸어서 5분」 「도보 10분 이내」 — 전에는 15분 고정이었다
+_KO_MINUTES = {"삼": 3, "오": 5, "칠": 7, "십": 10, "십오": 15, "이십": 20}
+_WALK_MINUTES = re.compile(r"(?:걸어서|도보|walk)\s*(?:로\s*)?(\d{1,2}|십오|이십|십|오|삼|칠)\s*(?:분|min)"
+                           r"|(\d{1,2}|십오|이십|십|오|삼|칠)\s*(?:분|min(?:ute)?s?)\s*(?:이내|안|안쪽|거리|컷|on\s*foot)", re.I)
+
+
+def read_walk_minutes(text: str | None) -> tuple[int | None, str | None]:
+    found = list(_WALK_MINUTES.finditer(str(text or "")))
+    if len(found) != 1:
+        return None, None
+    word = found[0].group(1) or found[0].group(2)
+    minutes = _KO_MINUTES.get(word) or (int(word) if word.isdigit() else None)
+    return (minutes, found[0].group(0)) if minutes and 1 <= minutes <= 30 else (None, None)
 
 
 def _parts(description: str | None) -> list[str]:
@@ -179,6 +234,16 @@ def stay_city(description: str | None) -> str | None:
     if stay_stars(last) is not None or any(last == word for word, _ in _KIND_WORDS):
         return None
     return last
+
+
+def price_reason(wants: Wants, price: float | None, max_price: int | None = None) -> str | None:
+    """1박 가격이 아래 끝보다 낮거나 위 끝보다 높으면 까닭. 가격을 모르면 `None`(다른 곳에서 뺀다)."""
+    if price is None:
+        return None
+    if wants.min_price and price < wants.min_price:
+        return "price_low"
+    top = max_price or wants.band_max
+    return "price_high" if top and price > top else None
 
 
 def kind_reason(wants: Wants, kinds: frozenset[str], *, strict: bool = True) -> str | None:
@@ -270,6 +335,8 @@ def summary(wants: Wants) -> list[str]:
         out.append(f"{wants.stars:g}성급 이상")
     if wants.no_dorm and wants.kind not in DORMS and not (wants.kind == "호텔"):
         out.append("호스텔 · 게스트하우스 제외")
+    if wants.min_price:
+        out.append(f"1박 {wants.min_price:,}원 이상")
     if wants.cheapest:
         out.append("1박 가격 낮은 순")
     if wants.guest.text() and wants.kind in DORMS:
@@ -277,5 +344,5 @@ def summary(wants: Wants) -> list[str]:
     return out
 
 
-__all__ = ["DORMS", "NOT_HOTEL", "Guest", "Wants", "guest_block", "read_guest", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
+__all__ = ["DORMS", "NOT_HOTEL", "Guest", "Wants", "guest_block", "price_reason", "read_guest", "read_price_band", "read_walk_minutes", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
            "strip_handled", "summary"]
