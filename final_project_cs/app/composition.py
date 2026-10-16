@@ -700,17 +700,17 @@ def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegi
     return connected
 
 
-def _dining_agent_shadow():
-    """요식 판정 에이전트 — 가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 실행기를 만든다(기본 꺼짐 → None). `[2026-10-13]`
-    ★`[2026-10-16 사용자 결정 — 그림자 모드를 뺀다]` 실행기는 `instances/dining/judge.run` — 판정을 기록만 하지 않고 접수 확인 줄에 합친다
-      (화면 문장은 지금처럼 코드가 만든다). 함수 · 가드레일 이름의 「shadow」는 옛 이름이다.
+def _dining_agent_judge():
+    """요식 판정 에이전트 — 가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐)일 때 실행기를 만든다. `[2026-10-13 · 2026-10-16]`
+    ★실행기는 `instances/dining/judge.run` — 판정을 접수 확인 줄에 합친다(화면 문장은 지금처럼 코드가 만든다).
+    ★모의 모델(`ACOP_LLM_PROVIDER=mock` — 시험 · CI)이면 만들지 않는다 — 가짜 키로 실제 모델을 부르지 않게.
 
     모델은 가드레일 `model` 로 고른다 — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
-    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(그림자는 없어도 되는 것이다 — 기동을 막지 않는다)."""
-    from app.core.settings import dining_agent_shadow, get_settings
+    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(없으면 규칙 검사 그대로 — 기동을 막지 않는다)."""
+    from app.core.settings import dining_agent_judge, get_settings
 
-    shadow_settings = dining_agent_shadow()
-    if shadow_settings is None:
+    judge_settings = dining_agent_judge()
+    if judge_settings is None:
         return None
     from functools import partial
 
@@ -718,14 +718,16 @@ def _dining_agent_shadow():
     from app.infrastructure.llm.tool_chat import OllamaToolChat, OpenAIToolChat
 
     settings = get_settings()
-    kind, _, model = shadow_settings["model"].partition(":")
+    if getattr(settings, "llm_provider", "") == "mock":
+        return None
+    kind, _, model = judge_settings["model"].partition(":")
     if kind == "openai" and (settings.openai_api_key or "").strip():
         chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-6-luna")
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
         chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
     else:
-        logging.getLogger(__name__).warning("dining agent shadow enabled but model %s has no key/address — shadow is off",
-                                            shadow_settings["model"])
+        logging.getLogger(__name__).warning("dining agent judge enabled but model %s has no key/address — rule review only",
+                                            judge_settings["model"])
         return None
     # ★`[2026-10-16]` 원장이 모를 때 에이전트가 고를 바깥 조회 — 지도(카카오 `map_search`) · 실시간 영업(구글 `live_open_check`).
     #   ☆전에는 기본 `DiningTools(connect)` 라 둘 다 None — 스위치를 켜도 바깥 조회는 늘 「모름」이었다(LLM 켜짐 점검).
@@ -733,7 +735,7 @@ def _dining_agent_shadow():
     from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
 
     tools_factory = partial(DiningTools, kakao=build_kakao_local(), google=build_google_places())
-    return partial(dining_judge.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"],
+    return partial(dining_judge.run, chat=chat, model=judge_settings["model"], deadline_s=judge_settings["deadline_s"],
                    tools_factory=tools_factory)
 
 
@@ -821,7 +823,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                planner_factory=dining_ledger_impl.PlannerLedger,
                                link_core_place=dining_ledger_impl.link_core_place_to,
                                closure_observation=dining_ledger_impl.closure_observation,
-                               agent_shadow=_dining_agent_shadow(),
+                               agent_judge=_dining_agent_judge(),
                                meal_picker=_dining_meal_picker())
 
     if "activity" in active_ids:

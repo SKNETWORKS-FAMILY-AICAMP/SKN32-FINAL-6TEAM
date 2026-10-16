@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""접수 → 확인 화면 → **요식 판정 에이전트 그림자** — 확인 화면은 그대로이고, 식사 항목의 판정이 `dining.dn_agent_shadow` 에만 남는다. `[2026-10-13]`
+"""접수 → 확인 화면 → **요식 판정 에이전트** — 식사 항목의 판정이 `dining.dn_agent_judge` 에 남는다. `[2026-10-13 · 2026-10-16]`
+가짜 모델은 found 를 unknown 으로만 내서 확인 줄은 바뀌지 않는다(규칙이 이미 판정한 줄은 그대로).
 
 모델은 가짜(계획을 읽고 식사마다 found 를 unknown 으로 낸다 — 근거 없는 unknown 은 검증을 통과한다). 실제 모델 평가는 `eval/runners/dining_agent.py`.
 """
@@ -9,7 +10,7 @@ import json
 from functools import partial
 
 from app.domains.travel_ops.components.team_hooks import dining_ledger
-from app.domains.travel_ops.instances.dining import shadow
+from app.domains.travel_ops.instances.dining import judge
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.llm.tool_chat import ToolTurn
 
@@ -32,9 +33,9 @@ class ReadingChat:
         return ToolTurn(content=json.dumps({"items": items, "skipped": []}, ensure_ascii=False))
 
 
-def test_the_shadow_runs_after_review_and_writes_only_to_the_dining_table(rv, monkeypatch):
+def test_the_judge_runs_after_review_and_records_in_the_dining_table(rv, monkeypatch):
     chat = ReadingChat()
-    monkeypatch.setattr(dining_ledger, "agent_shadow_runner", lambda: partial(shadow.run, chat=chat, model="fake"))
+    monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: partial(judge.run, chat=chat, model="fake"))
     client, _, _ = _client()
     headers = _key(client)
     view = _send(client, headers)
@@ -43,10 +44,10 @@ def test_the_shadow_runs_after_review_and_writes_only_to_the_dining_table(rv, mo
     assert chat.plans and chat.plans[0]["date"] == meal["date"]
     assert "광장시장" in chat.plans[0]["customer_notes"]                       # 계획 원문을 조건 읽기용으로 넘긴다(저장하지 않는다)
     with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT check_code, item_id, agent_verdict, rule_verdict, model FROM dining.dn_agent_shadow "
-                    "WHERE intake_id = %s ORDER BY shadow_id", (view["intake_id"],))
+        cur.execute("SELECT check_code, item_id, agent_verdict, rule_verdict, model FROM dining.dn_agent_judge "
+                    "WHERE intake_id = %s ORDER BY judge_id", (view["intake_id"],))
         rows = cur.fetchall()
-        cur.execute("DELETE FROM dining.dn_agent_shadow WHERE intake_id = %s", (view["intake_id"],))
+        cur.execute("DELETE FROM dining.dn_agent_judge WHERE intake_id = %s", (view["intake_id"],))
         conn.commit()
     assert rows[0][0] == "_run"
     found = [r for r in rows if r[0] == "found"]
@@ -54,11 +55,12 @@ def test_the_shadow_runs_after_review_and_writes_only_to_the_dining_table(rv, mo
     assert found[0][3] in ("ok", "bad", "unknown")                           # 같은 항목의 규칙 검사 줄(place)과 나란히
 
 
-def test_without_the_switch_nothing_is_written(rv):
+def test_with_the_mock_model_nothing_is_written(rv):
+    """스위치는 기본 켜짐이지만 시험(모의 모델)에서는 실행기를 만들지 않는다 — 가짜 키로 실제 모델을 부르지 않는다."""
     client, _, _ = _client()
     headers = _key(client)
     view = _send(client, headers)
     assert view["status"] == "review"
     with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT count(*) FROM dining.dn_agent_shadow WHERE intake_id = %s", (view["intake_id"],))
+        cur.execute("SELECT count(*) FROM dining.dn_agent_judge WHERE intake_id = %s", (view["intake_id"],))
         assert cur.fetchone()[0] == 0

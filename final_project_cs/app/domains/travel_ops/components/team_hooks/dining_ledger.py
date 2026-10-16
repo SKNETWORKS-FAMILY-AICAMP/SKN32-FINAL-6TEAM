@@ -35,7 +35,7 @@ def register(*, add_nearby: Callable[..., list[dict[str, Any]]],
              planner_factory: Callable[..., Any] | None = None,
              link_core_place: Callable[..., Any] | None = None,
              closure_observation: Callable[..., Any] | None = None,
-             agent_shadow: Callable[..., Any] | None = None,
+             agent_judge: Callable[..., Any] | None = None,
              meal_picker: Callable[..., Any] | None = None) -> None:
     """조립 때 한 번. 넷을 다 줘야 한다 — 빠뜨리면 여기서 `TypeError` 로 바로 드러난다."""
     if collect_registration("dining_ledger", locals()):
@@ -45,7 +45,7 @@ def register(*, add_nearby: Callable[..., list[dict[str, Any]]],
     _catalog_state = catalog_state
     _http_providers.update(lookup_factory=lookup_factory, slot_verdicts=slot_verdicts,
                            planner_factory=planner_factory, link_core_place=link_core_place,
-                           closure_observation=closure_observation, agent_shadow=agent_shadow,
+                           closure_observation=closure_observation, agent_judge=agent_judge,
                            meal_picker=meal_picker)
 
 
@@ -172,11 +172,11 @@ def meal_picker() -> Callable[..., Any] | None:
         return None
 
 
-def agent_shadow_runner() -> Callable[..., Any] | None:
-    """요식 판정 에이전트(`instances/dining/judge.run` — `[2026-10-16]` 그림자 모드를 빼고 판정을 접수 확인 줄에 합친다) —
-    가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 조립이 꽂는다(이름은 옛 것).
+def agent_judge_runner() -> Callable[..., Any] | None:
+    """요식 판정 에이전트(`instances/dining/judge.run` — 판정을 접수 확인 줄에 합친다) —
+    가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐)이고 모델이 있을 때 조립이 꽂는다.
     ★선택 기능이다 — 꽂히지 않았거나 조립이 묶이지 않은 문맥(시험 · 뒤 일꾼)이면 `None`(판정을 안 돈다). 접수는 이것과 무관하게 끝난다."""
     try:
-        return read_binding("dining_ledger", "agent_shadow", _http_providers.get("agent_shadow"))
-    except Exception:                                      # noqa: BLE001 — 그림자는 없어도 되는 것이다
+        return read_binding("dining_ledger", "agent_judge", _http_providers.get("agent_judge"))
+    except Exception:                                      # noqa: BLE001 — 없으면 규칙 검사 그대로다
         return None

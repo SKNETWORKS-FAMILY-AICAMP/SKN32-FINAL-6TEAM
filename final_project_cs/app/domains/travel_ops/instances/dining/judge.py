@@ -11,20 +11,32 @@
   규칙이 이미 판정한 줄은 그대로다(줄에 에이전트 판정 · 같은지만 근거로 단다). 에이전트 실패 · 근거 검증 실패인 체크는 쓰지 않는다.
 ★접수 확인으로 넘긴 **뒤에** 돈다(에이전트는 하루 15~30초) — 같은 판의 저장된 검사(`intake_reviews`)를 고쳐 쓰고, 화면은 다음 조회에서 본다.
   고친 줄로 확인 필요 개수(`needs`) · 등록 가능(`ready`)을 다시 센다.
-★근거 기록은 그대로 `dining.dn_agent_shadow`(232)에 쓴다 — 표 이름은 옛 그림자 운행 때 것이다.
+★근거 기록은 `dining.dn_agent_judge`(232)에 쓴다 — 체크마다 에이전트 판정 · 규칙 판정 · 근거 · 실패 이유.
+★`[2026-10-16 사용자 지시]` 옛 「그림자」 이름(모듈 `shadow.py` · 가드레일 `agent_shadow` · 표 `dn_agent_shadow`)을 모두 「판정」으로 바꿨다.
+
+규칙 검사 줄 → 체크
+    place  → found       hours → open_at       closed → closed_day
+  규칙 검사의 결과 ok · filled · warn 은 ok(warn 은 「주의」지 「안 된다」가 아니다), bad 는 bad, unknown 은 unknown.
+  ★`[2026-10-15]` 단 운영시간 줄은 그 줄이 따로 싣는 **시작 시각에 열려 있나**(`open_at`)가 있으면 그것을 쓴다 — 운영시간 warn 에는
+    「시작 때 이미 닫힘」이 섞여 있다.
 """
 from __future__ import annotations
 
 import json
 import logging
 import uuid
+from collections import defaultdict
 from typing import Any, Callable
 
 from app.domains.travel_ops.instances.dining.agent import judge_day
 from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
-from app.domains.travel_ops.instances.dining.shadow import plans_from_review, rule_verdicts
 
 log = logging.getLogger(__name__)
+
+RULE_ROWS = {"place": "found", "hours": "open_at", "closed": "closed_day"}
+RULE_RESULT = {"ok": "ok", "filled": "ok", "warn": "ok", "bad": "bad", "unknown": "unknown"}
+#: 에이전트에게 넘기는 계획 원문 길이 상한(글자) — 조건 문장을 읽히는 데 충분하고 토큰을 아낀다
+NOTES_MAX = 2000
 
 #: 규칙 검사 줄 ↔ 에이전트 체크
 ROW_OF = {"open_at": "hours", "closed_day": "closed"}
@@ -43,6 +55,40 @@ TEXT = {
 }
 #: 새 줄로 더하는 체크 — 폐업은 bad 일 때만(「폐업 기록 없음」은 고객에게 뜻이 없다)
 ADDED = ("dietary", "kids", "payment", "business")
+
+
+def rule_verdicts(item: dict[str, Any]) -> dict[str, str]:
+    """접수 검사 항목 하나의 규칙 판정 {체크: ok · bad · unknown}."""
+    out: dict[str, str] = {}
+    for row in item.get("rows") or []:
+        check = RULE_ROWS.get(row.get("row"))
+        if check == "open_at" and row.get("open_at") in ("ok", "bad"):
+            out[check] = row["open_at"]
+        elif check and row.get("result") in RULE_RESULT:
+            out[check] = RULE_RESULT[row["result"]]
+    return out
+
+
+def plans_from_review(review: dict[str, Any], notes: str) -> list[dict[str, Any]]:
+    """접수 검사 → 날마다 에이전트 계획 하나(식사가 있는 날만). 항목 id 는 접수 검사의 id 그대로."""
+    by_day: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in review.get("items") or []:
+        if item.get("date"):
+            by_day[item["date"]].append(item)
+    plans = []
+    for day, items in sorted(by_day.items()):
+        if not any(i.get("kind") == "dining" and i.get("place") for i in items):
+            continue
+        rows = []
+        for i in items:
+            place = i.get("place") or {}
+            rows.append({"item_id": i["id"], "kind": i.get("kind"), "title": i.get("title"),
+                         "start": f"{day}T{i['starts_at']}" if i.get("starts_at") else None,
+                         "end": f"{day}T{i['ends_at']}" if i.get("ends_at") else None,
+                         "place": {k: v for k, v in {"name": place.get("name"), "lat": place.get("latitude"),
+                                                     "lng": place.get("longitude")}.items() if v is not None} or None})
+        plans.append({"date": day, "customer_notes": (notes or "")[:NOTES_MAX], "items": rows})
+    return plans
 
 
 def _tools_of(check: dict[str, Any], calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -138,7 +184,7 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
     with connect() as conn, conn.transaction():
         with conn.cursor() as cur:
             for item_id, code, agent, rule, agree, failure, detail in records:
-                cur.execute("INSERT INTO dining.dn_agent_shadow (run_id, tenant_id, intake_id, revision, item_id, check_code, "
+                cur.execute("INSERT INTO dining.dn_agent_judge (run_id, tenant_id, intake_id, revision, item_id, check_code, "
                             "agent_verdict, rule_verdict, agree, failure, detail, model) "
                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s)",
                             (str(run_id), tenant_id, str(intake_id), revision, item_id, code, agent, rule, agree, failure,
@@ -153,4 +199,4 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
     return {"run_id": str(run_id), **counts}
 
 
-__all__ = ["ADDED", "ROW_OF", "TEXT", "merge", "run"]
+__all__ = ["ADDED", "RULE_ROWS", "ROW_OF", "TEXT", "merge", "plans_from_review", "rule_verdicts", "run"]

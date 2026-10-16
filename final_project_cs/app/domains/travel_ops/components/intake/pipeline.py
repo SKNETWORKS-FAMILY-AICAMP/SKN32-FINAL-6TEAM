@@ -214,7 +214,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("UPDATE trip_intakes SET status='review', stage='review', updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", (tenant_id, intake_id))
-        _dining_shadow(connect, tenant_id, intake_id, sources)
+        _dining_judge(connect, tenant_id, intake_id, sources)
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
         return "fatal"
@@ -231,14 +231,14 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
 
 
-def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
+def _dining_judge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
     """요식 판정 에이전트 — 확인 화면으로 넘긴 **뒤에** 식사를 판정해 그 판의 검사 줄에 합친다(`instances/dining/judge.run`). `[2026-10-13 · 2026-10-16]`
-    ★`[2026-10-16 사용자 결정]` 그림자 모드(기록만)를 뺐다 — 규칙이 모르던 영업 · 휴무를 에이전트가 도구로 정했으면 그 줄을 바꾸고, 고객 조건 확인은
-      줄을 더한다. 화면 문장은 코드가 만든다. ★가드레일 `travel.dining.agent_shadow.enabled` 를 켜야 돈다(기본 꺼짐 · 이름은 옛 것).
+    ★규칙이 모르던 영업 · 휴무를 에이전트가 도구로 정했으면 그 줄을 바꾸고, 고객 조건 확인은 줄을 더한다. 화면 문장은 코드가 만든다.
+      ★가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐) · 모델이 있어야 돈다.
       실패해도 접수에 영향이 없다(그 줄은 규칙 검사 그대로 · 경고만 남긴다)."""
     from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-    runner = dining_ledger.agent_shadow_runner()
+    runner = dining_ledger.agent_judge_runner()
     if runner is None:
         return
     try:
@@ -248,8 +248,8 @@ def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, 
             return
         notes = "\n".join(s.get("transcript") or "" for s in sources)
         runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=1, review=payload, notes=notes)
-    except Exception:                                  # noqa: BLE001 — 그림자 장애가 접수를 건드리지 않는다
-        log.warning("dining agent shadow failed intake=%s", intake_id, exc_info=True)
+    except Exception:                                  # noqa: BLE001 — 판정 장애가 접수를 건드리지 않는다
+        log.warning("dining agent judge failed intake=%s", intake_id, exc_info=True)
 
 
 def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:
