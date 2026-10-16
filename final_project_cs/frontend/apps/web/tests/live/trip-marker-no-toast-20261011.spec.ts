@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-import { beforeTheTrip, mockServer, start, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, galleryShot, mockServer, start, TRIP_ID, tripScreen } from "./helpers";
 import { mapSettled } from "./plan-check-kit";
 
 // `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
@@ -21,9 +20,8 @@ for (const width of [375, 1280]) {
     await expect(page.getByRole("status")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "목록에서 보기", exact: true })).toHaveCount(0);
     await mapSettled(page);
-    await mkdir("mockups/trip-marker-no-toast-2026-10-11-v1", { recursive: true });
     await page.mouse.move(0, 0);
-    await page.screenshot({ path: `mockups/trip-marker-no-toast-2026-10-11-v1/selected-${width}.png` });
+    await galleryShot(page, `mockups/trip-marker-no-toast-2026-10-11-v1/selected-${width}.png`);
     await first.locator("[data-pin-body]").click();
     await expect(page.locator("#stop-button-i-a")).toHaveAttribute("aria-expanded", "false");
     await expect(page.getByRole("status")).toHaveCount(0);

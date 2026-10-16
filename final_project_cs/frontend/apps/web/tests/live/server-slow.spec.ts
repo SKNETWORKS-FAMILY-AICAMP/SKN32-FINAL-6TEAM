@@ -6,6 +6,9 @@ import { checkPlan, mockServer, start } from "./helpers";
  * 읽는 화면은 새 소식이 30초 · 60초 없으면 따로 말한다. 테스트용 mock 서버로 도는 자동 시험이다(화면 반응을 본다 — 실서버 확인 아님).
  */
 const PLAN = "10/1 09:00 경복궁 관람";
+// `[2026-10-16 사용자 결정 — CI 시간 줄이기 ③]` 화면의 기다림 계산(`Date.now` · `setInterval`)은 가짜 시계로 건너뛴다 —
+//   「아직 안 넘어갔다 · 아직 안 떴다」는 시간을 건너뛴 뒤 화면이 다시 그려질 틈(0.3초)만 실제로 기다리고 본다.
+//   모방 서버가 늦게 답하는 시간(intakeDelay)은 실제 시간이라, 화면을 확인할 동안만 버티게 짧게 둔다.
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 const banner = (page: Page) => page.getByRole("status").filter({ hasText: "서버 응답이 늦어지고 있어요" });
@@ -25,13 +28,16 @@ test("서버가 답을 안 주고 10초가 넘으면 맨 위에 안내가 뜨고
   await send(page);
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 15_000 });
   await expect(banner(page)).toHaveCount(0);
-  // 서버가 늦다: 접수에 답하는 데 16초(`[2026-10-13]` 첫 안내가 10초라, 뜬 뒤 확인할 시간을 남긴다)
-  await server.scenario({ intakeDelay: 16_000, readingPolls: 0 });
+  // 서버가 늦다: 접수에 답하는 데 실제 8초 — 그동안 화면 시계를 5초 · 11초로 건너뛰어 본다(첫 안내가 10초)
+  await page.clock.install();
+  await server.scenario({ intakeDelay: 8_000, readingPolls: 0 });
   await send(page);
   await expect(page).toHaveURL(/\/intakes\/starting$/);
-  await page.waitForTimeout(5_000);
+  await page.clock.fastForward(5_000);
+  await page.waitForTimeout(300);
   await expect(banner(page)).toHaveCount(0);                                                           // 아직 5초 — 말할 때가 아니다
-  await expect(banner(page)).toBeVisible({ timeout: 8_000 });
+  await page.clock.fastForward(6_000);
+  await expect(banner(page)).toBeVisible({ timeout: 5_000 });
   await expect(banner(page)).toContainText("잠시만 더 기다려 주세요.");
   await expect(banner(page)).toContainText("초째");
   const box = (await banner(page).boundingBox())!;
@@ -46,14 +52,19 @@ test("30초가 넘으면 더 강한 문장으로 바뀌고, 닫기를 누르면 
   test.setTimeout(90_000);
   const server = mockServer(request);
   await start(page);
-  await server.scenario({ intakeDelay: 34_000, readingPolls: 0 });
+  await page.clock.install();
+  await server.scenario({ intakeDelay: 10_000, readingPolls: 0 });
   await send(page);
-  await expect(banner(page)).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole("status").filter({ hasText: "서버가 아직 답하지 않았어요" })).toBeVisible({ timeout: 30_000 });
+  await expect(page).toHaveURL(/\/intakes\/starting$/);                                              // 늦은 호출이 시작된 뒤에 건너뛴다
+  await page.clock.fastForward(11_000);
+  await expect(banner(page)).toBeVisible({ timeout: 5_000 });
+  await page.clock.fastForward(20_000);
+  await expect(page.getByRole("status").filter({ hasText: "서버가 아직 답하지 않았어요" })).toBeVisible({ timeout: 5_000 });
   await expect(page.getByRole("status").filter({ hasText: "계속 안 되면 잠시 뒤에 다시 시도해 주세요." })).toBeVisible();
   await page.getByRole("status").filter({ hasText: "서버가 아직 답하지 않았어요" }).getByRole("button", { name: "닫기" }).click();
   await expect(page.getByRole("status").filter({ hasText: "서버가 아직 답하지 않았어요" })).toHaveCount(0);
-  await page.waitForTimeout(2_500);
+  await page.clock.fastForward(2_500);
+  await page.waitForTimeout(300);
   await expect(page.getByRole("status").filter({ hasText: /서버(가 아직 답하지 않았어요| 응답이 늦어지고 있어요)/ })).toHaveCount(0);
 });
 
@@ -62,18 +73,23 @@ test("계획을 읽는 동안 새 소식이 30초 없으면 읽는 화면이 「
   const server = mockServer(request);
   await start(page);
   await server.scenario({ readingPolls: 999 });
+  await page.clock.install();
   await send(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   const note = page.getByRole("status").filter({ hasText: "서버 소식이 한동안 없어요" });
   await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", level: 1 })).toBeVisible();
-  await page.waitForTimeout(20_000);
+  await page.clock.fastForward(1_000);                                                                 // 첫 틱 — 조용한 시간을 재기 시작한다(use-quiet.ts)
+  await page.clock.fastForward(20_000);
+  await page.waitForTimeout(300);
   await expect(note).toHaveCount(0);                                                                   // 20초는 아직이다
-  await expect(note).toBeVisible({ timeout: 20_000 });
+  await page.clock.fastForward(11_000);
+  await expect(note).toBeVisible({ timeout: 5_000 });
   await expect(note).toContainText("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.");
   await expect(note).toContainText("30초 이상 새 진행 소식이 없어요.");
   await note.getByRole("button", { name: "닫기", exact: true }).click();
   await expect(note).toHaveCount(0);
-  await page.waitForTimeout(1200); // 다음 quiet 갱신이 닫은 토스트를 다시 띄우지 않습니다.
+  await page.clock.fastForward(1_200); // 다음 quiet 갱신이 닫은 토스트를 다시 띄우지 않습니다.
+  await page.waitForTimeout(300);
   await expect(note).toHaveCount(0);
   await server.scenario({ readingPolls: 0 });
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible({ timeout: 20_000 });

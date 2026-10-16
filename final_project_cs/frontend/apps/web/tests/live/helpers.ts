@@ -1,4 +1,6 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
+import { expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { TERMS_VERSION } from "../../src/features/consent/terms-content";
 
 export const STUB = `http://127.0.0.1:${process.env.STUB_PORT ?? 8043}`;
@@ -142,6 +144,18 @@ export async function hydrated(page: Page, selector = "textarea") {
     const element = document.querySelector(css);
     return Boolean(element) && Object.keys(element as object).some((key) => key.startsWith("__reactFiber"));
   }, selector);
+}
+
+/**
+ * `[2026-10-16 사용자 결정 — CI 시간 줄이기 ⑤]` 목업 갤러리(`mockups/…`)에 남기는 캡처는 `CAPTURE_SHOTS=1` 일 때만 찍는다. 평소 실행 · CI 에서는
+ * 찍지 않아 추적 중인 PNG 를 덮어쓰거나 새 폴더를 남기지 않는다(시험의 확인 문장은 그대로 돈다). 갤러리를 다시 찍을 때만 켠다.
+ */
+export const captureShots = process.env.CAPTURE_SHOTS === "1";
+
+export async function galleryShot(target: Page | Locator, path: string, options: { fullPage?: boolean } = {}) {
+  if (!captureShots) return;
+  await mkdir(dirname(path), { recursive: true });
+  await target.screenshot({ path, ...options });
 }
 
 export async function noHorizontalScroll(page: Page) {
