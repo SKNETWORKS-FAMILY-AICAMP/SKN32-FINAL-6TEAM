@@ -1,0 +1,5899 @@
+{
+ "per_case": {
+  "A01": {
+   "items": [
+    3,
+    4
+   ],
+   "items_tight": [
+    2,
+    4
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    4
+   ],
+   "kind": [
+    3,
+    4
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "A02": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    1
+   ],
+   "moves_precision": [
+    0,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "A03": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    3,
+    4
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    1,
+    2
+   ],
+   "moves_precision": [
+    1,
+    2
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "A04": {
+   "items": [
+    6,
+    6
+   ],
+   "items_tight": [
+    5,
+    6
+   ],
+   "items_precision": [
+    6,
+    6
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    6,
+    6
+   ],
+   "kind": [
+    4,
+    6
+   ],
+   "place_found": [
+    4,
+    6
+   ],
+   "tamper": [
+    0,
+    6
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    1,
+    1
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "A05": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    3,
+    3
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    2,
+    2
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "A06": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    3,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    2,
+    4
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "A07": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    4,
+    4
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "B01": {
+   "items": [
+    2,
+    3
+   ],
+   "items_tight": [
+    2,
+    3
+   ],
+   "items_precision": [
+    2,
+    2
+   ],
+   "time": [
+    2,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    2,
+    3
+   ],
+   "kind": [
+    2,
+    3
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    2
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "B02": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "B03": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    1,
+    1
+   ]
+  },
+  "B04": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    3,
+    3
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "B05": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    0,
+    2
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "B06": {
+   "items": [
+    2,
+    2
+   ],
+   "items_tight": [
+    2,
+    2
+   ],
+   "items_precision": [
+    2,
+    2
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    2,
+    2
+   ],
+   "kind": [
+    2,
+    2
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    2
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    1,
+    1
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "B07": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    2,
+    3
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "B08": {
+   "items": [
+    2,
+    2
+   ],
+   "items_tight": [
+    2,
+    2
+   ],
+   "items_precision": [
+    2,
+    4
+   ],
+   "time": [
+    1,
+    1
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    2,
+    2
+   ],
+   "kind": [
+    2,
+    2
+   ],
+   "place_found": [
+    2,
+    2
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "C01": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    2,
+    2
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    3,
+    3
+   ]
+  },
+  "C02": {
+   "items": [
+    0,
+    1
+   ],
+   "items_tight": [
+    0,
+    1
+   ],
+   "items_precision": [
+    0,
+    0
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    0,
+    1
+   ],
+   "place_found": [
+    0,
+    1
+   ],
+   "tamper": [
+    0,
+    0
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    1,
+    1
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    2,
+    2
+   ]
+  },
+  "C03": {
+   "items": [
+    2,
+    2
+   ],
+   "items_tight": [
+    2,
+    2
+   ],
+   "items_precision": [
+    2,
+    2
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    2,
+    2
+   ],
+   "kind": [
+    2,
+    2
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    2
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    0,
+    1
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "C04": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    4
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    1
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    2
+   ],
+   "requests": [
+    1,
+    2
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    1,
+    1
+   ],
+   "trip": [
+    3,
+    3
+   ]
+  },
+  "C05": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    3,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    1,
+    1
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    1,
+    1
+   ]
+  },
+  "C06": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    5
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    2
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    1,
+    1
+   ]
+  },
+  "C07": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    3,
+    4
+   ],
+   "items_precision": [
+    4,
+    5
+   ],
+   "time": [
+    1,
+    1
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    2,
+    4
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    1
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    1,
+    1
+   ],
+   "trip": [
+    2,
+    2
+   ]
+  },
+  "C08": {
+   "items": [
+    0,
+    2
+   ],
+   "items_tight": [
+    0,
+    2
+   ],
+   "items_precision": [
+    0,
+    1
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    2
+   ],
+   "kind": [
+    0,
+    2
+   ],
+   "place_found": [
+    0,
+    2
+   ],
+   "tamper": [
+    0,
+    1
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    1
+   ],
+   "preferences": [
+    0,
+    2
+   ],
+   "requests": [
+    1,
+    2
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    2,
+    2
+   ]
+  },
+  "D01": {
+   "items": [
+    5,
+    5
+   ],
+   "items_tight": [
+    5,
+    5
+   ],
+   "items_precision": [
+    5,
+    5
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    5,
+    5
+   ],
+   "kind": [
+    5,
+    5
+   ],
+   "place_found": [
+    5,
+    5
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "D02": {
+   "items": [
+    5,
+    5
+   ],
+   "items_tight": [
+    4,
+    5
+   ],
+   "items_precision": [
+    5,
+    5
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    5,
+    5
+   ],
+   "place_found": [
+    1,
+    4
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    1,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "D03": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    0,
+    4
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    1,
+    4
+   ],
+   "moves_precision": [
+    1,
+    4
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    1,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "J01": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    3,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    2,
+    2
+   ]
+  },
+  "J02": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    3,
+    4
+   ],
+   "end": [
+    0,
+    1
+   ],
+   "date": [
+    0,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    2,
+    4
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "J03": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    3,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    1,
+    4
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "X01": {
+   "items": [
+    7,
+    7
+   ],
+   "items_tight": [
+    7,
+    7
+   ],
+   "items_precision": [
+    7,
+    7
+   ],
+   "time": [
+    3,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    7,
+    7
+   ],
+   "kind": [
+    7,
+    7
+   ],
+   "place_found": [
+    3,
+    6
+   ],
+   "tamper": [
+    0,
+    7
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    3,
+    3
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    1,
+    1
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "X02": {
+   "items": [
+    5,
+    5
+   ],
+   "items_tight": [
+    5,
+    5
+   ],
+   "items_precision": [
+    5,
+    5
+   ],
+   "time": [
+    5,
+    5
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    5,
+    5
+   ],
+   "kind": [
+    5,
+    5
+   ],
+   "place_found": [
+    4,
+    5
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    4,
+    5
+   ],
+   "moves_precision": [
+    4,
+    5
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "X03": {
+   "items": [
+    7,
+    7
+   ],
+   "items_tight": [
+    7,
+    7
+   ],
+   "items_precision": [
+    7,
+    7
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    7,
+    7
+   ],
+   "kind": [
+    7,
+    7
+   ],
+   "place_found": [
+    4,
+    7
+   ],
+   "tamper": [
+    0,
+    7
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    1,
+    2
+   ],
+   "requests": [
+    1,
+    2
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    1,
+    1
+   ]
+  },
+  "X04": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    2,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    3,
+    3
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    1,
+    3
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "T01": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    4
+   ],
+   "time": [
+    4,
+    4
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "T02": {
+   "items": [
+    4,
+    4
+   ],
+   "items_tight": [
+    4,
+    4
+   ],
+   "items_precision": [
+    4,
+    5
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    4,
+    4
+   ],
+   "kind": [
+    4,
+    4
+   ],
+   "place_found": [
+    1,
+    4
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "T03": {
+   "items": [
+    5,
+    5
+   ],
+   "items_tight": [
+    5,
+    5
+   ],
+   "items_precision": [
+    5,
+    5
+   ],
+   "time": [
+    5,
+    5
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    5,
+    5
+   ],
+   "kind": [
+    3,
+    5
+   ],
+   "place_found": [
+    0,
+    4
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "E01": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "E02": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    2,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    1,
+    1
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    2
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "E03": {
+   "items": [
+    5,
+    5
+   ],
+   "items_tight": [
+    5,
+    5
+   ],
+   "items_precision": [
+    5,
+    5
+   ],
+   "time": [
+    5,
+    5
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    5,
+    5
+   ],
+   "kind": [
+    5,
+    5
+   ],
+   "place_found": [
+    3,
+    5
+   ],
+   "tamper": [
+    0,
+    5
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "E04": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "F01": {
+   "items": [
+    2,
+    2
+   ],
+   "items_tight": [
+    2,
+    2
+   ],
+   "items_precision": [
+    2,
+    2
+   ],
+   "time": [
+    2,
+    2
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    2,
+    2
+   ],
+   "kind": [
+    2,
+    2
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    2
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    3
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "F02": {
+   "items": [
+    0,
+    1
+   ],
+   "items_tight": [
+    0,
+    1
+   ],
+   "items_precision": [
+    0,
+    1
+   ],
+   "time": [
+    0,
+    1
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    1
+   ],
+   "kind": [
+    0,
+    1
+   ],
+   "place_found": [
+    0,
+    1
+   ],
+   "tamper": [
+    0,
+    1
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    2
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    2
+   ]
+  },
+  "F03": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    3
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "F04": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    2,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "F05": {
+   "items": [
+    1,
+    1
+   ],
+   "items_tight": [
+    0,
+    1
+   ],
+   "items_precision": [
+    1,
+    1
+   ],
+   "time": [
+    1,
+    1
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    1,
+    1
+   ],
+   "kind": [
+    0,
+    1
+   ],
+   "place_found": [
+    0,
+    1
+   ],
+   "tamper": [
+    0,
+    1
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    3
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "G01": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    1,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "G02": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "G03": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    2
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "G04": {
+   "items": [
+    2,
+    2
+   ],
+   "items_tight": [
+    2,
+    2
+   ],
+   "items_precision": [
+    2,
+    2
+   ],
+   "time": [
+    2,
+    2
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    2
+   ],
+   "kind": [
+    2,
+    2
+   ],
+   "place_found": [
+    1,
+    1
+   ],
+   "tamper": [
+    0,
+    2
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    2,
+    2
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R01": {
+   "items": [
+    10,
+    10
+   ],
+   "items_tight": [
+    8,
+    10
+   ],
+   "items_precision": [
+    10,
+    10
+   ],
+   "time": [
+    10,
+    10
+   ],
+   "end": [
+    1,
+    1
+   ],
+   "date": [
+    10,
+    10
+   ],
+   "kind": [
+    10,
+    10
+   ],
+   "place_found": [
+    6,
+    8
+   ],
+   "tamper": [
+    0,
+    10
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R02": {
+   "items": [
+    8,
+    8
+   ],
+   "items_tight": [
+    6,
+    8
+   ],
+   "items_precision": [
+    8,
+    8
+   ],
+   "time": [
+    8,
+    8
+   ],
+   "end": [
+    1,
+    1
+   ],
+   "date": [
+    8,
+    8
+   ],
+   "kind": [
+    8,
+    8
+   ],
+   "place_found": [
+    6,
+    6
+   ],
+   "tamper": [
+    0,
+    8
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R03": {
+   "items": [
+    1,
+    1
+   ],
+   "items_tight": [
+    1,
+    1
+   ],
+   "items_precision": [
+    1,
+    1
+   ],
+   "time": [
+    1,
+    1
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    1,
+    1
+   ],
+   "place_found": [
+    0,
+    0
+   ],
+   "tamper": [
+    0,
+    1
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    1,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R04": {
+   "items": [
+    0,
+    0
+   ],
+   "items_tight": [
+    0,
+    0
+   ],
+   "items_precision": [
+    0,
+    0
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    0,
+    0
+   ],
+   "place_found": [
+    0,
+    0
+   ],
+   "tamper": [
+    0,
+    0
+   ],
+   "moves": [
+    0,
+    1
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    1,
+    1
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    3,
+    3
+   ]
+  },
+  "R05": {
+   "items": [
+    0,
+    0
+   ],
+   "items_tight": [
+    0,
+    0
+   ],
+   "items_precision": [
+    0,
+    2
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    0,
+    0
+   ],
+   "place_found": [
+    0,
+    0
+   ],
+   "tamper": [
+    0,
+    2
+   ],
+   "moves": [
+    0,
+    1
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    2
+   ],
+   "preferences": [
+    0,
+    1
+   ],
+   "requests": [
+    0,
+    1
+   ],
+   "requests_exact": [
+    0,
+    1
+   ],
+   "missing": [
+    1,
+    1
+   ],
+   "trip": [
+    3,
+    3
+   ]
+  },
+  "R06": {
+   "items": [
+    0,
+    1
+   ],
+   "items_tight": [
+    0,
+    1
+   ],
+   "items_precision": [
+    0,
+    0
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    1
+   ],
+   "kind": [
+    0,
+    1
+   ],
+   "place_found": [
+    0,
+    1
+   ],
+   "tamper": [
+    0,
+    0
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    2
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R07": {
+   "items": [
+    0,
+    1
+   ],
+   "items_tight": [
+    0,
+    1
+   ],
+   "items_precision": [
+    0,
+    0
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    1
+   ],
+   "kind": [
+    0,
+    1
+   ],
+   "place_found": [
+    0,
+    1
+   ],
+   "tamper": [
+    0,
+    0
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R08": {
+   "items": [
+    10,
+    10
+   ],
+   "items_tight": [
+    9,
+    10
+   ],
+   "items_precision": [
+    10,
+    10
+   ],
+   "time": [
+    10,
+    10
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    10,
+    10
+   ],
+   "kind": [
+    10,
+    10
+   ],
+   "place_found": [
+    6,
+    9
+   ],
+   "tamper": [
+    0,
+    10
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R09": {
+   "items": [
+    10,
+    10
+   ],
+   "items_tight": [
+    8,
+    10
+   ],
+   "items_precision": [
+    10,
+    10
+   ],
+   "time": [
+    10,
+    10
+   ],
+   "end": [
+    1,
+    1
+   ],
+   "date": [
+    10,
+    10
+   ],
+   "kind": [
+    10,
+    10
+   ],
+   "place_found": [
+    5,
+    7
+   ],
+   "tamper": [
+    0,
+    10
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R10": {
+   "items": [
+    2,
+    2
+   ],
+   "items_tight": [
+    1,
+    2
+   ],
+   "items_precision": [
+    2,
+    2
+   ],
+   "time": [
+    2,
+    2
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    0,
+    0
+   ],
+   "kind": [
+    2,
+    2
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    2
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R11": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    2,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R12": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    2,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R13": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    2,
+    2
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    2,
+    3
+   ],
+   "place_found": [
+    2,
+    2
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    2,
+    2
+   ]
+  },
+  "R14": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    2,
+    2
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    2,
+    3
+   ],
+   "place_found": [
+    2,
+    3
+   ],
+   "tamper": [
+    0,
+    4
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R15": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    1,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    0,
+    0
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    2
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R16": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    3,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    1,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R17": {
+   "items": [
+    6,
+    6
+   ],
+   "items_tight": [
+    6,
+    6
+   ],
+   "items_precision": [
+    6,
+    6
+   ],
+   "time": [
+    6,
+    6
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    6,
+    6
+   ],
+   "kind": [
+    6,
+    6
+   ],
+   "place_found": [
+    0,
+    0
+   ],
+   "tamper": [
+    0,
+    6
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R18": {
+   "items": [
+    6,
+    6
+   ],
+   "items_tight": [
+    6,
+    6
+   ],
+   "items_precision": [
+    6,
+    6
+   ],
+   "time": [
+    6,
+    6
+   ],
+   "end": [
+    1,
+    1
+   ],
+   "date": [
+    6,
+    6
+   ],
+   "kind": [
+    6,
+    6
+   ],
+   "place_found": [
+    4,
+    5
+   ],
+   "tamper": [
+    0,
+    6
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R19": {
+   "items": [
+    10,
+    10
+   ],
+   "items_tight": [
+    8,
+    10
+   ],
+   "items_precision": [
+    10,
+    10
+   ],
+   "time": [
+    10,
+    10
+   ],
+   "end": [
+    1,
+    1
+   ],
+   "date": [
+    10,
+    10
+   ],
+   "kind": [
+    10,
+    10
+   ],
+   "place_found": [
+    6,
+    8
+   ],
+   "tamper": [
+    0,
+    10
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  },
+  "R20": {
+   "items": [
+    3,
+    3
+   ],
+   "items_tight": [
+    1,
+    3
+   ],
+   "items_precision": [
+    3,
+    3
+   ],
+   "time": [
+    3,
+    3
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    3,
+    3
+   ],
+   "kind": [
+    3,
+    3
+   ],
+   "place_found": [
+    0,
+    3
+   ],
+   "tamper": [
+    0,
+    3
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    1,
+    1
+   ],
+   "requests_exact": [
+    1,
+    1
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ]
+  }
+ },
+ "totals": {
+  "전체": {
+   "items": [
+    250,
+    258
+   ],
+   "items_tight": [
+    223,
+    258
+   ],
+   "items_precision": [
+    250,
+    261
+   ],
+   "time": [
+    189,
+    195
+   ],
+   "end": [
+    12,
+    13
+   ],
+   "date": [
+    215,
+    238
+   ],
+   "kind": [
+    239,
+    258
+   ],
+   "place_found": [
+    123,
+    216
+   ],
+   "tamper": [
+    0,
+    263
+   ],
+   "moves": [
+    18,
+    28
+   ],
+   "moves_precision": [
+    20,
+    31
+   ],
+   "conditions": [
+    5,
+    9
+   ],
+   "preferences": [
+    10,
+    18
+   ],
+   "requests": [
+    78,
+    89
+   ],
+   "requests_exact": [
+    57,
+    69
+   ],
+   "missing": [
+    6,
+    16
+   ],
+   "trip": [
+    26,
+    28
+   ],
+   "cases": [
+    69,
+    69
+   ]
+  },
+  "origin:synthetic": {
+   "items": [
+    166,
+    172
+   ],
+   "items_tight": [
+    153,
+    172
+   ],
+   "items_precision": [
+    166,
+    175
+   ],
+   "time": [
+    108,
+    114
+   ],
+   "end": [
+    3,
+    4
+   ],
+   "date": [
+    134,
+    155
+   ],
+   "kind": [
+    159,
+    172
+   ],
+   "place_found": [
+    81,
+    150
+   ],
+   "tamper": [
+    0,
+    176
+   ],
+   "moves": [
+    17,
+    25
+   ],
+   "moves_precision": [
+    19,
+    27
+   ],
+   "conditions": [
+    5,
+    7
+   ],
+   "preferences": [
+    9,
+    16
+   ],
+   "requests": [
+    59,
+    69
+   ],
+   "requests_exact": [
+    38,
+    49
+   ],
+   "missing": [
+    4,
+    9
+   ],
+   "trip": [
+    18,
+    20
+   ],
+   "cases": [
+    49,
+    49
+   ]
+  },
+  "shape:mixed_list": {
+   "items": [
+    29,
+    30
+   ],
+   "items_tight": [
+    26,
+    30
+   ],
+   "items_precision": [
+    29,
+    29
+   ],
+   "time": [
+    23,
+    23
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    29,
+    30
+   ],
+   "kind": [
+    26,
+    30
+   ],
+   "place_found": [
+    19,
+    26
+   ],
+   "tamper": [
+    0,
+    30
+   ],
+   "moves": [
+    3,
+    5
+   ],
+   "moves_precision": [
+    3,
+    5
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    3,
+    3
+   ],
+   "requests": [
+    8,
+    8
+   ],
+   "requests_exact": [
+    6,
+    7
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    0,
+    0
+   ],
+   "cases": [
+    7,
+    7
+   ]
+  },
+  "shape:typo_line": {
+   "items": [
+    22,
+    23
+   ],
+   "items_tight": [
+    22,
+    23
+   ],
+   "items_precision": [
+    22,
+    24
+   ],
+   "time": [
+    10,
+    11
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    19,
+    23
+   ],
+   "kind": [
+    21,
+    23
+   ],
+   "place_found": [
+    11,
+    18
+   ],
+   "tamper": [
+    0,
+    24
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    1,
+    1
+   ],
+   "requests": [
+    8,
+    8
+   ],
+   "requests_exact": [
+    8,
+    8
+   ],
+   "missing": [
+    0,
+    1
+   ],
+   "trip": [
+    1,
+    1
+   ],
+   "cases": [
+    8,
+    8
+   ]
+  },
+  "shape:paragraph": {
+   "items": [
+    19,
+    22
+   ],
+   "items_tight": [
+    17,
+    22
+   ],
+   "items_precision": [
+    19,
+    24
+   ],
+   "time": [
+    5,
+    5
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    12,
+    14
+   ],
+   "kind": [
+    19,
+    22
+   ],
+   "place_found": [
+    8,
+    17
+   ],
+   "tamper": [
+    0,
+    24
+   ],
+   "moves": [
+    3,
+    3
+   ],
+   "moves_precision": [
+    3,
+    3
+   ],
+   "conditions": [
+    2,
+    4
+   ],
+   "preferences": [
+    3,
+    7
+   ],
+   "requests": [
+    8,
+    12
+   ],
+   "requests_exact": [
+    4,
+    8
+   ],
+   "missing": [
+    2,
+    5
+   ],
+   "trip": [
+    14,
+    14
+   ],
+   "cases": [
+    8,
+    8
+   ]
+  },
+  "shape:csv": {
+   "items": [
+    14,
+    14
+   ],
+   "items_tight": [
+    13,
+    14
+   ],
+   "items_precision": [
+    14,
+    14
+   ],
+   "time": [
+    11,
+    11
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    5,
+    5
+   ],
+   "kind": [
+    14,
+    14
+   ],
+   "place_found": [
+    6,
+    13
+   ],
+   "tamper": [
+    0,
+    14
+   ],
+   "moves": [
+    2,
+    5
+   ],
+   "moves_precision": [
+    2,
+    5
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    3,
+    3
+   ],
+   "requests_exact": [
+    3,
+    3
+   ],
+   "missing": [
+    2,
+    2
+   ],
+   "trip": [
+    0,
+    0
+   ],
+   "cases": [
+    3,
+    3
+   ]
+  },
+  "shape:json": {
+   "items": [
+    12,
+    12
+   ],
+   "items_tight": [
+    10,
+    12
+   ],
+   "items_precision": [
+    12,
+    12
+   ],
+   "time": [
+    11,
+    12
+   ],
+   "end": [
+    0,
+    1
+   ],
+   "date": [
+    4,
+    12
+   ],
+   "kind": [
+    12,
+    12
+   ],
+   "place_found": [
+    5,
+    11
+   ],
+   "tamper": [
+    0,
+    12
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    1
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    4,
+    4
+   ],
+   "requests_exact": [
+    3,
+    3
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    2,
+    2
+   ],
+   "cases": [
+    3,
+    3
+   ]
+  },
+  "shape:excel_memo": {
+   "items": [
+    23,
+    23
+   ],
+   "items_tight": [
+    21,
+    23
+   ],
+   "items_precision": [
+    23,
+    23
+   ],
+   "time": [
+    12,
+    13
+   ],
+   "end": [
+    3,
+    3
+   ],
+   "date": [
+    23,
+    23
+   ],
+   "kind": [
+    23,
+    23
+   ],
+   "place_found": [
+    13,
+    21
+   ],
+   "tamper": [
+    0,
+    23
+   ],
+   "moves": [
+    6,
+    9
+   ],
+   "moves_precision": [
+    8,
+    9
+   ],
+   "conditions": [
+    1,
+    1
+   ],
+   "preferences": [
+    2,
+    3
+   ],
+   "requests": [
+    4,
+    5
+   ],
+   "requests_exact": [
+    2,
+    4
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    1,
+    1
+   ],
+   "cases": [
+    4,
+    4
+   ]
+  },
+  "shape:pasted_table": {
+   "items": [
+    13,
+    13
+   ],
+   "items_tight": [
+    13,
+    13
+   ],
+   "items_precision": [
+    13,
+    14
+   ],
+   "time": [
+    9,
+    9
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    13,
+    13
+   ],
+   "kind": [
+    11,
+    13
+   ],
+   "place_found": [
+    3,
+    11
+   ],
+   "tamper": [
+    0,
+    14
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    3,
+    3
+   ],
+   "requests_exact": [
+    3,
+    3
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ],
+   "cases": [
+    3,
+    3
+   ]
+  },
+  "shape:multi_message": {
+   "items": [
+    14,
+    14
+   ],
+   "items_tight": [
+    13,
+    14
+   ],
+   "items_precision": [
+    14,
+    14
+   ],
+   "time": [
+    9,
+    9
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    11,
+    14
+   ],
+   "kind": [
+    14,
+    14
+   ],
+   "place_found": [
+    8,
+    14
+   ],
+   "tamper": [
+    0,
+    14
+   ],
+   "moves": [
+    1,
+    1
+   ],
+   "moves_precision": [
+    1,
+    2
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    5,
+    5
+   ],
+   "requests_exact": [
+    4,
+    4
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ],
+   "cases": [
+    4,
+    4
+   ]
+  },
+  "shape:mixed_request": {
+   "items": [
+    9,
+    10
+   ],
+   "items_tight": [
+    7,
+    10
+   ],
+   "items_precision": [
+    9,
+    10
+   ],
+   "time": [
+    9,
+    10
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    9,
+    10
+   ],
+   "kind": [
+    8,
+    10
+   ],
+   "place_found": [
+    3,
+    10
+   ],
+   "tamper": [
+    0,
+    10
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    1
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    2
+   ],
+   "requests": [
+    9,
+    13
+   ],
+   "requests_exact": [
+    2,
+    5
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    2
+   ],
+   "cases": [
+    5,
+    5
+   ]
+  },
+  "shape:correction": {
+   "items": [
+    11,
+    11
+   ],
+   "items_tight": [
+    11,
+    11
+   ],
+   "items_precision": [
+    11,
+    11
+   ],
+   "time": [
+    9,
+    11
+   ],
+   "end": [
+    0,
+    0
+   ],
+   "date": [
+    9,
+    11
+   ],
+   "kind": [
+    11,
+    11
+   ],
+   "place_found": [
+    5,
+    9
+   ],
+   "tamper": [
+    0,
+    11
+   ],
+   "moves": [
+    0,
+    0
+   ],
+   "moves_precision": [
+    0,
+    0
+   ],
+   "conditions": [
+    0,
+    0
+   ],
+   "preferences": [
+    0,
+    0
+   ],
+   "requests": [
+    7,
+    8
+   ],
+   "requests_exact": [
+    3,
+    4
+   ],
+   "missing": [
+    0,
+    0
+   ],
+   "trip": [
+    0,
+    0
+   ],
+   "cases": [
+    4,
+    4
+   ]
+  },
+  "origin:real": {
+   "items": [
+    84,
+    86
+   ],
+   "items_tight": [
+    70,
+    86
+   ],
+   "items_precision": [
+    84,
+    86
+   ],
+   "time": [
+    81,
+    81
+   ],
+   "end": [
+    9,
+    9
+   ],
+   "date": [
+    81,
+    83
+   ],
+   "kind": [
+    80,
+    86
+   ],
+   "place_found": [
+    42,
+    66
+   ],
+   "tamper": [
+    0,
+    87
+   ],
+   "moves": [
+    1,
+    3
+   ],
+   "moves_precision": [
+    1,
+    4
+   ],
+   "conditions": [
+    0,
+    2
+   ],
+   "preferences": [
+    1,
+    2
+   ],
+   "requests": [
+    19,
+    20
+   ],
+   "requests_exact": [
+    19,
+    20
+   ],
+   "missing": [
+    2,
+    7
+   ],
+   "trip": [
+    8,
+    8
+   ],
+   "cases": [
+    20,
+    20
+   ]
+  },
+  "shape:real": {
+   "items": [
+    84,
+    86
+   ],
+   "items_tight": [
+    70,
+    86
+   ],
+   "items_precision": [
+    84,
+    86
+   ],
+   "time": [
+    81,
+    81
+   ],
+   "end": [
+    9,
+    9
+   ],
+   "date": [
+    81,
+    83
+   ],
+   "kind": [
+    80,
+    86
+   ],
+   "place_found": [
+    42,
+    66
+   ],
+   "tamper": [
+    0,
+    87
+   ],
+   "moves": [
+    1,
+    3
+   ],
+   "moves_precision": [
+    1,
+    4
+   ],
+   "conditions": [
+    0,
+    2
+   ],
+   "preferences": [
+    1,
+    2
+   ],
+   "requests": [
+    19,
+    20
+   ],
+   "requests_exact": [
+    19,
+    20
+   ],
+   "missing": [
+    2,
+    7
+   ],
+   "trip": [
+    8,
+    8
+   ],
+   "cases": [
+    20,
+    20
+   ]
+  }
+ },
+ "meta": {
+  "started_kst": "2026-10-16T12:00:54+09:00",
+  "args": {
+   "out": "../results/new_v2",
+   "ollama": "http://127.0.0.1:11455",
+   "model": "tripilot-pointer:e4b-ft",
+   "num_ctx": 8192,
+   "kakao_cap": 2000,
+   "no_model": false,
+   "no_kakao": false,
+   "oracle": false,
+   "only": null,
+   "agent_mode": "on",
+   "chunk_chars": null,
+   "agent_replay": "",
+   "fallback_seconds": 9.0,
+   "rescore": false
+  },
+  "model": "tripilot-pointer:e4b-ft",
+  "num_ctx": 8192,
+  "kakao": true,
+  "agent_calls": 69,
+  "agent_calls_over_fallback": 49,
+  "agent_call_seconds_median": 12.18,
+  "kakao_calls": 328,
+  "finished_kst": "2026-10-16T12:16:15+09:00"
+ }
+}
