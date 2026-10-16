@@ -20,6 +20,7 @@ import { isAgentKeysUnsupported, listAgentKeys } from "@/lib/live/agent-keys";
 import { getLinks, providerName } from "@/lib/live/auth";
 import { LiveError } from "@/lib/live/client";
 import { readDiscordReturn } from "@/lib/live/discord-connect";
+import { nextIsReplace, previousPath } from "@/lib/nav-history";
 import { isUnsupported } from "@/lib/live/profile";
 import { nicknameLabel, useProfile, type Profile } from "@/lib/profile";
 import { routes } from "@/lib/routes";
@@ -126,7 +127,7 @@ export function SettingsPage() {
   const profile = useProfile();
   // `[2026-10-13]` The server's Discord callback comes back to `/mypage?discord=…` (its setting): the alerts screen reads that answer now, so it is passed on there.
   useEffect(() => {
-    if (readDiscordReturn(window.location.search) !== null) router.replace(`${routes.myPageAlerts}${window.location.search}`);
+    if (readDiscordReturn(window.location.search) !== null) { nextIsReplace(); router.replace(`${routes.myPageAlerts}${window.location.search}`); }
   }, [router]);
   return <>
     <div className={styles.bar}>
@@ -143,8 +144,12 @@ export function SettingsPage() {
 /** The head of a settings screen: back to the settings, then the screen's name. */
 function SubBar({ title }: { title: string }) {
   const t = useT();
+  const router = useRouter();
+  // ★`[2026-10-16 ST4F-601 F7]` Back the way it came — Settings, or the screen whose 「로그인 · 가입」 / login link opened it (the browser's back). Loaded straight
+  //   here (or after a redirect): Settings replaces this screen. It used to push Settings, and with Settings' ← being the browser's back the two ping-ponged.
+  const back = () => { if (previousPath() !== null) router.back(); else router.replace(routes.myPage); };
   return <div className={styles.bar}>
-    <Link href={routes.myPage} className={styles.back} aria-label={t("설정으로", "Back to settings")}><ArrowLeft size={20} strokeWidth={1.8} aria-hidden="true" /></Link>
+    <button type="button" className={styles.back} aria-label={t("뒤로", "Back")} onClick={back}><ArrowLeft size={20} strokeWidth={1.8} aria-hidden="true" /></button>
     <h1>{title}</h1>
   </div>;
 }

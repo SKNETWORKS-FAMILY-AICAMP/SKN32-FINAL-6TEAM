@@ -28,6 +28,8 @@ export interface OnboardingState {
 }
 
 const initial: OnboardingState = { agreed: false, choices: noConsents(), open: null, webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers };
+/** `[2026-10-16 ST4F-601 F10]` Back to the start — signing out does this so the next person on this device does not inherit the answers. */
+export const blankOnboarding = (): OnboardingState => ({ ...initial, choices: noConsents() });
 const Context = createContext<[OnboardingState, Dispatch<SetStateAction<OnboardingState>>] | null>(null);
 const ReadyContext = createContext(false);
 

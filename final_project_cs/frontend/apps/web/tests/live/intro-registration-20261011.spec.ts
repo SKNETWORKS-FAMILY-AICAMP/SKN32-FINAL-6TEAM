@@ -26,7 +26,7 @@ for (const width of [375, 1280]) {
       await page.goto("/");
       const cta = page.getByRole("button", { name: "내 일정 시작하기" });
       await cta.scrollIntoViewIfNeeded();
-      await expect(page.getByText("이미 설정을 마치셨어요.", { exact: false })).toBeVisible();
+      await expect(page.getByText("약관에 동의했어요.", { exact: false })).toBeVisible();   // `[2026-10-16 ST4F-601]` 동의한 사람의 안내 문구
       // 약관 재확인은 기존 흐름을 유지한다. 이 시험은 브라우저 초안 읽기만 관찰한다.
       await expect.poll(async () => (await mockServer(request).received("GET", "/v1/web/consents")).length).toBeGreaterThan(0);
       await watchLoading(page);

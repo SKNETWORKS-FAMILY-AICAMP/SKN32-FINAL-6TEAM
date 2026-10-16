@@ -6,16 +6,26 @@ import { Button } from "@/components/ui";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { Onboarding } from "@/features/onboarding/onboarding";
 import { CONSENT_REQUIRED_EVENT, SESSION_CHANGED_EVENT } from "@/lib/live/client";
+import { nextIsReplace } from "@/lib/nav-history";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { CONSENT_CHECK_STEPS, reconcileConsents, type ConsentCheckProgress, type ReconcileResult } from "./consent-sync";
 import { useRequiredConsents } from "./consent-store";
 import styles from "./consent.module.css";
 
-/** 약관에 동의하지 않아도 열리는 화면: 첫 소개, 약관 화면(시작), 소셜 로그인이 돌아오는 화면(로그인하면 서버에 있는 동의가 이 브라우저로 온다). */
-const OPEN_PATHS = new Set<string>([routes.home, routes.start, routes.authDone]);
+/**
+ * 약관에 동의하지 않아도 열리는 화면: 첫 소개, 약관 화면(시작), 소셜 로그인이 돌아오는 화면(로그인하면 서버에 있는 동의가 이 브라우저로 온다).
+ * ★`[2026-10-16 사용자 결정 — ST4F-601 로그인 먼저]` 로그인 화면(`/mypage/account`)도 연다 — 「로그인 · 가입」이 약관 · 디스코드 · 취향 화면을 거쳐 계획 담기로 끝나던 것.
+ *   서버도 로그인 · 세션 · 동의 길은 동의 없이 받는다(`consents.EXEMPT_PREFIXES`). 로그인한 뒤 서버에 동의가 없으면 가려던 화면에서 약관만 받는다.
+ */
+const OPEN_PATHS = new Set<string>([routes.home, routes.start, routes.authDone, routes.myPageAccount]);
 /** `[2026-10-12 사용자 지시]` 동의 확인 진행 카드는 확인이 이 시간을 넘게 걸릴 때만 보인다. 빨리 끝나면 아무것도 안 뜬다(「동의하고 다음으로」 뒤 로딩이 바로 뜨던 문제). */
 const CHECK_CARD_AFTER_MS = 3000;
+
+/** `[2026-10-16 ST4F-601]` 약관 화면 주소 — 가려던 화면(지금 주소)을 `returnTo` 로 실어, 동의가 끝나면 그 화면으로 돌아간다. */
+function termsAddress(): string {
+  return `${routes.start}?terms=required&returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+}
 
 const subscribeNothing = () => () => {};
 /** 서버 렌더와 첫 화면은 false, 화면이 붙은 뒤 true - 동의 사본(브라우저 저장소)은 그 뒤에야 읽힌다. */
@@ -79,7 +89,7 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   }, [checking, ready]);
 
   const needsTerms = ready && !agreed && result !== null && result !== "outdated" && result !== "failed";
-  useEffect(() => { if (needsTerms && !open) router.replace(`${routes.start}?terms=required`); }, [needsTerms, open, router]);
+  useEffect(() => { if (needsTerms && !open) { nextIsReplace(); router.replace(termsAddress()); } }, [needsTerms, open, router]);
 
   const showPage = open || (ready && result !== "outdated" && (agreed || (checking && admitted)));
   const showError = result === "failed" || result === "outdated";
@@ -89,7 +99,7 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   return <>
     {/* ★`[2026-10-12]` 동의 사본이 없으면 확인하는 동안 열린 약관을 먼저 보인다. 확인 뒤 `/start?terms=required` 로 가며 온보딩이 다시 그려질 때
         열림 애니메이션이 두 번 돌지 않게, 온보딩이 두 번째 그림에서는 애니메이션을 끈다(`onboarding.tsx` 의 `termsShownOnce`). */}
-    {showPage ? children : ready && !agreed && result !== "outdated" ? <Onboarding termsRequired /> : <DeviceFrame scroll headerInert>
+    {showPage ? children : ready && !agreed && result !== "outdated" ? <Onboarding termsRequired returnTo={window.location.pathname + window.location.search} /> : <DeviceFrame scroll headerInert>
       {/* 동의 확인 전에 보호 API를 호출하지 않는다. 기존 화면과 같은 틀·배치를 먼저 보여 준다. */}
       <main className={styles.waitingPage} aria-busy="true" data-consent-shell>
         <h1>{title}</h1>
@@ -106,7 +116,7 @@ export function ConsentGate({ children }: { children: ReactNode }) {
           <div className={styles.checkActions}>
             <Button variant="primary" onClick={() => result === "outdated" ? window.location.reload() : setRetry((value) => value + 1)}>{result === "outdated" ? t("새로 고침", "Reload") : t("다시 확인하기", "Check again")}</Button>
             {/* 서버 확인이 안 될 때도 고객이 직접 동의 화면으로 가서 다시 동의할 수 있게 한다. 오류 카드를 먼저 걷어야 약관 화면이 가려지지 않는다. */}
-            {result === "failed" && <Button variant="quiet" onClick={() => { setResult(null); router.push(`${routes.start}?terms=required`); }}>{t("동의 다시 하기", "Agree again")}</Button>}
+            {result === "failed" && <Button variant="quiet" onClick={() => { setResult(null); router.push(termsAddress()); }}>{t("동의 다시 하기", "Agree again")}</Button>}
           </div>
         </> : <>
           <div className={styles.checkHead}><h2>{t("앱 사용 준비", "Getting ready")}</h2><span>{elapsed}{t("초", " s")}</span></div>

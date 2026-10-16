@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Check } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
+import { LiveError } from "@/lib/live/client";
 import { useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
 import styles from "./ui.module.css";
@@ -58,7 +60,10 @@ export function RegistrationSteps({ current }: { current: 0 | 1 | 2 }) {
 
 export function QueryState({ loading, error, retry }: { loading: boolean; error: Error | null; retry?: () => void }) {
   const t = useT();
+  const pathname = usePathname();
   if (loading) return <div className={styles.queryState} role="status"><h1>{t("여행 정보를 불러오고 있어요", "Loading your trip")}</h1><p>{t("잠시만 기다려 주세요.", "Just a moment.")}</p></div>;
   if (!error) return null;
-  return <div className={styles.queryState}><h1>{t("여행 정보를 불러오지 못했어요", "We couldn’t load your trip")}</h1><p role="alert">{error.message}</p><div className={styles.actions}>{retry && <Button onClick={retry}>{t("다시 불러오기", "Try again")}</Button>}<ButtonLink href={routes.newTrip} variant="primary">{t("여행 계획 등록", "Add a travel plan")}</ButtonLink></div></div>;
+  // ★`[2026-10-16 ST4F-601 F9]` The session ended: the text says signing in opens the account's trips again, so the way to sign in is right here.
+  const expired = error instanceof LiveError && error.code === "session_expired";
+  return <div className={styles.queryState}><h1>{t("여행 정보를 불러오지 못했어요", "We couldn’t load your trip")}</h1><p role="alert">{error.message}</p><div className={styles.actions}>{retry && <Button onClick={retry}>{t("다시 불러오기", "Try again")}</Button>}{expired && <ButtonLink href={`${routes.myPageAccount}?returnTo=${encodeURIComponent(pathname)}`} variant="primary">{t("로그인", "Sign in")}</ButtonLink>}<ButtonLink href={routes.newTrip} variant={expired ? "secondary" : "primary"}>{t("여행 계획 등록", "Add a travel plan")}</ButtonLink></div></div>;
 }
