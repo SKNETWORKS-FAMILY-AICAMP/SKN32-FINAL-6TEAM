@@ -8,6 +8,8 @@
     # 쇼핑(38)을 빼고 나머지만: ... fill_tourapi_details --types 12 14 28 15 --max-calls 900
     python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details --max-calls 900
     # 하루 한도에 걸려 멈추면 다음 날 같은 명령을 다시 돌린다(캐시에 있는 건 부르지 않는다)
+    # `[2026-10-16]` 쇼핑: detailIntro2 만 · 표본 먼저 · 같은 매장/브랜드 지점끼리 운영시간 · 휴무 옮겨 적기
+    python -m app.domains.travel_ops.instances.activity.data_processing.fill_tourapi_details --types 38 --intro-only --siblings --max-calls 900
 
 ★대상은 TourAPI 행(contentid 가 숫자) 전부다 — 장소마다 detailCommon2 · detailIntro2 를 한 번씩 부른다.
   캐시(`tourapi_details_cache.jsonl`)에 있는 호출은 다시 부르지 않는다.
@@ -21,6 +23,10 @@
 ★`[2026-10-12 사용자]` `field_sources`(JSON) — 사람이 TourAPI 밖(공식 홈페이지 등)에서 채운 칸의 출처.
   그 칸은 TourAPI 응답에 값이 있으면 **TourAPI 값으로 바꾸고 출처를 지운다**(빈 칸만 채운다는 규칙의 유일한 예외).
   형식이 틀리면(허용 밖 컬럼 · 빈 칸의 출처 · url/checked 오류) 호출도 쓰기도 하지 않고 멈춘다.
+
+`[2026-10-16 사용자]` `--intro-only` — detailIntro2 만 부른다(장소당 1번). 운영시간 · 휴무 · 문의처는 모두 그 응답에 있다.
+  `--siblings` — 쇼핑(38)을 표본 → 혼자인 곳 → 엇갈린 묶음 → 옮겨 적은 곳 순으로 받고, 받은 뒤 같은 입점 매장 · 브랜드
+  지점끼리 운영시간 · 휴무를 옮겨 적는다(`sibling_hours.py`, 출처 `by=sibling`). 브랜드 행(숫자 아닌 id)도 이것으로 채워진다.
 
 `[2026-10-11]` 컬럼 옮기기(`migrate`) — 옛 헤더를 읽으면 문서의 29개로 바꿔 쓴다. 다시 돌려도 같다.
     info_center → tel · reservation → reservation_info · spend_time → spendtime
@@ -62,6 +68,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from . import sibling_hours
 from .tourapi_client import (CALL_INTERVAL_SECONDS, StopFetching, append_cache, call_tourapi,
                              load_cache, load_service_key)
 
@@ -111,6 +118,8 @@ HUMAN_FILLABLE = ("business_hours", "closed_days", "fee", "tel", "homepage", "re
                   "capacity", "pet", "age_limit")
 #: `[2026-10-12 사용자]` `claude` — Claude 가 공식 페이지 본문을 열어 확인한 값(근거 문구 `quote` 필수). 사람이 검토하면 `human`.
 SOURCE_BY = ("human", "claude")
+#: `[2026-10-16 사용자]` 같은 입점 매장 · 브랜드 지점에서 옮겨 적은 값(`sibling_hours.py`) — 운영시간 · 휴무만
+SIBLING_KEYS = {"by", "group", "basis", "checked"}
 #: `[2026-10-14 사용자]` 출처의 `from` — 값을 페이지가 아니라 같은 행 `overview`(관광공사 소개글)에서 뽑았을 때.
 FROM_OVERVIEW = "overview"
 #: 한 구에 코드가 여럿일 때 브랜드 행에 쓰려면 한 코드가 이만큼 이상이어야 한다(경계에 걸친 장소 한두 곳은 넘긴다).
@@ -153,16 +162,18 @@ def migrate(rows: list[dict[str, str]], fieldnames: list[str]) -> Counter:
     return stats
 
 
-def operations_for(row: dict[str, str]) -> tuple[str, ...]:
-    """이 행에 필요한 호출. TourAPI 행(숫자 id · 아는 타입)이면 둘 다 — 캐시에 있는 것은 `fetch` 가 건너뛴다."""
+def operations_for(row: dict[str, str], intro_only: bool = False) -> tuple[str, ...]:
+    """이 행에 필요한 호출. TourAPI 행(숫자 id · 아는 타입)이면 둘 다(`intro_only` 면 detailIntro2 만) — 캐시에 있는 것은 `fetch` 가 건너뛴다."""
     if not row["contentid"].isdigit() or row["contenttypeid"] not in INTRO_FIELDS:
         return ()
-    return BOTH_OPERATIONS
+    return ("detailIntro2",) if intro_only else BOTH_OPERATIONS
 
 
-def targets(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+def targets(rows: list[dict[str, str]], order: dict[str, int] | None = None) -> list[dict[str, str]]:
+    """타입 우선순위대로. `order`(contentid → 순서, `sibling_hours.call_order`)가 있으면 같은 타입 안에서 그 순서."""
     todo = [r for r in rows if operations_for(r)]
-    return sorted(todo, key=lambda r: PRIORITY.index(r["contenttypeid"]))
+    order = order or {}
+    return sorted(todo, key=lambda r: (PRIORITY.index(r["contenttypeid"]), order.get(r["contentid"], 0)))
 
 
 def _plain(text: str) -> str:
@@ -207,6 +218,9 @@ def source_errors(rows: list[dict[str, str]]) -> list[str]:
                 continue
             if not (row.get(column) or "").strip():
                 errors.append(f"{where}: {column} 칸이 비었는데 출처만 있다")
+            if isinstance(source, dict) and source.get("by") == sibling_hours.SIBLING_BY:
+                errors.extend(f"{where}: {column} {e}" for e in _sibling_errors(column, source))
+                continue
             # ★`[2026-10-12 사용자]` url 은 claude 에만 필수 — 사람이 직접 확인해 값만 준 경우(`human`)는 url 없이 note 로 남긴다
             if not isinstance(source, dict) or not {"by", "checked"} <= set(source) <= {"by", "url", "checked", "quote", "note", "from"}:
                 errors.append(f"{where}: {column} 출처는 by · checked (+ url · quote · note · from) 키여야 한다")
@@ -231,6 +245,29 @@ def source_errors(rows: list[dict[str, str]]) -> list[str]:
             except ValueError:
                 errors.append(f"{where}: {column} checked 가 YYYY-MM-DD 가 아니다")
     return errors
+
+
+def _sibling_errors(column: str, source: dict[str, Any]) -> list[str]:
+    errors = []
+    if column not in sibling_hours.COLUMNS:
+        errors.append(f"by=sibling 은 {sibling_hours.COLUMNS} 칸에만 쓴다")
+    if set(source) != SIBLING_KEYS:
+        errors.append(f"by=sibling 출처는 {sorted(SIBLING_KEYS)} 키여야 한다")
+        return errors
+    if not re.match(r"(venue|brand):\S", str(source["group"])):
+        errors.append("by=sibling group 은 venue:… · brand:… 이어야 한다")
+    basis = source["basis"]
+    if not (isinstance(basis, list) and basis and all(isinstance(b, str) and b.isdigit() for b in basis)):
+        errors.append("by=sibling basis 는 근거 contentid(숫자) 목록이어야 한다")
+    try:
+        date.fromisoformat(str(source["checked"]))
+    except ValueError:
+        errors.append("checked 가 YYYY-MM-DD 가 아니다")
+    return errors
+
+
+def write_sources(row: dict[str, str], sources: dict[str, Any]) -> None:
+    row[SOURCES_COLUMN] = json.dumps(sources, ensure_ascii=False) if sources else ""
 
 
 def apply_cache(rows: list[dict[str, str]], cache: dict[tuple[str, str], dict[str, Any] | None]) -> Counter:
@@ -263,7 +300,7 @@ def apply_cache(rows: list[dict[str, str]], cache: dict[tuple[str, str], dict[st
                 row[column] = value
                 del sources[column]
                 stats[f"{column}(사람 값→TourAPI)"] += 1
-        row[SOURCES_COLUMN] = json.dumps(sources, ensure_ascii=False) if sources else ""
+        write_sources(row, sources)
     return stats
 
 
@@ -303,12 +340,12 @@ def fill_brand_signgu(rows: list[dict[str, str]]) -> Counter:
     return stats
 
 
-def fetch(todo: list[dict[str, str]], service_key: str, max_calls: int | None) -> int:
+def fetch(todo: list[dict[str, str]], service_key: str, max_calls: int | None, intro_only: bool = False) -> int:
     cache = load_cache()
     calls = 0
     for row in todo:
         cid, ctype = row["contentid"], row["contenttypeid"]
-        wanted = operations_for(row)
+        wanted = operations_for(row, intro_only)
         for operation, params in (("detailCommon2", {"contentId": cid}),
                                   ("detailIntro2", {"contentId": cid, "contentTypeId": ctype})):
             if operation not in wanted or (cid, operation) in cache:
@@ -341,8 +378,13 @@ def write_csv(rows: list[dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
-def remaining_calls(rows: list[dict[str, str]], cache: dict) -> int:
-    return sum(1 for r in targets(rows) for op in operations_for(r) if (r["contentid"], op) not in cache)
+def remaining_calls(rows: list[dict[str, str]], cache: dict, intro_only: bool = False) -> int:
+    return sum(1 for r in targets(rows) for op in operations_for(r, intro_only) if (r["contentid"], op) not in cache)
+
+
+def fetched_ids(cache: dict) -> set[str]:
+    """detailIntro2 를 이미 받은 contentid — 운영시간 · 휴무는 그 응답에 있다."""
+    return {cid for cid, operation in cache if operation == "detailIntro2"}
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -351,21 +393,31 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--dry-run", action="store_true", help="호출 없이 대상 건수만 본다(CSV 도 쓰지 않는다)")
     ap.add_argument("--types", nargs="+", choices=sorted(INTRO_FIELDS), default=None,
                     help="이 타입만 받는다(예: --types 12 14 28 15). 안 주면 전부. 쇼핑(38)이 호출의 대부분이라 먼저 빼고 받을 때 쓴다")
+    ap.add_argument("--intro-only", action="store_true",
+                    help="detailIntro2 만 부른다(장소당 1번) — 운영시간 · 휴무 · 문의처는 이 응답에 있다")
+    ap.add_argument("--siblings", action="store_true",
+                    help="쇼핑을 표본 먼저 받고, 같은 입점 매장 · 브랜드 지점끼리 운영시간 · 휴무를 옮겨 적는다(sibling_hours.py)")
     args = ap.parse_args(argv)
 
     rows = read_csv()
     errors = source_errors(rows)
     if errors:
         raise SystemExit("field_sources 형식 오류 — 고친 뒤 다시 돌린다(호출 · CSV 쓰기 안 함):\n  " + "\n  ".join(errors))
-    todo = [r for r in targets(rows) if not args.types or r["contenttypeid"] in args.types]
     cache = load_cache()
-    remaining = sum(1 for r in todo for op in operations_for(r) if (r["contentid"], op) not in cache)
+    order = sibling_hours.call_order(rows, rows, fetched_ids(cache), read_sources) if args.siblings else None
+    todo = [r for r in targets(rows, order) if not args.types or r["contenttypeid"] in args.types]
+    remaining = sum(1 for r in todo for op in operations_for(r, args.intro_only) if (r["contentid"], op) not in cache)
     print(f"대상 {len(todo)}행 {dict(Counter(r['contenttypeid'] for r in todo))} · 아직 안 부른 호출 {remaining}건")
+    if order:
+        left = Counter(order[r["contentid"]] for r in todo
+                       if r["contentid"] in order and (r["contentid"], "detailIntro2") not in cache)
+        print("쇼핑 남은 곳(받는 순서): " + " · ".join(
+            f"{name} {left.get(rank, 0)}" for rank, name in enumerate(("표본", "혼자", "엇갈린 묶음", "옮겨 적은 곳"))))
     if args.dry_run:
         return
 
     try:
-        calls = fetch(todo, load_service_key(), args.max_calls)
+        calls = fetch(todo, load_service_key(), args.max_calls, args.intro_only)
         print(f"이번 실행 호출 {calls}건")
     except StopFetching as stop:
         print(f"멈춤: {stop}\n→ 받은 것까지는 캐시에 남아 있다. 원인을 확인한 뒤 같은 명령을 다시 돌리면 이어서 받는다")
@@ -373,8 +425,10 @@ def main(argv: list[str] | None = None) -> None:
     cache = load_cache()
     filled = apply_cache(rows, cache)
     filled.update(fill_brand_signgu(rows))
+    if args.siblings:
+        filled.update(sibling_hours.propagate(rows, date.today().isoformat(), read_sources, write_sources))
     write_csv(rows)
-    print(f"CSV 반영: {dict(filled)} · 아직 안 부른 호출 {remaining_calls(rows, cache)}건")
+    print(f"CSV 반영: {dict(filled)} · 아직 안 부른 호출 {remaining_calls(rows, cache, args.intro_only)}건")
 
 
 if __name__ == "__main__":
