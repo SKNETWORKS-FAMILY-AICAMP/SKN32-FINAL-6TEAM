@@ -38,8 +38,15 @@
 .pager button[aria-current="page"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
 .pager button:disabled { opacity: .4; }
 .body { white-space: pre-wrap; overflow-wrap: anywhere; }
-.banner { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 130; width: min(420px, calc(100% - 32px)); max-height: 35svh; overflow: auto; border: 1px solid var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-text); border-radius: 12px; padding: 12px 16px; box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.banner { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 130; width: min(420px, calc(100% - 32px)); max-height: 35svh; overflow: auto; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); border-radius: 12px; padding: 12px 16px; box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 12%, transparent); }
 .banner h2 { font-size: 14px; }
 .banner p { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* `[2026-10-17 ST4F-603]` 공지 종류 — 왼쪽 색 줄과 딱지(장애 빨강 · 점검 예고 노랑 · 안내 기본색) */
+.noticeItem { border-left: 4px solid var(--tone); padding-left: 10px; }
+.noticeItem + .noticeItem { margin-top: 10px; }
+.noticeItem[data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
+.noticeItem[data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+.noticeItem[data-tone="info"] { --tone: var(--color-primary); --tone-soft: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.noticeKind { display: inline-block; margin-bottom: 4px; padding: 2px 8px; border-radius: 999px; background: var(--tone-soft); color: var(--tone); font-size: 12px; font-weight: 650; }
 .bannerActions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .bannerActions button { min-height: 44px; padding: 8px; }

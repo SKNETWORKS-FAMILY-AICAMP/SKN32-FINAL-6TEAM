@@ -104,7 +104,7 @@ const DEFAULTS = {
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   //   | "busy" (`[2026-10-17 ST4F-603]` 429 — too many bells already open for this user, as the server says past four)
   bell: "off",
-  // `[2026-10-17 ST4F-603]` the service notices an operator posts (`GET /v1/web/support/notices`): "none" | "one"
+  // `[2026-10-17 ST4F-603]` the service notices an operator posts (`GET /v1/web/support/notices`): "none" | "one" | "kinds" (one of each kind the admin app offers)
   serviceNotice: "none",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
   profile: "on",
@@ -896,7 +896,12 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   // ── 약관 보관 기간 (2026-10-07) ── 끝
   if (request.method === "GET" && path === "/v1/web/support/notices") {
     const posted = scenario.serviceNotice === "one"
-      ? [{ id: "notice-1", kind: "notice", title: "서비스 점검 예정 안내", body: "오늘 밤 11시부터 10분 동안 점검해요.", startsAt: null, endsAt: null }] : [];
+      ? [{ id: "notice-1", kind: "notice", title: "서비스 점검 예정 안내", body: "오늘 밤 11시부터 10분 동안 점검해요.", startsAt: null, endsAt: null }]
+      : scenario.serviceNotice === "kinds" ? [
+        { id: "k-info", kind: "안내", title: "여행 중 문의는 문의함에", body: "운영자가 확인한 뒤 답해요.", startsAt: null, endsAt: null },
+        { id: "k-down", kind: "기능 차질·장애", title: "채팅 답변이 늦어요", body: "모델 서버가 느려 답이 늦어질 수 있어요.", startsAt: null, endsAt: null },
+        { id: "k-plan", kind: "점검 예고", title: "오늘 밤 점검", body: "23:00부터 10분 동안 점검해요.", startsAt: null, endsAt: null },
+      ] : [];
     return json(response, 200, { notices: posted, maintenance: { enabled: false, message: "" } }, origin);
   }
   // 공개 계획 원문 목록은 고객 세션·약관 조회 없이 읽습니다(cs trip_api.py 계약).

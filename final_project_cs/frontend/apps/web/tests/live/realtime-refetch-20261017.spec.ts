@@ -39,6 +39,22 @@ test("운영자가 공지를 올리면 새로고침 없이 15초 안에 배너�
   expect(box.y).toBeLessThan(40);                                                      // `[2026-10-17 사용자 지시]` 화면 맨 위에 뜬다(옛: 아래)
 });
 
+test("공지 종류마다 딱지와 색이 다르고, 장애 · 점검 예고 · 안내 순으로 놓인다 (2026-10-17 사용자 결정)", async ({ page, request }) => {
+  await mockServer(request).scenario({ serviceNotice: "kinds" });                    // 올린 순서는 안내 → 장애 → 점검 예고
+  await page.goto("/trips");
+  const items = banner(page).locator("[data-tone]");
+  await expect(items).toHaveCount(3);
+  await expect(items.nth(0)).toHaveAttribute("data-tone", "error");
+  await expect(items.nth(0)).toContainText("기능 차질·장애");
+  await expect(items.nth(0)).toContainText("채팅 답변이 늦어요");
+  await expect(items.nth(1)).toHaveAttribute("data-tone", "warning");
+  await expect(items.nth(1)).toContainText("점검 예고");
+  await expect(items.nth(2)).toHaveAttribute("data-tone", "info");
+  await expect(items.nth(2)).toContainText("안내");
+  const colors = await items.evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).borderLeftColor));
+  expect(new Set(colors).size).toBe(3);                                               // 세 종류의 색 줄이 모두 다르다
+});
+
 test("탭으로 돌아오면 공지를 바로 다시 읽는다", async ({ page, request }) => {
   const server = mockServer(request);
   await page.goto("/trips");

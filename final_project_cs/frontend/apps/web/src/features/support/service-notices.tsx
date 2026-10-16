@@ -18,6 +18,17 @@ const NOTICE_REFRESH_MS = 15_000;
  */
 const NOTICE_RETRIES = 2;
 
+/**
+ * `[2026-10-17 사용자 결정 — ST4F-603]` 운영 앱의 공지 종류(`kind` — 운영 앱이 고르는 「안내」 · 「기능 차질·장애」 · 「점검 예고」)를 딱지와 색으로 가른다.
+ *   장애 빨강 · 점검 예고 노랑 · 안내 기본색, 장애가 가장 위. 모르는 종류는 안내 모양에 그 이름 그대로(옛: 세 종류가 같은 노란 띠에 제목 · 본문만).
+ */
+const KINDS: Record<string, { tone: "error" | "warning" | "info"; rank: number; en: string }> = {
+  "기능 차질·장애": { tone: "error", rank: 0, en: "Service disruption" },
+  "점검 예고": { tone: "warning", rank: 1, en: "Planned maintenance" },
+  "안내": { tone: "info", rank: 2, en: "Notice" },
+};
+const kindOf = (kind: string) => KINDS[kind] ?? { tone: "info" as const, rank: 3, en: kind };
+
 export function ServiceNotices() {
   const t = useT();
   const { language } = useSettings();
@@ -44,7 +55,13 @@ export function ServiceNotices() {
   return <aside ref={box} className={styles.banner} aria-label={t("서비스 공지", "Service notices")} aria-live="polite">
     {failed && <><h2>{t("서비스 공지를 확인하지 못했어요", "Could not check service notices")}</h2><p>{t("공지와 점검 상태를 다시 확인해 주세요.", "Please check notices and maintenance status again.")}</p><button type="button" disabled={query.isFetching} onClick={() => void query.refetch()}>{t("다시 확인", "Check again")}</button></>}
     {data?.maintenance.enabled && <><h2>{t("서비스 점검 안내", "Service maintenance")}</h2><p>{language === "en" && data.maintenance.messageEn ? data.maintenance.messageEn : data.maintenance.message}</p>{data.maintenance.endsAt && <p>{t("종료 예정: ", "Expected end: ")}<time dateTime={data.maintenance.endsAt}>{new Date(data.maintenance.endsAt).toLocaleString(language)}</time></p>}</>}
-    {data?.notices.map((notice) => <div key={notice.id}><h2>{language === "en" && notice.titleEn ? notice.titleEn : notice.title}</h2><p>{language === "en" && notice.bodyEn ? notice.bodyEn : notice.body}</p></div>)}
+    {[...(data?.notices ?? [])].sort((a, b) => kindOf(a.kind).rank - kindOf(b.kind).rank).map((notice) => {
+      const kind = kindOf(notice.kind);
+      return <div key={notice.id} className={styles.noticeItem} data-tone={kind.tone}>
+        <span className={styles.noticeKind}>{language === "en" ? kind.en : notice.kind}</span>
+        <h2>{language === "en" && notice.titleEn ? notice.titleEn : notice.title}</h2><p>{language === "en" && notice.bodyEn ? notice.bodyEn : notice.body}</p>
+      </div>;
+    })}
     <div className={styles.bannerActions}><Link href="/support">{t("문의하기", "Contact support")}</Link><button type="button" onClick={() => setDismissed(identity)}>{t("공지 닫기", "Dismiss notice")}</button></div>
   </aside>;
 }
