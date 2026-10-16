@@ -218,7 +218,8 @@ class TripDesk:
         def plan(candidates):
             return plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
                                         places=candidates, item_id=item_id, message=message, request_id=request_id,
-                                        state_lookup=self._state_lookup(), reported_closed=reported_closed)
+                                        state_lookup=self._state_lookup(), reported_closed=reported_closed,
+                                        meal_picker=dining_hook.meal_picker() if meal is not None else None)
         return self._with_nearby(trip_id, meal, places, plan, always=True)
 
     def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,

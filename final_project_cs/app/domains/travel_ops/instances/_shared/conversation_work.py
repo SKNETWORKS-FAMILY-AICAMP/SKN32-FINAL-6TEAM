@@ -9,6 +9,7 @@ from app.core.contracts import NextAction, TeamResult, TeamTask
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (
     NoChange, plan_fresh_alternate, plan_swap,
 )
+from app.domains.travel_ops.components.team_hooks import dining_ledger
 
 
 def _text(value: Any) -> str:
@@ -246,7 +247,8 @@ def _fresh_plan(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any, *, re
         items=ctx["items"], places=places, item_id=item.item_id,
         message=task.input_text, request_id=task.context.current_state.get("request_id"),
         state_lookup=work._state_lookup(task, ctx) if dining else None,
-        price_lookup=work._price_lookup(task, ctx) if dining else None, reported_closed=reported_closed)
+        price_lookup=work._price_lookup(task, ctx) if dining else None, reported_closed=reported_closed,
+        meal_picker=dining_ledger.meal_picker() if dining and item.kind == "dining" else None)
 
 
 def _propose_alternatives(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> TeamResult:

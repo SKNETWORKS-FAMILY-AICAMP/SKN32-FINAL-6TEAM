@@ -229,3 +229,56 @@ def test_same_restaurant_needs_one_name_inside_the_other_and_the_same_spot():
     assert not same_restaurant(spot("서울 김밥"), spot("서울 떡볶이"))          # 첫 낱말만 같다
     assert not same_restaurant(spot("미진 명동점"), spot("하동관"))             # 같은 건물의 다른 가게
     assert not same_restaurant(spot("하동관"), spot("하동관", 37.5700, 126.9900))  # 같은 이름 다른 지점(약 500m)
+
+
+
+# ── 2026-10-16 취향 선택기(`meal_pick`) — 「다른 데로」 · 나중 식사 휴무 신고의 새 다른 안 계산에도 ─────────
+def _second_picker(calls):
+    """규칙 상위 셋 중 **둘째**를 고르는 가짜 선택기 — 실제 `meal_pick.make_picker` 와 같은 모양(`Pick`)을 돌려준다."""
+    from app.domains.travel_ops.components.planning.meal_pick import Pick
+
+    def pick(best, alternates, context):
+        calls.append((best.name, [a.name for a in alternates], context))
+        chosen = alternates[0]
+        return Pick(best=chosen, alternates=[best] + alternates[1:], by="llm", reason="취향: 비빔밥",
+                    cited=[{"id": "2", "field": "menu", "value": "산채비빔밥"}])
+    return pick
+
+
+def test_a_fresh_alternate_for_a_meal_lets_the_picker_choose_among_the_rule_top_three():
+    """☆`[2026-10-16 LLM 켜짐 점검]` 나중 식사 휴무 신고(`plan_fresh_alternate(reported_closed=True)`)는 선택기를 받지 않아
+    「산채비빔밥을 원해요」를 줘도 규칙 1위 국밥이었다(실제 gpt-6-luna 호출 0회). 가게 앞 신고(`plan_closed`)와 같게 고른다."""
+    home = _place("원래 국밥", "dining", 37.5700, 126.9800)
+    near = _place("가까운 국밥", "dining", 37.5703, 126.9803)
+    bibim = _place("산채 비빔밥", "dining", 37.5708, 126.9808)
+    calls = []
+    item = _item(home, 12)
+    plan = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[item],
+                                places=[home, near, bibim], item_id=item.item_id, message="원래 국밥 문 닫았대",
+                                request_id="r1", reported_closed=True, meal_picker=_second_picker(calls))
+    assert not isinstance(plan, NoChange), plan
+    assert len(calls) == 1 and calls[0][0] == "가까운 국밥", calls          # 규칙 1위를 선택기에 넘겼다
+    assert plan.summary["to"] == "산채 비빔밥", plan.summary
+    detail = plan.replacements[item.item_id].detail
+    assert detail["meal_pick"]["by"] == "llm" and detail["meal_pick"]["cited"], detail
+    assert "가까운 국밥" in plan.notice["other_options"], plan.notice           # 규칙 1위는 다른 안으로 남는다
+
+
+def test_without_a_picker_or_for_an_activity_the_rule_first_stays():
+    home = _place("원래 국밥", "dining", 37.5700, 126.9800)
+    near = _place("가까운 국밥", "dining", 37.5703, 126.9803)
+    bibim = _place("산채 비빔밥", "dining", 37.5708, 126.9808)
+    item = _item(home, 12)
+    plan = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[item],
+                                places=[home, near, bibim], item_id=item.item_id, message="다른 데로", request_id="r2")
+    assert plan.summary["to"] == "가까운 국밥" and "meal_pick" not in plan.replacements[item.item_id].detail
+
+    calls = []
+    hall = _place("원래 전시관", "activity", 37.5700, 126.9800)
+    museum = _place("가까운 박물관", "activity", 37.5703, 126.9803)
+    gallery = _place("먼 미술관", "activity", 37.5720, 126.9820)
+    visit = _item(hall, 10)
+    activity = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[visit],
+                                    places=[hall, museum, gallery], item_id=visit.item_id, message="다른 데로",
+                                    request_id="r3", meal_picker=_second_picker(calls))
+    assert calls == [] and activity.summary["to"] == "가까운 박물관", activity.summary   # 활동에는 식사 선택기를 쓰지 않는다

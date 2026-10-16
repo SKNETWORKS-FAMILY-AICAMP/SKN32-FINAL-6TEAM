@@ -1323,12 +1323,15 @@ def _top_reason(rejected: list) -> str | None:
 def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_version: int, items: list[Item],
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
                          request_id: str | None, state_lookup: DiningStateLookup | None = None,
-                         price_lookup: PriceLookup | None = None, reported_closed: bool = False) -> Plan:
+                         price_lookup: PriceLookup | None = None, reported_closed: bool = False,
+                         meal_picker: MealPicker | None = None) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
 
     ★`[2026-10-16]` `reported_closed` — 「○○ 문 닫았대」(지금 식사가 아닌 항목의 휴무 신고)도 같은 계산을 쓴다. 다만 **신고**다:
       고객이 「이 안으로」를 고른 것이 아니라 「문제가 생겼다」라서 원인 · 이유가 `customer_report` 다 — 적용기의 판정 문(D-020)을
       지나 먼저 물어봐줘면 묻는다. ☆전에는 `customer_request`(고객이 고른 것)로 적어 항로 지킴이를 끈 여행에서도 바로 바꿨다.
+    ★`[2026-10-16]` `meal_picker` — 식사면 규칙 상위 셋 중 하나를 고객 취향으로 고른다(가게 앞 신고 `plan_closed` 와 같은 `_meal_pick`).
+      ☆LLM 켜짐 점검: 이 계산만 선택기를 받지 않아 스위치를 켜도 나중 식사 휴무 신고 · 「다른 데로」는 규칙 1위였다(모델 호출 0회).
 
     ★`[2026-09-29 사용자 지적 · ui 세션 전달]` 전에는 들고 있던 안(`detail.alternates`)만 봐서, 감시가 한 번도 안 고친
       항목(일정 짜기·등록으로 막 만든 것)은 늘 「바꿀 수 있는 다른 안이 없어요」였다. 고객이 달라고 하면 **그때 찾는다.**
@@ -1374,7 +1377,11 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
             best, alternates, rejected = choose(candidates)
             if best is not None:
                 break
+        pick = None
+        if best is not None:
+            best, alternates, pick = _meal_pick(trip, items, current, best, alternates, meal_picker)
     else:
+        pick = None
         for radius in ALTERNATE_RADII_M["activity"]:
             candidates = [c for c in activity_candidates(original=current.place, places=places, start=current.starts_at,
                                                          end=current.ends_at, causes=[cause], radius_m=radius)
@@ -1439,6 +1446,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     replacement = current.replaced_by(
         place=best.place, title=title_for(current, name),
         detail={"customer_requested": True, "other_options": others,
+                **({"meal_pick": pick.record()} if pick is not None and pick.by != "rule" else {}),
                 **({"warnings": list(best.warnings)} if getattr(best, "warnings", None) else {}),
                 "alternates": more + [applied_record(current)]},
         starts_at=starts, ends_at=best.ends_at or current.ends_at)
