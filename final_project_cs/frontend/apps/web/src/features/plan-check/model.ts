@@ -180,7 +180,10 @@ export interface PlanCheckView {
   prefill?: PrefillNotes | null;
 }
 
-export interface PrefillNotes { filledCount: number; questions: string[]; understood: string[] }
+export interface PrefillNotes { filledCount: number; questions: string[]; understood: string[]; handoff: PrefillHandoff[] }
+
+/** `[2026-10-16 D-025 후속]` A read preference handed to an owner — `mine` true = 「우리가 채움」, false = the traveller's own answer wins. */
+export interface PrefillHandoff { label: string; text: string; owner: string; mine: boolean }
 
 /** What the server's `progress` packet says, with the stop's title to show. */
 export interface ServerProgress { phase: "places" | "hours" | "moves"; done: number; total: number; title: string | null }

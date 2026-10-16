@@ -1622,6 +1622,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         except pipeline.IntakeConflict as exc:
             raise _error(409, exc.code, exc.message, **exc.detail) from None
 
+    def _with_reading(constraints: dict[str, Any] | None, built: Any) -> dict[str, Any]:
+        """★`[2026-10-16 D-025 후속]` 이해 에이전트가 읽은 성향 · 조건을 담당 열쇠로 — **고객이 직접 답한 자리는 덮지 않는다**.
+        채운 것은 `constraints.filled_by_reading`(「우리가 채움」)에 원문 조각과 함께 남는다(`intake/reading_prefs.apply`)."""
+        from app.domains.travel_ops.components.intake import reading_prefs
+
+        return reading_prefs.apply({**(constraints or {}), reading_prefs.CARRY_KEY: list(getattr(built, "reading", None) or [])})
+
     def _intake_survey(tenant: str, intake_id: UUID, given: dict[str, Any] | None) -> dict[str, Any] | None:
         """★`[2026-10-06]` 등록에 실을 설문 = 로딩 중 질문으로 접수에 모아 둔 답 + 등록 요청이 직접 준 설문(요청이 준 값이 이긴다). 둘 다 없으면 None."""
         from app.domains.travel_ops.components.intake import survey_answers
@@ -1698,6 +1705,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         survey = _intake_survey(tenant, intake_id, request.survey)
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
+        body["constraints"] = _with_reading(body.get("constraints"), built)
         try:
             create = CreateTrip.model_validate(body)
         except ValidationError as exc:
@@ -1783,9 +1791,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
-            constraints={**(built.body.get("constraints") or {}), **({"survey": survey} if survey is not None else {}),
-                         **({"avoid_districts": list(request.recovery.avoid_districts), "lighter_day": request.recovery.lighter_day}
-                            if request.recovery is not None else {})})
+            constraints=_with_reading({**(built.body.get("constraints") or {}), **({"survey": survey} if survey is not None else {}),
+                                       **({"avoid_districts": list(request.recovery.avoid_districts), "lighter_day": request.recovery.lighter_day}
+                                          if request.recovery is not None else {})}, built))
         keep = request.keep_read_items and bool(built.body["items"])
         if keep:
             # ★읽은 일정이 요청한 날짜 밖이면 끼울 수 없다 — 조용히 버리지 않고 거절한다

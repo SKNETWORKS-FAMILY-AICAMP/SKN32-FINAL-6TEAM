@@ -44,6 +44,9 @@ domain: travel
 - 웹 앱의 확인 화면 `frontend/apps/web/src/features/intake-review/` 이 이 경로를 쓴다(`NEXT_PUBLIC_DATA_MODE=live`).
 - 「일정 짜 줘」는 모델이 가리키거나, 모델이 없어도 **규칙**(`intake/pipeline.PLAN_ASK` — 일정·코스·계획·동선 + 짜·만들어·추천해·세워·잡아 + 줘)으로 잡는다.
   `check.plan` = `{requested, start_date, days, party_size, preferences}` — **읽은 값에서만** 채우고 모르면 null(화면이 묻는다).
+  `check.handoff` `[2026-10-16 D-025 후속]` = 이해 에이전트가 읽은 성향 · 조건을 **어느 담당 열쇠로 넘기나** — `[{key, label, owner, value, text, codes, quotes, status}]`.
+  `status` `filled` = 등록 때 우리가 채운다(「우리가 채움」) · `customer` = 로딩 중 질문에 고객이 이미 답해 그 답이 이긴다. `text` 는 화면에 그대로 보일 말(「택시」 · 「여유 있게」 · 「21:00까지」).
+  등록(`/confirm`) · 일정 짜기(`/plan`)는 빈 자리에만 채우고 여행의 `constraints.filled_by_reading` 에 원문 인용과 함께 남긴다 — 표는 [D-025 §6-A](../../../../wiki/decisions/D-025-plan-reading-model-understands.md). 에이전트를 안 썼으면(그림자 · 실패 · 옛 서버) 빈 목록이다.
 - 시험 `tests/e2e/test_trip_intake_api.py` 15건 · `tests/unit/travel/test_intake_rules.py` 22건 · `test_intake_resolve.py` 22건 · `tests/e2e/test_trip_planner.py` 의 계획 읽기 1건(2026-09-28 실행).
 
 **여행 조회 항목의 종류 표시** `[2026-10-01 사용자 지적]` — `items[].kind_label`(`식사`·`활동`·`이동`·`숙소`·`항공`, 모르는 종류는 `kind` 그대로)와 `items[].meal`(식사만 `아침`·`점심`·`저녁`, 나머지 null). 화면이 「개화」만 보고는 식당인지 활동인지 알 수 없었다. 끼니는 일정 생성기가 적은 아침 표시가 먼저, 없으면 시작 시각(KST)으로 센다 — 10시 전 아침 · 16시 전 점심 · 그 뒤 저녁. 있던 필드는 안 바뀐 추가다.
@@ -190,6 +193,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 | `check` | `{item, row, result, text}` | `item` + `row` |
 | `move` | `moves[]` 한 건 | `from` + `to` |
 | `progress` `[2026-10-03]` | `{phase: places\|hours\|moves, done, total, current: {id, title}}` — 「3/14 · 광장시장 운영시간 확인 중」. `places` 는 **읽는 동안** 장소 찾기가 일정마다(찾든 못 찾든 그 일정의 장소 값이 정해지면 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤), `hours` 는 검사의 운영시간 확인이 일정마다, `moves` 는 이동이 구간마다(`current.title` = 「A → B」). `done` 은 1씩 늘어 `total` 에서 끝난다. 접수에 원본이 여럿이면 `places` 는 원본마다 센다 | `phase` |
+| `progress{reading}` `[2026-10-16]` | `{phase: reading, done, total, failed, skipped}` — 「읽는 중 2/6」. 규칙이 못 읽은 줄을 모델에 **줄 묶음으로** 나눠 보낼 때(가드레일 `travel.intake_reading.chunk_lines`), **처음 한 번 `done: 0`** 으로 묶음 수를 알리고 묶음 하나가 끝날 때마다(답을 받았든 실패했든) `done` 이 1씩 는다. `failed` = 그중 모델이 답하지 못한 묶음(그 줄은 남은 줄로 남는다), `skipped` = 이 단계 전체 상한(`travel.intake_reading.total_seconds`)을 넘어 **보내지 않은** 묶음 — 마지막 알림에서 정해지고 그때 `done + skipped = total`. ★분모는 모델에 보낼 묶음 수이지 읽어 낸 비율이 아니다 · 지어낸 진행이 아니라 끝난 묶음만 센다 · `current` 없음. 규칙이 다 읽은 글(남은 줄 0)이나 모델이 꺼진 환경에서는 오지 않는다 — 그때는 곧바로 `places` 로 간다. 원본이 여럿이면 원본마다 0부터 다시 센다(`places` 와 같다). 상한 · 실패로 못 읽은 줄은 `GET` 의 `reading.error`(예 「1/6 묶음 실패 — …」)와 `lines[].read=false` 로 보인다 | `phase` |
 | `done` | `{stage: review, revision, needs, ready}` — 검사가 끝났다, 곧 `result`. 검사할 것이 없는 접수(빈 접수)는 `done` 없이 곧바로 `result` | — |
 
 **검사 진행을 끝에서 한꺼번에 내지 않는다** `[2026-10-03 ui 세션 요청서 2번]` — 검사(`review.build`)는 한 트랜잭션 안에서 돌고 끝나 커밋돼야 DB 에 보이므로, 전에는 검사 줄 56개 · 이동 12개가 끝난 4.9초에 한꺼번에 나갔다(이동 계산이 대부분의 시간인데 화면은 아무것도 몰랐다). 이제 계산이 **끝나는 대로**: ①일정마다 `item` · `check` 를 이동 계산 **전에**(`status` 는 이때 정해진 값이고, 겹침 확인 필요는 끝에서 바뀔 수 있어 최종 값이 같은 키로 덮는다) ②이동은 구간마다 `move` + `progress{moves}` ③운영시간은 일정마다 `progress{hours}`. ★이 중간 진행은 **프로세스 안 보관소**(`intake/progress.py`)를 거친다 — DB 에 쓰지 않고(접수 하나에 150개 안팎), 읽는 일꾼(스레드)과 SSE 연결이 **같은 프로세스**일 때만 보인다(배포는 한 프로세스). 여러 프로세스(`--workers N`)에서 다른 프로세스의 연결은 전처럼 끝에서 받는다 — 깨지지 않고 **중간 진행만 안 보인다**. 접수 하나당 600개 상한(앞에서부터 버림) · 15분 지나면 버림 · 읽기가 끝나면 비운다(최종 값은 DB 에서 읽힌다). 서버는 DB 의 덜 채운 값(`status: null`)으로 이미 검사 줄까지 낸 일정을 **되돌리지 않는다**.

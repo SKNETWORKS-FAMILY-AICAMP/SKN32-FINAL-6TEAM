@@ -78,6 +78,26 @@ supersedes: program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md §0 「�
 - 등록 뒤 변경은 [D-020](D-020-trip-survey-and-ask-first.md) 그대로다(항로 지킴이 켜짐이면 적용 후 알림, 꺼짐이면 먼저 묻기).
 - 돈(유료 입장 등)은 지금 범위 밖이다.
 
+### 6-A. 읽은 성향 · 조건은 담당이 이미 읽는 열쇠로 넘긴다 `[2026-10-16 후속]`
+
+- 모델이 읽은 성향 · 조건은 **담당이 이미 읽는 설문 · 제약 열쇠**로 옮겨 싣는다. 새 판단 규칙은 만들지 않는다 — 담당은 지금 읽던 열쇠를 그대로 읽는다.
+- **고객이 직접 답한 값이 먼저다.** 로딩 중 질문 · 등록 요청의 설문에 이미 있는 자리와 등록 몸통에 이미 있는 열쇠는 덮지 않는다.
+- 읽은 값으로 채운 것은 여행의 `constraints.filled_by_reading` 에 원문 인용과 함께 남고(「우리가 채움」), 설문의 「직접 답한 문항」(`survey_answered`)에는 넣지 않는다 —
+  항로 지킴이 자동 적용처럼 「고객이 직접 고른 것」만 보는 판단이 읽은 값으로 켜지지 않게.
+- 확인 화면 목록 위에 「담당에 넘겨요」로 무엇을 · 어느 담당에 · 「우리가 채움」인지 「고객님 답 그대로」인지 보인다.
+
+| 읽은 것 | 담당이 읽는 열쇠 | 담당 |
+|---|---|---|
+| 택시 위주 · 대중교통 위주 · 걷기 좋아함, 여행 전체 이동(「다 지하철로」) | `survey.priority_details.mobility` | 이동 판정 · 일정 짜기 |
+| 느긋하게 · 늦게 시작 | `survey.pace = relaxed` | 일정 짜기(밀도) |
+| 맛집 위주 · 분위기 좋은 식당 + 원문 인용 | `constraints.meal_preference` | 식당 고르기 |
+| 비 오면 실내 | `survey.indoor_outdoor.activity = indoor` + 원문(`custom_answers.indoor_outdoor`) | 활동 대안 순서 |
+| 걷기 힘듦 · 어르신 · 계단 힘듦 | `constraints.mobility_ease = needs_rest` | 이동 판정(환승 상한) · 일정 밀도 |
+| 몇 시까지 끝 · 몇 시 이후 시작 | **새 열쇠** `constraints.day_hours.end` · `.start`(HH:MM) | 일정 짜기 하루 창 · 하루 마감 경고 · 설문 밀도의 하루 창 |
+
+- `day_hours` 는 이번에 새로 만든 열쇠다. 없으면 지금처럼 가드레일 `travel.day_window`(08:00~22:00) 기본값을 쓴다. 시작이 끝보다 늦게 읽히면 둘 다 넘기지 않는다(짐작으로 고르지 않는다).
+- 넘기지 않는 것: 아이 · 어르신 동반의 나이 짐작(일정 짜기는 원문 낱말로 이미 본다), 「비 오면 빼기」(감시 루프의 날씨 판정 몫), 채식 · 할랄(민감 정보 — 동의 화면에서만 받는다).
+
 ### 7. 고객 선호 장부 — 자리만 두고 구현은 뒤로
 
 - 근거 · 날짜 · 적용 기간을 붙여 두고 고객이 보고 지울 수 있는 장부. 이번에는 **설계에 자리만** 둔다. 구현하면 이 문서 「구현 상태」에 적는다.
@@ -101,6 +121,7 @@ supersedes: program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md §0 「�
 | 5. 계획 에이전트는 빈칸 하나 | 됨 — 하루 · 시간대 하나만 짜게 하고 그 시간대 안 · 겹치지 않는 곳만 새 일정으로. 원문 대신 성향 · 조건의 원문 인용만 넘긴다. 한 접수에 3곳까지 | `intake/prefill.py` `planner_slot` |
 | 6. 확인 화면 「우리가 채움」 | 됨 — 채운 일정 첫 줄에 「✎ 우리가 채움 · 이유」, 목록 위에 「이렇게 이해했어요」(이동 · 조건 · 성향 원문)와 고객만 아는 질문. 등록 한 번은 지금 그대로 | 웹 `features/plan-check/from-review.ts` · `parts.tsx` |
 | 채팅 수정 = 같은 입구 | 일부 — 채팅 「넣기」는 같은 이해 에이전트로 메시지를 읽어 여러 곳 · 시각을 한 번에 넣는다. 옮기기 · 빼기 · 바꾸기는 지금 해석(결정 단위)을 그대로 쓴다 | `conversation/chat_edit.py` · `trip_desk.py` |
+| 6-A. 성향 · 조건 → 담당 열쇠 | 됨(`[2026-10-16 후속]` 매니저 브랜치만, x600 서버 배포 안 함) — 접수 → 등록 · 일정 짜기 두 길 모두. 빈 자리에만 채우고 `filled_by_reading` 에 남긴다. 확인 화면 `check.handoff` → 웹 「담당에 넘겨요」 | `intake/reading_prefs.py` · `entry/trip_api.py` `_with_reading` · `planning/planner.py` `day_bounds` · `planning/survey.py` · `itinerary/itinerary_quality.py` · 웹 `features/plan-check/parts.tsx` |
 | 7. 고객 선호 장부 | 자리만 — 성향 · 조건은 읽은 값 줄(`reading.agent`)에 근거 인용과 함께 남고, 따로 쌓는 장부(날짜 · 적용 기간 · 고객이 지우기)는 만들지 않았다 | — |
 | DB | 값 줄 방법 이름 `llm_agent` 를 받게 제약을 넓혔다(없으면 접수가 「읽기 실패」가 된다) | `app/infrastructure/db/migrations/905_intake_claims_llm_agent.sql` |
 

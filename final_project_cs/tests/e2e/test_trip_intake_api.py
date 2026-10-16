@@ -216,7 +216,7 @@ class Labeler:
         raise AssertionError("사진이 없다")
 
     def json(self, system, user):
-        assert "3: 점심은 토속촌에서 먹을래" in user and "2: 09:00" not in user   # ★규칙이 읽은 줄은 안 보낸다
+        assert "1: 점심은 토속촌에서 먹을래" in user and "09:00" not in user     # ★규칙이 읽은 줄은 안 보낸다 · 번호는 보낸 목록 안 순서(`[2026-10-16]`) — 답은 원래 번호(3 · 4)로 해도 그 줄에 인용이 있으면 받는다
         return {"spans": [{"line": 3, "quote": "점심", "role": "meal"},
                           {"line": 3, "quote": "토속촌", "role": "place"},
                           {"line": 4, "quote": "저녁", "role": "time"},

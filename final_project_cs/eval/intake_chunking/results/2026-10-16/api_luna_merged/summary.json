@@ -1,0 +1,142 @@
+{
+ "0": {
+  "runs": 6,
+  "calls": 6,
+  "call_p50": 4.851,
+  "call_p90": 6.9265,
+  "call_max": 8.847,
+  "case_p50": 4.851,
+  "case_max": 8.847,
+  "prompt_p50": null,
+  "errors": 6,
+  "items": [
+   0,
+   184
+  ],
+  "items_tight": [
+   0,
+   184
+  ],
+  "items_precision": [
+   0,
+   0
+  ],
+  "kind": [
+   0,
+   184
+  ],
+  "date": [
+   0,
+   184
+  ],
+  "tamper": [
+   0,
+   0
+  ]
+ },
+ "8": {
+  "runs": 11,
+  "calls": 60,
+  "call_p50": 2.604,
+  "call_p90": 3.4322000000000004,
+  "call_max": 5.14,
+  "case_p50": 16.698,
+  "case_max": 20.169,
+  "prompt_p50": null,
+  "errors": 0,
+  "items": [
+   328,
+   328
+  ],
+  "items_tight": [
+   300,
+   328
+  ],
+  "items_precision": [
+   328,
+   433
+  ],
+  "kind": [
+   303,
+   328
+  ],
+  "date": [
+   328,
+   328
+  ],
+  "tamper": [
+   0,
+   509
+  ]
+ },
+ "12": {
+  "runs": 11,
+  "calls": 41,
+  "call_p50": 3.248,
+  "call_p90": 4.028,
+  "call_max": 5.087,
+  "case_p50": 12.709,
+  "case_max": 17.184,
+  "prompt_p50": null,
+  "errors": 1,
+  "items": [
+   313,
+   328
+  ],
+  "items_tight": [
+   289,
+   328
+  ],
+  "items_precision": [
+   313,
+   420
+  ],
+  "kind": [
+   283,
+   328
+  ],
+  "date": [
+   313,
+   328
+  ],
+  "tamper": [
+   0,
+   494
+  ]
+ },
+ "16": {
+  "runs": 5,
+  "calls": 13,
+  "call_p50": 3.549,
+  "call_p90": 5.4206,
+  "call_max": 5.866,
+  "case_p50": 8.953,
+  "case_max": 16.409,
+  "prompt_p50": null,
+  "errors": 1,
+  "items": [
+   131,
+   144
+  ],
+  "items_tight": [
+   117,
+   144
+  ],
+  "items_precision": [
+   131,
+   160
+  ],
+  "kind": [
+   121,
+   144
+  ],
+  "date": [
+   131,
+   144
+  ],
+  "tamper": [
+   0,
+   186
+  ]
+ }
+}

@@ -61,6 +61,22 @@ export interface IntakePrefill {
   kept: { kind: string; item: string | null; owner: string; reason: string }[];
 }
 
+/**
+ * `[2026-10-16 D-025 후속]` One preference or condition handed to the owner that reads it (이동 판정 · 일정 짜기 · 식당 고르기 · 활동 대안):
+ * `status` `filled` = we fill it from the plan's words (「우리가 채움」), `customer` = the traveller already answered it, so their answer wins.
+ * `text` is the server's words for the value; the page shows it as it is.
+ */
+export interface IntakeHandoff {
+  key: string;
+  label: string;
+  owner: string;
+  value: unknown;
+  text: string;
+  codes: string[];
+  quotes: string[];
+  status: "filled" | "customer";
+}
+
 export interface IntakeView {
   intake_id: string;
   test_scenario?: { code: string; name: string; description: string; mode: "prepared_text"; catalog_version: string } | null;
@@ -72,7 +88,9 @@ export interface IntakeView {
   fatal: { code: string; detail: string } | null;
   trip_id: string | null;
   sources: IntakeSource[];
-  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis } | null;
+  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis;
+    /** `[2026-10-16 D-025 후속]` What the reading agent read as a preference or condition and will hand to an owner (absent on an older server). */
+    handoff?: IntakeHandoff[] } | null;
   needs_review: { field: string; note: string | null }[];
   /**
    * `[2026-10-06]` Questions to ask while the server reads (`wiki/external/rest-endpoints.md` 「설문 질문」). The page DRAWS what is here and nothing else: a `kind` it does not know is skipped,

@@ -114,7 +114,7 @@ export function filledReasons(intake: Pick<IntakeView, "prefill">): Map<string, 
 }
 
 /** The note above the list: questions only the traveller can answer, and the traveller's own words read as a move, a condition or a preference. Null when there is nothing to say. */
-export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources">): PrefillNotes | null {
+export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources"> & Partial<Pick<IntakeView, "check">>): PrefillNotes | null {
   const questions = [...new Set((intake.prefill?.questions ?? []).map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
   const understood = [...new Set(intake.sources.flatMap((source) => {
     const read = source.understanding;
@@ -122,7 +122,11 @@ export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources">):
     return [...(read.moves ?? []), ...(read.conditions ?? []), ...(read.preferences ?? [])].map((entry) => entry?.quote).filter((text): text is string => typeof text === "string" && text.length > 0);
   }))];
   const filledCount = (intake.prefill?.filled ?? []).length;
-  return questions.length || understood.length || filledCount ? { filledCount, questions, understood } : null;
+  // `[2026-10-16 D-025 후속]` What we hand to an owner from those words — only lines the server named fully (label · text · owner)
+  const handoff = (intake.check?.handoff ?? [])
+    .filter((entry) => entry && typeof entry.label === "string" && typeof entry.text === "string" && entry.text && typeof entry.owner === "string")
+    .map((entry) => ({ label: entry.label, text: entry.text, owner: entry.owner, mine: entry.status !== "customer" }));
+  return questions.length || understood.length || filledCount || handoff.length ? { filledCount, questions, understood, handoff } : null;
 }
 
 /** Lines the stream has told about that the intake does not hold yet (a read that is a moment ahead of the GET). */
