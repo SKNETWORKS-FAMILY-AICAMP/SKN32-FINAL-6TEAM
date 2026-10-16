@@ -29,7 +29,7 @@ from .hours import _tenants, facts_for
 from .moves import leg_between, late_text
 from .terms import category_label
 from .places import distance_m, normalize_full
-from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, public_place)
+from .review import (KST, SOURCE_DEFAULT, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, public_place)
 
 LIMIT = 3                    #: 목업의 후보 A · B · C
 POOL_EXTRA = 2               #: 최종 셋을 고르기 전에 이동 계산기로 더 재 보는 후보 수
@@ -426,7 +426,7 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
         # ★`[2026-10-15 핫픽스]` 운영시간을 못 읽은 활동이 **이른 아침 · 늦은 밤** 자리에 「맞아요」로 올라왔다(「경복궁 08:00」 대신 두산아트센터 · 세운상가 — 관광공사 운영시간을
         #   아직 못 읽은 곳이 맞는 곳으로 센 것). 낮 시간이면 모르는 것을 맞는 것으로 두지만(없는 정보로 후보를 다 버리지 않는다), 문 여는 곳이 드문 시각에는 **확인 못 한 곳은 맞는 곳이 아니다**
         hours_line = _line("hours", "warn", f"{start.strftime('%H:%M')}에는 문을 열었는지 확인하지 못했어요 · {UNVERIFIED_HOURS}")
-    label = SOURCE_LABEL.get(place.get("source") or "", "장소 정보")
+    label = SOURCE_LABEL.get(place.get("source") or "", SOURCE_DEFAULT)
     lines = [_line("place", "ok", f"{label} 정보로 찾았어요")]
     # 앞 · 뒤 일정에 닿는 시간 — 늦으면 줄을 더한다
     late: list[str] = []

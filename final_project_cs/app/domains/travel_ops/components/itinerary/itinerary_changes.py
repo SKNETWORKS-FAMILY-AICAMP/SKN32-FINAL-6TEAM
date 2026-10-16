@@ -467,6 +467,46 @@ def other_sites(places: list[dict[str, Any]], original: dict[str, Any] | None,
             or not (same_site(original, p) or any(same_site(o, p) for o in others))]
 
 
+def same_restaurant(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """두 식당 장소가 **같은 가게**인가 — 카카오 「하동관 명동본점」 ↔ 요식 원장 「하동관」(4.6m).
+
+    ★`[2026-10-16 화면 점검]` 닫았다는 「하동관 명동본점」을 「하동관」으로 바꿨다 — 출처마다 이름이 달라 장소 id 로는 못 가렸다.
+    활동의 `same_site`(30m 안이면 같은 곳)는 쓰지 않는다 — 같은 건물에 다른 가게가 흔하다. 이름부터 본다 — 대괄호 표시
+    (「[백년가게]」) · 괄호 · 빈칸을 뺀 한쪽 이름이 다른 쪽을 **통째로** 품어야 한다(「하동관」 ⊂ 「하동관 명동본점」, 2자 이상).
+    첫 낱말만 같은 「서울 김밥」 · 「서울 떡볶이」는 다른 가게다. 그다음 둘 중 하나: ①주소가 같다 ②`SAME_SITE_M` 안.
+    """
+    import re
+
+    from app.domains.travel_ops.components.planning.replan import distance_m
+
+    def bare(name):
+        return re.sub(r"\[[^\]]*\]|\([^)]*\)|\s+", "", str(name or ""))
+
+    short, long = sorted((bare(a.get("name")), bare(b.get("name"))), key=len)
+    if len(short) < 2 or short not in long:
+        return False
+
+    def address(place):
+        text = (place.get("attributes") or {}).get("address") or place.get("address") or ""
+        return re.sub(r"\([^)]*\)|\s+", "", text)
+
+    if address(a) and address(a) == address(b):
+        return True
+    if None in (a.get("latitude"), a.get("longitude"), b.get("latitude"), b.get("longitude")):
+        return False
+    return distance_m({"latitude": float(a["latitude"]), "longitude": float(a["longitude"])},
+                      {"latitude": float(b["latitude"]), "longitude": float(b["longitude"])}) <= SAME_SITE_M
+
+
+def other_restaurants(places: list[dict[str, Any]], original: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """식사 대체 후보에서 원래 식당과 **같은 가게**(`same_restaurant`)를 뺀다. 원래 장소 자신은 남긴다(각 계산이 뺀다)."""
+    if not original:
+        return places
+    keep = str(original.get("place_id"))
+    return [p for p in places if str(p.get("place_id")) == keep or p.get("kind") != "dining"
+            or not same_restaurant(original, p)]
+
+
 def _same_activity_site(a, b) -> bool:
     """`choose(distinct=…)` 용 — 두 활동 후보가 같은 곳인가. ★`[2026-10-05]` **같은 브랜드는 한 곳으로 센다** —
     순위가 앞선(가까운) 매장 하나만 남는다. 올리브영 셋이 다른 안 자리를 다 차지하지 않게(활동 팀 `one_per_brand` 규칙)."""
@@ -816,6 +856,7 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
     if meal is None or meal.place is None:
         return NoChange("no_meal", {"message": "지금 시각에 식사 일정이 없다"})
     places = unused_places(places, items, meal)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
+    places = other_restaurants(places, meal.place)  # 닫았다는 가게의 다른 이름 행도 아니다
     duration = minutes_between(meal.starts_at, meal.ends_at)
     following = next((i for i in items if i.seq > meal.seq), None)
     cause = with_request({"category": "customer_report", "type": "closed_today",
@@ -861,6 +902,7 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
     if meal.place is None:
         return NoChange("no_meal", {"message": "장소가 없는 식사 일정이다"})
     places = unused_places(places, items, meal)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
+    places = other_restaurants(places, meal.place)  # 원래 식당의 다른 이름 행도 아니다
     duration = minutes_between(meal.starts_at, meal.ends_at)
     following = next((i for i in items if i.seq > meal.seq and i.kind != "mobility"), None)
     cause = {"category": "place_closed", "type": "closed_on_day", "source": source,
@@ -913,6 +955,7 @@ def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: li
     if meal.place is None:
         return NoChange("no_meal", {"message": "장소가 없는 식사 일정이다"})
     places = unused_places(places, items, meal)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
+    places = other_restaurants(places, meal.place)  # 원래 식당의 다른 이름 행도 아니다
     causes = list(report.get("disruptions") or [])
     duration = minutes_between(meal.starts_at, meal.ends_at)
     following = next((i for i in items if i.seq > meal.seq and i.kind != "mobility"), None)
@@ -1280,8 +1323,12 @@ def _top_reason(rejected: list) -> str | None:
 def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_version: int, items: list[Item],
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
                          request_id: str | None, state_lookup: DiningStateLookup | None = None,
-                         price_lookup: PriceLookup | None = None) -> Plan:
+                         price_lookup: PriceLookup | None = None, reported_closed: bool = False) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
+
+    ★`[2026-10-16]` `reported_closed` — 「○○ 문 닫았대」(지금 식사가 아닌 항목의 휴무 신고)도 같은 계산을 쓴다. 다만 **신고**다:
+      고객이 「이 안으로」를 고른 것이 아니라 「문제가 생겼다」라서 원인 · 이유가 `customer_report` 다 — 적용기의 판정 문(D-020)을
+      지나 먼저 물어봐줘면 묻는다. ☆전에는 `customer_request`(고객이 고른 것)로 적어 항로 지킴이를 끈 여행에서도 바로 바꿨다.
 
     ★`[2026-09-29 사용자 지적 · ui 세션 전달]` 전에는 들고 있던 안(`detail.alternates`)만 봐서, 감시가 한 번도 안 고친
       항목(일정 짜기·등록으로 막 만든 것)은 늘 「바꿀 수 있는 다른 안이 없어요」였다. 고객이 달라고 하면 **그때 찾는다.**
@@ -1300,8 +1347,13 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     places = unused_places(places, items, current)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
     if current.kind == "activity":
         places = other_sites(places, current.place, items)  # 원래 곳 · 일정의 다른 활동과 같은 곳도 아니다
-    cause = with_request({"category": "customer_request", "type": "alternate", "from": current.place["name"],
-                          "message": message, "evidence": "고객 요청"}, request_id)
+    else:
+        places = other_restaurants(places, current.place)  # 원래 식당의 다른 이름 행도 아니다(`[2026-10-16]` 하동관 명동본점 → 하동관)
+    cause = with_request(({"category": "customer_report", "type": "closed", "from": current.place["name"],
+                           "summary": "문을 닫았다고 알려 주셨어요",          # 묻는 알림의 원인 문장(`pending._cause_text`)
+                           "message": message, "evidence": "고객 신고"} if reported_closed else
+                          {"category": "customer_request", "type": "alternate", "from": current.place["name"],
+                           "message": message, "evidence": "고객 요청"}), request_id)
     original = str(current.place["place_id"])
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
     # ★`[2026-09-29 ui 세션 지적]` 0곳이면 **반경을 넓혀 다시** 찾는다 — 700m 는 설계 근거 없는 구현 선택이었고, 08:00 아침처럼
@@ -1377,7 +1429,8 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                 taken.append(spot)
     labels = [f"{m['note']} {m['name']}" if m.get("note") else m["name"] for m in more]
     others = [m["name"] for m in more]
-    text = (f"요청하신 대로 {current.place['name']} 대신 {name}(으)로 바꿨습니다({seoul(starts):%H:%M} 시작)."
+    lead = "닫았다고 알려 주셔서" if reported_closed else "요청하신 대로"
+    text = (f"{lead} {current.place['name']} 대신 {name}(으)로 바꿨습니다({seoul(starts):%H:%M} 시작)."
             + (" 다른 안: " + " · ".join(f"{n}) {label}" for n, label in enumerate(labels, start=1))
                + " — 다른 곳이 좋으면 고르세요. 답이 없으면 지금대로 둡니다." if labels else ""))
     notice = {"text": text, "language": "ko", "causes": [cause],
@@ -1391,7 +1444,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
         starts_at=starts, ends_at=best.ends_at or current.ends_at)
     # ★`[2026-09-29 ui 세션 요청]` 바꾼 뒤에도 몇 곳을 봤고 무엇이 왜 떨어졌는지 남긴다(왜 한 곳뿐이었는지 나중에 보게).
     #   `seen` = 떨어진 곳 + 통과한 곳(통과한 곳은 셋까지만 센다 — `choose` 가 셋만 돌려준다)
-    return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
+    return ItineraryChange(reason="customer_report" if reported_closed else "customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement},
                            summary={"from": current.place["name"], "to": name,
                                     "more_options": more, "radius_m": radius,

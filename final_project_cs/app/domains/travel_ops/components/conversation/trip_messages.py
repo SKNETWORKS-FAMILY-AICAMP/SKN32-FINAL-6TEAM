@@ -1010,8 +1010,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         if item is None or (meal_now is not None and item.item_id == meal_now.item_id):
             outcome = desk.report_closed(trip_id=trip_id, at=at, message=message, request_id=request_id)
         elif changeable:
-            outcome = desk.fresh_alternate(trip_id=trip_id, item_id=item.item_id, base_version=base, message=message,
-                                           request_id=request_id)
+            outcome = desk.report_closed_ahead(trip_id=trip_id, item_id=item.item_id, base_version=base,
+                                               message=message, request_id=request_id)
         else:
             outcome = {"status": "clarify", "text": _CLARIFY}
     else:
@@ -1097,11 +1097,13 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
         current_meal = next((i for i in current_items if i.kind == "dining"
                              and i.starts_at <= at < (i.ends_at or i.starts_at)), None)
         if current_meal is None or current_meal.item_id != item.item_id:
-            request["action"] = "apply_change"
+            # ★`[2026-10-16]` 지금 식사가 아닌 항목의 휴무 신고 — 신고 그대로(`report_closed`) 그 항목의 팀에 보낸다(`ahead`).
+            #   ☆전에는 `apply_change`(고객이 고른 「다른 안으로」)로 바꿔 판정 문을 건너뛰고 항로 지킴이를 끈 여행도 바로 바꿨다
+            request["ahead"] = True
     # ★`[2026-10-15 숙박예약 점검 LB-02]` 숙소 항목도 자기 팀(`lodging`)이 맡는다 — 전에는 식당 · 활동 · 이동만 알아서 숙소를 가리킨 「바꿔 줘」가
     #   활동 팀으로 넘어가 처리 못 한 채 사람에게 넘어갔다(`ITEM_TEAMS` = 일정 항목 종류 = 맡는 팀 id)
     owner = item.kind if item is not None and item.kind in ITEM_TEAMS else None
-    if action in ("report_delay", "report_closed") and request["action"] != "apply_change":
+    if action in ("report_delay", "report_closed") and not request.get("ahead"):
         owner = "dining"
     if owner is None:
         typed_choices = request.get("choices") or []
@@ -1300,6 +1302,12 @@ def _near_anchor(decision: Any, *, message: str, items: list[Any], at: datetime,
                  "longitude": found.longitude, "attributes": {}, "source": found.method}, at)
     pool = [c for c in (found.candidates or []) if c.get("latitude") is not None
             and c.get("category_group") not in ("FD6", "CE7")]
+    # ★`[2026-10-16 화면 점검]` 여행자가 댄 동네 이름은 **관광지**(카카오 분류 「여행 > …」)를 먼저 본다 — 「서촌」이 서촌한옥마을(종로구)이
+    #   아니라 이름이 정확히 같은 중랑구 상봉동의 동네 지명(「부동산 > 지명」)이 돼 중랑구 가게를 답했다(관광공사 키 없는 로컬)
+    #   관광지 표시는 분류 글(「여행 > 관광,명소」)이나 그룹 코드(`AT4` 관광명소) — 둘 중 하나만 있어도 본다
+    tourist = [c for c in pool if c.get("category_group") == "AT4"
+               or str(c.get("category") or c.get("category_name") or "").startswith("여행")]
+    pool = tourist or pool
     exact = [c for c in pool if normalize(c["name"]) == normalize(text)]
     pick = (exact or pool or [None])[0]
     if pick is None:
