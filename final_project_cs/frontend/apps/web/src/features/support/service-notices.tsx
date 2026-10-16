@@ -7,7 +7,11 @@ import { useSettings, useT } from "@/lib/settings";
 import { serviceStatus } from "./client";
 import styles from "./support.module.css";
 
-const NOTICE_REFRESH_MS = 60_000;
+/**
+ * `[2026-10-17 사용자 지적 — ST4F-603]` 운영 앱에서 보낸 공지가 60초 동안 안 보였다 — 15초마다 읽고, 탭으로 돌아오면 바로 읽는다(`staleTime` 0).
+ *   숨긴 탭에서는 읽지 않는다(React Query 기본). 바로 받는 길(서버가 미는 신호)은 서버 몫이라 이 값은 늦음을 줄일 뿐이다.
+ */
+const NOTICE_REFRESH_MS = 15_000;
 /**
  * `[2026-10-14 x600 실서버 확인]` 공지는 배경 정보라 한 번 실패로 띠를 띄우지 않는다 — 두 번 더 묻고(1초 · 2초 뒤) 그래도 못 받을 때만 「확인하지 못했어요」.
  * 앱 전체 기본값은 다시 묻지 않음(`providers.tsx` `retry: false`)이라, 첫 화면에서 화면 이동에 끊긴 요청(ERR_ABORTED) 하나로 띠가 떴다.
@@ -17,7 +21,7 @@ const NOTICE_RETRIES = 2;
 export function ServiceNotices() {
   const t = useT();
   const { language } = useSettings();
-  const query = useQuery({ queryKey: ["service-notices", language], queryFn: () => serviceStatus(language), staleTime: NOTICE_REFRESH_MS, refetchInterval: NOTICE_REFRESH_MS, refetchOnWindowFocus: true,
+  const query = useQuery({ queryKey: ["service-notices", language], queryFn: () => serviceStatus(language), staleTime: 0, refetchInterval: NOTICE_REFRESH_MS, refetchOnWindowFocus: true,
     retry: NOTICE_RETRIES, retryDelay: (attempt) => 1000 * 2 ** attempt });
   const [dismissed, setDismissed] = useState<string | null>(null);
   const data = query.data;
