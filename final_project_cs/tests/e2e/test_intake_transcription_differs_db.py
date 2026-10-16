@@ -115,6 +115,7 @@ def _review_item(view, title):
     return next(i for i in view["review"]["items"] if title in i["title"])
 
 
+# invariant: INV-CS-RT-028
 def test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons(api, monkeypatch):
     from app.domains.travel_ops.components.intake import places
 
