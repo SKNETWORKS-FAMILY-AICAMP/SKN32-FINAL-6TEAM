@@ -203,7 +203,18 @@ def resume_pending(conn, *, controller: Any, tenant: str, trip: dict[str, Any], 
         if not candidates:
             return None
         if len(candidates) > 1:
-            raise StateConflict("답변할 업무를 지정해 주세요")
+            # ★`[2026-10-15 사용자 지시 — 코어]` 답을 기다리는 질문이 여럿이어도(고객이 질문을 넘기고 같은 요청을 되풀이하면 쌓인다) 짧은 답은 거절하지 않는다 —
+            #   고객이 보고 있는 것은 **가장 나중에 보인 질문**이다. 그 질문의 건이 후보에 있으면 그것, 아니면 가장 최근에 만든 건. 후보는 질문 형식에 맞는 건뿐이다(`_matches_implicit_reply`)
+            import re
+
+            from . import chat_log
+
+            turns = chat_log.recent(conn, tenant_id=tenant, trip_id=trip["trip_id"])
+            latest = next((turn for turn in reversed(turns) if turn.get("role") == "assistant" and turn.get("case_id")), None)
+            shown = [candidate for candidate in candidates if latest and str(candidate) == str(latest["case_id"])]
+            if not shown and re.fullmatch(r"\d+\s*(?:번(?:이요|요)?|번째)?[.!]?", message.strip()):
+                raise StateConflict("답변할 업무를 지정해 주세요")      # 숫자만 있는 답은 어느 선택 목록의 번호인지 모른다 — 방금 보인 질문이 아니면 지정을 받는다(옛 규칙 그대로)
+            candidates = shown or candidates[-1:]
         case_id = candidates[0]
     case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
     state = (case or {}).get("state_json") or {}

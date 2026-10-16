@@ -973,6 +973,12 @@ web_guard:
   map_provider:
     default: osm
     choices: [osm, google]
+  # 모델 경로(`[2026-10-15 사용자 지시]`) — 운영 설정 `llm.model_route` 로 바꾼다. 채팅 해석 · 계획 읽기 · 번역 · 일정 짚기 · 공지 확인이 따른다.
+  #   local = 이 기계의 Ollama(우리 학습 E4B) · ssh = SSH 터널 너머 런팟 GPU 서버의 Ollama(`ACOP_OLLAMA_SSH_BASE_URL`) · api = 유료 API(서버용 키, 호출 상한 적용).
+  #   고른 경로가 먼저고 나머지는 넘김 순서다. 임베딩(규정 검색)은 따르지 않는다 — 벡터 차원이 달라 바꾸면 검색이 깨진다.
+  model_route:
+    default: local
+    choices: [local, ssh, api]
   # ── 브라우저 세션(쿠키) · 게스트 보존 — `[결정 2026-10-04 사용자]` D-CS-011 ─────────────────────────────
   # ★출처: 게스트 보존은 **재방문 간격 공식**으로 구한 초기값이다(`wiki/decisions/D-CS-011-browser-session-cookie.md` §2) —
   #   `T* = t0·[(α−1)/(ρ·t0)]^(1/α)`, t0=30분 · α=1.2(뉴스 포털 방문 간격, 여행 게스트 실측 아님) · ρ=1%/일(정책값, 근거 없음) → 6.4일 → 7일.

@@ -73,6 +73,14 @@ def _web_trip(api, request_id):
     return body
 
 
+def _new_customer(api):
+    """DB 에 있는 고객 — 채팅(`message`)을 세면 관리자 채팅 하루 한도 칸(`admin_chat_usage`, 고객 외래 키)도 올라간다(`[2026-10-15]` 저장 전 기본값도 적용)."""
+    customer = uuid4()
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO customers (customer_id, tenant_id, external_id) VALUES (%s,%s,%s)", (customer, api["tenant"], f"web-guard-{customer}"))
+    return customer
+
+
 def _usage(api):
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT who_kind, who, action, used FROM web_usage WHERE tenant_id=%s ORDER BY 1, 3",
@@ -130,10 +138,11 @@ def test_many_processes_at_once_never_go_over_the_cap(api):
     _set(api, "web.limits_enabled", True)
     _set(api, "web.message.service_day", 5)
     passed, refused = [], []
+    customers = [_new_customer(api) for _ in range(12)]
 
     def one(n):
         try:
-            web_guard.count(api["tenant"], "message", customer_id=uuid4(), ip=f"10.0.0.{n}")
+            web_guard.count(api["tenant"], "message", customer_id=customers[n], ip=f"10.0.0.{n}")
             passed.append(n)
         except web_guard.UsageRefused:
             refused.append(n)
@@ -334,7 +343,7 @@ def test_production_without_a_secret_does_not_start(monkeypatch, update):
 
 # ── 사용량 정리(옛 빈 키 정리는 게스트 정리 `tests/e2e/test_guest_cleanup.py` 가 대신한다 — D-CS-011) ───────────────
 def test_address_rows_go_after_48_hours(api):
-    web_guard.count(api["tenant"], "message", customer_id=uuid4(), ip="10.1.2.3")
+    web_guard.count(api["tenant"], "message", customer_id=_new_customer(api), ip="10.1.2.3")
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("UPDATE web_usage SET updated_at = now() - interval '49 hours' WHERE tenant_id=%s", (api["tenant"],))
     with get_connection() as conn:

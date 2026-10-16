@@ -77,9 +77,12 @@ def hours_sources(row: dict[str, str]) -> dict[str, dict[str, str]]:
 def hours_record(read: Any, now: datetime, sources: dict[str, dict[str, str]]) -> dict[str, Any]:
     """`catalog_hours.hours_read` 에 적을 기록. 사람이 채운 칸이 하나라도 있으면 출처를 `official_web` 으로 하고 그 출처를 싣는다."""
     if sources:
+        # `[2026-10-16]` `by=sibling` 칸은 같은 입점 매장 · 브랜드 다른 지점 값(추정) — 화면 표시는 `place_info.official_web_note`.
+        #   관광공사가 그 지점 값을 주면 바꾸는 규칙(`merge_official_web`)이 사람 값과 같아 같은 출처 이름을 쓴다
         return {**read.as_record(source=HUMAN_HOURS_SOURCE, read_at=now.isoformat()), "method": "csv_rule",
                 "field_sources": sources,
-                "note": "사람이 공식 페이지에서 확인해 활동 CSV 에 넣은 값 — 칸별 출처는 field_sources(나머지 칸은 관광공사 원문)"}
+                "note": "관광공사 밖에서 채운 칸이 있는 값(사람 · Claude 확인, 또는 같은 매장 · 브랜드 다른 지점 값 추정) — "
+                        "칸별 출처는 field_sources(나머지 칸은 관광공사 원문)"}
     return {**read.as_record(source="activity_csv", read_at=now.isoformat()), "method": "csv_rule",
             "note": "조직 develop 활동 CSV 의 관광공사 원문 — 규칙으로 읽음(모델 호출 없음)"}
 

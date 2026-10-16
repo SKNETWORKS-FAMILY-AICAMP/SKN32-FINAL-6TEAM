@@ -56,5 +56,13 @@ class AdminEnvFile(unittest.TestCase):
             self.assertNotIn("SECRET", out.getvalue())
 
 
+    def test_keys_cover_settings_screens(self):
+        """「웹 제한값」 · 「보관 기간」 화면이 쓰는 limits:read · limits:write 열쇠도 만든다(빠지면 두 화면이 503)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tool = load(Path(tmp) / ".env.admin")
+            self.assertIn("limits:read", tool.OPS_SCOPES)
+            self.assertIn("limits:write", tool.OPS_SCOPES)
+
+
 if __name__ == "__main__":
     unittest.main()

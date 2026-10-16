@@ -203,6 +203,24 @@ def _similar_places(conn, tenant_id: str, ref: tuple[float, float], lcls: list[s
     return [{**place, "basis": "same_kind", "class_grade": grade} for place in _tour_places(cands)]
 
 
+def _catalog_content_id(conn, tenant_id: str, current: dict[str, Any] | None) -> str | None:
+    """관광공사 번호가 없는 원래 장소(우리 장소 목록에서 찾은 「경복궁」 등)를 **같은 이름의 목록 항목**으로 잇는다 — 정확히 한 곳일 때만(`_original_class` 와 같은 이름 규칙).
+    ★`[2026-10-15 x600 실서버 확인]` 우리 장소 목록 행은 번호가 비어 있는 경우가 많아 팀 엔진을 못 부르고 자체 고르기로 떨어졌다. 여럿이면 모름(`None`)."""
+    name = ((current or {}).get("name") or "").strip()
+    if not name:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT content_id FROM place_catalog WHERE tenant_id = ANY(%s) AND source='tour_api' AND title = %s",
+                        (_tenants(tenant_id), name))
+            ids = [row[0] for row in cur.fetchall() if row[0]]
+    except Exception as exc:                                  # noqa: BLE001 — 목록이 없는 DB 면 모른다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+            raise
+        return None
+    return str(ids[0]) if len(ids) == 1 else None
+
+
 def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, Any] | None,
                  items: list[dict[str, Any]]) -> list[dict[str, Any]] | None:
     """활동 일정의 다른 곳 후보를 **활동 팀 엔진**(`team_hooks.activity_alternatives`)에게 받는다. `[2026-10-15 사용자 결정]` 후보 공급은 팀이, 조립은 우리가.
@@ -215,7 +233,7 @@ def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, 
 
     if get_guardrails().get("travel.candidates.team_first") is False:
         return None
-    content_id = (current or {}).get("content_id")
+    content_id = (current or {}).get("content_id") or _catalog_content_id(conn, tenant_id, current)
     start = _dt(item["date"], item["starts_at"])
     if not content_id or start is None:
         return None
@@ -232,6 +250,55 @@ def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, 
                       category=category_label(alt.get("content_type_id")), content_id=alt["contentid"],
                       content_type_id=alt.get("content_type_id"), ref=f"tour:{alt['contentid']}"),
              "basis": "same_kind", "team_rank": rank, "similarity": alt.get("tier")}
+            for rank, alt in enumerate(got["alternatives"])]
+
+
+def _dining_uid(conn, current: dict[str, Any] | None) -> str | None:
+    """원래 식당의 요식 원장 번호 — 장소 값에 있으면 그것, 없으면 그 공용 장소 행의 속성에서."""
+    if not current:
+        return None
+    if current.get("dining_place_uid"):
+        return str(current["dining_place_uid"])
+    place_ref = str(current.get("place_id") or "") or (str(current.get("ref") or "")[6:] if str(current.get("ref") or "").startswith("place:") else "")
+    if not place_ref:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT attributes->>'dining_place_uid' FROM places WHERE place_id::text = %s", (place_ref,))
+            row = cur.fetchone()
+    except Exception as exc:                                  # noqa: BLE001 — 열이 없는 DB 면 모른다
+        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable", "InvalidTextRepresentation"):
+            raise
+        return None
+    return str(row[0]) if row and row[0] else None
+
+
+def _team_dining_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, Any] | None,
+                        nxt: dict[str, Any] | None) -> list[dict[str, Any]] | None:
+    """식사 일정의 다른 식당 후보를 **요식 팀 대체안**(`team_hooks.dining_alternatives`)에게 받는다. `[2026-10-15 사용자 결정]`
+    ★`None` = 팀이 없거나 답하지 못함(원래 식당이 원장에 없음 · 오류) — 그때만 자체 고르기(원장 근처 식당). 끄는 스위치: `travel.candidates.team_first`."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.team_hooks import dining_alternatives
+
+    if get_guardrails().get("travel.candidates.team_first") is False:
+        return None
+    uid = _dining_uid(conn, current)
+    start = _dt(item["date"], item["starts_at"])
+    if not uid or start is None:
+        return None
+    end = _dt(item["date"], item["ends_at"]) if item.get("ends_at") else None
+    nplace = (nxt or {}).get("place") or {}
+    next_point = (float(nplace["latitude"]), float(nplace["longitude"])) if nplace.get("latitude") is not None and nplace.get("longitude") is not None else None
+    try:
+        got = dining_alternatives.ranked(conn, tenant_id, uid, start, end, next_point=next_point)
+    except Exception:                                     # noqa: BLE001 — 팀이 답하지 못한 것으로 보고 자체 길로 간다
+        log.warning("dining alternatives failed — falling back to the local candidate picker", exc_info=True)
+        return None
+    if got is None:
+        return None
+    return [{**_place(alt["name"], alt["latitude"], alt["longitude"], "places", kind="dining", address=alt.get("address"),
+                      category=category_label("39"), place_id=alt["place_id"], ref=f"place:{alt['place_id']}"),
+             "team_rank": rank}
             for rank, alt in enumerate(got["alternatives"])]
 
 
@@ -687,7 +754,13 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     if not found and ref and item["place_state"] not in ("picked_nearest", "needs_choice", "needs_name"):
         # ② 같은 종류의 다른 곳 — ★이름이 모호한 체인(올리브영)은 다른 지점이 없다고 해서 엉뚱한 관광지를 대신 권하지 않는다(`notes` 에 이유)
         if item["kind"] == "dining":
-            found += _ledger_places(conn, tenant_id, ref)
+            # ★`[2026-10-15]` 식사 일정은 **요식 팀 대체안이 먼저**다 — 팀이 없거나 답하지 못할 때만 원장 근처 식당(자체 고르기)
+            team = _team_dining_places(conn, tenant_id, item, current, nxt)
+            if team is not None:
+                found += team
+                notes.append("team_ranked")
+            else:
+                found += _ledger_places(conn, tenant_id, ref)
         elif stay_item:
             # ★`[2026-10-15]` 숙소 항목은 같은 숙박 분류에서만 찾는다 — 분류를 모르는 활동처럼 쇼핑만 빼고 관광지까지 권하지 않는다. 목록이 모자라면 지도의 「숙소」로 채운다
             found += _catalog_places(conn, tenant_id, ref, LODGING_TYPE, now)

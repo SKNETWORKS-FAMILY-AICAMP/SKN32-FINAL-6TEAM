@@ -28,7 +28,7 @@ test('차단·해제와 예외 한도는 사유를 요구하고 사용자와 운
   await expect(page.getByRole('button', { name: '사용자 차단', exact: true })).toBeVisible();
   await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveCount(0);
 
-  await page.getByLabel('② 채팅 하루 한도', { exact: true }).fill('75');
+  await page.getByLabel('② 채팅 하루 한도 (0 = 한도 없음)', { exact: true }).fill('75');
   await page.getByRole('button', { name: '예외 한도 저장', exact: true }).click();
   await expect(main(page).getByRole('alert')).toContainText('사유');
   await expect(page.getByRole('meter', { name: '오늘 채팅 사용률', exact: true })).toHaveAttribute('aria-valuetext', '50 / 50');
@@ -43,13 +43,13 @@ test('차단·해제와 예외 한도는 사유를 요구하고 사용자와 운
 
 test('기본 한도 저장은 사유가 있어야 적용되고 기존 사용자 예외를 유지한다', async ({ page }) => {
   await page.goto('/limits');
-  await page.getByLabel('② 채팅 하루 한도 (모든 사용자)', { exact: true }).fill('60');
+  await page.getByLabel('② 채팅 하루 한도 (모든 사용자 · 0 = 한도 없음)', { exact: true }).fill('60');
   await page.getByRole('button', { name: '한도 · 감시 설정 저장', exact: true }).click();
   await expect(main(page).getByRole('alert')).toContainText('사유');
   await page.getByRole('navigation', { name: '운영 메뉴' }).getByRole('button', { name: '사용자', exact: true }).click();
   await expect(main(page).getByRole('row').filter({ hasText: 'demo-user-01' })).toContainText('50 / 50');
   await page.getByRole('navigation', { name: '운영 메뉴' }).getByRole('button', { name: '한도 · 감시 조절', exact: true }).click();
-  await page.getByLabel('② 채팅 하루 한도 (모든 사용자)', { exact: true }).fill('60');
+  await page.getByLabel('② 채팅 하루 한도 (모든 사용자 · 0 = 한도 없음)', { exact: true }).fill('60');
   await page.getByLabel('한도·감시 설정 변경 사유 (필수)', { exact: true }).fill('기본 채팅 한도 검토 결과 반영');
   await page.getByRole('button', { name: '한도 · 감시 설정 저장', exact: true }).click();
   await expect(main(page).getByRole('status')).toContainText('반영');
