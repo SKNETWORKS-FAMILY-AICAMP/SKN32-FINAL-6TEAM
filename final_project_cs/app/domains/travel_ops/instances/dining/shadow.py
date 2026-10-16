@@ -72,7 +72,7 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
     """그림자 한 판 — 날마다 에이전트를 돌리고 체크마다 한 줄씩 쓴다. 돌려주는 값은 셈(기록 · 시험용)."""
     run_id = uuid.uuid4()
     rows: list[tuple] = []
-    counts = {"days": 0, "checks": 0, "compared": 0, "disagree": 0, "failures": 0}
+    counts = {"days": 0, "checks": 0, "compared": 0, "disagree": 0, "failures": 0, "missing": 0}
     rule_of = {i["id"]: rule_verdicts(i) for i in review.get("items") or [] if i.get("kind") == "dining"}
     for plan in plans_from_review(review, notes):
         counts["days"] += 1
@@ -96,6 +96,11 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
                 counts["disagree"] += agree is False
                 rows.append((item_id, code, agent, rule, agree, check.get("failure"),
                              {k: check.get(k) for k in ("why_chosen", "reason", "evidence", "claimed_verdict") if check.get(k)}))
+        # ★`[2026-10-16]` 에이전트가 빠뜨린 필수 체크도 한 줄씩 — 판정이 없으니 agent_verdict 는 비우고 이유를 failure 에 남긴다
+        for gap in result.missing:
+            item_id = str(gap["item_id"])
+            counts["missing"] += 1
+            rows.append((item_id, gap["check"], None, rule_of.get(item_id, {}).get(gap["check"]), None, gap["failure"], {}))
     with connect() as conn, conn.transaction(), conn.cursor() as cur:
         for item_id, code, agent, rule, agree, failure, detail in rows:
             cur.execute("INSERT INTO dining.dn_agent_shadow (run_id, tenant_id, intake_id, revision, item_id, check_code, "

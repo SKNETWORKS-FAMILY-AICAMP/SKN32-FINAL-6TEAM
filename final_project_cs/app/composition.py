@@ -725,7 +725,14 @@ def _dining_agent_shadow():
         logging.getLogger(__name__).warning("dining agent shadow enabled but model %s has no key/address — shadow is off",
                                             shadow_settings["model"])
         return None
-    return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"])
+    # ★`[2026-10-16]` 원장이 모를 때 에이전트가 고를 바깥 조회 — 지도(카카오 `map_search`) · 실시간 영업(구글 `live_open_check`).
+    #   ☆전에는 기본 `DiningTools(connect)` 라 둘 다 None — 스위치를 켜도 바깥 조회는 늘 「모름」이었다(LLM 켜짐 점검).
+    #   키가 없으면 그 도구만 「모름」(어댑터 None). 호출 예산은 각 어댑터의 DB 예산 그대로다
+    from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
+
+    tools_factory = partial(DiningTools, kakao=build_kakao_local(), google=build_google_places())
+    return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"],
+                   tools_factory=tools_factory)
 
 
 def _dining_meal_picker():
