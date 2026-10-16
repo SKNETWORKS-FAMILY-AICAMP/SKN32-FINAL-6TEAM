@@ -58,7 +58,7 @@ from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TO
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, with_request
 from .ledger import item_key
 from .interpret import LABELS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, rule_dates, settle_years
-from .wants import (Wants, kind_reason, read_wants, restriction, stars_reason, stay_city, stay_kinds, stay_stars, strip_handled, summary,
+from .wants import (DORMS, Wants, guest_block, kind_reason, read_wants, restriction, stars_reason, stay_city, stay_kinds, stay_stars, strip_handled, summary,
                     wants_pet)
 
 logger = logging.getLogger(__name__)
@@ -409,7 +409,7 @@ def _sellers(detail: dict[str, Any] | None) -> list[dict[str, Any]]:
     return sorted(out, key=lambda seller: seller["price_per_night"])[:SELLERS_SHOWN]
 
 
-def _listing_reason(stay: dict[str, Any], wants: Wants, seoul: bool, *, anchored: bool = False) -> str | None:
+def _listing_reason(stay: dict[str, Any], wants: Wants, seoul: bool, *, anchored: bool = False, children: int = 0) -> str | None:
     """마이리얼트립 목록 한 곳을 뺄 까닭(목록 칸만 본다 — 부르지 않는다). 없으면 `None`.
     `seoul` 이면 설명 마지막 칸(시)이 서울이 아닌 곳을 뺀다(☆10-15 검수 L01 「군산 성수」 — 설명 「모텔 · 군산」).
     `anchored`(기준점이 있음)면 서울에 맞닿은 시(`_NEXT_TO_SEOUL`)는 빼지 않고 거리로 본다(☆사용자 판정 L08)."""
@@ -417,12 +417,19 @@ def _listing_reason(stay: dict[str, Any], wants: Wants, seoul: bool, *, anchored
     city = stay_city(description)
     if seoul and city and city != "서울" and not (anchored and city in _NEXT_TO_SEOUL):
         return "region"
-    if restriction(stay.get("name")):
-        return "restricted"
+    if guest_block(stay.get("name"), wants.guest, children=children):
+        return "restricted"                        # `[2026-10-16 사용자 판정 L05]` 묵을 분에게 맞지 않는 이용 조건만
     kind = kind_reason(wants, stay_kinds(description, stay.get("name")))
     if kind:
         return kind
     return stars_reason(wants, stay_stars(description))
+
+
+def _restricted_text(guest: Any) -> str:
+    """뺀 이용 조건 숙소를 말하는 조각 — 묵을 분을 알면 「묵을 분과 맞지 않는」, 모르면 「…이 붙은」."""
+    if not guest.missing():
+        return f"묵을 분({guest.text()})과 맞지 않는 이용 조건(여성 · 외국인 전용 등)이 이름에 보인"
+    return "여성 · 외국인 전용처럼 이용 조건이 붙은"
 
 
 def _outside_seoul(where: tuple[float, float] | None) -> bool:
@@ -484,12 +491,28 @@ def google_ts(check_in: str, check_out: str, adults: int) -> str:
     return base64.urlsafe_b64encode(body).decode().rstrip("=")
 
 
-def _google_page(name: str, dates: dict[str, str] | None = None, adults: int | None = None) -> str:
-    """구글 호텔에서 그 이름으로 찾은 화면 — 날짜 · 인원을 알면 `ts` 로 채운다(`google_ts`). `[2026-10-15 검수 D]` ☆사용자 판정 L01 —
-    목록 `link`(숙소 자체 사이트) 「호텔케이월드」가 열리지 않았다(서비스 종료). 이름이 하나로 정해지지 않으면 목록 화면으로 열린다(☆호텔케이월드)."""
-    url = f"https://www.google.com/travel/search?q={quote(str(name))}&hl=ko&gl=kr"
+def google_qs(property_token: str) -> str:
+    """구글 호텔 주소의 `qs` 칸 — 이 숙소 화면을 바로 연다. `[2026-10-16 사용자 판정 4차 L03 「렉시 호텔 링크 결과 없음」]`
+
+    ☆10-16 playdata 내장 브라우저: 구글 호텔 목록에서 숙소를 누르면 주소에 `qs` 가 붙었다 — base64url 프로토콜 버퍼로
+      6번 칸 = 숙소 열쇠(SerpApi `property_token` 과 같은 모양 「ChgI…」), 7번 칸 = 13. 이 함수로 만든 값이 화면 값과 글자까지 같았고,
+      이름만으로는 「결과 없음」이던 「렉시 호텔」을 `q=렉시 호텔` + `ts`(11/20~22 · 2명 / 11/28~30 · 3명) + 이 `qs` 로 열었더니
+      그 숙소 화면에 그 날짜 · 인원이 들어 있었다. ★구글이 공개한 주소 규칙이 아니다."""
+    return base64.urlsafe_b64encode(_proto(6, str(property_token).encode()) + _proto(7, 13)).decode().rstrip("=")
+
+
+def _google_page(name: str, dates: dict[str, str] | None = None, adults: int | None = None, *,
+                 token: str | None = None, area: str | None = None) -> str:
+    """구글 호텔에서 그 숙소를 연 화면 — 날짜 · 인원을 알면 `ts` 로 채운다(`google_ts`). `[2026-10-15 검수 D]` ☆사용자 판정 L01 —
+    목록 `link`(숙소 자체 사이트) 「호텔케이월드」가 열리지 않았다(서비스 종료).
+    `[2026-10-16]` 숙소 열쇠(`token`)가 있으면 `qs` 로 그 숙소 화면을 바로 연다. 없으면 이름(+ `area`, 「서울」)으로 찾은 목록 화면 —
+    ☆10-16 playdata 「렉시 호텔」은 이름만이면 「결과 없음」, 「렉시 호텔 서울」이면 목록 첫 줄이었다."""
+    query = str(name) if token or not area or area in str(name) else f"{name} {area}"
+    url = f"https://www.google.com/travel/search?q={quote(query)}&hl=ko&gl=kr"
     if dates and dates.get("check_in") and dates.get("check_out") and adults:
         url += "&ts=" + google_ts(dates["check_in"], dates["check_out"], adults)
+    if token:
+        url += "&qs=" + google_qs(token)
     return url
 
 
@@ -603,6 +626,15 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
     def _search(self, task: TeamTask, found: Interpretation, seen: set[str], evidence: list[Evidence],
                 decision: dict[str, Any], points: list[dict[str, Any]] | None = None) -> TeamResult:
         dates = {"check_in": found.check_in.isoformat(), "check_out": found.check_out.isoformat()}
+        early = read_wants(task.input_text)
+        if early.asks_guest:
+            # `[2026-10-16 사용자 판정 L05]` 게스트하우스 · 호스텔은 여성 전용 · 외국인 전용 · 나이 제한이 붙은 곳이 많다 —
+            #   바로 찾지 않고 묵을 분의 나이 · 성별 · 내국인/외국인을 먼저 묻는다(부르기 전에 — 도구 호출 0번)
+            missing = early.asks_guest
+            return self._respond(task, evidence, {**decision, "needs": ["guest_profile"], "guest_missing": missing},
+                                 f"{early.kind}{_eun(early.kind)} 여성 전용 · 외국인 전용 · 나이 제한처럼 묵을 수 있는 사람을 정해 둔 곳이 많아요. "
+                                 f"찾기 전에 묵으실 분의 정보({' · '.join(missing)})를 알려 주세요(예: 「20대 여자 1명, 내국인」). "
+                                 "처음 말씀하신 조건과 함께 보내 주시면 그에 맞는 곳으로 찾아 드릴게요.")
         center = trip_center(points or [], found.check_in, found.check_out)
         if center is not None:
             decision = {**decision, "trip_center": center}
@@ -640,7 +672,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         states = {name: (booked.get("sources") or {}).get(name, {}).get("status", "failed") for name in ("myrealtrip", "google")}
         listing, google = booked.get("myrealtrip"), booked.get("google")
         resting = states["myrealtrip"] == "resting"
-        block = {"wants": wants, "anchor": anchor, "max_price": found.max_price_per_night, "limit": limit, "base": base,
+        block = {"children": children, "wants": wants, "anchor": anchor, "max_price": found.max_price_per_night, "limit": limit, "base": base,
                  "label": label, "query": google_keyword, "walker": walker, "seoul": seoul, "dates": dates,
                  "adults": party.get("adults")}
         notes = self._wants_lines(found, wants, anchor, limit, children, party, text=task.input_text, walker=walker is not None)
@@ -670,7 +702,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         dropped: dict[str, int] = {}
         rows = []
         for stay in listing["stays"]:
-            reason = _listing_reason(stay, wants, seoul, anchored=anchor is not None)
+            reason = _listing_reason(stay, wants, seoul, anchored=anchor is not None, children=children)
             if reason:
                 dropped[reason] = dropped.get(reason, 0) + 1
                 continue
@@ -742,7 +774,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         others = self._skip_text(counts, wants, anchor, limit_text)
         if counts.get("restricted"):
             # `[2026-10-15 사용자 판정 L05]` 이용 조건이 붙은 숙소는 바로 주지 않고 고객 정보를 묻는다
-            notes = [*notes, "여성 전용 · 외국인 전용처럼 이용 조건이 붙은 숙소는 성별 · 국적 · 나이를 몰라 뺐어요 — 해당되시면 알려 주세요."]
+            notes = [*notes, f"마이리얼트립에서 {_restricted_text(wants.guest)} {counts['restricted']}곳은 뺐어요"
+                     + ("." if not wants.guest.missing() else " — 성별 · 국적 · 나이를 알려 주시면 다시 볼게요.")]
+        if wants.kind in DORMS and wants.guest.text():
+            notes = [*notes, "이용 조건은 숙소 이름에 보이는 것만 거를 수 있어요 — 나이 · 성별 제한은 링크한 화면에서 꼭 확인해 주세요."]
         if not lines:
             why = (f"{basic}곳이 가격이 없거나 그 날짜에 객실이 없었고, " if basic else "") \
                 + (f"{others} — 말씀하신 조건에 맞는 곳을 찾지 못했습니다. " if others else "그 밖의 곳은 확인하지 못했습니다. ")
@@ -1292,7 +1327,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                       center: dict[str, Any] | None = None, *, wants: Wants | None = None, anchor: dict[str, Any] | None = None,
                       max_price: int | None = None, limit: float | None = None, base: dict[str, Any] | None = None,
                       label: str = "일정 가운데에서", query: str | None = None, walker: Any = None, seoul: bool = False,
-                      dates: dict[str, str] | None = None, adults: int | None = None) -> list[str]:
+                      dates: dict[str, str] | None = None, adults: int | None = None, children: int = 0) -> list[str]:
         """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(이름 핵심 `_core` — 공백 · 「호텔」 · 「서울」 무시)과 숙박 공유(vacation rental)는 뺀다.
 
         ★숙박 공유를 빼는 까닭 — ☆2026-10-10 14:21 playdata 「서울 명동」 앞의 셋이 숙박 공유(Bluepillow · Vio)였고 평점 · 후기가 없었다.
@@ -1320,8 +1355,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             for stay in rows:
                 where = _coords(stay)
                 gap = _km(anchor["latitude"], anchor["longitude"], *where) if anchor and where else None
-                if restriction(stay.get("name")):
-                    restricted += 1                  # `[2026-10-15 사용자 판정 L05]` 여성 · 외국인 전용 등
+                if guest_block(stay.get("name"), wants.guest, children=children):
+                    restricted += 1                  # `[2026-10-15 · 10-16 사용자 판정 L05]` 묵을 분에게 맞지 않는 여성 · 외국인 전용 등
                     continue
                 if (max_price is not None and stay["price_per_night"] > max_price) \
                         or (gap is not None and (gap > REGION_KM or (straight_cap is not None and gap > straight_cap))) \
@@ -1367,10 +1402,13 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     star = f"{stay['hotel_class']}성급 · " if stay.get("hotel_class") else ""
                     far = _distance(base, stay)
                     minutes = walked.get(id(stay))
+                    rule = f" · 이용 조건 {restriction(stay.get('name'))}(묵을 분과 맞음)" if restriction(stay.get("name")) else ""
                     where = ((f" · {label} 걸어서 {minutes}분({far}km)" if minutes is not None and far is not None
                               else f" · {label} {far}km" if far is not None else " · 거리 모름") if base is not None else "")
                     lines.append(f"   · {stay['name']} — {star}1박 {_won(stay.get('price_per_night'))} · 전체 {_won(stay.get('total_price'))} · "
-                                 f"{rating}{where}: 구글 호텔 {_google_page(stay['name'], dates, adults)} · 숙소 사이트 {stay.get('link')}")
+                                 f"{rating}{where}{rule}: 구글 호텔 "
+                                 f"{_google_page(stay['name'], dates, adults, token=stay.get('property_token'), area='서울' if seoul else None)}"
+                                 f" · 숙소 사이트 {stay.get('link')}")
                 # `[2026-10-15 사용자 판정 L01 · L12]` 구글 호텔 화면 주소에는 날짜 · 인원이 넘어가지 않는다 —
                 #   ☆18시대 playdata 내장 브라우저: `checkin` · `checkout` · `adults` 를 붙여도 그 화면은 다른 날짜 · 2명으로 열렸다
                 # `[2026-10-15]` 안내 대신 링크에 날짜 · 인원을 싣는다(`google_ts`) — 최소 숙박 일수는 링크로 못 거른다
@@ -1378,7 +1416,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             elif dropped:
                 lines.append(f"구글 호텔 목록 {len(rows)}곳은 다른 지역이거나 말씀하신 조건(가격 · 유형 · 성급 · 거리)에 맞지 않아 싣지 않았습니다.")
             if restricted:
-                lines.append(f"구글 호텔에서 여성 · 외국인 전용처럼 이용 조건이 붙은 {restricted}곳은 뺐어요(성별 · 국적 · 나이를 알려 주시면 다시 볼게요).")
+                lines.append(f"구글 호텔에서 {_restricted_text(wants.guest)} {restricted}곳은 뺐어요"
+                             + ("." if not wants.guest.missing() else "(성별 · 국적 · 나이를 알려 주시면 다시 볼게요)."))
             if google.get("page"):
                 searched = query or google.get("keyword")
                 if dates and adults and searched:

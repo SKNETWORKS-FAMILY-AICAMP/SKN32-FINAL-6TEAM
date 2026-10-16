@@ -1153,16 +1153,40 @@ def test_walking_minutes_come_from_the_mobility_walk_planner_when_it_is_there(mo
     assert "강남역 2호선에서 걸어서 6분(0.2km)" in result.answer and "강남역 2호선에서 걸어서 15분 안(이동 계산기 도보)" in result.answer
 
 
-def test_restricted_stays_are_not_given_and_the_customer_is_asked():
-    """사용자 판정 L05 — 「YAB-GuestHouse, FemaleOnly, ForeignOnly」. 이용 조건이 붙은 곳은 바로 주지 않고 묻는다."""
-    listing = _listing([(1, "홍대 여성전용 게스트하우스", "게스트하우스 · 마포 · 서울", 30000), (2, "홍대 게스트하우스", "게스트하우스 · 마포 · 서울", 35000)])
+def test_a_guesthouse_request_asks_who_will_stay_before_searching():
+    """사용자 판정 4차 L05(10-16) — 게스트하우스는 이용 조건(성별 · 국적 · 나이)이 붙은 곳이 많아 바로 찾지 않고 먼저 묻는다."""
+    reply = {**SEARCH, "keyword": "홍대", "adults": 1, "max_price_per_night": 50000, "min_rating": None}
+    result, _, tools = _run(reply, {"read.stay_search": _listing([]), "read.stay_google": _google([])},
+                            text="다음 달 6일부터 3박 홍대 게스트하우스 1명")
+    assert result.decisions[0]["needs"] == ["guest_profile"] and result.decisions[0]["guest_missing"] == ["나이", "성별", "내국인/외국인"]
+    assert tools.calls == [], "묻기 전에는 도구를 부르지 않는다"
+    assert "게스트하우스는 여성 전용" in result.answer and "묵으실 분의 정보(나이 · 성별 · 내국인/외국인)" in result.answer
+    partly, _, _ = _run(reply, {}, text="다음 달 6일부터 3박 홍대 호스텔 1명 20대 여자")
+    assert partly.decisions[0]["guest_missing"] == ["내국인/외국인"] and "호스텔은" in partly.answer
+
+
+def test_restricted_stays_are_filtered_by_who_will_stay():
+    """사용자 판정 L05 — 「YAB-GuestHouse, FemaleOnly, ForeignOnly」. 묵을 분(20대 · 여성 · 내국인)에게 맞는 조건만 남긴다."""
+    listing = _listing([(1, "홍대 여성전용 게스트하우스", "게스트하우스 · 마포 · 서울", 30000), (2, "홍대 남성전용 게스트하우스", "게스트하우스 · 마포 · 서울", 35000)])
     google = _google([("YAB-GuestHouse, FemaleOnly, ForeignOnly", 36782.0, None, None, None), ("하이데어 게스트하우스", 32612.0, None, None, None)])
     reply = {**SEARCH, "keyword": "홍대", "adults": 1, "max_price_per_night": 50000, "min_rating": None}
     result, _, _ = _run(reply, {"read.stay_search": listing, "read.stay_detail": lambda a: None, "read.stay_google": google},
-                        text="다음 달 6일부터 3박 홍대 게스트하우스 1명")
-    assert [item["gid"] for item in result.decisions[0]["shown"]] == [2] and result.decisions[0]["dropped"] == {"restricted": 1}
-    assert "YAB-GuestHouse" not in result.answer and "하이데어 게스트하우스" in result.answer
-    assert "성별 · 국적 · 나이를 몰라 뺐어요" in result.answer and "이용 조건이 붙은 1곳은 뺐어요" in result.answer
+                        text="다음 달 6일부터 3박 홍대 게스트하우스 1명, 20대 여자 내국인")
+    assert [item["gid"] for item in result.decisions[0]["shown"]] == [1] and result.decisions[0]["dropped"] == {"restricted": 1}, \
+        "여성 전용은 여성에게 남기고 남성 전용은 뺀다"
+    assert "YAB-GuestHouse" not in result.answer and "하이데어 게스트하우스" in result.answer, "외국인 전용은 내국인에게 맞지 않는다"
+    assert "묵을 분(20대 · 여성 · 내국인)과 맞지 않는" in result.answer and "묵을 분 20대 · 여성 · 내국인" in result.answer
+    assert "링크한 화면에서 꼭 확인" in result.answer
+
+
+def test_restricted_stays_are_dropped_when_who_will_stay_is_unknown():
+    """게스트하우스를 묻지 않은 문장(호텔 · 유형 없음)에서는 전처럼 이용 조건이 붙은 곳을 빼고 알려 준다."""
+    google = _google([("YAB-GuestHouse, FemaleOnly, ForeignOnly", 36782.0, None, None, None), ("하이데어 호텔", 32612.0, None, None, None)])
+    reply = {**SEARCH, "keyword": "홍대", "adults": 1, "max_price_per_night": 50000, "min_rating": None}
+    result, _, _ = _run(reply, {"read.stay_search": _listing([(2, "홍대 호텔", "호텔 · 마포 · 서울", 35000)]),
+                                "read.stay_detail": lambda a: None, "read.stay_google": google},
+                        text="다음 달 6일부터 3박 홍대 숙소 1명")
+    assert "YAB-GuestHouse" not in result.answer and "이용 조건이 붙은 1곳은 뺐어요(성별 · 국적 · 나이를 알려 주시면" in result.answer
 
 
 def test_pets_get_their_own_guidance_and_google_says_dates_do_not_carry_over():
@@ -1225,3 +1249,24 @@ def test_google_hotel_links_carry_dates_and_adults():
     assert _google_page("호텔 리베라", {"check_in": "2026-11-28", "check_out": "2026-11-30"}, 3).endswith(
         "&ts=CAESDgoCCAMKAggDCgIIAxABGh4KAhoAEhgSEgoHCOoPEAsYHBIHCOoPEAsYHjICCAIqCQoFOgNLUlcaAA")
     assert "&ts=" not in _google_page("호텔 리베라"), "날짜를 모르면 이름만"
+    from app.domains.travel_ops.instances.lodging.team import google_qs
+    # ☆10-16 playdata 내장 브라우저 — 「렉시 호텔」 목록에서 숙소를 눌렀을 때 주소의 `qs` 와 같은 값
+    assert google_qs("ChgI7NLDu7iQ6KXqARoLL2cvMXRsYm0yYnAQAQ") == "MiZDaGdJN05MRHU3aVE2S1hxQVJvTEwyY3ZNWFJzWW0weVluQVFBUTgN"
+    link = _google_page("렉시 호텔", {"check_in": "2026-11-20", "check_out": "2026-11-22"}, 2,
+                        token="ChgI7NLDu7iQ6KXqARoLL2cvMXRsYm0yYnAQAQ", area="서울")
+    assert link.startswith("https://www.google.com/travel/search?q=%EB%A0%89%EC%8B%9C%20%ED%98%B8%ED%85%94&") and \
+        link.endswith("&qs=MiZDaGdJN05MRHU3aVE2S1hxQVJvTEwyY3ZNWFJzWW0weVluQVFBUTgN"), "열쇠가 있으면 이름 + qs 로 그 숙소 화면"
+    assert "q=%EB%A0%89%EC%8B%9C%20%ED%98%B8%ED%85%94%20%EC%84%9C%EC%9A%B8&" in _google_page("렉시 호텔", area="서울"), \
+        "열쇠가 없으면 이름 + 서울(이름만이면 「결과 없음」이었다)"
+
+
+def test_who_will_stay_is_read_from_the_sentence():
+    """사용자 판정 4차 L05(10-16) — 나이 · 성별 · 내국인/외국인. 「여자친구」 「여성 전용」은 성별이 아니고, 「외국인 친구랑」은 섞임."""
+    from app.domains.travel_ops.instances.lodging.wants import guest_block, read_guest
+
+    guest = read_guest("홍대 게스트하우스 2박 1명, 20대 여자 내국인")
+    assert (guest.age, guest.gender, guest.nation) == (20, "여성", "내국인") and guest.missing() == []
+    assert read_guest("여자친구랑 여성 전용 말고").gender is None
+    assert read_guest("외국인 친구랑 둘이").nation == "섞임" and read_guest("25살 남자 1명, 여자 1명").gender == "혼성"
+    assert guest_block("YAB-GuestHouse, FemaleOnly, ForeignOnly", guest) == "외국인 전용"
+    assert guest_block("Adults only hostel", guest) is None and guest_block("Adults only hostel", guest, children=1) == "성인 전용"

@@ -38,6 +38,58 @@ _WALK = re.compile(r"도보|걸어서|걸어\s*갈|걸어\s*다닐|걸을\s*수|
 _NEAR = re.compile(r"근처|가까운|가까이|가깝|인근|주변|바로\s*앞")
 
 
+#: `[2026-10-16 사용자 판정 L05]` 묵을 사람 — 게스트하우스 · 호스텔은 여성 전용 · 외국인 전용 · 나이 제한이 붙은 곳이 많아
+#:  찾기 전에 묻고(나이 · 성별 · 내국인/외국인), 받은 값으로 이름에 보이는 이용 조건을 거른다
+_FEMALE = re.compile(r"(?:여자|여성|female|woman|women)(?!\s*(?:친구|전용|만))", re.I)
+_MALE = re.compile(r"(?<![여fe])(?:남자|남성|male|man|men)(?!\s*(?:친구|전용|만))", re.I)
+_LOCAL = re.compile(r"내국인(?!\s*(?:전용|만))|한국인|한국\s*사람|한국\s*국적")
+_FOREIGN = re.compile(r"외국인(?!\s*(?:전용|만))|foreigner", re.I)
+_AGE = re.compile(r"(?<!\d)(\d{1,2})\s*(?:살|세)(?!\s*(?:미만|이하|이상))")
+_DECADE = re.compile(r"(?<!\d)([1-7])0\s*대")
+_MINOR = re.compile(r"미성년|고등학생|중학생|고딩|중딩")
+
+
+@dataclass(frozen=True)
+class Guest:
+    gender: str | None = None                      # 여성 · 남성 · 혼성
+    nation: str | None = None                      # 내국인 · 외국인 · 섞임
+    age: int | None = None                         # 대략 나이(「20대」 → 20)
+    words: tuple[str, ...] = field(default_factory=tuple)
+
+    def missing(self) -> list[str]:
+        return [label for label, value in (("나이", self.age), ("성별", self.gender), ("내국인/외국인", self.nation)) if value is None]
+
+    def text(self) -> str:
+        age = None if self.age is None else (f"{self.age}대" if self.age % 10 == 0 and self.age >= 10 else f"{self.age}세")
+        return " · ".join(part for part in (age, self.gender, self.nation) if part)
+
+
+def read_guest(text: str | None) -> Guest:
+    """문장에서 묵을 사람의 나이 · 성별 · 내국인/외국인을 읽는다. 「여자친구」 「여성 전용」은 성별로 보지 않는다."""
+    text = str(text or "")
+    words: list[str] = []
+
+    def seen(pattern: re.Pattern[str]) -> bool:
+        found = [match.group(0) for match in pattern.finditer(text)]
+        words.extend(found)
+        return bool(found)
+    female, male = seen(_FEMALE), seen(_MALE)
+    gender = "혼성" if female and male else "여성" if female else "남성" if male else None
+    local, foreign = seen(_LOCAL), seen(_FOREIGN)
+    # 「외국인 친구랑」은 말하는 사람 + 외국인 친구 — 섞인 것으로 본다(☆검수 L04 문장)
+    mixed = foreign and re.search(r"외국인\s*친구", text) is not None
+    nation = "섞임" if (local and foreign) or mixed else "내국인" if local else "외국인" if foreign else None
+    age = None
+    exact, decade = _AGE.search(text), _DECADE.search(text)
+    if exact:
+        age, _ = int(exact.group(1)), words.append(exact.group(0))
+    elif decade:
+        age, _ = int(decade.group(1)) * 10, words.append(decade.group(0))
+    elif _MINOR.search(text):
+        age, _ = 17, words.append(_MINOR.search(text).group(0))
+    return Guest(gender=gender, nation=nation, age=age, words=tuple(words))
+
+
 @dataclass(frozen=True)
 class Wants:
     kind: str | None = None
@@ -48,6 +100,12 @@ class Wants:
     near: str | None = None                        # "walk" · "near" · None
     #: 읽은 말(「반영 못 한 요청」에서 지울 때 쓴다)
     words: tuple[str, ...] = field(default_factory=tuple)
+    guest: Guest = field(default_factory=Guest)
+
+    @property
+    def asks_guest(self) -> list[str]:
+        """게스트하우스 · 호스텔을 찾는데 묵을 사람 정보가 빠졌으면 빠진 칸(묻기 전에는 찾지 않는다 — 사용자 판정 L05)."""
+        return self.guest.missing() if self.kind in DORMS else []
 
     @property
     def any(self) -> bool:
@@ -81,8 +139,9 @@ def read_wants(text: str | None) -> Wants:
             words.append(found.group(0))
     if kind in avoid:
         kind = None
+    guest = read_guest(text)
     return Wants(kind=kind, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
-                 words=tuple(words))
+                 words=tuple(words) + guest.words, guest=guest)
 
 
 def _parts(description: str | None) -> list[str]:
@@ -161,6 +220,19 @@ def restriction(name: str | None) -> str | None:
     return " · ".join(found) or None
 
 
+def guest_block(name: str | None, guest: Guest, *, children: int = 0) -> str | None:
+    """이름에 보이는 이용 조건 중 **묵을 사람에게 맞지 않는 것**. 맞거나 조건이 없으면 `None`. `[2026-10-16 사용자 판정 L05]`
+    모르는 칸(성별 · 국적 · 나이)이 걸린 조건은 맞지 않는 것으로 본다(전처럼 뺀다). 이름에 없는 조건은 알 수 없다 — 링크에서 확인."""
+    found = restriction(name)
+    if not found:
+        return None
+    fits = {"여성 전용": guest.gender == "여성", "남성 전용": guest.gender == "남성",
+            "외국인 전용": guest.nation == "외국인", "내국인 전용": guest.nation == "내국인",
+            "성인 전용": guest.age is not None and guest.age >= 19 and not children}
+    bad = [label for label in found.split(" · ") if not fits.get(label, False)]
+    return " · ".join(bad) or None
+
+
 #: `[2026-10-15 사용자 판정 L10]` 반려동물 말
 _PET = re.compile(r"반려\s*(?:견|동물|묘)|강아지|애견|댕댕|고양이|(?<![가-힣])펫(?!트)")
 
@@ -200,8 +272,10 @@ def summary(wants: Wants) -> list[str]:
         out.append("호스텔 · 게스트하우스 제외")
     if wants.cheapest:
         out.append("1박 가격 낮은 순")
+    if wants.guest.text() and wants.kind in DORMS:
+        out.append(f"묵을 분 {wants.guest.text()}")
     return out
 
 
-__all__ = ["DORMS", "NOT_HOTEL", "Wants", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
+__all__ = ["DORMS", "NOT_HOTEL", "Guest", "Wants", "guest_block", "read_guest", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
            "strip_handled", "summary"]
