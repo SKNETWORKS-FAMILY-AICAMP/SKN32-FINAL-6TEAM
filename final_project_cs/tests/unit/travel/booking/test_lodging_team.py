@@ -1270,3 +1270,21 @@ def test_who_will_stay_is_read_from_the_sentence():
     assert read_guest("외국인 친구랑 둘이").nation == "섞임" and read_guest("25살 남자 1명, 여자 1명").gender == "혼성"
     assert guest_block("YAB-GuestHouse, FemaleOnly, ForeignOnly", guest) == "외국인 전용"
     assert guest_block("Adults only hostel", guest) is None and guest_block("Adults only hostel", guest, children=1) == "성인 전용"
+
+
+def test_hanok_search_keeps_foreign_named_hanok_rentals_and_records_dropped_names():
+    """사용자 판정 5차 L06(10-16) — 「Hanok」처럼 외국어로 한옥이라 적힌 곳도 넣는다(숙박 공유로 와도). 뺀 이름은 판단 기록에 남긴다."""
+    google = _google([("Bukchon Hanok Stay", 180000.0, None, None, None), ("Seoul Apartment", 90000.0, None, None, None),
+                      ("韓屋ゲストハウス 楽古斎", 200000.0, None, None, None), ("나인트리 인사동", 150000.0, None, None, None)])
+    for stay in google["stays"][:2]:
+        stay["type"] = "vacation rental"
+    reply = {**SEARCH, "keyword": "인사동", "adults": 2, "max_price_per_night": None, "min_rating": None}
+    result, _, _ = _run(reply, {"read.stay_search": _listing([(1, "인사동 호텔", "호텔 · 종로 · 서울", 150000)]),
+                                "read.stay_detail": lambda a: None, "read.stay_google": google},
+                        text="다음 달 6일부터 3박 인사동 한옥 2명")
+    answer, decision = result.answer, result.decisions[0]
+    assert "Bukchon Hanok Stay" in answer and "숙박 공유" in answer and "韓屋ゲストハウス" in answer
+    assert "Seoul Apartment" not in answer and "나인트리 인사동" not in answer
+    assert decision["dropped_names"] == [{"name": "인사동 호텔", "why": "kind"}]
+    assert {"name": "Seoul Apartment", "why": "vacation_rental"} in decision["google_dropped"]
+    assert {"name": "나인트리 인사동", "why": "kind"} in decision["google_dropped"]

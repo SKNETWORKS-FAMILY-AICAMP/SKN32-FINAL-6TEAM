@@ -22,7 +22,7 @@ import re
 _KIND_WORDS = (("한옥", "한옥"), ("게스트하우스", "게스트하우스"), ("게하", "게스트하우스"), ("호스텔", "호스텔"),
                ("모텔", "모텔"), ("펜션", "펜션"), ("리조트", "리조트"), ("호텔", "호텔"))
 #: 숙소 이름 · 설명에서 유형을 알아보는 낱말(영어 포함). 「호스텔」 · 「hostel」에는 「호텔」 · 「hotel」이 들어 있지 않다
-_STAY_KIND_WORDS = (("한옥", "한옥"), ("hanok", "한옥"), ("게스트하우스", "게스트하우스"), ("guesthouse", "게스트하우스"),
+_STAY_KIND_WORDS = (("한옥", "한옥"), ("hanok", "한옥"), ("han-ok", "한옥"), ("韓屋", "한옥"), ("韩屋", "한옥"), ("ハノク", "한옥"), ("게스트하우스", "게스트하우스"), ("guesthouse", "게스트하우스"),
                     ("guest house", "게스트하우스"), ("호스텔", "호스텔"), ("hostel", "호스텔"), ("모텔", "모텔"), ("motel", "모텔"),
                     ("펜션", "펜션"), ("리조트", "리조트"), ("resort", "리조트"), ("호텔", "호텔"), ("hotel", "호텔"))
 DORMS = frozenset({"게스트하우스", "호스텔"})
@@ -194,7 +194,7 @@ def kind_reason(wants: Wants, kinds: frozenset[str], *, strict: bool = True) -> 
         return "kind" if kinds and kinds & NOT_HOTEL and "호텔" not in kinds else None
     if wants.kind in kinds:
         return None
-    # `[2026-10-15 사용자 판정 L06]` 한옥은 이름에 「한옥 · hanok」이 확실히 있을 때만(구글 칸도) — 「나인트리 인사동」이 한옥처럼 섞였다
+    # `[2026-10-15 사용자 판정 L06]` 한옥은 이름에 「한옥 · hanok(韓屋 · ハノク)」이 확실히 있을 때만(구글 칸도) — 「나인트리 인사동」이 한옥처럼 섞였다
     return "kind" if strict or kinds or wants.kind == "한옥" else None
 
 
