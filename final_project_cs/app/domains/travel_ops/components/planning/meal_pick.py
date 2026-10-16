@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any, Callable, Mapping, Sequence
 from zoneinfo import ZoneInfo
@@ -185,8 +185,10 @@ def _same(value: Any, fact: Any) -> bool:
     return norm(value) == norm(fact)
 
 
-def check(answer: Mapping[str, Any], table: Mapping[str, Mapping[str, Any]], *, preference: str = "") -> str | None:
-    """모델 답을 확인한다. 문제가 없으면 None, 있으면 이유 이름. 취향 문장(`preference`)이 비면 1등을 바꾸는 답은 받지 않는다."""
+def check(answer: Mapping[str, Any], table: Mapping[str, Mapping[str, Any]], *, preference: str = "",
+          flow: bool = False) -> str | None:
+    """모델 답을 확인한다. 문제가 없으면 None, 있으면 이유 이름. 취향 문장(`preference`)이 비면 1등을 바꾸는 답은 받지 않는다.
+    `flow` — 흐름 한 칸(`make_flow_picker`): 1등을 바꾸지 않으니 취향 문장 없이도 받는다(고른 곳 인용은 그대로 요구)."""
     pick = answer.get("pick")
     if pick not in table:
         return "pick_not_in_candidates"
@@ -203,7 +205,7 @@ def check(answer: Mapping[str, Any], table: Mapping[str, Mapping[str, Any]], *, 
             return "cited_unknown_field"
         if not _same(cite.get("value"), row[cite.get("field")]):
             return "cited_value_mismatch"
-    if table[pick].get("rule_rank") != 1 and not preference.strip():
+    if table[pick].get("rule_rank") != 1 and not preference.strip() and not flow:
         return "override_without_preference"
     if table[pick].get("rule_rank") != 1 and not any(c.get("candidate") == pick for c in cited):
         return "uncited_override"
@@ -242,6 +244,74 @@ def make_picker(chat: Any, *, ask: Callable[[Any, Sequence[Any], MealContext], l
     return pick
 
 
+# ── 흐름 한 칸 `[2026-10-16 사용자 결정]` ─────────────────────────────────────
+# 「LLM은 읽고 판단하고, 코드는 계산하고, 승인은 고객이」. 대안 셋 = ①규칙 1위 그대로 ②**모델이 그날 흐름 · 취향으로 고른 안 하나**
+# (이유를 붙여) ③나머지. 모델은 1위를 바꾸지 않는다 — 고객이 고르는 목록에 성격이 다른 안을 하나 넣는다.
+# ☆10-13 실측의 「흐름」 실패(취향 없이 불러 2위를 1위로 바꿔 다음 일정에 늦음)를 피한다: 1위는 모델에게 보이지 않고, 1위와 동선 등급
+#   (다음 일정에 늦지 않는 범위)이 다른 곳도 보이지 않으며, 결과는 바로 적용이 아니라 고객이 고르는 다른 안이다.
+# ★`[2026-10-16 실제 모델 측정]` 「1위보다 이동이 늘지 않는 곳만」(10-13 의 1위 바꾸기 안전장치)은 뺐다 — 다른 안이 1~2분만 멀어도 다 빠져
+#   흐름 사례 3건에서 모델을 한 번도 부르지 않았다. 늘어난 이동은 **서버가 잰 값**으로 안 설명 끝에 붙인다(`extra_walk`).
+# ★정답지가 없는 판단이라 평가 자료는 아직 없다.
+FLOW_NOTE = "그날 흐름"
+
+FLOW_SYSTEM = (
+    "너는 여행 일정의 대체 식당 목록에 「성격이 다른 안」 하나를 고르는 도우미다. 규칙 1위는 이미 목록 맨 앞에 있고 여기에는 보이지 않는다. "
+    "아래 후보는 모두 그 시각에 영업하고 다음 일정에 늦지 않는다고 확인됐다. 1위보다 조금 더 걸을 수 있다(added_move_min).\n"
+    "할 일: 그날 흐름(day — 같은 날 다른 식사 · 일정)과 고객 취향(customer_preference, 있으면)에 가장 잘 맞는 후보 하나를 고른다.\n"
+    "- 예: 같은 날 다른 식사와 같은 종류가 겹치지 않게 · 점심이 무거웠으면 저녁은 가볍게 · 취향 문장이 있으면 그것이 먼저다.\n"
+    "- 후보 id 는 규칙 순위다(\"2\" 가 규칙 2위). 순위가 아니라 흐름으로 고른다.\n"
+    "- 후보 사실에 없는 것을 지어내지 않는다. 고른 후보의 사실을 하나 이상 cited 에 그대로 옮긴다(candidate=후보 id, field=칸 이름, value=그 칸의 값).\n"
+    "- reason 은 고객에게 그대로 보일 한국어 한 문장, 60자 안쪽. 늘어난 이동 시간은 서버가 따로 붙이니 쓰지 않아도 된다.\n"
+    "JSON 으로만 답한다."
+)
+
+
+def flow_pool(best: Any, alternates: Sequence[Any]) -> list[Any]:
+    """둘째 칸 후보(규칙 순서) — 1위를 뺀 상위 셋 안에서, 1위와 같은 동선 등급(다음 일정에 늦지 않는 범위)인 곳. 둘 미만이면 고를 이유가 없다."""
+    pool = [c for c in list(alternates)[:TOP - 1] if _route_band(c) == _route_band(best)]
+    return pool if len(pool) >= 2 else []
+
+
+def extra_walk(best: Any, chosen: Any) -> str:
+    """고른 안이 1위보다 더 움직이면 그 분을 잰 값으로 — 「 (1순위보다 이동 N분 더)」. 늘지 않으면 빈 말."""
+    more = int(chosen.added_move_min or 0) - int(best.added_move_min or 0)
+    return f" (1순위보다 이동 {more}분 더)" if more > 0 else ""
+
+
+def make_flow_picker(chat: Any, *, clock: Callable[[], float] = time.perf_counter, num_predict: int = 200) -> MealPicker:
+    """흐름 한 칸 선택기 — `Pick.best` 는 늘 규칙 1위, 모델이 고른 안은 `alternates` 맨 앞에 `note`(「그날 흐름: 이유」)를 달고 선다.
+    실패 · 이상한 답은 규칙 순서 그대로(예외를 올리지 않는다). 모양은 `make_picker` 와 같아 부르는 쪽(`_meal_pick`)은 그대로다."""
+
+    def pick(best: Any, alternates: list[Any], context: MealContext) -> Pick:
+        pool = flow_pool(best, alternates)
+        if not pool:
+            return Pick(best=best, alternates=list(alternates), by="rule")
+        table = {IDS[[best, *alternates].index(c)]: facts(c, [best, *alternates].index(c) + 1) for c in pool}
+        body = {"meal": {"title": context.meal_title, "starts_at": _hm(context.starts_at),
+                         "original": _place_brief(context.original)},
+                "day": context.day, "customer_preference": context.preference or None,
+                "candidates": [{"id": key, **value} for key, value in table.items()]}
+        started = clock()
+        try:
+            answer = chat.structured(FLOW_SYSTEM, json.dumps(body, ensure_ascii=False), schema(list(table)),
+                                     num_predict=num_predict)
+            failure = check(answer, table, preference=context.preference, flow=True)
+        except Exception as exc:                       # noqa: BLE001 — 모델 실패는 규칙 순서로. 이유는 남긴다
+            answer, failure = {}, f"call_failed:{type(exc).__name__}"
+        seconds = round(clock() - started, 3)
+        if failure:
+            return Pick(best=best, alternates=list(alternates), by="rule_fallback", failure=failure,
+                        seconds=seconds, asked_ids=list(table))
+        chosen = [best, *alternates][IDS.index(answer["pick"])]
+        reason = answer["reason"].strip()[:REASON_MAX]
+        marked = replace(chosen, note=f"{FLOW_NOTE}: {reason}{extra_walk(best, chosen)}")   # 원래 후보는 건드리지 않는다
+        rest = [c for c in alternates if c is not chosen]
+        return Pick(best=best, alternates=[marked, *rest], by="llm", reason=reason,
+                    cited=list(answer.get("cited") or []), seconds=seconds, asked_ids=list(table))
+
+    return pick
+
+
 def day_context(items: Sequence[Any], meal: Any, preference: str = "") -> MealContext:
     """같은 날 다른 항목을 맥락으로 — 시각 · 종류 · 이름, 식사면 종류 · 결도."""
     day = meal.starts_at.astimezone(KST).date()
@@ -257,5 +327,5 @@ def day_context(items: Sequence[Any], meal: Any, preference: str = "") -> MealCo
                        preference=preference)
 
 
-__all__ = ["IDS", "PREFERENCE_KEY", "MealContext", "MealPicker", "Pick", "check", "day_context", "facts",
-           "make_picker", "preference_of", "prompt", "schema", "should_ask"]
+__all__ = ["FLOW_NOTE", "IDS", "PREFERENCE_KEY", "MealContext", "MealPicker", "Pick", "check", "day_context", "facts",
+           "extra_walk", "flow_pool", "make_flow_picker", "make_picker", "preference_of", "prompt", "schema", "should_ask"]

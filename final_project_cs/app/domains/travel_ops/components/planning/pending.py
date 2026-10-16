@@ -277,7 +277,9 @@ def proposal_notice(*, item: Item, decision: Decision, causes: list[dict[str, An
     ★`[2026-10-16 화면 점검]` 고객 문장에 마크다운 별표를 넣지 않는다 — 채팅 · 웹 알림은 그리지 않아 `**바꾸지 않았어요.**` 가 그대로 보였다."""
     head = "⚠️ 안전 알림 — " if decision.safety else ""
     why = _cause_text(causes)
-    listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}" for o in options[:3])
+    # ★`[2026-10-16]` 안 설명(`note` — 흐름 한 칸의 「그날 흐름: …」 · 조건을 푼 안의 「13:04으로 늦추면」)을 이름 뒤에 붙인다 — 고객이 고를 근거
+    listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}" + (f" ({o['note']})" if o.get("note") else "")
+                        for o in options[:3])
     if decision.reason == "protected":
         body = (f"{item.title} — {why}. 변경하지 않기로 한 일정이라 바꾸지 않았어요. "
                 f"어떻게 할까요? {listed}")

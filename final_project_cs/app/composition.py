@@ -754,7 +754,9 @@ def _dining_meal_picker():
         logging.getLogger(__name__).warning("dining meal_pick enabled but model %s has no key/address — rule pick only",
                                             pick_settings["model"])
         return None
-    return meal_pick.make_picker(chat)
+    # ★`[2026-10-16 사용자 결정]` 「흐름 한 칸」 — 규칙 1위는 그대로 두고 모델이 그날 흐름 · 취향으로 다른 안 하나를 고른다(고객이 고른다).
+    #   1위를 바꾸는 `make_picker` 는 평가용으로 남긴다(eval/runners/dining_alternatives)
+    return meal_pick.make_flow_picker(chat)
 
 
 def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> list[str]:
