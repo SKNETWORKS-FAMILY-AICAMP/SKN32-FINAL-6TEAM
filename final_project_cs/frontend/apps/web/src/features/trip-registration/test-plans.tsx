@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useRef, type KeyboardEvent } from "react";
+import { useEffect, useRef, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { openApi } from "@/lib/live/client";
 import { useSettings, useT } from "@/lib/settings";
@@ -48,6 +48,14 @@ export function TestPlans({ value, onChoose, disabled }: { value: string; onChoo
   const entry = planOfInput(query.data?.scenarios, value);
   const selectedCategory = entry && categoryOf(entry);
   const close = () => { if (picker.current) picker.current.open = false; trigger.current?.focus(); };
+  useEffect(() => {
+    function outside(event: PointerEvent) {
+      const box = picker.current;
+      if (box?.open && !box.contains(event.target as Node)) box.open = false;
+    }
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, []);
   function navigate(event: KeyboardEvent<HTMLDetailsElement>) {
     if (event.key === "Escape" && picker.current?.open) { event.preventDefault(); event.stopPropagation(); close(); return; }
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) || !picker.current?.open) return;
@@ -59,14 +67,17 @@ export function TestPlans({ value, onChoose, disabled }: { value: string; onChoo
   if (query.data && !query.data.enabled) return <p className={styles.help}>{t("시험 일정 입력이 꺼져 있어요.", "Test plan shortcuts are turned off.")}</p>;
   return <div className={styles.box}>
     <span className={styles.label}>{t("테스트 계획", "Test plan")}</span>
-    <details ref={picker} className={styles.picker} onKeyDown={navigate} onToggle={event => { if (event.currentTarget.open) event.currentTarget.scrollIntoView({ block: "nearest" }); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }}>
+    {/* ★바깥을 누르면 닫는다 — 초점 이동(blur)만으로 닫지 않는다. 아이폰·아이패드 사파리는 탭한 단추에 초점을 주지 않아(바탕 main 으로 옮기거나 비운다)
+        목록이 손가락을 떼기 전에 닫히고 누른 계획이 골라지지 않았다(2026-10-16 사용자 신고). blur 로는 Tab 으로 밖에 나간 경우만 닫는다. */}
+    <details ref={picker} className={styles.picker} onKeyDown={navigate} onToggle={event => { if (event.currentTarget.open) event.currentTarget.scrollIntoView({ block: "nearest" }); }} onBlur={event => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }}>
       <summary ref={trigger} id="test-plan-code" aria-label={t("테스트 계획", "Test plan")} aria-disabled={disabled || !query.data} onClick={event => { if (disabled || !query.data) event.preventDefault(); }}>
         <span className={styles.selection}>
           {selectedCategory && <span className={styles.badge} data-category={selectedCategory[0]}>{t(selectedCategory[1], selectedCategory[2])}</span>}
           <span>{entry ? `${entry.code} · ${entry.name}` : query.isPending ? t("준비된 계획 불러오는 중…", "Loading prepared plans…") : t("분류별 테스트 계획 선택", "Choose a test plan by category")}</span>
         </span><ChevronDown size={18} aria-hidden="true" />
       </summary>
-      {!disabled && query.data && <div className={styles.options} aria-label={t("분류별 테스트 계획", "Test plans by category")}>
+      {/* 목록 안을 눌러도 초점을 옮기지 않는다 — WebKit(사파리)은 탭한 단추 대신 바탕(main)에 초점을 줘서 목록이 닫혔다. 클릭은 그대로 일어난다 */}
+      {!disabled && query.data && <div className={styles.options} aria-label={t("분류별 테스트 계획", "Test plans by category")} onMouseDown={event => event.preventDefault()}>
         {sections.map(section => {
           const groups = categories.filter(category => category[3] === section[0]).map(category => {
             const plans = query.data.scenarios.filter(plan => categoryOf(plan)[0] === category[0]);

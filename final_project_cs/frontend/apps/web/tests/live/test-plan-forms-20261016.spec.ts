@@ -48,6 +48,29 @@ for (const width of [375, 1280]) {
   });
 }
 
+test("아이폰 사파리처럼 단추가 초점을 받지 않아도 목록에서 고른 계획이 입력칸에 채워지고, 바깥을 누르면 목록이 닫힌다", async ({ page, request }) => {
+  // 2026-10-16 사용자 신고(아이폰·아이패드): 목록에서 골라도 입력칸에 안 나온다. 사파리는 단추를 눌러도 초점을 옮기지 않아
+  // 목록이 「초점이 밖으로 나갔다」고 보고 손을 떼기 전에 닫혔다. 크롬에서 같은 조건을 만든다 — 단추를 누르는 순간 초점만 비운다.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await mockServer(request).reset();
+  await page.route("**/v1/web/test-scenarios", route => route.fulfill({ json: catalog }));
+  await start(page);
+  await page.goto("/trips/new");
+  await page.evaluate(() => document.addEventListener("mousedown", event => {
+    if ((event.target as Element).closest("button[data-plan-code]")) { event.preventDefault(); (document.activeElement as HTMLElement | null)?.blur(); }
+  }, true));
+  const picker = page.getByLabel("테스트 계획", { exact: true });
+  await page.getByLabel("나의 여행 계획").fill("10:00 경복궁");
+  await picker.click();
+  await page.locator('button[data-plan-code="test38"]').click();
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue(catalog.scenarios.find(plan => plan.code === "test38")!.text);
+  await expect(picker).toContainText("test38 ·");
+  await picker.click();
+  await expect(page.locator('button[data-plan-code="test17"]')).toBeVisible();
+  await page.getByLabel("나의 여행 계획").click();
+  await expect(page.locator('button[data-plan-code="test17"]')).toBeHidden();
+});
+
 test("입력란에 test33처럼 적어도 입력 형식 계획으로 알아보고 분류 이름을 보여 준다", async ({ page, request }) => {
   await mockServer(request).reset();
   await page.route("**/v1/web/test-scenarios", route => route.fulfill({ json: catalog }));
