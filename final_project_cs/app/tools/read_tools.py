@@ -7,6 +7,7 @@ validated ContextPack.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Callable
 from uuid import UUID
@@ -981,15 +982,23 @@ class ReadToolbox:
         word = str(name or "").strip()
         if not word or self.kakao is None:
             return None
-        tries = [{"category_group_code": "SW8"}, {}] if word.endswith("역") else [{}]
+        compact = "".join(word.split())
+        # `[2026-10-16 평가 2차 · GPT 검수]` 관련도 1위만 쓰니 「여의도」→「한강」, 「신촌」→「안산자락길」, 「DDP」→「서울디자인로드」처럼
+        #   다른 곳이 기준점이 됐다. 동네 이름이면 같은 이름 역(「여의도역」)부터, 아니면 이름에 검색어가 든 곳을 고른다.
+        station_first = bool(re.fullmatch(r"[가-힣]{2,6}", word)) and not re.search(r"[역구동로길]$", word)
+        tries = ([(word, {"category_group_code": "SW8"}, None), (word, {}, compact)] if word.endswith("역") else
+                 ([(word + "역", {"category_group_code": "SW8"}, compact + "역")] if station_first else []) + [(word, {}, compact)])
         answered = False
-        for options in tries:
-            found = self.kakao.search(word, size=1, anywhere=True, **options)
+        for query, options, must in tries:
+            found = self.kakao.search(query, size=5, anywhere=True, **options)
             if found is None:
                 continue
             answered = True
-            if found:
-                top = found[0]
+            named = [row for row in found if must and must.lower() in "".join(str(row.get("name") or "").split()).lower()]
+            if options and must and not named:
+                continue                      # 같은 이름 역이 없으면(「성수역」이 아닌 다른 역) 쓰지 않는다
+            top = (named or found or [None])[0]
+            if top:
                 return {"source": "kakao", "found": True, "name": top.get("name"),
                         "latitude": top.get("latitude"), "longitude": top.get("longitude")}
         return {"source": "kakao", "found": False} if answered else None

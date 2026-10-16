@@ -1061,7 +1061,7 @@ def test_children_without_ages_search_a_room_for_everyone():
                             text="다음 달 6일부터 3박 어른 2명 아이 2명 잠실")
     search = next(a for n, a in tools.calls if n == "read.booking_search_stays")
     assert (search["adults"], search["children"]) == (4, 0)
-    assert "성인 2명 · 아이 2명 조건으로" in result.answer and "아이 나이를 몰라 4명이 묵을 방 기준으로 찾았습니다" in result.answer
+    assert "성인 2명 · 아이 2명 조건으로" in result.answer and "아이 나이별 요금은 반영하지 못해 4명이 묵을 방 기준으로 찾았습니다" in result.answer
     assert "adultCount=4&childCount=0" in result.answer
 
 
@@ -1100,6 +1100,32 @@ def test_landmark_tool_returns_name_and_coordinates_only():
     assert got == {"source": "kakao", "found": True, "name": "강남역", "latitude": 37.49, "longitude": 127.02}
     assert [options.get("category_group_code") for _, options in kakao.calls] == ["SW8", None], "「…역」은 지하철역부터"
     assert ReadToolbox(lambda: None).landmark(None, name="강남역") is None, "카카오가 없으면 모름"
+
+
+def test_landmark_prefers_same_name_station_then_name_match():
+    """`[2026-10-16 GPT 검수]` 관련도 1위가 「여의도」→「한강」, 「DDP」→「서울디자인로드」였다."""
+    from app.tools.read_tools import ReadToolbox
+
+    def spot(name):
+        return {"name": name, "latitude": 37.5, "longitude": 127.0}
+
+    class Kakao:
+        def __init__(self, answers):
+            self.answers, self.calls = answers, []
+
+        def search(self, query, **options):
+            self.calls.append((query, options.get("category_group_code")))
+            return self.answers.get((query, options.get("category_group_code")), [])
+
+    def pick(word, answers):
+        return ReadToolbox(lambda: None, kakao=Kakao(answers)).landmark(None, name=word)["name"]
+
+    assert pick("여의도", {("여의도역", "SW8"): [spot("여의도역 5호선")], ("여의도", None): [spot("한강")]}) == "여의도역 5호선"
+    assert pick("홍대", {("홍대역", "SW8"): [spot("홍대입구역 2호선")], ("홍대", None): [spot("홍대걷고싶은거리")]}) == "홍대걷고싶은거리", \
+        "이름이 다른 역(홍대입구역)은 같은 이름 역이 아니다"
+    assert pick("DDP", {("DDP", None): [spot("서울디자인로드"), spot("동대문디자인플라자(DDP)")]}) == "동대문디자인플라자(DDP)"
+    assert pick("성동구", {("성동구", None): [spot("성수동카페거리"), spot("성동구청")]}) == "성동구청"
+    assert pick("경리단길", {("경리단길", None): [spot("경리단길")]}) == "경리단길"
 
 
 def test_a_city_less_stay_name_with_seoul_coordinates_searches_in_seoul():
@@ -1311,6 +1337,8 @@ def test_date_ranges_people_and_vague_dates_are_read_by_rules():
     assert rule_checks(last_sat, "2027년 1월의 마지막 토요일에 들어가서 다음 날 나올 용산 숙소, 성인 2명")[1] == [], "몇째 요일은 날짜다(F-33)"
     parents = Interpretation(task="search", check_in=day(2026, 12, 18), check_in_text="12월 18일", adults=2)
     assert rule_checks(parents, "부모님 모시고 종로 한옥 12월 18일 1박")[1] == ["adults"]
+    family = Interpretation(task="search", adults=2, children=1)
+    assert rule_checks(family, "엄마랑 아빠, 그리고 10개월 된 아기 이렇게 세 식구가 묵을 온돌방 숙소")[1] == [], "세 식구 · 엄마 아빠는 인원 근거(H-31)"
     assert parse({"task": "search", "max_price_per_night": 0}).max_price_per_night is None, "「0원」으로 해석 전체가 거절되지 않는다(I-05)"
 
 

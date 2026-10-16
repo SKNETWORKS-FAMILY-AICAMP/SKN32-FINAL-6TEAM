@@ -864,7 +864,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         """반영한 조건 · 못 한 조건 · 아이 인원 · 반려동물 안내 줄."""
         lines = []
         if children:
-            lines.append(f"아이 나이를 몰라 {party['adults']}명이 묵을 방 기준으로 찾았습니다 — 아이 요금 · 객실 정원은 링크에서 확인해 주세요.")
+            # `[2026-10-16 GPT 검수 F-32 · G-31]` 나이를 말해도 「몰라」라고 했다 — 나이는 안 읽으므로 「반영 못 함」으로
+            lines.append(f"아이 나이별 요금은 반영하지 못해 {party['adults']}명이 묵을 방 기준으로 찾았습니다 — 아이 요금 · 객실 정원은 링크에서 확인해 주세요.")
         done = summary(wants)
         if limit is not None and anchor:
             done.append(f"{anchor['name']}에서 걸어서 {_walk_cap(wants)[0]}분 안(이동 계산기 도보)" if walker

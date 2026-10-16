@@ -258,7 +258,9 @@ _DAY_GIVEN = re.compile(r"\d+\s*일|\d+\s*[/.]\s*\d+|오늘|내일|모레|이번
 _RELATIVE_STAY = re.compile(r"(오늘|내일|모레)\s*(?:부터|밤|하룻밤|\d+\s*박|체크\s*인|입실|묵|숙박|자|들어|저녁|당일|1박)")
 #: 인원 근거 — 숫자 + 명 · 인, 혼자 · 둘 · 커플 · 부부 …. 없는데 모델이 인원을 냈으면 지운다(B-22 「부모님 모시고」를 2명으로)
 _PEOPLE = re.compile(r"\d+\s*(?:명|인|분|adults?|people|persons?|pax)|혼자|혼행|혼숙|한\s*명|두\s*명|세\s*명|네\s*명|다섯|여섯|"
-                     r"둘|셋|넷|성인|어른|부부|커플|연인|여자\s*친구|남자\s*친구|여친|남친|신혼|solo|couple|single", re.I)
+                     r"둘|셋|넷|성인|어른|부부|커플|연인|여자\s*친구|남자\s*친구|여친|남친|신혼|solo|couple|single|"
+                     # 「엄마랑 아빠, 그리고 아기 세 식구」(H-31) — 식구 수 · 엄마 아빠 둘 다는 인원 근거. 「부모님 모시고」는 아니다(B-22)
+                     r"\d+\s*식구|[두세네]\s*식구|다섯\s*식구|엄마.{0,6}아빠|아빠.{0,6}엄마", re.I)
 
 
 def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[str]]:
