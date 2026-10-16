@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-"""상황 카드 초안 — RAG 60장 · LLM 60장 · 작성자 시트(블라인드).
+"""상황 카드 초안 — LLM 60장 · 작성자 시트(블라인드).
 
 무엇인가
 - 사람이 **고객 문장**만 쓰게 하는 카드다. 카드가 상황을 정하므로 정답(키)은 카드를 만들 때 정해진다.
-- RAG 카드: 규정 표(`knowledge/travel_ext/` 의 국내여행 · 공연 · 레저 기준)에서 **기대 결과를 계산**한다.
 - LLM 카드: 고객이 바라는 성질(실내 · 역사 · 체험 …)과 단서 출처를 정답 키로 둔다. 후보 3곳은
   DB(활동 원장 `activity.ac_place`)를 켠 뒤 운영 코드(`rank_alternatives`)로 붙인다 — `binding` 이 후보 조건이다.
 
-★정답 키는 `travel_ext` **초안**(README 「사실 확인 대기」) 기준이다. 원문 대조 전에는 `source_status` 가
-  `draft` 이고, 해석이 갈릴 수 있는 카드는 `needs_review=true` 로 표시한다.
-★작성자 시트(`sheet_*.csv`)에는 상황 문장만 싣는다 — 정답 키 · 묶음 · 규정 용어를 싣지 않는다(블라인드).
+★`[2026-10-16]` RAG(환불 · 취소 규정) 카드는 지웠다 — RAG 테스트를 범위에서 뺐다.
+★해석이 갈릴 수 있는 카드는 `needs_review` 로 표시한다.
+★작성자 시트(`sheet_*.csv`)에는 상황 문장만 싣는다 — 정답 키 · 묶음을 싣지 않는다(블라인드).
 ★LLM 호출 없음 · DB 없음 · 난수는 고정 seed.
 
 실행: `python eval/situation_cards/build_cards.py` (final_project_cs 에서)
@@ -19,262 +18,12 @@ from __future__ import annotations
 import csv
 import json
 import random
-from datetime import date, timedelta
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent
 VERSION = "v0"
 SEED = 1016
 WRITERS = 4
-WEEKDAY = "월화수목금토일"
-
-# ── 규정 절(골드) — 문서 id#절 제목. 제목은 knowledge/travel_ext/documents/*.md 의 `##` 와 같다 ──
-S = {
-    "t1_scope": "t_ext_01#표준약관이 다루는 범위",
-    "t1_cancel": "t_ext_01#출발 전 계약 해제와 손해 배상",
-    "t1_force": "t_ext_01#천재지변·정부 명령 등 위약금 없이 해제할 수 있는 공통 사유",
-    "t1_personal": "t_ext_01#가족 사망·질병 등 개인 사유로 위약금 없이 해제하는 경우",
-    "t1_minimum": "t_ext_01#최저 인원이 채워지지 않았을 때",
-    "t2_traveler": "t_ext_02#여행자 사유로 취소하는 경우",
-    "t2_agency": "t_ext_02#여행사 사유로 취소하는 경우",
-    "t2_change": "t_ext_02#여행사가 계약 조건을 바꿔 해지하는 경우",
-    "t2_minimum": "t_ext_02#인원 미달로 여행사가 취소하는 경우",
-    "t2_force": "t_ext_02#천재지변·정부 명령 같은 불가항력으로 취소하는 경우",
-    "t2_disease": "t_ext_02#감염병과 재난으로 해제를 요청하는 경우",
-    "t3_facility": "t_ext_03#시설을 정상적으로 이용할 수 없을 때",
-    "t3_ad": "t_ext_03#광고나 계약 내용과 실제가 다른 경우",
-    "t3_biz": "t_ext_03#사업자 책임으로 해제하는 경우의 반환 금액",
-    "t3_consumer": "t_ext_03#소비자 책임으로 해제하는 경우의 반환 금액",
-    "t3_show_cancel": "t_ext_03#공연이 취소되거나 연기된 경우",
-    "t3_show_refund": "t_ext_03#관객이 환급을 요구하는 경우",
-}
-CAVEAT = "참고 · 권고 기준이며 업체(계약) 약관이 확인되면 그것이 우선"
-
-PARTIES = ["친구 3명과", "가족 4명이", "부모님을 모시고", "회사 동료 2명과", "연인과", "대학 동기 5명과"]
-PERSONAL = ["회사에 급한 일이 생겨서", "다른 약속과 날짜가 겹쳐서", "일행끼리 일정이 안 맞아서",
-            "마음이 바뀌어서", "이사 날짜가 당겨져서", "예산이 부족해져서"]
-
-
-def _day(d: date) -> str:
-    return f"{d.month}월 {d.day}일({WEEKDAY[d.weekday()]})"
-
-
-def _when(days: int) -> str:
-    return "당일" if days == 0 else f"{days}일 전"
-
-
-# ── RAG 계산 규칙(초안 기준) ───────────────────────────────────────────────
-def traveler_rate(kind: str, days: int) -> int | None:
-    """여행자 사유 — None = 전액 환급. 당일: 3일 전까지 전액 · 2일 10 · 1일 20 · 당일 30.
-    숙박: 5일 전까지 전액 · 「2일 전까지」10(=4~2일) · 1일 20 · 당일 30."""
-    full = 3 if kind == "당일" else 5
-    if days >= full:
-        return None
-    return {0: 30, 1: 20}.get(days, 10)
-
-
-def agency_rate(kind: str, days: int) -> int | None:
-    """여행사 사유 · 조건 변경 해지 — None = 계약금 환급만. 그 밖은 계약금 환급 + 요금 비율 배상."""
-    return traveler_rate(kind, days)
-
-
-def show_deduction(days: int) -> int | None:
-    """관객 환급 요구 — None = 전액. 10일 전까지 전액 · 7일 10 · 3일 20 · 1일 30 · 당일(시작 전) 90."""
-    if days >= 10:
-        return None
-    if days >= 7:
-        return 10
-    if days >= 3:
-        return 20
-    if days >= 1:
-        return 30
-    return 90
-
-
-def _other_rates(rate: int | None, pool=(10, 20, 30)) -> list[str]:
-    out = [f"{p}%" for p in pool if p != rate]
-    if rate is not None:
-        out.append("전액 환급")
-    return out
-
-
-# ── RAG 카드 ──────────────────────────────────────────────────────────────
-def rag_cards(rng: random.Random) -> list[dict]:
-    cards: list[dict] = []
-    base = date(2026, 11, 7)
-
-    def add(stratum, situation, behavior, gold, facts, forbidden, *, required=None, review=None, caveat=True, meta=None):
-        cards.append({
-            "card_id": f"R-{len(cards) + 1:02d}", "kind": "rag", "stratum": stratum, "situation": situation,
-            "expected_behavior": behavior, "gold_sections": gold, "required_sections": required or [],
-            "required_facts": facts, "forbidden_claims": forbidden, "must_caveat": caveat and behavior == "answer",
-            "needs_review": review or "", "source_status": "draft", "meta": meta or {}, "label_by": "card-rule",
-        })
-
-    # 1) 여행자 사유 — 국내 당일 5 · 숙박 7 · 연락 없이 불참 2 (14)
-    plan = [("당일", d) for d in (5, 3, 2, 1, 0)] + [("숙박", d) for d in (7, 5, 4, 3, 2, 1, 0)]
-    for i, (kind, days) in enumerate(plan):
-        dep = base + timedelta(days=i * 2)
-        notice = dep - timedelta(days=days)
-        rate = traveler_rate(kind, days)
-        product = "당일치기 국내 여행 상품" if kind == "당일" else "1박 2일 국내 여행 상품"
-        situation = (f"{rng.choice(PARTIES)} 여행사에서 {product}을 예약했습니다. 출발은 {_day(dep)}입니다. "
-                     f"{rng.choice(PERSONAL)} {_day(notice)}에 취소하려고 합니다. 돈을 얼마나 돌려받을 수 있는지 궁금합니다.")
-        result = "전액 환급" if rate is None else f"요금의 {rate}% 배상"
-        boundary = (kind == "당일" and days == 3) or (kind == "숙박" and days == 5)
-        review = ""
-        if boundary:
-            review = "경계일 — 「N일 전까지」의 날짜 세는 법을 원문으로 확인"
-        elif kind == "숙박" and days in (3, 4):
-            review = "숙박 4~3일 전을 「2일 전까지 10%」 구간으로 읽었다 — 원문 표로 확인"
-        add("D" if boundary or review else "C", situation, "answer", [S["t2_traveler"], S["t1_cancel"]],
-            [{"k": "구분", "v": f"{kind}여행"}, {"k": "통보 시점", "v": _when(days)}, {"k": "결과", "v": result}],
-            _other_rates(rate), review=review, meta={"departure": str(dep), "notice": str(notice), "days_before": days})
-    for kind in ("당일", "숙박"):
-        dep = base + timedelta(days=30 if kind == "당일" else 32)
-        add("C", f"{rng.choice(PARTIES)} {kind if kind == '당일' else '1박 2일'} 국내 여행 상품을 예약했는데, "
-                 f"출발일({_day(dep)}) 아침에 늦잠을 자서 연락도 못 하고 못 갔습니다. 환불이 되는지 궁금합니다.",
-            "answer", [S["t2_traveler"]],
-            [{"k": "구분", "v": f"{kind}여행"}, {"k": "통보 시점", "v": "당일 · 연락 없이 불참"}, {"k": "결과", "v": "요금의 30% 배상"}],
-            _other_rates(30), meta={"departure": str(dep), "days_before": 0})
-
-    # 2) 여행사 사유 4 · 조건 변경 해지 2 (6)
-    for kind, days in (("당일", 4), ("당일", 1), ("숙박", 6), ("숙박", 0)):
-        dep = base + timedelta(days=40 + days)
-        notice = dep - timedelta(days=days)
-        rate = agency_rate(kind, days)
-        result = "계약금 환급" if rate is None else f"계약금 환급 + 요금의 {rate}% 배상"
-        add("E", f"{rng.choice(PARTIES)} {'당일치기' if kind == '당일' else '1박 2일'} 국내 여행 상품을 예약했습니다(출발 {_day(dep)}). "
-                 f"{_day(notice)}에 여행사에서 '차량을 구하지 못해 여행을 취소한다'고 연락이 왔습니다. 무엇을 받을 수 있는지 궁금합니다.",
-            "answer", [S["t2_agency"]],
-            [{"k": "구분", "v": f"{kind}여행"}, {"k": "통보 시점", "v": _when(days)}, {"k": "결과", "v": result}],
-            _other_rates(rate) + ["위약금을 내야"], meta={"departure": str(dep), "days_before": days})
-    for kind, days, change in (("숙박", 2, "숙소가 다른 지역으로 바뀐다"), ("당일", 3, "방문지 두 곳이 빠진다")):
-        dep = base + timedelta(days=50 + days)
-        notice = dep - timedelta(days=days)
-        rate = agency_rate(kind, days)
-        result = "계약금 환급" if rate is None else f"계약금 환급 + 요금의 {rate}% 배상"
-        add("E", f"출발 {_day(dep)}인 {'1박 2일' if kind == '숙박' else '당일치기'} 국내 여행 상품인데, {_day(notice)}에 여행사가 "
-                 f"'{change}'고 알려 왔습니다. 약속과 달라 계약을 그만두고 싶습니다.",
-            "answer", [S["t2_change"]],
-            [{"k": "구분", "v": f"{kind}여행"}, {"k": "통보 시점", "v": _when(days)}, {"k": "결과", "v": result}],
-            _other_rates(rate) + ["위약금을 내야"], meta={"departure": str(dep), "days_before": days})
-
-    # 3) 인원 미달 (4) — 통지 기한: 당일 24시간 · 숙박 48시간
-    for kind, hours in (("당일", 30), ("당일", 10), ("숙박", 72), ("숙박", 36)):
-        deadline = 24 if kind == "당일" else 48
-        ok = hours >= deadline
-        result = "계약금 환급(추가 배상 없음)" if ok else "계약금 환급 + 계약금의 100% 배상"
-        add("E", f"{'당일치기' if kind == '당일' else '1박 2일'} 국내 여행 상품을 예약했는데, 출발 {hours}시간 전에 여행사에서 "
-                 "'신청한 사람이 모자라 여행을 진행하지 않는다'는 연락을 받았습니다. 보상이 있는지 궁금합니다.",
-            "answer", [S["t2_minimum"], S["t1_minimum"]],
-            [{"k": "구분", "v": f"{kind}여행"}, {"k": "통지 기한", "v": f"{deadline}시간 전"}, {"k": "결과", "v": result}],
-            ["계약금의 100%"] if ok else ["배상 없음"], meta={"hours_before": hours, "deadline_hours": deadline})
-
-    # 4) 불가항력 3 · 감염병 · 재난 3 (6)
-    for cause in ("태풍으로 배 운항이 모두 중단돼", "폭설로 가는 길이 통제돼", "정부 명령으로 방문지가 폐쇄돼"):
-        add("E", f"{rng.choice(PARTIES)} 예약한 1박 2일 국내 여행이 {cause} 갈 수 없게 됐습니다. 돈은 어떻게 되는지 궁금합니다.",
-            "answer", [S["t2_force"], S["t1_force"]],
-            [{"k": "사유", "v": "불가항력"}, {"k": "결과", "v": "계약금 환급(배상 없음)"}],
-            ["30%", "위약금을 내야", "여행사가 배상"])
-    add("E", "1급 감염병이 돌아 여행지 시설에 운영 중단 명령이 내려졌습니다. 예약한 국내 여행을 취소하고 싶습니다.",
-        "answer", [S["t2_disease"]],
-        [{"k": "사유", "v": "행정명령으로 이행 불가"}, {"k": "결과", "v": "위약금 없이 계약금 환급"}], ["50% 감경"])
-    add("E", "여행 가려던 지역에 재난사태가 선포됐습니다. 시설은 열려 있다는데 가기 어려워 취소하려 합니다. 위약금이 있나요?",
-        "answer", [S["t2_disease"]],
-        [{"k": "사유", "v": "재난사태 선포"}, {"k": "결과", "v": "위약금 50% 감경"}], ["위약금 없이", "전액 환급"])
-    add("E", "감염병 위기경보가 '심각' 단계가 됐다는 뉴스를 봤습니다. 다음 주 국내 여행을 취소하면 위약금이 줄어드나요?",
-        "answer", [S["t2_disease"]],
-        [{"k": "사유", "v": "위기경보 심각 단계"}, {"k": "결과", "v": "위약금 50% 감경"}], ["위약금 없이"],
-        review="1급 감염병 여부가 상황에 없다 — 조건 확인이 정답일 수도 있음(라벨러 판단)")
-
-    # 5) 표준약관 개인 사유 — 해당 4 · 해당 안 됨 2 (6)
-    personal = [
-        ("본인이 독감에 걸려 참가할 수 없어", True, "본인 질병"),
-        ("이모가 돌아가셔서", True, "3촌 이내 친족 사망"),
-        ("남편이 수술로 5일 동안 입원하게 돼", True, "배우자 3일 이상 입원"),
-        ("아이가 장염으로 4일 입원해서 출발 때까지 퇴원이 어려워", True, "직계비속 3일 이상 입원"),
-        ("사촌 형이 돌아가셔서", False, "사촌은 4촌 — 3촌 이내가 아니다"),
-        ("어머니가 하루 입원하셨다가 출발 전에 퇴원하실 예정이지만 걱정돼서", False, "입원 3일 미만 · 출발 전 퇴원"),
-    ]
-    for i, (why, ok, note) in enumerate(personal):
-        dep = base + timedelta(days=60 + i)
-        notice = dep - timedelta(days=1)
-        if ok:
-            facts = [{"k": "사유", "v": note}, {"k": "결과", "v": "위약금 없이 해제 가능"}]
-            gold, req, forbidden = [S["t1_personal"]], [S["t1_personal"]], ["20%"]
-        else:
-            facts = [{"k": "판단", "v": f"위약금 없는 해제 사유 아님 ({note})"},
-                     {"k": "결과", "v": "여행자 사유 기준 — 숙박 1일 전 요금의 20% 배상"}]
-            gold, req, forbidden = [S["t1_personal"], S["t2_traveler"]], [S["t1_personal"], S["t2_traveler"]], ["위약금 없이"]
-        add("F", f"출발 {_day(dep)}인 1박 2일 국내 여행 상품을 예약했는데, {why} {_day(notice)}에 취소하려 합니다. 위약금을 내야 하나요?",
-            "answer", gold, facts, forbidden, required=req,
-            review="" if ok else "개인 사유 해당 여부 → 여행자 사유 표로 넘어가는 두 절 연결",
-            meta={"departure": str(dep), "days_before": 1})
-
-    # 6) 공연 관객 환급 (8)
-    show = base + timedelta(days=70)
-    for days in (12, 10, 8, 5, 2, 0):
-        ded = show_deduction(days)
-        req_day = show - timedelta(days=days)
-        when = "공연 당일 공연 시작 2시간 전" if days == 0 else _day(req_day)
-        result = "전액 환급" if ded is None else f"{ded}% 공제 후 환급"
-        add("D" if days in (10,) else "C",
-            f"{_day(show)} 저녁 뮤지컬 표를 한 달 전에 예매했습니다. 사정이 생겨 {when}에 표를 취소하려 합니다. 얼마나 돌려받나요?",
-            "answer", [S["t3_show_refund"]],
-            [{"k": "요구 시점", "v": f"공연 {_when(days)}"}, {"k": "결과", "v": result}],
-            [f"{p}% 공제" for p in (10, 20, 30, 90) if p != ded] + ([] if ded is None else ["전액 환급"]),
-            review="경계일 — 10일 전 날짜 세는 법 확인" if days == 10 else "", meta={"days_before": days})
-    add("C", f"{_day(show)} 콘서트 표를 어제 저녁 9시에 예매했는데, 오늘 오후 3시에 마음이 바뀌어 취소하려 합니다(공연까지 5일 넘게 남음).",
-        "answer", [S["t3_show_refund"]],
-        [{"k": "조건", "v": "예매 후 24시간 이내 · 공연 3일 전까지"}, {"k": "결과", "v": "전액 환급"}], ["20% 공제"],
-        review="비영업일은 시간 계산에서 뺀다 — 예매 요일이 주말이 아닌지 확인")
-    add("E", "이틀 뒤 공연 표를 오늘 아침에 예매했는데 몇 시간 만에 취소하려 합니다. 예매하고 하루 안 지났으니 전액 환불되나요?",
-        "answer", [S["t3_show_refund"]],
-        [{"k": "판단", "v": "공연 3일 전이 지나 24시간 전액 환급 조건에 해당하지 않음"}, {"k": "결과", "v": "30% 공제 후 환급"}],
-        ["전액 환급"])
-
-    # 7) 공연 취소 (3)
-    for why, result, forbidden in (
-        ("주최 측 사정으로 공연이 취소됐다는 문자를 받았습니다", "입장료 환급 + 입장료의 10% 배상", ["입장료만 환급"]),
-        ("태풍 때문에 야외 공연이 취소됐습니다", "입장료 환급(배상 없음)", ["10% 배상"]),
-        ("공연 당일 주연 배우가 예고 없이 바뀌었습니다", "입장료 환급 + 입장료의 10% 배상", ["환급 불가"]),
-    ):
-        add("E", f"예매한 공연에 대해 묻습니다. {why}. 어떻게 보상받을 수 있나요?", "answer", [S["t3_show_cancel"]],
-            [{"k": "결과", "v": result}], forbidden)
-
-    # 8) 레저 · 체육시설 (5)
-    leisure = [
-        ("스키장 리프트가 고장 나서 예약한 날 거의 타지 못했습니다", [S["t3_facility"]], "이용 시기별 금액 환급 또는 동급 시설 대체", ["전액 환급만"]),
-        ("예약하고 갔는데 정원이 꽉 찼다며 입장을 못 했습니다", [S["t3_facility"]], "이용 시기별 금액 환급 또는 동급 시설 대체", ["환급 불가"]),
-        ("패러글라이딩 체험이 광고 영상과 전혀 다르게 진행됐습니다", [S["t3_ad"]], "이용료 전액 환급", ["10% 공제"]),
-        ("다음 주 서핑 강습을 예약했는데 개인 사정으로 시작 전에 취소하려 합니다", [S["t3_consumer"]], "이용료에서 위약금(10분의 1)을 뺀 금액 환급", ["전액 환급"]),
-        ("업체가 강사를 못 구했다며 시작 전에 수상스키 강습을 취소했습니다", [S["t3_biz"]], "이용료 + 위약금(10분의 1) 반환", ["위약금을 빼고"]),
-    ]
-    for why, gold, result, forbidden in leisure:
-        add("C", f"{why}. 돈을 얼마나 돌려받을 수 있나요?", "answer", gold, [{"k": "결과", "v": result}], forbidden)
-
-    # 9) 모호 — 조건 확인 (4)
-    for text, gold in (
-        ("다음 주 여행을 취소하면 얼마나 돌려받을 수 있는지 그냥 물어보고 싶습니다(언제 · 왜 취소하는지, 어떤 여행인지는 말하지 마세요)",
-         [S["t2_traveler"], S["t2_agency"]]),
-        ("공연 표를 환불하고 싶다고만 물어보세요(공연 날짜 · 예매 시각은 말하지 마세요)", [S["t3_show_refund"], S["t3_show_cancel"]]),
-        ("여행사가 여행을 취소했다는 연락을 받았다고만 말하세요(언제 연락받았는지, 이유는 말하지 마세요)",
-         [S["t2_agency"], S["t2_minimum"], S["t2_force"]]),
-        ("체험 예약을 취소하면 위약금이 있는지 물어보세요(누구 사정인지, 언제인지는 말하지 마세요)", [S["t3_consumer"], S["t3_biz"]]),
-    ):
-        add("G", text, "clarify", gold, [{"k": "행동", "v": "빠진 조건(시점 · 사유 · 종류)을 묻거나 경우별로 나눠 답함"}],
-            ["단정한 비율 하나만 제시"], caveat=False)
-
-    # 10) 범위 밖 (4)
-    for text in ("일본 오사카 패키지 여행을 취소하면 위약금이 얼마인지 궁금합니다",
-                 "제주 가는 항공권을 취소하면 수수료가 얼마인지 궁금합니다",
-                 "호텔 앱으로 직접 예약한 서울 호텔을 취소하면 환불되는지 궁금합니다",
-                 "여행사가 환불을 안 해 줘서 소송을 하려는데 절차를 알려 달라고 하세요"):
-        add("H", text, "out_of_scope", [], [{"k": "행동", "v": "자료로 확인할 수 없다고 안내 + 업체 약관 · 기관 확인 권유"}],
-            ["국내여행 기준 비율을 그대로 적용"], caveat=False)
-    return cards
-
 
 # ── LLM 카드 ──────────────────────────────────────────────────────────────
 #: ★`[2026-10-16 사용자 결정]` 설문 동행(`party`)은 접수 문항이 묻지 않아 비어 있다 — 카드 설문에 넣지 않는다.
@@ -446,11 +195,10 @@ def write(cards: list[dict], name: str, rng: random.Random) -> None:
 
 def main() -> None:
     rng = random.Random(SEED)
-    rag, llm = rag_cards(rng), llm_cards(rng)
-    assert len(rag) == 60 and len(llm) == 60, (len(rag), len(llm))
-    write(rag, "rag", rng)
+    llm = llm_cards(rng)
+    assert len(llm) == 60, len(llm)
     write(llm, "llm", rng)
-    for name, cards in (("rag", rag), ("llm", llm)):
+    for name, cards in (("llm", llm),):
         strata: dict[str, int] = {}
         for c in cards:
             strata[c["stratum"]] = strata.get(c["stratum"], 0) + 1
