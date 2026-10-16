@@ -128,6 +128,25 @@ GOOGLE = {"stays": [
     "page": "https://www.google.com/travel/search?q=%EC%9A%A9%EC%82%B0&hl=ko&gl=kr", "source": "serpapi_hotels"}
 
 
+def test_hotel_request_puts_starred_google_hotels_first_and_marks_unstarred():
+    """`[2026-10-16 최종 평가 뒤]` 호텔 요청 — 구글에서 성급 없는 곳(모텔 · 레지던스일 수 있음)은 빼지 않고 뒤로, 표시를 단다."""
+    google = {**GOOGLE, "stays": [
+        {"name": "노클래스 하우스", "type": "hotel", "price_per_night": 90000.0, "total_price": 270000.0, "rating": 4.5,
+         "review_count": 10, "hotel_class": None, "link": "https://noclass.example"}, *GOOGLE["stays"][1:]]}
+    result, _, _ = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else None,
+                                 "read.stay_google": google})
+    block = result.answer.split("구글 호텔에서 본 같은 조건 숙소")[1]
+    assert block.index("밀리오레호텔 명동") < block.index("노클래스 하우스")
+    assert "노클래스 하우스 — 1박 90,000원" in block and "성급 정보 없음(호텔이 아닐 수 있음)" in block.split("노클래스 하우스")[1].split("\n")[0]
+
+
+def test_landmark_uses_the_station_named_in_the_sentence():
+    """`[2026-10-16 최종 평가 뒤]` 모델이 「홍대입구역」을 「홍대」로 줄였다 — 문장에 있는 역 이름으로 기준점을 찾는다."""
+    reply = {**SEARCH, "keyword": "홍대", "check_in_text": "다음 달 6일부터"}
+    _, _, tools = _run(reply, {"read.stay_search": STAYS}, text="홍대입구역 근처 다음 달 6일부터 3박 호텔 성인 2명")
+    assert tools.calls[0] == ("read.landmark", {"name": "홍대입구역"})
+
+
 def test_google_hotels_are_a_separate_block_without_shown_names_and_rentals():
     result, _, _ = _run(SEARCH, {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else None,
                                  "read.stay_google": GOOGLE})
@@ -1102,6 +1121,17 @@ def test_landmark_tool_returns_name_and_coordinates_only():
     assert ReadToolbox(lambda: None).landmark(None, name="강남역") is None, "카카오가 없으면 모름"
 
 
+def test_unsupported_room_requests_are_told_even_when_the_model_skips_them():
+    """`[2026-10-16 최종 평가 뒤]` 모델이 욕조 · 아기침대 · 영어 응대 · 정원을 「반영 못 함」에 넣지 않았다(A-30 · G-29 · N1-24 · G-05)."""
+    from app.domains.travel_ops.instances.lodging.wants import stay_kinds, unsupported_requests
+
+    assert unsupported_requests("강남 1/23~25 무료 주차 되고 방에 욕조 있는 호텔", ["무료 주차 되고"]) == ["욕조"]
+    assert unsupported_requests("마포 호텔 아기침대 두는 곳, 영어 되는 숙소", []) == ["아기침대", "영어 응대"]
+    assert unsupported_requests("최대 2명까지만 투숙 가능한 객실에 셋", []) == ["객실 정원"]
+    assert unsupported_requests("리뷰 좋은 곳", []) == [], "「리뷰」의 「뷰」는 전망이 아니다"
+    assert stay_kinds(None, "애플여관") == frozenset({"모텔"})
+
+
 def test_weekday_dates_ranges_without_day_and_slash_dates_are_read():
     """`[2026-10-16 최종 평가 뒤]` 모델이 「1월 둘째 주 금요일」을 1/15, 「다음 달 첫 주말」을 11/4 로 읽거나 「3주 뒤 금요일」 ·
     「11월 28~29」 · 「2027.1.22~24」 · 「1/12부터 3박」을 비웠다."""
@@ -1148,8 +1178,12 @@ def test_landmark_prefers_same_name_station_then_name_match():
         return ReadToolbox(lambda: None, kakao=Kakao(answers)).landmark(None, name=word)["name"]
 
     assert pick("여의도", {("여의도역", "SW8"): [spot("여의도역 5호선")], ("여의도", None): [spot("한강")]}) == "여의도역 5호선"
-    assert pick("홍대", {("홍대역", "SW8"): [spot("홍대입구역 2호선")], ("홍대", None): [spot("홍대걷고싶은거리")]}) == "홍대걷고싶은거리", \
-        "이름이 다른 역(홍대입구역)은 같은 이름 역이 아니다"
+    assert pick("가로수", {("가로수역", "SW8"): [spot("신사역 3호선")], ("가로수", None): [spot("가로수길")]}) == "가로수길", \
+        "이름이 다른 역(신사역)은 같은 이름 역이 아니다"
+    assert pick("홍대", {("홍대입구역", "SW8"): [spot("홍대입구역 2호선")], ("홍대", None): [spot("머큐어 앰배서더 서울 홍대")]}) == "홍대입구역 2호선", \
+        "줄임말 「홍대」는 홍대입구역(☆10-16 최종 평가: 호텔이 기준점이 됐다)"
+    lodging = {**spot("종로연당한옥스테이"), "category_group": "AD5"}
+    assert pick("북촌 한옥스테이", {("북촌 한옥스테이", None): [lodging, spot("북촌한옥마을")]}) == "북촌한옥마을", "숙박(AD5)은 기준점이 아니다"
     assert pick("DDP", {("DDP", None): [spot("서울디자인로드"), spot("동대문디자인플라자(DDP)")]}) == "동대문디자인플라자(DDP)"
     assert pick("성동구", {("성동구", None): [spot("성수동카페거리"), spot("성동구청")]}) == "성동구청"
     assert pick("경리단길", {("경리단길", None): [spot("경리단길")]}) == "경리단길"

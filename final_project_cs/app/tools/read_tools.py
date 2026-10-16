@@ -16,6 +16,10 @@ from app.core.contracts import ContextPack, ToolNotAllowed
 from app.infrastructure.rag.retriever import search_policy
 
 
+#: `[2026-10-16]` 기준점 줄임말 → 역 이름(우리가 고른 짧은 목록)
+_LANDMARK_ALIASES = {"홍대": "홍대입구역", "건대": "건대입구역", "서울대": "서울대입구역", "고터": "고속터미널역"}
+
+
 class ToolBudgetExceeded(RuntimeError):
     """도구 호출이 `manifest.max_steps` 예산을 넘었다.
 
@@ -983,6 +987,8 @@ class ReadToolbox:
         if not word or self.kakao is None:
             return None
         word = re.sub(r"^서울(?:특별시|시)?\s+", "", word) or word      # 「서울 강남」 → 「강남」(카카오는 이미 서울 안만 찾는다)
+        # `[2026-10-16 최종 평가 뒤]` 줄임말 → 역 이름(「홍대」가 「머큐어 앰배서더 서울 홍대」 호텔로 잡혔다)
+        word = _LANDMARK_ALIASES.get("".join(word.split()), word)
         compact = "".join(word.split())
         # `[2026-10-16 평가 2차 · GPT 검수]` 관련도 1위만 쓰니 「여의도」→「한강」, 「신촌」→「안산자락길」, 「DDP」→「서울디자인로드」처럼
         #   다른 곳이 기준점이 됐다. 동네 이름이면 같은 이름 역(「여의도역」)부터, 아니면 이름에 검색어가 든 곳을 고른다.
@@ -997,6 +1003,9 @@ class ReadToolbox:
             if found is None:
                 continue
             answered = True
+            if not options:
+                # 기준점은 숙소가 아니다 — 숙박(AD5) 결과는 다른 결과가 있으면 뺀다(「홍대」 → 호텔, 「북촌 한옥스테이」 → 한옥스테이)
+                found = [row for row in found if row.get("category_group") != "AD5"] or found
             named = [row for row in found if must and must.lower() in "".join(str(row.get("name") or "").split()).lower()]
             if options and must and not named:
                 continue                      # 같은 이름 역이 없으면(「성수역」이 아닌 다른 역) 쓰지 않는다

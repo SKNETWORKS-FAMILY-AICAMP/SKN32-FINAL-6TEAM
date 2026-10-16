@@ -27,7 +27,9 @@ _KIND_WORDS = (("한옥", "한옥"), ("게스트하우스", "게스트하우스"
 #: 숙소 이름 · 설명에서 유형을 알아보는 낱말(영어 포함). 「호스텔」 · 「hostel」에는 「호텔」 · 「hotel」이 들어 있지 않다
 _STAY_KIND_WORDS = (("한옥", "한옥"), ("hanok", "한옥"), ("han-ok", "한옥"), ("韓屋", "한옥"), ("韩屋", "한옥"), ("ハノク", "한옥"), ("게스트하우스", "게스트하우스"), ("guesthouse", "게스트하우스"),
                     ("guest house", "게스트하우스"), ("호스텔", "호스텔"), ("hostel", "호스텔"), ("모텔", "모텔"), ("motel", "모텔"),
-                    ("펜션", "펜션"), ("리조트", "리조트"), ("resort", "리조트"), ("호텔", "호텔"), ("hotel", "호텔"))
+                    ("펜션", "펜션"), ("리조트", "리조트"), ("resort", "리조트"), ("호텔", "호텔"), ("hotel", "호텔"),
+                    # `[2026-10-16 최종 평가 뒤]` 이름의 「여관 · 여인숙 · 무인텔」은 모텔 — 호텔 요청에 「애플여관」이 섞였다
+                    ("여관", "모텔"), ("여인숙", "모텔"), ("무인텔", "모텔"))
 DORMS = frozenset({"게스트하우스", "호스텔"})
 #: 「호텔」을 원할 때 뺄 유형(유형을 모르면 남긴다)
 NOT_HOTEL = frozenset({"게스트하우스", "호스텔", "모텔", "한옥", "펜션"})
@@ -322,6 +324,27 @@ def strip_handled(requests: list[str], wants: Wants, *, near_done: bool) -> list
         return list(requests)
     handled = re.compile("|".join(patterns))
     return [item for item in requests if not handled.search(item)]
+
+
+#: `[2026-10-16 최종 평가 뒤]` 우리가 거르지 못하는 숙소 조건 — 모델이 「반영 못 함」에 안 넣어도(욕조 · 아기침대 · 영어 응대 · 정원) 서버가 문장에서 찾아 알린다.
+#:  반려동물은 따로 안내 줄이 있어 뺀다. (표시 이름, 낱말)
+_UNSUPPORTED = (("욕조", r"욕조"), ("아기침대", r"아기\s*침대|유아\s*침대|베이비\s*(?:침대|베드)|아기\s*베드"), ("엘리베이터", r"엘리베이터|엘베"),
+                ("주차", r"주차"), ("조식", r"조식|아침\s*(?:식사|포함)"), ("전망", r"(?<!리)뷰|view|전망|보이는\s*방|야경"),
+                ("수영장", r"수영장|풀\s*빌라|인피니티\s*풀"), ("영어 응대", r"영어|english"), ("금연", r"금연|흡연"),
+                ("객실 정원", r"정원\s*\d|최대\s*\d+\s*명|\d+\s*명\s*까지(?:만)?\s*(?:투숙|숙박)"), ("온돌", r"온돌"),
+                ("발코니 · 테라스", r"발코니|테라스"), ("취사", r"취사|주방|부엌"), ("얼리 체크인 · 레이트 체크아웃", r"얼리\s*체크\s*인|레이트\s*체크\s*아웃"),
+                ("셔틀", r"셔틀"), ("안전 · 여성 전용층", r"안전한|여성\s*전용\s*층"))
+
+
+def unsupported_requests(text: str, already: list[str]) -> list[str]:
+    """문장에 있는데 「반영 못 함」 목록(모델이 적은 조각)에 아직 없는 숙소 조건 — 표시 이름으로."""
+    told = " ".join(already)
+    out = []
+    for label, pattern in _UNSUPPORTED:
+        hit = re.search(pattern, text or "", re.I)
+        if hit and hit.group(0) not in told and not re.search(pattern, told, re.I):
+            out.append(label)
+    return out
 
 
 def summary(wants: Wants) -> list[str]:

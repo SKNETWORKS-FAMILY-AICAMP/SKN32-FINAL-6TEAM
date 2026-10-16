@@ -60,6 +60,7 @@ from .ledger import item_key
 from .interpret import (LABELS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, rule_checks, rule_dates,
                         rule_nights, rule_ranges, rule_weekdays, settle_years)
 from .wants import (DORMS, Wants, guest_block, kind_reason, price_reason, read_wants, restriction, stars_reason, stay_city, stay_kinds, stay_stars, strip_handled, summary,
+                    unsupported_requests,
                     wants_pet)
 
 logger = logging.getLogger(__name__)
@@ -833,7 +834,12 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             # ☆10-15 17:49 playdata 검수 L10 · L12 — 「서울」 하나로는 카카오가 「청계천」을 주어 「청계천에서 12.3km」처럼 뜻 없는 거리가 붙었다.
             #   도시 전체면 기준점을 찾지 않는다(서울인지는 검색어로 안다)
             return None, evidence
-        spot = self._read(task, "read.landmark", {"name": found.keyword}, seen)
+        name = str(found.keyword)
+        # `[2026-10-16 최종 평가 뒤]` 문장에 검색어가 든 역 이름(「홍대입구역」)이 있으면 그 역으로 — 모델이 「홍대」로 줄였다
+        said = re.search(r"[가-힣A-Za-z0-9]*" + re.escape("".join(name.split())) + r"[가-힣0-9]*역", "".join((task.input_text or "").split()))
+        if said and not name.endswith("역"):
+            name = said.group(0)
+        spot = self._read(task, "read.landmark", {"name": name}, seen)
         evidence = self._evidence(task, source_id="read.landmark", claim="검색 지역 기준점(카카오맵, 서울 안)", value=spot, base=evidence)
         if not spot or not spot.get("found") or not isinstance(spot.get("latitude"), (int, float)) \
                 or not isinstance(spot.get("longitude"), (int, float)):
@@ -1420,6 +1426,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 picks.sort(key=lambda stay: stay["price_per_night"])
             elif near:
                 picks.sort(key=lambda stay: (_distance(base, stay) is None, _distance(base, stay) or 0.0))
+            if wants.kind == "호텔":
+                # `[2026-10-16 최종 평가 뒤]` 호텔 요청 — 구글에 성급이 있는 곳을 앞에(성급 없는 곳은 모텔 · 레지던스일 수 있다, 사용자 판정: 빼지는 않는다)
+                picks.sort(key=lambda stay: not stay.get("hotel_class"))
             walked: dict[int, int] = {}
             if walker is not None:
                 kept, checks = [], 0
@@ -1452,7 +1461,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     star = f"{stay['hotel_class']}성급 · " if stay.get("hotel_class") else ""
                     far = _distance(base, stay)
                     minutes = walked.get(id(stay))
-                    rule = (" · 숙박 공유" if stay.get("type") == "vacation rental" else "") + \
+                    rule = (" · 성급 정보 없음(호텔이 아닐 수 있음)" if wants.kind == "호텔" and not stay.get("hotel_class") else "") + \
+                        (" · 숙박 공유" if stay.get("type") == "vacation rental" else "") + \
                         (f" · 이용 조건 {restriction(stay.get('name'))}(묵을 분과 맞음)" if restriction(stay.get("name")) else "")
                     where = ((f" · {label} 걸어서 {minutes}분({far}km)" if minutes is not None and far is not None
                               else f" · {label} {far}km" if far is not None else " · 거리 모름") if base is not None else "")
@@ -1536,6 +1546,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         others = (decision.get("interpretation") or {}).get("other_requests") or []
         if wants is not None:
             others = strip_handled(others, wants, near_done=near_done)
+        others = [*others, *unsupported_requests(task.input_text or "", others)][:6]
         if others:
             answer = answer + "\n말씀하신 조건 중 아직 반영하지 못한 것: " + " · ".join(f"「{item}」" for item in others) \
                 + " — 링크한 화면에서 직접 확인해 주세요."
