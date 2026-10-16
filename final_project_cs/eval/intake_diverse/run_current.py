@@ -41,18 +41,49 @@ class TimedChat:
     def __init__(self, inner: Any) -> None:
         self.inner, self.calls, self.seconds, self.log = inner, 0, 0.0, []
 
+    @property
+    def model(self) -> str | None:
+        return getattr(self.inner, "model", None)
+
+    def structured(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160) -> dict[str, Any]:
+        return self._timed(lambda: self.inner.structured(system, user, schema, num_predict=num_predict), user)
+
     def json(self, system: str, user: str) -> dict[str, Any]:
+        return self._timed(lambda: self.inner.json(system, user), user)
+
+    def _timed(self, call, user: str) -> dict[str, Any]:
         started = time.perf_counter()
         try:
-            out = self.inner.json(system, user)
-            self.log.append({"user": user, "answer": out})
+            out = call()
+            self.log.append({"user": user, "answer": out, "seconds": round(time.perf_counter() - started, 2)})
             return out
         except Exception as exc:          # noqa: BLE001 — 기록만 하고 그대로 던진다(read_source 가 이 단계만 건너뛴다)
-            self.log.append({"user": user, "error": f"{type(exc).__name__}: {exc}"[:300]})
+            self.log.append({"user": user, "error": f"{type(exc).__name__}: {exc}"[:300], "seconds": round(time.perf_counter() - started, 2)})
             raise
         finally:
             self.calls += 1
             self.seconds += time.perf_counter() - started
+
+
+class ReplayChat:
+    """앞 실행에서 받은 에이전트 답을 그대로 돌려준다(`--agent-replay`) — 같은 글이면 같은 답. 없는 글은 실패로 올린다(지어내지 않는다)."""
+
+    def __init__(self, log: Path, *, model: str | None = None) -> None:
+        self.model = model
+        self.answers: dict[str, Any] = {}
+        # 사례 번호로 적힌 답(`results/*/agent_answers.jsonl`)은 시험지의 원문으로 바꿔 찾는다
+        texts = {c["case_id"]: c["source_text"] for c in (json.loads(x) for x in (HERE / "cases.jsonl").read_text(encoding="utf-8").splitlines() if x.strip())}
+        for line in log.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                user = row.get("user") or texts.get(row.get("case_id") or "")
+                if user and row.get("answer") is not None:
+                    self.answers[user] = row["answer"]
+
+    def structured(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160) -> dict[str, Any]:
+        if user not in self.answers:
+            raise LookupError("replay: 앞 실행에 이 글의 답이 없다")
+        return self.answers[user]
 
 
 class RunBudget:
@@ -73,6 +104,7 @@ def adapt(rows: list[dict[str, Any]]) -> dict[str, Any]:
     items: dict[int, dict[str, Any]] = {}
     trip: dict[str, Any] = {}
     requests, missing, fields = set(), set(), set()
+    agent_seen: dict[str, Any] | None = None
     for row in rows:
         field, value = str(row.get("field") or ""), row.get("value")
         m = ITEM.match(field)
@@ -95,6 +127,8 @@ def adapt(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 item.setdefault("place_kind", value.get("kind"))
         elif field in ("trip.party_size", "trip.days", "trip.nights"):
             trip[field.split(".")[1]] = value
+        elif field == "reading.agent" and isinstance(value, dict) and value.get("used"):
+            agent_seen = value
         elif field == "trip.plan_request" and value:
             requests.add("plan_ask")
         elif field == "trip.ask_first_day" and value:
@@ -107,7 +141,16 @@ def adapt(rows: list[dict[str, Any]]) -> dict[str, Any]:
                           "kind": kind, "place_name": it.get("place_name")})
     if any(i.get("title") for i in out_items):
         requests.add("register")
-    return {"items": out_items, "moves": [], "conditions": [], "preferences": [], "requests": sorted(requests),
+    moves, conditions, preferences = [], [], []
+    if agent_seen is not None:                           # 읽기 에이전트가 읽은 이해 결과(이동 · 조건 · 성향 · 요청 · 빠진 값)
+        moves = [{k: m.get(k) for k in ("mode", "scope", "day", "from", "to")} for m in agent_seen.get("moves") or []]
+        conditions = [{"code": c.get("code"), "target": None} for c in agent_seen.get("conditions") or []]
+        preferences = sorted({p.get("code") for p in agent_seen.get("preferences") or []})
+        requests |= set(agent_seen.get("requests") or [])
+        missing |= {m for m in agent_seen.get("missing") or [] if m != "first_day_date" or not out_items}
+        for key, value in (agent_seen.get("trip") or {}).items():
+            trip.setdefault(key, value)
+    return {"items": out_items, "moves": moves, "conditions": conditions, "preferences": preferences, "requests": sorted(requests),
             "missing": sorted(missing), "trip": trip, "fields_seen": sorted(fields)}
 
 
@@ -149,6 +192,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-kakao", action="store_true")
     parser.add_argument("--oracle", action="store_true")
     parser.add_argument("--only", nargs="*")
+    parser.add_argument("--agent-mode", choices=["off", "on", "shadow"], default="off",
+                        help="읽기 에이전트(`intake/agent_read.py`) — on 이면 제품과 같이 에이전트가 먼저 읽는다(같은 Ollama · 모델 · 대기 90초)")
+    parser.add_argument("--chunk-chars", type=int, default=None,
+                        help="`[2026-10-16 D-025]` 이해 에이전트가 긴 글을 나누는 글자 수(기본 가드레일 값)")
+    parser.add_argument("--agent-replay", default="",
+                        help="`[2026-10-16]` 앞 실행의 agent_log.jsonl — 모델을 다시 부르지 않고 그때 받은 답으로 코드 쪽(사실 검사 · 값 줄)만 다시 잰다")
+    parser.add_argument("--fallback-seconds", type=float, default=9.0,
+                        help="이 시간을 넘긴 에이전트 호출 수를 센다 — 제품에서는 넘김 장치가 켜져 있으면 유료 대체로 넘어갔을 호출이다")
     parser.add_argument("--rescore", action="store_true", help="모델을 다시 부르지 않고 --out 의 predictions.jsonl 을 다시 채점한다")
     args = parser.parse_args(argv)
     for key, value in _DUMMY_ENV.items():
@@ -180,6 +231,13 @@ def main(argv: list[str] | None = None) -> int:
             from app.infrastructure.ollama_chat import OllamaChat
 
             chat = TimedChat(OllamaChat(base_url=args.ollama, model=args.model, timeout=120.0, keep_alive="30m", num_ctx=args.num_ctx))
+        agent = None
+        if args.agent_replay and args.agent_mode != "off":
+            agent = TimedChat(ReplayChat(Path(args.agent_replay), model=args.model))
+        elif chat is not None and args.agent_mode != "off":
+            from app.infrastructure.ollama_chat import OllamaChat
+
+            agent = TimedChat(OllamaChat(base_url=args.ollama, model=args.model, timeout=90.0, keep_alive="30m", num_ctx=args.num_ctx))
         kakao, budget = None, RunBudget(args.kakao_cap)
         key = "" if args.no_kakao else _kakao_key(args.kakao_key_file)
         if key:
@@ -190,17 +248,20 @@ def main(argv: list[str] | None = None) -> int:
         with (out / "rows.jsonl").open("w", encoding="utf-8") as raw:
             for case in cases:
                 before_calls, before_secs, before_kakao = (chat.calls, chat.seconds, budget.used) if chat else (0, 0.0, budget.used)
+                if agent is not None:
+                    before_calls, before_secs = before_calls + agent.calls, before_secs + agent.seconds
                 started = time.perf_counter()
                 error, rows = None, []
                 try:
                     rows = read_source(case["source_text"], chat=chat, tour=None, kakao=kakao, our_places=[],
-                                       today=date.fromisoformat(case["today"]), now=_now(case))
+                                       today=date.fromisoformat(case["today"]), now=_now(case),
+                                       agent=agent, agent_mode=args.agent_mode, agent_chunk_chars=args.chunk_chars)
                 except Exception as exc:              # noqa: BLE001 — 읽기 실패는 엄격 계수로 센다
                     error = f"{type(exc).__name__}: {exc}"[:300]
                 seconds = time.perf_counter() - started
                 pred = {**adapt(rows), "case_id": case["case_id"], "error": error, "seconds": round(seconds, 2),
-                        "model_calls": (chat.calls - before_calls) if chat else 0,
-                        "model_seconds": round((chat.seconds - before_secs), 2) if chat else 0.0,
+                        "model_calls": (chat.calls + (agent.calls if agent else 0) - before_calls) if chat else 0,
+                        "model_seconds": round((chat.seconds + (agent.seconds if agent else 0.0) - before_secs), 2) if chat else 0.0,
                         "kakao_calls": budget.used - before_kakao}
                 preds[case["case_id"]] = pred
                 raw.write(json.dumps({"case_id": case["case_id"], "rows": rows, "error": error}, ensure_ascii=False, default=str) + "\n")
@@ -209,6 +270,12 @@ def main(argv: list[str] | None = None) -> int:
                       f"항목 {len(pred['items'])}" + (f" 오류 {error}" if error else ""), flush=True)
         if chat is not None:
             (out / "model_log.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in chat.log) + "\n", encoding="utf-8")
+        if agent is not None:
+            (out / "agent_log.jsonl").write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in agent.log) + "\n", encoding="utf-8")
+            secs = sorted(x.get("seconds", 0.0) for x in agent.log)
+            meta["agent_calls"] = len(secs)
+            meta["agent_calls_over_fallback"] = sum(1 for x in secs if x > args.fallback_seconds)
+            meta["agent_call_seconds_median"] = secs[len(secs) // 2] if secs else None
         meta["kakao_calls"] = budget.used
     meta.setdefault("finished_kst", datetime.now(KST).isoformat(timespec="seconds"))
     (out / "predictions.jsonl").write_text("\n".join(json.dumps(p, ensure_ascii=False) for p in preds.values()) + "\n", encoding="utf-8")

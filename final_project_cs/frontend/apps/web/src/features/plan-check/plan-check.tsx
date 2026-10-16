@@ -15,7 +15,7 @@ import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
-import { Act, HeadBadges, letter, pinKindLabel, reason, type ListFilter } from "./parts";
+import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
@@ -1429,6 +1429,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
             {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
+            {done && !registered && !previewing && view.prefill && <PrefillNote notes={view.prefill} />}
             {done && !registered && !previewing && view.taxiPricing && actions.editTrip &&
               <TaxiPricing value={view.taxiPricing} locked={frozen} onSave={(value) => actions.editTrip!("taxi_pricing", value)} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}

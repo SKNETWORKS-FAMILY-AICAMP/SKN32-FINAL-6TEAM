@@ -25,6 +25,7 @@ from . import progress as progress_module
 from . import review as review_module
 from . import survey_answers
 from .areas import areas_for
+from . import agent_read as agent_module
 from .assemble import assemble, effective
 from .catalog_names import with_catalog
 from .line_parts import lookup_title
@@ -196,6 +197,10 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 "
                             "AND method <> 'customer'", (tenant_id, intake_id))
         push = progress_module.sink(intake_id)             # ★검사가 끝나기 전에 장소 n/m · 일정 · 검사 줄 · 이동을 실시간 진행에 알린다(`progress.py`)
+        # ★`[2026-10-16 D-025]` 이해 · 분류 에이전트 — 채팅과 같은 모델 클라이언트 그대로(넘김 장치가 켜져 있으면 9초 넘을 때 유료 대체 1회).
+        #   실패하면 규칙 미리보기 + 못 읽은 줄 표시로 읽는다(`read_source`)
+        reader = agent_reader_config(tenant_id)
+        agent = chat if callable(getattr(chat, "structured", None)) and reader["mode"] in ("on", "shadow") else None
         for source in sources:
             def places_progress(phase, done, total, index, title, _position=source["position"]):
                 push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
@@ -203,7 +208,9 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
                         aliases=aliases, areas=areas, dining=dining, today=(today or received_at.date()), now=received_at,
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress,
-                        differs=differs_by_line(source.get("differs_json")))
+                        differs=differs_by_line(source.get("differs_json")), agent=agent, agent_mode=reader["mode"],
+                        position=int(source["position"]), agent_num_predict=reader["num_predict"],
+                        agent_chunk_chars=reader["chunk_chars"])
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -216,6 +223,8 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("UPDATE trip_intakes SET status='review', stage='review', updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", (tenant_id, intake_id))
+        if reader["prefill"] == "on" and reader["mode"] == "on":
+            _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
         _dining_shadow(connect, tenant_id, intake_id, sources)
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
@@ -231,6 +240,46 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         if "beat" in locals():
             beat.__exit__()
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
+
+
+def agent_reader_config(tenant_id: str) -> dict[str, Any]:
+    """이해 · 분류 에이전트 설정 — 운영 설정 `travel.intake_reader.mode`(관리 콘솔, 재기동 없이)가 먼저, 없으면 가드레일 `travel.intake_reader`.
+    못 읽으면 `off`(규칙으로 읽는다). ★기다리는 시간은 여기서 정하지 않는다 — 채팅과 같은 넘김 장치(`llm_failover_primary_timeout_seconds`)를 따른다."""
+    from app.core.settings import get_guardrails
+
+    default = {"mode": "off", "num_predict": 3072, "chunk_chars": agent_module.fragments_module.CHUNK_CHARS, "prefill": "off"}
+    try:
+        guard = get_guardrails()
+        mode = str(guard.get("travel.intake_reader.mode"))
+        num_predict = int(guard.get("travel.intake_reader.num_predict"))
+        chunk_chars = int(guard.get("travel.intake_reader.chunk_chars"))
+        prefill = str(guard.get("travel.intake_reader.prefill"))
+    except Exception:                                  # noqa: BLE001 — 설정이 없으면 규칙으로
+        return default
+    console = settings_hook.operator_setting(tenant_id, "travel.intake_reader.mode")
+    if console in ("on", "shadow", "off"):
+        mode = console
+    return {"mode": mode if mode in ("on", "shadow", "off") else "off", "num_predict": num_predict,
+            "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off"}
+
+
+def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any) -> None:
+    """`[2026-10-16 D-025]` 비서처럼 먼저 채우기(`prefill.py`) — 빈칸을 담당에게 보내 제안을 받고 맞춰 본 것만 「우리가 채움」으로 싣는다.
+    ★실패해도 읽은 값 · 확인 화면은 그대로다(채우기만 빠지고 경고가 남는다). 그 사이 고객이 먼저 고쳤으면(판이 바뀌었으면) 하지 않는다."""
+    from . import prefill as prefill_module
+
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT customer_id, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND status='review'",
+                            (tenant_id, intake_id))
+                row = cur.fetchone()
+            if row is None or int(row[1]) != 1:
+                return
+            prefill_module.run(conn, tenant_id=tenant_id, customer_id=row[0], intake_id=intake_id, revision=1,
+                               tour=tour, kakao=kakao, dining=dining)
+    except Exception:                                  # noqa: BLE001 — 채우기 장애가 확인 화면을 막지 않는다
+        log.warning("intake prefill failed intake=%s", intake_id, exc_info=True)
 
 
 def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
@@ -320,7 +369,9 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "lines": [{"no": n, "text": text, "read": n in read_lines} for n, text in enumerate(lines, start=1)],
             "items": _items(mine), "trip": _trip_fields(mine),
             # 남은 줄에 모델이 가리킨 결과 — 몇 개 받고 무엇을 버렸나(원문에 없는 인용). 모델을 안 불렀으면 None
-            "reading": next((c["value"] for c in mine if c["field"] == "reading.llm"), None)})
+            "reading": next((c["value"] for c in mine if c["field"] == "reading.llm"), None),
+            # ★`[2026-10-16 D-025]` 이해 에이전트가 읽은 것 중 일정 칸이 아닌 것 — 구간 수단 · 조건 · 성향 · 요청 조각 · 가드 판정(확인 화면 「이렇게 이해했어요」)
+            "understanding": _understanding(next((c["value"] for c in mine if c["field"] == "reading.agent"), None))})
     if review is not None and test_scenario is not None:
         review = {**review, "test_scenario": test_scenario}
     return {"intake_id": str(intake_id), "status": status, "stage": stage, "stage_label": STAGES.get(stage, stage),
@@ -331,11 +382,28 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "reopen": ({"trip_id": str(reopen_trip), "version": reopen_version, "frozen_item_ids": list(frozen or [])}
                        if reopen_trip else None),
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
+            # ★`[2026-10-16 D-025]` 먼저 채운 기록 — 일정마다 「우리가 채움」 + 이유(`filled[].item` = 검사의 일정 id) · 고객에게 물을 것(`questions`)
+            "prefill": _prefill_view(next((c["value"] for c in reversed(claims) if c["field"] == "reading.prefill"), None)),
             # ★`[2026-10-06]` 로딩 중 질문 — 계획서만으로 알 수 없는 것만(쓰는 문항만, 최대 3). 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`)
             "questions": survey_answers.questions(survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)),
             "questions_version": survey_answers.QUESTION_SET_VERSION,
             "needs_review": [{"field": c["field"], "value": c["value"], "note": c["note"],
                               "evidence": c["evidence"]} for c in claims if c["needs_review"]]}
+
+
+def _understanding(value: Any) -> dict[str, Any] | None:
+    """`reading.agent` 값 줄 → 화면에 보일 것만(걸린 초 · 버린 수 · 모델 이름은 빼고). 에이전트를 안 썼으면(실패 · 그림자) None."""
+    if not isinstance(value, dict) or not value.get("used"):
+        return None
+    return {k: value.get(k) or ([] if k != "guard" else None)
+            for k in ("moves", "conditions", "preferences", "pieces", "gaps", "missing", "guard")}
+
+
+def _prefill_view(value: Any) -> dict[str, Any] | None:
+    """`reading.prefill` 값 줄 → 화면 모양. 담당의 제안 원본(`proposals` · `rounds`)은 싣지 않는다 — 운영 기록이다."""
+    if not isinstance(value, dict):
+        return None
+    return {"filled": value.get("filled") or [], "questions": value.get("questions") or [], "kept": value.get("kept") or []}
 
 
 def _review_of(conn, tenant_id: str, intake_id: UUID, revision: int, sources: list[dict[str, Any]],
@@ -952,8 +1020,13 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 aliases: dict[str, str] | None = None, areas: Any = None, dining: Any = None,
                 on_rows: Callable[[list[dict[str, Any]]], None] | None = None,
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
-                differs: dict[int, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-    """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·lookup)과 근거가 붙는다.
+                differs: dict[int, dict[str, Any]] | None = None, agent: Any = None, agent_mode: str = "off",
+                position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None) -> list[dict[str, Any]]:
+    """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
+
+    `agent` · `agent_mode` `[2026-10-16 사용자 지시]` — 읽기 에이전트(`agent_read.py`, 가르친 모델 한 번 호출). `on` 이면 에이전트가 먼저 읽고
+    (시각이 적힌 줄을 에이전트가 빠뜨렸으면 규칙이 읽은 그 줄로 채운다), 에이전트가 실패하거나 아무것도 못 읽었는데 규칙은 읽었으면 지금까지처럼 규칙이 읽는다.
+    `shadow` 는 규칙 결과를 쓰고 에이전트 결과는 `reading.agent` 값 줄에 남기기만 한다. `position` 은 이 원본의 접수 안 순서(이동 수단 값 줄의 구간 id).
 
     `on_rows` — 값 줄이 **생길 때마다 묶음으로** 알려 준다(규칙으로 읽은 줄 → 모델이 가리킨 줄 → 날짜 → 장소가 하나씩 찾아질 때마다).
     실시간 진행이 읽은 줄 · 일정 · 장소를 그때그때 보이게 하려는 것이다. 돌려주는 목록은 전과 같다(알린 줄을 두 번 알리지 않는다).
@@ -974,7 +1047,16 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     from .places import _kind_hits, nearest, normalize, resolve
 
     read = read_plan(text)
-    rows = [claim.as_dict() for claim in read.claims]
+    agent_out, agent_error = None, None
+    if agent is not None and agent_mode in ("on", "shadow"):
+        try:
+            agent_out = agent_module.read(text, read.lines, agent, today=today, num_predict=agent_num_predict,
+                                          chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS)
+        except Exception as exc:                      # noqa: BLE001 — 에이전트 장애는 기록하고 규칙으로 읽는다
+            agent_error = f"{type(exc).__name__}: {exc}"[:200]
+            log.warning("intake agent read failed: %s", agent_error)
+    use_agent = agent_mode == "on" and agent_out is not None and (bool(agent_out.items) or not read.items)
+    rows = [claim.as_dict() for claim in read.claims] if not use_agent else []
     sent: set[int] = set()
     flushed = 0
 
@@ -990,69 +1072,82 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         send(rows[flushed:])
         flushed = len(rows)
 
-    flush()                                       # 규칙으로 읽은 줄 — 이 순간 「읽은 줄」이 생긴다
-    marks = [(c.span.line, c.value if c.field.endswith(".heading") else None,
-              c.value if c.field.endswith(".date") else None) for c in read.claims if c.field.startswith("days[")]
-    items: list[dict[str, Any]] = []
-    for item in read.items:
-        items.append({"line": (item.title or item.booking_no).line if (item.title or item.booking_no) else 0,
-                      "day": item.day, "date": item.date, "title": item.title.text if item.title else None,
-                      "meal": any(r["field"] == f"items[{len(items)}].kind" for r in rows), "booked": item.booked})
+    if use_agent:
+        rows, items, dated, ask = _agent_rows(read, agent_out, position=position, today=today)
+        flush()
+    else:
+        flush()                                       # 규칙으로 읽은 줄 — 이 순간 「읽은 줄」이 생긴다
+        marks = [(c.span.line, c.value if c.field.endswith(".heading") else None,
+                  c.value if c.field.endswith(".date") else None) for c in read.claims if c.field.startswith("days[")]
+        items: list[dict[str, Any]] = []
+        for item in read.items:
+            items.append({"line": (item.title or item.booking_no).line if (item.title or item.booking_no) else 0,
+                          "day": item.day, "date": item.date, "title": item.title.text if item.title else None,
+                          "meal": any(r["field"] == f"items[{len(items)}].kind" for r in rows), "booked": item.booked})
 
-    # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
-    if chat is not None and read.unread_lines:
-        try:
-            _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now)
-        except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
-            span_items, report = [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
-        rows.append({"field": "reading.llm", "value": report, "method": "llm_span",
-                     "evidence": {"source": "model", "lines": read.unread_lines}, "needs_review": False,
-                     "note": "남은 줄에 모델이 가리킨 결과(원문에 없는 인용은 버렸다)"})
-        for span_item in span_items:
-            index = len(items)
-            day, date_mark = _mark_for(span_item.line, marks)
-            rows.append({"field": f"items[{index}].title", "value": span_item.title.text, "method": "llm_span",
-                         "evidence": {"source": "text", **span_item.title.as_dict(),
-                                      "segment": span_item.segment.as_dict()}, "needs_review": True,
-                         "note": "모델이 가리킨 원문 조각"})
-            time_claim = span_item.time_claim          # ★한 줄에 장소가 여럿이면 시각도 장소마다 다르다(`llm_spans`)
-            if time_claim is not None:
-                rows.append({**time_claim.as_dict(), "field": f"items[{index}].starts_at"})
-            if span_item.meal:
-                rows.append({"field": f"items[{index}].kind", "value": "dining", "method": "llm_span",
-                             "evidence": {"source": "text", "line": span_item.line}, "needs_review": False,
-                             "note": f"끼니 말({span_item.meal})"})
-            items.append({"line": span_item.line, "day": day, "date": span_item.date or date_mark,
-                          "title": span_item.title.text, "meal": bool(span_item.meal), "booked": None,
-                          "segment": span_item.segment.as_dict()})
-        if report.get("plan_request"):
-            rows.append({"field": "trip.plan_request", "value": True, "method": "llm_span",
-                         "evidence": {"source": "text"}, "needs_review": False,
-                         "note": "「일정 짜 줘」— 확인 화면에서 일정 생성기로 넘긴다"})
+        # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
+        # ★`[2026-10-16 D-025]` 이해 에이전트가 방금 실패했으면(연결 · 시간 초과 · 유료 대체까지) 같은 모델을 다시 부르지 않는다 —
+        #   규칙 미리보기 + 못 읽은 줄 표시로 끝낸다(남은 줄은 확인 화면의 「못 읽은 줄」로 보인다)
+        if chat is not None and read.unread_lines and agent_error is None:
+            try:
+                _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now)
+            except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
+                span_items, report = [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
+            rows.append({"field": "reading.llm", "value": report, "method": "llm_span",
+                         "evidence": {"source": "model", "lines": read.unread_lines}, "needs_review": False,
+                         "note": "남은 줄에 모델이 가리킨 결과(원문에 없는 인용은 버렸다)"})
+            for span_item in span_items:
+                index = len(items)
+                day, date_mark = _mark_for(span_item.line, marks)
+                rows.append({"field": f"items[{index}].title", "value": span_item.title.text, "method": "llm_span",
+                             "evidence": {"source": "text", **span_item.title.as_dict(),
+                                          "segment": span_item.segment.as_dict()}, "needs_review": True,
+                             "note": "모델이 가리킨 원문 조각"})
+                time_claim = span_item.time_claim          # ★한 줄에 장소가 여럿이면 시각도 장소마다 다르다(`llm_spans`)
+                if time_claim is not None:
+                    rows.append({**time_claim.as_dict(), "field": f"items[{index}].starts_at"})
+                if span_item.meal:
+                    rows.append({"field": f"items[{index}].kind", "value": "dining", "method": "llm_span",
+                                 "evidence": {"source": "text", "line": span_item.line}, "needs_review": False,
+                                 "note": f"끼니 말({span_item.meal})"})
+                items.append({"line": span_item.line, "day": day, "date": span_item.date or date_mark,
+                              "title": span_item.title.text, "meal": bool(span_item.meal), "booked": None,
+                              "segment": span_item.segment.as_dict()})
+            if report.get("plan_request"):
+                rows.append({"field": "trip.plan_request", "value": True, "method": "llm_span",
+                             "evidence": {"source": "text"}, "needs_review": False,
+                             "note": "「일정 짜 줘」— 확인 화면에서 일정 생성기로 넘긴다"})
 
-    flush()
-    # 「일정 짜 줘」 — 모델이 못 가리켜도 규칙으로 잡는다(모델이 꺼져 있어도 요청을 놓치지 않게)
-    if not any(r["field"] == "trip.plan_request" for r in rows):
-        for number, line in enumerate(read.lines, start=1):
-            asked = PLAN_ASK.search(line)
-            if asked:
-                rows.append({"field": "trip.plan_request", "value": True, "method": "rule",
-                             "evidence": {"source": "text", "line": number, "start": asked.start(),
-                                          "end": asked.end(), "text": asked.group(0)},
-                             "needs_review": False, "note": "「일정 짜 줘」 — 확인 화면에서 일정 생성기로 넘긴다"})
-                break
+        flush()
+        # 「일정 짜 줘」 — 모델이 못 가리켜도 규칙으로 잡는다(모델이 꺼져 있어도 요청을 놓치지 않게)
+        if not any(r["field"] == "trip.plan_request" for r in rows):
+            for number, line in enumerate(read.lines, start=1):
+                asked = PLAN_ASK.search(line)
+                if asked:
+                    rows.append({"field": "trip.plan_request", "value": True, "method": "rule",
+                                 "evidence": {"source": "text", "line": number, "start": asked.start(),
+                                              "end": asked.end(), "text": asked.group(0)},
+                                 "needs_review": False, "note": "「일정 짜 줘」 — 확인 화면에서 일정 생성기로 넘긴다"})
+                    break
 
-    # 날짜 — 우선순위대로. 다 없으면 첫날을 묻는다
-    dated, ask = resolve_dates(items, today=today, lines=read.lines)
-    for index, day_date in enumerate(dated):
-        rows.append({"field": f"items[{index}].date", "value": day_date.value, "method": "rule",
-                     "evidence": {"source": "rule", "how": day_date.how, "line": items[index]["line"]},
-                     "needs_review": day_date.needs_review, "note": day_date.note})
-    if ask:
-        rows.append({"field": "trip.ask_first_day", "value": True, "method": "rule",
-                     "evidence": {"source": "rule"}, "needs_review": True,
-                     "note": "날짜가 적혀 있지 않다 — 첫날 날짜 하나만 묻는다"})
-    flush()
+        # 날짜 — 우선순위대로. 다 없으면 첫날을 묻는다
+        dated, ask = resolve_dates(items, today=today, lines=read.lines)
+        for index, day_date in enumerate(dated):
+            rows.append({"field": f"items[{index}].date", "value": day_date.value, "method": "rule",
+                         "evidence": {"source": "rule", "how": day_date.how, "line": items[index]["line"]},
+                         "needs_review": day_date.needs_review, "note": day_date.note})
+        if ask:
+            rows.append({"field": "trip.ask_first_day", "value": True, "method": "rule",
+                         "evidence": {"source": "rule"}, "needs_review": True,
+                         "note": "날짜가 적혀 있지 않다 — 첫날 날짜 하나만 묻는다"})
+        flush()
+    if agent is not None and agent_mode in ("on", "shadow"):
+        # 에이전트가 읽은 것 중 화면 칸이 없는 것(이동 · 조건 · 성향 · 요청 · 빠진 값)과 실패 · 그림자 결과를 남긴다
+        rows.append({"field": "reading.agent", "method": "llm_agent", "evidence": {"source": "model"}, "needs_review": False,
+                     "value": ({**agent_module.report_value(agent_out), "used": use_agent} if agent_out is not None
+                               else {"error": agent_error, "used": False}),
+                     "note": "읽기 에이전트 결과(원문에 글자 그대로 없는 조각은 버렸다)"})
+        flush()
 
     # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
     resolved: dict[int, Any] = {}
@@ -1272,6 +1367,158 @@ def _coords(found) -> tuple[float, float] | None:
     if found is None or found.status != "resolved" or found.latitude is None or found.longitude is None:
         return None
     return float(found.latitude), float(found.longitude)
+
+
+#: 이동 수단 값 줄로 확인 화면에 싣는 수단(`review.MOVE_MODES`) — 에이전트의 「대중교통」은 지하철로, 나머지(자동차 · 자전거 · 케이블카)는 화면 칸이 없어 기록만 한다
+_AGENT_MODE = {"taxi": "taxi", "subway": "subway", "bus": "bus", "walk": "walk", "transit": "subway"}
+
+
+def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any, bool]:
+    """읽기 에이전트 결과 → (값 줄, 항목, 날짜, 첫날 묻기). `[2026-10-16]`
+
+    ★에이전트가 시각이 적힌 줄을 통째로 빠뜨리면(실제 접수 시험에서 둘째 날 다섯 줄) 규칙이 그 줄에서 읽은 항목을 붙인다 —
+      단 그 줄이 에이전트가 이동 · 조건 · 성향으로 읽은 줄이거나(「택시로 이동」) 고객이 메시지 안에서 고친 경우(정정)는 붙이지 않는다.
+    ★날짜는 에이전트 값이 먼저, 없으면 규칙의 날짜 해석(`resolve_dates`)."""
+    from .dates import DayDate, resolve_dates
+    from .places import normalize
+
+    lines = read.lines
+    rows: list[dict[str, Any]] = []
+    items: list[dict[str, Any]] = []
+    guessed_dates: set[int] = set()
+    by_line: dict[int, list[Any]] = {}
+    for it in out.items:
+        by_line.setdefault(it.title.line, []).append(it)
+
+    def segment(it: Any) -> dict[str, Any]:
+        line = lines[it.title.line - 1]
+        later = [o.title.start for o in by_line.get(it.title.line, []) if o.title.start > it.title.start]
+        end = min(later) if later else len(line)
+        return {"line": it.title.line, "start": it.title.start, "end": end, "text": line[it.title.start:end]}
+
+    # ★`[2026-10-16 D-025 사실 검사]` 같은 줄에 규칙이 읽은 시각 — 에이전트가 항목은 읽고 시각을 비웠거나(실제 접수 R08: 9곳) 시각 근거를 **다른 줄**에서
+    #   가져왔으면(R19: 경복궁 10:00 → 12:00) 그 줄의 원문 시각을 쓴다. 같은 줄 근거로 오후를 판단한 값(「1시 점심」→13:00)은 그대로 둔다.
+    #   그 줄에 규칙 항목이 하나일 때만(한 줄에 장소가 여럿이면 어느 시각인지 규칙도 모른다)
+    rule_clock: dict[int, Any] = {}
+    for rule_item in read.items:
+        if rule_item.title is not None and rule_item.start:
+            rule_clock.setdefault(rule_item.title.line, []).append(rule_item)
+    for it in out.items:
+        same = rule_clock.get(it.title.line) or []
+        if len(same) != 1:
+            continue
+        quote_line = it.time_quote.line if it.time_quote is not None else None
+        if it.start is None or (quote_line is not None and quote_line != it.title.line and same[0].start != it.start):
+            it.start, it.end, it.time_quote, it.time_guessed = same[0].start, it.end or same[0].end, None, False
+            it.time_from_rule = True                                          # 근거 표시용 — 아래 값 줄의 방법이 규칙이 된다
+
+    for it in out.items:
+        index = len(items)
+        rows.append({"field": f"items[{index}].title", "value": it.title.text, "method": "llm_agent",
+                     "evidence": {"source": "text", **it.title.as_dict(), "segment": segment(it)}, "needs_review": False,
+                     "note": "읽기 에이전트가 가리킨 원문 조각"})
+        if getattr(it, "time_from_rule", False):
+            rows.append({"field": f"items[{index}].starts_at", "value": it.start, "method": "rule",
+                         "evidence": {"source": "text", "line": it.title.line}, "needs_review": False,
+                         "note": "같은 줄의 원문 시각(규칙)으로 맞췄어요"})
+        for name, value in (("starts_at", None if getattr(it, "time_from_rule", False) else it.start), ("ends_at", it.end)):
+            if value:
+                rows.append({"field": f"items[{index}].{name}", "value": value, "method": "llm_agent",
+                             "evidence": {"source": "text", **it.time_quote.as_dict()} if it.time_quote else {"source": "model"},
+                             "needs_review": it.time_guessed,
+                             "note": (f"「{it.time_quote.text}」을 오후로 봤어요 — 다르면 고쳐 주세요" if it.time_guessed and it.time_quote
+                                      else "읽기 에이전트가 읽은 시각")})
+        if it.kind == "dining":
+            rows.append({"field": f"items[{index}].kind", "value": "dining", "method": "llm_agent",
+                         "evidence": {"source": "text", "line": it.title.line}, "needs_review": False, "note": "읽기 에이전트 — 식사"})
+        if it.date_guessed:
+            guessed_dates.add(index)
+        items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
+                      "meal": it.kind == "dining", "booked": None, "segment": segment(it), "start": it.start})
+    agent_count = len(items)
+
+    # 규칙이 읽은 시각 있는 줄 중 에이전트가 빠뜨린 줄
+    covered = {it.title.line for it in out.items}
+    noted: set[int] = set()
+    for quote in [m.get("quote") for m in out.moves] + [c.get("quote") for c in out.conditions] + [p.get("quote") for p in out.preferences]:
+        noted |= {n for n, line in enumerate(lines, start=1) if quote and quote in line}
+    if "correction" not in out.requests:
+        claims_by_item: dict[int, list[Any]] = {}
+        for claim in read.claims:
+            if claim.field.startswith("items["):
+                claims_by_item.setdefault(int(claim.field[6:claim.field.index("]")]), []).append(claim)
+        for k, rule_item in enumerate(read.items):
+            line = rule_item.title.line if rule_item.title else None
+            if line is None or not rule_item.start or line in covered or line in noted:
+                continue
+            index = len(items)
+            for claim in claims_by_item.get(k, []):
+                row = claim.as_dict()
+                row["field"] = f"items[{index}]" + claim.field[claim.field.index("]") + 1:]
+                row["note"] = ((row.get("note") or "") + " · 읽기 에이전트가 빠뜨린 줄이라 규칙으로 읽었다").lstrip(" ·")
+                rows.append(row)
+            items.append({"line": line, "day": rule_item.day, "date": rule_item.date, "title": rule_item.title.text,
+                          "meal": any(c.field == f"items[{k}].kind" for c in claims_by_item.get(k, [])), "booked": rule_item.booked,
+                          "start": rule_item.start})
+    # 일차 머리줄 · 여행 전체(규칙이 원문에서 잡은 것)는 근거가 원문 위치라 그대로 싣는다 — 「읽은 줄」 표시와 일차 묶음에 쓰인다
+    rule_trip: set[str] = set()
+    for claim in read.claims:
+        if claim.field.startswith("days[") or claim.field.startswith("trip."):
+            rows.append(claim.as_dict())
+            rule_trip.add(claim.field)
+    for key, value in out.trip.items():
+        if f"trip.{key}" not in rule_trip and value:
+            rows.append({"field": f"trip.{key}", "value": value, "method": "llm_agent", "evidence": {"source": "model"},
+                         "needs_review": True, "note": "읽기 에이전트가 읽은 값 — 다르면 고쳐 주세요"})
+    if "plan_ask" in out.requests:
+        rows.append({"field": "trip.plan_request", "value": True, "method": "llm_agent", "evidence": {"source": "model"},
+                     "needs_review": False, "note": "「일정 짜 줘」— 확인 화면에서 일정 생성기로 넘긴다"})
+
+    dated, ask = resolve_dates(items, today=today, lines=lines)
+    for index, day_date in enumerate(dated):
+        if index in guessed_dates and day_date.value:
+            dated[index] = DayDate(day_date.value, "agent_relative", True, "읽기 에이전트가 오늘 기준으로 정한 날짜 — 다르면 고쳐 주세요")
+    for index, day_date in enumerate(dated):
+        rows.append({"field": f"items[{index}].date", "value": day_date.value, "method": "llm_agent" if index < agent_count else "rule",
+                     "evidence": {"source": "rule", "how": day_date.how, "line": items[index]["line"]},
+                     "needs_review": day_date.needs_review, "note": day_date.note})
+    if ask or (not items and "first_day_date" in out.missing):
+        rows.append({"field": "trip.ask_first_day", "value": True, "method": "rule" if ask else "llm_agent",
+                     "evidence": {"source": "rule"}, "needs_review": True, "note": "날짜가 적혀 있지 않다 — 첫날 날짜 하나만 묻는다"})
+
+    # 이동 수단 — 확인 화면의 구간 수단 값 줄(`moves[{앞}~{뒤}].mode`, `review.picked_modes`). 구간은 같은 날 시각 순서로 이웃한 두 항목
+    order = sorted(range(len(items)), key=lambda i: (dated[i].value or "", items[i].get("start") or "99:99", i))
+    pairs = [(a, b) for a, b in zip(order, order[1:]) if dated[a].value == dated[b].value]
+
+    def find(quote: Any) -> int | None:
+        key = normalize(quote or "")
+        return next((i for i, item in enumerate(items)
+                     if key and (key in normalize(item["title"] or "") or normalize(item["title"] or "") in key)), None)
+
+    picked: dict[tuple[int, int], tuple[str, str]] = {}
+    for move in out.moves:
+        mode = _AGENT_MODE.get(move.get("mode"))
+        if mode is None:
+            continue
+        if move.get("scope") == "segment":
+            a, b = find(move.get("from")), find(move.get("to"))
+            if b is not None:
+                chosen = [(x, y) for x, y in pairs if y == b and (a is None or x == a)]
+            else:
+                chosen = [(x, y) for x, y in pairs if a is not None and x == a]
+        else:
+            day_value = None
+            if move.get("scope") == "day" and move.get("day"):
+                day_items = [i for i in order if items[i].get("day") == move["day"]]
+                day_value = dated[day_items[0]].value if day_items else None
+            chosen = [(x, y) for x, y in pairs if day_value is None or dated[x].value == day_value]
+        for pair in chosen:
+            picked[pair] = (mode, move.get("quote") or "")
+    for (a, b), (mode, quote) in picked.items():
+        rows.append({"field": f"moves[{position}-{a}~{position}-{b}].mode", "value": mode, "method": "llm_agent",
+                     "evidence": {"source": "text", "text": quote}, "needs_review": False,
+                     "note": f"계획서의 「{quote}」 — 이 구간을 이 수단으로 봤어요"})
+    return rows, items, dated, ask
 
 
 def _mark_for(line: int, marks: list[tuple[int, Any, Any]]) -> tuple[int | None, str | None]:

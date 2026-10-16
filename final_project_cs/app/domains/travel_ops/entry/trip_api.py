@@ -808,7 +808,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         # ★`[2026-10-15]` 채팅 고치기의 이름 찾기 = 웹 「일정 수정」의 고치기(`/edits`)와 같은 부품(관광공사 · 카카오 · 요식 원장)
         return TripDesk(store=store, connection_factory=get_connection, check=_check(), catalog_pool=True,
                         edit_lookups=lambda: (_lazy("place", place_factory), _lazy("kakao", kakao_factory),
-                                              _dining_lookup(_PlaceCtx())))
+                                              _dining_lookup(_PlaceCtx())),
+                        # ★`[2026-10-16 D-025]` 채팅 「넣기」를 계획서와 같은 이해 에이전트로 읽는다(같은 모델 클라이언트)
+                        reader=lambda: _lazy("chat", chat_factory))
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:
