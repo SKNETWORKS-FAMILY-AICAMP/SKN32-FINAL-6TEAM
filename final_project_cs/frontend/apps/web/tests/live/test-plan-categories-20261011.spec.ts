@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync, mkdirSync } from "node:fs";
-import { mockServer, noHorizontalScroll, start, checkPlan } from "./helpers";
+import { readFileSync } from "node:fs";
+import { galleryShot, mockServer, noHorizontalScroll, start, checkPlan } from "./helpers";
 
 const catalog = JSON.parse(readFileSync(new URL("./fixtures/prepared-test-plans.json", import.meta.url), "utf8"));
 
@@ -26,8 +26,7 @@ for (const width of [375, 1280]) {
     expect(targets.every(height => height >= 44)).toBe(true);
     await noHorizontalScroll(page);
     await picker.locator("..").scrollIntoViewIfNeeded();
-    mkdirSync("mockups/test-plan-categories-2026-10-11-v1", { recursive: true });
-    await page.screenshot({ path: `mockups/test-plan-categories-2026-10-11-v1/list-${width}.png` });
+    await galleryShot(page, `mockups/test-plan-categories-2026-10-11-v1/list-${width}.png`);
     await picker.press("ArrowDown");
     await expect(page.locator('button[data-plan-code="test13"]')).toBeFocused();
     await page.keyboard.press("ArrowDown");
@@ -52,7 +51,7 @@ for (const width of [375, 1280]) {
     await page.getByText("준비된 계획 원문 보기", { exact: true }).click();
     await expect(page.locator("pre")).toContainText("14:00~15:00 인사동");
     await noHorizontalScroll(page);
-    await page.screenshot({ path: `mockups/test-plan-categories-2026-10-11-v1/selected-${width}.png` });
+    await galleryShot(page, `mockups/test-plan-categories-2026-10-11-v1/selected-${width}.png`);
     await checkPlan(page);
     await expect.poll(async () => (await server.received("POST", "/v1/web/trip-intakes")).length).toBe(1);
     const posts = await server.received("POST", "/v1/web/trip-intakes");
