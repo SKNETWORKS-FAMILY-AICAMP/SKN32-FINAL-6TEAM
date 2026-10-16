@@ -55,6 +55,27 @@ def test_the_judge_runs_after_review_and_records_in_the_dining_table(rv, monkeyp
     assert found[0][3] in ("ok", "bad", "unknown")                           # 같은 항목의 규칙 검사 줄(place)과 나란히
 
 
+def test_an_edit_judges_the_new_revision_again(rv, monkeypatch):
+    """`[2026-10-16 설계 대조 P2]` 고치면 새 판의 검사가 새로 계산된다 — 그 판의 식사를 뒤에서 다시 판정해 그 판에 남긴다."""
+    from .test_intake_review import _edit, _field, _item
+
+    chat = ReadingChat()
+    monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: partial(judge.run, chat=chat, model="fake"))
+    client, _, _ = _client()
+    headers = _key(client)
+    view = _send(client, headers)
+    edited = _edit(client, headers, view, _field(_item(view, "올리브영"), "removed", True))
+    assert edited["revision"] == view["revision"] + 1
+    assert len(chat.plans) == 2                                               # 접수 때 한 번 · 고친 뒤 새 판에 한 번
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT DISTINCT revision FROM dining.dn_agent_judge WHERE intake_id = %s ORDER BY revision",
+                    (view["intake_id"],))
+        revisions = [r[0] for r in cur.fetchall()]
+        cur.execute("DELETE FROM dining.dn_agent_judge WHERE intake_id = %s", (view["intake_id"],))
+        conn.commit()
+    assert revisions == [view["revision"], edited["revision"]]
+
+
 def test_with_the_mock_model_nothing_is_written(rv):
     """스위치는 기본 켜짐이지만 시험(모의 모델)에서는 실행기를 만들지 않는다 — 가짜 키로 실제 모델을 부르지 않는다."""
     client, _, _ = _client()

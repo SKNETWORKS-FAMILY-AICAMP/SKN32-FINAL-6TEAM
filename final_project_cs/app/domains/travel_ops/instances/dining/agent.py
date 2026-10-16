@@ -54,6 +54,16 @@ _BLOCKERS = {
     "closed_day": frozenset({"check_closed_day", "check_business"}),
     "business": frozenset({"check_business"}),
 }
+#: 판정을 **받치는** 규칙 도구 — 영업 · 휴무 · 폐업의 ok · bad 는 인용한 호출 중 하나가 이 도구이고 그 결과 판정이 같아야 한다.
+#: 아니면 원문(`TEXT_TOOLS`)을 읽은 판정이어야 한다(SYSTEM 규칙 4).
+#: ☆`[2026-10-16 설계 대조 P1]` 규칙 도구의 unknown 만 인용한 ok 가 통과했다 — 인용이 있다는 것과 판정이 정당하다는 것은 다르다
+DECISIVE_TOOLS = {
+    "open_at": frozenset({"check_open_at", "live_open_check"}),
+    "closed_day": frozenset({"check_closed_day"}),
+    "business": frozenset({"check_business"}),
+}
+#: 원문을 돌려주는 도구 — 판정 근거가 될 수 있지만 검증기는 원문의 뜻까지 보지 못한다(그래서 화면 줄은 바꾸지 않는다 — `judge.merge`)
+TEXT_TOOLS = frozenset({"place_detail"})
 #: 속성 체크 → 근거가 될 속성(`check_attributes` 결과의 `attributes.<속성>.state`)
 #: ☆`[2026-10-16]` 도구 종류만 보던 때 `halal.state = "no"` 를 인용한 식단 ok · 아이 동반만 인용한 식단 ok 가 통과했다
 _CHECK_ATTRIBUTES = {"dietary": frozenset({"halal", "vegetarian"}), "kids": frozenset({"kids"}), "payment": frozenset({"card"})}
@@ -182,7 +192,7 @@ def validate_check(check: dict[str, Any], tools: DiningTools, *, place_uid: str 
         return "evidence_not_list"
     if check["verdict"] != "unknown" and not evidence:
         return "no_evidence"
-    rule_verdicts, cited_tools, attribute_verdicts = [], set(), []
+    rule_verdicts, cited_tools, attribute_verdicts, cited_calls = [], set(), [], []
     for ev in evidence:
         if not isinstance(ev, dict):
             return "evidence_bad_shape"
@@ -199,6 +209,7 @@ def validate_check(check: dict[str, Any], tools: DiningTools, *, place_uid: str 
         if start and not _same_time(call, start, end):
             return "evidence_other_time"
         cited_tools.add(call["tool"])
+        cited_calls.append(call)
         parts = str(ev.get("path", "")).split(".")
         if (call["tool"] == "check_attributes" and len(parts) >= 2 and parts[0] == "attributes"
                 and parts[1] in _CHECK_ATTRIBUTES.get(check["check"], ())):
@@ -221,7 +232,23 @@ def validate_check(check: dict[str, Any], tools: DiningTools, *, place_uid: str 
             if (call["tool"] in _BLOCKERS.get(check["check"], ()) and _same_slot(call, place_uid, start)
                     and _RULE_VERDICT.get(str((call.get("result") or {}).get("verdict"))) == "bad"):
                 return "contradicts_rule_tool"
+    if check["verdict"] != "unknown" and check["check"] in DECISIVE_TOOLS:
+        backed = any(call["tool"] in DECISIVE_TOOLS[check["check"]]
+                     and _RULE_VERDICT.get(str((call.get("result") or {}).get("verdict"))) == check["verdict"]
+                     for call in cited_calls)
+        if not backed and not cited_tools & TEXT_TOOLS:
+            return "evidence_not_decisive"       # 인용한 규칙 도구가 그 판정을 내지 않았다(unknown 만 인용) · 원문도 읽지 않았다
     return None
+
+
+def shows_verdict(check: dict[str, Any]) -> bool:
+    """근거 줄(`{"tool", "path", "value"}`)에 그 판정을 낸 규칙 도구의 판정 값이 그대로 보이나 — 원문 해석만으로 낸 판정이면 False.
+    영업 · 휴무 · 폐업 체크에만 뜻이 있다(그 밖의 체크는 True)."""
+    tools = DECISIVE_TOOLS.get(check.get("check"))
+    if tools is None:
+        return True
+    return any(ev.get("tool") in tools and ev.get("path") == "verdict"
+               and _RULE_VERDICT.get(str(ev.get("value"))) == check.get("verdict") for ev in check.get("evidence") or [])
 
 
 def validate_place(place: dict[str, Any] | None, tools: DiningTools) -> str | None:
@@ -416,4 +443,5 @@ def judge_day(plan: dict[str, Any], *, tools: DiningTools, chat: Any, max_turns:
                        missing=missing)
 
 
-__all__ = ["AgentResult", "CHECKS", "CHECK_TOOLS", "DIRECT_TOOLS", "SYSTEM", "judge_day", "turn_limit_for", "validate_check", "validate_place"]
+__all__ = ["AgentResult", "CHECKS", "CHECK_TOOLS", "DECISIVE_TOOLS", "DIRECT_TOOLS", "SYSTEM", "TEXT_TOOLS", "judge_day",
+           "shows_verdict", "turn_limit_for", "validate_check", "validate_place"]
