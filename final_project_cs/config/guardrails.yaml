@@ -424,6 +424,29 @@ travel:
   # slow 8초 — 깨어 있는 모델은 2초 안팎에 답한다(ui 세션 실측 2.0·2.1초) → 8초면 평소보다 확실히 느린 것이라 「모델이 느려요」를 알린다.
   # max_seconds — 채팅은 식은 모델 첫 호출 34초 + 모델 시간 제한 20초 여유로 90초, 일정 짜기는 생성기가 더 오래 걸려 240초, 접수 읽기는 사진·PDF 라 600초.
   # 한 사용자가 열 수 있는 실시간 작업 3개(채팅 · 일정 짜기 · 접수 읽기 동시). intake_stalled_seconds — 읽는 일꾼이 갱신 없이 이만큼 조용하면 죽은 것으로 본다.
+  # 고객이 보낸 공개 SNS 맛집 링크. 수치는 첫 범위의 요청/조회 예산으로 고른 값이다.
+  social_dining:
+    max_links: 10
+    max_url_chars: 2048
+    timeout_seconds: 8
+    # [2026-10-15 실측] YouTube 영상 페이지는 1.4MB, og:title 은 약 770KB 지점. HTML 은 </head> 에서 멈춘다
+    max_response_bytes: 1048576
+    max_redirects: 3
+    max_metadata_chars: 6000
+    max_restaurants_per_link: 5
+    max_preview_pairs: 40
+    allowed_hosts:
+      - instagram.com
+      - www.instagram.com
+      - tiktok.com
+      - www.tiktok.com
+      - m.tiktok.com
+      - vm.tiktok.com
+      - vt.tiktok.com
+      - youtube.com
+      - www.youtube.com
+      - m.youtube.com
+      - youtu.be
   op_stream:
     beat_seconds: 3
     slow_seconds: 8
@@ -503,13 +526,16 @@ travel:
   #   콘솔에서 바꾼 값이 먼저고, 이 값은 콘솔 값이 없을 때의 기본이다. 실제로 읽는 곳: `settings_hook.google_price_enabled(tenant)`.
   dining:
     google_price_enabled: false
-    # -- 요식 판정 에이전트 그림자 운행 (2026-10-13 · 설계 §10 단계 5) --
-    # 접수 확인의 규칙 검사와 나란히 에이전트(LLM 이 체크를 고르고 규칙 도구를 인용)가 판정하고 `dining.dn_agent_shadow`(232)에 남긴다.
-    # ★고객 결과는 바뀌지 않는다(기록만) · 새벽 확인에는 쓰지 않는다. ★기본 꺼짐 — 모델 호출 비용이 들어 켜는 것은 사람이 정한다.
-    # model = openai:<모델>(키 ACOP_OPENAI_API_KEY) · ollama:<모델>(주소 ACOP_OLLAMA_BASE_URL). 읽는 곳: `app.core.settings.dining_agent_shadow()`.
-    agent_shadow:
-      enabled: false
-      # `[2026-10-15]` 기본 모델 luna — 실측 그림자 규칙과 같음 8/10 · 하루 약 $0.001~0.002(eval/reports/2026-10-15_intake_meal_kind.md §6)
+    # -- 요식 판정 에이전트 (2026-10-13 · 2026-10-16 그림자 모드를 빼고 이름을 agent_shadow → agent_judge 로 바꿈) --
+    # 접수 확인 뒤 에이전트(LLM 이 체크를 고르고 규칙 도구 · 카카오 · 구글을 부른다)가 식사를 판정해 **확인 줄에 합친다**(`instances/dining/judge.py`):
+    # 규칙이 모르던 영업 · 휴무 줄을 도구 근거로 정하고, 고객 조건(식이 · 아이 · 결제) · 폐업(bad)은 줄을 더한다. 화면 문장은 코드가 만든다.
+    # 근거는 `dining.dn_agent_judge`(232)에 남는다. 새벽 확인에는 쓰지 않는다.
+    # ★`[2026-10-16 사용자 지시]` **기본 켜짐**(전에는 그림자 시절이라 꺼짐). 모델 키 · 주소가 없거나 모의 모델(ACOP_LLM_PROVIDER=mock — 시험 · CI)이면
+    #   돌지 않고 규칙 검사 그대로다. 비용은 하루 약 $0.001~0.002(luna 실측) — 끄려면 false.
+    # model = openai:<모델>(키 ACOP_OPENAI_API_KEY) · ollama:<모델>(주소 ACOP_OLLAMA_BASE_URL). 읽는 곳: `app.core.settings.dining_agent_judge()`.
+    agent_judge:
+      enabled: true
+      # `[2026-10-15]` 기본 모델 luna — 실측 규칙과 같음 8/10 · 하루 약 $0.001~0.002(eval/reports/2026-10-15_intake_meal_kind.md §6)
       model: "openai:gpt-6-luna"
       deadline_s: 120
     # -- 대체 식당 셋 중 고르기 (2026-10-15 · 설계 §7-2 연결) --

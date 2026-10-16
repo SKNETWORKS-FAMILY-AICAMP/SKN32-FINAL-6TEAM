@@ -124,6 +124,11 @@ CONTRACT_V1_PATHS = {
     # ★2026-10-02 확인 화면 수정 화면 — 대체 후보 · 장소 검색 · 사진(읽기 전용) · 전체 자동 추천 · 재검증(계획 확인 시나리오 목업).
     #   `wiki/external/rest-endpoints.md` 「확인 화면 검사 · 후보 · 자동 추천」
     "/v1/web/trip-intakes/{intake_id}/candidates",
+    # ★2026-10-15 SNS 맛집 링크 — 링크 받기 · 미리 보기 · 일정에 넣기 · 한 링크 고치기/지우기. `wiki/external/social-dining-links.md`
+    "/v1/web/trip-intakes/{intake_id}/dining-links",
+    "/v1/web/trip-intakes/{intake_id}/dining-links/preview",
+    "/v1/web/trip-intakes/{intake_id}/dining-links/apply",
+    "/v1/web/trip-intakes/{intake_id}/dining-links/{key}",
     "/v1/web/trip-intakes/{intake_id}/place-search",
     "/v1/web/trip-intakes/{intake_id}/autofix",
     "/v1/web/trip-intakes/{intake_id}/revalidate",

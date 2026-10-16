@@ -177,3 +177,30 @@ def test_missing_dining_schema_is_none_not_an_error():
             return contextlib.nullcontext()
 
     assert find_place_by_name(Broken(), "토속촌삼계탕") is None
+
+
+def test_a_shop_name_with_an_area_word_in_front_finds_the_ledger_shop_only_right_there(conn, shop):
+    """「광화문미진 본점」(카카오) → 원장 「미진」(6m). 짧은 이름이 아무 데나 붙지 않게 그 자리 100m 안만 본다. `[2026-10-15]`"""
+    from app.domains.travel_ops.instances.dining.ledger import find_place_inside_name
+
+    short = f"미{uuid.uuid4().hex[:4]}"
+    uid, _ = shop(short, lat=37.5708982, lng=126.9799374)
+    here, far = (37.5708446, 126.9799234), (37.5800, 126.9799)                    # 6m · 약 1km
+
+    found = find_place_inside_name(conn, f"광화문{short} 본점", here)
+    assert (found["dining_place_uid"], found["match"], found["needs_review"]) == (uid, "contains_near", True)
+    assert find_place_inside_name(conn, f"광화문{short} 본점", far) is None
+    assert find_place_by_name(conn, f"광화문{short} 본점") is None                 # 이름 찾기는 그대로 — 따로 부른다
+
+
+def test_the_review_link_ties_a_kakao_name_with_an_area_word_to_the_ledger_shop_right_there(conn, shop):
+    """확인 화면의 원장 연결(`_catalog_uid`) — 카카오 「광화문미진 본점」 자리 6m 의 원장 「미진」과 잇는다(영업시간을 원장에서 읽는다)."""
+    from app.domains.travel_ops.instances.dining.ledger import _catalog_uid
+
+    short = f"미{uuid.uuid4().hex[:4]}"
+    uid, _ = shop(short, lat=37.5708982, lng=126.9799374)
+    near = {"name": f"광화문{short} 본점", "latitude": 37.5708446, "longitude": 126.9799234, "source": "kakao"}
+    far = {**near, "latitude": 37.5800}
+
+    assert _catalog_uid(conn, None, near) == uid
+    assert _catalog_uid(conn, None, far) is None

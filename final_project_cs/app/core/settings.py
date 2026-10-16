@@ -550,13 +550,13 @@ def get_guardrails() -> Guardrails:
     return Guardrails(data, path)
 
 
-def dining_agent_shadow() -> dict[str, Any] | None:
-    """요식 판정 에이전트 그림자 운행 설정 — 가드레일 `travel.dining.agent_shadow`. 켜져 있으면 `{model, deadline_s}`, 아니면 None. ★기본 꺼짐.
+def dining_agent_judge() -> dict[str, Any] | None:
+    """요식 판정 에이전트 설정 — 가드레일 `travel.dining.agent_judge`. 켜져 있으면 `{model, deadline_s}`, 아니면 None. ★기본 켜짐(가드레일 값).
 
-    `[2026-10-13]` 접수 확인의 규칙 검사와 나란히 판정해 기록만 한다(고객 결과는 그대로). 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    `[2026-10-16]` 판정이 접수 확인 줄에 합쳐진다(`instances/dining/judge.run`). 가드레일을 못 읽으면 **꺼짐**으로 본다.
     """
     try:
-        section = get_guardrails().get("travel.dining.agent_shadow")
+        section = get_guardrails().get("travel.dining.agent_judge")
     except ConfigError:
         return None
     if not isinstance(section, dict) or section.get("enabled") is not True:

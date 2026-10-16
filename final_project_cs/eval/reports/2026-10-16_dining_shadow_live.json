@@ -1,0 +1,385 @@
+{
+ "intake_id": "deb5cb21-87f0-480b-be28-6956b09fc719",
+ "model": "openai:gpt-6-luna",
+ "seconds": 17.1,
+ "counts": {
+  "run_id": "86cea238-2b9d-4f3b-8bc2-c976526c7f34",
+  "days": 1,
+  "checks": 8,
+  "compared": 8,
+  "disagree": 3,
+  "failures": 0,
+  "missing": 0
+ },
+ "tools_used": {
+  "null": 8
+ },
+ "adapters": {
+  "kakao": true,
+  "google": true
+ },
+ "rows": [
+  {
+   "item_id": "0-1",
+   "check": "found",
+   "agent": "unknown",
+   "rule": "ok",
+   "agree": false,
+   "failure": null,
+   "detail": {
+    "reason": "가까운 순희네빈대떡으로 찾았으나 맞는 지점인지 확인이 필요합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "unknown",
+      "call_id": "c1"
+     }
+    ],
+    "why_chosen": "식사 장소를 특정해야 합니다."
+   },
+   "title": "광장시장 순희네빈대떡"
+  },
+  {
+   "item_id": "0-1",
+   "check": "open_at",
+   "agent": "bad",
+   "rule": "bad",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그 시각에 영업하지 않습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "bad",
+      "call_id": "c5"
+     }
+    ],
+    "why_chosen": "12:30 식사 시각의 영업 여부를 확인합니다."
+   },
+   "title": "광장시장 순희네빈대떡"
+  },
+  {
+   "item_id": "0-2",
+   "check": "found",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "원장에서 같은 이름의 가게 하나로 정해졌습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c2"
+     }
+    ],
+    "why_chosen": "식사 장소를 특정해야 합니다."
+   },
+   "title": "통인시장"
+  },
+  {
+   "item_id": "0-2",
+   "check": "open_at",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그 시각에 영업합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c6"
+     }
+    ],
+    "why_chosen": "16:00 식사 시각의 영업 여부를 확인합니다."
+   },
+   "title": "통인시장"
+  },
+  {
+   "item_id": "0-3",
+   "check": "found",
+   "agent": "unknown",
+   "rule": "ok",
+   "agree": false,
+   "failure": null,
+   "detail": {
+    "reason": "하동관으로 찾았으나 명동본점이 맞는지 확인이 필요합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "unknown",
+      "call_id": "c3"
+     }
+    ],
+    "why_chosen": "식사 장소를 특정해야 합니다."
+   },
+   "title": "하동관 명동본점"
+  },
+  {
+   "item_id": "0-3",
+   "check": "open_at",
+   "agent": "bad",
+   "rule": "bad",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그 시각에 영업하지 않습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "bad",
+      "call_id": "c7"
+     }
+    ],
+    "why_chosen": "18:00 식사 시각의 영업 여부를 확인합니다."
+   },
+   "title": "하동관 명동본점"
+  },
+  {
+   "item_id": "0-4",
+   "check": "found",
+   "agent": "unknown",
+   "rule": "ok",
+   "agree": false,
+   "failure": null,
+   "detail": {
+    "reason": "가까운 미진으로 찾았으나 광화문미진 본점이 맞는지 확인이 필요합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "unknown",
+      "call_id": "c4"
+     }
+    ],
+    "why_chosen": "식사 장소를 특정해야 합니다."
+   },
+   "title": "광화문미진"
+  },
+  {
+   "item_id": "0-4",
+   "check": "open_at",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그 시각에 영업합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c8"
+     }
+    ],
+    "why_chosen": "20:00 식사 시각의 영업 여부를 확인합니다."
+   },
+   "title": "광화문미진"
+  },
+  {
+   "item_id": null,
+   "check": "_run",
+   "agent": null,
+   "rule": null,
+   "agree": null,
+   "failure": null,
+   "detail": {
+    "date": "2026-10-27",
+    "tools": [
+     "find_place",
+     "find_place",
+     "find_place",
+     "find_place",
+     "check_open_at",
+     "check_open_at",
+     "check_open_at",
+     "check_open_at"
+    ],
+    "turns": 3,
+    "refused": 0,
+    "seconds": 17.0,
+    "tool_calls": 8,
+    "prompt_tokens": 9175,
+    "unknown_items": 0,
+    "missing_checks": 0,
+    "completion_tokens": 1156,
+    "validation_failures": 0
+   },
+   "title": null
+  }
+ ],
+ "calls": [
+  {
+   "id": "c1",
+   "tool": "find_place",
+   "args": {
+    "name": "광장시장 순희네빈대떡",
+    "lat": 37.5704472282839,
+    "lng": 127.001177238937
+   },
+   "result": {
+    "verdict": "unknown",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "c46914dd-f906-5197-8706-422b00523b13",
+    "name": "순희네빈대떡",
+    "address": "서울특별시 종로구 종로32길 5 (종로5가)",
+    "lat": 37.5706736091,
+    "lng": 127.0007355441,
+    "category": "한식",
+    "match": "dish",
+    "needs_review": true,
+    "others": 0,
+    "note": "「순희네빈대떡」 가게 중 가까운 「순희네빈대떡」(46m) — 다르면 고쳐 주세요",
+    "reason": "「순희네빈대떡」 가게 중 가까운 「순희네빈대떡」(46m) — 다르면 고쳐 주세요"
+   }
+  },
+  {
+   "id": "c2",
+   "tool": "find_place",
+   "args": {
+    "name": "서울 원조할머니 기름떡볶이",
+    "lat": 37.580660576615,
+    "lng": 126.970222542239
+   },
+   "result": {
+    "verdict": "ok",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "93173784-60d6-5ba6-a6b9-c42117787bcc",
+    "name": "서울 원조할머니 기름떡볶이",
+    "address": "서울특별시 종로구 자하문로15길 13 (통인동)",
+    "lat": 37.580660576615,
+    "lng": 126.970222542239,
+    "category": "한식",
+    "match": "exact",
+    "needs_review": false,
+    "others": 0,
+    "note": null,
+    "reason": "원장에서 같은 이름의 가게 하나로 정해졌다"
+   }
+  },
+  {
+   "id": "c3",
+   "tool": "find_place",
+   "args": {
+    "name": "하동관 명동본점",
+    "lat": 37.56439,
+    "lng": 126.98501
+   },
+   "result": {
+    "verdict": "unknown",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "3f0e94e3-4cea-50f0-8193-2f0ef5d98f80",
+    "name": "하동관",
+    "address": "서울특별시 중구 명동9길 12",
+    "lat": 37.56439,
+    "lng": 126.98501,
+    "category": "한식",
+    "match": "branch",
+    "needs_review": true,
+    "others": 0,
+    "note": "원장의 「하동관」로 찾았어요",
+    "reason": "원장의 「하동관」로 찾았어요"
+   }
+  },
+  {
+   "id": "c4",
+   "tool": "find_place",
+   "args": {
+    "name": "광화문미진 본점",
+    "lat": 37.570844667978704,
+    "lng": 126.9799234417087
+   },
+   "result": {
+    "verdict": "unknown",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "e21d00b5-11c8-5c4f-8f4c-0697254991bd",
+    "name": "미진",
+    "address": "서울특별시 종로구 종로 19 (종로1가)",
+    "lat": 37.5708982096,
+    "lng": 126.9799374337,
+    "category": "한식",
+    "match": "contains_near",
+    "needs_review": true,
+    "others": 0,
+    "note": "「광화문미진 본점」 안의 이름인 원장의 「미진」(6m)로 찾았어요 — 다르면 고쳐 주세요",
+    "reason": "「광화문미진 본점」 안의 이름인 원장의 「미진」(6m)로 찾았어요 — 다르면 고쳐 주세요"
+   }
+  },
+  {
+   "id": "c5",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "c46914dd-f906-5197-8706-422b00523b13",
+    "start": "2026-10-27T12:30",
+    "end": "2026-10-27T13:30"
+   },
+   "result": {
+    "verdict": "bad",
+    "reason": "그 시각에 영업하지 않는다(휴무 · 브레이크 · 영업시간 밖 · 폐업)",
+    "open_at_slot": false,
+    "order_ok": null,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  },
+  {
+   "id": "c6",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "93173784-60d6-5ba6-a6b9-c42117787bcc",
+    "start": "2026-10-27T16:00",
+    "end": "2026-10-27T17:00"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "그 시각에 영업한다",
+    "open_at_slot": true,
+    "order_ok": true,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  },
+  {
+   "id": "c7",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "3f0e94e3-4cea-50f0-8193-2f0ef5d98f80",
+    "start": "2026-10-27T18:00",
+    "end": "2026-10-27T19:00"
+   },
+   "result": {
+    "verdict": "bad",
+    "reason": "그 시각에 영업하지 않는다(휴무 · 브레이크 · 영업시간 밖 · 폐업)",
+    "open_at_slot": false,
+    "order_ok": null,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  },
+  {
+   "id": "c8",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "e21d00b5-11c8-5c4f-8f4c-0697254991bd",
+    "start": "2026-10-27T20:00",
+    "end": "2026-10-27T21:00"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "그 시각에 영업한다",
+    "open_at_slot": true,
+    "order_ok": true,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  }
+ ],
+ "config_unchanged": true
+}

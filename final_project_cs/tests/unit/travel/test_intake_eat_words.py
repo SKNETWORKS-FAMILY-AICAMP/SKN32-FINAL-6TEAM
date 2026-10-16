@@ -65,9 +65,7 @@ def _kinds(text):
 def test_a_timed_line_with_eating_words_becomes_a_meal_without_the_model():
     """시각 있는 줄은 규칙이 읽어 모델에 가지 않는다 — 규칙이 잡아야 한다."""
     kinds = _kinds("2026-10-21\n12:00 통인시장에서 뭐 좀 먹고\n13:00 익선동 맛집\n15:00 국립중앙박물관 관람")
-    assert [k for t, k in kinds.items() if t.startswith("통인시장")] == ["dining"]
-    assert [k for t, k in kinds.items() if t.startswith("익선동")] == ["dining"]
-    assert [k for t, k in kinds.items() if t.startswith("국립중앙박물관")] == [None]
+    assert kinds == {"통인시장": "dining", "익선동": "dining", "국립중앙박물관 관람": None}
 
 
 def test_a_place_quote_carrying_the_eating_word_is_cut_and_becomes_a_meal():
@@ -84,3 +82,17 @@ def test_the_models_eat_span_counts_only_after_the_place():
         {"line": 1, "quote": "명동교자", "role": "place"}, {"line": 1, "quote": "칼국수", "role": "eat"}]))
     assert [bool(i.meal) for i in before] == [False]
     assert [bool(i.meal) for i in after] == [True]
+
+
+@pytest.mark.parametrize("line, title", [
+    ("16:00 통인시장에서 뭐 좀 먹고", "통인시장"),        # ☆「통인시장에서 뭐 좀」이 이름으로 남아 장소를 못 찾았다(2026-10-15 로컬 접수)
+    ("12:00 광장시장에서 빈대떡 먹기", "광장시장"),
+    ("12:00 통인시장 가서 뭐 좀 먹고", "통인시장"),
+    ("12:00 통인시장에 가서 요기하고", "통인시장"),
+    ("12:00 망원시장 들러서 간단히 요기", "망원시장"),
+    ("21:00 을지로 노가리골목에서 한잔", "을지로 노가리골목"),
+    ("12:00 명동교자 본점에서 칼국수 먹기", "명동교자 본점"),
+    ("13:00 익선동 맛집", "익선동"),
+])
+def test_the_place_name_ends_where_the_place_ends_not_where_eating_starts(line, title):
+    assert _kinds("2026-10-31"+chr(10)+line) == {title: "dining"}

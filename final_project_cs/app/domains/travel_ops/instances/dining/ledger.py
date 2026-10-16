@@ -132,6 +132,9 @@ def _catalog_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | N
         #   좌표가 없으면 거리를 못 재니 예전처럼 **정확히 같은 이름 하나**만 받는다.
         here = _coords(place)
         found = find_place_by_name(conn, str(place.get("name") or ""), near=here)
+        if not found and here is not None:
+            # ★`[2026-10-15]` 「광화문미진 본점」(카카오) — 원장은 「미진」(6m). 이름 단계가 못 맞추면 이 장소 100m 안에서 이름 안의 원장 가게
+            found = find_place_inside_name(conn, str(place.get("name") or ""), here)
         if not found or not found.get("dining_place_uid"):
             return None
         if here is None:
@@ -457,6 +460,8 @@ class PlannerLedger:
 #: ★`[2026-10-07]` 이름 찾기 단계 — 정확히 같은 이름 하나가 아니면 모두 확인 필요(`needs_review`)로 낸다
 NAME_TYPO_RATIO = 0.2               # 자모 거리 / 긴 쪽 길이 — 이 이하면 오타로 본다(`intake/places.TYPO_RATIO` 와 같다)
 NAME_PREFIX_MIN = 4                 # 앞부분 일치로 받는 최소 글자 수(「진옥화할매」 → 「진옥화할매원조닭한마리」)
+#: 「광화문 미진」 → 원장 「미진」 — 입력 안에 원장 이름이 들어 있을 때 같은 가게로 보는 거리(m). 좌표 없이 포함만 보면 짧은 이름이 아무 데나 붙는다
+NAME_CONTAINS_NEAR_M = 100
 NAME_PREFIX_UNIQUE_MIN = 3          # ★`[2026-10-10 사용자 결정]` 이 글자 수부터는 앞부분이 맞는 가게가 **하나뿐일 때만** 받는다(「편강율」 → 「편강 율 플래그십&티하우스」)
 #: ★`[2026-10-12]` 3글자 앞부분 찾기에서 받지 않는 끝말 — 동네 · 역 · 길 이름이다. 접수가 「성수동 소문난 감자탕」을 「성수동」으로
 #:  좁혔을 때 「성수동」으로 시작하는 가게가 하나(「성수동 대림창고 갤러리」)라 그 가게가 골라졌다(장소 찾기 평가 PL-034)
@@ -587,6 +592,31 @@ def find_place_by_name(conn, name: str | None, *, near: tuple[float, float] | No
     if near is not None:
         return find_dish_near(conn, name, near, shops=shops)
     return None
+
+
+def find_place_inside_name(conn, name: str | None, at: tuple[float, float]) -> dict[str, Any] | None:
+    """`at` 자리의 가게 이름 **안에** 원장 이름이 들어 있으면 그 원장 가게 — 「광화문미진 본점」(카카오) → 원장 「미진」. `[2026-10-15]`
+
+    ★`find_place_by_name` 과 따로 둔다 — 앞에 지역명이 붙은 이름은 그 단계들(같음 · 지점 · 앞부분 · 오타 · 메뉴)이 못 맞췄다.
+      `at` 은 **그 가게 자체의 좌표**(카카오가 찾은 자리)여야 한다. 앞뒤 일정 좌표로 부르지 않는다 — 그 기준은 `find_place_by_name` 이 쓴다.
+    ★짧은 이름은 아무 데나 붙기 쉬워 좌표가 `NAME_CONTAINS_NEAR_M` 안인 곳만 받는다. 긴 이름 · 가까운 곳 먼저. 언제나 확인 필요.
+    """
+    base = _base_key(name)
+    if len(base) < 3:
+        return None
+    try:
+        shops = _shops(conn)
+    except Exception as exc:   # noqa: BLE001 — 못 읽으면 못 찾음
+        logger.warning("dining find_place_inside_name not read reason=%s", type(exc).__name__)
+        return None
+    inside = [(s, _metres(at, (s["latitude"], s["longitude"]))) for s in shops
+              if len(s["base"]) >= 2 and s["base"] != base and s["base"] in base]
+    inside = [(s, m) for s, m in inside if m <= NAME_CONTAINS_NEAR_M]
+    if not inside:
+        return None
+    shop, metres = min(inside, key=lambda pair: (-len(pair[0]["base"]), pair[1]))
+    return _found(shop, match="contains_near", review=True, others=len(inside) - 1,
+                  note=f"「{name}」 안의 이름인 원장의 「{shop['name']}」({round(metres)}m)로 찾았어요 — 다르면 고쳐 주세요")
 
 
 def _typo_match(base: str, shops: list[dict[str, Any]]) -> tuple[dict[str, Any], float] | None:

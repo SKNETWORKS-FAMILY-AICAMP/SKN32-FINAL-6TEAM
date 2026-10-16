@@ -237,11 +237,11 @@ def unresolved_notice(*, item: Item, causes: list[dict[str, Any]], recheck_faile
     head = "⚠️ 안전 알림 — " if safety else ""
     if recheck_failed:
         # ★`[2026-10-03]` 바꿀 곳은 찾았는데 **일정 전체를 다시 판정하니** 앞뒤 일정과 안 맞았다(시간 · 이동 · 예산) — 바꾸지 않았다. 원인에 없는 말은 안 붙인다
-        text = (f"{head}{item.title} — {_cause_text(causes)}. 바꿀 곳을 찾았지만 일정 전체와 맞지 않아 **일정은 그대로 두었어요.** "
+        text = (f"{head}{item.title} — {_cause_text(causes)}. 바꿀 곳을 찾았지만 일정 전체와 맞지 않아 일정은 그대로 두었어요. "
                 "가시기 전에 한 번 확인해 주세요.")
         kind = "recheck_failed"
     else:
-        text = (f"{head}{item.title} — {_cause_text(causes)}. 대신 갈 수 있는 곳을 찾지 못해 **일정은 그대로 두었어요.** "
+        text = (f"{head}{item.title} — {_cause_text(causes)}. 대신 갈 수 있는 곳을 찾지 못해 일정은 그대로 두었어요. "
                 "가시기 전에 한 번 확인해 주세요.")
         kind = "no_alternate"
     return {"type": "safety_alert" if safety else "guidance", "kind": kind, "text": text, "language": "ko",
@@ -273,15 +273,18 @@ def _cause_text(causes: list[dict[str, Any]]) -> str:
 
 def proposal_notice(*, item: Item, decision: Decision, causes: list[dict[str, Any]],
                     options: list[dict[str, Any]], proposal_id: UUID) -> dict[str, Any]:
-    """묻는 알림. ★「답이 없으면 원래 일정을 그대로 둡니다」를 **반드시** 적는다 — 무응답의 결과다."""
+    """묻는 알림. ★「답이 없으면 원래 일정을 그대로 둡니다」를 **반드시** 적는다 — 무응답의 결과다.
+    ★`[2026-10-16 화면 점검]` 고객 문장에 마크다운 별표를 넣지 않는다 — 채팅 · 웹 알림은 그리지 않아 `**바꾸지 않았어요.**` 가 그대로 보였다."""
     head = "⚠️ 안전 알림 — " if decision.safety else ""
     why = _cause_text(causes)
-    listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}" for o in options[:3])
+    # ★`[2026-10-16]` 안 설명(`note` — 흐름 한 칸의 「그날 흐름: …」 · 조건을 푼 안의 「13:04으로 늦추면」)을 이름 뒤에 붙인다 — 고객이 고를 근거
+    listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}" + (f" ({o['note']})" if o.get("note") else "")
+                        for o in options[:3])
     if decision.reason == "protected":
-        body = (f"{item.title} — {why}. 변경하지 않기로 한 일정이라 **바꾸지 않았어요.** "
+        body = (f"{item.title} — {why}. 변경하지 않기로 한 일정이라 바꾸지 않았어요. "
                 f"어떻게 할까요? {listed}")
     elif decision.reason == "safety_alert":
-        body = (f"{item.title} — {why}. 일정은 **바꾸지 않았어요.** 안전을 먼저 살펴 주세요."
+        body = (f"{item.title} — {why}. 일정은 바꾸지 않았어요. 안전을 먼저 살펴 주세요."
                 + (f" 다른 안: {listed}" if listed else ""))
     else:
         body = f"{item.title} — {why}. 어떻게 할까요? {listed}"

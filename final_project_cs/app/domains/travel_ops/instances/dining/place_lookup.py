@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from .ledger import find_dish_near, find_license_shop_by_name, find_meal_near, find_place_by_name
+from .ledger import find_dish_near, find_license_shop_by_name, find_meal_near, find_place_by_name, find_place_inside_name
 
 
 class LedgerPlaceLookup:
@@ -48,6 +48,16 @@ class LedgerPlaceLookup:
         try:
             with self._connect() as conn:
                 found = find_dish_near(conn, text, (float(latitude), float(longitude)))
+        except Exception:   # noqa: BLE001
+            self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
+            return None
+        return self._seen(found)
+
+    def find_inside_name(self, text: str, latitude: float, longitude: float) -> dict[str, Any] | None:
+        """그 자리 가게 이름 안에 원장 이름이 든 곳(「광화문미진 본점」 → 「미진」). 언제나 확인 필요. `[2026-10-15]`"""
+        try:
+            with self._connect() as conn:
+                found = find_place_inside_name(conn, text, (float(latitude), float(longitude)))
         except Exception:   # noqa: BLE001
             self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
             return None

@@ -216,7 +216,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("UPDATE trip_intakes SET status='review', stage='review', updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", (tenant_id, intake_id))
-        _dining_shadow(connect, tenant_id, intake_id, sources)
+        _dining_judge(connect, tenant_id, intake_id, sources)
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
         return "fatal"
@@ -233,24 +233,45 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
 
 
-def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
-    """요식 판정 에이전트 **그림자** — 확인 화면으로 넘긴 **뒤에** 규칙 검사와 나란히 판정해 요식 표에만 기록한다. `[2026-10-13 · 설계 §10 단계 5]`
-    ★가드레일 `travel.dining.agent_shadow.enabled` 를 켜야 돈다(기본 꺼짐 — 꽂히지 않으면 아무것도 안 한다). 고객 결과 · 상태는 바꾸지 않고,
-      실패해도 접수에 영향이 없다(경고만 남긴다)."""
+def rejudge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, revision: int) -> None:
+    """고객이 고쳐 생긴 **새 판**의 식사를 다시 판정한다(뒤에서 — 고치기 응답을 기다리게 하지 않는다). `[2026-10-16 설계 대조 P2]`
+    ★그 사이 또 고쳤거나(판이 바뀜) 등록했으면 돌리지 않는다 — 지난 판을 판정하는 데 모델을 부르지 않는다.
+      판정 중에 판이 바뀌면 합치기 직전에 한 번 더 막는다(`judge.run`)."""
     from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-    runner = dining_ledger.agent_shadow_runner()
+    if dining_ledger.agent_judge_runner() is None:
+        return
+    try:
+        with connect() as conn:
+            if review_module.intake_state(conn, tenant_id, intake_id) != ("review", revision):
+                return
+            sources = _sources(conn, tenant_id, intake_id)
+    except Exception:                                  # noqa: BLE001 — 판정 장애가 고치기를 건드리지 않는다
+        log.warning("dining agent rejudge failed intake=%s revision=%s", intake_id, revision, exc_info=True)
+        return
+    _dining_judge(connect, tenant_id, intake_id, sources, revision=revision)
+
+
+def _dining_judge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]],
+                  revision: int = 1) -> None:
+    """요식 판정 에이전트 — 확인 화면으로 넘긴 **뒤에** 식사를 판정해 그 판의 검사 줄에 합친다(`instances/dining/judge.run`). `[2026-10-13 · 2026-10-16]`
+    ★규칙이 모르던 영업 · 휴무를 에이전트가 도구로 정했으면 그 줄을 바꾸고, 고객 조건 확인은 줄을 더한다. 화면 문장은 코드가 만든다.
+      ★가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐) · 모델이 있어야 돈다.
+      실패해도 접수에 영향이 없다(그 줄은 규칙 검사 그대로 · 경고만 남긴다)."""
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+    runner = dining_ledger.agent_judge_runner()
     if runner is None:
         return
     try:
         with connect() as conn:
-            payload = review_module.load(conn, tenant_id, intake_id, 1)
+            payload = review_module.load(conn, tenant_id, intake_id, revision)
         if not payload:
             return
         notes = "\n".join(s.get("transcript") or "" for s in sources)
-        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=1, review=payload, notes=notes)
-    except Exception:                                  # noqa: BLE001 — 그림자 장애가 접수를 건드리지 않는다
-        log.warning("dining agent shadow failed intake=%s", intake_id, exc_info=True)
+        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=revision, review=payload, notes=notes)
+    except Exception:                                  # noqa: BLE001 — 판정 장애가 접수를 건드리지 않는다
+        log.warning("dining agent judge failed intake=%s", intake_id, exc_info=True)
 
 
 def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:

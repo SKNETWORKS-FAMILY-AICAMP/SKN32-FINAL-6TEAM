@@ -9,6 +9,7 @@ from app.core.contracts import NextAction, TeamResult, TeamTask
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (
     NoChange, plan_fresh_alternate, plan_swap,
 )
+from app.domains.travel_ops.components.team_hooks import dining_ledger
 
 
 def _text(value: Any) -> str:
@@ -211,8 +212,10 @@ async def run_conversation(work: Any, task: TeamTask, ctx: dict[str, Any]) -> Te
         ctx["report"] = {**request, "type": "delay", "minutes": minutes}
         return await work.handle_report(task, "delay", ctx)
     if action == "report_closed":
-        if item is not None and item.kind != "dining":
-            return _fresh_change(work, task, ctx, item)
+        # ★`[2026-10-16]` 지금 식사가 아닌 항목(`ahead`) · 활동의 휴무 신고 — 그 항목의 다른 곳을 **우리가 고른다**(신고, `customer_report`).
+        #   적용기가 판정 문(D-020)을 지나 먼저 물어봐줘면 묻는다. ☆전에는 「다른 안으로」(고객이 고른 것)로 보내 바로 바꿨다
+        if item is not None and (item.kind != "dining" or request.get("ahead")):
+            return _fresh_change(work, task, ctx, item, reported_closed=True)
         ctx["report"] = {**request, "type": "closed"}
         return await work.handle_report(task, "closed", ctx)
     if action in ("apply_change", "propose_alternatives"):
@@ -268,7 +271,7 @@ async def run_conversation(work: Any, task: TeamTask, ctx: dict[str, Any]) -> Te
     return work._escalate(task, "conversation_action_not_supported", ctx["evidence"])
 
 
-def _fresh_plan(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> Any:
+def _fresh_plan(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any, *, reported_closed: bool = False) -> Any:
     places = work.catalog(task, ctx)
     if places is None:
         return work._unknown(task, "장소 목록", ctx["evidence"])
@@ -279,7 +282,8 @@ def _fresh_plan(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> An
         items=ctx["items"], places=places, item_id=item.item_id,
         message=task.input_text, request_id=task.context.current_state.get("request_id"),
         state_lookup=work._state_lookup(task, ctx) if dining else None,
-        price_lookup=work._price_lookup(task, ctx) if dining else None)
+        price_lookup=work._price_lookup(task, ctx) if dining else None, reported_closed=reported_closed,
+        meal_picker=dining_ledger.meal_picker() if dining and item.kind == "dining" else None)
 
 
 def _propose_alternatives(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> TeamResult:
@@ -326,8 +330,9 @@ def _propose_alternatives(work: Any, task: TeamTask, ctx: dict[str, Any], item: 
     return result
 
 
-def _fresh_change(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> TeamResult:
-    plan = _fresh_plan(work, task, ctx, item)
+def _fresh_change(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any, *,
+                  reported_closed: bool = False) -> TeamResult:
+    plan = _fresh_plan(work, task, ctx, item, reported_closed=reported_closed)
     if isinstance(plan, TeamResult):
         return plan
     dining = work.manifest.team_id == "dining"

@@ -195,8 +195,21 @@ class TripDesk:
             outcome.update({"proposal_id": asked.get("proposal_id"), "options": asked.get("options")})
         return outcome
 
+    def report_closed_ahead(self, *, trip_id: UUID, item_id: UUID, base_version: int,
+                            message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
+        """★`[2026-10-16]` 「○○ 문 닫았대」 — 지금 식사가 아닌 항목의 휴무 신고. 계산은 「다른 데로」와 같고(`plan_fresh_alternate`),
+        **신고라서** 판정 문(`gate`, D-020)을 지난다 — 먼저 물어봐줘 · 변경 안 할 일정이면 바꾸지 않고 묻는다."""
+        self._widen_activities(trip_id, item_id)
+        trip, items, places = self._read(trip_id)
+        plan = self._fresh_plan(trip_id, trip, items, places, item_id=item_id, base_version=base_version,
+                                message=message, request_id=request_id, reported_closed=True)
+        if isinstance(plan, NoChange) and plan.status == "relaxed":
+            return self._ask_relaxed(trip_id, item_id, plan)
+        return self._outcome(trip_id, base_version, items, plan, gate=True)
+
     def _fresh_plan(self, trip_id: UUID, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], *,
-                    item_id: UUID, base_version: int, message: str | None, request_id: str | None) -> Plan:
+                    item_id: UUID, base_version: int, message: str | None, request_id: str | None,
+                    reported_closed: bool = False) -> Plan:
         """「다른 데로 바꿔 줘」 · 「후보 알아봐 줘」의 계산 — 식당이면 **먼저** 근처 원장 가게를 들여놓은 뒤 계산한다(`[2026-10-05]`).
         식당 후보는 요식 원장이 정본이다 — 코어 `places` 에는 이 여행이 쓸 사본(`trip_scope`)만 둔다."""
         current = next((i for i in items if i.item_id == item_id), None)
@@ -205,7 +218,8 @@ class TripDesk:
         def plan(candidates):
             return plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
                                         places=candidates, item_id=item_id, message=message, request_id=request_id,
-                                        state_lookup=self._state_lookup())
+                                        state_lookup=self._state_lookup(), reported_closed=reported_closed,
+                                        meal_picker=dining_hook.meal_picker() if meal is not None else None)
         return self._with_nearby(trip_id, meal, places, plan, always=True)
 
     def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,

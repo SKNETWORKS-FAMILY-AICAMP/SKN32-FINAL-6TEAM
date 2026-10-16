@@ -20,7 +20,9 @@ def at(hm):
 
 
 def place(*, hours=True, key=None):
-    return {"place_id": str(key or uuid4()), "name": "식당", "kind": "dining",
+    key = str(key or uuid4())
+    # ★`[2026-10-16]` 가게마다 다른 이름 — 같은 이름 · 같은 자리면 같은 가게로 본다(`same_restaurant`, 닫힌 가게의 다른 이름 행 빼기)
+    return {"place_id": key, "name": f"식당 {key[:8]}", "kind": "dining",
             "latitude": 37.54, "longitude": 127.05,
             "attributes": {"hours": ["11:00", "22:00"]} if hours else {}}
 

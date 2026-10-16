@@ -154,6 +154,47 @@ def test_an_untimed_line_between_stops_also_drops_a_joined_meal_word():
     assert _meal_kind(r, 2) == ["dining"]
 
 
+# ── 2026-10-16 edge 평가(eval/intake/edge.py) C1 · C2 ─────────────────────────
+@pytest.mark.parametrize("text, title", [
+    ("10:00 도산공원 산책", "도산공원 산책"),                   # ☆C1 — 이름 첫 글자 「도」를 조사로 떼던 결함(산공원)
+    ("12:30 은평한옥마을", "은평한옥마을"),                      # ☆「은」(평한옥마을) — 배포 판 「은평구 → 평구」와 같은 뿌리
+    ("15:00 도봉산 등산", "도봉산 등산"),
+    ("10:00 에버랜드", "에버랜드"),                              # ☆「에」
+    ("10:00 는개카페", "는개카페"),                              # ☆「는」
+    ("9시 반에 도산공원", "도산공원"),                           # 시각 뒤 조사 「에」는 그대로 뗀다
+    ("10시에 은평한옥마을", "은평한옥마을"),
+])
+def test_a_name_starting_with_a_particle_letter_keeps_its_first_letter(text, title):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == [title]
+    item = read.items[0]
+    assert text[item.title.start:item.title.end] == item.title.text
+
+
+@pytest.mark.parametrize("text", [
+    "1일차 · 10월 20일: 경복궁 → 북촌한옥마을 → 인사동",       # ☆C2 — 머리줄과 화살표가 한 줄이면 항목이 통째로 사라졌다
+    "첫째 날: 경복궁 → 북촌한옥마을 → 인사동",
+    "10월 20일 경복궁 → 북촌한옥마을 → 인사동",
+    "DAY 1 | 경복궁 -> 북촌한옥마을 -> 인사동",
+])
+def test_arrows_on_the_day_heading_line_become_ordered_items(text):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == ["경복궁", "북촌한옥마을", "인사동"]
+    assert all(i.order_only and i.start is None for i in read.items)
+    for item in read.items:                                     # ★잘라 낼 뿐 바꾸지 않는다
+        assert text[item.title.start:item.title.end] == item.title.text
+
+
+def test_arrows_on_the_heading_line_keep_its_day_and_date():
+    read = read_plan("1일차 · 10월 20일: 경복궁 → 인사동")
+    assert {(i.day, i.date) for i in read.items} == {(1, "--10-20")}
+
+
+def test_a_heading_line_without_arrows_still_makes_no_item():
+    assert read_plan("1일차 · 10월 20일").items == []
+    assert read_plan("DAY 1 2026-10-20").items == []
+
+
 def test_an_end_time_said_after_a_comma_becomes_an_ends_at_value_with_its_source():
     """★x600 실서버 확인(2026-10-15): 「08:00 경복궁 · 한복 체험, 12:00 종료」 — 끝 시각이 항목에만 달리고 값 줄이 없어 확인 화면에서 사라졌다."""
     r = read_plan(chr(10).join(["1일차 · 2026-10-22", "08:00 경복궁 · 한복 체험, 12:00 종료", "12:30 광장시장 · 점심"]))
