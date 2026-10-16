@@ -47,8 +47,6 @@ import { useInsertionPoint } from "./use-insertion-point";
 import { PlaceSearchHeader } from "./place-search-header";
 import { useBackgroundBack } from "./use-background-back";
 import type { RailNow } from "./rail-list";
-import { SocialDiningPanel } from "@/features/social-dining/panel";
-import { diningMeals, type DiningContext } from "@/features/social-dining/model";
 import styles from "./plan-check.module.css";
 import tripStyles from "@/features/trip/trip-screen.module.css";
 
@@ -70,8 +68,6 @@ export interface PlanCheckProps {
   sending?: boolean;
   /** What the result can change, each wired by the page. One left out stays on the screen and says it is coming. */
   actions?: PlanCheckActions;
-  /** Planning from the same empty intake keeps its saved restaurant wishlist. */
-  socialDiningPlan?: ReactNode;
   /** Registering the result, at the bottom of the list once the check is done. */
   registration?: Registration;
   /** Trip-wide details the server asks for before it can register. */
@@ -120,7 +116,6 @@ export interface AutoResult {
  * coming, so the screen is whole either way.
  */
 export interface PlanCheckActions {
-  socialDining?: DiningContext;
   add?: (draft: NewStop) => Promise<void>;
   searchToAdd?: (anchorId: string, query: string) => Promise<AddStopPlace[]>;
   /** Save one stop's details as drafted (the server looks a typed place up again and checks the plan again). */
@@ -383,7 +378,7 @@ const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom" | "edit" | "socialDiningPlan">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom" | "edit">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -393,7 +388,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom, edit, socialDiningPlan }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
+function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom, edit }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const done = view.stage === "done";
@@ -1431,8 +1426,6 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
                 : countText(view, t)}</p>}
           </header>
           <div ref={bodyBox} className={styles.sheetBody} data-next-preview={(canRecommend || (previewing && side === "before")) && !noFixNow || undefined} data-under-float={done && dayStrip ? true : undefined} {...quietSubmit.handlers} {...follow.handlers} onScroll={follow.handlers.onScroll}>
-            {done && !registered && !previewing && actions.socialDining && <SocialDiningPanel context={actions.socialDining} blocked={frozen ?? (registration?.busy ? t("여행을 저장하고 있어요 · 잠시만요", "Saving your trip · one moment") : null)} initiallyOpen={!view.items.length}
-              meals={diningMeals(view.items)}>{socialDiningPlan}</SocialDiningPanel>}
             {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}

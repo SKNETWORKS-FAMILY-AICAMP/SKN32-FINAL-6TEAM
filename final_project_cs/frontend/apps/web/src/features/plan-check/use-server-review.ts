@@ -73,7 +73,6 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
    */
   const warmed = useRef<{ intakeId: string; base: number; ask: Promise<Awaited<ReturnType<typeof autofixIntake>>> } | null>(null);
   const needsLook = (view?.review?.needs?.total ?? 0) > 0;
-  const diningRevision = view?.revision ?? 0;
   const warmRevision = view?.status === "review" ? view.revision : null;
   useEffect(() => {
     if (warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
@@ -155,16 +154,6 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     };
 
     return {
-      socialDining: {
-        intakeId, revision: diningRevision, onRefresh: reread,
-        onApplied: (next) => {
-          const before = plan();
-          allUndo.remember(before, next);
-          undoEdits.current = null;
-          setDirty(false);
-          take(next);
-        },
-      },
       add: async (draft) => {
         const current = plan();
         const source = current.sources[0];
@@ -366,7 +355,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         }
       },
     };
-  }, [intakeId, language, apply, reread, allUndo, setDirty, diningRevision]);
+  }, [intakeId, language, apply, reread, allUndo, setDirty]);
 
   // The preview shows only while the plan it was asked on is still the plan (an answer from elsewhere — a re-read after a stale edit — ends it too).
   const preview = previewed && view && previewed.view.intake_id === intakeId && previewed.base === view.revision ? previewed.view : null;

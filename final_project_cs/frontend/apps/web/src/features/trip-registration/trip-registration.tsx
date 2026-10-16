@@ -22,7 +22,6 @@ import { textToSend } from "./test-plan-input";
 import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
 import { PlanAskFields } from "./plan-ask-fields";
 import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
-import { openDiningIntake } from "@/features/social-dining/start";
 import styles from "./trip-registration.module.css";
 
 const draftKey = "tripilot.web.registration-draft.v1";
@@ -145,16 +144,8 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   //   `[2026-10-04]` 이미 세션이 있으면(쿠키 · 옛 키 이전) 확인을 쓰지 않고 그대로 보낸다.
   //   ★`[2026-10-03 사용자 결정]` 마지막에 고른 칸만 보낸다: 직접 입력이면 글만, 파일이면 파일만, 계획 짜 주기면 그 조건만(고른 칸이 비어 있으면 단추가 꺼져 있다).
   const [sent, setSent] = useState(false);
-  const diningIntent = useRef(false);
   function send(token: string | null) {
     setSent(true);
-    if (diningIntent.current) {
-      void openDiningIntake(language, token).then((href) => router.push(href), (error: unknown) => {
-        setSent(false); setRestored(error instanceof Error ? error.message : t("맛집 후보를 보관할 여행을 열지 못했어요. 다시 시도해 주세요.", "Could not open a trip for your restaurant candidates. Please try again."));
-        setHumanToken(null); setHumanReset((count) => count + 1);
-      });
-      return;
-    }
     const base = { language, humanToken: token };
     if (active === "plan") {
       // The short text rides as the intake's text (the server reads it as the preferences); the survey only when it was finished.
@@ -219,7 +210,6 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending || card) return;
-    diningIntent.current = false;
     // ★`[2026-10-03 사용자 결정]` The chosen panel must have something in it. ★`[2026-10-06 사용자 지시]` The button is not switched off for it any more: pressing it with nothing in the panel says why under the panels
     //   (`role="alert"`, gone as soon as the customer starts writing) and puts the focus there. Pressing Enter in a field is the same.
     if (reason) {
@@ -234,16 +224,6 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     // ★`[2026-10-06 사용자 지시 — 한 번 켜면 켜진 상태가 기본]` A Course Keeper choice already made (turned on once before, or answered in this tab) is not asked again; otherwise the card asks BEFORE the plan is read.
     const made = readCriteria();
     // ★`[2026-10-07 사용자 지시 — 켠 선택은 기억하고 끈 선택은 다시 물어본다]` Only a choice to turn it ON is kept and not asked again; a choice to leave it OFF is asked again with the next plan (the card is where it can be turned on).
-    if (made.decided && made.guardian === "on") { proceed("on"); return; }
-    setCard(true);
-  }
-
-  function startDining() {
-    if (pending || card) return;
-    if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); setNudge((count) => count + 1); return; }
-    diningIntent.current = true;
-    setValidation(""); setRestored("");
-    const made = readCriteria();
     if (made.decided && made.guardian === "on") { proceed("on"); return; }
     setCard(true);
   }
@@ -399,7 +379,6 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
               {active === "plan" && errorNode}
             </Pane>
           </div>
-          <Panel><h2>{t("가 보고 싶은 맛집이 있나요?", "Saved a restaurant you want to visit?")}</h2><p>{t("Instagram · TikTok · YouTube 링크를 먼저 모아 둘 수 있어요. 위 칸의 글·파일·계획 조건은 보내지 않고 그대로 두어요.", "Collect Instagram, TikTok and YouTube links first. The text, files and planning conditions above stay in their boxes.")}</p><Button disabled={pending} onClick={startDining}>{t("맛집 링크 모아보기", "Collect restaurant links")}</Button></Panel>
           <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />
           {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}

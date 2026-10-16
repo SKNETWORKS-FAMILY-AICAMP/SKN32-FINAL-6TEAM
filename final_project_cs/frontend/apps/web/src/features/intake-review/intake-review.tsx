@@ -2,7 +2,7 @@
 
 import { silenceSnapshot, type SilenceSnapshot } from "./silence-snapshot";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { JourneyShell } from "@/components/layout/journey-shell";
@@ -34,11 +34,6 @@ import type { BusToast } from "@/lib/toast-bus";
 import { useQuiet } from "@/lib/use-quiet";
 import { useIntakeEvents } from "./use-intake-events";
 import styles from "./intake-review.module.css";
-import { diningEntry } from "@/features/social-dining/start";
-import { EmptyDiningPlan } from "@/features/social-dining/empty-plan";
-
-const observeDiningEntry = () => () => undefined;
-const currentDiningEntry = () => diningEntry(window.location.href);
 
 /**
  * The screen of a plan the server has taken (`/intakes/[intakeId]`): the plan check (`features/plan-check/`) while the server reads and
@@ -53,7 +48,6 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
-  const diningMode = useSyncExternalStore(observeDiningEntry, currentDiningEntry, () => false);
   const queryClient = useQueryClient();
   const [arrival] = useState(() => intakeArrival(intakeId));
   const arriving = arrival !== undefined;
@@ -187,7 +181,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   useEffect(() => {
     const view = query.data;
     if (!view || view.status === "reading") return;
-    if (!emptyIntake || diningMode) { forgetIntakeSubmission(intakeId); return; }
+    if (!emptyIntake) { forgetIntakeSubmission(intakeId); return; }
     if (emptyReturned.current) return;
     emptyReturned.current = true;
     const text = view.sources.filter((source) => source.kind === "text").flatMap((source) => source.lines.map((line) => line.text)).join("\n");
@@ -195,11 +189,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     // A corrected intake must be read again instead of reusing the completed empty snapshot.
     queryClient.removeQueries({ queryKey: ["intake", intakeId, language], exact: true });
     router.replace(routes.newTrip);
-  }, [emptyIntake, diningMode, intakeId, language, query.data, queryClient, router, t]);
+  }, [emptyIntake, intakeId, language, query.data, queryClient, router, t]);
   const shell = (children: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{children}</JourneyShell>;
 
   // Returning takes priority over survey holds and replay of the completed read.
-  if (emptyIntake && !diningMode) return null;
+  if (emptyIntake) return null;
   if (query.isPending && arriving) return <PlanCheck key="plan" view={firstView} sending onBack={() => router.push(routes.newTrip)} />;
   if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
@@ -266,10 +260,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const details = [unchecked, asked, yearNote].filter(Boolean).join("\n");
   const finalNotice: BusToast | null = details ? { text: t("계획 확인 안내", "Plan check notice"), sub: [details, testNote?.text, testNote?.sub].filter(Boolean).join("\n"), stay: Boolean(unchecked) } : testNote;
   return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={finalNotice} onBack={() => router.push(routes.newTrip)}
-    socialDiningPlan={emptyIntake && diningMode ? <EmptyDiningPlan intakeId={intakeId} revision={view.revision} survey={survey} onRefresh={reread} onApplied={apply} /> : undefined}
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
-      socialDining: server.actions.socialDining,
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
       // `[2026-10-04]` Several stops' new times in ONE request (title · date · place stay as they are; an empty start leaves the start alone).
       retime: async (changes) => {
