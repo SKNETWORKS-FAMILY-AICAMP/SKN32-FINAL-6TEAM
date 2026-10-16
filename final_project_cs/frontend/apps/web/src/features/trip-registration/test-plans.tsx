@@ -10,16 +10,33 @@ import { planOfInput } from "./test-plan-input";
 
 interface PreparedPlan { code: string; name: string; description: string; expected: string; text: string; category?: string }
 interface Catalog { enabled: boolean; scenarios: PreparedPlan[] }
-const categories = [
-  ["normal", "문제 없는 기본안", "No intentional issues"],
-  ["time", "시간 겹침", "Overlapping times"],
-  ["hours", "운영시간·휴무", "Opening hours / closures"],
-  ["place", "장소 미정", "Unspecified place"],
-  ["mobility", "이동 여유", "Travel time"],
-  ["input", "입력 확인", "Input checks"],
-  ["general", "일반 흐름", "General flow"],
+// 두 묶음: 검사 항목별(test1~16, 시각+장소 목록) · 입력 형식별(test17~, 계획 이해 시험지의 형식 이름 그대로 — 2026-10-16)
+const sections = [
+  ["check", "검사 항목별 · 시각+장소 목록", "By check · time + place lists"],
+  ["form", "입력 형식별 · 계획 이해 시험지 분류", "By input form · plan reading test categories"],
 ] as const;
-function categoryOf(plan: PreparedPlan) { return categories.find(([code]) => code === plan.category) ?? categories[categories.length - 1]; }
+const categories = [
+  ["normal", "문제 없는 기본안", "No intentional issues", "check"],
+  ["time", "시간 겹침", "Overlapping times", "check"],
+  ["hours", "운영시간·휴무", "Opening hours / closures", "check"],
+  ["place", "장소 미정", "Unspecified place", "check"],
+  ["mobility", "이동 여유", "Travel time", "check"],
+  ["input", "입력 확인", "Input checks", "check"],
+  ["general", "일반 흐름", "General flow", "check"],
+  ["mixed_list", "정형 목록+자유 문장", "List with free sentences", "form"],
+  ["typo_line", "말투·오타 한 줄", "Casual one-liner with typos", "form"],
+  ["paragraph", "문단 자유문", "Free paragraph", "form"],
+  ["csv", "CSV·TSV", "CSV / TSV", "form"],
+  ["json", "JSON", "JSON", "form"],
+  ["excel_memo", "메모식 엑셀", "Spreadsheet memo", "form"],
+  ["pasted_table", "붙여 넣은 표", "Pasted table", "form"],
+  ["multi_message", "나눠 보낸 메시지", "Split messages", "form"],
+  ["mixed_request", "계획+질문+짜기", "Plan + question + planning ask", "form"],
+  ["correction", "중간 정정", "Mid-message correction", "form"],
+  ["real", "실제 접수", "Real-intake style", "form"],
+] as const;
+const fallback = categories.find(([code]) => code === "general")!;
+function categoryOf(plan: PreparedPlan) { return categories.find(([code]) => code === plan.category) ?? fallback; }
 
 /** 목록은 부가 기능이다. 읽기를 기다리거나 실패해도 일반 계획 입력을 막지 않는다. */
 export function TestPlans({ value, onChoose, disabled }: { value: string; onChoose: (code: string, text: string) => void; disabled: boolean }) {
@@ -50,14 +67,20 @@ export function TestPlans({ value, onChoose, disabled }: { value: string; onChoo
         </span><ChevronDown size={18} aria-hidden="true" />
       </summary>
       {!disabled && query.data && <div className={styles.options} aria-label={t("분류별 테스트 계획", "Test plans by category")}>
-        {categories.map(category => {
-          const plans = query.data.scenarios.filter(plan => categoryOf(plan)[0] === category[0]);
-          return plans.length > 0 && <fieldset key={category[0]} className={styles.group}>
-            <legend><span className={styles.badge} data-category={category[0]}>{t(category[1], category[2])}</span><span className={styles.count}>{plans.length}</span></legend>
-            {plans.map(plan => <button key={plan.code} type="button" data-plan-code={plan.code} data-category={category[0]} aria-pressed={entry?.code === plan.code} onClick={() => { onChoose(plan.code, plan.text); close(); }}>
-              <span className={styles.code}>{plan.code}</span><span>{plan.name}</span><Check size={16} aria-hidden="true" className={entry?.code === plan.code ? styles.checked : styles.unchecked} />
-            </button>)}
-          </fieldset>;
+        {sections.map(section => {
+          const groups = categories.filter(category => category[3] === section[0]).map(category => {
+            const plans = query.data.scenarios.filter(plan => categoryOf(plan)[0] === category[0]);
+            return plans.length > 0 && <fieldset key={category[0]} className={styles.group}>
+              <legend><span className={styles.badge} data-category={category[0]}>{t(category[1], category[2])}</span><span className={styles.count}>{plans.length}</span></legend>
+              {plans.map(plan => <button key={plan.code} type="button" data-plan-code={plan.code} data-category={category[0]} aria-pressed={entry?.code === plan.code} onClick={() => { onChoose(plan.code, plan.text); close(); }}>
+                <span className={styles.code}>{plan.code}</span><span>{plan.name}</span><Check size={16} aria-hidden="true" className={entry?.code === plan.code ? styles.checked : styles.unchecked} />
+              </button>)}
+            </fieldset>;
+          }).filter(Boolean);
+          return groups.length > 0 && <section key={section[0]} className={styles.section} data-section={section[0]} aria-label={t(section[1], section[2])}>
+            <p className={styles.sectionTitle}>{t(section[1], section[2])}</p>
+            {groups}
+          </section>;
         })}
       </div>}
     </details>
