@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
@@ -299,6 +299,77 @@ def _team_dining_places(conn, tenant_id: str, item: dict[str, Any], current: dic
     return [{**_place(alt["name"], alt["latitude"], alt["longitude"], "places", kind="dining", address=alt.get("address"),
                       category=category_label("39"), place_id=alt["place_id"], ref=f"place:{alt['place_id']}"),
              "team_rank": rank}
+            for rank, alt in enumerate(got["alternatives"])]
+
+
+def _district(address: Any) -> str | None:
+    words = str(address or "").split()
+    return next((w for w in words if len(w) > 1 and w.endswith("구")), None)
+
+
+def _stay_keyword(conn, tenant_id: str, item: dict[str, Any], current: dict[str, Any] | None) -> str | None:
+    """숙소 비교 검색어 — 지역 이름(「명동」) → 원래 숙소 주소의 구 → 원래 숙소에서 가장 가까운 관광공사 목록 행 주소의 구(「서울 중구」) → 원래 숙소 이름.
+    ★호텔 이름으로 찾으면 그 호텔 하나만 나올 수 있어 지역을 먼저 쓴다(숙소 팀 「바꿔 줘」 검색어 `_stay_query` 도 지역 → 구 → 이름 차례)."""
+    area = (area_of(item) or {}).get("name")
+    if area:
+        return str(area)
+    district = _district((current or {}).get("address"))
+    if not district and current and current.get("latitude") is not None and current.get("longitude") is not None:
+        lat, lon = float(current["latitude"]), float(current["longitude"])
+        try:
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute("SELECT address FROM place_catalog WHERE tenant_id = ANY(%s) AND address LIKE %s "
+                            "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
+                            "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT 1",
+                            (_tenants(tenant_id), "%구 %", lat - 0.01, lat + 0.01, lon - 0.0125, lon + 0.0125,
+                             lat, lon, math.cos(math.radians(lat))))
+                row = cur.fetchone()
+        except Exception as exc:                              # noqa: BLE001 — 표가 없는 DB 면 모른다
+            if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+                raise
+            row = None
+        district = _district(row[0]) if row else None
+    if district:
+        return f"서울 {district}"
+    return str((current or {}).get("name") or item.get("title") or "").strip() or None
+
+
+def _team_lodging_places(conn, tenant_id: str, review: dict[str, Any], item: dict[str, Any], current: dict[str, Any] | None,
+                         items: list[dict[str, Any]]) -> list[dict[str, Any]] | None:
+    """숙소 일정의 다른 숙소 후보를 **숙소 팀**(`team_hooks.lodging_alternatives` — 팀의 「바꿔 줘」 고르기)에게 받는다. `[2026-10-16 사용자 결정]`
+    ★`None` = 팀이 없거나 답하지 못함(날짜 · 인원 · 검색어 모름 · 바깥 한도 몫 소진 · 좌표 있는 후보 없음 · 오류) — 그때만 자체 고르기(관광공사 숙박 목록)."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.team_hooks import lodging_alternatives
+
+    if get_guardrails().get("travel.candidates.team_first") is False:
+        return None
+    try:
+        check_in = date.fromisoformat(str(item["date"]))
+    except (TypeError, ValueError):
+        return None
+    try:
+        check_out = date.fromisoformat(str(item.get("end_date")))
+    except (TypeError, ValueError):
+        check_out = None
+    if check_out is None or check_out <= check_in:
+        check_out = check_in + timedelta(days=1)              # 끝을 모르면 1박 — 숙소 팀 `_stay_query` 와 같다
+    adults = review.get("party_size")
+    anchor = ((float(current["latitude"]), float(current["longitude"]))
+              if current and current.get("latitude") is not None and current.get("longitude") is not None else None)
+    exclude = [x["place"]["name"] for x in items if x.get("place") and x["place"].get("name") and x["kind"] == "lodging"]
+    try:
+        got = lodging_alternatives.ranked(keyword=_stay_keyword(conn, tenant_id, item, current), check_in=check_in.isoformat(),
+                                          check_out=check_out.isoformat(), adults=adults, anchor=anchor, exclude_names=exclude)
+    except Exception:                                     # noqa: BLE001 — 팀이 답하지 못한 것으로 보고 자체 길로 간다
+        log.warning("lodging alternatives failed — falling back to the local candidate picker", exc_info=True)
+        return None
+    if got is None:
+        return None
+    # 고르면 화면이 `edits` 로 이 값을 보낸다 — 출처는 고른 장소가 받는 값(`search`)으로 싣는다(서버는 `customer_pick` 으로 적는다)
+    return [{**_place(alt["name"], alt["latitude"], alt["longitude"], "search", kind="activity",
+                      category=category_label(LODGING_TYPE), content_type_id=LODGING_TYPE),
+             "basis": "lodging", "team_rank": rank, "offer": {"source": alt.get("source"), "price_per_night": alt.get("price_per_night"),
+                                                              "rating": alt.get("rating"), "link": alt.get("link")}}
             for rank, alt in enumerate(got["alternatives"])]
 
 
@@ -762,10 +833,16 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
             else:
                 found += _ledger_places(conn, tenant_id, ref)
         elif stay_item:
+            # ★`[2026-10-16 사용자 결정]` 숙소 항목은 **숙소 팀이 먼저**다(숙소 비교 → 가격대 · 거리 순) — 자동 추천의 순서 매기기(`rank_only`)에서는 바깥 한도를 아끼려 부르지 않는다
+            team = None if rank_only else _team_lodging_places(conn, tenant_id, review, item, current, items)
+            if team is not None:
+                found += team
+                notes.append("team_ranked")
             # ★`[2026-10-15]` 숙소 항목은 같은 숙박 분류에서만 찾는다 — 분류를 모르는 활동처럼 쇼핑만 빼고 관광지까지 권하지 않는다. 목록이 모자라면 지도의 「숙소」로 채운다
-            found += _catalog_places(conn, tenant_id, ref, LODGING_TYPE, now)
-            if len(found) < limit + POOL_EXTRA:
-                found += _kakao_places(kakao, "숙소", ref, want, notes)
+            else:
+                found += _catalog_places(conn, tenant_id, ref, LODGING_TYPE, now)
+                if len(found) < limit + POOL_EXTRA:
+                    found += _kakao_places(kakao, "숙소", ref, want, notes)
         else:
             cls = _original_class(conn, tenant_id, current)
             eat = _eats_there(items, item, cls)

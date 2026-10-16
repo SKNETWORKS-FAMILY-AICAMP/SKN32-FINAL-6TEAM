@@ -5,9 +5,10 @@ import json, math, os
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
-GS = json.load(open(os.path.join(HERE, 'fixtures', 'gold_sets.json'), encoding='utf-8'))
-Q = {w: json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]['qs'] for w in SETS}
+GS = json.load(open(fixture('gold_sets.json'), encoding='utf-8'))
+Q = {w: json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]['qs'] for w in SETS}
 
 
 def okB(w, i, pick):

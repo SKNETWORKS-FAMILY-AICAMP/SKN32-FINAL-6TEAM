@@ -199,6 +199,12 @@ class Settings(BaseSettings):
     #:  (예 `http://<터널 입구>:<포트>`). 앱은 SSH 키를 들지 않는다 — 이 주소만 부른다. 비어 있으면 콘솔에서 SSH 를 골라도 로컬 모델로 간다(경고 로그).
     #:  런팟 Ollama 에도 `ollama_model` 과 **같은 이름**의 학습 모델이 올라가 있어야 한다. 실제 주소는 `.env` 에만 적는다.
     ollama_ssh_base_url: str = ""
+    #: ★`[2026-10-16 사용자 지시]` 상황마다의 기본 모델 경로 — 관리 콘솔의 그 칸이 「끔」이면 이 값을 따른다(콘솔 값이 있으면 콘솔이 먼저).
+    #:  chat = 채팅 해석 · 계획 읽기 · 번역 · 분류(local · ssh · api) · pointer = 일정 짚기 · notice = 공지 확인(local · ssh — 학습 모델은 API 에 없다).
+    #:  기본 local 은 지금까지와 같다. 환경 파일 이름: `ACOP_MODEL_ROUTE_CHAT` · `ACOP_MODEL_ROUTE_POINTER` · `ACOP_MODEL_ROUTE_NOTICE`.
+    model_route_chat: Literal["local", "ssh", "api"] = "local"
+    model_route_pointer: Literal["local", "ssh"] = "local"
+    model_route_notice: Literal["local", "ssh"] = "local"
     ollama_pointer_keep_alive: str = ""
     #: 일정이 바뀐 첫 문장은 고객을 기다리게 하지 않고 규칙으로 답하며 모델은 뒤에서 그 일정을 읽어 둔다(`item_pointer.py` 머리). 끄면 첫 문장도 모델을 기다린다.
     ollama_pointer_background_warm: bool = True

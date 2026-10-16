@@ -8,6 +8,7 @@ import json, math, os, random, sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 argv0 = sys.argv
 sys.argv = ['x', 'e16d', '--final', 'mix8']
 src = open(os.path.join(HERE, 'eval_router.py'), encoding='utf-8').read()
@@ -22,7 +23,7 @@ W = 'mix8'
 
 
 def inject(ns, tag):
-    ns['SETS'][W] = J(os.path.join(HERE, 'fixtures', f'{W}.json'))['sets'][W]
+    ns['SETS'][W] = J(fixture(f'{W}.json'))['sets'][W]
     for p, v in zip(J(os.path.join(HERE, 'fixtures', f'pairs_{W}.json')), J(R(f'ft_{tag}_{W}_scores.json'))[f'ft/emb_{tag}']):
         ns['S'][(p['set'], p['qi'])][p['item']] = v
     ns['G'][W] = G[W]

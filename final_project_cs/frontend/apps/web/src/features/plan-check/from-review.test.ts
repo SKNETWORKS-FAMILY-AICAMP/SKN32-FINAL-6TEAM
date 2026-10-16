@@ -184,3 +184,34 @@ describe("candidates and photos", () => {
     expect(safePhotoUrl(null)).toBeNull();
   });
 });
+
+describe("D-025 「우리가 채움」 — the server filled in first", () => {
+  const filledIntake = (extra: Partial<ReviewedIntakeView>) => intake("review", "review", {
+    review: { items: [item({ id: "0-0" }), item({ id: "0-1", title: "숙소 근처", status: "adjusted" })], moves: [] } as unknown as ReviewedIntakeView["review"],
+    ...extra,
+  });
+
+  it("puts one ✎ line with the reason first on the stop the server filled, and nowhere else", () => {
+    const next = filledIntake({ prefill: { filled: [{ item: "0-1", title: "근처 식당", owner: "dining_team", owner_label: "식당 팀",
+      reason: "계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요", gap: "meal_place", new: false }], questions: [], kept: [] } });
+    const view = reviewResultOf(next, readingOf(next))!;
+    const [plain, filled] = view.items;
+    expect(plain.checks.some((check) => check.text.startsWith("우리가 채움"))).toBe(false);
+    expect(filled.checks[0]).toEqual({ kind: "place", result: "filled", text: "우리가 채움 · 계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요" });
+    expect(view.prefill).toEqual({ filledCount: 1, questions: [], understood: [] });
+  });
+
+  it("shows questions only the traveller knows and the words read as a move, a condition or a preference", () => {
+    const next = filledIntake({ prefill: { filled: [], kept: [], questions: [{ kind: "lodging_name", question: "묵는 숙소 이름을 알려 주세요", quote: null },
+      { kind: "lodging_name", question: "묵는 숙소 이름을 알려 주세요", quote: null }] } });
+    next.sources[0].understanding = { moves: [{ mode: "taxi", scope: "segment", from: "경복궁", to: "광장시장", quote: "택시로 이동할 거야" }],
+      conditions: [{ code: "if_rain_indoor", quote: "비 오면 실내" }], preferences: [{ code: "kid_friendly", quote: "애들 데리고" }] };
+    expect(reviewResultOf(next, readingOf(next))!.prefill).toEqual({ filledCount: 0, questions: ["묵는 숙소 이름을 알려 주세요"],
+      understood: ["택시로 이동할 거야", "비 오면 실내", "애들 데리고"] });
+  });
+
+  it("says nothing when an older server sends no prefill", () => {
+    const next = filledIntake({});
+    expect(reviewResultOf(next, readingOf(next))!.prefill).toBeNull();
+  });
+});

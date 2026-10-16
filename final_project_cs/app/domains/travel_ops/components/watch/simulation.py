@@ -143,6 +143,7 @@ def configure(conn, tenant: str, trip_id: UUID, *, actor: str, expected_revision
         raise AdminServiceError(409, "다른 변경이 먼저 저장됐습니다. 현재 여행과 설정을 다시 읽어 주세요.")
     items = TripStore(tenant).items(conn, trip_id, trip[1])
     if categories:
+        _require_watched(conn, tenant, trip_id)
         if trip[2] != "active" or not any((i.ends_at or i.starts_at) > now for i in items):
             raise AdminServiceError(422, "끝나지 않은 활성 여행에서만 시험할 수 있습니다.")
         target = next((i for i in items if i.item_id == item_id), None)
@@ -169,6 +170,24 @@ def configure(conn, tenant: str, trip_id: UUID, *, actor: str, expected_revision
     after = state(conn, tenant, trip_id, now=now)
     audit(conn, tenant, actor, "watch-simulation", str(trip_id), before, after, reason)
     return after
+
+
+def _require_watched(conn, tenant: str, trip_id: UUID) -> None:
+    """감시가 보지 않는 여행에는 시험을 걸지 않는다 — 저장만 되고 점검 결과 · 알림이 영영 안 생긴다. `[2026-10-16]`
+
+    감시 대상(`TripStore._open_trips`)과 같은 두 조건: 대상 좁히기(게스트 여행 빼기 — `trip_scope`) · 재난 정지 없음."""
+    from app.domains.travel_ops.components.itinerary.trip_scope import extra_sql
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT " + extra_sql("t") + ", EXISTS (SELECT 1 FROM trip_safety_pauses p WHERE p.tenant_id=t.tenant_id "
+                    "AND p.trip_id=t.trip_id AND p.resumed_at IS NULL) FROM trips t WHERE t.tenant_id=%s AND t.trip_id=%s", (tenant, trip_id))
+        row = cur.fetchone()
+    if row and not row[0]:
+        raise AdminServiceError(422, "로그인하지 않은 손님(게스트) 여행은 감시 대상이 아니라 시험 입력이 반영되지 않습니다. "
+                                     "소셜 로그인으로 연결한 회원의 여행을 골라 주세요.")
+    if row and row[1]:
+        raise AdminServiceError(409, "재난 정지 중인 여행은 감시가 쉬고 있어 시험 입력이 반영되지 않습니다. "
+                                     "고객 앱에서 「다시 시작」한 뒤 시험해 주세요.")
 
 
 def inputs(current: dict, place: dict, *, safety_only: bool = False) -> dict[str, dict]:

@@ -10,7 +10,7 @@ from stats import latency_summary, wilson
 
 folder = HERE / 'results/gpu_backlog_20261008/frog_h'
 answer = folder / 'd_test_h_backlog_frog.jsonl'
-gold_path = HERE / 'results/hard_set/h_set_test_30_20261015_agree.json'
+gold_path = HERE.parents[2] / 'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json'
 gold = {r['i']: r for r in json.loads(gold_path.read_text(encoding='utf-8'))}
 rows = [json.loads(line) for line in answer.read_text(encoding='utf-8').splitlines()]
 run = {r['i']: r for r in rows}

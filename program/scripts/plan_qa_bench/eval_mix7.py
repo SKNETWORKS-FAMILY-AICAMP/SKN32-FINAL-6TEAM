@@ -4,6 +4,7 @@
 # 사용: python eval_mix7.py [--md 출력파일]
 import contextlib, io, json, math, os, random, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 md = sys.argv[sys.argv.index('--md') + 1] if '--md' in sys.argv else None
 src = open(os.path.join(HERE, 'eval_night.py'), encoding='utf-8').read()
 head = src[:src.index('rows = []')]
@@ -17,7 +18,7 @@ S, G, SETS, run, IDX = ns['S'], ns['G'], ns['SETS'], ns['run'], ns['IDX']
 R = lambda *a: os.path.join(HERE, 'results', *a)
 J = lambda f: json.load(open(f, encoding='utf-8'))
 for w in ('mix6', 'mix7'):
-    SETS[w] = J(os.path.join(HERE, 'fixtures', f'{w}.json'))['sets'][w]
+    SETS[w] = J(fixture(f'{w}.json'))['sets'][w]
     for p, v in zip(J(os.path.join(HERE, 'fixtures', f'pairs_{w}.json')), J(R(f'ft_e16c_{w}_scores.json'))['ft/emb_e16c']):
         S[(p['set'], p['qi'])][p['item']] = v
     G[w] = {}

@@ -26,7 +26,7 @@ import pytest
 
 from app.domains.travel_ops.components.intake import candidates
 
-from .test_intake_review import Tour, _catalog, _client, _item, _key, _send, rv  # noqa: F401
+from .test_intake_review import Tour, _catalog, _client, _edit, _field, _item, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
 
 PLAZA = {"id": "31", "name": "더 플라자 호텔 서울", "category": "여행 > 숙박 > 호텔", "category_group": "AD5",
@@ -147,6 +147,44 @@ def test_a_plan_with_a_named_hotel_goes_all_the_way_to_a_registered_trip(hotels)
     assert stay["title"] == "더 플라자 호텔 서울" and (stay["starts_at"][:16], stay["ends_at"][:16]) == ("2026-12-06T15:00", "2026-12-07T11:00"), stay
     assert stay["place"], stay                                                                  # 장소가 있다 — 지도 핀 자리
     assert [i["title"] for i in items if i["kind"] == "activity"] == ["경복궁", "N서울타워"], "체크아웃 줄은 따로 일정이 되지 않는다"
+
+
+def test_a_found_hotel_gets_its_other_stays_from_the_lodging_team_first_and_a_pick_is_accepted(hotels, monkeypatch):
+    """★`[2026-10-16 사용자 결정]` 후보 공급은 팀이 — 장소가 정해진 숙소 항목의 「다른 숙소」는 숙소 팀(숙소 비교 → 가격대 · 거리 순)이 먼저 고른다.
+    팀이 물은 값(지역 · 날짜 · 인원 · 기준점 · 뺄 이름)이 일정에서 왔는지, 고른 후보가 일정에 들어가는지 본다."""
+    from app.domains.travel_ops.components.team_hooks import lodging_alternatives
+
+    _catalog(hotels, "920002", "12", "서울광장", 37.5658, 126.9779, "서울특별시 중구 세종대로 110")   # 검색어의 구(「서울 중구」)는 가장 가까운 목록 행 주소에서
+    client, headers, _tour, kakao, view = _send_plan("2명\n2030-11-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2030-11-08\n11:00 체크아웃")
+    asked = {}
+
+    def rank(**query):
+        asked.update(query)
+        return {"alternatives": [{"name": "명동 팀 호텔", "latitude": 37.5636, "longitude": 126.9826, "source": "구글 호텔"},
+                                 {"name": "을지로 팀 호텔", "latitude": 37.5660, "longitude": 126.9910, "source": "구글 호텔"}]}
+
+    monkeypatch.setattr(lodging_alternatives, "ranked", rank)
+    stay = _item(view, "더 플라자 호텔 서울")
+    got = _candidates(client, headers, view, stay)
+    assert "team_ranked" in got["notes"], got
+    assert [c["place"]["name"] for c in got["candidates"]] == ["명동 팀 호텔", "을지로 팀 호텔"], got     # 관광공사 · 지도 숙소로 채우지 않는다
+    assert all(c["basis"] == "lodging" and c["place"]["content_type_id"] == "32" for c in got["candidates"]), got
+    assert (asked["keyword"], asked["check_in"], asked["check_out"]) == ("서울 중구", "2030-11-06", "2030-11-08") and asked["adults"] == 2, asked
+    assert asked["anchor"] == (37.5655, 126.978) and "더 플라자 호텔 서울" in asked["exclude_names"], asked
+    pick = got["candidates"][0]["place"]
+    _edit(client, headers, view, _field(stay, "place", pick))                                   # 화면이 보내는 그대로(출처 `search`) — 서버가 받는다
+    after = client.get(f"/v1/web/trip-intakes/{view['intake_id']}", headers=headers).json()
+    assert any(i["kind"] == "lodging" and (i.get("place") or {}).get("name") == "명동 팀 호텔" for i in after["review"]["items"]), after["review"]["items"]
+
+
+def test_without_a_lodging_team_answer_a_found_hotel_falls_back_to_the_lodging_list(hotels, monkeypatch):
+    from app.domains.travel_ops.components.team_hooks import lodging_alternatives
+
+    client, headers, _tour, kakao, view = _send_plan("2030-11-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2030-11-07\n11:00 체크아웃")
+    monkeypatch.setattr(lodging_alternatives, "ranked", lambda **_: None)            # 팀이 답하지 못함(바깥 한도 소진 · 키 없음) — 자체 고르기로 간다
+    got = _candidates(client, headers, view, _item(view, "더 플라자 호텔 서울"))
+    assert "team_ranked" not in got["notes"], got
+    assert "광화문호텔" in [c["place"]["name"] for c in got["candidates"]], got
 
 
 def test_the_stay_kind_compares_as_an_activity_place():

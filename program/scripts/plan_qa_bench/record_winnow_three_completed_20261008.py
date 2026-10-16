@@ -30,9 +30,9 @@ def main():
                      for line in (BASE/'winnow_completed_remote_hashes_1455.txt').read_text().splitlines() if line.strip()}
     pairs, results = {}, {}
     for suite, count_file, gold_file in [
-        ('D', 'choice_counts.json', 'empty_probe/all_prompts.json'),
-        ('D2', 'choice_counts.json', 'empty_probe/all_prompts_d2.json'),
-        ('H', 'h_counts.json', 'hard_set/h_set_test_30_20261015_agree.json')]:
+        ('D', 'choice_counts.json', 'datasets/core/pointing/testset/questions_plus_chitchat_v1/all_prompts.json'),
+        ('D2', 'choice_counts.json', 'datasets/core/pointing/testset/chitchat_only_holdout_v1/all_prompts_d2.json'),
+        ('H', 'h_counts.json', 'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json')]:
         job = 'winnow_oos_'+suite.lower()
         original = 'winnow_original_'+suite.lower()
         r, before = read(BASE/job/count_file), read(BASE/original/count_file)
@@ -46,7 +46,7 @@ def main():
         old_answer = BASE/original/f"d_test_{before['execution']['job']['tag']}.jsonl"
         rows = [json.loads(x) for x in answer.read_text(encoding='utf-8').splitlines()]
         old = [json.loads(x) for x in old_answer.read_text(encoding='utf-8').splitlines()]
-        gold_path = ROOT/'program/scripts/plan_qa_bench/results'/gold_file
+        gold_path = ROOT/gold_file
         gold = read(gold_path)
         run, ref, prior = ({x['i']: x for x in values} for values in [rows, gold, old])
         assert len(rows) == len(run) == len(ref) == len(prior) == r['expected']

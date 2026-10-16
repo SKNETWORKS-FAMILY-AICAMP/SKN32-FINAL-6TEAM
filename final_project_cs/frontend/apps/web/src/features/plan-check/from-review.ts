@@ -5,7 +5,7 @@ import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
-import type { CheckRow, PlaceInfo, PlanCandidate, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, Reread, Verdict } from "./model";
+import type { CheckRow, PlaceInfo, PlanCandidate, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
 
 /**
  * The plan-check screen's data from the server's own check (`review`, `wiki/external/rest-endpoints.md` 「확인 화면 검사 …」).
@@ -81,9 +81,10 @@ export interface ReviewShape {
  * The screen's view of items and legs. `infos` are what the change screen has fetched for a stop's own place (photos …),
  * by stop id; `base` is the intake read from the server (lines, title).
  */
-export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: PlanStage, infos: Readonly<Record<string, PlaceInfo>> = {}): PlanCheckView {
+export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: PlanStage, infos: Readonly<Record<string, PlaceInfo>> = {},
+  filled: ReadonlyMap<string, string> = new Map()): PlanCheckView {
   const dayOf = dayNumbers(review.items);
-  const items = review.items.map((item) => planItem(item, dayOf.get(item.id) ?? 1, infos[item.id] ?? null));
+  const items = review.items.map((item) => withFilled(planItem(item, dayOf.get(item.id) ?? 1, infos[item.id] ?? null), filled.get(item.id)));
   const days = [...new Map(items.map((item) => [item.day, item.date])).entries()].map(([day, date]) => ({ day, date })).sort((a, b) => a.day - b.day);
   return { ...base, stage, days, items, moves: review.moves.map((move) => planMove(move, dayOf)) };
 }
@@ -94,7 +95,34 @@ export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: Pl
  */
 export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, infos?: Readonly<Record<string, PlaceInfo>>): PlanCheckView | null {
   if (!intake.review) return null;
-  return viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing) }, intake.review, "done", infos);
+  return viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing),
+    prefill: prefillNotesOf(intake) }, intake.review, "done", infos, filledReasons(intake));
+}
+
+/**
+ * `[2026-10-16 D-025]` 「우리가 채움」 — a stop the server filled in first carries one ✎ line with the reason, ahead of its own checks.
+ * Only stops the server names in `prefill.filled`; a stop the customer changed afterwards keeps the line until the server drops it.
+ */
+function withFilled(item: PlanItem, reason: string | undefined): PlanItem {
+  return reason ? { ...item, checks: [{ kind: "place", result: "filled", text: `우리가 채움 · ${reason}` }, ...item.checks] } : item;
+}
+
+export function filledReasons(intake: Pick<IntakeView, "prefill">): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const entry of intake.prefill?.filled ?? []) if (entry?.item && typeof entry.reason === "string" && entry.reason) out.set(entry.item, entry.reason);
+  return out;
+}
+
+/** The note above the list: questions only the traveller can answer, and the traveller's own words read as a move, a condition or a preference. Null when there is nothing to say. */
+export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources">): PrefillNotes | null {
+  const questions = [...new Set((intake.prefill?.questions ?? []).map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
+  const understood = [...new Set(intake.sources.flatMap((source) => {
+    const read = source.understanding;
+    if (!read) return [];
+    return [...(read.moves ?? []), ...(read.conditions ?? []), ...(read.preferences ?? [])].map((entry) => entry?.quote).filter((text): text is string => typeof text === "string" && text.length > 0);
+  }))];
+  const filledCount = (intake.prefill?.filled ?? []).length;
+  return questions.length || understood.length || filledCount ? { filledCount, questions, understood } : null;
 }
 
 /** Lines the stream has told about that the intake does not hold yet (a read that is a moment ahead of the GET). */

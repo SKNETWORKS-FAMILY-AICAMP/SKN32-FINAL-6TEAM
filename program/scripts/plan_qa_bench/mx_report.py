@@ -14,7 +14,7 @@ from stats import mcnemar_exact  # noqa: E402
 
 sys.stdout.reconfigure(encoding='utf-8')
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
-MXDIR = next(p for p in (os.path.join(ROOT, 'datasets', 'travel', 'mx_testset'), os.path.join(ROOT, 'program', 'datasets', 'travel', 'mx_testset')) if os.path.exists(os.path.join(p, 'mx_main_prompts.json')))
+MXDIR = next(p for p in (os.path.join(ROOT, 'datasets', 'core', 'pointing', 'testset', 'requests_inside_chitchat_pairs_v1'), os.path.join(ROOT, 'program', 'datasets', 'core', 'pointing', 'testset', 'requests_inside_chitchat_pairs_v1')) if os.path.exists(os.path.join(p, 'mx_main_prompts.json')))
 D = os.path.join(HERE, 'results', 'd_test')
 ITEMS = json.load(open(os.path.join(MXDIR, 'mx_main_prompts.json'), encoding='utf-8'))
 POS = ['MX1', 'MX2', 'MX6a']

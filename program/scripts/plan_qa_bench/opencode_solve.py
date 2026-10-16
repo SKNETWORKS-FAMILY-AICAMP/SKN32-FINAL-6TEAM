@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 args = sys.argv[1:]
 SETS = args[0].split(',')
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
@@ -89,7 +90,7 @@ def parse(res, ids):
 
 
 for name in SETS:
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{name}.json'), encoding='utf-8'))['sets'][name]
+    job = json.load(open(fixture(f'{name}.json'), encoding='utf-8'))['sets'][name]
     qs = job['qs'][:LIMIT] if LIMIT else job['qs']
     ids = {i['id'] for i in job['items']}
     outf = os.path.join(HERE, 'results', f'opencode_{TAG}_{name}{"_smoke" if LIMIT else ""}.json')

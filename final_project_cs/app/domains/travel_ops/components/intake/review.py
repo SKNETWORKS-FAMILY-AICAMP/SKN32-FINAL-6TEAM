@@ -741,6 +741,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
+            "party_size": party,          # `[2026-10-16]` 숙소 후보(숙소 팀 숙소 비교)가 인원을 읽는다 — 모르면 `None`
             "items": items, "moves": moves, "taxi_pricing": (pricing if pricing is not None else taxi_pricing.default()) if taxi_pick_on else None,
             "needs": {"items": needs_items, "moves": needs_moves, "total": needs_items + needs_moves},
             "ready": bool(items) and not got.problems and needs_items + needs_moves == 0}
@@ -778,12 +779,13 @@ def picked_modes(claims: list[dict[str, Any]]) -> dict[str, str]:
     """고객이 구간마다 고른 수단 — 값 줄 `moves[{from}~{to}].mode`(고객 값 · `recommended` 로 되돌리면 값이 비어 이 표에서 빠진다).
 
     ★`[2026-10-14]` 수정 접수는 등록한 여행에 이미 정해 둔 수단을 `method: "trip"` 값 줄로 싣는다(`reopen.open_for_trip`) — 그것도 고른 수단으로 본다.
+    ★`[2026-10-16]` 계획서에 적힌 수단(「택시로 이동」)을 읽기 에이전트가 `method: "llm_agent"` 값 줄로 싣는다(`pipeline._agent_rows`) — 그것도 고른 수단으로 본다.
     안 그러면 다시 연 수정 화면이 저장된 수단(예: 지하철) 대신 추천(예: 도보)을 보였다(x600 실서버 확인). 칸마다 **마지막 값**이 이긴다 — 고객이 뒤에
     「추천으로」(빈 값)를 고르면 여행에서 가져온 수단도 빠진다."""
     out: dict[str, str] = {}
     for c in claims:
         field = str(c.get("field") or "")
-        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip")):
+        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip", "llm_agent")):
             continue
         pair = field[len("moves["):-len("].mode")]
         if c.get("value") in MOVE_MODES:

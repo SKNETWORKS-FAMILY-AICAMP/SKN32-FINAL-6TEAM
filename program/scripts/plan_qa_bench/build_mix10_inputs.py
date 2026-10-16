@@ -3,8 +3,9 @@ import json, os
 from datetime import date
 from clauses import analyze
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 W = '월화수목금토일'
-st = json.load(open(os.path.join(HERE, 'fixtures', 'mix10.json'), encoding='utf-8'))['sets']['mix10']
+st = json.load(open(fixture('mix10.json'), encoding='utf-8'))['sets']['mix10']
 items = sorted(st['items'], key=lambda i: (i['date'], i['start']))
 
 

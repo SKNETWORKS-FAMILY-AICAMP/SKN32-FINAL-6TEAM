@@ -370,6 +370,12 @@ button.moveHead { cursor: pointer; }
 
 
 /* The trip-wide details the server asks for */
+/* `[2026-10-16 D-025]` 먼저 채운 것 · 이해한 말 · 묻는 것 — 막지 않는 안내라 경고색이 아니라 조정색 테두리만 */
+.prefill { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--color-border); border-left: 3px solid var(--color-adjusted); border-radius: 12px; background: var(--color-surface); display: grid; gap: 6px; }
+.prefillHead { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--color-text); }
+.prefillLine { margin: 0; font-size: 12.5px; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.prefillLine b { color: var(--color-text); margin-right: 4px; }
+.prefillAsk { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--color-text); display: grid; gap: 2px; }
 .tripIssues { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-surface); }
 .tripIssuesTitle { margin: 0 0 6px; font-size: 13px; font-weight: 750; color: var(--color-warning); }
 .tripIssues ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }

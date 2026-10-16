@@ -14,7 +14,7 @@ def main():
     r=read(folder/'mx_counts.json')
     answer=folder/f"d_test_{r['execution']['job']['tag']}.jsonl"
     rows=[json.loads(line) for line in answer.read_text(encoding='utf-8').splitlines()]
-    gold_path=ROOT/'datasets/travel/mx_testset/mx_main_prompts.json'
+    gold_path=ROOT/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json'
     gold=read(gold_path);run={x['i']:x for x in rows}
     assert len(rows)==len(run)==len(gold)==r['expected']==r['saved']==4014
     assert set(run)=={x['i'] for x in gold} and r['missing']==0

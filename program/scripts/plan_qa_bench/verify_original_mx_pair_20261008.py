@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[3]
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent/'eval_kit'))
 from stats import mcnemar_exact
-items=json.loads((ROOT/'datasets/travel/mx_testset/mx_main_prompts.json').read_text(encoding='utf-8'))
+items=json.loads((ROOT/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json').read_text(encoding='utf-8'))
 folder=HERE/'results/gpu_backlog_20261008/e4bbase_mx'
 counts=json.loads((folder/'mx_counts.json').read_text(encoding='utf-8'))
 raw=folder/'d_test_mx_backlog_e4bbase.jsonl'

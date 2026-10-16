@@ -19,7 +19,7 @@ def main():
     jobs = ['e4bqat_original_d3']+[f'e4bqat_{v}_d3' for v in ['oos1','oos2','oos3','oos2r']]
     results = {j:read(BASE/j/'choice_counts.json') for j in jobs}
     answers = {}
-    goldpath = BASE.parent/'empty_probe/all_prompts_d3.json'
+    goldpath = ROOT/'datasets/core/pointing/testset/synthetic_chitchat_plus_questions_v1/all_prompts_d3.json'
     gold = {x['i']:x for x in read(goldpath)}
     for job,r in results.items():
         assert r['saved'] == r['expected'] == 360 and r['missing'] == 0

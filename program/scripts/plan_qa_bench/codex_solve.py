@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 args = sys.argv[1:]
 MODEL, SETS = args[0], args[1].split(',')
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
@@ -105,7 +106,7 @@ def parse(res, ids):
 
 
 for name in SETS:
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{name}.json'), encoding='utf-8'))['sets'][name]
+    job = json.load(open(fixture(f'{name}.json'), encoding='utf-8'))['sets'][name]
     qs = job['qs'][:LIMIT] if LIMIT else job['qs']
     ids = {i['id'] for i in job['items']}
     outf = os.path.join(HERE, 'results', f'{PREFIX}_{MODEL}_{name}{"_multi" if MULTI else ""}{"_smoke" if LIMIT else ""}.json')
@@ -135,7 +136,7 @@ for name in SETS:
         sys.exit(f'쿼터 창이 막혔다 — 멈춘다. 재시도: {quota_hit[0]}')
     ok = sum(1 for r in rows.values() if r['parsed'])
     if MULTI:
-        gs = json.load(open(os.path.join(HERE, 'fixtures', 'gold_sets.json'), encoding='utf-8'))[name]
+        gs = json.load(open(fixture('gold_sets.json'), encoding='utf-8'))[name]
         c_all = sum(1 for k in range(len(qs)) if frozenset(rows[str(k)].get('picks') or []) == frozenset(gs[str(k)]))
         comp = [k for k in range(len(qs)) if qs[k]['type'] == 'compound_intent']
         c_comp = sum(1 for k in comp if frozenset(rows[str(k)].get('picks') or []) == frozenset(gs[str(k)]))

@@ -7,12 +7,13 @@ import json, math, os
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 pairs = json.load(open(os.path.join(HERE, 'fixtures', 'pairs_experts.json'), encoding='utf-8'))
 sc = json.load(open(os.path.join(HERE, 'results', 'expert_scores_out.json'), encoding='utf-8'))
 import glob
 for f in glob.glob(os.path.join(HERE, 'results', 'ft_*_scores.json')):
     sc.update(json.load(open(f, encoding='utf-8')))          # 학습시킨 전용 모델(ft/…)
-JOB = {j: json.load(open(os.path.join(HERE, 'fixtures', f'{j}.json'), encoding='utf-8'))['sets'][j]['qs'] for j in ('heavy', 'mix4')}
+JOB = {j: json.load(open(fixture(f'{j}.json'), encoding='utf-8'))['sets'][j]['qs'] for j in ('heavy', 'mix4')}
 NAMES = {'ft/emb_e16b': 'FT임베딩0.6B(전용학습)', 'ft/r16a': 'FT재평가0.6B(전용학습)', 'Qwen/Qwen3-Reranker-4B': '재평가4B', 'tencent/WeMM-Embedding-4B': 'WeMM-4B', 'Qwen/Qwen3-Reranker-0.6B': '재평가0.6B', 'Qwen/Qwen3-Embedding-0.6B': '임베딩0.6B'}
 S = {n: defaultdict(dict) for n in NAMES.values()}
 for m, n in NAMES.items():

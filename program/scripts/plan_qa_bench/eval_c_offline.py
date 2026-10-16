@@ -6,12 +6,13 @@ import json, os
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda n: os.path.join(HERE, 'results', n)
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 DEV, TEST = ['mix8', 'mix9'], ['mix10', 'mix11', 'mix12']
 TAUS = [0.10, 0.15, 0.25, 0.35, 0.50]
-GS = json.load(open(os.path.join(HERE, 'fixtures', 'gold_sets.json'), encoding='utf-8'))
-QT = {w: [q['type'] for q in json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']] for w in SETS}
+GS = json.load(open(fixture('gold_sets.json'), encoding='utf-8'))
+QT = {w: [q['type'] for q in json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']] for w in SETS}
 MODELS = [('decider-chat 31B', 'decider31bl'), ('OpenJev 26B', 'openjev26b'), ('Decider-12B bf16', 'decider12bl'), ('pplx-decider 27B', 'pplx27b'), ('Rune v3', 'rune26b')]
 
 

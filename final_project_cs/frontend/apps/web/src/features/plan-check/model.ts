@@ -173,7 +173,14 @@ export interface PlanCheckView {
    * there the bar and the words come from it alone; when the server sends none (an older server) they come from the rows drawn, as before.
    */
   serverProgress?: ServerProgress | null;
+  /**
+   * `[2026-10-16 D-025]` What the server filled in first and what it understood beyond the stops — drawn as a short note above the list.
+   * `questions`: what only the traveller knows. `understood`: the traveller's own words the server read as a move, a condition or a preference.
+   */
+  prefill?: PrefillNotes | null;
 }
+
+export interface PrefillNotes { filledCount: number; questions: string[]; understood: string[] }
 
 /** What the server's `progress` packet says, with the stop's title to show. */
 export interface ServerProgress { phase: "places" | "hours" | "moves"; done: number; total: number; title: string | null }
