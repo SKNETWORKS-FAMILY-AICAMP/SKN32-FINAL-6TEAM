@@ -78,6 +78,12 @@ export interface PlanItem {
    * nothing pushes it. Absent on the plan check of a new plan.
    */
   past?: boolean;
+  /**
+   * `[2026-10-15 ST4F-490]` Why a `past` stop is not in the edit — only `past` is called over; the others say what keeps them out (`reopen.frozen`). Null when the server did not say.
+   */
+  fixedReason?: "past" | "overnight" | "no_place" | "kind" | null;
+  /** `[2026-10-15 사용자 결정 — 연결 유지 + 안내]` Tied to a vendor's booking: unlocking it says the booking is changed with the vendor (`vendor_booking`). */
+  vendorBooking?: boolean;
 }
 
 /**
@@ -167,7 +173,17 @@ export interface PlanCheckView {
    * there the bar and the words come from it alone; when the server sends none (an older server) they come from the rows drawn, as before.
    */
   serverProgress?: ServerProgress | null;
+  /**
+   * `[2026-10-16 D-025]` What the server filled in first and what it understood beyond the stops — drawn as a short note above the list.
+   * `questions`: what only the traveller knows. `understood`: the traveller's own words the server read as a move, a condition or a preference.
+   */
+  prefill?: PrefillNotes | null;
 }
+
+export interface PrefillNotes { filledCount: number; questions: string[]; understood: string[]; handoff: PrefillHandoff[] }
+
+/** `[2026-10-16 D-025 후속]` A read preference handed to an owner — `mine` true = 「우리가 채움」, false = the traveller's own answer wins. */
+export interface PrefillHandoff { label: string; text: string; owner: string; mine: boolean }
 
 /** What the server's `progress` packet says, with the stop's title to show. */
 export interface ServerProgress { phase: "places" | "hours" | "moves"; done: number; total: number; title: string | null }

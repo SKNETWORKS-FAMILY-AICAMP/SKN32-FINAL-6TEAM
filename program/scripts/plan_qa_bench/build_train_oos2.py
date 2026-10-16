@@ -10,13 +10,13 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture, TRAP_SENTENCES, TRAP_SENTENCES_TRAIN  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.stdout.reconfigure(encoding='utf-8')
 src, dst = sys.argv[1], sys.argv[2]
 SEED = int(os.environ.get('SEED', '20261017'))
 rnd = random.Random(SEED)
-HS = os.path.join(HERE, 'results', 'hard_set')
-TRAIN_SET = os.path.join(HS, 'h_set_train_60_20261016.json')
-TEST_SETS = [os.path.join(HS, 'h_set_test_30_20261015.json')]
+TRAIN_SET = str(TRAP_SENTENCES_TRAIN / 'h_set_train_60_20261016.json')
+TEST_SETS = [str(TRAP_SENTENCES / 'h_set_test_30_20261015.json')]
 MINE = os.path.join(HERE, 'results', 'd_test', 'd_test_lp_htrain_q4km_oos1.jsonl')
 QUOTA = {'hard_N6': 200, 'hard_N1': 120, 'hard_N2': 110, 'hard_N4': 100, 'hard_N3': 40, 'hard_N5': 30,
          'hard_P3': 150, 'hard_P2': 55, 'hard_P4': 55, 'hard_P1': 40}
@@ -38,7 +38,7 @@ test_q = []
 for f in TEST_SETS:
     test_q += [x['q'] for x in json.load(open(f, encoding='utf-8'))]
 for f in ('all_prompts_d3.json', 'all_prompts_d2.json'):
-    for x in json.load(open(os.path.join(HERE, 'results', 'empty_probe', f), encoding='utf-8')):
+    for x in json.load(open(fixture(f), encoding='utf-8')):
         m = QRE.search(x['prompt'])
         if m:
             test_q.append(m.group(1).strip())

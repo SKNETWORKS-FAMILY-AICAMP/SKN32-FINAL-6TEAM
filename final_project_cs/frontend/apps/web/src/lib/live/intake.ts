@@ -8,7 +8,7 @@ import { streamApi, type OpProgress } from "./stream";
 export interface IntakeField {
   value: unknown;
   /** rule · llm_span (the model pointed at a span of the original) · lookup (place search) · customer · trip (`[2026-10-13]` taken from the registered trip an edit reopened) */
-  method: "rule" | "llm_span" | "lookup" | "customer" | "trip";
+  method: "rule" | "llm_span" | "lookup" | "customer" | "trip" | "llm_agent";
   evidence: { line?: number; text?: string; source?: string; how?: string; blocked?: string[] } & Record<string, unknown>;
   needs_review: boolean;
   note: string | null;
@@ -34,6 +34,47 @@ export interface IntakeSource {
   items: IntakeItem[];
   trip: Record<string, { value: unknown }>;
   reading: { asked_lines?: number; accepted?: number; rejected?: { quote?: string; why: string }[]; error?: string } | null;
+  /**
+   * `[2026-10-16 D-025]` What the reading agent understood that is not a stop: moves, conditions (「비 오면 실내」), how the traveller likes to travel,
+   * and the guard's view — each with the exact words it came from. Null (or absent, an older server) when the agent was not used.
+   */
+  understanding?: IntakeUnderstanding | null;
+}
+
+export interface IntakeUnderstanding {
+  moves: { mode: string; scope: string; from: string | null; to: string | null; quote: string }[];
+  conditions: { code: string; quote: string }[];
+  preferences: { code: string; quote: string }[];
+  pieces?: { kind: string; quote: string }[];
+  gaps?: { kind: string; quote: string }[];
+  missing?: string[];
+  guard?: { travel: boolean; instruction_change: boolean; out_of_scope: boolean; quote: string | null } | null;
+}
+
+/**
+ * `[2026-10-16 D-025]` What the server filled in first, like a secretary would: `filled[].item` is the check's stop id, with who proposed it and why;
+ * `questions` are what only the traveller knows (asked, never refused). The page shows these words as they are.
+ */
+export interface IntakePrefill {
+  filled: { item: string | null; title: string | null; owner: string; owner_label: string; reason: string; gap: string; new: boolean }[];
+  questions: { kind: string; question: string; quote: string | null }[];
+  kept: { kind: string; item: string | null; owner: string; reason: string }[];
+}
+
+/**
+ * `[2026-10-16 D-025 후속]` One preference or condition handed to the owner that reads it (이동 판정 · 일정 짜기 · 식당 고르기 · 활동 대안):
+ * `status` `filled` = we fill it from the plan's words (「우리가 채움」), `customer` = the traveller already answered it, so their answer wins.
+ * `text` is the server's words for the value; the page shows it as it is.
+ */
+export interface IntakeHandoff {
+  key: string;
+  label: string;
+  owner: string;
+  value: unknown;
+  text: string;
+  codes: string[];
+  quotes: string[];
+  status: "filled" | "customer";
 }
 
 export interface IntakeView {
@@ -47,7 +88,9 @@ export interface IntakeView {
   fatal: { code: string; detail: string } | null;
   trip_id: string | null;
   sources: IntakeSource[];
-  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis } | null;
+  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis;
+    /** `[2026-10-16 D-025 후속]` What the reading agent read as a preference or condition and will hand to an owner (absent on an older server). */
+    handoff?: IntakeHandoff[] } | null;
   needs_review: { field: string; note: string | null }[];
   /**
    * `[2026-10-06]` Questions to ask while the server reads (`wiki/external/rest-endpoints.md` 「설문 질문」). The page DRAWS what is here and nothing else: a `kind` it does not know is skipped,
@@ -57,11 +100,18 @@ export interface IntakeView {
   /** The question set these come from; a change in meaning of an option raises it. Kept for the record - the page does not branch on it. */
   questions_version?: string;
   /**
-   * `[2026-10-13]` An edit of a registered trip (`reopenTrip`): the trip and the version it reopened, and the trip's stops left out of the intake (over, or not an activity or a meal) —
-   * they stay as they are when the edit is done. Null (or absent, an older server) on an intake read from a plan.
+   * `[2026-10-13]` An edit of a registered trip (`reopenTrip`): the trip and the version it reopened, and the trip's stops left out of the intake — they stay as they are when the edit is done.
+   * Null (or absent, an older server) on an intake read from a plan.
+   * `[2026-10-15 ST4F-490]` `frozen` says why each is left out (`reason` null on an edit opened before the server said so; absent on an older server). Stays, flights and vendor bookings
+   * are no longer left out: they come into the edit locked.
    */
-  reopen?: { trip_id: string; version: number; frozen_item_ids: string[] } | null;
+  reopen?: { trip_id: string; version: number; frozen_item_ids: string[]; frozen?: { item_id: string; reason: FrozenReason | null }[] } | null;
+  /** `[2026-10-16 D-025]` See `IntakePrefill`. Null (or absent) when nothing was filled first. */
+  prefill?: IntakePrefill | null;
 }
+
+/** `[2026-10-15 ST4F-490]` Why a stop of the trip is left out of an edit: over · runs past midnight · its place has no position · a kind the edit does not take. */
+export type FrozenReason = "past" | "overnight" | "no_place" | "kind";
 
 /** One question of `questions[]`. Only `kind: "single"` (pick one option) is drawn today; the fields are read as data and checked again before drawing (`features/survey-questions/model.ts`). */
 export interface IntakeQuestion {

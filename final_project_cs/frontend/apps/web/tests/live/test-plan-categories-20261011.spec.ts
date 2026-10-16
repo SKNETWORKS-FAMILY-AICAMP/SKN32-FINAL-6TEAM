@@ -15,7 +15,7 @@ for (const width of [375, 1280]) {
     await page.goto("/trips/new");
     const picker = page.getByLabel("테스트 계획", { exact: true });
     await picker.click();
-    await expect(page.locator("button[data-plan-code]")).toHaveCount(16);
+    await expect(page.locator("button[data-plan-code]")).toHaveCount(50);
     await expect(page.locator("button[data-plan-code]").first()).toHaveAttribute("data-plan-code", "test13");
     const firstOption = page.locator('button[data-plan-code="test13"]');
     await expect(firstOption).toBeInViewport();
@@ -36,11 +36,11 @@ for (const width of [375, 1280]) {
     await expect(page.locator("button[data-plan-code]").first()).not.toBeVisible();
     await picker.press("Enter");
     await picker.press("ArrowUp");
-    await expect(page.locator('button[data-plan-code="test16"]')).toBeFocused();
+    await expect(page.locator('button[data-plan-code="test50"]')).toBeFocused();
     await page.keyboard.press("Home");
     await expect(page.locator('button[data-plan-code="test13"]')).toBeFocused();
     await page.keyboard.press("End");
-    await expect(page.locator('button[data-plan-code="test16"]')).toBeFocused();
+    await expect(page.locator('button[data-plan-code="test50"]')).toBeFocused();
     await page.keyboard.press("Escape");
     await picker.press("Enter");
     await picker.press("ArrowDown");

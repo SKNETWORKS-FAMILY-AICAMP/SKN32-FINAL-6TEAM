@@ -6,12 +6,13 @@ import hashlib
 import sys
 
 HERE = Path(__file__).resolve().parent
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 ROOT = HERE.parents[2]
 RES = HERE / 'results'
 sys.stdout.reconfigure(encoding='utf-8')
 stamp = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-gs = json.loads((HERE / 'fixtures/gold_sets.json').read_text(encoding='utf-8'))
-fixtures = {s: json.loads((HERE / f'fixtures/{s}.json').read_text(encoding='utf-8'))['sets'][s] for s in gs}
+gs = json.loads((Path(fixture('gold_sets.json'))).read_text(encoding='utf-8'))
+fixtures = {s: json.loads((Path(fixture(f'{s}.json'))).read_text(encoding='utf-8'))['sets'][s] for s in gs}
 keys = [(s, i) for s in ['mix8', 'mix9', 'mix10', 'mix11', 'mix12'] for i in range(len(fixtures[s]['qs']))]
 assert len(keys) == 835
 comp = [k for k in keys if len(gs[k[0]][str(k[1])]) == 2]
@@ -78,8 +79,8 @@ def summarize(items, answers):
             'false_pick': [sum(valid(answers.get(x['i'])) and answers[x['i']]['pick'] is not None for x in n), len(n)],
             'failed_or_missing': sum(not valid(answers.get(x['i'])) for x in items)}
 
-d_gold = read(RES / 'empty_probe/all_prompts.json')
-e_gold = read(ROOT / 'datasets/travel/mx_testset/mx_main_prompts.json')
+d_gold = read(ROOT / 'datasets/core/pointing/testset/questions_plus_chitchat_v1/all_prompts.json')
+e_gold = read(ROOT / 'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json')
 mixed = [x for x in e_gold if x['kind'] == 'mixed']
 natural = [x for x in mixed if x['src'] == 'llm']
 assert len(mixed) == 2007 and len(natural) == 239

@@ -9,6 +9,7 @@ from rule_slots import rule_slots
 from slot_lookup import resolve
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 KEY, F_HEAVY, F_MIX5 = sys.argv[1:4]
 FBS = sys.argv[4].split(',') if len(sys.argv) > 4 else ['gemma4:e4b', 'gemma4:e2b']
 J = lambda f: json.load(open(f, encoding='utf-8'))
@@ -18,7 +19,7 @@ S = defaultdict(dict)
 for pr, f in ((pairs_h, F_HEAVY), (pairs_5, F_MIX5)):
     for p, v in zip(pr, J(f)[KEY]):
         S[(p['set'], p['qi'])][p['item']] = v
-SET = {j: J(os.path.join(HERE, 'fixtures', f'{j}.json'))['sets'][j] for j in ('heavy', 'mix5')}
+SET = {j: J(fixture(f'{j}.json'))['sets'][j] for j in ('heavy', 'mix5')}
 G = {j: J(os.path.join(HERE, 'results', f'llm_{j}_out.json')) for j in ('heavy', 'mix5')}
 for _j in list(G):        # GEPA식으로 최적화한 E4B 프롬프트의 답(서버 eval_prompt --dump 결과)을 넘김 모델 「gepa_e4b」 로 쓸 수 있게 한다
     _f = os.path.join(HERE, 'results', f'gepa_e4b_{_j}.json')

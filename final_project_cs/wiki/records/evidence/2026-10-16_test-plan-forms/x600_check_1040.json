@@ -1,0 +1,67 @@
+{
+  "checked_at": "2026-10-16 10:20~10:40 KST",
+  "where": "x600 서버의 cs 프로젝트 서버 공개 화면 (주소는 적지 않는다)",
+  "deployed": {
+    "running_commit": "a82566efce",
+    "contains": "770a40eb5",
+    "how": "x600 서버 자동 배포 상태 파일 deployed_sha 와 git merge-base --is-ancestor"
+  },
+  "scenario_list_api": {
+    "request": "GET /v1/web/test-scenarios",
+    "http": 200,
+    "catalog_version": "seoul-text-v3",
+    "count": 50,
+    "categories": 18,
+    "by_category": {
+      "general": 6, "time": 1, "hours": 2, "place": 1, "mobility": 1, "input": 2,
+      "normal": 3, "mixed_list": 4, "typo_line": 3, "paragraph": 3, "csv": 3, "json": 3,
+      "excel_memo": 2, "pasted_table": 3, "multi_message": 3, "mixed_request": 3, "correction": 3, "real": 4
+    }
+  },
+  "screen_list": {
+    "viewport": "in-app browser, mobile frame",
+    "sections": [
+      {"section": "check", "title": "검사 항목별 · 시각+장소 목록", "categories": 7, "plans": 16},
+      {"section": "form", "title": "입력 형식별 · 계획 이해 시험지 분류", "categories": 11, "plans": 34,
+       "names": ["정형 목록+자유 문장", "말투·오타 한 줄", "문단 자유문", "CSV·TSV", "JSON", "메모식 엑셀", "붙여 넣은 표", "나눠 보낸 메시지", "계획+질문+짜기", "중간 정정", "실제 접수"]}
+    ],
+    "min_button_height_px": 44,
+    "horizontal_scroll": false
+  },
+  "intakes": [
+    {
+      "code": "test26",
+      "guardian": "off (건너뛰기 — 끄고 진행)",
+      "final_status": "review",
+      "reached_confirm_screen": true,
+      "start_date": "2026-10-23", "days": 5, "nights": 4, "party_size": 3,
+      "items": [
+        {"day": 1, "title": "공항"},
+        {"day": 1, "title": "라 저녁만"},
+        {"day": 1, "title": "전에는 숙소로 돌아가고 싶어요. 비 오는 날은 실내 일정으로 바꿔 주세요. 마지막 날은 오전에 짐 싸고"}
+      ],
+      "screen_summary": "확인을 마쳤어요. 장소 3곳 확인 필요.",
+      "questions": ["preferred_mobility", "priority"],
+      "expected_text": "10/16 지금 구조: 기간·인원은 읽지만 일정 세 개가 문장 조각이에요. 날별 행선지·계단·귀가 시각·비 조건을 읽지 못해요.",
+      "matches_expected": true
+    },
+    {
+      "code": "test20",
+      "guardian": "off (건너뛰기 — 끄고 진행)",
+      "final_status": "review",
+      "reached_confirm_screen": true,
+      "reading_seconds_approx": "20~40",
+      "start_date": "2026-10-23", "days": 7, "party_size": null,
+      "items_count": 18,
+      "items_by_day": {"1": 2, "2": 3, "3": 3, "4": 2, "5": 3, "6": 3, "7": 2},
+      "place_state": {"found": 15, "picked_nearest": 1, "needs_choice": 1, "unresolved": 1},
+      "problems": ["「익선동」 장소 못 정함", "「공항철도 타고 인천공항」 장소 못 정함"],
+      "memo_lines_as_items": 0,
+      "trip_title": "도착일이라 가볍게",
+      "screen_summary": "확인을 마쳤어요. 장소 6곳 · 이동 1구간 확인 필요.",
+      "expected_text": "10/16 지금 구조: 7일 18곳을 날짜대로 읽지만 「공항철도 타고 인천공항」이 일정이 되고, 메모(한복·비·자전거)는 읽지 못해요.",
+      "matches_expected": true,
+      "note": "메모 첫 줄 「도착일이라 가볍게」가 여행 제목으로 쓰였다 — 안내 문장에는 없는 증상. 재현 모델 읽기는 19개(체크인·체크아웃 따로)였고, 확인 화면은 숙소 체크인~체크아웃을 한 칸(6박)으로 묶어 18개다."
+    }
+  ]
+}

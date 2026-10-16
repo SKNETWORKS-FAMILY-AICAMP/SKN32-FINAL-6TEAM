@@ -16,6 +16,7 @@ import { useRouteDetail } from "@/features/map/use-route-detail";
 import { useListZoom } from "@/features/plan-check/list-zoom";
 import { useTimeInset } from "@/features/plan-check/use-time-inset";
 import { useDayMarker } from "@/features/plan-check/use-day-marker";
+import { useCenterFocus } from "@/features/plan-check/use-center-focus";
 import { useQuietDayStrip } from "@/features/plan-check/use-quiet-day-strip";
 import { useDayGestures } from "@/features/plan-check/use-day-gestures";
 import { useTripGuardian } from "@/features/guardian/trip-guardian";
@@ -27,6 +28,7 @@ import { getRouteShapes } from "@/lib/live/route-shapes";
 import type { Language, Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, type BusToast } from "@/lib/toast-bus";
+import { browserNotify } from "@/lib/browser-notify";
 import type { Notice, Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -264,6 +266,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const quietDays = useQuietDayStrip(stripBox, pane === "plan" && !detailId, false, bodyBox, toolsBox);
 
   useTimeInset(bodyBox, sheetBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}`);
+  // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (below the day strip) wears a grey border, as on the plan check — there is no ＋ here, only the border.
+  useCenterFocus(bodyBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}|${listZoom}`, stripBox);
 
   // ── The two panes: the plan, and the chat beside it. A turn made by a swipe lands where the finger left it (no second slide). ──
   function goPane(next: "plan" | "chat", bySwipe = false) {
@@ -469,7 +473,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   }
 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
-  const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => showToast(noticeToast(notice, trip, targets, t, () => openCenter("notices"))));
+  const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
+    const toast = noticeToast(notice, trip, targets, t, () => openCenter("notices"));
+    showToast(toast);
+    // `[2026-10-16]` 이 탭을 보고 있지 않으면 브라우저(운영체제) 알림도 — 고객이 「받은 알림」에서 켰을 때만. 누르면 이 화면의 받은 알림으로 온다.
+    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, () => openCenter("notices"));
+  });
   const known = useRef<Set<string> | null>(null);
   const newestNotice = useRef<string | null>(null);
   const { data: targetProposals, refetch: refetchProposals } = proposals;

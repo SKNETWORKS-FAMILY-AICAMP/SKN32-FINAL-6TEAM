@@ -7,9 +7,9 @@ import statistics
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.stdout.reconfigure(encoding='utf-8')
 D = os.path.join(HERE, 'results', 'd_test')
-E = os.path.join(HERE, 'results', 'empty_probe')
 
 
 def jl(name):
@@ -31,7 +31,7 @@ for ds, (pat, pre) in SRC.items():
     for s, n in SEEDS.items():
         data[(ds, s)] = jl(pat.format(pre + n))
 frogfull = {'D': jl('d_test_a_frognano.jsonl'), 'D2': jl('d_test_d2_frog.jsonl'), 'D3': jl('d_test_d3_frog.jsonl')}
-P = {'D': {p['i']: p for p in json.load(open(os.path.join(E, 'all_prompts.json'), encoding='utf-8'))}}
+P = {'D': {p['i']: p for p in json.load(open(fixture('all_prompts.json'), encoding='utf-8'))}}
 
 
 def final(ds, s, i, verifier, tau):

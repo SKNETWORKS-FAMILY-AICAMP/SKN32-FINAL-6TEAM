@@ -16,13 +16,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.stdout.reconfigure(encoding='utf-8')
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 D = os.path.join(HERE, 'results', '_pull', 'distill_eval')
 C = os.path.join(HERE, 'results', '_pull', 'chain')
 J = lambda f: json.load(open(f, encoding='utf-8'))
-JOB = {w: J(os.path.join(HERE, 'fixtures', f'{w}.json'))['sets'][w] for w in SETS}
-GS = J(os.path.join(HERE, 'fixtures', 'gold_sets.json'))
+JOB = {w: J(fixture(f'{w}.json'))['sets'][w] for w in SETS}
+GS = J(fixture('gold_sets.json'))
 norm = lambda v: None if v in (None, 'null', 'None') else (int(v) if str(v).lstrip('-').isdigit() else v)
 
 E = {w: J(os.path.join(D, f'eval_r16e2_{w}.json'))['r16e2#lora'] for w in SETS}

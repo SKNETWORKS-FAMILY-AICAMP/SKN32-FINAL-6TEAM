@@ -6,6 +6,7 @@ from collections import Counter
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 raw = open(sys.argv[1], encoding='utf-8').read()
 m = re.search(r'\{.*\}', raw, re.S)
 d = json.loads(m.group(0))
@@ -45,7 +46,7 @@ for x in d['questions']:
     h = x.get('history') or []
     qs.append({'q': x['q'], 'gold': ID[x['gold']] if x['gold'] else None, 'type': x['type'], 'split': 'held',
                'history': [{'role': 'customer' if k % 2 == 0 else 'service', 'text': t} for k, t in enumerate(h)]})
-json.dump({'sets': {'mix9': {'today': d['today'], 'items': items, 'qs': qs}}}, open(os.path.join(HERE, 'fixtures', 'mix9.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+json.dump({'sets': {'mix9': {'today': d['today'], 'items': items, 'qs': qs}}}, open(fixture('mix9.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('mix9 항목', len(items), '· 문제', len(qs), '· 정답 null', sum(x['gold'] is None for x in qs), '· 앞 대화', sum(bool(x['history']) for x in qs))
 print('유형별', dict(Counter(x['type'] for x in qs)))
 print('종류별 항목', dict(Counter(i['kind'] for i in items)))
@@ -53,7 +54,7 @@ print('버린 문제', len(dropped), dropped)
 # 장소 겹침: 평가 세트 6개 + 학습 풀
 names = set()
 for j in ('heavy', 'mix4', 'mix5', 'mix6', 'mix7', 'mix8'):
-    names |= {i['place'].replace(' ', '') for i in json.load(open(os.path.join(HERE, 'fixtures', f'{j}.json'), encoding='utf-8'))['sets'][j]['items']}
+    names |= {i['place'].replace(' ', '') for i in json.load(open(fixture(f'{j}.json'), encoding='utf-8'))['sets'][j]['items']}
 train_dir = os.path.join(HERE, '..', '..', '..', 'datasets', 'travel', 'plan_qa_bench', 'train')
 tr = set()
 for f in glob.glob(os.path.join(train_dir, 'places_*.json')):

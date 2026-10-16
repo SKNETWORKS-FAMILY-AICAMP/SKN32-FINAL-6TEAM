@@ -13,6 +13,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture, TRAP_SENTENCES, TRAP_SENTENCES_TRAIN  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.path.insert(0, os.path.join(HERE, '..', 'eval_kit'))
 sys.stdout.reconfigure(encoding='utf-8')
 from codex_percall import call  # noqa: E402
@@ -28,9 +29,9 @@ ap.add_argument('--workers', type=int, default=3)
 ap.add_argument('--heads-file', default='', help='일정 머리를 이 jsonl(행마다 prompt)의 고유 일정에서 고른다 — 학습용(--split train)은 D 시험과 겹치지 않는 학습 자료의 일정을 쓴다')
 a = ap.parse_args()
 
-OUT = os.path.join(HERE, 'results', 'hard_set')
+OUT = str(TRAP_SENTENCES if a.split == 'test' else TRAP_SENTENCES_TRAIN)   # 시험용 · 학습용을 다른 폴더에
 os.makedirs(OUT, exist_ok=True)
-P = json.load(open(os.path.join(HERE, 'results', 'empty_probe', 'all_prompts.json'), encoding='utf-8'))
+P = json.load(open(fixture('all_prompts.json'), encoding='utf-8'))
 heads, tail = {}, None
 for p in P:
     h, rest = p['prompt'].split('고객 질문: ', 1)

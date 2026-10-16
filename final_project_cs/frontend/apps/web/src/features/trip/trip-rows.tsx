@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowRight, BedDouble, Bike, Bus, Car, ChevronRight, Clock, Footprints, Map as MapIcon, MapPinned, Route, Tag, TrainFront } from "lucide-react";
+import { ArrowRight, BedDouble, Bike, Bus, Car, ChevronRight, Clock, Footprints, Map as MapIcon, MapPinned, Moon, Route, Tag, TrainFront } from "lucide-react";
 import type { RouteShape } from "@/lib/live/route-shapes";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
@@ -89,7 +89,7 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
   const id = `trip-stop-${stop.id}`;
   const timeFocused = open || selected;
   const stay = isStay(stop);
-  const hasTags = stay || stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
+  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
   const kind = kindLook(stop.kind);
   const KindIcon = kind.icon;
   const kindName = stop.kindLabel ?? t(kind.label[0], kind.label[1]);
@@ -100,16 +100,18 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
   // `[2026-10-13]` A stay's end is on its check-out day — it is not this day's end, so the line does not read it (`data-end`).
   return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}
     data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-rail-open={open || undefined} data-past-open={past || undefined} data-passed={started || undefined}>
-    <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end>~{stay ? `${monthDay(stop.endDate!)} ` : ""}{stop.endTime || "—"}</time></span></span>
+    <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end>{stay
+      // `[2026-10-15 ST4F-498]` 「~10/4 11:00」 on one line ran out of the time column (left of the sheet): the day, then the time.
+      ? <>~{monthDay(stop.endDate!)}<br /> {stop.endTime || "—"}</>
+      : `~${stop.endTime || "—"}`}</time></span></span>
     <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} data-stay={stay || undefined} /></span>
-    <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-stay={stay || undefined} data-open={open || undefined} aria-labelledby={`${id}-title`}>
+    <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-stay={stay || undefined} data-open={open || undefined} aria-labelledby={`${id}-title${stay ? ` ${id}-stay` : ""}`}>
       <div className={`${pc.cardTop} ${styles.stopHead}`}>
         <button type="button" className={`${pc.cardHead} ${styles.stopToggle}`} id={`stop-button-${stop.id}`} aria-expanded={open} aria-controls={`stop-detail-${stop.id}`} onClick={onToggle}>
           <span className={styles.stopName}>
             <span className={styles.stopKind} role="img" aria-label={kindName} title={kindName}><KindIcon size={18} strokeWidth={1.8} aria-hidden="true" /></span>
-            <strong id={`${id}-title`} className={pc.cardTitle}>{stay ? t(`${stop.title} 체크인`, `Check in · ${stop.title}`) : stop.title}</strong>
+            <strong id={`${id}-title`} className={pc.cardTitle}>{stop.title}</strong>
             {hasTags && <span className={styles.stopTags}>
-              {stay && <span className={pc.pill} data-stay-nights>{stayPill(stop, t)}</span>}
               {stop.badges?.map((badge) => <span className={pc.pill} key={badge.code}>{badge.label}</span>)}
               {stop.booking === "booked" && <span className={pc.pill} data-booked>{bookingLabel(stop, t)}</span>}
               {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
@@ -117,7 +119,11 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
             </span>}
           </span>
           {category && <span className={styles.stopFact}><Tag size={14} strokeWidth={1.8} aria-hidden="true" /><span>{category}</span></span>}
-          <span className={styles.stopFact} data-missing={!hours || undefined}><Clock size={14} strokeWidth={1.8} aria-hidden="true" /><span>{hours ?? t("영업시간 정보 없음", "Hours not known")}</span></span>
+          {/* `[2026-10-15 사용자 결정 — ST4F-498 ㉮]` A stay says its nights where other stops say their hours: beside the name the nights' pill left 「롯데호텔 서...」 and cut 「체크인」 (430px).
+              `[2026-10-15 사용자 결정]` The title is the name only, as on every card; 「체크인」 leads this line (a long name cut it off after the name). */}
+          {stay
+            ? <span className={styles.stopFact} data-stay-nights id={`${id}-stay`}><Moon size={14} strokeWidth={1.8} aria-hidden="true" /><span><b className={pc.stayWord}>{t("체크인", "Check in")}</b> · {stayPill(stop, t)}</span></span>
+            : <span className={styles.stopFact} data-missing={!hours || undefined}><Clock size={14} strokeWidth={1.8} aria-hidden="true" /><span>{hours ?? t("영업시간 정보 없음", "Hours not known")}</span></span>}
           <span className={styles.stopFact} data-missing={!address || undefined}><MapIcon size={14} strokeWidth={1.8} aria-hidden="true" /><span>{address ?? t("주소 정보 없음", "Address not known")}</span></span>
         </button>
         {/* `[2026-10-08 사용자 지시]` ＋/－ 는 늘 맨 오른쪽이다. 오른쪽 끝의 ＋/－ 는 같은 접기 단추의 누르는 자리일 뿐이라 화면 읽기와 키보드에는 앞의 이름 단추 하나만 있다.
@@ -142,13 +148,14 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
 export function PastStopRow({ stop, onToggle }: { stop: TripStop; onToggle: () => void }) {
   const t = useT();
   // `[2026-10-13 숙소 B안 × 지난 일정]` A past check-in still says it is the check-in, and its nights stand where the end would (the end is on the check-out day, not this one).
+  // `[2026-10-15 사용자 결정]` Name only, 「체크인 · n박 · 날짜」 at the right — as the card says it.
   const stay = isStay(stop);
-  const title = stay ? t(`${stop.title} 체크인`, `Check in · ${stop.title}`) : stop.title;
+  const label = stay ? t(`${stop.title} 체크인`, `Check in · ${stop.title}`) : stop.title;
   return <li className={pc.entry} data-type="item" data-entry-id={stop.id} data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-past data-passed>
     <span className={pc.time}>{stop.time}</span>
     <span className={pc.rail} aria-hidden="true"><span className={pc.dot} /></span>
-    <div><button type="button" className={pc.pastLine} id={`stop-button-${stop.id}`} aria-expanded={false} onClick={onToggle} aria-label={t(`${title} · 지난 일정 · 펼치기`, `${title} · past · open`)}>
-      <span>{title}</span><small>{stay ? stayPill(stop, t) : `~${stop.endTime || "—"}`}</small><b aria-hidden="true">+</b></button></div>
+    <div><button type="button" className={pc.pastLine} id={`stop-button-${stop.id}`} aria-expanded={false} onClick={onToggle} aria-label={t(`${label} · 지난 일정 · 펼치기`, `${label} · past · open`)}>
+      <span>{stop.title}</span><small>{stay ? `${t("체크인", "Check in")} · ${stayPill(stop, t)}` : `~${stop.endTime || "—"}`}</small><b aria-hidden="true">+</b></button></div>
   </li>;
 }
 
@@ -202,11 +209,13 @@ export function StayRow({ stay, onShow }: { stay: StayMark; onShow: () => void }
     <article className={`${pc.card} ${styles.stopCard}`} data-stay>
       <div className={`${pc.cardTop} ${styles.stopHead}`}>
         <button type="button" className={`${pc.cardHead} ${styles.stopToggle}`} onClick={onShow}>
-          <BedDouble size={18} strokeWidth={1.8} aria-hidden="true" />
+          {/* `[2026-10-15 ST4F-498]` The icon in the name's icon column, like every stop card (`StopRow`) — outside it the name fell into that 18px column (「롯.」). */}
           <span className={styles.stopName}>
-            <strong className={pc.cardTitle}>{t(`${stop.title} 체크아웃`, `Check out · ${stop.title}`)}</strong>
-            <span className={styles.stayNote}>{t("퇴실 마감", "Check-out time")}</span>
+            <span className={styles.stopKind} data-stay aria-hidden="true"><BedDouble size={18} strokeWidth={1.8} /></span>
+            <strong className={pc.cardTitle}>{stop.title}</strong>
           </span>
+          {/* `[2026-10-15 사용자 결정]` As the check-in card: the name, and under it 「체크아웃 · n박 · 날짜」 (was 「○○ 체크아웃」 · 「퇴실 마감」 — a long name cut the word off; the time column has the time). */}
+          <span className={styles.stopFact} data-stay-nights><Moon size={14} strokeWidth={1.8} aria-hidden="true" /><span><b className={pc.stayWord}>{t("체크아웃", "Check-out")}</b> · {stayPill(stop, t)}</span></span>
         </button>
       </div>
     </article>

@@ -175,7 +175,7 @@ def pass_itinerary():
     pat = re.compile(r'몇 ?시|언제|어디|시간')
     rows_in = []
     for w in ('mix8', 'mix9', 'mix10', 'mix11', 'mix12'):
-        job = json.load(open(os.path.join(HERE, '..', 'plan_qa_bench', 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]
+        job = json.load(open(os.path.join(HERE, '..', '..', '..', 'datasets', 'core', 'pointing', 'testset', 'itinerary_questions_v1', f'{w}.json'), encoding='utf-8'))['sets'][w]
         items = [SimpleNamespace(id=i['id'], kind=i['kind'], title=i['title'], place={'name': i['place']}, ends_at=None,
                                  starts_at=datetime.fromisoformat(f"{i['date']}T{i['start']}:00").replace(tzinfo=kst)) for i in job['items']]
         for qi, x in enumerate(job['qs']):

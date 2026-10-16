@@ -61,6 +61,7 @@ const DEFAULTS = {
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
+  //   | "stay" (`[2026-10-15 ST4F-499]` three days with a two-night hotel — see `freshStayBoard`)
   board: "simple",
   // 받아쓰기 두 읽기 (2026-10-07): "on" = the first stop was read two ways off a photo (`rereads[]` + a warning row) — see `withReread`; "note_only" = the other value is unknown (`other: null`).
   reread: "off",
@@ -413,7 +414,7 @@ const place = (name, latitude, longitude, extra = {}) => ({ name, latitude, long
 /** The check of a plan — the shape of `review` in the real server's answer. "rich": three stops (one needs review) and two legs. */
 function freshBoard(kind = "simple") {
   const rich = freshRichBoard();
-  const board = kind === "rich" ? rich : { revision: 1, items: [rich.items[0]], moves: [] };
+  const board = kind === "rich" ? rich : kind === "stay" ? freshStayBoard() : { revision: 1, items: [rich.items[0]], moves: [] };
   return scenario.reread === "on" || scenario.reread === "note_only" ? withReread(board) : board;
 }
 
@@ -449,6 +450,34 @@ function freshRichBoard() {
         summary: "지하철 3호선 9분 · 0.6km", rows: [row("route", "warn", "올리브영 인사동점을 임시로 골라서 계산했어요"), row("mode", "ok", "지하철 3호선 9분 · 0.6km"), row("arrival", "warn", "일정보다 39분 늦어요")] },
       { from: "0-1", to: "0-2", day: 1, date: "2026-10-01", status: "keep", mode: "subway", mode_label: "지하철 1호선", minutes: 16, km: 1.5, depart: "12:00", arrive: "12:16", slack_min: 14, basis: "timetable",
         summary: "지하철 1호선 16분 · 1.5km", rows: [row("route", "ok", "종로3가 → 종로5가"), row("mode", "ok", "지하철 1호선 16분 · 1.5km"), row("arrival", "ok", "14분 여유")] },
+    ],
+  };
+}
+
+/**
+ * `[2026-10-15 ST4F-499]` `board: "stay"` — the check before registration of a plan with a stay (숙소 항목 B안, 2026-10-13): 1일차 15:00 롯데호텔 서울 체크인 — one stop of `kind: "lodging"` that ends on its
+ * check-out day (`end_date` 10/3 · `ends_at` 11:00), the evening leg leaves it at the check-in time; 2일차 · 3일차 open with the morning leg 「숙소 → 그날 첫 일정」 (`from_stay`, `day` · `date` of that day).
+ * Every stop and leg is fine, so 「여행 등록」 is open. The shape follows the server's `intake/review.py`; the minutes and the check lines are made up for this mock.
+ */
+function freshStayBoard() {
+  const stop = (index, title, kind, day, date, start, end, spot, extra = {}) => ({ id: `0-${index}`, source_id: "s1", index, title, kind, day, date, starts_at: start, ends_at: end, end_date: null,
+    locked: false, status: "keep", can_lock: true, place_state: "found", place: spot, candidates_hint: null, rows: [row("place", "ok", "관광공사 정보로 찾았어요"), row("time", "ok", "시간이 겹치지 않아요")], ...extra });
+  const leg = (from, to, day, date, mode, label, minutes, km, depart, arrive, slack, extra = {}) => ({ from, to, day, date, status: "keep", mode, mode_label: label, minutes, km, depart, arrive, slack_min: slack,
+    basis: "timetable", summary: `${label} ${minutes}분 · ${km}km`, rows: [row("mode", "ok", `${label} ${minutes}분 · ${km}km`), row("arrival", "ok", `${slack}분 여유`)], ...extra });
+  return {
+    revision: 1,
+    items: [
+      stop(0, "경복궁 관람", "activity", 1, "2026-10-01", "09:00", "10:30", place("경복궁", 37.5796, 126.977, { content_id: "126508" })),
+      stop(1, "롯데호텔 서울", "lodging", 1, "2026-10-01", "15:00", "11:00", place("롯데호텔 서울", 37.5653, 126.981, { content_type_id: "32" }), { end_date: "2026-10-03" }),
+      stop(2, "명동교자", "dining", 1, "2026-10-01", "18:00", "19:00", place("명동교자", 37.5636, 126.9858)),
+      stop(3, "남산서울타워", "activity", 2, "2026-10-02", "10:00", "12:00", place("남산서울타워", 37.5512, 126.9882)),
+      stop(4, "광장시장", "dining", 3, "2026-10-03", "09:30", "10:30", place("광장시장", 37.57, 126.9996, { content_id: "132183" })),
+    ],
+    moves: [
+      leg("0-0", "0-1", 1, "2026-10-01", "subway", "지하철 3호선", 15, 2.1, "10:30", "10:45", 255),
+      leg("0-1", "0-2", 1, "2026-10-01", "walk", "도보", 12, 0.6, "15:00", "15:12", 168),
+      leg("0-1", "0-3", 2, "2026-10-02", "bus", "버스 402", 15, 2.4, "09:35", "09:50", 10, { from_stay: true }),
+      leg("0-1", "0-4", 3, "2026-10-03", "subway", "지하철 2호선", 15, 2.3, "09:10", "09:25", 5, { from_stay: true }),
     ],
   };
 }
@@ -536,8 +565,11 @@ function intakeStream() {
   const state = (status, stage = status === "reading" ? "checking" : "review") => ({ status, stage, stage_label: stage === "reading" ? "일정 읽기" : status === "reading" ? "장소·운영시간 확인" : "확인해 주세요", revision: 1, fatal_code: null, quiet_seconds: 0 });
   const rev = reviewOf(board);
   const events = [["accepted", { op: "intake", state: state("reading", "reading"), at: "2026-10-03T09:00:00+09:00" }]];
-  [["10월 1일 서울 여행", null], ["09:00 경복궁 관람", board.items[0]], ["11:00 올리브영", board.items[1]], ["12:30 광장시장", board.items[2]]].forEach(([text, found], i) => {
-    events.push(["line", { source_id: "s1", no: i + 1, text, read: true, found: found && { id: found.id, index: found.index, day: 1, date: "2026-10-01", starts_at: found.starts_at, title: found.title } }]);
+  const lines = scenario.board === "stay"
+    ? [["10월 1일~3일 서울 여행", null], ...board.items.map((stop) => [`${Number(stop.date.slice(8))}일 ${stop.starts_at} ${stop.title}${stop.kind === "lodging" ? " 체크인" : ""}`, stop])]
+    : [["10월 1일 서울 여행", null], ["09:00 경복궁 관람", board.items[0]], ["11:00 올리브영", board.items[1]], ["12:30 광장시장", board.items[2]]];
+  lines.forEach(([text, found], i) => {
+    events.push(["line", { source_id: "s1", no: i + 1, text, read: true, found: found && { id: found.id, index: found.index, day: found.day, date: found.date, starts_at: found.starts_at, title: found.title } }]);
   });
   // Like the server (`progress` — one value per phase): the places are counted while it reads, the hours and the legs while it checks.
   const packets = scenario.intakeProgress !== "off";

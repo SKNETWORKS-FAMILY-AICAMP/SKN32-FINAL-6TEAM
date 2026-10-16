@@ -3,6 +3,7 @@
 import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda n: os.path.join(HERE, 'results', n)
 SETS = sys.argv[1].split(',') if len(sys.argv) > 1 else ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 TAGS = ['decider12bq8', 'decider12bq8rot10', 'decider12bq8rot21', 'decider12bq8rot32']
@@ -32,7 +33,7 @@ print('사용 세트:', use, '· 빠진 세트:', [w for w in SETS if w not in u
 tot = {t: 0 for t in TAGS}
 base_v, avg_v, avg3_v, n_all = [], [], [], 0
 for w in use:
-    gold = [x['gold'] for x in json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']]
+    gold = [x['gold'] for x in json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']]
     P = {t: [norm(r['probs']) for r in json.load(open(R(f'dec_{t}_{w}.json'), encoding='utf-8'))[w]['rows']] for t in TAGS}
     per = {}
     for t in TAGS:

@@ -55,6 +55,9 @@ SEONGSU_ADDRESS = "서울특별시 성동구 성수이로 1 (성수동2가)"
 def seongsu(rv, monkeypatch):  # noqa: F811
     """성수 둘레의 관광공사 목록 · 요식 원장 장소를 넣고, 지명 사전을 시험의 작은 사전으로 바꾼다."""
     monkeypatch.setattr(pipeline, "areas_for", lambda conn, tenant_id, terms=None: AreaIndex.from_rows(ROWS))
+    # ★`[2026-10-16 D-025]` 이 시험은 **먼저 채우기 전**의 확인 화면(이름 없는 자리 · 후보 · 검색)을 본다 — 먼저 채우기는 `test_intake_prefill.py` 가 본다
+    real = pipeline.agent_reader_config
+    monkeypatch.setattr(pipeline, "agent_reader_config", lambda tenant_id: {**real(tenant_id), "prefill": "off"})
     areas_module.reset()
     for cid, title, lat, lon in SHOPS_SEONGSU:
         _catalog(rv, cid, "38", title, lat, lon, SEONGSU_ADDRESS)

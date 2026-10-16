@@ -12,7 +12,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     headers = _key(client)
     listing = client.get("/v1/web/test-scenarios")
     assert listing.status_code == 200
-    assert len(listing.json()["scenarios"]) == 16
+    assert len(listing.json()["scenarios"]) == plans.TOTAL == 50
     view = _send(client, headers, " TEST1 ")
     assert view["status"] == "review"
     assert sum(len(s["items"]) for s in view["sources"]) == 6
@@ -32,7 +32,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     assert ordinary["test_scenario"] is None
 
 
-@pytest.mark.parametrize("text,code", (("test17", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
+@pytest.mark.parametrize("text,code", (("test51", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
 def test_rejected_code_does_not_create_empty_intake(rv, text, code):
     client, _, _ = _client()
     headers = _key(client)
@@ -83,3 +83,19 @@ def test_lodging_code_expands_to_a_named_hotel_check_in(rv):
     lines = "\n".join(line["text"] for source in view["sources"] for line in source["lines"])
     assert "더 플라자 호텔 서울" in lines
     assert sum(len(source["items"]) for source in view["sources"]) == 3
+
+
+@pytest.mark.parametrize("number", range(17, 51))
+def test_every_input_form_code_reads_through_to_the_review_screen(rv, number):
+    """test17~50 — 입력 형식별 예시가 접수 → 읽기 → 확인 화면까지 실패 없이 간다(규칙만 — 이 시험에는 모델이 없다).
+    무엇을 읽는지는 재지 않는다: 지금 구조가 못 읽는 형식을 보여 주는 예시라 읽은 항목 수는 재설계 뒤 달라진다."""
+    client, _, _ = _client()
+    headers = _key(client)
+    code = f"test{number}"
+    view = _send(client, headers, code)
+    assert view["status"] == "review", view.get("error")
+    assert view["test_scenario"]["code"] == code
+    assert view["test_scenario"]["category"] in plans.FORM_CATEGORIES
+    assert view["review"]["test_scenario"] == view["test_scenario"]
+    expected = plans.prepared(number)["text"].splitlines()[0]
+    assert expected in "\n".join(line["text"] for source in view["sources"] for line in source["lines"])

@@ -5,12 +5,13 @@
 import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda n: os.path.join(HERE, 'results', n)
 CAL = ['mix8', 'mix9', 'mix10']
 TEST = sys.argv[sys.argv.index('--test') + 1].split(',') if '--test' in sys.argv else ['mix11']
 ALPHAS = [0.02, 0.05, 0.10]
 ALLS = CAL + TEST
-GOLD = {w: [x['gold'] for x in json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']] for w in ALLS}
+GOLD = {w: [x['gold'] for x in json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']] for w in ALLS}
 
 
 def norm(p):

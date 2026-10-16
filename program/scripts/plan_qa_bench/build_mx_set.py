@@ -2,7 +2,7 @@
 #  설계 합의(2026-10-07): Claude(코드 이어 붙이기 대량 + LLM 소량) · Codex 솔 6.1(같은 선택 C, 세부 보강) — 기록 scratchpad/consensus/20261007_2150_mixed_testset/ (결정 문서 program/research/시험세트_MX_설계_2026-10-07.md).
 #  구성: 요청 문장(일정마다 솔 6.1 이 잡담 없이 씀 + 루나 6.0 이 따로 라벨, 합의분만) × 잡담 조각(로컬 말뭉치: D 잡담 1,300 · D2 1,000 · Claude 합성 240 — AI Hub · KoCulture 문장은 외부로 보내지 않고 코드로만 이어 붙임)
 #        + LLM 이 자연스럽게 섞어 쓴 소량(솔 6.1, 힌트는 Claude 합성 잡담뿐 · 루나 6.0 이 따로 라벨). 모든 섞인 문장에는 「요청만 있는 대조 짝」이 붙는다 → 섞임 효과를 짝지어 잰다.
-#  일정: D 시험의 일정 89개 중 H 시험(어려운 세트)이 쓴 30개를 뺀 59개(학습에는 안 쓴 일정). ★AI Hub · KoCulture 문장이 들어간 결과 파일은 git 밖 datasets/travel/mx_testset/ 에 둔다.
+#  일정: D 시험의 일정 89개 중 H 시험(어려운 세트)이 쓴 30개를 뺀 59개(학습에는 안 쓴 일정). ★AI Hub · KoCulture 문장이 들어간 결과 파일은 git 밖 datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/ 에 둔다.
 # 단계: gen(요청 문장, 솔) → label(루나) → nat(자연 혼합, 솔) → natlabel(루나) → build(조립)
 # 사용: python build_mx_set.py gen|label|nat|natlabel|build [--workers 3] [--seed 20261018]
 import argparse
@@ -15,6 +15,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, os.path.join(HERE, '..', 'eval_kit'))
 sys.stdout.reconfigure(encoding='utf-8')
@@ -28,17 +29,16 @@ ap.add_argument('--gen-model', default='gpt-6.1-sol')
 ap.add_argument('--label-model', default='gpt-6-luna')
 a = ap.parse_args()
 
-OUT = os.path.join(os.path.abspath(os.path.join(HERE, '..', '..', '..')), 'datasets', 'travel', 'mx_testset')   # 저장소 루트의 datasets/(git 밖). ★ROOT 는 program/ 이라 거기에 만들면 git 이 못 막는다 — 2026-10-07 바로잡음
+OUT = os.path.join(os.path.abspath(os.path.join(HERE, '..', '..', '..')), 'datasets', 'core', 'pointing', 'testset', 'requests_inside_chitchat_pairs_v1')   # 저장소 루트의 datasets/(git 밖). ★ROOT 는 program/ 이라 거기에 만들면 git 이 못 막는다 — 2026-10-07 바로잡음
 os.makedirs(OUT, exist_ok=True)
-EP = os.path.join(HERE, 'results', 'empty_probe')
-P = json.load(open(os.path.join(EP, 'all_prompts.json'), encoding='utf-8'))
+P = json.load(open(fixture('all_prompts.json'), encoding='utf-8'))
 heads, tail = {}, None
 for p in P:
     h, rest = p['prompt'].split('고객 질문: ', 1)
     heads[h] = heads.get(h, 0) + 1
     tail = tail or rest.split('\n\n', 1)[1]
 HEADS = sorted(heads)
-H_USED = {json.loads(l)['k'] for l in open(os.path.join(HERE, 'results', 'hard_set', 'gen_test_30_20261015.jsonl'), encoding='utf-8') if 'error' not in json.loads(l)}
+H_USED = {json.loads(l)['k'] for l in open(os.path.join(HERE, '..', '..', '..', 'datasets', 'core', 'pointing', 'testset', 'confusing_trap_sentences_v1', 'gen_test_30_20261015.jsonl'), encoding='utf-8') if 'error' not in json.loads(l)}
 SEL = [(k, HEADS[k]) for k in range(len(HEADS)) if k not in H_USED]   # H 시험이 쓴 일정 30개를 뺀 나머지(59개)
 GEN, LAB, NAT, NLAB = (os.path.join(OUT, f'{n}.jsonl') for n in ('gen', 'label', 'nat', 'natlabel'))
 QRE = re.compile(r'고객 질문: (.*?)\n\n', re.S)
@@ -59,7 +59,7 @@ LAB_SCHEMA = {'type': 'object', 'properties': {'answers': {'type': 'array', 'ite
 NAT_SCHEMA = {'type': 'object', 'properties': {'blends': {'type': 'array', 'items': {'type': 'object', 'properties': {'cat': {'type': 'string'}, 'blend': {'type': 'string'}, 'request_only': {'type': 'string'}, 'item': {'type': ['integer', 'null']}}}}}}
 
 # Claude 가 쓴 합성 잡담(D3 의 synth_chat_A/B) — LLM 자연 혼합의 말투 힌트로만 보낸다(AI Hub · KoCulture 원문은 안 보낸다)
-D3 = json.load(open(os.path.join(EP, 'all_prompts_d3.json'), encoding='utf-8'))
+D3 = json.load(open(fixture('all_prompts_d3.json'), encoding='utf-8'))
 CLAUDE_CHAT = [QRE.search(x['prompt']).group(1).strip() for x in D3 if x['type'].startswith('synth_chat')]
 
 
@@ -204,7 +204,7 @@ def build():
     for p in P:
         if p['type'] == 'chitchat':
             pool.append((QRE.search(p['prompt']).group(1).strip(), 'D(AI Hub·KoCulture)'))
-    for x in json.load(open(os.path.join(EP, 'all_prompts_d2.json'), encoding='utf-8')):
+    for x in json.load(open(fixture('all_prompts_d2.json'), encoding='utf-8')):
         pool.append((QRE.search(x['prompt']).group(1).strip(), 'D2(AI Hub·KoCulture)'))
     for x in D3:
         if x['type'].startswith('synth_chat'):
@@ -287,9 +287,9 @@ def build():
             add('control', b['cat'], rq, b['item'], k, h, 'llm', pid, None, None, rq)
     # 3) 학습 · 다른 시험 문장과 겹침 검사(요청 부분 기준, 자카드 0.6 이상이면 격리)
     seen_q = []
-    for f in (os.path.join(HERE, 'results', 'hard_set', 'h_set_test_30_20261015.json'),):
+    for f in (os.path.join(HERE, '..', '..', '..', 'datasets', 'core', 'pointing', 'testset', 'confusing_trap_sentences_v1', 'h_set_test_30_20261015.json'),):
         seen_q += [x['q'] for x in json.load(open(f, encoding='utf-8'))]
-    ht = os.path.join(HERE, 'results', 'hard_set', 'h_set_train_60_20261016.json')
+    ht = os.path.join(HERE, '..', '..', '..', 'datasets', 'core', 'pointing', 'trainset', 'confusing_trap_sentences_v1', 'h_set_train_60_20261016.json')
     if os.path.exists(ht):
         seen_q += [x['q'] for x in json.load(open(ht, encoding='utf-8'))]
     seen_t = [tri(q) for q in seen_q]

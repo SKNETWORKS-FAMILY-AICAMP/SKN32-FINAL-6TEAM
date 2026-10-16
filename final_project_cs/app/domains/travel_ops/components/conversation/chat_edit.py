@@ -159,6 +159,11 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 if str(op.item_id) in frozen:
                     raise EditRefused("frozen_item", f"「{title}」은(는) 이미 지났거나 예약이 묶인 일정이라 채팅으로 바꾸지 않았어요.")
                 raise EditRefused("unknown_item", "바꿀 일정을 지금 일정에서 하나로 찾지 못해 일정은 바꾸지 않았어요. 일정 이름을 알려 주세요.")
+            if reopen._policy_locked(by_id[op.item_id]):
+                # `[2026-10-15 ST4F-490]` 숙소 · 항공 · 업체 예약 일정은 수정 접수에 **잠금**으로 들어온다(웹 「일정 수정」에서 풀어 고친다). 채팅은 전처럼 바꾸지 않고
+                #   「일정 수정」으로 안내한다 — 채팅으로 푼 잠금은 다음 요청의 수정 접수에서 다시 잠겨 「고정 풀어줘」 안내가 되풀이됐다
+                raise EditRefused("locked_kind", f"「{by_id[op.item_id].title}」은(는) 숙소 · 항공 · 예약 일정이라 채팅으로는 바꾸지 않았어요. "
+                                                 "「일정 수정」에서 잠금을 풀고 고쳐 주세요.")
             prefix = f"items[{where[op.item_id]}]"
             if op.kind in ("place", "remove", "time") and prefix in auto_pinned and op.item_id not in unpinned:
                 # ★`[2026-10-15 실서버 확인]` 서버가 **고객이 만진 일정**(되돌리기 · 앞선 고치기 · 직접 지정한 곳)에 붙인 자동 표시(`customer_pinned`)는 다시 열면
@@ -209,9 +214,10 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 with connect() as conn:
                     pinned_now = {pipeline._item_no(c["field"]) for c in pipeline.effective(pipeline._claims(conn, tenant, intake_id, revision))
                                   if c["field"].endswith(".locked") and c["value"] is True}
+                # `[2026-10-15 ST4F-490]` 숙소 · 항공 · 업체 예약(정책 잠금)은 풀지 않는다 — 넣기 때문에 비행기 · 체크인 시각을 밀지 않는다
                 release = [f"items[{index}]" for item_id, index in where.items()
                            if index in pinned_now and by_id[item_id].starts_at.astimezone(KST).date().isoformat() in add_days
-                           and not by_id[item_id].booking_id]
+                           and not reopen._policy_locked(by_id[item_id])]
                 retry = [{"source_id": source_id, "field": f"{p}.locked", "value": False} for p in release] + edits
                 try:
                     if not release:
@@ -391,8 +397,12 @@ def _range_from_sentence(message: str, token: str | None, stops: list[Any], now:
     return {"day": day, "period": period, "kind": "all", "position": "all"}
 
 
-def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = "") -> tuple[list[EditOp], str]:
+def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = "",
+            read_plan: Callable[[str, Any], Any] | None = None) -> tuple[list[EditOp], str]:
     """해석(`decision_unit.Decision`) → 고칠 것들 · 무엇을 하는지 한 줄. 값이 모자라면 `EditRefused`(고객에게 물을 말).
+
+    `read_plan` `[2026-10-16 D-025]` — 채팅 수정 요청과 계획서는 **같은 입구**다. 「넣기」면 메시지를 계획서와 같은 이해 에이전트(`intake.agent_read`)로
+      읽어(원문 인용 · 시각 다시 계산을 그대로 거친다) 장소 여럿 · 시각을 한 번에 넣는다. 못 읽으면(모델 실패 · 시각 없음) 아래 한 곳 넣기로 간다.
 
     ★값은 해석이 낸 칸만 쓴다 — 시각(`anchor_time`) · 날(`at_day`) · 옮길 크기(`minutes`, 문장에 적힌 시간 · 분) · 기준 일정(`anchor_item`) ·
       넣을 곳 이름(`destination_text`). 서버가 짐작으로 채우지 않는다(모르면 묻는다)."""
@@ -488,6 +498,11 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
         for target, d, st, en in pairs:
             _same_day(d, st, en, target.title)
         return [EditOp("time", item_id=t.item_id, date=d, starts_at=st, ends_at=en) for t, d, st, en in pairs], f"{item.title} · {other.title} 순서 바꾸기"
+    if action == "add_item" and read_plan is not None:
+        read_ops = _read_adds(message, read_plan, stops=stops, now=now, day=day)
+        if read_ops:
+            names = " · ".join(op.title or "" for op in read_ops)
+            return read_ops, f"{names} 넣기"
     if action == "add_item":
         if not name or _GENERIC_PLACE.fullmatch(name.strip()):
             # ★`[2026-10-15 x600 실서버 확인]` 「오후 3시에 카페 하나 추가해줘」 — 종류만 말했는데 「카페」라는 이름을 장소로 찾으러 가 조회 한도만 쓰고 막혔다.
@@ -510,6 +525,34 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
         return [EditOp("add", date=begin.date().isoformat(), starts_at=begin.strftime("%H:%M"), ends_at=end.strftime("%H:%M"),
                        place_name=name, title=name)], f"{name} 넣기"
     raise EditRefused("not_an_edit", "무엇을 바꿀지 알아듣지 못해 일정은 바꾸지 않았어요.")
+
+
+def _read_adds(message: str, read_plan: Callable[[str, Any], Any], *, stops: list[Any], now: datetime, day: str | None) -> list[EditOp]:
+    """이해 에이전트가 읽은 메시지 → 넣을 일정들. ★시각이 있는 항목만 넣는다(없으면 묻는 길로) · 이미 일정에 있는 이름은 넣지 않는다 ·
+    날짜는 에이전트 값 → 해석의 날 → 여행 첫날(오늘이 여행 안이면 오늘) 순."""
+    try:
+        got = read_plan(message, now.astimezone(KST).date())
+    except Exception:                                  # noqa: BLE001 — 읽기 실패는 한 곳 넣기로(지금 길)
+        log.info("chat add: reader failed", exc_info=True)
+        return []
+    have = {(s.title or "").strip() for s in stops}
+    first_day = min((s.starts_at.astimezone(KST).date() for s in stops), default=now.astimezone(KST).date())
+    today = now.astimezone(KST).date()
+    fallback_day = day or (today if today >= first_day else first_day).isoformat()
+    ops: list[EditOp] = []
+    for it in getattr(got, "items", []) or []:
+        title = it.title.text.strip()[:80]
+        if not it.start or not title or title in have or _GENERIC_PLACE.fullmatch(title):
+            continue
+        when = it.date or fallback_day
+        begin = datetime.fromisoformat(f"{when}T{it.start}").replace(tzinfo=KST)
+        end = datetime.fromisoformat(f"{when}T{it.end}").replace(tzinfo=KST) if it.end and it.end > it.start else begin + DEFAULT_STAY
+        if end.date() != begin.date():
+            continue
+        _same_day(when, it.start, end.strftime("%H:%M"), title)
+        ops.append(EditOp("add", date=when, starts_at=it.start, ends_at=end.strftime("%H:%M"), place_name=title, title=title,
+                          item_kind="dining" if it.kind == "dining" else "activity"))
+    return ops
 
 
 def done_text(ops: list[EditOp], *, items_after: list[Any], plan: Any) -> str:

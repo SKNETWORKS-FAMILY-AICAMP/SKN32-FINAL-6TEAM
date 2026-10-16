@@ -12,6 +12,9 @@
 import os
 
 os.environ.setdefault("ACOP_MOBILITY_DATA_DIR", "")
+# ★`[2026-10-16]` 구글 호텔(SerpApi — 하루 8 · 월 250회)을 시험이 쓰지 않게 키를 비운다. 확인 화면의 숙소 후보(숙소 팀)가 이 키가 있을 때만 바깥에 나간다.
+#   숙소 시험은 메모리 객체를 넣어 키 없이 돈다. 셸에서 직접 내보내면 그 값이 이긴다(setdefault).
+os.environ.setdefault("ACOP_SERPAPI_API_KEY", "")
 
 
 import pytest  # noqa: E402

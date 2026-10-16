@@ -1,11 +1,11 @@
 """채팅 해석 재생 결과 여러 개를 **같은 정답표 · 같은 채점**으로 나란히 비교한다 (2026-10-15, 6주차 발표 점검 후속).
 
 사용(작업 폴더 루트에서):
-  python program/scripts/chat_replay_compare/replay_compare.py datasets/chat_probe/2026-10-13_x600_web_chat \
+  python program/scripts/chat_replay_compare/replay_compare.py datasets/core/chat_probe/2026-10-13_x600_web_chat \
       replay/out_recorded_x600.jsonl replay/out_ft_e4b_final.jsonl replay/out_ft_e4b_20261015_current.jsonl \
       [--detail replay/out_ft_e4b_20261015_current.jsonl] [--show 40]
 
-재생 도구(`replay_inputs.py` · `replay_run.py` · `replay_score.py`)는 `datasets/chat_probe/…/scripts/`(git 밖, 이 PC 에만 있음)에 있다.
+재생 도구(`replay_inputs.py` · `replay_run.py` · `replay_score.py`)는 `datasets/core/chat_probe/…/scripts/`(git 밖, 이 PC 에만 있음)에 있다.
 이 도구는 `replay_score.py` 가 보는 「할 일」에 더해 **고객에게 가장 위험한 것 = 요청과 다른 변경이 실행되는가**를 센다.
 - 실행 계열 = 해석이 서버의 검사를 거쳐 최종으로 낸 할 일(`action`)이 apply_change · rollback · redo · report_closed 중 하나.
 - 잘못 실행 후보 = **대상 일정을 골라** 실행 계열로 갔는데 ① 정답 할 일이 실행 계열이 아니다 ② 정답 할 일이 apply_change · report_closed 이고 정답 대상과 다른 일정을 골랐다.

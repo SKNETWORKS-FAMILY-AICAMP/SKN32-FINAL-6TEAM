@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useRef, type KeyboardEvent } from "react";
+import { useEffect, useRef, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { openApi } from "@/lib/live/client";
 import { useSettings, useT } from "@/lib/settings";
@@ -10,16 +10,33 @@ import { planOfInput } from "./test-plan-input";
 
 interface PreparedPlan { code: string; name: string; description: string; expected: string; text: string; category?: string }
 interface Catalog { enabled: boolean; scenarios: PreparedPlan[] }
-const categories = [
-  ["normal", "문제 없는 기본안", "No intentional issues"],
-  ["time", "시간 겹침", "Overlapping times"],
-  ["hours", "운영시간·휴무", "Opening hours / closures"],
-  ["place", "장소 미정", "Unspecified place"],
-  ["mobility", "이동 여유", "Travel time"],
-  ["input", "입력 확인", "Input checks"],
-  ["general", "일반 흐름", "General flow"],
+// 두 묶음: 검사 항목별(test1~16, 시각+장소 목록) · 입력 형식별(test17~, 계획 이해 시험지의 형식 이름 그대로 — 2026-10-16)
+const sections = [
+  ["check", "검사 항목별 · 시각+장소 목록", "By check · time + place lists"],
+  ["form", "입력 형식별 · 계획 이해 시험지 분류", "By input form · plan reading test categories"],
 ] as const;
-function categoryOf(plan: PreparedPlan) { return categories.find(([code]) => code === plan.category) ?? categories[categories.length - 1]; }
+const categories = [
+  ["normal", "문제 없는 기본안", "No intentional issues", "check"],
+  ["time", "시간 겹침", "Overlapping times", "check"],
+  ["hours", "운영시간·휴무", "Opening hours / closures", "check"],
+  ["place", "장소 미정", "Unspecified place", "check"],
+  ["mobility", "이동 여유", "Travel time", "check"],
+  ["input", "입력 확인", "Input checks", "check"],
+  ["general", "일반 흐름", "General flow", "check"],
+  ["mixed_list", "정형 목록+자유 문장", "List with free sentences", "form"],
+  ["typo_line", "말투·오타 한 줄", "Casual one-liner with typos", "form"],
+  ["paragraph", "문단 자유문", "Free paragraph", "form"],
+  ["csv", "CSV·TSV", "CSV / TSV", "form"],
+  ["json", "JSON", "JSON", "form"],
+  ["excel_memo", "메모식 엑셀", "Spreadsheet memo", "form"],
+  ["pasted_table", "붙여 넣은 표", "Pasted table", "form"],
+  ["multi_message", "나눠 보낸 메시지", "Split messages", "form"],
+  ["mixed_request", "계획+질문+짜기", "Plan + question + planning ask", "form"],
+  ["correction", "중간 정정", "Mid-message correction", "form"],
+  ["real", "실제 접수", "Real-intake style", "form"],
+] as const;
+const fallback = categories.find(([code]) => code === "general")!;
+function categoryOf(plan: PreparedPlan) { return categories.find(([code]) => code === plan.category) ?? fallback; }
 
 /** 목록은 부가 기능이다. 읽기를 기다리거나 실패해도 일반 계획 입력을 막지 않는다. */
 export function TestPlans({ value, onChoose, disabled }: { value: string; onChoose: (code: string, text: string) => void; disabled: boolean }) {
@@ -31,6 +48,14 @@ export function TestPlans({ value, onChoose, disabled }: { value: string; onChoo
   const entry = planOfInput(query.data?.scenarios, value);
   const selectedCategory = entry && categoryOf(entry);
   const close = () => { if (picker.current) picker.current.open = false; trigger.current?.focus(); };
+  useEffect(() => {
+    function outside(event: PointerEvent) {
+      const box = picker.current;
+      if (box?.open && !box.contains(event.target as Node)) box.open = false;
+    }
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, []);
   function navigate(event: KeyboardEvent<HTMLDetailsElement>) {
     if (event.key === "Escape" && picker.current?.open) { event.preventDefault(); event.stopPropagation(); close(); return; }
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) || !picker.current?.open) return;
@@ -42,22 +67,31 @@ export function TestPlans({ value, onChoose, disabled }: { value: string; onChoo
   if (query.data && !query.data.enabled) return <p className={styles.help}>{t("시험 일정 입력이 꺼져 있어요.", "Test plan shortcuts are turned off.")}</p>;
   return <div className={styles.box}>
     <span className={styles.label}>{t("테스트 계획", "Test plan")}</span>
-    <details ref={picker} className={styles.picker} onKeyDown={navigate} onToggle={event => { if (event.currentTarget.open) event.currentTarget.scrollIntoView({ block: "nearest" }); }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }}>
+    {/* ★바깥을 누르면 닫는다 — 초점 이동(blur)만으로 닫지 않는다. 아이폰·아이패드 사파리는 탭한 단추에 초점을 주지 않아(바탕 main 으로 옮기거나 비운다)
+        목록이 손가락을 떼기 전에 닫히고 누른 계획이 골라지지 않았다(2026-10-16 사용자 신고). blur 로는 Tab 으로 밖에 나간 경우만 닫는다. */}
+    <details ref={picker} className={styles.picker} onKeyDown={navigate} onToggle={event => { if (event.currentTarget.open) event.currentTarget.scrollIntoView({ block: "nearest" }); }} onBlur={event => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }}>
       <summary ref={trigger} id="test-plan-code" aria-label={t("테스트 계획", "Test plan")} aria-disabled={disabled || !query.data} onClick={event => { if (disabled || !query.data) event.preventDefault(); }}>
         <span className={styles.selection}>
           {selectedCategory && <span className={styles.badge} data-category={selectedCategory[0]}>{t(selectedCategory[1], selectedCategory[2])}</span>}
           <span>{entry ? `${entry.code} · ${entry.name}` : query.isPending ? t("준비된 계획 불러오는 중…", "Loading prepared plans…") : t("분류별 테스트 계획 선택", "Choose a test plan by category")}</span>
         </span><ChevronDown size={18} aria-hidden="true" />
       </summary>
-      {!disabled && query.data && <div className={styles.options} aria-label={t("분류별 테스트 계획", "Test plans by category")}>
-        {categories.map(category => {
-          const plans = query.data.scenarios.filter(plan => categoryOf(plan)[0] === category[0]);
-          return plans.length > 0 && <fieldset key={category[0]} className={styles.group}>
-            <legend><span className={styles.badge} data-category={category[0]}>{t(category[1], category[2])}</span><span className={styles.count}>{plans.length}</span></legend>
-            {plans.map(plan => <button key={plan.code} type="button" data-plan-code={plan.code} data-category={category[0]} aria-pressed={entry?.code === plan.code} onClick={() => { onChoose(plan.code, plan.text); close(); }}>
-              <span className={styles.code}>{plan.code}</span><span>{plan.name}</span><Check size={16} aria-hidden="true" className={entry?.code === plan.code ? styles.checked : styles.unchecked} />
-            </button>)}
-          </fieldset>;
+      {/* 목록 안을 눌러도 초점을 옮기지 않는다 — WebKit(사파리)은 탭한 단추 대신 바탕(main)에 초점을 줘서 목록이 닫혔다. 클릭은 그대로 일어난다 */}
+      {!disabled && query.data && <div className={styles.options} aria-label={t("분류별 테스트 계획", "Test plans by category")} onMouseDown={event => event.preventDefault()}>
+        {sections.map(section => {
+          const groups = categories.filter(category => category[3] === section[0]).map(category => {
+            const plans = query.data.scenarios.filter(plan => categoryOf(plan)[0] === category[0]);
+            return plans.length > 0 && <fieldset key={category[0]} className={styles.group}>
+              <legend><span className={styles.badge} data-category={category[0]}>{t(category[1], category[2])}</span><span className={styles.count}>{plans.length}</span></legend>
+              {plans.map(plan => <button key={plan.code} type="button" data-plan-code={plan.code} data-category={category[0]} aria-pressed={entry?.code === plan.code} onClick={() => { onChoose(plan.code, plan.text); close(); }}>
+                <span className={styles.code}>{plan.code}</span><span>{plan.name}</span><Check size={16} aria-hidden="true" className={entry?.code === plan.code ? styles.checked : styles.unchecked} />
+              </button>)}
+            </fieldset>;
+          }).filter(Boolean);
+          return groups.length > 0 && <section key={section[0]} className={styles.section} data-section={section[0]} aria-label={t(section[1], section[2])}>
+            <p className={styles.sectionTitle}>{t(section[1], section[2])}</p>
+            {groups}
+          </section>;
         })}
       </div>}
     </details>

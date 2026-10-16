@@ -60,12 +60,14 @@ def build_router(*, operator_dependency, require_permission) -> APIRouter:
         require(op, "ops:introspect")
         tenant = get_settings().tenant_id
         with get_connection() as conn, conn.cursor() as cur:
-            cur.execute("SELECT t.trip_id,t.title FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t") + " "
+            # ★`[2026-10-16]` 재난 정지 중인 여행은 감시가 쉰다 — 목록에는 두되 표시하고, 시험 저장은 거절한다(`simulation.configure`)
+            cur.execute("SELECT t.trip_id,t.title,EXISTS (SELECT 1 FROM trip_safety_pauses p WHERE p.tenant_id=t.tenant_id "
+                        "AND p.trip_id=t.trip_id AND p.resumed_at IS NULL) FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + scope_sql("t") + " "
                         "AND EXISTS (SELECT 1 FROM itinerary_items i WHERE i.tenant_id=t.tenant_id AND i.trip_id=t.trip_id "
                         "AND i.version=t.latest_version AND COALESCE(i.ends_at,i.starts_at)>now()) ORDER BY t.created_at DESC",
                         (tenant,))
             rows = cur.fetchall()
-        return {"trips": [{"trip_id": str(identity), "title": title} for identity, title in rows],
+        return {"trips": [{"trip_id": str(identity), "title": title, "paused": bool(paused)} for identity, title, paused in rows],
                 "categories": [{"key": key, "label": label} for key, label in simulation.CATEGORIES.items()]}
 
     @router.get("/{trip_id}")

@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 
 def audit(root):
-    data = root / "datasets/travel/mx_testset"
+    data = root / "datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1"
     files = [data / name for name in (
         "mx_all.json", "mx_main_prompts.json", "mx_disputes.json",
         "mx_human_check_sample.csv",

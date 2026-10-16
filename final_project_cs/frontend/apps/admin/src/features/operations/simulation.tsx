@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { operationSimulations, saveOperationSimulation } from '../../lib/gateway';
 import styles from './simulation.module.css';
 
-type Catalogue = { trips: { trip_id: string; title: string }[]; categories: { key: string; label: string }[] };
+type Catalogue = { trips: { trip_id: string; title: string; paused?: boolean }[]; categories: { key: string; label: string }[] };
 type Simulation = {
   trip_id: string; title: string; version: number;
   configuration: { revision: number; active: boolean; categories: string[]; item_id?: string; expires_at?: string; run_id?: string };
@@ -28,7 +28,7 @@ export function DisasterSimulation() {
   return <section className={`panel ${styles.page}`}><h1>재난 6종 시뮬레이션</h1>
     <p>진행 중인 여행과 대상 일정을 고르고 재난 입력을 켜세요. 다음 감시 회차가 기존 알림·일정 변경·안전정지 규칙으로 처리합니다.</p>
     {catalogue.isPending ? <p role="status">시험할 여행을 읽는 중…</p> : catalogue.isError ? <div role="alert"><p className="error">{catalogue.error.message}</p><button onClick={() => void catalogue.refetch()}>여행 다시 읽기</button></div> : <>
-      <label>대상 여행<select value={tripId} onChange={e => setTripId(e.target.value)}><option value="">여행 선택</option>{catalogue.data.trips.map(trip => <option key={trip.trip_id} value={trip.trip_id}>{trip.title} · {trip.trip_id.slice(0, 8)}</option>)}</select></label>
+      <label>대상 여행<select value={tripId} onChange={e => setTripId(e.target.value)}><option value="">여행 선택</option>{catalogue.data.trips.map(trip => <option key={trip.trip_id} value={trip.trip_id}>{trip.title} · {trip.trip_id.slice(0, 8)}{trip.paused ? ' · 재난 정지 중(감시 쉼 — 다시 시작 뒤 시험)' : ''}</option>)}</select></label>
       {!catalogue.data.trips.length && <p>시험할 활성 여행이 없습니다. 고객 앱에서 여행 일정을 등록한 뒤 다시 읽어 주세요.</p>}
       <button onClick={() => void catalogue.refetch()}>여행 목록 새로 읽기</button>
       {tripId && <SimulationForm key={tripId} tripId={tripId} categories={catalogue.data.categories} />}

@@ -4,10 +4,11 @@
 import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 TAG = sys.argv[1] if len(sys.argv) > 1 else 'e4bt_q8'
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 sys.stdout.reconfigure(encoding='utf-8')
-FX = {s: json.load(open(os.path.join(HERE, f'fixtures/{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
+FX = {s: json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
 
 
 def pct(v, p):
