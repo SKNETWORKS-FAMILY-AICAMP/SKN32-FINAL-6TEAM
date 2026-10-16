@@ -364,6 +364,46 @@ def test_the_day_word_in_the_sentence_beats_the_models_day_when_it_gave_a_clock_
     assert after == before and "없는 날" in body["answer"], body
 
 
+# ── `[2026-10-15 ST4F-490 병합 점검]` 숙소 · 항공 · 업체 예약 일정은 이제 수정 접수에 **잠금**으로 들어온다(웹 「일정 수정」에서 풀어 고친다).
+#   채팅 고치기는 같은 수정 접수를 쓰므로 그 잠금을 「고객이 고정한 일정」처럼 다루면 안 된다 — 전처럼 채팅으로는 바꾸지 않는다
+
+def _flight_day(chat):
+    """내일 북촌한옥마을(10:00~11:30) → 김포 출발(항공 12:30~13:30). 덕수궁은 등록만 한 장소(넣을 곳)."""
+    from .test_trip_reopen import TOMORROW, _item, _place
+
+    body = {"request_id": "chat-flight-day", "title": "항공 있는 하루", "locale": "ko", "party_size": 2, "constraints": {},
+            "places": [_place("bc", "북촌한옥마을", 37.5826, 126.9836), _place("gp", "김포공항", 37.5624, 126.8013),
+                       _place("ds", "덕수궁", 37.5658, 126.9751)],
+            "items": [_item(1, "activity", "북촌한옥마을", "bc", TOMORROW, "10:00", "11:30"),
+                      _item(2, "flight", "김포 출발", "gp", TOMORROW, "12:30", "13:30")]}
+    response = chat["client"].post("/v1/web/trips", json=body, headers=_h(chat["key"]))
+    assert response.status_code == 201, response.text
+    return {**chat, "trip": response.json()}
+
+
+def test_an_add_does_not_push_a_flight_out_of_the_way(chat):
+    """넣기가 막혀 고정 표시를 잠시 풀고 밀 때(B) 항공 · 숙소 · 업체 예약은 풀지 않는다 — 비행기 시각을 손님 일정 때문에 옮기지 않는다.
+    앞 일정(북촌)도 고객이 고정해 자리가 없을 때만 B 로 간다(고정이 없으면 서버가 앞 일정을 당겨 자리를 만든다)."""
+    day = _flight_day(chat)
+    _answer(day, "lock_item", target="북촌한옥마을")
+    assert _say(day, "북촌한옥마을 고정해줘", "flight-push-lock")["status"] == "adjusted"
+    _answer(day, "add_item", destination_text="덕수궁", anchor_kind="item", anchor="북촌한옥마을", relation="after")
+    body = _say(day, "북촌한옥마을 다음에 덕수궁 넣어줘", "flight-push-add")
+    _, items = _latest(day)
+    assert _hm(items["김포 출발"].starts_at) == "12:30" and _hm(items["김포 출발"].ends_at) == "13:30", body   # ★비행기는 그대로
+
+
+def test_a_flight_time_asked_in_chat_points_to_the_edit_screen_not_to_unlocking_in_chat(chat):
+    """항공 시각을 채팅으로 바꾸라고 하면 「고정 풀어줘」를 되풀이시키지 않고 웹 「일정 수정」으로 안내한다(채팅으로 푼 잠금은 다음 요청에 다시 잠긴다)."""
+    day = _flight_day(chat)
+    before, _ = _latest(day)
+    _answer(day, "change_time", target="김포 출발", minutes=30)
+    body = _say(day, "김포 출발 30분 늦춰줘", "flight-time")
+    after, items = _latest(day)
+    assert after == before and body["status"] == "edit_refused", body
+    assert _hm(items["김포 출발"].starts_at) == "12:30" and "일정 수정" in body["answer"] and "고정 풀어줘" not in body["answer"], body
+
+
 def test_a_chat_replacement_does_not_teach_the_name_as_an_alias(chat):
     """★x600 실서버 확인(2026-10-15): 「경복궁 대신 창덕궁 가자」 뒤 같은 고객의 새 계획에서 「경복궁」이 창덕궁으로 찾아졌다 — 일정 바꾸기는 이름 고침(별칭)이 아니다."""
     _answer(chat, "apply_change", target="인사동", destination_text="덕수궁", change_scope="place")

@@ -16,6 +16,7 @@ import { useRouteDetail } from "@/features/map/use-route-detail";
 import { useListZoom } from "@/features/plan-check/list-zoom";
 import { useTimeInset } from "@/features/plan-check/use-time-inset";
 import { useDayMarker } from "@/features/plan-check/use-day-marker";
+import { useCenterFocus } from "@/features/plan-check/use-center-focus";
 import { useQuietDayStrip } from "@/features/plan-check/use-quiet-day-strip";
 import { useDayGestures } from "@/features/plan-check/use-day-gestures";
 import { useTripGuardian } from "@/features/guardian/trip-guardian";
@@ -265,6 +266,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const quietDays = useQuietDayStrip(stripBox, pane === "plan" && !detailId, false, bodyBox, toolsBox);
 
   useTimeInset(bodyBox, sheetBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}`);
+  // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (below the day strip) wears a grey border, as on the plan check — there is no ＋ here, only the border.
+  useCenterFocus(bodyBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}|${listZoom}`, stripBox);
 
   // ── The two panes: the plan, and the chat beside it. A turn made by a swipe lands where the finger left it (no second slide). ──
   function goPane(next: "plan" | "chat", bySwipe = false) {

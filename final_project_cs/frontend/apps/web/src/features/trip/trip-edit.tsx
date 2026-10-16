@@ -73,10 +73,12 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
   const actions = useMemo(() => ({ ...server.actions, editTrip: undefined }), [server.actions]);
 
   const frozen = query.data?.reopen?.frozen_item_ids;
+  const frozenWhy = query.data?.reopen?.frozen;
+  const reasons = useMemo(() => Object.fromEntries((frozenWhy ?? []).map((entry) => [entry.item_id, entry.reason])), [frozenWhy]);
   const reviewed = useMemo(() => query.data?.review ? reviewResultOf(query.data, readingOf(query.data), server.infos) : null, [query.data, server.infos]);
   const previewed = useMemo(() => server.preview?.review ? reviewResultOf(server.preview, readingOf(server.preview), server.infos) : null, [server.preview, server.infos]);
-  const result = useMemo(() => reviewed && withTrip({ ...reviewed, dirty: server.dirty, rechecking: server.rechecking }, trip, frozen ?? []), [reviewed, server.dirty, server.rechecking, trip, frozen]);
-  const preview = useMemo(() => previewed && withTrip({ ...previewed, dirty: false, rechecking: null }, trip, frozen ?? []), [previewed, trip, frozen]);
+  const result = useMemo(() => reviewed && withTrip({ ...reviewed, dirty: server.dirty, rechecking: server.rechecking }, trip, frozen ?? [], reasons), [reviewed, server.dirty, server.rechecking, trip, frozen, reasons]);
+  const preview = useMemo(() => previewed && withTrip({ ...previewed, dirty: false, rechecking: null }, trip, frozen ?? [], reasons), [previewed, trip, frozen, reasons]);
   // The lines between the stops for the plan being edited (the intake's `route-shapes`), as on the plan check; none on a failure.
   const routeShapes = useQuery({
     queryKey: ["intake-route-shapes", intakeId, query.data?.revision ?? 0, language],
@@ -169,24 +171,26 @@ function CancelDialog({ pending, onKeep, onDrop }: { pending: boolean; onKeep: (
 }
 
 /**
- * The edit's plan with the trip around it: the stops that are not in the edit (`frozen` — over) as grey lines, and every stop numbered by the trip's days — the server counts only the days
- * that have a stop in the edit, so a trip seen on its second day would start again at 「1일차」.
+ * The edit's plan with the trip around it: the stops that are not in the edit (`frozen` — over, or kept out for a `reasons` entry) as grey lines, and every stop numbered by the trip's days —
+ * the server counts only the days that have a stop in the edit, so a trip seen on its second day would start again at 「1일차」.
  */
-export function withTrip(view: PlanCheckView, trip: Pick<Trip, "stops" | "title">, frozen: readonly string[]): PlanCheckView {
+export function withTrip(view: PlanCheckView, trip: Pick<Trip, "stops" | "title">, frozen: readonly string[],
+  reasons: Readonly<Record<string, PlanItem["fixedReason"]>> = {}): PlanCheckView {
   const kept = new Set(frozen);
-  const past = trip.stops.filter((stop) => kept.has(stop.id)).map(pastItem);
+  const past = trip.stops.filter((stop) => kept.has(stop.id)).map((stop) => pastItem(stop, reasons[stop.id] ?? null));
   const dates = [...new Set([...trip.stops.map((stop) => stop.date), ...view.items.map((item) => item.date)].filter(Boolean))].sort();
   const items = [...past, ...view.items].map((item) => item.date ? { ...item, day: dates.indexOf(item.date) + 1 } : item)
     .sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999") || (a.startsAt || "99:99").localeCompare(b.startsAt || "99:99"));
   const dayOf = new Map(items.map((item) => [item.id, item.day]));
   const days = [...new Map(items.map((item) => [item.day, item.date])).entries()].map(([day, date]) => ({ day, date })).sort((a, b) => a.day - b.day);
-  return { ...view, title: trip.title ?? view.title, items, days, moves: view.moves.map((move) => ({ ...move, day: dayOf.get(move.fromId) ?? move.day })) };
+  // `[2026-10-15 ST4F-490]` A morning move from the stay (`fromStay`) opens the day of the stop it goes to — the stay (fixed in an edit) is on its check-in day.
+  return { ...view, title: trip.title ?? view.title, items, days, moves: view.moves.map((move) => ({ ...move, day: dayOf.get(move.fromStay ? move.toId : move.fromId) ?? move.day })) };
 }
 
-/** A stop of the trip that is not in the edit, as one of the list's (`past` — drawn grey, nothing on it can change). */
-function pastItem(stop: TripStop): PlanItem {
+/** A stop of the trip that is not in the edit, as one of the list's (`past` — drawn grey, nothing on it can change; `fixedReason` says why). */
+function pastItem(stop: TripStop, fixedReason: PlanItem["fixedReason"]): PlanItem {
   return {
     id: stop.id, day: 0, date: stop.date, startsAt: stop.time, endsAt: stop.endTime ?? "", title: stop.title, place: "", noPlace: false, kind: stop.kind ?? null,
-    coordinates: stop.coordinates ?? null, checks: [], verdict: "keep", locked: false, booked: stop.booking === "booked" ? true : null, info: null, suggestion: null, past: true,
+    coordinates: stop.coordinates ?? null, checks: [], verdict: "keep", locked: false, booked: stop.booking === "booked" ? true : null, info: null, suggestion: null, past: true, fixedReason,
   };
 }

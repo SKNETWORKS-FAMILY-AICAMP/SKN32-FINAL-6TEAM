@@ -43,6 +43,7 @@ import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal } from "./use-reveal";
 import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
 import type { InsertionPoint } from "./insertion-points";
+import { useCenterFocus } from "./use-center-focus";
 import { useInsertionPoint } from "./use-insertion-point";
 import { PlaceSearchHeader } from "./place-search-header";
 import { useBackgroundBack } from "./use-background-back";
@@ -580,21 +581,37 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     setOpen(id, list);
     if (from === "map") {
       if (sheet === "peek") setSheet("half");
-      const bringUp = () => requestAnimationFrame(() => requestAnimationFrame(() => {
-        const box = bodyBox.current;
-        const card = document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`);
-        const row = card?.closest<HTMLElement>('li[data-type="item"]') ?? card;
-        if (!box || !row) return;
-        const head = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
-        const visibleTop = Math.max(box.getBoundingClientRect().top, head?.getBoundingClientRect().bottom ?? 0) + 12;
-        // Reserve only the missing room; the source and preview hint already provide space below the final stop.
-        box.style.removeProperty("--focus-room");
-        const target = box.scrollTop + row.getBoundingClientRect().top - visibleTop;
-        box.style.setProperty("--focus-room", `${Math.max(0, target - (box.scrollHeight - box.clientHeight))}px`);
-        dampedScrollTo(box, target);
-      }));
-      bringUp();
+      bringCardUp(id, list);
     }
+  }
+  /** A stop's card brought to the top of the list once it is drawn (its day may change first). */
+  function bringCardUp(id: string, list: "before" | "after") {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const box = bodyBox.current;
+      const card = document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`);
+      const row = card?.closest<HTMLElement>('li[data-type="item"]') ?? card;
+      if (!box || !row) return;
+      const head = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
+      const visibleTop = Math.max(box.getBoundingClientRect().top, head?.getBoundingClientRect().bottom ?? 0) + 12;
+      // Reserve only the missing room; the source and preview hint already provide space below the final stop.
+      box.style.removeProperty("--focus-room");
+      const target = box.scrollTop + row.getBoundingClientRect().top - visibleTop;
+      box.style.setProperty("--focus-room", `${Math.max(0, target - (box.scrollHeight - box.clientHeight))}px`);
+      dampedScrollTo(box, target);
+    }));
+  }
+  /**
+   * `[2026-10-15 사용자 결정 — ST4F-498]` 「○○에서 출발」 pressed: the stay itself, as the trip screen's band does — its check-in day, its card marked, opened and brought into view.
+   * Not a toggle: pressed again the card stays open.
+   */
+  function showStay(id: string, list: "before" | "after") {
+    const item = shown.items.find((entry) => entry.id === id);
+    if (!item) return;
+    setSelectedLine(null);
+    setSelected(id);
+    setChosenDay(item.day);
+    setOpen(id, list);
+    bringCardUp(id, list);
   }
   /**
    * `[2026-10-06 사용자 지시 — 경로를 누르면 해당 경로가 나온다]` A route line pressed on the map: it is drawn picked, its leg is opened in the list (and brought into view), and a card over the map describes it. Pressed again it is let go.
@@ -721,14 +738,17 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       await actions.lock!(item.id, on);
       if (on && timeEdit.edit?.id === item.id) timeEdit.close();
       return on ? { text: t(`${eul(item.title)} 꼭 넣을 일정으로 고정했어요`, `Locked ${item.title} in`), sub: t("다시 짜거나 바꿔도 빠지지 않게 서버에 알렸어요", "Re-planning and recommendations keep it") }
-        : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
+        // `[2026-10-15 사용자 결정 — 연결 유지 + 안내]` A vendor's booking is not changed by changing the stop: it is said when it is unlocked.
+        : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: item.vendorBooking ? t("이제 바꾸거나 삭제할 수 있어요 · 업체 예약은 따로 취소·변경해야 해요", "It can be changed or deleted now · change or cancel the booking with the vendor yourself")
+          : t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
     }, true);
   }
   function unlockAll() {
+    const vendor = view.items.some((item) => item.locked && item.vendorBooking);
     void run(async () => {
       const count = await actions.unlockAll!();
       requestAnimationFrame(() => document.getElementById("plan-recommend-all")?.focus({ preventScroll: true }));
-      return { text: t(`일정 ${count}개의 잠금을 모두 풀었어요`, `Unlocked all ${count} stops`) };
+      return { text: t(`일정 ${count}개의 잠금을 모두 풀었어요`, `Unlocked all ${count} stops`), ...(vendor ? { sub: t("업체 예약은 따로 취소·변경해야 해요", "Change or cancel vendor bookings with the vendor yourself") } : {}) };
     }, true);
   }
   /**
@@ -1163,6 +1183,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "center");
   const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !timeEdit.edit && !removed.length;
   useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
+  // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (a card or a way) wears a grey border, by the ＋'s measure — chosen apart from the ＋, so both can show.
+  useCenterFocus(bodyBox, done && !changing, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
   const closeInsertion = (key: string) => {
     if (addingBusy) return;
     setMapPicking(false); setMapCoordinate(null); setInserting(null); setSlide("prev");
@@ -1256,6 +1278,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     reveal: done ? undefined : { activeId: readingList.activeId, waiting: readingList.waiting },
     prefix: list === "after" ? "after-" : "",
     onPick: (id) => pick(id, "list", list),
+    onShowStay: (id) => showStay(id, list),
     // ★`[2026-10-07 사용자 지적 — 목록에서 이동을 다시 눌러 닫아도 지도의 선은 골라진 채였다]` The list and the map say the same: opening a leg picks its line on the map, closing it lets the line go.
     onToggleMove: (id) => {
       const closing = openAt?.id === id && openAt.list === list;

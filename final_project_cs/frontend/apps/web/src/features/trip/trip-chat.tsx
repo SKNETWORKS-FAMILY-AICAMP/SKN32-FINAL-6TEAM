@@ -254,7 +254,8 @@ export function ChatBar({ chat, open, inChat, subject, onOpen, onClose, onEnterC
   if (!shown) {
     return <div className={styles.chatBar}><button ref={fab} type="button" className={styles.chatFab} onClick={onOpen} aria-label={t("채팅 입력 열기", "Open the chat")}><MessageCircle size={26} strokeWidth={1.7} aria-hidden="true" /></button></div>;
   }
-  return <div className={styles.chatBar} data-open>
+  // `[2026-10-15 사용자 결정 — ST4F-493 · 목업 A안]` In the chat pane the bar sits on the bottom edge, full width (`data-docked`); opened over the plan it floats as before.
+  return <div className={styles.chatBar} data-open data-docked={inChat || undefined}>
     {!inChat && <button ref={closeButton} type="button" className={styles.chatClose} onClick={() => { backToFab.current = true; onClose(); }} aria-label={t("채팅 막대 접기", "Close the chat bar")}><X size={18} strokeWidth={1.8} aria-hidden="true" /></button>}
     {inChat && <button type="button" className={styles.chatClose} onClick={() => { backToFab.current = true; onLeaveChat(); }} aria-label={t("일정으로 돌아가기", "Back to the itinerary")} title={t("일정으로 돌아가기", "Back to the itinerary")}><ArrowLeft size={18} strokeWidth={1.8} aria-hidden="true" /></button>}
     <form className={styles.chatForm} onSubmit={submit} noValidate>

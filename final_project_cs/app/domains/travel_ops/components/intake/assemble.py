@@ -210,6 +210,8 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
                                 "장소 이름을 고치거나 「장소 없음」으로 두세요", sid))
     kind = value("kind") if value("kind") in ("activity", "dining") else \
         ("dining" if (place or {}).get("kind") == "dining" else "activity")
+    if (fields.get("kind") or {}).get("method") == "trip" and value("kind") in ("lodging", "flight"):
+        kind = value("kind")            # `[2026-10-15 ST4F-490]` 수정 접수가 등록한 여행에서 가져온 숙소 · 항공은 그 종류 그대로(읽은 줄은 지금처럼 활동 · 식사)
     start, end = value("starts_at"), value("ends_at")
     lines = (source.get("transcript") or "").splitlines()
     text = lines[line - 1] if 0 < line <= len(lines) else ""
@@ -222,7 +224,8 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
             "place": place if place and place.get("latitude") is not None else None,
             "booking_no": value("booking_no"), "provenance": _provenance(fields), "where": where,
             "claims": fields, "locked": value("locked") is True, "day": day, "no_place": no_place,
-            "end_date": None}           # 끝이 다른 날인 항목(숙소)만 채운다 — `_stays`
+            # 끝이 다른 날인 항목(숙소)만 채운다 — `_stays` · `[2026-10-15]` 수정 접수가 등록한 숙소에서 가져온 체크아웃 날(`end_date` 값 줄)
+            "end_date": value("end_date") if kind == "lodging" else None}
 
 
 def _stays(rows, filled, problems) -> list[dict[str, Any]]:
@@ -237,10 +240,11 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
     def words(row):
         return f"{row['title'] or ''} {row['text'] or ''}"
 
-    ins = [r for r in rows if r["date"] and r["kind"] != "dining" and _CHECK_IN.search(words(r))]
+    # `[2026-10-15 ST4F-490]` 이미 숙소인 줄(수정 접수가 등록한 숙소에서 가져온 것 — 끝 날짜를 값 줄로 안다)은 합치지 않는다
+    ins = [r for r in rows if r["date"] and r["kind"] not in ("dining", "lodging") and _CHECK_IN.search(words(r))]
     if not ins:
         return rows
-    outs = [r for r in rows if r["date"] and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)]
+    outs = [r for r in rows if r["date"] and r["kind"] != "lodging" and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)]
     last_day = max(r["date"] for r in rows if r["date"])
     merged: list[int] = []
 

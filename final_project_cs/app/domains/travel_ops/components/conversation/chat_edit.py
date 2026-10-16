@@ -159,6 +159,11 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 if str(op.item_id) in frozen:
                     raise EditRefused("frozen_item", f"「{title}」은(는) 이미 지났거나 예약이 묶인 일정이라 채팅으로 바꾸지 않았어요.")
                 raise EditRefused("unknown_item", "바꿀 일정을 지금 일정에서 하나로 찾지 못해 일정은 바꾸지 않았어요. 일정 이름을 알려 주세요.")
+            if reopen._policy_locked(by_id[op.item_id]):
+                # `[2026-10-15 ST4F-490]` 숙소 · 항공 · 업체 예약 일정은 수정 접수에 **잠금**으로 들어온다(웹 「일정 수정」에서 풀어 고친다). 채팅은 전처럼 바꾸지 않고
+                #   「일정 수정」으로 안내한다 — 채팅으로 푼 잠금은 다음 요청의 수정 접수에서 다시 잠겨 「고정 풀어줘」 안내가 되풀이됐다
+                raise EditRefused("locked_kind", f"「{by_id[op.item_id].title}」은(는) 숙소 · 항공 · 예약 일정이라 채팅으로는 바꾸지 않았어요. "
+                                                 "「일정 수정」에서 잠금을 풀고 고쳐 주세요.")
             prefix = f"items[{where[op.item_id]}]"
             if op.kind in ("place", "remove", "time") and prefix in auto_pinned and op.item_id not in unpinned:
                 # ★`[2026-10-15 실서버 확인]` 서버가 **고객이 만진 일정**(되돌리기 · 앞선 고치기 · 직접 지정한 곳)에 붙인 자동 표시(`customer_pinned`)는 다시 열면
@@ -209,9 +214,10 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 with connect() as conn:
                     pinned_now = {pipeline._item_no(c["field"]) for c in pipeline.effective(pipeline._claims(conn, tenant, intake_id, revision))
                                   if c["field"].endswith(".locked") and c["value"] is True}
+                # `[2026-10-15 ST4F-490]` 숙소 · 항공 · 업체 예약(정책 잠금)은 풀지 않는다 — 넣기 때문에 비행기 · 체크인 시각을 밀지 않는다
                 release = [f"items[{index}]" for item_id, index in where.items()
                            if index in pinned_now and by_id[item_id].starts_at.astimezone(KST).date().isoformat() in add_days
-                           and not by_id[item_id].booking_id]
+                           and not reopen._policy_locked(by_id[item_id])]
                 retry = [{"source_id": source_id, "field": f"{p}.locked", "value": False} for p in release] + edits
                 try:
                     if not release:

@@ -25,17 +25,20 @@ export interface RailSpan { from: number | null; to: number | null }
 /**
  * A stop ends at its end time. With no end it lasts until it is left: the way after it leaves, else the next stop starts — the last stop of a day with no end stays open (null).
  * A way lasts from the end of the stop before to the start of the next stop (waiting to leave, travelling and the free time after arriving are all in it).
+ * `[2026-10-15 ST4F-498]` A way with no stop before it on the day — the morning way from the stay 「숙소 → 그날 첫 일정」 — starts when it leaves (it had no start, so 「지금」 skipped it).
  */
 export function railSpans(rows: readonly RailRow[]): RailSpan[] {
   const spans: RailSpan[] = [];
   let lastStayTo: number | null = null;
+  let stopBefore = false;
   rows.forEach((row, index) => {
     const after = rows.slice(index + 1);
     const nextStart = (after.find((other) => other.kind === "stay") as Extract<RailRow, { kind: "stay" }> | undefined)?.start ?? null;
     if (row.kind === "move") {
-      spans.push({ from: lastStayTo, to: nextStart });
+      spans.push({ from: stopBefore ? lastStayTo : row.depart, to: nextStart });
       return;
     }
+    stopBefore = true;
     let to = row.end;
     if (to === null) {
       const leave = after[0]?.kind === "move" ? after[0].depart : null;

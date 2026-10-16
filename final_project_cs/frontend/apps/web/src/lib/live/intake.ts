@@ -100,13 +100,18 @@ export interface IntakeView {
   /** The question set these come from; a change in meaning of an option raises it. Kept for the record - the page does not branch on it. */
   questions_version?: string;
   /**
-   * `[2026-10-13]` An edit of a registered trip (`reopenTrip`): the trip and the version it reopened, and the trip's stops left out of the intake (over, or not an activity or a meal) —
-   * they stay as they are when the edit is done. Null (or absent, an older server) on an intake read from a plan.
+   * `[2026-10-13]` An edit of a registered trip (`reopenTrip`): the trip and the version it reopened, and the trip's stops left out of the intake — they stay as they are when the edit is done.
+   * Null (or absent, an older server) on an intake read from a plan.
+   * `[2026-10-15 ST4F-490]` `frozen` says why each is left out (`reason` null on an edit opened before the server said so; absent on an older server). Stays, flights and vendor bookings
+   * are no longer left out: they come into the edit locked.
    */
-  reopen?: { trip_id: string; version: number; frozen_item_ids: string[] } | null;
+  reopen?: { trip_id: string; version: number; frozen_item_ids: string[]; frozen?: { item_id: string; reason: FrozenReason | null }[] } | null;
   /** `[2026-10-16 D-025]` See `IntakePrefill`. Null (or absent) when nothing was filled first. */
   prefill?: IntakePrefill | null;
 }
+
+/** `[2026-10-15 ST4F-490]` Why a stop of the trip is left out of an edit: over · runs past midnight · its place has no position · a kind the edit does not take. */
+export type FrozenReason = "past" | "overnight" | "no_place" | "kind";
 
 /** One question of `questions[]`. Only `kind: "single"` (pick one option) is drawn today; the fields are read as data and checked again before drawing (`features/survey-questions/model.ts`). */
 export interface IntakeQuestion {
