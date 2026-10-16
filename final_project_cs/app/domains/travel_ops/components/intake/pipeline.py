@@ -742,7 +742,7 @@ class _DryRunRollback(Exception):
 
 
 def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, tour: Any = None,
-            kakao: Any = None, dry_run: bool = False, dining: Any = None) -> dict[str, Any]:
+            kakao: Any = None, dry_run: bool = False, dining: Any = None, item_id: str | None = None) -> dict[str, Any]:
     """**전체 자동 추천** — 확인이 필요한 일정을 검증한 대체 일정(장소 · 시각)으로 한 번에 바꾼다(`autofix.py`).
     바꿀 것이 있으면 `edits` 와 같은 길로 **새 판** 하나가 된다. 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
 
@@ -752,7 +752,9 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
     from . import autofix as autofix_module
 
     _, found = current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)
-    got = autofix_module.plan(conn, tenant_id=tenant_id, review=found, kakao=kakao)
+    if item_id is not None and not any(item["id"] == item_id for item in found["items"]):
+        raise LookupError("intake item not found")
+    got = autofix_module.plan(conn, tenant_id=tenant_id, review=found, kakao=kakao, item_id=item_id)
     edits = [{"source_id": c["source_id"], "field": f"items[{c['index']}].{e['field']}", "value": e["value"]}
              for c in got["changes"] for e in c["edits"]]
     new = revision

@@ -116,7 +116,9 @@ def _kakao_places(kakao: Any, query: str, ref: tuple[float, float] | None, kind:
     # ★음식점 · 카페가 아닌 곳은 늘 활동이다 — 전에는 일정이 식사면 약국 · 공원도 식사로 태그했다(검색에서 식당 자리에 약국이 섞였다, 실서버 실측)
     return [_place(h["name"], h["latitude"], h["longitude"], "kakao",
                    kind="dining" if h.get("category_group") in ("FD6", "CE7") else "activity", address=h.get("address"),
-                   category=h.get("category") or None, ref=f"kakao:{h['id']}" if h.get("id") else None) for h in hits]
+                   category=h.get("category") or (category_label(LODGING_TYPE) if h.get("category_group") == "AD5" else None),
+                   content_type_id=LODGING_TYPE if h.get("category_group") == "AD5" else None,
+                   ref=f"kakao:{h['id']}" if h.get("id") else None) for h in hits]
 
 
 #: 관광공사 분류 — 숙박 · 쇼핑. ★`[2026-10-07]` 숙소 줄은 숙박(32)을 **읽어야** 후보가 나오고, 분류를 모르는 활동 줄은 쇼핑(38)을 **빼야** 한다
@@ -160,10 +162,33 @@ def _is_lodging_place(place: dict[str, Any]) -> bool:
     return str(place.get("content_type_id") or "") == LODGING_TYPE or "숙박" in str(place.get("category") or "")
 
 
+def _is_stay_place(place: dict[str, Any] | None) -> bool:
+    """숙박 분류가 확인된 장소. 이름에 '호텔'이 들어간 식당·공원을 숙소로 추정하지 않는다."""
+    if not place:
+        return False
+    if str(place.get("content_type_id") or "") == LODGING_TYPE:
+        return True
+    categories = {part.strip() for part in str(place.get("category") or "").split(">")}
+    return bool(categories & {"숙박", "숙소", "숙소 안 식사"})
+
+
 def _is_stay_line(item: dict[str, Any]) -> bool:
     """숙소를 찾는 줄 — 「호텔」 · 「호텔 조식」 둘 다. ★`[2026-10-07 사용자]` 「그냥 호텔이라고 적어 놨는데 호텔 조식으로 인식하는 오류다 — 아침에 출발하는 장소일 수도,
     그 안에서 조식을 먹을 수도 있다. 둘 다 추천 목록에 올려서 보여 주면 된다」."""
-    return (item.get("parts") or {}).get("content_type") == LODGING_TYPE
+    return ((item.get("parts") or {}).get("content_type") == LODGING_TYPE
+            or _is_stay_place(item.get("place")))
+
+
+def _lodging_places(conn, tenant_id: str, ref: tuple[float, float], now: datetime, kakao: Any,
+                    area: dict[str, Any] | None, notes: list[str], limit: int) -> list[dict[str, Any]]:
+    """숙소 후보를 공통 위치 기준에서 모은다. 지도 결과도 숙박 분류와 반경을 모두 확인한다."""
+    radius = float(area["radius_m"]) if area else RADIUS_M
+    found = _catalog_places(conn, tenant_id, ref, LODGING_TYPE, now, radius_m=radius)
+    if len(found) < limit + POOL_EXTRA:
+        query = " ".join(word for word in ((area or {}).get("name"), "숙소") if word)
+        found += _kakao_places(kakao, query, ref, "activity", notes)
+    return [{**place, "basis": "lodging"} for place in found if _is_stay_place(place)
+            and distance_m(float(place["latitude"]), float(place["longitude"]), ref[0], ref[1]) <= radius]
 
 
 def _with_stay_meals(found: list[dict[str, Any]], *, per: int = 3) -> list[dict[str, Any]]:
@@ -354,11 +379,19 @@ def _team_lodging_places(conn, tenant_id: str, review: dict[str, Any], item: dic
     if check_out is None or check_out <= check_in:
         check_out = check_in + timedelta(days=1)              # 끝을 모르면 1박 — 숙소 팀 `_stay_query` 와 같다
     adults = review.get("party_size")
-    anchor = ((float(current["latitude"]), float(current["longitude"]))
-              if current and current.get("latitude") is not None and current.get("longitude") is not None else None)
+    previous, following = neighbours(items, item)
+    anchor = reference(item, previous, following)
+    keyword_place = current
+    if anchor is not None:
+        # The next visit supplies location when the hotel name has no coordinates.
+        neighbour = following or previous
+        keyword_place = {**((neighbour or {}).get("place") or {}), **(current or {}),
+                         "latitude": anchor[0], "longitude": anchor[1]}
+        if not current:
+            keyword_place.pop("address", None)
     exclude = [x["place"]["name"] for x in items if x.get("place") and x["place"].get("name") and x["kind"] == "lodging"]
     try:
-        got = lodging_alternatives.ranked(keyword=_stay_keyword(conn, tenant_id, item, current), check_in=check_in.isoformat(),
+        got = lodging_alternatives.ranked(keyword=_stay_keyword(conn, tenant_id, item, keyword_place), check_in=check_in.isoformat(),
                                           check_out=check_out.isoformat(), adults=adults, anchor=anchor, exclude_names=exclude)
     except Exception:                                     # noqa: BLE001 — 팀이 답하지 못한 것으로 보고 자체 길로 간다
         log.warning("lodging alternatives failed — falling back to the local candidate picker", exc_info=True)
@@ -792,13 +825,29 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     stay_item = item["kind"] == "lodging"         # ★`[2026-10-15]` 체크인 ~ 체크아웃으로 묶인 숙소 항목 — 숙소 후보만 보이고 식사 짝은 붙이지 않는다(식사 일정이 아니다)
     want = place_kind_of(item)
     stay = _is_stay_line(item) and not stay_item  # 「호텔」 · 「호텔 조식」 — 숙소 후보와 숙소 안 식사 후보를 함께 보인다
-    if stay:
+    pair_stay_meals = stay and (item["place_state"] == "needs_choice" or item["kind"] == "dining")
+    if pair_stay_meals:
         limit = limit * 2                         # 숙소마다 짝(식사)이 붙으므로 칸을 두 배로
     cls: dict[str, Any] | None = None            # 원래 장소의 분류(같은 종류 다른 곳 블록에서 찾는다)
     group: str | None = None                      # 원래 장소의 경험 갈래(비슷한 경험 단계)
     if item["place_state"] == "needs_name":
         # ★예약했다고 적힌 이름 없는 줄 — 후보를 권하지 않는다(예약한 곳을 다른 곳으로 바꾸자고 하지 않는다). 이름은 검색 · 직접 입력으로 알려 준다
         notes.append("booked_needs_name")
+    elif stay or stay_item:
+        if ref is None:
+            notes.append("no_reference_point")
+        else:
+            # Names without a location still use the registered lodging team.
+            team = None if rank_only else _team_lodging_places(conn, tenant_id, review, item, current, items)
+            if team is not None:
+                radius = float(area["radius_m"]) if area else RADIUS_M
+                found += [place for place in team if _is_stay_place(place)
+                          and distance_m(float(place["latitude"]), float(place["longitude"]), ref[0], ref[1]) <= radius]
+                notes.append("team_ranked")
+            else:
+                found += _lodging_places(conn, tenant_id, ref, now, kakao, area, notes, limit)
+            if not found:
+                notes.append("no_candidates_in_area")
     elif item["place_state"] == "needs_choice":
         parts = item.get("parts") or {}
         if ref is None:
@@ -816,13 +865,13 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
             found += _kakao_places(kakao, words, ref, want, notes)
         if ref is not None and not found:
             notes.append("no_candidates_in_area")            # 그 지역 둘레에 같은 종류가 하나도 없다 — 화면이 「이름을 직접 알려 주세요」로 안내하게
-    if branch:
+    if branch and not (stay or stay_item):
         # ① 같은 이름의 다른 지점
         hits = _kakao_places(kakao, item["title"] or "", ref, want, notes)
         words = (item["title"] or "").split()
         brand = normalize_full(words[0]) if words else ""
         found += [p for p in hits if brand and brand in normalize_full(p["name"])] or hits
-    if not found and ref and item["place_state"] not in ("picked_nearest", "needs_choice", "needs_name"):
+    if not found and ref and not (stay or stay_item) and item["place_state"] not in ("picked_nearest", "needs_choice", "needs_name"):
         # ② 같은 종류의 다른 곳 — ★이름이 모호한 체인(올리브영)은 다른 지점이 없다고 해서 엉뚱한 관광지를 대신 권하지 않는다(`notes` 에 이유)
         if item["kind"] == "dining":
             # ★`[2026-10-15]` 식사 일정은 **요식 팀 대체안이 먼저**다 — 팀이 없거나 답하지 못할 때만 원장 근처 식당(자체 고르기)
@@ -863,7 +912,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
                 notes.append("meal_inferred")
             if cls and not found:
                 notes.append("no_same_kind")
-    if branch and not found and "kakao" not in " ".join(notes):
+    if branch and not (stay or stay_item) and not found and "kakao" not in " ".join(notes):
         notes.append("no_other_branches")
     found = _dedupe(found, taken)
     if group and "meal_inferred" not in notes and len([p for p in found if p.get("basis") == "same_kind"]) < limit:
@@ -894,7 +943,9 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     found = [p for p in found if p.get("kind") in kinds]
     if stay_item:
         found = [{**p, "basis": p.get("basis") or "lodging"} for p in found if _is_lodging_place(p)]     # 숙소 항목의 후보는 숙소만 — 지도의 관광지 · 편의시설은 거른다
-    if stay and item["place_state"] == "needs_choice" and found:
+    if (stay or stay_item):
+        found = [place for place in found if _is_stay_place(place)]
+    if pair_stay_meals and found:
         # 종류를 거른 **뒤에** 짝을 붙인다 — 지도의 음식점(호텔 뷔페)이 식사 후보로 섞이지 않고, 짝은 숙소 이름 그대로인 것만 생긴다
         found = _with_stay_meals(found)
         notes.append("stay_and_meal")
@@ -973,7 +1024,7 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     area = area_of(item)
     taken = _taken(items, item, include_self=False)
     # ★`[2026-10-04]` 숙소 + 끼니(「호텔 조식」)는 식사 일정이지만 장소는 숙소 — 숙소를 찾는 검색이라 식당 목록은 안 섞는다
-    lodging = bool((item.get("parts") or {}).get("lodging_meal"))
+    lodging = _is_stay_line(item) or bool((item.get("parts") or {}).get("lodging_meal"))
     stay_item = item["kind"] == "lodging"          # ★`[2026-10-15]` 숙소 항목 — 후보는 지도 · 목록의 숙소만(종류는 활동 쪽으로 읽힌다)
     found = _db_places_by_name(conn, tenant_id, q, ref, now)
     if ref and not lodging and not stay_item:
@@ -990,7 +1041,7 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     found = _dedupe(found, taken)
     # ★검색 결과도 일정의 종류와 같은 곳만 — 식당 자리를 찾는데 약국 · 공원이 섞이지 않게(맞는 것이 없으면 이유가 `no_same_kind`)
     before = len(found)
-    found = [p for p in found if p.get("kind") == ("activity" if lodging else place_kind_of(item))]
+    found = [p for p in found if (_is_stay_place(p) if (lodging or stay_item) else p.get("kind") == place_kind_of(item))]
     if stay_item:
         found = [p for p in found if _is_lodging_place(p)]
     if before and not found:

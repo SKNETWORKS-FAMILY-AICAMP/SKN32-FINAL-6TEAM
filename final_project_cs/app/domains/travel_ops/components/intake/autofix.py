@@ -94,7 +94,7 @@ def latest_end(engine: Any, place: dict[str, Any], next_place: dict[str, Any], n
 
 
 def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, engine: Callable[..., Any] | None = None,
-         use_engine: bool = True, now: datetime | None = None) -> dict[str, Any]:
+         use_engine: bool = True, now: datetime | None = None, item_id: str | None = None) -> dict[str, Any]:
     """검증을 끝낸 대체 일정. `{changes:[{id, source_id, index, title, from, to, reason, edits}], kept:[{id, title, reason}]}`.
     DB 에 쓰지 않는다 — 적용은 부르는 쪽이 `edits` 로 한다."""
     defaulted = engine is None and use_engine
@@ -122,6 +122,8 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
     kept: list[dict[str, Any]] = []
     last_changed = -2
     for i, item in enumerate(items):
+        if item_id is not None and item["id"] != item_id:
+            continue
         placed_bad = item["status"] == "review"
         late = item["id"] in late_into
         if not placed_bad and not late and last_changed == i - 1 and item["date"] and item["starts_at"]:
@@ -183,7 +185,8 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
             alt = cand_module.alternatives(conn, tenant_id=tenant_id, review={"items": items, "moves": review["moves"]},
                                            item=item, kakao=kakao, engine=budget, use_engine=False, now=now, rank_only=True,
                                            limit=CANDIDATES_TRIED)
-            places += [c["place"] for c in alt["candidates"] if c["status"] != "bad"]
+            places += [c["place"] for c in alt["candidates"] if c["status"] != "bad"
+                       and (not cand_module._is_stay_line(item) or c["place"].get("kind") == item["kind"])]
         done = None
         failed: set[str] = set()
         for place in places:
@@ -202,7 +205,7 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
             done = (place, fit)
             break
         note = None
-        if done is None and item["kind"] == "dining":
+        if done is None and item["kind"] == "dining" and not cand_module._is_stay_line(item):
             # ★`[2026-10-13 사용자 지시]` 식사는 「맞출 수 없음」으로 두지 않는다 — 앞뒤 일정 근처 식당, 그래도 안 되면 다음 일정을 민다(`_meal_on_route`)
             done, note = _meal_on_route(conn, tenant_id, item, places, prev, nxt, start, duration, budget, kakao)
         if done is None:
