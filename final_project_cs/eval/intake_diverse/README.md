@@ -11,6 +11,8 @@
 | [score.py](score.py) | 채점기 — 구조와 상관없는 중립 모양 예측을 받는다. 읽기 실패는 그 건의 정답 전부 틀림(엄격 계수) |
 | [run_current.py](run_current.py) | 지금 구조(`intake/pipeline.read_source`)를 돌려 채점한다. `--oracle` 은 채점기 점검(전부 100% 여야 한다) |
 | [report.py](report.py) | 점수 → 표 |
+| [run_agent_proto.py](run_agent_proto.py) | `[2026-10-16]` 읽기 에이전트 **시제품** — 모델 한 번 호출로 통째로 읽는다(Ollama · llama-server). 원문에 글자 그대로 없는 조각은 버린다 |
+| [compare.py](compare.py) | 여러 측정의 `scores.json` 을 나란히 놓는 표 |
 
 ## 다시 돌리기
 
@@ -23,6 +25,8 @@ python -m eval.intake_diverse.run_current --ollama <x600 과 같은 구성의 Ol
 
 - 실제 접수 20건이 x600 서버 원문과 글자까지 같은지 보려면 `build --real-export <내보낸 JSON>`(내보낸 파일은 git 밖 `datasets/travel/intake_real_20261016/`).
 - 새 구조는 같은 `score.score_all` 에 중립 모양 예측(`score.py` 맨 위 설명)을 넣으면 같은 표가 나온다.
+- `[2026-10-16]` 읽기 에이전트 **초안**(제품 반영 안 함 — 새 세션이 이어받는다)과 시제품 두 모델의 점수: [results/2026-10-16_agent/](results/2026-10-16_agent/)
+  (`draft_agent_*` = 초안을 제품 함수 그대로 잰 값, `proto_*` = 시제품) · 보고서 `wiki/records/reports/2026-10-16_계획읽기_에이전트_초안_측정.md`.
 
 ## 시험지 구성
 
