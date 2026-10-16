@@ -9,6 +9,7 @@ import { Avatar, ButtonLink } from "@/components/ui";
 import { idleText } from "@/features/account/session-card";
 import { answerLines, questions } from "@/features/onboarding/model";
 import { useOnboarding, useOnboardingReady } from "@/features/onboarding/onboarding-state";
+import { useServiceStatus } from "@/features/support/service-notices";
 import { useTrips } from "@/features/trip/use-trip";
 import { DATA_MODE } from "@/lib/data-mode";
 import { nicknameLabel, useProfile, type Profile } from "@/lib/profile";
@@ -107,6 +108,8 @@ function MenuBoard({ onClose, onHide }: { onClose: () => void; onHide: () => voi
     <button type="button" className={styles.row} onClick={openSurvey}>{row(t("여행 취향 설문", "Travel preferences survey"), preferences)}</button>
     {/* `[2026-10-12 사용자 지시]` 문의함(옛 「문의하기」)은 마이페이지 카드에서 이 메뉴로 옮겼다. */}
     <Link href={routes.support} className={styles.row} onClick={onClose}>{row(t("문의함", "Inquiries"), t("보낸 문의와 답변", "Your inquiries and the answers"))}</Link>
+    {/* `[2026-10-17 사용자 결정 — ST4F-604]` 공지사항 게시판 — 배너를 닫았거나 여행 화면 밖(알림 센터가 없는 곳)에서도 공지를 본다. */}
+    <Link href={routes.notices} className={styles.row} onClick={onClose}>{row(t("공지사항", "Notices"), <NoticeCount />)}</Link>
     <Link href={routes.myPage} className={styles.row} onClick={onClose}>{row(t("설정", "Settings"), t("계정 · 알림 · 약관 동의 · 에이전트 · 언어 · 테마", "Account · alerts · consents · agents · language · theme"))}</Link>
   </>;
 }
@@ -141,6 +144,15 @@ function ProfileCell({ profile, onClose }: { profile: Profile | undefined; onClo
 }
 
 /** 「여행 목록 보기」's note: how many trips this browser has (the same list as the 「내 여행」 screen, read when the menu opens). */
+/** `[2026-10-17 ST4F-604]` 공지사항 줄의 보조 문구 — 게시 중인 공지 수(맨 위 배너와 같은 읽기). */
+function NoticeCount() {
+  const t = useT();
+  const status = useServiceStatus();
+  if (status.isPending) return t("불러오고 있어요", "Loading");
+  const count = status.data?.notices.length ?? 0;
+  return count > 0 ? t(`게시 중 ${count}개`, `${count} posted now`) : t("게시 중인 공지 없음", "Nothing posted now");
+}
+
 function TripCount() {
   const t = useT();
   const trips = useTrips();

@@ -106,6 +106,8 @@ const DEFAULTS = {
   bell: "off",
   // `[2026-10-17 ST4F-603]` the service notices an operator posts (`GET /v1/web/support/notices`): "none" | "one" | "kinds" (one of each kind the admin app offers)
   serviceNotice: "none",
+  // `[2026-10-17 ST4F-604]` the notices board (`GET /v1/web/support/notices/board`): "off" (an older server: FastAPI 404) | "none" | "many" (3 posted + 12 ended — two pages of ten)
+  noticeBoard: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
   profile: "on",
   // `[2026-10-05]` 「디스코드로 연결」 (`POST /v1/web/profile/discord/connect/start`, the profile's `discord_connect.available`): "off" = an older server (the profile does not say) | "on"
@@ -894,6 +896,18 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return scenario.retention === "on" ? json(response, 200, retentionView(), origin) : json(response, 404, { detail: "Not Found" }, origin);
   }
   // ── 약관 보관 기간 (2026-10-07) ── 끝
+  if (request.method === "GET" && path === "/v1/web/support/notices/board") {
+    if (scenario.noticeBoard === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    // the server's order: posted first, then ended, each newest first (scheduled ones and the operator's name never come)
+    const board = scenario.noticeBoard === "many" ? [
+      { id: "b-down", kind: "기능 차질·장애", title: "채팅 답변이 늦어요", body: "모델 서버가 느려 채팅 답이 1분 넘게 걸릴 수 있어요.", titleEn: "Chat replies are slow", bodyEn: "Replies may take over a minute.", startsAt: "2026-10-17T14:00", endsAt: "2026-10-17T20:00", status: "posted" },
+      { id: "b-plan", kind: "점검 예고", title: "오늘 밤 23시 서버 점검", body: "23:00부터 10분 동안 점검해요.", titleEn: "", bodyEn: "", startsAt: "2026-10-17T09:00", endsAt: "2026-10-17T23:10", status: "posted" },
+      { id: "b-info", kind: "안내", title: "여행 중 문의는 문의함으로", body: "운영자가 확인한 뒤 답해요.", titleEn: "", bodyEn: "", startsAt: "2026-10-16T10:00", endsAt: "2026-10-31T23:59", status: "posted" },
+      ...Array.from({ length: 12 }, (_, index) => ({ id: `b-old-${index + 1}`, kind: "안내", title: `지난 공지 ${index + 1}`, body: `지난 공지 ${index + 1} 본문`, titleEn: "", bodyEn: "",
+        startsAt: `2026-10-${String(15 - index).padStart(2, "0")}T09:00`, endsAt: `2026-10-${String(15 - index).padStart(2, "0")}T18:00`, status: "ended" })),
+    ] : [];
+    return json(response, 200, { notices: board }, origin);
+  }
   if (request.method === "GET" && path === "/v1/web/support/notices") {
     const posted = scenario.serviceNotice === "one"
       ? [{ id: "notice-1", kind: "notice", title: "서비스 점검 예정 안내", body: "오늘 밤 11시부터 10분 동안 점검해요.", startsAt: null, endsAt: null }]

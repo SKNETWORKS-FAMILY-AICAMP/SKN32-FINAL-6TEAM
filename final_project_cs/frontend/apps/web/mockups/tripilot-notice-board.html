@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공지사항 게시판 비교</title>
+<!--
+  2026-10-17 · ST4F-604 · 상태: 검토용 목업(미결정) · 실제 API 미연결.
+  사용자 웹 「공지사항」(/notices) 게시판을 다른 서비스의 공지 목록을 참고해 세 가지로 그려 본다.
+  색 · 글꼴 · 문의함 칸(5줄 · 높이 234px) · 쪽 단추는 2026-10-17 로컬 웹(127.0.0.1:3100)에서 읽은 실제 값을 옮겼다.
+  공지 내용은 모두 예시다(운영 앱에서 올린 실제 공지가 아니다).
+-->
+<style>
+  :root {
+    --color-background: #f3f5f3; --color-surface: #fff; --color-text: #24392f; --color-text-secondary: #4a5d52; --color-muted: #56645b;
+    --color-border: #dce3dd; --color-primary: #2e6047; --color-on-primary: #fff; --color-soft: #e9f2eb;
+    --color-error: #965640; --color-error-soft: #fdf3ed; --color-warning: #82693e; --color-warning-soft: #faf6ec;
+    --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e7ebe7; color: var(--color-text); font-family: var(--font-sans); font-size: 13px; line-height: 1.65; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .doc { max-width: 1240px; margin: 0 auto; padding: 24px 16px 48px; }
+  .doc h1 { margin: 0 0 4px; font-size: 22px; }
+  .doc > p { margin: 0 0 12px; color: var(--color-text-secondary); }
+  .refs { width: 100%; border-collapse: collapse; margin: 8px 0 20px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden; }
+  .refs th, .refs td { padding: 8px 10px; text-align: left; vertical-align: top; border-top: 1px solid var(--color-border); }
+  .refs th { background: var(--color-soft); border-top: 0; font-weight: 650; }
+  .refs a { color: var(--color-primary); }
+  .phones { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; align-items: flex-start; }
+  .option { width: 375px; max-width: 100%; }
+  .option h2 { margin: 0 0 2px; font-size: 16px; }
+  .option > p { margin: 0 0 10px; min-height: 66px; color: var(--color-text-secondary); }
+  .option > p b { color: var(--color-text); }
+  .phone { height: 720px; overflow: auto; border: 1px solid var(--color-border); border-radius: 28px; background: var(--color-background); box-shadow: 0 8px 24px rgb(36 57 47 / .12); }
+  .note { margin-top: 24px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+  .note h2 { margin: 0 0 6px; font-size: 16px; }
+  .note ul { margin: 0; padding-left: 18px; }
+
+  /* ── 앱 머리(실제 header: 높이 76px · 좌우 25px) ── */
+  .appHeader { height: 76px; padding: 0 25px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; color: var(--color-primary); }
+  .mark { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--color-primary); color: #fff; font-size: 19px; }
+  .menu { width: 44px; height: 44px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); display: grid; place-items: center; }
+  .menu i, .menu i::before, .menu i::after { display: block; width: 16px; height: 2px; border-radius: 2px; background: var(--color-text); position: relative; content: ""; }
+  .menu i::before { position: absolute; top: -5px; } .menu i::after { position: absolute; top: 5px; }
+
+  /* ── 앱 본문(실제 support.module.css 값) ── */
+  main { padding: 12px 16px 24px; display: grid; gap: 20px; }
+  main h1 { margin: 0; font-size: 26px; line-height: 1.65; }
+  .section { display: grid; gap: 12px; }
+  .section h2 { margin: 0; font-size: 17px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+  .box { height: 234px; padding: 4px 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); display: flex; flex-direction: column; overflow: hidden; }
+  .box.grow { height: auto; min-height: 234px; }
+  .box.auto { height: auto; }
+  .list { padding: 0; margin: 0; list-style: none; }
+  .list > li + li { border-top: 1px solid var(--color-border); }
+  .line { width: 100%; height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 2px; border: 0; background: none; font-weight: 600; text-align: left; }
+  .line .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .line time { flex: none; min-width: 36px; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; color: var(--color-muted); }
+  .line[data-tone] { border-left: 4px solid var(--tone); padding-left: 8px; }
+  /* 「게시 중」은 문의함의 「답변 완료」 딱지, 「종료」는 「문의 중」 딱지와 같은 모양 */
+  .tag { flex: none; min-width: 52px; text-align: center; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11px; font-weight: 650; line-height: 1.6; color: var(--color-muted); background: var(--color-surface); }
+  .tag[data-posted] { border-color: transparent; color: var(--color-primary); background: var(--color-soft); }
+  .pager { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .pager button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-primary); font-weight: 650; }
+  .pager button[aria-current="page"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  .quiet { min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--color-primary); font-weight: 650; }
+  .card { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+  .card h2 { margin: 0; font-size: 17px; line-height: 1.5; overflow-wrap: anywhere; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--color-muted); }
+  .body { margin: 0; white-space: pre-wrap; }
+  [data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
+  [data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+  [data-tone="info"] { --tone: var(--color-primary); --tone-soft: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+  .kind { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--tone-soft); color: var(--tone); font-size: 12px; font-weight: 650; }
+  .open { padding: 2px 2px 14px; display: grid; gap: 6px; }
+  .open .period { font-size: 12px; color: var(--color-muted); }
+  .muted { color: var(--color-muted); }
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>공지사항 게시판 — 다른 서비스 참고 · 적용안 3가지</h1>
+  <p>2026-10-17 · ST4F-604 · 검토용(미결정). 휴대폰 화면 안에서 쪽 단추와 공지 줄을 눌러 볼 수 있다. 공지는 모두 예시다.</p>
+  <table class="refs">
+    <thead><tr><th>참고한 곳(공개 웹 페이지 · 2026-10-17 확인)</th><th>목록 구성</th><th>가져온 것</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://toss.im/notices">토스 공지사항</a></td><td>한 줄에 제목 · 날짜, 최신순, 한 쪽 10개, 아래 쪽 번호. 누르면 공지 한 장 화면(제목 · 날짜 · 본문 · 「목록으로 돌아가기」)</td><td>A안 · B안의 「줄 → 공지 화면」</td></tr>
+      <tr><td><a href="https://cs.kakao.com/notices?service=8">카카오 고객센터 공지사항</a></td><td>제목 · 날짜, 최신순, 중요 공지는 제목 앞 「중요」 표시, 처음 · 이전 · 다음 · 끝 쪽 단추. 본문은 그 자리에서 펼침</td><td>C안의 「제자리 펼치기」, 제목 앞 상태 표시</td></tr>
+      <tr><td><a href="https://www.jeju.com/company/notice/not_list.html">제주닷컴(여행사) 공지</a></td><td>중요 공지는 번호 없이 맨 위에 고정, 그 아래 일반 공지 최신순, 쪽 번호 1~10</td><td>B안의 「게시 중은 위에 고정 · 지난 공지만 쪽 넘김」</td></tr>
+    </tbody>
+  </table>
+  <p>세 안 모두 사용자 지시대로 <b>제목 앞에 「게시 중」 · 「종료」</b>를 붙이고, 게시 중이 위(게시 시작이 늦은 것부터) · 종료가 그 아래이며, 문의함과 같은 쪽 단추(「‹ 1 2 3 ›」)를 쓴다. 딱지 모양은 문의함의 「답변 완료」 · 「문의 중」과 같다.</p>
+  <div class="phones">
+    <section class="option"><h2>A안 · 문의함 칸 그대로</h2><p>문의함과 똑같은 흰 칸(5줄 고정)에 <b>게시 중 → 종료</b>를 이어서 넣고 5줄씩 쪽을 넘긴다. 줄을 누르면 문의 내역처럼 공지 한 장 화면.</p><div class="phone" id="phone-a"></div></section>
+    <section class="option"><h2>B안 · 게시 중 위에 고정</h2><p>게시 중 공지는 <b>쪽을 넘겨도 늘 위에</b> 남고(종류 색 줄), 아래 「지난 공지」 칸만 5줄씩 넘긴다. 줄을 누르면 공지 한 장 화면.</p><div class="phone" id="phone-b"></div></section>
+    <section class="option"><h2>C안 · 제자리 펼치기</h2><p>A안과 같은 목록에서 줄을 누르면 <b>그 자리에서 본문이 펼쳐진다</b>(화면 이동 없음). 펼치면 칸이 늘어난다.</p><div class="phone" id="phone-c"></div></section>
+  </div>
+  <div class="note">
+    <h2>정할 것</h2>
+    <ul>
+      <li>세 안 중 하나. 작성자 제안은 <b>A안</b> — 사용자 지시(「게시 중 맨 위 · 종료는 그 아래 이어서 · 문의함처럼 쪽 넘김」)와 그대로 맞고, 문의함과 같은 칸 · 같은 공지 한 장 화면이라 새 모양이 가장 적다.</li>
+      <li>B안은 「맨 위 고정」을 <b>모든 쪽에서</b> 보이게 하는 해석이다. 게시 중이 많으면 아래 칸이 화면 밖으로 밀린다.</li>
+      <li>새로 지은 문구(앱에 아직 없음): 딱지 「게시 중」 · 「종료」, 공지 한 장 화면 제목 「공지」, 빈 목록 「아직 올라온 공지가 없어요.」, 줄 끝 날짜는 게시 시작일. 공지 종류 이름(안내 · 기능 차질·장애 · 점검 예고)은 운영 앱이 고르는 값 그대로.</li>
+    </ul>
+  </div>
+</div>
+<script>
+const KINDS = { "기능 차질·장애": "error", "점검 예고": "warning", "안내": "info" };
+// 예시 공지 — 지금(2026-10-17 15:00) 기준으로 게시 중 3개 · 종료 11개
+const NOW = "2026-10-17T15:00";
+const NOTICES = [
+  ["기능 차질·장애", "채팅 답변이 늦어요", "2026-10-17T14:00", "2026-10-17T20:00", "모델 서버가 느려 채팅 답이 1분 넘게 걸릴 수 있어요.\n일정 확인과 알림은 그대로 동작해요."],
+  ["점검 예고", "오늘 밤 23시 서버 점검", "2026-10-17T09:00", "2026-10-17T23:10", "23:00부터 10분 동안 점검해요. 그동안 채팅과 일정 수정은 쉬어요."],
+  ["안내", "여행 중 문의는 문의함으로 보내 주세요", "2026-10-16T10:00", "2026-10-31T23:59", "메뉴 › 문의함에서 보내면 운영자가 확인한 뒤 답해요."],
+  ["안내", "여행 취향 설문이 메뉴로 옮겨졌어요", "2026-10-15T10:00", "2026-10-16T10:00", "메뉴 › 마이페이지 › 여행 취향 설문에서 언제든 다시 할 수 있어요."],
+  ["점검 예고", "10월 15일 새벽 점검", "2026-10-14T18:00", "2026-10-15T03:00", "02:00부터 30분 동안 점검했어요."],
+  ["안내", "등록한 여행을 고칠 수 있어요", "2026-10-13T12:00", "2026-10-15T12:00", "여행 화면의 「일정 수정」에서 고친 뒤 ✓ 완료를 누르면 새 판으로 저장돼요."],
+  ["기능 차질·장애", "지도 표시가 늦었어요", "2026-10-13T09:30", "2026-10-13T11:00", "지도 서버 지연으로 지도가 늦게 보였어요. 지금은 정상이에요."],
+  ["안내", "여행 화면에 지금 시각 표시가 생겼어요", "2026-10-12T10:00", "2026-10-14T10:00", "일정 사이에 지금 시각 줄이 보여요. 지난 일정은 회색 한 줄로 접혀요."],
+  ["안내", "문의함이 새로 바뀌었어요", "2026-10-12T09:00", "2026-10-13T09:00", "문의 목록과 문의 작성이 두 화면으로 나뉘었어요."],
+  ["점검 예고", "10월 11일 점검 안내", "2026-10-10T15:00", "2026-10-11T02:30", "01:00부터 1시간 동안 점검했어요."],
+  ["기능 차질·장애", "알림이 늦게 도착했어요", "2026-10-09T18:00", "2026-10-09T21:00", "알림 발송이 최대 20분 늦었어요. 지금은 정상이에요."],
+  ["안내", "약관이 바뀌었어요", "2026-10-08T10:00", "2026-10-10T10:00", "약관 동의 화면에서 바뀐 내용을 볼 수 있어요."],
+  ["안내", "영어 화면을 쓸 수 있어요", "2026-10-07T10:00", "2026-10-09T10:00", "메뉴 › 마이페이지 › 설정에서 언어를 바꿀 수 있어요."],
+  ["점검 예고", "10월 6일 점검 안내", "2026-10-05T15:00", "2026-10-06T02:00", "01:00부터 30분 동안 점검했어요."],
+].map(([kind, title, startsAt, endsAt, body], index) => ({ id: `n${index}`, kind, title, startsAt, endsAt, body, posted: startsAt <= NOW && NOW < endsAt }));
+// 게시 중이 위, 종료가 아래 — 각각 게시 시작이 늦은 것부터
+const ORDERED = [...NOTICES].sort((a, b) => b.startsAt.localeCompare(a.startsAt)).sort((a, b) => Number(b.posted) - Number(a.posted));
+const PER_PAGE = 5;
+// 앱의 쪽 단추와 같은 화살표(lucide chevron · 18px)
+const chevron = (d) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+const day = (iso) => `${Number(iso.slice(5, 7))}.${Number(iso.slice(8, 10))}`;
+const at = (iso) => `${day(iso)} ${iso.slice(11, 16)}`;
+const esc = (text) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const tag = (n) => `<span class="tag"${n.posted ? " data-posted" : ""}>${n.posted ? "게시 중" : "종료"}</span>`;
+const header = `<header class="appHeader"><span class="brand"><span class="mark">t</span>triPilot</span><span class="menu" aria-hidden="true"><i></i></span></header>`;
+const line = (n, extra = "") => `<button type="button" class="line" data-open="${n.id}"${extra}>${tag(n)}<span class="title">${esc(n.title)}</span><time>${day(n.startsAt)}</time></button>`;
+function pager(page, pages) {
+  const numbers = Array.from({ length: pages }, (_, i) => i + 1).map((p) => `<button type="button" data-page="${p}"${p === page ? ' aria-current="page"' : ""}>${p}</button>`).join("");
+  return `<nav class="pager"><button type="button" data-page="${page - 1}"${page === 1 ? " disabled" : ""} aria-label="이전 페이지">${chevron("m15 18-6-6 6-6")}</button>${numbers}<button type="button" data-page="${page + 1}"${page === pages ? " disabled" : ""} aria-label="다음 페이지">${chevron("m9 18 6-6-6-6")}</button></nav>`;
+}
+function detail(n) {
+  return `<main><div class="row"><h1>공지</h1><button type="button" class="quiet" data-back>공지사항</button></div>
+    <article class="card" data-tone="${KINDS[n.kind] ?? "info"}"><div class="meta">${tag(n)}<span class="kind">${esc(n.kind)}</span></div>
+      <h2>${esc(n.title)}</h2><div class="meta">게시 ${at(n.startsAt)} ~ ${at(n.endsAt)}</div><p class="body">${esc(n.body)}</p></article></main>`;
+}
+function mount(id, render, expand = false) {
+  const root = document.getElementById(id);
+  const state = { page: 1, open: null, view: null };
+  const draw = () => { root.innerHTML = header + render(state); };
+  root.addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target || target.disabled) return;
+    if (target.dataset.page) state.page = Number(target.dataset.page), state.open = null;
+    if (target.dataset.open) { if (expand) state.open = state.open === target.dataset.open ? null : target.dataset.open; else state.view = target.dataset.open; }
+    if (target.hasAttribute("data-back")) state.view = null;
+    draw();
+  });
+  draw();
+  return state;
+}
+// A안 — 문의함 칸 그대로: 한 칸에 게시 중 → 종료를 이어서, 5줄씩
+mount("phone-a", (s) => {
+  if (s.view) return detail(NOTICES.find((n) => n.id === s.view));
+  const pages = Math.max(1, Math.ceil(ORDERED.length / PER_PAGE));
+  const shown = ORDERED.slice((s.page - 1) * PER_PAGE, s.page * PER_PAGE);
+  return `<main><h1>공지사항</h1><section class="section"><div class="box"><ul class="list">${shown.map((n) => `<li>${line(n)}</li>`).join("")}</ul></div>${pager(s.page, pages)}</section></main>`;
+});
+// B안 — 게시 중은 늘 위(쪽과 상관없이), 지난 공지만 5줄씩
+mount("phone-b", (s) => {
+  if (s.view) return detail(NOTICES.find((n) => n.id === s.view));
+  const posted = ORDERED.filter((n) => n.posted), ended = ORDERED.filter((n) => !n.posted);
+  const pages = Math.max(1, Math.ceil(ended.length / PER_PAGE));
+  const shown = ended.slice((s.page - 1) * PER_PAGE, s.page * PER_PAGE);
+  return `<main><h1>공지사항</h1>
+    <section class="section"><h2>게시 중 ${posted.length}</h2><div class="box auto"><ul class="list">${posted.map((n) => `<li data-tone="${KINDS[n.kind] ?? "info"}">${line(n, ` data-tone="${KINDS[n.kind] ?? "info"}"`)}</li>`).join("")}</ul></div></section>
+    <section class="section"><h2>지난 공지</h2><div class="box"><ul class="list">${shown.map((n) => `<li>${line(n)}</li>`).join("")}</ul></div>${pager(s.page, pages)}</section></main>`;
+});
+// C안 — 제자리 펼치기: 줄을 누르면 그 아래에 종류 · 기간 · 본문
+mount("phone-c", (s) => {
+  const pages = Math.max(1, Math.ceil(ORDERED.length / PER_PAGE));
+  const shown = ORDERED.slice((s.page - 1) * PER_PAGE, s.page * PER_PAGE);
+  return `<main><h1>공지사항</h1><section class="section"><div class="box grow"><ul class="list">${shown.map((n) => `<li>${line(n, ` aria-expanded="${s.open === n.id}"`)}${s.open === n.id
+    ? `<div class="open" data-tone="${KINDS[n.kind] ?? "info"}"><span><span class="kind">${esc(n.kind)}</span></span><span class="period">게시 ${at(n.startsAt)} ~ ${at(n.endsAt)}</span><p class="body">${esc(n.body)}</p></div>` : ""}</li>`).join("")}</ul></div>${pager(s.page, pages)}</section></main>`;
+}, true);
+</script>
+</body>
+</html>

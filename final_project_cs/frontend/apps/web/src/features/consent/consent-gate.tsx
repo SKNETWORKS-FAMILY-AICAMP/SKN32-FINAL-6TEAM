@@ -18,7 +18,8 @@ import styles from "./consent.module.css";
  * ★`[2026-10-16 사용자 결정 — ST4F-601 로그인 먼저]` 로그인 화면(`/mypage/account`)도 연다 — 「로그인 · 가입」이 약관 · 디스코드 · 취향 화면을 거쳐 계획 담기로 끝나던 것.
  *   서버도 로그인 · 세션 · 동의 길은 동의 없이 받는다(`consents.EXEMPT_PREFIXES`). 로그인한 뒤 서버에 동의가 없으면 가려던 화면에서 약관만 받는다.
  */
-const OPEN_PATHS = new Set<string>([routes.home, routes.start, routes.authDone, routes.myPageAccount]);
+// `[2026-10-17 ST4F-604]` 공지사항 게시판도 연다 — 공지는 누구에게나 보이는 것이고(서버도 세션 없이 준다), 맨 위 배너도 약관 전부터 뜬다.
+const OPEN_PATHS = new Set<string>([routes.home, routes.start, routes.authDone, routes.myPageAccount, routes.notices]);
 /** `[2026-10-12 사용자 지시]` 동의 확인 진행 카드는 확인이 이 시간을 넘게 걸릴 때만 보인다. 빨리 끝나면 아무것도 안 뜬다(「동의하고 다음으로」 뒤 로딩이 바로 뜨던 문제). */
 const CHECK_CARD_AFTER_MS = 3000;
 
@@ -54,7 +55,8 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const [elapsed, setElapsed] = useState(0);
   const [retry, setRetry] = useState(0);
   const [admitted, setAdmitted] = useState(false);
-  const open = OPEN_PATHS.has(pathname);
+  // `[2026-10-17 ST4F-604]` 공지 한 장(`/notices/<id>`)도 공지사항처럼 동의 없이 열린다.
+  const open = OPEN_PATHS.has(pathname) || pathname.startsWith(`${routes.notices}/`);
 
   // 처음 읽은 동의로 열었던 화면은 버전 재확인 동안에도 유지한다.
   if (ready && agreed && !admitted) setAdmitted(true);

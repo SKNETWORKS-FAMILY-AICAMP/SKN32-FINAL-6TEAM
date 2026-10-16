@@ -24,7 +24,9 @@
 .inquiryDate { flex: none; min-width: 36px; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; color: var(--color-muted); }
 /* `[2026-10-12 사용자 지시]` 문의 중 · 답변 완료 (`StatusTag`) — 목록 줄에서는 날짜 왼쪽, 문의 내역에서는 시각 앞. */
 .status { flex: none; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11px; font-weight: 650; line-height: 1.6; color: var(--color-muted); background: var(--color-surface); }
-.status[data-answered] { border-color: transparent; color: var(--color-primary); background: var(--color-soft); }
+.status[data-answered], .status[data-posted] { border-color: transparent; color: var(--color-primary); background: var(--color-soft); }
+/* `[2026-10-17 ST4F-604]` 공지사항의 게시 중(「답변 완료」 모양) · 종료(「문의 중」 모양) — 제목 앞이라 폭을 맞춰 제목 시작선을 가지런히 */
+.status[data-notice-status] { min-width: 52px; text-align: center; }
 /* 문의 내역(`InquiryPage`): 위에 문의 카드, 답변이 있으면 그 아래 「답변」 칸. */
 .card { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
 .card h2, .answer h2 { font-size: 17px; line-height: 1.5; overflow-wrap: anywhere; }
@@ -44,9 +46,12 @@
 /* `[2026-10-17 ST4F-603]` 공지 종류 — 왼쪽 색 줄과 딱지(장애 빨강 · 점검 예고 노랑 · 안내 기본색) */
 .noticeItem { border-left: 4px solid var(--tone); padding-left: 10px; }
 .noticeItem + .noticeItem { margin-top: 10px; }
-.noticeItem[data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
-.noticeItem[data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
-.noticeItem[data-tone="info"] { --tone: var(--color-primary); --tone-soft: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.noticeItem[data-tone="error"], .tone[data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
+.noticeItem[data-tone="warning"], .tone[data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+.noticeItem[data-tone="info"], .tone[data-tone="info"] { --tone: var(--color-primary); --tone-soft: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+/* `[2026-10-17 사용자 결정 — ST4F-604]` 공지사항 게시판 — 문의함 칸(`.box`)을 한 쪽 10줄 높이로 고정: 테두리 2 + 위아래 여백 8 + 10줄 × 44 + 구분선 9 */
+.noticeBox { height: 459px; }
+.cardMeta .noticeKind { margin-bottom: 0; }
 .noticeKind { display: inline-block; margin-bottom: 4px; padding: 2px 8px; border-radius: 999px; background: var(--tone-soft); color: var(--tone); font-size: 12px; font-weight: 650; }
 .bannerActions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .bannerActions button { min-height: 44px; padding: 8px; }

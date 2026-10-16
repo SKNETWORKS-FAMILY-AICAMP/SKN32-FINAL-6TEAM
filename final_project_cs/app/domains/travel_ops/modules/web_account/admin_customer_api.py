@@ -40,6 +40,12 @@ def build_router() -> APIRouter:
         # Operator identity belongs in the audit, not in the public notice.
         return {"notices": [{k:v for k,v in n.items() if k != "author"} for n in active], "maintenance": maintenance}
 
+    @router.get("/notices/board")
+    def notice_board():
+        # `[2026-10-17 ST4F-604]` 「공지사항」 게시판 — 게시 중 · 종료(예약 · 작성 운영자 제외). 쪽 나누기는 화면이 한다.
+        with get_connection() as conn:
+            return {"notices": admin_service.notice_board(conn, get_settings().tenant_id)}
+
     @router.get("/inquiries")
     def inquiries(before: UUID | None = None, limit: Annotated[int, Query(ge=1, le=50)] = 50, identity=Depends(web_cookie.require_identity)):
         with get_connection() as conn:

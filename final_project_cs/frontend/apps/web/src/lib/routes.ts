@@ -15,6 +15,10 @@ export const routes = {
   supportNew: "/support/new",
   /** One of my inquiries: its title and text, and the answer under them once there is one. */
   supportInquiry: (id: string) => `/support/${encodeURIComponent(id)}`,
+  /** `[2026-10-17 사용자 결정 — ST4F-604]` 공지사항 게시판: the notices posted now and the ones that ended. */
+  notices: "/notices",
+  /** One notice on its own page (like one inquiry): its kind, when it was posted, and the text. */
+  notice: (id: string) => `/notices/${encodeURIComponent(id)}`,
   /** Where a social sign-in sends the browser back to (with a one-time ticket in the address, which the page removes at once). */
   authDone: "/auth/done",
   newTrip: "/trips/new",
