@@ -65,7 +65,7 @@ def main(argv: list[str]) -> int:
     calls = [c for t in made for c in t.calls]
     used = {}
     for c in calls:
-        used[c.get("name")] = used.get(c.get("name"), 0) + 1
+        used[c.get("tool")] = used.get(c.get("tool"), 0) + 1               # 도구 호출 기록의 이름 칸은 `tool` 이다
     out = {"intake_id": str(intake_id), "model": model, "seconds": seconds, "counts": counts, "tools_used": used,
            "adapters": {"kakao": made[0].kakao is not None if made else None, "google": made[0].google is not None if made else None},
            "rows": rows, "calls": calls,
