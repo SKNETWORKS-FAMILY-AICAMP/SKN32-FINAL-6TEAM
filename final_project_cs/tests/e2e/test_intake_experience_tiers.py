@@ -271,7 +271,8 @@ def test_an_original_place_without_a_tour_number_is_linked_to_the_same_named_cat
         review, item = _palace_review()
         item["place"] = {**item["place"], "content_id": None}
         got = _alternatives(park_world, review, item)
-        shown = [str(c["place"].get("content_id")) for c in got["candidates"]]
+        # 팀 엔진이 준 후보만 본다(`same_kind`) — 팀 후보가 셋이 안 되면 확인 화면이 「비슷한 경험」(테넌트 카탈로그)으로 칸을 채운다
+        shown = [str(c["place"].get("content_id")) for c in got["candidates"] if c.get("basis") == "same_kind"]
         with get_connection() as conn, conn.cursor() as cur:
             cur.execute("SELECT content_id FROM activity.ac_place WHERE content_id = ANY(%s)", (shown,))
             in_ledger = {r[0] for r in cur.fetchall()}
@@ -280,5 +281,6 @@ def test_an_original_place_without_a_tour_number_is_linked_to_the_same_named_cat
             cur.execute("DELETE FROM activity.ac_place WHERE content_id = ANY(%s)", (ids,))
             cur.execute("DELETE FROM activity.ac_load_meta WHERE load_id=%s", (load_id,))
     assert "team_ranked" in got["notes"], got["notes"]
-    # 후보가 팀 엔진(원장)에서 왔다 — 원장은 공용이라 근처 실제 궁궐이 가짜 「창덕궁」보다 앞설 수 있어 이름으로는 보지 않는다
-    assert got["candidates"] and set(shown) <= in_ledger, (shown, in_ledger)
+    # 팀 후보가 원장에서 왔다 — 원장은 공용이라 근처 실제 궁궐이 가짜 「창덕궁」보다 앞설 수 있어 이름으로는 보지 않는다
+    #   (빈 원장인 CI 에서는 960006 하나, 실데이터가 있는 로컬에서는 근처 실제 궁궐들)
+    assert shown and set(shown) <= in_ledger, (shown, in_ledger)
