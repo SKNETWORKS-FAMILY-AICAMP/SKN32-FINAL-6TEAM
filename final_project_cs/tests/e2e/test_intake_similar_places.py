@@ -31,7 +31,9 @@ from .test_trip_api import api  # noqa: F401
 
 NOW = datetime(2030, 1, 5, 9, 0, tzinfo=timezone(timedelta(hours=9)))
 PALACE = (37.5796, 126.9770)
-MARKET = (37.5700, 126.9990)
+#: ★`[2026-10-16]` 시장 세계는 **서울 밖(제주 근처)** 에 둔다 — 활동 팀 후보는 공용 원장(`activity.ac_place`, 테넌트 없음)에서 오므로
+#:  서울 좌표면 실데이터 시장(진짜 광장시장 · 방산시장 …)이 10km 안 후보로 섞인다. 거리 관계는 전과 같다(남대문시장 약 2.6km).
+MARKET = (33.5000, 126.5300)
 
 
 def _row(rv, cid, ctype, title, lat, lon, l1, l2, l3):
@@ -130,16 +132,29 @@ def test_another_meal_nearby_or_another_kind_of_place_turns_it_off():
 
 @pytest.fixture()
 def market_world(rv):  # noqa: F811
-    _row(rv, "950001", "38", "광장시장", *MARKET, "SH", "SH06", "SH060200")
-    _row(rv, "950002", "38", "남대문시장", 37.5590, 126.9770, "SH", "SH06", "SH060200")
-    _row(rv, "950003", "38", "올리브영 종로", 37.5701, 126.9991, "SH", "SH04", "SH040100")         # 쇼핑 전문매장 — 가장 가깝다
-    _row(rv, "950004", "38", "우정약국", 37.5702, 126.9992, "SH", "SH04", "SH040100")
+    lat, lon = MARKET
+    rows = [("950001", "광장시장", lat, lon, "SH06", "SH060200"),
+            ("950002", "남대문시장", lat - 0.0110, lon - 0.0220, "SH06", "SH060200"),
+            ("950003", "올리브영 종로", lat + 0.0001, lon + 0.0001, "SH04", "SH040100"),     # 쇼핑 전문매장 — 가장 가깝다
+            ("950004", "우정약국", lat + 0.0002, lon + 0.0002, "SH04", "SH040100")]
+    for cid, title, y, x, l2, l3 in rows:
+        _row(rv, cid, "38", title, y, x, "SH", l2, l3)
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("INSERT INTO places (tenant_id, name, kind, latitude, longitude, source_name, attributes) "
-                    "VALUES (%s,'시장 빈대떡집','dining',37.5703,126.9993,'dining_ledger','{\"source\": \"dining_ledger\"}')", (rv["tenant"],))
+                    "VALUES (%s,'시장 빈대떡집','dining',%s,%s,'dining_ledger','{\"source\": \"dining_ledger\"}')",
+                    (rv["tenant"], lat + 0.0003, lon + 0.0003))
+        # ★`[2026-10-16]` 활동 팀 엔진은 원장(`activity.ac_place`)을 읽는다 — 같은 장소를 원장에도 넣는다
+        cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES ('test', %s, 4) "
+                    "RETURNING load_id", ("0" * 64,))
+        load_id = cur.fetchone()[0]
+        for cid, title, y, x, l2, l3 in rows:
+            cur.execute("INSERT INTO activity.ac_place (content_id, content_type_id, name_ko, name_key, lat, lng, lcls1, lcls2, lcls3, "
+                        "load_id) VALUES (%s,'38',%s,%s,%s,%s,'SH',%s,%s,%s)", (cid, title, title, y, x, l2, l3, load_id))
     yield rv
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM places WHERE tenant_id=%s AND source_name='dining_ledger'", (rv["tenant"],))
+        cur.execute("DELETE FROM activity.ac_place WHERE content_id = ANY(%s)", ([r[0] for r in rows],))
+        cur.execute("DELETE FROM activity.ac_load_meta WHERE load_id=%s", (load_id,))
 
 
 def _review(extra_items=()):

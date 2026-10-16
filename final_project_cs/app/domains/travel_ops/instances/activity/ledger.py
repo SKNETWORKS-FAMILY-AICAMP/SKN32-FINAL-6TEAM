@@ -91,7 +91,7 @@ def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until
     from . import live_store
 
     return _with_live_status(_state_of_row(place_row(conn, tenant_id, place_id), at, until, holiday), at,
-                             lambda day: live_store.lookup(conn, tenant_id, place_id, day))
+                             _in_savepoint(conn, lambda day: live_store.lookup(conn, tenant_id, place_id, day)))
 
 
 def content_row(conn, content_id: str | None) -> dict[str, Any] | None:
@@ -117,7 +117,21 @@ def state_by_content(conn, content_id: str | None, at: datetime | None, until: d
     from . import live_store
 
     return _with_live_status(_state_of_row(content_row(conn, content_id), at, until, holiday), at,
-                             lambda day: live_store.read(conn, content_id, day))
+                             _in_savepoint(conn, lambda day: live_store.read(conn, content_id, day)))
+
+
+def _in_savepoint(conn, read: Callable[[Any], dict[str, Any] | None]) -> Callable[[Any], dict[str, Any] | None]:
+    """실시간 운영 상태 읽기를 **세이브포인트 안에서** 한다. `[2026-10-16]`
+
+    ★`_live_status` 는 읽기 실패를 잡아 「모름」으로 싣는다. 그런데 PostgreSQL 은 실패한 문장 뒤 트랜잭션 전체를 막아서(aborted),
+      예외만 잡으면 **같은 연결의 다음 쿼리가 모두** `InFailedSqlTransaction` 으로 깨졌다 — 로컬 DB 에 마이그레이션 304
+      (`activity.ac_live_status`)가 빠져 있을 때 확인 화면이 원장에 있는 장소마다 이렇게 멈췄다(2026-10-16 확인).
+      세이브포인트로 감싸면 실패한 읽기만 되돌리고 부르는 쪽의 트랜잭션은 살아 있다. 예외는 그대로 올려 `_live_status` 가 기록한다."""
+    def guarded(day: Any) -> dict[str, Any] | None:
+        with conn.transaction():
+            return read(day)
+
+    return guarded
 
 
 def _state_of_row(row: dict[str, Any] | None, at: datetime, until: datetime | None,

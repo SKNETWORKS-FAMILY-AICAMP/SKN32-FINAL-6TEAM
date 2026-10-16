@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""고객이 말한 이름 → `place_catalog` 에서 장소 **하나** 찾기 (`read.place_lookup` 의 1단계).
+"""고객이 말한 이름 → 활동 원장(`activity.ac_place`)에서 장소 **하나** 찾기 (`read.place_lookup` 의 1단계).
+
+`[2026-10-16 사용자 결정]` 전에는 코어 `place_catalog` 를 읽었다 — 활동 팀은 원장만 읽는다(`place_candidates.py` 메모).
+원장은 공용이라 테넌트를 나누지 않는다. 결과의 `via` 는 부르는 쪽 계약이라 `"place_catalog"` 그대로 둔다(「우리 목록」이라는 뜻).
 
 반환 `status`:
   - `found`      — 이름이 정확히 한 곳을 가리킨다
@@ -12,7 +15,7 @@
 ★후보 선별은 SQL(포함 검색)이 하고 정확 비교는 파이썬이 한다. SQL 은 띄어쓰기를 뗀 제목이 질의를 **포함**하는
   행만 가져오므로, 괄호가 **가운데** 끼어 정규화로만 같아지는 제목(「A(x)B」 = 「AB」)은 놓친다. 그 경우는 `not_found`
   쪽으로 기운다 — 없는 곳을 있다고 하지 않는 방향이다.
-★카카오 같은 바깥 값은 여기 없다. 우리 카탈로그의 행만 읽는다.
+★카카오 같은 바깥 값은 여기 없다. 우리 원장의 행만 읽는다.
 """
 from __future__ import annotations
 
@@ -22,7 +25,7 @@ from typing import Any, Callable
 
 from app.domains.travel_ops.components.intake.places import normalize
 
-from .place_candidates import DEFAULT_SOURCES
+from .place_candidates import DEFAULT_SOURCES, SOURCE_SQL
 
 #: ambiguous 일 때 같이 내는 후보 이름 수(고객에게 보여 줄 만큼만)
 SHOW_LIMIT = 5
@@ -30,10 +33,11 @@ SHOW_LIMIT = 5
 FETCH_LIMIT = 200
 
 _COLUMNS = ("content_id", "content_type_id", "title", "latitude", "longitude", "source")
-SQL = ("SELECT content_id, content_type_id, title, latitude, longitude, source FROM place_catalog "
-       "WHERE tenant_id=%s AND source = ANY(%s) "
+SQL = ("SELECT content_id, content_type_id, name_ko, lat, lng, source FROM "
+       f"(SELECT *, {SOURCE_SQL} AS source FROM activity.ac_place) a "
+       "WHERE source = ANY(%s) "
        # ★지우는 문자가 `_loose` 와 같아야 한다(공백·`·`·`-`·`_`·`/`) — 다르면 SQL 이 제목을 놓친다
-       "AND regexp_replace(title, '[[:space:]·_/-]+', '', 'g') ILIKE %s "
+       "AND regexp_replace(name_ko, '[[:space:]·_/-]+', '', 'g') ILIKE %s "
        "ORDER BY content_id LIMIT %s")
 
 
@@ -55,13 +59,13 @@ def _hit(row: dict[str, Any]) -> dict[str, Any]:
 
 def find_place_by_name(connection_factory: Callable[[], Any], tenant_id: str, name: str | None, *,
                        sources: tuple[str, ...] = DEFAULT_SOURCES) -> dict[str, Any]:
-    """이름으로 카탈로그에서 찾는다. 항상 `status` 가 있는 dict 를 준다(모름이 아니라 **없음**을 말할 수 있다)."""
+    """이름으로 원장에서 찾는다. 항상 `status` 가 있는 dict 를 준다(모름이 아니라 **없음**을 말할 수 있다). `tenant_id` 는 쓰지 않는다."""
     query = (name or "").strip()
     key = _loose(query)
     if len(key) < 2:
         return {"status": "not_found", "via": "place_catalog", "reason": "name_too_short"}
     with connection_factory() as conn, conn.cursor() as cur:
-        cur.execute(SQL, (tenant_id, list(sources), _like(key), FETCH_LIMIT))
+        cur.execute(SQL, (list(sources), _like(key), FETCH_LIMIT))
         rows = [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
 
     exact = [r for r in rows if _loose(r["title"]) == key]

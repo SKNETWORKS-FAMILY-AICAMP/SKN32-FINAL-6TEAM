@@ -22,6 +22,17 @@ CLOSED = {"content_id": "126508", "visit_date": date(2026, 10, 14), "value": "cl
           "checked_at": datetime(2026, 10, 14, 3, 30, tzinfo=KST)}
 
 
+
+class _Conn:
+    """가짜 연결 — 실시간 운영 상태 읽기는 세이브포인트(`conn.transaction()`) 안에서 한다(`ledger._in_savepoint`, 2026-10-16)."""
+
+    def transaction(self):
+        from contextlib import nullcontext
+        return nullcontext()
+
+
+CONN = _Conn()
+
 @pytest.fixture
 def stored(monkeypatch):
     """원장 행 · 저장된 운영 상태를 고정한다. 키가 장소 행이든 번호든 같은 줄을 돌려준다."""
@@ -49,8 +60,8 @@ def _mode(monkeypatch, value):
 @pytest.mark.parametrize("path", ["state", "state_by_content"])
 def test_shadow_carries_the_field_and_keeps_the_verdict(monkeypatch, stored, path):
     _mode(monkeypatch, "shadow")
-    out = (ledger.state(None, "t", "p1", WEDNESDAY) if path == "state"
-           else ledger.state_by_content(None, "126508", WEDNESDAY))
+    out = (ledger.state(CONN, "t", "p1", WEDNESDAY) if path == "state"
+           else ledger.state_by_content(CONN, "126508", WEDNESDAY))
     assert out["live_status"]["value"] == "closed" and out["live_status"]["applied"] is False
     assert out["closed"] is False                       # 수요일 — 정기휴무 아님. shadow 는 판정을 안 바꾼다
     assert out.get("closure_reason") != "live_status"
@@ -59,23 +70,23 @@ def test_shadow_carries_the_field_and_keeps_the_verdict(monkeypatch, stored, pat
 @pytest.mark.parametrize("path", ["state", "state_by_content"])
 def test_llm_applies_a_cited_closed(monkeypatch, stored, path):
     _mode(monkeypatch, "llm")
-    out = (ledger.state(None, "t", "p1", WEDNESDAY) if path == "state"
-           else ledger.state_by_content(None, "126508", WEDNESDAY))
+    out = (ledger.state(CONN, "t", "p1", WEDNESDAY) if path == "state"
+           else ledger.state_by_content(CONN, "126508", WEDNESDAY))
     assert out["live_status"]["applied"] is True
     assert out["closed"] is True and out["closure_reason"] == "live_status" and out["quote"] == "임시 휴관"
 
 
 def test_each_path_reads_through_its_own_key(monkeypatch, stored):
     _mode(monkeypatch, "shadow")
-    ledger.state(None, "t", "p1", WEDNESDAY)
+    ledger.state(CONN, "t", "p1", WEDNESDAY)
     assert stored == {"lookup": 1, "read": 0}
-    ledger.state_by_content(None, "126508", WEDNESDAY)
+    ledger.state_by_content(CONN, "126508", WEDNESDAY)
     assert stored == {"lookup": 1, "read": 1}
 
 
 @pytest.mark.parametrize("path", ["state", "state_by_content"])
 def test_rule_mode_has_no_field(monkeypatch, stored, path):
     _mode(monkeypatch, "rule")
-    out = (ledger.state(None, "t", "p1", WEDNESDAY) if path == "state"
-           else ledger.state_by_content(None, "126508", WEDNESDAY))
+    out = (ledger.state(CONN, "t", "p1", WEDNESDAY) if path == "state"
+           else ledger.state_by_content(CONN, "126508", WEDNESDAY))
     assert "live_status" not in out
