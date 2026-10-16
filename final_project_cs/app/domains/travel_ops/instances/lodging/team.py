@@ -58,7 +58,7 @@ from app.domains.travel_ops.instances._shared.itinerary_team import ITINERARY_TO
 from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange, NoChange, applied_record, with_request
 from .ledger import item_key
 from .interpret import (LABELS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, rule_checks, rule_dates,
-                        rule_nights, rule_ranges, settle_years)
+                        rule_nights, rule_ranges, rule_weekdays, settle_years)
 from .wants import (DORMS, Wants, guest_block, kind_reason, price_reason, read_wants, restriction, stars_reason, stay_city, stay_kinds, stay_stars, strip_handled, summary,
                     wants_pet)
 
@@ -593,6 +593,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             found, year_fixed = settle_years(found, today=today, text=task.input_text)   # `[2026-10-10]` 연도를 말하지 않은 날짜는 연도만 서버가 정한다
             found, date_rule = rule_dates(found, task.input_text, today=today)          # `[2026-10-15 L02]` 모델이 날짜를 비웠을 때만
             found, range_rule = rule_ranges(found, task.input_text, today=today)        # `[2026-10-16 평가 2차]` 「12/24~26」 같은 범위
+            found, weekday_rule = rule_weekdays(found, task.input_text, today=today)    # `[2026-10-16 최종 평가 뒤]` 「1월 둘째 주 금요일」 · 「3주 뒤 금요일」
             found, weak = rule_checks(found, task.input_text)                           # `[2026-10-16 평가 2차]` 근거 약한 날짜 · 인원은 비운다
             found, nights_rule = rule_nights(found, task.input_text)                    # `[2026-10-16 평가 4차]` 「…부터 하룻밤」 체크아웃
         except InterpretationInvalid as exc:
@@ -609,7 +610,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         decision = {"task": found.task, "interpretation": found.model_dump(mode="json", exclude={"question"}),
                     "ungrounded": ungrounded, "year_fixed": year_fixed, **({"date_rule": True} if date_rule else {}),
                     **({"range_rule": True} if range_rule else {}), **({"weak_cleared": weak} if weak else {}),
-                    **({"nights_rule": True} if nights_rule else {})}
+                    **({"nights_rule": True} if nights_rule else {}), **({"weekday_rule": True} if weekday_rule else {})}
 
         if found.task == "status":
             return self._status(task, seen, evidence)

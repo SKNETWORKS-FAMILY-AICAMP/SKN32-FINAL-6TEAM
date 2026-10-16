@@ -1102,6 +1102,33 @@ def test_landmark_tool_returns_name_and_coordinates_only():
     assert ReadToolbox(lambda: None).landmark(None, name="강남역") is None, "카카오가 없으면 모름"
 
 
+def test_weekday_dates_ranges_without_day_and_slash_dates_are_read():
+    """`[2026-10-16 최종 평가 뒤]` 모델이 「1월 둘째 주 금요일」을 1/15, 「다음 달 첫 주말」을 11/4 로 읽거나 「3주 뒤 금요일」 ·
+    「11월 28~29」 · 「2027.1.22~24」 · 「1/12부터 3박」을 비웠다."""
+    from datetime import date as day
+
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, rule_dates, rule_ranges, rule_weekdays
+
+    today = day(2026, 10, 16)
+    for text, start, end in (("1월 둘째 주 금요일부터 두 밤 잠실", day(2027, 1, 8), day(2027, 1, 10)),
+                             ("홍대 근처 다음 달 첫 주말에 2박", day(2026, 11, 7), day(2026, 11, 9)),
+                             ("다음 달 첫 주말에 성인 2명", day(2026, 11, 7), day(2026, 11, 8)),
+                             ("3주 뒤 금요일부터 2박 용산", day(2026, 11, 6), day(2026, 11, 8)),
+                             ("2027년 1월의 마지막 토요일에 들어가서 다음 날 일요일에 나올", day(2027, 1, 30), day(2027, 1, 31)),
+                             ("다음 달 셋째 주 금요일에 둘이 잘 곳", day(2026, 11, 20), None)):
+        found, fixed = rule_weekdays(Interpretation(task="search"), text, today=today)
+        assert fixed and (found.check_in, found.check_out) == (start, end), text
+    wrong = Interpretation(task="search", check_in=day(2027, 1, 15), check_out=day(2027, 1, 17))
+    assert rule_weekdays(wrong, "1월 둘째 주 금요일부터 두 밤", today=today)[0].check_in == day(2027, 1, 8), "모델 값이 틀리면 바꾼다"
+    for text, start, end in (("을지로 쪽 11월 28~29 2인", day(2026, 11, 28), day(2026, 11, 29)),
+                             ("2027.1.22~24 홍대 호스텔", day(2027, 1, 22), day(2027, 1, 24))):
+        found, fixed = rule_ranges(Interpretation(task="search"), text, today=today)
+        assert fixed and (found.check_in, found.check_out) == (start, end), text
+    assert rule_ranges(Interpretation(task="search"), "11월 28~29만원", today=today)[1] is False, "끝 숫자 뒤가 값 단위면 범위가 아니다"
+    found, _ = rule_dates(Interpretation(task="search"), "성인 다섯 명 서울 홍대 가는데 1/12부터 3박 할 호스텔", today=today)
+    assert (found.check_in, found.check_out) == (day(2027, 1, 12), day(2027, 1, 15))
+
+
 def test_landmark_prefers_same_name_station_then_name_match():
     """`[2026-10-16 GPT 검수]` 관련도 1위가 「여의도」→「한강」, 「DDP」→「서울디자인로드」였다."""
     from app.tools.read_tools import ReadToolbox
