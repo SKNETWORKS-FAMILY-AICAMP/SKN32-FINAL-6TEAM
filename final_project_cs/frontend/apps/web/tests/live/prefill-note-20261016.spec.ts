@@ -61,6 +61,32 @@ test("서버가 먼저 채운 일정에는 「우리가 채움 · 이유」가, 
   await expect(page.getByRole("article", { name: "경복궁 관람", exact: true }).getByText(/우리가 채움/)).toHaveCount(0);
 });
 
+/** `[2026-10-16 D-025 후속]` 서버가 계획에서 읽은 성향 · 조건을 담당에 넘긴다고 알린 것(`check.handoff`) — 하나는 우리가 채움, 하나는 고객 답 그대로. */
+function handedOver(view: Json) {
+  view.check.handoff = [
+    { key: "survey.pace", label: "일정 여유", owner: "일정 짜기", value: "relaxed", text: "여유 있게", codes: ["slow_pace"], quotes: ["천천히 다닐래요"], status: "filled" },
+    { key: "constraints.day_hours.end", label: "하루 끝 시각", owner: "일정 짜기 · 하루 마감", value: "21:00", text: "21:00까지", codes: ["finish_by:21:00"],
+      quotes: ["9시까지는 숙소"], status: "filled" },
+    { key: "survey.priority_details.mobility", label: "이동 수단", owner: "이동 판정 · 일정 짜기", value: ["public"], text: "대중교통", codes: ["prefer_transit"],
+      quotes: ["지하철로"], status: "customer" },
+  ];
+}
+
+test("계획에서 읽은 성향 · 조건을 어느 담당에 넘기는지 「우리가 채움」 / 「고객님 답 그대로」로 보인다", async ({ page, request }) => {
+  await open(page, request, handedOver);
+  const list = page.locator("[data-prefill-handoff]");
+  await expect(list).toBeVisible();
+  await expect(list.getByRole("listitem")).toHaveCount(3);
+  await expect(list.locator('[data-mine="true"]').first()).toContainText("일정 여유 여유 있게 → 일정 짜기");
+  await expect(list.locator('[data-mine="true"]').first()).toContainText("우리가 채움");
+  await expect(list.locator('[data-mine="false"]')).toContainText("이동 수단 대중교통 → 이동 판정 · 일정 짜기");
+  await expect(list.locator('[data-mine="false"]')).toContainText("고객님 답 그대로");
+  for (const [width, height] of [[375, 812], [320, 640]]) {
+    await page.setViewportSize({ width, height });
+    await noHorizontalScroll(page);
+  }
+});
+
 test("옛 서버(먼저 채운 기록 없음)에는 안내도 「우리가 채움」도 없다", async ({ page, request }) => {
   await open(page, request);
   await expect(page.locator("[data-prefill-note]")).toHaveCount(0);

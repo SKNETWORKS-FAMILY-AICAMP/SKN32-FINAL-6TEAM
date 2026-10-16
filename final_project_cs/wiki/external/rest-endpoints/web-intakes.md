@@ -44,6 +44,9 @@ domain: travel
 - 웹 앱의 확인 화면 `frontend/apps/web/src/features/intake-review/` 이 이 경로를 쓴다(`NEXT_PUBLIC_DATA_MODE=live`).
 - 「일정 짜 줘」는 모델이 가리키거나, 모델이 없어도 **규칙**(`intake/pipeline.PLAN_ASK` — 일정·코스·계획·동선 + 짜·만들어·추천해·세워·잡아 + 줘)으로 잡는다.
   `check.plan` = `{requested, start_date, days, party_size, preferences}` — **읽은 값에서만** 채우고 모르면 null(화면이 묻는다).
+  `check.handoff` `[2026-10-16 D-025 후속]` = 이해 에이전트가 읽은 성향 · 조건을 **어느 담당 열쇠로 넘기나** — `[{key, label, owner, value, text, codes, quotes, status}]`.
+  `status` `filled` = 등록 때 우리가 채운다(「우리가 채움」) · `customer` = 로딩 중 질문에 고객이 이미 답해 그 답이 이긴다. `text` 는 화면에 그대로 보일 말(「택시」 · 「여유 있게」 · 「21:00까지」).
+  등록(`/confirm`) · 일정 짜기(`/plan`)는 빈 자리에만 채우고 여행의 `constraints.filled_by_reading` 에 원문 인용과 함께 남긴다 — 표는 [D-025 §6-A](../../../../wiki/decisions/D-025-plan-reading-model-understands.md). 에이전트를 안 썼으면(그림자 · 실패 · 옛 서버) 빈 목록이다.
 - 시험 `tests/e2e/test_trip_intake_api.py` 15건 · `tests/unit/travel/test_intake_rules.py` 22건 · `test_intake_resolve.py` 22건 · `tests/e2e/test_trip_planner.py` 의 계획 읽기 1건(2026-09-28 실행).
 
 **여행 조회 항목의 종류 표시** `[2026-10-01 사용자 지적]` — `items[].kind_label`(`식사`·`활동`·`이동`·`숙소`·`항공`, 모르는 종류는 `kind` 그대로)와 `items[].meal`(식사만 `아침`·`점심`·`저녁`, 나머지 null). 화면이 「개화」만 보고는 식당인지 활동인지 알 수 없었다. 끼니는 일정 생성기가 적은 아침 표시가 먼저, 없으면 시작 시각(KST)으로 센다 — 10시 전 아침 · 16시 전 점심 · 그 뒤 저녁. 있던 필드는 안 바뀐 추가다.

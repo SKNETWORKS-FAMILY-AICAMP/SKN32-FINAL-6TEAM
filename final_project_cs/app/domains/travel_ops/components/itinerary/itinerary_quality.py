@@ -59,6 +59,8 @@ def quality_warnings(parts: Iterable[Part], constraints: Mapping[str, Any] | Non
             continue
         by_day.setdefault(part.starts_at.date(), []).append(part)
     own_window = "density" in (constraints or {})
+    hours = (constraints or {}).get("day_hours")
+    own_end = hours.get("end") if isinstance(hours, Mapping) and isinstance(hours.get("end"), str) else None
     found: list[dict[str, Any]] = []
     failed: dict[str, date] = {}
 
@@ -74,7 +76,7 @@ def quality_warnings(parts: Iterable[Part], constraints: Mapping[str, Any] | Non
         run("meals", day, lambda: _meals(day, day_parts, policy))
         run("zigzag", day, lambda: _zigzag(day, day_parts, dict(policy["zigzag"])))
         if not own_window:
-            run("day_end", day, lambda: _day_end(day, day_parts))
+            run("day_end", day, lambda: _day_end(day, day_parts, own_end))
         run("last_order", day, lambda: _last_order(day, day_parts))
     if failed:
         names = ", ".join(_RULE_LABEL.get(name, name) for name in failed)
@@ -239,12 +241,13 @@ def _shortest_open_path(dist: list[list[float]]) -> tuple[int, ...]:
 
 
 # ── T13 하루 마감 ────────────────────────────────────────────
-def _day_end(day: date, parts: list[Part]) -> list[dict[str, Any]]:
+def _day_end(day: date, parts: list[Part], limit_text: str | None = None) -> list[dict[str, Any]]:
     """그날 마지막 일정이 **하루 마감**(생성기의 하루 창 끝 `travel.day_window.default_end`, 22:00) 뒤에 끝나는가. `[체크리스트 T13]`
 
     생성기는 마감을 넘기면 거절하지만(「상품의 약속」) 고객·외부 에이전트가 준 일정에는 거절하지 않고 알린다 — 일부러 늦게까지 가는 일정(야경 · 공연)도 가능은 하다.
     끝 시각이 없으면 시작 시각으로 본다. 늦게 끝나는 항목을 모두 이름으로 말한다."""
-    limit_text = str(get_guardrails().get("travel.day_window.default_end"))
+    # ★`[2026-10-16 D-025 후속]` 고객 계획에서 읽은 「몇 시까지 끝」(`constraints.day_hours.end`)이 있으면 그 시각이 마감이다
+    limit_text = limit_text or str(get_guardrails().get("travel.day_window.default_end"))
     limit = datetime.combine(day, _clock(limit_text), tzinfo=KST)
     late = [p for p in parts if (p.ends_at or p.starts_at) > limit]
     if not late:

@@ -78,6 +78,22 @@ DAY_START, DAY_END = _day_window()   #: 하루 첫 활동 · 마지막 일정이
 #: ★`[2026-09-28]` 하루 여는 시각 = **아침 식사 시각**(팀 결정 D-020 「하루 시작 08:00 — 평균 일정 시작 9시보다 식사 1시간 앞」).
 #:  전에는 이 한 시간을 식사 자리로 비워 두고 **아침을 짜는 코드가 없어** 08~09시가 비었다(사용자가 실제 화면에서 찾았다)
 BREAKFAST_AT = _day_open()
+
+
+def day_bounds(constraints: Mapping[str, Any] | None) -> tuple[time, time]:
+    """하루 첫 활동 · 마감 시각 — 고객 계획에서 읽은 「몇 시 이후 시작 · 몇 시까지 끝」(`constraints.day_hours`)이 있으면 그것, 없으면 팀 기본값.
+    ★`[2026-10-16 D-025 후속]` 계획 읽기가 `finish_by` · `start_after` 를 읽어도 일정 짜기는 늘 22:00 마감으로 짰다(`intake/reading_prefs`)."""
+    hours = (constraints or {}).get("day_hours")
+    start, end = DAY_START, DAY_END
+    if isinstance(hours, Mapping):
+        for key in ("start", "end"):
+            text = hours.get(key)
+            if isinstance(text, str) and re.match(r"^([01]\d|2[0-3]):[0-5]\d$", text):
+                value = time(int(text[:2]), int(text[3:]))
+                start, end = (value, end) if key == "start" else (start, value)
+    if start >= end:                        # 읽은 값이 서로 어긋나면 기본값 — 짐작으로 고르지 않는다
+        return DAY_START, DAY_END
+    return start, end
 ACTIVITY_MIN = 90                #: 활동 한 건에 두는 시간
 MEAL_MIN = 60                    #: 식사 한 건에 두는 시간
 LUNCH_FROM = time(12, 0)
@@ -745,7 +761,7 @@ def _place_slot(cand: Cand, start: datetime, minutes: int) -> tuple[datetime, da
 
 
 def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from: int,
-              breakfast: Cand | None = None) -> list[dict[str, Any]]:
+              breakfast: Cand | None = None, day_start: time | None = None) -> list[dict[str, Any]]:
     """활동·식사를 하루에 늘어놓는다. **시각은 전부 여기서 나온다 — 모델이 아니다.**
 
     ★`breakfast` 가 있으면 하루 여는 시각(`BREAKFAST_AT`, 08:00)에 아침 식사를 두고 첫 활동은 그 뒤(이동 + 여유)."""
@@ -762,10 +778,11 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
         plan.insert(len(plan) - 1 if len(dining) > 1 else len(plan), (cand, "activity", ACTIVITY_MIN))
 
     items: list[dict[str, Any]] = []
-    cursor = _at(day, DAY_START)
+    cursor = _at(day, day_start or DAY_START)
     previous: Cand | None = None
     if breakfast is not None:
-        start = _at(day, BREAKFAST_AT)
+        # 아침은 첫 활동 시각의 한 시간 앞(팀 기본 08:00 · 09:00) — 고객이 「10시 반 이후 시작」이면 09:30 으로 함께 늦춘다(더 이르게는 두지 않는다)
+        start = max(_at(day, BREAKFAST_AT), _at(day, day_start or DAY_START) - (_at(day, DAY_START) - _at(day, BREAKFAST_AT)))
         end = start + timedelta(minutes=MEAL_MIN)
         items.append({"seq": seq_from, "kind": "dining", "title": breakfast.name, "place": breakfast.key,
                       "starts_at": start, "ends_at": end,
@@ -980,14 +997,15 @@ def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Ma
     """
     top = min(MAX_ACTIVITIES_PER_DAY, len(activities))
     tried: list[dict[str, Any]] = []
+    first, last = day_bounds(constraints)
     for count in range(top, MIN_ACTIVITIES_PER_DAY - 1, -1):
-        items = build_day(day, activities[:count], dining, seq_from=seq_from, breakfast=breakfast)
+        items = build_day(day, activities[:count], dining, seq_from=seq_from, breakfast=breakfast, day_start=first)
         trial, routes, _ = add_moves(copy.deepcopy(items), places)
         measured = measure_density(_parts_of(trial, places, routes), constraints)
         entry = next((row for row in measured["density"] if row["date"] == day.isoformat()), None)
         if entry is None or entry["status"] == "unmeasurable":
             fallback = min(ACTIVITIES_PER_DAY, len(activities))
-            return (build_day(day, activities[:fallback], dining, seq_from=seq_from, breakfast=breakfast),
+            return (build_day(day, activities[:fallback], dining, seq_from=seq_from, breakfast=breakfast, day_start=first),
                     {"date": day.isoformat(), "activities": fallback, "status": "unmeasurable",
                      "reasons": (entry or {}).get("reasons") or ["그날 하루 창이 없다"],
                      "note": f"밀도를 잴 수 없어 기본 {fallback}곳으로 짰다"})
@@ -996,13 +1014,13 @@ def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Ma
         broken = check_itinerary(_parts_of(trial, places, routes), constraints=constraints)
         tried.append({"activities": count, "actual_density": round(entry["actual_density"], 3),
                       "violations": [v.code for v in broken]})
-        if entry["status"] == "ok" and not broken and ends <= _at(day, DAY_END):
+        if entry["status"] == "ok" and not broken and ends <= _at(day, last):
             return items, {"date": day.isoformat(), "activities": count, "status": "ok",
                            "candidates": len(activities),        # ★이날 넣어 볼 수 있던 활동 후보 수
                            "target_density": entry["target_density"],
                            "actual_density": round(entry["actual_density"], 3), "tried": tried}
     # ★하한으로도 목표를 넘는다 — 빈 하루를 내지 않고 하한으로 짜고 넘는다고 적는다(밀도는 관측값, D-019)
-    items = build_day(day, activities[:MIN_ACTIVITIES_PER_DAY], dining, seq_from=seq_from, breakfast=breakfast)
+    items = build_day(day, activities[:MIN_ACTIVITIES_PER_DAY], dining, seq_from=seq_from, breakfast=breakfast, day_start=first)
     return items, {"date": day.isoformat(), "activities": MIN_ACTIVITIES_PER_DAY, "status": "exceeded",
                    "target_density": tried[-1:] and entry["target_density"], "tried": tried,
                    "note": f"활동 {MIN_ACTIVITIES_PER_DAY}곳으로도 목표를 넘는다 — 식사·이동만으로 찬다"}
@@ -1503,7 +1521,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             day_act = day_act[:fit["activities"]]
             fits.append(fit)
         else:
-            day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1, breakfast=breakfast)
+            day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1, breakfast=breakfast,
+                                  day_start=day_bounds(request.constraints)[0])
         day_din = extra + day_din
         from_model += sum(1 for cand in day_act if cand.key in picks["activities"])
         from_model += sum(1 for cand in day_din if cand.key in picks["dining"])
@@ -1554,7 +1573,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
             remedy="완화 조건을 하나 풀거나(예산·결제 조건) 후보를 더 받는다")
-    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니")
+    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니", day_end=day_bounds(request.constraints)[1])
     # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
     #   자리가 모자라 민 항목이 영업시간을 넘길 수 있다. 여기서 걸리면 고친 척하지 않고 거절한다.
     # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
@@ -1572,7 +1591,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
             remedy="하루 항목을 줄이거나 가까운 장소로 바꾼다")
-    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="이동 시간을 넣고 나니")
+    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="이동 시간을 넣고 나니", day_end=day_bounds(request.constraints)[1])
     _remeasure_density_after_moves(fits, items, chosen, routes, request.constraints)
 
     draft = PlanDraft(
@@ -1732,17 +1751,17 @@ def plan_around(outcome: PlanOutcome, *, fixed_items: list[dict[str, Any]],
                       constraints=draft.constraints, places=new_places, items=items, routes=routes), done)
 
 
-def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[str], why: str) -> None:
+def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[str], why: str, day_end: time = DAY_END) -> None:
     """★★`check_itinerary` 는 **하루가 몇 시에 끝나야 하는지 모른다** — 그건 우리 상품의 약속이지
     일정의 성립 조건이 아니다. 고치는 과정이나 이동 자리를 내는 과정에서 뒤로 민 항목이 한밤중으로
     넘어갈 수 있으므로 따로 본다. 넘으면 「고쳤다」고 하지 않고 거절한다."""
     overflow = [item for item in items if item["kind"] not in STAY_KINDS   # `[2026-10-13]` 숙소 끝은 체크아웃 날이다
                 and (item["ends_at"] or item["starts_at"])
-                > _at(date.fromisoformat(_planned_day(item)), DAY_END)]
+                > _at(date.fromisoformat(_planned_day(item)), day_end)]
     if overflow:
         raise PlanRefused(
             "day_overflow",
-            f"{why} {len(overflow)}개 항목이 하루 마감({DAY_END.strftime('%H:%M')})을 넘었다: "
+            f"{why} {len(overflow)}개 항목이 하루 마감({day_end.strftime('%H:%M')})을 넘었다: "
             + ", ".join(f"{item['title']}"
                         f"({(item['ends_at'] or item['starts_at']).strftime('%m-%d %H:%M')})"
                         for item in overflow),

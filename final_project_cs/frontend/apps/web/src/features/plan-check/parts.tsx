@@ -50,6 +50,12 @@ export function PrefillNote({ notes }: { notes: PrefillNotes }) {
       {t(`우리가 ${notes.filledCount}곳을 먼저 채웠어요 — 일정마다 이유가 있어요. 등록하기 전에 바꿀 수 있어요.`,
         `We filled in ${notes.filledCount} for you first — each says why. You can change them before registering.`)}</p>}
     {notes.understood.length > 0 && <p className={styles.prefillLine}><b>{t("이렇게 이해했어요", "What we understood")}</b> {notes.understood.map((quote) => `「${quote}」`).join(" · ")}</p>}
+    {notes.handoff.length > 0 && <ul className={styles.prefillHandoff} aria-label={t("담당에 넘겨요", "Handed to")} data-prefill-handoff>
+      {notes.handoff.map((entry) => <li key={`${entry.label}-${entry.owner}`} data-mine={entry.mine ? "true" : "false"}>
+        <b>{entry.label}</b> {entry.text} → {entry.owner}
+        <span className={styles.prefillWho}>{entry.mine ? t("우리가 채움", "filled by us") : t("고객님 답 그대로", "your answer kept")}</span>
+      </li>)}
+    </ul>}
     {notes.questions.length > 0 && <ul className={styles.prefillAsk}>{notes.questions.map((question) => <li key={question}>{question}</li>)}</ul>}
   </section>;
 }

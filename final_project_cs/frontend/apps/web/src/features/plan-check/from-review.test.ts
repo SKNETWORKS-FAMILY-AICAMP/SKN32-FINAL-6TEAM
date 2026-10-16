@@ -198,7 +198,7 @@ describe("D-025 「우리가 채움」 — the server filled in first", () => {
     const [plain, filled] = view.items;
     expect(plain.checks.some((check) => check.text.startsWith("우리가 채움"))).toBe(false);
     expect(filled.checks[0]).toEqual({ kind: "place", result: "filled", text: "우리가 채움 · 계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요" });
-    expect(view.prefill).toEqual({ filledCount: 1, questions: [], understood: [] });
+    expect(view.prefill).toEqual({ filledCount: 1, questions: [], understood: [], handoff: [] });
   });
 
   it("shows questions only the traveller knows and the words read as a move, a condition or a preference", () => {
@@ -207,7 +207,19 @@ describe("D-025 「우리가 채움」 — the server filled in first", () => {
     next.sources[0].understanding = { moves: [{ mode: "taxi", scope: "segment", from: "경복궁", to: "광장시장", quote: "택시로 이동할 거야" }],
       conditions: [{ code: "if_rain_indoor", quote: "비 오면 실내" }], preferences: [{ code: "kid_friendly", quote: "애들 데리고" }] };
     expect(reviewResultOf(next, readingOf(next))!.prefill).toEqual({ filledCount: 0, questions: ["묵는 숙소 이름을 알려 주세요"],
-      understood: ["택시로 이동할 거야", "비 오면 실내", "애들 데리고"] });
+      understood: ["택시로 이동할 거야", "비 오면 실내", "애들 데리고"], handoff: [] });
+  });
+
+  it("lists what is handed to an owner — ours as 「우리가 채움」, the traveller's own answer kept (D-025 후속)", () => {
+    const next = filledIntake({});
+    next.check = { ready: true, problems: [], filled: [], items: 2, title: "t", plan: next.check?.plan as never, handoff: [
+      { key: "survey.pace", label: "일정 여유", owner: "일정 짜기", value: "relaxed", text: "여유 있게", codes: ["slow_pace"], quotes: ["천천히"], status: "filled" },
+      { key: "survey.priority_details.mobility", label: "이동 수단", owner: "이동 판정 · 일정 짜기", value: ["taxi"], text: "택시", codes: ["prefer_taxi"],
+        quotes: ["택시로"], status: "customer" },
+      { key: "x", label: "빈 값", owner: "누구", value: null, text: "", codes: [], quotes: [], status: "filled" }] };
+    expect(reviewResultOf(next, readingOf(next))!.prefill?.handoff).toEqual([
+      { label: "일정 여유", text: "여유 있게", owner: "일정 짜기", mine: true },
+      { label: "이동 수단", text: "택시", owner: "이동 판정 · 일정 짜기", mine: false }]);
   });
 
   it("says nothing when an older server sends no prefill", () => {

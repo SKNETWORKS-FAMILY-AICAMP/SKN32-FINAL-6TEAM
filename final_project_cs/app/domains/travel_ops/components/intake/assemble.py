@@ -70,6 +70,8 @@ class Assembled:
     filled: list[dict[str, Any]] = field(default_factory=list)     # 규칙으로 채운 칸 — 화면이 배지로 보인다
     #: 「일정 짜 줘」 — 일정 생성기에 넘길 기본값(화면이 미리 채우고 고객이 고친다). 모르는 값은 None
     plan: dict[str, Any] = field(default_factory=dict)
+    #: `[2026-10-16 D-025 후속]` 이해 에이전트가 읽은 성향 · 조건 → 담당 열쇠(`reading_prefs.carry`). 등록 직전 `reading_prefs.apply` 가 빈 자리에만 옮긴다
+    reading: list[dict[str, Any]] = field(default_factory=list)
 
 
 def effective(claims: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -173,7 +175,8 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
         # ★상품은 최대 4인(루트 CLAUDE.md 「가격 · 비용」). 범위 밖 인원은 계약 오류로 새지 않게 여기서 막는다
         problems.append(Problem("party_size_out_of_range", "trip.party_size",
                                 f"인원이 {party}명으로 읽혔습니다 — 1~{MAX_PARTY}명으로 고쳐 주세요"))
-    return Assembled(body=body, problems=problems, filled=filled, plan=plan)
+    from . import reading_prefs
+    return Assembled(body=body, problems=problems, filled=filled, plan=plan, reading=reading_prefs.carry(claims))
 
 
 # ── 항목 하나 ─────────────────────────────────────────────────────

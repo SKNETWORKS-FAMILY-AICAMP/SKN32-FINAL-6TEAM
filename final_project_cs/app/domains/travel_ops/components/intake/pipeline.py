@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components import settings_hook
 from . import progress as progress_module
+from . import reading_prefs
 from . import review as review_module
 from . import survey_answers
 from .areas import areas_for
@@ -353,7 +354,10 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
         check = {"ready": not built.problems and bool(built.body["items"]),
                  "problems": [p.as_dict() for p in built.problems],
                  "filled": built.filled, "items": len(built.body["items"]), "title": built.body["title"],
-                 "plan": built.plan}
+                 "plan": built.plan,
+                 # ★`[2026-10-16 D-025 후속]` 읽은 성향 · 조건을 담당에 넘길 것 — 열쇠 · 담당 · 원문 조각 · 「우리가 채움」(filled) / 「고객 답 먼저」(customer)
+                 "handoff": reading_prefs.view(built.reading, survey=survey_answers.to_survey(
+                     survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)))}
         review, review_error = _review_of(conn, tenant_id, intake_id, revision, sources, claims)
         review = review_module.public(review, tenant_id=tenant_id)               # 내부 칸(이동 재사용 키 · 장소 행 번호)은 응답에 싣지 않는다
     out_sources = []
