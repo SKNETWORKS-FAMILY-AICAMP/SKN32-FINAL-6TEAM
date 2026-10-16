@@ -1472,8 +1472,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return StreamingResponse(flow(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
+    def _rejudge_later(background: BackgroundTasks, tenant: str, intake_id: UUID, shown: dict[str, Any] | None) -> None:
+        """확인 화면의 검사가 새로 계산된 판(고치기 · 자동 추천 · 복원 · 재검증)의 식사를 **뒤에서** 다시 판정한다(`pipeline.rejudge`).
+        `[2026-10-16 설계 대조 P2]` 새로 계산한 검사에는 앞 판의 판정 줄이 없다 — 응답은 기다리지 않고 다음 조회에서 판정 줄을 본다.
+        판정이 꺼져 있으면(시험 · 모의 모델 포함) 아무것도 안 한다."""
+        from app.domains.travel_ops.components.intake.pipeline import rejudge
+
+        revision = (shown or {}).get("revision")
+        if isinstance(revision, int) and not (shown or {}).get("preview"):
+            background.add_task(rejudge, get_connection, tenant, intake_id, revision)
+
     @router.post("/v1/web/trip-intakes/{intake_id}/edits")
-    def web_intake_edit(intake_id: UUID, request: IntakeEditIn, who: tuple[str, UUID] = Depends(_web_customer)):
+    def web_intake_edit(intake_id: UUID, request: IntakeEditIn, background: BackgroundTasks,
+                        who: tuple[str, UUID] = Depends(_web_customer)):
         """확인 화면에서 고친 값 → 새 판. ★낡은 판(다른 탭에서 먼저 고침)은 409 — 조용히 덮지 않는다."""
         from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, IntakeRejected, edit, view
 
@@ -1487,7 +1498,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                      tour=_lazy("place", place_factory),
                      kakao=_kakao_raw,
                      dining=_dining_lookup(_ctx))
-                return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+                shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+            _rejudge_later(background, tenant, intake_id, shown)
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1496,16 +1509,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, exc.code, exc.message) from None
 
     @router.post("/v1/web/trip-intakes/{intake_id}/restore")
-    def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, who: tuple[str, UUID] = Depends(_web_customer)):
+    def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, background: BackgroundTasks,
+                           who: tuple[str, UUID] = Depends(_web_customer)):
         """완료된 원판을 새 판으로 전체 복원한다. 현재 잠금·예약·판 충돌은 부분 저장 없이 거절한다."""
         from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, restore
 
         tenant, customer = who
         try:
             with get_connection() as conn:
-                return restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                               revision=request.revision, restore_revision=request.restore_revision,
-                               item=(request.item.source_id, request.item.index) if request.item else None)
+                shown = restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                revision=request.revision, restore_revision=request.restore_revision,
+                                item=(request.item.source_id, request.item.index) if request.item else None)
+            _rejudge_later(background, tenant, intake_id, shown)
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1588,7 +1604,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return candidates.photos(_lazy("place", place_factory), ref)
 
     @router.post("/v1/web/trip-intakes/{intake_id}/autofix")
-    def web_intake_autofix(intake_id: UUID, request: IntakeAutofixIn, http: Request,
+    def web_intake_autofix(intake_id: UUID, request: IntakeAutofixIn, http: Request, background: BackgroundTasks,
                            who: tuple[str, UUID] = Depends(_web_customer)):
         """**전체 자동 추천** — 확인이 필요한 일정을 운영시간·휴무·앞뒤 이동까지 검증한 대체 일정(장소+시각)으로 한 번에 바꾼다(`intake/autofix.py`).
         고정한 일정은 건드리지 않는다. 바꿀 것이 있으면 `edits` 와 같은 길로 새 판이 되고(`applied: true`), 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
@@ -1605,7 +1621,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                         kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run,
                                         dining=_dining_lookup())
                 # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
-                return {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
+                shown = {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
+            if done.get("applied"):
+                _rejudge_later(background, tenant, intake_id, shown["view"])
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:
@@ -1614,7 +1633,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, exc.code, exc.message) from None
 
     @router.post("/v1/web/trip-intakes/{intake_id}/revalidate")
-    def web_intake_revalidate(intake_id: UUID, request: IntakeRevisionIn,
+    def web_intake_revalidate(intake_id: UUID, request: IntakeRevisionIn, background: BackgroundTasks,
                               who: tuple[str, UUID] = Depends(_web_customer)):
         """**재검증** — 새 판 없이 같은 판의 검사(운영시간·휴무·이동)를 처음부터 다시 계산해 저장된 검사를 새 값으로 바꾼다. 응답은 `GET …/{id}` 와 같은 모양이고
         `review.ready` 가 참이면 「여행 등록」을 켠다. 등록 판정(`confirm`)과 같은 판정기를 쓴다."""
@@ -1623,8 +1642,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         tenant, customer = who
         try:
             with get_connection() as conn:
-                return pipeline.revalidate(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                                           revision=request.revision)
+                shown = pipeline.revalidate(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                            revision=request.revision)
+            _rejudge_later(background, tenant, intake_id, shown)     # 다시 계산한 검사에는 판정 줄이 없다
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:

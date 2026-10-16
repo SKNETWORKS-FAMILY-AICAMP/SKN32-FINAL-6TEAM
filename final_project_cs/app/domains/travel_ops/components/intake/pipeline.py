@@ -231,7 +231,27 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
 
 
-def _dining_judge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
+def rejudge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, revision: int) -> None:
+    """고객이 고쳐 생긴 **새 판**의 식사를 다시 판정한다(뒤에서 — 고치기 응답을 기다리게 하지 않는다). `[2026-10-16 설계 대조 P2]`
+    ★그 사이 또 고쳤거나(판이 바뀜) 등록했으면 돌리지 않는다 — 지난 판을 판정하는 데 모델을 부르지 않는다.
+      판정 중에 판이 바뀌면 합치기 직전에 한 번 더 막는다(`judge.run`)."""
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+    if dining_ledger.agent_judge_runner() is None:
+        return
+    try:
+        with connect() as conn:
+            if review_module.intake_state(conn, tenant_id, intake_id) != ("review", revision):
+                return
+            sources = _sources(conn, tenant_id, intake_id)
+    except Exception:                                  # noqa: BLE001 — 판정 장애가 고치기를 건드리지 않는다
+        log.warning("dining agent rejudge failed intake=%s revision=%s", intake_id, revision, exc_info=True)
+        return
+    _dining_judge(connect, tenant_id, intake_id, sources, revision=revision)
+
+
+def _dining_judge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]],
+                  revision: int = 1) -> None:
     """요식 판정 에이전트 — 확인 화면으로 넘긴 **뒤에** 식사를 판정해 그 판의 검사 줄에 합친다(`instances/dining/judge.run`). `[2026-10-13 · 2026-10-16]`
     ★규칙이 모르던 영업 · 휴무를 에이전트가 도구로 정했으면 그 줄을 바꾸고, 고객 조건 확인은 줄을 더한다. 화면 문장은 코드가 만든다.
       ★가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐) · 모델이 있어야 돈다.
@@ -243,11 +263,11 @@ def _dining_judge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, s
         return
     try:
         with connect() as conn:
-            payload = review_module.load(conn, tenant_id, intake_id, 1)
+            payload = review_module.load(conn, tenant_id, intake_id, revision)
         if not payload:
             return
         notes = "\n".join(s.get("transcript") or "" for s in sources)
-        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=1, review=payload, notes=notes)
+        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=revision, review=payload, notes=notes)
     except Exception:                                  # noqa: BLE001 — 판정 장애가 접수를 건드리지 않는다
         log.warning("dining agent judge failed intake=%s", intake_id, exc_info=True)
 

@@ -165,6 +165,7 @@ def _run(monkeypatch, result, stored):
     monkeypatch.setattr(judge, "judge_day", lambda plan, **kw: result)
     monkeypatch.setattr(review_module, "load", lambda conn, t, i, r: copy.deepcopy(stored))
     monkeypatch.setattr(review_module, "store", lambda conn, t, i, r, payload: saved.append(payload))
+    monkeypatch.setattr(review_module, "intake_state", lambda conn, t, i: ("review", 1))   # 지금 판 그대로(늦은 판정은 `test_dining_judge_stale.py`)
     got = judge.run(lambda: FakeConn(inserted), tenant_id="t", intake_id="i", revision=1, review=_review(), notes="",
                     chat=None, model="fake", tools_factory=lambda connect: None)
     return got, inserted, saved

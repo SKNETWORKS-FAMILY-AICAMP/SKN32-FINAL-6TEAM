@@ -794,6 +794,16 @@ def store(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str
                     (tenant_id, intake_id, revision, json.dumps(payload, ensure_ascii=False, default=str)))
 
 
+def intake_state(conn, tenant_id: str, intake_id: Any) -> tuple[str, int] | None:
+    """접수의 지금 (상태, 판 번호) — 줄을 잠근다(같은 트랜잭션의 고치기 · 등록이 끝날 때까지 기다리게). 늦게 끝난 일이 지난 판에 쓰지 않게 본다.
+    `[2026-10-16 설계 대조 P2]`"""
+    with conn.cursor() as cur:
+        cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s FOR UPDATE",
+                    (tenant_id, intake_id))
+        row = cur.fetchone()
+    return (row[0], int(row[1])) if row else None
+
+
 def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
            claims: list[dict[str, Any]], force: bool = False, previous_revision: int | None = None,
            **options: Any) -> dict[str, Any]:

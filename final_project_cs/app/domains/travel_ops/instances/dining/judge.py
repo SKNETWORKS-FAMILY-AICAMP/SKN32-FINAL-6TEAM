@@ -28,7 +28,7 @@ import uuid
 from collections import defaultdict
 from typing import Any, Callable
 
-from app.domains.travel_ops.instances.dining.agent import judge_day
+from app.domains.travel_ops.instances.dining.agent import judge_day, shows_verdict
 from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
 
 log = logging.getLogger(__name__)
@@ -119,14 +119,17 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
             agent = {"verdict": verdict, "agree": (verdict == rule[code]) if code in rule else None, "evidence": evidence}
             row_name = ROW_OF.get(code)
             row = next((r for r in rows if r.get("row") == row_name), None) if row_name else None
+            # ★`[2026-10-16 설계 대조 P1]` 화면 줄은 **근거에 그 판정을 낸 규칙 도구(구글 포함)의 값이 보일 때만** 바꾼다.
+            #   원문(place_detail)만 읽은 판정은 검증기가 문장의 뜻까지 못 보므로 줄에 에이전트 판정으로만 단다
+            shown = shows_verdict(check)
             if row is not None:
                 row["agent"] = agent
-                if rule.get(code) == "unknown" and verdict in ("ok", "bad"):
+                if rule.get(code) == "unknown" and verdict in ("ok", "bad") and shown:
                     row.update({"result": verdict, "text": _text(code, verdict, evidence), "by": "agent"})
                     if code == "open_at":
                         row["open_at"] = verdict
                     changed += 1
-            elif code in ADDED and (code, verdict) in TEXT and not any(r.get("row") == code for r in rows):
+            elif code in ADDED and (code, verdict) in TEXT and shown and not any(r.get("row") == code for r in rows):
                 rows.append({"row": code, "result": verdict, "text": _text(code, verdict, evidence), "by": "agent",
                              "agent": agent})
                 changed += 1
@@ -151,7 +154,7 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
     run_id = uuid.uuid4()
     records: list[tuple] = []
     decided: dict[str, list[dict[str, Any]]] = {}
-    counts = {"days": 0, "checks": 0, "used": 0, "failures": 0, "missing": 0, "changed": 0}
+    counts = {"days": 0, "checks": 0, "used": 0, "failures": 0, "missing": 0, "changed": 0, "stale": 0}
     rule_of = {i["id"]: rule_verdicts(i) for i in review.get("items") or [] if i.get("kind") == "dining"}
     for plan in plans_from_review(review, notes):
         counts["days"] += 1
@@ -192,6 +195,17 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
         if decided:
             # ★합치는 바탕은 **지금 저장된** 그 판의 검사다 — 넘겨받은 `review` 는 에이전트를 돌리는 사이 다시 계산됐을 수 있다
             current = review_module.load(conn, tenant_id, intake_id, revision)
+            # ★`[2026-10-16 설계 대조 P2]` 그 사이 고객이 고쳐 새 판이 생겼거나 등록했으면 합치지 않는다 — 버린 것도 한 줄 남긴다.
+            #   새 판은 고치기 뒤의 다시 판정(`pipeline.rejudge`)이 맡는다. 접수 줄을 잠그고 보므로 합치는 동안 고치기 · 등록이 기다린다
+            state = review_module.intake_state(conn, tenant_id, intake_id) if current else None
+            if current and state != ("review", revision):
+                current, counts["stale"] = None, 1
+                with conn.cursor() as cur:
+                    cur.execute("INSERT INTO dining.dn_agent_judge (run_id, tenant_id, intake_id, revision, item_id, check_code, "
+                                "agent_verdict, rule_verdict, agree, failure, detail, model) "
+                                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s)",
+                                (str(run_id), tenant_id, str(intake_id), revision, None, "_stale", None, None, None,
+                                 "intake_moved_on", json.dumps({"now": list(state) if state else None}), model))
             if current:
                 merged, counts["changed"] = merge(current, decided)
                 merged["agent_judged"] = {"run_id": str(run_id), "model": model, "changed_rows": counts["changed"]}
