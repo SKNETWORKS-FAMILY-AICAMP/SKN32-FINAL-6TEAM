@@ -91,3 +91,5 @@ domain: travel
 - 2026-10-18 후속: 고객 입력 초안 원문 탭·철회 시계 차이 결함 수정·양쪽 매니저·운영 배포·지정 5여행 20/20 DB 대조를 완료했습니다. 미완료 19/19와 운영 환경 전체 DoD 26/26, 로컬 추가 오류의 후속 2/2 및 최초 실패는 [날짜별 결과](records/reports/2026-10-18_trip-draft-and-full-gates.md)에 구분해 보존했습니다.
 
 - 2026-10-18: 재난문자 내용·지역 관련성 v2. 담당 격리842/842·완료관문26/26·mock 서버 화면8/8; 통합·운영 상태는 [검증 기록](records/reports/2026-10-18_receipt-message-relevance.md)에 구분.
+
+- 2026-10-18: 재난문자 지역·내용 v2는 양쪽 매니저와 운영 api·worker·admin 반영 및 실제 동일 시각 문제 카드 확인 완료. [운영 응답·화면·시험 한계](records/reports/2026-10-18_receipt-message-relevance-live.md).
