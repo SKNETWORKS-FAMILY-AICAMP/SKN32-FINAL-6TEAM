@@ -4,6 +4,7 @@
 # 사용: python eval_front_v3.py [--md 출력파일]
 import contextlib, io, json, math, os, random, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda *a: os.path.join(HERE, 'results', *a)
 J = lambda f: json.load(open(f, encoding='utf-8'))
 M = 'gemma4:e4b-it-qat'
@@ -20,7 +21,7 @@ def load(tag):
     sys.argv = bak
     S, G, SETS = ns['S'], ns['G'], ns['SETS']
     for w in ('mix6', 'mix7'):
-        SETS[w] = J(os.path.join(HERE, 'fixtures', f'{w}.json'))['sets'][w]
+        SETS[w] = J(fixture(f'{w}.json'))['sets'][w]
         for p, v in zip(J(os.path.join(HERE, 'fixtures', f'pairs_{w}.json')), J(R(f'ft_{tag}_{w}_scores.json'))[f'ft/emb_{tag}']):
             S[(p['set'], p['qi'])][p['item']] = v
         G[w] = {m: v['picks'] for m, v in J(R(f'llm_{w}_out.json')).items() if isinstance(v, dict) and 'picks' in v and '#' not in m and not m.startswith('_')}

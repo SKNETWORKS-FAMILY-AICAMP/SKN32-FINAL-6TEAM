@@ -106,7 +106,8 @@ def _entry(a, b, move, *, registration_keys=False):
                        **({'departure_context': context} if context is not None else {})}}
 
 
-def fill_edited_moves(items: list[Item], review, keys: dict, customer_pairs=frozenset()) -> tuple[list[Item], list[str]]:
+def fill_edited_moves(items: list[Item], review, keys: dict, customer_pairs=frozenset(),
+                      fixed_ids=frozenset()) -> tuple[list[Item], list[str]]:
     """`[2026-10-14]` 수정 접수 「완료」 — 확인 화면이 검증한 이동을 새 판에 잇는다. → (새 판 일정, 수단을 바꾼 구간 이름들).
 
     `keys` = 새 판 일정 id → 접수의 (원본, 항목 번호). 같은 날 이웃한 두 일정이 둘 다 접수 항목일 때
@@ -114,18 +115,40 @@ def fill_edited_moves(items: list[Item], review, keys: dict, customer_pairs=froz
     - 고객이 **이 접수에서** 수단을 골랐거나 「추천으로」 되돌렸으면(`customer_pairs` = `review.customer_mode_pairs`) 옛 이동을 검증한 이동으로 갈음한다(`replaces_item_id`).
       ★`[2026-10-14]` 처음엔 `mode_choice.state=kept` 로 갈랐는데, 여행에서 가져온 수단(`method: trip`)도 kept 라 「완료」 때마다 모든 이동이 「바뀜」이 됐다
     - 그 밖에는 옛 이동을 그대로 둔다(계획 때의 경로 · 출발 문맥을 지운 검증값으로 덮지 않는다)
-    ☆처음 판(팀원 커밋 6eb2ad44)은 바뀐 일정 옆 이동을 빼기만 하고 다시 넣지 않아, 그 구간 출발 알림이 사라지고 고른 수단도 저장되지 않았다."""
+    ☆처음 판(팀원 커밋 6eb2ad44)은 바뀐 일정 옆 이동을 빼기만 하고 다시 넣지 않아, 그 구간 출발 알림이 사라지고 고른 수단도 저장되지 않았다.
+    ★`[2026-10-15 ST4F-490]` `fixed_ids` = 접수에 넣지 않은 **고정 일정**(여행 일정 id 문자열). 재검사가 「고정 ↔ 접수 일정」 구간과 아침 「고정 숙소 → 그날 첫 일정」
+      구간(`from_stay`)도 세므로(구간의 고정 쪽 id 가 여행 일정 id) 그 구간도 같은 규칙으로 넣는다. ☆전에는 양쪽이 다 접수 항목일 때만 넣어 항공 · 지난 일정 ·
+      숙소 옆 이동이 사라졌다(Codex 검토 2026-10-14 ②)."""
     if not review:
         return items, []
     ids = {(str(c.get("source_id")), c.get("index")): c.get("id") for c in review.get("items") or []}
-    # 아침 「숙소 → 첫 일정」(`from_stay`)은 이웃 사이 이동이 아니다 — 여기서 다루지 않는다
+
+    def review_id(item: Item):
+        """검사가 이 일정을 부르는 id — 접수 항목은 「0-3」, 고정 일정은 여행 일정 id."""
+        key = keys.get(item.item_id)
+        if key:
+            return ids.get(key)
+        return str(item.item_id) if str(item.item_id) in fixed_ids else None
+
     moves = {(m.get("from"), m.get("to")): m for m in review.get("moves") or [] if not m.get("from_stay")}
+    # 아침 「숙소 → 그날 첫 일정」(`from_stay`) — 이웃 사이가 아니라 그날 첫 일정 **앞**에 넣는다(뒤 일정 id 로 찾는다)
+    stay_moves = {m.get("to"): m for m in review.get("moves") or [] if m.get("from_stay")}
+    titles = {str(item.item_id): item.title for item in items}
     ordered = sorted(items, key=lambda item: item.seq)
     stop_at = [n for n, item in enumerate(ordered) if item.kind != "mobility"]
     out: list[Item] = list(ordered[:stop_at[0]]) if stop_at else list(ordered)
     picked: list[str] = []
     for k, n in enumerate(stop_at):
         a = ordered[n]
+        stay = stay_moves.get(review_id(a))
+        day = a.starts_at.astimezone(KST).date()
+        if stay is not None and not (out and out[-1].kind == "mobility" and out[-1].starts_at.astimezone(KST).date() == day):
+            hotel = titles.get(str(stay.get("from"))) or ""
+            entry = _entry({"title": hotel, "starts_at": a.starts_at, "detail": a.detail}, {"title": a.title}, stay)
+            if entry is not None:
+                out.append(Item(item_id=uuid4(), seq=0, kind="mobility", title=f"{hotel} → {a.title}" if hotel else entry["title"],
+                                place_id=None, starts_at=_stamp(entry["starts_at"]), ends_at=_stamp(entry["ends_at"]),
+                                detail={**entry["detail"], "from_stay": True}))
         out.append(a)
         end = stop_at[k + 1] if k + 1 < len(stop_at) else len(ordered)
         between = ordered[n + 1:end]
@@ -133,9 +156,8 @@ def fill_edited_moves(items: list[Item], review, keys: dict, customer_pairs=froz
             out += between
             continue
         b = ordered[end]
-        ka, kb = keys.get(a.item_id), keys.get(b.item_id)
-        pair = (ids.get(ka), ids.get(kb)) if ka and kb else (None, None)
-        move = moves.get(pair) if ka and kb else None
+        pair = (review_id(a), review_id(b))
+        move = moves.get(pair) if pair[0] and pair[1] else None
         same_day = a.starts_at.astimezone(KST).date() == b.starts_at.astimezone(KST).date()
         entry = None
         if move is not None and same_day and (not between or f"{pair[0]}~{pair[1]}" in customer_pairs):

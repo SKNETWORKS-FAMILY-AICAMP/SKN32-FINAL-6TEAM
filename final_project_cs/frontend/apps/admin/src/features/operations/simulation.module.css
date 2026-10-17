@@ -1,4 +1,18 @@
 .page{max-width:1000px;margin-inline:auto}
+.tabs{display:flex;gap:8px;margin:16px 0 24px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;min-width:0;padding:12px 8px;line-height:1.5;white-space:normal}
+.tabs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tabs button[aria-selected=true]:hover{background:var(--accent)}
+.tripPicker{min-width:0;margin:16px 0;padding:16px;border:1px solid var(--line);border-radius:8px}
+.tripPicker legend{padding-inline:6px;font-weight:600}
+.tripPicker select{width:100%;min-width:0;max-width:100%}
+.dateFilters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.dateFilters label{min-width:0}
+.dateFilters input{width:100%;min-width:0;box-sizing:border-box}
+.pagination{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:12px 0}
+.tripPicker button,.tripPicker input,.tripPicker select{min-height:44px}
+.tripPicker button:disabled{opacity:.65}
+@media(max-width:700px){.dateFilters{grid-template-columns:minmax(0,1fr)}.tripPicker{padding:12px}}
 .switches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;border:1px solid var(--line);border-radius:8px;margin:18px 0;padding:14px}
 .switches legend{padding-inline:6px;font-weight:600}
 .switches label{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px;cursor:pointer}
@@ -9,3 +23,29 @@
 .switches input:checked::before{transform:translateX(16px);border-color:#fff}
 .switches input:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 @media(max-width:700px){.switches{grid-template-columns:minmax(0,1fr);gap:0;padding:8px}.switches label{padding:10px 4px}}
+
+.receipts,.delivery{min-width:0;margin:24px 0;padding:16px;border:1px solid var(--line);border-radius:8px}
+.receipts button,.delivery label{min-height:44px}
+.delivery label{display:flex;align-items:center;gap:12px;cursor:pointer}
+.delivery input{width:20px;height:20px;flex-shrink:0}
+.messages{padding-left:24px;max-height:440px;overflow:auto;overflow-wrap:anywhere}
+.messages li{padding:12px 0;border-bottom:1px solid var(--line)}
+.messages p{white-space:pre-wrap}
+.payload{max-height:360px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;border:1px solid var(--line);font-size:13px;line-height:1.6}
+.receiptFilters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}
+.receiptFilters label{min-width:0}
+.receiptFilters input,.receiptFilters select{width:100%;min-width:0;box-sizing:border-box}
+.receiptActions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}
+.pagination [aria-current=page]{background:var(--accent);border-color:var(--accent);color:#fff}
+.recordList{padding-left:24px;overflow-wrap:anywhere}
+.recordList>li{padding:16px 0;border-bottom:1px solid var(--line)}
+.recordHeading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.recordMode{flex-shrink:0;padding:4px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px}
+.receiptText{white-space:pre-wrap}
+.recordList summary,.currentMonitoring>summary{min-height:44px;display:list-item;align-content:center;cursor:pointer}
+.currentMonitoring{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+@media(max-width:700px){.receiptFilters{grid-template-columns:minmax(0,1fr)}.receipts{padding:12px}.recordList{padding-left:20px}}
+
+.page button,.page select,.page input:not([type=checkbox]){min-height:44px}
+.page select,.page input:not([type=checkbox]),.payload{font-size:14px}
+.page h1,.page h2,.page h3,.page strong{font-weight:600;line-height:1.25}

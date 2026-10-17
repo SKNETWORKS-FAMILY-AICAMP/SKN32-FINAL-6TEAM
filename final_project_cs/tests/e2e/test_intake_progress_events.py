@@ -110,6 +110,54 @@ def test_the_reading_worker_stores_progress_while_it_reads_and_clears_it_at_the_
         cur.execute("DELETE FROM trip_intakes WHERE intake_id=%s", (intake_id,))
 
 
+class _Pointer:
+    """남은 줄마다 장소 하나를 가리키는 모델(시험용) — 받은 줄 번호를 남긴다."""
+
+    PLACES = ("경복궁", "광장시장", "북촌한옥마을", "남산타워", "망원시장", "서울숲")
+
+    def __init__(self) -> None:
+        self.calls: list[list[int]] = []
+
+    def json(self, system, user):
+        rows = [row.split(": ", 1) for row in user.splitlines()]
+        self.calls.append([int(n) for n, _ in rows])
+        return {"spans": [{"line": int(n), "quote": next(p for p in self.PLACES if p in text), "role": "place"} for n, text in rows]}
+
+
+def test_the_reading_worker_reports_model_chunks_before_the_places(rv, monkeypatch):
+    """`[2026-10-16]` 남은 줄 모델 호출을 줄 묶음으로 나눈다 — 묶음 하나가 끝날 때마다 「읽는 중 n/m」(`phase: reading`)이 장소 찾기보다 먼저 쌓인다."""
+    tour, kakao = Tour(), Kakao()
+    text = "\n".join(["2026-10-15", *[f"오후엔 {p} 가 보고 싶어" for p in _Pointer.PLACES]])
+    with get_connection() as conn:
+        intake_id = pipeline.open_intake(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], text=text, files=[])
+    kept: list[tuple[str, dict]] = []
+    real_clear = progress.clear
+
+    def spy_clear(key):
+        kept.extend(progress.drain(str(key), 0)[0])
+        real_clear(key)
+
+    monkeypatch.setattr(progress, "clear", spy_clear)
+    monkeypatch.setattr(pipeline, "_reading_limits", lambda size, cap: (4, 0.0))      # 6줄 → 4 · 2 … 고른 크기라 3 · 3
+    chat = _Pointer()
+    assert pipeline.process(get_connection, tenant_id=rv["tenant"], intake_id=intake_id, blobs={}, see=None, chat=chat,
+                            tour=tour, kakao=kakao) == "review"
+    assert chat.calls == [[1, 2, 3], [1, 2, 3]]                                                        # 묶음마다 한 번, 번호는 묶음 안 순서(원래 2~7줄)
+    progress_events = [b for n, b in kept if n == "progress"]
+    reading = [b for b in progress_events if b["phase"] == "reading"]
+    assert reading == [{"phase": "reading", "done": d, "total": 2, "failed": 0, "skipped": 0} for d in (0, 1, 2)]
+    first_place = next(i for i, b in enumerate(progress_events) if b["phase"] == "places")
+    assert max(i for i, b in enumerate(progress_events) if b["phase"] == "reading") < first_place     # 모델 묶음이 다 끝난 뒤 장소 찾기
+    with get_connection() as conn:
+        claims = pipeline._claims(conn, rv["tenant"], intake_id, 1)
+    titles = sorted(c["value"] for c in claims if c["field"].endswith(".title"))
+    assert titles == sorted(_Pointer.PLACES)
+    report = next(c["value"] for c in claims if c["field"] == "reading.llm")
+    assert [c["lines"] for c in report["chunks"]] == [[2, 3, 4], [5, 6, 7]] and "error" not in report
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM trip_intakes WHERE intake_id=%s", (intake_id,))
+
+
 def test_the_feed_sends_stored_progress_first_and_never_regresses_an_item_the_store_already_completed(rv):
     client, _, _ = _client()
     headers = _key(client)

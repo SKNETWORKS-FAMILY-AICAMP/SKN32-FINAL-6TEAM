@@ -1,6 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
-import { mockServer, noHorizontalScroll } from "./helpers";
+import { captureShots, mockServer, noHorizontalScroll } from "./helpers";
 import { openFinished } from "./plan-check-kit";
 
 async function metrics(control: Locator) {
@@ -32,9 +32,10 @@ for (const width of [375, 1280]) {
     expect(place.fontSize).toBe(reference.fontSize);
     expect(place.hitHeight).toBe("44px");
     await noHorizontalScroll(page);
-    const gallery = process.env.UNDO_SIZE_SHOTS ?? "mockups/undo-size-20261012";
-    await mkdir(gallery, { recursive: true });
-    await page.screenshot({ path: `${gallery}/place-${width}.png`, fullPage: true });
+    // `[2026-10-16 ⑤]` 갤러리 · 지표 파일은 UNDO_SIZE_SHOTS 나 CAPTURE_SHOTS=1 일 때만 남긴다
+    const gallery = process.env.UNDO_SIZE_SHOTS ?? (captureShots ? "mockups/undo-size-20261012" : null);
+    if (gallery) await mkdir(gallery, { recursive: true });
+    if (gallery) await page.screenshot({ path: `${gallery}/place-${width}.png`, fullPage: true });
     await undoPlace.focus();
     await page.keyboard.press("Enter");
     await expect(first.getByRole("button", { name: /변경 되돌리기$/ })).toHaveCount(0);
@@ -49,8 +50,8 @@ for (const width of [375, 1280]) {
     expect(time.fontSize).toBe(reference.fontSize);
     expect(time.hitHeight).toBe("44px");
     await noHorizontalScroll(page);
-    await page.screenshot({ path: `${gallery}/time-${width}.png`, fullPage: true });
-    await writeFile(`${gallery}/metrics-${width}.json`, JSON.stringify({ reference, place, time }, null, 2));
+    if (gallery) await page.screenshot({ path: `${gallery}/time-${width}.png`, fullPage: true });
+    if (gallery) await writeFile(`${gallery}/metrics-${width}.json`, JSON.stringify({ reference, place, time }, null, 2));
     await undoTime.focus();
     await page.keyboard.press("Enter");
     await expect(first.getByRole("button", { name: "경복궁 관람 시간 되돌리기" })).toHaveCount(0);

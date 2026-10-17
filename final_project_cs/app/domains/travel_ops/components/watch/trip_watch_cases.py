@@ -358,10 +358,18 @@ class TripWatchCaseOpener:
         """조건을 푼 안을 물었으면 True(옛 알림은 안 낸다). 못 찾았거나 실패했으면 False — 부르는 쪽이 지금처럼 알린다(`watch_relaxed.try_offer` 는 예외를 삼킨다)."""
         from app.domains.travel_ops.components.watch.watch_relaxed import try_offer
 
-        offered = try_offer(self._connect, store=self.store, trip_id=trip_id, item_id=item.item_id, causes=causes,
-                            check=self.check, recheck_failed=recheck_failed)
+        from app.domains.travel_ops.components import candidate_diagnostics
+
+        with candidate_diagnostics.scope(case_id=str(case_id)):
+            offered = try_offer(self._connect, store=self.store, trip_id=trip_id, item_id=item.item_id, causes=causes,
+                                check=self.check, recheck_failed=recheck_failed)
         if offered is None:
             return False
+        if offered.get("status") == "source_failed":
+            self._defer_notice(trip_id, item, {"error_code": "alternate_verification_failed",
+                                             "failed_categories": offered.get("failed_categories", [])},
+                               self.clock(), result, case_id=case_id)
+            return True
         result.relaxed.append({"case_id": str(case_id), "trip_id": str(trip_id), "item": item.title,
                                "proposal_id": offered.get("proposal_id"), "already": bool(offered.get("already")),
                                "options": [o["name"] for o in offered["options"]]})

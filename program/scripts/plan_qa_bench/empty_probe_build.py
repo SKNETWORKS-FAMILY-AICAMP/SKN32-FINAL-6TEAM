@@ -7,7 +7,7 @@ import os
 import random
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-M = os.path.join(HERE, '..', '..', '..', 'datasets', 'travel', 'mixed_testset')
+M = os.path.join(HERE, '..', '..', '..', 'datasets', 'core', 'pointing', 'testset', 'questions_plus_chitchat_v1', 'source')
 src = open(os.path.join(HERE, 'server', 'chain_e2e.py'), encoding='utf-8').read()
 tree = ast.parse(src)
 code = ['from datetime import date', "WK = '월화수목금토일'", 'SFX = "\\n\\n답은 JSON 한 줄로만: {\\"item\\": 번호} 또는 {\\"item\\": null}"']
@@ -44,6 +44,6 @@ for k, t in enumerate(rows):
     x = job['qs'][t['qi']]
     prompt, valid = build(job, x)
     allp.append({'i': k, 'set': t['set'], 'qi': t['qi'], 'type': t['type'], 'gold': t['gold'], 'prompt': prompt})
-json.dump(allp, open(os.path.join(HERE, 'results', 'empty_probe', 'all_prompts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+json.dump(allp, open(os.path.join(HERE, '..', '..', '..', 'datasets', 'core', 'pointing', 'testset', 'questions_plus_chitchat_v1', 'all_prompts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
 print(len(out), '프롬프트, 평균 글자수', sum(len(o['prompt']) for o in out) // len(out))
 print(out[0]['prompt'][-160:])

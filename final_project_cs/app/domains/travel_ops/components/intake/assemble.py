@@ -70,6 +70,8 @@ class Assembled:
     filled: list[dict[str, Any]] = field(default_factory=list)     # 규칙으로 채운 칸 — 화면이 배지로 보인다
     #: 「일정 짜 줘」 — 일정 생성기에 넘길 기본값(화면이 미리 채우고 고객이 고친다). 모르는 값은 None
     plan: dict[str, Any] = field(default_factory=dict)
+    #: `[2026-10-16 D-025 후속]` 이해 에이전트가 읽은 성향 · 조건 → 담당 열쇠(`reading_prefs.carry`). 등록 직전 `reading_prefs.apply` 가 빈 자리에만 옮긴다
+    reading: list[dict[str, Any]] = field(default_factory=list)
 
 
 def effective(claims: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -173,7 +175,8 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
         # ★상품은 최대 4인(루트 CLAUDE.md 「가격 · 비용」). 범위 밖 인원은 계약 오류로 새지 않게 여기서 막는다
         problems.append(Problem("party_size_out_of_range", "trip.party_size",
                                 f"인원이 {party}명으로 읽혔습니다 — 1~{MAX_PARTY}명으로 고쳐 주세요"))
-    return Assembled(body=body, problems=problems, filled=filled, plan=plan)
+    from . import reading_prefs
+    return Assembled(body=body, problems=problems, filled=filled, plan=plan, reading=reading_prefs.carry(claims))
 
 
 # ── 항목 하나 ─────────────────────────────────────────────────────
@@ -207,6 +210,8 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
                                 "장소 이름을 고치거나 「장소 없음」으로 두세요", sid))
     kind = value("kind") if value("kind") in ("activity", "dining") else \
         ("dining" if (place or {}).get("kind") == "dining" else "activity")
+    if (fields.get("kind") or {}).get("method") == "trip" and value("kind") in ("lodging", "flight"):
+        kind = value("kind")            # `[2026-10-15 ST4F-490]` 수정 접수가 등록한 여행에서 가져온 숙소 · 항공은 그 종류 그대로(읽은 줄은 지금처럼 활동 · 식사)
     start, end = value("starts_at"), value("ends_at")
     lines = (source.get("transcript") or "").splitlines()
     text = lines[line - 1] if 0 < line <= len(lines) else ""
@@ -219,7 +224,8 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
             "place": place if place and place.get("latitude") is not None else None,
             "booking_no": value("booking_no"), "provenance": _provenance(fields), "where": where,
             "claims": fields, "locked": value("locked") is True, "day": day, "no_place": no_place,
-            "end_date": None}           # 끝이 다른 날인 항목(숙소)만 채운다 — `_stays`
+            # 끝이 다른 날인 항목(숙소)만 채운다 — `_stays` · `[2026-10-15]` 수정 접수가 등록한 숙소에서 가져온 체크아웃 날(`end_date` 값 줄)
+            "end_date": value("end_date") if kind == "lodging" else None}
 
 
 def _stays(rows, filled, problems) -> list[dict[str, Any]]:
@@ -234,10 +240,11 @@ def _stays(rows, filled, problems) -> list[dict[str, Any]]:
     def words(row):
         return f"{row['title'] or ''} {row['text'] or ''}"
 
-    ins = [r for r in rows if r["date"] and r["kind"] != "dining" and _CHECK_IN.search(words(r))]
+    # `[2026-10-15 ST4F-490]` 이미 숙소인 줄(수정 접수가 등록한 숙소에서 가져온 것 — 끝 날짜를 값 줄로 안다)은 합치지 않는다
+    ins = [r for r in rows if r["date"] and r["kind"] not in ("dining", "lodging") and _CHECK_IN.search(words(r))]
     if not ins:
         return rows
-    outs = [r for r in rows if r["date"] and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)]
+    outs = [r for r in rows if r["date"] and r["kind"] != "lodging" and _CHECK_OUT.search(words(r)) and not any(r is i for i in ins)]
     last_day = max(r["date"] for r in rows if r["date"])
     merged: list[int] = []
 

@@ -5,9 +5,10 @@
 import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda n: os.path.join(HERE, 'results', n)
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
-GOLD = {w: [x['gold'] for x in json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']] for w in SETS}
+GOLD = {w: [x['gold'] for x in json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]['qs']] for w in SETS}
 
 
 def probs(tag, w):

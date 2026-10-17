@@ -7,6 +7,7 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 D = os.path.join(HERE, 'results', '_pull', 'chain')
 sys.stdout.reconfigure(encoding='utf-8')
 summ = json.load(open(os.path.join(D, 'chain_summary.json'), encoding='utf-8'))
@@ -16,7 +17,7 @@ LAB = {'e4b_only': '단독 기준선: 가르친 E4B 만(같은 서버·같은 GG
        'full_live': '(수정 판 다시 호출 — 캐시 없음)', 'e4b_only_live': '(단독 기준선 다시 호출 — 캐시 없음)'}
 ORDER = ['e4b_only', 'rules_e4b', 'no_jev', 'no_ml', 'no_rules', 'full', 'full_v1', 'full_noctx']
 key = lambda n: n.replace('#', '_')
-GS = json.load(open(os.path.join(HERE, 'fixtures', 'gold_sets.json'), encoding='utf-8'))
+GS = json.load(open(fixture('gold_sets.json'), encoding='utf-8'))
 
 
 def rf(x):

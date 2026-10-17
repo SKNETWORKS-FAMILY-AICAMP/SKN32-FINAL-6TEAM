@@ -1,0 +1,37 @@
+{
+ "8": {
+  "runs": 3,
+  "calls": 16,
+  "call_p50": 2.717,
+  "call_p90": 3.3245,
+  "call_max": 6.204,
+  "case_p50": 18.21,
+  "case_max": 18.945,
+  "prompt_p50": null,
+  "errors": 0,
+  "items": [
+   104,
+   104
+  ],
+  "items_tight": [
+   92,
+   104
+  ],
+  "items_precision": [
+   104,
+   137
+  ],
+  "kind": [
+   96,
+   104
+  ],
+  "date": [
+   104,
+   104
+  ],
+  "tamper": [
+   0,
+   162
+  ]
+ }
+}

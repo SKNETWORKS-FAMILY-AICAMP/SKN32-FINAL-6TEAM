@@ -1,3 +1,4 @@
+import { fitPadding } from "./fit-padding";
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { linePieces, lineStyle, linesKey, walkStyle } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, ME_LABEL, meKey, STAY_BOX, staysKey } from "./me";
@@ -181,7 +182,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           else map.setCenter(positions[0]);
           map.setZoom(15);
         } else {
-          map.fitBounds(positions, { top: 80 + (options.topInset ?? 0), right: 80, bottom: 80 + (options.bottomInset ?? 0), left: 80, maxZoom: 16 });
+          map.fitBounds(positions, { ...fitPadding(container.clientWidth, container.clientHeight, options.topInset, options.bottomInset, 80), maxZoom: 16 });
         }
       }
 

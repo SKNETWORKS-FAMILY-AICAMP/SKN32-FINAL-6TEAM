@@ -20,8 +20,11 @@ export type TripEvent =
   | { type: "ready"; version: number | null }
   | { type: "changed"; kinds: ChangeKind[]; version: number | null };
 
-/** How a watch ended. `unsupported` — this server has no bell (404/405): the screen goes back to re-reading every 30 s. */
-export type WatchEnd = "closed" | "unsupported" | "failed";
+/**
+ * How a watch ended. `unsupported` — this server has no bell (404/405): the screen goes back to re-reading every 30 s.
+ * `busy` — `[2026-10-17 ST4F-603]` too many bells open for this user (429, four per user): re-read on a timer until a bell can be opened again.
+ */
+export type WatchEnd = "closed" | "unsupported" | "busy" | "failed";
 
 /** One server-sent event block → a trip event, or null for what the screen does not use. Unknown kinds mean "re-read all". */
 export function toTripEvent(name: string, data: string): TripEvent | null {
@@ -76,6 +79,7 @@ export async function watchTrip(tripId: string, language: Language, onEvent: (ev
     return signal.aborted ? "closed" : "failed";
   }
   if (response.status === 404 || response.status === 405) return "unsupported";
+  if (response.status === 429) return "busy";
   if (!response.ok || !response.body) return "failed";
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
   const feed = eventStreamParser((name, data) => {

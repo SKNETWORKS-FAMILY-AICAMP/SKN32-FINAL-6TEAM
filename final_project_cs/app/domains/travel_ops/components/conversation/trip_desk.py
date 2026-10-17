@@ -46,8 +46,11 @@ from app.domains.travel_ops.components.team_hooks import dining_ledger as dining
 class TripDesk:
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
                  check: Callable[..., dict[str, Any]] | None = None, dining_ledger: bool = True,
-                 catalog_pool: bool = False, edit_lookups: Callable[[], tuple[Any, Any, Any]] | None = None) -> None:
+                 catalog_pool: bool = False, edit_lookups: Callable[[], tuple[Any, Any, Any]] | None = None,
+                 reader: Callable[[], Any] | None = None) -> None:
         self.store, self._connect = store, connection_factory
+        #: ★`[2026-10-16 D-025]` 채팅 수정 요청을 계획서와 같은 이해 에이전트로 읽는 모델 클라이언트(부를 때만 만든다). 없으면 지금처럼 해석 칸만 쓴다
+        self._reader = reader or (lambda: None)
         #: ★`[2026-10-15]` 채팅 고치기(`chat_edit`)의 이름 찾기 부품 — (관광공사, 카카오, 요식 원장). 웹 「일정 수정」의 고치기와 같은 것(`trip_api._desk`)
         self._edit_lookups = edit_lookups or (lambda: (None, None, None))
         #: ★`[2026-09-29]` 활동 대체 후보를 관광공사 목록(DB)에서 넓히나(`catalog_pool`). 끄면(시나리오 · 시험 일부) 장소 표만 본다
@@ -310,6 +313,18 @@ class TripDesk:
                             dining=dining, kind_hint=kind_hint)
         return found if found.status == "resolved" else None
 
+    def _read_plan(self) -> Callable[[str, Any], Any] | None:
+        """채팅 메시지를 계획서와 같은 이해 에이전트로 읽는 함수 — 모델 클라이언트가 없거나 가드레일이 꺼져 있으면 None."""
+        from app.domains.travel_ops.components.intake import agent_read
+        from app.domains.travel_ops.components.intake.pipeline import agent_reader_config
+
+        chat = self._reader()
+        config = agent_reader_config(self.store.tenant_id)
+        if not callable(getattr(chat, "structured", None)) or config["mode"] != "on":
+            return None
+        return lambda text, today: agent_read.read(text, text.splitlines(), chat, today=today, num_predict=config["num_predict"],
+                                                   chunk_chars=config["chunk_chars"])
+
     def edit(self, *, trip_id: UUID, base_version: int, decision: Any, now: datetime, message: str | None = None,
              request_id: str | None = None) -> dict[str, Any]:
         """★`[2026-10-15 사용자 지시]` 채팅으로 일정 고치기 — 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳으로 바꾸기 · 순서 · 고정.
@@ -319,7 +334,7 @@ class TripDesk:
         with self._connect() as conn:
             trip, items = self.store.latest(conn, trip_id)
         try:
-            ops, what = chat_edit.ops_for(decision, items=items, now=now, message=message or "")
+            ops, what = chat_edit.ops_for(decision, items=items, now=now, message=message or "", read_plan=self._read_plan())
             done = chat_edit.run(store=self.store, connect=self._connect, tenant=self.store.tenant_id,
                                  customer_id=trip["customer_id"], trip_id=trip_id, base_version=base_version, ops=ops,
                                  lookups=self._edit_lookups, now=now,

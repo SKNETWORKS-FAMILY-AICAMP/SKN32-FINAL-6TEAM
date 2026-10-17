@@ -211,3 +211,54 @@ def test_case_team_reads_the_same_trial_input_and_tags_its_result(world,monkeypa
     assert len(result.opened) == 1 and len(result.ran) == 1 and not result.failed
     notices = w.conn.execute("SELECT payload_json FROM outbox WHERE tenant_id=%s AND dedupe_key LIKE %s",(w.tenant,f'{w.trip_id}:%')).fetchall()
     assert notices and all(notice[0].get('simulation') for notice in notices)
+
+
+# ── `[2026-10-16]` 사용자 보고 「관리자 웹앱에서 조정한 모니터링 옵션이 실제 알림으로 안 가고 적용이 안 된다」 ──
+def test_guest_trip_is_watched_only_while_an_explicit_trial_is_active(world, monkeypatch):
+    from app.domains.travel_ops.components.itinerary import trip_scope
+    from app.domains.travel_ops.modules.web_account.guest_policy import watch_scope_sql
+
+    w = world
+    monkeypatch.setattr(trip_scope, "_narrowers", [("web_account.guest", watch_scope_sql)])
+    w.conn.execute("UPDATE customers SET external_id=%s WHERE customer_id=%s", ('web:guest-' + uuid4().hex, w.customer))
+    def included():
+        return w.conn.execute("SELECT " + trip_scope.extra_sql("t") + " FROM trips t WHERE t.tenant_id=%s AND t.trip_id=%s", (w.tenant, w.trip_id)).fetchone()[0]
+    assert not included()
+    assert set_inputs(w, ['earthquake'])['active']
+    assert included()
+    assert not set_inputs(w, [])['active']
+    assert not included()
+
+
+def test_paused_trip_is_refused_and_marked_in_the_list(world):
+    w = world
+    w.conn.execute("INSERT INTO trip_safety_pauses(tenant_id,trip_id,level,event_key,event_json,from_at) VALUES(%s,%s,'trip','test-pause','{}',now())",
+                   (w.tenant, w.trip_id))
+    with pytest.raises(AdminServiceError) as error:
+        set_inputs(w, ['forecast'])
+    assert error.value.status_code == 409 and '다시 시작' in error.value.detail
+    assert set_inputs(w, [])['active'] is False                    # 끄기는 언제나 된다
+
+
+def test_an_unselected_source_failure_does_not_mask_the_trial_result(world, monkeypatch):
+    w = world
+    monkeypatch.setattr(w.checker, '_traffic', lambda *a: {'category': 'traffic_control', 'status': 'failed', 'reason': 'timeout'})
+    set_inputs(w, ['earthquake'])
+    _, [item, other] = w.store.latest(w.conn, w.trip_id)
+    report = w.checker.check(place=item.place, starts_at=w.now)
+    assert report['verdict'] == 'disrupted' and report['failed_categories'] == []
+    assert report['simulation_ignored_failures'] == ['traffic_control']
+    plain = w.checker.check(place=other.place, starts_at=w.now)   # 시험 없는 일정은 그대로 「조회 실패」
+    assert plain['verdict'] == 'fatal' and plain['failed_categories'] == ['traffic_control']
+
+
+def test_a_forecast_trial_still_reaches_the_app_when_another_source_fails(world, monkeypatch):
+    w = world
+    monkeypatch.setattr(w.checker, '_air', lambda *a: {'category': 'air_quality', 'status': 'failed', 'reason': 'timeout'})
+    state = set_inputs(w, ['forecast'])
+    opener = TripWatchCaseOpener(store=w.store, check=w.checker.check, connection_factory=w.connect,
+                                 clock=lambda: w.now, repository=repository, run_case=None)
+    assert len(opener.tick().notified) == 1
+    texts = [row[0]['text'] for row in w.conn.execute("SELECT payload_json FROM outbox WHERE tenant_id=%s AND payload_json->>'simulation_id'=%s",
+                                                      (w.tenant, state['run_id'])).fetchall()]
+    assert texts and all(text.startswith('[시뮬레이션]') for text in texts)

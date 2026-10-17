@@ -41,7 +41,8 @@ class FilePromptLLM:
         if not settings.openai_api_key.strip():
             raise RuntimeError("OpenAI API key is missing")
         folder, _, stem = prompt_key.partition(".")
-        files = sorted(Path("prompts", folder).glob(f"{stem}.v*.md"))
+        root = Path(__file__).with_name("evaluation_prompts") if prompt_key == "flight.interpret_transit" else Path("prompts")
+        files = sorted((root / folder).glob(f"{stem}.v*.md"))
         if len(files) != 1:
             raise RuntimeError(f"expected exactly one prompt file for {prompt_key}, found {len(files)}")
         prompt = json.dumps({"prompt_key": prompt_key, "input_text": input_text, "context": context,

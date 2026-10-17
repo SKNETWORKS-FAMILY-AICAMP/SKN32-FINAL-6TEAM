@@ -70,8 +70,8 @@ async def test_when_the_best_fails_the_whole_check_the_next_ranked_one_is_applie
     [proposal] = result.action_proposals
     [replacement] = proposal.arguments["replacements"]
     assert replacement["item"]["place"]["name"] == "북촌길(종로)"                         # 2순위가 적용됐다
-    assert "북촌길(종로)" in result.answer and "1순위(남산공원(중구))" in result.answer and "2순위로 골랐어요" in result.answer
-    assert proposal.arguments["summary"]["fit_rank"] == 2 and proposal.arguments["summary"]["skipped"] == ["남산공원(중구)"]
+    assert "북촌길(종로)" in result.answer and "남산공원(중구)" not in result.answer
+    assert proposal.arguments["summary"]["fit_rank"] == 2 and "skipped" not in proposal.arguments["summary"]
     # 걸린 1순위는 고객에게 「다른 안」으로 보이지 않는다 — 적용된 안의 다른 안 목록에 없다
     names = [a["name"] for a in replacement["item"]["detail"]["alternates"]]
     assert "남산공원(중구)" not in names
@@ -94,7 +94,8 @@ async def test_when_every_ranked_option_fails_nothing_is_applied_and_it_is_not_a
     assert not result.action_proposals
     assert result.outcome == "escalated" and result.next_action is NextAction.ESCALATE
     assert result.failure_code == "itinerary_recheck_failed"
-    assert any("일정 전체 재판정" in w and "1순위 남산공원(중구)" in w and "2순위 서울숲(성동)" in w for w in result.warnings)
+    assert any("일정 전체 재판정" in w for w in result.warnings)
+    assert all("남산공원" not in w and "서울숲" not in w for w in result.warnings)
 
 
 @pytest.mark.asyncio
@@ -135,8 +136,9 @@ def test_fit_change_returns_the_first_rank_that_passes_and_records_what_it_skipp
     fitted = fit.change
     assert fit.rank == 3 and [s.rank for s in fit.skipped] == [1, 2] and [s.name for s in fit.skipped] == ["1순위", "2순위"]
     assert all("겹친다" in s.reasons[0] and s.why == "schedule" for s in fit.skipped)
-    assert fitted.summary["to"] == "3순위" and fitted.summary["skipped"] == ["1순위", "2순위"]
-    assert "1·2순위(1순위 1순위, 2순위 2순위)은(는) 일정과 안 맞아 3순위로 골랐어요" in fitted.notice["text"]
+    assert fitted.summary["to"] == "3순위" and "skipped" not in fitted.summary
+    assert "1순위" not in fitted.notice["text"] and "2순위" not in fitted.notice["text"]
+    assert "skipped" not in fitted.notice.get("fit", {})
 
 
 def test_fit_change_returns_none_when_all_fail_and_untouched_when_the_best_fits():

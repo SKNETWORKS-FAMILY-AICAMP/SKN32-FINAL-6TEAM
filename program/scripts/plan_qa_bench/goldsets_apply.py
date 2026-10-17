@@ -5,10 +5,11 @@
 import json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 raw = json.load(open(sys.argv[1], encoding='utf-8'))
 out, bad_first, bad_id = {}, [], []
 for w in ('mix8', 'mix9', 'mix10', 'mix11', 'mix12'):
-    job = json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]
+    job = json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]
     ids = {i['id'] for i in job['items']}
     d = {}
     for k, q in enumerate(job['qs']):
@@ -24,7 +25,7 @@ for w in ('mix8', 'mix9', 'mix10', 'mix11', 'mix12'):
         else:
             d[str(k)] = [q['gold']] if q['gold'] is not None else []
     out[w] = d
-json.dump(out, open(os.path.join(HERE, 'fixtures', 'gold_sets.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+json.dump(out, open(fixture('gold_sets.json'), 'w', encoding='utf-8'), ensure_ascii=False)
 comp = [(w, k) for w in out for k, v in out[w].items() if len(v) >= 2]
 print('요청 둘 정답 목록', len(raw), '문제 · 항목 2개 이상', len(comp), '· 없는 번호', len(bad_id), '· 첫 항목이 기존 정답과 다름', len(bad_first))
 for r in bad_id[:5]:

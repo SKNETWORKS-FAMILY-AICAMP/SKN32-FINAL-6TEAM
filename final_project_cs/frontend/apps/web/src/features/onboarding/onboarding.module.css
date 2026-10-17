@@ -8,12 +8,9 @@
 .phone { position: relative; min-height: 100%; background: color-mix(in srgb, var(--color-paper) 40%, transparent); }
 
 .intro { padding: 16px 24px 25px; text-shadow: 0 1px 10px color-mix(in srgb, var(--color-surface) 90%, transparent); }
-.eyebrow { display: flex; gap: 6px; align-items: center; font-size: 11px; letter-spacing: 1.2px; font-weight: 650; color: var(--color-primary); margin-bottom: 12px; }
-.eyebrowDot { height: 5px; width: 5px; border-radius: 50%; background: var(--color-primary); }
 .intro h1 { font-size: 28px; line-height: 1.45; letter-spacing: -1.25px; font-weight: 720; }
 .intro p { font-size: 13px; line-height: 1.75; color: var(--color-text-secondary); margin: 11px 0 0; }
 .phone:has(.card[data-card="2"].active) .intro { padding-top: 5px; padding-bottom: 18px; }
-.phone:has(.card[data-card="2"].active) .intro .eyebrow { margin-bottom: 8px; font-size: 10px; }
 .phone:has(.card[data-card="2"].active) .intro h1 { font-size: 24px; line-height: 1.4; }
 .phone:has(.card[data-card="2"].active) .intro p { margin-top: 7px; font-size: 11px; line-height: 1.65; }
 

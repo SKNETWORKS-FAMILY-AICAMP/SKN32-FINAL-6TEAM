@@ -1,0 +1,96 @@
+{
+  "version": "2bee4df693-notice2-lodging2",
+  "services": {
+    "tripilot-api": {
+      "image": "sha256:14926752eb5998cfa04c62a510039fdccba3197e9af13fd07d3a5a69d3fe1088",
+      "status": "running",
+      "health": "healthy",
+      "restarts": 0
+    },
+    "tripilot-worker": {
+      "image": "sha256:14926752eb5998cfa04c62a510039fdccba3197e9af13fd07d3a5a69d3fe1088",
+      "status": "running",
+      "health": null,
+      "restarts": 0
+    },
+    "tripilot-web": {
+      "image": "sha256:a56e7e40bb134a2838985d4b6c123063632ec617044300785a5dc6e3f31cc485",
+      "status": "running",
+      "health": "healthy",
+      "restarts": 0
+    },
+    "tripilot-db": {
+      "image": "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f",
+      "status": "running",
+      "health": "healthy",
+      "restarts": 0
+    }
+  },
+  "files": {
+    "app/domains/travel_ops/components/intake/candidates.py": "1341db4682ddf33b503a028fd24e6d21f7f8e8a9c423dd4b13d02fb41f74b0c4",
+    "app/domains/travel_ops/components/intake/autofix.py": "3edbe5def391ac4b63dfed9c0c6a08951a409f194be673cc2cc73f5e4666d25f",
+    "app/domains/travel_ops/components/intake/pipeline.py": "8ec05d89eaec3c3a1f2b05e5042c423fbe70b2ac3216ff96b0ff951fdb971481",
+    "app/domains/travel_ops/entry/trip_api.py": "ca91bc5f694111e6f6f43ce795d8fb2d74ca6e183f90f4026cb8ea4cb83d6a2b",
+    "frontend/apps/web/src/features/plan-check/model.ts": "c05d90e71d9f95aa8047d6bfb5576915433b3b517a640ffd505c55009be24e80",
+    "frontend/apps/web/src/features/plan-check/from-review.ts": "9dff72256e51b4f15f8104dd1d72c5c4cf9002154ef8ccbd7d37330beb5ff141",
+    "frontend/apps/web/src/features/plan-check/stop-kind.tsx": "15caf1ac3f16c457dd885c209cd81e21f7453717ca4fd76c71d93e4257153106",
+    "frontend/apps/web/src/features/plan-check/use-server-review.ts": "1f0b3a106bca9495c082c7d8840182f1df01778ba583312e36d778273d40a9be",
+    "frontend/apps/web/src/lib/live/intake-review.ts": "95d9fd9999c8ad8186fd9031ef932d15f16d366b80a0eae18b2c8cf1f1f74468"
+  },
+  "sql_executed": false,
+  "db_preserved": true,
+  "settled_seconds": 30,
+  "verification": {
+    "native_lodging_tests": {
+      "passed": 18,
+      "total": 18
+    },
+    "http_contract_security": {
+      "unique_passed_after_seed_recheck": 498,
+      "total": 498,
+      "first_run_passed": 488,
+      "first_run_failed_missing_prompts": 10,
+      "seed_recheck_passed": 12,
+      "seed_recheck_total": 12
+    },
+    "web_image_unit_tests": {
+      "passed": 790,
+      "total": 790
+    },
+    "lodging_view_tests": {
+      "passed": 27,
+      "total": 27
+    },
+    "product_gate": {
+      "passed": 26,
+      "total": 26
+    },
+    "browser_examples": [
+      {
+        "day": 1,
+        "next": "경복궁",
+        "candidate": "효자스테이",
+        "straight_distance_m": 421,
+        "meal": "09:00-09:45",
+        "depart": "09:45",
+        "arrive": "09:56",
+        "mode": "walk",
+        "minutes": 11,
+        "icon": "숙박",
+        "saved_kind": "dining"
+      },
+      {
+        "day": 2,
+        "next": "북촌한옥마을",
+        "candidate": "북촌다락방",
+        "straight_distance_m": 35,
+        "meal": "09:00-09:50",
+        "depart": "09:50",
+        "arrive": "09:52",
+        "mode": "walk",
+        "minutes": 2,
+        "icon": "숙박"
+      }
+    ]
+  }
+}

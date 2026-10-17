@@ -7,8 +7,8 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 D = os.path.join(HERE, 'results', 'd_test')
-E = os.path.join(HERE, 'results', 'empty_probe')
 sys.stdout.reconfigure(encoding='utf-8')
 dst = sys.argv[1]
 SETS = {'D': ('all_prompts.json', 'd_test_lp_{}.jsonl', {'e4bt': 'q4km_e4bt', 'e4bs2': 'q4km_e4bs2', 'e4bs3': 'q4km_e4bs3'}),
@@ -22,7 +22,7 @@ for tag in [t for t in os.environ.get('VERIFY_EXTRA_TAGS', '').split(',') if t]:
 QRE = re.compile(r'고객 질문: (.*?)\n\n', re.S)
 items, seen = [], set()
 for ds, (pf, ff, tags) in SETS.items():
-    P = {p['i']: p for p in json.load(open(os.path.join(E, pf), encoding='utf-8'))}
+    P = {p['i']: p for p in json.load(open(fixture(pf), encoding='utf-8'))}
     for seed, tag in tags.items():
         for line in open(os.path.join(D, ff.format(tag)), encoding='utf-8'):
             r = json.loads(line)

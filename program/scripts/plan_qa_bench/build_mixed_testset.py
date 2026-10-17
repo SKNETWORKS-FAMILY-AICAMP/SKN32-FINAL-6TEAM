@@ -1,5 +1,5 @@
 # 「실전처럼 섞은 시험 세트」 만들기 — 사용자 지시(2026-10-06): 「관광지 질문 데이터를 우리 데이터셋에 있는 관광지·장소로 바꾼 합성 데이터셋을 만들어 다른 자료와 같이 섞어 시험 세트를 만들어라」.
-#  재료(전부 git 밖 datasets/ 에 있다 — AI Hub 는 재배포 제한, 관광지 질문 모음은 라이선스 표기 없음 → 만든 결과도 datasets/travel/mixed_testset/ 에 두고 이 스크립트와 통계만 커밋한다):
+#  재료(전부 git 밖 datasets/ 에 있다 — AI Hub 는 재배포 제한, 관광지 질문 모음은 라이선스 표기 없음 → 만든 결과도 datasets/core/pointing/testset/questions_plus_chitchat_v1/source/ 에 두고 이 스크립트와 통계만 커밋한다):
 #   ① 관광지 질문 모음(서울·경기 관광지 QA, 질문 2,543) — 질문 틀만 쓴다. 질문 속 장소 이름을 우리 DB 장소 목록(place_catalog 8,370곳) 이름과 글자가 가장 길게 겹치는 것으로 찾아 「{P}」 로 바꿔 틀을 만든다.
 #   ② 우리 시험 세트 mix8~mix12 의 일정(항목 · 장소) — 일정 안 장소로 틀을 채우면 정답 항목이 정해진다(합성 · 정답 = 그 항목). 일정 밖 장소(place_catalog 에서 일정과 이름이 겹치지 않는 곳)로 채우면 정답은 「없음」.
 #   ③ 일상 대화(AI Hub 주제별 일상 대화 · 카카오톡 구어체) · 신조어 구어체 대화(KoCulture) — 일정과 무관한 말(정답 = 없음, 규정 답으로 오인하면 오답).
@@ -15,8 +15,9 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
-OUT = os.path.join(ROOT, 'datasets', 'travel', 'mixed_testset')
+OUT = os.path.join(ROOT, 'datasets', 'core', 'pointing', 'testset', 'questions_plus_chitchat_v1', 'source')
 TRAVEL = os.path.join(ROOT, 'datasets', 'travel')
 SEED = 20261006
 N_SYN = 60            # 일정마다: 일정 안 장소 N_SYN · 일정 밖 장소 N_SYN
@@ -119,7 +120,7 @@ def main():
     catalog_pool = list(titles)
     syn_rows = []
     for w in ('mix8', 'mix9', 'mix10', 'mix11', 'mix12'):
-        job = json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]
+        job = json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]
         items = [i for i in job['items'] if i['kind'] != 'mobility' and len(i['place']) >= 2]
         item_names = ' '.join(f"{i['title']} {i['place']}" for i in job['items'])
         qs = [dict(q, src='합성(Codex·Claude)') for q in job['qs']]

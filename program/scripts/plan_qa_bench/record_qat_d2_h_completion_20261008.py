@@ -23,8 +23,8 @@ def main():
     assert len(ac['ready']) >= 3 and str(a['worker_pid']) in a['processes']
     assert b['active_training_variants'] == ['spark_s1_4b_oos']
     results, pairs = {}, {}
-    for suite, count_file, gold_file in [('D2','choice_counts.json','empty_probe/all_prompts_d2.json'),
-                                        ('H','h_counts.json','hard_set/h_set_test_30_20261015_agree.json')]:
+    for suite, count_file, gold_file in [('D2','choice_counts.json','datasets/core/pointing/testset/chitchat_only_holdout_v1/all_prompts_d2.json'),
+                                        ('H','h_counts.json','datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json')]:
         job, baseline = 'e4bqat_original_'+suite.lower(), 'e4bbase_'+suite.lower()
         r, old = read(BASE/job/count_file), read(BASE/baseline/count_file)
         assert not r['our_training'] and not old['our_training']
@@ -34,7 +34,7 @@ def main():
         old_answer = BASE/baseline/f"d_test_{old['execution']['job']['tag']}.jsonl"
         rows = [json.loads(x) for x in answer.read_text(encoding='utf-8').splitlines()]
         previous = {x['i']: x for x in (json.loads(s) for s in old_answer.read_text(encoding='utf-8').splitlines())}
-        gold_path = ROOT/'program/scripts/plan_qa_bench/results'/gold_file
+        gold_path = ROOT/gold_file
         gold = read(gold_path)
         run, ref = ({x['i']: x for x in values} for values in [rows,gold])
         assert len(rows) == len(run) == len(ref) == r['saved'] == r['expected']

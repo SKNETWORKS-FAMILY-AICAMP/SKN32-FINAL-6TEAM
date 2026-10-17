@@ -6,6 +6,7 @@ import csv, json, math, os, sys
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -21,7 +22,7 @@ for r in rows:
         k = (r['set'], int(r['q_index']))
         GOLD[k], TYPE[k] = fnum(r['gold']), r['q_type']
         PICK[r['model']][k] = fnum(r['pick'])
-KEYS = [(s, i) for s in SETS for i in range(len(json.load(open(os.path.join(HERE, f'fixtures/{s}.json'), encoding='utf-8'))['sets'][s]['qs']))]
+KEYS = [(s, i) for s in SETS for i in range(len(json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s]['qs']))]
 KEYS = [k for k in KEYS if TYPE[k] != 'compound_intent']
 assert len(KEYS) == 769
 E4B, CONF, SAME = {}, {}, 0

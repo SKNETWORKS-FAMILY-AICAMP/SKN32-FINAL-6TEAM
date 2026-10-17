@@ -10,14 +10,17 @@ export interface AdminGateway {
   reset(): Promise<void>;
 }
 const count = z.number().int().min(1, '1 이상의 정수를 입력해 주세요.').max(100000000);
+/** 채팅 하루 한도 — 0 은 한도 없음 */
+const quota = z.number().int().min(0, '0 이상의 정수를 입력해 주세요. 0 은 한도 없음입니다.').max(100000000);
 const body = z.string().trim().min(1, '내용을 입력해 주세요.').max(5000, '5,000자 이내로 입력해 주세요.');
 const reason = z.string().trim().min(1, '변경 사유를 입력해 주세요.').max(1000);
 const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, '날짜와 시간을 입력해 주세요.').refine(v => Number.isFinite(Date.parse(`${v}+09:00`)), '올바른 날짜를 입력해 주세요.');
 const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('block-user'), userId: body, blocked: z.boolean(), reason }),
-  z.object({ type: z.literal('user-limit'), userId: body, limit: count.nullable(), period: z.enum(['today','until-cleared']), reason }),
-  z.object({ type: z.literal('save-limits'), chatLimit: count, rules: z.array(z.object({ id: body, threshold: z.number().min(1).max(99), multiplier: z.number().min(1.1).max(20) })).max(5), reason }),
+  z.object({ type: z.literal('user-limit'), userId: body, limit: quota.nullable(), period: z.enum(['today','until-cleared']), reason }),
+  z.object({ type: z.literal('save-limits'), chatLimit: quota, rules: z.array(z.object({ id: body, threshold: z.number().min(1).max(99), multiplier: z.number().min(1.1).max(20) })).max(5), reason }),
   z.object({ type: z.literal('api-cap'), apiId: body, daily: count, monthly: count, reason }),
+  z.object({ type: z.literal('api-cap-clear'), apiId: body, reason }),
   z.object({ type: z.literal('inquiry-status'), inquiryId: body, status: z.enum(['접수','처리 중','답변 완료']), assignee: z.string().max(100), reason }),
   z.object({ type: z.literal('reply'), inquiryId: body, body }),
   z.object({ type: z.literal('save-template'), id: body.optional(), title: body, body }),
@@ -80,6 +83,11 @@ export function createAdminGateway(mode: string | undefined): AdminGateway {
           if (command.daily > command.monthly) throw new Error('월 운영 상한은 하루 운영 상한 이상이어야 합니다.');
           record('외부 API 운영 상한 변경', api.name, { daily: api.dailyCap, monthly: api.monthlyCap }, { daily: command.daily, monthly: command.monthly }, command.reason);
           api.dailyCap = command.daily; api.monthlyCap = command.monthly; break;
+        }
+        case 'api-cap-clear': {
+          const api = find(next.apis, command.apiId);
+          record('외부 API 운영 상한 해제', api.name, { daily: api.dailyCap, monthly: api.monthlyCap }, 'ENV 상한', command.reason);
+          break;
         }
         case 'inquiry-status': {
           const inquiry = find(next.inquiries, command.inquiryId);
@@ -174,7 +182,7 @@ export async function saveSourcePolicy<T>(payload: unknown): Promise<T> {
   const session = await operatorSession();
   return liveRequest<T>('source-policy', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
 }
-export const operationSimulations = <T,>(tripId?: string) => liveRequest<T>(tripId ? `simulations/${encodeURIComponent(tripId)}` : 'simulations');
+export const operationSimulations = <T,>(tripId?: string, query?: URLSearchParams) => liveRequest<T>(`${tripId ? `simulations/${encodeURIComponent(tripId)}` : 'simulations'}${query ? `?${query}` : ''}`);
 export const operationWatchRuns = <T,>(suffix = '') => liveRequest<T>(`watch-runs${suffix}`);
 export const operationApiLimits = <T,>() => liveRequest<T>('api-limits');
 export async function saveOperationSimulation<T>(tripId: string, payload: unknown): Promise<T> {
@@ -205,4 +213,10 @@ export function createLiveGateway(): AdminGateway {
       await liveRequest('commands', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(command) });
     },
   };
+}
+
+
+export async function receiveOperationSimulation<T>(tripId: string, payload: unknown): Promise<T> {
+  const session = await operatorSession();
+  return liveRequest<T>(`simulations/${encodeURIComponent(tripId)}/mock-receipts`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
 }

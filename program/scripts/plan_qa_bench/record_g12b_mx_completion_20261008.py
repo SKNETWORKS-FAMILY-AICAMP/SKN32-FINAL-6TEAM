@@ -16,7 +16,7 @@ assert not (ROOT / REPORT).exists(), 'Already recorded'
 folder = BASE / 'g12bbase_mx'
 r = json.loads((folder / 'mx_counts.json').read_text(encoding='utf-8'))
 raw = folder / 'd_test_mx_backlog_g12bbase.jsonl'
-gold_path = ROOT / 'datasets/travel/mx_testset/mx_main_prompts.json'
+gold_path = ROOT / 'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json'
 gold = json.loads(gold_path.read_text(encoding='utf-8'))
 rows = [json.loads(line) for line in raw.read_text(encoding='utf-8').splitlines()]
 answers = {x['i']: x for x in rows}

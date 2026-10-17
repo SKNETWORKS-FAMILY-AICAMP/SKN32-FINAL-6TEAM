@@ -113,3 +113,27 @@ def activity_live_check_enabled(tenant_id: str) -> bool:
     from app.core.settings import activity_live_check_enabled as guardrail_default
 
     return guardrail_default()
+
+
+#: 상황마다의 운영 설정 이름 — 채팅(옛 이름 그대로 두어 이미 저장된 값을 잇는다) · 일정 짚기 · 공지 확인
+MODEL_ROUTE = "llm.model_route"
+MODEL_ROUTE_KEYS = {"chat": MODEL_ROUTE, "pointer": "llm.model_route.pointer", "notice": "llm.model_route.notice"}
+MODEL_ROUTE_CHOICES = {"chat": ("off", "local", "ssh", "api"), "pointer": ("off", "local", "ssh"), "notice": ("off", "local", "ssh")}
+
+
+def model_route_choice(tenant_id: str, purpose: str = "chat") -> str:
+    """관리 콘솔에서 그 상황(chat · pointer · notice)에 고른 모델 경로 — off(환경 파일 따름) · local · ssh · api. `[2026-10-15 · 10-16 사용자 지시]`
+
+    콘솔 값이 없거나 못 읽거나 목록 밖이면 가드레일 기본(`web_guard.model_route.default`, 기본 off).
+    ★off 를 경로로 바꾸는 일(환경 파일 `ACOP_MODEL_ROUTE_<상황>` 읽기)은 `app.infrastructure.ollama_chat.resolve_route` 가 한다 — 조립 루트가 이 함수를 꽂는다.
+    """
+    choices = MODEL_ROUTE_CHOICES.get(purpose)
+    if choices is None:
+        return "off"
+    value = operator_setting(tenant_id, MODEL_ROUTE_KEYS[purpose])
+    if value in choices:
+        return str(value)
+    from app.core.settings import get_guardrails
+
+    default = str((get_guardrails().get("web_guard.model_route") or {}).get("default") or "off")
+    return default if default in choices else "off"

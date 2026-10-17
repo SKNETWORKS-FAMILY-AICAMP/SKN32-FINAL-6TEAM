@@ -38,6 +38,8 @@ export interface RowContext {
   /** The checks to show for a stop while they are being ticked in again (null = the stop's own). */
   rowsFor: (item: PlanItem) => CheckRow[] | null;
   onPick: (id: string) => void;
+  /** `[2026-10-15 사용자 결정 — ST4F-498]` 「○○에서 출발」 pressed: show the stay (its check-in card), as on the trip screen. */
+  onShowStay: (id: string) => void;
   onToggleMove: (id: string) => void;
   /** `[2026-10-07]` The customer picked a way for a leg (`mode`, and its name for the notice): the screen sends it and says what was done, with 「되돌리기」. Rejects with the server's refusal. */
   onSetMode: (move: PlanMove, choice: { mode: MoveOptionMode | "recommended"; label: string }) => Promise<void>;
@@ -119,10 +121,17 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, 
         const points = ctx.insertion ? insertionPoints(view, day) : [];
         // `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top (the move from it follows, when the check found one).
         const stay = view.items.find((item) => isStayItem(item) && item.date < day.date && day.date <= item.endDate!);
-        return <>{stay && <li className={styles.stayBand} data-entry-id={`${stay.id}:from`}>
-          <BedDouble size={16} strokeWidth={1.8} aria-hidden="true" />
-          <span>{t(`${stay.title}에서 출발`, `Leaving from ${stay.title}`)}</span>
-          <small>{day.date === stay.endDate ? t("마지막 날", "Last day") : t(`${nightOf(stay, day.date)}박째`, `Night ${nightOf(stay, day.date)}`)}</small>
+        const common = view.items.find((item) => item.day === day.day && item.lodgingGroup?.place && item.lodgingGroup.members.length > 1);
+        const departure = stay ?? common;
+        const stayName = stay?.title ?? common?.lodgingGroup?.place;
+        // `[2026-10-15 사용자 결정 — ST4F-498]` Pressed (once the check is done) it shows the stay — the trip screen's band does the same (`StayRow`).
+        return <>{departure && <li className={styles.stayBand} data-entry-id={`${departure.id}:from`}>
+          <button type="button" className={styles.stayBandButton} disabled={!ctx.done} onClick={() => ctx.onShowStay(departure.id)}
+            aria-label={t(`${stayName}에서 출발 — 숙소 보기`, `Leaving from ${stayName} — show the stay`)}>
+            <BedDouble size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>{t(`${stayName}에서 출발`, `Leaving from ${stayName}`)}</span>
+            <small>{stay ? (day.date === stay.endDate ? t("마지막 날", "Last day") : t(`${nightOf(stay, day.date)}박째`, `Night ${nightOf(stay, day.date)}`)) : t("여행 공통 숙소", "Shared trip stay")}</small>
+          </button>
         </li>}{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
@@ -140,14 +149,14 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, 
  * 2026-10-08: 제목 옆에는 바뀐 일정의 체크만 둔다. 확인 필요와 시간 되돌리기는 카드 하단 오른쪽에 놓는다.
  * A stop marked for deletion is grey and has Undo where the bin is.
  */
-/** `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay (kind lodging with a later end day): 「○○ 체크인」 and its nights 「3박 · 11/6~11/9」. Other stops keep their title. */
+/**
+ * `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay (kind lodging with a later end day): its name, and under it 「체크인 · 3박 · 11/6~11/9」.
+ * `[2026-10-15 사용자 결정 — ST4F-498]` The word 체크인 moved from after the name (「○○ 체크인」 — a long name cut it off) to the front of the nights' pill.
+ */
 const isStayItem = (item: PlanItem) => item.kind === "lodging" && !!item.endDate && item.endDate > item.date;
 /** Which night of the stay the morning of `date` follows (the day after check-in is night 2 …, as the trip screen says it). */
 const nightOf = (stay: PlanItem, date: string) => Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${stay.date}T00:00:00Z`)) / 86_400_000) + 1;
 const monthDay = (iso: string) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
-function stayTitle(item: PlanItem, t: ReturnType<typeof useT>): string {
-  return isStayItem(item) ? t(`${item.title} 체크인`, `Check in · ${item.title}`) : item.title;
-}
 function stayPillOf(item: PlanItem, t: ReturnType<typeof useT>): string | null {
   if (!isStayItem(item)) return null;
   const nights = Math.round((Date.parse(`${item.endDate}T00:00:00Z`) - Date.parse(`${item.date}T00:00:00Z`)) / 86_400_000);
@@ -161,6 +170,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   const waiting = !done && Boolean(ctx.reveal?.waiting.has(item.id));
   const open = done ? ctx.open === item.id || item.verdict === null : current;
   const selected = done && ctx.selected === item.id;
+  // `[2026-10-15 사용자 결정 — ST4F-498]` A stay's title is its name only; its card is still read as 「○○ … 체크인 · n박 · 날짜」 (the pill is named with it).
+  const labelledBy = `${ctx.prefix}plan-item-${item.id}${isStayItem(item) ? ` ${ctx.prefix}plan-item-${item.id}-stay` : ""}`;
   const timeFocused = done && (ctx.time ? ctx.time.id === item.id && ctx.time.kind === "start" : selected || ctx.open === item.id);
   const checking = item.verdict === null;
   const review = item.verdict === "review";
@@ -215,16 +226,16 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
           <span className={styles.timeStack}><time data-stop-start>{item.startsAt || "–"}</time><time className={styles.rangeEnd} data-stop-end>~{item.endsAt || "—"}</time></span></Act>
       : <span className={styles.time}>{item.startsAt || "–"}</span>}
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} data-grab={grab ? true : undefined} {...grab} /></span>
-    <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} data-pickable={done && !checking && !removed ? true : undefined} data-open={open && !checking ? true : undefined} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-busy={checking && !waiting} onClick={pickCard}>
+    <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} data-pickable={done && !checking && !removed ? true : undefined} data-open={open && !checking ? true : undefined} aria-labelledby={labelledBy} aria-busy={checking && !waiting} onClick={pickCard}>
       {done
         // Once done a card opens and closes (accordion: the heading holds the button).
         ? <div className={styles.cardTop}>
             {open ? <Act className={`${styles.icon} ${styles.lockIcon}`} why={lockWhy} explain={explain} onPress={() => ctx.onLock(item)} aria-pressed={item.locked} aria-label={lockLabel}>
               {item.locked ? <Lock size={18} strokeWidth={1.8} aria-hidden="true" /> : <LockOpen size={18} strokeWidth={1.8} aria-hidden="true" />}</Act> : <StopKind item={item} />}
-            <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} title={item.title} aria-labelledby={`${ctx.prefix}plan-item-${item.id}`} aria-expanded={open} aria-controls={`${ctx.prefix}plan-item-${item.id}-checks`} onClick={() => ctx.onPick(item.id)}>
+            <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} title={item.title} aria-labelledby={labelledBy} aria-expanded={open} aria-controls={`${ctx.prefix}plan-item-${item.id}-checks`} onClick={() => ctx.onPick(item.id)}>
               <span className={styles.cardName}>
-                <span className={styles.cardTitleLine}><span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{stayTitle(item, t)}</span>{changedMark}</span>
-                {stayPillOf(item, t) && <small className={styles.pill} data-stay-nights>{stayPillOf(item, t)}</small>}
+                <span className={styles.cardTitleLine}><span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>{changedMark}</span>
+                {stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}
                 {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}
               </span>
             </button></h4>
@@ -239,7 +250,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               : <Act id={`${ctx.prefix}plan-delete-${item.id}`} className={styles.icon} why={deleteWhy} explain={explain} onPress={() => ctx.onDelete(item)} aria-label={t(`${item.title} 삭제`, `Delete ${item.title}`)} tooltip={t(`${item.title} 삭제`, `Delete ${item.title}`)}><Trash2 size={16} strokeWidth={1.8} aria-hidden="true" /></Act>}
             </span>
           </div>
-        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{stayTitle(item, t)}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights>{stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
+        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
       {editingTime && <TimeEditor item={item} ui={ctx.time!} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
         {rows.length
@@ -270,14 +281,22 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
 /**
  * `[2026-10-13 사용자 결정 — 수정 모드]` A stop of the registered trip that is over: the trip screen's thin grey line (its name, 「~end」). It is not in the edit — the server keeps it as it is —
  * so it has no tools, and pressed it says why.
+ * `[2026-10-15 사용자 지적 — ST4F-490]` Only a stop that is over is called over (`fixedReason`): the others say what keeps them out of the edit. A locked stay, flight or booking is not here —
+ * it is a card of the edit, locked (pressed, it says it is locked).
  */
 function PastItemRow({ item, ctx }: { item: PlanItem; ctx: RowContext }) {
   const t = useT();
-  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-past data-passed>
+  const why = item.fixedReason === "overnight" ? t("자정을 넘는 일정이라 여기서는 바꿀 수 없어요", "This stop runs past midnight, so it cannot change here")
+    : item.fixedReason === "no_place" ? t("장소 위치를 몰라 여기서는 바꿀 수 없어요", "Its place has no position, so it cannot change here")
+    : item.fixedReason === "kind" ? t("이 일정은 여기서 바꿀 수 없어요", "This stop cannot change here")
+    : item.fixedReason === "past" ? t("지난 일정이라 바꿀 수 없어요", "This stop is over, so it cannot change")
+    : t("여기서는 바꿀 수 없는 일정이에요", "This stop cannot change here");
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-past
+    data-passed={item.fixedReason === "past" || undefined} data-fixed={item.fixedReason ?? undefined}>
     <span className={styles.time}>{item.startsAt}</span>
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
-    <div><Act className={styles.pastLine} why={t("지난 일정이라 바꿀 수 없어요", "This stop is over, so it cannot change")} explain={ctx.explain} onPress={() => undefined}
-      aria-label={t(`${item.title} · 지난 일정`, `${item.title} · past`)}><span>{item.title}</span><small>~{item.endsAt || "—"}</small></Act></div>
+    <div><Act className={styles.pastLine} why={why} explain={ctx.explain} onPress={() => undefined}
+      aria-label={item.fixedReason === "past" ? t(`${item.title} · 지난 일정`, `${item.title} · past`) : t(`${item.title} · 바꿀 수 없는 일정`, `${item.title} · cannot change here`)}><span>{item.title}</span><small>~{item.endsAt || "—"}</small></Act></div>
   </li>;
 }
 

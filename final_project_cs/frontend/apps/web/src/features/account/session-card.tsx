@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
+import { forgetConsents } from "@/features/consent/consent-store";
+import { blankOnboarding, useOnboarding } from "@/features/onboarding/onboarding-state";
 import { LiveError, logout, type WebSession } from "@/lib/live/client";
 import type { Profile } from "@/lib/profile";
 import { useSettings, useT } from "@/lib/settings";
@@ -60,6 +62,7 @@ export function SignOut({ profile }: { profile: Profile | undefined }) {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const opener = useRef<HTMLButtonElement>(null);
   const member = profile?.session?.kind === "member";
+  const [, setOnboarding] = useOnboarding();
 
   async function signOut() {
     setBusy(true);
@@ -69,6 +72,10 @@ export function SignOut({ profile }: { profile: Profile | undefined }) {
       // `[2026-10-05 · 팀 develop 점검]` Not only marked old: dropped. Marked old they stayed on screen (the previous account's trips and chat) until a re-read, and a failed re-read left them.
       await queryClient.cancelQueries();
       queryClient.clear();
+      // ★`[2026-10-16 사용자 결정 — ST4F-601 F10]` This device's consent copy and preference answers go too: the next person here sees the terms
+      //   instead of entering on the previous person's consent (which a gate-on server would even record under the new guest).
+      forgetConsents();
+      setOnboarding(blankOnboarding());
       setMessage({ ok: true, text: t("로그아웃했어요. 다시 로그인하면 이 계정의 여행을 열 수 있어요.", "Signed out. Sign in again to open this account's trips.") });
     } catch (error) {
       setMessage({ ok: false, text: error instanceof LiveError || error instanceof Error ? error.message : String(error) });

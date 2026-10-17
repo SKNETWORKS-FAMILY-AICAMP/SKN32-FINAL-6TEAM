@@ -59,7 +59,7 @@ def main():
     folder=HERE/'results/gpu_backlog_20261008'/args.job
     started=json.loads((folder/'started.json').read_text(encoding='utf-8'))
     answer=folder/f"d_test_{started['job']['tag']}.jsonl"
-    golden=ROOT/'datasets/travel/mx_testset/mx_main_prompts.json'
+    golden=ROOT/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json'
     items=json.loads(golden.read_text(encoding='utf-8'))
     rows=[json.loads(l) for l in answer.read_text(encoding='utf-8').splitlines()]
     answers={r['i']:r for r in rows}; gold={x['i']:x for x in items}

@@ -215,6 +215,12 @@ def parse_row(raw: dict[str, Any]) -> dict[str, Any] | None:
 #: `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 문자를 넘겨받아 남기는 곳(관리자 웹앱에서 사안 · 건수를 본다).
 #:  조립이 꽂는다(`components/watch/notice_exclusions.register`). 비어 있으면 남기지 않는다(시험 · 조립 전).
 _excluded_sink: Any = None
+_receipt_sink: Any = None
+
+
+def set_receipt_sink(sink: Any) -> None:
+    global _receipt_sink
+    _receipt_sink = sink
 
 
 def set_excluded_sink(sink: Any) -> None:
@@ -417,6 +423,7 @@ class DisasterMsgApi(TravelSource):
             "numOfRows": API_PAGE_ROWS, "crtDt": window_start.strftime("%Y%m%d"),
             "rgnNm": REGION_NAMES.get(region, region)})
         if payload is None:
+            self._record_receipt(region, None)
             return None
         body = payload.get("body")
         if body is None:
@@ -431,18 +438,31 @@ class DisasterMsgApi(TravelSource):
                 body = [body]
         if not isinstance(body, list):
             self._miss("unexpected_shape", type(body).__name__)
+            self._record_receipt(region, None)
             return None
         total = payload.get("totalCount")
         if isinstance(total, (int, str)) and str(total).isdigit() and int(total) > len(body):
             self._miss("truncated", f"{total} > {len(body)}")
+            self._record_receipt(region, None)
             return None
         for raw in body:
             row = parse_row(raw) if isinstance(raw, dict) else None
             if row is None:
                 self._miss("bad_row", repr(raw)[:160])
+                self._record_receipt(region, None)
                 return None
             rows.append(row)
+        self._record_receipt(region, rows)
         return rows
+
+    def _record_receipt(self, region: str, rows: list | None) -> None:
+        if _receipt_sink is None:
+            return
+        fetched = getattr(self._fetch_state, "fetched_at", None)
+        _receipt_sink({"source": self.name, "region": region, "status": "received" if rows is not None else "failed",
+                       "fetched_at": fetched.isoformat() if fetched else None,
+                       "from_cache": bool(getattr(self._fetch_state, "from_cache", False)),
+                       "error_code": next(reversed(self.misses), None) if rows is None else None, "rows": rows or []})
 
     def released(self, *, region: str, since: datetime, at: datetime, district: str | None = None) -> list[dict[str, Any]] | None:
         """`since` 부터 `at` 까지 `region` 으로 온 **해제 문자**(재해구분은 가리지 않는다). 못 읽으면 `None`. `[2026-10-06]` 재난 정지를 푸는 알림이 쓴다."""

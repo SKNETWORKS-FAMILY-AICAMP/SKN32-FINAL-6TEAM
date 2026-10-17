@@ -52,6 +52,8 @@ class LimitSpec:
     choices: tuple[str, ...] | None = None
     #: ★`[2026-10-14]` 관리 콘솔이 이름 아래에 보여 주는 설명(무엇이 켜지나 · 비용 · 끄면 어떻게 되나). 비면 싣지 않는다
     help: str = ""
+    #: ★`[2026-10-15]` `choice` 값마다 관리 콘솔이 보여 줄 한국어 이름(값 자체는 그대로 저장한다). 비면 값을 그대로 보인다
+    choice_labels: tuple[tuple[str, str], ...] = ()
 
     def check(self, value: Any) -> str | None:
         """맞으면 None, 아니면 거절 이유 코드."""
@@ -71,7 +73,8 @@ class LimitSpec:
         return {"name": self.name, "label": self.label, "unit": self.unit, "type": self.type,
                 "default": self.default, "min": self.min, "max": self.max,
                 **({"choices": list(self.choices)} if self.choices else {}),
-                **({"text_ko": self.help} if self.help else {})}
+                **({"text_ko": self.help} if self.help else {}),
+                **({"choice_labels_ko": dict(self.choice_labels)} if self.choice_labels else {})}
 
 
 def _mode_text(raw: Any) -> str:
@@ -115,7 +118,7 @@ def specs() -> dict[str, LimitSpec]:
     # ★`[2026-09-29 사용자 지시]` 개발 모드 — 켜면 웹 채팅 응답에 근거(`basis`)를 싣는다. 고객 문장에는 늘 싣지 않는다
     out["web.dev_mode"] = LimitSpec("web.dev_mode", "개발 모드(근거 보이기)", "", "choice", "off", choices=("off", "on"))
     out["testing.intake_presets_enabled"] = LimitSpec(
-        "testing.intake_presets_enabled", "준비된 시험 일정 입력(test1~test15)", "", "bool",
+        "testing.intake_presets_enabled", "준비된 시험 일정 입력(test1~test50)", "", "bool",
         bool(guard.get("testing.intake_presets_enabled")))
     # ★`[2026-09-29 Codex 3회차 합의]` 채팅 결정 단위 — 재기동 없이 끄고 켠다(오변경이 보이면 곧바로 shadow 로)
     out["chat.decision_mode"] = LimitSpec("chat.decision_mode", "채팅 해석 방식(결정 단위)", "", "choice",
@@ -144,7 +147,62 @@ def specs() -> dict[str, LimitSpec]:
     out["travel.activity_judge.live_status_batch_enabled"] = LimitSpec(
         "travel.activity_judge.live_status_batch_enabled", "활동 장소 임시휴무 · 폐업 웹 확인(유료 — 하루 최대 약 1.6달러)", "", "bool",
         guard.get("travel.activity_judge.live_status_batch_enabled") is True, help=_activity_live_check_help(guard))
+    # ★`[2026-10-15 · 10-16 사용자 지시]` 모델 경로 — 상황마다(채팅 · 일정 짚기 · 공지 확인) 따로 고른다. off = 환경 파일을 따른다.
+    #   읽는 곳은 `settings_hook.model_route_choice` 하나다(조립이 `ollama_chat.register_route_provider` 로 꽂는다)
+    route = guard.get("web_guard.model_route") or {}
+    default = _mode_text(route.get("default"))
+    from app.domains.travel_ops.components.settings_hook import MODEL_ROUTE_CHOICES, MODEL_ROUTE_KEYS
+
+    for purpose, title in MODEL_ROUTE_TITLES:
+        choices = MODEL_ROUTE_CHOICES[purpose]
+        out[MODEL_ROUTE_KEYS[purpose]] = LimitSpec(
+            MODEL_ROUTE_KEYS[purpose], f"모델 경로 — {title}", "", "choice", default if default in choices else "off", choices=choices,
+            help=_model_route_help(purpose), choice_labels=_route_labels(purpose, choices))
     return out
+
+
+MODEL_ROUTE_TITLES = (("chat", "채팅 해석 · 계획 읽기 · 번역"), ("pointer", "일정 짚기"), ("notice", "공지 확인(끝났나 · 여행 영향)"))
+MODEL_ROUTE_LABELS = (("local", "로컬 모델 — 이 기계의 학습 E4B"), ("ssh", "SSH — 런팟 GPU 서버"), ("api", "API — 유료(서버용 키)"))
+_ROUTE_NAME = {"local": "로컬 모델", "ssh": "SSH(런팟)", "api": "API"}
+
+
+def _env_route(purpose: str) -> str:
+    """콘솔이 「끔」일 때 따르는 환경 파일 값(`ACOP_MODEL_ROUTE_<상황>`). 값이 아니라 경로 이름만 보인다."""
+    from app.core.settings import get_settings
+
+    return str(getattr(get_settings(), f"model_route_{purpose}", "local") or "local")
+
+
+def _route_labels(purpose: str, choices: tuple[str, ...]) -> tuple[tuple[str, str], ...]:
+    names = dict(MODEL_ROUTE_LABELS)
+    return tuple((c, f"끔 — 환경 파일 따름(지금 {_ROUTE_NAME.get(_env_route(purpose), _env_route(purpose))})" if c == "off" else names[c])
+                 for c in choices)
+
+
+def _model_route_help(purpose: str) -> str:
+    """모델 경로 설명 — 무엇이 바뀌고, 지금 이 기계에서 각 경로를 쓸 수 있는지(주소 · 키 값은 싣지 않는다)."""
+    from app.core.settings import get_settings
+
+    settings = get_settings()
+    has = lambda name: bool((getattr(settings, name, "") or "").strip())                      # noqa: E731
+    ready = {"local": has("ollama_base_url"), "ssh": has("ollama_ssh_base_url"), "api": has("openai_api_key_server")}
+    shown = ("local", "ssh", "api") if purpose == "chat" else ("local", "ssh")
+    state = " · ".join(f"{_ROUTE_NAME[key]} {'준비됨' if ready[key] else '설정 없음'}" for key in shown)
+    failover = "켜짐" if getattr(settings, "llm_failover_enabled", False) else "꺼짐"
+    env = f"ACOP_MODEL_ROUTE_{purpose.upper()}"
+    lines = {
+        "chat": ["하는 일: 채팅 해석 · 계획 읽기 · 번역 · 분류가 모델을 어디서 부를지 고릅니다.",
+                 f"넘김: 고른 경로가 먼저입니다. 모델 넘김 장치(지금 {failover})가 켜져 있으면 안 될 때 다른 경로로 넘깁니다 — API 를 고르면 늘 로컬 모델로 넘깁니다."],
+        "pointer": ["하는 일: 「둘째 날 식당」처럼 고객이 가리킨 일정 항목을 고르는 학습 모델을 어디서 부를지 고릅니다.",
+                    "API 는 고를 수 없습니다 — 학습 모델은 API 에 없습니다. 모델을 못 부르면 낱말 규칙으로 고릅니다."],
+        "notice": ["하는 일: 재난 문자 · 공지가 「끝났나」 · 「여행에 영향이 있나」를 한 번 더 보는 학습 모델을 어디서 부를지 고릅니다.",
+                   "API 는 고를 수 없습니다 — 학습 모델은 API 에 없습니다. 모델을 못 부르면 규칙 결과를 씁니다."],
+    }[purpose]
+    return "\n".join([
+        *lines,
+        f"끔: 콘솔이 끼어들지 않고 환경 파일({env}, 지금 {_ROUTE_NAME.get(_env_route(purpose), _env_route(purpose))})을 따릅니다. 저장하면 재기동 없이 30초 안에 바뀝니다.",
+        "로컬 모델: 이 기계의 Ollama 에 올린 우리 학습 E4B. SSH: 앱 밖 SSH 터널 프로그램을 거쳐 런팟 GPU 서버의 같은 모델.",
+        f"지금 이 서버: {state}. 설정 없는 경로를 고르면 로컬 모델로 돕니다. 규정 검색(임베딩)은 어느 칸도 따르지 않습니다."])
 
 
 def _activity_live_check_help(guard: Any) -> str:
@@ -286,11 +344,10 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
 
                 raise HTTPException(exc.status, {"error": {"code": exc.code, "message": exc.message}}) from None
         for kind, who, scope in rows:
-            cap = int(limits[f"web.{action}.{scope}"])
+            cap: int | None = int(limits[f"web.{action}.{scope}"])
             if action == "message" and kind == "key":
-                operator_cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
-                if operator_cap is not None:
-                    cap = int(operator_cap)
+                # ★사용자 한 명의 채팅 한도는 관리자 화면 「② 채팅 하루 한도」(사용자별 예외 포함)가 정한다 — None 은 한도 없음(0 으로 저장)
+                cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
             got = _bump(cur, tenant_id, kind, who, action, day, cap if enabled else None)
             if got is None:
                 cur.execute("SELECT used FROM web_usage WHERE tenant_id=%s AND who_kind=%s AND who=%s AND action=%s "

@@ -616,6 +616,17 @@ def build_reroute():
     return _call
 
 
+def wire_trip_scope() -> None:
+    """감시 · 안내 대상 좁히기만 꽂는다 — 게스트(로그인 안 한 웹 사용자)의 여행은 안내 · 감시 대상이 아니다(D-CS-011 §2).
+
+    ★`[2026-10-16]` 운영 앱(`ops_entrypoint`)도 부른다. 전에는 감시 프로그램만 꽂아서, 관리자 「재난 6종 시뮬레이션」 목록에 감시가 보지 않는
+      게스트 여행까지 나왔고 거기에 시험을 걸면 저장만 되고 알림이 영영 안 생겼다(사용자 보고: 「실제 알림으로 안 가고 적용이 안 된다」)."""
+    from app.domains.travel_ops.components.itinerary import trip_scope
+    from app.domains.travel_ops.modules.web_account.guest_policy import watch_scope_sql
+
+    trip_scope.register("web_account.guest", watch_scope_sql)
+
+
 def wire_optional_features() -> list[str]:
     """끌 수 있는 기능이 **자기 규칙을 끼움 자리에 꽂는 곳**. `[2026-10-06]` D-CS-013
 
@@ -626,16 +637,21 @@ def wire_optional_features() -> list[str]:
     꽂지 않으면 부품은 기본값으로 돈다(감시 대상 좁히기 없음 = 전부 감시).
     """
     from app.domains.travel_ops.components.itinerary import trip_scope
-    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
 
-    # 게스트(로그인 안 한 웹 사용자)의 여행은 안내·감시 대상이 아니다 — D-CS-011 §2.
-    trip_scope.register("web_account.guest", not_guest_sql)
+    wire_trip_scope()
 
     # 운영자가 관리 화면에서 바꾼 값(채팅 해석 방식 등)을 읽는 자리. 표는 웹 제한값 기능이 들고 있다.
     from app.domains.travel_ops.components import settings_hook
     from app.domains.travel_ops.modules.web_account import web_guard
 
     settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
+
+    # ★`[2026-10-15 · 10-16 사용자 지시]` 관리 콘솔 「모델 경로」 — 상황마다(채팅 · 일정 짚기 · 공지 확인) off(환경 파일 따름) · local · ssh · api. 채팅은 부를 때마다,
+    #  일정 짚기 · 공지 확인은 주소를 부를 때마다 읽는다(재기동 없이 반영, 운영 설정 캐시만큼 늦을 수 있다). SSH 터널은 앱 밖 프로그램이 연다.
+    from app.infrastructure import ollama_chat
+
+    route_tenant = get_settings().tenant_id
+    ollama_chat.register_route_provider(lambda purpose: settings_hook.model_route_choice(route_tenant, purpose))
 
     # 접수 읽기의 진행 알림을 화면이 읽는 모양(SSE)으로 포장하는 자리.
     from app.domains.travel_ops.components import progress_hook
@@ -652,17 +668,20 @@ def wire_optional_features() -> list[str]:
     #  (없으면 낱말 규칙만 — 지금까지와 같다). 켜고 끄기: 가드레일 `travel.pointer.mode`(off · shadow · on).
     from app.domains.travel_ops.components.conversation import item_pointer
 
-    pointer = item_pointer.register_from_settings(get_settings())
+    route_settings = get_settings()
+    pointer = item_pointer.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings, "pointer"))
 
     # ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 2차 확인 — 규칙이 「끝남」이라 한 공지를 가르친 모델이 한 번 더 본다. `.env` 에
     #  `ACOP_OLLAMA_NOTICE_MODEL` 이 있을 때만 꽂는다(없으면 규칙만). 켜고 끄기: 가드레일 `travel.notice_end.mode`(off · shadow · on).
     from app.domains.travel_ops.ports.data_sources import notice_end_model
 
-    notice_judge = notice_end_model.register_from_settings(get_settings())
+    notice_judge = notice_end_model.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings, "notice"))
     # `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 재난 문자를 DB 에 남긴다(관리자 웹앱 「걸러진 재난 문자」)
     from app.domains.travel_ops.components.watch import notice_exclusions
 
     notice_exclusions.register()
+    from app.domains.travel_ops.components.watch import notice_receipts
+    notice_receipts.register()
     return (list(trip_scope.registered())
             + (["settings"] if settings_hook.is_registered() else [])
             + (["progress"] if progress_hook.is_registered() else [])
@@ -763,7 +782,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_alternatives, lodging_ledger, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -859,6 +878,18 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                 adopt=lodging_ledger_impl.adopt_option,
                                 item_key=lodging_ledger_impl.item_key,
                                 offers=lodging_ledger_impl.shown_offers)
+        # ★`[2026-10-16 사용자 결정]` 확인 화면의 「다른 숙소」 후보도 숙소 팀이 고른다 — 팀의 「바꿔 줘」 고르기(`team._fresh_picks`)를 그대로 쓴다.
+        #   숙소 비교는 바깥 소스 하루 한도를 쓰므로 낮은 우선순위 몫(`travel.candidates.lodging_source_share`)으로 **부를 때** 소스를 만든다(만드는 것은 I/O 없음)
+        from app.domains.travel_ops.instances.lodging import review_alternatives as lodging_review_alternatives
+
+        def _lodging_rank(**query):
+            from app.core.settings import get_guardrails, get_settings
+            from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+
+            share = float(get_guardrails().get("travel.candidates.lodging_source_share"))
+            return lodging_review_alternatives.rank(travel=build_travel_sources(get_settings(), low_priority_share=share), **query)
+
+        lodging_alternatives.register(rank=_lodging_rank)
     # 팀 정기 작업 — 활성 팀이 `instances/<팀>/jobs.py` 에 `JOBS` 를 두면 등록한다. 작업 실행기가 시간대 안에서 부른다.
     #   `[2026-10-13]` 활동 → 코어 전달 사항 2번: 전에는 실행기에 작업이 고정돼 있어 팀 배치마다 코어를 고쳐야 했다.
     from app.domains.travel_ops.components.team_hooks import scheduled_jobs
@@ -885,7 +916,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
 
     names = {"mobility": ("legs",), "dining": ("dining_ledger", "dining_alternatives"), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
-    hook_names = {**names, "lodging": ("lodging_ledger",)}
+    hook_names = {**names, "lodging": ("lodging_ledger", "lodging_alternatives")}
     connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]
     connected += [f"watch:{kind}" for kind in sorted(active_ids & names.keys())]
     for declaration in (config.teams if config else []):

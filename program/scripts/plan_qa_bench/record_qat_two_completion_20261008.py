@@ -41,10 +41,10 @@ def main():
 
     specs = [
         ('e4bqat_oos1_mx', 'MX / user E', 'mx_counts.json', 'e4bqat_original_mx',
-         'datasets/travel/mx_testset/mx_main_prompts.json',
+         'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json',
          '6d3cf6786fb5e99511930e493776d38695adf6fd201fd16398df7ade01f767ba'),
         ('e4bqat_oos2_h', 'H', 'h_counts.json', 'e4bqat_original_h',
-         'program/scripts/plan_qa_bench/results/hard_set/h_set_test_30_20261015_agree.json',
+         'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json',
          '28fbce6efc2ace8fdda5cbcdc803b5be9ae8f7715e238819c8f7e60a418e0348'),
     ]
     results, pairs = {}, {}

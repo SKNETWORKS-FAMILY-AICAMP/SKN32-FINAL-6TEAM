@@ -31,5 +31,6 @@ export function useNotices(tripId: string) {
 /** `[2026-10-06]` The situation brief after a disaster pause was lifted (null when there is none or it is older than 72 hours). A server without it reads as none; a read that fails otherwise is the caller's to show. */
 export function useRecovery(tripId: string) {
   const { language } = useSettings();
-  return useQuery({ queryKey: recoveryKey(tripId, language), queryFn: () => getRecovery(tripId, language), retry: false, staleTime: 30_000 });
+  // `[2026-10-17 ST4F-603]` 정지가 풀리면 생긴다 — 초인종의 알림 신호(`use-trip-events.ts`)와 탭 복귀 때 다시 읽는다.
+  return useQuery({ queryKey: recoveryKey(tripId, language), queryFn: () => getRecovery(tripId, language), retry: false, staleTime: 30_000, refetchOnWindowFocus: true });
 }

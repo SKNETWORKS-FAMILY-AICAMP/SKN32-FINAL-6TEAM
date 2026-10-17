@@ -110,9 +110,11 @@ class DisruptionCheck:
             "earthquake": lambda: self._earthquake(place, starts_at),
         }
         simulated = resolve(place)
+        replaced: set[str] = set()
         if simulated:
             for name, row in inputs(simulated, place).items():
                 jobs[name] = lambda row=row: row
+                replaced.add(name)
         # ★동시에 돌린다 — 소스 하나가 느려도 나머지를 기다리게 하지 않는다.
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             futures = {name: pool.submit(job) for name, job in jobs.items()}
@@ -124,6 +126,13 @@ class DisruptionCheck:
         disruptions = [item for check in checks for item in check.pop("_disruptions", [])]
         advisories = [item for check in checks for item in check.pop("_advisories", [])]
         failed = [check["category"] for check in checks if check["status"] == "failed"]
+        # ★`[2026-10-16]` 관리자 재난 시험이 켜진 일정이면 **고르지 않은 실제 자료**의 조회 실패가 시험 결과를 덮지 않는다 —
+        #   전에는 실제 자료 하나만 실패해도 판정이 「조회 실패」가 되어 시험 사건 · 예보 안내가 고객에게 가지 않았다
+        #   (사용자 보고: 「모니터링 옵션 … 실제 알림으로 안 가고 적용이 안 된다」). 실제 고객 일정(시험 없음)의 판정은 그대로다.
+        #   덮지 않은 실패는 `simulation_ignored_failures` 에 남긴다.
+        ignored = [name for name in failed if name not in replaced] if replaced else []
+        if ignored:
+            failed = [name for name in failed if name in replaced]
         verdict = "fatal" if failed else ("disrupted" if disruptions else "clear")
         report = {
             "verdict": verdict,
@@ -131,6 +140,7 @@ class DisruptionCheck:
             "advisories": advisories,
             "checks": checks,
             "failed_categories": failed,
+            **({"simulation_ignored_failures": ignored} if ignored else {}),
             "not_connected": [c["category"] for c in checks if c["status"] == "not_connected"],
             "place_id": place.get("place_id"),
             "starts_at": starts_at.isoformat() if isinstance(starts_at, datetime) else None,
@@ -268,6 +278,7 @@ class DisruptionCheck:
         held_back = [row for row, is_weather in zip(rows, weather) if not sensitive and is_weather]
         return {**base, "status": "ok", "mode": mode, "source": value.get("source"),
                 "confirmed_at": value.get("confirmed_at"),
+                "value": value,
                 "unclassified": value.get("unclassified", []),
                 "weather_held_back": held_back,
                 "_disruptions": disruptions}
@@ -308,6 +319,7 @@ class DisruptionCheck:
         answered = value.get("sources") or [value.get("source")]
         result = {**base, "status": "ok", "source": value.get("source"),
                   "confirmed_at": value.get("confirmed_at"),
+                  "value": value,
                   "partial_from": value.get("partial_from", []),
                   "_disruptions": disruptions, "_advisories": advisories}
         if "utic" not in answered:
@@ -396,6 +408,7 @@ class DisruptionCheck:
                                    "limit": magnitude_min})
         return {**base, "status": "ok", "source": value.get("source"),
                 "confirmed_at": value.get("confirmed_at"), "window": value.get("window"),
+                "value": value,
                 "rules": {"magnitude_min": magnitude_min, "radius_km": radius_km,
                           "lookback_hours": lookback_hours},
                 "_disruptions": disruptions, "_advisories": advisories}

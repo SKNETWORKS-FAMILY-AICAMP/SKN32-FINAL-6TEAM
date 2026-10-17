@@ -51,6 +51,10 @@ def test_all_configured_sources_even_without_usage_and_no_secret_serialization(w
     assert rows['odsay']['recorded'] == {'day': None, 'month': None}
     assert rows['kma']['monthly']['origin'] == 'absent'
     assert all(value not in response.text for value in ['never-display-api-key', 'private-db-url', 'openai_api_key', 'database_url'])
+    # `[2026-10-15]` 조정은 DB 예산 소스만 — 나머지는 이유를 싣는다(눌러도 안 먹는 단추를 만들지 않는다)
+    assert rows['its']['adjustable'] is True and rows['its']['adjust_note'] is None
+    assert rows['open_meteo']['adjustable'] is False and rows['open_meteo']['adjust_note']
+    assert rows['odsay']['adjustable'] is False      # ENV 하루 0 은 DB 예산을 안 건다
 
 
 def test_actual_db_usage_last_cap_override_and_kst_utc_boundary_are_distinct(world):

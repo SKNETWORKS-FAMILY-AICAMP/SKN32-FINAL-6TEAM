@@ -3,7 +3,7 @@
 import { useId, type CSSProperties, type ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
-import type { CheckKind, CheckResult, CheckRow, PlaceInfo, Verdict } from "./model";
+import type { CheckKind, CheckResult, CheckRow, PlaceInfo, PrefillNotes, Verdict } from "./model";
 import type { Grab } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
@@ -37,6 +37,27 @@ export function NeedsLine({ rows, inline = false }: { rows: CheckRow[]; inline?:
       <span className={styles.mark} data-result={row.result} aria-hidden="true">{GLYPH[row.result]}</span>
       <b>{kindLabel(row.kind, t)}</b><span className="sr-only">{resultLabel(row.result, t)}</span>
     </span>)}</Box>;
+}
+
+/**
+ * `[2026-10-16 D-025]` The note above the list after the server filled in first: how many stops it filled (each says why on its own ✎ line),
+ * what only the traveller can tell us, and the traveller's own words it read as a move, a condition or a preference. A note, never a gate.
+ */
+export function PrefillNote({ notes }: { notes: PrefillNotes }) {
+  const t = useT();
+  return <section className={styles.prefill} aria-label={t("먼저 채운 것", "What we filled in first")} data-prefill-note>
+    {notes.filledCount > 0 && <p className={styles.prefillHead}><span className={styles.mark} data-result="filled" aria-hidden="true">{GLYPH.filled}</span>
+      {t(`우리가 ${notes.filledCount}곳을 먼저 채웠어요 — 일정마다 이유가 있어요. 등록하기 전에 바꿀 수 있어요.`,
+        `We filled in ${notes.filledCount} for you first — each says why. You can change them before registering.`)}</p>}
+    {notes.understood.length > 0 && <p className={styles.prefillLine}><b>{t("이렇게 이해했어요", "What we understood")}</b> {notes.understood.map((quote) => `「${quote}」`).join(" · ")}</p>}
+    {notes.handoff.length > 0 && <ul className={styles.prefillHandoff} aria-label={t("담당에 넘겨요", "Handed to")} data-prefill-handoff>
+      {notes.handoff.map((entry) => <li key={`${entry.label}-${entry.owner}`} data-mine={entry.mine ? "true" : "false"}>
+        <b>{entry.label}</b> {entry.text} → {entry.owner}
+        <span className={styles.prefillWho}>{entry.mine ? t("우리가 채움", "filled by us") : t("고객님 답 그대로", "your answer kept")}</span>
+      </li>)}
+    </ul>}
+    {notes.questions.length > 0 && <ul className={styles.prefillAsk}>{notes.questions.map((question) => <li key={question}>{question}</li>)}</ul>}
+  </section>;
 }
 
 /** ★`[2026-10-04 사용자 지시]` Only 「확인 필요」 is said: a stop that is simply fine (or was adjusted a little by the server) carries no word — the old 「조정」 told no one anything. */
@@ -83,6 +104,7 @@ export function placeKindLabel(kind: string | null | undefined, t: Translate): s
 
 /** `[2026-10-07 사용자 지시]` The word under a picked pin on the map: 「액티비티」 for a thing to do, 「식당」 for a meal; none when the server does not class the stop. */
 export function pinKindLabel(kind: string | null | undefined, t: Translate): string | null {
+  if (kind === "lodging") return t("숙박", "Lodging");
   if (kind === "dining") return t("식당", "Food");
   if (kind === "activity") return t("액티비티", "Activity");
   return null;

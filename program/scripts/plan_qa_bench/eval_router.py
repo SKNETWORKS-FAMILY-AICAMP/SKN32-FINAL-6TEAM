@@ -11,6 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 tag = next((a for a in sys.argv[1:] if not a.startswith('--') and a != sys.argv[sys.argv.index('--final') + 1 if '--final' in sys.argv else -1] and a != (sys.argv[sys.argv.index('--md') + 1] if '--md' in sys.argv else '')), 'e16d')
 final = sys.argv[sys.argv.index('--final') + 1] if '--final' in sys.argv else None
 argv0 = sys.argv
@@ -27,7 +28,7 @@ M = 'gemma4:e4b-it-qat'
 R = lambda *a: os.path.join(HERE, 'results', *a)
 J = lambda f: json.load(open(f, encoding='utf-8'))
 if final:
-    SETS[final] = J(os.path.join(HERE, 'fixtures', f'{final}.json'))['sets'][final]
+    SETS[final] = J(fixture(f'{final}.json'))['sets'][final]
     for p, v in zip(J(os.path.join(HERE, 'fixtures', f'pairs_{final}.json')), J(R(f'ft_{tag}_{final}_scores.json'))[f'ft/emb_{tag}']):
         S[(p['set'], p['qi'])][p['item']] = v
     G[final] = {m: v['picks'] for m, v in J(R(f'llm_{final}_out.json')).items() if isinstance(v, dict) and 'picks' in v and '#' not in m and not m.startswith('_')}

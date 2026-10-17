@@ -264,6 +264,7 @@ class IntakeRestoreIn(IntakeRevisionIn):
 class IntakeAutofixIn(IntakeRevisionIn):
     """전체 자동 추천 — `dry_run` 이면 **저장하지 않고** 바뀔 모습만(`view.preview`) 돌려준다. `[2026-10-03 ui 세션 요청서 3번]`"""
     dry_run: bool = False
+    item_id: str | None = Field(default=None, pattern=r"^\d+-\d+$", max_length=80)
 
 
 class RecoveryPlanIn(BaseModel):
@@ -808,7 +809,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         # ★`[2026-10-15]` 채팅 고치기의 이름 찾기 = 웹 「일정 수정」의 고치기(`/edits`)와 같은 부품(관광공사 · 카카오 · 요식 원장)
         return TripDesk(store=store, connection_factory=get_connection, check=_check(), catalog_pool=True,
                         edit_lookups=lambda: (_lazy("place", place_factory), _lazy("kakao", kakao_factory),
-                                              _dining_lookup(_PlaceCtx())))
+                                              _dining_lookup(_PlaceCtx())),
+                        # ★`[2026-10-16 D-025]` 채팅 「넣기」를 계획서와 같은 이해 에이전트로 읽는다(같은 모델 클라이언트)
+                        reader=lambda: _lazy("chat", chat_factory))
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:
@@ -1410,7 +1413,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from starlette.responses import StreamingResponse
 
         from app.domains.travel_ops.modules.live_progress import op_stream
-        from app.domains.travel_ops.components.intake.pipeline import STAGES as INTAKE_STAGES
+        from app.domains.travel_ops.components.intake.pipeline import STAGES as INTAKE_STAGES, public_status
 
         tenant, customer = who
 
@@ -1423,6 +1426,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             if row is None:
                 return None
             status, stage, revision, fatal_code, quiet = row
+            status = public_status(status, stage)
             return {"status": status, "stage": stage, "stage_label": INTAKE_STAGES.get(stage, stage),
                     "revision": revision, "fatal_code": fatal_code, "quiet_seconds": round(float(quiet), 1)}
 
@@ -1592,7 +1596,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 done = pipeline.autofix(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                         revision=request.revision, tour=_lazy("place", place_factory),
-                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run,
+                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run, item_id=request.item_id,
                                         dining=_dining_lookup())
                 # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
                 return {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
@@ -1619,6 +1623,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:
             raise _error(409, exc.code, exc.message, **exc.detail) from None
+
+    def _with_reading(constraints: dict[str, Any] | None, built: Any) -> dict[str, Any]:
+        """★`[2026-10-16 D-025 후속]` 이해 에이전트가 읽은 성향 · 조건을 담당 열쇠로 — **고객이 직접 답한 자리는 덮지 않는다**.
+        채운 것은 `constraints.filled_by_reading`(「우리가 채움」)에 원문 조각과 함께 남는다(`intake/reading_prefs.apply`)."""
+        from app.domains.travel_ops.components.intake import reading_prefs
+
+        return reading_prefs.apply({**(constraints or {}), reading_prefs.CARRY_KEY: list(getattr(built, "reading", None) or [])})
 
     def _intake_survey(tenant: str, intake_id: UUID, given: dict[str, Any] | None) -> dict[str, Any] | None:
         """★`[2026-10-06]` 등록에 실을 설문 = 로딩 중 질문으로 접수에 모아 둔 답 + 등록 요청이 직접 준 설문(요청이 준 값이 이긴다). 둘 다 없으면 None."""
@@ -1696,6 +1707,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         survey = _intake_survey(tenant, intake_id, request.survey)
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
+        body["constraints"] = _with_reading(body.get("constraints"), built)
         try:
             create = CreateTrip.model_validate(body)
         except ValidationError as exc:
@@ -1781,9 +1793,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
-            constraints={**(built.body.get("constraints") or {}), **({"survey": survey} if survey is not None else {}),
-                         **({"avoid_districts": list(request.recovery.avoid_districts), "lighter_day": request.recovery.lighter_day}
-                            if request.recovery is not None else {})})
+            constraints=_with_reading({**(built.body.get("constraints") or {}), **({"survey": survey} if survey is not None else {}),
+                                       **({"avoid_districts": list(request.recovery.avoid_districts), "lighter_day": request.recovery.lighter_day}
+                                          if request.recovery is not None else {})}, built))
         keep = request.keep_read_items and bool(built.body["items"])
         if keep:
             # ★읽은 일정이 요청한 날짜 밖이면 끼울 수 없다 — 조용히 버리지 않고 거절한다

@@ -8,13 +8,14 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.path.insert(0, os.path.join(HERE, '..', 'eval_kit'))
 from stats import fmt_ratio, mcnemar_exact  # noqa: E402
 
 sys.stdout.reconfigure(encoding='utf-8')
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
-GS = json.load(open(os.path.join(HERE, 'fixtures/gold_sets.json'), encoding='utf-8'))
-FX = {s: json.load(open(os.path.join(HERE, f'fixtures/{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
+GS = json.load(open(fixture('gold_sets.json'), encoding='utf-8'))
+FX = {s: json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
 KEYS = [(s, i) for s in SETS for i in range(len(FX[s]['qs']))]
 GSET = {k: frozenset(GS[k[0]][str(k[1])]) for k in KEYS}
 GOLD = {k: FX[k[0]]['qs'][k[1]]['gold'] for k in KEYS}

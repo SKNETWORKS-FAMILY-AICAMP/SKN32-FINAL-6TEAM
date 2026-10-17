@@ -54,6 +54,10 @@ class TripSurvey(BaseModel):
     custom_answers: dict[str, str] = Field(default_factory=dict)  # 직접 쓴 선호 원문 — 알아듣지 못한 말도 보존한다
 
 
+def _is_clock(text: Any) -> bool:
+    return isinstance(text, str) and len(text) == 5 and text[2] == ":" and text[:2].isdigit() and text[3:].isdigit()         and int(text[:2]) < 24 and int(text[3:]) < 60
+
+
 def _clock(text: str) -> time:
     hour, minute = str(text).split(":")
     return time(int(hour), int(minute))
@@ -78,7 +82,9 @@ def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> d
     # ★`[2026-09-29]` **직접 답한 문항**을 따로 남긴다 — 옛 저장본은 기본값까지 채워져 있었으므로,
     #   「비슷한 곳으로 바꿔줘」를 고른 것과 문항을 건너뛴 것이 구별되지 않았다. 자동 변경은 직접 고른 경우에만 한다
     #   (`auto_on_disruption` · 사용자 지시 2026-09-29 · 코덱스 합의). 이미 있는 값은 덮지 않는다(합친다)
-    answered = {key for key, value in raw.items() if key != "version" and value is not None}
+    # ★`[2026-10-16 D-025 후속]` 계획 읽기가 채운 자리(`survey_read_keys` — `intake/reading_prefs.apply`)는 「직접 답한 문항」이 아니다
+    read_keys = set(out.get("survey_read_keys") or [])
+    answered = {key for key, value in raw.items() if key != "version" and value is not None and key not in read_keys}
     out["survey_answered"] = sorted(answered | set(out.get("survey_answered") or []))
     if survey.pace is None:
         return out
@@ -94,6 +100,12 @@ def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> d
     elif density is None:
         start = _clock(guard.get("travel.day_window.default_start"))
         end = _clock(guard.get("travel.day_window.default_end"))
+        # ★`[2026-10-16 D-025 후속]` 고객 계획에서 읽은 하루 시작 · 끝(`day_hours`)이 있으면 그 창으로 — 서로 어긋나면 기본값
+        hours = out.get("day_hours") if isinstance(out.get("day_hours"), Mapping) else {}
+        own_start = _clock(hours["start"]) if _is_clock(hours.get("start")) else start
+        own_end = _clock(hours["end"]) if _is_clock(hours.get("end")) else end
+        if own_start < own_end:
+            start, end = own_start, own_end
         buffer = float(guard.get("travel.day_window.default_buffer_minutes"))
         days = sorted(set(item_days))
         if days:
@@ -102,8 +114,9 @@ def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> d
                                   "ends_at": datetime.combine(day, end, tzinfo=KST).isoformat(),
                                   "buffer_minutes": buffer}
                 for day in days}}
-            derived["density"] = (f"설문 16번({survey.pace}) → {level}, 하루 활동 시간은 팀 기본값 "
-                                  f"{start:%H:%M}~{end:%H:%M} (사용자가 시간을 주지 않았다)")
+            derived["density"] = (f"설문 16번({survey.pace}) → {level}, 하루 활동 시간은 "
+                                  + (f"계획에서 읽은 {start:%H:%M}~{end:%H:%M}" if hours else
+                                     f"팀 기본값 {start:%H:%M}~{end:%H:%M} (사용자가 시간을 주지 않았다)"))
     if derived:
         out["derived"] = derived
     return out

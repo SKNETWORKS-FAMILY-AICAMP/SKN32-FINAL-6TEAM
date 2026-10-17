@@ -36,7 +36,8 @@ for(const width of [375,1280]) {
     const controls=page.getByRole('group',{name:'지도 단추'}),fold=controls.locator('button[aria-expanded]'),arrow=fold.locator('[class*=foldArrow]');
     const menu=page.getByRole('button',{name:'메뉴',exact:true});
     const a=(await fold.boundingBox())!,b=(await menu.boundingBox())!;
-    expect(a.width).toBe(b.width);expect(a.height).toBe(40);expect(Math.abs(a.x-b.x)).toBeLessThan(.6);
+    expect(a.width).toBe(b.width);expect(a.height).toBeCloseTo(40,3);expect(Math.abs(a.x-b.x)).toBeLessThan(.6);
+    await expect(fold).toHaveCSS('height','40px');
     await expect(arrow).toHaveCSS('transition-property','transform');await expect(arrow).toHaveCSS('transition-duration','0.2s');
     await expect.poll(async()=>(await arrowGeometry(page)).dy).toBeGreaterThan(3);
     const origin=await arrowGeometry(page);
@@ -67,12 +68,13 @@ for(const width of [375,1280]) {
     await page.emulateMedia({reducedMotion:'reduce'});expect(await arrow.evaluate(el=>parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThanOrEqual(.0001);
     await noHorizontalScroll(page);
   });
-  test(`일반 카드 테두리(10-13 ④)·선택과 상태 테두리·잠금 재클릭 ${width}px`,async({page,request})=>{
+  test(`맨 위 카드의 가운데 초점 테두리(10-15 — 10-13 ④ 일반 카드 테두리를 바꿈)·선택과 상태 테두리·잠금 재클릭 ${width}px`,async({page,request})=>{
     await page.setViewportSize({width,height:812});await page.emulateMedia({reducedMotion:'reduce'});
     const tiles=shots?await useMapTiles(page):async()=>{};
     await openFinished(page,request,undefined,{intakeEvents:'off'});await tiles();await prepare(page);
     for(let i=0;i<4;i++)await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
     await page.evaluate(()=>{if(document.activeElement instanceof HTMLElement)document.activeElement.blur();});
+    // `[2026-10-15 ST4F-532]` 접힌 카드의 회색 테두리는 뺐다 — 목록 맨 위라 첫 카드가 가운데 초점(회색)이다(use-center-focus.ts)
     await expect(card(page,'경복궁 관람')).toHaveCSS('border-top-color','rgb(195, 205, 198)');
     await expect(card(page,'올리브영')).not.toHaveCSS('border-top-color','rgba(0, 0, 0, 0)');
     await expect(card(page,'광장시장')).not.toHaveCSS('border-top-color','rgba(0, 0, 0, 0)');

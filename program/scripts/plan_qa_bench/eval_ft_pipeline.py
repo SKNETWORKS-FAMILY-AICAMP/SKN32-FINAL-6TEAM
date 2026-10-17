@@ -11,6 +11,7 @@ from slot_lookup import resolve
 from eval_pipeline import load, run_one
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 FT = sys.argv[1]
 files = sys.argv[2:] or [os.path.join(HERE, 'results', f'{FT.split("/")[-1]}_scores.json')]
 scores = {}
@@ -27,7 +28,7 @@ def _load(j):
     try:
         return load(j)
     except FileNotFoundError:            # 새 세트(mix5)는 기존 구조 비교용 전문가 호출 결과가 없다
-        st = json.load(open(os.path.join(HERE, 'fixtures', f'{j}.json'), encoding='utf-8'))['sets'][j]
+        st = json.load(open(fixture(f'{j}.json'), encoding='utf-8'))['sets'][j]
         return st['qs'], st['items'], None
 
 

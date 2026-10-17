@@ -2,6 +2,8 @@ import { toPixels } from "./map-geometry";
 import type { MapLine, MapPoint, MapView } from "./model";
 
 type Pixel = { x: number; y: number };
+type Box = { left: number; right: number; top: number; bottom: number };
+type LabelSize = { width: number; height: number };
 
 /** Clip a segment to the visible map, including routes whose two ends are off screen. */
 function clip(a: Pixel, b: Pixel, box: { left: number; right: number; top: number; bottom: number }) {
@@ -18,7 +20,7 @@ function clip(a: Pixel, b: Pixel, box: { left: number; right: number; top: numbe
 }
 
 /** Names sit on a visible part of the real path at street zoom, clear of pins, chrome and other names. */
-export function routeLabels(view: MapView | null, lines: readonly MapLine[], points: readonly MapPoint[], top = 0, bottom = 0) {
+export function routeLabels(view: MapView | null, lines: readonly MapLine[], points: readonly MapPoint[], top = 0, bottom = 0, obstacles: readonly Box[] = [], sizes: Readonly<Record<string, LabelSize>> = {}) {
   if (!view || view.zoom < 15 || view.width < 144 || view.height < top + bottom + 48) return [];
   const box = { left: 68, right: view.width - 68, top: top + 20, bottom: view.height - bottom - 24 };
   const pins = points.map((point) => toPixels(view, point.coordinates));
@@ -32,10 +34,13 @@ export function routeLabels(view: MapView | null, lines: readonly MapLine[], poi
     if (segments.reduce((sum, segment) => sum + segment.length, 0) < 80) continue;
     // The middle can be covered by a pin when just one end is visible. Try both quarters of the clipped path too.
     const candidates = segments.sort((a, b) => b.length - a.length).flatMap(({ a, b }) =>
-      [0.5, 0.25, 0.75].map((part) => ({ x: a.x + (b.x - a.x) * part, y: a.y + (b.y - a.y) * part })));
+      [0.5, 0.25, 0.75, 0.35, 0.65].map((part) => ({ x: a.x + (b.x - a.x) * part, y: a.y + (b.y - a.y) * part })));
+    const size = sizes[line.id] ?? { width: 132, height: 28 };
     const spot = candidates.find((at) =>
       !pins.some((pin) => Math.abs(pin.x - at.x) < 96 && Math.abs(pin.y - at.y) < 48)
-      && !labels.some((label) => Math.abs(label.x - at.x) < 136 && Math.abs(label.y - at.y) < 36));
+      && !labels.some((label) => Math.abs(label.x - at.x) < 136 && Math.abs(label.y - at.y) < 36)
+      && !obstacles.some((box) => at.x + size.width / 2 > box.left - 4 && at.x - size.width / 2 < box.right + 4
+        && at.y + size.height / 2 > box.top - 4 && at.y - size.height / 2 < box.bottom + 4));
     if (spot) labels.push({ id: line.id, mode: line.mode, dashed: line.dashed, x: spot.x, y: spot.y });
   }
   return labels;

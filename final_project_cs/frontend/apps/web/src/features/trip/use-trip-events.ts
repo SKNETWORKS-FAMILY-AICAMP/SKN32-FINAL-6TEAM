@@ -6,7 +6,7 @@ import { watchTrip, type ChangeKind } from "@/lib/live/events";
 import { useSettings } from "@/lib/settings";
 import { tripKey } from "../../lib/gateway";
 import type { Trip } from "./model";
-import { noticesKey, proposalsKey } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey } from "./use-trip-extras";
 import { setWatchMode } from "./watch-mode";
 
 /**
@@ -16,6 +16,9 @@ import { setWatchMode } from "./watch-mode";
  * - Reconnected, or the tab came back to the front → re-read everything once. A bell missed while away is
  *   covered by that: the bell carries no content, the server's database is the record.
  * - The server has no bell (older server: 404/405) → the notices and proposals go back to being re-read every 30 s.
+ * - `[2026-10-17 ST4F-603]` Too many bells open (429 — other tabs) → re-read on that timer while reconnecting; the bell takes over again once it opens.
+ * - `[2026-10-17 ST4F-603]` A notice can mean a disaster pause was set or lifted, which the trip itself shows (the pause chip, the safety panel) and the brief after it —
+ *   a notice bell re-reads those too (the pause does not move the trip's version, so no itinerary bell comes with it).
  *
  * ★Nothing is sent back to the server to "stay alive" — the server's own `: ping` lines keep the line open.
  */
@@ -39,7 +42,11 @@ export function useTripEvents(tripId: string) {
 
     const reread = (kinds: readonly ChangeKind[]) => {
       if (kinds.includes("itinerary")) void queryClient.invalidateQueries({ queryKey: tripKey(tripId, language) });
-      if (kinds.includes("notice")) void queryClient.invalidateQueries({ queryKey: noticesKey(tripId, language) });
+      if (kinds.includes("notice")) {
+        void queryClient.invalidateQueries({ queryKey: noticesKey(tripId, language) });
+        if (!kinds.includes("itinerary")) void queryClient.invalidateQueries({ queryKey: tripKey(tripId, language) });
+        void queryClient.invalidateQueries({ queryKey: recoveryKey(tripId, language) });
+      }
       if (kinds.includes("proposal")) void queryClient.invalidateQueries({ queryKey: proposalsKey(tripId, language) });
     };
     const rereadAll = () => reread(["itinerary", "notice", "proposal"]);
@@ -80,6 +87,7 @@ export function useTripEvents(tripId: string) {
         stop.signal.removeEventListener("abort", abortCurrent);
         if (stop.signal.aborted) break;
         if (end === "unsupported") { setWatchMode(tripId, "polling"); break; }
+        if (end === "busy") setWatchMode(tripId, "polling");               // `ready` sets it back to the bell
         failures += 1;
         await pause(reconnectDelay(failures));
       }

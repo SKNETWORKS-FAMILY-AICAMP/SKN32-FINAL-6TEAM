@@ -12,7 +12,7 @@ CATEGORIES = {'MX1': '기존 항목 정보·확인 질문', 'MX2': '기존 항�
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     visualization_dir = Path(sys.argv[1])
-    source = ROOT / 'datasets/travel/mx_testset/mx_main_prompts.json'
+    source = ROOT / 'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json'
     raw = source.read_bytes()
     records = json.loads(raw)
     mixed = [r for r in records if r['kind'] == 'mixed']

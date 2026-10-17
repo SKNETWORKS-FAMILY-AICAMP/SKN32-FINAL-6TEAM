@@ -9,7 +9,7 @@ folders=sorted(RES.glob('comparison_abcde_*'));folder=folders[-1]
 s=json.loads((folder/'snapshot.json').read_text(encoding='utf-8'));records=s['single_contract']
 sys.path.insert(0,str(RES.parent.parent/'eval_kit'))
 from stats import mcnemar_exact
-gold=json.loads((ROOT/'datasets/travel/mx_testset/mx_main_prompts.json').read_text(encoding='utf-8'))
+gold=json.loads((ROOT/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json').read_text(encoding='utf-8'))
 pos=[x for x in gold if x['kind']=='mixed' and x['gold'] is not None]
 def correctness(r):
     rows={x['i']:x for x in [json.loads(l) for l in (ROOT/r['suites']['mx']['source']).read_text(encoding='utf-8').splitlines()]}

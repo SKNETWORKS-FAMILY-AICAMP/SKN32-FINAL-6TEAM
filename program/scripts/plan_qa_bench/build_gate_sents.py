@@ -4,6 +4,7 @@
 # 출력: fixtures/gate_sents.json {"texts": [...]} · fixtures/gate_meta.json [{"i": 문장 번호, "kind": "lab|chat_train|chat_test", "set":…, "qi":…, "label": 0|1, "type":…}]
 import json, os, random, re
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 D = os.path.join(HERE, '..', '..', '..', 'datasets', 'travel', '020.주제별 텍스트 일상 대화 데이터', 'processed')
 texts, idx, meta = [], {}, []
 
@@ -16,7 +17,7 @@ def add(t):
 
 
 for w in ('heavy', 'mix4', 'mix5', 'mix6', 'mix7', 'mix8', 'mix9'):
-    st = json.load(open(os.path.join(HERE, 'fixtures', f'{w}.json'), encoding='utf-8'))['sets'][w]
+    st = json.load(open(fixture(f'{w}.json'), encoding='utf-8'))['sets'][w]
     for qi, x in enumerate(st['qs']):
         meta.append({'i': add(x['q']), 'kind': 'lab', 'set': w, 'qi': qi, 'label': 0 if x['type'] == 'out_of_scope' else 1, 'type': x['type'],
                      'split': x.get('split')})

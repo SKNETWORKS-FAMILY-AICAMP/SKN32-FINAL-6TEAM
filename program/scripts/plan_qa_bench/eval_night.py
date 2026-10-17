@@ -9,13 +9,14 @@ from rule_slots import rule_slots
 from slot_lookup import resolve
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda *a: os.path.join(HERE, 'results', *a)
 args = [a for k, a in enumerate(sys.argv[1:]) if not a.startswith('--') and not (k > 0 and sys.argv[k] == '--md')]
 KEY = args[0] if args else 'ft/emb_e16c'
 F_HM = args[1] if len(args) > 1 else R('ft_e16c_scores.json')
 F_M5 = args[2] if len(args) > 2 else R('ft_e16c_mix5_scores.json')
 J = lambda f: json.load(open(f, encoding='utf-8'))
-SETS = {j: J(os.path.join(HERE, 'fixtures', f'{j}.json'))['sets'][j] for j in ('heavy', 'mix4', 'mix5')}
+SETS = {j: J(fixture(f'{j}.json'))['sets'][j] for j in ('heavy', 'mix4', 'mix5')}
 pairs_hm = J(os.path.join(HERE, 'fixtures', 'pairs_experts.json'))
 pairs_5 = J(os.path.join(HERE, 'fixtures', 'pairs_mix5.json'))
 S = defaultdict(dict)

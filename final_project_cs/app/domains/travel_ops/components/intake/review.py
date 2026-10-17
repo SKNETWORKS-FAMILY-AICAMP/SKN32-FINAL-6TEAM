@@ -442,6 +442,47 @@ def default_engine(party_size: int | None, modes: list[str] | None = None, *, co
         return None
 
 
+def _fixed_neighbours(conn, tenant_id: str, intake_id: Any) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """`[2026-10-15 ST4F-490]` 수정 접수면 여행의 **고정 일정**(`reopen.frozen` — 지난 일정 · 자정을 넘는 일정 · 좌표 없는 장소 · 다루지 않는 종류)을
+    (값 줄 모양, 검사 항목 모양) 짝으로 — 이동 구간을 셀 때 「고칠 수 없는 이웃」으로 시각 순서에 끼운다. 보통 접수는 [].
+
+    ☆전에는 접수 일정끼리만 구간을 셌다 — 항공 도착 5분 뒤 13 km 떨어진 곳 시작으로 고쳐도 「등록 가능」이었고, 「완료」 때는
+      고정 일정 옆 이동이 빠져 그 구간 이동 줄 · 경로선 · 출발 알림이 사라졌다(Codex 검토 2026-10-14 ②). 검사 항목(`items`)에는 넣지 않는다 —
+      화면은 고정 일정을 여행에서 읽어 회색 줄로 그리고, 구간의 `from` · `to` 는 그 여행 일정 id 다.
+    ★숙소 · 항공 · 업체 예약 일정은 고정이 아니라 잠금으로 접수에 들어온다(`reopen.LOCKED_KINDS` — 2026-10-15 사용자 결정)."""
+    from uuid import UUID
+
+    from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+    from .reopen import session
+
+    if conn is None:
+        return []                                     # DB 없이 검사만 계산하는 시험 — 수정 접수가 있을 수 없다
+    opened = session(conn, tenant_id=tenant_id, intake_id=intake_id)
+    if not opened or not opened["frozen_item_ids"]:
+        return []
+    frozen = set(opened["frozen_item_ids"])
+    _trip, trip_items = TripStore(tenant_id).latest(conn, UUID(opened["trip_id"]))
+    out: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for item in sorted(trip_items, key=lambda i: (i.starts_at, i.seq)):
+        if str(item.item_id) not in frozen or item.kind == "mobility":
+            continue
+        start = item.starts_at.astimezone(KST)
+        end = item.ends_at.astimezone(KST) if item.ends_at else None
+        place = item.place or {}
+        located = place.get("latitude") is not None and place.get("longitude") is not None
+        value = ({"name": place.get("name") or item.title, "latitude": float(place["latitude"]), "longitude": float(place["longitude"])}
+                 if located else None)
+        row = {"date": start.date().isoformat(), "start": start.strftime("%H:%M"),
+               # 숙소처럼 끝이 다른 날이면 그 날짜(체크아웃) — 같은 날이면 끝 시각만
+               "end": end.strftime("%H:%M") if end and end.date() == start.date() else None,
+               "end_date": end.date().isoformat() if end and end.date() != start.date() else None,
+               "kind": item.kind, "title": item.title, "place": value, "fixed": True}
+        shown = {"id": str(item.item_id), "title": item.title, "date": row["date"], "day": None,
+                 "place_state": "found" if located else "none", "place": value}
+        out.append((row, shown))
+    return out
+
+
 def _item_id(row: dict[str, Any], positions: dict[str, int]) -> str:
     return f"{positions.get(row['source_id'], 0)}-{row['index']}"
 
@@ -580,6 +621,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             if state == "picked_nearest" else None,
             # 예약했다고 적혀 있나(True · False · 말 없음 None) · 이름 없는 줄이 읽힌 조각(그 밖은 None) — 후보 중심 · 문장의 재료
             "booked": booked, "parts": nameless_parts(r, state),
+            "_lodging_parts": (((r.get("claims") or {}).get("place") or {}).get("evidence") or {}).get("lodging_parts"),
+            # `[2026-10-15 ST4F-490]` 업체 예약 표에 묶인 일정(수정 접수만) — 화면은 잠금을 풀 때 「업체 예약은 따로 취소 · 변경해야 해요」를 알린다
+            "vendor_booking": ((r["claims"].get("vendor_booking") or {}).get("value") is True),
             # 두 번 다르게 읽은 제목 · 예약번호 — `[{field: title | booking_no, current, other(null 이면 두 읽기 문장만), note}]`. 없으면 [] (고객이 고르면 사라진다)
             "rereads": [{k: v for k, v in reread.items() if k != "note"} for reread in rereads],
             "rows": lines})
@@ -588,12 +632,33 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         for line in lines:
             note("check", {"item": items[-1]["id"], **line})
 
+    from .lodging_context import annotate
+    annotate(items)
     mode_pick = picked_modes(claims)            # {"0-0~0-1": "taxi"} — 고객이 구간마다 고른 수단(없으면 추천)
     old_moves = {m.get("sig"): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
     moves: list[dict[str, Any]] = []
-    move_total = sum(1 for i in range(len(rows) - 1) if rows[i]["date"] and rows[i]["date"] == rows[i + 1]["date"])
+    # 구간을 셀 일정 줄 — 접수 일정(값 줄 순서 그대로)에 `[2026-10-15 ST4F-490]` 수정 접수의 고정 일정을 시각 순서로 끼운다. 보통 접수는 접수 일정 그대로다
+    order: list[tuple[dict[str, Any], dict[str, Any]]] = list(zip(rows, items))
+    for fixed_row, fixed_item in _fixed_neighbours(conn, tenant_id, intake_id):
+        fixed_item["day"] = day_no.get(fixed_row["date"])
+        key = (fixed_row["date"], fixed_row["start"])
+        at = next((n for n, (r, _) in enumerate(order) if r["date"] and r["start"] and (r["date"], r["start"]) > key), len(order))
+        order.insert(at, (fixed_row, fixed_item))
+    now_at = now or datetime.now(KST)
+
+    def counted(x: dict[str, Any], y: dict[str, Any]) -> bool:
+        """이 두 이웃 사이 구간을 세나 — 같은 날이고, 고정끼리가 아니고, 고정 일정이 낀 구간이면 아직 지나지 않았을 때(뒤 일정 시작 > 지금)."""
+        if not x["date"] or x["date"] != y["date"] or (x.get("fixed") and y.get("fixed")):
+            return False
+        if x.get("fixed") or y.get("fixed"):
+            start = _dt(y["date"], y["start"])
+            return start is not None and start > now_at
+        return True
+
+    pairs = [(order[n], order[n + 1]) for n in range(len(order) - 1) if counted(order[n][0], order[n + 1][0])]
+    move_total = len(pairs)
     # `[2026-10-13 사용자 지시]` 묵는 날 아침 「숙소 → 그날 첫 일정」 — 등록 뒤 일정 화면과 같은 구간을 확인 화면에서도 보인다(등록은 이 구간을 그대로 싣는다 — `registered_moves`)
-    morning: list[tuple[int, int]] = []
+    morning: list[tuple[tuple[dict[str, Any], dict[str, Any]], tuple[dict[str, Any], dict[str, Any]]]] = []
     for i, stay in enumerate(rows):
         if stay["kind"] != "lodging" or not stay.get("end_date") or not stay["date"]:
             continue
@@ -601,7 +666,16 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             if b["kind"] == "lodging" or not b["date"] or not (stay["date"] < b["date"] <= stay["end_date"]):
                 continue
             if not any(r["date"] == b["date"] and r["kind"] != "lodging" for r in rows[:j]):
-                morning.append((i, j))                  # 그날 첫 일정
+                morning.append(((stay, items[i]), (b, items[j])))      # 그날 첫 일정
+    # `[2026-10-15 ST4F-490]` 수정 접수의 숙소는 늘 고정이다 — 그날 첫 일정(고정 · 접수 통틀어)이 접수 일정이고 아직 시작 전이면 아침 구간을 센다
+    for stay, stay_item in (entry for entry in order if entry[0].get("fixed") and entry[0]["kind"] == "lodging"):
+        if not stay.get("end_date"):
+            continue
+        for day in sorted({r["date"] for r, _ in order if r["date"] and stay["date"] < r["date"] <= stay["end_date"]}):
+            first = next(((r, it) for r, it in order if r["date"] == day and r["kind"] != "lodging"), None)
+            start = _dt(day, first[0]["start"]) if first else None
+            if first is not None and not first[0].get("fixed") and start is not None and start > now_at:
+                morning.append(((stay, stay_item), first))
     move_total += len(morning)
 
     def add_move(move: dict[str, Any], ia: dict[str, Any], ib: dict[str, Any]) -> None:
@@ -611,11 +685,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         note("progress", {"phase": "moves", "done": len(moves), "total": move_total,
                           "current": {"id": f"{ia['id']}>{ib['id']}", "title": f"{ia['title']} → {ib['title']}"}})
 
-    for i in range(len(rows) - 1):
-        a, b = rows[i], rows[i + 1]
-        if not a["date"] or a["date"] != b["date"]:
-            continue
-        ia, ib = items[i], items[i + 1]
+    for (a, ia), (b, ib) in pairs:
         # `[2026-10-13]` 숙소는 체크인 시각에 떠난다고 본다 — 끝(체크아웃)은 며칠 뒤다
         a_end = _dt(a["date"], a["start"] if a["kind"] == "lodging" else (a["end"] or a["start"]))
         b_start = _dt(b["date"], b["start"])
@@ -639,9 +709,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
         add_move({**_move(ia, ib, leg, provisional, sig), "recommended_mode": recommended, "mode_choice": choice}, ia, ib)
 
-    for i, j in morning:
-        a, b = rows[i], rows[j]
-        ia, ib = items[i], items[j]
+    for (a, ia), (b, ib) in morning:
         floor, b_start = _dt(b["date"], STAY_MORNING_FROM), _dt(b["date"], b["start"])
         if a["place"] is None or b["place"] is None or b_start is None:
             add_move({**_waiting_move(ia, ib, mode_pick.get(f"{ia['id']}~{ib['id']}")), "day": ib["day"], "date": ib["date"],
@@ -676,6 +744,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
+            "party_size": party,          # `[2026-10-16]` 숙소 후보(숙소 팀 숙소 비교)가 인원을 읽는다 — 모르면 `None`
             "items": items, "moves": moves, "taxi_pricing": (pricing if pricing is not None else taxi_pricing.default()) if taxi_pick_on else None,
             "needs": {"items": needs_items, "moves": needs_moves, "total": needs_items + needs_moves},
             "ready": bool(items) and not got.problems and needs_items + needs_moves == 0}
@@ -698,9 +767,12 @@ def public(payload: dict[str, Any] | None, *, tenant_id: str | None = None) -> d
     items = []
     for it in payload.get("items", []):
         place = it.get("place")
-        items.append({**it, "place": public_place(place)})
+        items.append({**it, "place": public_place(place), "rows": list(it.get("rows", []))})
+    from .lodging_context import prepare
+    prepared = prepare({**payload, "items": items})
+    items = [{k: v for k, v in it.items() if k != "_lodging_parts"} for it in items]
     # `uses` 는 경로선을 그리는 쪽(`/route-shapes`)이 저장본에서 읽는다 — 확인 화면 응답 모양은 그대로 둔다
-    return {**payload, "items": items,
+    return {**prepared, "items": items,
             "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses", "departure_context", "selected_option_id")}
                       for m in payload.get("moves", [])]}
 
@@ -713,12 +785,13 @@ def picked_modes(claims: list[dict[str, Any]]) -> dict[str, str]:
     """고객이 구간마다 고른 수단 — 값 줄 `moves[{from}~{to}].mode`(고객 값 · `recommended` 로 되돌리면 값이 비어 이 표에서 빠진다).
 
     ★`[2026-10-14]` 수정 접수는 등록한 여행에 이미 정해 둔 수단을 `method: "trip"` 값 줄로 싣는다(`reopen.open_for_trip`) — 그것도 고른 수단으로 본다.
+    ★`[2026-10-16]` 계획서에 적힌 수단(「택시로 이동」)을 읽기 에이전트가 `method: "llm_agent"` 값 줄로 싣는다(`pipeline._agent_rows`) — 그것도 고른 수단으로 본다.
     안 그러면 다시 연 수정 화면이 저장된 수단(예: 지하철) 대신 추천(예: 도보)을 보였다(x600 실서버 확인). 칸마다 **마지막 값**이 이긴다 — 고객이 뒤에
     「추천으로」(빈 값)를 고르면 여행에서 가져온 수단도 빠진다."""
     out: dict[str, str] = {}
     for c in claims:
         field = str(c.get("field") or "")
-        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip")):
+        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip", "llm_agent")):
             continue
         pair = field[len("moves["):-len("].mode")]
         if c.get("value") in MOVE_MODES:
@@ -807,7 +880,10 @@ def load(conn, tenant_id: str, intake_id: Any, revision: int) -> dict[str, Any] 
         cur.execute("SELECT payload FROM intake_reviews WHERE tenant_id=%s AND intake_id=%s AND revision=%s",
                     (tenant_id, intake_id, revision))
         row = cur.fetchone()
-    return dict(row[0]) if row else None
+    if not row:
+        return None
+    from .lodging_context import prepare
+    return prepare(dict(row[0]))
 
 
 def store(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str, Any]) -> None:

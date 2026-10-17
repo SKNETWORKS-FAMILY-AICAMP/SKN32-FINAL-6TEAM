@@ -6,6 +6,7 @@ from collections import Counter
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 raw = open(sys.argv[1], encoding='utf-8').read()
 m = re.search(r'\{.*\}', raw, re.S)
 d = json.loads(m.group(0))
@@ -45,7 +46,7 @@ print('버린 문제', len(dropped), dropped)
 # 장소 겹침: 평가 세트 3개 + 학습 풀
 names = set()
 for j in ('heavy', 'mix4', 'mix5', 'mix6'):
-    names |= {i['place'].replace(' ', '') for i in json.load(open(os.path.join(HERE, 'fixtures', f'{j}.json'), encoding='utf-8'))['sets'][j]['items']}
+    names |= {i['place'].replace(' ', '') for i in json.load(open(fixture(f'{j}.json'), encoding='utf-8'))['sets'][j]['items']}
 train_dir = os.path.join(HERE, '..', '..', '..', 'datasets', 'travel', 'plan_qa_bench', 'train')
 tr = set()
 for f in glob.glob(os.path.join(train_dir, 'places_*.json')):

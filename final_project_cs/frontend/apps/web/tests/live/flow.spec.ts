@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { agree, fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead, checkPlan, tripScreen } from "./helpers";
+import { agree, fillPlanAsk, finishOnboarding, KNOWN_SESSION, openRegistration, selfOpenedCard, start, startCardHead, mockServer, TRIP_ID, weekAhead, checkPlan, tripScreen } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 const PLAN = "10/1 09:00 경복궁 관람";
@@ -99,10 +99,12 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
 
 const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";
 
-test("디스코드 알림 카드의 웹훅은 알림 채널 동의와 함께 약관 단계를 지날 때 서버로 가고(동의를 기록하며 게스트 세션이 이미 생겼다), 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
+test("회원 세션에서 디스코드 알림 카드의 웹훅은 알림 채널 동의와 함께 약관 단계를 지날 때 서버로 가고(쿠키로 한 번, 키 없이), 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
+  // ★`[2026-10-16 사용자 결정 — ST4F-601]` 디스코드 알림 카드는 로그인한 회원에게만 있다. 옛 시험은 첫 방문(세션 없음)이 동의를 기록하며 게스트 세션을 만들고 웹훅이 뒤따르는 길이었는데,
+  //   게스트에게는 카드도 웹훅 전송도 없어 그 길은 없어졌다(게스트 쪽은 `login-consent-flow-20261016.spec.ts`). 이 기기에서 아직 동의하지 않은 회원이 같은 단계를 지난다.
   const server = mockServer(request);
-  await server.scenario({ trips: "none" });
-  await start(page, null);
+  await server.scenario({ trips: "none", sessionKind: "member" });
+  await start(page, "acop_u_known", false);
   await finishOnboarding(page, async () => {
     const head = page.getByRole("button", { name: /디스코드 알림/ });
     await head.click();
@@ -110,9 +112,8 @@ test("디스코드 알림 카드의 웹훅은 알림 채널 동의와 함께 약
     await head.click();                                              // fold it; the terms step checks the field and passes
     await expect(head).toContainText("입력했어요 · 설정에서 바꿀 수 있어요");
   }, ["alert_channel"]);                                             // ★알림 채널 정보는 그 선택 동의를 해야 보낸다(`alert_channel`)
-  // ★`[2026-10-05]` Agreeing to the terms records the consent on the server, which makes the guest session; the webhook (agreed to as the alert-channel item) goes up right behind it:
-  //   no waiting in page memory for a first plan any more. Once, with the cookie and the CSRF token, no key.
-  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => [entry.session, entry.key, entry.body])).toEqual([["stub-session-1", null, { discord_webhook_url: WEBHOOK }]]);
+  // ★`[2026-10-05]` The webhook (agreed to as the alert-channel item) goes up right behind the consent: no waiting in page memory for a first plan any more. Once, with the cookie, no key.
+  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => [entry.session, entry.key, entry.body])).toEqual([[KNOWN_SESSION, null, { discord_webhook_url: WEBHOOK }]]);
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
@@ -125,6 +126,7 @@ test("디스코드 알림 카드의 웹훅은 알림 채널 동의와 함께 약
 
 test("세션이 이미 있으면 웹훅은 알림 채널 동의와 함께 약관 단계를 지날 때 서버로 가고, 동의하지 않으면 입력한 주소는 버려지며, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
+  await server.scenario({ sessionKind: "member" });                                  // `[2026-10-16 ST4F-601]` 디스코드 알림 카드는 회원에게만 있다
   await start(page, "acop_u_known");
   await finishOnboarding(page, async () => {
     const head = page.getByRole("button", { name: /디스코드 알림/ });
@@ -136,6 +138,7 @@ test("세션이 이미 있으면 웹훅은 알림 채널 동의와 함께 약관
 
   // Back on the card with the field cleared: leaving it again sends nothing (blank is "not entered", not "remove").
   await page.goto("/start");
+  await startCardHead(page, await selfOpenedCard(page)).click();                     // `[2026-10-16 ST4F-601]` 스스로 열린 취향 카드를 접어야 다른 카드가 눌린다(inert)
   const head = page.getByRole("button", { name: /디스코드 알림/ });
   await head.click();
   await expect(page.getByRole("textbox", { name: "디스코드 웹훅 URL" })).toHaveValue("");
