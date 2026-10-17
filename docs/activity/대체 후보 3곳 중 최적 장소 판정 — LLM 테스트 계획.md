@@ -1,6 +1,6 @@
 # 대체 후보 3곳 중 최적 장소 판정 — LLM 테스트 계획
 
-> 작성 2026-10-16 · 상태: **계획**(기능 미구현, 평가 자료·도구 미작성)
+> 작성 2026-10-16 · 상태: **계획**(기능 미구현, 평가 자료 작성 중) · `[2026-10-17]` 실행 · 채점 도구 작성 — `final_project_cs/eval/alternative_pick/`(README)
 > 관련 코드: `final_project_cs/app/domains/travel_ops/instances/activity/alternative_order.py` · `final_project_cs/prompts/activity_judge/alternative_order.v2.md` · `final_project_cs/eval/activity_judge/`
 
 ## 0. 지금 코드와의 관계

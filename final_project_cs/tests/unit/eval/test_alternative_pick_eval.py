@@ -1,0 +1,208 @@
+"""대체 후보 1순위 판정 평가 — 사례 만들기 · 실행(가짜 LLM) · 채점 갈래(M1~M8) · 전환 기준. DB · 외부 호출 없이."""
+from __future__ import annotations
+
+import asyncio
+import csv
+import json
+from types import SimpleNamespace
+
+import pytest
+
+from eval.alternative_pick import build, run, score
+
+IDS = ["a1", "b2", "c3"]
+
+
+def case(case_id="X-01", *, text="실내로 바꿔 주세요", survey=None, acceptable=("b2",), forbidden=("c3",),
+         stratum="B", quiet=False, claims=()):
+    return {"case_id": case_id, "kind": "alternative_pick", "split": "holdout", "stratum": stratum,
+            "inputs": {"origin": "경복궁", "at": "2026-11-16T14:00:00+09:00",
+                       "candidates": [{"id": i, "title": f"장소{i}", "code_reason": "1.0km", "distance_km": 1.0,
+                                       "class": "HS010100"} for i in IDS],
+                       "preference": {"survey": survey or {}, "customer_text": text}},
+            "acceptable": list(acceptable), "forbidden": list(forbidden), "expects_code_order": quiet,
+            "forbidden_claims": list(claims), "rationale": "", "label_by": "사람", "text_by": "writer"}
+
+
+def answer(order, used=True, reason="실내 시설이라 먼저 보여 드려요"):
+    async def ask(_body):
+        return SimpleNamespace(output={"order": order, "used_preference": used, "reason": reason}, model="m",
+                               latency_ms=100, input_tokens=10, output_tokens=5, reasoning_tokens=0)
+    return ask
+
+
+def observe(c, ask, variant="base", repeat=1, order=None):
+    return asyncio.run(run.observe(c, variant, repeat, order or IDS, ask, timeout=1.0))
+
+
+# ── 사례 만들기 ───────────────────────────────────────────
+
+def test_smoke_build_covers_all_cards_with_inputs_only_hash(tmp_path):
+    cards = build.load_cards()
+    cases = build.build(cards, smoke=True)
+    assert len(cases) == len(cards) == 80
+    assert all(c["inputs"]["preference"]["customer_text"] for c in cases)
+    manifest = build.write(cases, tmp_path / "c.jsonl", {"smoke": True})
+    relabeled = [{**c, "acceptable": []} for c in cases]
+    assert build.inputs_digest(relabeled) == manifest["inputs_sha256"]       # 라벨만 바뀌면 입력 해시는 같다
+    assert build.load_cases(tmp_path / "c.jsonl")[1]["sha256"] == manifest["sha256"]
+
+
+def test_label_numbers_become_candidate_ids_and_missing_cards_stop():
+    card = build.load_cards()[0]
+    ids = [c["id"] for c in card["candidates"]]
+    labels = {card["card_id"]: {"acceptable": ["2", "3"], "forbidden": ["1"]}}
+    [c] = build.build([card], smoke=False, texts={card["card_id"]: "아무 데나"}, labels=labels, labeler="갑")
+    assert c["acceptable"] == ids[1:] and c["forbidden"] == ids[:1] and c["split"] == "holdout"
+    with pytest.raises(SystemExit):
+        build.build([card], smoke=False, texts={}, labels=labels, labeler="갑")
+
+
+def test_tampered_dataset_is_refused(tmp_path):
+    path = tmp_path / "c.jsonl"
+    build.write([case()], path, {})
+    path.write_text(path.read_text(encoding="utf-8").replace("경복궁", "창덕궁"), encoding="utf-8")
+    with pytest.raises(SystemExit):
+        build.load_cases(path)
+
+
+# ── 실행 ──────────────────────────────────────────────────
+
+def test_no_cue_is_not_called_like_production():
+    row = observe(case(text=""), answer(IDS))
+    assert row["status"] == "not_called" and row["applied"] is None
+
+
+def test_timeout_and_error_are_call_failures():
+    async def slow(_body):
+        await asyncio.sleep(5)
+
+    async def boom(_body):
+        raise RuntimeError("no active prompt registered")
+
+    assert observe(case(), slow)["status"] == "llm_timeout"
+    row = observe(case(), boom)
+    assert row["status"] == "llm_error" and "RuntimeError" in row["error"]
+
+
+def test_shuffle_plan_is_seeded_and_moves_first_place():
+    cases = [case(f"X-{i:02d}") for i in range(10)]
+    plan = run.shuffle_plan(cases, n_cases=4, n_shuffles=2, seed=7)
+    assert plan == run.shuffle_plan(cases, n_cases=4, n_shuffles=2, seed=7)
+    assert len(plan) == 4 and all(len(v) == 2 and all(p[0] != IDS[0] for p in v) for v in plan.values())
+    assert len(run.jobs(cases, repeats=3, plan=plan)) == 10 * 3 + 4 * 2
+
+
+def test_run_appends_and_resume_skips_done(tmp_path):
+    results = tmp_path / "results.jsonl"
+    todo = run.jobs([case()], repeats=2, plan={})
+    asyncio.run(run.run(todo[:1], answer(IDS, used=False, reason=""), timeout=1, concurrency=2, results=results))
+    left = [j for j in todo if (j[0]["case_id"], j[1], j[2]) not in run.done_keys(results)]
+    assert len(left) == 1 and left[0][2] == 2
+
+
+# ── 채점 ──────────────────────────────────────────────────
+
+def test_judge_branches():
+    c = case()
+    good = score.judge(c, observe(c, answer(["b2", "a1", "c3"])))
+    assert (good["served_outcome"], good["usage"], good["dangerous"]) == ("correct", "valid", False)
+
+    partial = score.judge(c, observe(c, answer(["b2"])))                       # 빠진 후보를 코드가 뒤에 붙임
+    assert partial["usage"] == "corrected" and partial["served_first"] == "b2"
+
+    no_reason = score.judge(c, observe(c, answer(["c3", "a1", "b2"], used=False, reason="")))
+    assert no_reason["usage"] == "discarded" and no_reason["served_first"] == "a1"   # 버려서 코드 순서
+
+    danger = score.judge(c, observe(c, answer(["c3", "a1", "b2"])))
+    assert danger["dangerous"] and danger["served_dangerous"]
+
+    # 범위 이탈 — 원답은 위험, 보정 후는 고객에게 안 나감
+    outside = score.judge(c, observe(c, answer(["lotte", "b2"])))
+    assert outside["raw_outside"] and outside["dangerous"] and not outside["served_dangerous"]
+    assert outside["served_first"] == "b2" and outside["usage"] == "corrected"
+
+
+def test_reason_flags_banned_words_card_claims_and_won():
+    c = case(claims=("한적",))
+    assert score.flags("입장료 3,000원이라 한적해요", c) == ["…원", "입장료", "한적"]
+    assert score.flags("실내 시설이라 비를 피할 수 있어요", c) == []
+
+
+def summary_for(rows_by_case, extra_conditions=None, reasons=None):
+    cases = {c["case_id"]: c for c, _ in rows_by_case}
+    rows = [r for _, rs in rows_by_case for r in rs]
+    conditions = {"split": ["holdout"], "smoke": False, "dry_run": False, **(extra_conditions or {})}
+    return score.summarize(cases, rows, conditions, reasons, n_boot=200)
+
+
+def test_summary_counts_and_gate():
+    better = case("B-01")                       # 코드 1순위 a1 은 허용 밖 — LLM 이 b2 로 올리면 개선
+    quiet = case("A-01", text="아무 데나요", acceptable=IDS, forbidden=(), stratum="A", quiet=True)
+    rows = [
+        (better, [observe(better, answer(["b2", "a1", "c3"]), repeat=r) for r in (1, 2, 3)]
+         + [observe(better, answer(["b2", "c3", "a1"]), variant="shuffle-1", order=["c3", "b2", "a1"])]),
+        (quiet, [observe(quiet, answer(IDS, used=False, reason=""), repeat=r) for r in (1, 2, 3)]),
+    ]
+    s = summary_for(rows)
+    assert s["M1_served"]["num"] == 6 and s["M1_served"]["den"] == 6
+    assert s["baseline_code_order"]["num"] == 1 and s["M3_llm_minus_code"]["value"] == 0.5
+    assert s["M4_keep_code_order"] == {"num": 3, "den": 3, "pct": 100.0}
+    assert s["M6b_used"]["num"] == 7 and s["M6e_call_failed"]["num"] == 0
+    assert s["M7_consistent"]["num"] == 2
+    assert s["M8_position_stable"]["num"] == 1 and s["M8_position_stable"]["den"] == 1
+    assert s["M5_reason_grounded"]["status"] == "pending"
+    assert s["gate"]["checks"]["M5 = 100%"] is None and s["gate"]["verdict"].startswith("확인 전")
+
+    keys = {("B-01", "base", r): score.GROUNDED for r in (1, 2, 3)} | {("B-01", "shuffle-1", 1): score.GROUNDED}
+    s2 = summary_for(rows, reasons=keys)
+    assert s2["M5_reason_grounded"]["status"] == "reviewed" and s2["M5_reason_grounded"]["pct"] == 100.0
+    assert s2["gate"]["final"] is True and s2["gate"]["checks"]["M2 = 0"] and s2["gate"]["checks"]["M6e = 0"]
+    assert s2["gate"]["checks"]["M3 하한 > 0"] is False and s2["gate"]["verdict"] == "shadow 유지"   # 2건이면 하한이 0
+
+
+def test_call_failures_block_the_gate_and_drafts_are_reference_only():
+    c = case()
+
+    async def boom(_body):
+        raise RuntimeError("no active prompt registered")
+
+    s = summary_for([(c, [observe(c, boom)])])
+    assert s["M6e_call_failed"]["num"] == 1 and s["gate"]["verdict"].startswith("환경 먼저")
+    draft = {**c, "label_by": "auto-tag-draft"}
+    s2 = summary_for([(draft, [observe(draft, answer(["b2", "a1", "c3"]))])], {"smoke": True, "split": ["smoke"]})
+    assert s2["gate"]["verdict"].startswith("참고만")
+
+
+def test_export_reasons_sheet_and_read_back(tmp_path):
+    c = case(claims=("후기",))
+    rows = [observe(c, answer(["b2", "a1", "c3"], reason="후기가 좋아요")),
+            observe(c, answer(["b2", "a1", "c3"]), repeat=2)]
+    path = score.export_reasons(tmp_path, {c["case_id"]: c}, rows)
+    with path.open(encoding="utf-8-sig", newline="") as fh:
+        sheet = list(csv.DictReader(fh))
+    assert [r["자동 표시"] for r in sheet] == ["후기", ""]                  # 표시된 것 먼저, 그다음 무작위 표본
+    sheet[0][score.VERDICT_COL] = score.FABRICATED
+    sheet[1][score.VERDICT_COL] = score.GROUNDED
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(sheet[0]))
+        w.writeheader()
+        w.writerows(sheet)
+    got = score.load_reasons(path)
+    m5 = summary_for([(c, rows)], reasons=got)["M5_reason_grounded"]
+    assert (m5["num"], m5["den"], m5["fabricated"]) == (1, 2, 1)
+    with pytest.raises(SystemExit):
+        score.export_reasons(tmp_path, {c["case_id"]: c}, rows)              # 덮어쓰지 않는다
+
+
+def test_dry_run_end_to_end(tmp_path):
+    cases = build.build(build.load_cards(), smoke=True)[:6]
+    results = tmp_path / "results.jsonl"
+    plan = run.shuffle_plan(cases, n_cases=2, n_shuffles=2, seed=7)
+    n = asyncio.run(run.run(run.jobs(cases, repeats=2, plan=plan), run.dry_run_ask(), timeout=1, concurrency=3,
+                            results=results))
+    assert n == 6 * 2 + 2 * 2
+    rows = [json.loads(line) for line in results.read_text(encoding="utf-8").splitlines()]
+    s = score.summarize({c["case_id"]: c for c in cases}, rows, {"split": ["smoke"], "smoke": True}, n_boot=100)
+    assert s["M3_llm_minus_code"]["value"] == 0.0                          # 받은 순서 그대로 = 기준선
+    assert s["M8_position_stable"]["num"] == 0                              # 받은 순서를 따르면 섞을 때마다 바뀐다

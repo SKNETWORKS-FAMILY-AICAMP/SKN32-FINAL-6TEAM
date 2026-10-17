@@ -25,6 +25,7 @@ from app.domains.travel_ops.components.itinerary.itinerary import weather_from_c
 from app.domains.travel_ops.instances.activity.alternatives import rank_alternatives
 from app.domains.travel_ops.instances.activity.db_search.place_candidates import find_place_candidates
 from app.infrastructure.db.session import get_connection
+from build_cards import assign_writers, write_sheet  # 같은 폴더 — 스크립트로 실행하면 이 폴더가 import 경로에 있다
 
 HERE = Path(__file__).resolve().parent
 KST = ZoneInfo("Asia/Seoul")
@@ -90,7 +91,7 @@ def check(card: dict, shown: list[dict]) -> tuple[bool, str]:
     if rule.get("code_first_matches") is False and hit[0]:
         return False, "코드 1순위가 이미 맞는다(기준선과 같은 답)"
     lose = target.get("loses_to")
-    if rule.get("need_survey_match") and lose and lose in {"kid", "low_walking"}:
+    if rule.get("need_survey_match") and lose and lose in {"kid", "low_walking", "stroller"}:
         return True, "설문 쪽 속성 자동 확인 불가 — 사람 확인"
     if rule.get("need_survey_match") and lose and not any(lose in s["auto_tags"] for s in shown):
         return False, f"설문 쪽 속성({lose}) 후보가 없다 — 충돌이 성립 안 함"
@@ -173,6 +174,14 @@ def survey_coverage(table: dict) -> dict:
     return {"origins": total, "mixed": mixed}
 
 
+TIME_IN_TEXT = re.compile(r"[월화수목금토일]요일 \d{1,2}:\d{2}")
+
+
+def sync_time(situation: str, at: datetime) -> str:
+    """상황 문장의 「X요일 HH:MM」을 후보를 뽑은 시각으로 바꾼다. 문장에 시각이 없으면 그대로."""
+    return TIME_IN_TEXT.sub(f"{'월화수목금토일'[at.weekday()]}요일 {at:%H:%M}", situation, count=1)
+
+
 def rebind(card: dict, table: dict, origins: list[dict], used: set[str], at: datetime) -> dict | None:
     """실패한 카드의 원래 장소를 표본에서 다시 고른다. 상황 문장의 장소 이름 · 사유를 함께 바꾼다."""
     for origin in origins:
@@ -192,6 +201,9 @@ def rebind(card: dict, table: dict, origins: list[dict], used: set[str], at: dat
             why = "비 예보로 야외 일정이 어렵다는 안내를 받았습니다" if rainy else "운영이 임시로 중단됐다는 공지를 봤습니다"
             situation = re.sub(rf"{re.escape(card['origin_hint'])}에 가려 했는데 [^.]*\.",
                                f"{origin['title']}에 가려 했는데 {why}.", card["situation"], count=1)
+            # ★`[2026-10-16]` 후보는 `at`(표본 기준 시각)으로 뽑았다 — 문장의 요일 · 시각도 그 시각으로 맞춘다.
+            #   전에는 카드에 적힌 시각(예: 「화요일 13:00」)이 남아, 다시 고른 41장 중 18장이 문장과 후보 시각이 달랐다
+            situation = sync_time(situation, at)
             survey = dict(card["survey"])
             if pref is not None:
                 survey["priority"] = [pref]
@@ -204,12 +216,43 @@ def rebind(card: dict, table: dict, origins: list[dict], used: set[str], at: dat
     return None
 
 
+def write_bound_sheet(bound: list[dict]) -> None:
+    """작성자 시트를 결합 뒤 문장으로 쓴다. 결합 실패 카드는 빼고 낸다 — 작성자 배정은 `build_cards.assign_writers`.
+
+    ★`[2026-10-17]` 시트가 이미 있으면 **그 배정을 그대로 둔다.** 카드 검토를 상대 카드로 바꿔 했으므로 배정이 바뀌면
+      작성자가 자기 카드의 후보를 본 셈이 된다. `assign_writers` 는 묶음으로 나누는데 L-60 이 D → B 로 바뀌어,
+      다시 돌리면 배정이 통째로 흔들린다. 새로 생긴 카드만 `assign_writers` 를 따른다."""
+    path = HERE / "sheet_llm_bound_v0.csv"
+    ok = [card for card in bound if card["binding_status"] == "ok"]
+    if not path.exists():
+        write_sheet(ok, path)
+        return
+    with path.open(encoding="utf-8-sig", newline="") as fh:
+        frozen = {r["카드"]: r["작성자"] for r in csv.DictReader(fh)}
+    fresh = dict((c["card_id"], f"작성자{w}") for c, w in assign_writers([c for c in ok if c["card_id"] not in frozen]))
+    order = [*[cid for cid in frozen if any(c["card_id"] == cid for c in ok)], *fresh]
+    by_id = {c["card_id"]: c for c in ok}
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        out = csv.writer(fh)
+        out.writerow(["카드", "작성자", "상황", "참고", "고객이 보낼 말(1~2문장)", "메모"])
+        for cid in order:
+            card = by_id[cid]
+            out.writerow([cid, frozen.get(cid) or fresh[cid], card["situation"], card.get("writer_hint", ""), "", ""])
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tenant", default="demo")
     # ★`[2026-10-16]` 300 → 800 — 카드 80장으로 늘린 뒤 300곳으로는 충돌 · 동점 카드 3장의 조건을 맞추는 원래 장소를 못 찾았다
     parser.add_argument("--sample", type=int, default=800, help="다시 고를 원래 장소 표본 수")
+    parser.add_argument("--sheet-only", action="store_true",
+                        help="DB 없이 기존 cards_llm_bound_v0.jsonl 로 작성자 시트만 다시 쓴다")
     args = parser.parse_args()
+    if args.sheet_only:
+        bound = [json.loads(line) for line in (HERE / "cards_llm_bound_v0.jsonl").open(encoding="utf-8")]
+        write_bound_sheet(bound)
+        print(f"작성자 시트만 다시 썼다 — {sum(c['binding_status'] == 'ok' for c in bound)}/{len(bound)}장")
+        return
     cards = [json.loads(line) for line in (HERE / "cards_llm_v0.jsonl").open(encoding="utf-8")]
     bound = [bind(card, args.tenant) for card in cards]
     first = sum(card["binding_status"] == "ok" for card in bound)
@@ -238,14 +281,7 @@ def main() -> None:
     with (HERE / "cards_llm_bound_v0.jsonl").open("w", encoding="utf-8", newline="\n") as fh:
         for card in bound:
             fh.write(json.dumps(card, ensure_ascii=False) + "\n")
-    # ★작성자 시트도 결합 뒤 문장으로 다시 쓴다(블라인드 — 정답 키 · 후보 · 묶음 없음). 결합 실패 카드는 빼고 낸다.
-    order = [card for card in bound if card["binding_status"] == "ok"]
-    random.Random(1016).shuffle(order)
-    with (HERE / "sheet_llm_bound_v0.csv").open("w", encoding="utf-8-sig", newline="") as fh:
-        out = csv.writer(fh)
-        out.writerow(["카드", "작성자", "상황", "참고", "고객이 보낼 말(1~2문장)", "메모"])
-        for i, card in enumerate(order):
-            out.writerow([card["card_id"], f"작성자{i % 4 + 1}", card["situation"], card.get("writer_hint", ""), "", ""])
+    write_bound_sheet(bound)
     by: dict[str, list[int]] = {}
     for card in bound:
         row = by.setdefault(card["stratum"], [0, 0])

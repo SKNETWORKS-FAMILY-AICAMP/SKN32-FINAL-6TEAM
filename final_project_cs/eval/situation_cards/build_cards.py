@@ -23,7 +23,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent
 VERSION = "v0"
 SEED = 1016
-WRITERS = 4
+WRITERS = 2   # ★`[2026-10-16 사용자 결정]` 4 → 2명 — `assign_writers`
 
 # ── LLM 카드 ──────────────────────────────────────────────────────────────
 #: ★`[2026-10-16 사용자 결정]` 설문 동행(`party`)은 접수 문항이 묻지 않아 비어 있다 — 카드 설문에 넣지 않는다.
@@ -33,7 +33,7 @@ ATTR = {
     "indoor": ("실내", True), "outdoor": ("야외", True), "history": ("역사 유적", True), "nature": ("자연 · 산책", True),
     "experience": ("직접 하는 체험", True), "culture": ("전시 · 공연", True), "shopping": ("쇼핑", True),
     "leisure": ("몸을 쓰는 레저", True), "night_view": ("야경 · 전망", True), "kid": ("아이와 함께 하기 좋음", False),
-    "low_walking": ("많이 걷지 않음", False), "none": ("특별한 선호 없음", True),
+    "low_walking": ("많이 걷지 않음", False), "stroller": ("유모차 접근", False), "none": ("특별한 선호 없음", True),
 }
 
 TEXT_CUES = [  # (원래 장소, 시각, 바뀐 사유, 동행, 작성자에게 줄 바람, 속성)
@@ -50,7 +50,7 @@ TEXT_CUES = [  # (원래 장소, 시각, 바뀐 사유, 동행, 작성자에게 
     ("서울식물원", "월요일 10:00", "휴관일이었습니다", "운동 좋아하는 친구와", "몸을 움직이는 활동을 하고 싶습니다", "leisure"),
     ("경복궁 야간관람", "토요일 19:00", "표가 매진됐습니다", "연인과", "밤에 야경을 볼 수 있는 곳이면 좋겠습니다", "night_view"),
     ("북한산 둘레길", "일요일 09:00", "호우 주의보가 내려졌습니다", "70대 부모님과", "부모님 무릎이 안 좋아 많이 걷지 않는 곳이 좋습니다", "low_walking"),
-    ("낙산성곽길", "토요일 10:00", "공사로 길 일부가 막혔습니다", "유모차를 끄는 가족이", "유모차로 다니기 쉬운 곳이 좋겠습니다", "low_walking"),
+    ("낙산성곽길", "토요일 10:00", "공사로 길 일부가 막혔습니다", "유모차를 끄는 가족이", "유모차로 다니기 쉬운 곳이 좋겠습니다", "stroller"),
     ("리버시티수상스키장", "일요일 14:00", "강풍으로 운영이 취소됐습니다", "외국인 친구와", "한국 전통 문화를 보여 주고 싶습니다", "history"),
     ("어린이대공원", "토요일 11:00", "비가 많이 온다는 예보가 있습니다", "5살 아이와", "아이가 지쳐서 실내에서 쉬엄쉬엄 놀았으면 합니다", "indoor"),
     ("덕수궁", "토요일 15:00", "행사로 출입이 통제됐습니다", "친구 2명과", "미술관 같은 전시를 보고 싶습니다", "culture"),
@@ -69,16 +69,16 @@ SURVEY_ONLY = [  # (원래 장소, 시각, 사유, 설문, 속성)
     ("국립중앙박물관", "월요일 10:00", "휴관일입니다", {"indoor_outdoor": {"activity": "outdoor"}}, "outdoor"),
 ]
 
-CONFLICTS = [  # (원래 장소, 사유, 설문, 오늘의 바람, 이기는 속성, 지는 속성)
+CONFLICTS = [  # (원래 장소, 사유, 설문, 오늘의 바람 — ★「오늘은」을 바람 문장에 넣는다(틀에 붙이면 「오늘은 오늘은」), 이기는 속성, 지는 속성)
     ("서울숲", "비 예보가 있습니다", {"indoor_outdoor": {"activity": "outdoor"}, "theme": "자연"}, "오늘은 비가 오니 실내로 가고 싶습니다", "indoor", "outdoor"),
     ("경복궁", "휴궁일입니다", {"theme": "역사"}, "아이가 역사는 지루해해서 오늘은 체험 같은 걸 하고 싶습니다", "experience", "history"),
     ("국립중앙박물관", "휴관일입니다", {"indoor_outdoor": {"activity": "indoor"}}, "날씨가 너무 좋아서 오늘은 밖에 있고 싶습니다", "outdoor", "indoor"),
     ("명동", "행사로 너무 붐빕니다", {"theme": "쇼핑"}, "오늘은 쇼핑 말고 조용히 전시를 보고 싶습니다", "culture", "shopping"),
-    ("하늘공원", "강풍으로 통제됐습니다", {"theme": "자연"}, "일행이 발목을 다쳐서 많이 걷지 않는 곳이 좋겠습니다", "low_walking", "nature"),
+    ("하늘공원", "강풍으로 통제됐습니다", {"theme": "자연"}, "일행이 발목을 다쳐서 오늘은 많이 걷지 않는 곳이 좋겠습니다", "low_walking", "nature"),
     ("북촌전통공예체험관", "예약이 마감됐습니다", {"theme_details": ["체험"]}, "오늘은 뭘 만들기보다 그냥 구경만 하고 싶습니다", "culture", "experience"),
     ("어린이대공원", "비 예보가 있습니다", {"theme": "자연"}, "오늘은 어른 둘이서 역사 유적에 가고 싶습니다", "history", "nature"),
     ("리버시티수상스키장", "강풍으로 취소됐습니다", {"theme": "레저"}, "너무 피곤해서 오늘은 앉아서 보는 실내 공연이나 전시가 좋겠습니다", "culture", "leisure"),
-    ("동대문디자인플라자", "전시 교체로 닫았습니다", {"indoor_outdoor": {"activity": "any"}, "theme": "문화"}, "바깥 산책을 하고 싶습니다", "nature", "culture"),
+    ("동대문디자인플라자", "전시 교체로 닫았습니다", {"indoor_outdoor": {"activity": "any"}, "theme": "문화"}, "오늘은 바깥 산책을 하고 싶습니다", "nature", "culture"),
     ("인사동 쌈지길", "임시 휴무입니다", {"custom_answers": {"활동": "사진 찍기 좋은 곳"}}, "사진은 이미 많이 찍어서 오늘은 역사 공부가 되는 곳이 좋겠습니다", "history", "night_view"),
     ("남산공원", "폭염 경보가 내려졌습니다", {"indoor_outdoor": {"activity": "outdoor"}}, "오늘은 너무 더워서 실내에 있고 싶습니다", "indoor", "outdoor"),
     ("국립현대미술관", "휴관일입니다", {"theme": "문화"}, "오늘은 전시 말고 고궁을 걷고 싶습니다", "history", "culture"),
@@ -169,7 +169,7 @@ def llm_cards(rng: random.Random) -> list[dict]:
     # C. 단서 충돌 (10)
     for origin, why, survey, want, win, lose in CONFLICTS:
         add("C", f"서울 여행 중입니다. {origin}에 가려 했는데 {why}. 여행 전 설문에는 평소 취향을 적어 두었지만, "
-                 f"오늘은 {want}. 챗봇에게 보낼 말을 1~2문장으로 써 주세요.",
+                 f"{want}. 챗봇에게 보낼 말을 1~2문장으로 써 주세요.",
             survey, {"origin": origin, "cue_source": "customer_text_over_survey", "attribute": win, "loses_to": lose},
             "reorder_to_match", {"need_match": 1, "need_nonmatch": 1, "need_survey_match": 1, "code_first_matches": False},
             hint="설문 내용은 문장에 쓰지 마세요 — 오늘 바라는 것만")
@@ -199,24 +199,49 @@ def llm_cards(rng: random.Random) -> list[dict]:
 
 
 # ── 출력 ─────────────────────────────────────────────────────────────────
-def write(cards: list[dict], name: str, rng: random.Random) -> None:
+def assign_writers(cards: list[dict], seed: int = SEED) -> list[tuple[dict, int]]:
+    """카드를 작성자에게 나눈다 — 묶음(`stratum` · 단서 출처)마다 번갈아 준다.
+
+    ★`[2026-10-16 사용자 결정]` 작성자 4 → 2명, 묶음별 균등. 전체를 섞어 돌려 주면 동점(D) 11장 중 8장이
+    한 사람에게 가 그 묶음 결과가 한 사람 말투로 정해졌다. 번호는 묶음을 넘어 이어 세므로 사람마다 합도 같다(±1).
+    """
+    rng = random.Random(seed)
+    groups: dict[tuple[str, str], list[dict]] = {}
+    for card in cards:
+        groups.setdefault((card["stratum"], card["preference_target"]["cue_source"]), []).append(card)
+    pairs: list[tuple[dict, int]] = []
+    turn = 0
+    for key in sorted(groups):
+        members = sorted(groups[key], key=lambda c: c["card_id"])
+        rng.shuffle(members)
+        for card in members:
+            pairs.append((card, turn % WRITERS + 1))
+            turn += 1
+    rng.shuffle(pairs)  # ★묶음이 이어지지 않게 섞는다 — 작성자가 패턴을 읽지 않게
+    return pairs
+
+
+def write_sheet(cards: list[dict], path: Path) -> None:
+    """작성자 시트(블라인드 — 정답 키 · 후보 · 묶음 없음)."""
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        out = csv.writer(fh)
+        out.writerow(["카드", "작성자", "상황", "참고", "고객이 보낼 말(1~2문장)", "메모"])
+        for card, writer in assign_writers(cards):
+            out.writerow([card["card_id"], f"작성자{writer}", card["situation"], card.get("writer_hint", ""), "", ""])
+
+
+def write(cards: list[dict], name: str) -> None:
     with (OUT / f"cards_{name}_{VERSION}.jsonl").open("w", encoding="utf-8", newline="\n") as fh:
         for card in cards:
             fh.write(json.dumps(card, ensure_ascii=False) + "\n")
-    order = cards[:]
-    rng.shuffle(order)  # ★묶음이 이어지지 않게 섞는다 — 작성자가 패턴을 읽지 않게
-    with (OUT / f"sheet_{name}_{VERSION}.csv").open("w", encoding="utf-8-sig", newline="") as fh:
-        out = csv.writer(fh)
-        out.writerow(["카드", "작성자", "상황", "참고", "고객이 보낼 말(1~2문장)", "메모"])
-        for i, card in enumerate(order):
-            out.writerow([card["card_id"], f"작성자{i % WRITERS + 1}", card["situation"], card.get("writer_hint", ""), "", ""])
+    write_sheet(cards, OUT / f"sheet_{name}_{VERSION}.csv")
 
 
 def main() -> None:
     rng = random.Random(SEED)
     llm = llm_cards(rng)
     assert len(llm) == 80, len(llm)     # ★`[2026-10-16]` 60 → 80 — 계획서 holdout 80건(A 13 · B 27 · C 13 · D 11 · E 11 · F 5)
-    write(llm, "llm", rng)
+    write(llm, "llm")
     for name, cards in (("llm", llm),):
         strata: dict[str, int] = {}
         for c in cards:
