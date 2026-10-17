@@ -1,0 +1,18 @@
+.page { max-width: 52rem; margin-inline: auto; line-height: 1.6; }
+.page h1, .page h2 { font-weight: 600; }
+.page p { max-width: 72ch; }
+.page button, .reason input { min-height: 2.75rem; }
+.page button, .reason, .reason input { font-size: .875rem; }
+.state { padding: 1.5rem; margin-block: 1.5rem; border: 1px solid var(--border, #dbe3e9); border-radius: .75rem; }
+.state h2 { margin-top: 0; }
+.state dl { display: grid; grid-template-columns: auto 1fr; gap: .5rem 1rem; }
+.state dd { margin: 0; overflow-wrap: anywhere; }
+.reason { display: grid; gap: .5rem; margin-block: 1.5rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.actions button, .danger button { min-height: 2.75rem; }
+.danger { border-top: 1px solid var(--border, #dbe3e9); padding-top: 1.5rem; margin-top: 2rem; }
+.delete { background: #b42332; color: white; border-color: #b42332; }
+.dialog { width: min(32rem, calc(100vw - 2rem)); padding: 1.5rem; border: 1px solid #dbe3e9; border-radius: .75rem; color: inherit; }
+.dialog h2 { overflow-wrap: anywhere; }
+.dialog::backdrop { background: rgb(15 23 42 / 45%); }
+@media (max-width: 767.98px) { .state dl { grid-template-columns: 1fr; } .actions { flex-direction: column; } }

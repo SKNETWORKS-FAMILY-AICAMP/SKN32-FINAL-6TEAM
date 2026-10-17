@@ -62,6 +62,8 @@ def create_ops_app(*, routers: list | None = None) -> FastAPI:
     app.include_router(build_limits_router(operator_dependency=operator, require_permission=require))
     from app.presentation.admin_operations_api import build_router as build_operations_router
     app.include_router(build_operations_router(operator_dependency=operator, require_permission=require))
+    from app.domains.travel_ops.modules.web_account.qa_account_api import build_admin_router as build_qa_router
+    app.include_router(build_qa_router(operator, require))
     from app.domains.travel_ops.entry.admin_simulation_api import build_router as build_simulation_router
     app.include_router(build_simulation_router(operator_dependency=operator, require_permission=require))
     from app.domains.travel_ops.entry.admin_watch_api import build_router as build_watch_router

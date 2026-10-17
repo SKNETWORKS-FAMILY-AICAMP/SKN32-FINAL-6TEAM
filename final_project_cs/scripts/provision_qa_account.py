@@ -6,9 +6,9 @@ import json
 import os
 from pathlib import Path
 
-from app.application.admin_service import set_usage_exemption
 from app.core.settings import get_settings
-from app.domains.travel_ops.modules.web_account.web_session import issue
+from app.domains.travel_ops.modules.web_account import qa_account
+from app.domains.travel_ops.modules.web_account.web_session import add_key
 from app.infrastructure.db.session import get_connection
 
 
@@ -24,8 +24,11 @@ def main() -> None:
     # 기존 자격 파일이 있으면 새 계정을 만들지 않는다. 키 원문은 출력하지 않는다.
     with os.fdopen(os.open(args.credentials, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8") as output:
         with get_connection() as conn, conn.transaction():
-            customer, key = issue(conn, tenant_id=tenant)
-            set_usage_exemption(conn, tenant, str(customer), enabled=True, actor=args.actor, reason=args.reason)
+            current = qa_account.status(conn, tenant)
+            current = qa_account.change(conn, tenant, args.actor, enabled=True,
+                                        expected_revision=current['revision'], reason=args.reason)
+            customer = current['customer_id']
+            key = add_key(conn, tenant_id=tenant, customer_id=customer)
             json.dump({"tenant_id": tenant, "customer_id": str(customer), "user_key": key}, output)
         print(json.dumps({"customer_id": str(customer), "usage_exempt": True}))
 

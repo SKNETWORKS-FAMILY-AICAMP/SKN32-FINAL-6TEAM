@@ -171,6 +171,15 @@ async function liveRequest<T>(path: string, options: RequestInit = {}): Promise<
   return data as T;
 }
 export const operationSettings = <T,>(kind: 'limits' | 'retention') => liveRequest<T>(`settings/${kind}`);
+export const operationQaAccount = <T,>() => liveRequest<T>('qa-account');
+export async function saveQaAccount(payload: unknown) {
+  const session = await operatorSession();
+  return liveRequest('qa-account', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
+export async function openQaAccount(payload: unknown) {
+  const session = await operatorSession();
+  return liveRequest<{ url: string; ticket: string; expires_in_seconds: number }>('qa-account/open', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
 export const operationCases = <T,>(id?: string) => liveRequest<T>(id ? `cases/${encodeURIComponent(id)}` : 'cases');
 export const operationSourcePolicy = <T,>() => liveRequest<T>('source-policy');
 export const operationDiagnostics = <T,>(suffix = '') => liveRequest<T>(`diagnostics${suffix}`);
