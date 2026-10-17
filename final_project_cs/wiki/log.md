@@ -821,3 +821,6 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 | `wiki/records/history/` 43개 | git으로 복원 가능. 결정만 추출 |
 | `wiki/records/plans/` | 선별 이관 |
 | `wiki/records/evidence/` | 선별 이관 |
+
+
+- 2026-10-17: [여행 공통 숙소·호텔 조식 연결](records/reports/2026-10-17_shared-lodging_production_ui.md) — UI팀 숙소 표시 재사용, 전체 동선 기준 한 호텔·양일 조식 연결, 새 예시·기존 예시의 실제 저장과 화면 확인.

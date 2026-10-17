@@ -207,6 +207,7 @@
     "tests/integration/rag/test_travel_corpus_retrieval.py",
     "tests/integration/test_admin_policy_runtime.py",
     "tests/integration/test_api_environment_limits.py",
+    "tests/integration/test_simulation_guest_catalogue.py",
     "tests/integration/test_watch_cadence.py",
     "tests/integration/test_watch_monitoring.py",
     "tests/integration/test_watch_simulation.py",

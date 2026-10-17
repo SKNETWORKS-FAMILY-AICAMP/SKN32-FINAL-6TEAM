@@ -1,0 +1,82 @@
+{
+  "fresh_example": {
+    "revision": 3,
+    "same_place": true,
+    "breakfasts": [
+      {
+        "date": "2026-10-24",
+        "start": "09:00",
+        "end": "09:35",
+        "hotel": "트레블로지 명동을지로호텔",
+        "kind": "dining"
+      },
+      {
+        "date": "2026-10-25",
+        "start": "09:00",
+        "end": "09:30",
+        "hotel": "트레블로지 명동을지로호텔",
+        "kind": "dining"
+      }
+    ],
+    "routes": [
+      {
+        "from": "트레블로지 명동을지로호텔",
+        "to": "경복궁",
+        "depart": "09:36",
+        "arrive": "09:47",
+        "minutes": 11,
+        "mode": "subway",
+        "status": "keep"
+      },
+      {
+        "from": "트레블로지 명동을지로호텔",
+        "to": "북촌한옥마을",
+        "depart": "09:30",
+        "arrive": "09:47",
+        "minutes": 17,
+        "mode": "subway",
+        "status": "keep"
+      }
+    ]
+  },
+  "existing_example": {
+    "revision": 5,
+    "same_place": true,
+    "breakfasts": [
+      {
+        "date": "2026-10-24",
+        "start": "09:00",
+        "end": "09:35",
+        "hotel": "트레블로지 명동을지로호텔",
+        "kind": "dining"
+      },
+      {
+        "date": "2026-10-25",
+        "start": "09:00",
+        "end": "09:30",
+        "hotel": "트레블로지 명동을지로호텔",
+        "kind": "dining"
+      }
+    ],
+    "routes": [
+      {
+        "from": "트레블로지 명동을지로호텔",
+        "to": "경복궁",
+        "depart": "09:36",
+        "arrive": "09:47",
+        "minutes": 11,
+        "mode": "subway",
+        "status": "keep"
+      },
+      {
+        "from": "트레블로지 명동을지로호텔",
+        "to": "북촌한옥마을",
+        "depart": "09:30",
+        "arrive": "09:47",
+        "minutes": 17,
+        "mode": "subway",
+        "status": "keep"
+      }
+    ]
+  }
+}
