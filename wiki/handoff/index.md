@@ -58,3 +58,6 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 - 규칙을 바꿨으면 루트·`final_project_cs/` 의 `CLAUDE.md` 와 `AGENTS.md` 를 **같이** 고친다(루트 `CLAUDE.md` 「함께 고친다」 절).
 
 - 숙소·예약 보호 통합: 최신 매니저와 재난 수정을 보존 병합했고 추가 회귀를 검토 중이다. [진행 기록](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-ui-manager-integration.md).
+
+
+- 재난 수신 기록 영향 표시 추가: [완료한 일과 남은 일](2026-10-17_receipt-impact.md).

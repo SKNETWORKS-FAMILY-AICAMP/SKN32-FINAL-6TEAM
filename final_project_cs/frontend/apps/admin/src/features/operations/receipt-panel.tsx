@@ -6,12 +6,15 @@ import { operationSimulations } from '../../lib/gateway';
 import styles from './simulation.module.css';
 
 type Mode = 'actual' | 'simulation' | 'all';
+type ImpactScope = 'trip' | 'day' | 'item' | 'none';
+type Impact = { scope: ImpactScope | 'unassessed'; label: string; summary: string; affects_itinerary: boolean; target_mode: 'actual' | 'simulation' | null };
 type Period = { from: string; to: string };
 type Target = { trip_id: string; item_id: string; title: string; starts_at: string; ends_at: string | null; reason: string };
 type Receipt = {
   id: string; received_at: string; mode: Exclude<Mode, 'all'>; record_type: string; category: string;
   status: string; source: string | null; trip_id: string | null; target_title: string | null;
   stage: string; text: string | null; published_at: string | null; regions: string[]; payload: Record<string, unknown>;
+  impact?: Impact;
 };
 type Receipts = {
   statuses: { region: string; status: string; observed_at: string; fetched_at: string | null; from_cache: boolean; count: number; error_code?: string }[];
@@ -22,6 +25,9 @@ type Receipts = {
 const CATEGORIES: Record<string, string> = { forecast: '날씨 예보', weather_warning: '기상 특보', disaster_msg: '재난문자', traffic_control: '교통 통제', air_quality: '대기질', earthquake: '지진' };
 const STATUSES: Record<string, string> = { ok: '확인', received: '수신', failed: '조회 실패', not_connected: '미연결', not_applicable: '해당 없음' };
 const KINDS: Record<string, string> = { disaster_message: '수신 문자', api_receipt: 'API 수신 기록', api_check: 'API 점검 기록', mock_input: 'mock API 입력' };
+const SOURCES: Record<string, string> = { open_meteo: 'Open-Meteo 날씨 예보', kma_warning: '기상청 기상 특보', disaster_msg: '공식 재난문자 API', utic: '도시교통정보센터 교통 통제', its: '국가교통정보센터 교통 통제', airkorea: '에어코리아 대기질', kma_earthquake: '기상청 지진정보' };
+const IMPACTS: { value: ImpactScope; label: string }[] = [{ value: 'trip', label: '전체일정정지' }, { value: 'day', label: '일일일정정지' }, { value: 'item', label: '해당일정정지' }, { value: 'none', label: '영향없음' }];
+const UNASSESSED: Impact = { scope: 'unassessed', label: '영향 미판정', summary: '이 기록에는 일정 영향 판정이 보관되지 않았습니다.', affects_itinerary: false, target_mode: null };
 const time = (value: string | null | undefined) => value ? new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '확인 기록 없음';
 
 function recentWeek(): Period {
@@ -43,13 +49,15 @@ export function DisasterReceiptPanel() {
   const [period, setPeriod] = useState(recentWeek);
   const [draft, setDraft] = useState(period);
   const [mode, setMode] = useState<Mode>('actual');
+  const [impacts, setImpacts] = useState<ImpactScope[]>([]);
   const [page, setPage] = useState(1);
   const [asOf, setAsOf] = useState<string>();
   const [error, setError] = useState('');
   const query = useQuery({
-    queryKey: ['disaster-receipts', period, mode, page, asOf],
+    queryKey: ['disaster-receipts', period, mode, impacts, page, asOf],
     queryFn: () => {
       const params = new URLSearchParams({ mode, date_from: period.from, date_to: period.to, page: String(page) });
+      impacts.forEach(value => params.append('impact', value));
       if (asOf) params.set('as_of', asOf);
       return operationSimulations<Receipts>('receipts', params);
     },
@@ -70,9 +78,17 @@ export function DisasterReceiptPanel() {
       setError(''); setPeriod(draft); resetPage();
       if (draft.from === period.from && draft.to === period.to && page === 1 && !asOf) void query.refetch();
     }}>
-      <label>입력 구분<select value={mode} onChange={event => { setMode(event.target.value as Mode); resetPage(); }}>
+      <label className={styles.inputMode}>입력 구분<select value={mode} onChange={event => { setMode(event.target.value as Mode); resetPage(); }}>
         <option value="simulation">모의</option><option value="actual">실제</option><option value="all">둘 다</option>
       </select></label>
+      <fieldset className={styles.impactFilters} aria-describedby="impact-filter-help">
+        <legend>일정 영향</legend>
+        <div>{IMPACTS.map(option => <label key={option.value}><input type="checkbox" checked={impacts.includes(option.value)} onChange={event => {
+          setImpacts(IMPACTS.filter(value => value.value === option.value ? event.target.checked : impacts.includes(value.value)).map(value => value.value));
+          resetPage();
+        }} />{option.label}</label>)}</div>
+        <p id="impact-filter-help">여러 개를 선택할 수 있습니다. 모두 해제하면 영향 미판정 기록까지 표시합니다.</p>
+      </fieldset>
       <label>수신·점검 시작일<input type="date" value={draft.from} max={draft.to || undefined} onChange={event => { setDraft({ ...draft, from: event.target.value }); setError(''); }} /></label>
       <label>수신·점검 종료일<input type="date" value={draft.to} min={draft.from || undefined} onChange={event => { setDraft({ ...draft, to: event.target.value }); setError(''); }} /></label>
       <div className={styles.receiptActions}>
@@ -82,7 +98,8 @@ export function DisasterReceiptPanel() {
       </div>
     </form>
     {error && <p role="alert">{error}</p>}
-    <p role="status">조회 기간 {period.from} ~ {period.to} · {mode === 'all' ? '모의·실제 모두' : mode === 'actual' ? '실제 기록' : '모의 기록'} · 한 페이지 50건</p>
+    <p role="status">조회 기간 {period.from} ~ {period.to} · {mode === 'all' ? '모의·실제 모두' : mode === 'actual' ? '실제 기록' : '모의 기록'} · {impacts.length ? impacts.map(value => IMPACTS.find(option => option.value === value)!.label).join(' · ') : '모든 영향'} · 한 페이지 50건</p>
+    <p className={styles.impactHelp}>색이 있는 카드는 실제 일정에 영향을 줄 수 있는 기록입니다. 영향 범위는 저장된 내용을 현재 기준으로 분류한 결과이며, 일정 정지 완료를 뜻하지 않습니다.</p>
     {query.isPending ? <p role="status">수신 기록을 읽는 중…</p> : query.isError ? <div role="alert"><p>{query.error.message}</p><button onClick={() => void query.refetch()}>수신 기록 다시 읽기</button></div> : !history ?
       <p role="alert">기간별 수신 기록 조회가 준비되지 않았습니다. 관리자 앱과 운영 API의 적용 판을 확인해 주세요.</p> : <>
       <p role="status">총 {history.total}건 · {history.page}/{history.total_pages}페이지 · 조회 기준 {time(history.as_of)}</p>
@@ -94,14 +111,7 @@ export function DisasterReceiptPanel() {
         </span>)}
         <button disabled={history.page >= history.total_pages} onClick={() => changePage(history.page + 1)}>다음 페이지</button>
       </nav>
-      {history.records.length ? <ol className={styles.recordList} start={(history.page - 1) * history.page_size + 1}>{history.records.map(record => <li key={record.id}>
-        <div className={styles.recordHeading}><strong>{CATEGORIES[record.category] || record.category} · {KINDS[record.record_type] || record.record_type}</strong><span className={styles.recordMode}>{record.mode === 'simulation' ? '모의' : '실제'}</span></div>
-        <p>수신·점검 {time(record.received_at)} · {STATUSES[record.status] || record.status || '상태 미기록'}<br />출처 {record.source || '출처 미기록'}</p>
-        {record.target_title && <p>점검 일정 {record.target_title}{record.trip_id && ` · 여행 ${record.trip_id.slice(0, 8)}`}</p>}
-        {record.text && <p className={styles.receiptText}>{record.text}</p>}
-        {record.published_at && <p>발표 {time(record.published_at)} · {record.regions.join(' · ')}</p>}
-        <details><summary>API 데이터·점검 결과 펼치기</summary><pre className={styles.payload}>{JSON.stringify(record.payload, null, 2)}</pre></details>
-      </li>)}</ol> : <p role="status">선택한 구분과 기간에 저장된 기록이 없습니다. 기간을 넓히거나 입력 구분을 바꿔 주세요. 이 표시가 현재 재난이 없다는 뜻은 아닙니다.</p>}
+      {history.records.length ? <ol className={styles.recordList} start={(history.page - 1) * history.page_size + 1}>{history.records.map(record => <ReceiptCard key={record.id} record={record} />)}</ol> : <p role="status">선택한 구분·일정 영향·기간에 저장된 기록이 없습니다. 조건을 풀거나 기간을 넓혀 주세요. 이 표시가 현재 재난이 없다는 뜻은 아닙니다.</p>}
     </>}
     {query.data && <details className={styles.currentMonitoring}>
       <summary>현재 수신 상태·검사 대상 펼치기</summary>
@@ -120,6 +130,21 @@ export function DisasterReceiptPanel() {
       <p>{query.data.latest_run ? `최근 감시 회차 ${query.data.latest_run.status} · 시작 ${time(query.data.latest_run.started_at)} · 종료 ${time(query.data.latest_run.finished_at)}` : '기록된 감시 회차가 없습니다.'}</p>
     </details>}
   </section>;
+}
+
+function ReceiptCard({ record }: { record: Receipt }) {
+  const impact = record.impact || UNASSESSED;
+  const affects = impact.affects_itinerary && record.mode === 'actual' && impact.target_mode === 'actual';
+  return <li data-impact={impact.scope} data-affects={affects}>
+    <div className={styles.recordHeading}><strong>{CATEGORIES[record.category] || record.category} · {KINDS[record.record_type] || record.record_type}</strong><span className={styles.recordMode}>{record.mode === 'simulation' ? '모의' : '실제'}</span></div>
+    <div className={styles.impactHeading}><strong className={styles.impactBadge}>{impact.label}</strong><span>{affects ? '실제 일정 영향 가능' : impact.target_mode === 'simulation' ? '모의 시험 대상' : impact.scope === 'unassessed' ? '여행 영향 확인 전' : '이 점검에서 영향 없음'}</span></div>
+    <p>{impact.summary}</p>
+    {record.target_title && <p>점검 일정 {record.target_title}{record.trip_id && ` · 여행 ${record.trip_id.slice(0, 8)}`}</p>}
+    <p>수신·점검 {time(record.received_at)} · {STATUSES[record.status] || record.status || '상태 미기록'}<br />출처 {record.source ? SOURCES[record.source] || record.source : '출처 미기록'}</p>
+    {record.text && <p className={styles.receiptText}>{record.text}</p>}
+    {record.published_at && <p>발표 {time(record.published_at)} · {record.regions.join(' · ')}</p>}
+    <details><summary>API 데이터·점검 결과 펼치기</summary><pre className={styles.payload}>{JSON.stringify(record.payload, null, 2)}</pre></details>
+  </li>;
 }
 
 function TargetList({ targets }: { targets: Target[] }) {

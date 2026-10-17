@@ -5,7 +5,9 @@ from datetime import UTC, date, datetime, time, timedelta, timezone
 
 from fastapi import HTTPException
 
+from app.domains.travel_ops.components.planning.safety import SafetyRules
 from app.domains.travel_ops.components.watch.monitoring import _safe
+from app.domains.travel_ops.components.watch.receipt_impact import SCOPES, describe
 
 KST = timezone(timedelta(hours=9))
 PAGE_SIZE = 50
@@ -36,7 +38,14 @@ WITH records AS (
         'api_check', part.value->>'category', part.value->>'status',
         part.value->>'source', c.trip_id::text, c.target_title, c.stage,
         part.value || jsonb_build_object('disruptions',c.report->'disruptions',
-                                        'advisories',c.report->'advisories')
+                                        'advisories',c.report->'advisories',
+                                        'verdict',c.report->'verdict',
+                                        'simulation_target',c.stage='simulation_full' OR EXISTS (
+                                            SELECT 1 FROM jsonb_array_elements(
+                                                CASE WHEN jsonb_typeof(c.report->'checks')='array'
+                                                     THEN c.report->'checks' ELSE '[]'::jsonb END) AS trial
+                                            WHERE COALESCE(trial->>'mode',trial#>>'{value,mode}')
+                                                IN ('simulation','mock','fixture','sample','dataset')))
  FROM travel_watch_checks c
  CROSS JOIN LATERAL jsonb_array_elements(
    CASE WHEN jsonb_typeof(c.report->'checks')='array' THEN c.report->'checks'
@@ -61,10 +70,14 @@ WITH records AS (
 
 
 def view(conn, tenant: str, *, mode: str = 'actual', date_from: date | None = None,
-         date_to: date | None = None, page: int = 1, as_of: datetime | None = None) -> dict:
+         date_to: date | None = None, page: int = 1, as_of: datetime | None = None,
+         impacts: list[str] | None = None) -> dict:
     now = conn.execute('SELECT clock_timestamp()').fetchone()[0]
     if mode not in ('actual', 'simulation', 'all') or page < 1:
         raise HTTPException(422, '입력 구분과 페이지를 확인해 주세요.')
+    if impacts and (len(impacts) > 4 or any(value not in SCOPES for value in impacts)):
+        raise HTTPException(422, '일정 영향 조건을 확인해 주세요.')
+    selected = list(dict.fromkeys(impacts or []))
     if as_of is not None and as_of.tzinfo is None:
         raise HTTPException(422, '조회 기준 시각에는 시간대가 필요합니다.')
     snapshot = min(as_of, now) if as_of else now
@@ -78,7 +91,25 @@ def view(conn, tenant: str, *, mode: str = 'actual', date_from: date | None = No
     where = '' if mode == 'all' else ' WHERE mode=%s'
     if mode != 'all':
         args += (mode,)
-    total = conn.execute(_RECORDS+'SELECT count(*) FROM records'+where, args).fetchone()[0]
+    rules = SafetyRules.from_guardrails()
+    if selected:
+        # 판정만 필요한 가벼운 자료를 읽는다. 원문 payload는 최종 50건만 읽는다.
+        # Python의 기존 안전 판정기를 재사용해 SQL에 별도 재난 규칙을 복제하지 않는다.
+        minimal = conn.execute(_RECORDS+"""SELECT id,mode,record_type,category,status,trip_id,stage,
+            jsonb_build_object('disruptions',payload->'disruptions','advisories',payload->'advisories',
+                '_disruptions',payload->'_disruptions','_advisories',payload->'_advisories',
+                'verdict',payload->'verdict','simulation_target',payload->'simulation_target',
+                'partial_from',payload->'partial_from',
+                'value',jsonb_build_object('partial_from',payload#>'{value,partial_from}'))
+            FROM records"""+where, args).fetchall()
+        identities = [identity for identity, entry_mode, kind, category, status, trip, stage, payload in minimal
+                      if describe(category=category, status=status, record_type=kind, mode=entry_mode,
+                                  trip_id=trip, stage=stage, payload=payload, rules=rules)['scope'] in selected]
+        total = len(identities)
+        where += (' AND ' if where else ' WHERE ') + 'id=ANY(%s)'
+        args += (identities,)
+    else:
+        total = conn.execute(_RECORDS+'SELECT count(*) FROM records'+where, args).fetchone()[0]
     total_pages = max(1, (total+PAGE_SIZE-1)//PAGE_SIZE)
     current = min(page, total_pages)
     rows = conn.execute(_RECORDS+'SELECT * FROM records'+where+
@@ -92,13 +123,16 @@ def view(conn, tenant: str, *, mode: str = 'actual', date_from: date | None = No
                 payload[field] = [v for v in payload[field] or []
                                   if isinstance(v, dict) and v.get('category') == category]
         safe = _safe(payload)
+        impact = describe(category=category, status=status, record_type=kind, mode=entry_mode,
+                          trip_id=trip, stage=stage, payload=payload, rules=rules)
+        impact['summary'] = _safe(impact['summary'])
         records.append(dict(id=identity, received_at=at.isoformat(), mode=entry_mode,
                             record_type=kind, category=category, status=status,
                             source=_safe(source), trip_id=trip, target_title=_safe(target), stage=stage,
                             text=_safe(payload.get('text')), published_at=payload.get('published_at'),
-                            regions=[_safe(v) for v in payload.get('regions') or []], payload=safe))
+                            regions=[_safe(v) for v in payload.get('regions') or []], payload=safe, impact=impact))
     return dict(records=records, total=total, page=current, page_size=PAGE_SIZE,
-                total_pages=total_pages, mode=mode, date_from=first.isoformat(), date_to=last.isoformat(),
+                total_pages=total_pages, mode=mode, impacts=selected, date_from=first.isoformat(), date_to=last.isoformat(),
                 as_of=snapshot.astimezone(UTC).isoformat())
 
 

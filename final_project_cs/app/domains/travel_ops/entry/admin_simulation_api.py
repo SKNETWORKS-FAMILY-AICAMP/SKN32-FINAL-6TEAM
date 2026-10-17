@@ -84,7 +84,9 @@ def build_router(*, operator_dependency, require_permission) -> APIRouter:
     @router.get("/receipts")
     def receipts(mode: Literal['actual', 'simulation', 'all'] = 'actual', date_from: date | None = None,
                  date_to: date | None = None, page: Annotated[int, Query(ge=1)] = 1,
-                 as_of: datetime | None = None, op=Depends(operator)):
+                 as_of: datetime | None = None,
+                 impact: Annotated[list[Literal['trip', 'day', 'item', 'none']] | None, Query(max_length=4)] = None,
+                 op=Depends(operator)):
         require(op, "ops:introspect")
         from app.domains.travel_ops.components.watch.notice_receipts import view
         from app.domains.travel_ops.components.watch.receipt_history import targets, view as history
@@ -93,7 +95,7 @@ def build_router(*, operator_dependency, require_permission) -> APIRouter:
             conn.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY')
             data = view(conn, tenant)
             data['history'] = history(conn, tenant, mode=mode, date_from=date_from, date_to=date_to,
-                                      page=page, as_of=as_of)
+                                      page=page, as_of=as_of, impacts=impact)
             now = conn.execute('SELECT clock_timestamp()').fetchone()[0]
             end = now + timedelta(minutes=90)
             due = TripStore(tenant).due(conn, start=now, end=end)

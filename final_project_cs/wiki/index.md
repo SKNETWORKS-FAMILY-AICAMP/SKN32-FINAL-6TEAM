@@ -77,4 +77,9 @@ domain: travel
 <a id="최근-변경"></a>
 <a id="기록-구역-records-2026-09-08"></a>
 
-- 숙소·즉시 수정·예약 보호 통합은 격리 검증 중이며 운영 반영 전이다. [작업 기록](records/reports/2026-10-17_lodging-ui-manager-integration.md).
+- 숙소·즉시 수정·예약 보호 통합은 양쪽 매니저 반영·운영 배포 완료. 신규 접수의 최초 호텔 자동 채움 실패는 후속 추적 중이다. [작업 기록](records/reports/2026-10-17_lodging-ui-manager-integration.md).
+
+
+- 재난 수신 기록의 영향 카드·다중 필터는 격리 구현·관련 시험 완료, 통합·운영 반영 전이다. [확인 범위와 남은 일](records/reports/2026-10-17_receipt-impact.md).
+
+- 재난 영향 필터 통합판은 전체 시험과 관리자 기본 빌드 통과, 운영 반영 전이다. [통합 검토](records/reports/2026-10-17_receipt-impact-manager-integration.md).
