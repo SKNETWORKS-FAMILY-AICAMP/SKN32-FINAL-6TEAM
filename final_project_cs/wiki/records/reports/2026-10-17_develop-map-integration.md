@@ -18,3 +18,11 @@ Real cs project response verification: not performed for this final integration.
 Original local checkout, datasets, index and settings were not synchronized or cleaned. Verification used an isolated exported tree and synthetic DB. Tests did not replace production API, worker, DB, web or administrator containers. No private environment files are included.
 
 The final tracked text tree is scanned for credential/infrastructure leaks; raw grep is retained privately without truncation. Both develop heads must match the tested parent before fast-forward publication. Main is excluded. GitHub checks are followed afterward. Personal account billing previously prevented jobs from starting; this is not a code-test success.
+
+## CI follow-up
+
+Team backend full non-live tests, Docker build and ruff passed on aac392393. Administrator CI failed because the committed standalone HTML was stale after integration. Regenerated it from the exact integrated source; two exports match. Administrator lint/type/unit 22/22/build, browser 22/22 and unconfigured-mode 1/1 passed in isolation. This follow-up changes only the generated HTML and this record; backend/customer-web code is identical to aac392393. Personal CI workflows are disabled_manually, so no new CI runs were generated; prior billing failures are not evidence for this commit.
+
+## Subsequent operational web verification
+
+After the isolated checks, the producer separately deployed the customer-web v3 candidate using preserved prior image/settings. Producer reports healthy startup, 30-second observation, zero restarts, four API/worker/DB/admin container IDs unchanged, no SQL. Operational candidate lint/types/unit 801/801/build passed; this differs from the integrated web unit scope 802/802. The producer verified the existing test intake: selected hotel summary displays lodging, first-day four route lines remain, map height 306px. The receiving session visually inspected the [final operational screenshot](../evidence/2026-10-17_intake-map-routes/final-v3-hotel-caption.jpg); this is producer live-screen evidence, not an independently repeated response test by the integration session.
