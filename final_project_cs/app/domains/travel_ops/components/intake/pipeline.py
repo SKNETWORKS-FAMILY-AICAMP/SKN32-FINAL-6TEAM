@@ -584,6 +584,8 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 raise IntakeConflict(exc.code, str(exc)) from exc
             for change in adjusted:
                 evidence = {"source": "customer", "via": "direct_schedule", "basis": change["basis"]}
+                if change.get("derived_stay_end") is True:
+                    evidence["derived_stay_end"] = True
                 note = "장소 변경에 따라 앞뒤 이동시간을 반영해 재배치" + ("(어림 이동시간)" if change["basis"] == "estimate" else "")
                 rows.append((change["source_id"], change["field"], change["value"], evidence, note))
         new = current + 1

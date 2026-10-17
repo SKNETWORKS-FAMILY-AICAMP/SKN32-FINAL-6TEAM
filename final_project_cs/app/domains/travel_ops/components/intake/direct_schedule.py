@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import Any
 
 from .moves import leg_between
@@ -39,7 +40,7 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
     defaulted = engine is None and use_engine
     if defaulted:
         engine = review.default_engine(party_size)
-    budget = review._Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
+    budget = None
     by_mode: dict[str, Any] = {}
     days = {r["date"] for r in rows if key(r) in touched and r["date"]}
     out: list[dict[str, Any]] = []
@@ -78,7 +79,8 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
             fell_back.add(pair_of(a, b))
             eng = budget
             got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
-        if eng is not None and (got.basis == "estimate" or eng.exhausted):
+        # 상한은 다음 새 계산을 막는다. 이미 얻은 시간표 결과는 유효하다.
+        if eng is not None and got.basis == "estimate":
             # ★`[2026-10-15]` 이유를 남긴다 — x600 서버 채팅 「토속촌 대신 덕수궁」이 이유 없이 「끝내지 못해」로만 막혀 원인을 가리지 못했다
             why = (got.why or "").strip() or ("이동 계산 시간 상한을 넘겼어요" if eng.exhausted else "계산기가 이 구간을 못 채웠어요")
             log.warning("schedule leg not computed: %s -> %s (%s) exhausted=%s", a["place"].get("name"), b["place"].get("name"), why,
@@ -98,7 +100,22 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                                                    "attributes": dict(facts.attributes)})])
         return not violations and facts.open_at_slot is not False and facts.order_ok is not False
 
+    def derived_stay_end(row):
+        from .line_parts import lookup_title, parse
+
+        claims = row.get("claims") or {}
+        parts = ((claims.get("place") or {}).get("evidence") or {}).get("lodging_parts") or {}
+        hotel_meal = parts.get("lodging_meal") is True or parse(lookup_title(row.get("title")), kind_hint=row.get("kind")).lodging_meal
+        end = claims.get("ends_at") or {}
+        evidence = end.get("evidence") or {}
+        inferred = (not end and ((row.get("provenance") or {}).get("ends_at") or {}).get("rule") == "intake.default_duration")
+        return (row.get("kind") == "dining" and hotel_meal
+                and (inferred or evidence.get("via") == "autofix" or evidence.get("derived_stay_end") is True))
+
     for day in sorted(days):
+        # 연결된 숙소도 날짜마다 같은 계산 몫을 쓴다. 첫날 소진이 다음 날을 막지 않는다.
+        budget = review._Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
+        by_mode.clear()
         chain = []
         for r in rows:
             if r["date"] != day:
@@ -114,6 +131,7 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
             chain.append({**r, "start_at": start, "end_at": end, "duration": end - start})
         active = set(touched)
         basis: dict[tuple[str, int], str] = {}
+        shortened_meals = set()
 
         def shift(row, start, why_basis):
             end = start + row["duration"]
@@ -159,6 +177,17 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                 continue
             if route.ok:
                 continue
+            # 우리가 채운 조식 끝만 줄여 다음 방문 시각을 지킨다. 고객이 쓴 끝·예약·잠금은 줄이지 않는다.
+            if (key(a) in touched and not protected(a) and derived_stay_end(a)
+                    and route.basis == "timetable" and route.latest_depart is not None):
+                from .autofix import MIN_STAY_MIN, _floor5
+                finish = _floor5(route.latest_depart)
+                if (finish >= a["start_at"] + timedelta(minutes=MIN_STAY_MIN)
+                        and finish < a["end_at"] and hours_fit(a, a["start_at"], finish)):
+                    a["end_at"], a["duration"] = finish, finish - a["start_at"]
+                    basis[key(a)] = route.basis
+                    shortened_meals.add(key(a))
+                    continue
             if protected(b):
                 latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"])
                 if latest is None:
@@ -207,5 +236,6 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                 if value == r["start" if field == "starts_at" else "end"] and not freeze_end:
                     continue
                 out.append({"source_id": str(r["source_id"]), "field": f"items[{r['index']}].{field}",
-                            "value": value, "basis": basis.get(key(r), "inferred_duration_preserved")})
+                            "value": value, "basis": basis.get(key(r), "inferred_duration_preserved"),
+                            **({"derived_stay_end": True} if field == "ends_at" and key(r) in shortened_meals else {})})
     return out
