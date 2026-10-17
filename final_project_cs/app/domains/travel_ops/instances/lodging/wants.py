@@ -101,6 +101,8 @@ def read_guest(text: str | None) -> Guest:
 @dataclass(frozen=True)
 class Wants:
     kind: str | None = None
+    #: `[2026-10-17 D17]` 「게스트하우스나 호텔」 — 둘 중 하나면 된다(`kind` 는 비우고, 둘 다 아닌 게 보이는 곳만 뺀다)
+    either: frozenset[str] = frozenset()
     avoid: frozenset[str] = frozenset()
     stars: float | None = None
     no_dorm: bool = False
@@ -121,7 +123,7 @@ class Wants:
 
     @property
     def any(self) -> bool:
-        return bool(self.kind or self.avoid or self.stars or self.no_dorm or self.cheapest or self.near)
+        return bool(self.kind or self.either or self.avoid or self.stars or self.no_dorm or self.cheapest or self.near)
 
 
 def read_wants(text: str | None) -> Wants:
@@ -153,13 +155,17 @@ def read_wants(text: str | None) -> Wants:
     if kind in avoid:
         kind = None
     either = _EITHER.search(text)
+    pair: frozenset[str] = frozenset()
     if either and dict(_KIND_WORDS).get(either.group(1).replace(" ", "")) != dict(_KIND_WORDS).get(either.group(2).replace(" ", "")):
         kind = None
         words.append(either.group(0))
+        pair = frozenset(dict(_KIND_WORDS)[word.replace(" ", "")] for word in either.groups())
+        if pair & DORMS:
+            pair |= DORMS                            # 게스트하우스 · 호스텔은 한 묶음으로 본다
     guest = read_guest(text)
     low, high, price_words = read_price_band(text)
     minutes, minute_word = read_walk_minutes(text) if near == "walk" else (None, None)
-    return Wants(kind=kind, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
+    return Wants(kind=kind, either=pair, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
                  words=tuple(words) + guest.words + price_words + ((minute_word,) if minute_word else ()), guest=guest,
                  min_price=low, band_max=high, walk_min=minutes)
 
@@ -186,7 +192,12 @@ def read_price_band(text: str | None) -> tuple[int | None, int | None, tuple[str
     bands = _BAND_WORD.findall(text)
     if len(bands) == 1:
         n = _KO_TENS.get(bands[0]) or int(bands[0])
-        return n * 10000, n * 10000 + (99999 if n % 10 == 0 else 9999), (_BAND_WORD.search(text).group(0),)
+        high = n * 10000 + (99999 if n % 10 == 0 else 9999)
+        word = _BAND_WORD.search(text)
+        # `[2026-10-17 D17]` 「15만 원대 이하」는 위 끝만 — 아래 끝(15만)을 걸어 맞는 곳 13곳을 모두 뺐다(☆N10-10)
+        if re.match(r"\s*(?:이하|까지|아래|안쪽|내|미만|선)", text[word.end():]):
+            return None, high, (word.group(0),)
+        return n * 10000, high, (word.group(0),)
     least = _AT_LEAST.findall(text)
     if len(least) == 1:
         return int(least[0]) * 10000, None, (_AT_LEAST.search(text).group(0),)
@@ -263,7 +274,8 @@ def kind_reason(wants: Wants, kinds: frozenset[str], *, strict: bool = True) -> 
     if wants.no_dorm and kinds & DORMS:
         return "dorm"
     if wants.kind is None:
-        return None
+        # 「A나 B」 — 유형이 보이는데 둘 다 아니면 뺀다(모르면 남긴다). ☆N12-24 「게스트하우스나 호텔」에 「동경모텔」
+        return "kind" if wants.either and kinds and not kinds & wants.either else None
     if wants.kind == "호텔":
         return "kind" if kinds and kinds & NOT_HOTEL and "호텔" not in kinds else None
     if wants.kind in kinds:
@@ -340,7 +352,9 @@ _UNSUPPORTED = (("욕조", r"욕조"), ("아기침대", r"아기\s*침대|유아
                 ("수영장", r"수영장|풀\s*빌라|인피니티\s*풀"), ("영어 응대", r"영어|english"), ("금연", r"금연|흡연"),
                 ("객실 정원", r"정원\s*\d|최대\s*\d+\s*명|\d+\s*명\s*까지(?:만)?\s*(?:투숙|숙박)"), ("온돌", r"온돌"),
                 ("발코니 · 테라스", r"발코니|테라스"), ("취사", r"취사|주방|부엌"), ("얼리 체크인 · 레이트 체크아웃", r"얼리\s*체크\s*인|레이트\s*체크\s*아웃"),
-                ("셔틀", r"셔틀"), ("안전 · 여성 전용층", r"안전한|여성\s*전용\s*층"))
+                ("셔틀", r"셔틀"), ("안전 · 여성 전용층", r"안전한|여성\s*전용\s*층"),
+                # `[2026-10-17 D17]` ☆N12-23 「파티룸이나 큰 숙소」 — 반영 못 함에 없었다
+                ("파티룸 · 단체 숙소", r"파티\s*룸|파티\s*(?:하|할|용)|단체\s*(?:숙소|방)|큰\s*숙소"))
 
 
 def unsupported_requests(text: str, already: list[str]) -> list[str]:
@@ -359,6 +373,8 @@ def summary(wants: Wants) -> list[str]:
     out = []
     if wants.kind:
         out.append(f"{wants.kind}만" if wants.kind != "호텔" else "호텔(게스트하우스 · 호스텔 · 모텔 제외)")
+    if wants.either:
+        out.append(" · ".join(sorted(wants.either)) + " 중 하나")
     if wants.avoid:
         out.append(" · ".join(sorted(wants.avoid)) + " 제외")
     if wants.stars:

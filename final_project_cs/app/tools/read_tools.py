@@ -1002,6 +1002,8 @@ class ReadToolbox:
         if _OUTSIDE_SEOUL.match(re.sub(r"^서울(?:특별시|시)?\s*", "", word) if word.startswith("서울") else word):
             return {"source": "kakao", "found": False, "outside_seoul": True}
         word = re.sub(r"^서울(?:특별시|시)?\s+", "", word) or word      # 「서울 강남」 → 「강남」(카카오는 이미 서울 안만 찾는다)
+        # `[2026-10-17 D17]` 「홍대/신촌」 · 「홍대, 신촌」 — 앞 지역으로(☆N10-23: 통째로 찾아 「홍대선원」이 기준점이 됐다)
+        word = re.split(r"\s*[/,·]\s*|\s+(?:이나|또는|아니면)\s+", word)[0].strip() or word
         # `[2026-10-16 최종 평가 뒤]` 줄임말 → 역 이름(「홍대」가 「머큐어 앰배서더 서울 홍대」 호텔로 잡혔다)
         word = _LANDMARK_ALIASES.get("".join(word.split()), word)
         compact = "".join(word.split())

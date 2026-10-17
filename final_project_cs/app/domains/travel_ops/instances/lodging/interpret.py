@@ -277,6 +277,8 @@ _WEEKDAYS = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4, "토": 5, "일": 
 _ORDINALS = {"첫": 1, "첫째": 1, "둘째": 2, "두번째": 2, "셋째": 3, "세번째": 3, "넷째": 4, "네번째": 4, "다섯째": 5, "마지막": -1}
 _NTH_WEEKDAY = re.compile(r"(?:(\d{1,2})\s*월|(다음\s*달|담달|이번\s*달))\s*(?:의\s*)?(첫째|첫|둘째|두\s*번째|셋째|세\s*번째|넷째|네\s*번째|다섯째|마지막)\s*"
                           r"(?:주\s*(?:의\s*)?)?(?:([월화수목금토일])(?:요일|욜)|(주말))")
+#: `[2026-10-17 D17]` 「다음 달 주말」(차례 말 없음) — 그 달 첫 주말로(☆N10-11: 모델이 10/21 로 읽었다)
+_MONTH_WEEKEND = re.compile(r"(?:(\d{1,2})\s*월|(다음\s*달|담달|이번\s*달))\s*(?:의\s*)?주말")
 _WEEKS_LATER = re.compile(r"(\d|한|두|세|네|다섯)\s*주\s*(?:뒤|후)\s*(?:의\s*)?(?:([월화수목금토일])(?:요일|욜)|(주말))")
 _WEEK_NUM = {"한": 1, "두": 2, "세": 3, "네": 4, "다섯": 5}
 
@@ -296,12 +298,16 @@ def rule_weekdays(found: Interpretation, text: str, *, today: date) -> tuple[Int
     「주말」이면 토 → 일 1박, 그 밖엔 비운다(되묻는다). (해석, 고쳤나)"""
     if found.task != "search":
         return found, False
-    hits = list(_NTH_WEEKDAY.finditer(text or "")) + list(_WEEKS_LATER.finditer(text or ""))
+    hits = list(_NTH_WEEKDAY.finditer(text or "")) + list(_WEEKS_LATER.finditer(text or "")) + list(_MONTH_WEEKEND.finditer(text or ""))
     if len({m.group(0) for m in hits}) != 1:
         return found, False
     m = hits[0]
-    if m.re is _NTH_WEEKDAY:
-        month_word, relative, ordinal, day_word, weekend = m.groups()
+    if m.re is _MONTH_WEEKEND:
+        month_word, relative = m.groups()
+        ordinal, day_word, weekend = "첫", None, "주말"
+    if m.re in (_NTH_WEEKDAY, _MONTH_WEEKEND):
+        if m.re is _NTH_WEEKDAY:
+            month_word, relative, ordinal, day_word, weekend = m.groups()
         if month_word:
             month = int(month_word)
             year = today.year + (1 if month < today.month else 0)
@@ -330,7 +336,7 @@ def rule_weekdays(found: Interpretation, text: str, *, today: date) -> tuple[Int
 
 #: `[2026-10-16 평가 4차]` 체크인만 있고 체크아웃이 비었을 때 박수 — 「11월 12일부터 하룻밤」(G-38)을 모델이 비워 되물었다.
 #: 「1박 6만 원」 · 「1박에 10만」 · 「1박당」처럼 값 단위로 쓴 「N박」은 박수가 아니다
-_NIGHTS = re.compile(r"(\d+)\s*박(?!\s*(?:에\s*|당\s*)?[\d,]+\s*(?:만|천|원))(?!\s*당)|(하룻\s*밤|한\s*밤|두\s*밤|세\s*밤|이틀\s*밤|사흘\s*밤)")
+_NIGHTS = re.compile(r"(\d+)\s*박(?!\s*(?:에\s*|당\s*|최대\s*|최고\s*|기준\s*|은\s*|는\s*)*[\d,]+\s*(?:만|천|원))(?!\s*당)|(하룻\s*밤|한\s*밤|두\s*밤|세\s*밤|이틀\s*밤|사흘\s*밤)")
 _NIGHT_WORDS = {"하룻밤": 1, "한밤": 1, "두밤": 2, "이틀밤": 2, "세밤": 3, "사흘밤": 3}
 
 
@@ -349,6 +355,8 @@ def rule_nights(found: Interpretation, text: str) -> tuple[Interpretation, bool]
 _DAY_GIVEN = re.compile(r"\d+\s*일|\d+\s*[/.]\s*\d+|오늘|내일|모레|이번|다음|담주|금주|크리스마스|성탄|이브|새해|신정|첫날|마지막\s*날|말일|\d+\s*(?:st|nd|rd|th)|"
                         r"(?:첫|첫째|둘째|셋째|넷째|다섯째|마지막)\s*(?:주\s*)?(?:[월화수목금토일]요일|주말)|"
                         r"(?:\d|한|두|세|네|다섯)\s*주\s*(?:뒤|후)|"
+                        # `[2026-10-17 D17]` 「12월 24~26」의 근거 조각 「12월 24」(일 없음) · 「한 달 뒤에」(☆N12-02 · N10-14 — 모델 값이 맞는데 비웠다)
+                        r"\d{1,2}\s*월\s*\d{1,2}|(?:\d|한|두|세)\s*달\s*(?:뒤|후)|"
                         r"(?:first|second|third|fourth|last)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend)|"
                         r"jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec", re.I)
 #: 「오늘 · 내일」은 숙박 말과 붙어 있을 때만 날짜 — 「오늘 날씨 진짜 추운데」의 「오늘」을 체크인으로 읽었다(H-39)
@@ -358,6 +366,36 @@ _PEOPLE = re.compile(r"\d+\s*(?:명|인|분|adults?|people|persons?|pax)|혼자|
                      r"둘|셋|넷|성인|어른|부부|커플|연인|여자\s*친구|남자\s*친구|여친|남친|신혼|solo|couple|single|"
                      # 「엄마랑 아빠, 그리고 아기 세 식구」(H-31) — 식구 수 · 엄마 아빠 둘 다는 인원 근거. 「부모님 모시고」는 아니다(B-22)
                      r"\d+\s*식구|[두세네]\s*식구|다섯\s*식구|엄마.{0,6}아빠|아빠.{0,6}엄마", re.I)
+
+
+#: `[2026-10-17 D17]` 「1월 15일부터」처럼 시작을 못박은 날짜 — 모델이 「새해 1월 15일부터」를 1/1 로 읽었다(☆N7-20)
+_START_DAY = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:부터|에\s*(?:들어|체크\s*인|입실)|체크\s*인|입실)")
+
+
+def rule_start(found: Interpretation, text: str, *, today: date) -> tuple[Interpretation, bool]:
+    """문장에 「N월 N일부터」가 **하나**인데 모델 체크인이 그 날이 아니면 체크인을 그 날로(체크아웃은 박수를 지켜 같이 옮긴다). (해석, 고쳤나)"""
+    if found.task != "search" or found.check_in is None:
+        return found, False
+    hits = {m.groups() for m in _START_DAY.finditer(text or "")}
+    if len(hits) != 1:
+        return found, False
+    month, day = (int(x) for x in hits.pop())
+    start = _next_date(today, month, day)
+    if start is None or (found.check_in.month, found.check_in.day) == (month, day):
+        return found, False
+    end = start + (found.check_out - found.check_in) if found.check_out is not None and found.check_out > found.check_in else None
+    return found.model_copy(update={"check_in": start, "check_out": end}), True
+
+
+#: `[2026-10-17 D17]` 「저랑 부모님 두 분」 「나랑 부모님」 — 성인 3명(☆N7-21 · N8-22: 모델이 비워 되물었다). 「부모님 모시고」만은 그대로 둔다(B-22)
+_ME_AND_PARENTS = re.compile(r"(?:나|저)\s*(?:랑|하고|와|이랑)\s*,?\s*(?:우리\s*)?부모님|부모님\s*(?:두\s*분)?\s*(?:이랑|하고|과|와|랑)\s*(?:나|저)(?![가-힣])")
+
+
+def rule_people(found: Interpretation, text: str) -> tuple[Interpretation, bool]:
+    """모델이 성인 수를 비웠고 문장이 「나 + 부모님」이면 성인 3명. (해석, 채웠나)"""
+    if found.task != "search" or found.adults is not None or not _ME_AND_PARENTS.search(text or ""):
+        return found, False
+    return found.model_copy(update={"adults": 3}), True
 
 
 def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[str]]:
@@ -378,4 +416,4 @@ def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[
     return (found.model_copy(update=update), cleared) if update else (found, [])
 
 
-__all__ = ["CALENDAR_DAYS", "rule_dates", "rule_ranges", "rule_checks", "rule_nights", "rule_weekdays", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
+__all__ = ["CALENDAR_DAYS", "rule_dates", "rule_ranges", "rule_checks", "rule_nights", "rule_people", "rule_start", "rule_weekdays", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

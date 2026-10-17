@@ -1486,6 +1486,11 @@ def test_either_of_two_kinds_does_not_filter_or_ask_the_guest_first():
     assert wants.kind is None and wants.asks_guest == []
     assert read_wants("홍대 호스텔 1/10~13").kind == "호스텔"
     assert read_wants("게스트하우스나 게하").kind == "게스트하우스", "같은 유형 두 말은 그 유형"
+    from app.domains.travel_ops.instances.lodging.wants import kind_reason
+    either = read_wants("홍대 게스트하우스나 호텔 1월 20일 1박")
+    assert either.either == {"게스트하우스", "호스텔", "호텔"}
+    assert kind_reason(either, frozenset({"모텔"})) == "kind", "☆N12-24 「동경모텔」 — 둘 다 아니면 뺀다"
+    assert kind_reason(either, frozenset({"호스텔"})) is None and kind_reason(either, frozenset()) is None
 
 
 def test_a_han_river_view_is_not_an_area_and_the_area_is_asked():
@@ -1495,3 +1500,50 @@ def test_a_han_river_view_is_not_an_area_and_the_area_is_asked():
     assert tools.calls == [] and result.decisions[0]["needs"] == ["keyword"] and "지역" in result.answer
     result, _, tools = _run(reply, {"read.stay_search": STAYS}, text="한강 근처 뷰 좋은 호텔 다음 달 6일부터 3박 성인 2명")
     assert "needs" not in result.decisions[0]
+
+
+def test_d17_dates_people_and_price_words_from_the_held_out_runs():
+    """`[2026-10-17 D17]` ☆qa_1017_153028 — N12-02 「12월 24~26」(근거 「12월 24」를 비움) · N10-14 「한 달 뒤에」 · N8-10 「두 밤 … 1박 최대 6만」 ·
+    N10-11 「다음 달 주말」 · N7-20 「새해 1월 15일부터」 → 1/1 · N7-21 「저랑 부모님 두 분」 · N10-10 「15만 원대 이하」."""
+    from datetime import date as day
+
+    from app.domains.travel_ops.instances.lodging.interpret import (Interpretation, rule_checks, rule_nights, rule_people, rule_start,
+                                                                    rule_weekdays)
+    from app.domains.travel_ops.instances.lodging.wants import read_price_band
+
+    today = day(2026, 10, 17)
+    kept = Interpretation(task="search", check_in=day(2026, 12, 24), check_out=day(2026, 12, 26), adults=2,
+                          check_in_text="12월 24", check_out_text="26")
+    assert rule_checks(kept, "강남구 12월 24~26 커플 둘이서")[1] == []
+    later = Interpretation(task="search", check_in=day(2026, 11, 17), check_out=day(2026, 11, 18), adults=2, check_in_text="한 달 뒤에")
+    assert rule_checks(later, "홍대 숙소 한 달 뒤에 하룻밤 성인 둘")[1] == []
+    found, ok = rule_nights(Interpretation(task="search", check_in=day(2026, 12, 22)), "12월 22일부터 두 밤 혼자 1박 최대 6만 원으로")
+    assert ok and found.check_out == day(2026, 12, 24)
+    found, ok = rule_weekdays(Interpretation(task="search", check_in=day(2026, 10, 21)), "신촌역 도보 5분 다음 달 주말 성인 둘", today=today)
+    assert ok and (found.check_in, found.check_out) == (day(2026, 11, 7), day(2026, 11, 8))
+    wrong = Interpretation(task="search", check_in=day(2027, 1, 1), check_out=day(2027, 1, 3))
+    found, ok = rule_start(wrong, "새해 1월 15일부터 두 밤 명동", today=today)
+    assert ok and (found.check_in, found.check_out) == (day(2027, 1, 15), day(2027, 1, 17))
+    assert rule_start(found, "새해 1월 15일부터 두 밤 명동", today=today)[1] is False
+    assert rule_people(Interpretation(task="search"), "저랑 부모님 두 분에 5살 아이 하나")[0].adults == 3
+    assert rule_people(Interpretation(task="search"), "나랑 부모님 두 분, 1월 10일부터 3박")[0].adults == 3
+    assert rule_people(Interpretation(task="search"), "부모님 모시고 1월 10일부터 3박")[1] is False, "B-22"
+    assert read_price_band("15만 원대 이하로")[:2] == (None, 159999)
+    assert read_price_band("15만 원대로")[:2] == (150000, 159999)
+
+
+def test_a_slashed_pair_of_areas_uses_the_first_for_the_anchor():
+    """`[2026-10-17 D17]` ☆N10-23 「홍대/신촌」을 통째로 찾아 「홍대선원」이 기준점이 됐다."""
+    from app.tools.read_tools import ReadToolbox
+
+    class Kakao:
+        def __init__(self):
+            self.calls = []
+
+        def search(self, query, **options):
+            self.calls.append(query)
+            return [{"name": f"{query} 2호선", "latitude": 37.55, "longitude": 126.92}]
+
+    kakao = Kakao()
+    assert ReadToolbox(lambda: None, kakao=kakao).landmark(None, name="홍대/신촌")["name"] == "홍대입구역 2호선"
+    assert kakao.calls == ["홍대입구역"]
