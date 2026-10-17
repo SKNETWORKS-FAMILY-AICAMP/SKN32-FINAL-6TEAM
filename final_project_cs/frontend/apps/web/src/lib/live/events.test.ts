@@ -63,5 +63,10 @@ describe("the server's change bell", () => {
       reply = () => { throw new TypeError("network down"); };
       expect(await watchTrip("t1", "ko", () => {}, new AbortController().signal)).toBe("failed");
     });
+
+    it("says 'busy' when too many bells are open for this user (429) — the screen then re-reads on a timer (ST4F-603)", async () => {
+      reply = () => new Response("{}", { status: 429 });
+      expect(await watchTrip("t1", "ko", () => {}, new AbortController().signal)).toBe("busy");
+    });
   });
 });

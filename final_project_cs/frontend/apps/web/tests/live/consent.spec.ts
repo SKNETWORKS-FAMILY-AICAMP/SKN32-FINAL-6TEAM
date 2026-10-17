@@ -17,7 +17,7 @@ const startCard = (page: import("@playwright/test").Page) => page.getByRole("but
 test("처음 온 사람은 다른 화면으로 가도 약관 화면으로 돌아오고, 약관 화면에는 필수 둘 · 선택 넷과 초안 표시가 있다", async ({ page }) => {
   await useKorean(page);                                                                 // 세션도 동의도 없는 첫 방문
   await page.goto("/mypage/consents");
-  await expect(page).toHaveURL(/\/start\?terms=required$/);
+  await expect(page).toHaveURL(/\/start\?terms=required&returnTo=%2Fmypage%2Fconsents$/);         // `[2026-10-16 ST4F-601]` 가려던 화면을 싣고 간다
   await expect(startCard(page)).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("status").filter({ hasText: "이용을 위해서는 필수 약관 동의가 필요해요." })).toBeVisible();
   if (process.env.LOADING_SHOTS) await page.screenshot({ path: `${process.env.LOADING_SHOTS}/04-required-terms.png`, fullPage: true });
@@ -36,7 +36,7 @@ test("동의하고 다음으로를 누르면 여섯 항목이 서버에 기록�
   await server.scenario({ consents: "on" });
   await useKorean(page);
   await page.goto("/start");
-  await startCard(page).click();
+  await expect(startCard(page)).toHaveAttribute("aria-expanded", "true");                // `[2026-10-16 ST4F-601]` 설문 입구(/start)는 약관 카드를 스스로 연다 — 머리를 누르면 접힌다
   await agreeTerms(page, ["location"]);
   await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toHaveAttribute("aria-expanded", "true");
 
@@ -59,7 +59,7 @@ test("관리자가 보관 기간을 고친 cs 프로젝트 서버면 약관 글�
   await server.scenario({ consents: "on", retention: "on" });
   await useKorean(page);
   await page.goto("/start");
-  await startCard(page).click();
+  await expect(startCard(page)).toHaveAttribute("aria-expanded", "true");                // `[2026-10-16 ST4F-601]` 설문 입구(/start)는 약관 카드를 스스로 연다 — 머리를 누르면 접힌다
   const privacyText = page.locator('li[data-doc="privacy"]').getByRole("region");
   await expect(privacyText).toContainText("마지막 이용 후 2년이 지나면 파기");                 // 서버가 준 문장(웹 기본값은 1년)
   await agreeTerms(page, []);
@@ -77,7 +77,7 @@ test("선택 항목을 하나도 안 골라도 필수 둘만으로 앱을 쓸 �
   await server.scenario({ consents: "on" });
   await useKorean(page);
   await page.goto("/start");
-  await startCard(page).click();
+  await expect(startCard(page)).toHaveAttribute("aria-expanded", "true");                // `[2026-10-16 ST4F-601]` 설문 입구(/start)는 약관 카드를 스스로 연다 — 머리를 누르면 접힌다
   await agreeTerms(page);
   await expect.poll(async () => (await server.received("POST", "/v1/web/consents")).length).toBe(1);
   const [post] = await server.received("POST", "/v1/web/consents");
@@ -89,7 +89,7 @@ test("선택 항목을 하나도 안 골라도 필수 둘만으로 앱을 쓸 �
 test("옛 서버(동의 기록을 모름, 404)에서도 동의는 이 브라우저에 남고 앱은 열린다", async ({ page }) => {
   await useKorean(page);                                                                  // 장면 consents 는 기본값 off
   await page.goto("/start");
-  await startCard(page).click();
+  await expect(startCard(page)).toHaveAttribute("aria-expanded", "true");                // `[2026-10-16 ST4F-601]` 설문 입구(/start)는 약관 카드를 스스로 연다 — 머리를 누르면 접힌다
   await agreeTerms(page);
   await page.goto("/mypage/consents");
   await expect(page).toHaveURL(/\/mypage\/consents$/);
@@ -114,7 +114,7 @@ test("다른 기기에서 필수 동의를 철회했으면 이 브라우저의 �
   await server.consents({ service_terms: true, privacy: false });
   await start(page);                                                                       // 사본은 필수 둘 동의
   await page.goto("/mypage/consents");
-  await expect(page).toHaveURL(/\/start\?terms=required$/);
+  await expect(page).toHaveURL(/\/start\?terms=required&returnTo=%2Fmypage%2Fconsents$/);
 });
 
 test("서버가 동의 없이는 막는데(gate) 이 브라우저에 사본만 있으면, 사본을 서버에 기록하고 통과한다", async ({ page, request }) => {
@@ -132,7 +132,7 @@ test("서버가 필수 동의가 없다고 막으면(403 consent_required) 약�
   await server.consents({ service_terms: false, privacy: false });                       // 서버에는 「동의 안 함」 기록이 있다
   await start(page);
   await page.goto("/trips");                                                               // 다른 화면이 서버를 부르는 순간 막힌다
-  await expect(page).toHaveURL(/\/start\?terms=required$/);
+  await expect(page).toHaveURL(/\/start\?terms=required&returnTo=%2Ftrips$/);
 });
 
 test("서버의 약관이 이 화면보다 새 버전이면 새로 고침을 안내한다(옛 약관으로 동의를 받지 않는다)", async ({ page, request }) => {

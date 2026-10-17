@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { APP, KEY_STORAGE, KNOWN_SESSION, mockServer, SESSION_COOKIE, start, startWithOldKey, STUB, TRIP_ID, checkPlan } from "./helpers";
+import { agreeTerms, APP, KEY_STORAGE, KNOWN_SESSION, mockServer, SESSION_COOKIE, start, startWithOldKey, STUB, TRIP_ID, checkPlan } from "./helpers";
 
 /**
  * `[2026-10-04 사용자 결정 · 서버 D-CS-011]` 브라우저는 키를 두지 않는다 — 서버가 HttpOnly 쿠키 세션을 주고, 쓰기에는 보안 토큰(X-CSRF-Token)이 따른다.
@@ -108,6 +108,11 @@ test("로그아웃하면 이전 계정의 여행이 화면 캐시에 남지 않�
   await expect(page.getByRole("status").filter({ hasText: "로그아웃했어요" })).toBeVisible();
   await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => { await new Promise((resolve) => setTimeout(resolve, 4_000)); await route.abort(); });   // 다시 읽기를 붙잡아 둔다
   await page.goBack();                                                                                              // 설정 화면
+  // ★`[2026-10-16 사용자 결정 — ST4F-601 F10]` 로그아웃은 이 기기의 동의 사본도 지운다 — 설정 화면은 약관 화면으로 바뀌고(새로 읽지 않고 앱 안에서),
+  //   다시 동의하면 설정 화면으로 돌아온다(약관 화면은 기록에 남지 않는다). 그 다음 뒤로가 옛 여행 화면이다.
+  await expect(page).toHaveURL(/\/start\?terms=required&returnTo=%2Fmypage$/);
+  await agreeTerms(page);
+  await expect(page).toHaveURL(/\/mypage$/);
   await page.goBack();                                                                                              // 재로딩 없는 뒤로가기
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   expect(await page.evaluate(() => (window as unknown as { __stayed?: boolean }).__stayed)).toBe(true);              // 재로딩이 아니라 앱 안의 이동이었다

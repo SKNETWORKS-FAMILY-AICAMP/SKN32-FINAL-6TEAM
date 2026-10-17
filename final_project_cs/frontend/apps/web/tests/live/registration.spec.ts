@@ -6,13 +6,14 @@ test.beforeEach(async ({ page, request }) => { await mockServer(request).reset()
 // The registration page's three panels, pressing 「계획 확인하기」 while the chosen one is empty (it says why, the button is not switched off), what is sent and how a refusal comes back are
 // in `registration-panels.spec.ts`, `flow.spec.ts` and `intake-start.spec.ts`. These two keep what only the old demo suite held.
 
-test("작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 소개 화면(약관 동의 뒤)으로 간다", async ({ page }) => {
+test("작성 중인 계획은 화면을 오가도·새로고침해도 보존되고, 「이전」은 바로 연 등록 화면에서는 소개 화면으로 간다", async ({ page }) => {
   await openRegistration(page);
   const plan = page.getByLabel("나의 여행 계획");
   const valid = "1일차 · 2026-10-03\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음";
   await plan.fill(valid);
-  await page.locator("form").getByRole("link", { name: "이전", exact: true }).click();
-  await expect(page).toHaveURL(/\/$/);                                                  // 약관에 동의했으니 시작 화면이 아니라 소개 화면으로
+  // `[2026-10-16 ST4F-601]` 「이전」은 단추다 — 앱 안에서 온 화면이 있으면 그리로, 주소로 바로 열었으면(이 시험) 소개 화면으로 간다.
+  await page.locator("form").getByRole("button", { name: "이전", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
   await page.goBack();
   await expect(plan).toHaveValue(valid);
   await page.reload();

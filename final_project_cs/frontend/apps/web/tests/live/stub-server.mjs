@@ -102,7 +102,12 @@ const DEFAULTS = {
   // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
   agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
+  //   | "busy" (`[2026-10-17 ST4F-603]` 429 — too many bells already open for this user, as the server says past four)
   bell: "off",
+  // `[2026-10-17 ST4F-603]` the service notices an operator posts (`GET /v1/web/support/notices`): "none" | "one" | "kinds" (one of each kind the admin app offers)
+  serviceNotice: "none",
+  // `[2026-10-17 ST4F-604]` the notices board (`GET /v1/web/support/notices/board`): "off" (an older server: FastAPI 404) | "none" | "many" (3 posted + 12 ended — two pages of ten)
+  noticeBoard: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
   profile: "on",
   // `[2026-10-05]` 「디스코드로 연결」 (`POST /v1/web/profile/discord/connect/start`, the profile's `discord_connect.available`): "off" = an older server (the profile does not say) | "on"
@@ -891,8 +896,27 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return scenario.retention === "on" ? json(response, 200, retentionView(), origin) : json(response, 404, { detail: "Not Found" }, origin);
   }
   // ── 약관 보관 기간 (2026-10-07) ── 끝
+  if (request.method === "GET" && path === "/v1/web/support/notices/board") {
+    if (scenario.noticeBoard === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    // the server's order: posted first, then ended, each newest first (scheduled ones and the operator's name never come)
+    const board = scenario.noticeBoard === "many" ? [
+      { id: "b-down", kind: "기능 차질·장애", title: "채팅 답변이 늦어요", body: "모델 서버가 느려 채팅 답이 1분 넘게 걸릴 수 있어요.", titleEn: "Chat replies are slow", bodyEn: "Replies may take over a minute.", startsAt: "2026-10-17T14:00", endsAt: "2026-10-17T20:00", status: "posted" },
+      { id: "b-plan", kind: "점검 예고", title: "오늘 밤 23시 서버 점검", body: "23:00부터 10분 동안 점검해요.", titleEn: "", bodyEn: "", startsAt: "2026-10-17T09:00", endsAt: "2026-10-17T23:10", status: "posted" },
+      { id: "b-info", kind: "안내", title: "여행 중 문의는 문의함으로", body: "운영자가 확인한 뒤 답해요.", titleEn: "", bodyEn: "", startsAt: "2026-10-16T10:00", endsAt: "2026-10-31T23:59", status: "posted" },
+      ...Array.from({ length: 12 }, (_, index) => ({ id: `b-old-${index + 1}`, kind: "안내", title: `지난 공지 ${index + 1}`, body: `지난 공지 ${index + 1} 본문`, titleEn: "", bodyEn: "",
+        startsAt: `2026-10-${String(15 - index).padStart(2, "0")}T09:00`, endsAt: `2026-10-${String(15 - index).padStart(2, "0")}T18:00`, status: "ended" })),
+    ] : [];
+    return json(response, 200, { notices: board }, origin);
+  }
   if (request.method === "GET" && path === "/v1/web/support/notices") {
-    return json(response, 200, { notices: [], maintenance: { enabled: false, message: "" } }, origin);
+    const posted = scenario.serviceNotice === "one"
+      ? [{ id: "notice-1", kind: "notice", title: "서비스 점검 예정 안내", body: "오늘 밤 11시부터 10분 동안 점검해요.", startsAt: null, endsAt: null }]
+      : scenario.serviceNotice === "kinds" ? [
+        { id: "k-info", kind: "안내", title: "여행 중 문의는 문의함에", body: "운영자가 확인한 뒤 답해요.", startsAt: null, endsAt: null },
+        { id: "k-down", kind: "기능 차질·장애", title: "채팅 답변이 늦어요", body: "모델 서버가 느려 답이 늦어질 수 있어요.", startsAt: null, endsAt: null },
+        { id: "k-plan", kind: "점검 예고", title: "오늘 밤 점검", body: "23:00부터 10분 동안 점검해요.", startsAt: null, endsAt: null },
+      ] : [];
+    return json(response, 200, { notices: posted, maintenance: { enabled: false, message: "" } }, origin);
   }
   // 공개 계획 원문 목록은 고객 세션·약관 조회 없이 읽습니다(cs trip_api.py 계약).
   if (path === "/v1/web/test-scenarios" && request.method === "GET") return json(response, 200, PREPARED_PLAN_CATALOG, origin);
@@ -1142,6 +1166,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 200, { trip_id: id, status: "deleted" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
+  if (path === `/v1/web/trips/${TRIP_ID}/events` && request.method === "GET" && scenario.bell === "busy") {
+    return json(response, 429, { error: { code: "too_many_streams", message: "열린 연결이 너무 많아요" } }, origin);
+  }
   if (path === `/v1/web/trips/${TRIP_ID}/events` && request.method === "GET" && scenario.bell === "on") {
     response.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", ...cors(origin) });
     response.write(`: connected

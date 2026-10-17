@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agreeTerms, hydrated, mockServer, noHorizontalScroll, useKorean, checkPlan } from "./helpers";
+import { agreeTerms, hydrated, mockServer, noHorizontalScroll, start, checkPlan } from "./helpers";
 
 /** Write a plan and press 「계획 확인하기」: the app goes to the plan-check screen of the mock server's intake. */
 async function sendPlan(page: Page) {
@@ -10,7 +10,8 @@ async function sendPlan(page: Page) {
 }
 
 
-test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); });
+// `[2026-10-16 사용자 결정 — ST4F-601]` 디스코드 알림 카드는 로그인한 회원에게만 있다 — 이 파일은 이 기기에서 아직 약관에 동의하지 않은 회원으로 돈다.
+test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await mockServer(request).scenario({ sessionKind: "member" }); await start(page, "acop_u_known", false); });
 
 // `[2026-10-03 user decision]` The recovery email is gone; the first card of the start screen asks only for the Discord webhook.
 const alertsHead = (page: Page) => page.getByRole("button", { name: /디스코드 알림/ });
@@ -28,6 +29,16 @@ const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-de
 async function alertsCardOpened(page: Page) {
   await expect(alertsHead(page)).toHaveAttribute("aria-expanded", "true");
   await page.locator("#card-0").evaluate((card) => Promise.all(card.getAnimations().map((animation) => animation.finished)));
+}
+
+/**
+ * `[2026-10-16 ST4F-601]` 시작 화면(설문 입구)은 동의 전이면 약관 카드를 스스로 연다. 카드 하나가 열려 있으면 다른 카드는 눌리지 않는다(inert) —
+ * 알림 카드부터 다루는 시험은 먼저 접는다.
+ */
+async function foldOpenedTerms(page: Page) {
+  await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
+  await termsHead(page).click();
+  await expect(termsHead(page)).toHaveAttribute("aria-expanded", "false");
 }
 
 /** Preferences open: skip all six questions, then add a plan and start its check. */
@@ -48,7 +59,7 @@ async function skipPreferencesAndRegister(page: Page) {
 }
 
 test("디스코드 알림 카드를 한 번도 열지 않고 약관 → 취향 → 여행 등록까지 가고, 번호는 약관 01·취향 02 그대로이며 알림 카드는 선택 표시만 있다", async ({ page, request }) => {
-  await mockServer(request).scenario({ trips: "none" });   // [2026-10-06] 처음 동의하면 계획 화면을 거쳐 취향으로 돌아오므로, 그 사이 세션이 생긴다 - 그 세션에 여행은 아직 없다(첫 시험과 같다)
+  await mockServer(request).scenario({ trips: "none" });   // 회원 세션에 여행은 아직 없다(「여행 계획 등록하기」가 보이는 처음 모양)
   await page.goto("/start");
   await expect(alertsHead(page)).toHaveAttribute("aria-expanded", "false");
   await expect(alertsHead(page)).toContainText("선택");
@@ -60,17 +71,20 @@ test("디스코드 알림 카드를 한 번도 열지 않고 약관 → 취향 �
   await expect(preferencesHead(page)).toContainText("02");
   // Collapsed and never asking: no focus is taken.
   expect(await page.evaluate(() => document.activeElement?.id)).not.toBe("discord-webhook");
+  // `[2026-10-16 ST4F-601]` 스스로 열린 약관 카드는 화면에 고정돼 떠 있다 — 카드 순서는 모두 접은 채로 잰다.
+  await foldOpenedTerms(page);
   const tops = await Promise.all([alertsHead(page), termsHead(page), preferencesHead(page)].map(async (head) => (await head.boundingBox())!.y));
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
 
   await termsHead(page).click();
-  await agreeTerms(page);
+  await agreeTerms(page);                                     // 동의하면 그 자리에서 취향 카드가 열린다
   await skipPreferencesAndRegister(page);
 });
 
 test("카드를 열고 비우거나 공백만 넣은 채 계속하면 약관으로 가고, 끝까지 진행할 수 있다", async ({ page, request }) => {
-  await mockServer(request).scenario({ trips: "none" });   // [2026-10-06] 처음 동의하면 계획 화면을 거쳐 취향으로 돌아오므로, 그 사이 세션이 생긴다 - 그 세션에 여행은 아직 없다(첫 시험과 같다)
+  await mockServer(request).scenario({ trips: "none" });   // 회원 세션에 여행은 아직 없다(「여행 계획 등록하기」가 보이는 처음 모양)
   await page.goto("/start");
+  await foldOpenedTerms(page);
   await alertsHead(page).click();
   await expect(webhook(page)).toHaveAttribute("type", "url");
   await expect(webhook(page)).toHaveAttribute("inputmode", "url");
@@ -90,6 +104,7 @@ test("카드를 열고 비우거나 공백만 넣은 채 계속하면 약관으�
 
 test("디스코드 웹훅을 넣으면 앞뒤 공백을 지우고 받으며, 카드 머리는 입력했다고만 보인다", async ({ page }) => {
   await page.goto("/start");
+  await foldOpenedTerms(page);
   await alertsHead(page).click();
   await webhook(page).fill(`  ${WEBHOOK}  `);
   await page.getByRole("button", { name: "계속" }).click();
@@ -103,6 +118,7 @@ test("디스코드 웹훅을 넣으면 앞뒤 공백을 지우고 받으며, 카
 
 test("디스코드가 아닌 주소는 계속을 눌렀을 때만 오류를 보이고 막으며, 고치거나 지우면 진행된다", async ({ page }) => {
   await page.goto("/start");
+  await foldOpenedTerms(page);
   await alertsHead(page).click();
   for (const wrong of ["discord.com/api/web" + "hooks/1/x", "http://discord.com/api/web" + "hooks/1/x", "https://example.com/api/web" + "hooks/1/x", "https://discord.com/channels/1/2"]) {
     await webhook(page).fill("");                                  // an error shown once stays until the value is fixed or cleared
@@ -132,6 +148,7 @@ test("디스코드가 아닌 주소는 계속을 눌렀을 때만 오류를 보�
 
 test("잘못된 값을 둔 채 카드를 접거나 약관·취향으로 가려 해도 막히고, 알림 카드가 열려 입력란에 포커스가 간다", async ({ page }) => {
   await page.goto("/start");
+  await foldOpenedTerms(page);
   await alertsHead(page).click();
   await webhook(page).fill("https://example.com/hook");
   await alertsHead(page).click();                                  // folding the card is allowed…
@@ -165,6 +182,7 @@ test("잘못된 값을 둔 채 카드를 접거나 약관·취향으로 가려 �
 
 test("카드를 오가도 초안이 남는다 — 이 브라우저 저장소에는 어떤 모양으로도 쓰지 않는다", async ({ page }) => {
   await page.goto("/start");
+  await foldOpenedTerms(page);
   await alertsHead(page).click();
   await expect(page.getByText(/설정 › 「알림 받는 곳」에서 언제든 추가하거나 바꿀 수 있어요\. 첫 여행을 등록하면 서버에 저장돼요\./)).toBeVisible();
   await webhook(page).fill(WEBHOOK);
@@ -183,6 +201,7 @@ test("카드를 오가도 초안이 남는다 — 이 브라우저 저장소에�
 
 test("키보드로 열고 입력해 Enter로 계속하며 Esc로 접으면 카드 머리로 포커스가 돌아온다", async ({ page }) => {
   await page.goto("/start");
+  await foldOpenedTerms(page);
   await alertsHead(page).focus();
   await page.keyboard.press("Enter");
   await alertsCardOpened(page);
@@ -203,6 +222,7 @@ test("영어와 PC 기기 틀·375px·320px에서 세 카드와 펼친 알림 �
   for (const [width, height] of [[1280, 900], [375, 812], [320, 640]]) {
     await page.setViewportSize({ width, height });
     await page.goto("/start");
+    await foldOpenedTerms(page);
     await noHorizontalScroll(page);
     await preferencesHead(page).scrollIntoViewIfNeeded();
     await expect(preferencesHead(page)).toBeInViewport();

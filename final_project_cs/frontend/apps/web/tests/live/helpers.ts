@@ -81,11 +81,34 @@ export async function startWithOldKey(page: Page, key = "acop_u_known") {
   await page.addInitScript(([storageKey, value]) => { if (!localStorage.getItem(storageKey)) localStorage.setItem(storageKey, value); }, [KEY_STORAGE, key] as const);
 }
 
-/** Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open. */
+/** The head of a start-screen card: 「약관 동의」(card 1) or 「여행 취향 알아보기」(card 2). */
+export const startCardHead = (page: Page, card: "terms" | "preferences") => page.getByRole("button", { name: card === "terms" ? /약관 동의/ : /여행 취향 알아보기/ });
+
+/**
+ * `[2026-10-16 사용자 결정 — ST4F-601]` The survey way in (`/start` without `terms=required`) opens a card by itself once it has read this browser's copy:
+ * the preferences card when the required terms are agreed here, the terms card when not. Waits for that card and says which one (pressing its head would fold it).
+ */
+export async function selfOpenedCard(page: Page): Promise<"terms" | "preferences"> {
+  const items = await page.evaluate((key) => (JSON.parse(localStorage.getItem(key) ?? "null") as { items?: Record<string, boolean> } | null)?.items ?? {}, CONSENT_STORAGE);
+  const opened = items.service_terms && items.privacy ? "preferences" : "terms";
+  await expect(startCardHead(page, opened)).toHaveAttribute("aria-expanded", "true");
+  return opened;
+}
+
+/**
+ * Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open.
+ * ★`[2026-10-16 ST4F-601]` /start opens a card by itself, and while one card is open the others take no press (inert): the open card is folded before
+ *   `beforeTerms` (it works on the Discord card — a signed-in member's only) and before the terms card is opened by hand. Agreeing opens the survey in place.
+ */
 export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
   await page.goto("/start");
+  const opened = await selfOpenedCard(page);
+  if (beforeTerms || opened === "preferences") {
+    await startCardHead(page, opened).click();
+    await expect(startCardHead(page, opened)).toHaveAttribute("aria-expanded", "false");
+  }
   await beforeTerms?.();
-  await page.getByRole("button", { name: /약관 동의/ }).click();
+  if ((await startCardHead(page, "terms").getAttribute("aria-expanded")) !== "true") await startCardHead(page, "terms").click();
   await agreeTerms(page, optional);
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
@@ -163,14 +186,18 @@ export async function noHorizontalScroll(page: Page) {
 }
 
 /**
- * Terms card open on /start: tick each REQUIRED item (optional items are left unticked unless `optional` names them), then go on to the preferences.
+ * Terms card open on /start: tick each REQUIRED item (optional items are left unticked unless `optional` names them), then press 「동의하고 다음으로」.
  * `[2026-10-05]` Consent is per item: 서비스 이용약관 and 개인정보 수집·이용 are required. `[2026-10-05 사용자 지시]` A required item is ticked at once - no reading to the end first.
- * ★`[2026-10-06 사용자 지시]` The FIRST agreement goes straight on to the plan screen (the preference survey is not part of the first run any more). So that the many
- *   start-screen tests that continue with the preferences keep their steps, this helper then opens the preferences from the menu, as a customer would (`openPreferencesFromMenu`).
- * ★`[2026-10-12 사용자 지시]` A customer who had already agreed goes to My trips too (the press never opens the preferences card) — the helper then opens the preferences from the menu the same way.
+ * ★`[2026-10-16 사용자 결정 — ST4F-601]` Where the press goes depends on the way in (the 10-06 / 10-12 detour — plan screen or My trips, then back through the menu — is gone):
+ *   - `/start?terms=required…` (a screen that needs the terms sent the customer here): back to `returnTo`, replacing the terms screen; without `returnTo`,
+ *     the plan screen on a first agreement, My trips otherwise.
+ *   - `/start` (the preference survey's way in): it stays on /start and opens the preferences card in place.
  */
 export async function agreeTerms(page: Page, optional: Array<"sensitive" | "location" | "alert_channel" | "service_improvement"> = []) {
-  await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
+  await expect(startCardHead(page, "terms")).toHaveAttribute("aria-expanded", "true");
+  const address = new URL(page.url());
+  const termsRequired = address.searchParams.get("terms") === "required";
+  const returnTo = address.searchParams.get("returnTo");
   const alreadyAgreed = (await page.locator("#consent-service_terms").isChecked()) && (await page.locator("#consent-privacy").isChecked());
   for (const code of ["service_terms", "privacy"]) {
     if (await page.locator(`#consent-${code}`).isChecked()) continue;                       // a returning customer's boxes are already on - ticking again would untick
@@ -179,8 +206,13 @@ export async function agreeTerms(page: Page, optional: Array<"sensitive" | "loca
   }
   for (const code of optional) await page.locator(`#consent-${code}`).evaluate((input: HTMLInputElement) => { if (!input.checked) input.click(); });
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
-  await expect(page).toHaveURL(alreadyAgreed ? /\/trips$/ : /\/trips\/new$/);
-  await openPreferencesFromMenu(page);
+  if (termsRequired) {
+    const target = returnTo ?? (alreadyAgreed ? "/trips" : "/trips/new");
+    await expect(page).toHaveURL((url) => url.pathname + url.search === target);
+    return;
+  }
+  await expect(page).toHaveURL(/\/start$/);
+  await expect(startCardHead(page, "preferences")).toHaveAttribute("aria-expanded", "true");
 }
 
 /**

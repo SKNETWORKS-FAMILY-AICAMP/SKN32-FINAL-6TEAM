@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
+import { MaintenanceItem, NoticeItems, useServiceStatus } from "@/features/support/service-notices";
 import { seoul } from "@/lib/live/gateway";
 import { LiveError } from "@/lib/live/client";
 import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
@@ -55,6 +56,23 @@ const VERSION_REASON: Record<string, [string, string]> = {
  * ★Every sentence here is the server's — its notice text, its warning reason, its history. Where it sent none, the screen shows the server's own code instead of writing a line of its own.
  * Read state is this browser's (`notice-reads.ts`): the server keeps none yet.
  */
+/**
+ * `[2026-10-17 사용자 결정 — ST4F-604]` 알림 센터 맨 위 「서비스 공지」 — 운영 앱의 공지(여행과 상관없는 전체 공지)를 맨 위 배너와 같은 모양으로(종류 딱지 · 장애 먼저).
+ *   배너를 닫아도 여기서 다시 본다. 게시 중인 공지도 점검도 없으면 칸이 없다.
+ */
+function ServiceNoticeSection() {
+  const t = useT();
+  const status = useServiceStatus();
+  const notices = status.data?.notices ?? [];
+  const maintenance = status.data?.maintenance.enabled ? status.data.maintenance : null;
+  if (notices.length === 0 && !maintenance) return null;
+  return <section className={styles.tasks} aria-labelledby="trip-service-title" data-service-notices>
+    <h3 id="trip-service-title" className={styles.secTitle}>{t("서비스 공지", "Service notices")} {notices.length + (maintenance ? 1 : 0)}</h3>
+    {maintenance && <MaintenanceItem maintenance={maintenance} />}
+    <NoticeItems notices={notices} />
+  </section>;
+}
+
 export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   trip: Trip; tab: CenterTab; onTab: (tab: CenterTab) => void;
   /** 「일정에서 보기」: close the center and show that stop in the list. */
@@ -118,6 +136,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   }
 
   return <div className={styles.wrap}>
+    <ServiceNoticeSection />
     {readError && <div className={styles.error} role="alert">{t("선택과 알림을 읽지 못했어요 — ", "Could not read your choices and notices — ")}{readError instanceof Error ? readError.message : String(readError)}</div>}
 
     <section className={styles.tasks} aria-labelledby="trip-tasks-title">

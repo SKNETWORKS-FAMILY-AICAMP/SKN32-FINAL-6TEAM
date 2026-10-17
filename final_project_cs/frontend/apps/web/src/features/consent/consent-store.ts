@@ -93,7 +93,7 @@ export function setConsent(code: ConsentCode, agreed: boolean): void {
   replaceConsents({ ...readConsents(), [code]: agreed }, new Date().toISOString());
 }
 
-/** 시험용: 저장된 동의를 모두 잊는다. */
+/** 저장된 동의를 모두 잊는다 — 로그아웃(`[2026-10-16 ST4F-601 F10]` 다음 사람이 앞사람의 동의로 들어가지 않게) · 시험. */
 export function forgetConsents(): void {
   memory = null;
   loaded = true;

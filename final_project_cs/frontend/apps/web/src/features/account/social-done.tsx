@@ -4,12 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Panel, ButtonLink } from "@/components/ui";
 import { clearFlow, exchangeTicket, localPath, pendingFlow, providerName, socialErrorText, type SocialResult } from "@/lib/live/auth";
-import { LiveError } from "@/lib/live/client";
+import { LiveError, probeSession } from "@/lib/live/client";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./account.module.css";
 
-type State = { kind: "working" } | { kind: "ok"; result: SocialResult; back: string } | { kind: "error"; text: string; back: string };
+type State = { kind: "working" } | { kind: "ok"; result: SocialResult; back: string } | { kind: "already" } | { kind: "error"; text: string; back: string };
 
 /**
  * `[2026-10-03]` The page a social sign-in ends on (`/auth/done?ticket=…` or `?error=…`, sent here by the server after the provider).
@@ -37,7 +37,12 @@ export function SocialDone() {
     clearFlow();
     void (async () => {
       if (error) { setState({ kind: "error", text: socialErrorText(error, t), back }); return; }
-      if (!ticket || !flow) { setState({ kind: "error", text: socialErrorText("ticket_invalid", t), back }); return; }
+      if (!ticket || !flow) {
+        // ★`[2026-10-16 ST4F-601 F6]` Back here with the browser's back after a finished sign-in (the ticket is spent): signed in, not an error.
+        const session = await probeSession(language).catch(() => null);
+        setState(session?.kind === "member" ? { kind: "already" } : { kind: "error", text: socialErrorText("ticket_invalid", t), back });
+        return;
+      }
       try {
         const result = await exchangeTicket(ticket, flow.nonce, language);
         void queryClient.invalidateQueries();
@@ -49,6 +54,11 @@ export function SocialDone() {
   }, [language, queryClient, t]);
 
   if (state.kind === "working") return <Panel className={styles.done}><p role="status">{t("로그인을 마무리하는 중이에요…", "Finishing the sign-in…")}</p></Panel>;
+  if (state.kind === "already") return <Panel className={styles.done}>
+    <h1>{t("로그인돼 있어요", "You are signed in")}</h1>
+    <p role="status">{t("이 기기에서 계정으로 로그인한 상태예요.", "This device is signed in with your account.")}</p>
+    <div className={styles.actions}><ButtonLink href={routes.trips} variant="primary">{t("여행 목록 보기", "My trips")}</ButtonLink><ButtonLink href={routes.myPage}>{t("설정", "Settings")}</ButtonLink></div>
+  </Panel>;
   if (state.kind === "error") {
     return <Panel className={styles.done}>
       <h1>{t("로그인하지 못했어요", "Could not sign in")}</h1>

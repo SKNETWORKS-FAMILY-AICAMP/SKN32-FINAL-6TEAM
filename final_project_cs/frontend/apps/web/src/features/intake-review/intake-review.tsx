@@ -19,6 +19,7 @@ import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-revi
 import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
+import { clearRegistrationDraft } from "@/features/trip-registration/trip-registration";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
@@ -120,7 +121,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
-  const registered = (tripId: string) => { queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
+  const registered = (tripId: string) => { clearRegistrationDraft(); queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
   const confirm = useMutation({
     mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
     onSuccess: (result) => registered(result.trip.trip_id),
