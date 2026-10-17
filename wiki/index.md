@@ -77,3 +77,6 @@ domain: travel
 
 
 2026-10-17 수동 저장 API·worker 배포 안정성 확인. 공개 계획서의 선택 장소 표시 보완은 격리36/36 통과, 운영 반영 확인 전. [통합 기록](../final_project_cs/wiki/records/reports/2026-10-17_public-plan-manager-review.md)
+
+
+2026-10-17 공개 계획서 선택 장소 표시9ebf1aec의 API·worker 배포30초 안정성 확인. 실제 내부HTTP에서3응답200·장소4/4표시·첨부헤더 확인. 공개 브라우저·수동 저장 최종 화면은 미확인. [최종 확인 기록](../final_project_cs/wiki/records/reports/2026-10-17_public-plan-manager-review.md)
