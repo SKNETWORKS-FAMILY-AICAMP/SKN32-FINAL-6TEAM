@@ -87,3 +87,5 @@ domain: travel
 - 재난 영향 필터 통합판은 전체 시험·관리자 기본 빌드·양쪽 매니저 반영·운영 배포 완료. 실제 관리자 화면의 체크박스·조회는 확인. 안전 단계 참고 문자의 영향 표시 보정은 남았다. [통합 검토](records/reports/2026-10-17_receipt-impact-manager-integration.md).
 
 - 관리자 여행 상세 매니저 통합·자동배포 검증은 [후속 기록](records/reports/2026-10-17_admin-trip-release.md)에 이어 남깁니다.
+
+- 2026-10-18 후속: 고객 입력 초안 원문을 별도 탭으로 추가하고 이전 DB 미완료 시험·전체 DoD를 검증 중입니다. [날짜별 결과](records/reports/2026-10-18_trip-draft-and-full-gates.md).

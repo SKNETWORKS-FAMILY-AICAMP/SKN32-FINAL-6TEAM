@@ -30,6 +30,9 @@
 .message { max-width: 72ch; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0 0; }
 .caseLink { margin-top: 12px; color: var(--accent); background: transparent; text-align: left; }
 .more { margin: 20px auto 0; display: flex; }
+.source { margin: 24px 0; }
+.source h3 { font-size: 16px; overflow-wrap: anywhere; }
+.original { border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: var(--surface); font: inherit; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 75ch; }
 .planMeta { display: flex; gap: 8px 20px; flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .planMeta span { color: var(--muted); }
 .day { margin: 24px 0; }

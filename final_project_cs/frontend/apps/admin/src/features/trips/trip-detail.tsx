@@ -5,14 +5,15 @@ import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-quer
 import { operationTripDetail } from '../../lib/gateway';
 import styles from './trip-detail.module.css';
 
-type Tab = 'chat' | 'initial' | 'current';
+type Tab = 'chat' | 'draft' | 'initial' | 'current';
 type Props = { userId: string; tripId: string; live: boolean; navigate: (path: string) => void };
 type Trip = { trip_id: string; customer_id: string; title: string; status: string; locale: string | null; party_size: number | null; latest_version: number; created_at: string };
 type Turn = { turn_id: string; role: 'customer' | 'assistant'; text: string; at: string; case_id: string | null };
 type ChatPage = { turns: Turn[]; next_after: string | null };
 type Item = { item_id: string; seq: number; kind: string; title: string; starts_at: string; ends_at: string | null; locked: boolean; place_name: string | null; address: string | null; detail: Record<string, string | number> };
 type Plan = { version: number; reason: string; created_at: string; items: Item[] };
-const tabs: { id: Tab; label: string }[] = [{ id: 'chat', label: '대화 내역' }, { id: 'initial', label: '처음 여행계획' }, { id: 'current', label: '현재 여행계획' }];
+type Draft = { intake_id: string; received_at: string; sources: { source_id: string; position: number; kind: string; filename: string | null; text: string | null; transcribed: boolean }[] };
+const tabs: { id: Tab; label: string }[] = [{ id: 'chat', label: '대화 내역' }, { id: 'draft', label: '초안 원문' }, { id: 'initial', label: '처음 여행계획' }, { id: 'current', label: '현재 여행계획' }];
 const statusLabel: Record<string, string> = { active: '진행 중', completed: '여행 종료', cancelled: '취소됨', paused: '일시 정지' };
 const kindLabel: Record<string, string> = { activity: '활동', dining: '식사', mobility: '이동', lodging: '숙박', flight: '항공' };
 const reasonLabel: Record<string, string> = { created: '처음 등록', auto_adjusted: '자동 조정', customer_request: '고객 요청', rollback: '이전 계획으로 되돌림' };
@@ -54,10 +55,23 @@ export function TripDetailScreen(props: Props) {
       <dl className={styles.identities}><div><dt>사용자 ID</dt><dd>{userId}</dd></div><div><dt>여행 ID</dt><dd>{tripId}</dd></div></dl>
       <div role="tablist" aria-label="여행 기록" className={styles.tabs}>{tabs.map((item, index) => <button key={item.id} id={`trip-tab-${item.id}`} ref={node => { buttons.current[index] = node; }} role="tab" aria-selected={tab === item.id} aria-controls={`trip-panel-${item.id}`} tabIndex={tab === item.id ? 0 : -1} onKeyDown={event => moveTab(event, index)} onClick={() => setTab(item.id)}>{item.label}</button>)}</div>
       <section role="tabpanel" id={`trip-panel-${tab}`} aria-labelledby={`trip-tab-${tab}`} tabIndex={0} className={`panel ${styles.body}`}>
-        {tab === 'chat' ? <ChatHistory {...props} /> : <PlanHistory key={tab} {...props} view={tab} />}
+        {tab === 'chat' ? <ChatHistory {...props} /> : tab === 'draft' ? <DraftHistory {...props} /> : <PlanHistory key={tab} {...props} view={tab} />}
       </section>
     </>}
   </div>;
+}
+
+function DraftHistory(props: Props) {
+  const query = useQuery({ queryKey: [...queryKey(props), 'draft'], queryFn: ({ signal }) => operationTripDetail<{ draft: Draft | null; as_of: string }>(props.userId, props.tripId, '/draft', signal), staleTime: 0 });
+  const draft = query.data?.draft;
+  return <><div className={styles.sectionHeading}><h2>고객이 입력한 여행 초안 원문</h2><button disabled={query.isFetching} onClick={() => void query.refetch()}>원문 다시 읽기</button></div>
+    <p className="muted">이 여행을 처음 등록할 때 입력한 글과 첨부에서 읽은 글입니다. 저장된 문구와 줄바꿈을 표시하며, 개인정보는 가립니다. 등록 후 정리된 일정은 처음 여행계획에서 확인할 수 있습니다.</p>
+    {query.isPending ? <LoadingState label="초안 원문을 읽는 중…" /> : query.isError ? <ReadError error={query.error} retry={() => void query.refetch()} /> : !draft || !draft.sources.length ? <p className={styles.empty}>이 여행에 보관된 입력 원문이 없습니다. 입력 없이 만든 여행이나 원문이 보관되지 않은 여행은 처음 여행계획에서 등록된 일정을 확인해 주세요.</p> : <>
+      <p className="muted">접수 {stamp(draft.received_at)} · 원문 {draft.sources.length}개 · 한국 시각</p>
+      {draft.sources.map((source, index) => <section className={styles.source} key={source.source_id}><h3>{index + 1}. {source.filename || '입력한 글'}</h3><p className="muted">{source.transcribed ? '사진·스캔에서 받아쓴 글' : ['chat', 'text'].includes(source.kind) ? '입력한 텍스트' : '첨부 파일에서 추출한 글'}</p>{source.text ? <pre className={styles.original}>{source.text}</pre> : <p className={styles.empty}>이 원본에서 읽은 글이 보관되어 있지 않습니다.</p>}</section>)}
+      <p className="muted">조회 {stamp(query.data!.as_of)} · 이후 변경은 다시 읽기로 확인할 수 있습니다.</p>
+    </>}
+  </>;
 }
 
 function ChatHistory(props: Props) {

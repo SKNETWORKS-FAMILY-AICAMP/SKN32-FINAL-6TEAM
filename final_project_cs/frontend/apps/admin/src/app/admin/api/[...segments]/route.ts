@@ -9,7 +9,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ segments
   const monitoringPath = ['simulations', 'watch-runs'].includes(segments[0]) && (segments.length === 1 || (segments.length === 2 && /^[0-9a-f-]{36}$/i.test(segments[1])));
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const tripPath = segments[0] === 'users' && uuid.test(segments[1] || '') && segments[2] === 'trips' && uuid.test(segments[3] || '') &&
-    (segments.length === 4 || (segments.length === 5 && segments[4] === 'chat') ||
+    (segments.length === 4 || (segments.length === 5 && ['chat', 'draft'].includes(segments[4])) ||
       (segments.length === 6 && segments[4] === 'plans' && ['initial', 'current'].includes(segments[5])));
   const receiptPath = segments[0] === 'simulations' && segments.length === 2 && segments[1] === 'receipts' && request.method === 'GET';
   const mockReceiptPath = segments[0] === 'simulations' && segments.length === 3 && /^[0-9a-f-]{36}$/i.test(segments[1]) && segments[2] === 'mock-receipts' && request.method === 'POST';

@@ -56,6 +56,29 @@ def build_router(*, operator_dependency, require_permission):
             trip = _trip(cur, get_settings().tenant_id, customer_id, trip_id)
         return _response({"trip": trip, "as_of": datetime.now(UTC).isoformat()})
 
+    @router.get("/draft")
+    def draft(customer_id: UUID, trip_id: UUID, op=Depends(operator_dependency)):
+        require_permission(op, "ops:introspect")
+        tenant = get_settings().tenant_id
+        result = None
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
+            _trip(cur, tenant, customer_id, trip_id)
+            cur.execute("SELECT intake_id,received_at FROM trip_intakes "
+                        "WHERE tenant_id=%s AND customer_id=%s AND trip_id=%s "
+                        "AND reopen_trip_id IS NULL ORDER BY received_at,intake_id LIMIT 1",
+                        (tenant, customer_id, trip_id))
+            intake = cur.fetchone()
+            if intake:
+                cur.execute("SELECT source_id,position,kind,filename,transcript,transcribed "
+                            "FROM intake_sources WHERE tenant_id=%s AND intake_id=%s "
+                            "ORDER BY position,source_id", (tenant, intake[0]))
+                sources = [{"source_id": str(row[0]), "position": row[1], "kind": row[2],
+                            "filename": row[3].replace("\\", "/").rsplit("/", 1)[-1] if row[3] else None,
+                            "text": row[4], "transcribed": row[5]} for row in cur.fetchall()]
+                result = {"intake_id": str(intake[0]), "received_at": intake[1].isoformat(), "sources": sources}
+        return _response({"draft": result, "as_of": datetime.now(UTC).isoformat()})
+
     @router.get("/chat")
     def chat(customer_id: UUID, trip_id: UUID, op=Depends(operator_dependency),
              after: str = Query("0", pattern=r"^(0|[1-9][0-9]{0,18})$"),

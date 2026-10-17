@@ -34,6 +34,8 @@ def pg():
     database.request({"script": True, "sql": (root / "app/infrastructure/db/migrations/014_itinerary.sql").read_text(encoding="utf8")})
     migration = (root / "app/infrastructure/db/migrations/034_trip_chat_turns.sql").read_text(encoding="utf8")
     database.request({"script": True, "sql": migration.split("DO $$")[0]})
+    for name in ("028_trip_intakes.sql", "232_intake_reopen.sql"):
+        database.request({"script": True, "sql": (root / "app/infrastructure/db/migrations" / name).read_text(encoding="utf8")})
     yield database
     process.stdin.close()
     process.wait(timeout=15)
@@ -100,7 +102,7 @@ def test_chat_cursor_preserves_long_text_and_excludes_other_trips(case):
     assert [turn["role"] for turn in seen] == ["customer", "assistant", "customer", "assistant", "customer"]
 
 
-@pytest.mark.parametrize("suffix", ["", "/chat", "/plans/initial", "/plans/current"])
+@pytest.mark.parametrize("suffix", ["", "/chat", "/draft", "/plans/initial", "/plans/current"])
 def test_customer_and_tenant_isolation(case, monkeypatch, suffix):
     wrong_owner = case.path.replace(str(case.customer), str(case.other))
     assert case.client.get(wrong_owner + suffix).status_code == 404
@@ -108,7 +110,7 @@ def test_customer_and_tenant_isolation(case, monkeypatch, suffix):
     assert case.client.get(case.path + suffix).status_code == 404
 
 
-@pytest.mark.parametrize("suffix", ["", "/chat", "/plans/initial", "/plans/current"])
+@pytest.mark.parametrize("suffix", ["", "/chat", "/draft", "/plans/initial", "/plans/current"])
 def test_customer_credentials_and_missing_scope_cannot_read(case, suffix):
     case.client.cookies.clear()
     assert case.client.get(case.path + suffix, headers={"X-User-Key": "customer-key"}).status_code == 401
@@ -148,3 +150,50 @@ def test_plan_keeps_selected_transport_and_filters_internal_details(case, chosen
     case.pg.execute("UPDATE itinerary_items SET detail=%s::jsonb WHERE trip_id=%s AND version=2", (json.dumps(detail), case.trip))
     item = case.client.get(case.path + "/plans/current").json()["plan"]["items"][0]
     assert item["detail"] == {"mode": "도보" if chosen else "지하철 2호선", "travel_minutes": 35 if chosen else 18}
+
+
+def test_original_draft_preserves_text_and_excludes_reopened_and_foreign_intakes(case):
+    original, reopened, foreign = uuid4(), uuid4(), uuid4()
+    case.pg.execute("INSERT INTO trip_intakes(intake_id,tenant_id,customer_id,trip_id,received_at) "
+                    "VALUES(%s,%s,%s,%s,'2026-10-17T12:00:00Z')", (original, case.tenant, case.customer, case.trip))
+    case.pg.execute("INSERT INTO trip_intakes(intake_id,tenant_id,customer_id,trip_id,reopen_trip_id,received_at) "
+                    "VALUES(%s,%s,%s,%s,%s,'2026-10-16T12:00:00Z')", (reopened, case.tenant, case.customer, case.trip, case.trip))
+    case.pg.execute("INSERT INTO trip_intakes(intake_id,tenant_id,customer_id,trip_id,received_at) "
+                    "VALUES(%s,%s,%s,%s,'2026-10-15T12:00:00Z')", (foreign, case.tenant, case.other, case.trip))
+    text = "첫 여행\n  10:00 경복궁\n\n<script>alert(1)</script> 연락 010-1234-5678\n" + "원문 유지 " * 3000
+    for intake, tenant, position, body in [(original, case.tenant, 0, text), (reopened, case.tenant, 0, "수정 접수 비공개"),
+                                         (foreign, case.tenant, 0, "다른 고객 비공개"), (original, "foreign", 9, "다른 테넌트 비공개")]:
+        case.pg.execute("INSERT INTO intake_sources(intake_id,tenant_id,position,kind,sha256,size_bytes,transcript) "
+                        "VALUES(%s,%s,%s,'chat','synthetic',1,%s)", (intake, tenant, position, body))
+    case.pg.execute("INSERT INTO intake_sources(intake_id,tenant_id,position,kind,filename,sha256,size_bytes,"
+                    "transcript,transcribed,storage_path) VALUES(%s,%s,1,'pdf',%s,'synthetic',1,'첨부에서 읽은 글',true,'/private/blob')",
+                    (original, case.tenant, r"C:\private\plan.pdf"))
+    response = case.client.get(case.path + "/draft")
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    draft = response.json()["draft"]
+    assert draft["intake_id"] == str(original)
+    assert draft["received_at"] == "2026-10-17T12:00:00+00:00"
+    assert [source["text"] for source in draft["sources"]] == [text.replace("010-1234-5678", "010-****-5678"), "첨부에서 읽은 글"]
+    assert draft["sources"][1]["filename"] == "plan.pdf"
+    assert draft["sources"][1]["transcribed"] is True
+    assert "storage_path" not in response.text and "/private/blob" not in response.text
+    assert case.pg.execute("SELECT latest_version FROM trips WHERE trip_id=%s", (case.trip,)).fetchone()[0] == 2
+
+
+def test_draft_absence_does_not_reconstruct_the_first_plan(case):
+    response = case.client.get(case.path + "/draft")
+    assert response.json()["draft"] is None
+    intake = uuid4()
+    case.pg.execute("INSERT INTO trip_intakes(intake_id,tenant_id,customer_id,trip_id) VALUES(%s,%s,%s,%s)",
+                    (intake, case.tenant, case.customer, case.trip))
+    assert case.client.get(case.path + "/draft").json()["draft"]["sources"] == []
+
+
+def test_draft_keeps_missing_attachment_text_distinct(case):
+    intake = uuid4()
+    case.pg.execute("INSERT INTO trip_intakes(intake_id,tenant_id,customer_id,trip_id) VALUES(%s,%s,%s,%s)",
+                    (intake, case.tenant, case.customer, case.trip))
+    case.pg.execute("INSERT INTO intake_sources(intake_id,tenant_id,position,kind,filename,sha256,size_bytes) "
+                    "VALUES(%s,%s,0,'pdf','plan.pdf','synthetic',1)", (intake, case.tenant))
+    assert case.client.get(case.path + "/draft").json()["draft"]["sources"][0]["text"] is None

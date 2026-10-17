@@ -8,8 +8,9 @@ const originalTitle = '경복궁 관람';
 const currentTitle = '국립중앙박물관 관람';
 const at = '2026-10-17T12:10:00Z';
 const longText = '박물관으로 바꿔 주세요.\n<script>window.injected=true</script>\n' + '여행 계획 확인. '.repeat(120);
+const draftText = '1일차 서울\n  10:00 경복궁\n\n<script>window.draftInjected=true</script>\n' + '입력한 글 유지. '.repeat(100);
 
-async function records(page: Page, options: { empty?: boolean; failed?: boolean; missingInitial?: boolean } = {}) {
+async function records(page: Page, options: { empty?: boolean; failed?: boolean; missingInitial?: boolean; draftFailed?: boolean; missingDraft?: boolean } = {}) {
   const calls: string[] = [];
   const snapshot = { ...createDemoSnapshot(), live: true };
   snapshot.users = [{ ...snapshot.users[0], id: userId, trips: [{ id: tripId, title: '서울 가족 여행', status: 'active', places: 2 }] }];
@@ -20,6 +21,13 @@ async function records(page: Page, options: { empty?: boolean; failed?: boolean;
     if (url.pathname.endsWith('/session')) return route.fulfill({ json: { authenticated: true, configured: true, operator: 'qa-operator', scopes: ['ops:introspect'], csrf: 'csrf' } });
     if (url.pathname.endsWith('/snapshot')) return route.fulfill({ json: snapshot });
     if (url.pathname === `/admin/api${path}`) return route.fulfill({ json: summary });
+    if (url.pathname.endsWith('/draft')) {
+      if (options.draftFailed) return route.fulfill({ status: 503, json: { detail: '입력 원문 연결을 확인해 주세요.' } });
+      return route.fulfill({ json: { draft: options.missingDraft ? null : { intake_id: 'intake-1', received_at: at, sources: [
+        { source_id: 'source-1', position: 0, kind: 'chat', filename: null, text: draftText, transcribed: false },
+        { source_id: 'source-2', position: 1, kind: 'image', filename: '여행 사진.png', text: '사진에서 받아쓴 일정', transcribed: true },
+      ] }, as_of: at } });
+    }
     if (url.pathname.endsWith('/chat')) {
       if (options.failed) return route.fulfill({ status: 503, json: { detail: '대화 기록 연결을 확인해 주세요.' } });
       const turns = options.empty ? [] : url.searchParams.get('after') === '0' ? [
@@ -117,6 +125,11 @@ for (const width of [375, 1280]) test(`${width}px 화면·키보드 탭·기록 
   await expect(page.getByText(longText, { exact: true })).toBeVisible();
   const tab = page.getByRole('tab', { name: '대화 내역' });
   await tab.focus(); await tab.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: '초안 원문' })).toBeFocused();
+  await expect(page.getByText(draftText, { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath(`trip-detail-${width}-draft.png`), fullPage: true });
+  await page.getByRole('tab', { name: '초안 원문' }).press('ArrowRight');
   await expect(page.getByRole('tab', { name: '처음 여행계획' })).toBeFocused();
   await expect(page.getByRole('heading', { name: originalTitle })).toBeVisible();
   await page.getByRole('tab', { name: '처음 여행계획' }).press('End');
@@ -132,4 +145,33 @@ for (const width of [375, 1280]) test(`${width}px 화면·키보드 탭·기록 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   expect(await page.getByRole('tab', { name: '대화 내역' }).evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
   await page.screenshot({ path: testInfo.outputPath(`trip-detail-${width}-chat.png`), fullPage: true });
+});
+
+test('초안 원문과 첨부에서 읽은 글을 구분하고 HTML을 실행하지 않는다', async ({ page }) => {
+  const calls = await records(page);
+  await page.goto(path);
+  await page.getByRole('tab', { name: '초안 원문' }).click();
+  await expect(page.getByRole('heading', { name: '고객이 입력한 여행 초안 원문' })).toBeVisible();
+  await expect(page.getByText(draftText, { exact: true })).toBeVisible();
+  await expect(page.getByText('사진·스캔에서 받아쓴 글', { exact: true })).toBeVisible();
+  await expect(page.getByText('사진에서 받아쓴 일정', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => 'draftInjected' in window)).toBe(false);
+  expect(calls.filter(call => call.endsWith('/draft'))).toHaveLength(1);
+});
+
+test('초안 원문 실패를 다시 읽고 미보관을 최초 계획과 구분한다', async ({ page }) => {
+  const options = { draftFailed: true, missingDraft: false };
+  await records(page, options);
+  await page.goto(path);
+  await page.getByRole('tab', { name: '초안 원문' }).click();
+  const error = page.getByRole('alert').filter({ hasText: '입력 원문 연결을 확인해 주세요.' });
+  await expect(error).toBeVisible();
+  options.draftFailed = false;
+  await error.getByRole('button', { name: '다시 읽기', exact: true }).click();
+  await expect(page.getByText(draftText, { exact: true })).toBeVisible();
+  options.missingDraft = true;
+  await page.getByRole('button', { name: '원문 다시 읽기', exact: true }).click();
+  await expect(page.getByText('이 여행에 보관된 입력 원문이 없습니다.', { exact: false })).toBeVisible();
+  await page.getByRole('tab', { name: '처음 여행계획' }).click();
+  await expect(page.getByRole('heading', { name: originalTitle })).toBeVisible();
 });
