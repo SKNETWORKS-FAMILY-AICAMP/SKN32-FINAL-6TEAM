@@ -1572,6 +1572,8 @@ def test_d19_partner_people_room_size_safety_and_either_labels():
     room = Interpretation(task="search", adults=2)
     assert rule_checks(room, "홍대 근처 게스트하우스 12월 5일부터 2박, 도미토리 말고 2인실로.")[0].adults is None, "2인실은 인원이 아니다"
     assert rule_checks(room, "홍대 2인 12월 5일부터 2박")[0].adults == 2
+    one = Interpretation(task="search", adults=1)
+    assert rule_checks(one, "종로구 쪽에서 11월 5일부터 1박, 1인용으로 10만 원대 숙소")[0].adults == 1, "「1인용」은 한 사람 — 「N인실」만 방 크기(☆21:04 N18-06)"
     assert unsupported_requests("여자 혼자 안전하게 묵을 수 있는 홍대 쪽 숙소", []) == ["안전 · 여성 전용층"]
     text = LodgingTeam._skip_text({"kind": 3}, read_wants("홍대 게스트하우스나 호텔"), None, "")
     assert text == "게스트하우스 · 호스텔 · 호텔 아님 3곳은 뺌" and "None" not in text
