@@ -67,3 +67,6 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 
 2026-10-17 수동 숙소 저장 보완: 격리 HTTP40/40 통과, 운영 반영 확인 전. [독립 통합 기록](../../final_project_cs/wiki/records/reports/2026-10-17_manual-stay-manager-review.md)
+
+
+2026-10-17 한 일: 수동 저장 두 매니저 반영·API worker 안전 배포, 공개 계획서 표시36/36 검증. 남은 일: 공개 표시 매니저·운영 반영과 실제 화면 저장·계획서 확인. [통합 기록](../../final_project_cs/wiki/records/reports/2026-10-17_public-plan-manager-review.md)

@@ -681,8 +681,10 @@ def _render_plan(view: dict[str, Any]) -> str:
         if item["other_options"]:
             others = ('<div class="others">다른 안: '
                       + ", ".join(esc(o["name"]) for o in item["other_options"]) + "</div>")
+        place = item.get("place")
+        venue = f'<div class="others">{esc(place)}</div>' if place and place != item["title"] else ""
         rows.append(f'<li><div class="time">{start}–{end}</div><div><div class="title">'
-                    f'{esc(item["title"])} {badge}</div>{others}</div></li>')
+                    f'{esc(item["title"])} {badge}</div>{venue}{others}</div></li>')
     changes = "".join(
         f"<li>버전 {h['version']} · {esc(_REASON_LABELS.get(h['reason'], h['reason']))}"
         + "".join(f" · {esc(_cause_label(c))}" for c in h["causes"]) + "</li>"
