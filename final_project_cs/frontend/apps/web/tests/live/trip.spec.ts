@@ -92,10 +92,10 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
   await expect(facts).not.toContainText("michelin_selected");
   await page.keyboard.press("Escape");
 
-  // 종 — 알림 센터: 할 일 · 탭 셋(서버가 찾은 것 · 보낸 것 · 바꾼 것)
+  // 종 — 알림 센터: 답이 필요해요 · 탭 넷(서버가 찾은 것 · 보낸 것 · 바꾼 것 · `[2026-10-17 ST4F-606]` 운영 앱 공지)
   const notices = await openNotices(page);
   const tabs = notices.getByRole("tablist", { name: "알림 종류" }).getByRole("tab");
-  await expect(tabs).toHaveText([/^살펴볼 점 \d+$/, "받은 알림 2", /^변경 이력 \d+$/]);
+  await expect(tabs).toHaveText([/^살펴볼 점 \d+$/, "받은 알림 2", /^변경 이력 \d+$/, /^공지 \d+$/]);
   const list = notices.getByRole("tabpanel");
   await expect(notices.getByRole("tab", { name: /받은 알림/ })).toHaveAttribute("aria-selected", "true");   // 안 읽은 알림이 있으면 받은 알림부터
   await expect(list).toContainText("오늘 첫 일정은 08:00 아침 식당이에요.");

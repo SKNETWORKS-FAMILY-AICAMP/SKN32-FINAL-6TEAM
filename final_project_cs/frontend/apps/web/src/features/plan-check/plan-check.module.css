@@ -857,3 +857,9 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 .stayBandButton > span { min-width: 0; overflow-wrap: anywhere; }
 .stayBandButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .stayBandButton small { flex: none; margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); white-space: nowrap; }   /* `[2026-10-15 ST4F-498]` 「2박째」 is not broken by a long name */
+
+/* Route progress belongs beside the map checks and survives a failed request. */
+.mapChips > [data-route-loading], .mapChips > [data-route-load-error] { margin: 0; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font-size: 14px; line-height: 1.5; pointer-events: auto; }
+.mapChips > [data-route-load-error] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mapChips > [data-route-load-error] button { min-height: 44px; padding: 8px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-primary); font: inherit; cursor: pointer; }
+.mapChips > [data-route-load-error] button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }

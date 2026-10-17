@@ -7,6 +7,7 @@ import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
 import { ToastView, useToastState } from "@/components/toast-view";
 import { TripMap } from "@/features/map";
 import { routeNotes, visibleShapes } from "@/features/map/route-lines";
+import { RouteLoadStatus, type RouteLoadState } from "@/features/map/route-load-status";
 import type { RouteShapes } from "@/lib/live/route-shapes";
 import type { Coordinates, PinLook } from "@/features/map/model";
 import type { TripStop } from "@/features/trip/model";
@@ -80,6 +81,7 @@ export interface PlanCheckProps {
   previewView?: PlanCheckView | null;
   /** `[2026-10-04]` The lines between the stops for the plan as it is (the server's `route-shapes` for the intake); null = none (an older server, or nothing to draw). */
   routes?: RouteShapes | null;
+  routeState?: RouteLoadState;
   /** `[2026-10-05]` The zoom level of the map: the screen above asks for the detailed route lines once it is zoomed in (`features/map/use-route-detail.ts`). */
   onMapZoom?: (zoom: number) => void;
   /** `[2026-10-13 사용자 결정 — 수정 모드]` The screen edits a registered trip (`features/trip/trip-edit.tsx`) instead of checking a new plan. */
@@ -92,6 +94,8 @@ export interface PlanCheckProps {
  * The trip's 「지금」 runs on the list, and the first notice says what the screen is. Every change still goes through `actions`, as on the plan check of a new plan.
  */
 export interface TripEditMode {
+  /** 저장된 여행을 표시하면서 수정 접수를 기다린다. 준비 전에는 변경·완료를 허용하지 않는다. */
+  preparing?: boolean;
   /** 「취소」 in the sheet's head: the page asks, then drops the edit and goes back to the trip. */
   onCancel: () => void;
   /** 「지금」 on a day's line, as on the trip screen. */
@@ -379,7 +383,7 @@ const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom" | "edit">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -389,7 +393,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom, edit }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
+function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const done = view.stage === "done";
@@ -531,6 +535,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const registered = Boolean(registration?.registeredHref);
   // Nothing can be changed while a stop or the whole plan is checked again, or once registered — buttons say why.
   const frozen = registered ? t("이미 등록한 여행이에요", "This trip is already registered")
+    : edit?.preparing ? t("수정할 일정을 준비하고 있어요 · 잠시만요", "Preparing the itinerary for editing · one moment")
     : view.rechecking ? t("다시 확인하는 중이에요 · 잠시만요", "Checking again · one moment")
       : working || view.items.some((item) => item.verdict === null) ? t("바뀐 일정을 다시 확인하는 중이에요 · 잠시만요", "Checking the change · one moment") : null;
   const explain = (why: string) => setToast({ text: why });
@@ -1343,15 +1348,17 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     {...quietDays.handlers} {...backGesture}
     style={mapPicking ? { "--sheet-h": "min(320px, 55%)" } as CSSProperties : custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
-      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" onInteractionChange={setMapMoving} topInset={64} bottomInset={76} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
+      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" onInteractionChange={setMapMoving} topInset={64} bottomInset={20} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
         coordinatePick={mapPicking ? { value: mapCoordinate, onPick: setMapCoordinate } : undefined}
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
     {/* `[2026-10-08 사용자 지시]` 확인·변경·장소 표시는 같은 막대에, 이동 수단 이름은 확대된 경로선에 표시한다. */}
-    {!mapPicking && (unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+    {!mapPicking && (edit?.preparing || routeState?.loading || routeState?.error || unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+      {edit?.preparing && <p role="status" className={styles.unlocated}>{t("수정할 일정을 준비하고 있어요…", "Preparing the itinerary for editing…")}</p>}
+      <RouteLoadStatus state={routeState} />
       <div className={styles.statusTools} role="group" aria-label={t("일정 확인과 변경", "Plan checks and changes")}>
       {pinned
-        ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
+        ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.displayKind ?? pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.displayKind ?? pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
         : mapSummary ? <p className={styles.picked} data-map-summary aria-live="polite">{mapSummary}</p> : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
       {/* ★`[2026-10-07 사용자 지시 — 「! 2」는 지도 쪽에]` The count of what needs a look stands on the map; pressed, the list and the map show only those. */}
       {done && !changing && !registered && needCount > 0 && <button type="button" className={styles.mapNeeds} aria-pressed={filter === "needs" && filtering}

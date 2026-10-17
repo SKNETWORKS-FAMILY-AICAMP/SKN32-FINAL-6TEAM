@@ -85,15 +85,16 @@ def test_a_named_hotel_check_in_line_resolves_its_place_without_the_check_in_wor
     assert not [i for i in view["review"]["items"] if "체크아웃" in i["title"]], "체크아웃 줄은 항목이 되지 않고 숙소에 합쳐진다"
 
 
-def test_a_nameless_hotel_check_in_line_is_a_pick_a_lodging_line_and_never_a_meal_pair(hotels):
+def test_a_nameless_hotel_check_in_line_is_filled_with_a_lodging_and_never_a_meal_pair(hotels):
     client, headers, tour, kakao, view = _send_plan("2030-11-06\n15:00 호텔 체크인\n17:00 경복궁\n2030-11-07\n11:00 호텔 체크아웃")
     stay = _item(view, "호텔")
-    assert stay["kind"] == "lodging" and stay["place_state"] == "needs_choice" and stay["place"] is None, stay
-    assert stay["parts"]["content_type"] == "32" and stay["parts"]["label"] == "숙소", stay["parts"]
+    assert stay["kind"] == "lodging" and stay["place_state"] == "customer", stay
+    assert stay["place"]["name"] in ("광화문호텔", "광화문스테이호텔"), stay
+    assert stay["parts"] is None, stay  # 숙소가 정해져 미정 장소 분류 질문이 남지 않는다
     assert not any(word in str(q) for q in [*tour.asked, *kakao.asked] for word in ("체크인", "체크아웃", "호텔")), (tour.asked, kakao.asked)
     got = _candidates(client, headers, view, stay)
     names = [c["place"]["name"] for c in got["candidates"]]
-    assert "광화문호텔" in names and "광화문스테이호텔" in names, got                       # 목록의 숙박과 지도의 숙소가 후보로 온다
+    assert names and set(names) <= {"광화문호텔", "광화문스테이호텔"}, got                       # 목록의 숙박과 지도의 숙소가 후보로 온다
     assert "호텔 뷔페 광화문" not in names, got                                               # 음식점은 버린다
     assert all(c["place"]["kind"] == "activity" and c["basis"] == "lodging" for c in got["candidates"]), got   # 숙박 한 건은 식사 짝을 붙이지 않는다
     assert "stay_and_meal" not in got["notes"] and "no_same_kind" not in got["notes"], got
@@ -116,16 +117,15 @@ def test_an_unresolved_stay_gets_lodging_candidates_from_the_map_not_no_same_kin
     assert any(c["place"]["name"] == "광화문스테이호텔" for c in got["candidates"]), (got, kakao.asked)
 
 
-def test_auto_fix_fills_only_the_place_of_a_stay_and_never_touches_its_check_in_and_check_out(hotels):
+def test_first_fill_and_repeated_auto_fix_preserve_a_stays_check_in_and_check_out(hotels):
     client, headers, _tour, _kakao, view = _send_plan("2030-11-06\n15:00 호텔 체크인\n17:00 경복궁\n2030-11-08\n11:00 호텔 체크아웃")
     stay = _item(view, "호텔")
-    assert stay["place_state"] == "needs_choice" and stay["ends_at"] == "11:00" and stay["end_date"] == "2030-11-08", stay
+    assert stay["place_state"] == "customer" and stay["ends_at"] == "11:00" and stay["end_date"] == "2030-11-08", stay
+    assert stay["starts_at"] == "15:00" and stay["place"]["name"] in ("광화문호텔", "광화문스테이호텔"), stay
     got = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/autofix", headers=headers, json={"revision": view["revision"]})
     assert got.status_code == 200, got.text
     body = got.json()
-    [change] = [c for c in body["changed"] if c["title"] == "호텔"]
-    assert change["reason"] == "place", change                                                    # 시각을 바꾸는 이유(`place_and_time` · `time`)가 아니다
-    assert (change["to"]["starts_at"], change["to"]["ends_at"]) == ("15:00", "11:00"), change
+    assert not [c for c in body["changed"] if c["title"] == "호텔"], body["changed"]
     new = _item(body["view"], "호텔")
     assert new["place_state"] == "customer" and new["place"]["name"] in ("광화문호텔", "광화문스테이호텔"), new
     assert (new["starts_at"], new["ends_at"], new["end_date"]) == ("15:00", "11:00", "2030-11-08"), "체크아웃 날과 시각이 그대로다"

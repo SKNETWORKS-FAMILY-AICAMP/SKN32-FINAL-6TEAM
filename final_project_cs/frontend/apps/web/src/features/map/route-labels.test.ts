@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { fromPixels } from "./map-geometry";
 import { routeLabels } from "./route-labels";
 import type { MapLine, MapView } from "./model";
 
@@ -28,4 +29,18 @@ describe("route names on the visible path", () => {
     expect(labels).toHaveLength(1);
     expect(labels[0].x).toBeLessThan(104);
   });
+});
+
+it("moves a route name along its real line around measured map chrome", () => {
+  const scene = { ...view, width: 375, height: 375 };
+  const points = [{ x: -168, y: -55 }, { x: 202, y: 196 }].map((pixel) => fromPixels(scene, pixel));
+  const ride = { ...line, points };
+  const stop = { id: "stop", coordinates: points[1], order: 1, title: "", date: "", time: "" };
+  const obstacles = [{ left: 0, right: 99, top: 82, bottom: 116 }, { left: 183, right: 222, top: 157, bottom: 196 }];
+  const [label] = routeLabels(scene, [ride], [stop], 64, 20, obstacles, { ride: { width: 116, height: 28 } });
+  expect(label.x).toBeGreaterThan(110);
+  expect(label.x).toBeLessThan(120);
+  expect(label.y).toBeGreaterThan(130);
+  expect(label.y).toBeLessThan(145);
+  expect(routeLabels(scene, [ride], [stop], 64, 20, [{ left: 0, right: 375, top: 0, bottom: 375 }])).toEqual([]);
 });

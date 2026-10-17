@@ -106,29 +106,35 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
     #   고른 수단이 안 닿아 추천으로 되돌아간다. 못 닿으면 그 구간은 새 판의 검사에서 `dropped` + 이유로 알린다(`review.build`).
     kept_modes = {f"{m['from']}~{m['to']}": m["mode_choice"]["mode"] for m in review.get("moves", [])
                   if (m.get("mode_choice") or {}).get("state") == "kept"}
-    by_mode: dict[str, Any] = {}
+    by_mode: dict[Any, Any] = {}
 
-    def engine_for(a_id: Any, b_id: Any) -> Any:
+    def engine_for(a_id: Any, b_id: Any, *, scope: Any = None) -> Any:
         mode = kept_modes.get(f"{a_id}~{b_id}") if defaulted else None
-        if not mode:
+        if not mode and scope is None:
             return budget
-        if mode not in by_mode:
-            eng = default_engine(None, [mode])
-            by_mode[mode] = _Budgeted(eng, ENGINE_BUDGET_S) if eng is not None else budget
-        return by_mode[mode]
+        key = (scope, mode)
+        if key not in by_mode:
+            eng = default_engine(None, [mode]) if mode else engine
+            by_mode[key] = _Budgeted(eng, ENGINE_BUDGET_S) if eng is not None else budget
+        return by_mode[key]
     # 바꾸는 동안의 기준 상태 — 앞 일정이 바뀌면 그 값으로 다음 일정을 맞춘다
     items = [{**it, "rows": list(it["rows"])} for it in review["items"]]
     late_into = {m["to"] for m in review["moves"] if m["status"] == "review"}
     changes: list[dict[str, Any]] = []
     kept: list[dict[str, Any]] = []
     handled: set[str] = set()
+    dates = {item["id"]: item.get("date") for item in items}
+    # 공통 숙소는 날짜마다 이동을 검사한다. 앞 날짜의 후보 탈락이 다음 날짜의 계산 몫을 쓰지 않는다.
+    def stay_engine_for(a_id: Any, b_id: Any) -> Any:
+        return engine_for(a_id, b_id, scope=("lodging", dates.get(b_id) or dates.get(a_id)))
+
     for members in stay_context.groups(items):
         if len(members) < 2 or (item_id is not None and not any(x["id"] == item_id for x in members)):
             continue
         if not any(x["status"] == "review" or x["id"] in late_into for x in members):
             continue
         handled.update(x["id"] for x in members)
-        group_changes, group_kept = _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, engine_for)
+        group_changes, group_kept = _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, stay_engine_for)
         changes.extend(group_changes)
         kept.extend(group_kept)
     last_changed = -2

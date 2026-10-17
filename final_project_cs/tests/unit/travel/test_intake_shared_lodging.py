@@ -62,6 +62,38 @@ def test_fourth_hotel_can_win_when_the_first_three_do_not_fit_both_dates(sources
     assert {x["id"] for x in got["changes"]} == {"0-0", "0-2"}
 
 
+def test_cold_route_calculation_budget_is_shared_by_day_not_exhausted_across_all_dates(sources, monkeypatch):
+    from app.domains.travel_ops.components.intake import review as review_module
+    from datetime import datetime, timedelta
+
+    clock = [0.0]
+    monkeypatch.setattr(review_module.time, "monotonic", lambda: clock[0])
+    hotels = [{**HOTEL, "name": f"숙소 {n}", "latitude": HOTEL["latitude"] + n * 0.0001, "content_type_id": "32"} for n in range(3)]
+    monkeypatch.setattr(candidates, "_catalog_places", lambda *a, **kw: hotels)
+    monkeypatch.setattr(context, "score", lambda place, points: int(place["name"].split()[-1]))
+
+    def engine(a, b, arrive, not_before=None):
+        clock[0] += 6.0
+        return {"ok": True}, None
+
+    def fit(conn, tenant, item, place, prev, nxt, start, duration, budget, **kwargs):
+        route = kwargs["engine_next"]
+        point = {"lat": place["latitude"], "lon": place["longitude"]}
+        target = {"lat": nxt["place"]["latitude"], "lon": nxt["place"]["longitude"]}
+        got, _ = route(point, target, datetime.fromisoformat(item["date"] + "T10:00:00"))
+        if got is None:
+            return "travel"
+        if place["name"] != "숙소 2" and item["date"] == "2030-01-06":
+            return "stay"
+        return start, start + timedelta(minutes=30), False
+
+    monkeypatch.setattr(autofix, "_fit_window", fit)
+    got = autofix.plan(None, tenant_id="travel", review=trip(), engine=engine, item_id="0-0")
+    assert {c["to"]["place"]["name"] for c in got["changes"]} == {"숙소 2"}, got
+    assert {c["id"] for c in got["changes"]} == {"0-0", "0-2"}
+    assert clock[0] == 36.0
+
+
 def test_named_stay_is_reused_instead_of_searching_another_hotel(sources):
     calls, kakao = sources
     view = trip()

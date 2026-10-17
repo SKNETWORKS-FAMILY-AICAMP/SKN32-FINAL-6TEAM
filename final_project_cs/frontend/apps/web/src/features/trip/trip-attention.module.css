@@ -8,6 +8,8 @@
 /* A task: a choice the server waits for (warning tone), an automatic change (info tone). */
 .act { padding: 12px 14px; border: 1px solid var(--color-warning-border); border-radius: 14px; background: var(--color-warning-soft); }
 .act[data-tone="info"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+/* `[2026-10-17 ST4F-606]` 재난 뒤 이어가기 한 장짜리 카드 */
+.act[data-tone="safety"] { border-color: var(--color-error-border); background: var(--color-error-soft); }
 .act h4 { margin: 0; font-size: 14px; font-weight: 750; }
 .act p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); overflow-wrap: anywhere; }
 .choice + .choice { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-warning-border); }
@@ -26,6 +28,10 @@
 .tabs button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 1px; }
 .unread { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--color-error); vertical-align: middle; }
 
+/* `[2026-10-17 ST4F-606]` 「공지」 탭 — 운영 앱 공지(배너와 같은 모양) · 끝에 공지사항 게시판으로 */
+.service { padding: 12px 2px 4px; }
+.service > * + * { margin-top: 12px; }
+.toBoard { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 700; color: var(--color-primary); text-decoration: none; }
 .list { list-style: none; margin: 0; padding: 0; }
 .list li { padding: 12px 2px; border-top: 1px solid var(--color-divider); font-size: 13.5px; line-height: 1.5; }
 .list li:first-child { border-top: 0; }

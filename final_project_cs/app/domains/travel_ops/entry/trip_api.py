@@ -1413,7 +1413,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from starlette.responses import StreamingResponse
 
         from app.domains.travel_ops.modules.live_progress import op_stream
-        from app.domains.travel_ops.components.intake.pipeline import STAGES as INTAKE_STAGES
+        from app.domains.travel_ops.components.intake.pipeline import STAGES as INTAKE_STAGES, public_status
 
         tenant, customer = who
 
@@ -1426,6 +1426,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             if row is None:
                 return None
             status, stage, revision, fatal_code, quiet = row
+            status = public_status(status, stage)
             return {"status": status, "stage": stage, "stage_label": INTAKE_STAGES.get(stage, stage),
                     "revision": revision, "fatal_code": fatal_code, "quiet_seconds": round(float(quiet), 1)}
 

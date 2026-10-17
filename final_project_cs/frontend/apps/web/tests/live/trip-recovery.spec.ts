@@ -46,18 +46,26 @@ async function stage(page: Page, state: { brief: unknown; answer?: Record<string
     await route.fulfill({ json: { recovery: state.brief } });
   });
 }
-/** `[2026-10-07 목업 C안]` 재난 뒤 이어가기는 종 아래 알림 칸에 있다. */
-async function openTrip(page: Page) {
+/**
+ * `[2026-10-07 목업 C안]` 재난 뒤 이어가기는 종 아래 알림 칸에 있다. `[2026-10-17 ST4F-606]` 「답이 필요해요」에는 한 장짜리 카드로 서고,
+ *   그 단추(「이어갈 방법 고르기」 · 고른 뒤에는 「고르신 것 보기」)를 누르면 이 패널이 그 자리에 펼쳐진다.
+ */
+async function openTrip(page: Page, expand = true) {
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
   await openNotices(page);
+  if (expand) await expandRecovery(page);
+}
+async function expandRecovery(page: Page) {
+  await page.locator("[data-recovery-short]").getByRole("button").click();
 }
 const panel = (page: Page) => page.getByTestId("recovery-panel");
 
 test("다시 시작한 정지가 없으면 패널이 없다(꾸러미가 null 이거나 서버에 아직 없을 때 — 404 — 도 조용히 없다)", async ({ page }) => {
   await stage(page, { brief: null, posts: [] });
-  await openTrip(page);
+  await openTrip(page, false);
+  await expect(page.locator("[data-recovery-short]")).toHaveCount(0);
   await expect(panel(page)).toHaveCount(0);
 });
 
@@ -176,5 +184,7 @@ test("「일정 다시 시작」의 답에 꾸러미가 실려 오면 곧바로 
   await page.getByTestId("safety-panel").getByRole("button", { name: "일정 다시 시작" }).click();
   await expect(page.getByTestId("safety-panel")).toHaveCount(0);
   await openNotices(page);                                                                                  // 꾸러미는 종 아래 알림 칸에
+  await expect(page.locator("[data-recovery-short]")).toContainText("어떻게 이어갈지 골라 주세요");             // 먼저 한 장짜리 카드
+  await expandRecovery(page);
   await expect(panel(page)).toBeVisible();
 });

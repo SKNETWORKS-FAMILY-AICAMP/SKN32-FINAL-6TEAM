@@ -5,7 +5,7 @@ import { mockServer, openNotices, start, TRIP_ID, tripScreen } from "./helpers";
  * `[2026-10-07 사용자 결정 — 목업 C안 ① 알림 센터]` 종 · 알림 센터 · 새 알림 막대. mock 서버 시험이다 — 화면 반응만 본다.
  *   - 종에는 이 브라우저가 아직 안 본 알림 수가 붙는다. 「받은 알림」 탭이 보여 주면 읽음이고, 이 브라우저가 기억한다(★서버에 읽음 상태가 없다 — 다른 기기에서는 다시 새 알림이다).
  *   - 여행 화면이 열려 있는 동안 서버가 알림을 보내면 알림 막대가 뜨고 「알림 보기」로 받은 알림 탭이 열린다. 화면을 열 때 이미 있던 알림은 막대로 띄우지 않는다.
- *   - 할 일의 「선택이 필요해요」에서 「일정에서 보기」를 누르면 센터가 닫히고 그 일정이 목록에서 펼쳐진다.
+ *   - 「답이 필요해요」(`[2026-10-17 ST4F-606]` 옛 「할 일」)의 「선택이 필요해요」에서 「일정에서 보기」를 누르면 센터가 닫히고 그 일정이 목록에서 펼쳐진다.
  */
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
@@ -42,6 +42,8 @@ test("탭은 화살표 키로 옮겨 가고, 탭마다 서버가 준 수를 단�
   await expect(center.getByRole("tab", { name: /변경 이력/ })).toBeFocused();
   await expect(center.getByRole("tab", { name: /변경 이력/ })).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowRight");
+  await expect(center.getByRole("tab", { name: /^공지/ })).toHaveAttribute("aria-selected", "true");       // `[2026-10-17 ST4F-606]` 넷째 탭
+  await page.keyboard.press("ArrowRight");
   await expect(center.getByRole("tab", { name: /살펴볼 점/ })).toHaveAttribute("aria-selected", "true");
   await expect(center.getByRole("tabpanel")).toContainText("하루가 빡빡해요");
 });
@@ -64,7 +66,7 @@ test("화면이 열려 있는 동안 서버가 선택 요청을 보내면 그 �
   const center = page.getByRole("dialog", { name: "알림" });
   await expect(center.getByRole("tab", { name: /받은 알림/ })).toHaveAttribute("aria-selected", "true");
   await expect(center.getByRole("region", { name: /선택이 필요해요/ })).toBeVisible();                     // 할 일 맨 위
-  await expect(center.getByRole("heading", { name: /할 일 1/ })).toBeVisible();
+  await expect(center.getByRole("heading", { name: /답이 필요해요 1/ })).toBeVisible();
 });
 
 test("선택 요청의 「일정에서 보기」는 센터를 닫고 그 일정을 목록에서 펼친다", async ({ page, request }) => {

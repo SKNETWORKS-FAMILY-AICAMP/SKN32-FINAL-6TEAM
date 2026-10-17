@@ -76,3 +76,5 @@ domain: travel
 <a id="중앙-허브"></a>
 <a id="최근-변경"></a>
 <a id="기록-구역-records-2026-09-08"></a>
+
+- 숙소·즉시 수정·예약 보호 통합은 격리 검증 중이며 운영 반영 전이다. [작업 기록](records/reports/2026-10-17_lodging-ui-manager-integration.md).

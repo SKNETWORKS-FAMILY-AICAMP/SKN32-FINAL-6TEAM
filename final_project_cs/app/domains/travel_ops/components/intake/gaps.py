@@ -8,7 +8,7 @@
 
 ★담당은 이 파일이 모른다 — 부르는 쪽(`pipeline`)이 담당 이름마다 함수를 넣는다(`owners`). 그래서 식당 팀 · 활동 팀 · 이동 판정 · 계획 에이전트를
   바꿔 끼워도 이 파일은 그대로고, 시험은 가짜 담당으로 돈다.
-★고객만 아는 값(첫날 날짜 · 숙소 이름 · 예약한 가게 이름)은 우리가 채우지 않는다 — 담당 `ask_customer` 가 질문 하나를 낸다.
+★고객만 아는 값(첫날 날짜 · 예약한 숙소·가게 이름)은 묻는다. 미정 숙소는 숙소 추천에 연결한다.
 """
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from typing import Any, Callable, Iterable, Mapping
 ROUTES: dict[str, str] = {
     "meal_place": "dining_team",          # 「저녁은 숙소 근처에서」 — 끼니는 있는데 가게가 없다
     "activity_place": "activity_team",    # 「오후엔 근처 구경」 — 활동 자리는 있는데 장소가 없다
+    "lodging_place": "lodging_team",      # 아직 정하지 않은 호텔·조식 — 여행 공통 숙소 추천
     "move_mode": "mobility",              # 구간 수단이 없다 · 고른 수단으로 못 닿는다
     "tight_move": "mobility",             # 사실 검사 — 앞 일정 끝에서 다음 일정까지 이동이 빠듯하다
     "free_slot": "planner",               # 「둘째 날은 알아서」 「오후는 채워 주세요」 — 하루 · 시간대를 통째로
@@ -33,7 +34,7 @@ ROUTES: dict[str, str] = {
 #: 초안에 대 보는 순서 — 장소가 정해져야 이동을 재고, 이동이 정해져야 시각을 다시 맞춘다
 APPLY_ORDER = ("place", "move", "time")
 #: 담당 이름 → 그 제안이 바꾸는 것
-CHANGES: dict[str, str] = {"dining_team": "place", "activity_team": "place", "planner": "place", "mobility": "move",
+CHANGES: dict[str, str] = {"dining_team": "place", "activity_team": "place", "lodging_team": "place", "planner": "place", "mobility": "move",
                            "ask_customer": "question"}
 MAX_ROUNDS = 2
 MAX_CANDIDATES = 3

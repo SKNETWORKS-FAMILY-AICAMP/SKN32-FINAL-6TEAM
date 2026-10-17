@@ -1,10 +1,85 @@
 """예시의 이틀 호텔 조식을 접수·후보·검색·자동 추천 HTTP 경로로 확인한다."""
+import pytest
+
 from .test_intake_candidate_kinds import _LodgingKakao, around  # noqa: F401
 from .test_intake_review import _client, _key, _send, rv  # noqa: F401
 from .test_trip_api import api  # noqa: F401
 
 
 PLAN = "2026-10-24\n09:00 호텔 조식\n10:00 경복궁\n2026-10-25\n09:00 호텔 조식\n10:00 경복궁"
+
+
+@pytest.fixture(autouse=True)
+def manual_recommendation_baseline(monkeypatch):
+    from app.domains.travel_ops.components.intake import pipeline
+    real = pipeline.agent_reader_config
+    monkeypatch.setattr(pipeline, "agent_reader_config", lambda tenant: {**real(tenant), "prefill": "off"})
+
+
+def test_fresh_example_prefills_one_hotel_before_reporting_completion(around, monkeypatch):
+    from app.domains.travel_ops.components.intake import pipeline
+    from app.infrastructure.db.session import get_connection
+
+    real_config, real_prefill = pipeline.agent_reader_config, pipeline._prefill
+    monkeypatch.setattr(pipeline, "agent_reader_config", lambda tenant: {**real_config(tenant), "mode": "on", "prefill": "on"})
+    pending = []
+
+    def fill(connect, tenant_id, intake_id, **kwargs):
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT customer_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s", (tenant_id, intake_id))
+            owner = cur.fetchone()[0]
+            snapshot = pipeline.view(conn, tenant_id=tenant_id, customer_id=owner, intake_id=intake_id)
+            pending.append(snapshot["status"])
+            assert snapshot["review"] is None
+        real_prefill(connect, tenant_id, intake_id, **kwargs)
+
+    monkeypatch.setattr(pipeline, "_prefill", fill)
+    client, _, _ = _client(kakao=LodgingMap())
+    view = _send(client, _key(client), PLAN)
+    assert pending == ["reading"]
+    assert view["status"] == "review" and view["stage"] == "review"
+    hotels = [i for i in view["review"]["items"] if i.get("lodging_group")]
+    assert len(hotels) == 2 and all(i["place"] and i["kind"] == "dining" for i in hotels)
+    assert len({(i["place"]["name"], i["place"]["latitude"], i["place"]["longitude"]) for i in hotels}) == 1
+    assert all(i["starts_at"] == "09:00" and i["ends_at"] < "10:00" for i in hotels)
+    assert {f["owner"] for f in view["prefill"]["filled"]} == {"lodging_team"}
+    assert not any(q["kind"] == "lodging_name" for q in view["prefill"]["questions"])
+
+
+def test_interrupted_prefill_is_reaped_instead_of_remaining_publicly_reading_forever(around):
+    from app.infrastructure.db.session import get_connection
+    client, _, _ = _client(kakao=LodgingMap())
+    headers = _key(client)
+    view = _send(client, headers, PLAN)
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE trip_intakes SET status='review', stage='checking', updated_at=now()-interval '1 day' WHERE intake_id=%s", (view["intake_id"],))
+    shown = client.get(f"/v1/web/trip-intakes/{view['intake_id']}", headers=headers).json()
+    assert shown["status"] == "fatal" and shown["fatal"]["code"] == "stalled"
+
+
+def test_intake_events_wait_for_prefill_with_the_same_status_as_the_get(around, monkeypatch):
+    from app.infrastructure.db.session import get_connection
+    from app.domains.travel_ops.modules.live_progress import op_stream
+    client, _, _ = _client(kakao=LodgingMap())
+    headers = _key(client)
+    view = _send(client, headers, PLAN)
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE trip_intakes SET stage='checking' WHERE intake_id=%s", (view["intake_id"],))
+    assert client.get(f"/v1/web/trip-intakes/{view['intake_id']}", headers=headers).json()["status"] == "reading"
+
+    async def watch(read, *, done, **kwargs):
+        pending = read()
+        assert pending["status"] == "reading" and not done(pending)
+        yield op_stream.sse("accepted", {"state": pending})
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("UPDATE trip_intakes SET stage='review' WHERE intake_id=%s", (view["intake_id"],))
+        ready = read()
+        assert ready["status"] == "review" and done(ready)
+        yield op_stream.sse("result", {"state": ready})
+
+    monkeypatch.setattr(op_stream, "watch", watch)
+    response = client.get(f"/v1/web/trip-intakes/{view['intake_id']}/events", headers=headers)
+    assert response.status_code == 200 and "event: accepted" in response.text and "event: result" in response.text
 
 
 class LodgingMap(_LodgingKakao):

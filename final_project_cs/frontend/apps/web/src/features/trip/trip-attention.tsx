@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
 import { MaintenanceItem, NoticeItems, useServiceStatus } from "@/features/support/service-notices";
+import { markServiceNoticesSeen, useSeenServiceNotices } from "@/features/support/service-notice-reads";
+import { routes } from "@/lib/routes";
 import { seoul } from "@/lib/live/gateway";
 import { LiveError } from "@/lib/live/client";
 import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
@@ -27,9 +30,12 @@ export const NOTICE_LABEL: Record<string, [string, string]> = {
 
 export const noticeWhen = (iso: string) => { const at = seoul(iso); return `${at.date} ${at.time}`; };
 
-/** The three lists of the notice center (`[2026-10-07 목업 C안]`): what the server found, what it sent, what it changed. */
-export type CenterTab = "warnings" | "notices" | "history";
-const TABS: readonly [CenterTab, string, string][] = [["warnings", "살펴볼 점", "Worth a look"], ["notices", "받은 알림", "Notices"], ["history", "변경 이력", "History"]];
+/**
+ * The lists of the notice center (`[2026-10-07 목업 C안]`): what the server found, what it sent, what it changed —
+ * `[2026-10-17 사용자 결정 — ST4F-606]` and the service's own notices (the admin app's, for everyone), which were a section above 「할 일」.
+ */
+export type CenterTab = "warnings" | "notices" | "history" | "service";
+const TABS: readonly [CenterTab, string, string][] = [["warnings", "살펴볼 점", "Worth a look"], ["notices", "받은 알림", "Notices"], ["history", "변경 이력", "History"], ["service", "공지", "Announcements"]];
 
 /** Server contract (2026-09-29): a proposal with this reason and no options asks "change it?"; answering with this key makes
  *  the server compute options and fill the same proposal (reason becomes `indoor_unknown_options`). */
@@ -57,20 +63,22 @@ const VERSION_REASON: Record<string, [string, string]> = {
  * Read state is this browser's (`notice-reads.ts`): the server keeps none yet.
  */
 /**
- * `[2026-10-17 사용자 결정 — ST4F-604]` 알림 센터 맨 위 「서비스 공지」 — 운영 앱의 공지(여행과 상관없는 전체 공지)를 맨 위 배너와 같은 모양으로(종류 딱지 · 장애 먼저).
- *   배너를 닫아도 여기서 다시 본다. 게시 중인 공지도 점검도 없으면 칸이 없다.
+ * `[2026-10-17 사용자 결정 — ST4F-606]` 「공지」 탭 — 운영 앱의 공지(여행과 상관없는 전체 공지)를 맨 위 배너와 같은 모양으로(종류 딱지 · 장애 먼저), 점검 중이면 점검도.
+ *   (옛 ST4F-604: 알림 센터 맨 위 「서비스 공지」 칸 — 할 일을 화면 아래로 밀어 탭으로 옮겼다.) 끝에 지난 공지까지 보는 공지사항 게시판으로 가는 길.
  */
-function ServiceNoticeSection() {
+function ServiceNoticeTab() {
   const t = useT();
   const status = useServiceStatus();
   const notices = status.data?.notices ?? [];
   const maintenance = status.data?.maintenance.enabled ? status.data.maintenance : null;
-  if (notices.length === 0 && !maintenance) return null;
-  return <section className={styles.tasks} aria-labelledby="trip-service-title" data-service-notices>
-    <h3 id="trip-service-title" className={styles.secTitle}>{t("서비스 공지", "Service notices")} {notices.length + (maintenance ? 1 : 0)}</h3>
+  return <div className={styles.service} data-service-notices>
+    {status.isPending && <p className={styles.empty}>{t("공지를 불러오고 있어요.", "Loading the notices.")}</p>}
+    {status.error && !status.data && <p className={styles.error} role="alert">{t("공지를 불러오지 못했어요.", "Could not load the notices.")}</p>}
+    {status.data && notices.length === 0 && !maintenance && <p className={styles.empty}>{t("지금 게시 중인 공지가 없어요.", "No notices are posted now.")}</p>}
     {maintenance && <MaintenanceItem maintenance={maintenance} />}
     <NoticeItems notices={notices} />
-  </section>;
+    <Link href={routes.notices} className={styles.toBoard}>{t("지난 공지까지 보기 › 공지사항", "Past notices too › Notices")}</Link>
+  </div>;
 }
 
 export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
@@ -99,6 +107,17 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   useEffect(() => {
     if (tab === "notices" && keys) markNoticesSeen(trip.id, keys.split("\n"));
   }, [tab, keys, trip.id]);
+  // `[2026-10-17 사용자 결정 — ST4F-606]` 운영 앱 공지도 같다 — 「공지」 탭이 보여 주면 읽음(종 숫자에서 빠진다). 새것이 있으면 탭에 점.
+  const service = useServiceStatus();
+  const seenService = useSeenServiceNotices();
+  const serviceNotices = service.data?.notices ?? [];
+  const serviceKeys = serviceNotices.map((notice) => notice.id).join("\n");
+  const serviceUnread = serviceNotices.some((notice) => !seenService.includes(notice.id));
+  useEffect(() => {
+    if (tab === "service" && serviceKeys) markServiceNoticesSeen(serviceKeys.split("\n"));
+  }, [tab, serviceKeys]);
+  // `[2026-10-17 사용자 결정 — ST4F-606]` 재난 뒤 이어가기는 「답이 필요해요」에 한 장짜리 카드로 — 누르면 지금의 전체 패널을 그 자리에 펼친다.
+  const [recoveryOpen, setRecoveryOpen] = useState(false);
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: tripKey(trip.id, language) });
@@ -124,7 +143,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   const paused = Boolean(trip.safety?.paused);
   const goingOn = !paused && recovery.data ? recovery.data : null;
   const tasks = (paused ? 1 : 0) + (goingOn && !goingOn.chosen ? 1 : 0) + choices.length + (undoable ? 1 : 0);
-  const counts: Record<CenterTab, number> = { warnings: warnings.length, notices: total, history: history.length };
+  const counts: Record<CenterTab, number> = { warnings: warnings.length, notices: total, history: history.length, service: serviceNotices.length + (service.data?.maintenance.enabled ? 1 : 0) };
 
   function tabKeys(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
@@ -136,15 +155,22 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   }
 
   return <div className={styles.wrap}>
-    <ServiceNoticeSection />
     {readError && <div className={styles.error} role="alert">{t("선택과 알림을 읽지 못했어요 — ", "Could not read your choices and notices — ")}{readError instanceof Error ? readError.message : String(readError)}</div>}
 
     <section className={styles.tasks} aria-labelledby="trip-tasks-title">
-      <h3 id="trip-tasks-title" className={styles.secTitle}>{t("할 일", "To do")}{tasks > 0 ? ` ${tasks}` : ""}</h3>
+      {/* `[2026-10-17 사용자 결정 — ST4F-606 · 목업 B안]` 「할 일」 → 「답이 필요해요」(선택 · 재난 뒤 이어가기 · 되돌리기 — 답하면 빠진다). */}
+      <h3 id="trip-tasks-title" className={styles.secTitle}>{t("답이 필요해요", "Needs your answer")}{tasks > 0 ? ` ${tasks}` : ""}</h3>
       {/* `[2026-10-06]` 재난으로 일정이 멈췄으면 맨 위에: 정지 · 안전 안내 · 다시 시작(일정 칸 맨 윗줄에도 같은 패널이 있다). 정지가 없으면 아무것도 그리지 않는다. */}
       <SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} onResumed={onResumed} where="center" />
       {/* `[2026-10-06]` 다시 시작한 뒤(72시간 안): 아는 것 · 모르는 것 · 남은 일정의 영향 · 이어가는 세 가지 길. 다시 정지 중이면(새 사건) 그 정지 패널이 먼저다. */}
-      {goingOn && <RecoveryPanel key={goingOn.pauseId} trip={trip} recovery={goingOn} onChosen={chosen} />}
+      {goingOn && (recoveryOpen ? <RecoveryPanel key={goingOn.pauseId} trip={trip} recovery={goingOn} onChosen={chosen} />
+        : <section className={styles.act} data-tone="safety" aria-labelledby="trip-recovery-short" data-recovery-short>
+          <h4 id="trip-recovery-short">{t("재난 뒤 이어가기", "Going on after the disaster")}</h4>
+          <p>{[goingOn.event.label, goingOn.event.at ? noticeWhen(goingOn.event.at) : null].filter(Boolean).join(" · ")}{" — "}
+            {goingOn.chosen ? t("고르신 것을 다시 보거나 바꿀 수 있어요.", "You can look at or change your choice.") : t("어떻게 이어갈지 골라 주세요.", "Choose how to go on.")}</p>
+          <div className={styles.options}><Button variant={goingOn.chosen ? "secondary" : "primary"} onClick={() => setRecoveryOpen(true)}>
+            {goingOn.chosen ? t("고르신 것 보기", "See your choice") : t("이어갈 방법 고르기", "Choose how to go on")}</Button></div>
+        </section>)}
 
       {choices.length > 0 && <section className={styles.act} aria-labelledby="trip-choices">
         <h4 id="trip-choices">{t("선택이 필요해요", "Your choice is needed")}{choices.length > 1 ? ` ${choices.length}` : ""}</h4>
@@ -196,7 +222,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
 
     <div className={styles.tabs} role="tablist" aria-label={t("알림 종류", "Kinds of notices")} onKeyDown={tabKeys}>
       {TABS.map(([key, ko, en]) => <button key={key} type="button" role="tab" id={`trip-center-tab-${key}`} aria-selected={tab === key} aria-controls="trip-center-panel" tabIndex={tab === key ? 0 : -1}
-        onClick={() => onTab(key)}>{t(ko, en)} {counts[key]}{key === "notices" && unread > 0 && <span className={styles.unread} role="img" aria-label={t("읽지 않은 알림", "Unread notices")} />}</button>)}
+        onClick={() => onTab(key)}>{t(ko, en)} {counts[key]}{((key === "notices" && unread > 0) || (key === "service" && serviceUnread)) && <span className={styles.unread} role="img" aria-label={t("읽지 않은 알림", "Unread notices")} />}</button>)}
     </div>
     <div id="trip-center-panel" role="tabpanel" aria-labelledby={`trip-center-tab-${tab}`}>
       {tab === "warnings" && (warnings.length === 0 ? <p className={styles.empty}>{t("살펴볼 점이 없어요.", "Nothing to look at.")}</p>
@@ -205,6 +231,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
           <p>{warning.reason}</p>
           {warning.remedy && <p className={styles.remedy}>{warning.remedy}</p>}
         </li>)}</ul>)}
+      {tab === "service" && <ServiceNoticeTab />}
       {tab === "notices" && <BrowserNotifyOffer />}
       {tab === "notices" && (total === 0 ? <p className={styles.empty}>{t("받은 알림이 없어요.", "No notices yet.")}</p> : <>
         <ul className={styles.list}>{shown.map((notice) => {

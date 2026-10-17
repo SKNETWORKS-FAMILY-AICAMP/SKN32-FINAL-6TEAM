@@ -836,7 +836,8 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     stay_item = item["kind"] == "lodging"         # ★`[2026-10-15]` 체크인 ~ 체크아웃으로 묶인 숙소 항목 — 숙소 후보만 보이고 식사 짝은 붙이지 않는다(식사 일정이 아니다)
     want = place_kind_of(item)
     stay = _is_stay_line(item) and not stay_item  # 「호텔」 · 「호텔 조식」 — 숙소 후보와 숙소 안 식사 후보를 함께 보인다
-    pair_stay_meals = stay and (item["place_state"] == "needs_choice" or item["kind"] == "dining")
+    # 먼저 채운 일반 호텔도 같은 숙소 안 식사 선택을 유지한다. 체크인 숙박은 stay에서 이미 제외했다.
+    pair_stay_meals = stay and (item["place_state"] == "needs_choice" or item["kind"] == "dining" or stay_context.generic(item))
     if pair_stay_meals:
         limit = limit * 2                         # 숙소마다 짝(식사)이 붙으므로 칸을 두 배로
     cls: dict[str, Any] | None = None            # 원래 장소의 분류(같은 종류 다른 곳 블록에서 찾는다)

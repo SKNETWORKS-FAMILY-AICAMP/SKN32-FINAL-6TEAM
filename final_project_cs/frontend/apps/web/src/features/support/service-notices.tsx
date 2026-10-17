@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSettings, useT } from "@/lib/settings";
 import { serviceStatus, type ServiceNotice, type ServiceStatus } from "./client";
+import { dismissServiceNotices, useDismissedServiceNotices } from "./service-notice-reads";
 import styles from "./support.module.css";
 
 /**
@@ -60,12 +61,17 @@ export function ServiceNotices() {
   const t = useT();
   const { language } = useSettings();
   const query = useServiceStatus();
-  const [dismissed, setDismissed] = useState<string | null>(null);
   const data = query.data;
-  const identity = JSON.stringify([data?.maintenance, data?.notices]);
-  // 앞서 받은 공지가 있으면 다시 묻다 실패해도 그것을 그대로 둔다 — 「확인하지 못했어요」는 한 번도 못 받았을 때만
+  // `[2026-10-17 사용자 결정 — ST4F-608]` 「공지 닫기」는 이 브라우저가 공지 id 로 기억한다 — 새로고침해도 닫은 공지는 다시 안 뜨고, 새 공지(새 점검)가 오면 그것만 뜬다.
+  //   (옛: 화면 메모리라 새로고침하면 같은 공지가 다시 떴다.) 닫은 공지도 알림 센터 「공지」 탭 · 공지사항 게시판에서는 보인다.
+  const closed = useDismissedServiceNotices();
+  const notices = (data?.notices ?? []).filter((notice) => !closed.includes(notice.id));
+  const maintenanceKey = data?.maintenance.enabled ? `maintenance:${data.maintenance.endsAt ?? ""}` : null;
+  const maintenance = maintenanceKey && !closed.includes(maintenanceKey) ? data!.maintenance : null;
+  // 앞서 받은 공지가 있으면 다시 묻다 실패해도 그것을 그대로 둔다 — 「확인하지 못했어요」는 한 번도 못 받았을 때만(이것은 이 화면에서만 닫힌다)
   const failed = Boolean(query.error) && !data;
-  const shown = !((query.isPending || (!failed && !data?.maintenance.enabled && !data?.notices.length)) || dismissed === identity);
+  const [failedClosed, setFailedClosed] = useState(false);
+  const shown = !query.isPending && (failed ? !failedClosed : Boolean(maintenance) || notices.length > 0);
   const box = useRef<HTMLElement>(null);
   // ★`[2026-10-17 사용자 지시 — ST4F-603]` 배너는 화면 맨 위에 뜬다(옛: 아래 — 10-08 `bf42b659` 운영 앱 연결 때 들어왔고 아래로 정한 근거는 문서 · 커밋에 없다).
   //   서버가 늦을 때의 안내(`wait-notice`)도 맨 위라, 배너가 떠 있는 동안 그 높이만큼 아래로 내린다(`--service-notice-space`).
@@ -80,8 +86,9 @@ export function ServiceNotices() {
   if (!shown) return null;
   return <aside ref={box} className={styles.banner} aria-label={t("서비스 공지", "Service notices")} aria-live="polite">
     {failed && <><h2>{t("서비스 공지를 확인하지 못했어요", "Could not check service notices")}</h2><p>{t("공지와 점검 상태를 다시 확인해 주세요.", "Please check notices and maintenance status again.")}</p><button type="button" disabled={query.isFetching} onClick={() => void query.refetch()}>{t("다시 확인", "Check again")}</button></>}
-    {data?.maintenance.enabled && <><h2>{t("서비스 점검 안내", "Service maintenance")}</h2><p>{language === "en" && data.maintenance.messageEn ? data.maintenance.messageEn : data.maintenance.message}</p>{data.maintenance.endsAt && <p>{t("종료 예정: ", "Expected end: ")}<time dateTime={data.maintenance.endsAt}>{new Date(data.maintenance.endsAt).toLocaleString(language)}</time></p>}</>}
-    <NoticeItems notices={data?.notices ?? []} />
-    <div className={styles.bannerActions}><Link href="/support">{t("문의하기", "Contact support")}</Link><button type="button" onClick={() => setDismissed(identity)}>{t("공지 닫기", "Dismiss notice")}</button></div>
+    {maintenance && <><h2>{t("서비스 점검 안내", "Service maintenance")}</h2><p>{language === "en" && maintenance.messageEn ? maintenance.messageEn : maintenance.message}</p>{maintenance.endsAt && <p>{t("종료 예정: ", "Expected end: ")}<time dateTime={maintenance.endsAt}>{new Date(maintenance.endsAt).toLocaleString(language)}</time></p>}</>}
+    <NoticeItems notices={notices} />
+    <div className={styles.bannerActions}><Link href="/support">{t("문의하기", "Contact support")}</Link><button type="button" onClick={() => failed ? setFailedClosed(true)
+      : dismissServiceNotices([...notices.map((notice) => notice.id), ...(maintenance && maintenanceKey ? [maintenanceKey] : [])])}>{t("공지 닫기", "Dismiss notice")}</button></div>
   </aside>;
 }
