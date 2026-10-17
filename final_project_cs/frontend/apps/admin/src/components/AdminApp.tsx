@@ -14,6 +14,7 @@ import { OperationsSettings, CaseTrace } from '../features/operations/connected'
 import { DiagnosticsPanel } from '../features/operations/source-policy';
 import { DisasterSimulation } from '../features/operations/simulation';
 import { WatchMonitoring } from '../features/operations/monitoring';
+import { TripDetailScreen } from '../features/trips/trip-detail';
 
 const MENUS = [
   { group: '운영', path: '/', title: '운영 홈', icon: Home },
@@ -103,6 +104,10 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
     else if ((route === '/cases' || route.startsWith('/cases/')) && !isDemoMode(mode)) screen = <CaseTrace navigate={navigate} id={route === '/cases' ? undefined : route.slice('/cases/'.length)} />;
     else if (route === '/') screen = <HomeScreen {...screenProps} />;
     else if (route === '/users') screen = <UsersScreen {...screenProps} listState={usersList} onListStateChange={setUsersList} />;
+    else if (/^\/users\/[^/]+\/trips\/[^/]+$/.test(route)) {
+      const segments = route.split('/');
+      screen = <TripDetailScreen key={route} userId={decodeURIComponent(segments[2])} tripId={decodeURIComponent(segments[4])} live={data?.live === true} navigate={navigate} />;
+    }
     else if (route.startsWith('/users/')) screen = <UserDetailScreen {...screenProps} userId={decodeURIComponent(route.slice('/users/'.length))} />;
     else if (route === '/limits') screen = <LimitsScreen {...screenProps} />;
     else if (route === '/usage') screen = <UsageScreen {...screenProps} />;

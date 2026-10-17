@@ -185,6 +185,13 @@ export async function saveSourcePolicy<T>(payload: unknown): Promise<T> {
 export const operationSimulations = <T,>(tripId?: string, query?: URLSearchParams) => liveRequest<T>(`${tripId ? `simulations/${encodeURIComponent(tripId)}` : 'simulations'}${query ? `?${query}` : ''}`);
 export const operationWatchRuns = <T,>(suffix = '') => liveRequest<T>(`watch-runs${suffix}`);
 export const operationApiLimits = <T,>() => liveRequest<T>('api-limits');
+export async function operationTripDetail<T>(userId: string, tripId: string, suffix = '', signal?: AbortSignal): Promise<T> {
+  try { return await liveRequest<T>(`users/${encodeURIComponent(userId)}/trips/${encodeURIComponent(tripId)}${suffix}`, { signal }); }
+  catch (cause) {
+    if (cause instanceof TypeError || cause instanceof SyntaxError) throw new Error('여행 기록에 연결하지 못했습니다. 잠시 후 다시 읽어 주세요.');
+    throw cause;
+  }
+}
 export async function saveOperationSimulation<T>(tripId: string, payload: unknown): Promise<T> {
   const session = await operatorSession();
   return liveRequest<T>(`simulations/${encodeURIComponent(tripId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });

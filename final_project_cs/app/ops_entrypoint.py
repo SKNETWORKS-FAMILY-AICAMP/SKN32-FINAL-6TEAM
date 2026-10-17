@@ -66,6 +66,8 @@ def create_ops_app(*, routers: list | None = None) -> FastAPI:
     app.include_router(build_simulation_router(operator_dependency=operator, require_permission=require))
     from app.domains.travel_ops.entry.admin_watch_api import build_router as build_watch_router
     app.include_router(build_watch_router(operator_dependency=operator, require_permission=require))
+    from app.domains.travel_ops.entry.admin_trip_api import build_router as build_trip_detail_router
+    app.include_router(build_trip_detail_router(operator_dependency=operator, require_permission=require))
     # `[2026-10-13 사용자 결정]` 일정 감시에 보내지 않은 「기타」 재난 문자 — 사안 · 건수 읽기
     from app.domains.travel_ops.entry.admin_notice_api import build_router as build_notice_router
     app.include_router(build_notice_router(operator_dependency=operator, require_permission=require))
