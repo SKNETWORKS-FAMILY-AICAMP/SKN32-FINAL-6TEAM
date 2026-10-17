@@ -16,6 +16,12 @@ import { useT } from "@/lib/settings";
 /** The server has not answered the plan yet: say it is slow after this long, and that it is very slow after this long. */
 export const SLOW_AFTER_MS = 4_000;
 export const VERY_SLOW_AFTER_MS = 15_000;
+/**
+ * `[2026-10-17 ST4F-596]` The plan goes out after two paint frames — or after this long if no frame comes. A hidden browser window or pane gives no
+ * `requestAnimationFrame` at all (while `visibilityState` still says "visible"), and the plan was never sent: the screen stayed on 「보내는 중」
+ * with no request (reproduced in the app's browser pane while hidden). Timers still run there. Two frames take ~33 ms, so this does not cut in.
+ */
+export const SEND_WITHOUT_PAINT_MS = 300;
 
 /**
  * `[2026-10-08 사용자 지시]` The plan check from the moment 「계획 확인하기」 is pressed. The entry page renders this screen
@@ -54,9 +60,10 @@ export function IntakeStarting() {
   useEffect(() => {
     if (!start) { router.replace(routes.newTrip); return; }
     let live = true;
-    // 두 번의 그리기 프레임을 기다려 화면을 실제로 표시한 뒤 전송한다.
+    // 두 번의 그리기 프레임을 기다려 화면을 실제로 표시한 뒤 전송한다 — 그리기 신호가 안 오는 화면에서는 타이머로(`SEND_WITHOUT_PAINT_MS`). 전송은 한 번뿐이다(`send`).
     let secondFrame = 0;
     const firstFrame = requestAnimationFrame(() => { secondFrame = requestAnimationFrame(() => start.send()); });
+    const noPaint = setTimeout(() => start.send(), SEND_WITHOUT_PAINT_MS);
     const fail = (error: unknown) => {
       if (!live || left.current) return;
     rememberIntakeFailure(start, error);
@@ -85,7 +92,7 @@ export function IntakeStarting() {
       endIntakeStart(start);
       router.replace(routes.intake(intake_id));
     }, fail);
-    return () => { live = false; cancelAnimationFrame(firstFrame); cancelAnimationFrame(secondFrame); };
+    return () => { live = false; cancelAnimationFrame(firstFrame); cancelAnimationFrame(secondFrame); clearTimeout(noPaint); };
   }, [start, router, queryClient]);
 
   // Going back gives the entry page what the customer had chosen to send (the files, the planning conditions) — with no sentence of a refusal.
