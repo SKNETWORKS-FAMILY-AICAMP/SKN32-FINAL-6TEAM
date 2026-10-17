@@ -255,7 +255,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
             <h2 tabIndex={-1} id={titleId(INTRO_STEP)}>{introTitle}</h2>
             <p className={styles.helper}>{t(`${questions.length}가지 질문으로 여행 취향을 알아봐요.`, `${questions.length} short questions about how you like to travel.`)}</p>
             <ul className={styles.introList}>
-              <li>{t("이 설문은 triPilot이 가볼 곳·식당·이동 방법 후보를 추천할 때 참고할 여행 취향 정보를 모아요.", "This survey gathers the travel preferences triPilot uses when recommending places to visit, restaurants, and ways to get around.")}</li>
+              <li>{t("이 설문은 구구루트가 가볼 곳·식당·이동 방법 후보를 추천할 때 참고할 여행 취향 정보를 모아요.", "This survey gathers the travel preferences GuguRoute uses when recommending places to visit, restaurants, and ways to get around.")}</li>
               <li>{t("답해 주실수록 나에게 더 잘 맞는 후보와 결과를 추천받을 수 있어요.", "The more you answer, the better the suggestions and results can fit you.")}</li>
               <li>{t("답하고 싶지 않은 질문은 ‘응답하지 않고 넘어가기’를 눌러 건너뛸 수 있어요.", "Rather not answer a question? Tap “Skip this question” to move on.")}</li>
             </ul>

@@ -142,7 +142,7 @@ export function TripShare({ trip, title, planUrl, onClose, notify }: { trip: Tri
           : <button type="button" className={styles.shareApp} onClick={() => press(target.key)}>{face}</button>}</li>;
       })}</ul>
       {download && <a className={styles.shareDownload} href={download} data-plan-download onClick={() => done()}>
-        <Download size={20} strokeWidth={1.8} aria-hidden="true" />{t("파일로 내려받기", "Download as a file")}<small>{`triPilot-${title}.html`}</small></a>}
+        <Download size={20} strokeWidth={1.8} aria-hidden="true" />{t("파일로 내려받기", "Download as a file")}<small>{`구구루트-${title}.html`}</small></a>}
     </section>
   </div>;
 }

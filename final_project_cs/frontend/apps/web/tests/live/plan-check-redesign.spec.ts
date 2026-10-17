@@ -38,7 +38,7 @@ test("결과 화면의 상단바는 투명하고 지도가 맨 위까지 이어�
   const frame = (await page.locator('div[data-floating="true"]').boundingBox())!;
   const map = (await page.getByRole("region", { name: "여행 지도" }).boundingBox())!;
   expect(Math.abs(map.y - frame.y)).toBeLessThan(2);                                                // 지도가 상단바 아래가 아니라 맨 위에서 시작한다
-  await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /구구루트 — 소개 화면/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /^계획 이름 · / })).toBeVisible();
   await expect(page.getByRole("button", { name: "메뉴", exact: true })).toBeVisible();
 });

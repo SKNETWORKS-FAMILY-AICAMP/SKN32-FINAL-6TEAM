@@ -518,7 +518,7 @@ test("「공유하기」의 「파일로 내려받기」는 계획서 링크와 
   expect(downloadHref.searchParams.get("download")).toBe("1");
   expect(openHref.searchParams.get("download")).toBeNull();                                         // 여는 링크는 그대로 — 파일로 받지 않는다
   const answer = await request.get(downloadHref.toString());
-  expect(answer.headers()["content-disposition"]).toMatch(/^attachment; filename\*=UTF-8''triPilot-/);
+  expect(answer.headers()["content-disposition"]).toMatch(new RegExp(`^attachment; filename\\*=UTF-8''${encodeURIComponent("구구루트-")}`));
   expect((await request.get(openHref.toString())).headers()["content-disposition"]).toBeUndefined();
 });
 

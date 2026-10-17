@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import threading
 from datetime import datetime, timedelta
+from urllib.parse import quote
 from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
@@ -256,7 +257,7 @@ def test_the_plan_link_can_be_downloaded_as_a_file_without_logging_in(cookies):
     got = anon.get(f"/plan/{trip_id}", params={"t": token, "download": "1"})
     assert got.status_code == 200 and got.text == shown.text                                # 같은 내용
     disposition = got.headers["content-disposition"]
-    assert disposition.startswith("attachment;") and "filename*=UTF-8''triPilot-" in disposition and disposition.endswith(".html")
+    assert disposition.startswith("attachment;") and "filename*=UTF-8''" + quote("구구루트-") in disposition and disposition.endswith(".html")
     assert "/" not in disposition.split("filename*=UTF-8''")[1]                              # 제목의 경로 글자는 이름에 안 들어간다
     assert "<script src" not in got.text and "<link " not in got.text                      # 외부 파일 없이 혼자 열린다
     assert anon.get(f"/plan/{trip_id}", params={"t": "wrong", "download": "1"}).status_code == 404   # 틀린 토큰은 있는지도 말하지 않는다

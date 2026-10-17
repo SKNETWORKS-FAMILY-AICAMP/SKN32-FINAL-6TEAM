@@ -44,7 +44,7 @@ test("동의하고 다음으로를 누르면 여섯 항목이 서버에 기록�
   const [post] = await server.received("POST", "/v1/web/consents");
   const body = post.body as { version: string; items: { code: string; agreed: boolean; text_sha256: string }[] };
   expect(body.version).toBe(TERMS_VERSION);
-  expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false]]);   // `[2026-10-12 임시]` service_improvement 는 서버가 아직 몰라 보내지 않는다
+  expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false], ["service_improvement", false]]);
   for (const item of body.items) {
     const doc = TERMS_DOCS.find((entry) => entry.code === item.code)!;
     expect(item.text_sha256).toBe(sha256(docText(doc)));                                   // 브라우저가 계산한 지문 = 정본 글에서 계산한 지문
@@ -243,23 +243,23 @@ test("동의 조회 실패를 미동의로 바꾸지 않고 같은 화면에서 
 });
 
 test.describe("마이페이지의 약관 동의 관리(`[2026-10-13]` /mypage/consents)", () => {
-  // `[2026-10-12 임시]` 서버가 아직 service_improvement 를 기록하지 못해(보내면 저장 전체가 422) 화면은 전문만 보이고 동의 · 철회는 「준비 중」이다.
-  //   서버가 받게 되면 `SERVER_PENDING_CONSENTS` 에서 빼고 이 시험을 옛 모양(켜고 철회 → 보낸 값 [true, false])으로 되돌린다.
-  test("서비스 개선 선택 동의는 서버가 받기 전까지 준비 중이며 서버에 보내지 않는다", async ({ page, request }) => {
+  test("서비스 개선 선택 동의는 기본 꺼짐이며 켜고 철회해도 기본 서비스를 계속 이용한다", async ({ page, request }) => {
     const server = mockServer(request);
     await server.scenario({ consents: "on" });
     await start(page);
     await page.goto("/mypage/consents");
     await page.getByRole("button", { name: "선택 약관 동의", exact: true }).click();
     const row = page.locator('[data-doc="service_improvement"]');
-    await expect(row).toContainText("준비 중");
-    await expect(row.getByRole("button", { name: "동의하기" })).toHaveCount(0);
-    await expect(row.getByRole("button", { name: "동의 철회" })).toHaveCount(0);
-    await row.getByRole("button", { name: "전문 보기" }).click();
-    await expect(row.locator("[data-optional-full]")).toBeVisible();
+    await expect(row).toContainText("동의 안 함");
+    await row.getByRole("button", { name: "동의하기" }).click();
+    await expect(row).toContainText("동의함");
+    await row.getByRole("button", { name: "동의 철회" }).click();
+    await expect(row.getByRole("alert")).toContainText("검토 대기 합성 자료는 폐기");
+    await row.getByRole("button", { name: "철회하기" }).click();
+    await expect(row).toContainText("동의 안 함");
     await expect(page).toHaveURL(/\/mypage\/consents$/);
     const posts = await server.received("POST", "/v1/web/consents");
-    for (const entry of posts) expect((entry.body as { items: { code: string }[] }).items.some((item) => item.code === "service_improvement")).toBe(false);
+    expect(posts.slice(-2).map((entry) => (entry.body as { items: { code: string; agreed: boolean }[] }).items.find((item) => item.code === "service_improvement")?.agreed)).toEqual([true, false]);
     if (process.env.CONSENT_SHOTS) {
       await page.screenshot({ path: `${process.env.CONSENT_SHOTS}/improvement-desktop.png`, fullPage: true });
       await page.setViewportSize({ width: 375, height: 812 });

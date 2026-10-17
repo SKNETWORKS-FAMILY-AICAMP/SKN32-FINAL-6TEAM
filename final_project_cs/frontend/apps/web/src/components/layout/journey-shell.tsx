@@ -17,7 +17,7 @@ const steps: Partial<Record<JourneyView, 0 | 1 | 2>> = { registration: 0, checki
 /** Frame of the journey screens: brand, settings, step marker and the landscape behind. */
 export function JourneyShell({ view, title, children }: { view: JourneyView; title: readonly [ko: string, en: string]; children: ReactNode }) {
   const t = useT();
-  useDocumentTitle(`${t(...title)} · triPilot`);
+  useDocumentTitle(`${t(...title)} · ${t("구구루트", "GuguRoute")}`);
   const step = steps[view];
   const footer = <footer className={styles.footer}>
     <span><Leaf size={18} strokeWidth={1.6} aria-hidden="true" />{t("당신의 취향대로, 더 편안하게.", "More you. A little more at ease.")}</span>

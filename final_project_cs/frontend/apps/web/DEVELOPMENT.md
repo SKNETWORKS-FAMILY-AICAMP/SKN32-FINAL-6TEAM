@@ -736,3 +736,13 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - 시험: `intake-start.spec.ts` 에 하나(그리기 신호를 끈 채 누르면 접수 화면으로 넘어가고 요청은 한 번) — 고치기 전 코드에서는 12초 동안 `/intakes/starting` 에 멈춰 실패함을 확인.
 - 검증(2026-10-17, 이 PC): 타입 0 · 린트 0 · 단위 791/791 · 등록 · 보내기 화면 시험 7파일 52/52. 실서버: 숨은 내장 브라우저 창에서 그리기 신호 없이(1.5초 동안 0회) 누르자 요청이 나가고 `/intakes/<id>` 로 넘어감. 보고서 [2026-10-17 계획 보내기 멈춤](../../../wiki/records/reports/2026-10-17_1654_웹_계획보내기_보내는중_멈춤_ST4F-596.md).
 - 다른 곳의 그리기 신호 쓰임(초점 이동 · 등장 효과 — `plan-check.tsx` · `onboarding.tsx` · `intro.tsx` 등)은 요청을 보내지 않아 그대로 두었다.
+
+## 2026-10-17 (이어서) — 서비스 이름 구구루트 · 새 아이콘 · 글자 로고 · 다크 모드 · 약관 판 2026-10-17.1 (ST4F-610 · ST4F-609 · ST4F-205)
+
+`[2026-10-17 사용자 결정]` 서비스 이름 triPilot → **구구루트**(영문 **GuguRoute**). 로고 · 색까지 한 번에, 약관 판은 이름 + 「마이페이지」 문구(ST4F-205) + 서비스 개선 동의(ST4F-609)를 묶어 한 번만 올린다.
+- **이름**: 화면 · 제목 · 약관 · 안내 문장의 「triPilot」 → 한국어 「구구루트」(조사 맞춤 — 「구구루트는 · 가」) · 영어 「GuguRoute」. 계획서 파일 이름 `구구루트-<제목>.html`(서버와 같이) · 엔딩 크레딧 그림 `guguroute-credits.png`. **바꾸지 않은 것**: 쿠키 · 브라우저 저장 키(`tripilot.web.*` · `triPilot.*`) · 이미지 파일 이름 · MCP 도구 이름 · 에이전트 연결 명령의 별칭 `tripilot`(식별자 — 바꾸면 로그아웃 · 설정 · 동의 사본이 사라진다).
+- **아이콘 · 글자 로고**(`components/ui/brand.tsx`): 머리 로고 = 아이콘(작은 크기용 굵은 판) + 글자 로고(Pretendard ExtraBold 윤곽 — 한국어 「구구루트」, 영어 「GuguRoute」, 글자색을 따른다). 지도 위 떠 있는 머리에서는 아이콘만. 탭 아이콘 `public/images/guguroute-mark.svg` · 휴대폰 홈 화면 `guguroute-apple-touch-icon.png`. 원본 · 비교판: [목업 README](mockups/README.md) 「구구루트 브랜드 · 다크 모드 비교」.
+- **다크 모드**(`styles/tokens.css` `[data-theme="dark"]` · `lib/theme.ts`): 화이트(`neutral`) 자리를 다크 A(초록 다크)로. 테마 설정은 「기기 설정 따르기」(기본 · `system`) · 그린 · 다크 — 기기 설정이 바뀌면 열린 화면도 바로 따른다(`useDeviceDark`). 첫 그림 전 스크립트도 같은 규칙(옛 「화이트」 저장값은 기기 설정을 따른다). 첫 화면 배경은 다크에서 밤 그림(`tripilot-home-03-journey-night.png` — 「서울 불빛」), 설문 화면의 풍경 그림은 다크에서 숨긴다(화이트 때와 같다). 무료 지도(OSM)는 타일 층만 어둡게 뒤집는다(`map.module.css`) — 구글 · 네이버 지도는 아직 밝은 그대로.
+- **약관 판 2026-10-17.1**(`terms-content.ts` · 서버 `config/guardrails.yaml` `consent.terms_version` · mock 서버 같이): 이름 + 약관 본문의 「마이페이지」 → 「설정 › 약관 · 동의」 · 「설정 › 알림 받는 곳」(가지 `feat/terms-mypage-wording` `da8dcd53` 의 변경 — 그 커밋의 판 2026-10-13.1 은 쓰지 않았다) + **서비스 개선 선택 동의를 서버에 보낸다**(`consent-model.ts` `SERVER_PENDING_CONSENTS` 비움 — 서버 `consents.py` `CODES` 가 여섯을 받는다). 시행일 2026-10-17. 옛 판에 동의한 사람은 다시 동의한다. ★웹만 먼저 배포하면 서버가 판이 다르다고 거절하므로 **서버와 같이 배포**.
+- 시험: 이름 기대값(13파일) · 동의 여섯(`consent.spec` 의 「서비스 개선 동의 켜고 철회」 되돌림 · `consent-sync.test` 등 4파일) · 테마(`menu.spec` — 기기 설정 따르기 · 기기 다크 전환 · 다크 고정 · 옛 화이트 저장값, `registration-panels.spec` 그린 · 다크, `tokens.test`).
+- 검증 · 남은 일: [리포트](../../../wiki/records/reports/2026-10-17_2020_구구루트_이름_아이콘_다크모드_약관판_ST4F-610.md).

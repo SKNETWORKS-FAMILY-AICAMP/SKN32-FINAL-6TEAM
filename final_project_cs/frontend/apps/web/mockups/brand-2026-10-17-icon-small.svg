@@ -1,0 +1,15 @@
+<!-- small sizes (favicon 16 · 32): thicker lines, no feather notch -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="구구루트">
+  <rect x="4" y="4" width="92" height="92" rx="21" fill="#2E6047"/>
+  <g fill="none" stroke="#F4F3EA" stroke-width="4.2" stroke-linejoin="miter" stroke-miterlimit="6">
+    <!-- wing: front edge, top edge to the tip, outer edge, lower lobe to a point, then the route (S) to the ring -->
+    <path d="M63.8 39.6 C63.4 35.4 61.8 33 60.6 31.4 L39.3 20.8 C39 24.5 39.8 28 42.6 31 C42.6 36.5 46 40.4 50 41.7 L53.8 42.7 C52.8 45.6 51 47.6 48.4 49.2 C45.5 50.9 41.9 51 39.8 53 C38.4 54.3 37.9 56 38.1 57.6 C38.5 61.2 41.5 63.4 45.5 63.5 L58.2 63.7 A6.275 6.275 0 0 1 58.2 76.25 L29.9 76.25"/>
+    <!-- head, beak, breast -->
+    <path d="M60.6 31.4 C62.5 29.8 63.4 27.8 64.6 26 C66 23.6 67.6 22 70 21.9 C72.7 21.8 74.5 23.4 75.3 25.4 L77.9 28.3 L74 29.4 C72.6 30.6 72.4 32.6 72.4 35.5 C72.4 44.5 65 50.5 53.8 50.6"/>
+    <!-- the ring the route ends at -->
+    <circle cx="26.7" cy="76.25" r="3.2"/>
+  </g>
+  <!-- map pin (round hole) sitting on the ring the route ends at -->
+  <path fill="#F4F3EA" fill-rule="evenodd" d="M26.7 74.2 L22.09 66.37 A5.35 5.35 0 1 1 31.31 66.37 Z M26.7 61 A2.7 2.7 0 1 0 26.7 66.4 A2.7 2.7 0 1 0 26.7 61 Z"/>
+  <circle cx="70.5" cy="26.3" r="1.6" fill="#F4F3EA"/>
+</svg>

@@ -50,7 +50,7 @@ class LoopbackOnly:
 
 def create_ops_app(*, routers: list | None = None) -> FastAPI:
     """운영 앱을 조립한다. `routers` — 시험이 도메인 경로를 갈아 끼우는 자리(없으면 `composition.build_ops_routers()`)."""
-    app = FastAPI(title="triPilot 운영 콘솔")
+    app = FastAPI(title="구구루트 운영 콘솔")
     app.add_middleware(LoopbackOnly)
     composition.wire_trip_scope()              # 관리자 화면의 여행 목록이 감시 대상과 같게(게스트 여행 빼기) `[2026-10-16]`
     mount_ui(app)

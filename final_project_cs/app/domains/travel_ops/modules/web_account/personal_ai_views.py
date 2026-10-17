@@ -22,7 +22,7 @@ def document(title, body):
     nonce = secrets.token_urlsafe(16)
     return HTMLResponse(f"<!doctype html><html lang='ko'><head><meta charset='utf-8'>"
         f"<meta name='viewport' content='width=device-width,initial-scale=1'><title>{html.escape(title)}</title>"
-        f"<style nonce='{nonce}'>{STYLE}</style></head><body><main id='main'><p class='eyebrow'>triPilot · 개인 AI 연결</p>"
+        f"<style nonce='{nonce}'>{STYLE}</style></head><body><main id='main'><p class='eyebrow'>구구루트 · 개인 AI 연결</p>"
         f"{body}</main></body></html>", headers={"Cache-Control": "no-store", "Pragma": "no-cache",
             "Referrer-Policy": "no-referrer", "X-Frame-Options": "DENY",
             "Content-Security-Policy": f"default-src 'none'; style-src 'nonce-{nonce}'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"})

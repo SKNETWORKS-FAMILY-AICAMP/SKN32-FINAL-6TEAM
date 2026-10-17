@@ -52,8 +52,8 @@ test("칸을 누르거나, 그 안에 쓰거나 고르거나, 키보드 초점�
   expect(await active()).toEqual(["files"]);
 });
 
-for (const theme of ["green", "neutral"] as const) {
-  test(`보낼 칸은 글칸에 초점이 있을 때와 같은 강조색 2px 로 둘러진다 — ${theme === "green" ? "초록(기본)" : "흰색"} 테마`, async ({ page }) => {
+for (const theme of ["green", "dark"] as const) {
+  test(`보낼 칸은 글칸에 초점이 있을 때와 같은 강조색 2px 로 둘러진다 — ${theme === "green" ? "초록" : "다크"} 테마`, async ({ page }) => {
     await page.addInitScript((value) => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", theme: value })), theme);
     await start(page);
     await openRegistration(page);

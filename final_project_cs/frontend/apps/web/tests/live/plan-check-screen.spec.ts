@@ -422,7 +422,7 @@ test("수정 화면: 장소 검색은 로고 자리(머리줄)에 작게 들어 
   const search = page.getByRole("searchbox", { name: "장소 검색" });
   const field = page.locator("[class*=headSearch]");
   await expect(page.locator("header").filter({ has: search })).toHaveCount(1);
-  await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeHidden();          // 검색이 로고 자리를 쓴다
+  await expect(page.getByRole("link", { name: /구구루트 — 소개 화면/ })).toBeHidden();          // 검색이 로고 자리를 쓴다
   await expect(page.getByRole("button", { name: "메뉴", exact: true })).toBeVisible();
   const compact = (await field.boundingBox())!;
   await search.click();
@@ -430,7 +430,7 @@ test("수정 화면: 장소 검색은 로고 자리(머리줄)에 작게 들어 
   await search.fill("명동");
   await expect(page.getByText("‘명동’ 검색 결과 1곳")).toBeVisible();
   await page.getByRole("button", { name: "바꾸기 그만두기" }).click();
-  await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();          // 수정이 끝나면 로고가 돌아온다
+  await expect(page.getByRole("link", { name: /구구루트 — 소개 화면/ })).toBeVisible();          // 수정이 끝나면 로고가 돌아온다
 });
 
 test("「장소 없음」을 저장하면 place.none을 보내고 변경 완료 카드와 확인 필요 우선 안내를 유지한다", async ({ page, request }) => {

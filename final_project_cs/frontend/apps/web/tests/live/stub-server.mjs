@@ -236,11 +236,11 @@ function telegramChannelRefusal(body) {
 let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
-const TERMS_VERSION = "2026-10-10.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
-// `[2026-10-12]` The codes the cs server records (`consents.py` `CODES`) - not the page's list. The page's sixth, `service_improvement`, is
-// not on the server yet and the server refuses the whole save when it comes (wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md);
-// the stub had it, which is why the browser tests passed. Add it here when the server takes it.
-const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
+const TERMS_VERSION = "2026-10-17.1";   // 웹 `terms-content.ts` 와 같은 값(`[2026-10-17]` 이름 구구루트 · 「마이페이지」 문구 · 서비스 개선 동의)
+// `[2026-10-12]` The codes the cs server records (`consents.py` `CODES`) - not the page's list (a code the server does not know made it refuse the
+// whole save while the stub took it: wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md). `[2026-10-17]` The server records the sixth,
+// `service_improvement`.
+const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel", "service_improvement"];
 const CONSENT_REQUIRED = ["service_terms", "privacy"];
 /** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
 let consentRecords = new Map();
@@ -775,8 +775,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   if (path === "/__test/hangup") { const closed = bells.size; bells.forEach((stream) => stream.end()); bells.clear(); return json(response, 200, { closed }, origin); }
   if (path.startsWith("/plan/")) {
-    // `download=1` → the same page sent as a file (the server writes `Content-Disposition: attachment; filename*=UTF-8''triPilot-<제목>.html`)
-    const file = url.searchParams.get("download") === "1" ? { "Content-Disposition": "attachment; filename*=UTF-8''triPilot-" + encodeURIComponent("내 여행") + ".html" } : {};
+    // `download=1` → the same page sent as a file (the server writes `Content-Disposition: attachment; filename*=UTF-8''구구루트-<제목>.html`)
+    const file = url.searchParams.get("download") === "1" ? { "Content-Disposition": "attachment; filename*=UTF-8''" + encodeURIComponent("구구루트-내 여행") + ".html" } : {};
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", ...file });
     response.end("<h1>여행계획서(스텁)</h1>");
     return;

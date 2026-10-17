@@ -43,7 +43,7 @@ test("약관이 필요한 화면은 약관 카드만 있는 약관 화면으로 
   await page.goto("/");
   await page.goto("/mypage/consents");
   await expect(page).toHaveURL(/\/start\?terms=required&returnTo=%2Fmypage%2Fconsents$/);
-  await expect(page).toHaveTitle("triPilot · 약관 동의");
+  await expect(page).toHaveTitle("구구루트 · 약관 동의");
   await expect(page.getByRole("heading", { name: "약관 동의", level: 1 })).toBeVisible();
   await expect(page.getByText("동의하면 보던 화면으로 돌아가요.")).toBeVisible();
   await expect(card(page, 1)).toHaveCount(1);
@@ -62,7 +62,7 @@ test("취향 설문 입구(/start)는 동의 전이면 약관 · 취향 카드�
   const server = mockServer(request);
   await useKorean(page);
   await page.goto("/start");
-  await expect(page).toHaveTitle("triPilot · 여행 취향 설문");
+  await expect(page).toHaveTitle("구구루트 · 여행 취향 설문");
   await expect(page.getByRole("heading", { name: "여행 취향 설문", level: 1 })).toBeVisible();
   await expect(page.getByText("설문을 하려면 먼저 약관에 동의해 주세요.")).toBeVisible();
   await expect(startCardHead(page, "terms")).toHaveAttribute("aria-expanded", "true");

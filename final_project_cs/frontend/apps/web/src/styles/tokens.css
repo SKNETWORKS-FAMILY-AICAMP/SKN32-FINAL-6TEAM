@@ -1,7 +1,7 @@
 /*
- * Two themes on the same roles (2026-10-03, user-confirmed values): green — the 2026-09-23 journey mockup, the default — and
- * white (`data-theme="neutral"` on <html>) — the plan-check streaming mockup. Chosen in the menu's theme card
- * (`lib/settings.ts`). Fonts, sizes and weights are the same in both. A screen's CSS uses roles, never a colour.
+ * Two themes on the same roles: green — the 2026-09-23 journey mockup (2026-10-03, user-confirmed values) — and dark
+ * (`data-theme="dark"` on <html>, 2026-10-17 — it took the white theme's place). The device's light/dark setting picks one unless the
+ * menu's theme card chooses (`lib/settings.ts` · `lib/theme.ts`). Fonts, sizes and weights are the same in both. A screen's CSS uses roles, never a colour.
  * An element with its own `data-theme` (the menu's theme samples) shows that theme inside it.
  */
 :root, [data-theme="green"] {
@@ -26,7 +26,7 @@
   --color-error: #965640;
   --color-error-soft: #fdf3ed;
   --color-error-border: #ecd2c7;
-  /* Roles added 2026-10-03 for the plan-check screen (user-approved list); the white theme below redefines them too. */
+  /* Roles added 2026-10-03 for the plan-check screen (user-approved list); the dark theme below redefines them too. */
   --color-text-secondary: #4a5d52;
   --color-faint: #66746b;
   --color-divider: #e8ede9;
@@ -92,56 +92,60 @@
   --color-credits-accent: #c9b98f;
 }
 
-/* White theme — the plan-check streaming mockup (`mockups/tripilot-plan-check-streaming.html`). */
-[data-theme="neutral"] {
-  --color-text: #1c1c1e;
-  --color-muted: #5f5f65;
-  --color-border: #dadad6;
-  --color-surface: #ffffff;
-  --color-background: #f2f2ef;
-  --color-paper: #ffffff;
-  --color-primary: #1c1c1e;
-  --color-primary-hover: #2c2c2e;
-  --color-on-primary: #ffffff;
-  --color-soft: #ececea;
-  --color-subtle: #f6f6f4;
-  --color-warning: #a35a00;
-  --color-warning-soft: #fff0d4;
-  --color-warning-border: #e9c27a;
-  --color-error: #c03a1a;
-  --color-error-soft: #fde5de;
-  --color-error-border: #f2b8a8;
-  --color-text-secondary: #48484d;
-  --color-faint: #707074;
-  --color-divider: #ebebe7;
-  --color-subtle-strong: #ececea;
-  --color-border-strong: #c2c2c6;
-  --color-success: #4f7a63;
-  --color-success-soft: #e8f1ec;
-  --color-adjusted: #3f6a8a;
-  --color-adjusted-soft: #e6eff6;
-  --color-adjusted-border: #bcd0df;
-  --color-selected: #2457d6;
-  --color-selected-soft: #e1e9ff;
-  --color-warning-surface: #fffaf0;
-  --color-inverse: #26262a;
-  --color-on-inverse: #ffffff;
-  --color-scrim: rgba(28, 28, 30, 0.45);
-  --color-now: #c8552a;
-  --color-now-soft: #fbe9e1;
-  --color-rail-stay: #a9c4b4;
-  --color-rail-cap: #5f8a72;
-  --color-rail-free: #d6d6d2;
-  --color-past-ink: #5f5f65;
-  --color-past-sub: #707074;
-  --color-past-bg: #ededeb;
-  --color-past-line: #c2c2c6;
-  --color-past-dot: #b6b6ba;
-  --color-past-pill: #e0e0de;
-  /* 승인된 브랜드·시험 분류·지도 스택 색은 두 테마에서 동일하게 유지합니다. */
-  --color-shadow-soft: #0002;
-  --color-shadow-strong: #0005;
-  --color-dialog-backdrop: rgb(0 0 0 / 28%);
+/*
+ * `[2026-10-17 사용자 결정 · ST4F-610]` 다크 — 화이트 테마 자리를 바꿨다. 지금 초록을 어둡게 맞춘 「다크 A」(바탕 #0f1a15 · 카드 #18251f · 본문 #e4ece7 ·
+ * 주색 #7cbd96 · 단추 글자 #0d1712). 글자 · 바탕 12쌍 대비 최소 5.98(WCAG 4.5 이상). 기기 설정(prefers-color-scheme)을 따르거나 메뉴의 테마 카드에서 고른다(`lib/theme.ts`).
+ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-text: #e4ece7;
+  --color-muted: #a7b7ad;
+  --color-border: #2e3f36;
+  --color-surface: #18251f;
+  --color-background: #0f1a15;
+  --color-paper: #121e18;
+  --color-primary: #7cbd96;
+  --color-primary-hover: #8fcaa6;
+  --color-on-primary: #0d1712;
+  --color-soft: #1f3a2c;
+  --color-subtle: #1c2a23;
+  --color-warning: #e3bd78;
+  --color-warning-soft: #2e2615;
+  --color-warning-border: #5a4a26;
+  --color-error: #f2a28c;
+  --color-error-soft: #351e18;
+  --color-error-border: #6a3a2e;
+  --color-text-secondary: #c3d1c8;
+  --color-faint: #93a49a;
+  --color-divider: #25342c;
+  --color-subtle-strong: #23332b;
+  --color-border-strong: #43574c;
+  --color-success: #7cc39a;
+  --color-success-soft: #1d3527;
+  --color-adjusted: #93bbde;
+  --color-adjusted-soft: #182a38;
+  --color-adjusted-border: #2f4a61;
+  --color-selected: #7cbd96;
+  --color-selected-soft: #244534;
+  --color-warning-surface: #262012;
+  --color-inverse: #e4ece7;
+  --color-on-inverse: #13201a;
+  --color-scrim: rgba(0, 0, 0, 0.6);
+  --color-now: #f08a5d;
+  --color-now-soft: #3a2218;
+  --color-rail-stay: #3f6f55;
+  --color-rail-cap: #7cbd96;
+  --color-rail-free: #2c3b33;
+  --color-past-ink: #a7b7ad;
+  --color-past-sub: #93a49a;
+  --color-past-bg: #1b2621;
+  --color-past-line: #43574c;
+  --color-past-dot: #4f6357;
+  --color-past-pill: #25322b;
+  --color-shadow-soft: #0006;
+  --color-shadow-strong: #000a;
+  --color-dialog-backdrop: rgb(0 0 0 / 55%);
+  /* 승인된 브랜드 색(구글 · 카카오 · 네이버 · 디스코드)과 지도 스택 색은 두 테마에서 같은 값입니다. */
   --color-social-surface: #ffffff;
   --color-kakao-text: #191919;
   --color-kakao-border: #d8dfdb;
@@ -149,27 +153,26 @@
   --color-naver: #03a94d;
   --color-discord: #5865f2;
   --color-map-stack: #202020;
-  --color-test-default-ink: #47565d;
-  --color-test-default-soft: #edf1f3;
-  --color-test-default-border: #cbd4d9;
-  --color-test-normal-ink: #235d42;
-  --color-test-normal-soft: #e8f3ec;
-  --color-test-normal-border: #c4ddce;
-  --color-test-time-ink: #795111;
-  --color-test-time-soft: #fff3d7;
-  --color-test-time-border: #ead7a9;
-  --color-test-hours-ink: #943f33;
-  --color-test-hours-soft: #fcece7;
-  --color-test-hours-border: #e9c8be;
-  --color-test-place-ink: #69498c;
-  --color-test-place-soft: #f1ebf8;
-  --color-test-place-border: #d8c9e8;
-  --color-test-mobility-ink: #285f89;
-  --color-test-mobility-soft: #e8f1fa;
-  --color-test-mobility-border: #bed4e7;
-  --color-test-input-ink: #226765;
-  --color-test-input-soft: #e6f3f1;
-  --color-test-input-border: #bcdcd7;
-  /* `[2026-10-15 ST4F-496]` 엔딩 크레딧의 머리글 · 쿠키 글자(어두운 `--color-inverse` 위의 금빛 — 목업 2026-10-08 C안) */
-  --color-credits-accent: #c9b98f;
+  --color-test-default-ink: #b8c4ca;
+  --color-test-default-soft: #1e262a;
+  --color-test-default-border: #3a474e;
+  --color-test-normal-ink: #8fd0ab;
+  --color-test-normal-soft: #183326;
+  --color-test-normal-border: #2f5a43;
+  --color-test-time-ink: #e3bf73;
+  --color-test-time-soft: #33280f;
+  --color-test-time-border: #5c4a20;
+  --color-test-hours-ink: #f0a593;
+  --color-test-hours-soft: #3a1f19;
+  --color-test-hours-border: #6b3b30;
+  --color-test-place-ink: #c7a9ea;
+  --color-test-place-soft: #2a2138;
+  --color-test-place-border: #4d3d66;
+  --color-test-mobility-ink: #93bfe6;
+  --color-test-mobility-soft: #172a3b;
+  --color-test-mobility-border: #2e4c66;
+  --color-test-input-ink: #85d0c9;
+  --color-test-input-soft: #15302d;
+  --color-test-input-border: #2b5652;
+  --color-credits-accent: #7a6326;
 }
