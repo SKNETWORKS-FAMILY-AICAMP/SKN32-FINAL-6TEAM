@@ -165,7 +165,7 @@ test("목록을 읽지 못하면(서버 500) 첫 화면 카드 안에만 오류�
   const server = mockServer(request);
   await server.scenario({ fail: "trips" });
   await page.goto("/");
-  await expect(card(page).getByRole("alert")).toContainText("서버 오류");
+  await expect(card(page).getByRole("alert")).toContainText("요청을 처리하지 못했어요");   // `[2026-10-17 ST4F-611]` 서버의 개발 문장(「서버 오류」)은 그대로 보이지 않는다 — error-text.ts
   await expect(card(page).getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await expect(page.locator("#intro-title")).toBeVisible();
 
@@ -178,7 +178,7 @@ test("목록을 읽지 못하면(서버 500) 첫 화면 카드 안에만 오류�
   await server.scenario({ fail: "trips" });
   await page.goto("/trips");
   await expect(page.getByRole("heading", { name: "여행 정보를 불러오지 못했어요" })).toBeVisible();
-  await expect(page.locator("#main-content").getByRole("alert")).toHaveText("서버 오류");
+  await expect(page.locator("#main-content").getByRole("alert")).toHaveText("요청을 처리하지 못했어요. 잠시 뒤 다시 해 주세요. (internal_error)");   // `[2026-10-17 ST4F-611]` 서버의 개발 문장(「서버 오류」)은 그대로 보이지 않는다 — error-text.ts
   await expect(page.getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await server.scenario({ fail: "" });
   await page.getByRole("button", { name: "다시 불러오기" }).click();

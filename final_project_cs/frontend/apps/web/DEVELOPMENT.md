@@ -746,3 +746,11 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **약관 판 2026-10-17.1**(`terms-content.ts` · 서버 `config/guardrails.yaml` `consent.terms_version` · mock 서버 같이): 이름 + 약관 본문의 「마이페이지」 → 「설정 › 약관 · 동의」 · 「설정 › 알림 받는 곳」(가지 `feat/terms-mypage-wording` `da8dcd53` 의 변경 — 그 커밋의 판 2026-10-13.1 은 쓰지 않았다) + **서비스 개선 선택 동의를 서버에 보낸다**(`consent-model.ts` `SERVER_PENDING_CONSENTS` 비움 — 서버 `consents.py` `CODES` 가 여섯을 받는다). 시행일 2026-10-17. 옛 판에 동의한 사람은 다시 동의한다. ★웹만 먼저 배포하면 서버가 판이 다르다고 거절하므로 **서버와 같이 배포**.
 - 시험: 이름 기대값(13파일) · 동의 여섯(`consent.spec` 의 「서비스 개선 동의 켜고 철회」 되돌림 · `consent-sync.test` 등 4파일) · 테마(`menu.spec` — 기기 설정 따르기 · 기기 다크 전환 · 다크 고정 · 옛 화이트 저장값, `registration-panels.spec` 그린 · 다크, `tokens.test`).
 - 검증 · 남은 일: [리포트](../../../wiki/records/reports/2026-10-17_2020_구구루트_이름_아이콘_다크모드_약관판_ST4F-610.md).
+
+## 2026-10-17 (이어서) — 서버 거절 문장을 웹 문장으로 (ST4F-611 · 문구 대조표 113)
+
+`[2026-10-17 사용자 승인]` 웹 화면 문구 정리(ST4F-611)의 첫 묶음. 문구 대조표(조사 2,069개 문자열 · 고칠 것 119행)는 사용자가 행별로 확인 중이고, 그중 동작이 바뀌는 행에서 113만 먼저 진행한다.
+- **원인**: `lib/live/client.ts` `refusal` 이 서버 `error.message` 를 그대로 보였다 — 해라체 개발 문장(「로그인을 너무 자주 시도했다 — 잠시 뒤에 다시 한다」), 영어(「resource not found」), 영어 화면에도 한국어.
+- **고침**(`lib/live/error-text.ts`): 코드마다 웹 문장(한국어 · 영어) 약 60개. 한국어 화면에서 서버 문장이 이미 존댓말이면 그대로(숫자 · 이름이 든 안내 — 「키가 10개예요」 「여행을 1개까지」), 아니면 웹 문장. 영어 화면은 늘 웹 문장. 표에 없는 코드는 「요청을 처리하지 못했어요. 잠시 뒤 다시 해 주세요. (코드)」. 한도(`usage_limit` · `service_daily_cap` …)의 다시 열리는 시각 안내는 그대로 붙는다. 서버 문장은 `detail.message` 에 남는다.
+- 협의: [화면별 연동 문서](../../../wiki/external/web-screen-api.md) 협의 표 「거절 문장」 — 거절 코드 목록을 계약에 두기 · 고객용 `message` 말투 · 영어 문장.
+- 시험: 새 단위 시험 `error-text.test.ts`(존댓말 유지 · 개발 문장 바꿈 · 영어 · 모르는 코드 · 모든 코드 두 언어), 기대값을 바꾼 것 — 단위 3(`client.test` · `gateway.test` · 공지 `client.test`), 브라우저 4파일(`flow` · `move-mode` · `progress` · `trip-list` — mock 서버의 개발 문장 「서버 오류」 · 「…너무 많다」).

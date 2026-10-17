@@ -310,7 +310,7 @@ test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화�
   await checkPlan(page);
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
   await page.getByRole("button", { name: "여행 등록" }).click();
-  const alert = page.getByRole("alert").filter({ hasText: "서버 오류" });
+  const alert = page.getByRole("alert").filter({ hasText: "요청을 처리하지 못했어요" });   // `[2026-10-17 ST4F-611]` 서버의 개발 문장(「서버 오류」)은 그대로 보이지 않는다 — error-text.ts
   await expect(alert).toBeInViewport();
   await expect(page).toHaveURL(/\/intakes\//);
 });

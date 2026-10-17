@@ -25,6 +25,6 @@ describe("public notices", () => {
   });
   it("does not turn a failed read into an empty notice list", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: "unavailable", message: "점검 중" } }), { status: 503 })));
-    await expect(serviceStatus("ko")).rejects.toThrow("점검 중");
+    await expect(serviceStatus("ko")).rejects.toMatchObject({ code: "unavailable" });   // `[2026-10-17 ST4F-611]` 개발 문장 「점검 중」은 그대로 보이지 않는다(error-text.ts)
   });
 });
