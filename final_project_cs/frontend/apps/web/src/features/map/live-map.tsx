@@ -21,6 +21,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
   const surface = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
+  const viewRef = useRef<MapView | null>(null);
   const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me, stays, onZoom, onInteractionChange });
   const refreshLayout = useCallback(() => {
     controller.current?.relayout?.();
@@ -28,7 +29,24 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
     if (!node) return;
     const occupied = [...node.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls]")]
       .filter((item) => getComputedStyle(item).visibility !== "hidden").map((item) => item.getBoundingClientRect());
-    node.querySelectorAll<HTMLElement>("[data-route-label]").forEach((label) => {
+    const frame = node.getBoundingClientRect();
+    const currentView = viewRef.current;
+    if (!currentView || !frame.width || !frame.height) return;
+    const scaleX = currentView.width / frame.width, scaleY = currentView.height / frame.height;
+    const labelNodes = [...node.querySelectorAll<HTMLElement>("[data-route-label]")];
+    const sizes = Object.fromEntries(labelNodes.map((label) => {
+      const box = label.getBoundingClientRect();
+      return [label.dataset.routeLabel!, { width: box.width * scaleX, height: box.height * scaleY }];
+    }));
+    const obstacles = occupied.map((box) => ({ left: (box.left-frame.left)*scaleX, right: (box.right-frame.left)*scaleX,
+      top: (box.top-frame.top)*scaleY, bottom: (box.bottom-frame.top)*scaleY }));
+    const positions = routeLabels(currentView, latest.current.lines ?? [], latest.current.points,
+      latest.current.topInset, latest.current.bottomInset, obstacles, sizes);
+    labelNodes.forEach((label) => {
+      const spot = positions.find((position) => position.id === label.dataset.routeLabel);
+      if (!spot) { label.style.visibility = "hidden"; return; }
+      label.style.left = `${spot.x}px`;
+      label.style.top = `${spot.y}px`;
       const box = label.getBoundingClientRect();
       const blocked = occupied.some((other) => Math.min(box.right,other.right)>Math.max(box.left,other.left)-4 && Math.min(box.bottom,other.bottom)>Math.max(box.top,other.top)-4);
       label.style.visibility = blocked ? "hidden" : "";
@@ -91,6 +109,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       onSelectLine: (id) => latest.current.onSelectLine?.(id),
       onZoom: (zoom) => latest.current.onZoom?.(zoom),          // [2026-10-05] the screen above asks for the detailed route lines once this says the map is zoomed in
       onView: (next) => {
+        viewRef.current = next;
         pendingView = next;
         if (viewScheduled) return;
         viewScheduled = true;

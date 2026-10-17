@@ -26,3 +26,9 @@ Team backend full non-live tests, Docker build and ruff passed on aac392393. Adm
 ## Subsequent operational web verification
 
 After the isolated checks, the producer separately deployed the customer-web v3 candidate using preserved prior image/settings. Producer reports healthy startup, 30-second observation, zero restarts, four API/worker/DB/admin container IDs unchanged, no SQL. Operational candidate lint/types/unit 801/801/build passed; this differs from the integrated web unit scope 802/802. The producer verified the existing test intake: selected hotel summary displays lodging, first-day four route lines remain, map height 306px. The receiving session visually inspected the [final operational screenshot](../evidence/2026-10-17_intake-map-routes/final-v3-hotel-caption.jpg); this is producer live-screen evidence, not an independently repeated response test by the integration session.
+
+## Route-label collision correction
+
+Full web CI had one deterministic map-status-bar failure, repeated on the failed-shard retry and in isolation. Measured DOM bounds showed a route name overlapping an offscreen-navigation chip by about 3 pixels. Test-only zoom/pan attempts did not resolve it; final browser assertions and setup were restored unchanged. Names now try additional positions along the actual clipped route using measured pin, chip and control bounds and label size, transformed into map-local coordinates. With no clear position they remain hidden. A regression covers both an available clear section and a fully blocked route.
+
+Final isolated checks: eslint/types/build, unit 803/803, four related browser files 37/37, no skips/flaky results. Backend and administrator GitHub checks passed on a70a2ee4; their source is unchanged. Personal CI remains manually disabled. Full new web CI follows publication.
