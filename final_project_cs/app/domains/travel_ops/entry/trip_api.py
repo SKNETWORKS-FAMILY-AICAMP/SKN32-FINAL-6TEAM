@@ -264,6 +264,7 @@ class IntakeRestoreIn(IntakeRevisionIn):
 class IntakeAutofixIn(IntakeRevisionIn):
     """전체 자동 추천 — `dry_run` 이면 **저장하지 않고** 바뀔 모습만(`view.preview`) 돌려준다. `[2026-10-03 ui 세션 요청서 3번]`"""
     dry_run: bool = False
+    item_id: str | None = Field(default=None, pattern=r"^\d+-\d+$", max_length=80)
 
 
 class RecoveryPlanIn(BaseModel):
@@ -1412,7 +1413,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         from starlette.responses import StreamingResponse
 
         from app.domains.travel_ops.modules.live_progress import op_stream
-        from app.domains.travel_ops.components.intake.pipeline import STAGES as INTAKE_STAGES
+        from app.domains.travel_ops.components.intake.pipeline import STAGES as INTAKE_STAGES, public_status
 
         tenant, customer = who
 
@@ -1425,6 +1426,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             if row is None:
                 return None
             status, stage, revision, fatal_code, quiet = row
+            status = public_status(status, stage)
             return {"status": status, "stage": stage, "stage_label": INTAKE_STAGES.get(stage, stage),
                     "revision": revision, "fatal_code": fatal_code, "quiet_seconds": round(float(quiet), 1)}
 
@@ -1594,7 +1596,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 done = pipeline.autofix(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                         revision=request.revision, tour=_lazy("place", place_factory),
-                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run,
+                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run, item_id=request.item_id,
                                         dining=_dining_lookup())
                 # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
                 return {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}

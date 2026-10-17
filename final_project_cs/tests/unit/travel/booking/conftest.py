@@ -27,6 +27,15 @@ GATE: dict[str, dict[str, str]] = {
     "test_choose_recheck.py": {
         "test_same_changed_gone_and_unreadable": "고를 때 숙소 가격 재확인 — 같음 · 바뀜 · 객실 없음 · 확인 못 함",
     },
+    "test_transit_module.py": {                                   # `[2026-10-14]` 예약 모듈 — 기차 · 버스(TAGO)
+        "test_the_rules_read_the_transport_mode_and_station_names": "규칙이 교통수단(기차 · 버스 · 비행기) · 역 · 등급을 읽음",
+        "test_the_adapter_uses_the_2026_03_addresses_and_normalises_rows": "TAGO 어댑터 — 2026-03 주소 · 응답 정리",
+        "test_train_search_turns_names_into_stations_and_sorts_by_departure": "역 이름 → 역 id · 운행 출발 시각순",
+        "test_bus_search_asks_every_matching_terminal_pair_express_first_and_suburbs_only_when_needed": "터미널 조합 조회 · 고속 먼저 · 시외는 없을 때만",
+        "test_a_train_sentence_is_answered_from_tago_by_time_band_with_booking_links": "기차 답 — 시간대별 운행 · 요금 · 예매 링크",
+        "test_change_on_a_train_item_offers_same_grade_runs_near_the_original_departure_without_touching_the_plan": "기차 항목 「바꿔 줘」 → 같은 등급 · 앞뒤 3시간 운행을 보류 제안으로",
+        "test_choosing_a_train_run_moves_both_times_and_rechecks_the_fare": "운행 고르기 → 출발 · 도착 시각 교체 · 요금 재확인",
+    },
     "test_lodging_team.py": {
         "test_search_calls_the_model_once_and_answers_from_tool_values": "숙소 검색 — 모델은 해석 한 번, 답은 도구 값으로",
         "test_missing_values_are_asked_back_without_any_search": "빠진 값(날짜 · 인원 · 지역)을 검색 없이 되묻기",
@@ -40,9 +49,9 @@ GATE: dict[str, dict[str, str]] = {
         "test_a_booked_lodging_is_never_changed_and_nothing_is_searched": "예약한 숙소는 바꾸지 않음",
     },
     "test_flight_team.py": {
-        "test_search_calls_the_model_once_and_both_sources_once": "항공 검색 — 모델 한 번 · 소스마다 한 번",
+        "test_search_calls_the_model_once_and_both_sources_once": "항공 검색 — 규칙 해석(모델 0번) · 소스마다 한 번",
         "test_missing_values_are_asked_back_without_any_search": "빠진 값(공항 · 날짜 · 인원)을 검색 없이 되묻기",
-        "test_a_bad_or_failed_interpretation_is_not_repaired": "모델 해석이 깨지면 지어내지 않고 사람에게",
+        "test_what_the_rules_cannot_read_is_asked_back_never_invented": "규칙이 못 읽은 칸은 지어내지 않고 되묻기(2026-10-14 예약 모듈)",
         "test_one_source_is_enough_and_both_missing_is_unknown": "소스 하나로도 답 · 다 없으면 모름",
         "test_a_time_of_day_the_customer_said_keeps_only_those_flights": "말한 시간대만",
         "test_only_direct_flights_unless_the_traveller_says_connecting_is_fine": "직항 우선(경유는 말할 때만)",

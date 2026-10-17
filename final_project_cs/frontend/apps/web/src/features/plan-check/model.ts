@@ -60,6 +60,9 @@ export interface PlanItem {
   noPlace: boolean;
   /** `[2026-10-07]` What kind of stop the server classes it (`activity` · `dining`), for the tag under the map when its pin is picked — null when it does not say. */
   kind?: string | null;
+  /** Place category for the icon; a hotel breakfast remains a dining stop. */
+  displayKind?: string | null;
+  lodgingGroup?: { id: string; members: string[]; place: string | null };
   /** Null when the place is not settled — it shows as 「위치 미정」 instead of a pin. */
   coordinates: Coordinates | null;
   checks: CheckRow[];

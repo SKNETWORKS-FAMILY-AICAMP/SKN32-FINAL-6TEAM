@@ -73,7 +73,8 @@ class _Heartbeat:
         while not self._stop.wait(self._every):
             try:
                 with self._connect() as conn, conn.transaction(), conn.cursor() as cur:
-                    cur.execute("UPDATE trip_intakes SET updated_at=now() WHERE tenant_id=%s AND intake_id=%s AND status='reading'",
+                    cur.execute("UPDATE trip_intakes SET updated_at=now() WHERE tenant_id=%s AND intake_id=%s "
+                                "AND (status='reading' OR (status='review' AND stage='checking'))",
                                 (self._tenant, self._intake))
             except Exception:                                  # noqa: BLE001 — 표시 한 번을 못 남겨도 읽기는 계속한다
                 log.warning("intake heartbeat failed intake=%s", self._intake, exc_info=True)
@@ -225,11 +226,15 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                                      claims=_claims(conn, tenant_id, intake_id, 1), force=True, on_event=push)
         except Exception:                                  # noqa: BLE001 — 검사 장애가 읽기를 지우지 않는다
             log.warning("intake review failed intake=%s", intake_id, exc_info=True)
+        filling = reader["prefill"] == "on" and reader["mode"] == "on"
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
-            cur.execute("UPDATE trip_intakes SET status='review', stage='review', updated_at=now() "
-                        "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", (tenant_id, intake_id))
-        if reader["prefill"] == "on" and reader["mode"] == "on":
+            cur.execute("UPDATE trip_intakes SET status='review', stage=%s, updated_at=now() "
+                        "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", ("checking" if filling else "review", tenant_id, intake_id))
+        if filling:
             _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+            with connect() as conn, conn.transaction(), conn.cursor() as cur:
+                cur.execute("UPDATE trip_intakes SET stage='review', updated_at=now() "
+                            "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
         _dining_shadow(connect, tenant_id, intake_id, sources)
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
@@ -319,11 +324,16 @@ def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("UPDATE trip_intakes SET status='fatal', stage='fatal', fatal_code='stalled', "
                     "fatal_detail='읽던 일이 멈춰 끝내지 못했다 — 다시 올려 주세요', updated_at=now() "
-                    "WHERE tenant_id=%s AND intake_id=%s AND status='reading' "
+                    "WHERE tenant_id=%s AND intake_id=%s AND (status='reading' OR (status='review' AND stage='checking')) "
                     "AND now() - updated_at > make_interval(secs => %s)", (tenant_id, intake_id, seconds))
         if cur.rowcount:
             cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 AND method <> 'customer'",
                         (tenant_id, intake_id))
+
+
+def public_status(status: str, stage: str) -> str:
+    """조회와 실시간 진행 모두 먼저 채우기가 끝난 뒤에만 완료를 알린다."""
+    return "reading" if status == "review" and stage == "checking" else status
 
 
 def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[str, Any] | None:
@@ -339,6 +349,8 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
         if row is None:
             return None
         status, stage, revision, fatal_code, fatal_detail, trip_id, received_at, reopen_trip, reopen_version, frozen = row
+        # 내부 수정은 review 상태가 필요하다. 먼저 채우는 동안 고객에게 완료를 알리지 않는다.
+        status = public_status(status, stage)
         cur.execute("SELECT metadata FROM intake_test_scenarios WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
                     (tenant_id, intake_id, customer_id))
         scenario_row = cur.fetchone()
@@ -544,6 +556,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             if via:
                 evidence = {**evidence, "via": via}            # 전체 자동 추천이 낸 값이면 그렇게 적는다(고객이 고른 값과 구별)
             rows.append((source_id if field_name.startswith("items[") else None, field_name, value, evidence, note))
+        if any(field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None
+               for _, field, value, _, _ in rows):
+            rows = _link_stay_places(review_module.load(conn, tenant_id, intake_id, current), rows)
         # 직접 고른 장소도 자동 추천과 마찬가지로 이동시간을 반영한다. 저장 전에
         # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
@@ -569,6 +584,8 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 raise IntakeConflict(exc.code, str(exc)) from exc
             for change in adjusted:
                 evidence = {"source": "customer", "via": "direct_schedule", "basis": change["basis"]}
+                if change.get("derived_stay_end") is True:
+                    evidence["derived_stay_end"] = True
                 note = "장소 변경에 따라 앞뒤 이동시간을 반영해 재배치" + ("(어림 이동시간)" if change["basis"] == "estimate" else "")
                 rows.append((change["source_id"], change["field"], change["value"], evidence, note))
         new = current + 1
@@ -620,8 +637,14 @@ def restore(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
             raise IntakeConflict("restore_revision_invalid", "복원할 이전 값이 없어요")
         if item is not None:
             source_id, index = item
+            from . import lodging_context
+            keys = {(str(source_id), index)}
+            for snapshot in (old_review, review_module.load(conn, tenant_id, intake_id, current) or {}):
+                target = next((x for x in snapshot.get("items", []) if (str(x["source_id"]), x["index"]) == (str(source_id), index)), None)
+                if target:
+                    keys.update((str(x["source_id"]), x["index"]) for x in lodging_context.group_for(snapshot["items"], target))
             def selected(claim):
-                return str(claim["source_id"]) == str(source_id) and claim["field"].startswith(f"items[{index}].")
+                return claim["field"].startswith("items[") and (str(claim["source_id"]), _item_no(claim["field"])) in keys
             old_item = [claim for claim in before if selected(claim)]
             if not old_item or not any(selected(claim) for claim in now):
                 raise IntakeConflict("restore_item_invalid", "복원할 일정을 현재 판과 이전 판에서 확인하지 못했어요")
@@ -644,6 +667,46 @@ def restore(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
         if found is None:
             raise IntakeConflict("schedule_check_failed", "되돌린 후 검사를 끝내지 못해 저장하지 않았어요", reason=error)
         return view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
+
+
+def _link_stay_places(snapshot, rows):
+    """검증된 장소 선택을 연결된 호텔·조식에 함께 싣는다. 보호 항목은 우회하지 않는다."""
+    from . import lodging_context as context
+    items = (snapshot or {}).get("items", [])
+    proposed = {(str(sid), _item_no(field)): (value, evidence, note)
+                for sid, field, value, evidence, note in rows if field.endswith(".place")}
+    out = list(rows)
+    for members in context.groups(items):
+        if len(members) < 2:
+            continue
+        choices = [proposed[(str(x["source_id"]), x["index"])] for x in members
+                   if (str(x["source_id"]), x["index"]) in proposed]
+        located = [c for c in choices if isinstance(c[0], dict) and c[0].get("latitude") is not None]
+        if not located:
+            continue
+        value, evidence, note = located[0]
+        if any(not context.same_place(value, c[0]) for c in located[1:]):
+            raise IntakeConflict("conflicting_stays", "같은 숙소에 서로 다른 장소를 함께 지정할 수 없어요")
+        if len(located) != len(choices):
+            raise IntakeConflict("conflicting_stays", "공통 숙소 선택과 장소 비우기를 함께 할 수 없어요")
+        for member in members:
+            if context.protected(member):
+                if not context.same_place(value, member.get("place")):
+                    raise IntakeConflict("item_locked" if member.get("locked") else "item_booked",
+                                         "연결된 고정·예약 숙소와 달라서 저장하지 않았어요")
+                continue
+            key = (str(member["source_id"]), member["index"])
+            parts = member.get("parts") or member.get("_lodging_parts")
+            if key in proposed and parts:
+                out = [(sid, field, val, {**ev, "lodging_parts": parts}, nt)
+                       if (str(sid), _item_no(field)) == key and field.endswith(".place") else (sid, field, val, ev, nt)
+                       for sid, field, val, ev, nt in out]
+            if key not in proposed and not context.same_place(value, member.get("place")):
+                linked = context.as_place(value, member)
+                linked = {k: v for k, v in linked.items() if k not in ("basis", "content_type_id", "ref")}
+                out.append((key[0], f"items[{key[1]}].place", linked, {**evidence, "linked_stay": members[0]["id"], "lodging_parts": parts},
+                            note or "여행 공통 숙소에 연결"))
+    return out
 
 
 def _protect_restore(now, before, sources) -> None:
@@ -742,7 +805,7 @@ class _DryRunRollback(Exception):
 
 
 def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, tour: Any = None,
-            kakao: Any = None, dry_run: bool = False, dining: Any = None) -> dict[str, Any]:
+            kakao: Any = None, dry_run: bool = False, dining: Any = None, item_id: str | None = None) -> dict[str, Any]:
     """**전체 자동 추천** — 확인이 필요한 일정을 검증한 대체 일정(장소 · 시각)으로 한 번에 바꾼다(`autofix.py`).
     바꿀 것이 있으면 `edits` 와 같은 길로 **새 판** 하나가 된다. 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
 
@@ -752,7 +815,9 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
     from . import autofix as autofix_module
 
     _, found = current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)
-    got = autofix_module.plan(conn, tenant_id=tenant_id, review=found, kakao=kakao)
+    if item_id is not None and not any(item["id"] == item_id for item in found["items"]):
+        raise LookupError("intake item not found")
+    got = autofix_module.plan(conn, tenant_id=tenant_id, review=found, kakao=kakao, item_id=item_id)
     edits = [{"source_id": c["source_id"], "field": f"items[{c['index']}].{e['field']}", "value": e["value"]}
              for c in got["changes"] for e in c["edits"]]
     new = revision
@@ -1405,6 +1470,24 @@ def _coords(found) -> tuple[float, float] | None:
 _AGENT_MODE = {"taxi": "taxi", "subway": "subway", "bus": "bus", "walk": "walk", "transit": "subway"}
 
 
+def _agent_booking_rows(read: Any, item: Any, index: int) -> list[dict[str, Any]]:
+    """원문에서 같은 장소에 붙은 예약 값만 보존한다. 여러 장소에 걸친 인용은 추측하지 않는다."""
+    matches = [i for i, original in enumerate(read.items)
+               if original.title is not None and original.title.line == item.title.line
+               and max(original.title.start, item.title.start) < min(original.title.end, item.title.end)]
+    if len(matches) != 1:
+        return []
+    prefix = f"items[{matches[0]}]"
+    rows = []
+    for claim in read.claims:
+        if claim.field not in (f"{prefix}.booked", f"{prefix}.booking_no"):
+            continue
+        row = claim.as_dict()
+        row["field"] = f"items[{index}]" + claim.field[len(prefix):]
+        rows.append(row)
+    return rows
+
+
 def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any, bool]:
     """읽기 에이전트 결과 → (값 줄, 항목, 날짜, 첫날 묻기). `[2026-10-16]`
 
@@ -1446,6 +1529,10 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
 
     for it in out.items:
         index = len(items)
+        booking_rows = _agent_booking_rows(read, it, index)
+        rows.extend(booking_rows)
+        booked = next((r["value"] for r in booking_rows if r["field"].endswith(".booked")),
+                      True if any(r["field"].endswith(".booking_no") for r in booking_rows) else None)
         rows.append({"field": f"items[{index}].title", "value": it.title.text, "method": "llm_agent",
                      "evidence": {"source": "text", **it.title.as_dict(), "segment": segment(it)}, "needs_review": False,
                      "note": "읽기 에이전트가 가리킨 원문 조각"})
@@ -1466,7 +1553,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
         if it.date_guessed:
             guessed_dates.add(index)
         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
-                      "meal": it.kind == "dining", "booked": None, "segment": segment(it), "start": it.start})
+                      "meal": it.kind == "dining", "booked": booked, "segment": segment(it), "start": it.start})
     agent_count = len(items)
 
     # 규칙이 읽은 시각 있는 줄 중 에이전트가 빠뜨린 줄
@@ -1729,7 +1816,8 @@ def _fatal(connect, tenant_id: str, intake_id: UUID, code: str, detail: str) -> 
         # 읽는 중인 접수만 실패로 만든다(이미 확인 화면 · 등록 · 실패인 접수는 그대로). 읽다 만 값은 남기지 않는다 — 못 읽은 접수의 확인 화면에
         # 반쯤 읽은 일정이 보이지 않게(전에는 값을 끝에 한꺼번에 적어 이 경우가 없었다)
         cur.execute("UPDATE trip_intakes SET status='fatal', stage='fatal', fatal_code=%s, fatal_detail=%s, "
-                    "updated_at=now() WHERE tenant_id=%s AND intake_id=%s AND status='reading'", (code, detail, tenant_id, intake_id))
+                    "updated_at=now() WHERE tenant_id=%s AND intake_id=%s "
+                    "AND (status='reading' OR (status='review' AND stage='checking'))", (code, detail, tenant_id, intake_id))
         if cur.rowcount:
             cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 AND method <> 'customer'",
                         (tenant_id, intake_id))

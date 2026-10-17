@@ -105,4 +105,4 @@ async def test_when_the_budget_runs_out_first_a_candidate_not_checked_is_never_c
     assert len(tools.calls) <= 4
     assert not result.action_proposals                              # 점검을 통과한 곳이 없다 — 고르지 않는다
     assert result.outcome == "escalated" and result.next_action is NextAction.ESCALATE       # 예외가 아니라 「못 풀었다」
-    assert any("unresolved" in warning for warning in result.warnings)
+    assert result.failure_code == "itinerary_source_failed"  # 검사 예산 소진은 대안 부재와 다르다

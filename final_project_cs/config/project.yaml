@@ -93,11 +93,12 @@ teams:
   hooks:
   - lodging_ledger
   - lodging_alternatives
-# ★2026-10-08 항공 팀 — 항공편 찾기 · 일정 항공편 항목(마이리얼트립 · Ignav · 구글 항공권, 예약은 링크로). 본체는 instances/flight/
+# ★2026-10-08 항공 팀 — 항공편 찾기 · 일정 항공편 항목(마이리얼트립 · Ignav · 구글 항공권, 예약은 링크로). 본체는 instances/booking/
+#   `[2026-10-14 팀장 결정]` 규칙 기반 **예약 모듈**(LLM 없음, 기차 · 버스로 확장) — 폴더 · 클래스만 booking, team_id · 능력 이름은 아직 flight
 #   옛 「등록만」 두 팀(`instances/locked/`)은 등록에서 빠졌고 코드는 그대로 둔다.
 - team_id: flight
   active: true
-  implementation_ref: app.domains.travel_ops.instances.flight:FlightTeam
+  implementation_ref: app.domains.travel_ops.instances.booking:BookingTeam
   required: false
   capabilities:
   - flight.assist

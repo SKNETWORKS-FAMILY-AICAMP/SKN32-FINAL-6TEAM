@@ -23,8 +23,11 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import UTC, date, datetime
+import logging
 import time
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 #: `[2026-10-12]` 소스 하나를 기다리는 최대 시간(초). 우리가 고른 값(사용자와 정함 — 「소스별 제한 두기」).
 #: 근거(playdata): Ignav 편도 10개 15.9~25.2초(10-09) · 18.7초(10-11 16:57), 마이리얼트립 국내선 9.49초(10-07) · 국내선 왕복 약 15초(10-08),
@@ -47,14 +50,18 @@ CITY = {"ICN": "SEL", "GMP": "SEL", "NRT": "TYO", "HND": "TYO", "KIX": "OSA", "I
 
 
 def _key(flight: dict[str, Any]) -> tuple[Any, ...] | None:
-    """같은 편인지 가르는 열쇠 — 항공사 코드 · 첫 다리 출발 공항 · 날짜 · 시각 · 마지막 다리 도착 공항. 하나라도 없으면 묶지 않는다."""
+    """같은 편인지 가르는 열쇠 — 항공사 코드 + **다리마다** 출발 공항 · 도착 공항 · 출발 날짜 · 시각. 하나라도 없으면 묶지 않는다.
+
+    `[2026-10-15 검수 · GPT 검토 #1]` 전에는 첫 다리 출발 · 마지막 다리 도착 · 다리 수만 봐서, 가는 편이 같고 **오는 편이 다른** 왕복 두 상품이
+    한 후보로 묶였다(표시 일정은 한 상품, 최저가 · 링크는 다른 상품). 편명은 소스마다 있거나 없어 열쇠에 넣지 않는다(묶일 때 빌려 온다)."""
     legs = flight.get("legs") or []
     if not legs:
         return None
-    first, last = legs[0], legs[-1]
-    key = (str(flight.get("airline_code") or "").upper(), first.get("origin"), first.get("departDate"),
-           first.get("departTime"), last.get("destination"), len(legs))
-    return key if all(key[:5]) else None
+    parts = tuple((leg.get("origin"), leg.get("destination"), leg.get("departDate"), leg.get("departTime")) for leg in legs)
+    airline = str(flight.get("airline_code") or "").upper()
+    if not airline or not all(all(part) for part in parts):
+        return None
+    return (airline, parts)
 
 
 def _offer(flight: dict[str, Any], source: str) -> dict[str, Any]:
@@ -190,7 +197,18 @@ def search_flights(travel: Any, *, origin: str, destination: str, depart_date: s
     futures = {name: pool.submit(timed, name, adapter) for name, adapter in calls.items()}
     done, _ = wait(list(futures.values()), timeout=SOURCE_WAIT_SECONDS)
     pool.shutdown(wait=False, cancel_futures=True)   # 늦은 소스는 기다리지 않는다
-    got_by_name = {name: future.result() for name, future in futures.items() if future in done}
+    # `[2026-10-15 검수 · GPT 검토 #14]` 한 소스의 예외가 다른 소스 결과까지 버리지 않게 — 그 소스만 「조회 실패」(예외 종류만 남긴다, 본문은 안 남김)
+    got_by_name: dict[str, Any] = {}
+    broken: dict[str, str] = {}
+    for name, future in futures.items():
+        if future not in done:
+            continue
+        error = future.exception()
+        if error is not None:
+            broken[name] = type(error).__name__
+            logger.warning("booking flight source raised source=%s error=%s", name, broken[name])
+            continue
+        got_by_name[name] = future.result()
     late = {name for name, future in futures.items() if future not in done}
     for name in SLOTS:
         if name == "ignav" and return_date:
@@ -203,6 +221,8 @@ def search_flights(travel: Any, *, origin: str, destination: str, depart_date: s
             continue
         got = got_by_name.get(name)
         sources[name] = _status(got, absent=adapters[name] is None)
+        if name in broken:
+            sources[name] = {"status": "failed", "error": broken[name]}
         raw[name] = got if sources[name]["status"] == "ok" else None
     options = merge([(name, (raw[name] or {}).get("flights") or []) for name in SLOTS])
     links = elsewhere(origin=origin, destination=destination, depart_date=date.fromisoformat(depart_date),

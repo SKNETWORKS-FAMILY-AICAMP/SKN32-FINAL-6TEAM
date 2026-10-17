@@ -117,7 +117,24 @@ def test_check_gaps_are_only_blanks_never_the_customers_own_places_times_or_tigh
     out = prefill.check_gaps(review, trip={"party_size": 2})
     assert [(g.kind, g.where["item"], g.owner) for g in out] == [
         ("meal_place", "a", "dining_team"), ("booked_place_name", "d", "ask_customer"), ("place_not_found", "e", "ask_customer"),
-        ("lodging_name", "f", "ask_customer")]                                  # 숙소는 고객만 아는 값 — 고르지 않고 묻는다
+        ("lodging_place", "f", "lodging_team")]
+
+
+def test_unset_hotel_routes_to_recommendation_but_booked_hotel_still_asks():
+    hotel = {"id": "h", "title": "호텔 조식", "kind": "dining", "place_state": "needs_choice"}
+    booked = {**hotel, "id": "b", "booked": True, "place_state": "needs_name"}
+    locked = {**hotel, "id": "l", "locked": True}
+    found = prefill.check_gaps({"items": [hotel, booked, locked]})
+    assert [(g.kind, g.owner) for g in found] == [("lodging_place", "lodging_team"), ("booked_place_name", "ask_customer")]
+    assert gaps.CHANGES[found[0].owner] == "place"
+
+
+def test_model_hotel_gap_uses_stay_owner_and_does_not_repeat_missing_name_question():
+    claim = {"field": "reading.agent", "source_id": "s", "value": {"used": True,
+             "gaps": [{"kind": "meal_place", "quote": "호텔 조식"}], "missing": ["lodging_name"]}}
+    hotel = {"id": "h", "source_id": "s", "title": "호텔 조식", "kind": "dining", "place_state": "needs_choice"}
+    assert [(g.kind, g.owner) for g in prefill.model_gaps([claim], [hotel])] == [("lodging_place", "lodging_team")]
+    assert prefill.model_gaps([claim], [{**hotel, "place_state": "found", "place": {"category": "숙소 안 식사"}}]) == []
 
 
 def test_planner_fills_one_slot_at_a_time_and_only_a_few_per_intake():

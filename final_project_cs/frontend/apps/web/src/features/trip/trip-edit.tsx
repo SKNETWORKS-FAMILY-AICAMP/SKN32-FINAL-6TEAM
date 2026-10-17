@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { JourneyShell } from "@/components/layout/journey-shell";
 import { Button, QueryState } from "@/components/ui";
+import { useIntakeRoutes } from "@/features/map/use-intake-routes";
 import { useRouteDetail } from "@/features/map/use-route-detail";
 import { readingOf } from "@/features/plan-check/from-intake";
 import { reviewResultOf } from "@/features/plan-check/from-review";
@@ -22,6 +23,7 @@ import { pushToast } from "@/lib/toast-bus";
 import type { Trip, TripStop } from "./model";
 import { tripKey, tripsKey } from "./use-trip";
 import { useSeoulNow } from "./use-seoul-now";
+import { useRouteShapes } from "./use-route-shapes";
 import dialogStyles from "./trip-list.module.css";
 
 /**
@@ -37,6 +39,8 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
   const { language } = useSettings();
   const queryClient = useQueryClient();
   const now = useSeoulNow();
+  const savedRoutes = useRouteShapes(trip.id, trip.version);
+  const opening = useMemo(() => openingView(trip), [trip]);
   const [intakeId, setIntakeId] = useState<string | null>(null);
   /** Back to the trip, read again — saying in the server's words what went wrong, when something did (the trip screen's bar shows it). */
   const leave = useCallback((error?: Error) => {
@@ -51,10 +55,12 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
     onError: (error) => leave(error),
   });
   const opened = useRef(false);
+  const openingRequest = useRef<Promise<ReviewedIntakeView> | null>(null);
   useEffect(() => {
     if (opened.current) return;
     opened.current = true;
-    reopen.mutate();
+    openingRequest.current = reopen.mutateAsync();
+    void openingRequest.current.catch(() => undefined);
   }, [reopen]);
 
   const key = useMemo(() => ["intake", intakeId ?? "", language] as const, [intakeId, language]);
@@ -80,14 +86,7 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
   const result = useMemo(() => reviewed && withTrip({ ...reviewed, dirty: server.dirty, rechecking: server.rechecking }, trip, frozen ?? [], reasons), [reviewed, server.dirty, server.rechecking, trip, frozen, reasons]);
   const preview = useMemo(() => previewed && withTrip({ ...previewed, dirty: false, rechecking: null }, trip, frozen ?? [], reasons), [previewed, trip, frozen, reasons]);
   // The lines between the stops for the plan being edited (the intake's `route-shapes`), as on the plan check; none on a failure.
-  const routeShapes = useQuery({
-    queryKey: ["intake-route-shapes", intakeId, query.data?.revision ?? 0, language],
-    queryFn: () => getIntakeRouteShapes(intakeId!, language).catch(() => null),
-    enabled: Boolean(reviewed),
-    retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 10 * 60_000,
-  });
+  const routeShapes = useIntakeRoutes(intakeId ?? "", query.data?.revision ?? 0, language, Boolean(reviewed));
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId ?? "", query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId!, language, { detail: true }));
 
   // `[2026-10-13 사용자 지시]` The plan check's last step, as it is: changes → 「다시 제출」 → checked → ✓. Here ✓ (and 「완료」 in the head) writes the trip's next version, then the trip is shown.
@@ -114,7 +113,11 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
   // `[2026-10-13 사용자 지시]` 「취소」: asked first, then the edit is closed on the server (what was changed is not written, and the next edit starts afresh) and the trip is shown.
   const [asking, setAsking] = useState(false);
   const drop = useMutation({
-    mutationFn: () => cancelTripEdit(intakeId!, language),
+    mutationFn: async () => {
+      const id = intakeId ?? (await openingRequest.current)?.intake_id;
+      if (!id) throw new Error(t("수정 접수를 준비하지 못했어요. 다시 시도해 주세요.", "Could not prepare the edit. Please try again."));
+      return cancelTripEdit(id, language);
+    },
     onSuccess: () => leave(),
     onError: (error) => { setAsking(false); pushToast({ text: error.message, stay: true }); },
   });
@@ -125,8 +128,9 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
   const edit: TripEditMode = useMemo(() => ({
     onCancel: () => setAsking(true),
     now: railNow,
-    intro: { text: t("일정을 고칠 수 있어요", "You can change the itinerary"), sub: t("지난 일정은 바꿀 수 없어요 · 다 고쳤으면 「완료」를 눌러 주세요", "Past stops cannot change · press Done when you are finished"), ms: 3_500 },
-  }), [railNow, t]);
+    preparing: !result,
+    intro: { text: t("일정 수정 화면이에요", "Edit your itinerary"), sub: t("수정 준비를 마치면 고칠 수 있어요 · 지난 일정은 그대로 유지해요", "Editing becomes available when preparation finishes · past stops stay unchanged"), ms: 3_500 },
+  }), [railNow, result, t]);
 
   if (query.data && !query.data.review) {
     // The server could not check the plan (`review_error`): nothing is offered as fine that it did not check.
@@ -134,13 +138,34 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
       <QueryState loading={false} error={new Error(t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요.", "The server could not build the place, hours and route check."))} retry={reread} />
     </JourneyShell>;
   }
-  if (!result) {
-    return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={!query.error} error={query.error} retry={reread} /></JourneyShell>;
+  if (!result && query.error) {
+    return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={false} error={query.error} retry={reread} /></JourneyShell>;
   }
   return <>
-    <PlanCheck key="edit" view={result} previewView={preview} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} onBack={onExit} actions={actions} registration={registration} edit={edit} />
+    <PlanCheck key="edit" view={result ?? opening} previewView={preview} routes={result ? routeDetail.routes : savedRoutes.data} onMapZoom={routeDetail.onZoom} routeState={{ loading: routeShapes.isFetching, error: routeShapes.isError, retry: () => { void routeShapes.refetch(); } }} onBack={() => setAsking(true)} actions={result ? actions : {}} registration={registration} edit={edit} />
     {asking && <CancelDialog pending={drop.isPending} onKeep={() => setAsking(false)} onDrop={() => drop.mutate()} />}
   </>;
+}
+
+/** 저장된 여행을 즉시 그린다. 접수 검사·수정 권한을 받기 전에는 확인 결과를 만들지 않는다. */
+export function openingView(trip: Trip): PlanCheckView {
+  const dates = [...new Set(trip.stops.map((stop) => stop.date))].sort();
+  return {
+    stage: "done", title: trip.title ?? null, lines: [], dirty: false, rechecking: null,
+    days: dates.map((date, index) => ({ day: index + 1, date })),
+    items: trip.stops.map((stop) => ({
+      id: stop.id, day: dates.indexOf(stop.date) + 1, date: stop.date, startsAt: stop.time, endsAt: stop.endTime ?? "", endDate: stop.endDate,
+      title: stop.title, place: stop.place ?? "", noPlace: false, kind: stop.kind,
+      displayKind: stop.kind === "lodging" || /숙박|숙소|호텔|lodging|hotel/i.test(stop.placeInfo?.category ?? "") ? "lodging" : stop.kind,
+      coordinates: stop.coordinates ?? null,
+      checks: [], verdict: null, locked: Boolean(stop.pinned), booked: stop.booking === "booked", info: null, suggestion: null,
+    })),
+    moves: (trip.moves ?? []).flatMap((move) => move.fromId && move.toId ? [{
+      id: move.id, fromId: move.fromId, toId: move.toId, day: dates.indexOf(move.date) + 1,
+      departAt: move.departAt, arriveAt: move.arriveAt ?? "", mode: "", summary: "", minutes: null, slackMin: null, estimated: false,
+      checks: [], verdict: null,
+    }] : []),
+  };
 }
 
 /** 「취소」 asked first (the trip list's delete question, in its look): going on editing is the button in focus. */

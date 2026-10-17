@@ -334,6 +334,9 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
     midnight = datetime.combine(now.date() + timedelta(days=1), datetime.min.time(), tzinfo=KST)
     used: dict[str, int] = {}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        from app.application.admin_service import usage_exempt
+
+        exempt = usage_exempt(conn, tenant_id, str(customer_id))
         if action == "message":
             from app.application.admin_service import AdminPolicyRefused, access_policy, consume_chat
 
@@ -348,6 +351,9 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
             if action == "message" and kind == "key":
                 # ★사용자 한 명의 채팅 한도는 관리자 화면 「② 채팅 하루 한도」(사용자별 예외 포함)가 정한다 — None 은 한도 없음(0 으로 저장)
                 cap = access_policy(conn, tenant_id, str(customer_id), now)["chat_limit"]
+            # QA도 서비스 전체 예산과 사용량 집계는 유지한다.
+            if exempt and kind != "all":
+                cap = None
             got = _bump(cur, tenant_id, kind, who, action, day, cap if enabled else None)
             if got is None:
                 cur.execute("SELECT used FROM web_usage WHERE tenant_id=%s AND who_kind=%s AND who=%s AND action=%s "

@@ -278,6 +278,7 @@ class DisruptionCheck:
         held_back = [row for row, is_weather in zip(rows, weather) if not sensitive and is_weather]
         return {**base, "status": "ok", "mode": mode, "source": value.get("source"),
                 "confirmed_at": value.get("confirmed_at"),
+                "value": value,
                 "unclassified": value.get("unclassified", []),
                 "weather_held_back": held_back,
                 "_disruptions": disruptions}
@@ -318,6 +319,7 @@ class DisruptionCheck:
         answered = value.get("sources") or [value.get("source")]
         result = {**base, "status": "ok", "source": value.get("source"),
                   "confirmed_at": value.get("confirmed_at"),
+                  "value": value,
                   "partial_from": value.get("partial_from", []),
                   "_disruptions": disruptions, "_advisories": advisories}
         if "utic" not in answered:
@@ -406,6 +408,7 @@ class DisruptionCheck:
                                    "limit": magnitude_min})
         return {**base, "status": "ok", "source": value.get("source"),
                 "confirmed_at": value.get("confirmed_at"), "window": value.get("window"),
+                "value": value,
                 "rules": {"magnitude_min": magnitude_min, "radius_km": radius_km,
                           "lookback_hours": lookback_hours},
                 "_disruptions": disruptions, "_advisories": advisories}

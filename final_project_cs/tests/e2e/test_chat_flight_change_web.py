@@ -75,7 +75,7 @@ def flight_chat(api, monkeypatch):
 
     from app.domains.travel_ops.components.conversation import trip_messages
     from app.domains.travel_ops.entry.trip_api import build_trip_router
-    from app.domains.travel_ops.instances.flight import FlightTeam
+    from app.domains.travel_ops.instances.booking import FlightTeam
     from app.presentation.api.app import create_app
 
     calls: list[dict] = []
@@ -169,7 +169,7 @@ def flight_chat_unknown_party(api, monkeypatch):
 
     from app.domains.travel_ops.components.conversation import trip_messages
     from app.domains.travel_ops.entry.trip_api import build_trip_router
-    from app.domains.travel_ops.instances.flight import FlightTeam
+    from app.domains.travel_ops.instances.booking import FlightTeam
     from app.presentation.api.app import create_app
 
     searches: list[tuple[str, dict]] = []

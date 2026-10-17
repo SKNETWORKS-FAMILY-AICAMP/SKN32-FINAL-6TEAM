@@ -22,6 +22,15 @@ CATEGORIES = {
 SOURCE = "[시뮬레이션] 관리자 시험 입력"
 
 
+def active_sql(alias: str = "t") -> str:
+    """관리자가 켠 현재 판의 시험만 감시 대상 예외로 인정한다."""
+    return ("EXISTS (SELECT 1 FROM admin_records trial WHERE trial.tenant_id=" + alias + ".tenant_id "
+            "AND trial.kind='watch_simulation' AND trial.id=" + alias + ".trip_id::text "
+            "AND jsonb_typeof(trial.value->'categories')='array' AND trial.value->'categories'<>'[]'::jsonb "
+            "AND trial.value->>'base_version'=" + alias + ".latest_version::text "
+            "AND (trial.value->>'expires_at')::timestamptz>now())")
+
+
 def state(conn, tenant: str, trip_id: UUID, *, now: datetime | None = None) -> dict:
     # 226 이전 DB의 일반 여행 읽기는 계속 허용한다. 시험 기능 쓰기는 226이 필요하다.
     try:
@@ -125,10 +134,12 @@ def record_result(current: dict, report: dict, *, safety_only: bool) -> None:
 
 def configure(conn, tenant: str, trip_id: UUID, *, actor: str, expected_revision: int,
               expected_version: int, item_id: UUID | None, categories: list[str], duration_minutes: int, reason: str,
-              now: datetime | None = None) -> dict:
+              now: datetime | None = None, external_delivery: bool = False, disaster_scenario: str = "fire") -> dict:
     from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
     now = now or datetime.now(UTC)
+    if disaster_scenario not in ("fire", "closure"):
+        raise AdminServiceError(422, "재난문자 시험 상황을 다시 선택해 주세요.")
     if len(categories) != len(set(categories)) or set(categories) - CATEGORIES.keys():
         raise AdminServiceError(422, "시험 종류는 6종 안에서 중복 없이 골라 주세요.")
     if not 1 <= duration_minutes <= 60 or not reason.strip():
@@ -151,13 +162,27 @@ def configure(conn, tenant: str, trip_id: UUID, *, actor: str, expected_revision
                 or target.place.get("latitude") is None or target.place.get("longitude") is None
                 or (target.ends_at or target.starts_at) <= now):
             raise AdminServiceError(422, "끝나지 않은 방문 일정 중 위치가 있는 항목을 골라 주세요.")
-        value = {"categories": [k for k in CATEGORIES if k in categories], "item_id": str(target.item_id),
+        if external_delivery:
+            from app.domains.travel_ops.components.customer import consents
+            try:
+                consents.require(conn, tenant, trip[0], 'alert_channel')
+            except consents.ConsentError:
+                raise AdminServiceError(422, '이 여행 계정의 알림 채널 동의가 필요합니다.') from None
+            profile = conn.execute('SELECT notice_channel,discord_webhook_enc IS NOT NULL FROM customer_profiles '
+                                   'WHERE tenant_id=%s AND customer_id=%s', (tenant, trip[0])).fetchone()
+            if not profile or profile[0] != 'discord' or not profile[1]:
+                raise AdminServiceError(422, '이 여행 계정에 디스코드가 연결되어 있지 않습니다.')
+        value = {"disaster_scenario": disaster_scenario, "external_delivery": external_delivery, "delivery_customer_id": str(trip[0]),
+                 "mock_received_at": now.isoformat(), "categories": [k for k in CATEGORIES if k in categories], "item_id": str(target.item_id),
                  "item_title": target.title, "base_version": trip[1], "run_id": str(uuid4()),
                  "started_at": now.isoformat(), "expires_at": (now + timedelta(minutes=duration_minutes)).isoformat()}
     else:
         value = {**before, "categories": [], "expires_at": now.isoformat()}
         value.pop("revision", None)
         value.pop("active", None)
+    if categories:
+        value['mock_receipt'] = {'mode': 'simulation', 'received_at': now.isoformat(),
+                                 'run_id': value['run_id'], 'sources': inputs(value, target.place or {})}
     if before.get("run_id"):
         with conn.cursor() as cur:
             cur.execute("UPDATE pending_changes SET status='superseded',decided_at=now(),chosen_by='operator:simulation_changed' "
@@ -173,19 +198,14 @@ def configure(conn, tenant: str, trip_id: UUID, *, actor: str, expected_revision
 
 
 def _require_watched(conn, tenant: str, trip_id: UUID) -> None:
-    """감시가 보지 않는 여행에는 시험을 걸지 않는다 — 저장만 되고 점검 결과 · 알림이 영영 안 생긴다. `[2026-10-16]`
+    """명시적 시험을 켤 때 게스트도 허용하되 재난 정지 중이면 거절한다.
 
-    감시 대상(`TripStore._open_trips`)과 같은 두 조건: 대상 좁히기(게스트 여행 빼기 — `trip_scope`) · 재난 정지 없음."""
-    from app.domains.travel_ops.components.itinerary.trip_scope import extra_sql
-
+    일반 감시의 게스트 제외는 watch_scope_sql이 유지한다. 시험 저장 후 유효한 현재 판만 예외가 된다.
+    """
     with conn.cursor() as cur:
-        cur.execute("SELECT " + extra_sql("t") + ", EXISTS (SELECT 1 FROM trip_safety_pauses p WHERE p.tenant_id=t.tenant_id "
-                    "AND p.trip_id=t.trip_id AND p.resumed_at IS NULL) FROM trips t WHERE t.tenant_id=%s AND t.trip_id=%s", (tenant, trip_id))
-        row = cur.fetchone()
-    if row and not row[0]:
-        raise AdminServiceError(422, "로그인하지 않은 손님(게스트) 여행은 감시 대상이 아니라 시험 입력이 반영되지 않습니다. "
-                                     "소셜 로그인으로 연결한 회원의 여행을 골라 주세요.")
-    if row and row[1]:
+        cur.execute("SELECT 1 FROM trip_safety_pauses WHERE tenant_id=%s AND trip_id=%s AND resumed_at IS NULL", (tenant, trip_id))
+        paused = cur.fetchone()
+    if paused:
         raise AdminServiceError(409, "재난 정지 중인 여행은 감시가 쉬고 있어 시험 입력이 반영되지 않습니다. "
                                      "고객 앱에서 「다시 시작」한 뒤 시험해 주세요.")
 
@@ -216,6 +236,22 @@ def inputs(current: dict, place: dict, *, safety_only: bool = False) -> dict[str
             pop, wind = _default_limits()
             notes = forecast_advisories(value, pop_limit=pop, wind_limit=wind)
             rows[category] = {**base, "value": value, "_advisories": [{**n, **common} for n in notes]}
+        elif category == 'disaster_msg':
+            from zoneinfo import ZoneInfo
+            from app.domains.travel_ops.ports.data_sources.disaster_msg import parse_row, judge
+            at = datetime.fromisoformat(stamp)
+            raw = {'SN': 'simulation-'+current['run_id'],
+                   'CRT_DT': at.astimezone(ZoneInfo('Asia/Seoul')).strftime('%Y/%m/%d %H:%M:%S'),
+                   'DST_SE_NM': '화재', 'EMRG_STEP_NM': '긴급재난', 'RCPTN_RGN_NM': '서울특별시 전체',
+                   'MSG_CN': '[시뮬레이션] 대상 일정 주변 화재 발생. 시험용 상황입니다.'}
+            if current.get('disaster_scenario') == 'closure':
+                raw.update(DST_SE_NM='기타', EMRG_STEP_NM='안전안내',
+                           MSG_CN='[시뮬레이션] '+str(place.get('name') or '대상 장소')+' 출입 통제 중. 다른 장소를 이용해 주세요.')
+            parsed = parse_row(raw)
+            messages, _ = judge([parsed], region='서울', district=None,
+                                window_start=at-timedelta(seconds=1), at=at)
+            rows[category] = {**base, 'api_payload': {'header': {'resultCode': '00'}, 'totalCount': 1, 'body': [raw]},
+                              '_disruptions': [{'category': category, **message, **common} for message in messages]}
         else:
             rows[category] = {**base, "_disruptions": [{"category": category, **causes[category], **common}]}
     return rows
@@ -269,3 +305,23 @@ def case_place(conn, *, tenant: str, customer_id: UUID, case_id: UUID, place: di
     if str(trip['customer_id']) != str(customer_id):
         return place
     return next((i.place for i in items if i.place and str(i.place_id) == str(place.get("place_id")) and MARKER in i.place), place)
+
+
+def external_delivery_allowed(conn, tenant: str, trip_id: UUID, run_id: str) -> bool:
+    """페이로드의 허용 표시를 믿지 않고 저장된 운영자 선택과 소유 고객을 확인한다."""
+    current = state(conn, tenant, trip_id)
+    if (not current.get('external_delivery') or current.get('run_id') != run_id
+            or not current.get('categories') or not current.get('expires_at')):
+        return False
+    if datetime.fromisoformat(current['expires_at']) <= datetime.now(UTC):
+        return False
+    owner = conn.execute('SELECT customer_id FROM trips WHERE tenant_id=%s AND trip_id=%s',
+                         (tenant, trip_id)).fetchone()
+    return bool(owner and str(owner[0]) == current.get('delivery_customer_id'))
+
+
+def receipt_view(conn, tenant: str, trip_id: UUID, items: list) -> dict | None:
+    current = state(conn, tenant, trip_id)
+    if not current.get('run_id'):
+        return None
+    return {**current.get('mock_receipt', {}), 'active': current['active']} if current.get('mock_receipt') else None

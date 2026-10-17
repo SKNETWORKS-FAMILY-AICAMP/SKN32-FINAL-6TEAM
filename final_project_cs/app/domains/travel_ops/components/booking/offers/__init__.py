@@ -5,10 +5,11 @@
   이 폴더는 예약 **전**에 「찾고 비교하는」 쪽이라 같은 booking 아래 하위 폴더로 둔다(그 둘은 건드리지 않는다).
 
 에이전트 → booking 모듈의 비교 부분(이 폴더, `components/booking/offers/`) → 어댑터(`ports/data_sources/`) → 결과. 결제 · 예약은 하지 않는다(판매처 사이트에서).
-위치 · 경로 계산은 이동 모듈이 맡는다. 도구 이름은 `read.booking_search_flights` · `read.booking_search_stays` —
+위치 · 경로 계산은 이동 모듈이 맡는다. 도구 이름은 `read.booking_search_flights` · `read.booking_search_stays` · `read.booking_search_transit`(`[2026-10-14]` 열차 · 버스) —
 이미 있는 `read.booking`(잠긴 예약 조회)과 겹치지 않게 동사를 붙였다.
 """
 from .flights import search_flights
 from .stays import google_details, search_stays
+from .transit import search_transit
 
-__all__ = ["google_details", "search_flights", "search_stays"]
+__all__ = ["google_details", "search_flights", "search_stays", "search_transit"]

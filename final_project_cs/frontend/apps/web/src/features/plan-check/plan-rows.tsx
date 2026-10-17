@@ -121,13 +121,16 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, 
         const points = ctx.insertion ? insertionPoints(view, day) : [];
         // `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top (the move from it follows, when the check found one).
         const stay = view.items.find((item) => isStayItem(item) && item.date < day.date && day.date <= item.endDate!);
+        const common = view.items.find((item) => item.day === day.day && item.lodgingGroup?.place && item.lodgingGroup.members.length > 1);
+        const departure = stay ?? common;
+        const stayName = stay?.title ?? common?.lodgingGroup?.place;
         // `[2026-10-15 사용자 결정 — ST4F-498]` Pressed (once the check is done) it shows the stay — the trip screen's band does the same (`StayRow`).
-        return <>{stay && <li className={styles.stayBand} data-entry-id={`${stay.id}:from`}>
-          <button type="button" className={styles.stayBandButton} disabled={!ctx.done} onClick={() => ctx.onShowStay(stay.id)}
-            aria-label={t(`${stay.title}에서 출발 — 숙소 보기`, `Leaving from ${stay.title} — show the stay`)}>
+        return <>{departure && <li className={styles.stayBand} data-entry-id={`${departure.id}:from`}>
+          <button type="button" className={styles.stayBandButton} disabled={!ctx.done} onClick={() => ctx.onShowStay(departure.id)}
+            aria-label={t(`${stayName}에서 출발 — 숙소 보기`, `Leaving from ${stayName} — show the stay`)}>
             <BedDouble size={16} strokeWidth={1.8} aria-hidden="true" />
-            <span>{t(`${stay.title}에서 출발`, `Leaving from ${stay.title}`)}</span>
-            <small>{day.date === stay.endDate ? t("마지막 날", "Last day") : t(`${nightOf(stay, day.date)}박째`, `Night ${nightOf(stay, day.date)}`)}</small>
+            <span>{t(`${stayName}에서 출발`, `Leaving from ${stayName}`)}</span>
+            <small>{stay ? (day.date === stay.endDate ? t("마지막 날", "Last day") : t(`${nightOf(stay, day.date)}박째`, `Night ${nightOf(stay, day.date)}`)) : t("여행 공통 숙소", "Shared trip stay")}</small>
           </button>
         </li>}{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}

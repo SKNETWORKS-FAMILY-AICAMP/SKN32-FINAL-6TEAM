@@ -363,7 +363,8 @@ class SafetySweep:
             return                                         # 이미 여행 전체가 멈춰 있다 — 더 올릴 단계가 없다
         result.checked += 1
         report = self.check(place=place, starts_at=now, region="서울")
-        record('safety', trip_id=trip_id, target_title=place.get('name'), report=report)
+        record('safety', trip_id=trip_id, target_title=place.get('name'),
+               report={**report, 'phase': phase, 'checked_at': now})
         if report.get("verdict") == "fatal":
             result.fatal.append({"trip_id": str(trip_id), "failed_categories": report.get("failed_categories")})
             return                                         # 조회 실패는 정지 사유가 아니다(결정 15)

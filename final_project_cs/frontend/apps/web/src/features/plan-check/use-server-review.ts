@@ -12,7 +12,7 @@ import {
   autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces,
   type CandidatePlace, type ReviewItem, type ReviewedIntakeView,
 } from "@/lib/live/intake-review";
-import { planCandidate, safePhotoUrl } from "./from-review";
+import { isLodgingReviewItem, planCandidate, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
 import type { AutoResult, PlaceChoice, PlanCheckActions } from "./plan-check";
 import { retimeEdits } from "./retime-edits";
@@ -255,11 +255,26 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       },
       autoRecommend: async (id) => {
         const item = itemOf(id);
-        const found = await alternativesOf(id, item);
-        const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
-        const picked = best && pickedPlace(best.place);
-        if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
-        await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null);
+        if (!isLodgingReviewItem(item)) {
+          const found = await alternativesOf(id, item);
+          const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
+          const picked = best && pickedPlace(best.place);
+          if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
+          await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null);
+          return;
+        }
+        const before = plan();
+        const result = await autofixIntake(intakeId, before.revision, language, false, id).catch(staleThenRethrow);
+        if (!allUndo.active) throw gone();
+        if (!result.changed.length) {
+          const noCandidates = result.kept.some((entry) => entry.reason === "no_candidates");
+          throw new LiveError("no_fitting_place", noCandidates
+            ? t("근처 후보를 찾지 못했어요 · 수정에서 장소를 직접 골라 주세요", "No nearby place found — pick a place in Edit")
+            : t("시간을 조정해도 맞는 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits after adjusting the time — pick a place in Edit"));
+        }
+        allUndo.remember(before, result.view);
+        undoEdits.current = autofixUndo(result.changed);
+        take(result.view);
       },
       // Show how 「전체 자동 추천」 would change the plan — saves nothing (the server's dry run), so scrolling or pressing never changes the plan.
       previewRecommendAll: async (): Promise<AutoResult> => {

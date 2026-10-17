@@ -123,7 +123,7 @@ def test_soft_mode_demotes_the_option_that_shakes_the_density_and_says_why():
     fit = fit_change(_ranked(over, calm), trip=TRIP, items=[a, b])
     assert fit.rank == 2 and fit.change.summary["to"] == "여유 있는 곳" and fit.accepted == []
     assert [(s.rank, s.name, s.why) for s in fit.skipped] == [(1, "빡빡한 곳", "density")]
-    assert "1순위(빡빡한 곳)은(는) 그날 일정이 원하신 여유보다 빡빡해져 2순위로 골랐어요" in fit.change.notice["text"]
+    assert "빡빡한 곳" not in fit.change.notice["text"] and "skipped" not in fit.change.notice.get("fit", {})
     assert "밀도" not in fit.change.notice["text"]
 
 
@@ -142,7 +142,7 @@ def test_when_every_option_shakes_the_density_the_least_bad_one_is_applied_and_t
     assert [s.kind for s in fit.accepted] == ["new_exceed"]
     text = fit.change.notice["text"]
     assert "더 나은 안이 없어 이 안을 적용했지만 10월 6일 일정이 원하신 여유보다 빡빡해졌어요" in text
-    assert "1·2순위(1순위 가장 빡빡, 2순위 중간)은(는) 그날 일정이 원하신 여유보다 빡빡해져 3순위로 골랐어요" in text
+    assert "가장 빡빡" not in text and "중간" not in text and "skipped" not in fit.change.notice.get("fit", {})
 
 
 def test_a_candidate_that_loses_the_measurement_ranks_behind_one_with_a_known_excess():

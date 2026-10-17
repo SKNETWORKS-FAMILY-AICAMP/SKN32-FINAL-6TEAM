@@ -71,3 +71,6 @@ domain: travel
 ## 별도 참고 구현
 
 [참고 sample wiki](../final_project_sample/wiki/index.md)는 계약 인프라를 검증하는 별도 구현입니다. 그 업무 자료·완료 결과를 여행 릴리스 증거로 쓰지 않습니다.
+
+
+2026-10-17 수동 숙소 저장 보완: 격리 HTTP40/40 통과, 운영 반영 확인 전. [독립 통합 기록](../final_project_cs/wiki/records/reports/2026-10-17_manual-stay-manager-review.md)

@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable
 
 from . import candidates as cand_module
+from . import lodging_context as stay_context
 from .hours import facts_for
 from .moves import leg_between
 from .places import distance_m, normalize_full
@@ -94,7 +95,7 @@ def latest_end(engine: Any, place: dict[str, Any], next_place: dict[str, Any], n
 
 
 def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, engine: Callable[..., Any] | None = None,
-         use_engine: bool = True, now: datetime | None = None) -> dict[str, Any]:
+         use_engine: bool = True, now: datetime | None = None, item_id: str | None = None) -> dict[str, Any]:
     """검증을 끝낸 대체 일정. `{changes:[{id, source_id, index, title, from, to, reason, edits}], kept:[{id, title, reason}]}`.
     DB 에 쓰지 않는다 — 적용은 부르는 쪽이 `edits` 로 한다."""
     defaulted = engine is None and use_engine
@@ -105,23 +106,43 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
     #   고른 수단이 안 닿아 추천으로 되돌아간다. 못 닿으면 그 구간은 새 판의 검사에서 `dropped` + 이유로 알린다(`review.build`).
     kept_modes = {f"{m['from']}~{m['to']}": m["mode_choice"]["mode"] for m in review.get("moves", [])
                   if (m.get("mode_choice") or {}).get("state") == "kept"}
-    by_mode: dict[str, Any] = {}
+    by_mode: dict[Any, Any] = {}
 
-    def engine_for(a_id: Any, b_id: Any) -> Any:
+    def engine_for(a_id: Any, b_id: Any, *, scope: Any = None) -> Any:
         mode = kept_modes.get(f"{a_id}~{b_id}") if defaulted else None
-        if not mode:
+        if not mode and scope is None:
             return budget
-        if mode not in by_mode:
-            eng = default_engine(None, [mode])
-            by_mode[mode] = _Budgeted(eng, ENGINE_BUDGET_S) if eng is not None else budget
-        return by_mode[mode]
+        key = (scope, mode)
+        if key not in by_mode:
+            eng = default_engine(None, [mode]) if mode else engine
+            by_mode[key] = _Budgeted(eng, ENGINE_BUDGET_S) if eng is not None else budget
+        return by_mode[key]
     # 바꾸는 동안의 기준 상태 — 앞 일정이 바뀌면 그 값으로 다음 일정을 맞춘다
     items = [{**it, "rows": list(it["rows"])} for it in review["items"]]
     late_into = {m["to"] for m in review["moves"] if m["status"] == "review"}
     changes: list[dict[str, Any]] = []
     kept: list[dict[str, Any]] = []
+    handled: set[str] = set()
+    dates = {item["id"]: item.get("date") for item in items}
+    # 공통 숙소는 날짜마다 이동을 검사한다. 앞 날짜의 후보 탈락이 다음 날짜의 계산 몫을 쓰지 않는다.
+    def stay_engine_for(a_id: Any, b_id: Any) -> Any:
+        return engine_for(a_id, b_id, scope=("lodging", dates.get(b_id) or dates.get(a_id)))
+
+    for members in stay_context.groups(items):
+        if len(members) < 2 or (item_id is not None and not any(x["id"] == item_id for x in members)):
+            continue
+        if not any(x["status"] == "review" or x["id"] in late_into for x in members):
+            continue
+        handled.update(x["id"] for x in members)
+        group_changes, group_kept = _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, stay_engine_for)
+        changes.extend(group_changes)
+        kept.extend(group_kept)
     last_changed = -2
     for i, item in enumerate(items):
+        if item["id"] in handled:
+            continue
+        if item_id is not None and item["id"] != item_id:
+            continue
         placed_bad = item["status"] == "review"
         late = item["id"] in late_into
         if not placed_bad and not late and last_changed == i - 1 and item["date"] and item["starts_at"]:
@@ -183,7 +204,8 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
             alt = cand_module.alternatives(conn, tenant_id=tenant_id, review={"items": items, "moves": review["moves"]},
                                            item=item, kakao=kakao, engine=budget, use_engine=False, now=now, rank_only=True,
                                            limit=CANDIDATES_TRIED)
-            places += [c["place"] for c in alt["candidates"] if c["status"] != "bad"]
+            places += [c["place"] for c in alt["candidates"] if c["status"] != "bad"
+                       and (not cand_module._is_stay_line(item) or c["place"].get("kind") == item["kind"])]
         done = None
         failed: set[str] = set()
         for place in places:
@@ -202,7 +224,7 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
             done = (place, fit)
             break
         note = None
-        if done is None and item["kind"] == "dining":
+        if done is None and item["kind"] == "dining" and not cand_module._is_stay_line(item):
             # ★`[2026-10-13 사용자 지시]` 식사는 「맞출 수 없음」으로 두지 않는다 — 앞뒤 일정 근처 식당, 그래도 안 되면 다음 일정을 민다(`_meal_on_route`)
             done, note = _meal_on_route(conn, tenant_id, item, places, prev, nxt, start, duration, budget, kakao)
         if done is None:
@@ -239,6 +261,73 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
         items[i] = {**item, "place": after["place"], "starts_at": after["starts_at"], "ends_at": after["ends_at"],
                     "place_state": "customer", "status": "adjusted"}
     return {"changes": changes, "kept": kept}
+
+
+def _shared_stay(conn, tenant_id, items, members, review, kakao, budget, now, engine_for):
+    """후보 하나를 모든 날짜에서 검증하고, 모두 맞을 때만 함께 바꾼다."""
+    picked, conflict = stay_context.anchor(members)
+    movable = [x for x in members if not stay_context.protected(x)]
+    reason = "conflicting_stays" if conflict else "locked" if not movable else None
+    if any(stay_context.protected(x) and not x.get("place") for x in members):
+        reason = "booked_needs_name"
+    if reason:
+        return [], [{"id": x["id"], "title": x["title"], "reason": reason} for x in members]
+    target = movable[0]
+    if picked:
+        places = [picked]
+    else:
+        alt = cand_module.alternatives(conn, tenant_id=tenant_id, review={**review, "items": items}, item=target,
+                                       kakao=kakao, engine=budget, use_engine=False, now=now, rank_only=True,
+                                       limit=CANDIDATES_TRIED)
+        places = [c["place"] for c in alt["candidates"] if c["status"] != "bad"
+                  and c["place"].get("kind") == cand_module.place_kind_of(target)]
+        # 예전 판에서 날짜별로 다르게 골랐던 숙소도 전체 동선으로 다시 비교한다.
+        places += [stay_context.as_place(x["place"], target) for x in members if x.get("place")]
+        points = stay_context.visits(items, members)
+        places.sort(key=lambda p: stay_context.score(p, points))
+    for place in places:
+        proposed = []
+        for member in members:
+            if stay_context.protected(member):
+                if not stay_context.same_place(member.get("place"), place):
+                    break
+                continue
+            selected = stay_context.as_place(place, member)
+            if member["kind"] == "lodging":
+                fit = (_dt(member["date"], member["starts_at"]),
+                       _dt(member.get("end_date") or member["date"], member["ends_at"]), False)
+            else:
+                start = _dt(member["date"], member["starts_at"])
+                end = _dt(member["date"], member["ends_at"] or member["starts_at"])
+                if start is None or end is None:
+                    break
+                prev, nxt = cand_module.neighbours(items, member)
+                fit = _fit_window(conn, tenant_id, member, selected, prev, nxt, start,
+                                  max(end - start, timedelta(minutes=MIN_STAY_MIN)), budget,
+                                  engine_prev=engine_for(prev["id"], member["id"]) if prev else None,
+                                  engine_next=engine_for(member["id"], nxt["id"]) if nxt else None)
+            if isinstance(fit, str) or fit[0] is None or fit[1] is None:
+                break
+            begin, finish, known = fit
+            edits = []
+            if not stay_context.same_place(member.get("place"), selected):
+                edits.append({"field": "place", "value": _pick(selected, member)})
+            for field, value in (("starts_at", _hhmm(begin)), ("ends_at", _hhmm(finish))):
+                if value != member.get(field):
+                    edits.append({"field": field, "value": value})
+            if edits:
+                proposed.append({"id": member["id"], "source_id": member["source_id"], "index": member["index"],
+                                 "title": member["title"], "from": {k: member.get(k) for k in ("place", "starts_at", "ends_at")},
+                                 "to": {"place": selected, "starts_at": _hhmm(begin), "ends_at": _hhmm(finish)},
+                                 "reason": "place_and_time" if len(edits) > 1 else "place", "hours_known": known,
+                                 "note": "여행 전체의 공통 숙소에 호텔 식사도 연결했어요", "edits": edits})
+        else:
+            for change in proposed:
+                at = next(i for i, x in enumerate(items) if x["id"] == change["id"])
+                items[at] = {**items[at], **change["to"], "place_state": "customer", "status": "adjusted"}
+            return proposed, []
+    return [], [{"id": x["id"], "title": x["title"], "reason": "no_fitting_time" if places else "no_candidates"}
+                for x in members]
 
 
 def _route_restaurants(conn, tenant_id: str, item: dict[str, Any], tried: list[dict[str, Any]], prev: dict[str, Any] | None,

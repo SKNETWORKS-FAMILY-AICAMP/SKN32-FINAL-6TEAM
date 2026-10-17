@@ -36,7 +36,8 @@ for(const width of [375,1280]) {
     const controls=page.getByRole('group',{name:'지도 단추'}),fold=controls.locator('button[aria-expanded]'),arrow=fold.locator('[class*=foldArrow]');
     const menu=page.getByRole('button',{name:'메뉴',exact:true});
     const a=(await fold.boundingBox())!,b=(await menu.boundingBox())!;
-    expect(a.width).toBe(b.width);expect(a.height).toBe(40);expect(Math.abs(a.x-b.x)).toBeLessThan(.6);
+    expect(a.width).toBe(b.width);expect(a.height).toBeCloseTo(40,3);expect(Math.abs(a.x-b.x)).toBeLessThan(.6);
+    await expect(fold).toHaveCSS('height','40px');
     await expect(arrow).toHaveCSS('transition-property','transform');await expect(arrow).toHaveCSS('transition-duration','0.2s');
     await expect.poll(async()=>(await arrowGeometry(page)).dy).toBeGreaterThan(3);
     const origin=await arrowGeometry(page);

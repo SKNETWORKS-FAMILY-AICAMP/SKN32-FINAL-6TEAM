@@ -1,0 +1,20 @@
+{
+  "version": "shared-lodging-20261017-v3",
+  "files": {
+    "app/domains/travel_ops/components/intake/candidates.py": "83cfb3e11331213e35ab1adfb5d01ef301481ae923345134b16107e8032909ef",
+    "app/domains/travel_ops/components/intake/autofix.py": "2e4459868a5120890e138103025f4710ed87cbd7e6b6ec02488015030e80530c",
+    "app/domains/travel_ops/components/intake/pipeline.py": "5daf04dcf51c09af9170591741f5ab2da481dea54db6cb08277dea217d6d29c8",
+    "app/domains/travel_ops/components/intake/review.py": "bdb208a339f0e3ef64bd99158e21f871a484c9fd48f895f2af59fa3720851433",
+    "app/domains/travel_ops/components/intake/lodging_context.py": "266214cf401c70015c5fb1a04182de219f27423bfb5956753f0c1b63294e4387",
+    "frontend/apps/web/src/features/plan-check/model.ts": "2be5bb853f623e640d7484dc9873d4d9ad1661d2550d08c91ba982eb2b2ee146",
+    "frontend/apps/web/src/features/plan-check/from-review.ts": "2abbd9bb6a799bac37648945559d8463cb9e738ad191c42b4dc6e18066304600",
+    "frontend/apps/web/src/features/plan-check/plan-rows.tsx": "6cc84e1c7475654b51e0c61ebf2c546a361fc3288ada4dfc37f15d5cdd8c2049",
+    "frontend/apps/web/src/features/plan-check/from-review.test.ts": "6b12b9d3bd1e9b52d550e30b482a285114d859d6b0d5ca1730f0aa08752108b6",
+    "frontend/apps/web/src/features/plan-check/plan-check.module.css": "05083fcbdc9f049a8a1791e1437e2540632fbbaba17a49fdd2a5464ee575f1d2",
+    "frontend/apps/web/src/lib/live/intake-review.ts": "0da25663e491e3c3710625afe60a89a817121a4fe13142aa41fc5624b8fd81c6"
+  },
+  "sql_executed": false,
+  "db_preserved": true,
+  "admin_preserved": true,
+  "source_commit": "29106b7f097ba41ed1dd289479861f016249c3c5"
+}

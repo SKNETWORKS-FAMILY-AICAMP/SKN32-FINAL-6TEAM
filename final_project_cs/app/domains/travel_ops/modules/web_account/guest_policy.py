@@ -36,6 +36,13 @@ def not_guest_sql(alias: str = "t") -> str:
     return "NOT (" + _GUEST_OWNER.format(a=alias) + ")"
 
 
+def watch_scope_sql(alias: str = "t") -> str:
+    """일반 게스트는 제외하고, 관리자가 명시적으로 켠 시험만 잠시 포함한다."""
+    from app.domains.travel_ops.components.watch.simulation import active_sql
+
+    return f"({not_guest_sql(alias)} OR {active_sql(alias)})"
+
+
 def is_guest(conn, *, tenant_id: str, customer_id: UUID | str) -> bool:
     with conn.cursor() as cur:
         cur.execute("SELECT left(external_id, 4) = 'web:' AND NOT EXISTS (SELECT 1 FROM web_social_links l WHERE l.tenant_id=c.tenant_id "
@@ -65,7 +72,9 @@ def check_new_trip(conn, *, tenant_id: str, customer_id: UUID | str, starts: Ite
         cur.execute("SELECT count(*) FROM trips WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
         existing = int(cur.fetchone()[0])
     cap = int(guard.get("web_guard.guest.max_trips"))
-    if existing >= cap:
+    from app.application.admin_service import usage_exempt
+
+    if existing >= cap and not usage_exempt(conn, tenant_id, str(customer_id)):
         raise GuestLimit("guest_trip_limit", f"로그인하지 않으면 여행을 {cap}개까지 만들 수 있어요", cap=cap, existing=existing)
     starts, ends = [_aware(m) for m in starts if m is not None], [_aware(m) for m in ends if m is not None]
     if not starts:
@@ -80,4 +89,4 @@ def check_new_trip(conn, *, tenant_id: str, customer_id: UUID | str, starts: Ite
         raise GuestLimit("guest_trip_too_long", f"로그인하지 않으면 {length_max}일 안의 여행만 만들 수 있어요", limit_days=length_max)
 
 
-__all__ = ["GuestLimit", "check_new_trip", "is_guest", "not_guest_sql"]
+__all__ = ["GuestLimit", "check_new_trip", "is_guest", "not_guest_sql", "watch_scope_sql"]

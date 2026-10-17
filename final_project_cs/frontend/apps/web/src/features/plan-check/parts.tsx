@@ -104,6 +104,7 @@ export function placeKindLabel(kind: string | null | undefined, t: Translate): s
 
 /** `[2026-10-07 사용자 지시]` The word under a picked pin on the map: 「액티비티」 for a thing to do, 「식당」 for a meal; none when the server does not class the stop. */
 export function pinKindLabel(kind: string | null | undefined, t: Translate): string | null {
+  if (kind === "lodging") return t("숙박", "Lodging");
   if (kind === "dining") return t("식당", "Food");
   if (kind === "activity") return t("액티비티", "Activity");
   return null;
