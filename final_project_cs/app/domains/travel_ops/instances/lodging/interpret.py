@@ -229,7 +229,7 @@ _RANGE_SLASH = re.compile(r"(?<![\d/.])(?:20\d{2}\s*[./]\s*)?(\d{1,2})\s*[/.]\s*
 _RANGE_KO = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일?\s*(?:부터)?\s*[~\-–]\s*(?:(\d{1,2})\s*월\s*)?(\d{1,2})"
                        r"(?:\s*일|(?![\d.])(?!\s*(?:만|천|원|박|명|인|시|분|%)))")
 _RANGE_WORDS = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:에\s*)?(?:들어가|입실|체크\s*인|드러가)[^0-9]{0,12}?"
-                          r"(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일\s*(?:에\s*)?(?:나오|나올|나가|퇴실|체크\s*아웃)")
+                          r"(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일\s*(?:에\s*)?(?:나오|나올|나와|나가|퇴실|체크\s*아웃)")
 
 
 def _next_date(today: date, month: int, day: int) -> date | None:
@@ -279,6 +279,9 @@ _NTH_WEEKDAY = re.compile(r"(?:(\d{1,2})\s*월|(다음\s*달|담달|이번\s*달
                           r"(?:주\s*(?:의\s*)?)?(?:([월화수목금토일])(?:요일|욜)|(주말))")
 #: `[2026-10-17 D17]` 「다음 달 주말」(차례 말 없음) — 그 달 첫 주말로(☆N10-11: 모델이 10/21 로 읽었다)
 _MONTH_WEEKEND = re.compile(r"(?:(\d{1,2})\s*월|(다음\s*달|담달|이번\s*달))\s*(?:의\s*)?주말")
+#: `[2026-10-17 D20]` 「다음 달 중순 주말」 「11월 말 주말」 「다음 달 초 주말」 — 모델이 11/12(목) · 10/30(이번 달)으로 읽었다(☆4차 N24-05 · N24-23).
+#:  초 = 첫 토요일, 중순 = 11일 이후 첫 토요일, 말 · 하순 = 마지막 토요일. 토 → 일 1박(박수가 있으면 그 박수). 「11월 중에 주말」은 아니다(F-06)
+_MONTH_PART_WEEKEND = re.compile(r"(?:(\d{1,2})\s*월|(다음\s*달|담달|이번\s*달))\s*(?:의\s*)?(초순|초|중순|하순|말)\s*(?:쯤\s*)?(?:의\s*|에\s*)?주말")
 _WEEKS_LATER = re.compile(r"(\d|한|두|세|네|다섯)\s*주\s*(?:뒤|후)\s*(?:의\s*)?(?:([월화수목금토일])(?:요일|욜)|(주말))")
 _WEEK_NUM = {"한": 1, "두": 2, "세": 3, "네": 4, "다섯": 5}
 
@@ -298,14 +301,19 @@ def rule_weekdays(found: Interpretation, text: str, *, today: date) -> tuple[Int
     「주말」이면 토 → 일 1박, 그 밖엔 비운다(되묻는다). (해석, 고쳤나)"""
     if found.task != "search":
         return found, False
-    hits = list(_NTH_WEEKDAY.finditer(text or "")) + list(_WEEKS_LATER.finditer(text or "")) + list(_MONTH_WEEKEND.finditer(text or ""))
+    hits = list(_NTH_WEEKDAY.finditer(text or "")) + list(_WEEKS_LATER.finditer(text or "")) + list(_MONTH_WEEKEND.finditer(text or "")) \
+        + list(_MONTH_PART_WEEKEND.finditer(text or ""))
     if len({m.group(0) for m in hits}) != 1:
         return found, False
     m = hits[0]
+    part = None
+    if m.re is _MONTH_PART_WEEKEND:
+        month_word, relative, part = m.groups()
+        ordinal, day_word, weekend = "첫", None, "주말"
     if m.re is _MONTH_WEEKEND:
         month_word, relative = m.groups()
         ordinal, day_word, weekend = "첫", None, "주말"
-    if m.re in (_NTH_WEEKDAY, _MONTH_WEEKEND):
+    if m.re in (_NTH_WEEKDAY, _MONTH_WEEKEND, _MONTH_PART_WEEKEND):
         if m.re is _NTH_WEEKDAY:
             month_word, relative, ordinal, day_word, weekend = m.groups()
         if month_word:
@@ -317,6 +325,10 @@ def rule_weekdays(found: Interpretation, text: str, *, today: date) -> tuple[Int
         if not 1 <= month <= 12:
             return found, False
         start = _nth_weekday(year, month, _ORDINALS[re.sub(r"\s", "", ordinal)], _WEEKDAYS[day_word] if day_word else 5)
+        if part == "중순" and start is not None:
+            start = date(year, month, 11) + timedelta(days=(5 - date(year, month, 11).weekday()) % 7)
+        elif part in ("하순", "말"):
+            start = _nth_weekday(year, month, -1, 5)
     else:
         count, day_word, weekend = m.groups()
         weeks = int(count) if count.isdigit() else _WEEK_NUM[count]
@@ -404,6 +416,122 @@ def rule_people(found: Interpretation, text: str) -> tuple[Interpretation, bool]
     return found, False
 
 
+#: `[2026-10-17 D20]` 말로 쓴 날짜를 숫자 날짜로 — 「11월 열흘」 「스물여덟 날」 「열하룻날」 「일곱째 날」 「11-18」 「2027-01-28」 「이틀 자고」 「이박」
+#:  ☆qa_1017_214452(4차 held-out) 21건: 모델이 날짜를 비우거나, 근거 조각(「11월 열흘에」)이 숫자가 아니라 `rule_checks` 가 지웠다.
+#:  뜻을 새로 정하지 않고 글자만 숫자로 바꾼 문장을 기존 규칙(`rule_ranges` · `rule_dates` · `rule_nights`)에 다시 넣는다.
+_NATIVE_ONES = {"하나": 1, "한": 1, "하루": 1, "하룻": 1, "둘": 2, "두": 2, "이틀": 2, "셋": 3, "세": 3, "사흘": 3, "넷": 4, "네": 4, "나흘": 4,
+                "다섯": 5, "닷새": 5, "여섯": 6, "엿새": 6, "일곱": 7, "이레": 7, "여덟": 8, "여드레": 8, "아홉": 9, "아흐레": 9}
+_NATIVE_TENS = {"열": 10, "스물": 20, "스무": 20, "서른": 30}
+_ONES = "|".join(sorted(_NATIVE_ONES, key=len, reverse=True))
+_NATIVE_DAY = re.compile(rf"(?:(열흘|보름)|(열|스물|스무|서른)\s*({_ONES})?|({_ONES}))(?=\s*(?:째\s*)?(?:날|일)|\s*(?:에|부터|까지|입실|퇴실|체크|들어|나오|나와|나올|나가|가서|~|$|[,.!\s]))")
+_ORDINAL_DAY = re.compile(rf"(?<![가-힣])((?:열|스물|스무|서른)(?:\s*(?:{_ONES}))?|{_ONES}|첫)\s*째\s*날")
+_ISO_DAY = re.compile(r"(?<![\d\-/.])(?:(20\d{2})\s*-\s*)?(\d{1,2})\s*-\s*(\d{1,2})(?![\d\-])")
+_SPAN_WORDS = {"하루": 1, "이틀": 2, "사흘": 3, "나흘": 4, "닷새": 5}
+_SPAN = re.compile(r"(하루|이틀|사흘|나흘|닷새)(?=\s*(?:만\s*)?(?:자|묵|숙박|머물|지내|밤|동안|뒤|후|있))")
+_SINO_NIGHTS = re.compile(r"(?<![가-힣])(일|이|삼|사|오)\s*박(?![가-힣])")
+_COUNT_NIGHTS = re.compile(r"(?<![가-힣])(두|세|네)\s*밤")
+
+
+def _native_number(tens: str | None, ones: str | None) -> int | None:
+    value = (_NATIVE_TENS.get(tens or "", 0)) + (_NATIVE_ONES.get(ones or "", 0))
+    return value or None
+
+
+def spoken_days(text: str) -> str:
+    """말로 쓴 날짜 · 박수를 숫자로 바꾼 문장. 바꿀 것이 없으면 그대로. 「N월」 뒤이거나, 들어가고 나오는 말 · 「째 날」이 붙은 것만 날로 본다."""
+    out = text or ""
+    out = _ISO_DAY.sub(lambda m: f"{int(m.group(2))}월 {int(m.group(3))}일" if 1 <= int(m.group(2)) <= 12 and 1 <= int(m.group(3)) <= 31
+                       else m.group(0), out)
+
+    def ordinal(m: re.Match) -> str:
+        word = "".join(m.group(1).split())
+        if word == "첫":
+            return "1일"
+        tens = next((t for t in _NATIVE_TENS if word.startswith(t)), None)
+        rest = word[len(tens):] if tens else word
+        rest = {"둘": "둘", "셋": "셋", "넷": "넷"}.get(rest, rest)
+        value = _native_number(tens, rest or None)
+        return f"{value}일" if value and value <= 31 else m.group(0)
+    out = _ORDINAL_DAY.sub(ordinal, out)
+
+    def native(m: re.Match) -> str:
+        special, tens, ones, alone = m.groups()
+        before = out[:m.start()]
+        month_before = re.search(r"\d{1,2}\s*월\s*$", before)
+        if special:                                 # 「11월 열흘에」 「8일~열흘」 「여드레에 가서 열흘에 나와」 — 날. 「열흘 동안」은 아니다
+            day_like = month_before or re.search(r"(?:~|부터|가서|들어가\S*|입실\S*|일\s*에?)\s*$", before) \
+                or re.match(r"\s*(?:에|부터|까지|입실|퇴실|체크|나오|나와|나올|나가)", out[m.end():])
+            return ("10일" if special == "열흘" else "15일") if day_like else m.group(0)
+        if alone and alone in _SPAN_WORDS and not month_before:
+            return m.group(0)                       # 「이틀 자고」는 박수 — 아래에서 바꾼다
+        if alone and not month_before and not re.search(r"(?:~|부터|들어가\S*|입실\S*|가서|일\s*에?)\s*$", before):
+            return m.group(0)                       # 「다섯 명」 「둘이」 같은 말은 날이 아니다
+        if alone in ("한", "두", "세", "네", "하룻"):
+            return m.group(0)
+        value = _native_number(tens, ones) if tens else _NATIVE_ONES.get(alone or "")
+        if not value or value > 31:
+            return m.group(0)
+        tail = out[m.end():]
+        return f"{value}일" + ("" if re.match(r"\s*(?:째\s*)?(?:날|일)", tail) else "")
+    out = _NATIVE_DAY.sub(native, out)
+    out = re.sub(r"(\d{1,2})일\s*(?:째\s*)?(?:날|일)", r"\1일", out)        # 「28일 날」 「11일날」 → 「28일」
+    out = _SPAN.sub(lambda m: f"{_SPAN_WORDS[m.group(1)]}박", out)
+    out = _SINO_NIGHTS.sub(lambda m: f"{'일이삼사오'.index(m.group(1)) + 1}박", out)
+    out = _COUNT_NIGHTS.sub(lambda m: f"{'두세네'.index(m.group(1)) + 2}박", out)
+    return out
+
+
+#: `[2026-10-17 D20]` 체크인은 있는데 체크아웃이 빈 때 — 「4일 아침에 나와요」 「셋째 날 체크아웃」 「토욜 아침에 나와요」 「월요일에 나오는」 「다음 날 나와요」
+_END_DAY = re.compile(r"(?<!\d)(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일\s*(?:에\s*|아침\s*에?\s*|오전\s*에?\s*)?(?:까지|나오|나와|나올|나가|나갈|퇴실|체크\s*아웃)")
+_END_WEEKDAY = re.compile(r"([월화수목금토일])(?:요일|욜)\s*(?:에\s*|아침\s*에?\s*|오전\s*에?\s*)?(?:까지|나오|나와|나올|나가|나갈|퇴실|체크\s*아웃)")
+_END_NEXT = re.compile(r"(?:다음\s*날|담날|이튿날)\s*(?:에\s*|아침\s*에?\s*)?(?:나오|나와|나올|나가|퇴실|체크\s*아웃)")
+
+
+def rule_end(found: Interpretation, text: str) -> tuple[Interpretation, bool]:
+    """체크인만 있을 때 문장의 나오는 날(하나로 정해질 때)로 체크아웃. (해석, 채웠나)"""
+    if found.task != "search" or found.check_in is None or found.check_out is not None:
+        return found, False
+    start, ends = found.check_in, set()
+    for m in _END_DAY.finditer(text or ""):
+        month = int(m.group(1)) if m.group(1) else start.month
+        year = start.year + (1 if month < start.month else 0)
+        try:
+            end = date(year, month, int(m.group(2)))
+        except ValueError:
+            continue
+        if not m.group(1) and end <= start:        # 「12월 30일 … 2일까지」 — 다음 달
+            nxt = start.month % 12 + 1
+            try:
+                end = date(start.year + (nxt == 1), nxt, int(m.group(2)))
+            except ValueError:
+                continue
+        ends.add(end)
+    for m in _END_WEEKDAY.finditer(text or ""):
+        gap = (_WEEKDAYS[m.group(1)] - start.weekday()) % 7 or 7
+        ends.add(start + timedelta(days=gap))
+    if _END_NEXT.search(text or ""):
+        ends.add(start + timedelta(days=1))
+    ends = {end for end in ends if 0 < (end - start).days <= 30}
+    if len(ends) != 1:
+        return found, False
+    return found.model_copy(update={"check_out": ends.pop()}), True
+
+
+def rule_spoken(found: Interpretation, text: str, *, today: date) -> tuple[Interpretation, bool]:
+    """말로 쓴 날짜를 숫자로 바꾼 문장으로 날짜 규칙을 한 번 더 돌린다(`rule_checks` 뒤). (해석, 고쳤나)"""
+    if found.task != "search":
+        return found, False
+    spoken = spoken_days(text)
+    changed = False
+    if spoken != (text or ""):
+        found, by_range = rule_ranges(found, spoken, today=today)
+        found, by_date = rule_dates(found, spoken, today=today)
+        changed = by_range or by_date
+    found, by_end = rule_end(found, spoken)
+    found, by_nights = rule_nights(found, spoken)
+    return found, changed or by_end or by_nights
+
+
 def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[str]]:
     """모델 값 가운데 문장에 근거가 약한 것을 비운다(되묻게 된다). (해석, 비운 칸)"""
     if found.task != "search":
@@ -422,4 +550,4 @@ def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[
     return (found.model_copy(update=update), cleared) if update else (found, [])
 
 
-__all__ = ["CALENDAR_DAYS", "rule_dates", "rule_ranges", "rule_checks", "rule_nights", "rule_people", "rule_start", "rule_weekdays", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
+__all__ = ["CALENDAR_DAYS", "rule_dates", "rule_ranges", "rule_checks", "rule_nights", "rule_people", "rule_spoken", "rule_start", "rule_weekdays", "spoken_days", "rule_end", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]

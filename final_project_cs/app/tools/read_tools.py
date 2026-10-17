@@ -26,6 +26,10 @@ _FIXED_LANDMARKS = (("인천공항2터미널", "인천국제공항 제2여객터
                     ("인천공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507),
                     ("인천국제공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507))
 #: 서울 밖 도시 이름으로 시작하는 검색어 — 카카오(서울 안)의 답은 이름만 같은 서울 가게라 기준점으로 쓰지 않는다
+#: `[2026-10-17 D20]` 구 이름만 말하면 그 구청을 기준점으로 — 「성북구」→「서울한양도성 낙산구간」, 「영등포구」→「한강」, 「서초구」→「헌릉과 인릉」처럼
+#:  관련도 1위 관광지가 잡혀 다른 구 숙소가 나왔다(☆4차 held-out qa_1017_214452, 17건)
+_SEOUL_GU = frozenset("종로구 중구 용산구 성동구 광진구 동대문구 중랑구 성북구 강북구 도봉구 노원구 은평구 서대문구 마포구 양천구 강서구 구로구 "
+                      "금천구 영등포구 동작구 관악구 서초구 강남구 송파구 강동구".split())
 _OUTSIDE_SEOUL = re.compile(r"^(?:인천|부천|일산|고양|성남|분당|판교|수원|용인|안양(?!천)|과천|광명|하남|구리|남양주|의정부|파주|"
                             r"부산|해운대|대구|대전|울산|제주|서귀포|강릉|속초|춘천|경주|전주|여수|송도|영종)")
 
@@ -1014,6 +1018,8 @@ class ReadToolbox:
         station_first = bool(re.fullmatch(r"[가-힣]{2,6}", stem)) and not re.search(r"[역구동로길]$", stem)
         tries = ([(word, {"category_group_code": "SW8"}, None), (word, {}, compact)] if word.endswith("역") else
                  ([(stem + "역", {"category_group_code": "SW8"}, stem + "역")] if station_first else []) + [(word, {}, compact)])
+        if compact in _SEOUL_GU:
+            tries = [(compact + "청", {"category_group_code": "PO3"}, compact + "청"), *tries]     # PO3 = 공공기관
         answered = False
         for query, options, must in tries:
             found = self.kakao.search(query, size=5, anywhere=True, **options)

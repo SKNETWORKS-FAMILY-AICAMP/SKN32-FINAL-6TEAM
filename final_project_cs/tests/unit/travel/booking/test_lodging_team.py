@@ -1577,3 +1577,74 @@ def test_d19_partner_people_room_size_safety_and_either_labels():
     assert unsupported_requests("여자 혼자 안전하게 묵을 수 있는 홍대 쪽 숙소", []) == ["안전 · 여성 전용층"]
     text = LodgingTeam._skip_text({"kind": 3}, read_wants("홍대 게스트하우스나 호텔"), None, "")
     assert text == "게스트하우스 · 호스텔 · 호텔 아님 3곳은 뺌" and "None" not in text
+
+
+def test_d20_spoken_and_dash_dates_are_read():
+    """`[2026-10-17 D20]` ☆4차 held-out qa_1017_214452 — 「11월 열흘」 「스물여덟 날」 「11-18」 「2027-01-28」 「이틀 자고」 「이박」
+    「셋째 날 체크아웃」 「토욜 아침에 나와요」를 못 읽어 날짜를 다시 물었다(21건)."""
+    from datetime import date as day
+
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, rule_spoken, spoken_days
+
+    today = day(2026, 10, 17)
+
+    def dates(text, **known):
+        found, _ = rule_spoken(Interpretation(task="search", **known), text, today=today)
+        return found.check_in, found.check_out
+
+    assert dates("용산구 쪽, 11월 열흘에 들어가서 이틀 자고 나올 거고 성인 한 명이야") == (day(2026, 11, 10), day(2026, 11, 12))
+    assert dates("도봉구 게스트하우스 11월 스물여덟 날부터 두 밤, 성인 둘") == (day(2026, 11, 28), day(2026, 11, 30))
+    assert dates("강서구 모텔 성인 둘. 12월 열일곱부터 열아홉까지!") == (day(2026, 12, 17), day(2026, 12, 19))
+    assert dates("1월 열하루에 들어가서 열사흘에 나올 방") == (day(2027, 1, 11), day(2027, 1, 13))
+    assert dates("동대문구, 성인 넷. 11-18 입실해서 11-19 퇴실하는 일정") == (day(2026, 11, 18), day(2026, 11, 19))
+    assert dates("2027-01-28 체크인으로 성인 두 명") == (day(2027, 1, 28), None)
+    assert dates("중랑구 11월 스무날부터 이박 성인 둘") == (day(2026, 11, 20), day(2026, 11, 22))
+    assert dates("1월 일곱째 날 들어가서 아홉째 날 나와요") == (day(2027, 1, 7), day(2027, 1, 9))
+    assert dates("12월 열하룻날부터 하루 자는 걸루") == (day(2026, 12, 11), day(2026, 12, 12))
+    assert dates("새해 첫날 체크인, 셋째 날 체크아웃", check_in=day(2027, 1, 1)) == (day(2027, 1, 1), day(2027, 1, 3))
+    assert dates("1월 14일 목욜 들어가서 토욜 아침에 나와요", check_in=day(2027, 1, 14)) == (day(2027, 1, 14), day(2027, 1, 16))
+    assert dates("마포구 12월 8일~열흘, 성인 둘", check_in=day(2026, 12, 8)) == (day(2026, 12, 8), day(2026, 12, 10))
+    # 날이 아닌 말은 그대로
+    assert spoken_days("성인 다섯 명, 친구 셋이랑, 하루 8만원 넘지 않게, 열흘 동안") == "성인 다섯 명, 친구 셋이랑, 하루 8만원 넘지 않게, 열흘 동안"
+    assert spoken_days("1월 넷째 토요일에 도착") == "1월 넷째 토요일에 도착"
+
+
+def test_d20_month_part_weekends():
+    """`[2026-10-17 D20]` 「다음 달 중순 주말」을 11/12(목), 「다음 달 말 주말」을 10/30 으로 읽었다(☆N24-05 · N24-23). 「11월 중에 주말」은 날짜 아님(F-06)."""
+    from datetime import date as day
+
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, rule_weekdays
+
+    today = day(2026, 10, 17)
+    model = Interpretation(task="search", check_in=day(2026, 11, 12), check_out=day(2026, 11, 13))
+
+    def dates(text):
+        found, _ = rule_weekdays(model, text, today=today)
+        return found.check_in, found.check_out
+
+    assert dates("마포구 다음 달 중순 주말에 1박으로") == (day(2026, 11, 14), day(2026, 11, 15))
+    assert dates("송파구 다음 달 말 주말에 1박") == (day(2026, 11, 28), day(2026, 11, 29))
+    assert dates("12월 초 주말 2박") == (day(2026, 12, 5), day(2026, 12, 7))
+    assert rule_weekdays(Interpretation(task="search"), "11월 중에 주말 2박으로 신촌", today=today)[0].check_in is None
+
+
+def test_d20_a_bare_district_anchors_on_its_office():
+    """`[2026-10-17 D20]` 「성북구」→「서울한양도성 낙산구간」, 「영등포구」→「한강」 — 구 이름만이면 구청을 먼저 찾는다."""
+    from app.tools.read_tools import ReadToolbox
+
+    class Kakao:
+        def __init__(self):
+            self.calls = []
+
+        def search(self, query, **options):
+            self.calls.append((query, options.get("category_group_code")))
+            answers = {("영등포구청", "PO3"): [{"name": "영등포구청", "latitude": 37.526, "longitude": 126.896}],
+                       ("영등포구", None): [{"name": "한강", "latitude": 37.52, "longitude": 126.93}]}
+            return answers.get((query, options.get("category_group_code")), [])
+
+    kakao = Kakao()
+    assert ReadToolbox(lambda: None, kakao=kakao).landmark(None, name="영등포구")["name"] == "영등포구청"
+    assert kakao.calls == [("영등포구청", "PO3")]
+    other = Kakao()
+    ReadToolbox(lambda: None, kakao=other).landmark(None, name="여의도")
+    assert all(query != "여의도청" for query, _ in other.calls), "구 이름이 아니면 구청을 찾지 않는다"
