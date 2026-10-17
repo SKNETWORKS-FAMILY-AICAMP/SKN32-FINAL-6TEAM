@@ -1660,7 +1660,9 @@ def test_d21_an_unnamed_station_walk_is_measured_from_the_nearest_station():
     tools = {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else None,
              "read.landmark": office, "read.stations_near": near}
     result, _, calls = _run({**SEARCH, "keyword": "용산구"}, tools, text=text)
-    assert ("read.stations_near", {"latitude": 37.5324, "longitude": 126.9906, "radius": 5000}) in calls.calls
+    station_calls = [arguments for name, arguments in calls.calls if name == "read.stations_near"]
+    assert len(station_calls) == 1 and station_calls[0]["points"][0] == [37.5324, 126.9906] and station_calls[0]["radius"] == 1500, \
+        "역 목록은 한 번 — 기준점과 숙소들이 모인 곳 둘레"
     assert "이태원역 6호선에서 0.0km" in result.answer, "구청이 아니라 가장 가까운 역에서 잰 거리"
     assert "가장 가까운 지하철역에서 걸어서 7분 안" in result.answer
     assert "용산구청에서 걸어서" not in result.answer
@@ -1680,3 +1682,40 @@ def test_d21_a_named_station_still_uses_the_landmark():
     assert wants("역까지 걸어서 십분 안쪽이면 좋겠어").station_walk is True
     assert wants("강남구 지하철역 도보 6분 안쪽").station_walk is True
     assert wants("홍대 근처 지하철역 가까운 곳").station_walk is False, "걷기 말이 없으면 근처(3km) 그대로"
+
+
+def test_d21_stations_are_looked_up_around_the_stays_too():
+    """`[2026-10-17 D21]` ☆qa_1017_225355 — 용산구청 둘레 역만 받아 명동 · 회현 쪽 숙소가 모두 「7분 넘음」이 됐다. 숙소들이 모인 곳 둘레도 본다."""
+    from app.domains.travel_ops.instances.lodging.team import _StationMeter
+    from app.tools.read_tools import ReadToolbox
+
+    class Kakao:
+        def __init__(self):
+            self.calls = []
+
+        def search(self, query, **options):
+            self.calls.append(options.get("near"))
+            return [{"name": "명동역 4호선", "latitude": 37.5609, "longitude": 126.9863}] if options["near"][0] > 37.55 else \
+                [{"name": "녹사평역 6호선", "latitude": 37.5344, "longitude": 126.9870}]
+
+    kakao = Kakao()
+    box = ReadToolbox(lambda: None, kakao=kakao)
+    team = SimpleNamespace(_read=lambda task, name, arguments, seen: box.stations_near(None, **arguments),
+                           _evidence=lambda task, **kw: kw["base"], _walker=lambda spot, day: None)
+    meter = _StationMeter(team, None, {"name": "용산구청", "latitude": 37.5324, "longitude": 126.9906}, None, 0.37, set())
+    meter.prime([(37.5590, 126.9850), (37.5595, 126.9855)], [])
+    assert len(kakao.calls) == 2, "기준점 + 1km 넘게 떨어진 숙소 무리 한 곳"
+    name, minutes, km = meter((37.5590, 126.9850))
+    assert name == "명동역 4호선" and minutes is None and km < 0.3
+
+
+def test_d21_locate_many_accepts_one_name_containing_the_other():
+    """`[2026-10-17 D21]` ☆qa_1017_225355 — 「남산, 쉼」 ↔ 「남산쉼 게스트하우스」를 못 묶어 20곳 중 14곳이 위치 모름이었다. 둘 이상이면 쓰지 않는다."""
+    looked = {"source": "kakao", "stays": {
+        "남산, 쉼": [{"name": "남산쉼 게스트하우스", "latitude": 37.55, "longitude": 126.98}],
+        "스테이 가온": [{"name": "스테이가온 명동", "latitude": 37.56, "longitude": 126.98},
+                    {"name": "스테이가온 홍대", "latitude": 37.55, "longitude": 126.92}]}}
+    team = LodgingTeam(SimpleNamespace(), None)
+    team._read = lambda task, name, arguments, seen: looked
+    found, _ = team._locate_many(SimpleNamespace(context=SimpleNamespace(evidence=[]), team_id="lodging"), ["남산, 쉼", "스테이 가온"], set(), [])
+    assert found == {"남산, 쉼": (37.55, 126.98)}

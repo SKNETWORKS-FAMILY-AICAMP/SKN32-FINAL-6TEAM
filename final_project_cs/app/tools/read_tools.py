@@ -1064,22 +1064,37 @@ class ReadToolbox:
                         "latitude": top.get("latitude"), "longitude": top.get("longitude")}
         return {"source": "kakao", "found": False} if answered else None
 
-    def stations_near(self, scope: ToolContext, *, latitude: Any = None, longitude: Any = None, radius: Any = None,
-                      **_: Any) -> dict[str, Any] | None:
-        """좌표 둘레 반경(미터, 기본 3000) 안 지하철역 — 거리순 최대 15곳(카카오 한 쪽 상한). `[2026-10-17 D21]`
+    #: 한 번에 둘레 역을 찾는 점 수 상한(카카오 호출 수 = 점 수). 우리가 고른 값
+    STATION_POINTS_MAX = 6
 
-        카카오 로컬 키워드 검색(「역」, 지하철역 `SW8`, 거리순). 돌려주는 것: `{"source": "kakao", "stations": [{name, latitude, longitude}]}` —
-        이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관). 카카오를 부를 수 없으면 `None`."""
-        try:
-            point = (float(latitude), float(longitude))
-        except (TypeError, ValueError):
+    def stations_near(self, scope: ToolContext, *, points: Any = None, latitude: Any = None, longitude: Any = None,
+                      radius: Any = None, **_: Any) -> dict[str, Any] | None:
+        """점(들) 둘레 반경(미터, 기본 1500) 안 지하철역 — 점마다 거리순 최대 15곳(카카오 한 쪽 상한)을 모아 중복을 뺀다. `[2026-10-17 D21]`
+
+        `points=[[위도, 경도], …]`(앞의 `STATION_POINTS_MAX` 개) 또는 `latitude` · `longitude` 하나. 카카오 로컬 키워드 검색(「역」, 지하철역 `SW8`).
+        돌려주는 것: `{"source": "kakao", "stations": [{name, latitude, longitude}]}` — 이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관).
+        카카오를 부를 수 없으면 `None`."""
+        raw = points if points else [[latitude, longitude]]
+        spots = []
+        for point in list(raw)[: self.STATION_POINTS_MAX]:
+            try:
+                spots.append((float(point[0]), float(point[1])))
+            except (TypeError, ValueError, IndexError):
+                continue
+        if self.kakao is None or not spots:
             return None
-        if self.kakao is None:
-            return None
-        found = self.kakao.search("역", size=15, near=point, radius=int(radius or 3000), category_group_code="SW8")
-        if found is None:
-            return None
-        return {"source": "kakao", "stations": [{key: row.get(key) for key in ("name", "latitude", "longitude")} for row in found]}
+        out, seen, answered = [], set(), False
+        for spot in spots:
+            found = self.kakao.search("역", size=15, near=spot, radius=int(radius or 1500), category_group_code="SW8")
+            if found is None:
+                continue
+            answered = True
+            for row in found:
+                key = (row.get("name"), round(float(row.get("latitude") or 0), 5), round(float(row.get("longitude") or 0), 5))
+                if key not in seen:
+                    seen.add(key)
+                    out.append({k: row.get(k) for k in ("name", "latitude", "longitude")})
+        return {"source": "kakao", "stations": out} if answered else None
 
     def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
                             check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
