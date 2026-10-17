@@ -72,6 +72,29 @@ def test_real_source_in_a_mixed_simulation_target_is_labelled_as_a_trial(db, mon
     assert record['impact']['affects_itinerary'] is False
 
 
+def test_safety_reference_messages_are_not_in_the_item_filter(db, monkeypatch, rules):
+    monkeypatch.setattr(history.SafetyRules, 'from_guardrails', lambda: rules)
+    report = {'checks': [{'category': 'disaster_msg', 'mode': 'api', 'status': 'ok'}],
+              'disruptions': [{'category': 'disaster_msg', 'kind': '기타', 'text': '참고 안내'}]}
+    db.execute('INSERT INTO travel_watch_checks(tenant_id,at,trip_id,stage,report) VALUES(%s,%s,%s,%s,%s)',
+               ('one', now(db)-timedelta(seconds=1), uuid4(), 'safety', Jsonb(report)))
+    assert history.view(db, 'one', impacts=['item'])['total'] == 0
+    row = history.view(db, 'one', impacts=['none'])['records'][0]
+    assert row['impact']['affects_itinerary'] is False
+
+
+def test_safety_phase_and_timestamp_survive_filter_projection(db, monkeypatch, rules):
+    monkeypatch.setattr(history.SafetyRules, 'from_guardrails', lambda: rules)
+    for phase in ('upcoming', 'in_progress'):
+        report = {'phase': phase, 'checked_at': now(db).isoformat(),
+                  'checks': [{'category': 'earthquake', 'mode': 'api', 'status': 'ok'}],
+                  'disruptions': [{'category': 'earthquake', 'magnitude': 4.5}]}
+        db.execute('INSERT INTO travel_watch_checks(tenant_id,at,trip_id,stage,report) VALUES(%s,%s,%s,%s,%s)',
+                   ('one', now(db)-timedelta(seconds=1), uuid4(), 'safety', Jsonb(report)))
+    assert history.view(db, 'one', impacts=['day'])['total'] == 1
+    assert history.view(db, 'one', impacts=['none'])['total'] == 1
+
+
 @pytest.mark.parametrize('query', ['impact=bad', 'impact=trip&impact=day&impact=item&impact=none&impact=trip'])
 def test_invalid_impact_query_is_rejected_before_storage(query, monkeypatch):
     from app.domains.travel_ops.entry import admin_simulation_api as api

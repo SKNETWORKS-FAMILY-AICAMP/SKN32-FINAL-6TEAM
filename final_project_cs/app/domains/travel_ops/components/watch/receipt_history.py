@@ -40,6 +40,7 @@ WITH records AS (
         part.value || jsonb_build_object('disruptions',c.report->'disruptions',
                                         'advisories',c.report->'advisories',
                                         'verdict',c.report->'verdict',
+                                        'phase',c.report->'phase','checked_at',c.report->'checked_at',
                                         'simulation_target',c.stage='simulation_full' OR EXISTS (
                                             SELECT 1 FROM jsonb_array_elements(
                                                 CASE WHEN jsonb_typeof(c.report->'checks')='array'
@@ -98,7 +99,8 @@ def view(conn, tenant: str, *, mode: str = 'actual', date_from: date | None = No
         minimal = conn.execute(_RECORDS+"""SELECT id,mode,record_type,category,status,trip_id,stage,
             jsonb_build_object('disruptions',payload->'disruptions','advisories',payload->'advisories',
                 '_disruptions',payload->'_disruptions','_advisories',payload->'_advisories',
-                'verdict',payload->'verdict','simulation_target',payload->'simulation_target',
+                'verdict',payload->'verdict','phase',payload->'phase','checked_at',payload->'checked_at',
+                'simulation_target',payload->'simulation_target',
                 'partial_from',payload->'partial_from',
                 'value',jsonb_build_object('partial_from',payload#>'{value,partial_from}'))
             FROM records"""+where, args).fetchall()

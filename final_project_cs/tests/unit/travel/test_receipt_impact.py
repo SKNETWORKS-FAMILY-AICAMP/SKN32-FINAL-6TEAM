@@ -1,3 +1,7 @@
+from contextlib import contextmanager
+from datetime import datetime
+from types import SimpleNamespace
+
 import pytest
 
 from app.domains.travel_ops.components.planning.safety import SafetyRules
@@ -11,8 +15,10 @@ def rules():
 
 
 def record(rules, **changes):
+    payload = {'phase': 'in_progress', 'checked_at': '2026-10-17T19:00:00+09:00'}
+    payload.update(changes.pop('payload', {}))
     args = dict(category='earthquake', status='ok', record_type='api_check', mode='actual',
-                trip_id='trip', stage='safety', payload={}, rules=rules)
+                trip_id='trip', stage='safety', payload=payload, rules=rules)
     args.update(changes)
     return describe(**args)
 
@@ -59,9 +65,9 @@ def test_another_source_cannot_colour_this_source(rules):
 
 
 def test_item_changes_and_forecast_attention_are_not_claimed_as_applied_stops(rules):
-    closure = record(rules, category='traffic_control', payload={'disruptions': [{'category': 'traffic_control', 'kind': '전면 통제'}]})
+    closure = record(rules, category='traffic_control', stage='schedule', payload={'disruptions': [{'category': 'traffic_control', 'kind': '전면 통제'}]})
     advisory = record(rules, category='forecast', record_type='mock_input', mode='simulation',
-                      payload={'_advisories': [{'category': 'forecast', 'field': 'wind_speed_kmh', 'value': 100}]})
+                      stage='input', payload={'_advisories': [{'category': 'forecast', 'field': 'wind_speed_kmh', 'value': 100}]})
     assert closure['scope'] == advisory['scope'] == 'item'
     assert '정지 완료를 뜻하지 않습니다' in closure['summary']
     assert '주의 안내' in advisory['summary']
@@ -71,3 +77,55 @@ def test_non_applicable_and_successful_clear_checks_are_no_impact(rules):
     assert record(rules, status='not_applicable')['scope'] == 'none'
     assert record(rules)['scope'] == 'none'
     assert record(rules, trip_id=None)['scope'] == 'unassessed'
+
+
+def test_safety_reference_message_cannot_become_an_item_stop(rules):
+    payload = {'disruptions': [{'category': 'disaster_msg', 'kind': '기타', 'text': '참고 안내'}]}
+    assert record(rules, category='disaster_msg', payload=payload)['scope'] == 'none'
+    assert record(rules, category='disaster_msg', stage='schedule', payload=payload)['scope'] == 'item'
+
+
+@pytest.mark.parametrize('phase,expected', [('upcoming', 'none'), (None, 'unassessed'), ('in_progress', 'day')])
+def test_day_safety_scope_requires_saved_travel_phase(rules, phase, expected):
+    result = record(rules, payload={'phase': phase, 'disruptions': [{'category': 'earthquake', 'magnitude': 4.5}]})
+    assert result['scope'] == expected
+
+
+def test_safety_events_of_a_different_day_and_fatal_checks_are_not_highlighted(rules):
+    cause = {'category': 'earthquake', 'magnitude': 4.5, 'at': '2026-10-16T19:00:00+09:00'}
+    assert record(rules, payload={'disruptions': [cause]})['scope'] == 'none'
+    assert record(rules, payload={'verdict': 'fatal', 'disruptions': [{**cause, 'magnitude': 7}]})['scope'] == 'unassessed'
+
+
+def test_a_confirmed_schedule_disruption_is_retained_with_partial_source_coverage(rules):
+    result = record(rules, stage='schedule', category='traffic_control', payload={
+        'value': {'partial_from': ['utic']},
+        'disruptions': [{'category': 'traffic_control', 'kind': '확인된 도로 통제'}]})
+    assert result['scope'] == 'item'
+
+
+@pytest.mark.parametrize('phase', ['upcoming', 'in_progress'])
+@pytest.mark.parametrize('verdict', ['clear', 'fatal'])
+def test_safety_worker_records_real_phase_and_clock_without_changing_input_or_notifying(monkeypatch, rules, phase, verdict):
+    from app.domains.travel_ops.components.watch import monitoring, safety_pause
+    events = []
+    monkeypatch.setattr(monitoring, 'record', lambda stage, **event: events.append((stage, event)))
+    spot = {'name': '기록 검증 장소'}
+    monkeypatch.setattr(safety_pause, '_reference_place', lambda items, at: spot)
+
+    @contextmanager
+    def connect():
+        yield object()
+
+    original = {'verdict': verdict, 'checks': []}
+    fake = SimpleNamespace(_connect=connect, store=SimpleNamespace(latest=lambda *args: ({}, [SimpleNamespace(place=spot)])),
+                           pauses=SimpleNamespace(active=lambda *args, **kwargs: []),
+                           check=lambda **kwargs: original, rules=rules)
+    clock = datetime.fromisoformat('2026-10-17T19:00:00+09:00')
+    result = safety_pause.SweepResult()
+    safety_pause.SafetySweep._one(fake, 'trip', phase, clock, result)
+    assert events[0][0] == 'safety'
+    assert events[0][1]['report']['phase'] == phase
+    assert events[0][1]['report']['checked_at'] == clock
+    assert original == {'verdict': verdict, 'checks': []}
+    assert result.opened == []

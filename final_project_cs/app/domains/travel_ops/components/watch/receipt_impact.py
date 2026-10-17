@@ -1,6 +1,9 @@
 """운영자 기록의 영향 범위. 기존 안전 판정을 읽기 전용으로 재사용한다."""
 from __future__ import annotations
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from app.domains.travel_ops.components.planning.safety import SafetyRules, classify
 
 SCOPES = {'trip': '전체일정정지', 'day': '일일일정정지', 'item': '해당일정정지', 'none': '영향없음'}
@@ -27,6 +30,10 @@ def describe(*, category: str, status: str | None, record_type: str, mode: str,
         return result('none', '이 일정은 해당 소스의 점검 대상이 아닙니다.')
     if status != 'ok':
         return result('unassessed', 'API 조회를 확인하지 못해 일정 영향을 판단할 수 없습니다.')
+    if payload.get('verdict') == 'fatal':
+        return result('unassessed', '점검 실패로 일정 영향 판정을 완료하지 못했습니다.')
+    value = payload.get('value') or {}
+    partial = payload.get('partial_from') or isinstance(value, dict) and value.get('partial_from')
 
     def causes(field: str) -> list[dict]:
         values = payload.get(field) or payload.get('_' + field) or []
@@ -34,6 +41,24 @@ def describe(*, category: str, status: str | None, record_type: str, mode: str,
 
     disruptions, advisories = causes('disruptions'), causes('advisories')
     event = classify(disruptions, rules)
+    if stage == 'safety':
+        if event is None:
+            if partial:
+                return result('unassessed', '일부 소스만 응답해 일정 영향이 없다고 확정할 수 없습니다.')
+            return result('none', '이 안전 점검에서는 여행 전체·당일 일정 정지 기준에 해당하지 않았습니다.')
+        if event.level == 'day':
+            if payload.get('phase') == 'upcoming':
+                return result('none', '아직 시작 전인 여행이므로 현재 날짜의 일일 정지 적용 대상이 아닙니다.')
+            if payload.get('phase') != 'in_progress':
+                return result('unassessed', '과거 기록에 여행 진행 단계가 없어 일일 정지 적용 여부를 판단할 수 없습니다.')
+            try:
+                checked = datetime.fromisoformat(str(payload.get('checked_at') or ''))
+            except ValueError:
+                checked = None
+            if checked is None or checked.tzinfo is None or event.at and event.at.tzinfo is None:
+                return result('unassessed', '실제 점검 날짜를 확인하지 못해 일일 정지 적용 여부를 판단할 수 없습니다.')
+            if event.at and event.at.astimezone(ZoneInfo('Asia/Seoul')).date() != checked.astimezone(ZoneInfo('Asia/Seoul')).date():
+                return result('none', '점검 날짜와 다른 날의 사건이므로 이 날짜의 일일 정지 사유가 아닙니다.')
     if event:
         extent = '여행 전체' if event.level == 'trip' else '당일 남은 일정'
         return result(event.level, f'{event.label}: {extent}의 안전정지 기준에 해당합니다. 실제 적용 여부는 별도입니다.')
@@ -43,9 +68,6 @@ def describe(*, category: str, status: str | None, record_type: str, mode: str,
         return result('item', f'{reason}: 해당 방문의 중단·변경 검토 대상입니다. 정지 완료를 뜻하지 않습니다.')
     if advisories:
         return result('item', '예보 주의 기준을 넘었습니다. 주의 안내·변경 제안 대상이며 자동 정지 완료를 뜻하지 않습니다.')
-    value = payload.get('value') or {}
-    if payload.get('partial_from') or isinstance(value, dict) and value.get('partial_from'):
+    if partial:
         return result('unassessed', '일부 소스만 응답해 일정 영향이 없다고 확정할 수 없습니다.')
-    if payload.get('verdict') == 'fatal':
-        return result('unassessed', '점검 실패로 일정 영향 판정을 완료하지 못했습니다.')
     return result('none', '이 점검에서는 일정 정지·변경 사유가 확인되지 않았습니다.')
