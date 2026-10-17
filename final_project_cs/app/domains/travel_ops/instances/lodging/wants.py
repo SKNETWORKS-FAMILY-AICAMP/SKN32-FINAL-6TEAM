@@ -33,6 +33,9 @@ _STAY_KIND_WORDS = (("한옥", "한옥"), ("hanok", "한옥"), ("han-ok", "한�
 DORMS = frozenset({"게스트하우스", "호스텔"})
 #: 「호텔」을 원할 때 뺄 유형(유형을 모르면 남긴다)
 NOT_HOTEL = frozenset({"게스트하우스", "호스텔", "모텔", "한옥", "펜션"})
+#: `[2026-10-17 GPT 검수 2차 · N10-23]` 「호스텔이나 호텔」 — 두 유형 중 아무거나면 유형으로 거르지 않는다(묵을 분 먼저 묻기 L05 도 안 한다)
+_EITHER = re.compile(r"(한옥|게스트\s*하우스|게하|호스텔|모텔|펜션|리조트|호텔)\s*(?:이나|나|또는|혹은|아니면|이든|든|/|or)\s*"
+                     r"(한옥|게스트\s*하우스|게하|호스텔|모텔|펜션|리조트|호텔)", re.I)
 _AVOID = re.compile(r"(한옥|게스트하우스|게하|호스텔|모텔|펜션|리조트)\s*(?:은|는|이나|나)?\s*(?:말고|빼고|제외|싫|아니)")
 _STARS = re.compile(r"(?<![\d.])([1-5](?:\.5)?)\s*성(?!인)(?:급|짜리)?")
 _NO_DORM = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|연인|기념일|분위기|신혼|허니문|프러포즈|프로포즈|고급|럭셔리")
@@ -149,6 +152,10 @@ def read_wants(text: str | None) -> Wants:
             words.append(found.group(0))
     if kind in avoid:
         kind = None
+    either = _EITHER.search(text)
+    if either and dict(_KIND_WORDS).get(either.group(1).replace(" ", "")) != dict(_KIND_WORDS).get(either.group(2).replace(" ", "")):
+        kind = None
+        words.append(either.group(0))
     guest = read_guest(text)
     low, high, price_words = read_price_band(text)
     minutes, minute_word = read_walk_minutes(text) if near == "walk" else (None, None)

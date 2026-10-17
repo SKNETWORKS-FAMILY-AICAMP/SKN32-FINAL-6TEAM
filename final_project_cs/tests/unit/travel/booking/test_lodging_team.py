@@ -1431,3 +1431,67 @@ def test_price_band_walk_minutes_and_kind_spellings_are_read():
     assert [item["gid"] for item in result.decisions[0]["shown"]] == [2] and "1박 100,000원 미만 1곳" in result.answer
     assert "구간 안 호텔" in result.answer and "너무 싼 호텔" not in result.answer
     assert next(a for n, a in tools.calls if n == "read.booking_search_stays")["max_price"] == 199999, "구간 시작으로 낸 상한은 구간 끝으로"
+
+
+def test_incheon_airport_has_a_fixed_anchor_and_other_cities_are_not_found_in_seoul():
+    """`[2026-10-17 GPT 검수 2차]` 카카오(서울 안)가 「인천공항」을 「인천공항 주차장 주차대행」(서울시청 근처)으로 잡았다(☆10-16 N7-13 등 5건)."""
+    from app.tools.read_tools import ReadToolbox
+
+    class Kakao:
+        def __init__(self):
+            self.calls = []
+
+        def search(self, query, **options):
+            self.calls.append(query)
+            return [{"name": f"{query} 주차대행", "latitude": 37.566, "longitude": 126.978}]
+
+    kakao = Kakao()
+    toolbox = ReadToolbox(lambda: None, kakao=kakao)
+    got = toolbox.landmark(None, name="인천공항")
+    assert got["source"] == "fixed" and got["name"] == "인천국제공항 제1여객터미널" and got["longitude"] < 126.6
+    assert toolbox.landmark(None, name="인천공항2터미널역")["name"] == "인천국제공항 제2여객터미널"
+    assert toolbox.landmark(None, name="수원역") == {"source": "kakao", "found": False, "outside_seoul": True}
+    assert kakao.calls == [], "서울 밖 이름은 카카오(서울 안)를 부르지 않는다"
+    assert toolbox.landmark(None, name="안양천")["found"] is True and toolbox.landmark(None, name="세종문화회관")["found"] is True
+
+
+def test_an_incheon_anchor_keeps_incheon_stays_and_does_not_prefix_seoul():
+    """인천공항 기준점이면 마이리얼트립 설명의 「인천」을 다른 지역으로 빼지 않고, 구글 검색어에 「서울」을 붙이지 않는다."""
+    listing = _listing([(1, "공항 호텔", "호텔 · 중구 · 인천", 120000), (2, "명동 호텔", "호텔 · 중구 · 서울", 110000)])
+    near = {(1,): (37.4470, 126.4520), (2,): (37.5600, 126.9850)}
+    detail = lambda a: {**DETAIL, "gid": a["gid"], "latitude": near[(a["gid"],)][0], "longitude": near[(a["gid"],)][1]}  # noqa: E731
+    spot = {"source": "fixed", "found": True, "name": "인천국제공항 제1여객터미널", "latitude": 37.4492, "longitude": 126.4507}
+    reply = {**SEARCH, "keyword": "인천공항", "max_price_per_night": None, "min_rating": None}
+    result, _, tools = _run(reply, {"read.landmark": spot, "read.stay_search": listing, "read.stay_detail": detail,
+                                    "read.stay_google": _google([("영종 호텔", 90000.0, 3, 37.4900, 126.4900)])},
+                            text="다음 달 6일부터 3박 인천공항 근처 숙소 성인 2명")
+    decision = result.decisions[0]
+    assert [item["gid"] for item in decision["shown"]] == [1], "인천 숙소는 남고 서울 명동(40km 넘게)은 뺀다"
+    assert next(a for n, a in tools.source_calls if n == "read.stay_google")["keyword"] == "인천공항"
+
+
+def test_the_model_question_is_used_only_when_it_asks_every_missing_field():
+    """`[2026-10-17 GPT 검수 2차]` ☆10-16 N8-27 · N12-27 — 모델은 빠진 칸을 지역 · 체크아웃으로 셌는데 문장은 지역만 물었다."""
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, ask
+
+    found = Interpretation(task="search", missing=["keyword", "check_out"], question="어느 지역으로 찾아 드릴까요?")
+    assert ask(found, ["keyword", "check_out"]) == "지역 · 체크아웃 날짜을(를) 알려 주시면 이어서 찾아 드리겠습니다."
+    found = Interpretation(task="search", missing=["keyword", "check_out"], question="어느 지역에서 몇 박 묵으실지 알려 주세요.")
+    assert ask(found, ["keyword", "check_out"]) == "어느 지역에서 몇 박 묵으실지 알려 주세요."
+
+
+def test_either_of_two_kinds_does_not_filter_or_ask_the_guest_first():
+    """`[2026-10-17 GPT 검수 2차 · N10-23]` 「호스텔이나 호텔」은 둘 다 — 호스텔로 좁혀 묵을 분부터 묻지 않는다."""
+    wants = read_wants("혼자 여행하는 여자인데 홍대/신촌 쪽 안전한 호스텔이나 호텔 1/10~13 추천 좀.")
+    assert wants.kind is None and wants.asks_guest == []
+    assert read_wants("홍대 호스텔 1/10~13").kind == "호스텔"
+    assert read_wants("게스트하우스나 게하").kind == "게스트하우스", "같은 유형 두 말은 그 유형"
+
+
+def test_a_han_river_view_is_not_an_area_and_the_area_is_asked():
+    """`[2026-10-17 GPT 검수 2차 · N11-29]` 「한강 뷰가 보이는 호텔」 — 한강은 전망, 지역을 묻는다. 「한강 근처」는 그대로 찾는다(L09)."""
+    reply = {**SEARCH, "keyword": "한강", "check_in_text": "다음 달 6일부터"}
+    result, _, tools = _run(reply, {"read.stay_search": STAYS}, text="한강 뷰가 보이는 호텔 다음 달 6일부터 3박 성인 2명")
+    assert tools.calls == [] and result.decisions[0]["needs"] == ["keyword"] and "지역" in result.answer
+    result, _, tools = _run(reply, {"read.stay_search": STAYS}, text="한강 근처 뷰 좋은 호텔 다음 달 6일부터 3박 성인 2명")
+    assert "needs" not in result.decisions[0]

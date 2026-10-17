@@ -18,6 +18,16 @@ from app.infrastructure.rag.retriever import search_policy
 
 #: `[2026-10-16]` 기준점 줄임말 → 역 이름(우리가 고른 짧은 목록)
 _LANDMARK_ALIASES = {"홍대": "홍대입구역", "건대": "건대입구역", "서울대": "서울대입구역", "고터": "고속터미널역"}
+#: `[2026-10-17 GPT 검수 2차]` 서울 밖이지만 서울 여행에서 자주 쓰는 기준점 — 카카오 어댑터는 서울 안만 찾아 「인천공항」이
+#:   「인천공항 주차장 주차대행」(서울시청 근처 업체)으로 잡혔다(☆10-16 새 문장 N7-13 · N8-13 · N9-14 · N10-05 · N11-05).
+#:   좌표는 터미널 대략 위치(공개 지도에서 옮김, **카카오로 다시 확인 안 함**) — 거리 확인(수 km 단위)에만 쓴다
+_FIXED_LANDMARKS = (("인천공항2터미널", "인천국제공항 제2여객터미널", 37.4687, 126.4335),
+                    ("인천국제공항2터미널", "인천국제공항 제2여객터미널", 37.4687, 126.4335),
+                    ("인천공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507),
+                    ("인천국제공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507))
+#: 서울 밖 도시 이름으로 시작하는 검색어 — 카카오(서울 안)의 답은 이름만 같은 서울 가게라 기준점으로 쓰지 않는다
+_OUTSIDE_SEOUL = re.compile(r"^(?:인천|부천|일산|고양|성남|분당|판교|수원|용인|안양(?!천)|과천|광명|하남|구리|남양주|의정부|파주|"
+                            r"부산|해운대|대구|대전|울산|제주|서귀포|강릉|속초|춘천|경주|전주|여수|송도|영종)")
 
 
 class ToolBudgetExceeded(RuntimeError):
@@ -984,8 +994,13 @@ class ReadToolbox:
         서울에서 못 찾았으면 `{"source": "kakao", "found": False}`, 카카오를 부를 수 없었으면 `None`(모름).
         """
         word = str(name or "").strip()
+        fixed = next((row for row in _FIXED_LANDMARKS if "".join(word.split()).startswith(row[0])), None)
+        if fixed:
+            return {"source": "fixed", "found": True, "name": fixed[1], "latitude": fixed[2], "longitude": fixed[3]}
         if not word or self.kakao is None:
             return None
+        if _OUTSIDE_SEOUL.match(re.sub(r"^서울(?:특별시|시)?\s*", "", word) if word.startswith("서울") else word):
+            return {"source": "kakao", "found": False, "outside_seoul": True}
         word = re.sub(r"^서울(?:특별시|시)?\s+", "", word) or word      # 「서울 강남」 → 「강남」(카카오는 이미 서울 안만 찾는다)
         # `[2026-10-16 최종 평가 뒤]` 줄임말 → 역 이름(「홍대」가 「머큐어 앰배서더 서울 홍대」 호텔로 잡혔다)
         word = _LANDMARK_ALIASES.get("".join(word.split()), word)

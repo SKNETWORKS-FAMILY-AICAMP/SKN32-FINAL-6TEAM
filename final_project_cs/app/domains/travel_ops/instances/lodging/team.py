@@ -98,6 +98,9 @@ _WHOLE_SEOUL = frozenset({"서울", "서울시", "서울특별시", "seoul"})
 #: `[2026-10-15 사용자 판정 L09]` 길게 이어진 곳 — 카카오 한 점(「한강」 → 용산 근처)을 거리 기준으로 쓰지 않는다. 서울 안으로는 본다
 _WIDE_SEOUL = frozenset({"한강", "한강변", "강변", "한강뷰"})
 #: `[2026-10-15 사용자 판정 L08]` 서울에 맞닿은 시 — 기준점이 있으면 시 이름으로 빼지 않고 거리로 본다(「김포 · 강서는 코앞」)
+#: 「한강 뷰」 「한강이 보이는」 — 전망 말(지역 아님). 「한강 근처 · 변 · 쪽 · 공원」이 같이 있으면 지역으로 본다
+_VIEW_ONLY = re.compile(r"한강\s*(?:뷰|view|전망)|한강이?\s*(?:잘\s*)?보이")
+_RIVER_PLACE = re.compile(r"한강\s*(?:근처|주변|변|쪽|공원|가)")
 _NEXT_TO_SEOUL = frozenset({"김포", "고양", "부천", "광명", "과천", "안양", "성남", "하남", "구리", "남양주", "의정부", "시흥"})
 #: `[2026-10-15 사용자 판정 L03]` 「걸어서 · 도보」 상한(분) — 이동 계산기(도보)가 있을 때. 없으면 직선 `WALK_KM`. 우리가 고른 값
 WALK_MIN = 15
@@ -463,7 +466,8 @@ def _google_keyword(keyword: str | None, wants: Wants, anchor: dict[str, Any] | 
     if not word:
         return None
     parts = [word]
-    if anchor is not None and "서울" not in word:
+    # `[2026-10-17]` 서울 밖 고정 기준점(인천공항)이면 「서울」을 붙이지 않는다
+    if anchor is not None and "서울" not in word and not _outside_seoul((anchor["latitude"], anchor["longitude"])):
         parts.insert(0, "서울")
     if wants.kind and wants.kind != "호텔" and wants.kind not in word:
         parts.append(wants.kind)
@@ -619,6 +623,12 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             return self._respond(task, evidence, {**decision, "needs": ["task"]},
                                  "숙소를 새로 찾아 드릴지, 이미 예약하신 숙소를 알려 주시는 것인지 말씀해 주세요. "
                                  "찾아 드리려면 지역 · 날짜 · 인원을, 예약하신 숙소라면 숙소 이름과 날짜를 알려 주세요.")
+        if "".join(str(found.keyword or "").split()) in _WIDE_SEOUL and _VIEW_ONLY.search(task.input_text or "") \
+                and not _RIVER_PLACE.search(task.input_text or ""):
+            # `[2026-10-17 GPT 검수 2차 · N11-29 · 사용자 결정]` 「한강 뷰가 보이는 호텔」의 한강은 전망이지 지역이 아니다 — 지역을 묻는다
+            #   (「한강 근처」 「한강변」은 그대로 서울 강변 전체로 찾는다 — ☆10-15 L09)
+            found = found.model_copy(update={"keyword": None})
+            decision = {**decision, "view_not_area": True}
         missing = needs(found, today=today)
         if missing:
             places = list(dict.fromkeys((trip or {}).get("places") or []))[:3]
@@ -666,7 +676,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         party = {"adults": found.adults + children, "children": 0} if children else {"adults": found.adults, "children": found.children}
         anchor, evidence = self._landmark(task, found, seen, evidence)
         squeezed = "".join(str(found.keyword or "").split())
-        seoul = anchor is not None or "서울" in squeezed or squeezed in _WIDE_SEOUL
+        # `[2026-10-17]` 서울 밖 고정 기준점(인천공항)이면 서울 검색이 아니다 — 「인천」 숙소를 지역 밖으로 빼지 않고 기준점 거리로 본다
+        far_anchor = anchor is not None and _outside_seoul((anchor["latitude"], anchor["longitude"]))
+        seoul = (anchor is not None and not far_anchor) or "서울" in squeezed or squeezed in _WIDE_SEOUL
         walk_min, walk_km = _walk_cap(wants)
         limit = (walk_km if wants.near == "walk" else NEAR_KM if wants.near == "near" else None) if anchor else None
         # `[2026-10-16 평가 2차]` 「10만 원대」 — 모델이 상한을 구간 시작(10만)으로 냈거나 비웠으면 구간 끝(199,999)으로
@@ -841,7 +853,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         if said and not name.endswith("역"):
             name = said.group(0)
         spot = self._read(task, "read.landmark", {"name": name}, seen)
-        evidence = self._evidence(task, source_id="read.landmark", claim="검색 지역 기준점(카카오맵, 서울 안)", value=spot, base=evidence)
+        evidence = self._evidence(task, source_id="read.landmark", claim="검색 지역 기준점(카카오맵 서울 안 · 인천공항은 고정 좌표)", value=spot, base=evidence)
         if not spot or not spot.get("found") or not isinstance(spot.get("latitude"), (int, float)) \
                 or not isinstance(spot.get("longitude"), (int, float)):
             return None, evidence

@@ -83,6 +83,25 @@ def needs(found: Interpretation, *, today: date) -> list[str]:
     return [name for name in REQUIRED.get(found.task, ()) if values.get(name) in (None, "")]
 
 
+#: `[2026-10-17 GPT 검수 2차]` 되묻는 문장이 그 칸을 묻는지 볼 말 — ☆10-16 17:14 새 문장 N8-27 · N12-27: 모델이 빠진 칸을 지역 · 체크아웃 둘로 적고
+#:   문장은 「어느 지역으로 찾을까요?」만 물었다. 세는 것(`missing`)이 같아도 문장이 다 묻지 않으면 서버 문장을 쓴다
+_ASKS = {"keyword": r"지역|어디|어느\s*곳|동네|위치|근처",
+         "stay_name": r"숙소\s*이름|어느\s*숙소|어떤\s*숙소|이름",
+         "check_in": r"체크인|입실|언제|날짜|며칠|일정",
+         "check_out": r"체크아웃|퇴실|몇\s*박|며칠\s*(?:동안|묵)|언제까지|박\s*수|나가",
+         "adults": r"인원|몇\s*(?:분|명)|성인|어른"}
+
+
+def covers(question: str, missing: list[str]) -> bool:
+    """되묻는 문장이 빠진 칸을 하나도 빼지 않고 묻는가(칸마다 그 칸을 묻는 말이 있나)."""
+    def asked(name: str) -> bool:
+        if name == "check_out" and "check_in" in missing:
+            return asked("check_in")        # 둘 다 빠졌으면 「언제 묵으실지」 한 번으로 묻는다
+        return bool(re.search(_ASKS.get(name, re.escape(LABELS.get(name, name))), question))
+
+    return all(asked(name) for name in missing)
+
+
 def ask(found: Interpretation, missing: list[str]) -> str:
     """되묻는 문장. 모델이 센 빠진 값이 서버가 센 것과 **같을 때만** 모델 문장을 쓰고, 다르면 빠진 값의 이름을 나열한다.
 
@@ -95,7 +114,7 @@ def ask(found: Interpretation, missing: list[str]) -> str:
     if rejected:
         return (f"{' · '.join(rejected)}(으)로 읽었는데 지난 날짜이거나 앞뒤가 맞지 않습니다. "
                 f"{' · '.join(LABELS[name] for name in missing)}을(를) 다시 알려 주세요.")
-    if found.question and set(found.missing) == set(missing):
+    if found.question and set(found.missing) == set(missing) and covers(found.question, missing):
         return found.question
     return f"{' · '.join(LABELS[name] for name in missing)}을(를) 알려 주시면 이어서 찾아 드리겠습니다."
 
