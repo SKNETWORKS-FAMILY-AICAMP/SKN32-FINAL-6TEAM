@@ -26,7 +26,7 @@ for (const width of [375, 1280]) test(`알림 센터 탭·재렌더 초점 유�
   await expect(history).toBeFocused();
   await expect(history).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowRight");
-  const warnings = center.getByRole("tab", { name: /살펴볼 점/ });
+  const warnings = center.getByRole("tab", { name: /^공지/ });                         // `[2026-10-17 ST4F-606]` 변경 이력 다음은 넷째 탭 「공지」
   await expect(warnings).toBeFocused();
   await expect(warnings).toHaveAttribute("aria-selected", "true");
   await mockServer(request).ring(["itinerary"]);

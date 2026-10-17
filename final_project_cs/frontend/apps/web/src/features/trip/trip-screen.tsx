@@ -40,7 +40,7 @@ import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
 import { useServiceStatus } from "@/features/support/service-notices";
-import { markServiceNoticesSeen, useSeenServiceNotices } from "@/features/support/service-notice-reads";
+import { useSeenServiceNotices } from "@/features/support/service-notice-reads";
 import { DetailHeader, TripDetail } from "./trip-detail";
 import { TripEdit } from "./trip-edit";
 import { TitleMenu, TripShare, TripTitle } from "./trip-title";
@@ -110,11 +110,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
   const seen = useSeenNotices(trip.id);
   const tripUnread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
-  // `[2026-10-17 사용자 결정 — ST4F-604]` 운영 앱의 서비스 공지 중 안 본 것도 센다 — 알림 센터를 열면 본 것(맨 위 「서비스 공지」 칸에 보인다).
+  // `[2026-10-17 사용자 결정 — ST4F-604 · 606]` 운영 앱의 서비스 공지 중 안 본 것도 센다 — 알림 센터의 「공지」 탭이 보여 주면 본 것(`trip-attention.tsx`).
   const service = useServiceStatus();
   const seenService = useSeenServiceNotices();
   const serviceKey = (service.data?.notices ?? []).map((notice) => notice.id).join("\n");
-  const unread = tripUnread + (serviceKey ? serviceKey.split("\n").filter((id) => !seenService.includes(id)).length : 0);
+  const serviceUnread = serviceKey ? serviceKey.split("\n").filter((id) => !seenService.includes(id)).length : 0;
+  const unread = tripUnread + serviceUnread;
   // `[2026-10-04]` The lines between the stops (never holding the page up); zoomed in, the detailed lines replace them.
   const routeShapes = useRouteShapes(trip.id, trip.version);
   const routeDetail = useRouteDetail(routeShapes.data, ["trip", trip.id, trip.version ?? 0, language], () => getRouteShapes(trip.id, language, { detail: true }));
@@ -144,7 +145,6 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
   const [centerOpen, setCenterOpen] = useState(false);
-  useEffect(() => { if (centerOpen && serviceKey) markServiceNoticesSeen(serviceKey.split("\n")); }, [centerOpen, serviceKey]);
   const [centerTab, setCenterTab] = useState<CenterTab>("warnings");
   // `[2026-10-07 목업 C안 3단계]` The title row (opened · being renamed), the share sheet, and the stop whose detail is open.
   const [titleOpen, setTitleOpen] = useState(false);
@@ -422,7 +422,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
 
   // ── The notice center: opened by the bell (unread notices first), by a notice's 「알림 보기」, by 「일정 정지 중」. ──
   function openCenter(tab?: CenterTab) {
-    setCenterTab(tab ?? (tripUnread > 0 ? "notices" : centerTab));
+    // `[2026-10-17 ST4F-606]` 처음 보이는 탭: 새 여행 알림 > 새 공지 > 마지막에 본 탭
+    setCenterTab(tab ?? (tripUnread > 0 ? "notices" : serviceUnread > 0 ? "service" : centerTab));
     setTitleOpen(false);
     setCenterOpen(true);
   }
