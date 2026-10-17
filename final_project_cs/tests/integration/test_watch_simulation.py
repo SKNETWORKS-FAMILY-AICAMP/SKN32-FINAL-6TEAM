@@ -214,18 +214,20 @@ def test_case_team_reads_the_same_trial_input_and_tags_its_result(world,monkeypa
 
 
 # ── `[2026-10-16]` 사용자 보고 「관리자 웹앱에서 조정한 모니터링 옵션이 실제 알림으로 안 가고 적용이 안 된다」 ──
-def test_guest_trip_is_refused_because_the_watch_never_looks_at_it(world, monkeypatch):
+def test_guest_trip_is_watched_only_while_an_explicit_trial_is_active(world, monkeypatch):
     from app.domains.travel_ops.components.itinerary import trip_scope
-    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
+    from app.domains.travel_ops.modules.web_account.guest_policy import watch_scope_sql
 
     w = world
-    monkeypatch.setattr(trip_scope, "_narrowers", [("web_account.guest", not_guest_sql)])
+    monkeypatch.setattr(trip_scope, "_narrowers", [("web_account.guest", watch_scope_sql)])
     w.conn.execute("UPDATE customers SET external_id=%s WHERE customer_id=%s", ('web:guest-' + uuid4().hex, w.customer))
-    with pytest.raises(AdminServiceError) as error:
-        set_inputs(w, ['earthquake'])
-    assert error.value.status_code == 422 and '게스트' in error.value.detail
-    monkeypatch.setattr(trip_scope, "_narrowers", [])
-    assert set_inputs(w, ['earthquake'])['active']                 # 같은 여행이라도 감시 대상이면 저장된다
+    def included():
+        return w.conn.execute("SELECT " + trip_scope.extra_sql("t") + " FROM trips t WHERE t.tenant_id=%s AND t.trip_id=%s", (w.tenant, w.trip_id)).fetchone()[0]
+    assert not included()
+    assert set_inputs(w, ['earthquake'])['active']
+    assert included()
+    assert not set_inputs(w, [])['active']
+    assert not included()
 
 
 def test_paused_trip_is_refused_and_marked_in_the_list(world):

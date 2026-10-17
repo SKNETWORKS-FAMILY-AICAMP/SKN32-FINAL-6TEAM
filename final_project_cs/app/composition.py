@@ -622,9 +622,9 @@ def wire_trip_scope() -> None:
     ★`[2026-10-16]` 운영 앱(`ops_entrypoint`)도 부른다. 전에는 감시 프로그램만 꽂아서, 관리자 「재난 6종 시뮬레이션」 목록에 감시가 보지 않는
       게스트 여행까지 나왔고 거기에 시험을 걸면 저장만 되고 알림이 영영 안 생겼다(사용자 보고: 「실제 알림으로 안 가고 적용이 안 된다」)."""
     from app.domains.travel_ops.components.itinerary import trip_scope
-    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
+    from app.domains.travel_ops.modules.web_account.guest_policy import watch_scope_sql
 
-    trip_scope.register("web_account.guest", not_guest_sql)
+    trip_scope.register("web_account.guest", watch_scope_sql)
 
 
 def wire_optional_features() -> list[str]:
