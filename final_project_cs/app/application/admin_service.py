@@ -84,8 +84,25 @@ def access_policy(conn, tenant_id: str, customer_id: str, now: datetime | None =
         exception = None
     # ★`[2026-10-15 사용자 지시]` 저장한 값이 없으면 관리자 화면이 보여 주는 기본값을 그대로 적용한다(전에는 「한도 없음」으로 돌아
     #   화면에는 50 이 보이는데 76번째 채팅도 통과했다). 0 은 한도 없음 — 사용자별 예외도 같다.
-    chosen = exception if exception is not None else limits.get("chatLimit", default_chat_limit())
+    chosen = 0 if user.get("usageExempt") is True else exception if exception is not None else limits.get("chatLimit", default_chat_limit())
     return {"blocked": bool(user.get("blocked")), "chat_limit": chat_cap(chosen), "maintenance": maintenance}
+
+
+def usage_exempt(conn, tenant_id: str, customer_id: str) -> bool:
+    """운영자가 지정한 계정만 이용 횟수 예외다. 인증·소유권·전체 예산은 바꾸지 않는다."""
+    return record(conn, tenant_id, "user", str(customer_id)).get("usageExempt") is True
+
+
+def set_usage_exemption(conn, tenant_id: str, customer_id: str, *, enabled: bool, actor: str, reason: str) -> None:
+    """신뢰된 운영 실행 전용. 고객 HTTP 요청에서는 이 함수를 노출하지 않는다."""
+    if type(enabled) is not bool or not actor.strip() or not reason.strip():
+        raise AdminServiceError(422, "예외 여부와 작업자·사유를 명시해야 합니다.")
+    require_customer(conn, tenant_id, str(customer_id))
+    with conn.cursor() as cur:
+        cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"admin:{tenant_id}:user:{customer_id}",))
+    value = record(conn, tenant_id, "user", str(customer_id), lock=True)
+    value["usageExempt"] = enabled
+    put(conn, tenant_id, "user", str(customer_id), value, actor=actor, action="usage-exemption", reason=reason)
 
 
 def default_chat_limit() -> int:

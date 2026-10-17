@@ -21,16 +21,22 @@ from uuid import UUID
 from . import gaps as gaps_module
 from .fact_check import guard_gaps, scope_gaps
 from .gaps import Gap, Proposal
+from . import lodging_context
 
 log = logging.getLogger(__name__)
 
 #: 담당 이름 → 고객에게 보일 이름
 OWNER_LABEL = {"dining_team": "식당 팀", "activity_team": "활동 팀", "mobility": "이동 판정", "planner": "계획 에이전트",
-               "ask_customer": "고객 확인"}
+               "lodging_team": "숙소 추천", "ask_customer": "고객 확인"}
 #: 한 접수에서 계획 에이전트에게 맡기는 빈 시간대 수의 상한(우리가 고른 값)
 MAX_PLANNER_SLOTS = 3
 MISSING_QUESTION = {"first_day_date": "여행 첫날이 언제인가요?", "lodging_name": "묵는 숙소 이름을 알려 주시면 숙소 기준으로 동선을 맞출게요",
                     "booked_place_name": "예약하신 곳의 이름을 알려 주세요 — 예약 일정은 우리가 바꾸지 않아요"}
+
+
+def _open_stay(item: Mapping[str, Any]) -> bool:
+    return (item.get("place_state") == "needs_choice" and lodging_context.generic(item)
+            and not lodging_context.protected(item))
 
 
 def model_gaps(claims: list[Mapping[str, Any]], items: list[Mapping[str, Any]]) -> list[Gap]:
@@ -46,13 +52,22 @@ def model_gaps(claims: list[Mapping[str, Any]], items: list[Mapping[str, Any]]) 
             if target is not None and target.get("place_state") not in (None, "needs_choice"):
                 continue                               # 고객이 이름을 적은 자리 — 빈칸이 아니다(모델이 빈칸이라 해도 채우지 않는다)
             if target is not None:
-                out.append(Gap(gap["kind"] if gap["kind"] != "free_slot" else "activity_place", {"item": target["id"]},
+                if lodging_context.protected(target):
+                    continue
+                kind = "lodging_place" if _open_stay(target) else gap["kind"] if gap["kind"] != "free_slot" else "activity_place"
+                out.append(Gap(kind, {"item": target["id"]},
                                f"계획서의 「{gap['quote']}」", quote=gap["quote"]))
             else:
                 out.append(Gap("free_slot", {"source_id": source_id, "day": gap.get("day"), "window": [gap.get("start"), gap.get("end")],
                                              "meal": gap["kind"] == "meal_place"},
                                f"계획서의 「{gap['quote']}」", quote=gap["quote"]))
         for code in value.get("missing") or []:
+            if code == "lodging_name" and any(_open_stay(item) or (lodging_context.is_stay(item) and item.get("place")) for item in items):
+                continue
+            if code == "booked_place_name":
+                booked = [item for item in items if str(item.get("source_id") or "") == source_id and item.get("booked") is True]
+                if booked and all(item.get("place") for item in booked):
+                    continue                         # 원문 예약 장소를 확인했다면 모델의 이름 누락 추측보다 확인한 값을 따른다.
             out.append(Gap(code, {"trip": code}, MISSING_QUESTION.get(code, code)))
         out.extend(guard_gaps(value.get("guard")))
     return out
@@ -74,9 +89,12 @@ def check_gaps(review: Mapping[str, Any], *, trip: Mapping[str, Any] | None = No
             continue
         state, title = item.get("place_state"), item.get("title") or "이름 없는 일정"
         parts = item.get("parts") or {}
-        if state in ("needs_choice", "needs_name") and (parts.get("lodging_meal") or parts.get("label") == "숙소"
+        if _open_stay(item):
+            out.append(Gap("lodging_place", {"item": item["id"]}, f"「{title}」 — 전체 동선에 맞는 공통 숙소를 추천해요",
+                           source="check", quote=item.get("title")))
+        elif state in ("needs_choice", "needs_name") and (parts.get("lodging_meal") or parts.get("label") == "숙소"
                                                         or item.get("kind") in ("lodging", "stay")):
-            # ★숙소는 고객만 아는 값이다(D-025 「고객만 아는 빠진 값」) — 우리가 숙소를 골라 넣지 않고 묻는다
+            # 예약한 숙소의 이름은 추천으로 대신하지 않는다.
             out.append(Gap("lodging_name", {"item": item["id"]}, f"「{title}」 — 묵는 숙소 이름을 알려 주시면 숙소 기준으로 동선을 맞출게요",
                            source="check"))
         elif state == "needs_choice":
@@ -228,7 +246,7 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
     if plan_slot is None:
         plan_slot = planner_slot(conn, tenant_id=tenant_id, tour=tour, review=lambda: state["review"],
                                  preferences=_preference_text(claims), party_size=_int(trip.get("party_size")))
-    owners = {"dining_team": team, "activity_team": team, "mobility": team, "planner": planner_owner(plan_slot),
+    owners = {"dining_team": team, "activity_team": team, "lodging_team": team, "mobility": team, "planner": planner_owner(plan_slot),
               "ask_customer": ask_owner}
 
     def apply(draft: dict[str, Any], proposals: list[Proposal]) -> dict[str, Any]:
@@ -238,9 +256,13 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
             change = (p.candidates[0] or {}).get("change")
             if change is not None and change.get("id") not in seen:
                 seen.add(change.get("id"))
-                # ★장소만 — 고객이 적은 시각은 그대로 둔다(빠듯해지면 노란 표시만, D-025). 자동 추천이 함께 낸 시각 고치기는 쓰지 않는다
+                # 고객이 쓴 시각은 유지한다. 원문에 없는 조식 끝만 검증한 추천으로 채운다.
+                end_field = f"items[{change['index']}].ends_at"
+                written_end = any(str(c.get("source_id")) == str(change["source_id"]) and c["field"] == end_field
+                                  for c in claims)
                 edits += [{"source_id": change["source_id"], "field": f"items[{change['index']}].{e['field']}", "value": e["value"]}
-                          for e in change.get("edits") or [] if e.get("field") == "place"]
+                          for e in change.get("edits") or [] if e.get("field") == "place"
+                          or (p.gap.kind == "lodging_place" and not written_end and e.get("field") == "ends_at")]
         new = draft["revision"]
         if edits:
             new = pipeline.edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new, edits=edits,
@@ -260,12 +282,15 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
         return check_gaps(state["review"], trip=trip)
 
     first = gaps_module.collect(model_gaps(claims, found.get("items") or []), check_gaps(found, trip=trip))
-    draft, used, rounds = gaps_module.settle({"revision": revision}, first, owners, apply, recheck, max_rounds=max_rounds)
-    filled = [_filled_line(p) for p in used if p.owner != "ask_customer" and p.candidates and p.error is None]
+    # 다른 장소를 채우면 전체 동선과 숙소 후보도 바뀐다. 같은 판의 실패를 반복하지 않고 바뀐 판에서만 다시 본다.
+    draft, used, rounds = gaps_module.settle({"revision": revision}, first, owners, apply, recheck, max_rounds=max_rounds,
+                                           retry_unfilled=lambda p: p.gap.kind == "lodging_place" and p.owner == "lodging_team")
+    latest = {p.gap.key: p for p in used}
+    filled = [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
     questions = [{"kind": p.gap.kind, "question": (p.candidates[0] or {}).get("question") or p.gap.reason, "quote": p.gap.quote}
-                 for p in used if p.owner == "ask_customer"]
+                 for p in latest.values() if p.owner == "ask_customer"]
     kept = [{"kind": p.gap.kind, "item": p.gap.where.get("item"), "owner": p.owner, "reason": p.reason}
-            for p in used if p.owner != "ask_customer" and not p.candidates]
+            for p in latest.values() if p.owner != "ask_customer" and not p.candidates]
     record = {"filled": [f for f in filled if f], "questions": _unique(questions), "kept": kept, "rounds": rounds,
               "proposals": [p.as_dict() for p in used]}
     _store(conn, tenant_id=tenant_id, intake_id=intake_id, revision=draft["revision"], record=record)

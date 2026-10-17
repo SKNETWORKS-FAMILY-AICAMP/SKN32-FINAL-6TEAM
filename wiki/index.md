@@ -71,3 +71,14 @@ domain: travel
 ## 별도 참고 구현
 
 [참고 sample wiki](../final_project_sample/wiki/index.md)는 계약 인프라를 검증하는 별도 구현입니다. 그 업무 자료·완료 결과를 여행 릴리스 증거로 쓰지 않습니다.
+
+
+2026-10-17 수동 숙소 저장 보완: 격리 HTTP40/40 통과, 운영 반영 확인 전. [독립 통합 기록](../final_project_cs/wiki/records/reports/2026-10-17_manual-stay-manager-review.md)
+
+
+2026-10-17 수동 저장 API·worker 배포 안정성 확인. 공개 계획서의 선택 장소 표시 보완은 격리36/36 통과, 운영 반영 확인 전. [통합 기록](../final_project_cs/wiki/records/reports/2026-10-17_public-plan-manager-review.md)
+
+
+2026-10-17 공개 계획서 선택 장소 표시9ebf1aec의 API·worker 배포30초 안정성 확인. 실제 내부HTTP에서3응답200·장소4/4표시·첨부헤더 확인. 공개 브라우저·수동 저장 최종 화면은 미확인. [최종 확인 기록](../final_project_cs/wiki/records/reports/2026-10-17_public-plan-manager-review.md)
+
+- 2026-10-18 관리자 여행 상세 운영 반영·실제 5여행 검증 완료: [인계·확인 한계](handoff/2026-10-18_admin-trip-release.md).

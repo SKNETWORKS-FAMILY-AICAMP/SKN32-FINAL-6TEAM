@@ -680,6 +680,8 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.components.watch import notice_exclusions
 
     notice_exclusions.register()
+    from app.domains.travel_ops.components.watch import notice_receipts
+    notice_receipts.register()
     return (list(trip_scope.registered())
             + (["settings"] if settings_hook.is_registered() else [])
             + (["progress"] if progress_hook.is_registered() else [])

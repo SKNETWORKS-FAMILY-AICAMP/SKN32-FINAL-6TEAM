@@ -64,8 +64,10 @@ class CustomerNoticeRouter:
     def __call__(self, message: dict[str, Any]) -> None:
         if message.get("topic") not in TOPICS:
             return self._operator(message)
-        if (message.get("payload") or {}).get("simulation"):
-            raise NoticeSuppressed("재난 시뮬레이션 알림 — 고객 앱에서만 확인한다")
+        simulated = bool((message.get("payload") or {}).get("simulation"))
+        run_id = (message.get("payload") or {}).get("simulation_id")
+        if simulated and (not run_id or trip_id_of(message.get("dedupe_key")) is None):
+            raise NoticeSuppressed("재난 시뮬레이션 외부 발송이 허용되지 않았다")
         if not self._enabled():
             raise NoticeSuppressed("고객 외부 알림이 꺼져 있다 — 앱 알림에서 확인한다")
         tenant = str(message.get("tenant_id") or "")
@@ -75,10 +77,16 @@ class CustomerNoticeRouter:
         if trip_id is None:
             raise NoticeSuppressed("어느 여행의 알림인지 알 수 없다 — 보내지 않았다")
         with self._connect() as conn:
+            if simulated:
+                from app.domains.travel_ops.components.watch.simulation import external_delivery_allowed
+                if not external_delivery_allowed(conn, tenant, trip_id, str(run_id)):
+                    raise NoticeSuppressed("이 여행·실행의 시뮬레이션 외부 발송이 꺼져 있거나 종료됐다")
             found = self._destination(conn, tenant, trip_id)
         customer, channel, secret, status = found
         payload = message.get("payload") or {}
         text = self._renderer.text_for(payload)
+        if simulated and not text.startswith('[시뮬레이션]'):
+            text = '[시뮬레이션] ' + text
         if channel == "telegram":
             self._send_telegram(tenant, customer, secret, text)
         else:

@@ -171,6 +171,15 @@ async function liveRequest<T>(path: string, options: RequestInit = {}): Promise<
   return data as T;
 }
 export const operationSettings = <T,>(kind: 'limits' | 'retention') => liveRequest<T>(`settings/${kind}`);
+export const operationQaAccount = <T,>() => liveRequest<T>('qa-account');
+export async function saveQaAccount(payload: unknown) {
+  const session = await operatorSession();
+  return liveRequest('qa-account', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
+export async function openQaAccount(payload: unknown) {
+  const session = await operatorSession();
+  return liveRequest<{ url: string; ticket: string; expires_in_seconds: number }>('qa-account/open', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
+}
 export const operationCases = <T,>(id?: string) => liveRequest<T>(id ? `cases/${encodeURIComponent(id)}` : 'cases');
 export const operationSourcePolicy = <T,>() => liveRequest<T>('source-policy');
 export const operationDiagnostics = <T,>(suffix = '') => liveRequest<T>(`diagnostics${suffix}`);
@@ -182,9 +191,16 @@ export async function saveSourcePolicy<T>(payload: unknown): Promise<T> {
   const session = await operatorSession();
   return liveRequest<T>('source-policy', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
 }
-export const operationSimulations = <T,>(tripId?: string, query?: URLSearchParams) => liveRequest<T>(tripId ? `simulations/${encodeURIComponent(tripId)}` : `simulations${query ? `?${query}` : ''}`);
+export const operationSimulations = <T,>(tripId?: string, query?: URLSearchParams) => liveRequest<T>(`${tripId ? `simulations/${encodeURIComponent(tripId)}` : 'simulations'}${query ? `?${query}` : ''}`);
 export const operationWatchRuns = <T,>(suffix = '') => liveRequest<T>(`watch-runs${suffix}`);
 export const operationApiLimits = <T,>() => liveRequest<T>('api-limits');
+export async function operationTripDetail<T>(userId: string, tripId: string, suffix = '', signal?: AbortSignal): Promise<T> {
+  try { return await liveRequest<T>(`users/${encodeURIComponent(userId)}/trips/${encodeURIComponent(tripId)}${suffix}`, { signal }); }
+  catch (cause) {
+    if (cause instanceof TypeError || cause instanceof SyntaxError) throw new Error('여행 기록에 연결하지 못했습니다. 잠시 후 다시 읽어 주세요.');
+    throw cause;
+  }
+}
 export async function saveOperationSimulation<T>(tripId: string, payload: unknown): Promise<T> {
   const session = await operatorSession();
   return liveRequest<T>(`simulations/${encodeURIComponent(tripId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
@@ -213,4 +229,10 @@ export function createLiveGateway(): AdminGateway {
       await liveRequest('commands', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(command) });
     },
   };
+}
+
+
+export async function receiveOperationSimulation<T>(tripId: string, payload: unknown): Promise<T> {
+  const session = await operatorSession();
+  return liveRequest<T>(`simulations/${encodeURIComponent(tripId)}/mock-receipts`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
 }

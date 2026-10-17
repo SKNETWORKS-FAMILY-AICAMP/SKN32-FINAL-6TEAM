@@ -72,7 +72,9 @@ def check_new_trip(conn, *, tenant_id: str, customer_id: UUID | str, starts: Ite
         cur.execute("SELECT count(*) FROM trips WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
         existing = int(cur.fetchone()[0])
     cap = int(guard.get("web_guard.guest.max_trips"))
-    if existing >= cap:
+    from app.application.admin_service import usage_exempt
+
+    if existing >= cap and not usage_exempt(conn, tenant_id, str(customer_id)):
         raise GuestLimit("guest_trip_limit", f"로그인하지 않으면 여행을 {cap}개까지 만들 수 있어요", cap=cap, existing=existing)
     starts, ends = [_aware(m) for m in starts if m is not None], [_aware(m) for m in ends if m is not None]
     if not starts:

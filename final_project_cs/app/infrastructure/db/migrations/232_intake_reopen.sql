@@ -18,7 +18,8 @@ ALTER TABLE trip_intakes ADD CONSTRAINT trip_intakes_status_check
 -- trip — 등록한 여행에서 가져온 값(고객이 고친 값 `customer` 과 구별한다)
 ALTER TABLE intake_claims DROP CONSTRAINT IF EXISTS intake_claims_method_check;
 ALTER TABLE intake_claims ADD CONSTRAINT intake_claims_method_check
-    CHECK (method IN ('rule', 'llm_span', 'lookup', 'customer', 'trip'));
+    -- 전체 SQL을 재실행하므로 후속 905가 허용한 llm_agent를 중간에 금지하지 않는다.
+    CHECK (method IN ('rule', 'llm_span', 'lookup', 'customer', 'trip', 'llm_agent'));
 
 -- 여행 하나에 열린 수정 접수는 하나 — 동시에 두 번 열어도 둘이 생기지 않는다
 CREATE UNIQUE INDEX IF NOT EXISTS trip_intakes_reopen_open_idx

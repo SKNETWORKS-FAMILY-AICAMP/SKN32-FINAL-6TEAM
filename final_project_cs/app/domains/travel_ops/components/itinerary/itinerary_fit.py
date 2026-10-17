@@ -7,8 +7,7 @@
 ★자리(적대 검토의 결론): 고르는 일은 **Team 쪽**이 한다(`ItineraryWork.settle` → 이 함수). 알림 문구 · 「다른 안」 목록은 Team 이 그 안 기준으로 만들어 두었다(`ItineraryChange.fallbacks`) —
 적용기가 몰래 다른 안으로 바꿔 넣으면 고객은 알림에 적힌 곳과 다른 곳을 안내받는다. 적용기(`itinerary_actions`)는 같은 재판정(구조 위반만)을 **마지막 안전망**으로 한 번 더 볼 뿐이다.
 
-★원칙: ①순위 순으로 시험하고 통과하는 **첫** 안을 쓴다 ②다 걸리면 지금처럼 쓰지 않고(`None`) 부르는 쪽이 「그대로 두었어요」를 알린다 ③다른 안을 쓰면 알림에 **왜 1순위가 아닌지**를 적는다
-(「1순위(A)은(는) 일정과 안 맞아 2순위로 골랐어요」) ④걸린 안은 고객에게 다른 안으로 보이지 않는다(각 안의 「다른 안」은 그보다 낮은 순위만 — `itinerary_changes._with_fallbacks`).
+★원칙: ①순위 순으로 시험하고 통과하는 **첫** 안을 쓴다 ②다 걸리면 지금처럼 쓰지 않고(`None`) 부르는 쪽이 「그대로 두었어요」를 알린다 ③후보별 탈락 사유는 내부 운영 기록에만 남긴다(2026-10-17 사용자 지시) ④걸린 안은 고객에게 다른 안으로 보이지 않는다(각 안의 「다른 안」은 그보다 낮은 순위만 — `itinerary_changes._with_fallbacks`).
 
 ★`[2026-10-03 사용자 지시 · D-019 개정]` **밀도도 여기서 본다.** 구조 위반(겹침 · 이동 불가 …)은 못 넘는 벽이지만 밀도는 **선호**다 — 고장 난 항목(닫힌 곳 · 재난)을 그대로 두는 것이 하루가 좀 빡빡해지는 것보다 나쁘다.
 그래서 `travel.density.gate.mode` 가 `soft`(기본)이면: 밀도를 나쁘게 만드는 안(`density.density_regressions`)은 **뒤로 밀고**, 구조 위반 없는 안 중 밀도를 나쁘게 만들지 않는 첫 안을 쓴다.
@@ -16,6 +15,8 @@
 밀도 목표가 없는 여행(`constraints.density` 없음)에는 아무 영향이 없다.
 """
 from __future__ import annotations
+
+from app.domains.travel_ops.components import candidate_diagnostics
 
 from dataclasses import dataclass, field, replace
 from typing import Any
@@ -60,21 +61,16 @@ def _head(skips: list[Skip]) -> tuple[str, str]:
 
 
 def _noted(change: ItineraryChange, skipped: list[Skip], accepted: list[DayShift], rank: int) -> ItineraryChange:
-    """건너뛴 이유 · 감수한 밀도 악화를 알림 끝에 붙이고 무엇을 건너뛰었는지 기록한다. 아무것도 없으면 그대로."""
+    """감수한 밀도 악화만 고객에게 알린다. 후보별 탈락 사유는 내부 기록으로 분리한다."""
     if not skipped and not accepted:
         return change
     sentences: list[str] = []
-    for why, tail in (("schedule", "일정과 안 맞아"), ("density", "그날 일정이 원하신 여유보다 빡빡해져")):
-        group = [s for s in skipped if s.why == why]
-        if group:
-            head, names = _head(group)
-            sentences.append(f"※ {head}({names})은(는) {tail} {rank}순위로 골랐어요.")
     if accepted:
         sentences.append("※ 더 나은 안이 없어 이 안을 적용했지만 " + " · ".join(s.sentence() for s in accepted) + ".")
     notice = {**change.notice, "text": " ".join([change.notice["text"], *sentences]),
-              "fit": {"rank": rank, "skipped": [{"rank": s.rank, "name": s.name, "reasons": s.reasons, "why": s.why} for s in skipped],
+              "fit": {"rank": rank,
                       "density": [s.as_dict() for s in accepted]}}
-    summary = {**change.summary, **({"fit_rank": rank, "skipped": [s.name for s in skipped]} if skipped else {}),
+    summary = {**change.summary, **({"fit_rank": rank} if skipped else {}),
                **({"density": [s.as_dict() for s in accepted]} if accepted else {})}
     return replace(change, notice=notice, summary=summary)
 
@@ -97,15 +93,25 @@ def fit_change(change: ItineraryChange, *, trip: dict[str, Any], items: list[Ite
     for rank, candidate in enumerate([change, *change.fallbacks], start=1):
         new_items = candidate.new_items(items)
         introduced = introduced_violations(trip, items, new_items)
+        replacement = next(iter(candidate.replacements.values()), None)
+
+        def record_fit(outcome, reasons=()):
+            candidate_diagnostics.record(key=str(replacement.place_id) if replacement else rank,
+                name=_name(candidate), outcome=outcome, reasons=reasons, phase="schedule_validation", rank=rank,
+                trip_id=trip.get("trip_id"), item_id=str(next(iter(candidate.replacements))) if candidate.replacements else None)
+
         if introduced:
+            record_fit("rejected", [v.reason for v in introduced])
             skipped.append(Skip(rank, _name(candidate), [v.reason for v in introduced], "schedule"))
             continue
         shifts = density_regressions(constraints, before, parts_from_items(new_items))
         if not shifts:
+            record_fit("verified")
             # 앞에서 밀도 때문에 뒤로 민 안들도 이유에 적는다
             skipped += [Skip(r, _name(c), [s.sentence() for s in sh], "density") for r, c, sh in soft]
             return Fit(_noted(candidate, sorted(skipped, key=lambda s: s.rank), [], rank), rank,
                        sorted(skipped, key=lambda s: s.rank))
+        record_fit("rejected" if hard_mode else "deferred", [s.sentence() for s in shifts])
         if hard_mode:
             skipped.append(Skip(rank, _name(candidate), [s.sentence() for s in shifts], "density"))
         else:

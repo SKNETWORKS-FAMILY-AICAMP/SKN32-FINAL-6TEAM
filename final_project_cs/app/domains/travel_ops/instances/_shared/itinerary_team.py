@@ -23,6 +23,8 @@
 """
 from __future__ import annotations
 
+from app.domains.travel_ops.components import candidate_diagnostics
+
 from dataclasses import dataclass
 from datetime import datetime
 import re
@@ -106,6 +108,11 @@ class ItineraryWork:
 
     # ── 진입 ────────────────────────────────────────────────────
     async def run_itinerary(self, task: TeamTask) -> TeamResult:
+        ref = task.context.current_state.get("subject_ref") or {}
+        with candidate_diagnostics.scope(trip_id=ref.get("id"), case_id=str(task.context.case_id)):
+            return await self._run_itinerary(task)
+
+    async def _run_itinerary(self, task: TeamTask) -> TeamResult:
         state = task.context.current_state
         ref = state.get("subject_ref") or {}
         seen: set[str] = set()
@@ -286,8 +293,8 @@ class ItineraryWork:
         def safe(*, place: dict[str, Any], starts_at: datetime | None) -> dict[str, Any]:
             try:
                 return check(place=place, starts_at=starts_at)
-            except self.TOOL_LIMITS:
-                return {"verdict": "not_checked"}
+            except self.TOOL_LIMITS as exc:
+                return {"verdict": "not_checked", "reason": type(exc).__name__}
         return safe
 
     @staticmethod
@@ -332,8 +339,7 @@ class ItineraryWork:
             fit = fit_change(plan, trip=trip, items=ctx["items"])
             if fit.change is None:
                 return self._escalate(task, "itinerary_recheck_failed", evidence,
-                                      warnings=["일정 전체 재판정에 걸려 바꾸지 못했다: " + " / ".join(
-                                          f"{s.rank}순위 {s.name} — {chr(59).join(s.reasons)}" for s in fit.skipped)])
+                                      warnings=["일정 전체 재판정에 걸려 바꾸지 못했다"])
             plan = fit.change
         base = int(ctx["ref"].get("base_version") or trip["version"]) \
             if plan.reason in ("customer_request", "rollback") else trip["version"]

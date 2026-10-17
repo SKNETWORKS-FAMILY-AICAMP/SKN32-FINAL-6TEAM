@@ -4,7 +4,7 @@ import { mockServer, openNotices, start, TRIP_ID, tripScreen } from "./helpers";
 /**
  * `[2026-10-17 사용자 결정 — ST4F-604]` 운영 앱 공지를 여행 화면 밖에서도 본다. mock 서버 시험이다(화면 반응만 본다 — 실서버 아님).
  *   - 공지사항(`/notices`, 메뉴 「공지사항」 · 목업 A안): 문의함 칸에 게시 중 → 종료, 제목 앞 「게시 중」 · 「종료」, 한 쪽 10줄 · 쪽 단추. 줄을 누르면 공지 한 장 화면.
- *   - 여행 화면 알림 센터 맨 위 「서비스 공지」: 배너와 같은 모양, 공지가 없으면 칸이 없다. 종에는 안 본 서비스 공지도 더하고, 센터를 열면 읽음.
+ *   - 여행 화면 알림 센터의 「공지」 탭(`[2026-10-17 ST4F-606]` 옛: 맨 위 「서비스 공지」 칸): 배너와 같은 모양. 종에는 안 본 서비스 공지도 더하고, 공지 탭을 보면 읽음.
  */
 test.beforeEach(async ({ request }) => {
   await mockServer(request).reset();
@@ -101,7 +101,7 @@ test("메뉴 「공지사항」 줄은 게시 중인 공지 수를 말하고 게
   await expect(page).toHaveURL(/\/notices$/);
 });
 
-test("여행 화면 알림 센터 맨 위 「서비스 공지」 — 종에 안 본 공지가 더해지고, 센터를 열면 읽음이 되어 새로고침 뒤에도 남지 않는다", async ({ page, request }) => {
+test("여행 화면 알림 센터 「공지」 탭 — 종에 안 본 공지가 더해지고, 공지 탭을 보면 읽음이 되어 새로고침 뒤에도 남지 않는다 (ST4F-606)", async ({ page, request }) => {
   await start(page);
   await mockServer(request).scenario({ serviceNotice: "kinds" });                    // 안내 · 장애 · 점검 예고
   await page.goto(`/trips/${TRIP_ID}`);
@@ -109,25 +109,50 @@ test("여행 화면 알림 센터 맨 위 「서비스 공지」 — 종에 안 
   await page.getByRole("button", { name: "공지 닫기" }).click();
   await expect(bell(page)).toHaveAccessibleName("알림 센터 열기 · 읽지 않은 알림 5개");   // 여행 알림 2 + 서비스 공지 3
   const center = await openNotices(page);
-  const section = center.locator("[data-service-notices]");
-  await expect(section.getByRole("heading", { name: "서비스 공지 3" })).toBeVisible();
-  const items = section.locator("[data-tone]");
+  await expect(center.locator("[data-service-notices]")).toHaveCount(0);             // 맨 위 칸이 아니라 탭 안
+  await expect(center.getByRole("tab", { name: /받은 알림/ })).toHaveAttribute("aria-selected", "true");   // 새 여행 알림이 먼저
+  const serviceTab = center.getByRole("tab", { name: /^공지 3/ });
+  await expect(serviceTab.getByRole("img", { name: "읽지 않은 알림" })).toHaveCount(1);
+  await expect(bell(page)).toHaveAccessibleName("알림 센터 열기 · 읽지 않은 알림 3개");   // 여행 알림만 읽음 — 공지는 탭을 봐야
+  await serviceTab.click();
+  const items = center.locator("[data-service-notices] [data-tone]");
   await expect(items).toHaveCount(3);
   await expect(items.nth(0)).toHaveAttribute("data-tone", "error");                 // 배너처럼 장애가 가장 위
   await expect(items.nth(0)).toContainText("채팅 답변이 늦어요");
-  await expect(center.getByRole("tab", { name: /받은 알림/ })).toHaveAttribute("aria-selected", "true");   // 여행 알림이 있으면 받은 알림 탭(옛 그대로)
+  await expect(center.getByRole("link", { name: /지난 공지까지 보기/ })).toHaveAttribute("href", "/notices");
   await expect(bell(page)).toHaveAccessibleName("알림 센터 열기");
+  await expect(serviceTab.getByRole("img", { name: "읽지 않은 알림" })).toHaveCount(0);
   await page.reload();
   await expect(tripScreen(page)).toBeVisible();
   await expect(bell(page)).toHaveAccessibleName("알림 센터 열기");                    // 이 브라우저가 기억한다
 });
 
-test("서비스 공지가 없으면 알림 센터에 그 칸이 없고 종 수도 그대로다", async ({ page }) => {
+test("새 여행 알림은 없고 새 공지만 있으면 알림 센터가 「공지」 탭으로 열린다 (ST4F-606)", async ({ page, request }) => {
+  await start(page);
+  await page.goto(`/trips/${TRIP_ID}`);
+  await expect(tripScreen(page)).toBeVisible();
+  let center = await openNotices(page);                                              // 받은 알림 탭이 보여 주면 여행 알림은 읽음
+  await center.getByRole("button", { name: "알림 센터 닫기" }).click();
+  await mockServer(request).scenario({ serviceNotice: "one" });
+  await page.reload();
+  await expect(tripScreen(page)).toBeVisible();
+  await page.getByRole("button", { name: "공지 닫기" }).click();
+  await expect(bell(page)).toHaveAccessibleName("알림 센터 열기 · 읽지 않은 알림 1개");
+  center = await openNotices(page);
+  await expect(center.getByRole("tab", { name: /^공지/ })).toHaveAttribute("aria-selected", "true");
+  await expect(center.getByRole("tabpanel")).toContainText("서비스 점검 예정 안내");
+  await expect(bell(page)).toHaveAccessibleName("알림 센터 열기");
+});
+
+test("서비스 공지가 없으면 「공지 0」 탭은 빈 문장과 공지사항 가는 길만 있고 종 수도 그대로다", async ({ page }) => {
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
   await expect(bell(page)).toHaveAccessibleName("알림 센터 열기 · 읽지 않은 알림 2개");
   const center = await openNotices(page);
-  await expect(center.getByRole("tab", { name: /받은 알림/ })).toBeVisible();
-  await expect(center.locator("[data-service-notices]")).toHaveCount(0);
+  const serviceTab = center.getByRole("tab", { name: /^공지 0/ });
+  await expect(serviceTab.getByRole("img")).toHaveCount(0);
+  await serviceTab.click();
+  await expect(center.getByRole("tabpanel")).toContainText("지금 게시 중인 공지가 없어요.");
+  await expect(center.getByRole("link", { name: /지난 공지까지 보기/ })).toBeVisible();
 });

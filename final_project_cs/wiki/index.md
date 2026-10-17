@@ -1,4 +1,6 @@
 ---
+
+- [재난 수신 기록 계약](operations/receipt-history.md) · [구현 보고](records/reports/2026-10-17_1530_receipt-history-and-targets.md) · [매니저 독립 검토](records/reports/2026-10-17_receipt-history-manager-review.md)
 type: guide
 title: cs 프로젝트 구현 wiki
 description: 여행 CS triPilot의 현재 계약·구현 안내입니다
@@ -7,6 +9,8 @@ domain: travel
 ---
 
 # cs 프로젝트 구현 wiki
+
+2026-10-18 관리자 여행 상세: 여행을 눌러 저장 대화·최초/현재 계획을 조회합니다. 양쪽 매니저 코드 반영·운영 자동배포 완료, 지정 다섯 여행의 세 탭 15/15을 실제 화면과 DB로 대조했습니다. [운영 확인·시험 한계](records/reports/2026-10-17_admin-trip-release.md) · [초기 구현 기록](records/reports/2026-10-17_admin-trip-detail.md).
 
 여행 CS triPilot의 현재 계약·구현 안내입니다. 제품 사양은 [상위 wiki](../../wiki/index.md)의 후속 확정 결정과 대조하며, 이력 문서는 당시 상태를 확인할 때만 엽니다.
 
@@ -74,3 +78,20 @@ domain: travel
 <a id="중앙-허브"></a>
 <a id="최근-변경"></a>
 <a id="기록-구역-records-2026-09-08"></a>
+
+- 숙소 재검토 후속 배포 뒤 새 예시 양일 같은 호텔·조식·숙박 아이콘과 지도, 375/1280px 즉시 수정·취소의 실제 확인을 완료했다. [최종 기록](records/reports/2026-10-17_lodging-edit-live-verification.md). 수동 호텔 저장 문제는 별도 추적 범위다.
+
+
+- 재난 수신 기록의 영향 카드·다중 필터는 양쪽 매니저 반영·운영 배포 완료. 로그인 화면의 실제 확인은 남았다. [확인 범위와 남은 일](records/reports/2026-10-17_receipt-impact.md).
+
+- 재난 영향 필터 통합판은 전체 시험·관리자 기본 빌드·양쪽 매니저 반영·운영 배포 완료. 실제 관리자 화면의 체크박스·조회는 확인. 안전 단계 참고 문자의 영향 표시 보정은 남았다. [통합 검토](records/reports/2026-10-17_receipt-impact-manager-integration.md).
+
+- 관리자 여행 상세 매니저 통합·자동배포 검증은 [후속 기록](records/reports/2026-10-17_admin-trip-release.md)에 이어 남깁니다.
+
+- 2026-10-18 후속: 고객 입력 초안 원문 탭·철회 시계 차이 결함 수정·양쪽 매니저·운영 배포·지정 5여행 20/20 DB 대조를 완료했습니다. 미완료 19/19와 운영 환경 전체 DoD 26/26, 로컬 추가 오류의 후속 2/2 및 최초 실패는 [날짜별 결과](records/reports/2026-10-18_trip-draft-and-full-gates.md)에 구분해 보존했습니다.
+
+- 2026-10-18: 재난문자 내용·지역 관련성 v2. 담당 격리842/842·완료관문26/26·mock 서버 화면8/8; 통합·운영 상태는 [검증 기록](records/reports/2026-10-18_receipt-message-relevance.md)에 구분.
+
+- 2026-10-18: 재난문자 지역·내용 v2는 양쪽 매니저와 운영 api·worker·admin 반영 및 실제 동일 시각 문제 카드 확인 완료. [운영 응답·화면·시험 한계](records/reports/2026-10-18_receipt-message-relevance-live.md).
+
+2026-10-18: develop 웹앱 보존 병합의 로컬 검증을 완료했다. 게시·운영 상태와 분리한 [검증 기록](records/reports/2026-10-18_develop-web-merge-review.md).

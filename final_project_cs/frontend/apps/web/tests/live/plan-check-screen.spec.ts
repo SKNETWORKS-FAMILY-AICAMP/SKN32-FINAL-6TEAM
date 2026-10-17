@@ -310,7 +310,10 @@ test("핀을 누르면 선택한 이름·종류가 나오고 다시 누르면 �
   await expect(picked).toContainText("액티비티");
   await expect(page.getByText("확인 필요 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다
   await mapSettled(page);                                                                          // 핀을 누르면 지도가 그리로 날아간다 — 멈춘 뒤에 다음 핀을 누른다
-  await page.locator("[data-edge-chip]").filter({ hasText: "3" }).click(); // Select the offscreen stop through its visible navigation chip.
+  // 첫 핀을 고르면 중심이 이동해 다음 핀이 화면 밖으로 나갈 수 있다. 화면에 보이는 일정 버튼으로 같은 장소를 선택한다.
+  const market = pin(page, "3. 광장시장").locator("[data-pin-body]");
+  if (await market.isVisible()) await market.click();
+  else await page.getByRole("button", { name: /^3번 일정이 화면 밖에 있어요/ }).click();
   await expect(picked).toContainText("광장시장 · 식당");
   await mapSettled(page);
   await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 같은 핀을 다시 누르면 놓는다

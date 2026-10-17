@@ -26,6 +26,8 @@ from app.presentation.api.app import app
 
 # 설계 계약 문서 §1 의 표 — 이것은 **최소 집합**이지 상한이 아니다.
 CONTRACT_V1_PATHS = {
+    # 관리자 테스트 계정의 단기 일회용 로그인 표 교환. qa-account-lifecycle.md.
+    "/v1/web/auth/qa-session",
     # 실제 계약: personal-ai-oauth.md, test-scenarios.md, rest-endpoints/web-intakes.md.
     "/v1/web/agent-connections",
     "/v1/web/agent-connections/{connection_id}",
@@ -172,9 +174,10 @@ CONTRACT_V1_PATHS = {
 #   `/v1/web/auth/{provider}/start`: 로그인 시작은 인증 없이 열린다(`link` 모드는 함수 안에서 인증을 확인한다 — 사람 확인 · 주소당 한도).
 #   `/v1/web/auth/exchange`: 일회용 표 + 시작한 브라우저의 `client_nonce` 가 인증이다(로그인 CSRF 막기).
 #   `/v1/web/auth/adopt`: 옛 키를 쿠키로 옮기는 자리 — 함수 안에서 키를 확인한다(쿠키와 같이 오면 400, 주소당 한도).
+#   `/v1/web/auth/qa-session`: 관리자 인증·쓰기 권한·CSRF를 통과해 발급한 단기 일회용 표가 인증이다. 활성 QA 계정만 열며 종료·만료·재사용·변조를 거부한다.
 #   `/v1/telegram/webhook`: 텔레그램이 부르는 곳 — 사용자 인증이 아니라 **비밀 헤더**(`X-Telegram-Bot-Api-Secret-Token` = 서버 비밀값, 상수 시간 비교)가 인증이다. 틀리면 401 이고 아무것도 안 바뀐다(`telegram_connect.verify_secret`).
 OPEN_WRITE_PATHS = {"/v1/web/session", "/v1/web/auth/session", "/v1/web/auth/{provider}/start", "/v1/web/auth/exchange", "/v1/web/auth/adopt",
-                    "/v1/telegram/webhook"}
+                    "/v1/telegram/webhook", "/v1/web/auth/qa-session"}
 
 # 인증으로 치는 의존성 — scope 키(`require_scope`) 또는 웹 사용자 키(`_web_customer`)
 AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity",

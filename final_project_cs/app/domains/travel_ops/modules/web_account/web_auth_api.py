@@ -65,6 +65,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
     """`exchange` — 코드를 사용자 고유 번호로 바꾸는 것(시험이 가짜 업체를 꽂는다). 없으면 업체에 실제로 묻는다.
     `human_verify` — 사람 확인(Turnstile)을 갈아 끼우는 자리(시험)."""
     router = APIRouter()
+    from .qa_account_api import build_customer_router
+    router.include_router(build_customer_router())
     from .personal_ai_api import build_personal_ai_router
     router.include_router(build_personal_ai_router())
     router.include_router(build_agent_keys_router())        # `[2026-10-04 D-CS-012]` 에이전트 키(쿠키 로그인한 회원만)

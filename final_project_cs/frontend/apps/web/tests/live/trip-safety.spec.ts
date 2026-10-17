@@ -153,7 +153,7 @@ test("정지가 없는 여행(또는 이 값을 모르는 옛 서버)에는 아�
   await expect(page.getByText("일정 정지", { exact: true })).toHaveCount(0);
 });
 
-test("정지 중이면 시트 머리 「일정 | 채팅」 앞에 「일정 정지 중」이 붙고, 누르면 알림 센터의 할 일 맨 위에 같은 정지 패널이 있다", async ({ page }) => {
+test("정지 중이면 시트 머리 「일정 | 채팅」 앞에 「일정 정지 중」이 붙고, 누르면 알림 센터의 「답이 필요해요」 맨 위에 같은 정지 패널이 있다", async ({ page }) => {
   await stage(page, { paused: true, resumed: 0 });
   await openTrip(page);
   const chip = page.getByRole("button", { name: "일정 정지 중 · 알림 센터 열기" });
@@ -162,7 +162,7 @@ test("정지 중이면 시트 머리 「일정 | 채팅」 앞에 「일정 정�
   const center = page.getByRole("dialog", { name: "알림" });
   await expect(center.getByTestId("center-safety-panel")).toBeVisible();
   await expect(center.getByTestId("center-safety-panel").getByRole("heading", { name: "일정 정지 중" })).toBeVisible();
-  await expect(center.getByRole("heading", { name: /^할 일 1$/ })).toBeVisible();
+  await expect(center.getByRole("heading", { name: /^답이 필요해요 1$/ })).toBeVisible();
 });
 
 test("화면이 열려 있는 동안 안전 알림이 오면 「일정 정지 중 · 안전 알림」 막대가 대피 장소를 말하고 9초 동안 남는다 — 정지가 풀리면 칩도 없다", async ({ page, request }) => {

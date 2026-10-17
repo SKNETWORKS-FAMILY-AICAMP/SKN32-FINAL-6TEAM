@@ -94,6 +94,8 @@ export interface PlanCheckProps {
  * The trip's 「지금」 runs on the list, and the first notice says what the screen is. Every change still goes through `actions`, as on the plan check of a new plan.
  */
 export interface TripEditMode {
+  /** 저장된 여행을 표시하면서 수정 접수를 기다린다. 준비 전에는 변경·완료를 허용하지 않는다. */
+  preparing?: boolean;
   /** 「취소」 in the sheet's head: the page asks, then drops the edit and goes back to the trip. */
   onCancel: () => void;
   /** 「지금」 on a day's line, as on the trip screen. */
@@ -533,6 +535,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const registered = Boolean(registration?.registeredHref);
   // Nothing can be changed while a stop or the whole plan is checked again, or once registered — buttons say why.
   const frozen = registered ? t("이미 등록한 여행이에요", "This trip is already registered")
+    : edit?.preparing ? t("수정할 일정을 준비하고 있어요 · 잠시만요", "Preparing the itinerary for editing · one moment")
     : view.rechecking ? t("다시 확인하는 중이에요 · 잠시만요", "Checking again · one moment")
       : working || view.items.some((item) => item.verdict === null) ? t("바뀐 일정을 다시 확인하는 중이에요 · 잠시만요", "Checking the change · one moment") : null;
   const explain = (why: string) => setToast({ text: why });
@@ -1350,7 +1353,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
     {/* `[2026-10-08 사용자 지시]` 확인·변경·장소 표시는 같은 막대에, 이동 수단 이름은 확대된 경로선에 표시한다. */}
-    {!mapPicking && (routeState?.loading || routeState?.error || unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+    {!mapPicking && (edit?.preparing || routeState?.loading || routeState?.error || unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+      {edit?.preparing && <p role="status" className={styles.unlocated}>{t("수정할 일정을 준비하고 있어요…", "Preparing the itinerary for editing…")}</p>}
       <RouteLoadStatus state={routeState} />
       <div className={styles.statusTools} role="group" aria-label={t("일정 확인과 변경", "Plan checks and changes")}>
       {pinned

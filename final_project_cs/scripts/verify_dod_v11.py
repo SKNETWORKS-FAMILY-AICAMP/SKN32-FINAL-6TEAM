@@ -172,6 +172,8 @@ ITEMS: tuple[Item, ...] = (
     Item(19, "(시연) 위임을 철회하면 진행 중인 자동 실행이 멈춘다", "자동", (
         T + "integration/controller/test_delegation_scope.py::"
             "test_revoking_after_the_approval_stops_the_execution",
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_revocation_stops_execution_despite_application_clock_skew",
         T + "integration/controller/test_delegation_scope.py::test_after_a_revocation_no_new_execution_opens",
         T + "integration/controller/test_delegation_scope.py::"
             "test_one_out_of_scope_proposal_rolls_the_whole_batch_back",

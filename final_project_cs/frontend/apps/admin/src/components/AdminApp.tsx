@@ -14,6 +14,8 @@ import { OperationsSettings, CaseTrace } from '../features/operations/connected'
 import { DiagnosticsPanel } from '../features/operations/source-policy';
 import { DisasterSimulation } from '../features/operations/simulation';
 import { WatchMonitoring } from '../features/operations/monitoring';
+import { QaAccount } from '../features/operations/qa-account';
+import { TripDetailScreen } from '../features/trips/trip-detail';
 
 const MENUS = [
   { group: '운영', path: '/', title: '운영 홈', icon: Home },
@@ -27,6 +29,7 @@ const MENUS = [
   { group: '기록', path: '/audit', title: '운영 기록', icon: ListChecks },
   { group: '설정', path: '/settings', title: '운영 설정 · 보관', icon: Settings2 },
   { group: '설정', path: '/simulations', title: '재난 시뮬레이션', icon: Activity },
+  { group: '설정', path: '/qa-account', title: '테스트 계정', icon: Users },
   { group: '운영', path: '/cases', title: '접수 · 처리 근거', icon: ListChecks },
   { group: '기록', path: '/diagnostics', title: '결함 사후 분석', icon: Bug },
   { group: '임시', path: '/ops', title: '승인 · 위임 · 발송', icon: ShieldCheck },
@@ -99,10 +102,15 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
     if (route === '/diagnostics' && !isDemoMode(mode)) screen = <DiagnosticsPanel />;
     else if (route === '/settings' && !isDemoMode(mode)) screen = <OperationsSettings />;
     else if (route === '/simulations' && !isDemoMode(mode)) screen = <DisasterSimulation />;
+    else if (route === '/qa-account' && !isDemoMode(mode)) screen = <QaAccount />;
     else if (route === '/monitoring' && !isDemoMode(mode)) screen = <WatchMonitoring />;
     else if ((route === '/cases' || route.startsWith('/cases/')) && !isDemoMode(mode)) screen = <CaseTrace navigate={navigate} id={route === '/cases' ? undefined : route.slice('/cases/'.length)} />;
     else if (route === '/') screen = <HomeScreen {...screenProps} />;
     else if (route === '/users') screen = <UsersScreen {...screenProps} listState={usersList} onListStateChange={setUsersList} />;
+    else if (/^\/users\/[^/]+\/trips\/[^/]+$/.test(route)) {
+      const segments = route.split('/');
+      screen = <TripDetailScreen key={route} userId={decodeURIComponent(segments[2])} tripId={decodeURIComponent(segments[4])} live={data?.live === true} navigate={navigate} />;
+    }
     else if (route.startsWith('/users/')) screen = <UserDetailScreen {...screenProps} userId={decodeURIComponent(route.slice('/users/'.length))} />;
     else if (route === '/limits') screen = <LimitsScreen {...screenProps} />;
     else if (route === '/usage') screen = <UsageScreen {...screenProps} />;
@@ -117,7 +125,7 @@ function Console({ mode, initialPath = '/', standalone = false, operatorId, onLo
     <a href="#main-content" className={styles.skip} onClick={event => { event.preventDefault(); document.getElementById('main-content')?.focus(); }}>본문으로 건너뛰기</a>
     <aside className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`}>
       <div className={styles.brand}>triPilot<span>OPERATIONS</span></div>
-      <nav aria-label="운영 메뉴">{MENUS.filter(item => !isDemoMode(mode) || !['/settings', '/cases', '/simulations', '/monitoring', '/diagnostics'].includes(item.path)).map((item, i) => <div key={item.path}>{(i === 0 || MENUS[i-1].group !== item.group) && <p className={styles.navGroup}>{item.group}</p>}<button aria-current={(item.path === '/' ? route === '/' : route.startsWith(item.path)) ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={18} /><span>{item.title}</span>{item.path === '/inquiries' && data && <b>{data.inquiries.filter(q => q.status !== '답변 완료').length}</b>}</button></div>)}</nav>
+      <nav aria-label="운영 메뉴">{MENUS.filter(item => !isDemoMode(mode) || !['/settings', '/cases', '/simulations', '/monitoring', '/diagnostics', '/qa-account'].includes(item.path)).map((item, i) => <div key={item.path}>{(i === 0 || MENUS[i-1].group !== item.group) && <p className={styles.navGroup}>{item.group}</p>}<button aria-current={(item.path === '/' ? route === '/' : route.startsWith(item.path)) ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={18} /><span>{item.title}</span>{item.path === '/inquiries' && data && <b>{data.inquiries.filter(q => q.status !== '답변 완료').length}</b>}</button></div>)}</nav>
       <div className={styles.sidebarBottom}>{isDemoMode(mode) && <button onClick={() => setGuide(v => !v)} aria-expanded={guide}><ListChecks size={17} /> 시연 가이드 {guide ? '닫기' : '열기'}</button>}<p>운영자 전용 · 고객 화면과 분리</p></div>
     </aside>
     <div className={styles.workspace}><header className={styles.header}><button className={styles.menuButton} aria-label="메뉴 열기" aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}><PanelLeft size={20} /></button><span className={styles.breadcrumb}>워크스페이스 <span>/</span> <strong>{breadcrumb}</strong></span><div className={styles.operator}><span className={styles.avatar}>OP</span><span>{operatorId || DEMO_OPERATOR}<small>{isDemoMode(mode) ? '시연 운영자' : '인증된 운영자'}</small></span><button aria-label="로그아웃" onClick={() => { if (onLogout) void onLogout(); else navigate('/login'); }}><LogOut size={17} /></button></div></header>

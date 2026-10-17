@@ -52,6 +52,8 @@
 """
 from __future__ import annotations
 
+from app.domains.travel_ops.components import candidate_diagnostics
+
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta
 import math
@@ -388,6 +390,8 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
         # ★`[2026-09-29]` 「실내」는 출처가 적은 `indoor` 이거나, 날씨 영향이 **없다고 아는** 곳(`weather_sensitive is False`).
         #   모름(`None`)은 실내로 치지 않는다 — 비를 피하려고 고른 곳이 또 야외일 수 있다
         if indoor_only and not (attributes.get("indoor") or place.get("weather_sensitive") is False):
+            candidate_diagnostics.record(key=place["place_id"], name=place["name"], outcome="rejected",
+                                         reasons=["실내 대체 조건을 확인할 수 없다"])
             continue
         candidate = Candidate(key=str(place["place_id"]), place=place, changed_items=1,
                               extra_cost_krw=None, shift_minutes=0,
@@ -761,12 +765,27 @@ def choose(candidates: list[Candidate],
                 candidate.rejected.append(f"재검증 불통과: {report.get('verdict')}")
         (rejected if candidate.rejected else survivors).append(candidate)
     survivors.sort(key=Candidate.rank)
+    duplicates = []
     if distinct is not None:
         kept: list[Candidate] = []
         for candidate in survivors:
             if not any(distinct(candidate, other) for other in kept):
                 kept.append(candidate)
+            else:
+                duplicates.append(candidate)
         survivors = kept
+    for candidate in rejected:
+        deferred = (candidate.recheck or {}).get("verdict") == "not_checked"
+        candidate_diagnostics.record(key=candidate.key, name=candidate.name,
+                                     outcome="deferred" if deferred else "rejected",
+                                     reasons=candidate.rejected, report=candidate.recheck)
+    for candidate in duplicates:
+        candidate_diagnostics.record(key=candidate.key, name=candidate.name, outcome="duplicate",
+                                     reasons=["같은 장소·브랜드의 앞 순위 후보가 있다"], report=candidate.recheck)
+    for rank, candidate in enumerate(survivors, 1):
+        outcome = "selected" if rank == 1 else "alternate" if rank <= 3 else "ranked_out"
+        candidate_diagnostics.record(key=candidate.key, name=candidate.name, outcome=outcome,
+                                     report=candidate.recheck, rank=rank)
     if not survivors:
         return None, [], rejected
     return survivors[0], survivors[1:3], rejected

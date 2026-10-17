@@ -1,0 +1,59 @@
+.page { width: 100%; max-width: 1120px; margin-inline: auto; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.page :is(h1, h2, h3, h4, strong) { font-weight: 600; }
+.page :global(.badge) { font-size: 12px; }
+.page button { min-height: 44px; }
+.breadcrumb { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--muted); }
+.breadcrumb button { border: 0; background: transparent; color: var(--accent); padding: 8px; }
+.heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.heading > div { min-width: 0; }
+.heading h1 { overflow-wrap: anywhere; }
+.heading p { margin-bottom: 8px; }
+.heading > button { flex-shrink: 0; }
+.identities { display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 0; font-size: 12px; color: var(--muted); }
+.identities div { min-width: 0; }
+.identities dt { font-weight: 600; }
+.identities dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); gap: 8px; }
+.tabs button { flex: 0 1 auto; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; padding: 10px 14px; white-space: nowrap; }
+.tabs button[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-soft); }
+.body { min-height: 240px; }
+.sectionHeading { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px; }
+.sectionHeading h2 { margin: 0; }
+.empty { padding: 32px 16px; background: var(--background); color: var(--muted); text-align: center; border-radius: 6px; }
+.conversation, .itinerary { list-style: none; padding: 0; margin: 0; }
+.conversation { display: flex; flex-direction: column; gap: 16px; }
+.conversation > li { max-width: 88%; border: 1px solid var(--line); padding: 16px; border-radius: 8px; overflow-wrap: anywhere; }
+.customer { margin-left: auto; background: var(--accent-soft); width: fit-content; min-width: min(100%, 240px); }
+.assistant { background: var(--surface); width: fit-content; min-width: min(100%, 240px); }
+.turnMeta { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; }
+.turnMeta time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.message { max-width: 72ch; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0 0; }
+.caseLink { margin-top: 12px; color: var(--accent); background: transparent; text-align: left; }
+.more { margin: 20px auto 0; display: flex; }
+.source { margin: 24px 0; }
+.source h3 { font-size: 16px; overflow-wrap: anywhere; }
+.original { border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: var(--surface); font: inherit; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 75ch; }
+.planMeta { display: flex; gap: 8px 20px; flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.planMeta span { color: var(--muted); }
+.day { margin: 24px 0; }
+.day h3 { color: var(--accent); font-size: 16px; }
+.itinerary { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.itinerary > li { display: flex; gap: 24px; padding: 16px; border-bottom: 1px solid var(--line); }
+.itinerary > li:last-child { border: 0; }
+.scheduleTime { flex: 0 0 108px; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; }
+.scheduleTime time { font-weight: 600; }
+.scheduleTime span { color: var(--muted); font-size: 12px; }
+.itemBody { min-width: 0; overflow-wrap: anywhere; }
+.itemBody p { white-space: pre-wrap; margin: 8px 0 0; }
+.itemTitle { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.itemTitle h4 { font-size: 15px; margin: 0; }
+.skeleton { display: grid; gap: 16px; }
+.skeleton span { display: block; height: 72px; background: var(--background); border: 1px solid var(--line); border-radius: 8px; }
+@media (max-width: 767.98px) {
+  .heading { flex-direction: column; }
+  .tabs { gap: 0; }
+  .tabs button { flex: 1 1 0; font-size: 14px; padding: 12px 4px; }
+  .conversation > li { max-width: 100%; }
+  .itinerary > li { padding: 14px; gap: 12px; flex-direction: column; }
+  .scheduleTime { flex: none; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+}
