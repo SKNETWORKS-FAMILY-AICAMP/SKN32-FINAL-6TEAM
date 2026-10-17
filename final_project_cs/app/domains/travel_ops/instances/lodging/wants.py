@@ -123,6 +123,8 @@ class Wants:
     walk_min: int | None = None
     #: `[2026-10-17 D21]` 걸어서 거리를 「가장 가까운 지하철역」에서 잰다(역 이름 없이 역을 말했을 때)
     station_walk: bool = False
+    #: `[2026-10-18 D22 · 사용자 결정]` 문장에 말한 서울 구(「영등포구」) — 다른 구 숙소는 싣지 않는다
+    gu: str | None = None
 
     @property
     def asks_guest(self) -> list[str]:
@@ -132,6 +134,14 @@ class Wants:
     @property
     def any(self) -> bool:
         return bool(self.kind or self.either or self.avoid or self.stars or self.no_dorm or self.cheapest or self.near)
+
+
+#: `[2026-10-18 D22]` 서울 25개 구 — 「영등포구」 요청에 용산구 숙소가 섞였다(☆5차 GPT 검수 높음 ①, 30건)
+SEOUL_GU = ("종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구", "성북구", "강북구", "도봉구", "노원구", "은평구", "서대문구",
+            "마포구", "양천구", "강서구", "구로구", "금천구", "영등포구", "동작구", "관악구", "서초구", "강남구", "송파구", "강동구")
+_GU_SAID = re.compile(r"(?<![가-힣])(" + "|".join(sorted(SEOUL_GU, key=len, reverse=True)) + r")(?![가-힣]*청)")
+#: 「펜션이나 숙소」 「모텔이든 아무 데나」 — 유형을 고르지 않은 말(☆5차 N28-07: 펜션만 남겨 0곳)
+_KIND_ANY = re.compile(r"(한옥|게스트\s*하우스|게하|호스텔|모텔|펜션|리조트|호텔)\s*(?:이나|나|또는|아니면|이든|든)\s*(?:그냥\s*)?(?:숙소|아무|다른|일반|어디)")
 
 
 def read_wants(text: str | None) -> Wants:
@@ -160,7 +170,7 @@ def read_wants(text: str | None) -> Wants:
         found = pattern.search(text)
         if found:
             words.append(found.group(0))
-    if kind in avoid:
+    if kind in avoid or _KIND_ANY.search(text):
         kind = None
     either = _EITHER.search(text)
     pair: frozenset[str] = frozenset()
@@ -176,7 +186,8 @@ def read_wants(text: str | None) -> Wants:
     return Wants(kind=kind, either=pair, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
                  words=tuple(words) + guest.words + price_words + ((minute_word,) if minute_word else ()), guest=guest,
                  min_price=low, band_max=high, walk_min=minutes,
-                 station_walk=near == "walk" and bool(_ANY_STATION.search(text)) and not _NAMED_STATION.search(text))
+                 station_walk=near == "walk" and bool(_ANY_STATION.search(text)) and not _NAMED_STATION.search(text),
+                 gu=(_GU_SAID.search(text).group(1) if len(set(_GU_SAID.findall(text))) == 1 else None))
 
 
 #: `[2026-10-16 평가 2차]` 1박 가격의 아래 끝 — 해석 칸에 최저가가 없어 「10만 원대」 「15만~20만」에서 하한 아래 숙소가 나왔다
@@ -187,9 +198,24 @@ _RANGE_WON = re.compile(r"(?<![\d,])(\d{1,3}(?:,\d{3})+|\d{5,7})\s*(?:원|krw)?\
 _AT_LEAST = re.compile(r"(?:최소\s*)?(\d{1,3})\s*만\s*원?\s*(?:이상|부터|넘는)")
 
 
+_SINO_DIGIT = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6, "칠": 7, "팔": 8, "구": 9}
+#: `[2026-10-18 D22]` 「십이만 원대」 「칠만 원」(한자어 수사, ☆5차 N25-08 — 아래 끝을 못 읽었다)
+_SINO_MAN = re.compile(r"(?<![가-힣\d])([이삼사오육칠팔구]?십[일이삼사오육칠팔구]?|[이삼사오육칠팔구])\s*(?=만)")
+
+
+def _sino_man(text: str) -> str:
+    def value(m: re.Match) -> str:
+        word = m.group(1)
+        if "십" in word:
+            head, _, tail = word.partition("십")
+            return str((_SINO_DIGIT.get(head, 1)) * 10 + _SINO_DIGIT.get(tail, 0))
+        return str(_SINO_DIGIT[word])
+    return _SINO_MAN.sub(value, text)
+
+
 def read_price_band(text: str | None) -> tuple[int | None, int | None, tuple[str, ...]]:
     """문장의 1박 가격 아래 끝(과 「N만 원대」의 위 끝). (최저, 구간 상한, 읽은 말). 하나로 정해지지 않으면 `None`."""
-    text = str(text or "")
+    text = _sino_man(str(text or ""))
     ranges = _RANGE_MAN.findall(text)
     if len(ranges) == 1:
         low, high = int(ranges[0][0]) * 10000, int(ranges[0][1]) * 10000
@@ -263,6 +289,22 @@ def stay_city(description: str | None) -> str | None:
     if stay_stars(last) is not None or any(last == word for word, _ in _KIND_WORDS):
         return None
     return last
+
+
+def stay_gu(description: str | None) -> str | None:
+    """설명의 구 칸 — 「3성급 · 호텔 · 용산구 · 서울」 · 「모텔 · 용산 · 서울」 → 용산구. 서울이 아니거나 없으면 `None`. `[2026-10-18 D22]`"""
+    parts = _parts(description)
+    if len(parts) < 2 or parts[-1] != "서울":
+        return None
+    word = parts[-2]
+    name = word if word.endswith("구") else word + "구"
+    return name if name in SEOUL_GU else None
+
+
+def address_gu(address: str | None) -> str | None:
+    """주소 → 서울 구(「서울특별시 용산구 …」 → 용산구). 없으면 `None`."""
+    found = re.match(r"\s*서울(?:특별시|시)?\s+(\S+구)", str(address or ""))
+    return found.group(1) if found and found.group(1) in SEOUL_GU else None
 
 
 def price_reason(wants: Wants, price: float | None, max_price: int | None = None) -> str | None:
@@ -399,5 +441,5 @@ def summary(wants: Wants) -> list[str]:
     return out
 
 
-__all__ = ["DORMS", "NOT_HOTEL", "Guest", "Wants", "guest_block", "price_reason", "read_guest", "read_price_band", "read_walk_minutes", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
+__all__ = ["SEOUL_GU", "address_gu", "stay_gu", "DORMS", "NOT_HOTEL", "Guest", "Wants", "guest_block", "price_reason", "read_guest", "read_price_band", "read_walk_minutes", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
            "strip_handled", "summary"]

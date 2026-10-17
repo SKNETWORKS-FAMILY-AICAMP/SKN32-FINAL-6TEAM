@@ -996,7 +996,7 @@ class ReadToolbox:
         return {"source": None, "stays": []} if answered else None
 
     #: 한 번에 위치를 찾는 숙소 수 상한(카카오 호출 수 = 이름 수). 우리가 고른 값
-    STAYS_LOOKUP_MAX = 12
+    STAYS_LOOKUP_MAX = 20                     # `[2026-10-18 D22]` 12 → 20: 구를 말하면 구글 숙소 이름도 함께 찾는다
 
     def stays_lookup(self, scope: ToolContext, *, names: Any = None, **_: Any) -> dict[str, Any] | None:
         """숙소 이름 여럿 → 이름마다 카카오 로컬 숙박(`AD5`, 서울 전역) 결과. `[2026-10-17 D21]`

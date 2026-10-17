@@ -1717,5 +1717,47 @@ def test_d21_locate_many_accepts_one_name_containing_the_other():
                     {"name": "스테이가온 홍대", "latitude": 37.55, "longitude": 126.92}]}}
     team = LodgingTeam(SimpleNamespace(), None)
     team._read = lambda task, name, arguments, seen: looked
-    found, _ = team._locate_many(SimpleNamespace(context=SimpleNamespace(evidence=[]), team_id="lodging"), ["남산, 쉼", "스테이 가온"], set(), [])
-    assert found == {"남산, 쉼": (37.55, 126.98)}
+    found, gus, _ = team._locate_many(SimpleNamespace(context=SimpleNamespace(evidence=[]), team_id="lodging"), ["남산, 쉼", "스테이 가온"], set(), [])
+    assert found == {"남산, 쉼": (37.55, 126.98)} and gus == {}
+
+
+
+def test_d22_dates_people_kind_and_price_words():
+    """`[2026-10-18 D22]` ☆5차 held-out qa_1017_234959 — 「11월 십팔일」 「퇴실은 그 이튿날」 「12월의 마지막 밤부터 새해 첫날」 「열나흗날」
+    「새해 1월 2일」 · 「나 포함 친구 다섯」(6명으로) · 「이인 숙소」 · 「펜션이나 숙소」 · 「십이만 원대」."""
+    from datetime import date as day
+
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, rule_people, rule_spoken
+    from app.domains.travel_ops.instances.lodging.wants import read_price_band
+
+    today = day(2026, 10, 18)
+
+    def dates(text, **known):
+        found, _ = rule_spoken(Interpretation(task="search", **known), text, today=today)
+        return found.check_in, found.check_out
+
+    assert dates("중랑구, 11월 십팔일 입실해서 다음 날 퇴실.") == (day(2026, 11, 18), day(2026, 11, 19))
+    assert dates("성인 둘이 12월의 마지막 밤부터 새해 첫날 아침까지 묵으려구요.") == (day(2026, 12, 31), day(2027, 1, 1))
+    assert dates("1월 열이튿날부터 열나흗날까지 성인 셋") == (day(2027, 1, 12), day(2027, 1, 14))
+    assert dates("체크인은 12월 14일이고 퇴실은 그 이튿날!", check_in=day(2026, 12, 14)) == (day(2026, 12, 14), day(2026, 12, 15))
+    assert dates("12월 29일~새해 1월 2일로 보고 있어요", check_in=day(2026, 12, 29), check_out=day(2027, 1, 1)) == (day(2026, 12, 29), day(2027, 1, 2))
+    assert rule_people(Interpretation(task="search", adults=6), "나 포함 성인 친구 다섯이 가는데 한 명은 외국인")[0].adults == 5
+    assert rule_people(Interpretation(task="search"), "종로구 10만 원대로 12/1~12/2 이인 숙소 찾아줘요.")[0].adults == 2
+    assert read_wants("강아지 같이 갈 수 있는 펜션이나 숙소 있나요?").kind is None
+    assert read_wants("펜션 찾아줘").kind == "펜션"
+    assert read_price_band("숙박비는 하루 십이만 원대 생각 중.")[:2] == (120000, 129999)
+
+
+def test_d22_a_named_district_drops_stays_of_other_districts():
+    """`[2026-10-18 D22 · 사용자 결정]` 「영등포구」 요청에 용산구 숙소가 섞였다(☆5차 GPT 검수 높음 ①). 구를 말하면 설명의 구 칸으로 다른 구를 뺀다."""
+    from app.domains.travel_ops.instances.lodging.wants import stay_gu
+
+    assert read_wants("영등포구 성인 셋, 12월 22일 IN").gu == "영등포구"
+    assert read_wants("강서구청 근처").gu is None and read_wants("성동구 성수동이랑 광진구").gu is None
+    assert stay_gu("레지던스 · 용산 · 서울") == "용산구" and stay_gu("3성급 · 호텔 · 영등포구 · 서울") == "영등포구"
+    listing = _listing([(1, "용산 숙소", "호텔 · 용산 · 서울", 90000), (2, "영등포 숙소", "호텔 · 영등포 · 서울", 95000)])
+    reply = {**SEARCH, "keyword": "영등포구", "min_rating": None, "max_price_per_night": None}
+    result, _, _ = _run(reply, {"read.stay_search": listing, "read.stay_detail": lambda a: None},
+                        text="다음 달 6일부터 3박 영등포구 성인 2명")
+    assert "영등포 숙소" in result.answer and "용산 숙소" not in result.answer
+    assert "영등포구 밖 1곳" in result.answer
