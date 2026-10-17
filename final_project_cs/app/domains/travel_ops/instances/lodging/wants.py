@@ -46,6 +46,10 @@ _COMPANION = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|�
 _CHEAP = re.compile(r"(?<!비)싼|(?<!비)싸게|저렴|가성비|최저가")
 _WALK = re.compile(r"도보|걸어서|걸어\s*갈|걸어\s*다닐|걸을\s*수|역세권|walk|on\s*foot", re.I)
 _NEAR = re.compile(r"근처|가까운|가까이|가깝|인근|주변|바로\s*앞")
+#: `[2026-10-17 D21]` 역 이름 없이 「지하철역 걸어서 7분」 「역까지 걸어서 십분」 「역에서 걸어갈 만한」 — 기준은 지역 기준점(구청)이 아니라
+#:  숙소에서 가장 가까운 지하철역이다(☆4차 qa_1017_222129: 용산구청에서 7분으로 걸렀다, 8건). 이름 있는 역(「서울대입구역」)이 있으면 아니다
+_ANY_STATION = re.compile(r"(?:지하철|전철)\s*역|(?<![가-힣A-Za-z0-9])역\s*(?:까지|에서|이랑|하고|과|와|으로|근처|가까|부터|에|도보)|역세권")
+_NAMED_STATION = re.compile(r"(?<![가-힣A-Za-z0-9])(?!지하철역|전철역)[가-힣A-Za-z0-9]{1,10}역(?!세권)")
 
 
 #: `[2026-10-16 사용자 판정 L05]` 묵을 사람 — 게스트하우스 · 호스텔은 여성 전용 · 외국인 전용 · 나이 제한이 붙은 곳이 많아
@@ -117,6 +121,8 @@ class Wants:
     min_price: int | None = None
     band_max: int | None = None
     walk_min: int | None = None
+    #: `[2026-10-17 D21]` 걸어서 거리를 「가장 가까운 지하철역」에서 잰다(역 이름 없이 역을 말했을 때)
+    station_walk: bool = False
 
     @property
     def asks_guest(self) -> list[str]:
@@ -169,7 +175,8 @@ def read_wants(text: str | None) -> Wants:
     minutes, minute_word = read_walk_minutes(text) if near == "walk" else (None, None)
     return Wants(kind=kind, either=pair, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
                  words=tuple(words) + guest.words + price_words + ((minute_word,) if minute_word else ()), guest=guest,
-                 min_price=low, band_max=high, walk_min=minutes)
+                 min_price=low, band_max=high, walk_min=minutes,
+                 station_walk=near == "walk" and bool(_ANY_STATION.search(text)) and not _NAMED_STATION.search(text))
 
 
 #: `[2026-10-16 평가 2차]` 1박 가격의 아래 끝 — 해석 칸에 최저가가 없어 「10만 원대」 「15만~20만」에서 하한 아래 숙소가 나왔다

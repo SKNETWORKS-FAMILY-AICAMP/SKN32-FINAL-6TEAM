@@ -1061,17 +1061,18 @@ def test_walking_distance_uses_the_kakao_anchor_and_drops_far_places():
                         (5, "다섯째 호텔", "호텔 · 강남 · 서울", 100000)])
     coords = {1: (37.4870, 127.0450), 2: (37.4990, 127.0290)}
     detail = lambda a: {**DETAIL, "gid": a["gid"], "latitude": coords[a["gid"]][0], "longitude": coords[a["gid"]][1]}   # noqa: E731
-    lookup = lambda a: {"source": "kakao", "stays": [{"name": "토요코인서울강남", "address": "서울 서초구", "latitude": 37.5010,   # noqa: E731
-                                                     "longitude": 127.0250}]} if "토요코인" in a["name"] else {"source": "kakao", "stays": []}
+    # `[2026-10-17 D21 · 사용자 결정]` 위치는 이름 여럿을 한 번에 찾고(`read.stays_lookup`), 그래도 모르는 곳은 싣지 않는다(전에는 「거리 확인 안 함」으로 실었다)
+    lookup = lambda a: {"source": "kakao", "stays": {name: ([{"name": "토요코인서울강남", "address": "서울 서초구", "latitude": 37.5010,   # noqa: E731
+                                                              "longitude": 127.0250}] if "토요코인" in name else []) for name in a["names"]}}
     reply = {**SEARCH, "keyword": "강남역", "adults": 1, "max_price_per_night": 199999, "min_rating": None}
     result, _, tools = _run(reply, {"read.landmark": GANGNAM, "read.stay_search": listing, "read.stay_detail": detail,
-                                    "read.stay_lookup": lookup}, text="다음 달 6일부터 3박 혼자 강남역 걸어갈 수 있는 비즈니스호텔")
+                                    "read.stays_lookup": lookup}, text="다음 달 6일부터 3박 혼자 강남역 걸어갈 수 있는 비즈니스호텔")
     decision = result.decisions[0]
-    assert [item["gid"] for item in decision["shown"]] == [2, 3, 4]
-    assert [(item["gid"], item["reason"]) for item in decision["skipped"]] == [(1, "far")]
+    assert [item["gid"] for item in decision["shown"]] == [2, 3]
+    assert [(item["gid"], item["reason"]) for item in decision["skipped"]] == [(1, "far"), (4, "unlocated"), (5, "unlocated")]
     assert decision["shown"][1]["located"] == "kakao" and "강남역 2호선에서 0.4km" in result.answer
-    assert "위치 모를 호텔" in result.answer and "거리 확인 안 함" in result.answer, "위치를 못 찾으면 가깝다고 하지 않는다"
-    assert [name for name, _ in tools.calls].count("read.stay_lookup") == 2, "카카오 위치 찾기는 2번까지"
+    assert "위치 모를 호텔" not in result.answer and "위치를 확인하지 못한 곳 2곳" in result.answer, "위치를 못 찾으면 싣지 않는다"
+    assert [name for name, _ in tools.calls].count("read.stays_lookup") == 1 and "read.stay_lookup" not in [name for name, _ in tools.calls]
     assert "강남역 2호선에서 0.8km 넘음 1곳" in result.answer and "이동 계산기를 못 써 직선거리로 봄" in result.answer and "거리는 카카오맵의 「강남역 2호선」 위치에서" in result.answer
 
 
@@ -1648,3 +1649,34 @@ def test_d20_a_bare_district_anchors_on_its_office():
     other = Kakao()
     ReadToolbox(lambda: None, kakao=other).landmark(None, name="여의도")
     assert all(query != "여의도청" for query, _ in other.calls), "구 이름이 아니면 구청을 찾지 않는다"
+
+
+def test_d21_an_unnamed_station_walk_is_measured_from_the_nearest_station():
+    """`[2026-10-17 D21]` 「용산구에서 지하철역 걸어서 7분」 — 용산구청에서 7분으로 걸렀다(☆4차 qa_1017_222129 8건).
+    지역 둘레 역 목록을 한 번 받아 숙소마다 가장 가까운 역에서 잰다."""
+    text = "다음 달 6일부터 3박 용산구 지하철역 걸어서 7분 안 성인 2명 찾아줘"
+    office = {"source": "kakao", "found": True, "name": "용산구청", "latitude": 37.5324, "longitude": 126.9906}
+    near = {"source": "kakao", "stations": [{"name": "이태원역 6호선", "latitude": 37.5345, "longitude": 126.9945}]}
+    tools = {"read.stay_search": STAYS, "read.stay_detail": lambda a: DETAIL if a["gid"] == 11 else None,
+             "read.landmark": office, "read.stations_near": near}
+    result, _, calls = _run({**SEARCH, "keyword": "용산구"}, tools, text=text)
+    assert ("read.stations_near", {"latitude": 37.5324, "longitude": 126.9906, "radius": 5000}) in calls.calls
+    assert "이태원역 6호선에서 0.0km" in result.answer, "구청이 아니라 가장 가까운 역에서 잰 거리"
+    assert "가장 가까운 지하철역에서 걸어서 7분 안" in result.answer
+    assert "용산구청에서 걸어서" not in result.answer
+    assert result.decisions[0]["station_walk"] is True
+    assert result.decisions[0]["shown"][0]["station"] == "이태원역 6호선"
+
+    far = {"source": "kakao", "stations": [{"name": "먼역", "latitude": 37.5500, "longitude": 126.9700}]}
+    result, _, _ = _run({**SEARCH, "keyword": "용산구"}, {**tools, "read.stations_near": far}, text=text)
+    assert "가장 가까운 지하철역에서 걸어서 7분 넘음 1곳" in result.answer
+    assert "해밀톤 호텔" not in result.answer.split("구글 호텔")[0]
+
+
+def test_d21_a_named_station_still_uses_the_landmark():
+    from app.domains.travel_ops.instances.lodging.wants import read_wants as wants
+
+    assert wants("서울대입구역에서 도보 7분 이내 방").station_walk is False
+    assert wants("역까지 걸어서 십분 안쪽이면 좋겠어").station_walk is True
+    assert wants("강남구 지하철역 도보 6분 안쪽").station_walk is True
+    assert wants("홍대 근처 지하철역 가까운 곳").station_walk is False, "걷기 말이 없으면 근처(3km) 그대로"

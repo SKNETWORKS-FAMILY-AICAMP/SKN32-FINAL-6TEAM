@@ -222,9 +222,15 @@ class ReadToolbox:
             "read.booking_search_stays": self.booking_search_stays,
             # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
             "read.stay_lookup": self.stay_lookup,
+            # ★`[2026-10-17 D21]` 숙소 이름 여럿 → 위치(카카오 숙박, 한 번에 최대 12곳). 숙소 팀이 걷기 · 근처 조건에서 목록의 위치를 한꺼번에 찾는다
+            #   (도구 호출 예산 `max_steps` 안에서 — 전에는 이름 하나씩 2곳까지라 나머지는 「거리 확인 안 함」이었다)
+            "read.stays_lookup": self.stays_lookup,
             # ★`[2026-10-15]` 지역 · 장소 이름 → 기준점 하나(이름 · 좌표, 카카오 · 서울 안). 숙소 팀이 「강남역 도보」 「경복궁 근처」의 거리와
             #   검색 지역이 서울인지 볼 때 쓴다(검수 D · 사용자 결정 「카카오로 기준점 찾기」)
             "read.landmark": self.landmark,
+            # ★`[2026-10-17 D21]` 좌표 둘레의 지하철역 목록(카카오 · 거리순 최대 15). 숙소 팀이 「지하철역 걸어서 N분」(역 이름 없음)을
+            #   숙소마다 가장 가까운 역에서 잴 때 쓴다 — 한 번 불러 목록을 받고, 숙소별 거리는 팀이 계산한다(도구 호출 예산 `max_steps`)
+            "read.stations_near": self.stations_near,
             # ★`[2026-10-13]` 구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 동시에 — 숙소 팀이 후보마다 판매처 가격을 붙일 때
             "read.stay_google_details": self.stay_google_details,
             # ★`[2026-10-13]` 숙소 · 항공 일정 항목에 앞서 보여 준 후보(숙소 · 항공 원장) — 「또 바꿔 줘」에서 뺀다
@@ -989,6 +995,26 @@ class ReadToolbox:
                                                          "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
         return {"source": None, "stays": []} if answered else None
 
+    #: 한 번에 위치를 찾는 숙소 수 상한(카카오 호출 수 = 이름 수). 우리가 고른 값
+    STAYS_LOOKUP_MAX = 12
+
+    def stays_lookup(self, scope: ToolContext, *, names: Any = None, **_: Any) -> dict[str, Any] | None:
+        """숙소 이름 여럿 → 이름마다 카카오 로컬 숙박(`AD5`, 서울 전역) 결과. `[2026-10-17 D21]`
+
+        돌려주는 것: `{"source": "kakao", "stays": {이름: [{name, address, latitude, longitude}]}}` — 이름 · 주소 · 좌표만(응답은 저장하지 않는다,
+        카카오 약관). 앞의 `STAYS_LOOKUP_MAX` 곳까지만 부른다. 카카오를 부를 수 없으면 `None`."""
+        if self.kakao is None or not names:
+            return None
+        out: dict[str, list[dict[str, Any]]] = {}
+        answered = False
+        for name in list(dict.fromkeys(str(n).strip() for n in names if str(n or "").strip()))[: self.STAYS_LOOKUP_MAX]:
+            found = self.kakao.search(name, size=5, category_group_code="AD5", anywhere=True)
+            if found is None:
+                continue
+            answered = True
+            out[name] = [{key: row.get(key) for key in ("name", "address", "latitude", "longitude")} for row in found]
+        return {"source": "kakao", "stays": out} if answered else None
+
     def landmark(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
         """지역 · 장소 이름 → 기준점 하나(이름 · 위도 · 경도). `[2026-10-15]` 숙소 팀 — 「강남역 걸어서」 「경복궁 근처」 「김포공항 근처」의 기준점,
         그리고 검색 지역이 서울인지(카카오 어댑터는 서울 주소만 돌려준다).
@@ -1037,6 +1063,23 @@ class ReadToolbox:
                 return {"source": "kakao", "found": True, "name": top.get("name"),
                         "latitude": top.get("latitude"), "longitude": top.get("longitude")}
         return {"source": "kakao", "found": False} if answered else None
+
+    def stations_near(self, scope: ToolContext, *, latitude: Any = None, longitude: Any = None, radius: Any = None,
+                      **_: Any) -> dict[str, Any] | None:
+        """좌표 둘레 반경(미터, 기본 3000) 안 지하철역 — 거리순 최대 15곳(카카오 한 쪽 상한). `[2026-10-17 D21]`
+
+        카카오 로컬 키워드 검색(「역」, 지하철역 `SW8`, 거리순). 돌려주는 것: `{"source": "kakao", "stations": [{name, latitude, longitude}]}` —
+        이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관). 카카오를 부를 수 없으면 `None`."""
+        try:
+            point = (float(latitude), float(longitude))
+        except (TypeError, ValueError):
+            return None
+        if self.kakao is None:
+            return None
+        found = self.kakao.search("역", size=15, near=point, radius=int(radius or 3000), category_group_code="SW8")
+        if found is None:
+            return None
+        return {"source": "kakao", "stations": [{key: row.get(key) for key in ("name", "latitude", "longitude")} for row in found]}
 
     def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
                             check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:

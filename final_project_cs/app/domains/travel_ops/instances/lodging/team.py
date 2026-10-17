@@ -86,6 +86,9 @@ PRICE_BAND = (0.7, 1.3)
 #: `[2026-10-15 검수 D]` 기준점(카카오 `read.landmark`)에서 이보다 멀면 다른 지역으로 본다 — ☆10-15 검수 L01 · L03 · L05:
 #:   「성수」에 군산 모텔, 「강남역」 · 「홍대」에 속초 · 제주 숙소가 왔다. 서울 끝에서 끝이 30km 남짓이라 그 절반 넘게. 우리가 고른 값
 REGION_KM = 20.0
+#: `[2026-10-17 D21]` 「지하철역 걸어서 N분」 — 지역 둘레 역 목록을 받을 반경(미터) · 숙소별 걸어서 분을 이동 계산기로 잴 최대 곳 수. 우리가 고른 값
+STATION_RADIUS_M = 5000
+STATION_WALK_CHECKS = 12
 #: `[2026-10-15 검수 D]` 「걸어서 · 도보」 직선거리 상한 — 이동 계산기(도보)를 못 쓸 때만. 「근처 · 가까운」은 `NEAR_KM`. 우리가 고른 값 —
 #:   ☆사용자 판정 L03 「강남역 도보 20분은 도보 거리 아님」(17:49 판: 베스트웨스턴 직선 0.9km 가 걸어서 20분) → 1.0 에서 0.8 로
 WALK_KM = 0.8
@@ -115,7 +118,7 @@ def _walk_cap(wants: Wants) -> tuple[int, float]:
 WALK_CHECKS = 5
 #: 건너뛴 까닭 → 답에 적는 말(가격 없음 · 객실 없음은 전과 같은 문장으로 따로 적는다)
 _SKIP_LABELS = {"region": "다른 지역", "kind": "{kind} 아님", "dorm": "호스텔 · 게스트하우스", "avoid": "빼 달라신 유형",
-                "stars": "{stars}성급 미만이거나 성급 모름", "far": "{anchor}에서 {limit} 넘음",
+                "stars": "{stars}성급 미만이거나 성급 모름", "far": "{anchor}에서 {limit} 넘음", "unlocated": "위치를 확인하지 못한 곳",
                 "restricted": "이용 조건(여성 · 외국인 전용 등)이 붙은 곳",
                 "price_low": "1박 {low}원 미만", "price_high": "1박 상한 넘음"}
 #: 한국 안 좌표인지(국내 · 해외 검색을 고른다) — 대략의 경계. 우리가 고른 값
@@ -554,11 +557,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                        "read.offers_shown",
                        "read.stay_lookup",                    # `[2026-10-13]` 내 숙소 위치 — 마이리얼트립이 못 줄 때(카카오 · 관광공사)
                        "read.landmark",                       # `[2026-10-15]` 「강남역 도보」 「경복궁 근처」 기준점 · 서울인지(카카오)
+                       "read.stations_near",                  # `[2026-10-17 D21]` 「지하철역 걸어서 N분」(역 이름 없음) — 지역 둘레 역 목록(카카오)
+                       "read.stays_lookup",                   # `[2026-10-17 D21]` 걷기 · 근처 조건 — 목록 숙소 위치를 한 번에(카카오 숙박)
                        "read.stay_google",                    # `[2026-10-13]` 내 숙소를 구글 호텔에서 같은 숙소로 찾기(가격 · 사진 · 판매처)
                        "read.stay_google_details",            # `[2026-10-13]` 구글 호텔 후보의 판매처별 가격 · 주소 · 사진
                        "read.policy", "read.booking_terms", *[name for name in ITINERARY_TOOLS if name != "read.itinerary"]],
         knowledge_scope=["travel_cancellation", "travel_access"],
-        max_steps=8,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS(2) + 여유(내 숙소 갈래 · 일정 항목 갈래의 넓혀 찾기 등)
+        max_steps=9,                                  # 일정 1 + booking 1 + 상세 DETAIL_CALLS(2) + 여유(내 숙소 갈래 · 일정 항목 갈래의 넓혀 찾기 등)
+                                                      # `[2026-10-17 D21]` 8 → 9: 기준점 1 + 위치 찾기 LOOKUP_CALLS(2) + 역 목록 1 이 더해지면 8을 다 쓴다
         active=True,
         implementation_revision="2026-10-07",
         default_capability="lodging.assist",
@@ -697,11 +703,21 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         # `[2026-10-15 사용자 판정 L03]` 「걸어서」는 이동 계산기(도보)로 몇 분인지 본다 — 없으면(꺼짐 · 미등록) 직선 `WALK_KM`
         walker = self._walker(anchor, found.check_in) if wants.near == "walk" and anchor else None
         limit_text = f"걸어서 {walk_min}분" if walker else (f"{limit:g}km" if limit is not None else "")
+        # `[2026-10-17 D21]` 역 이름 없이 「지하철역 걸어서 N분」 — 지역 기준점(구청)이 아니라 숙소마다 가장 가까운 역에서 잰다
+        #   (☆4차 qa_1017_222129: 「용산구에서 지하철역 걸어서 칠분」을 용산구청에서 7분으로 걸렀다)
+        meter = None
+        if wants.station_walk and anchor is not None and not far_anchor:
+            meter, evidence = self._station_meter(task, anchor, found.check_in, walk_km, seen, evidence)
+            if meter is not None:
+                walker = None
+                limit_text = f"걸어서 {walk_min}분"
+        said_anchor = {**anchor, "name": "가장 가까운 지하철역"} if meter is not None and anchor else anchor
         google_keyword = _google_keyword(found.keyword, wants, anchor)
         decision = {**decision, "wants": {"kind": wants.kind, "avoid": sorted(wants.avoid), "stars": wants.stars,
                                           "no_dorm": wants.no_dorm, "cheapest": wants.cheapest, "near": wants.near},
                     "anchor": {key: anchor[key] for key in ("name", "latitude", "longitude")} if anchor else None,
                     "near_km": limit, "walk_engine": walker is not None if wants.near == "walk" else None,
+                    **({"station_walk": True} if meter is not None else {}),
                     "searched_party": party, "google_keyword": google_keyword}
         # `[2026-10-10]` 소스 고르기 · 다른 곳 링크는 booking 모듈(`components/booking/offers/stays.py`)이 한다(팀 피드백). 상세 확인 · 고르기는 여기서
         arguments = {"keyword": found.keyword, **dates, **party, "domestic": found.domestic,
@@ -717,10 +733,13 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         resting = states["myrealtrip"] == "resting"
         google_trace: list[dict[str, Any]] = []
         block = {"trace": google_trace, "children": children, "wants": wants, "anchor": anchor, "max_price": max_price, "limit": limit, "base": base,
-                 "label": label, "query": google_keyword, "walker": walker, "seoul": seoul, "dates": dates,
+                 "label": label, "query": google_keyword, "walker": walker, "meter": meter, "seoul": seoul, "dates": dates,
                  "adults": party.get("adults")}
-        notes = self._wants_lines(found, wants, anchor, limit, children, party, text=task.input_text, walker=walker is not None)
-        place_lines = self._anchor_line(anchor, walking=walker is not None) if base is anchor and anchor else self._center_line(center)
+        notes = self._wants_lines(found, wants, said_anchor, limit, children, party, text=task.input_text,
+                                  walker=walker is not None or meter is not None)
+        place_lines = (["거리는 숙소에서 가장 가까운 지하철역(카카오맵 역 위치)까지 잰 직선거리이고, 「걸어서 N분」은 이동 계산기(도보)로 잰 시간입니다."]
+                       if meter is not None else
+                       self._anchor_line(anchor, walking=walker is not None) if base is anchor and anchor else self._center_line(center))
         extra = self._google_block(google, [], booked.get("elsewhere") or [], center, **block)
         who = f"성인 {found.adults}명" + (f" · 아이 {children}명" if children else "")
         if listing is None:
@@ -760,6 +779,13 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         # `[2026-10-10]` 상세는 앞의 `DETAIL_CALLS` 곳만 부른다(전에는 4번까지). 나머지는 **목록 값**으로 싣고 링크는 숙소 번호로 만든다
         #   — ☆17:14 playdata 두 문장을 이어 돌리자 7번째 호출에서 429(`retryAfter` 60). 답 하나에 마이리얼트립 최대 1 + `DETAIL_CALLS` 번.
         lines, shown, skipped, calls, stopped, lookups, walks = [], [], [], 0, False, 0, 0
+        # `[2026-10-17 D21 · 사용자 결정]` 걷기 · 근처 조건이면 목록 숙소 위치를 한 번에 찾고(카카오 숙박), 그래도 위치를 모르는 곳은 싣지 않는다
+        #   (☆4차 qa_1017_222129 — 「거리 확인 안 함」으로 실은 곳이 정답 좌표로는 조건 밖이었다)
+        located_by_name: dict[str, tuple[float, float]] = {}
+        if limit is not None:
+            names = [stay["name"] for stay in rows if stay.get("price_per_night") is not None]
+            located_by_name, evidence = self._locate_many(task, names, seen, evidence)
+            lookups = LOOKUP_CALLS                    # 한 번에 찾았으면 하나씩 찾기는 하지 않는다(도구 호출 예산)
         for stay in rows:
             if len(lines) >= SHOWN:
                 break
@@ -785,30 +811,44 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     continue
             where = _coords(detail)
             located = "detail" if where is not None else None
+            if where is None and stay["name"] in located_by_name:
+                where, located = located_by_name[stay["name"]], "kakao"
             if where is None and limit is not None and lookups < LOOKUP_CALLS:
                 # `[2026-10-15 검수 D]` 거리 조건이 있는데 상세를 못 읽은 곳 — 이름으로 카카오(숙박)에서 위치를 찾는다(이름 핵심이 같을 때만)
                 lookups += 1
                 where, evidence = self._locate(task, stay["name"], seen, evidence)
                 located = "kakao" if where is not None else None
             minutes = None
+            if where is None and limit is not None:
+                skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "unlocated"})
+                continue
             if seoul and anchor is None and _outside_seoul(where):
                 skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "region"})
                 continue
+            station = None
             if anchor is not None and where is not None:
                 gap = _km(anchor["latitude"], anchor["longitude"], *where)
-                if walker is not None and gap <= REGION_KM and walks < WALK_CHECKS:
-                    walks += 1
-                    minutes = walker(where)
-                too_far = (minutes > walk_min) if minutes is not None else (limit is not None and gap > limit)
+                if meter is not None and gap <= REGION_KM:
+                    station, minutes, station_km = meter(where)
+                    too_far = (minutes > walk_min) if minutes is not None else station_km > walk_km
+                else:
+                    if walker is not None and gap <= REGION_KM and walks < WALK_CHECKS:
+                        walks += 1
+                        minutes = walker(where)
+                    too_far = (minutes > walk_min) if minutes is not None else (limit is not None and gap > limit)
                 if gap > REGION_KM or too_far:
                     skipped.append({"gid": stay["gid"], "name": stay["name"], "reason": "region" if gap > REGION_KM else "far",
                                     "km": round(gap, 1), **({"walk_min": minutes} if minutes is not None else {})})
                     continue
             far = round(_km(base["latitude"], base["longitude"], *where), 1) if base is not None and where is not None else None
+            if station is not None:
+                far = round(station_km, 1)
             shown.append({"gid": stay["gid"], "name": stay["name"], "detail_read": detail is not None,
                           **({"located": located} if located == "kakao" else {}),
+                          **({"station": station} if station is not None else {}),
                           **({"walk_min": minutes} if minutes is not None else {})})
-            lines.append(self._line(len(lines) + 1, stay, detail, far, _list_link(stay["gid"], dates, party), label,
+            lines.append(self._line(len(lines) + 1, stay, detail, far, _list_link(stay["gid"], dates, party),
+                                    f"{station}에서" if station is not None else label,
                                     unknown_far=limit is not None and far is None, walk_min=minutes))
         google_trace.clear()
         extra = self._google_block(google, [item["name"] for item in shown], booked.get("elsewhere") or [], center, **block)
@@ -819,7 +859,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     "dropped_names": dropped_names[:20], "google_dropped": list(google_trace)[:20],
                     "google": len((google or {}).get("stays") or []) if google is not None else None}
         basic = counts.get("no_price_in_list", 0) + counts.get("no_rooms", 0)
-        others = self._skip_text(counts, wants, anchor, limit_text)
+        others = self._skip_text(counts, wants, said_anchor, limit_text)
         if counts.get("restricted"):
             # `[2026-10-15 사용자 판정 L05]` 이용 조건이 붙은 숙소는 바로 주지 않고 고객 정보를 묻는다
             notes = [*notes, f"마이리얼트립에서 {_restricted_text(wants.guest)} {counts['restricted']}곳은 뺐어요"
@@ -865,6 +905,50 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             return None, evidence
         return {"name": str(spot.get("name") or found.keyword), "latitude": float(spot["latitude"]),
                 "longitude": float(spot["longitude"]), "usable": True}, evidence
+
+    def _station_meter(self, task: TeamTask, anchor: dict[str, Any], day: date, walk_km: float, seen: set[str],
+                       evidence: list[Evidence]) -> tuple[Any, list[Evidence]]:
+        """`[2026-10-17 D21]` 「지하철역 걸어서 N분」(역 이름 없음) — 지역 기준점 둘레 지하철역을 한 번 받아(`read.stations_near`, 거리순 15곳)
+        숙소마다 가장 가까운 역과 걸어서 몇 분인지 잰다. 역 목록을 못 받으면 `None`(부르는 쪽은 예전처럼 기준점에서 잰다).
+        돌려주는 함수: 좌표 → (역 이름, 걸어서 분 또는 None, 역까지 직선 km). 분은 직선이 상한의 1.5배 안인 곳만 이동 계산기로(호출 수 상한)."""
+        got = self._read(task, "read.stations_near", {"latitude": anchor["latitude"], "longitude": anchor["longitude"],
+                                                      "radius": STATION_RADIUS_M}, seen)
+        evidence = self._evidence(task, source_id="read.stations_near", claim="지역 둘레 지하철역(카카오맵, 가까운 역 거리용)", value=got,
+                                  base=evidence)
+        stations = [row for row in (got or {}).get("stations") or []
+                    if isinstance(row.get("latitude"), (int, float)) and isinstance(row.get("longitude"), (int, float))]
+        if not stations:
+            return None, evidence
+        walkers: dict[str, Any] = {}
+        checks = [0]
+
+        def measure(where: tuple[float, float]) -> tuple[str, int | None, float]:
+            row, km = min(((row, _km(row["latitude"], row["longitude"], *where)) for row in stations), key=lambda pair: pair[1])
+            name = str(row.get("name") or "지하철역")
+            minutes = None
+            if km <= walk_km * 1.5 and checks[0] < STATION_WALK_CHECKS:
+                if name not in walkers:
+                    walkers[name] = self._walker({"name": name, "latitude": row["latitude"], "longitude": row["longitude"]}, day)
+                if walkers[name] is not None:
+                    checks[0] += 1
+                    minutes = walkers[name](where)
+            return name, minutes, km
+        return measure, evidence
+
+    def _locate_many(self, task: TeamTask, names: list[str], seen: set[str],
+                     evidence: list[Evidence]) -> tuple[dict[str, tuple[float, float]], list[Evidence]]:
+        """`[2026-10-17 D21]` 숙소 이름 여럿 → 좌표(`read.stays_lookup`, 한 번). 이름 핵심이 같은 곳이 하나일 때만 — 지어내지 않는다."""
+        if not names:
+            return {}, evidence
+        looked = self._read(task, "read.stays_lookup", {"names": names}, seen)
+        evidence = self._evidence(task, source_id="read.stays_lookup", claim="숙소 위치(이름으로 한 번에, 거리 확인용)", value=looked,
+                                  base=evidence)
+        out = {}
+        for name, rows in ((looked or {}).get("stays") or {}).items():
+            same = [row for row in rows or [] if _core(row.get("name")) and _core(row.get("name")) == _core(name) and _coords(row) is not None]
+            if len(same) == 1:
+                out[name] = _coords(same[0])
+        return out, evidence
 
     def _locate(self, task: TeamTask, name: str, seen: set[str],
                 evidence: list[Evidence]) -> tuple[tuple[float, float] | None, list[Evidence]]:
@@ -1383,7 +1467,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
     def _google_block(google: dict[str, Any] | None, shown_names: list[str], links: list[dict[str, str]],
                       center: dict[str, Any] | None = None, *, wants: Wants | None = None, anchor: dict[str, Any] | None = None,
                       max_price: int | None = None, limit: float | None = None, base: dict[str, Any] | None = None,
-                      label: str = "일정 가운데에서", query: str | None = None, walker: Any = None, seoul: bool = False,
+                      label: str = "일정 가운데에서", query: str | None = None, walker: Any = None, meter: Any = None, seoul: bool = False,
                       dates: dict[str, str] | None = None, adults: int | None = None, children: int = 0,
                       trace: list[dict[str, Any]] | None = None) -> list[str]:
         """구글 호텔 쪽 줄 + 다른 곳에서 보기 링크. 이미 보인 이름(이름 핵심 `_core` — 공백 · 「호텔」 · 「서울」 무시)과 숙박 공유(vacation rental)는 뺀다.
@@ -1421,6 +1505,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             picks, dropped, restricted = [], 0, 0
             # 걸어서 몇 분을 계산기로 볼 때는 직선 상한 대신 넉넉한 거리(걸어서 15분이 넘을 게 뻔한 곳만)로 먼저 거른다
             straight_cap = (2.0 if walker is not None else limit) if limit is not None else None
+            if meter is not None:
+                straight_cap = None                  # `[2026-10-17 D21]` 가까운 역 거리는 아래에서 잰다 — 기준점(구청) 거리로 거르지 않는다
             for stay in rows:
                 where = _coords(stay)
                 gap = _km(anchor["latitude"], anchor["longitude"], *where) if anchor and where else None
@@ -1430,6 +1516,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                         trace.append({"name": stay.get("name"), "why": "restricted"})
                     continue
                 why = (price_reason(wants, stay["price_per_night"], max_price)
+                       or ("unlocated" if limit is not None and where is None else None)
                        or ("far" if gap is not None and (gap > REGION_KM or (straight_cap is not None and gap > straight_cap)) else
                            "region" if seoul and anchor is None and _outside_seoul(where) else None)
                        or kind_reason(wants, stay_kinds(None, stay.get("name")) or (frozenset({"호텔"}) if stay.get("hotel_class") else frozenset()),
@@ -1452,7 +1539,28 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 # `[2026-10-16 최종 평가 뒤]` 호텔 요청 — 구글에 성급이 있는 곳을 앞에(성급 없는 곳은 모텔 · 레지던스일 수 있다, 사용자 판정: 빼지는 않는다)
                 picks.sort(key=lambda stay: not stay.get("hotel_class"))
             walked: dict[int, int] = {}
-            if walker is not None:
+            stations: dict[int, tuple[str, float]] = {}
+            if meter is not None:
+                kept = []
+                cap_min, cap_km = _walk_cap(wants)
+                for stay in picks:
+                    if len(kept) >= GOOGLE_SHOWN:
+                        break
+                    where = _coords(stay)
+                    if where is None:
+                        continue                     # 위치 모름 — 위 거르기에서 이미 뺐다(사용자 결정 D21)
+                    station, minutes, km = meter(where)
+                    if (minutes is not None and minutes > cap_min) or (minutes is None and km > cap_km):
+                        dropped += 1
+                        if trace is not None:
+                            trace.append({"name": stay.get("name"), "why": "walk"})
+                        continue
+                    stations[id(stay)] = (station, round(km, 1))
+                    if minutes is not None:
+                        walked[id(stay)] = minutes
+                    kept.append(stay)
+                picks = kept
+            elif walker is not None:
                 kept, checks = [], 0
                 for stay in picks:
                     if len(kept) >= GOOGLE_SHOWN:
@@ -1483,14 +1591,17 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     star = f"{stay['hotel_class']}성급 · " if stay.get("hotel_class") else ""
                     far = _distance(base, stay)
                     minutes = walked.get(id(stay))
+                    spot = label
+                    if id(stay) in stations:
+                        spot, far = f"{stations[id(stay)][0]}에서", stations[id(stay)][1]
                     # `[2026-10-17 D19]` 「A나 B」 요청 — 이름 · 성급으로 유형을 모르는 곳은 빼지 않고 표시한다(호텔 요청의 「성급 정보 없음」과 같은 방식)
                     unknown_kind = bool(wants.either) and not stay_kinds(None, stay.get("name")) and not stay.get("hotel_class")
                     rule = (" · 성급 정보 없음(호텔이 아닐 수 있음)" if wants.kind == "호텔" and not stay.get("hotel_class") else "") + \
                         (f" · 유형 정보 없음({' · '.join(sorted(wants.either))}이 아닐 수 있음)" if unknown_kind else "") + \
                         (" · 숙박 공유" if stay.get("type") == "vacation rental" else "") + \
                         (f" · 이용 조건 {restriction(stay.get('name'))}(묵을 분과 맞음)" if restriction(stay.get("name")) else "")
-                    where = ((f" · {label} 걸어서 {minutes}분({far}km)" if minutes is not None and far is not None
-                              else f" · {label} {far}km" if far is not None else " · 거리 모름") if base is not None else "")
+                    where = ((f" · {spot} 걸어서 {minutes}분({far}km)" if minutes is not None and far is not None
+                              else f" · {spot} {far}km" if far is not None else " · 거리 모름") if base is not None else "")
                     lines.append(f"   · {stay['name']} — {star}1박 {_won(stay.get('price_per_night'))} · 전체 {_won(stay.get('total_price'))} · "
                                  f"{rating}{where}{rule}: 구글 호텔 "
                                  f"{_google_page(stay['name'], dates, adults, token=stay.get('property_token'), area='서울' if seoul else None)}"
