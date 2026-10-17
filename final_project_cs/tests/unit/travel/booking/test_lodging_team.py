@@ -1547,3 +1547,15 @@ def test_a_slashed_pair_of_areas_uses_the_first_for_the_anchor():
     kakao = Kakao()
     assert ReadToolbox(lambda: None, kakao=kakao).landmark(None, name="홍대/신촌")["name"] == "홍대입구역 2호선"
     assert kakao.calls == ["홍대입구역"]
+
+
+def test_a_hotel_request_drops_residences():
+    """`[2026-10-17 D18 · 사용자 결정]` 호텔 요청에 마이리얼트립 설명 「레지던스」(구도 컬렉티브 강남 · 오크우드 여의도 파크)가 남았다 — 뺀다."""
+    from app.domains.travel_ops.instances.lodging.wants import kind_reason, summary
+
+    hotel = read_wants("강남 호텔 1월 23일부터 두 밤")
+    assert kind_reason(hotel, stay_kinds("레지던스 · 강남 · 서울", "구도 컬렉티브 강남")) == "kind"
+    assert kind_reason(hotel, stay_kinds(None, "Somerset Palace Residence"), strict=False) == "kind"
+    assert kind_reason(hotel, stay_kinds("3성급 · 호텔 · 강남 · 서울", "라마다 호텔")) is None
+    assert "레지던스 제외" in " ".join(summary(hotel))
+    assert read_wants("잠실 레지던스 2박").kind == "레지던스"
