@@ -52,7 +52,7 @@ def team_parts(team):
     return PROMPT_KEY, interpret
 
 
-PROMPT_KEY_OVERRIDE = ""     # `[2026-10-14]` 대조용 프롬프트(`--prompt-key flight.interpret_transit` → prompts/flight/interpret_transit.v*.md)
+PROMPT_KEY_OVERRIDE = ""     # `[2026-10-14]` 대조용 프롬프트(`--prompt-key flight.interpret_transit` → scripts/evaluation_prompts/flight/interpret_transit.v*.md)
 
 
 async def run_case(llm, team, case, today, trip):
