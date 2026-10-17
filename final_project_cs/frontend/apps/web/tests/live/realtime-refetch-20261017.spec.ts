@@ -55,6 +55,24 @@ test("공지 종류마다 딱지와 색이 다르고, 장애 · 점검 예고 ·
   expect(new Set(colors).size).toBe(3);                                               // 세 종류의 색 줄이 모두 다르다
 });
 
+test("「공지 닫기」는 이 브라우저가 기억한다 — 새로고침해도 같은 공지는 다시 안 뜨고, 새 공지가 오면 그 공지만 뜬다 (ST4F-608)", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ serviceNotice: "one" });
+  await page.goto("/trips");
+  await expect(banner(page)).toContainText("서비스 점검 예정 안내");
+  await banner(page).getByRole("button", { name: "공지 닫기" }).click();
+  await expect(banner(page)).toHaveCount(0);
+  const read = page.waitForResponse((response) => response.url().endsWith("/v1/web/support/notices"));
+  await page.reload();
+  await read;
+  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();
+  await expect(banner(page)).toHaveCount(0);                                            // 옛: 새로고침하면 같은 공지가 다시 떴다
+  await server.scenario({ serviceNotice: "two" });                                      // 닫은 공지 + 새 공지
+  await page.reload();
+  await expect(banner(page)).toContainText("새 기능 안내");
+  await expect(banner(page)).not.toContainText("서비스 점검 예정 안내");                  // 닫은 것은 빼고 새 것만
+});
+
 test("탭으로 돌아오면 공지를 바로 다시 읽는다", async ({ page, request }) => {
   const server = mockServer(request);
   await page.goto("/trips");
