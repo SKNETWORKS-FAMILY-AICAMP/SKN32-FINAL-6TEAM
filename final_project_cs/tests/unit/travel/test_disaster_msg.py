@@ -99,8 +99,8 @@ def test_outside_the_sample_period_is_unknown_not_none(source):
 
 
 # ── 점검에 들어가면 ──────────────────────────────────────────────
-def _check(source, *, sensitive, at):
-    place = {"place_id": "p", "latitude": None, "longitude": None, "weather_sensitive": sensitive}
+def _check(source, *, sensitive, at, district=None):
+    place = {"place_id": "p", "latitude": None, "longitude": None, "district": district, "weather_sensitive": sensitive}
     sources = TravelSources(disaster=source)
     return DisruptionCheck(sources, limits=lambda: (60, 30)).check(place=place, starts_at=at)
 
@@ -110,7 +110,7 @@ def _disaster_check(report):
 
 
 def test_an_indoor_place_ignores_rain_messages_but_not_road_closures(source):
-    report = _check(source, sensitive=False, at=_at(16, 0))
+    report = _check(source, sensitive=False, at=_at(16, 0), district='강남구')
     kinds = [d["kind"] for d in report["disruptions"]]
     assert kinds == ["교통통제"] and report["verdict"] == "disrupted"
     assert _disaster_check(report)["mode"] == "sample"

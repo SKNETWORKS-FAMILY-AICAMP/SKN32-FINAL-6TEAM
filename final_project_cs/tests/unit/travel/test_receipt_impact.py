@@ -82,7 +82,7 @@ def test_non_applicable_and_successful_clear_checks_are_no_impact(rules):
 def test_safety_reference_message_cannot_become_an_item_stop(rules):
     payload = {'disruptions': [{'category': 'disaster_msg', 'kind': '기타', 'text': '참고 안내'}]}
     assert record(rules, category='disaster_msg', payload=payload)['scope'] == 'none'
-    assert record(rules, category='disaster_msg', stage='schedule', payload=payload)['scope'] == 'item'
+    assert record(rules, category='disaster_msg', stage='schedule', payload=payload)['scope'] == 'unassessed'
 
 
 @pytest.mark.parametrize('phase,expected', [('upcoming', 'none'), (None, 'unassessed'), ('in_progress', 'day')])

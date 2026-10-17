@@ -253,7 +253,10 @@ class DisruptionCheck:
                 "disaster", "행정안전부 긴급재난문자 — 키 발급 대기 (data.go.kr/data/15134001)")
             return {**base, "status": "not_connected", "reason": reason}
         moment = at if isinstance(at, datetime) else datetime.now(UTC)
-        value = source.active(region=region, at=moment, district=place.get("district"))
+        from .notice_area import place_area, relation
+
+        target = place_area(place, region)
+        value = source.active(region=region, at=moment, district=target['district'])
         if value is None:
             return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
                     "reason": "재난문자를 못 읽었다"}
@@ -264,19 +267,28 @@ class DisruptionCheck:
             return {**base, "status": "not_connected", "mode": mode,
                     "reason": (f"샘플 기간({coverage.get('from')} ~ {coverage.get('to')}) 밖 — "
                                f"실키 발급 대기 (data.go.kr/data/15134001)")}
+        selected = value.get('for_region') or []
+        unknown_area = [item for item in selected if relation(item.get('regions') or [], target) == 'unassessed']
+        # 미확인 지역은 실제 중단 사유로 승격하지 않는다. 확인된 도시 전체 경보는 유지한다.
+        relevant = [item for item in selected if relation(item.get('regions') or [], target) == 'matched']
+        if unknown_area:
+            value = {**value, 'partial_from': [*(value.get('partial_from') or []), 'target_area']}
         rows = [{"category": "disaster_msg", "kind": item.get("kind"),
                  "step": item.get("step"), "text": item.get("text"),
+                 "regions": item.get('regions') or [], "serial": item.get('serial'),
                  "created_at": item.get("created_at"), "source": value.get("source"),
                  "mode": mode,
                  # `[2026-10-13]` 「기타」 · 모르는 구분이면 본문으로 가른 여행 영향 종류(road · bus · rail · utility · crowd · hazard · outdoor)와 누가 냈는지
                  **({"impact": item["impact"], "impact_by": item.get("impact_by")} if item.get("impact") else {})}
-                for item in value.get("for_region") or []]
-        weather = [bool(item.get("weather")) for item in value.get("for_region") or []]
+                for item in relevant]
+        weather = [bool(item.get("weather")) for item in relevant]
         disruptions = [row for row, is_weather in zip(rows, weather) if sensitive or not is_weather]
         # ★`[2026-10-13]` 날씨 영향이 없다고 본 장소에서 뺀 날씨형 문자는 버리지 않고 **사실로** 남긴다 — 이상으로 세지는 않는다.
         #   호우 · 산사태처럼 그 구에 가는 것 자체가 위험한 문자는 실내 관광지도 막는다(활동 팀 판정 — 감시가 `activity_ledger.disaster` 로 다시 가른다)
         held_back = [row for row, is_weather in zip(rows, weather) if not sensitive and is_weather]
-        return {**base, "status": "ok", "mode": mode, "source": value.get("source"),
+        return {**base, "status": "failed" if unknown_area and not relevant else "ok", "mode": mode, "source": value.get("source"),
+                **({'reason': '문자의 적용 지역과 일정 위치를 확인하지 못했다'} if unknown_area and not relevant else {}),
+                "target_place": target,
                 "confirmed_at": value.get("confirmed_at"),
                 "value": value,
                 "unclassified": value.get("unclassified", []),

@@ -5,6 +5,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components.planning.safety import SafetyRules, classify
+from app.domains.travel_ops.components.watch.receipt_notice import causes_in_area, review
 
 SCOPES = {'trip': '전체일정정지', 'day': '일일일정정지', 'item': '해당일정정지', 'none': '영향없음'}
 
@@ -41,6 +42,17 @@ def describe(*, category: str, status: str | None, record_type: str, mode: str,
 
     disruptions, advisories = causes('disruptions'), causes('advisories')
     event = classify(disruptions, rules)
+    if category == 'disaster_msg' and not trial and (stage != 'safety' or event is not None):
+        notice = review(payload)
+        if notice['messages'] and notice['unrelated'] == len(notice['messages']):
+            return result('none', notice['reason'])
+        if (disruptions or advisories) and not notice['matched']:
+            return result('unassessed', '문자의 적용 지역과 일정 위치의 관련성을 확인하지 못했습니다.')
+        disruptions = causes_in_area(disruptions, notice)
+        advisories = causes_in_area(advisories, notice)
+        if notice['unassessed'] and not (disruptions or advisories):
+            return result('unassessed', '문자의 적용 지역과 일정 위치의 관련성을 확인하지 못했습니다.')
+        event = classify(disruptions, rules)
     if stage == 'safety':
         if event is None:
             if partial:

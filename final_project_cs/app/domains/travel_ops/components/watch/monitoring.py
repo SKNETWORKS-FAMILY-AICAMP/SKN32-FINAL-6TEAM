@@ -18,6 +18,7 @@ _FIELDS = frozenset('verdict checks category status mode simulation_id source co
     'precipitation_probability wind_speed_kmh temperature pm10 pm25 reason tried fell_back_from '
     'target targets event_type code name level label phase pause_id case_id item item_id trip_id '
     'issue_code shelters shelter_status number released attempt outcome action counts observation '
+    'target_place review_target district_basis basis_source impact impact_by messages matched unrelated unassessed relation '
     'exception_type error text message road station at indoor_unknown '
     'region regions serial published_at received_at fetched_at observed_at from_cache count error_code '
     'for_region announced_at areas events active window rules magnitude_min radius_km lookback_hours '

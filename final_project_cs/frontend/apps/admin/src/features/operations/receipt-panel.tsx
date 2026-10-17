@@ -15,6 +15,11 @@ type Receipt = {
   status: string; source: string | null; trip_id: string | null; target_title: string | null;
   stage: string; text: string | null; published_at: string | null; regions: string[]; payload: Record<string, unknown>;
   impact?: Impact;
+  notice_review?: {
+    messages: { text: string | null; kind: string | null; step: string | null; created_at: string | null; published_at: string | null; regions: string[]; relation: string }[];
+    target: { name: string | null; district: string | string[] | null; district_basis: string; basis_source: string };
+    reason: string;
+  } | null;
 };
 type Receipts = {
   statuses: { region: string; status: string; observed_at: string; fetched_at: string | null; from_cache: boolean; count: number; error_code?: string }[];
@@ -28,6 +33,7 @@ const KINDS: Record<string, string> = { disaster_message: '수신 문자', api_r
 const SOURCES: Record<string, string> = { open_meteo: 'Open-Meteo 날씨 예보', kma_warning: '기상청 기상 특보', disaster_msg: '공식 재난문자 API', utic: '도시교통정보센터 교통 통제', its: '국가교통정보센터 교통 통제', airkorea: '에어코리아 대기질', kma_earthquake: '기상청 지진정보' };
 const IMPACTS: { value: ImpactScope; label: string }[] = [{ value: 'trip', label: '전체일정정지' }, { value: 'day', label: '일일일정정지' }, { value: 'item', label: '해당일정정지' }, { value: 'none', label: '영향없음' }];
 const UNASSESSED: Impact = { scope: 'unassessed', label: '영향 미판정', summary: '이 기록에는 일정 영향 판정이 보관되지 않았습니다.', affects_itinerary: false, target_mode: null };
+const AREA_BASES: Record<string, string> = { explicit: '저장된 자치구', address: '주소 기준', box: '좌표로 추정한 구', box_ambiguous: '좌표로 추정한 여러 구', none: '지역 미확인' };
 const time = (value: string | null | undefined) => value ? new Date(value).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : '확인 기록 없음';
 
 function recentWeek(): Period {
@@ -135,13 +141,31 @@ export function DisasterReceiptPanel() {
 function ReceiptCard({ record }: { record: Receipt }) {
   const impact = record.impact || UNASSESSED;
   const affects = impact.affects_itinerary && record.mode === 'actual' && impact.target_mode === 'actual';
+  const simulated = record.mode === 'simulation' || impact.target_mode === 'simulation';
+  const review = simulated
+    ? { state: 'simulation', label: impact.scope === 'unassessed' ? '모의 · 미판정' : impact.scope === 'none' ? '모의 · 영향 없음' : '모의 · 영향 감지' }
+    : affects ? { state: 'affected', label: '영향 감지' }
+    : record.trip_id && impact.target_mode === 'actual' && impact.scope === 'none'
+      ? { state: 'clear', label: '영향 없음' } : { state: 'unassessed', label: '미판정' };
   return <li data-impact={impact.scope} data-affects={affects}>
     <div className={styles.recordHeading}><strong>{CATEGORIES[record.category] || record.category} · {KINDS[record.record_type] || record.record_type}</strong><span className={styles.recordMode}>{record.mode === 'simulation' ? '모의' : '실제'}</span></div>
     <div className={styles.impactHeading}><strong className={styles.impactBadge}>{impact.label}</strong><span>{affects ? '실제 일정 영향 가능' : impact.target_mode === 'simulation' ? '모의 시험 대상' : impact.scope === 'unassessed' ? '여행 영향 확인 전' : '이 점검에서 영향 없음'}</span></div>
     <p>{impact.summary}</p>
-    {record.target_title && <p>점검 일정 {record.target_title}{record.trip_id && ` · 여행 ${record.trip_id.slice(0, 8)}`}</p>}
+    {record.notice_review && <section className={styles.noticeReview} aria-label="재난문자 내용과 일정 관련성">
+      {record.notice_review.messages.length ? <ul className={styles.noticeMessages}>{record.notice_review.messages.map((message, index) => <li key={index}>
+        <p className={styles.noticeContent}><strong>수신 내용</strong> {message.text || '본문이 보관되지 않았습니다.'}</p>
+        <p>발송 지역 {message.regions.join(' · ') || '미기록'} · {message.step || '단계 미기록'} · {message.kind || '종류 미기록'}<br />발표 {time(message.created_at || message.published_at)}</p>
+        <p>지역 대조: {message.relation === 'unrelated' ? '대상 지역과 다름 · 영향 사유에서 제외' : message.relation === 'matched' ? '대상 지역과 겹침 · 현장 관련성은 안내 내용 확인' : '관련 지역 확인 불가'}</p>
+      </li>)}</ul> : <p>이 점검에 저장된 재난문자 본문이 없습니다.</p>}
+      {record.trip_id && <p>비교 장소 {record.notice_review.target.name || record.target_title || '미기록'}<br />비교 지역 {Array.isArray(record.notice_review.target.district) ? record.notice_review.target.district.join(' · ') : record.notice_review.target.district || '미확인'} · {AREA_BASES[record.notice_review.target.district_basis] || '지역 근거 미확인'}{record.notice_review.target.basis_source === 'current_saved_place' && ' · 현재 저장된 장소 기준 재검토'}</p>}
+      <p><strong>판단 이유</strong> {record.notice_review.reason}</p>
+    </section>}
+    {record.target_title && <p className={styles.targetReview}>
+      <span>점검 일정 {record.target_title}{record.trip_id && ` · 여행 ${record.trip_id.slice(0, 8)}`}</span>
+      <strong className={styles.reviewResult} data-review={review.state}>검토 결과: {review.label}</strong>
+    </p>}
     <p>수신·점검 {time(record.received_at)} · {STATUSES[record.status] || record.status || '상태 미기록'}<br />출처 {record.source ? SOURCES[record.source] || record.source : '출처 미기록'}</p>
-    {record.text && <p className={styles.receiptText}>{record.text}</p>}
+    {record.text && !record.notice_review?.messages.length && <p className={styles.receiptText}>{record.text}</p>}
     {record.published_at && <p>발표 {time(record.published_at)} · {record.regions.join(' · ')}</p>}
     <details><summary>API 데이터·점검 결과 펼치기</summary><pre className={styles.payload}>{JSON.stringify(record.payload, null, 2)}</pre></details>
   </li>;

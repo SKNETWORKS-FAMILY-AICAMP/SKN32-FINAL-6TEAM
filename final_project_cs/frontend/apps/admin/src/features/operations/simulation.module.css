@@ -57,6 +57,16 @@
 .impactBadge{padding:4px 8px;border:1px solid currentColor;border-radius:4px}
 .recordMode{flex-shrink:0;padding:4px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px}
 .receiptText{white-space:pre-wrap}
+.targetReview{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 12px}
+.targetReview .reviewResult{display:inline-block;padding:4px 8px;border:1px solid #8d949a;border-radius:4px;background:#f3f4f6;color:#4b5563;font-size:14px;font-weight:600;line-height:1.5}
+.reviewResult[data-review=affected]{background:#fff1f2;border-color:#b4232c;color:#9f1c20}
+.reviewResult[data-review=clear]{background:#edf9ef;border-color:#258044;color:#166534}
+.reviewResult[data-review=simulation]{background:#f5f0ff;border-color:#8053b8;color:#5b21b6}
+.noticeReview{margin:16px 0;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--surface,#fff);color:var(--text,#252621);font-size:14px;line-height:1.6}
+.noticeMessages{margin:0;padding-left:20px}
+.noticeMessages>li{margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.noticeMessages p{margin:8px 0}
+.noticeContent{white-space:pre-wrap;overflow-wrap:anywhere}
 .recordList summary,.currentMonitoring>summary{min-height:44px;display:list-item;align-content:center;cursor:pointer}
 .currentMonitoring{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);overflow-wrap:anywhere}
 @media(max-width:700px){.receiptFilters{grid-template-columns:minmax(0,1fr)}.receipts{padding:12px}.recordList{padding-left:20px}}
