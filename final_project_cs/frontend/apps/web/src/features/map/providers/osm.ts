@@ -1,3 +1,4 @@
+import { fitPadding } from "./fit-padding";
 import type { MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { linePieces, lineStyle, linesKey, walkStyle } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, meKey, STAY_BOX, staysKey } from "./me";
@@ -154,7 +155,8 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           if (focus || points.length === 1) { const at = (focus ?? points[0]).coordinates; if (fly) map.flyTo(at, 15, FLIGHT); else map.setView(at, 15, { animate: false }); }
           else {
             const bounds = L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number]));
-            const padding = { paddingTopLeft: [50, 50 + (options.topInset ?? 0)] as [number, number], paddingBottomRight: [50, 50 + (options.bottomInset ?? 0)] as [number, number] };
+            const gutter = fitPadding(container.clientWidth, container.clientHeight, options.topInset, options.bottomInset);
+            const padding = { paddingTopLeft: [gutter.left, gutter.top] as [number, number], paddingBottomRight: [gutter.right, gutter.bottom] as [number, number] };
             if (fly) map.flyToBounds(bounds, { ...padding, ...FLIGHT }); else map.fitBounds(bounds, { ...padding, animate: false });
           }
           fitted = true;

@@ -102,7 +102,7 @@ export function TripMap(props: TripMapProps) {
   const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, onSelectLine: props.onSelectLine, selectedLineId: props.selectedLineId, topInset: props.topInset, bottomInset: props.bottomInset, me, stays, onZoom: props.onZoom, onInteractionChange: props.onInteractionChange, meAvailable: agreed,
     onRequestLocation: (onLocated: (location: MyLocation) => void) => { setPendingLocate(() => onLocated); if (!agreed) setAskingConsent(true); } };
   const fill = props.variant === "fill";
-  return <div className={`${styles.frame} ${fill ? styles.fill : ""}`}>
+  return <div className={`${styles.frame} ${fill ? styles.fill : ""}`} style={fill ? { position: "relative", display: "flex", flexDirection: "column", height: "100%", minHeight: 0, flex: 1 } : undefined}>
     {mapConfiguration.provider === "naver" ? <NaverMap {...viewProps} coordinatePick={props.coordinatePick} clientId={mapConfiguration.clientId} />
       : mapConfiguration.provider === "osm" ? <OsmMap {...viewProps} coordinatePick={props.coordinatePick} tileUrl={mapConfiguration.tileUrl} />
       : <GoogleMap {...viewProps} coordinatePick={props.coordinatePick} apiKey={mapConfiguration.apiKey} mapId={mapConfiguration.mapId} tileUrl={mapConfiguration.tileUrl} onDecided={setGoogle} />}

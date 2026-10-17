@@ -218,3 +218,48 @@ def test_the_ledger_prefers_the_point_it_was_given_over_the_request_hint():
         place_lookup.find_license_shop_by_name = original_license
 
     assert asked == [(37.5796, 126.9770), (1.0, 1.0)]
+
+
+class InsideLookup(Lookup):
+    """이름 찾기로는 못 찾고, 카카오 가게 자리에서 「이름 안의 원장 가게」로만 찾는 원장 흉내. `[2026-10-15]`"""
+
+    def __init__(self, inside):
+        super().__init__({})
+        self.inside, self.inside_asked = inside, []
+
+    def find_inside_name(self, text, latitude, longitude):
+        self.inside_asked.append((text, latitude, longitude))
+        name = self.inside.get(text)
+        return None if name is None else {"matched_title": name, "content_id": None, "content_type_id": "39",
+                                          "latitude": latitude, "longitude": longitude, "address": "서울특별시 종로구",
+                                          "dining_place_uid": "u-" + name, "match": "contains_near", "needs_review": True}
+
+
+def test_a_kakao_shop_with_an_area_word_in_front_is_tied_to_the_ledger_shop_at_that_spot():
+    # 「광화문 미진」 → 카카오 「광화문미진 본점」 → 원장은 「미진」(6m). 전에는 원장에 잇지 못해 영업시간이 「모름」이었다
+    dining = InsideLookup({"광화문미진 본점": "미진"})
+    kakao = Kakao({"광화문 미진": [_hit("광화문미진 본점")]})
+
+    found = resolve("광화문 미진", our_places=[], tour=Lookup({}), dining=dining, kakao=kakao, kind_hint="dining")
+
+    assert (found.method, found.name, found.needs_review) == ("dining_ledger", "미진", True)
+    assert dining.asked[-1] == "광화문미진 본점"                                   # 앞뒤 일정 기준의 이름 찾기가 먼저다
+    assert dining.inside_asked == [("광화문미진 본점", 37.5777, 126.9715)]       # 그다음 그 가게 자리에서만
+
+
+def test_the_spot_lookup_is_not_used_when_the_name_lookup_already_found_the_shop():
+    dining = InsideLookup({"토속촌삼계탕": "다른가게"})
+    dining.known = {"토속촌삼계탕": "토속촌삼계탕"}
+
+    found = resolve("토속촌", our_places=[], tour=Lookup({}), dining=dining,
+                    kakao=Kakao({"토속촌": [_hit("토속촌삼계탕")]}), kind_hint="dining")
+
+    assert found.name == "토속촌삼계탕" and dining.inside_asked == []
+
+
+def test_the_web_intake_ledger_wrapper_passes_every_lookup_through():
+    """☆`[2026-10-15]` 웹 접수 감싸개에 `find_meal_near` · `find_inside_name` 이 없어 접수가 `getattr` 로 건너뛰었다."""
+    from app.domains.travel_ops.entry.trip_api import _dining_lookup
+
+    wrapper = _dining_lookup()
+    assert all(callable(getattr(wrapper, name, None)) for name in ("find", "find_dish_near", "find_meal_near", "find_inside_name"))

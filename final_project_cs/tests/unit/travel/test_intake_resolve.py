@@ -72,7 +72,7 @@ def test_only_quotes_found_verbatim_in_the_line_are_kept():
                  {"line": 1, "quote": "경복궁", "role": "place"},        # 남은 줄이 아니다 — 버린다
                  {"line": 2, "quote": "먹을래", "role": "verdict"}])      # 모르는 역할 — 버린다
     claims, items, report = label_lines(lines, [2], chat)
-    assert chat.asked == "2: 점심은 토속촌에서 먹을래"                     # ★읽은 줄은 보내지 않는다
+    assert chat.asked == "1: 점심은 토속촌에서 먹을래"                     # ★읽은 줄은 보내지 않는다 · 번호는 보낸 목록 안 순서(`[2026-10-16]` 가르친 E4B 가 순서로 답한다)
     assert [(i.line, i.title.text, i.meal) for i in items] == [(2, "토속촌", "lunch")]
     assert (report["accepted"], len(report["rejected"])) == (2, 3)
     assert claims == []

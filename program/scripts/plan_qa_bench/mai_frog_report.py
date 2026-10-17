@@ -14,7 +14,7 @@ def load(path, field):
 
 
 def main():
-    input_path = HERE.parents[2] / 'datasets/travel/mixed_testset/all_prompts_d3_mai_2026-10-08.json'
+    input_path = HERE.parents[2] / 'datasets/core/pointing/testset/synthetic_chitchat_plus_questions_v1/source/all_prompts_d3_mai_2026-10-08.json'
     direct_items = json.loads(input_path.read_text(encoding='utf-8'))
     verification_items = [x for x in json.loads((D / 'verify_inputs.json').read_text(encoding='utf-8')) if x['ds'] == 'D3']
     gold = {x['i']: x['gold'] for x in direct_items}

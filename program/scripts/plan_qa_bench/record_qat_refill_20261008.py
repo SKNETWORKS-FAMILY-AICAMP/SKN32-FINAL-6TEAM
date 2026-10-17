@@ -26,7 +26,7 @@ def main():
         return {x['i']: x for x in (json.loads(line) for line in path.read_text(encoding='utf-8').splitlines())}
     new, previous = rows('winnow_oos'), rows('winnow_original')
     assert set(new) == set(previous) and len(new) == 4014
-    gold = read(ROOT/'datasets/travel/mx_testset/mx_main_prompts.json')
+    gold = read(ROOT/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json')
     correct = lambda x: bool(x.get('parsed')) and not x.get('error') and x['pick'] == x['gold']
     paired = {}
     for label, positive in [('request',True),('no_request',False)]:

@@ -1,0 +1,47 @@
+{
+ "case_id": "edge-01",
+ "format": "edge",
+ "defect": "c1_name_prefix",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "서울 1일 여행 (2명)\n1일차 · 10월 20일\n09:30 도산공원 산책\n12:30 은평한옥마을\n15:00 도봉산 등산"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (2명)",
+  "1일차 · 10월 20일",
+  "09:30 도산공원 산책",
+  "12:30 은평한옥마을",
+  "15:00 도봉산 등산"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": "09:30",
+   "title": "도산공원 산책",
+   "place": "도산공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "12:30",
+   "title": "은평한옥마을",
+   "place": "은평한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "15:00",
+   "title": "도봉산 등산",
+   "place": "도봉산",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [],
+ "why": "이름 첫 글자가 「에·는·은·도」 — 조사 떼기가 첫 글자를 먹는다(도산공원 → 산공원)"
+}

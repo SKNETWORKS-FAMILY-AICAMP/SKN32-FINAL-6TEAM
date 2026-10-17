@@ -36,6 +36,7 @@ export interface ReviewPlace {
   /** Korea Tourism Organization numbers — present only for places that came from it. */
   content_id?: string | null;
   content_type_id?: string | null;
+  category?: string | null;
 }
 
 export interface ReviewItem {
@@ -60,7 +61,11 @@ export interface ReviewItem {
   place: ReviewPlace | null;
   /** The plan says it is booked (`true`), says it is not (`false`), or says nothing (`null`; also an older server). */
   booked?: boolean | null;
+  /** `[2026-10-15 ST4F-490]` An edit's stop tied to a vendor's booking: unlocking it does not change that booking (the customer changes it with the vendor). Absent on an older server. */
+  vendor_booking?: boolean;
   candidates_hint: number | null;
+  parts?: { content_type?: string | null; lodging_meal?: boolean } | null;
+  lodging_group?: { id: string; members: string[]; place: Pick<ReviewPlace, "name" | "latitude" | "longitude"> | null };
   rows?: CheckLine<ItemRow>[];
   /**
    * `[2026-10-07 cs 개발 세션 제안 계약]` A value read off a photo or scan that the server read two ways (the whole page and a half of it read the same line differently). `current` is the value it kept,
@@ -230,8 +235,8 @@ export function getPlacePhotos(ref: string, language: Language): Promise<PlacePh
 }
 
 /** `dryRun`: only show how the plan would look (server 224e7a1b, 2026-10-03) — the server saves nothing and the answer's `view.preview` is true. */
-export function autofixIntake(intakeId: string, revision: number, language: Language, dryRun = false): Promise<AutofixResult> {
-  return api(`${base(intakeId)}/autofix`, language, json({ revision, ...(dryRun ? { dry_run: true } : {}) }));
+export function autofixIntake(intakeId: string, revision: number, language: Language, dryRun = false, itemId?: string): Promise<AutofixResult> {
+  return api(`${base(intakeId)}/autofix`, language, json({ revision, ...(dryRun ? { dry_run: true } : {}), ...(itemId ? { item_id: itemId } : {}) }));
 }
 
 export function revalidateIntake(intakeId: string, revision: number, language: Language): Promise<ReviewedIntakeView> {

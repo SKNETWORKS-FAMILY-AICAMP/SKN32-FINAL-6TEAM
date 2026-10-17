@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.domains.travel_ops.instances.flight import interpret as flight
+from app.domains.travel_ops.instances.booking import interpret as flight
 from app.domains.travel_ops.instances.lodging import interpret as lodging
 from app.domains.travel_ops.instances._shared.interpret_dates import model_context, quote_found
 

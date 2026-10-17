@@ -3,11 +3,12 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { operationSimulations, saveOperationSimulation } from '../../lib/gateway';
+import { SimulationTripPicker, type Audience, type Categories } from './simulation-trip-picker';
 import styles from './simulation.module.css';
 
-type Catalogue = { trips: { trip_id: string; title: string }[]; categories: { key: string; label: string }[] };
 type Simulation = {
   trip_id: string; title: string; version: number;
+  can_simulate?: boolean; paused?: boolean; unavailable_reason?: string;
   configuration: { revision: number; active: boolean; categories: string[]; item_id?: string; expires_at?: string; run_id?: string };
   items: { item_id: string; title: string; starts_at: string; weather_sensitive: boolean | null; ongoing: boolean }[];
   notices: { key: string; text: string; at: string }[];
@@ -23,27 +24,26 @@ const EFFECTS: Record<string, string> = {
 };
 
 export function DisasterSimulation() {
-  const catalogue = useQuery({ queryKey: ['simulation-catalogue'], queryFn: () => operationSimulations<Catalogue>() });
-  const [tripId, setTripId] = useState('');
+  const [selection, setSelection] = useState<{ id: string; audience: Audience; categories: Categories } | null>(null);
   return <section className={`panel ${styles.page}`}><h1>재난 6종 시뮬레이션</h1>
-    <p>진행 중인 여행과 대상 일정을 고르고 재난 입력을 켜세요. 다음 감시 회차가 기존 알림·일정 변경·안전정지 규칙으로 처리합니다.</p>
-    {catalogue.isPending ? <p role="status">시험할 여행을 읽는 중…</p> : catalogue.isError ? <div role="alert"><p className="error">{catalogue.error.message}</p><button onClick={() => void catalogue.refetch()}>여행 다시 읽기</button></div> : <>
-      <label>대상 여행<select value={tripId} onChange={e => setTripId(e.target.value)}><option value="">여행 선택</option>{catalogue.data.trips.map(trip => <option key={trip.trip_id} value={trip.trip_id}>{trip.title} · {trip.trip_id.slice(0, 8)}</option>)}</select></label>
-      {!catalogue.data.trips.length && <p>시험할 활성 여행이 없습니다. 고객 앱에서 여행 일정을 등록한 뒤 다시 읽어 주세요.</p>}
-      <button onClick={() => void catalogue.refetch()}>여행 목록 새로 읽기</button>
-      {tripId && <SimulationForm key={tripId} tripId={tripId} categories={catalogue.data.categories} />}
-    </>}
+    <p>감시 대상 여행 또는 게스트 여행과 대상 일정을 고르고 재난 입력을 켜세요. 다음 감시 회차가 기존 알림·일정 변경·안전정지 규칙으로 처리합니다.</p>
+    {(['monitored', 'guest'] as const).map(audience => <SimulationTripPicker key={audience} audience={audience}
+      selectedId={selection?.audience === audience ? selection.id : ''}
+      onSelect={(id, categories) => setSelection(id ? { id, audience, categories } : null)}
+      onClear={() => setSelection(current => current?.audience === audience ? null : current)} />)}
+    {selection?.audience === 'guest' && <p>이 게스트 여행은 시험 입력을 켠 동안에만 감시합니다. 중지·시간 만료·일정 판 변경으로 시험이 끝나면 일반 게스트처럼 감시에서 제외됩니다.</p>}
+    {selection && <SimulationForm key={selection.id} tripId={selection.id} categories={selection.categories} />}
   </section>;
 }
 
-function SimulationForm({ tripId, categories }: { tripId: string; categories: Catalogue['categories'] }) {
+function SimulationForm({ tripId, categories }: { tripId: string; categories: Categories }) {
   const query = useQuery({ queryKey: ['watch-simulation', tripId], queryFn: () => operationSimulations<Simulation>(tripId), refetchInterval: 5000 });
   if (query.isPending) return <p role="status">현재 일정과 설정을 읽는 중…</p>;
   if (query.isError) return <div role="alert"><p className="error">{query.error.message}</p><button onClick={() => void query.refetch()}>현재 일정 다시 읽기</button></div>;
   return <Editor key={`${query.data.version}-${query.data.configuration.revision}`} data={query.data} categories={categories} reload={async () => { await query.refetch(); }} />;
 }
 
-function Editor({ data, categories, reload }: { data: Simulation; categories: Catalogue['categories']; reload: () => Promise<void> }) {
+function Editor({ data, categories, reload }: { data: Simulation; categories: Categories; reload: () => Promise<void> }) {
   const [selected, setSelected] = useState(data.configuration.active ? data.configuration.categories : []);
   const [itemId, setItemId] = useState(data.configuration.item_id && data.items.some(i => i.item_id === data.configuration.item_id) ? data.configuration.item_id : data.items.find(i => i.ongoing)?.item_id || data.items[0]?.item_id || '');
   const [duration, setDuration] = useState(15);
@@ -72,7 +72,8 @@ function Editor({ data, categories, reload }: { data: Simulation; categories: Ca
   return <div style={{ marginTop: '1.5rem' }}>
     <p role="status">{data.configuration.active ? `시뮬레이션 입력 ${data.configuration.categories.length}종 활성 · ${new Date(data.configuration.expires_at!).toLocaleTimeString('ko-KR')}까지` : '시뮬레이션 입력 꺼짐'} · 일정 판 {data.version} · 설정 판 {data.configuration.revision}</p>
     <p>선택한 일정에만 시험 입력을 넣습니다. 실내 일정의 예보·특보·대기질은 해당 없음으로 판정하며, 여러 상황에서는 안전정지가 먼저 처리됩니다. 선택하지 않은 소스와 대체 장소는 실제로 점검합니다.</p>
-    <form noValidate onSubmit={e => { e.preventDefault(); void save(false); }} aria-busy={busy}>
+    {data.can_simulate === false && <p role="status">{data.unavailable_reason}</p>}
+    {(data.can_simulate !== false || data.configuration.active) && <form noValidate onSubmit={e => { e.preventDefault(); if (data.can_simulate !== false) void save(false); }} aria-busy={busy}>
       <label>대상 일정<select ref={itemInput} value={itemId} onChange={e => { setItemId(e.target.value); setError(''); }}><option value="">일정 선택</option>{data.items.map(item => <option key={item.item_id} value={item.item_id}>{item.ongoing ? '진행 중' : '다음 일정'} · {item.title} · {new Date(item.starts_at).toLocaleString('ko-KR')}</option>)}</select></label>
       <fieldset className={styles.switches}><legend>재난 활성화 스위치 · 선택 {selected.length}/6</legend>
         {categories.map(category => <label key={category.key}>
@@ -83,9 +84,9 @@ function Editor({ data, categories, reload }: { data: Simulation; categories: Ca
       <label>자동 종료 시간<select value={duration} onChange={e => setDuration(Number(e.target.value))}>{[5, 15, 30, 60].map(minutes => <option key={minutes} value={minutes}>{minutes}분 뒤</option>)}</select></label>
       <label>적용·중지 사유<input ref={reasonInput} value={reason} maxLength={500} onChange={e => { setReason(e.target.value); setError(''); }} onBlur={() => { if (reason && !reason.trim()) setError('적용·중지 사유를 입력해 주세요.'); }} aria-invalid={!!error && !reason.trim()} /></label>
       <p>시험 알림에는 시뮬레이션 표시가 붙고 고객 앱에서 확인합니다. 일정 판이 바뀌거나 시간이 지나면 입력이 종료됩니다. 중지는 이미 적용한 변경·안전정지를 되돌리지 않습니다.</p>
-      <div className="toolbar"><button className="primary" type="submit">{busy ? '저장 중…' : `선택한 ${selected.length}종 적용`}</button><button type="button" onClick={() => void save(true)}>시뮬레이션 중지</button><button type="button" onClick={() => void reload()}>현재 값 다시 읽기</button></div>
+      <div className="toolbar">{data.can_simulate !== false && <button className="primary" type="submit">{busy ? '저장 중…' : `선택한 ${selected.length}종 적용`}</button>}<button type="button" onClick={() => void save(true)}>시뮬레이션 중지</button><button type="button" onClick={() => void reload()}>현재 값 다시 읽기</button></div>
       {error && <p role="alert" className="error">{error}</p>}{feedback && <p role="status" className="success">{feedback}</p>}
-    </form>
+    </form>}
     <h2>실제 감시 점검 결과</h2>{Object.entries(data.reports || {}).length ? Object.entries(data.reports!).map(([stage, report]) => <div key={stage}>
       <p>{stage === 'safety' ? '안전정지 점검' : '6종 통합 점검'} · {({ clear: '주요 사건 없음', disrupted: '사건 감지', fatal: '조회 실패' } as Record<string,string>)[report.verdict] || report.verdict} · {new Date(report.checked_at).toLocaleString('ko-KR')}</p>
       <div style={{ overflowX: 'auto' }}><table><thead><tr><th>종류</th><th>입력</th><th>확인 결과</th></tr></thead><tbody>{report.checks.map(check => <tr key={check.category}><td>{categories.find(c => c.key === check.category)?.label || check.category}</td><td>{check.mode === 'simulation' ? '시뮬레이션' : '실제 소스'}</td><td>{({ok:'확인',failed:'조회 실패',not_applicable:'해당 없음',not_connected:'미연결'} as Record<string,string>)[check.status] || check.status}</td></tr>)}</tbody></table></div>

@@ -1,6 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-import { beforeTheTrip, dayTab, mockServer, noHorizontalScroll, start, TRIP_ID, tripScreen, openPane } from "./helpers";
+import { beforeTheTrip, dayTab, galleryShot, mockServer, noHorizontalScroll, start, TRIP_ID, tripScreen, openPane } from "./helpers";
 import { openFinished } from "./plan-check-kit";
 
 const shots = "mockups/registered-trip-parity-2026-10-11-v1";
@@ -29,7 +28,7 @@ for (const width of [375, 1280]) {
     await aligned(page);
     const strip = page.getByRole("tablist", { name: "일차 고르기", includeHidden: true });
     const body = page.locator("#trip-pane-schedule > div");
-    await expect(page.locator("#trip-card-i-a")).toHaveCSS("border-top-color", "rgb(195, 205, 198)");   // `[2026-10-13 ④]` 접힌 카드는 테두리를 두른다(10-10 무테를 바꿈)
+    await expect(page.locator("#trip-card-i-a")).toHaveCSS("border-top-color", "rgb(195, 205, 198)");   // `[2026-10-15 ST4F-532]` 접힌 카드 회색 테두리는 뺐고(10-13 ④ 를 바꿈), 목록 맨 위라 첫 카드가 가운데 초점(회색)이다
     await dayTab(page, /^2일차/).click(); await aligned(page);
     await openPane(page, "채팅"); await openPane(page, "일정"); await aligned(page);
     // `[2026-10-15 ST4F-493]` 목록 끝 출처가 접힌 한 줄이 되어 2일차(일정 하나)는 반 높이 시트에서 스크롤할 길이가 없다 — 스크롤 숨김은 1일차(일정 셋)에서 본다
@@ -50,7 +49,7 @@ for (const width of [375, 1280]) {
     expect(await page.evaluate(() => localStorage.getItem("triPilot.planListZoom"))).toBeNull();
     await expect(dayTab(page, /^1일차/)).toHaveAttribute("aria-selected", "true"); await aligned(page);
     await noHorizontalScroll(page);
-    await mkdir(shots, { recursive: true }); await page.screenshot({ path: `${shots}/shared-${width}.png` });
+    await galleryShot(page, `${shots}/shared-${width}.png`);
   });
   test(`수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 812 });
@@ -115,6 +114,6 @@ for (const width of [375, 1280]) {
     await page.getByRole("button", { name: "메시지 전송", exact: true }).click();
     await expect.poll(end).toBeLessThan(2);
     await noHorizontalScroll(page);
-    await page.screenshot({ path: `${shots}/chat-${width}.png` });
+    await galleryShot(page, `${shots}/chat-${width}.png`);
   });
 }

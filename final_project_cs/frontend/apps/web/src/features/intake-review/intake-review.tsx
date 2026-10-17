@@ -19,6 +19,7 @@ import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-revi
 import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
+import { clearRegistrationDraft } from "@/features/trip-registration/trip-registration";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
@@ -26,6 +27,7 @@ import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/liv
 import { clearIntakeArrival, forgetIntakeSubmission, intakeArrival, rememberEmptyIntake } from "@/lib/live/intake-start";
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
+import { useIntakeRoutes } from "@/features/map/use-intake-routes";
 import { useRouteDetail } from "@/features/map/use-route-detail";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -120,7 +122,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
-  const registered = (tripId: string) => { queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
+  const registered = (tripId: string) => { clearRegistrationDraft(); queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
   const confirm = useMutation({
     mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
     onSuccess: (result) => registered(result.trip.trip_id),
@@ -155,15 +157,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     return reviewed ? { ...reviewed, dirty: server.dirty, rechecking: server.rechecking } : resultOf(query.data);
   }, [query.data, reviewed, server.dirty, server.rechecking]);
   // ★`[2026-10-04 사용자 지시]` The lines to draw between the stops on the map (`trip-intakes/{id}/route-shapes`): asked once the check is on screen and again when the plan moves on
-  //   (`revision`). A failure or an older server (404) just means no lines — the pins are the map.
-  const routeShapes = useQuery({
-    queryKey: ["intake-route-shapes", intakeId, query.data?.revision ?? 0, language],
-    queryFn: () => getIntakeRouteShapes(intakeId, language).catch(() => null),
-    enabled: Boolean(reviewed),
-    retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 10 * 60_000,
-  });
+  //   (`revision`). Failures are shown with a retry; an older API (404) means route lines are unsupported.
+  const routeShapes = useIntakeRoutes(intakeId, query.data?.revision ?? 0, language, Boolean(reviewed));
   // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));
   // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
@@ -259,7 +254,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const yearNote = year ? t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`) : null;
   const details = [unchecked, asked, yearNote].filter(Boolean).join("\n");
   const finalNotice: BusToast | null = details ? { text: t("계획 확인 안내", "Plan check notice"), sub: [details, testNote?.text, testNote?.sub].filter(Boolean).join("\n"), stay: Boolean(unchecked) } : testNote;
-  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} notice={finalNotice} onBack={() => router.push(routes.newTrip)}
+  return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} routeState={{ loading: routeShapes.isFetching, error: routeShapes.isError, retry: () => { void routeShapes.refetch(); } }} notice={finalNotice} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },

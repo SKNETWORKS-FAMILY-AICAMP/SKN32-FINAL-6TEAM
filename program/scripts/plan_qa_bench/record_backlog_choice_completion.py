@@ -7,6 +7,7 @@ import shutil
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 BASE = ROOT / 'program/scripts/plan_qa_bench/results/gpu_backlog_20261008'
 DAILY = ROOT / 'program/research/daily_rag_slm'
 
@@ -25,7 +26,7 @@ def main():
     answer = folder / f"d_test_{r['execution']['job']['tag']}.jsonl"
     rows = [json.loads(line) for line in answer.read_text(encoding='utf-8').splitlines()]
     names = {'D':'all_prompts.json','D2':'all_prompts_d2.json','D3':'all_prompts_d3.json'}
-    gold_path = ROOT / 'program/scripts/plan_qa_bench/results/empty_probe' / names[r['suite']]
+    gold_path = Path(fixture(names[r['suite']]))
     gold = json.loads(gold_path.read_text(encoding='utf-8'))
     run = {x['i']:x for x in rows}
     assert len(rows) == len(run) == len(gold) == r['saved'] == r['expected'] and r['missing'] == 0

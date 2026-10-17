@@ -8,6 +8,10 @@
 #   ★실서버 시험(test:real)은 넣지 않는다 — 팀 채팅 알림 · 외부 호출 · DB 에 시험 여행이 남는다
 #     (playwright.real.config.ts 머리 주석).
 # ★`[2026-10-13 사용자 결정]` GitHub 검사는 develop · main 에서만 돈다 — role-manager 는 검사하지 않는다(ci-main.yml 과 같다).
+# ★`[2026-10-16 사용자 결정 — CI 시간 줄이기]` 한 작업에서 check → live(833개 · worker 1) 를 차례로 돌려 50분 안팎이 걸렸다.
+#   check 와 live 를 따로 띄우고, live 는 독립된 실행 환경 4개로 나눠 동시에 돈다(Playwright --shard). 묶음마다 모방 서버 ·
+#   빌드가 따로라 서로 상태를 건드리지 않는다. 한 묶음 안은 지금처럼 하나씩(workers 1) — workers 를 늘리면 모방 서버의
+#   일정 · 로그 · 세션 상태를 시험끼리 나눠 써서 깨진다. 마지막 「web (check · e2e · live)」가 결과를 모아 하나라도 실패면 실패다.
 name: CI (web)
 
 on:
@@ -21,18 +25,20 @@ on:
     paths:
       - "final_project_cs/frontend/apps/web/**"
       - ".github/workflows/ci-web.yml"
+  # `[2026-10-16]` 다른 가지(role-manager 등)에서 손으로 돌려 볼 수 있게 — ci-main.yml 과 같다
+  workflow_dispatch:
 
 concurrency:
   group: ci-web-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  web:
-    name: web (check · e2e · live)
+  check:
+    name: web check (린트 · 타입 · 단위 · 빌드)
     runs-on: ubuntu-latest
     env:
       # ★.env.local 은 저장소에 없다. 값이 없으면 프로덕션 빌드는 데이터 모드가 unconfigured 가 되어
-      #   데모 시험이 전부 깨진다(src/lib/data-mode.ts). live 시험은 serve.mjs 가 live 로 덮어쓴다.
+      #   데모 시험이 전부 깨진다(src/lib/data-mode.ts).
       NEXT_PUBLIC_DATA_MODE: demo
       NEXT_PUBLIC_MAP_PROVIDER: demo
       # 로컬(KST)과 같은 시간대에서 돌린다 — 이유는 ci-develop.yml 의 같은 줄 참고.
@@ -51,7 +57,45 @@ jobs:
       - run: npm ci
       - name: 린트 · 타입 · 단위 시험 · 빌드
         run: npm run check
+
+  live:
+    name: web live ${{ matrix.shard }}/4
+    runs-on: ubuntu-latest
+    strategy:
+      # 한 묶음이 실패해도 나머지 묶음은 끝까지 돈다 — 실패를 한 번에 모두 본다
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      # live 시험은 serve.mjs 가 데이터 모드를 live 로 덮어쓴다(값이 없어도 되지만 check 와 같은 바탕을 둔다)
+      NEXT_PUBLIC_DATA_MODE: demo
+      NEXT_PUBLIC_MAP_PROVIDER: demo
+      TZ: Asia/Seoul
+    defaults:
+      run:
+        working-directory: final_project_cs/frontend/apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: final_project_cs/frontend/apps/web/package-lock.json
+      - run: npm ci
       - name: 브라우저 설치
         run: npx playwright install --with-deps chromium
-      - name: 브라우저 시험 (mock 서버)
-        run: npm run test:live
+      - name: 브라우저 시험 (mock 서버) — ${{ matrix.shard }}/4 묶음
+        run: npm run test:live -- --shard=${{ matrix.shard }}/4
+
+  web:
+    # 예전 단일 작업과 같은 이름 — 결과를 한 줄로 본다. check · live 네 묶음 중 하나라도 성공이 아니면 실패
+    name: web (check · e2e · live)
+    needs: [check, live]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 결과 모으기
+        run: |
+          echo "check: ${{ needs.check.result }} · live(4묶음): ${{ needs.live.result }}"
+          test "${{ needs.check.result }}" = "success"
+          test "${{ needs.live.result }}" = "success"

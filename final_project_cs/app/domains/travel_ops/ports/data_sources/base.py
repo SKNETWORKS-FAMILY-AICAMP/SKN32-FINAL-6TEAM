@@ -338,6 +338,8 @@ class TravelSources:
     flight_google: Any | None = None
     #: SerpApi Google Hotels — 구글 호텔 한국 설정 검색(`serpapi_hotels.py`). 같은 키(`serpapi_api_key`)가 있을 때만(2026-10-10).
     stay_google: Any | None = None
+    #: `[2026-10-14]` 국토교통부 TAGO 열차 · 고속버스 · 시외버스 운행 정보(`tago_transit.py`) — 예약 모듈(기차 · 버스). 공공데이터포털 키(`tago_api_key` → 공통 키).
+    transit_schedule: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
     unavailable: dict[str, str] = field(default_factory=dict)
     #: 소스 전부가 같은 것을 공유한다 - 따로 두면 한 키를 두 소스가 나눠
@@ -494,6 +496,13 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     else:
         sources.unavailable["flight_google"] = "serpapi_api_key 없음 — 구글 항공권 비교 안 함"
         sources.unavailable["stay_google"] = "serpapi_api_key 없음 — 구글 호텔 비교 안 함"
+    # ★`[2026-10-14]` 예약 모듈 기차 · 버스 — TAGO 열차 · 고속 · 시외버스(활용신청 셋, 공통 키). 없으면 그 소스만 빠진다
+    tago_key = _public_data_key(settings, "tago_api_key")
+    if tago_key:
+        from .tago_transit import TagoTransit
+        sources.transit_schedule = TagoTransit(service_key=tago_key, limiter=limiter, cache=cache)
+    else:
+        sources.unavailable["transit_schedule"] = "ACOP_TAGO_API_KEY(또는 공통 키) 없음 — 기차 · 버스 운행 비교 안 함"
     # ── 기상: 1차 + 대체 (v11 §0-4 결정 15) ─────────────────────────
     # ★`weather_provider` 는 **어느 쪽이 먼저인가**만 정한다. 붙일 수 있는 것은
     #   전부 붙이고 나머지를 대체로 둔다 — 1차가 못 주면 대체가 값을 낸다.

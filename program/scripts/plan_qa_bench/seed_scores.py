@@ -7,13 +7,14 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 sys.path.insert(0, os.path.join(HERE, '..', 'eval_kit'))
 from stats import fmt_ratio, mcnemar_exact  # noqa: E402
 
 sys.stdout.reconfigure(encoding='utf-8')
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
-FX = {s: json.load(open(os.path.join(HERE, f'fixtures/{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
-GS = json.load(open(os.path.join(HERE, 'fixtures/gold_sets.json'), encoding='utf-8'))
+FX = {s: json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
+GS = json.load(open(fixture('gold_sets.json'), encoding='utf-8'))
 KEYS = [(s, i) for s in SETS for i, q in enumerate(FX[s]['qs']) if q['type'] != 'compound_intent']
 assert len(KEYS) == 769
 D = os.path.join(HERE, 'results/_pull/distill_eval')

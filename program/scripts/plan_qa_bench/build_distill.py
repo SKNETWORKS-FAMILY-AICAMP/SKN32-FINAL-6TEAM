@@ -7,6 +7,7 @@ from collections import Counter
 from datetime import date
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 GEN = sys.argv[1]
 PIDS = sys.argv[2:]
 OUT = os.path.join(HERE, 'fixtures', 'distill')
@@ -14,7 +15,7 @@ os.makedirs(OUT, exist_ok=True)
 EVAL = ['heavy', 'mix4', 'mix5', 'mix6', 'mix7', 'mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 ev_q, ev_place = set(), set()
 for w in EVAL:
-    f = os.path.join(HERE, 'fixtures', f'{w}.json')
+    f = fixture(f'{w}.json')
     if os.path.exists(f):
         s = json.load(open(f, encoding='utf-8'))['sets'][w]
         ev_q |= {re.sub(r'\s+', '', q['q']) for q in s['qs']}

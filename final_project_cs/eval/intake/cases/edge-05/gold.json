@@ -1,0 +1,46 @@
+{
+ "case_id": "edge-05",
+ "format": "edge",
+ "defect": "c5_bare_hour",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "10월 20일\n11시 국립중앙박물관\n2시쯤 토속촌삼계탕 점심\n5시 반 N서울타워"
+  }
+ ],
+ "lines": [
+  "10월 20일",
+  "11시 국립중앙박물관",
+  "2시쯤 토속촌삼계탕 점심",
+  "5시 반 N서울타워"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": "11:00",
+   "title": "국립중앙박물관",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "14:00",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "17:30",
+   "title": "N서울타워",
+   "place": "N서울타워",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [],
+ "why": "오전·오후 없는 「2시쯤」 · 「5시 반」 — 낮 일정인데 새벽(02:00 · 05:30)으로 읽고 「쯤」이 제목에 붙는다"
+}

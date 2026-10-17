@@ -157,3 +157,17 @@ def test_api_cap_for_budgeted_source_without_calls_and_clear(state, monkeypatch)
     assert refused.value.status_code == 404
     with pytest.raises(admin.AdminServiceError):
         mutate(state, {"type": "api-cap", "apiId": "not_budgeted_" + uuid4().hex, "daily": 1, "monthly": 1, "reason": "시험"})
+
+
+def test_notice_board_lists_posted_then_ended_without_scheduled_or_author(state):
+    """`[2026-10-17 ST4F-604]` 고객 웹 「공지사항」 — 게시 중이 위(게시 시작이 늦은 것부터), 종료가 아래. 예약 · 작성 운영자는 내지 않는다."""
+    conn, tenant, _ = state
+    for title, starts, ends in (("지난 공지 1", "2026-10-15T09:00", "2026-10-16T09:00"), ("게시 중 1", "2026-10-17T09:00", "2026-10-18T09:00"),
+                                ("지난 공지 2", "2026-10-16T10:00", "2026-10-17T11:00"), ("게시 중 2", "2026-10-17T11:00", "2026-10-17T13:00"),
+                                ("예약", "2026-10-17T13:00", "2026-10-18T13:00"), ("방금 끝남", "2026-10-17T08:00", "2026-10-17T12:00")):
+        mutate(state, {"type": "publish-notice", "notice": {"kind": "안내", "title": title, "body": "본문", "titleEn": "", "bodyEn": "", "startsAt": starts, "endsAt": ends}})
+    board = admin.notice_board(conn, tenant, datetime(2026, 10, 17, 12, 0, tzinfo=admin.KST))
+    assert [(item["title"], item["status"]) for item in board] == [
+        ("게시 중 2", "posted"), ("게시 중 1", "posted"), ("방금 끝남", "ended"), ("지난 공지 2", "ended"), ("지난 공지 1", "ended")]
+    assert all("author" not in item and item["id"] for item in board)                # 끝 시각 = 지금이면 종료 · 운영자 이름은 감사 기록에만
+    assert admin.notice_board(conn, "admin_test_" + uuid4().hex, datetime(2026, 10, 17, 12, 0, tzinfo=admin.KST)) == []   # 다른 테넌트의 공지는 안 보인다

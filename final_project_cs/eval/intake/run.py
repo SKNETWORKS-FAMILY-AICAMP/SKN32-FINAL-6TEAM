@@ -3,6 +3,7 @@
 
     python -m eval.intake.run                     # 60건 전부 · 실제 받아쓰기(gemma)·모델·관광공사·카카오
     python -m eval.intake.run --only paste,xlsx   # 형식만 골라서
+    python -m eval.intake.run --only edge         # 실제 고객 입력 모양 8건(`edge.py`) — ★기본 실행에는 안 들어간다(이전 60건 실행과 견줄 수 있게)
 
 ★실제 처리 흐름을 그대로 탄다 — `intake.sources.to_text` → `intake.pipeline.read_source` → `intake.assemble`.
   DB 에 접수 행을 만들지 않는다(조립에 필요한 원본 모양만 만든다). 우리 장소 표·별칭은 `demo` 테넌트의 공용 행을 읽는다.
@@ -19,6 +20,11 @@
     근거 없는 값    근거가 빈 값 / 뽑은 값 전체
     처리 시간       받아쓰기한 원본의 초(p50 · p95)
 ★짝짓기: 같은 날짜 안에서 제목이 정답 제목을 포함하거나 정답 제목에 포함되는 것(정규화 비교). 못 짝지으면 재현 실패.
+★`[2026-10-16]` 지표 셋을 더했다(이전 실행 수치는 그대로 견줄 수 있다).
+    남는 항목       정답과 짝짓지 못한 뽑은 항목 / 뽑은 항목 — 카톡 보낸 시각 같은 헛항목. 재현율은 이것을 못 본다
+    제목 그대로     정규화한 제목이 정답과 같은 것 / 찾은 항목 — 「도산공원 → 산공원」은 포함 짝짓기로 찾은 것으로 세지고
+                    원문의 부분 문자열이라 변조로도 안 잡힌다
+    나와야 할 문제  정답의 `expect_problems` 가 조립 문제에 나온 것 / 기대한 문제(edge 만 있다)
 """
 from __future__ import annotations
 
@@ -81,9 +87,13 @@ def run(only: set[str] | None = None) -> dict:
     #   이 실행에서만 몰림 200 · 하루 합계는 설정값(`rate_tour_api_per_day`) 그대로 지킨다(`interval_for`)
     from app.domains.travel_ops.ports.data_sources.ratelimit import RateLimiter, interval_for
     per_day = settings.rate_tour_api_per_day
-    place_source._limiter = RateLimiter(intervals={"tour_api": interval_for(per_day, burst=200)},
-                                        bursts={"tour_api": 200})
-    tour = Memo(place_source, "find")
+    # ★`[2026-10-16]` 관광공사 키가 없는 PC 에서도 읽기 지표(재현 · 시각 · 제목 · 남는 항목)는 잴 수 있다 — 장소는 우리 표 ·
+    #   카카오만으로 찾고, 요약에 `tour_api: unavailable` 을 남긴다. 이 실행의 장소 1위 정확도는 키 있는 실행과 견주지 않는다
+    tour = None
+    if place_source is not None:
+        place_source._limiter = RateLimiter(intervals={"tour_api": interval_for(per_day, burst=200)},
+                                            bursts={"tour_api": 200})
+        tour = Memo(place_source, "find")
     kakao = Memo(KakaoLocal(api_key=settings.kakao_rest_api_key,
                             budget=CallBudget(connection_factory=get_connection, caps=kakao_caps())), "search")
     with get_connection() as conn:
@@ -94,11 +104,14 @@ def run(only: set[str] | None = None) -> dict:
     totals = dict(gold=0, found=0, extracted=0, tampered=0, timed=0, time_ok=0, placed=0, place_ok=0,
                   values=0, no_evidence=0, place_blocked=0,
                   tampered_flagged_by_check=0, tampered_flagged_other=0, tampered_leaked=0,
-                  flagged_by_check=0, differ_lines=0, transcribed_lines=0)
+                  flagged_by_check=0, differ_lines=0, transcribed_lines=0,
+                  predicted=0, extra=0, title_exact=0, problem_expected=0, problem_hit=0)
     for folder in sorted(p for p in CASES.iterdir() if p.is_dir()):
         gold = json.loads((folder / "gold.json").read_text(encoding="utf-8"))
         if only and gold["format"] not in only:
             continue
+        if not only and gold["format"] == "edge":
+            continue                                      # 기본 실행은 원래 60건 — edge 는 `--only edge`
         started = time.perf_counter()
         sources, claims, errors, transcripts = [], [], [], []
         for position, source in enumerate(gold["inputs"]):
@@ -186,14 +199,25 @@ def run(only: set[str] | None = None) -> dict:
                 name = places.get(got["place"], {}).get("name") if got["place"] else None
                 place_ok = bool(name) and (_norm(name) == _norm(want["place"]) or _norm(want["place"]) in _norm(name))
                 totals["place_ok"] += place_ok
-            case_rows.append({"want": want, "found": got is not None,
+            title_ok = bool(got) and _norm(got["title"]) == _norm(want["title"])
+            totals["title_exact"] += title_ok
+            case_rows.append({"want": want, "found": got is not None, "title_ok": title_ok if got else None,
                               "got": {"title": got["title"], "start": got["starts_at"][11:16],
                                       "place": places.get(got["place"], {}).get("name") if got and got["place"] else None}
                               if got else None, "time_ok": time_ok, "place_ok": place_ok})
+        totals["predicted"] += len(predicted)
+        totals["extra"] += len(free)
+        codes = [p.code for p in built.problems]
+        expected = gold.get("expect_problems") or []
+        totals["problem_expected"] += len(expected)
+        totals["problem_hit"] += sum(code in codes for code in expected)
         rows_out.append({"case": gold["case_id"], "format": gold["format"], "defect": gold["defect"],
                          "seconds": round(time.perf_counter() - started, 1), "errors": errors,
-                         "problems": [p.code for p in built.problems], "items": case_rows, "transcripts": transcripts})
+                         "problems": codes, "missing_problems": [c for c in expected if c not in codes],
+                         "extra": [{"title": predicted[i]["title"], "starts_at": predicted[i]["starts_at"]} for i in free],
+                         "items": case_rows, "transcripts": transcripts})
         print(f"{gold['case_id']:12} found {sum(r['found'] for r in case_rows)}/{len(case_rows)} "
+              f"extra {len(free)} title {sum(bool(r['title_ok']) for r in case_rows)}/{len(case_rows)} "
               f"{'ERR ' + errors[0][:60] if errors else ''}", flush=True)
 
     def pct(a, b):
@@ -211,11 +235,14 @@ def run(only: set[str] | None = None) -> dict:
         "differ_lines": pct(totals["differ_lines"], totals["transcribed_lines"]),
         "leaked": leaked,
         "time_accuracy": pct(totals["time_ok"], totals["timed"]),
+        "extra_items": pct(totals["extra"], totals["predicted"]),
+        "title_exact": pct(totals["title_exact"], totals["found"]),
+        "expected_problems": pct(totals["problem_hit"], totals["problem_expected"]),
         "place_top1": pct(totals["place_ok"], totals["placed"]),
         "no_evidence": pct(totals["no_evidence"], totals["values"]),
         "transcribe_seconds": {"n": len(q), "p50": round(statistics.median(q), 1) if q else None,
                                "p95": round(q[max(0, int(len(q) * 0.95) - 1)], 1) if q else None},
-        "calls": {"tour_api": tour.calls, "kakao": kakao.calls},
+        "calls": {"tour_api": tour.calls if tour else "unavailable", "kakao": kakao.calls},
         "totals": totals,
     }
     by_format = {}

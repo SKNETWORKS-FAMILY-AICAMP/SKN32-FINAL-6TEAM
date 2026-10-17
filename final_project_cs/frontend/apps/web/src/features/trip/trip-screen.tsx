@@ -16,6 +16,7 @@ import { useRouteDetail } from "@/features/map/use-route-detail";
 import { useListZoom } from "@/features/plan-check/list-zoom";
 import { useTimeInset } from "@/features/plan-check/use-time-inset";
 import { useDayMarker } from "@/features/plan-check/use-day-marker";
+import { useCenterFocus } from "@/features/plan-check/use-center-focus";
 import { useQuietDayStrip } from "@/features/plan-check/use-quiet-day-strip";
 import { useDayGestures } from "@/features/plan-check/use-day-gestures";
 import { useTripGuardian } from "@/features/guardian/trip-guardian";
@@ -27,6 +28,7 @@ import { getRouteShapes } from "@/lib/live/route-shapes";
 import type { Language, Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, type BusToast } from "@/lib/toast-bus";
+import { browserNotify } from "@/lib/browser-notify";
 import type { Notice, Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -37,6 +39,8 @@ import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./tri
 import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
+import { useServiceStatus } from "@/features/support/service-notices";
+import { markServiceNoticesSeen, useSeenServiceNotices } from "@/features/support/service-notice-reads";
 import { DetailHeader, TripDetail } from "./trip-detail";
 import { TripEdit } from "./trip-edit";
 import { TitleMenu, TripShare, TripTitle } from "./trip-title";
@@ -105,7 +109,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const proposals = useProposals(trip.id);
   // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
   const seen = useSeenNotices(trip.id);
-  const unread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
+  const tripUnread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
+  // `[2026-10-17 사용자 결정 — ST4F-604]` 운영 앱의 서비스 공지 중 안 본 것도 센다 — 알림 센터를 열면 본 것(맨 위 「서비스 공지」 칸에 보인다).
+  const service = useServiceStatus();
+  const seenService = useSeenServiceNotices();
+  const serviceKey = (service.data?.notices ?? []).map((notice) => notice.id).join("\n");
+  const unread = tripUnread + (serviceKey ? serviceKey.split("\n").filter((id) => !seenService.includes(id)).length : 0);
   // `[2026-10-04]` The lines between the stops (never holding the page up); zoomed in, the detailed lines replace them.
   const routeShapes = useRouteShapes(trip.id, trip.version);
   const routeDetail = useRouteDetail(routeShapes.data, ["trip", trip.id, trip.version ?? 0, language], () => getRouteShapes(trip.id, language, { detail: true }));
@@ -135,6 +144,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
   const [centerOpen, setCenterOpen] = useState(false);
+  useEffect(() => { if (centerOpen && serviceKey) markServiceNoticesSeen(serviceKey.split("\n")); }, [centerOpen, serviceKey]);
   const [centerTab, setCenterTab] = useState<CenterTab>("warnings");
   // `[2026-10-07 목업 C안 3단계]` The title row (opened · being renamed), the share sheet, and the stop whose detail is open.
   const [titleOpen, setTitleOpen] = useState(false);
@@ -264,6 +274,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const quietDays = useQuietDayStrip(stripBox, pane === "plan" && !detailId, false, bodyBox, toolsBox);
 
   useTimeInset(bodyBox, sheetBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}`);
+  // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (below the day strip) wears a grey border, as on the plan check — there is no ＋ here, only the border.
+  useCenterFocus(bodyBox, pane === "plan" && !detailId, `${all}|${dayAt}|${compact}|${listZoom}`, stripBox);
 
   // ── The two panes: the plan, and the chat beside it. A turn made by a swipe lands where the finger left it (no second slide). ──
   function goPane(next: "plan" | "chat", bySwipe = false) {
@@ -410,7 +422,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
 
   // ── The notice center: opened by the bell (unread notices first), by a notice's 「알림 보기」, by 「일정 정지 중」. ──
   function openCenter(tab?: CenterTab) {
-    setCenterTab(tab ?? (unread > 0 ? "notices" : centerTab));
+    setCenterTab(tab ?? (tripUnread > 0 ? "notices" : centerTab));
     setTitleOpen(false);
     setCenterOpen(true);
   }
@@ -469,7 +481,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   }
 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
-  const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => showToast(noticeToast(notice, trip, targets, t, () => openCenter("notices"))));
+  const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
+    const toast = noticeToast(notice, trip, targets, t, () => openCenter("notices"));
+    showToast(toast);
+    // `[2026-10-16]` 이 탭을 보고 있지 않으면 브라우저(운영체제) 알림도 — 고객이 「받은 알림」에서 켰을 때만. 누르면 이 화면의 받은 알림으로 온다.
+    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, () => openCenter("notices"));
+  });
   const known = useRef<Set<string> | null>(null);
   const newestNotice = useRef<string | null>(null);
   const { data: targetProposals, refetch: refetchProposals } = proposals;

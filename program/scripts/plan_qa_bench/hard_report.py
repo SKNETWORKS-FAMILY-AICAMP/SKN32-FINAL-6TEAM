@@ -14,7 +14,7 @@ from stats import fmt_ratio  # noqa: E402
 
 sys.stdout.reconfigure(encoding='utf-8')
 D = os.path.join(HERE, 'results', 'd_test')
-SET = os.path.join(HERE, 'results', 'hard_set', 'h_set_test_30_20261015_agree.json')
+SET = os.path.join(HERE, '..', '..', '..', 'datasets', 'core', 'pointing', 'testset', 'confusing_trap_sentences_v1', 'h_set_test_30_20261015_agree.json')
 TAGS = [('시드 1', 'e4bt'), ('시드 2', 'e4bs2'), ('시드 3', 'e4bs3'), ('oos1', 'oos1'), ('oos2', 'oos2'), ('oos3', 'oos3'), ('oos2r(어려운 문장 보강)', 'oos2r')]
 P = {x['i']: x for x in json.load(open(SET, encoding='utf-8'))}
 

@@ -21,6 +21,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
   const surface = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
+  const viewRef = useRef<MapView | null>(null);
   const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me, stays, onZoom, onInteractionChange });
   const refreshLayout = useCallback(() => {
     controller.current?.relayout?.();
@@ -28,7 +29,24 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
     if (!node) return;
     const occupied = [...node.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls]")]
       .filter((item) => getComputedStyle(item).visibility !== "hidden").map((item) => item.getBoundingClientRect());
-    node.querySelectorAll<HTMLElement>("[data-route-label]").forEach((label) => {
+    const frame = node.getBoundingClientRect();
+    const currentView = viewRef.current;
+    if (!currentView || !frame.width || !frame.height) return;
+    const scaleX = currentView.width / frame.width, scaleY = currentView.height / frame.height;
+    const labelNodes = [...node.querySelectorAll<HTMLElement>("[data-route-label]")];
+    const sizes = Object.fromEntries(labelNodes.map((label) => {
+      const box = label.getBoundingClientRect();
+      return [label.dataset.routeLabel!, { width: box.width * scaleX, height: box.height * scaleY }];
+    }));
+    const obstacles = occupied.map((box) => ({ left: (box.left-frame.left)*scaleX, right: (box.right-frame.left)*scaleX,
+      top: (box.top-frame.top)*scaleY, bottom: (box.bottom-frame.top)*scaleY }));
+    const positions = routeLabels(currentView, latest.current.lines ?? [], latest.current.points,
+      latest.current.topInset, latest.current.bottomInset, obstacles, sizes);
+    labelNodes.forEach((label) => {
+      const spot = positions.find((position) => position.id === label.dataset.routeLabel);
+      if (!spot) { label.style.visibility = "hidden"; return; }
+      label.style.left = `${spot.x}px`;
+      label.style.top = `${spot.y}px`;
       const box = label.getBoundingClientRect();
       const blocked = occupied.some((other) => Math.min(box.right,other.right)>Math.max(box.left,other.left)-4 && Math.min(box.bottom,other.bottom)>Math.max(box.top,other.top)-4);
       label.style.visibility = blocked ? "hidden" : "";
@@ -91,6 +109,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       onSelectLine: (id) => latest.current.onSelectLine?.(id),
       onZoom: (zoom) => latest.current.onZoom?.(zoom),          // [2026-10-05] the screen above asks for the detailed route lines once this says the map is zoomed in
       onView: (next) => {
+        viewRef.current = next;
         pendingView = next;
         if (viewScheduled) return;
         viewScheduled = true;
@@ -156,7 +175,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
   }) : [], [ready, view, points, topInset, bottomInset, controlArea]);
   useLayoutEffect(() => { controller.current?.setHiddenPoints(chips.flatMap((chip) => chip.ids)); refreshLayout(); }, [chips, folded, refreshLayout]);
   const preview = view && coordinatePick?.value ? toPixels(view, coordinatePick.value) : null;
-  return <div ref={surface} className={styles.live} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-moving={moving || undefined} data-awake={awake || undefined} data-picking={!!coordinatePick || undefined} onPointerDown={wake}
+  return <div ref={surface} className={styles.live} style={{ position: "relative", flex: 1 }} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-moving={moving || undefined} data-awake={awake || undefined} data-picking={!!coordinatePick || undefined} onPointerDown={wake}
     onPointerDownCapture={event => { pointer.current = { x: event.clientX, y: event.clientY, moved: false }; }}
     onPointerMoveCapture={event => { const start = pointer.current; if (start && Math.hypot(event.clientX-start.x, event.clientY-start.y)>8) start.moved = true; }}
     onClickCapture={event => {
@@ -166,7 +185,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       const rect = container.current!.getBoundingClientRect(), x = event.clientX-rect.left, y = event.clientY-rect.top;
       if (x>=0 && x<=rect.width && y>=(topInset??0) && y<=rect.height-(bottomInset??0)) coordinatePick.onPick(fromPixels(view, { x, y }));
     }}>
-    <div className={styles.canvas} ref={container} aria-label={`${name} 지도`} />
+    <div className={styles.canvas} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", isolation: "isolate", zIndex: 0 }} ref={container} aria-label={`${name} 지도`} />
     {ready && <div className={styles.routeLabels} aria-hidden="true">
       {routeLabels(view, lines ?? [], points, topInset, bottomInset).map((label) => <span key={label.id} data-route-label={label.id} data-mode={label.mode}
         className={styles.routeLabel} style={{ left: label.x, top: label.y, color: `var(${LINE_TONE_VARIABLE[label.mode ?? "unknown"]})` }}>

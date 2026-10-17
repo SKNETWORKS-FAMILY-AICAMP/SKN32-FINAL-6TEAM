@@ -92,7 +92,11 @@ def _reading(world, case_id) -> dict:
     (CHILD, "dining", "t_doc_12#c2", "저녁"),                  # 「저녁 식당」 → 저녁 식사 항목
     (PALACE, "activity", "t_doc_08#c1", "경복궁"),             # ★closed 로 둔갑하던 문장
 ])
-def test_a_rules_question_is_answered_from_the_rules_and_the_plan_stays(world, text, team, source, item):
+def test_a_rules_question_is_answered_from_the_rules_and_the_plan_stays(world, text, team, source, item, monkeypatch):
+    # ★`[2026-10-16]` Activity 의 규정 검색은 운영에서 꺼져 있다(`_RAG_OFF`). 이 시험은 규정 질문이 **켜진** 경로로 답하는지 본다 — 꺼진 동작은 아래 시험.
+    from app.domains.travel_ops.instances.activity import ActivityTeam
+
+    monkeypatch.setattr(ActivityTeam, "_RAG_OFF", False)
     view = _ask(world, text, f"q-{source}")
     assert _reading(world, view["case_id"]) == {"type": "question"}          # ★질문으로 읽혔다
     assert view["case_status"] == "resolved" and view["owner_team_id"] == team, view
@@ -105,6 +109,15 @@ def test_a_rules_question_is_answered_from_the_rules_and_the_plan_stays(world, t
     if item:
         assert view["answer"].split(" — ")[0].find(item) >= 0, view["answer"]
     assert view["applied_actions"] == [] and _latest(world)[0]["version"] == 1   # ★일정을 안 바꿨다
+
+
+def test_an_activity_rules_question_has_no_answer_while_the_rules_search_is_off(world):
+    """`[2026-10-16]` 규정 검색을 끈 Activity(`_RAG_OFF` 기본 True)는 규정 질문에 답을 만들지 않고 넘긴다 — 지어내지 않는다.
+    일정은 그대로다. (CI 에서 확인된 동작: `case_status == escalated`, `answer is None`)"""
+    view = _ask(world, KAYAK, "q-rag-off")
+
+    assert view["case_status"] == "escalated" and view["answer"] is None, view
+    assert view["applied_actions"] == [] and _latest(world)[0]["version"] == 1
 
 
 def test_the_two_reports_stay_what_they_were(world):

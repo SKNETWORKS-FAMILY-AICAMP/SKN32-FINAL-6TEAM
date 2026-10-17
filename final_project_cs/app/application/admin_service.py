@@ -55,6 +55,22 @@ def require_customer(conn, tenant: str, customer: str) -> None:
             raise AdminServiceError(404, "사용자를 찾을 수 없습니다.")
 
 
+def notice_board(conn, tenant: str, now: datetime | None = None) -> list[dict]:
+    """`[2026-10-17 사용자 결정 — ST4F-604]` 고객 웹 「공지사항」 — 운영 앱 「공지 목록」 중 게시를 시작한 공지.
+
+    게시 중(`posted`)이 위, 종료(`ended`)가 아래, 각각 게시 시작이 늦은 것부터. 예약(시작 전)은 빼고, 작성 운영자는 감사 기록에만 둔다.
+    판정은 운영 앱 목록(`noticeStatus`)과 같다 — 시작 ≤ 지금 < 끝이면 게시 중, 끝 ≤ 지금이면 종료.
+    """
+    now = (now or datetime.now(UTC)).astimezone(KST)
+    def at(value: str) -> datetime:
+        return datetime.fromisoformat(value).replace(tzinfo=KST)
+    shown = [{**{key: value for key, value in item.items() if key != "author"}, "status": "posted" if now < at(item["endsAt"]) else "ended"}
+             for item in records(conn, tenant, "notice") if at(item["startsAt"]) <= now]
+    shown.sort(key=lambda item: at(item["startsAt"]), reverse=True)
+    shown.sort(key=lambda item: item["status"] != "posted")
+    return shown
+
+
 def access_policy(conn, tenant_id: str, customer_id: str, now: datetime | None = None) -> dict:
     now = (now or datetime.now(UTC)).astimezone(KST)
     user = record(conn, tenant_id, "user", str(customer_id))

@@ -7,6 +7,7 @@ import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
 import { ToastView, useToastState } from "@/components/toast-view";
 import { TripMap } from "@/features/map";
 import { routeNotes, visibleShapes } from "@/features/map/route-lines";
+import { RouteLoadStatus, type RouteLoadState } from "@/features/map/route-load-status";
 import type { RouteShapes } from "@/lib/live/route-shapes";
 import type { Coordinates, PinLook } from "@/features/map/model";
 import type { TripStop } from "@/features/trip/model";
@@ -15,7 +16,7 @@ import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
-import { Act, HeadBadges, letter, pinKindLabel, reason, type ListFilter } from "./parts";
+import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
 import { DayList, type RowContext } from "./plan-rows";
@@ -43,6 +44,7 @@ import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal } from "./use-reveal";
 import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
 import type { InsertionPoint } from "./insertion-points";
+import { useCenterFocus } from "./use-center-focus";
 import { useInsertionPoint } from "./use-insertion-point";
 import { PlaceSearchHeader } from "./place-search-header";
 import { useBackgroundBack } from "./use-background-back";
@@ -79,6 +81,7 @@ export interface PlanCheckProps {
   previewView?: PlanCheckView | null;
   /** `[2026-10-04]` The lines between the stops for the plan as it is (the server's `route-shapes` for the intake); null = none (an older server, or nothing to draw). */
   routes?: RouteShapes | null;
+  routeState?: RouteLoadState;
   /** `[2026-10-05]` The zoom level of the map: the screen above asks for the detailed route lines once it is zoomed in (`features/map/use-route-detail.ts`). */
   onMapZoom?: (zoom: number) => void;
   /** `[2026-10-13 사용자 결정 — 수정 모드]` The screen edits a registered trip (`features/trip/trip-edit.tsx`) instead of checking a new plan. */
@@ -378,7 +381,7 @@ const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "onMapZoom" | "edit">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -388,7 +391,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, onMapZoom, edit }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
+function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const done = view.stage === "done";
@@ -580,21 +583,37 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     setOpen(id, list);
     if (from === "map") {
       if (sheet === "peek") setSheet("half");
-      const bringUp = () => requestAnimationFrame(() => requestAnimationFrame(() => {
-        const box = bodyBox.current;
-        const card = document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`);
-        const row = card?.closest<HTMLElement>('li[data-type="item"]') ?? card;
-        if (!box || !row) return;
-        const head = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
-        const visibleTop = Math.max(box.getBoundingClientRect().top, head?.getBoundingClientRect().bottom ?? 0) + 12;
-        // Reserve only the missing room; the source and preview hint already provide space below the final stop.
-        box.style.removeProperty("--focus-room");
-        const target = box.scrollTop + row.getBoundingClientRect().top - visibleTop;
-        box.style.setProperty("--focus-room", `${Math.max(0, target - (box.scrollHeight - box.clientHeight))}px`);
-        dampedScrollTo(box, target);
-      }));
-      bringUp();
+      bringCardUp(id, list);
     }
+  }
+  /** A stop's card brought to the top of the list once it is drawn (its day may change first). */
+  function bringCardUp(id: string, list: "before" | "after") {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const box = bodyBox.current;
+      const card = document.getElementById(`${list === "after" ? "after-" : ""}plan-card-${id}`);
+      const row = card?.closest<HTMLElement>('li[data-type="item"]') ?? card;
+      if (!box || !row) return;
+      const head = sheetBox.current?.querySelector<HTMLElement>(`header.${styles.sheetHead}`);
+      const visibleTop = Math.max(box.getBoundingClientRect().top, head?.getBoundingClientRect().bottom ?? 0) + 12;
+      // Reserve only the missing room; the source and preview hint already provide space below the final stop.
+      box.style.removeProperty("--focus-room");
+      const target = box.scrollTop + row.getBoundingClientRect().top - visibleTop;
+      box.style.setProperty("--focus-room", `${Math.max(0, target - (box.scrollHeight - box.clientHeight))}px`);
+      dampedScrollTo(box, target);
+    }));
+  }
+  /**
+   * `[2026-10-15 사용자 결정 — ST4F-498]` 「○○에서 출발」 pressed: the stay itself, as the trip screen's band does — its check-in day, its card marked, opened and brought into view.
+   * Not a toggle: pressed again the card stays open.
+   */
+  function showStay(id: string, list: "before" | "after") {
+    const item = shown.items.find((entry) => entry.id === id);
+    if (!item) return;
+    setSelectedLine(null);
+    setSelected(id);
+    setChosenDay(item.day);
+    setOpen(id, list);
+    bringCardUp(id, list);
   }
   /**
    * `[2026-10-06 사용자 지시 — 경로를 누르면 해당 경로가 나온다]` A route line pressed on the map: it is drawn picked, its leg is opened in the list (and brought into view), and a card over the map describes it. Pressed again it is let go.
@@ -721,14 +740,17 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       await actions.lock!(item.id, on);
       if (on && timeEdit.edit?.id === item.id) timeEdit.close();
       return on ? { text: t(`${eul(item.title)} 꼭 넣을 일정으로 고정했어요`, `Locked ${item.title} in`), sub: t("다시 짜거나 바꿔도 빠지지 않게 서버에 알렸어요", "Re-planning and recommendations keep it") }
-        : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
+        // `[2026-10-15 사용자 결정 — 연결 유지 + 안내]` A vendor's booking is not changed by changing the stop: it is said when it is unlocked.
+        : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: item.vendorBooking ? t("이제 바꾸거나 삭제할 수 있어요 · 업체 예약은 따로 취소·변경해야 해요", "It can be changed or deleted now · change or cancel the booking with the vendor yourself")
+          : t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
     }, true);
   }
   function unlockAll() {
+    const vendor = view.items.some((item) => item.locked && item.vendorBooking);
     void run(async () => {
       const count = await actions.unlockAll!();
       requestAnimationFrame(() => document.getElementById("plan-recommend-all")?.focus({ preventScroll: true }));
-      return { text: t(`일정 ${count}개의 잠금을 모두 풀었어요`, `Unlocked all ${count} stops`) };
+      return { text: t(`일정 ${count}개의 잠금을 모두 풀었어요`, `Unlocked all ${count} stops`), ...(vendor ? { sub: t("업체 예약은 따로 취소·변경해야 해요", "Change or cancel vendor bookings with the vendor yourself") } : {}) };
     }, true);
   }
   /**
@@ -1163,6 +1185,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "center");
   const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !timeEdit.edit && !removed.length;
   useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
+  // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (a card or a way) wears a grey border, by the ＋'s measure — chosen apart from the ＋, so both can show.
+  useCenterFocus(bodyBox, done && !changing, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
   const closeInsertion = (key: string) => {
     if (addingBusy) return;
     setMapPicking(false); setMapCoordinate(null); setInserting(null); setSlide("prev");
@@ -1256,6 +1280,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     reveal: done ? undefined : { activeId: readingList.activeId, waiting: readingList.waiting },
     prefix: list === "after" ? "after-" : "",
     onPick: (id) => pick(id, "list", list),
+    onShowStay: (id) => showStay(id, list),
     // ★`[2026-10-07 사용자 지적 — 목록에서 이동을 다시 눌러 닫아도 지도의 선은 골라진 채였다]` The list and the map say the same: opening a leg picks its line on the map, closing it lets the line go.
     onToggleMove: (id) => {
       const closing = openAt?.id === id && openAt.list === list;
@@ -1320,15 +1345,16 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     {...quietDays.handlers} {...backGesture}
     style={mapPicking ? { "--sheet-h": "min(320px, 55%)" } as CSSProperties : custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
     <div className={styles.map}>
-      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" onInteractionChange={setMapMoving} topInset={64} bottomInset={76} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
+      <TripMap stops={mapStops} dayNumber={mapDay} selectedId={mapSelected} looks={looks} variant="fill" onInteractionChange={setMapMoving} topInset={64} bottomInset={20} routes={lineShapes} onZoom={onMapZoom} onSelect={onPin}
         coordinatePick={mapPicking ? { value: mapCoordinate, onPick: setMapCoordinate } : undefined}
         selectedLineId={selectedLine ?? undefined} onSelectLine={done && !changing ? onLine : undefined} />
     </div>
     {/* `[2026-10-08 사용자 지시]` 확인·변경·장소 표시는 같은 막대에, 이동 수단 이름은 확대된 경로선에 표시한다. */}
-    {!mapPicking && (unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+    {!mapPicking && (routeState?.loading || routeState?.error || unlocated.length > 0 || pinned || mapSummary || (done && !changing && !registered && (needCount > 0 || changedCount > 0 || removed.length > 0 || actions.canUndoAll?.()))) && <div className={styles.mapChips} data-muted={mapMoving || undefined} inert={mapMoving} aria-hidden={mapMoving || undefined}>
+      <RouteLoadStatus state={routeState} />
       <div className={styles.statusTools} role="group" aria-label={t("일정 확인과 변경", "Plan checks and changes")}>
       {pinned
-        ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
+        ? <p className={styles.picked} aria-live="polite"><b>{pinned.title}</b>{(pinKindLabel(pinned.displayKind ?? pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category) && <> · {pinKindLabel(pinned.displayKind ?? pinned.kind ?? pinned.info?.kind, t) ?? pinned.info?.category}</>}</p>
         : mapSummary ? <p className={styles.picked} data-map-summary aria-live="polite">{mapSummary}</p> : unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
       {/* ★`[2026-10-07 사용자 지시 — 「! 2」는 지도 쪽에]` The count of what needs a look stands on the map; pressed, the list and the map show only those. */}
       {done && !changing && !registered && needCount > 0 && <button type="button" className={styles.mapNeeds} aria-pressed={filter === "needs" && filtering}
@@ -1429,6 +1455,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
             {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
+            {done && !registered && !previewing && view.prefill && <PrefillNote notes={view.prefill} />}
             {done && !registered && !previewing && view.taxiPricing && actions.editTrip &&
               <TaxiPricing value={view.taxiPricing} locked={frozen} onSave={(value) => actions.editTrip!("taxi_pricing", value)} />}
             {filtering && <p className={styles.filterNote} role="status">{filter === "changed" ? t("바뀐 곳만 보는 중이에요", "Showing only what changed") : t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}

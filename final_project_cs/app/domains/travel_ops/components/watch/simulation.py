@@ -22,6 +22,15 @@ CATEGORIES = {
 SOURCE = "[시뮬레이션] 관리자 시험 입력"
 
 
+def active_sql(alias: str = "t") -> str:
+    """관리자가 켠 현재 판의 시험만 감시 대상 예외로 인정한다."""
+    return ("EXISTS (SELECT 1 FROM admin_records trial WHERE trial.tenant_id=" + alias + ".tenant_id "
+            "AND trial.kind='watch_simulation' AND trial.id=" + alias + ".trip_id::text "
+            "AND jsonb_typeof(trial.value->'categories')='array' AND trial.value->'categories'<>'[]'::jsonb "
+            "AND trial.value->>'base_version'=" + alias + ".latest_version::text "
+            "AND (trial.value->>'expires_at')::timestamptz>now())")
+
+
 def state(conn, tenant: str, trip_id: UUID, *, now: datetime | None = None) -> dict:
     # 226 이전 DB의 일반 여행 읽기는 계속 허용한다. 시험 기능 쓰기는 226이 필요하다.
     try:
@@ -143,6 +152,7 @@ def configure(conn, tenant: str, trip_id: UUID, *, actor: str, expected_revision
         raise AdminServiceError(409, "다른 변경이 먼저 저장됐습니다. 현재 여행과 설정을 다시 읽어 주세요.")
     items = TripStore(tenant).items(conn, trip_id, trip[1])
     if categories:
+        _require_watched(conn, tenant, trip_id)
         if trip[2] != "active" or not any((i.ends_at or i.starts_at) > now for i in items):
             raise AdminServiceError(422, "끝나지 않은 활성 여행에서만 시험할 수 있습니다.")
         target = next((i for i in items if i.item_id == item_id), None)
@@ -169,6 +179,19 @@ def configure(conn, tenant: str, trip_id: UUID, *, actor: str, expected_revision
     after = state(conn, tenant, trip_id, now=now)
     audit(conn, tenant, actor, "watch-simulation", str(trip_id), before, after, reason)
     return after
+
+
+def _require_watched(conn, tenant: str, trip_id: UUID) -> None:
+    """명시적 시험을 켤 때 게스트도 허용하되 재난 정지 중이면 거절한다.
+
+    일반 감시의 게스트 제외는 watch_scope_sql이 유지한다. 시험 저장 후 유효한 현재 판만 예외가 된다.
+    """
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM trip_safety_pauses WHERE tenant_id=%s AND trip_id=%s AND resumed_at IS NULL", (tenant, trip_id))
+        paused = cur.fetchone()
+    if paused:
+        raise AdminServiceError(409, "재난 정지 중인 여행은 감시가 쉬고 있어 시험 입력이 반영되지 않습니다. "
+                                     "고객 앱에서 「다시 시작」한 뒤 시험해 주세요.")
 
 
 def inputs(current: dict, place: dict, *, safety_only: bool = False) -> dict[str, dict]:

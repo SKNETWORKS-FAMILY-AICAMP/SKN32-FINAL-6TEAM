@@ -7,12 +7,17 @@ validated ContextPack.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Callable
 from uuid import UUID
 
 from app.core.contracts import ContextPack, ToolNotAllowed
 from app.infrastructure.rag.retriever import search_policy
+
+
+#: `[2026-10-16]` 기준점 줄임말 → 역 이름(우리가 고른 짧은 목록)
+_LANDMARK_ALIASES = {"홍대": "홍대입구역", "건대": "건대입구역", "서울대": "서울대입구역", "고터": "고속터미널역"}
 
 
 class ToolBudgetExceeded(RuntimeError):
@@ -199,9 +204,13 @@ class ReadToolbox:
             "read.stay_google": self.stay_google,
             # ★`[2026-10-10]` booking 모듈 — 여러 판매처를 한 번에 비교(팀 피드백: 에이전트 → booking → 어댑터). 항공 팀 · 숙소 팀이 쓴다
             "read.booking_search_flights": self.booking_search_flights,
+            "read.booking_search_transit": self.booking_search_transit,   # `[2026-10-14]` 열차 · 버스(TAGO)
             "read.booking_search_stays": self.booking_search_stays,
             # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
             "read.stay_lookup": self.stay_lookup,
+            # ★`[2026-10-15]` 지역 · 장소 이름 → 기준점 하나(이름 · 좌표, 카카오 · 서울 안). 숙소 팀이 「강남역 도보」 「경복궁 근처」의 거리와
+            #   검색 지역이 서울인지 볼 때 쓴다(검수 D · 사용자 결정 「카카오로 기준점 찾기」)
+            "read.landmark": self.landmark,
             # ★`[2026-10-13]` 구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 동시에 — 숙소 팀이 후보마다 판매처 가격을 붙일 때
             "read.stay_google_details": self.stay_google_details,
             # ★`[2026-10-13]` 숙소 · 항공 일정 항목에 앞서 보여 준 후보(숙소 · 항공 원장) — 「또 바꿔 줘」에서 뺀다
@@ -966,6 +975,46 @@ class ReadToolbox:
                                                          "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
         return {"source": None, "stays": []} if answered else None
 
+    def landmark(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """지역 · 장소 이름 → 기준점 하나(이름 · 위도 · 경도). `[2026-10-15]` 숙소 팀 — 「강남역 걸어서」 「경복궁 근처」 「김포공항 근처」의 기준점,
+        그리고 검색 지역이 서울인지(카카오 어댑터는 서울 주소만 돌려준다).
+
+        카카오 로컬 키워드 검색, 서울 전역을 관련도 순으로(`anywhere`). 이름이 「…역」이면 지하철역(`SW8`)으로 먼저 찾고 없으면 분류 없이.
+        돌려주는 것: `{"source": "kakao", "found": True, "name", "latitude", "longitude"}` — 이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관).
+        서울에서 못 찾았으면 `{"source": "kakao", "found": False}`, 카카오를 부를 수 없었으면 `None`(모름).
+        """
+        word = str(name or "").strip()
+        if not word or self.kakao is None:
+            return None
+        word = re.sub(r"^서울(?:특별시|시)?\s+", "", word) or word      # 「서울 강남」 → 「강남」(카카오는 이미 서울 안만 찾는다)
+        # `[2026-10-16 최종 평가 뒤]` 줄임말 → 역 이름(「홍대」가 「머큐어 앰배서더 서울 홍대」 호텔로 잡혔다)
+        word = _LANDMARK_ALIASES.get("".join(word.split()), word)
+        compact = "".join(word.split())
+        # `[2026-10-16 평가 2차 · GPT 검수]` 관련도 1위만 쓰니 「여의도」→「한강」, 「신촌」→「안산자락길」, 「DDP」→「서울디자인로드」처럼
+        #   다른 곳이 기준점이 됐다. 동네 이름이면 같은 이름 역(「여의도역」)부터, 아니면 이름에 검색어가 든 곳을 고른다.
+        # 「망원동」 · 「성수동」은 「망원역」 · 「성수역」으로(☆10-16 재실행: 「망원동」→「망리단길」, 「연남동」→ 골목 이름)
+        stem = word[:-1] if re.fullmatch(r"[가-힣]{2,5}동", word) else word
+        station_first = bool(re.fullmatch(r"[가-힣]{2,6}", stem)) and not re.search(r"[역구동로길]$", stem)
+        tries = ([(word, {"category_group_code": "SW8"}, None), (word, {}, compact)] if word.endswith("역") else
+                 ([(stem + "역", {"category_group_code": "SW8"}, stem + "역")] if station_first else []) + [(word, {}, compact)])
+        answered = False
+        for query, options, must in tries:
+            found = self.kakao.search(query, size=5, anywhere=True, **options)
+            if found is None:
+                continue
+            answered = True
+            if not options:
+                # 기준점은 숙소가 아니다 — 숙박(AD5) 결과는 다른 결과가 있으면 뺀다(「홍대」 → 호텔, 「북촌 한옥스테이」 → 한옥스테이)
+                found = [row for row in found if row.get("category_group") != "AD5"] or found
+            named = [row for row in found if must and must.lower() in "".join(str(row.get("name") or "").split()).lower()]
+            if options and must and not named:
+                continue                      # 같은 이름 역이 없으면(「성수역」이 아닌 다른 역) 쓰지 않는다
+            top = (named or found or [None])[0]
+            if top:
+                return {"source": "kakao", "found": True, "name": top.get("name"),
+                        "latitude": top.get("latitude"), "longitude": top.get("longitude")}
+        return {"source": "kakao", "found": False} if answered else None
+
     def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
                             check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
         """구글 호텔 숙소 여럿의 상세(booking 모듈 `google_details`) — 판매처별 1박 가격 · 주소 · 사진. 소스가 없으면 `None`. `[2026-10-13]`"""
@@ -1010,6 +1059,17 @@ class ReadToolbox:
         return search_flights(self.travel, origin=str(origin), destination=str(destination), depart_date=str(depart_date),
                               **{key: options[key] for key in wanted if options.get(key) is not None})
 
+    def booking_search_transit(self, scope: ToolContext, *, mode: str | None = None, origin: str | None = None,
+                               destination: str | None = None, depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """열차 · 버스 운행 비교(booking 모듈, TAGO) — 역 · 터미널로 옮겨 그날 운행을 출발 시각순으로. 소스가 없으면 `None`. `[2026-10-14]`"""
+        if not self.travel or mode not in ("train", "bus") or not origin or not destination or not depart_date:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_transit
+
+        wanted = ("adults", "kind")
+        return search_transit(self.travel, mode=str(mode), origin=str(origin), destination=str(destination),
+                              depart_date=str(depart_date), **{key: options[key] for key in wanted if options.get(key) is not None})
+
     def booking_search_stays(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
                              check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
         """숙소 비교(booking 모듈) — 마이리얼트립 목록 · 구글 호텔 목록 · 다른 곳 링크. 소스가 없으면 `None`. `[2026-10-10]`"""
@@ -1017,7 +1077,7 @@ class ReadToolbox:
             return None
         from app.domains.travel_ops.components.booking.offers import search_stays
 
-        wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating")
+        wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating", "google_keyword")
         return search_stays(self.travel, keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
                             **{key: options[key] for key in wanted if options.get(key) is not None})
 

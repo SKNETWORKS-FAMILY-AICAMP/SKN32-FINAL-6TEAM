@@ -66,7 +66,7 @@ CONTEXT = ["일정 번호", "고객 문장", "요청 부분만(참고)", "일정
 
 def build_h(src: Sources | None = None) -> Bundle:
     src = src or Sources()
-    path = src.need(src.plan_qa / "results" / "hard_set" / "h_set_test_30_20261015.json", "H 시험용 전체 파일")
+    path = src.need(src.pointing_testset / "confusing_trap_sentences_v1" / "h_set_test_30_20261015.json", "H 시험용 전체 파일")
     rows = [r for r in json.loads(path.read_text(encoding="utf-8")) if r["status"] == "dispute"]
     items = [_item(f"H-{r['i']}", f"H-{r['itin']}", r["q"], "", _head(r["prompt"]),
                    {"sol_author": _answer(r["gold"]), "luna_label": _answer(r["label_other"])},
@@ -79,7 +79,7 @@ def build_h(src: Sources | None = None) -> Bundle:
 
 
 def _mx_heads(src: Sources) -> dict[int, str]:
-    path = src.need(src.datasets_root / "travel" / "mx_testset" / "mx_all.json", "MX 전체 파일")
+    path = src.need(src.pointing_testset / "requests_inside_chitchat_pairs_v1" / "mx_all.json", "MX 전체 파일")
     heads: dict[int, str] = {}
     for x in json.loads(path.read_text(encoding="utf-8")):
         heads.setdefault(x["itin"], _head(x["prompt"]))
@@ -89,7 +89,7 @@ def _mx_heads(src: Sources) -> dict[int, str]:
 def build_mx_dispute(src: Sources | None = None) -> Bundle:
     src = src or Sources()
     heads = _mx_heads(src)
-    disputes = json.loads(src.need(src.datasets_root / "travel" / "mx_testset" / "mx_disputes.json", "MX 이견 파일").read_text(encoding="utf-8"))
+    disputes = json.loads(src.need(src.pointing_testset / "requests_inside_chitchat_pairs_v1" / "mx_disputes.json", "MX 이견 파일").read_text(encoding="utf-8"))
     items = []
     for n, d in enumerate(disputes):
         luna = d["luna_item"] if d["src"] == "code" else d.get("luna_blend")
@@ -116,7 +116,7 @@ def build_mx_dispute(src: Sources | None = None) -> Bundle:
 def build_mx_check(src: Sources | None = None) -> Bundle:
     src = src or Sources()
     heads = _mx_heads(src)
-    sample = list(csv.DictReader(src.need(src.datasets_root / "travel" / "mx_testset" / "mx_human_check_sample.csv", "MX 사람 점검 표본").open(encoding="utf-8-sig", newline="")))
+    sample = list(csv.DictReader(src.need(src.pointing_testset / "requests_inside_chitchat_pairs_v1" / "mx_human_check_sample.csv", "MX 사람 점검 표본").open(encoding="utf-8-sig", newline="")))
     items = []
     for r in sample:
         k = int(r["일정 번호(일정 파일)"])

@@ -13,6 +13,9 @@ from eval.human_review.adapters import REGISTRY, build
 from eval.human_review.adapters import e2 as e2_adapter
 from eval.human_review.adapters.paths import Sources
 
+H_SET = Sources().pointing_testset / "confusing_trap_sentences_v1" / "h_set_test_30_20261015.json"
+needs_h = pytest.mark.skipif(not H_SET.exists(), reason="H 원본은 git 밖(datasets/core/pointing/, 2026-10-16 이동) — 이 PC 에 없으면 건너뛴다")
+
 
 def sheet_text(bundle, tmp_path, subset=None):
     path = tmp_path / f"{bundle.name}.csv"
@@ -80,12 +83,12 @@ def test_g96_sheet_is_blind_and_round_trips(tmp_path):
     assert all(e["n"] == 96 and e["exact_match"] == 1.0 for e in result["fields"].values())
 
 
-def test_second_rater_subsets_are_seeded_30_row_samples():
-    for name in ("g96", "pointing_h"):
-        bundle = build(name)
-        sample = [it.id for it in bundle.select("second30")]
-        assert len(sample) == 30 and set(sample) <= {it.id for it in bundle.items}
-        assert sample == [it.id for it in build(name).select("second30")]                         # 다시 만들어도 같다
+@pytest.mark.parametrize("name", ["g96", pytest.param("pointing_h", marks=needs_h)])
+def test_second_rater_subsets_are_seeded_30_row_samples(name):
+    bundle = build(name)
+    sample = [it.id for it in bundle.select("second30")]
+    assert len(sample) == 30 and set(sample) <= {it.id for it in bundle.items}
+    assert sample == [it.id for it in build(name).select("second30")]                             # 다시 만들어도 같다
 
 
 # ───────── 활동 판정 ─────────
@@ -145,8 +148,9 @@ def test_rag_reference_human_and_weighted_kappa_excludes_unknown():
     assert verdict["weighted_kappa"] is not None
 
 
-# ───────── 일정 짚기(H 이견 64) — 저장소 안 자료 ─────────
+# ───────── 일정 짚기(H 이견 64) — git 밖 원본(datasets/core/pointing/), 없으면 건너뛴다 ─────────
 
+@needs_h
 def test_pointing_h_has_64_disputes_with_schedule_and_numeric_choices(tmp_path):
     bundle = build("pointing_h")
     assert len(bundle.items) == 64
@@ -170,7 +174,7 @@ def head(n: int) -> str:
 
 @pytest.fixture
 def mx_root(tmp_path):
-    root = tmp_path / "datasets" / "travel" / "mx_testset"
+    root = tmp_path / "datasets" / "core" / "pointing" / "testset" / "requests_inside_chitchat_pairs_v1"
     root.mkdir(parents=True)
     tail = "\n\n이 질문이 가리키는 일정 항목 번호 하나를 item 에 넣어라."
     all_rows = [{"i": 1, "itin": 3, "prompt": head(5) + "고객 질문: 문장" + tail}, {"i": 2, "itin": 7, "prompt": head(6) + "고객 질문: 다른 문장" + tail}]
@@ -213,7 +217,7 @@ def test_mx_dispute_sheet_shows_schedule_but_not_model_answers(mx_root, tmp_path
 
 def test_mx_dispute_priority_subset_keeps_all_non_mx4_and_samples_mx4(tmp_path):
     from eval.human_review.adapters import pointing
-    root = tmp_path / "datasets" / "travel" / "mx_testset"
+    root = tmp_path / "datasets" / "core" / "pointing" / "testset" / "requests_inside_chitchat_pairs_v1"
     root.mkdir(parents=True)
     (root / "mx_all.json").write_text(json.dumps([{"i": 1, "itin": 0, "prompt": head(3) + "고객 질문: x\n\n끝"}]), encoding="utf-8")
     disputes = [{"k": 0, "cat": "MX4" if n < 100 else "MX1", "q": f"문장 {n}", "gen_item": None, "luna_item": 1, "src": "code"} for n in range(130)]

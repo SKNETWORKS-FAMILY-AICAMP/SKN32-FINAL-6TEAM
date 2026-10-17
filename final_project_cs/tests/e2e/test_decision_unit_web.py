@@ -65,6 +65,8 @@ class _Decider:
             talk = user.split("직전 대화:", 1)[1].split("화면에서 고른 일정:", 1)[0]
             target = self._alias(user, "성수 점심") if "성수 점심" in talk else "none"
             return {**none, "action": "answer_fact", "target_item": target, "fact": "phone"}
+        if "성수 점심 문 닫았대" in message:
+            return {**none, "action": "report_closed", "target_item": self._alias(user, "성수 점심")}
         if "점심 다른 데로 바꿔" in message:
             return {**none, "action": "apply_change", "target_item": self._alias(user, "성수 점심")}
         if "저녁 다른 데로 바꿔" in message:
@@ -461,3 +463,52 @@ def test_the_server_reads_a_named_place_as_near_that_place_not_the_current_locat
     body = _say(decided, "성수동 근처에 저녁 먹을 데 있어?", "near-reroute", at=NOON)
     assert body["decision"]["fact"] == "dining_near", body["decision"]
     assert "needs_location" not in body and "현재 위치를 알려 주시면" not in body["answer"], body["answer"]
+
+
+
+# ── 2026-10-16 요식 점검 장면 3 — 「○○ 문 닫았대」는 신고다: 먼저 물어봐줘면 묻는다(D-020) ─────────────
+def _open_proposals(api, trip_id):
+    from app.domains.travel_ops.components.planning.pending import PendingStore
+
+    with get_connection() as conn:
+        return [p for p in PendingStore(api["tenant"]).list(conn, trip_id) if p["status"] == "open"]
+
+
+def _course_keeper(api, trip_id, enabled):
+    """항로 지킴이 켜기 · 끄기 — 웹 입구(`POST …/guardian`)는 로그인 쿠키 세션만 받아 같은 함수를 직접 부른다."""
+    from uuid import UUID
+
+    from app.domains.travel_ops.components.planning import guardian
+
+    with get_connection() as conn, conn.transaction():
+        with conn.cursor() as cur:
+            cur.execute("SELECT customer_id FROM trips WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip_id))
+            (customer,) = cur.fetchone()
+        assert guardian.set_enabled(conn, tenant_id=api["tenant"], trip_id=UUID(str(trip_id)), customer_id=customer,
+                                    enabled=enabled, via="settings") is not None
+
+
+def test_a_closed_report_on_a_later_meal_asks_first_and_does_not_change_the_plan(decided, api):
+    """☆`[2026-10-16 화면 점검]` 항로 지킴이를 켜지 않은 여행에서 「하동관 명동본점 오늘 문 닫았대」 → 묻지 않고 바로 바꿨다.
+    지금 식사가 아닌 항목의 휴무 신고를 「다른 안으로」(고객이 고른 것 — 판정 문을 건너뜀)로 바꿔 보냈다. 신고는 「문제가 생겼다」라
+    어느 안으로 바꿀지 우리가 고른다 → 먼저 물어봐줘(설문 미응답 포함)면 **바꾸지 않고 묻는다**(D-020 · `test_desk_gate.py`)."""
+    trip_id = decided["trip"]["trip_id"]
+    _course_keeper(api, trip_id, False)                                     # 화면 점검 여행과 같이 꺼짐(시나리오 기본은 켬)
+    body = _say(decided, "성수 점심 문 닫았대", "du-closed-1")
+    assert body["decision"]["action"] == "report_closed", body
+    view = decided["client"].get(f"/v1/web/trips/{trip_id}", headers=_h(decided["key"])).json()
+    assert view["version"] == 1, (body, view["history"])                     # 일정은 그대로
+    assert "답이 없으면" in body["answer"], body                               # 고르게 묻는다
+    asked = _open_proposals(api, trip_id)
+    assert len(asked) == 1 and asked[0]["options_json"], asked
+
+
+def test_a_closed_report_on_a_later_meal_changes_right_away_when_the_course_keeper_is_on(decided, api):
+    """항로 지킴이를 켠 여행(15번 「비슷한 곳으로 바꿔줘」를 직접 고름)은 신고에도 바로 바꾼다 — 원인은 「고객 신고」로 남는다."""
+    trip_id = decided["trip"]["trip_id"]
+    _course_keeper(api, trip_id, True)
+    changed = _say(decided, "성수 점심 문 닫았대", "du-closed-2")
+    assert changed["decision"]["action"] == "report_closed", changed
+    view = decided["client"].get(f"/v1/web/trips/{trip_id}", headers=_h(decided["key"])).json()
+    assert view["version"] == 2, (changed, view["history"])
+    assert view["history"][-1]["causes"][0]["category"] == "customer_report", view["history"][-1]

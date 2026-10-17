@@ -41,11 +41,11 @@ def main():
 
     specs = [
         ('e4bqat_original_d3', 'D3', 'choice_counts.json',
-         'program/scripts/plan_qa_bench/results/empty_probe/all_prompts_d3.json', 'e4bbase_d3'),
+         'datasets/core/pointing/testset/synthetic_chitchat_plus_questions_v1/all_prompts_d3.json', 'e4bbase_d3'),
         ('e4bqat_original_mx', 'MX / user E', 'mx_counts.json',
-         'datasets/travel/mx_testset/mx_main_prompts.json', 'e4bbase_mx'),
+         'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json', 'e4bbase_mx'),
         ('e4bqat_oos1_h', 'H', 'h_counts.json',
-         'program/scripts/plan_qa_bench/results/hard_set/h_set_test_30_20261015_agree.json', 'e4bqat_original_h'),
+         'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json', 'e4bqat_original_h'),
     ]
     results, pairs = {}, {}
     # 역할 메타데이터 혼동을 먼저 기록한다. 원본 started.json은 수정하지 않는다.

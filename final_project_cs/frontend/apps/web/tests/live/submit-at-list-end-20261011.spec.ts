@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-import { mockServer, noHorizontalScroll } from "./helpers";
+import { galleryShot, mockServer, noHorizontalScroll } from "./helpers";
 import { openFinished } from "./plan-check-kit";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
@@ -26,9 +25,8 @@ for (const width of [375, 1280]) for (const reduced of [false, true]) {
     await expect(footer).not.toHaveAttribute("data-quiet", { timeout: 250 });
     if (reduced) await expect(footer).toHaveCSS("transform", "none");
     await noHorizontalScroll(page);
-    await mkdir(gallery, { recursive: true });
     await page.mouse.move(0, 0);
-    await page.screenshot({ path: `${gallery}/bottom-${width}-${reduced ? "reduce" : "normal"}.png` });
+    await galleryShot(page, `${gallery}/bottom-${width}-${reduced ? "reduce" : "normal"}.png`);
     const action = footer.getByRole("button", { name: "다시 제출", exact: true });
     await action.focus();
     await expect(action).toBeFocused();

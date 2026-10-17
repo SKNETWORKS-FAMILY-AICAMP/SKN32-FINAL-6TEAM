@@ -23,6 +23,11 @@ class Sources:
         return self.repo_root / "program" / "scripts" / "plan_qa_bench"
 
     @property
+    def pointing_testset(self) -> Path:
+        """일정 항목 짚기 시험 세트(H · MX 등) — 2026-10-16 datasets/core/pointing/testset/ 으로 모았다."""
+        return self.datasets_root / "core" / "pointing" / "testset"
+
+    @property
     def human_eval(self) -> Path:
         return self.repo_root / "program" / "scripts" / "rag_gate" / "human_eval"
 

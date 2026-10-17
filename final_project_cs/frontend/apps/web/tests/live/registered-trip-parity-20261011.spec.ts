@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mkdir } from "node:fs/promises";
-import { dayTab, mockServer, noHorizontalScroll, start, TRIP_ID, tripScreen } from "./helpers";
+import { dayTab, galleryShot, mockServer, noHorizontalScroll, start, TRIP_ID, tripScreen } from "./helpers";
 import { mapSettled } from "./plan-check-kit";
 
 test.beforeEach(async ({ page, request }) => {
@@ -35,9 +34,8 @@ for (const width of [375, 1280]) for (const reduced of [false, true]) {
     await expect(first.locator("[data-stop-end]")).toHaveCSS("font-weight", "400");
     if (reduced) expect(await first.locator("[data-stop-end]").evaluate((el) => parseFloat(getComputedStyle(el).transitionDuration))).toBeLessThanOrEqual(0.001);
     await noHorizontalScroll(page);
-    await mkdir("mockups/registered-trip-parity-2026-10-11-v1", { recursive: true });
     await page.mouse.move(0, 0);
-    await page.screenshot({ path: `mockups/registered-trip-parity-2026-10-11-v1/${width}-${reduced ? "reduce" : "normal"}.png` });
+    await galleryShot(page, `mockups/registered-trip-parity-2026-10-11-v1/${width}-${reduced ? "reduce" : "normal"}.png`);
     await page.locator("#stop-button-i-b").click();
     await expect(first.locator("[data-stop-end]")).toHaveCSS("opacity", "1");             // 다른 일정을 골라도 끝 시각은 남는다
     await page.getByRole("button", { name: "경복궁 관람 상세 보기", exact: true }).click();

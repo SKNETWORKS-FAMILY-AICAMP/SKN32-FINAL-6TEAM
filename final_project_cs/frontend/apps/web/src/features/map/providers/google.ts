@@ -1,3 +1,4 @@
+import { fitPadding } from "./fit-padding";
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { linePieces, lineStyle, linesKey, walkStyle } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_LABEL, meKey, staysKey } from "./me";
@@ -175,7 +176,7 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         } else {
           const bounds = new sdk.LatLngBounds();
           points.forEach(({ coordinates }) => bounds.extend(coordinates));
-          map.fitBounds(bounds, { top: 50 + (options.topInset ?? 0), right: 50, bottom: 50 + (options.bottomInset ?? 0), left: 50 });
+          map.fitBounds(bounds, fitPadding(container.clientWidth, container.clientHeight, options.topInset, options.bottomInset));
         }
       }
 

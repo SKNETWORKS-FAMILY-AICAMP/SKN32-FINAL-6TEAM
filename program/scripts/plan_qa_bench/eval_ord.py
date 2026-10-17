@@ -7,6 +7,7 @@ from slot_lookup import resolve
 from rule_slots import rule_slots
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 R = lambda f: os.path.join(HERE, 'results', f)
 J = lambda f: json.load(open(f, encoding='utf-8'))
 
@@ -32,7 +33,7 @@ def show(name, r, extra=''):
 
 
 def run(job):
-    st = J(os.path.join(HERE, 'fixtures', f'{job}.json'))['sets'][job]
+    st = J(fixture(f'{job}.json'))['sets'][job]
     qs, items = st['qs'], st['items']
     print(f"\n## {job} — {len(qs)}문제 (정답 null {sum(x['gold'] is None for x in qs)})")
     dj = jev_direct(job)

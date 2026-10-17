@@ -616,6 +616,17 @@ def build_reroute():
     return _call
 
 
+def wire_trip_scope() -> None:
+    """감시 · 안내 대상 좁히기만 꽂는다 — 게스트(로그인 안 한 웹 사용자)의 여행은 안내 · 감시 대상이 아니다(D-CS-011 §2).
+
+    ★`[2026-10-16]` 운영 앱(`ops_entrypoint`)도 부른다. 전에는 감시 프로그램만 꽂아서, 관리자 「재난 6종 시뮬레이션」 목록에 감시가 보지 않는
+      게스트 여행까지 나왔고 거기에 시험을 걸면 저장만 되고 알림이 영영 안 생겼다(사용자 보고: 「실제 알림으로 안 가고 적용이 안 된다」)."""
+    from app.domains.travel_ops.components.itinerary import trip_scope
+    from app.domains.travel_ops.modules.web_account.guest_policy import watch_scope_sql
+
+    trip_scope.register("web_account.guest", watch_scope_sql)
+
+
 def wire_optional_features() -> list[str]:
     """끌 수 있는 기능이 **자기 규칙을 끼움 자리에 꽂는 곳**. `[2026-10-06]` D-CS-013
 
@@ -626,10 +637,8 @@ def wire_optional_features() -> list[str]:
     꽂지 않으면 부품은 기본값으로 돈다(감시 대상 좁히기 없음 = 전부 감시).
     """
     from app.domains.travel_ops.components.itinerary import trip_scope
-    from app.domains.travel_ops.modules.web_account.guest_policy import not_guest_sql
 
-    # 게스트(로그인 안 한 웹 사용자)의 여행은 안내·감시 대상이 아니다 — D-CS-011 §2.
-    trip_scope.register("web_account.guest", not_guest_sql)
+    wire_trip_scope()
 
     # 운영자가 관리 화면에서 바꾼 값(채팅 해석 방식 등)을 읽는 자리. 표는 웹 제한값 기능이 들고 있다.
     from app.domains.travel_ops.components import settings_hook
@@ -637,12 +646,12 @@ def wire_optional_features() -> list[str]:
 
     settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
 
-    # ★`[2026-10-15 사용자 지시]` 관리 콘솔 「모델 경로」(local · ssh · api) — 채팅 해석 · 계획 읽기 · 번역은 부를 때마다,
+    # ★`[2026-10-15 · 10-16 사용자 지시]` 관리 콘솔 「모델 경로」 — 상황마다(채팅 · 일정 짚기 · 공지 확인) off(환경 파일 따름) · local · ssh · api. 채팅은 부를 때마다,
     #  일정 짚기 · 공지 확인은 주소를 부를 때마다 읽는다(재기동 없이 반영, 운영 설정 캐시만큼 늦을 수 있다). SSH 터널은 앱 밖 프로그램이 연다.
     from app.infrastructure import ollama_chat
 
     route_tenant = get_settings().tenant_id
-    ollama_chat.register_route_provider(lambda: settings_hook.model_route(route_tenant))
+    ollama_chat.register_route_provider(lambda purpose: settings_hook.model_route_choice(route_tenant, purpose))
 
     # 접수 읽기의 진행 알림을 화면이 읽는 모양(SSE)으로 포장하는 자리.
     from app.domains.travel_ops.components import progress_hook
@@ -660,13 +669,13 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.components.conversation import item_pointer
 
     route_settings = get_settings()
-    pointer = item_pointer.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings))
+    pointer = item_pointer.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings, "pointer"))
 
     # ★`[2026-10-13 사용자 지시]` 공지 「끝났나」 2차 확인 — 규칙이 「끝남」이라 한 공지를 가르친 모델이 한 번 더 본다. `.env` 에
     #  `ACOP_OLLAMA_NOTICE_MODEL` 이 있을 때만 꽂는다(없으면 규칙만). 켜고 끄기: 가드레일 `travel.notice_end.mode`(off · shadow · on).
     from app.domains.travel_ops.ports.data_sources import notice_end_model
 
-    notice_judge = notice_end_model.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings))
+    notice_judge = notice_end_model.register_from_settings(route_settings, base_url_for=lambda: ollama_chat.route_base_url(route_settings, "notice"))
     # `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 재난 문자를 DB 에 남긴다(관리자 웹앱 「걸러진 재난 문자」)
     from app.domains.travel_ops.components.watch import notice_exclusions
 
@@ -708,32 +717,43 @@ def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegi
     return connected
 
 
-def _dining_agent_shadow():
-    """요식 판정 에이전트 그림자 운행 — 가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 실행기를 만든다(기본 꺼짐 → None). `[2026-10-13]`
+def _dining_agent_judge():
+    """요식 판정 에이전트 — 가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐)일 때 실행기를 만든다. `[2026-10-13 · 2026-10-16]`
+    ★실행기는 `instances/dining/judge.run` — 판정을 접수 확인 줄에 합친다(화면 문장은 지금처럼 코드가 만든다).
+    ★모의 모델(`ACOP_LLM_PROVIDER=mock` — 시험 · CI)이면 만들지 않는다 — 가짜 키로 실제 모델을 부르지 않게.
 
     모델은 가드레일 `model` 로 고른다 — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
-    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(그림자는 없어도 되는 것이다 — 기동을 막지 않는다)."""
-    from app.core.settings import dining_agent_shadow, get_settings
+    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(없으면 규칙 검사 그대로 — 기동을 막지 않는다)."""
+    from app.core.settings import dining_agent_judge, get_settings
 
-    shadow_settings = dining_agent_shadow()
-    if shadow_settings is None:
+    judge_settings = dining_agent_judge()
+    if judge_settings is None:
         return None
     from functools import partial
 
-    from app.domains.travel_ops.instances.dining import shadow as dining_shadow
+    from app.domains.travel_ops.instances.dining import judge as dining_judge
     from app.infrastructure.llm.tool_chat import OllamaToolChat, OpenAIToolChat
 
     settings = get_settings()
-    kind, _, model = shadow_settings["model"].partition(":")
+    if getattr(settings, "llm_provider", "") == "mock":
+        return None
+    kind, _, model = judge_settings["model"].partition(":")
     if kind == "openai" and (settings.openai_api_key or "").strip():
         chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-6-luna")
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
         chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
     else:
-        logging.getLogger(__name__).warning("dining agent shadow enabled but model %s has no key/address — shadow is off",
-                                            shadow_settings["model"])
+        logging.getLogger(__name__).warning("dining agent judge enabled but model %s has no key/address — rule review only",
+                                            judge_settings["model"])
         return None
-    return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"])
+    # ★`[2026-10-16]` 원장이 모를 때 에이전트가 고를 바깥 조회 — 지도(카카오 `map_search`) · 실시간 영업(구글 `live_open_check`).
+    #   ☆전에는 기본 `DiningTools(connect)` 라 둘 다 None — 스위치를 켜도 바깥 조회는 늘 「모름」이었다(LLM 켜짐 점검).
+    #   키가 없으면 그 도구만 「모름」(어댑터 None). 호출 예산은 각 어댑터의 DB 예산 그대로다
+    from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
+
+    tools_factory = partial(DiningTools, kakao=build_kakao_local(), google=build_google_places())
+    return partial(dining_judge.run, chat=chat, model=judge_settings["model"], deadline_s=judge_settings["deadline_s"],
+                   tools_factory=tools_factory)
 
 
 def _dining_meal_picker():
@@ -762,7 +782,9 @@ def _dining_meal_picker():
         logging.getLogger(__name__).warning("dining meal_pick enabled but model %s has no key/address — rule pick only",
                                             pick_settings["model"])
         return None
-    return meal_pick.make_picker(chat)
+    # ★`[2026-10-16 사용자 결정]` 「흐름 한 칸」 — 규칙 1위는 그대로 두고 모델이 그날 흐름 · 취향으로 다른 안 하나를 고른다(고객이 고른다).
+    #   1위를 바꾸는 `make_picker` 는 평가용으로 남긴다(eval/runners/dining_alternatives)
+    return meal_pick.make_flow_picker(chat)
 
 
 def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> list[str]:
@@ -771,7 +793,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_ledger, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_alternatives, lodging_ledger, mobility_shapes, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -818,7 +840,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                planner_factory=dining_ledger_impl.PlannerLedger,
                                link_core_place=dining_ledger_impl.link_core_place_to,
                                closure_observation=dining_ledger_impl.closure_observation,
-                               agent_shadow=_dining_agent_shadow(),
+                               agent_judge=_dining_agent_judge(),
                                meal_picker=_dining_meal_picker())
 
         # 요식 — 확인 화면 「다른 식당」 후보(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
@@ -867,6 +889,18 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                 adopt=lodging_ledger_impl.adopt_option,
                                 item_key=lodging_ledger_impl.item_key,
                                 offers=lodging_ledger_impl.shown_offers)
+        # ★`[2026-10-16 사용자 결정]` 확인 화면의 「다른 숙소」 후보도 숙소 팀이 고른다 — 팀의 「바꿔 줘」 고르기(`team._fresh_picks`)를 그대로 쓴다.
+        #   숙소 비교는 바깥 소스 하루 한도를 쓰므로 낮은 우선순위 몫(`travel.candidates.lodging_source_share`)으로 **부를 때** 소스를 만든다(만드는 것은 I/O 없음)
+        from app.domains.travel_ops.instances.lodging import review_alternatives as lodging_review_alternatives
+
+        def _lodging_rank(**query):
+            from app.core.settings import get_guardrails, get_settings
+            from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+
+            share = float(get_guardrails().get("travel.candidates.lodging_source_share"))
+            return lodging_review_alternatives.rank(travel=build_travel_sources(get_settings(), low_priority_share=share), **query)
+
+        lodging_alternatives.register(rank=_lodging_rank)
     # 팀 정기 작업 — 활성 팀이 `instances/<팀>/jobs.py` 에 `JOBS` 를 두면 등록한다. 작업 실행기가 시간대 안에서 부른다.
     #   `[2026-10-13]` 활동 → 코어 전달 사항 2번: 전에는 실행기에 작업이 고정돼 있어 팀 배치마다 코어를 고쳐야 했다.
     from app.domains.travel_ops.components.team_hooks import scheduled_jobs
@@ -893,7 +927,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
 
     names = {"mobility": ("legs",), "dining": ("dining_ledger", "dining_alternatives"), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
-    hook_names = {**names, "lodging": ("lodging_ledger",)}
+    hook_names = {**names, "lodging": ("lodging_ledger", "lodging_alternatives")}
     connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]
     connected += [f"watch:{kind}" for kind in sorted(active_ids & names.keys())]
     for declaration in (config.teams if config else []):

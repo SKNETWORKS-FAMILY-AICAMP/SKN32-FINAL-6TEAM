@@ -29,6 +29,33 @@ function intake(status: IntakeView["status"], stage: string, extra: Partial<Revi
 }
 
 describe("the finished check, from the server's review", () => {
+  it("connects breakfast cards to the shared stay without inventing check-in or nights", () => {
+    const common = { id: "0-0", members: ["0-0", "0-2"], place: place("공통 숙소") };
+    const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: true,
+      needs: { items: 0, moves: 0, total: 0 }, items: [
+        item({ title: "호텔", kind: "dining", lodging_group: common }),
+        item({ id: "0-2", date: "2026-10-02", day: 2, title: "호텔", kind: "dining", lodging_group: common }),
+      ], moves: [] } });
+    const result = reviewResultOf(next, readingOf(next))!;
+    expect(result.items.map((row) => row.lodgingGroup)).toEqual([
+      { ...common, place: "공통 숙소" }, { ...common, place: "공통 숙소" },
+    ]);
+    expect(result.items.every((row) => row.kind === "dining" && !row.endDate)).toBe(true);
+  });
+  it.each([
+    { parts: { content_type: "32", lodging_meal: true }, place: null },
+    { parts: null, place: { ...place("효자스테이"), kind: "dining", category: "숙소 안 식사" } },
+    { parts: null, place: { ...place("호텔"), content_type_id: "32" } },
+  ])("keeps breakfast as dining while displaying its lodging icon", (patch) => {
+    const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: false,
+      needs: { items: 1, moves: 0, total: 1 }, items: [item({ ...patch, title: "호텔", kind: "dining" })], moves: [] } });
+    expect(reviewResultOf(next, readingOf(next))!.items[0]).toMatchObject({ kind: "dining", displayKind: "lodging" });
+  });
+  it("retains the dining icon for an ordinary restaurant", () => {
+    const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: true,
+      needs: { items: 0, moves: 0, total: 0 }, items: [item({ kind: "dining", place: place("시장 식당") })], moves: [] } });
+    expect(reviewResultOf(next, readingOf(next))!.items[0].displayKind).toBeUndefined();
+  });
   const review = {
     revision: 3, built_at: "", engine: "timetable" as const, ready: false, needs: { items: 1, moves: 0, total: 1 },
     items: [item({}), item({ id: "0-1", index: 1, title: "광장시장", starts_at: "12:00", ends_at: "13:00", status: "review", locked: true, place: place("광장시장"),
@@ -182,5 +209,48 @@ describe("candidates and photos", () => {
     expect(safePhotoUrl("javascript:alert(1)")).toBeNull();
     expect(safePhotoUrl("data:text/html,x")).toBeNull();
     expect(safePhotoUrl(null)).toBeNull();
+  });
+});
+
+describe("D-025 「우리가 채움」 — the server filled in first", () => {
+  const filledIntake = (extra: Partial<ReviewedIntakeView>) => intake("review", "review", {
+    review: { items: [item({ id: "0-0" }), item({ id: "0-1", title: "숙소 근처", status: "adjusted" })], moves: [] } as unknown as ReviewedIntakeView["review"],
+    ...extra,
+  });
+
+  it("puts one ✎ line with the reason first on the stop the server filled, and nowhere else", () => {
+    const next = filledIntake({ prefill: { filled: [{ item: "0-1", title: "근처 식당", owner: "dining_team", owner_label: "식당 팀",
+      reason: "계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요", gap: "meal_place", new: false }], questions: [], kept: [] } });
+    const view = reviewResultOf(next, readingOf(next))!;
+    const [plain, filled] = view.items;
+    expect(plain.checks.some((check) => check.text.startsWith("우리가 채움"))).toBe(false);
+    expect(filled.checks[0]).toEqual({ kind: "place", result: "filled", text: "우리가 채움 · 계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요" });
+    expect(view.prefill).toEqual({ filledCount: 1, questions: [], understood: [], handoff: [] });
+  });
+
+  it("shows questions only the traveller knows and the words read as a move, a condition or a preference", () => {
+    const next = filledIntake({ prefill: { filled: [], kept: [], questions: [{ kind: "lodging_name", question: "묵는 숙소 이름을 알려 주세요", quote: null },
+      { kind: "lodging_name", question: "묵는 숙소 이름을 알려 주세요", quote: null }] } });
+    next.sources[0].understanding = { moves: [{ mode: "taxi", scope: "segment", from: "경복궁", to: "광장시장", quote: "택시로 이동할 거야" }],
+      conditions: [{ code: "if_rain_indoor", quote: "비 오면 실내" }], preferences: [{ code: "kid_friendly", quote: "애들 데리고" }] };
+    expect(reviewResultOf(next, readingOf(next))!.prefill).toEqual({ filledCount: 0, questions: ["묵는 숙소 이름을 알려 주세요"],
+      understood: ["택시로 이동할 거야", "비 오면 실내", "애들 데리고"], handoff: [] });
+  });
+
+  it("lists what is handed to an owner — ours as 「우리가 채움」, the traveller's own answer kept (D-025 후속)", () => {
+    const next = filledIntake({});
+    next.check = { ready: true, problems: [], filled: [], items: 2, title: "t", plan: next.check?.plan as never, handoff: [
+      { key: "survey.pace", label: "일정 여유", owner: "일정 짜기", value: "relaxed", text: "여유 있게", codes: ["slow_pace"], quotes: ["천천히"], status: "filled" },
+      { key: "survey.priority_details.mobility", label: "이동 수단", owner: "이동 판정 · 일정 짜기", value: ["taxi"], text: "택시", codes: ["prefer_taxi"],
+        quotes: ["택시로"], status: "customer" },
+      { key: "x", label: "빈 값", owner: "누구", value: null, text: "", codes: [], quotes: [], status: "filled" }] };
+    expect(reviewResultOf(next, readingOf(next))!.prefill?.handoff).toEqual([
+      { label: "일정 여유", text: "여유 있게", owner: "일정 짜기", mine: true },
+      { label: "이동 수단", text: "택시", owner: "이동 판정 · 일정 짜기", mine: false }]);
+  });
+
+  it("says nothing when an older server sends no prefill", () => {
+    const next = filledIntake({});
+    expect(reviewResultOf(next, readingOf(next))!.prefill).toBeNull();
   });
 });

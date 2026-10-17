@@ -3,8 +3,9 @@ import { agree, mockServer, registerStubTrip, start, TRIP_ID, useKorean } from "
 
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); await agree(page); });
 
-test("메뉴는 프로필 칸·여행 목록 보기·여행 취향 설문·문의함·설정 순서이고, Tab 순환과 Esc·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
+test("메뉴는 프로필 칸·여행 목록 보기·여행 취향 설문·문의함·공지사항·설정 순서이고, Tab 순환과 Esc·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
   // `[2026-10-13 회의 확정 — 메뉴 = 마이페이지]` 한 판: 프로필 칸(이미지 · 이름 · 로그인 칩 · 단추 하나 — 게스트는 「로그인 · 가입」) 다음 네 줄.
+  // `[2026-10-17 사용자 결정 — ST4F-604]` 문의함 아래에 「공지사항」 줄(게시판 · 보조 문구는 게시 중인 공지 수)을 더해 다섯 줄.
   // 앞의 세 줄은 전과 같은 이름이고(`[2026-10-13 사용자 지시]`) 줄마다 보조 문구가 있다. 언어 · 테마 · 일정 목록 크기 · 애니메이션은 설정 화면으로 옮겼다.
   await mockServer(request).scenario({ social: "off" });
   await page.goto("/trips/new");
@@ -15,14 +16,16 @@ test("메뉴는 프로필 칸·여행 목록 보기·여행 취향 설문·문�
   const trips = menu.getByRole("link", { name: /^여행 목록 보기/ });
   const survey = menu.getByRole("button", { name: /^여행 취향 설문/ });
   const support = menu.getByRole("link", { name: /^문의함/ });
+  const notices = menu.getByRole("link", { name: /^공지사항/ });
   const settings = menu.getByRole("link", { name: /^설정/ });
   const close = menu.getByRole("button", { name: "메뉴 닫기" });
-  const tops = await Promise.all([signIn, trips, survey, support, settings].map(async (item) => (await item.boundingBox())!.y));
+  const tops = await Promise.all([signIn, trips, survey, support, notices, settings].map(async (item) => (await item.boundingBox())!.y));
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
-  // One board holds exactly the profile cell and the four rows; the app settings are not in the menu any more.
+  // One board holds exactly the profile cell and the five rows; the app settings are not in the menu any more.
   expect(await trips.evaluate((link) => {
     const board = link.parentElement!;
-    return board.children.length === 5 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('a[href="/support"]')) && Boolean(board.querySelector('a[href="/mypage"]'))
+    return board.children.length === 6 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('a[href="/support"]')) && Boolean(board.querySelector('a[href="/notices"]'))
+      && Boolean(board.querySelector('a[href="/mypage"]'))
       && !board.querySelector('[role="switch"]') && !board.textContent!.includes("LANGUAGE");
   })).toBe(true);
   await expect(menu).toContainText("게스트");
@@ -30,7 +33,7 @@ test("메뉴는 프로필 칸·여행 목록 보기·여행 취향 설문·문�
   await expect(support).toContainText("보낸 문의와 답변");
 
   await expect(signIn).toBeFocused();
-  for (const next of [trips, survey, support, settings, close, signIn]) {
+  for (const next of [trips, survey, support, notices, settings, close, signIn]) {
     await page.keyboard.press("Tab");
     await expect(next).toBeFocused();
   }
@@ -187,6 +190,7 @@ test("등록 여행 메뉴의 모든 항목에 Tab으로 닿고 항로 지킴이
     menu.getByRole("link", { name: /^여행 목록 보기/ }),
     menu.getByRole("button", { name: /^여행 취향 설문/ }),
     menu.getByRole("link", { name: /^문의함/ }),
+    menu.getByRole("link", { name: /^공지사항/ }),
     menu.getByRole("link", { name: /^설정/ }),
     keeper, close, first,                                                       // 마지막 줄 다음은 머리(항로 지킴이 · 닫기), 그다음 다시 처음
   ]) { await page.keyboard.press("Tab"); await expect(next).toBeFocused(); }

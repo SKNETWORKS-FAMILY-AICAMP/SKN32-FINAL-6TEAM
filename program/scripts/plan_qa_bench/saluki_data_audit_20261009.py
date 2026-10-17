@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[3]
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 BENCH = ROOT / 'program/scripts/plan_qa_bench'
 
 def normalize(text):
@@ -24,10 +25,10 @@ def rows(path):
 
 def audit(train_path):
     train = rows(train_path)
-    fixtures = [(name, BENCH / 'results/empty_probe' / filename) for name, filename in
+    fixtures = [(name, Path(fixture(filename))) for name, filename in
                 [('D', 'all_prompts.json'), ('D2', 'all_prompts_d2.json'), ('D3', 'all_prompts_d3.json')]]
-    fixtures += [('H', BENCH / 'results/hard_set/h_set_test_30_20261015_agree.json'),
-                 ('E_pair', ROOT / 'datasets/travel/mx_testset/mx_main_prompts.json')]
+    fixtures += [('H', ROOT / 'datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json'),
+                 ('E_pair', ROOT / 'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json')]
     errors = []
     for i, row in enumerate(train):
         try:
@@ -47,11 +48,11 @@ def audit(train_path):
               'duplicate_prompt_excess': sum(n - 1 for n in pcounts.values()),
               'duplicate_question_excess': sum(n - 1 for n in qcounts.values()), 'fixtures': []}
     for name, path in fixtures:
-        fixture = rows(path)
-        queries = [question(row) for row in fixture]
-        result['fixtures'].append({'set': name, 'path': str(path.relative_to(ROOT)), 'rows': len(fixture),
+        fixture_rows = rows(path)
+        queries = [question(row) for row in fixture_rows]
+        result['fixtures'].append({'set': name, 'path': str(path.relative_to(ROOT)), 'rows': len(fixture_rows),
             'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
-            'exact_prompt_overlap_rows': sum(normalize(row['prompt']) in pcounts for row in fixture),
+            'exact_prompt_overlap_rows': sum(normalize(row['prompt']) in pcounts for row in fixture_rows),
             'exact_question_overlap_rows': sum(q is not None and normalize(q) in qcounts for q in queries),
             'unparsed_question_rows': sum(q is None for q in queries)})
     result['independent_holdout_verified'] = False

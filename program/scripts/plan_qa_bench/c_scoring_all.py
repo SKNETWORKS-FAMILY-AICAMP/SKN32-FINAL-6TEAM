@@ -7,10 +7,11 @@ import csv, json, math, os, sys
 from collections import Counter, defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+from testsets import fixture  # 시험 세트 자리 — datasets/core/pointing (2026-10-16)
 SETS = ['mix8', 'mix9', 'mix10', 'mix11', 'mix12']
 sys.stdout.reconfigure(encoding='utf-8')
-GS = json.load(open(os.path.join(HERE, 'fixtures/gold_sets.json'), encoding='utf-8'))
-FX = {s: json.load(open(os.path.join(HERE, f'fixtures/{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
+GS = json.load(open(fixture('gold_sets.json'), encoding='utf-8'))
+FX = {s: json.load(open(fixture(f'{s}.json'), encoding='utf-8'))['sets'][s] for s in SETS}
 KEYS = [(s, i) for s in SETS for i in range(len(FX[s]['qs']))]
 GSET = {(s, i): frozenset(GS[s][str(i)]) for s, i in KEYS}
 GOLD = {(s, i): FX[s]['qs'][i]['gold'] for s, i in KEYS}

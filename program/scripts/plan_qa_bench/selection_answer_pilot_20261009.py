@@ -137,7 +137,7 @@ def validate():
     known = set()
     reference_files = [ROOT / "datasets/travel/train_oos/train_oos.jsonl"]
     reference_files += [ROOT / "program/scripts/plan_qa_bench/results/empty_probe" / f"all_prompts{s}.json" for s in ["", "_d2", "_d3"]]
-    reference_files += [ROOT / "program/scripts/plan_qa_bench/results/hard_set/h_set_test_30_20261015_agree.json", ROOT / "datasets/travel/mx_testset/mx_main_prompts.json"]
+    reference_files += [ROOT / "datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json", ROOT / "datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json"]
     scanned = []
     for p in reference_files:
         assert p.exists(), p

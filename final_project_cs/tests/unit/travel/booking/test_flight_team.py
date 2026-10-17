@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from types import SimpleNamespace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -12,8 +12,8 @@ import pytest
 
 from app.core.contracts import ContextPack, TeamTask, ToolNotAllowed
 from app.domains.travel_ops.components.booking.offers import search_flights
-from app.domains.travel_ops.instances.flight import FlightTeam
-from app.domains.travel_ops.instances.flight.interpret import InterpretationInvalid, needs, parse
+from app.domains.travel_ops.instances.booking import FlightTeam
+from app.domains.travel_ops.instances.booking.interpret import InterpretationInvalid, needs, parse
 from app.tools.read_tools import ALLOWED_PROMPT_KEYS
 
 TODAY = datetime.now(ZoneInfo("Asia/Seoul")).date()
@@ -83,7 +83,53 @@ class FakeTools:
         return value(dict(arguments)) if callable(value) else value
 
 
-def _run(reply, tools=None, *, text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도", capability="flight.assist", llm=True, state=None):
+_BAND_KO = {"dawn": "새벽", "morning": "오전", "afternoon": "오후", "evening": "저녁"}
+
+
+def _say(reply):
+    """`[2026-10-14]` 해석이 규칙(모델 없음)이 되면서 시험의 「모델 답」(reply)을 **고객 문장**으로 바꾼다 — 규칙이 같은 구조를 뽑는다.
+    옛 시험은 reply 로 해석 결과를 지정했으므로, 그 값을 말하는 문장을 만든다."""
+    if not isinstance(reply, dict):
+        return "비행기 알아봐줘"
+    if reply.get("task") == "status":
+        return "내 항공권 확정됐어?"
+    if reply.get("task") == "unclear":
+        return "비행기 말고 숙소 알아봐줘"
+    parts = []
+    if reply.get("depart_date"):
+        day = date.fromisoformat(reply["depart_date"])
+        parts.append(f"{day.month}월 {day.day}일" if day.year >= TODAY.year else f"{day.year}년 {day.month}월 {day.day}일")
+    origin, destination = reply.get("origin"), reply.get("destination")
+    parts.append(f"{origin}→{destination}" if origin and destination else f"{origin}에서" if origin else f"{destination} 가는" if destination else "")
+    parts.append("비행기")
+    if reply.get("return_date"):
+        back = date.fromisoformat(reply["return_date"])
+        parts.append(f"{back.month}월 {back.day}일에 돌아오는")
+    elif reply.get("depart_date"):
+        parts.append("편도")
+    for key, word in (("adults", "성인"), ("children", "아이"), ("infants", "유아")):
+        if reply.get(key) is not None:
+            parts.append(f"{word} {reply[key]}")
+    if reply.get("cabin"):
+        parts.append({"BUSINESS": "비즈니스", "FIRST": "퍼스트", "ECONOMY": "이코노미"}[reply["cabin"]])
+    if reply.get("direct_only") is True:
+        parts.append("직항만")
+    elif reply.get("direct_only") is False:
+        parts.append("경유도 괜찮아")
+    if reply.get("depart_times"):
+        parts.append(reply.get("depart_times_text") or (" · ".join(_BAND_KO[b] for b in reply["depart_times"]) + " 출발로"))
+    if reply.get("return_times"):
+        parts.append("오는 날은 " + (reply.get("return_times_text") or " · ".join(_BAND_KO[b] for b in reply["return_times"])))
+    if reply.get("max_price"):
+        price = reply["max_price"]
+        parts.append(f"1인 {price}만원 이하" if price < 1000 else f"1인 {price // 10000}만원 이하")
+    for wish in reply.get("other_requests") or []:
+        parts.append(wish)
+    return " ".join(part for part in parts if part)
+
+
+def _run(reply, tools=None, *, text=None, capability="flight.assist", llm=True, state=None):
+    text = _say(reply) if text is None else text
     model, toolbox = FakeLLM(reply), FakeTools(tools or {})
     case_id = uuid4()
     pack = ContextPack(pack_id=uuid4(), case_id=case_id, team_id="flight", tenant_id="t", knowledge_scope=["flight"],
@@ -96,9 +142,7 @@ def _run(reply, tools=None, *, text="다음 달 6일 타이베이에서 인천 �
 
 def test_search_calls_the_model_once_and_both_sources_once():
     result, llm, tools = _run(SEARCH, {"read.flight_search": FLIGHTS})
-    assert len(llm.calls) == 1 and llm.calls[0][0] == "flight.interpret"
-    context = llm.calls[0][2]
-    assert context["today"] == TODAY.isoformat() and len(context["calendar"]) == 70 and "trip" not in context, "달력을 준다(2026-10-10)"
+    assert llm.calls == [], "`[2026-10-14]` 예약 모듈 — 문장 해석은 규칙(interpret_rules), 모델을 부르지 않는다"
     wanted = {"origin": "TPE", "destination": "ICN", "depart_date": GO, "return_date": None, "domestic": False,
               "direct_only": True, "cabin": None, "max_results": 100, "adults": 2, "children": None, "infants": None}
     assert tools.calls == [("read.booking_search_flights", wanted)], "팀은 booking 도구 하나만 부른다"
@@ -116,7 +160,7 @@ def test_search_calls_the_model_once_and_both_sources_once():
     assert "TW727 (1시간 15분)" in result.answer, "국내선은 경유 칸이 없어 적지 않는다"
     assert "   · 마이리얼트립 64,000원\n" in result.answer, "국내선 편 줄에는 링크를 붙이지 않는다"
     assert "이 노선 · 날짜의 검색 결과 페이지(위 편을 목록에서 고르시면 됩니다): https://flights.myrealtrip.com/air/b2c/x" in result.answer
-    assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.booking_search_flights"]
+    assert [item.source_id for item in result.evidence] == ["flight.interpret_rules", "read.booking_search_flights"]
     assert result.evidence[-1].value["sources"]["ignav"] == {"status": "failed"}
 
 
@@ -146,10 +190,10 @@ def test_the_same_flight_from_both_sources_is_shown_once_with_both_prices():
     assert [offer["source"] for offer in shown[1]["offers"]] == ["ignav", "myrealtrip"]
     assert result.decisions[0]["both"] == [{"flight": "7C1501", "depart": "13:10", "myrealtrip": 302000, "ignav": 289000.0}], \
         "두 소스가 다 판 편만, 소스별 최저가로"
-    assert [item.source_id for item in result.evidence] == ["flight.interpret", "read.booking_search_flights"]
+    assert [item.source_id for item in result.evidence] == ["flight.interpret_rules", "read.booking_search_flights"]
 
 
-TEXT_MORNING = "다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도 오전 출발로"
+TEXT_MORNING = "다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 2명 편도 직항만 오전 출발로"
 
 
 def test_a_time_of_day_the_customer_said_keeps_only_those_flights():
@@ -165,24 +209,24 @@ def test_several_times_of_day_show_the_cheapest_in_each_of_them():
     # `[2026-10-11]` 서버가 근거에 없는 시간대를 빼므로(flight.interpret.settle_years) 근거도 두 시간대를 말해야 한다
     result, _, _ = _run({**SEARCH, "depart_times": ["morning", "evening"], "depart_times_text": "오전이나 저녁 출발로"},
                         {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV},
-                        text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 9일에 오는 편도 오전이나 저녁 출발로")
+                        text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 2명 편도 직항만 오전이나 저녁 출발로")
     assert "오전 · 저녁 출발 시간대마다 가장 싼 편을 보여 드립니다." in result.answer
     assert [option["band"] for option in result.decisions[0]["shown"]] == ["morning", "evening"], "오후는 고객이 빼지 않았어도 말한 것만"
     assert "1. [오전 최저가] 에바항공" in result.answer and "2. [저녁 최저가 · 전체 최저가] 티웨이항공" in result.answer
 
 
 def test_a_time_of_day_with_nothing_found_shows_the_other_bands_and_says_so():
-    result, _, _ = _run({**SEARCH, "depart_times": ["dawn"], "depart_times_text": "오전 출발로"},
-                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=TEXT_MORNING)
+    result, _, _ = _run({**SEARCH, "depart_times": ["dawn"], "depart_times_text": "새벽 출발로"},
+                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=TEXT_MORNING.replace("오전 출발로", "새벽 출발로"))
     assert "새벽 출발 편이 없어, 다른 출발 시간대마다 가장 싼 편을 보여 드립니다" in result.answer
     assert [option["band"] for option in result.decisions[0]["shown"]] == ["morning", "afternoon", "evening"]
     assert result.decisions[0]["fallback"] is True and "받은 결과에 새벽" not in result.answer
 
 
-def test_a_time_of_day_not_in_the_message_is_cleared():
-    result, _, _ = _run({**SEARCH, "depart_times": ["morning"], "depart_times_text": "오전"},
-                        {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV})
-    assert result.decisions[0]["ungrounded"] == ["depart_times"]
+def test_a_time_of_day_not_in_the_message_is_not_invented():
+    """`[2026-10-14]` 규칙은 문장에 없는 시간대를 만들지 않는다(모델 때는 근거 없는 시간대를 서버가 지웠다)."""
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV})
+    assert result.decisions[0]["ungrounded"] == []
     assert result.decisions[0]["times"] is None and "출발 시간대마다 가장 싼 편을" in result.answer
 
 
@@ -321,7 +365,7 @@ def test_missing_values_are_asked_back_without_any_search():
     reply = {**SEARCH, "origin": None, "depart_date": None, "adults": None, "domestic": None,
              "missing": ["origin", "depart_date", "adults"], "question": "어디서, 언제, 몇 분이 출발하시나요?"}
     result, _, tools = _run(reply)
-    assert tools.calls == [] and result.answer == "어디서, 언제, 몇 분이 출발하시나요?"
+    assert tools.calls == [] and result.answer == "출발지 · 출발 날짜 · 성인 인원을 알려 주시면 이어서 찾아 드리겠습니다."
     assert result.decisions[0]["needs"] == ["origin", "depart_date", "adults"]
 
 
@@ -335,42 +379,49 @@ def test_the_server_recounts_what_is_missing():
     assert result.decisions[0]["needs"] == ["destination"]
     early = _NEXT.replace(day=5).isoformat()          # 떠나는 날(6일)보다 앞
     result, _, _ = _run({**SEARCH, "return_date": early, "return_date_text": "5일에 오는"},
-                        text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘, 5일에 오는")
+                        text="다음 달 6일 타이베이에서 인천 가는 비행기 알아봐줘 2명, 5일에 오는")
     assert result.decisions[0]["needs"] == ["return_date"]
 
 
 def test_no_flights_and_unreadable_search_are_different():
     result, _, _ = _run(SEARCH, {"read.flight_search": {**FLIGHTS, "flights": [], "total": 0}})
-    assert result.outcome == "completed" and "찾은 항공편이 없습니다" in result.answer
+    # `[10-15 검수 · GPT 검토 #10]` 다른 소스를 확인하지 못했으면 「없습니다」가 아니라 「받은 결과에는 없었다」
+    assert result.outcome == "completed" and "받은 결과에는 항공편이 없었습니다" in result.answer and "확인하지 못했습니다" in result.answer
+    empty = {"flights": [], "source": "x"}
+    result, _, _ = _run(SEARCH, {"read.flight_search": {**FLIGHTS, "flights": [], "total": 0},
+                                 "read.flight_offers": empty, "read.flight_google": empty})
+    assert "찾은 항공편이 없습니다" in result.answer and result.decisions[0]["found"] == 0
     result, _, _ = _run(SEARCH, {"read.flight_search": None})
     assert (result.outcome, result.failure_code) == ("escalated", "unknown_항공편 검색 결과")
 
 
-@pytest.mark.parametrize("reply,code", [
-    ({"task": "book"}, "interpretation_invalid"),
-    ({**SEARCH, "origin": "타이베이"}, "interpretation_invalid"),
-    ({**SEARCH, "domestic": None}, "interpretation_invalid"),
-    ({**SEARCH, "cabin": "PREMIUM"}, "interpretation_invalid"),
-    (RuntimeError("no active prompt registered for flight.interpret"), "interpretation_failed"),
+@pytest.mark.parametrize("text,needs", [
+    ("비행기 예매 좀", ["origin", "destination", "depart_date", "adults"]),
+    ("다음 주에 어디든 가고 싶어", ["origin", "destination", "depart_date", "adults"]),
+    ("11월 6일 비행기 2명", ["origin", "destination"]),
 ])
-def test_a_bad_or_failed_interpretation_is_not_repaired(reply, code):
-    result, _, tools = _run(reply)
-    assert (result.outcome, result.failure_code, tools.calls) == ("escalated", code, [])
+def test_what_the_rules_cannot_read_is_asked_back_never_invented(text, needs):
+    """`[2026-10-14]` 규칙 해석은 못 뽑은 칸을 비워 두고 되묻는다 — 지어내지도, 사람에게 넘기지도 않는다(모델 때의 invalid · failed 가 없다)."""
+    result, _, tools = _run({"task": "unclear"}, text=text)
+    assert (result.outcome, tools.calls, result.decisions[0]["needs"]) == ("completed", [], needs)
 
 
 def test_without_a_model_and_other_branches():
-    assert _run(SEARCH, llm=False)[0].failure_code == "interpreter_missing"
+    assert _run(SEARCH, {"read.flight_search": FLIGHTS}, llm=False)[0].outcome == "completed", "`[2026-10-14]` 모델이 없어도 돈다(규칙)"
     result, _, tools = _run({"task": "unclear"})
     assert tools.calls == [] and result.decisions[0]["needs"] == ["task"]
     result, llm, tools = _run(SEARCH, {"read.booking": {"booking_id": "b1"}}, capability="flight.status")
     assert llm.calls == [] and [c[0] for c in tools.calls] == ["read.booking"] and "잠긴 예약" in result.answer
 
 
-def test_a_trip_on_the_case_is_summarised_for_the_model():
+def test_a_trip_on_the_case_fills_the_date_and_the_party():
+    """`[2026-10-14]` 「이번 여행」 — 규칙이 여행 첫날 · 인원을 쓴다(근거 `trip`). 공항은 모르니 되묻는다."""
     view = {"trip": {"party_size": 2}, "items": [{"title": "경복궁", "starts_at": "2026-11-06T10:00:00+09:00"}]}
-    _, llm, tools = _run({"task": "unclear"}, {"read.itinerary": view}, state={"subject_ref": {"kind": "trip", "id": "T1"}})
-    assert tools.calls[0] == ("read.itinerary", {"trip_id": "T1"})
-    assert llm.calls[0][2]["trip"] == {"party_size": 2, "first_day": "2026-11-06", "last_day": "2026-11-06", "places": ["경복궁"]}
+    result, llm, tools = _run({"task": "unclear"}, {"read.itinerary": view}, text="이번 여행 갈 때 비행기 찾아줘",
+                              state={"subject_ref": {"kind": "trip", "id": "T1"}})
+    assert tools.calls[0] == ("read.itinerary", {"trip_id": "T1"}) and llm.calls == []
+    found = result.decisions[0]["interpretation"]
+    assert (found["depart_date"], found["adults"], result.decisions[0]["needs"]) == ("2026-11-06", 2, ["origin", "destination"])
 
 
 def test_parse_needs_and_registration():
@@ -408,9 +459,10 @@ def test_a_date_without_a_year_gets_the_year_from_today():
     assert result.decisions[0]["year_fixed"] == ["depart_date"] and tools.calls[0][1]["depart_date"] == fixed
 
 
-def test_an_ungrounded_flight_date_is_cleared():
-    result, _, tools = _run({**SEARCH, "depart_date_text": "내일"}, text="타이베이에서 인천 가는 비행기 2명")
-    assert tools.calls == [] and result.decisions[0]["ungrounded"] == ["depart_date"]
+def test_a_date_the_customer_did_not_say_is_not_invented():
+    """`[2026-10-14]` 규칙 해석은 문장에 없는 날짜를 만들지 않는다(모델 때는 「내일」을 지어내 서버가 지웠다)."""
+    result, _, tools = _run({"task": "unclear"}, text="타이베이에서 인천 가는 비행기 2명")
+    assert tools.calls == [] and result.decisions[0]["ungrounded"] == []
     assert result.decisions[0]["needs"] == ["depart_date"]
 
 
@@ -427,8 +479,8 @@ def test_a_per_person_price_cap_keeps_only_flights_under_it_and_says_how_it_coun
 
 
 def test_return_times_pick_the_return_leg_band():
-    from app.domains.travel_ops.instances.flight.interpret import parse
-    from app.domains.travel_ops.instances.flight.team import _apply_limits
+    from app.domains.travel_ops.instances.booking.interpret import parse
+    from app.domains.travel_ops.instances.booking.team import _apply_limits
 
     def option(back_time, price):
         return {"legs": [{**LEG}, {**LEG, "origin": "ICN", "destination": "TPE", "departTime": back_time}], "best": price}
@@ -573,7 +625,7 @@ def test_choosing_rechecks_the_price_and_says_it_is_the_same_or_changed():
 
 def test_a_cheaper_seller_on_recheck_is_said_as_a_seller_change_not_a_price_change():
     """☆10-12 18:41 playdata — 같은 편인데 고를 때 다른 판매처(Ignav)가 더 싸게 들어왔다. 값이 「바뀌었다」고 하지 않고 판매처를 적는다."""
-    from app.domains.travel_ops.instances.flight.team import _price_note
+    from app.domains.travel_ops.instances.booking.team import _price_note
 
     note = _price_note({"status": "changed", "before": 150700, "now": 143616,
                         "seller_before": "마이리얼트립", "seller_now": "Gotogate(여행사)"})
@@ -607,7 +659,7 @@ def test_change_again_skips_flights_the_ledger_says_were_shown():
 
 
 def test_new_flights_near_the_original_departure_come_first_then_the_rest_by_price():
-    from app.domains.travel_ops.instances.flight.team import _fresh_flights
+    from app.domains.travel_ops.instances.booking.team import _fresh_flights
 
     def flight(clock, price):
         return {"airline": "A", "legs": [{**LEG, "departTime": clock, "flightNumber": clock}], "best": price}
@@ -623,7 +675,7 @@ def test_new_flights_near_the_original_departure_come_first_then_the_rest_by_pri
 
 def test_the_booking_link_skips_a_results_page_and_says_why():
     """`[2026-10-12]` ☆이스타 편 — 가장 싼 판매처가 구글 항공권(결과 페이지)이면 그 편을 바로 고를 수 있는 다음 판매처 링크를 쓴다."""
-    from app.domains.travel_ops.instances.flight.team import _booking_note, _flight_option
+    from app.domains.travel_ops.instances.booking.team import _booking_note, _flight_option
 
     item = SimpleNamespace(starts_at=datetime.fromisoformat(f"{GO}T10:00:00+09:00"))
     option = {"airline": "이스타항공", "legs": [{**LEG, "flightNumber": "ZE607"}], "best": 300000,
@@ -683,3 +735,95 @@ def test_a_non_flight_item_or_a_missing_airport_is_not_guessed():
     result, _, tools = _legrun(plan)
     assert result.outcome == "escalated" and result.failure_code.startswith("unknown_")
     assert [name for name, _ in tools.calls] == ["read.itinerary"]
+
+
+# ── 검수 10-15 고침 묶음 A (GPT 검토 #9) ─────────────
+def test_an_explicit_cheapest_request_lists_by_price_instead_of_one_per_time_band():
+    text = TEXT_MORNING.replace("오전 출발로", "최저가로")
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=text)
+    shown = [option["best"] for option in result.decisions[0]["shown"]]
+    assert result.decisions[0]["prefer"] == "cheapest" and shown == sorted(shown)
+    assert "가격이 낮은 순으로" in result.answer
+
+
+def test_the_last_flight_lists_the_latest_departures_and_warns_the_list_is_partial():
+    text = TEXT_MORNING.replace("오전 출발로", "마지막 비행기로")
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=text)
+    bands = [option["band"] for option in result.decisions[0]["shown"]]
+    assert result.decisions[0]["prefer"] == "last" and bands[0] == "evening"
+    assert "출발이 늦은 순으로" in result.answer and "그날의 실제 마지막 편이 아닐 수 있습니다" in result.answer
+
+
+def test_a_clock_limit_keeps_only_flights_leaving_after_it():
+    text = TEXT_MORNING.replace("오전 출발로", "오후 3시 이후 출발로")
+    result, _, _ = _run(SEARCH, {"read.flight_search": FLIGHTS, "read.flight_offers": IGNAV}, text=text)
+    assert result.decisions[0]["clock_limit"] == ["15:00", None]
+    assert all(option["band"] in ("afternoon", "evening") for option in result.decisions[0]["shown"])
+    assert "출발 15:00 이후 편만 골랐습니다." in result.answer or "받은 결과에 출발 15:00 이후 편이 없어" in result.answer
+
+
+# ── 검수 10-15 고침 묶음 B (GPT 검토 #10 · #14) ─────────────
+def test_a_resting_source_and_a_round_trip_reference_are_not_said_as_no_flights():
+    """☆10-15 14:58 F01 — 마이리얼트립이 쉬는 중이고 구글은 왕복 참고가만 줬는데 「찾은 항공편이 없습니다」라고 답했다."""
+    google = {"flights": [], "note": "왕복은 편별 대신 최저가 참고", "round_trip_lowest": 326400.0,
+              "page": "https://www.google.com/travel/flights?hl=ko&tfs=rt", "source": "serpapi_flights"}
+    result, _, _ = _run({**SEARCH, "return_date": BACK, "return_date_text": "9일에 오는"},
+                        {"read.flight_search": {"cooldown_seconds": 540, "source": "myrealtrip"}, "read.flight_google": google})
+    answer = result.answer
+    assert "찾은 항공편이 없습니다" not in answer and "항공편 목록을 받지 못했습니다" in answer and "항공편이 없다는 뜻은 아닙니다" in answer
+    assert "마이리얼트립 요청 한도로 쉬는 중" in answer and "구글 항공권 왕복 최저가 참고만" in answer
+    assert "구글 항공권 왕복 최저 참고 326,400원" in answer and result.decisions[0]["found"] is None
+
+
+def test_one_source_raising_keeps_the_other_sources():
+    class Boom:
+        misses: dict = {}
+
+        def flight_search(self, **_):
+            raise ValueError("bad nested shape")
+
+    from types import SimpleNamespace as _NS
+    from app.domains.travel_ops.components.booking.offers.flights import search_flights as _search
+    ok = StubSource("read.flight_search", FLIGHTS, [])
+    got = _search(_NS(travel_search=ok, flight_offers=Boom(), flight_google=None), origin="TPE", destination="ICN",
+                  depart_date=GO, domestic=False, adults=2)
+    assert got["sources"]["ignav"] == {"status": "failed", "error": "ValueError"}
+    assert got["sources"]["myrealtrip"]["status"] == "ok" and got["options"], "정상 소스 결과는 남는다"
+
+
+# ── 검수 10-15 고침 묶음 C (GPT 검토 #1) ─────────────
+def _rt(back_time, price, *, number="TW702"):
+    go = {"origin": "GMP", "destination": "CJU", "departDate": "2026-11-06", "departTime": "17:25", "flightNumber": "TW725"}
+    back = {"origin": "CJU", "destination": "GMP", "departDate": "2026-11-09", "departTime": back_time, "flightNumber": number}
+    return {"airline": "티웨이항공", "airline_code": "TW", "legs": [go, back], "price_total": price, "currency": "KRW",
+            "duration_minutes": 150, "link": f"https://x/{back_time}", "link_kind": "route_search"}
+
+
+def test_round_trips_with_different_return_legs_are_not_merged():
+    from app.domains.travel_ops.components.booking.offers.flights import merge
+    options = merge([("myrealtrip", [_rt("09:00", 300000), _rt("21:00", 200000, number="TW718")])])
+    assert len(options) == 2, "오는 편이 다르면 다른 상품"
+    assert sorted((o["legs"][1]["departTime"], o["best"]) for o in options) == [("09:00", 300000), ("21:00", 200000)]
+    same = merge([("myrealtrip", [_rt("09:00", 300000)]), ("google", [{**_rt("09:00", 290000), "flight_number": None}])])
+    assert len(same) == 1 and len(same[0]["offers"]) == 2, "같은 상품은 소스끼리 묶인다"
+    missing = merge([("myrealtrip", [_rt("09:00", 300000)]),
+                     ("google", [{**_rt("09:00", 290000), "legs": [_rt("09:00", 0)["legs"][0], {**_rt("09:00", 0)["legs"][1], "departTime": None}]}])])
+    assert len(missing) == 2, "다리 정보가 비면 묶지 않는다"
+
+
+def test_recheck_does_not_match_a_different_return_or_connection():
+    from app.domains.travel_ops.instances.booking.team import _same_flight
+    pick = {"airline": "티웨이항공", "legs": _rt("09:00", 0)["legs"]}
+    assert _same_flight({"airline": "티웨이항공", "legs": _rt("09:00", 0)["legs"]}, pick)
+    assert not _same_flight({"airline": "티웨이항공", "legs": _rt("21:00", 0)["legs"]}, pick), "오는 편 시각이 다르면 다른 편"
+    via = [{**pick["legs"][0], "destination": "PUS"}, {"origin": "PUS", "destination": "CJU", "departDate": "2026-11-06", "departTime": "19:00"}]
+    assert not _same_flight({"airline": "티웨이항공", "legs": via}, {"airline": "티웨이항공", "legs": [*via[:1], {**via[1], "departTime": "20:00"}]})
+    assert not _same_flight({"airline": "티웨이항공", "legs": [{**pick["legs"][0], "departTime": None}]}, pick), "정보가 비면 같다고 하지 않는다"
+
+
+def test_an_overnight_flight_shows_its_arrival_date():
+    from app.domains.travel_ops.instances.booking.team import _leg
+    leg = {"origin": "ICN", "destination": "DAD", "departDate": "2026-11-13", "departTime": "20:55", "arriveDate": "2026-11-14",
+           "arriveTime": "00:20", "durationMinutes": 325, "isDirect": True}
+    assert "→ DAD (11/14) 00:20" in _leg(leg)
+    assert "(11/" not in _leg({**leg, "arriveDate": "2026-11-13", "arriveTime": "23:20"}) and "(11/" not in _leg({**leg, "arriveDate": None})

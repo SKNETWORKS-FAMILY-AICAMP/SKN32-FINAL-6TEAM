@@ -8,7 +8,7 @@ data=json.loads((folder/'mx_counts.json').read_text(encoding='utf-8'))
 answer=folder/'d_test_mx_backlog_frog.jsonl'
 assert hashlib.sha256(answer.read_bytes()).hexdigest()=='46aefc1479b5ccc378fd1f9178a761955b98976f968992dfab2928e0a26d59df'
 rows=[json.loads(l) for l in answer.read_text(encoding='utf-8').splitlines()]
-items=json.loads((root/'datasets/travel/mx_testset/mx_main_prompts.json').read_text(encoding='utf-8'))
+items=json.loads((root/'datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json').read_text(encoding='utf-8'))
 ref={x['i']:x for x in items}
 mixed=[r for r in rows if ref[r['i']]['kind']=='mixed']
 positives=[r for r in mixed if r['gold'] is not None]

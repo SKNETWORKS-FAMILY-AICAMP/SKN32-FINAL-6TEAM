@@ -1,0 +1,785 @@
+{
+ "intake_id": "deb5cb21-87f0-480b-be28-6956b09fc719",
+ "model": "openai:gpt-6-luna",
+ "seconds": 29.0,
+ "counts": {
+  "run_id": "ef865960-cf74-4e22-a179-54c840e2dcf2",
+  "days": 1,
+  "checks": 16,
+  "compared": 12,
+  "disagree": 2,
+  "failures": 0,
+  "missing": 0
+ },
+ "tools_used": {
+  "null": 19
+ },
+ "adapters": {
+  "kakao": true,
+  "google": true
+ },
+ "rows": [
+  {
+   "item_id": "0-1",
+   "check": "business",
+   "agent": "ok",
+   "rule": null,
+   "agree": null,
+   "failure": null,
+   "detail": {
+    "reason": "폐업 기록이 없습니다(영업 상태를 따로 확인하지는 않았습니다).",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c7"
+     }
+    ],
+    "why_chosen": "폐업 또는 이전 상태를 확인합니다."
+   },
+   "title": "광장시장 순희네빈대떡"
+  },
+  {
+   "item_id": "0-1",
+   "check": "closed_day",
+   "agent": "bad",
+   "rule": "bad",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "2026-10-27은 매주 화요일 휴무에 해당합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "bad",
+      "call_id": "c6"
+     }
+    ],
+    "why_chosen": "해당 날짜의 휴무 여부를 확인합니다."
+   },
+   "title": "광장시장 순희네빈대떡"
+  },
+  {
+   "item_id": "0-1",
+   "check": "found",
+   "agent": "unknown",
+   "rule": "ok",
+   "agree": false,
+   "failure": null,
+   "detail": {
+    "reason": "가까운 순희네빈대떡으로 찾았지만 다른 가게인지 확인이 필요합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "unknown",
+      "call_id": "c1"
+     }
+    ],
+    "why_chosen": "시각이 있는 식사이므로 가게 특정 여부를 확인합니다."
+   },
+   "title": "광장시장 순희네빈대떡"
+  },
+  {
+   "item_id": "0-1",
+   "check": "open_at",
+   "agent": "bad",
+   "rule": "bad",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "해당 시각에 영업하지 않는 것으로 판정됐습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "bad",
+      "call_id": "c5"
+     }
+    ],
+    "why_chosen": "12:30~13:30에 식사할 수 있는지 확인합니다."
+   },
+   "title": "광장시장 순희네빈대떡"
+  },
+  {
+   "item_id": "0-2",
+   "check": "business",
+   "agent": "ok",
+   "rule": null,
+   "agree": null,
+   "failure": null,
+   "detail": {
+    "reason": "폐업 기록이 없습니다(영업 상태를 따로 확인하지는 않았습니다).",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c10"
+     }
+    ],
+    "why_chosen": "폐업 또는 이전 상태를 확인합니다."
+   },
+   "title": "통인시장"
+  },
+  {
+   "item_id": "0-2",
+   "check": "closed_day",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그날 휴무 규칙에 걸리지 않습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c9"
+     }
+    ],
+    "why_chosen": "해당 날짜의 휴무 여부를 확인합니다."
+   },
+   "title": "통인시장"
+  },
+  {
+   "item_id": "0-2",
+   "check": "found",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "원장에서 같은 이름의 가게 하나로 특정됐습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c2"
+     }
+    ],
+    "why_chosen": "시각이 있는 식사이므로 가게 특정 여부를 확인합니다."
+   },
+   "title": "통인시장"
+  },
+  {
+   "item_id": "0-2",
+   "check": "open_at",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그 시각에 영업합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c8"
+     }
+    ],
+    "why_chosen": "16:00~17:00에 식사할 수 있는지 확인합니다."
+   },
+   "title": "통인시장"
+  },
+  {
+   "item_id": "0-3",
+   "check": "business",
+   "agent": "ok",
+   "rule": null,
+   "agree": null,
+   "failure": null,
+   "detail": {
+    "reason": "폐업 기록이 없습니다(영업 상태를 따로 확인하지는 않았습니다).",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c13"
+     }
+    ],
+    "why_chosen": "폐업 또는 이전 상태를 확인합니다."
+   },
+   "title": "하동관 명동본점"
+  },
+  {
+   "item_id": "0-3",
+   "check": "closed_day",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그날 휴무 규칙에 걸리지 않습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c12"
+     }
+    ],
+    "why_chosen": "해당 날짜의 휴무 여부를 확인합니다."
+   },
+   "title": "하동관 명동본점"
+  },
+  {
+   "item_id": "0-3",
+   "check": "found",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "원장에서 같은 이름의 가게 하나로 특정됐습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c3"
+     }
+    ],
+    "why_chosen": "시각이 있는 식사이므로 가게 특정 여부를 확인합니다."
+   },
+   "title": "하동관 명동본점"
+  },
+  {
+   "item_id": "0-3",
+   "check": "open_at",
+   "agent": "bad",
+   "rule": "bad",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "해당 시각에 영업하지 않는 것으로 판정됐습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "bad",
+      "call_id": "c11"
+     }
+    ],
+    "why_chosen": "18:00~19:00에 식사할 수 있는지 확인합니다."
+   },
+   "title": "하동관 명동본점"
+  },
+  {
+   "item_id": "0-4",
+   "check": "business",
+   "agent": "ok",
+   "rule": null,
+   "agree": null,
+   "failure": null,
+   "detail": {
+    "reason": "폐업 기록이 없습니다(영업 상태를 따로 확인하지는 않았습니다).",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c16"
+     }
+    ],
+    "why_chosen": "폐업 또는 이전 상태를 확인합니다."
+   },
+   "title": "광화문미진"
+  },
+  {
+   "item_id": "0-4",
+   "check": "closed_day",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그날 휴무 규칙에 걸리지 않습니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c15"
+     }
+    ],
+    "why_chosen": "해당 날짜의 휴무 여부를 확인합니다."
+   },
+   "title": "광화문미진"
+  },
+  {
+   "item_id": "0-4",
+   "check": "found",
+   "agent": "unknown",
+   "rule": "ok",
+   "agree": false,
+   "failure": null,
+   "detail": {
+    "reason": "가까운 이름 일치 가게인 미진으로 찾았지만 다른 가게인지 확인이 필요합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "unknown",
+      "call_id": "c4"
+     }
+    ],
+    "why_chosen": "시각이 있는 식사이므로 가게 특정 여부를 확인합니다."
+   },
+   "title": "광화문미진"
+  },
+  {
+   "item_id": "0-4",
+   "check": "open_at",
+   "agent": "ok",
+   "rule": "ok",
+   "agree": true,
+   "failure": null,
+   "detail": {
+    "reason": "그 시각에 영업합니다.",
+    "evidence": [
+     {
+      "path": "verdict",
+      "value": "ok",
+      "call_id": "c14"
+     }
+    ],
+    "why_chosen": "20:00~21:00에 식사할 수 있는지 확인합니다."
+   },
+   "title": "광화문미진"
+  },
+  {
+   "item_id": null,
+   "check": "_run",
+   "agent": null,
+   "rule": null,
+   "agree": null,
+   "failure": null,
+   "detail": {
+    "date": "2026-10-27",
+    "tools": [
+     "find_place",
+     "find_place",
+     "find_place",
+     "find_place",
+     "check_open_at",
+     "check_closed_day",
+     "check_business",
+     "check_open_at",
+     "check_closed_day",
+     "check_business",
+     "check_open_at",
+     "check_closed_day",
+     "check_business",
+     "check_open_at",
+     "check_closed_day",
+     "check_business",
+     "place_detail",
+     "place_detail",
+     "place_detail"
+    ],
+    "turns": 7,
+    "refused": 1,
+    "seconds": 28.96,
+    "tool_calls": 19,
+    "prompt_tokens": 30417,
+    "unknown_items": 0,
+    "missing_checks": 0,
+    "completion_tokens": 2246,
+    "validation_failures": 0
+   },
+   "title": null
+  }
+ ],
+ "calls": [
+  {
+   "id": "c1",
+   "tool": "find_place",
+   "args": {
+    "name": "광장시장 순희네빈대떡",
+    "lat": 37.5704472282839,
+    "lng": 127.001177238937
+   },
+   "result": {
+    "verdict": "unknown",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "c46914dd-f906-5197-8706-422b00523b13",
+    "name": "순희네빈대떡",
+    "address": "서울특별시 종로구 종로32길 5 (종로5가)",
+    "lat": 37.5706736091,
+    "lng": 127.0007355441,
+    "category": "한식",
+    "match": "dish",
+    "needs_review": true,
+    "others": 0,
+    "note": "「순희네빈대떡」 가게 중 가까운 「순희네빈대떡」(46m) — 다르면 고쳐 주세요",
+    "reason": "「순희네빈대떡」 가게 중 가까운 「순희네빈대떡」(46m) — 다르면 고쳐 주세요"
+   }
+  },
+  {
+   "id": "c2",
+   "tool": "find_place",
+   "args": {
+    "name": "서울 원조할머니 기름떡볶이",
+    "lat": 37.580660576615,
+    "lng": 126.970222542239
+   },
+   "result": {
+    "verdict": "ok",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "93173784-60d6-5ba6-a6b9-c42117787bcc",
+    "name": "서울 원조할머니 기름떡볶이",
+    "address": "서울특별시 종로구 자하문로15길 13 (통인동)",
+    "lat": 37.580660576615,
+    "lng": 126.970222542239,
+    "category": "한식",
+    "match": "exact",
+    "needs_review": false,
+    "others": 0,
+    "note": null,
+    "reason": "원장에서 같은 이름의 가게 하나로 정해졌다"
+   }
+  },
+  {
+   "id": "c3",
+   "tool": "find_place",
+   "args": {
+    "name": "하동관",
+    "lat": 37.56439,
+    "lng": 126.98501
+   },
+   "result": {
+    "verdict": "ok",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "3f0e94e3-4cea-50f0-8193-2f0ef5d98f80",
+    "name": "하동관",
+    "address": "서울특별시 중구 명동9길 12",
+    "lat": 37.56439,
+    "lng": 126.98501,
+    "category": "한식",
+    "match": "exact",
+    "needs_review": false,
+    "others": 0,
+    "note": null,
+    "reason": "원장에서 같은 이름의 가게 하나로 정해졌다"
+   }
+  },
+  {
+   "id": "c4",
+   "tool": "find_place",
+   "args": {
+    "name": "광화문미진 본점",
+    "lat": 37.570844667978704,
+    "lng": 126.9799234417087
+   },
+   "result": {
+    "verdict": "unknown",
+    "found": true,
+    "source": "ledger",
+    "place_uid": "e21d00b5-11c8-5c4f-8f4c-0697254991bd",
+    "name": "미진",
+    "address": "서울특별시 종로구 종로 19 (종로1가)",
+    "lat": 37.5708982096,
+    "lng": 126.9799374337,
+    "category": "한식",
+    "match": "contains_near",
+    "needs_review": true,
+    "others": 0,
+    "note": "「광화문미진 본점」 안의 이름인 원장의 「미진」(6m)로 찾았어요 — 다르면 고쳐 주세요",
+    "reason": "「광화문미진 본점」 안의 이름인 원장의 「미진」(6m)로 찾았어요 — 다르면 고쳐 주세요"
+   }
+  },
+  {
+   "id": "c5",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "c46914dd-f906-5197-8706-422b00523b13",
+    "start": "2026-10-27T12:30",
+    "end": "2026-10-27T13:30"
+   },
+   "result": {
+    "verdict": "bad",
+    "reason": "그 시각에 영업하지 않는다(휴무 · 브레이크 · 영업시간 밖 · 폐업)",
+    "open_at_slot": false,
+    "order_ok": null,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  },
+  {
+   "id": "c6",
+   "tool": "check_closed_day",
+   "args": {
+    "place_uid": "c46914dd-f906-5197-8706-422b00523b13",
+    "date": "2026-10-27"
+   },
+   "result": {
+    "verdict": "bad",
+    "reason": "그날은 휴무다",
+    "closed": true,
+    "closure_info": "present",
+    "rules": [
+     {
+      "pattern": "weekly",
+      "weekday": 2,
+      "nth": null,
+      "holiday": null,
+      "date": null,
+      "source_text": "매주 화요일"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c7",
+   "tool": "check_business",
+   "args": {
+    "place_uid": "c46914dd-f906-5197-8706-422b00523b13"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "폐업 기록이 없다(영업 상태를 따로 확인하지는 않았다)",
+    "name": "순희네빈대떡",
+    "record_status": "unknown",
+    "closure_state": "present",
+    "needs_closure_check": false
+   }
+  },
+  {
+   "id": "c8",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "93173784-60d6-5ba6-a6b9-c42117787bcc",
+    "start": "2026-10-27T16:00",
+    "end": "2026-10-27T17:00"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "그 시각에 영업한다",
+    "open_at_slot": true,
+    "order_ok": true,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  },
+  {
+   "id": "c9",
+   "tool": "check_closed_day",
+   "args": {
+    "place_uid": "93173784-60d6-5ba6-a6b9-c42117787bcc",
+    "date": "2026-10-27"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "그날 휴무 규칙에 걸리지 않는다",
+    "closed": false,
+    "closure_info": "none",
+    "rules": []
+   }
+  },
+  {
+   "id": "c10",
+   "tool": "check_business",
+   "args": {
+    "place_uid": "93173784-60d6-5ba6-a6b9-c42117787bcc"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "폐업 기록이 없다(영업 상태를 따로 확인하지는 않았다)",
+    "name": "서울 원조할머니 기름떡볶이",
+    "record_status": "unknown",
+    "closure_state": "none",
+    "needs_closure_check": false
+   }
+  },
+  {
+   "id": "c11",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "3f0e94e3-4cea-50f0-8193-2f0ef5d98f80",
+    "start": "2026-10-27T18:00",
+    "end": "2026-10-27T19:00"
+   },
+   "result": {
+    "verdict": "bad",
+    "reason": "그 시각에 영업하지 않는다(휴무 · 브레이크 · 영업시간 밖 · 폐업)",
+    "open_at_slot": false,
+    "order_ok": null,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  },
+  {
+   "id": "c12",
+   "tool": "check_closed_day",
+   "args": {
+    "place_uid": "3f0e94e3-4cea-50f0-8193-2f0ef5d98f80",
+    "date": "2026-10-27"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "그날 휴무 규칙에 걸리지 않는다",
+    "closed": false,
+    "closure_info": "present",
+    "rules": [
+     {
+      "pattern": "weekly",
+      "weekday": 7,
+      "nth": null,
+      "holiday": null,
+      "date": null,
+      "source_text": "일요일"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c13",
+   "tool": "check_business",
+   "args": {
+    "place_uid": "3f0e94e3-4cea-50f0-8193-2f0ef5d98f80"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "폐업 기록이 없다(영업 상태를 따로 확인하지는 않았다)",
+    "name": "하동관",
+    "record_status": "unknown",
+    "closure_state": "present",
+    "needs_closure_check": false
+   }
+  },
+  {
+   "id": "c14",
+   "tool": "check_open_at",
+   "args": {
+    "place_uid": "e21d00b5-11c8-5c4f-8f4c-0697254991bd",
+    "start": "2026-10-27T20:00",
+    "end": "2026-10-27T21:00"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "그 시각에 영업한다",
+    "open_at_slot": true,
+    "order_ok": true,
+    "last_order_warning": false,
+    "holiday_context": null
+   }
+  },
+  {
+   "id": "c15",
+   "tool": "check_closed_day",
+   "args": {
+    "place_uid": "e21d00b5-11c8-5c4f-8f4c-0697254991bd",
+    "date": "2026-10-27"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "그날 휴무 규칙에 걸리지 않는다",
+    "closed": false,
+    "closure_info": "none",
+    "rules": []
+   }
+  },
+  {
+   "id": "c16",
+   "tool": "check_business",
+   "args": {
+    "place_uid": "e21d00b5-11c8-5c4f-8f4c-0697254991bd"
+   },
+   "result": {
+    "verdict": "ok",
+    "reason": "폐업 기록이 없다(영업 상태를 따로 확인하지는 않았다)",
+    "name": "미진",
+    "record_status": "unknown",
+    "closure_state": "none",
+    "needs_closure_check": false
+   }
+  },
+  {
+   "id": "c17",
+   "tool": "place_detail",
+   "args": {
+    "place_uid": "3f0e94e3-4cea-50f0-8193-2f0ef5d98f80",
+    "date": "2026-10-27"
+   },
+   "result": {
+    "found": true,
+    "name": "하동관",
+    "branch": null,
+    "address": "서울특별시 중구 명동9길 12",
+    "category": "한식",
+    "style": "국물요리",
+    "record_status": "unknown",
+    "hours_text": [
+     "월 07:00-16:00 / 화 07:00-16:00 / 수 07:00-16:00 / 목 07:00-16:00 / 금 07:00-16:00 / 토 07:00-16:00 / 일 휴무"
+    ],
+    "closure_text": [
+     "일요일"
+    ],
+    "date": "2026-10-27",
+    "intervals": [
+     {
+      "open": "07:00",
+      "close": "16:00",
+      "last_order": null
+     }
+    ]
+   }
+  },
+  {
+   "id": "c18",
+   "tool": "place_detail",
+   "args": {
+    "place_uid": "c46914dd-f906-5197-8706-422b00523b13",
+    "date": "2026-10-27"
+   },
+   "result": {
+    "found": true,
+    "name": "순희네빈대떡",
+    "branch": null,
+    "address": "서울특별시 종로구 종로32길 5 (종로5가)",
+    "category": "한식",
+    "style": "해산물",
+    "record_status": "unknown",
+    "hours_text": [
+     "11:00~21:00 (마지막 주문 20:30)"
+    ],
+    "closure_text": [
+     "매주 화요일"
+    ],
+    "date": "2026-10-27",
+    "intervals": [
+     {
+      "open": "11:00",
+      "close": "21:00",
+      "last_order": "20:30"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c19",
+   "tool": "place_detail",
+   "args": {
+    "place_uid": "e21d00b5-11c8-5c4f-8f4c-0697254991bd",
+    "date": "2026-10-27"
+   },
+   "result": {
+    "found": true,
+    "name": "미진",
+    "branch": null,
+    "address": "서울특별시 종로구 종로 19 (종로1가)",
+    "category": "한식",
+    "style": "면",
+    "record_status": "unknown",
+    "hours_text": [
+     "10:30~21:00 (마지막 주문 20:30)"
+    ],
+    "closure_text": [],
+    "date": "2026-10-27",
+    "intervals": [
+     {
+      "open": "10:30",
+      "close": "21:00",
+      "last_order": "20:30"
+     }
+    ]
+   }
+  }
+ ],
+ "config_unchanged": true
+}

@@ -41,11 +41,14 @@ function shortDate(iso: string): string {
  * one page). A row opens the inquiry's own page (`InquiryPage`, `/support/[id]`) — the box never grows. The server sends the whole list
  * (no paging on its side), so the pages are cut here.
  */
+/** `[2026-10-17 ST4F-603]` 운영자의 답변 · 상태는 서버에서 바뀐다 — 탭으로 돌아오면 다시 읽고(앱 기본값은 안 읽음), 문의를 연 동안은 30초마다 읽는다. */
+const INQUIRY_REFRESH_MS = 30_000;
+
 export function SupportPage({ sent = false }: { sent?: boolean }) {
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
-  const list = useQuery({ queryKey: ["support-inquiries", language], queryFn: () => inquiries(language) });
+  const list = useQuery({ queryKey: ["support-inquiries", language], queryFn: () => inquiries(language), refetchOnWindowFocus: true });
   const [justSent] = useState(sent);
   const [page, setPage] = useState(1);
   useEffect(() => { if (sent) router.replace(routes.support, { scroll: false }); }, [sent, router]);
@@ -95,7 +98,7 @@ export function SupportPage({ sent = false }: { sent?: boolean }) {
 export function InquiryPage({ id }: { id: string }) {
   const t = useT();
   const { language } = useSettings();
-  const list = useQuery({ queryKey: ["support-inquiries", language], queryFn: () => inquiries(language) });
+  const list = useQuery({ queryKey: ["support-inquiries", language], queryFn: () => inquiries(language), refetchOnWindowFocus: true, refetchInterval: INQUIRY_REFRESH_MS });
   const item = list.data?.inquiries.find((entry) => entry.id === id);
   return <div className={styles.page}>
     <div className={styles.row}><h1>{t("문의 내역", "Inquiry")}</h1><ButtonLink href={routes.support} variant="quiet">{t("문의함", "Inquiries")}</ButtonLink></div>

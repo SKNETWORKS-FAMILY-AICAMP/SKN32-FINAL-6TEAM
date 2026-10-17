@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, type KeyboardEvent } from "react";
+import { useEffect, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
+import { MaintenanceItem, NoticeItems, useServiceStatus } from "@/features/support/service-notices";
 import { seoul } from "@/lib/live/gateway";
 import { LiveError } from "@/lib/live/client";
 import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
@@ -17,6 +18,7 @@ import { SafetyPanel } from "./trip-safety";
 import { RecoveryPanel } from "./trip-recovery";
 import type { Recovery } from "@/lib/live/recovery";
 import styles from "./trip-attention.module.css";
+import { askBrowserNotify, browserNotifyState, type BrowserNotifyState } from "@/lib/browser-notify";
 
 export const NOTICE_LABEL: Record<string, [string, string]> = {
   guidance: ["안내", "Guidance"], proposal_request: ["선택 요청", "Your choice"],
@@ -54,6 +56,23 @@ const VERSION_REASON: Record<string, [string, string]> = {
  * ★Every sentence here is the server's — its notice text, its warning reason, its history. Where it sent none, the screen shows the server's own code instead of writing a line of its own.
  * Read state is this browser's (`notice-reads.ts`): the server keeps none yet.
  */
+/**
+ * `[2026-10-17 사용자 결정 — ST4F-604]` 알림 센터 맨 위 「서비스 공지」 — 운영 앱의 공지(여행과 상관없는 전체 공지)를 맨 위 배너와 같은 모양으로(종류 딱지 · 장애 먼저).
+ *   배너를 닫아도 여기서 다시 본다. 게시 중인 공지도 점검도 없으면 칸이 없다.
+ */
+function ServiceNoticeSection() {
+  const t = useT();
+  const status = useServiceStatus();
+  const notices = status.data?.notices ?? [];
+  const maintenance = status.data?.maintenance.enabled ? status.data.maintenance : null;
+  if (notices.length === 0 && !maintenance) return null;
+  return <section className={styles.tasks} aria-labelledby="trip-service-title" data-service-notices>
+    <h3 id="trip-service-title" className={styles.secTitle}>{t("서비스 공지", "Service notices")} {notices.length + (maintenance ? 1 : 0)}</h3>
+    {maintenance && <MaintenanceItem maintenance={maintenance} />}
+    <NoticeItems notices={notices} />
+  </section>;
+}
+
 export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   trip: Trip; tab: CenterTab; onTab: (tab: CenterTab) => void;
   /** 「일정에서 보기」: close the center and show that stop in the list. */
@@ -117,6 +136,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   }
 
   return <div className={styles.wrap}>
+    <ServiceNoticeSection />
     {readError && <div className={styles.error} role="alert">{t("선택과 알림을 읽지 못했어요 — ", "Could not read your choices and notices — ")}{readError instanceof Error ? readError.message : String(readError)}</div>}
 
     <section className={styles.tasks} aria-labelledby="trip-tasks-title">
@@ -185,6 +205,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
           <p>{warning.reason}</p>
           {warning.remedy && <p className={styles.remedy}>{warning.remedy}</p>}
         </li>)}</ul>)}
+      {tab === "notices" && <BrowserNotifyOffer />}
       {tab === "notices" && (total === 0 ? <p className={styles.empty}>{t("받은 알림이 없어요.", "No notices yet.")}</p> : <>
         <ul className={styles.list}>{shown.map((notice) => {
           const label = NOTICE_LABEL[notice.type];
@@ -205,4 +226,24 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
     </div>
 
   </div>;
+}
+
+
+/**
+ * 「받은 알림」 위 한 줄 — 브라우저(운영체제) 알림 켜기. `[2026-10-16 사용자 지시]`
+ * 권한은 단추를 눌렀을 때만 묻는다. 켜면 여행 화면이 뒤에 있을 때도 새 알림이 운영체제 알림으로 뜬다(탭을 닫으면 오지 않는다).
+ */
+const noSubscribe = () => () => undefined;
+
+function BrowserNotifyOffer() {
+  const t = useT();
+  // 서버에서 그릴 때는 「없음」 — 브라우저에서만 실제 권한을 읽는다(그리기 불일치를 막는다). 단추로 바꾼 값이 있으면 그것.
+  const current = useSyncExternalStore(noSubscribe, browserNotifyState, () => "unsupported" as BrowserNotifyState);
+  const [asked, setState] = useState<BrowserNotifyState | null>(null);
+  const state = asked ?? current;
+  if (state === "unsupported") return null;
+  if (state === "granted") return <p className={styles.empty}>{t("브라우저 알림이 켜져 있어요. 이 창을 내려 둬도 새 알림이 떠요.", "Browser notifications are on. New notices pop up even when this window is in the background.")}</p>;
+  if (state === "denied") return <p className={styles.empty}>{t("브라우저에서 이 사이트 알림이 막혀 있어요. 주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꿀 수 있어요.", "This site's notifications are blocked in your browser. Allow them from the lock icon left of the address bar.")}</p>;
+  return <p className={styles.empty}>{t("창을 내려 둬도 알림을 받으려면", "To get notices while this window is in the background,")}{" "}
+    <Button onClick={() => void askBrowserNotify().then(setState)}>{t("브라우저 알림 켜기", "Turn on browser notifications")}</Button></p>;
 }
