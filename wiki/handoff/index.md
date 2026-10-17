@@ -15,6 +15,7 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 | 날짜 | 문서 | 무엇 |
 |---|---|---|
+| 2026-10-17 20:11 | [새 예시 공통 숙소·즉시 수정 실제 확인](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-edit-live-verification.md) | 양쪽 매니저 `6b397560`·후속 배포 완료, 양일 같은 호텔·조식·숙박 아이콘 2/2·지도 4구간씩, 375/1280px 수정 전환·취소 확인. 이전 실패·별도 경고 보존 |
 | 2026-10-17 18:28 | [공통 숙소·즉시 수정 화면의 매니저 반영 재개](2026-10-17_1828_lodging-edit-manager.md) | 최신 실행판 기반 66/66·후보 파일 5/5·그 외 448/448 보존. 양쪽 매니저 통합·배포는 커밋푸시 세션, 새 예시·모바일 실제 확인은 남음 |
 | 2026-10-17 | [검증 화면 지도 경로 수정 커밋 인계](2026-10-17_intake-map-routes-commit.md) | 지도·조회 상태 수정, 웹 801/801·실제 경로 8/8, 최신 develop 통합·양쪽 푸시를 커밋 담당에게 인계 |
 | 2026-10-16 03:30 | [확인 화면 후보를 팀이 먼저 고르게 · 이른 시각 핫픽스](../../final_project_cs/wiki/records/reports/2026-10-15_확인화면_후보공급_팀엔진_1단계활동.md) | 「질의 개선 (fork)」 세션 — 한 일(끝 · 커밋 · 배포 · x600 서버 확인 끝): ①이른 아침 · 늦은 밤 대체 후보에서 운영시간 못 읽은 곳을 경고로 · 비슷한 경험까지 넓힘 · 채팅 고치기는 장소 별칭을 배우지 않음(`8e66d540`) ②「종료」로 말한 끝 시각을 값 줄로(`40bb9730`) ③사용자 결정 D-CS-017 — 확인 화면 「다른 곳」 후보를 활동(`c0542de9` · `86afa14d`) · 식당(`f510d241`) · 숙소(`c5340a12`) 팀이 먼저 고르고 자체 고르기는 대비책 ④채팅 일정 고치기 4~6차(`7c993472` · `6a6b7a8e` · `50231461`). 남은 일: 비슷한 경험 넓히기를 활동 팀 엔진으로 옮기기 · 활동 팀 풀에 새벽 운영시간 합치기 · 숙소 팀 폴더에 더한 어댑터를 숙소 담당(유현님)에게 알리기 · 웹 접수가 「서버로 보내는 중」에서 멈춘 현상(1회, 원인 미확인) · 화면에서 직접 「다른 곳」 누르기는 안 함(서버 함수까지 확인) |
@@ -57,9 +58,9 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 - 바깥 기계에서 도는 일(GPU 작업 대기열 · x600 서버 배포)은 **상태를 다시 확인하는 명령**을 적는다. 숫자를 현재 값처럼 옮기지 않는다.
 - 규칙을 바꿨으면 루트·`final_project_cs/` 의 `CLAUDE.md` 와 `AGENTS.md` 를 **같이** 고친다(루트 `CLAUDE.md` 「함께 고친다」 절).
 
-- 숙소·예약 보호 통합: 최신 매니저와 재난 수정을 보존 병합했고 추가 회귀를 검토 중이다. [진행 기록](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-ui-manager-integration.md).
+- 숙소 최초 채움·즉시 수정: 후속 배포 뒤 새 예시와 375/1280px 실제 확인을 완료했다. [최종 기록](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-edit-live-verification.md). 수동 호텔 저장 실패는 별도 추적한다.
 
 
 - 재난 수신 기록 영향 표시 추가: [완료한 일과 남은 일](2026-10-17_receipt-impact.md).
 
-- 2026-10-17 후속: 숙소·예약·고객 웹 11196399, 재난 영향 필터 3057ad2f의 양쪽 매니저 반영 및 운영 배포·안정성 확인 완료. [재난 배포와 남은 확인](../../final_project_cs/wiki/records/reports/2026-10-17_receipt-impact-manager-integration.md). 숙소 최초 채움·수동 저장 실패는 [후속 기록](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-ui-manager-integration.md)에서 별도 추적한다.
+- 2026-10-17 후속: 숙소·예약·고객 웹 11196399, 재난 영향 필터 3057ad2f의 양쪽 매니저 반영 및 운영 배포·안정성 확인 완료. [재난 배포와 남은 확인](../../final_project_cs/wiki/records/reports/2026-10-17_receipt-impact-manager-integration.md). 숙소 최초 채움은 [최종 실제 확인](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-edit-live-verification.md)을 완료했으며, 수동 저장 실패는 [후속 기록](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-ui-manager-integration.md)에서 별도 추적한다.

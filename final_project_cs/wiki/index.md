@@ -77,7 +77,7 @@ domain: travel
 <a id="최근-변경"></a>
 <a id="기록-구역-records-2026-09-08"></a>
 
-- 숙소·즉시 수정·예약 보호 통합은 양쪽 매니저 반영·운영 배포 완료. 신규 접수의 최초 호텔 자동 채움 실패는 후속 추적 중이다. [작업 기록](records/reports/2026-10-17_lodging-ui-manager-integration.md).
+- 숙소 재검토 후속 배포 뒤 새 예시 양일 같은 호텔·조식·숙박 아이콘과 지도, 375/1280px 즉시 수정·취소의 실제 확인을 완료했다. [최종 기록](records/reports/2026-10-17_lodging-edit-live-verification.md). 수동 호텔 저장 문제는 별도 추적 범위다.
 
 
 - 재난 수신 기록의 영향 카드·다중 필터는 양쪽 매니저 반영·운영 배포 완료. 로그인 화면의 실제 확인은 남았다. [확인 범위와 남은 일](records/reports/2026-10-17_receipt-impact.md).
