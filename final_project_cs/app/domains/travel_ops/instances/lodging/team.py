@@ -879,7 +879,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         parts = []
         for reason, label in _SKIP_LABELS.items():
             if counts.get(reason):
-                text = label.format(kind=wants.kind, stars=f"{wants.stars:g}" if wants.stars else "", low=f"{wants.min_price or 0:,}",
+                # `[2026-10-17 D19]` 「A나 B」 요청이면 유형 칸이 비어 「None 아님」이 나왔다(☆qa_1017_200257 N13-23 등)
+                kind_text = wants.kind or " · ".join(sorted(wants.either)) or "원하신 유형"
+                text = label.format(kind=kind_text, stars=f"{wants.stars:g}" if wants.stars else "", low=f"{wants.min_price or 0:,}",
                                     anchor=(anchor or {}).get("name", "기준점"), limit=limit)
                 parts.append(f"{text} {counts[reason]}곳")
         return (" · ".join(parts) + "은 뺌") if parts else ""
@@ -1428,7 +1430,8 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 why = (price_reason(wants, stay["price_per_night"], max_price)
                        or ("far" if gap is not None and (gap > REGION_KM or (straight_cap is not None and gap > straight_cap)) else
                            "region" if seoul and anchor is None and _outside_seoul(where) else None)
-                       or kind_reason(wants, stay_kinds(None, stay.get("name")), strict=False)
+                       or kind_reason(wants, stay_kinds(None, stay.get("name")) or (frozenset({"호텔"}) if stay.get("hotel_class") else frozenset()),
+                                      strict=False)
                        or stars_reason(wants, stay_stars(None, stay.get("hotel_class"))))
                 if why:
                     dropped += 1
@@ -1478,7 +1481,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     star = f"{stay['hotel_class']}성급 · " if stay.get("hotel_class") else ""
                     far = _distance(base, stay)
                     minutes = walked.get(id(stay))
+                    # `[2026-10-17 D19]` 「A나 B」 요청 — 이름 · 성급으로 유형을 모르는 곳은 빼지 않고 표시한다(호텔 요청의 「성급 정보 없음」과 같은 방식)
+                    unknown_kind = bool(wants.either) and not stay_kinds(None, stay.get("name")) and not stay.get("hotel_class")
                     rule = (" · 성급 정보 없음(호텔이 아닐 수 있음)" if wants.kind == "호텔" and not stay.get("hotel_class") else "") + \
+                        (f" · 유형 정보 없음({' · '.join(sorted(wants.either))}이 아닐 수 있음)" if unknown_kind else "") + \
                         (" · 숙박 공유" if stay.get("type") == "vacation rental" else "") + \
                         (f" · 이용 조건 {restriction(stay.get('name'))}(묵을 분과 맞음)" if restriction(stay.get("name")) else "")
                     where = ((f" · {label} 걸어서 {minutes}분({far}km)" if minutes is not None and far is not None

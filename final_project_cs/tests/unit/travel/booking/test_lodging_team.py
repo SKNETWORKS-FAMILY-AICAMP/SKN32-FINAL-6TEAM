@@ -1559,3 +1559,19 @@ def test_a_hotel_request_drops_residences():
     assert kind_reason(hotel, stay_kinds("3성급 · 호텔 · 강남 · 서울", "라마다 호텔")) is None
     assert "레지던스 제외" in " ".join(summary(hotel))
     assert read_wants("잠실 레지던스 2박").kind == "레지던스"
+
+
+def test_d19_partner_people_room_size_safety_and_either_labels():
+    """`[2026-10-17 D19]` ☆qa_1017_200257 — N15-21 「저랑 남편이랑 5살 아이」 성인 수 되물음 · N18-17 「2인실」을 인원으로 ·
+    N18-22 「안전하게」 반영 못 함 없음 · 「A나 B」 요청의 뺀 까닭 「None 아님」."""
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, rule_checks, rule_people
+    from app.domains.travel_ops.instances.lodging.wants import unsupported_requests
+
+    assert rule_people(Interpretation(task="search"), "저랑 남편이랑 5살 아이 하나, 12월 3일부터 2박 잠실")[0].adults == 2
+    assert rule_people(Interpretation(task="search"), "나랑 여친 둘이 홍대")[0].adults == 2
+    room = Interpretation(task="search", adults=2)
+    assert rule_checks(room, "홍대 근처 게스트하우스 12월 5일부터 2박, 도미토리 말고 2인실로.")[0].adults is None, "2인실은 인원이 아니다"
+    assert rule_checks(room, "홍대 2인 12월 5일부터 2박")[0].adults == 2
+    assert unsupported_requests("여자 혼자 안전하게 묵을 수 있는 홍대 쪽 숙소", []) == ["안전 · 여성 전용층"]
+    text = LodgingTeam._skip_text({"kind": 3}, read_wants("홍대 게스트하우스나 호텔"), None, "")
+    assert text == "게스트하우스 · 호스텔 · 호텔 아님 3곳은 뺌" and "None" not in text

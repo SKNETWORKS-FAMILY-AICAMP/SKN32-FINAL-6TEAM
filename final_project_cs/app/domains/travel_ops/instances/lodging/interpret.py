@@ -362,7 +362,7 @@ _DAY_GIVEN = re.compile(r"\d+\s*일|\d+\s*[/.]\s*\d+|오늘|내일|모레|이번
 #: 「오늘 · 내일」은 숙박 말과 붙어 있을 때만 날짜 — 「오늘 날씨 진짜 추운데」의 「오늘」을 체크인으로 읽었다(H-39)
 _RELATIVE_STAY = re.compile(r"(오늘|내일|모레)\s*(?:부터|밤|하룻밤|\d+\s*박|체크\s*인|입실|묵|숙박|자|들어|저녁|당일|1박)")
 #: 인원 근거 — 숫자 + 명 · 인, 혼자 · 둘 · 커플 · 부부 …. 없는데 모델이 인원을 냈으면 지운다(B-22 「부모님 모시고」를 2명으로)
-_PEOPLE = re.compile(r"\d+\s*(?:명|인|분|adults?|people|persons?|pax)|혼자|혼행|혼숙|한\s*명|두\s*명|세\s*명|네\s*명|다섯|여섯|"
+_PEOPLE = re.compile(r"\d+\s*(?:명|인(?![실용])|분|adults?|people|persons?|pax)|혼자|혼행|혼숙|한\s*명|두\s*명|세\s*명|네\s*명|다섯|여섯|"
                      r"둘|셋|넷|성인|어른|부부|커플|연인|여자\s*친구|남자\s*친구|여친|남친|신혼|solo|couple|single|"
                      # 「엄마랑 아빠, 그리고 아기 세 식구」(H-31) — 식구 수 · 엄마 아빠 둘 다는 인원 근거. 「부모님 모시고」는 아니다(B-22)
                      r"\d+\s*식구|[두세네]\s*식구|다섯\s*식구|엄마.{0,6}아빠|아빠.{0,6}엄마", re.I)
@@ -388,14 +388,20 @@ def rule_start(found: Interpretation, text: str, *, today: date) -> tuple[Interp
 
 
 #: `[2026-10-17 D17]` 「저랑 부모님 두 분」 「나랑 부모님」 — 성인 3명(☆N7-21 · N8-22: 모델이 비워 되물었다). 「부모님 모시고」만은 그대로 둔다(B-22)
+#: `[2026-10-17 D19]` 「저랑 남편이랑」 「나랑 와이프」 — 성인 2명(☆qa_1017_200257 N15-21: 모델이 비워 되물었다)
+_ME_AND_PARTNER = re.compile(r"(?:나|저)\s*(?:랑|하고|와|이랑)\s*,?\s*(?:우리\s*)?(?:남편|아내|와이프|신랑|배우자|남친|여친|애인|남자\s*친구|여자\s*친구)")
 _ME_AND_PARENTS = re.compile(r"(?:나|저)\s*(?:랑|하고|와|이랑)\s*,?\s*(?:우리\s*)?부모님|부모님\s*(?:두\s*분)?\s*(?:이랑|하고|과|와|랑)\s*(?:나|저)(?![가-힣])")
 
 
 def rule_people(found: Interpretation, text: str) -> tuple[Interpretation, bool]:
     """모델이 성인 수를 비웠고 문장이 「나 + 부모님」이면 성인 3명. (해석, 채웠나)"""
-    if found.task != "search" or found.adults is not None or not _ME_AND_PARENTS.search(text or ""):
+    if found.task != "search" or found.adults is not None:
         return found, False
-    return found.model_copy(update={"adults": 3}), True
+    if _ME_AND_PARENTS.search(text or ""):
+        return found.model_copy(update={"adults": 3}), True
+    if _ME_AND_PARTNER.search(text or ""):
+        return found.model_copy(update={"adults": 2}), True
+    return found, False
 
 
 def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[str]]:
