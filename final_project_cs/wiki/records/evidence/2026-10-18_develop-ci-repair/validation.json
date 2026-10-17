@@ -1,0 +1,57 @@
+{
+  "base_commit": "34280188d531b65f22e4f0ae188bff72356a27e4",
+  "scope": "develop CI repair after preserved web merge",
+  "python": {
+    "passed": 10194,
+    "skipped": 396,
+    "failed": 0,
+    "errors": 0,
+    "selected": 10590,
+    "workers": 4,
+    "exit": 0
+  },
+  "dod_from_full_suite": {
+    "passed": 26,
+    "total": 26,
+    "all_setup_call_teardown_phases_checked": true
+  },
+  "race_cases": {
+    "passed": 3,
+    "total": 3,
+    "uses_actual_postgresql_and_instance_bindings": true
+  },
+  "owner_repeated_cases": {
+    "passed": 40,
+    "total": 40,
+    "overlaps_other_suites": true
+  },
+  "web_mock_browser": {
+    "passed": 11,
+    "total": 11,
+    "flaky": 0
+  },
+  "ruff_exit": 0,
+  "web_eslint_exit": 0,
+  "web_typecheck_exit": 0,
+  "completion_verifier_exit": 0,
+  "before_fix_team_ci": {
+    "python_passed": 10146,
+    "python_failed": 5,
+    "python_errors": 3,
+    "python_skipped": 433,
+    "web_failed_cases": 2,
+    "admin": "success"
+  },
+  "single_and_two_worker_targeted_checks_before_core_fix": {
+    "single_passed": 48,
+    "parallel_passed": 48
+  },
+  "serial_full_attempt": {
+    "completed": false,
+    "reason": "switched to four fresh worker databases; partial log preserved"
+  },
+  "production_checked": false,
+  "personal_ci": "disabled_manually; not reenabled",
+  "post_publish_ci": "not yet checked in this pre-push record",
+  "controller_sha256": "665386ac13001bbc2723e4c39bc24c2cc667f8da07a0bd9d2320ea7ad530f1c5"
+}

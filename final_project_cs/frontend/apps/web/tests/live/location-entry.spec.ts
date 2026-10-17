@@ -21,9 +21,10 @@ for (const width of [375, 1280]) test(`${width}px: 동의 전에도 왼쪽 내 �
   await expect(tools(page)).toHaveAttribute("data-layout", "row");
   const boxes = await tools(page).getByRole("button").evaluateAll(nodes => nodes.map(node => ({ label: node.getAttribute("aria-label"), box: node.getBoundingClientRect().toJSON() })));
   for (const item of boxes) {
-    expect(item.box.width, `${item.label} 누름 폭`).toBeGreaterThanOrEqual(44);
+    // 변환된 DOM 좌표의 부동소수점 오차만 허용한다(0.0001px). 실제 누름 영역 기준은 유지한다.
+    expect(item.box.width + 0.0001, `${item.label} 누름 폭`).toBeGreaterThanOrEqual(44);
     // 거리·접기 버튼은 44×40px, 내 위치를 포함한 원형 도구는 44×44px를 유지한다.
-    expect(item.box.height, `${item.label} 누름 높이`).toBeGreaterThanOrEqual(item.label === "지도 단추 접기" ? 40 : 44);
+    expect(item.box.height + 0.0001, `${item.label} 누름 높이`).toBeGreaterThanOrEqual(item.label === "지도 단추 접기" ? 40 : 44);
   }
   if (await tools(page).getAttribute("data-layout") === "row") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);
   await tools(page).getByRole("button", { name: "지도 단추 접기" }).focus();
