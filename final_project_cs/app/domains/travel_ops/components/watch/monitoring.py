@@ -7,6 +7,8 @@ from uuid import UUID, uuid4
 
 from psycopg.types.json import Jsonb
 
+from app.domains.travel_ops.components import candidate_diagnostics
+
 from app.infrastructure.db.session import get_connection
 
 _current: ContextVar[tuple | None] = ContextVar('travel_watch_run', default=None)
@@ -21,7 +23,7 @@ _FIELDS = frozenset('verdict checks category status mode simulation_id source co
     'for_region announced_at areas events active window rules magnitude_min radius_km lookback_hours '
     'pm10_grade pm25_grade warning message_id unclassified weather_held_back partial_from note '
     'created_at occurred_at latitude longitude covered step district district_basis coverage from to '
-    'for_place depth_km location intensity remark notice_type'.split())
+    'for_place depth_km location intensity remark notice_type candidate_key reasons rank'.split())
 
 
 def _safe(value):
@@ -71,7 +73,12 @@ def execute(tenant: str, *, forced: bool, interval: float, work, connection_fact
                      "VALUES(%s,%s,%s,%s,'running')", (tenant, run_id, forced, interval))
     token = _current.set((tenant, run_id, connect))
     try:
-        counts = work()
+        def candidate_record(event):
+            record('candidate_evaluation', trip_id=event.get('trip_id'), item_id=event.get('item_id'),
+                   target_title=event.get('target_title'), report=event)
+
+        with candidate_diagnostics.observe(candidate_record):
+            counts = work()
     except Exception as exc:
         with connect() as conn, conn.transaction():
             conn.execute("UPDATE travel_watch_runs SET status='failed',finished_at=clock_timestamp(),error_type=%s "

@@ -19,6 +19,8 @@
 """
 from __future__ import annotations
 
+from app.domains.travel_ops.components import candidate_diagnostics
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.domains.travel_ops.components.planning.replan import Candidate
@@ -61,11 +63,13 @@ class ItineraryChange:
     #:  각 안은 알림 · 「다른 안」 목록까지 완성된 변경이다(그 안보다 **낮은** 순위만 다른 안으로 보인다 — 이미 안 맞는다고 본 안을 고객에게 다른 안으로 보이지 않는다).
     fallbacks: list["ItineraryChange"] = field(default_factory=list)
 
-    def new_items(self, current: list[Item]) -> list[Item]:
+    def new_items(self, current: list[Item], *, party_size: int | None = None,
+                  constraints: dict[str, Any] | None = None) -> list[Item]:
         if self.full_items is not None:
             return list(self.full_items)
         out = [self.replacements.get(item.item_id, item) for item in current]
-        return refresh_moves_around(current, out, self.replacements)
+        return refresh_moves_around(current, out, self.replacements,
+                                    party_size=party_size, constraints=constraints)
 
 
 def _with_fallbacks(build: Callable[[Any, list[Any]], "ItineraryChange"], ranked: list[Any]) -> "ItineraryChange":
@@ -93,7 +97,8 @@ def _basis_of(move: Item, basis: str, travel_min: int | None) -> dict[str, Any]:
     return out
 
 
-def refresh_moves_around(before: list[Item], after: list[Item], replacements: dict[UUID, Item]) -> list[Item]:
+def refresh_moves_around(before: list[Item], after: list[Item], replacements: dict[UUID, Item], *,
+                         party_size: int | None = None, constraints: dict[str, Any] | None = None) -> list[Item]:
     """☆`[2026-09-29 이동 계산기 문제목록 #44]` 장소가 바뀐 항목의 **바로 앞뒤 이동**을 새 장소 기준으로 다시 만든다.
 
     앞 판은 장소 항목만 바꾸고 이동 항목은 옛 장소로 가는 경로(탈 노선 uses · 소요)를 그대로 둬, 식당을 바꿨는데
@@ -148,7 +153,7 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
     if not targets:
         return after
     from app.domains.travel_ops.components.team_hooks import legs
-    engine = legs.leg_planner(None, {})
+    engine = legs.leg_planner(party_size, constraints or {})
     fresh: dict[UUID, Item] = {}
     for j, far in sorted(targets.items()):
         move = seq_sorted[j]
@@ -477,6 +482,7 @@ def _same_activity_site(a, b) -> bool:
 
 
 # ── 감시 — 활동 ────────────────────────────────────────────────
+@candidate_diagnostics.for_item("activity_adjustment")
 def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list[dict[str, Any]],
                              check: Callable[..., dict[str, Any]], now: datetime,
                              items: list[Item] | None = None,
@@ -494,8 +500,17 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
     fresh = next((p for p in places if str(p.get("place_id")) == str(origin.get("place_id"))), None)
     if fresh is not None and fresh.get("catalog_class") and not origin.get("catalog_class"):
         origin["catalog_class"] = fresh["catalog_class"]
-    places = unused_places(places, items, item)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
-    places = other_sites(places, item.place, items)  # 원래 곳 · 일정의 다른 활동과 같은 곳(경복궁 ↔ 건청궁)도 아니다
+    for filter_places, reason in (
+        (lambda values: unused_places(values, items, item), "여행에 이미 포함된 장소"),
+        (lambda values: other_sites(values, item.place, items), "기존 일정과 같은 장소"),
+    ):
+        kept = filter_places(places)
+        kept_ids = {str(p["place_id"]) for p in kept}
+        for place in places:
+            if str(place["place_id"]) not in kept_ids:
+                candidate_diagnostics.record(key=place["place_id"], name=place["name"],
+                                             outcome="excluded", reasons=[reason])
+        places = kept
     causes = report.get("disruptions", [])
     candidates = activity_candidates(original=origin, places=places,
                                      start=item.starts_at, end=item.ends_at, causes=causes,
@@ -505,11 +520,19 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
         from app.domains.travel_ops.components.planning.replan import Candidate
 
         alive = sorted((c for c in candidates if not c.rejected), key=Candidate.rank)
+        for candidate in alive[limit:]:
+            candidate.rejected.append("재검증 회차 한도에 따라 보류")
+            candidate.recheck = {"verdict": "not_checked", "reason": "candidate_limit"}
         candidates = alive[:limit] + [c for c in candidates if c.rejected]
     best, alternates, rejected = choose(
         candidates, lambda c: check(place=c.place, starts_at=item.starts_at), distinct=_same_activity_site)
     if best is None:
         # ★못 풀면 부분 반영하지 않는다(§6-C-5). 고객 안내와 결함 분석에 쓸 원인을 남긴다.
+        failed = [c.recheck for c in rejected if c.recheck and c.recheck.get("verdict") not in ("clear", "disrupted")]
+        if failed:
+            return NoChange("source_failed", {"causes": causes,
+                            "failed_categories": sorted({name for report in failed for name in report.get("failed_categories", [])}),
+                            "rejected": {c.name: c.rejected for c in rejected}})
         return NoChange("unresolved", {"causes": causes,
                                        "rejected": {c.name: c.rejected for c in rejected}})
     replay = any(cause.get("mode") == "replay" for cause in causes)

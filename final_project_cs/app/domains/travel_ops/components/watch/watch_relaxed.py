@@ -16,6 +16,8 @@
 """
 from __future__ import annotations
 
+from app.domains.travel_ops.components import candidate_diagnostics
+
 import logging
 from datetime import datetime
 from typing import Any, Callable
@@ -51,6 +53,15 @@ def ledger_states(conn, tenant_id: str) -> Callable[[list[dict[str, Any]]], Any]
     return dining_ledger.state_lookup(conn, tenant_id)
 
 
+class VerificationUnavailable(RuntimeError):
+    """후보 확인 실패를 대안 부재로 안내하지 않게 실행 계층에 구분해 전달한다."""
+
+    def __init__(self, categories):
+        self.categories = sorted(set(categories))
+        super().__init__("alternate verification unavailable")
+
+
+@candidate_diagnostics.for_item("relaxed_validation")
 def verified_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
                      options: list[dict[str, Any]], check: Callable[..., dict[str, Any]] | None) -> list[dict[str, Any]]:
     """묻는 안 가운데 **고르면 그대로 적용될 안**만 — 고를 때(`pending.choose`)와 같은 계산으로 미리 해 본다.
@@ -62,10 +73,16 @@ def verified_options(*, trip: dict[str, Any], items: list[Item], places: list[di
     probe = [i if i.item_id != current.item_id else _with_alternates(i, ranked) for i in items]
     before, constraints = parts_from_items(items), dict(trip.get("constraints") or {})
     kept: list[dict[str, Any]] = []
+    unavailable = []
     for option in ranked:
         plan = plan_swap(trip_version=trip["version"], base_version=trip["version"], items=probe, places_by_id=by_id,
                          item_id=current.item_id, choice=option["key"], message=None, request_id=None, check=check)
         if isinstance(plan, NoChange):
+            report = plan.detail.get("report") or {}
+            candidate_diagnostics.record(key=option["key"], name=option["name"], outcome="rejected",
+                                         reasons=[plan.status], report=report)
+            if plan.status == "alternate_invalid" and report.get("verdict") not in ("clear", "disrupted"):
+                unavailable.append(report)
             continue
         # 식사도 같은 원인을 **다시 점검**한다 — `plan_swap` 은 활동만 다시 본다. 감시가 식사 대체를 고를 때도 후보마다 같은 점검을 지났다(`plan_dining_disrupted`).
         #   재난 · 통제가 걸린 동네의 식당을 「비슷한 안」으로 내밀지 않는다. 점검이 통과(`clear`)가 아니면(모름 · 치명 포함) 싣지 않는다
@@ -73,12 +90,24 @@ def verified_options(*, trip: dict[str, Any], items: list[Item], places: list[di
             spot = by_id.get(str(option.get("place_id") or ""))
             if spot is not None:
                 start = datetime.fromisoformat(option["starts_at"]) if option.get("starts_at") else current.starts_at
-                if (check(place=spot, starts_at=start) or {}).get("verdict") != "clear":
+                report = check(place=spot, starts_at=start) or {}
+                if report.get("verdict") != "clear":
+                    candidate_diagnostics.record(key=option["key"], name=option["name"], outcome="rejected",
+                                                 reasons=["재검증 불통과"], report=report)
+                    if report.get("verdict") != "disrupted":
+                        unavailable.append(report)
                     continue
-        after = plan.new_items(probe)
-        if introduced_violations(trip, items, after) or density_regressions(constraints, before, parts_from_items(after)):
+        after = plan.new_items(probe, party_size=trip.get("party_size"), constraints=constraints)
+        violations = introduced_violations(trip, items, after)
+        density = density_regressions(constraints, before, parts_from_items(after))
+        if violations or density:
+            candidate_diagnostics.record(key=option["key"], name=option["name"], outcome="rejected",
+                                         reasons=["일정 전체 재판정 위반" if violations else "일정 밀도 악화"])
             continue
+        candidate_diagnostics.record(key=option["key"], name=option["name"], outcome="verified")
         kept.append(option)
+    if not kept and unavailable:
+        raise VerificationUnavailable(name for report in unavailable for name in report.get("failed_categories", []))
     return [{**option, "rank": n} for n, option in enumerate(kept, start=1)]
 
 
@@ -129,9 +158,11 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
             all_places = more
             candidates = unused_places(all_places, items, current)
         state_lookup = ledger_states(conn, store.tenant_id)
-    options = relaxed_options(trip=trip, items=items, places=candidates, current=current, state_lookup=state_lookup,
-                              causes=causes)
-    options = verified_options(trip=trip, items=items, places=all_places, current=current, options=options, check=check)
+    with candidate_diagnostics.scope(trip_id=str(trip_id), item_id=str(item_id), target_title=current.title,
+                                     phase="relaxed_search"):
+        options = relaxed_options(trip=trip, items=items, places=candidates, current=current, state_lookup=state_lookup,
+                                  causes=causes)
+        options = verified_options(trip=trip, items=items, places=all_places, current=current, options=options, check=check)
     if not options:
         return None
     text = relaxed_text(item=current, causes=causes, options=options, recheck_failed=recheck_failed)
@@ -151,14 +182,17 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
 
 def try_offer(connect: Callable[[], Any], *, store: Any, trip_id: UUID, item_id: UUID, causes: list[dict[str, Any]],
               check: Callable[..., dict[str, Any]] | None = None, recheck_failed: bool = False) -> dict[str, Any] | None:
-    """`offer_relaxed` 를 **자기 트랜잭션**으로 — 감시 반복이 쓴다. ★어떤 실패든 `None`(로그만) — 비슷한 안을 못 찾는 것이 옛 알림까지 막으면 안 된다."""
+    """`offer_relaxed` 를 **자기 트랜잭션**으로 — 감시 반복이 쓴다. ★확인 실패는 `source_failed` — 대안 부재로 오안내하지 않고 기존 확인 지연 경로로 전달한다."""
     try:
         with connect() as conn, conn.transaction():
             return offer_relaxed(conn, store=store, trip_id=trip_id, item_id=item_id, causes=causes, check=check,
                                  recheck_failed=recheck_failed)
-    except Exception:                                  # noqa: BLE001
+    except VerificationUnavailable as exc:
+        return {"status": "source_failed", "failed_categories": exc.categories, "options": []}
+    except Exception as exc:                           # noqa: BLE001
         logger.exception("watch relaxed offer failed trip=%s item=%s", trip_id, item_id)
-        return None
+        return {"status": "source_failed", "failed_categories": ["execution"],
+                "error_code": type(exc).__name__, "options": []}
 
 
 __all__ = ["REASON", "ledger_states", "enabled", "offer_relaxed", "relaxed_text", "try_offer", "verified_options"]
