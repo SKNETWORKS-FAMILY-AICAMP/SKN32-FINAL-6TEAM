@@ -544,7 +544,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             if via:
                 evidence = {**evidence, "via": via}            # 전체 자동 추천이 낸 값이면 그렇게 적는다(고객이 고른 값과 구별)
             rows.append((source_id if field_name.startswith("items[") else None, field_name, value, evidence, note))
-        rows = _link_stay_places(review_module.load(conn, tenant_id, intake_id, current), rows)
+        if any(field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None
+               for _, field, value, _, _ in rows):
+            rows = _link_stay_places(review_module.load(conn, tenant_id, intake_id, current), rows)
         # 직접 고른 장소도 자동 추천과 마찬가지로 이동시간을 반영한다. 저장 전에
         # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows

@@ -1,4 +1,6 @@
 ---
+
+- [재난 수신 기록 계약](operations/receipt-history.md) · [구현 보고](records/reports/2026-10-17_1530_receipt-history-and-targets.md) · [매니저 독립 검토](records/reports/2026-10-17_receipt-history-manager-review.md)
 type: guide
 title: cs 프로젝트 구현 wiki
 description: 여행 CS triPilot의 현재 계약·구현 안내입니다
