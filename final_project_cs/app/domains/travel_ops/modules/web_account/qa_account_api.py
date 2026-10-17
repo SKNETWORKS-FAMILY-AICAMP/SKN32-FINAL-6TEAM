@@ -70,7 +70,10 @@ def build_customer_router():
     @router.post("/v1/web/auth/qa-session")
     def exchange(ticket: str = Form(min_length=40, max_length=100)):
         settings = get_settings()
-        origin = (settings.web_origin or "").rstrip("/")
+        origin = (settings.web_origin or "").strip()
+        if not origin:
+            origin = next((value.strip() for value in settings.web_allowed_origins.split(",") if value.strip()), "")
+        origin = origin.rstrip("/")
         if urlparse(origin).scheme not in ("http", "https") or not urlparse(origin).netloc:
             raise HTTPException(503, "고객 웹 주소 설정을 확인해 주세요.")
         with get_connection() as conn, conn.transaction():

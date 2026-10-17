@@ -857,3 +857,5 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 - 2026-10-18: 테스트 계정 수명 제어 독립 통합·지원 Node 빌드·완료 관문 통과. [검증 범위·남은 일](records/reports/2026-10-18_qa-account-manager-independent-review.md). 운영 완료 기록 아님.
 
 - 2026-10-18: 재난문자 v2 지역·문자 식별 보정 독립 통합과 mock 서버8/8·완료관문26/26 통과. [검증 범위·남은 일](records/reports/2026-10-18_receipt-message-relevance-manager-review.md). 실제 운영 확인은 기능 담당.
+
+- 2026-10-18: QA 로그인 주소 설정 대체 규칙 보완. 독립 계약354/354·관련190/190·완료26/26. [검토·범위·남은 일](records/reports/2026-10-18_qa-web-origin-manager-review.md). 실제 자동 배포 확인은 기능 담당.

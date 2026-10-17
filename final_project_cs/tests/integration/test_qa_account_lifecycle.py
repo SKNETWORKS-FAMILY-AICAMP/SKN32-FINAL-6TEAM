@@ -169,8 +169,11 @@ def test_partial_delete_is_rolled_back_not_reported_off(state, monkeypatch):
     assert qa.status(conn, tenant) == current
 
 
-def test_admin_http_permissions_csrf_actor_and_input_boundary(state, monkeypatch):
+@pytest.mark.parametrize('web_origin', ['https://customer.example', ''])
+def test_admin_http_permissions_csrf_actor_and_input_boundary(state, monkeypatch, web_origin):
     conn, tenant, _, _ = state
+    monkeypatch.setattr(api, 'get_settings', lambda: SimpleNamespace(tenant_id=tenant, public_base_url='https://customer.example',
+                        web_origin=web_origin, web_allowed_origins=' , https://customer.example/ , http://localhost:3100'))
     hashed = auth.hash_password('correct-password', iterations=1000)
     scopes = frozenset({'ops:introspect','limits:write'})
     monkeypatch.setattr(auth, 'operators', lambda: {'qa-operator': (hashed, scopes)})
