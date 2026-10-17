@@ -61,3 +61,5 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 
 - 재난 수신 기록 영향 표시 추가: [완료한 일과 남은 일](2026-10-17_receipt-impact.md).
+
+- 2026-10-17 후속: 숙소·예약·고객 웹 11196399, 재난 영향 필터 3057ad2f의 양쪽 매니저 반영 및 운영 배포·안정성 확인 완료. [재난 배포와 남은 확인](../../final_project_cs/wiki/records/reports/2026-10-17_receipt-impact-manager-integration.md). 숙소 최초 채움·수동 저장 실패는 [후속 기록](../../final_project_cs/wiki/records/reports/2026-10-17_lodging-ui-manager-integration.md)에서 별도 추적한다.

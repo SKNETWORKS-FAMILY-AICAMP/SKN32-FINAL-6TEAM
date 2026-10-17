@@ -111,10 +111,12 @@ def ask(gaps: Iterable[Gap], owners: Mapping[str, Owner], draft: Mapping[str, An
 
 
 def settle(draft: dict[str, Any], gaps: list[Gap], owners: Mapping[str, Owner], apply: Apply, recheck: Recheck, *,
-           max_rounds: int = MAX_ROUNDS) -> tuple[dict[str, Any], list[Proposal], list[dict[str, Any]]]:
+           max_rounds: int = MAX_ROUNDS,
+           retry_unfilled: Callable[[Proposal], bool] | None = None) -> tuple[dict[str, Any], list[Proposal], list[dict[str, Any]]]:
     """빈칸을 담당 제안으로 채운 초안 · 쓴 제안 · 회차 기록. ★적용은 여기(코드)만 한다 — 담당은 제안만.
 
     한 회차: 담당에게 묻기 → 장소 → 이동 → 시각 순으로 첫 후보를 대 보기 → 다시 검사. 다시 검사가 **새** 빈칸을 내면 그것만 다음 회차로.
+    부르는 쪽이 `retry_unfilled`로 고른 미해결 제안은 다른 적용으로 판이 바뀐 때만 다시 볼 수 있다.
     `max_rounds` 를 넘기면 남은 빈칸은 고객 질문(제안 없이 이유만)으로 둔다 — 끝없이 돌지 않는다."""
     used: list[Proposal] = []
     log: list[dict[str, Any]] = []
@@ -123,6 +125,7 @@ def settle(draft: dict[str, Any], gaps: list[Gap], owners: Mapping[str, Owner], 
     for round_no in range(1, max_rounds + 1):
         if not pending:
             break
+        before_revision = draft.get("revision")
         proposals = ask(pending, owners, draft)
         order = {name: i for i, name in enumerate(APPLY_ORDER)}
         ordered = sorted(proposals, key=lambda p: order.get(CHANGES.get(p.owner, ""), len(order)))
@@ -130,10 +133,17 @@ def settle(draft: dict[str, Any], gaps: list[Gap], owners: Mapping[str, Owner], 
         if usable:
             draft = apply(draft, usable)
         used.extend(ordered)
-        fresh = [g for g in recheck(draft) if g.key not in seen]
-        log.append({"round": round_no, "asked": len(pending), "new_gaps": [g.as_dict() for g in fresh]})
+        remaining = recheck(draft)
+        fresh = [g for g in remaining if g.key not in seen]
+        retry_keys = {p.gap.key for p in ordered if retry_unfilled is not None and not p.candidates
+                      and p.error is None and retry_unfilled(p)} if draft.get("revision") != before_revision else set()
+        retried = [g for g in remaining if g.key in seen and g.key in retry_keys]
+        entry = {"round": round_no, "asked": len(pending), "new_gaps": [g.as_dict() for g in fresh]}
+        if retried:
+            entry["retried_gaps"] = [g.as_dict() for g in retried]
+        log.append(entry)
         seen |= {g.key for g in fresh}
-        pending = fresh
+        pending = fresh + retried
     for gap in pending:                                # 회차를 다 써도 남은 것
         used.append(Proposal(gap, "ask_customer", [{"question": gap.reason}], reason=f"{max_rounds}회 맞춰 봐도 남았다"))
     return draft, used, log
