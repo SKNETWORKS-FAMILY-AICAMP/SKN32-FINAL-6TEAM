@@ -14,6 +14,7 @@ import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import { LiveError, probeSession, startSession } from "@/lib/live/client";
 import { beginIntake, clearIntakeFailure, intakeFailure, type PlanRequest } from "@/lib/live/intake-start";
+import { previousPath } from "@/lib/nav-history";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { examplePlan } from "./example-plan";
@@ -29,6 +30,11 @@ const draftKey = "tripilot.web.registration-draft.v1";
 function readDraft(): string {
   try { return sessionStorage.getItem(draftKey) ?? ""; }
   catch { return ""; }
+}
+
+/** `[2026-10-16 ST4F-601 F8]` The plan became a trip: the next 「새 여행 등록」 starts empty instead of showing the text just sent. */
+export function clearRegistrationDraft(): void {
+  try { sessionStorage.removeItem(draftKey); } catch { /* a private window: nothing was kept */ }
 }
 
 function Preferences() {
@@ -396,7 +402,8 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
         </aside>
       </div>
       <div className={styles.actions}>
-        <ButtonLink href={onboarding.agreed ? routes.home : routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</ButtonLink>
+        {/* ★`[2026-10-16 ST4F-601 F16]` Back to the screen it was opened from (it always went to the intro, also from My trips); the intro when there is none. */}
+        <Button onClick={() => { if (previousPath() !== null) router.back(); else router.push(routes.home); }}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</Button>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
         {/* `[2026-10-06 사용자 지적]` Empty: it LOOKS switched off (grey) but still answers a press - it says what to do. It is not `disabled`, which would say nothing. */}
         <Button variant="primary" type="submit" disabled={pending} className={reason ? styles.blocked : ""} aria-disabled={reason ? true : undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>

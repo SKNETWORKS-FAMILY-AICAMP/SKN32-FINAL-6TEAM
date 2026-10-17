@@ -182,7 +182,7 @@ export async function saveSourcePolicy<T>(payload: unknown): Promise<T> {
   const session = await operatorSession();
   return liveRequest<T>('source-policy', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
 }
-export const operationSimulations = <T,>(tripId?: string) => liveRequest<T>(tripId ? `simulations/${encodeURIComponent(tripId)}` : 'simulations');
+export const operationSimulations = <T,>(tripId?: string, query?: URLSearchParams) => liveRequest<T>(tripId ? `simulations/${encodeURIComponent(tripId)}` : `simulations${query ? `?${query}` : ''}`);
 export const operationWatchRuns = <T,>(suffix = '') => liveRequest<T>(`watch-runs${suffix}`);
 export const operationApiLimits = <T,>() => liveRequest<T>('api-limits');
 export async function saveOperationSimulation<T>(tripId: string, payload: unknown): Promise<T> {

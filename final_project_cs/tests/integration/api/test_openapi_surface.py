@@ -33,6 +33,7 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/restore",
     # 운영자 웹앱 연동 계약의 고객 문의·공개 공지. 문의 쓰기는 고객 인증과 CSRF를 거친다.
     "/v1/web/support/notices",
+    "/v1/web/support/notices/board",
     "/v1/web/support/inquiries",
     # 공개 계약 rest-endpoints.md에 이미 정의된 이동 선택·보관 정책·안전 복구 경로.
     "/v1/web/legal/retention",

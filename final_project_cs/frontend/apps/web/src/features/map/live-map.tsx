@@ -156,7 +156,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
   }) : [], [ready, view, points, topInset, bottomInset, controlArea]);
   useLayoutEffect(() => { controller.current?.setHiddenPoints(chips.flatMap((chip) => chip.ids)); refreshLayout(); }, [chips, folded, refreshLayout]);
   const preview = view && coordinatePick?.value ? toPixels(view, coordinatePick.value) : null;
-  return <div ref={surface} className={styles.live} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-moving={moving || undefined} data-awake={awake || undefined} data-picking={!!coordinatePick || undefined} onPointerDown={wake}
+  return <div ref={surface} className={styles.live} style={{ position: "relative", flex: 1 }} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-moving={moving || undefined} data-awake={awake || undefined} data-picking={!!coordinatePick || undefined} onPointerDown={wake}
     onPointerDownCapture={event => { pointer.current = { x: event.clientX, y: event.clientY, moved: false }; }}
     onPointerMoveCapture={event => { const start = pointer.current; if (start && Math.hypot(event.clientX-start.x, event.clientY-start.y)>8) start.moved = true; }}
     onClickCapture={event => {
@@ -166,7 +166,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       const rect = container.current!.getBoundingClientRect(), x = event.clientX-rect.left, y = event.clientY-rect.top;
       if (x>=0 && x<=rect.width && y>=(topInset??0) && y<=rect.height-(bottomInset??0)) coordinatePick.onPick(fromPixels(view, { x, y }));
     }}>
-    <div className={styles.canvas} ref={container} aria-label={`${name} 지도`} />
+    <div className={styles.canvas} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", isolation: "isolate", zIndex: 0 }} ref={container} aria-label={`${name} 지도`} />
     {ready && <div className={styles.routeLabels} aria-hidden="true">
       {routeLabels(view, lines ?? [], points, topInset, bottomInset).map((label) => <span key={label.id} data-route-label={label.id} data-mode={label.mode}
         className={styles.routeLabel} style={{ left: label.x, top: label.y, color: `var(${LINE_TONE_VARIABLE[label.mode ?? "unknown"]})` }}>

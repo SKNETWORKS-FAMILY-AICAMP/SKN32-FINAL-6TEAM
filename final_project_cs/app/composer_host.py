@@ -175,9 +175,9 @@ IMPLEMENTATIONS: tuple[Implementation, ...] = (
     ),
     Implementation(
         id="team.flight_search",
-        ref="app.domains.travel_ops.instances.flight:FlightTeam",
-        display_name="Flight Team",
-        description="항공편을 찾아 주고(마이리얼트립 · Ignav · 구글 항공권), 일정 항공편 항목을 새 편으로 바꾼다. 예약은 링크로.",
+        ref="app.domains.travel_ops.instances.booking:BookingTeam",   # `[2026-10-14]` 규칙 기반 예약 모듈(옛 instances.flight:FlightTeam)
+        display_name="Booking Module (항공)",
+        description="항공편을 찾아 주고(마이리얼트립 · Ignav · 구글 항공권, 문장 해석은 규칙), 일정 항공편 항목을 새 편으로 바꾼다. 예약은 링크로. 기차 · 버스로 넓힐 예약 모듈.",
     ),
 )
 

@@ -38,9 +38,9 @@ export function kindLook(kind: string | null | undefined) {
   return kinds[stopKind(kind)];
 }
 
-export function StopKind({ item }: { item: Pick<PlanItem, "kind" | "info"> }) {
+export function StopKind({ item }: { item: Pick<PlanItem, "kind" | "info" | "displayKind"> }) {
   const t = useT();
-  const kind = stopKind(item.kind || item.info?.kind);
+  const kind = stopKind(item.displayKind || item.kind || item.info?.kind);
   const { icon: Icon, label } = kinds[kind];
   return <span className={styles.itemKind} data-stop-kind={kind} role="img" aria-label={t(label[0], label[1])} title={t(label[0], label[1])}>
     <Icon size={18} strokeWidth={1.8} aria-hidden="true" />

@@ -29,6 +29,33 @@ function intake(status: IntakeView["status"], stage: string, extra: Partial<Revi
 }
 
 describe("the finished check, from the server's review", () => {
+  it("connects breakfast cards to the shared stay without inventing check-in or nights", () => {
+    const common = { id: "0-0", members: ["0-0", "0-2"], place: place("공통 숙소") };
+    const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: true,
+      needs: { items: 0, moves: 0, total: 0 }, items: [
+        item({ title: "호텔", kind: "dining", lodging_group: common }),
+        item({ id: "0-2", date: "2026-10-02", day: 2, title: "호텔", kind: "dining", lodging_group: common }),
+      ], moves: [] } });
+    const result = reviewResultOf(next, readingOf(next))!;
+    expect(result.items.map((row) => row.lodgingGroup)).toEqual([
+      { ...common, place: "공통 숙소" }, { ...common, place: "공통 숙소" },
+    ]);
+    expect(result.items.every((row) => row.kind === "dining" && !row.endDate)).toBe(true);
+  });
+  it.each([
+    { parts: { content_type: "32", lodging_meal: true }, place: null },
+    { parts: null, place: { ...place("효자스테이"), kind: "dining", category: "숙소 안 식사" } },
+    { parts: null, place: { ...place("호텔"), content_type_id: "32" } },
+  ])("keeps breakfast as dining while displaying its lodging icon", (patch) => {
+    const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: false,
+      needs: { items: 1, moves: 0, total: 1 }, items: [item({ ...patch, title: "호텔", kind: "dining" })], moves: [] } });
+    expect(reviewResultOf(next, readingOf(next))!.items[0]).toMatchObject({ kind: "dining", displayKind: "lodging" });
+  });
+  it("retains the dining icon for an ordinary restaurant", () => {
+    const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: true,
+      needs: { items: 0, moves: 0, total: 0 }, items: [item({ kind: "dining", place: place("시장 식당") })], moves: [] } });
+    expect(reviewResultOf(next, readingOf(next))!.items[0].displayKind).toBeUndefined();
+  });
   const review = {
     revision: 3, built_at: "", engine: "timetable" as const, ready: false, needs: { items: 1, moves: 0, total: 1 },
     items: [item({}), item({ id: "0-1", index: 1, title: "광장시장", starts_at: "12:00", ends_at: "13:00", status: "review", locked: true, place: place("광장시장"),

@@ -624,6 +624,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             if state == "picked_nearest" else None,
             # 예약했다고 적혀 있나(True · False · 말 없음 None) · 이름 없는 줄이 읽힌 조각(그 밖은 None) — 후보 중심 · 문장의 재료
             "booked": booked, "parts": nameless_parts(r, state),
+            "_lodging_parts": (((r.get("claims") or {}).get("place") or {}).get("evidence") or {}).get("lodging_parts"),
             # `[2026-10-15 ST4F-490]` 업체 예약 표에 묶인 일정(수정 접수만) — 화면은 잠금을 풀 때 「업체 예약은 따로 취소 · 변경해야 해요」를 알린다
             "vendor_booking": ((r["claims"].get("vendor_booking") or {}).get("value") is True),
             # 두 번 다르게 읽은 제목 · 예약번호 — `[{field: title | booking_no, current, other(null 이면 두 읽기 문장만), note}]`. 없으면 [] (고객이 고르면 사라진다)
@@ -634,6 +635,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         for line in lines:
             note("check", {"item": items[-1]["id"], **line})
 
+    from .lodging_context import annotate
+    annotate(items)
     mode_pick = picked_modes(claims)            # {"0-0~0-1": "taxi"} — 고객이 구간마다 고른 수단(없으면 추천)
     old_moves = {m.get("sig"): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
     moves: list[dict[str, Any]] = []
@@ -767,9 +770,12 @@ def public(payload: dict[str, Any] | None, *, tenant_id: str | None = None) -> d
     items = []
     for it in payload.get("items", []):
         place = it.get("place")
-        items.append({**it, "place": public_place(place)})
+        items.append({**it, "place": public_place(place), "rows": list(it.get("rows", []))})
+    from .lodging_context import prepare
+    prepared = prepare({**payload, "items": items})
+    items = [{k: v for k, v in it.items() if k != "_lodging_parts"} for it in items]
     # `uses` 는 경로선을 그리는 쪽(`/route-shapes`)이 저장본에서 읽는다 — 확인 화면 응답 모양은 그대로 둔다
-    return {**payload, "items": items,
+    return {**prepared, "items": items,
             "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses", "departure_context", "selected_option_id")}
                       for m in payload.get("moves", [])]}
 
@@ -877,7 +883,10 @@ def load(conn, tenant_id: str, intake_id: Any, revision: int) -> dict[str, Any] 
         cur.execute("SELECT payload FROM intake_reviews WHERE tenant_id=%s AND intake_id=%s AND revision=%s",
                     (tenant_id, intake_id, revision))
         row = cur.fetchone()
-    return dict(row[0]) if row else None
+    if not row:
+        return None
+    from .lodging_context import prepare
+    return prepare(dict(row[0]))
 
 
 def store(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str, Any]) -> None:

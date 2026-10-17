@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { JourneyShell } from "@/components/layout/journey-shell";
 import { Button, QueryState } from "@/components/ui";
+import { useIntakeRoutes } from "@/features/map/use-intake-routes";
 import { useRouteDetail } from "@/features/map/use-route-detail";
 import { readingOf } from "@/features/plan-check/from-intake";
 import { reviewResultOf } from "@/features/plan-check/from-review";
@@ -79,15 +80,8 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
   const previewed = useMemo(() => server.preview?.review ? reviewResultOf(server.preview, readingOf(server.preview), server.infos) : null, [server.preview, server.infos]);
   const result = useMemo(() => reviewed && withTrip({ ...reviewed, dirty: server.dirty, rechecking: server.rechecking }, trip, frozen ?? [], reasons), [reviewed, server.dirty, server.rechecking, trip, frozen, reasons]);
   const preview = useMemo(() => previewed && withTrip({ ...previewed, dirty: false, rechecking: null }, trip, frozen ?? [], reasons), [previewed, trip, frozen, reasons]);
-  // The lines between the stops for the plan being edited (the intake's `route-shapes`), as on the plan check; none on a failure.
-  const routeShapes = useQuery({
-    queryKey: ["intake-route-shapes", intakeId, query.data?.revision ?? 0, language],
-    queryFn: () => getIntakeRouteShapes(intakeId!, language).catch(() => null),
-    enabled: Boolean(reviewed),
-    retry: false,
-    refetchOnWindowFocus: false,
-    staleTime: 10 * 60_000,
-  });
+  // The lines between the stops for the plan being edited (the intake's `route-shapes`), as on the plan check; failures are shown with a retry, while an older API (404) is unsupported.
+  const routeShapes = useIntakeRoutes(intakeId ?? "", query.data?.revision ?? 0, language, Boolean(reviewed));
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId ?? "", query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId!, language, { detail: true }));
 
   // `[2026-10-13 사용자 지시]` The plan check's last step, as it is: changes → 「다시 제출」 → checked → ✓. Here ✓ (and 「완료」 in the head) writes the trip's next version, then the trip is shown.
@@ -138,7 +132,7 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
     return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={!query.error} error={query.error} retry={reread} /></JourneyShell>;
   }
   return <>
-    <PlanCheck key="edit" view={result} previewView={preview} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} onBack={onExit} actions={actions} registration={registration} edit={edit} />
+    <PlanCheck key="edit" view={result} previewView={preview} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} routeState={{ loading: routeShapes.isFetching, error: routeShapes.isError, retry: () => { void routeShapes.refetch(); } }} onBack={onExit} actions={actions} registration={registration} edit={edit} />
     {asking && <CancelDialog pending={drop.isPending} onKeep={() => setAsking(false)} onDrop={() => drop.mutate()} />}
   </>;
 }

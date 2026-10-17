@@ -22,7 +22,7 @@ from zoneinfo import ZoneInfo
 
 def main():
     from app.core.contracts import ContextPack, TeamTask
-    from app.domains.travel_ops.instances.flight import FlightTeam
+    from app.domains.travel_ops.instances.booking import FlightTeam
     from app.domains.travel_ops.ports.data_sources.base import TravelSources
     from app.domains.travel_ops.ports.data_sources.ignav import IgnavMcp
     from app.domains.travel_ops.ports.data_sources.serpapi_flights import SerpApiFlights
@@ -30,7 +30,7 @@ def main():
     from app.tools.read_tools import ReadToolbox
     from scripts.try_lodging_team import FilePromptLLM
 
-    import app.domains.travel_ops.instances.flight.team as flight_team
+    import app.domains.travel_ops.instances.booking.team as flight_team
 
     args = sys.argv[1:]
     if "--fetch" in args:                             # 소스마다 받는 수를 바꿔 재 본다(기본 team.FETCH)

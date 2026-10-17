@@ -8,11 +8,13 @@ import { ServerNotConnected } from "@/components/server-not-connected";
 import { ConsentGate } from "@/features/consent/consent-gate";
 import { OnboardingProvider } from "@/features/onboarding/onboarding-state";
 import { DATA_MODE } from "@/lib/data-mode";
+import { usePathTracker } from "@/lib/nav-history";
 import { useSettings } from "@/lib/settings";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false }, mutations: { retry: false } } }));
   const { language, theme } = useSettings();
+  usePathTracker();
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   // The layout's script set the saved theme before the first paint; this follows a change made in the menu.
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);

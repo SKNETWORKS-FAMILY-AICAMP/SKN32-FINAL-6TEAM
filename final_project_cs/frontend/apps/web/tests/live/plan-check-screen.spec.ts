@@ -310,7 +310,7 @@ test("핀을 누르면 선택한 이름·종류가 나오고 다시 누르면 �
   await expect(picked).toContainText("액티비티");
   await expect(page.getByText("확인 필요 · 올리브영")).toHaveCount(0);                              // 그 자리를 이름이 차지한다
   await mapSettled(page);                                                                          // 핀을 누르면 지도가 그리로 날아간다 — 멈춘 뒤에 다음 핀을 누른다
-  await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 다른 핀을 누르면 그 핀의 이름으로 바뀐다
+  await page.locator("[data-edge-chip]").filter({ hasText: "3" }).click(); // Select the offscreen stop through its visible navigation chip.
   await expect(picked).toContainText("광장시장 · 식당");
   await mapSettled(page);
   await pin(page, "3. 광장시장").locator("[data-pin-body]").click();                                // 같은 핀을 다시 누르면 놓는다

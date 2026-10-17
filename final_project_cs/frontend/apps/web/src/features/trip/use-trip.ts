@@ -28,7 +28,8 @@ export function useTrips() {
     queryKey: [...tripsKey, language],
     queryFn: () => tripGateway.listTrips(language),
     retry: false,
-    refetchOnWindowFocus: false,
+    // `[2026-10-17 ST4F-603]` 에이전트 · MCP · 다른 기기에서 등록한 여행도 있다 — 탭으로 돌아오면 다시 읽는다.
+    refetchOnWindowFocus: true,
   });
 }
 

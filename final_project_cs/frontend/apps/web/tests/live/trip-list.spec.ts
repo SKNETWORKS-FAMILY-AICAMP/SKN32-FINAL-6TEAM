@@ -107,7 +107,7 @@ test("첫 장에는 등록 버튼과 소개 건너뛰기 없이 아래로 가는
   await page.locator("main > section").nth(1).getByRole("button", { name: "다음 화면" }).click();
   await expect(page.locator("#start-title")).toBeInViewport();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start\?terms=required$/);
+  await expect(page).toHaveURL(/\/start\?terms=required&returnTo=%2Ftrips%2Fnew$/);   // `[2026-10-16 ST4F-601]` 가려던 화면을 싣고 간다
   await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
 });
 
