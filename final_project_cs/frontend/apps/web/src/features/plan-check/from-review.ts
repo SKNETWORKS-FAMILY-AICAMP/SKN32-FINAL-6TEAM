@@ -59,6 +59,7 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
     id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "", ...(item.end_date ? { endDate: item.end_date } : {}),
     title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none", kind: item.kind ?? item.place?.kind ?? null,
     ...(isLodgingReviewItem(item) ? { displayKind: "lodging" } : {}),
+    ...(item.lodging_group ? { lodgingGroup: { ...item.lodging_group, place: item.lodging_group.place?.name ?? null } } : {}),
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
     checks: (item.rows ?? []).map(row), rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
     ...(item.vendor_booking ? { vendorBooking: true } : {}),

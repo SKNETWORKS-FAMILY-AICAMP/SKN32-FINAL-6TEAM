@@ -471,6 +471,7 @@
     "tests/unit/travel/test_intake_review_units.py",
     "tests/unit/travel/test_intake_rules.py",
     "tests/unit/travel/test_intake_search_exact_name.py",
+    "tests/unit/travel/test_intake_shared_lodging.py",
     "tests/unit/travel/test_intake_test_plans.py",
     "tests/unit/travel/test_intake_transcription_differs.py",
     "tests/unit/travel/test_item_pointer.py",

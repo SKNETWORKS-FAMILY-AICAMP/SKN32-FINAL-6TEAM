@@ -26,6 +26,7 @@ from typing import Any, Callable
 
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
 from .hours import _tenants, facts_for
+from . import lodging_context as stay_context
 from .moves import leg_between, late_text
 from .terms import category_label
 from .places import distance_m, normalize_full
@@ -380,7 +381,10 @@ def _team_lodging_places(conn, tenant_id: str, review: dict[str, Any], item: dic
         check_out = check_in + timedelta(days=1)              # 끝을 모르면 1박 — 숙소 팀 `_stay_query` 와 같다
     adults = review.get("party_size")
     previous, following = neighbours(items, item)
-    anchor = reference(item, previous, following)
+    members = stay_context.group_for(items, item)
+    anchor = stay_context.center(items, members) if members else reference(item, previous, following)
+    if current and not stay_context.generic(item) and current.get("latitude") is not None and current.get("longitude") is not None:
+        anchor = float(current["latitude"]), float(current["longitude"])
     keyword_place = current
     if anchor is not None:
         # The next visit supplies location when the hotel name has no coordinates.
@@ -504,7 +508,10 @@ def _taken(items: list[dict[str, Any]], item: dict[str, Any], *, include_self: b
     """이미 일정에 있는 곳 — 같은 날 다른 일정의 장소(와 `include_self` 면 이 일정의 지금 장소). 후보에서 뺀다(이름 **과** 자리가 같을 때만).
     ★검색은 지금 장소를 남긴다 — 이름이 모호해 임시로 고른 곳을 「맞아요」로 확정하려고 다시 고르는 길이다."""
     out = []
+    linked = {x["id"] for x in stay_context.group_for(items, item)}
     for x in items:
+        if x["id"] in linked and x["id"] != item["id"]:
+            continue
         if x["place"] and ((include_self and x["id"] == item["id"]) or (x["id"] != item["id"] and x["date"] == item["date"])):
             out.append((normalize_full(x["place"]["name"]), x["place"].get("latitude"), x["place"].get("longitude")))
     return out
@@ -814,6 +821,10 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     items = review["items"]
     prev, nxt = neighbours(items, item)
     ref = reference(item, prev, nxt)
+    members = stay_context.group_for(items, item)
+    route_points = stay_context.visits(items, members) if members else []
+    if members:
+        ref = stay_context.center(items, members) or ref
     notes: list[str] = []
     taken = _taken(items, item)
     current = item["place"]
@@ -834,7 +845,14 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         # ★예약했다고 적힌 이름 없는 줄 — 후보를 권하지 않는다(예약한 곳을 다른 곳으로 바꾸자고 하지 않는다). 이름은 검색 · 직접 입력으로 알려 준다
         notes.append("booked_needs_name")
     elif stay or stay_item:
-        if ref is None:
+        fixed, conflict = stay_context.anchor(members, fixed_only=True)
+        if conflict:
+            notes.append("conflicting_stays")
+        elif fixed and stay_context.generic(item):
+            found = [{**stay_context.as_place(fixed, item), "kind": "activity", "basis": "lodging"}]
+            taken = []
+            notes.append("existing_trip_stay")
+        elif ref is None:
             notes.append("no_reference_point")
         else:
             # Names without a location still use the registered lodging team.
@@ -947,7 +965,9 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         found = [place for place in found if _is_stay_place(place)]
     if pair_stay_meals and found:
         # 종류를 거른 **뒤에** 짝을 붙인다 — 지도의 음식점(호텔 뷔페)이 식사 후보로 섞이지 않고, 짝은 숙소 이름 그대로인 것만 생긴다
-        found = _with_stay_meals(found)
+        if members and route_points:
+            found.sort(key=lambda p: stay_context.score(p, route_points))
+        found = _with_stay_meals(found, per=len(found))
         notes.append("stay_and_meal")
     if before and not found and "no_same_kind" not in notes:
         notes.append("no_same_kind")
@@ -962,6 +982,8 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         first.append((place, assess(conn, tenant_id, item, place, prev, nxt, None)))
     first.sort(key=lambda pa: (not pa[1]["fits"], pa[1]["status"] == "bad", _hours_rank(pa[1]["rows"]), pa[0].get("team_rank", 10**6),
                                -(pa[0].get("similarity") or 0), _score(pa[0], prev, nxt, ref, bool(area))))
+    if members and route_points:
+        first.sort(key=lambda pa: (pa[1]["status"] == "bad", stay_context.score(pa[0], route_points)))
     if (group and item["kind"] == "activity" and not stay and not lodging and ref and "similar_experience" not in notes
             and sum(1 for pa in first if pa[1]["fits"]) < limit):
         # ★`[2026-10-15 핫픽스]` 같은 종류(궁궐)가 **이 시각에 맞는 곳이 셋 못 되면**(이른 아침엔 궁궐이 다 닫는다) 같은 경험의 다른 곳(공원 · 광장 · 둘레길)까지 넓혀 다시 줄 세운다 —
@@ -982,10 +1004,14 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     for place, cheap in pool:
         full = cheap if rank_only else assess(conn, tenant_id, item, place, prev, nxt, budget)
         out.append({"rank": 0, **_present(place, full, prev, nxt, ref, area)})
+        if members and route_points and not area:
+            out[-1].update(distance_m=round(stay_context.score(place, route_points)), reference="여행 전체 방문지(평균 직선거리)")
     # 시간표로 잰 곳이 어림으로 잰 곳보다 앞(같은 적합성 안에서) — 계산기 시간 상한이 일찍 닿아 뒤 후보가 어림으로 평가돼도 순위가 뒤섞이지 않게
     out.sort(key=lambda c: (not c["fits"], c["status"] == "bad", _hours_rank(c["rows"]), _BASIS_ORDER.get(c["basis"], 0), -(c["similarity"] or 0),
                             -((c.get("taste") or {}).get("score") or 0), c["estimated"],     # 취향 후보는 임베딩 점수가 있으면 그 순서(`taste.ranked_by == "embedding"`)
                             c["distance_m"] if c["distance_m"] is not None else 10**9))
+    if members and route_points:
+        out.sort(key=lambda c: (c["status"] == "bad", stay_context.score(c["place"], route_points)))
     if "meal_inferred" in notes:
         # 거기서 밥을 먹는 일정 — 시장만 셋이 아니라 식당도 둘까지 보인다(순서는 위 판정 순서를 지킨다)
         eating = [c for c in out if c["place"]["kind"] == "dining"][:2]
@@ -996,6 +1022,8 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     original_name = (current or {}).get("name")
     for c in out:
         c["reason"] = _reason(c, original_name)
+        if members and len(members) > 1:
+            c["reason"] = "여행 공통 숙소 · 연결된 호텔 조식도 같은 곳으로 맞춰요 · " + (c["reason"] or "")
         c["reason_by"] = "template"
     if chat is not None and out:
         from . import reasons

@@ -29,6 +29,19 @@ function intake(status: IntakeView["status"], stage: string, extra: Partial<Revi
 }
 
 describe("the finished check, from the server's review", () => {
+  it("connects breakfast cards to the shared stay without inventing check-in or nights", () => {
+    const common = { id: "0-0", members: ["0-0", "0-2"], place: place("공통 숙소") };
+    const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: true,
+      needs: { items: 0, moves: 0, total: 0 }, items: [
+        item({ title: "호텔", kind: "dining", lodging_group: common }),
+        item({ id: "0-2", date: "2026-10-02", day: 2, title: "호텔", kind: "dining", lodging_group: common }),
+      ], moves: [] } });
+    const result = reviewResultOf(next, readingOf(next))!;
+    expect(result.items.map((row) => row.lodgingGroup)).toEqual([
+      { ...common, place: "공통 숙소" }, { ...common, place: "공통 숙소" },
+    ]);
+    expect(result.items.every((row) => row.kind === "dining" && !row.endDate)).toBe(true);
+  });
   it.each([
     { parts: { content_type: "32", lodging_meal: true }, place: null },
     { parts: null, place: { ...place("효자스테이"), kind: "dining", category: "숙소 안 식사" } },

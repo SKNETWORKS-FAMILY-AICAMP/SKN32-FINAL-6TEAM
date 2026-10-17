@@ -65,6 +65,7 @@ export interface ReviewItem {
   vendor_booking?: boolean;
   candidates_hint: number | null;
   parts?: { content_type?: string | null; lodging_meal?: boolean } | null;
+  lodging_group?: { id: string; members: string[]; place: Pick<ReviewPlace, "name" | "latitude" | "longitude"> | null };
   rows?: CheckLine<ItemRow>[];
   /**
    * `[2026-10-07 cs 개발 세션 제안 계약]` A value read off a photo or scan that the server read two ways (the whole page and a half of it read the same line differently). `current` is the value it kept,
