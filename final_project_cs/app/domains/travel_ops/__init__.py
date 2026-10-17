@@ -24,7 +24,7 @@ from importlib import import_module
 
 _TEAM_EXPORTS = {
     "ActivityTeam": "activity", "BookingHandoffTeam": "booking_handoff",
-    "DiningTeam": "dining", "FlightTeam": "flight", "LodgingTeam": "lodging",   # `[2026-10-07~08]` 숙소 · 항공 본체(옛 locked 는 등록에서 빠짐)
+    "DiningTeam": "dining", "BookingTeam": "booking", "FlightTeam": "booking", "LodgingTeam": "lodging",   # `[2026-10-07~08]` 숙소 · 항공 본체(옛 locked 는 등록에서 빠짐) · `[10-14]` 항공 → 예약 모듈 `booking`(FlightTeam 은 별칭)
     "MobilityTeam": "mobility",
 }
 
@@ -39,6 +39,7 @@ def __getattr__(name):
 __all__ = [
     "ActivityTeam",
     "BookingHandoffTeam",
+    "BookingTeam",
     "DiningTeam",
     "FlightTeam",
     "LodgingTeam",
