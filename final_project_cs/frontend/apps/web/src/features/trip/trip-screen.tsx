@@ -7,7 +7,9 @@ import { DeviceFrame } from "@/components/layout/device-frame";
 import { OverlayRoot } from "@/components/layout/overlay-root";
 import { JourneyShell } from "@/components/layout/journey-shell";
 import { ToastView, useToastState } from "@/components/toast-view";
-import { QueryState } from "@/components/ui";
+import { ButtonLink, QueryState } from "@/components/ui";
+import { useSearchParams } from "next/navigation";
+import { routes } from "@/lib/routes";
 import { TripMap } from "@/features/map";
 import type { PinLook } from "@/features/map/model";
 import { rideLines, routeNotes, visibleShapes } from "@/features/map/route-lines";
@@ -77,6 +79,7 @@ const UNDER_CHIPS = 96;
  * Always the phone frame (user decision 2026-10-07, like the plan check).
  */
 export function TripScreen({ tripId }: { tripId: string }) {
+  const t = useT();
   const query = useTrip(tripId);
   // `[2026-10-13 사용자 결정 — D 수정 모드]` 「일정 수정」: the same page becomes the plan check of this trip (`trip-edit.tsx`) until 「완료」, then the trip is drawn afresh.
   const [editing, setEditing] = useState(false);
@@ -84,7 +87,8 @@ export function TripScreen({ tripId }: { tripId: string }) {
   // ★`[2026-10-05]` But a trip that is gone (`not_found`) or a session that ended (`session_expired`) is not drawn from the cache: another account's plan must not stay on the screen.
   const gone = query.error instanceof LiveError && ["not_found", "session_expired"].includes(query.error.code);
   if (query.isPending || !query.data || gone) {
-    return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} /></JourneyShell>;
+    return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()}
+      action={gone ? <ButtonLink variant="primary" href={`${routes.myPageAccount}?login=1&returnTo=${encodeURIComponent(`${routes.trip(tripId)}?notices=1`)}`}>{t("여행을 등록한 계정으로 로그인", "Sign in with the account that owns this trip")}</ButtonLink> : undefined} /></JourneyShell>;
   }
   if (editing) return <TripEdit trip={query.data} onExit={() => setEditing(false)} />;
   // `useTripGuardian` reads the address (`?guardian=on`): wait for it outside the server render.
@@ -99,6 +103,7 @@ const dayName = (index: number, t: Translate) => t(`${index + 1}일차`, `Day ${
 
 function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: () => void }) {
   const t = useT();
+  const search = useSearchParams();
   const { language, skipAnimation } = useSettings();
   const queryClient = useQueryClient();
   useDocumentTitle(`${t("나의 여행", "Your trip")} · triPilot`);
@@ -144,8 +149,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const [pane, setPane] = useState<"plan" | "chat">("plan");
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
-  const [centerOpen, setCenterOpen] = useState(false);
-  const [centerTab, setCenterTab] = useState<CenterTab>("warnings");
+  const [centerOpen, setCenterOpen] = useState(() => search.get("notices") === "1");
+  const [centerTab, setCenterTab] = useState<CenterTab>(() => search.get("notices") === "1" ? "notices" : "warnings");
   // `[2026-10-07 목업 C안 3단계]` The title row (opened · being renamed), the share sheet, and the stop whose detail is open.
   const [titleOpen, setTitleOpen] = useState(false);
   const [titleEditing, setTitleEditing] = useState(false);

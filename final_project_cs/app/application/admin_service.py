@@ -154,6 +154,10 @@ def mutate(conn, tenant: str, actor: str, command: dict) -> None:
     command = mask_json(command)
     kind = command["type"]
     now = datetime.now(KST)
+    if kind in ('maintenance', 'publish-notice'):
+        from app.application import service_notifications
+        if service_notifications.prepare(conn, tenant, command):
+            return
     reason = command.get("reason") or command.get("body") or command.get("title") or "운영자 점검"
     if kind in ("block-user", "user-limit"):
         identity = command["userId"]
@@ -174,12 +178,28 @@ def mutate(conn, tenant: str, actor: str, command: dict) -> None:
             raise AdminServiceError(422, "감시 단계는 중복 없이 증가해야 합니다.")
         put(conn, tenant, "settings", "limits", {"chatLimit": command["chatLimit"], "watchRules": rules}, actor=actor, action=kind, reason=reason)
     elif kind == "maintenance":
-        put(conn, tenant, "settings", "maintenance", {k: command[k] for k in ("enabled", "message", "messageEn", "endsAt")}, actor=actor, action=kind, reason=reason)
+        end = datetime.fromisoformat(command['endsAt']).replace(tzinfo=KST)
+        if command['enabled'] and end <= now:
+            raise AdminServiceError(422, '예상 종료 시각은 현재보다 뒤로 지정해 주세요.')
+        value = {k: command[k] for k in ('enabled', 'message', 'messageEn', 'endsAt')}
+        value['deliveryRequestId'] = command.get('requestId')
+        put(conn, tenant, "settings", "maintenance", value, actor=actor, action=kind, reason=reason)
+        service_notifications.persist(conn, tenant, actor, command,
+            title='서비스 점검 안내' if command['enabled'] else '서비스 점검 종료',
+            body=command['message'] if command['enabled'] else '서비스 점검이 종료되었습니다.',
+            start=now, end=end if command['enabled'] else None)
     elif kind == "publish-notice":
-        value = {**command["notice"], "author": actor}
+        value = {**command["notice"], "author": actor, 'audience':command.get('audience','all'),
+                 'deliveryRequestId':command.get('requestId')}
         if value["startsAt"] >= value["endsAt"]:
             raise AdminServiceError(422, "게시 종료는 시작보다 늦어야 합니다.")
-        put(conn, tenant, "notice", str(uuid4()), value, actor=actor, action=kind, reason=value["title"])
+        starts = datetime.fromisoformat(value['startsAt']).replace(tzinfo=KST)
+        ends = datetime.fromisoformat(value['endsAt']).replace(tzinfo=KST)
+        if command.get('notifyUsers') and ends <= now:
+            raise AdminServiceError(422, '게시 종료 시각이 이미 지났습니다.')
+        put(conn, tenant, "notice", command.get('requestId') or str(uuid4()), value, actor=actor, action=kind, reason=value["title"])
+        service_notifications.persist(conn, tenant, actor, command, title=value['title'], body=value['body'],
+                                      start=max(starts, now), end=ends)
     elif kind == "save-template":
         identity = command.get("id") or str(uuid4())
         if command.get("id") and not record(conn, tenant, "template", identity):

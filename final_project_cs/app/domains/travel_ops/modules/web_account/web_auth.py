@@ -22,6 +22,7 @@ from uuid import UUID
 import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 from .guest_policy import is_guest
+from app.domains.travel_ops.components.customer import consents, registration
 
 #: 시작한 브라우저가 만드는 값의 최소 길이 — 짧으면 맞춰 보기 쉽다(요청서: 무작위 32자 이상)
 MIN_CLIENT_NONCE = 32
@@ -133,6 +134,8 @@ def complete(conn, *, tenant_id: str, started: dict[str, Any], subject: str,
                     cur.execute("DELETE FROM customers WHERE customer_id=%s", (created,))
             else:
                 customer, outcome = created, "created"
+        if (outcome == "created" or (outcome == "linked" and guest)) and not consents.is_ok(conn, tenant_id, customer):
+            registration.begin(conn, tenant_id, customer)
         ticket = secrets.token_urlsafe(32)
         cur.execute("INSERT INTO web_oauth_tickets (ticket_hash, tenant_id, provider, outcome, customer_id, client_nonce_hash, source_customer_id) "
                     "VALUES (%s,%s,%s,%s,%s,%s,%s)", (_h(ticket), tenant_id, provider, outcome, customer,

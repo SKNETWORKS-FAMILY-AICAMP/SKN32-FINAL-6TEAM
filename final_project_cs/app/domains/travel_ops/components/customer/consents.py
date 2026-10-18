@@ -26,7 +26,7 @@ from uuid import UUID
 import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 
-from . import retention
+from . import retention, registration
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +156,10 @@ def record(conn, *, tenant_id: str, user_id: UUID, session_kind: str, version: A
         if set(withdrawn) & {"service_terms", "privacy", "service_improvement"}:
             from .service_improvement import invalidate_pending
             invalidate_pending(conn, tenant_id)
-    return state(conn, tenant_id, user_id)
+        result = state(conn, tenant_id, user_id)
+        if result["ok"]:
+            registration.complete(conn, tenant_id, user_id, result["current_version"])
+    return result
 
 
 # ── 철회 효과 ───────────────────────────────────────────────────
@@ -206,8 +209,8 @@ def require(conn, tenant_id: str, user_id: UUID, code: str) -> None:
 
 # ── 사용 조건(게이트) ───────────────────────────────────────────
 def gate_check(conn, *, tenant_id: str, user_id: UUID, path: str) -> None:
-    """게이트가 켜져 있고 이 길이 면제가 아니면, 필수 동의가 지금 버전으로 없을 때 403 `consent_required`."""
-    if not gate_enabled():
+    """일반 게이트 또는 신규 가입 대기 중이면 필수 동의를 확인한다. 로그인·동의 경로는 열어 둔다."""
+    if not gate_enabled() and not registration.pending(conn, tenant_id, user_id):
         return
     if any(path == prefix or path.startswith(prefix + "/") for prefix in EXEMPT_PREFIXES):
         return

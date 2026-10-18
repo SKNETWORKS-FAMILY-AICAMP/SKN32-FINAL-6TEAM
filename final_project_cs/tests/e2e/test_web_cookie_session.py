@@ -318,6 +318,11 @@ def test_social_exchange_in_cookie_mode_gives_a_cookie_and_no_key(cookies):
     assert body["outcome"] == "created" and body["kind"] == "member" and body["csrf_token"] and "user_key" not in body
     assert "guest_idle_hours" not in body
     assert "HttpOnly" in response.headers["set-cookie"] and "Max-Age=2592000" in response.headers["set-cookie"]     # 회원 쿠키는 오래간다(절대 수명 720시간)
+    assert body["registration_required"] is True
+    assert browser.get("/v1/web/trips").status_code == 403
+    current = browser.get("/v1/web/consents").json()["current_version"]
+    assert browser.post("/v1/web/consents", headers={"Origin": WEB, "X-CSRF-Token": body["csrf_token"]}, json={"version": current, "items": [
+        {"code": code, "agreed": True, "text_sha256": "a" * 64} for code in ("service_terms", "privacy")]}).json()["ok"]
     assert browser.get("/v1/web/trips").status_code == 200
 
 

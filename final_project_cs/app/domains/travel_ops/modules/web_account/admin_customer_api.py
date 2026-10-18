@@ -34,11 +34,12 @@ def build_router() -> APIRouter:
         with get_connection() as conn:
             items = admin_service.records(conn, tenant, "notice")
             maintenance = admin_service.record(conn, tenant, "settings", "maintenance") or {"enabled": False, "message": "", "messageEn": "", "endsAt": ""}
-        active = [n for n in items if datetime.fromisoformat(n["startsAt"]).replace(tzinfo=admin_service.KST) <= now < datetime.fromisoformat(n["endsAt"]).replace(tzinfo=admin_service.KST)]
+        active = [n for n in items if n.get('audience','all') == 'all' and datetime.fromisoformat(n["startsAt"]).replace(tzinfo=admin_service.KST) <= now < datetime.fromisoformat(n["endsAt"]).replace(tzinfo=admin_service.KST)]
         if maintenance["enabled"] and datetime.fromisoformat(maintenance["endsAt"]).replace(tzinfo=admin_service.KST) <= now:
             maintenance["enabled"] = False
         # Operator identity belongs in the audit, not in the public notice.
-        return {"notices": [{k:v for k,v in n.items() if k != "author"} for n in active], "maintenance": maintenance}
+        return {"notices": [{k:v for k,v in n.items() if k in {'id','kind','title','body','titleEn','bodyEn','startsAt','endsAt'}} for n in active],
+                "maintenance": {k:v for k,v in maintenance.items() if k in {'enabled','message','messageEn','endsAt'}}}
 
     @router.get("/notices/board")
     def notice_board():
