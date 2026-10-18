@@ -38,3 +38,28 @@ def test_a_registered_team_answer_passes_through_with_the_next_stop_point():
     hook.register(rank=rank)
     assert hook.ranked(None, "t", "uid", AT, None, next_point=(37.5, 127.0)) == {"alternatives": []}
     assert seen == {"uid": "uid", "next_point": (37.5, 127.0)}
+
+
+# ── `[2026-10-18 사용자 지시]` 가게 이름 없는 식사(「점심」 · 「ㅇㅇ 근처 점심」) — 원래 식당 없이 **한 지점** 둘레의 원장 식당 ──
+
+def test_a_nameless_meal_without_a_registered_near_answer_is_unknown():
+    hook.register(rank=lambda *a, **k: {"alternatives": []})          # 이름 있는 식당 길만 등록한 팀
+    assert hook.near(None, "t", (37.5, 127.0), AT) is None
+
+
+def test_a_nameless_meal_needs_a_point_and_a_time():
+    hook.register(rank=lambda *a, **k: None, near=lambda *a, **k: {"alternatives": []})
+    assert hook.near(None, "t", None, AT) is None and hook.near(None, "t", (37.5, 127.0), None) is None
+
+
+def test_a_registered_near_answer_passes_through_with_the_meal_flag_and_radius():
+    seen = {}
+
+    def near(conn, tenant, point, starts_at, ends_at, *, next_point=None, conditions=(), meal=True, radius_m=2000):
+        seen.update(point=point, next_point=next_point, meal=meal, radius_m=radius_m, starts_at=starts_at)
+        return {"alternatives": []}
+
+    hook.register(rank=lambda *a, **k: None, near=near)
+    assert hook.is_registered() and hook.near(None, "t", (37.5, 127.0), AT, None, next_point=(37.6, 127.1),
+                                              meal=False, radius_m=800) == {"alternatives": []}
+    assert seen == {"point": (37.5, 127.0), "next_point": (37.6, 127.1), "meal": False, "radius_m": 800, "starts_at": AT}

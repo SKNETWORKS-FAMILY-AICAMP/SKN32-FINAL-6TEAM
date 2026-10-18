@@ -33,7 +33,7 @@ MIN_STAY_MIN = 30           #: 머무는 시간이 이보다 짧아지면 못 �
 CANDIDATES_TRIED = 8
 #: ★`[2026-10-13 사용자 지시]` 일정상 무리한 식사 — 앞 · 뒤 일정에서 이 반경 안의 식당을 찾는다(원장 `DISH_RADIUS_M` · 접수 `MEAL_NEAR_RADIUS_M` 과 같다)
 MEAL_ROUTE_RADIUS_M = 800
-#: 카카오 근처 찾기에 넣는 말 — 음식점 분류만 받는다(`candidates._kakao_places` 가 음식점 · 카페를 식사로 표시)
+#: 카카오 근처 찾기에 넣는 말 — 음식점 분류만 받는다(`candidates._kakao_places` 가 음식점 · 카페를 식사로 표시 — 끼니면 카페는 아래에서 거른다)
 MEAL_QUERY = "음식점"
 ROUND_MIN = 5
 ENGINE_BUDGET_S = 20.0
@@ -342,6 +342,9 @@ def _route_restaurants(conn, tenant_id: str, item: dict[str, Any], tried: list[d
         ref = (float(point["latitude"]), float(point["longitude"]))
         found = cand_module._ledger_places(conn, tenant_id, ref, radius_m=MEAL_ROUTE_RADIUS_M)
         found += [p for p in cand_module._kakao_places(kakao, MEAL_QUERY, ref, "dining", []) if p.get("kind") == "dining"]
+        if cand_module.is_meal_line(item):
+            # ★`[2026-10-18 사용자 지시]` 끼니에는 카페 · 디저트를 넣지 않는다 — 실측: 카카오 「음식점」 검색의 카페(CE7)가 점심 자리에 들어갔다
+            found = [p for p in found if not cand_module.not_a_meal(p)]
         for place in found:
             key = (normalize_full(place["name"]), round(float(place["latitude"]), 4), round(float(place["longitude"]), 4))
             if key in seen or min(_metres(place, pt) for pt in points) > MEAL_ROUTE_RADIUS_M:
