@@ -28,6 +28,31 @@ class OllamaContentError(OllamaError):
     모델 서버 넘김 장치(`llm_failover.py`)가 이 한 번만 다음 경로로 넘기고 서킷에는 세지 않는다. 부르는 쪽에는 `OllamaError` 와 같다."""
 
 
+def validate_structured(value: Any, schema: dict[str, Any]) -> dict[str, Any]:
+    """Reject malformed model output while failover still owns the call."""
+    from jsonschema import Draft202012Validator
+    from jsonschema.exceptions import ValidationError
+
+    try:
+        Draft202012Validator(schema).validate(value)
+    except ValidationError as exc:
+        # Values and model output may include personal data; report only the path and rule.
+        location = ".".join(str(part) for part in exc.absolute_path) or "$"
+        raise OllamaContentError(f"구조화 답의 스키마가 다르다: {location} ({exc.validator})") from None
+    if not isinstance(value, dict):
+        raise OllamaContentError("구조화 답이 JSON 객체가 아니다")
+    return value
+
+
+def validate_content(value: dict[str, Any], validator: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
+    """Run caller evidence checks before a backend result becomes successful."""
+    try:
+        validator(value)
+    except ValueError as exc:
+        raise OllamaContentError(f"구조화 답의 근거 검증 실패: {type(exc).__name__}") from None
+    return value
+
+
 class OllamaChat:
     def __init__(self, *, base_url: str, model: str, timeout: float = 60.0,
                  transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "", num_ctx: int = 0) -> None:
@@ -179,9 +204,11 @@ class OllamaChat:
             value = json.loads(response.json()["message"]["content"])
         except (ValueError, KeyError, TypeError) as exc:
             raise OllamaContentError(f"구조화 답이 JSON 이 아니다: {response.text[:160]}") from exc
-        if not isinstance(value, dict):
-            raise OllamaContentError("구조화 답이 JSON 객체가 아니다")
-        return value
+        return validate_structured(value, schema)
+
+    def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+        return validate_content(self.structured(system, user, schema, num_predict=num_predict), validator)
 
     # ── 예열 `[2026-09-29]` — 식은 모델의 첫 호출이 30초 넘게 걸렸다(ui 세션 실측). 화면이 채팅을 열 때 미리 깨운다 ──
     def loaded(self, *, timeout: float = 5.0) -> bool:
@@ -316,8 +343,8 @@ def _build(settings: Any, route: str) -> Any:
     if not base:
         return None
 
-    def ollama(url: str) -> OllamaChat:
-        return OllamaChat(base_url=url, model=getattr(settings, "ollama_model", "tripilot-pointer:e4b-ft"),
+    def ollama(url: str, model: str = "") -> OllamaChat:
+        return OllamaChat(base_url=url, model=model or getattr(settings, "ollama_model", "tripilot-pointer:e4b-ft"),
                           timeout=float(getattr(settings, "ollama_timeout_seconds", 60.0)),
                           keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""),
                           num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0))
@@ -329,7 +356,12 @@ def _build(settings: Any, route: str) -> Any:
             from app.infrastructure.llm_failover import wrap_from_settings
 
             # 넘김이 꺼져 있으면 지금처럼 한 경로만 — 넘김 순서는 넘김 장치 몫이다
-            return wrap_from_settings(ollama(ssh), settings, extra_urls=(base,)) if failover else ollama(ssh)
+            primary = ollama(ssh, str(getattr(settings, "ollama_ssh_model", "") or ""))
+            if not failover:
+                return primary
+            if getattr(settings, "llm_failover_local_last", False):
+                return wrap_from_settings(primary, settings, local_fallback=ollama(base))
+            return wrap_from_settings(primary, settings, extra_urls=(base,))
         _warn_once("ssh:empty:chat", "model route 'ssh' chosen but ACOP_OLLAMA_SSH_BASE_URL is empty — using local Ollama")
     if route == "api":
         if (getattr(settings, "openai_api_key_server", "") or "").strip():

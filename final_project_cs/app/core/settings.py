@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import ValidationError
+from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -199,6 +199,10 @@ class Settings(BaseSettings):
     #:  (예 `http://<터널 입구>:<포트>`). 앱은 SSH 키를 들지 않는다 — 이 주소만 부른다. 비어 있으면 콘솔에서 SSH 를 골라도 로컬 모델로 간다(경고 로그).
     #:  런팟 Ollama 에도 `ollama_model` 과 **같은 이름**의 학습 모델이 올라가 있어야 한다. 실제 주소는 `.env` 에만 적는다.
     ollama_ssh_base_url: str = ""
+    #: SSH 모델 식별자가 내부 모델과 다를 때만 지정한다. 비우면 기존 이름을 쓴다.
+    ollama_ssh_model: str = ""
+    #: SSH → API → 내부 모델 순서. 기본 꺼짐으로 기존 배포 순서를 유지한다.
+    llm_failover_local_last: bool = False
     #: ★`[2026-10-16 사용자 지시]` 상황마다의 기본 모델 경로 — 관리 콘솔의 그 칸이 「끔」이면 이 값을 따른다(콘솔 값이 있으면 콘솔이 먼저).
     #:  chat = 채팅 해석 · 계획 읽기 · 번역 · 분류(local · ssh · api) · pointer = 일정 짚기 · notice = 공지 확인(local · ssh — 학습 모델은 API 에 없다).
     #:  기본 local 은 지금까지와 같다. 환경 파일 이름: `ACOP_MODEL_ROUTE_CHAT` · `ACOP_MODEL_ROUTE_POINTER` · `ACOP_MODEL_ROUTE_NOTICE`.
@@ -282,6 +286,11 @@ class Settings(BaseSettings):
     #:    온다**(서울 122건 중 시군도 10·국도 6·지방도 2). 공공데이터포털 15040465 는
     #:    LINK 형이라 키가 ITS 에서 나온다.
     its_api_key: str = ""
+    #: 비공개 환경 설정의 순서 있는 예비 키 목록(JSON 또는 쉼표 구분). 실값은 로그에 남기지 않는다.
+    its_api_keys: str = ""
+    #: 키별 운영 상한. 0은 해당 ITS 전체 상한을 상속하며 전체 사용량·상한은 그대로 유지한다.
+    rate_its_key_per_day: int = Field(default=0, ge=0)
+    rate_its_key_per_month: int = Field(default=0, ge=0)
     #: 경찰청 UTIC 도시교통정보센터 — 도로위험상황예보·돌발(행사·집회 포함)  utic.go.kr
     #:  ★**등록한 IP 에서만** 호출된다. 키가 **둘**이다 — 키마다 등록 IP 가 다르다(2026-09-14 발급).
     #:    key 1 = 바로 부르는 자리의 IP   key 2 = 고정 IP 경유 서버의 IP

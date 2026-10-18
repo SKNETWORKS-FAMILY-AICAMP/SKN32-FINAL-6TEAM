@@ -900,10 +900,19 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     if not force:
         cached = load(conn, tenant_id, intake_id, revision)
         if cached is not None:
-            return cached
+            from . import risks
+
+            mode = "cached" if cached.get("risk_schema_version") == risks.SCHEMA_VERSION else "fresh"
+            payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
+            if mode == "fresh":
+                store(conn, tenant_id, intake_id, revision, payload)
+            return payload
     previous = load(conn, tenant_id, intake_id, previous_revision) if previous_revision else None
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
                     previous=previous, **options)
+    from . import risks
+
+    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="fresh")
     store(conn, tenant_id, intake_id, revision, payload)
     return payload
 

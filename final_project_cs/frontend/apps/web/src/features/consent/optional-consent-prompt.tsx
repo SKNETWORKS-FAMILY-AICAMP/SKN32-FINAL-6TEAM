@@ -4,8 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui";
 import { useSettings, useT } from "@/lib/settings";
 import type { ConsentCode } from "./consent-model";
-import { readConsents } from "./consent-store";
-import { saveConsents } from "./consent-sync";
+import { saveOptionalConsent } from "./consent-sync";
 import { useLiveTerms } from "./terms-live";
 import { plainTitle } from "./terms-text";
 import { TermsViewer } from "./terms-viewer";
@@ -22,19 +21,27 @@ export function OptionalConsentPrompt({ code, why, onAgreed, onCancel, onReadTer
   const doc = useLiveTerms(language).docs.find((entry) => entry.code === code);
   const [reading, setReading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<"failed" | "outdated" | null>(null);
   if (!doc) return null;
 
   async function agree() {
     setBusy(true);
+    setFailure(null);
     try {
-      await saveConsents({ ...readConsents(), [code]: true }, language);       // 서버에 못 보내도 이 브라우저에는 남고 나중에 다시 보낸다
-      onAgreed();
+      const result = await saveOptionalConsent(code, language);
+      if (result === "recorded" || result === "local_only") onAgreed();
+      else setFailure(result);
+    } catch {
+      setFailure("failed");
     } finally { setBusy(false); }
   }
 
   return <div className={styles.prompt} role="group" aria-label={t(`${plainTitle(doc.title)[0]} 동의`, `${plainTitle(doc.title)[1]} consent`)}>
     <p className={styles.promptText}><span className={styles.itemTag}>{t("[선택]", "[Optional]")}</span>{why}</p>
     <p className={styles.managerNote}>{t("동의하지 않아도 앱은 그대로 쓸 수 있어요. 동의는 설정 › 「약관 · 동의」에서 언제든 철회할 수 있어요.", "You can keep using the app without agreeing, and withdraw this in Settings → “Terms & consents” at any time.")}</p>
+    {failure && <p role="alert">{failure === "outdated"
+      ? t("약관이 바뀌었어요. 최신 전문을 확인한 뒤 다시 동의해 주세요.", "The terms changed. Read the current terms before agreeing again.")
+      : t("동의 기록을 저장하지 못했어요. 연결을 확인한 뒤 다시 눌러 주세요.", "Your consent could not be recorded. Check your connection and try again.")}</p>}
     <div className={styles.itemActions}>
       <Button variant="quiet" onClick={() => onReadTerms ? onReadTerms(doc) : setReading(true)}>{t("전문 보기", "Read in full")}</Button>
       <Button variant="primary" disabled={busy} onClick={() => void agree()}>{busy ? t("기록하는 중…", "Recording…") : t(`${plainTitle(doc.title)[0]}에 동의하고 계속`, `Agree to ${plainTitle(doc.title)[1]} and continue`)}</Button>

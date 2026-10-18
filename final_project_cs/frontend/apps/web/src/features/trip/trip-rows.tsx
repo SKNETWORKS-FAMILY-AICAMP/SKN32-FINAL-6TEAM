@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight, BedDouble, Bike, Bus, Car, ChevronRight, Clock, Footprints, Map as MapIcon, MapPinned, Moon, Route, Tag, TrainFront } from "lucide-react";
 import type { RouteShape } from "@/lib/live/route-shapes";
+import { problemText, type ItemRisk } from "@/lib/live/risks";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import { isGuess, MODE_NAMES, rideLines } from "@/features/map/route-lines";
@@ -81,9 +82,10 @@ function visitHours(stop: TripStop): string | null {
  * `past` (its end has passed): the same card in grey with 「지난 일정」 at the right of its head; `started` fills its dot (now has passed its start).
  * `[2026-10-14 사용자 결정 — ST4F-492]` 「이 일정 질문하기」 is no longer in the card (the detail keeps it), and 「지도 앱으로 열기」 opens the sheet of three map apps (`map-apps.tsx`).
  */
-export function StopRow({ stop, open, selected, past = false, started = false, onToggle, onDetail, onMapApps }: {
+export function StopRow({ stop, open, selected, past = false, started = false, onToggle, onDetail, onMapApps, risk, onRisk }: {
   stop: TripStop; open: boolean; selected: boolean; past?: boolean; started?: boolean;
   onToggle: () => void; onDetail: () => void; onMapApps: (target: MapTarget) => void;
+  risk?: ItemRisk; onRisk?: () => void;
 }) {
   const t = useT();
   const id = `trip-stop-${stop.id}`;
@@ -131,6 +133,11 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
         {past && <span className={`${pc.pill} ${styles.stopPast}`} data-state="past">{t("지난 일정", "Past")}</span>}
         <button type="button" className={styles.toggleEnd} onClick={onToggle} tabIndex={-1} aria-hidden="true" data-toggle-mark><span className={styles.toggleMark}>{open ? "−" : "+"}</span></button>
       </div>
+      {!past && risk?.itemId === stop.id && risk.status === "problem" && <div className={styles.stopRisk} data-stop-risk={stop.id}>
+        <p><b>{t("주의", "Attention")}</b> · {risk.problems.map((problem) => problemText(problem)).filter(Boolean).join(" · ") || t("확인된 위험이 있어요", "A risk was found")}</p>
+        {onRisk && <button type="button" className={styles.action} onClick={onRisk}
+          aria-label={t(`${stop.title} 위험·대안 보기`, `See risks and choices for ${stop.title}`)}>{t("위험·대안 보기", "See risks and choices")}<ChevronRight size={16} strokeWidth={1.6} aria-hidden="true" /></button>}
+      </div>}
       {open && <div className={styles.stopBody} id={`stop-detail-${stop.id}`}>
         <div className={styles.detailActions}>
           <button type="button" className={styles.action} onClick={onDetail} aria-label={t(`${stop.title} 상세 보기`, `Details of ${stop.title}`)}>{t("상세 보기", "Details")}<ChevronRight size={16} strokeWidth={1.6} aria-hidden="true" /></button>

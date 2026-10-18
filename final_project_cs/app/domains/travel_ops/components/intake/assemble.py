@@ -29,6 +29,7 @@ from zoneinfo import ZoneInfo
 from app.domains.travel_ops.components.planning import planner
 
 from .rules import meal_mention
+from . import schedule_cards
 from .span_segments import split_segments
 
 KST = ZoneInfo("Asia/Seoul")
@@ -100,9 +101,12 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
     `place`(좌표를 아는 장소 값 또는 None) · `claims`(그 항목의 칸별 값 줄 — 근거·확인 필요·메모) · `locked`(고객이 「꼭 넣을 일정」으로 고정) 을 든다."""
     original_titles = {(c["source_id"], c["field"]): c.get("evidence") or {} for c in claims
                        if c["field"].endswith(".title") and isinstance((c.get("evidence") or {}).get("start"), int)}
+    missing_cards = schedule_cards.omissions(sources, claims)
     claims = effective(claims)
     trip = {c["field"][5:]: c for c in claims if c["field"].startswith("trip.")}
-    problems: list[Problem] = []
+    problems: list[Problem] = [Problem("source_item_missing", "reading.source_items",
+                                     f"원문 일정이 읽기 결과에서 빠졌어요: {card['title']}", str(card["source_id"]))
+                               for card in missing_cards]
     rows: list[dict[str, Any]] = []
     all_rows: list[tuple[dict[str, Any], bool]] = []
     first_day = _date_value(trip.get("first_day"))

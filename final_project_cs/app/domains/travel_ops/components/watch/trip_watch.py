@@ -97,7 +97,7 @@ class TripWatcher:
             if item.place is None:
                 continue
             result.checked += 1
-            report = self.check(place=item.place, starts_at=item.starts_at)
+            report = self.check(place=item.place, starts_at=max(item.starts_at, now))
             # ★`[2026-10-13]` 관광지는 재난문자 이상을 활동 판정(재해 분류표)으로 다시 가른다 — 복구 문자는 빼고, 실내라도 호우 · 산사태는 더한다
             report = rejudge_activity_disasters(report, item)
             verdict = report.get("verdict")

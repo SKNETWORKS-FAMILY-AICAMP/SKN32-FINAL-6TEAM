@@ -256,8 +256,23 @@ _CODE_TEXT = {"closed_on_day": "오늘은 쉬는 곳이에요", "closed_today": 
 
 
 def _cause_text(causes: list[dict[str, Any]]) -> str:
-    """원인에 **있는 말**만 쓴다. 코드 이름(`closed_on_day` — 영문 소문자·밑줄)은 고객 문장에 싣지 않고 알려진 것만 말로 바꾼다 — 모르는 코드는 건너뛴다."""
+    """확인된 여러 원인을 빠뜨리지 않는다. 모르는 코드와 근거 없는 값은 쓰지 않는다."""
+    texts = []
     for cause in causes:
+        if cause.get("category") == "traffic_control" and cause.get("message"):
+            text = str(cause["message"])
+            end = cause.get("ends_at")
+            if end:
+                try:
+                    moment = datetime.fromisoformat(str(end))
+                    if moment.tzinfo is not None:
+                        end = moment.astimezone(ZoneInfo("Asia/Seoul")).strftime("%m월 %d일 %H:%M")
+                except ValueError:
+                    pass
+                text += f" (통제 종료 예정: {end})"
+            if text not in texts:
+                texts.append(text)
+            continue
         for field in ("summary", "kind", "reason", "type", "category"):
             value = cause.get(field)
             if not value:
@@ -265,10 +280,34 @@ def _cause_text(causes: list[dict[str, Any]]) -> str:
             text = str(value)
             if re.fullmatch(r"[a-z][a-z0-9_]*", text):          # 코드 이름
                 if text in _CODE_TEXT:
-                    return _CODE_TEXT[text]
-                continue
-            return text
-    return "일정에 문제가 생겼어요"
+                    text = _CODE_TEXT[text]
+                else:
+                    continue
+            if text not in texts:
+                texts.append(text)
+            break
+    return "; ".join(texts) or "일정에 문제가 생겼어요"
+
+
+def traffic_detail_notice(*, item: Item, causes: list[dict[str, Any]], previous: dict[str, Any]) -> tuple[str, dict[str, Any]] | None:
+    """현재도 확인되는 사건 중 앞선 발송 문장에서 누락된 도로통제만 한 번 보완한다."""
+    if previous.get("kind") not in {"no_alternate", "recheck_failed"}:
+        return None
+
+    def identity(cause):
+        return cause.get("incident_id") or cause.get("message")
+
+    known = {identity(c) for c in previous.get("causes") or [] if c.get("category") == "traffic_control"}
+    missing = [c for c in causes if c.get("category") == "traffic_control" and c.get("message")
+               and identity(c) in known and str(c["message"]) not in str(previous.get("text") or "")]
+    if not missing:
+        return None
+    keys = sorted({str(identity(c)) for c in missing})
+    fingerprint = hashlib.sha256(json.dumps(keys, ensure_ascii=False).encode()).hexdigest()[:16]
+    text = (f"도로통제 안내 보완 — {item.title}. {_cause_text(missing)}. "
+            "앞선 알림에서 도로통제 설명이 빠져 추가로 알려 드려요. 일정은 바꾸지 않았어요.")
+    return fingerprint, {"type": "guidance", "kind": "traffic_control_detail", "reason": "notice_text_incomplete",
+                         "text": text, "language": "ko", "causes": missing, "item_id": str(item.item_id), "replay": False}
 
 
 def proposal_notice(*, item: Item, decision: Decision, causes: list[dict[str, Any]],

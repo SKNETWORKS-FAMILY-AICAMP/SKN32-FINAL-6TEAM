@@ -817,6 +817,12 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     `chat` — 주면 화면에 먼저 보이는 후보의 이유 문장을 **모델이 확인된 값으로** 다시 쓴다(`reasons.polish` — 저장 · 검사 · 실패하면 틀 문장). 안 주면 전부 틀 문장.
     `rank_only` — 이동 계산기로 후보를 재지 않고 **싼 판정(운영시간 + 어림 이동)의 순서**만 낸다(자동 추천이 쓴다: 맞는 곳은 그쪽이 후보를
     차례로 시간표로 맞춰 보며 찾으므로 후보마다 미리 재면 계산기 시간을 두 번 쓴다 — 2026-10-03 실서버 10초)."""
+    from . import risks
+
+    safe = risks.alternatives(conn, tenant_id=tenant_id, review=review, item=item, now=now, limit=limit,
+                              engine=engine, use_engine=use_engine)
+    if safe is not None:
+        return safe
     now = now or datetime.now(KST)
     items = review["items"]
     prev, nxt = neighbours(items, item)

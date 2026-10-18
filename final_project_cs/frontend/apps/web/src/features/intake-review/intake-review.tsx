@@ -71,7 +71,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     refetchOnWindowFocus: false,
     // Keep recently read data when reopening; a new submission opens its progress screen before this first GET finishes.
     staleTime: 2_000,
-    refetchInterval: (state) => polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
+    refetchInterval: (state) => state.state.data?.status === "review" ? 180_000
+      : polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
   });
   const refresh = useRef({ running: false, queued: false });
   const reread = useCallback(() => {

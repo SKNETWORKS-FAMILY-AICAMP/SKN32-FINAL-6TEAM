@@ -27,6 +27,11 @@ export interface ChangeSession {
  */
 export function candidateNoteText(notes: readonly string[] | undefined, t: Translate): string | null {
   const has = (note: string) => notes?.includes(note);
+  if (has("verification_unavailable")) return t("실내 후보의 안전·운영시간·이동을 확인하지 못했어요. 일정은 그대로예요. 다시 확인하거나 직접 장소를 찾아 주세요.", "Indoor options could not be verified for safety, hours and travel. Your plan is kept. Check again or search for a place.");
+  if (has("indoor_with_coverage_warning")) return t("교통 통제 자료 일부를 확인하지 못한 실내 후보예요. 확인한 범위에서 위험은 발견되지 않았지만, 출발 전에 도로 상황을 다시 확인해 주세요.", "Some traffic-control data is unavailable for these indoor options. No risk was found in the available data; check road conditions again before leaving.");
+  if (has("protected_schedule")) return t("예약·고정 일정은 그대로 보존했어요. 고정 조건을 확인한 뒤 직접 수정해 주세요.", "The booked or pinned stop was kept. Check its constraints before editing it.");
+  if (has("no_verified_alternative")) return t("확인한 실내 후보 중 안전·운영시간·이동 조건을 모두 만족하는 곳이 없었어요. 일정은 그대로예요. 다시 확인하거나 직접 장소를 찾아 주세요.", "None of the checked indoor options met safety, hours and travel conditions. Your plan is kept. Check again or search for a place.");
+  if (has("verified_indoor")) return t("안전·운영시간·이동을 확인한 실내 대안이에요. 표시된 방문 시각도 함께 적용돼요.", "These indoor alternatives were checked for safety, hours and travel. The shown visit time is applied with the place.");
   if (has("booked_needs_name")) return t("예약하신 곳이라 다른 후보를 권하지 않아요 · 위 검색창에 예약한 곳의 이름을 쓰면 바꿔요", "This is booked, so no other places are offered · type the booked place's name above to set it");
   if (has("no_candidates_in_area")) return t("글에 적힌 지역 둘레에 같은 종류의 장소가 없어요 · 위 검색창에서 찾아 보세요", "Nothing of the same kind around the area you wrote · search above");
   if (has("no_same_kind")) return t("같은 종류의 후보가 없어요 · 위 검색창에서 찾아 바꿀 수 있어요", "No place of the same kind · search above to change it");

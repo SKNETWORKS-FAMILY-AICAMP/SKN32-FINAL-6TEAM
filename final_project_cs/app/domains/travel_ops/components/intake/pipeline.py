@@ -27,6 +27,7 @@ from . import review as review_module
 from . import survey_answers
 from .areas import areas_for
 from . import agent_read as agent_module
+from . import schedule_cards
 from .assemble import assemble, effective
 from .catalog_names import with_catalog
 from .line_parts import lookup_title
@@ -378,6 +379,9 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
                      survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)))}
         review, review_error = _review_of(conn, tenant_id, intake_id, revision, sources, claims)
         review = review_module.public(review, tenant_id=tenant_id)               # 내부 칸(이동 재사용 키 · 장소 행 번호)은 응답에 싣지 않는다
+        missing_cards = [p.as_dict() for p in built.problems if p.code == "source_item_missing"]
+        if review is not None and missing_cards:
+            review = {**review, "ready": False, "source_coverage": {"status": "missing", "problems": missing_cards}}
     out_sources = []
     for source in sources:
         mine = [c for c in claims if c["source_id"] == source["source_id"]]
@@ -531,6 +535,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 # ★`[2026-10-14 핫픽스]` 화면에서 칸을 감췄어도 직접 보내는 요청은 여기서 막는다(관리 콘솔 스위치가 켜져야 받는다)
                 raise IntakeRejected("taxi_pricing_disabled", "택시 호출 상품 고르기는 지금 쓰지 않습니다")
             value, evidence, note = _checked(field_name, entry.get("value"))
+            if field_name.startswith("items[") and field_name.endswith(".title"):
+                previous_title = next((c for c in current_claims if str(c["source_id"]) == source_id and c["field"] == field_name), {})
+                evidence = schedule_cards.edited_title_evidence(evidence, previous_title)
             if field_name.endswith(".locked") and value is True:
                 _require_lockable(conn, tenant_id, intake_id, current, source_rows, current_claims, source_id, field_name)
             if field_name.endswith(".place") and isinstance(value, dict) and value.get("content_id"):
@@ -1164,6 +1171,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     from .places import _kind_hits, nearest, normalize, resolve
 
     read = read_plan(text)
+    copied_cards = schedule_cards.cards(read)
+    schedule_cards.restore(read, copied_cards)
     agent_out, agent_error = None, None
     if agent is not None and agent_mode in ("on", "shadow"):
         try:
@@ -1201,7 +1210,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         flushed = len(rows)
 
     if use_agent:
-        rows, items, dated, ask = _agent_rows(read, agent_out, position=position, today=today)
+        rows, items, dated, ask = _agent_rows(read, agent_out, position=position, today=today, copied_cards=copied_cards)
         flush()
     else:
         flush()                                       # 규칙으로 읽은 줄 — 이 순간 「읽은 줄」이 생긴다
@@ -1522,7 +1531,8 @@ def _agent_booking_rows(read: Any, item: Any, index: int) -> list[dict[str, Any]
     return rows
 
 
-def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any, bool]:
+def _agent_rows(read: Any, out: Any, *, position: int, today: date,
+                copied_cards: list[Any] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any, bool]:
     """읽기 에이전트 결과 → (값 줄, 항목, 날짜, 첫날 묻기). `[2026-10-16]`
 
     ★에이전트가 시각이 적힌 줄을 통째로 빠뜨리면(실제 접수 시험에서 둘째 날 다섯 줄) 규칙이 그 줄에서 읽은 항목을 붙인다 —
@@ -1532,6 +1542,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
     from .places import normalize
 
     lines = read.lines
+    cards_by_line = {card.title.line: card for card in copied_cards or []}
     rows: list[dict[str, Any]] = []
     items: list[dict[str, Any]] = []
     guessed_dates: set[int] = set()
@@ -1553,6 +1564,12 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
         if rule_item.title is not None and rule_item.start:
             rule_clock.setdefault(rule_item.title.line, []).append(rule_item)
     for it in out.items:
+        card = cards_by_line.get(it.title.line)
+        if card is not None:
+            it.title = agent_module.Quote(**card.title.as_dict())
+            it.start, it.end, it.time_guessed = card.start.value, card.end.value, False
+            it.time_from_rule = True
+            continue
         same = rule_clock.get(it.title.line) or []
         if len(same) != 1:
             continue
@@ -1571,13 +1588,16 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
                      "evidence": {"source": "text", **it.title.as_dict(), "segment": segment(it)}, "needs_review": False,
                      "note": "읽기 에이전트가 가리킨 원문 조각"})
         if getattr(it, "time_from_rule", False):
+            card = cards_by_line.get(it.title.line)
             rows.append({"field": f"items[{index}].starts_at", "value": it.start, "method": "rule",
-                         "evidence": {"source": "text", "line": it.title.line}, "needs_review": False,
-                         "note": "같은 줄의 원문 시각(규칙)으로 맞췄어요"})
+                         "evidence": {"source": "text", **card.start.span.as_dict()} if card else {"source": "text", "line": it.title.line}, "needs_review": False,
+                         "note": "앞 카드 시각줄의 원문 시각으로 맞췄어요" if card else "같은 줄의 원문 시각(규칙)으로 맞췄어요"})
         for name, value in (("starts_at", None if getattr(it, "time_from_rule", False) else it.start), ("ends_at", it.end)):
             if value:
-                rows.append({"field": f"items[{index}].{name}", "value": value, "method": "llm_agent",
-                             "evidence": {"source": "text", **it.time_quote.as_dict()} if it.time_quote else {"source": "model"},
+                card = cards_by_line.get(it.title.line)
+                rows.append({"field": f"items[{index}].{name}", "value": value, "method": "rule" if card else "llm_agent",
+                             "evidence": {"source": "text", **card.end.span.as_dict()} if card else
+                                         {"source": "text", **it.time_quote.as_dict()} if it.time_quote else {"source": "model"},
                              "needs_review": it.time_guessed,
                              "note": (f"「{it.time_quote.text}」을 오후로 봤어요 — 다르면 고쳐 주세요" if it.time_guessed and it.time_quote
                                       else "읽기 에이전트가 읽은 시각")})
@@ -1595,7 +1615,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
     noted: set[int] = set()
     for quote in [m.get("quote") for m in out.moves] + [c.get("quote") for c in out.conditions] + [p.get("quote") for p in out.preferences]:
         noted |= {n for n, line in enumerate(lines, start=1) if quote and quote in line}
-    if "correction" not in out.requests:
+    if "correction" not in out.requests or copied_cards:
         claims_by_item: dict[int, list[Any]] = {}
         for claim in read.claims:
             if claim.field.startswith("items["):
@@ -1604,6 +1624,10 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
             line = rule_item.title.line if rule_item.title else None
             if line is None or not rule_item.start or line in covered or line in noted:
                 continue
+            if "correction" in out.requests:
+                card = cards_by_line.get(line)
+                if card is None or not schedule_cards.may_restore(card, out.requests, out.pieces):
+                    continue
             index = len(items)
             for claim in claims_by_item.get(k, []):
                 row = claim.as_dict()

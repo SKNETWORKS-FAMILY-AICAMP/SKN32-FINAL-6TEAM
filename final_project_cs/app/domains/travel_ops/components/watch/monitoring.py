@@ -43,6 +43,11 @@ def _safe(value):
     return value if value is None or isinstance(value, (int, float, bool)) else str(type(value).__name__)
 
 
+def recording() -> bool:
+    """정상 회차에 결과를 보관할 수 있는 문맥인가."""
+    return _current.get() is not None
+
+
 def record(stage: str, *, trip_id=None, item_id=None, target_title=None, report: dict) -> None:
     current = _current.get()
     if current is None:

@@ -47,7 +47,7 @@ def _fc(pop=10, wind=5.0, source="open_meteo"):
 
 
 def _warn(*kinds):
-    return {"for_region": [{"kind": k, "areas": ["서울동남권"]} for k in kinds],
+    return {"for_region": [{"kind": k, "areas": ["서울"]} for k in kinds],
             "source": "kma_warning", "announced_at": "2026-09-15T08:00", "confirmed_at": "x"}
 
 

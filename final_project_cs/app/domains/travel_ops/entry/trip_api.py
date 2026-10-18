@@ -2566,6 +2566,36 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                 at=_seoul(at) or datetime.now(KST), horizon_hours=horizon, max_items=limit, item_id=item_id, mode="fresh" if fresh else "cached",
                                 snapshot_hours=float(guard.get("travel.mcp.risk_check.snapshot_hours")))
 
+    @router.post("/v1/web/trips/{trip_id}/risks/{item_id}/alternatives")
+    def web_risk_alternatives(trip_id: UUID, item_id: UUID, http: Request,
+                              who: tuple[str, UUID] = Depends(_web_customer)):
+        """본인 일정의 현재 위험을 확인하고 검증된 보류 제안만 연다. 일정은 바꾸지 않는다."""
+        from app.domains.travel_ops.components.watch import risk_alternatives
+
+        tenant, customer = who
+        _, items = _owned_trip_items(tenant, trip_id, customer)
+        if not any(item.item_id == item_id for item in items):
+            raise _error(404, "not_found", "resource not found")
+        if check_factory is None:
+            raise _error(503, "risk_check_unavailable", "일정 위험 점검 소스를 사용할 수 없습니다")
+        _count("risk_check", tenant, customer, http)
+        def may_notify(conn, tenant_id, customer_id):
+            from app.domains.travel_ops.components.customer import consents
+
+            if guest_policy.is_guest(conn, tenant_id=tenant_id, customer_id=customer_id):
+                return False
+            try:
+                consents.require(conn, tenant_id, customer_id, "alert_channel")
+            except consents.ConsentError:
+                return False
+            return True
+        try:
+            with _slot("risk_check"):
+                return risk_alternatives.request(get_connection, tenant_id=tenant, customer_id=customer,
+                    trip_id=trip_id, item_id=item_id, check=_check(), may_notify=may_notify)
+        except (LookupError, KeyError):
+            raise _error(404, "not_found", "resource not found") from None
+
     @router.post("/v1/web/moves/judge")
     def web_move_judge(request: MoveJudgeIn, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
         """**이동 판정** — 두 장소 → 출발 시각 · 경로(노선) · 소요 · 근거 등급(`timetable` 시간표 판정 · `estimate` 직선 어림 · `none` 근거 없음) · 확인 시각.

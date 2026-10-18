@@ -12,6 +12,7 @@ import type { RouteShapes } from "@/lib/live/route-shapes";
 import type { Coordinates, PinLook } from "@/features/map/model";
 import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
+import { RiskPanel } from "@/features/risk/risk-panel";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
@@ -1458,6 +1459,10 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
           <div ref={bodyBox} className={styles.sheetBody} data-next-preview={(canRecommend || (previewing && side === "before")) && !noFixNow || undefined} data-under-float={done && dayStrip ? true : undefined} {...quietSubmit.handlers} {...follow.handlers} onScroll={follow.handlers.onScroll}>
             {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
+            {done && !changing && view.risksAvailable !== undefined && <RiskPanel items={view.items.flatMap((item) => item.risk ? [item.risk] : [])}
+              at={view.riskCheckedAt} mode={view.riskMode} unavailable={!view.risksAvailable}
+              retry={actions.recheck && !frozen ? () => { void run(async () => { await actions.recheck!(); return null; }); } : undefined} busy={Boolean(view.rechecking)}
+              onAlternatives={actions.candidates && !registered && !frozen ? (id) => { const item = view.items.find((entry) => entry.id === id); if (item) void startChange(item); } : undefined} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {done && !registered && !previewing && view.prefill && <PrefillNote notes={view.prefill} />}
             {done && !registered && !previewing && view.taxiPricing && actions.editTrip &&

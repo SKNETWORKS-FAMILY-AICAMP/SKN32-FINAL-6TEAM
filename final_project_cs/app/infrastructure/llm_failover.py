@@ -34,7 +34,7 @@ from typing import Any, Callable
 import httpx
 
 from app.core.redaction import masked
-from app.infrastructure.ollama_chat import OllamaChat, OllamaContentError, OllamaError
+from app.infrastructure.ollama_chat import OllamaChat, OllamaContentError, OllamaError, validate_content, validate_structured
 
 log = logging.getLogger("app.llm_failover")
 
@@ -443,11 +443,12 @@ class OpenAIChat:
         try:
             text = self._complete(messages, response_format=strict, max_tokens=budget)
             try:
-                return _drop_optional_nulls(self._object(text), schema)
+                value = self._object(text)
             except OllamaContentError:
-                # ★`[2026-10-15]` 엄격 모드에서도 가끔(5번 중 1번 실측) 깨진 문자가 섞인 JSON 을 낸다 — 같은 요청을 **한 번만** 다시 보낸다
+                # Existing parse retry applies only to malformed JSON, not schema/evidence failures.
                 text = self._complete(messages, response_format=strict, max_tokens=budget)
-                return _drop_optional_nulls(self._object(text), schema)
+                value = self._object(text)
+            return validate_structured(_drop_optional_nulls(value, schema), schema)
         except ModelCallError as exc:
             if exc.reason != "bad_request":
                 raise
@@ -455,7 +456,11 @@ class OpenAIChat:
             messages[0] = {"role": "system", "content": system + "\nReply with a single JSON object that matches this JSON schema:\n"
                            + json.dumps(schema, ensure_ascii=False)}
             text = self._complete(messages, response_format={"type": "json_object"}, max_tokens=budget)
-        return self._object(text)
+        return validate_structured(self._object(text), schema)
+
+    def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+        return validate_content(self.structured(system, user, schema, num_predict=num_predict), validator)
 
     def see(self, prompt: str, image: bytes, *, timeout: float = 60.0) -> str:
         mime = "image/jpeg" if image[:3] == b"\xff\xd8\xff" else "image/png"
@@ -607,6 +612,14 @@ class FailoverChat:
     def structured(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160) -> dict[str, Any]:
         return self._run("structured", lambda chat, api: chat.structured(system, masked(user) if api else user, schema, num_predict=num_predict))
 
+    def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+        def call(chat: Any, api: bool) -> dict[str, Any]:
+            result = chat.structured(system, masked(user) if api else user, schema, num_predict=num_predict)
+            return validate_content(result, validator)
+
+        return self._run("structured", call)
+
     def see(self, prompt: str, image: bytes, *, timeout: float = 240.0) -> str:
         return self._run("see", lambda chat, api: chat.see(prompt, image, timeout=60.0 if api else timeout), image=True)
 
@@ -637,7 +650,8 @@ def budget_gate(settings: Any) -> Callable[[], bool] | None:
 
 def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[], bool] | None = None, api_client: Any = None,
                        clock: Callable[[], float] = time.monotonic, sleep: Callable[[float], None] = time.sleep,
-                       extra_urls: tuple[str, ...] = (), api_first: bool = False) -> Any:
+                       extra_urls: tuple[str, ...] = (), api_first: bool = False,
+                       local_fallback: OllamaChat | None = None) -> Any:
     """스위치가 꺼져 있거나 서버용 키가 없으면 `primary` 를 **그대로** 돌려준다. 켜져 있으면 `FailoverChat`.
 
     ★`[2026-10-15]` 관리 콘솔 「모델 경로」 — `extra_urls` 는 `primary` 바로 뒤에 시도할 Ollama(SSH 를 골랐을 때 이 기계의 Ollama),
@@ -645,7 +659,7 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     if not getattr(settings, "llm_failover_enabled", False) and not api_first:
         return primary
     key = (getattr(settings, "openai_api_key_server", "") or "").strip()
-    if not key:
+    if not key and local_fallback is None:
         log.warning("llm_failover enabled but ACOP_OPENAI_API_KEY_SERVER is empty — failover is off")
         return primary
     threshold = int(settings.llm_failover_failures)
@@ -666,10 +680,18 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     gate = budget or (_budget_provider(settings) if _budget_provider is not None else None)
     if gate is None:
         log.warning("llm_failover has no call-budget gate registered — API calls are not capped")
-    api = _Backend("openai", OpenAIChat(api_key=key, model=model, timeout=api_timeout, client=api_client),
-                   breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock), is_api=True, timeout=api_timeout,
-                   budget=gate)
-    backends = [api] + backends if api_first else backends + [api]
+    if key:
+        api = _Backend("openai", OpenAIChat(api_key=key, model=model, timeout=api_timeout, client=api_client),
+                       breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock),
+                       is_api=True, timeout=api_timeout, budget=gate)
+        backends = [api] + backends if api_first else backends + [api]
+    else:
+        log.warning("llm_failover server API key absent — preserving final internal model recovery")
+    if local_fallback is not None:
+        backends.append(_Backend("local", local_fallback,
+                                 breaker_for(f"local@{local_fallback.base_url}", threshold=threshold,
+                                             open_seconds=open_seconds, clock=clock),
+                                 timeout=float(local_fallback.timeout)))
     return FailoverChat(backends, total_seconds=float(settings.llm_failover_total_seconds), vision=bool(settings.llm_failover_vision),
                         sleep=sleep, clock=clock, warm_chat=primary)
 

@@ -1,14 +1,28 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getNotices, getProposals } from "@/lib/live/extras";
 import { getRecovery } from "@/lib/live/recovery";
 import { useSettings } from "@/lib/settings";
 import { useNeedsPolling } from "./watch-mode";
+import { getTripRisks } from "@/lib/live/risks";
+import { requestRiskRefresh, riskQueryOptions } from "./risk-query";
 
 export const proposalsKey = (tripId: string, language: string) => ["proposals", tripId, language] as const;
 export const noticesKey = (tripId: string, language: string) => ["notices", tripId, language] as const;
 export const recoveryKey = (tripId: string, language: string) => ["recovery", tripId, language] as const;
+export const risksKey = (tripId: string, language: string, version?: number) =>
+  ["trip-risks", tripId, language, ...(typeof version === "number" ? [version] : [])] as const;
+
+/** First entry fills missing cache within the existing budget; periodic reads never force provider calls. */
+export function useTripRisks(tripId: string, version?: number) {
+  const { language } = useSettings();
+  const queryClient = useQueryClient();
+  const key = risksKey(tripId, language, version);
+  const query = useQuery(riskQueryOptions(queryClient, key, (fresh) => getTripRisks(tripId, language, fresh)));
+  const refresh = () => { requestRiskRefresh(queryClient, key); void query.refetch({ cancelRefetch: false }); };
+  return { ...query, refresh };
+}
 
 /**
  * The server may open a choice or send a notice at any time (the watcher runs on its own). Its bell

@@ -390,14 +390,15 @@ class TripStore:
         return [row[0] for row in self._open_trips(conn, "t.trip_id", now, " ORDER BY t.trip_id")]
 
     def due(self, conn, *, start: datetime, end: datetime) -> list[tuple[UUID, Item]]:
-        """최신 버전에서 `[start, end)` 에 시작하는 항목. 감시 루프가 읽는다. 재난 정지 중인 여행은 빠진다(`_open_trips` — 시계는 `start`)."""
+        """최신 버전에서 `[start, end)` 에 시작하거나 아직 끝나지 않은 항목. 감시 루프가 읽는다. 재난 정지 중인 여행은 빠진다(`_open_trips` — 시계는 `start`)."""
         trips = self._open_trips(conn, "t.trip_id, t.latest_version", start)
         by_trip = self._items_of_trips(conn, [(trip_id, version) for trip_id, version in trips])
         found = []
         for trip_id, _ in trips:
             for item in by_trip.get(trip_id, []):
                 simulated = (item.place or {}).get("_watch_simulation")
-                if start <= item.starts_at < end or (simulated and (item.ends_at or item.starts_at) > start):
+                ongoing = item.ends_at is not None and item.starts_at < start < item.ends_at
+                if start <= item.starts_at < end or ongoing or (simulated and (item.ends_at or item.starts_at) > start):
                     found.append((trip_id, item))
         return found
 

@@ -18,6 +18,9 @@ import type { AutoResult, PlaceChoice, PlanCheckActions } from "./plan-check";
 import { retimeEdits } from "./retime-edits";
 import { ReviewUndo } from "./review-undo";
 import { newStopEdits } from "./new-stop";
+import { candidateTimeEdits, proposedTimeOf } from "./risk-candidate-edits";
+import { itemRiskOf, riskSignature } from "@/lib/live/risks";
+import type { PlanCandidate } from "./model";
 
 /** How many alternatives get their photos fetched (A, B, C) — each is one call to the tourism photo service. */
 const PHOTO_CANDIDATES = 3;
@@ -102,7 +105,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     /** The stop's alternatives for the revision shown — asked once (a failure is not kept, so it is asked again). */
     const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1]) => {
       const revision = plan().revision;
-      const key = `${revision}:${id}`;
+      const currentRisk = itemRiskOf(itemOf(id).risk);
+      const key = `${revision}:${id}:${currentRisk ? riskSignature([currentRisk]) : ""}`;
       for (const old of [...alternatives.current.keys()]) if (!old.startsWith(`${revision}:`)) alternatives.current.delete(old);
       const kept = alternatives.current.get(key);
       if (kept) return kept;
@@ -143,14 +147,16 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       } catch { /* a photo that cannot be fetched is just not shown */ }
       return info;
     }
-    const replaceWith = async (id: string, edit: IntakeEdit, kind: string | null = null) => {
+    const replaceWith = async (id: string, edit: IntakeEdit, kind: string | null = null, time?: PlanCandidate["proposedTime"]) => {
       const item = itemOf(id);
       const back = restorePlace(targetOf(item), item.place);
+      const timing = candidateTimeEdits(item, time);
       // ★`[2026-10-07 서버 c0ca7054 · 90d9e403]` A place of another kind than the stop (a meal place for an activity, a stay's own meal for a stay) changes the stop's kind with it - the server asks for both
       //   in the same request, or the meal lands in an activity. The undo puts the kind back too.
       const retype = kind !== null && kind !== item.kind;
-      await save(retype ? [edit, itemEdit.kind(targetOf(item), kind)] : [edit], true);
-      undoEdits.current = back ? (retype && item.kind ? [back, itemEdit.kind(targetOf(item), item.kind)] : [back]) : null;
+      await save([edit, ...(retype ? [itemEdit.kind(targetOf(item), kind)] : []), ...timing.edits], true);
+      undoEdits.current = back && timing.undo !== null ? [back,
+        ...(retype && item.kind ? [itemEdit.kind(targetOf(item), item.kind)] : []), ...timing.undo] : null;
     };
 
     return {
@@ -251,7 +257,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const place = pickable.current.get(choice.candidate.id);
         const picked = place && pickedPlace(place);
         // A place the server gave coordinates for is taken as it is; one without them is looked up again by its name.
-        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null);
+        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null, choice.candidate.proposedTime);
       },
       autoRecommend: async (id) => {
         const item = itemOf(id);
@@ -260,7 +266,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
           const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
           const picked = best && pickedPlace(best.place);
           if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
-          await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null);
+          await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null, proposedTimeOf(best));
           return;
         }
         const before = plan();
