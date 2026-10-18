@@ -57,7 +57,8 @@ def create_ops_app(*, routers: list | None = None) -> FastAPI:
     # 관리자 웹앱의 JSON 표면도 이 운영 프로세스에만 등록한다.
     from app.presentation.admin_api import build_router as build_admin_router, operator, require
 
-    app.include_router(build_admin_router(snapshot_provider=composition.build_admin_snapshot))
+    app.include_router(build_admin_router(snapshot_provider=composition.build_admin_snapshot,
+                                        users_provider=composition.build_admin_users))
     from app.presentation.admin_limits_api import build_router as build_limits_router
     app.include_router(build_limits_router(operator_dependency=operator, require_permission=require))
     from app.presentation.admin_operations_api import build_router as build_operations_router

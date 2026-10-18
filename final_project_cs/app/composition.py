@@ -1014,6 +1014,12 @@ def build_domain_routers() -> list:
             build_customer_support_router()]
 
 
+def build_admin_users(conn, tenant_id: str, default_chat_limit: int, kind: str, **options):
+    from app.domains.travel_ops.modules.web_account.admin_users import read
+
+    return read(conn, tenant_id, default_chat_limit, kind, **options)
+
+
 def build_admin_snapshot(conn, tenant_id: str, default_chat_limit: int):
     """운영 화면의 도메인 조회를 조립 자리에서 제공한다."""
     from app.domains.travel_ops.modules.web_account.admin_snapshot import snapshot

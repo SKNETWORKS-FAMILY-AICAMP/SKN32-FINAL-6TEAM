@@ -1,6 +1,6 @@
 export type ViewState = 'normal' | 'loading' | 'empty' | 'error';
 export type InquiryStatus = '접수' | '처리 중' | '답변 완료';
-export interface UsersListState { query: string; status: string; quick: string; order: string }
+export interface UsersListState { query: string; status: string; quick: string; order: string; match?: 'contains' | 'exact'; sort?: 'id' | 'status' | 'chat' | 'web' | 'trips' | 'inquiries' | 'lastUsed'; direction?: 'asc' | 'desc'; page?: number }
 export interface InquiriesListState { query: string; status: Inquiry['status'] | '전체'; owner: string }
 export const INITIAL_USERS_LIST: UsersListState = { query: '', status: '전체', quick: '전체', order: '마지막 사용순' };
 export const INITIAL_INQUIRIES_LIST: InquiriesListState = { query: '', status: '전체', owner: 'all' };
@@ -10,7 +10,13 @@ export interface User {
   exceptionPeriod: 'today' | 'until-cleared' | null;
   trips: { id: string; title: string; status: string; places: number }[];
   paths: { path: string; count: number }[];
+  inquiryCount?: number;
 }
+export interface PageInfo { total: number; page: number; pageSize: number; pages: number }
+export interface UsersPage extends PageInfo { users: User[] }
+export interface Conversation { id: string; title: string; total: number; firstAt: string; lastAt: string }
+export interface ChatMessage { id: string; role: 'customer' | 'assistant'; text: string; at: string }
+export interface MessagesPage extends PageInfo { messages: ChatMessage[] }
 export interface ApiUsage {
   id: string; name: string; adapter: string; connection: string; metering: string;
   used: number | null; monthlyUsed: number | null; dailyCap: number | null; monthlyCap: number | null;

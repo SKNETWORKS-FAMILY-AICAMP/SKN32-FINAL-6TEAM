@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Annotated, Callable, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
@@ -172,7 +172,7 @@ class Login(Input):
     password: Annotated[str, Field(min_length=1, max_length=1024)]
 
 
-def build_router(*, snapshot_provider: Callable | None = None) -> APIRouter:
+def build_router(*, snapshot_provider: Callable | None = None, users_provider: Callable | None = None) -> APIRouter:
     router = APIRouter(prefix="/admin/api", tags=["operations-admin"])
 
     def measured_snapshot(conn, tenant, default_limit):
@@ -222,6 +222,38 @@ def build_router(*, snapshot_provider: Callable | None = None) -> APIRouter:
     def cases(op=Depends(operator)):
         require(op, "case:read")
         return {"cases": mask_json(_cases())}
+
+    def read_users(op, kind, **options):
+        require(op, "ops:introspect")
+        if users_provider is None:
+            raise HTTPException(503, "사용자 조회 제공기가 연결되지 않았습니다.")
+        with get_connection() as conn:
+            try:
+                data = users_provider(conn, get_settings().tenant_id,
+                                      int(get_guardrails().get("web_guard.limits.message.per_key_day")), kind, **options)
+            except admin_service.AdminServiceError as exc:
+                raise HTTPException(exc.status_code, exc.detail) from None
+        return JSONResponse(data, headers={"Cache-Control": "no-store"})
+
+    @router.get("/users")
+    def users(page: Annotated[int, Query(ge=1, le=1000000)] = 1,
+              q: Annotated[str, Query(max_length=200)] = "",
+              match: Literal["contains", "exact"] = "contains",
+              status: Literal["all", "active", "blocked"] = "all",
+              quick: Literal["all", "limit", "inquiry"] = "all",
+              sort: Literal["id", "status", "chat", "web", "trips", "inquiries", "lastUsed"] = "lastUsed",
+              direction: Literal["asc", "desc"] = "desc", op=Depends(operator)):
+        return read_users(op, "users", page=page, q=q.strip(), match=match, status=status,
+                          quick=quick, sort=sort, direction=direction)
+
+    @router.get("/users/{user_id}/conversations")
+    def conversations(user_id: UUID, op=Depends(operator)):
+        return read_users(op, "conversations", user_id=user_id)
+
+    @router.get("/users/{user_id}/conversations/{trip_id}")
+    def messages(user_id: UUID, trip_id: UUID, page: Annotated[int, Query(ge=1, le=1000000)] = 1,
+                 op=Depends(operator)):
+        return read_users(op, "messages", user_id=user_id, trip_id=trip_id, page=page)
 
     @router.get("/cases/{case_id}")
     def case(case_id: UUID, op=Depends(operator)):

@@ -12,11 +12,15 @@ async function proxy(request: NextRequest, context: { params: Promise<{ segments
   const tripPath = segments[0] === 'users' && uuid.test(segments[1] || '') && segments[2] === 'trips' && uuid.test(segments[3] || '') &&
     (segments.length === 4 || (segments.length === 5 && ['chat', 'draft'].includes(segments[4])) ||
       (segments.length === 6 && segments[4] === 'plans' && ['initial', 'current'].includes(segments[5])));
+  const usersPath = segments[0] === 'users' && (segments.length === 1 ||
+    (uuid.test(segments[1] || '') && segments[2] === 'conversations' &&
+      (segments.length === 3 || (segments.length === 4 && uuid.test(segments[3] || '')))));
+  if (usersPath && request.method !== 'GET') return Response.json({ detail: '사용자 기록은 조회만 할 수 있습니다.' }, { status: 405 });
   const receiptPath = segments[0] === 'simulations' && segments.length === 2 && segments[1] === 'receipts' && request.method === 'GET';
   const mockReceiptPath = segments[0] === 'simulations' && segments.length === 3 && /^[0-9a-f-]{36}$/i.test(segments[1]) && segments[2] === 'mock-receipts' && request.method === 'POST';
   // 결함 사후 분석 — 목록 · 한 결함의 영향 고객 · 발생 기록 · 해결 판 기록(지문은 sha256 16진 64자)
   const diagnosticsPath = segments[0] === 'diagnostics' && (segments.length === 1 || (segments.length === 3 && /^[a-f0-9]{64}$/.test(segments[1]) && ['customers', 'events', 'resolution'].includes(segments[2])));
-  if (!qaPath && !settingsPath && !casesPath && !monitoringPath && !receiptPath && !mockReceiptPath && !diagnosticsPath && !tripPath && (segments.length !== 1 || !allowed.has(segments[0]))) return Response.json({ detail: '경로를 찾을 수 없습니다.' }, { status: 404 });
+  if (!qaPath && !usersPath && !settingsPath && !casesPath && !monitoringPath && !receiptPath && !mockReceiptPath && !diagnosticsPath && !tripPath && (segments.length !== 1 || !allowed.has(segments[0]))) return Response.json({ detail: '경로를 찾을 수 없습니다.' }, { status: 404 });
   if (tripPath && request.method !== 'GET') return Response.json({ detail: '여행 상세는 조회만 할 수 있습니다.' }, { status: 405 });
   const origin = new URL(process.env.ADMIN_OPS_API_URL || 'http://127.0.0.1:8070');
   if (!['127.0.0.1', 'localhost', '[::1]'].includes(origin.hostname) || !['http:', 'https:'].includes(origin.protocol)) return Response.json({ detail: '운영 API 주소 설정을 확인해 주세요.' }, { status: 503 });

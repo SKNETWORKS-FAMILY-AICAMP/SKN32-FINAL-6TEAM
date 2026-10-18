@@ -1,3 +1,4 @@
+import type { Conversation, MessagesPage, UsersPage } from './model';
 import { z } from 'zod';
 import { createDemoSnapshot, DEMO_OPERATOR } from './demo/fixtures';
 import { isDemoMode } from './data-mode';
@@ -181,6 +182,9 @@ export async function openQaAccount(payload: unknown) {
   return liveRequest<{ url: string; ticket: string; expires_in_seconds: number }>('qa-account/open', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf }, body: JSON.stringify(payload) });
 }
 export const operationCases = <T,>(id?: string) => liveRequest<T>(id ? `cases/${encodeURIComponent(id)}` : 'cases');
+export const operationUsers = (query: URLSearchParams) => liveRequest<UsersPage>(`users?${query}`);
+export const operationConversations = (userId: string) => liveRequest<{ conversations: Conversation[] }>(`users/${encodeURIComponent(userId)}/conversations`);
+export const operationMessages = (userId: string, tripId: string, page: number) => liveRequest<MessagesPage>(`users/${encodeURIComponent(userId)}/conversations/${encodeURIComponent(tripId)}?page=${page}`);
 export const operationSourcePolicy = <T,>() => liveRequest<T>('source-policy');
 export const operationDiagnostics = <T,>(suffix = '') => liveRequest<T>(`diagnostics${suffix}`);
 export async function saveDiagnosticResolution(fingerprint: string, payload: { version: string; reason: string }) {
