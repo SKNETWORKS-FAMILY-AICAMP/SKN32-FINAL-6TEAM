@@ -1057,11 +1057,16 @@ retention:
   # ★지우는 일은 되돌릴 수 없다 — 기본은 dry_run 이고, on 은 사용자가 건수를 보고 승인한 뒤에 관리 화면(`/admin/limits` 의 `retention.purge_mode`)에서 켠다
   purge_mode: dry_run
   purge_batch: 100                      # 한 번에 처리하는 회원 수 상한(오래 안 잡는다)
+  # ★`[2026-10-16 사용자 지시]` 계획서 접수 백업(`intake_backups` · `components/intake/backup.py`) — 여행 삭제 · 게스트 정리 · 회원 정리가
+  #   접수를 지우기 **직전에** 통째로 담는다(골든셋 재료). 이 일수가 지난 백업을 정리 작업이 지운다. **0 = 지우지 않음.**
+  #   관리 화면 `/admin/limits` 의 `retention.intake_backup_days` 로 바꾼다 — 지울 때 읽으므로 이미 쌓인 백업에도 새 기간이 적용된다. 출처: 사용자 지시(기본은 지우지 않음)
+  intake_backup_days: 0
   bounds:                               # 관리 화면이 넣을 수 있는 값의 범위
     member_idle_days: {min: 30, max: 3650}
     consent_days: {min: 365, max: 3650}
     location_points_days_after_trip: {min: 1, max: 365}
     location_proof_months: {min: 1, max: 60}
+    intake_backup_days: {min: 0, max: 3650}
 
 # ── 이동 계산기(app/domains/travel_ops/instances/mobility/engine) 정책 수치 ──────────────────────
 # ★`[2026-09-29 이동 계산기 문제목록 #49]` 엔진 규칙 JSON(rules_v0.3.json)에 따로 있던 값을 여기로 옮겼다 — 그 JSON 에는

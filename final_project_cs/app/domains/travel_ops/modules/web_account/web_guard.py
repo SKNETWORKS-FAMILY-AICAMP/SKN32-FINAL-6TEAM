@@ -127,6 +127,13 @@ def specs() -> dict[str, LimitSpec]:
     # ★`[2026-10-07 사용자 결정 — 약관 보관 기간]` 회원 자료 정리 모드 — off · dry_run(세기만) · on(지움). 기본 dry_run, on 은 사용자가 건수를 보고 승인한 뒤에(`member_cleanup`)
     out["retention.purge_mode"] = LimitSpec("retention.purge_mode", "회원 자료 정리 모드(지움은 승인 뒤에만 on)", "", "choice",
                                             _mode_text(guard.get("retention.purge_mode")), choices=("off", "dry_run", "on"))
+    # ★`[2026-10-16 사용자 지시]` 계획서 접수 백업의 보관 일수 — 0 이면 지우지 않는다(`components/intake/backup.py` · 정리 작업 `scripts/run_sweepers.py`)
+    backup_bounds = guard.get("retention.bounds.intake_backup_days")
+    out["retention.intake_backup_days"] = LimitSpec(
+        "retention.intake_backup_days", "계획서 백업 보관 기간(0 = 지우지 않음)", "일", "int",
+        int(guard.get("retention.intake_backup_days")), int(backup_bounds["min"]), int(backup_bounds["max"]),
+        help="여행 삭제 · 게스트 정리 · 회원 정리가 계획서 접수를 지우기 직전에 원문 · 읽은 값 · 고객이 고친 값을 통째로 백업합니다.\n"
+             "이 일수가 지난 백업은 매일 정리 작업이 지웁니다. 0 이면 지우지 않습니다. 바꾸면 이미 쌓인 백업에도 새 기간이 적용됩니다.")
     # ★`[2026-10-13 사용자 지시]` 식당 대체 후보의 구글 가격 비교 — 유료 결제 뒤 관리 콘솔에서 켠다. 기본은 가드레일(꺼짐).
     #   읽는 곳은 `settings_hook.google_price_enabled` 하나다(도구 `read.place_price` · 새벽 확인)
     out["travel.dining.google_price_enabled"] = LimitSpec(
