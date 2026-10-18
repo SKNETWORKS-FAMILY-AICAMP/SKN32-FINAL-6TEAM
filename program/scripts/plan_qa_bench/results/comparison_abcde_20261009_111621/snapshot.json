@@ -30716,7 +30716,7 @@
     "program/scripts/plan_qa_bench/results/empty_probe/all_prompts_d2.json": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
     "program/scripts/plan_qa_bench/results/empty_probe/all_prompts_d3.json": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
     "program/scripts/plan_qa_bench/results/hard_set/h_set_test_30_20261015_agree.json": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
-    "datasets/travel/mx_testset/mx_main_prompts.json": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "datasets/core/pointing/legacy_runs/mx_testset/mx_main_prompts.json": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
     "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/saluki_original_d_a1/d_test_saluki_original_d_a1.jsonl": "b0ffe4268f6869c8417724955b820c361f45e6203b3eaa3a7911ec407e3fac3f",
     "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/saluki_original_d_a1/started.json": "55dca1aa467711f9cba8e52db4b7e61d739ffb1883615ccbb2d9723cab91aca1",
     "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/saluki_original_d_a1/choice_counts.json": "b0c8fe8abb212006a1ef83cc05488934420de6ca7155ea8213f8101bb7fb90d3",

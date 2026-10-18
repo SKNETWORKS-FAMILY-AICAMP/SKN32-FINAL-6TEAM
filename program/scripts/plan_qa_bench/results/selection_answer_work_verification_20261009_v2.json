@@ -30,7 +30,7 @@
     },
     {
       "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
-      "target": "../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
+      "target": "../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
     },
     {
       "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
@@ -46,7 +46,7 @@
     },
     {
       "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
-      "target": "../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
+      "target": "../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
     },
     {
       "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
@@ -62,7 +62,7 @@
     },
     {
       "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
-      "target": "../../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
+      "target": "../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
     },
     {
       "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
@@ -98,7 +98,7 @@
     },
     {
       "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
-      "target": "../../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v1/REPORT.md"
+      "target": "../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v1/REPORT.md"
     },
     {
       "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
@@ -130,38 +130,38 @@
     },
     {
       "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
-      "target": "../../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v1/_backup/2026-10-09_1208_manifest/manifest.json"
+      "target": "../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v1/_backup/2026-10-09_1208_manifest/manifest.json"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "raw/episodes.jsonl"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "raw/sources.jsonl"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "processed/model_inputs.jsonl"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "schema.json"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "manifest.json"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "../../../../program/scripts/plan_qa_bench/selection_answer_pilot_20261009.py"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "../../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md"
     },
     {
-      "document": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
       "target": "../../../../final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md"
     },
     {

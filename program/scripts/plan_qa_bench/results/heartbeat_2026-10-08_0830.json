@@ -34,9 +34,9 @@
     "strata_restarted": false
   },
   "preserved": {
-    "gguf": "datasets/travel/train_oos/oos2r_lora_f16_2026-10-08.gguf",
+    "gguf": "datasets/core/pointing/trainset/train_oos/oos2r_lora_f16_2026-10-08.gguf",
     "gguf_sha256": "d6de28e7c665ebc3f8e380c1be14fd10acbd1a1cc41e2f1a52ea36c0f5d6b333",
-    "hf_adapter": "datasets/travel/train_oos/oos2r_hf_adapter_2026-10-08",
+    "hf_adapter": "datasets/core/pointing/trainset/train_oos/oos2r_hf_adapter_2026-10-08",
     "hf_weights_sha256": "f091af66790f9ff788c6710c3442849015c5b0a219a7f7e69d0e506910c847b5",
     "hf_config_sha256": "4d42e6ad0e0b987e9dd67abcb747c5ca85783cae97c70f9e1f16c00c981886de",
     "train_input_sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",

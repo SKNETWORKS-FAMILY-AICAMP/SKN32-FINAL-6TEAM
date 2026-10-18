@@ -86,7 +86,7 @@ sys.stdout.buffer.write(b.getvalue())
         for m in t.getmembers():
             p=out/m.name;assert m.isfile() and p.resolve().is_relative_to(out.resolve())
             with p.open('xb') as f:f.write(t.extractfile(m).read())
-    data=Path(cfg['root'])/'datasets/travel/train_oos'/c['tag'];data.mkdir(exist_ok=False)
+    data=Path(cfg['root'])/'datasets/core/pointing/trainset/train_oos'/c['tag'];data.mkdir(exist_ok=False)
     for x in meta['files']:
         p=out/Path(x['path']).name;assert p.stat().st_size==x['bytes'] and sha(p)==x['sha256']
         if '/root/adapters/' in x['path'] or p.suffix=='.gguf':shutil.copy2(p,data/p.name)

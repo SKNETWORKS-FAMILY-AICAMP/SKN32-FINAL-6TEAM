@@ -7,7 +7,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-OUT = ROOT / "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3"
+OUT = ROOT / "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3"
 
 
 def dump(path, value):
@@ -135,7 +135,7 @@ def validate():
         for citation in re.findall(r"\[([^]]+)\]", r["gold"]["reference_answer"]):
             assert citation in r["allowed_source_ids"]
     known = set()
-    reference_files = [ROOT / "datasets/travel/train_oos/train_oos.jsonl"]
+    reference_files = [ROOT / "datasets/core/pointing/trainset/train_oos/train_oos.jsonl"]
     reference_files += [ROOT / "program/scripts/plan_qa_bench/results/empty_probe" / f"all_prompts{s}.json" for s in ["", "_d2", "_d3"]]
     reference_files += [ROOT / "datasets/core/pointing/testset/confusing_trap_sentences_v1/h_set_test_30_20261015_agree.json", ROOT / "datasets/core/pointing/testset/requests_inside_chitchat_pairs_v1/mx_main_prompts.json"]
     scanned = []

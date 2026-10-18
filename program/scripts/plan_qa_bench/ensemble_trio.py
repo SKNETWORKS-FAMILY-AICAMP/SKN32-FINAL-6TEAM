@@ -2,7 +2,7 @@
 #  - 재평가·임베딩은 쌍 점수를 질문마다 소프트맥스(온도는 개발용에서만), OpenDecider 는 저장된 선택지 확률을 쓴다.
 #  - 합치기: 세 확률 평균. OpenDecider 의 「없음」 확률은 (없음 몫 = OD/3)로 반영하는 변형과 무시하는 변형을 둘 다 잰다.
 #  - 규칙(날짜·시간대·시각·종류)은 켠 것과 끈 것을 모두 낸다. 문턱은 개발용(mine38+dev50)에서만 고르고 판정은 보류 90개.
-# 사용: python ensemble_trio.py <datasets/travel/plan_qa_bench/raw 폴더>
+# 사용: python ensemble_trio.py <datasets/core/pointing/benchmarks/plan_qa_bench/raw 폴더>
 import json, math, os, sys
 from collections import defaultdict
 from datetime import date

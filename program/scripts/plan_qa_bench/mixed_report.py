@@ -1,5 +1,5 @@
 # 「섞은 시험 세트(mixed8~12)」 한 줄 연결 시험 결과를 출처별로 집계한다.
-#  입력: 서버 C 에서 chain_e2e.py(OUT_TAG=mixed)가 만든 chain_mixed_<변형>.json 5개 세트 합본 — 이 PC 의 datasets/travel/mixed_testset/results/ 에 내려받아 둔다(문장 원문이 있어 git 밖).
+#  입력: 서버 C 에서 chain_e2e.py(OUT_TAG=mixed)가 만든 chain_mixed_<변형>.json 5개 세트 합본 — 이 PC 의 datasets/core/pointing/legacy_runs/mixed_testset/results/ 에 내려받아 둔다(문장 원문이 있어 git 밖).
 #  출처는 세트 파일(datasets/core/pointing/testset/questions_plus_chitchat_v1/source/mixedN.json)의 질문 순서(qi)로 붙인다.
 #  출력: results/mixed_chain_report.txt — 건수·비율만(문장 원문은 싣지 않는다: AI Hub 는 재배포 제한, 관광지 질문 모음은 라이선스 표기 없음).
 # 사용: python mixed_report.py [변형,쉼표]

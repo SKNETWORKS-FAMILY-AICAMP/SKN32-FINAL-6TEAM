@@ -15,7 +15,7 @@
     "product_applied": false,
     "contract": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
     "plan": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
-    "dataset": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3",
+    "dataset": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3",
     "proposed_development_rows": 480,
     "proposed_holdout_rows": 720,
     "pilot_rows_written": 24,

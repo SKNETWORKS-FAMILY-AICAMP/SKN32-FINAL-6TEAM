@@ -47,7 +47,7 @@ GPU 서버 B는 초기 관측에서 cosine 두 번째 시드를160/654=24.46% �
 
 [실측14:02:29경] 보충 뒤 GPU 서버 A GPU98%·D3 저장209/360·준비9개를 확인했다. 등록103작업은 완료91·과거실패2·실행1·준비9이며 실패2개도 남긴다. GPU 서버 B는 GPU100%·cosine180/654·준비2개다. 기존 파일 목록과 실행 조건을 대조한 범위에서 새 유효한 세 번째 준비 작업은 확인하지 못했다. Saluki 동일 모델 학습·StandardOne 원본의 공간·Spark 기반 모델 호환 등 조건 대기를 즉시 실행 가능한 일로 세지 않는다. [최종 실행·대기·조건 근거](2026-10-09_140358_gpu-finch-seed2-completion-valen-final-refill.md) · [관측 구조화 원문](../../../../program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/final_proof.json).
 
-[어댑터 영구 보관 정본](../../../../datasets/travel/train_oos/oos2r_finch_5e5_seed20261013_20261009/)에 HF와 GGUF를 보관했다. GGUF SHA256은 `efbfc01207517ace92b4bde9b880b006ee5b4fc84c488e3844d809367ec60429`다.
+[어댑터 영구 보관 정본](../../../../datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261013_20261009/)에 HF와 GGUF를 보관했다. GGUF SHA256은 `efbfc01207517ace92b4bde9b880b006ee5b4fc84c488e3844d809367ec60429`다.
 
 이번 GPU 답안 회수4340개는 복수 항목 선택 역할4판×835개와 Valen D2 수정 실행1000개다. 답안28파일SHA를 확인했고 FINCH 보관18파일은 부모 에이전트도 SHA를 다시 계산했다. [답안 보관 검증](../../../../program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/A_verification.json) · [부모 독립 재계수](../../../../program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/parent_recount.json).
 

@@ -16,7 +16,7 @@
 
 ## 정답과 검수 범위
 
-[실측·AI 검토] 소넷 실제 CLI `claude-sonnet-5-5`, effort high로4묶음의167가족·467변형을 검토했습니다. 원본 고객 자료·스크린샷·운영 URL·접속정보 대신 합성 일정 문맥과 최소 질문·정답 계획만 전달했습니다.162수용·3수정·2모호 판정 중 Codex가 지적5가족을 대조해4가족을 정정했습니다. [조정 내역](../../../../datasets/travel/e2_itinerary_crud_20261012_v2/review_decision.md), [CLI 원본·집계](../../../../datasets/travel/e2_itinerary_crud_20261012_v2/raw/reviews/gold_audit.json).
+[실측·AI 검토] 소넷 실제 CLI `claude-sonnet-5-5`, effort high로4묶음의167가족·467변형을 검토했습니다. 원본 고객 자료·스크린샷·운영 URL·접속정보 대신 합성 일정 문맥과 최소 질문·정답 계획만 전달했습니다.162수용·3수정·2모호 판정 중 Codex가 지적5가족을 대조해4가족을 정정했습니다. [조정 내역](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v2/review_decision.md), [CLI 원본·집계](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v2/raw/reviews/gold_audit.json).
 
 사람 검수와 전체 사실 답변 검증은 아닙니다. 주소·가격·경로 등 누락된 사실은 요청 계획만 평가하며 실제 답변의 사실성은 미측정입니다. 엄격한 구조 일치의 표현 차이도 의미 오답으로 즉시 단정하지 않습니다. 기존 E와E2-v1은 바꾸지 않았습니다.
 
@@ -43,10 +43,10 @@
 
 현재 러너는 실제 원시 모델 답변과 JSON 계획·지연을 보존하며 요청 집합과 응답 종류만 비교합니다. 모델의 계획을 실제 여행에 실행하지 않습니다. HTTP 오류·잘못된 출력 형식·표현 차이·요청 해석 후보를 나누되, 실제 앱 로직은 시험하지 않았다고 명시합니다. 올바른 정답 계획을 격리한 실제 앱 실행기에 넣는 대조 시험과 실제 DB/부수효과 기록이 있어야 모델 대 로직의 원인을 확정할 수 있습니다. 별도 실행기 구현과 자연어 근거 답변 검수가 남았습니다.
 
-[자료·검토 화면·러너·등록 원본](../../../../datasets/travel/e2_itinerary_crud_20261012_v2/REPORT.md). 최종 제품 채택·독립 검증·실서비스 반영은 하지 않았습니다. Saluki 실제 약27B 텐서 수와 추가 학습 조건은 [별도 재점검](2026-10-12_saluki-training-runtime-recheck.md)이 소유합니다.
+[자료·검토 화면·러너·등록 원본](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v2/REPORT.md). 최종 제품 채택·독립 검증·실서비스 반영은 하지 않았습니다. Saluki 실제 약27B 텐서 수와 추가 학습 조건은 [별도 재점검](2026-10-12_saluki-training-runtime-recheck.md)이 소유합니다.
 
 ## 사용량·보존
 
 소넷4회 합계 입력8, 캐시생성73,630, 캐시재사용0, 출력25,046토큰입니다. 사고 토큰은 출력에 포함되므로 다시 더하지 않습니다. Claude 계정 잔여 사용량은 조회하지 못했습니다.
 
-기존 문서·검토 화면·생성기 수정 직전 백업은 [백업 목록](../../../../datasets/travel/e2_itinerary_crud_20261012_v2/document_backups.json)에 보관합니다. 새 판은 새 폴더이며 기존E2-v1을 덮지 않았습니다. A4000 manifest 백업 위치·전체 등록은 자료 폴더의 비공개 등록 원본에서 확인합니다. 외부 게시·커밋·push·새 임대·모델 삭제는 하지 않았습니다.
+기존 문서·검토 화면·생성기 수정 직전 백업은 [백업 목록](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v2/document_backups.json)에 보관합니다. 새 판은 새 폴더이며 기존E2-v1을 덮지 않았습니다. A4000 manifest 백업 위치·전체 등록은 자료 폴더의 비공개 등록 원본에서 확인합니다. 외부 게시·커밋·push·새 임대·모델 삭제는 하지 않았습니다.

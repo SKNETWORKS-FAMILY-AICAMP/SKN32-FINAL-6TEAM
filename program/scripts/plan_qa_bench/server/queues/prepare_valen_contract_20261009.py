@@ -6,7 +6,7 @@ import re
 
 HERE = Path(__file__).resolve().parents[2]
 ROOT = HERE.parents[2]
-OUT = ROOT/'datasets/travel/valen_native_eval_20261009'
+OUT = ROOT/'datasets/core/pointing/evaluations/valen_native_eval_20261009'
 SOURCES = dict(d=ROOT/'datasets/core/pointing/testset/questions_plus_chitchat_v1/all_prompts.json',
                d2=ROOT/'datasets/core/pointing/testset/chitchat_only_holdout_v1/all_prompts_d2.json',
                d3=ROOT/'datasets/core/pointing/testset/synthetic_chitchat_plus_questions_v1/all_prompts_d3.json',

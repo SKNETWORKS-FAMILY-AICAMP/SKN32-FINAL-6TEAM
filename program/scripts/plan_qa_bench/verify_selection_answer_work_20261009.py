@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-PILOT = ROOT / "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3"
+PILOT = ROOT / "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3"
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
         "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
         "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
         "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
-        "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+        "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
         "program/scripts/plan_qa_bench/results/jev_training_recount_20261009_v1/comparison.md",
         "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
     ]

@@ -21,7 +21,7 @@ D/E 이후 시험은 기존 자료를 그대로 합치는 대신 새 여행 일�
 
 ## 새 시험의 의미
 
-[계획·최근 연구·대안](../../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v1.md), [제안 계약 정본](../../quality/selection-grounded-answer-evaluation.md), [구조화된 검토 상태](../../../../program/research/daily_rag_slm/selection_answer_review_2026-10-09_v1.json), [예시 원본·해시·검수 대기](../../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v1/REPORT.md).
+[계획·최근 연구·대안](../../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v1.md), [제안 계약 정본](../../quality/selection-grounded-answer-evaluation.md), [구조화된 검토 상태](../../../../program/research/daily_rag_slm/selection_answer_review_2026-10-09_v1.json), [예시 원본·해시·검수 대기](../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v1/REPORT.md).
 
 기존 항목이 없는 새 장소 요청은 잡담과 다릅니다. 선택 번호·요청 범위·근거 상태를 분리하고, 제공된 사실을 보존해 실제로 요청에 답했는지 확인합니다. 정답 대상/근거를 고정한 진단과 실제 전체 경로를 비교해 선택·검색·생성 손실을 구분합니다.
 
@@ -49,6 +49,6 @@ Jevify 최신 보강판은 가중치 확보 오류로 학습 스모크에 실패
 
 ## 백업·남은 일
 
-공유 문서·상태 갱신 직전 백업은 각각 같은 폴더의 `_backup/2026-10-09_1152_selection-answer-integration/`에 보존했습니다. Quality색인 최초 등록 전 백업은 [이전 색인](../../quality/_backup/2026-10-09_1155_selection-answer-contract/index.md)입니다. 예시 완전일치 검사에 고객 질문 추출을 보강하기 전 [생성 도구](../../../../program/scripts/plan_qa_bench/_backup/2026-10-09_1208_question-extraction/selection_answer_pilot_20261009.py)와 [초기 manifest](../../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v1/_backup/2026-10-09_1208_manifest/manifest.json)를 보존했습니다.
+공유 문서·상태 갱신 직전 백업은 각각 같은 폴더의 `_backup/2026-10-09_1152_selection-answer-integration/`에 보존했습니다. Quality색인 최초 등록 전 백업은 [이전 색인](../../quality/_backup/2026-10-09_1155_selection-answer-contract/index.md)입니다. 예시 완전일치 검사에 고객 질문 추출을 보강하기 전 [생성 도구](../../../../program/scripts/plan_qa_bench/_backup/2026-10-09_1208_question-extraction/selection_answer_pilot_20261009.py)와 [초기 manifest](../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v1/_backup/2026-10-09_1208_manifest/manifest.json)를 보존했습니다.
 
 다음은 개발 답변/검색 평가 실행기·근접 중복 검사·두 사람 검수·독립 일정군 자료 작성과 해시 고정입니다. Saluki는 동일 모델 학습 경로를 먼저 확보한 후 GPU 연결 검사를 재개합니다. 외부 게시·push·결제·새 임대·기존 모델 삭제·실서비스 배포는 하지 않았습니다.

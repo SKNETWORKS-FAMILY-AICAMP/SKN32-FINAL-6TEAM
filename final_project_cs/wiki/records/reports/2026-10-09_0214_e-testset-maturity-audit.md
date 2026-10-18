@@ -56,4 +56,4 @@ flowchart LR
 
 - [기존 설계와 생성 조건](../../../../program/research/시험세트_MX_설계_2026-10-07.md) — 이견 제외·유형·사전 기준의 원본 기록.
 - [현재 모델 평가 기준](../../quality/slm-model-evaluation.md) — 개발 점수와 모델 채택을 구분하는 정본.
-- [원본 데이터 폴더](../../../../datasets/travel/mx_testset/) — 공개 저장소 밖 여행 입력과 판정 자료.
+- [원본 데이터 폴더](../../../../datasets/core/pointing/legacy_runs/mx_testset/) — 공개 저장소 밖 여행 입력과 판정 자료.

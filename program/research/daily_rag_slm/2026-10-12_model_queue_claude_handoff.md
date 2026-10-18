@@ -18,7 +18,7 @@
    python program/scripts/plan_qa_bench/inspect_model_queue_20261012.py --collect
    ```
 
-   로컬 파일은 [비공개 인계 자료 폴더](../../../datasets/travel/model_queue_handoff_20261012/)에 생깁니다. 실제 접속 별칭·기계 경로·manifest 백업·등록 상세는 이 폴더와 [Winnow 등록 원본](../../../datasets/travel/winnow_upgrade_20261012/)·[Saluki 등록 원본](../../../datasets/travel/saluki_training_queue_20261012/)에서 확인합니다. 공용 문서에 복사하지 않습니다.
+   로컬 파일은 [비공개 인계 자료 폴더](../../../datasets/travel/model_queue_handoff_20261012/)에 생깁니다. 실제 접속 별칭·기계 경로·manifest 백업·등록 상세는 이 폴더와 [Winnow 등록 원본](../../../datasets/travel/winnow_upgrade_20261012/)·[Saluki 등록 원본](../../../datasets/core/pointing/queues/saluki_training_queue_20261012/)에서 확인합니다. 공용 문서에 복사하지 않습니다.
 
 ## 실행 순서와 조건
 

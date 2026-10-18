@@ -102,6 +102,6 @@ flowchart LR
 - [일일 연구 기록](../../../program/research/daily_rag_slm/index.md) — 단계별 실제 완료와 재개 위치
 - [모델 선별·추가 학습](slm-model-evaluation.md) — 후보와 제품 채택 구분
 - [E 완성도 감사](../records/reports/2026-10-09_0214_e-testset-maturity-audit.md) — 기존 진단의 한계
-- [개발 예시 자료](../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md) — 사람 검수 전 예시, 독립 최종 검증 자료가 아님
+- [개발 예시 자료](../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md) — 사람 검수 전 예시, 독립 최종 검증 자료가 아님
 
 평가의 request_scope는 진단용 정답 라벨이며 제품의 기존 intent·case_type을 교체하지 않습니다. 개발 예시의 초기 ID·일정군 표시를 모델 실행 전에 수정했습니다. [독립 검토·현재 판](../records/reports/2026-10-09_1158_pilot-independent-review-corrections.md).

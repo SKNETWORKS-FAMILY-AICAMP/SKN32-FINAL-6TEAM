@@ -30,8 +30,8 @@ print(json.dumps({'hf_files':files,'adapter_config':json.loads((p/'adapter_confi
 run=subprocess.run(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=15',sys.argv[1],'/root/venv_imajev/bin/python -'],input=remote,text=True,encoding='utf-8',capture_output=True,timeout=60)
 if run.returncode:raise RuntimeError(run.stderr)
 r=json.loads(run.stdout)
-hf=ROOT/'datasets/travel/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308'
-gguf=ROOT/'datasets/travel/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf'
+hf=ROOT/'datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308'
+gguf=ROOT/'datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf'
 for name,info in r['hf_files'].items():
  p=hf/name
  assert p.stat().st_size==info['bytes'] and hashlib.sha256(p.read_bytes()).hexdigest()==info['sha256'],name

@@ -17,8 +17,8 @@ for case in cases:
         failures.append({'case':case.get('classname','')+'::'+case.get('name',''),
                          'type':problem.get('type',''),
                          'category':'로컬 개발 DB 접속 오류' if 'OperationalError' in (problem.text or '') else 'Team의 금지된 직접 import 검사 실패'})
-train=WORKSPACE/'datasets/travel/train_oos2/train_oos2.jsonl'
-training={'path':'datasets/travel/train_oos2/train_oos2.jsonl','available':train.exists()}
+train=WORKSPACE/'datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl'
+training={'path':'datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl','available':train.exists()}
 if train.exists():
     rows=[json.loads(s) for s in train.read_text(encoding='utf-8').splitlines() if s.strip()]
     training.update(rows=len(rows),sha256=hashlib.sha256(train.read_bytes()).hexdigest(),field_names=sorted(rows[0]))
