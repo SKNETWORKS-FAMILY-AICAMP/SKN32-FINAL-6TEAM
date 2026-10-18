@@ -15,6 +15,7 @@
 ★지키는 선(코드의 사실 검사): **원문에 글자 그대로 없는 조각은 버린다**(`ground`). 시각 · 날짜 **값**은 모델이 문맥으로 정하되(「1시쯤 점심」→13:00)
   근거 조각이 원문에 있을 때만 받고, 오후로 본 시각 · 상대 날짜로 정한 날짜는 「확인 필요」. 시각은 인용에서 다시 계산한다(`fact_check.recompute_time`).
 ★모델 호출은 **지금 채팅 장치 그대로**(`chat.structured`) — 넘김 장치가 켜져 있으면 9초 넘을 때 유료 대체로 1회 넘어간다(`llm_failover`).
+  ★`[2026-10-16 2회차 합의]` 조금씩 받기 설정(`stream`)이 오면 `chat.structured_stream` — 고정 9초 대신 조각 감시, 한 계획은 한 모델(`read`).
   그것도 실패하면 예외를 그대로 올린다 — 부르는 쪽(`pipeline.read_source`)이 규칙 미리보기 + 못 읽은 조각 표시로 보인다.
 ★긴 글은 길이로 나눠 읽는다(`fragments.chunk`) — 묶음마다 앞 묶음의 읽은 상태(지금 몇째 날 · 앞에 나온 장소)를 붙이고, 겹친 줄에서 나온 항목은 두 번 세지 않는다.
 """
@@ -22,6 +23,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+import json
 import re
 import time
 from typing import Any
@@ -316,37 +318,143 @@ def _merge(total: AgentRead, part: AgentRead) -> None:
         bucket[key] = bucket.get(key, 0) + value
 
 
+_QUOTE = re.compile(r'"(?:[a-z]+_)?quote"\s*:\s*"((?:[^"\\]|\\.)*)"')     # quote · place_quote · time_quote · date_quote · from_quote · to_quote
+
+
+class _Progress:
+    """받는 중인 답에서 **원문에 글자 그대로 있는 인용이 나온 서로 다른 줄 수 / 보낸 줄 수**를 센다 — 지어낸 진행률이 아니다. `[2026-10-16]`
+    ★인용은 지금 묶음의 줄에서만 찾고, 같은 인용이 여러 줄에 있으면 아직 안 센 첫 줄 하나만 센다(짧은 말 「점심」이 여러 줄을 한꺼번에 세지 않게).
+    ★`every` 초마다 한 번 알린다. 경로가 바뀌면(로컬 → 유료) 곧바로 0 부터 다시(`phase: reading_api`)."""
+
+    def __init__(self, lines: list[str], tell: Any, *, every: float, clock: Any) -> None:
+        self.lines, self.tell, self.every, self.clock = lines, tell, every, clock
+        self.total = sum(1 for line in lines if line.strip())
+        self.path, self.last = "local", None
+        self.done: set[int] = set()
+        self.scope: list[int] = []
+        self.live: set[int] = set()
+
+    def start(self, numbers: list[int]) -> None:
+        self.scope, self.live = numbers, set()
+
+    def reset(self, path: str) -> None:
+        self.path, self.done, self.live = path, set(), set()
+
+    def piece(self, text: str, path: str = "local") -> None:
+        if path != self.path:
+            self.reset(path)
+            self.emit()
+        seen: set[int] = set()
+        for match in _QUOTE.finditer(text):
+            try:
+                quote = json.loads(f'"{match.group(1)}"')
+            except ValueError:
+                continue
+            if not quote.strip():
+                continue
+            number = next((n for n in self.scope if n not in self.done and n not in seen and quote in self.lines[n - 1]), None)
+            if number is not None:
+                seen.add(number)
+        self.live = seen
+        if self.last is None or self.clock() - self.last >= self.every:
+            self.emit()
+
+    def finish_chunk(self) -> None:
+        self.done |= self.live
+        self.live = set()
+
+    def emit(self, *, final: bool = False) -> None:
+        if self.tell is None:
+            return
+        body: dict[str, Any] = {"phase": "reading_api" if self.path == "api" else "reading",
+                                "done": len(self.done | self.live), "total": self.total}
+        if final:
+            body["final"] = True
+        self.last = self.clock()
+        try:
+            self.tell(body)
+        except Exception:                              # noqa: BLE001 — 진행 알림은 부가 기능이다
+            pass
+
+
+def _clear_path() -> None:
+    try:
+        from app.infrastructure.llm_failover import clear_path
+    except Exception:                                  # noqa: BLE001
+        return
+    clear_path()
+
+
 def read(text: str, lines: list[str], chat: Any, *, today: date, num_predict: int = 3072,
-         chunk_chars: int = fragments_module.CHUNK_CHARS) -> AgentRead:
+         chunk_chars: int = fragments_module.CHUNK_CHARS, stream: dict[str, Any] | None = None,
+         on_progress: Any = None, clock: Any = time.monotonic) -> AgentRead:
     """묶음마다 한 번씩 부른다(짧은 글은 한 번). 모델 · 모양 오류는 그대로 올린다 — 부르는 쪽(`pipeline.read_source`)이 규칙 미리보기로 읽는다.
 
-    `lines` 는 규칙 읽기와 같은 줄(`text.splitlines()`) — 줄 번호가 규칙 · 확인 화면 · 이 읽기에서 같다."""
+    `lines` 는 규칙 읽기와 같은 줄(`text.splitlines()`) — 줄 번호가 규칙 · 확인 화면 · 이 읽기에서 같다.
+
+    ★`[2026-10-16 2회차 합의 · 사용자 승인]` `stream`(가드레일 `travel.intake_reading` 값)이 있고 모델이 `structured_stream` 을 가지면 답을 **조금씩 받으며**
+      첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(`app/infrastructure/model_stream.py`). 로컬이 멈추면 넘김 장치가 그 묶음을 유료로 처음부터 읽는다.
+      ★한 계획은 한 모델이 읽는다 — 어느 묶음이 유료로 답하면 그 뒤 묶음도 유료만 쓰고(`api_only`), 앞 묶음을 로컬이 읽었으면 **첫 묶음부터 유료로 다시** 읽는다.
+      `on_progress({phase: reading|reading_api, done, total, final?})` — 원문에 글자 그대로 있는 인용이 나온 서로 다른 줄 수 / 보낸 줄 수(`progress_seconds` 마다)."""
     started = time.perf_counter()
     frags = fragments_module.explode([(text, {"source": 0})])
     chunks = fragments_module.chunk(frags, limit=chunk_chars) or [fragments_module.Chunk([])]
-    total = AgentRead()
-    state = fragments_module.ReadState()
-    taken: list[tuple[int, int]] = []
-    paths: list[Any] = []
-    for part in chunks:
-        many = len(chunks) > 1
-        raw = chat.structured(system_for(today, state.note() if many else ""), part.text if many else text, SCHEMA,
-                              num_predict=num_predict)
-        paths.append(_path())
-        if not isinstance(raw, dict) or not isinstance(raw.get("items"), list):
-            raise ValueError("읽기 에이전트 답의 모양이 다르다")
-        got = ground(raw, lines, allowed=part.new_numbers if many else None, taken=taken)
-        if many:
-            _rebase_days(got, state)
-        _merge(total, got)
-        last = got.items[-1] if got.items else None
-        if last is not None:
-            state.day = last.day if last.day is not None else state.day
-            state.date = last.date or state.date
-        state.places.extend(i.title.text for i in got.items)
+    many = len(chunks) > 1
+    streamer = getattr(chat, "structured_stream", None) if stream else None
+    progress = _Progress(lines, on_progress, every=float(stream["progress_seconds"]), clock=clock) if callable(streamer) else None
+    if progress is not None:
+        progress.emit()
+    api_only, restarted = False, False
+    while True:
+        total = AgentRead()
+        state = fragments_module.ReadState()
+        taken: list[tuple[int, int]] = []
+        paths: list[Any] = []
+        restart = False
+        for index, part in enumerate(chunks):
+            system, user = system_for(today, state.note() if many else ""), (part.text if many else text)
+            _clear_path()
+            if callable(streamer):
+                progress.start(list(part.new_numbers) if many else list(range(1, len(lines) + 1)))
+                extra = {"api_only": True} if api_only else {}
+                raw = streamer(system, user, SCHEMA, num_predict=num_predict, on_piece=progress.piece,
+                               first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
+                               max_seconds=float(stream["max_seconds"]), **extra)
+            else:
+                raw = chat.structured(system, user, SCHEMA, num_predict=num_predict)
+            path = _path()
+            paths.append(path)
+            if not api_only and isinstance(path, dict) and path.get("path") == "api":
+                api_only = True                        # 이 계획은 이제 유료가 읽는다
+                if index > 0:
+                    restart = True                     # 앞 묶음은 로컬이 읽었다 — 첫 묶음부터 유료로 다시
+                    break
+            if not isinstance(raw, dict) or not isinstance(raw.get("items"), list):
+                raise ValueError("읽기 에이전트 답의 모양이 다르다")
+            got = ground(raw, lines, allowed=part.new_numbers if many else None, taken=taken)
+            if many:
+                _rebase_days(got, state)
+            _merge(total, got)
+            last = got.items[-1] if got.items else None
+            if last is not None:
+                state.day = last.day if last.day is not None else state.day
+                state.date = last.date or state.date
+            state.places.extend(i.title.text for i in got.items)
+            if progress is not None:
+                progress.finish_chunk()
+        if not restart:
+            break
+        restarted = True
+        if progress is not None:
+            progress.reset("api")
+            progress.emit()
+    if progress is not None:
+        progress.emit(final=True)
     total.requests = requests_from(total)
     total.report.update({"seconds": round(time.perf_counter() - started, 2), "model": getattr(chat, "model", None),
                          "items": len(total.items), "chunks": len(chunks), "paths": paths})
+    if restarted:
+        total.report["restarted_on_api"] = True
     return total
 
 

@@ -84,6 +84,79 @@ class OllamaChat:
             raise OllamaContentError("JSON 객체가 아니다")
         return value
 
+    def json_stream(self, system: str, user: str, *, on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0,
+                    stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0) -> dict[str, Any]:
+        """`json` 과 같은 답을 **조금씩 받아** 모은다 — 첫 조각 · 조각 사이 · 맨 위 상한을 따로 본다(`model_stream.collect`). `[2026-10-16]`
+        `max_tokens` 는 답 토큰 상한(Ollama `num_predict`) — 같은 말을 되풀이하는 답을 끊는다. 상한에 걸려 잘린 답은 JSON 이 아니어서 `OllamaContentError`.
+        ★시험이 넣은 가짜(`transport`)는 조금씩 주지 못한다 — 그때는 `json` 으로 한 번에 받고 `on_piece` 를 한 번 부른다."""
+        if self._injected:
+            value = self.json(system, user)
+            if on_piece is not None:
+                on_piece(json.dumps(value, ensure_ascii=False))
+            return value
+        return self._stream(system, user, "json", max_tokens, on_piece=on_piece, first_wait=first_wait, stall=stall,
+                            max_seconds=max_seconds)
+
+    def structured_stream(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160,
+                          on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
+                          max_seconds: float = 180.0) -> dict[str, Any]:
+        """`structured`(JSON 스키마 강제)와 같은 답을 **조금씩 받는다** — 계획 읽기 에이전트(`intake/agent_read`)가 쓴다. `[2026-10-16]`
+        `num_predict` 는 답 토큰 상한 그대로. 시험이 넣은 가짜(`transport`)는 `structured` 로 한 번에 받는다."""
+        if self._injected:
+            value = self.structured(system, user, schema, num_predict=num_predict)
+            if on_piece is not None:
+                on_piece(json.dumps(value, ensure_ascii=False))
+            return value
+        return self._stream(system, user, schema, num_predict, on_piece=on_piece, first_wait=first_wait, stall=stall,
+                            max_seconds=max_seconds)
+
+    def _stream(self, system: str, user: str, fmt: Any, max_tokens: int, *, on_piece: Callable[[str], None] | None,
+                first_wait: float, stall: float, max_seconds: float) -> dict[str, Any]:
+        from app.infrastructure.model_stream import collect
+
+        options: dict[str, Any] = {"temperature": 0}
+        if max_tokens > 0:
+            options["num_predict"] = int(max_tokens)
+        payload: dict[str, Any] = {"model": self.model, "stream": True, "think": False, "format": fmt,
+                                   "options": self._options(options),
+                                   "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+        if self.keep_alive:
+            payload["keep_alive"] = self.keep_alive
+        held: dict[str, Any] = {}
+
+        def pieces():
+            try:
+                with httpx.stream("POST", f"{self.base_url}/api/chat", json=payload,
+                                  timeout=httpx.Timeout(max_seconds, connect=min(5.0, max_seconds))) as response:
+                    held["response"] = response
+                    if response.status_code != 200:
+                        raise OllamaError(f"Ollama HTTP {response.status_code}: {response.read()[:160]!r}")
+                    for line in response.iter_lines():
+                        if not line:
+                            continue
+                        part = json.loads(line)
+                        if part.get("error"):
+                            raise OllamaError(f"Ollama 오류: {str(part['error'])[:160]}")
+                        yield (part.get("message") or {}).get("content") or ""
+            except httpx.HTTPError as exc:
+                raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
+
+        def close() -> None:
+            response = held.get("response")
+            if response is not None:
+                response.close()
+
+        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, close=close).strip()
+        if not text:
+            raise OllamaError("Ollama 가 빈 답을 냈다")
+        try:
+            value = json.loads(text)
+        except ValueError as exc:
+            raise OllamaContentError(f"JSON 이 아니다(답 상한에 잘렸을 수 있다): {text[-80:]}") from exc
+        if not isinstance(value, dict):
+            raise OllamaContentError("JSON 객체가 아니다")
+        return value
+
     def text(self, system: str, user: str) -> str:
         return self._chat(system, user, json_mode=False)
 

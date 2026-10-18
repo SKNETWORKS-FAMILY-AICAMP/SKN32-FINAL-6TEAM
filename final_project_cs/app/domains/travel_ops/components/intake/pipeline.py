@@ -207,9 +207,10 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             def places_progress(phase, done, total, index, title, _position=source["position"]):
                 push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
 
-            def reading_progress(tally):
-                # ★`[2026-10-16]` 남은 줄 모델 호출이 묶음 하나 끝날 때마다 「읽는 중 n/m 묶음」(`llm_spans.label_lines`) — 지어낸 진행률이 아니라 끝난 묶음 수다
-                push("progress", {"phase": "reading", **tally})
+            def reading_progress(body):
+                # ★`[2026-10-16 2회차 합의]` 남은 줄 모델이 답을 쓰는 동안 「읽는 중 n/m 줄」(`llm_spans.label_lines`) — 원문 검사를 통과한 줄 수 / 보낸 줄 수.
+                #   유료로 처음부터 다시 읽으면 `phase: reading_api` 로 0 부터 다시 센다
+                push("progress", body)
 
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
                         aliases=aliases, areas=areas, dining=dining, today=(today or received_at.date()), now=received_at,
@@ -1085,16 +1086,35 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
 
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
-def _reading_limits(chunk_lines: int | None, total_seconds: float | None) -> tuple[int, float]:
-    """남은 줄 모델 호출의 묶음 크기 · 전체 상한 — 넘겨받은 값이 없으면 가드레일 `travel.intake_reading.*`(근거는 그 설정의 주석)."""
-    if chunk_lines is not None and total_seconds is not None:
-        return int(chunk_lines), float(total_seconds)
+READING_STREAM_KEYS = ("first_token_seconds", "stall_seconds", "max_seconds", "progress_seconds", "output_tokens_base",
+                       "output_tokens_per_line", "output_tokens_per_char")
+
+#: 남은 줄 모델이 끝내 답하지 못했을 때 고객에게 보이는 말(접수 `fatal_detail`) — 무엇이 안 됐고 무엇을 하면 되는지. 기술 사유는 로그에 남긴다
+READING_FAILED_TEXT = "계획을 읽는 모델이 지금 답하지 않아 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요."
+
+
+def _model_side_failure(exc: BaseException) -> bool:
+    """에이전트 실패가 **모델 쪽**(로컬 · 유료 모두 답하지 못함 — 연결 · 시간 초과 · 조각 끊김)인가. `[2026-10-16 2회차 합의 ②]`
+    답 내용 쪽(모양 · 스키마 · 인용 검사 — `OllamaContentError` · `ValueError` · 넘김 장치가 모든 경로에서 「모양」 이유로 실패)이면 False — 줄 읽기로 한 번 더 읽는다."""
+    from app.infrastructure.llm_failover import current_path
+    from app.infrastructure.ollama_chat import OllamaContentError, OllamaError
+
+    if isinstance(exc, OllamaContentError):
+        return False
+    if not isinstance(exc, (OllamaError, TimeoutError, ConnectionError)):
+        return False
+    reasons = [reason for _, reason in ((current_path() or {}).get("reasons") or [])]
+    return not (reasons and all(reason == "content" for reason in reasons))
+
+
+def _reading_stream(given: dict[str, Any] | None) -> dict[str, Any]:
+    """남은 줄 모델 호출의 조금씩 받기 설정 — 넘겨받은 값이 없으면 가드레일 `travel.intake_reading.*`(근거는 그 설정의 주석)."""
+    if given is not None:
+        return given
     from app.core.settings import get_guardrails
 
     guard = get_guardrails()
-    size = int(guard.get("travel.intake_reading.chunk_lines")) if chunk_lines is None else int(chunk_lines)
-    cap = float(guard.get("travel.intake_reading.total_seconds")) if total_seconds is None else float(total_seconds)
-    return size, cap
+    return {key: guard.get(f"travel.intake_reading.{key}") for key in READING_STREAM_KEYS}
 
 
 
@@ -1112,7 +1132,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
                 differs: dict[int, dict[str, Any]] | None = None, agent: Any = None, agent_mode: str = "off",
                 position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
-                chunk_lines: int | None = None, reading_seconds: float | None = None,
+                reading_stream: dict[str, Any] | None = None,
                 on_reading: Callable[[dict[str, Any]], None] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
 
@@ -1132,25 +1152,38 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     `differs` `[2026-10-06 사용자 지시 — 값 변조 줄이기]` — 사진 · 스캔 받아쓰기가 같은 줄을 **두 번 다르게 읽은 곳**(`sources.differing_lines`). 그 줄에서 읽은 제목 · 예약번호는 「확인 필요」로 표시한다 —
     고객이 확인하기 전에는 확정 값으로 쓰지 않는다(`flag_differing`).
 
-    `chunk_lines` · `reading_seconds` · `on_reading` `[2026-10-16]` — 남은 줄을 모델에 **줄 묶음으로** 나눠 보낸다(`llm_spans.label_lines`). 비우면(None)
-    가드레일 `travel.intake_reading.chunk_lines` · `total_seconds` 를 읽는다. `on_reading({done, total, failed, skipped})` 는 묶음 하나가 끝날 때마다 불린다.
+    `reading_stream` · `on_reading` `[2026-10-16 2회차 합의 · 사용자 승인]` — 남은 줄을 모델에 **한 번에** 보내고 답을 **조금씩 받는다**(`llm_spans.label_lines`).
+    비우면(None) 가드레일 `travel.intake_reading.*`(첫 조각 · 조각 사이 · 맨 위 상한 · 진행 알림 간격 · 답 토큰 상한)를 읽는다.
+    `on_reading({phase: reading|reading_api, done, total})` — 원문 검사를 통과한 줄 수 / 보낸 줄 수(`progress_seconds` 마다 · 유료로 바뀌면 곧바로).
+    ★모델이 로컬 · 유료 모두 답하지 못하면 `IntakeRejected("reading_model_failed")` — 접수가 「읽기 실패」가 되고 고객은 다시 보낼 수 있다(조용히 남은 줄로 두지 않는다).
 
     `dining` `[2026-10-05]` — 요식 원장 이름 조회(`dining/place_lookup.py`, 관광공사 자리와 같은 계약 `find` + `misses`). 식사 항목은 이것이 먼저, 그 밖의 항목은 관광공사 자리 뒤다(`places.resolve`). 없으면(None) 건너뛴다."""
     from .dates import resolve_dates
     from .line_parts import parse as parse_line
-    from .llm_spans import label_lines
+    from .llm_spans import ReadingFailed, label_lines
     from .places import _kind_hits, nearest, normalize, resolve
 
     read = read_plan(text)
     agent_out, agent_error = None, None
     if agent is not None and agent_mode in ("on", "shadow"):
         try:
+            # ★`[2026-10-16 2회차 합의]` 조금씩 받기 + 멈춤 감시(`travel.intake_reading`) — 진행 알림은 에이전트 결과를 쓰는 `on` 일 때만(그림자는 규칙 경로가 알린다)
             agent_out = agent_module.read(text, read.lines, agent, today=today, num_predict=agent_num_predict,
-                                          chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS)
-        except Exception as exc:                      # noqa: BLE001 — 에이전트 장애는 기록하고 규칙으로 읽는다
+                                          chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS,
+                                          stream=_reading_stream(reading_stream), on_progress=on_reading if agent_mode == "on" else None)
+        except Exception as exc:                      # noqa: BLE001 — 갈래를 나눈다(아래)
             agent_error = f"{type(exc).__name__}: {exc}"[:200]
-            log.warning("intake agent read failed: %s", agent_error)
+            # ★`[2026-10-16 2회차 합의 ②]` 버리는 줄 없음 — 실패 이유로 갈래를 나눈다
+            #   · 모델 쪽(로컬 · 유료 모두 답 못 함 — 연결 · 시간 초과 · 멈춤): 같은 모델을 또 부르지 않고 곧바로 「읽기 실패」(유료를 두 번 태우지 않는다)
+            #   · 답 내용 쪽(스키마 · 모양 · 인용 검사 — 모델은 답했다): 아래에서 줄 읽기(`label_lines`)로 한 번 더 읽고, 그것도 실패하면 「읽기 실패」
+            #   ☆전에는(D-025 첫 판) 어느 쪽이든 「규칙 미리보기 + 못 읽은 줄」로 끝냈다 — 못 읽은 줄이 조용히 남았다
+            if agent_mode == "on" and _model_side_failure(exc):
+                log.warning("intake reading outcome=failed by=agent_model error=%s", agent_error)
+                raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
+            log.warning("intake agent read failed (answer side — reading lines instead): %s", agent_error)
     use_agent = agent_mode == "on" and agent_out is not None and (bool(agent_out.items) or not read.items)
+    #: 어느 길로 읽었나 — `reading.agent` 값 줄과 로그에 남긴다(화면 · 관리 콘솔에서 본다). 줄 읽기가 실패하면 `failed` 로 로그만 남고 접수가 「읽기 실패」가 된다
+    outcome = "agent" if use_agent else ("lines_instead" if agent_mode == "on" else "lines")
     rows = [claim.as_dict() for claim in read.claims] if not use_agent else []
     sent: set[int] = set()
     flushed = 0
@@ -1180,16 +1213,16 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                           "day": item.day, "date": item.date, "title": item.title.text if item.title else None,
                           "meal": any(r["field"] == f"items[{len(items)}].kind" for r in rows), "booked": item.booked})
 
-        # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
-        # ★`[2026-10-16 D-025]` 이해 에이전트가 방금 실패했으면(연결 · 시간 초과 · 유료 대체까지) 같은 모델을 다시 부르지 않는다 —
-        #   규칙 미리보기 + 못 읽은 줄 표시로 끝낸다(남은 줄은 확인 화면의 「못 읽은 줄」로 보인다)
-        if chat is not None and read.unread_lines and agent_error is None:
+        # 남은 줄 — 모델은 가리키기만. ★`[2026-10-16 2회차 합의]` 로컬 · 유료 모두 실패하면 접수를 「읽기 실패」로 드러낸다(전에는 이 단계만 건너뛰었다)
+        # ★`[2026-10-16 2회차 합의 ②]` 에이전트가 **답 내용 쪽**으로 실패했거나 항목을 못 냈으면 여기서 줄 읽기로 한 번 더 읽는다.
+        #   모델 쪽 실패는 위에서 이미 「읽기 실패」로 끝났다(같은 모델을 또 부르지 않는다)
+        if chat is not None and read.unread_lines:
             try:
-                size, cap = _reading_limits(chunk_lines, reading_seconds)
-                _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now, chunk_lines=size,
-                                                    total_seconds=cap, on_chunk=on_reading)
-            except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
-                span_items, report = [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
+                _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now,
+                                                    stream=_reading_stream(reading_stream), on_progress=on_reading)
+            except ReadingFailed as exc:
+                log.warning("intake reading outcome=failed by=lines after=%s lines=%d: %s", outcome, len(read.unread_lines), exc)
+                raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
             rows.append({"field": "reading.llm", "value": report, "method": "llm_span",
                          "evidence": {"source": "model", "lines": read.unread_lines}, "needs_review": False,
                          "note": "남은 줄에 모델이 가리킨 결과(원문에 없는 인용은 버렸다)"})
@@ -1241,10 +1274,11 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     if agent is not None and agent_mode in ("on", "shadow"):
         # 에이전트가 읽은 것 중 화면 칸이 없는 것(이동 · 조건 · 성향 · 요청 · 빠진 값)과 실패 · 그림자 결과를 남긴다
         rows.append({"field": "reading.agent", "method": "llm_agent", "evidence": {"source": "model"}, "needs_review": False,
-                     "value": ({**agent_module.report_value(agent_out), "used": use_agent} if agent_out is not None
-                               else {"error": agent_error, "used": False}),
+                     "value": ({**agent_module.report_value(agent_out), "used": use_agent, "outcome": outcome} if agent_out is not None
+                               else {"error": agent_error, "used": False, "outcome": outcome}),
                      "note": "읽기 에이전트 결과(원문에 글자 그대로 없는 조각은 버렸다)"})
         flush()
+    log.info("intake reading outcome=%s agent_mode=%s agent_error=%s", outcome, agent_mode, agent_error or "-")
 
     # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
     resolved: dict[int, Any] = {}

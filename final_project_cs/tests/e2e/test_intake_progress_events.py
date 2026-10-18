@@ -111,7 +111,7 @@ def test_the_reading_worker_stores_progress_while_it_reads_and_clears_it_at_the_
 
 
 class _Pointer:
-    """남은 줄마다 장소 하나를 가리키는 모델(시험용) — 받은 줄 번호를 남긴다."""
+    """남은 줄마다 장소 하나를 가리키는 모델(시험용) — 답을 조각으로 나눠 준다(`json_stream`). 받은 줄 번호를 남긴다."""
 
     PLACES = ("경복궁", "광장시장", "북촌한옥마을", "남산타워", "망원시장", "서울숲")
 
@@ -123,9 +123,20 @@ class _Pointer:
         self.calls.append([int(n) for n, _ in rows])
         return {"spans": [{"line": int(n), "quote": next(p for p in self.PLACES if p in text), "role": "place"} for n, text in rows]}
 
+    def json_stream(self, system, user, *, on_piece=None, first_wait, stall, max_seconds, max_tokens):
+        import json as _json
 
-def test_the_reading_worker_reports_model_chunks_before_the_places(rv, monkeypatch):
-    """`[2026-10-16]` 남은 줄 모델 호출을 줄 묶음으로 나눈다 — 묶음 하나가 끝날 때마다 「읽는 중 n/m」(`phase: reading`)이 장소 찾기보다 먼저 쌓인다."""
+        answer = self.json(system, user)
+        text = _json.dumps(answer, ensure_ascii=False)
+        for cut in range(40, len(text) + 40, 40):                  # 40자씩 조금씩
+            on_piece(text[:cut], "local")
+        self.budget = max_tokens
+        return answer
+
+
+def test_the_reading_worker_reports_lines_read_while_the_model_writes(rv, monkeypatch):
+    """`[2026-10-16 2회차 합의]` 남은 줄을 한 번에 보내고 답을 조금씩 받는다 — 「읽는 중 n/m 줄」(`phase: reading`)이 장소 찾기보다 먼저 쌓인다.
+    `done` 은 원문 검사를 통과한 서로 다른 줄 수, `total` 은 보낸 줄 수다(지어낸 진행률이 아니다)."""
     tour, kakao = Tour(), Kakao()
     text = "\n".join(["2026-10-15", *[f"오후엔 {p} 가 보고 싶어" for p in _Pointer.PLACES]])
     with get_connection() as conn:
@@ -138,22 +149,26 @@ def test_the_reading_worker_reports_model_chunks_before_the_places(rv, monkeypat
         real_clear(key)
 
     monkeypatch.setattr(progress, "clear", spy_clear)
-    monkeypatch.setattr(pipeline, "_reading_limits", lambda size, cap: (4, 0.0))      # 6줄 → 4 · 2 … 고른 크기라 3 · 3
+    real_stream = pipeline._reading_stream
+    monkeypatch.setattr(pipeline, "_reading_stream", lambda given: {**real_stream(None), "progress_seconds": 0})   # 조각마다 알림(시험)
     chat = _Pointer()
     assert pipeline.process(get_connection, tenant_id=rv["tenant"], intake_id=intake_id, blobs={}, see=None, chat=chat,
                             tour=tour, kakao=kakao) == "review"
-    assert chat.calls == [[1, 2, 3], [1, 2, 3]]                                                        # 묶음마다 한 번, 번호는 묶음 안 순서(원래 2~7줄)
+    assert chat.calls == [[1, 2, 3, 4, 5, 6]]                                                         # 한 번에, 번호는 보낸 목록 안 순서(원래 2~7줄)
+    assert chat.budget == 1024                                                                        # max(1024, 40 × 6)
     progress_events = [b for n, b in kept if n == "progress"]
     reading = [b for b in progress_events if b["phase"] == "reading"]
-    assert reading == [{"phase": "reading", "done": d, "total": 2, "failed": 0, "skipped": 0} for d in (0, 1, 2)]
+    assert reading[0] == {"phase": "reading", "done": 0, "total": 6} and reading[-1] == {"phase": "reading", "done": 6, "total": 6, "final": True}
+    dones = [b["done"] for b in reading]
+    assert dones == sorted(dones) and len(set(dones)) > 2                                             # 받는 동안 늘어난다
     first_place = next(i for i, b in enumerate(progress_events) if b["phase"] == "places")
-    assert max(i for i, b in enumerate(progress_events) if b["phase"] == "reading") < first_place     # 모델 묶음이 다 끝난 뒤 장소 찾기
+    assert max(i for i, b in enumerate(progress_events) if b["phase"] == "reading") < first_place     # 모델 답이 끝난 뒤 장소 찾기
     with get_connection() as conn:
         claims = pipeline._claims(conn, rv["tenant"], intake_id, 1)
     titles = sorted(c["value"] for c in claims if c["field"].endswith(".title"))
     assert titles == sorted(_Pointer.PLACES)
     report = next(c["value"] for c in claims if c["field"] == "reading.llm")
-    assert [c["lines"] for c in report["chunks"]] == [[2, 3, 4], [5, 6, 7]] and "error" not in report
+    assert report["asked_lines"] == 6 and report["accepted"] == 6 and report["output_tokens"] == 1024 and "error" not in report
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM trip_intakes WHERE intake_id=%s", (intake_id,))
 
