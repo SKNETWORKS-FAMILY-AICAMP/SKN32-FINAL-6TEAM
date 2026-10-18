@@ -125,3 +125,8 @@ export function useAgreedCount(codes: readonly ConsentCode[]): number {
 export function useRequiredConsents(): boolean {
   return useSyncExternalStore(subscribe, () => readConsents().service_terms && readConsents().privacy, () => false);
 }
+
+/** 동의 저장이 끝나기 전에는 보호 화면으로 넘어가지 않는다. */
+export function useConsentsSynced(): boolean {
+  return useSyncExternalStore(subscribe, consentsSynced, () => false);
+}

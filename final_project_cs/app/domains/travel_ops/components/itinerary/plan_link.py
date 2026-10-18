@@ -28,4 +28,10 @@ def plan_url(tenant_id: str, trip_id: UUID | str) -> str:
     return f"{base}/plan/{trip_id}?t={plan_token(tenant_id, trip_id)}"
 
 
-__all__ = ["plan_token", "plan_url"]
+def app_url(trip_id: UUID | str) -> str:
+    """로그인한 본인 계정의 여행 알림 화면. 이 주소는 접근 권한을 부여하지 않는다."""
+    base = settings_module.get_settings().public_base_url.rstrip("/")
+    return f"{base}/trips/{UUID(str(trip_id))}?notices=1"
+
+
+__all__ = ["plan_token", "plan_url", "app_url"]

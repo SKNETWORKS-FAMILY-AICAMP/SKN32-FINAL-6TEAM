@@ -51,12 +51,12 @@ def main() -> int:
                                phrases=phrases)
     # ★`[2026-10-05]` 고객별 발송 — 스위치(`travel.notice_per_customer_enabled`, 기본 꺼짐)가 켜져 있으면 여행 알림을 **고객이 연결한 곳 한 곳**(디스코드 웹훅 · 텔레그램)으로 보낸다.
     #   꺼져 있으면 외부 발송만 `skipped` 로 남기고 앱 알림은 유지한다. 고객 알림을 위의 운영자 채널로 우회하지 않는다. 보내면 안 되는 테넌트 · 연결 없음 · 막힘도 `skipped`(`app/domains/travel_ops/components/watch/notice_routing.py`).
-    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.modules.web_account.customer_notice_delivery import enabled as customer_delivery_enabled
     from app.domains.travel_ops.components.watch.notice_routing import CustomerNoticeRouter
 
     publisher = CustomerNoticeRouter(
         operator=publisher, connection_factory=get_connection, renderer=publisher, allowed_tenants=allowed,
-        enabled=lambda: bool(get_guardrails().get("travel.notice_per_customer_enabled")))
+        enabled=lambda: customer_delivery_enabled(settings.tenant_id))
     worker = OutboxWorker(get_connection, publisher, tenant_id=args.tenant)
     handled = 0
     while worker.process_once():

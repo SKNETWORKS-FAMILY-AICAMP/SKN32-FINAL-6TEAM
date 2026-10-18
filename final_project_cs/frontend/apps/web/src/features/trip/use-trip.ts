@@ -22,9 +22,10 @@ export function useTrip(tripId: string) {
 }
 
 /** This browser's trips, newest first. The home card and "My trips" share this one query. */
-export function useTrips() {
+export function useTrips({ enabled = true }: { enabled?: boolean } = {}) {
   const { language } = useSettings();
   return useQuery({
+    enabled,
     queryKey: [...tripsKey, language],
     queryFn: () => tripGateway.listTrips(language),
     retry: false,

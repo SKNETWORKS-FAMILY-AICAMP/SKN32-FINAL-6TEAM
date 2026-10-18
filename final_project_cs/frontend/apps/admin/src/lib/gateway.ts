@@ -16,6 +16,10 @@ const quota = z.number().int().min(0, '0 이상의 정수를 입력해 주세요
 const body = z.string().trim().min(1, '내용을 입력해 주세요.').max(5000, '5,000자 이내로 입력해 주세요.');
 const reason = z.string().trim().min(1, '변경 사유를 입력해 주세요.').max(1000);
 const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, '날짜와 시간을 입력해 주세요.').refine(v => Number.isFinite(Date.parse(`${v}+09:00`)), '올바른 날짜를 입력해 주세요.');
+const noticeDelivery = {
+  notifyUsers: z.boolean().optional(), audience: z.enum(['all','customer']).optional(),
+  customerId: z.string().uuid().optional(), requestId: z.string().uuid().optional(),
+};
 const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('block-user'), userId: body, blocked: z.boolean(), reason }),
   z.object({ type: z.literal('user-limit'), userId: body, limit: quota.nullable(), period: z.enum(['today','until-cleared']), reason }),
@@ -25,8 +29,8 @@ const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('inquiry-status'), inquiryId: body, status: z.enum(['접수','처리 중','답변 완료']), assignee: z.string().max(100), reason }),
   z.object({ type: z.literal('reply'), inquiryId: body, body }),
   z.object({ type: z.literal('save-template'), id: body.optional(), title: body, body }),
-  z.object({ type: z.literal('maintenance'), enabled: z.boolean(), message: body, messageEn: z.string().max(5000), endsAt: localDate, reason }),
-  z.object({ type: z.literal('publish-notice'), notice: z.object({ kind: body, title: body, body, titleEn: z.string().max(5000), bodyEn: z.string().max(5000), startsAt: localDate, endsAt: localDate }) }),
+  z.object({ ...noticeDelivery, type: z.literal('maintenance'), enabled: z.boolean(), message: body, messageEn: z.string().max(5000), endsAt: localDate, reason }),
+  z.object({ ...noticeDelivery, type: z.literal('publish-notice'), notice: z.object({ kind: body, title: body, body, titleEn: z.string().max(5000), bodyEn: z.string().max(5000), startsAt: localDate, endsAt: localDate }) }),
   z.object({ type: z.literal('approval'), approvalId: body, approve: z.boolean(), reason }),
   z.object({ type: z.literal('delegation'), delegationId: body, active: z.boolean(), reason }),
   z.object({ type: z.literal('resolve-outbox'), outboxId: body, resolution: z.enum(['confirmed_delivered','confirmed_not_delivered']), reason }),
@@ -197,6 +201,7 @@ export async function saveSourcePolicy<T>(payload: unknown): Promise<T> {
 }
 export const operationSimulations = <T,>(tripId?: string, query?: URLSearchParams) => liveRequest<T>(`${tripId ? `simulations/${encodeURIComponent(tripId)}` : 'simulations'}${query ? `?${query}` : ''}`);
 export const operationWatchRuns = <T,>(suffix = '') => liveRequest<T>(`watch-runs${suffix}`);
+export const operationNoticeDeliveries = <T,>(identity: string) => liveRequest<T>(`notice-deliveries/${encodeURIComponent(identity)}`);
 export const operationApiLimits = <T,>() => liveRequest<T>('api-limits');
 export async function operationTripDetail<T>(userId: string, tripId: string, suffix = '', signal?: AbortSignal): Promise<T> {
   try { return await liveRequest<T>(`users/${encodeURIComponent(userId)}/trips/${encodeURIComponent(tripId)}${suffix}`, { signal }); }

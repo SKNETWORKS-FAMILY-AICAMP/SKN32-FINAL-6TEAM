@@ -30,6 +30,7 @@ export type SessionKind = "guest" | "member";
 /** The session the server gave this browser. `csrf` is memory-only. */
 export interface WebSession {
   kind: SessionKind;
+  registrationPending?: boolean;
   csrf: string;
   /** Guests only: hours without use after which the session (and its trips) go away. */
   guestIdleHours: number | null;
@@ -87,6 +88,7 @@ export function sessionOf(body: unknown): WebSession | null {
   if (!csrf || !kind) return null;
   const hours = Number(entry.guest_idle_hours);
   return {
+    ...(entry.registration_required === true ? { registrationPending: true } : {}),
     kind, csrf, guestIdleHours: kind === "guest" && Number.isFinite(hours) && hours > 0 ? hours : null,
     idleExpiresAt: text(entry.idle_expires_at), absoluteExpiresAt: text(entry.absolute_expires_at),
   };

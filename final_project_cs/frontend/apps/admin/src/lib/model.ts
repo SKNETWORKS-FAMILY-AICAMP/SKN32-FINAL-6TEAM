@@ -32,7 +32,7 @@ export interface Inquiry {
 }
 export interface Notice {
   id: string; kind: string; title: string; body: string; titleEn: string; bodyEn: string;
-  startsAt: string; endsAt: string; author: string;
+  startsAt: string; endsAt: string; author: string; deliveryRequestId?: string;
 }
 export interface AuditEntry { id: string; at: string; actor: string; action: string; target: string; before: string; after: string; reason: string }
 export interface Approval { id: string; userId: string; trip: string; request: string; evidence: string; at: string; status: '대기' | '승인' | '거절' }
@@ -44,13 +44,17 @@ export interface AdminSnapshot {
   measurements?: { requests: string; llm: string };
   clock: string; users: User[]; apis: ApiUsage[]; chatLimit: number; watchRules: WatchRule[];
   inquiries: Inquiry[]; templates: { id: string; title: string; body: string }[];
-  notices: Notice[]; maintenance: { enabled: boolean; message: string; messageEn: string; endsAt: string };
+  notices: Notice[]; maintenance: { enabled: boolean; message: string; messageEn: string; endsAt: string; deliveryRequestId?: string };
   audit: AuditEntry[]; approvals: Approval[]; delegations: Delegation[]; outbox: OutboxItem[];
   server: { checkedAt: string; checks: ServerCheck[]; cpu: number | null; memory: number | null; disk: number | null; uptime: string | null; dbSize: string | null; dbConnections: number | null; slowQueries: number | null; lastWatch: string | null; watchFailures: number | null; restarts: number };
   requests: { path: string; count: number; users: number; errorRate: number; p50: number; p95: number }[];
   llm: { model: string; calls: number; input: number | null; output: number | null; cost: number | null; latency: number | null; local: boolean }[];
   daily: { day: string; watch: number | null; chat: number }[];
 }
+export interface NoticeDeliveryOptions {
+  notifyUsers?: boolean; audience?: 'all' | 'customer'; customerId?: string; requestId?: string;
+}
+export interface NoticeDeliveryResult { stored: number; delivered: number; pending: number; skipped: number; unknown: number; failed: number }
 export type AdminCommand =
   | { type: 'block-user'; userId: string; blocked: boolean; reason: string }
   | { type: 'user-limit'; userId: string; limit: number | null; period: 'today' | 'until-cleared'; reason: string }
@@ -60,8 +64,8 @@ export type AdminCommand =
   | { type: 'inquiry-status'; inquiryId: string; status: InquiryStatus; assignee: string; reason: string }
   | { type: 'reply'; inquiryId: string; body: string }
   | { type: 'save-template'; id?: string; title: string; body: string }
-  | { type: 'maintenance'; enabled: boolean; message: string; messageEn: string; endsAt: string; reason: string }
-  | { type: 'publish-notice'; notice: Omit<Notice, 'id' | 'author'> }
+  | ({ type: 'maintenance'; enabled: boolean; message: string; messageEn: string; endsAt: string; reason: string } & NoticeDeliveryOptions)
+  | ({ type: 'publish-notice'; notice: Omit<Notice, 'id' | 'author'> } & NoticeDeliveryOptions)
   | { type: 'approval'; approvalId: string; approve: boolean; reason: string }
   | { type: 'delegation'; delegationId: string; active: boolean; reason: string }
   | { type: 'resolve-outbox'; outboxId: string; resolution: 'confirmed_delivered' | 'confirmed_not_delivered'; reason: string }

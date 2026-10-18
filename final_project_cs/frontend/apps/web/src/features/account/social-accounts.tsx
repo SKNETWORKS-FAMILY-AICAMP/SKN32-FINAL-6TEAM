@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
 import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
@@ -11,6 +11,8 @@ import { useSettings, useT } from "@/lib/settings";
 import { ProviderButton, ProviderIdentity } from "./provider-button";
 import { useAuthProviders } from "./use-auth-providers";
 import styles from "./account.module.css";
+
+const subscribeNothing = () => () => {};
 
 export const linksKey = (language: string) => ["auth-links", language] as const;
 
@@ -24,6 +26,8 @@ export function SocialAccounts() {
   const session = profile?.session ?? null;
   const hasSession = Boolean(session);
   const isGuest = session?.kind === "guest";
+  const ready = useSyncExternalStore(subscribeNothing, () => true, () => false);
+  const loginOnly = ready && new URLSearchParams(window.location.search).get("login") === "1";
   const [unlinking, setUnlinking] = useState<SocialProvider | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   // A login with no session may need a human check (`human_check_required`): the provider and mode wait for the token.
@@ -86,7 +90,7 @@ export function SocialAccounts() {
     }
     if (!providers.data.length) return <p className={styles.mutedNote}>{t("서버에 설정된 로그인 방법이 아직 없어요.", "The server has no sign-in method set up yet.")}</p>;
     return <>
-      {session?.kind === "member" && <div className={styles.row}>
+      {session?.kind === "member" && !loginOnly && <div className={styles.row}>
         <p className={styles.explain}>{isGuest
           ? t("계정을 연결해 두면 창을 닫아도 여행이 보관되고, 게스트 제한도 없어져요. 다른 기기에서도 그 계정으로 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Link an account and your trips are kept even after you close the window, the guest limits end, and you can sign in with it on another device. We do not take your email.")
           : t("연결된 계정으로 어느 기기에서든 로그인해 여행을 열 수 있어요. 이메일은 받지 않아요.", "Sign in with a linked account on any device to open your trips. We do not take your email.")}</p>
@@ -106,8 +110,8 @@ export function SocialAccounts() {
         {links.isError && !isSocialUnsupported(links.error) && <p className={styles.error} role="alert">{reason(links.error)}</p>}
       </div>}
 
-      {session?.kind !== "member" && <div className={styles.row}>
-        <p className={styles.explain}>{t("계정으로 계속하면 기존 계정은 로그인되고, 처음이면 가입돼요. 지금 작성한 일정과 이 기기의 게스트 여행도 함께 보관돼요.", "Continue with an account to sign in or create one automatically. Your current plan and this device's guest trips will be kept together.")}</p>
+      {(session?.kind !== "member" || loginOnly) && <div className={styles.row}>
+        <p className={styles.explain}>{t("계정으로 계속하면 기존 계정은 로그인되고, 처음이면 필수 약관 동의 후 가입이 완료돼요. 지금 작성한 일정과 이 기기의 게스트 여행도 함께 보관돼요.", "Continue with an account to sign in, or finish signing up after agreeing to the required terms. Your current plan and this device's guest trips will be kept together.")}</p>
         <ul className={styles.providers} aria-label={t("계정으로 계속하기", "Continue with an account")}>{providers.data.map((provider) =>
           <li key={provider} data-provider={provider} className={styles.brandRow}><ProviderButton provider={provider} disabled={busy} onClick={() => start(provider, "login")} /></li>)}</ul>
       </div>}

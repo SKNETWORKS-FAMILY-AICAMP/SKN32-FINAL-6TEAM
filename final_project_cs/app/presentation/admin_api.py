@@ -95,7 +95,14 @@ class Template(Input):
 Date = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$")]
 
 
-class Maintenance(Input):
+class Delivery(Input):
+    notifyUsers: bool = False
+    audience: Literal['all', 'customer'] = 'all'
+    customerId: UUID | None = None
+    requestId: UUID | None = None
+
+
+class Maintenance(Delivery):
     type: Literal["maintenance"]
     enabled: bool
     message: Text
@@ -114,7 +121,7 @@ class Notice(Input):
     endsAt: Date
 
 
-class Publish(Input):
+class Publish(Delivery):
     type: Literal["publish-notice"]
     notice: Notice
 
@@ -262,6 +269,16 @@ def build_router(*, snapshot_provider: Callable | None = None, users_provider: C
         if value is None:
             raise HTTPException(404, "접수 건을 찾을 수 없습니다.")
         return mask_json(value)
+
+    @router.get('/notice-deliveries/{identity}')
+    def notice_delivery(identity: UUID, op=Depends(operator)):
+        require(op, 'ops:introspect')
+        from app.application import service_notifications
+        with get_connection() as conn:
+            try:
+                return service_notifications.delivery(conn, get_settings().tenant_id, str(identity))
+            except admin_service.AdminServiceError as exc:
+                raise HTTPException(exc.status_code, exc.detail) from None
 
     @router.post("/commands")
     async def commands(body: Command, request: Request, op=Depends(operator)):
