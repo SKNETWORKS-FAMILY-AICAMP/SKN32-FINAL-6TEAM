@@ -41,7 +41,7 @@ class HolidaySource(TravelSource):
         self._key = service_key
         # ★같은 달을 여러 번 묻는다(한 여행이 한 달 안에 몰린다). 캐시가 없으면
         #   예약마다 바깥으로 나가 개발계정 한도를 금방 먹는다.
-        self._cache: dict[tuple[int, int], dict[str, str]] = {}
+        self._month_cache: dict[tuple[int, int], dict[str, str]] = {}
 
     def is_holiday(self, when: date) -> dict[str, Any] | None:
         """그 날짜가 공휴일인지. 모르면 `None`(모름) — **「아니다」가 아니다.**"""
@@ -59,7 +59,7 @@ class HolidaySource(TravelSource):
         }, source=self.name)
 
     def _month(self, year: int, month: int) -> dict[str, str] | None:
-        cached = self._cache.get((year, month))
+        cached = self._month_cache.get((year, month))
         if cached is not None:
             return cached
 
@@ -89,7 +89,7 @@ class HolidaySource(TravelSource):
 
         found = {str(row.get("locdate")): str(row.get("dateName", "")).strip()
                  for row in rows if isinstance(row, dict) and row.get("locdate")}
-        self._cache[(year, month)] = found
+        self._month_cache[(year, month)] = found
         return found
 
     @staticmethod
