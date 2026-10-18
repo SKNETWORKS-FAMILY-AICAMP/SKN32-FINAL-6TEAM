@@ -213,6 +213,36 @@ class TripDesk:
                                         state_lookup=self._state_lookup())
         return self._with_nearby(trip_id, meal, places, plan, always=True)
 
+    def near_alternate(self, *, trip_id: UUID, item_id: UUID, base_version: int, origin: dict[str, Any],
+                       message: str | None = None, request_id: str | None = None, propose: bool = False) -> dict[str, Any]:
+        """요식 원장을 지정한 기준 위치에서 읽고 기존 영업·이동 판정으로 계산한다."""
+        from types import SimpleNamespace
+        trip, items, places = self._read(trip_id)
+        current = next((i for i in items if i.item_id == item_id), None)
+        if trip["version"] != base_version:
+            return {"status": "stale", "version": trip["version"]}
+        if current is None or current.kind != "dining":
+            return {"status": "clarify", "text": "바꿀 식사 일정을 알려 주세요."}
+        if current.locked or current.booking_id:
+            return {"status": "edit_refused", "reason": "locked_item", "text": "예약·고정된 식사 일정이라 장소를 바꾸지 않았어요."}
+        if self._use_ledger:
+            places = self._add_nearby(trip_id, SimpleNamespace(kind="dining", place=origin,
+                                      starts_at=current.starts_at, ends_at=current.ends_at), places)
+        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version,
+                                    items=items, places=places, item_id=item_id, message=message,
+                                    request_id=request_id, state_lookup=self._state_lookup(), search_origin=origin,
+                                    meal_picker=dining_hook.meal_picker())
+        if isinstance(plan, NoChange):
+            if plan.status == "relaxed":
+                return self._ask_relaxed(trip_id, item_id, plan)
+            return {"status": plan.status, **plan.detail}
+        if propose:
+            options = [o for o in options_from(plan, current) if str(o.get("place_id") or "") != str(current.place["place_id"])]
+            return self._ask_options(trip_id, item_id, reason="requested_options",
+                                     text=f"{origin['name']} 근처에서 확인한 식당이에요. 고르시면 바꿀게요.",
+                                     options=options, causes=plan.causes)
+        return self._outcome(trip_id, base_version, items, plan)
+
     def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,
                              message: str | None = None, request_id: str | None = None,
                              keep: Callable[[list[dict[str, Any]]], list[dict[str, Any]]] | None = None) -> dict[str, Any]:

@@ -40,6 +40,7 @@ class EditOp:
     place_name: str | None = None
     title: str | None = None
     item_kind: str | None = None     # 넣기: activity · dining
+    reflow: bool = False             # 명시된 시각을 지키며 같은 날 뒤 일정을 맞춘다
 
 
 class EditRefused(Exception):
@@ -204,7 +205,8 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             try:
                 with connect() as conn:
                     revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
-                                             revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining, learn_aliases=False)
+                                             revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining, learn_aliases=False,
+                                             reflow=any(o.reflow for o in ops))
             except pipeline.IntakeConflict as exc:
                 add_days = {o.date for o in ops if o.kind == "add" and o.date}
                 if batch is not edits or exc.code != "schedule_conflict" or not add_days:
@@ -421,6 +423,11 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
     name = str(raw.get("destination_text") or "").strip()[:80]
 
     if action == "change_time":
+        from .edit_intent import time_ops
+
+        semantic = time_ops(decision, items=items, now=now)
+        if semantic is not None:
+            return semantic
         targets = [item] if item is not None else []
         query = decision.query if item is None else None
         if item is None and query is None and decision.minutes:

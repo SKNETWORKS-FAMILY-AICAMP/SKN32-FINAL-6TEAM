@@ -26,7 +26,8 @@ def key(row: dict[str, Any]) -> tuple[str, int]:
 
 def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[str, int]],
         party_size: int | None = None, engine: Any = None, use_engine: bool = True,
-        mode_picks: dict[str, str] | None = None) -> list[dict[str, Any]]:
+        mode_picks: dict[str, str] | None = None, fixed_times: set[tuple[str, int]] | None = None,
+        forward_only: bool = False) -> list[dict[str, Any]]:
     """날짜별 시각순 rows를 앞뒤로 맞추고 시각 claim만 반환한다.
 
     계산기가 꺼진 경우 기존 이동 계약대로 어림 근거를 남긴다. 켜진 계산기의 오류나
@@ -90,7 +91,7 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
         return got
 
     def protected(row):
-        return row.get("locked") or row.get("booked") is True or bool(row.get("booking_no"))
+        return key(row) in (fixed_times or set()) or row.get("locked") or row.get("booked") is True or bool(row.get("booking_no"))
 
     def hours_fit(row, start, end):
         facts = facts_for(conn, tenant_id, row["place"], row["kind"], start, end)
@@ -189,6 +190,8 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                     shortened_meals.add(key(a))
                     continue
             if protected(b):
+                if forward_only:
+                    raise ScheduleConflict("지정한 시각과 뒤쪽 고정·예약 일정을 함께 지킬 수 없어 저장하지 않았어요.")
                 latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"])
                 if latest is None:
                     raise ScheduleConflict("예약 일정에 도착 가능한 시각을 찾지 못했어요.")
@@ -199,9 +202,13 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                     raise ScheduleConflict("다음 일정에 도착 가능한 시각을 찾지 못했어요.")
                 earliest = max(b["start_at"], earliest)
                 if (earliest + b["duration"]).date().isoformat() != day:
+                    if forward_only:
+                        raise ScheduleConflict("뒤 일정을 미루면 하루를 넘어서 저장하지 않았어요.")
                     # 뒤쪽 여유가 모자라면 날짜를 넘기지 말고 앞의 여유를 쓴다.
                     backwards(i, b["start_at"].replace(hour=23, minute=59), route.basis)
                 elif not hours_fit(b, earliest, earliest + b["duration"]) and hours_fit(b, b["start_at"], b["end_at"]):
+                    if forward_only:
+                        raise ScheduleConflict("뒤 일정을 미루면 운영시간에 맞지 않아 저장하지 않았어요.")
                     # 닫는 시각·브레이크타임 때문에 뒤로 밀 수 없으면, 현재 방문
                     # 시각을 지키고 앞의 변경 가능한 일정에서 여유를 확보한다.
                     backwards(i, b["end_at"], route.basis)

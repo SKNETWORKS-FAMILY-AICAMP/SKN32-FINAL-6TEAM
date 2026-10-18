@@ -45,7 +45,7 @@ def recent(conn, *, tenant_id: str, trip_id: UUID, limit: int = RECENT_TURNS) ->
         return []
     return [{"role": r[0], "text": r[1], "case_id": str(r[2]) if r[2] else None, "at": r[3].isoformat(),
              "turn_id": r[5],
-             **({"reply": {k: v for k, v in r[4].items() if k in ("choices", "choices_title", "more", "answer_web", "focus")}}
+             **({"reply": {k: v for k, v in r[4].items() if k in ("choices", "choices_title", "more", "answer_web", "focus", "edit_goal")}}
                 if r[0] == "assistant" and isinstance(r[4], dict) else {})}
             for r in reversed(rows)]
 

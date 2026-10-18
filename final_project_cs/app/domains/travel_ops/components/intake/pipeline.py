@@ -474,7 +474,7 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None, learn_aliases: bool = True) -> int:
+         dining: Any = None, learn_aliases: bool = True, reflow: bool = False) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
@@ -571,6 +571,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
                    if field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None}
+        explicit_times = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
+                          if field.endswith((".starts_at", ".ends_at", ".date"))} if reflow else set()
+        touched |= explicit_times
         if (touched or added) and via != "autofix":
             from . import direct_schedule
             from .assemble import collect
@@ -587,7 +590,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             party = (got.trip.get("party_size") or {}).get("value")
             try:
                 adjusted = direct_schedule.fit(conn, tenant_id=tenant_id, rows=got.rows, touched=touched, party_size=party,
-                                               mode_picks=review_module.picked_modes(prospective))
+                                               mode_picks=review_module.picked_modes(prospective), fixed_times=explicit_times, forward_only=reflow)
             except direct_schedule.ScheduleConflict as exc:
                 raise IntakeConflict(exc.code, str(exc)) from exc
             for change in adjusted:

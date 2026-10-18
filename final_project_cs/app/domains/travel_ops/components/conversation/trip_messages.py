@@ -784,7 +784,17 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         turns=turns,
         version=current_context["version"], now=context_now,
         ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
-    if decision.action == "replace_named":
+    from . import edit_intent
+    decision = edit_intent.resume(decision, items=context_items, turns=turns, version=current_context["version"],
+                                  now=context_now, ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    spatial = (decision.raw or {}).get("place_search") or {}
+    near_change = spatial.get("relation") == "near" and decision.action in ("apply_change", "propose_alternatives", "replace_named")
+    if near_change:
+        # 기존 업무 실행이 검색 위치를 버리지 않도록 이 조건 요청은 TripDesk의 같은 요식 계산으로 전달한다.
+        from dataclasses import replace
+        mode = "propose" if decision.action == "propose_alternatives" else "apply"
+        decision = replace(decision, action="replace_named", raw={**decision.raw, "near_mode": mode})
+    if decision.action == "replace_named" and not near_change:
         # ★`[2026-10-15]` 말한 곳을 **먼저 찾는다**(웹 「일정 수정」과 같은 이름 찾기). 한 곳으로 찾으면 그곳으로 바꾸고(`TripDesk.edit`),
         #   못 찾으면 — 「다른 식당」 같은 설명이거나 모르는 이름이다 — 바꾸지 않고 다른 안을 보여 고르게 한다(찾지 못했다고 먼저 밝힌다, `case_dispatch.response`)
         named = dict((decision.raw or {}).get("named_destination") or {})
@@ -996,6 +1006,24 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         else:
             outcome = desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                     request_id=request_id)
+    elif action == "replace_named" and near_change:
+        from .decision_unit import stops_of
+        anchor = next((s.item for s in stops_of(now_items) if s.alias == spatial.get("anchor_item")), None)
+        if anchor is not None:
+            origin = anchor.place
+        else:
+            from dataclasses import replace
+            origin, _ = _near_anchor(replace(decision, item=None, raw={**decision.raw, "place_text": spatial.get("place_text", "")}),
+                                    message=message, items=now_items, at=at, store=store, conn=conn, trip_id=trip_id,
+                                    place_source=place_source, kakao_source=kakao_source)
+        if origin is None or origin.get("latitude") is None or origin.get("longitude") is None:
+            outcome = {"status": "clarify", "reason": "need_search_origin", "text": "어느 곳 근처로 식당을 바꿀까요? 기준이 될 일정이나 동네를 알려 주세요."}
+        elif item is None or item.kind != "dining":
+            outcome = {"status": "clarify", "reason": "need_target", "text": "어느 식사 일정을 바꿀지 알려 주세요."}
+        else:
+            outcome = desk.near_alternate(trip_id=trip_id, item_id=item.item_id, base_version=base,
+                                          origin=origin, message=message, request_id=request_id,
+                                          propose=decision.raw.get("near_mode") == "propose")
     elif action in EDIT_ACTIONS:
         # ★`[2026-10-15 사용자 지시]` 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳 · 순서 · 고정 — 웹 「일정 수정」과 같은 길로 실행한다(`TripDesk.edit`)
         outcome = desk.edit(trip_id=trip_id, base_version=base, decision=decision, now=at, message=message,
@@ -1027,6 +1055,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         chat_reply["focus"] = focus
     elif status == "adjusted" and action in EDIT_ACTIONS and outcome.get("focus"):
         chat_reply["focus"] = outcome["focus"]
+    if action == "change_time" and status in ("clarify", "edit_refused"):
+        goal = edit_intent.pending_goal(decision, version=base, now=context_now)
+        if goal:
+            chat_reply["edit_goal"] = goal
     kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version", "proposal_id",
                                     "choices") if k in outcome}
     if basis.get("suspect_wrong_change"):

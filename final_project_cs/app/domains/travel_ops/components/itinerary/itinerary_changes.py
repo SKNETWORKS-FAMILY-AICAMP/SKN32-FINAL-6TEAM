@@ -1338,7 +1338,8 @@ def _top_reason(rejected: list) -> str | None:
 def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_version: int, items: list[Item],
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
                          request_id: str | None, state_lookup: DiningStateLookup | None = None,
-                         price_lookup: PriceLookup | None = None) -> Plan:
+                         price_lookup: PriceLookup | None = None, reported_closed: bool = False,
+                         meal_picker: MealPicker | None = None, search_origin: dict[str, Any] | None = None) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
 
     ★`[2026-09-29 사용자 지적 · ui 세션 전달]` 전에는 들고 있던 안(`detail.alternates`)만 봐서, 감시가 한 번도 안 고친
@@ -1361,6 +1362,10 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     cause = with_request({"category": "customer_request", "type": "alternate", "from": current.place["name"],
                           "message": message, "evidence": "고객 요청"}, request_id)
     original = str(current.place["place_id"])
+    if search_origin is not None:
+        from app.domains.travel_ops.components.planning.replan import distance_m
+        places = [p for p in places if p.get("latitude") is not None and p.get("longitude") is not None
+                  and distance_m(search_origin, p) <= max(ALTERNATE_RADII_M["dining"])]
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
     # ★`[2026-09-29 ui 세션 지적]` 0곳이면 **반경을 넓혀 다시** 찾는다 — 700m 는 설계 근거 없는 구현 선택이었고, 08:00 아침처럼
     #   그 시각에 여는 곳이 드문 때 「없어요」가 쉽게 나왔다(실서버 「첫날 아침 일정 바꿔」). 식사 700m → 1.5km → 3km,
@@ -1370,7 +1375,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
         duration = minutes_between(current.starts_at, current.ends_at)
         for radius in ALTERNATE_RADII_M["dining"]:
             candidates = dining_candidates(
-                original=current.place, places=places, arrival=current.starts_at, minutes=duration,
+                original=search_origin or current.place, places=places, arrival=current.starts_at, minutes=duration,
                 constraints=trip.get("constraints") or {}, radius_m=radius,
                 next_start=following.starts_at if following else None, exclude={original},
                 state_lookup=state_lookup,

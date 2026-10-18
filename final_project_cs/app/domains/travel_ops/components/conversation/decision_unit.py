@@ -341,10 +341,13 @@ def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, An
     previous = next((t for t in reversed(history) if t.get("role") == "assistant"), {})
     focus = (previous.get("reply") or {}).get("focus") or {}
     focus_alias = next((s.alias for s in stops if str(s.item.item_id) == str(focus.get("item_id"))), "none")
+    goal = (previous.get("reply") or {}).get("edit_goal") or {}
+    goal_alias = next((s.alias for s in stops if str(s.item.item_id) == goal.get("item_id")), "none")
+    goal_line = ("\n직전 미완료 변경 목표: " + str({"target_item": goal_alias, "time_edit": goal.get("time_edit")})) if goal_alias != "none" else ""
     head = now_line(stops, now)
-    return ((head + "\n\n" if head else "") + "일정 목록:\n" + ("\n".join(lines) or "(없음)")
+    return (( head + "\n\n" if head else "") + "일정 목록:\n" + ("\n".join(lines) or "(없음)")
             + "\n\n바뀐 이력(아래가 최근):\n" + ("\n".join(change_lines) or "(없음)")
-            + f"\n\n직전 대화:\n{talk}\n구조화된 직전 답변 대상: {focus_alias}\n\n화면에서 고른 일정: {selected}\n\n고객 문장: {message}")
+            + f"\n\n직전 대화:\n{talk}{goal_line}\n구조화된 직전 답변 대상: {focus_alias}\n\n화면에서 고른 일정: {selected}\n\n고객 문장: {message}")
 
 
 def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
@@ -376,7 +379,10 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "steps": {"type": "integer"}},
         "required": ["fact", "target_item", "origin_item", "origin_text", "transport_mode", "reference", "query", "text", "advice",
                      "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"], "additionalProperties": False}
+    from .edit_intent import schemas
+
     return {"type": "object", "properties": {
+        **schemas(items),
         "action": {"type": "string", "enum": [a for a in ACTIONS if a not in SERVER_ACTIONS]},   # 서버 전용 할 일은 모델이 고르지 않는다
         "target_item": {"type": "string", "enum": items},
         "target_change": {"type": "string", "enum": change_ids},
@@ -402,7 +408,7 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "choices": {"type": "array", "items": choice, "maxItems": 3}},
         # ★되묻는 문장은 모델이 쓰지 않는다 — 서버가 후보로 만든다(답이 길어져 p95 가 7초였다, 재생 시험 2026-09-29)
         # ★`[2026-10-14]` 목적지 · 조건 칸은 **반드시 낸다**(없으면 빈 문자열) — 선택 칸이면 학습 E4B 가 아예 내지 않았다(재생 434건 중 목적지 0/43)
-        "required": ["action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
+        "required": ["time_edit", "place_search", "action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
                      "destination_text", "condition_text", "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"]}
 
 
@@ -422,11 +428,25 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     selected = next((s.alias for s in stops if selected_item_id and s.item.item_id == selected_item_id), "none")
     started = time.monotonic()
     try:
-        raw = chat.structured(SYSTEM, _prompt(stops, changes, history, selected, masked(message), now),
-                              _schema(stops, changes), num_predict=num_predict)
+        from .edit_intent import SYSTEM as EDIT_SYSTEM, validate
+
+        arguments = (SYSTEM + EDIT_SYSTEM, _prompt(stops, changes, history, selected, masked(message), now),
+                     _schema(stops, changes))
+        validated = getattr(chat, "structured_validated", None)
+        if callable(validated):
+            raw = validated(*arguments, num_predict=num_predict,
+                            validator=lambda value: validate(value, message or "", {s.alias for s in stops} | {"none"}))
+        else:
+            # Existing in-process callers/test doubles remain compatible; checks below still apply.
+            raw = chat.structured(*arguments, num_predict=num_predict)
     except Exception as exc:                          # noqa: BLE001 — 모델 장애는 부르는 쪽이 「바꾸지 않고 묻기」로 답한다
         raise DecisionFailed(f"{type(exc).__name__}: {str(exc)[:160]}") from exc
     seconds = time.monotonic() - started
+    from .edit_intent import validate
+    try:
+        validate(raw, message or "", {s.alias for s in stops} | {"none"})
+    except ValueError as exc:
+        raise DecisionFailed(str(exc)) from exc
     action = raw.get("action")
     if action not in ACTIONS:
         raise DecisionFailed(f"할 일이 목록 밖이다: {action!r}")
@@ -690,7 +710,19 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                         change=None if scope_blocked else changes_by.get(change_alias), fact=fact,
                         minutes=minutes, question=str(raw.get("question") or "").strip()[:200], raw=raw, seconds=seconds,
                         choices=choices[:3], query=query, reads=reads, social=social)
-    return guard_target(decision, stops=stops, changes=changes, history=history, selected=selected, message=message or "")
+    decision = guard_target(decision, stops=stops, changes=changes, history=history, selected=selected, message=message or "")
+    # 검색 기준과 변경 대상을 각각 검증한다. 근처 조건을 상호명 조회로 넘기지 않는다.
+    search = raw.get("place_search") or {}
+    temporal = raw.get("time_edit") or {}
+    anchor_alias = (search.get("anchor_item") if search.get("relation") == "near" else
+                    raw.get("anchor_item") if temporal.get("scope") == "following" else None)
+    anchor = by_alias.get(anchor_alias)
+    if anchor is not None:
+        checked = guard_target(replace(decision, action="change_time", item=anchor), stops=stops, changes=changes,
+                               history=history, selected=selected, message=message or "")
+        if checked.action == "clarify":
+            return replace(decision, action="clarify", question="기준으로 삼을 일정을 하나로 알려 주세요.", choices=[])
+    return decision
 
 
 #: 문장이 대상을 **가려 주는 말** — 날 · 순서 · 때(오늘 · 다음 · 방금). 이것이 있으면 모델이 센 순번 표시(`item_lines`)를 믿는다.
