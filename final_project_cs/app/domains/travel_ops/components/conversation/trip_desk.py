@@ -36,7 +36,7 @@ from typing import Any, Callable
 from uuid import UUID
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleItinerary, TripStore
-from app.domains.travel_ops.components.itinerary.itinerary_changes import (DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
+from app.domains.travel_ops.components.itinerary.itinerary_changes import (ALTERNATE_RADII_M, DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
                                 plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap)
 from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_from, proposal_notice
 # 요식 끼움 자리 — 생성자 인자 `dining_ledger`(원장을 쓰나)와 이름이 겹치지 않게 별칭으로 둔다
@@ -111,12 +111,15 @@ class TripDesk:
         more = self._add_nearby(trip_id, meal, places)
         return plan(more) if more != places else first
 
-    def _add_nearby(self, trip_id: UUID, meal: Item, places: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _add_nearby(self, trip_id: UUID, meal: Item, places: list[dict[str, Any]], *,
+                    radius_m: int | None = None) -> list[dict[str, Any]]:
         # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
         from app.domains.travel_ops.components.team_hooks import dining_ledger
 
         with self._connect() as conn:
-            return dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places)
+            if radius_m is None:
+                return dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places)
+            return dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places, radius_m=radius_m)
 
     def _state_lookup(self):
         """대체 식당 후보의 방문 시간대 원장 판정 — 시나리오 모드(`dining_ledger=False`)는 원장을 섞지 않으므로 None."""
@@ -227,7 +230,8 @@ class TripDesk:
             return {"status": "edit_refused", "reason": "locked_item", "text": "예약·고정된 식사 일정이라 장소를 바꾸지 않았어요."}
         if self._use_ledger:
             places = self._add_nearby(trip_id, SimpleNamespace(kind="dining", place=origin,
-                                      starts_at=current.starts_at, ends_at=current.ends_at), places)
+                                      starts_at=current.starts_at, ends_at=current.ends_at), places,
+                                      radius_m=max(ALTERNATE_RADII_M["dining"]))
         plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version,
                                     items=items, places=places, item_id=item_id, message=message,
                                     request_id=request_id, state_lookup=self._state_lookup(), search_origin=origin,
