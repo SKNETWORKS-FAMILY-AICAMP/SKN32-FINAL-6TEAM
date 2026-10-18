@@ -645,7 +645,7 @@ class TripWatchCaseOpener:
         with self._connect() as conn:
             seen = conn.execute(
                 "SELECT 1 FROM travel_watch_checks WHERE tenant_id=%s AND trip_id=%s AND item_id=%s "
-                "AND stage='alternate_refresh' AND report->>'reason'='indoor_candidates_v2' "
+                "AND stage='alternate_refresh' AND report->>'reason'='indoor_candidates_v3_visit_window' "
                 "AND report->>'case_id'=%s AND report->>'status' IN ('asked','no_alternate') LIMIT 1",
                 (self.store.tenant_id, issue.trip_id, issue.item.item_id, str(case_id))).fetchone()
             if seen:
@@ -662,7 +662,7 @@ class TripWatchCaseOpener:
                                       guardrail == "itinerary_recheck_failed", result, UUID(str(case_id)))
         status = "asked" if len(result.relaxed) > before else "source_failed" if handled else "no_alternate"
         record_check('alternate_refresh', trip_id=issue.trip_id, item_id=issue.item.item_id,
-                     target_title=issue.item.title, report={"reason": "indoor_candidates_v2", "case_id": str(case_id), "status": status})
+                     target_title=issue.item.title, report={"reason": "indoor_candidates_v3_visit_window", "case_id": str(case_id), "status": status})
 
     def _repair_traffic_notice(self, conn: Any, issue: Issue, result: CaseTickResult) -> None:
         """닫힌 사건을 다시 실행하지 않고 기존 알림에서 빠진 현재 도로통제 설명만 보완한다."""

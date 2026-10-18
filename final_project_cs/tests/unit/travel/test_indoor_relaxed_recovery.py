@@ -110,6 +110,33 @@ def test_without_a_route_calculator_walking_is_explicit_and_not_instant(monkeypa
     assert all("도보 추정" in o["note"] for o in options)
 
 
+def test_an_ongoing_alternative_can_shorten_the_visit_to_preserve_the_next_leg(monkeypatch):
+    monkeypatch.setattr(legs, "leg_planner", lambda *args: lambda *a: ({"eta_min": 30}, None))
+    current = ongoing()
+    move = Item(item_id=uuid4(), seq=2, kind="mobility", title="다음 방문 이동", place_id=None,
+                starts_at=NOW + timedelta(hours=2), ends_at=NOW + timedelta(hours=3))
+    following = Item(item_id=uuid4(), seq=3, kind="activity", title="다음 방문", place=place("다음 방문"), place_id=None,
+                     starts_at=NOW + timedelta(hours=3), ends_at=NOW + timedelta(hours=4))
+    options = changes.relaxed_options(trip={}, items=[current, move, following], places=[place()], current=current,
+                                      causes=CAUSES, now=NOW)
+    assert options
+    for option in options:
+        assert datetime.fromisoformat(option["starts_at"]) >= NOW + timedelta(minutes=30)
+        assert datetime.fromisoformat(option["ends_at"]) <= NOW + timedelta(hours=2)
+        assert "방문 90분으로 줄임" in option["note"]
+        assert changes.shift_moves_after([current, move, following], current,
+                                         datetime.fromisoformat(option["ends_at"]))[1] is None
+
+
+def test_a_shortened_visit_still_needs_at_least_25_minutes(monkeypatch):
+    monkeypatch.setattr(legs, "leg_planner", lambda *args: lambda *a: ({"eta_min": 30}, None))
+    current = ongoing()
+    following = Item(item_id=uuid4(), seq=2, kind="activity", title="다음 방문", place=place("다음 방문"), place_id=None,
+                     starts_at=NOW + timedelta(minutes=50), ends_at=NOW + timedelta(hours=2))
+    assert changes.relaxed_options(trip={}, items=[current, following], places=[place()], current=current,
+                                   causes=CAUSES, now=NOW) == []
+
+
 def test_an_ended_visit_has_no_new_proposal(monkeypatch):
     current = ongoing()
     current.ends_at = NOW

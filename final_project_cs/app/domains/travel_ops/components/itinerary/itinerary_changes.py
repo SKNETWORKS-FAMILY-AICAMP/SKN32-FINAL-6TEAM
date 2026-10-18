@@ -1245,6 +1245,12 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
     constraints = trip.get("constraints") or {}
     travel_minutes: dict[str, tuple[int, str]] = {}
     route_probe = MealRoute(planned_end=base_start, leg=_leg_engine(trip)) if ongoing and current.kind == "activity" else None
+    # 다음 방문과 그 앞 이동을 보존하면서 방문을 줄이는 선택지도 만든다.
+    latest_finish = None
+    if ongoing and current.kind == "activity" and following is not None:
+        onward = sum(((i.ends_at or i.starts_at) - i.starts_at for i in items
+                      if current.seq < i.seq < following.seq and i.kind == "mobility"), timedelta())
+        latest_finish = following.starts_at - onward
 
     def best_at(center: dict[str, Any], start: datetime, radius: int):
         end = start + timedelta(minutes=duration)
@@ -1274,11 +1280,21 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
                     eta, basis = travel_minutes[key]
                     arrival = max(start, base_start + timedelta(minutes=eta))
                     finish = arrival + timedelta(minutes=duration)
+                    if latest_finish is not None:
+                        finish = min(finish, latest_finish)
+                    visit_minutes = int((finish - arrival).total_seconds() // 60)
+                    if visit_minutes < min(duration, 25):
+                        from app.domains.travel_ops.components import candidate_diagnostics
+                        candidate_diagnostics.record(key=key, name=spot.get("name"), outcome="rejected",
+                                                     reasons=["다음 일정 전 최소 방문 시간이 부족하다"])
+                        continue
                     got = activity_candidates(original=center, places=[spot], start=arrival, end=finish,
                                               causes=list(causes), radius_m=radius)
                     for candidate in got:
                         candidate.starts_at, candidate.ends_at = arrival, finish
                         candidate.note = f"지금 출발 · {basis} {eta}분 · {seoul(arrival):%H:%M}~{seoul(finish):%H:%M} 방문"
+                        if visit_minutes < duration:
+                            candidate.note += f" · 다음 일정에 맞춰 방문 {visit_minutes}분으로 줄임"
                     found.extend(got)
             else:
                 found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
