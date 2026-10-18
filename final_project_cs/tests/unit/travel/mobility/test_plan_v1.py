@@ -766,7 +766,9 @@ def test_bus_from_place_recheck():
     tr = []
     items, got = _ns_it(modes=['bus'], trace=tr)
     n = _recheck(got, tr, items, 1, {})
-    assert n == 1, n
+    # ☆`[2026-10-18]` 걷기 상한을 끈 뒤 남산 → 정류장이 실제 산길(1.4~1.6 km)로 재져 버스 후보가 1개 → 여러 개가 됐다.
+    #   시험의 뜻은 「출력한 버스 후보마다 판정기를 따로 불러 성립 · eta 일치」 — 개수가 아니라 전부 다시 봤는지를 본다.
+    assert n == sum(1 for o in tr[0]["options"] if o.get("check") is not None) >= 1, n
     chk = next(o["check"] for o in tr[0]["options"] if o["id"] == "bus_405")
     assert chk["walk_stop_in"] == 0 and chk["walk_stop_out"] == 0, "장소→정류장 한 번만 걷는다"
 
@@ -960,19 +962,28 @@ def test_recheck_revives():
     early = dict(o, _start=o["_start"] - 30, eta_min=o["eta_min"] + 7, _route="살릴 후보", _n=700, _lr=None)
     orig = P.Planner._bus_direct
     tr = []
+    # ☆`[2026-10-18]` 걷기 상한을 끈 뒤 남산 → 정류장이 실제 산길로 재져 환승 버스 후보가 늘었고, 살린 후보가 「버스 직행 상한」에서
+    #   도보 짧은 순으로 밀려났다(살리기 자체는 됐다). 이 시험은 살리기만 보므로 시험하는 동안만 상한을 넉넉히 둔다.
+    cap_rule = pl.v.R["candidates"]["버스_직행_최대"]
+    cap_saved = cap_rule["value"]
     try:
+        cap_rule["value"] = 99
         P.Planner._bus_direct = lambda self, *a, **k: [dict(o), dict(early)]
         pl.trace = tr
         nb = datetime.combine(sdate, datetime.min.time(), tzinfo=KST) + timedelta(minutes=o["_start"] - 20)
         got, why = pl.leg(_NT[0], _NT[1], arrive, {}, True, "rv", not_before_dt=nb)
     finally:
         P.Planner._bus_direct = orig
+        cap_rule["value"] = cap_saved
     assert got is not None, why
     labels = {x["label"].split(" — ")[0]: x for x in got[0]["options"]}
     assert "살릴 후보" in labels, got
     assert labels["살릴 후보"]["eta_min"] == o["eta_min"], "살린 후보의 eta 가 재판정 값이 아니다"
     assert tr[0]["start_min"] == o["_start"]
-    assert all(x["start_min"] == o["_start"] for x in tr[0]["options"])
+    # 시험이 넣은 두 후보(직행 · 살릴 후보)는 계획 출발에서 판정한다 — 다른 버스 후보(2026-10-18 이후 남산 산길로 생긴 환승 등)는 제 출발을 쓴다
+    our_ids = {v["id"] for k, v in labels.items() if k in ("살릴 후보", o["_route"])}
+    ours = [x for x in tr[0]["options"] if x["id"] in our_ids]
+    assert len(ours) == 2 and all(x["start_min"] == o["_start"] for x in ours), tr[0]["options"]
 
 
 def test_core_routes_strips_display():
@@ -1012,7 +1023,9 @@ def test_replan_fare_known_locked():
         {'_check': saved['check'], '_legs': saved['legs']}, start, by, {'size': 1}, True, 'fare_common')
     assert checked is not None, why
     rail.update(eta_min=checked['eta_min'], fare_krw=checked['_fare'])
-    route = dict(route, options=[*route['options'], rail])
+    # ☆`[2026-10-18]` 걷기 상한을 끈 뒤 버스 전용 계획에 다른 버스 후보(환승 버스 등)가 함께 실려, 405 무정차의 대안으로 추가 비용 0 인
+    #   다른 버스가 뽑힌다(그것도 맞는 동작). 이 시험은 「요금이 실린 지하철이 대안이 된다」를 보므로 원래 상황(405 + 지하철)만 남긴다.
+    route = dict(route, options=[*[o for o in route['options'] if o['id'] == 'bus_405'], rail])
     fares = {o["id"]: o.get("fare_krw") for o in route["options"]}
     assert fares.get("bus_405") == 1500 and fares.get("subway_1") == 1550, fares
     mob = next(it for it in got["items"] if it["kind"] == "mobility")
