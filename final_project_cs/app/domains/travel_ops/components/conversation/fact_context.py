@@ -32,8 +32,7 @@ def named_items(items: list[Any], message: str) -> list[Any]:
 
 def resolve(decision, *, items, message, selected, turns, version, now, ttl_seconds):
     """(확인된 결정, 근거, 만료된 명시 선택). 쓰기 행동과 해석 실패에는 적용하지 않는다."""
-    item_fact = decision.fact in ITEM_FACTS or (decision.fact == "outdoor" and decision.query is None)
-    if decision.action != "answer_fact" or not item_fact:
+    if decision.action != "answer_fact" or decision.fact not in ITEM_FACTS:
         return decision, None, False
     by_id = {str(i.item_id): i for i in items if i.kind != "mobility"}
     if selected is not None and str(selected) not in by_id:

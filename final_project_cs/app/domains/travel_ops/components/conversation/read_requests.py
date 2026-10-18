@@ -120,19 +120,6 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
         elif stale:
             text = "가리키는 일정을 현재 여행에서 하나로 확인하지 못했어요. 일정 이름이나 날짜를 알려 주세요."
             basis["unresolved"] = "target"
-        elif fact == "outdoor" and request.get("query") is None:
-            if item is None:
-                text = "어느 일정의 실내·야외 여부인지 확인할 수 있도록 일정 이름을 알려 주세요."
-                basis["unresolved"] = "target"
-            else:
-                indoor = ((item.place or {}).get("attributes") or {}).get("indoor")
-                basis.update(source="latest_itinerary", indoor=indoor)
-                if isinstance(indoor, bool):
-                    label = "실내" if indoor else "야외"
-                    text = f"{item.title}: 등록된 장소 정보 기준으로 {label} 일정이에요. 일정은 바꾸지 않았어요."
-                else:
-                    text = f"{item.title}의 실내·야외 분류는 등록된 장소 정보에서 확인되지 않았어요. 일정은 바꾸지 않았어요."
-                    basis["unresolved"] = "indoor"
         elif fact in (*schedule_query.QUERY_FACTS, "day", "outdoor"):
             text, query_basis = schedule_query.reply("schedule" if fact in ("day", "outdoor") else fact,
                                                       request["query"], items=items, now=now)
