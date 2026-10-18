@@ -141,3 +141,97 @@ def test_a_chosen_mode_that_cannot_reach_falls_back_to_the_recommended_engine(mo
     got = schedule.fit(None, tenant_id="test", rows=[row(0, "09:00", "10:00"), row(1, "10:05", "11:05")],
                        touched={("source", 0)}, mode_picks={"0-0~0-1": "walk"})
     assert values(got) == {"items[1].starts_at": "10:15", "items[1].ends_at": "11:15"}
+
+
+def slow_clock_engine(monkeypatch, seconds):
+    """실제 대기 없이 계산기가 쓴 시간만 증가시킨다."""
+    from types import SimpleNamespace
+    from app.domains.travel_ops.components.intake import review
+
+    clock, calls = [0.0], []
+    monkeypatch.setattr(review, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    def engine(a, b, arrive, not_before=None):
+        calls.append((a["name"], b["name"], arrive, not_before))
+        clock[0] += seconds
+        return walk11(a, b, arrive, not_before)
+    return engine, calls
+
+
+@pytest.mark.parametrize("mode", [None, "walk"])
+def test_shared_hotel_gives_each_day_its_own_existing_budget(monkeypatch, mode):
+    from app.domains.travel_ops.components.intake import review
+
+    engine, calls = slow_clock_engine(monkeypatch, 12)
+    monkeypatch.setattr(review, "default_engine", lambda *args: engine)
+    rows = [row(0, "09:00", "10:00"), row(1, "11:00", "12:00"),
+            row(2, "09:00", "10:00", date="2026-10-16"), row(3, "11:00", "12:00", date="2026-10-16")]
+    picks = {"0-0~0-1": mode, "0-2~0-3": mode} if mode else None
+    assert schedule.fit(None, tenant_id="test", rows=rows, touched={("source",0),("source",2)}, mode_picks=picks) == []
+    assert len(calls) == 2
+
+
+def test_completed_timetable_is_kept_when_its_call_uses_the_remaining_budget(monkeypatch):
+    engine, calls = slow_clock_engine(monkeypatch, 21)
+    assert fit([row(0, "09:00", "10:00"), row(1, "11:00", "12:00")], engine=engine) == []
+    assert len(calls) == 1
+
+
+def test_spent_budget_still_refuses_the_next_uncalculated_leg(monkeypatch):
+    engine, calls = slow_clock_engine(monkeypatch, 11)
+    rows = [row(0,"09:00","10:00"),row(1,"11:00","12:00"),row(2,"13:00","14:00"),row(3,"15:00","16:00")]
+    with pytest.raises(schedule.ScheduleConflict) as refused:
+        fit(rows, touched={("source",0),("source",1),("source",2)}, engine=engine)
+    assert refused.value.code == "schedule_check_failed"
+    assert len(calls) == 2
+
+
+def breakfast_claims(end_evidence):
+    return {"place": {"evidence": {"lodging_parts": {"lodging_meal": True}}},
+            "ends_at": {"value": "10:00", "method": "customer", "evidence": end_evidence}}
+
+
+def test_derived_hotel_breakfast_end_shrinks_without_moving_the_next_visit():
+    rows = [row(0, "09:00", "10:00", kind="dining", claims=breakfast_claims({"via": "autofix"})),
+            row(1, "10:05", "11:05")]
+    changes = fit(rows)
+    assert values(changes) == {"items[0].ends_at": "09:50"}
+    assert changes[0]["derived_stay_end"] is True
+
+
+@pytest.mark.parametrize("evidence", [{"source": "customer"}, {"text": "10:00", "source": "text"}])
+def test_explicit_breakfast_end_is_not_shortened(evidence):
+    changes = fit([row(0,"09:00","10:00",kind="dining",claims=breakfast_claims(evidence)),
+                   row(1,"10:05","11:05")])
+    assert values(changes) == {"items[1].starts_at": "10:15", "items[1].ends_at": "11:15"}
+
+
+@pytest.mark.parametrize("protection", [{"booked":True}, {"locked":True}, {"booking_no":"RES-1"}])
+def test_protected_breakfast_is_not_shortened(protection):
+    changes = fit([row(0,"09:00","10:00",kind="dining",claims=breakfast_claims({"via":"autofix"}),**protection),
+                   row(1,"10:05","11:05")])
+    assert values(changes) == {"items[1].starts_at": "10:15", "items[1].ends_at": "11:15"}
+
+
+def test_a_previous_derived_stay_end_remains_adjustable():
+    changes = fit([row(0,"09:00","09:50",kind="dining",claims=breakfast_claims({"via":"direct_schedule","derived_stay_end":True})),
+                   row(1,"10:00","11:00")])
+    assert values(changes) == {"items[0].ends_at":"09:45"}
+
+
+def test_derived_breakfast_is_not_shortened_below_the_existing_minimum():
+    changes = fit([row(0,"09:00","09:30",kind="dining",claims=breakfast_claims({"via":"autofix"})),
+                   row(1,"09:35","10:35")])
+    assert values(changes) == {"items[1].starts_at":"09:45", "items[1].ends_at":"10:45"}
+
+
+def test_single_hotel_breakfast_without_linked_place_parts_uses_the_original_title():
+    changes = fit([row(0,"09:00","10:00",kind="dining",provenance={"ends_at":{"rule":"intake.default_duration"}}),
+                   row(1,"10:05","11:05")])
+    assert values(changes) == {"items[0].ends_at":"09:50"}
+
+
+def test_ordinary_restaurant_does_not_use_the_hotel_breakfast_rule():
+    changes = fit([row(0,"09:00","10:00",title="점심",kind="dining",provenance={"ends_at":{"rule":"intake.default_duration"}}),
+                   row(1,"10:05","11:05")])
+    assert values(changes) == {"items[0].ends_at":"10:00", "items[1].starts_at":"10:15", "items[1].ends_at":"11:15"}
+    assert not any(c.get("derived_stay_end") for c in changes)

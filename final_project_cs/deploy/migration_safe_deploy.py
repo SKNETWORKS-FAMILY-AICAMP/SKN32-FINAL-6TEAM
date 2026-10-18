@@ -91,11 +91,14 @@ def snapshot(docker, command, directory):
         # The tag-sync job updates display metadata after rollout, without
         # recreating containers. Recover only that metadata from the live
         # baseline; every other setting must still pass the strict hash check.
-        environment = config["services"][service].get("environment") or {}
+        environment = config["services"][service].setdefault("environment", {})
         live_environment = dict(value.split("=", 1) for value in
                                 (info["Config"].get("Env") or []) if "=" in value)
-        if "TRIPILOT_TAG" in environment and "TRIPILOT_TAG" in live_environment:
-            environment["TRIPILOT_TAG"] = live_environment["TRIPILOT_TAG"]
+        for key in ("TRIPILOT_TAG", "ACOP_DEPLOYMENT_VERSION"):
+            if key in live_environment:
+                environment[key] = live_environment[key]
+            else:
+                environment.pop(key, None)
     with tempfile.TemporaryDirectory(prefix="tripilot-baseline-") as temporary:
         config_path = Path(temporary) / "baseline.compose.json"
         compose_json(config_path, config)

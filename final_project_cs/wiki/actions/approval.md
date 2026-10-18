@@ -224,3 +224,8 @@ seed 스크립트가 화면 표시·버튼 활성화용으로 `arguments_json.ev
 - [../../../wiki/product/personas.md](../../../wiki/product/personas.md) — 승인하는 사람
 
 개정 전 승인 설명·수치: [보존 기록](../records/commerce_2026-10-11/wiki--actions--approval.md).
+
+
+### 철회는 저장 즉시 효력이 있다 — 2026-10-18 보정
+
+`delegations.revoked_at`은 철회 사실의 기록 시각이며 예약 철회 시각이 아니다. 값이 저장된 위임은 적용 시점에 즉시 차단한다. 앱 시계가 DB 시계보다 느리더라도 이미 철회된 위임을 살아 있다고 판단하지 않는다. 화면의 `revoked` 상태와 실행 판정은 같은 기준을 사용한다. 기존 고객 승인·공급자 등급·다시 위임하기·감사 기록 경계는 유지한다.

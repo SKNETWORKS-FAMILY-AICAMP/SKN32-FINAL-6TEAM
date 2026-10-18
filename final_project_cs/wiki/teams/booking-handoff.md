@@ -300,3 +300,8 @@ subject = 객체 id    →  다른 키
 - [../actions/approval.md](../actions/approval.md) — 승인 경계
 - [../../../wiki/decisions/D-005-write-gate.md](../../../wiki/decisions/D-005-write-gate.md) — 쓰기 게이트. 승계한다
 - [../../../wiki/product/scope.md](../../../wiki/product/scope.md) — 실행 경계
+
+
+### 철회 시각과 기계별 시계 차이 — 2026-10-18
+
+위임의 철회 시각이 저장돼 있으면 자동 실행을 즉시 거절한다. 이 시각은 감사 기록이며 미래 철회를 예약하는 기능이 아니다. 앱 시계가 DB 시계보다 느리다는 이유로 철회를 잠깐 무시하지 않는다. 승인 후 철회와 원장 미변경을 앱 시계 ±5분 조건에서 실제 실행 경로로 검증한다.

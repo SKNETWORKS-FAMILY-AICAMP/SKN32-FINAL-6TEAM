@@ -174,7 +174,8 @@ def judge(conn: Any, *, tenant_id: str, customer_id: Any, booking: Mapping[str, 
         # ★행이 없으면 위임이 없다. 「아직 안 적었을 뿐」로 해석하지 않는다.
         return no(LIMIT_DELEGATION_ABSENT, "이 고객의 위임 기록이 없다 — 자동 실행 대상이 아니다")
     checks["granted_at"] = row["granted_at"].isoformat() if row["granted_at"] else None
-    if row["revoked_at"] is not None and row["revoked_at"] <= now:
+    # 철회 시각은 감사 기록이다. 앱·DB 시계 차이로 저장된 철회를 무시하지 않는다.
+    if row["revoked_at"] is not None:
         checks["revoked_at"] = row["revoked_at"].isoformat()
         return no(LIMIT_DELEGATION_REVOKED,
                   f"위임이 {row['revoked_at'].isoformat()} 에 철회됐다"

@@ -131,6 +131,23 @@ def test_tag_sync_metadata_uses_live_baseline_without_changing_candidate(tmp_pat
 
 
 @pytest.mark.parametrize('service', guard.SERVICES)
+@pytest.mark.parametrize('declared,live', [('new-display','old-display'), (None,'old-display'), ('new-display',None)])
+def test_deployment_display_metadata_presence_does_not_block_recovery(tmp_path, service, declared, live):
+    docker = DockerSimulation()
+    if declared is not None:
+        docker.config['services'][service]['environment'] = {'ACOP_DEPLOYMENT_VERSION': declared}
+    if live is not None:
+        docker.live_environment[service] = {'ACOP_DEPLOYMENT_VERSION': live}
+    guard.snapshot(docker, guard.compose(), tmp_path)
+    recovered = json.loads((tmp_path/'recovery.compose.json').read_text())
+    assert recovered['services'][service].get('environment', {}).get('ACOP_DEPLOYMENT_VERSION') == live
+    assert docker.config['services'][service].get('environment', {}).get('ACOP_DEPLOYMENT_VERSION') == declared
+    guard.rollout(docker, guard.compose(), tmp_path, settle=0)
+    candidate = json.loads((tmp_path/'candidate.compose.json').read_text())
+    assert candidate['services'][service].get('environment', {}).get('ACOP_DEPLOYMENT_VERSION') == declared
+
+
+@pytest.mark.parametrize('service', guard.SERVICES)
 def test_tag_reconstruction_does_not_hide_real_environment_drift(tmp_path, service):
     docker = DockerSimulation()
     docker.config['services'][service]['environment'] = {'TRIPILOT_TAG':'new-display', 'MODE':'changed'}

@@ -282,12 +282,15 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
         return check_gaps(state["review"], trip=trip)
 
     first = gaps_module.collect(model_gaps(claims, found.get("items") or []), check_gaps(found, trip=trip))
-    draft, used, rounds = gaps_module.settle({"revision": revision}, first, owners, apply, recheck, max_rounds=max_rounds)
-    filled = [_filled_line(p) for p in used if p.owner != "ask_customer" and p.candidates and p.error is None]
+    # 다른 장소를 채우면 전체 동선과 숙소 후보도 바뀐다. 같은 판의 실패를 반복하지 않고 바뀐 판에서만 다시 본다.
+    draft, used, rounds = gaps_module.settle({"revision": revision}, first, owners, apply, recheck, max_rounds=max_rounds,
+                                           retry_unfilled=lambda p: p.gap.kind == "lodging_place" and p.owner == "lodging_team")
+    latest = {p.gap.key: p for p in used}
+    filled = [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
     questions = [{"kind": p.gap.kind, "question": (p.candidates[0] or {}).get("question") or p.gap.reason, "quote": p.gap.quote}
-                 for p in used if p.owner == "ask_customer"]
+                 for p in latest.values() if p.owner == "ask_customer"]
     kept = [{"kind": p.gap.kind, "item": p.gap.where.get("item"), "owner": p.owner, "reason": p.reason}
-            for p in used if p.owner != "ask_customer" and not p.candidates]
+            for p in latest.values() if p.owner != "ask_customer" and not p.candidates]
     record = {"filled": [f for f in filled if f], "questions": _unique(questions), "kept": kept, "rounds": rounds,
               "proposals": [p.as_dict() for p in used]}
     _store(conn, tenant_id=tenant_id, intake_id=intake_id, revision=draft["revision"], record=record)

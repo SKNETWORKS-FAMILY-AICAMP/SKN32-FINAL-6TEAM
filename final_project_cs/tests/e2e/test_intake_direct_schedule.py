@@ -142,3 +142,18 @@ def test_booked_and_pinned_anchors_preserve_original_on_conflict(direct):
     response = request(client, headers, before, [_field(items[0], "place", HOTEL)])
     assert response.status_code == 409 and response.json()["error"]["code"] == "schedule_conflict", response.text
     assert fetch(client, headers, before)["revision"] == before["revision"]
+
+
+def test_hotel_breakfast_pick_preserves_next_visit_and_records_derived_end(direct):
+    client, headers, _ = direct
+    before = _send(client, headers, "2026-10-15\n09:00 호텔 조식\n10:05 경복궁 관람 1시간\n13:00 N서울타워 관람 1시간")
+    first = before["review"]["items"][0]
+    response = request(client, headers, before, [_field(first, "place", {**HOTEL, "kind":"dining"})])
+    assert response.status_code == 200, response.text
+    after = response.json()
+    assert after["revision"] == before["revision"] + 1
+    assert after["review"]["items"][0]["ends_at"] == "09:50"
+    assert after["review"]["items"][1]["starts_at"] == "10:05"
+    fields = after["sources"][0]["items"][0]["fields"]
+    assert fields["ends_at"]["evidence"]["derived_stay_end"] is True
+    assert fetch(client, headers, before)["review"] == after["review"]
