@@ -152,10 +152,12 @@ def read_wants(text: str | None) -> Wants:
         avoid.add(dict(_KIND_WORDS)[match.group(1)])
         words.append(match.group(0))
     rest = _AVOID.sub(" ", text).lower()
+    rest = re.sub(r"한옥\s*마을", " ", rest)       # `[2026-10-18 D23]` 「은평구 한옥마을 호텔」의 한옥마을은 동네 이름이다(☆6차 N32-29)
     kind = next((name for word, name in _KIND_WORDS if word in rest), None)
     if kind:
         words += [match.group(0) for word, name in _KIND_WORDS if name == kind
-                  for match in re.finditer(re.escape(word), text, re.I)]
+                  for match in re.finditer(re.escape(word), text, re.I)
+                  if not (word == "한옥" and re.match(r"\s*마을", text[match.end():]))]
     star = _STARS.search(text)
     stars = float(star.group(1)) if star else None
     if star:
@@ -211,6 +213,16 @@ def _sino_man(text: str) -> str:
             return str((_SINO_DIGIT.get(head, 1)) * 10 + _SINO_DIGIT.get(tail, 0))
         return str(_SINO_DIGIT[word])
     return _SINO_MAN.sub(value, text)
+
+
+#: `[2026-10-18 D23]` 「7만 원 아래」 「10만 원 미만」 — 그 값은 넣지 않는다(☆6차 N33-26: 70,000원을 냈다). 「N만 원대 아래」는 구간 말이라 아니다
+_BELOW = re.compile(r"(?<![\d,])(\d{1,3})\s*만\s*원?\s*(?:아래|미만|밑)")
+
+
+def strict_below(text: str | None) -> int | None:
+    """「N만 원 아래 · 미만」이 하나로 정해지면 N만 원(그 값은 빼야 하는 상한). 아니면 `None`."""
+    found = {int(value) for value in _BELOW.findall(_sino_man(str(text or "")))}
+    return found.pop() * 10000 if len(found) == 1 else None
 
 
 def read_price_band(text: str | None) -> tuple[int | None, int | None, tuple[str, ...]]:

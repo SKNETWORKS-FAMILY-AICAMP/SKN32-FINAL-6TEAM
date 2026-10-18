@@ -59,7 +59,7 @@ from app.domains.travel_ops.components.itinerary.itinerary_changes import Itiner
 from .ledger import item_key
 from .interpret import (LABELS, Interpretation, InterpretationInvalid, ask, ground, model_context, needs, parse, rule_checks, rule_dates,
                         rule_nights, rule_people, rule_ranges, rule_spoken, rule_start, rule_weekdays, settle_years)
-from .wants import (DORMS, SEOUL_GU, Wants, address_gu, guest_block, kind_reason, price_reason, read_wants, restriction, stars_reason, stay_city, stay_gu, stay_kinds, stay_stars, strip_handled, summary,
+from .wants import (DORMS, SEOUL_GU, Wants, address_gu, guest_block, kind_reason, price_reason, read_wants, restriction, stars_reason, stay_city, stay_gu, stay_kinds, stay_stars, strict_below, strip_handled, summary,
                     unsupported_requests,
                     wants_pet)
 
@@ -86,6 +86,8 @@ PRICE_BAND = (0.7, 1.3)
 #: `[2026-10-15 검수 D]` 기준점(카카오 `read.landmark`)에서 이보다 멀면 다른 지역으로 본다 — ☆10-15 검수 L01 · L03 · L05:
 #:   「성수」에 군산 모텔, 「강남역」 · 「홍대」에 속초 · 제주 숙소가 왔다. 서울 끝에서 끝이 30km 남짓이라 그 절반 넘게. 우리가 고른 값
 REGION_KM = 20.0
+#: `[2026-10-18 D23]` 구글 좌표와 이름으로 찾은 곳이 이만큼 안이면 같은 곳으로 본다(같은 이름의 다른 곳을 붙이지 않게)
+SAME_PLACE_KM = 0.5
 #: `[2026-10-17 D21]` 「지하철역 걸어서 N분」 — 점마다 둘레 역을 찾을 반경(미터) · 숙소별 걸어서 분을 이동 계산기로 잴 최대 곳 수 · 역을 찾을 점 수. 우리가 고른 값
 STATION_RADIUS_M = 1500
 STATION_WALK_CHECKS = 12
@@ -747,6 +749,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         if wants.band_max and (max_price is None or max_price == wants.min_price
                                or (wants.min_price is None and 0 <= wants.band_max - max_price < 100000 and max_price % 10000 == 0)):
             max_price = wants.band_max
+        below = strict_below(task.input_text)
+        if below is not None and max_price == below:
+            max_price = below - 1                 # `[2026-10-18 D23]` 「7만 원 아래」는 70,000원을 넣지 않는다(☆6차 N33-26)
         usable_center = center if center and center["usable"] else None
         base = anchor if limit is not None else (usable_center or anchor)
         label = f"{anchor['name']}에서" if base is anchor and anchor else "일정 가운데에서"
@@ -787,8 +792,16 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         gu_by_name: dict[str, str] = {}
         lookup_names = ([stay["name"] for stay in (listing or {}).get("stays") or [] if stay.get("price_per_night") is not None]
                         if limit is not None else []) + ([stay["name"] for stay in (google or {}).get("stays") or []] if wants.gu else [])
+        # `[2026-10-18 D23]` 이름이 같은 다른 곳을 잡지 않게 — 목록 설명의 구 · 구글 좌표를 함께 넘긴다(☆6차 럭스 · 코지스테이)
+        hints: dict[str, dict[str, Any]] = {}
+        for stay in (listing or {}).get("stays") or []:
+            if stay_gu(stay.get("description")):
+                hints.setdefault(stay["name"], {})["gu"] = stay_gu(stay.get("description"))
+        for stay in (google or {}).get("stays") or []:
+            if _coords(stay) is not None:
+                hints.setdefault(stay["name"], {})["near"] = _coords(stay)
         if lookup_names:
-            located_by_name, gu_by_name, evidence = self._locate_many(task, lookup_names, seen, evidence)
+            located_by_name, gu_by_name, evidence = self._locate_many(task, lookup_names, seen, evidence, hints=hints)
         google_trace: list[dict[str, Any]] = []
         block = {"gus": gu_by_name, "trace": google_trace, "children": children, "wants": wants, "anchor": anchor, "max_price": max_price, "limit": limit, "base": base,
                  "label": label, "query": google_keyword, "walker": walker, "meter": meter, "seoul": seoul, "dates": dates,
@@ -876,7 +889,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             if where is None and limit is not None and lookups < LOOKUP_CALLS:
                 # `[2026-10-15 검수 D]` 거리 조건이 있는데 상세를 못 읽은 곳 — 이름으로 카카오(숙박)에서 위치를 찾는다(이름 핵심이 같을 때만)
                 lookups += 1
-                where, evidence = self._locate(task, stay["name"], seen, evidence)
+                where, evidence = self._locate(task, stay["name"], seen, evidence, gu=stay_gu(stay.get("description")))
                 located = "kakao" if where is not None else None
             minutes = None
             if wants.gu and not stay_gu(stay.get("description")) and address_gu((detail or {}).get("address")) not in (None, wants.gu):
@@ -974,8 +987,13 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                 "longitude": float(spot["longitude"]), "usable": True}, evidence
 
     def _locate_many(self, task: TeamTask, names: list[str], seen: set[str],
-                     evidence: list[Evidence]) -> tuple[dict[str, tuple[float, float]], dict[str, str], list[Evidence]]:
-        """`[2026-10-17 D21]` 숙소 이름 여럿 → 좌표 · 구(`read.stays_lookup`, 한 번). 이름 핵심이 같은 곳이 하나일 때만 — 지어내지 않는다."""
+                     evidence: list[Evidence], *, hints: dict[str, dict[str, Any]] | None = None
+                     ) -> tuple[dict[str, tuple[float, float]], dict[str, str], list[Evidence]]:
+        """`[2026-10-17 D21]` 숙소 이름 여럿 → 좌표 · 구(`read.stays_lookup`, 한 번). 이름 핵심이 같은 곳이 하나일 때만 — 지어내지 않는다.
+
+        `[2026-10-18 D23]` `hints[이름]` — 목록 설명의 구(`gu`) · 구글이 준 좌표(`near`)가 있으면 그와 맞는 곳만 본다.
+        ☆6차(qa_1018_merged): 노원구 「럭스」(구글)를 노원 「호텔럭스」에 붙여 구 안으로 셌고(정답은 도봉구),
+        「코지스테이 · 노원」을 같은 이름의 다른 곳(노원구청에서 16.6km)으로 찾았다."""
         if not names:
             return {}, {}, evidence
         looked = self._read(task, "read.stays_lookup", {"names": names}, seen)
@@ -984,6 +1002,11 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         out, gus = {}, {}
         for name, rows in ((looked or {}).get("stays") or {}).items():
             placed = [row for row in rows or [] if _core(row.get("name")) and _coords(row) is not None]
+            hint = (hints or {}).get(name) or {}
+            if hint.get("gu"):
+                placed = [row for row in placed if address_gu(row.get("address")) == hint["gu"]]
+            if hint.get("near"):
+                placed = [row for row in placed if _km(*hint["near"], *_coords(row)) <= SAME_PLACE_KM]
             same = [row for row in placed if _core(row.get("name")) == _core(name)]
             if not same and len(_core(name)) >= 3:
                 # ☆qa_1017_225355 — 20곳 중 14곳을 못 찾았다(「남산, 쉼」 ↔ 「남산쉼게스트하우스」). 이름 핵심이 서로 들어 있는 곳이 하나면 쓴다
@@ -996,13 +1019,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         return out, gus, evidence
 
     def _locate(self, task: TeamTask, name: str, seen: set[str],
-                evidence: list[Evidence]) -> tuple[tuple[float, float] | None, list[Evidence]]:
+                evidence: list[Evidence], *, gu: str | None = None) -> tuple[tuple[float, float] | None, list[Evidence]]:
         """숙소 이름 → 좌표(카카오 숙박 → 관광공사, `read.stay_lookup`). 이름 핵심(`_core`)이 같은 곳이 하나일 때만 — 지어내지 않는다."""
         looked = self._read(task, "read.stay_lookup", {"name": name}, seen)
         evidence = self._evidence(task, source_id=f"read.stay_lookup:{name}", claim="숙소 위치(이름으로, 거리 확인용)", value=looked,
                                   base=evidence)
         same = [stay for stay in (looked or {}).get("stays") or []
-                if _core(stay.get("name")) and _core(stay.get("name")) == _core(name) and _coords(stay) is not None]
+                if _core(stay.get("name")) and _core(stay.get("name")) == _core(name) and _coords(stay) is not None
+                and (gu is None or address_gu(stay.get("address")) == gu)]     # `[2026-10-18 D23]` 목록 설명의 구와 같은 곳만
         return (_coords(same[0]) if len(same) == 1 else None), evidence
 
     @staticmethod

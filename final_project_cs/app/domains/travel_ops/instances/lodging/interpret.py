@@ -236,6 +236,11 @@ _RANGE_WORDS = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:에\s*
 _RANGE_FROM_TO = re.compile(r"(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일[^0-9]{0,8}?부터[^0-9]{0,6}?(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일[^0-9]{0,6}?까지")
 
 
+#: `[2026-10-18 D23]` 「도착 11월 19일 / 퇴실 11월 22일」 「체크인 1월 3일, 체크아웃 1월 5일」 — 말이 날짜 앞에 붙은 범위(☆6차 N31-07)
+_RANGE_LABELS = re.compile(r"(?:도착|입실|체크\s*인)\s*(?:은|는|일은|:)?\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일[^0-9]{0,8}?"
+                           r"(?:퇴실|체크\s*아웃|출발)\s*(?:은|는|일은|:)?\s*(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일")
+
+
 def _next_date(today: date, month: int, day: int) -> date | None:
     try:
         found = date(today.year, month, day)
@@ -248,7 +253,7 @@ def rule_ranges(found: Interpretation, text: str, *, today: date) -> tuple[Inter
     """문장의 날짜 범위가 하나로 정해지면 체크인 · 체크아웃을 그 값으로(모델 값이 다르거나 비었을 때). (해석, 고쳤나)"""
     if found.task not in ("search", "my_stay"):
         return found, False
-    hits = [m for pattern in (_RANGE_KO, _RANGE_WORDS, _RANGE_SLASH, _RANGE_FROM_TO) for m in pattern.finditer(text or "")]
+    hits = [m for pattern in (_RANGE_KO, _RANGE_WORDS, _RANGE_SLASH, _RANGE_FROM_TO, _RANGE_LABELS) for m in pattern.finditer(text or "")]
     if len({tuple(m.groups()) for m in hits}) != 1:        # 없거나 둘 이상이면 모델 값 그대로
         return found, False
     month, day, end_month, end_day = hits[0].groups()
@@ -352,7 +357,7 @@ def rule_weekdays(found: Interpretation, text: str, *, today: date) -> tuple[Int
 
 #: `[2026-10-16 평가 4차]` 체크인만 있고 체크아웃이 비었을 때 박수 — 「11월 12일부터 하룻밤」(G-38)을 모델이 비워 되물었다.
 #: 「1박 6만 원」 · 「1박에 10만」 · 「1박당」처럼 값 단위로 쓴 「N박」은 박수가 아니다
-_NIGHTS = re.compile(r"(\d+)\s*박(?!\s*(?:에\s*|당\s*|최대\s*|최고\s*|기준\s*|은\s*|는\s*)*[\d,]+\s*(?:만|천|원))(?!\s*당)|(하룻\s*밤|한\s*밤|두\s*밤|세\s*밤|이틀\s*밤|사흘\s*밤)")
+_NIGHTS = re.compile(r"(\d+)\s*박(?!\s*(?:에\s*|당\s*|최대\s*|최고\s*|기준\s*|은\s*|는\s*|방값\s*|요금\s*|가격\s*|숙박비\s*|비용\s*)*[\d,]+\s*(?:만|천|원))(?!\s*당)|(하룻\s*밤|한\s*밤|두\s*밤|세\s*밤|이틀\s*밤|사흘\s*밤)")
 _NIGHT_WORDS = {"하룻밤": 1, "한밤": 1, "두밤": 2, "이틀밤": 2, "세밤": 3, "사흘밤": 3}
 
 
@@ -445,10 +450,13 @@ _NATIVE_ONES = {"하나": 1, "한": 1, "하루": 1, "하룻": 1, "둘": 2, "두"
 _NATIVE_TENS = {"열": 10, "스물": 20, "스무": 20, "서른": 30}
 _ONES = "|".join(sorted(_NATIVE_ONES, key=len, reverse=True))
 _NATIVE_DAY = re.compile(rf"(?:(열흘|보름)|(열|스물|스무|서른)\s*({_ONES})?|({_ONES}))(?=\s*(?:째\s*)?(?:날|일)|\s*(?:에|부터|까지|입실|퇴실|체크|들어|나오|나와|나올|나가|가서|~|$|[,.!\s]))")
-_ORDINAL_DAY = re.compile(rf"(?<![가-힣])((?:열|스물|스무|서른)(?:\s*(?:{_ONES}))?|{_ONES}|첫)\s*째\s*날")
+_ORDINAL_DAY = re.compile(rf"(?<![가-힣])((?:열|스물|스무|서른)(?:\s*(?:{_ONES}))?|{_ONES}|첫)\s*(?:번\s*)?째\s*날")   # `[2026-10-18 D23]` 「스물두 번째 날」(☆6차 N31-28)
 _ISO_DAY = re.compile(r"(?<![\d\-/.])(?:(20\d{2})\s*-\s*)?(\d{1,2})\s*-\s*(\d{1,2})(?![\d\-])")
 _SPAN_WORDS = {"하루": 1, "이틀": 2, "사흘": 3, "나흘": 4, "닷새": 5}
 _SPAN = re.compile(r"(하루|이틀|사흘|나흘|닷새)(?=\s*(?:만\s*)?(?:자|묵|숙박|머물|지내|밤|동안|뒤|후|있))")
+#: `[2026-10-18 D23]` 「…부터 이틀이야」 「…부터 사흘!」 「숙박은 하루예요」 — 날 수를 박 수로(평가 라벨: 이틀 = 2박 · 사흘 = 3박, ☆6차 N31-15 · N31-20 · N31-27 · N33-03)
+_SPAN_FROM = re.compile(r"(?:부터|에서)\s*(하루|이틀|사흘|나흘|닷새)(?![가-힣]*(?:\s*(?:뒤|후|전)))(?=\s*(?:이야|이에요|예요|요|만|간|동안|지낼|지내|묵|머물|자|!|,|\.|$|\s))"
+                        r"|(?:숙박|묵는\s*건|자는\s*건|머무는\s*건|머무르는\s*건)\s*(?:은|는|이|기간은)?\s*(하루|이틀|사흘|나흘|닷새)")
 _SINO_NIGHTS = re.compile(r"(?<![가-힣])(일|이|삼|사|오)\s*박(?![가-힣])")
 _COUNT_NIGHTS = re.compile(r"(?<![가-힣])(두|세|네)\s*밤")
 
@@ -487,6 +495,7 @@ def spoken_days(text: str) -> str:
         return f"{month}월 {(nxt - timedelta(days=1)).day}일"
     out = _MONTH_LAST.sub(last_day, out)
     out = re.sub(r"새해\s*첫\s*날", "1월 1일", out)
+    out = re.sub(r"(?<![가-힣])(열한|열두|열)\s*월", lambda m: {"열": "10", "열한": "11", "열두": "12"}[m.group(1)] + "월", out)   # `[2026-10-18 D23]` 「열한 월」(☆6차 N33-03)
     out = re.sub(r"새해\s*(?=\d{1,2}\s*월)", "", out)
     out = _ISO_DAY.sub(lambda m: f"{int(m.group(2))}월 {int(m.group(3))}일" if 1 <= int(m.group(2)) <= 12 and 1 <= int(m.group(3)) <= 31
                        else m.group(0), out)
@@ -514,7 +523,8 @@ def spoken_days(text: str) -> str:
             return m.group(0)                       # 「이틀 자고」는 박수 — 아래에서 바꾼다
         if alone and not month_before and not re.search(r"(?:~|부터|들어가\S*|입실\S*|가서|일\s*에?)\s*$", before):
             return m.group(0)                       # 「다섯 명」 「둘이」 같은 말은 날이 아니다
-        if alone in ("한", "두", "세", "네", "하룻"):
+        if alone in ("한", "두", "세", "네", "하룻", "이튿", "사흗", "나흗"):
+            # `[2026-10-18 D23]` 「이튿날 퇴실」은 다음 날이다(「2일」이 아님) — ㄷ 꼴은 「열이튿날」처럼 십 단위와 함께일 때만 날(☆6차 N33-21 · N35-20)
             return m.group(0)
         value = _native_number(tens, ones) if tens else _NATIVE_ONES.get(alone or "")
         if not value or value > 31:
@@ -523,6 +533,7 @@ def spoken_days(text: str) -> str:
         return f"{value}일" + ("" if re.match(r"\s*(?:째\s*)?(?:날|일)", tail) else "")
     out = _NATIVE_DAY.sub(native, out)
     out = re.sub(r"(\d{1,2})일\s*(?:째\s*)?(?:날|일)", r"\1일", out)        # 「28일 날」 「11일날」 → 「28일」
+    out = _SPAN_FROM.sub(lambda m: m.group(0).replace(m.group(1) or m.group(2), f"{_SPAN_WORDS[m.group(1) or m.group(2)]}박"), out)
     out = _SPAN.sub(lambda m: f"{_SPAN_WORDS[m.group(1)]}박", out)
     out = _SINO_NIGHTS.sub(lambda m: f"{'일이삼사오'.index(m.group(1)) + 1}박", out)
     out = _COUNT_NIGHTS.sub(lambda m: f"{'두세네'.index(m.group(1)) + 2}박", out)
@@ -579,7 +590,25 @@ def rule_spoken(found: Interpretation, text: str, *, today: date) -> tuple[Inter
         changed = by_range or by_date
     found, by_end = rule_end(found, spoken)
     found, by_nights = rule_nights(found, spoken)
-    return found, changed or by_end or by_nights
+    found, by_fix = rule_end_fix(found, spoken)
+    return found, changed or by_end or by_nights or by_fix
+
+
+def rule_end_fix(found: Interpretation, spoken: str) -> tuple[Interpretation, bool]:
+    """`[2026-10-18 D23]` 모델이 채운 체크아웃이 문장과 다를 때 고친다 — 「1월 4일 입실해서 이튿날 퇴실」을 2/2 로, 「27일부터 사흘! 1박 방값 …」을 1박으로 읽었다
+    (☆6차 N33-21 · N35-20 · N31-20). 문장에 끝을 정하는 말이 **하나**(이튿날 · 다음 날 / N박 · 숫자로 바꾼 날 수)이고 끝 날짜 · 요일을 말하지 않았을 때만. (해석, 고쳤나)"""
+    if found.task != "search" or found.check_in is None:
+        return found, False
+    others = bool(_END_DAY.search(spoken) or _END_WEEKDAY.search(spoken))
+    ends = {int(m.group(1)) if m.group(1) else _NIGHT_WORDS["".join(m.group(2).split())] for m in _NIGHTS.finditer(spoken)}
+    if _END_NEXT.search(spoken):
+        ends.add(1)
+    if others or len(ends) != 1 or not 1 <= min(ends) <= 30:
+        return found, False
+    end = found.check_in + timedelta(days=ends.pop())
+    if found.check_out == end:
+        return found, False
+    return found.model_copy(update={"check_out": end}), True
 
 
 def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[str]]:
@@ -600,4 +629,4 @@ def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[
     return (found.model_copy(update=update), cleared) if update else (found, [])
 
 
-__all__ = ["CALENDAR_DAYS", "rule_dates", "rule_ranges", "rule_checks", "rule_nights", "rule_people", "rule_spoken", "rule_start", "rule_weekdays", "spoken_days", "rule_end", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
+__all__ = ["CALENDAR_DAYS", "rule_dates", "rule_ranges", "rule_checks", "rule_nights", "rule_people", "rule_spoken", "rule_start", "rule_weekdays", "spoken_days", "rule_end", "rule_end_fix", "model_context", "settle_years", "GROUNDS", "Interpretation", "InterpretationInvalid", "LABELS", "REQUIRED", "ask", "ground", "needs", "parse"]
