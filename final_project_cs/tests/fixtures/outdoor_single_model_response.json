@@ -1,0 +1,39 @@
+{
+  "action": "answer_fact",
+  "target_item": "i1",
+  "target_change": "none",
+  "fact": "outdoor",
+  "change_scope": "none",
+  "destination_text": "",
+  "condition_text": "",
+  "anchor_kind": "none",
+  "anchor_item": "none",
+  "anchor_time": "",
+  "at_day": "none",
+  "relation": "at",
+  "steps": 1,
+  "minutes": 0,
+  "place_text": "",
+  "reads": [
+    {
+      "fact": "outdoor",
+      "target_item": "i1",
+      "origin_item": "none",
+      "origin_text": "",
+      "transport_mode": "any",
+      "reference": "explicit",
+      "query": null,
+      "text": "광화문 일정은 야외 일정이야?",
+      "advice": "",
+      "anchor_kind": "none",
+      "anchor_item": "none",
+      "anchor_time": "",
+      "at_day": "none",
+      "relation": "at",
+      "steps": 1
+    }
+  ],
+  "social": "",
+  "general_requests": [],
+  "choices": []
+}

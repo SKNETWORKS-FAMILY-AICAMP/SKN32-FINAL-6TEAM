@@ -571,6 +571,11 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         ignored["general_requests"] = dropped_general
     if ignored:
         raw = {**raw, "ignored_for_action": ignored, **({"reads": []} if "reads" in ignored else {})}
+    if action == "answer_fact" and fact == "outdoor" and query is None and not raw.get("reads"):
+        # A single-place indoor/outdoor question uses the same target resolution as other item facts.
+        raw = {**raw, "reads": [{"fact": fact, "target_item": target, "origin_item": "none",
+               "origin_text": "", "transport_mode": "any", "reference": "explicit" if target != "none" else "none",
+               "query": None, "text": message or "", "advice": "", "from_top_level": True}]}
     reads = []
     dropped_reads: list[dict[str, Any]] = []
     for read in raw.get("reads") or []:
@@ -579,7 +584,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                 or read.get("origin_item") not in {*by_alias, "none"}
                 or read.get("reference") not in {"explicit", "previous", "selection", "none"}):
             raise DecisionFailed("읽기 질문의 대상·종류가 유효하지 않습니다")
-        scoped = read["fact"] in (*QUERY_FACTS, "day", "outdoor")
+        scoped = (read["fact"] in (*QUERY_FACTS, "day")
+                  or (read["fact"] == "outdoor" and read.get("query") is not None))
         if (read.get("transport_mode", "any") not in {"any", "transit", "subway", "bus", "walk", "taxi"}
                 or not isinstance(read.get("origin_text", ""), str)):
             raise DecisionFailed("이동의 출발지 표현·수단이 유효하지 않습니다")
@@ -630,7 +636,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         for read in reads:
             if read["fact"] in (*QUERY_FACTS, "day", "outdoor") and read.get("query") == query:
                 read.update(target_item="none", reference="none")
-    if fact in (*QUERY_FACTS, "day", "outdoor") and (reads or fact in QUERY_FACTS):
+    scoped_fact = fact in (*QUERY_FACTS, "day") or (fact == "outdoor" and query is not None)
+    if scoped_fact and (reads or fact in QUERY_FACTS):
         identical_reads = isinstance(duplicates, list) and all(
             isinstance(c, dict) and c.get("action") == "answer_fact" and c.get("fact") == fact
             and c.get("target_item") == "none" and c.get("target_change") == "none" for c in duplicates)
