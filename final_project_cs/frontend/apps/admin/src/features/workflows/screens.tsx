@@ -194,7 +194,7 @@ export function NoticesScreen({ data, onCommand }: ScreenProps) {
     if (!validateCustomer()) { customerInput.current?.focus(); return; }
     if (!reason.trim()) return maintenanceFeedback.invalid('점검 모드를 바꾸는 사유를 입력해 주세요.');
     if (!data.maintenance.enabled && (!maintenanceMessage.trim() || !maintenanceEnd)) return maintenanceFeedback.invalid('점검 안내 문구와 예상 종료 시각을 입력해 주세요.');
-    if (!data.maintenance.enabled && kstTimestamp(maintenanceEnd) <= Date.now()) return maintenanceFeedback.invalid('예상 종료는 현재 시각보다 뒤로 지정해 주세요.');
+    if (!data.maintenance.enabled && kstTimestamp(maintenanceEnd) <= kstTimestamp(data.clock)) return maintenanceFeedback.invalid('예상 종료는 현재 시각보다 뒤로 지정해 주세요.');
     if (await maintenanceFeedback.run({ type: 'maintenance', enabled: !data.maintenance.enabled, message: maintenanceMessage, messageEn: maintenanceEnglish, endsAt: maintenanceEnd, reason, ...delivery, requestId: maintenanceRequest }, `점검 모드를 ${data.maintenance.enabled ? '껐습니다' : '켰습니다'}.${notifyUsers ? ' 고객 알림을 등록했습니다.' : ''}`)) { setReason(''); setMaintenanceRequest(crypto.randomUUID()); }
   }
   async function publish(event: FormEvent<HTMLFormElement>) {
