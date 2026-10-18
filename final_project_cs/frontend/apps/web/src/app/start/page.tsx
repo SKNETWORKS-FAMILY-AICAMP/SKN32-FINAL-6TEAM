@@ -1,6 +1,6 @@
 import { Onboarding } from "@/features/onboarding/onboarding";
 
-export default async function StartPage({ searchParams }: { searchParams: Promise<{ terms?: string; returnTo?: string; signup?: string }> }) {
+export default async function StartPage({ searchParams }: { searchParams: Promise<{ terms?: string; returnTo?: string }> }) {
   const params = await searchParams;
-  return <Onboarding signupRequired={params.signup === "1"} termsRequired={params.terms === "required" || params.signup === "1"} returnTo={params.returnTo ?? null} />;
+  return <Onboarding termsRequired={params.terms === "required"} returnTo={params.returnTo ?? null} />;
 }

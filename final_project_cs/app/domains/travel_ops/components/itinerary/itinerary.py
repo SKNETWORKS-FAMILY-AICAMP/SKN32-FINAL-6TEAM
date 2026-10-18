@@ -634,11 +634,10 @@ class TripStore:
                             (self.tenant_id, trip_id, version, UUID(key.split(":", 1)[1])))
                 if not cur.fetchone()[0]:
                     raise StaleDeparture("departure item is no longer current")
-        from app.domains.travel_ops.components.itinerary.plan_link import app_url, plan_url
+        if "plan_url" not in payload:
+            from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
-        # 고객·모델이 넣은 주소 대신 이 여행의 정식 주소를 생성한다.
-        payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id),
-                   "app_url": app_url(trip_id)}
+            payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
         payload = self._with_guardian(conn, trip_id, payload)
         with conn.cursor() as cur:
             cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
@@ -663,11 +662,10 @@ class TripStore:
         """
         from app.domains.travel_ops.components.watch.simulation import mark_notice
         payload = mark_notice(conn, self.tenant_id, trip_id, {**payload, "version": version})
-        from app.domains.travel_ops.components.itinerary.plan_link import app_url, plan_url
+        if "plan_url" not in payload:
+            from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
-        # 고객·모델이 넣은 주소 대신 이 여행의 정식 주소를 생성한다.
-        payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id),
-                   "app_url": app_url(trip_id)}
+            payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
         payload = self._with_guardian(conn, trip_id, payload)
         if "locale" not in payload:
             with conn.cursor() as cur:

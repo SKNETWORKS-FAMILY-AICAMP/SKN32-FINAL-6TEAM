@@ -37,18 +37,6 @@ describe("the browser's copy of the consents and the server's record", () => {
 
   const consentCalls = () => calls.filter((call) => new URL(call.url).pathname === "/v1/web/consents");
 
-  it("필수 동의를 저장했다는 응답이어도 서버 ok가 거짓이면 완료하지 않는다", async () => {
-    replies.push(json({ current_version: TERMS_VERSION, ok: false, items: [] }));
-    expect(await saveConsents({ ...noConsents(), service_terms: true, privacy: true }, "ko")).toBe("failed");
-    expect(consentsSynced()).toBe(false);
-  });
-
-  it("저장 도중 약관 버전이 바뀌면 이전 동의를 완료 처리하지 않는다", async () => {
-    replies.push(json({ current_version: "changed-version", ok: true, items: requiredOn }));
-    expect(await saveConsents({ ...noConsents(), service_terms: true, privacy: true }, "ko")).toBe("outdated");
-    expect(consentsSynced()).toBe(false);
-  });
-
   it("follows actual streamed phases without completing the browser sync until the result arrives", async () => {
     let controller!: ReadableStreamDefaultController<Uint8Array>;
     const encode = new TextEncoder();

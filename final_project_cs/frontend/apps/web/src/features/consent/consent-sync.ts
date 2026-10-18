@@ -82,8 +82,6 @@ async function sendNow(language: Language): Promise<SendResult> {
   const version = termsVersion();
   try {
     const server = await postServerConsents(version, await choicesOf(map), language);
-    if (server.currentVersion && server.currentVersion !== version) return "outdated";
-    if (requiredAgreed(map) && !server.ok) return "failed";
     if (server.items.some((item) => item.version === version)) adoptServer(server);
     else markConsentsSynced();
     return "recorded";

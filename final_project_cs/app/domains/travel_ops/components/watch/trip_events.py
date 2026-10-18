@@ -57,11 +57,8 @@ def snapshot(conn, tenant_id: str, trip_id: UUID) -> dict[str, Any] | None:
         if row is None:
             return None
         cur.execute("SELECT count(*), max(available_at) FROM outbox "
-                    "WHERE tenant_id=%s AND ((topic='trip.notice' AND dedupe_key LIKE %s) "
-                    "OR (topic='customer.notice' AND dedupe_key LIKE "
-                    "(SELECT customer_id::text || ':service:%%' FROM trips WHERE tenant_id=%s AND trip_id=%s) "
-                    "AND (payload_json->>'visible_at')::timestamptz<=now()))",
-                    (tenant_id, f"{trip_id}:%", tenant_id, trip_id), prepare=False)
+                    "WHERE tenant_id=%s AND topic='trip.notice' AND dedupe_key LIKE %s",
+                    (tenant_id, f"{trip_id}:%"), prepare=False)
         count, latest = cur.fetchone()
         cur.execute("SELECT coalesce(md5(string_agg(proposal_id::text || ':' || status, ',' ORDER BY proposal_id)), '') "
                     "FROM pending_changes WHERE tenant_id=%s AND trip_id=%s", (tenant_id, trip_id), prepare=False)

@@ -35,10 +35,10 @@ function DraftNote({ t }: { t: Translate }) {
   return <p className={styles.termsDraft} role="note">{t(DRAFT_NOTICE[0], DRAFT_NOTICE[1])}</p>;
 }
 
-export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, onReadDoc, onToggle, onContinue, saving = false, signup = false }: {
+export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, onReadDoc, onToggle, onContinue }: {
   t: Translate; choices: ConsentMap; consentMotion: boolean;
   /** The customer typed a Discord address on the first card: it is kept only if the alert-channel item is ticked. */
-  alertTyped?: boolean; saving?: boolean; signup?: boolean;
+  alertTyped?: boolean;
   onReadDoc: (code: ConsentCode) => void; onToggle: (code: ConsentCode, checked: boolean) => void; onContinue: () => void;
 }) {
   const { docs } = useLiveTerms(useSettings().language);
@@ -63,7 +63,7 @@ export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, o
         </li>;
       })}
     </ul>
-    <button type="button" className={`${styles.next} ${styles.termsContinue}`} disabled={saving || !requiredAgreed(choices)} onClick={onContinue}>{saving ? t("동의 저장 중…", "Saving consent…") : signup ? t("동의하고 가입 완료", "Agree and finish sign-up") : t("동의하고 다음으로", "Agree and continue")}<OnboardingIcon name="arrow" size={15} /></button>
+    <button type="button" className={`${styles.next} ${styles.termsContinue}`} disabled={!requiredAgreed(choices)} onClick={onContinue}>{t("동의하고 다음으로", "Agree and continue")}<OnboardingIcon name="arrow" size={15} /></button>
   </>;
 }
 

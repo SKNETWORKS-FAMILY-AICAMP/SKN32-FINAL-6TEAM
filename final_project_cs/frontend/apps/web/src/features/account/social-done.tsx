@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Panel, ButtonLink } from "@/components/ui";
 import { clearFlow, exchangeTicket, localPath, pendingFlow, providerName, socialErrorText, type SocialResult } from "@/lib/live/auth";
@@ -24,10 +23,6 @@ export function SocialDone() {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
-  const router = useRouter();
-  const finishSignup = useCallback((back: string) => {
-    router.replace(`${routes.start}?terms=required&signup=1&returnTo=${encodeURIComponent(localPath(back))}`);
-  }, [router]);
   const [state, setState] = useState<State>({ kind: "working" });
   const started = useRef(false);
 
@@ -45,20 +40,18 @@ export function SocialDone() {
       if (!ticket || !flow) {
         // ★`[2026-10-16 ST4F-601 F6]` Back here with the browser's back after a finished sign-in (the ticket is spent): signed in, not an error.
         const session = await probeSession(language).catch(() => null);
-        if (session?.registrationPending) { finishSignup(back); return; }
         setState(session?.kind === "member" ? { kind: "already" } : { kind: "error", text: socialErrorText("ticket_invalid", t), back });
         return;
       }
       try {
         const result = await exchangeTicket(ticket, flow.nonce, language);
         void queryClient.invalidateQueries();
-        if (result.registrationRequired) { finishSignup(back); return; }
         setState({ kind: "ok", result, back });
       } catch (failure) {
         setState({ kind: "error", text: failure instanceof LiveError && failure.code === "ticket_invalid" ? socialErrorText("ticket_invalid", t) : failure instanceof Error ? failure.message : String(failure), back });
       }
     })();
-  }, [language, queryClient, t, finishSignup]);
+  }, [language, queryClient, t]);
 
   if (state.kind === "working") return <Panel className={styles.done}><p role="status">{t("로그인을 마무리하는 중이에요…", "Finishing the sign-in…")}</p></Panel>;
   if (state.kind === "already") return <Panel className={styles.done}>

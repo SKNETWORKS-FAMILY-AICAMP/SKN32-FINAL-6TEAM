@@ -47,9 +47,6 @@ def member(env, code):
     response = exchange(env, flow(env, code)["ticket"][0])
     assert response.status_code == 200, response.text
     customer = session_owner(env)
-    current = env["client"].get("/v1/web/consents").json()["current_version"]
-    assert env["client"].post("/v1/web/consents", headers={"Origin": WEB, "X-CSRF-Token": response.json()["csrf_token"]}, json={"version": current, "items": [
-        {"code": code, "agreed": True, "text_sha256": "a" * 64} for code in ("service_terms", "privacy")]}).json()["ok"]
     env["client"].cookies.clear()
     return customer
 

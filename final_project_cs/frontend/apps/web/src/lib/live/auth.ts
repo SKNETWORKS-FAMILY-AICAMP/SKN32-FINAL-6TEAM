@@ -29,14 +29,7 @@ export interface PendingFlow { provider: SocialProvider; mode: SocialMode; nonce
 const FLOW_STORAGE = "tripilot.web.auth.flow.v1";
 
 /** A path inside this site only (never an address, never `//host`) — the flow is read back from storage, so it is checked again here. */
-export const localPath = (value: unknown): string => {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || /[\\\x00-\x20\x7f]/.test(value)) return "/";
-  try {
-    const origin = "https://return.invalid";
-    const parsed = new URL(value, origin);
-    return parsed.origin === origin ? `${parsed.pathname}${parsed.search}${parsed.hash}` : "/";
-  } catch { return "/"; }
-};
+export const localPath = (value: unknown): string => (typeof value === "string" && value.startsWith("/") && !value.startsWith("//") && !value.includes("\\") ? value : "/");
 
 export function pendingFlow(): PendingFlow | null {
   try {
@@ -80,7 +73,7 @@ export async function startSocial(provider: SocialProvider, mode: SocialMode, re
 }
 
 export type SocialOutcome = "signed_in" | "created" | "linked";
-export interface SocialResult { outcome: SocialOutcome; provider: SocialProvider; trips: number | null; registrationRequired?: boolean }
+export interface SocialResult { outcome: SocialOutcome; provider: SocialProvider; trips: number | null }
 
 /**
  * Swap the ticket for the result (`POST /auth/exchange`). A ticket that is old, used or not this browser's is refused (410 `ticket_invalid`).
@@ -88,7 +81,7 @@ export interface SocialResult { outcome: SocialOutcome; provider: SocialProvider
  *   guest session this browser had (the cookie goes along) is ended by the server. A link keeps the session — it is read again to learn it is a member's now.
  */
 export async function exchangeTicket(ticket: string, nonce: string, language: Language): Promise<SocialResult> {
-  const body = await openApi<{ outcome?: unknown; provider?: unknown; trips?: unknown; kind?: unknown; csrf_token?: unknown; registration_required?: unknown }>("/v1/web/auth/exchange", language, {
+  const body = await openApi<{ outcome?: unknown; provider?: unknown; trips?: unknown; kind?: unknown; csrf_token?: unknown }>("/v1/web/auth/exchange", language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ticket, client_nonce: nonce, session: "cookie" }),
   });
   const outcome = (["signed_in", "created", "linked"] as const).find((value) => value === body.outcome);
@@ -100,8 +93,7 @@ export async function exchangeTicket(ticket: string, nonce: string, language: La
     if (!session) throw new LiveError("bad_exchange", "서버가 로그인 세션을 주지 않았어요.");
     takeSession(session);
   }
-  return { outcome, provider: body.provider, trips: typeof body.trips === "number" ? body.trips : null,
-    ...(body.registration_required === true ? { registrationRequired: true } : {}) };
+  return { outcome, provider: body.provider, trips: typeof body.trips === "number" ? body.trips : null };
 }
 
 /** The providers linked to this browser's session (`GET /auth/links`). */

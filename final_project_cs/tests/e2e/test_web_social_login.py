@@ -153,13 +153,7 @@ def test_login_creates_a_user_once_and_signs_the_same_account_in_with_a_new_key_
     assert body["outcome"] == "created" and body["provider"] == "google" and body["trips"] == 0 and body["user_key"].startswith("acop_u_")
     key_a = {"X-User-Key": body["user_key"]}
     assert client.get("/v1/web/auth/links", headers=key_a).json()["links"][0]["provider"] == "google"
-    assert body["registration_required"] is True
-    assert client.get("/v1/web/trips", headers=key_a).status_code == 403
-    current = client.get("/v1/web/consents", headers=key_a).json()["current_version"]
-    agreed = client.post("/v1/web/consents", headers=key_a, json={"version": current, "items": [
-        {"code": code, "agreed": True, "text_sha256": "a" * 64} for code in ("service_terms", "privacy")]})
-    assert agreed.status_code == 200 and agreed.json()["ok"] is True
-    assert client.get("/v1/web/trips", headers=key_a).status_code == 200                              # 필수 동의 뒤 새 키가 열린다
+    assert client.get("/v1/web/trips", headers=key_a).status_code == 200                              # 새 키가 정말 열린다
     # 같은 계정으로 다른 기기에서 로그인 → 같은 사용자, 새 키 하나 더
     again = _exchange(client, _flow(client, "sub-alice")["ticket"]).json()
     assert again["outcome"] == "signed_in" and again["user_key"] != body["user_key"] and "새 키" in again["notice"]
@@ -251,9 +245,6 @@ def test_unlink_removes_only_the_attachment_and_says_not_linked_the_second_time(
     client = social["client"]
     mine = _session(client)
     _exchange(client, _flow(client, "sub-hana", mode="link", headers=mine)["ticket"])
-    current = client.get("/v1/web/consents", headers=mine).json()["current_version"]
-    assert client.post("/v1/web/consents", headers=mine, json={"version": current, "items": [
-        {"code": code, "agreed": True, "text_sha256": "a" * 64} for code in ("service_terms", "privacy")]}).json()["ok"]
     removed = client.delete("/v1/web/auth/google", headers=mine)
     assert removed.status_code == 200 and removed.json() == {"links": []}
     assert client.get("/v1/web/trips", headers=mine).status_code == 200                                 # 키와 여행은 그대로

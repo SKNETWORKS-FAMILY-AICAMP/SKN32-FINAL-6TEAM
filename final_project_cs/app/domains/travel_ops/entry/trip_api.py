@@ -2483,10 +2483,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             _trip_or_404(conn, TripStore(tenant), trip_id, customer)
             with conn.cursor() as cur:
                 cur.execute("SELECT dedupe_key, payload_json, status, available_at FROM outbox "
-                            "WHERE tenant_id=%s AND ((topic='trip.notice' AND dedupe_key LIKE %s) "
-                            "OR (topic='customer.notice' AND dedupe_key LIKE %s "
-                            "AND (payload_json->>'visible_at')::timestamptz<=now())) "
-                            "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%", f"{customer}:service:%"))
+                            "WHERE tenant_id=%s AND topic='trip.notice' AND dedupe_key LIKE %s "
+                            "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%"))
                 rows = cur.fetchall()
         return {"notices": [{"key": key.split(":", 1)[1], "type": payload.get("type") or "change_notice",
                              "kind": payload.get("kind"), "text": payload.get("text"),

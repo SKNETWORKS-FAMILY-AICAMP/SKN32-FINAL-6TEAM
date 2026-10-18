@@ -120,10 +120,6 @@ def specs() -> dict[str, LimitSpec]:
     out["testing.intake_presets_enabled"] = LimitSpec(
         "testing.intake_presets_enabled", "준비된 시험 일정 입력(test1~test50)", "", "bool",
         bool(guard.get("testing.intake_presets_enabled")))
-    out["travel.notice_per_customer_enabled"] = LimitSpec(
-        "travel.notice_per_customer_enabled", "고객 외부 알림 발송", "", "bool",
-        guard.get("travel.notice_per_customer_enabled") is True,
-        help="켜면 고객이 연결한 디스코드·텔레그램으로 알립니다. 관리자 채널로 우회하지 않습니다. 외부 연결이 없어도 앱 알림은 유지합니다.")
     # ★`[2026-09-29 Codex 3회차 합의]` 채팅 결정 단위 — 재기동 없이 끄고 켠다(오변경이 보이면 곧바로 shadow 로)
     out["chat.decision_mode"] = LimitSpec("chat.decision_mode", "채팅 해석 방식(결정 단위)", "", "choice",
                                           _mode_text(guard.get("travel.decision_unit.mode")),

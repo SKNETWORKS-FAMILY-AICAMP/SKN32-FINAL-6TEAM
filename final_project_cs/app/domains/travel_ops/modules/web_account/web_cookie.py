@@ -230,17 +230,15 @@ def _admin_access(request: Request, identity: Identity) -> None:
     if policy.get("blocked"):
         raise refuse(403, "user_blocked", "이 계정은 이용이 제한되었습니다. 문제 신고·건의 기록은 남길 수 있지만 개별 상담 답변이나 제한 해제를 약속하지 않습니다.")
     maintenance = policy.get("maintenance")
-    # 점검 중에도 본인 인증과 필수 동의 기록은 열어 둔다. 실제 여행 작업은 계속 제한한다.
-    account_entry = path in {"/v1/web/auth/me", "/v1/web/auth/session", "/v1/web/auth/adopt", "/v1/web/auth/links"}
-    account_entry = account_entry or path in {f"/v1/web/auth/{provider}/start" for provider in ("google", "kakao", "naver", "discord")}
-    account_entry = account_entry or path == "/v1/web/consents"
-    if maintenance and maintenance.get("enabled") and not account_entry:
+    if maintenance and maintenance.get("enabled"):
         raise refuse(503, "maintenance", str(maintenance.get("message") or "서비스 점검 중입니다."))
 
 
 def _consent_gate(request: Request, identity: Identity) -> None:
     from app.domains.travel_ops.components.customer import consents
 
+    if not consents.gate_enabled():
+        return
     try:
         with get_connection() as conn:
             consents.gate_check(conn, tenant_id=identity.tenant_id, user_id=identity.customer_id, path=request.url.path)

@@ -64,24 +64,7 @@ def _later(delay: float, work) -> threading.Thread:
     return thread
 
 
-def _snapshot_barriers(monkeypatch):
-    """실제 초기 조회 뒤 쓰기를 시작하고 제안 관찰 뒤 만료시킨다."""
-    ready, proposal_seen = threading.Event(), threading.Event()
-    original = trip_events.snapshot
-
-    def observed(conn, tenant, trip):
-        value = original(conn, tenant, trip)
-        if value is not None:
-            if ready.is_set() and value["proposals"]:
-                proposal_seen.set()
-            ready.set()
-        return value
-
-    monkeypatch.setattr(trip_events, "snapshot", observed)
-    return ready, proposal_seen
-
-
-def test_a_change_after_connecting_sends_a_signal_with_no_content(api, fast, monkeypatch):
+def test_a_change_after_connecting_sends_a_signal_with_no_content(api, fast):
     """①: 연결 직후 `ready`, 알림이 생기면 `notice`, 새 판이 생기면 `itinerary` — 내용 · 키는 싣지 않는다."""
     me = _session(api)
     trip_id = _trip(api, me)
@@ -100,23 +83,10 @@ def test_a_change_after_connecting_sends_a_signal_with_no_content(api, fast, mon
             store.append_version(conn, trip_id=UUID(trip_id), base_version=trip["version"], items=items,
                                  reason="customer_request", causes=[])
 
-    ready, _ = _snapshot_barriers(monkeypatch)
-    failures = []
-
-    def after_ready(delay, work):
-        try:
-            assert ready.wait(10), "initial snapshot was not observed"
-            time.sleep(delay)
-            work()
-        except Exception as error:
-            failures.append(error)
-
-    threads = [_later(0, lambda: after_ready(0.35, notice)),
-               _later(0, lambda: after_ready(0.8, bump))]
+    threads = [_later(0.35, notice), _later(0.8, bump)]
     response = api["client"].get(f"/v1/web/trips/{trip_id}/events", headers=_h(me["user_key"]))
     for thread in threads:
         thread.join()
-    assert not failures, failures
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     assert response.headers["cache-control"] == "no-cache" and response.headers["x-accel-buffering"] == "no"
@@ -130,7 +100,7 @@ def test_a_change_after_connecting_sends_a_signal_with_no_content(api, fast, mon
     assert ": ping" in response.text                                                # 조용한 사이 연결 유지
 
 
-def test_a_proposal_that_is_decided_or_expires_also_sends_a_signal(api, fast, monkeypatch):
+def test_a_proposal_that_is_decided_or_expires_also_sends_a_signal(api, fast):
     """알림이 안 생기는 변화(제안 선택 · 만료)도 신호가 난다 — Codex 가 짚은 점."""
     me = _session(api)
     trip_id = _trip(api, me, "ev-2")
@@ -139,29 +109,18 @@ def test_a_proposal_that_is_decided_or_expires_also_sends_a_signal(api, fast, mo
         _, items = TripStore(tenant).latest(conn, UUID(trip_id))
     item = next(i for i in items if i.kind == "activity")
 
-    ready, proposal_seen = _snapshot_barriers(monkeypatch)
-    failures = []
-
     def open_then_expire():
-        assert ready.wait(10), "initial snapshot was not observed"
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("INSERT INTO pending_changes (tenant_id, trip_id, item_id, base_version, reason, status) "
                         "VALUES (%s,%s,%s,1,'ask_first','open') RETURNING proposal_id", (tenant, trip_id, item.item_id))
             proposal = cur.fetchone()[0]
-        assert proposal_seen.wait(10), "open proposal was not observed"
+        time.sleep(0.5)
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("UPDATE pending_changes SET status='expired', decided_at=now() WHERE proposal_id=%s", (proposal,))
 
-    def run_change():
-        try:
-            open_then_expire()
-        except Exception as error:
-            failures.append(error)
-
-    thread = _later(0, run_change)
+    thread = _later(0.3, open_then_expire)
     response = api["client"].get(f"/v1/web/trips/{trip_id}/events", headers=_h(me["user_key"]))
     thread.join()
-    assert not failures, failures
     changed = [data for name, data in _events(response.text) if name == "trip.changed"]
     assert len([c for c in changed if c["kinds"] == ["proposal"]]) >= 2, changed      # 생성 한 번 · 만료 한 번
 
