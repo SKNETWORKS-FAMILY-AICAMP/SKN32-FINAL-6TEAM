@@ -203,6 +203,11 @@ test("계획 짜 주기를 보내면 글·파일은 가지 않고, 곧바로 진
   // 읽을 계획 줄이 없는 화면이다 — 「올린 계획」 목록 대신 서버가 말하는 단계가 보인다
   await expect(page.getByText("올린 계획")).toHaveCount(0);
   await expect(page.getByRole("status").filter({ hasText: "여행으로 등록하는 중이에요" })).toBeVisible();
+  // `[2026-10-18 ST4F-612]` 단계 넷(요청 읽기 · 일정 짜기 · 조건 확인 · 여행 등록) — 마지막 단계가 현재, 앞 셋은 끝남
+  const bar = page.getByRole("progressbar", { name: "일정 짜기 진행" });
+  await expect(bar.locator("li")).toHaveText(["요청 읽기", "일정 짜기", "조건 확인", "여행 등록"]);
+  await expect(bar.locator('li[data-state="current"]')).toHaveText("여행 등록");
+  await expect(bar.locator('li[data-state="done"]')).toHaveCount(3);
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
 
   // 서버가 받은 것: 접수에는 「원하는 여행」 글만(쓴 글과 파일은 없다), 일정 짜기에는 고른 조건과 읽은 일정을 쓰지 않는다는 표시
@@ -215,6 +220,28 @@ test("계획 짜 주기를 보내면 글·파일은 가지 않고, 곧바로 진
   expect(plan.accept).toContain("text/event-stream");
   expect(plan.body).toEqual({ revision: 1, start_date: weekAhead(), days: 3, party_size: 2, keep_read_items: false, survey: { version: "2026-09-24.v1", pace: "moderate", on_disruption: "replace" } });   // 설문을 안 마쳤어도 계획 담기에서 정한 것은 간다
   expect(await server.received("POST", "/confirm")).toHaveLength(0);
+});
+
+test("계획 짜 주기 진행바 — 보내고 읽는 동안은 첫 단계 「요청 읽기」가 현재이고, 선은 첫 원에서 마지막 원까지만 그린다(ST4F-612)", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 4, planDelay: 1500 });
+  await start(page);
+  await openRegistration(page);
+  await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
+  await checkPlan(page);
+  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  const bar = page.getByRole("progressbar", { name: "일정 짜기 진행" });
+  await expect(bar.locator('li[data-state="current"]')).toHaveText("요청 읽기");
+  await expect(bar).toHaveAttribute("aria-valuenow", "0");
+  // 옛 화면은 계획 확인의 4칸 진행바에 3단계를 얹어, 선이 「여행 등록」 너머 빈 칸까지 그려졌다(사용자 휴대폰 화면 2026-10-18)
+  const ends = await bar.evaluate((element) => {
+    const track = element.querySelector("div")!.getBoundingClientRect();
+    const nodes = [...element.querySelectorAll("li > span:first-child")].map((node) => { const r = node.getBoundingClientRect(); return r.left + r.width / 2; });
+    return { left: track.left - nodes[0], right: track.right - nodes[nodes.length - 1] };
+  });
+  expect(Math.abs(ends.left)).toBeLessThan(2);
+  expect(Math.abs(ends.right)).toBeLessThan(2);
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 20_000 });
 });
 
 test("원하는 여행을 비워도 보낼 수 있다 — 빈 글로 접수하고 곧바로 일정을 짜게 한다", async ({ page, request }) => {
