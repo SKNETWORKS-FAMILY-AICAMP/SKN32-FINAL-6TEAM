@@ -10,6 +10,9 @@
   · 접근이 검증된(낙관 표시가 아닌) 경로 중 **거리가 짧은 것**을 고른다. 둘 다 낙관이면 짧은 쪽을 낙관 표시 그대로 돌려준다
     (플래너가 「보행 접근 미검증」으로 막는다). 둘 다 실패하면 두 이유를 묶어 RouterDown — 거리를 지어내지 않는다.
   · 고른 자료와 두 후보(거리 · 낙관 · 실패 이유)를 경로의 `walk_candidates` 에 남긴다 — 「조용한 대체」가 아니라 기록된 선택이다.
+  · ☆`[2026-10-19]` 두 자료 모두 낙관이면, 길에서 30 m 넘게 떨어진 끝점이 건물 안일 때 그 건물 출입구 → 도로 연결선 끝으로
+    옮겨 한 번 더 찾는다(도로명주소 건물 도형 · building_entrances). 검증된 경로가 나오면 건물 안 직선 + 연결선 길이를 더하고
+    `building_entrance` 에 근거를 남긴다. 그래도 낙관이면 원래 결과 그대로다.
   · 그 밖(서울 밖 끝점 · 자동차 · 자전거)은 기존 라우터 그대로.
   · 응답 경로에 어느 자료로 찾았는지(`source_id` · `basis`)를 싣는다 — BikeRouter 가 근거 칸에 옮긴다.
 """
@@ -74,8 +77,9 @@ class Boundary:
 class SeoulWalkRouter:
     """`GraphRouter`/`GraphHopperClient` 와 같은 `route((lng,lat),(lng,lat), profile)` 모양. 기존 라우터를 감싼다."""
 
-    def __init__(self, base, seoul, boundary):
+    def __init__(self, base, seoul, boundary, entrances=None):
         self.base, self.seoul, self.boundary = base, seoul, boundary
+        self.entrances = entrances                           # 건물 출입구 진입점(building_entrances) — 없으면 이 기능 전과 같다
         self.seoul_calls = 0
 
     # BikeRouter·플래너가 읽는 속성은 기존 라우터 것을 그대로 보인다(역 접근 길 재기 여부 등 동작을 바꾸지 않는다)
@@ -139,6 +143,10 @@ class SeoulWalkRouter:
             raise RouterDown("no_path: 서울시 도보 그래프·기존 보행망 모두 경로 없음 — "
                              + " / ".join(f"{c['source']}: {c.get('error')}" for c in cands))
         verified = [x for x in got if not x[0]["optimistic"]]
+        if not verified:
+            via_entrance = self._from_entrances(s, e, cands)
+            if via_entrance is not None:
+                return via_entrance
         pick_c, pick_doc = min(verified or got, key=lambda x: x[0]["distance_m"])
         if pick_c["source"] == "seoul_walk_network":
             pick_doc = self._tag(pick_doc, self.seoul.source_id, SEOUL_WALK_BASIS)
@@ -146,6 +154,75 @@ class SeoulWalkRouter:
             pick_doc = self._tag(pick_doc, getattr(self.base, "source_id", None), getattr(self.base, "basis", None))
         pick_doc["paths"][0]["walk_candidates"] = {"chosen": pick_c["source"], "rule": "검증된 경로 중 짧은 것",
                                                    "candidates": cands}
+        return pick_doc
+
+    def _entrance_for(self, pt):
+        """끝점이 보행 길에서 OPTIMISTIC_ACCESS_M 넘게 떨어지고 건물 안이면, 그 건물 출입구 중 (건물 안 직선 + 연결선 + 길까지)이
+        가장 짧고 연결선 끝이 길에서 OPTIMISTIC_ACCESS_M 안인 것. 아니면 None(그 끝점은 바꾸지 않는다)."""
+        from .car import RouterDown
+        from .graph_router import OPTIMISTIC_ACCESS_M
+        try:
+            if self.seoul.nearest_snap_m("foot", pt[0], pt[1]) <= OPTIMISTIC_ACCESS_M:
+                return None
+        except RouterDown:
+            pass
+        best = None
+        for c in self.entrances.candidates(pt[0], pt[1]):
+            try:
+                d = self.seoul.nearest_snap_m("foot", c["road_end"][0], c["road_end"][1])
+            except RouterDown:
+                continue
+            if d > OPTIMISTIC_ACCESS_M:
+                continue
+            total = c["inner_m"] + c["connect_m"] + d
+            if best is None or total < best[0]:
+                best = (total, c)
+        return best and best[1]
+
+    def _from_entrances(self, s, e, first_cands):
+        """☆`[2026-10-19]` 두 자료 모두 「낙관(길에서 멂)」일 때만 — 건물 안 끝점을 그 건물 출입구 연결선 끝으로 옮겨 다시 찾는다.
+
+        옮긴 끝점마다 건물 안 직선(장소 → 출입구)과 연결선 길이를 거리 · 시간에 더하고 `building_entrance` 에 근거를 남긴다.
+        다시 찾아도 검증된 경로가 없으면 None — 원래 결과(낙관 표시 그대로)를 돌려준다. 거리를 지어내지 않는다."""
+        if self.entrances is None or not self.entrances.available() or not hasattr(self.seoul, "nearest_snap_m"):
+            return None
+        from .graph_router import FOOT_MPS
+        ends = [self._entrance_for(s), self._entrance_for(e)]
+        if ends == [None, None]:
+            return None
+        if ends[0] and ends[1] and ends[0]["building"] == ends[1]["building"]:
+            # 두 끝이 같은 건물 안 — 건물 안 동선은 이 자료로 확인할 수 없다(출입구로 나갔다 들어오는 거리는 지어낸 값이다)
+            return None
+        s2 = ends[0]["road_end"] if ends[0] else s
+        e2 = ends[1]["road_end"] if ends[1] else e
+        seoul_doc, seoul_c = self._try(self.seoul, s2, e2, "foot", "seoul_walk_network")
+        base_doc, base_c = self._try(self.base, s2, e2, "foot", "base")
+        got = [(c, d) for c, d in ((seoul_c, seoul_doc), (base_c, base_doc)) if d is not None and not c["optimistic"]]
+        if not got:
+            return None
+        pick_c, pick_doc = min(got, key=lambda x: x[0]["distance_m"])
+        if pick_c["source"] == "seoul_walk_network":
+            pick_doc = self._tag(pick_doc, self.seoul.source_id, SEOUL_WALK_BASIS)
+        else:
+            pick_doc = self._tag(pick_doc, getattr(self.base, "source_id", None), getattr(self.base, "basis", None))
+        p = pick_doc["paths"][0]
+        extra = sum(c["inner_m"] + c["connect_m"] for c in ends if c)
+        p["distance"] = round(float(p["distance"]) + extra, 2)
+        if isinstance(p.get("time"), (int, float)):
+            p["time"] = p["time"] + int(round(extra / FOOT_MPS * 1000))
+        if isinstance(p.get("foot_timing"), dict):
+            p["foot_timing"] = dict(p["foot_timing"], seconds=p["foot_timing"]["seconds"] + extra / FOOT_MPS)
+
+        def ev(c):
+            return c and {"building": c["building"], "kind": c["kind"],
+                          "entrance": [round(c["entrance"][0], 6), round(c["entrance"][1], 6)],
+                          "road_end": [round(c["road_end"][0], 6), round(c["road_end"][1], 6)],
+                          "inner_straight_m": c["inner_m"], "connect_m": c["connect_m"]}
+        p["building_entrance"] = {"start": ev(ends[0]), "end": ev(ends[1]), "added_m": round(extra, 1),
+                                  "source_id": self.entrances.source_id,
+                                  "note": "건물 안 거리는 장소→출입구 직선(실제 동선은 더 길 수 있다)"}
+        p["walk_candidates"] = {"chosen": pick_c["source"], "rule": "검증된 경로 중 짧은 것 — 건물 출입구에서 다시 찾음",
+                                "candidates": [seoul_c, base_c], "first_try": first_cands}
         return pick_doc
 
     @staticmethod
@@ -182,4 +259,7 @@ def wrap_with_seoul_walk(base, graph_dir=None):
         logging.getLogger(__name__).warning("서울시 도보 그래프에 경계 파일이 없어 쓰지 않는다: %s", bpath)
         return base, f"서울시 도보 그래프 경계 파일 없음({d.name}/seoul_boundary.geojson)"
     from .graph_router import GraphRouter
-    return SeoulWalkRouter(base, GraphRouter.shared(d), Boundary.from_geojson(bpath)), None
+    from .building_entrances import BuildingEntrances, ENTRANCES_DIRNAME
+    # 건물 출입구 자료는 보행 그래프 옆 폴더 — 없으면 available() 이 False 라 이 기능 전과 같다
+    return SeoulWalkRouter(base, GraphRouter.shared(d), Boundary.from_geojson(bpath),
+                           entrances=BuildingEntrances.shared(d.parent / ENTRANCES_DIRNAME)), None

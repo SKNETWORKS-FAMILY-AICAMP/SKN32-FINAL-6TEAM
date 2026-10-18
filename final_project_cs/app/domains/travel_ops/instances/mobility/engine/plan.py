@@ -424,6 +424,8 @@ class Planner:
                         evidence["walk_candidates"] = r["walk_candidates"]
                     if r.get("indoor"):                             # 역·지하상가 안 통로를 지난 거리
                         evidence["indoor"] = r["indoor"]
+                    if r.get("building_entrance"):                  # 건물 안 장소를 출입구 → 도로 연결선 끝에서 이어 찾음
+                        evidence["building_entrance"] = r["building_entrance"]
                 routed_m = float(r["distance_m"])
                 used_m = routed_m
                 seconds = used_m / self.speed

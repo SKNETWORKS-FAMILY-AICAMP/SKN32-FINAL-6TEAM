@@ -410,6 +410,11 @@ class GraphRouter:
         near = sorted((sn for sn in found.values() if sn.dist <= best + tie), key=lambda sn: sn.dist)
         return near[:6]
 
+    def nearest_snap_m(self, profile, lng, lat):
+        """좌표에서 그 프로파일로 붙일 수 있는 가장 가까운 간선까지 거리(m). SNAP_MAX_M 안에 없으면 RouterDown."""
+        self._load()
+        return self._snap_many(profile, lng, lat)[0].dist
+
     # ── 길 찾기 ───────────────────────────────────────────────────────────────
     def route(self, s, e, profile="car", via=None, car_cost=None):
         """s, e = (lng, lat). GraphHopper `/route` 응답 모양으로 돌려준다. 못 찾으면 RouterDown.
