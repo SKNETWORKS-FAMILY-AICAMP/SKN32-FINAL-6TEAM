@@ -1795,6 +1795,7 @@ def test_d23_spoken_ends_labelled_ranges_and_next_day():
                  check_out_text="이튿날 퇴실") == ("2027-01-04", "2027-01-05")
     assert dates("12월 3일부터 2박 3일, 1박 10만 원", check_in="2026-12-03", check_out="2026-12-05", check_in_text="12월 3일",
                  check_out_text="2박") == ("2026-12-03", "2026-12-05"), "맞게 읽은 값은 그대로"
+    assert dates("마포구 성인 둘, 1월 16일 토욜~18일 월욜 방 있을까?", check_in_text="1월 16일") == ("2027-01-16", "2027-01-18"), "D23b 요일 낀 범위"
 
 
 def test_d23_hanok_village_is_a_place_and_below_excludes_the_price():
