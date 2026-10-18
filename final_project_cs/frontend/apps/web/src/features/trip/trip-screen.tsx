@@ -1,5 +1,7 @@
 "use client";
 
+import { mapStopsWithPlaceNames, stopDisplayName } from "./stop-display";
+
 import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bell, ChevronDown, ChevronsRight, OctagonAlert, Pencil } from "lucide-react";
@@ -403,7 +405,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   });
 
   // ── Picks on the map and in the list ──
-  const mapStops = trip.stops.filter((stop) => stop.date === mapDay);
+  const mapStops = mapStopsWithPlaceNames(trip.stops.filter((stop) => stop.date === mapDay));
   const legsOf = (date: string) => dayTimeline(trip, date, shapes).flatMap((entry) => entry.type === "leg" ? [entry.leg] : []);
   const bringUp = (id: string) => requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   /** A stop picked on the map or with 「지도에서 보기」 is marked and opened in the list without a notice. Pressed again on the map it is let go. */
@@ -601,7 +603,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       {riskCount > 0 && <span className={styles.riskBadge}>{t(`위험 ${riskCount}`, `${riskCount} risks`)}</span>}
       <Bell size={20} strokeWidth={2} aria-hidden="true" />{unread > 0 && <span className={styles.badge} aria-hidden="true">{unread > 99 ? "99+" : unread}</span>}</button>}>
     <main id="main-content" tabIndex={-1} className={`${pc.screen} ${styles.screen}`} data-stage="done" data-floating onKeyDown={onKey}>
-      {detailStop ? <DetailHeader title={detailStop.title} onBack={closeDetail} />
+      {detailStop ? <DetailHeader title={stopDisplayName(detailStop)} onBack={closeDetail} />
         : <TripTitle title={tripTitle} open={titleOpen} editing={titleEditing} onOpen={() => setTitleOpen(true)} onClose={closeTitle}
           onEdit={() => setTitleEditing(true)} onEditEnd={closeTitle}
           // ★The server cannot rename a registered trip yet: said, and the name stays.
@@ -616,7 +618,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
         </div>
         {/* 지도 아래 안내 줄(계획 확인 화면과 같다): 핀이 없는 일정 · 경로선을 읽지 못함. 수단 태그(지하철 · 버스 · 도보)는 띄우지 않는다(2026-10-07 사용자 결정). */}
         {(unlocated.length > 0 || routeShapes.isError) && <div className={pc.mapChips}>
-          {unlocated.length > 0 && <p className={pc.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((stop) => stop.title).join(", ")}</p>}
+          {unlocated.length > 0 && <p className={pc.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((stop) => stopDisplayName(stop)).join(", ")}</p>}
           {routeShapes.isError && <p className={pc.unlocated} role="status">{t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.")}</p>}
         </div>}
         <section ref={sheetBox} className={pc.sheet} aria-label={t("일정 목록", "Itinerary")}>
@@ -778,7 +780,7 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
     const proposal = proposals.find((entry) => entry.id === notice.proposalId);
     const stop = trip.stops.find((entry) => entry.id === proposal?.itemId);
     const order = stop ? trip.stops.filter((entry) => entry.date === stop.date).indexOf(stop) + 1 : 0;
-    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, sub,
+    return { badge: stop ? String(order) : undefined, text: stop ? stopDisplayName(stop) : kind, chip: { text: kind, tone: "warn" }, sub,
       note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined, action };
   }
   if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, action };
@@ -788,7 +790,7 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
 function legToast(leg: TripLeg, t: Translate, onList: () => void) {
   const times = leg.move ? [t(`${leg.move.departAt} 출발`, `Leave ${leg.move.departAt}`), leg.move.arriveAt && t(`${leg.move.arriveAt} 도착`, `arrive ${leg.move.arriveAt}`)].filter(Boolean).join(" → ") : null;
   return {
-    badge: "→", text: `${leg.from.title} → ${leg.to.title}`,
+    badge: "→", text: `${stopDisplayName(leg.from)} → ${stopDisplayName(leg.to)}`,
     sub: [legSummary(leg, t), times, ...(leg.shape ? rideLines(leg.shape, t) : [])].filter(Boolean).join("\n"),
     note: leg.slack !== null && leg.slack < 0 ? t(`다음 일정보다 ${Math.abs(leg.slack)}분 늦어요`, `${Math.abs(leg.slack)} min late for the next stop`) : undefined,
     action: { label: t("목록에서 보기", "Show in list"), run: onList }, ms: READ_MS,

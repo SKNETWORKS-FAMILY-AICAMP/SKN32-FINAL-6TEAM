@@ -347,7 +347,7 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
             closed = _line("closed", "unknown", "휴무 정보가 없어요")
         if facts.conditions:
             closed = _line("closed", "warn" if closed["result"] != "bad" else "bad",
-                           closed["text"] + " · 공휴일 조건이 있어요(" + "; ".join(facts.conditions[:1]) + ")")
+                           "휴무·운영 조건을 확인해 주세요 (" + "; ".join(facts.conditions) + ")")
     # 운영시간
     if today == "closed" or "closed_day" in codes:
         if act.get("closed") is True and act.get("closure_reason") == "live_status":

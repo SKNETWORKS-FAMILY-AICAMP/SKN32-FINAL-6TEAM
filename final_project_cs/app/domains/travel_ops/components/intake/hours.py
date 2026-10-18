@@ -83,10 +83,11 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
         content_id = content_id or row_source_id
     # ② 관광공사 운영시간 표 → ③ 다른 여행 장소 행
     if content_id and not (attributes.get("hours_week") or "hours" in attributes):
-        week = _catalog_week(conn, tenant_id, content_id)
-        if week:
-            attributes, source = {**attributes, "hours_week": week}, "tour_api"
-    out = HoursFacts(bool(attributes.get("hours_week") or "hours" in attributes), attributes, source)
+        catalog = _catalog_attributes(conn, tenant_id, content_id)
+        if catalog:
+            attributes, source = {**attributes, **catalog}, "tour_api"
+    out = HoursFacts(bool(attributes.get("hours_week") or "hours" in attributes), attributes, source,
+                     conditions=_stored_conditions(attributes))
     # ④ 요식 원장 — 식당만. ★`[2026-10-05]` 요식 원장이 식당의 정본이다. 그 여행의 장소 행(코어 장소)이 있으면 그 행으로(`dining_state`),
     #   아직 없으면(확인 화면 단계) 관광공사 번호 — 없으면 이름이 하나로 정해질 때 — 로 원장 가게를 바로 찾는다. 공용 장소 표에 올리지 않는다
     if kind == "dining":
@@ -125,21 +126,29 @@ def _place_row(conn, tenant_id: str, place_id: str) -> tuple[dict[str, Any], str
     return keep, (str(row[1]) if row[1] else None)
 
 
-def _catalog_week(conn, tenant_id: str, content_id: str) -> dict[str, Any] | None:
+def _stored_conditions(attributes: dict[str, Any]) -> list[str]:
+    read = attributes.get("hours_read")
+    conditions = read.get("conditions") if isinstance(read, dict) else None
+    if not isinstance(conditions, list):
+        return []
+    return list(dict.fromkeys(text.strip() for text in conditions if isinstance(text, str) and text.strip()))
+
+
+def _catalog_attributes(conn, tenant_id: str, content_id: str) -> dict[str, Any] | None:
     with conn.cursor() as cur:
-        cur.execute("SELECT hours_week FROM catalog_hours WHERE tenant_id = ANY(%s) AND source='tour_api' "
+        cur.execute("SELECT hours_week, hours_read FROM catalog_hours WHERE tenant_id = ANY(%s) AND source='tour_api' "
                     "AND content_id=%s AND hours_week IS NOT NULL LIMIT 1", (_tenants(tenant_id), content_id))
         row = cur.fetchone()
         if row and row[0]:
-            return dict(row[0])
+            return {"hours_week": dict(row[0]), "hours_read": row[1]}
         cur.execute(
-            "SELECT attributes->'hours_week' FROM places WHERE tenant_id=%s AND attributes ? 'hours_week' "
+            "SELECT attributes->'hours_week', attributes->'hours_read' FROM places WHERE tenant_id=%s AND attributes ? 'hours_week' "
             "AND attributes->'hours_week' <> '{}'::jsonb "
             "AND COALESCE(source_content_id, attributes->>'source_content_id') = %s "
             "AND (attributes->'hours_read'->>'read_at')::timestamptz > now() - make_interval(days => %s) "
             "ORDER BY attributes->'hours_read'->>'read_at' DESC LIMIT 1", (tenant_id, content_id, REUSE_DAYS))
         row = cur.fetchone()
-    return dict(row[0]) if row and row[0] else None
+    return {"hours_week": dict(row[0]), "hours_read": row[1]} if row and row[0] else None
 
 
 def _apply_ledger(conn, tenant_id: str, core_id: str, start: datetime, end: datetime | None,
