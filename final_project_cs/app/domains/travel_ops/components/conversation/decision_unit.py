@@ -44,7 +44,8 @@ UNSUPPORTED: dict[str, str] = {
 }
 FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move",
          "route_here", "nearby_dining", "nearby_activity", "dining_near", "schedule", "changeability",
-         "description", "duration", "price", "entry_booking", "outdoor", "food", "none")
+         "description", "duration", "price", "entry_booking", "outdoor", "weather", "food", "none")
+WEATHER_FACTS = ("weather", "outdoor")
 #: 고객의 **현재 위치**가 있어야 답할 수 있는 사실 — 요청에 위치가 없으면 서버가 「현재 위치를 알려 주세요」로 답한다(`trip_here`)
 LOCATION_FACTS = ("route_here", "nearby_dining", "nearby_activity")
 #: ★`[2026-10-15]` **어떤 곳 근처**의 먹을 곳 — 일정의 곳(target_item)이나 고객이 이름을 댄 곳(`place_text`)이 기준이다. 현재 위치가 필요 없다.
@@ -139,11 +140,14 @@ text는 해당 질문 부분의 원문이다. target_item은 답할 대상이며
 reference: 새 이름·별칭·날짜·종류를 명시하면 explicit, 지시어·생략으로 직전 대상을 이어 물으면 previous,
 화면 선택만 근거이면 selection, 전체 조회·잡담·대상 불명은 none. previous는 구조화된 직전 답변 대상을 사용한다.
 이동의 target_item은 도착지, origin_item은 출발지다. 출발지가 여러 일정에 해당하면 none으로 두고 되묻는다.
-day/schedule/changeability/outdoor는 query={day,period,kind,position}를 반드시 낸다. N일차는 dN이며 영어 day N도 같다.
+day/schedule/changeability는 query={day,period,kind,position}를 반드시 낸다.
+날씨·강수 예보는 weather이며 서버가 실제 기상 자료를 조회한다. 한 일정/직전 변경지의 날씨는 query=null, reads의 reference와 target_item으로 가리킨다.
+여러 일정의 날씨는 weather와 검증 가능한 query 범위를 낸다. 지금 날씨면 anchor_kind=now, 아니면 방문 예정 시각의 예보다. 날씨 수치는 general_requests나 social에 만들지 않는다.
+weather/outdoor는 단독 질문도 reads에 한 항목으로 적는다. outdoor도 한 일정은 query=null을 허용하고 날짜 범위는 query로 낸다. N일차는 dN이며 영어 day N도 같다.
 position은 조회 범위의 전체(all), 첫 일정(first), 마지막 일정(last)이다. 첫/마지막만 물으면 해당 한 항목만 답하도록 position을 보존한다.
 다른 사실의 query는 null이다. 하루 조회는 target_item=none이며 명시한 날을 버리지 않는다.
 추가 사실: description(장소 소개), duration(머무는 시간), price(이용 요금), entry_booking(방문 예약 필요 여부),
-food(식단·먹을거리 조언), outdoor(비·야외 여부). booking은 고객 본인의 예약 기록이며 entry_booking과 다르다.
+food(식단·먹을거리 조언), outdoor(등록된 장소의 실내·야외 분류), weather(실제 강수·기온 예보). booking은 고객 본인의 예약 기록이며 entry_booking과 다르다.
 한 문장에서 소개와 시각, 가격과 방문 예약을 함께 물으면 각각 reads 항목으로 보존한다.
 잡담이나 인사와 여행 질문이 섞여 있어도 여행 질문을 빼지 않는다. 바꾸지 말라는 요청은 실행 행동으로 해석하지 않는다.
 social에는 현재 문장의 인사·감정에만 짧게 응답한다. 의미 없는 오타 조각을 그대로 되풀이하지 않는다. 없으면 빈 문자열이다.
@@ -553,9 +557,9 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
             ignored["reads"] = len(raw["reads"])
         if query is not None and action != "change_time":       # 시각 옮기기는 한꺼번에 옮길 범위로 쓴다(아래)
             ignored["query"], query = query, None
-        if fact in (*QUERY_FACTS, "day", "outdoor"):
+        if fact in (*QUERY_FACTS, "day", *WEATHER_FACTS):
             ignored["fact"], fact = fact, "none"
-    if action in ("apply_change", "rollback", "redo", "report_closed") and query is not None and fact not in (*QUERY_FACTS, "day", "outdoor"):
+    if action in ("apply_change", "rollback", "redo", "report_closed") and query is not None and fact not in (*QUERY_FACTS, "day", *WEATHER_FACTS):
         # ★`[2026-10-15]` 일정 종류가 아닌 사실(운영시간 · 시각 …)을 가진 변경 요청에 붙은 조회 범위는 쓰지 않는 칸이다 — 버린다. 변경 자체는 그대로 대상 확인을 거친다.
         ignored["query"], query = query, None
     if action == "answer_fact" and query is None and fact in QUERY_FACTS and not raw.get("reads") and (raw.get("target_item") or "none") == "none":
@@ -563,7 +567,7 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         #   없으면 프롬프트 규칙대로 전체(all). 일정을 바꾸지 않는 읽기라 안전하다(재생 434건 중 6건이 이 이유로 해석 실패).
         query = default_query(raw, stops)
         raw = {**raw, "query_defaulted": query}
-    if action == "answer_fact" and query is not None and fact not in (*QUERY_FACTS, "day", "outdoor") and not raw.get("reads"):
+    if action == "answer_fact" and query is not None and fact not in (*QUERY_FACTS, "day", *WEATHER_FACTS) and not raw.get("reads"):
         # ★`[2026-10-14]` 한 일정을 묻는 사실(다음 · 시각 · 이동 · 영업시간 …)에 붙은 조회 범위는 쓰지 않는 칸이다 — 버린다.
         #   전에는 해석 전체를 버렸다(학습 E4B 재생 434건 중 30건). 일정을 바꾸지 않는 읽기라 안전하다
         ignored["query"], query = query, None
@@ -579,7 +583,7 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                 or read.get("origin_item") not in {*by_alias, "none"}
                 or read.get("reference") not in {"explicit", "previous", "selection", "none"}):
             raise DecisionFailed("읽기 질문의 대상·종류가 유효하지 않습니다")
-        scoped = read["fact"] in (*QUERY_FACTS, "day", "outdoor")
+        scoped = read["fact"] in (*QUERY_FACTS, "day") or (read["fact"] in WEATHER_FACTS and read.get("query") is not None)
         if (read.get("transport_mode", "any") not in {"any", "transit", "subway", "bus", "walk", "taxi"}
                 or not isinstance(read.get("origin_text", ""), str)):
             raise DecisionFailed("이동의 출발지 표현·수단이 유효하지 않습니다")
@@ -599,7 +603,7 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
             raise DecisionFailed("읽기 질문의 범위가 유효하지 않습니다")
         raw = {**raw, "dropped_reads": dropped_reads}
     top_time = clean_time(raw, [*query_days(stops), "none"], [*by_alias, "none"])
-    if (action == "answer_fact" and not reads and fact not in (*QUERY_FACTS, "day", "outdoor", *LOCATION_FACTS)
+    if (action == "answer_fact" and not reads and fact not in (*QUERY_FACTS, "day", *WEATHER_FACTS, *LOCATION_FACTS)
             and (top_time["anchor_kind"] != "none" or top_time["relation"] != "at")):
         # ★`[2026-10-14]` 읽기 항목 없이 맨 위 칸에만 날 · 시각 · 앞뒤를 적었으면 읽기 항목 하나로 옮긴다 — 그래야 서버가 일정표로 계산한다
         #   (`time_anchor.py`). 날 · 시각이 없는 맨 위 답은 그대로 둔다. 재생 107건 v2 에서 「다음 일정 뭐야?」 「30분 뒤에 뭐 해?」
@@ -608,6 +612,12 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
                   "transport_mode": "any", "reference": "explicit" if target != "none" else "none", "query": None,
                   "text": message or "", "advice": "", **{k: top_time[k] for k in ("anchor_kind", "anchor_item", "anchor_time", "at_time", "at_day", "relation", "steps")},
                   "from_top_level": True}]
+    if action == "answer_fact" and not reads and fact in WEATHER_FACTS:
+        reads = [{"fact": fact, "target_item": target, "origin_item": "none", "origin_text": "",
+                  "transport_mode": "any", "reference": ("previous" if top_time["anchor_kind"] == "previous"
+                                else "explicit" if target != "none" else "none"),
+                  "query": query, "text": message or "", "advice": "",
+                  **{k: top_time[k] for k in ("anchor_kind", "anchor_item", "anchor_time", "at_time", "at_day", "relation", "steps")}}]
     if reads:
         first_read = reads[0]
         fact, target, query = first_read["fact"], first_read["target_item"], first_read.get("query")
@@ -618,7 +628,7 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     # in-trip model item hints cannot turn that read into an invalid write request.
     duplicates = raw.get("choices")
     canonical_scope = (action == "answer_fact" and change_alias == "none"
-                       and fact in (*QUERY_FACTS, "day", "outdoor")
+                       and fact in (*QUERY_FACTS, "day", *WEATHER_FACTS)
                        and valid_query(query, stops) and query.get("position") in ("first", "last")
                        and isinstance(duplicates, list) and all(
                            isinstance(c, dict) and c.get("action") == "answer_fact" and c.get("fact") == fact
@@ -628,9 +638,10 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         target = "none"
         duplicates = [{**c, "target_item": "none"} for c in duplicates]
         for read in reads:
-            if read["fact"] in (*QUERY_FACTS, "day", "outdoor") and read.get("query") == query:
+            if read["fact"] in (*QUERY_FACTS, "day", *WEATHER_FACTS) and read.get("query") == query:
                 read.update(target_item="none", reference="none")
-    if fact in (*QUERY_FACTS, "day", "outdoor") and (reads or fact in QUERY_FACTS):
+    if ((fact in (*QUERY_FACTS, "day") and (reads or fact in QUERY_FACTS))
+            or (fact in WEATHER_FACTS and query is not None)):
         identical_reads = isinstance(duplicates, list) and all(
             isinstance(c, dict) and c.get("action") == "answer_fact" and c.get("fact") == fact
             and c.get("target_item") == "none" and c.get("target_change") == "none" for c in duplicates)

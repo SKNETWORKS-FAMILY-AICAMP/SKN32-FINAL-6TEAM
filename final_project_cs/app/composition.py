@@ -982,6 +982,12 @@ def build_domain_routers() -> list:
     from app.domains.travel_ops.entry.delegation_api import build_delegation_router
     from app.domains.travel_ops.modules.web_account.web_auth_api import build_auth_router
 
+    def weather_factory():
+        from app.core.settings import get_settings
+        from app.domains.travel_ops.ports.data_sources import build_travel_sources
+
+        return build_travel_sources(get_settings()).weather
+
     def place_factory():
         # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
         #   실제로 불린다. 키가 없으면 `None` 이고 그러면 그 경로가 아예 안 열린다.
@@ -1000,7 +1006,7 @@ def build_domain_routers() -> list:
         return build_policy_search()
 
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
-                              chat_factory=chat_factory, place_factory=place_factory,
+                              chat_factory=chat_factory, place_factory=place_factory, weather_factory=weather_factory,
                               kakao_factory=kakao_factory,
                               # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
                               policy_search_factory=policy_search_factory,

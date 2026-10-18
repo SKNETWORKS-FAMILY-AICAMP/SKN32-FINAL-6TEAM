@@ -259,6 +259,8 @@ class EditPlan:
     #: 부르는 쪽이 그 행을 쓰거나(공용 · 이 여행의 행일 때만) 등록과 같은 규칙으로 넣어 `place_id` 를 채운다
     places: dict[UUID, dict[str, Any]] = field(default_factory=dict)
     changed: list[str] = field(default_factory=list)
+    changed_ids: list[UUID] = field(default_factory=list)
+    added_ids: list[UUID] = field(default_factory=list)
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
     #: 이미 끝난 일정을 바꾸거나 빼거나 지난 때에 더한 것(제목) — 하나라도 있으면 쓰지 않는다
@@ -359,10 +361,12 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
         if origin is not None:
             replaced.add(origin.item_id)
             plan.changed.append(title if title == origin.title else f"{origin.title} → {title}")
+            plan.changed_ids.append(item.item_id)
             if _end(origin) <= now or _end(item) <= now:
                 plan.past.append(title)
         else:
             plan.added.append(title)
+            plan.added_ids.append(item.item_id)
             if _end(item) <= now:
                 plan.past.append(title)
         plan.items.append(item)

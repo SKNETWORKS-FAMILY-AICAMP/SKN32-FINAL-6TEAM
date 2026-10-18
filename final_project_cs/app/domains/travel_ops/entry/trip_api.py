@@ -746,6 +746,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
                       chat_factory: Callable[[], Any] | None = None,
                       place_factory: Callable[[], Any] | None = None,
+                      weather_factory: Callable[[], Any] | None = None,
                       kakao_factory: Callable[[], Any] | None = None,
                       policy_search_factory: Callable[[], Any] | None = None,
                       human_verify: Callable[..., dict[str, Any]] | None = None,
@@ -813,7 +814,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         edit_lookups=lambda: (_lazy("place", place_factory), _lazy("kakao", kakao_factory),
                                               _dining_lookup(_PlaceCtx())),
                         # ★`[2026-10-16 D-025]` 채팅 「넣기」를 계획서와 같은 이해 에이전트로 읽는다(같은 모델 클라이언트)
-                        reader=lambda: _lazy("chat", chat_factory))
+                        reader=lambda: _lazy("chat", chat_factory),
+                        weather=lambda **query: (source.forecast(**query)
+                                                 if (source := _lazy("weather", weather_factory)) is not None else None))
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:

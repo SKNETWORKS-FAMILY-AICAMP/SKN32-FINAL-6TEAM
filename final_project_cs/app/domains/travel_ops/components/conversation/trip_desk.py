@@ -31,7 +31,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from uuid import UUID
 
@@ -47,7 +47,8 @@ class TripDesk:
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
                  check: Callable[..., dict[str, Any]] | None = None, dining_ledger: bool = True,
                  catalog_pool: bool = False, edit_lookups: Callable[[], tuple[Any, Any, Any]] | None = None,
-                 reader: Callable[[], Any] | None = None) -> None:
+                 reader: Callable[[], Any] | None = None,
+                 weather: Callable[..., Any] | None = None) -> None:
         self.store, self._connect = store, connection_factory
         #: ★`[2026-10-16 D-025]` 채팅 수정 요청을 계획서와 같은 이해 에이전트로 읽는 모델 클라이언트(부를 때만 만든다). 없으면 지금처럼 해석 칸만 쓴다
         self._reader = reader or (lambda: None)
@@ -62,6 +63,7 @@ class TripDesk:
         # ★다른 안으로 바꿀 때 활동이면 **그 시각에 다시 점검**한다 — 계산한 뒤로 시간이
         #   흘렀다. 점검기가 없으면(재생 시험 일부) 점검 없이 바꾼다고 결과에 적는다.
         self._check = check
+        self.weather = weather
 
     def _read(self, trip_id: UUID):
         with self._connect() as conn:
@@ -345,8 +347,17 @@ class TripDesk:
         if not done["changed"]:
             return {"status": "already_applied", "text": "말씀하신 대로 이미 되어 있어 일정은 바꾸지 않았어요.", "reason": "unchanged"}
         with self._connect() as conn:
-            _, after = self.store.latest(conn, trip_id)
+            current, latest_items = self.store.latest(conn, trip_id)
+            after = (latest_items if current["version"] == done["version"] else
+                     self.store.items(conn, trip_id, done["version"]))
+        primary_ids = {op.item_id for op in ops if op.item_id is not None and op.kind != "remove"}
+        primary = [i for i in after if i.item_id in primary_ids or i.replaces_item_id in primary_ids
+                   or i.item_id in done["plan"].added_ids]
+        focus = ({"item_id": str(primary[0].item_id), "version": done["version"],
+                  "at": datetime.now(timezone.utc).isoformat(), "source": "saved_edit"}
+                 if len(primary) == 1 and current["version"] == done["version"] else None)
         return {"status": "adjusted", "version": done["version"], "edit": what,
+                **({"focus": focus} if focus else {}),
                 "text": chat_edit.done_text(ops, items_after=after, plan=done["plan"])}
 
     # ── 적용(버전 + 통지를 한 트랜잭션) ─────────────────────────

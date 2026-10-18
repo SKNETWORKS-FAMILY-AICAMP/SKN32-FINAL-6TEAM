@@ -560,8 +560,9 @@ def done_text(ops: list[EditOp], *, items_after: list[Any], plan: Any) -> str:
     from app.domains.travel_ops.components.conversation import trip_facts
 
     lines = []
-    for title in (plan.changed or []) + (plan.added or []):
-        row = next((i for i in items_after if i.title == title), None)
+    by_id = {i.item_id: i for i in items_after}
+    for item_id in dict.fromkeys([*plan.changed_ids, *plan.added_ids]):
+        row = by_id.get(item_id)
         if row is not None:
             lines.append(f"· {trip_facts._day_label(row.starts_at.astimezone(KST).date())} "
                          f"{_hm(row.starts_at)}{'~' + _hm(row.ends_at) if row.ends_at else ''} {row.title}")
