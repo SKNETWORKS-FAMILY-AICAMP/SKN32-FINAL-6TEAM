@@ -77,6 +77,19 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
     return result
 
 
+def legs_many(engine: Callable[..., Any] | None, jobs: list[tuple[Any, Any, Any, Any]]) -> list[tuple[Any, Any]]:
+    """여러 구간을 한 번에 — `engine` 은 `leg_planner(...)` 가 준 계산기, `jobs` = [(a, b, 도착 목표, 그전엔 안 됨)].
+    같은 순서의 [(결과, 이유)] 를 돌려준다. 같은 구간은 한 번만 센다. `[2026-10-19]`
+    ★계산기는 순수 파이썬 계산이라 스레드로 나눠도 빨라지지 않는다(실측) — 이 함수도 차례로 센다. 계산기가 이 기능을 모르는
+      옛 등록 · 시험 대역이면 하나씩 부른다(결과는 같다). `engine` 이 None 이면 빈 목록이 아니라 구간마다 (None, 이유)."""
+    if engine is None:
+        return [(None, {"code": "engine_off", "reason": "이동 계산기가 꺼져 있다"}) for _ in jobs]
+    many = getattr(engine, "many", None)
+    if callable(many):
+        return many(list(jobs))
+    return [engine(a, b, arrive, not_before) for a, b, arrive, not_before in jobs]
+
+
 def disruptions_from_events(events: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
     """우리 경로 사건 → 계산기가 아는 사고 조건. (옮긴 것, 못 옮긴 대상).
     ★미등록이면 `([], [])` — 「사고 정보가 없다」와 같다. 못 옮긴 것을 숨기는 게 아니다(옮길 것 자체가 없다)."""

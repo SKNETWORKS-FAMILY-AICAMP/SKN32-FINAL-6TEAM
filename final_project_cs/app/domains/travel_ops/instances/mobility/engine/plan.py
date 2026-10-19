@@ -144,6 +144,8 @@ MIX_EST_TOL_MIN = 3
 MIX_WALK_TOL_MIN = 1
 #: 버스 운행 시간 거르기 여유(분) — 구간 [도착 목표 − 추정 소요, 도착 목표] 가 그 노선 첫차~막차 ±이 값과 안 겹치면 판정하지 않는다
 MIX_WINDOW_TOL_MIN = 60
+#: 버스 구간에서 승차 정류장을 정하는 칸 — `_in_service` 가 후보에 기억한 승차 정보가 이 값들이 같을 때만 다시 쓰인다
+_BOARD_KEY_FIELDS = ("route", "from", "to", "route_id", "from_sequence", "to_sequence", "from_stop_id", "to_stop_id")
 #: 혼합 후보 마지막 성립 출발 찾기(_mix_latest) 판정 호출 상한(성능)
 MIX_LFD_STEPS = 10
 #: 빠른 길 첫 출발이 이 이유로 불가면 판정기 역산(느린 길)으로 넘긴다 — 출발을 당기면 될 수 있는 이유(GPT 87 #1)
@@ -842,33 +844,47 @@ class Planner:
             return True
         boards = getattr(mc, "bus_boards", None)
         if boards is None:
-            boards = []
-            for leg in getattr(mc, "legs", ()):
-                if leg_mode(leg) != "bus":
-                    continue
-                r = route_for_leg(bus, leg)
-                seg = segment_for_leg(bus, r, leg) if r is not None else None
-                boards.append((r, seg[0] if seg else None))
-            if not boards:
-                boards = [(bus.by_id.get(getattr(mc, "route_id", None)), getattr(mc, "board", None))]
+            # ☆`[2026-10-19 속도]` 버스→지하철 · 지하철→버스 후보는 승차 정보를 안 달고 와서, 부를 때마다 노선 정류장 전체를 훑어
+            #   승차 정류장을 다시 찾았다(구간 하나에 수만 번). 버스 구간 식별값이 같으면 같은 답이라 후보에 기억해 둔다.
+            bus_legs = tuple(leg for leg in getattr(mc, "legs", ()) if leg_mode(leg) == "bus")
+            key = tuple(tuple(leg.get(k) for k in _BOARD_KEY_FIELDS) for leg in bus_legs)
+            memo = getattr(mc, "_service_boards", None)
+            if memo is not None and memo[0] == key and memo[1] is bus:
+                boards = memo[2]
+            else:
+                boards = []
+                for leg in bus_legs:
+                    r = route_for_leg(bus, leg)
+                    seg = segment_for_leg(bus, r, leg) if r is not None else None
+                    boards.append((r, seg[0] if seg else None))
+                if not boards:
+                    boards = [(bus.by_id.get(getattr(mc, "route_id", None)), getattr(mc, "board", None))]
+                mc._service_boards = (key, bus, boards)
         offsets = getattr(mc, 'bus_board_offsets', None)
         total = getattr(mc, 'est_min', None)
+        ride = getattr(self, "_ride_est", None)
+        use_offsets = offsets is not None and len(offsets) == len(boards) and total is not None
         for index, (r, board) in enumerate(boards):
             if r is None or r.first_min is None or r.last_min is None:
                 continue                         # 운행창을 모르면 확정 탈락시키지 않는다
+            if ride is None or board is None:
+                continue
             rows = bus.stops.get(r.route_id, [])
-            ride = getattr(self, "_ride_est", None)
-            off = ride(r, rows[0], board) if ride is not None and rows and board is not None else None
+            if not rows:
+                continue
+            off = ride(r, rows[0], board)
             if off is None:
                 continue
             last_min = r.last_min + (MIN_DAY if r.last_min < r.first_min else 0)
             board_lo, board_hi = lo, hi
-            if offsets is not None and len(offsets) == len(boards) and total is not None:
+            if use_offsets:
                 board_lo = lo + offsets[index]
                 board_hi = hi - (total - offsets[index])
-            if not any(not (r.first_min + off + day - MIX_WINDOW_TOL_MIN > board_hi
-                            or last_min + off + day + MIX_WINDOW_TOL_MIN < board_lo)
-                       for day in (-MIN_DAY, 0, MIN_DAY)):
+            first_off, last_off = r.first_min + off, last_min + off
+            for day in (-MIN_DAY, 0, MIN_DAY):
+                if not (first_off + day - MIX_WINDOW_TOL_MIN > board_hi or last_off + day + MIX_WINDOW_TOL_MIN < board_lo):
+                    break
+            else:
                 return False
         return True
 
