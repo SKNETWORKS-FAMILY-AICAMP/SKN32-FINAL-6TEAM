@@ -15,50 +15,56 @@ import styles from "./intro.module.css";
 
 const copy: Record<Language, Record<string, string>> = {
   en: {
-    title: "guguroute · Your next journey",
-    intro: "From plans to memories,\ntriPilot by your side.",
-    introDescription: "A travel partner that understands your style\nand helps you review your plans.\nMake room for the joy of the journey.",
-    badge: "Your style. Your pace. Your journey.",
-    how: "A trip that feels like you.\nOne step at a time.",
+    title: "GuguRoute · Your next journey",
+    intro: "Let’s check your\nSeoul trip plan.",
+    introDescription: "Upload your plan and we check places, opening hours and travel between them.\nSigned in, we keep watching it during the trip.",
+    badge: "Seoul · up to 7 days · up to 4 people",
+    how: "How to use it",
     step1: "Tell us what you love", detail1: "Your favorite experiences and travel companions. Set the starting point for a trip that fits you.",
     step2: "Bring your travel plans", detail2: "Add the places and plans you have in mind. See each day come together at a glance.",
     step3: "Review it together", detail3: "We look over travel times and visiting requirements. See what changed and what needs a look.",
     step4: "Refine as you go", detail4: "Browse your itinerary and visit order, and ask about your plans in chat.",
-    guide: "How to use guguroute", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
+    guide: "How to use GuguRoute", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
     start: "Your next journey\nstarts right here.",
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
-    taste: "Your plan", trip: "Your trip", cta: "Start my itinerary",
+    taste: "Add plan", trip: "Start trip", cta: "Start my itinerary",
     actionNote: "Review the terms, then add your plan.",
     actionNoteDone: "You have agreed to the terms. The preference questions are in the menu.",
     scrollHint: "Scroll down to explore", skip: "Skip intro", next: "Next screen",
-    pages: "guguroute introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
+    pages: "GuguRoute introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
     label0: "Introduction", label1: "How it works", label2: "Start your itinerary",
+    howEyebrow: "HOW IT WORKS", ticketLabel: "YOUR NEXT JOURNEY", ticketPartner: "TRAVEL PARTNER",
   },
   ko: {
-    title: "guguroute · 당신다운 여행의 시작",
-    intro: "계획부터 여행까지,\n당신 곁의 guguroute.",
-    introDescription: "취향을 이해하고, 일정을 함께 살펴보는\n나만의 여행 파트너.\n당신은 여행의 설렘에만 집중하세요.",
-    badge: "내 취향에 맞게, 내 일정에 여유롭게.",
-    how: "당신다운 여행,\n이렇게 시작해요.",
+    title: "구구루트 · 당신다운 여행의 시작",
+    intro: "서울 여행 일정을\n함께 확인해요.",
+    introDescription: "준비한 일정을 올리면 장소 · 운영시간 · 이동을 확인해요.\n로그인하면 여행 중에도 일정을 지켜봐요.",
+    badge: "서울 · 최대 7일 · 4명까지",
+    how: "이렇게 사용할 수 있어요",
     step1: "나의 여행 취향 알려주기", detail1: "좋아하는 테마부터 함께 가는 사람까지. 나에게 맞는 여행의 기준을 정해요.",
     step2: "준비한 일정 가져오기", detail2: "가고 싶은 장소와 여행 계획을 등록하면 하루의 흐름을 한눈에 정리해요.",
     step3: "함께 점검하기", detail3: "이동 시간과 방문 조건을 살펴보고, 바뀐 일정과 확인할 일정을 보여줘요.",
     step4: "대화하며 다듬기", detail4: "일정과 방문 순서를 한눈에 보고, 궁금한 점은 채팅으로 물어보세요.",
-    guide: "guguroute 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
+    guide: "구구루트 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
     start: "다음 여행의 첫걸음,\n여기서 시작해요.",
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
-    taste: "나의 계획", trip: "나의 여행", cta: "내 일정 시작하기",
+    taste: "계획 담기", trip: "여행 시작", cta: "내 일정 시작하기",
     actionNote: "약관 확인부터 함께할게요.",
     actionNoteDone: "약관에 동의했어요. 취향 설문은 메뉴에서 할 수 있어요.",
-    scrollHint: "아래로 스크롤하며 만나보세요", skip: "소개 건너뛰기", next: "다음 화면",
-    pages: "guguroute 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
+    scrollHint: "아래로 넘겨 보세요", skip: "소개 건너뛰기", next: "다음 화면",
+    pages: "구구루트 서비스 소개. 아래로 넘기면 다음 화면으로 가요.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
+    howEyebrow: "이용 방법", ticketLabel: "다음 여행", ticketPartner: "구구루트",
   },
 };
 
 /** Optimized background for all three pages; CSS cannot use next/image directly. */
 const { props: { srcSet } } = getImageProps({ alt: "", src: "/images/tripilot-home-03-journey.png", width: 1672, height: 941, quality: 75 });
-const background = `image-set(${(srcSet ?? "").split(", ").map((entry) => { const [url, density] = entry.split(" "); return `url("${url}") ${density}`; }).join(", ")})`;
+const imageSet = (set: string | undefined) => `image-set(${(set ?? "").split(", ").map((entry) => { const [url, density] = entry.split(" "); return `url("${url}") ${density}`; }).join(", ")})`;
+const background = imageSet(srcSet);
+/** `[2026-10-17 사용자 결정]` The dark theme's version of the same picture: night, lights along the river, the route lit like lanterns. */
+const { props: { srcSet: nightSrcSet } } = getImageProps({ alt: "", src: "/images/tripilot-home-03-journey-night.png", width: 1672, height: 941, quality: 75 });
+const nightBackground = imageSet(nightSrcSet);
 
 /** How-it-works slides; each has a screen capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
 const guide = ["1-preferences", "2-plan", "3-results", "4-chat"] as const;
@@ -223,7 +229,7 @@ export function Intro() {
 
   return <DeviceFrame onBrand={backToStart} headerExtra={<LanguageButton />}>
     <div className={styles.progress} style={{ "--fx-p": progress.toFixed(3) } as CSSProperties} aria-hidden="true" />
-    <main ref={pages} id="main-content" className={styles.pages} tabIndex={0} aria-label={text.pages} onKeyDown={keys} style={{ "--intro-bg": background } as CSSProperties}>
+    <main ref={pages} id="main-content" className={styles.pages} tabIndex={0} aria-label={text.pages} onKeyDown={keys} style={{ "--intro-bg": background, "--intro-bg-night": nightBackground } as CSSProperties}>
       <section className={`${page(0)} ${styles.hero}`} aria-labelledby="intro-title">
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow} data-fx="up" style={delay(.05)}>YOUR TRAVEL, OUR JOURNEY</p>
@@ -235,7 +241,7 @@ export function Intro() {
         {controls(1)}
       </section>
       <section className={`${page(1)} ${styles.how}`} aria-labelledby="how-title">
-        <p className={styles.eyebrow} data-fx="up" style={delay(.05)}>HOW IT WORKS</p>
+        <p className={styles.eyebrow} data-fx="up" style={delay(.05)}>{text.howEyebrow}</p>
         <h2 id="how-title" className={styles.title}><Reveal key={language} text={text.how} mode="word" /></h2>
         <div className={styles.guide} role="region" aria-roledescription="carousel" aria-label={text.guide} data-fx="left" style={delay(.45)}>
           <div ref={slides} className={`${styles.slides} ${dragging ? styles.dragging : ""}`} onScroll={trackSlide} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>{guide.map((shot, index) => (
@@ -260,9 +266,9 @@ export function Intro() {
         <h2 id="start-title" className={styles.title}><Reveal key={language} text={text.start} mode="word" /></h2>
         <p className={styles.description} data-fx="up" style={delay(.5)}><Lines text={text.startDescription} /></p>
         <div className={styles.ticket} data-fx="scale" style={delay(.45)}>
-          <span className={styles.ticketLabel}>YOUR NEXT JOURNEY</span>
+          <span className={styles.ticketLabel}>{text.ticketLabel}</span>
           <div className={styles.route}><strong>{text.taste}</strong><span className={styles.routeLine} aria-hidden="true">····· →</span><strong>{text.trip}</strong></div>
-          <div className={styles.ticketBottom}><span>TRAVEL PARTNER</span><span>guguroute</span></div>
+          <div className={styles.ticketBottom}><span>{text.ticketPartner}</span><span>GuguRoute</span></div>
         </div>
         <div className={styles.actionArea} data-fx="up" style={delay(.95)}>
           <button type="button" className={styles.primary} onClick={() => router.push(routes.newTrip)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>

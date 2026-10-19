@@ -203,6 +203,9 @@ def empty_state(text: str, *, hint: str = "") -> str:
 
 
 # ── 셸 ───────────────────────────────────────────────────────────────────────
+#: `[2026-10-17 ST4F-610]` 구구루트 아이콘 — 작은 크기용 굵은 판(웹 `frontend/apps/web/public/images/guguroute-mark.svg` 와 같은 그림).
+BRAND_ICON = "<svg class='brand__icon' viewBox='4 4 92 92' width='22' height='22' aria-hidden='true'><rect x='4' y='4' width='92' height='92' rx='21' fill='#2E6047'/><g fill='none' stroke='#F4F3EA' stroke-width='4.2' stroke-linejoin='miter' stroke-miterlimit='6'><path d='M63.8 39.6 C63.4 35.4 61.8 33 60.6 31.4 L39.3 20.8 C39 24.5 39.8 28 42.6 31 C42.6 36.5 46 40.4 50 41.7 L53.8 42.7 C52.8 45.6 51 47.6 48.4 49.2 C45.5 50.9 41.9 51 39.8 53 C38.4 54.3 37.9 56 38.1 57.6 C38.5 61.2 41.5 63.4 45.5 63.5 L58.2 63.7 A6.275 6.275 0 0 1 58.2 76.25 L29.9 76.25'/><path d='M60.6 31.4 C62.5 29.8 63.4 27.8 64.6 26 C66 23.6 67.6 22 70 21.9 C72.7 21.8 74.5 23.4 75.3 25.4 L77.9 28.3 L74 29.4 C72.6 30.6 72.4 32.6 72.4 35.5 C72.4 44.5 65 50.5 53.8 50.6'/><circle cx='26.7' cy='76.25' r='3.2'/></g><path fill='#F4F3EA' fill-rule='evenodd' d='M26.7 74.2 L22.09 66.37 A5.35 5.35 0 1 1 31.31 66.37 Z M26.7 61 A2.7 2.7 0 1 0 26.7 66.4 A2.7 2.7 0 1 0 26.7 61 Z'/><circle cx='70.5' cy='26.3' r='1.6' fill='#F4F3EA'/></svg>"
+
 NAV = (
     ("/ui/cases", "Cases"),
     ("/ui/approvals", "Approvals"),
@@ -255,7 +258,7 @@ body{margin:0;background:var(--bg);color:var(--text);
   border-bottom:1px solid var(--line);margin-bottom:1.75rem}
 .topbar__in{max-width:1180px;margin:0 auto;padding:.7rem 1.25rem;display:flex;
   align-items:center;gap:1.25rem;flex-wrap:wrap}
-.brand{font-weight:700;letter-spacing:-.02em;margin-right:.25rem}
+.brand{display:inline-flex;align-items:center;gap:.45rem;font-weight:700;letter-spacing:-.02em;margin-right:.25rem}
 .brand span{color:var(--text-dim);font-weight:500;font-size:.82rem;margin-left:.5rem}
 nav{display:flex;gap:.25rem;flex-wrap:wrap}
 nav a{color:var(--text-dim);text-decoration:none;padding:.35rem .7rem;border-radius:99px;
@@ -457,9 +460,9 @@ def page(title: str, body: str, *, current: str = "", lede: str = "",
     return (
         "<!doctype html><html lang='ko'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        f"<title>{esc(title)} · guguroute</title><style>{CSS}</style></head><body>"
+        f"<title>{esc(title)} · 구구루트</title><style>{CSS}</style></head><body>"
         f"<div class='topbar'><div class='topbar__in'>"
-        f"<span class='brand'>guguroute<span>운영 콘솔</span></span>"
+        f"<span class='brand'>{BRAND_ICON}구구루트<span>운영 콘솔</span></span>"
         "<input type='checkbox' id='menu-toggle' class='menu-toggle' aria-label='메뉴 열기·닫기'>"
         "<label for='menu-toggle' class='menu-btn' aria-hidden='true' title='메뉴'>☰</label>"
         f"<div class='menu'><nav>{links}</nav>{_who(who)}</div></div></div>"

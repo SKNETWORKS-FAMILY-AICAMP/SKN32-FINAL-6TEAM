@@ -112,7 +112,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const search = useSearchParams();
   const { language, skipAnimation } = useSettings();
   const queryClient = useQueryClient();
-  useDocumentTitle(`${t("나의 여행", "Your trip")} · guguroute`);
+  useDocumentTitle(`${t("나의 여행", "Your trip")} · ${t("구구루트", "GuguRoute")}`);
   // The server's "this trip changed" bell keeps the plan, notices and choices current while the trip is open.
   useTripEvents(trip.id);
   const guardian = useTripGuardian(trip.id);
@@ -677,7 +677,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                   {trip.stops.length === 0 && <p className={pc.empty}>{t("등록한 일정이 없어요.", "There are no stops.")}</p>}
                   {/* `[2026-10-14 사용자 결정 — ST4F-493]` 예약 안내는 가운데 한 줄로 늘 보이고, 그 아래 출처는 계획 확인 화면처럼 접힌 한 줄(누르면 장소 정보 출처 · 경로선 출처 · 경로 안내). */}
                   {trip.stops.length > 0 && <>
-                    <p className={styles.bookingNote}>{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}</p>
+                    <p className={styles.bookingNote}>{t("예약 표시는 입력하신 내용 기준이에요.", "Booking notes reflect what you entered.")}</p>
                     <details className={pc.credit}>
                       <summary aria-label={t("출처와 경로 안내 펼치기", "Show sources and route notes")}><span>{t("ⓒ한국관광공사", "ⓒKorea Tourism Organization")}{drawn.length > 0 && routeDetail.routes?.attribution && ` · ${routeDetail.routes.attribution.includes("OpenStreetMap") ? "© OpenStreetMap" : routeDetail.routes.attribution}`}</span><ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" /></summary>
                       <div className={pc.creditDetails}><p>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>

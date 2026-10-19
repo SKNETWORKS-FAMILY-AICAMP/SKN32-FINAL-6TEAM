@@ -17,7 +17,7 @@ test("scrollend 이벤트가 없는 브라우저에서도 소개 카드 드래�
   await start(page);
   await page.goto("/");
   await page.getByRole("button", { name: "다음 화면", exact: true }).first().click();
-  const guide = page.getByRole("region", { name: "guguroute 이용 방법", exact: true });
+  const guide = page.getByRole("region", { name: "구구루트 이용 방법", exact: true });
   const track = guide.getByRole("group", { name: "1 / 4", exact: true }).locator("..");
   await expect.poll(() => page.locator("main").evaluate(main => Math.abs(main.scrollTop - (main.children[1] as HTMLElement).offsetTop))).toBeLessThan(2);
   const box = (await track.boundingBox())!;

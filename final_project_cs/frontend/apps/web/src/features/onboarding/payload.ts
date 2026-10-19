@@ -28,20 +28,20 @@ export type TripSurvey = z.infer<typeof tripSurveySchema>;
 
 /**
  * Build the survey from the answers. A skipped question sends no field, so the backend
- * applies its own default (on_disruption → replace; pace → no density target; the rest empty).
+ * applies its own default (pace → no density target; the rest empty).
  * `preferred_mobility` is no longer asked, so it is not sent; the backend field stays as it is.
+ * `[2026-10-19]` `theme` and `on_disruption` are no longer asked either. `on_disruption` comes from the Course Keeper card
+ * (`guardian/criteria-store.ts` `withCriteria`); both fields stay in the schema because the server still takes them.
  */
 export function toSurvey(a: Answers): TripSurvey {
   const has = (id: QuestionId) => isAnswered(id, a);
   return tripSurveySchema.parse({
     version: SURVEY_VERSION,
-    ...(has("theme") && { theme: a.theme }),
     // `party` is a free string on the backend: `other` sends what was typed, trimmed.
     ...(has("party") && { party: a.party === "other" ? a.partyOther.trim() : a.party }),
     // Array order is the ranking. Areas not picked (and their details) are left out.
     ...(has("priority") && { priority: a.priority, priority_details: Object.fromEntries(a.priority.map((area) => [area, a.details[area]])) }),
     ...(has("indoor") && { indoor_outdoor: { dining: a.indoorDining, activity: a.indoorActivity } }),
-    ...(has("onDisruption") && { on_disruption: a.onDisruption }),
     ...(has("pace") && { pace: a.pace }),
   });
 }

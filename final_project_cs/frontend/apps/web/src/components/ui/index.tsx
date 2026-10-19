@@ -50,7 +50,7 @@ export function PageHeading({ eyebrow, title, description, action }: { eyebrow?:
 
 export function RegistrationSteps({ current }: { current: 0 | 1 | 2 }) {
   const t = useT();
-  const labels = [t("계획 담기", "Your plan"), t("함께 확인", "Check together"), t("여행 시작", "Your journey")];
+  const labels = [t("계획 담기", "Add plan"), t("계획 확인", "Check plan"), t("여행 시작", "Start trip")];
   return <ol className={styles.steps} aria-label={t("여행 등록 단계", "Trip steps")}>{labels.map((label, index) => (
     <li key={label} aria-current={index === current ? "step" : undefined}>
       <span aria-hidden="true">{index < current ? <Check size={13} /> : `0${index + 1}`}</span>{label}

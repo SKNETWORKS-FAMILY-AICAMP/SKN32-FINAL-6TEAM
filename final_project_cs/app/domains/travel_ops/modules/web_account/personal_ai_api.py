@@ -213,7 +213,7 @@ def build_personal_ai_router(provider_factory=configured_provider):
         options = "<option value=''>전체 상태</option>" + "".join(
             f"<option value='{key}'{' selected' if key == status else ''}>{value}</option>" for key, value in states.items())
         empty = ("검색 조건에 맞는 연결이 없습니다. <a href='/oauth/connections'>검색 조건 지우기</a>" if rows else
-                 "아직 연결한 개인 AI가 없습니다. 개인 AI에서 guguroute 연결을 시작해 주세요.")
+                 "아직 연결한 개인 AI가 없습니다. 개인 AI에서 구구루트 연결을 시작해 주세요.")
         nav = []
         for label, target, available in (("이전 페이지", page-1, page > 1), ("다음 페이지", page+1, page*20 < len(filtered))):
             href = "/oauth/connections?" + urlencode({"q": query, "status": status, "page": target})

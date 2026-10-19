@@ -38,7 +38,7 @@ KST = timezone(timedelta(hours=9))
 ENC_VERSION = "v1"
 #: `/start` 링크 인자 — 텔레그램 규칙상 64자 이하 · `A-Z a-z 0-9 _ -` 만(공식 문서 확인). `token_urlsafe(32)` = 43자
 _CODE = re.compile(r"^[A-Za-z0-9_-]{20,64}$")
-TEST_TEXT = "guguroute 알림 시험이에요 — 이 메시지가 보이면 연결이 잘 된 거예요."
+TEST_TEXT = "구구루트 알림 시험이에요 — 이 메시지가 보이면 연결이 잘 된 거예요."
 #: 봇이 하는 말 — 고정 문장뿐이다(모델을 부르지 않는다)
 SAY_CONNECTED = "연결됐어요. 이 채팅은 알림 전용이에요 — 일정 수정과 질문은 웹이나 여행계획서 링크에서 해 주세요."
 SAY_EXPIRED = "연결 시간이 지났거나 이미 쓴 링크예요. 웹 마이페이지에서 다시 눌러 주세요."

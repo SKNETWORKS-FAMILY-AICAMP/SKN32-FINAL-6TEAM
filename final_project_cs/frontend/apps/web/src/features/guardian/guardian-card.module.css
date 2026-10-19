@@ -28,7 +28,6 @@
 .title { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; word-break: keep-all; }
 .title:focus, .title:focus-visible { outline: none; }
 .reco { display: block; margin-bottom: var(--space-1); font-size: var(--text-meta); font-weight: 600; line-height: 1.4; letter-spacing: 0; color: var(--color-primary); }
-.en { margin: var(--space-1) 0 0; font-size: var(--text-secondary); line-height: 1.4; color: var(--color-text-secondary); }
 .close { position: relative; align-self: start; margin-top: calc(var(--space-3) * -1); display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none; color: var(--color-text-secondary); cursor: pointer; }
 .close:hover { background: var(--color-subtle); }
 .close svg { display: block; width: 24px; height: 24px; }

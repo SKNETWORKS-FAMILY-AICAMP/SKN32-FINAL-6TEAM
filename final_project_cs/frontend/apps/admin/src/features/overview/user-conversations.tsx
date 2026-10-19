@@ -38,10 +38,10 @@ function MessageWindow({ userId, conversation, live, clock }: { userId: string; 
       <p className={styles.range} role="status">{result.messages.length ? `이 구간: ${userTime(result.messages[0].at)} ~ ${userTime(result.messages.at(-1)!.at)}` : '이 구간에 저장된 메시지가 없습니다.'}</p>
       <ol className={styles.messages} start={(result.page - 1) * result.pageSize + 1} aria-label="시간순 대화">
         {result.messages.map((message, index) => <li key={message.id} className={message.role === 'customer' ? styles.customer : styles.assistant}>
-          <div className={styles.messageMeta}><strong>{message.role === 'customer' ? '사용자' : 'guguroute'}</strong><time dateTime={message.at}>{userTime(message.at)}</time><span>#{(result.page - 1) * result.pageSize + index + 1}</span></div>
+          <div className={styles.messageMeta}><strong>{message.role === 'customer' ? '사용자' : '구구루트'}</strong><time dateTime={message.at}>{userTime(message.at)}</time><span>#{(result.page - 1) * result.pageSize + index + 1}</span></div>
           {message.text.length > 600 || message.text.split('\n').length > 10 ? <details className={styles.longMessage}>
             <summary><span className={styles.preview}>{message.text.slice(0, 240)}…</span><span className={styles.expand}>전문 펼치기 / 접기 · {message.text.length.toLocaleString('ko-KR')}자</span></summary>
-            <div className={styles.fullText} tabIndex={0} role="region" aria-label={`${message.role === 'customer' ? '사용자' : 'guguroute'} 메시지 전문`}>{message.text}</div>
+            <div className={styles.fullText} tabIndex={0} role="region" aria-label={`${message.role === 'customer' ? '사용자' : '구구루트'} 메시지 전문`}>{message.text}</div>
           </details> : <p className={styles.messageText}>{message.text}</p>}
         </li>)}
       </ol>

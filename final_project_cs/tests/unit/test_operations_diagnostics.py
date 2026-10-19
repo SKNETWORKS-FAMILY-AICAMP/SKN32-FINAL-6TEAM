@@ -127,7 +127,7 @@ def test_unknown_inquiry_is_not_created_by_reply(monkeypatch, kind):
 def test_customer_sees_operator_reply_without_operator_identity():
     from app.domains.travel_ops.modules.web_account.admin_customer_api import _public
     answered = _public({"id": "i1", "title": "t", "body": "b", "language": "ko", "receivedAt": "x", "replies": [{"body": "안내", "operator": "qa", "at": "y"}]})
-    assert answered["status"] == "답변 완료" and answered["replies"] == [{"body": "안내", "operator": "guguroute 운영팀", "at": "y"}]
+    assert answered["status"] == "답변 완료" and answered["replies"] == [{"body": "안내", "operator": "구구루트 운영팀", "at": "y"}]
     assert _public({"id": "i1", "title": "t", "body": "b", "language": "ko", "receivedAt": "x", "replies": []})["status"] == "기록 완료"
 
 

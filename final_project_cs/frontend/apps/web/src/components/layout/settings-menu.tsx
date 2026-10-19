@@ -99,7 +99,7 @@ function MenuBoard({ onClose, onHide }: { onClose: () => void; onHide: () => voi
 
   // `[2026-10-13 정한 것 ③]` 줄의 보조 문구: 여행 개수 · 취향 요약(이 브라우저 값) · 문의함 · 설정은 고정 설명 — 메뉴를 열 때 서버 읽기를 늘리지 않는다.
   const preferences = !ready ? t("불러오고 있어요", "Loading")
-    : complete ? questions.slice(0, 3).map((question) => answerLines(question.id, answers, t)[0]).join(" · ")
+    : complete ? questions.slice(0, 2).map((question) => answerLines(question.id, answers, t)[0]).join(" · ")
       : t("아직 설정하지 않았어요", "Not set yet");
   const row = (title: string, note: ReactNode) => <><span className={styles.rowText}><strong>{title}</strong><small>{note}</small></span><ChevronRight size={18} aria-hidden="true" /></>;
   return <>

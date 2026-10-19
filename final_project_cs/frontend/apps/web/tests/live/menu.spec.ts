@@ -88,7 +88,7 @@ test("설정 화면의 언어 카드를 펼쳐 고르면 바로 적용·접히�
   await expect(toggle).toContainText("English");
   await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
   await page.goto("/");
-  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await expect(page.locator("#intro-title")).toContainText("Let’s check your");
 
   // Back to Korean on the settings screen — the only place the card lives.
   await page.goto("/mypage");
@@ -110,50 +110,67 @@ test("플로팅 버튼 스위치는 없다 — 예전에 켜 둔 설정이 남�
   await expect(page.getByRole("switch", { name: "플로팅 버튼 사용" })).toHaveCount(0);
 });
 
-test("테마 카드에서 화이트를 고르면 모든 화면에 바로 적용되고, 새로고침 뒤에는 첫 화면을 그리기 전에 적용된다", async ({ page }) => {
-  // When the saved theme lands on <html>: before <body> exists means before the first paint (no green flash).
+test("테마는 기본으로 기기 설정을 따르고, 테마 카드에서 다크를 고르면 모든 화면에 바로 적용되며 새로고침 뒤에는 첫 화면을 그리기 전에 적용된다", async ({ page }) => {
+  // `[2026-10-17 ST4F-610]` 다크가 화이트 자리를 바꿨다. When the theme lands on <html>: before <body> exists means before the first paint (no green flash).
   await page.addInitScript(() => {
     new MutationObserver(() => {
-      if (document.documentElement?.dataset.theme === "neutral" && !("themeBeforeBody" in window)) Object.assign(window, { themeBeforeBody: document.body === null });
+      if (document.documentElement?.dataset.theme === "dark" && !("themeBeforeBody" in window)) Object.assign(window, { themeBeforeBody: document.body === null });
     }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-theme"] });
   });
   await page.goto("/trips");
   const html = page.locator("html");
   const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  await expect(html).toHaveAttribute("data-theme", "green");
+  await expect(html).toHaveAttribute("data-theme", "green");                       // 브라우저 시험의 기기는 밝은 설정이다
   expect(await background()).toBe("rgb(243, 245, 243)");
 
   await page.goto("/mypage");                                                      // `[2026-10-13]` 테마 카드는 설정 화면에 있다(전에는 메뉴)
   await expect(html).toHaveAttribute("data-theme", "green");
   const card = page.getByRole("group", { name: /THEME/ });
+  const device = card.getByRole("button", { name: "기기 설정 따르기", exact: true });
   const green = card.getByRole("button", { name: "그린", exact: true });
-  const white = card.getByRole("button", { name: "화이트", exact: true });
-  await expect(green).toHaveAttribute("aria-pressed", "true");
-  await white.click();
-  await expect(white).toHaveAttribute("aria-pressed", "true");
-  await expect(green).toHaveAttribute("aria-pressed", "false");
-  await expect(card).toContainText("화이트");
-  await expect(html).toHaveAttribute("data-theme", "neutral");
-  expect(await background()).toBe("rgb(242, 242, 239)");
+  const dark = card.getByRole("button", { name: "다크", exact: true });
+  await expect(device).toHaveAttribute("aria-pressed", "true");
+  await expect(card).toContainText("기기 설정 따르기 · 그린");
+  // The device turns dark while the page is open: the screen follows at once, and back.
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await expect(card).toContainText("기기 설정 따르기 · 다크");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(html).toHaveAttribute("data-theme", "green");
+
+  await dark.click();
+  await expect(dark).toHaveAttribute("aria-pressed", "true");
+  await expect(device).toHaveAttribute("aria-pressed", "false");
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  expect(await background()).toBe("rgb(15, 26, 21)");
   // Each sample keeps its own theme's colours, whichever is chosen; the chosen option uses the selection colour.
   const sample = (option: typeof green) => option.locator("[data-theme] > span").evaluate((dot) => getComputedStyle(dot).backgroundColor);
-  expect([await sample(green), await sample(white)]).toEqual(["rgb(46, 96, 71)", "rgb(28, 28, 30)"]);
-  expect(await white.evaluate((option) => getComputedStyle(option).borderColor)).toBe("rgb(36, 87, 214)");
+  expect([await sample(green), await sample(dark)]).toEqual(["rgb(46, 96, 71)", "rgb(124, 189, 150)"]);
+  expect(await dark.evaluate((option) => getComputedStyle(option).borderColor)).toBe("rgb(124, 189, 150)");
 
+  // A chosen theme stays whatever the device says (the device here is light).
   await page.reload();
-  await expect(html).toHaveAttribute("data-theme", "neutral");
+  await expect(html).toHaveAttribute("data-theme", "dark");
   expect(await page.evaluate(() => (window as unknown as { themeBeforeBody?: boolean }).themeBeforeBody)).toBe(true);
-  expect(await background()).toBe("rgb(242, 242, 239)");
+  expect(await background()).toBe("rgb(15, 26, 21)");
 
   // Another screen follows the same choice; choosing green again returns every colour.
   await page.goto("/start");
-  await expect(html).toHaveAttribute("data-theme", "neutral");
+  await expect(html).toHaveAttribute("data-theme", "dark");
   await page.goto("/mypage");
   await page.getByRole("group", { name: /THEME/ }).getByRole("button", { name: "그린", exact: true }).click();
   await expect(html).toHaveAttribute("data-theme", "green");
   await page.goto("/start");
   await expect(html).toHaveAttribute("data-theme", "green");
   expect(await background()).toBe("rgb(243, 245, 243)");
+});
+
+test("옛 「화이트」를 저장한 브라우저는 기기 설정을 따른다(`[2026-10-17]` 화이트 → 다크)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", theme: "neutral" })));
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/mypage");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByRole("group", { name: /THEME/ }).getByRole("button", { name: "기기 설정 따르기", exact: true })).toHaveAttribute("aria-pressed", "true");
 });
 
 test("「애니메이션 건너뛰기」 스위치는 기본 꺼짐이고, 켜면 이 브라우저가 기억해 새로고침 뒤에도 켜져 있다(시스템의 「동작 줄이기」와 별개)", async ({ page, request }) => {

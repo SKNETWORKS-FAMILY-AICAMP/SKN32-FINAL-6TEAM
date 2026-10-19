@@ -73,7 +73,6 @@ export function WebhookView({ hasSession }: { hasSession: boolean }) {
     onSuccess: (answer, _variables, context) => keep(answer.profile, context),
   });
   // ★`[2026-10-04]` 서버는 게스트의 여행을 감시·안내하지 않는다(외부 호출 비용) — `[2026-10-13 사용자 판단]` 그래서 게스트에게는 이 줄 대신 「알림 받는 곳」 화면이 잠긴 안내를 보인다.
-  const later = <span className={styles.note}>{t("일정이 바뀔 때 디스코드로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Discord are still being prepared.")}</span>;
   // ★`[2026-10-05 사용자 지시]` 「디스코드로 연결」: 서버가 연결할 수 있다고 말할 때만(`discord_connect.available`) 단추가 있다. 디스코드 창에서 서버·채널을 고르면 서버가 웹훅을 받아 저장한다.
   const [returned, setReturned] = useState<DiscordReturn | null>(null);
   useEffect(() => {
@@ -107,7 +106,7 @@ export function WebhookView({ hasSession }: { hasSession: boolean }) {
     <span className={styles.muted}>{webhookWaiting()
       ? t("입력한 웹훅은 첫 여행을 등록하면 서버에 저장돼요. 그 전에 새로고침하면 다시 넣어 주세요.", "The webhook you entered is saved when you register your first trip. Enter it again if you reload before then.")
       : t("등록된 웹훅이 없어요.", "No webhook registered.")}</span>
-    {!webhookWaiting() && add}{later}
+    {!webhookWaiting() && add}
   </>;
   if (profile.isPending) return <span className={styles.muted} role="status">{t("불러오고 있어요.", "Loading.")}</span>;
   if (profile.isError) return <>
@@ -125,7 +124,7 @@ export function WebhookView({ hasSession }: { hasSession: boolean }) {
       {connectLine(t("디스코드로 연결", "Connect with Discord"), true)}
       <span className={styles.note}>{t("버튼을 누르면 디스코드 창이 열려요. 알림을 받을 서버와 채널을 고르고 승인하면 끝이에요 — 주소를 복사해 붙여넣을 필요가 없어요. 알림을 받을 서버가 없으면 디스코드 앱에서 「서버 만들기」로 내 서버를 먼저 만들어 주세요(무료).", "Press the button and Discord opens a window. Pick the server and channel that should get the alerts and approve - no address to copy. No server yet? Make your own in the Discord app first (free).")}</span>
     </>}
-    {alertConsent && add}{later}
+    {alertConsent && add}
   </>;
   return <>
     {backLine}
@@ -141,7 +140,6 @@ export function WebhookView({ hasSession }: { hasSession: boolean }) {
       {choose.isError && <span className={styles.failed} role="alert">{choose.error instanceof LiveError ? choose.error.message : t("바꾸지 못했어요. 잠시 뒤 다시 해 보세요.", "Could not switch. Try again shortly.")}</span>}
     </>}
     {connectable && connectLine(t("다른 채널로 바꾸기", "Switch to another channel"), false)}
-    {later}
   </>;
 }
 

@@ -46,10 +46,10 @@ from pydantic import Field
 
 log = logging.getLogger(__name__)
 
-SERVER_NAME = "guguroute"
+SERVER_NAME = "GuguRoute"
 
 INSTRUCTIONS = """\
-guguroute 은 여행 중 일정이 틀어질 때 지켜 주고 고쳐 주는 서비스입니다(서울 · 여행자 본인의 여행). 이 서버의 도구는 호출한 사용자 **본인의 여행**만 다룹니다.
+구구루트(GuguRoute — 도구 이름 앞의 tripilot_ 은 옛 이름 triPilot)는 여행 중 일정이 틀어질 때 지켜 주고 고쳐 주는 서비스입니다(서울 · 여행자 본인의 여행). 이 서버의 도구는 호출한 사용자 **본인의 여행**만 다룹니다.
 
 사용 순서: 먼저 tripilot_list_trips 로 여행 id 를 얻고, tripilot_get_trip 으로 일정(항목마다 식사/활동/이동 구분 · 시각 · 장소 정보)을 읽습니다.
 알림은 tripilot_get_notices, 서버가 고객에게 물어 둔 선택지는 tripilot_get_proposals 입니다.
@@ -185,7 +185,7 @@ def caller_of(ctx: Context | None, *, env_key: str | None = None) -> Caller:
     key = env_key or os.environ.get("TRIPILOT_USER_KEY")
     if not key:
         raise ToolError("사용자 키가 없어요 — 연결할 때 `Authorization: Bearer <사용자 키>` 를 붙이거나 로컬이면 환경변수 TRIPILOT_USER_KEY 를 넣어 주세요. "
-                        "키는 guguroute 웹의 마이페이지 「에이전트 연결」에서 로그인한 뒤 만들 수 있고, 만들 때 한 번만 보여 드립니다.")
+                        "키는 구구루트 웹의 설정 › 「에이전트 연결」에서 로그인한 뒤 만들 수 있고, 만들 때 한 번만 보여 드립니다.")
     return Caller(key)
 
 

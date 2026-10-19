@@ -74,6 +74,10 @@
 @media (prefers-reduced-motion: reduce) {
   .canvas :global(.leaflet-container), .canvas :global(.leaflet-container *) { transition: none !important; animation: none !important; }
 }
+/* `[2026-10-17 ST4F-610]` 다크: 밝은 무료 지도(OSM 타일 층)만 어둡게 뒤집는다 — 핀 · 경로선 · 내 위치는 다른 층이라 색이 그대로다.
+   구글 · 네이버 지도는 그리는 방식이 달라 아직 밝은 그대로다. */
+:global(:root[data-theme="dark"]) .canvas :global(.leaflet-tile-pane) { filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.5); }
+:global(:root[data-theme="dark"]) .canvas :global(.leaflet-container) { background: var(--color-background); }
 
 /* 조작 중에는 지도 도구가 잠시 물러나고 멈춘 뒤 돌아온다. */
 .live .controls { opacity: 1; pointer-events: auto; transform: translateY(0); transition: opacity 200ms ease-out, transform 200ms ease-out; }

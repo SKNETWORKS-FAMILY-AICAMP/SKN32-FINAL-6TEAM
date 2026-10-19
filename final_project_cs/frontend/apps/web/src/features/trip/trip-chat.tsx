@@ -172,11 +172,11 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active, o
     <div ref={logRef} className={styles.chatLog} tabIndex={0} onScroll={latest.onScroll} role="log" aria-label={t("여행 대화 이력", "Travel conversation")} aria-live="polite" aria-relevant="additions text" aria-busy={message.isPending}>
       <div className={styles.chatContext}><strong>{dayText} · {day}</strong>
         <span>{selected ? t(`선택: ${selected.title}`, `Selected: ${selected.title}`) : t("선택한 일정이 없어요.", "No stop selected.")}</span></div>
-      {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>guguroute</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
+      {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>{t("구구루트", "GuguRoute")}</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
       {records.map(record => {
         if (record.kind === "notice") return <ChatNotice key={record.id} notice={record.notice} />;
         const { message: item, index } = record;
-        return <article key={record.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : "guguroute"}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /> : item.text}</p>
+        return <article key={record.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : t("구구루트", "GuguRoute")}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /> : item.text}</p>
         {item.awaitingReply && index === trip.messages.length - 1 && <p className={styles.undoHint}>{t("답변을 기다리고 있어요. 아래에 답하시면 같은 요청을 이어서 처리해요.", "Waiting for your reply. Answer below to continue this request.")}</p>}
         {item.more && <details className={styles.more}><summary>{t("더 보기", "More")}</summary><p><LinkedText text={item.more} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /></p></details>}
         {item.basis && item.basis.length > 0 && <p className={styles.devBasis}>{t("개발 모드 · 근거 ", "Dev mode · basis ")}{item.basis.join(", ")}</p>}
@@ -221,7 +221,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active, o
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.ask(t(`${selected.date} ${selected.time} ${selected.title} 다음 일정을 알려 주세요.`, `What comes after ${selected.title} on ${selected.date} at ${selected.time}?`))}>{t("다음 일정", "Next stop")}</button>
       <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 예약 표시를 알려 주세요.`, `Show booking notes for ${day}.`))}>{t("예약 표시", "Booking notes")}</button>
     </div>
-    <p className={styles.chatNote}>{t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")}</p>
+    <p className={styles.chatNote}>{t("채팅으로 일정을 바꾸면 여행계획서에 새 판이 생겨요. 숙소 · 항공 · 예약한 일정은 채팅으로 바꾸지 않아요 — 「일정 수정」에서 고쳐 주세요.", "Changes made in chat create a new version of your trip plan. Lodging, flights and booked stops are not changed from chat — use “Edit itinerary”.")}</p>
   </>;
 }
 

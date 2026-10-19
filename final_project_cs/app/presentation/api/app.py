@@ -52,7 +52,7 @@ def create_app(controller=None, classifier=None, *,
         active_config = composition.load_project_config()
         built_revision = config_revision(active_config)
         controller = composition.build_controller(config=active_config)
-    app = FastAPI(title="guguroute S-API", lifespan=_lifespan)
+    app = FastAPI(title="구구루트 S-API", lifespan=_lifespan)
     # ★`[2026-09-24]` 웹(`frontend/apps/web`)이 다른 출처(포트 3100)에서 부른다(D-020). 허용하는 헤더는
     #   사용자 식별 키(`X-User-Key`)와 Content-Type 뿐 — 서버용 `Authorization` 은 브라우저에서 받지 않는다.
     origins = [o.strip() for o in get_settings().web_allowed_origins.split(",") if o.strip()]

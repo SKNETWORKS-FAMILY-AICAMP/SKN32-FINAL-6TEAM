@@ -61,11 +61,11 @@ export function TripCredits({ facts, skipAnimation, onClose }: { facts: CreditFa
     if (phase !== "end" || drawing.current || !shade.current) return;
     drawing.current = true;
     const css = getComputedStyle(shade.current);
-    drawEndPicture({ heading: facts.title, dates: facts.dates, kicker: "COOKIE", line, cells: numbers, brand: "guguroute" }, {
+    drawEndPicture({ heading: facts.title, dates: facts.dates, kicker: "COOKIE", line, cells: numbers, brand: t("구구루트", "GuguRoute") }, {
       background: css.getPropertyValue("--color-inverse").trim(), ink: css.getPropertyValue("--color-on-inverse").trim(),
       accent: css.getPropertyValue("--color-credits-accent").trim(), font: css.fontFamily,
-    }).then((blob) => setPicture(blob ? new File([blob], "tripilot-credits.png", { type: "image/png" }) : null), () => setPicture(null));
-  }, [phase, facts, line, numbers, shade]);
+    }).then((blob) => setPicture(blob ? new File([blob], "guguroute-credits.png", { type: "image/png" }) : null), () => setPicture(null));
+  }, [phase, facts, line, numbers, shade, t]);
 
   async function share() {
     if (!picture) return;
@@ -92,7 +92,7 @@ export function TripCredits({ facts, skipAnimation, onClose }: { facts: CreditFa
         <button type="button" className={styles.skip} onClick={() => setPhase("end")}>{t("건너뛰기", "Skip")}</button>
         <div ref={view} className={styles.view}>
           <div ref={roll} className={styles.roll}>
-            <p className={styles.small}>guguroute presents</p>
+            <p className={styles.small}>GuguRoute presents</p>
             <p className={styles.title}>{facts.title}</p>
             <p className={styles.small}>{facts.dates}</p>
             {facts.days.map((day) => <section key={day.label}><h3>{day.label}</h3>{day.titles.map((title, at) => <p key={at}>{title}</p>)}</section>)}
@@ -102,7 +102,7 @@ export function TripCredits({ facts, skipAnimation, onClose }: { facts: CreditFa
             <section><h3>{t("숫자로 본 여행", "The trip in numbers")}</h3>
               {numbers.map(([label, value]) => <p key={label} className={styles.pair}><span>{label}</span><span>{value}</span></p>)}</section>
             {facts.sources.length > 0 && <section><h3>{t("자료 제공", "Data")}</h3>{facts.sources.map((source) => <p key={source}>{source}</p>)}</section>}
-            <section><h3>{t("검증 · 감시", "Checked and watched by")}</h3><p>guguroute</p></section>
+            <section><h3>{t("검증 · 감시", "Checked and watched by")}</h3><p>{t("구구루트", "GuguRoute")}</p></section>
           </div>
         </div>
       </> : <div className={styles.end}>

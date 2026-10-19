@@ -1138,7 +1138,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             # ★`[2026-10-04 사용자 결정]` 계획서 **내려받기** — 게스트 데이터는 보존 시간 뒤 지워지니 파일로 가져갈 수 있게 한다. 이 HTML 은 외부 파일 없이 혼자 열린다(밖으로 나가는 것은 지도 링크뿐)
             name = "".join(ch for ch in str(view.get("title") or "plan") if ch not in _FILENAME_BAD).strip()[:60] or "plan"
             return HTMLResponse(_render_plan(view), headers={
-                "Content-Disposition": f"attachment; filename=\"guguroute-plan.html\"; filename*=UTF-8''{quote('guguroute-' + name + '.html')}",
+                "Content-Disposition": f"attachment; filename=\"GuguRoute-plan.html\"; filename*=UTF-8''{quote('구구루트-' + name + '.html')}",
                 "Cache-Control": "no-store"})
         return HTMLResponse(_render_plan(view))
 

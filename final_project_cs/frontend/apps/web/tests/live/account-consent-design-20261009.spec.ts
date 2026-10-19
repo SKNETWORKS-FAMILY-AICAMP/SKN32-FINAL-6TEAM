@@ -98,7 +98,7 @@ test("관리 화면에서 선택 항목만 수정하고 기존 필수 동의 두
   expect(await list.locator(":scope > li").evaluateAll((rows) => rows.map((row) => row.getAttribute("data-doc")))).toEqual([
     "sensitive", "location", "alert_channel", "service_improvement",
   ]);
-  await expect(list.locator('[data-doc="service_improvement"]')).toContainText("준비 중");   // `[2026-10-12 임시]` 서버가 아직 기록하지 못한다
+  await expect(list.locator('[data-doc="service_improvement"]')).toContainText("동의 안 함");
   await expect(page.locator('[data-doc="service_terms"], [data-doc="privacy"]')).toHaveCount(0);
   const location = list.locator('[data-doc="location"]');
   await location.getByRole("button", { name: "동의하기", exact: true }).click();
@@ -106,8 +106,7 @@ test("관리 화면에서 선택 항목만 수정하고 기존 필수 동의 두
   const posts = await mock.received("POST", "/v1/web/consents");
   const items = posts.at(-1)!.body!.items as { code: string; agreed: boolean }[];
   for (const code of ["service_terms", "privacy", "location"]) expect(items.find((item) => item.code === code)?.agreed).toBe(true);
-  for (const code of ["sensitive", "alert_channel"]) expect(items.find((item) => item.code === code)?.agreed).toBe(false);
-  expect(items.some((item) => item.code === "service_improvement")).toBe(false);   // `[2026-10-12 임시]` 보내지 않는다
+  for (const code of ["sensitive", "alert_channel", "service_improvement"]) expect(items.find((item) => item.code === code)?.agreed).toBe(false);
   await page.locator("#consents").scrollIntoViewIfNeeded();
   if (process.env.ACCOUNT_SHOTS) await page.screenshot({ path: `${process.env.ACCOUNT_SHOTS}/consent-optional-manager.png` });
 });

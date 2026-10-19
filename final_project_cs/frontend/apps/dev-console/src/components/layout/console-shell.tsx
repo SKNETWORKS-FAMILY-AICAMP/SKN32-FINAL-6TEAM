@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { House, FlaskConical, Workflow, GitCompareArrows, Plug, ArrowUpRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { dataMode } from "@/lib/gateway";
+import { BrandIcon, Wordmark } from "./brand";
 import styles from "./console-shell.module.css";
 
 const pages = [
@@ -18,7 +19,7 @@ export function ConsoleShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   return <>
     <a className={styles.skip} href="#main-content">본문으로 건너뛰기</a>
-    <header className={styles.header}><Link href="/" className={styles.brand}><span className={styles.mark} aria-hidden="true">t.</span>guguroute <span className={styles.brandSub}>MANAGEMENT</span></Link><span className={styles.mode}>{dataMode === "demo" ? "샘플 모드 · 실제 API 호출 없음" : "데이터 연결 미설정"}</span></header>
+    <header className={styles.header}><Link href="/" className={styles.brand}><BrandIcon size={32} /><Wordmark height={19} /> <span className={styles.brandSub}>MANAGEMENT</span></Link><span className={styles.mode}>{dataMode === "demo" ? "샘플 모드 · 실제 API 호출 없음" : "데이터 연결 미설정"}</span></header>
     <div className={styles.shell}><nav className={styles.nav} aria-label="개발팀 메뉴"><p className={styles.navLabel}>WORKSPACE</p>{pages.map(({ href, label, icon: Icon }) => <Link href={href} key={href} aria-current={path === href ? "page" : undefined}><Icon size={17} aria-hidden="true" />{label}</Link>)}<div className={styles.bottom}><Link href="/connections" aria-current={path === "/connections" ? "page" : undefined}><Plug size={17} aria-hidden="true" />연결 안내<ArrowUpRight size={13} aria-hidden="true" /></Link><p>Core API 미연결<br />개발·실험용 작업공간</p></div></nav><main id="main-content" className={styles.main}>{children}</main></div>
     <footer className={styles.footer}>관리 화면은 고정 가상 오류 예시입니다. 시험 도구의 실행 기록은 현재 브라우저 탭에 보관됩니다.</footer>
   </>;

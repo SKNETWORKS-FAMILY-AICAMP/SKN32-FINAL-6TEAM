@@ -16,16 +16,17 @@ describe("the two themes (styles/tokens.css)", () => {
   it("define the same colour roles, so a screen looks complete in either", () => {
     const green = roles(':root, [data-theme="green"]');
     expect(green.length).toBeGreaterThan(30);
-    expect(roles('[data-theme="neutral"]')).toEqual(green);
+    expect(roles('[data-theme="dark"]')).toEqual(green);
   });
 
   it("are the values the theme setting and the early script know", () => {
-    expect(themes).toEqual(["green", "neutral"]);
-    expect(themeScript).toContain('s.theme==="neutral"');
+    expect(themes).toEqual(["system", "green", "dark"]);
+    expect(themeScript).toContain('t!=="green"&&t!=="dark"');
+    expect(themeScript).toContain("(prefers-color-scheme: dark)");
   });
 
   it("leave no colour written into a screen's CSS: every screen follows the chosen theme", () => {
-    // The landscape's veil and light belong to the green pictures and are hidden in the white theme.
+    // The landscape's veil and light belong to the green pictures and are hidden in the dark theme.
     // `[2026-10-05]` Google's own sign-in button keeps Google's colours in every theme (its brand rules: the standard-colour "G" on a white button), so it is not themed.
     const decorative = new Set(["styles/tokens.css", "components/layout/scene.module.css", "features/account/google-button.module.css"]);
     const files = readdirSync(src, { recursive: true, encoding: "utf8" }).map((file) => file.replaceAll("\\", "/")).filter((file) => file.endsWith(".css") && !decorative.has(file));

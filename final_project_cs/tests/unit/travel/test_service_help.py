@@ -31,7 +31,7 @@ def test_customer_help_uses_tenant_scoped_search_and_customer_lines():
         return [chunk()]
 
     status, text, basis = reply(search)
-    assert status == "answered" and "guguroute 여행 도우미" in text
+    assert status == "answered" and "구구루트 여행 도우미" in text
     assert "오늘 일정 알려줘" in text and "30분 늦어요" in text
     assert requests == [{"tenant_id": "customer-tenant", "query": "너가 할 수 있는 게 뭐야?",
                          "allowed_scopes": ["travel_service"], "top_k": 3}]

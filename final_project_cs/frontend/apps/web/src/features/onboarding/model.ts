@@ -10,7 +10,6 @@ export const areas: readonly Area[] = ["food", "activity", "mobility"];
  * backend's `constraints.survey` (see payload.ts); the questions follow wiki D-020.
  */
 export interface Answers {
-  theme: string;
   party: string;
   /** Typed for `party: other`. Kept while another choice is picked, so choosing `other` again brings it back; sent only with `other`. */
   partyOther: string;
@@ -20,28 +19,25 @@ export interface Answers {
   details: Record<Area, string[]>;
   indoorDining: string;
   indoorActivity: string;
-  onDisruption: string;
   pace: string;
   /** Questions (by position) skipped without an answer. They still count toward progress. */
   skipped: number[];
 }
 
 export const initialAnswers: Answers = {
-  theme: "", party: "", partyOther: "", priority: [], details: { food: [], activity: [], mobility: [] },
-  indoorDining: "", indoorActivity: "", onDisruption: "", pace: "", skipped: [],
+  party: "", partyOther: "", priority: [], details: { food: [], activity: [], mobility: [] },
+  indoorDining: "", indoorActivity: "", pace: "", skipped: [],
 };
 
 export type Option = readonly [value: string, ko: string, en: string];
-export type ChoiceKey = "theme" | "party" | "indoorDining" | "indoorActivity" | "onDisruption" | "pace";
+export type ChoiceKey = "party" | "indoorDining" | "indoorActivity" | "pace";
 
 const indoorOutdoor: readonly Option[] = [["indoor", "실내", "Indoors"], ["outdoor", "실외", "Outdoors"], ["any", "상관없음", "Either is fine"]];
 
 export const options: Record<ChoiceKey, readonly Option[]> = {
-  theme: [["food", "맛집 탐방", "Food discoveries"], ["nature", "자연과 힐링", "Nature & rest"], ["culture", "문화와 역사", "Culture & history"], ["activity", "액티비티", "Adventure"], ["shopping", "쇼핑", "Shopping"], ["local", "로컬 일상", "Local life"]],
   party: [["alone", "혼자", "Solo"], ["partner", "연인", "Partner"], ["friends", "친구", "Friends"], ["family", "가족", "Family"], ["other", "기타", "Other"]],
   indoorDining: indoorOutdoor,
   indoorActivity: indoorOutdoor,
-  onDisruption: [["replace", "비슷한 곳으로 바꿔줘", "Swap in something similar"], ["ask_first", "먼저 물어봐줘", "Ask me first"]],
   pace: [["relaxed", "여유롭게", "Relaxed"], ["moderate", "적당히", "Balanced"], ["packed", "꽉 차게", "Packed"]],
 };
 
@@ -51,11 +47,15 @@ export const areaNames: Record<Area, readonly [ko: string, en: string]> = { food
 export const detailOptions: Record<Area, readonly Option[]> = {
   // `michelin` · `nopo` — the planner puts restaurants with that mark first (backend `dining/survey.py` SURVEY_LIKES). Nothing is filtered out.
   food: [["taste", "맛", "Taste"], ["kindness", "친절", "Kindness"], ["clean", "청결", "Cleanliness"], ["michelin", "미쉐린", "Michelin"], ["nopo", "노포", "Old-school (nopo)"]],
-  activity: [["extreme", "익스트림", "Extreme"], ["healing", "힐링", "Relaxation"], ["diy", "DIY", "DIY"], ["shopping", "쇼핑", "Shopping"]],
+  // `[2026-10-19 사용자 지시]` 관광공사 신분류체계 대분류 코드 그대로(활동 팀이 장소 분류로 쓰는 `lclsSystm1`). 고르면 정확히 `ACTIVITY_PICKS` 개, 누른 순서가 순위다.
+  activity: [["EV", "축제/공연/행사", "Festivals/Performances/Events"], ["EX", "체험관광", "Hands-on experiences"], ["HS", "역사관광", "History"], ["LS", "레저스포츠", "Leisure sports"], ["NA", "자연관광", "Nature"], ["SH", "쇼핑", "Shopping"], ["VE", "문화관광", "Culture"]],
   mobility: [["public", "대중교통", "Public transit"], ["walk", "도보", "Walking"], ["car", "렌트카", "Rental car"], ["taxi", "택시", "Taxi"]],
 };
 
-export type QuestionId = "theme" | "party" | "priority" | "indoor" | "onDisruption" | "pace";
+/** How many activity details a picked activity area needs — no more, no fewer. */
+export const ACTIVITY_PICKS = 3;
+
+export type QuestionId = "party" | "priority" | "indoor" | "pace";
 type Pair = readonly [ko: string, en: string];
 
 interface Question {
@@ -70,15 +70,11 @@ interface Question {
 }
 
 /**
- * The six questions, in order. Everything about a question — its fields, its check and its text — is in its one
+ * The four questions, in order. `[2026-10-19 사용자 지시]` 여행 테마 · 일정 변경 방식은 뺐다 — 일정 변경 방식은 항로 지킴이 카드가 정한다. Everything about a question — its fields, its check and its text — is in its one
  * entry, and the survey is built by `id`, so no position is shared by two questions. Nationality is not asked
  * (nothing uses it; the backend's `domestic` stays optional).
  */
 export const questions: readonly Question[] = [
-  {
-    id: "theme", name: ["여행 테마", "Travel theme"], fields: ["theme"], answered: (a) => Boolean(a.theme),
-    title: ["어떤 여행을 좋아하세요?", "What’s your kind of trip?"], helper: ["가장 마음에 드는 테마 하나를 골라 주세요.", "Choose the one theme that suits you best."],
-  },
   {
     id: "party", name: ["여행자 구성", "Your companions"], fields: ["party", "partyOther"],
     answered: (a) => Boolean(a.party) && (a.party !== "other" || Boolean(a.partyOther.trim())),
@@ -86,8 +82,8 @@ export const questions: readonly Question[] = [
   },
   {
     id: "priority", name: ["여행 우선순위", "Your priorities"], fields: ["priority", "details"],
-    // At least one area, and at least one detail in every area picked. Areas left out need nothing.
-    answered: (a) => a.priority.length > 0 && a.priority.every((area) => a.details[area].length > 0),
+    // At least one area, and at least one detail in every area picked — exactly `ACTIVITY_PICKS` for activities. Areas left out need nothing.
+    answered: (a) => a.priority.length > 0 && a.priority.every((area) => area === "activity" ? a.details.activity.length === ACTIVITY_PICKS : a.details[area].length > 0),
     title: ["어떤 것을 더 중요하게 생각하나요?", "What matters more to you?"], helper: ["중요한 순서대로 분야와 세부 항목을 선택해 주세요.", "Pick areas and details in order of importance."],
   },
   {
@@ -95,11 +91,7 @@ export const questions: readonly Question[] = [
     title: ["실내와 실외 중 어디가 좋으세요?", "Indoors or outdoors?"], helper: ["식당과 액티비티에서 각각 하나씩 골라 주세요.", "Choose one for dining and one for activities."],
   },
   {
-    id: "onDisruption", name: ["일정 변경 방식", "When plans change"], fields: ["onDisruption"], answered: (a) => Boolean(a.onDisruption),
-    title: ["갑자기 일정이 꼬이면 어떻게 했으면 좋겠어요?", "If plans suddenly go wrong, what should we do?"], helper: ["일정을 바꿔야 하는 일이 생겼을 때의 방식을 정해요.", "Choose how we handle it when something forces a change."],
-  },
-  {
-    id: "pace", name: ["여행 여유", "Your pace"], fields: ["pace"], answered: (a) => Boolean(a.pace),
+    id: "pace", name: ["하루 일정의 여유", "How full a day is"], fields: ["pace"], answered: (a) => Boolean(a.pace),
     title: ["여행할 때 어느 정도 여유가 좋으세요?", "How much breathing room do you like?"], helper: ["하루에 담을 일정의 양을 정할 때 쓰여요.", "We use this to decide how much to fit into each day."],
   },
 ];
@@ -153,11 +145,9 @@ export function priorityLines(a: Answers, t: Translate): string[] {
 export function answerLines(id: QuestionId, a: Answers, t: Translate): string[] {
   if (a.skipped.includes(questions.findIndex((question) => question.id === id))) return [t("응답하지 않음", "Not answered")];
   switch (id) {
-    case "theme": return [chosenLabel("theme", a.theme, t)];
     case "party": return [partyLabel(a, t)];
     case "priority": return a.priority.length ? priorityLines(a, t) : [t("미선택", "Not selected")];
     case "indoor": return [`${t("식당", "Dining")} · ${chosenLabel("indoorDining", a.indoorDining, t)}`, `${t("액티비티", "Activities")} · ${chosenLabel("indoorActivity", a.indoorActivity, t)}`];
-    case "onDisruption": return [chosenLabel("onDisruption", a.onDisruption, t)];
     case "pace": return [chosenLabel("pace", a.pace, t)];
   }
 }
@@ -173,9 +163,10 @@ export function toggleArea(a: Answers, area: Area): Answers {
   return { ...a, priority: a.priority.filter((item) => item !== area), details: { ...a.details, [area]: [] } };
 }
 
-/** Tap a detail: the same ranking, kept per area. The area's own pick is not touched. */
+/** Tap a detail: the same ranking, kept per area. The area's own pick is not touched. A full activity area takes no more. */
 export function toggleDetail(a: Answers, area: Area, value: string): Answers {
   const picked = a.details[area];
+  if (area === "activity" && !picked.includes(value) && picked.length >= ACTIVITY_PICKS) return a;
   return { ...a, details: { ...a.details, [area]: picked.includes(value) ? picked.filter((item) => item !== value) : [...picked, value] } };
 }
 

@@ -137,11 +137,11 @@ describe("live trip gateway", () => {
       await expect(remove()).rejects.toMatchObject({ code: "delete_unsupported" });
     });
 
-    it("takes the server's own “no such trip of yours” (404 not_found) as already gone, but passes any other refusal on as it was", async () => {
+    it("takes the server's own “no such trip of yours” (404 not_found) as already gone, but passes any other refusal on", async () => {
       replies.push(new Response(JSON.stringify({ error: { code: "not_found", message: "resource not found" } }), { status: 404 }));
       await expect(remove()).resolves.toBeUndefined();
       replies.push(new Response(JSON.stringify({ error: { code: "internal_error", message: "서버 오류" } }), { status: 500 }));
-      await expect(remove()).rejects.toMatchObject({ code: "internal_error", message: "서버 오류" });
+      await expect(remove()).rejects.toMatchObject({ code: "internal_error", message: "요청을 처리하지 못했어요. 잠시 뒤 다시 해 주세요. (internal_error)" });
     });
   });
 

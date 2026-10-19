@@ -74,7 +74,7 @@ test("공유하기는 아래에서 올라오는 창으로 보낼 곳과 「파�
   await expect(apps).toHaveText(["카카오톡", "디스코드", "메시지", "텔레그램", "링크 복사", "더보기"]);
   await expect(sheet.getByRole("link", { name: "텔레그램" })).toHaveAttribute("href", `https://t.me/share/url?url=${encodeURIComponent(planUrl)}&text=${encodeURIComponent("내 여행 — 여행계획서")}`);
   await expect(sheet.getByRole("link", { name: "메시지" })).toHaveAttribute("href", /^sms:\?&body=/);
-  await expect(sheet.getByRole("link", { name: /파일로 내려받기/ })).toContainText("triPilot-내 여행.html");
+  await expect(sheet.getByRole("link", { name: /파일로 내려받기/ })).toContainText("구구루트-내 여행.html");
   // 카카오톡은 앱 키가 없어 보내지 않는다 — 준비 중이라 말하고 창은 그대로
   await sheet.getByRole("button", { name: "카카오톡" }).click();
   await expect(page.getByRole("status").filter({ hasText: "카카오톡 공유는 준비 중이에요" })).toBeVisible();

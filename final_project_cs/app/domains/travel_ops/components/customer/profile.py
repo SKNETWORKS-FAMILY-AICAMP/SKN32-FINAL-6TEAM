@@ -42,7 +42,7 @@ _PATH = re.compile(r"^/api/webhooks/(\d{15,25})/([A-Za-z0-9_-]{20,120})$")
 _EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,189}\.[^@\s]{2,}$")
 MAX_EMAIL = 254
 ENC_VERSION = "v1"
-TEST_TEXT = "guguroute 알림 시험이에요 — 이 메시지가 보이면 연결이 잘 된 거예요."
+TEST_TEXT = "구구루트 알림 시험이에요 — 이 메시지가 보이면 연결이 잘 된 거예요."
 KST = timezone(timedelta(hours=9))
 
 #: 시험이 바깥 호출을 가로채는 자리 — 실제 운영에서는 비어 있어 진짜 HTTP 로 간다(`ui.routes.API_TRANSPORT` 와 같은 방식)
@@ -280,7 +280,7 @@ def send_test(conn, tenant_id: str, customer_id: UUID, *, min_interval_seconds: 
     url = canonical(parse_webhook(decrypt(stored)))                    # 발송 직전 재검사
     try:
         with httpx.Client(transport=TRANSPORT, timeout=httpx.Timeout(8.0), follow_redirects=False) as client:
-            result = _classify(client.post(url, json={"content": TEST_TEXT, "username": "guguroute",
+            result = _classify(client.post(url, json={"content": TEST_TEXT, "username": "구구루트",
                                                       "allowed_mentions": {"parse": []}}))
     except httpx.HTTPError:
         result = "failed"                                              # 연결 실패 · 시간 초과 — 주소는 싣지 않는다

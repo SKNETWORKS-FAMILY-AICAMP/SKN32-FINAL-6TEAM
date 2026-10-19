@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { createContext, useState, type ReactNode } from "react";
-import { useT } from "@/lib/settings";
+import { useSettings, useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
+import { BrandIcon, Wordmark } from "@/components/ui/brand";
 import { GuardianHeaderControl } from "@/features/guardian/guardian-header";
 import { OverlayRoot } from "./overlay-root";
 import { SettingsMenu } from "./settings-menu";
@@ -30,17 +31,18 @@ export function DeviceFrame({ children, onBrand, headerInert = false, floating =
   menuTools?: ReactNode;
 }) {
   const t = useT();
+  const { language } = useSettings();
   const [overlay, setOverlay] = useState<HTMLElement | null>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
-  const brand = <><span className={styles.mark} aria-hidden="true">t</span>guguroute</>;
+  const brand = <><BrandIcon size={29} /><span className={styles.word}><Wordmark language={language} height={18} /></span></>;
   return <div className={styles.stage}>
     <div className={styles.device} data-floating={floating || undefined} data-journey={scroll || undefined}>
       <OverlayRoot.Provider value={overlay}>
         <HeaderSlot.Provider value={slot}>
         <header className={styles.header} inert={headerInert}>
           {onBrand
-            ? <button type="button" className={styles.brand} onClick={onBrand} aria-label={t("guguroute — 소개 화면으로 돌아가기", "guguroute — Back to introduction")}>{brand}</button>
-            : <Link href={routes.home} className={styles.brand} aria-label={t("guguroute — 소개 화면으로 돌아가기", "guguroute — Back to introduction")}>{brand}</Link>}
+            ? <button type="button" className={styles.brand} onClick={onBrand} aria-label={t("구구루트 — 소개 화면으로 돌아가기", "GuguRoute — Back to introduction")}>{brand}</button>
+            : <Link href={routes.home} className={styles.brand} aria-label={t("구구루트 — 소개 화면으로 돌아가기", "GuguRoute — Back to introduction")}>{brand}</Link>}
           <div ref={setSlot} className={styles.slot} />
           {/* `[2026-10-06]` 항로 지킴이 아이콘: 등록 전 화면(읽는 중 · 계획 확인)에서, 카드로 정한 뒤부터만 보인다. */}
           <div className={styles.right}>{headerExtra}{guardianIcon && <GuardianHeaderControl />}<SettingsMenu tools={menuTools} /></div>

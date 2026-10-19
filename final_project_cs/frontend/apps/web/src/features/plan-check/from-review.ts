@@ -138,7 +138,7 @@ function withUnfound(item: PlanItem, unfound: { question: string; blocked: boole
  * Only stops the server names in `prefill.filled`; a stop the customer changed afterwards keeps the line until the server drops it.
  */
 function withFilled(item: PlanItem, reason: string | undefined): PlanItem {
-  return reason ? { ...item, checks: [{ kind: "place", result: "filled", text: `우리가 채움 · ${reason}` }, ...item.checks] } : item;
+  return reason ? { ...item, checks: [{ kind: "place", result: "filled", text: `먼저 채움 · ${reason}` }, ...item.checks] } : item;
 }
 
 export function filledReasons(intake: Pick<IntakeView, "prefill">): Map<string, string> {

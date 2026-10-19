@@ -20,7 +20,7 @@ test.beforeEach(async ({ page, request }) => {
 const tripAt = (index: number) => index === 0 ? TRIP_ID : `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
 const listed = (count: number) => Array.from({ length: count }, (_, index) => tripAt(index));
 
-const card = (page: Page) => page.getByRole("region", { name: "내 여행", exact: true });
+const card = (page: Page) => page.getByRole("region", { name: "최근 여행", exact: true });
 const hrefs = (links: Locator) => links.evaluateAll((elements) => elements.map((element) => element.getAttribute("href")));
 
 /** 전체 목록의 행, 목록이 보이는 순서대로의 여행 id. ★선택 삭제 모드에서는 행에 링크가 없어 `shownIds` 가 빈다 — 그때는 행 개수로 본다. */
@@ -43,7 +43,7 @@ function watchDeletes(page: Page) {
 const openMenu = (page: Page, name: "메뉴" | "Menu") => page.getByRole("button", { name, exact: true }).first().click();
 const menuLink = (page: Page, menu: "메뉴" | "Menu", link: string | RegExp) => page.getByRole("dialog", { name: menu }).getByRole("link", { name: link });
 
-test("첫 화면 내 여행 카드는 0·1·3·4개 이상에 맞춰 최근 3개까지만 보이고, 4개부터 전체일정 보기로 전체 목록을 연다", async ({ page, request }) => {
+test("첫 화면 최근 여행 카드는 0·1·3·4개 이상에 맞춰 최근 3개까지만 보이고, 4개부터 여행 목록 보기로 전체 목록을 연다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await page.goto("/");
@@ -53,7 +53,7 @@ test("첫 화면 내 여행 카드는 0·1·3·4개 이상에 맞춰 최근 3개
   await server.scenario({ trips: 1 });
   await page.reload();
   await expect(card(page).getByRole("listitem")).toHaveCount(1);
-  await expect(card(page).getByRole("link", { name: "전체일정 보기" })).toHaveCount(0);
+  await expect(card(page).getByRole("link", { name: "여행 목록 보기" })).toHaveCount(0);
   await expect(card(page).getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await expect(card(page).getByRole("listitem")).toContainText("내 여행");
   await expect(card(page).getByRole("listitem")).toContainText("등록");
@@ -61,13 +61,13 @@ test("첫 화면 내 여행 카드는 0·1·3·4개 이상에 맞춰 최근 3개
   await server.scenario({ trips: 3 });
   await page.reload();
   await expect(card(page).getByRole("listitem")).toHaveCount(3);
-  await expect(card(page).getByRole("link", { name: "전체일정 보기" })).toHaveCount(0);
+  await expect(card(page).getByRole("link", { name: "여행 목록 보기" })).toHaveCount(0);
 
   await server.scenario({ trips: 5 });
   await page.reload();
   await expect(card(page).getByRole("listitem")).toHaveCount(3);
   const shown = await hrefs(card(page).getByRole("listitem").getByRole("link"));
-  await card(page).getByRole("link", { name: "전체일정 보기" }).click();
+  await card(page).getByRole("link", { name: "여행 목록 보기" }).click();
   await expect(page).toHaveURL(/\/trips$/);
   const all = page.locator("#main-content li a");
   await expect(all).toHaveCount(5);
@@ -115,11 +115,11 @@ test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에�
   await page.goto("/");
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await expect(page.locator("#start-title")).toBeInViewport();
-  await page.getByRole("button", { name: "guguroute — 소개 화면으로 돌아가기" }).click();
+  await page.getByRole("button", { name: "구구루트 — 소개 화면으로 돌아가기" }).click();
   await expect(page.locator("#intro-title")).toBeInViewport();
 
   await page.goto("/start");
-  await page.getByRole("link", { name: "guguroute — 소개 화면으로 돌아가기" }).click();
+  await page.getByRole("link", { name: "구구루트 — 소개 화면으로 돌아가기" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("#intro-title")).toBeInViewport();
 
@@ -130,7 +130,7 @@ test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에�
     await expect(banner.getByRole("link")).toHaveCount(1);
     await expect(banner.getByRole("button")).toHaveCount(buttons.length);
     for (const name of buttons) await expect(banner.getByRole("button", { name, exact: true })).toBeVisible();
-    await banner.getByRole("link", { name: "guguroute — 소개 화면으로 돌아가기" }).click();
+    await banner.getByRole("link", { name: "구구루트 — 소개 화면으로 돌아가기" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator("#intro-title")).toBeInViewport();
   }
@@ -153,7 +153,7 @@ test("등록하고 로고로 돌아오면 첫 화면 카드와 전체 목록이 
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  await page.getByRole("banner").getByRole("link", { name: "guguroute — 소개 화면으로 돌아가기" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "구구루트 — 소개 화면으로 돌아가기" }).click();
   await expect(card(page).getByRole("listitem")).toHaveCount(1);
   await expect(card(page).getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await openMenu(page, "메뉴");
@@ -165,7 +165,7 @@ test("목록을 읽지 못하면(서버 500) 첫 화면 카드 안에만 오류�
   const server = mockServer(request);
   await server.scenario({ fail: "trips" });
   await page.goto("/");
-  await expect(card(page).getByRole("alert")).toContainText("서버 오류");
+  await expect(card(page).getByRole("alert")).toContainText("요청을 처리하지 못했어요");   // `[2026-10-17 ST4F-611]` 서버의 개발 문장(「서버 오류」)은 그대로 보이지 않는다 — error-text.ts
   await expect(card(page).getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await expect(page.locator("#intro-title")).toBeVisible();
 
@@ -178,7 +178,7 @@ test("목록을 읽지 못하면(서버 500) 첫 화면 카드 안에만 오류�
   await server.scenario({ fail: "trips" });
   await page.goto("/trips");
   await expect(page.getByRole("heading", { name: "여행 정보를 불러오지 못했어요" })).toBeVisible();
-  await expect(page.locator("#main-content").getByRole("alert")).toHaveText("서버 오류");
+  await expect(page.locator("#main-content").getByRole("alert")).toHaveText("요청을 처리하지 못했어요. 잠시 뒤 다시 해 주세요. (internal_error)");   // `[2026-10-17 ST4F-611]` 서버의 개발 문장(「서버 오류」)은 그대로 보이지 않는다 — error-text.ts
   await expect(page.getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await server.scenario({ fail: "" });
   await page.getByRole("button", { name: "다시 불러오기" }).click();
@@ -192,8 +192,8 @@ test("영어와 PC 기기 틀·375px·320px·낮은 화면에서 첫 화면 카�
     if (english) {
       await page.goto("/");
       await pickLanguage(page, "메뉴", "English");                              // `[2026-10-13]` 언어는 설정 화면에서 고르고 뒤로 온다
-      const recent = page.getByRole("region", { name: "My trips", exact: true });
-      await expect(recent.getByRole("link", { name: /View all/ })).toBeVisible();
+      const recent = page.getByRole("region", { name: "Recent trips", exact: true });
+      await expect(recent.getByRole("link", { name: /View trip list/ })).toBeVisible();
       // 제목은 서버가 준 그대로라 영어로 바뀌지 않는다 — 바뀌는 것은 「등록」 문구다.
       await expect(recent.getByRole("listitem").first()).toContainText("내 여행");
       await expect(recent.getByRole("listitem").first()).toContainText("Added");
@@ -244,7 +244,7 @@ test("휴지통은 상세로 가지 않고 확인창을 열며, 확인창 취소
   await expect(dialog).toHaveAccessibleName("이 여행을 삭제할까요?");
   await expect(dialog).toContainText("내 여행");
   await expect(dialog).toContainText("등록");
-  await expect(dialog).toContainText("서버에 저장된 이 여행과 대화 기록, 여행계획서 링크가 삭제되고 알림도 멈춰요. 삭제한 내용은 되돌릴 수 없어요.");
+  await expect(dialog).toContainText("이 여행과 채팅 기록, 여행계획서 링크가 지워지고 알림도 멈춰요. 지운 여행은 되돌릴 수 없어요.");
   await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
   await dialog.getByRole("button", { name: "취소" }).click();
   await expect(dialog).toHaveCount(0);
@@ -423,7 +423,7 @@ test("마지막 여행을 지우면 빈 목록과 새 여행 등록만 남고, �
   await expect(tripScreen(page)).toHaveCount(0);
 
   // 첫 화면 카드도 삭제를 따른다.
-  await page.getByRole("banner").getByRole("link", { name: "guguroute — 소개 화면으로 돌아가기" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "구구루트 — 소개 화면으로 돌아가기" }).click();
   await expect(card(page).getByText("아직 등록한 여행이 없어요.", { exact: true })).toBeVisible();
 
   // 새로고침해도 돌아오지 않는다(서버가 지웠다).
@@ -449,7 +449,7 @@ test("영어·키보드로 한 건 삭제와 선택 삭제를 쓰고, PC 기기 
   await page.keyboard.press("Enter");
   const dialog = confirmDialog(page);
   await expect(dialog).toHaveAccessibleName("Delete this trip?");
-  await expect(dialog).toContainText("The trip, its chat and its plan link saved on the server will be deleted, and its alerts stop. This can’t be undone.");
+  await expect(dialog).toContainText("The trip, its chat and its plan link are deleted and its alerts stop. This can’t be undone.");
   await page.keyboard.press("Escape");
   await expect(trash).toBeFocused();
   expect(await asked(server)).toEqual([]);
