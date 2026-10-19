@@ -1,0 +1,274 @@
+{
+ "made": "2026-10-18",
+ "seed": 20261018,
+ "source_ledger": "dining_rebuild",
+ "eval_ledger": "dining_eval_v2",
+ "synthetic_attributes": [
+  {
+   "place_uid": "f4836dd8-6771-5344-b198-dc0adffee576",
+   "name": "호라파",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "decffe71-aa30-5e73-9d90-dcbada292831",
+   "name": "도깨비코티지",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "33ca43e5-6b2d-54b6-8208-ddfe3d78567f",
+   "name": "거울한옥 미러룸",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "584f1181-1772-58a2-91be-539b44e4b8d0",
+   "name": "뉘조",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "de347b0e-7428-53d8-b8b5-dd50d220b641",
+   "name": "삼호 짱뚱이",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "10e75ea0-216a-5dde-86d0-4791c8703c43",
+   "name": "셀프하우스",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "f68061fb-9a7f-5b08-a761-0eac6883741a",
+   "name": "평안도만두집",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "7d512cb4-d241-5b22-827a-3e973e010a53",
+   "name": "보보식당",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "8beca3b5-c5fb-5850-820b-b551a8d4fd37",
+   "name": "볼라레",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "985dcb5d-fc8d-58c4-aea0-8d61bd5d0a4b",
+   "name": "안동국시소람",
+   "attr_code": "halal",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "e7a3eb4b-35b4-5ac1-bb2e-ac33907050b1",
+   "name": "채홍",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "1ebde165-6daf-57b8-aa11-e4465d1fc553",
+   "name": "붓처스컷 광화문점",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "f3cd3970-ad46-56fd-a6b4-864cb2f00e96",
+   "name": "공기(Gongi)",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "3c8ba18a-2632-5e0f-b499-65cc0b0fa6fb",
+   "name": "천장지구",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "0f00629a-45ae-5263-a51b-f861c981ca08",
+   "name": "북촌김치재",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "b1b0399c-82c1-5dd1-aa0b-a1a9b05e2f5b",
+   "name": "상락원",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "4b2f21c7-6d7e-54bd-9111-206b4ddbac5f",
+   "name": "송원",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "469c3bb3-cbd7-5747-93a9-6240d296ed1e",
+   "name": "우성갈비",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "a44c0282-eae3-545a-85f4-904a68a47dab",
+   "name": "원조 수구레",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "f96760a4-d917-5090-9d87-70167dc84afa",
+   "name": "비둘기집",
+   "attr_code": "vegetarian_menu",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "30f38581-476e-53ec-a5c2-3ebbcd387092",
+   "name": "소바쥬",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "d33f56aa-9099-578c-91d5-a164acafbfa7",
+   "name": "서울홍성원",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "99947c90-4ac9-51d5-a73f-35cc56d8620d",
+   "name": "연남다방",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "90cdfaaf-94fe-5022-ad13-b5856b9c1ee1",
+   "name": "마주이야기",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "0ddc38b2-6b18-5827-87e2-2efc3e80079c",
+   "name": "고두리 용산점",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "41957772-954d-5f5f-9bf5-64bd36274b79",
+   "name": "할랄킹(HALAL KING)",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "fdb3e6ed-5e68-5a3b-8db8-a19ca0baef2a",
+   "name": "옥류헌릴렉스",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "e86aba1b-df67-5c9f-b480-555ad86f0e23",
+   "name": "설눈",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "214b6aaa-c4df-5c56-b010-dfd877070912",
+   "name": "왕돈까스&왕냉면",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  },
+  {
+   "place_uid": "bab0b21d-f5d8-5538-a848-12d047f6a7e9",
+   "name": "에피코어",
+   "attr_code": "kids_allowed",
+   "value_state": "no"
+  }
+ ],
+ "splits": {
+  "dev": {
+   "file": "dining_agent_v2.jsonl",
+   "sha": "4e09d66a0e7523e9",
+   "cases": 80,
+   "must_checks": 222,
+   "by_slice": {
+    "plain_time": 36,
+    "cond_required": 20,
+    "cond_preference": 12,
+    "cond_negated": 6,
+    "multi_meal": 6
+   },
+   "by_verdict": {
+    "dietary=bad": 6,
+    "dietary=ok": 6,
+    "dietary=unknown": 8,
+    "found=ok": 88,
+    "kids=bad": 3,
+    "kids=ok": 3,
+    "kids=unknown": 7,
+    "open_at=bad": 34,
+    "open_at=ok": 53,
+    "open_at=unknown": 1,
+    "payment=bad": 3,
+    "payment=ok": 3,
+    "payment=unknown": 7
+   },
+   "required_labels": 46
+  },
+  "holdout": {
+   "file": "dining_agent_holdout_v2.jsonl",
+   "sha": "b1d20cb48f1ba99d",
+   "cases": 40,
+   "must_checks": 111,
+   "by_slice": {
+    "plain_time": 18,
+    "cond_required": 10,
+    "cond_preference": 6,
+    "cond_negated": 3,
+    "multi_meal": 3
+   },
+   "by_verdict": {
+    "dietary=bad": 2,
+    "dietary=ok": 2,
+    "dietary=unknown": 6,
+    "found=ok": 44,
+    "kids=bad": 2,
+    "kids=ok": 1,
+    "kids=unknown": 3,
+    "open_at=bad": 16,
+    "open_at=ok": 28,
+    "payment=bad": 2,
+    "payment=ok": 2,
+    "payment=unknown": 3
+   },
+   "required_labels": 23
+  }
+ },
+ "plan": [
+  {
+   "slice": "plain_time",
+   "dev": 36,
+   "holdout": 18
+  },
+  {
+   "slice": "cond_required",
+   "dev": 20,
+   "holdout": 10
+  },
+  {
+   "slice": "cond_preference",
+   "dev": 12,
+   "holdout": 6
+  },
+  {
+   "slice": "cond_negated",
+   "dev": 6,
+   "holdout": 3
+  },
+  {
+   "slice": "multi_meal",
+   "dev": 6,
+   "holdout": 3
+  }
+ ]
+}

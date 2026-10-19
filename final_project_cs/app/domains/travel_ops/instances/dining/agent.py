@@ -69,6 +69,22 @@ TEXT_TOOLS = frozenset({"place_detail"})
 _CHECK_ATTRIBUTES = {"dietary": frozenset({"halal", "vegetarian"}), "kids": frozenset({"kids"}), "payment": frozenset({"card"})}
 #: 속성 상태 → 판정. limited 는 「조건부 가능」이라 가능으로 본다(`dining.attribute_state` 205 와 같다)
 _ATTRIBUTE_VERDICT = {"yes": "ok", "limited": "ok", "no": "bad", "unknown": "unknown"}
+#: 체크 이름 대신 적은 속성 이름(`check_attributes` 의 말 · 원장 속성 코드) → 체크 이름. 근거 검증은 맞춘 이름으로 그대로 한다
+#: ☆`[2026-10-18 실측]` 모델이 `halal` 로 적어 `unknown_check` 로 거절됐다(v1 DG-007 · v2 DG2-041, 할랄 조건 판 39회 중 1회) —
+#:   그러면 식이 줄이 빠져 필수 할랄이 안 맞아도 등록이 막히지 않을 수 있었다. 식단을 맞춘 뒤 재측정에서 결제도 `card` 로 적었다(DG2-040).
+#:   속성 이름만 맞춘다(다른 지어낸 이름은 그대로 거절)
+CHECK_ALIASES = {"halal": "dietary", "vegetarian": "dietary", "vegan": "dietary", "vegetarian_menu": "dietary",
+                 "card": "payment", "card_payment": "payment", "kids_allowed": "kids"}
+
+
+def normalize_check(check: dict[str, Any]) -> dict[str, Any]:
+    """속성 이름으로 적은 체크를 체크 이름(dietary · payment · kids)으로 맞춘다 — 원래 이름은 `claimed_check` 에 남긴다.
+    그 밖에는 그대로 돌려준다."""
+    name = check.get("check")
+    target = CHECK_ALIASES.get(name.strip().lower()) if isinstance(name, str) else None
+    if target is None:
+        return check
+    return {**check, "check": target, "claimed_check": name}
 DEFAULT_MAX_TURNS = 10
 #: ★`[2026-10-16 실제 접수 그림자]` 턴 상한 = max(DEFAULT_MAX_TURNS, TURNS_BASE + TURNS_PER_MEAL × 식사 수) — 식당 4곳인 날이 10턴에 걸려
 #:  판정이 통째로 실패했다. 식사 하나에 「찾기 · 영업 · 휴무」를 한두 턴에 묶어 부른다(실측). ★우리가 고른 값 — 시간 상한(deadline)이 따로 막는다
@@ -87,6 +103,8 @@ SYSTEM = """너는 여행 일정의 식사 항목을 점검하는 요식 담당�
    그 place_uid 로 확인을 이어 가고, found 체크는 그 verdict(unknown) 그대로 적는다. 다시 찾기는 found=false(못 찾음)일 때만 다른 말로 한 번.
 2. 시각이 있는 식사 항목마다 found 와 open_at 은 반드시 판정해 checks 에 넣는다(가게를 이미 알아도 found 를 넣는다).
    그 밖의 체크는 체크리스트에서 이 항목에 필요한 것만 고른다. 필요 없는 체크는 하지 않는다 — 고객이 요청하지 않은 식이 조건 · 아이 · 결제는 보지 않는다.
+   고객이 명시한 필수 조건은 required=true, 「선호한다 · 가능하면」처럼 선택적인 희망은 required=false로 적는다.
+   found · open_at · closed_day · business는 이용 가능성 확인이라 required 를 적지 않아도 된다. 조건 확인(식이 · 아이 · 결제)에서 required 를 생략하면 선호(false)로 본다.
    check 값은 반드시 아래 이름 중 하나다(다른 이름을 만들지 않는다). 체크 하나에 판정 하나.
 {checks}
 3. 영업 · 휴무 · 폐업 · 속성은 규칙 도구(check_*)를 불러 그 판정을 그대로 쓴다. 다시 계산하지 않는다.
@@ -95,7 +113,7 @@ SYSTEM = """너는 여행 일정의 식사 항목을 점검하는 요식 담당�
 6. 확인이 끝나면 도구를 더 부르지 말고 아래 JSON 하나로만 답한다.
 
 {{"items": [{{"item_id": "...", "place": {{"place_uid": "... 또는 null", "call_id": "find_place 의 call_id 또는 null"}},
-  "checks": [{{"check": "체크 이름", "why_chosen": "고른 이유 한 줄", "verdict": "ok|bad|unknown", "reason": "한 문장",
+  "checks": [{{"check": "체크 이름", "why_chosen": "고른 이유 한 줄", "required": false, "verdict": "ok|bad|unknown", "reason": "한 문장",
               "evidence": [{{"call_id": "c2", "path": "verdict", "value": "ok"}}]}}]}}],
  "skipped": [{{"item_id": "식사 항목 id", "check": "체크리스트의 이름", "why": "안 본 이유"}}]}}
 식사가 아닌 항목(활동 · 이동)은 items 에도 skipped 에도 넣지 않는다.
@@ -183,10 +201,13 @@ def validate_check(check: dict[str, Any], tools: DiningTools, *, place_uid: str 
 
     `place_uid` · `start` · `end` 는 그 식사 항목의 가게 · 시작 · 끝 시각 — 주면 남의 가게나 다른 시각(날)을 물은 근거를 거절하고,
     인용하지 않은 같은 가게 · 같은 시각(날)의 규칙 도구 bad 와 어긋나는 ok 도 거절한다."""
+    check = normalize_check(check)
     if check.get("check") not in CHECKS:
         return "unknown_check"
     if check.get("verdict") not in VERDICTS:
         return "bad_verdict"
+    if "required" in check and not isinstance(check["required"], bool):
+        return "bad_requirement"
     evidence = check.get("evidence")
     if not isinstance(evidence, list):
         return "evidence_not_list"
@@ -406,6 +427,7 @@ def judge_day(plan: dict[str, Any], *, tools: DiningTools, chat: Any, max_turns:
         for check in item.get("checks") or []:
             if not isinstance(check, dict):
                 continue
+            check = normalize_check(check)
             why = place_failure or validate_check(check, tools, place_uid=place_uid, start=planned.get("start"),
                                                   end=planned.get("end"))
             if why:

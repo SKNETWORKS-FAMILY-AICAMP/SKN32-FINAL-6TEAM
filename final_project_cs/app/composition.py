@@ -848,7 +848,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         # 요식 — 확인 화면 「다른 식당」 후보(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
         from app.domains.travel_ops.instances.dining import review_alternatives as dining_review_alternatives
 
-        dining_alternatives.register(rank=dining_review_alternatives.rank)
+        dining_alternatives.register(rank=dining_review_alternatives.rank, near=dining_review_alternatives.rank_near)
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
@@ -944,6 +944,34 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
 def build_place_status(google=None):
     from app.domains.travel_ops.components.watch.place_status import PlaceStatus
     return PlaceStatus(get_connection, google=google)
+
+
+def build_dining_trial_live(tenant_id: str):
+    """일정 안내(`TripReminders`)에 꽂는 캐치테이블 시험 값 읽기 — `(식당 항목, 지금) -> [{topic, state, num, asked_at, …}]`.
+
+    `[2026-10-19 사용자 지시]` 이미 가는 ② 다음 일정 · ③ 출발 안내에 참고 한 줄만 얹는다(새 알림 없음). 조건은 카드와 같다 —
+    관리 콘솔 스위치(`settings_hook.dining_trial_live_view_enabled`, 기본 꺼짐) · 식사 시작 1시간 전 ~ 시작 전 · 최근 30분 안에 읽은 값.
+    스위치는 부를 때마다 본다(운영 중에 켜고 끈다). 요식 팀이 꺼져 있으면 None — 안내에 아무것도 안 붙는다.
+    """
+    from app.core.service_bindings import current_bindings
+    from app.core.team_availability import TeamUnavailable
+
+    table = current_bindings()
+    if table is not None:
+        try:
+            table.registry.require_runnable("dining")
+        except TeamUnavailable:
+            return None
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.instances.dining import ledger as dining_ledger
+
+    def read(item, now):
+        if not settings_hook.dining_trial_live_view_enabled(tenant_id) or not dining_ledger.trial_due(item.starts_at, now):
+            return []
+        with get_connection() as conn:
+            return dining_ledger.trial_live(conn, tenant_id, [item.place])[0]
+
+    return read
 
 
 def build_domain_routers() -> list:

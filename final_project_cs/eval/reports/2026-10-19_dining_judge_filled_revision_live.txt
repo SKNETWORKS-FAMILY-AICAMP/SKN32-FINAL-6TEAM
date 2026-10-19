@@ -1,0 +1,458 @@
+{
+ "reader_config": {
+  "mode": "on",
+  "num_predict": 3072,
+  "chunk_chars": 1800,
+  "prefill": "on"
+ },
+ "N1_lunch": {
+  "status": "review",
+  "revision": 2,
+  "fatal": null,
+  "seconds": 96.4,
+  "openai_reads": 1,
+  "prefill_filled": [
+   [
+    "0-1",
+    "dining_team"
+   ]
+  ],
+  "items": [
+   [
+    "0-0",
+    "activity",
+    "경복궁",
+    "경복궁",
+    "adjusted"
+   ],
+   [
+    "0-1",
+    "dining",
+    "점심",
+    "스미스가 좋아하는 한옥",
+    "adjusted"
+   ],
+   [
+    "0-2",
+    "activity",
+    "북촌한옥마을",
+    "북촌한옥마을",
+    "adjusted"
+   ]
+  ],
+  "dining_rows": [
+   [
+    "0-1",
+    [
+     [
+      "place",
+      "ok",
+      null,
+      "직접 고른 곳이에요 · 우리 장소 목록에서 찾았어요"
+     ],
+     [
+      "time",
+      "filled",
+      null,
+      "끝 시각이 없어 60분으로 두었어요"
+     ],
+     [
+      "hours",
+      "ok",
+      null,
+      "11:30–21:00 안에 머물러요 · 브레이크 15:00–17:00"
+     ],
+     [
+      "closed",
+      "ok",
+      null,
+      "토요일은 열어요"
+     ]
+    ]
+   ]
+  ],
+  "agent_judged": {
+   "model": "openai:gpt-6-luna",
+   "run_id": "bdc2adbc-fb3d-42b8-a0bf-178d9e830110",
+   "changed_rows": 0
+  },
+  "judge_records": [
+   [
+    2,
+    "_run",
+    null,
+    null,
+    null
+   ],
+   [
+    2,
+    "found",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    2,
+    "open_at",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    2,
+    "closed_day",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    2,
+    "business",
+    "0-1",
+    "ok",
+    null
+   ]
+  ]
+ },
+ "N2_market": {
+  "status": "review",
+  "revision": 1,
+  "fatal": null,
+  "seconds": 214.9,
+  "openai_reads": 1,
+  "prefill_filled": [],
+  "items": [
+   [
+    "0-0",
+    "activity",
+    "창덕궁",
+    "창덕궁",
+    "adjusted"
+   ],
+   [
+    "0-1",
+    "dining",
+    "광장시장 근처",
+    null,
+    "review"
+   ],
+   [
+    "0-2",
+    "activity",
+    "청계천",
+    "청계천",
+    "adjusted"
+   ]
+  ],
+  "dining_rows": [
+   [
+    "0-1",
+    [
+     [
+      "place",
+      "bad",
+      null,
+      "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요"
+     ],
+     [
+      "time",
+      "filled",
+      null,
+      "끝 시각이 없어 60분으로 두었어요"
+     ],
+     [
+      "hours",
+      "unknown",
+      null,
+      "장소를 정하면 확인해요"
+     ],
+     [
+      "closed",
+      "unknown",
+      null,
+      "장소를 정하면 확인해요"
+     ]
+    ]
+   ]
+  ],
+  "agent_judged": null,
+  "judge_records": []
+ },
+ "N3_area": {
+  "status": "review",
+  "revision": 2,
+  "fatal": null,
+  "seconds": 20.7,
+  "openai_reads": 1,
+  "prefill_filled": [
+   [
+    "0-1",
+    "dining_team"
+   ]
+  ],
+  "items": [
+   [
+    "0-0",
+    "activity",
+    "서울숲",
+    "서울숲",
+    "adjusted"
+   ],
+   [
+    "0-1",
+    "dining",
+    "성수 근처",
+    "중앙감속기",
+    "adjusted"
+   ],
+   [
+    "0-2",
+    "activity",
+    "뚝섬한강공원",
+    "뚝섬한강공원",
+    "adjusted"
+   ]
+  ],
+  "dining_rows": [
+   [
+    "0-1",
+    [
+     [
+      "place",
+      "ok",
+      null,
+      "직접 고른 곳이에요 · 우리 장소 목록에서 찾았어요"
+     ],
+     [
+      "time",
+      "filled",
+      null,
+      "끝 시각이 없어 60분으로 두었어요"
+     ],
+     [
+      "hours",
+      "ok",
+      null,
+      "12:00–21:00 안에 머물러요 · 브레이크 15:00–17:30"
+     ],
+     [
+      "closed",
+      "ok",
+      null,
+      "토요일은 열어요"
+     ]
+    ]
+   ]
+  ],
+  "agent_judged": {
+   "model": "openai:gpt-6-luna",
+   "run_id": "0e818e83-bf6d-49e1-a66f-9e90e112373d",
+   "changed_rows": 0
+  },
+  "judge_records": [
+   [
+    2,
+    "_run",
+    null,
+    null,
+    null
+   ],
+   [
+    2,
+    "found",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    2,
+    "open_at",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    2,
+    "closed_day",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    2,
+    "business",
+    "0-1",
+    "ok",
+    null
+   ]
+  ]
+ },
+ "N4_myeongdong": {
+  "status": "review",
+  "revision": 1,
+  "fatal": null,
+  "seconds": 212.2,
+  "openai_reads": 1,
+  "prefill_filled": [],
+  "items": [
+   [
+    "0-0",
+    "activity",
+    "남산서울타워",
+    "N서울타워",
+    "review"
+   ],
+   [
+    "0-1",
+    "dining",
+    "명동 근처",
+    null,
+    "review"
+   ],
+   [
+    "0-2",
+    "activity",
+    "남대문시장",
+    "남대문시장",
+    "adjusted"
+   ]
+  ],
+  "dining_rows": [
+   [
+    "0-1",
+    [
+     [
+      "place",
+      "bad",
+      null,
+      "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요"
+     ],
+     [
+      "time",
+      "filled",
+      null,
+      "끝 시각이 없어 60분으로 두었어요"
+     ],
+     [
+      "hours",
+      "unknown",
+      null,
+      "장소를 정하면 확인해요"
+     ],
+     [
+      "closed",
+      "unknown",
+      null,
+      "장소를 정하면 확인해요"
+     ]
+    ]
+   ]
+  ],
+  "agent_judged": null,
+  "judge_records": []
+ },
+ "N5_named": {
+  "status": "review",
+  "revision": 1,
+  "fatal": null,
+  "seconds": 41.6,
+  "openai_reads": 1,
+  "prefill_filled": [],
+  "items": [
+   [
+    "0-0",
+    "activity",
+    "광화문",
+    "광화문",
+    "adjusted"
+   ],
+   [
+    "0-1",
+    "dining",
+    "하동관 명동본점",
+    "하동관",
+    "adjusted"
+   ],
+   [
+    "0-2",
+    "activity",
+    "덕수궁",
+    "덕수궁",
+    "adjusted"
+   ]
+  ],
+  "dining_rows": [
+   [
+    "0-1",
+    [
+     [
+      "place",
+      "ok",
+      null,
+      "우리 장소 목록 정보로 「하동관」을 찾았어요"
+     ],
+     [
+      "time",
+      "filled",
+      null,
+      "끝 시각이 없어 60분으로 두었어요"
+     ],
+     [
+      "hours",
+      "ok",
+      null,
+      "07:00–16:00 안에 머물러요"
+     ],
+     [
+      "closed",
+      "ok",
+      null,
+      "일요일 휴무 · 방문은 토요일"
+     ]
+    ]
+   ]
+  ],
+  "agent_judged": {
+   "model": "openai:gpt-6-luna",
+   "run_id": "4d157db5-f524-4d85-8764-6759cb4bc70b",
+   "changed_rows": 0
+  },
+  "judge_records": [
+   [
+    1,
+    "_run",
+    null,
+    null,
+    null
+   ],
+   [
+    1,
+    "found",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    1,
+    "open_at",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    1,
+    "closed_day",
+    "0-1",
+    "ok",
+    null
+   ],
+   [
+    1,
+    "business",
+    "0-1",
+    "ok",
+    null
+   ]
+  ]
+ }
+}

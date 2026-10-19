@@ -96,6 +96,15 @@ domain: travel
 - 값: 관리 콘솔 「운영 설정」 의 스위치 `travel.trip_screen.now_label_enabled`(운영자가 바꾼 값이 먼저) → 없거나 못 읽으면 가드레일 `travel.trip_screen.now_label_enabled`(기본 `true`). 참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 `settings_hook.trip_now_label_enabled(tenant)` 하나.
 - 웹: 이 칸이 없는 응답(이 칸을 만들기 전 서버)은 켜짐으로 본다 — 사용자가 정한 기본값이다.
 
+### 식당 카드의 캐치테이블 시험 값 — 여행 조회 항목의 `trial_live` `[2026-10-19 사용자 지시]`
+
+제휴 전제 시험 구현(`scripts/dining/catchtable.py`)이 읽어 적은 웨이팅 · 빈자리를 등록 여행 화면의 식당 카드에 한 줄로 보인다. **화면 표시뿐** — 판정 · 재계획 · 알림은 이 값을 보지 않는다(본 갈래 `v_live_check_fresh` 는 시험 출처를 그대로 뺀다). 계획: [2026-10-16 계획](../../records/plans/2026-10-16_catchtable_trial_live_card.md).
+
+**항목의 `trial_live`**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}` — `kind: "dining"` 항목에만) — `[{"topic": "waiting"|"vacancy", "state": "yes"|"no", "num": 41|null, "detail": "현재 웨이팅 41팀"|null, "asked_at": "…+09:00", "source": "catchtable_trial"}]`, 주제마다 가장 최근 하나(웨이팅 → 빈자리 순).
+- 실리는 조건: `[2026-10-19 사용자 결정]` **곧 갈 식사만** — 식사 시작 1시간 전부터 시작 시각 전까지(`ledger.trial_due`, 사람이 1시간 전 · 30분 전에 한 번씩 읽는다). 그리고 관리 콘솔 스위치 `travel.dining.trial_live_view_enabled`(운영자 값이 먼저 → 가드레일, **기본 `false`**)가 켜졌고, 장소가 원장과 이어져 있고(`dining_place_uid` 또는 그 테넌트의 `dn_core_place_link`), `[2026-10-19 사용자 결정]` **최근 30분 안에 읽은** 값이 있을 때 — 주제마다 가장 최근 읽기가 `outcome='ok'` · `yes`/`no` 여야 한다(가장 최근이 실패면 그 전 값을 꺼내지 않는다). DB 기한(빈자리 · 웨이팅 5분)은 그대로 두고 보여 주기만 30분이다(`ledger.TRIAL_SHOW`) — 읽은 시각을 늘 함께 보인다. 하나라도 아니면 **칸 자체가 없다**.
+- 화면을 열어도 조회하지 않는다 — 사람이 다리로 적은 값만 읽는다(robots.txt). 읽는 곳은 `ledger.trial_live` 하나.
+- 웹: 「웨이팅 41팀 · 예약 가능한 시간 있음 · 3분 전 확인」 + 「제휴 전제 시험」 표시를 카드 머리의 사실 줄에 보인다. 모양이 다른 줄은 버린다(`gateway.trialLive`).
+
 ## 관계
 
 - [REST 안내](index.md) — 계약 지도

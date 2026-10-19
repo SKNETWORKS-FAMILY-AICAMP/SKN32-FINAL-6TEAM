@@ -628,3 +628,14 @@ def trip_now_label_enabled() -> bool:
         return get_guardrails().get("travel.trip_screen.now_label_enabled") is not False
     except ConfigError:
         return True
+
+
+def dining_trial_live_view_enabled() -> bool:
+    """등록 여행 식당 카드에 캐치테이블 시험 값(웨이팅 · 빈자리)을 보이나 — 가드레일 `travel.dining.trial_live_view_enabled`. ★기본 꺼짐.
+
+    `[2026-10-19 사용자 지시]` 제휴 전제 시험 구현이라 시연 때만 켠다. 가드레일을 못 읽어도 **꺼짐**이다(켜는 것은 명시한 경우뿐).
+    """
+    try:
+        return get_guardrails().get("travel.dining.trial_live_view_enabled") is True
+    except ConfigError:
+        return False

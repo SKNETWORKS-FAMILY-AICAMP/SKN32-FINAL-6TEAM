@@ -32,6 +32,8 @@ interface ServerItem {
    * The server keeps that ID on the place (`source_content_id`) but does not send it with a trip yet — asked of the backend (`wiki/external/web-screen-api.md`).
    */
   place_ref?: string | null;
+  /** `[2026-10-19]` The pre-partnership trial's fresh readings for a restaurant — only while the admin switch is on (`trial_live`). */
+  trial_live?: { topic?: string; state?: string; num?: number | null; asked_at?: string }[];
 }
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
@@ -100,7 +102,18 @@ function stop(item: ServerItem, t: Translate): TripStop {
     ...(text(item.place_ref) ? { placeRef: text(item.place_ref) } : {}),
     ...(text(item.kind) ? { kind: text(item.kind) } : {}),
     ...(text(item.kind_label) ? { kindLabel: text(item.kind_label) } : {}),
+    ...(trialLive(item.trial_live).length ? { trialLive: trialLive(item.trial_live) } : {}),
   };
+}
+
+/** The trial readings in a shape the card can say; anything else is dropped (the screen does not make a reading up). */
+export function trialLive(raw: ServerItem["trial_live"]): NonNullable<TripStop["trialLive"]> {
+  return (Array.isArray(raw) ? raw : []).flatMap((row) => {
+    const topic = row?.topic, state = row?.state, askedAt = text(row?.asked_at);
+    if ((topic !== "waiting" && topic !== "vacancy") || (state !== "yes" && state !== "no") || !askedAt || Number.isNaN(Date.parse(askedAt))) return [];
+    const num = typeof row.num === "number" && Number.isInteger(row.num) && row.num >= 0 ? row.num : null;
+    return [{ topic, state, num, askedAt }];
+  });
 }
 
 /** An instant of the pause in Seoul time ("2026-10-06 14:05"); something that is not an instant (a plain date) is shown as it came. */

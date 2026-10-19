@@ -30,7 +30,7 @@ from .hours import _tenants, facts_for
 from . import lodging_context as stay_context
 from .moves import leg_between, late_text
 from .terms import category_label
-from .places import distance_m, normalize_full
+from .places import MEAL_WORDS, distance_m, normalize_full
 from .review import (KST, SOURCE_DEFAULT, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, public_place)
 
 log = logging.getLogger(__name__)
@@ -40,6 +40,12 @@ POOL_EXTRA = 2               #: 최종 셋을 고르기 전에 이동 계산기�
 SEARCH_LIMIT = 8
 SEARCH_POOL = 40             #: 검색 결과 중 일정에 맞는지 판정해 순위에 반영하는 수(이름 일치 · 가까운 순으로 고른 앞 40곳)
 RADIUS_M = 3000              #: 같은 종류 후보를 찾는 반경 — `catalog_pool` 이 바꾸기 후보에 쓰는 3km 와 같다
+#: 끼니 식사 후보에서 빼는 종류 말 — 카카오 분류(「음식점 > 카페 > …」 · 「음식점 > 간식 > 제과,베이커리」) · 요식 원장 요리 갈래(「카페디저트」)
+#: ★`[2026-10-18 사용자 지시]` 카페 · 디저트는 끼니 식사 후보가 아니다 — 실측(테스트 서버): 「점심」에 디저트카페 · 「저녁」에 카페가 들어갔다.
+#:   「떡」은 넣지 않는다(떡볶이가 걸린다). 카페 · 디저트를 가는 일정(「카페」 · 「디저트」)이면 거르지 않는다(`is_meal_line`)
+NOT_A_MEAL_WORDS = ("카페", "디저트", "제과", "베이커리", "아이스크림", "간식")
+#: 끼니 시간대(분) — 아침 06:00–10:30 · 점심 11:00–14:30 · 저녁 17:00–21:30. ★우리가 고른 값 — 끼니 단서가 하나도 없는 식사 일정에만 쓴다(`is_meal_line` ④)
+MEAL_HOURS = ((360, 630), (660, 870), (1020, 1290))
 #: 후보 하나를 판정하는 데 이동 계산기를 쓰는 시간 상한(초) — 넘으면 남은 구간은 어림값
 ENGINE_BUDGET_S = 12.0
 
@@ -280,6 +286,46 @@ def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, 
             for rank, alt in enumerate(got["alternatives"])]
 
 
+def is_meal_line(item: dict[str, Any]) -> bool:
+    """끼니(밥) 일정인가 — 카페 · 디저트를 가는 일정이면 아니다. 끼니를 모르면 아니다(모르는 것을 가정하지 않는다).
+    끼니로 보는 것: ①끼니 말(아침 · 점심 · 저녁 · 식사 — 읽은 칸 `parts.meal` 이나 제목) ②찾는 말이 밥집(「식당」 · 「맛집」 — `parts.label`)
+    ③이미 정한 곳이 음식점(카페 아님). ★`[2026-10-18 실측]` 「18:00 성수 근처 저녁」은 규칙이 끼니 말을 떼어 종류(식사)로만 남겨 ①이 비었다."""
+    if item.get("kind") != "dining":
+        return False
+    title = str(item.get("title") or "")
+    parts = item.get("parts") or {}
+    current = item.get("place") or {}
+    label = str(parts.get("label") or "")
+    if any(word in title or word in label for word in NOT_A_MEAL_WORDS) or (current.get("category") and not_a_meal(current)):
+        return False
+    if parts.get("meal") or any(word in MEAL_WORDS for word in title.replace("·", " ").split()):
+        return True
+    if label or current.get("category"):
+        return True
+    # ④단서가 하나도 없으면(장소를 못 정한 줄은 읽은 칸이 없다) 시각만 본다 — 끼니 시간대의 식사 일정이면 끼니
+    #   ☆실측: 「12:30 보라매공원 근처 점심」이 끼니 말을 잃고 자동 추천에 교회 카페가 들어갔다
+    clock = _minutes(item.get("starts_at"))
+    return clock is not None and any(start <= clock <= end for start, end in MEAL_HOURS)
+
+
+def not_a_meal(place: dict[str, Any]) -> bool:
+    """끼니가 아닌 곳(카페 · 디저트 · 제과 …) — 종류 이름(`category`)으로 본다."""
+    category = str(place.get("category") or "")
+    return any(word in category for word in NOT_A_MEAL_WORDS)
+
+
+def _team_rows(conn, alternatives: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """요식 팀 답 → 후보 장소. 종류 이름에 원장 요리 갈래를 붙인다(「음식점 > 한식」) — 끼니 거르기(`not_a_meal`)가 읽는다."""
+    cuisine = _ledger_details(conn, [str(a["place_uid"]) for a in alternatives if a.get("place_uid")])
+    out = []
+    for rank, alt in enumerate(alternatives):
+        kind_name = (cuisine.get(str(alt.get("place_uid"))) or (None, None))[1]
+        category = category_label("39") + (f" > {kind_name}" if kind_name and kind_name != "미상" else "")
+        out.append({**_place(alt["name"], alt["latitude"], alt["longitude"], "places", kind="dining", address=alt.get("address"),
+                             category=category, place_id=alt["place_id"], ref=f"place:{alt['place_id']}"), "team_rank": rank})
+    return out
+
+
 def _dining_uid(conn, current: dict[str, Any] | None) -> str | None:
     """원래 식당의 요식 원장 번호 — 장소 값에 있으면 그것, 없으면 그 공용 장소 행의 속성에서."""
     if not current:
@@ -323,10 +369,33 @@ def _team_dining_places(conn, tenant_id: str, item: dict[str, Any], current: dic
         return None
     if got is None:
         return None
-    return [{**_place(alt["name"], alt["latitude"], alt["longitude"], "places", kind="dining", address=alt.get("address"),
-                      category=category_label("39"), place_id=alt["place_id"], ref=f"place:{alt['place_id']}"),
-             "team_rank": rank}
-            for rank, alt in enumerate(got["alternatives"])]
+    return _team_rows(conn, got["alternatives"])
+
+
+def _team_dining_near(conn, tenant_id: str, item: dict[str, Any], ref: tuple[float, float] | None, nxt: dict[str, Any] | None,
+                      *, radius_m: int = 2000) -> list[dict[str, Any]] | None:
+    """가게 이름 없는 식사(「점심」 · 「ㅇㅇ 근처 점심」)의 식당 후보를 **요식 팀**(`team_hooks.dining_alternatives.near`)에게 받는다. `[2026-10-18 사용자 지시]`
+    ★원래 식당이 없어 `_team_dining_places` 는 늘 None 이었다 — 그래서 자체 고르기의 지도 채우기가 카페를 식사로 넣었다(실측).
+    기준점은 줄에 적은 지역 · 앞뒤 일정(`reference`). `None` = 팀이 없거나 답하지 못함 · 시각이나 기준점을 모름 — 그때만 자체 고르기."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.team_hooks import dining_alternatives
+
+    if get_guardrails().get("travel.candidates.team_first") is False:
+        return None
+    start = _dt(item.get("date"), item.get("starts_at"))
+    if ref is None or start is None:
+        return None
+    end = _dt(item.get("date"), item.get("ends_at")) if item.get("ends_at") else None
+    nplace = (nxt or {}).get("place") or {}
+    next_point = (float(nplace["latitude"]), float(nplace["longitude"])) if nplace.get("latitude") is not None and nplace.get("longitude") is not None else None
+    try:
+        got = dining_alternatives.near(conn, tenant_id, ref, start, end, next_point=next_point, meal=is_meal_line(item), radius_m=radius_m)
+    except Exception:                                     # noqa: BLE001 — 팀이 답하지 못한 것으로 보고 자체 길로 간다
+        log.warning("dining near alternatives failed — falling back to the local candidate picker", exc_info=True)
+        return None
+    if got is None:
+        return None
+    return _team_rows(conn, got["alternatives"])
 
 
 def _district(address: Any) -> str | None:
@@ -955,11 +1024,19 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         if ref is None:
             notes.append("no_reference_point")
         elif item["kind"] == "dining" and not lodging:
-            found += _ledger_places(conn, tenant_id, ref, radius_m=int(area["radius_m"]) if area else 2000)
+            # ★`[2026-10-18 사용자 지시]` 가게 이름 없는 식사도 **요식 팀이 먼저**다 — 팀이 후보를 내면 팀 것만, 못 내면(모름 · 둘레에 없음)
+            #   원장 근처 식당(자체 고르기) → 지도 채우기. 이름 없는 식사에 빈칸을 던지지 않는다. 끼니면 카페 · 디저트는 아래에서 거른다
+            radius = int(area["radius_m"]) if area else 2000
+            team = _team_dining_near(conn, tenant_id, item, ref, nxt, radius_m=radius)
+            if team:
+                found += team
+                notes.append("team_ranked")
+            else:
+                found += _ledger_places(conn, tenant_id, ref, radius_m=radius)
         else:
             found += _catalog_places(conn, tenant_id, ref, parts.get("content_type"), now,
                                      radius_m=float(area["radius_m"]) if area else RADIUS_M)
-        if ref is not None and len(found) < limit + POOL_EXTRA:
+        if ref is not None and len(found) < limit + POOL_EXTRA and "team_ranked" not in notes:
             # 우리 목록이 모자라면 카카오 지도로 채운다 — 「성수 식당」 같은 말 그대로 지역 중심 둘레에서.
             # ★`[2026-10-07]` 숙소 줄(「호텔 조식」)도 「숙소」로 찾는다 — 전에는 숙소 줄에서 이 길을 막아 후보가 늘 0 이었다(사용자 지적 「전에는 카카오로 줬다」).
             #   카카오가 음식점(FD6 · CE7)을 섞어 내도 아래 종류 거르기(숙소 줄은 활동만)가 버린다
@@ -1043,6 +1120,9 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     before = len(found)
     kinds = {"activity", "dining"} if "meal_inferred" in notes else {"activity" if (lodging or stay) else want}
     found = [p for p in found if p.get("kind") in kinds]
+    if is_meal_line(item) and any(not_a_meal(p) for p in found):
+        found = [p for p in found if not not_a_meal(p)]                # ★끼니 자리에 카페 · 디저트를 권하지 않는다 `[2026-10-18 사용자 지시]`
+        notes.append("not_a_meal_dropped")
     if stay_item:
         found = [{**p, "basis": p.get("basis") or "lodging"} for p in found if _is_lodging_place(p)]     # 숙소 항목의 후보는 숙소만 — 지도의 관광지 · 편의시설은 거른다
     if (stay or stay_item):

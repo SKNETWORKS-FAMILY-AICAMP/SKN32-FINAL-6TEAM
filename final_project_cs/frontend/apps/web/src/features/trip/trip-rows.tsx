@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowRight, BedDouble, Bike, Bus, Car, ChevronRight, Clock, Footprints, Map as MapIcon, MapPinned, Moon, Route, Tag, TrainFront } from "lucide-react";
+import { ArrowRight, BedDouble, Bike, Bus, Car, ChevronRight, Clock, Footprints, Map as MapIcon, MapPinned, Moon, Route, Tag, TrainFront, Users } from "lucide-react";
 import type { RouteShape } from "@/lib/live/route-shapes";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
@@ -71,6 +71,20 @@ function visitHours(stop: TripStop): string | null {
 }
 
 /**
+ * `[2026-10-19 사용자 지시]` The pre-partnership trial's readings in one line: 「웨이팅 41팀 · 예약 가능한 시간 있음 · 3분 전 확인」. Null when the server sent none (switch off, nothing fresh).
+ * The server sends only fresh, read values — the card does not judge their age again, it only says it.
+ */
+export function trialLiveText(stop: TripStop, t: Translate, now: number = Date.now()): string | null {
+  const rows = stop.trialLive ?? [];
+  if (!rows.length) return null;
+  const said = rows.map((row) => row.topic === "waiting"
+    ? (row.state === "no" ? t("웨이팅 없음", "No waiting line") : row.num !== null ? t(`웨이팅 ${row.num}팀`, `${row.num} parties waiting`) : t("웨이팅 있음", "Waiting line"))
+    : (row.state === "yes" ? t("예약 가능한 시간 있음", "Tables open to book") : t("지금 예약 가능한 시간 없음", "No tables open to book now")));
+  const minutes = Math.max(0, Math.floor((now - Math.max(...rows.map((row) => Date.parse(row.askedAt)))) / 60000));
+  return [...said, minutes < 1 ? t("방금 확인", "checked just now") : t(`${minutes}분 전 확인`, `checked ${minutes} min ago`)].join(" · ");
+}
+
+/**
  * `[2026-10-07 사용자 결정 — 목업 C안]` One stop of a registered trip, on the plan check's timeline: its time at the left (start, and `[2026-10-12]` always its end small under it; it stays at
  * the top of the list while the opened stop is in view) and its card.
  * `[2026-10-13 사용자 결정 — 목업 Tripilot_personal/travel-careops/mockups/2026-10-13_타임라인_일정간격_접힌카드_목업_v2.html (A)]` The card shows its kind as an icon before the name (the
@@ -96,6 +110,7 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
   const category = stop.placeInfo?.category;
   const address = stop.placeInfo?.address;
   const hours = visitHours(stop);
+  const trial = trialLiveText(stop, t);
   const maps = placeLinks(stop);
   // `[2026-10-13]` A stay's end is on its check-out day — it is not this day's end, so the line does not read it (`data-end`).
   return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}
@@ -125,6 +140,7 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
             ? <span className={styles.stopFact} data-stay-nights id={`${id}-stay`}><Moon size={14} strokeWidth={1.8} aria-hidden="true" /><span><b className={pc.stayWord}>{t("체크인", "Check in")}</b> · {stayPill(stop, t)}</span></span>
             : <span className={styles.stopFact} data-missing={!hours || undefined}><Clock size={14} strokeWidth={1.8} aria-hidden="true" /><span>{hours ?? t("영업시간 정보 없음", "Hours not known")}</span></span>}
           <span className={styles.stopFact} data-missing={!address || undefined}><MapIcon size={14} strokeWidth={1.8} aria-hidden="true" /><span>{address ?? t("주소 정보 없음", "Address not known")}</span></span>
+          {trial && <span className={styles.stopFact} data-trial><Users size={14} strokeWidth={1.8} aria-hidden="true" /><span>{trial}</span><em className={styles.trialMark}>{t("제휴 전제 시험", "Partner trial")}</em></span>}
         </button>
         {/* `[2026-10-08 사용자 지시]` ＋/－ 는 늘 맨 오른쪽이다. 오른쪽 끝의 ＋/－ 는 같은 접기 단추의 누르는 자리일 뿐이라 화면 읽기와 키보드에는 앞의 이름 단추 하나만 있다.
              `[2026-10-12 사용자 지시]` 지난 일정은 그 앞(머리 오른쪽)에 「지난 일정」 표시. */}
