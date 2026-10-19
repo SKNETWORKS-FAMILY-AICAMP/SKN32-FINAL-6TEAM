@@ -213,6 +213,7 @@ API 주소와 토큰과 사용법은 [`.env.teamflow`](.env.teamflow)에 있다.
   3. 푸시 직전에 다시 fetch 한다. develop 이 움직였으면 2부터 다시 한다(병합 커밋의 부모는 트리를 계산한 해시 그대로).
   4. 시험이 통과했을 때만 푸시가 이어지게 명령을 묶는다. 푸시 뒤 develop 검사 결과를 끝까지 보고, 실패면 흔들림인지(실패 묶음 1회 다시 돌리기) 우리 탓인지 가려 바로 고친다.
 - `[2026-10-13 사용자 결정]` **GitHub 검사(CI)는 develop · main 에서만 돈다.** role-manager 에는 어떤 검사(파이썬 pytest · 웹 · 관리자)도 넣지 않는다 — `.github/workflows/*.yml` 의 push · pull_request 대상에 role-manager 를 다시 넣지 않는다. 10-08 통합 커밋이 이유 기록 없이 넣어 같은 커밋에 검사가 4번 돌았다.
+- `[2026-10-19 사용자 결정]` **전체 검사는 main 에서만 돈다. develop 은 빠른 검사만.** 사용자: 「develop 테스트 너무 많다 … 풀 테스트는 main 만」. develop push · develop 으로 오는 PR 에서는 ruff F·E9 + `tests/architecture` · `contract` · `unit` · `security`(CI develop, 약 2~3분)와 웹 · 관리자 `npm run check`(바뀐 때만)만 돈다. 전체 pytest(통합 · e2e) · Docker 빌드 · 웹 브라우저 시험 4묶음 · 관리자 브라우저 시험은 main push · main 으로 오는 PR · 손으로 돌릴 때(Run workflow)만 돈다. 그래서 위 순서 1·4 의 「develop 검사 결과」는 빠른 검사 결과이고, 통합 · e2e 는 2번의 로컬 시험이나 손으로 돌린 CI (main) 으로 본다. main 필수 검사 이름(「ruff (F·E9)」「전체 시험 (live 제외)」「Docker 빌드」)은 바꾸지 않는다([기록](wiki/records/reports/2026-10-19_ci-develop-fast-main-full.md)).
 
 ## 모델 작업큐 이어받기
 
