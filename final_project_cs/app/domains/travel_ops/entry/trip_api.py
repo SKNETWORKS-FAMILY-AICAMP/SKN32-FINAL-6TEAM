@@ -581,6 +581,16 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     for item, shown in zip(items, views):
         shown["paused"] = bool(since is not None and (item.ends_at or item.starts_at) >= since
                                and (safety["level"] == "trip" or _seoul(item.starts_at).date().isoformat() == safety["day"]))
+    # ★`[2026-10-19 사용자 지시]` 캐치테이블 시험 값(웨이팅 · 빈자리) — 관리 콘솔 스위치(기본 꺼짐)가 켜졌을 때만 식당 항목에 `trial_live` 를 싣는다.
+    #   화면 표시뿐(판정 · 알림에 안 닿는다) · 조회하지 않고 적힌 값만 읽는다 · 값이 없으면 필드도 없다(`instances/dining/ledger.trial_live`)
+    #   `[2026-10-19 사용자 결정]` 곧 갈 식사에만 — 시작 1시간 전부터 시작 시각까지(`ledger.trial_due`)
+    if settings_hook.dining_trial_live_view_enabled(store.tenant_id):
+        from app.domains.travel_ops.instances.dining.ledger import trial_due, trial_live
+        now = datetime.now(ZoneInfo("Asia/Seoul"))
+        dining = [(item, shown) for item, shown in zip(items, views) if item.kind == "dining" and trial_due(item.starts_at, now)]
+        for (item, shown), live in zip(dining, trial_live(conn, store.tenant_id, [item.place for item, _ in dining])):
+            if live:
+                shown["trial_live"] = live
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "simulation": trip.get("simulation"),

@@ -533,6 +533,11 @@ travel:
       enabled: false
       # `[2026-10-15]` 기본 모델 luna — 실측 12/12(gpt-4o-mini 10/12) · 위반 0 · 평균 3.8초
       model: "openai:gpt-6-luna"
+    # -- 캐치테이블 시험 값 화면 표시 (2026-10-19 사용자 지시 · 계획 wiki/records/plans/2026-10-16_catchtable_trial_live_card.md) --
+    # 켜면 등록 여행 화면의 식당 카드에 시험 출처(catchtable_trial)의 지금 웨이팅 · 빈자리를 「제휴 전제 시험」 표시와 함께 한 줄 보인다.
+    # ★화면 표시뿐 — 판정 · 재계획 · 알림은 이 값을 보지 않는다. 화면을 열어도 조회하지 않고 사람이 다리로 적은 값만 읽는다.
+    # ★기본 꺼짐 — 시연 때만 **관리 콘솔 「운영 설정」** 의 같은 이름 스위치로 켠다(콘솔 값이 먼저). 읽는 곳: `settings_hook.dining_trial_live_view_enabled(tenant)`.
+    trial_live_view_enabled: false
   # -- 확인 화면의 「택시 호출 상품」 고르기 (2026-10-14 사용자 지시 · 핫픽스) --
   # 택시 요금(호출 상품별 이용료) 계산이 아직 믿을 만하지 않아 고객 화면의 상품 고르기 칸을 **기본 꺼짐**으로 둔다.
   # 꺼짐: 검사 응답에 `taxi_pricing` 을 싣지 않아 칸이 사라지고, 고르기 요청(`trip.taxi_pricing`)은 거절하고, 이미 저장된 고른 값은 계산에 쓰지 않는다.

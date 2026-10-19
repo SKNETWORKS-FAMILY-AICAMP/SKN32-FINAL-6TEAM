@@ -35,6 +35,19 @@ export interface TripStop {
   kind?: string;
   /** The server's name for that kind (`kind_label`: 식사 · 활동 · 숙소 · 항공), said for the icon as it came. */
   kindLabel?: string;
+  /**
+   * `[2026-10-19 사용자 지시]` A restaurant's waiting line and open tables read just now from the pre-partnership trial (`items[].trial_live`) — sent only while the admin switch is on and
+   * only fresh, read values. Shown, never judged: the plan, its checks and notices do not use it.
+   */
+  trialLive?: TrialLive[];
+}
+
+/** One trial reading: `waiting` (yes with the team count, or no line) or `vacancy` (a table free or not), and when it was read. */
+export interface TrialLive {
+  topic: "waiting" | "vacancy";
+  state: "yes" | "no";
+  num: number | null;
+  askedAt: string;
 }
 
 /**

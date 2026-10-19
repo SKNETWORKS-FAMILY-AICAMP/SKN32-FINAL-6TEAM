@@ -869,3 +869,65 @@ def enrich_place(conn, tenant_id: str, place: dict[str, Any] | None,
         return None
     state = dining_state(conn, tenant_id, place.get("place_id"), at, until)
     return merge_state(place, state)
+
+
+#: 화면에 보일 시험 출처 — 제휴 전제 시험 구현(`scripts/dining/catchtable.py`). 이 이름을 아는 곳은 여기 하나다
+TRIAL_SOURCE = "catchtable_trial"
+#: 시험 출처에서 화면에 보일 주제 — 몇 분이면 바뀌는 둘. 영업시간 · 휴무는 원장 · 본 갈래가 말한다
+TRIAL_TOPICS = ("waiting", "vacancy")
+#: `[2026-10-19 사용자 결정]` 곧 갈 식사에만 보인다 — 식사 시작 60분 전부터 시작 시각까지.
+#: 사람이 1시간 전 · 30분 전에 다리로 한 번씩 읽고(무인 반복 없음), 카드는 그중 최신 값을 보인다. 사흘 뒤 저녁의 「지금 웨이팅」은 쓸모가 없다
+TRIAL_WINDOW = timedelta(minutes=60)
+
+
+def trial_due(starts_at: datetime | None, now: datetime) -> bool:
+    """이 식사가 시험 값을 보일 때인가 — 시작 `TRIAL_WINDOW` 전부터 시작 시각 전까지. 시각을 모르면 아니다."""
+    start = _as_datetime(starts_at)
+    return start is not None and start - TRIAL_WINDOW <= now < start
+
+
+def trial_live(conn, tenant_id: str, places: list[dict[str, Any] | None]) -> list[list[dict[str, Any]]]:
+    """장소마다 시험 출처의 지금 값(웨이팅 · 빈자리) — `places` 와 같은 순서. 값이 없으면 그 자리는 빈 목록.
+
+    ★`[2026-10-19 사용자 지시 — 계획 wiki/records/plans/2026-10-16_catchtable_trial_live_card.md]` **화면 표시만** 한다.
+      판정 · 재계획 · 알림은 이 값을 보지 않는다(본 갈래 `v_live_check_fresh` 는 시험 출처를 빼고, 그대로 둔다).
+    ★조회하지 않는다 — 사람이 다리로 읽어 적은 것(`dn_live_check`)만 읽는다(robots.txt · `catchtable.py` 머리말 4).
+    ★낡은 값 · 실패한 조회 · 모름은 싣지 않는다 — `v_live_check_fresh_trial` 이 `outcome='ok'` · 기한 안만 내고, 여기서 yes/no 만 남긴다.
+    원장과 이어지지 않은 장소(`dining_place_uid` 도 `dn_core_place_link` 도 없음)는 빈 목록 — 이름으로 짐작해 잇지 않는다.
+    """
+    out: list[list[dict[str, Any]]] = [[] for _ in places]
+    if not places or not ledger_ready(conn):
+        return out
+    with conn.cursor() as cur:
+        cur.execute("SELECT to_regclass('dining.v_live_check_fresh_trial') IS NOT NULL")
+        if not cur.fetchone()[0]:
+            return out
+        uids: list[str | None] = []
+        for place in places:
+            uid = str(((place or {}).get("attributes") or {}).get("dining_place_uid") or "").strip()
+            uids.append(uid or None)
+        core_ids = sorted({str(place["place_id"]) for place, uid in zip(places, uids)
+                           if uid is None and place and place.get("place_id")})
+        linked: dict[str, str] = {}
+        if core_ids:
+            cur.execute("SELECT core_place_id, place_uid::text FROM dining.dn_core_place_link "
+                        "WHERE tenant_id=%s AND core_place_id = ANY(%s)", (tenant_id, core_ids))
+            linked = {str(core): uid for core, uid in cur.fetchall()}
+        uids = [uid or linked.get(str((place or {}).get("place_id"))) for place, uid in zip(places, uids)]
+        wanted = sorted({uid for uid in uids if uid})
+        if not wanted:
+            return out
+        cur.execute("SELECT DISTINCT ON (place_uid, topic) place_uid::text, topic, value_state, value_num, value_detail, asked_at "
+                    "FROM dining.v_live_check_fresh_trial "
+                    "WHERE source_code=%s AND topic = ANY(%s) AND place_uid::text = ANY(%s) "
+                    "ORDER BY place_uid, topic, asked_at DESC, check_id DESC",
+                    (TRIAL_SOURCE, list(TRIAL_TOPICS), wanted))
+        rows = cur.fetchall()
+    found: dict[str, list[dict[str, Any]]] = {}
+    for uid, topic, state, num, detail, asked_at in rows:
+        if state not in ("yes", "no"):
+            continue
+        found.setdefault(uid, []).append({"topic": topic, "state": state, "num": num, "detail": detail,
+                                          "asked_at": asked_at.astimezone(KST).isoformat(), "source": TRIAL_SOURCE})
+    return [sorted(found.get(uid, []), key=lambda row: TRIAL_TOPICS.index(row["topic"])) if uid else []
+            for uid in uids]
