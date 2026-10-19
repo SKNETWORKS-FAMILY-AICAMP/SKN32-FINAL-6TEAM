@@ -1,0 +1,60 @@
+{
+ "built_on": "2026-10-19",
+ "cases": 80,
+ "by_stratum": {
+  "A": 13,
+  "B": 28,
+  "C": 13,
+  "D": 10,
+  "E": 11,
+  "F": 5
+ },
+ "split": [
+  "holdout"
+ ],
+ "source": "cards_llm_bound_v0.jsonl",
+ "sha256": "e4d436d9e21ed72df7ed37ca80d34d5eef8e3469873917f609df24d875f65c51",
+ "inputs_sha256": "b519094167f346a548c4d24fc45f0bb0e54b0a88e89f444eeb4d11e38829a2b7",
+ "labeler": "합의",
+ "labels_file": "situation_cards_human_합의_2026-10-19.json",
+ "texts": "responses_llm_bound_v0.csv",
+ "smoke": false,
+ "labeling": {
+  "labelers": [
+   "작성자1",
+   "작성자2"
+  ],
+  "blind": true,
+  "agreement_before_consensus": {
+   "acceptable": "69/80 = 86.25% · 평균 자카드 0.9313",
+   "forbidden": "57/80 = 71.25% · 평균 자카드 0.7312"
+  },
+  "consensus_changed_cards": 27,
+  "consensus_rule": "위험 = 하드 조건 · 「싫다/말고/보다」 거부 · 고객이 말한 물리 조건 정면 위반(2026-10-19 사용자 결정), 주제 불일치는 차선",
+  "claude_assisted": "10-19 빈 칸 제안(작성자1 6장 · 작성자2 2장 중 사람이 다시 판단) · 합의 27장 제안(사람 확정, 제안과 다른 카드 L-20 · L-24)",
+  "decision_A": "2026-10-19 — 전환 기준 M2 · M5 · M6b · M6e, M1 · M3 · M7 · M8 참고",
+  "counts": {
+   "discriminating": 39,
+   "all_acceptable": 39,
+   "no_fit": 2,
+   "with_forbidden": 16
+  }
+ },
+ "relabel_after_run": {
+  "date": "2026-10-19",
+  "run": "20261019T075053Z",
+  "cards": [
+   "L-74"
+  ],
+  "before": {
+   "acceptable": "2;3",
+   "forbidden": "1"
+  },
+  "after": {
+   "acceptable": "1;2;3",
+   "forbidden": ""
+  },
+  "reason": "음식 반입 여부는 입력에 없음 — 라벨 규칙 「기준이 입력에 없으면 무엇이든 허용」 위반 정정(사용자 결정 A). 결과를 본 뒤 바꾼 라벨이라 정정 전 값을 병기한다",
+  "frozen_original": "cases.jsonl (sha256 b2ab6812…) 그대로 둠"
+ }
+}
