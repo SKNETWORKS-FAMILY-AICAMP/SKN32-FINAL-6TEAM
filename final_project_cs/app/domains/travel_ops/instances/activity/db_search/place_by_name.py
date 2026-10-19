@@ -16,6 +16,9 @@
   행만 가져오므로, 괄호가 **가운데** 끼어 정규화로만 같아지는 제목(「A(x)B」 = 「AB」)은 놓친다. 그 경우는 `not_found`
   쪽으로 기운다 — 없는 곳을 있다고 하지 않는 방향이다.
 ★카카오 같은 바깥 값은 여기 없다. 우리 원장의 행만 읽는다.
+★`[2026-10-19]` `fuzzy=True` 면 위 둘이 못 찾았을 때 **어순이 다른 이름 · 오타**로 한 번 더 찾는다(`name_match`). 기본은 꺼짐 —
+  짐작한 장소라 결과에 `needs_review` · `match` · `note` 가 붙고, 부르는 쪽이 확인 필요로 다뤄야 한다. 원장 전체 이름을 읽으므로(약 6천 행)
+  못 찾았을 때만 부른다. 폐지된 곳(`delisted_at`)은 짐작 대상에서 뺀다.
 """
 from __future__ import annotations
 
@@ -25,6 +28,7 @@ from typing import Any, Callable
 
 from app.domains.travel_ops.components.intake.places import normalize
 
+from ..name_match import TypoIndex, word_set
 from .place_candidates import DEFAULT_SOURCES, SOURCE_SQL
 
 #: ambiguous 일 때 같이 내는 후보 이름 수(고객에게 보여 줄 만큼만)
@@ -39,6 +43,10 @@ SQL = ("SELECT content_id, content_type_id, name_ko, lat, lng, source FROM "
        # ★지우는 문자가 `_loose` 와 같아야 한다(공백·`·`·`-`·`_`·`/`) — 다르면 SQL 이 제목을 놓친다
        "AND regexp_replace(name_ko, '[[:space:]·_/-]+', '', 'g') ILIKE %s "
        "ORDER BY content_id LIMIT %s")
+#: `fuzzy` 용 — 이름 조건 없이 원장 전체(같은 열 순서). 폐지된 곳은 뺀다
+SQL_ALL = ("SELECT content_id, content_type_id, name_ko, lat, lng, source FROM "
+           f"(SELECT *, {SOURCE_SQL} AS source FROM activity.ac_place WHERE delisted_at IS NULL) a "
+           "WHERE source = ANY(%s) ORDER BY content_id")
 
 
 def _loose(text: str) -> str:
@@ -57,8 +65,35 @@ def _hit(row: dict[str, Any]) -> dict[str, Any]:
             "source": row["source"]}
 
 
+def _fuzzy_hit(rows: list[dict[str, Any]], match: str, note: str) -> dict[str, Any]:
+    if len(rows) == 1:
+        return {"status": "found", "via": "place_catalog", **_hit(rows[0]), "match": match, "needs_review": True, "note": note}
+    return {"status": "ambiguous", "via": "place_catalog", "match_count": len(rows), "match": match,
+            "candidates": [{"content_id": r["content_id"], "title": r["title"]} for r in rows[:SHOW_LIMIT]]}
+
+
+def _find_fuzzy(connection_factory: Callable[[], Any], query: str, key: str, sources: tuple[str, ...]) -> dict[str, Any] | None:
+    """어순이 다른 이름 → 오타 순서로 하나를 찾는다. 못 찾으면 `None`."""
+    with connection_factory() as conn, conn.cursor() as cur:
+        cur.execute(SQL_ALL, (list(sources),))
+        rows = [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
+    words = word_set(query)
+    if len(words) >= 2:
+        same = [r for r in rows if word_set(r["title"]) == words]
+        if same:
+            return _fuzzy_hit(same, "word_order", "단어 순서가 달라도 같은 이름으로 보고 찾았다")
+    by_key: dict[str, list[dict[str, Any]]] = {}
+    for r in rows:
+        by_key.setdefault(_loose(r["title"]), []).append(r)
+    typo = TypoIndex(by_key.items()).best(key)
+    if typo is None:
+        return None
+    matched, ratio = typo
+    return _fuzzy_hit(matched, "typo", f"오타로 보고 「{matched[0]['title']}」로 찾았다(자모 거리 비율 {ratio:.2f})")
+
+
 def find_place_by_name(connection_factory: Callable[[], Any], tenant_id: str, name: str | None, *,
-                       sources: tuple[str, ...] = DEFAULT_SOURCES) -> dict[str, Any]:
+                       sources: tuple[str, ...] = DEFAULT_SOURCES, fuzzy: bool = False) -> dict[str, Any]:
     """이름으로 원장에서 찾는다. 항상 `status` 가 있는 dict 를 준다(모름이 아니라 **없음**을 말할 수 있다). `tenant_id` 는 쓰지 않는다."""
     query = (name or "").strip()
     key = _loose(query)
@@ -71,6 +106,10 @@ def find_place_by_name(connection_factory: Callable[[], Any], tenant_id: str, na
     exact = [r for r in rows if _loose(r["title"]) == key]
     pool = exact or [r for r in rows if normalize(r["title"]) == normalize(query)]
     if not pool:
+        if fuzzy:
+            guessed = _find_fuzzy(connection_factory, query, key, sources)
+            if guessed is not None:
+                return guessed
         return {"status": "not_found", "via": "place_catalog"}
     if len(pool) == 1:
         return {"status": "found", "via": "place_catalog", **_hit(pool[0])}

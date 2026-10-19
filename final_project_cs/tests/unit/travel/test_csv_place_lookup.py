@@ -41,3 +41,32 @@ def test_near_hint_picks_geographically_closest():
     # 용산 아이파크몰 근처 좌표 (37.530, 126.964)
     r_near = _csv.find("다이소 용산", near=(37.530, 126.964))
     assert r_near is not None and "용산" in r_near["matched_title"]
+
+
+def test_swapped_word_order_finds_same_place():
+    """'명동 올리브영 타운' = '올리브영 명동 타운' — 어순만 다르면 같은 장소, 확인 필요로 낸다."""
+    r = _csv.find("명동 올리브영 타운", fuzzy=True)
+    assert r is not None and r["matched_title"] == "올리브영 명동 타운" and r["needs_review"] is True
+
+
+def test_typo_finds_unique_title_with_review():
+    """자모 거리 비율 0.2 이하인 제목이 하나면 오타로 고쳐 찾는다."""
+    r = _csv.find("남산서울타우", fuzzy=True)
+    assert r is not None and r["matched_title"] == "남산서울타워" and r["needs_review"] is True
+
+
+def test_exact_match_is_not_marked_for_review():
+    """정확히 같은 이름은 확인 필요를 붙이지 않는다."""
+    r = _csv.find("남산서울타워")
+    assert r is not None and "needs_review" not in r
+
+
+def test_unrelated_name_still_not_found():
+    """이름이 비슷하지도 않으면 억지로 고르지 않는다."""
+    assert _csv.find("없는곳테스트장소", fuzzy=True) is None
+
+
+def test_fuzzy_is_off_by_default():
+    """★기본은 정확·접두사·이름+지역만 — 어순·오타 매칭은 호출하는 쪽이 켤 때만(판정 쪽이 짐작한 장소를 읽지 않게)."""
+    assert _csv.find("남산서울타우") is None
+    assert _csv.find("명동 올리브영 타운") is None
