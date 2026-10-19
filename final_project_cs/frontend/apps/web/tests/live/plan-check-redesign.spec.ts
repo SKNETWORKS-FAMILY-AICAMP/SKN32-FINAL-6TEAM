@@ -403,8 +403,12 @@ test("이동 줄은 앞뒤 일정의 시작 시각 사이에서 출발하는 만
   await expect(leg.locator('[data-move-end]')).toHaveCount(0);
   await expect(arrival).toHaveAttribute('aria-hidden', 'true');
   await expect(arrival).toHaveCSS('opacity', '0');
+  // 이 이동 줄은 일정 목록 판(높이 약 400px)의 보이는 칸 아래에 있다 — 누르면 Playwright 가 먼저 판을 굴려(약 267px) 단추를 보이게 하므로,
+  // 그 굴림이 「출발 표시가 움직였다」로 잡히지 않게 누르기 전에 단추를 보이는 칸으로 옮겨 두고 잰다(2026-10-20, 화면은 누른 뒤 스스로 움직이지 않는다).
+  const moveHead = leg.locator('button[aria-controls="plan-move-0-0:0-1-checks"]');
+  await moveHead.scrollIntoViewIfNeeded();
   const departureBefore = await textCentre(page, 'li[data-type="move"][data-entry-id="0-0:0-1"] [data-move-departure]');
-  await leg.locator('button[aria-controls="plan-move-0-0:0-1-checks"]').click();
+  await moveHead.click();
   await expect(arrival).toHaveAttribute('aria-hidden', 'false');
   await expect(arrival).toHaveCSS('opacity', '1');
   const departureAfter = await textCentre(page, 'li[data-type="move"][data-entry-id="0-0:0-1"] [data-move-departure]');
