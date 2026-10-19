@@ -143,6 +143,18 @@ def specs() -> dict[str, LimitSpec]:
     out["travel.dining.google_price_enabled"] = LimitSpec(
         "travel.dining.google_price_enabled", "식당 대체 후보 구글 가격 비교(유료 호출 — 결제 뒤 켜기)", "", "bool",
         guard.get("travel.dining.google_price_enabled") is True)
+    # ★`[2026-10-19 사용자 결정]` 숙소 모드 — 숙소 팀 · 숙소 대안의 구글 호텔(SerpApi) 호출을 여기서만 켠다. 기본 off.
+    #   읽는 곳은 `settings_hook.lodging_mode` 하나다(구글 호텔 어댑터의 호출 문 · 확인 화면 「다른 숙소」 `composition._lodging_rank`)
+    from app.domains.travel_ops.components.settings_hook import LODGING_MODES, lodging_mode_default as lodging_default
+
+    out[LODGING_MODE_NAME] = LimitSpec(
+        LODGING_MODE_NAME, "숙소 모드 — 구글 호텔(SerpApi) 숙소 대안", "", "choice", lodging_default(), choices=LODGING_MODES,
+        help=_lodging_mode_help(guard), choice_labels=LODGING_MODE_LABELS)
+    # ★`[2026-10-19 사용자 결정]` 언리미티드 모드 — 바깥 API 호출 한도를 푼다. 기본 꺼짐. 관리 콘솔 「API 호출량」 탭이 확인 창을 거쳐 바꾼다
+    #   (운영 설정 목록에서는 읽기만). 읽는 곳은 `settings_hook.unlimited_mode` 하나다(조립이 `operator_modes` 에 꽂는다)
+    out[UNLIMITED_MODE_NAME] = LimitSpec(
+        UNLIMITED_MODE_NAME, "언리미티드 모드 — 바깥 API 호출 한도 모두 풀기(유료 호출이 늘 수 있음)", "", "bool",
+        guard.get("web_guard.unlimited_mode") is True, help=UNLIMITED_MODE_HELP)
     # ★`[2026-10-14 사용자 지시 · 핫픽스]` 확인 화면의 「택시 호출 상품」 고르기 — 택시 요금 계산이 믿을 만해질 때까지 기본 꺼짐.
     #   읽는 곳은 `settings_hook.taxi_call_product_enabled` 하나다(검사 응답 · 고르기 요청 · 계산 입력)
     out["travel.mobility.taxi_call_product_enabled"] = LimitSpec(
@@ -170,6 +182,39 @@ def specs() -> dict[str, LimitSpec]:
             MODEL_ROUTE_KEYS[purpose], f"모델 경로 — {title}", "", "choice", default if default in choices else "off", choices=choices,
             help=_model_route_help(purpose), choice_labels=_route_labels(purpose, choices))
     return out
+
+
+#: 숙소 모드 · 언리미티드 모드의 운영 설정 이름 — `settings_hook.LODGING_MODE` · `UNLIMITED_MODE` 와 같은 글자(시험이 같은지 본다)
+LODGING_MODE_NAME = "travel.lodging.alternatives_mode"
+UNLIMITED_MODE_NAME = "api.unlimited_mode"
+#: 관리 콘솔 선택지 글자 — `[2026-10-19 사용자 결정]` 그대로
+LODGING_MODE_LABELS = (("demo", "숙소 시연 모드"), ("test", "테스트 모드"), ("off", "끄기"))
+UNLIMITED_MODE_HELP = "\n".join([
+    "하는 일: 켜면 카카오 · 구글 · SerpApi · 공공 API · 활동 웹 확인 · 유료 대체 모델 넘김의 하루 · 월 한도, 운영자 지정 상한, 호출 간격을 모두 풉니다.",
+    "세기: 한도를 넘긴 호출도 계속 셉니다(같은 줄 이름에 「:uncapped」를 붙인 줄).",
+    "비용: 무료 한도를 넘으면 유료 호출이 늘 수 있습니다. 발표 · 시연이 끝나면 끕니다.",
+    "풀지 않는 것: 제공처가 「한도 초과」라고 알린 API(제공처가 거절합니다) · 웹 사용자 횟수 제한 · 숙소 모드 「끄기」.",
+    "바꾸는 곳: 관리 콘솔 「API 호출량」 탭(확인 창을 거칩니다). 저장하면 재기동 없이 30초 안에 바뀝니다.",
+])
+
+
+def _lodging_mode_help(guard: Any) -> str:
+    """숙소 모드 설명 — 무엇을 부르고 한도가 얼마인지(숫자는 설정 · 가드레일에서 읽는다). 키 값은 싣지 않는다."""
+    from app.core.settings import get_settings
+
+    settings = get_settings()
+    day = int(getattr(settings, "rate_serpapi_per_day", 0) or 0)
+    month = int(getattr(settings, "rate_serpapi_per_month", 0) or 0)
+    share = float(guard.get("travel.candidates.lodging_source_share") or 1.0)
+    ready = bool((getattr(settings, "serpapi_api_key", "") or "").strip())
+    return "\n".join([
+        "하는 일: 숙소 팀이 숙소 대안(확인 화면 「다른 숙소」 · 채팅 「바꿔 줘」 · 고를 때 가격 재확인)에 구글 호텔(SerpApi)을 부를지 정합니다.",
+        "끄기(기본): SerpApi 를 부르지 않습니다. 확인 화면은 우리 DB(관광공사 숙박 목록 · 숙소 원장) → 카카오 · 관광공사 무료 조회로, "
+        "채팅의 숙소 팀은 마이리얼트립(무료) 목록으로만 고릅니다.",
+        f"테스트 모드: 하루 {day}번까지만 부르고(확인 화면 「다른 숙소」는 그 {share:.0%}), 넘으면 무료 길로 갑니다.",
+        f"숙소 시연 모드: 발표용 — 하루 한도 없이 부르되 한 달 {month}번(구글 항공권과 같은 계정)은 지킵니다. 언리미티드 모드를 켜면 월 한도도 풀립니다.",
+        f"지금 이 서버: SerpApi 키 {'있음' if ready else '없음 — 어느 모드든 부르지 않습니다'}. 구글 항공권은 이 값과 상관없습니다.",
+    ])
 
 
 MODEL_ROUTE_TITLES = (("chat", "채팅 해석 · 계획 읽기 · 번역"), ("pointer", "일정 짚기"), ("notice", "공지 확인(끝났나 · 여행 영향)"))

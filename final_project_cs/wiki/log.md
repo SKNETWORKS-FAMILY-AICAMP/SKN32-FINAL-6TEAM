@@ -12,6 +12,10 @@ domain: travel
 
 # cs wiki 변경 기록
 
+## 2026-10-19 — 관리 콘솔 숙소 모드 · 언리미티드 모드
+
+구글 호텔(SerpApi) 숙소 대안은 관리 콘솔 「운영 설정」의 숙소 모드(숙소 시연 모드 · 테스트 모드 · 끄기, 기본 끄기)로만 켜고, 「API 호출량」 탭에 바깥 API 한도를 모두 푸는 언리미티드 모드(기본 꺼짐, 켤 때 유료 호출 확인 창)를 더했다. 한도를 넘긴 호출은 `<줄>:uncapped` 줄에 따로 센다. [API 환경설정 한도 계약](external/api-environment-limits.md) · [D-CS-017](decisions/D-CS-017-candidates-supplied-by-teams.md) 갱신. 로컬 작업 사본 · 전용 시험 DB 에서 시험, x600 서버 배포 · 실제 SerpApi 호출은 안 함. [기록](records/reports/2026-10-19_숙소모드_언리미티드모드.md)
+
 ## 2026-10-18 01:06:47 KST — 공통 숙소·즉시 수정 세션 종료 점검
 
 10월 17일의 새 예시 공통 숙소·조식, 지도·숙박 아이콘, 375/1280px 즉시 수정·취소 확인과 최종 문서 8개의 양쪽 매니저 반영을 대조했다. 이 수정 채팅의 구현·기능 검증은 완료이며 수동 호텔 저장·QA·재난 후속은 별도 담당 범위다. 오늘 실서비스 시험을 다시 한 결과로 바꾸지 않았다. [실제 확인·종료 점검 기록](records/reports/2026-10-17_lodging-edit-live-verification.md) · [종료 인계](../../wiki/handoff/2026-10-17_1828_lodging-edit-manager.md).

@@ -616,6 +616,17 @@ def google_price_enabled() -> bool:
         return False
 
 
+def unlimited_mode() -> bool:
+    """언리미티드 모드 — 가드레일 `web_guard.unlimited_mode`. ★기본 꺼짐. 켜면 바깥 API 호출 한도를 풀고 세기만 한다.
+
+    `[2026-10-19 사용자 결정]` 유료 호출이 늘 수 있어 관리 콘솔에서 사람이 켠다. 가드레일을 못 읽어도 **꺼짐**이다(켜는 것은 명시한 경우뿐).
+    """
+    try:
+        return get_guardrails().get("web_guard.unlimited_mode") is True
+    except ConfigError:
+        return False
+
+
 def taxi_call_product_enabled() -> bool:
     """확인 화면의 택시 호출 상품 고르기를 켰나 — 가드레일 `travel.mobility.taxi_call_product_enabled`. ★기본 꺼짐.
 

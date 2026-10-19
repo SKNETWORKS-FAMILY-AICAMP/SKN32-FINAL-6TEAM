@@ -123,8 +123,8 @@ class TravelSource:
     def _miss(self, reason: str, detail: str = "") -> None:
         """★`None` 을 돌려주기 **전에** 반드시 부른다. 이유 없는 모름은 못 고친다."""
         self.misses[reason] += 1
-        if reason == "cache_only":
-            # 캐시만 읽는 호출(`CacheOnlyLimiter`)의 정상 갈래 — 경고도 실패 수도 아니다
+        if reason in ("cache_only", "lodging_mode_off"):
+            # 캐시만 읽는 호출(`CacheOnlyLimiter`) · 숙소 모드 끄기(`LodgingModeLimiter`)의 정상 갈래 — 경고도 실패 수도 아니다
             logger.debug("travel source miss: %s", SourceMiss(self.name, reason, detail))
             return
         logger.warning("travel source miss: %s", SourceMiss(self.name, reason, detail))
@@ -403,11 +403,11 @@ def apply_outbound_proxy(sources: TravelSources, *, url: str, names: str) -> str
     return None
 
 def _with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int], names: list[str], *,
-                    on_db_error: str = "allow", share: float = 1.0) -> Any:
+                    on_db_error: str = "allow", share: float = 1.0, soft_day: frozenset[str] = frozenset()) -> Any:
     """안쪽 제한기에 **DB 예산**을 얹는다 — 본체는 `source_budget.with_db_budget`(한도를 모르는 소스는 세지 않는다)."""
     from .source_budget import with_db_budget
 
-    return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error, share=share)
+    return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error, share=share, soft_day=soft_day)
 
 
 #: 부른 뒤 **쓸 수 있는 답을 못 받은** 이유 — 응답이 오지 않았거나(시간 초과 · 연결 오류 · HTTP 오류) 와도 읽을 수 없었다(JSON · XML 이 아님 · 모양이 다름 · 본문이 오류).
@@ -451,21 +451,34 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
               if hasattr(settings, "source_rate_limits") else {})
     by_source = guardrails.get("travel.rate_burst_by_source") or {}
     bursts = {name: max(1, int(by_source.get(name) or burst)) for name in limits}
-    limiter = RateLimiter(
-        intervals={name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()},
-        bursts=bursts,
-        max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
-    its_limiter = limiter  # ITS는 전체·키별 예산을 한 트랜잭션으로 확보하는 전용 문을 쓴다.
-    if guardrails.get("travel.source_budget_shared"):
-        limiter = _with_db_budget(limiter, limits, getattr(settings, "source_monthly_limits", lambda: {})(),
-                                  list(guardrails.get("travel.source_budget_sources") or []),
-                                  on_db_error=str(guardrails.get("travel.source_budget_on_db_error") or "allow"),
-                                  share=1.0 if low_priority_share is None else float(low_priority_share))
+    intervals = {name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()}
+
+    def _limiter(intervals: dict[str, float], share: float, soft_day: frozenset[str] = frozenset(), raw: Any = None) -> Any:
+        made: Any = raw if raw is not None else RateLimiter(intervals=intervals, bursts=bursts,
+                                                            max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
+        if guardrails.get("travel.source_budget_shared"):
+            made = _with_db_budget(made, limits, getattr(settings, "source_monthly_limits", lambda: {})(),
+                                   list(guardrails.get("travel.source_budget_sources") or []),
+                                   on_db_error=str(guardrails.get("travel.source_budget_on_db_error") or "allow"),
+                                   share=share, soft_day=soft_day)
+        return made
+
+    its_limiter: Any = RateLimiter(intervals=intervals, bursts=bursts,
+                                   max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
+    # ITS는 전체·키별 예산을 한 트랜잭션으로 확보하는 전용 문을 쓴다 — DB 예산으로 감싸기 **전**의 원래 제한기(같은 인스턴스)를 준다.
+    limiter = _limiter(intervals, 1.0 if low_priority_share is None else float(low_priority_share), raw=its_limiter)
+    #: ★`[2026-10-19 사용자 결정]` 구글 호텔 어댑터의 호출 문 — 숙소 모드(관리 콘솔)를 부를 때마다 읽는다(`LodgingModeLimiter`).
+    #:  시연(demo) 제한기는 `serpapi` 의 호출 간격 · 하루 줄 · 몫을 빼고 월 줄만 지킨다. 만드는 것은 I/O 가 없다
+    from .source_budget import LodgingModeLimiter
+
+    hotel_limiter: Any = LodgingModeLimiter(
+        test=limiter, demo=_limiter({n: v for n, v in intervals.items() if n != "serpapi"}, 1.0, frozenset({"serpapi"})))
     if cache_only:
         from .ratelimit import CacheOnlyLimiter
 
         limiter = CacheOnlyLimiter()                  # 예산 칸에도 닿지 않는다 — 위에서 만든 제한기를 쓰지 않는다
         its_limiter = limiter
+        hotel_limiter = limiter
 
     ttl = float(guardrails.get("travel.source_cache_seconds") or 0)
     if ttl > 0 and guardrails.get("travel.source_cache_shared"):
@@ -497,7 +510,7 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
         from .serpapi_flights import SerpApiFlights
         sources.flight_google = SerpApiFlights(api_key=serpapi_key, limiter=limiter)
         from .serpapi_hotels import SerpApiHotels
-        sources.stay_google = SerpApiHotels(api_key=serpapi_key, limiter=limiter)
+        sources.stay_google = SerpApiHotels(api_key=serpapi_key, limiter=hotel_limiter)    # 숙소 모드를 따른다(위 `hotel_limiter`)
     else:
         sources.unavailable["flight_google"] = "serpapi_api_key 없음 — 구글 항공권 비교 안 함"
         sources.unavailable["stay_google"] = "serpapi_api_key 없음 — 구글 호텔 비교 안 함"

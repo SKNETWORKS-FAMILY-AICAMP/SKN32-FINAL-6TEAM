@@ -35,7 +35,8 @@ CRITICAL_RATIO = 0.95
 
 class CallBudget:
     def __init__(self, *, connection_factory: Callable[[], Any], caps: dict[str, dict[str, int]],
-                 clock: Callable[[], datetime] | None = None, tz: tzinfo = UTC, share: float = 1.0) -> None:
+                 clock: Callable[[], datetime] | None = None, tz: tzinfo = UTC, share: float = 1.0,
+                 soft_day: frozenset[str] = frozenset()) -> None:
         """`caps` — {meter: {"month": n, "day": m}}. 모르는 meter 는 **부르지 않는다**(한도를 모르면 막는다).
 
         `share` — ★`[2026-10-06]` **낮은 우선순위 호출의 몫**(0 < share ≤ 1, 기본 1 = 전부). 이 객체는 일 · 월 줄이 `상한 × share` 에 닿으면 거절한다 — 나머지는 다른 호출(감시 · 채팅) 몫이다.
@@ -43,10 +44,14 @@ class CallBudget:
         몫으로 거절한 것은 줄의 `rejected` 수에 안 센다(그 수는 「진짜 한도가 차서」 못 부른 것을 뜻한다). 상한을 모르는(UNLIMITED) 줄에는 몫을 곱하지 않는다.
 
         `tz` — 일·월 줄을 가르는 시간대. 기본 UTC(구글·카카오가 그대로 쓰는 값). ★국내 공공 API 의 하루는
-        한국 시각 자정에 바뀌므로 그 소스들은 `KST` 를 준다(UTC 로 세면 한국 하루 안에 두 줄이 걸쳐 한도가 두 배로 샌다)."""
+        한국 시각 자정에 바뀌므로 그 소스들은 `KST` 를 준다(UTC 로 세면 한국 하루 안에 두 줄이 걸쳐 한도가 두 배로 샌다).
+
+        `soft_day` — ★`[2026-10-19 사용자 결정]` **하루 줄로는 거절하지 않는** meter(숙소 시연 모드의 `serpapi`). 하루 상한을 넘은 호출은 `<meter>:uncapped`
+        하루 줄에 센다. 월 줄은 그대로 지킨다."""
         if not 0.0 < share <= 1.0:
             raise ValueError(f"share 는 0 보다 크고 1 이하여야 한다: {share!r}")
         self._connect, self.caps, self.share = connection_factory, caps, share
+        self.soft_day = frozenset(soft_day)
         self.clock = clock or (lambda: datetime.now(UTC))
         self._tz = tz
         self.refused: dict[str, int] = {}
@@ -60,11 +65,22 @@ class CallBudget:
         return max(1.0, (tomorrow - now).total_seconds())
 
     def reserve(self, meter: str) -> bool:
+        """한 칸 확보. ★`[2026-10-19 사용자 결정]` 언리미티드 모드(`operator_modes.unlimited()`)가 켜져 있으면 하루 · 월 줄 · 운영자 상한 · 몫으로는
+        거절하지 않는다 — 상한 안이면 그 줄에, 상한을 넘으면 `<meter>:uncapped` 줄에 센다(표가 used ≤ cap 을 강제한다). 상한을 모르는 meter 도
+        그 줄에만 센다. ★제공처가 「한도 초과」라고 알린 줄은 그대로 멈춘다(제공처가 거절한다). `soft_day` 의 meter 는 하루 줄만 같은 방식으로 푼다(숙소 시연 모드)."""
+        from .operator_modes import unlimited
+
+        loose = unlimited()
         cap = self.caps.get(meter)
+        now = self.clock().astimezone(self._tz)
         if not cap:
+            if loose:
+                with self._connect() as conn, conn.transaction(), conn.cursor() as cur:
+                    for period in (f"month:{now:%Y-%m}", f"day:{now:%Y-%m-%d}"):
+                        self._over(cur, meter, period)
+                return True
             self.refused[meter] = self.refused.get(meter, 0) + 1
             return False
-        now = self.clock().astimezone(self._tz)
         after: dict[str, tuple[int, int]] = {}
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         with self._connect() as conn, conn.transaction(), conn.cursor() as cur:
@@ -82,17 +98,32 @@ class CallBudget:
             if blocked is not None:
                 raise _Exhausted(meter, blocked[0])
             for period, limit in rows:
+                kind = period.split(":", 1)[0]
+                soft = loose or (kind == "day" and meter in self.soft_day)
                 # ★상한은 **지금 설정값**으로 본다 — 줄에 남은 옛 cap 이 더 커도 새 값이 이긴다. 몫(`share`)이 있으면 **같은 UPDATE 의 조건**이 `상한 × 몫` 이다
-                allowed = limit if (self.share >= 1.0 or limit >= UNLIMITED) else int(limit * self.share)
+                #   (한도를 푼 줄은 몫 없이 진짜 상한까지 이 줄에 센다)
+                allowed = limit if (soft or self.share >= 1.0 or limit >= UNLIMITED) else int(limit * self.share)
                 cur.execute("UPDATE external_call_budget SET used = used + 1, cap = %s, updated_at = now() "
                             "WHERE meter=%s AND period=%s AND used < %s RETURNING used",
                             (max(limit, 0), meter, period, allowed))
                 row = cur.fetchone()
                 if row is None:
-                    raise _Exhausted(meter, period)      # ★트랜잭션이 되돌린다 — 월 줄만 올라가지 않는다
-                after[period.split(":", 1)[0]] = (int(row[0]), int(limit))
+                    if not soft:
+                        raise _Exhausted(meter, period)  # ★트랜잭션이 되돌린다 — 월 줄만 올라가지 않는다
+                    self._over(cur, meter, period)       # 한도를 푼 줄 — 상한 밖 줄에 센다
+                    cur.execute("SELECT used FROM external_call_budget WHERE meter=%s AND period=%s", (meter, period))
+                    row = cur.fetchone()
+                after[kind] = (int(row[0]), int(limit))
         self.last[meter] = after
         return True
+
+    @staticmethod
+    def _over(cur: Any, meter: str, period: str) -> int:
+        """한도를 푼 호출(언리미티드 · 숙소 시연 모드의 하루 줄)을 `<meter>:uncapped` 줄에 센다 — 상한 있는 줄은 used ≤ cap 이라 넘겨 셀 수 없다."""
+        cur.execute("INSERT INTO external_call_budget (meter, period, used, cap) VALUES (%s,%s,1,%s) "
+                    "ON CONFLICT (meter, period) DO UPDATE SET used = external_call_budget.used + 1, updated_at = now() RETURNING used",
+                    (f"{meter}:uncapped", period, UNLIMITED))
+        return int(cur.fetchone()[0])
 
     def try_reserve(self, meter: str) -> bool:
         try:
