@@ -1,0 +1,3 @@
+{"episode_id": "S1-remove-dinner", "compiled_by": "synthetic-handwritten", "targets": [{"seq": 2}], "end": [], "forbidden": [{"text": "다른 식당으로 교체 금지", "dsl": {"op": "absent", "match": {"seq": 2}}}]}
+{"episode_id": "S2-short-answer", "compiled_by": "synthetic-handwritten", "targets": [{"seq": 1}], "end": [], "forbidden": []}
+{"episode_id": "S3-rain-indoor", "compiled_by": "synthetic-handwritten", "targets": [{"seq": 2}], "end": [], "forbidden": [{"text": "야외 장소로 교체 금지", "dsl": {"op": "field", "match": {"seq": 2}, "field": "indoor", "ne": false, "must_exist": false}}]}
