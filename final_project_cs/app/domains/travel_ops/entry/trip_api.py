@@ -580,8 +580,10 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
             "simulation": trip.get("simulation"),
             "version": trip["version"],
             # ★`[2026-10-06]` 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜짐 여부 — 상단 아이콘이 읽는다(`components/planning/guardian.py`)
-            "guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
-                                             constraints=trip.get("constraints")),
+            #   ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 칸을 싣지 않는다 — 화면이 아이콘 · 카드를 그리지 않는다(계약 web-trips.md)
+            **({"guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
+                                                 constraints=trip.get("constraints"))}
+               if settings_hook.guardian_enabled(store.tenant_id) else {}),
             "safety": safety,
             # ★`[2026-10-15 사용자 결정 — ST4F-494]` 여행 화면 「지금 HH:MM」 시각 꼬리표 — 관리 콘솔 스위치(기본 켜짐). 계약 rest-endpoints/web-trips.md
             "now_label": settings_hook.trip_now_label_enabled(store.tenant_id),
@@ -2040,8 +2042,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
           자동 변경은 일정을 실제로 바꾸는 권한이라서다. 디스코드 · 텔레그램 알림에서는 링크로 웹을 열고 **웹이 확인한 뒤** 이 입구를 부른다.
         - 본인 여행이 아니거나 없으면 404. 같은 값을 다시 보내면 아무것도 바꾸지 않고 현재 값을 돌려준다.
         - `since`·`via` 는 **마지막으로 바뀐** 시각 · 곳이다(`trip_guardian_changes`, 추가만 하는 기록).
+        - ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 409 `guardian_disabled` — 아무것도 바꾸지 않고 기록도 더하지 않는다(본인 여행인지 보기 전에).
         """
         tenant, customer = who
+        if not settings_hook.guardian_enabled(tenant):
+            raise _error(409, "guardian_disabled", "항로 지킴이는 지금 쓸 수 없다 — 운영자가 꺼 두었다")
         with get_connection() as conn, conn.transaction():
             result = guardian_module.set_enabled(conn, tenant_id=tenant, trip_id=trip_id,
                                                  customer_id=customer, enabled=request.enabled, via=request.via)
@@ -2507,6 +2512,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             "AND (payload_json->>'visible_at')::timestamptz<=now())) "
                             "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%", f"{customer}:service:%"))
                 rows = cur.fetchall()
+        # ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 이미 쌓인 알림의 항로 지킴이 몫도 싣지 않는다(켤 수 없는 「켜기」 단추를 보이지 않게)
+        guardian_on = settings_hook.guardian_enabled(tenant)
         return {"notices": [{"key": key.split(":", 1)[1], "type": payload.get("type") or "change_notice",
                              "kind": payload.get("kind"), "text": payload.get("text"),
                              "version": payload.get("version"), "proposal_id": payload.get("proposal_id"),
@@ -2515,7 +2522,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "rollback": payload.get("rollback"), "consent": bool(payload.get("consent")),
                              "consent_key": payload.get("consent_key"),
                              # ★`[2026-10-06]` 항로 지킴이 몫 — `{changed: true}`(켜 둔 사용자에게 자동으로 바꿨다는 표시) · `{offer: {label, via, path, url}}`(꺼 둔 사용자에게 켜기 단추)
-                             "guardian": payload.get("guardian"),
+                             "guardian": payload.get("guardian") if guardian_on else None,
                              # ★`[2026-10-06]` 재난 안전 알림의 안내(공식 안내 · 가까운 대피 장소 · 「일정 다시 시작」) — 안전 알림(`safety_pause` · `safety_release`)에만 있다
                              "safety": payload.get("guidance") if payload.get("reason") in ("safety_pause", "safety_release") else None,
                              "at": at.isoformat()} for key, payload, status, at in rows]}

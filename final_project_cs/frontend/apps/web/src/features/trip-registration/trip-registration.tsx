@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CircleAlert, FileText, Paperclip, X } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel } from "@/components/ui";
+import { useGuardianShown } from "@/features/guardian/availability";
 import { decideGuardian, paceOf, readCriteria, setPace, useCriteria, withCriteria } from "@/features/guardian/criteria-store";
 import { GuardianCard } from "@/features/guardian/guardian-card";
 import { ReadingCriteria } from "@/features/guardian/reading-criteria";
@@ -89,6 +90,8 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계]` 「읽는 기준」 (a day's fullness, 「적당히」 from the start) and the Course Keeper card that opens when 「계획 확인하기」 is pressed, before the plan is read.
   const criteria = useCriteria();
   const [card, setCard] = useState(false);
+  // ★`[2026-10-19 사용자 결정 — ST4F-613]` The operator's switch for the Course Keeper (`GET /v1/web/features`). Not said yet: as before (the card asks).
+  const guardianShown = useGuardianShown() !== false;
   // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown, the attached files and the planning
   //   conditions are given back, and the panel it came from is the chosen one again.
   const [files, setFiles] = useState<File[]>(() => returned?.files ?? []);
@@ -226,6 +229,8 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     setRestored("");
+    // ★`[2026-10-19 사용자 결정 — ST4F-613]` The operator switched the Course Keeper off: no card, the plan goes at once (and without `on_disruption` — `withCriteria`).
+    if (!guardianShown) { proceed(null); return; }
     // ★`[2026-10-06 사용자 지시 — 한 번 켜면 켜진 상태가 기본]` A Course Keeper choice already made (turned on once before, or answered in this tab) is not asked again; otherwise the card asks BEFORE the plan is read.
     const made = readCriteria();
     // ★`[2026-10-07 사용자 지시 — 켠 선택은 기억하고 끈 선택은 다시 물어본다]` Only a choice to turn it ON is kept and not asked again; a choice to leave it OFF is asked again with the next plan (the card is where it can be turned on).
@@ -233,9 +238,10 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     setCard(true);
   }
 
-  /** 「켜고 진행」 / 「건너뛰기 — 끄고 진행」: the choice is kept (and sent with the plan, `ask_first` said out loud when off), then the plan is sent as before. */
-  function proceed(guardian: "on" | "off") {
-    decideGuardian(guardian);
+  /** 「켜고 진행」 / 「건너뛰기 — 끄고 진행」: the choice is kept (and sent with the plan, `ask_first` said out loud when off), then the plan is sent as before.
+   *  `null`: the Course Keeper is switched off by the operator — nothing is chosen, the plan is sent. */
+  function proceed(guardian: "on" | "off" | null) {
+    if (guardian) decideGuardian(guardian);
     setCard(false);
     if (checking) signUp.mutate();
     else send(humanToken);

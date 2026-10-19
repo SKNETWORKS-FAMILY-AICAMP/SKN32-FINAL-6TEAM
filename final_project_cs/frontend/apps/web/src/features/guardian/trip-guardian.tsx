@@ -7,6 +7,7 @@ import { useAppToast } from "@/components/app-toast";
 import { CloseMenu } from "@/components/layout/settings-menu";
 import { tripKey, useTrip } from "@/features/trip/use-trip";
 import type { Trip } from "@/features/trip/model";
+import { LiveError } from "@/lib/live/client";
 import { setGuardian, type GuardianVia } from "@/lib/live/extras";
 import { useSettings, useT } from "@/lib/settings";
 import { rememberGuardian } from "./criteria-store";
@@ -60,9 +61,16 @@ export function useTripGuardian(tripId: string): { tool: ReactNode; overlay: Rea
         ? { text: t("항로 지킴이를 켰어요.", "Course Keeper is on."), action: { label: t("되돌리기", "Undo"), run: () => send({ enabled: false, via: "header" }) } }
         : { text: t("항로 지킴이를 껐어요. 문제가 생기면 물어볼게요.", "Course Keeper is off. We will ask you when something goes wrong."), action: { label: t("되돌리기", "Undo"), run: () => send({ enabled: true, via: "header" }) } });
     },
-    onError: (_error, variables, context) => {
+    onError: (error, variables, context) => {
       if (!context?.query || queryClient.getQueryCache().find({ queryKey: key, exact: true }) !== context.query) return;
       if (context?.before) queryClient.setQueryData<Trip>(key, context.before);
+      // ★`[2026-10-19 ST4F-613]` The operator switched the Course Keeper off while this screen was open: the trip is read again (it comes without `guardian`, so the icon goes).
+      //   No 「다시 시도하기」 — it would be refused again.
+      if (error instanceof LiveError && error.code === "guardian_disabled") {
+        void queryClient.invalidateQueries({ queryKey: key, exact: true });
+        show({ text: t("지금은 항로 지킴이를 쓸 수 없어요.", "Course Keeper is not available right now.") });
+        return;
+      }
       show({ text: t("항로 지킴이를 바꾸지 못했어요. 연결을 확인하고 다시 시도해 주세요.", "Course Keeper could not be changed. Check the connection and try again."), action: { label: t("다시 시도하기", "Try again"), run: () => send(variables) } });
     },
   });

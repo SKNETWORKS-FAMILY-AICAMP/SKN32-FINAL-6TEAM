@@ -810,3 +810,14 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 `[2026-10-20 사용자 결정]` 인원은 설문 계약 칸 `TripSurvey.party_size`(1~4)로 보낸다 — 서버도 이번에 함께 고쳤다(계약 → 서버 → 웹). 웹은 `/confirm` 설문에 카드에 보인 인원을 싣고(`payload.ts`), 서버는 여행 인원이 비었을 때만 쓴다(계획 확인에서 고친 값 > 계획서에서 읽은 값 > 설문). 설문 끝 요약 카드 · 메뉴 요약은 「친구 · 3명」처럼 인원을 붙인다(`model.ts` `partyLine` — 영어는 「· 3 people」, 새로 지은 문구). 계획 담기 화면의 여행자 구성 꼬리표는 그대로(구성만).
 - 시험: 웹 타입 · 린트 0, 설문 단위 22/22, 브라우저 시험은 미실행(요약 카드 기대값 4곳만 고침). 서버 쪽 시험과 로컬 실서버 확인(친구 · 3명 → 여행 인원 3)은 [작업 기록](../../../wiki/records/reports/2026-10-20_설문_여행자구성_인원_B안.md). **웹 · 서버 같이 배포**(옛 서버는 새 칸을 422 로 거절).
+
+## 2026-10-20 — 항로 지킴이 운영 스위치: 끄면 카드 · 아이콘을 숨기고 on_disruption 을 싣지 않음 (ST4F-613)
+
+`[2026-10-19 사용자 지시 · 결정]` 관리 콘솔 운영 설정의 항로 지킴이 스위치(`travel.guardian.enabled`, 기본 켜짐)를 끄면 웹에서 항로 지킴이를 숨기고, 서버는 켠 여행도 먼저 묻는다(켠 기록은 그대로). 계약 [web-trips.md 「항로 지킴이 운영 스위치」](../../../wiki/external/rest-endpoints/web-trips.md) · 서버 · 시험 기록 [작업 기록](../../../wiki/records/reports/2026-10-20_0300_항로지킴이_운영스위치_ST4F-613.md).
+- **공개 읽기**(`lib/live/features.ts`): `GET /v1/web/features` → `{guardian}` 를 세션 없이(`openApi`) 페이지마다 한 번 읽는다. 못 읽으면(옛 서버 404 · 연결 실패 · 참/거짓이 아닌 값) **켜짐**으로 본다 — 지금 동작 그대로이고 판정은 서버가 한다. 화면은 `features/guardian/availability.ts` `useGuardianShown()`(답이 오기 전 null).
+- **계획 담기**(`trip-registration.tsx`): 꺼져 있으면 「계획 확인하기」가 카드 없이 곧장 보낸다(`proceed(null)` — 아무것도 고르지 않음). 답이 오기 전에는 지금처럼 카드가 묻는다.
+- **설문에 싣는 값**(`criteria-store.ts` `withCriteria`): 꺼져 있으면 `on_disruption` 을 싣지 않는다 — 카드의 선택도, 설문에 남은 값도. 「하루 일정의 여유」는 그대로 간다(카드를 안 거쳐도). 확정(`/confirm`) · 「계획 짜 주기」(`/plan`) 모두 이 함수를 쓴다.
+- **머리 아이콘**(`guardian-header.tsx` — 읽는 중 · 계획 확인): 꺼져 있거나 답이 오기 전이면 그리지 않는다. 계획 확인 화면 파일(`features/plan-check/`)은 고치지 않았다.
+- **등록한 여행**: 서버가 꺼진 동안 여행 조회에 `guardian` 을 싣지 않아 메뉴 서랍 아이콘 · 카드 · 알림 링크 `?guardian=on` 이 저절로 없다(코드 변경 없음). 화면을 연 사이 운영자가 끄면 누른 것이 409 `guardian_disabled` → 여행을 다시 읽어 아이콘을 거두고 「지금은 항로 지킴이를 쓸 수 없어요.」(새로 지은 문구 · 영어 「Course Keeper is not available right now.」) — 「다시 시도하기」는 붙이지 않는다(`trip-guardian.tsx`).
+- mock 서버(`stub-server.mjs`): 시나리오 `features` — `off`(옛 서버 404, 기본) · `on` · `guardian_off`(서버처럼 여행 조회에 `guardian` 없음 · `POST …/guardian` 409).
+- 시험: 단위 `lib/live/features.test.ts`(새) · `criteria-store.test.ts`(꺼졌을 때 둘) — 웹 단위 전체 945/945 · 타입 0 · 린트(바뀐 파일) 0. 브라우저 시험(mock 서버) 새 `tests/live/guardian-switch.spec.ts` 6개 포함 5파일 46/46. 로컬 실서버 화면(API 8080 · 웹 3140 · 시험 DB): 켜짐이면 카드, 끄면 카드 없이 곧장 진행 · 머리 아이콘 없음 · 등록 설문에 `on_disruption` 없음(`survey_answered` = pace), 등록한 여행의 메뉴 서랍 아이콘 없음, 다시 켜면 돌아옴. 관리 콘솔 화면 눈 확인 · 실서버(배포) 확인은 아직.

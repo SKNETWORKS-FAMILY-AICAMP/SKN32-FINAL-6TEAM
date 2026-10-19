@@ -59,6 +59,9 @@ const DEFAULTS = {
   guardian: "absent",
   // the answer to `POST …/guardian`: "ok" | "fail" (500: nothing changes)
   guardianSave: "ok",
+  // `[2026-10-19 ST4F-613]` the operator's switches, read without a session (`GET /v1/web/features`): "off" (an older server: 404 — the Course Keeper shows as before)
+  //   | "on" (`{guardian: true}`) | "guardian_off" (`{guardian: false}` — and, as the server does then, the trip view has no `guardian` and `POST …/guardian` answers 409 guardian_disabled)
+  features: "off",
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
@@ -380,7 +383,7 @@ function tripView(id = TRIP_ID) {
     density: [],
     warnings: scenario.warnings === "some" ? [{ code: "density_exceeded", date: "2026-10-01", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }] : [],
   };
-  const withGuardian = scenario.guardian === "absent" ? view : { ...view, guardian: guardianState ?? { enabled: scenario.guardian === "on", since: null, via: null } };
+  const withGuardian = scenario.guardian === "absent" || scenario.features === "guardian_off" ? view : { ...view, guardian: guardianState ?? { enabled: scenario.guardian === "on", since: null, via: null } };
   if (scenario.tripItems === "stay") return { ...withGuardian, items: stayItems(), warnings: [], history: view.history.slice(0, 1), map: { days: [] } };
   return scenario.tripItems === "map" ? { ...withGuardian, items: mapItems(), warnings: [], history: view.history.slice(0, 1) } : withGuardian;
 }
@@ -924,6 +927,11 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return scenario.retention === "on" ? json(response, 200, retentionView(), origin) : json(response, 404, { detail: "Not Found" }, origin);
   }
   // ── 약관 보관 기간 (2026-10-07) ── 끝
+  // ── 기능 스위치 (2026-10-19 ST4F-613) ── (no session needed: asking must not make a user)
+  if (path === "/v1/web/features" && request.method === "GET") {
+    if (scenario.features === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    return json(response, 200, { guardian: scenario.features !== "guardian_off" }, origin);
+  }
   if (request.method === "GET" && path === "/v1/web/support/notices/board") {
     if (scenario.noticeBoard === "off") return json(response, 404, { detail: "Not Found" }, origin);
     // the server's order: posted first, then ended, each newest first (scheduled ones and the operator's name never come)
@@ -1109,6 +1117,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   // `[2026-10-06]` Turn the Course Keeper on or off: `{enabled, via}` -> `{enabled, since, via}` (the same value again changes nothing).
   const guardianPath = /^\/v1\/web\/trips\/([^/]+)\/guardian$/.exec(path);
   if (guardianPath && request.method === "POST") {
+    if (scenario.features === "guardian_off") return json(response, 409, { error: { code: "guardian_disabled", message: "항로 지킴이는 지금 쓸 수 없다 — 운영자가 꺼 두었다" } }, origin);
     if (scenario.guardianSave === "fail") return json(response, 500, { error: { code: "internal_error", message: "저장하지 못했어요" } }, origin);
     const body = JSON.parse(raw || "{}");
     if (typeof body.enabled !== "boolean" || !["card", "header", "notice", "settings"].includes(body.via)) return json(response, 422, { error: { code: "validation_error", message: "enabled 와 via 가 필요해요" } }, origin);

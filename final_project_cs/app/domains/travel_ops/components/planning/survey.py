@@ -141,11 +141,34 @@ def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> d
     return out
 
 
+def guardian_switch_on() -> bool:
+    """★`[2026-10-19 사용자 결정 — ST4F-613]` 운영자가 항로 지킴이를 켜 두었나(관리 콘솔 `travel.guardian.enabled`, 기본 켜짐).
+
+    끄면 모든 여행을 꺼진 여행과 같이 판정한다 — 아래 두 판정 함수가 이것을 본다. 저장값(`constraints.survey.on_disruption` ·
+    `survey_answered`)은 바꾸지 않으므로 다시 켜면 각 여행이 원래대로 돌아간다. 판정 함수는 여행의 테넌트를 받지 않아
+    **서비스 테넌트**(`settings.tenant_id`)의 운영 설정을 읽는다. 계약 `rest-endpoints/web-trips.md` 「항로 지킴이 운영 스위치」.
+    운영 설정 읽기가 꽂혀 있지 않으면(도구 · 단위 시험) 읽을 운영자 값이 없으므로 설정을 찾지 않고 가드레일 기본값이다(`settings_hook` 과 같은 결과)."""
+    from app.domains.travel_ops.components import settings_hook
+
+    if not settings_hook.is_registered():
+        from app.core.settings import guardian_enabled as guardrail_default
+
+        return guardrail_default()
+    from app.core.settings import get_settings
+
+    return settings_hook.guardian_enabled(get_settings().tenant_id)
+
+
 def on_disruption(constraints: Mapping[str, Any] | None) -> str:
-    """현재 고객 설정. 명시적 응답이 없는 옛 기본값도 먼저 확인으로 읽는다(D-020)."""
+    """현재 고객 설정. 명시적 응답이 없는 옛 기본값도 먼저 확인으로 읽는다(D-020).
+
+    ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 저장값과 상관없이 먼저 확인(`ask_first`)이다 — 저장값이
+    「바꿔 줘」일 때만 스위치를 읽는다."""
     survey = (constraints or {}).get("survey") or {}
     answered = set((constraints or {}).get("survey_answered") or [])
-    return "replace" if "on_disruption" in answered and survey.get("on_disruption") == "replace" else "ask_first"
+    if "on_disruption" not in answered or survey.get("on_disruption") != "replace":
+        return "ask_first"
+    return "replace" if guardian_switch_on() else "ask_first"
 
 
 def auto_on_disruption(constraints: Mapping[str, Any] | None) -> bool:
@@ -177,4 +200,4 @@ def likes_from_survey(constraints: Mapping[str, Any] | None) -> tuple[str, ...]:
 
 
 __all__ = ["ACTIVITY_DETAILS", "SURVEY_LIKES", "SURVEY_VERSION", "TripSurvey", "apply_survey", "auto_on_disruption",
-           "likes_from_survey", "on_disruption"]
+           "guardian_switch_on", "likes_from_survey", "on_disruption"]

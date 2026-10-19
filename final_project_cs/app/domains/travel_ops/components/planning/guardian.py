@@ -10,6 +10,9 @@
 ★「건너뛰기 = 꺼짐」은 `ask_first` 로 기록한다. 미응답·옛 기본 `replace`만 있는 여행도 먼저 묻는다.
 ★고정한 일정(`protected`)과 안전 사건은 켜져 있어도 먼저 묻는다 — 그 판정은 `pending.decide` 가 한다(여기서 건드리지 않는다).
 ★옛 여행도 직접 켠 기록이 있어야 자동 변경한다. 화면과 적용 판정은 같은 함수를 읽는다.
+★`[2026-10-19 사용자 결정 — ST4F-613]` 운영자가 관리 콘솔에서 항로 지킴이를 끄면(`travel.guardian.enabled`) 판정 함수가 모든 여행을 꺼짐으로 읽고
+  (`survey.guardian_switch_on`), 알림에 항로 지킴이 몫을 싣지 않는다. 여행 조회의 `guardian` 과 켜기 입구는 HTTP 입구(`entry/trip_api.py`)가 막는다.
+  저장값과 `trip_guardian_changes` 는 그대로라 다시 켜면 원래대로다.
 """
 from __future__ import annotations
 
@@ -17,7 +20,7 @@ import json
 from typing import Any, Literal, Mapping
 from uuid import UUID
 
-from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, auto_on_disruption
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, auto_on_disruption, guardian_switch_on
 
 Via = Literal["card", "header", "notice", "settings"]
 VIAS: tuple[str, ...] = ("card", "header", "notice", "settings")
@@ -63,11 +66,12 @@ def annotate(payload: dict[str, Any], *, constraints: Mapping[str, Any] | None, 
       ② 「다른 안」을 보내며 먼저 묻는 알림(이유 `ask_first`)이고 **꺼져 있으면** → `{"offer": {label, via, path, url}}` (「항로 지킴이 켜기」)
     ★직접 켜지 않은 여행에는 ①을 싣지 않는다.
     ★고정한 일정(`protected`) · 안전 알림 · 「바꿀까요?」(실내외 모름)에는 ②를 싣지 않는다 — 켜도 그 경우는 먼저 묻거나 달라지지 않는다.
-    부르는 쪽이 이미 `guardian` 을 줬으면 그대로 둔다. 알림이 만들어지는 **모든 길**(`TripStore.enqueue_*` · Case 버전의 `itinerary_actions`)이 이 한 곳을 쓴다."""
+    부르는 쪽이 이미 `guardian` 을 줬으면 그대로 둔다. 알림이 만들어지는 **모든 길**(`TripStore.enqueue_*` · Case 버전의 `itinerary_actions`)이 이 한 곳을 쓴다.
+    ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 아무것도 싣지 않는다 — 자동 변경이 없고(①) 켤 수도 없다(②)."""
     if "guardian" in payload:
         return payload
     changed, offered = _kinds(payload)
-    if not (changed or offered):
+    if not (changed or offered) or not guardian_switch_on():
         return payload
     on = is_on(constraints)
     if changed and on:
