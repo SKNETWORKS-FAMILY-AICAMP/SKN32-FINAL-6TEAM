@@ -1,4 +1,4 @@
-# triPilot 아키텍처 독립 검토 (검토 전용, 구현 증거 아님)
+# guguroute 아키텍처 독립 검토 (검토 전용, 구현 증거 아님)
 
 전제: 파일 경로는 제공된 사실에 이름만 있어서 문서명으로 적었다. 구현 시 `Grep`으로 실제 경로를 확인해야 한다. 아래 수치와 만료값 중 "(가정)" 표시는 실측이나 결정 전 정책 가정이다.
 
@@ -43,7 +43,7 @@
 - CSRF 없는 POST가 거부된다.
 - 로그에 키·토큰 평문이 없다 (OWASP Logging).
 
-**근거와 한계**: OWASP Session/Authorization/Logging, MCP authorization 2026-07-28. 표준은 triPilot의 만료 수치를 정해주지 않는다. 실행 결과는 미조회다.
+**근거와 한계**: OWASP Session/Authorization/Logging, MCP authorization 2026-07-28. 표준은 guguroute의 만료 수치를 정해주지 않는다. 실행 결과는 미조회다.
 
 ## 2. W05 자동복구 → 고객 보완입력 → 사후분석
 
@@ -124,7 +124,7 @@
 - 필수입력 누락과 조회 오류가 서로 다른 코드와 문구로 나온다.
 - 재난 정지 중 조회 실패에도 정지가 유지된다.
 
-**근거와 한계**: Azure Bulkhead, Circuit Breaker, Retry. 표준은 triPilot 숫자를 정해주지 않는다.
+**근거와 한계**: Azure Bulkhead, Circuit Breaker, Retry. 표준은 guguroute 숫자를 정해주지 않는다.
 
 ## 4. W02/W03 정리
 

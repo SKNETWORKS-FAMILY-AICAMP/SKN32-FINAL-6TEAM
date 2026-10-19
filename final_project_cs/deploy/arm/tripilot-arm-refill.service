@@ -1,5 +1,5 @@
 [Unit]
-Description=triPilot ARM replenish six hours of meaningful serving checks
+Description=guguroute ARM replenish six hours of meaningful serving checks
 
 [Service]
 Type=oneshot

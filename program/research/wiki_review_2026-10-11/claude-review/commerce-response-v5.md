@@ -44,7 +44,7 @@
 
 ## 6. 자동 주입 문서 (최우선, 가장 작은 변경)
 
-- cs의 AGENTS/CLAUDE와 RULE은 매 세션에 주입되므로 가장 먼저, 최소 변경으로 고칩니다. 이커머스 설명을 현재 여행 CS triPilot과 Activity/Dining/Mobility 설명으로 교체하고, "v6/v8 계약에 맞추라"는 문구는 제거합니다.
+- cs의 AGENTS/CLAUDE와 RULE은 매 세션에 주입되므로 가장 먼저, 최소 변경으로 고칩니다. 이커머스 설명을 현재 여행 CS guguroute과 Activity/Dining/Mobility 설명으로 교체하고, "v6/v8 계약에 맞추라"는 문구는 제거합니다.
 - 참조 sample이 별개라는 점도 한 줄로 분명히 합니다.
 
 ## 7. wiki 정리

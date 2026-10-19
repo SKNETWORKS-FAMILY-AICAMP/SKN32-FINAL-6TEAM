@@ -446,7 +446,7 @@ test("여행을 등록해 관리를 시작한 뒤 다시 요약을 열면 주 �
 
   // ★「내 여행 이어보기」 follows the server's trip list (the newest trip), not something this page remembers. The intro button
   // now goes straight to registering once the terms are agreed, so the preferences are reached from the menu (`[2026-10-13]` once My page).
-  await page.getByRole("banner").getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "guguroute — 소개 화면으로 돌아가기" }).click();
   await openPreferencesFromMenu(page);
   const preferences = page.getByRole("button", { name: /여행 취향 알아보기/ }).first();
   if (await preferences.getAttribute("aria-expanded") !== "true") await preferences.click();

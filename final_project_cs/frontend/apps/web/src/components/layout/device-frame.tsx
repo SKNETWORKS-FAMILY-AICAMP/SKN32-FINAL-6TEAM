@@ -32,15 +32,15 @@ export function DeviceFrame({ children, onBrand, headerInert = false, floating =
   const t = useT();
   const [overlay, setOverlay] = useState<HTMLElement | null>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
-  const brand = <><span className={styles.mark} aria-hidden="true">t</span>triPilot</>;
+  const brand = <><span className={styles.mark} aria-hidden="true">t</span>guguroute</>;
   return <div className={styles.stage}>
     <div className={styles.device} data-floating={floating || undefined} data-journey={scroll || undefined}>
       <OverlayRoot.Provider value={overlay}>
         <HeaderSlot.Provider value={slot}>
         <header className={styles.header} inert={headerInert}>
           {onBrand
-            ? <button type="button" className={styles.brand} onClick={onBrand} aria-label={t("triPilot — 소개 화면으로 돌아가기", "triPilot — Back to introduction")}>{brand}</button>
-            : <Link href={routes.home} className={styles.brand} aria-label={t("triPilot — 소개 화면으로 돌아가기", "triPilot — Back to introduction")}>{brand}</Link>}
+            ? <button type="button" className={styles.brand} onClick={onBrand} aria-label={t("guguroute — 소개 화면으로 돌아가기", "guguroute — Back to introduction")}>{brand}</button>
+            : <Link href={routes.home} className={styles.brand} aria-label={t("guguroute — 소개 화면으로 돌아가기", "guguroute — Back to introduction")}>{brand}</Link>}
           <div ref={setSlot} className={styles.slot} />
           {/* `[2026-10-06]` 항로 지킴이 아이콘: 등록 전 화면(읽는 중 · 계획 확인)에서, 카드로 정한 뒤부터만 보인다. */}
           <div className={styles.right}>{headerExtra}{guardianIcon && <GuardianHeaderControl />}<SettingsMenu tools={menuTools} /></div>

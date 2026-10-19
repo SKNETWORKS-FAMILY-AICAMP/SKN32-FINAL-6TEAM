@@ -1,13 +1,13 @@
 ---
 type: guide
-title: 과거 기록 — triPilot 법적 근거 원문
-description: triPilot 법적 근거 원문 — 당시 자료를 보존하는 기록 입구(현재 사양·수치로 쓰지 않는다)
+title: 과거 기록 — guguroute 법적 근거 원문
+description: guguroute 법적 근거 원문 — 당시 자료를 보존하는 기록 입구(현재 사양·수치로 쓰지 않는다)
 status: draft
 domain: neutral
 domain_note: 사용 종료된 과거 자료로 연결하는 색인이며 현재 제품 판정 재료가 아니다
 ---
 
-# 과거 기록 — triPilot 법적 근거 원문
+# 과거 기록 — guguroute 법적 근거 원문
 
 이 페이지는 **사용 종료된 당시 자료의 기록 입구**입니다. 본문에 있었던 과거 도메인 사례·수집 절차·점수·완료표·판단은 현재 여행 사양으로 적용하지 않습니다. 이전 문서 전문은 아래 기록에 보존했습니다.
 

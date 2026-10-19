@@ -74,7 +74,7 @@ export function Onboarding({ termsRequired = false, signupRequired = false, retu
   // The webhook this screen last sent: the server never answers it back, so this is how a second pass does not resend it.
   const sentWebhook = useRef<string | null>(null);
   const cards = useRef<Record<0 | 1 | 2, HTMLElement | null>>({ 0: null, 1: null, 2: null });
-  useDocumentTitle(termsRequired ? t("triPilot · 약관 동의", "triPilot · Terms & consent") : t("triPilot · 여행 취향 설문", "triPilot · Travel preferences"));
+  useDocumentTitle(termsRequired ? t("guguroute · 약관 동의", "guguroute · Terms & consent") : t("guguroute · 여행 취향 설문", "guguroute · Travel preferences"));
 
   // The survey way in opens its card at once — the terms card first when they are not agreed yet (the same for every survey link — flow check F15).
   useEffect(() => {

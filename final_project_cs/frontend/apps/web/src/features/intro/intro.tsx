@@ -15,7 +15,7 @@ import styles from "./intro.module.css";
 
 const copy: Record<Language, Record<string, string>> = {
   en: {
-    title: "triPilot · Your next journey",
+    title: "guguroute · Your next journey",
     intro: "From plans to memories,\ntriPilot by your side.",
     introDescription: "A travel partner that understands your style\nand helps you review your plans.\nMake room for the joy of the journey.",
     badge: "Your style. Your pace. Your journey.",
@@ -24,19 +24,19 @@ const copy: Record<Language, Record<string, string>> = {
     step2: "Bring your travel plans", detail2: "Add the places and plans you have in mind. See each day come together at a glance.",
     step3: "Review it together", detail3: "We look over travel times and visiting requirements. See what changed and what needs a look.",
     step4: "Refine as you go", detail4: "Browse your itinerary and visit order, and ask about your plans in chat.",
-    guide: "How to use triPilot", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
+    guide: "How to use guguroute", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
     start: "Your next journey\nstarts right here.",
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
     taste: "Your plan", trip: "Your trip", cta: "Start my itinerary",
     actionNote: "Review the terms, then add your plan.",
     actionNoteDone: "You have agreed to the terms. The preference questions are in the menu.",
     scrollHint: "Scroll down to explore", skip: "Skip intro", next: "Next screen",
-    pages: "triPilot introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
+    pages: "guguroute introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
     label0: "Introduction", label1: "How it works", label2: "Start your itinerary",
   },
   ko: {
-    title: "triPilot · 당신다운 여행의 시작",
-    intro: "계획부터 여행까지,\n당신 곁의 triPilot.",
+    title: "guguroute · 당신다운 여행의 시작",
+    intro: "계획부터 여행까지,\n당신 곁의 guguroute.",
     introDescription: "취향을 이해하고, 일정을 함께 살펴보는\n나만의 여행 파트너.\n당신은 여행의 설렘에만 집중하세요.",
     badge: "내 취향에 맞게, 내 일정에 여유롭게.",
     how: "당신다운 여행,\n이렇게 시작해요.",
@@ -44,14 +44,14 @@ const copy: Record<Language, Record<string, string>> = {
     step2: "준비한 일정 가져오기", detail2: "가고 싶은 장소와 여행 계획을 등록하면 하루의 흐름을 한눈에 정리해요.",
     step3: "함께 점검하기", detail3: "이동 시간과 방문 조건을 살펴보고, 바뀐 일정과 확인할 일정을 보여줘요.",
     step4: "대화하며 다듬기", detail4: "일정과 방문 순서를 한눈에 보고, 궁금한 점은 채팅으로 물어보세요.",
-    guide: "triPilot 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
+    guide: "guguroute 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
     start: "다음 여행의 첫걸음,\n여기서 시작해요.",
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
     taste: "나의 계획", trip: "나의 여행", cta: "내 일정 시작하기",
     actionNote: "약관 확인부터 함께할게요.",
     actionNoteDone: "약관에 동의했어요. 취향 설문은 메뉴에서 할 수 있어요.",
     scrollHint: "아래로 스크롤하며 만나보세요", skip: "소개 건너뛰기", next: "다음 화면",
-    pages: "triPilot 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
+    pages: "guguroute 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
   },
 };
@@ -262,7 +262,7 @@ export function Intro() {
         <div className={styles.ticket} data-fx="scale" style={delay(.45)}>
           <span className={styles.ticketLabel}>YOUR NEXT JOURNEY</span>
           <div className={styles.route}><strong>{text.taste}</strong><span className={styles.routeLine} aria-hidden="true">····· →</span><strong>{text.trip}</strong></div>
-          <div className={styles.ticketBottom}><span>TRAVEL PARTNER</span><span>triPilot</span></div>
+          <div className={styles.ticketBottom}><span>TRAVEL PARTNER</span><span>guguroute</span></div>
         </div>
         <div className={styles.actionArea} data-fx="up" style={delay(.95)}>
           <button type="button" className={styles.primary} onClick={() => router.push(routes.newTrip)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>

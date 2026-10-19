@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>triPilot · 서울 하루 여행 시연</title>
+<title>guguroute · 서울 하루 여행 시연</title>
 <style>
 :root{color-scheme:light;--paper:#f3f5f3;--surface:#fff;--soft:#f6f7f5;--ink:#24392f;--muted:#6d7c73;--line:#dce3dd;--green:#2e6047;--green-soft:#e9f2eb;--warn:#916425;--warn-soft:#fbf3e4;--red:#ae4b3c;--red-soft:#fceeea;--shadow:0 8px 28px #25392f0d;font-family:"Segoe UI","Malgun Gothic",sans-serif;font-size:14px;line-height:1.6;background:var(--paper);color:var(--ink)}
 *{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button,a,input,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer;color:inherit}button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #77a58a;outline-offset:3px}button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 12px}button:hover:not(:disabled){background:var(--soft)}button.primary{background:var(--green);border-color:var(--green);color:#fff}button.primary:hover:not(:disabled){background:#244e39}button.quiet{background:transparent;border-color:transparent}h1,h2,h3,p{margin:0}h1{font-size:23px;font-weight:600;letter-spacing:-.8px}h2{font-size:17px;font-weight:600}h3{font-size:14px;font-weight:600}strong{font-weight:600}small,.muted{color:var(--muted);font-size:12px}.eyebrow{font-size:10px;letter-spacing:1.4px;font-weight:600;color:var(--muted)}.row{display:flex;align-items:center;gap:10px}.wrap{flex-wrap:wrap}.between{justify-content:space-between}.pill{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:3px 8px;border-radius:5px;font-size:11px;background:var(--soft);border:1px solid var(--line);line-height:1.5}.pill.good{color:var(--green);border-color:#c7dfce;background:var(--green-soft)}.pill.warn{color:var(--warn);border-color:#ead9b9;background:var(--warn-soft)}.pill.bad{color:var(--red);border-color:#efcabe;background:var(--red-soft)}.dot{width:6px;height:6px;border-radius:50%;background:#5b986a;display:inline-block;flex-shrink:0}.hidden,[hidden]{display:none!important}
@@ -58,7 +58,7 @@ body:not(.filming){overflow:auto}.workspace{min-height:560px}.filming .workspace
   </nav></div>
 </section>
 <header class="topbar">
-  <a class="brand" href="tripilot-intake-wireframe.html" aria-label="triPilot · 내 여행 홈"><span class="brand-mark" aria-hidden="true">t</span>triPilot</a>
+  <a class="brand" href="tripilot-intake-wireframe.html" aria-label="guguroute · 내 여행 홈"><span class="brand-mark" aria-hidden="true">t</span>guguroute</a>
 </header>
 <section class="tripbar" aria-label="여행 개요">
   <div><div class="eyebrow">SEOUL · READY FOR YOUR TRIP</div><h1>서울, 취향을 따라 걷는 하루</h1><p class="muted">2026-09-15 · 서울 · 2명 · 1일 여행</p></div>
@@ -226,7 +226,7 @@ function deferNotificationDismiss(){
 function showNotification(title,preview){
   notificationIndex=state.messages.length-1;
   const message=state.messages[notificationIndex];
-  $('#noticeMeta').textContent=`triPilot · ${message.time}`;
+  $('#noticeMeta').textContent=`guguroute · ${message.time}`;
   $('#noticeTitle').textContent=title;
   $('#noticePreview').textContent=preview||message.text;
   $('#tripNotice').hidden=false;
@@ -275,7 +275,7 @@ function renderMap(){
 }
 function renderMessage(message,index){
   if(message.role==='system')return `<div class="message system"><span class="bubble">${esc(message.text)}</span></div>`;
-  return `<div id="message-${index}" tabindex="-1" class="message ${message.role==='user'?'user':''}">${message.role==='assistant'?'<div class="message-icon" aria-hidden="true">t</div>':''}<div class="message-body"><div class="meta">${message.role==='user'?'나':'triPilot'} · ${esc(message.time)}</div><div class="bubble">${esc(message.text)}</div></div></div>`;
+  return `<div id="message-${index}" tabindex="-1" class="message ${message.role==='user'?'user':''}">${message.role==='assistant'?'<div class="message-icon" aria-hidden="true">t</div>':''}<div class="message-body"><div class="meta">${message.role==='user'?'나':'guguroute'} · ${esc(message.time)}</div><div class="bubble">${esc(message.text)}</div></div></div>`;
 }
 function renderIncident(){
   const pendingKey=Object.keys(state.events).find(key=>state.events[key].pending);
@@ -484,7 +484,7 @@ function showModal(kind){
   }else{
     content=`<div class="eyebrow">PRESENTATION GUIDE</div><h2>서울 하루 여행 시연</h2><p><strong>확정_시나리오_액티비티_수정_버전.md</strong>를 반영한 12개 장면과 6개 사건을 바탕으로, 에이전트가 대안을 먼저 확정·적용한 뒤 알리는 서비스 흐름을 체험하는 HTML 목업입니다.</p><ol><li><strong>상단 알림:</strong> 새 안내와 일정 변경은 화면 상단 중앙에도 표시됩니다. “채팅 확인”을 누르면 재생을 멈추고 해당 메시지로 이동합니다. 알림은 약 8초 후 사라지며, × 또는 <kbd>Esc</kbd>로 닫을 수 있습니다.</li><li><strong>수동 시연:</strong> 다음 장면으로 이동하면 감지 → 대안 탐색 → 일정 확정·반영 → 알림이 자동으로 이어집니다. 점심 지연·식당 임시휴무·상품 품절은 여행자가 채팅으로 알린 뒤 탐색·반영을 시작합니다.</li><li><strong>변경 요청:</strong> 확정 알림의 “에이전트에게 변경 요청”을 누르면 입력창에 요청 예시가 들어갑니다. 내용을 전송하거나 채팅 아래 예시를 누르면 다시 탐색하고 변경을 적용합니다. 경로·식당 교체, 짧은 관람·휴식 등 준비된 요청을 시연합니다. 문서의 경로·식당 후보는 기존 데모의 자동 확정 후 재요청 흐름으로 표현합니다.</li><li><strong>자동 재생:</strong> 약 2분 동안 하루를 시연합니다. 08:00 정시 안내 → 09:00 미세먼지 사전 감지·일정 조정 → 10:00 아쿠아리움 관람 일정으로 이어지며 사용자 신고 메시지도 시연합니다. 점심은 신고 후 A 식당으로 확정한 뒤 가벼운 식사를 요청하면 B 식당으로 재적용합니다. 시계는 처리 중에는 실제 경과 시간으로, 다음 장면으로 이동할 때는 빠르게 연속해서 흐릅니다. 일시정지하면 시계·채팅 출력·일정 변경 단계와 알림 표시 시간이 함께 멈춥니다. 다시 재생하면 남은 대기 시간부터 이어집니다.</li><li><strong>영상 촬영:</strong> 기본은 촬영 모드입니다. <kbd>F</kbd>로 발표자 제어 영역을 표시·숨기고, <kbd>Space</kbd>로 자동 재생을 시작·일시정지·재개합니다. 일정 변경 처리 중에도 멈출 수 있으며, 버튼에 포커스가 있어도 작동합니다. 채팅 입력창에서는 띄어쓰기를 유지하므로 입력창 밖을 클릭한 뒤 사용하세요. 실제 녹화는 운영체제나 녹화 도구에서 시작하세요.</li><li><strong>장면 재촬영:</strong> 장면 선택이나 <kbd>←</kbd>로 해당 장면의 시작 시각부터 다시 시연합니다. 앞선 사건은 자동 반영과 기존 변경 요청으로 재구성됩니다. <kbd>→</kbd>는 처리 완료 후 다음 장면으로 이동합니다.</li><li><strong>상세 확인:</strong> 왼쪽 일정이나 가운데 핀에서 상세를 확인하고, 변경 기록에서 자동 확정과 재요청에 따른 버전별 이력을 확인하세요.</li></ol><div class="inline-warning">모든 사건·대화·운영 정보는 시연 데이터입니다. AI·백엔드·예약·교통·날씨·재고 서비스와 연결되지 않습니다. 지도와 핀은 시연 배치이며 실제 Google Maps가 아닙니다.</div><p class="muted">우측 시계는 실제 현재 시간이 아닌 시나리오 속 서울 시각입니다. 08:00은 하루 일정 안내의 고정 발송 시각이며, 09:00은 10:00 활동의 기상 사전 감지·조정 시각, 20:30은 변경 내역 안내를 위한 시연 시각입니다. 실제 위치·탑승·도착·귀가 여부를 감지하지 않습니다. 경로 수치, 익명 식당·판매점, 추가 휴식은 시연용 예시이며 실측 이동 시간으로 계산하지 않았습니다. 일정 확정과 업체 예약 승인은 별개이며, 원래 점심 예약의 취소·변경 및 판매점 재고를 확인 완료로 처리하지 않습니다.</p><p class="muted">오른쪽 위에서 한국어와 영어를 선택할 수 있습니다. 화면과 시연 대화가 함께 전환되며 장면·변경 기록은 유지됩니다.</p><div class="modal-footer">촬영 권장: 1440×900 또는 1920×1080, 브라우저 확대 100%. 새로고침하면 처음부터 시작합니다. 입력한 대화는 현재 탭에서만 유지됩니다.</div>`;
   }
-  $('#modalRoot').innerHTML=`<div class="modal-backdrop" data-backdrop><section class="modal" role="dialog" aria-modal="true" aria-label="${kind==='history'?'변경 기록':'시연 안내'}"><div class="row between"><span class="pill">triPilot · DEMO</span><button data-action="closeModal" aria-label="창 닫기">닫기 ×</button></div>${content}</section></div>`;
+  $('#modalRoot').innerHTML=`<div class="modal-backdrop" data-backdrop><section class="modal" role="dialog" aria-modal="true" aria-label="${kind==='history'?'변경 기록':'시연 안내'}"><div class="row between"><span class="pill">guguroute · DEMO</span><button data-action="closeModal" aria-label="창 닫기">닫기 ×</button></div>${content}</section></div>`;
   $('#modalRoot [data-action="closeModal"]').focus();
 }
 function closeModal(){if(!$('#modalRoot').hasChildNodes())return;$('#modalRoot').innerHTML='';modalOpener?.focus({preventScroll:true});}

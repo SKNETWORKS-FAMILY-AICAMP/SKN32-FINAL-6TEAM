@@ -1,5 +1,5 @@
 [Unit]
-Description=triPilot ARM serving checks every thirty minutes
+Description=guguroute ARM serving checks every thirty minutes
 
 [Timer]
 OnBootSec=10min

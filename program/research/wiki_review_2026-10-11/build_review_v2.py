@@ -25,7 +25,7 @@ add('W02','고객 웹·개인 AI 연동·공유 계획서의 역할 명시',
     '“별도 접점”을 지우고, 고객이 이용하는 화면과 API의 역할을 적습니다.',
     [('A','현재 웹 기능까지 범위에 포함','웹 입력·일정 구성·검증·수정·감시 설정, 개인 AI 연동, 공유 계획서 열람을 함께 설명합니다.'),('B','웹은 입력·검토 중심','최초 자동 일정 구성은 시험 기능으로 표시합니다. 현재 기능을 제품 약속에서 좁히는 선택입니다.'),('C','개인 AI 중심으로 제공','개인 AI가 일정을 만들고 웹은 검토·관리만 합니다. 현재 웹 일정 구성 기능의 역할을 축소합니다.')],
     ['scope·positioning·system-context의 “자체 앱 없음/계획 생성은 우리 일 아님”을 현재 웹 흐름에 맞게 바꿉니다.','범위표에 고객 웹 화면, 개인 AI 연동(API/MCP), 공유 계획서 링크를 적습니다. 모두 같은 여행 상태를 사용하며 독립 앱 3개를 만들자는 뜻이 아닙니다.','최초 일정 구성과 여행 중 재계획을 분리하고 지원 지역·자료·검증 수준을 각 기능에 연결합니다.'],
-    '고객은 triPilot 웹에서 여행 조건과 장소를 입력하고 일정을 구성·검토·수정한다. 개인 AI는 API/MCP로 본인 여행을 조회·처리한다. 공유 계획서 링크는 최신 일정을 읽는 화면이며 편집 권한을 주지 않는다.',
+    '고객은 guguroute 웹에서 여행 조건과 장소를 입력하고 일정을 구성·검토·수정한다. 개인 AI는 API/MCP로 본인 여행을 조회·처리한다. 공유 계획서 링크는 최신 일정을 읽는 화면이며 편집 권한을 주지 않는다.',
     ['제품 범위표와 실제 웹 입력→구성→검토→등록 흐름이 일치합니다.','웹 제공을 제외하는 현재 문구를 제거하고, 미검증 기능을 완료라고 쓰지 않습니다.'],targets=['wiki/product/scope.md','wiki/product/positioning.md','wiki/architecture/system-context.md','final_project_cs/wiki/external/rest-endpoints.md'])
 
 add('W03','항로 지킴이 켜짐: 검증한 변경을 자동 적용',
@@ -46,7 +46,7 @@ add('W05','자동 처리·고객 보완 입력·개발자/QA 사후 분석',
     '실시간 상담원 인계를 없애고, 자동 복구와 고객의 직접 해결을 지원하면서 결함 자료를 축적합니다.',
     [('A','기존 DB에 결함·영향 기록 + 사후 분석','현재 규모에 맞게 시작합니다. 개발자·QA 조회는 별도 내부 권한으로 제한합니다.'),('B','관측 도구에 결함 집계 위임','중복 오류와 추적을 도구가 묶습니다. 외부 전송 범위·보존 비용·영향 고객 연결을 추가 설계해야 합니다.'),('C','처음부터 전용 수집 작업자 분리','오류가 많아도 고객 처리와 자원을 분리합니다. 대기열·재전송·누락 검사 운영이 늘어납니다.')],
     ['실시간 상담원 대기·수동 처리 완료 기준을 제거합니다. 자동 재조회·대체 자료·재분류 후에도 실패하면 원인을 구분합니다.','고객이 고칠 수 있는 장소명·주소·날짜 등만 입력 요청합니다. 검증된 후보가 있으면 추천순으로 최대 3개와 추천 이유를 제시하고, 없으면 직접 입력 필드를 제공합니다. 외부 API 장애를 고객 입력 탓으로 돌리지 않습니다.','장소 미매칭, 처리 오류, 고객 건의를 별도 유형으로 저장합니다. 오류 발생 기록과 동일 결함 묶음, 영향 고객 연결을 분리합니다. 고객 건의와 장소 입력은 검증 전 공용 자료에 자동 반영하지 않습니다.','개발자·QA는 결함 유형·재현 조건·영향 고객·해결 판본을 사후 조회합니다. 고객 요청을 대신 처리하거나 일정 DB를 직접 고치는 권한은 부여하지 않습니다.','대기열 지연·DB 기록 지연이 기준을 넘으면 수집 작업자를 분리하고, 동일 결함은 집계·표본 상세로 저장합니다. 영향 고객 연결과 발생 건수는 표본으로 줄이지 않습니다.'],
-    'triPilot은 실시간 상담원 또는 운영관리자의 개입 없이 동작한다. 자동 해결이 어려운 고객 입력은 추천안과 함께 고객이 보완한다. 미매칭 장소·오류·건의는 개발자·QA의 사후 개선을 위한 기록으로 축적하며 상담 인계나 수동 처리 완료로 표시하지 않는다.',
+    'guguroute은 실시간 상담원 또는 운영관리자의 개입 없이 동작한다. 자동 해결이 어려운 고객 입력은 추천안과 함께 고객이 보완한다. 미매칭 장소·오류·건의는 개발자·QA의 사후 개선을 위한 기록으로 축적하며 상담 인계나 수동 처리 완료로 표시하지 않는다.',
     ['실패 응답에 다음 행동·입력 항목·가능한 추천·고객용 오류 코드가 있습니다. 상담원 배정 약속은 없습니다.','같은 오류 반복 시 결함 묶음은 하나이고 발생 건수·영향 고객은 빠짐없이 집계됩니다.','진단 저장 실패가 추가 무한 재시도나 다른 고객 처리 중단을 만들지 않습니다.'],targets=['wiki/delivery/dod.md','final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md','final_project_cs/wiki/external/rest-endpoints.md','wiki/architecture/notifications.md'],basis=['logging','queue','retry'],fixed=True)
 
 add('W06','조회 실패는 해당 기능에서 격리하고 복구',
@@ -213,7 +213,7 @@ by_id['W04']['replacement'] += ' 쿠키와 사용자·에이전트 키가 함께
 by_id['W04']['checks'] += ['공유 중지·재발급·만료 뒤 옛 토큰이 거부되고 새 알림은 새 링크를 사용합니다.','공유 URL 토큰이 접근 로그·외부 요청 Referer에 남지 않습니다. 현재 구현 확인과 새 정책 구현 완료를 구분합니다.']
 by_id['W04']['targets'] += ['final_project_cs/app/domains/travel_ops/components/itinerary/plan_link.py','final_project_cs/app/domains/travel_ops/entry/trip_api.py','final_project_cs/app/domains/travel_ops/modules/web_account/web_cookie.py']
 by_id['W05']['steps'] += ['실제 support 화면의 “운영팀 답변 대기”와 문의 응답 타입을 건의·문제 신고 접수로 개편합니다. 접수 성공은 기록 완료만 뜻하고 고객 문제 해결을 뜻하지 않습니다. 계정 차단 문구의 “운영자에게 문의”도 자동 안내·건의 기록 경로로 바꿉니다.','고객의 업무 처리 결과는 완료/입력 필요/변경 보류/처리 불가로 설명하고, 내부 escalated가 상담원 대기라는 뜻으로 화면에 번역되지 않게 응답 대응표를 만듭니다. 상태기계 변경이 필요하면 계약 판올림과 이관을 별도 작업으로 수행합니다.','진단 DB 저장 실패는 제한된 마스킹 이벤트를 로컬 영속 대기 파일에 보관하고 복구 후 같은 발생 ID로 전송합니다. 용량 상한과 유실 지표를 둡니다. DB와 대기 파일 모두 실패하면 내부 관측에 수집 저하를 표시하고 영속 기록을 보장했다고 세지 않습니다.','서비스 설정·배포·결함 분석은 개발자의 유지보수 역할입니다. 고객 요청마다 운영관리자 승인을 기다리는 구조를 뜻하지 않으며, 고객 여행 편집 권한과 분리합니다.']
-by_id['W05']['replacement']='triPilot은 실시간 상담원 대기나 건별 수동 처리를 전제하지 않는다. 자동 해결이 어려운 고객 입력은 추천안과 함께 고객이 보완한다. 미매칭 장소·오류·건의는 접근이 제한된 사후 개선 기록으로 축적하며 가명 고객 ID에도 접근통제·보존기한을 둔다. 개발자의 설정·배포·QA는 유지보수이며 고객 처리의 대기 조건이 아니다.'
+by_id['W05']['replacement']='guguroute은 실시간 상담원 대기나 건별 수동 처리를 전제하지 않는다. 자동 해결이 어려운 고객 입력은 추천안과 함께 고객이 보완한다. 미매칭 장소·오류·건의는 접근이 제한된 사후 개선 기록으로 축적하며 가명 고객 ID에도 접근통제·보존기한을 둔다. 개발자의 설정·배포·QA는 유지보수이며 고객 처리의 대기 조건이 아니다.'
 by_id['W05']['checks'] += ['문의 화면·접수 응답·계정 차단 안내에 운영팀 답변을 기다린다는 약속이 남지 않습니다.','기록 저장 실패·대기 파일 포화·복구 재전송을 검사하고 기록 누락을 정상 수집으로 세지 않습니다.']
 by_id['W05']['targets'] += ['final_project_cs/frontend/apps/web/src/features/support/support.tsx','final_project_cs/frontend/apps/web/src/features/support/client.ts','final_project_cs/app/domains/travel_ops/modules/web_account/admin_customer_api.py','final_project_cs/app/domains/travel_ops/modules/web_account/web_cookie.py']
 by_id['W06']['steps'] += ['D-017의 “점검 소스 실패는 알리지 않는다”를 명시적으로 대체합니다. 일시 재시도 중에는 알림을 만들지 않고, 주자료·대체 자료가 시간/횟수 예산 안에서 모두 실패해 영향을 확정했을 때 여행별 장애 회차에 한 번, 정상 재검증으로 회복했을 때 한 번 안내합니다.','설정 오류로 필수 기반을 보장할 수 없는 기동 실패와 외부 조회 하나의 실패를 분리합니다. 불확실한 상태에서 접근 권한을 완화하거나 쓰기를 재개하지 않습니다.']
@@ -262,7 +262,7 @@ TERMS = [
 TERMS_EXAMPLE = '예: 같은 점검에서 관광지 폐쇄와 식당 휴무가 발견되면, 함께 처리하는 스위치와 항목 수 제한 안에서 사건 하나로 모읍니다. 활동 변경을 반영한 초안으로 식당·이동을 계산하고 전체 일정을 재검증합니다. 자동 적용 가능한 변경은 새 일정 버전·변경 알림 각각 하나로 모읍니다. 고객 확인이 필요한 질문은 항목마다 따로 보냅니다.'
 
 SOURCES = {
- 'session':('OWASP 세션 관리','https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html','브라우저 세션 속성·수명·폐기와 세션 식별자 보호의 근거. triPilot의 7일·90일을 정한 표준은 아닙니다.'),
+ 'session':('OWASP 세션 관리','https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html','브라우저 세션 속성·수명·폐기와 세션 식별자 보호의 근거. guguroute의 7일·90일을 정한 표준은 아닙니다.'),
  'authorization':('OWASP 권한 검사','https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html','최소 권한·기본 거부·매 요청 자원 권한 검사. 인증 수단과 편집 권한을 구분하는 근거입니다.'),
  'mcp':('MCP 인증 사양 2026-07-28','https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization','HTTP MCP 인증과 대상 자원·인가 흐름의 근거. 현재 키 방식이 OAuth 구현 완료라는 뜻은 아닙니다.'),
  'logging':('OWASP 로그 기록','https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html','오류·상관 식별자와 민감값 제외·접근 통제·기록 실패 검사. 제안한 보존 일수를 규정하지 않습니다.'),
@@ -346,8 +346,8 @@ def render():
             rs=json.loads(rw.get('stdout','{}'));second_ok=rw.get('returncode')==0 and not rs.get('is_error',False) and bool(rs.get('result')) and 'claude-sonnet-5-5' in rs.get('modelUsage',{})
         except (ValueError,TypeError): pass
     consult=('Claude Code CLI · Claude Sonnet 5.5(claude-sonnet-5-5)와 '+('두 차례' if second_ok else '한 차례')+' 검토했습니다. 합의한 설계 방향과 Codex가 추가로 정한 세부 정책을 반영 판단 기록에서 구분했습니다.') if cli_ok else 'Claude Sonnet 5.5 검토 요청을 보냈으나 정상 응답 확인 전입니다. 공동 검토 완료로 표시하지 않습니다.'
-    html='<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>triPilot wiki 수정 계획 v2 · 선택지와 추천안</title><style>'+css+'</style></head><body><main>'
-    html+='<header><p class="muted">triPilot · 현재 기준 정리 · 2026-10-11 · 수정 계획 v2</p><h1>wiki를 어떻게 고칠지 정했습니다.</h1><p>항로 지킴이는 자동 변경, 고객 대응은 자동 처리와 직접 보완 입력으로 정리합니다. 나머지는 각 항목의 A안을 기본으로 채택합니다.</p></header>'
+    html='<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>guguroute wiki 수정 계획 v2 · 선택지와 추천안</title><style>'+css+'</style></head><body><main>'
+    html+='<header><p class="muted">guguroute · 현재 기준 정리 · 2026-10-11 · 수정 계획 v2</p><h1>wiki를 어떻게 고칠지 정했습니다.</h1><p>항로 지킴이는 자동 변경, 고객 대응은 자동 처리와 직접 보완 입력으로 정리합니다. 나머지는 각 항목의 A안을 기본으로 채택합니다.</p></header>'
     html+='<div class="progress">'+table(['할 일','상태','진행'],[['검토 항목의 수정 계획','작성','25/25 = 100%'],['항목별 선택지·추천안','작성','25/25 = 100%'],['전체 wiki 본문 정독','기존 확인 범위','31/284 = 10.9%'],['wiki 본문·제품 코드 적용','이 문서와 구분','이번 산출물은 적용 계획; 완료 수에 포함하지 않음']])+'</div>'
     html+='<p class="note"><strong>읽는 법</strong> — 각 항목에서 결론 → A/B/C 비교 → 실제 수정 문장과 완료 검사를 보시면 됩니다. 선택하지 않으면 A안입니다. 화면 선택은 이 기기의 검토 표시이며 wiki나 제품 설정을 바꾸지 않습니다. 말씀하신 자동 운영 방향은 선택지와 무관하게 유지합니다.</p>'
     html+='<div class="tools"><button id="export" type="button">선택 결과 보기</button><button id="reset" type="button">모든 항목을 추천안으로 되돌리기</button><button id="print" type="button">검토안 인쇄하기</button></div><p class="selection-note" id="selection-status" aria-live="polite"></p><div id="export-panel" hidden><label for="export-text">복사해서 전달할 선택 결과 · 화면 선택만으로 wiki가 바뀌지는 않습니다.</label><textarea id="export-text" readonly rows="12" style="width:100%;font:inherit"></textarea></div>'
@@ -386,14 +386,14 @@ function notify(){const n=Object.values(selected()).filter(x=>x!=='A').length;do
 try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved)form.forEach(x=>{if(['A','B','C'].includes(saved[x.name]))x.checked=saved[x.name]===x.value;});}catch(e){}
 form.forEach(x=>x.addEventListener('change',()=>{try{localStorage.setItem(key,JSON.stringify(selected()));}catch(e){}notify();}));
 document.getElementById('reset').addEventListener('click',()=>{form.forEach(x=>x.checked=x.value==='A');try{localStorage.removeItem(key);}catch(e){}notify();});
-document.getElementById('export').addEventListener('click',()=>{const data={document:'triPilot wiki review v2',selected_at:new Date().toISOString(),defaults:defaults(),selections:selected(),scope:'review choices only; no wiki or product mutation'};document.getElementById('export-panel').hidden=false;const text=document.getElementById('export-text');text.value=JSON.stringify(data,null,2);text.focus();text.select();});
+document.getElementById('export').addEventListener('click',()=>{const data={document:'guguroute wiki review v2',selected_at:new Date().toISOString(),defaults:defaults(),selections:selected(),scope:'review choices only; no wiki or product mutation'};document.getElementById('export-panel').hidden=false;const text=document.getElementById('export-text');text.value=JSON.stringify(data,null,2);text.focus();text.select();});
 document.getElementById('print').addEventListener('click',()=>{document.querySelectorAll('details').forEach(d=>d.open=true);window.print();});
 notify();
 </script></body></html>'''
     for x in PLANS:x['status']='수정 계획 기본안 채택; wiki·코드 적용 상태와 별개'
     backup_write(OUT/'wiki-review-v2.html',html)
     backup_write(OUT/'findings-v2.json',json.dumps(dict(updated_at=STAMP,default='A',claude_verified=cli_ok,claude_rounds=2 if second_ok else int(cli_ok),claude_model=model,scope='review plan only',findings=PLANS,sources=SOURCES,architecture_terms=TERMS,architecture_example=TERMS_EXAMPLE,terminology_review='2026-10-11; local decisions and code review; Claude rounds predate this wording correction'),ensure_ascii=False,indent=2))
-    md='# triPilot wiki 수정 계획 v2\n\n항로 지킴이 자동 변경·상담원 없는 자동 운영을 반영했습니다. 별도 선택이 없으면 각 항목 A안을 기본 채택합니다. 이 문서는 실행 계획이며 wiki·코드·배포 완료 보고가 아닙니다.\n\n'+consult+'\n'
+    md='# guguroute wiki 수정 계획 v2\n\n항로 지킴이 자동 변경·상담원 없는 자동 운영을 반영했습니다. 별도 선택이 없으면 각 항목 A안을 기본 채택합니다. 이 문서는 실행 계획이며 wiki·코드·배포 완료 보고가 아닙니다.\n\n'+consult+'\n'
     md+='\n## 에이전트 팀 호출과 여행 상태 점검 용어\n\n팀은 에이전트 팀을 뜻합니다. 코어라는 계층 이름을 호출 담당의 이름 대신 쓰지 않습니다.\n\n| 정확한 이름 | 하는 일 |\n|---|---|\n'+''.join('| '+name+' | '+meaning+' |\n' for name,meaning in TERMS)+'\n'+TERMS_EXAMPLE+'\n\n이번 용어 정정은 개정 결정과 로컬 코드 대조 결과이며 앞선 Claude 두 차례 검토 이후에 수행했습니다.\n'
     for x in PLANS:
         md+='\n## '+x['id']+' · '+x['title']+'\n\n'+x['decision']+'\n\n'

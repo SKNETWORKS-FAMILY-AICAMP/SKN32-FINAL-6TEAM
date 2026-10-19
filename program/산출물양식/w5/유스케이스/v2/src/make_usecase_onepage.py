@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 — 전부 한 장(합성판). 깔끔하게 나온 세부 그림 넷을 구역으로 위에서 아래로 쌓고,
+"""guguroute 유스케이스 — 전부 한 장(합성판). 깔끔하게 나온 세부 그림 넷을 구역으로 위에서 아래로 쌓고,
 구역 사이 «include»(2 여행 중 요청 · 4 자동 관리 → 3 일정 조율)만 직접 그어 한 장으로 만든다.
 
     python make_usecase_onepage.py   → ../uc_onepage.svg · ../uc_onepage.html (PNG 는 Edge 로 찍는다)
@@ -28,7 +28,7 @@ class Band(V.D):
 
     def render(self):
         body = (self.head + (["  { rank=min; " + " ".join(self.L) + " }"] if self.L else [])
-                + [f'  subgraph cluster_sys {{ label=<<B>triPilot · {self.region}</B>>; fontsize=16; fontcolor="{self.color}"; '
+                + [f'  subgraph cluster_sys {{ label=<<B>guguroute · {self.region}</B>>; fontsize=16; fontcolor="{self.color}"; '
                    f'style="rounded"; color="{self.color}"; penwidth=2.2; margin=20;']
                 + ["    " + u for u in self.U] + ["  }"]
                 + (["  { rank=max; " + " ".join(self.R) + " }"] if self.R else [])
@@ -190,9 +190,9 @@ def main():
         links.append((f"M{sx:.1f},{sy:.1f} L{lane:.1f},{sy:.1f} L{lane:.1f},{ey + 34 + i * 12:.1f} L{ex:.1f},{ey + 34 + i * 12:.1f} L{ex:.1f},{ey + 2:.1f}", "«include»", (lane + 6, (sy + ey) / 2)))
     link_svg = "".join(f'<path d="{d}" fill="none" stroke="{G1}" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#vee)"/>'
                        f'<text x="{lx:.1f}" y="{ly:.1f}" font-size="13" fill="{G1}" font-family="Malgun Gothic">{t}</text>' for d, t, (lx, ly) in links)
-    title = (f'<text x="{W / 2:.1f}" y="40" text-anchor="middle" font-size="26" font-weight="700" fill="#1d2a23" font-family="Malgun Gothic">triPilot 유스케이스 — 전체 한 장</text>'
+    title = (f'<text x="{W / 2:.1f}" y="40" text-anchor="middle" font-size="26" font-weight="700" fill="#1d2a23" font-family="Malgun Gothic">guguroute 유스케이스 — 전체 한 장</text>'
              f'<text x="{W / 2:.1f}" y="66" text-anchor="middle" font-size="14" fill="#5f6b64" font-family="Malgun Gothic">'
-             f'v2 · 2026-10-02 · 실제 API · 코드 기준 · 구역 넷은 하나의 시스템(triPilot) · 굵은 점선 = 구역 사이 «include»</text>')
+             f'v2 · 2026-10-02 · 실제 API · 코드 기준 · 구역 넷은 하나의 시스템(guguroute) · 굵은 점선 = 구역 사이 «include»</text>')
     foot = (f'<text x="40" y="{H - 30:.1f}" font-size="13" fill="#5f6b64" font-family="Malgun Gothic">'
             f'실선 = 연관 · 점선 «include» = 반드시 쓰는 공통 기능 · 점선 «extend» = 조건이 맞을 때만 · 빈 삼각형 = 일반화 · '
             f'AI 모델 · 장소 정보 · 디스코드는 같은 액터를 구역마다 옆에 다시 그렸다(선을 짧게)</text>')
@@ -204,7 +204,7 @@ def main():
     import base64
     png64 = base64.b64encode((OUT / "actor.png").read_bytes()).decode()
     one = re.sub(r'xlink:href="[^"]*actor\.png"', f'xlink:href="data:image/png;base64,{png64}"', svg)
-    (OUT / "uc_onepage.html").write_text(f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>triPilot 유스케이스 전체 한 장</title>'
+    (OUT / "uc_onepage.html").write_text(f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>guguroute 유스케이스 전체 한 장</title>'
                                          f'<style>body{{margin:0;background:#fff}}svg{{display:block}}</style></head><body>{one}</body></html>', encoding="utf-8")
     print("ok", int(W), "x", int(H))
 

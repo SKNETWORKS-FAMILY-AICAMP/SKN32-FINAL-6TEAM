@@ -89,7 +89,7 @@
     document.documentElement.lang=state.lang;
     const step=state.view==='registration'?0:state.view==='checking'?1:2;
     shell.dataset.view=state.view;
-    shell.innerHTML=`<header class="j-topbar"><button type="button" class="j-brand brand" data-j-action="home" aria-label="${t('triPilot 홈으로','triPilot home')}"><span class="brand-mark" aria-hidden="true">t</span>triPilot</button><div class="j-top-actions"><button type="button" class="j-home-button" data-j-action="home" aria-label="${t('홈으로','Home')}">${icon('home')}</button><button type="button" class="j-language-button" data-j-action="language">${t('English','한국어')}</button></div></header><div class="j-main">
+    shell.innerHTML=`<header class="j-topbar"><button type="button" class="j-brand brand" data-j-action="home" aria-label="${t('guguroute 홈으로','guguroute home')}"><span class="brand-mark" aria-hidden="true">t</span>guguroute</button><div class="j-top-actions"><button type="button" class="j-home-button" data-j-action="home" aria-label="${t('홈으로','Home')}">${icon('home')}</button><button type="button" class="j-language-button" data-j-action="language">${t('English','한국어')}</button></div></header><div class="j-main">
     ${state.view!=='trip'?`<ol class="j-steps">${[t('계획 담기','Your plan'),t('함께 확인','Check together'),t('여행 시작','Your journey')].map((label,i)=>`<li ${i===step?'aria-current="step"':''} ${i<step?'data-done="true"':''}><span>${i<step?icon('check'):'0'+(i+1)}</span>${label}</li>`).join('')}</ol>`:''}
     ${state.view==='registration'?registrationMarkup():state.view==='checking'?verificationMarkup():state.view==='results'?resultsMarkup():window.triPilotWorkspace.render(context())}
     <footer class="j-footer"><span>${icon('leaf')}${t('당신의 취향대로, 더 편안하게.','More you. A little more at ease.')}</span><p class="j-demo-note">${t('인터랙션 목업 · 검증과 채팅은 시연 응답이며 실제 서비스에 연결되지 않아요.','Interactive preview · Checks and chat use demo responses, without a live service connection.')}</p></footer></div>`;
@@ -109,7 +109,7 @@
   function navigate(view) {
     if(view==='results'&&state.verification!=='completed')view='checking';
     if(view==='trip'&&state.status!=='active')view=state.verification==='completed'?'results':'registration';
-    history.pushState({tripilotView:view},'',view==='home'?location.pathname+location.search:'#'+view);
+    history.pushState({gugurouteView:view},'',view==='home'?location.pathname+location.search:'#'+view);
     show(view);
   }
   function beginVerification(retry=false) {
@@ -162,7 +162,7 @@
     if(view==='results'&&state.verification!=='completed')view='checking';
     show(view);
   });
-  history.replaceState({tripilotView:'home'},'',location.pathname+location.search);
+  history.replaceState({gugurouteView:'home'},'',location.pathname+location.search);
   window.triPilotJourney={
     open(options){state.lang=options.lang;state.answers={...options.answers};onHome=options.onHome;if(state.verification==='completed')refreshResults();navigate(state.status==='active'?'trip':'registration')},
     setLanguage(lang){

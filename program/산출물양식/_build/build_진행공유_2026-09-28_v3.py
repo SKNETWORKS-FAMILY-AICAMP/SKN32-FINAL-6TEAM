@@ -187,7 +187,7 @@ def table(s, rows, widths, y=1.7, height=4.5, headings=('항목', '상태', '근
 # 1. 표지
 s = p.slides.add_slide(BLANK)
 s.shapes.add_picture(io.BytesIO(BG_COVER), 0, 0, p.slide_width, p.slide_height)
-text(s, .46, 2.05, 12, .85, 'triPilot 진행 공유', 40, True)
+text(s, .46, 2.05, 12, .85, 'guguroute 진행 공유', 40, True)
 text(s, .46, 3.08, 12, .55, '팀 A-COPilot · 2026. 9. 28.', 18, color=MUTE)
 text(s, .46, 3.72, 12, .45, '여행 운영 서비스의 구현 현황', 18, color=MUTE)
 for i, label in enumerate(['자동 검사와 빌드', '유스케이스', '변경 흐름', '공통 플로우', '화면 목업']):
@@ -205,7 +205,7 @@ for i, (n, title, body) in enumerate(agenda):
     text(s, .6, y, .8, .5, n, 24, True, C['blue'][0])
     text(s, 1.6, y, 3.6, .5, title, 18, True)
     text(s, 5.2, y+.04, 7.6, .5, body, 16, color=MUTE)
-notes(s, '오늘은 triPilot의 구현 현황을 다섯 주제로 말씀드리겠습니다. 먼저 코드를 합칠 때 어떤 자동 검사를 하는지 보고, 유스케이스의 범위와 준비 상태를 살펴보겠습니다. 이어서 시스템이 변화를 감지할 때와 여행자가 요청할 때의 변경 흐름을 비교하겠습니다. 액티비티와 요식업의 공통 플로우, 여행 등록 목업도 보겠습니다. 마지막에는 다음에 할 일과 팀이 결정할 내용을 정리하겠습니다.')
+notes(s, '오늘은 guguroute의 구현 현황을 다섯 주제로 말씀드리겠습니다. 먼저 코드를 합칠 때 어떤 자동 검사를 하는지 보고, 유스케이스의 범위와 준비 상태를 살펴보겠습니다. 이어서 시스템이 변화를 감지할 때와 여행자가 요청할 때의 변경 흐름을 비교하겠습니다. 액티비티와 요식업의 공통 플로우, 여행 등록 목업도 보겠습니다. 마지막에는 다음에 할 일과 팀이 결정할 내용을 정리하겠습니다.')
 
 # 3. CI/CD
 s = page('코드를 합칠 때 두 범위로 검사한다', '자동 검사', num=3)

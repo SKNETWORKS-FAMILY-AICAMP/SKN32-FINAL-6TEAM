@@ -11,7 +11,7 @@ export class LiveError extends Error {
 }
 
 /**
- * Live connection to the triPilot server (`/v1/web/*`).
+ * Live connection to the guguroute server (`/v1/web/*`).
  *
  * ★`[2026-10-04 사용자 결정 · 서버 D-CS-011]` The browser no longer holds a key. The server gives a session cookie (HttpOnly — no script of
  *   this page can read it), and every call carries it (`credentials: "include"`). A write also carries `X-CSRF-Token`, the token the

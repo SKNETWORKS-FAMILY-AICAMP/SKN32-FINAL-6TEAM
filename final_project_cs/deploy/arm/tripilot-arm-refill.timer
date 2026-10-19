@@ -1,5 +1,5 @@
 [Unit]
-Description=triPilot ARM server-local six-hour workload replenishment
+Description=guguroute ARM server-local six-hour workload replenishment
 
 [Timer]
 OnBootSec=2min

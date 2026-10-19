@@ -172,7 +172,7 @@ def plot(summary, rows, folder):
         ax.text(i, v/2, f"{v:+.1f}%", ha="center", color="white", va="center")
     ax.axhline(0, color=gray, lw=1)
     ax.set(ylabel="(우리 거리 / 카카오 거리 - 1) × 100 (%)", title="경로 거리: 중앙 차이 (시간 속도와 분리)")
-    fig.suptitle("triPilot 이동 기능 · 카카오 웹 기준 새 경로 대조", fontsize=18)
+    fig.suptitle("guguroute 이동 기능 · 카카오 웹 기준 새 경로 대조", fontsize=18)
     fig.supxlabel("2026-10-08 · 서울 · 기존 200쌍과 경로 중복 없음 · 계수 재조정 없음\n표본 결과이며 실제 택시 미터·실시간 운행 정확도 검증은 아님", fontsize=10)
     for ext in ("png", "svg", "pdf"):
         fig.savefig(folder / f"mobility-fresh-100-overview.{ext}", dpi=170)

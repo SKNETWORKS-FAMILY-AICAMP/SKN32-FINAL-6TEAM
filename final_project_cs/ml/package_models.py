@@ -79,7 +79,7 @@ def main() -> int:
         lines.append(f"| `{name}/` | {task} | {metrics.get('model', 'TF-IDF')} | {', '.join(labels) if labels else '-'} | {summary(metrics)} |")
 
     readme = [
-        "# 학습한 ML/DL 모델 — triPilot 인라인 분류(여행)",
+        "# 학습한 ML/DL 모델 — guguroute 인라인 분류(여행)",
         "",
         "6팀 데이터 전처리 단계 산출물 「학습한 ML/DL 모델」의 모델 파일이다. 문서의 수치는 각 폴더 `metrics.json` 에서 나왔다.",
         "",

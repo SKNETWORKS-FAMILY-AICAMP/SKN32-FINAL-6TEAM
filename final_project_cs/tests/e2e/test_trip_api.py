@@ -584,7 +584,7 @@ def test_a_question_shaped_closed_report_does_not_change_the_plan(api):
 
 def test_a_rollback_sentence_rolls_back_instead_of_swapping(api):
     """★`[2026-09-26]` 대화로 보낸 「N번 일정으로 되돌려 주세요」 — 전에는 분기가 delay·closed·stock_out·그 밖뿐이라
-    그 밖(= 다른 안으로 바꾸기)으로 떨어졌다(triPilot : RAG 세션이 코드를 읽고 찾았다). 옛 버전으로 돌아가야 한다."""
+    그 밖(= 다른 안으로 바꾸기)으로 떨어졌다(guguroute : RAG 세션이 코드를 읽고 찾았다). 옛 버전으로 돌아가야 한다."""
     trip_id = _create(api)["trip_id"]
     assert len(api["tick"]("09:00").adjusted) == 1                   # v2 — 감시가 바꿨다
     before = [(s["seq"], s["place"]) for s in _detail(api, trip_id)["items"]]

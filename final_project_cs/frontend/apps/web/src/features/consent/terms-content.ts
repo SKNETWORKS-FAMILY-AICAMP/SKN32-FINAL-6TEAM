@@ -143,26 +143,26 @@ export function buildTermsDocs(RETENTION: Retention): readonly TermsDoc[] {
 const serviceTerms: TermsDoc = {
   code: "service_terms",
   required: true,
-  title: ["triPilot 서비스 이용약관", "triPilot Terms of Service"],
+  title: ["guguroute 서비스 이용약관", "guguroute Terms of Service"],
   summary: [
-    "triPilot은 올리신 여행 계획을 읽고 확인하며, 회원의 여행은 끝날 때까지 지켜보고 바뀐 점을 알려 드립니다. 대신 예약하거나 결제하지 않습니다. 동의하지 않으면 서비스를 이용할 수 없습니다.",
-    "triPilot reads and checks the travel plan you upload and, for members, watches the trip until it ends and tells you what changed. It does not book or pay for anything on your behalf. You cannot use the service without agreeing.",
+    "guguroute은 올리신 여행 계획을 읽고 확인하며, 회원의 여행은 끝날 때까지 지켜보고 바뀐 점을 알려 드립니다. 대신 예약하거나 결제하지 않습니다. 동의하지 않으면 서비스를 이용할 수 없습니다.",
+    "guguroute reads and checks the travel plan you upload and, for members, watches the trip until it ends and tells you what changed. It does not book or pay for anything on your behalf. You cannot use the service without agreeing.",
   ],
   sections: [
     {
       heading: ["제1조 (목적)", "Article 1 (Purpose)"],
       body: [
-        `이 약관은 ${OPERATOR.name}(이하 「운영자」)가 제공하는 triPilot 서비스를 이용하는 조건과 절차, 운영자와 이용자의 권리와 의무를 정합니다.`,
-        `These terms set out the conditions and procedures for using the triPilot service provided by ${OPERATOR.name} (the "Operator"), and the rights and obligations of the Operator and users.`,
+        `이 약관은 ${OPERATOR.name}(이하 「운영자」)가 제공하는 guguroute 서비스를 이용하는 조건과 절차, 운영자와 이용자의 권리와 의무를 정합니다.`,
+        `These terms set out the conditions and procedures for using the guguroute service provided by ${OPERATOR.name} (the "Operator"), and the rights and obligations of the Operator and users.`,
       ],
     },
     {
       heading: ["제2조 (정의)", "Article 2 (Definitions)"],
       body: [
         paras(
-          "이 약관에서 쓰는 말의 뜻은 다음과 같습니다. triPilot의 다른 동의 문서(개인정보 · 민감정보 · 개인위치정보 · 알림 채널)도 같은 뜻으로 씁니다.",
+          "이 약관에서 쓰는 말의 뜻은 다음과 같습니다. guguroute의 다른 동의 문서(개인정보 · 민감정보 · 개인위치정보 · 알림 채널)도 같은 뜻으로 씁니다.",
           list(
-            "「서비스」: 이용자가 올린 여행 계획을 읽고 확인하며, 등록한 여행을 여행이 끝날 때까지 지켜보고 알리는 triPilot 웹 서비스와 그에 딸린 API를 말합니다.",
+            "「서비스」: 이용자가 올린 여행 계획을 읽고 확인하며, 등록한 여행을 여행이 끝날 때까지 지켜보고 알리는 guguroute 웹 서비스와 그에 딸린 API를 말합니다.",
             "「이용자」: 이 약관에 동의하고 서비스를 이용하는 사람을 말합니다. 이용자는 게스트와 회원으로 나뉩니다.",
             "「게스트」: 소셜 계정을 연결하지 않고 서비스를 이용하는 이용자를 말합니다.",
             "「회원」: 소셜 계정(현재는 구글 계정)을 연결한 이용자를 말합니다.",
@@ -173,9 +173,9 @@ const serviceTerms: TermsDoc = {
           ),
         ),
         paras(
-          "The words below have these meanings in these terms and in triPilot's other consent documents (personal data, sensitive data, personal location data and alert channel).",
+          "The words below have these meanings in these terms and in guguroute's other consent documents (personal data, sensitive data, personal location data and alert channel).",
           list(
-            "\"Service\": the triPilot web service and its APIs, which read and check the travel plan a user uploads and watch a registered trip until it ends and send alerts.",
+            "\"Service\": the guguroute web service and its APIs, which read and check the travel plan a user uploads and watch a registered trip until it ends and send alerts.",
             "\"User\": a person who has agreed to these terms and uses the Service. Users are either guests or members.",
             "\"Guest\": a user who uses the Service without connecting a social account.",
             "\"Member\": a user who has connected a social account (currently a Google account).",
@@ -519,11 +519,11 @@ const privacy: TermsDoc = {
       heading: ["제1조 (이 문서에 대하여)", "Article 1 (About this document)"],
       body: [
         paras(
-          `${OPERATOR.name}(이하 「운영자」)는 triPilot 서비스에서 이용자의 개인정보를 이 문서에 따라 처리합니다. 이 문서에서 쓰는 말의 뜻은 「triPilot 서비스 이용약관」 제2조(정의)와 같습니다.`,
+          `${OPERATOR.name}(이하 「운영자」)는 guguroute 서비스에서 이용자의 개인정보를 이 문서에 따라 처리합니다. 이 문서에서 쓰는 말의 뜻은 「guguroute 서비스 이용약관」 제2조(정의)와 같습니다.`,
           "제2조와 제3조는 꼭 필요한 정보의 수집 · 이용에 대한 동의 내용이고, 제4조부터는 개인정보 처리방침입니다. 서비스 개선용 정보 이용, 민감정보, 개인위치정보, 알림 채널 정보는 이 문서가 아니라 각각의 선택 동의 문서가 정합니다.",
         ),
         paras(
-          `${OPERATOR.name} (the "Operator") processes users' personal data in the triPilot service as described in this document. Words used here have the meanings given in Article 2 (Definitions) of the "triPilot Terms of Service".`,
+          `${OPERATOR.name} (the "Operator") processes users' personal data in the guguroute service as described in this document. Words used here have the meanings given in Article 2 (Definitions) of the "guguroute Terms of Service".`,
           "Articles 2 and 3 are the consent to collect and use the information the Service needs; Article 4 onwards is the privacy policy. Service improvement processing, sensitive data, personal location data and alert channel data are governed not by this document but by their own optional consent documents.",
         ),
       ],
@@ -683,8 +683,8 @@ const privacy: TermsDoc = {
     {
       heading: ["제8조 (자동화된 판단)", "Article 8 (Automated decisions)"],
       body: [
-        "서비스는 사람의 개입 없이, 일정에 문제가 생겼을 때 일정을 바꿀지 · 무엇으로 바꿀지 · 먼저 물을지를 자동으로 판단합니다(「triPilot 서비스 이용약관」 제6조(일정 변경과 되돌리기)). 이용자는 그 판단의 이유를 물을 수 있고, 반영된 변경을 되돌리거나 다른 안을 요청할 수 있습니다.",
-        "The Service decides automatically, without human involvement, whether to change the schedule when a problem arises, what to change it to, and whether to ask first (Article 6, Schedule changes and undoing them, of the \"triPilot Terms of Service\"). The user may ask for the reasons for a decision, and may undo an applied change or ask for another option.",
+        "서비스는 사람의 개입 없이, 일정에 문제가 생겼을 때 일정을 바꿀지 · 무엇으로 바꿀지 · 먼저 물을지를 자동으로 판단합니다(「guguroute 서비스 이용약관」 제6조(일정 변경과 되돌리기)). 이용자는 그 판단의 이유를 물을 수 있고, 반영된 변경을 되돌리거나 다른 안을 요청할 수 있습니다.",
+        "The Service decides automatically, without human involvement, whether to change the schedule when a problem arises, what to change it to, and whether to ask first (Article 6, Schedule changes and undoing them, of the \"guguroute Terms of Service\"). The user may ask for the reasons for a decision, and may undo an applied change or ask for another option.",
       ],
     },
     {
@@ -746,8 +746,8 @@ const privacy: TermsDoc = {
     {
       heading: ["제11조 (만 14세 미만 아동)", "Article 11 (Children under 14)"],
       body: [
-        "서비스는 만 14세 미만 아동이 이용할 수 없으며(「triPilot 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인정보를 알고서 수집하지 않습니다.",
-        "Children under 14 may not use the Service (Article 7 of the \"triPilot Terms of Service\"), and the Operator does not knowingly collect personal data of children under 14.",
+        "서비스는 만 14세 미만 아동이 이용할 수 없으며(「guguroute 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인정보를 알고서 수집하지 않습니다.",
+        "Children under 14 may not use the Service (Article 7 of the \"guguroute Terms of Service\"), and the Operator does not knowingly collect personal data of children under 14.",
       ],
     },
     {
@@ -779,8 +779,8 @@ const privacy: TermsDoc = {
     {
       heading: ["제14조 (처리방침의 변경)", "Article 14 (Changes to this policy)"],
       body: [
-        `이 처리방침은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 내용이 바뀌면 운영자는 「triPilot 서비스 이용약관」 제3조(약관의 게시와 변경)와 같은 방법으로 알리고, 이용자의 동의를 다시 받습니다.`,
-        `This policy applies from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). If it changes, the Operator announces the change in the same way as Article 3 (Posting and changing these terms) of the "triPilot Terms of Service" and asks users to agree again.`,
+        `이 처리방침은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 내용이 바뀌면 운영자는 「guguroute 서비스 이용약관」 제3조(약관의 게시와 변경)와 같은 방법으로 알리고, 이용자의 동의를 다시 받습니다.`,
+        `This policy applies from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). If it changes, the Operator announces the change in the same way as Article 3 (Posting and changing these terms) of the "guguroute Terms of Service" and asks users to agree again.`,
       ],
     },
     LANGUAGE_SECTION,
@@ -890,8 +890,8 @@ const location: TermsDoc = {
     {
       heading: ["제1조 (목적)", "Article 1 (Purpose)"],
       body: [
-        "이 약관은 운영자가 제공하는 위치기반서비스의 이용 조건과, 운영자가 이용자의 개인위치정보를 수집 · 이용하는 데 필요한 사항을 정합니다. 이 약관에 없는 사항은 「triPilot 서비스 이용약관」과 「개인정보 수집 · 이용 동의 및 처리방침」을 따르며, 말의 뜻도 같습니다.",
-        "These terms set out the conditions of the location-based service the Operator provides and what is needed for the Operator to collect and use users' personal location data. Matters not covered here follow the \"triPilot Terms of Service\" and the \"Consent to Collection and Use of Personal Data and Privacy Policy\", and words have the same meanings.",
+        "이 약관은 운영자가 제공하는 위치기반서비스의 이용 조건과, 운영자가 이용자의 개인위치정보를 수집 · 이용하는 데 필요한 사항을 정합니다. 이 약관에 없는 사항은 「guguroute 서비스 이용약관」과 「개인정보 수집 · 이용 동의 및 처리방침」을 따르며, 말의 뜻도 같습니다.",
+        "These terms set out the conditions of the location-based service the Operator provides and what is needed for the Operator to collect and use users' personal location data. Matters not covered here follow the \"guguroute Terms of Service\" and the \"Consent to Collection and Use of Personal Data and Privacy Policy\", and words have the same meanings.",
       ],
     },
     {
@@ -1019,8 +1019,8 @@ const location: TermsDoc = {
     {
       heading: ["제10조 (만 14세 미만 아동)", "Article 10 (Children under 14)"],
       body: [
-        "만 14세 미만은 서비스를 이용할 수 없으므로(「triPilot 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인위치정보를 수집하지 않으며 법정대리인이나 보호의무자의 동의로 위치정보를 처리하지 않습니다.",
-        "Because people under 14 may not use the Service (Article 7 of the \"triPilot Terms of Service\"), the Operator does not collect personal location data of children under 14 and does not process location data on the consent of a legal representative or guardian.",
+        "만 14세 미만은 서비스를 이용할 수 없으므로(「guguroute 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인위치정보를 수집하지 않으며 법정대리인이나 보호의무자의 동의로 위치정보를 처리하지 않습니다.",
+        "Because people under 14 may not use the Service (Article 7 of the \"guguroute Terms of Service\"), the Operator does not collect personal location data of children under 14 and does not process location data on the consent of a legal representative or guardian.",
       ],
     },
     {
@@ -1040,8 +1040,8 @@ const location: TermsDoc = {
     {
       heading: ["제13조 (약관의 변경)", "Article 13 (Changes to these terms)"],
       body: [
-        `이 약관은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 이 약관을 바꿀 때는 「triPilot 서비스 이용약관」 제3조(약관의 게시와 변경)를 따르며, 바뀐 뒤에는 다시 동의한 이용자의 위치만 읽습니다.`,
-        `These terms apply from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). Changes follow Article 3 (Posting and changing these terms) of the "triPilot Terms of Service", and after a change the Service reads positions only of users who have agreed again.`,
+        `이 약관은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 이 약관을 바꿀 때는 「guguroute 서비스 이용약관」 제3조(약관의 게시와 변경)를 따르며, 바뀐 뒤에는 다시 동의한 이용자의 위치만 읽습니다.`,
+        `These terms apply from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). Changes follow Article 3 (Posting and changing these terms) of the "guguroute Terms of Service", and after a change the Service reads positions only of users who have agreed again.`,
       ],
     },
     LANGUAGE_SECTION,

@@ -35,7 +35,7 @@ def ioflow(x, y, w, h, num, title, gets, gives, cls="node", status=None):
 def workflow():
     S.clear()
     W, H = 1800, 1600
-    T(40, 40, "triPilot 멀티 에이전트 플로우 — 한 장", "big", "start")
+    T(40, 40, "guguroute 멀티 에이전트 플로우 — 한 장", "big", "start")
     T(40, 66, "① 계획을 올릴 때 한 번 검증하고 ② 여행이 끝날 때까지 지킨다 · 받음 = 이 단계가 받는 것 · 냄 = 다음 단계로 넘기는 것 · 금색 선 = 반복 · 붉은 선 = 실패", "s", "start")
     tx = 1330
     for k in ("done", "wip", "plan"):

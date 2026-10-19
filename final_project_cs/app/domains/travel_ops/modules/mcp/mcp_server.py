@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot MCP 서버 — 개인 AI(Claude · ChatGPT · Cursor …)가 **사용자 본인의 여행**을 다루는 입구. `[2026-10-02 사용자 지시]`
+"""guguroute MCP 서버 — 개인 AI(Claude · ChatGPT · Cursor …)가 **사용자 본인의 여행**을 다루는 입구. `[2026-10-02 사용자 지시]`
 
 ☆왜 새로 만들었나. 옛 도구 셋(`app/presentation/api/mcp.py` — 쇼핑몰 시절 Case 3개)은 **띄우는 곳이 한 번도 없었고**(git 이력 전체 · sample 저장소까지
   확인) 여행(trips) 도구가 없었다. 그대로 띄우면 호출 주체가 고정(`mcp:read`)이고 `customer_id` 를 호출자가 정해서 **남의 문의를 읽는 구멍**이 된다.
@@ -46,10 +46,10 @@ from pydantic import Field
 
 log = logging.getLogger(__name__)
 
-SERVER_NAME = "triPilot"
+SERVER_NAME = "guguroute"
 
 INSTRUCTIONS = """\
-triPilot 은 여행 중 일정이 틀어질 때 지켜 주고 고쳐 주는 서비스입니다(서울 · 여행자 본인의 여행). 이 서버의 도구는 호출한 사용자 **본인의 여행**만 다룹니다.
+guguroute 은 여행 중 일정이 틀어질 때 지켜 주고 고쳐 주는 서비스입니다(서울 · 여행자 본인의 여행). 이 서버의 도구는 호출한 사용자 **본인의 여행**만 다룹니다.
 
 사용 순서: 먼저 tripilot_list_trips 로 여행 id 를 얻고, tripilot_get_trip 으로 일정(항목마다 식사/활동/이동 구분 · 시각 · 장소 정보)을 읽습니다.
 알림은 tripilot_get_notices, 서버가 고객에게 물어 둔 선택지는 tripilot_get_proposals 입니다.
@@ -185,7 +185,7 @@ def caller_of(ctx: Context | None, *, env_key: str | None = None) -> Caller:
     key = env_key or os.environ.get("TRIPILOT_USER_KEY")
     if not key:
         raise ToolError("사용자 키가 없어요 — 연결할 때 `Authorization: Bearer <사용자 키>` 를 붙이거나 로컬이면 환경변수 TRIPILOT_USER_KEY 를 넣어 주세요. "
-                        "키는 triPilot 웹의 마이페이지 「에이전트 연결」에서 로그인한 뒤 만들 수 있고, 만들 때 한 번만 보여 드립니다.")
+                        "키는 guguroute 웹의 마이페이지 「에이전트 연결」에서 로그인한 뒤 만들 수 있고, 만들 때 한 번만 보여 드립니다.")
     return Caller(key)
 
 
@@ -555,7 +555,7 @@ def build_surface(app_getter: Callable[[], Any], *, enabled: Callable[[], bool],
 # ── 로컬 stdio 프록시 ─────────────────────────────────────────────
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="triPilot MCP (로컬 stdio 프록시) — 실제 일은 --base-url 의 서버가 한다")
+    parser = argparse.ArgumentParser(description="guguroute MCP (로컬 stdio 프록시) — 실제 일은 --base-url 의 서버가 한다")
     parser.add_argument("--base-url", default=os.environ.get("TRIPILOT_BASE_URL", "http://127.0.0.1:8042"))
     parser.add_argument("--write", action="store_true", help="쓰기 도구도 연다(일정을 바꾼다) — 기본은 읽기만")
     args = parser.parse_args(argv)

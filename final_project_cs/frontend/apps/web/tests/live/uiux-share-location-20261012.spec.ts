@@ -117,7 +117,7 @@ test("GPS 대기 중 여행 화면을 나가면 늦게 도착한 위치로 질�
   const mock = mockServer(request);
   await mock.reset();
   await openDelayedLocation(page);
-  await page.getByRole("link", { name: "triPilot — 소개 화면으로 돌아가기", exact: true }).click();
+  await page.getByRole("link", { name: "guguroute — 소개 화면으로 돌아가기", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   await finishLocation(page);
   expect(await mock.received("POST", `/trips/${TRIP_ID}/messages`)).toHaveLength(1);

@@ -78,7 +78,7 @@ class TourApiPlace(TravelSource):
     def _common(self) -> dict[str, Any]:
         # ★`MobileApp` 은 서비스 고유명 — 운영계정(트래픽 증설) 승인 요건이다(2026-09-27, 옛 값 "acop")
         return {"serviceKey": self._key, "MobileOS": "ETC",
-                "MobileApp": "triPilot", "_type": "json"}
+                "MobileApp": "guguroute", "_type": "json"}
 
     # ── 찾기 ────────────────────────────────────────────────────
     def find(self, place_name: str, *,
@@ -280,7 +280,7 @@ class TourApiPlace(TravelSource):
         ★★`[2026-09-26 실측, 같은 키]` `areaBasedList2` 의 서울 전체 건수 —
           `areaCode=1` 이면 **1,965건**, `lDongRegnCd=11` 이면 **7,996건**. 응답 대부분이 `areacode` 를
           빈칸으로 주어 지역 코드로 거르면 서울 자료의 약 24.6%만 온다. 그래서 `place_catalog` 에
-          경복궁(관광지 12)·명동난타극장·토속촌삼계탕이 없었다(triPilot : RAG 세션 인계, 이 세션이 다시 쟀다).
+          경복궁(관광지 12)·명동난타극장·토속촌삼계탕이 없었다(guguroute : RAG 세션 인계, 이 세션이 다시 쟀다).
         ★저장하는 구분값(`area_code`)은 그대로다 — 장소를 읽는 쪽(`planner.load_candidates`)이 그 값으로 찾는다.
         ★표에 없는 지역은 예전처럼 `areaCode` 로 거른다(그 지역은 아직 재지 않았다).
         """

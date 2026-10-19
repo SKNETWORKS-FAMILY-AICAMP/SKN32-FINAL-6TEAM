@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 v2 — 한 장에 다 넣지 않고 다섯 장으로 나눈다(선 겹침을 줄이고 세부 처리 구조를 보인다).
+"""guguroute 유스케이스 v2 — 한 장에 다 넣지 않고 다섯 장으로 나눈다(선 겹침을 줄이고 세부 처리 구조를 보인다).
 
     python make_usecase_v2.py   → ../uc0_overview.* · uc1_prepare.* · uc2_request.* · uc3_coordinate.* · uc4_auto.*
 
@@ -98,7 +98,7 @@ class D:
 
     def render(self):
         body = (self.head + ["  { rank=min; " + " ".join(self.L) + " }" if self.L else ""]
-                + [f'  subgraph cluster_sys {{ label=<<B>triPilot</B>>; fontsize=16; style="rounded"; color="{G1}"; penwidth=2.2; margin=20;']
+                + [f'  subgraph cluster_sys {{ label=<<B>guguroute</B>>; fontsize=16; style="rounded"; color="{G1}"; penwidth=2.2; margin=20;']
                 + ["    " + u for u in self.U] + ["  }"]
                 + (["  { rank=max; " + " ".join(self.R) + " }"] if self.R else [])
                 + ["  " + e for e in self.E] + ["}"])

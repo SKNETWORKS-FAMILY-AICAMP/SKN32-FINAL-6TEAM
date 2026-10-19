@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 v3 — 「유스케이스 2026-10-02 v6」 브리핑의 「한눈에」 그림 스타일로 다시 그린다.
+"""guguroute 유스케이스 v3 — 「유스케이스 2026-10-02 v6」 브리핑의 「한눈에」 그림 스타일로 다시 그린다.
 
 스타일(그 문서의 CSS 그대로):
   흰 상자 · 옅은 회색 테두리(#dbe0ea) · 핵심 상자만 옅은 금색(accent-tint · accent-rule) · 구역은 옅은 회색 판(#f1f4f8)
@@ -277,9 +277,9 @@ def main():
     parts = "".join(f'<svg x="{x:.1f}" y="{y0:.1f}" width="{p[0]:.1f}" height="{p[1]:.1f}" viewBox="0 0 {p[0]:.1f} {p[1]:.1f}" overflow="visible">{p[4]}</svg>'
                     for x, y0, p in zip(xs, ys, P))
     head = (f'<text x="30" y="40" font-family="{MONO}" font-size="12" letter-spacing="1" fill="{SOFT}">사람 · 앱</text>'
-            f'<text x="{frame_x1 + 22:.1f}" y="40" font-family="{MONO}" font-size="12" letter-spacing="1" fill="{SOFT}">유스케이스 — triPilot</text>'
+            f'<text x="{frame_x1 + 22:.1f}" y="40" font-family="{MONO}" font-size="12" letter-spacing="1" fill="{SOFT}">유스케이스 — guguroute</text>'
             f'<text x="{frame_x2 + 26:.1f}" y="40" font-family="{MONO}" font-size="12" letter-spacing="1" fill="{SOFT}">시스템 행위자</text>'
-            f'<text x="30" y="78" font-family="{SANS}" font-size="22" font-weight="700" fill="{INK}">triPilot 유스케이스 — 전체 한 장</text>'
+            f'<text x="30" y="78" font-family="{SANS}" font-size="22" font-weight="700" fill="{INK}">guguroute 유스케이스 — 전체 한 장</text>'
             f'<text x="30" y="100" font-family="{SANS}" font-size="13" fill="{MUTED}">v3 · 2026-10-02 · 실제 API · 코드 기준 · 실선 = 연관 · 회색 점선 = 반드시 쓰는 공통 기능(«include») · 금색 점선 = 조건이 맞을 때만(«extend») · 빈 삼각형 = 일반화 · 금색 상자 = 핵심 처리</text>')
     frame = f'<rect x="{frame_x1:.1f}" y="{frame_y1:.1f}" width="{frame_x2 - frame_x1:.1f}" height="{frame_y2 - frame_y1:.1f}" rx="10" fill="none" stroke="{RULE}" stroke-width="1.2"/>'
     foot = (f'<text x="30" y="{H - 18:.1f}" font-family="{SANS}" font-size="12" fill="{MUTED}">'
@@ -294,7 +294,7 @@ def main():
         b64 = base64.b64encode((OUT / f"ic_{n}.png").read_bytes()).decode()
         one = re.sub(rf'xlink:href="[^"]*ic_{n}\.png"', f'xlink:href="data:image/png;base64,{b64}"', one)
     (OUT / "uc_onepage_v3.html").write_text(
-        f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>triPilot 유스케이스 전체 한 장 v3</title>'
+        f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>guguroute 유스케이스 전체 한 장 v3</title>'
         f'<style>body{{margin:0;background:#fbfcfd}}svg{{display:block}}</style></head><body>{one}</body></html>', encoding="utf-8")
     print("ok", int(W), "x", int(H))
 

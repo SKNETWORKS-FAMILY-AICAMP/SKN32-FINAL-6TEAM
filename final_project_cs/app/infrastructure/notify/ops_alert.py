@@ -23,7 +23,7 @@ def send_ops_alert(text: str) -> str:
         logger.warning("ops alert not sent (no webhook): %s", text)
         return "보낼 곳이 없다(ACOP_DISCORD_WEBHOOK_URL 이 비어 있다) — 알리지 않았다"
     try:
-        response = httpx.post(url, json={"content": f"[triPilot 운영] {text}"[:2000]}, timeout=8.0)
+        response = httpx.post(url, json={"content": f"[guguroute 운영] {text}"[:2000]}, timeout=8.0)
     except Exception as exc:                      # noqa: BLE001
         logger.warning("ops alert failed: %s", exc)
         return f"알림 실패: {type(exc).__name__}: {exc}"[:160]

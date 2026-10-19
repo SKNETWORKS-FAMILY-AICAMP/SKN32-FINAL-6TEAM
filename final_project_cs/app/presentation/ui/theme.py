@@ -457,9 +457,9 @@ def page(title: str, body: str, *, current: str = "", lede: str = "",
     return (
         "<!doctype html><html lang='ko'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        f"<title>{esc(title)} · triPilot</title><style>{CSS}</style></head><body>"
+        f"<title>{esc(title)} · guguroute</title><style>{CSS}</style></head><body>"
         f"<div class='topbar'><div class='topbar__in'>"
-        f"<span class='brand'>triPilot<span>운영 콘솔</span></span>"
+        f"<span class='brand'>guguroute<span>운영 콘솔</span></span>"
         "<input type='checkbox' id='menu-toggle' class='menu-toggle' aria-label='메뉴 열기·닫기'>"
         "<label for='menu-toggle' class='menu-btn' aria-hidden='true' title='메뉴'>☰</label>"
         f"<div class='menu'><nav>{links}</nav>{_who(who)}</div></div></div>"

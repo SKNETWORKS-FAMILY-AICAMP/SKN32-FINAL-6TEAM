@@ -1,5 +1,5 @@
 [Unit]
-Description=Check triPilot develop every five minutes
+Description=Check guguroute develop every five minutes
 
 [Timer]
 OnBootSec=3min

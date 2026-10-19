@@ -15,7 +15,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await mockServer(request).scenario({ trips: "none" });           // 동의를 기록하면 서버가 게스트 세션을 만든다 - 그 세션에 여행은 아직 없다
   await useKorean(page);
   await page.goto("/");
-  await expect(page.locator("#intro-title")).toHaveText("계획부터 여행까지,당신 곁의 triPilot.");
+  await expect(page.locator("#intro-title")).toHaveText("계획부터 여행까지,당신 곁의 guguroute.");
   await page.getByRole("button", { name: "다음 화면" }).first().click();
   await expect(page.locator("#how-title")).toBeInViewport();
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
@@ -169,7 +169,7 @@ test("설정에서 바꾼 언어는 새로고침 후에도 유지되고, 여행 
 
   await pickLanguage(page, "Menu", "한국어");
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
-  await expect(page).toHaveTitle("triPilot · 당신다운 여행의 시작");
+  await expect(page).toHaveTitle("guguroute · 당신다운 여행의 시작");
 
   await page.reload();
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
@@ -206,7 +206,7 @@ test("설정 화면에서 언어를 고르면 카드가 접히고 첫 화면 문
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
 
   await page.getByRole("button", { name: "다음 화면" }).first().click();
-  const guide = page.getByRole("region", { name: "triPilot 이용 방법" });
+  const guide = page.getByRole("region", { name: "guguroute 이용 방법" });
   const firstShot = guide.getByRole("group", { name: "1 / 4" }).getByRole("img");
   await expect(firstShot).toHaveAccessibleName("앱 화면: 나의 여행 취향 알려주기");
   await expect.poll(() => firstShot.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
@@ -345,7 +345,7 @@ test("계획 확인 전 화면(첫 화면 · 시작(약관) · 계획 담기)에
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("button", { name: "English", exact: true })).toHaveCount(0);   // 고르면 목록이 닫히고
   await expect(header.getByRole("button", { name: "Language · English", exact: true })).toBeFocused();
-  await expect(page.locator('li[data-doc="service_terms"]')).toContainText("triPilot Terms of Service");   // 약관을 영어로 읽는다
+  await expect(page.locator('li[data-doc="service_terms"]')).toContainText("guguroute Terms of Service");   // 약관을 영어로 읽는다
 
   // 계획 담기(계획 올리기)에도 지구본이 있고, 그 자리에 있던 항로 지킴이 아이콘은 없다. 그 뒤 화면(내 여행 목록)은 메뉴 › 설정에서만 바꾼다.
   await header.getByRole("button", { name: "Language · English", exact: true }).click();

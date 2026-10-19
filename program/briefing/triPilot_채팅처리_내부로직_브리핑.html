@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>triPilot 채팅 처리 내부 로직 브리핑</title>
+<title>guguroute 채팅 처리 내부 로직 브리핑</title>
 <style>
   :root {
     --bg: #f6f7f9; --card: #ffffff; --ink: #1f2937; --muted: #5b6474; --soft: #8b93a3;
@@ -88,7 +88,7 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">triPilot · 여행 채팅 처리 · 2026-09-29 기준</div>
+  <div class="eyebrow">guguroute · 여행 채팅 처리 · 2026-09-29 기준</div>
   <h1>고객이 채팅을 보내면 서버 안에서 무슨 일이 일어나나</h1>
   <p class="lead">「질문을 임베딩해서 LLM에 넣는 방식」이 아닙니다. 서버가 <b>이 여행의 일정 상태를 통째로 모델에게 보여 주고</b>, 모델이 <b>정해진 보기 중 하나를 고르면</b>, 서버가 확인한 뒤 <b>기존 코드로 실행</b>합니다.</p>
 </header>
@@ -247,7 +247,7 @@ c2 | 대상 i2 | 1일차 10:10 활동: 건청궁 → 경복궁 (고객 요청) (
 
 <span class="k">직전 대화:</span>
 고객: 첫 활동 알려줘
-triPilot: 경복궁 일정이에요 — 1일차 10:10 …
+guguroute: 경복궁 일정이에요 — 1일차 10:10 …
 
 <span class="k">화면에서 고른 일정:</span> i2
 

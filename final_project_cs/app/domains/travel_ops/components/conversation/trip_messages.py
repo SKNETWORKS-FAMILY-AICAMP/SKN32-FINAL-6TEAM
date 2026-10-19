@@ -551,7 +551,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                         message=message, request_id=request_id)
     elif report["type"] == "rollback":
         # ★`[2026-09-26]` 전에는 이 분기가 없어 「N번 일정으로 되돌려 주세요」가 아래 「다른 안으로 바꾸기」로
-        #   떨어졌다 — 되돌리는 대신 **다른 장소로 바꿨다**(시험으로 확인, triPilot : RAG 세션이 코드를 읽고 찾았다).
+        #   떨어졌다 — 되돌리는 대신 **다른 장소로 바꿨다**(시험으로 확인, guguroute : RAG 세션이 코드를 읽고 찾았다).
         #   기준 버전은 지금 최신 — 그 사이 바뀌었으면 되돌리기가 `stale` 로 답한다.
         with get_connection() as conn:
             current, latest_items = store.latest(conn, trip_id)

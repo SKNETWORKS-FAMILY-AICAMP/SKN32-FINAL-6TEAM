@@ -299,7 +299,7 @@ function announce(text){document.getElementById('announcement').textContent=text
 function allAnswered(){return state.answers.every(Boolean)}
 function nextOpen(except=-1){return state.answers.findIndex((a,i)=>!a&&!state.skipped[i]&&i!==except)}
 function remaining(){return state.answers.filter(a=>!a).length}
-function brand(){return '<div class="brand"><span>triPilot</span><span>여행 계획</span></div>'}
+function brand(){return '<div class="brand"><span>guguroute</span><span>여행 계획</span></div>'}
 function shell(body,footer='',heading=''){
   return `<div class="phone-content">${brand()}${heading?`<header class="app-head">${heading}</header>`:''}<div class="scroll">${body}</div>${footer?`<footer class="footer">${footer}</footer>`:''}</div>`;
 }
@@ -314,7 +314,7 @@ function progress(done=false){
   return `<div class="progress-steps" aria-label="${done?'계획 읽기가 끝났어요':'장소·운영시간 확인 중'}">${['받았어요','일정 읽기','장소·운영시간','정리 완료'].map((label,i)=>`<div class="step ${!done&&i===2?'current':''} ${!done&&i===3?'pending':''}"><div class="track"><div class="fill"></div></div><span>${done||i<2?'✓ ':''}${label}</span></div>`).join('')}</div>`;
 }
 function screen1(){
-  phone.innerHTML=`<header class="site-head"><div class="logo"><span class="logo-mark" aria-hidden="true">t</span><span>triPilot</span></div><button class="menu-button" aria-label="메뉴">☰</button></header>
+  phone.innerHTML=`<header class="site-head"><div class="logo"><span class="logo-mark" aria-hidden="true">t</span><span>guguroute</span></div><button class="menu-button" aria-label="메뉴">☰</button></header>
   <div class="site-body">
     <ol class="stepper" aria-label="진행 단계"><li class="current" aria-current="step"><span class="num">01</span>계획 담기</li><li><span class="num">02</span>함께 확인</li><li><span class="num">03</span>여행 시작</li></ol>
     <p class="caps">A PLAN THAT FEELS LIKE YOU</p>

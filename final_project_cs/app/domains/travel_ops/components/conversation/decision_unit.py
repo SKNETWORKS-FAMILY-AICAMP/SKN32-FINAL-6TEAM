@@ -88,7 +88,7 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
 - ask_policy: 여행의 규정·이용 조건·장소 선택 기준·확인 절차를 묻는다(취소·위약금·환불·동반·날씨 기준, 식당이 미정일 때 장소를 정하는 방법).
   일반 여행 질문도 검색으로 확인한다. 특정 일정이나 가게 이름이 없어도 target_item=none으로 ask_policy를 쓴다.
   장소를 고르는 기준을 물은 것은 실제 후보 추천이나 일정 변경 실행이 아니다. 여행과 관계없는 일반 상식·투자·잡담은 other다.
-- answer_service: triPilot 자체의 기능·사용법·지원 범위·정체를 묻는다. 「너가 할 수 있는 게 뭐야?」「사용법 알려줘」「뭘 부탁할 수 있어?」「예약도 대신 해 줘?」「너는 누구야」.
+- answer_service: guguroute 자체의 기능·사용법·지원 범위·정체를 묻는다. 「너가 할 수 있는 게 뭐야?」「사용법 알려줘」「뭘 부탁할 수 있어?」「예약도 대신 해 줘?」「너는 누구야」.
   서비스 사용법 질문에는 일정 대상이 필요 없다: target_item=none, target_change=none, fact=none, choices=[].
   「식당을 바꿀 수 있어?」처럼 기능 지원을 물으면 answer_service다. 「이 식당 바꿔 줘」처럼 실제 실행 요청은 apply_change다.
   「경복궁이 뭐야?」는 장소 질문 answer_fact/detail이며, 「이 예약 취소 위약금은?」은 규정 질문 ask_policy다.
@@ -351,7 +351,7 @@ def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, An
                     for c in changes]
     from app.domains.travel_ops.components.conversation.chat_log import TURN_CHARS
 
-    talk = "\n".join(f"{'고객' if t['role'] == 'customer' else 'triPilot'}: {t['text'][:TURN_CHARS]}"
+    talk = "\n".join(f"{'고객' if t['role'] == 'customer' else 'guguroute'}: {t['text'][:TURN_CHARS]}"
                      for t in history) or "(없음)"
     previous = next((t for t in reversed(history) if t.get("role") == "assistant"), {})
     focus = (previous.get("reply") or {}).get("focus") or {}

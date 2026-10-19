@@ -7,7 +7,7 @@
 #   <입구 포트>       비어 있는 포트 하나(이 기계 Ollama 의 11434 와 겹치지 않게)
 #   <런팟 별칭>       ~/.ssh/config 의 Host 이름 — 런팟 포드를 다시 만들면 거기 주소 · 포트만 바꾼다
 [Unit]
-Description=triPilot model SSH tunnel (RunPod Ollama)
+Description=guguroute model SSH tunnel (RunPod Ollama)
 After=network-online.target
 Wants=network-online.target
 

@@ -111,7 +111,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const search = useSearchParams();
   const { language, skipAnimation } = useSettings();
   const queryClient = useQueryClient();
-  useDocumentTitle(`${t("나의 여행", "Your trip")} · triPilot`);
+  useDocumentTitle(`${t("나의 여행", "Your trip")} · guguroute`);
   // The server's "this trip changed" bell keeps the plan, notices and choices current while the trip is open.
   useTripEvents(trip.id);
   const guardian = useTripGuardian(trip.id);
