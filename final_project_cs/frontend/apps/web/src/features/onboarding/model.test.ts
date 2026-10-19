@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { translator } from "@/lib/i18n";
 import {
-  ACTIVITY_PICKS, answeredCount, answerLines, discordWebhookProblem, done, initialAnswers, partyLabel, priorityLines, questions, skip, toggle, toggleArea, toggleDetail, unskip, valid, type Answers,
+  ACTIVITY_PICKS, answeredCount, answerLines, canPickPartySize, discordWebhookProblem, done, initialAnswers, PARTY_SIZES, partyLabel, partySizeOf, pickPartySize, priorityLines, questions,
+  skip, toggle, toggleArea, toggleDetail, unskip, valid, type Answers,
 } from "./model";
 
 const ko = translator("ko");
 /** Every question answered, with a picked "other" draft kept aside. */
 const full: Answers = {
-  ...initialAnswers, party: "family", partyOther: "직장 동료", priority: ["food", "mobility"],
+  ...initialAnswers, party: "family", partyOther: "직장 동료", partySize: 3, priority: ["food", "mobility"],
   details: { food: ["clean", "taste"], activity: [], mobility: ["taxi"] }, indoorDining: "indoor", indoorActivity: "any", pace: "relaxed",
 };
 
@@ -38,7 +39,7 @@ describe("onboarding preferences", () => {
   });
 
   it("companions: `other` needs typed words (not spaces); another choice hides it but keeps the draft; skipping clears both", () => {
-    const other = toggle(initialAnswers, "party", "other");
+    const other = pickPartySize(toggle(initialAnswers, "party", "other"), 3);
     expect(valid(0, other)).toBe(false);
     expect(valid(0, { ...other, partyOther: "   " })).toBe(false);
     const typed = { ...other, partyOther: "  직장 동료 " };
@@ -48,7 +49,46 @@ describe("onboarding preferences", () => {
     expect(valid(0, family)).toBe(true);
     expect(partyLabel(family, ko)).toBe("가족");
     expect(toggle(family, "party", "other").partyOther).toBe("  직장 동료 ");
-    expect(skip(typed, 0)).toMatchObject({ party: "", partyOther: "" });
+    expect(skip(typed, 0)).toMatchObject({ party: "", partyOther: "", partySize: null });
+  });
+
+  it("companions' size: 혼자 · 연인 set 1 · 2; 친구 · 가족 start at 2 and never take 1; 기타 needs one of 1–4 picked", () => {
+    expect(PARTY_SIZES).toEqual([1, 2, 3, 4]);
+    expect(partySizeOf(initialAnswers)).toBeNull();
+    for (const [party, size] of [["alone", 1], ["partner", 2]] as const) {
+      const a = toggle(initialAnswers, "party", party);
+      expect(partySizeOf(a), party).toBe(size);
+      expect(valid(0, a), party).toBe(true);
+      expect(PARTY_SIZES.filter((n) => canPickPartySize(party, n)), party).toEqual([]);
+      // A size picked for another choice does not change the set one.
+      expect(partySizeOf({ ...a, partySize: 4 }), party).toBe(size);
+    }
+    for (const party of ["friends", "family"]) {
+      const a = toggle(initialAnswers, "party", party);
+      expect(partySizeOf(a), party).toBe(2);
+      expect(a.partySize, `${party}: the start of 2 is not stored as picked`).toBeNull();
+      expect(valid(0, a), party).toBe(true);
+      expect(PARTY_SIZES.filter((n) => canPickPartySize(party, n)), party).toEqual([2, 3, 4]);
+      expect(partySizeOf(pickPartySize(a, 4)), party).toBe(4);
+    }
+    const other = toggle(initialAnswers, "party", "other");
+    expect(partySizeOf(other)).toBeNull();
+    expect(PARTY_SIZES.filter((n) => canPickPartySize("other", n))).toEqual([1, 2, 3, 4]);
+    expect(partySizeOf(pickPartySize(other, 1))).toBe(1);
+  });
+
+  it("companions' size: tapping the picked size keeps it; a size kept from another choice counts only where it can be picked", () => {
+    const three = pickPartySize(toggle(initialAnswers, "party", "friends"), 3);
+    expect(pickPartySize(three, 3).partySize).toBe(3);
+    const alone = toggle(three, "party", "alone");
+    expect(partySizeOf(alone)).toBe(1);
+    expect(partySizeOf(toggle(alone, "party", "family"))).toBe(3);
+    expect(partySizeOf(toggle(three, "party", "friends"))).toBeNull();
+    // 기타 with 1, then 친구: 1 is not offered there, so it starts at 2; back on 기타 the 1 is still there.
+    const one = pickPartySize(toggle(initialAnswers, "party", "other"), 1);
+    const friends = toggle(one, "party", "friends");
+    expect(partySizeOf(friends)).toBe(2);
+    expect(partySizeOf(toggle(friends, "party", "other"))).toBe(1);
   });
 
   it("areas rank in tapping order; un-picking pulls the ones behind up and clears its details; picking again goes last", () => {

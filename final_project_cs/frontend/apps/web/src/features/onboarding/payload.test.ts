@@ -15,7 +15,7 @@ describe("trip survey (backend constraints.survey)", () => {
     a = toggleArea(a, "activity");
     a = toggleDetail(toggleDetail(a, "food", "clean"), "food", "taste");
     a = toggleDetail(toggleDetail(a, "mobility", "taxi"), "mobility", "public");
-    const answers = { ...a, party: "family", indoorDining: "indoor", indoorActivity: "any", pace: "relaxed" };
+    const answers = { ...a, party: "family", partySize: 3, indoorDining: "indoor", indoorActivity: "any", pace: "relaxed" };
     const survey = toSurvey(answers);
     expect(survey).toEqual({
       version: SURVEY_VERSION, party: "family",
@@ -43,7 +43,7 @@ describe("trip survey (backend constraints.survey)", () => {
   });
 
   it("sends typed companions for `other` (trimmed) in `party`, and never once another choice is picked", () => {
-    const other = { ...toggle(initialAnswers, "party", "other"), partyOther: "  직장 동료  " };
+    const other = { ...toggle(initialAnswers, "party", "other"), partyOther: "  직장 동료  ", partySize: 3 };
     expect(toSurvey(other).party).toBe("직장 동료");
     expect(toSurvey(toggle(other, "party", "friends")).party).toBe("friends");
     expect(toSurvey({ ...other, partyOther: "   " })).not.toHaveProperty("party");

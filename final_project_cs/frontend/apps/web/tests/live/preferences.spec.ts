@@ -71,6 +71,9 @@ test("여행자 구성의 기타는 입력란을 열고, 공백만으로는 못 
   await field.fill("   ");
   await expect(next(page)).toBeDisabled();
   await field.fill("  직장 동료  ");
+  // `[2026-10-19]` 기타는 인원도 골라야 넘어간다(친구 · 가족은 2명으로 시작).
+  await expect(next(page)).toBeDisabled();
+  await page.getByRole("button", { name: "1명", exact: true }).click();
   await expect(next(page)).toBeEnabled();
 
   await page.getByRole("button", { name: "친구", exact: true }).click();
@@ -279,6 +282,7 @@ test("완료 화면은 기본사항·여행 방식 두 장에 선택 언어와 4
   await openSurvey(page);
   await page.getByRole("button", { name: "기타", exact: true }).click();
   await page.getByRole("textbox", { name: "누구와 함께 여행하는지 알려 주세요." }).fill("  대학 동기 여섯 명과 그 가족들  ");
+  await page.getByRole("button", { name: "4명", exact: true }).click();
   await next(page).click();
   await settled(page, PRIORITY);
   await area(page, "활동").click();
@@ -406,6 +410,7 @@ test("영어와 PC 기기 틀·375px·320px에서 긴 답도 카드 안에서 �
   await skipTo(page, PARTY);
   await page.getByRole("button", { name: "기타", exact: true }).click();
   await page.getByRole("textbox", { name: "누구와 함께 여행하는지 알려 주세요." }).fill("대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리와 함께하는 아주 긴 여행");
+  await page.getByRole("button", { name: "4명", exact: true }).click();
   await next(page).click();
   await settled(page, PRIORITY);
   for (const name of ["음식", "이동", "활동"] as const) await area(page, name).click();

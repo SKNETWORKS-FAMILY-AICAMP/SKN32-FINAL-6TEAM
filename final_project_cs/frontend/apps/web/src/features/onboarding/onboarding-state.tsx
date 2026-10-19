@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type Dispatch,
 import { z } from "zod";
 import { noConsents, type ConsentMap } from "@/features/consent/consent-model";
 import { readConsents, useRequiredConsents } from "@/features/consent/consent-store";
-import { initialAnswers, INTRO_STEP, questions, type Answers } from "./model";
+import { initialAnswers, INTRO_STEP, PARTY_SIZES, questions, type Answers } from "./model";
 
 export interface OnboardingState {
   /** The documents whose full text was scrolled to the end on this page (page state only - the proof of a consent is the server's record, not this). */
@@ -46,7 +46,8 @@ const saved = z.object({
   complete: z.boolean(),
   step: z.number().int().min(INTRO_STEP).max(questions.length - 1),
   answers: z.object({
-    party: text, partyOther: text, priority: z.array(area).max(3),
+    // `[2026-10-19]` An answer saved before the size was asked has none: 친구 · 가족 read as their start of 2, 기타 as not picked yet (asked once more).
+    party: text, partyOther: text, partySize: z.number().int().min(PARTY_SIZES[0]).max(PARTY_SIZES[PARTY_SIZES.length - 1]).nullable().default(null), priority: z.array(area).max(3),
     details: z.object({ food: z.array(text).max(8), activity: z.array(text).max(8), mobility: z.array(text).max(8) }),
     indoorDining: text, indoorActivity: text, pace: text, skipped: z.array(z.number().int().min(0).max(questions.length - 1)).max(questions.length),
   }),

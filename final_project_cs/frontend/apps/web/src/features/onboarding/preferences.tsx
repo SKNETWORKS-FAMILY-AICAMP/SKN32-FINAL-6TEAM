@@ -4,8 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import {
-  ACTIVITY_PICKS, answeredCount, answerLines, areaNames, areas, detailOptions, done, INTRO_STEP, LAST_STEP, options, questions, skip as skipQuestion,
-  toggle, toggleArea, toggleDetail, unskip, valid, type Answers, type Area, type ChoiceKey, type Option, type QuestionId,
+  ACTIVITY_PICKS, answeredCount, answerLines, areaNames, areas, canPickPartySize, detailOptions, done, INTRO_STEP, LAST_STEP, options, PARTY_SIZES, partySizeOf, pickPartySize, questions,
+  skip as skipQuestion, toggle, toggleArea, toggleDetail, unskip, valid, type Answers, type Area, type ChoiceKey, type Option, type QuestionId,
 } from "./model";
 import styles from "./onboarding.module.css";
 
@@ -153,7 +153,28 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
       <input id="party-other" className={styles.otherInput} value={answers.partyOther} autoComplete="off" placeholder={t("예: 직장 동료", "e.g. coworkers")}
         onChange={(event) => update({ ...answers, partyOther: event.target.value })} />
     </div>}
+    {answers.party && partySize()}
   </>;
+
+  /**
+   * `[2026-10-19 사용자 지시]` How many travel, under the companions once one is picked: 혼자 · 연인 set it (1 · 2) and the chips stay
+   * fixed; 친구 · 가족 start at 2 with 1 not offered; 기타 picks one of 1–4, and the card is not done until it does.
+   */
+  function partySize() {
+    const size = partySizeOf(answers);
+    return <div className={styles.sizeField} role="group" aria-labelledby="party-size-label">
+      <p id="party-size-label" className={styles.groupLabel}>{t("인원", "Travelers")}</p>
+      <div className={styles.chips}>{PARTY_SIZES.map((n) => {
+        const selected = size === n;
+        const key = `partySize:${n}`;
+        return <button key={n} type="button" className={`${styles.chip} ${styles.sizeChip} ${selected ? styles.selected : ""} ${touched.has(key) ? styles.selectionFeedback : ""}`}
+          aria-pressed={selected} disabled={!canPickPartySize(answers.party, n)} onClick={(event) => press(event, pickPartySize(answers, n), key)}>
+          <span className={styles.optionCheck} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
+          {t(`${n}명`, `${n}`)}
+        </button>;
+      })}</div>
+    </div>;
+  }
 
   /**
    * Three area cards in a fixed order. Tapping an area ranks it (1, 2, 3 in tapping order) and opens its details, which
