@@ -47,8 +47,11 @@ if [ "$fetched" = "$loaded" ] && [ "$FORCE" -eq 0 ] && [ "$MODE" = "apply" ]; th
   echo "드라이브 자료가 지난 적재와 같다 — 그대로 둔다"; exit 0
 fi
 
-TAG="$(docker inspect -f '{{.Config.Image}}' "$API_CONTAINER" | sed 's/.*://')"
-[ -n "$TAG" ] && [ "$TAG" != "local" ] || { echo "떠 있는 api 이미지 태그를 못 읽었다 — 멈춘다"; exit 1; }
+# 떠 있는 api 컨테이너의 이미지 ID → 그 이미지에 붙은 커밋 이름표. ☆`Config.Image` 는 해시로만 보이고 컨테이너 환경의
+#  TRIPILOT_TAG 는 옛 값일 수 있었다(2026-10-19 x600 실측) — 이미지 ID 로 찾는다. `local` · `keep-*` 은 고르지 않는다
+IMG_ID="$(docker inspect -f '{{.Image}}' "$API_CONTAINER" | sed 's/^sha256://' | cut -c1-12)"
+TAG="$(docker images tripilot-api --format '{{.Tag}} {{.ID}}' | awk -v id="$IMG_ID" '$2 == id && $1 != "local" && $1 !~ /^keep-/ {print $1; exit}')"
+[ -n "$TAG" ] || { echo "떠 있는 api 이미지의 커밋 이름표를 못 찾았다(이미지 $IMG_ID) — 멈춘다"; exit 1; }
 
 run_load() {  # run_load [--apply]
   (cd "$BASE" && TRIPILOT_TAG="$TAG" docker compose run --rm --no-deps -T \
