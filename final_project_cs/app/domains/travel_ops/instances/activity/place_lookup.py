@@ -25,9 +25,12 @@ from .db_search.place_by_name import find_place_by_name
 
 
 def lookup_place(connection_factory: Callable[[], Any], tenant_id: str, name: str | None,
-                 kakao: Any | None) -> dict[str, Any]:
-    """항상 `status` 가 있는 dict. `status`: found · ambiguous · exists_unregistered · not_found · unknown."""
-    found = find_place_by_name(connection_factory, tenant_id, name)
+                 kakao: Any | None, *, fuzzy: bool = False) -> dict[str, Any]:
+    """항상 `status` 가 있는 dict. `status`: found · ambiguous · exists_unregistered · not_found · unknown.
+
+    `fuzzy=True` 면 원장 조회가 어순 · 오타로도 찾는다(결과에 `needs_review` · `match`). 기본은 꺼짐.
+    """
+    found = find_place_by_name(connection_factory, tenant_id, name, fuzzy=fuzzy)
     if found["status"] != "not_found" or found.get("reason") == "name_too_short":
         return found
 

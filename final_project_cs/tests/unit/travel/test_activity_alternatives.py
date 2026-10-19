@@ -15,7 +15,7 @@ import pytest
 
 
 from app.domains.travel_ops.instances.activity.alternatives import (
-    RADIUS_MAX_KM, bounding_box, closed_on, open_at, rank_alternatives, search_steps)
+    RADIUS_MAX_KM, bounding_box, closed_on, open_at, rank_alternatives, search_steps, zone_of)
 
 
 KST = timezone(timedelta(hours=9))        # ★요청 시각은 전부 한국 시간으로 다룬다(2026-10-01)
@@ -182,7 +182,9 @@ def test_search_steps_order_per_preference():
                             (2.0, ())]
     activity = search_steps("activity")
     assert activity[:3] == [(1.0, ()), (2.0, ()), (3.0, ())]
-    assert activity[10] == (1.0, ("lclsSystm3",))
+    assert activity[3] == (1.0, ("lclsSystm3",)) and activity[6] == (1.0, ("lclsSystm3", "lclsSystm2"))
+    assert activity[9] == (4.0, ())                         # 가까운 구간(1~3km)을 다 본 뒤에야 4km 로 넓힌다
+    assert [r for r, d in activity if d == ("lclsSystm3", "lclsSystm2")][-1] == 5.0   # 먼 구간(6~10km)은 중분류를 안 푼다
     assert search_steps(None) == [(float(r), ()) for r in range(1, 11)]
     assert mobility[-1][0] == activity[-1][0] == RADIUS_MAX_KM
 
@@ -223,7 +225,7 @@ def test_never_widens_beyond_10km():
 def test_fewer_than_three_returns_what_the_loosest_step_found():
     result = rank_alternatives(ORIGIN, [_at_km("x", 0.3, l3="HS019999")], SATURDAY, preference="activity")
     assert [a["contentid"] for a in result["alternatives"]] == ["x"]
-    assert result["dropped_fields"] == ["lclsSystm3", "lclsSystm2"] and result["radius_km"] == RADIUS_MAX_KM
+    assert result["dropped_fields"] == ["lclsSystm3"] and result["radius_km"] == RADIUS_MAX_KM   # 마지막 단계 = 먼 구간(소분류만 풂)
 
 
 def test_preference_none_widens_radius_but_never_drops_class_fields():
@@ -293,14 +295,46 @@ def test_mobility_loosens_class_before_widening_radius_activity_the_opposite():
 
 
 def test_loosening_keeps_what_the_stricter_step_found_farther_away():
-    """★활동 중요 — 같은 소분류 셋은 3km 에만 있다. 소분류를 풀면 반경이 1km 부터 다시 시작하지만
+    """★활동 중요 — 같은 소분류 셋은 2km 에만 있다. 소분류를 풀면 반경이 1km 부터 다시 시작하지만
     앞에서 찾은 셋은 남고, 분류가 더 가까워 화면 앞에 선다(실데이터 창경궁에서 나온 경우)."""
-    exact = [_at_km(f"exact{i}", 3 + 0.1 * i) for i in range(3)]
+    exact = [_at_km(f"exact{i}", 2 + 0.1 * i) for i in range(3)]
     loose = [_at_km(f"loose{i}", 0.05 * (i + 1), l3="HS019999") for i in range(8)]
     result = rank_alternatives(ORIGIN, exact + loose, SATURDAY, preference="activity")
     assert result["dropped_fields"] == ["lclsSystm3"] and result["radius_km"] == 1.0
     assert [a["contentid"] for a in result["alternatives"]] == ["exact0", "exact1", "exact2"]
     assert len(result["more_alternatives"]) == 7
+
+
+def test_zone_of_boundaries():
+    assert [zone_of(km) for km in (0.5, 3.0, 3.01, 5.0, 5.01, 10.0)] == [0, 0, 1, 1, 2, 2]
+
+
+def test_near_same_mid_class_beats_far_same_small_class():
+    """★`[2026-10-19 사용자 결정]` 같은 소분류 8km 가 같은 중분류 2km 보다 앞서면 안 된다 — 거리 구간이 분류 점수보다 먼저다."""
+    far_exact = [_at_km(f"far{i}", 8 + 0.1 * i) for i in range(3)]
+    near_mid = [_at_km(f"near{i}", 0.05 * (i + 1) + 1.5, l3="HS019999") for i in range(8)]
+    result = rank_alternatives(ORIGIN, far_exact + near_mid, SATURDAY, preference="activity")
+    shown = [a["contentid"] for a in result["alternatives"]]
+    assert shown == ["near0", "near1", "near2"]
+    ids = [a["contentid"] for a in result["alternatives"] + result["more_alternatives"]]
+    assert ids[:8] == [f"near{i}" for i in range(8)] and ids[8:] == ["far0", "far1"]   # 가까운 중분류 8곳이 먼저, 먼 소분류는 남은 칸(10곳까지)에
+
+
+def test_within_one_zone_category_still_comes_before_distance():
+    """같은 구간(가까움) 안에서는 분류가 먼저다 — 2.5km 소분류가 0.5km 중분류보다 앞."""
+    pool = [_at_km("mid_near", 0.5, l3="HS019999"), _at_km("exact_2_5", 2.5)]
+    result = rank_alternatives(ORIGIN, pool, SATURDAY, preference="activity")
+    assert [a["contentid"] for a in result["alternatives"]] == ["exact_2_5", "mid_near"]
+
+
+def test_far_zone_does_not_accept_mid_class_only_matches():
+    """먼 구간(6~10km)은 소분류만 푼다 — 중분류까지 푼 후보(대분류만 같음)는 받지 않는다."""
+    result = rank_alternatives(ORIGIN, [_at_km("far_other_mid", 7, l2="HS02", l3="HS020100")], SATURDAY,
+                               preference="activity")
+    assert result["alternatives"] == []
+    near = rank_alternatives(ORIGIN, [_at_km("near_other_mid", 2, l2="HS02", l3="HS020100")], SATURDAY,
+                             preference="activity")
+    assert [a["contentid"] for a in near["alternatives"]] == ["near_other_mid"]       # 가까우면 받는다
 
 
 def test_activity_never_drops_large_class_or_type():

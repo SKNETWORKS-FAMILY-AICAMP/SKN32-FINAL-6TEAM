@@ -125,3 +125,44 @@ def test_toolbox_tool_returns_none_for_blank_name():
 
     assert ReadToolbox(_db([])).place_lookup(Scope(), name="  ") is None
     assert "read.place_lookup" in ReadToolbox(_db([]))._travel_tools()
+
+
+# ── fuzzy(어순 · 오타) — 기본은 꺼짐 `[2026-10-19]` ─────────────────
+
+NAMSAN = ("126535", "12", "남산서울타워", 37.551, 126.988, "tour_api")
+OLIVE = ("2", "38", "올리브영 명동 타운", 37.564, 126.985, "tour_api")
+
+
+def test_fuzzy_is_off_by_default_and_typo_is_not_found():
+    out = lookup_place(_db([NAMSAN]), "t", "남산서울타우", _Kakao([]))
+    assert out["status"] == "not_found"
+
+
+def test_fuzzy_finds_a_typo_and_asks_for_review_without_calling_kakao():
+    kakao = _Kakao(KAKAO_HIT)
+    out = lookup_place(_db([NAMSAN, GYEONGBOK]), "t", "남산서울타우", kakao, fuzzy=True)
+    assert out["status"] == "found" and out["content_id"] == "126535"
+    assert out["match"] == "typo" and out["needs_review"] is True and "오타" in out["note"]
+    assert kakao.calls == []
+
+
+def test_fuzzy_finds_swapped_word_order():
+    out = lookup_place(_db([OLIVE, NAMSAN]), "t", "명동 올리브영 타운", _Kakao([]), fuzzy=True)
+    assert out["status"] == "found" and out["content_id"] == "2" and out["match"] == "word_order"
+
+
+def test_fuzzy_does_not_override_an_exact_match():
+    out = lookup_place(_db([NAMSAN]), "t", "남산서울타워", _Kakao([]), fuzzy=True)
+    assert out["status"] == "found" and "match" not in out and "needs_review" not in out
+
+
+def test_fuzzy_with_an_unrelated_name_still_falls_through_to_kakao():
+    kakao = _Kakao(KAKAO_HIT)
+    out = lookup_place(_db([NAMSAN]), "t", "새로생긴전시관", kakao, fuzzy=True)
+    assert out["status"] == "exists_unregistered" and kakao.calls == ["새로생긴전시관"]
+
+
+def test_fuzzy_does_not_pick_between_two_equally_close_names():
+    rows = [("1", "12", "경복굴", 37.5, 127.0, "tour_api"), ("2", "12", "경복군", 37.6, 127.1, "tour_api")]
+    out = lookup_place(_db(rows), "t", "경복궁", _Kakao([]), fuzzy=True)
+    assert out["status"] == "not_found"          # 비율이 같은 서로 다른 이름 둘 — 고르지 않는다

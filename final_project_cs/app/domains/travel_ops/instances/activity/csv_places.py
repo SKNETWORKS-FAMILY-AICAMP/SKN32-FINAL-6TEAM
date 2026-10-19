@@ -15,6 +15,8 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
+from .name_match import TypoIndex, word_set
+
 _CSV_PATH = Path(__file__).parent / "data_processing" / "activity_total_data.csv"
 _BRANCH = re.compile(r"\s*(본점|직영점|\S+점)$")
 _COMPOUND_SEP = re.compile(r"[&·,+]")
@@ -89,6 +91,8 @@ class CsvPlaceLookup:
         self._by_norm: dict[str, dict[str, str]] = {}
         self._by_base: dict[str, list[dict[str, str]]] = {}
         self._by_content_id: dict[str, dict[str, str]] = {}
+        self._by_words: dict[frozenset[str], list[dict[str, str]]] | None = None
+        self._typo_index: TypoIndex | None = None
         self._load(csv_path)
 
     def _load(self, path: Path) -> None:
@@ -116,10 +120,12 @@ class CsvPlaceLookup:
                     self._by_content_id[content_id] = row
 
     def find(self, place_name: str, *, area_code: str | None = None,
-             near: tuple[float, float] | None = None, **_kwargs: Any) -> dict[str, Any] | None:
+             near: tuple[float, float] | None = None, fuzzy: bool = False, **_kwargs: Any) -> dict[str, Any] | None:
         """이름으로 장소 하나를 찾는다. 없으면 None.
 
         near=(위도, 경도) 를 주면 접두사 다중 일치 시 해당 좌표에 가장 가까운 것을 고른다.
+        ★`fuzzy=True` 일 때만 어순이 바뀐 이름 · 오타로도 찾는다(④⑤). 기본은 끈다 — `judge/rule.py` 의 `place_facts` 처럼
+          결과의 `needs_review` 를 보지 않고 구 · 분류를 읽는 호출이 짐작한 장소로 판정하지 않게(`[2026-10-19]`).
         """
         if not place_name or not place_name.strip():
             self.misses["no_place_name"] = self.misses.get("no_place_name", 0) + 1
@@ -176,6 +182,20 @@ class CsvPlaceLookup:
                     row = with_loc[0]
                 break
 
+        # ④ 어순이 바뀐 이름 — "명동 올리브영" = "올리브영 명동". 단어 집합이 같을 때만(부분집합은 아무 데나 붙는다)
+        fuzzy_note: str | None = None
+        if row is None and fuzzy:
+            swapped = self._same_words(place_name, near)
+            if swapped is not None:
+                row, fuzzy_note = swapped, "단어 순서가 달라도 같은 이름으로 보고 찾았다"
+
+        # ⑤ 오타 — 자모 거리 비율 ≤ TYPO_RATIO 인 이름이 하나뿐일 때(`intake/places.TYPO_RATIO` · 다이닝 원장과 같은 기준)
+        if row is None and fuzzy:
+            typo = self._typo(key)
+            if typo is not None:
+                row, ratio = typo
+                fuzzy_note = f"오타로 보고 「{row.get('title')}」로 찾았다(자모 거리 비율 {ratio:.2f})"
+
         if row is None:
             self.misses["not_found"] = self.misses.get("not_found", 0) + 1
             return None
@@ -200,7 +220,31 @@ class CsvPlaceLookup:
             "latitude": lat,
             "longitude": lon,
             "address": addr,
+            # ★이름이 딱 맞지 않고 어순·오타로 고른 곳은 확인 필요다(`intake/places._from_tour` 가 읽는다)
+            **({"needs_review": True, "note": fuzzy_note} if fuzzy_note else {}),
         }
+
+    def _same_words(self, place_name: str, near: tuple[float, float] | None) -> dict[str, str] | None:
+        """단어 순서만 다른 제목. 단어는 끝의 「점」을 뗀 채 비교한다. 여럿이면 near 가 있을 때만 가장 가까운 곳."""
+        words = word_set(place_name)
+        if len(words) < 2:
+            return None
+        if self._by_words is None:                  # 처음 한 번만 만든다
+            self._by_words = {}
+            for r in self._rows:
+                self._by_words.setdefault(word_set(r.get("title", "")), []).append(r)
+        pool = self._by_words.get(words, [])
+        if len(pool) == 1:
+            return pool[0]
+        if len(pool) > 1 and near is not None:
+            return min(pool, key=lambda r: _distance_to(r, near))
+        return None
+
+    def _typo(self, key: str) -> tuple[dict[str, str], float] | None:
+        """자모 거리 비율이 가장 작은 제목 — 기준 이하이고 같은 거리의 **다른 이름**이 없을 때만(`name_match.TypoIndex`)."""
+        if self._typo_index is None:                # 처음 한 번만 만든다
+            self._typo_index = TypoIndex((base, rows[0]) for base, rows in self._by_base.items())
+        return self._typo_index.best(key)
 
     def find_by_content_id(self, content_id: str) -> dict[str, str] | None:
         """contentid로 CSV 원본 행을 반환한다. 없으면 None."""

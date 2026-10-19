@@ -17,7 +17,7 @@ from . import failure_codes as fc
 from app.domains.travel_ops.components.intake.survey_answers import QUESTIONS as SURVEY_QUESTIONS
 from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
 
-from . import alternative_order
+from . import alternative_order, place_identity
 from .alternatives import FALLBACK_DROPS, RADIUS_START_KM, preference_from_survey, rank_alternatives
 from .disaster_impact import ImpactRules, assess
 from .judge.llm import file_instructions
@@ -101,8 +101,8 @@ class ReplacementMixin:
         return survey, info, evidence, (["예약이 속한 여행을 추정으로 찾아 그 여행의 설문을 썼다"] if guessed else [])
 
     def _itinerary_places(self, task: TeamTask, booking: dict[str, Any] | None, seen: set[str],
-                          view: Any, *, reserve: int = 0) -> tuple[set[str], set[str], list[str]]:
-        """이 예약이 속한 여행 일정에 **이미 들어 있는 장소** — `(관광공사 contentid 들, 이름들, 경고)`. `[2026-10-15 피드백]`
+                          view: Any, *, reserve: int = 0) -> tuple[set[str], set[str], list[Any], list[str]]:
+        """이 예약이 속한 여행 일정에 **이미 들어 있는 장소** — `(관광공사 contentid 들, 이름들, 같은 곳 판정용 `Spot` 들, 경고)`. `[2026-10-15 피드백]`
 
         ★전에는 `rank_alternatives(exclude_ids=)` 가 있는데 부르는 쪽이 넘기지 않아 같은 여행의 다른 일정 장소가 대체 후보로 나갔다.
           같은 곳이 다른 contentid 로 있을 수 있어 이름도 함께 본다(`itinerary_changes.unused_places` 와 같은 기준).
@@ -116,9 +116,10 @@ class ReplacementMixin:
             except Exception:  # noqa: BLE001 — 실패 코드는 `_read` 가 남겼다. 경고로 드러낸다
                 view = None
         if not isinstance(view, dict):
-            return set(), set(), ["여행 일정을 읽지 못해 후보가 이미 일정에 있는 곳인지 확인하지 못했다"]
+            return set(), set(), [], ["여행 일정을 읽지 못해 후보가 이미 일정에 있는 곳인지 확인하지 못했다"]
         ids: set[str] = set()
         names: set[str] = set()
+        spots: list[Any] = []
         for item in view.get("items") or []:
             if item.get("kind") == "mobility":
                 continue
@@ -129,7 +130,10 @@ class ReplacementMixin:
             name = str(placed.get("name") or item.get("title") or "").strip()
             if name:
                 names.add(name)
-        return ids, names, []
+            spot = place_identity.spot_of({**placed, "name": name}) if name else None
+            if spot is not None:
+                spots.append(spot)
+        return ids, names, spots, []
 
     @staticmethod
     def _preference(task: TeamTask, survey: dict[str, Any] | None) -> tuple[str | None, list[str], str | None]:
@@ -214,11 +218,13 @@ class ReplacementMixin:
                                                                reserve=1 if disaster_blocked else 0, plan_out=plan)
         preference, more_warnings, source = self._preference(task, survey)
         warnings = [*warnings, *more_warnings]
-        in_plan_ids, in_plan_names, plan_warnings = self._itinerary_places(
+        in_plan_ids, in_plan_names, in_plan_spots, plan_warnings = self._itinerary_places(
             task, booking, seen, plan.get("view"), reserve=1 if disaster_blocked else 0)
         warnings += plan_warnings
         if in_plan_names:
             candidates = [c for c in candidates if str(c.get("title") or "").strip() not in in_plan_names]
+        # ★`[2026-10-19]` 이름이 달라도 같은 곳(「N서울타워」 = 「남산서울타워」)은 규칙 → 애매한 쌍만 LLM(`place_identity`)
+        candidates = self._drop_same_places(task, candidates, in_plan_spots, warnings)
         ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference,
                                    exclude_ids=in_plan_ids)
         if ranked["reason"] == "origin_no_coordinates":
@@ -290,6 +296,58 @@ class ReplacementMixin:
                 + (f"더보기에 후보 {more}곳이 더 있습니다.\n" if more else "")
                 + "후보는 휴무 요일·운영시간·재난문자만 다시 확인했고 정원은 확인하지 않았습니다."
                 + (f"\n{ask_line}" if ask_line else ""), warnings)
+
+    def _drop_same_places(self, task: TeamTask, candidates: list[dict[str, Any]], spots: list[Any],
+                          warnings: list[str]) -> list[dict[str, Any]]:
+        """일정에 이름만 다르게 이미 들어 있는 같은 장소를 대체 후보에서 뺀다 — `place_identity`. `[2026-10-19 사용자 결정]`
+
+        ★규칙이 `same` 이라 한 후보는 바로 뺀다. `ambiguous`(300m 안 · 이름이 닮음 · 이름은 다름)만 `kind_modes.same_place` 가 `llm` 이고 판정 LLM 이
+          있을 때 묻는다. 그 밖(`rule` · `shadow` · 판정 LLM 없음 · 예산 초과 · 실패 · 쓸 수 없는 답)은 **빼지 않고** 경고만 남긴다.
+        ★답은 프로세스 메모리에 기억한다 — 같은 이름 쌍은 다시 묻지 않는다(재기동하면 사라진다).
+        """
+        if not spots or not candidates:
+            return candidates
+        kept, removed, pairs = place_identity.split(spots, candidates)
+        if removed:
+            warnings.append(f"일정에 이미 들어 있는 같은 장소 {removed}곳을 대체 후보에서 뺐다")
+        if not pairs:
+            return kept
+        llm = getattr(self, "judge_llm", None)
+        if llm is None or kind_mode(place_identity.KIND) != "llm":
+            warnings.append(f"일정에 있는 곳과 같은 장소일 수 있는 후보 {len(pairs)}곳을 확인하지 못해 그대로 두었다")
+            return kept
+        budget = getattr(self, "judge_budget", None)
+        try:
+            if budget is not None and not budget(place_identity.KIND):
+                warnings.append("같은 장소 확인 LLM 예산이 다해 확인하지 못하고 그대로 두었다")
+                return kept
+        except Exception:  # noqa: BLE001 — 세지 못하면 부르지 않는다(판정 계층과 같다)
+            warnings.append("같은 장소 확인 LLM 예산을 읽지 못해 확인하지 못하고 그대로 두었다")
+            return kept
+        from app.core.settings import get_guardrails
+
+        # ★전용 상한 키는 아직 없다(가드레일은 코어 공유 파일) — 같은 종류의 짧은 판정인 대체 후보 순서의 상한을 쓴다
+        timeout = float(get_guardrails().get("travel.activity_judge.alternative_order_timeout_seconds"))
+        try:
+            call = _run(llm.judge(place_identity.PROMPT_KEY, place_identity.payload(pairs), schema=place_identity.schema(),
+                                  schema_name="activity_same_place", web_search=False,
+                                  instructions=file_instructions(place_identity.KIND), run_id=task.run_id), timeout=timeout)
+        except FuturesTimeout:
+            self._record_failure(task, fc.LLM_TIMEOUT, tool=place_identity.KIND)
+            warnings.append("같은 장소 확인 LLM 이 시간 안에 답하지 않아 그대로 두었다")
+            return kept
+        except Exception as exc:  # noqa: BLE001 — 429 · 키 없음 · 프롬프트 미등록 — 종류만 남기고 그대로 둔다
+            self._record_failure(task, fc.LLM_ERROR, tool=place_identity.KIND, error=type(exc).__name__)
+            warnings.append("같은 장소 확인 LLM 을 부르지 못해 그대로 두었다")
+            return kept
+        answers = place_identity.apply(pairs, getattr(call, "output", None))
+        if answers is None:
+            warnings.append("같은 장소 확인 LLM 의 답을 쓸 수 없어 그대로 두었다")
+            return kept
+        kept, gone = place_identity.drop_same(kept, pairs, answers)
+        if gone:
+            warnings.append(f"LLM 이 일정의 장소와 같다고 확인한 후보 {gone}곳을 대체 후보에서 뺐다")
+        return kept
 
     def _order_alternatives(self, task: TeamTask, place: Any, alt: dict[str, Any], candidates: list[dict[str, Any]],
                             warnings: list[str], survey: dict[str, Any] | None = None) -> dict[str, Any] | None:

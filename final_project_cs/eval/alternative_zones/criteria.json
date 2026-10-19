@@ -1,0 +1,19 @@
+{
+  "registered_at": "2026-10-19",
+  "note": "결과를 보기 전에 정한 기준이다. 결과를 보고 바꾸지 않는다. 숫자(3·5·10km 경계 포함)는 문헌 값이 아니라 팀이 정한 시작값이다.",
+  "compare": "활동 대체 장소 — 옛 정렬(baseline_alternatives_2026-10-19.py = 구간표 이전 커밋) vs 새 정렬(app/.../activity/alternatives.py)",
+  "checks": [
+    {"id": "C1", "preference": "activity", "rule": "가까운 중분류 이상(3km 안 · 소분류 또는 중분류 일치 · 영업 가능)이 있는데 먼 소분류(5km 초과)가 1순위인 경우 = 0건 (새 방식)"},
+    {"id": "C2", "preference": "activity", "rule": "상위 3곳의 대분류 일치 = 100% 유지 (새 방식, 대분류가 있는 원래 장소만)"},
+    {"id": "C3", "preference": "activity", "rule": "상위 3곳 평균 거리: 새 방식 <= 옛 방식"},
+    {"id": "C4", "preference": "mobility, None", "rule": "화면 상위 3곳이 옛 방식과 모든 표본에서 같다 (회귀 없음)"}
+  ],
+  "report_only": [
+    "활동 1순위의 소분류 일치율 (옛 -> 새)",
+    "5km 초과 추천 비율 (옛 -> 새)",
+    "1순위가 바뀐 표본 수와 대표 사례 10개"
+  ],
+  "sample": "고정 25곳(eval/situation_cards/bind_candidates.py ORIGIN_IDS 중 CSV 에 있는 것) + 대분류별 무작위(seed=20261019) 약 100곳(쇼핑·행사·음식·숙박 제외), 시각 2026-11-21(토) 14:00 KST",
+  "pool": "DB 가 꺼져 있어 activity_total_data.csv 를 후보 풀로 쓴다(운영은 activity.ac_place). 행사(EV)는 운영과 같이 뺀다. 폐지 표시(delisted_at)는 CSV 에 없다.",
+  "radius_km": 10
+}
