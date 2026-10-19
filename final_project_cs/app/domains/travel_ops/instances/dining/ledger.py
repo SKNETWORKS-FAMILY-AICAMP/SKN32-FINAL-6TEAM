@@ -878,6 +878,10 @@ TRIAL_TOPICS = ("waiting", "vacancy")
 #: `[2026-10-19 사용자 결정]` 곧 갈 식사에만 보인다 — 식사 시작 60분 전부터 시작 시각까지.
 #: 사람이 1시간 전 · 30분 전에 다리로 한 번씩 읽고(무인 반복 없음), 카드는 그중 최신 값을 보인다. 사흘 뒤 저녁의 「지금 웨이팅」은 쓸모가 없다
 TRIAL_WINDOW = timedelta(minutes=60)
+#: `[2026-10-19 사용자 결정]` 보여 주기에만 쓰는 신선도 — 최근 30분 안에 읽은 값. 사람이 읽는 간격(1시간 전 → 30분 전)과 맞췄다.
+#: DB 기한(빈자리 · 웨이팅 300초, 마이그레이션 206)은 그대로다 — 그것은 시험 갈래 판정과 「다시 물을지」가 쓴다.
+#: 화면 · 알림은 늘 읽은 시각을 함께 적어 낡은 정도를 고객이 보게 한다
+TRIAL_SHOW = timedelta(minutes=30)
 
 
 def trial_due(starts_at: datetime | None, now: datetime) -> bool:
@@ -890,18 +894,17 @@ def trial_live(conn, tenant_id: str, places: list[dict[str, Any] | None]) -> lis
     """장소마다 시험 출처의 지금 값(웨이팅 · 빈자리) — `places` 와 같은 순서. 값이 없으면 그 자리는 빈 목록.
 
     ★`[2026-10-19 사용자 지시 — 계획 wiki/records/plans/2026-10-16_catchtable_trial_live_card.md]` **화면 표시만** 한다.
-      판정 · 재계획 · 알림은 이 값을 보지 않는다(본 갈래 `v_live_check_fresh` 는 시험 출처를 빼고, 그대로 둔다).
+      판정 · 재계획은 이 값을 보지 않는다(본 갈래 `v_live_check_fresh` 는 시험 출처를 빼고, 그대로 둔다).
+      보는 곳은 둘 — 여행 화면 식당 카드(`trip_api._trip_view`)와 일정 안내의 참고 한 줄(`composition.build_dining_trial_live`).
     ★조회하지 않는다 — 사람이 다리로 읽어 적은 것(`dn_live_check`)만 읽는다(robots.txt · `catchtable.py` 머리말 4).
-    ★낡은 값 · 실패한 조회 · 모름은 싣지 않는다 — `v_live_check_fresh_trial` 이 `outcome='ok'` · 기한 안만 내고, 여기서 yes/no 만 남긴다.
+    ★최근 `TRIAL_SHOW`(30분) 안에 읽은 값만 — 주제마다 **가장 최근 읽기**를 보고, 그것이 실패 · 모름이면 그 주제는 싣지 않는다
+      (실패 직전의 옛 값을 꺼내 보이지 않는다). DB 기한(5분)과 따로 둔 이유는 위 `TRIAL_SHOW` 주석.
     원장과 이어지지 않은 장소(`dining_place_uid` 도 `dn_core_place_link` 도 없음)는 빈 목록 — 이름으로 짐작해 잇지 않는다.
     """
     out: list[list[dict[str, Any]]] = [[] for _ in places]
     if not places or not ledger_ready(conn):
         return out
     with conn.cursor() as cur:
-        cur.execute("SELECT to_regclass('dining.v_live_check_fresh_trial') IS NOT NULL")
-        if not cur.fetchone()[0]:
-            return out
         uids: list[str | None] = []
         for place in places:
             uid = str(((place or {}).get("attributes") or {}).get("dining_place_uid") or "").strip()
@@ -917,15 +920,16 @@ def trial_live(conn, tenant_id: str, places: list[dict[str, Any] | None]) -> lis
         wanted = sorted({uid for uid in uids if uid})
         if not wanted:
             return out
-        cur.execute("SELECT DISTINCT ON (place_uid, topic) place_uid::text, topic, value_state, value_num, value_detail, asked_at "
-                    "FROM dining.v_live_check_fresh_trial "
+        cur.execute("SELECT DISTINCT ON (place_uid, topic) place_uid::text, topic, outcome, value_state, value_num, value_detail, asked_at "
+                    "FROM dining.dn_live_check "
                     "WHERE source_code=%s AND topic = ANY(%s) AND place_uid::text = ANY(%s) "
+                    "AND asked_at <= now() AND asked_at > now() - make_interval(secs => %s) "
                     "ORDER BY place_uid, topic, asked_at DESC, check_id DESC",
-                    (TRIAL_SOURCE, list(TRIAL_TOPICS), wanted))
+                    (TRIAL_SOURCE, list(TRIAL_TOPICS), wanted, TRIAL_SHOW.total_seconds()))
         rows = cur.fetchall()
     found: dict[str, list[dict[str, Any]]] = {}
-    for uid, topic, state, num, detail, asked_at in rows:
-        if state not in ("yes", "no"):
+    for uid, topic, outcome, state, num, detail, asked_at in rows:
+        if outcome != "ok" or state not in ("yes", "no"):
             continue
         found.setdefault(uid, []).append({"topic": topic, "state": state, "num": num, "detail": detail,
                                           "asked_at": asked_at.astimezone(KST).isoformat(), "source": TRIAL_SOURCE})

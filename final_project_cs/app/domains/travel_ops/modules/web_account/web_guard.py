@@ -140,9 +140,9 @@ def specs() -> dict[str, LimitSpec]:
         "travel.trip_screen.now_label_enabled", "여행 화면 「지금 HH:MM」 시각 표시(시험 기간 — 배포 때 끄기)", "", "bool",
         guard.get("travel.trip_screen.now_label_enabled") is not False)
     # ★`[2026-10-19 사용자 지시]` 등록 여행 식당 카드의 캐치테이블 시험 값(웨이팅 · 빈자리) — 제휴 전제 시험이라 기본 꺼짐, 시연 때만 켠다.
-    #   읽는 곳은 `settings_hook.dining_trial_live_view_enabled` 하나다(여행 조회 응답의 항목 `trial_live`). 판정 · 알림에는 닿지 않는다
+    #   읽는 곳은 `settings_hook.dining_trial_live_view_enabled` 하나다(여행 조회 응답의 항목 `trial_live` · 일정 안내의 참고 한 줄). 판정 · 재계획에는 닿지 않는다
     out["travel.dining.trial_live_view_enabled"] = LimitSpec(
-        "travel.dining.trial_live_view_enabled", "식당 카드에 캐치테이블 시험 값 보이기(제휴 전제 시험 — 시연 때만 켜기)", "", "bool",
+        "travel.dining.trial_live_view_enabled", "식당 카드 · 일정 안내에 캐치테이블 시험 값 보이기(제휴 전제 시험 — 시연 때만 켜기)", "", "bool",
         guard.get("travel.dining.trial_live_view_enabled") is True)
     # ★`[2026-10-14 사용자 지시]` 활동 장소 임시휴무 · 폐업 새벽 웹 확인 — 유료라 기본 꺼짐. 읽는 곳은 `settings_hook.activity_live_check_enabled` 하나다
     #   (정기 작업 `activity_live_status`). 설명에 **지금 이 서버에서 켜면 실제로 도는지**를 함께 싣는다(값은 싣지 않는다).

@@ -62,10 +62,32 @@ def test_같은_주제는_가장_최근_하나만(conn, place):
     assert [row["num"] for row in got] == [30]
 
 
-def test_낡은_값은_안_실린다(conn, place):
+def _age(conn, check, minutes):
+    conn.execute("UPDATE dining.dn_live_check SET asked_at = now() - make_interval(mins => %s) WHERE check_id=%s",
+                 (minutes, check))
+
+
+def test_DB_기한_5분이_지나도_30분_안이면_보인다(conn, place):
+    # `[2026-10-19 사용자 결정]` DB 기한은 5분 그대로, 보여 주기만 30분 — 사람이 1시간 전 · 30분 전에 읽는 간격과 맞춘다
     uid = place()
-    check = record(conn, uid, "waiting", num=41)
-    conn.execute("UPDATE dining.dn_live_check SET asked_at = now() - interval '10 minutes' WHERE check_id=%s", (check,))
+    _age(conn, record(conn, uid, "waiting", num=41), 10)
+
+    [got] = trial_live(conn, TENANT, [{"attributes": {"dining_place_uid": uid}}])
+
+    assert [row["num"] for row in got] == [41]
+
+
+def test_30분이_지난_값은_안_실린다(conn, place):
+    uid = place()
+    _age(conn, record(conn, uid, "waiting", num=41), 31)
+
+    assert trial_live(conn, TENANT, [{"attributes": {"dining_place_uid": uid}}]) == [[]]
+
+
+def test_가장_최근_읽기가_실패면_그_전_값을_꺼내지_않는다(conn, place):
+    uid = place()
+    _age(conn, record(conn, uid, "waiting", num=41), 20)
+    record(conn, uid, "waiting", outcome="blocked", state="unknown")
 
     assert trial_live(conn, TENANT, [{"attributes": {"dining_place_uid": uid}}]) == [[]]
 
