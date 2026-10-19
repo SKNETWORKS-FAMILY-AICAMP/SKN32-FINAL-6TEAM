@@ -628,6 +628,19 @@ def wire_trip_scope() -> None:
     trip_scope.register("web_account.guest", watch_scope_sql)
 
 
+def wire_operator_modes() -> None:
+    """★`[2026-10-19 사용자 결정]` 언리미티드 모드 · 숙소 모드 — 바깥 호출 문(제한기 · 호출 예산 · 구글 호텔 어댑터)이 부를 때마다 읽는다.
+
+    ports 는 운영 설정 표를 모르므로 조립이 꽂는다. 안 꽂으면(시험 · 도구) 한도 그대로 · 숙소 모드 off 다.
+    테넌트는 부를 때 설정에서 읽는다(설정은 캐시돼 있다). 시험이 이것만 부를 수 있게 따로 둔다(다른 전역 등록을 남기지 않게)."""
+    import app.core.settings as settings_module
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.ports.data_sources import operator_modes
+
+    operator_modes.register(unlimited=lambda: settings_hook.unlimited_mode(settings_module.get_settings().tenant_id),
+                            lodging_mode=lambda: settings_hook.lodging_mode(settings_module.get_settings().tenant_id))
+
+
 def wire_optional_features() -> list[str]:
     """끌 수 있는 기능이 **자기 규칙을 끼움 자리에 꽂는 곳**. `[2026-10-06]` D-CS-013
 
@@ -646,6 +659,8 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.modules.web_account import web_guard
 
     settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
+
+    wire_operator_modes()
 
     # ★`[2026-10-15 · 10-16 사용자 지시]` 관리 콘솔 「모델 경로」 — 상황마다(채팅 · 일정 짚기 · 공지 확인) off(환경 파일 따름) · local · ssh · api. 채팅은 부를 때마다,
     #  일정 짚기 · 공지 확인은 주소를 부를 때마다 읽는다(재기동 없이 반영, 운영 설정 캐시만큼 늦을 수 있다). SSH 터널은 앱 밖 프로그램이 연다.
@@ -883,10 +898,15 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         #   숙소 비교는 바깥 소스 하루 한도를 쓰므로 낮은 우선순위 몫(`travel.candidates.lodging_source_share`)으로 **부를 때** 소스를 만든다(만드는 것은 I/O 없음)
         from app.domains.travel_ops.instances.lodging import review_alternatives as lodging_review_alternatives
 
+        #   ★`[2026-10-19 사용자 결정]` 숙소 모드(관리 콘솔)를 따른다 — off(기본)면 바깥에 나가지 않고 `None`(확인 화면 자체 고르기: DB → 카카오 · 관광공사),
+        #   test 면 위 몫까지, demo 면 하루 줄 · 몫 없이 월 한도만(구글 호텔 어댑터의 호출 문 `LodgingModeLimiter` 가 고른다)
         def _lodging_rank(**query):
             from app.core.settings import get_guardrails, get_settings
+            from app.domains.travel_ops.components.settings_hook import lodging_mode
             from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
 
+            if lodging_mode(get_settings().tenant_id) == "off":
+                return None
             share = float(get_guardrails().get("travel.candidates.lodging_source_share"))
             return lodging_review_alternatives.rank(travel=build_travel_sources(get_settings(), low_priority_share=share), **query)
 

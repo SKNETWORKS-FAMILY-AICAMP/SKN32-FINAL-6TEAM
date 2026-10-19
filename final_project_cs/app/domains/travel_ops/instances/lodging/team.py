@@ -1009,8 +1009,11 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             sellers = " · ".join(f"{seller['name']} {_won(seller['price_per_night'])}" for seller in stay["sellers"])
             priced = (f"구글 호텔 기준 1박 {_won(stay['price_from'])}~ (판매처 {sellers}). "
                       + (f"예약은 {stay['link_seller']}에서: {stay['link']}" if stay.get("link") else "바로 갈 예약 링크는 없었어요."))
+        elif google["asked"]:
+            priced = "구글 호텔에서 같은 숙소를 찾지 못해 날짜별 가격 · 예약 링크를 확인하지 못했어요."
         else:
-            priced = "이 경로로는 날짜별 가격 · 예약 링크를 확인하지 못했어요."
+            # ★`[2026-10-19]` 구글 호텔을 부르지 않았다(숙소 모드 「끄기」 · 키 없음 · 한도) — 빈칸 · 오류처럼 보이지 않게 고객이 할 일을 함께 말한다
+            priced = "날짜별 가격 · 예약 링크는 확인하지 못했어요 — 예약하신 사이트에서 날짜를 넣어 확인해 주세요."
         answer = (f"{pick['name']} — {pick.get('address') or '주소 모름'} "
                   f"(위도 {pick['latitude']}, 경도 {pick['longitude']}). "
                   f"{reason}{label}에 등록된 위치로 알려 드려요. {priced}\n"

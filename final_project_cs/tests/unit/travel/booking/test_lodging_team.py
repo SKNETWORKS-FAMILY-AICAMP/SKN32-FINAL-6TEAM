@@ -302,7 +302,9 @@ def test_my_stay_while_myrealtrip_rests_uses_kakao_and_says_where_it_came_from()
     assert result.decisions[0]["my_stay_fallback"] == "resting"
     assert result.decisions[0]["google"] == {"asked": False, "matched": False, "detail": False}, "구글 호텔 소스가 없으면 위치만"
     assert "마이리얼트립이 요청 한도로 잠시 쉬는 중이라 카카오맵에 등록된 위치로 알려 드려요" in result.answer
-    assert "날짜별 가격 · 예약 링크를 확인하지 못했어요" in result.answer
+    # `[2026-10-19]` 구글 호텔을 부르지 않았을 때(숙소 모드 「끄기」 등) — 빈칸 · 오류 대신 고객이 할 일을 함께 말한다
+    assert "날짜별 가격 · 예약 링크는 확인하지 못했어요 — 예약하신 사이트에서 날짜를 넣어 확인해 주세요." in result.answer
+    assert "이 경로로는" not in result.answer
 
 
 def test_my_stay_found_elsewhere_gets_google_prices_photo_and_booking_button():
@@ -340,7 +342,8 @@ def test_my_stay_found_elsewhere_gets_google_prices_photo_and_booking_button():
     unmatched, _, _ = _run({**MY_STAY, "stay_name": "롯데호텔 서울"},
                            {"read.stay_search": None, "read.stay_lookup": kakao, "read.stay_google": {"stays": google["stays"][:1]}})
     assert unmatched.decisions[0]["google"] == {"asked": True, "matched": False, "detail": False}
-    assert "날짜별 가격 · 예약 링크를 확인하지 못했어요" in unmatched.answer, "같은 숙소가 없으면 위치만 — 옆 건물을 붙이지 않는다"
+    assert "구글 호텔에서 같은 숙소를 찾지 못해 날짜별 가격 · 예약 링크를 확인하지 못했어요." in unmatched.answer, \
+        "같은 숙소가 없으면 위치만 — 옆 건물을 붙이지 않는다"
 
 
 def test_my_stay_not_on_myrealtrip_is_looked_up_elsewhere_or_said_not_found():
