@@ -72,6 +72,9 @@
 .stopFact > svg { justify-self: center; color: var(--color-faint); }
 .stopFact > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .stopFact[data-missing] > span { color: var(--color-faint); }
+/* `[2026-10-19]` The trial line keeps its 「제휴 전제 시험」 mark whole — only the reading is cut short on a narrow screen. */
+.stopFact[data-trial] { grid-template-columns: 18px minmax(0, 1fr) auto; }
+.trialMark { padding: 1px 6px; border: 1px solid var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11px; font-style: normal; font-weight: 700; white-space: nowrap; }
 .stopCard .stopHead .toggleEnd { min-height: 38px; }
 .stopPast { flex: none; margin-top: 8px; }
 .stopBody { padding: 10px 13px 13px; border-top: 1px solid var(--color-divider); }
