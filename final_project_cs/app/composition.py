@@ -221,7 +221,7 @@ _mobility_configuration_lock = threading.Lock()
 _mobility_configuration_key = None
 
 
-def _configure_mobility(settings):
+def _configure_mobility(settings, *, preload: bool = True):
     """Engine configuration is process-scoped; reload never edits a live engine.
 
     Changed engine settings require a process restart. Team enable/disable and
@@ -240,12 +240,12 @@ def _configure_mobility(settings):
             if key != _mobility_configuration_key:
                 raise CompositionError("live mobility engine settings require a process restart")
             return {"mode": mobility_wiring.mode()}
-        result = _configure_mobility_once(settings)
+        result = _configure_mobility_once(settings, preload=preload)
         _mobility_configuration_key = key
         return result
 
 
-def _configure_mobility_once(settings):
+def _configure_mobility_once(settings, *, preload: bool = True):
     """요청 조립과 출발 안내 단독 실행이 같은 이동 기동·호출 예산을 사용한다."""
     from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
     bike_gate = None
@@ -256,7 +256,7 @@ def _configure_mobility_once(settings):
         except Exception as exc:  # noqa: BLE001 — 문 없이는 따릉이 실시간을 끈다
             import logging
             logging.getLogger(__name__).warning('따릉이 실시간 한도 문 준비 실패: %s', type(exc).__name__)
-    return mobility_wiring.configure_from_settings(settings, bike_gate=bike_gate)
+    return mobility_wiring.configure_from_settings(settings, bike_gate=bike_gate, preload=preload)
 
 
 def build_mobility_departure_observer(settings, sources, *, guardrails=None):
@@ -508,7 +508,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      config_path: str | Path | None = None,
                      config: ProjectConfig | None = None,
                      action_handlers: Any | None = None,
-                     execution_planner: Any | None = None) -> Controller:
+                     execution_planner: Any | None = None,
+                     preload_mobility: bool = True) -> Controller:
     """Assemble the application Controller and inject every concrete adapter.
 
     ★`config` 를 주면 **그 선언 그대로** 조립한다(2026-09-06, reload 계약).
@@ -558,7 +559,7 @@ def build_controller(*, registry: TeamRegistry | None = None,
     controller.project_config = config.model_copy(deep=True)
     controller.service_bindings = BindingTable(bindings, registry, controller.composition_revision)
     if tools is None and ("legs", "leg_planner") in bindings:
-        _configure_mobility(get_settings())
+        _configure_mobility(get_settings(), preload=preload_mobility)
     return controller
 
 

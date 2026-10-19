@@ -41,7 +41,7 @@ def test_successful_independent_initialization_keeps_the_warmed_pointer_across_r
     pointers = []
     monkeypatch.setattr(composition, "wire_optional_features",
                         lambda: pointers.append(item_pointer.register_from_settings(config)))
-    monkeypatch.setattr(composition, "build_controller", lambda: pytest.fail("independent initialization built a Team candidate"))
+    monkeypatch.setattr(composition, "build_controller", lambda **kwargs: pytest.fail("independent initialization built a Team candidate"))
     monkeypatch.setattr(run_sweepers, "_run_web_guard", lambda tenant: {"cleaned": 0})
     run_sweepers._run_once("travel-test", "web_guard")
     first = pointers[0]
@@ -222,7 +222,7 @@ def test_nested_jobs_hold_one_controller_and_new_round_sees_new_generation(monke
     old, new = table(revision="old"), table(revision="new")
     builds, seen = [], []
     candidate = SimpleNamespace(service_bindings=old)
-    monkeypatch.setattr(composition, "build_controller", lambda: builds.append(candidate) or candidate)
+    monkeypatch.setattr(composition, "build_controller", lambda **kwargs: builds.append(candidate) or candidate)
     monkeypatch.setattr(composition, "wire_optional_features", lambda: None)
 
     @run_sweepers._in_round
@@ -247,7 +247,7 @@ def test_nested_jobs_hold_one_controller_and_new_round_sees_new_generation(monke
 
 def test_independent_only_job_does_not_require_team_assembly(monkeypatch):
     from app import composition
-    monkeypatch.setattr(composition, "build_controller", lambda: pytest.fail("independent job requires Team"))
+    monkeypatch.setattr(composition, "build_controller", lambda **kwargs: pytest.fail("independent job requires Team"))
     monkeypatch.setattr(composition, "wire_optional_features", lambda: None)
     monkeypatch.setattr(run_sweepers, "_run_jobs", lambda *a: {"web_guard": {"scanned": 3}})
     assert run_sweepers._run_once("travel-test", "web_guard") == {"web_guard": {"scanned": 3}}
@@ -293,7 +293,7 @@ def test_watch_does_not_close_controller_preserved_case_on_unavailable(monkeypat
 def test_all_teams_off_default_round_keeps_independent_cleanup(monkeypatch):
     from app import composition
     empty = table(disabled=["activity", "dining", "mobility"])
-    monkeypatch.setattr(composition, "build_controller", lambda: SimpleNamespace(service_bindings=empty))
+    monkeypatch.setattr(composition, "build_controller", lambda **kwargs: SimpleNamespace(service_bindings=empty))
     monkeypatch.setattr(composition, "wire_optional_features", lambda: None)
     monkeypatch.setattr(composition, "build_classifier", lambda: object())
     monkeypatch.setattr(run_sweepers, "get_connection", Connection)
@@ -320,7 +320,7 @@ def test_failed_composition_skips_team_jobs_but_keeps_independent_work(monkeypat
     from app import composition
     calls = []
 
-    def fail():
+    def fail(**kwargs):
         raise failure
 
     monkeypatch.setattr(composition, "build_controller", fail)
@@ -347,7 +347,7 @@ def test_failed_composition_skips_team_jobs_but_keeps_independent_work(monkeypat
 def test_one_job_exception_keeps_the_same_round_and_runs_later_jobs(monkeypatch, caplog):
     from app import composition
     bound = table(revision="stable")
-    monkeypatch.setattr(composition, "build_controller", lambda: SimpleNamespace(service_bindings=bound))
+    monkeypatch.setattr(composition, "build_controller", lambda **kwargs: SimpleNamespace(service_bindings=bound))
     monkeypatch.setattr(composition, "wire_optional_features", lambda: None)
     monkeypatch.setattr(composition, "build_classifier", lambda: object())
     monkeypatch.setattr(run_sweepers, "get_connection", Connection)
@@ -427,7 +427,7 @@ def test_feature_wiring_failure_keeps_cleanup_but_never_broadens_watch_scope(mon
     from app import composition
     calls = []
 
-    def build():
+    def build(**kwargs):
         if mode == "composition_and_features":
             raise ImportError("private plugin path")
         if mode in ("independent_only", "independent_safety"):

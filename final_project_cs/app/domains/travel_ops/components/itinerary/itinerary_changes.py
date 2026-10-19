@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from app.domains.travel_ops.components.planning.replan import Candidate
 
 from dataclasses import dataclass, field, replace
+from copy import deepcopy
 from datetime import datetime, time, timedelta
 from typing import Any, Callable
 from uuid import UUID, uuid4
@@ -653,11 +654,15 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
                     ) -> ItineraryChange | None:
     """저장된 후보가 다 막혔을 때 이동 계산기로 사고를 피하는 새 경로를 찾는다. 못 찾으면 None(종전 unresolved)."""
     if previous is None or following is None:
+        if current_departure:
+            raise DepartureReplanUnavailable("adjacent_visit_missing")
         return None
     from app.domains.travel_ops.components.team_hooks import legs
     from app.domains.travel_ops.components.planning.replan import Candidate
     a, b = _leg_place(previous), _leg_place(following)
     if a is None or b is None:
+        if current_departure:
+            raise DepartureReplanUnavailable("current_place_missing")
         return None
     disruptions, unmapped = legs.disruptions_from_events(events)
     if current_departure and unmapped:
@@ -670,8 +675,11 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
     start_floor = max(now, leave_at(previous))   # `[2026-10-13]` 숙소면 체크인 시각
     got, _why = leg(a, b, following.starts_at, start_floor)
     if got is None:
-        if current_departure and (_why or {}).get("code") == "no_data":
-            raise DepartureReplanUnavailable("mobility_source_unavailable")
+        if current_departure:
+            why = deepcopy(_why) if isinstance(_why, dict) else {"code": "invalid_replan_result"}
+            rejected.append(why)
+            if why.get("code") not in _DEPARTURE_INFEASIBLE_CODES:
+                raise DepartureReplanUnavailable("mobility_source_unavailable", report=why)
         return None
     if current_departure:
         try:
@@ -710,6 +718,15 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
 class DepartureReplanUnavailable(RuntimeError):
     """현재 경로를 계산할 소스/유효한 계산 결과가 없어 기존 일정으로 우회할 수 없다."""
 
+    def __init__(self, code: str, *, report: dict[str, Any] | None = None):
+        self.report = deepcopy(report) if report is not None else {"code": code}
+        super().__init__(code)
+
+
+_DEPARTURE_INFEASIBLE_CODES = frozenset({
+    "arrive_late", "before_first", "service_gap", "after_last", "no_path", "no_walk_path",
+})
+
 
 def plan_departure_adjustment(*, item: Item, previous: Item | None, following: Item | None,
                               events: dict[str, Any], now: datetime, trip: dict[str, Any]) -> Plan:
@@ -717,10 +734,11 @@ def plan_departure_adjustment(*, item: Item, previous: Item | None, following: I
     route = route_of(item) or {}
     _, planned = planned_option(item, route) if route else (None, {"label": item.title})
     causes = [{"category": "departure_revalidation", "kind": "current_route_replan"}]
+    rejected = []
     change = _engine_reroute(item=item, previous=previous, following=following, events=events,
-        now=now, causes=causes, rejected=[], planned=planned, party_size=trip.get("party_size"),
+        now=now, causes=causes, rejected=rejected, planned=planned, party_size=trip.get("party_size"),
         constraints=trip.get("constraints") or {}, current_departure=True)
-    return change or NoChange("unresolved", {"causes": causes})
+    return change or NoChange("unresolved", {"causes": causes, "departure_replan": rejected[-1]})
 
 
 # ── 고객 신고 — 식당 ───────────────────────────────────────────

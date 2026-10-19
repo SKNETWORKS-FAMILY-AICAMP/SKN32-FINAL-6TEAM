@@ -21,6 +21,7 @@ import { newStopEdits } from "./new-stop";
 import { candidateTimeEdits, proposedTimeOf } from "./risk-candidate-edits";
 import { itemRiskOf, riskSignature } from "@/lib/live/risks";
 import type { PlanCandidate } from "./model";
+import { assertPlaceSearchComplete } from "./place-search-status";
 
 /** How many alternatives get their photos fetched (A, B, C) — each is one call to the tourism photo service. */
 const PHOTO_CANDIDATES = 3;
@@ -236,6 +237,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const item = itemOf(id);
         const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
         if (!allUndo.active) throw gone();
+        assertPlaceSearchComplete(found, t);
         return found.results.map((result) => ({
           ...planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source }),
           pickedPlace: pickedPlace(result.place),
@@ -244,6 +246,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       search: async (id, words) => {
         const item = itemOf(id);
         const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
+        assertPlaceSearchComplete(found, t);
         return found.results.map((result) => {
           const card = planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source });
           pickable.current.set(card.id, result.place);
