@@ -567,6 +567,8 @@ def with_alternates(conn, *, tenant_id: str, intake_id: Any, body: dict[str, Any
     by_key = {(str(x["source_id"]), int(x["index"])): x for x in review.get("items") or []}
     places = out.setdefault("places", [])
     for entry in out.get("items") or []:
+        if entry.get("kind") == "mobility":
+            continue          # ☆이동 항목은 출발 일정의 접수 표시(`detail.intake`)를 그대로 물려받는다(`registered_moves`) — 2026-10-20 x600 실서버에서 이동에 장소 대안이 붙었다
         ref = ((entry.get("detail") or {}).get("intake") or {})
         item = by_key.get((str(ref.get("source_id")), int(ref.get("index", -1))))
         if item is None:

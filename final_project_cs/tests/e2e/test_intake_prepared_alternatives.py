@@ -211,6 +211,7 @@ def test_registering_keeps_the_other_prepared_alternatives_and_the_chat_swap_use
     with get_connection() as conn:
         trip, items = store.latest(conn, trip_id)
         places = store.places(conn, trip_id)
+    assert not [i.title for i in items if i.kind == "mobility" and i.detail.get("alternates")]          # 이동 항목에는 장소 대안을 붙이지 않는다
     target = next(i for i in items if (i.place or {}).get("name") == pick["name"])
     alternates = target.detail.get("alternates") or []
     assert [a["name"] for a in alternates] == [n for n in names if n != pick["name"]][:3]           # 고른 곳을 뺀 나머지
