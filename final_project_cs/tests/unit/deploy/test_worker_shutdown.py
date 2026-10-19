@@ -40,7 +40,8 @@ def _shell_path(path):
     return f"/{value[0].lower()}{value[2:]}" if os.name == "nt" else value
 
 
-def _until(condition, label, timeout=6):
+# Git Bash 에서 프로세스 시작이 느려 다른 시험이 함께 돌면 6초를 넘긴 적이 있다(2026-10-19, 240건 중 3건) — 10초로 둔다.
+def _until(condition, label, timeout=10):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         value = condition()
@@ -202,7 +203,7 @@ exec {SHELLS[shell]} "$WORKER_TEST_ROOT/worker-under-test.sh"
         (self.root / "release").touch()
 
     def finish(self, expected):
-        code = self.process.wait(timeout=6)
+        code = self.process.wait(timeout=10)
         self.stdout.flush()
         self.stderr.flush()
         assert code == expected, (code, self.events(), (self.root / "stderr.log").read_text())

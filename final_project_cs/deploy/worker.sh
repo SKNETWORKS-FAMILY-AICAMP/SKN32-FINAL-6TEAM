@@ -70,11 +70,22 @@ run() {
   return "$job_status"
 }
 
-# 배달 반복 — 서브셸 안에서 돈다. 위 변수는 서브셸의 사본이고 같은 request_stop 이 이 반복의 대기만 끊는다.
+# 배달 반복의 멈춤 — 신호를 받을 때마다 대기 sleep 을 다시 끈다(부모가 1초마다 다시 알린다).
+#   ☆막 띄운 sleep 에 보낸 첫 TERM 이 사라지는 경우가 있었다(Git Bash 시험 · exec 중 신호). 그래서 부모의 request_stop 과 달리
+#   뒤 신호를 무시하지 않는다. 진행 중인 발송(Python)에는 어느 신호도 보내지 않는다.
+stop_delivery() {
+  stopping=1
+  signals=$((signals + 1))
+  if [ -n "$sleep_pid" ]; then
+    kill -TERM "$sleep_pid" 2>/dev/null || :
+  fi
+}
+
+# 배달 반복 — 서브셸 안에서 돈다. 위 변수는 서브셸의 사본이다.
 # ★`stopping` 은 되돌리지 않는다 — 서브셸이 뜨자마자 받은 멈춤 요청(부모의 트랩이 서브셸에서 돈 경우)을 지우지 않게.
 delivery_loop() {
   sleep_pid=
-  trap request_stop TERM INT
+  trap stop_delivery TERM INT
   while [ "$stopping" -eq 0 ]; do
     python -m scripts.run_outbox_worker --once --drain &
     wait_child "$!"
@@ -88,16 +99,15 @@ delivery_loop() {
     if [ "$stopping" -ne 0 ]; then
       kill -TERM "$sleep_pid" 2>/dev/null || :
     fi
-    wait "$sleep_pid"
+    # 멈춤으로 wait 가 깨져도 sleep 이 실제로 끝나 회수될 때까지 다시 기다린다(신호마다 sleep 을 다시 끈다).
+    wait_child "$sleep_pid"
     delivery_sleep_status=$?
-    if [ "$stopping" -ne 0 ]; then
-      wait "$sleep_pid" 2>/dev/null || :
-    elif [ "$delivery_sleep_status" -ne 0 ]; then
+    sleep_pid=
+    if [ "$stopping" -eq 0 ] && [ "$delivery_sleep_status" -ne 0 ]; then
       # 대기가 깨지면 반복을 끝낸다(쉬지 않고 발송을 띄우지 않게). 다음 회차가 기록하고 다시 띄운다.
       log_failure delivery_wait "$delivery_sleep_status"
       exit "$delivery_sleep_status"
     fi
-    sleep_pid=
   done
   exit 0
 }
@@ -158,7 +168,7 @@ while [ "$stopping" -eq 0 ]; do
 done
 # 배달 반복을 멈추고 진행 중인 발송이 끝날 때까지 회수한다. 종료 코드는 되잡기 회차의 것이다.
 # ☆갓 뜬 서브셸이 자기 트랩을 걸기 전에 받은 신호는 셸에 따라 처리되지 않고 사라질 수 있다 — 끝날 때까지 1초마다 다시 알린다.
-#   이미 멈춤을 받은 반복은 신호를 무시하므로(trap '') 다시 보내도 진행 중인 발송은 끊기지 않는다.
+#   반복은 다시 받은 신호로 대기 sleep 만 다시 끈다 — 진행 중인 발송은 끊기지 않는다.
 if [ -n "$delivery_pid" ]; then
   while kill -0 "$delivery_pid" 2>/dev/null; do
     kill -TERM "$delivery_pid" 2>/dev/null || :
