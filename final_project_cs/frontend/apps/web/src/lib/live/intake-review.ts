@@ -135,6 +135,7 @@ export interface ReviewedIntakeView extends IntakeView {
 
 /** One place, in the shape `POST …/edits` takes for `items[n].place` when the customer picked it from a list. */
 export interface PickedPlace {
+  provider_ref?: string | null;
   name: string;
   latitude: number;
   longitude: number;
@@ -269,5 +270,6 @@ export function pickedPlace(place: CandidatePlace): PickedPlace | null {
     source: place.source && PICK_SOURCES.includes(place.source) ? place.source as PickedPlace["source"] : "search",
     ...(place.kind ? { kind: place.kind } : {}),
     ...(place.content_id ? { content_id: place.content_id } : {}),
+    ...(place.ref && /^(?:kakao|tour):[0-9]{1,30}$/.test(place.ref) ? { provider_ref: place.ref } : {}),
   };
 }

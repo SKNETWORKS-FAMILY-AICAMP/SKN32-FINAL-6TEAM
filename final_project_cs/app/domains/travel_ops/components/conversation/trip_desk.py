@@ -335,7 +335,7 @@ class TripDesk:
         return {"status": "rolled_back", "version": written["version"],
                 "restored": plan.summary["restored"], "notice": plan.notice}
 
-    def find_place(self, name: str, *, kind_hint: str | None = None) -> Any | None:
+    def find_place(self, name: str, *, kind_hint: str | None = None, near=None, trip_id=None) -> Any | None:
         """이름 → 장소 **한 곳**(`intake.places.resolve` — 우리 장소 표 → 관광공사 → 요식 원장 → 카카오). 못 찾으면 None.
         ★`[2026-10-15]` 이름 말한 곳으로 바꾸기 전에 본다 — 「다른 식당」처럼 이름이 아닌 설명이면 못 찾으므로 다른 안 보여 주기로 돌린다."""
         from app.domains.travel_ops.components.intake import pipeline
@@ -345,8 +345,8 @@ class TripDesk:
             return None
         tour, kakao, dining = self._edit_lookups()
         with self._connect() as conn:
-            found = resolve(name.strip(), our_places=pipeline._our_places(conn, self.store.tenant_id), tour=tour, kakao=kakao,
-                            dining=dining, kind_hint=kind_hint)
+            found = resolve(name.strip(), our_places=pipeline._our_places(conn, self.store.tenant_id, trip_id=trip_id), tour=tour, kakao=kakao,
+                            dining=dining, kind_hint=kind_hint, near=near, choose_near=True)
         return found if found.status == "resolved" else None
 
     def _read_plan(self) -> Callable[[str, Any], Any] | None:
@@ -367,17 +367,38 @@ class TripDesk:
         웹 「일정 수정」과 **같은 길**(`chat_edit.run` — 다시 열기 → 고치기 → 검사 → 「완료」). 못 고치면 까닭을 그대로 답한다."""
         from app.domains.travel_ops.components.conversation import chat_edit
 
+        # 시험 · 다른 호출처는 decision 없이(None) 고친 ops 만 넘길 수 있다 — 장소 뜻 · 시각 맞춤 표시는 있을 때만 읽는다.
+        raw = getattr(decision, "raw", None) or {}
+        action = getattr(decision, "action", None)
         with self._connect() as conn:
             trip, items = self.store.latest(conn, trip_id)
         try:
             ops, what = chat_edit.ops_for(decision, items=items, now=now, message=message or "", read_plan=self._read_plan())
+            area_text = str(raw.get("place_text") or "").strip()
+            if area_text and action == "replace_named":
+                from dataclasses import replace
+                area = self.find_place(area_text, kind_hint="activity", trip_id=trip_id)
+                if area is not None and area.latitude is not None and area.longitude is not None:
+                    ops = [replace(op, near=(area.latitude, area.longitude)) if op.kind == "place" else op for op in ops]
             done = chat_edit.run(store=self.store, connect=self._connect, tenant=self.store.tenant_id,
                                  customer_id=trip["customer_id"], trip_id=trip_id, base_version=base_version, ops=ops,
                                  lookups=self._edit_lookups, now=now,
-                                 cause_extra={"message": (message or "")[:200], **({"chat_request_id": request_id} if request_id else {})})
+                                 cause_extra={"message": (message or "")[:200], "fit_time_changes": action == "swap_order"
+                                     or str(raw.get("at_day")) == "tomorrow",
+                                     **({"chat_request_id": request_id} if request_id else {})})
         except chat_edit.EditRefused as refused:
+            if action == "replace_named" and refused.code == "place_not_found":
+                from .requested_destination import apply as preserve_destination
+                saved = preserve_destination(store=self.store, connect=self._connect, trip_id=trip_id,
+                    base_version=base_version, decision=decision, now=now, request_id=request_id)
+                if saved is not None:
+                    return saved
             status = "clarify" if refused.code.startswith("need_") else "edit_refused"
-            return {"status": status, "text": refused.message, "reason": refused.code, **refused.detail}
+            requested = str(raw.get("destination_text") or "").strip()
+            choices = ([{"label": requested + " (위치 확인 필요)", "message": requested + " 지점을 확인해 줘"}]
+                       if requested and refused.code in ("place_not_found", "intake_incomplete") else [])
+            return {"status": status, "text": refused.message, "reason": refused.code,
+                    **({"choices": choices, "choices_title": "요청하신 장소"} if choices else {}), **refused.detail}
         if not done["changed"]:
             return {"status": "already_applied", "text": "말씀하신 대로 이미 되어 있어 일정은 바꾸지 않았어요.", "reason": "unchanged"}
         with self._connect() as conn:

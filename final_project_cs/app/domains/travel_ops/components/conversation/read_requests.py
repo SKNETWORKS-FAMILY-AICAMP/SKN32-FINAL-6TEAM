@@ -22,7 +22,12 @@ def _origin_matches(items, phrase):
     fragment = fact_context._compact(phrase)
     if len(fragment) < 2:
         return []
-    return [i for i in items if i.kind != "mobility" and any(fragment in fact_context._compact(name)
+    stops = [i for i in items if i.kind != "mobility"]
+    exact = [i for i in stops if any(fragment == fact_context._compact(name)
+             for name in (i.title, (i.place or {}).get("name") or ""))]
+    if exact:
+        return exact
+    return [i for i in stops if any(fragment in fact_context._compact(name)
             for name in (i.title, (i.place or {}).get("name") or ""))]
 
 

@@ -88,6 +88,8 @@ def _place_value(place: dict[str, Any], kind: str) -> dict[str, Any]:
         value["dining_place_uid"] = str(attributes["dining_place_uid"])
     if attributes.get("pick_origin"):
         value["origin"] = str(attributes["pick_origin"])
+    if attributes.get("provider_ref"):
+        value["provider_ref"] = attributes["provider_ref"]
     return value
 
 
@@ -334,6 +336,13 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
         inherited = {k: v for k, v in (origin.detail or {}).items()
                      if k not in ("provenance", "intake", "booking", "customer_pinned")} if inherit else {}
         detail: dict[str, Any] = {**inherited, "provenance": row["provenance"], "intake": {"intake_id": intake_id, "revision": revision}}
+        if origin is not None and origin.detail.get("execution"):
+            from copy import deepcopy
+            execution = deepcopy(origin.detail["execution"])
+            if same_spot and starts.date() == origin.starts_at.date():
+                detail["execution"] = execution
+            else:
+                detail["execution_history"] = [*origin.detail.get("execution_history", []), execution]
         vendor = origin is not None and origin.booking_id is not None
         if row["booking_no"] or row["booked"] is True:
             old_booking = dict((origin.detail or {}).get("booking") or {}) if inherit else {}
@@ -389,7 +398,7 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
             continue
         before = next((i for i in reversed(ordered_base[:n]) if i.kind != "mobility"), None)
         after = next((i for i in ordered_base[n + 1:] if i.kind != "mobility"), None)
-        if _end(move) <= now:
+        if _end(move) <= now and before is not None and after is not None and before.item_id in (stays | set(replaced)) and after.item_id in (stays | set(replaced)):
             moves.append(move)
         elif before is not None and after is not None and before.item_id in stays and after.item_id in stays \
                 and before.item_id in order and after.item_id in order \

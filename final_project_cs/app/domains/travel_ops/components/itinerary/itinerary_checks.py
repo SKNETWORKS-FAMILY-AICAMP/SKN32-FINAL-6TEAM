@@ -144,11 +144,21 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
     found: list[Violation] = []
 
     for part in items:
-        if part.ends_at is not None and part.ends_at <= part.starts_at:
+        if (part.ends_at is not None and part.ends_at <= part.starts_at and not (part.detail or {}).get("origin")
+                and not ((part.detail or {}).get("execution", {}).get("state") == "completed"
+                         and (part.detail or {}).get("execution", {}).get("start_unknown") is True)):
             found.append(Violation("time_order", (part.seq,),
                                    f"{part.title}: 끝나는 시각({_hm(part.ends_at)})이 시작({_hm(part.starts_at)})보다 빠르다",
                                    "끝나는 시각을 시작 뒤로 보내거나 비워 둔다"))
         found += _place_violations(part)
+        day_end = ((constraints or {}).get("day_hours") or {}).get("end")
+        if day_end and part.kind not in STAY_KINDS:
+            until = _seoul(part.ends_at or part.starts_at)
+            deadline = datetime.combine(_seoul(part.starts_at).date(), time.fromisoformat(day_end), tzinfo=KST)
+            if until > deadline:
+                found.append(Violation("day_deadline", (part.seq,),
+                    f"{part.title}: 고객이 정한 하루 마감 {day_end} 뒤에 끝난다",
+                    "체류·이동을 줄이거나 다른 날로 옮긴다"))
 
     # ★`[2026-10-13 사용자 결정 — 숙소 항목 B안]` 숙소는 체크인부터 체크아웃까지 며칠에 걸친다(한 항목 = 한 숙박) — 그 사이 낮 일정과
     #   시간이 겹치는 것이 정상이다. 그래서 앞뒤 일정끼리의 겹침 · 이동 시간 검사에서 빼고, 숙소끼리만 겹치지 않는지 본다(같은 밤 두 곳)

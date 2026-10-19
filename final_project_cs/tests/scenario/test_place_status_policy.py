@@ -195,9 +195,10 @@ def test_day_watch_and_team_read_share_free_closure_without_duplicate_diagnostic
         report = tools.disruptions(scope, place_id=w.meal.place_id, starts_at=w.meal.starts_at)
         assert report['verdict'] == 'disrupted' and report['disruptions'][0]['kind'] == 'closed', report
     else:
-        assert result.fatal and result.notified and not result.opened and notices == []
+        assert not result.fatal and not result.notified and not result.opened and notices == []
+        assert any(row.get('category') == 'temporary_closure' for row in result.unchecked)
         with get_connection() as conn:
-            assert conn.execute('SELECT sum(occurrences) FROM ops_defects WHERE tenant_id=%s', (w.tenant,)).fetchone()[0] == len(result.fatal)
+            assert conn.execute('SELECT sum(occurrences) FROM ops_defects WHERE tenant_id=%s', (w.tenant,)).fetchone()[0] >= 1
 
 
 def test_daytime_saved_interval_gates_only_scheduled_reads(world):

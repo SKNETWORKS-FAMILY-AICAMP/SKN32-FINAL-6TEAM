@@ -161,8 +161,18 @@ def narrowings(title: str) -> list[str]:
 
 def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,
             kind_hint: str | None = None, aliases: dict[str, str] | None = None, dining: Any = None,
-            near: tuple[float, float] | None = None) -> Resolved:
+            near: tuple[float, float] | None = None, choose_near: bool = False) -> Resolved:
     # ★앞에 끼니 말이 있으면 식사다 — 규칙 읽기는 「12:00 점심 토속촌삼계탕」에 식사 표시를 하지 않는다(모델이 읽은 줄만)
+    original_title = title
+    condition = re.sub(r"\s*(?:파는|먹을|먹는)\s*(?:곳|데|식당).*$", "", title).strip()
+    if condition != title and condition:
+        title, kind_hint = condition, "dining"
+    if re.fullmatch(r"(?:(?:거기|여기|그곳|이곳)(?:서|에서)?(?:\s*식사)?|식사|밥|점심|저녁)", title.strip()):
+        if near is not None and kind_hint == "dining":
+            got = _meal_near(dining, kakao, "식당", {"name": "", "latitude": near[0], "longitude": near[1]}, [], [])
+            if got is not None:
+                return got
+        return Resolved("unresolved", needs_review=True, note="앞 장소를 가리키는 말이다 — 기준 장소를 먼저 확인한다", chain_deferred=True)
     words = title.split()
     meal = kind_hint == "dining" or (len(words) > 1 and words[0] in MEAL_WORDS)
     if meal:
@@ -184,6 +194,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
     blocked: list[str] = []
     candidates: list[dict[str, Any]] = []
     full_hits: list[dict[str, Any]] = []
+    near_checked, near_hits = False, []
     by_name = {normalize(p["name"]): p for p in our_places
                if p.get("name") and (not meal or p.get("kind") == "dining")}
     # ★`[2026-09-28]` 요식 식당이 공용 장소가 되면서 같은 이름 지점이 여럿일 수 있다 — 고른 뒤 「확인 필요」로 남긴다
@@ -198,7 +209,10 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                            if activity else by_name)
         # 1 — 우리 장소 표 정확 일치
         if key in matching_places:
-            place = matching_places[key]
+            exacts = [p for p in our_places if normalize(p.get("name", "")) == key and (not meal or p.get("kind") == "dining")]
+            located = [p for p in exacts if p.get("latitude") is not None and p.get("longitude") is not None
+                       and (not activity or _fits_item_kind(p, query, meal=False, activity=True))]
+            place = min(located, key=lambda p: (float(p["latitude"]) - near[0]) ** 2 + (float(p["longitude"]) - near[1]) ** 2) if near and located else matching_places[key]
             return Resolved("resolved", "places", place["name"], query, place.get("kind"), place.get("latitude"),
                             place.get("longitude"), place_id=str(place["place_id"]),
                             needs_review=not _plain(query, title) or seen.get(key, 0) > 1,
@@ -260,6 +274,21 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                 blocked.append("kakao:" + (max(kakao.misses, key=kakao.misses.get)
                                            if getattr(kakao, "misses", None) else "unavailable"))
                 hits = []
+            if choose_near and near:
+                from app.domains.travel_ops.components.itinerary.itinerary_changes import RELAX_WIDE_M
+                around = kakao.search(query, near=near, radius=MEAL_NEAR_RADIUS_M if meal else RELAX_WIDE_M)
+                near_checked, near_hits = True, around or []
+                tried.append(f"kakao:{query} 주변")
+                if around is None:
+                    blocked.append("kakao:unavailable")
+                else:
+                    # A unique prefix in the global result is not a local food match.
+                    # Deduplicate the same provider place before exact-name counting.
+                    combined = {}
+                    for hit in [*hits, *around]:
+                        identity = hit.get("id") or (hit.get("name"), hit.get("latitude"), hit.get("longitude"))
+                        combined[identity] = hit
+                    hits = list(combined.values())
             # ★`[2026-10-13 develop 병합]` 식사의 기준 장소(시장 · 동네)는 가게가 아니라서 아래 거르기 **전의** 결과에서 찾는다
             every_hit = hits
             if meal:
@@ -299,11 +328,13 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
             if found is not None:
                 return found
             match = _kakao_match(query, hits)
+            if match is not None and choose_near and near and normalize_full(match["name"]) != normalize_full(query):
+                match = None  # A prefix match must compete with the local candidates.
             if match is None:
                 # ★이름이 특정하지 않는다 — 종류가 맞는 후보를 **남겨 두기만** 하고 좁혀 찾기를 계속한다.
                 #   ☆2026-09-28 실측: 여기서 바로 돌려주니 「광장시장 빈대떡」이 「순희네빈대떡」(원문에 없는 가게)이 됐다 —
                 #   설계서 §4-2 가 막은 바로 그것. 좁힌 이름(「광장시장」)이 먼저이고, 후보는 좁혀도 못 찾을 때만 쓴다
-                candidates = candidates or _kind_hits(query, hits)[:5]
+                candidates = candidates or _kind_hits(query, hits, food_query=bool(meal and choose_near))[:5]
             if match is not None:
                 # 카카오가 찾은 이름을 미리 적재한 데이터에서 다시 확인한다 — 식당(FD6 · CE7)이나 식사면 원장부터
                 food = meal or match["category_group"] in ("FD6", "CE7")
@@ -327,6 +358,23 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                                 match["latitude"], match["longitude"], needs_review=not exact or query != title,
                                 tried=tried, note=("카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다"
                                                    + ("" if exact else f" · 이름이 원문과 달라 확인이 필요하다(「{match['name']}」)")))
+    if candidates and near and choose_near:
+        if near_checked:
+            candidates = _kind_hits(title, near_hits, food_query=meal)
+            if not candidates:
+                return Resolved("unresolved",needs_review=True,tried=tried,blocked=blocked,
+                    note="기준 지역 안에서 요청에 맞는 장소를 확인하지 못했다 — 요청한 장소를 그대로 보존한다")
+        if kakao is not None and not near_checked:
+            around = kakao.search(title, near=near)
+            tried.append(f"kakao:{title} 주변")
+            if around is None:
+                blocked.append("kakao:unavailable")
+            else:
+                candidates += _kind_hits(title, around)
+        chosen = min(candidates, key=lambda h: (h["latitude"] - near[0]) ** 2 + (h["longitude"] - near[1]) ** 2)
+        return Resolved("resolved", "kakao", chosen["name"], title, "dining" if meal else "activity",
+                        chosen["latitude"], chosen["longitude"], needs_review=True, tried=tried, blocked=blocked,
+                        note=f"요청 「{original_title}」에 맞는 기준 장소 주변에서 가장 가까운 후보를 골랐다")
     if candidates:
         return Resolved("unresolved", tried=tried, needs_review=True, blocked=blocked, candidates=candidates,
                         note=f"이름이 특정하지 않아 종류가 맞는 {len(candidates)}곳 중 앞뒤 일정에 가까운 곳으로 고른다")
@@ -596,12 +644,12 @@ def _food_hint(query: str, title: str, hits: list[dict[str, Any]]) -> str | None
     return "dining" if food * 2 > len(hits) else None
 
 
-def _kind_hits(query: str, hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _kind_hits(query: str, hits: list[dict[str, Any]], *, food_query: bool = False) -> list[dict[str, Any]]:
     """종류가 맞는 후보 — 이름이 원문으로 시작하거나(구간들), 원문의 **마지막 말**(활동 · 종류, 2자 이상)이 이름이나
     분류에 든 것. 「한강 카약」 → 「○○카약」 업체들, 「북한산 둘레길」 → 「북한산둘레길 n구간」들."""
     key = normalize(query)
     words = query.split()
-    last = normalize(words[-1]) if len(words) > 1 else ""
+    last = normalize(words[-1]) if len(words) > 1 or food_query else ""
     out = []
     for hit in hits:
         name, category = normalize(hit["name"]), normalize(hit.get("category") or "")

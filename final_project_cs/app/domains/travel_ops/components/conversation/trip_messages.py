@@ -794,23 +794,6 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         from dataclasses import replace
         mode = "propose" if decision.action == "propose_alternatives" else "apply"
         decision = replace(decision, action="replace_named", raw={**decision.raw, "near_mode": mode})
-    if decision.action == "replace_named" and not near_change:
-        # ★`[2026-10-15]` 말한 곳을 **먼저 찾는다**(웹 「일정 수정」과 같은 이름 찾기). 한 곳으로 찾으면 그곳으로 바꾸고(`TripDesk.edit`),
-        #   못 찾으면 — 「다른 식당」 같은 설명이거나 모르는 이름이다 — 바꾸지 않고 다른 안을 보여 고르게 한다(찾지 못했다고 먼저 밝힌다, `case_dispatch.response`)
-        named = dict((decision.raw or {}).get("named_destination") or {})
-        # ★`[2026-10-15 x600 실서버 확인]` 종류 힌트 없이 **이름으로 먼저** 찾는다 — 식사 일정에 「덕수궁」이라고 말하면 식당에서만 찾아 「탁사발두부공방 덕수궁점」으로 바뀌었다.
-        #   못 찾았고 바꿀 일정이 식사면 식사 힌트로 한 번 더 찾는다(식당 이름만 말한 경우)
-        text = str(named.get("text") or "")
-        found = desk.find_place(text)
-        if found is None and getattr(decision.item, "kind", None) == "dining":
-            found = desk.find_place(text, kind_hint="dining")
-        if found is None:
-            from dataclasses import replace as _replace
-
-            decision = _replace(decision, action="propose_alternatives",
-                                raw={**decision.raw, "named_destination": {**named, "found": False}})
-        else:
-            decision.raw["named_destination"] = {**named, "found": True, "name": found.name}
     # 복합 읽기는 각 질문의 대상·범위를 따로 검증한다.
     if decision.reads:
         focus, stale_selection = None, False
@@ -1024,6 +1007,14 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
             outcome = desk.near_alternate(trip_id=trip_id, item_id=item.item_id, base_version=base,
                                           origin=origin, message=message, request_id=request_id,
                                           propose=decision.raw.get("near_mode") == "propose")
+    elif action in ("arrive_item", "complete_item", "advance_trip", "finish_day"):
+        from .journey_progress import apply as apply_progress, arrival_anchor
+        outcome = apply_progress(store=store, connect=get_connection, trip_id=trip_id, base_version=base,
+                                 decision=decision, now=at, request_id=request_id, message=message,
+                                 destination=(desk.find_place(str(decision.raw.get("destination_text")),
+                                     kind_hint=getattr(decision.item, "kind", None), trip_id=trip_id,
+                                     near=arrival_anchor(items,decision.item,here,at))
+                                     if action == "arrive_item" and decision.raw.get("destination_text") else None))
     elif action in EDIT_ACTIONS:
         # ★`[2026-10-15 사용자 지시]` 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳 · 순서 · 고정 — 웹 「일정 수정」과 같은 길로 실행한다(`TripDesk.edit`)
         outcome = desk.edit(trip_id=trip_id, base_version=base, decision=decision, now=at, message=message,
@@ -1051,7 +1042,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more") if k in outcome}
     if outcome.get("text_web"):
         chat_reply["answer_web"] = outcome["text_web"]
-    if focus and status == "answered":
+    if action in ("arrive_item", "complete_item", "advance_trip") and status in ("adjusted", "already_applied") and item is not None:
+        focus = {"item_id": outcome.get("item_id") or str(item.item_id), "version": outcome.get("version") or base,
+                 "at": at.isoformat(), "source": "customer_progress"}
+    if focus and (status == "answered" or action in ("arrive_item", "complete_item", "advance_trip")):
         chat_reply["focus"] = focus
     elif status == "adjusted" and action in EDIT_ACTIONS and outcome.get("focus"):
         chat_reply["focus"] = outcome["focus"]

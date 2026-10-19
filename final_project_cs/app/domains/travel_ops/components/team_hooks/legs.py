@@ -59,17 +59,19 @@ def is_registered() -> bool:
     return _selected_0 is not None
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None):
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None, stage=None):
     """구간 계산기를 만든다 → `leg(a, b, 도착목표, 그전엔안됨)` → (결과, None) 또는 (None, 이유).
     운영에서는 이동 팀 부재·계산기 준비 실패를 명시적으로 거절한다.
     `modes`(`["subway"]` 처럼 이 수단만으로) 는 주었을 때만 이동 팀에 넘긴다 — 안 받는 옛 등록 함수도 그대로 돈다."""
     _selected_0 = read_binding("legs", "leg_planner", globals()["_leg_planner"], required_team="mobility")
     if _selected_0 is None:
         return None
+    options = {"disruptions": disruptions}
     if modes:
-        result = _selected_0(party_size, constraints, disruptions=disruptions, modes=modes)
-    else:
-        result = _selected_0(party_size, constraints, disruptions=disruptions)
+        options["modes"] = modes
+    if stage is not None:
+        options["stage"] = stage
+    result = _selected_0(party_size, constraints, **options)
     if result is None and current_bindings() is not None:
         raise TeamUnavailable("mobility", "engine_unavailable")
     return result

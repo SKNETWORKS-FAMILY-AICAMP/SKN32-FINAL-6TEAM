@@ -38,6 +38,7 @@ class EditOp:
     starts_at: str | None = None     # HH:MM
     ends_at: str | None = None       # HH:MM
     place_name: str | None = None
+    near: tuple[float, float] | None = None
     title: str | None = None
     item_kind: str | None = None     # 넣기: activity · dining
     reflow: bool = False             # 명시된 시각을 지키며 같은 날 뒤 일정을 맞춘다
@@ -136,7 +137,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 from app.domains.travel_ops.components.intake.places import resolve
 
                 with connect() as conn:
-                    found = resolve(op.place_name or "", our_places=pipeline._our_places(conn, tenant), tour=tour,
+                    found = resolve(op.place_name or "", our_places=pipeline._our_places(conn, tenant, trip_id=trip_id), tour=tour,
                                     kakao=kakao, dining=dining)
                 if found.status != "resolved":
                     raise EditRefused("place_not_found", _refusal("place_not_found", found.note or "찾지 못함"))
@@ -186,11 +187,12 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                     from app.domains.travel_ops.components.intake.places import resolve
 
                     with connect() as conn:
-                        named = resolve(op.place_name, our_places=pipeline._our_places(conn, tenant), tour=tour, kakao=kakao, dining=dining)
+                        named = resolve(op.place_name, our_places=pipeline._our_places(conn, tenant, trip_id=trip_id), tour=tour, kakao=kakao, dining=dining,
+                                        near=op.near or ((item.place["latitude"], item.place["longitude"]) if item.place else None), choose_near=True)
                     new_kind = "dining" if named.kind == "dining" else ("activity" if named.kind else None)
                     if named.status == "resolved" and new_kind and new_kind != item.kind:
                         edits.append({"source_id": source_id, "field": f"{prefix}.kind", "value": new_kind})
-                edits.append({"source_id": source_id, "field": f"{prefix}.place", "value": {"name": op.place_name}})
+                edits.append({"source_id": source_id, "field": f"{prefix}.place", "value": {"name": op.place_name, **({"near": list(op.near)} if op.near else {})}})
                 if op.title:
                     edits.append({"source_id": source_id, "field": f"{prefix}.title", "value": op.title})
             elif op.kind == "remove":
@@ -206,7 +208,7 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 with connect() as conn:
                     revision = pipeline.edit(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
                                              revision=revision, edits=batch, tour=tour, kakao=kakao, dining=dining, learn_aliases=False,
-                                             reflow=any(o.reflow for o in ops))
+                                             reflow=any(o.reflow for o in ops) or bool((cause_extra or {}).get("fit_time_changes")))
             except pipeline.IntakeConflict as exc:
                 add_days = {o.date for o in ops if o.kind == "add" and o.date}
                 if batch is not edits or exc.code != "schedule_conflict" or not add_days:
@@ -409,6 +411,7 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
     ★값은 해석이 낸 칸만 쓴다 — 시각(`anchor_time`) · 날(`at_day`) · 옮길 크기(`minutes`, 문장에 적힌 시간 · 분) · 기준 일정(`anchor_item`) ·
       넣을 곳 이름(`destination_text`). 서버가 짐작으로 채우지 않는다(모르면 묻는다)."""
     from app.domains.travel_ops.components.conversation import trip_facts
+    from app.domains.travel_ops.components.planning.planner import MAX_DAYS
     from app.domains.travel_ops.components.conversation.schedule_query import matching
 
     stops = trip_facts._stops(items)
@@ -449,8 +452,8 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
                 day = meal[0] or day
         for target in targets:
             if raw.get("anchor_kind") == "now" and len(targets) == 1 and not decision.minutes:
-                # 「지금 경복궁 갈래」 — 지금(5분 올림)으로 옮긴다. 머무는 시간은 그대로
-                begin = _round5(now.astimezone(KST))
+                # Explicit now keeps the current minute; planned slot rounding does not apply.
+                begin = now.astimezone(KST).replace(second=0, microsecond=0)
                 new_day, start, end = moved_to(target, day=begin.date().isoformat(), start=begin.strftime("%H:%M"))
             elif anchor_time and len(targets) == 1:
                 new_day, start, end = moved_to(target, day=day, start=anchor_time)
@@ -460,7 +463,7 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
                 new_day, start, end = moved_to(target, day=day, start=None)
             else:
                 raise EditRefused("need_time", f"「{target.title}」을(를) 몇 시로(또는 몇 분) 옮길지 알려 주세요.")
-            if not _inside_trip(new_day, stops):
+            if not _inside_trip(new_day, stops) and ((max([s.starts_at.astimezone(KST).date() for s in stops] + [datetime.fromisoformat(new_day).date()]) - min([s.starts_at.astimezone(KST).date() for s in stops] + [datetime.fromisoformat(new_day).date()])).days >= MAX_DAYS):
                 # ★`[2026-10-15 x600 실서버 확인]` 「내일 점심을 오늘 저녁으로」 — 오늘이 여행 날이 아닌데 「이미 되어 있어요」가 나왔다. 여행 밖의 날로는 옮기지 않고 그렇게 알린다
                 first = min(s.starts_at.astimezone(KST).date() for s in stops)
                 last = max(s.starts_at.astimezone(KST).date() for s in stops)
@@ -483,7 +486,11 @@ def ops_for(decision: Any, *, items: list[Any], now: datetime, message: str = ""
             raise EditRefused("need_target", f"어느 일정을 「{name}」(으)로 바꿀지 알려 주세요.")
         if not name:
             raise EditRefused("need_place", "어디로 바꿀지 장소 이름을 알려 주세요.")
-        return [EditOp("place", item_id=item.item_id, place_name=name, title=name)], f"{item.title} → {name}"
+        ops = [EditOp("place", item_id=item.item_id, place_name=name, title=name)]
+        if decision.minutes:
+            date, start, end = shifted(item, decision.minutes)
+            ops.append(EditOp("time", item_id=item.item_id, date=date, starts_at=start, ends_at=end))
+        return ops, f"{item.title} → {name}"
     if action == "swap_order":
         if item is None or other is None or other.item_id == item.item_id:
             raise EditRefused("need_target", "순서를 바꿀 두 일정을 알려 주세요.")
@@ -568,7 +575,11 @@ def done_text(ops: list[EditOp], *, items_after: list[Any], plan: Any) -> str:
 
     lines = []
     by_id = {i.item_id: i for i in items_after}
-    for item_id in dict.fromkeys([*plan.changed_ids, *plan.added_ids]):
+    # 구조화 id(changed_ids · added_ids)가 기준이다. 고객이 지목한 항목이 다른 곳으로 바뀐 경우(replaces_item_id)도 함께 보인다.
+    touched = {op.item_id for op in ops if op.item_id is not None}
+    replaced = [i.item_id for i in items_after if i.kind != "mobility"
+                and (i.item_id in touched or getattr(i, "replaces_item_id", None) in touched)]
+    for item_id in dict.fromkeys([*plan.changed_ids, *plan.added_ids, *replaced]):
         row = by_id.get(item_id)
         if row is not None:
             lines.append(f"· {trip_facts._day_label(row.starts_at.astimezone(KST).date())} "
@@ -577,7 +588,7 @@ def done_text(ops: list[EditOp], *, items_after: list[Any], plan: Any) -> str:
             "unlock": "고정을 풀었어요.", "place": "말씀하신 곳으로 바꿨어요.", "time": "시각을 옮겼어요."}[ops[0].kind]
     if plan.removed:
         lines += [f"· 뺀 일정: {t}" for t in plan.removed]
-    tail = "이동 시간과 운영시간은 바뀐 일정으로 다시 확인했어요. 마음에 안 드시면 「되돌려 줘」라고 말씀해 주세요."
+    tail = "변경한 일정과 확인 상태는 계획서에 반영했어요. 마음에 안 드시면 「되돌려 줘」라고 말씀해 주세요."
     return "\n".join([head, *lines, tail])
 
 

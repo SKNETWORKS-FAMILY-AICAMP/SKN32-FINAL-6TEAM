@@ -103,6 +103,37 @@ class CustomerNoticeRouter:
                 from app.domains.travel_ops.components.watch.simulation import external_delivery_allowed
                 if not external_delivery_allowed(conn, tenant, trip_id, str(run_id)):
                     raise NoticeSuppressed("이 여행·실행의 시뮬레이션 외부 발송이 꺼져 있거나 종료됐다")
+            payload = message.get("payload") or {}
+            if payload.get("kind") in ("departure", "next_item") and payload.get("item_id"):
+                with conn.cursor() as cur:
+                    cur.execute("SELECT i.detail FROM trips t JOIN itinerary_items i ON i.tenant_id=t.tenant_id "
+                                "AND i.trip_id=t.trip_id AND i.version=t.latest_version "
+                                "WHERE t.tenant_id=%s AND t.trip_id=%s AND i.item_id=%s",
+                                (tenant, trip_id, UUID(str(payload["item_id"]))))
+                    current = cur.fetchone()
+                if not current or (current[0].get("execution") or {}).get("state") in ("completed", "skipped"):
+                    raise NoticeSuppressed("현재 일정에서 완료·교체된 안내라 보내지 않았다")
+            for basis in payload.get("schedule_basis") or []:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT i.starts_at,i.ends_at,i.detail FROM itinerary_items i JOIN trips t "
+                        "ON t.tenant_id=i.tenant_id AND t.trip_id=i.trip_id AND t.latest_version=i.version "
+                        "WHERE t.tenant_id=%s AND t.trip_id=%s AND i.item_id=%s",
+                        (tenant, trip_id, UUID(basis["item_id"])))
+                    row = cur.fetchone()
+                expected_end = datetime.fromisoformat(basis["ends_at"]) if basis.get("ends_at") else None
+                if (not row or row[0] != datetime.fromisoformat(basis["starts_at"]) or row[1] != expected_end
+                        or (row[2].get("execution") or {}).get("state") in ("completed", "skipped")):
+                    raise NoticeSuppressed("이 안내의 일정 시각이 바뀌거나 완료·교체되어 보내지 않았다")
+            if payload.get("type") == "guidance" and payload.get("items"):
+                with conn.cursor() as cur:
+                    cur.execute("SELECT count(*) FROM itinerary_items i JOIN trips t "
+                        "ON t.tenant_id=i.tenant_id AND t.trip_id=i.trip_id AND t.latest_version=i.version "
+                        "WHERE t.tenant_id=%s AND t.trip_id=%s AND i.item_id=ANY(%s::uuid[]) "
+                        "AND COALESCE(i.detail->'execution'->>'state','') NOT IN ('completed','skipped')",
+                        (tenant, trip_id, list(payload['items'])))
+                    relevant = cur.fetchone()[0]
+                if not relevant:
+                    raise NoticeSuppressed("이 안내의 일정이 모두 완료·교체되어 보내지 않았다")
             found = self._destination(conn, tenant, trip_id)
         self._send(found, tenant, message.get('payload') or {}, simulated=simulated)
 

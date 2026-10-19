@@ -119,19 +119,21 @@ def test_a_named_place_is_found_and_the_stop_changes_to_it(chat):
     assert "아직 없어" not in body["answer"] and "말씀하신 곳으로 바꿨어요" in body["answer"], body
 
 
-def test_a_named_place_that_is_not_found_changes_nothing_and_offers_choices(chat):
-    """말한 이름으로 장소를 한 곳 찾지 못하면(모르는 이름 · 「다른 식당」 같은 설명) 바꾸지 않고, 찾지 못했다고 밝힌 뒤 다른 안을 보인다."""
+def test_a_named_place_that_is_not_found_is_preserved_with_location_pending(chat, monkeypatch):
+    from app.domains.travel_ops.components.intake import places
+    monkeypatch.setattr(places, "resolve", lambda *a, **kw: places.Resolved("unresolved", note="시험 조회 결과 없음"))
     before, _ = _latest(chat)
     _answer(chat, "apply_change", target="인사동", destination_text="없는궁궐이름", change_scope="place")
     body = _say(chat, "인사동 대신 없는궁궐이름 가자", "edit-named-missing")
-    after, _ = _latest(chat)
-    assert after == before and body["status"] != "adjusted", body
-    assert body["decision"]["action"] == "propose_alternatives", body
-    assert body["decision"]["raw"]["named_destination"]["found"] is False, body
-    assert body["answer"].startswith("말씀하신 「없는궁궐이름」을(를) 장소 목록 · 관광 정보 · 지도에서 한 곳으로 찾지 못해"), body
-    with get_connection() as conn, conn.cursor() as cur:      # 수정 접수를 열지 않았다 — 웹 「일정 수정」을 막지 않는다
-        cur.execute("SELECT count(*) FROM trip_intakes WHERE reopen_trip_id=%s AND status='review'", (chat["trip"]["trip_id"],))
-        assert cur.fetchone()[0] == 0
+    after, items = _latest(chat)
+    assert after == before + 1 and body["status"] == "adjusted", body
+    assert body["decision"]["action"] == "replace_named", body
+    pending = items["없는궁궐이름"]
+    assert pending.place_id is None and pending.place is None
+    assert pending.detail["requested_place"]["status"] == "unresolved"
+    assert pending.detail["navigation"]["status"] == "needs_location"
+    assert "정확한 지점 위치는 아직 확인 중" in body["answer"]
+    assert "없는궁궐이름" in str(body.get("choices"))
 
 
 def test_a_new_place_is_added_after_a_stop(chat):
@@ -293,12 +295,15 @@ def test_a_stop_moves_to_the_meal_time_said_even_without_a_clock_time(chat):
     assert body["status"] == "adjusted" and _hm(tower.starts_at) == "18:00", body
 
 
-def test_a_stop_is_not_moved_to_a_day_outside_the_trip_and_the_trip_days_are_told(chat):
+def test_an_explicit_day_outside_the_old_trip_extends_its_days_within_the_product_limit(chat):
     before, _ = _latest(chat)
     _answer(chat, "change_time", target="N서울타워", anchor_kind="none", at_day="none")
     body = _say(chat, "N서울타워를 모레 저녁으로 옮겨줘", "meal-outside")
     after, _ = _latest(chat)
-    assert after == before and "없는 날" in body["answer"] and "여행은" in body["answer"], body
+    assert after == before + 1 and body["status"] == "adjusted", body
+    _, items = _latest(chat)
+    assert items["N서울타워"].starts_at.astimezone(KST).date() == (datetime.now(KST).date() + __import__("datetime").timedelta(days=2))
+    assert _hm(items["N서울타워"].starts_at) == "18:00"
 
 
 def test_an_add_pushes_the_pinned_later_stops_instead_of_refusing(chat):
@@ -361,7 +366,10 @@ def test_the_day_word_in_the_sentence_beats_the_models_day_when_it_gave_a_clock_
     _answer(chat, "change_time", target="N서울타워", anchor_kind="time", anchor_time="12:00", at_day="d1")
     body = _say(chat, "N서울타워를 모레 점심으로 옮겨줘", "meal-day-word")
     after, _ = _latest(chat)
-    assert after == before and "없는 날" in body["answer"], body
+    assert after == before + 1 and body["status"] == "adjusted", body
+    _, items = _latest(chat)
+    assert items["N서울타워"].starts_at.astimezone(KST).date() == (datetime.now(KST).date() + __import__("datetime").timedelta(days=2))
+    assert _hm(items["N서울타워"].starts_at) == "12:00"
 
 
 # ── `[2026-10-15 ST4F-490 병합 점검]` 숙소 · 항공 · 업체 예약 일정은 이제 수정 접수에 **잠금**으로 들어온다(웹 「일정 수정」에서 풀어 고친다).

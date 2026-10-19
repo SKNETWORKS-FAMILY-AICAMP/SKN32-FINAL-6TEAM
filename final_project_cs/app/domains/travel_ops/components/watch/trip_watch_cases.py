@@ -207,6 +207,9 @@ class TripWatchCaseOpener:
         self._contexts: dict[UUID, dict[str, Any]] = {}
         issues: list[Issue] = []
         for trip_id, item in due:
+            from app.domains.travel_ops.components.conversation.journey_progress import terminal
+            if terminal(item) or item.detail.get("origin"):
+                continue
             from app.domains.travel_ops.components.watch.trip_watch_batch import skipped_watch
             skipped = skipped_watch(item.kind, trip_id=trip_id, item_id=item.item_id)
             if skipped is not None:
@@ -255,6 +258,8 @@ class TripWatchCaseOpener:
                           "failed_categories": sorted({*(validated_report or {}).get("failed_categories", []), "place_check"}),
                           "error_code": type(exc).__name__}
             record_check('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title, report=report)
+            for incomplete in report.get("unverified_checks", []):
+                result.unchecked.append({"trip_id": str(trip_id), "item": item.title, **incomplete})
             verdict = report.get("verdict")
             with self._connect() as conn, conn.transaction():
                 attention = forecast_attention(conn, store=self.store, trip_id=trip_id, item=item, report=report)
@@ -323,7 +328,8 @@ class TripWatchCaseOpener:
         with self._connect() as conn, conn.transaction():
             trip, _ = self.store.latest(conn, trip_id)
             fingerprint = _deferred_fingerprint(categories, code, confirmed)
-            key = f"watch-deferred:{item.item_id}:{fingerprint}"
+            # 같은 장소 · 같은 날의 일정이 바뀌어 id 가 달라져도 같은 미룸 안내를 두 번 보내지 않는다.
+            key = f"watch-deferred:{item.place_id or item.item_id}:{item.starts_at.date()}:{fingerprint}"
             added = self.store.enqueue_message(conn, trip_id=trip_id, key=key, payload=payload)
         diagnostic = {"event": "travel_execution_diagnostic", "plan_sha256": None,
                       "tenant_id": str(self.store.tenant_id), "customer_id": str(trip['customer_id']),

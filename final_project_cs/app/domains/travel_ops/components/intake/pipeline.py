@@ -546,12 +546,13 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 value = _linked_ledger_pick(conn, tenant_id, value)
             if field_name.endswith(".place") and value is not None and "latitude" not in value:
                 if our_places is None:
-                    our_places = _our_places(conn, tenant_id)
+                    our_places = _our_places(conn, tenant_id, trip_id=reopened)
                 typed = str(value["name"]).strip()
                 # ★`[2026-10-05]` 식사 항목이면 요식 원장부터 찾는다(팀 판 — 같은 요청에서 함께 고친 종류가 먼저, 없으면 지금 판의 종류)
                 kind = _item_kind(cur, tenant_id, intake_id, current, source_id, field_name, edits)
                 value, evidence, note = _typed_place(value, our_places, tour, kakao, dining,
-                                                     kind_hint="dining" if kind == "dining" else None)
+                                                     kind_hint="dining" if kind == "dining" else None,
+                                                     near=_edit_place_anchor(cur, tenant_id, intake_id, current, source_id, field_name))
                 # 원래 읽은 이름 → 고객이 고친 이름을 별칭으로 쌓는다(다음 고객은 안 고쳐도 되게)
                 cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
                             "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
@@ -572,7 +573,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
                    if field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None}
         explicit_times = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
-                          if field.endswith((".starts_at", ".ends_at", ".date"))} if reflow else set()
+                          if field.startswith("items[") and field.endswith((".starts_at", ".ends_at", ".date"))} if reflow else set()
         touched |= explicit_times
         if (touched or added) and via != "autofix":
             from . import direct_schedule
@@ -1051,10 +1052,13 @@ def _checked_pick(field_name: str, value: dict[str, Any]) -> dict[str, Any]:
     content_id = value.get("content_id")
     if content_id is not None and not _CONTENT_ID.match(str(content_id)):
         raise IntakeRejected("invalid_value", f"{field_name}: content_id 는 숫자입니다")
+    provider_ref = str(value.get("provider_ref") or "").strip()
+    if provider_ref and not re.fullmatch(r"(?:kakao|tour):[0-9]{1,30}", provider_ref):
+        raise IntakeRejected("invalid_value", f"{field_name}: provider_ref 형식을 확인해 주세요")
     category = str(value.get("category") or "").strip()[:60] or None
     return {"name": name, "kind": kind if kind in ("activity", "dining") else None, "latitude": coords[0],
             "longitude": coords[1], "place_id": None, "content_id": str(content_id) if content_id else None,
-            "content_type_id": None, "category": category, "source": "customer_pick",
+            "content_type_id": None, "category": category, "provider_ref": provider_ref or None, "source": "customer_pick",
             "origin": source if source != "customer_pick" else str(value.get("origin") or "search")
             if str(value.get("origin") or "search") in _PICK_ORIGINS else "search"}
 
@@ -1080,12 +1084,29 @@ def _item_kind(cur, tenant_id: str, intake_id: UUID, revision: int, source_id: s
     return row[0] if row and isinstance(row[0], str) else None
 
 
-def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, kind_hint: str | None = None):
+def _edit_place_anchor(cur, tenant, intake_id, revision, source_id, field):
+    cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
+                "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
+                (tenant, intake_id, revision, source_id, field))
+    row = cur.fetchone()
+    value = row[0] if row and isinstance(row[0], dict) else {}
+    return ((value["latitude"], value["longitude"]) if value.get("latitude") is not None
+            and value.get("longitude") is not None else None)
+
+
+def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, kind_hint: str | None = None, near=None):
     """고객이 적은 장소 이름 → 다시 찾아 **하나**. 못 찾으면 받지 않는다(지어내지 않는다)."""
     from .places import resolve
 
     name = str(value["name"]).strip()[:80]
-    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao, dining=dining, kind_hint=kind_hint)
+    if "near" in value:
+        anchor = value["near"]
+        if (not isinstance(anchor, (list, tuple)) or len(anchor) != 2
+                or any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in anchor)
+                or not SEOUL_LAT[0] <= anchor[0] <= SEOUL_LAT[1] or not SEOUL_LON[0] <= anchor[1] <= SEOUL_LON[1]):
+            raise IntakeRejected("invalid_value", "검색 기준 위치는 서울 안의 위도·경도 숫자여야 해요")
+        near = tuple(anchor)
+    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao, dining=dining, kind_hint=kind_hint, near=near, choose_near=True)
     if found.status != "resolved":
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
@@ -1182,7 +1203,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             # ★`[2026-10-16 2회차 합의]` 조금씩 받기 + 멈춤 감시(`travel.intake_reading`) — 진행 알림은 에이전트 결과를 쓰는 `on` 일 때만(그림자는 규칙 경로가 알린다)
             agent_out = agent_module.read(text, read.lines, agent, today=today, num_predict=agent_num_predict,
                                           chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS,
-                                          stream=_reading_stream(reading_stream), on_progress=on_reading if agent_mode == "on" else None)
+                                          stream=_reading_stream(reading_stream), on_progress=on_reading if agent_mode == "on" else None,
+                                          now=now)
         except Exception as exc:                      # noqa: BLE001 — 갈래를 나눈다(아래)
             agent_error = f"{type(exc).__name__}: {exc}"[:200]
             # ★`[2026-10-16 2회차 합의 ②]` 버리는 줄 없음 — 실패 이유로 갈래를 나눈다
@@ -1303,7 +1325,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             # ★`[2026-10-15 숙박예약 점검 LB-01]` 장소는 체크인 · 체크아웃 말을 뺀 말로 찾는다(숙소 줄) — 고객이 이 글을 다른 이름으로 고친 적이 있으면(별칭) 원문 그대로
             query = _lookup_title(item["title"], aliases)
             parts = parse_line(query, areas=areas, kind_hint="dining" if item["meal"] else None)
-            if parts.nameless and normalize(item["title"]) not in (aliases or {}):
+            meal_reference = item["meal"] and re.fullmatch(r"(?:(?:거기|여기|그곳|이곳)(?:서|에서)?\s*(?:식사|밥)?|식사|밥)", query.strip())
+            if parts.nameless and not meal_reference and normalize(item["title"]) not in (aliases or {}):
                 nameless.add(index)
                 early[index] = _nameless_rows(index, parts, item, rows)
                 send(early[index])
@@ -1566,6 +1589,9 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
     for rule_item in read.items:
         if rule_item.title is not None and rule_item.start:
             rule_clock.setdefault(rule_item.title.line, []).append(rule_item)
+    line_counts = {}
+    for it in out.items:
+        line_counts[it.title.line] = line_counts.get(it.title.line, 0) + 1
     for it in out.items:
         card = cards_by_line.get(it.title.line)
         if card is not None:
@@ -1574,7 +1600,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
             it.time_from_rule = True
             continue
         same = rule_clock.get(it.title.line) or []
-        if len(same) != 1:
+        if len(same) != 1 or line_counts[it.title.line] > 1:
             continue
         quote_line = it.time_quote.line if it.time_quote is not None else None
         if it.start is None or (quote_line is not None and quote_line != it.title.line and same[0].start != it.start):
@@ -1607,6 +1633,9 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
         if it.kind == "dining":
             rows.append({"field": f"items[{index}].kind", "value": "dining", "method": "llm_agent",
                          "evidence": {"source": "text", "line": it.title.line}, "needs_review": False, "note": "읽기 에이전트 — 식사"})
+        if it.role == "origin":
+            rows.append({"field": f"items[{index}].role", "value": "origin", "method": "llm_agent",
+                         "evidence": it.title.as_dict(), "needs_review": False, "note": "고객이 말한 출발 위치 — 체류 없음"})
         if it.date_guessed:
             guessed_dates.add(index)
         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
@@ -1752,10 +1781,11 @@ def remember_alias(cur, tenant_id: str, customer_id: Any, phrase: str, replaceme
                 (tenant_id, key, phrase[:120], replacement[:120], customer_id))
 
 
-def _our_places(conn, tenant_id: str) -> list[dict[str, Any]]:
+def _our_places(conn, tenant_id: str, *, trip_id=None) -> list[dict[str, Any]]:
     with conn.cursor() as cur:
         cur.execute("SELECT place_id, name, kind, latitude, longitude FROM places WHERE tenant_id=%s "
-                    "AND trip_scope IS NULL", (tenant_id,))                # ★공용만 — 다른 여행 전용 행은 안 쓴다
+                    "AND (trip_scope IS NULL OR trip_scope=%s) ORDER BY trip_scope NULLS FIRST,place_id",
+                    (tenant_id, trip_id))  # Only the verified current trip may add its private picks.
         return [dict(zip(("place_id", "name", "kind", "latitude", "longitude"), r)) for r in cur.fetchall()]
 
 

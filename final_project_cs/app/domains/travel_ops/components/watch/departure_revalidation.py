@@ -39,7 +39,16 @@ def build_observer(*, bus_arrival, subway_arrival=None, basis_validator=None):
         if origin is None or destination is None:
             return {'status': 'needs_replan', 'reason': 'current_place_missing'}
         try:
-            result = legs.observe_departure(move.detail.get('departure_context'), planned.get('id'),
+            context, option_id = move.detail.get('departure_context'), planned.get('id')
+            if not context:
+                engine = legs.leg_planner((trip or {}).get('party_size'), (trip or {}).get('constraints') or {},
+                                          modes={option_id} if option_id in ('walk', 'taxi') else None, stage='pre_departure')
+                fresh, why = engine(origin, destination, after[0].starts_at, now) if engine else (None, {'code': 'engine_unavailable'})
+                if not fresh or not fresh.get('departure_context'):
+                    return {'status': 'needs_replan', 'reason': 'current_route_unverifiable', 'diagnostic': why}
+                context = fresh['departure_context']
+                option_id = fresh['route']['planned']
+            result = legs.observe_departure(context, option_id,
                 now=now, deadline=after[0].starts_at, origin=origin, destination=destination,
                 bus_arrival=bus_arrival, subway_arrival=subway_arrival, events=events, trip=trip)
         except Exception as exc:  # noqa: BLE001 — 치명 상태를 보고하고 낡은 안내는 발행하지 않는다

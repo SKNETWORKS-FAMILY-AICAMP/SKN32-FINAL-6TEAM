@@ -631,7 +631,8 @@ class TripStore:
                     if current is None or not current[0]:
                         raise StaleDeparture("departure trip inputs changed")
                 cur.execute("SELECT EXISTS (SELECT 1 FROM itinerary_items WHERE tenant_id=%s "
-                            "AND trip_id=%s AND version=%s AND item_id=%s AND kind='mobility')",
+                            "AND trip_id=%s AND version=%s AND item_id=%s AND kind='mobility' "
+                            "AND COALESCE(detail->'execution'->>'state','') NOT IN ('completed','skipped'))",
                             (self.tenant_id, trip_id, version, UUID(key.split(":", 1)[1])))
                 if not cur.fetchone()[0]:
                     raise StaleDeparture("departure item is no longer current")
