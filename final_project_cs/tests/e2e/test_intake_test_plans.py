@@ -12,7 +12,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     headers = _key(client)
     listing = client.get("/v1/web/test-scenarios")
     assert listing.status_code == 200
-    assert len(listing.json()["scenarios"]) == plans.TOTAL == 50
+    assert len(listing.json()["scenarios"]) == plans.TOTAL == 51
     view = _send(client, headers, " TEST1 ")
     assert view["status"] == "review"
     assert sum(len(s["items"]) for s in view["sources"]) == 6

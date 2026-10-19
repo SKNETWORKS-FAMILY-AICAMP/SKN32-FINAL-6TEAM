@@ -790,12 +790,13 @@ def picked_modes(claims: list[dict[str, Any]]) -> dict[str, str]:
 
     ★`[2026-10-14]` 수정 접수는 등록한 여행에 이미 정해 둔 수단을 `method: "trip"` 값 줄로 싣는다(`reopen.open_for_trip`) — 그것도 고른 수단으로 본다.
     ★`[2026-10-16]` 계획서에 적힌 수단(「택시로 이동」)을 읽기 에이전트가 `method: "llm_agent"` 값 줄로 싣는다(`pipeline._agent_rows`) — 그것도 고른 수단으로 본다.
+    ★`[2026-10-19]` 규칙으로 읽은 이동 말 줄(「11:30 택시로 이동」)도 앞 · 뒤 일정 사이 구간의 수단으로 `method: "rule"` 값 줄로 싣는다(`pipeline._move_segments`).
     안 그러면 다시 연 수정 화면이 저장된 수단(예: 지하철) 대신 추천(예: 도보)을 보였다(x600 실서버 확인). 칸마다 **마지막 값**이 이긴다 — 고객이 뒤에
     「추천으로」(빈 값)를 고르면 여행에서 가져온 수단도 빠진다."""
     out: dict[str, str] = {}
     for c in claims:
         field = str(c.get("field") or "")
-        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip", "llm_agent")):
+        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip", "llm_agent", "rule")):
             continue
         pair = field[len("moves["):-len("].mode")]
         if c.get("value") in MOVE_MODES:

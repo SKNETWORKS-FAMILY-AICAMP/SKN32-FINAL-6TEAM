@@ -32,7 +32,7 @@ def test_ordinary_text_is_not_replaced_or_reads_settings(monkeypatch, text):
 
 
 @pytest.mark.parametrize("text,files,enabled,code", (
-    ("test51", False, True, "unknown_test_scenario"),
+    ("test52", False, True, "unknown_test_scenario"),          # `[2026-10-19]` test51 은 장소 종류 · 이동 말 확인 예시
     ("test100", False, True, "unknown_test_scenario"),
     ("test999999999999999999999", False, True, "unknown_test_scenario"),
     ("test1", True, True, "test_scenario_with_files"),
@@ -51,7 +51,7 @@ def test_disabled_catalog_is_empty_and_operator_override_wins(monkeypatch):
     assert plans.catalog("unit")["scenarios"] == []
     assert plans.catalog("unit")["enabled"] is False
     monkeypatch.setattr(plans, "operator_setting", lambda *_: None)
-    assert len(plans.catalog("unit")["scenarios"]) == plans.TOTAL == 50
+    assert len(plans.catalog("unit")["scenarios"]) == plans.TOTAL == 51
 
 
 def test_normal_plans_have_known_places_end_times_and_generous_gaps(monkeypatch):
@@ -80,7 +80,7 @@ def test_the_lodging_plan_has_a_named_hotel_the_catalog_knows(monkeypatch):
     assert [item.title.text for item in read.items if "호텔" in item.title.text] == ["더 플라자 호텔 서울 체크인"]
 
 
-FORM_CODES = [f"test{n}" for n in range(17, 51)]
+FORM_CODES = [f"test{n}" for n in range(17, 52)]             # `[2026-10-19]` test51 더함(실제 사례 「real」 형식)
 
 
 def test_form_plans_use_the_reading_test_shape_names_and_cover_every_shape(monkeypatch):
@@ -104,7 +104,8 @@ def test_form_plan_expands_to_dated_seoul_text_without_tokens(monkeypatch, code)
     monkeypatch.setattr(plans, "operator_setting", lambda *_: True)
     text, meta = plans.expand(code.upper(), tenant_id="unit", has_files=False, today=date(2026, 10, 16))
     assert meta["code"] == code and meta["mode"] == "prepared_text" and meta["catalog_version"] == "seoul-text-v3"
-    assert meta["expected"].startswith("10/16 지금 구조: ") and "실제 조회" in meta["expected"]
+    # `[2026-10-19]` test51 은 「지금 구조」가 아니라 고친 뒤 기대 결과를 적는다(실서버 확인용)
+    assert re.match(r"10/16 지금 구조: |10/19 고친 뒤 기대: ", meta["expected"]) and "실제 조회" in meta["expected"]
     assert "@" not in text and 0 < len(text) < 2_000
     for found in re.findall(r"20\d\d-\d\d-\d\d", text):            # 적힌 날짜는 7일 뒤부터 최대 7일 안
         assert "2026-10-23" <= found <= "2026-10-29"

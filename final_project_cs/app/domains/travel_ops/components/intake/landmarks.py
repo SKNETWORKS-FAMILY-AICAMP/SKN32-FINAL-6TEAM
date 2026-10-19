@@ -222,6 +222,18 @@ def read_move(title: str | None) -> MoveText | None:
     return MoveText(lead.group("mode") or lead.group("walk"), dest, bool(_TRANSIT_END.search(normalize_full(dest))))
 
 
+#: 원문의 수단 말 → 확인 화면이 고를 수 있는 구간 수단(`review.MOVE_MODES` — 지하철 · 버스 · 택시 · 도보). 화면 칸이 없는 수단은 None
+_SCREEN_MODE = (("taxi", r"택시"), ("subway", r"지하철|전철|공항\s*철도|AREX"), ("bus", r"버스|리무진|셔틀"), ("walk", r"도보|걸어서"))
+
+
+def move_mode(mode_text: str | None) -> str | None:
+    """「택시」 · 「공항철도」 · 「걸어서」 → taxi · subway · walk. 자전거 · 렌터카 · 기차처럼 화면 칸이 없는 수단은 None(구간에 넣지 않는다)."""
+    for mode, words in _SCREEN_MODE:
+        if mode_text and re.search(words, mode_text, re.IGNORECASE):
+            return mode
+    return None
+
+
 # ── 운영시간 ────────────────────────────────────────────────────────
 def hours_attributes(landmark: Landmark, day: date) -> tuple[dict[str, Any] | None, list[str]]:
     """그날의 운영시간을 판정기가 읽는 모양(`hours_week`)으로 — `(속성, 조건 문장)`. 표에 그날 값이 없으면 `(None, 조건)`.
@@ -248,4 +260,4 @@ def hours_attributes(landmark: Landmark, day: date) -> tuple[dict[str, Any] | No
 
 
 __all__ = ["Hours", "Landmark", "LandmarkHit", "MoveText", "Table", "find_landmark", "hours_attributes", "is_lodging_text",
-           "is_only_stay_words", "landmark_named", "load_table", "lodging_query", "read_move", "reset"]
+           "is_only_stay_words", "landmark_named", "load_table", "lodging_query", "move_mode", "read_move", "reset"]

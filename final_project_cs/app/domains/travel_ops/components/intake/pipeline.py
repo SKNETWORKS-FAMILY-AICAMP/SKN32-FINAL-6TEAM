@@ -1319,6 +1319,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     resolved: dict[int, Any] = {}
     early: dict[int, list[dict[str, Any]]] = {}
     nameless: set[int] = set()
+    move_lines: dict[int, Any] = {}             # 이동 말 줄(「택시로 이동」) — 장소 대신 앞 · 뒤 일정 사이 구간의 수단이 된다(`_move_segments`)
     titled, placed = sum(1 for item in items if item["title"]), 0
     for index, item in enumerate(items):
         if item["title"]:
@@ -1332,6 +1333,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 early[index] = _move_rows(index, move, item)
                 send(early[index])
                 nameless.add(index)
+                move_lines[index] = move
                 placed += 1
                 if on_progress is not None:
                     on_progress("places", placed, titled, index, item["title"])
@@ -1379,6 +1381,10 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         placed += 1
         if on_progress is not None:
             on_progress("places", placed, titled, index, items[index]["title"])
+    if move_lines:
+        new = _move_segments(move_lines, items, dated, position)
+        rows.extend(new)
+        send(new)
     flush()
     return rows
 
@@ -1501,6 +1507,66 @@ def _move_rows(index: int, move: Any, item: dict[str, Any]) -> list[dict[str, An
              "needs_review": False,
              "note": f"이동을 적은 말(「{item['title']}」)이라 장소로 찾지 않았다"
                      + (f" — 끝점 「{move.destination}」은 이동의 도착지로 둔다" if move.destination else "")}]
+
+
+def _around_quote(quote: Any, lines: list[str], items: list[dict[str, Any]], dated: Any) -> tuple[int | None, int | None]:
+    """원문 조각(「택시로 이동」)이 적힌 자리의 바로 앞 일정과 바로 뒤 일정(같은 날). 자리를 못 찾거나 앞뒤 날이 다르면 (None, None)."""
+    text = str(quote or "").strip()
+    spot = next(((n, line.find(text)) for n, line in enumerate(lines, start=1) if text and text in line), None)
+    if spot is None:
+        return None, None
+
+    def at(i: int) -> tuple[int, int]:
+        line = items[i].get("line") or 0
+        column = lines[line - 1].find(items[i].get("title") or "") if 0 < line <= len(lines) else -1
+        return line, column
+
+    named = [i for i in range(len(items)) if items[i].get("title")]
+    before = [i for i in named if at(i) < spot]
+    after = [i for i in named if at(i) > spot]
+    a = max(before, key=at) if before else None
+    b = min(after, key=at) if after else None
+    if a is None or b is None or a >= len(dated) or b >= len(dated) or dated[a].value != dated[b].value:
+        return None, None
+    return a, b
+
+
+def _stops_around(index: int, items: list[dict[str, Any]], dated: Any, skip: set[int]) -> tuple[int | None, int | None]:
+    """원문에서 `index` 줄 바로 앞 일정과 바로 뒤 일정(같은 날 · 원문 줄 순서 · 이동 말 줄은 빼고). 날짜를 모르면 같은 원본 안 줄 순서."""
+    day = dated[index].value if index < len(dated) else None
+    same = [i for i in range(len(items)) if i != index and i not in skip and items[i].get("title")
+            and (i < len(dated) and dated[i].value == day)]
+    key = lambda i: (items[i].get("line") or 0, i)       # noqa: E731 — 같은 줄의 여러 항목은 읽은 순서
+    before = [i for i in same if key(i) < key(index)]
+    after = [i for i in same if key(i) > key(index)]
+    return (max(before, key=key) if before else None), (min(after, key=key) if after else None)
+
+
+def _move_segments(move_lines: dict[int, Any], items: list[dict[str, Any]], dated: Any, position: int) -> list[dict[str, Any]]:
+    """이동 말 줄 → 일정에서 빼고(`items[n].removed`) 바로 앞 · 뒤 일정 사이 구간의 수단(`moves[앞~뒤].mode`, 방법 `rule`). `[2026-10-19 사용자 지시]`
+
+    ☆전에는 「11:30 택시로 이동」이 장소 없는 일정 한 줄로 남고 경복궁 → 광장시장 구간은 추천 수단으로 계산됐다(고객이 적은 택시가 사라졌다).
+    ★앞이나 뒤 일정이 없으면(마지막 날 「공항철도 타고 인천공항」) 빼지 않는다 — 그 시각의 「장소 없이 둔 출발」로 남긴다.
+    ★확인 화면이 고를 수 없는 수단(자전거 · 렌터카 · 기차)은 구간에 넣지 않고 근거에만 남긴다(줄은 뺀다 — 일정이 아니다)."""
+    from .landmarks import move_mode
+
+    out: list[dict[str, Any]] = []
+    skip = set(move_lines)
+    for index, move in sorted(move_lines.items()):
+        before, after = _stops_around(index, items, dated, skip)
+        if before is None or after is None:
+            continue
+        mode = move_mode(move.mode)
+        out.append({"field": f"items[{index}].removed", "value": True, "method": "rule",
+                    "evidence": {"source": "rule", "method": "move_phrase", "line": items[index]["line"], "mode": move.mode,
+                                 "segment": [before, after]},
+                    "needs_review": False,
+                    "note": f"「{items[index]['title']}」은 일정이 아니라 앞 · 뒤 일정 사이의 이동이라 일정에서 뺐다"})
+        if mode is not None:
+            out.append({"field": f"moves[{position}-{before}~{position}-{after}].mode", "value": mode, "method": "rule",
+                        "evidence": {"source": "text", "text": items[index]["title"], "line": items[index]["line"]},
+                        "needs_review": False, "note": f"계획서의 「{items[index]['title']}」 — 이 구간을 이 수단으로 봤어요"})
+    return out
 
 
 def _nameless_rows(index: int, parts: Any, item: dict[str, Any], rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1747,6 +1813,10 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
             continue
         if move.get("scope") == "segment":
             a, b = find(move.get("from")), find(move.get("to"))
+            if a is None and b is None:
+                # ★`[2026-10-19 사용자 지시]` 에이전트가 앞뒤 장소를 비웠다 — 수단 말이 적힌 원문 자리의 바로 앞 · 뒤 일정 사이로 본다(규칙 길 `_move_segments` 와 같다).
+                #   ☆전에는 어느 구간에도 붙지 않아 고객이 적은 수단이 사라졌다
+                a, b = _around_quote(move.get("quote"), lines, items, dated)
             if b is not None:
                 chosen = [(x, y) for x, y in pairs if y == b and (a is None or x == a)]
             else:
