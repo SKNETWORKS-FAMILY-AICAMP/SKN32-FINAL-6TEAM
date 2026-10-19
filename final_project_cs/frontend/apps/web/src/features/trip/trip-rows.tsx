@@ -81,7 +81,7 @@ export function trialLiveText(stop: TripStop, t: Translate, now: number = Date.n
     ? (row.state === "no" ? t("웨이팅 없음", "No waiting line") : row.num !== null ? t(`웨이팅 ${row.num}팀`, `${row.num} parties waiting`) : t("웨이팅 있음", "Waiting line"))
     : (row.state === "yes" ? t("예약 가능한 시간 있음", "Tables open to book") : t("지금 예약 가능한 시간 없음", "No tables open to book now")));
   const minutes = Math.max(0, Math.floor((now - Math.max(...rows.map((row) => Date.parse(row.askedAt)))) / 60000));
-  return [...said, minutes < 1 ? t("방금 확인", "checked just now") : t(`${minutes}분 전 확인`, `checked ${minutes} min ago`)].join(" · ");
+  return [...said, minutes < 1 ? t("방금 확인", "checked just now") : t(`${minutes}분 전 확인`, `checked ${minutes} min ago`)].join(" · ");
 }
 
 /**

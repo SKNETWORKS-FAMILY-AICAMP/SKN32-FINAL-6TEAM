@@ -36,14 +36,14 @@ describe("the card's trial line", () => {
     expect(trialLiveText(stop([
       { topic: "waiting", state: "yes", num: 41, askedAt: "2026-10-20T12:03:00+09:00" },
       { topic: "vacancy", state: "yes", num: null, askedAt: "2026-10-20T12:02:00+09:00" },
-    ]), ko, now)).toBe("웨이팅 41팀 · 예약 가능한 시간 있음 · 3분 전 확인");
+    ]), ko, now)).toBe("웨이팅 41팀 · 예약 가능한 시간 있음 · 3분 전 확인");
   });
 
   it("says no line and no tables, and 「방금」 under a minute", () => {
     expect(trialLiveText(stop([
       { topic: "waiting", state: "no", num: null, askedAt: "2026-10-20T12:06:00+09:00" },
       { topic: "vacancy", state: "no", num: null, askedAt: "2026-10-20T12:06:00+09:00" },
-    ]), ko, now)).toBe("웨이팅 없음 · 지금 예약 가능한 시간 없음 · 방금 확인");
+    ]), ko, now)).toBe("웨이팅 없음 · 지금 예약 가능한 시간 없음 · 방금 확인");
   });
 
   it("has no line without readings", () => {

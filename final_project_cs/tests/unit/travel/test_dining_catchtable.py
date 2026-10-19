@@ -254,6 +254,19 @@ def test_포장이_없어요여도_매장_41팀은_41팀이다():
     assert got["num"] == 41
 
 
+#: `[2026-10-19 실측]` 런던베이글뮤지엄 안국 매장 페이지 — 머리가 「매장 식사」에서 「매장 내 취식」으로 바뀌었다.
+LBM_2026_10 = lines(
+    "소식", "[매장이용안내]", "웨이팅", "새로고침", "매장", "매장 내 취식", "웨이팅이 없어요",
+    "포장", "포장", "웨이팅이 없어요",
+)
+
+
+def test_바뀐_화면의_매장_내_취식_줄을_읽는다():
+    assert auto.parse_waiting(LBM_2026_10) == {"state": "no", "num": 0, "detail": "웨이팅이 없어요"}
+    got = auto.parse_waiting(lines("매장", "매장 내 취식", "현재 웨이팅 41팀", "포장", "웨이팅이 없어요"))
+    assert got["state"] == "yes" and got["num"] == 41
+
+
 def test_매장_식사가_없으면_읽지_않는다():
     # 로그인이 풀려 껍데기만 오면 이 줄이 없다. 없음이 아니라 모름이다.
     assert auto.parse_waiting(lines("캐치테이블", "즐거운 미식 생활의 시작")) is None
@@ -288,3 +301,10 @@ def test_캐치테이블에서_본_영업시간은_캐치테이블_출처다():
     assert rc.default_source("catchtable", "hours") == "catchtable_trial"
     assert rc.default_source("catchtable", "closure") == "catchtable_trial"
     assert rc.default_source("manual", "hours") == "operator_check"
+
+
+def test_지도_미리보기_카드의_현재_대기도_읽는다():
+    # `[2026-10-19 실측]` 조앤도슨 광화문 — 매장 페이지가 아니라 지도 위 미리보기 카드가 열렸다
+    got = auto.parse_waiting(lines("조앤도슨 광화문", "길찾기", "영업중", "현재 대기 26팀", "지금 웨이팅하기"))
+    assert got == {"state": "yes", "num": 26, "detail": "현재 대기 26팀"}
+    assert auto.parse_waiting(lines("현재 대기 중인 팀이 많아요", "2팀 이상부터 온라인 웨이팅 가능")) is None
