@@ -1,4 +1,4 @@
-import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripMessageResume, TripMove, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
+import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripMessageResume, TripMove, TripPick, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
 import { api, currentSession, hasSession, LiveError } from "./client";
 import { streamApi } from "./stream";
@@ -181,7 +181,7 @@ function warning(row: ServerWarning): TripWarning | null {
 
 interface ServerChoice { label?: unknown; message?: unknown; item_id?: unknown }
 interface ServerTurn { role?: string; text?: string; case_id?: string | null; at?: string; turn_id?: number;
-  reply?: { choices?: ServerChoice[]; choices_title?: unknown; more?: unknown; answer_web?: unknown } }
+  reply?: { choices?: ServerChoice[]; choices_title?: unknown; more?: unknown; answer_web?: unknown; pick?: unknown } }
 
 /**
  * ★`[2026-09-29]` The conversation is the server's record (`GET /v1/web/trips/{id}/chat`) — it follows the customer to
@@ -209,6 +209,7 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
       ...(kept?.changedTo ? { changedTo: kept.changedTo } : {}),
       ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}),
       ...(kept?.needsLocation ? { needsLocation: true } : {}), ...(kept?.awaitingReply ? { awaitingReply: true } : {}),
+      ...(kept?.pick ? { pick: kept.pick } : {}), ...(pickOf(reply?.pick) ? { pick: pickOf(reply?.pick)! } : {}),
       ...(reply?.choices ? { choices: choicesOf(reply.choices) } : {}),
       ...(typeof reply?.choices_title === "string" ? { choicesTitle: reply.choices_title } : {}),
       ...(typeof reply?.more === "string" ? { more: reply.more } : {}) };
@@ -266,6 +267,27 @@ function writeMessages(tripId: string, messages: TripMessage[]) {
 function basisOf(raw: unknown[] | null | undefined): string[] {
   return (raw ?? []).map((entry) => (typeof entry === "string" ? entry : typeof (entry as { source?: unknown })?.source === "string" ? (entry as { source: string }).source : ""))
     .filter((source) => source.trim() !== "");
+}
+
+/**
+ * `[2026-10-19]` The answer's `pick` when it can be acted on: `change` needs the stop, `add` the words to search. Anything else (an older server, a value that is not one of these) is dropped —
+ * the answer's sentence still says what happened.
+ */
+export function pickOf(raw: unknown): TripPick | null {
+  if (!raw || typeof raw !== "object") return null;
+  const pick = raw as { mode?: unknown; item_id?: unknown; query?: unknown; prefill?: unknown; blocked?: unknown };
+  const text = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : undefined;
+  const query = text(pick.query) ?? "";
+  const fill = (pick.prefill && typeof pick.prefill === "object" ? pick.prefill : {}) as Record<string, unknown>;
+  const clock = (value: unknown) => typeof value === "string" && /^\d{2}:\d{2}$/.test(value) ? value : undefined;
+  const day = (value: unknown) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+  if (pick.mode === "change") {
+    const itemId = text(pick.item_id);
+    return itemId ? { mode: "change", itemId, query, prefill: {}, blocked: pick.blocked === true } : null;
+  }
+  if (pick.mode !== "add" || !query) return null;
+  const prefill = { title: text(fill.title), date: day(fill.date), startsAt: clock(fill.starts_at), endsAt: clock(fill.ends_at), kind: text(fill.kind) };
+  return { mode: "add", itemId: null, query, prefill: Object.fromEntries(Object.entries(prefill).filter(([, value]) => value !== undefined)), blocked: pick.blocked === true };
 }
 
 /** 「다음 중 하나인가요?」 — only choices with a sentence to send are kept. */
@@ -395,7 +417,7 @@ export function createLiveGateway(): TripGateway {
       //   sends the same `request_id` again, which the server answers without acting twice.
       const result = await streamApi<{ status?: string; case_status?: string; case_id?: string; version?: number; resume_token?: string | null;
         required_input_schema?: Record<string, unknown> | null; answer?: string; basis_sources?: unknown[] | null; choices?: ServerChoice[] | null;
-        outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
+        outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown; pick?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(summaryDay ? { summary_day: summaryDay } : {}), ...(resume ?? {}), ...(itemId ? { item_id: itemId } : {}),
           // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
           ...(location ? { location: { lat: location.lat, lng: location.lng, accuracy_m: location.accuracyM, at: location.at } } : {}) }),
@@ -416,6 +438,7 @@ export function createLiveGateway(): TripGateway {
           ...(typeof result.more === "string" && result.more.trim() ? { more: result.more.trim() } : {}),
           ...(result.needs_location === true && !location ? { needsLocation: true } : {}),
           ...(awaitingReply ? { awaitingReply: true } : {}),
+          ...(pickOf(result.pick) ? { pick: pickOf(result.pick)! } : {}),
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];

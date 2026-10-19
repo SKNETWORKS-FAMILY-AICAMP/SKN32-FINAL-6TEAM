@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PlanCheckView, PlanItem, PlanMove } from "@/features/plan-check/model";
 import type { TripStop } from "./model";
-import { openingView, withTrip } from "./trip-edit";
+import { editItemIdOf, openingOf, openingView, withTrip } from "./trip-edit";
 
 const stop = (id: string, date: string, time: string, endTime?: string): TripStop => ({ id, date, time, endTime, title: id, booking: "unknown", notes: "", coordinates: { lat: 37.57, lng: 126.98 } });
 const item = (id: string, day: number, date: string, startsAt: string): PlanItem => ({
@@ -61,5 +61,29 @@ describe("the edit of a registered trip", () => {
     const view = withTrip(edit, trip, []);
     expect(view.items.map((entry) => entry.id)).toEqual(["0-0", "0-1"]);
     expect(view.items.map((entry) => entry.day)).toEqual([2, 3]);
+  });
+});
+
+describe("[2026-10-19] the chat's 「직접 고르기」 opens the edit there", () => {
+  // The reopened edit: one source, each line read from a trip stop (`evidence.item_id`), checked as 「0-<n>」.
+  const field = (value: unknown, tripItemId: string) => ({ value, method: "trip" as const, evidence: { source: "trip", item_id: tripItemId }, needs_review: false, note: null });
+  const intake = {
+    intake_id: "edit-1", sources: [{ source_id: "s-trip", items: [
+      { index: 0, line: 1, day: 1, date: "2026-10-15", fields: { title: field("점심 식당", "trip-a") } },
+      { index: 1, line: 2, day: 1, date: "2026-10-15", fields: { title: field("저녁 식당", "trip-b") } }] }],
+    review: { items: [{ id: "0-0", source_id: "s-trip", index: 0 }, { id: "0-1", source_id: "s-trip", index: 1 }] },
+  } as unknown as Parameters<typeof openingOf>[1];
+
+  it("finds the trip's stop under the edit's own id, and none for a stop the edit does not hold", () => {
+    expect(editItemIdOf(intake, "trip-b")).toBe("0-1");
+    expect(editItemIdOf(intake, "trip-over")).toBeNull();
+    expect(editItemIdOf(intake, "")).toBeNull();
+  });
+
+  it("opens the stop's place change with the chat's words, or the add form with only what the chat had", () => {
+    expect(openingOf({ mode: "change", itemId: "trip-b", query: "민수네", prefill: {}, blocked: false }, intake))
+      .toEqual({ key: "edit-1:change:trip-b:민수네", change: { itemId: "0-1", query: "민수네" } });
+    expect(openingOf({ mode: "add", itemId: null, query: "민수네", prefill: { title: "민수네", date: "2026-10-21", startsAt: "19:00", kind: "dining" }, blocked: false }, intake))
+      .toEqual({ key: "edit-1:add::민수네", add: { title: "민수네", date: "2026-10-21", start: "19:00", end: null, kind: "dining", query: "민수네" } });
   });
 });

@@ -59,7 +59,7 @@ import { RiskPanel } from "@/features/risk/risk-panel";
 import { problemText, riskSignature } from "@/lib/live/risks";
 import { useRiskAlternatives } from "./use-risk-alternatives";
 import type { Recovery } from "@/lib/live/recovery";
-import type { Trip } from "./model";
+import type { Trip, TripPick } from "./model";
 import styles from "./trip-screen.module.css";
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다. */
@@ -87,7 +87,8 @@ export function TripScreen({ tripId }: { tripId: string }) {
   const t = useT();
   const query = useTrip(tripId);
   // `[2026-10-13 사용자 결정 — D 수정 모드]` 「일정 수정」: the same page becomes the plan check of this trip (`trip-edit.tsx`) until 「완료」, then the trip is drawn afresh.
-  const [editing, setEditing] = useState(false);
+  // `[2026-10-19 사용자 결정]` The chat's 「직접 고르기」 opens the edit on a stop or on the add form (`TripPick`); 「일정 수정」 opens it as it is (`pick` null).
+  const [editing, setEditing] = useState<{ pick: TripPick | null } | null>(null);
   // ★A failed re-read keeps the plan already on screen (react-query keeps the last data). Only a trip that never loaded shows the error page — the change bell re-reads often.
   // ★`[2026-10-05]` But a trip that is gone (`not_found`) or a session that ended (`session_expired`) is not drawn from the cache: another account's plan must not stay on the screen.
   const gone = query.error instanceof LiveError && ["not_found", "session_expired"].includes(query.error.code);
@@ -95,9 +96,9 @@ export function TripScreen({ tripId }: { tripId: string }) {
     return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()}
       action={gone ? <ButtonLink variant="primary" href={`${routes.myPageAccount}?login=1&returnTo=${encodeURIComponent(`${routes.trip(tripId)}?notices=1`)}`}>{t("여행을 등록한 계정으로 로그인", "Sign in with the account that owns this trip")}</ButtonLink> : undefined} /></JourneyShell>;
   }
-  if (editing) return <TripEdit trip={query.data} onExit={() => setEditing(false)} />;
+  if (editing) return <TripEdit trip={query.data} pick={editing.pick} onExit={() => setEditing(null)} />;
   // `useTripGuardian` reads the address (`?guardian=on`): wait for it outside the server render.
-  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} onEdit={() => setEditing(true)} /></Suspense>;
+  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} onEdit={(pick = null) => setEditing({ pick })} /></Suspense>;
 }
 
 const monthDay = (date: string) => `${date.slice(5, 7)}.${date.slice(8, 10)}`;
@@ -106,7 +107,7 @@ const weekday = (date: string, language: Language) =>
 const dayLabel = (date: string, language: Language) => `${monthDay(date)} ${weekday(date, language)}`;
 const dayName = (index: number, t: Translate) => t(`${index + 1}일차`, `Day ${index + 1}`);
 
-function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: () => void }) {
+function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: (pick?: TripPick | null) => void }) {
   const t = useT();
   const search = useSearchParams();
   const { language, skipAnimation } = useSettings();
@@ -651,7 +652,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                 <OctagonAlert size={16} strokeWidth={2} aria-hidden="true" />{t("일정 정지 중", "Paused")}</button>}
               {/* `[2026-10-13 사용자 결정 — 수정 모드 · 후보 1]` 「일정 수정」은 아이콘 단추(이름은 화면 읽기 · 툴팁). 누르면 같은 화면이 수정 모드(`trip-edit.tsx`)가 된다.
                    `[2026-10-14 사용자 결정 — ST4F-493]` 채팅 아이콘 단추는 뺐다 — 채팅은 오른쪽 아래 채팅 단추 · 옆으로 밀기로 들어가고, 일차 칩으로 돌아온다. */}
-              <button type="button" className={styles.chatButton} data-icon id="trip-edit-button" onClick={onEdit} aria-label={t("일정 수정", "Edit itinerary")} title={t("일정 수정", "Edit itinerary")}>
+              <button type="button" className={styles.chatButton} data-icon id="trip-edit-button" onClick={() => onEdit()} aria-label={t("일정 수정", "Edit itinerary")} title={t("일정 수정", "Edit itinerary")}>
                 <Pencil size={16} strokeWidth={1.8} aria-hidden="true" /></button>
             </div>
           </header>
@@ -688,7 +689,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                 </div>
               </div>
               <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="group" aria-label={t("채팅", "Chat")} inert={plan}>
-                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} selected={selected} logRef={chatLog} active={!plan} />
+                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} selected={selected} logRef={chatLog} active={!plan} onPick={onEdit} />
               </div>
             </div>
           </div>

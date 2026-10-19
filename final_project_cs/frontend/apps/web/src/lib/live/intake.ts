@@ -57,8 +57,24 @@ export interface IntakeUnderstanding {
  */
 export interface IntakePrefill {
   filled: { item: string | null; title: string | null; owner: string; owner_label: string; reason: string; gap: string; new: boolean }[];
-  questions: { kind: string; question: string; quote: string | null }[];
+  questions: IntakePrefillQuestion[];
   kept: { kind: string; item: string | null; owner: string; reason: string }[];
+}
+
+/**
+ * One question of `prefill.questions`. `[2026-10-19 사용자 결정 — 못 찾은 장소]` `kind: "place_not_found"` is a stop whose place was not found: `item` is the check's stop id (its card carries
+ * the question), `source_id` · `index` the keys of its candidates, `blocked` = the place lookup was blocked and searched once more. The other kinds carry only the words.
+ */
+export interface IntakePrefillQuestion {
+  kind: string;
+  question: string;
+  quote: string | null;
+  item?: string | null;
+  source_id?: string | null;
+  index?: number | null;
+  mode?: string;
+  actions?: string[];
+  blocked?: boolean;
 }
 
 /**

@@ -17,7 +17,7 @@ import { tripKey } from "./use-trip";
 import { noticesKey, proposalsKey, useNotices } from "./use-trip-extras";
 import { chatRecords } from "./trip-chat-records";
 import { ChatNotice, ChatProposalChoices } from "./trip-chat-notices";
-import type { Trip, TripMessage, TripStop } from "./model";
+import type { Trip, TripMessage, TripPick, TripStop } from "./model";
 import styles from "./trip-screen.module.css";
 
 /**
@@ -160,7 +160,9 @@ export type TripChat = ReturnType<typeof useTripChat>;
  * The chat pane of the sheet (mockup C안 「채팅」): the context of the question (the day and the stop picked) at the top of the conversation, the conversation, the quick questions and
  * what a message does. Typing is the chat bar's (`ChatBar`) — it stays at the bottom of the frame.
  */
-export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }: { trip: Trip; chat: TripChat; day: string; dayText: string; selected: TripStop | null; logRef: RefObject<HTMLDivElement | null>; active: boolean }) {
+export function ChatPane({ trip, chat, day, dayText, selected, logRef, active, onPick }: { trip: Trip; chat: TripChat; day: string; dayText: string; selected: TripStop | null; logRef: RefObject<HTMLDivElement | null>; active: boolean;
+  /** `[2026-10-19 사용자 결정]` 「직접 고르기」 under an answer that could not find the place: the screen turns into the edit, as 「일정 수정」 does (`TripPick`). */
+  onPick?: (pick: TripPick) => void }) {
   const t = useT();
   const { message, undo } = chat;
   const notices = useNotices(trip.id);
@@ -186,6 +188,12 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
         {item.choices && item.choices.length > 0 && index === trip.messages.length - 1 && <div className={styles.choices}>
           {item.choicesTitle && <span className={styles.choicesTitle}>{item.choicesTitle}</span>}{item.choices.map((choice) =>
           <button key={choice.message} type="button" className={styles.choice} disabled={message.isPending} onClick={() => chat.ask(choice.message, false, choice.itemId ?? null)}>{choice.label}</button>)}</div>}
+        {/* `[2026-10-19 사용자 결정 — 못 찾은 장소는 직접 고르기로]` Only on the latest answer, like its choices: the edit opens on that stop (or on the add form, filled in). */}
+        {item.pick && onPick && index === trip.messages.length - 1 && <div className={styles.choices} data-pick={item.pick.mode}>
+          <button type="button" className={styles.choice} disabled={message.isPending} onClick={() => onPick(item.pick!)}>{t("직접 고르기", "Choose myself")}</button>
+          <span className={styles.undoHint}>{item.pick.mode === "add"
+            ? t("수정 화면의 일정 추가 칸에서 장소를 찾아 넣어요.", "Find the place in the edit's add form.")
+            : t("수정 화면에서 이 일정의 장소를 직접 골라요.", "Pick this stop's place yourself in the edit.")}</span></div>}
         {item.needsLocation && index === trip.messages.length - 1 && trip.messages[index - 1]?.role === "user" && <div className={styles.choices}>
           <button type="button" className={styles.choice} disabled={message.isPending || chat.locating} onClick={() => void chat.askWithLocation(trip.messages[index - 1].text)}><LocateFixed size={15} strokeWidth={1.6} aria-hidden="true" />{chat.locating ? t("위치 찾는 중…", "Finding your location…") : t("내 위치 알려 주고 다시 묻기", "Share my location and ask again")}</button>
           <span className={styles.undoHint}>{t("누르면 브라우저가 위치 권한을 물어요. 위치는 이 질문에 답하는 데 써요.", "Your browser will ask first. The location is used to answer this question.")}</span></div>}</article>;

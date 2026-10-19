@@ -119,6 +119,21 @@ export interface TripMessage {
   needsLocation?: boolean;
   /** The current request is waiting for the customer's answer; no resume token is kept in the conversation. */
   awaitingReply?: boolean;
+  /** `[2026-10-19 사용자 결정]` The chat could not find the place it was asked for: 「직접 고르기」 opens the edit there (see `TripPick`). */
+  pick?: TripPick;
+}
+
+/**
+ * `[2026-10-19 사용자 결정 — 못 찾은 장소는 직접 고르기로 수정 · 추가 모드에]` The answer's `pick` (`POST …/messages` with `status: "edit_refused"`, `reason: "place_not_found"`):
+ * `change` — the stop `itemId` (a trip stop) opens in the edit with its place search holding `query`; `add` — the edit's add form opens filled in with `prefill`
+ * (only what the chat had: `end` only when the customer said it). No candidates here — the edit has them.
+ */
+export interface TripPick {
+  mode: "change" | "add";
+  itemId: string | null;
+  query: string;
+  prefill: { title?: string; date?: string; startsAt?: string; endsAt?: string; kind?: string };
+  blocked: boolean;
 }
 
 /** An explicit reply to an open request. Kept in memory; never persisted with chat messages. */

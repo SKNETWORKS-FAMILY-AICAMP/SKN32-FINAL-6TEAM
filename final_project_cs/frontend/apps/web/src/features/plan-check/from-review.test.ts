@@ -254,3 +254,37 @@ describe("D-025 「우리가 채움」 — the server filled in first", () => {
     expect(reviewResultOf(next, readingOf(next))!.prefill).toBeNull();
   });
 });
+
+describe("[2026-10-19] 못 찾은 장소 — the question rides on the stop's card", () => {
+  const unresolved = item({ id: "0-1", title: "을지로 그 집", status: "review", place_state: "unresolved", place: null });
+  const question = (patch: Record<string, unknown> = {}) => ({ kind: "place_not_found", question: "「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요",
+    quote: "을지로 그 집", item: "0-1", source_id: "s1", index: 1, mode: "change", actions: ["pick_candidate", "pick_myself", "no_place"], blocked: false, ...patch });
+  const withQuestions = (questions: Record<string, unknown>[], items = [item({ id: "0-0" }), unresolved]) => intake("review", "review", {
+    review: { items, moves: [] } as unknown as ReviewedIntakeView["review"],
+    prefill: { filled: [], kept: [], questions: questions as never },
+  });
+
+  it("puts the server's sentence on the stop it names, and keeps it out of the note above the list", () => {
+    const next = withQuestions([question(), { kind: "lodging_name", question: "묵는 숙소 이름을 알려 주세요", quote: null }]);
+    const view = reviewResultOf(next, readingOf(next))!;
+    expect(view.items.find((entry) => entry.id === "0-1")!.unfound).toEqual({ question: question().question, blocked: false });
+    expect(view.items.find((entry) => entry.id === "0-0")!.unfound).toBeUndefined();
+    expect(view.prefill?.questions).toEqual(["묵는 숙소 이름을 알려 주세요"]);
+  });
+
+  it("says when the lookup was blocked and searched once more", () => {
+    const next = withQuestions([question({ blocked: true, question: "조회가 막혀 다시 찾아봤지만 「을지로 그 집」을 찾지 못했어요" })]);
+    expect(reviewResultOf(next, readingOf(next))!.items[1].unfound).toEqual({ question: "조회가 막혀 다시 찾아봤지만 「을지로 그 집」을 찾지 못했어요", blocked: true });
+  });
+
+  it("asks no more once the stop has a place or 「장소 없음」, and leaves a question naming no stop of the check in the note", () => {
+    const placed = withQuestions([question()], [item({ id: "0-0" }), item({ id: "0-1", title: "을지로 그 집" })]);
+    expect(reviewResultOf(placed, readingOf(placed))!.items[1].unfound).toBeUndefined();
+    expect(reviewResultOf(placed, readingOf(placed))!.prefill).toBeNull();
+    const none = withQuestions([question()], [item({ id: "0-0" }), item({ id: "0-1", place_state: "none", place: null })]);
+    expect(reviewResultOf(none, readingOf(none))!.items[1].unfound).toBeUndefined();
+    const elsewhere = withQuestions([question({ item: "0-9" })]);
+    expect(reviewResultOf(elsewhere, readingOf(elsewhere))!.items.some((entry) => entry.unfound)).toBe(false);
+    expect(reviewResultOf(elsewhere, readingOf(elsewhere))!.prefill?.questions).toEqual([question().question]);
+  });
+});

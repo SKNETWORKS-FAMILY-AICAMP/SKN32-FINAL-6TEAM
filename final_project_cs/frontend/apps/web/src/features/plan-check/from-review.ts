@@ -107,9 +107,30 @@ export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: Pl
  */
 export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, infos?: Readonly<Record<string, PlaceInfo>>): PlanCheckView | null {
   if (!intake.review) return null;
-  return viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing),
+  const view = viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing),
     prefill: prefillNotesOf(intake), risksAvailable: intake.review.risk_schema_version === 1,
     riskMode: intake.review.risk_mode, riskCheckedAt: intake.review.risk_checked_at }, intake.review, "done", infos, filledReasons(intake));
+  const unfound = unfoundQuestions(intake);
+  return unfound.size ? { ...view, items: view.items.map((item) => withUnfound(item, unfound.get(item.id))) } : view;
+}
+
+/**
+ * `[2026-10-19 사용자 결정 — 못 찾은 장소는 후보 보이고 묻기]` The questions about a stop whose place was not found (`prefill.questions[]` `kind: "place_not_found"`), by the check's stop id.
+ * Only those that name a stop of the check — the card of that stop carries the question; one that names none stays in the note above the list.
+ */
+export function unfoundQuestions(intake: Pick<IntakeView, "prefill"> & { review?: { items: readonly { id: string }[] } | null }): Map<string, { question: string; blocked: boolean }> {
+  const ids = new Set((intake.review?.items ?? []).map((item) => item.id));
+  const out = new Map<string, { question: string; blocked: boolean }>();
+  for (const entry of intake.prefill?.questions ?? []) {
+    if (entry?.kind !== "place_not_found" || typeof entry.item !== "string" || !ids.has(entry.item) || typeof entry.question !== "string" || !entry.question) continue;
+    if (!out.has(entry.item)) out.set(entry.item, { question: entry.question, blocked: entry.blocked === true });
+  }
+  return out;
+}
+
+/** A stop that has a place now (picked, or 「장소 없음」) is not asked about any more, whatever the record of the first fill still says. */
+function withUnfound(item: PlanItem, unfound: { question: string; blocked: boolean } | undefined): PlanItem {
+  return unfound && !item.coordinates && !item.noPlace ? { ...item, unfound } : item;
 }
 
 /**
@@ -127,8 +148,12 @@ export function filledReasons(intake: Pick<IntakeView, "prefill">): Map<string, 
 }
 
 /** The note above the list: questions only the traveller can answer, and the traveller's own words read as a move, a condition or a preference. Null when there is nothing to say. */
-export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources"> & Partial<Pick<IntakeView, "check">>): PrefillNotes | null {
-  const questions = [...new Set((intake.prefill?.questions ?? []).map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
+export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources"> & Partial<Pick<IntakeView, "check">> & { review?: { items: readonly { id: string }[] } | null }): PrefillNotes | null {
+  // `[2026-10-19]` A question about a stop's place not found is asked on that stop's card, not here.
+  const onCards = new Set(unfoundQuestions(intake).keys());
+  const questions = [...new Set((intake.prefill?.questions ?? [])
+    .filter((entry) => !(entry?.kind === "place_not_found" && typeof entry.item === "string" && onCards.has(entry.item)))
+    .map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
   const understood = [...new Set(intake.sources.flatMap((source) => {
     const read = source.understanding;
     if (!read) return [];
