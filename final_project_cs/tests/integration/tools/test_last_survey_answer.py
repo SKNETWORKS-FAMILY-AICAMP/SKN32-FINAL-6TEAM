@@ -47,18 +47,35 @@ def _read(world, customer="owner", question_id="priority"):
     return ReadToolbox(get_connection).last_survey_answer(scope, question_id=question_id)
 
 
+def _ranked(*areas):
+    """묶음 3의 우선순위 답(분야 순서) — 저장 글 그대로."""
+    return survey_answers.check({"priority": {"areas": list(areas)}})["priority"]
+
+
 def test_the_latest_answer_of_this_customer_is_returned_with_its_label(world):
-    _answer(world, "activity")
-    _answer(world, "mobility")                                              # 나중 접수의 답이 이긴다
+    _answer(world, _ranked("activity"))
+    _answer(world, _ranked("food", "mobility", "activity"))                 # 나중 접수의 답이 이긴다 — 활동 · 이동 중 앞선 것은 이동
 
     found = _read(world)
-    question = next(q for q in survey_answers.QUESTIONS if q.id == "priority")
+    question = survey_answers.REPLACEMENT_QUESTION                         # `[2026-10-19]` 활동 팀이 다시 묻는 질문의 선택지로 돌려준다
     label = next(option.label for option in question.options if option.id == "mobility")
     assert found == {"option_id": "mobility", "value": "mobility", "label": label}
 
 
+def test_a_ranking_without_activity_or_mobility_offers_nothing(world):
+    _answer(world, _ranked("food"))
+
+    assert _read(world) is None
+
+
+def test_another_compound_question_is_not_offered(world):
+    _answer(world, survey_answers.check({"indoor_outdoor": {"dining": "indoor"}})["indoor_outdoor"], question_id="indoor_outdoor")
+
+    assert _read(world, question_id="indoor_outdoor") is None
+
+
 def test_an_answer_from_an_old_question_set_is_not_offered(world):
-    _answer(world, "mobility", version="0-old")
+    _answer(world, "mobility", version="2")                                 # 묶음 2의 대체할 곳 답
 
     assert _read(world) is None
 

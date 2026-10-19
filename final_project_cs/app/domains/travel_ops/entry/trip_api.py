@@ -213,9 +213,12 @@ class IntakeConfirmIn(BaseModel):
 
 
 class IntakeSurveyIn(BaseModel):
-    """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`)."""
+    """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`).
+
+    `[2026-10-19]` 여러 칸 문항은 객체로 — 우선순위 `{areas: [...], details: {분야: [...]}}` · 실내외 `{dining: …, activity: …}`. 직접 입력은 `{custom: 글}`.
+    모양은 `survey_answers.check` 가 문항 종류대로 확인한다(틀리면 422 `invalid_answers`)."""
     model_config = ConfigDict(extra="forbid")
-    answers: dict[str, str | dict[str, str] | None] = Field(min_length=1, max_length=8)
+    answers: dict[str, str | dict[str, Any] | None] = Field(min_length=1, max_length=8)
 
 
 class MoveEndIn(BaseModel):
@@ -1649,9 +1652,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def web_intake_survey(intake_id: UUID, request: IntakeSurveyIn, who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-06 사용자 지시]` 로딩 중 질문의 답을 **한 문항씩 바로** 저장한다 → `{ok, answered, questions_version}`(지금까지 답한 모든 문항 번호 · 이 답을 해석한 질문 묶음 버전).
 
-        - 질문은 `GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 답 = `{문항 id: 선택지 id}` — 모르는 문항 · 선택지는 422 `invalid_answers`(하나라도 틀리면 **아무것도 저장하지 않는다**).
+        - 질문은 `GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 답 = `{문항 id: 선택지 id}`(여러 칸 문항은 객체 — 계약 「설문 질문」) — 모르는 문항 · 선택지 · 모양은 422 `invalid_answers`(하나라도 틀리면 **아무것도 저장하지 않는다**).
         - 부분 답 · 멱등이다. ★**같은 문항을 다시 보내면 덮어쓴다**(마지막 값이 이긴다) — 화면이 앞 질문으로 돌아가 고칠 수 있다.
-        - `on_disruption`(replace · ask_first)과 `pace`(relaxed · moderate · packed)도 받는다 — 항로 지킴이 카드 · 계획 담기 화면의 값을 접수에 실어 두기 위해서다(질문 목록에는 없다).
+        - `on_disruption`(replace · ask_first)도 받는다 — 항로 지킴이 카드의 값을 접수에 실어 두기 위해서다(질문 목록에는 없다). `[2026-10-19]` `pace` 는 이제 문항이다(계획 담기 화면도 같은 선택지로 보낸다).
         - ★`[2026-10-06 uiux 요청]` 서버가 그때의 질문 묶음 버전 · 문구 · 라벨 · 슬롯 · 해석한 값을 **답 이력**(`trip_intake_survey_answers`)에 남기고, 등록 때는 **저장 때 해석한 값**으로 설문을 만든다.
           웹은 선택지 번호만 보내고 뜻(구조화 값)을 모른다 — 문항 번호와 슬롯은 다른 칸이고 선택지 ↔ 값 매핑은 서버가 소유한다.
         - 답은 접수에 모아 두었다가 **등록(`confirm` · `plan`)할 때 설문에 합쳐진다.** 등록 요청이 직접 준 `survey` 가 이긴다. 이미 등록된 접수는 409 `intake_confirmed`. 남의 접수는 404.

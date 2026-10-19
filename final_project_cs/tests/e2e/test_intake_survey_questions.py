@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
-"""로딩 중 질문 — `questions[]` · `POST /v1/web/trip-intakes/{id}/survey` · 등록 때 설문에 합치기. `[2026-10-06 사용자 지시 · uiux 인계]`
+"""로딩 중 질문 — `questions[]` · `POST /v1/web/trip-intakes/{id}/survey` · 등록 때 설문에 합치기. `[2026-10-06 사용자 지시 · uiux 인계]` · `[2026-10-19 개편]`
 
-계약: `wiki/external/rest-endpoints.md` 「설문 질문」 · 기획 `wiki/records/plans/2026-10-05_설문_계획서에서_읽고_로딩에서_묻기_기획.md` 「서버 몫」 1
-구현: `components/intake/survey_answers.py` · `entry/trip_api.py` · `051_intake_survey_answers.sql`
+계약: `wiki/external/rest-endpoints/web-intakes.md` 「설문 질문」 · 설계 `wiki/records/plans/2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md`
+구현: `components/intake/survey_answers.py` · `pipeline.view` · `entry/trip_api.py` · 마이그레이션 051 · 053 · 907
 
 ★지키려는 것
- ①접수 조회에 `questions[]` — **쓰는 문항만**(이동 · 대체 우선순위) 최대 3, `on_disruption` · `pace` 는 목록에 없다. 이미 답한 문항도 목록에 남고 `answer` 에 고른 번호가 있다.
- ②답은 한 문항씩 바로 저장 · 부분 답 · 멱등 · **같은 문항을 다시 보내면 덮어쓴다**. 하나라도 틀리면 아무것도 저장하지 않는다(422). `updated_at` 은 안 건드린다(읽기가 멈췄는지 가르는 기준).
+ ①접수 조회에 `questions[]` — 시작 설문에서 「일정이 꼬이면」을 뺀 다섯 문항 중 **계획서에서 못 얻은 것만, 상한 없이.** 처음은 셋(테마 · 누구와 · 우선순위),
+   이해 단계 결과 뒤 실내외 · 여유를 **뒤에 붙인다**(한 번만 늘고 이미 보인 문항은 남는다). 이미 답한 문항도 목록에 남고 `answer` 에 고른 답이 있다.
+ ②답은 한 문항씩 바로 저장 · 부분 답 · 멱등 · **같은 문항을 다시 보내면 덮어쓴다**. 하나라도 틀리면 아무것도 저장하지 않는다(422). `updated_at` 은 안 건드린다.
  ③등록(`confirm`)할 때 모아 둔 답이 설문에 합쳐진다 — 요청이 직접 준 값이 이긴다. 안 답한 문항은 **채워 넣지 않는다**(`on_disruption` 을 안 줬으면 자동 변경 안 함).
  ④남의 접수 · 없는 접수는 같은 404. 이미 등록된 접수는 409. 답을 하나도 안 했으면 등록 동작은 옛 그대로(설문 없음).
+ ⑤옛 묶음(2)의 답은 저장 때 해석한 값으로 읽힌다 — 새 매핑으로 잘못 읽히지 않는다(053).
 
 재현:
 
@@ -16,16 +18,21 @@
 """
 from __future__ import annotations
 
+import json
 from uuid import UUID, uuid4
 
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.domains.travel_ops.components.intake import survey_answers
+from app.domains.travel_ops.components.intake import pipeline, survey_answers
 from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, auto_on_disruption
 
+from .test_intake_review import rv  # noqa: F401 — 접수를 직접 여는 시험이 쓴다
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_trip_intake_api import CHAT_PLAN, _full_client, _key, _send
+
+FIVE = ["theme", "party", "priority", "indoor_outdoor", "pace"]
+PRIORITY = {"areas": ["food", "mobility"], "details": {"food": ["taste", "clean"], "mobility": ["taxi"]}}
 
 
 def _intake(client, headers) -> dict:
@@ -48,20 +55,145 @@ def _constraints(trip_id) -> dict:
         return cur.fetchone()[0]
 
 
+def _answers_of(view) -> dict:
+    return {q["id"]: q["answer"] for q in view["questions"]}
+
+
 # ── ① 질문 목록 ───────────────────────────────────────────────────
-def test_the_intake_carries_only_the_questions_that_are_used(api):
+def test_without_anything_read_all_five_questions_are_asked_with_no_cap(api):
+    """이 시험의 읽기는 이해 에이전트를 쓰지 않는다(읽은 칸 없음) — 다섯 문항이 모두 나온다. 옛 상한 3 은 없다."""
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    asked = view["questions"]
-    assert [q["id"] for q in asked] == ["preferred_mobility", "priority"]
-    assert len(asked) <= survey_answers.MAX_QUESTIONS
-    for question in asked:
-        assert question["kind"] == "single" and question["title"] and question["why"] and question["answer"] is None
-        assert question["options"] and all(set(option) == {"id", "label"} for option in question["options"])
-    assert [o["id"] for o in asked[0]["options"]] == ["public", "taxi", "walk"]          # 렌트카는 이동 계산기가 아직 못 다룬다
-    ids = {q["id"] for q in asked}
-    assert not ids & {"on_disruption", "pace", "dietary", "diet", "accessibility", "party", "theme"}   # 카드·화면이 보내는 값 · 민감 항목은 묻지 않는다
+    assert [q["id"] for q in view["questions"]] == FIVE
+    assert view["questions_phase"] == 2 and view["skipped_by_reading"] == []
+    assert not hasattr(survey_answers, "MAX_QUESTIONS")
+    kinds = {q["id"]: q["kind"] for q in view["questions"]}
+    assert kinds == {"theme": "single", "party": "single", "priority": "priority", "indoor_outdoor": "pair", "pace": "single"}
+    for question in view["questions"]:
+        assert question["title"] and question["why"] and question["answer"] is None
+        assert "slot" not in question and "value" not in question                      # 웹은 슬롯 · 값을 모른다
+    ids = {q["id"] for q in view["questions"]}
+    assert not ids & {"on_disruption", "dietary", "diet", "accessibility", "domestic", "mobility_ease", "day_hours"}   # 카드 몫 · 민감 · 문항 없는 칸
+
+
+def test_question_shapes_carry_groups_parts_and_the_custom_label(api):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    by_id = {q["id"]: q for q in _intake(client, headers)["questions"]}
+    priority = by_id["priority"]
+    assert [o["id"] for o in priority["options"]] == ["food", "activity", "mobility"]
+    groups = {g["id"]: g for g in priority["groups"]}
+    assert [o["id"] for o in groups["activity"]["options"]] == ["EV", "EX", "HS", "LS", "NA", "SH", "VE"]     # 2026-10-19 사용자 지시
+    assert [o["label"] for o in groups["activity"]["options"]] == ["축제/공연/행사", "체험관광", "역사관광", "레저스포츠", "자연관광", "쇼핑", "문화관광"]
+    assert all(g["read"] is None for g in priority["groups"])
+    pair = by_id["indoor_outdoor"]
+    assert "options" not in pair and [p["id"] for p in pair["parts"]] == ["dining", "activity"]
+    assert by_id["party"]["allow_custom"] is True and by_id["party"]["custom_label"] == "기타"
+    assert by_id["theme"]["allow_custom"] is False and by_id["pace"]["allow_custom"] is False
+
+
+# ── ①-2 두 번에 정한다 · 읽은 칸은 뺀다 (접수를 직접 열고 읽기 결과 줄을 넣어 본다) ─────────────
+def _open(rv):  # noqa: F811
+    with get_connection() as conn:
+        return pipeline.open_intake(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], text=CHAT_PLAN, files=[])
+
+
+def _agent_row(rv, intake_id, value):  # noqa: F811
+    """이해 단계가 원본 하나를 읽은 결과 줄(`reading.agent`)을 넣는다 — 읽는 동안 일꾼이 남기는 그 줄과 같은 모양."""
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("SELECT source_id FROM intake_sources WHERE tenant_id=%s AND intake_id=%s ORDER BY position LIMIT 1", (rv["tenant"], intake_id))
+        source_id = cur.fetchone()[0]
+        cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, method, evidence, needs_review, note) "
+                    "VALUES (%s,%s,1,%s,'reading.agent',%s,'llm_agent',%s,false,'시험')",
+                    (intake_id, rv["tenant"], source_id, json.dumps({"used": True, **value}, ensure_ascii=False), json.dumps({"source": "model"})))
+
+
+def _look(rv, intake_id):  # noqa: F811
+    with get_connection() as conn:
+        return pipeline.view(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], intake_id=intake_id)
+
+
+def test_first_three_while_reading_then_the_rest_after_the_understanding_result(rv):  # noqa: F811
+    intake_id = _open(rv)
+    first = _look(rv, intake_id)
+    assert first["status"] == "reading" and first["questions_phase"] == 1
+    assert [q["id"] for q in first["questions"]] == ["theme", "party", "priority"]                      # 계획서에서 거의 안 나오는 것부터 바로
+    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["theme", "party", "priority"]       # 결과 전에는 그대로
+    _agent_row(rv, intake_id, {"moves": [{"mode": "subway", "scope": "all", "quote": "다 지하철로"}],
+                               "conditions": [{"code": "if_rain_indoor", "quote": "비 오면 실내로"}], "preferences": []})
+    second = _look(rv, intake_id)
+    assert second["questions_phase"] == 2
+    assert [q["id"] for q in second["questions"]] == ["theme", "party", "priority", "indoor_outdoor", "pace"]   # 뒤에 붙는다 · 앞 순서 그대로
+    priority = {g["id"]: g for g in next(q for q in second["questions"] if q["id"] == "priority")["groups"]}
+    assert priority["mobility"]["read"]["quotes"] == ["다 지하철로"] and priority["mobility"]["read"]["value"] == ["subway"]
+    assert priority["food"]["read"] is None and priority["activity"]["read"] is None                    # 분야 순서 · 다른 세부는 묻는다
+    pair = {p["id"]: p for p in next(q for q in second["questions"] if q["id"] == "indoor_outdoor")["parts"]}
+    assert pair["activity"]["read"]["value"] == "indoor" and pair["dining"]["read"] is None             # 「비 오면 실내」 — 식당 칸만 묻는다
+    skipped = {(s["question"], s["part"]): s for s in second["skipped_by_reading"]}
+    assert set(skipped) == {("priority", "mobility"), ("indoor_outdoor", "activity")}
+    assert skipped[("priority", "mobility")]["key"] == "survey.priority_details.mobility" and skipped[("priority", "mobility")]["text"] == "지하철"
+    # 한 번만 는다 — 그 뒤로는 흔들리지 않는다
+    _agent_row(rv, intake_id, {"preferences": [{"code": "slow_pace", "quote": "천천히"}]})
+    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["theme", "party", "priority", "indoor_outdoor", "pace"]
+
+
+def test_a_read_pace_is_not_asked_and_is_listed_with_its_quote(rv):  # noqa: F811
+    intake_id = _open(rv)
+    _look(rv, intake_id)
+    _agent_row(rv, intake_id, {"preferences": [{"code": "slow_pace", "quote": "천천히 다닐래요"}]})
+    view = _look(rv, intake_id)
+    assert [q["id"] for q in view["questions"]] == ["theme", "party", "priority", "indoor_outdoor"]
+    assert view["skipped_by_reading"] == [{"question": "pace", "part": None, "key": "survey.pace", "value": "relaxed",
+                                           "text": "여유 있게", "quotes": ["천천히 다닐래요"]}]
+
+
+def test_one_taxi_ride_does_not_skip_the_transport_detail(rv):  # noqa: F811
+    """☆x600 서버 사례 — 「택시로 이동」 한 구간을 여행 전체(scope all)로 읽어도 「다 · 늘 · 주로 · 웬만하면」류가 없으면 받지 않는다."""
+    intake_id = _open(rv)
+    _look(rv, intake_id)
+    _agent_row(rv, intake_id, {"moves": [{"mode": "taxi", "scope": "all", "quote": "택시로 이동"}]})
+    view = _look(rv, intake_id)
+    priority = next(q for q in view["questions"] if q["id"] == "priority")
+    assert all(group["read"] is None for group in priority["groups"]) and view["skipped_by_reading"] == []
+
+
+def test_a_shadow_reading_skips_nothing(rv):  # noqa: F811
+    """그림자 · 실패한 이해 결과(`used: false`)는 질문을 빼는 근거가 아니다 — 다섯 문항."""
+    intake_id = _open(rv)
+    _look(rv, intake_id)
+    _agent_row(rv, intake_id, {"used": False, "preferences": [{"code": "slow_pace", "quote": "천천히"}]})
+    view = _look(rv, intake_id)
+    assert [q["id"] for q in view["questions"]] == FIVE and view["skipped_by_reading"] == []
+
+
+def test_a_failed_reading_asks_all_five(rv):  # noqa: F811
+    intake_id = _open(rv)
+    _look(rv, intake_id)
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE trip_intakes SET status='fatal', stage='fatal', fatal_code='reading_model_failed' WHERE intake_id=%s", (intake_id,))
+    view = _look(rv, intake_id)
+    assert view["status"] == "fatal" and [q["id"] for q in view["questions"]] == FIVE
+
+
+def test_answers_given_after_the_first_look_keep_their_place(rv):  # noqa: F811
+    """첫 조회 뒤에 답한 문항은 목록에서 빠지지 않는다(`answer` 가 채워진다) — 화면의 `i / N` 이 흔들리지 않는다."""
+    intake_id = _open(rv)
+    _look(rv, intake_id)
+    with get_connection() as conn, conn.transaction():
+        survey_answers.save(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], intake_id=intake_id,
+                            answers=survey_answers.check({"theme": "food", "pace": "packed"}))
+    _agent_row(rv, intake_id, {"preferences": []})
+    view = _look(rv, intake_id)
+    assert [q["id"] for q in view["questions"]] == ["theme", "party", "priority", "indoor_outdoor"]   # 테마는 남고 · 이미 답한 여유는 붙이지 않는다
+    assert _answers_of(view)["theme"] == "food"
+
+
+def test_without_the_907_column_the_list_is_still_computed(rv, monkeypatch):  # noqa: F811
+    """907 이 안 올라간 DB — 저장 없이 그때그때 계산한다(경고). 접수 조회는 막지 않는다."""
+    monkeypatch.setattr(survey_answers, "_load_plan", lambda conn, **kw: (None, False))
+    intake_id = _open(rv)
+    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["theme", "party", "priority"]
 
 
 # ── ② 답 저장 ─────────────────────────────────────────────────────
@@ -69,31 +201,34 @@ def test_next_intake_continues_saved_questions_but_not_direct_settings(api):
     client, _, _ = _full_client()
     headers = _key(client)
     previous = _intake(client, headers)["intake_id"]
-    _answer(client, headers, previous, {"preferred_mobility": "taxi", "pace": "packed", "on_disruption": "replace"})
+    _answer(client, headers, previous, {"theme": "culture", "priority": PRIORITY, "on_disruption": "replace"})
     next_view = _intake(client, headers)
-    assert {q["id"]: q["answer"] for q in next_view["questions"]} == {"preferred_mobility": "taxi", "priority": None}
+    assert [q["id"] for q in next_view["questions"]] == ["party", "indoor_outdoor", "pace"]         # 이어받은 답은 묻지 않는다
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT survey FROM trip_intakes WHERE intake_id=%s", (UUID(next_view["intake_id"]),))
-        assert cur.fetchone()[0] == {"preferred_mobility": "taxi"}
+        saved = cur.fetchone()[0]
+    assert set(saved) == {"theme", "priority"} and json.loads(saved["priority"]) == PRIORITY            # 항로 지킴이 같은 직접 설정은 이어받지 않는다
 
 
 def test_next_intake_does_not_inherit_answers_from_another_customer(api):
     first, _, _ = _full_client()
     first_headers = _key(first)
     previous = _intake(first, first_headers)["intake_id"]
-    _answer(first, first_headers, previous, {"priority": "mobility"})
+    _answer(first, first_headers, previous, {"theme": "food"})
     other, _, _ = _full_client()
     other_headers = _key(other)
-    assert all(q["answer"] is None for q in _intake(other, other_headers)["questions"])
+    view = _intake(other, other_headers)
+    assert [q["id"] for q in view["questions"]] == FIVE and all(q["answer"] is None for q in view["questions"])
 
 
 def test_changed_question_bundle_is_asked_again_on_the_next_intake(api, monkeypatch):
     client, _, _ = _full_client()
     headers = _key(client)
     previous = _intake(client, headers)["intake_id"]
-    _answer(client, headers, previous, {"preferred_mobility": "taxi"})
+    _answer(client, headers, previous, {"theme": "food"})
     monkeypatch.setattr(survey_answers, "QUESTION_SET_VERSION", "future-bundle")
-    assert all(q["answer"] is None for q in _intake(client, headers)["questions"])
+    view = _intake(client, headers)
+    assert [q["id"] for q in view["questions"]] == FIVE and all(q["answer"] is None for q in view["questions"])
 
 
 def test_answers_are_saved_one_at_a_time_and_a_later_answer_overwrites(api):
@@ -101,18 +236,18 @@ def test_answers_are_saved_one_at_a_time_and_a_later_answer_overwrites(api):
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
 
-    assert _answer(client, headers, intake_id, {"preferred_mobility": "taxi"}) == {"ok": True, "answered": ["preferred_mobility"],
-                                                                                  "questions_version": survey_answers.QUESTION_SET_VERSION}
-    mobility = {q["id"]: q["answer"] for q in _view(client, headers, intake_id)["questions"]}
-    assert mobility == {"preferred_mobility": "taxi", "priority": None}               # 답한 문항도 목록에 남고 `answer` 에 번호가 있다
-
-    again = _answer(client, headers, intake_id, {"preferred_mobility": "walk"})          # ★덮어쓴다 — 앞 질문으로 돌아가 고쳤다
-    assert again == {"ok": True, "answered": ["preferred_mobility"], "questions_version": survey_answers.QUESTION_SET_VERSION}
-    assert _answer(client, headers, intake_id, {"priority": "mobility", "preferred_mobility": "walk"})["answered"] == ["preferred_mobility", "priority"]
-    final = {q["id"]: q["answer"] for q in _view(client, headers, intake_id)["questions"]}
-    assert final == {"preferred_mobility": "walk", "priority": "mobility"}
-    # 같은 값을 또 보내도 같다(멱등)
-    assert _answer(client, headers, intake_id, {"priority": "mobility"})["answered"] == ["preferred_mobility", "priority"]
+    assert _answer(client, headers, intake_id, {"theme": "food"}) == {"ok": True, "answered": ["theme"],
+                                                                     "questions_version": survey_answers.QUESTION_SET_VERSION}
+    assert _answers_of(_view(client, headers, intake_id))["theme"] == "food"               # 답한 문항도 목록에 남고 `answer` 에 번호가 있다
+    _answer(client, headers, intake_id, {"theme": "local"})                                  # ★덮어쓴다 — 앞 질문으로 돌아가 고쳤다
+    both = {"priority": PRIORITY, "indoor_outdoor": {"dining": "indoor", "activity": "any"}}
+    assert _answer(client, headers, intake_id, both)["answered"] == ["indoor_outdoor", "priority", "theme"]
+    final = _answers_of(_view(client, headers, intake_id))
+    assert final["theme"] == "local" and final["priority"] == PRIORITY and final["indoor_outdoor"] == {"dining": "indoor", "activity": "any"}
+    assert [q["id"] for q in _view(client, headers, intake_id)["questions"]] == FIVE           # 답해도 목록은 그대로
+    # 같은 값을 또 보내도 같다(멱등) — 순서가 다른 같은 객체도 같은 답이다
+    again = _answer(client, headers, intake_id, {"indoor_outdoor": {"activity": "any", "dining": "indoor"}})
+    assert again["answered"] == ["indoor_outdoor", "priority", "theme"]
 
 
 def test_saving_an_answer_does_not_touch_updated_at(api):
@@ -127,35 +262,40 @@ def test_saving_an_answer_does_not_touch_updated_at(api):
             return cur.fetchone()[0]
 
     before = stamp()
-    _answer(client, headers, intake_id, {"priority": "activity"})
+    _answer(client, headers, intake_id, {"pace": "relaxed"})
     assert stamp() == before
 
 
-def test_the_card_and_plan_screen_values_are_accepted_but_not_asked(api):
+def test_the_guardian_card_value_is_accepted_but_not_asked(api):
     client, _, _ = _full_client()
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
     assert _answer(client, headers, intake_id, {"on_disruption": "ask_first", "pace": "moderate"})["answered"] == ["on_disruption", "pace"]
-    assert [q["id"] for q in _view(client, headers, intake_id)["questions"]] == ["preferred_mobility", "priority"]
+    assert "on_disruption" not in [q["id"] for q in _view(client, headers, intake_id)["questions"]]
 
 
 @pytest.mark.parametrize("answers", [
-    {"nope": "x"},                                          # 모르는 문항
-    {"preferred_mobility": "car"},                          # 렌트카는 선택지에 없다
-    {"preferred_mobility": 3},                              # 선택지는 글자
-    {"dietary": "halal"},                                   # 민감 항목은 이 입구가 받지 않는다
+    {"nope": "x"},                                                        # 모르는 문항
+    {"preferred_mobility": "taxi"},                                       # 묶음 2의 문항 — 이 묶음에 없다
+    {"theme": "beach"},                                                   # 없는 선택지
+    {"theme": {"custom": "바다"}},                                         # 직접 입력은 누구와(party)만
+    {"dietary": "halal"},                                                 # 민감 항목은 이 입구가 받지 않는다
     {"on_disruption": "yes"},
-    {"pace": "packed", "priority": "nope"},                 # 하나라도 틀리면 아무것도 저장하지 않는다
+    {"priority": "activity"},                                             # 묶음 2의 단일 답 모양
+    {"priority": {"areas": []}},                                          # 분야는 하나 이상
+    {"priority": {"areas": ["food", "food"]}},                            # 겹침
+    {"priority": {"areas": ["food"], "details": {"mobility": ["taxi"]}}},  # 고르지 않은 분야의 세부
+    {"priority": {"areas": ["activity"], "details": {"activity": ["healing"]}}},   # 옛 활동 세부 — 이제 관광 분류 코드
+    {"indoor_outdoor": {"dining": "maybe"}},
+    {"indoor_outdoor": {}},
+    {"pace": "packed", "theme": "nope"},                                  # 하나라도 틀리면 아무것도 저장하지 않는다
 ])
 def test_a_wrong_answer_is_refused_and_nothing_is_saved(api, answers):
     client, _, _ = _full_client()
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
     response = _answer(client, headers, intake_id, answers, status=422)
-    if all(isinstance(value, str) for value in answers.values()):
-        assert response["error"]["code"] == "invalid_answers" and response["error"]["problems"]
-    else:                                                    # 글자가 아닌 선택지는 몸통 모양 검사(`validation_error`)가 먼저 막는다
-        assert response["error"]["code"] == "validation_error"
+    assert response["error"]["code"] in ("invalid_answers", "validation_error")
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT survey FROM trip_intakes WHERE intake_id=%s", (UUID(intake_id),))
         assert cur.fetchone()[0] == {}
@@ -168,7 +308,7 @@ def test_an_empty_or_unknown_body_is_refused(api):
     url = f"/v1/web/trip-intakes/{intake_id}/survey"
     assert client.post(url, headers=headers, json={"answers": {}}).status_code == 422
     assert client.post(url, headers=headers, json={}).status_code == 422
-    assert client.post(url, headers=headers, json={"answers": {"priority": "activity"}, "extra": 1}).status_code == 422
+    assert client.post(url, headers=headers, json={"answers": {"theme": "food"}, "extra": 1}).status_code == 422
 
 
 # ── ④ 누구의 접수인가 ─────────────────────────────────────────────
@@ -176,11 +316,11 @@ def test_someone_elses_or_a_missing_intake_is_the_same_404(api):
     client, _, _ = _full_client()
     mine, other = _key(client), _key(client)
     intake_id = _intake(client, mine)["intake_id"]
-    theirs = client.post(f"/v1/web/trip-intakes/{intake_id}/survey", headers=other, json={"answers": {"priority": "activity"}})
-    missing = client.post(f"/v1/web/trip-intakes/{uuid4()}/survey", headers=other, json={"answers": {"priority": "activity"}})
+    theirs = client.post(f"/v1/web/trip-intakes/{intake_id}/survey", headers=other, json={"answers": {"theme": "food"}})
+    missing = client.post(f"/v1/web/trip-intakes/{uuid4()}/survey", headers=other, json={"answers": {"theme": "food"}})
     assert theirs.status_code == missing.status_code == 404 and theirs.json() == missing.json()
-    assert [q["answer"] for q in _view(client, mine, intake_id)["questions"]] == [None, None]
-    assert client.post(f"/v1/web/trip-intakes/{intake_id}/survey", json={"answers": {"priority": "activity"}}).status_code == 401
+    assert all(q["answer"] is None for q in _view(client, mine, intake_id)["questions"])
+    assert client.post(f"/v1/web/trip-intakes/{intake_id}/survey", json={"answers": {"theme": "food"}}).status_code == 401
 
 
 # ── ⑤ 문항 번호 ↔ 슬롯 · 질문 묶음 버전 · 답 이력 `[2026-10-06 uiux 요청 · 맞춤 질문 의논 §7]` ─────────
@@ -191,83 +331,60 @@ def _history(intake_id):
         return cur.fetchall()
 
 
-def _bundle(version, mobility_value="taxi"):
-    """다른 묶음 — 문항 번호 `q_move` 가 슬롯 `preferred_mobility` 로 가고, 선택지 `o_taxi` 가 `mobility_value` 로 해석된다(번호와 값이 다르다)."""
-    return (version, (survey_answers.Question("q_move", "preferred_mobility", "이동은 어떻게 하세요?", "묶음 시험", (
-        survey_answers.Option("o_taxi", "택시로 이동", mobility_value), survey_answers.Option("o_walk", "걸어서", "walk"))),
-                      survey_answers.QUESTIONS[1]))
-
-
 def test_the_view_and_the_answer_reply_carry_the_question_set_version(api):
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    assert view["questions_version"] == survey_answers.QUESTION_SET_VERSION == "2"
-    assert _answer(client, headers, view["intake_id"], {"priority": "activity"})["questions_version"] == "2"
-    assert all("slot" not in question and "value" not in question for question in view["questions"])    # 웹은 슬롯 · 값을 모른다 — 번호 · 문구 · 선택지만
+    assert view["questions_version"] == survey_answers.QUESTION_SET_VERSION == "3"
+    assert _answer(client, headers, view["intake_id"], {"theme": "food"})["questions_version"] == "3"
 
 
 def test_saving_an_answer_keeps_what_was_shown_and_how_it_was_read(api):
     client, _, _ = _full_client()
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
-    _answer(client, headers, intake_id, {"preferred_mobility": "taxi", "pace": "packed"})
-    _answer(client, headers, intake_id, {"preferred_mobility": "taxi"})                                  # 같은 답을 다시 보냄 — 줄이 늘지 않는다(멱등)
-    _answer(client, headers, intake_id, {"preferred_mobility": "walk"})                                  # 고침 — 줄이 하나 더 쌓인다(덮어쓰지 않는다)
+    _answer(client, headers, intake_id, {"theme": "food", "on_disruption": "ask_first"})
+    _answer(client, headers, intake_id, {"theme": "food"})                                  # 같은 답을 다시 보냄 — 줄이 늘지 않는다(멱등)
+    _answer(client, headers, intake_id, {"priority": PRIORITY})
     rows = _history(intake_id)
-    assert [(r[0], r[1]) for r in rows] == [("preferred_mobility", "taxi"), ("pace", "packed"), ("preferred_mobility", "walk")]
-    first = rows[0]
-    assert first[2:] == ("preferred_mobility", "taxi", "이동은 주로 어떻게 하세요?", "택시", "2")        # 슬롯 · 값 · 그때의 문구 · 라벨 · 묶음 버전
-    assert rows[1][2:] == ("pace", "packed", None, None, "2")                                            # 직접 값은 문구 · 라벨이 없다
+    assert [r[0] for r in rows] == ["theme", "on_disruption", "priority"]
+    assert rows[0][2:] == ("theme", "food", "어떤 여행을 좋아하세요?", "맛집 탐방", "3")         # 슬롯 · 값 · 그때의 문구 · 라벨 · 묶음 버전
+    assert rows[1][2:] == ("on_disruption", "ask_first", None, None, "3")                    # 직접 값은 문구 · 라벨이 없다
+    assert rows[2][2] == "priority_rank" and json.loads(rows[2][3]) == PRIORITY              # 여러 칸 답은 정리한 JSON 글
+    assert rows[2][5] == "음식 > 이동 / 음식: 맛 · 청결 / 이동: 택시"
 
 
-def test_a_question_id_and_its_slot_are_different_things(api, monkeypatch):
-    """문항 번호를 새로 만들어도 슬롯은 같다 — 웹은 번호만 알고, 어디로 가는지는 서버가 안다. 번호 · 선택지 번호와 값이 달라도 설문에 올바르게 들어간다."""
-    version, bundle = _bundle("2")
-    monkeypatch.setattr(survey_answers, "QUESTIONS", bundle)
-    monkeypatch.setattr(survey_answers, "QUESTION_SET_VERSION", version)
+def test_an_answer_saved_under_bundle_2_keeps_its_meaning(api):
+    """묶음 2의 답(대체할 곳 `priority=activity` · 이동 `preferred_mobility=taxi`)이 남은 접수 — 이력의 해석 값으로 등록된다(새 우선순위 매핑으로 읽지 않는다)."""
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    assert [q["id"] for q in view["questions"]] == ["q_move", "priority"] and view["questions_version"] == "2"
-    assert [o["id"] for o in view["questions"][0]["options"]] == ["o_taxi", "o_walk"]
-    assert _answer(client, headers, view["intake_id"], {"q_move": "o_taxi"}, status=200)["answered"] == ["q_move"]
-    _answer(client, headers, view["intake_id"], {"preferred_mobility": "taxi"}, status=422)             # 옛 번호는 이 묶음에 없다
-    assert _history(view["intake_id"])[0][:4] == ("q_move", "o_taxi", "preferred_mobility", "taxi")
-    done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
+    intake_id = UUID(view["intake_id"])
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE trip_intakes SET survey=%s::jsonb WHERE intake_id=%s",
+                    (json.dumps({"priority": "activity", "preferred_mobility": "taxi"}), intake_id))
+        for question, option in (("priority", "activity"), ("preferred_mobility", "taxi")):
+            cur.execute("INSERT INTO trip_intake_survey_answers (tenant_id,intake_id,question_id,option_id,slot,value,bundle_version) "
+                        "SELECT tenant_id, intake_id, %s, %s, %s, %s, '2' FROM trip_intakes WHERE intake_id=%s",
+                        (question, option, question, option, intake_id))
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/confirm", headers=headers, json={"revision": view["revision"]})
     assert done.status_code == 200, done.text
-    assert _constraints(done.json()["trip"]["trip_id"])["survey"]["priority_details"] == {"mobility": ["taxi"]}
+    survey = _constraints(done.json()["trip"]["trip_id"])["survey"]
+    assert survey["priority"] == ["activity"] and survey["priority_details"] == {"mobility": ["taxi"]}
 
 
-def test_an_old_answer_keeps_the_meaning_it_had_when_it_was_saved(api, monkeypatch):
-    """묶음이 바뀌어 같은 선택지 번호의 값이 달라져도(원칙은 안 바꾸는 것 — 어겨도 옛 답은 지켜진다) 옛 답은 **저장 때 해석한 값**으로 등록된다."""
-    client, _, _ = _full_client()
-    headers = _key(client)
-    view = _intake(client, headers)
-    _answer(client, headers, view["intake_id"], {"preferred_mobility": "taxi"})                          # 묶음 2 에서: taxi → "taxi"
-    version, bundle = _bundle("3", mobility_value="walk")                                                # 묶음 3 은 같은 번호를 다르게 읽는다
-    monkeypatch.setattr(survey_answers, "QUESTIONS", (survey_answers.Question(
-        "preferred_mobility", "preferred_mobility", "이동은?", "묶음 시험", (survey_answers.Option("taxi", "택시", "walk"),)), bundle[1]))
-    monkeypatch.setattr(survey_answers, "QUESTION_SET_VERSION", version)
-    done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
-    assert done.status_code == 200, done.text
-    assert _constraints(done.json()["trip"]["trip_id"])["survey"]["priority_details"] == {"mobility": ["taxi"]}    # 저장 때의 뜻 그대로(walk 가 아니다)
-    assert [r[-1] for r in _history(view["intake_id"])] == ["2"]
-
-
-def test_without_history_an_answer_is_read_with_the_current_bundle():
-    """053 이 안 올라간 DB 의 옛 답 — 이력이 없으면 지금 묶음의 매핑으로 읽는다(그리고 순수 함수라 DB 없이도 같다)."""
-    assert survey_answers.to_survey({"preferred_mobility": "taxi", "priority": "mobility"}) == {"priority_details": {"mobility": ["taxi"]}, "priority": ["mobility"]}
-    saved = {"preferred_mobility": ("taxi", "preferred_mobility", "walk")}
-    assert survey_answers.to_survey({"preferred_mobility": "taxi"}, saved) == {"priority_details": {"mobility": ["walk"]}}      # 이력이 있으면 그것
-    assert survey_answers.to_survey({"preferred_mobility": "walk"}, saved) == {"priority_details": {"mobility": ["walk"]}}      # 선택지가 달라졌으면(고쳤다) 지금 묶음
+def test_without_history_an_old_answer_is_not_misread_by_the_new_bundle():
+    """053 이 안 올라간 DB 의 옛 답 — 묶음 3의 `priority` 는 여러 칸 문항이라 옛 단일 답(「activity」)을 새 뜻으로 읽지 않고 버린다(경고)."""
+    assert survey_answers.to_survey({"priority": "activity", "preferred_mobility": "taxi"}) == {}
+    saved = {"priority": ("activity", "priority", "activity")}
+    assert survey_answers.to_survey({"priority": "activity"}, saved) == {"priority": ["activity"]}                # 이력이 있으면 그때의 뜻
 
 
 def test_the_history_is_append_only_and_leaves_with_the_intake(api):
     client, _, _ = _full_client()
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
-    _answer(client, headers, intake_id, {"priority": "activity"})
+    _answer(client, headers, intake_id, {"theme": "food"})
     with get_connection() as conn, conn.cursor() as cur:
         with pytest.raises(Exception, match="추가만 한다"):
             cur.execute("UPDATE trip_intake_survey_answers SET value='x' WHERE intake_id=%s", (UUID(intake_id),))
@@ -281,27 +398,40 @@ def test_the_saved_answers_are_merged_into_the_survey_when_the_intake_is_confirm
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    _answer(client, headers, view["intake_id"], {"preferred_mobility": "taxi", "priority": "activity", "pace": "packed"})
+    _answer(client, headers, view["intake_id"], {"theme": "nature", "party": {"custom": "부모님과 아이 둘"}, "priority": PRIORITY,
+                                                 "indoor_outdoor": {"dining": "indoor", "activity": "outdoor"}, "pace": "packed"})
     done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers,
                        json={"revision": view["revision"], "survey": {"version": SURVEY_VERSION, "pace": "relaxed"}})
     assert done.status_code == 200, done.text
     stored = _constraints(done.json()["trip"]["trip_id"])
     survey = stored["survey"]
-    assert survey["priority_details"]["mobility"] == ["taxi"] and survey["priority"] == ["activity"]
+    assert survey["theme"] == "nature" and survey["party"] == "부모님과 아이 둘" and survey["custom_answers"]["party"] == "부모님과 아이 둘"
+    assert survey["priority"] == ["food", "mobility"] and survey["priority_details"] == {"food": ["taste", "clean"], "mobility": ["taxi"]}
+    assert survey["indoor_outdoor"] == {"dining": "indoor", "activity": "outdoor"}
     assert survey["pace"] == "relaxed"                                               # ★등록 요청이 직접 준 값이 이긴다(모아 둔 packed 가 아니라)
-    assert {"priority_details", "priority", "pace"} <= set(stored["survey_answered"])
-    assert "on_disruption" not in stored["survey_answered"] and auto_on_disruption(stored) is False   # 안 답한 문항은 채워 넣지 않는다 — 자동 변경은 켜지지 않는다
+    assert {"theme", "party", "priority_details", "priority", "indoor_outdoor", "pace"} <= set(stored["survey_answered"])
+    assert "on_disruption" not in stored["survey_answered"] and auto_on_disruption(stored) is False   # 안 답한 문항은 채워 넣지 않는다
+
+
+def test_activity_details_reach_the_trip_as_the_tourism_codes(api):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _intake(client, headers)
+    _answer(client, headers, view["intake_id"], {"priority": {"areas": ["activity"], "details": {"activity": ["HS", "EV"]}}})
+    done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
+    assert done.status_code == 200, done.text
+    assert _constraints(done.json()["trip"]["trip_id"])["survey"]["priority_details"] == {"activity": ["HS", "EV"]}
 
 
 def test_confirm_without_a_survey_still_uses_the_saved_answers(api):
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    _answer(client, headers, view["intake_id"], {"preferred_mobility": "public", "on_disruption": "ask_first"})
+    _answer(client, headers, view["intake_id"], {"pace": "relaxed", "on_disruption": "ask_first"})
     done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
     assert done.status_code == 200, done.text
     stored = _constraints(done.json()["trip"]["trip_id"])
-    assert stored["survey"]["priority_details"] == {"mobility": ["public"]} and stored["survey"]["on_disruption"] == "ask_first"
+    assert stored["survey"]["pace"] == "relaxed" and stored["survey"]["on_disruption"] == "ask_first"
     assert "on_disruption" in stored["survey_answered"]                              # 카드가 보낸 끄기는 「직접 고른 것」이다
 
 
@@ -320,16 +450,16 @@ def test_an_already_registered_intake_takes_no_more_answers(api):
     view = _intake(client, headers)
     assert client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers,
                        json={"revision": view["revision"]}).status_code == 200
-    late = _answer(client, headers, view["intake_id"], {"priority": "activity"}, status=409)
+    late = _answer(client, headers, view["intake_id"], {"theme": "food"}, status=409)
     assert late["error"]["code"] == "intake_confirmed"
 
 
 # ── 합치기 규칙 (순수) ────────────────────────────────────────────
 def test_merging_keeps_each_area_of_the_details_and_the_request_wins():
-    mine = {"preferred_mobility": "taxi", "priority": "mobility"}
-    survey = survey_answers.merged_survey(mine, {"version": SURVEY_VERSION, "priority_details": {"food": ["vegetarian"]},
+    mine = survey_answers.check({"priority": PRIORITY})
+    survey = survey_answers.merged_survey(mine, {"version": SURVEY_VERSION, "priority_details": {"food": ["michelin"]},
                                                  "priority": ["activity"]})
-    assert survey["priority_details"] == {"mobility": ["taxi"], "food": ["vegetarian"]}      # 영역마다 합친다
+    assert survey["priority_details"] == {"mobility": ["taxi"], "food": ["michelin"]}          # 영역마다 합친다 — 같은 영역은 요청이 이긴다
     assert survey["priority"] == ["activity"]                                                 # 같은 문항은 요청이 이긴다
     assert survey_answers.merged_survey({}, None) is None
     assert survey_answers.merged_survey({}, {"version": SURVEY_VERSION, "pace": "relaxed"}) == {"version": SURVEY_VERSION, "pace": "relaxed"}
@@ -337,10 +467,11 @@ def test_merging_keeps_each_area_of_the_details_and_the_request_wins():
 
 
 def test_the_question_catalog_only_offers_choices_the_engines_understand():
-    """선택지를 더하면 그 값을 읽는 쪽이 모르는 코드가 되지 않는지 — 이동은 계산기 수단 표(`SURVEY_MODES`), 우선순위는 비슷함 가중(`ORDER`)."""
+    """선택지 값이 읽는 쪽이 아는 코드인지 — 이동 세부는 계산기 수단 표(렌트카만 예외 — 시작 설문과 같게 두고 계산기 기본 수단으로 간다), 분야는 대체 비슷함 가중."""
     from app.domains.travel_ops.instances.activity.similarity import ORDER
     from app.domains.travel_ops.instances.mobility.wiring import SURVEY_MODES
 
-    by_id = {q.id: q for q in survey_answers.QUESTIONS}
-    assert set(by_id["preferred_mobility"].option_ids()) <= set(SURVEY_MODES)
-    assert set(by_id["priority"].option_ids()) <= set(ORDER)
+    priority = next(q for q in survey_answers.QUESTIONS if q.id == "priority")
+    mobility = next(g for g in priority.groups if g.id == "mobility")
+    assert set(mobility.option_ids()) - {"car"} <= set(SURVEY_MODES)
+    assert {"activity", "mobility"} <= set(ORDER) and set(survey_answers.REPLACEMENT_QUESTION.option_ids()) <= set(ORDER)

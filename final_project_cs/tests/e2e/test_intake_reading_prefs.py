@@ -124,7 +124,8 @@ def test_a_customer_answer_wins_over_what_we_read(reading):
     client = _client()
     headers = _key(client)
     intake_id = _send(client, headers)
-    saved = client.post(f"/v1/web/trip-intakes/{intake_id}/survey", headers=headers, json={"answers": {"preferred_mobility": "public"}})
+    saved = client.post(f"/v1/web/trip-intakes/{intake_id}/survey", headers=headers,
+                        json={"answers": {"priority": {"areas": ["mobility"], "details": {"mobility": ["public"]}}}})
     assert saved.status_code == 200, saved.text
     view = _view(client, headers, intake_id)
     shown = {h["key"]: h for h in view["check"]["handoff"]}
@@ -134,3 +135,38 @@ def test_a_customer_answer_wins_over_what_we_read(reading):
     assert "survey.priority_details.mobility" not in {f["key"] for f in constraints["filled_by_reading"]}
     assert "priority_details" in constraints["survey_answered"]                                 # 고객 답은 직접 답한 문항이다
     assert constraints["survey"]["pace"] == "relaxed"                                            # 고객이 안 답한 자리는 채운다
+
+
+# ── 로딩 중 질문 — 읽은 칸은 빼고 빈 칸만 `[2026-10-19 사용자 지시]` ─────────────────
+def test_the_loading_questions_leave_out_what_the_plan_already_said(reading):
+    """같은 계획서(「웬만하면 택시」 · 「천천히」 · 「비 오면 실내」 · 「맛집 위주」)를 실제 읽기 길로 읽으면 —
+    여유는 묻지 않고, 우선순위는 분야 순서와 활동 세부만, 실내외는 식당 칸만 묻는다. 테마 · 누구와는 계획서에서 읽지 않는다."""
+    client = _client()
+    headers = _key(client)
+    view = _view(client, headers, _send(client, headers))
+    assert view["status"] == "review", view.get("fatal")
+    assert [q["id"] for q in view["questions"]] == ["theme", "party", "priority", "indoor_outdoor"]
+    priority = {g["id"]: g for g in next(q for q in view["questions"] if q["id"] == "priority")["groups"]}
+    assert priority["mobility"]["read"]["quotes"] == ["웬만하면 택시로"] and priority["mobility"]["read"]["text"] == "택시"
+    assert priority["food"]["read"]["quotes"] == ["맛집 위주로요"] and priority["activity"]["read"] is None
+    parts = {p["id"]: p for p in next(q for q in view["questions"] if q["id"] == "indoor_outdoor")["parts"]}
+    assert parts["activity"]["read"]["quotes"] == ["비 오면 실내로"] and parts["dining"]["read"] is None
+    skipped = {(s["question"], s["part"]) for s in view["skipped_by_reading"]}
+    assert skipped == {("priority", "food"), ("priority", "mobility"), ("indoor_outdoor", "activity"), ("pace", None)}
+    assert not {"mobility_ease", "day_hours"} & {q["id"] for q in view["questions"]}          # 덜 걷게 · 하루 시각은 묻지 않는다
+
+
+def test_a_single_taxi_ride_read_as_the_whole_trip_does_not_skip_or_fill(reading, monkeypatch):
+    """☆x600 서버 사례 — 이해 단계가 「택시로 이동」 한 구간을 여행 전체(scope all)로 읽었다. 「다 · 늘 · 주로 · 웬만하면」류가 없으니
+    이동 세부를 묻고, 등록 때 설문에도 택시를 채우지 않는다."""
+    monkeypatch.setitem(ANSWER, "moves", [{"mode": "taxi", "scope": "all", "quote": "택시로"}])
+    monkeypatch.setitem(ANSWER, "preferences", [])
+    monkeypatch.setitem(ANSWER, "conditions", [])
+    client = _client()
+    headers = _key(client)
+    view = _view(client, headers, _send(client, headers))
+    assert view["status"] == "review", view.get("fatal")
+    priority = {g["id"]: g for g in next(q for q in view["questions"] if q["id"] == "priority")["groups"]}
+    assert priority["mobility"]["read"] is None and view["skipped_by_reading"] == []
+    constraints = _confirm(client, headers, {**view, "_tenant": reading["tenant"]})
+    assert "mobility" not in ((constraints.get("survey") or {}).get("priority_details") or {})
