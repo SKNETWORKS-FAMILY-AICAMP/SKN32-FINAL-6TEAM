@@ -19,7 +19,7 @@ from app.domains.travel_ops.components.intake import reading_prefs
 from app.domains.travel_ops.components.intake import survey_answers as sa
 from app.domains.travel_ops.components.planning.survey import ACTIVITY_DETAILS, SURVEY_VERSION, TripSurvey
 
-FIVE = ["theme", "party", "priority", "indoor_outdoor", "pace"]
+ALL = ["party", "priority", "indoor_outdoor", "pace"]       # `[2026-10-19]` UI 팀 4문항에 맞춰 여행 테마는 뺐다
 ONBOARDING = Path(__file__).resolve().parents[3] / "frontend" / "apps" / "web" / "src" / "features" / "onboarding" / "model.ts"
 
 
@@ -33,10 +33,11 @@ def _plan(found, answered=()):
 
 
 # ── 문항 집합 ─────────────────────────────────────────────────────
-def test_the_five_questions_are_the_start_survey_without_on_disruption():
-    assert [q.id for q in sa.QUESTIONS] == FIVE
+def test_the_four_questions_are_the_start_survey_without_on_disruption():
+    assert [q.id for q in sa.QUESTIONS] == ALL
     assert not hasattr(sa, "MAX_QUESTIONS")                                          # 상한 3 을 없앴다
     assert "on_disruption" not in {q.id for q in sa.QUESTIONS} and "on_disruption" in sa.DIRECT   # 항로 지킴이 카드 몫 — 받기만 한다
+    assert "theme" not in {q.id for q in sa.QUESTIONS} and "theme" in sa.DIRECT                   # 여행 테마도 문항이 아니다 — 받기만 한다
     assert sa.QUESTION_SET_VERSION == "3"
 
 
@@ -70,19 +71,19 @@ def test_sensitive_and_unasked_slots_are_never_questions():
 
 
 # ── 고르는 규칙 · 두 번에 정하기 ──────────────────────────────────────
-def test_first_the_three_that_the_plan_rarely_says():
-    assert sa.first_plan([])["asked"] == ["theme", "party", "priority"]
-    assert sa.first_plan(["party"])["asked"] == ["theme", "priority"]                 # 이어받은 답은 묻지 않는다
+def test_first_the_two_that_the_plan_rarely_says():
+    assert sa.first_plan([])["asked"] == ["party", "priority"]
+    assert sa.first_plan(["party"])["asked"] == ["priority"]                 # 이어받은 답은 묻지 않는다
 
 
-def test_nothing_read_means_all_five_can_be_asked():
+def test_nothing_read_means_all_four_can_be_asked():
     plan = _plan([])
-    assert plan["asked"] == FIVE and plan["skipped_by_reading"] == [] and plan["phase"] == 2
+    assert plan["asked"] == ALL and plan["skipped_by_reading"] == [] and plan["phase"] == 2
 
 
 def test_whole_trip_subway_skips_the_transport_detail_but_one_taxi_ride_does_not():
     said = _plan(_read(moves=[{"mode": "subway", "scope": "all", "quote": "다 지하철로"}]))
-    assert said["asked"] == FIVE
+    assert said["asked"] == ALL
     assert [(s["question"], s["part"], s["value"]) for s in said["skipped_by_reading"]] == [("priority", "mobility", ["subway"])]
     once = _plan(_read(moves=[{"mode": "taxi", "scope": "all", "quote": "택시로 이동"}]))
     assert once["skipped_by_reading"] == []                                            # 「택시로 이동」 한 구간은 여행 전체가 아니다
@@ -125,26 +126,26 @@ def test_party_hints_never_skip_the_party_question():
 def test_an_answered_question_is_neither_asked_nor_listed_as_read():
     found = _read(preferences=[{"code": "slow_pace", "quote": "천천히"}], conditions=[{"code": "if_rain_indoor", "quote": "비 오면 실내"}])
     plan = _plan(found, answered=["pace", "indoor_outdoor"])
-    assert plan["asked"] == ["theme", "party", "priority"] and plan["skipped_by_reading"] == []
+    assert plan["asked"] == ["party", "priority"] and plan["skipped_by_reading"] == []
 
 
 def test_the_second_list_only_appends_and_keeps_the_first_order():
     first = sa.first_plan([])
-    second = sa.second_plan(first, ["theme"], [])                                     # 첫 조회 뒤에 테마를 답했다 — 테마는 남는다
-    assert second["asked"][:3] == first["asked"] and second["asked"] == FIVE
+    second = sa.second_plan(first, ["party"], [])                                     # 첫 조회 뒤에 누구와를 답했다 — 누구와는 남는다
+    assert second["asked"][:2] == first["asked"] and second["asked"] == ALL
 
 
 def test_the_questions_view_follows_the_plan_order_and_shows_answers():
-    answers = sa.check({"theme": "food", "priority": {"areas": ["mobility", "food"], "details": {"mobility": ["walk"]}}})
-    shown = sa.questions(answers, {"asked": ["theme", "party", "priority"], "skipped_by_reading": []})
-    assert [q["id"] for q in shown] == ["theme", "party", "priority"]
-    assert shown[0]["answer"] == "food" and shown[2]["answer"] == {"areas": ["mobility", "food"], "details": {"mobility": ["walk"]}}
+    answers = sa.check({"party": "friends", "priority": {"areas": ["mobility", "food"], "details": {"mobility": ["walk"]}}})
+    shown = sa.questions(answers, {"asked": ["party", "priority"], "skipped_by_reading": []})
+    assert [q["id"] for q in shown] == ["party", "priority"]
+    assert shown[0]["answer"] == "friends" and shown[1]["answer"] == {"areas": ["mobility", "food"], "details": {"mobility": ["walk"]}}
 
 
 # ── 답 모양 · 설문으로 ─────────────────────────────────────────────
 def test_compound_answers_are_stored_as_sorted_json_and_reach_the_survey_shape():
     checked = sa.check({"priority": {"details": {"food": ["nopo"]}, "areas": ["food", "activity"]},
-                        "indoor_outdoor": {"activity": "outdoor", "dining": "any"}, "theme": "local", "pace": "moderate"})
+                        "indoor_outdoor": {"activity": "outdoor", "dining": "any"}, "theme": "local", "pace": "moderate"})   # 테마는 받아 두기만 한다
     assert checked["priority"] == '{"areas":["food","activity"],"details":{"food":["nopo"]}}'
     survey = sa.to_survey(checked)
     assert survey == {"priority": ["food", "activity"], "priority_details": {"food": ["nopo"]},

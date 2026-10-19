@@ -5,7 +5,7 @@
 구현: `components/intake/survey_answers.py` · `pipeline.view` · `entry/trip_api.py` · 마이그레이션 051 · 053 · 907
 
 ★지키려는 것
- ①접수 조회에 `questions[]` — 시작 설문에서 「일정이 꼬이면」을 뺀 다섯 문항 중 **계획서에서 못 얻은 것만, 상한 없이.** 처음은 셋(테마 · 누구와 · 우선순위),
+ ①접수 조회에 `questions[]` — 시작 설문에서 「일정이 꼬이면」을 뺀 네 문항 중 **계획서에서 못 얻은 것만, 상한 없이.** 처음은 둘(누구와 · 우선순위),
    이해 단계 결과 뒤 실내외 · 여유를 **뒤에 붙인다**(한 번만 늘고 이미 보인 문항은 남는다). 이미 답한 문항도 목록에 남고 `answer` 에 고른 답이 있다.
  ②답은 한 문항씩 바로 저장 · 부분 답 · 멱등 · **같은 문항을 다시 보내면 덮어쓴다**. 하나라도 틀리면 아무것도 저장하지 않는다(422). `updated_at` 은 안 건드린다.
  ③등록(`confirm`)할 때 모아 둔 답이 설문에 합쳐진다 — 요청이 직접 준 값이 이긴다. 안 답한 문항은 **채워 넣지 않는다**(`on_disruption` 을 안 줬으면 자동 변경 안 함).
@@ -31,7 +31,7 @@ from .test_intake_review import rv  # noqa: F401 — 접수를 직접 여는 시
 from .test_trip_api import api  # noqa: F401 — 픽스처를 그대로 쓴다
 from .test_trip_intake_api import CHAT_PLAN, _full_client, _key, _send
 
-FIVE = ["theme", "party", "priority", "indoor_outdoor", "pace"]
+ALL = ["party", "priority", "indoor_outdoor", "pace"]       # `[2026-10-19]` UI 팀 4문항 — 여행 테마는 뺐다
 PRIORITY = {"areas": ["food", "mobility"], "details": {"food": ["taste", "clean"], "mobility": ["taxi"]}}
 
 
@@ -60,16 +60,16 @@ def _answers_of(view) -> dict:
 
 
 # ── ① 질문 목록 ───────────────────────────────────────────────────
-def test_without_anything_read_all_five_questions_are_asked_with_no_cap(api):
-    """이 시험의 읽기는 이해 에이전트를 쓰지 않는다(읽은 칸 없음) — 다섯 문항이 모두 나온다. 옛 상한 3 은 없다."""
+def test_without_anything_read_all_four_questions_are_asked_with_no_cap(api):
+    """이 시험의 읽기는 이해 에이전트를 쓰지 않는다(읽은 칸 없음) — 네 문항이 모두 나온다. 옛 상한 3 은 없다(테마는 문항이 아니다)."""
     client, _, _ = _full_client()
     headers = _key(client)
     view = _intake(client, headers)
-    assert [q["id"] for q in view["questions"]] == FIVE
+    assert [q["id"] for q in view["questions"]] == ALL
     assert view["questions_phase"] == 2 and view["skipped_by_reading"] == []
     assert not hasattr(survey_answers, "MAX_QUESTIONS")
     kinds = {q["id"]: q["kind"] for q in view["questions"]}
-    assert kinds == {"theme": "single", "party": "single", "priority": "priority", "indoor_outdoor": "pair", "pace": "single"}
+    assert kinds == {"party": "single", "priority": "priority", "indoor_outdoor": "pair", "pace": "single"}
     for question in view["questions"]:
         assert question["title"] and question["why"] and question["answer"] is None
         assert "slot" not in question and "value" not in question                      # 웹은 슬롯 · 값을 모른다
@@ -90,7 +90,7 @@ def test_question_shapes_carry_groups_parts_and_the_custom_label(api):
     pair = by_id["indoor_outdoor"]
     assert "options" not in pair and [p["id"] for p in pair["parts"]] == ["dining", "activity"]
     assert by_id["party"]["allow_custom"] is True and by_id["party"]["custom_label"] == "기타"
-    assert by_id["theme"]["allow_custom"] is False and by_id["pace"]["allow_custom"] is False
+    assert by_id["pace"]["allow_custom"] is False and "theme" not in by_id
 
 
 # ── ①-2 두 번에 정한다 · 읽은 칸은 뺀다 (접수를 직접 열고 읽기 결과 줄을 넣어 본다) ─────────────
@@ -118,13 +118,13 @@ def test_first_three_while_reading_then_the_rest_after_the_understanding_result(
     intake_id = _open(rv)
     first = _look(rv, intake_id)
     assert first["status"] == "reading" and first["questions_phase"] == 1
-    assert [q["id"] for q in first["questions"]] == ["theme", "party", "priority"]                      # 계획서에서 거의 안 나오는 것부터 바로
-    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["theme", "party", "priority"]       # 결과 전에는 그대로
+    assert [q["id"] for q in first["questions"]] == ["party", "priority"]                               # 계획서에서 거의 안 나오는 것부터 바로
+    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["party", "priority"]                # 결과 전에는 그대로
     _agent_row(rv, intake_id, {"moves": [{"mode": "subway", "scope": "all", "quote": "다 지하철로"}],
                                "conditions": [{"code": "if_rain_indoor", "quote": "비 오면 실내로"}], "preferences": []})
     second = _look(rv, intake_id)
     assert second["questions_phase"] == 2
-    assert [q["id"] for q in second["questions"]] == ["theme", "party", "priority", "indoor_outdoor", "pace"]   # 뒤에 붙는다 · 앞 순서 그대로
+    assert [q["id"] for q in second["questions"]] == ["party", "priority", "indoor_outdoor", "pace"]   # 뒤에 붙는다 · 앞 순서 그대로
     priority = {g["id"]: g for g in next(q for q in second["questions"] if q["id"] == "priority")["groups"]}
     assert priority["mobility"]["read"]["quotes"] == ["다 지하철로"] and priority["mobility"]["read"]["value"] == ["subway"]
     assert priority["food"]["read"] is None and priority["activity"]["read"] is None                    # 분야 순서 · 다른 세부는 묻는다
@@ -135,7 +135,7 @@ def test_first_three_while_reading_then_the_rest_after_the_understanding_result(
     assert skipped[("priority", "mobility")]["key"] == "survey.priority_details.mobility" and skipped[("priority", "mobility")]["text"] == "지하철"
     # 한 번만 는다 — 그 뒤로는 흔들리지 않는다
     _agent_row(rv, intake_id, {"preferences": [{"code": "slow_pace", "quote": "천천히"}]})
-    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["theme", "party", "priority", "indoor_outdoor", "pace"]
+    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["party", "priority", "indoor_outdoor", "pace"]
 
 
 def test_a_read_pace_is_not_asked_and_is_listed_with_its_quote(rv):  # noqa: F811
@@ -143,7 +143,7 @@ def test_a_read_pace_is_not_asked_and_is_listed_with_its_quote(rv):  # noqa: F81
     _look(rv, intake_id)
     _agent_row(rv, intake_id, {"preferences": [{"code": "slow_pace", "quote": "천천히 다닐래요"}]})
     view = _look(rv, intake_id)
-    assert [q["id"] for q in view["questions"]] == ["theme", "party", "priority", "indoor_outdoor"]
+    assert [q["id"] for q in view["questions"]] == ["party", "priority", "indoor_outdoor"]
     assert view["skipped_by_reading"] == [{"question": "pace", "part": None, "key": "survey.pace", "value": "relaxed",
                                            "text": "여유 있게", "quotes": ["천천히 다닐래요"]}]
 
@@ -159,21 +159,21 @@ def test_one_taxi_ride_does_not_skip_the_transport_detail(rv):  # noqa: F811
 
 
 def test_a_shadow_reading_skips_nothing(rv):  # noqa: F811
-    """그림자 · 실패한 이해 결과(`used: false`)는 질문을 빼는 근거가 아니다 — 다섯 문항."""
+    """그림자 · 실패한 이해 결과(`used: false`)는 질문을 빼는 근거가 아니다 — 네 문항."""
     intake_id = _open(rv)
     _look(rv, intake_id)
     _agent_row(rv, intake_id, {"used": False, "preferences": [{"code": "slow_pace", "quote": "천천히"}]})
     view = _look(rv, intake_id)
-    assert [q["id"] for q in view["questions"]] == FIVE and view["skipped_by_reading"] == []
+    assert [q["id"] for q in view["questions"]] == ALL and view["skipped_by_reading"] == []
 
 
-def test_a_failed_reading_asks_all_five(rv):  # noqa: F811
+def test_a_failed_reading_asks_all_four(rv):  # noqa: F811
     intake_id = _open(rv)
     _look(rv, intake_id)
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("UPDATE trip_intakes SET status='fatal', stage='fatal', fatal_code='reading_model_failed' WHERE intake_id=%s", (intake_id,))
     view = _look(rv, intake_id)
-    assert view["status"] == "fatal" and [q["id"] for q in view["questions"]] == FIVE
+    assert view["status"] == "fatal" and [q["id"] for q in view["questions"]] == ALL
 
 
 def test_answers_given_after_the_first_look_keep_their_place(rv):  # noqa: F811
@@ -182,18 +182,18 @@ def test_answers_given_after_the_first_look_keep_their_place(rv):  # noqa: F811
     _look(rv, intake_id)
     with get_connection() as conn, conn.transaction():
         survey_answers.save(conn, tenant_id=rv["tenant"], customer_id=rv["customer"], intake_id=intake_id,
-                            answers=survey_answers.check({"theme": "food", "pace": "packed"}))
+                            answers=survey_answers.check({"party": "friends", "pace": "packed"}))
     _agent_row(rv, intake_id, {"preferences": []})
     view = _look(rv, intake_id)
-    assert [q["id"] for q in view["questions"]] == ["theme", "party", "priority", "indoor_outdoor"]   # 테마는 남고 · 이미 답한 여유는 붙이지 않는다
-    assert _answers_of(view)["theme"] == "food"
+    assert [q["id"] for q in view["questions"]] == ["party", "priority", "indoor_outdoor"]   # 누구와는 남고 · 이미 답한 여유는 붙이지 않는다
+    assert _answers_of(view)["party"] == "friends"
 
 
 def test_without_the_907_column_the_list_is_still_computed(rv, monkeypatch):  # noqa: F811
     """907 이 안 올라간 DB — 저장 없이 그때그때 계산한다(경고). 접수 조회는 막지 않는다."""
     monkeypatch.setattr(survey_answers, "_load_plan", lambda conn, **kw: (None, False))
     intake_id = _open(rv)
-    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["theme", "party", "priority"]
+    assert [q["id"] for q in _look(rv, intake_id)["questions"]] == ["party", "priority"]
 
 
 # ── ② 답 저장 ─────────────────────────────────────────────────────
@@ -201,34 +201,34 @@ def test_next_intake_continues_saved_questions_but_not_direct_settings(api):
     client, _, _ = _full_client()
     headers = _key(client)
     previous = _intake(client, headers)["intake_id"]
-    _answer(client, headers, previous, {"theme": "culture", "priority": PRIORITY, "on_disruption": "replace"})
+    _answer(client, headers, previous, {"party": "family", "priority": PRIORITY, "on_disruption": "replace"})
     next_view = _intake(client, headers)
-    assert [q["id"] for q in next_view["questions"]] == ["party", "indoor_outdoor", "pace"]         # 이어받은 답은 묻지 않는다
+    assert [q["id"] for q in next_view["questions"]] == ["indoor_outdoor", "pace"]                  # 이어받은 답은 묻지 않는다
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT survey FROM trip_intakes WHERE intake_id=%s", (UUID(next_view["intake_id"]),))
         saved = cur.fetchone()[0]
-    assert set(saved) == {"theme", "priority"} and json.loads(saved["priority"]) == PRIORITY            # 항로 지킴이 같은 직접 설정은 이어받지 않는다
+    assert set(saved) == {"party", "priority"} and json.loads(saved["priority"]) == PRIORITY            # 항로 지킴이 같은 직접 설정은 이어받지 않는다
 
 
 def test_next_intake_does_not_inherit_answers_from_another_customer(api):
     first, _, _ = _full_client()
     first_headers = _key(first)
     previous = _intake(first, first_headers)["intake_id"]
-    _answer(first, first_headers, previous, {"theme": "food"})
+    _answer(first, first_headers, previous, {"party": "friends"})
     other, _, _ = _full_client()
     other_headers = _key(other)
     view = _intake(other, other_headers)
-    assert [q["id"] for q in view["questions"]] == FIVE and all(q["answer"] is None for q in view["questions"])
+    assert [q["id"] for q in view["questions"]] == ALL and all(q["answer"] is None for q in view["questions"])
 
 
 def test_changed_question_bundle_is_asked_again_on_the_next_intake(api, monkeypatch):
     client, _, _ = _full_client()
     headers = _key(client)
     previous = _intake(client, headers)["intake_id"]
-    _answer(client, headers, previous, {"theme": "food"})
+    _answer(client, headers, previous, {"party": "friends"})
     monkeypatch.setattr(survey_answers, "QUESTION_SET_VERSION", "future-bundle")
     view = _intake(client, headers)
-    assert [q["id"] for q in view["questions"]] == FIVE and all(q["answer"] is None for q in view["questions"])
+    assert [q["id"] for q in view["questions"]] == ALL and all(q["answer"] is None for q in view["questions"])
 
 
 def test_answers_are_saved_one_at_a_time_and_a_later_answer_overwrites(api):
@@ -236,18 +236,18 @@ def test_answers_are_saved_one_at_a_time_and_a_later_answer_overwrites(api):
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
 
-    assert _answer(client, headers, intake_id, {"theme": "food"}) == {"ok": True, "answered": ["theme"],
+    assert _answer(client, headers, intake_id, {"party": "friends"}) == {"ok": True, "answered": ["party"],
                                                                      "questions_version": survey_answers.QUESTION_SET_VERSION}
-    assert _answers_of(_view(client, headers, intake_id))["theme"] == "food"               # 답한 문항도 목록에 남고 `answer` 에 번호가 있다
-    _answer(client, headers, intake_id, {"theme": "local"})                                  # ★덮어쓴다 — 앞 질문으로 돌아가 고쳤다
+    assert _answers_of(_view(client, headers, intake_id))["party"] == "friends"               # 답한 문항도 목록에 남고 `answer` 에 번호가 있다
+    _answer(client, headers, intake_id, {"party": "family"})                                  # ★덮어쓴다 — 앞 질문으로 돌아가 고쳤다
     both = {"priority": PRIORITY, "indoor_outdoor": {"dining": "indoor", "activity": "any"}}
-    assert _answer(client, headers, intake_id, both)["answered"] == ["indoor_outdoor", "priority", "theme"]
+    assert _answer(client, headers, intake_id, both)["answered"] == ["indoor_outdoor", "party", "priority"]
     final = _answers_of(_view(client, headers, intake_id))
-    assert final["theme"] == "local" and final["priority"] == PRIORITY and final["indoor_outdoor"] == {"dining": "indoor", "activity": "any"}
-    assert [q["id"] for q in _view(client, headers, intake_id)["questions"]] == FIVE           # 답해도 목록은 그대로
+    assert final["party"] == "family" and final["priority"] == PRIORITY and final["indoor_outdoor"] == {"dining": "indoor", "activity": "any"}
+    assert [q["id"] for q in _view(client, headers, intake_id)["questions"]] == ALL           # 답해도 목록은 그대로
     # 같은 값을 또 보내도 같다(멱등) — 순서가 다른 같은 객체도 같은 답이다
     again = _answer(client, headers, intake_id, {"indoor_outdoor": {"activity": "any", "dining": "indoor"}})
-    assert again["answered"] == ["indoor_outdoor", "priority", "theme"]
+    assert again["answered"] == ["indoor_outdoor", "party", "priority"]
 
 
 def test_saving_an_answer_does_not_touch_updated_at(api):
@@ -266,6 +266,19 @@ def test_saving_an_answer_does_not_touch_updated_at(api):
     assert stamp() == before
 
 
+def test_a_theme_answer_is_accepted_and_kept_but_never_asked(api):
+    """`[2026-10-19]` UI 팀 4문항에서 테마가 빠졌다 — 로딩 문항은 아니지만, 옛 화면이 보낸 테마는 거절하지 않고 받아 두었다가 등록 때 설문에 싣는다."""
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _intake(client, headers)
+    assert "theme" not in [q["id"] for q in view["questions"]]
+    assert _answer(client, headers, view["intake_id"], {"theme": "culture"})["answered"] == ["theme"]
+    assert "theme" not in [q["id"] for q in _view(client, headers, view["intake_id"])["questions"]]
+    done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
+    assert done.status_code == 200, done.text
+    assert _constraints(done.json()["trip"]["trip_id"])["survey"]["theme"] == "culture"
+
+
 def test_the_guardian_card_value_is_accepted_but_not_asked(api):
     client, _, _ = _full_client()
     headers = _key(client)
@@ -277,7 +290,7 @@ def test_the_guardian_card_value_is_accepted_but_not_asked(api):
 @pytest.mark.parametrize("answers", [
     {"nope": "x"},                                                        # 모르는 문항
     {"preferred_mobility": "taxi"},                                       # 묶음 2의 문항 — 이 묶음에 없다
-    {"theme": "beach"},                                                   # 없는 선택지
+    {"theme": "beach"},                                                   # 받기만 하는 테마도 선택지는 정해져 있다
     {"theme": {"custom": "바다"}},                                         # 직접 입력은 누구와(party)만
     {"dietary": "halal"},                                                 # 민감 항목은 이 입구가 받지 않는다
     {"on_disruption": "yes"},
@@ -308,7 +321,7 @@ def test_an_empty_or_unknown_body_is_refused(api):
     url = f"/v1/web/trip-intakes/{intake_id}/survey"
     assert client.post(url, headers=headers, json={"answers": {}}).status_code == 422
     assert client.post(url, headers=headers, json={}).status_code == 422
-    assert client.post(url, headers=headers, json={"answers": {"theme": "food"}, "extra": 1}).status_code == 422
+    assert client.post(url, headers=headers, json={"answers": {"party": "friends"}, "extra": 1}).status_code == 422
 
 
 # ── ④ 누구의 접수인가 ─────────────────────────────────────────────
@@ -316,11 +329,11 @@ def test_someone_elses_or_a_missing_intake_is_the_same_404(api):
     client, _, _ = _full_client()
     mine, other = _key(client), _key(client)
     intake_id = _intake(client, mine)["intake_id"]
-    theirs = client.post(f"/v1/web/trip-intakes/{intake_id}/survey", headers=other, json={"answers": {"theme": "food"}})
-    missing = client.post(f"/v1/web/trip-intakes/{uuid4()}/survey", headers=other, json={"answers": {"theme": "food"}})
+    theirs = client.post(f"/v1/web/trip-intakes/{intake_id}/survey", headers=other, json={"answers": {"party": "friends"}})
+    missing = client.post(f"/v1/web/trip-intakes/{uuid4()}/survey", headers=other, json={"answers": {"party": "friends"}})
     assert theirs.status_code == missing.status_code == 404 and theirs.json() == missing.json()
     assert all(q["answer"] is None for q in _view(client, mine, intake_id)["questions"])
-    assert client.post(f"/v1/web/trip-intakes/{intake_id}/survey", json={"answers": {"theme": "food"}}).status_code == 401
+    assert client.post(f"/v1/web/trip-intakes/{intake_id}/survey", json={"answers": {"party": "friends"}}).status_code == 401
 
 
 # ── ⑤ 문항 번호 ↔ 슬롯 · 질문 묶음 버전 · 답 이력 `[2026-10-06 uiux 요청 · 맞춤 질문 의논 §7]` ─────────
@@ -336,19 +349,19 @@ def test_the_view_and_the_answer_reply_carry_the_question_set_version(api):
     headers = _key(client)
     view = _intake(client, headers)
     assert view["questions_version"] == survey_answers.QUESTION_SET_VERSION == "3"
-    assert _answer(client, headers, view["intake_id"], {"theme": "food"})["questions_version"] == "3"
+    assert _answer(client, headers, view["intake_id"], {"party": "friends"})["questions_version"] == "3"
 
 
 def test_saving_an_answer_keeps_what_was_shown_and_how_it_was_read(api):
     client, _, _ = _full_client()
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
-    _answer(client, headers, intake_id, {"theme": "food", "on_disruption": "ask_first"})
-    _answer(client, headers, intake_id, {"theme": "food"})                                  # 같은 답을 다시 보냄 — 줄이 늘지 않는다(멱등)
+    _answer(client, headers, intake_id, {"party": "friends", "on_disruption": "ask_first"})
+    _answer(client, headers, intake_id, {"party": "friends"})                                  # 같은 답을 다시 보냄 — 줄이 늘지 않는다(멱등)
     _answer(client, headers, intake_id, {"priority": PRIORITY})
     rows = _history(intake_id)
-    assert [r[0] for r in rows] == ["theme", "on_disruption", "priority"]
-    assert rows[0][2:] == ("theme", "food", "어떤 여행을 좋아하세요?", "맛집 탐방", "3")         # 슬롯 · 값 · 그때의 문구 · 라벨 · 묶음 버전
+    assert [r[0] for r in rows] == ["party", "on_disruption", "priority"]
+    assert rows[0][2:] == ("party", "friends", "누구와 함께 떠나나요?", "친구", "3")         # 슬롯 · 값 · 그때의 문구 · 라벨 · 묶음 버전
     assert rows[1][2:] == ("on_disruption", "ask_first", None, None, "3")                    # 직접 값은 문구 · 라벨이 없다
     assert rows[2][2] == "priority_rank" and json.loads(rows[2][3]) == PRIORITY              # 여러 칸 답은 정리한 JSON 글
     assert rows[2][5] == "음식 > 이동 / 음식: 맛 · 청결 / 이동: 택시"
@@ -384,7 +397,7 @@ def test_the_history_is_append_only_and_leaves_with_the_intake(api):
     client, _, _ = _full_client()
     headers = _key(client)
     intake_id = _intake(client, headers)["intake_id"]
-    _answer(client, headers, intake_id, {"theme": "food"})
+    _answer(client, headers, intake_id, {"party": "friends"})
     with get_connection() as conn, conn.cursor() as cur:
         with pytest.raises(Exception, match="추가만 한다"):
             cur.execute("UPDATE trip_intake_survey_answers SET value='x' WHERE intake_id=%s", (UUID(intake_id),))
@@ -450,7 +463,7 @@ def test_an_already_registered_intake_takes_no_more_answers(api):
     view = _intake(client, headers)
     assert client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers,
                        json={"revision": view["revision"]}).status_code == 200
-    late = _answer(client, headers, view["intake_id"], {"theme": "food"}, status=409)
+    late = _answer(client, headers, view["intake_id"], {"party": "friends"}, status=409)
     assert late["error"]["code"] == "intake_confirmed"
 
 

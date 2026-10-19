@@ -298,17 +298,16 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 
 ### 설문 질문 — `questions[]` · `POST /v1/web/trip-intakes/{intake_id}/survey` `[2026-10-06 사용자 지시 · uiux 인계]`
 
-`[2026-10-19 개편 — 읽은 칸은 빼고 빈 칸만 · 사용자 지시]` 로딩 중 질문은 **계획서에서 못 얻은 것만** 묻는다. 후보는 시작 설문에서 「일정이 꼬이면」(항로 지킴이 카드 몫)을 뺀 **다섯 문항**이고 **상한이 없다**(옛 「최대 3」은 없앴다). 설계 [2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md](../../records/plans/2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md) · 구현 기록 [2026-10-19_로딩설문_빈칸만묻기.md](../../records/reports/2026-10-19_로딩설문_빈칸만묻기.md). 질문 묶음 버전 `questions_version` = **`"3"`**.
+`[2026-10-19 개편 — 읽은 칸은 빼고 빈 칸만 · 사용자 지시]` 로딩 중 질문은 **계획서에서 못 얻은 것만** 묻는다. 후보는 시작 설문에서 「일정이 꼬이면」(항로 지킴이 카드 몫)을 뺀 **네 문항**이고 **상한이 없다**(옛 「최대 3」은 없앴다). 설계 [2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md](../../records/plans/2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md) · 구현 기록 [2026-10-19_로딩설문_빈칸만묻기.md](../../records/reports/2026-10-19_로딩설문_빈칸만묻기.md). 질문 묶음 버전 `questions_version` = **`"3"`**.
 
 `[2026-10-08 사용자 지시]` 새 계획 접수는 같은 고객이 이전 로딩 설문에서 저장한 최신 답을 이어받는다. 현재 질문 묶음 버전과 선택지의 의미가 같은 답만 새 접수에 기록하며 다른 고객·테넌트의 답, 항로 지킴이 같은 직접 설정은 이어받지 않는다. 웹은 첫 미응답 문항부터 보여 준다. 설문 중에도 SSE 결과를 수신하지만 확인 애니메이션은 재생하지 않으며, 설문에서 다음으로 넘어가는 순간부터 축적된 결과를 재생한다.
 
 `[실측]` 구현 `app/domains/travel_ops/components/intake/survey_answers.py` · `pipeline.view` · `reading_prefs.py` · `entry/trip_api.py` · 저장 `trip_intakes.survey`(051) · 답 이력 `trip_intake_survey_answers`(053) · 문항 목록 `trip_intakes.survey_plan`(907) · 시험 `tests/e2e/test_intake_survey_questions.py` · `tests/unit/travel/test_intake_loading_questions.py`.
 
-**문항 다섯** — 문구 · 선택지는 시작 설문 화면(`features/onboarding/model.ts`)과 같다. ★`[2026-10-19 사용자 지시]` 활동 세부만 관광 분류 일곱 코드로 받는다(시작 설문 화면은 UI 팀 브랜치에서 바꾼다).
+**문항 넷** — 문구 · 선택지는 시작 설문 화면(`features/onboarding/model.ts`, 팀 SKN role-manager `9ec5f2b9` 판의 네 문항)과 같다. ★`[2026-10-19 사용자 지시]` 활동 세부는 관광 분류 일곱 코드(`EV · EX · HS · LS · NA · SH · VE`)다. ★`[2026-10-19 UI 팀 4문항에 맞춰 theme 제외]` 처음 구현은 「여행 테마」까지 다섯이었지만 UI 팀이 시작 설문에서 테마를 뺐고 로딩 문항 = 시작 설문 − 「일정이 꼬이면」 이라 같이 뺐다. 테마 답(`theme`: `food · nature · culture · activity · shopping · local`)은 문항이 아니라 `on_disruption` 처럼 **받아 두기만 하는 입구**로 남겨, 옛 화면이 보내도 거절하지 않고 등록 때 설문 `theme` 칸에 싣는다.
 
 | 문항 `id` | `kind` | `title` | 선택지 `id` 글 | 계획서에서 읽어 빠지는 칸 | 설문에 닿는 곳 | 정하는 때 |
 |---|---|---|---|---|---|---|
-| `theme` | `single` | 어떤 여행을 좋아하세요? | `food` 맛집 탐방 · `nature` 자연과 힐링 · `culture` 문화와 역사 · `activity` 액티비티 · `shopping` 쇼핑 · `local` 로컬 일상 | 없음 | `theme` | 처음 |
 | `party` | `single` + 직접 입력(「기타」) | 누구와 함께 떠나나요? | `alone` 혼자 · `partner` 연인 · `friends` 친구 · `family` 가족 | 없음 — 읽은 아이 · 어르신 성향으로 구성을 추정해 채우지 않는다 | `party`(직접 입력은 그 글 + `custom_answers.party`) | 처음 |
 | `priority` | `priority` | 어떤 것을 더 중요하게 생각하나요? | 분야 `food` 음식 · `activity` 활동 · `mobility` 이동(고른 순서가 순위) + 분야별 세부 — 음식 `taste` 맛 · `kindness` 친절 · `clean` 청결 · `michelin` 미쉐린 · `nopo` 노포 / 활동 `EV` 축제/공연/행사 · `EX` 체험관광 · `HS` 역사관광 · `LS` 레저스포츠 · `NA` 자연관광 · `SH` 쇼핑 · `VE` 문화관광 / 이동 `public` 대중교통 · `walk` 도보 · `car` 렌트카 · `taxi` 택시 | **세부만** — 이동 ← 읽은 이동 수단, 음식 ← 읽은 식당 취향. 분야 순서는 늘 묻는다 | `priority` · `priority_details` | 처음(읽은 세부는 둘째에 `groups[].read` 로 표시) |
 | `indoor_outdoor` | `pair` | 실내와 실외 중 어디가 좋으세요? | 칸 `dining` 식당 · `activity` 액티비티 — 칸마다 `indoor` 실내 · `outdoor` 실외 · `any` 상관없음 | 활동 칸 ← 「비 오면 실내」 | `indoor_outdoor` | 둘째 |
@@ -325,10 +324,10 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 - 시작 설문 답은 서버에 없다(웹이 등록 때 `survey` 로 보낸다). 로딩에서 같은 것을 다시 묻지 않으려면 웹이 그 답을 `POST …/survey` 로 접수에 실어야 한다 — 화면 몫([UI 팀 반영 기록](../../records/reports/2026-10-19_로딩설문_화면_UI팀_반영기록.md)).
 
 **두 번에 정한다** — 무엇이 비었는지는 이해 단계 결과가 나와야 안다.
-- **처음**(접수 응답 · 첫 조회): `theme` · `party` · `priority`. `questions_phase: 1`.
+- **처음**(접수 응답 · 첫 조회): `party` · `priority`. `questions_phase: 1`.
 - **둘째** — 이해 단계 결과(`reading.agent` 값 줄)가 원본마다 다 나왔거나 읽기가 끝났을 때(확인 화면 · 실패): `indoor_outdoor` · `pace` 를 규칙대로 **뒤에 붙이고**, `priority` 의 읽은 세부를 표시한다. `questions_phase: 2`.
 - 목록은 **한 번만 늘고**, 이미 보인 문항은 지워지거나 순서가 바뀌지 않는다. 그 뒤로는 그 접수에서 흔들리지 않는다(접수 행 `survey_plan` — 907. 이 칸이 없는 DB 는 저장 없이 그때그때 계산한다 — 경고).
-- 읽기가 실패하거나(`fatal` — `reading_model_failed` 등) 이해 에이전트를 안 쓰면(꺼짐 · 그림자) 읽은 칸이 없으므로 다섯 문항 중 안 답한 것을 **모두** 묻는다.
+- 읽기가 실패하거나(`fatal` — `reading_model_failed` 등) 이해 에이전트를 안 쓰면(꺼짐 · 그림자) 읽은 칸이 없으므로 네 문항 중 안 답한 것을 **모두** 묻는다.
 - ★**여행 전체 이동 수단**(이해 결과 `moves[].scope: all`)은 그 원문 조각에 「다 · 늘 · 모두 · 전부 · 항상 · 내내 · 주로 · 웬만하면 · 대부분」 같은 말이 있을 때만 읽은 값으로 받는다(코드의 사실 검사 — D-025 「인용은 원문에 글자 그대로」와 같은 자리). 「택시로 이동」 한 구간은 질문을 빼는 근거도, 등록 때 설문을 채우는 근거도 아니다(구간 수단은 이동 판정에만 쓴다). ☆x600 서버에서 이 말을 여행 전체로 읽은 사례 2건(설계서 §4).
 
 **`GET /v1/web/trip-intakes/{id}` 의 칸**
@@ -343,14 +342,14 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 
 **`POST /v1/web/trip-intakes/{id}/survey`** `{answers: {문항 id: 답}}` → `{ok: true, answered: [지금까지 답한 모든 문항 id, 정렬], questions_version: "3"}`
 - 답 모양: `single` = 선택지 id, 또는 `{custom: "글"}`(`allow_custom` 문항만 — 지금 `party`, 공백 정리 후 1~1000자) · `priority` = `{areas: [1~3개, 겹침 없이], details: {고른 분야만: [그 분야 세부, 겹침 없이]}}`(세부를 안 준 분야는 비어 있는 채) · `pair` = `{칸 id: 선택지 id}`(1칸 이상) · `null` = 답 취소(이력에 취소가 남아 다음 접수에서 되살아나지 않는다).
-- `on_disruption`(`replace` · `ask_first`)은 문항이 아니지만 같은 입구가 받는다(항로 지킴이 카드). `pace` 는 이제 문항이고 계획 담기 화면도 같은 선택지 id 로 보낸다.
+- `on_disruption`(`replace` · `ask_first`)과 `theme`(`food · nature · culture · activity · shopping · local`)은 문항이 아니지만 같은 입구가 받는다(항로 지킴이 카드 · 옛 화면의 테마 — 받아 두기만). `pace` 는 이제 문항이고 계획 담기 화면도 같은 선택지 id 로 보낸다.
 - 한 번에 1~8개 · **부분 답 · 멱등** · 같은 문항을 다시 보내면 **덮어쓴다**. 모르는 문항 · 선택지 · 모양이 틀린 답은 **422 `invalid_answers`**(`problems[{key, reason}]`) — **하나라도 틀리면 아무것도 저장하지 않는다.** 남의 접수 · 없는 접수는 같은 404, 이미 등록된 접수는 409 `intake_confirmed`. 저장은 접수의 `updated_at` 을 건드리지 않는다.
 - 답은 접수에 모아 두었다가 **`confirm` · `plan` 할 때 설문(`constraints.survey`)에 합쳐진다** — 요청이 직접 준 `survey` 가 이긴다(`priority_details` 는 영역마다 합친다). 안 답한 문항은 채워 넣지 않는다. 답이 하나도 없고 `survey` 도 안 보내면 등록 동작은 옛 그대로(설문 없음).
 
 **★질문 묶음 · 문항 번호와 슬롯 · 답 이력** `[2026-10-06 uiux 요청 — 맞춤 질문 의논 §7]`
 - **웹은 `questions[]` 만 그린다.** 문구 · 선택지의 뜻을 하드코딩하지 않는다. `questions[]` 는 슬롯 · 값을 싣지 않는다.
 - **문항 번호(`id`)와 슬롯(구조화 값이 들어가는 자리)은 다른 칸이다.** 선택지 번호 ↔ 구조화 값의 매핑은 서버가 소유한다(`Question.slot` · `Option.value`). 같은 선택지 번호의 뜻을 바꾸지 않는다. ★`[2026-10-19]` 묶음 3의 `priority` 는 묶음 2의 `priority`(대체할 곳 — 활동/이동 하나)와 **문항 번호는 같고 슬롯이 다르다**(`priority_rank`) — 옛 답은 053 이력에 남은 해석 값(슬롯 `priority`)으로 읽고, 이력 없는 옛 답은 새 매핑으로 읽히지 않는다(경고 후 버린다).
-- **질문 묶음 버전** `QUESTION_SET_VERSION` = `"3"`. 2 → 3 에서 바뀐 것: 문항 `preferred_mobility` · 옛 `priority`(단일) 삭제, 다섯 문항 새로(위 표). 버전이 다른 이전 답은 이어받지 않는다.
+- **질문 묶음 버전** `QUESTION_SET_VERSION` = `"3"`. 2 → 3 에서 바뀐 것: 문항 `preferred_mobility` · 옛 `priority`(단일) 삭제, 네 문항 새로(위 표). 버전이 다른 이전 답은 이어받지 않는다. ("3" 은 어느 서버에도 배포된 적 없다 — 다섯 문항 판은 격리 사본에서만 있었고 테마를 뺀 지금 모양이 "3" 의 첫 모양이다.)
 - **저장할 때 그때의 묶음을 남긴다** — 답 이력(`trip_intake_survey_answers`, 추가만 · 053): 문항 번호 · 선택지 번호 · 슬롯 · 해석한 값 · 그때 화면에 보인 문구와 라벨 · 묶음 버전. 여러 칸 답(`priority` · `pair`)은 **키를 정렬한 JSON 글**로 접수(`trip_intakes.survey`)와 이력의 `option_id` · `value` 에 남는다. 등록 때는 저장 때 해석한 값으로 설문을 만든다.
 - 활동 팀이 채팅에서 다시 묻는 질문(「일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?」 — 활동이 비슷한 곳 / 이동이 편한 곳)은 **로딩 문항이 아니다** — 따로 둔 질문(`survey_answers.REPLACEMENT_QUESTION`)이다. 지난 답 조회(`read.last_survey_answer`, `question_id: priority`)는 새 묶음의 우선순위 답에서 활동 · 이동 가운데 앞선 것을 고른다.
 - **지금 하지 않는 것**: 자유 선택지 생성 · 추정값으로 기존 답 덮어쓰기 · 로딩 경로의 모델 여러 번 호출 · 로딩이 끝날 때까지 못 물은 문항을 확인 화면 카드로 잇기(10-05 범위 변경 1 — 「나중에 답하기」 카드는 만들지 않는다).

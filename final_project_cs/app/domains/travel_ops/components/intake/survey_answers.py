@@ -4,8 +4,9 @@
 계약 `wiki/external/rest-endpoints/web-intakes.md` 「설문 질문」 · 설계 `wiki/records/plans/2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md`.
 
 ★`[2026-10-19 사용자 지시]` **계획서에서 읽은 칸은 빼고 빈 칸만 묻는다 — 상한 없음.** 후보는 시작 설문(웹 `features/onboarding/model.ts`)에서
-  「일정이 꼬이면」(항로 지킴이 카드 몫)을 뺀 다섯 문항이다 — 문구 · 선택지가 시작 설문과 같다(활동 세부만 관광 분류 일곱 코드, 같은 날 사용자 지시).
-    theme           여행 테마                  → survey.theme                         (계획서에서 읽지 않는다)
+  「일정이 꼬이면」(항로 지킴이 카드 몫)을 뺀 네 문항이다 — 문구 · 선택지가 시작 설문과 같다(활동 세부는 관광 분류 일곱 코드).
+  ★`[2026-10-19 UI 팀 4문항에 맞춰 theme 제외]` 처음 구현은 「여행 테마」까지 다섯이었다. UI 팀이 시작 설문에서 테마를 뺐고(712206795) 로딩 문항 = 시작 설문 − 일정이 꼬이면 이 원칙이라 같이 뺐다.
+  테마 답은 **받아 두기만 하는 입구**(`DIRECT`)로 남긴다 — 옛 화면 · 외부가 보내도 거절하지 않는다.
     party           누구와 함께                → survey.party                         (읽은 아이 · 어르신 성향으로 추정해 채우지 않는다)
     priority        우선순위(분야 순서 + 세부)  → survey.priority · priority_details     (세부만 읽어 채운다: 이동 ← 이동 수단, 음식 ← 식당 취향)
     indoor_outdoor  실내 · 실외(식당 · 활동)    → survey.indoor_outdoor                (활동 칸 ← 「비 오면 실내」)
@@ -40,7 +41,8 @@ from . import reading_prefs
 log = logging.getLogger(__name__)
 
 #: 질문 묶음 버전 — 문구만 고치면 안 올린다. **선택지 목록 · 값 매핑 · 문항의 추가/삭제**처럼 답의 뜻이 달라지면 올린다(옛 답은 저장 때 해석한 값으로 남는다)
-#: ☆"2"(2026-10-06~10-18): 이동 수단 · 대체할 곳 두 문항, 최대 3. "3"(2026-10-19): 시작 설문의 다섯 문항 · 읽은 칸은 뺀다 · 상한 없음
+#: ☆"2"(2026-10-06~10-18): 이동 수단 · 대체할 곳 두 문항, 최대 3. "3"(2026-10-19): 시작 설문의 네 문항(누구와 · 우선순위 · 실내외 · 여유) · 읽은 칸은 뺀다 · 상한 없음
+#:   ("3" 은 어느 서버에도 배포된 적 없다 — 다섯 문항에서 테마만 뺀 지금 판이 "3" 의 첫 모양이다)
 QUESTION_SET_VERSION = "3"
 CUSTOM_PREFIX = "custom:"
 CLEARED_ANSWER = "__cleared__"
@@ -100,9 +102,6 @@ _INDOOR = _opts(("indoor", "실내"), ("outdoor", "실외"), ("any", "상관없�
 #: 묻는 문항 — 앞이 먼저 나간다. 문구 · 선택지는 시작 설문 화면(`features/onboarding/model.ts`)과 같다(활동 세부만 2026-10-19 관광 분류 코드).
 #: ★렌트카(`car`)는 시작 설문처럼 선택지에 있지만 이동 계산기가 아직 못 다룬다(`mobility/wiring.SURVEY_MODES` — 계산기 기본 수단으로 간다)
 QUESTIONS: tuple[Question, ...] = (
-    Question("theme", "theme", "어떤 여행을 좋아하세요?", "가장 마음에 드는 테마 하나를 골라 주세요.",
-             _opts(("food", "맛집 탐방"), ("nature", "자연과 힐링"), ("culture", "문화와 역사"), ("activity", "액티비티"),
-                   ("shopping", "쇼핑"), ("local", "로컬 일상"))),
     Question("party", "party", "누구와 함께 떠나나요?", "함께 떠나는 사람을 하나 골라 주세요.",
              _opts(("alone", "혼자"), ("partner", "연인"), ("friends", "친구"), ("family", "가족")),
              allow_custom=True, custom_label="기타"),
@@ -131,9 +130,10 @@ def _by_id() -> dict[str, Question]:
     return {question.id: question for question in QUESTIONS}
 
 
-#: 묻지는 않지만 같은 입구가 받는 값 — 항로 지킴이 카드(`on_disruption`)
+#: 묻지는 않지만 같은 입구가 받는 값 — 항로 지킴이 카드(`on_disruption`) · 옛 화면의 여행 테마(`theme` — 받아 두기만 한다, 설문 `theme` 칸으로)
 DIRECT: dict[str, tuple[str, ...]] = {
     "on_disruption": ("replace", "ask_first"),
+    "theme": ("food", "nature", "culture", "activity", "shopping", "local"),
 }
 
 
@@ -320,7 +320,7 @@ def _shown_answer(question: Question, answer: str | None) -> dict[str, Any]:
 def questions(answers: Mapping[str, str], plan: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
     """`GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 이미 답한 문항도 **그대로 둔다**(`answer` 에 고른 번호) — 화면이 새로 고쳐져도 앞 질문으로 돌아가 고칠 수 있게.
 
-    `plan` = 이 접수에서 정한 목록(`loading_questions`) — 물을 문항 번호(`asked`)와 읽은 칸(`skipped_by_reading`). 없으면 다섯 문항 모두(읽은 칸 없음).
+    `plan` = 이 접수에서 정한 목록(`loading_questions`) — 물을 문항 번호(`asked`)와 읽은 칸(`skipped_by_reading`). 없으면 네 문항 모두(읽은 칸 없음).
     ★목록은 `plan.asked` 순서 그대로다 — 둘째에 정한 문항은 뒤에 붙으므로 화면의 앞 번호가 흔들리지 않는다."""
     known = _by_id()
     asked = list((plan or {}).get("asked") or [q.id for q in QUESTIONS])
