@@ -125,7 +125,10 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const needsTerms = !loginPending && ready && !agreed && result !== null && result !== "outdated" && result !== "failed";
   useEffect(() => { if (needsTerms && !open) { nextIsReplace(); router.replace(termsAddress()); } }, [needsTerms, open, router]);
 
-  const showPage = open || (ready && result !== "outdated" && (!loginPending && ((agreed && synced) || (checking && admitted))));
+  // ★`[2026-10-19 ST4F-611]` 「서버와 맞춤(synced)」은 처음 열어 줄 때만 기다린다. 이미 연 화면은 고객이 선택 동의를 철회해 사본을 보내는 동안(`saveConsents` 가
+  //   synced 를 잠깐 false 로 둔다) 내리지 않는다 — 내렸다 다시 그리면 「선택 약관 동의」 창이 철회 결과를 보이기 전에 닫혔다(consent.spec 철회 시험 셋).
+  //   필수 동의가 빠지면(`agreed` false) 그대로 바로 닫는다.
+  const showPage = open || (ready && result !== "outdated" && (!loginPending && ((agreed && (synced || admitted)) || (checking && admitted))));
   const showError = !open && (result === "failed" || result === "outdated");
   const step = progress?.step ?? 0;
   const title = pathname.startsWith(routes.myPage) ? t("설정", "Settings")
