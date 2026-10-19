@@ -32,7 +32,7 @@ import hashlib
 import hmac
 import html
 import logging
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, Mapping
 from uuid import UUID, uuid4
 from urllib.parse import quote       # 계획서 내려받기 파일 이름(`/plan/{id}?download=1` — D-CS-011)
 from zoneinfo import ZoneInfo
@@ -1639,6 +1639,21 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         return reading_prefs.apply({**(constraints or {}), reading_prefs.CARRY_KEY: list(getattr(built, "reading", None) or [])})
 
+    def _party_from_survey(body: dict[str, Any], survey: Mapping[str, Any]) -> None:
+        """★`[2026-10-20 사용자 결정 — B안 · ST4F-581]` 여행 인원이 비었을 때만 설문의 여행자 구성 인원을 쓴다.
+
+        계획 확인에서 고친 인원 · 계획서에서 읽은 인원(`body.party_size`)이 먼저다. 상품 범위 밖이면 옮기지 않는다 — 설문 확인(`apply_survey`)이 422 로 거절한다.
+        어디서 채웠는지 `constraints.derived.party_size` 에 남긴다."""
+        from app.domains.travel_ops.components.planning.planner import MAX_PARTY
+
+        size = survey.get("party_size")
+        if body.get("party_size") is not None or not isinstance(size, int) or isinstance(size, bool) or not 1 <= size <= MAX_PARTY:
+            return
+        body["party_size"] = size
+        constraints = dict(body.get("constraints") or {})
+        constraints["derived"] = {**dict(constraints.get("derived") or {}), "party_size": f"여행 인원이 비어 설문 여행자 구성의 인원({size}명)을 썼다"}
+        body["constraints"] = constraints
+
     def _intake_survey(tenant: str, intake_id: UUID, given: dict[str, Any] | None) -> dict[str, Any] | None:
         """★`[2026-10-06]` 등록에 실을 설문 = 로딩 중 질문으로 접수에 모아 둔 답 + 등록 요청이 직접 준 설문(요청이 준 값이 이긴다). 둘 다 없으면 None."""
         from app.domains.travel_ops.components.intake import survey_answers
@@ -1715,6 +1730,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         survey = _intake_survey(tenant, intake_id, request.survey)
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
+            _party_from_survey(body, survey)
         body["constraints"] = _with_reading(body.get("constraints"), built)
         try:
             create = CreateTrip.model_validate(body)

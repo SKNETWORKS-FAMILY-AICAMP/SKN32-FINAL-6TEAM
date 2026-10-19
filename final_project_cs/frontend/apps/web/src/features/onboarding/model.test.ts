@@ -148,8 +148,8 @@ describe("onboarding preferences", () => {
 
   it("the finished-survey cards word every answer, keep `상관없음` as an answer, and say `응답하지 않음` only for skipped questions", () => {
     const lines = (a: Answers) => questions.map((question) => answerLines(question.id, a, ko));
-    // `full` picked family after typing an "other" draft: the draft is not shown.
-    expect(lines(full)).toEqual([["가족"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["식당 · 실내", "액티비티 · 상관없음"], ["여유롭게"]]);
+    // `full` picked family after typing an "other" draft: the draft is not shown. `[2026-10-20]` The size follows the companions.
+    expect(lines(full)).toEqual([["가족 · 3명"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["식당 · 실내", "액티비티 · 상관없음"], ["여유롭게"]]);
     expect(lines(skip(skip(full, 0), 2))).toEqual([["응답하지 않음"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["응답하지 않음"], ["여유롭게"]]);
     const none = questions.reduce((a, _, index) => skip(a, index), initialAnswers);
     expect(lines(none)).toEqual(questions.map(() => ["응답하지 않음"]));
@@ -162,7 +162,7 @@ describe("onboarding preferences", () => {
     for (const value of ["SH", "EV", "HS"]) a = toggleDetail(a, "activity", value);
     for (const value of ["kindness", "taste", "clean"]) a = toggleDetail(a, "food", value);
     for (const value of ["walk", "car", "taxi", "public"]) a = toggleDetail(a, "mobility", value);
-    expect(answerLines("party", a, ko)).toEqual(["대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리"]);
+    expect(answerLines("party", a, ko)).toEqual(["대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리 · 3명"]);
     expect(answerLines("priority", a, ko)).toEqual([
       "1. 활동 — 쇼핑 → 축제/공연/행사 → 역사관광", "2. 음식 — 친절 → 맛 → 청결", "3. 이동 — 도보 → 렌트카 → 택시 → 대중교통",
     ]);

@@ -20,7 +20,7 @@ from datetime import date, datetime, time
 from typing import Any, Iterable, Literal, Mapping
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.settings import get_guardrails
 
@@ -58,6 +58,19 @@ class TripSurvey(BaseModel):
                          Literal["indoor", "outdoor", "any"]] = Field(default_factory=dict)
     theme_details: list[str] = Field(default_factory=list)     # 세부 테마 — 팀이 정할 값
     custom_answers: dict[str, str] = Field(default_factory=dict)  # 직접 쓴 선호 원문 — 알아듣지 못한 말도 보존한다
+    #: `[2026-10-20 사용자 결정 — B안 · ST4F-581]` 여행자 구성 카드의 인원(혼자 1 · 연인 2 · 친구 · 가족 2~4 · 기타 1~4).
+    #: 웹 접수 등록에서 여행 인원이 비었을 때만 여행 인원이 된다(`trip_api.web_intake_confirm` — 계획 확인에서 고친 값 · 계획서에서 읽은 값이 먼저다)
+    party_size: int | None = None
+
+    @field_validator("party_size")
+    @classmethod
+    def _party_in_product(cls, value: int | None) -> int | None:
+        # 계획기가 이 모듈을 불러오므로 상한은 여기서만 불러온다(순환을 피한다). 상품 범위 밖 인원은 계약 오류로 받지 않는다
+        from app.domains.travel_ops.components.planning.planner import MAX_PARTY
+
+        if value is not None and not 1 <= value <= MAX_PARTY:
+            raise ValueError(f"인원은 1~{MAX_PARTY}명이어야 한다")
+        return value
 
 
 def _is_clock(text: Any) -> bool:

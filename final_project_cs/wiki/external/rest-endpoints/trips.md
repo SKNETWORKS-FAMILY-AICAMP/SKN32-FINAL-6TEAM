@@ -112,6 +112,7 @@ domain: travel
 | `version` | `"2026-09-24.v1"` (필수) | — |
 | `on_disruption` | `replace`(기본) · `ask_first` | ★**쓴다** — 15번. 보류 제안 조회 · 선택 API 가 구현돼 있다(아래 「보류 제안」 절) |
 | `pace` | `relaxed` · `moderate` · `packed` | ★**쓴다** — 16번 → 밀도 목표 0.40 · 0.55 · 0.70 |
+| `party_size` | 정수 1~4(선택) | `[2026-10-20 사용자 결정 — B안 · ST4F-581]` 여행자 구성 카드의 인원(혼자 1 · 연인 2 · 친구 · 가족 2~4, 처음 2 · 기타 1~4). ★**웹 접수 등록**(`POST /v1/web/trip-intakes/{id}/confirm`)에서 여행 인원(`party_size`)이 비었을 때만 쓴다 — **계획 확인에서 고친 인원 > 계획서에서 읽은 인원 > 설문 인원**. 직접 등록(`POST /v1/trips` · `/plan`)은 요청의 `party_size` 가 정본이라 기록으로만 남는다. 판(`version`)은 그대로 — 선택 칸 추가이고, 이 칸을 모르는 옛 서버는 422 로 거절하므로 **웹과 서버를 같이 배포**한다 |
 | `theme` · `party` · `preferred_mobility[]` · `domestic` · `priority[]`(`food`·`activity`·`mobility`) · `priority_details{영역: [..]}` · `indoor_outdoor{dining·activity: indoor·outdoor·any}` · `theme_details[]` | 문자열·목록 | 필드별 소비 경로는 아래 설명을 따른다 — 세부 값은 담당 팀이 정한다. 저장됐다는 이유로 모든 선호가 계획에 반영됐다고 표시하지 않는다 |
 
 - `[실측 2026-09-29]` 이동 계산기 연결이 `priority_details.mobility` 와 `preferred_mobility` 를 수단 집합으로 바꾼다([wiring.py](../../../app/domains/travel_ops/instances/mobility/wiring.py) `modes_from_survey` — 화면은 `priority_details.mobility` 로 보내고 둘 다 읽는다). 도보는 늘 포함하며 변환 가능한 값이 없으면 계산기 기본 수단(지하철 · 버스 · 도보)을 쓴다. 선호 순위를 그대로 최적화한다는 뜻은 아니다.

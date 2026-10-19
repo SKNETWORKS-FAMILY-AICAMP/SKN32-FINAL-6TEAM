@@ -157,6 +157,12 @@ export function chosenLabel(key: ChoiceKey, value: string, t: Translate) {
 /** Companions in words: what was typed for `other`, otherwise the choice. */
 export const partyLabel = (a: Answers, t: Translate) => a.party === "other" && a.partyOther.trim() ? a.partyOther.trim() : chosenLabel("party", a.party, t);
 
+/** `[2026-10-20 B안 · ST4F-581]` Companions with how many travel — 「친구 · 3명」. With no size yet (기타 not picked) only the companions. */
+export function partyLine(a: Answers, t: Translate): string {
+  const size = partySizeOf(a);
+  return size === null ? partyLabel(a, t) : `${partyLabel(a, t)} · ${t(`${size}명`, size === 1 ? "1 person" : `${size} people`)}`;
+}
+
 /** Priorities in picking order, one line per area: "1. 음식 — 청결 → 맛". */
 export function priorityLines(a: Answers, t: Translate): string[] {
   const detail = (area: Area, value: string) => {
@@ -173,7 +179,7 @@ export function priorityLines(a: Answers, t: Translate): string[] {
 export function answerLines(id: QuestionId, a: Answers, t: Translate): string[] {
   if (a.skipped.includes(questions.findIndex((question) => question.id === id))) return [t("응답하지 않음", "Not answered")];
   switch (id) {
-    case "party": return [partyLabel(a, t)];
+    case "party": return [partyLine(a, t)];
     case "priority": return a.priority.length ? priorityLines(a, t) : [t("미선택", "Not selected")];
     case "indoor": return [`${t("식당", "Dining")} · ${chosenLabel("indoorDining", a.indoorDining, t)}`, `${t("액티비티", "Activities")} · ${chosenLabel("indoorActivity", a.indoorActivity, t)}`];
     case "pace": return [chosenLabel("pace", a.pace, t)];

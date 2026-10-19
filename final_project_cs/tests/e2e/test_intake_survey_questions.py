@@ -279,6 +279,49 @@ def test_a_theme_answer_is_accepted_and_kept_but_never_asked(api):
     assert _constraints(done.json()["trip"]["trip_id"])["survey"]["theme"] == "culture"
 
 
+def _trip_party(trip_id) -> tuple[int | None, dict]:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT party_size, constraints FROM trips WHERE trip_id=%s", (trip_id,))
+        return cur.fetchone()
+
+
+def test_a_saved_party_size_fills_an_empty_trip_party_size(api):
+    """`[2026-10-20 B안 · ST4F-581]` 계획서에 인원이 없으면 여행자 구성 카드의 인원이 여행 인원이 된다 — 묻는 문항은 아니고, 어디서 채웠는지 남는다."""
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _intake(client, headers)
+    assert _answer(client, headers, view["intake_id"], {"party": "friends", "party_size": "3"})["answered"] == ["party", "party_size"]
+    assert "party_size" not in [q["id"] for q in _view(client, headers, view["intake_id"])["questions"]]
+    done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
+    assert done.status_code == 200, done.text
+    party, constraints = _trip_party(done.json()["trip"]["trip_id"])
+    assert party == 3 and constraints["survey"]["party_size"] == 3
+    assert "설문" in constraints["derived"]["party_size"]
+
+
+def test_the_registration_survey_size_fills_an_empty_trip_party_size(api):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _intake(client, headers)
+    done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers,
+                       json={"revision": view["revision"], "survey": {"version": SURVEY_VERSION, "party": "family", "party_size": 4}})
+    assert done.status_code == 200, done.text
+    assert _trip_party(done.json()["trip"]["trip_id"])[0] == 4
+
+
+def test_a_party_size_read_from_the_plan_wins_over_the_survey(api):
+    """계획서에서 읽은 인원(「2명이서」)이 먼저다 — 설문 인원은 비었을 때만 쓴다."""
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text=CHAT_PLAN + "\n우리 2명이서 가요")
+    done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers,
+                       json={"revision": view["revision"], "survey": {"version": SURVEY_VERSION, "party": "family", "party_size": 4}})
+    assert done.status_code == 200, done.text
+    party, constraints = _trip_party(done.json()["trip"]["trip_id"])
+    assert party == 2 and constraints["survey"]["party_size"] == 4                     # 설문 답은 그대로 남는다
+    assert "party_size" not in (constraints.get("derived") or {})
+
+
 def test_the_guardian_card_value_is_accepted_but_not_asked(api):
     client, _, _ = _full_client()
     headers = _key(client)
@@ -294,6 +337,8 @@ def test_the_guardian_card_value_is_accepted_but_not_asked(api):
     {"theme": {"custom": "바다"}},                                         # 직접 입력은 누구와(party)만
     {"dietary": "halal"},                                                 # 민감 항목은 이 입구가 받지 않는다
     {"on_disruption": "yes"},
+    {"party_size": "5"},                                                 # 인원은 1~4(상품 범위)
+    {"party_size": 3},                                                   # 입구는 글자로 받는다
     {"priority": "activity"},                                             # 묶음 2의 단일 답 모양
     {"priority": {"areas": []}},                                          # 분야는 하나 이상
     {"priority": {"areas": ["food", "food"]}},                            # 겹침
