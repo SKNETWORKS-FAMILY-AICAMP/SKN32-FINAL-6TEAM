@@ -449,7 +449,7 @@ test("영어·키보드로 한 건 삭제와 선택 삭제를 쓰고, PC 기기 
   await page.keyboard.press("Enter");
   const dialog = confirmDialog(page);
   await expect(dialog).toHaveAccessibleName("Delete this trip?");
-  await expect(dialog).toContainText("The trip, its chat and its plan link saved on the server will be deleted, and its alerts stop. This can’t be undone.");
+  await expect(dialog).toContainText("The trip, its chat and its plan link are deleted and its alerts stop. This can’t be undone.");
   await page.keyboard.press("Escape");
   await expect(trash).toBeFocused();
   expect(await asked(server)).toEqual([]);
