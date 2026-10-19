@@ -31,5 +31,6 @@ python -m eval.alternative_pick.score eval/reports/alternative_pick/<run> --reas
 - M8 = 섞은 판의 LLM 1순위가 원래 판 1회차와 같은 사례 비율. 어느 쪽이든 폐기 · 실패면 비교에서 뺀다(`excluded`).
 - M5 는 사람 확인 전 `pending` — 전환 기준도 「확인 전」. 비용(M9)은 `activity_judge.metrics` 의 gpt-5.4-nano 요율 추정.
 - 전환 기준은 holdout · 사람 라벨 · 실호출일 때만 판정, 그 밖은 「참고만」.
+- `[2026-10-19 A안]` 전환 기준 = **M2 · M5 · M6b · M6e**(안전). M1 · M3 · M7 · M8 은 참고. M1 참고값은 골라야 하는 사례(`M1_discriminating` — 허용 답이 후보 일부)로 따로 내고, 뺀 사례 수(`M1_excluded_cases` — 셋 다 허용 · 없음)를 같이 적는다. 라벨 정답 칸의 `없음` → `acceptable=[]` · `no_fit=true`.
 
 시험: `tests/unit/eval/test_alternative_pick_eval.py`(DB · 외부 호출 없음).

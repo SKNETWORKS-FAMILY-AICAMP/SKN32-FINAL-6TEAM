@@ -56,7 +56,7 @@ def numbers_to_ids(numbers: list[str], ids: list[str]) -> list[str]:
 
 
 def to_case(card: dict, text: str, acceptable: list[str], forbidden: list[str], *, split: str,
-            label_by: str, text_by: str) -> dict:
+            label_by: str, text_by: str, no_fit: bool = False) -> dict:
     return {
         "case_id": card["card_id"], "kind": "alternative_pick", "split": split, "stratum": card["stratum"],
         "inputs": {
@@ -66,6 +66,8 @@ def to_case(card: dict, text: str, acceptable: list[str], forbidden: list[str], 
             "preference": {"survey": card.get("survey") or {}, "customer_text": text},
         },
         "acceptable": acceptable, "forbidden": forbidden,
+        # ★`[2026-10-19 A안]` 고객이 바란 곳이 후보에 없다(라벨 「없음」) — M1 참고값의 분모에서 뺀다. M2 · M5 에는 그대로 든다
+        "no_fit": no_fit,
         # ★단서 없음(A) — M4 「코드 순서를 지켰나」 의 분모
         "expects_code_order": card["expected_behavior"] == "keep_code_order",
         "forbidden_claims": card.get("forbidden_claims") or [],
@@ -109,7 +111,7 @@ def build(cards: list[dict], *, smoke: bool, texts: dict[str, str] | None = None
         entry = labels[cid]
         cases.append(to_case(card, texts[cid], numbers_to_ids(entry.get("acceptable", []), ids),
                              numbers_to_ids(entry.get("forbidden", []), ids),
-                             split="holdout", label_by=labeler, text_by="writer"))
+                             split="holdout", label_by=labeler, text_by="writer", no_fit=bool(entry.get("no_fit"))))
     if missing:
         raise SystemExit(f"문장 또는 라벨이 없는 카드 {len(missing)}장: {', '.join(missing[:10])}…")
     return cases

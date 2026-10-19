@@ -157,8 +157,53 @@ def test_summary_counts_and_gate():
     keys = {("B-01", "base", r): score.GROUNDED for r in (1, 2, 3)} | {("B-01", "shuffle-1", 1): score.GROUNDED}
     s2 = summary_for(rows, reasons=keys)
     assert s2["M5_reason_grounded"]["status"] == "reviewed" and s2["M5_reason_grounded"]["pct"] == 100.0
-    assert s2["gate"]["final"] is True and s2["gate"]["checks"]["M2 = 0"] and s2["gate"]["checks"]["M6e = 0"]
-    assert s2["gate"]["checks"]["M3 하한 > 0"] is False and s2["gate"]["verdict"] == "shadow 유지"   # 2건이면 하한이 0
+    assert s2["gate"]["final"] is True and s2["gate"]["checks"]["M2 하드 = 0"] and s2["gate"]["checks"]["M6e = 0"]
+    # A안(10-19) — M3 은 참고값이라 전환 기준에 없다. 안전 지표만 넘으면 전환 가능
+    assert "M3 하한 > 0" not in s2["gate"]["checks"] and s2["gate"]["verdict"] == "전환 가능"
+    # M1 참고값 — 셋 다 허용(quiet)은 골라야 하는 사례에서 빠진다
+    assert s["M1_discriminating"]["num"] == 3 and s["M1_discriminating"]["den"] == 3
+    assert s["M1_excluded_cases"] == {"all_acceptable": 1, "no_fit": 0, "discriminating": 1}
+
+
+def test_no_fit_case_is_out_of_m1_but_still_counts_for_m2():
+    no_fit = case("N-01", text="궁궐로 바꿔 주세요", acceptable=(), forbidden=("c3",))
+    picked = case("P-01", acceptable=("b2",), forbidden=())
+    rows = [(no_fit, [observe(no_fit, answer(["c3", "a1", "b2"]))]),
+            (picked, [observe(picked, answer(["a1", "b2", "c3"]))])]
+    s = summary_for(rows)
+    assert s["M1_excluded_cases"] == {"all_acceptable": 0, "no_fit": 1, "discriminating": 1}
+    assert s["M1_discriminating"]["den"] == 1 and s["M1_discriminating"]["num"] == 0
+    assert s["M2_dangerous"]["num"] == 1                                         # 「없음」 사례도 위험은 센다
+    # 코드 1순위(a1)는 위험이 아닌데 LLM 이 c3 으로 올렸다 → 새로 만든 위험 · 코드 순서보다 나쁨
+    assert s["M2_new_danger"]["num"] == 1 and s["M2_code_order"]["num"] == 0
+    assert not s["gate"]["checks"]["M2 새 위험 = 0"] and not s["gate"]["checks"]["M2 ≤ 코드 순서"]
+    assert s["gate"]["checks"]["M2 하드 = 0"]
+
+
+def test_m2_split_hard_new_and_code_order():
+    # 코드 1순위가 이미 위험(a1) — LLM 도 못 고침: 위험이지만 새로 만든 것은 아니고 코드 순서보다 나쁘지 않다
+    same = case("S-01", acceptable=("b2",), forbidden=("a1",))
+    fixed = case("F-01", acceptable=("b2",), forbidden=("a1",))
+    outside = case("O-01", acceptable=("b2",), forbidden=())
+    hard = {**case("H-01", acceptable=("b2",), forbidden=("c3",)), "forbidden_hard": ["c3"]}
+    rows = [(same, [observe(same, answer(["a1", "b2", "c3"]))]),
+            (fixed, [observe(fixed, answer(["b2", "a1", "c3"]))]),
+            (outside, [observe(outside, answer(["lotte", "b2"]))]),
+            (hard, [observe(hard, answer(["b2", "a1", "c3"]))])]
+    s = summary_for(rows)
+    assert s["M2_dangerous"]["num"] == 2 and s["M2_code_order"]["num"] == 2         # same(a1) + 후보 밖 / same · fixed
+    assert s["M2_new_danger"]["num"] == 0
+    assert s["M2_hard"]["num"] == 1                                                 # 후보 밖 원답은 하드 위험
+    assert not s["gate"]["checks"]["M2 하드 = 0"] and s["gate"]["checks"]["M2 ≤ 코드 순서"]
+    hard_hit = summary_for([(hard, [observe(hard, answer(["c3", "a1", "b2"]))])])
+    assert hard_hit["M2_hard"]["num"] == 1                                          # 하드 조건 위반 후보를 1순위로
+
+
+def test_build_carries_no_fit_from_labels():
+    card = build.load_cards()[0]
+    labels = {card["card_id"]: {"acceptable": [], "forbidden": [], "no_fit": True}}
+    [c] = build.build([card], smoke=False, texts={card["card_id"]: "궁궐로"}, labels=labels, labeler="갑")
+    assert c["acceptable"] == [] and c["no_fit"] is True
 
 
 def test_call_failures_block_the_gate_and_drafts_are_reference_only():

@@ -17,8 +17,12 @@ from .paths import Sources
 
 AI_SOURCE = "auto_tag_draft"
 NUMBERS = ("1", "2", "3")
+#: ★`[2026-10-19 사용자 결정 A안]` 고객이 바란 곳이 후보에 하나도 없으면 정답 칸에 이 말만 적는다 → `acceptable=[]` · `no_fit=True`.
+#:  빈 칸은 그대로 「덜 채움」 오류다(구별하려고 말을 적게 한다). 위험 칸은 하드 조건 위반 · 고객이 거부한 유형만이다(1-2).
+NO_FIT = "없음"
 CRITERIA = (
     "후보 중 1순위로 나와도 정답인 곳(acceptable · 하나 이상)과 1순위로 나오면 위험한 곳(forbidden · 없으면 비움)을 번호로 적는다. "
+    f"고객이 바란 곳이 후보에 하나도 없으면 정답 칸에 「{NO_FIT}」만 적는다. 위험은 그 시각에 못 가는 곳 · 고객이 직접 거부한 유형뿐이다. "
     "이번 고객 문장의 요청 > 설문. 설문 항목끼리 갈리면 더 많이 맞는 후보, 같으면 모두 허용. "
     "고객이 바란 기준이 후보 정보에 없으면(혼잡 · 후기 · 요금 등) 순서는 무엇이든 허용. 바깥 지식으로 판단하지 않는다(계획서 1-1 · 1-2)."
 )
@@ -48,7 +52,7 @@ def build(src: Sources | None = None) -> Bundle:
                      "설문(priority 뺌)": rs.survey_text(c["survey"]),
                      "후보 1": shown[0], "후보 2": shown[1], "후보 3": shown[2]},
             criteria=CRITERIA,
-            allowed={"acceptable": numbers, "forbidden": numbers},
+            allowed={"acceptable": (*numbers, NO_FIT), "forbidden": numbers},
             ai={AI_SOURCE: {"acceptable": draft, "forbidden": []}} if draft else {},
             meta={"ids": ids, "stratum": c["stratum"], "writer": r["작성자"]},
         ))
@@ -73,6 +77,11 @@ def build(src: Sources | None = None) -> Bundle:
 def _check_overlap(entry: dict) -> dict:
     from ..core import SheetError
 
+    acceptable = entry.get("acceptable", [])
+    if NO_FIT in acceptable:
+        if len(acceptable) > 1:
+            raise SheetError(f"「{NO_FIT}」 은 번호와 함께 적지 않는다({acceptable})")
+        entry = {**entry, "acceptable": [], "no_fit": True}
     both = sorted(set(entry.get("acceptable", [])) & set(entry.get("forbidden", [])))
     if both:
         raise SheetError(f"같은 후보 {both} 가 acceptable 과 forbidden 에 함께 있다")

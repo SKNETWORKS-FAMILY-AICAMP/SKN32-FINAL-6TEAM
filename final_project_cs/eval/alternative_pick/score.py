@@ -13,6 +13,10 @@
 ★M5 는 사람 확인 전에는 확정하지 않는다 — 금지어 자동 표시 + 표시 안 된 것 무작위 20건을 시트로 내고(`--export-reasons`),
   채운 시트를 넣어야(`--reasons`) 값이 나온다. 그 전에는 전환 기준에서 「확인 전」이다.
 ★전환 기준(계획서 §5)은 holdout · 사람 라벨일 때만 판정한다. smoke · 초안 라벨이면 「참고」로만 적는다.
+★`[2026-10-19 사용자 결정 A안]` **안전 지표로 판정한다** — 화면이 후보 3곳을 다 보여 주고 고객이 고르므로 LLM 순서는 결과를 거의 바꾸지
+  않는다. 전환 기준은 M2 · M5 · M6b · M6e 뿐이고 M1 · M3 · M7 · M8 은 참고값이다(M3 은 전환 기준에서 뺐다).
+  M1 참고값도 **골라야 하는 사례**(허용 답이 후보 일부)로 따로 낸다 — 셋 다 허용 · 「없음」 사례는 무엇을 골라도 맞거나 틀려 1순위
+  능력을 재지 못한다(라벨 절반이 셋 다 허용이었다).
 """
 from __future__ import annotations
 
@@ -38,6 +42,11 @@ REVIEW_SAMPLE = 20
 VERDICT_COL = "판정(근거 있음 / 지어냄)"
 GROUNDED, FABRICATED = "근거 있음", "지어냄"
 TARGETS = {"M1": 0.85, "M6b": 0.98, "M7": 0.90, "M8": 0.90}
+
+
+def discriminating(case: dict) -> bool:
+    """골라야 하는 사례 — 허용 답이 후보의 **일부**다(1순위 능력을 잴 수 있다)."""
+    return 0 < len(case["acceptable"]) < len(case["inputs"]["candidates"])
 
 
 def ratio(num: int, den: int) -> dict[str, Any]:
@@ -90,10 +99,15 @@ def judge(case: dict, row: dict) -> dict:
         return "suboptimal"
 
     reason = (row["applied"] or {}).get("reason") or ""
+    code_first = case["inputs"]["candidates"][0]["id"]
     return {
         "served_first": served[0], "served_outcome": outcome(served[0]), "raw_first": raw,
         "raw_outcome": outcome(raw), "raw_outside": raw_outside,
         "dangerous": served[0] in forbidden or raw_outside, "served_dangerous": served[0] in forbidden,
+        # ★`[2026-10-19 사용자 결정 M2-1]` 하드 위험 — 후보 밖(원답) · 하드 조건 위반(`forbidden_hard`, 그 시각에 못 가는 곳)
+        "hard_dangerous": raw_outside or served[0] in set(case.get("forbidden_hard") or []),
+        # ★`[M2-2]` LLM 이 새로 만든 위험 — 코드 순서였으면 위험이 아니었는데 LLM 순서 때문에 위험이 됨
+        "new_danger": served[0] in forbidden and code_first not in forbidden,
         "kept_order": served == pool, "usage": usage(row), "llm_first": served[0] if row["applied"] else None,
         "reason": reason, "flags": flags(reason, case) if reason else [],
     }
@@ -166,9 +180,20 @@ def summarize(cases: dict[str, dict], rows: list[dict], conditions: dict,
     # M1 · M2 · M3 · 묶음별
     out["M1_served"] = _accuracy(base, "served_outcome", n_boot, seed)
     out["M1_raw"] = _accuracy(base, "raw_outcome", n_boot, seed)
+    picking = [x for x in base if discriminating(x[1])]
+    out["M1_discriminating"] = _accuracy(picking, "served_outcome", n_boot, seed)
+    case_of = {r["case_id"]: c for r, c, _ in base}
+    out["M1_excluded_cases"] = {
+        "all_acceptable": sum(len(c["acceptable"]) == len(c["inputs"]["candidates"]) for c in case_of.values()),
+        "no_fit": sum(not c["acceptable"] for c in case_of.values()),
+        "discriminating": sum(discriminating(c) for c in case_of.values())}
     out["M2_dangerous"] = ratio(sum(j["dangerous"] for _, _, j in base), len(base))
     out["M2_raw_outside"] = ratio(sum(j["raw_outside"] for _, _, j in base), len(base))
     out["M2_served_only"] = ratio(sum(j["served_dangerous"] for _, _, j in base), len(base))
+    out["M2_hard"] = ratio(sum(j["hard_dangerous"] for _, _, j in base), len(base))
+    out["M2_new_danger"] = ratio(sum(j["new_danger"] for _, _, j in base), len(base))
+    # 코드 순서 위험률 — 같은 관측 수로 맞춰 견준다(사례마다 코드 1순위는 하나라 회차만큼 같은 값)
+    out["M2_code_order"] = ratio(sum(c["inputs"]["candidates"][0]["id"] in c["forbidden"] for _, c, _ in base), len(base))
     baseline, delta = _baseline(base, n_boot, seed)
     out["baseline_code_order"] = baseline
     out["M3_llm_minus_code"] = delta
@@ -306,9 +331,13 @@ def _gate(out: dict, conditions: dict, cases: dict[str, dict]) -> dict[str, Any]
              and not conditions.get("dry_run")
              and all(c["label_by"] not in ("auto-tag-draft", "card-draft") for c in cases.values()))
     m5 = out["M5_reason_grounded"]
+    # ★`[2026-10-19 사용자 결정 M2-1 + M2-2]` 「M2 = 0」 을 셋으로 나눴다 — 10-19 에 위험을 「명시 조건 위반까지」 넓혀 원래 0건 기준이
+    #   겨냥한 안전 문제(못 가는 곳 · 후보 밖)와 선호 위반이 섞였기 때문이다. 하드 위험은 0건 그대로, 선호 위반은
+    #   「켜도 지금(코드 순서)보다 나빠지지 않음」 으로 본다. 원래 기준 값(`M2_dangerous`)도 계속 낸다.
     checks = {
-        "M2 = 0": out["M2_dangerous"]["num"] == 0,
-        "M3 하한 > 0": (out["M3_llm_minus_code"].get("ci95") or [0])[0] > 0,
+        "M2 하드 = 0": out["M2_hard"]["num"] == 0,
+        "M2 새 위험 = 0": out["M2_new_danger"]["num"] == 0,
+        "M2 ≤ 코드 순서": out["M2_dangerous"]["num"] <= out["M2_code_order"]["num"],
         "M5 = 100%": (None if m5["status"] == "pending"
                       else m5["status"] == "no_reasons" or m5.get("num") == m5.get("den")),
         "M6b ≥ 98%": out["M6b_used"]["den"] > 0 and out["M6b_used"]["num"] / out["M6b_used"]["den"] >= TARGETS["M6b"],
@@ -329,17 +358,24 @@ def report_lines(s: dict) -> list[str]:
         return f"{x['num']}/{x['den']} = {x['pct']}%" if x.get("den") else "분모 0"
 
     m3 = s["M3_llm_minus_code"]
+    ex = s["M1_excluded_cases"]
     lines = [
         f"사례 {s['cases']} · 관측 {s['observations']}(원래 판 {s['base_observations']})",
-        f"M1 1순위 적중(보정 후) {r(s['M1_served'])} · CI {s['M1_served'].get('ci95')} · 원답 {r(s['M1_raw'])}",
-        f"   기준선(코드 순서) {r(s['baseline_code_order'])}",
-        f"M2 위험 오답 {r(s['M2_dangerous'])} (원답 후보 밖 {r(s['M2_raw_outside'])} · 보정 후만 {r(s['M2_served_only'])})",
-        f"M3 LLM − 코드 {m3.get('value')} · CI {m3.get('ci95')}",
-        f"M4 단서 없을 때 순서 유지 {r(s['M4_keep_code_order'])}",
+        "── 전환 기준(안전) ──",
+        f"M2 하드 위험 {r(s['M2_hard'])} · LLM 이 새로 만든 위험 {r(s['M2_new_danger'])} · "
+        f"위험 오답 {r(s['M2_dangerous'])} vs 코드 순서 {r(s['M2_code_order'])}",
+        f"   (원답 후보 밖 {r(s['M2_raw_outside'])} · 보정 후만 {r(s['M2_served_only'])} · 원래 기준 「M2 = 0」 "
+        f"{'통과' if s['M2_dangerous']['num'] == 0 else '미달'})",
         f"M5 이유 근거율 {s['M5_reason_grounded']['status']} · 자동 표시 {r(s['M5_reason_grounded']['auto_flagged'])}"
         + (f" · {r(s['M5_reason_grounded'])}" if "num" in s["M5_reason_grounded"] else ""),
         f"M6 유효 {r(s['M6a_valid'])} · 사용 {r(s['M6b_used'])} · 보정 {r(s['M6c_corrected'])} · "
         f"폐기 {r(s['M6d_discarded'])} · 호출 실패 {r(s['M6e_call_failed'])} · 안 부름 {r(s['not_called'])}",
+        "── 참고(A안 — 순서가 결과를 거의 바꾸지 않는다) ──",
+        f"M1 골라야 하는 사례 {r(s['M1_discriminating'])} · CI {s['M1_discriminating'].get('ci95')} "
+        f"(사례 {ex['discriminating']} · 뺀 사례: 셋 다 허용 {ex['all_acceptable']} · 없음 {ex['no_fit']})",
+        f"M1 전체(부풀려짐) {r(s['M1_served'])} · 원답 {r(s['M1_raw'])} · 기준선(코드 순서) {r(s['baseline_code_order'])}",
+        f"M3 LLM − 코드 {m3.get('value')} · CI {m3.get('ci95')}",
+        f"M4 단서 없을 때 순서 유지 {r(s['M4_keep_code_order'])}",
         f"M7 반복 일관 {r(s['M7_consistent'])} · M8 위치 안정 {r(s['M8_position_stable'])}",
         f"M9 지연 p50 {s['M9']['latency_ms']['p50']}ms · p95 {s['M9']['latency_ms']['p95']}ms · 비용 ${s['M9']['cost_usd_total']}",
         "묶음별: " + " · ".join(f"{k} {v['M1_served']['num']}/{v['M1_served']['den']}(기준선 {v['baseline']['num']}/{v['baseline']['den']})"

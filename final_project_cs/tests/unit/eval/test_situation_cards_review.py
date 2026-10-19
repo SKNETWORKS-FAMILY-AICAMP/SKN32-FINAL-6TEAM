@@ -93,6 +93,13 @@ def test_merge_takes_each_writers_rows_and_rejects_gaps_or_stale_sheets(cards_di
     assert len(merged) == 80 and all(r[rs.TEXT_COL].startswith("문장 ") for r in merged)
 
 
+def test_no_fit_word_becomes_empty_acceptable_and_cannot_mix_with_numbers():
+    assert adapter._check_overlap({"acceptable": [adapter.NO_FIT], "forbidden": []}) == {
+        "acceptable": [], "forbidden": [], "no_fit": True}
+    with pytest.raises(core.SheetError, match="함께 적지 않는다"):
+        adapter._check_overlap({"acceptable": [adapter.NO_FIT, "2"], "forbidden": []})
+
+
 def test_label_sheet_is_blind_round_trips_and_rejects_overlap(cards_dir, tmp_path):
     filled = tmp_path / "all.csv"
     fill_writer_sheet(cards_dir, filled)
