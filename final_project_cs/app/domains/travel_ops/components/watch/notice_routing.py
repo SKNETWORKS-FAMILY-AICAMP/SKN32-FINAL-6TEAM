@@ -48,6 +48,20 @@ def trip_id_of(dedupe_key: Any) -> UUID | None:
         return None
 
 
+
+def guidance_item_ids(items) -> list[str]:
+    """안내 알림의 일정 목록에서 항목 id 만 꺼낸다.
+
+    ★`[2026-10-19 x600 운영]` 대부분의 안내는 id 문자열 목록이지만, 위험 확인 안내(`risk_detected`)는
+    `{item_id, title, starts_at, ...}` 객체 목록을 싣는다. 객체를 그대로 `uuid[]` 로 넘기면
+    「cannot adapt type 'dict'」로 발송 전체가 실패했다(16:38~16:52 3건). id 가 없는 칸은 건너뛴다."""
+    ids = []
+    for item in items or []:
+        value = item.get("item_id") if isinstance(item, dict) else item
+        if value:
+            ids.append(str(value))
+    return ids
+
 class CustomerNoticeRouter:
     """일꾼의 발행자 — `trip.notice`는 고객 연결로만 보내며, 다른 주제만 `operator`에 넘긴다."""
 
@@ -130,7 +144,7 @@ class CustomerNoticeRouter:
                         "ON t.tenant_id=i.tenant_id AND t.trip_id=i.trip_id AND t.latest_version=i.version "
                         "WHERE t.tenant_id=%s AND t.trip_id=%s AND i.item_id=ANY(%s::uuid[]) "
                         "AND COALESCE(i.detail->'execution'->>'state','') NOT IN ('completed','skipped')",
-                        (tenant, trip_id, list(payload['items'])))
+                        (tenant, trip_id, guidance_item_ids(payload['items'])))
                     relevant = cur.fetchone()[0]
                 if not relevant:
                     raise NoticeSuppressed("이 안내의 일정이 모두 완료·교체되어 보내지 않았다")
