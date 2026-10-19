@@ -393,7 +393,8 @@ class TripDesk:
                 saved = preserve_destination(store=self.store, connect=self._connect, trip_id=trip_id,
                     base_version=base_version, decision=decision, now=now, request_id=request_id)
                 if saved is not None:
-                    return saved
+                    # ★`[2026-10-19 사용자 결정 A]` 요청한 이름은 「위치 확인 필요」로 저장하고, 「직접 고르기」 카드도 함께 — 바뀐 일정을 수정 모드에서 고치게
+                    return chat_edit.with_saved_pick(saved, ops, refused.code, refused.message)
             status = "clarify" if refused.code.startswith("need_") else "edit_refused"
             requested = str(raw.get("destination_text") or "").strip()
             choices = ([{"label": requested + " (위치 확인 필요)", "message": requested + " 지점을 확인해 줘"}]

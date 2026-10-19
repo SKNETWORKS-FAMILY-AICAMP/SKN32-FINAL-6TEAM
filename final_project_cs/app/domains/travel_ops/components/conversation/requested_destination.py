@@ -46,6 +46,8 @@ def apply(*, store, connect, trip_id, base_version, decision, now, request_id):
             reason='customer_request',causes=[cause])
         store.enqueue_notice(conn,trip_id=trip_id,version=version,payload={'text':text,'version':version,
             'language':'ko','changed':{'requested_place':name},'causes':[cause],'replay':False})
+    # `item_id` — the stop that now carries the requested name; the chat attaches the 「직접 고르기」 card to it (2026-10-19 decision A).
     return {'status':'adjusted','version':version,'text':text,'navigation':'needs_location',
+        'item_id':str(replacement.item_id),
         'choices':[{'label':name+' 지점 확인','message':name+' 지점을 확인해 줘'}],
         'choices_title':'요청하신 목적지'}

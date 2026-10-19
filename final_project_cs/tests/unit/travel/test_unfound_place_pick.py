@@ -121,3 +121,28 @@ def test_no_card_for_other_refusals_or_when_nothing_was_read():
     assert pick_card(ops, "locked_item", "") is None
     assert pick_card([], "place_not_found", "") is None
     assert pick_card([EditOp("remove", item_id=uuid4())], "place_not_found", "") is None
+
+
+# ── 채팅 — 바꾸기를 「위치 확인 필요」로 저장한 답에도 카드 `[2026-10-19 사용자 결정 A]` ──────────
+
+def test_saved_requested_destination_also_carries_the_pick_card_on_the_new_stop():
+    from app.domains.travel_ops.components.conversation.chat_edit import with_saved_pick
+
+    old, new = uuid4(), uuid4()
+    ops = [EditOp("place", item_id=old, place_name="순자네 비밀식당", title="순자네 비밀식당")]
+    saved = {"status": "adjusted", "version": 3, "text": "목적지를 순자네 비밀식당(으)로 바꿨어요. …", "item_id": str(new),
+             "navigation": "needs_location"}
+    out = with_saved_pick(saved, ops, "place_not_found", "… 「순자네 비밀식당」: 찾지 못함")
+    assert out["pick"] == {"mode": "change", "item_id": str(new), "prefill": {}, "query": "순자네 비밀식당", "blocked": False,
+                           "actions": ["pick_myself"]}
+    assert {k: v for k, v in out.items() if k != "pick"} == saved          # 저장한 답은 그대로
+
+
+def test_no_card_when_the_save_changed_nothing():
+    from app.domains.travel_ops.components.conversation.chat_edit import with_saved_pick
+
+    ops = [EditOp("place", item_id=uuid4(), place_name="x", title="x")]
+    for saved in ({"status": "already_applied", "version": 3, "text": "…"},
+                  {"status": "edit_refused", "text": "이미 완료한 방문이에요"},
+                  {"status": "adjusted", "version": 3, "text": "…"}):              # 바뀐 일정 id 가 없으면 카드를 붙이지 않는다
+        assert "pick" not in with_saved_pick(saved, ops, "place_not_found", "")

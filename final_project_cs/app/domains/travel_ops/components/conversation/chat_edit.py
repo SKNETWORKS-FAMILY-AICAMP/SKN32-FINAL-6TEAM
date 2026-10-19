@@ -97,6 +97,15 @@ def pick_card(ops: list[EditOp], code: str, message: str = "") -> dict[str, Any]
     return {"mode": "add", "item_id": None, "prefill": {k: v for k, v in prefill.items() if v}, **base}
 
 
+def with_saved_pick(saved: dict[str, Any], ops: list[EditOp], code: str, message: str = "") -> dict[str, Any]:
+    """`[2026-10-19 사용자 결정 A]` 「○○로 바꿔 줘」를 못 찾아 요청한 이름을 「위치 확인 필요」로 **저장한 답**에도 「직접 고르기」 카드를 싣는다.
+    카드의 일정은 **바뀐 일정**(저장이 만든 새 일정 — `saved["item_id"]`)이다. 저장이 바꾼 것이 없으면(이미 반영 · 완료한 방문 안내) 답을 그대로 둔다."""
+    card = pick_card(ops, code, message)
+    if card is None or card["mode"] != "change" or saved.get("status") != "adjusted" or not saved.get("item_id"):
+        return saved
+    return {**saved, "pick": {**card, "item_id": str(saved["item_id"])}}
+
+
 def run(*, store: Any, connect: Callable[[], Any], tenant: str, customer_id: UUID, trip_id: UUID, base_version: int,
         ops: list[EditOp], lookups: Callable[[], tuple[Any, Any, Any]], now: datetime,
         cause_extra: dict[str, Any] | None = None) -> dict[str, Any]:

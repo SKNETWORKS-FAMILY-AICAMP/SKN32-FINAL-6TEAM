@@ -356,12 +356,12 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 - 조회가 막혀서 못 찾은 줄은 묻기 전에 서버가 **한 번** 다시 찾는다. 찾으면 질문 대신 `prefill.filled[]` 에 `{item, title, owner: "refind", owner_label: "장소 다시 찾기", reason: "장소 조회가 막혀 못 찾았던 곳을 다시 찾아 채웠어요", gap: "place_not_found", new: false}` 로 남는다(「우리가 채움」 표시). 막힘 없이 못 찾은 줄(지도에 없는 곳)은 다시 찾지 않는다.
 
 **여행 화면 채팅 — `POST /v1/web/trips/{id}/messages` 답의 `pick`**
-- 채팅으로 장소를 바꾸거나(「○○로 바꿔 줘」) 넣으려다(「○○ 넣어 줘」) 이름을 못 찾으면(`status: "edit_refused"`, `reason: "place_not_found"`) 거절 문장과 함께 `pick` 이 실린다:
+- 채팅으로 장소를 넣으려다(「○○ 넣어 줘」) 이름을 못 찾으면 거절 답(`status: "edit_refused"`)에 거절 문장과 함께 `pick` 이 실린다. 맨 위 `reason` 은 해석한 할 일(`decision_add_item` 등 `decision_<할 일>`)이고, 못 찾았다는 코드는 `outcome.reason: "place_not_found"` 에 있다 `[2026-10-19 실서버 확인으로 정정 — 앞 문장은 맨 위 reason 을 place_not_found 로 적었다]`. 장소를 바꾸려다(「○○로 바꿔 줘」) 못 찾은 경우는 아래 「위치 확인 필요로 저장」 줄이다:
   `pick = {mode: "change" | "add", item_id, query, prefill, blocked, actions: ["pick_myself"]}`
   - `mode: "change"` — `item_id` = 바꾸려던 일정. 화면은 「일정 수정」과 같은 전환으로 **수정 모드를 그 일정이 골라진 채** 연다(`query` 를 장소 검색 칸에).
   - `mode: "add"` — `item_id: null`. 화면은 수정 모드로 넘어가며 **일정 추가 칸**을 열고 `prefill`(`title` · `date` · `starts_at` · `ends_at`? · `kind`?)을 미리 채운다. 값은 채팅 고치기가 쓰려던 것뿐이고, `ends_at` 은 고객이 끝 시각을 말했을 때만 있다(기본 머무는 시간으로 채운 끝은 싣지 않는다).
   - 채팅 카드에는 후보가 없다 — 수정 모드에 그 일정의 후보 · 검색이 이미 있다.
   - 대화 기록(`GET …/chat` 의 `turns[].reply.pick`)과 같은 요청 되풀이(`status: "duplicate"`) 답에도 실린다.
-  - 「○○로 바꿔 줘」를 못 찾아 요청 목적지를 「위치 확인 필요」로 남기는 길(`requested_destination`)이 처리한 답에는 `pick` 이 없다(그 결과를 그대로 돌려준다).
+  - `[2026-10-19 사용자 결정 A]` 「○○로 바꿔 줘」를 못 찾으면 서버는 요청한 이름을 **「위치 확인 필요」로 저장**하고(`requested_destination` — `status: "adjusted"`, `reason: "decision_replace_named"`, `outcome.navigation: "needs_location"`, 요청한 이름이 든 새 일정) **같은 답에 `pick` 도 싣는다** — `mode: "change"`, `item_id` = **바뀐(새) 일정**의 id, `query` = 요청한 이름. 화면은 수정 모드를 그 일정이 골라진 채 연다. 저장이 바꾼 것이 없으면(이미 반영 · 완료한 방문 안내) `pick` 이 없다. 저장 길로 갈 수 없는 경우(고정 · 예약 · 고객이 고정한 일정 · 대상 일정을 모름 · 판정 위반)는 위 거절 답과 같다(`edit_refused` + `pick: change`, `item_id` = 원래 일정).
 - 넣기의 종류를 정하려고 이름을 찾을 때 조회가 막혔으면 서버가 한 번 더 찾는다.
 - 등록 전 확인 화면에서 **대화로** 고르기는 아직 없다 — 확인 화면에 채팅 입구가 없다. D-026 2단계(대화와 계획서를 같은 고리로)에서 연다.
