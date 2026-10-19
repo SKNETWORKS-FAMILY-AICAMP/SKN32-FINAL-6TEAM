@@ -17,6 +17,7 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Callable
+from uuid import UUID
 
 from app.domains.travel_ops.instances.dining.ledger import (DEFAULT_ORDER_MARGIN_MIN, _as_datetime, find_license_shop_by_name,
                                                             find_place_by_name, find_place_inside_name)
@@ -140,6 +141,13 @@ class DiningTools:
             missing = [p for p in SPECS[name].parameters["required"] if args.get(p) in (None, "", [])]
             if missing:
                 raise ToolRefused(f"필수 인자가 없다: {missing}")
+            # ★`[2026-10-16 luna 실측]` 모델이 가게 번호의 한 칸을 빼고 넘겨 SQL 이 uuid 오류를 냈고 그날 판정이 통째로 사라졌다(3번 중 2번).
+            #   DB 에 보내기 전에 거절로 돌려준다 — 모델이 읽고 find_place 결과의 번호를 다시 옮긴다
+            if "place_uid" in args:
+                try:
+                    UUID(str(args["place_uid"]))
+                except ValueError:
+                    raise ToolRefused(f"place_uid 형식이 아니다: {args['place_uid']!r} — find_place 결과의 place_uid 를 그대로 옮긴다") from None
             result = _plain(getattr(self, f"_{name}")(**args))
         except ToolRefused as exc:
             self.refused.append({"tool": name, "args": args, "why": str(exc)})

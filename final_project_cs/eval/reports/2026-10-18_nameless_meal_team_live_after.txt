@@ -1,0 +1,300 @@
+{
+ "N1_lunch": {
+  "status": "review",
+  "items": [
+   [
+    "activity",
+    "경복궁",
+    "10:00"
+   ],
+   [
+    "dining",
+    "점심",
+    "12:00"
+   ],
+   [
+    "activity",
+    "북촌한옥마을",
+    "15:00"
+   ]
+  ],
+  "meals": [
+   {
+    "title": "점심",
+    "status": "review",
+    "place_state": "needs_choice",
+    "place": null,
+    "place_row": [
+     "bad",
+     "식당의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요"
+    ],
+    "notes": [
+     "team_ranked"
+    ],
+    "candidates": [
+     [
+      "스미스가 좋아하는 한옥",
+      "places",
+      "음식점 > 양식",
+      "ok"
+     ],
+     [
+      "두레 국립현대미술관서울점",
+      "places",
+      "음식점 > 한식",
+      "ok"
+     ],
+     [
+      "황생가칼국수",
+      "places",
+      "음식점 > 한식",
+      "ok"
+     ]
+    ]
+   }
+  ],
+  "autofix_preview": {
+   "changes": [
+    [
+     "점심",
+     "스미스가 좋아하는 한옥",
+     "place_and_time"
+    ]
+   ],
+   "kept": []
+  }
+ },
+ "N2_market": {
+  "status": "review",
+  "items": [
+   [
+    "activity",
+    "창덕궁",
+    "10:00"
+   ],
+   [
+    "dining",
+    "광장시장 근처",
+    "12:30"
+   ],
+   [
+    "activity",
+    "청계천",
+    "15:00"
+   ]
+  ],
+  "meals": [
+   {
+    "title": "광장시장 근처",
+    "status": "review",
+    "place_state": "unresolved",
+    "place": null,
+    "place_row": [
+     "bad",
+     "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요"
+    ],
+    "notes": [
+     "no_same_kind"
+    ],
+    "candidates": []
+   }
+  ],
+  "autofix_preview": {
+   "changes": [
+    [
+     "광장시장 근처",
+     "양꼬치구이촨",
+     "place"
+    ]
+   ],
+   "kept": []
+  }
+ },
+ "N3_area": {
+  "status": "review",
+  "items": [
+   [
+    "activity",
+    "서울숲",
+    "11:00"
+   ],
+   [
+    "dining",
+    "성수 근처",
+    "18:00"
+   ],
+   [
+    "activity",
+    "뚝섬한강공원",
+    "20:00"
+   ]
+  ],
+  "meals": [
+   {
+    "title": "성수 근처",
+    "status": "review",
+    "place_state": "needs_choice",
+    "place": null,
+    "place_row": [
+     "bad",
+     "성수 지역 식당의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요"
+    ],
+    "notes": [
+     "team_ranked"
+    ],
+    "candidates": [
+     [
+      "중앙감속기",
+      "places",
+      "음식점 > 중식",
+      "ok"
+     ],
+     [
+      "오레노카츠 성수본점",
+      "places",
+      "음식점 > 일식",
+      "ok"
+     ],
+     [
+      "가조쿠",
+      "places",
+      "음식점 > 일식",
+      "ok"
+     ]
+    ]
+   }
+  ],
+  "autofix_preview": {
+   "changes": [
+    [
+     "성수 근처",
+     "중앙감속기",
+     "place"
+    ]
+   ],
+   "kept": []
+  }
+ },
+ "N4_myeongdong": {
+  "status": "review",
+  "items": [
+   [
+    "activity",
+    "남산서울타워",
+    "10:00"
+   ],
+   [
+    "dining",
+    "명동 근처",
+    "12:00"
+   ],
+   [
+    "activity",
+    "남대문시장",
+    "16:00"
+   ]
+  ],
+  "meals": [
+   {
+    "title": "명동 근처",
+    "status": "review",
+    "place_state": "unresolved",
+    "place": null,
+    "place_row": [
+     "bad",
+     "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요"
+    ],
+    "notes": [
+     "not_a_meal_dropped",
+     "engine_budget_exhausted"
+    ],
+    "candidates": [
+     [
+      "기가스",
+      "places",
+      "음식점 > 양식",
+      "ok"
+     ],
+     [
+      "1992남산돈까스",
+      "places",
+      "음식점 > 일식",
+      "ok"
+     ],
+     [
+      "팔레드 신",
+      "places",
+      "음식점 > 양식",
+      "ok"
+     ]
+    ]
+   }
+  ],
+  "autofix_preview": {
+   "changes": [
+    [
+     "명동 근처",
+     "팔레드 신",
+     "place_and_time"
+    ]
+   ],
+   "kept": [
+    [
+     "남산서울타워",
+     "nothing_to_change"
+    ]
+   ]
+  }
+ },
+ "N5_boramae": {
+  "status": "review",
+  "items": [
+   [
+    "activity",
+    "서울대공원",
+    "10:00"
+   ],
+   [
+    "dining",
+    "보라매공원 근처",
+    "12:30"
+   ],
+   [
+    "activity",
+    "여의도 한강공원",
+    "16:00"
+   ]
+  ],
+  "meals": [
+   {
+    "title": "보라매공원 근처",
+    "status": "review",
+    "place_state": "unresolved",
+    "place": null,
+    "place_row": [
+     "bad",
+     "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요"
+    ],
+    "notes": [
+     "no_same_kind"
+    ],
+    "candidates": []
+   }
+  ],
+  "autofix_preview": {
+   "changes": [
+    [
+     "서울대공원",
+     "송학대공원(노량진근린공원)",
+     "place"
+    ],
+    [
+     "보라매공원 근처",
+     "술이꼬치네",
+     "place"
+    ]
+   ],
+   "kept": []
+  }
+ }
+}

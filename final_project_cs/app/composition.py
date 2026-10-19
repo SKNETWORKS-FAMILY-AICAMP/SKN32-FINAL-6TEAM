@@ -848,7 +848,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         # 요식 — 확인 화면 「다른 식당」 후보(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
         from app.domains.travel_ops.instances.dining import review_alternatives as dining_review_alternatives
 
-        dining_alternatives.register(rank=dining_review_alternatives.rank)
+        dining_alternatives.register(rank=dining_review_alternatives.rank, near=dining_review_alternatives.rank_near)
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
