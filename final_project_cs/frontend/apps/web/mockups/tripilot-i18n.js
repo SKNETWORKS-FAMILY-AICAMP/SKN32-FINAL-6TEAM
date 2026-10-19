@@ -1,4 +1,4 @@
-/* Shared offline localization for the two triPilot HTML mockups. */
+/* Shared offline localization for the two guguroute HTML mockups. */
 (() => {
   'use strict';
   const english = {
@@ -35,7 +35,7 @@
   "70분 지연": "70-minute delay",
   "DAY 1 · 서울 시각 (시연)": "DAY 1 · Seoul time (demo)",
   "K-뷰티 · 향수 · 식료품": "K-beauty · Fragrances · Groceries",
-  "triPilot · 내 여행 홈": "triPilot · My trips home",
+  "guguroute · 내 여행 홈": "guguroute · My trips home",
   "서울 하루 여행 시연": "Seoul day trip demo",
   "← → 장면 이동 · F 촬영 모드 · Space 자동 재생": "← → Scenes · F Filming mode · Space Autoplay",
   "← 이전": "← Back",
@@ -520,7 +520,7 @@
   "외부 AI의 계획이나 직접 적은 일정을 붙여넣어요.": "Paste a plan from another AI or an itinerary you wrote yourself.",
   "외부 정보 확인 실패 예시": "Example external lookup failure",
   "외부 정보 확인이 끝나지 않아 여행 관리를 시작할 수 없어요.": "Trip care cannot start because the external information check is incomplete.",
-  "왼쪽 위 triPilot을 누르면 내 여행 화면으로 돌아갑니다. 위쪽 화면 흐름의 일정 · 채팅 메뉴에서 여행을 열 수 있습니다.": "Select triPilot at the top left to return to My trips. Open a trip from Itinerary · Chat in the screen flow controls above.",
+  "왼쪽 위 guguroute을 누르면 내 여행 화면으로 돌아갑니다. 위쪽 화면 흐름의 일정 · 채팅 메뉴에서 여행을 열 수 있습니다.": "Select guguroute at the top left to return to My trips. Open a trip from Itinerary · Chat in the screen flow controls above.",
   "용산 저녁 식당": "Dinner restaurant in Yongsan",
   "용산 저녁": "Yongsan dinner",
   "운영시간, 브레이크타임, 이동 가능 여부를 살펴봐요.": "Check opening hours, restaurant breaks, and transport availability.",

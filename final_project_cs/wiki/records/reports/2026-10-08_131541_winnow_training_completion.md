@@ -22,7 +22,7 @@ domain: travel
 
 첫 보강 여행 자료1,713개, 시드20261012·r16·2에폭·학습률0.0002·누적8의 레시피다. 본 학습193.9분이며 학습 로그의 최대 GPU 사용량10.6GB다. 기반 배포 원본은 보존했고 다른 모델이나 두 번째 보강 자료로 바꾸지 않았다. 개발사 결정 학습과 우리 여행 자료 추가 학습을 구분한다.
 
-[HF 어댑터](../../../../datasets/travel/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308) · [GGUF 어댑터](../../../../datasets/travel/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf) · [학습 로그](../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_e4b_oos_training_1308/qlora_train_winnow_e4b_oos.log) · [원격/로컬 해시·레시피·환경·기반 설정 검증](../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_e4b_oos_training_1308/training_archive_verified.json).
+[HF 어댑터](../../../../datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308) · [GGUF 어댑터](../../../../datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf) · [학습 로그](../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_e4b_oos_training_1308/qlora_train_winnow_e4b_oos.log) · [원격/로컬 해시·레시피·환경·기반 설정 검증](../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_e4b_oos_training_1308/training_archive_verified.json).
 
 HF 가중치 SHA256 `ac3e8a62890a1265d0ada4e3a2a9f45a67e63865528a94bb51fa79a733c84d59`, GGUF SHA256 `3a4f2646ed55ce3758bc0c6e66b6ee005840886c499da4189e2503b2301ef963`다. 원격 파일과 로컬 사본을 비교했고 README·설정도 일치한다. 실행 환경 버전과 학습 도구·자료 해시는 검증 JSON에 고정했다.
 

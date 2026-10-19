@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>triPilot · 첫 여행 등록 와이어프레임</title>
+<title>guguroute · 첫 여행 등록 와이어프레임</title>
 <style>
 :root{color-scheme:light;--paper:#f3f5f3;--surface:#fff;--soft:#f6f7f5;--ink:#24392f;--muted:#6d7c73;--line:#dce3dd;--green:#2e6047;--green-soft:#e9f2eb;--warn:#916425;--warn-soft:#fbf3e4;--red:#a44738;font:14px/1.6 "Segoe UI","Malgun Gothic",sans-serif;color:var(--ink);background:var(--paper)}
 *{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit;color:inherit}button,a{touch-action:manipulation}button{cursor:pointer}button,.button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;border:1px solid var(--line);border-radius:7px;background:var(--surface);text-decoration:none;color:var(--ink);min-height:42px}button:hover,.button:hover{background:var(--soft)}button:disabled{opacity:.45;cursor:not-allowed}button.primary,.button.primary{background:var(--green);border-color:var(--green);color:#fff}.quiet{background:transparent;border-color:transparent}a{color:var(--green)}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #77a58a;outline-offset:3px}input,select,textarea{width:100%;min-width:0;padding:10px 11px;border:1px solid #bac9bf;border-radius:6px;background:var(--surface)}input:read-only{background:var(--soft)}textarea{resize:vertical;min-height:210px;line-height:1.9}input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);flex-shrink:0}input[aria-invalid=true]{border-color:var(--red)}h1,h2,h3,p{margin:0}h1{font-size:27px;line-height:1.4;letter-spacing:-1px;font-weight:600}h2{font-size:18px;font-weight:600}h3{font-size:14px;font-weight:600}strong{font-weight:600}.muted,small{font-size:12px;color:var(--muted)}.eyebrow{font-size:10px;letter-spacing:1.4px;color:var(--muted);margin-bottom:7px}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}.pill{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--line);border-radius:5px;background:var(--soft);font-size:11px}.pill.good{background:var(--green-soft);color:var(--green);border-color:#c7dfce}.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:#ead9b9}[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
@@ -117,7 +117,7 @@ body.is-entry{background:var(--surface)}
 <details class="review-notes"><summary>설계 의도 · 화면별 처리 경계</summary><div class="note-grid"><div><strong>등록 전에는 입력에 집중</strong><p>로그인 후 첫 방문(U02)을 가정합니다. U03에서 외부 계획 또는 직접 적은 일정을 받습니다. 지도와 여행 중 알림은 등록 뒤에 나타납니다.</p></div><div><strong>검증 후 관리 시작으로 연결</strong><p>검증 하기를 누르면 입력한 계획의 날짜·시각·장소를 확인하고 관리 시작 화면으로 바로 이동합니다. 중간 분석·내용 확인·첫 검증 화면은 표시하지 않습니다.</p></div><div><strong>한 번 확정한 상태로 첫 진입</strong><p>보존할 예약을 확인한 뒤 최적안 하나를 반영·안내하는 흐름입니다. 검증 실패 시 관리 시작을 막습니다. 첫 진입은 여행 전 상태이며 당일 사건이나 위치를 추정하지 않습니다.</p></div></div></details>
 </div>
 <header id="productHeader" class="topbar">
-  <a class="brand" href="tripilot-intake-wireframe.html" data-action="home" aria-label="triPilot · 내 여행 홈"><span class="brand-mark" aria-hidden="true">t</span>triPilot</a>
+  <a class="brand" href="tripilot-intake-wireframe.html" data-action="home" aria-label="guguroute · 내 여행 홈"><span class="brand-mark" aria-hidden="true">t</span>guguroute</a>
   <nav id="productNav" class="topnav" aria-label="여행 메뉴">
     <a class="header-link active desktop-only" id="homeNav" href="tripilot-intake-wireframe.html" data-action="home">내 여행</a>
     <a class="header-link desktop-only" id="workspaceNav" href="tripilot-scenario-demo.html" data-action="workspace">일정 · 채팅</a>
@@ -131,7 +131,7 @@ body.is-entry{background:var(--surface)}
   <main id="main"></main>
 </div>
 <p class="caption">클릭형 설계 초안 · 입력은 이 페이지 안에서만 유지 · 새로고침하면 초기화 · 실제 API, 계정 저장, 외부 알림·예약 실행 없음</p>
-<dialog id="infoDialog" aria-labelledby="dialogTitle"><form method="dialog" class="row between"><span class="pill">triPilot · DEMO</span><button aria-label="창 닫기">닫기 ×</button></form><div id="dialogContent"></div></dialog>
+<dialog id="infoDialog" aria-labelledby="dialogTitle"><form method="dialog" class="row between"><span class="pill">guguroute · DEMO</span><button aria-label="창 닫기">닫기 ×</button></form><div id="dialogContent"></div></dialog>
 <script src="tripilot-i18n.js"></script>
 <script>
 'use strict';
@@ -249,7 +249,7 @@ function mapMarkup(rows){
   return '<div class="location-map"><div class="map-heading"><strong>서울 · '+dayLabel(state.selectedDate)+'</strong><small>일정 장소 '+rows.length+'곳 · 방문 순서 표시</small></div><div class="location-pins" style="--map-zoom:'+state.mapZoom+'" role="group" aria-label="일정 장소 핀 · 시연 배치">'+rows.map((row,index)=>{const point=mapPosition(index,rows.length),meta=stopInfo(row);return '<button class="location-pin '+(point[0]>60?'label-left ':'')+(state.selectedStop===row.id?'selected':'')+'" style="--x:'+point[0]+'%;--y:'+point[1]+'%" data-map-pin="'+row.id+'" aria-label="'+escapeHTML((index+1)+'. '+meta.title+' 지도에서 선택')+'" aria-pressed="'+(state.selectedStop===row.id)+'">'+(index+1)+'<span class="pin-label" aria-hidden="true">'+userContent(meta.label)+'</span></button>';}).join('')+(rows.length?'':'<div class="map-empty">이 날짜에 등록한 장소가 없어요.</div>')+'</div><div class="map-controls"><button data-action="mapZoomIn" aria-label="장소 핀 확대" '+(state.mapZoom>=1.4?'disabled':'')+'>+</button><button data-action="mapZoomOut" aria-label="장소 핀 축소" '+(state.mapZoom<=1?'disabled':'')+'>−</button><button data-action="mapZoomReset" aria-label="장소 핀 원래 크기">⌂</button></div><div class="map-caption">위치 개념도 · 실제 지도와 경로가 아닌 시연 배치</div></div><div class="map-selection">'+(selected?'<span class="eyebrow">선택한 장소</span><h3>'+userContent(info.title)+'</h3><p>'+escapeHTML(info.time)+' · '+escapeHTML(info.area)+'</p><p>'+escapeHTML(bookingLabel(selected))+'</p><div class="row"><button data-action="showOnTimeline">일정 상세 보기</button><button data-ask-stop="'+selected.id+'">채팅으로 질문</button></div>':'<p>일정을 등록하면 선택한 장소의 상세가 표시돼요.</p>')+'</div>';
 }
 function chatMessageMarkup(message,index){
-  return '<div class="trip-message '+(message.role==='user'?'user':'')+'" id="trip-message-'+index+'">'+(message.role==='user'?'':'<span class="message-avatar" aria-hidden="true">t</span>')+'<div class="message-body"><div class="message-meta">'+(message.role==='user'?'나':'triPilot')+' · '+escapeHTML(message.label)+'</div><div class="message-bubble">'+escapeHTML(message.text)+'</div></div></div>';
+  return '<div class="trip-message '+(message.role==='user'?'user':'')+'" id="trip-message-'+index+'">'+(message.role==='user'?'':'<span class="message-avatar" aria-hidden="true">t</span>')+'<div class="message-body"><div class="message-meta">'+(message.role==='user'?'나':'guguroute')+' · '+escapeHTML(message.label)+'</div><div class="message-bubble">'+escapeHTML(message.text)+'</div></div></div>';
 }
 function chatMarkup(){
   const selected=selectedRow(),adjusted=state.applied&&state.result==='adjust'&&canAdjust();
@@ -353,7 +353,7 @@ document.addEventListener('click',event=>{
   }
 });
 function showInfo(kind){
-  $('dialogContent').innerHTML=kind==='history'?'<h2 id="dialogTitle">변경 기록</h2><p><strong>일정 v1 · 최초 등록</strong></p><p>'+summary()+'</p><p>'+(state.result==='adjust'&&canAdjust()?dayLabel(changedRow().date)+' · '+escapeHTML(changedRow().place)+' · '+escapeHTML(changedRow().time)+' → '+proposedTime(changedRow()):'원래 계획 유지')+'</p><p class="muted">첫 검증의 예시 결과입니다. 업체 예약 변경은 실행하지 않았습니다.</p>':'<h2 id="dialogTitle">여행 등록과 시나리오 연결</h2><p>왼쪽 위 triPilot을 누르면 내 여행 화면으로 돌아갑니다. 위쪽 화면 흐름의 일정 · 채팅 메뉴에서 여행을 열 수 있습니다.</p><p>일차별 날짜·시간·장소를 직접 입력한 뒤 검증 하기를 누르면 관리 시작 화면으로 바로 이동합니다. 입력 내용은 이전 화면으로 돌아오거나 언어를 바꿔도 유지됩니다.</p><p>촬영 모드는 화면 검토 도구를 숨깁니다. 실제 분석·지도·예약·저장은 연결되지 않은 목업입니다.</p>';
+  $('dialogContent').innerHTML=kind==='history'?'<h2 id="dialogTitle">변경 기록</h2><p><strong>일정 v1 · 최초 등록</strong></p><p>'+summary()+'</p><p>'+(state.result==='adjust'&&canAdjust()?dayLabel(changedRow().date)+' · '+escapeHTML(changedRow().place)+' · '+escapeHTML(changedRow().time)+' → '+proposedTime(changedRow()):'원래 계획 유지')+'</p><p class="muted">첫 검증의 예시 결과입니다. 업체 예약 변경은 실행하지 않았습니다.</p>':'<h2 id="dialogTitle">여행 등록과 시나리오 연결</h2><p>왼쪽 위 guguroute을 누르면 내 여행 화면으로 돌아갑니다. 위쪽 화면 흐름의 일정 · 채팅 메뉴에서 여행을 열 수 있습니다.</p><p>일차별 날짜·시간·장소를 직접 입력한 뒤 검증 하기를 누르면 관리 시작 화면으로 바로 이동합니다. 입력 내용은 이전 화면으로 돌아오거나 언어를 바꿔도 유지됩니다.</p><p>촬영 모드는 화면 검토 도구를 숨깁니다. 실제 분석·지도·예약·저장은 연결되지 않은 목업입니다.</p>';
   $('infoDialog').showModal();
 }
 document.addEventListener('keydown',event=>{if(event.key.toLowerCase()==='f'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,dialog')){event.preventDefault();$('recordToggle').click();}});

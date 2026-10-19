@@ -128,6 +128,12 @@ describe("social sign-in calls", () => {
     await expect(exchangeTicket("T", "n".repeat(64), "ko")).rejects.toMatchObject({ code: "ticket_invalid" });
   });
 
+  it("신규 가입 대기 상태를 서버 응답과 세션에서 함께 보존한다", async () => {
+    replies.push(json({ outcome: "created", provider: "google", trips: 0, ...sessionBody("member"), registration_required: true }));
+    expect(await exchangeTicket("T", "n".repeat(64), "ko")).toMatchObject({ registrationRequired: true });
+    expect(currentSession()?.registrationPending).toBe(true);
+  });
+
   it("lists and unlinks with the session, keeping only providers it knows (the write carries the CSRF token)", async () => {
     replies.push(json({ links: [{ provider: "google", linked_at: "2026-10-03T10:00:00+09:00" }, { provider: "weird" }] }));
     expect(await getLinks("ko")).toEqual([{ provider: "google", linkedAt: "2026-10-03T10:00:00+09:00" }]);

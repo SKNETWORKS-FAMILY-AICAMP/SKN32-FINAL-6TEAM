@@ -42,11 +42,11 @@ x600 서버와 오라클 서버의 도커 이미지 정리 규칙·월별 복원
 
 현재 안내와 과거 기록을 분리하고 데이터·평가·학습·경로·문서 형식을 정리했습니다. [적용·검증 보고서](../final_project_cs/wiki/records/reports/2026-10-11_wiki-current-and-governance-v3.md).
 
-## 2026-10-10 — triPilot 기준선 v2 현재 버전 반영·재검토
+## 2026-10-10 — guguroute 기준선 v2 현재 버전 반영·재검토
 
 [기준선 v2](../program/research/baseline_2026-10-10/triPilot-baseline-v2.html)와 [작성법 v2](../program/research/baseline_2026-10-10/baseline-writing-guide-v2.html)에 현재 동의·자료 사용 조건, 이동 경로 자료 갱신, 웹 검토·복원 동작을 반영했다. [재검토 보고](../final_project_cs/wiki/records/reports/2026-10-10_baseline-v2-refresh.md)에 문서 검사 38/38, 백엔드 선택 시험 317/319·실패 2, 웹 단위 시험 52/52와 검증 한계를 기록했다. v1과 v11은 보존했고 팀 채택 전 후보 지위를 유지했다.
 
-## 2026-10-10 — triPilot 통합 기준선 후보와 작성법
+## 2026-10-10 — guguroute 통합 기준선 후보와 작성법
 
 프로젝트 공통 기준·Activity/Dining/Mobility 구현 기준·모델 학습 비교 기준을 [한 HTML 기준선 후보](../program/research/baseline_2026-10-10/triPilot-baseline-v1.html)에 연결했다. [작성법](../program/research/baseline_2026-10-10/baseline-writing-guide.html)과 [검수 보고서](../program/research/baseline_2026-10-10/review-report.html)에 출처 11개, 현재 상태 관측, 수정·재검사 범위를 기록했다. v11을 바꾸거나 팀 채택·제품 출시 완료로 선언한 것은 아니다.
 

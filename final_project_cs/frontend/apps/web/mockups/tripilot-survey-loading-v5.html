@@ -421,7 +421,7 @@ function gkHeaderButton(){
   const label=on?'항로 지킴이 끄기':'항로 지킴이 켜기';
   return `<button class="icon-btn gk-icon ${on?'is-on':'is-off'}" type="button" data-action="gk-toggle" ${tipButton(label,on?'':'aria-haspopup="dialog"')}>${icon('shield')}<span class="sr-only">${on?'지금 켜져 있어요':'지금 꺼져 있어요'}</span></button>`;
 }
-function brand(){return `<div class="brand"><span>triPilot</span><span class="right"><span class="gk-slot">${gkHeaderButton()}</span><span class="meta">여행 계획</span></span></div>`}
+function brand(){return `<div class="brand"><span>guguroute</span><span class="right"><span class="gk-slot">${gkHeaderButton()}</span><span class="meta">여행 계획</span></span></div>`}
 function shell(body,footer='',heading=''){
   return `<div class="phone-content">${brand()}${heading?`<header class="app-head">${heading}</header>`:''}<div class="scroll">${body}</div>${footer?`<footer class="footer">${footer}</footer>`:''}</div>`;
 }
@@ -439,7 +439,7 @@ function progress(done=false){
 /* ① 계획 담기 */
 function screenPlan(){
   phone.innerHTML=`<div class="desk-content"><a class="skip" href="#plan-main">본문으로 건너뛰기</a>
-  <header class="site-head"><div class="logo"><span class="logo-mark" aria-hidden="true">t</span><span>triPilot</span></div><div class="right"><span class="gk-slot">${gkHeaderButton()}</span><button class="icon-btn" type="button" ${tipButton('메뉴 열기')}>${icon('menu')}</button></div></header>
+  <header class="site-head"><div class="logo"><span class="logo-mark" aria-hidden="true">t</span><span>guguroute</span></div><div class="right"><span class="gk-slot">${gkHeaderButton()}</span><button class="icon-btn" type="button" ${tipButton('메뉴 열기')}>${icon('menu')}</button></div></header>
   <div class="site-body" id="plan-main" tabindex="-1">
     <ol class="stepper" aria-label="진행 단계"><li class="current" aria-current="step"><span class="num">01</span>계획 담기</li><li><span class="num">02</span>함께 확인</li><li><span class="num">03</span>여행 시작</li></ol>
     <p class="caps">A PLAN THAT FEELS LIKE YOU</p>

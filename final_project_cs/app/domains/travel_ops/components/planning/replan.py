@@ -126,6 +126,8 @@ class Candidate:
     distance_first: bool = False
     #: ★`[2026-10-05]` 추천 이유 한 줄 — 잰 값만(거리 · 같은 분류 단계 · 같은 브랜드 · 영업 확인됨). 모르는 것은 말하지 않는다
     reason: str = ""
+    #: ★`[2026-10-16]` 고객에게 보일 안 설명 — 흐름 한 칸 선택기(`meal_pick.make_flow_picker`)가 고른 안에만 붙는다(「그날 흐름: …」)
+    note: str = ""
 
     def rank(self) -> tuple:
         # ★`[2026-09-28]` 도보 분(③ 원래 시각과의 차이)과 경고 유무를 더했다. 활동·경로 후보는 `walk_min` 이
@@ -822,6 +824,7 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             "walk_min": candidate.walk_min,
             # ★`[2026-10-05]` 추천 이유 한 줄(잰 값만) — 화면 표시는 ui 몫이라 먼저 기록에만 싣는다
             **({"reason": candidate.reason} if candidate.reason else {}),
+            **({"note": candidate.note} if candidate.note else {}),
             # ★`[2026-09-30 팀]` 원래 식당과의 가격 비교 결과만(구글 금액은 싣지 않는다 — 저장 금지). 식당 밖은 None
             "price_compare": candidate.price_compare,
             **({"card_payment": candidate.card_payment} if candidate.card_payment is not None else {}),

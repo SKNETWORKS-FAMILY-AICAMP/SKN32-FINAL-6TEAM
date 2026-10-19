@@ -137,7 +137,7 @@ const day = (iso) => `${Number(iso.slice(5, 7))}.${Number(iso.slice(8, 10))}`;
 const at = (iso) => `${day(iso)} ${iso.slice(11, 16)}`;
 const esc = (text) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const tag = (n) => `<span class="tag"${n.posted ? " data-posted" : ""}>${n.posted ? "게시 중" : "종료"}</span>`;
-const header = `<header class="appHeader"><span class="brand"><span class="mark">t</span>triPilot</span><span class="menu" aria-hidden="true"><i></i></span></header>`;
+const header = `<header class="appHeader"><span class="brand"><span class="mark">t</span>guguroute</span><span class="menu" aria-hidden="true"><i></i></span></header>`;
 const line = (n, extra = "") => `<button type="button" class="line" data-open="${n.id}"${extra}>${tag(n)}<span class="title">${esc(n.title)}</span><time>${day(n.startsAt)}</time></button>`;
 function pager(page, pages) {
   const numbers = Array.from({ length: pages }, (_, i) => i + 1).map((p) => `<button type="button" data-page="${p}"${p === page ? ' aria-current="page"' : ""}>${p}</button>`).join("");

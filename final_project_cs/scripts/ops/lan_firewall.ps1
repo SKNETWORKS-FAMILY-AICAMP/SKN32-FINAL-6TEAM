@@ -1,4 +1,4 @@
-﻿# triPilot — 같은 공유기의 다른 기기가 이 PC 의 웹앱 · API 에 들어올 수 있게 윈도 방화벽에 **들어오는 연결 허락 규칙 하나**를 더한다.
+﻿# guguroute — 같은 공유기의 다른 기기가 이 PC 의 웹앱 · API 에 들어올 수 있게 윈도 방화벽에 **들어오는 연결 허락 규칙 하나**를 더한다.
 #
 # ★관리자 PowerShell 에서 직접 실행한다(보안 설정이라 자동으로 하지 않는다):
 #     powershell -ExecutionPolicy Bypass -File scripts\ops\lan_firewall.ps1            # 규칙 더하기
@@ -11,7 +11,7 @@ param(
   [int[]]$Port = @(3110, 8043),
   [switch]$Remove
 )
-$name = 'triPilot LAN (web+api)'
+$name = 'guguroute LAN (web+api)'
 if ($Remove) {
   Get-NetFirewallRule -DisplayName $name -ErrorAction SilentlyContinue | Remove-NetFirewallRule
   Write-Host "규칙 '$name' 을 지웠다"

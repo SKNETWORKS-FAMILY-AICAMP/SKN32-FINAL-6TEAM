@@ -25,6 +25,7 @@ from psycopg.types.json import Json
 from app.core.settings import get_guardrails
 
 from app.domains.travel_ops.components.customer import retention
+from app.domains.travel_ops.components.intake import backup as intake_backup
 from app.domains.travel_ops.components.itinerary import trip_delete
 
 _CANDIDATES = """
@@ -84,8 +85,10 @@ def mode() -> str:
         return "dry_run"
 
 
-def erase_customer(conn, tenant_id: str, customer_id: UUID) -> dict[str, int]:
+def erase_customer(conn, tenant_id: str, customer_id: UUID, *, reason: str = "member_cleanup") -> dict[str, int]:
     """사용자 한 명의 자료를 지운다(회원 · 게스트 공통) — 호출자가 `with conn.transaction():` 으로 감싼다. 센 것을 돌려준다.
+
+    `reason` — 계획서 접수를 지우기 전 백업에 남길 이유(`member_cleanup` · `guest_cleanup`, `intake/backup.py`).
 
     `kept` = 1 이면 사용자 행을 가리키는 다른 기록이 있어 행만 남았다(식별 정보는 지워졌다)."""
     done = {"trips": 0, "cases": 0, "customer": 0, "kept": 0}
@@ -93,9 +96,12 @@ def erase_customer(conn, tenant_id: str, customer_id: UUID) -> dict[str, int]:
         cur.execute("SELECT trip_id FROM trips WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
         trips = [row[0] for row in cur.fetchall()]
     for trip_id in trips:
-        if trip_delete.delete_trip(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id) is not None:
+        if trip_delete.delete_trip(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id,
+                                   backup_reason=reason) is not None:
             done["trips"] += 1
     with conn.cursor() as cur:
+        # ★`[2026-10-16 사용자 지시]` 여행이 안 된 접수도 지우기 전에 백업한다 — 실패하면 예외로 이 고객의 삭제 전체가 되돌려진다
+        intake_backup.backup_customer_intakes(conn, tenant_id=tenant_id, customer_id=customer_id, reason=reason)
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))      # 여행이 안 된 접수(자식은 CASCADE)
         for table in _BY_CUSTOMER:
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))

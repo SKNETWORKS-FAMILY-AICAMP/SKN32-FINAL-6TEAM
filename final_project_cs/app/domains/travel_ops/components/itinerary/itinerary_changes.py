@@ -1171,6 +1171,7 @@ RELAX_SHIFTS_MIN = (30, 60, 90, 120)
 RELAX_RADIUS_M = 1500
 #: 반경을 넓힌 안의 반경 · 고르게 할 안 수 — ★우리가 고른 값(2026-09-29 사용자 요구 「3개를 뽑아 추천」). 5km 는 지하철 네댓 정거장
 RELAX_WIDE_M = 5000
+RELAX_ACTIVITY_RADII_M = (RELAX_WIDE_M, 10_000, 15_000)
 RELAX_WANT = 3
 
 
@@ -1220,7 +1221,8 @@ def plan_nearby(kind: str, *, trip: dict[str, Any], places: list[dict[str, Any]]
 
 def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
                     state_lookup: DiningStateLookup | None = None, exclude: set[str] = frozenset(),
-                    causes: list[dict[str, Any]] = ()) -> list[dict[str, Any]]:
+                    causes: list[dict[str, Any]] = (), now: datetime | None = None,
+                    wide_radius_m: int = RELAX_WIDE_M) -> list[dict[str, Any]]:
     """같은 조건으로 0곳일 때 **조건을 하나씩 풀어** 실제로 되는 안. `[2026-09-29 사용자 지적 — ui 세션 전달]`
 
     ☆왜 — 「08:00에 갈 수 있는 식당이 3km 안에 없어요」로 끝나면 고객이 할 수 있는 것이 없다. 되는 안을 계산해 준다.
@@ -1234,9 +1236,21 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
     돌려주는 것: 적용에 필요한 값을 그대로 적은 안(`alternate_record` 모양 + `relaxed` · `note`), 되는 것만.
     """
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
-    duration = minutes_between(current.starts_at, current.ends_at)
+    ongoing = now is not None and current.starts_at < now
+    if ongoing and current.ends_at is not None and current.ends_at <= now:
+        return []
+    base_start = max(current.starts_at, now) if now is not None else current.starts_at
+    duration = minutes_between(base_start, current.ends_at)
     original = str(current.place["place_id"])
     constraints = trip.get("constraints") or {}
+    travel_minutes: dict[str, tuple[int, str]] = {}
+    route_probe = MealRoute(planned_end=base_start, leg=_leg_engine(trip)) if ongoing and current.kind == "activity" else None
+    # 다음 방문과 그 앞 이동을 보존하면서 방문을 줄이는 선택지도 만든다.
+    latest_finish = None
+    if ongoing and current.kind == "activity" and following is not None:
+        onward = sum(((i.ends_at or i.starts_at) - i.starts_at for i in items
+                      if current.seq < i.seq < following.seq and i.kind == "mobility"), timedelta())
+        latest_finish = following.starts_at - onward
 
     def best_at(center: dict[str, Any], start: datetime, radius: int):
         end = start + timedelta(minutes=duration)
@@ -1247,9 +1261,45 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
                                       exclude={original, str(center["place_id"])}, state_lookup=state_lookup,
                                       route=meal_route(items, current, leg=_leg_engine(trip)))
         else:
-            found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
-                                                    radius_m=radius)
-                     if str(c.place["place_id"]) not in (original, str(center["place_id"]))]
+            if ongoing:
+                from app.domains.travel_ops.components.planning.replan import WEATHER_LIKE, distance_m, walk_minutes
+
+                found = []
+                indoor_only = any(c.get("category") in WEATHER_LIKE for c in causes)
+                for spot in places:
+                    key = str(spot["place_id"])
+                    if (spot.get("kind") != "activity" or spot.get("latitude") is None or spot.get("longitude") is None
+                            or key in {original, str(center["place_id"])} or distance_m(center, spot) > radius):
+                        continue
+                    if indoor_only and not ((spot.get("attributes") or {}).get("indoor") or spot.get("weather_sensitive") is False):
+                        continue
+                    if key not in travel_minutes:
+                        eta = route_probe._eta(current.place, spot, base_start) if route_probe.leg is not None else None
+                        travel_minutes[key] = (max(0, eta), "이동 계산") if eta is not None else (
+                            walk_minutes(distance_m(current.place, spot)), "도보 추정")
+                    eta, basis = travel_minutes[key]
+                    arrival = max(start, base_start + timedelta(minutes=eta))
+                    finish = arrival + timedelta(minutes=duration)
+                    if latest_finish is not None:
+                        finish = min(finish, latest_finish)
+                    visit_minutes = int((finish - arrival).total_seconds() // 60)
+                    if visit_minutes < min(duration, 25):
+                        from app.domains.travel_ops.components import candidate_diagnostics
+                        candidate_diagnostics.record(key=key, name=spot.get("name"), outcome="rejected",
+                                                     reasons=["다음 일정 전 최소 방문 시간이 부족하다"])
+                        continue
+                    got = activity_candidates(original=center, places=[spot], start=arrival, end=finish,
+                                              causes=list(causes), radius_m=radius)
+                    for candidate in got:
+                        candidate.starts_at, candidate.ends_at = arrival, finish
+                        candidate.note = f"지금 출발 · {basis} {eta}분 · {seoul(arrival):%H:%M}~{seoul(finish):%H:%M} 방문"
+                        if visit_minutes < duration:
+                            candidate.note += f" · 다음 일정에 맞춰 방문 {visit_minutes}분으로 줄임"
+                    found.extend(got)
+            else:
+                found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
+                                                        radius_m=radius)
+                         if str(c.place["place_id"]) not in (original, str(center["place_id"]))]
             for candidate in found:
                 candidate.rejected = [r for r in candidate.rejected if not r.startswith("가격을 몰라")]
         # `exclude` — 이미 고른 곳(바꾼 뒤의 다른 안을 모을 때 바꾼 곳 · 통과한 나머지)은 다시 내지 않는다
@@ -1267,11 +1317,12 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
             if current.kind == "activity" and any(_same_activity_site(candidate, other) for other in picked):
                 continue
             picked.append(candidate)
-            out.append({**alternate_record(candidate), "starts_at": start.isoformat(), "ends_at": end.isoformat(),
-                        "relaxed": relaxed, "note": note})
+            out.append({**alternate_record(candidate), "starts_at": (candidate.starts_at or start).isoformat(),
+                        "ends_at": (candidate.ends_at or end).isoformat(), "relaxed": relaxed,
+                        "note": " · ".join(part for part in [note, candidate.note] if part)})
 
     for shift in RELAX_SHIFTS_MIN:
-        start = current.starts_at + timedelta(minutes=shift)
+        start = base_start + timedelta(minutes=shift)
         # ★고를 때(`plan_swap`)와 같은 기준 — 뒤 이동을 밀고도 다음 장소 일정에 닿아야 올린다(고를 수 없는 안을 보이지 않는다)
         if shift_moves_after(items, current, start + timedelta(minutes=duration))[1] is not None:
             break
@@ -1280,11 +1331,11 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
             add(ranked, start, end, "time", f"{seoul(start):%H:%M}으로 늦추면", take=1)
             break
     if following is not None and following.place and following.place.get("latitude") is not None:
-        ranked, end = best_at(following.place, current.starts_at, RELAX_RADIUS_M)
-        add(ranked, current.starts_at, end, "near_next", f"다음 일정({following.place['name']}) 근처", take=1)
+        ranked, end = best_at(following.place, base_start, RELAX_RADIUS_M)
+        add(ranked, base_start, end, "near_next", f"다음 일정({following.place['name']}) 근처", take=1)
     # ★`[2026-09-29 사용자 요구 — ui 세션 전달]` 반경을 넓힌 안까지 더해 **3개**를 고르게 한다(「범위를 넓혀 찾아서 알려 주고」)
-    ranked, end = best_at(current.place, current.starts_at, RELAX_WIDE_M)
-    add(ranked, current.starts_at, end, "wider", f"{RELAX_WIDE_M / 1000:g}km 안으로 넓히면", take=RELAX_WANT)
+    ranked, end = best_at(current.place, base_start, wide_radius_m)
+    add(ranked, base_start, end, "wider", f"{wide_radius_m / 1000:g}km 안으로 넓히면", take=RELAX_WANT)
     return out
 
 
@@ -1303,7 +1354,8 @@ def _top_reason(rejected: list) -> str | None:
 def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_version: int, items: list[Item],
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
                          request_id: str | None, state_lookup: DiningStateLookup | None = None,
-                         price_lookup: PriceLookup | None = None) -> Plan:
+                         price_lookup: PriceLookup | None = None, reported_closed: bool = False,
+                         meal_picker: MealPicker | None = None, search_origin: dict[str, Any] | None = None) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
 
     ★`[2026-09-29 사용자 지적 · ui 세션 전달]` 전에는 들고 있던 안(`detail.alternates`)만 봐서, 감시가 한 번도 안 고친
@@ -1326,6 +1378,10 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     cause = with_request({"category": "customer_request", "type": "alternate", "from": current.place["name"],
                           "message": message, "evidence": "고객 요청"}, request_id)
     original = str(current.place["place_id"])
+    if search_origin is not None:
+        from app.domains.travel_ops.components.planning.replan import distance_m
+        places = [p for p in places if p.get("latitude") is not None and p.get("longitude") is not None
+                  and distance_m(search_origin, p) <= max(ALTERNATE_RADII_M["dining"])]
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
     # ★`[2026-09-29 ui 세션 지적]` 0곳이면 **반경을 넓혀 다시** 찾는다 — 700m 는 설계 근거 없는 구현 선택이었고, 08:00 아침처럼
     #   그 시각에 여는 곳이 드문 때 「없어요」가 쉽게 나왔다(실서버 「첫날 아침 일정 바꿔」). 식사 700m → 1.5km → 3km,
@@ -1335,7 +1391,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
         duration = minutes_between(current.starts_at, current.ends_at)
         for radius in ALTERNATE_RADII_M["dining"]:
             candidates = dining_candidates(
-                original=current.place, places=places, arrival=current.starts_at, minutes=duration,
+                original=search_origin or current.place, places=places, arrival=current.starts_at, minutes=duration,
                 constraints=trip.get("constraints") or {}, radius_m=radius,
                 next_start=following.starts_at if following else None, exclude={original},
                 state_lookup=state_lookup,

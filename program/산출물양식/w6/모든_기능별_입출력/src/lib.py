@@ -240,7 +240,7 @@ def page(slug, title, sub, top, spec=None, scenario=None, ext=None, diagram=None
          f"<title>{esc(title)}</title>",
          '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">',
          f"<style>{CSS}</style></head><body><div class=\"wrap\">",
-         '<p class="eyebrow">triPilot · 모든 기능별 입출력 · 2026-10-12</p>',
+         '<p class="eyebrow">guguroute · 모든 기능별 입출력 · 2026-10-12</p>',
          f"<h1>{esc(title)}</h1>",
          f'<div class="sub">{sub}</div>',
          f'<div class="nav">{_nav_links(slug)}</div>',

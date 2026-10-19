@@ -1,4 +1,8 @@
-# triPilot 루트 작업 기준
+# guguroute 루트 작업 기준
+
+## 제품 이름 변경 — 2026-10-18 사용자 결정
+
+제품·프로젝트 이름은 **구구루트(guguroute)**입니다. 개발 팀 이름 **A-COPilot**은 그대로입니다. 문서·코드에서 제품을 지칭하는 이름은 새 이름을 사용합니다. 기존 접속·파일 참조·로그인·식별자와 원문 보존에 필요한 이름은 [유지 위치·이유](wiki/records/reports/2026-10-18_guguroute-rename-exceptions.md)를 확인합니다.
 
 ## 워크플로 그림 규칙 — 2026-10-09 사용자 지시
 
@@ -37,7 +41,7 @@
 
 | 사실 | 현재 값 | 정본 | 확인일 |
 |---|---|---|---|
-| ★**이름** | `[2026-09-25 사용자]` **프로젝트(제품) 이름은 triPilot, 팀 이름은 A-COPilot.** 「A-COP」은 옛 이름이다 — 문서·화면에서 제품을 가리킬 때 A-COP 이라 쓰지 않는다. ★그대로 두는 것: 팀 이름 A-COPilot · 실제 파일 이름(`A-COP_구현계획서_v11.md` 등) · 코드 식별자(`ACOP_` 환경변수 · `acop_cs` DB · `acop_composer` · `acop_dojo`) · 기록 문서(계획서 v11 읽기 전용 · `records/` · 조사·브리핑·산출물) | `README.md` | 2026-09-25 |
+| ★**이름** | `[2026-10-18 사용자]` **프로젝트(제품) 이름은 구구루트(guguroute), 팀 이름은 A-COPilot.** 「A-COP」은 옛 이름이다 — 문서·화면에서 제품을 가리킬 때 A-COP 이라 쓰지 않는다. ★그대로 두는 것: 팀 이름 A-COPilot · 실제 파일 이름(`A-COP_구현계획서_v11.md` 등) · 코드 식별자(`ACOP_` 환경변수 · `acop_cs` DB · `acop_composer` · `acop_dojo`) · 기록 문서(계획서 v11 읽기 전용 · `records/` · 조사·브리핑·산출물) | `README.md` | 2026-09-25 |
 | 현재 사양 정본 | **wiki의 확정 결정·계약**. v11은 당시 계획 기록이며 v12 안내서는 작성 전이다 | `wiki/index.md` · 각 저장소 `wiki/` | 2026-10-11 |
 | **도메인** | **여행 CS** — 2026-09-08 팀 결정으로 커머스 CS 에서 교체. 코어 계약·생명주기·동시성·감사·평가 도구는 승계, Team 모듈과 도메인 데이터는 전량 신규 | `program/plan/A-COP_구현계획서_v11.md` §0 | 2026-09-10 |
 | Team 목록 — v11 §5 | Activity · Dining · Mobility · **Booking Handoff** · Lodging/Flight(등록만). `[결정 2026-09-10]` **MVP 는 Activity · Dining · Mobility 셋.** **Booking Handoff 는 MVP 가 아니다 — MVP 다음 단계**(09-08 「MVP 필수 승격」을 뒤집음). 그 몫인 DoD-14~21 은 MVP 판정에서 뺀다 | `program/plan/A-COP_구현계획서_v11.md` §5 · §0-4 결정 16 | 2026-09-10 |
@@ -125,7 +129,7 @@ v9 기준 표가 필요하면 `program/plan/A-COP_구현계획서_v9.md` §0 을
 
 폴더 규칙과 각 데이터셋의 상태는 [`datasets/README.md`](datasets/README.md)가 정본이다. 새 데이터셋을 만들기 전에 먼저 읽는다.
 
-| 데이터셋 | 무엇인가 | triPilot에서 쓰는 곳 |
+| 데이터셋 | 무엇인가 | guguroute에서 쓰는 곳 |
 |---|---|---|
 | [`voc/*`](datasets/voc/) | 고객 문의·응대 공개 데이터 | Core 1의 RAG 지식 재료 |
 | [`mt/*`](datasets/mt/) | 번역 성능 비교 | 다국어 응대 검토용 |

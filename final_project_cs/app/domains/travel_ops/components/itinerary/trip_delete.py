@@ -25,6 +25,7 @@ from app.core.contracts import CaseStatus
 from app.core.settings import get_guardrails
 from app.core.transition import transition_case
 from app.core.case_lifecycle.events import REQUIRED_PAYLOAD_KEYS, TRANSITIONS, EventType
+from app.domains.travel_ops.components.intake import backup as intake_backup
 
 REASON = "trip_deleted"
 ACTOR_TYPE, ACTOR_ID = "system", "trip_delete"
@@ -103,8 +104,11 @@ def purge_cases(conn, *, tenant_id: str, case_ids: list[UUID]) -> dict[str, int]
     return out
 
 
-def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> dict[str, Any] | None:
-    """여행 하나를 지운다. 없는 여행 · 남의 여행이면 None. 지운 것을 세어 돌려준다(조용히 넘기지 않는다)."""
+def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID,
+                backup_reason: str = "trip_delete") -> dict[str, Any] | None:
+    """여행 하나를 지운다. 없는 여행 · 남의 여행이면 None. 지운 것을 세어 돌려준다(조용히 넘기지 않는다).
+
+    `backup_reason` — 접수를 지우기 전에 백업할 때 남기는 이유(`intake/backup.py` — 고객이 지움 `trip_delete` · 게스트 정리 · 회원 정리)."""
     with conn.cursor() as cur:
         cur.execute("SELECT 1 FROM trips WHERE tenant_id=%s AND trip_id=%s AND customer_id=%s FOR UPDATE",
                     (tenant_id, trip_id, customer_id))
@@ -122,6 +126,9 @@ def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID) -> di
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s AND {column}=%s", (tenant_id, trip_id))
             counts[table] = cur.rowcount
         # 접수 — 이 여행으로 만든 것 · ★`[2026-10-13]` 이 여행을 다시 연 수정 접수(`intake/reopen.py`)만(자식 `intake_sources` · `intake_claims` · `intake_reviews` 는 CASCADE)
+        # ★`[2026-10-16 사용자 지시]` 지우기 전에 백업한다(계획서는 골든셋 재료) — 백업이 실패하면 예외로 삭제 전체가 되돌려진다
+        counts["intake_backups"] = intake_backup.backup_trip_intakes(conn, tenant_id=tenant_id, customer_id=customer_id,
+                                                                     trip_id=trip_id, reason=backup_reason)
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND (trip_id=%s OR reopen_trip_id=%s) AND customer_id=%s",
                     (tenant_id, trip_id, trip_id, customer_id))
         counts["trip_intakes"] = cur.rowcount

@@ -34,10 +34,10 @@ app, ctl = read("app.env"), read("control.env")
 names = [l.split("=", 1)[0] for l in app + ctl]
 dups = {n for n in names if names.count(n) > 1}
 assert not dups, dups
-env_lines = ["# triPilot Oracle ARM (develop) — x600 서버와 같은 구조: 설정·비밀값 = .env, 외부 API 키·호출 한도 = .env.apikeys",
+env_lines = ["# guguroute Oracle ARM (develop) — x600 서버와 같은 구조: 설정·비밀값 = .env, 외부 API 키·호출 한도 = .env.apikeys",
              "# compose 변수(DB_PASSWORD·CHAT_URL·EMBED_URL·MOBILITY_DIR·CHAT_ID·EMBED_ID)는 옛 control.env 에서 옮겼다(2026-10-13)"]
 env_lines += ctl + [l for l in app if l.split("=", 1)[0] not in KEYNAMES]
-key_lines = ["# triPilot Oracle ARM (develop) — 외부 API 키·호출 한도. 이름은 저장소 .env.apikeys.example 을 따른다"]
+key_lines = ["# guguroute Oracle ARM (develop) — 외부 API 키·호출 한도. 이름은 저장소 .env.apikeys.example 을 따른다"]
 key_lines += [l for l in app if l.split("=", 1)[0] in KEYNAMES]
 print(".env names:", [l.split("=", 1)[0] for l in env_lines if not l.startswith("#")])
 print(".env.apikeys names:", [l.split("=", 1)[0] for l in key_lines if not l.startswith("#")])

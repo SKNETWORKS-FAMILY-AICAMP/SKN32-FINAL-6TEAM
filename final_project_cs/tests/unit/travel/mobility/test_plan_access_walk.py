@@ -95,7 +95,7 @@ def test_near_stations_measure_to_the_exit_by_road_but_keep_candidate_order():
         def nearest(self, nm, lat, lng, line=None):
             return (250.0, {"lat": 37.5722, "lng": 126.9801}) if nm == "가" else None
 
-    # ☆`[2026-10-06]` 길 거리가 직선의 `WALK_ROUTED_CAP_PROPOSED`(2배) 를 넘으면 상한이 걸린다 — 이 시험은 상한 안(출구 직선 250 m · 길 480 m = 1.92배)에서 본다
+    # ☆`[2026-10-06]` 길 거리 상한(직선 2배) 안에서 보던 시험(출구 직선 250 m · 길 480 m = 1.92배). 상한은 2026-10-18 에 껐고 값은 그대로다
     p = _planner(FakeRouter(meters=480.0), sc=SC(), ex=EX())
     p._station_k = lambda: 3
     p._blocked_station = lambda rec: False

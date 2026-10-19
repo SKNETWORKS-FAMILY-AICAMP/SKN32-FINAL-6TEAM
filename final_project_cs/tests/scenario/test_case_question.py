@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """여행 Case 의 **규정 질문** — 일정을 바꾸지 않고 규정 근거로 답한다. `[2026-09-25]`
 
-★인계(triPilot : RAG 세션, 2026-09-25 실측): 여행을 가리키는 Case 는 전부 `*.itinerary`(규정 면제)로 갔고,
+★인계(guguroute : RAG 세션, 2026-09-25 실측): 여행을 가리키는 Case 는 전부 `*.itinerary`(규정 면제)로 갔고,
   고객 문장은 여섯 종류로만 읽혀
     「비 오면 오후 한강 카약 취소돼요? 위약금 있어요?」 → other  → 사람
     「저녁 식당에 아이 데려가도 되나요」                 → other  → 사람
@@ -33,7 +33,7 @@ PALACE = "내일 경복궁 휴관 아니에요?"
 DELAY = "점심 식당 70분 늦을 것 같아요"
 SWAP = "다른 식당으로 바꿔줘"
 
-#: 실측한 모델 출력(triPilot : RAG, 2026-09-25) — 앞의 둘은 other, 경복궁은 closed 로 둔갑했다
+#: 실측한 모델 출력(guguroute : RAG, 2026-09-25) — 앞의 둘은 other, 경복궁은 closed 로 둔갑했다
 MODEL = {KAYAK: {"type": "other"}, CHILD: {"type": "other"}, PALACE: {"type": "closed"},
          DELAY: {"type": "delay", "minutes": 70}, SWAP: {"type": "change"}}
 

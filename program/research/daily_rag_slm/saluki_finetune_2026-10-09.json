@@ -97,7 +97,7 @@
       "stop_after_failure": true
     },
     "data": {
-      "selected_first_baseline": "datasets/travel/train_oos2/train_oos2.jsonl",
+      "selected_first_baseline": "datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl",
       "sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",
       "rows": 2613,
       "normal_rows": 1377,

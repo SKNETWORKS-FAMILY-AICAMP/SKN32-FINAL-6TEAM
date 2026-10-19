@@ -1,12 +1,12 @@
 ---
 type: concept
 title: 시스템 경계
-description: 누가 triPilot과 대화하는가. 외부 행위자와 진입 경로 3종
+description: 누가 guguroute과 대화하는가. 외부 행위자와 진입 경로 3종
 status: draft
 tags: [architecture, security]
 owners: [human:미배정]
 domain: travel
-impl_scope: cs — triPilot 여행 제품의 고객·개발자 경계이며 sample 참고 구현의 경로를 규정하지 않는다
+impl_scope: cs — guguroute 여행 제품의 고객·개발자 경계이며 sample 참고 구현의 경로를 규정하지 않는다
 ---
 
 # 시스템 경계

@@ -40,9 +40,9 @@ def diagram(kind):
     slug = 'monitoring-' + kind
     value = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 {height}" role="img" aria-labelledby="{slug}-title {slug}-desc">'
     value += f'<title id="{slug}-title">{title}</title>'
-    value += f'<desc id="{slug}-desc">triPilot 모니터링의 {"여행자" if customer else "운영자"} 목표와 외부 액터의 참여 관계를 보여준다. 연결선은 실행 순서가 아니다.</desc>'
+    value += f'<desc id="{slug}-desc">guguroute 모니터링의 {"여행자" if customer else "운영자"} 목표와 외부 액터의 참여 관계를 보여준다. 연결선은 실행 순서가 아니다.</desc>'
     value += '<rect class="boundary" x="280" y="48" width="552" height="552" rx="8"/>'
-    value += text(296, 80, 'triPilot · 모니터링', 'boundary-name', 'start')
+    value += text(296, 80, 'guguroute · 모니터링', 'boundary-name', 'start')
     ys = [148 + i * 100 for i in range(count)]
     # 참여 관계는 화살표 없이 그린다. 상자와 타원보다 먼저 그려 가림을 방지한다.
     for y in ys:
@@ -79,7 +79,7 @@ def diagram(kind):
     for y, (key, lines) in zip(ys, goals):
         value += usecase(556, y, key, lines)
     value += '<path class="legend-rule" d="M40 624 H1080"/>'
-    value += text(40, 652, '실선: 액터의 참여 관계 · 타원: 사용자 목표 · 사각 경계: triPilot의 책임 범위', 'legend', 'start')
+    value += text(40, 652, '실선: 액터의 참여 관계 · 타원: 사용자 목표 · 사각 경계: guguroute의 책임 범위', 'legend', 'start')
     return value + '</svg>'
 
 def build():
@@ -93,7 +93,7 @@ def build():
     :root{color-scheme:light dark;--paper:light-dark(#fbfcfd,#141821);--ink:light-dark(#161c28,#e9edf4);--muted:light-dark(#6b7488,#9aa4b6);--rule:light-dark(#dbe0ea,#4c5260);--accent:light-dark(#a8720c,#d9a441)}
     *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Geist,'Noto Sans KR','Malgun Gothic',sans-serif;font-size:16px;line-height:1.75}main{max-width:1160px;margin:auto;padding:32px 24px 64px}h1,h2,h3{line-height:1.4}h1{font-family:'Instrument Serif','Noto Serif KR',serif}h2{margin-top:48px;border-top:1px solid var(--rule);padding-top:24px}h3{margin-top:40px;color:var(--accent)}a{color:inherit;text-underline-offset:3px}table{border-collapse:collapse;width:100%;margin:16px 0 24px;font-size:15px}th,td{border-bottom:1px solid var(--rule);padding:12px;text-align:left;vertical-align:top}th{font-weight:600}td:first-child{min-width:120px}li{margin:8px 0}figure{margin:24px 0}svg{display:block;width:100%;height:auto}.boundary{fill:none;stroke:var(--ink);stroke-width:1.2}.actor,.goal{fill:var(--paper);stroke:var(--ink);stroke-width:1}.association{fill:none;stroke:var(--muted);stroke-width:1}.label{fill:var(--ink);font-size:16px;font-weight:500}.uc-id,.actor-type,.legend{fill:var(--muted);font-size:12px}.boundary-name{fill:var(--ink);font-size:16px;font-weight:600}.legend-rule{stroke:var(--rule);stroke-width:1}p,li,td{overflow-wrap:anywhere}@media(max-width:700px){main{padding:16px 12px}table{font-size:14px}th,td{padding:8px}td:first-child{min-width:80px}.diagrams figure{overflow-x:auto}.diagrams svg{width:1120px;max-width:none}}@media print{body{color:#161c28;background:#fbfcfd}main{padding:0}h3{break-after:avoid}tr{break-inside:avoid}.diagrams svg{width:100%;max-width:100%}}
     """
-    result = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>triPilot 모니터링 유스케이스 명세</title><style>' + css + '</style></head><body><main>' + diagrams + body + '</main></body></html>'
+    result = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>guguroute 모니터링 유스케이스 명세</title><style>' + css + '</style></head><body><main>' + diagrams + body + '</main></body></html>'
     back_up(output)
     output.write_text(result, encoding='utf-8')
     for kind in ['traveler','operator']:

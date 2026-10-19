@@ -106,8 +106,8 @@ NOT_HERE = [
 ''' + s[j:]
 i = s.index('    page = f"""'); j = s.index('    (OUT / "triPilot_아키텍처_멘토반영_v6.html")')
 s = s[:i] + '''    page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot 멘토 반영 플로우</title><style>{CSS}</style></head><body><main>
-<h1>triPilot — 멀티 에이전트 플로우 · 시스템 구성도 (멘토링 반영)</h1>
+<title>guguroute 멘토 반영 플로우</title><style>{CSS}</style></head><body><main>
+<h1>guguroute — 멀티 에이전트 플로우 · 시스템 구성도 (멘토링 반영)</h1>
 <p class="note">2026-10-02 · v6 · 멘토링 수행일지 2~4회차(09-11 · 09-14 · 10-01)에서 시스템 아키텍처 · 에이전트 플로우에 대한 지적만 골라 반영 · 형식은 부트캠프 참고 구성도(AI Agent 구현실습3 원본 7 · 29쪽) · 사실은 final_project_cs 코드</p>
 <div class="lead">멘토 지적 19개를 반영했습니다. 그림 1은 <b>한 장</b>에 ① 계획을 올릴 때의 검증과 ② 여행 중 지속 관리를 담고, 에이전트마다 <b>트리거 · 받음 · 점검 · 냄 · 평가</b>를 적었습니다. 그림 2는 세부를 빼고 <b>큰 그림</b>으로 줄였습니다. 아직 없는 것(SSE 검증 스트림 · 로그인 · 대화형 성향 질문 · AWS 배포)은 「예정」으로 표시했습니다.</div>
 

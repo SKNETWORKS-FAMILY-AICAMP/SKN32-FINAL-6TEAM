@@ -12,7 +12,7 @@ export class LiveError extends Error {
 }
 
 /**
- * Live connection to the triPilot server (`/v1/web/*`).
+ * Live connection to the guguroute server (`/v1/web/*`).
  *
  * ★`[2026-10-04 사용자 결정 · 서버 D-CS-011]` The browser no longer holds a key. The server gives a session cookie (HttpOnly — no script of
  *   this page can read it), and every call carries it (`credentials: "include"`). A write also carries `X-CSRF-Token`, the token the
@@ -31,6 +31,7 @@ export type SessionKind = "guest" | "member";
 /** The session the server gave this browser. `csrf` is memory-only. */
 export interface WebSession {
   kind: SessionKind;
+  registrationPending?: boolean;
   csrf: string;
   /** Guests only: hours without use after which the session (and its trips) go away. */
   guestIdleHours: number | null;
@@ -88,6 +89,7 @@ export function sessionOf(body: unknown): WebSession | null {
   if (!csrf || !kind) return null;
   const hours = Number(entry.guest_idle_hours);
   return {
+    ...(entry.registration_required === true ? { registrationPending: true } : {}),
     kind, csrf, guestIdleHours: kind === "guest" && Number.isFinite(hours) && hours > 0 ? hours : null,
     idleExpiresAt: text(entry.idle_expires_at), absoluteExpiresAt: text(entry.absolute_expires_at),
   };

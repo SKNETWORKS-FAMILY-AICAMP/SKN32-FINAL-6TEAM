@@ -17,7 +17,7 @@ ROOT = HERE.parent
 SPEC, FIG = ROOT / "spec", ROOT / "그림"
 V26 = ROOT.parents[1] / "아키텍처_한눈에" / "v26"
 VER = "v1"
-TITLE = "triPilot 기능별 워크플로"
+TITLE = "guguroute 기능별 워크플로"
 CODE_BASE = "final_project_cs 9e99c46c (2026-10-07)"
 
 ORDER = ["F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08", "F09", "F10", "F11", "F12", "F13", "F14", "A01", "A02", "A03"]
@@ -117,7 +117,7 @@ def main():
                          for a, b, c, d, e in rows)
     html = (f'<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
             f'<title>{TITLE} {VER}</title><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">'
-            f'<style>{CSS}</style></head><body><main><p class="eyebrow">triPilot · 6팀 A-COPilot · {VER} · 2026-10-07</p><h1>{TITLE}</h1>'
+            f'<style>{CSS}</style></head><body><main><p class="eyebrow">guguroute · 6팀 A-COPilot · {VER} · 2026-10-07</p><h1>{TITLE}</h1>'
             f'{markdown.markdown(intro_md)}<h2 id="list" class="nobreak">기능 목록</h2><table><tr><th>ID</th><th>기능</th><th>유스케이스</th><th>판단에 쓰는 것</th><th>그림</th></tr>{table_rows}</table>'
             + "".join(parts) + "</main></body></html>")
     out = ROOT / f"triPilot_기능별_워크플로_{VER}.html"

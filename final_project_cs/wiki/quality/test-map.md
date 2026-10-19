@@ -55,3 +55,10 @@ python scripts/run_test_suite.py --suite travel -q
 <a id="invariant-inv-cs-rt-009"></a>
 <a id="테스트가-없는-곳"></a>
 <a id="관계"></a>
+
+
+## 전체 DoD 실행 근거 보존 — 2026-10-18
+
+`python -m scripts.verify_dod_v11 --evidence-dir var/<새 실행 이름>`은 전체 DoD를 원래 순서대로 한 번 실행하며 수집·pytest 원문, JUnit, 선택한 시험 ID, 하위 명령 종료 코드와 최종 항목별 판정을 보존합니다. 지정 폴더가 이미 있으면 덮어쓰지 않고 거절합니다. 실패·준비/정리 ERROR의 전체 traceback도 표 뒤에 출력합니다. 하위 pytest가 비정상 종료하면 일부 PASSED가 보이더라도 전체 명령은 실패합니다. 재실행·실패 제외·판정 완화는 하지 않습니다. 원문 로그는 접속 오류의 비공개 정보가 포함될 수 있으므로 git 밖 실행 폴더에서 보관하며, 공유 문서에는 검수한 요약만 싣습니다.
+
+2026-10-18 로컬 직접 연결 QA DB에서 전체 **26/26**, 선택 시험 **203/203**, 실패·ERROR·건너뜀 0을 단일 실행으로 확인했습니다. 과거 원문 소실·새 연결 장애·DB 버전 차이·배포 미확인은 [날짜별 원인·검증 기록](../records/reports/2026-10-18_dod-local-errors-root-cause.md)에 구분해 남겼습니다.

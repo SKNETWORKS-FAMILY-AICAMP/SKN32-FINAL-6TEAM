@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot · 등록 후 C안 + 알림 센터</title>
+<title>guguroute · 등록 후 C안 + 알림 센터</title>
 <style>
 /* 색은 앱 src/styles/tokens.css 의 그린 테마 값을 옮겼다(2026-10-07 9f9838c 에서 대조). 크기는 plan-check.module.css 를 따른다. */
 :root {
@@ -1082,7 +1082,7 @@ button { cursor: pointer; }
     const sel = byId(st.selected);
     const ctxText = st.day === "all" ? "전체 일정" : `${st.day}일차 · ${dayInfo(st.day).date}`;
     const selChip = sel ? `<span>선택: ${esc(sel.title)}<button type="button" class="selClear" data-action="clearSel" data-k="clearSel" aria-label="선택 해제">${icon("x")}</button></span>` : "<span>선택한 일정이 없어요.</span>";
-    const messages = st.messages.map((m, at) => `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "triPilot"}${m.options ? " · 채팅 답의 선택지" : ""}</p><p class="bubble">${esc(m.text)}</p>
+    const messages = st.messages.map((m, at) => `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "guguroute"}${m.options ? " · 채팅 답의 선택지" : ""}</p><p class="bubble">${esc(m.text)}</p>
       ${m.places && m.places.length ? `<div class="places">${m.places.map((id) => `<button type="button" class="placeChip" data-action="place" data-id="${id}">${icon("pin")}${esc(byId(id).title)}</button>`).join("")}</div>` : ""}
       ${m.options ? `<div class="opts">${m.options.map((label, n) => `<button type="button" class="btn" data-action="chatOption" data-k="chatOption-${at}-${n}">${esc(label)}</button>`).join("")}</div>` : ""}</article>`).join("");
     const prompts = [["summary", "하루 요약", false], ["selected", "선택 일정", !sel], ["next", "다음 일정", !sel], ["booking", "예약 표시", false]]
@@ -1782,7 +1782,7 @@ button { cursor: pointer; }
     root.innerHTML = `<div class="map"></div>
       <div class="top">
         <div class="topLead">
-          <button type="button" class="logo" data-action="soon" aria-label="triPilot 처음으로"><span>t</span></button>
+          <button type="button" class="logo" data-action="soon" aria-label="guguroute 처음으로"><span>t</span></button>
           <div class="titlePill"></div>
           <button type="button" class="dtBack" data-action="closeDetail" data-k="dtBack" aria-label="상세 닫기 · 일정으로 돌아가기" hidden>${icon("back", "i big")}</button>
           <p class="dtName" hidden></p>

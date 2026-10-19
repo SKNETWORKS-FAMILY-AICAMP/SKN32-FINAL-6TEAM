@@ -19,7 +19,10 @@ def db():
     with psycopg.connect(os.environ.get('TEST_DATABASE_URL') or database_dsn()) as conn:
         conn.execute('CREATE TEMP TABLE admin_records(tenant_id text,kind text,id text,value jsonb,updated_at timestamptz DEFAULT now(),PRIMARY KEY(tenant_id,kind,id))')
         conn.execute('CREATE TEMP TABLE admin_audit(tenant_id text,action text,target text,after_value jsonb,at timestamptz)')
-        conn.execute('CREATE TEMP TABLE travel_watch_checks(check_id bigserial,tenant_id text,at timestamptz,trip_id uuid,target_title text,stage text,report jsonb)')
+        conn.execute('CREATE TEMP TABLE travel_watch_checks(check_id bigserial,tenant_id text,at timestamptz,trip_id uuid,item_id uuid,target_title text,stage text,report jsonb)')
+        conn.execute('CREATE TEMP TABLE itinerary_items(tenant_id text,trip_id uuid,item_id uuid,version integer,place_id uuid)')
+        conn.execute('CREATE TEMP TABLE itinerary_versions(tenant_id text,trip_id uuid,version integer,created_at timestamptz)')
+        conn.execute('CREATE TEMP TABLE places(tenant_id text,place_id uuid,name text,latitude float,longitude float,attributes jsonb)')
         yield conn
         conn.rollback()
 

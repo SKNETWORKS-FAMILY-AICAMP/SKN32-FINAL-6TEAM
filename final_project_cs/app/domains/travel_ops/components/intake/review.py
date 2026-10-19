@@ -107,6 +107,8 @@ def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
         return "none", None                # ★`[2026-10-13]` 등록한 여행의 「장소 없음」 일정을 다시 연 것(`reopen.py`)
     if evidence.get("method") == "nameless":
         return ("needs_name" if evidence.get("booked") is True else "needs_choice"), None
+    if evidence.get("method") == "move_phrase" and value is None:
+        return "none", None                # ★`[2026-10-19]` 이동을 적은 줄(「택시로 이동」) — 방문할 장소가 아니라 장소 없이 둔다(`pipeline._move_rows`)
     if not value or row["place"] is None:
         return "unresolved", None
     if evidence.get("method") == "kakao_nearest":
@@ -119,6 +121,8 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
     evidence = claim.get("evidence") or {}
     title = row["title"] or ""
     if state == "none":
+        if evidence.get("method") == "move_phrase":
+            return _line("place", "unknown", "이동을 적은 줄이라 장소를 찾지 않았어요 · 앞뒤 일정 사이의 이동으로 봐요")
         return _line("place", "unknown", "장소 없이 두었어요 · 운영시간과 이동은 확인하지 않아요")
     if state in NAMELESS_STATES:
         parts = evidence.get("parts") or {}
@@ -347,7 +351,7 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
             closed = _line("closed", "unknown", "휴무 정보가 없어요")
         if facts.conditions:
             closed = _line("closed", "warn" if closed["result"] != "bad" else "bad",
-                           closed["text"] + " · 공휴일 조건이 있어요(" + "; ".join(facts.conditions[:1]) + ")")
+                           "휴무·운영 조건을 확인해 주세요 (" + "; ".join(facts.conditions) + ")")
     # 운영시간
     if today == "closed" or "closed_day" in codes:
         if act.get("closed") is True and act.get("closure_reason") == "live_status":
@@ -900,10 +904,19 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     if not force:
         cached = load(conn, tenant_id, intake_id, revision)
         if cached is not None:
-            return cached
+            from . import risks
+
+            mode = "cached" if cached.get("risk_schema_version") == risks.SCHEMA_VERSION else "fresh"
+            payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
+            if mode == "fresh":
+                store(conn, tenant_id, intake_id, revision, payload)
+            return payload
     previous = load(conn, tenant_id, intake_id, previous_revision) if previous_revision else None
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
                     previous=previous, **options)
+    from . import risks
+
+    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="fresh")
     store(conn, tenant_id, intake_id, revision, payload)
     return payload
 

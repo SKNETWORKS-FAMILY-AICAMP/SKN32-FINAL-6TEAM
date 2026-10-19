@@ -10,7 +10,7 @@ domain: travel
 
 | 이름 | 정확한 뜻 | 정본 |
 |---|---|---|
-| triPilot | 여행 CS 제품 | [제품 범위](scope.md) |
+| guguroute | 여행 CS 제품 | [제품 범위](scope.md) |
 | A-COPilot | 제품을 개발하는 팀 | [개발 역할](../delivery/roles.md) |
 | 에이전트 팀 | Activity·Dining·Mobility 등 업무 판단·제안 단위 | [Team 안내](../../final_project_cs/wiki/teams/index.md) |
 | TeamRegistry | 주입된 manifest·가용성으로 에이전트 팀을 선택하는 등록 장치 | [Registry](../../final_project_cs/wiki/teams/team-registry.md) |

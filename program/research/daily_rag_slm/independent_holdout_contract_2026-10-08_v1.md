@@ -109,7 +109,7 @@ near 검사 하나가 의미상 중복을 모두 검출했다고 주장하지 �
 ## 관계와 확인 범위
 
 - [모델 평가 정본](../../../final_project_cs/wiki/quality/slm-model-evaluation.md): 기존 기준과 제품 채택 경계.
-- [데이터 구역 규칙](../../../datasets/README.md) · [기존 일정 질문 비교 자료](../../../datasets/travel/plan_qa_bench/REPORT.md): 저장·출처 경계.
+- [데이터 구역 규칙](../../../datasets/README.md) · [기존 일정 질문 비교 자료](../../../datasets/core/pointing/benchmarks/plan_qa_bench/REPORT.md): 저장·출처 경계.
 - [B/C/D/E 집계 소스](../../scripts/plan_qa_bench/bcde_results_snapshot.py): 집합 채점과 E 별칭.
 - [MX 작성 소스](../../scripts/plan_qa_bench/build_mx_set.py) · [H 작성 소스](../../scripts/plan_qa_bench/build_hard_set.py) · [D2 중복 검사](../../scripts/plan_qa_bench/build_d2_holdout.py): 기존 입력·생성·중복 방식.
 

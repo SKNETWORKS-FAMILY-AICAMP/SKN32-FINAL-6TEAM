@@ -27,7 +27,7 @@ POOL_LIMIT = 10
 REUSE_DAYS = 14
 ACTIVITY_TYPES = [code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind == "activity"]
 #: 같은 여행 · 같은 자리를 이미 넓혔나 — (여행 id, 위도, 경도) → 시각. 다시 넓히면 가까운 곳이 이미 적혀 있어 더 먼 10곳을 읽게 된다
-_WIDENED: dict[tuple[str, float, float], float] = {}
+_WIDENED: dict[tuple[str, float, float, float, bool], float] = {}
 WIDEN_MEMO_SECONDS = 6 * 3600
 
 
@@ -40,7 +40,8 @@ def _catalog_tenants(tenant_id: str) -> list[str]:
 
 def nearby_activities(conn, tenant_id: str, *, latitude: float, longitude: float, radius_m: float,
                       exclude_names: set[str], limit: int = POOL_LIMIT, types: Sequence[str] | None = None,
-                      require_hours: bool = False, now: datetime | None = None) -> list[Cand]:
+                      require_hours: bool = False, now: datetime | None = None,
+                      indoor_only: bool = False) -> list[Cand]:
     """목록(`place_catalog`)에서 반경 안 활동을 가까운 순으로.
 
     `types` — 읽을 관광공사 분류 번호. 안 주면 활동 분류(`ACTIVITY_TYPES`)다. ★`[2026-10-07]` 숙소 줄의 후보를 위해 숙박(32)을 읽을 수 있게 열었다
@@ -62,21 +63,30 @@ def nearby_activities(conn, tenant_id: str, *, latitude: float, longitude: float
             "AND p.attributes->'hours_week' IS NOT NULL AND p.attributes->'hours_week' <> '{}'::jsonb "
             "AND (p.attributes->'hours_read'->>'read_at')::timestamptz > %s - make_interval(days => %s))) ")
         hours_params = (_catalog_tenants(tenant_id), tenant_id, now, REUSE_DAYS)
+    from app.domains.travel_ops.components.itinerary.itinerary import weather_case_sql, weather_from_class
+
+    indoor_filter = f"AND ({weather_case_sql().replace('pc.', 'c.')}) IS FALSE " if indoor_only else ""
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT content_id, content_type_id, title, address, latitude, longitude FROM place_catalog c "
+            "SELECT content_id, content_type_id, title, address, latitude, longitude, "
+            "raw_json->>'lclsSystm1', raw_json->>'lclsSystm2' FROM place_catalog c "
             "WHERE tenant_id = ANY(%s) AND source='tour_api' AND content_type_id = ANY(%s) "
             "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s "
-            + hours_filter +
+            "AND NOT (title = ANY(%s)) "
+            + hours_filter + indoor_filter +
             "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT %s",
             (_catalog_tenants(tenant_id), list(types) if types else ACTIVITY_TYPES, latitude - dlat, latitude + dlat, longitude - dlon,
-             longitude + dlon, *hours_params, latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
+             longitude + dlon, sorted(exclude_names), *hours_params, latitude, longitude, math.cos(math.radians(latitude)), limit * 3))
         rows = cur.fetchall()
     out: list[Cand] = []
-    for content_id, content_type, title, address, lat, lon in rows:
+    for content_id, content_type, title, address, lat, lon, lcls1, lcls2 in rows:
         if not title or title in exclude_names or any(c.name == title for c in out):
             continue
-        out.append(_catalog_cand(content_id, content_type, title, address, lat, lon))
+        candidate = _catalog_cand(content_id, content_type, title, address, lat, lon)
+        candidate.weather_sensitive = weather_from_class(lcls1, lcls2)
+        if candidate.weather_sensitive is not None:
+            candidate.attributes["weather_sensitive_basis"] = {"source": "tour_api_class", "lcls1": lcls1, "lcls2": lcls2}
+        out.append(candidate)
         if len(out) >= limit:
             break
     return out
@@ -201,19 +211,19 @@ def reuse_hours(conn, tenant_id: str, cands: list[Cand], now: datetime) -> dict[
 
 
 def widen_activity_pool(conn, *, tenant_id: str, trip_id: UUID, place: dict[str, Any], known_names: set[str],
-                        radius_m: float, now: datetime, memo: bool = True) -> dict[str, Any]:
+                        radius_m: float, now: datetime, memo: bool = True, indoor_only: bool = False) -> dict[str, Any]:
     """원래 장소 둘레 목록 활동에 DB 의 운영시간을 붙여, 아는 곳만 그 여행 전용 장소 행으로 적는다. **바깥을 부르지 않는다.**
     ★같은 여행 · 같은 자리는 `WIDEN_MEMO_SECONDS` 동안 다시 넓히지 않는다(`_WIDENED`)."""
     if place.get("latitude") is None or place.get("longitude") is None:
         return {"added": 0, "reason": "원래 장소 좌표 없음"}
     if memo:
         # ★`memo=False` — 고객의 **현재 위치**를 출발지로 넓힐 때(`trip_here`). 그 좌표를 프로세스 메모리에도 남기지 않는다
-        key = (str(trip_id), round(float(place["latitude"]), 4), round(float(place["longitude"]), 4))
+        key = (str(trip_id), round(float(place["latitude"]), 4), round(float(place["longitude"]), 4), float(radius_m), indoor_only)
         if time.time() - _WIDENED.get(key, 0.0) < WIDEN_MEMO_SECONDS:
             return {"added": 0, "reason": "이미 넓혔다"}
         _WIDENED[key] = time.time()
     cands = nearby_activities(conn, tenant_id, latitude=float(place["latitude"]), longitude=float(place["longitude"]),
-                              radius_m=radius_m, exclude_names=known_names, require_hours=True, now=now)
+                              radius_m=radius_m, exclude_names=known_names, require_hours=True, now=now, indoor_only=indoor_only)
     reused = reuse_hours(conn, tenant_id, cands, now)
     known = [c for c in cands if c.attributes.get("hours_week")]
     with conn.transaction(), conn.cursor() as cur:

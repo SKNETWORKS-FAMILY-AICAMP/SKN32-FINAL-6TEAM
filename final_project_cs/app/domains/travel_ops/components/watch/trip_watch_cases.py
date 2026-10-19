@@ -42,10 +42,12 @@ import hashlib
 import json
 import logging
 import re
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from app.application.case_intake import open_case
 from app.application.case_service import ActiveRunError
@@ -113,6 +115,64 @@ class Issue:
 
 _fingerprint = cause_fingerprint
 
+# 점검 사건의 공개 사실만 알림으로 옮긴다. 외부 응답·오류 본문은 옮기지 않는다.
+_NOTICE_CAUSE_FIELDS = frozenset({
+    "category", "kind", "summary", "text", "message", "source", "road", "section", "target",
+    "incident_id", "serial", "starts_at", "ends_at", "at", "created_at", "announced_at", "confirmed_at",
+    "control_type", "lanes", "magnitude", "distance_m", "distance_km", "location", "intensity",
+    "areas", "regions", "value", "limit", "station", "basis", "impact", "mode", "simulation_id",
+})
+_OBSERVATION_FIELDS = frozenset({"confirmed_at", "distance_m", "distance_km"})
+_DEFERRED_CODES = RETRYABLE_GUARDRAILS | frozenset({
+    "source_failed", "alternate_verification_failed", "departure_revalidation_failed",
+    "TimeoutError", "ConnectionError", "ValueError", "TypeError", "RuntimeError",
+    "ReadTimeout", "ConnectTimeout", "HTTPStatusError",
+})
+
+
+def _confirmed_causes(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """다른 자료 실패와 독립적으로 확인한 사건을 보존한다. 임의의 중첩 응답은 제외한다."""
+    checks = {c.get("category"): c for c in report.get("checks") or [] if isinstance(c, dict)}
+    causes = []
+    for event in report.get("disruptions") or []:
+        if not isinstance(event, dict) or not isinstance(event.get("category"), str):
+            continue
+        cause = {k: v for k, v in event.items() if k in _NOTICE_CAUSE_FIELDS
+                 and (v is None or isinstance(v, (str, int, float, bool))
+                      or isinstance(v, list) and all(isinstance(x, (str, int, float, bool)) for x in v))}
+        check = checks.get(cause["category"], {})
+        for name in ("source", "confirmed_at"):
+            if not cause.get(name) and isinstance(check.get(name), str):
+                cause[name] = check[name]
+        causes.append(cause)
+    return causes
+
+
+def _deferred_fingerprint(categories: list[str], code: str, confirmed: list[dict[str, Any]]) -> str:
+    """사건과 실패 상태로 구분한다. 같은 사건의 재조회·거리·목록 순서는 새 알림이 아니다."""
+    state: list[Any] = [categories, code]
+    if confirmed:
+        identities = []
+        for cause in confirmed:
+            identity = {k: sorted(v, key=str) if isinstance(v, list) else v
+                        for k, v in cause.items() if k not in _OBSERVATION_FIELDS}
+            identities.append(json.dumps(identity, sort_keys=True, ensure_ascii=False, default=str))
+        state.append(sorted(set(identities)))
+    return hashlib.sha256(json.dumps(state, ensure_ascii=False).encode()).hexdigest()[:16]
+
+
+def _early_event_key(cause: dict[str, Any]) -> str:
+    """조회 시각·거리는 빼고 제공처 사건 정체를 보존한다. 기존 Case 키는 바꾸지 않는다."""
+    identity = {key: cause.get(key) for key in ("category", "kind", "source")}
+    event = {key: cause[key] for key in ("incident_id", "serial") if cause.get(key)}
+    if not event:
+        event = {key: cause[key] for key in ("road", "section", "starts_at", "announced_at", "at", "regions", "areas")
+                 if cause.get(key) is not None}
+        if cause.get("category") == "disaster_msg":
+            event["message"] = cause.get("text") or cause.get("message")
+    identity["event"] = event
+    return hashlib.sha256(json.dumps(identity, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()[:16]
+
 
 class TripWatchCaseOpener:
     def __init__(self, *, store: TripStore, check: Callable[..., dict[str, Any]],
@@ -147,6 +207,9 @@ class TripWatchCaseOpener:
         self._contexts: dict[UUID, dict[str, Any]] = {}
         issues: list[Issue] = []
         for trip_id, item in due:
+            from app.domains.travel_ops.components.conversation.journey_progress import terminal
+            if terminal(item) or item.detail.get("origin"):
+                continue
             from app.domains.travel_ops.components.watch.trip_watch_batch import skipped_watch
             skipped = skipped_watch(item.kind, trip_id=trip_id, item_id=item.item_id)
             if skipped is not None:
@@ -170,10 +233,14 @@ class TripWatchCaseOpener:
                              report={'verdict': 'skipped', 'reason': 'no_place'})
                 continue
             result.checked += 1
+            validated_report = None
             try:
-                report = self.check(place=item.place, starts_at=item.starts_at)
+                report = self.check(place=item.place, starts_at=max(item.starts_at, now))
                 if not isinstance(report, dict) or report.get("verdict") not in ("clear", "disrupted", "fatal"):
                     raise ValueError("source_contract_invalid")
+                # 식당 상태 추가 조회가 실패해도 독립적으로 확인한 6종의 사실은 유지한다.
+                # 계약 검증 전 응답은 보존하지 않는다.
+                validated_report = deepcopy(report)
                 if self.place_status is not None and item.kind == 'dining' and not item.place.get('_watch_simulation'):
                     with self._connect() as conn:
                         trip, _ = self.store.latest(conn, trip_id)
@@ -187,9 +254,12 @@ class TripWatchCaseOpener:
                         continue
                     report = self.place_status.merge(report, status)
             except Exception as exc:  # 한 자료 조회의 실패가 다른 항목 점검을 끊지 않는다.
-                report = {"verdict": "fatal", "failed_categories": ["place_check"],
+                report = {**(validated_report or {}), "verdict": "fatal",
+                          "failed_categories": sorted({*(validated_report or {}).get("failed_categories", []), "place_check"}),
                           "error_code": type(exc).__name__}
             record_check('schedule', trip_id=trip_id, item_id=item.item_id, target_title=item.title, report=report)
+            for incomplete in report.get("unverified_checks", []):
+                result.unchecked.append({"trip_id": str(trip_id), "item": item.title, **incomplete})
             verdict = report.get("verdict")
             with self._connect() as conn, conn.transaction():
                 attention = forecast_attention(conn, store=self.store, trip_id=trip_id, item=item, report=report)
@@ -244,20 +314,22 @@ class TripWatchCaseOpener:
 
     # ── 실행 뒤 ───────────────────────────────────────────────
     def _defer_notice(self, trip_id, item, report, now, result, *, case_id=None):
-        """의존 항목만 유지하고 재조회한다. 같은 항목·오류 안내는 한 번만 저장한다."""
+        """변경은 보류하되 독립적으로 확인한 사건은 알린다. 같은 사건·실패 상태는 한 번만 저장한다."""
         from app.domains.travel_ops.components.watch.trip_watch_batch import Outcome, digest
 
-        code = str(report.get("error_code") or "source_failed")
-        # 오류 본문·외부 응답을 고객에게 복사하지 않는다.
-        code = re.sub(r"[^a-zA-Z0-9_.-]", "_", code)[:80]
-        categories = sorted(str(c) for c in report.get("failed_categories", []))
-        causes = [{"category": c, "kind": "source_unavailable"} for c in categories]
+        candidate_code = str(report.get("error_code") or "source_failed")
+        # 문자 치환만 하면 오류 본문의 비밀도 남는다. 정해진 내부 코드만 노출한다.
+        code = candidate_code if candidate_code in _DEFERRED_CODES else "source_failed"
+        categories = sorted({str(c) for c in report.get("failed_categories", [])})
+        confirmed = _confirmed_causes(report)
+        causes = [*confirmed, *({"category": c, "kind": "source_unavailable"} for c in categories)]
         payload = digest([Outcome(item, "source_failed", causes=causes, reasons=[code],
                                   checked_at=now.isoformat())], kind="guidance")
         with self._connect() as conn, conn.transaction():
             trip, _ = self.store.latest(conn, trip_id)
-            fingerprint = hashlib.sha256(json.dumps([categories, code]).encode()).hexdigest()[:16]
-            key = f"watch-deferred:{item.item_id}:{fingerprint}"
+            fingerprint = _deferred_fingerprint(categories, code, confirmed)
+            # 같은 장소 · 같은 날의 일정이 바뀌어 id 가 달라져도 같은 미룸 안내를 두 번 보내지 않는다.
+            key = f"watch-deferred:{item.place_id or item.item_id}:{item.starts_at.date()}:{fingerprint}"
             added = self.store.enqueue_message(conn, trip_id=trip_id, key=key, payload=payload)
         diagnostic = {"event": "travel_execution_diagnostic", "plan_sha256": None,
                       "tenant_id": str(self.store.tenant_id), "customer_id": str(trip['customer_id']),
@@ -468,16 +540,29 @@ class TripWatchCaseOpener:
         cap = max(2, int(guard.get("travel.watch.batch_max_items")))
         for trip_id, group in by_trip.items():
             fresh: list[tuple[Issue, int]] = []
+            refresh: list[tuple[Issue, str | None]] = []
             with self._connect() as conn:
                 for issue in group:
                     attempt, covered_by = self._attempt(conn, issue.base_id, issue.item.item_id)
                     if attempt is None:
                         result.existing.append({**issue.record(), "case_id": str(covered_by)})
+                        self._repair_traffic_notice(conn, issue, result)
+                        refresh.append((issue, covered_by))
                     elif covered_by is not None:
                         # 실행 실패로 멈춘 동일 사건이다. 새 Case/재시도 지문을 만들지 않는다.
                         self._recover_existing(conn, issue, covered_by, group, result, opened)
                     else:
                         fresh.append((issue, attempt))
+            # 기존 연결과 잠금을 모두 닫은 뒤 경고부터 커밋한다. 후보 계산은 이 뒤에도 오래 걸릴 수 있다.
+            try:
+                self._early_notice(trip_id, group, result)
+            except Exception as exc:  # noqa: BLE001 — 선안내 실패가 기존 Case 처리를 막지 않는다
+                logger.exception("watch: early risk notice failed")
+                result.failed.append({"trip_id": str(trip_id), "reason": "early_notice_failed",
+                                      "error_code": type(exc).__name__})
+            # 보완 알림의 여행 잠금을 해제한 뒤 별도 연결의 후보 검사·기록을 시작한다.
+            for issue, covered_by in refresh:
+                self._refresh_existing_alternatives(issue, covered_by, result)
             if not batching or len(fresh) < 2:
                 for issue, attempt in fresh:
                     self._open_single(issue, attempt, now, result, opened)
@@ -489,6 +574,138 @@ class TripWatchCaseOpener:
                         self._open_single(issue, attempt, now, result, opened)
                 else:
                     self._open_batch(trip_id, chunk, now, result, opened)
+
+    def _early_notice(self, trip_id: UUID, issues: list[Issue], result: CaseTickResult) -> None:
+        """정상 회차의 미안내 위험을 Case 상태와 분리해 대안 계산 전에 커밋한다. 묶음 구성 변화도 항목별로 중복을 거른다."""
+        from app.domains.travel_ops.components.planning.pending import _cause_text, is_safety
+        from app.domains.travel_ops.components.watch.monitoring import recording
+
+        if not recording() or not issues:
+            return
+        added = False
+        with self._connect() as conn, conn.transaction():
+            if not conn.execute("SELECT 1 FROM trips WHERE tenant_id=%s AND trip_id=%s FOR UPDATE",
+                                (self.store.tenant_id, trip_id)).fetchone():
+                return
+            now = self.clock()
+            current = {item.item_id: item for current_trip, item in
+                       self.store.due(conn, start=now, end=now + DEFAULT_LOOKAHEAD) if current_trip == trip_id}
+            fields = ("place_id", "place", "starts_at", "ends_at", "kind", "title", "locked", "booking_id", "detail")
+            candidates = {}
+            for issue in issues:
+                item = current.get(issue.item.item_id)
+                if issue.trip_id != trip_id or item is None or any(
+                        getattr(item, name) != getattr(issue.item, name) for name in fields):
+                    continue
+                causes = [cause for cause in _confirmed_causes({"disruptions": issue.causes})
+                          if cause.get("kind") != "source_unavailable"]
+                for cause in causes:
+                    candidates[f"{item.item_id}:{_early_event_key(cause)}"] = (item, [cause])
+            if not candidates:
+                return
+            rows = conn.execute(
+                "SELECT payload_json->'risk_fingerprints' FROM outbox WHERE tenant_id=%s AND topic='trip.notice' "
+                "AND dedupe_key LIKE %s AND payload_json->'risk_fingerprints' ?| %s::text[]",
+                (self.store.tenant_id, str(trip_id) + ':watch-risk-detected:%', list(candidates))).fetchall()
+            known = {key for (values,) in rows if isinstance(values, list) for key in values if isinstance(key, str)}
+            fresh = {key: value for key, value in candidates.items() if key not in known}
+            if not fresh:
+                return
+            by_item = {}
+            for item, item_causes in fresh.values():
+                by_item.setdefault(item.item_id, (item, []))[1].extend(item_causes)
+            members = [{"item_id": str(item.item_id), "title": item.title, "starts_at": item.starts_at.isoformat(),
+                        "ends_at": item.ends_at.isoformat() if item.ends_at else None, "causes": causes}
+                       for item, causes in by_item.values()]
+            causes = [cause for _, item_causes in by_item.values() for cause in item_causes]
+            safety = is_safety({"disruptions": causes})
+            zone = ZoneInfo("Asia/Seoul")
+            lines = [f"{item.title} ({item.starts_at.astimezone(zone):%m월 %d일 %H:%M}) — {_cause_text(item_causes)}"
+                     for item, item_causes in by_item.values()]
+            text = ("⚠️ 안전 알림 — " if safety else "일정 주의 안내 — ") + "\n".join(lines)
+            text += "\n대안을 확인하고 있어요. 현재 일정은 그대로예요."
+            payload = {"type": "safety_alert" if safety else "guidance", "kind": "risk_detected",
+                       "text": text, "language": "ko", "causes": causes, "items": members,
+                       "risk_fingerprints": sorted(fresh), "checked_at": now.isoformat(), "replay": False}
+            if len(members) == 1:
+                payload["item_id"] = members[0]["item_id"]
+            fingerprint = hashlib.sha256(json.dumps(sorted(fresh)).encode()).hexdigest()[:16]
+            added = self.store.enqueue_message(conn, trip_id=trip_id,
+                key=f"watch-risk-detected:{fingerprint}", payload=payload)
+        # 읽는 이가 저장 전 결과를 성공으로 세지 않도록 커밋 뒤에 기록한다.
+        if added:
+            result.notified.append({"trip_id": str(trip_id), "item": ", ".join(member["title"] for member in members),
+                                    "reason": "risk_detected", "items": [member["item_id"] for member in members]})
+
+    def _refresh_existing_alternatives(self, issue: Issue, case_id: str | None,
+                                       result: CaseTickResult) -> None:
+        """개선된 실내 검색을 과거 대안 없음 항목에도 한 번 적용한다. 일정은 바꾸지 않는다."""
+        from app.domains.travel_ops.components.watch.monitoring import recording
+        from app.domains.travel_ops.components.watch.watch_relaxed import enabled
+
+        if not recording() or not enabled() or self.repository is None or not case_id or issue.item.kind != "activity":
+            return
+        guardrail, _ = self._escalation(UUID(str(case_id)))
+        if guardrail not in {"itinerary_unresolved", "itinerary_recheck_failed"}:
+            return
+        with self._connect() as conn:
+            seen = conn.execute(
+                "SELECT 1 FROM travel_watch_checks WHERE tenant_id=%s AND trip_id=%s AND item_id=%s "
+                "AND stage='alternate_refresh' AND report->>'reason'='indoor_candidates_v3_visit_window' "
+                "AND report->>'case_id'=%s AND report->>'status' IN ('asked','no_alternate') LIMIT 1",
+                (self.store.tenant_id, issue.trip_id, issue.item.item_id, str(case_id))).fetchone()
+            if seen:
+                return
+            now = self.clock()
+            current = next((item for trip_id, item in self.store.due(conn, start=now, end=now + DEFAULT_LOOKAHEAD)
+                            if trip_id == issue.trip_id and item.item_id == issue.item.item_id), None)
+            fields = ("place_id", "starts_at", "ends_at", "kind", "title", "locked", "booking_id", "detail")
+            if current is None or any(getattr(current, name, None) != getattr(issue.item, name, None) for name in fields):
+                return
+        # 후보 계산과 감시 기록은 별도 연결을 쓰므로 위의 읽기 연결도 먼저 닫는다.
+        before = len(result.relaxed)
+        handled = self._offer_relaxed(issue.trip_id, current, issue.causes,
+                                      guardrail == "itinerary_recheck_failed", result, UUID(str(case_id)))
+        status = "asked" if len(result.relaxed) > before else "source_failed" if handled else "no_alternate"
+        record_check('alternate_refresh', trip_id=issue.trip_id, item_id=issue.item.item_id,
+                     target_title=issue.item.title, report={"reason": "indoor_candidates_v3_visit_window", "case_id": str(case_id), "status": status})
+
+    def _repair_traffic_notice(self, conn: Any, issue: Issue, result: CaseTickResult) -> None:
+        """닫힌 사건을 다시 실행하지 않고 기존 알림에서 빠진 현재 도로통제 설명만 보완한다."""
+        from app.domains.travel_ops.components.planning.pending import traffic_detail_notice
+
+        if not any(c.get("category") == "traffic_control" for c in issue.causes):
+            return
+        rows = conn.execute(
+            "SELECT payload_json FROM outbox WHERE tenant_id=%s AND topic='trip.notice' AND status='delivered' "
+            "AND dedupe_key LIKE %s AND payload_json->>'item_id'=%s "
+            "AND payload_json->>'kind' IN ('no_alternate','recheck_failed') ORDER BY available_at DESC LIMIT 10",
+            (self.store.tenant_id, str(issue.trip_id) + ':%', str(issue.item.item_id))).fetchall()
+        if not rows:
+            return
+        with conn.transaction():
+            # 최신 일정 저장·여행 정지와 같은 여행 행의 잠금을 공유한다.
+            if not conn.execute("SELECT 1 FROM trips WHERE tenant_id=%s AND trip_id=%s FOR UPDATE",
+                                (self.store.tenant_id, issue.trip_id)).fetchone():
+                return
+            now = self.clock()
+            current = next((item for trip_id, item in self.store.due(conn, start=now, end=now + DEFAULT_LOOKAHEAD)
+                            if trip_id == issue.trip_id and item.item_id == issue.item.item_id), None)
+            if current is None or any(getattr(current, field) != getattr(issue.item, field)
+                                      for field in ("place_id", "starts_at", "ends_at", "kind", "title")):
+                return
+            for (previous,) in rows:
+                for cause in issue.causes:
+                    # 사건별 키를 써서 둘 중 하나가 해제돼도 남은 통제를 다시 보내지 않는다.
+                    repair = traffic_detail_notice(item=current, causes=[cause], previous=previous)
+                    if repair is None:
+                        continue
+                    fingerprint, payload = repair
+                    added = self.store.enqueue_message(conn, trip_id=issue.trip_id,
+                        key=f"watch-traffic-detail:{current.item_id}:{fingerprint}", payload=payload)
+                    if added:
+                        result.notified.append({"trip_id": str(issue.trip_id), "item": current.title,
+                                                "reason": "notice_text_incomplete"})
 
     def _recover_existing(self, conn: Any, issue: Issue, case_id: str, group: list[Issue],
                           result: CaseTickResult, opened: list[UUID]) -> None:

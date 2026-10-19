@@ -52,6 +52,7 @@
     "tests/unit/core/test_routing_sweeper.py",
     "tests/unit/core/test_run_sweepers_signals_errors.py",
     "tests/unit/core/test_settings_composer_secrets.py",
+    "tests/unit/core/test_verify_dod_evidence.py",
     "tests/unit/infrastructure/test_graph_subgraph_edge_types.py",
     "tests/unit/infrastructure/test_graph_v7_axes.py",
     "tests/unit/infrastructure/test_llm_failover.py",

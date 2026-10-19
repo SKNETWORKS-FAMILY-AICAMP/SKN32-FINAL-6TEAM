@@ -52,7 +52,7 @@ ACCESS, REFRESH = "access-token-must-not-be-kept-123456", "refresh-token-must-no
 def _grant(url: str, webhook_id: str, token: str) -> dict:
     """디스코드 토큰 교환 응답 모양 — `webhook` 안에 주소가 있다."""
     return {"access_token": ACCESS, "refresh_token": REFRESH, "token_type": "Bearer", "expires_in": 604800, "scope": "webhook.incoming",
-            "webhook": {"id": webhook_id, "token": token, "url": url, "channel_id": "333", "guild_id": "444", "name": "triPilot"}}
+            "webhook": {"id": webhook_id, "token": token, "url": url, "channel_id": "333", "guild_id": "444", "name": "guguroute"}}
 
 
 @pytest.fixture()

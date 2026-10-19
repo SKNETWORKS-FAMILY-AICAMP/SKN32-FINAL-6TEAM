@@ -1,0 +1,17 @@
+.panel { min-width: 0; margin: 10px 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.panel[data-tone="danger"] { border-color: var(--color-error-border); }
+.panel[data-tone="unknown"] { border-color: var(--color-warning); }
+.heading { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.heading strong { flex: 1 1 12em; font-size: 14px; }
+.panel p { margin: 4px 0; }
+.panel button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 9px; background: var(--color-surface); color: var(--color-primary); font: inherit; font-weight: 600; cursor: pointer; }
+.panel button:disabled { opacity: .55; cursor: wait; }
+.panel button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.items { display: grid; gap: 12px; margin: 8px 0; padding: 0; list-style: none; }
+.items li { min-width: 0; }
+.items small { display: block; color: var(--color-muted); font-size: 12px; }
+.unknown, .when { color: var(--color-muted); font-size: 12px; }
+.alternative { margin-top: 5px; }
+.loading { display: grid; gap: 7px; padding: 8px 0; }
+.loading > span:not(:last-child) { display: block; height: 12px; border-radius: 4px; background: var(--color-subtle); }
+.loading > span:nth-child(2) { width: 75%; }

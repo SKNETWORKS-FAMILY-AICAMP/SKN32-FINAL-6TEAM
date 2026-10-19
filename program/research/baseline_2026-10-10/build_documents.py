@@ -71,7 +71,7 @@ figure{margin:28px 0}svg{display:block;width:100%;height:auto;max-height:none}sv
 def page(title,subtitle,sections,other,other_label):
     toc=''.join(f'<a href="#{sid}">{E(name)}</a>' for sid,name,_ in sections)
     body=''.join(section(sid,name,content) for sid,name,content in sections)
-    return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>'+E(title)+'</title><style>'+CSS+'</style></head><body><a class="skip" href="#main">본문으로 이동</a><div class="layout"><nav aria-label="문서 목차"><strong>triPilot · A-COPilot</strong>'+toc+f'<a href="{other}">{other_label} ↗</a></nav><main id="main"><header><p class="eyebrow">2026-10-10 · 팀 검토 자료</p><h1>'+E(title)+'</h1><p class="lead">'+subtitle+'</p></header>'+body+'<footer>문서 형식: 단일 HTML · 외부 스크립트·이미지·폰트 요청 없음 · 오프라인 글꼴은 맑은 고딕과 바탕체를 사용합니다.<br>다른 문서·참고 자료를 함께 보려면 이 폴더 구조를 유지하십시오. 작성·검수 기록은 <a href="review-report.html">검수 보고서</a>에 있습니다.</footer></main></div></body></html>'
+    return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>'+E(title)+'</title><style>'+CSS+'</style></head><body><a class="skip" href="#main">본문으로 이동</a><div class="layout"><nav aria-label="문서 목차"><strong>guguroute · A-COPilot</strong>'+toc+f'<a href="{other}">{other_label} ↗</a></nav><main id="main"><header><p class="eyebrow">2026-10-10 · 팀 검토 자료</p><h1>'+E(title)+'</h1><p class="lead">'+subtitle+'</p></header>'+body+'<footer>문서 형식: 단일 HTML · 외부 스크립트·이미지·폰트 요청 없음 · 오프라인 글꼴은 맑은 고딕과 바탕체를 사용합니다.<br>다른 문서·참고 자료를 함께 보려면 이 폴더 구조를 유지하십시오. 작성·검수 기록은 <a href="review-report.html">검수 보고서</a>에 있습니다.</footer></main></div></body></html>'
 
 REF_NOTES={
 'S01':('v4.0a · 표지 2026-08','8장 §2.1~2.4, PDF 190~191쪽. 기준선의 식별·합의·고정·변경 통제와 관리 대상 범위. 전문 PDF를 확보했으며 관련 절을 읽었습니다. IEEE 828 원문 자체를 읽었다는 뜻은 아닙니다.'),
@@ -126,7 +126,7 @@ baseline.append(('read-first','먼저 읽을 결론',f'''
 
 baseline.append(('scope','제품 범위와 우선하는 근거',f'''
 {table(['구분','고정할 기준','근거'],[
-['제품·팀','제품 triPilot · 팀 A-COPilot',local('README.md','프로젝트 소개')],
+['제품·팀','제품 guguroute · 팀 A-COPilot',local('README.md','프로젝트 소개')],
 ['하는 일','외부가 만든 일정을 받아 성립 여부를 확인하고 여행 종료까지 변경을 감지·재검증·반영·통지합니다.',local(plan_path,'v11 §0·§4-A')],
 ['대상','서울 1도시 · 최대 7일 · 최대 4인',local(plan_path,'v11 §1·§9-A')],
 ['MVP','Activity · Dining · Mobility',local(plan_path,'v11 §5·결정 16')],
@@ -355,5 +355,5 @@ def save(name,content):
     print(name,len(content.encode('utf-8')),'bytes')
 
 if __name__=='__main__':
-    save('triPilot-baseline-v1.html',page('triPilot 프로젝트 기준선 검토 후보','팀이 같은 범위·계약·버전·시험에서 작업을 시작하도록 묶은 공통 기준입니다.',baseline,'baseline-writing-guide.html','베이스라인 작성법'))
+    save('triPilot-baseline-v1.html',page('guguroute 프로젝트 기준선 검토 후보','팀이 같은 범위·계약·버전·시험에서 작업을 시작하도록 묶은 공통 기준입니다.',baseline,'baseline-writing-guide.html','베이스라인 작성법'))
     save('baseline-writing-guide.html',page('우리 팀의 베이스라인 작성법','무엇을 하나로 묶고 무엇을 따로 비교하는지, 실제 기준선을 보며 작성·검토하는 방법입니다.',guide,'triPilot-baseline-v1.html','프로젝트 기준선'))

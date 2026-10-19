@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot MCP 서버 — 개인 AI(Claude · ChatGPT · Cursor …)가 **사용자 본인의 여행**을 다루는 입구. `[2026-10-02 사용자 지시]`
+"""guguroute MCP 서버 — 개인 AI(Claude · ChatGPT · Cursor …)가 **사용자 본인의 여행**을 다루는 입구. `[2026-10-02 사용자 지시]`
 
 ☆왜 새로 만들었나. 옛 도구 셋(`app/presentation/api/mcp.py` — 쇼핑몰 시절 Case 3개)은 **띄우는 곳이 한 번도 없었고**(git 이력 전체 · sample 저장소까지
   확인) 여행(trips) 도구가 없었다. 그대로 띄우면 호출 주체가 고정(`mcp:read`)이고 `customer_id` 를 호출자가 정해서 **남의 문의를 읽는 구멍**이 된다.
@@ -555,7 +555,7 @@ def build_surface(app_getter: Callable[[], Any], *, enabled: Callable[[], bool],
 # ── 로컬 stdio 프록시 ─────────────────────────────────────────────
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="triPilot MCP (로컬 stdio 프록시) — 실제 일은 --base-url 의 서버가 한다")
+    parser = argparse.ArgumentParser(description="guguroute MCP (로컬 stdio 프록시) — 실제 일은 --base-url 의 서버가 한다")
     parser.add_argument("--base-url", default=os.environ.get("TRIPILOT_BASE_URL", "http://127.0.0.1:8042"))
     parser.add_argument("--write", action="store_true", help="쓰기 도구도 연다(일정을 바꾼다) — 기본은 읽기만")
     args = parser.parse_args(argv)

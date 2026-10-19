@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
 import { MaintenanceItem, NoticeItems, useServiceStatus } from "@/features/support/service-notices";
@@ -12,11 +12,14 @@ import { LiveError } from "@/lib/live/client";
 import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
 import { useSettings, useT } from "@/lib/settings";
 import { openChoices, recentNotices, undoableChange } from "./attention";
+import { proposalAvailable } from "./trip-chat-records";
 import { LinkedText } from "./linked-text";
 import type { Trip } from "./model";
 import { markNoticesSeen, useSeenNotices } from "./notice-reads";
 import { tripKey } from "./use-trip";
-import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery, useTripRisks } from "./use-trip-extras";
+import { RiskPanel } from "@/features/risk/risk-panel";
+import { useRiskAlternatives } from "./use-risk-alternatives";
 import { SafetyPanel } from "./trip-safety";
 import { RecoveryPanel } from "./trip-recovery";
 import type { Recovery } from "@/lib/live/recovery";
@@ -81,8 +84,10 @@ function ServiceNoticeTab() {
   </div>;
 }
 
-export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
+export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice = null, focusItemId = null }: {
   trip: Trip; tab: CenterTab; onTab: (tab: CenterTab) => void;
+  focusNotice?: Notice | null;
+  focusItemId?: string | null;
   /** 「일정에서 보기」: close the center and show that stop in the list. */
   onGoto: (stopId: string) => void;
   /** 「일정 다시 시작」 answered with the brief of the disaster just lifted (null when there was nothing to lift). */
@@ -94,8 +99,41 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   // `[2026-10-07]` The server's "this trip changed" bell is kept by the trip screen (`trip-screen.tsx`) — it listens while the trip is open, not only while this list is shown.
   const proposals = useProposals(trip.id);
   const notices = useNotices(trip.id);
+  const { refetch: refetchProposals } = proposals;
+  const { refetch: refetchNotices } = notices;
   const recovery = useRecovery(trip.id);
-  const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops);
+  const risks = useTripRisks(trip.id, trip.version);
+  const currentRisks = risks.data?.items ?? [];
+  const riskAlternatives = useRiskAlternatives(trip.id, () => onTab("warnings"));
+  const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops)
+    .filter((choice) => Boolean(choice.stop) && proposalAvailable(choice.proposal, trip.version));
+  const targetChoiceId = focusNotice || focusItemId
+    ? (focusNotice?.proposalId ? choices.find((choice) => choice.proposal.id === focusNotice.proposalId)
+      : focusItemId ? choices.find((choice) => choice.proposal.itemId === focusItemId) : choices[0])?.proposal.id
+    : undefined;
+  const focusedNoticeKey = focusNotice?.key ?? (focusItemId ? `risk:${focusItemId}` : undefined);
+  const [answeredNoticeKey, setAnsweredNoticeKey] = useState<string | null>(null);
+  const choiceAnswered = Boolean(focusedNoticeKey && answeredNoticeKey === focusedNoticeKey);
+  const choiceTarget = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!focusedNoticeKey || !targetChoiceId) return;
+    const frame = requestAnimationFrame(() => {
+      const target = choiceTarget.current;
+      const action = target?.querySelector<HTMLButtonElement>("button:not(:disabled)") ?? target;
+      action?.scrollIntoView({ block: "center", behavior: "instant" });
+      action?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusedNoticeKey, targetChoiceId]);
+  useEffect(() => {
+    if (!focusedNoticeKey || targetChoiceId || choiceAnswered) return;
+    const poll = setInterval(() => {
+      void refetchProposals({ cancelRefetch: false });
+      void refetchNotices({ cancelRefetch: false });
+    }, 3_000);
+    const bounded = setTimeout(() => clearInterval(poll), 90_000);
+    return () => { clearInterval(poll); clearTimeout(bounded); };
+  }, [focusedNoticeKey, targetChoiceId, choiceAnswered, refetchProposals, refetchNotices]);
   const { shown, total, hidden } = recentNotices(notices.data ?? []);
   const undoable = undoableChange(notices.data ?? [], trip.version);
 
@@ -126,7 +164,8 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   };
   const chosen = () => { refresh(); void queryClient.invalidateQueries({ queryKey: recoveryKey(trip.id, language) }); };
   const choose = useMutation({
-    mutationFn: ({ proposalId, key }: { proposalId: string; key: string | null }) => chooseProposal(trip.id, proposalId, key, language),
+    mutationFn: ({ proposalId, key }: { proposalId: string; key: string | null; noticeKey?: string }) => chooseProposal(trip.id, proposalId, key, language),
+    onSuccess: (result, variables) => { if (result.status !== "options" && variables.noticeKey) setAnsweredNoticeKey(variables.noticeKey); },
     // Refused because it was already decided or the trip moved on: nothing changed, so re-read what is true now.
     onSettled: refresh,
   });
@@ -143,7 +182,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
   const paused = Boolean(trip.safety?.paused);
   const goingOn = !paused && recovery.data ? recovery.data : null;
   const tasks = (paused ? 1 : 0) + (goingOn && !goingOn.chosen ? 1 : 0) + choices.length + (undoable ? 1 : 0);
-  const counts: Record<CenterTab, number> = { warnings: warnings.length, notices: total, history: history.length, service: serviceNotices.length + (service.data?.maintenance.enabled ? 1 : 0) };
+  const counts: Record<CenterTab, number> = { warnings: warnings.length + currentRisks.filter((item) => item.status === "problem").length, notices: total, history: history.length, service: serviceNotices.length + (service.data?.maintenance.enabled ? 1 : 0) };
 
   function tabKeys(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
@@ -162,6 +201,13 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
       <h3 id="trip-tasks-title" className={styles.secTitle}>{t("답이 필요해요", "Needs your answer")}{tasks > 0 ? ` ${tasks}` : ""}</h3>
       {/* `[2026-10-06]` 재난으로 일정이 멈췄으면 맨 위에: 정지 · 안전 안내 · 다시 시작(일정 칸 맨 윗줄에도 같은 패널이 있다). 정지가 없으면 아무것도 그리지 않는다. */}
       <SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} onResumed={onResumed} where="center" />
+      {focusedNoticeKey && <section className={styles.act} data-tone="info" data-notice-choice-state>
+        <h4>{focusNotice ? t("알림과 대안 선택", "Notice and alternatives") : t("현재 위험과 대안 선택", "Current risk and alternatives")}</h4>
+        {focusNotice?.text && <p><LinkedText text={focusNotice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /></p>}
+        {!targetChoiceId && !choiceAnswered && <p role="status">{proposals.isFetching || notices.isFetching
+          ? t("대안 제안을 확인하고 있어요.", "Checking for alternative proposals.")
+          : t("아직 선택할 대안을 받지 못했어요. 새 제안이 도착하면 자동으로 보여 드려요.", "No alternative proposal has arrived yet. New proposals appear here automatically.")}</p>}
+      </section>}
       {/* `[2026-10-06]` 다시 시작한 뒤(72시간 안): 아는 것 · 모르는 것 · 남은 일정의 영향 · 이어가는 세 가지 길. 다시 정지 중이면(새 사건) 그 정지 패널이 먼저다. */}
       {goingOn && (recoveryOpen ? <RecoveryPanel key={goingOn.pauseId} trip={trip} recovery={goingOn} onChosen={chosen} />
         : <section className={styles.act} data-tone="safety" aria-labelledby="trip-recovery-short" data-recovery-short>
@@ -172,21 +218,22 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
             {goingOn.chosen ? t("고르신 것 보기", "See your choice") : t("이어갈 방법 고르기", "Choose how to go on")}</Button></div>
         </section>)}
 
-      {choices.length > 0 && <section className={styles.act} aria-labelledby="trip-choices">
+      {choices.length > 0 && <section className={styles.act} aria-labelledby="trip-choices" data-center-choices>
         <h4 id="trip-choices">{t("선택이 필요해요", "Your choice is needed")}{choices.length > 1 ? ` ${choices.length}` : ""}</h4>
-        {choices.map(({ proposal, stop, text }) => <div key={proposal.id} className={styles.choice}>
+        {choices.map(({ proposal, stop, text }) => <div key={proposal.id} className={styles.choice} data-center-proposal={proposal.id} tabIndex={-1}
+          ref={proposal.id === targetChoiceId ? choiceTarget : undefined}>
           <p className={styles.what}>{stop ? `${stop.time} · ${stop.title}` : t("이 여행의 일정", "A stop on this trip")}</p>
           <p>{text ?? t(`서버가 이 일정에 대한 선택을 기다려요 (이유: ${proposal.reason}).`, `The server is waiting for your choice on this stop (reason: ${proposal.reason}).`)}</p>
           <div className={styles.options}>
             {/* 2026-09-29: "should we change it?" first (indoor/outdoor unknown). The server computes options only after "change". */}
             {[CONSENT_REASON, FORECAST_REASON].includes(proposal.reason) && proposal.options.length === 0 && <Button variant="primary" disabled={choose.isPending}
-              onClick={() => choose.mutate({ proposalId: proposal.id, key: CONSENT_KEY })}>{proposal.reason === FORECAST_REASON
+              onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: CONSENT_KEY })}>{proposal.reason === FORECAST_REASON
                 ? t("예보에 맞게 일정 변경", "Adjust the plan for the forecast")
                 : t("바꿔 줘 — 다른 곳 보기", "Change it — show other places")}</Button>}
             {proposal.options.map((option) => <Button key={option.key} variant="primary" disabled={choose.isPending}
-              onClick={() => choose.mutate({ proposalId: proposal.id, key: option.key })}>{option.note ? `${option.note} · ` : ""}{option.startsAt ? `${seoul(option.startsAt).time} ` : ""}{option.name}
+              onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: option.key })}>{option.note ? `${option.note} · ` : ""}{option.startsAt ? `${seoul(option.startsAt).time} ` : ""}{option.name}
               {option.warnings.length > 0 && <small className={styles.optionWarning}>{option.warnings.join(" · ")}</small>}</Button>)}
-            <Button disabled={choose.isPending} onClick={() => choose.mutate({ proposalId: proposal.id, key: null })}>{t("지금 일정 그대로 두기", "Keep the plan as it is")}</Button>
+            <Button disabled={choose.isPending} onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: null })}>{t("지금 일정 그대로 두기", "Keep the plan as it is")}</Button>
           </div>
           {(proposal.expiresAt || proposal.safety || stop) && <p className={styles.meta}>
             {proposal.safety ? t("안전과 관련된 선택이에요. ", "This one is about safety. ") : ""}{proposal.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : ""}
@@ -217,7 +264,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
         : undo.error.message}</div>}
       {undo.data && !undo.error && <p className={styles.said}>{undo.data.answer ?? t("바꾸기 전 일정으로 되돌렸어요.", "Your plan is back to how it was.")}</p>}
 
-      {tasks === 0 && !goingOn && <p className={styles.empty}>{t("지금 처리할 일은 없어요.", "Nothing to do right now.")}</p>}
+      {tasks === 0 && !goingOn && !focusedNoticeKey && <p className={styles.empty}>{t("지금 처리할 일은 없어요.", "Nothing to do right now.")}</p>}
     </section>
 
     <div className={styles.tabs} role="tablist" aria-label={t("알림 종류", "Kinds of notices")} onKeyDown={tabKeys}>
@@ -225,12 +272,16 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed }: {
         onClick={() => onTab(key)}>{t(ko, en)} {counts[key]}{((key === "notices" && unread > 0) || (key === "service" && serviceUnread)) && <span className={styles.unread} role="img" aria-label={t("읽지 않은 알림", "Unread notices")} />}</button>)}
     </div>
     <div id="trip-center-panel" role="tabpanel" aria-labelledby={`trip-center-tab-${tab}`}>
-      {tab === "warnings" && (warnings.length === 0 ? <p className={styles.empty}>{t("살펴볼 점이 없어요.", "Nothing to look at.")}</p>
-        : <ul className={styles.list}>{warnings.map((warning, index) => <li key={`${warning.code}-${warning.date ?? ""}-${index}`}>
+      {tab === "warnings" && <>
+        <RiskPanel items={currentRisks} at={risks.data?.at} mode={risks.data?.mode} scope={risks.data}
+          loading={risks.isPending} busy={risks.isFetching} error={risks.isError} retry={risks.refresh}
+          onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />
+        {warnings.length > 0 && <ul className={styles.list}>{warnings.map((warning, index) => <li key={`${warning.code}-${warning.date ?? ""}-${index}`}>
           {warning.date && <span className={styles.tag}>{warning.date}</span>}
           <p>{warning.reason}</p>
           {warning.remedy && <p className={styles.remedy}>{warning.remedy}</p>}
-        </li>)}</ul>)}
+        </li>)}</ul>}
+      </>}
       {tab === "service" && <ServiceNoticeTab />}
       {tab === "notices" && <BrowserNotifyOffer />}
       {tab === "notices" && (total === 0 ? <p className={styles.empty}>{t("받은 알림이 없어요.", "No notices yet.")}</p> : <>

@@ -390,14 +390,15 @@ class TripStore:
         return [row[0] for row in self._open_trips(conn, "t.trip_id", now, " ORDER BY t.trip_id")]
 
     def due(self, conn, *, start: datetime, end: datetime) -> list[tuple[UUID, Item]]:
-        """최신 버전에서 `[start, end)` 에 시작하는 항목. 감시 루프가 읽는다. 재난 정지 중인 여행은 빠진다(`_open_trips` — 시계는 `start`)."""
+        """최신 버전에서 `[start, end)` 에 시작하거나 아직 끝나지 않은 항목. 감시 루프가 읽는다. 재난 정지 중인 여행은 빠진다(`_open_trips` — 시계는 `start`)."""
         trips = self._open_trips(conn, "t.trip_id, t.latest_version", start)
         by_trip = self._items_of_trips(conn, [(trip_id, version) for trip_id, version in trips])
         found = []
         for trip_id, _ in trips:
             for item in by_trip.get(trip_id, []):
                 simulated = (item.place or {}).get("_watch_simulation")
-                if start <= item.starts_at < end or (simulated and (item.ends_at or item.starts_at) > start):
+                ongoing = item.ends_at is not None and item.starts_at < start < item.ends_at
+                if start <= item.starts_at < end or ongoing or (simulated and (item.ends_at or item.starts_at) > start):
                     found.append((trip_id, item))
         return found
 
@@ -630,14 +631,16 @@ class TripStore:
                     if current is None or not current[0]:
                         raise StaleDeparture("departure trip inputs changed")
                 cur.execute("SELECT EXISTS (SELECT 1 FROM itinerary_items WHERE tenant_id=%s "
-                            "AND trip_id=%s AND version=%s AND item_id=%s AND kind='mobility')",
+                            "AND trip_id=%s AND version=%s AND item_id=%s AND kind='mobility' "
+                            "AND COALESCE(detail->'execution'->>'state','') NOT IN ('completed','skipped'))",
                             (self.tenant_id, trip_id, version, UUID(key.split(":", 1)[1])))
                 if not cur.fetchone()[0]:
                     raise StaleDeparture("departure item is no longer current")
-        if "plan_url" not in payload:
-            from app.domains.travel_ops.components.itinerary.plan_link import plan_url
+        from app.domains.travel_ops.components.itinerary.plan_link import app_url, plan_url
 
-            payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
+        # 고객·모델이 넣은 주소 대신 이 여행의 정식 주소를 생성한다.
+        payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id),
+                   "app_url": app_url(trip_id)}
         payload = self._with_guardian(conn, trip_id, payload)
         with conn.cursor() as cur:
             cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
@@ -662,10 +665,11 @@ class TripStore:
         """
         from app.domains.travel_ops.components.watch.simulation import mark_notice
         payload = mark_notice(conn, self.tenant_id, trip_id, {**payload, "version": version})
-        if "plan_url" not in payload:
-            from app.domains.travel_ops.components.itinerary.plan_link import plan_url
+        from app.domains.travel_ops.components.itinerary.plan_link import app_url, plan_url
 
-            payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
+        # 고객·모델이 넣은 주소 대신 이 여행의 정식 주소를 생성한다.
+        payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id),
+                   "app_url": app_url(trip_id)}
         payload = self._with_guardian(conn, trip_id, payload)
         if "locale" not in payload:
             with conn.cursor() as cur:

@@ -2,7 +2,7 @@
 
 v2 에 대한 사용자 지적: 「디자인 스킬 쓴 거 맞아? 겁나 구린데」 — v2 는 디자인 스킬 없이 손으로 짰다.
 v3 원칙(design-critique 진단 → design-system 토큰 → diagram-design 규칙):
-- 색 · 글자 · 모서리는 triPilot 사용자 웹 디자인 시스템 토큰(초록 한 가지 + 따뜻한 경고 · 오류 톤, 시스템 글꼴, 큰 모서리)
+- 색 · 글자 · 모서리는 guguroute 사용자 웹 디자인 시스템 토큰(초록 한 가지 + 따뜻한 경고 · 오류 톤, 시스템 글꼴, 큰 모서리)
 - 차트는 「하나만 색, 나머지는 회색」 — 장마다 말하려는 막대 하나만 초록
 - 흐름도는 diagram-design 원칙(밀도 4/10, 강조 노드 1~2개, 선은 정보가 있을 때만) — 되돌아가는 고리는 흐름 한가운데 실제 화살표로
 출력: ../v3/_assets/
@@ -26,7 +26,7 @@ OUT = ROOT / "v3" / "_assets"
 OUT.mkdir(parents=True, exist_ok=True)
 CAP = W5 / "화면설계서" / "assets"
 
-# triPilot 디자인 시스템 토큰(사용자 웹 apps/web, 디자인 시스템 아티팩트 tokens.json)
+# guguroute 디자인 시스템 토큰(사용자 웹 apps/web, 디자인 시스템 아티팩트 tokens.json)
 T = {
     "text": "#24392f", "muted": "#6d7c73", "caption": "#526858", "border": "#dce3dd", "surface": "#ffffff",
     "background": "#f3f5f3", "paper": "#f7f9f3", "primary": "#2e6047", "soft": "#e9f2eb", "subtle": "#f6f7f5",

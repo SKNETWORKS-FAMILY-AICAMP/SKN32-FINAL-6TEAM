@@ -183,10 +183,13 @@ def _covers(tokens: list[str], region: str, district: str | list[str] | None) ->
     full = REGION_NAMES.get(region, region)
     districts = [district] if isinstance(district, str) else district
     for token in tokens:
+        token = token.strip()
         if not token.startswith(full):
             continue
+        area = token[len(full):].strip()
         # ★구까지 알면 구로 좁힌다 — 강남 도로 통제로 종로 일정을 바꾸지 않게.
-        if not districts or token.endswith("전체") or any(d in token for d in districts):
+        # ‘금천구 전체’의 전체는 해당 구 안에서만 적용한다.
+        if not districts or area in ("", "전체") or any(d in area for d in districts):
             return True
     return False
 

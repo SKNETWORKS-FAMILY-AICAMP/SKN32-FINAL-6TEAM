@@ -12,7 +12,7 @@ BASE=ROOT/'program/scripts/plan_qa_bench/results/gpu_backlog_20261008'
 FOLDER=BASE/'valen_08b_original_smoke12_a2'
 OUT=ROOT/'program/scripts/rag_gate/results/daily_20261009_selective_v1/valen_success_parent_verification.json'
 assert not OUT.exists()
-prompts=ROOT/'datasets/travel/valen_native_eval_20261009/smoke12.json'
+prompts=ROOT/'datasets/core/pointing/evaluations/valen_native_eval_20261009/smoke12.json'
 ref={r['i']:r for r in json.loads(prompts.read_text(encoding='utf-8'))}
 answers=FOLDER/'d_test_valen_08b_original_smoke12_a2.jsonl'
 rows=[json.loads(l) for l in answers.read_text(encoding='utf-8').splitlines()]

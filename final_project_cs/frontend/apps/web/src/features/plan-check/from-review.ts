@@ -2,6 +2,8 @@ import { compareItems, streamedReview } from "@/features/intake-review/stream-mo
 import type { IntakeView } from "@/lib/live/intake";
 import { modeChoiceOf } from "@/lib/live/move-options";
 import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
+import { itemRiskOf, problemText, type ItemRisk } from "@/lib/live/risks";
+import { proposedTimeOf } from "./risk-candidate-edits";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
@@ -55,13 +57,16 @@ export function isLodgingReviewItem(item: ReviewItem): boolean {
 function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanItem {
   // The place the customer picked names the card; the words they wrote stay for the editor and as a small line under it.
   const picked = item.place_state === "customer" && item.place?.name && item.place.name !== item.title ? item.place.name : null;
+  const risk = itemRiskOf(item.risk);
+  if (risk) { risk.itemId = item.id; risk.title = picked ?? item.title; }
   return {
     id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "", ...(item.end_date ? { endDate: item.end_date } : {}),
     title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none", kind: item.kind ?? item.place?.kind ?? null,
     ...(isLodgingReviewItem(item) ? { displayKind: "lodging" } : {}),
     ...(item.lodging_group ? { lodgingGroup: { ...item.lodging_group, place: item.lodging_group.place?.name ?? null } } : {}),
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
-    checks: (item.rows ?? []).map(row), rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
+    checks: [...(item.rows ?? []).filter((line) => line.row !== "risk").map(row), ...riskChecks(risk)], risk,
+    rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
     ...(item.vendor_booking ? { vendorBooking: true } : {}),
   };
 }
@@ -103,7 +108,8 @@ export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: Pl
 export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, infos?: Readonly<Record<string, PlaceInfo>>): PlanCheckView | null {
   if (!intake.review) return null;
   return viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing),
-    prefill: prefillNotesOf(intake) }, intake.review, "done", infos, filledReasons(intake));
+    prefill: prefillNotesOf(intake), risksAvailable: intake.review.risk_schema_version === 1,
+    riskMode: intake.review.risk_mode, riskCheckedAt: intake.review.risk_checked_at }, intake.review, "done", infos, filledReasons(intake));
 }
 
 /**
@@ -172,14 +178,27 @@ export function streamingViewOf(intake: IntakeView, stream: StreamState, infos?:
 
 /** Candidates → the change screen's cards. `distance.from` is the nearby stop the distance was measured from. */
 export function planCandidate(candidate: Candidate, itemId: string, source: PlanCandidate["source"], info: PlaceInfo | null): PlanCandidate {
+  const risk = itemRiskOf(candidate.risk);
+  const proposedTime = proposedTimeOf(candidate);
+  const timing = proposedTime ? [proposedTime.date, `${proposedTime.startsAt}${proposedTime.endsAt ? `–${proposedTime.endsAt}` : ""}`].filter(Boolean).join(" · ") : null;
+  const reason = [candidate.reason?.trim(), timing].filter(Boolean).join(" · ");
   return {
     id: `${itemId}:${candidate.place.ref ?? candidate.place.name}:${candidate.rank}`,
     name: candidate.place.name, source, rank: source === "candidate" ? candidate.rank : null,
     distance: typeof candidate.distance_m === "number" && candidate.reference ? { km: candidate.distance_m / 1000, from: candidate.reference } : null,
     coordinates: located(candidate.place) ? { lat: candidate.place.latitude, lng: candidate.place.longitude } : null,
-    info, checks: candidate.rows.map(row),
+    info, checks: [...candidate.rows.filter((line) => line.row !== "risk").map(row), ...riskChecks(risk)], risk,
+    ...(proposedTime ? { proposedTime } : {}),
     ...(candidate.basis ? { basis: candidate.basis } : {}),
     ...(candidate.basis === "meal_inferred" ? { placeKind: "dining" } : candidate.place.kind === "dining" || candidate.place.kind === "activity" ? { placeKind: candidate.place.kind } : {}),
-    ...(typeof candidate.reason === "string" && candidate.reason.trim() ? { reason: candidate.reason.trim() } : {}),
+    ...(reason ? { reason } : {}),
   };
+}
+
+function riskChecks(risk: ItemRisk | null): CheckRow[] {
+  if (!risk) return [];
+  const text = risk.problems.map(problemText).filter(Boolean).join("; ");
+  return [{ kind: "risk", result: risk.status === "problem" ? "warn" : risk.status === "clear" ? "ok" : "unknown",
+    text: text || (risk.status === "clear" ? "확인한 위험 정보에서 겹치는 문제가 없어요"
+      : risk.reason || `확인 불가: ${risk.unknownCategories.join(" · ") || "위험 정보"}`) }];
 }

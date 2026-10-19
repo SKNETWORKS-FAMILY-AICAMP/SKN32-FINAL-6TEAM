@@ -72,22 +72,32 @@ for (const standalone of [false, true]) {
     await context.setOffline(standalone);
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(standalone ? `${standaloneUrl}#/users` : '/users');
+    const filterPanel = page.locator('details').filter({ has: page.locator('summary', { hasText: /^필터$/ }) });
+    // 「필터」는 접힌 details 라 화면을 다시 그리면 닫힌다. 값을 고르거나 볼 때마다 열려 있게 한다.
+    const openFilters = async () => {
+      if (!(await filterPanel.evaluate(element => (element as HTMLDetailsElement).open))) await filterPanel.locator('summary').click();
+    };
+    const chatColumn = page.getByRole('columnheader', { name: /^② 채팅 오늘 \/ 한도/ });
+    const lastUsedColumn = page.getByRole('columnheader', { name: /^마지막 사용 · KST/ });
     await page.getByLabel('사용자 ID로 찾기', { exact: true }).fill('demo-user-0');
-    await page.getByRole('combobox', { name: '상태', exact: true }).selectOption('정상');
-    await page.getByRole('combobox', { name: '정렬', exact: true }).selectOption('오늘 사용량순');
-    await page.getByRole('button', { name: '문의 있음', exact: true }).click();
+    await openFilters();
+    await page.getByRole('combobox', { name: '상태', exact: true }).selectOption({ label: '정상' });
+    await page.getByRole('combobox', { name: '조회 조건', exact: true }).selectOption({ label: '문의 있음' });
+    await chatColumn.getByRole('button').click();
+    await expect(chatColumn).toHaveAttribute('aria-sort', 'descending');
     await expect(main(page).getByRole('row')).toHaveCount(4);
     await page.getByRole('button', { name: 'demo-user-02 상세 보기', exact: true }).click();
     await expect(main(page).getByRole('heading', { name: '사용자 상세', exact: true })).toBeVisible();
     await page.goBack();
     await expect(page.getByLabel('사용자 ID로 찾기', { exact: true })).toHaveValue('demo-user-0');
-    await expect(page.getByRole('combobox', { name: '상태', exact: true })).toHaveValue('정상');
-    await expect(page.getByRole('combobox', { name: '정렬', exact: true })).toHaveValue('오늘 사용량순');
-    await expect(page.getByRole('button', { name: '문의 있음', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await openFilters();
+    await expect(page.getByRole('combobox', { name: '상태', exact: true })).toHaveValue('active');
+    await expect(page.getByRole('combobox', { name: '조회 조건', exact: true })).toHaveValue('inquiry');
+    await expect(chatColumn).toHaveAttribute('aria-sort', 'descending');
     await page.goForward();
     await page.getByRole('button', { name: '← 사용자 목록', exact: true }).click();
     await expect(page.getByLabel('사용자 ID로 찾기', { exact: true })).toHaveValue('demo-user-0');
-    await expect(page.getByRole('combobox', { name: '정렬', exact: true })).toHaveValue('오늘 사용량순');
+    await expect(chatColumn).toHaveAttribute('aria-sort', 'descending');
     await expect(main(page).getByRole('row')).toHaveCount(4);
     if (!standalone) {
       await page.screenshot({ path: 'test-results/admin-users-filtered-desktop.png', fullPage: true });
@@ -97,9 +107,10 @@ for (const standalone of [false, true]) {
     }
     await page.getByRole('button', { name: '데모 초기화', exact: true }).click();
     await expect(page.getByLabel('사용자 ID로 찾기', { exact: true })).toHaveValue('');
-    await expect(page.getByRole('combobox', { name: '상태', exact: true })).toHaveValue('전체');
-    await expect(page.getByRole('combobox', { name: '정렬', exact: true })).toHaveValue('마지막 사용순');
-    await expect(page.getByRole('button', { name: '전체', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await openFilters();
+    await expect(page.getByRole('combobox', { name: '상태', exact: true })).toHaveValue('all');
+    await expect(page.getByRole('combobox', { name: '조회 조건', exact: true })).toHaveValue('all');
+    await expect(lastUsedColumn).toHaveAttribute('aria-sort', 'descending');
     await expect(main(page).getByRole('row')).toHaveCount(7);
     await page.getByLabel('사용자 ID로 찾기', { exact: true }).fill('demo-user-02');
     await page.reload();

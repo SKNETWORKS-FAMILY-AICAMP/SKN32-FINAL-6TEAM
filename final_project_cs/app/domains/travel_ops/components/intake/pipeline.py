@@ -27,6 +27,7 @@ from . import review as review_module
 from . import survey_answers
 from .areas import areas_for
 from . import agent_read as agent_module
+from . import schedule_cards
 from .assemble import assemble, effective
 from .catalog_names import with_catalog
 from .line_parts import lookup_title
@@ -207,9 +208,10 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
             def places_progress(phase, done, total, index, title, _position=source["position"]):
                 push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
 
-            def reading_progress(tally):
-                # ★`[2026-10-16]` 남은 줄 모델 호출이 묶음 하나 끝날 때마다 「읽는 중 n/m 묶음」(`llm_spans.label_lines`) — 지어낸 진행률이 아니라 끝난 묶음 수다
-                push("progress", {"phase": "reading", **tally})
+            def reading_progress(body):
+                # ★`[2026-10-16 2회차 합의]` 남은 줄 모델이 답을 쓰는 동안 「읽는 중 n/m 줄」(`llm_spans.label_lines`) — 원문 검사를 통과한 줄 수 / 보낸 줄 수.
+                #   유료로 처음부터 다시 읽으면 `phase: reading_api` 로 0 부터 다시 센다
+                push("progress", body)
 
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
                         aliases=aliases, areas=areas, dining=dining, today=(today or received_at.date()), now=received_at,
@@ -377,6 +379,9 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
                      survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)))}
         review, review_error = _review_of(conn, tenant_id, intake_id, revision, sources, claims)
         review = review_module.public(review, tenant_id=tenant_id)               # 내부 칸(이동 재사용 키 · 장소 행 번호)은 응답에 싣지 않는다
+        missing_cards = [p.as_dict() for p in built.problems if p.code == "source_item_missing"]
+        if review is not None and missing_cards:
+            review = {**review, "ready": False, "source_coverage": {"status": "missing", "problems": missing_cards}}
     out_sources = []
     for source in sources:
         mine = [c for c in claims if c["source_id"] == source["source_id"]]
@@ -469,7 +474,7 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None, learn_aliases: bool = True) -> int:
+         dining: Any = None, learn_aliases: bool = True, reflow: bool = False) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
@@ -530,6 +535,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 # ★`[2026-10-14 핫픽스]` 화면에서 칸을 감췄어도 직접 보내는 요청은 여기서 막는다(관리 콘솔 스위치가 켜져야 받는다)
                 raise IntakeRejected("taxi_pricing_disabled", "택시 호출 상품 고르기는 지금 쓰지 않습니다")
             value, evidence, note = _checked(field_name, entry.get("value"))
+            if field_name.startswith("items[") and field_name.endswith(".title"):
+                previous_title = next((c for c in current_claims if str(c["source_id"]) == source_id and c["field"] == field_name), {})
+                evidence = schedule_cards.edited_title_evidence(evidence, previous_title)
             if field_name.endswith(".locked") and value is True:
                 _require_lockable(conn, tenant_id, intake_id, current, source_rows, current_claims, source_id, field_name)
             if field_name.endswith(".place") and isinstance(value, dict) and value.get("content_id"):
@@ -538,12 +546,13 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 value = _linked_ledger_pick(conn, tenant_id, value)
             if field_name.endswith(".place") and value is not None and "latitude" not in value:
                 if our_places is None:
-                    our_places = _our_places(conn, tenant_id)
+                    our_places = _our_places(conn, tenant_id, trip_id=reopened)
                 typed = str(value["name"]).strip()
                 # ★`[2026-10-05]` 식사 항목이면 요식 원장부터 찾는다(팀 판 — 같은 요청에서 함께 고친 종류가 먼저, 없으면 지금 판의 종류)
                 kind = _item_kind(cur, tenant_id, intake_id, current, source_id, field_name, edits)
                 value, evidence, note = _typed_place(value, our_places, tour, kakao, dining,
-                                                     kind_hint="dining" if kind == "dining" else None)
+                                                     kind_hint="dining" if kind == "dining" else None,
+                                                     near=_edit_place_anchor(cur, tenant_id, intake_id, current, source_id, field_name))
                 # 원래 읽은 이름 → 고객이 고친 이름을 별칭으로 쌓는다(다음 고객은 안 고쳐도 되게)
                 cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
                             "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
@@ -563,6 +572,9 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
                    if field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None}
+        explicit_times = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
+                          if field.startswith("items[") and field.endswith((".starts_at", ".ends_at", ".date"))} if reflow else set()
+        touched |= explicit_times
         if (touched or added) and via != "autofix":
             from . import direct_schedule
             from .assemble import collect
@@ -579,7 +591,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             party = (got.trip.get("party_size") or {}).get("value")
             try:
                 adjusted = direct_schedule.fit(conn, tenant_id=tenant_id, rows=got.rows, touched=touched, party_size=party,
-                                               mode_picks=review_module.picked_modes(prospective))
+                                               mode_picks=review_module.picked_modes(prospective), fixed_times=explicit_times, forward_only=reflow)
             except direct_schedule.ScheduleConflict as exc:
                 raise IntakeConflict(exc.code, str(exc)) from exc
             for change in adjusted:
@@ -1040,10 +1052,13 @@ def _checked_pick(field_name: str, value: dict[str, Any]) -> dict[str, Any]:
     content_id = value.get("content_id")
     if content_id is not None and not _CONTENT_ID.match(str(content_id)):
         raise IntakeRejected("invalid_value", f"{field_name}: content_id 는 숫자입니다")
+    provider_ref = str(value.get("provider_ref") or "").strip()
+    if provider_ref and not re.fullmatch(r"(?:kakao|tour):[0-9]{1,30}", provider_ref):
+        raise IntakeRejected("invalid_value", f"{field_name}: provider_ref 형식을 확인해 주세요")
     category = str(value.get("category") or "").strip()[:60] or None
     return {"name": name, "kind": kind if kind in ("activity", "dining") else None, "latitude": coords[0],
             "longitude": coords[1], "place_id": None, "content_id": str(content_id) if content_id else None,
-            "content_type_id": None, "category": category, "source": "customer_pick",
+            "content_type_id": None, "category": category, "provider_ref": provider_ref or None, "source": "customer_pick",
             "origin": source if source != "customer_pick" else str(value.get("origin") or "search")
             if str(value.get("origin") or "search") in _PICK_ORIGINS else "search"}
 
@@ -1069,12 +1084,29 @@ def _item_kind(cur, tenant_id: str, intake_id: UUID, revision: int, source_id: s
     return row[0] if row and isinstance(row[0], str) else None
 
 
-def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, kind_hint: str | None = None):
+def _edit_place_anchor(cur, tenant, intake_id, revision, source_id, field):
+    cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
+                "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
+                (tenant, intake_id, revision, source_id, field))
+    row = cur.fetchone()
+    value = row[0] if row and isinstance(row[0], dict) else {}
+    return ((value["latitude"], value["longitude"]) if value.get("latitude") is not None
+            and value.get("longitude") is not None else None)
+
+
+def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, kind_hint: str | None = None, near=None):
     """고객이 적은 장소 이름 → 다시 찾아 **하나**. 못 찾으면 받지 않는다(지어내지 않는다)."""
     from .places import resolve
 
     name = str(value["name"]).strip()[:80]
-    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao, dining=dining, kind_hint=kind_hint)
+    if "near" in value:
+        anchor = value["near"]
+        if (not isinstance(anchor, (list, tuple)) or len(anchor) != 2
+                or any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in anchor)
+                or not SEOUL_LAT[0] <= anchor[0] <= SEOUL_LAT[1] or not SEOUL_LON[0] <= anchor[1] <= SEOUL_LON[1]):
+            raise IntakeRejected("invalid_value", "검색 기준 위치는 서울 안의 위도·경도 숫자여야 해요")
+        near = tuple(anchor)
+    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao, dining=dining, kind_hint=kind_hint, near=near, choose_near=True)
     if found.status != "resolved":
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
@@ -1085,16 +1117,35 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
 
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
-def _reading_limits(chunk_lines: int | None, total_seconds: float | None) -> tuple[int, float]:
-    """남은 줄 모델 호출의 묶음 크기 · 전체 상한 — 넘겨받은 값이 없으면 가드레일 `travel.intake_reading.*`(근거는 그 설정의 주석)."""
-    if chunk_lines is not None and total_seconds is not None:
-        return int(chunk_lines), float(total_seconds)
+READING_STREAM_KEYS = ("first_token_seconds", "stall_seconds", "max_seconds", "progress_seconds", "output_tokens_base",
+                       "output_tokens_per_line", "output_tokens_per_char")
+
+#: 남은 줄 모델이 끝내 답하지 못했을 때 고객에게 보이는 말(접수 `fatal_detail`) — 무엇이 안 됐고 무엇을 하면 되는지. 기술 사유는 로그에 남긴다
+READING_FAILED_TEXT = "계획을 읽는 모델이 지금 답하지 않아 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요."
+
+
+def _model_side_failure(exc: BaseException) -> bool:
+    """에이전트 실패가 **모델 쪽**(로컬 · 유료 모두 답하지 못함 — 연결 · 시간 초과 · 조각 끊김)인가. `[2026-10-16 2회차 합의 ②]`
+    답 내용 쪽(모양 · 스키마 · 인용 검사 — `OllamaContentError` · `ValueError` · 넘김 장치가 모든 경로에서 「모양」 이유로 실패)이면 False — 줄 읽기로 한 번 더 읽는다."""
+    from app.infrastructure.llm_failover import current_path
+    from app.infrastructure.ollama_chat import OllamaContentError, OllamaError
+
+    if isinstance(exc, OllamaContentError):
+        return False
+    if not isinstance(exc, (OllamaError, TimeoutError, ConnectionError)):
+        return False
+    reasons = [reason for _, reason in ((current_path() or {}).get("reasons") or [])]
+    return not (reasons and all(reason == "content" for reason in reasons))
+
+
+def _reading_stream(given: dict[str, Any] | None) -> dict[str, Any]:
+    """남은 줄 모델 호출의 조금씩 받기 설정 — 넘겨받은 값이 없으면 가드레일 `travel.intake_reading.*`(근거는 그 설정의 주석)."""
+    if given is not None:
+        return given
     from app.core.settings import get_guardrails
 
     guard = get_guardrails()
-    size = int(guard.get("travel.intake_reading.chunk_lines")) if chunk_lines is None else int(chunk_lines)
-    cap = float(guard.get("travel.intake_reading.total_seconds")) if total_seconds is None else float(total_seconds)
-    return size, cap
+    return {key: guard.get(f"travel.intake_reading.{key}") for key in READING_STREAM_KEYS}
 
 
 
@@ -1112,7 +1163,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None,
                 differs: dict[int, dict[str, Any]] | None = None, agent: Any = None, agent_mode: str = "off",
                 position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
-                chunk_lines: int | None = None, reading_seconds: float | None = None,
+                reading_stream: dict[str, Any] | None = None,
                 on_reading: Callable[[dict[str, Any]], None] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
 
@@ -1132,25 +1183,42 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     `differs` `[2026-10-06 사용자 지시 — 값 변조 줄이기]` — 사진 · 스캔 받아쓰기가 같은 줄을 **두 번 다르게 읽은 곳**(`sources.differing_lines`). 그 줄에서 읽은 제목 · 예약번호는 「확인 필요」로 표시한다 —
     고객이 확인하기 전에는 확정 값으로 쓰지 않는다(`flag_differing`).
 
-    `chunk_lines` · `reading_seconds` · `on_reading` `[2026-10-16]` — 남은 줄을 모델에 **줄 묶음으로** 나눠 보낸다(`llm_spans.label_lines`). 비우면(None)
-    가드레일 `travel.intake_reading.chunk_lines` · `total_seconds` 를 읽는다. `on_reading({done, total, failed, skipped})` 는 묶음 하나가 끝날 때마다 불린다.
+    `reading_stream` · `on_reading` `[2026-10-16 2회차 합의 · 사용자 승인]` — 남은 줄을 모델에 **한 번에** 보내고 답을 **조금씩 받는다**(`llm_spans.label_lines`).
+    비우면(None) 가드레일 `travel.intake_reading.*`(첫 조각 · 조각 사이 · 맨 위 상한 · 진행 알림 간격 · 답 토큰 상한)를 읽는다.
+    `on_reading({phase: reading|reading_api, done, total})` — 원문 검사를 통과한 줄 수 / 보낸 줄 수(`progress_seconds` 마다 · 유료로 바뀌면 곧바로).
+    ★모델이 로컬 · 유료 모두 답하지 못하면 `IntakeRejected("reading_model_failed")` — 접수가 「읽기 실패」가 되고 고객은 다시 보낼 수 있다(조용히 남은 줄로 두지 않는다).
 
     `dining` `[2026-10-05]` — 요식 원장 이름 조회(`dining/place_lookup.py`, 관광공사 자리와 같은 계약 `find` + `misses`). 식사 항목은 이것이 먼저, 그 밖의 항목은 관광공사 자리 뒤다(`places.resolve`). 없으면(None) 건너뛴다."""
     from .dates import resolve_dates
     from .line_parts import parse as parse_line
-    from .llm_spans import label_lines
+    from .landmarks import read_move
+    from .llm_spans import ReadingFailed, label_lines
     from .places import _kind_hits, nearest, normalize, resolve
 
     read = read_plan(text)
+    copied_cards = schedule_cards.cards(read)
+    schedule_cards.restore(read, copied_cards)
     agent_out, agent_error = None, None
     if agent is not None and agent_mode in ("on", "shadow"):
         try:
+            # ★`[2026-10-16 2회차 합의]` 조금씩 받기 + 멈춤 감시(`travel.intake_reading`) — 진행 알림은 에이전트 결과를 쓰는 `on` 일 때만(그림자는 규칙 경로가 알린다)
             agent_out = agent_module.read(text, read.lines, agent, today=today, num_predict=agent_num_predict,
-                                          chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS)
-        except Exception as exc:                      # noqa: BLE001 — 에이전트 장애는 기록하고 규칙으로 읽는다
+                                          chunk_chars=agent_chunk_chars or agent_module.fragments_module.CHUNK_CHARS,
+                                          stream=_reading_stream(reading_stream), on_progress=on_reading if agent_mode == "on" else None,
+                                          now=now)
+        except Exception as exc:                      # noqa: BLE001 — 갈래를 나눈다(아래)
             agent_error = f"{type(exc).__name__}: {exc}"[:200]
-            log.warning("intake agent read failed: %s", agent_error)
+            # ★`[2026-10-16 2회차 합의 ②]` 버리는 줄 없음 — 실패 이유로 갈래를 나눈다
+            #   · 모델 쪽(로컬 · 유료 모두 답 못 함 — 연결 · 시간 초과 · 멈춤): 같은 모델을 또 부르지 않고 곧바로 「읽기 실패」(유료를 두 번 태우지 않는다)
+            #   · 답 내용 쪽(스키마 · 모양 · 인용 검사 — 모델은 답했다): 아래에서 줄 읽기(`label_lines`)로 한 번 더 읽고, 그것도 실패하면 「읽기 실패」
+            #   ☆전에는(D-025 첫 판) 어느 쪽이든 「규칙 미리보기 + 못 읽은 줄」로 끝냈다 — 못 읽은 줄이 조용히 남았다
+            if agent_mode == "on" and _model_side_failure(exc):
+                log.warning("intake reading outcome=failed by=agent_model error=%s", agent_error)
+                raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
+            log.warning("intake agent read failed (answer side — reading lines instead): %s", agent_error)
     use_agent = agent_mode == "on" and agent_out is not None and (bool(agent_out.items) or not read.items)
+    #: 어느 길로 읽었나 — `reading.agent` 값 줄과 로그에 남긴다(화면 · 관리 콘솔에서 본다). 줄 읽기가 실패하면 `failed` 로 로그만 남고 접수가 「읽기 실패」가 된다
+    outcome = "agent" if use_agent else ("lines_instead" if agent_mode == "on" else "lines")
     rows = [claim.as_dict() for claim in read.claims] if not use_agent else []
     sent: set[int] = set()
     flushed = 0
@@ -1168,7 +1236,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         flushed = len(rows)
 
     if use_agent:
-        rows, items, dated, ask = _agent_rows(read, agent_out, position=position, today=today)
+        rows, items, dated, ask = _agent_rows(read, agent_out, position=position, today=today, copied_cards=copied_cards)
         flush()
     else:
         flush()                                       # 규칙으로 읽은 줄 — 이 순간 「읽은 줄」이 생긴다
@@ -1180,16 +1248,16 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                           "day": item.day, "date": item.date, "title": item.title.text if item.title else None,
                           "meal": any(r["field"] == f"items[{len(items)}].kind" for r in rows), "booked": item.booked})
 
-        # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
-        # ★`[2026-10-16 D-025]` 이해 에이전트가 방금 실패했으면(연결 · 시간 초과 · 유료 대체까지) 같은 모델을 다시 부르지 않는다 —
-        #   규칙 미리보기 + 못 읽은 줄 표시로 끝낸다(남은 줄은 확인 화면의 「못 읽은 줄」로 보인다)
-        if chat is not None and read.unread_lines and agent_error is None:
+        # 남은 줄 — 모델은 가리키기만. ★`[2026-10-16 2회차 합의]` 로컬 · 유료 모두 실패하면 접수를 「읽기 실패」로 드러낸다(전에는 이 단계만 건너뛰었다)
+        # ★`[2026-10-16 2회차 합의 ②]` 에이전트가 **답 내용 쪽**으로 실패했거나 항목을 못 냈으면 여기서 줄 읽기로 한 번 더 읽는다.
+        #   모델 쪽 실패는 위에서 이미 「읽기 실패」로 끝났다(같은 모델을 또 부르지 않는다)
+        if chat is not None and read.unread_lines:
             try:
-                size, cap = _reading_limits(chunk_lines, reading_seconds)
-                _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now, chunk_lines=size,
-                                                    total_seconds=cap, on_chunk=on_reading)
-            except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
-                span_items, report = [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
+                _, span_items, report = label_lines(read.lines, read.unread_lines, chat, now=now,
+                                                    stream=_reading_stream(reading_stream), on_progress=on_reading)
+            except ReadingFailed as exc:
+                log.warning("intake reading outcome=failed by=lines after=%s lines=%d: %s", outcome, len(read.unread_lines), exc)
+                raise IntakeRejected("reading_model_failed", READING_FAILED_TEXT) from exc
             rows.append({"field": "reading.llm", "value": report, "method": "llm_span",
                          "evidence": {"source": "model", "lines": read.unread_lines}, "needs_review": False,
                          "note": "남은 줄에 모델이 가리킨 결과(원문에 없는 인용은 버렸다)"})
@@ -1241,10 +1309,11 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     if agent is not None and agent_mode in ("on", "shadow"):
         # 에이전트가 읽은 것 중 화면 칸이 없는 것(이동 · 조건 · 성향 · 요청 · 빠진 값)과 실패 · 그림자 결과를 남긴다
         rows.append({"field": "reading.agent", "method": "llm_agent", "evidence": {"source": "model"}, "needs_review": False,
-                     "value": ({**agent_module.report_value(agent_out), "used": use_agent} if agent_out is not None
-                               else {"error": agent_error, "used": False}),
+                     "value": ({**agent_module.report_value(agent_out), "used": use_agent, "outcome": outcome} if agent_out is not None
+                               else {"error": agent_error, "used": False, "outcome": outcome}),
                      "note": "읽기 에이전트 결과(원문에 글자 그대로 없는 조각은 버렸다)"})
         flush()
+    log.info("intake reading outcome=%s agent_mode=%s agent_error=%s", outcome, agent_mode, agent_error or "-")
 
     # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
     resolved: dict[int, Any] = {}
@@ -1256,8 +1325,22 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             # ★이름 없는 줄(종류 + 지역만) — 가게 이름으로 찾지 않는다. 고객이 앞서 이 글을 다른 이름으로 고친 적이 있으면(별칭) 그 이름으로 다시 찾는 옛 길이 먼저다
             # ★`[2026-10-15 숙박예약 점검 LB-01]` 장소는 체크인 · 체크아웃 말을 뺀 말로 찾는다(숙소 줄) — 고객이 이 글을 다른 이름으로 고친 적이 있으면(별칭) 원문 그대로
             query = _lookup_title(item["title"], aliases)
+            # ★`[2026-10-19 진단 포인트 2]` 이동을 적은 말(「택시로 이동」 · 「공항철도 타고 인천공항」)은 방문할 장소가 아니다 — 장소를 찾지 않는다.
+            #   ☆「택시로 이동」이 택시 회사 본사가 됐다. 「따릉이 타고 한강」처럼 끝점이 공항 · 역 · 터미널이 아니면 수단 말만 떼고 목적지를 찾는다
+            move = read_move(query) if normalize(item["title"]) not in (aliases or {}) else None
+            if move is not None and move.is_move:
+                early[index] = _move_rows(index, move, item)
+                send(early[index])
+                nameless.add(index)
+                placed += 1
+                if on_progress is not None:
+                    on_progress("places", placed, titled, index, item["title"])
+                continue
+            if move is not None and move.destination:
+                query = move.destination
             parts = parse_line(query, areas=areas, kind_hint="dining" if item["meal"] else None)
-            if parts.nameless and normalize(item["title"]) not in (aliases or {}):
+            meal_reference = item["meal"] and re.fullmatch(r"(?:(?:거기|여기|그곳|이곳)(?:서|에서)?\s*(?:식사|밥)?|식사|밥)", query.strip())
+            if parts.nameless and not meal_reference and normalize(item["title"]) not in (aliases or {}):
                 nameless.add(index)
                 early[index] = _nameless_rows(index, parts, item, rows)
                 send(early[index])
@@ -1324,7 +1407,16 @@ def flag_differing(rows: list[dict[str, Any]], differs: dict[int, dict[str, Any]
 
 
 def _place_kind_hint(item: dict[str, Any]) -> str | None:
-    """장소를 찾을 종류 단서 — 활동 표현은 같은 줄 전체가 아닌 이 항목의 원문에서만 본다."""
+    """장소를 찾을 종류 단서 — 활동 표현은 같은 줄 전체가 아닌 이 항목의 원문에서만 본다.
+
+    ★`[2026-10-19 진단 포인트 2]` **숙소가 먼저다** — 에이전트가 숙소라고 읽었거나(`lodging`) 이 항목의 원문에 숙소 말(호텔 · 숙소 · 체크인 · ○○스테이 …)이
+      있으면 끼니 말이 있어도(「호텔 조식」 · 「롯데호텔 서울 조식」) 장소는 숙소 자료에서만 찾는다. 항목이 식사인지는 따로 남는다(종류 값 줄).
+      ★찾을 말(`lookup_title`)은 체크인 말을 뗀 것이라 여기서는 **원문 제목**을 본다(「노스텔지어 더블재 체크인」).
+      줄 전체(`segment`)는 보지 않는다 — 「체크인 후 경복궁」의 경복궁까지 숙소가 된다."""
+    from .landmarks import is_lodging_text
+
+    if item.get("lodging") or is_lodging_text(item.get("title")):
+        return "lodging"
     if item["meal"]:
         return "dining"
     text = (item.get("segment") or {}).get("text") or item.get("title") or ""
@@ -1398,6 +1490,17 @@ def _fitting(pool: list[dict[str, Any]], title: str, *, meal: bool, activity: bo
     key = normalize_full(title)
     same = [c for c in pool if normalize_full(c["name"]) == key]
     return same or pool
+
+
+def _move_rows(index: int, move: Any, item: dict[str, Any]) -> list[dict[str, Any]]:
+    """이동을 적은 줄(「택시로 이동」 · 「공항철도 타고 인천공항」)의 값 줄 — 장소 값은 비워 두고(찾지 않았다) 수단 · 목적지 원문을 근거에 남긴다. `[2026-10-19]`
+    확인 화면은 「장소 없이 둔」 줄로 보인다(`review.place_state`). 앞뒤 일정 사이 이동 수단으로 옮기는 일은 아직 하지 않는다(에이전트가 읽으면 이동 값 줄로 따로 온다)."""
+    return [{"field": f"items[{index}].place", "value": None, "method": "lookup",
+             "evidence": {"source": "rule", "method": "move_phrase", "line": item["line"], "query": item["title"],
+                          "mode": move.mode, "destination": move.destination},
+             "needs_review": False,
+             "note": f"이동을 적은 말(「{item['title']}」)이라 장소로 찾지 않았다"
+                     + (f" — 끝점 「{move.destination}」은 이동의 도착지로 둔다" if move.destination else "")}]
 
 
 def _nameless_rows(index: int, parts: Any, item: dict[str, Any], rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1488,7 +1591,8 @@ def _agent_booking_rows(read: Any, item: Any, index: int) -> list[dict[str, Any]
     return rows
 
 
-def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any, bool]:
+def _agent_rows(read: Any, out: Any, *, position: int, today: date,
+                copied_cards: list[Any] | None = None) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any, bool]:
     """읽기 에이전트 결과 → (값 줄, 항목, 날짜, 첫날 묻기). `[2026-10-16]`
 
     ★에이전트가 시각이 적힌 줄을 통째로 빠뜨리면(실제 접수 시험에서 둘째 날 다섯 줄) 규칙이 그 줄에서 읽은 항목을 붙인다 —
@@ -1498,6 +1602,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
     from .places import normalize
 
     lines = read.lines
+    cards_by_line = {card.title.line: card for card in copied_cards or []}
     rows: list[dict[str, Any]] = []
     items: list[dict[str, Any]] = []
     guessed_dates: set[int] = set()
@@ -1518,9 +1623,18 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
     for rule_item in read.items:
         if rule_item.title is not None and rule_item.start:
             rule_clock.setdefault(rule_item.title.line, []).append(rule_item)
+    line_counts = {}
     for it in out.items:
+        line_counts[it.title.line] = line_counts.get(it.title.line, 0) + 1
+    for it in out.items:
+        card = cards_by_line.get(it.title.line)
+        if card is not None:
+            it.title = agent_module.Quote(**card.title.as_dict())
+            it.start, it.end, it.time_guessed = card.start.value, card.end.value, False
+            it.time_from_rule = True
+            continue
         same = rule_clock.get(it.title.line) or []
-        if len(same) != 1:
+        if len(same) != 1 or line_counts[it.title.line] > 1:
             continue
         quote_line = it.time_quote.line if it.time_quote is not None else None
         if it.start is None or (quote_line is not None and quote_line != it.title.line and same[0].start != it.start):
@@ -1537,23 +1651,31 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
                      "evidence": {"source": "text", **it.title.as_dict(), "segment": segment(it)}, "needs_review": False,
                      "note": "읽기 에이전트가 가리킨 원문 조각"})
         if getattr(it, "time_from_rule", False):
+            card = cards_by_line.get(it.title.line)
             rows.append({"field": f"items[{index}].starts_at", "value": it.start, "method": "rule",
-                         "evidence": {"source": "text", "line": it.title.line}, "needs_review": False,
-                         "note": "같은 줄의 원문 시각(규칙)으로 맞췄어요"})
+                         "evidence": {"source": "text", **card.start.span.as_dict()} if card else {"source": "text", "line": it.title.line}, "needs_review": False,
+                         "note": "앞 카드 시각줄의 원문 시각으로 맞췄어요" if card else "같은 줄의 원문 시각(규칙)으로 맞췄어요"})
         for name, value in (("starts_at", None if getattr(it, "time_from_rule", False) else it.start), ("ends_at", it.end)):
             if value:
-                rows.append({"field": f"items[{index}].{name}", "value": value, "method": "llm_agent",
-                             "evidence": {"source": "text", **it.time_quote.as_dict()} if it.time_quote else {"source": "model"},
+                card = cards_by_line.get(it.title.line)
+                rows.append({"field": f"items[{index}].{name}", "value": value, "method": "rule" if card else "llm_agent",
+                             "evidence": {"source": "text", **card.end.span.as_dict()} if card else
+                                         {"source": "text", **it.time_quote.as_dict()} if it.time_quote else {"source": "model"},
                              "needs_review": it.time_guessed,
                              "note": (f"「{it.time_quote.text}」을 오후로 봤어요 — 다르면 고쳐 주세요" if it.time_guessed and it.time_quote
                                       else "읽기 에이전트가 읽은 시각")})
         if it.kind == "dining":
             rows.append({"field": f"items[{index}].kind", "value": "dining", "method": "llm_agent",
                          "evidence": {"source": "text", "line": it.title.line}, "needs_review": False, "note": "읽기 에이전트 — 식사"})
+        if it.role == "origin":
+            rows.append({"field": f"items[{index}].role", "value": "origin", "method": "llm_agent",
+                         "evidence": it.title.as_dict(), "needs_review": False, "note": "고객이 말한 출발 위치 — 체류 없음"})
         if it.date_guessed:
             guessed_dates.add(index)
+        # ★`[2026-10-19 진단 포인트 2]` 에이전트가 「숙소」라고 읽은 항목은 장소를 숙소 자료에서만 찾는다(`_place_kind_hint`) — 전에는 식사만 넘기고 숙소를 버렸다
         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
-                      "meal": it.kind == "dining", "booked": booked, "segment": segment(it), "start": it.start})
+                      "meal": it.kind == "dining", "lodging": it.kind == "lodging", "booked": booked, "segment": segment(it),
+                      "start": it.start})
     agent_count = len(items)
 
     # 규칙이 읽은 시각 있는 줄 중 에이전트가 빠뜨린 줄
@@ -1561,7 +1683,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
     noted: set[int] = set()
     for quote in [m.get("quote") for m in out.moves] + [c.get("quote") for c in out.conditions] + [p.get("quote") for p in out.preferences]:
         noted |= {n for n, line in enumerate(lines, start=1) if quote and quote in line}
-    if "correction" not in out.requests:
+    if "correction" not in out.requests or copied_cards:
         claims_by_item: dict[int, list[Any]] = {}
         for claim in read.claims:
             if claim.field.startswith("items["):
@@ -1570,6 +1692,10 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
             line = rule_item.title.line if rule_item.title else None
             if line is None or not rule_item.start or line in covered or line in noted:
                 continue
+            if "correction" in out.requests:
+                card = cards_by_line.get(line)
+                if card is None or not schedule_cards.may_restore(card, out.requests, out.pieces):
+                    continue
             index = len(items)
             for claim in claims_by_item.get(k, []):
                 row = claim.as_dict()
@@ -1691,10 +1817,11 @@ def remember_alias(cur, tenant_id: str, customer_id: Any, phrase: str, replaceme
                 (tenant_id, key, phrase[:120], replacement[:120], customer_id))
 
 
-def _our_places(conn, tenant_id: str) -> list[dict[str, Any]]:
+def _our_places(conn, tenant_id: str, *, trip_id=None) -> list[dict[str, Any]]:
     with conn.cursor() as cur:
         cur.execute("SELECT place_id, name, kind, latitude, longitude FROM places WHERE tenant_id=%s "
-                    "AND trip_scope IS NULL", (tenant_id,))                # ★공용만 — 다른 여행 전용 행은 안 쓴다
+                    "AND (trip_scope IS NULL OR trip_scope=%s) ORDER BY trip_scope NULLS FIRST,place_id",
+                    (tenant_id, trip_id))  # Only the verified current trip may add its private picks.
         return [dict(zip(("place_id", "name", "kind", "latitude", "longitude"), r)) for r in cur.fetchall()]
 
 

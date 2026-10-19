@@ -31,12 +31,12 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from uuid import UUID
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleItinerary, TripStore
-from app.domains.travel_ops.components.itinerary.itinerary_changes import (DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
+from app.domains.travel_ops.components.itinerary.itinerary_changes import (ALTERNATE_RADII_M, DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
                                 plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap)
 from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_from, proposal_notice
 # 요식 끼움 자리 — 생성자 인자 `dining_ledger`(원장을 쓰나)와 이름이 겹치지 않게 별칭으로 둔다
@@ -47,7 +47,8 @@ class TripDesk:
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
                  check: Callable[..., dict[str, Any]] | None = None, dining_ledger: bool = True,
                  catalog_pool: bool = False, edit_lookups: Callable[[], tuple[Any, Any, Any]] | None = None,
-                 reader: Callable[[], Any] | None = None) -> None:
+                 reader: Callable[[], Any] | None = None,
+                 weather: Callable[..., Any] | None = None) -> None:
         self.store, self._connect = store, connection_factory
         #: ★`[2026-10-16 D-025]` 채팅 수정 요청을 계획서와 같은 이해 에이전트로 읽는 모델 클라이언트(부를 때만 만든다). 없으면 지금처럼 해석 칸만 쓴다
         self._reader = reader or (lambda: None)
@@ -62,6 +63,7 @@ class TripDesk:
         # ★다른 안으로 바꿀 때 활동이면 **그 시각에 다시 점검**한다 — 계산한 뒤로 시간이
         #   흘렀다. 점검기가 없으면(재생 시험 일부) 점검 없이 바꾼다고 결과에 적는다.
         self._check = check
+        self.weather = weather
 
     def _read(self, trip_id: UUID):
         with self._connect() as conn:
@@ -109,12 +111,15 @@ class TripDesk:
         more = self._add_nearby(trip_id, meal, places)
         return plan(more) if more != places else first
 
-    def _add_nearby(self, trip_id: UUID, meal: Item, places: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _add_nearby(self, trip_id: UUID, meal: Item, places: list[dict[str, Any]], *,
+                    radius_m: int | None = None) -> list[dict[str, Any]]:
         # ★`[2026-10-06]` 요식 팀을 직접 부르지 않는다 — 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013)
         from app.domains.travel_ops.components.team_hooks import dining_ledger
 
         with self._connect() as conn:
-            return dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places)
+            if radius_m is None:
+                return dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places)
+            return dining_ledger.add_nearby(conn, self.store, trip_id, [meal], places, radius_m=radius_m)
 
     def _state_lookup(self):
         """대체 식당 후보의 방문 시간대 원장 판정 — 시나리오 모드(`dining_ledger=False`)는 원장을 섞지 않으므로 None."""
@@ -211,6 +216,37 @@ class TripDesk:
                                         state_lookup=self._state_lookup())
         return self._with_nearby(trip_id, meal, places, plan, always=True)
 
+    def near_alternate(self, *, trip_id: UUID, item_id: UUID, base_version: int, origin: dict[str, Any],
+                       message: str | None = None, request_id: str | None = None, propose: bool = False) -> dict[str, Any]:
+        """요식 원장을 지정한 기준 위치에서 읽고 기존 영업·이동 판정으로 계산한다."""
+        from types import SimpleNamespace
+        trip, items, places = self._read(trip_id)
+        current = next((i for i in items if i.item_id == item_id), None)
+        if trip["version"] != base_version:
+            return {"status": "stale", "version": trip["version"]}
+        if current is None or current.kind != "dining":
+            return {"status": "clarify", "text": "바꿀 식사 일정을 알려 주세요."}
+        if current.locked or current.booking_id:
+            return {"status": "edit_refused", "reason": "locked_item", "text": "예약·고정된 식사 일정이라 장소를 바꾸지 않았어요."}
+        if self._use_ledger:
+            places = self._add_nearby(trip_id, SimpleNamespace(kind="dining", place=origin,
+                                      starts_at=current.starts_at, ends_at=current.ends_at), places,
+                                      radius_m=max(ALTERNATE_RADII_M["dining"]))
+        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version,
+                                    items=items, places=places, item_id=item_id, message=message,
+                                    request_id=request_id, state_lookup=self._state_lookup(), search_origin=origin,
+                                    meal_picker=dining_hook.meal_picker())
+        if isinstance(plan, NoChange):
+            if plan.status == "relaxed":
+                return self._ask_relaxed(trip_id, item_id, plan)
+            return {"status": plan.status, **plan.detail}
+        if propose:
+            options = [o for o in options_from(plan, current) if str(o.get("place_id") or "") != str(current.place["place_id"])]
+            return self._ask_options(trip_id, item_id, reason="requested_options",
+                                     text=f"{origin['name']} 근처에서 확인한 식당이에요. 고르시면 바꿀게요.",
+                                     options=options, causes=plan.causes)
+        return self._outcome(trip_id, base_version, items, plan)
+
     def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,
                              message: str | None = None, request_id: str | None = None,
                              keep: Callable[[list[dict[str, Any]]], list[dict[str, Any]]] | None = None) -> dict[str, Any]:
@@ -299,7 +335,7 @@ class TripDesk:
         return {"status": "rolled_back", "version": written["version"],
                 "restored": plan.summary["restored"], "notice": plan.notice}
 
-    def find_place(self, name: str, *, kind_hint: str | None = None) -> Any | None:
+    def find_place(self, name: str, *, kind_hint: str | None = None, near=None, trip_id=None) -> Any | None:
         """이름 → 장소 **한 곳**(`intake.places.resolve` — 우리 장소 표 → 관광공사 → 요식 원장 → 카카오). 못 찾으면 None.
         ★`[2026-10-15]` 이름 말한 곳으로 바꾸기 전에 본다 — 「다른 식당」처럼 이름이 아닌 설명이면 못 찾으므로 다른 안 보여 주기로 돌린다."""
         from app.domains.travel_ops.components.intake import pipeline
@@ -309,8 +345,8 @@ class TripDesk:
             return None
         tour, kakao, dining = self._edit_lookups()
         with self._connect() as conn:
-            found = resolve(name.strip(), our_places=pipeline._our_places(conn, self.store.tenant_id), tour=tour, kakao=kakao,
-                            dining=dining, kind_hint=kind_hint)
+            found = resolve(name.strip(), our_places=pipeline._our_places(conn, self.store.tenant_id, trip_id=trip_id), tour=tour, kakao=kakao,
+                            dining=dining, kind_hint=kind_hint, near=near, choose_near=True)
         return found if found.status == "resolved" else None
 
     def _read_plan(self) -> Callable[[str, Any], Any] | None:
@@ -331,22 +367,52 @@ class TripDesk:
         웹 「일정 수정」과 **같은 길**(`chat_edit.run` — 다시 열기 → 고치기 → 검사 → 「완료」). 못 고치면 까닭을 그대로 답한다."""
         from app.domains.travel_ops.components.conversation import chat_edit
 
+        # 시험 · 다른 호출처는 decision 없이(None) 고친 ops 만 넘길 수 있다 — 장소 뜻 · 시각 맞춤 표시는 있을 때만 읽는다.
+        raw = getattr(decision, "raw", None) or {}
+        action = getattr(decision, "action", None)
         with self._connect() as conn:
             trip, items = self.store.latest(conn, trip_id)
         try:
             ops, what = chat_edit.ops_for(decision, items=items, now=now, message=message or "", read_plan=self._read_plan())
+            area_text = str(raw.get("place_text") or "").strip()
+            if area_text and action == "replace_named":
+                from dataclasses import replace
+                area = self.find_place(area_text, kind_hint="activity", trip_id=trip_id)
+                if area is not None and area.latitude is not None and area.longitude is not None:
+                    ops = [replace(op, near=(area.latitude, area.longitude)) if op.kind == "place" else op for op in ops]
             done = chat_edit.run(store=self.store, connect=self._connect, tenant=self.store.tenant_id,
                                  customer_id=trip["customer_id"], trip_id=trip_id, base_version=base_version, ops=ops,
                                  lookups=self._edit_lookups, now=now,
-                                 cause_extra={"message": (message or "")[:200], **({"chat_request_id": request_id} if request_id else {})})
+                                 cause_extra={"message": (message or "")[:200], "fit_time_changes": action == "swap_order"
+                                     or str(raw.get("at_day")) == "tomorrow",
+                                     **({"chat_request_id": request_id} if request_id else {})})
         except chat_edit.EditRefused as refused:
+            if action == "replace_named" and refused.code == "place_not_found":
+                from .requested_destination import apply as preserve_destination
+                saved = preserve_destination(store=self.store, connect=self._connect, trip_id=trip_id,
+                    base_version=base_version, decision=decision, now=now, request_id=request_id)
+                if saved is not None:
+                    return saved
             status = "clarify" if refused.code.startswith("need_") else "edit_refused"
-            return {"status": status, "text": refused.message, "reason": refused.code, **refused.detail}
+            requested = str(raw.get("destination_text") or "").strip()
+            choices = ([{"label": requested + " (위치 확인 필요)", "message": requested + " 지점을 확인해 줘"}]
+                       if requested and refused.code in ("place_not_found", "intake_incomplete") else [])
+            return {"status": status, "text": refused.message, "reason": refused.code,
+                    **({"choices": choices, "choices_title": "요청하신 장소"} if choices else {}), **refused.detail}
         if not done["changed"]:
             return {"status": "already_applied", "text": "말씀하신 대로 이미 되어 있어 일정은 바꾸지 않았어요.", "reason": "unchanged"}
         with self._connect() as conn:
-            _, after = self.store.latest(conn, trip_id)
+            current, latest_items = self.store.latest(conn, trip_id)
+            after = (latest_items if current["version"] == done["version"] else
+                     self.store.items(conn, trip_id, done["version"]))
+        primary_ids = {op.item_id for op in ops if op.item_id is not None and op.kind != "remove"}
+        primary = [i for i in after if i.item_id in primary_ids or i.replaces_item_id in primary_ids
+                   or i.item_id in done["plan"].added_ids]
+        focus = ({"item_id": str(primary[0].item_id), "version": done["version"],
+                  "at": datetime.now(timezone.utc).isoformat(), "source": "saved_edit"}
+                 if len(primary) == 1 and current["version"] == done["version"] else None)
         return {"status": "adjusted", "version": done["version"], "edit": what,
+                **({"focus": focus} if focus else {}),
                 "text": chat_edit.done_text(ops, items_after=after, plan=done["plan"])}
 
     # ── 적용(버전 + 통지를 한 트랜잭션) ─────────────────────────

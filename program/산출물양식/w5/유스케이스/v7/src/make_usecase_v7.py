@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 다이어그램 v7 — v5 를 코덱스 · Claude 검토(2026-10-03)로 고친 판. 규칙은 멘토링 자료 「유스케이스 & 멀티 에이전트 다이어그램」.
+"""guguroute 유스케이스 다이어그램 v7 — v5 를 코덱스 · Claude 검토(2026-10-03)로 고친 판. 규칙은 멘토링 자료 「유스케이스 & 멀티 에이전트 다이어그램」.
 
 v5 → v6: UC-07 은 UC-10 을 «include» 가 아니라 UC-10 이 «extend»(품절 · 늦어도 되는 신고는 안 바꾼다) ·
   UC-11 을 UC-10 아래로 · 부모 액터(요청자 · 동행자)를 자식 액터(여행자 · AI 앱) 위로(Ambler) ·
@@ -265,7 +265,7 @@ CSS = f"""
 """
 
 
-def render(out="triPilot_유스케이스_다이어그램_v7", title="triPilot 유스케이스 다이어그램 — 맥락 수준"):
+def render(out="triPilot_유스케이스_다이어그램_v7", title="guguroute 유스케이스 다이어그램 — 맥락 수준"):
     S.clear(); U.clear()
     bottom = build()
     H, W = bottom + 96, RIGHT_X + RIGHT_W + 30
@@ -275,7 +275,7 @@ def render(out="triPilot_유스케이스_다이어그램_v7", title="triPilot �
             f'<text class="title" x="{LEFT_X}" y="80">{esc(title)}</text>'
             f'<text class="svg-note" x="{LEFT_X}" y="104">v7 · 2026-10-03 · 멘토링 자료 규칙 · 사용자 목표 12개 + 공통 하위 기능 2개(UC-10 · 11) · 처리 단계는 명세 시나리오에 적었다</text>')
     frame = (f'<rect class="sys-frame" x="{FRAME_X1}" y="122" width="{FRAME_X2 - FRAME_X1}" height="{bottom - 122 + 16}" rx="10"/>'
-             f'<text class="sys-name" x="{FRAME_X1 + 16}" y="146">triPilot</text>'
+             f'<text class="sys-name" x="{FRAME_X1 + 16}" y="146">guguroute</text>'
              f'<text class="svg-note" x="{FRAME_X1 + 86}" y="146">여행 계획을 받아 여행 끝까지 지키는 서비스</text>')
     foot = (f'<text class="svg-note" x="{LEFT_X}" y="{H - 48}">실선 = 연관(액터가 그 유스케이스에 참여 — 순서가 아님) · 회색 점선 «include» = 반드시 · 여러 유스케이스가 공통으로(기본 → 포함) · '
             f'금색 점선 «extend» = 조건이 맞을 때만(확장 → 기본, 확장점 · 조건은 노트) · 빈 삼각형 = 일반화</text>'
@@ -289,7 +289,7 @@ def render(out="triPilot_유스케이스_다이어그램_v7", title="triPilot �
     svg = (f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{esc(title)}">'
            f'{defs}{head}{frame}{"".join(S)}{foot}</svg>')
     page = (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<title>triPilot 유스케이스 v7</title><style>body{{margin:0;background:var(--paper);color:var(--ink)}}.wrap{{max-width:{W}px;margin:0 auto;padding:16px}}{CSS}</style>'
+            f'<title>guguroute 유스케이스 v7</title><style>body{{margin:0;background:var(--paper);color:var(--ink)}}.wrap{{max-width:{W}px;margin:0 auto;padding:16px}}{CSS}</style>'
             f'</head><body><div class="wrap"><div class="diagram">{svg}</div></div></body></html>')
     (OUT / f"{out}.html").write_text(page, encoding="utf-8")
     style = CSS.replace(".diagram ", "")

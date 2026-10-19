@@ -95,6 +95,49 @@ def test_safety_phase_and_timestamp_survive_filter_projection(db, monkeypatch, r
     assert history.view(db, 'one', impacts=['none'])['total'] == 1
 
 
+def test_area_review_uses_historical_item_reference_and_filters_before_paging(db, monkeypatch, rules):
+    monkeypatch.setattr(history.SafetyRules, 'from_guardrails', lambda: rules)
+    trip, item, place = uuid4(), uuid4(), uuid4()
+    at = now(db)-timedelta(seconds=1)
+    db.execute('INSERT INTO places VALUES(%s,%s,%s,%s,%s,%s)',
+               ('one', place, '서초구 비교 장소', 37.48, 127.04, Jsonb({})))
+    # 같은 식별자의 다른 테넌트 자료가 지역 비교에 끼지 않는다.
+    db.execute('INSERT INTO places VALUES(%s,%s,%s,%s,%s,%s)',
+               ('two', place, '다른 테넌트 장소', 37.46, 126.9, Jsonb({'district': '금천구'})))
+    db.execute('INSERT INTO itinerary_items VALUES(%s,%s,%s,%s,%s)', ('one', trip, item, 1, place))
+    db.execute('INSERT INTO itinerary_versions VALUES(%s,%s,%s,%s)', ('one', trip, 1, at-timedelta(minutes=10)))
+    message = {'category': 'disaster_msg', 'kind': '기타', 'text': '금천구 시험 행사 소음 안전안내',
+               'regions': ['서울특별시 금천구'], 'created_at': at.isoformat()}
+    report = {'verdict': 'disrupted', 'disruptions': [message],
+              'checks': [{'category': 'disaster_msg', 'status': 'ok', 'mode': 'api',
+                          'value': {'for_region': [message]}}]}
+
+    def insert(value, identity=item):
+        db.execute('INSERT INTO travel_watch_checks(tenant_id,at,trip_id,item_id,target_title,stage,report) VALUES(%s,%s,%s,%s,%s,%s,%s)',
+                   ('one', at, trip, identity, '지역 비교 일정', 'schedule', Jsonb(value)))
+
+    for _ in range(61):
+        insert(report)
+    insert(report, identity=None)
+    assert history.view(db, 'one', impacts=['item'])['total'] == 0
+    first = history.view(db, 'one', impacts=['none'])
+    second = history.view(db, 'one', impacts=['none'], page=2, as_of=datetime.fromisoformat(first['as_of']))
+    assert first['total'] == second['total'] == 61
+    assert [len(first['records']), len(second['records'])] == [50, 11]
+    reviewed = first['records'][0]['notice_review']
+    assert reviewed['target']['district'] == '서초구'
+    assert reviewed['target']['basis_source'] == 'current_saved_place'
+    assert reviewed['messages'][0]['text'] == message['text']
+    assert reviewed['messages'][0]['relation'] == 'unrelated'
+    assert '다른 테넌트' not in str(reviewed)
+    # 새 기록에 보관한 대상 지역이 있으면 현재 저장 장소로 덮지 않는다.
+    snapshot = {**report['checks'][0], 'target_place': {'name': '당시 비교 장소', 'district': '금천구', 'district_basis': 'explicit'}}
+    insert({**report, 'checks': [snapshot]})
+    saved = history.view(db, 'one', impacts=['item'])
+    assert saved['total'] == 1
+    assert saved['records'][0]['notice_review']['target']['basis_source'] == 'recorded_target'
+
+
 @pytest.mark.parametrize('query', ['impact=bad', 'impact=trip&impact=day&impact=item&impact=none&impact=trip'])
 def test_invalid_impact_query_is_rejected_before_storage(query, monkeypatch):
     from app.domains.travel_ops.entry import admin_simulation_api as api

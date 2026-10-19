@@ -1,6 +1,6 @@
 ---
 type: guide
-title: triPilot 구현계획서 v12 — wiki 기반 안내서
+title: guguroute 구현계획서 v12 — wiki 기반 안내서
 status: draft
 decision_status: accepted
 implementation_status: partial
@@ -8,9 +8,9 @@ validation_status: partial
 domain: travel
 ---
 
-# triPilot 구현계획서 v12
+# guguroute 구현계획서 v12
 
-triPilot은 여행 일정을 구성·검증하고, 여행 중 변화를 확인해 고객 설정에 따라 조정하는 제품입니다. **이 문서는 현재 wiki를 찾고 구현 상태를 이해하는 안내서이며, 최종 인수 전 검토본입니다.** 사양 정본은 [wiki](../../wiki/index.md)입니다. [v11](A-COP_구현계획서_v11.md)은 2026-09-10 당시 기록으로 보존합니다.
+guguroute은 여행 일정을 구성·검증하고, 여행 중 변화를 확인해 고객 설정에 따라 조정하는 제품입니다. **이 문서는 현재 wiki를 찾고 구현 상태를 이해하는 안내서이며, 최종 인수 전 검토본입니다.** 사양 정본은 [wiki](../../wiki/index.md)입니다. [v11](A-COP_구현계획서_v11.md)은 2026-09-10 당시 기록으로 보존합니다.
 
 | 할 일 | 상태 | 진행 |
 |---|---|---|

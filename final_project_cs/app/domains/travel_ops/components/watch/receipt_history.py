@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from app.domains.travel_ops.components.planning.safety import SafetyRules
 from app.domains.travel_ops.components.watch.monitoring import _safe
 from app.domains.travel_ops.components.watch.receipt_impact import SCOPES, describe
+from app.domains.travel_ops.components.watch.receipt_notice import review
 
 KST = timezone(timedelta(hours=9))
 PAGE_SIZE = 50
@@ -41,6 +42,7 @@ WITH records AS (
                                         'advisories',c.report->'advisories',
                                         'verdict',c.report->'verdict',
                                         'phase',c.report->'phase','checked_at',c.report->'checked_at',
+                                        'review_target',COALESCE(NULLIF(part.value->'target_place','null'::jsonb),target.context),
                                         'simulation_target',c.stage='simulation_full' OR EXISTS (
                                             SELECT 1 FROM jsonb_array_elements(
                                                 CASE WHEN jsonb_typeof(c.report->'checks')='array'
@@ -51,6 +53,17 @@ WITH records AS (
  CROSS JOIN LATERAL jsonb_array_elements(
    CASE WHEN jsonb_typeof(c.report->'checks')='array' THEN c.report->'checks'
         ELSE '[]'::jsonb END) WITH ORDINALITY AS part(value,position)
+ LEFT JOIN LATERAL (
+   SELECT jsonb_build_object('name',p.name,'latitude',p.latitude,'longitude',p.longitude,
+       'district',p.attributes->>'district','address',p.attributes->>'address',
+       'basis_source','current_saved_place') AS context
+   FROM itinerary_items i
+   JOIN itinerary_versions v ON v.tenant_id=i.tenant_id AND v.trip_id=i.trip_id AND v.version=i.version
+   JOIN places p ON p.tenant_id=i.tenant_id AND p.place_id=i.place_id
+   WHERE part.value->>'category'='disaster_msg' AND i.tenant_id=c.tenant_id
+     AND i.trip_id=c.trip_id AND i.item_id=c.item_id AND v.created_at<=c.at
+   ORDER BY v.version DESC LIMIT 1
+ ) AS target ON true
  WHERE c.tenant_id=%s AND c.at >= %s AND c.at < %s AND c.at <= %s
    AND part.value->>'category' IN """ + _CATEGORIES + """
  UNION ALL
@@ -101,8 +114,10 @@ def view(conn, tenant: str, *, mode: str = 'actual', date_from: date | None = No
                 '_disruptions',payload->'_disruptions','_advisories',payload->'_advisories',
                 'verdict',payload->'verdict','phase',payload->'phase','checked_at',payload->'checked_at',
                 'simulation_target',payload->'simulation_target',
+                'target_place',payload->'target_place','review_target',payload->'review_target',
                 'partial_from',payload->'partial_from',
-                'value',jsonb_build_object('partial_from',payload#>'{value,partial_from}'))
+                'value',jsonb_build_object('partial_from',payload#>'{value,partial_from}',
+                    'for_region',payload#>'{value,for_region}','unclassified',payload#>'{value,unclassified}'))
             FROM records"""+where, args).fetchall()
         identities = [identity for identity, entry_mode, kind, category, status, trip, stage, payload in minimal
                       if describe(category=category, status=status, record_type=kind, mode=entry_mode,
@@ -132,7 +147,8 @@ def view(conn, tenant: str, *, mode: str = 'actual', date_from: date | None = No
                             record_type=kind, category=category, status=status,
                             source=_safe(source), trip_id=trip, target_title=_safe(target), stage=stage,
                             text=_safe(payload.get('text')), published_at=payload.get('published_at'),
-                            regions=[_safe(v) for v in payload.get('regions') or []], payload=safe, impact=impact))
+                            regions=[_safe(v) for v in payload.get('regions') or []], payload=safe, impact=impact,
+                            notice_review=_safe(review(payload)) if category == 'disaster_msg' else None))
     return dict(records=records, total=total, page=current, page_size=PAGE_SIZE,
                 total_pages=total_pages, mode=mode, impacts=selected, date_from=first.isoformat(), date_to=last.isoformat(),
                 as_of=snapshot.astimezone(UTC).isoformat())

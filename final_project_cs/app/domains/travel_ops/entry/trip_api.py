@@ -681,8 +681,10 @@ def _render_plan(view: dict[str, Any]) -> str:
         if item["other_options"]:
             others = ('<div class="others">다른 안: '
                       + ", ".join(esc(o["name"]) for o in item["other_options"]) + "</div>")
+        place = item.get("place")
+        venue = f'<div class="others">{esc(place)}</div>' if place and place != item["title"] else ""
         rows.append(f'<li><div class="time">{start}–{end}</div><div><div class="title">'
-                    f'{esc(item["title"])} {badge}</div>{others}</div></li>')
+                    f'{esc(item["title"])} {badge}</div>{venue}{others}</div></li>')
     changes = "".join(
         f"<li>버전 {h['version']} · {esc(_REASON_LABELS.get(h['reason'], h['reason']))}"
         + "".join(f" · {esc(_cause_label(c))}" for c in h["causes"]) + "</li>"
@@ -744,6 +746,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
                       chat_factory: Callable[[], Any] | None = None,
                       place_factory: Callable[[], Any] | None = None,
+                      weather_factory: Callable[[], Any] | None = None,
                       kakao_factory: Callable[[], Any] | None = None,
                       policy_search_factory: Callable[[], Any] | None = None,
                       human_verify: Callable[..., dict[str, Any]] | None = None,
@@ -811,7 +814,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         edit_lookups=lambda: (_lazy("place", place_factory), _lazy("kakao", kakao_factory),
                                               _dining_lookup(_PlaceCtx())),
                         # ★`[2026-10-16 D-025]` 채팅 「넣기」를 계획서와 같은 이해 에이전트로 읽는다(같은 모델 클라이언트)
-                        reader=lambda: _lazy("chat", chat_factory))
+                        reader=lambda: _lazy("chat", chat_factory),
+                        weather=lambda **query: (source.forecast(**query)
+                                                 if (source := _lazy("weather", weather_factory)) is not None else None))
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:
@@ -2478,8 +2483,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             _trip_or_404(conn, TripStore(tenant), trip_id, customer)
             with conn.cursor() as cur:
                 cur.execute("SELECT dedupe_key, payload_json, status, available_at FROM outbox "
-                            "WHERE tenant_id=%s AND topic='trip.notice' AND dedupe_key LIKE %s "
-                            "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%"))
+                            "WHERE tenant_id=%s AND ((topic='trip.notice' AND dedupe_key LIKE %s) "
+                            "OR (topic='customer.notice' AND dedupe_key LIKE %s "
+                            "AND (payload_json->>'visible_at')::timestamptz<=now())) "
+                            "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%", f"{customer}:service:%"))
                 rows = cur.fetchall()
         return {"notices": [{"key": key.split(":", 1)[1], "type": payload.get("type") or "change_notice",
                              "kind": payload.get("kind"), "text": payload.get("text"),
@@ -2558,6 +2565,36 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             return build_report(trip_id=trip_id, version=int(trip["version"]), items=items, check=_lazy("risk_" + ("fresh" if fresh else "cached"), factory),
                                 at=_seoul(at) or datetime.now(KST), horizon_hours=horizon, max_items=limit, item_id=item_id, mode="fresh" if fresh else "cached",
                                 snapshot_hours=float(guard.get("travel.mcp.risk_check.snapshot_hours")))
+
+    @router.post("/v1/web/trips/{trip_id}/risks/{item_id}/alternatives")
+    def web_risk_alternatives(trip_id: UUID, item_id: UUID, http: Request,
+                              who: tuple[str, UUID] = Depends(_web_customer)):
+        """본인 일정의 현재 위험을 확인하고 검증된 보류 제안만 연다. 일정은 바꾸지 않는다."""
+        from app.domains.travel_ops.components.watch import risk_alternatives
+
+        tenant, customer = who
+        _, items = _owned_trip_items(tenant, trip_id, customer)
+        if not any(item.item_id == item_id for item in items):
+            raise _error(404, "not_found", "resource not found")
+        if check_factory is None:
+            raise _error(503, "risk_check_unavailable", "일정 위험 점검 소스를 사용할 수 없습니다")
+        _count("risk_check", tenant, customer, http)
+        def may_notify(conn, tenant_id, customer_id):
+            from app.domains.travel_ops.components.customer import consents
+
+            if guest_policy.is_guest(conn, tenant_id=tenant_id, customer_id=customer_id):
+                return False
+            try:
+                consents.require(conn, tenant_id, customer_id, "alert_channel")
+            except consents.ConsentError:
+                return False
+            return True
+        try:
+            with _slot("risk_check"):
+                return risk_alternatives.request(get_connection, tenant_id=tenant, customer_id=customer,
+                    trip_id=trip_id, item_id=item_id, check=_check(), may_notify=may_notify)
+        except (LookupError, KeyError):
+            raise _error(404, "not_found", "resource not found") from None
 
     @router.post("/v1/web/moves/judge")
     def web_move_judge(request: MoveJudgeIn, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):

@@ -16,7 +16,7 @@ LEGEND = [("oval:timer", "시작"), ("focal", "오케스트레이터(코드)"), 
 
 def fig_agents():
     W, H = 1600, 784
-    f = Fig("tp-agents", W, H, "triPilot 에이전트 구성 — 누가 누구에게 일을 맡기나",
+    f = Fig("tp-agents", W, H, "guguroute 에이전트 구성 — 누가 누구에게 일을 맡기나",
             "오케스트레이터(코드)가 문제 종류를 보고 요식업 에이전트나 액티비티 에이전트 하나에 일을 맡기고, 결과는 늘 오케스트레이터로 돌아온다. "
             "두 에이전트는 각자의 읽기 도구와 공용 이동 판정기를 쓰며 서로 부르지 않는다. 검증 · 저장 · 알림은 프로그램이 한다.")
     f.max_nodes, f.max_arrows, f.max_accents = 12, 16, 3

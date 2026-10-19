@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 v3 — 「유스케이스 2026-10-02 v6」 브리핑 「한눈에」 그림처럼 좌표를 손으로 잡아 그린다.
+"""guguroute 유스케이스 v3 — 「유스케이스 2026-10-02 v6」 브리핑 「한눈에」 그림처럼 좌표를 손으로 잡아 그린다.
 
     python make_usecase_v3_hand.py   → ../triPilot_유스케이스_한장_v3.html · .svg
 
@@ -294,13 +294,13 @@ def build(which="ABCD"):
     return bottom
 
 
-def main(which="ABCD", out="triPilot_유스케이스_한장_v3", title="triPilot 유스케이스 — 전체 한 장"):
+def main(which="ABCD", out="triPilot_유스케이스_한장_v3", title="guguroute 유스케이스 — 전체 한 장"):
     S.clear(); N.clear()
     bottom = build(which)
     H = bottom + 70
     W = RIGHT_X + RIGHT_W + 30
     head = (f'<text class="svg-label" x="{LEFT_X}" y="40">사람 · 앱</text>'
-            f'<text class="svg-label" x="{FRAME_X1 + 10}" y="40">유스케이스 — triPilot</text>'
+            f'<text class="svg-label" x="{FRAME_X1 + 10}" y="40">유스케이스 — guguroute</text>'
             f'<text class="svg-label" x="{RIGHT_X}" y="40">시스템 행위자</text>'
             f'<text class="title" x="{LEFT_X}" y="80">{title}</text>'
             f'<text class="svg-note" x="{LEFT_X}" y="104">v3 · 2026-10-02 · 실제 API · 코드 기준 · 실선 = 연관 · 회색 점선 → = 반드시 쓰는 공통 기능(«include») · '
@@ -341,16 +341,16 @@ body{{margin:0;background:var(--paper);color:var(--ink)}}
 .diagram .svg-note{{fill:var(--muted);font-size:12px}}
 .diagram .svg-letter{{fill:var(--accent);font-family:{MONO};font-size:12px}}
 """
-    svg = (f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="triPilot 유스케이스 전체 한 장">'
+    svg = (f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="guguroute 유스케이스 전체 한 장">'
            f'{defs}{head}{frame}{"".join(S)}{foot}</svg>')
     page = (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<title>triPilot 유스케이스 한 장 v3</title><style>{css}</style></head><body><div class="wrap"><div class="diagram">{svg}</div></div></body></html>')
+            f'<title>guguroute 유스케이스 한 장 v3</title><style>{css}</style></head><body><div class="wrap"><div class="diagram">{svg}</div></div></body></html>')
     (OUT / f"{out}.html").write_text(page, encoding="utf-8")
     (OUT / f"{out}.svg").write_text(f'<?xml version="1.0" encoding="utf-8"?>' + svg.replace('<svg ', f'<svg xmlns:xlink="http://www.w3.org/1999/xlink" ', 1).replace('</defs>', f'</defs><style>{css}</style>', 1), encoding="utf-8")
     print("ok", W, "x", H)
 
 
-FIGS = [("ABCD", "triPilot_유스케이스_한장_v3", "triPilot 유스케이스 — 전체 한 장"),
+FIGS = [("ABCD", "triPilot_유스케이스_한장_v3", "guguroute 유스케이스 — 전체 한 장"),
         ("A", "uc_v3_A", "A · 여행 준비 — 계획을 받아 일정으로 읽는다"),
         ("B", "uc_v3_B", "B · 여행 중 요청 — 읽고, 근거로 답하고, 바꿀 일은 조율로"),
         ("C", "uc_v3_C", "C · 일정 조율 — 전부 통과할 때까지 다시 맞춘다"),

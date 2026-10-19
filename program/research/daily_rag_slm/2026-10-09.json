@@ -213,7 +213,7 @@
     "model_measurement": "0/24",
     "final_holdout": false,
     "report": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
-    "dataset": "datasets/travel/selection_answer_bench/2026-10-09_pilot_v3",
+    "dataset": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3",
     "unique_itinerary_contents": 1,
     "independent_agent_review": true
   },
@@ -222,7 +222,7 @@
     "authorized": true,
     "training_started": false,
     "resume": "Exact Saluki trainable representation/CUDA/storage/memory, then existing2613 CPU preflight -> smoke -> one separate baseline adapter; normal/NONE regression together",
-    "first_baseline_dataset": "datasets/travel/train_oos2/train_oos2.jsonl",
+    "first_baseline_dataset": "datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl",
     "first_baseline_rows": 2613,
     "added_AI_agreed_rows": 900,
     "human_review_verified": false,

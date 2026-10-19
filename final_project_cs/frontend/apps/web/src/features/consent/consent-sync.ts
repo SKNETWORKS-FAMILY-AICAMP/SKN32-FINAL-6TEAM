@@ -1,7 +1,7 @@
 import { hasSession } from "@/lib/live/client";
 import type { Language } from "@/lib/i18n";
 import { getServerConsents, isConsentsUnsupported, isTermsVersionChanged, postServerConsents, type ConsentChoice, type ServerConsents } from "@/lib/live/consents";
-import { CONSENT_CODES, noConsents, requiredAgreed, serverPending, type ConsentMap } from "./consent-model";
+import { CONSENT_CODES, REQUIRED_CONSENTS, noConsents, requiredAgreed, serverPending, type ConsentCode, type ConsentMap } from "./consent-model";
 import { consentedAt, consentsSynced, markConsentsSynced, readConsents, replaceConsents } from "./consent-store";
 import { loadLiveTerms, termsDocs, termsVersion } from "./terms-live";
 import { docHash, sha256Hex } from "./terms-text";
@@ -77,11 +77,15 @@ export function sendConsents(language: Language): Promise<SendResult> {
 }
 
 async function sendNow(language: Language): Promise<SendResult> {
+  const chosenVersion = termsVersion();
   await loadLiveTerms(language);
+  if (termsVersion() !== chosenVersion) return "outdated";
   const map = readConsents();
   const version = termsVersion();
   try {
     const server = await postServerConsents(version, await choicesOf(map), language);
+    if (server.currentVersion && server.currentVersion !== version) return "outdated";
+    if (requiredAgreed(map) && !server.ok) return "failed";
     if (server.items.some((item) => item.version === version)) adoptServer(server);
     else markConsentsSynced();
     return "recorded";
@@ -94,10 +98,33 @@ async function sendNow(language: Language): Promise<SendResult> {
 
 /** 고객이 동의를 바꿨다(처음 동의, 또는 선택 항목을 켜고 끔): 사본을 바꾸고 서버에 기록한다. */
 export function saveConsents(next: ConsentMap, language: Language): Promise<SendResult> {
+  const chosenVersion = termsVersion();
   replaceConsents(next, new Date().toISOString(), false);                       // 화면은 바로 따라간다
   return serial(async () => {
+    if (termsVersion() !== chosenVersion) return "outdated";
     replaceConsents(next, new Date().toISOString(), false);                     // 앞서 돌던 맞춤이 서버의 옛 값으로 덮었더라도 방금 고른 것이 이긴다
     return sendNow(language);
+  });
+}
+
+/** 선택 항목도 현재 버전으로 기록됐을 때만 해당 기능으로 진행한다. */
+export function saveOptionalConsent(code: ConsentCode, language: Language): Promise<SendResult> {
+  const chosenVersion = termsVersion();
+  return serial(async () => {
+    await loadLiveTerms(language);
+    if (termsVersion() !== chosenVersion) return "outdated";
+    const selected = { ...readConsents(), [code]: true };
+    try {
+      const server = await postServerConsents(chosenVersion, await choicesOf(selected), language);
+      if (server.currentVersion !== chosenVersion || termsVersion() !== chosenVersion) return "outdated";
+      const acknowledged = (item: ConsentCode) => server.items.some((row) => row.code === item && row.agreed && row.version === chosenVersion);
+      if (!server.ok || !acknowledged(code) || !REQUIRED_CONSENTS.every(acknowledged)) return "failed";
+      adoptServer(server);
+      return "recorded";
+    } catch (error) {
+      if (isTermsVersionChanged(error)) { await loadLiveTerms(language, true); return "outdated"; }
+      return "failed";
+    }
   });
 }
 
@@ -115,6 +142,7 @@ async function reconcileNow(language: Language, onProgress?: Report): Promise<Re
   const report = (step: number, flags: Partial<ConsentCheckProgress> = {}) => onProgress?.({ completed: step, step, slow: false, lost: false, recording: false, ...flags });
   report(0);
   await loadLiveTerms(language);
+  const localVersion = termsVersion();
   const local = readConsents();
   const localAgreed = requiredAgreed(local);
   try {
@@ -136,6 +164,7 @@ async function reconcileNow(language: Language, onProgress?: Report): Promise<Re
       return server.ok ? "ok" : "needs";
     }
     if (!localAgreed) return "needs";
+    if (termsVersion() !== localVersion) return "outdated";
     report(5, { recording: true });
     const sent = await sendNow(language);
     return sent === "recorded" ? "ok" : sent === "local_only" ? "local_only" : sent === "outdated" ? "outdated" : "failed";

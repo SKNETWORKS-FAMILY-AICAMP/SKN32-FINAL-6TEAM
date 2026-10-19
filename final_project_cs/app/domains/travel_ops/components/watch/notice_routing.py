@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Any, Callable
 from uuid import UUID
 
@@ -30,7 +31,7 @@ from app.domains.travel_ops.components.customer import channels as telegram_conn
 
 log = logging.getLogger(__name__)
 
-TOPICS = frozenset({"trip.notice"})
+TOPICS = frozenset({"trip.notice", "customer.notice"})
 #: 웹훅이 지워졌거나 거부된 응답 — 더 보내도 소용없다
 _DISCORD_GONE = (401, 403, 404, 410)
 #: 시험이 바깥 호출을 가로채는 자리(디스코드). 텔레그램은 `infrastructure/notify/telegram.TRANSPORT`
@@ -73,6 +74,27 @@ class CustomerNoticeRouter:
         tenant = str(message.get("tenant_id") or "")
         if self.allowed_tenants is not None and tenant not in self.allowed_tenants:
             raise NoticeSuppressed(f"보낼 대상이 아닌 테넌트({tenant or '이름 없음'}) — 바깥으로 보내지 않았다. 보내는 테넌트: {sorted(self.allowed_tenants)}")
+        if message.get('topic') == 'customer.notice':
+            if simulated:
+                raise NoticeSuppressed('고객 공지는 재난 시뮬레이션 권한을 재사용하지 않는다')
+            identity = trip_id_of(message.get('dedupe_key'))
+            expected = (message.get('payload') or {}).get('service_notice_id')
+            if identity is None or not expected or message.get('dedupe_key') != f'{identity}:service:{expected}':
+                raise NoticeSuppressed('고객 공지 발송 대상이 올바르지 않다')
+            expires = (message.get('payload') or {}).get('expires_at')
+            if expires and datetime.fromisoformat(expires) <= datetime.now(timezone.utc):
+                raise NoticeSuppressed('공지 게시 기간이 종료되어 외부 발송하지 않는다')
+            with self._connect() as conn:
+                with conn.cursor() as cur:
+                    cur.execute('SELECT 1 FROM customers WHERE tenant_id=%s AND customer_id=%s', (tenant, identity))
+                    if not cur.fetchone():
+                        raise NoticeSuppressed('이 테넌트의 고객이 아니다')
+                found = self._customer_destination(conn, tenant, identity)
+        else:
+            return self._trip(message, tenant, simulated, run_id)
+        self._send(found, tenant, message.get('payload') or {}, simulated=False)
+
+    def _trip(self, message, tenant, simulated, run_id):
         trip_id = trip_id_of(message.get("dedupe_key"))
         if trip_id is None:
             raise NoticeSuppressed("어느 여행의 알림인지 알 수 없다 — 보내지 않았다")
@@ -81,9 +103,42 @@ class CustomerNoticeRouter:
                 from app.domains.travel_ops.components.watch.simulation import external_delivery_allowed
                 if not external_delivery_allowed(conn, tenant, trip_id, str(run_id)):
                     raise NoticeSuppressed("이 여행·실행의 시뮬레이션 외부 발송이 꺼져 있거나 종료됐다")
+            payload = message.get("payload") or {}
+            if payload.get("kind") in ("departure", "next_item") and payload.get("item_id"):
+                with conn.cursor() as cur:
+                    cur.execute("SELECT i.detail FROM trips t JOIN itinerary_items i ON i.tenant_id=t.tenant_id "
+                                "AND i.trip_id=t.trip_id AND i.version=t.latest_version "
+                                "WHERE t.tenant_id=%s AND t.trip_id=%s AND i.item_id=%s",
+                                (tenant, trip_id, UUID(str(payload["item_id"]))))
+                    current = cur.fetchone()
+                if not current or (current[0].get("execution") or {}).get("state") in ("completed", "skipped"):
+                    raise NoticeSuppressed("현재 일정에서 완료·교체된 안내라 보내지 않았다")
+            for basis in payload.get("schedule_basis") or []:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT i.starts_at,i.ends_at,i.detail FROM itinerary_items i JOIN trips t "
+                        "ON t.tenant_id=i.tenant_id AND t.trip_id=i.trip_id AND t.latest_version=i.version "
+                        "WHERE t.tenant_id=%s AND t.trip_id=%s AND i.item_id=%s",
+                        (tenant, trip_id, UUID(basis["item_id"])))
+                    row = cur.fetchone()
+                expected_end = datetime.fromisoformat(basis["ends_at"]) if basis.get("ends_at") else None
+                if (not row or row[0] != datetime.fromisoformat(basis["starts_at"]) or row[1] != expected_end
+                        or (row[2].get("execution") or {}).get("state") in ("completed", "skipped")):
+                    raise NoticeSuppressed("이 안내의 일정 시각이 바뀌거나 완료·교체되어 보내지 않았다")
+            if payload.get("type") == "guidance" and payload.get("items"):
+                with conn.cursor() as cur:
+                    cur.execute("SELECT count(*) FROM itinerary_items i JOIN trips t "
+                        "ON t.tenant_id=i.tenant_id AND t.trip_id=i.trip_id AND t.latest_version=i.version "
+                        "WHERE t.tenant_id=%s AND t.trip_id=%s AND i.item_id=ANY(%s::uuid[]) "
+                        "AND COALESCE(i.detail->'execution'->>'state','') NOT IN ('completed','skipped')",
+                        (tenant, trip_id, list(payload['items'])))
+                    relevant = cur.fetchone()[0]
+                if not relevant:
+                    raise NoticeSuppressed("이 안내의 일정이 모두 완료·교체되어 보내지 않았다")
             found = self._destination(conn, tenant, trip_id)
+        self._send(found, tenant, message.get('payload') or {}, simulated=simulated)
+
+    def _send(self, found, tenant, payload, *, simulated):
         customer, channel, secret, status = found
-        payload = message.get("payload") or {}
         text = self._renderer.text_for(payload)
         if simulated and not text.startswith('[시뮬레이션]'):
             text = '[시뮬레이션] ' + text
@@ -99,7 +154,9 @@ class CustomerNoticeRouter:
             row = cur.fetchone()
         if row is None:
             raise NoticeSuppressed("그 여행이 지워졌다 — 보낼 곳이 없다")
-        customer = row[0]
+        return self._customer_destination(conn, tenant, row[0])
+
+    def _customer_destination(self, conn, tenant: str, customer: UUID):
         with conn.cursor() as cur:
             cur.execute("SELECT notice_channel, discord_webhook_enc, telegram_chat_enc, telegram_status FROM customer_profiles "
                         "WHERE tenant_id=%s AND customer_id=%s", (tenant, customer))

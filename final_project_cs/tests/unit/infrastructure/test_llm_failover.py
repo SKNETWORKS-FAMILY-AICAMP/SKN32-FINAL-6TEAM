@@ -601,3 +601,67 @@ def test_without_a_context_length_the_option_is_not_sent():
         return httpx.Response(200, json={"message": {"content": "{}"}}, request=httpx.Request("POST", url))
     OllamaChat(base_url=URL, model="m", transport=server).json("s", "u")
     assert sent == [False]
+
+
+@pytest.mark.parametrize("invalid", [{}, {"action": None}, {"action": 2}, {"action": "outside"}])
+def test_schema_invalid_primary_uses_existing_budgeted_fallback_without_opening_breaker(invalid):
+    asked = []
+    api = Api('{"action":"a"}')
+    chat, _ = build(Server(ok(json.dumps(invalid))), api, budget=lambda: asked.append(1) or True)
+    assert chat.structured("schema", "synthetic request", SCHEMA) == {"action": "a"}
+    assert asked == [1] and len(api.calls) == 1
+    assert lf.current_path()["path"] == "api"
+    assert lf.current_path()["reasons"] == [("ollama", "content")]
+    assert all(b["failures"] == 0 for b in lf.snapshot()["breakers"].values())
+
+
+def test_schema_invalid_primary_does_not_bypass_exhausted_api_budget():
+    api = Api('{"action":"a"}')
+    chat, _ = build(Server(ok('{}')), api, budget=lambda: False)
+    with pytest.raises(OllamaError, match="openai=budget_exhausted"):
+        chat.structured("schema", "synthetic request", SCHEMA)
+    assert not api.calls
+
+
+def test_invalid_api_schema_is_never_returned_as_a_success():
+    api = Api('{"action":"outside"}')
+    chat, _ = build(Server(CONNECT), api)
+    with pytest.raises(OllamaError, match="openai=content"):
+        chat.structured("schema", "synthetic request", SCHEMA)
+    assert lf.current_path()["path"] is None
+    assert len(api.calls) == 1
+
+
+def test_caller_evidence_validation_is_inside_the_existing_failover_path():
+    api = Api('{"action":"b"}')
+    chat, _ = build(Server(ok('{"action":"a"}')), api)
+    def evidence(value):
+        if value["action"] != "b":
+            raise ValueError("unquoted evidence")
+    assert chat.structured_validated("schema", "synthetic request", SCHEMA, validator=evidence) == {"action": "b"}
+    assert lf.current_path()["reasons"] == [("ollama", "content")]
+    assert len(api.calls) == 1
+
+
+def test_schema_error_does_not_include_model_values_or_customer_text():
+    from app.infrastructure.ollama_chat import validate_structured
+    with pytest.raises(OllamaError) as caught:
+        validate_structured({"action": "private-output-123"}, SCHEMA)
+    assert "private-output-123" not in str(caught.value)
+    assert "enum" in str(caught.value)
+
+
+def test_valid_nested_response_does_not_pay_for_a_second_model():
+    schema = {"type":"object","properties":{"goal":{"type":"object","properties":{"end":{"type":"string"}},"required":["end"]}},"required":["goal"]}
+    api = Api()
+    chat, _ = build(Server(ok('{"goal":{"end":"17:00"}}')), api)
+    assert chat.structured("schema", "synthetic request", schema) == {"goal":{"end":"17:00"}}
+    assert not api.calls
+
+
+def test_nested_missing_field_uses_fallback_and_keeps_the_complete_goal():
+    schema = {"type":"object","properties":{"goal":{"type":"object","properties":{"end":{"type":"string"}},"required":["end"]}},"required":["goal"]}
+    api = Api('{"goal":{"end":"17:00"}}')
+    chat, _ = build(Server(ok('{"goal":{}}')), api)
+    assert chat.structured("schema", "synthetic request", schema) == {"goal":{"end":"17:00"}}
+    assert len(api.calls) == 1

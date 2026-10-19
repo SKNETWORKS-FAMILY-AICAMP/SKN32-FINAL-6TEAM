@@ -19,14 +19,14 @@ I, T, O = "입력", "도구", "출력"
 
 def fig_context():
     W, H = 1600, 704
-    f = Fig("ctx", W, H, "triPilot 시스템 전체 관계도 — 누가 쓰고 무엇과 연결되나",
-            "고객은 웹으로, 고객의 개인 AI 는 MCP 로 triPilot 에 붙는다. triPilot 은 외부 정보 6종 · 장소 정보 · 언어 모델을 읽어 일정을 검증하고 지키며, 바뀐 것은 디스코드로 알린다.")
+    f = Fig("ctx", W, H, "guguroute 시스템 전체 관계도 — 누가 쓰고 무엇과 연결되나",
+            "고객은 웹으로, 고객의 개인 AI 는 MCP 로 guguroute 에 붙는다. guguroute 은 외부 정보 6종 · 장소 정보 · 언어 모델을 읽어 일정을 검증하고 지키며, 바뀐 것은 디스코드로 알린다.")
     f.max_nodes, f.max_arrows, f.max_accents = 9, 12, 2
     f.box("U1", 40, 120, 320, 104, kind="input", title="고객 (여행자)",
           io=[(I, "계획 올리기 · 채팅 · 고르기"), (O, "확인 화면 · 계획서 링크")])
     f.box("U2", 40, 392, 320, 104, kind="input", title="고객의 개인 AI",
           io=[(I, "MCP 도구 14 호출(본인 여행만)"), (O, "일정 · 위험 점검 · 이동 판정")])
-    f.box("S", 560, 192, 480, 248, kind="focal", title="triPilot — cs 프로젝트 서버",
+    f.box("S", 560, 192, 480, 248, kind="focal", title="guguroute — cs 프로젝트 서버",
           io=[("입구", "웹 · API(FastAPI) · MCP"), ("두뇌", "오케스트레이터(코드) · 에이전트 2"),
               ("도구", "읽기 도구 · 이동 판정기(공용)"), ("감시", "일정 위험 모니터링(3분 주기)"),
               ("저장", "PostgreSQL + pgvector(케이스 · 일정 · 규정)"), ("알림", "아웃박스 워커(1분 간격 3번)")])

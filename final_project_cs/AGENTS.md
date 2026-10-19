@@ -1,6 +1,6 @@
-# triPilot — 현재 작업 규칙
+# guguroute — 현재 작업 규칙
 
-현재 제품은 **여행 CS triPilot**, 개발 팀은 **A-COPilot**입니다. Activity·Dining·Mobility는 요청을 처리하는 에이전트 팀입니다. 개발 담당자와 혼동하지 않습니다.
+현재 제품은 **여행 CS guguroute**, 개발 팀은 **A-COPilot**입니다. Activity·Dining·Mobility는 요청을 처리하는 에이전트 팀입니다. 개발 담당자와 혼동하지 않습니다.
 
 ## 정본과 적용 범위
 

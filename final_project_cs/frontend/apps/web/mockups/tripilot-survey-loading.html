@@ -222,7 +222,7 @@ function announce(text){document.getElementById('announcement').textContent=text
 function allAnswered(){return state.answers.every(Boolean)}
 function nextOpen(except=-1){return state.answers.findIndex((a,i)=>!a&&!state.skipped[i]&&i!==except)}
 function remaining(){return state.answers.filter(a=>!a).length}
-function brand(){return '<div class="brand"><span>triPilot</span><span>여행 계획</span></div>'}
+function brand(){return '<div class="brand"><span>guguroute</span><span>여행 계획</span></div>'}
 function shell(body,footer='',heading=''){
   return `<div class="phone-content">${brand()}${heading?`<header class="app-head">${heading}</header>`:''}<div class="scroll">${body}</div>${footer?`<footer class="footer">${footer}</footer>`:''}</div>`;
 }

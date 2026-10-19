@@ -21,7 +21,7 @@ with tarfile.open(fileobj=io.BytesIO(r.stdout)) as t:
  for m in t.getmembers():
   assert m.isfile() and (out/m.name).resolve().is_relative_to(out.resolve())
   with (out/m.name).open('xb') as f:f.write(t.extractfile(m).read())
-weights=root/'datasets/travel/train_oos/oos2r_finch_5e5_seed20261013_20261009';weights.mkdir(exist_ok=False)
+weights=root/'datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261013_20261009';weights.mkdir(exist_ok=False)
 rows=[]
 for meta in detail['files']:
  p=out/Path(meta['path']).name

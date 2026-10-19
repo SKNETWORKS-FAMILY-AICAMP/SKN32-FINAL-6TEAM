@@ -18,8 +18,8 @@
 모델 유형 : 파인튜닝한 인코더 분류기 3종(kf-deberta-base) (과제별로 검증 조각에서 선정)
 담당 태스크 : 로컬 분류 시험: 감정 긍정·부정 2분류(최대 확률 0.9 미만은 후처리로 중립), 요청 종류 5종, 문제 코드 17종
 프레임워크 / 버전 : 학습 PyTorch 2.13.0+cu130(CUDA 13.0), Transformers 5.16.1, scikit-learn 1.9.1 / 추론 검증 PyTorch 2.12.0+cpu, Transformers 5.13.0, scikit-learn 1.5.2
-팀 A-COPilot이 만드는 여행 운영 서비스 triPilot의 데이터 전처리와 분류 모델을 다룬다. 선정된 kf-deberta-base 3종은 그대로다.
-3차의 제품 캐스케이드 연결 서술을 정정한다. 로컬 모델은 어댑터와 계약 시험까지 구현했으며 제품 분류에는 연결되지 않았다. triPilot의 인라인 분류는 Gemma 4 12B(Ollama)가 맡고, 없으면 OpenAI를 사용한다. 근거는 app/composition.py의 build_classifier와 app/infrastructure/ml, tests/unit/ml 및 추가 커밋 e8f9c458이다(2026-09-28 기준).
+팀 A-COPilot이 만드는 여행 운영 서비스 guguroute의 데이터 전처리와 분류 모델을 다룬다. 선정된 kf-deberta-base 3종은 그대로다.
+3차의 제품 캐스케이드 연결 서술을 정정한다. 로컬 모델은 어댑터와 계약 시험까지 구현했으며 제품 분류에는 연결되지 않았다. guguroute의 인라인 분류는 Gemma 4 12B(Ollama)가 맡고, 없으면 OpenAI를 사용한다. 근거는 app/composition.py의 build_classifier와 app/infrastructure/ml, tests/unit/ml 및 추가 커밋 e8f9c458이다(2026-09-28 기준).
 라벨 지침은 2026-09-17.v2에서 2026-09-22.v3으로 바뀌었다. booking_revert_request가 추가되어 제품 문제 코드는 18종이지만, 학습 데이터와 제출 모델은 v2의 17종 그대로다. 2026-09-17 이후 재학습은 없다. 취소와 되돌림을 구분하려면 v3 지침으로 다시 라벨을 붙이고 학습해야 한다(ml/label_with_gemma.py, 커밋 36cc1b99).
 모델 구조 정의
 2.1 구성 요소 (전처리 · 학습 · 후처리)

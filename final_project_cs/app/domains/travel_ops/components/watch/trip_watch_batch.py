@@ -34,6 +34,7 @@ from app.domains.travel_ops.instances._shared.itinerary_team import Consent
 from app.domains.travel_ops.components.team_hooks import watch_planners
 from app.domains.travel_ops.components.planning.pending import Decision, _cause_text as cause_text, cause_fingerprint, decide, is_safety
 from app.domains.travel_ops.components.planning.execution_plan import PlanFailed, classify_plan
+from app.domains.travel_ops.components.watch.risk_report import CATEGORIES
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,8 @@ class Outcome:
 
     @property
     def safety(self) -> bool:
-        return is_safety({"disruptions": self.causes})
+        # 자료 조회 실패는 재난 발생 사실이 아니다. 확인한 사건만 안전 안내로 구분한다.
+        return is_safety({"disruptions": [c for c in self.causes if c.get("kind") != "source_unavailable"]})
 
 
 def _planner(kind: str):
@@ -103,11 +105,39 @@ def _head(count: int) -> str:
     return f"일정에 문제가 {_COUNT_WORD.get(count, str(count))} 가지 겹쳐서 이렇게 처리했어요."
 
 
+def _confirmed_text(causes: list[dict[str, Any]]) -> str:
+    """조회 오류와 구분해 확인한 사실만 적는다. 주변 통제를 실제 이동 경로로 확정하지 않는다."""
+    facts = []
+    for cause in causes:
+        if cause.get("kind") == "source_unavailable":
+            continue
+        category = cause.get("category")
+        label = "장소 주변 교통 통제" if category == "traffic_control" else CATEGORIES.get(category, "일정 관련 정보")
+        evidence = cause.get("text") or cause.get("message") or cause_text([cause])
+        location = " · ".join(str(cause[k]) for k in ("road", "section") if cause.get(k))
+        fact = f"{label}: " + (f"{location} — " if location else "") + str(evidence)
+        if cause.get("source"):
+            fact += f" (출처: {cause['source']}"
+            if cause.get("confirmed_at"):
+                fact += f", 자료 확인 시각: {cause['confirmed_at']}"
+            fact += ")"
+        facts.append(fact)
+    return "; ".join(dict.fromkeys(facts))
+
+
 def _line(outcome: Outcome) -> str:
     """항목 하나의 한 줄 — 원인에 있는 말만(`cause_text`). 지어낸 대안 · 약속 없음, 사람 대기 약속도 안 한다."""
     title, why = outcome.item.title, cause_text(outcome.causes)
     if outcome.kind in ("source_failed", "error", "retry"):
         code = outcome.reasons[0] if outcome.reasons else outcome.kind
+        confirmed = _confirmed_text(outcome.causes)
+        if confirmed:
+            failed = sorted({CATEGORIES.get(c.get("category"), "필수 자료") for c in outcome.causes
+                             if c.get("kind") == "source_unavailable"})
+            missing = f"({', '.join(failed)})" if failed else ""
+            return (f"{title} — 확인한 정보: {confirmed}. 일부 자료{missing}를 확인하지 못해 "
+                    "자동 변경을 보류하고 기존 일정을 유지했어요. 자료와 조건을 다시 확인할게요. "
+                    f"확인 시각: {outcome.checked_at}, 오류 코드: {code}.")
         return (f"{title} — 이번 회차에 확인을 끝내지 못해 기존 일정을 유지했어요. "
                 f"자료와 조건을 다시 확인할게요. 확인 시각: {outcome.checked_at}, 오류 코드: {code}.")
     if outcome.kind == "unhandled":

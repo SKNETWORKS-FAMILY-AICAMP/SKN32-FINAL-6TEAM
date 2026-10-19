@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -141,6 +141,28 @@ def test_revoking_after_the_approval_stops_the_execution(world):
     assert delegation.LIMIT_DELEGATION_REVOKED in outcome["observed"], outcome["observed"]
     assert ours == theirs == "confirmed"                          # ★한 글자도 안 바뀌었다
     assert outcome["action_status"] == "failed"                   # 시도가 상태로 남는다
+
+
+@pytest.mark.parametrize("clock_offset_seconds", [-300, 300])
+def test_revocation_stops_execution_despite_application_clock_skew(
+    world, monkeypatch, clock_offset_seconds,
+):
+    """앱·DB 시계가 달라도 저장된 철회는 즉시 효력이 있고 원장은 바뀌지 않는다."""
+    class SkewedClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime.now(tz) + timedelta(seconds=clock_offset_seconds)
+
+    monkeypatch.setattr(delegation, "datetime", SkewedClock)
+    tenant, customer, booking = world
+    outcome = _cancel(tenant, customer, revoke_after_approval=True)
+
+    assert outcome["reached_approval"] is True
+    assert outcome["status"] == "escalated", outcome
+    assert outcome["guardrail"] == "action_rejected", outcome
+    assert delegation.LIMIT_DELEGATION_REVOKED in outcome["observed"]
+    assert outcome["action_status"] == "failed"
+    assert measure.ledger_status(tenant, booking) == ("confirmed", "confirmed")
 
 
 # invariant: DoD-19

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """고객 계획 읽기 — 고객이 어떤 모양으로 올리든 일정으로. `[2026-09-27]`
 
-설계 정본: `program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` (triPilot : RAG 세션).
+설계 정본: `program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` (guguroute : RAG 세션).
 
     접수 ─▶ 글자로(sources) ─▶ 규칙 읽기(rules) ─▶ (2주차: LLM 남은 줄 · 날짜 · 장소) ─▶ 확인 화면 ─▶ _create_trip
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot Multi-Agent 구조도 v9 — md(v8→v9) 내용 · 순서를 그대로 둔 「그림」판 (2026-10-02)
+"""guguroute Multi-Agent 구조도 v9 — md(v8→v9) 내용 · 순서를 그대로 둔 「그림」판 (2026-10-02)
 
     python make_visual_v9.py   → ../triPilot_Multi-Agent구조도_v9.html · .png
                                   ../그림1_전체구조도_v9.svg · .png · ../그림2_툴데이터계층_v9.svg · .png
@@ -349,7 +349,7 @@ TABLE = [
     ("계획 읽기 · 일정 생성", "계획 원문 / 「일정 짜 줘」 선호", "일정 항목 + 근거 줄 / 판정을 통과한 초안", "규칙 먼저 · AI 는 줄 위치 · 받아쓰기 · 순서 제안만"),
 ]
 
-INTRO = ("triPilot 의 <b>Multi-Agent 구조</b>는 다음처럼 정리할 수 있습니다. 핵심은 <b>낮 감시가 깨진 일정 항목을 Case 로 열면 오케스트레이터가 담당 에이전트 1개(요식 또는 액티비티)를 고르고, "
+INTRO = ("guguroute 의 <b>Multi-Agent 구조</b>는 다음처럼 정리할 수 있습니다. 핵심은 <b>낮 감시가 깨진 일정 항목을 Case 로 열면 오케스트레이터가 담당 에이전트 1개(요식 또는 액티비티)를 고르고, "
          "에이전트는 허용된 툴로만 데이터를 읽어 대체 후보를 하나씩 다시 점검하며(안쪽 루프), 결과는 검증 · 묻기 · 반영 · 알림을 거쳐 여행 기간 동안 다음 점검을 기다리는(바깥 루프)</b> 구조입니다. "
          "고객 채팅과 새벽 영업 확인은 에이전트를 거치지 않고 <b>같은 계산 코드와 같은 반영</b>을 씁니다. 이동은 에이전트가 아니라 <b>공용 판정 툴</b>입니다.")
 TOOLS_NOTE = ("특히 <b>에이전트가 DB · 외부 API 에 직접 접근하는 것이 아니라 툴 레이어(허용 목록)를 통해서만 조회</b>하도록 보는 것이 중요합니다. "
@@ -358,7 +358,7 @@ CLOSING = ("이 구조에서 에이전트 사이의 연결은 <b>오케스트레
            "데이터는 <b>PostgreSQL + 외부 6범주 + 이동 자료</b>가 담당합니다. AI 모델은 계획서 줄 위치 찾기 · 사진 받아쓰기 · 문장 해석 · 일정 후보 순서 제안 · 영업시간 원문 정리 · 문장 작성에 쓰고, "
            "일정 성립 · 영업 · 시간 판정과 반영 여부는 코드가 정합니다. 모델은 로컬 · API 비교 시험 중입니다.")
 CYCLE = ("시스템 구성도에서는 낮 감시의 대표 순환을 <b><code>트리거 → Case → 오케스트레이터 → Worker Agent(후보 재점검 루프) → 검증 · 묻기 · 반영 → 알림 → 다음 점검 대기</code></b>로 "
-         "표현하면 triPilot 의 핵심 — 계획을 받아 여행이 끝날 때까지 지킨다 — 이 가장 명확하게 드러납니다. 고객 채팅 · 새벽 영업 확인 · 일정 생성 · 정기 안내는 별도 경로이며 같은 계산과 버전 저장을 공유합니다.")
+         "표현하면 guguroute 의 핵심 — 계획을 받아 여행이 끝날 때까지 지킨다 — 이 가장 명확하게 드러납니다. 고객 채팅 · 새벽 영업 확인 · 일정 생성 · 정기 안내는 별도 경로이며 같은 계산과 버전 저장을 공유합니다.")
 STATUS = ("지금 상태: 일정 등록 거절 · 고객 채팅 · 다른 안 · 되돌리기 · 일정 생성 · 정기 안내 · 일정 변경 SSE 는 구현. 접수 · 생성 · 채팅 진행 SSE 는 서버 구현 · 웹 연결 진행 중. "
           "실패 항목의 채팅 대안 추천 · 후보 재점검의 이동 판정 연결은 아직 없음. 알림은 팀 Discord 채널 하나(개인 Discord 는 등록 · 시험 발송까지). "
           "로그인 · AWS 자동 배포는 팀 계획(코드 없음). 이동은 코드에 아직 팀으로 등록돼 있어 툴로 정리가 필요하다.")
@@ -379,7 +379,7 @@ tr:nth-child(2n) td{{background:#fbfcfd}} blockquote{{margin:16px 0;padding:6px 
 def page_html(f1, f2):
     rows = "".join(f"<tr><td><b>{esc(a)}</b></td><td>{esc(b)}</td><td>{esc(c)}</td><td>{esc(d)}</td></tr>" for a, b, c, d in TABLE)
     return f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot Multi-Agent 구조도</title><style>{PAGE_CSS}</style></head><body><main>
+<title>guguroute Multi-Agent 구조도</title><style>{PAGE_CSS}</style></head><body><main>
 <p class="note">v9 · 2026-10-02 · 형식: team_branch/me/Multi-Agent구조도참고.md 와 같은 순서 · 사실: final_project_cs 코드 대조 + 코덱스 독립 검토</p>
 <p>{INTRO}</p>
 <h2>Multi-Agent 전체 구조도</h2>

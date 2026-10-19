@@ -18,6 +18,7 @@ _FIELDS = frozenset('verdict checks category status mode simulation_id source co
     'precipitation_probability wind_speed_kmh temperature pm10 pm25 reason tried fell_back_from '
     'target targets event_type code name level label phase pause_id case_id item item_id trip_id '
     'issue_code shelters shelter_status number released attempt outcome action counts observation '
+    'target_place review_target district_basis basis_source impact impact_by messages matched unrelated unassessed relation '
     'exception_type error text message road station at indoor_unknown '
     'region regions serial published_at received_at fetched_at observed_at from_cache count error_code '
     'for_region announced_at areas events active window rules magnitude_min radius_km lookback_hours '
@@ -40,6 +41,11 @@ def _safe(value):
         value = re.sub(r'(?i)(token|secret|password|api[_-]?key|authorization)\s*[:=]\s*\S+', r'\1=[가림]', value)
         return value[:1000]
     return value if value is None or isinstance(value, (int, float, bool)) else str(type(value).__name__)
+
+
+def recording() -> bool:
+    """정상 회차에 결과를 보관할 수 있는 문맥인가."""
+    return _current.get() is not None
 
 
 def record(stage: str, *, trip_id=None, item_id=None, target_title=None, report: dict) -> None:

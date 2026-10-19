@@ -1,5 +1,6 @@
 import type { Coordinates } from "@/features/map/model";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
+import type { ItemRisk } from "@/lib/live/risks";
 
 /**
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
@@ -13,7 +14,7 @@ import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 /** One check's result (mockup `result`): passed · filled in by the server · warning · must fix · not known yet · not checked yet. */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pending";
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
-export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival";
+export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival" | "risk";
 export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
 /** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
 export interface Reread { field: "title" | "booking_no"; current: string; other: string }
@@ -38,6 +39,7 @@ export interface PlaceInfo {
 }
 
 export interface PlanItem {
+  risk?: ItemRisk | null;
   id: string;
   day: number;
   /** "YYYY-MM-DD", or "" when the server has no date for it. */
@@ -94,6 +96,8 @@ export interface PlanItem {
  * a search. `checks` are this place checked at the stop's time (empty when they have not been).
  */
 export interface PlanCandidate {
+  risk?: ItemRisk | null;
+  proposedTime?: { date: string | null; startsAt: string | null; endsAt: string | null };
   id: string;
   name: string;
   source: "candidate" | "search";
@@ -152,6 +156,9 @@ export type PlanStage = "received" | "reading" | "checking" | "done";
 export const STAGES: readonly PlanStage[] = ["received", "reading", "checking", "done"];
 
 export interface PlanCheckView {
+  risksAvailable?: boolean;
+  riskMode?: string | null;
+  riskCheckedAt?: string | null;
   /** 이동 후보의 이전 판 상태를 폐기할 때 쓰는 실제 접수 revision. */
   revision?: number;
   /** 이번 접수의 응답에 있는 호출 상품만 표시합니다. */

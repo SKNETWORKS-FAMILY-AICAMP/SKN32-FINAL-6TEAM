@@ -182,7 +182,7 @@ def disruptions_from_events(events: dict[str, dict[str, Any]]) -> tuple[list[dic
     return out, unmapped
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None):
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None, stage="planning"):
     """일정 짜기(planner.add_moves)가 부를 **구간 계산기**. 꺼져 있으면 None — 부르는 쪽이 직선 어림값으로 간다.
 
     돌려주는 함수 leg(a_place, b_place, arrive_dt, not_before_dt) → (결과 dict, None) 또는 (None, 이유 dict).
@@ -198,14 +198,16 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
     from .engine.plan import Planner, iso_of, party_of
     rt = engine_runtime.get_verifier(**_STATE["kw"])
     c = dict(constraints or {})
-    planner = Planner(rt, stage="planning", modes=(list(modes) if modes else modes_from_survey(c)),
+    if stage not in ("planning", "pre_departure"):
+        raise ValueError("unsupported leg planning stage")
+    planner = Planner(rt, stage=stage, modes=(list(modes) if modes else modes_from_survey(c)),
                       taxi_option_fees=c.get('taxi_option_fees'),
                       taxi_call_product=c.get('taxi_call_product'),taxi_call_quotes=c.get('taxi_call_quotes'))
     if disruptions:
         planner.disruptions = tuple(dict(d) for d in disruptions)     # #38 — 사고를 모든 판정 호출에 싣는다
     party = party_of(party_size, c)
     first_visit = c.get("first_visit", True)
-    buffer = rt._v.rv("buffer", "by_stage", "planning")
+    buffer = rt._v.rv("buffer", "by_stage", stage)
     counter = {"n": 0}
 
     def leg(a_place, b_place, arrive_dt, not_before_dt=None):

@@ -117,7 +117,7 @@ def dark(slide):
 s = prs.slides.add_slide(BLANK)
 dark(s)
 text(s, 0.9, 1.6, 11.5, 0.6, "SKN32 Final 6팀 · A-COPilot", size=18, color=RGBColor(0xBF, 0xD8, 0xCB))
-text(s, 0.9, 2.3, 11.5, 1.2, "triPilot 5주차 진행 경과", size=48, bold=True, color=WHITE)
+text(s, 0.9, 2.3, 11.5, 1.2, "guguroute 5주차 진행 경과", size=48, bold=True, color=WHITE)
 text(s, 0.9, 3.6, 11.5, 0.8, "화면 · 서버 · 모델 · 산출물을 한 주 동안 함께 끌어올렸습니다", size=22, color=WHITE)
 text(s, 0.9, 5.4, 11.5, 0.5, "2026.09.29 ~ 10.06   ·   작업 브랜치 커밋 402건 (팀원 브랜치 포함 531건)", size=16, color=RGBColor(0xBF, 0xD8, 0xCB))
 text(s, 0.9, 5.9, 11.5, 0.4, "커밋 수: git log, 2026-09-29 ~ 10-06", size=10, color=RGBColor(0x9F, 0xB8, 0xAB))

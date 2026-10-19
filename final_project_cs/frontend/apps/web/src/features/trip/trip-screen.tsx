@@ -1,5 +1,7 @@
 "use client";
 
+import { mapStopsWithPlaceNames, stopDisplayName } from "./stop-display";
+
 import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bell, ChevronDown, ChevronsRight, OctagonAlert, Pencil } from "lucide-react";
@@ -7,7 +9,9 @@ import { DeviceFrame } from "@/components/layout/device-frame";
 import { OverlayRoot } from "@/components/layout/overlay-root";
 import { JourneyShell } from "@/components/layout/journey-shell";
 import { ToastView, useToastState } from "@/components/toast-view";
-import { QueryState } from "@/components/ui";
+import { ButtonLink, QueryState } from "@/components/ui";
+import { useSearchParams } from "next/navigation";
+import { routes } from "@/lib/routes";
 import { TripMap } from "@/features/map";
 import type { PinLook } from "@/features/map/model";
 import { rideLines, routeNotes, visibleShapes } from "@/features/map/route-lines";
@@ -50,7 +54,10 @@ import { EndCard, TripCredits } from "./trip-credits";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
 import { useTripEvents } from "./use-trip-events";
-import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useTripRisks } from "./use-trip-extras";
+import { RiskPanel } from "@/features/risk/risk-panel";
+import { problemText, riskSignature } from "@/lib/live/risks";
+import { useRiskAlternatives } from "./use-risk-alternatives";
 import type { Recovery } from "@/lib/live/recovery";
 import type { Trip } from "./model";
 import styles from "./trip-screen.module.css";
@@ -77,6 +84,7 @@ const UNDER_CHIPS = 96;
  * Always the phone frame (user decision 2026-10-07, like the plan check).
  */
 export function TripScreen({ tripId }: { tripId: string }) {
+  const t = useT();
   const query = useTrip(tripId);
   // `[2026-10-13 사용자 결정 — D 수정 모드]` 「일정 수정」: the same page becomes the plan check of this trip (`trip-edit.tsx`) until 「완료」, then the trip is drawn afresh.
   const [editing, setEditing] = useState(false);
@@ -84,7 +92,8 @@ export function TripScreen({ tripId }: { tripId: string }) {
   // ★`[2026-10-05]` But a trip that is gone (`not_found`) or a session that ended (`session_expired`) is not drawn from the cache: another account's plan must not stay on the screen.
   const gone = query.error instanceof LiveError && ["not_found", "session_expired"].includes(query.error.code);
   if (query.isPending || !query.data || gone) {
-    return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} /></JourneyShell>;
+    return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()}
+      action={gone ? <ButtonLink variant="primary" href={`${routes.myPageAccount}?login=1&returnTo=${encodeURIComponent(`${routes.trip(tripId)}?notices=1`)}`}>{t("여행을 등록한 계정으로 로그인", "Sign in with the account that owns this trip")}</ButtonLink> : undefined} /></JourneyShell>;
   }
   if (editing) return <TripEdit trip={query.data} onExit={() => setEditing(false)} />;
   // `useTripGuardian` reads the address (`?guardian=on`): wait for it outside the server render.
@@ -99,6 +108,7 @@ const dayName = (index: number, t: Translate) => t(`${index + 1}일차`, `Day ${
 
 function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: () => void }) {
   const t = useT();
+  const search = useSearchParams();
   const { language, skipAnimation } = useSettings();
   const queryClient = useQueryClient();
   useDocumentTitle(`${t("나의 여행", "Your trip")} · ${t("구구루트", "GuguRoute")}`);
@@ -107,6 +117,10 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const guardian = useTripGuardian(trip.id);
   const notices = useNotices(trip.id);
   const proposals = useProposals(trip.id);
+  const risks = useTripRisks(trip.id, trip.version);
+  const currentRisks = risks.data?.items ?? [];
+  const riskCount = currentRisks.filter((item) => item.status === "problem").length;
+  const riskAlternatives = useRiskAlternatives(trip.id, () => openCenter("warnings"));
   // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
   const seen = useSeenNotices(trip.id);
   const tripUnread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
@@ -144,8 +158,10 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const [pane, setPane] = useState<"plan" | "chat">("plan");
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
-  const [centerOpen, setCenterOpen] = useState(false);
-  const [centerTab, setCenterTab] = useState<CenterTab>("warnings");
+  const [centerOpen, setCenterOpen] = useState(() => search.get("notices") === "1");
+  const [centerTab, setCenterTab] = useState<CenterTab>(() => search.get("notices") === "1" ? "notices" : "warnings");
+  const [centerNotice, setCenterNotice] = useState<Notice | null>(null);
+  const [centerItemId, setCenterItemId] = useState<string | null>(null);
   // `[2026-10-07 목업 C안 3단계]` The title row (opened · being renamed), the share sheet, and the stop whose detail is open.
   const [titleOpen, setTitleOpen] = useState(false);
   const [titleEditing, setTitleEditing] = useState(false);
@@ -163,6 +179,17 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const selected = trip.stops.find((stop) => stop.id === selectedId) ?? null;
   const chat = useTripChat(trip, selectedId, () => goPane("chat"));
   const explain = (why: string) => showToast({ text: why });
+  const announcedRisks = useRef(new Set<string>());
+  const announceRisk = useEffectEvent(() => {
+    const signature = riskSignature(currentRisks);
+    if (!signature || announcedRisks.current.has(signature)) return;
+    announcedRisks.current.add(signature);
+    const first = currentRisks.find((item) => item.status === "problem");
+    if (first && !centerOpen) showToast({ text: t(`현재 일정에 주의할 점 ${riskCount}개가 있어요`, `${riskCount} current stops need attention`),
+      sub: [first.title, ...first.problems.map(problemText)].filter(Boolean).join(" · "),
+      action: { label: t("위험·대안 보기", "See risks and choices"), run: () => openCenter("warnings", undefined, first.itemId) } });
+  });
+  useEffect(() => { announceRisk(); }, [risks.data]);
 
   // ── The sheet: three heights (the handle cycles them) or a height it was dragged to — the plan check's sheet. ──
   const [sheet, setSheet] = useState<Sheet>("half");
@@ -378,7 +405,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   });
 
   // ── Picks on the map and in the list ──
-  const mapStops = trip.stops.filter((stop) => stop.date === mapDay);
+  const mapStops = mapStopsWithPlaceNames(trip.stops.filter((stop) => stop.date === mapDay));
   const legsOf = (date: string) => dayTimeline(trip, date, shapes).flatMap((entry) => entry.type === "leg" ? [entry.leg] : []);
   const bringUp = (id: string) => requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   /** A stop picked on the map or with 「지도에서 보기」 is marked and opened in the list without a notice. Pressed again on the map it is let go. */
@@ -421,7 +448,10 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   };
 
   // ── The notice center: opened by the bell (unread notices first), by a notice's 「알림 보기」, by 「일정 정지 중」. ──
-  function openCenter(tab?: CenterTab) {
+  function openCenter(tab?: CenterTab, notice?: Notice, itemId?: string) {
+    hideToast();
+    setCenterNotice(notice ?? null);
+    setCenterItemId(itemId ?? null);
     // `[2026-10-17 ST4F-606]` 처음 보이는 탭: 새 여행 알림 > 새 공지 > 마지막에 본 탭
     setCenterTab(tab ?? (tripUnread > 0 ? "notices" : serviceUnread > 0 ? "service" : centerTab));
     setTitleOpen(false);
@@ -483,10 +513,13 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
   const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
-    const toast = noticeToast(notice, trip, targets, t, () => openCenter("notices"));
-    showToast(toast);
+    const needsChoice = notice.type === "safety_alert" || notice.type === "proposal_request";
+    const view = () => openCenter(needsChoice ? "warnings" : "notices", needsChoice ? notice : undefined);
+    const toast = noticeToast(notice, trip, targets, t, view);
+    if (!centerOpen) showToast(toast);
+    else if (needsChoice) { setCenterNotice(notice); setCenterItemId(null); }
     // `[2026-10-16]` 이 탭을 보고 있지 않으면 브라우저(운영체제) 알림도 — 고객이 「받은 알림」에서 켰을 때만. 누르면 이 화면의 받은 알림으로 온다.
-    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, () => openCenter("notices"));
+    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, view);
   });
   const known = useRef<Set<string> | null>(null);
   const newestNotice = useRef<string | null>(null);
@@ -544,7 +577,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
           return past && openId !== entry.stop.id
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
-                past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps} />;
+                past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps}
+                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} />;
         }
         return past
           ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
@@ -564,10 +598,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
 
   return <DeviceFrame floating menuTools={guardian.tool}
     headerExtra={<button type="button" id="trip-bell" className={styles.bell} onClick={() => openCenter()} aria-haspopup="dialog" aria-expanded={centerOpen}
-      aria-label={unread > 0 ? t(`알림 센터 열기 · 읽지 않은 알림 ${unread}개`, `Open notices · ${unread} unread`) : t("알림 센터 열기", "Open notices")}>
+      aria-label={riskCount > 0 ? t(`현재 위험 ${riskCount}개 · 알림 센터 열기`, `${riskCount} current risks · Open notices`)
+        : unread > 0 ? t(`알림 센터 열기 · 읽지 않은 알림 ${unread}개`, `Open notices · ${unread} unread`) : t("알림 센터 열기", "Open notices")}>
+      {riskCount > 0 && <span className={styles.riskBadge}>{t(`위험 ${riskCount}`, `${riskCount} risks`)}</span>}
       <Bell size={20} strokeWidth={2} aria-hidden="true" />{unread > 0 && <span className={styles.badge} aria-hidden="true">{unread > 99 ? "99+" : unread}</span>}</button>}>
     <main id="main-content" tabIndex={-1} className={`${pc.screen} ${styles.screen}`} data-stage="done" data-floating onKeyDown={onKey}>
-      {detailStop ? <DetailHeader title={detailStop.title} onBack={closeDetail} />
+      {detailStop ? <DetailHeader title={stopDisplayName(detailStop)} onBack={closeDetail} />
         : <TripTitle title={tripTitle} open={titleOpen} editing={titleEditing} onOpen={() => setTitleOpen(true)} onClose={closeTitle}
           onEdit={() => setTitleEditing(true)} onEditEnd={closeTitle}
           // ★The server cannot rename a registered trip yet: said, and the name stays.
@@ -582,7 +618,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
         </div>
         {/* 지도 아래 안내 줄(계획 확인 화면과 같다): 핀이 없는 일정 · 경로선을 읽지 못함. 수단 태그(지하철 · 버스 · 도보)는 띄우지 않는다(2026-10-07 사용자 결정). */}
         {(unlocated.length > 0 || routeShapes.isError) && <div className={pc.mapChips}>
-          {unlocated.length > 0 && <p className={pc.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((stop) => stop.title).join(", ")}</p>}
+          {unlocated.length > 0 && <p className={pc.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((stop) => stopDisplayName(stop)).join(", ")}</p>}
           {routeShapes.isError && <p className={pc.unlocated} role="status">{t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.")}</p>}
         </div>}
         <section ref={sheetBox} className={pc.sheet} aria-label={t("일정 목록", "Itinerary")}>
@@ -627,6 +663,9 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                     <button type="button" className={styles.action} onClick={stale.reload} disabled={stale.fetching}>{t("다시 불러오기", "Reload")}</button></div>}
                   {trip.simulation && <div role="status" className={styles.safetyTop}>{t(trip.simulation.active ? `[시뮬레이션] 재난 ${trip.simulation.categories.length}종 시험 중입니다. 시험으로 일정·알림이 바뀔 수 있습니다.` : '[시뮬레이션 기록] 시험 입력은 종료됐습니다. 이미 적용한 변경·정지는 유지됩니다.', trip.simulation.active ? '[Simulation] Disaster inputs are active. This test may change the itinerary and notifications.' : '[Simulation history] Test inputs have ended. Applied changes and pauses remain.')}</div>}
                   {trip.safety?.paused && <div className={styles.safetyTop}><SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} onResumed={resumed} /></div>}
+                  <RiskPanel items={currentRisks} at={risks.data?.at} mode={risks.data?.mode} scope={risks.data} compact
+                    loading={risks.isPending} busy={risks.isFetching} error={risks.isError} retry={risks.refresh}
+                    onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />
                   <div ref={dayTrack} className={pc.dayTrack} style={listZoom === 1 ? undefined : { zoom: listZoom }}>
                     {near && <div className={pc.peek} data-side={peek.side} style={{ top: peek.top }} aria-hidden="true" inert>{dayList(near)}</div>}
                     {peek.side !== 0 && peek.edge && <p className={pc.edgeNote} data-side={peek.side} style={{ top: peek.top + 28 }} aria-hidden="true">{peek.side === 1 ? t("마지막 날이에요", "Last day") : t("첫날이에요", "First day")}</p>}
@@ -663,6 +702,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 제목을 펼친 줄에 있다. */}
       {centerOpen && <NoticeCenter onClose={closeCenter}>
         <TripAttention trip={trip} tab={centerTab} onTab={setCenterTab} onResumed={resumed}
+          focusItemId={centerItemId}
+          focusNotice={centerNotice ?? (!centerItemId && search.get("notices") === "1" ? [...(notices.data ?? [])].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).find((notice) => notice.type === "safety_alert" || notice.type === "proposal_request") ?? null : null)}
           onGoto={(stopId) => {
             setCenterOpen(false);
             setDetailId(null);
@@ -739,7 +780,7 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
     const proposal = proposals.find((entry) => entry.id === notice.proposalId);
     const stop = trip.stops.find((entry) => entry.id === proposal?.itemId);
     const order = stop ? trip.stops.filter((entry) => entry.date === stop.date).indexOf(stop) + 1 : 0;
-    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, sub,
+    return { badge: stop ? String(order) : undefined, text: stop ? stopDisplayName(stop) : kind, chip: { text: kind, tone: "warn" }, sub,
       note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined, action };
   }
   if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, action };
@@ -749,7 +790,7 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
 function legToast(leg: TripLeg, t: Translate, onList: () => void) {
   const times = leg.move ? [t(`${leg.move.departAt} 출발`, `Leave ${leg.move.departAt}`), leg.move.arriveAt && t(`${leg.move.arriveAt} 도착`, `arrive ${leg.move.arriveAt}`)].filter(Boolean).join(" → ") : null;
   return {
-    badge: "→", text: `${leg.from.title} → ${leg.to.title}`,
+    badge: "→", text: `${stopDisplayName(leg.from)} → ${stopDisplayName(leg.to)}`,
     sub: [legSummary(leg, t), times, ...(leg.shape ? rideLines(leg.shape, t) : [])].filter(Boolean).join("\n"),
     note: leg.slack !== null && leg.slack < 0 ? t(`다음 일정보다 ${Math.abs(leg.slack)}분 늦어요`, `${Math.abs(leg.slack)} min late for the next stop`) : undefined,
     action: { label: t("목록에서 보기", "Show in list"), run: onList }, ms: READ_MS,

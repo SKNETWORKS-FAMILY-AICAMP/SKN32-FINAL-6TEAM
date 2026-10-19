@@ -24,7 +24,7 @@ Next.js 16 App Router + React 19 + TypeScript로 구현한 웹 MVP 1차다. 로�
 
 Node.js 22와 npm을 사용한다. 이 폴더에서 실행한다.
 
-★**웹은 실제 서버로 돈다.** 먼저 triPilot 서버(고객용 8042)를 띄운다(`final_project_cs` README 의 실행 절). 그다음 이 폴더에서:
+★**웹은 실제 서버로 돈다.** 먼저 guguroute 서버(고객용 8042)를 띄운다(`final_project_cs` README 의 실행 절). 그다음 이 폴더에서:
 
 ```powershell
 npm ci
@@ -93,7 +93,7 @@ npm run test:live
 
 아래 기존 연결 기록은 이전 화면의 버튼명·배치를 포함한다.
 
-`[2026-09-27]` **실제 연결(`NEXT_PUBLIC_DATA_MODE=live`)이 생겼다.** `NEXT_PUBLIC_API_BASE`(기본 `http://127.0.0.1:8042`)의 triPilot 서버 `/v1/web/*` 에 붙는다.
+`[2026-09-27]` **실제 연결(`NEXT_PUBLIC_DATA_MODE=live`)이 생겼다.** `NEXT_PUBLIC_API_BASE`(기본 `http://127.0.0.1:8042`)의 guguroute 서버 `/v1/web/*` 에 붙는다.
 - 등록 화면: 글(붙여 넣은 일정·채팅처럼 쓴 계획)과 파일(사진·PDF·워드·엑셀, 최대 5개)을 **계획 읽기**(`/v1/web/trip-intakes`)로 보낸다.
 - 확인 화면 `/intakes/[intakeId]`(틀은 `src/features/intake-review/intake-review.tsx`, 화면은 `src/features/plan-check/`): 위 표. `[2026-09-27]` 판의 목록형 화면(항목 배지 · 원문 줄)은 `[2026-10-03]` 에 없앴다.
 - **일정 짜기**(「일정 짜 줘」)는 `[2026-10-03]` 부터 등록 화면의 세 번째 칸 「계획 짜 주기 (테스트)」가 한다 — 첫날 · 일수 · 인원을 고르고 「계획 확인하기」를 누르면 서버가 접수를 읽은 뒤 `POST …/plan` 으로 짜서 곧바로 등록한다(전에는 읽은 일정이 없을 때 확인 화면에 나오던 「이 조건으로 짜서 등록」 칸이었다).

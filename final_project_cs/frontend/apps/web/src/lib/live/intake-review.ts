@@ -13,7 +13,7 @@ import type { WebTaxiPricing } from "./taxi-pricing";
 /** ✓ ok · ✎ filled (a rule filled it in) · ! warn · ✕ bad (must be fixed) · – unknown (not known yet). */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown";
 /** `booking` (2026-10-03, server 8b0d4c88): shown only for a booking word or a meal line with no name — 예약 있음 · 예약 없이 간다 · 예약 있다는데 장소 모름 · 예약 여부 모름. */
-export type ItemRow = "place" | "time" | "hours" | "closed" | "booking";
+export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk";
 export type MoveRow = "route" | "mode" | "arrival";
 export interface CheckLine<Row extends string = string> { row: Row; result: CheckResult; text: string }
 
@@ -40,6 +40,8 @@ export interface ReviewPlace {
 }
 
 export interface ReviewItem {
+  /** The same six-source risk result used by the watcher. Missing on an older deployment. */
+  risk?: unknown;
   /** `<source position>-<index>` — the key that events, moves and candidates use to point at each other. */
   id: string;
   source_id: string;
@@ -108,6 +110,9 @@ export interface ReviewMove {
 export interface ReviewNeeds { items: number; moves: number; total: number }
 
 export interface Review {
+  risk_mode?: "fresh" | "cached";
+  risk_checked_at?: string | null;
+  risk_schema_version?: number;
   taxi_pricing?: WebTaxiPricing;
   revision: number;
   built_at: string;
@@ -130,6 +135,7 @@ export interface ReviewedIntakeView extends IntakeView {
 
 /** One place, in the shape `POST …/edits` takes for `items[n].place` when the customer picked it from a list. */
 export interface PickedPlace {
+  provider_ref?: string | null;
   name: string;
   latitude: number;
   longitude: number;
@@ -146,6 +152,11 @@ export interface CandidatePlace extends ReviewPlace {
 }
 
 export interface Candidate {
+  risk?: unknown;
+  date?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  end_date?: string | null;
   rank: number;
   place: CandidatePlace;
   distance_m: number | null;
@@ -259,5 +270,6 @@ export function pickedPlace(place: CandidatePlace): PickedPlace | null {
     source: place.source && PICK_SOURCES.includes(place.source) ? place.source as PickedPlace["source"] : "search",
     ...(place.kind ? { kind: place.kind } : {}),
     ...(place.content_id ? { content_id: place.content_id } : {}),
+    ...(place.ref && /^(?:kakao|tour):[0-9]{1,30}$/.test(place.ref) ? { provider_ref: place.ref } : {}),
   };
 }

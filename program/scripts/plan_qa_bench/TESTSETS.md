@@ -7,10 +7,10 @@
 | 폴더(`datasets/core/pointing/…`) | 무엇인가 | 옛 이름 | 옛 자리 | 문항 수 |
 |---|---|---|---|---|
 | `testset/itinerary_questions_v1` | 일정 질문 11유형 — 맞는 항목 하나(또는 「없음」)를 짚는가 | 769 · mix8~12 | `fixtures/mix8~12.json` · `fixtures/gold_sets.json` | 835(요청 하나 769 + 요청 둘 66) |
-| `testset/questions_plus_chitchat_v1` | 일정 질문 + 관광객 말 + 일상 잡담을 섞은 실전형 입력 | D | `results/empty_probe/all_prompts.json` · `datasets/travel/mixed_testset/` | 2,735 |
+| `testset/questions_plus_chitchat_v1` | 일정 질문 + 관광객 말 + 일상 잡담을 섞은 실전형 입력 | D | `results/empty_probe/all_prompts.json` · `datasets/core/pointing/legacy_runs/mixed_testset/` | 2,735 |
 | `testset/chitchat_only_holdout_v1` | 새 잡담만(정답 전부 「없음」) | D2 | `results/empty_probe/all_prompts_d2.json` | 1,000 |
 | `testset/synthetic_chitchat_plus_questions_v1` | 합성 잡담 240 + 정답 있는 질문 120 | D3 | `results/empty_probe/all_prompts_d3.json` | 360 |
-| `testset/requests_inside_chitchat_pairs_v1` | 잡담 속 요청 문장 ↔ 잡담 뺀 같은 요청 짝 | E · MX | `datasets/travel/mx_testset/` | 4,014(짝 2,007) |
+| `testset/requests_inside_chitchat_pairs_v1` | 잡담 속 요청 문장 ↔ 잡담 뺀 같은 요청 짝 | E · MX | `datasets/core/pointing/legacy_runs/mx_testset/` | 4,014(짝 2,007) |
 | `testset/confusing_trap_sentences_v1` | 일부러 헷갈리게 만든 함정 문장 + 대조 문장 | H(Hard) 시험용 | `results/hard_set/` | 합의 1,316 / 전체 1,380 |
 | `trainset/confusing_trap_sentences_v1` | 위와 같은 도구로 만든 학습 자료(시험에 안 씀) | H 학습용 | `results/hard_set/` | 합의 2,534 / 전체 2,760 |
 

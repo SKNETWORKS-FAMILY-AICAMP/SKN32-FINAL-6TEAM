@@ -29,6 +29,7 @@ from zoneinfo import ZoneInfo
 from app.domains.travel_ops.components.planning import planner
 
 from .rules import meal_mention
+from . import schedule_cards
 from .span_segments import split_segments
 
 KST = ZoneInfo("Asia/Seoul")
@@ -100,9 +101,12 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
     `place`(좌표를 아는 장소 값 또는 None) · `claims`(그 항목의 칸별 값 줄 — 근거·확인 필요·메모) · `locked`(고객이 「꼭 넣을 일정」으로 고정) 을 든다."""
     original_titles = {(c["source_id"], c["field"]): c.get("evidence") or {} for c in claims
                        if c["field"].endswith(".title") and isinstance((c.get("evidence") or {}).get("start"), int)}
+    missing_cards = schedule_cards.omissions(sources, claims)
     claims = effective(claims)
     trip = {c["field"][5:]: c for c in claims if c["field"].startswith("trip.")}
-    problems: list[Problem] = []
+    problems: list[Problem] = [Problem("source_item_missing", "reading.source_items",
+                                     f"원문 일정이 읽기 결과에서 빠졌어요: {card['title']}", str(card["source_id"]))
+                               for card in missing_cards]
     rows: list[dict[str, Any]] = []
     all_rows: list[tuple[dict[str, Any], bool]] = []
     first_day = _date_value(trip.get("first_day"))
@@ -128,6 +132,7 @@ def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> C
     filled: list[dict[str, Any]] = []
     rows = _stays(rows, filled, problems)
     _fill_times(rows, filled, problems)
+    _fit_day_end(rows, claims, filled, problems)
     rows.sort(key=lambda r: (r["date"] or "9999", r["start"] or "99:99", r["order"]))
     return Collected(rows=rows, filled=filled, problems=problems, trip=trip, first_day=first_day)
 
@@ -147,6 +152,8 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
         detail: dict[str, Any] = {"provenance": row["provenance"],
                                   "intake": {"intake_id": intake_id, "revision": revision,
                                              "source_id": row["source_id"], "index": row["index"]}}
+        if row.get("role") == "origin":
+            detail["origin"] = True
         if row["booking_no"] or row["booked"] is True:
             detail["booking"] = {"declared_by": "customer_plan",
                                  **({"booking_no": row["booking_no"]} if row["booking_no"] else {})}
@@ -155,7 +162,7 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
             #   바꾸기 전에 묻는다(`pending.protected_reason` 「customer_pinned」 · `trip_watch`). 되살린 항목과 같은 표시다.
             detail["customer_pinned"] = True
         if row["date"] and row["start"]:
-            items.append({"seq": seq, "kind": row["kind"], "title": row["title"] or "(제목 없음)", "place": key,
+            items.append({"seq": seq, "kind": row["kind"], "title": ((row.get("place") or {}).get("name", "식사") + " 식사" if row["title"] in ("거기", "여기", "식사", "밥") and row["kind"] == "dining" else row["title"] or "(제목 없음)"), "place": key,
                           "starts_at": _at(row["date"], row["start"]).isoformat(),
                           # 숙소는 끝이 다른 날이다(체크아웃 날 · `_stays`)
                           "ends_at": _at(row.get("end_date") or row["date"], row["end"]).isoformat() if row["end"] else None,
@@ -218,7 +225,7 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
     # 예약했나 — 「예약 있음 · 없음」을 읽은 칸이 먼저, 예약번호가 있으면 예약한 것이다. 아무 말도 없으면 모른다(None — 예약 안 했다고 적지 않는다)
     booked = value("booked") if isinstance(value("booked"), bool) else (True if value("booking_no") else None)
     return {"order": (source["position"], line or 10_000, index), "source_id": sid, "index": index, "title": title,
-            "text": text, "booked": booked,
+            "text": text, "booked": booked, "role": value("role") or "visit",
             "date": when, "start": start if start and _HHMM.match(str(start)) else None,
             "end": end if end and _HHMM.match(str(end)) else None, "kind": kind,
             "place": place if place and place.get("latitude") is not None else None,
@@ -301,6 +308,10 @@ def _fill_times(rows, filled, problems) -> None:
                 problems.append(Problem("booking_without_time", f"{row['where']}.starts_at",
                                         f"「{row['title']}」에 예약번호가 있는데 시각이 없습니다 — 예약 시각을 알려 주세요",
                                         row["source_id"]))
+        if row.get("role") == "origin":
+            row["end"] = None
+            previous_end[row["date"]] = row["start"]
+            continue
         if not row["end"]:
             minutes = planner.MEAL_MIN if row["kind"] == "dining" else planner.ACTIVITY_MIN
             end = _plus(row["start"], minutes)
@@ -316,6 +327,71 @@ def _fill_times(rows, filled, problems) -> None:
                 row["provenance"]["ends_at"] = {"method": "rule", "rule": "intake.default_duration",
                                                 "minutes": minutes}
         previous_end[row["date"]] = row["end"] or row["start"]
+
+
+def _fit_day_end(rows, claims, filled, problems):
+    """Shorten only inferred durations; explicit clocks and protected visits remain anchors."""
+    from . import reading_prefs
+    from .autofix import MIN_STAY_MIN
+    constraints = reading_prefs.apply({reading_prefs.CARRY_KEY: reading_prefs.carry(claims)})
+    finish = (constraints.get("day_hours") or {}).get("end")
+    if not finish:
+        return
+    if any(r["date"] and not r["start"] for r in rows):
+        problems.append(Problem("time_window", "items", "하루 안에 모든 방문을 배치하지 못했어요. 방문 수나 마감 시각을 조정해 주세요."))
+    for day in sorted({r["date"] for r in rows if r["date"]}):
+        chain = [r for r in rows if r["date"] == day and r["kind"] != "lodging" and r["start"]]
+        if not chain:
+            continue
+        deadline = _at(day, finish)
+        durations, flexible = {}, set()
+        for n, row in enumerate(chain):
+            if row.get("role") == "origin":
+                durations[n] = timedelta(0)
+                continue
+            inferred = not (row["claims"].get("ends_at") or {}).get("value")
+            if inferred:
+                durations[n] = ((_at(day, row["end"]) - _at(day, row["start"])) if row["end"]
+                                else timedelta(minutes=planner.MEAL_MIN if row["kind"] == "dining" else planner.ACTIVITY_MIN))
+                if not row["locked"] and not row["booked"] and not row["booking_no"]:
+                    flexible.add(n)
+            else:
+                durations[n] = _at(day, row["end"]) - _at(day, row["start"]) if row["end"] else timedelta(0)
+
+        def timing():
+            result, previous = [], None
+            for n, row in enumerate(chain):
+                begin = _at(day, row["start"])
+                if (previous is not None and (row["provenance"].get("starts_at") or {}).get("rule") == "intake.fill_start"
+                        and begin == _at(day, chain[n - 1]["end"] or chain[n - 1]["start"]) + timedelta(minutes=planner.MOVE_BUFFER_MIN)):
+                    begin = previous + timedelta(minutes=planner.MOVE_BUFFER_MIN)
+                end = begin + durations[n]
+                result.append((begin, end))
+                previous = end
+            return result
+
+        moments = timing()
+        for n in sorted(flexible, reverse=True):
+            excess = max((end for _, end in moments), default=deadline) - deadline
+            if excess <= timedelta(0):
+                break
+            available = max(timedelta(0), durations[n] - timedelta(minutes=MIN_STAY_MIN))
+            durations[n] -= min(available, excess)
+            moments = timing()
+        if any(end > deadline for _, end in moments):
+            problems.append(Problem("day_deadline", "items", f"{finish} 마감 안에 최소 체류와 지정 시각을 함께 맞추지 못했어요. 방문을 줄이거나 다른 날로 옮겨 주세요."))
+            continue
+        for n, (row, (begin, end)) in enumerate(zip(chain, moments)):
+            for clock_field, value in (("start", begin.strftime("%H:%M")), ("end", end.strftime("%H:%M"))):
+                if row.get("role") == "origin" and clock_field == "end":
+                    continue
+                if row[clock_field] == value:
+                    continue
+                row[clock_field] = value
+                name = "starts_at" if clock_field == "start" else "ends_at"
+                row["provenance"][name] = {"method": "rule", "rule": "intake.fit_day_deadline", "finish_by": finish}
+                filled.append({"source_id": row["source_id"], "field": f"{row['where']}.{name}", "value": value,
+                               "method": "rule", "note": f"고객 마감 {finish} 안에 기본 체류를 맞췄어요"})
 
 
 def _split_shared_lines(rows, original_titles=None) -> None:
@@ -400,6 +476,8 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
         if place.get("dining_place_uid"):
             # ★`[2026-10-10]` 서버가 공용 원장 식당 행과 같은 곳으로 확인한 경우만 있다(`pipeline._linked_ledger_pick`) — 등록 판정 · 원장 연결이 이 번호로 간다
             attributes["dining_place_uid"] = str(place["dining_place_uid"])
+    if place.get("provider_ref"):
+        attributes["provider_ref"] = place["provider_ref"]
     return {"key": key, "name": place["name"], "kind": place.get("kind") or kind,
             "lat": float(place["latitude"]), "lon": float(place["longitude"]),
             "weather_sensitive": None, "attributes": attributes}   # ★`[2026-09-29]` 모름 — 확실한 분류로 채운다(`fill_weather_sensitive`)

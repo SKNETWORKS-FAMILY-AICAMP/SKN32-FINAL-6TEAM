@@ -1,4 +1,4 @@
-// 테스트용 mock 서버 — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
+// 테스트용 mock 서버 — ★실제 서버가 아니다. guguroute 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
 // 실제 앱(개발 서버 3100 · 배포)은 이 파일을 쓰지 않는다. 실제 서버 확인은 `tests/real/` 이 한다.
 //
 // ★Why a test mock server: registering on the real server sends a notice to the team's chat channel and leaves data behind.

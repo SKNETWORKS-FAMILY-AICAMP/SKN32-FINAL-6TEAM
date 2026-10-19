@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 — 전부 한 장(그림 0~4 의 내용을 하나로). 경계 안을 묶음 4구역으로 나눠 선이 구역 안에서 흐르게 한다.
+"""guguroute 유스케이스 — 전부 한 장(그림 0~4 의 내용을 하나로). 경계 안을 묶음 4구역으로 나눠 선이 구역 안에서 흐르게 한다.
 
     python make_usecase_all.py   → ../uc_all.dot · .svg · .png
 
@@ -66,7 +66,7 @@ def cluster(key, title, color, nodes):
 
 w("digraph UC {")
 w(f'  graph [rankdir=LR, splines=spline, nodesep=0.28, ranksep=0.75, pad=0.4, fontname="{FONT}", bgcolor="#ffffff", newrank=false,'
-  f'         label=<<B>triPilot 유스케이스 — 전체 한 장</B><BR/><FONT POINT-SIZE="13" COLOR="#5f6b64">v2 · 2026-10-02 · 실제 API · 코드 기준 · 구역별 세부는 그림 1~4</FONT>>, labelloc=t, fontsize=22];')
+  f'         label=<<B>guguroute 유스케이스 — 전체 한 장</B><BR/><FONT POINT-SIZE="13" COLOR="#5f6b64">v2 · 2026-10-02 · 실제 API · 코드 기준 · 구역별 세부는 그림 1~4</FONT>>, labelloc=t, fontsize=22];')
 w(f'  node [fontname="{FONT}", fontsize=12];')
 w(f'  edge [fontname="{FONT}", fontsize=10, color="#5f6b64", penwidth=1.3, arrowhead=none, arrowsize=0.8];')
 # 주 액터
@@ -75,7 +75,7 @@ w("  " + person("companion", "동행자"))
 w("  " + system("aiapp", "개인 AI 비서 앱", "우리 API로 연결"))
 w("  " + person("req", "요청하는 쪽", "여행자 · AI 비서 앱"))
 # 경계
-w(f'  subgraph cluster_sys {{ label=<<B>triPilot</B>>; fontsize=18; style="rounded"; color="{G1}"; penwidth=2.4; margin=20;')
+w(f'  subgraph cluster_sys {{ label=<<B>guguroute</B>>; fontsize=18; style="rounded"; color="{G1}"; penwidth=2.4; margin=20;')
 cluster("prep", "1 여행 준비", G1, [
     uc("u01", "여행 시작하기", "UC-01", note="언어 · 설문 6문항"),
     uc("u02", "계획 올리기", "UC-02", note="글 · 사진 · 파일 5개 · 10MB"),

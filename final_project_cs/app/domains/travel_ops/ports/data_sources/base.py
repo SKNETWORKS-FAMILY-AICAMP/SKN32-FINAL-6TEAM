@@ -421,13 +421,16 @@ def _is_call_failure(reason: str) -> bool:
     return reason in _CALL_FAILURE_REASONS or reason.startswith("http_")
 
 
-def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priority_share: float | None = None) -> TravelSources:
+def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priority_share: float | None = None,
+                         operation_snapshot: bool = False) -> TravelSources:
     """설정을 보고 붙일 수 있는 것만 붙인다.
 
     `cache_only` — ★`[2026-10-06]` 바깥으로 **한 번도 나가지 않고** 공유 응답 캐시(`source_response_cache`)에 있는 것만 읽는 소스 묶음(`CacheOnlyLimiter`).
     감시가 모아 둔 최근 결과를 읽기만 해야 하는 읽기 입구(MCP 일정 위험 점검)가 쓴다 — 하루 한도 칸을 안 쓴다. 캐시에 없으면 그 소스는 「모름」이다.
     `low_priority_share` — 낮은 우선순위로 **새로 부르는** 소스 묶음: 소스의 하루 · 이번 달 한도의 이 비율(0 < 몫 ≤ 1)까지만 쓰고(`CallBudget.share` — 같은 SQL 안에서 비교), 나머지는 감시 · 채팅 몫이다.
     ★DB 를 못 읽으면 **부르지 않는다**(일반 호출의 `allow` 정책과 반대 — `with_db_budget`). `cache_only` 가 이긴다.
+    `operation_snapshot` — 이 소스 묶음 안에서는 같은 ITS 원문 요청의 실패를 재사용한다.
+    실패는 공유 캐시에 저장하지 않으며 새 소스 묶음은 다시 확인할 수 있다.
 
     ★키가 없으면 **그 소스만** 빠진다. 앱이 죽지도 않고, 가짜로 채우지도
       않는다. 무엇이 왜 빠졌는지는 `unavailable` 이 들고 있고
@@ -452,6 +455,7 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
         intervals={name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()},
         bursts=bursts,
         max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
+    its_limiter = limiter  # ITS는 전체·키별 예산을 한 트랜잭션으로 확보하는 전용 문을 쓴다.
     if guardrails.get("travel.source_budget_shared"):
         limiter = _with_db_budget(limiter, limits, getattr(settings, "source_monthly_limits", lambda: {})(),
                                   list(guardrails.get("travel.source_budget_sources") or []),
@@ -461,6 +465,7 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
         from .ratelimit import CacheOnlyLimiter
 
         limiter = CacheOnlyLimiter()                  # 예산 칸에도 닿지 않는다 — 위에서 만든 제한기를 쓰지 않는다
+        its_limiter = limiter
 
     ttl = float(guardrails.get("travel.source_cache_seconds") or 0)
     if ttl > 0 and guardrails.get("travel.source_cache_shared"):
@@ -592,9 +597,21 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     its: Any = None
     # ★ITS 는 공공데이터포털 공통 키가 아니라 **ITS 가 발급한 키**를 쓴다.
     its_key = getattr(settings, "its_api_key", "") or ""
-    if its_key:
+    its_keys = getattr(settings, "its_api_keys", "") or ""
+    if its_key or its_keys:
+        from app.infrastructure.db.session import get_connection
+
+        from .its_key_budget import ItsKeyBudget
         from .its_traffic import ItsTrafficEvents
-        its = ItsTrafficEvents(service_key=its_key, limiter=limiter, cache=cache)
+
+        key_budget = ItsKeyBudget(connection_factory=get_connection,
+            day_limit=int(limits.get("its", 0)),
+            month_limit=int(getattr(settings, "rate_its_per_month", 0)),
+            key_day_limit=int(getattr(settings, "rate_its_key_per_day", 0)),
+            key_month_limit=int(getattr(settings, "rate_its_key_per_month", 0)),
+            share=1.0 if low_priority_share is None else float(low_priority_share))
+        its = ItsTrafficEvents(service_key=its_key, service_keys=its_keys, key_budget=key_budget,
+                               limiter=its_limiter, cache=cache, operation_snapshot=operation_snapshot)
         traffic_sources.append(its)
     else:
         sources.unavailable["traffic_its"] = (
@@ -606,7 +623,8 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     utic_key = settings.utic_key(proxied=proxied) if hasattr(settings, "utic_key") else ""
     if utic_key:
         from .utic import UticIncidents, UticRouteEvents
-        utic = UticIncidents(service_key=utic_key, limiter=limiter, cache=cache)
+        utic = UticIncidents(service_key=utic_key, limiter=limiter, cache=cache,
+                             timeout=float(guardrails.get("travel.utic_timeout_seconds")))
         traffic_sources.append(utic)
         # ★같은 레코드로 감시 루프의 **경로 사건**(도로 통제)도 답한다 — 요청은 캐시로 나눠 쓴다.
         road_events: Any = UticRouteEvents(utic)

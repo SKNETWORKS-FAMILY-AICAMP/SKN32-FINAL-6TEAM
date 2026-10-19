@@ -73,9 +73,9 @@ def link(target,label):
 
 table=''.join('<tr>'+''.join(f'<td>{html.escape(r[k])}</td>' for k in ['id','subject','status','reflected','remaining'])+'<td>'+''.join(link(e['path'],e['path'])+'<br>' for e in r['evidence'] if e['exists'])+'</td></tr>' for r in result)
 page='''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>triPilot · 25개 반영 현황 · 2026-10-12</title>
+<title>guguroute · 25개 반영 현황 · 2026-10-12</title>
 <style>body{margin:0;background:#fbfcfd;color:#161c28;font:16px/1.65 system-ui,sans-serif}main{max-width:1600px;margin:auto;padding:32px 24px}h1{font-size:30px}h2{font-size:21px}p{max-width:1000px}.notice{border-left:4px solid #a8720c;background:#f7f2e7;padding:14px 20px}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;min-width:1000px;font-size:14px}th,td{padding:12px;border:1px solid #cbd2df;vertical-align:top;text-align:left}th{background:#eee9df}td:last-child{font-size:12px;min-width:240px;overflow-wrap:anywhere}a{color:#765000}li{margin:8px 0}small{color:#586277}a:focus-visible{outline:3px solid #a8720c;outline-offset:3px}</style>
-<main><small>triPilot · 현재 기준 대조 · 2026-10-12</small><h1>25개 항목의 반영 현황</h1>
+<main><small>guguroute · 현재 기준 대조 · 2026-10-12</small><h1>25개 항목의 반영 현황</h1>
 <p class="notice">25/25 항목의 상태를 정리했습니다. 문서 수정 완료와 기능 구현·검증·배포 완료는 구분합니다. 아래는 현재 파일과 기존 실행 증거를 대조한 보고이며 제품 전체를 새로 시험한 결과가 아닙니다.</p>
 <p>현재 제품 사양은 wiki의 확정 결정·계약입니다. v11은 보존하며, v12 안내서와 최종 베이스라인은 아직 작성 완료하지 않았습니다.</p>
 <div class="scroll"><table><thead><tr><th>항목</th><th>대상</th><th>반영 상태</th><th>반영한 내용</th><th>남은 작업·확인 범위</th><th>관련 현재 파일</th></tr></thead><tbody>'''+table+'''</tbody></table></div>

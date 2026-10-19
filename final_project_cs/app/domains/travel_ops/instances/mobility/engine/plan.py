@@ -75,7 +75,13 @@ KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
 #   지도 원본(OSM)에 지하 통로·건물 안 연결이 없고 역 복합시설 둘레를 돌아가는 값이다. 같은 구간을 구글 Routes(TRANSIT)에 물으니 걷기 거리가 직선의 0.99~1.06 배(표본 19 · 중앙 1.00)였다.
 #   그래서 길 거리를 직선의 이 배수로 **상한**한다 — 우회계수(1.4)보다는 크게 두어 진짜 우회(철도·하천 건너편)는 거의 그대로 둔다. 상한이 걸리면 `Planner.walk_capped` 에 남고 로그가 난다(조용한 보정이 아니다).
 #   ★우리가 고른 값이다 — 측정으로 나온 상수가 아니다. 규칙 파일(rules)에 올리는 것은 다음 규칙판에서 한 번에(STATION_K_PROPOSED 와 같은 취급).
-WALK_ROUTED_CAP_PROPOSED = 2.0
+# ☆`[2026-10-18 사용자 결정 · 끔]` 상한을 끈다(None). 처음 상한을 넣게 한 세 곳이 이제 다른 장치로 풀렸다 — 남대문시장→시청은
+#   다른 출구 고르기(674 m · 1.39배), 서울역 광장은 서울시 도보 그래프(137 m · 1.43배), 롯데월드→잠실은 역 연결 건물 목록(직선 × 1.2).
+#   예시 일정 2개 + 택시 비교 12쌍의 접근 걷기 314건 중 상한이 걸린 18건을 출구 전부로 다시 재면 최종 걷기는 역 출구에서 0~42 m 만
+#   늘고, 남산(N서울타워) → 정류장 두 곳만 실제 산길(1.4~1.6 km)이 900 m 대로 깎이던 것이 바로잡힌다 — 상한이 하는 일이 「실제로 먼 길을
+#   짧게 보이게 하는 것」뿐이라 끈다(records/reports/2026-10-18_walk_cap_off_and_taxi_receipts/REPORT.md). 지하 통로 자료가 없는 역에서는
+#   길게 나올 수 있다(짧게 지어내지 않는 쪽).
+WALK_ROUTED_CAP_PROPOSED = None
 #: 택시 `링크:` 표기의 번호 모양 — 계약(route_uses._LINK_ID)과 같다: 숫자 6~12자리
 LINK_ID_RE = re.compile(r"^\d{6,12}$")
 #: 역과 지하로 이어진 건물(연결통로 표 — connectors.py)까지 걷는 거리 = 역~장소 직선 × 이 값(추정 — 표에 거리가 없다). 지상 우회보다 길면 안 쓴다
@@ -369,8 +375,8 @@ class Planner:
                 routed = float(r["distance_m"])
                 if r.get("optimistic"):
                     routed = max(routed, straight_m * self.detour)
-                cap = straight_m * WALK_ROUTED_CAP_PROPOSED
-                if routed > cap:
+                cap = straight_m * WALK_ROUTED_CAP_PROPOSED if WALK_ROUTED_CAP_PROPOSED else None
+                if cap is not None and routed > cap:
                     # 지도 원본의 끊김(지하 통로·역 복합시설)으로 길이 직선의 수 배로 나온 값 — 상한을 건다. 신호 없는 보정이 아니다: 기록 + 로그
                     self.__dict__.setdefault("walk_capped", []).append(
                         {"straight_m": round(straight_m), "routed_m": round(routed), "used_m": round(cap)})
@@ -418,6 +424,8 @@ class Planner:
                         evidence["walk_candidates"] = r["walk_candidates"]
                     if r.get("indoor"):                             # 역·지하상가 안 통로를 지난 거리
                         evidence["indoor"] = r["indoor"]
+                    if r.get("building_entrance"):                  # 건물 안 장소를 출입구 → 도로 연결선 끝에서 이어 찾음
+                        evidence["building_entrance"] = r["building_entrance"]
                 routed_m = float(r["distance_m"])
                 used_m = routed_m
                 seconds = used_m / self.speed

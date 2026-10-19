@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { chatLimitFor, chatLimitReached, chatLimitText, chatUnlimited, formatNumber, watchState, type AdminCommand, type AdminSnapshot, type ApiUsage, type ScreenProps, type User, type UsersListState, type WatchRule } from '../../lib/model';
+import { chatLimitFor, chatLimitReached, chatLimitText, chatUnlimited, formatNumber, watchState, type AdminCommand, type AdminSnapshot, type ApiUsage, type ScreenProps, type User, type WatchRule } from '../../lib/model';
 import styles from './screens.module.css';
 import { ApiEnvironmentLimits } from '../operations/api-limits';
+import { useQuery } from '@tanstack/react-query';
+import { operationUsers } from '../../lib/gateway';
+import { UserConversations } from './user-conversations';
+export { UsersScreen } from './user-list';
 
 const NEAR_CAP_PERCENT = 80; // 화면 검토용 제안값. 실제 운영 기준은 팀 합의 전이다.
 const MAX_QUOTA = 100_000_000; // AdminGateway의 시연 명령 입력 범위.
@@ -113,25 +117,12 @@ export function HomeScreen({ data, navigate }: ScreenProps) {
   </div>;
 }
 
-export function UsersScreen({ data, navigate, listState, onListStateChange }: ScreenProps & { listState: UsersListState; onListStateChange: (state: UsersListState) => void }) {
-  const { query, status, quick, order } = listState;
-  const setQuery = (query: string) => onListStateChange({ ...listState, query });
-  const setStatus = (status: string) => onListStateChange({ ...listState, status });
-  const setQuick = (quick: string) => onListStateChange({ ...listState, quick });
-  const setOrder = (order: string) => onListStateChange({ ...listState, order });
-  const inquiries = (id: string) => data.inquiries.filter(item => item.userId === id).length;
-  const users = data.users.filter(user => user.id.toLowerCase().includes(query.trim().toLowerCase()) && (status === '전체' || user.blocked === (status === '차단')) && (quick !== '채팅 한도 도달' || chatLimitReached(user, data)) && (quick !== '문의 있음' || inquiries(user.id) > 0))
-    .sort((a, b) => order === '마지막 사용순' ? b.lastUsed.localeCompare(a.lastUsed) : (b.chat + b.web) - (a.chat + a.web));
-  return <div className={styles.screen}><Heading eyebrow="OPERATIONS / USERS" title="사용자">사용자 ID로 식별합니다. 사용자별 집계는 ② 채팅 · ③ 웹이며, 외부 API는 서비스 전체로만 셉니다.</Heading>
-    <section className="panel"><div className={styles.filters}><label>사용자 ID로 찾기<input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="ID 일부 입력" /></label><label>상태<select value={status} onChange={event => setStatus(event.target.value)}>{['전체', '정상', '차단'].map(item => <option key={item}>{item}</option>)}</select></label><label>정렬<select value={order} onChange={event => setOrder(event.target.value)}><option>마지막 사용순</option><option>오늘 사용량순</option></select></label></div>
-      <div className={styles.chips} role="group" aria-label="사용자 빠른 필터">{['전체', '채팅 한도 도달', '문의 있음'].map(item => <button key={item} aria-pressed={quick === item} className={quick === item ? styles.selected : ''} onClick={() => setQuick(item)}>{item}</button>)}<span className="muted">{users.length}명 / 전체 {data.users.length}명</span></div>
-      {users.length === 0 ? <Empty>조건에 맞는 사용자가 없습니다. 검색어나 필터를 바꿔 보세요.</Empty> : <TableWrap><table><thead><tr><th>사용자 ID</th><th>상태</th><th>② 채팅 오늘 / 한도</th><th>③ 웹 호출</th><th>여행</th><th>문의</th><th>마지막 사용 · KST</th><th>상세</th></tr></thead><tbody>{users.map(user => <tr key={user.id}><td><button className={styles.textButton} onClick={() => navigate(`/users/${user.id}`)}>{user.id}</button></td><td><span className={user.blocked ? styles.warningBadge : 'badge'}>{user.blocked ? '차단' : '정상'}</span></td><td><div className={styles.usageCell}><span>{number(user.chat)} / {chatLimitText(chatLimitFor(user, data))}{user.exceptionLimit !== null && <small> · 예외</small>}</span>{!chatUnlimited(chatLimitFor(user, data)) && <Meter value={user.chat} max={chatLimitFor(user, data)} label={`${user.id} 채팅 사용률`} />}</div></td><td>{number(user.web)}</td><td>{user.trips.length}</td><td>{inquiries(user.id)}</td><td className={styles.mono}>{timestamp(user.lastUsed)}</td><td><button aria-label={`${user.id} 상세 보기`} onClick={() => navigate(`/users/${user.id}`)}>상세 →</button></td></tr>)}</tbody></table></TableWrap>}
-    </section><p className="muted">매일 한국 시각 00:00 초기화 · ③ 웹 호출의 한도 적용은 미정입니다.</p>
-  </div>;
-}
-
 export function UserDetailScreen(props: ScreenProps & { userId: string }) {
-  const user = props.data.users.find(item => item.id === props.userId);
+  const query = useQuery({ queryKey: ['user-detail', props.userId, props.data.clock],
+    queryFn: () => operationUsers(new URLSearchParams({ q: props.userId, match: 'exact' })), enabled: !!props.data.live });
+  if (props.data.live && query.isPending) return <section className="panel" role="status">사용자를 불러오는 중…</section>;
+  if (props.data.live && query.isError) return <section className="panel"><p className="error" role="alert">사용자를 불러오지 못했습니다. {query.error.message}</p><button onClick={() => void query.refetch()}>다시 불러오기</button></section>;
+  const user = props.data.live ? query.data?.users[0] : props.data.users.find(item => item.id === props.userId);
   return user ? <UserDetail key={user.id} {...props} user={user} /> : <section className="panel"><h1>사용자를 찾을 수 없습니다</h1><p>사용자 ID를 확인하거나 목록에서 다시 선택하세요.</p><button onClick={() => props.navigate('/users')}>사용자 목록으로</button></section>;
 }
 
@@ -156,12 +147,13 @@ function UserDetail({ data, user, onCommand, navigate }: ScreenProps & { user: U
   }
   return <div className={styles.screen}><button className={styles.back} onClick={() => navigate('/users')}>← 사용자 목록</button>
     <Heading eyebrow="OPERATIONS / USER DETAIL" title="사용자 상세" action={<button className={user.blocked ? 'primary' : 'danger'} onClick={() => { block.clear(); setBlockOpen(!blockOpen); }}>{user.blocked ? '차단 해제' : '사용자 차단'}</button>}><strong>{user.id}</strong> · 키 발급 {timestamp(user.issuedAt)} · 마지막 사용 {timestamp(user.lastUsed)} · <span className="badge">{user.blocked ? '차단' : '정상'}</span></Heading>
-    <p className="notice">서버는 키 원문을 보관하지 않습니다. 사용자 ID는 키 재발급 뒤에도 유지됩니다. 운영 차단 해제는 폐기한 옛 키를 되살리지 않습니다.</p>
+    <UserConversations user={user} live={!!data.live} clock={data.clock} />
+    <p className="notice">cs 프로젝트 서버는 키 원문을 보관하지 않습니다. 사용자 ID는 키 재발급 뒤에도 유지됩니다. 운영 차단 해제는 폐기한 옛 키를 되살리지 않습니다.</p>
     {blockOpen && <form noValidate className={`${styles.cautionPanel} panel`} onSubmit={confirmBlock}><h2>{user.blocked ? '차단 해제 확인' : '차단 확인'}</h2><p>{user.blocked ? '사용자가 같은 키로 다시 접근할 수 있습니다.' : '이 사용자의 요청을 거절합니다. 데이터는 삭제하지 않습니다.'} 진행 중인 여행 감시를 함께 멈출지는 미정입니다.</p><label>차단·해제 사유 (필수)<input value={blockReason} onChange={event => setBlockReason(event.target.value)} placeholder="처리 근거를 적어 주세요" /></label><div className="toolbar"><button className="danger" disabled={block.busy}>{block.busy ? '반영 중…' : user.blocked ? '차단 해제 확정' : '차단 확정'}</button><button type="button" onClick={() => setBlockOpen(false)}>닫기</button></div>{block.feedback}</form>}
     <div className={styles.twoColumns}><section className="panel"><h2>② 채팅 호출</h2><p className={styles.largeNumber}>{number(user.chat)} <span>/ {chatUnlimited(limit) ? '한도 없음' : `${number(limit)}회`}</span></p>{!chatUnlimited(limit) && <Meter value={user.chat} max={limit} label="오늘 채팅 사용률" />}<p className={chatLimitReached(user, data) ? styles.warning : 'muted'}>{chatUnlimited(limit) ? '한도 없이 이용합니다(0 = 한도 없음).' : chatLimitReached(user, data) ? `한도 도달 · 요청 거절 · ${timestamp(nextDay.toISOString())}부터 다시 이용` : `오늘 ${number(Math.max(0, limit - user.chat))}회 더 이용할 수 있습니다.`}</p></section><section className="panel"><h2>③ 웹 호출</h2><p className={styles.largeNumber}>{number(user.web)} <span>회 · 집계만</span></p><h3>자주 부른 경로</h3>{user.paths.length ? <ul className={styles.pathList}>{[...user.paths].sort((a, b) => b.count - a.count).slice(0, 3).map(path => <li key={path.path}><code>{path.path}</code><strong>{number(path.count)}</strong></li>)}</ul> : <Empty>실제 HTTP 경로별 계측은 연결되지 않았습니다.</Empty>}</section></div>
     <section className="panel"><PanelTitle title="이 사용자 여행의 감시" aside={<button onClick={() => navigate('/limits')}>서비스 전체 감시 상태 →</button>} /><div className={styles.inlineStats}><span>진행 중 여행 <strong>{user.trips.filter(trip => trip.status === '진행 중').length}개</strong></span><span>감시 대상 장소 <strong>{sum(user.trips, trip => trip.places)}개</strong></span></div><p>서비스 전체 감시: 간격 늘림 {data.apis.filter(api => watchState(api, data.watchRules).startsWith('간격')).length}개 API · 멈춤 {data.apis.filter(api => watchState(api, data.watchRules) === '멈춤').length}개 API</p><p className="muted">외부 API 호출은 사용자·여행별로 나누지 않습니다. 서비스 전체 상태를 참고하세요.</p></section>
     <form noValidate className="panel" onSubmit={saveLimit}><PanelTitle title="사용자 예외 한도" aside={<span className="badge">현재 {user.exceptionLimit === null ? '기본 한도 사용' : chatUnlimited(user.exceptionLimit) ? '예외 · 한도 없음' : `예외 ${number(user.exceptionLimit)}회`}</span>} /><div className={styles.filters}><label>② 채팅 하루 한도 (0 = 한도 없음)<input type="number" min="0" max={MAX_QUOTA} step="1" value={exception} onChange={event => setException(event.target.value)} /></label><label>적용 기간 · 정책 미정<select value={period} onChange={event => setPeriod(event.target.value as typeof period)}><option value="today">오늘만 · 데모</option><option value="until-cleared">해제할 때까지 · 데모</option></select></label></div><p className="muted">③ 웹 호출은 집계만 합니다. 예외 한도 기간은 화면 검토를 위한 제안입니다.</p><label>예외 한도 사유 (필수)<input value={limitReason} onChange={event => setLimitReason(event.target.value)} placeholder="변경하거나 해제하는 이유" /></label><div className="toolbar"><button className="primary" disabled={limitAction.busy}>예외 한도 저장</button><button type="button" disabled={limitAction.busy || user.exceptionLimit === null} onClick={() => void limitAction.run(() => ({ type: 'user-limit', userId: user.id, limit: null, period, reason: reasonRequired(limitReason) }), '예외를 해제하고 기본 한도로 돌렸습니다.')}>예외 해제 · 기본값 적용</button></div>{limitAction.feedback}</form>
-    <section className="panel"><h2>여행 목록</h2>{user.trips.length ? <TableWrap><table><thead><tr><th>여행 ID</th><th>여행</th><th>상태</th><th>감시 대상 장소</th></tr></thead><tbody>{user.trips.map(trip => <tr key={trip.id}><td className={styles.mono}>{trip.id}</td><td>{trip.title}</td><td>{trip.status}</td><td>{trip.places}개</td></tr>)}</tbody></table></TableWrap> : <Empty>등록된 여행이 없습니다.</Empty>}</section>
+    <section className="panel"><h2>여행 목록</h2><p className="muted">여행 이름을 누르면 대화 내역과 입력한 초안 원문, 처음·현재 여행계획을 확인할 수 있습니다.</p>{user.trips.length ? <TableWrap><table><thead><tr><th>여행 ID</th><th>여행</th><th>상태</th><th>감시 대상 장소</th><th>상세</th></tr></thead><tbody>{user.trips.map(trip => <tr key={trip.id}><td className={styles.mono}>{trip.id}</td><td><a href={`/users/${encodeURIComponent(user.id)}/trips/${encodeURIComponent(trip.id)}`} onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); navigate(event.currentTarget.getAttribute('href')!); } }} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44 }}>{trip.title}</a></td><td>{trip.status}</td><td>{trip.places}개</td><td><button style={{ minHeight: 44 }} aria-label={`${trip.title} 대화·계획 보기`} onClick={() => navigate(`/users/${encodeURIComponent(user.id)}/trips/${encodeURIComponent(trip.id)}`)}>상세 보기 →</button></td></tr>)}</tbody></table></TableWrap> : <Empty>등록된 여행이 없습니다.</Empty>}</section>
     <div className={styles.twoColumns}><section className="panel"><PanelTitle title="문의 이력" aside={<button onClick={() => navigate('/inquiries')}>문의함 →</button>} />{userInquiries.length ? <ul className={styles.itemList}>{userInquiries.map(item => <li key={item.id}><button className={styles.textButton} onClick={() => navigate(`/inquiries/${item.id}`)}>{item.title}</button><span className="badge">{item.status}</span><small>{timestamp(item.receivedAt)}</small></li>)}</ul> : <Empty>문의 이력이 없습니다.</Empty>}</section><section className="panel"><PanelTitle title="이 사용자 운영 기록" aside={<button onClick={() => navigate('/audit')}>전체 기록 →</button>} />{audits.length ? <ul className={styles.itemList}>{audits.slice(0, 5).map(item => <li key={item.id}><strong>{item.action}</strong><span>{item.before} → {item.after}</span><small>{timestamp(item.at)} · {item.actor} · {item.reason}</small></li>)}</ul> : <Empty>운영 기록이 없습니다.</Empty>}</section></div>
   </div>;
 }
