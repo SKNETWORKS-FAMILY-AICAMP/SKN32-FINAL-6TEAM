@@ -90,6 +90,9 @@
   --color-test-input-border: #bcdcd7;
   /* `[2026-10-15 ST4F-496]` 엔딩 크레딧의 머리글 · 쿠키 글자(어두운 `--color-inverse` 위의 금빛 — 목업 2026-10-08 C안) */
   --color-credits-accent: #c9b98f;
+  /* `[2026-10-20 사용자 결정]` 엔딩 크레딧 막의 바탕 · 글자 — 흔한 엔딩 크레딧처럼 검정 바탕(목업 2026-10-08 C안 값). 테마와 상관없이 같다. */
+  --color-credits-bg: #0e1612;
+  --color-credits-ink: #efe9da;
 }
 
 /*
@@ -175,4 +178,7 @@
   --color-test-input-soft: #15302d;
   --color-test-input-border: #2b5652;
   --color-credits-accent: #7a6326;
+  /* `[2026-10-20 사용자 결정]` 엔딩 크레딧 막의 바탕 · 글자 — 흔한 엔딩 크레딧처럼 검정 바탕(목업 2026-10-08 C안 값). 테마와 상관없이 같다. */
+  --color-credits-bg: #0e1612;
+  --color-credits-ink: #efe9da;
 }
