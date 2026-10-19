@@ -26,6 +26,7 @@ openai==2.44.0
 #   `langchain-core` 도 import 하는 곳이 없다(이 줄은 이번에 건드리지 않았다 — 필요하면 따로 뺀다).
 langchain-core==1.4.9
 tiktoken==0.13.0          # ★ContextPack 토큰은 추정이 아니라 실측이다
+jsonschema==4.26.0        # 구조화 모델 답 검사 — app/infrastructure/ollama_chat.py validate_structured 가 직접 import 한다(mcp 가 끌고 오지만 직접 쓰므로 적는다 · 판은 AWS 실행 이미지에 실제로 깔린 판 — 2026-10-19, 이 PC 개발 환경은 4.23.0)
 
 # ── MCP (개인 AI 입구 — mcp_server.py) ───────────────────────────────────
 mcp[cli]==1.28.1
