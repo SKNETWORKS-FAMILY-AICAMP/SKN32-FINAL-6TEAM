@@ -557,6 +557,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             if state == "picked_nearest" else None,
             # 예약했다고 적혀 있나(True · False · 말 없음 None) · 이름 없는 줄이 읽힌 조각(그 밖은 None) — 후보 중심 · 문장의 재료
             "booked": booked, "parts": nameless_parts(r, state),
+            # `[2026-10-19]` 「광장시장 점심」처럼 장소 근처에서 고른 식당의 기준 장소(그 밖은 None) — 대안을 그 둘레에서 찾는다(`candidates.area_of`)
+            "near_area": (((r["claims"].get("place") or {}).get("evidence") or {}).get("near_area") or None),
             # 두 번 다르게 읽은 제목 · 예약번호 — `[{field: title | booking_no, current, other(null 이면 두 읽기 문장만), note}]`. 없으면 [] (고객이 고르면 사라진다)
             "rereads": [{k: v for k, v in reread.items() if k != "note"} for reread in rereads],
             "rows": lines})

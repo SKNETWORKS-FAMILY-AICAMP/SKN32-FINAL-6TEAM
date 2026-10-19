@@ -1091,7 +1091,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 continue
             resolved[index] = resolve(query, our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint=_place_kind_hint(item), aliases=aliases, dining=dining,
-                                      near=_near_hint(index, items, resolved, dated))
+                                      near=_near_hint(index, items, resolved, dated), at=_visit_at(index, rows, dated))
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,
@@ -1269,6 +1269,19 @@ def _cluster_centre(found) -> tuple[float, float] | None:
     # 관련도 1위 후보에서 CLUSTER_M 안에 절반 이상이 모였나 — 「홍대입구역 사거리」 하나가 섞여 서로 가장 먼 거리는 555m 였다
     tight = [point for point in points if spread_m([points[0], point]) <= CLUSTER_M] if points else []
     return centre(tight) if tight and len(tight) * 2 >= len(points) else None
+
+
+def _visit_at(index: int, rows: list[dict[str, Any]], dated) -> datetime | None:
+    """이 항목의 방문 시각(서울) — 날짜(`dated`)와 읽은 시작 시각(값 줄 `items[i].starts_at`)이 다 있을 때만. 하나라도 모르면 None.
+    `[2026-10-19 사용자 지시]` 「광장시장 점심」의 근처 식당을 고를 때 그 시각에 확실히 닫힌 가게를 건너뛰는 데 쓴다(`places.resolve(at=)`)."""
+    day = dated[index].value if index < len(dated) else None
+    start = next((r["value"] for r in reversed(rows) if r.get("field") == f"items[{index}].starts_at" and r.get("value")), None)
+    if not day or not isinstance(start, str):
+        return None
+    try:
+        return datetime.fromisoformat(f"{day}T{start}").replace(tzinfo=KST)
+    except ValueError:
+        return None
 
 
 def _near_hint(index: int, items: list[dict[str, Any]], resolved: dict[int, Any], dated) -> tuple[float, float] | None:

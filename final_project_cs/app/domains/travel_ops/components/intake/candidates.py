@@ -58,8 +58,11 @@ def neighbours(items: list[dict[str, Any]], item: dict[str, Any]) -> tuple[dict[
 
 
 def area_of(item: dict[str, Any]) -> dict[str, Any] | None:
-    """이름 없는 줄이 가리키는 지역(`{name, kind, latitude, longitude, radius_m}`) — 없으면 None."""
-    return ((item.get("parts") or {}).get("area")) or None
+    """이름 없는 줄이 가리키는 지역(`{name, kind, latitude, longitude, radius_m}`) — 없으면 None.
+
+    `[2026-10-19 사용자 지시]` 이름 없는 줄의 지역이 없으면 「장소 + 식사」 줄의 **기준 장소**(`near_area` — 「광장시장 점심」의 광장시장)를 쓴다.
+    전에는 그런 줄의 대안 중심이 앞뒤 일정의 가운데라, 광장시장 점심의 대안이 북촌 식당이 됐다(오라클 서버 실측)."""
+    return ((item.get("parts") or {}).get("area")) or item.get("near_area") or None
 
 
 def reference(item: dict[str, Any], prev: dict[str, Any] | None, nxt: dict[str, Any] | None) -> tuple[float, float] | None:

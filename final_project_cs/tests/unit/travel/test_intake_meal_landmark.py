@@ -168,3 +168,133 @@ def test_the_ledger_picks_the_nearest_meal_shop_inside_the_radius_and_skips_cafe
     found = find_meal_near(None, MARKET, shops=shops)
     assert found["matched_title"] == "박가네빈대떡 본점" and found["needs_review"] is True
     assert find_meal_near(None, MARKET, shops=[_shop("광장시장 바베큐 용산점", YONGSAN)]) is None
+
+
+# ── `[2026-10-19 사용자 지시]` 기준 장소를 기억한다 — 대안도 그 둘레에서 ─────────────────────────────
+# 실측(오라클 서버): 「광장시장 점심」 → 순희네빈대떡(원장상 화요일 휴무) → 자동 추천이 북촌 「로씨니」로 바꿨다. 대안 중심이
+# 앞뒤 일정(경복궁 · 북촌)의 가운데였기 때문 — 바로 옆 박가네 빈대떡(17m)은 순위가 밀렸다. 고객은 광장시장에서 먹겠다고 했다.
+
+def test_a_meal_near_a_landmark_remembers_the_landmark_as_its_area():
+    found = resolve("광장시장", kind_hint="dining", our_places=[], dining=Ledger(SHOP), tour=Tour({"광장시장": (*MARKET, "38")}))
+    area = found.evidence()["near_area"]
+    assert (area["name"], area["kind"], area["latitude"], area["longitude"]) == ("광장시장", "landmark", *MARKET)
+    assert area["radius_m"] > 0
+
+
+def test_the_kakao_fallback_remembers_the_landmark_too():
+    kakao = Kakao({"광장시장": [_hit("광장시장", MARKET, "", "쇼핑 > 전통시장")]},
+                  around={"광장시장": [_hit("순희네빈대떡", (37.5702, 126.9994), "FD6", "음식점 > 한식")]})
+    found = resolve("광장시장", kind_hint="dining", our_places=[], dining=Ledger(None), kakao=kakao)
+    assert found.evidence()["near_area"]["name"] == "광장시장"
+
+
+def test_a_restaurant_named_by_the_customer_has_no_landmark_area():
+    found = resolve("박가네빈대떡 본점", kind_hint="dining", our_places=[], dining=Ledger(None),
+                    tour=Tour({"박가네빈대떡 본점": (37.5701, 126.9993, "39")}))
+    assert "near_area" not in found.evidence()
+
+
+def test_alternatives_center_on_the_landmark_not_between_the_neighbours():
+    from app.domains.travel_ops.components.intake.candidates import area_of, reference
+
+    landmark = {"name": "광장시장", "kind": "landmark", "latitude": MARKET[0], "longitude": MARKET[1], "radius_m": 800}
+    item = {"place": {"latitude": 37.5707, "longitude": 127.0007}, "parts": None, "near_area": landmark}
+    prev = {"place": {"latitude": 37.5796, "longitude": 126.9770}}          # 경복궁
+    nxt = {"place": {"latitude": 37.5826, "longitude": 126.9830}}           # 북촌
+    assert area_of(item) == landmark
+    assert reference(item, prev, nxt) == MARKET
+    # 이름 없는 줄의 지역(「성수 식당」)이 먼저다
+    seongsu = {"name": "성수", "kind": "area", "latitude": 37.544, "longitude": 127.056, "radius_m": 1500}
+    assert area_of({**item, "parts": {"area": seongsu}}) == seongsu
+
+
+# ── `[2026-10-19 사용자 지시]` 처음 고를 때 방문 시각에 확실히 닫힌 가게는 건너뛴다 ────────────────────────
+from datetime import datetime, timedelta, timezone  # noqa: E402
+
+TUESDAY_NOON = datetime(2026, 10, 20, 12, 30, tzinfo=timezone(timedelta(hours=9)))
+
+
+def test_the_ledger_skips_the_nearest_shop_when_it_is_closed_at_the_visit():
+    from app.domains.travel_ops.instances.dining.ledger import find_meal_near
+
+    shops = [_shop("순희네빈대떡", (37.57001, 126.99961)), _shop("박가네빈대떡 본점", (37.5702, 126.9994))]
+    asked = []
+
+    def opened(uids, at):
+        asked.append((list(uids), at))
+        return {shops[0]["place_uid"]: False, shops[1]["place_uid"]: True}
+
+    found = find_meal_near(None, MARKET, shops=shops, at=TUESDAY_NOON, opened=opened)
+    assert found["matched_title"] == "박가네빈대떡 본점" and found["needs_review"] is True
+    assert asked == [([shops[0]["place_uid"], shops[1]["place_uid"]], TUESDAY_NOON)]
+
+
+def test_unknown_hours_are_not_closed_and_keep_the_nearest():
+    from app.domains.travel_ops.instances.dining.ledger import find_meal_near
+
+    shops = [_shop("순희네빈대떡", (37.57001, 126.99961)), _shop("박가네빈대떡 본점", (37.5702, 126.9994))]
+    found = find_meal_near(None, MARKET, shops=shops, at=TUESDAY_NOON, opened=lambda uids, at: {})
+    assert found["matched_title"] == "순희네빈대떡"
+
+
+def test_when_every_shop_is_closed_the_nearest_is_kept_for_the_check_to_flag():
+    from app.domains.travel_ops.instances.dining.ledger import find_meal_near
+
+    shops = [_shop("순희네빈대떡", (37.57001, 126.99961)), _shop("박가네빈대떡 본점", (37.5702, 126.9994))]
+    found = find_meal_near(None, MARKET, shops=shops, at=TUESDAY_NOON,
+                           opened=lambda uids, at: {uid: False for uid in uids})
+    assert found["matched_title"] == "순희네빈대떡"
+
+
+def test_without_a_visit_time_hours_are_not_asked():
+    from app.domains.travel_ops.instances.dining.ledger import find_meal_near
+
+    shops = [_shop("순희네빈대떡", (37.57001, 126.99961))]
+
+    def opened(uids, at):
+        raise AssertionError("시각이 없으면 묻지 않는다")
+
+    assert find_meal_near(None, MARKET, shops=shops, opened=opened)["matched_title"] == "순희네빈대떡"
+
+
+def test_a_failing_hours_read_keeps_the_nearest():
+    from app.domains.travel_ops.instances.dining.ledger import find_meal_near
+
+    shops = [_shop("순희네빈대떡", (37.57001, 126.99961)), _shop("박가네빈대떡 본점", (37.5702, 126.9994))]
+
+    def opened(uids, at):
+        raise RuntimeError("db down")
+
+    assert find_meal_near(None, MARKET, shops=shops, at=TUESDAY_NOON, opened=opened)["matched_title"] == "순희네빈대떡"
+
+
+class TimedLedger(Ledger):
+    def find_meal_near(self, latitude, longitude, at=None):
+        self.meal_asked.append((latitude, longitude, at))
+        return self.near_shop
+
+
+def test_resolve_passes_the_visit_time_to_the_ledger():
+    ledger = TimedLedger(SHOP)
+    resolve("광장시장", kind_hint="dining", our_places=[], dining=ledger, tour=Tour({"광장시장": (*MARKET, "38")}),
+            at=TUESDAY_NOON)
+    assert ledger.meal_asked == [(*MARKET, TUESDAY_NOON)]
+
+
+def test_resolve_without_a_visit_time_keeps_the_old_call():
+    ledger = Ledger(SHOP)                      # 시각을 받지 않는 옛 흉내 — 시각이 없으면 예전처럼 부른다
+    resolve("광장시장", kind_hint="dining", our_places=[], dining=ledger, tour=Tour({"광장시장": (*MARKET, "38")}))
+    assert ledger.meal_asked == [MARKET]
+
+
+def test_the_visit_time_comes_from_the_read_date_and_start():
+    from types import SimpleNamespace
+
+    from app.domains.travel_ops.components.intake.pipeline import _visit_at
+
+    dated = [SimpleNamespace(value="2026-10-20"), SimpleNamespace(value=None)]
+    rows = [{"field": "items[0].starts_at", "value": "12:30"}, {"field": "items[1].starts_at", "value": "15:00"}]
+    assert _visit_at(0, rows, dated) == TUESDAY_NOON
+    assert _visit_at(1, rows, dated) is None                       # 날짜를 모른다
+    assert _visit_at(0, [], dated) is None                         # 시각을 모른다
+    assert _visit_at(0, [{"field": "items[0].starts_at", "value": "점심"}], dated) is None
