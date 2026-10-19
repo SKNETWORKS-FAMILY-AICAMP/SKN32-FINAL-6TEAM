@@ -117,7 +117,13 @@ export interface PlanCandidate {
   /** What kind of stop the place makes (`dining` · `activity`) when the server says so — picked for a stop of another kind, the kind is sent with it. */
   placeKind?: string | null;
   reason?: string | null;
+  /** `[2026-10-19]` The way in from the stop before / out to the stop after (whose stop, minutes, the way, a straight-line guess or not). */
+  legs?: { before: PlanCandidateLeg | null; after: PlanCandidateLeg | null };
+  /** `[2026-10-19]` While the live answer works the card out: the way in / out still being measured, the model's reason still being written. */
+  pending?: { before: boolean; after: boolean; reason: boolean };
 }
+
+export interface PlanCandidateLeg { with: string; minutes: number; modeLabel: string; estimated: boolean; slackMin: number }
 
 /** The way from one place to the next on the same day. */
 export interface PlanMove {

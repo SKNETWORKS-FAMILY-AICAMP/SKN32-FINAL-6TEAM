@@ -30,6 +30,7 @@ domain: travel
 | 조회 예산·공유 캐시·회차 제어 | `external_call_budget`, `job_gates`, `source_response_cache` | [027](../../../app/infrastructure/db/migrations/027_external_call_budget.sql), [041](../../../app/infrastructure/db/migrations/041_job_gates.sql), [042](../../../app/infrastructure/db/migrations/042_source_response_cache.sql) |
 | 요식 장소·영업시간·휴무·근거 | `dining.dn_place`, `dining.dn_hours_rule`, `dining.dn_closure_rule`, `dining.dn_source_record` | [200](../../../app/infrastructure/db/migrations/200_dining_schema.sql), 이후 201~225 변경 |
 | 보관기간·감시 실행·개선 작업 기록 | `legal_retention`, `travel_watch_runs`, `travel_watch_checks`, `service_improvement_batches` | [056](../../../app/infrastructure/db/migrations/056_legal_retention.sql), [228](../../../app/infrastructure/db/migrations/228_watch_run_history.sql), [229](../../../app/infrastructure/db/migrations/229_service_improvement.sql) |
+| 접수 대안 미리 준비 | `intake_alternatives` | [061](../../../app/infrastructure/db/migrations/061_intake_alternatives.sql) |
 
 위 표는 역할별 대표 목록입니다. 열·외래키·인덱스·이후 변경의 정확한 정의는 [전체 SQL 목록](../migrations.md)을 확인합니다. 파일의 CREATE TABLE 문 개수를 실행 중인 DB 테이블 수로 보고하지 않습니다.
 

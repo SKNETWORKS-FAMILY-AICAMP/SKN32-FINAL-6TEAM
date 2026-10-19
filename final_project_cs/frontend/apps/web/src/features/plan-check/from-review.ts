@@ -5,9 +5,9 @@ import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
 import { itemRiskOf, problemText, type ItemRisk } from "@/lib/live/risks";
 import { proposedTimeOf } from "./risk-candidate-edits";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
-import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
+import type { Candidate, CandidateLeg, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
-import type { CheckRow, PlaceInfo, PlanCandidate, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
+import type { CheckRow, PlaceInfo, PlanCandidate, PlanCandidateLeg, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
 
 /**
  * The plan-check screen's data from the server's own check (`review`, `wiki/external/rest-endpoints.md` 「확인 화면 검사 …」).
@@ -217,7 +217,13 @@ export function planCandidate(candidate: Candidate, itemId: string, source: Plan
     ...(candidate.basis ? { basis: candidate.basis } : {}),
     ...(candidate.basis === "meal_inferred" ? { placeKind: "dining" } : candidate.place.kind === "dining" || candidate.place.kind === "activity" ? { placeKind: candidate.place.kind } : {}),
     ...(reason ? { reason } : {}),
+    ...(candidate.legs ? { legs: { before: legOf(candidate.legs.before), after: legOf(candidate.legs.after) } } : {}),
+    ...(candidate.pending ? { pending: { before: candidate.pending.before === true, after: candidate.pending.after === true, reason: candidate.pending.reason === true } } : {}),
   };
+}
+
+function legOf(leg: CandidateLeg | null | undefined): PlanCandidateLeg | null {
+  return leg ? { with: leg.with, minutes: leg.minutes, modeLabel: leg.mode_label, estimated: leg.estimated, slackMin: leg.slack_min } : null;
 }
 
 function riskChecks(risk: ItemRisk | null): CheckRow[] {

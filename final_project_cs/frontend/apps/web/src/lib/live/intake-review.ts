@@ -1,5 +1,6 @@
 import type { Language } from "../i18n";
 import { api } from "./client";
+import { STREAM_TIMING, streamApi } from "./stream";
 import type { IntakeView } from "./intake";
 import type { WebTaxiPricing } from "./taxi-pricing";
 
@@ -176,7 +177,16 @@ export interface Candidate {
   reason?: string | null;
   similarity?: number | null;
   experience?: string | null;
+  /** `[2026-10-19]` Whether the reason was written by the model or is the plain template. */
+  reason_by?: "model" | "template";
+  /** `[2026-10-19]` The way in from the stop before and out to the stop after: whose stop, minutes, the way (`mode_label`), and whether it is a straight-line guess. */
+  legs?: { before: CandidateLeg | null; after: CandidateLeg | null };
+  /** `[2026-10-19]` Only in the live answer (`streamCandidates`): what is still being worked out — the way in, the way out, the model's reason. */
+  pending?: CandidatePending;
 }
+
+export interface CandidateLeg { with: string; minutes: number; mode: string; mode_label: string; estimated: boolean; slack_min: number }
+export interface CandidatePending { before: boolean; after: boolean; reason: boolean }
 
 export interface CandidateList {
   revision: number;
@@ -186,6 +196,16 @@ export interface CandidateList {
   candidates: Candidate[];
   /** Why the list is short or approximate (`engine_budget_exhausted` · `no_same_kind` · `no_other_branches` · `kakao:<reason>`). */
   notes: string[];
+  /** `[2026-10-19]` The alternatives were made ready when the plan was read (no wait): when, for which revision, and which legs were measured again (`before` · `after`). Null when worked out now. */
+  prepared?: { revision: number; computed_at: string; stale: string[] } | null;
+}
+
+/** `[2026-10-19]` One change to a card while the live answer works it out: the measured legs (`rows` … `legs`), or the model's reason. `rank` is the card's place in the first list. */
+export interface CandidateUpdate {
+  rank: number;
+  rows?: Candidate["rows"]; fits?: boolean; status?: Candidate["status"]; slack?: Candidate["slack"]; estimated?: boolean; legs?: Candidate["legs"];
+  reason?: string; reason_by?: "model" | "template";
+  pending?: Partial<CandidatePending>;
 }
 
 export interface PlaceSearchResult {
@@ -234,6 +254,20 @@ const json = (body: unknown): RequestInit => ({ method: "POST", headers: { "Cont
 export function getCandidates(intakeId: string, item: Pick<ReviewItem, "source_id" | "index">, revision: number, language: Language): Promise<CandidateList> {
   const query = new URLSearchParams({ source_id: item.source_id, index: String(item.index), revision: String(revision) });
   return api(`${base(intakeId)}/candidates?${query}`, language);
+}
+
+/**
+ * `[2026-10-19 사용자 지시]` The alternatives as a live answer: prepared ones come at once (only the result); otherwise the cards come first with
+ * straight-line guesses (`onFirst`), each measured leg and each model reason as it lands (`onUpdate`), then the final list (resolved — the server picks
+ * the three again by the full check). A server without streams answers once in JSON — then only the result comes.
+ */
+export function streamCandidates(intakeId: string, item: Pick<ReviewItem, "source_id" | "index">, revision: number, language: Language,
+  onFirst: (list: CandidateList) => void, onUpdate: (update: CandidateUpdate) => void): Promise<CandidateList> {
+  const query = new URLSearchParams({ source_id: item.source_id, index: String(item.index), revision: String(revision) });
+  return streamApi<CandidateList>(`${base(intakeId)}/candidates?${query}`, language, { method: "GET" }, undefined, STREAM_TIMING, (name, body) => {
+    if (name === "candidates") onFirst(body as unknown as CandidateList);
+    else if (name === "candidate" && typeof body.rank === "number") onUpdate(body as unknown as CandidateUpdate);
+  });
 }
 
 export function searchPlaces(intakeId: string, item: Pick<ReviewItem, "source_id" | "index">, revision: number, q: string, language: Language, signal?: AbortSignal): Promise<PlaceSearchResult> {

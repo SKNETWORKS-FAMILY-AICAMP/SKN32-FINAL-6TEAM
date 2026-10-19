@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
 import { ro } from "@/lib/josa";
 import { useT } from "@/lib/settings";
-import type { PlacePhoto, PlanCandidate, PlanItem } from "./model";
+import type { PlacePhoto, PlanCandidate, PlanCandidateLeg, PlanItem } from "./model";
 import { Act, Checks, letter, placeKindLabel, placeMeta, SourceTag, VerdictPill } from "./parts";
 import styles from "./plan-check.module.css";
 
@@ -156,6 +156,27 @@ export function kindNote(current: PlanItem, candidate: PlanCandidate, t: Transla
   return null;
 }
 
+/**
+ * `[2026-10-19 사용자 지시]` The way in from the stop before and out to the stop after. While the server still measures one it says so with the
+ * straight-line guess (「경복궁에서 오는 길 계산 중 · 어림 15분」); measured, it is the way and the minutes (「버스 18분 · 12분 여유」).
+ */
+function LegLines({ candidate }: { candidate: PlanCandidate }) {
+  const t = useT();
+  const legs = candidate.legs;
+  if (!legs || (!legs.before && !legs.after)) return null;
+  const line = (side: "before" | "after", leg: PlanCandidateLeg) => {
+    const pending = candidate.pending?.[side] === true;
+    const where = side === "before" ? t(`${leg.with}에서 오는 길`, `From ${leg.with}`) : t(`${leg.with}까지 가는 길`, `To ${leg.with}`);
+    if (pending) return <>{<span className={styles.spinner} aria-hidden />}{t(`${where} 계산 중 · 어림 ${leg.minutes}분`, `${where}: working it out · about ${leg.minutes} min`)}</>;
+    const way = leg.estimated ? t(`직선 어림 ${leg.minutes}분`, `about ${leg.minutes} min (straight line)`) : `${leg.modeLabel} ${t(`${leg.minutes}분`, `${leg.minutes} min`)}`;
+    const spare = side === "before" ? "" : leg.slackMin >= 0 ? t(` · ${leg.slackMin}분 여유`, ` · ${leg.slackMin} min to spare`) : t(` · ${-leg.slackMin}분 늦어요`, ` · ${-leg.slackMin} min late`);
+    return <>{`${where} · ${way}${spare}`}</>;
+  };
+  return <ul className={styles.legLines} aria-live="polite">
+    {(["before", "after"] as const).map((side) => legs[side] && <li key={side} data-pending={candidate.pending?.[side] || undefined}>{line(side, legs[side]!)}</li>)}
+  </ul>;
+}
+
 function CandidateCard({ candidate, current, index, active, applyWhy, explain, onApply }: {
   candidate: PlanCandidate; current: PlanItem; index: number; active: boolean; applyWhy: string | null; explain: (why: string) => void; onApply: () => void;
 }) {
@@ -177,7 +198,10 @@ function CandidateCard({ candidate, current, index, active, applyWhy, explain, o
     </div>
     <div className={styles.nameRow}><h4 id={headingId} className={styles.changeName}>{candidate.name}</h4><SourceTag origin={candidate.info?.origin} /></div>
     {placeMeta(candidate.info, t) && <p className={styles.changeSub}>{placeMeta(candidate.info, t)}</p>}
-    {candidate.reason && <p className={styles.changeReason}>{candidate.reason}</p>}
+    {candidate.pending?.reason
+      ? <p className={styles.changeReason} data-pending aria-live="polite">{t("추천 이유를 정리하고 있어요…", "Putting the reason into words…")}</p>
+      : candidate.reason && <p className={styles.changeReason}>{candidate.reason}</p>}
+    <LegLines candidate={candidate} />
     {note && <p className={styles.kindNote} data-mismatch={note.mismatch || undefined}>{note.text}</p>}
     {candidate.checks.length
       ? <Checks rows={candidate.checks} />

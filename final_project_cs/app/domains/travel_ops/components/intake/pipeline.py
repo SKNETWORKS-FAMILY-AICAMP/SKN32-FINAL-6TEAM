@@ -290,6 +290,9 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 cur.execute("UPDATE trip_intakes SET stage='review', updated_at=now() "
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
         _dining_shadow(connect, tenant_id, intake_id, sources)
+        # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
+        #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
+        _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat)
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
         return "fatal"
@@ -304,6 +307,21 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         if "beat" in locals():
             beat.__exit__()
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
+
+
+def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, kakao: Any, chat: Any) -> None:
+    """`[2026-10-19]` 접수 대안 미리 준비(`prepared.prepare`) — 가드레일 `travel.candidates.prepare_on_intake`(기본 켜짐)가 끄면 하지 않는다."""
+    from app.core.settings import get_guardrails
+
+    from . import prepared
+
+    try:
+        if get_guardrails().get("travel.candidates.prepare_on_intake") is False:
+            return
+        done = prepared.prepare(connect, tenant_id=tenant_id, intake_id=intake_id, kakao=kakao, chat=chat)
+        log.info("intake alternatives prepared intake=%s %s", intake_id, done)
+    except Exception:                                  # noqa: BLE001 — 준비 장애가 접수를 건드리지 않는다
+        log.warning("intake alternatives prepare failed intake=%s", intake_id, exc_info=True)
 
 
 def agent_reader_config(tenant_id: str) -> dict[str, Any]:

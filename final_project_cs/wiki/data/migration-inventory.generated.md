@@ -13,7 +13,7 @@ automation:
 
 # SQL 파일 목록
 
-[실측: 작업 트리] 실행 대상 SQL **89개**, 역사 보존 SQL **4개**, 보류 폴더 SQL **1개**. 파일 수이며 DB 적용 수가 아닙니다.
+[실측: 작업 트리] 실행 대상 SQL **107개**, 역사 보존 SQL **4개**, 보류 폴더 SQL **0개**. 파일 수이며 DB 적용 수가 아닙니다.
 
 근거: [실행기](../../app/infrastructure/db/migrate.py), [SQL 적용 안내](migrations.md). 생성 명령은 워크스페이스 루트에서 실행합니다.
 
@@ -75,6 +75,7 @@ automation:
 | [058_place_embeddings.sql](../../app/infrastructure/db/migrations/058_place_embeddings.sql) |
 | [059_forecast_advisory_proposals.sql](../../app/infrastructure/db/migrations/059_forecast_advisory_proposals.sql) |
 | [060_web_auth_guest_transfer.sql](../../app/infrastructure/db/migrations/060_web_auth_guest_transfer.sql) |
+| [061_intake_alternatives.sql](../../app/infrastructure/db/migrations/061_intake_alternatives.sql) |
 | [200_dining_schema.sql](../../app/infrastructure/db/migrations/200_dining_schema.sql) |
 | [201_dining_core_link.sql](../../app/infrastructure/db/migrations/201_dining_core_link.sql) |
 | [202_dining_matcher.sql](../../app/infrastructure/db/migrations/202_dining_matcher.sql) |
@@ -104,12 +105,29 @@ automation:
 | [225_dining_license_search.sql](../../app/infrastructure/db/migrations/225_dining_license_search.sql) |
 | [226_admin_operations.sql](../../app/infrastructure/db/migrations/226_admin_operations.sql) |
 | [226_dining_nopo.sql](../../app/infrastructure/db/migrations/226_dining_nopo.sql) |
+| [227_dining_vworld.sql](../../app/infrastructure/db/migrations/227_dining_vworld.sql) |
 | [227_watch_simulation_proposal_scope.sql](../../app/infrastructure/db/migrations/227_watch_simulation_proposal_scope.sql) |
 | [228_watch_run_history.sql](../../app/infrastructure/db/migrations/228_watch_run_history.sql) |
 | [229_service_improvement.sql](../../app/infrastructure/db/migrations/229_service_improvement.sql) |
 | [230_intake_test_scenarios.sql](../../app/infrastructure/db/migrations/230_intake_test_scenarios.sql) |
+| [231_dining_style.sql](../../app/infrastructure/db/migrations/231_dining_style.sql) |
+| [232_dining_agent_shadow.sql](../../app/infrastructure/db/migrations/232_dining_agent_shadow.sql) |
+| [232_intake_reopen.sql](../../app/infrastructure/db/migrations/232_intake_reopen.sql) |
+| [233_dining_link_same_name.sql](../../app/infrastructure/db/migrations/233_dining_link_same_name.sql) |
+| [240_lodging_ledger.sql](../../app/infrastructure/db/migrations/240_lodging_ledger.sql) |
+| [300_activity_schema.sql](../../app/infrastructure/db/migrations/300_activity_schema.sql) |
+| [301_activity_indoor.sql](../../app/infrastructure/db/migrations/301_activity_indoor.sql) |
+| [302_activity_source_modified.sql](../../app/infrastructure/db/migrations/302_activity_source_modified.sql) |
+| [303_activity_delisted.sql](../../app/infrastructure/db/migrations/303_activity_delisted.sql) |
+| [304_activity_live_status.sql](../../app/infrastructure/db/migrations/304_activity_live_status.sql) |
+| [305_activity_judge_shadow.sql](../../app/infrastructure/db/migrations/305_activity_judge_shadow.sql) |
 | [901_personal_ai_oauth.sql](../../app/infrastructure/db/migrations/901_personal_ai_oauth.sql) |
 | [902_unattended_operations.sql](../../app/infrastructure/db/migrations/902_unattended_operations.sql) |
+| [903_notice_excluded.sql](../../app/infrastructure/db/migrations/903_notice_excluded.sql) |
+| [904_case_events_append_only.sql](../../app/infrastructure/db/migrations/904_case_events_append_only.sql) |
+| [905_intake_claims_llm_agent.sql](../../app/infrastructure/db/migrations/905_intake_claims_llm_agent.sql) |
+| [906_intake_backups.sql](../../app/infrastructure/db/migrations/906_intake_backups.sql) |
+| [907_intake_screen_and_question_plan.sql](../../app/infrastructure/db/migrations/907_intake_screen_and_question_plan.sql) |
 
 ## 역사 보존 — 실행 제외
 
@@ -120,7 +138,7 @@ automation:
 
 ## 보류 폴더
 
-- [015_drop_commerce_domain.sql](../../app/infrastructure/db/migrations/pending/015_drop_commerce_domain.sql)
+
 
 ## 관계
 

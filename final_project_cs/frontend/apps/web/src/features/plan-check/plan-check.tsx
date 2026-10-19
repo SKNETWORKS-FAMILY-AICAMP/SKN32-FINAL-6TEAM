@@ -16,6 +16,7 @@ import { RiskPanel } from "@/features/risk/risk-panel";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
+import { changeLines } from "./change-lines";
 import { draftOfItem, foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
@@ -147,8 +148,11 @@ export interface PlanCheckActions {
   remove?: (id: string) => Promise<void>;
   /** Answer a trip-wide detail. */
   editTrip?: (field: "first_day" | "party_size" | "title" | "taxi_pricing", value: string | number | WebTaxiPricing) => Promise<void>;
-  /** The alternatives for one stop, best first (mockup 「대체 후보 A · B · C」). */
-  candidates?: (id: string) => Promise<PlanCandidate[]>;
+  /**
+   * The alternatives for one stop, best first (mockup 「대체 후보 A · B · C」). `[2026-10-19]` `onLive` gets the cards while the server still works them
+   * out (straight-line guesses first, then each measured leg and the model's reason); the promise ends with the final list.
+   */
+  candidates?: (id: string, onLive?: (cards: PlanCandidate[]) => void) => Promise<PlanCandidate[]>;
   /** Why the list for a stop is short or empty (the server's `notes`: `no_same_kind` · `booked_needs_name` · …) — read after `candidates` has answered. */
   candidateNotes?: (id: string) => string[];
   /** Places matching words, nearest first (the change screen's search bar). */
@@ -668,7 +672,10 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     if (!how.search) requestAnimationFrame(() => document.getElementById("plan-change-title")?.focus({ preventScroll: true }));
     if (!actions.candidates) return;
     try {
-      const list = await actions.candidates(item.id);
+      const list = await actions.candidates(item.id, (live) => {
+        // The cards show at once with straight-line guesses; each line changes when the server has measured it
+        setChange((current) => current?.id === item.id ? { ...current, list: live, state: "ready" } : current);
+      });
       const notes = actions.candidateNotes?.(item.id) ?? [];
       setChange((current) => current?.id === item.id ? { ...current, list, notes, state: "ready" } : current);
     } catch (error) {
@@ -1296,7 +1303,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   function onLine(lineId: string) { if (done && !changing) pickLine(lineId); }
 
   // The lines belong to the plan as it is: for the proposed one only those between stops it did not change are still true (a changed place moves its ends).
-  const lineShapes = !routes || changing ? null : previewing && side === "after" && recommended
+  const lineShapes = changing ? (change ? changeLines(view, changing, cards, change.index) : null) : !routes ? null : previewing && side === "after" && recommended
     ? { ...routes, shapes: routes.shapes.filter((shape) => !(shape.fromItemId in recommended.was) && !(shape.toItemId in recommended.was)) } : routes;
   // The lines of the day on the map, for attribution and source notes.
   const drawn = visibleShapes(lineShapes?.shapes, mapStops);
