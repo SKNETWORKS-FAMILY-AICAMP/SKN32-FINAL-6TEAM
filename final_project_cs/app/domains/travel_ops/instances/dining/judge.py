@@ -4,11 +4,12 @@
 「LLM은 읽고 판단하고, 코드는 계산하고, 승인은 고객이」:
   에이전트(`agent.judge_day`)가 식사마다 무엇을 확인할지 고르고 규칙 도구 · 바깥 조회(카카오 · 구글)를 부른다. 판정 값은 도구 결과다.
 ★화면 문장은 지금처럼 **코드가 만든다** — 에이전트의 문장(reason)은 고객에게 내보내지 않고 근거로만 남긴다(사용자: 「화면 보여지는 건 지금처럼」).
-★바꾸는 것은 둘뿐이다
+★화면 반영
   ①규칙 검사가 **모름**(unknown)인 영업 · 휴무 줄에 에이전트가 도구 근거로 ok · bad 를 냈으면 그 줄을 그 판정으로 바꾼다
     (구글 실시간 영업이 근거면 「구글 정보로는 …」).
   ②규칙 검사에 없는 확인 — 고객 조건(식이 · 아이 · 결제)은 결과와 함께, 폐업은 bad 일 때만 새 줄로 더한다.
-  규칙이 이미 판정한 줄은 그대로다(줄에 에이전트 판정 · 같은지만 근거로 단다). 에이전트 실패 · 근거 검증 실패인 체크는 쓰지 않는다.
+  ③최신 근거로 검증된 필수 bad는 기존 ok · 주의도 bad로 내린다. 기존 문장·결과는 rule_text · rule_result에 남긴다.
+  기존 bad를 LLM으로 올리지 않는다. 선호 불일치는 주의이고, 에이전트 실패 · 근거 검증 실패인 체크는 쓰지 않는다.
 ★접수 확인으로 넘긴 **뒤에** 돈다(에이전트는 하루 15~30초) — 같은 판의 저장된 검사(`intake_reviews`)를 고쳐 쓰고, 화면은 다음 조회에서 본다.
   고친 줄로 확인 필요 개수(`needs`) · 등록 가능(`ready`)을 다시 센다.
 ★근거 기록은 `dining.dn_agent_judge`(232)에 쓴다 — 체크마다 에이전트 판정 · 규칙 판정 · 근거 · 실패 이유.
@@ -38,16 +39,28 @@ RULE_RESULT = {"ok": "ok", "filled": "ok", "warn": "ok", "bad": "bad", "unknown"
 #: 에이전트에게 넘기는 계획 원문 길이 상한(글자) — 조건 문장을 읽히는 데 충분하고 토큰을 아낀다
 NOTES_MAX = 2000
 
+#: 등록을 막을 수 있는 이용 가능성 확인(검증된 bad 일 때) — 「못 찾음」(found)은 넣지 않는다(자료 부족 → 확인 못 함)
+BLOCKING_CHECKS = frozenset({"open_at", "closed_day", "business"})
+
+
+def is_required(check: dict[str, Any]) -> bool:
+    """이용 가능성 확인(영업 · 휴무 · 폐업)은 늘 필수, 고객 조건(식이 · 아이 · 결제)은 모델이 **명시(true)할 때만** 필수다.
+    `[2026-10-16 사용자 결정]` 빠뜨리면 선호(주의)다 — 전에는 생략도 필수로 봐 선호가 등록을 막을 수 있었다."""
+    return check.get("check") in BLOCKING_CHECKS or check.get("required") is True
+
+
 #: 규칙 검사 줄 ↔ 에이전트 체크
-ROW_OF = {"open_at": "hours", "closed_day": "closed"}
+ROW_OF = {"found": "place", "open_at": "hours", "closed_day": "closed"}
 #: 화면 문장(코드가 만든다) — 체크 × 판정. 지금 확인 화면 말투를 따른다
 TEXT = {
+    ("found", "ok"): "식당을 확인했어요", ("found", "bad"): "식당을 확인하지 못했어요(확인 못 함) — 이름이나 주소를 고쳐 다시 확인할 수 있어요",
     ("open_at", "ok"): "그 시각에 영업해요", ("open_at", "bad"): "그 시각에는 영업하지 않아요",
     ("closed_day", "ok"): "그날은 쉬는 날이 아니에요", ("closed_day", "bad"): "그날은 쉬는 날이에요",
     ("business", "bad"): "폐업했거나 옮긴 곳으로 나와요",
-    ("dietary", "ok"): "요청하신 식사 조건(할랄 · 채식)에 맞는 곳이에요",
-    ("dietary", "bad"): "요청하신 식사 조건(할랄 · 채식)에 맞지 않는 곳이에요",
-    ("dietary", "unknown"): "요청하신 식사 조건(할랄 · 채식)은 확인하지 못했어요",
+    # 식단 문장의 {조건} 은 `_text` 가 근거로 확인한 속성(할랄 · 채식)으로 채운다 — 없으면 빈칸
+    ("dietary", "ok"): "요청하신 식사 조건{조건}에 맞는 곳이에요",
+    ("dietary", "bad"): "요청하신 식사 조건{조건}에 맞지 않는 곳이에요",
+    ("dietary", "unknown"): "요청하신 식사 조건{조건}은 확인하지 못했어요",
     ("kids", "ok"): "아이와 함께 갈 수 있는 곳이에요", ("kids", "bad"): "아이 동반이 어려운 곳이에요",
     ("kids", "unknown"): "아이 동반 가능 여부는 확인하지 못했어요",
     ("payment", "ok"): "카드 결제가 되는 곳이에요", ("payment", "bad"): "카드 결제가 안 되는 곳이에요",
@@ -55,6 +68,9 @@ TEXT = {
 }
 #: 새 줄로 더하는 체크 — 폐업은 bad 일 때만(「폐업 기록 없음」은 고객에게 뜻이 없다)
 ADDED = ("dietary", "kids", "payment", "business")
+#: 식단 속성(`check_attributes` 의 말) → 화면 이름. 순서가 문장 순서다
+#: ☆`[2026-10-18]` 전에는 문장에 「(할랄 · 채식)」이 고정이라 할랄만 요청해도 채식이 같이 나왔다
+DIET_LABELS = {"halal": "할랄", "vegetarian": "채식"}
 
 
 def rule_verdicts(item: dict[str, Any]) -> dict[str, str]:
@@ -98,8 +114,18 @@ def _tools_of(check: dict[str, Any], calls: list[dict[str, Any]]) -> list[dict[s
              "path": ev.get("path"), "value": ev.get("value")} for ev in check.get("evidence") or []]
 
 
+def _diet_words(evidence: list[dict[str, Any]]) -> str:
+    """근거가 확인한 식단 속성 — `attributes.<속성>.state` 경로에서 읽는다. 「(할랄)」 · 「(할랄 · 채식)」 · 없으면 빈 글자."""
+    seen = {str(e.get("path") or "").split(".")[1] for e in evidence
+            if str(e.get("path") or "").startswith("attributes.") and len(str(e.get("path")).split(".")) >= 2}
+    words = [label for attr, label in DIET_LABELS.items() if attr in seen]
+    return f"({' · '.join(words)})" if words else ""
+
+
 def _text(code: str, verdict: str, evidence: list[dict[str, Any]]) -> str:
     text = TEXT[(code, verdict)]
+    if code == "dietary":
+        text = text.replace("{조건}", _diet_words(evidence))
     if code == "open_at" and any(e.get("tool") == "live_open_check" for e in evidence):
         text = "구글 정보로는 " + text                     # 원장이 몰라 실시간 영업(구글)으로 정했다
     return text
@@ -117,6 +143,16 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
         for check in checks:
             code, verdict, evidence = check["check"], check["verdict"], check["evidence"]
             agent = {"verdict": verdict, "agree": (verdict == rule[code]) if code in rule else None, "evidence": evidence}
+            validated = check.get("validated") is True
+            required = is_required(check)
+            # `[2026-10-16 사용자 결정]` 「못 찾음」은 자료 부족 — 「확인 못 함」(unknown)으로 두고 이용 불가로 내리지 않는다
+            not_found = code == "found" and verdict == "bad"
+            if validated:
+                agent.update({"check": code, "validated": True, "required": required})
+            # 선택한 선호를 만족하지 못해도 이용 불가로 승격하지 않는다.
+            result = "unknown" if not_found else "warn" if verdict == "bad" and not required else verdict
+            flags = {"requirement": "required" if required else "preference",
+                     "blocks_registration": validated and required and verdict == "bad"} if validated else {}
             row_name = ROW_OF.get(code)
             row = next((r for r in rows if r.get("row") == row_name), None) if row_name else None
             # ★`[2026-10-16 설계 대조 P1]` 화면 줄은 **근거에 그 판정을 낸 규칙 도구(구글 포함)의 값이 보일 때만** 바꾼다.
@@ -124,14 +160,18 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
             shown = shows_verdict(check)
             if row is not None:
                 row["agent"] = agent
-                if rule.get(code) == "unknown" and verdict in ("ok", "bad") and shown:
-                    row.update({"result": verdict, "text": _text(code, verdict, evidence), "by": "agent"})
+                downgrade = validated and required and verdict == "bad" and shown and rule.get(code) != "bad" and not not_found
+                if (rule.get(code) == "unknown" and verdict in ("ok", "bad") and shown) or downgrade:
+                    if downgrade:
+                        row.setdefault("rule_result", row.get("result"))
+                        row.setdefault("rule_text", row.get("text"))
+                    row.update({"result": result, "text": _text(code, verdict, evidence), "by": "agent", **flags})
                     if code == "open_at":
                         row["open_at"] = verdict
                     changed += 1
             elif code in ADDED and (code, verdict) in TEXT and shown and not any(r.get("row") == code for r in rows):
-                rows.append({"row": code, "result": verdict, "text": _text(code, verdict, evidence), "by": "agent",
-                             "agent": agent})
+                rows.append({"row": code, "result": result, "text": _text(code, verdict, evidence), "by": "agent",
+                             "agent": agent, **flags})
                 changed += 1
         if any(r.get("result") == "bad" for r in rows) and item.get("status") != "review":
             item["status"], item["can_lock"] = "review", False
@@ -175,11 +215,14 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
                 counts["checks"] += 1
                 records.append((item_id, code, verdict, rule, (verdict == rule) if rule is not None else None,
                                 check.get("failure"),
-                                {k: check.get(k) for k in ("why_chosen", "reason", "evidence", "claimed_verdict") if check.get(k)}))
+                                {k: check.get(k) for k in ("why_chosen", "reason", "evidence", "claimed_verdict", "claimed_check",
+                                                           "required") if check.get(k) is not None}))
                 if check.get("failure") is None:
                     counts["used"] += 1
+                    # 근거 검증(`agent.validate_check`)을 통과한 체크다 — 합치기가 필수 bad 로 줄을 내리고 필수 · 선호를 표시한다
                     decided.setdefault(item_id, []).append(
-                        {"check": code, "verdict": verdict, "evidence": _tools_of(check, result.tool_calls)})
+                        {"check": code, "verdict": verdict, "evidence": _tools_of(check, result.tool_calls),
+                         "validated": True, "required": is_required(check)})
         for gap in result.missing:
             counts["missing"] += 1
             records.append((str(gap["item_id"]), gap["check"], None, rule_of.get(str(gap["item_id"]), {}).get(gap["check"]),

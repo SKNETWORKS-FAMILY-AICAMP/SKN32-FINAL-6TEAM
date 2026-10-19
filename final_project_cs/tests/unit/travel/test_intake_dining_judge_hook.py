@@ -31,6 +31,46 @@ def test_a_failing_judge_does_not_raise(monkeypatch):
     assert calls and calls[0]["notes"] == "점심 하동관" and calls[0]["revision"] == 1
 
 
+
+class StateConn:
+    """접수 행 (상태, 판 번호) 하나만 돌려주는 가짜 연결."""
+
+    def __init__(self, row):
+        self.row = row
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def cursor(self):
+        return self
+
+    def execute(self, sql, params=()):
+        assert "FROM trip_intakes" in sql
+
+    def fetchone(self):
+        return self.row
+
+
+def test_without_a_revision_the_current_revision_is_judged(monkeypatch):
+    """`[2026-10-19]` 접수 흐름은 판 번호 없이 부른다 — 먼저 채우기가 만든 2판처럼 **지금 판**을 판정한다."""
+    calls, loaded = [], []
+    monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: lambda *a, **k: calls.append(k))
+    monkeypatch.setattr(pipeline.review_module, "load", lambda conn, t, i, r: loaded.append(r) or {"items": [{"id": "0-0"}]})
+    pipeline._dining_judge(lambda: StateConn(("review", 2)), "t", uuid.uuid4(), [], revision=None)
+    assert loaded == [2] and calls[0]["revision"] == 2
+
+
+def test_without_a_revision_a_registered_or_failed_intake_is_not_judged(monkeypatch):
+    calls = []
+    monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: lambda *a, **k: calls.append(k))
+    monkeypatch.setattr(pipeline.review_module, "load", lambda *a: (_ for _ in ()).throw(AssertionError("판을 읽지 않는다")))
+    for row in (("registered", 2), ("fatal", 1), None):
+        pipeline._dining_judge(lambda row=row: StateConn(row), "t", uuid.uuid4(), [], revision=None)
+    assert calls == []
+
 def test_the_switch_is_on_by_default():
     """`[2026-10-16 사용자 지시]` 기본 켜짐 — 가드레일 값."""
     from app.core.settings import dining_agent_judge

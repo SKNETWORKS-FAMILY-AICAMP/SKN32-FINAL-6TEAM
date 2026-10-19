@@ -81,3 +81,33 @@ def test_a_filled_blank_keeps_the_time_the_customer_wrote(filled):
     view = _send(client, headers, PLAN)
     plain = _item(view, "성수 식당")
     assert plain["place"] is not None and plain["starts_at"] == "15:00"            # 장소만 채우고 고객이 적은 시각은 그대로
+
+
+def test_the_dining_judge_judges_the_filled_revision_not_the_first(filled, monkeypatch):
+    """`[2026-10-19 사용자 지시]` 먼저 채우기가 새 판(2판)을 만들면 요식 판정은 **그 판**을 본다.
+    ☆전에는 판정이 늘 1판을 봤다 — 합치기 직전 「지난 판」으로 막혀(`_stale`) 고객이 보는 판에는 판정이 하나도 안 붙었고,
+      1판에서 장소가 없던 이름 없는 식사(「성수 식당」)는 판정 입력조차 못 됐다."""
+    from functools import partial
+
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+    from app.domains.travel_ops.instances.dining import judge
+    from app.infrastructure.db.session import get_connection
+
+    from .test_intake_dining_judge import ReadingChat
+
+    chat = ReadingChat()
+    monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: partial(judge.run, chat=chat, model="fake"))
+    client, _, _ = _client()
+    headers = _key(client)
+    view = _send(client, headers, PLAN)
+    assert view["revision"] > 1
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT DISTINCT revision, check_code FROM dining.dn_agent_judge WHERE intake_id = %s", (view["intake_id"],))
+        rows = cur.fetchall()
+        cur.execute("DELETE FROM dining.dn_agent_judge WHERE intake_id = %s", (view["intake_id"],))
+        conn.commit()
+    assert {r[0] for r in rows} == {view["revision"]}, rows                        # 채운 판(현재 판)에 남는다
+    assert "_stale" not in {r[1] for r in rows}, rows                               # 지난 판이라 버려진 판정이 없다
+    plain = _item(view, "성수 식당")
+    judged = {i["item_id"]: i for i in chat.plans[0]["items"]}
+    assert plain["id"] in judged and judged[plain["id"]].get("place"), judged      # 채운 식당이 판정 입력에 들어간다
