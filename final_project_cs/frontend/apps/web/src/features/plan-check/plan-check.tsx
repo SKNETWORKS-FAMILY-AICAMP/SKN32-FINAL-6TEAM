@@ -1164,14 +1164,15 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const neighbourOf = (side: -1 | 1) => (dayAt < 0 ? undefined : days[dayAt + side]);
   const placeMarker = useDayMarker(stripBox, markerBox, listDay === "all" ? 0 : dayAt + 1, `${dayStrip}|${days.length}|${language}|${side}|${compact}|${Boolean(inserting)}`);
   useCenterTools(bodyBox, done && !changing);
+  // `[2026-10-19 사용자 지시 — ST4F-614]` Before the first day is 「전체」: the overview swipes on to a day, so day 1 swipes back to it.
   useDayGestures(bodyBox, {
     swipe: dayStrip && !filtering && !inserting,
-    hasPrev: dayAt > 0,
+    hasPrev: dayAt >= 0,
     hasNext: dayAt >= 0 && dayAt < days.length - 1,
     track: () => trackBox.current,
     onPeek: (side, top, edge) => setPeek({ side, top, edge }),
     onProgress: (shift, width) => placeMarker(shift, width),
-    onTurn: (delta) => stepDay(delta, false),
+    onTurn: (delta) => { if (delta === -1 && dayAt === 0) chooseAllDays(); else stepDay(delta, false); },
     overview: listDay === "all",
     onOverviewSwipe: () => {
       // The day whose part of the list is at the top of what shows (the one being looked at).
@@ -1539,6 +1540,10 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
                 {near && <div className={styles.peek} data-side={peek.side} style={{ top: peek.top, ...zoomStyle }} aria-hidden="true" inert>
                   <span className={styles.peekBadge}>{t(`놓으면 ${near.day}일차`, `Let go for day ${near.day}`)}</span>
                   {dayList(near.day, false)}
+                </div>}
+                {peek.side === -1 && dayAt === 0 && <div className={styles.peek} data-side={peek.side} style={{ top: peek.top, ...zoomStyle }} aria-hidden="true" inert>
+                  <span className={styles.peekBadge}>{t("놓으면 전체", "Let go for all days")}</span>
+                  {dayList("all", false)}
                 </div>}
                 {peek.side !== 0 && peek.edge && <p className={styles.edgeNote} data-side={peek.side} style={{ top: peek.top + 28 }} aria-hidden="true">{peek.side === 1 ? t("마지막 날이에요", "Last day") : t("첫날이에요", "First day")}</p>}
                 <div ref={zoomBox} className={styles.dayZoom} data-swap={swap ?? undefined} style={zoomStyle} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setSwap(null); }}>

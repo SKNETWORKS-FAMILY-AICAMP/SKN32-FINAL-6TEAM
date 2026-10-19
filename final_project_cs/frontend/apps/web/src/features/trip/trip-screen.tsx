@@ -318,10 +318,11 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     return () => cancelAnimationFrame(frame);
   }, [instant]);
   // Swiping the plan: the next or previous day; past the last day (or the overview of every day), the chat.
+  // `[2026-10-19 사용자 지시 — ST4F-614]` Before the first day is 「전체」: the overview swipes on to day 1, so day 1 swipes back to it.
   const toChat = useRef(false);
   useDayGestures(bodyBox, {
     swipe: pane === "plan" && !centerOpen,
-    hasPrev: !all && dayAt > 0,
+    hasPrev: !all && dayAt >= 0,
     hasNext: true,
     track: () => (toChat.current ? pagerTrack.current : dayTrack.current),
     onPeek: (side, top, edge) => {
@@ -333,6 +334,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       if (toChat.current && delta === 1) { goPane("chat", true); return; }
       const next = days[dayAt + delta];
       if (next) goDay(next, false);
+      else if (delta === -1 && dayAt === 0) chooseAll();
     },
     overview: all, onOverviewSwipe: () => goDay(mapDay, false),
   });
@@ -589,6 +591,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     </section>;
   };
   const near = peek.side === 0 ? undefined : days[dayAt + peek.side];
+  // Day 1 dragged back: the overview of every day comes in beside it.
+  const nearAll = peek.side === -1 && !all && dayAt === 0;
   const detailLooks: Record<string, PinLook> | undefined = detailStop
     ? Object.fromEntries(mapStops.map((stop, at) => [stop.id, { label: String(at + 1), tone: stop.id === detailStop.id ? "current" : "muted" }]))
     : undefined;
@@ -669,6 +673,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                     onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />
                   <div ref={dayTrack} className={pc.dayTrack} style={listZoom === 1 ? undefined : { zoom: listZoom }}>
                     {near && <div className={pc.peek} data-side={peek.side} style={{ top: peek.top }} aria-hidden="true" inert>{dayList(near)}</div>}
+                    {nearAll && <div className={pc.peek} data-side={peek.side} style={{ top: peek.top }} aria-hidden="true" inert>{days.map(dayList)}</div>}
                     {peek.side !== 0 && peek.edge && <p className={pc.edgeNote} data-side={peek.side} style={{ top: peek.top + 28 }} aria-hidden="true">{peek.side === 1 ? t("마지막 날이에요", "Last day") : t("첫날이에요", "First day")}</p>}
                     <div key={all ? "all" : mapDay} className={pc.page} data-slide={slide ?? undefined}>
                       {all && facts && <EndCard facts={facts} onOpen={() => setCreditsOpen(true)} buttonRef={creditsButton} />}

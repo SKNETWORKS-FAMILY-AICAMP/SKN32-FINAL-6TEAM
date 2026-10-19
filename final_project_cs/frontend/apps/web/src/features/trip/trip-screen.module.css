@@ -101,8 +101,10 @@
 .legBody .legGuess { color: var(--color-warning); }
 
 /* ── The chat pane (the old trip screen's chat, in the sheet) ── */
-.chatPane { position: relative; padding-top: 80px; padding-bottom: 84px; }
-.chatLog { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 12px 14px; }
+/* `[2026-10-19 ST4F-614]` Up and down stay the browser's; a sideways move is the pane's own swipe back to the plan (as on the plan's list, `.sheetBody`). Without it a phone took the
+   sideways move as a pan of its own and cancelled the swipe (`pointercancel`). */
+.chatPane { position: relative; padding-top: 80px; padding-bottom: 84px; touch-action: pan-y pinch-zoom; }
+.chatLog { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 12px 14px; touch-action: pan-y pinch-zoom; }
 .chatContext { flex: none; padding: 8px 12px; border-radius: 10px; background: var(--color-soft); color: var(--color-primary); font-size: 12.5px; line-height: 1.6; }
 .chatContext span { display: block; }
 .message { display: flex; flex-direction: column; align-items: flex-start; }
