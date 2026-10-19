@@ -12,7 +12,7 @@
 
 장소 검색 — 이름·분류로 DB(관광공사 목록 · 요식 원장)와 카카오를 함께 찾고, 앞뒤 일정에서 가까운 순으로 같은 검사를 붙인다.
 ★카카오 값은 저장하지 않는다(약관 — `kakao_local.py`). 이 모듈은 DB 에 아무것도 쓰지 않는다. 고객이 고르면 `edits` 로 **그 여행 전용 장소**로만 들어간다.
-★`[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` **지켜야 하는 것(시험으로 막는다)**: ①후보 · 검색 결과의 `kind` 는 일정의 `kind` 와 **같다** — 맞는 것이 없으면 다른 종류로 채우지 않고 빈 목록 + `no_same_kind`
+★`[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` **지켜야 하는 것(시험으로 막는다)**: ①자동 후보의 `kind` 는 일정의 `kind` 와 **같다** — 맞는 것이 없으면 다른 종류로 채우지 않고 빈 목록 + `no_same_kind`
   ②이름 없는 줄(`needs_choice`)은 줄에 적힌 **지역의 중심 · 반경**에서 같은 종류만 찾는다(앞뒤 일정의 한가운데는 지역이 없을 때만) ③예약했다고 적힌 줄(`needs_name`)은 후보를 권하지 않는다(`booked_needs_name`) —
   이름만 묻는다. 검색은 그대로 쓸 수 있다 ④후보 · 검색 결과 · 현재 장소에 종류 이름(`category`)을 채운다.
 ★사진은 저장하지 않는다 — 관광공사 사진 주소를 부를 때마다 받아 그대로 넘기고 출처 표시를 붙인다(`TourApiPlace.images`).
@@ -1102,13 +1102,16 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
                                content_type_id=current.get("content_type_id"),
                                ref=f"tour:{current['content_id']}" if current.get("content_id") else None))
     found = _dedupe(found, taken)
-    # ★검색 결과도 일정의 종류와 같은 곳만 — 식당 자리를 찾는데 약국 · 공원이 섞이지 않게(맞는 것이 없으면 이유가 `no_same_kind`)
+    # 직접 이름 검색은 고객이 고르는 곳의 실제 종류를 유지한다. 자동 후보의 동종 조건은 바꾸지 않는다.
     before = len(found)
-    found = [p for p in found if (_is_stay_place(p) if (lodging or stay_item) else p.get("kind") == place_kind_of(item))]
+    allowed = {"activity", "dining"} if item["kind"] in ("activity", "dining") else {place_kind_of(item)}
+    found = [p for p in found if (_is_stay_place(p) if (lodging or stay_item) else p.get("kind") in allowed)]
     if stay_item:
         found = [p for p in found if _is_lodging_place(p)]
     if before and not found:
         notes.append("no_same_kind")
+    if not found and kakao is None:
+        notes.append("kakao:unavailable")
     # 이름이 검색어와 정확히 같은 곳 → 검색어로 시작하는 곳 순, 그 안에서 **일정에 맞는 곳**(휴무 · 운영시간 밖이 아닌 곳)이 앞, 같으면 앞뒤 일정에서 가까운 순
     # 평가(DB)할 풀을 고를 때도 출처 순서가 아니라 이름 일치 → 가까운 순으로 먼저 줄 세운다(뒤에 붙은 카카오 결과가 평가도 못 받고 잘리지 않게)
     found.sort(key=lambda p: (0 if normalize_full(p["name"]) == key else 1 if normalize_full(p["name"]).startswith(key) else 2, _score(p, prev, nxt, ref, bool(area))))

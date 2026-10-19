@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 
 from app.domains.travel_ops.components import settings_hook
 from . import progress as progress_module
+from . import screen as screen_module
 from . import reading_prefs
 from . import review as review_module
 from . import survey_answers
@@ -30,6 +31,7 @@ from . import agent_read as agent_module
 from . import schedule_cards
 from .assemble import assemble, effective
 from .catalog_names import with_catalog
+from .landmarks import load_table as load_landmarks
 from .line_parts import lookup_title
 from .rules import read_plan
 from .sources import UnsupportedSource, other_reading, sniff, to_text
@@ -102,12 +104,18 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
         #   읽을 것이 없으니 곧바로 확인 화면 상태(`review`)로 만든다. 그 화면에 「읽은 일정이 없어요 — 대신 짜 드릴까요?」 짜기 칸이
         #   이미 있다. 「짜 달라는 요청」 표시(`trip.plan_request`)는 넣지 않는다 — 고객이 그 칸에서 직접 고른다.
         #   ☆전에는 422 `empty_intake` 로 거절했다. 사람 확인 · 남용 방어 한도는 부르는 쪽이 그대로 적용한다(빈 접수도 한 건).
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, status, stage) VALUES (%s,%s,'review','review') "
-                        "RETURNING intake_id", (tenant_id, customer_id))
-            return cur.fetchone()[0]
+        # ★`[2026-10-19 사용자 결정]` 빠른 거름 — 빈 접수는 `screened: empty` 로 남고 로딩 설문을 내지 않는다(`screen.py`)
+        return _screened_intake(conn, tenant_id=tenant_id, customer_id=customer_id, text="", screened={"code": "empty", "rule": "empty"})
     if len(text) > MAX_TEXT_CHARS:
         raise IntakeRejected("text_too_long", f"글은 {MAX_TEXT_CHARS:,}자까지 받아요")
+    if not files:
+        # ★`[2026-10-19 사용자 결정]` 접수 입구의 빠른 거름 — 여행 단서가 하나도 없는 글은 모델 읽기 전에 바로 「일정 없음」으로 돌려보낸다
+        #   (규칙만 · 모델 호출 0). 애매하면 지금처럼 읽는다 · 파일이 붙으면 거르지 않는다(`screen.py` · 설계서 §5)
+        screened = screen_module.screen(text, has_files=False, place_names=_catalog_names(conn, tenant_id),
+                                        area_keys=_area_keys(conn, tenant_id), landmark_keys=set(load_landmarks().by_alias))
+        if screened is not None:
+            log.info("intake screened code=%s rule=%s", screened["code"], screened["rule"])
+            return _screened_intake(conn, tenant_id=tenant_id, customer_id=customer_id, text=text, screened=screened)
     if len(files) > MAX_FILES:
         raise IntakeRejected("too_many_files", f"파일은 {MAX_FILES}개까지 받아요")
     kinds = []
@@ -142,6 +150,50 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
                          len(data)))
             position += 1
     return intake_id
+
+
+def _screened_intake(conn, *, tenant_id: str, customer_id: UUID, text: str, screened: dict[str, str]) -> UUID:
+    """거른 접수 — 읽지 않고 곧바로 확인 화면 상태(`review`). 원문(글 원본 줄)과 걸린 규칙(`screened`, 907)을 남긴다 — 사후에 오판을 센다.
+    ★907 이 안 올라간 DB 면 규칙 기록 없이 같은 상태로 만든다(경고) — 접수를 막지 않는다."""
+    with conn.transaction(), conn.cursor() as cur:
+        try:
+            with conn.transaction():
+                cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, status, stage, screened) VALUES (%s,%s,'review','review',%s::jsonb) "
+                            "RETURNING intake_id", (tenant_id, customer_id, json.dumps(screened, ensure_ascii=False)))
+        except Exception:                                  # noqa: BLE001 — 907 없음
+            log.warning("intake screened mark not stored (migration 907?)", exc_info=True)
+            cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, status, stage) VALUES (%s,%s,'review','review') "
+                        "RETURNING intake_id", (tenant_id, customer_id))
+        intake_id = cur.fetchone()[0]
+        if text:
+            raw = text.encode("utf-8")
+            cur.execute("INSERT INTO intake_sources (intake_id, tenant_id, position, kind, sha256, size_bytes, transcript) "
+                        "VALUES (%s,%s,0,'chat',%s,%s,%s)", (intake_id, tenant_id, hashlib.sha256(raw).hexdigest(), len(raw), text))
+    return intake_id
+
+
+def _catalog_names(conn, tenant_id: str) -> Callable[[str], bool]:
+    """빠른 거름의 장소 단서 — 우리 장소 표 · 관광공사 목록의 이름이 글 안에 글자 그대로 있나. ★못 읽으면 「있다」(거르지 않는다)."""
+    def has(text: str) -> bool:
+        try:
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM place_catalog WHERE tenant_id=%s AND length(title) >= 2 AND strpos(%s, title) > 0 "
+                            "UNION ALL SELECT 1 FROM places WHERE tenant_id=%s AND length(name) >= 2 AND strpos(%s, name) > 0 LIMIT 1",
+                            (tenant_id, text, tenant_id, text))
+                return cur.fetchone() is not None
+        except Exception:                                  # noqa: BLE001 — 거름은 읽기를 막지 않는다
+            log.warning("intake screen place lookup failed — not screening", exc_info=True)
+            return True
+    return has
+
+
+def _area_keys(conn, tenant_id: str) -> set[str]:
+    """빠른 거름의 지명 단서(지명 사전 열쇠). 못 읽으면 빈 묶음 — 다른 단서로 본다."""
+    try:
+        return set(areas_for(conn, tenant_id).keys())
+    except Exception:                                      # noqa: BLE001
+        log.warning("intake screen area dictionary unreadable", exc_info=True)
+        return set()
 
 
 def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blobs: dict[int, bytes],
@@ -351,6 +403,7 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
         if row is None:
             return None
         status, stage, revision, fatal_code, fatal_detail, trip_id, received_at, reopen_trip, reopen_version, frozen = row
+        raw_status = status
         # 내부 수정은 review 상태가 필요하다. 먼저 채우는 동안 고객에게 완료를 알리지 않는다.
         status = public_status(status, stage)
         cur.execute("SELECT metadata FROM intake_test_scenarios WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
@@ -400,8 +453,19 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "understanding": _understanding(next((c["value"] for c in mine if c["field"] == "reading.agent"), None))})
     if review is not None and test_scenario is not None:
         review = {**review, "test_scenario": test_scenario}
+    # ★`[2026-10-19 사용자 지시]` 로딩 중 질문 — 계획서에서 읽은 칸은 빼고 빈 칸만(상한 없음). 이해 단계 결과(`reading.agent`)가 원본마다 다 나왔거나
+    #   읽기가 끝났으면(확인 화면 · 실패) 둘째 목록을 한 번 정한다(`survey_answers.loading_questions`)
+    agent_rows = {c["source_id"] for c in raw_claims if c["field"] == "reading.agent"}
+    reading_done = raw_status != "reading" or (bool(sources) and all(s["source_id"] in agent_rows for s in sources))
+    # ★`[2026-10-19 사용자 결정]` 빠른 거름에 걸린 접수(`screened`)는 로딩 설문을 내지 않는다 — 웹은 입력 화면으로 되돌린다(고객 글 보존)
+    screened = _screened_mark(conn, tenant_id, intake_id)
+    loading = ({"questions": [], "skipped_by_reading": [], "phase": None} if screened is not None else
+               survey_answers.loading_questions(conn, tenant_id=tenant_id, intake_id=intake_id, reading_done=reading_done,
+                                                found=reading_prefs.carry(raw_claims)))
     return {"intake_id": str(intake_id), "status": status, "stage": stage, "stage_label": STAGES.get(stage, stage),
             "test_scenario": test_scenario,
+            # ★`[2026-10-19]` 빠른 거름 — `{code: empty | off_topic, rule}` 이면 읽지 않고 돌려보낸 접수다(그 밖에는 null)
+            "screened": screened,
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
             # ★`[2026-10-13]` 등록한 여행을 다시 연 수정 접수(`reopen.py`) — 어느 여행의 몇 판인가 · 접수에 넣지 않고 그대로 두는 일정. 보통 접수는 None
@@ -413,11 +477,25 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
             # ★`[2026-10-16 D-025]` 먼저 채운 기록 — 일정마다 「우리가 채움」 + 이유(`filled[].item` = 검사의 일정 id) · 고객에게 물을 것(`questions`)
             "prefill": _prefill_view(next((c["value"] for c in reversed(claims) if c["field"] == "reading.prefill"), None)),
-            # ★`[2026-10-06]` 로딩 중 질문 — 계획서만으로 알 수 없는 것만(쓰는 문항만, 최대 3). 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`)
-            "questions": survey_answers.questions(survey_answers.stored(conn, tenant_id=tenant_id, intake_id=intake_id)),
-            "questions_version": survey_answers.QUESTION_SET_VERSION,
+            # ★`[2026-10-06]` 로딩 중 질문. 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`).
+            #   `[2026-10-19]` 계획서에서 읽은 칸은 빼고(`skipped_by_reading`) 빈 칸만 · 상한 없음 · 두 번에 정한다(`questions_phase`)
+            "questions": loading["questions"], "skipped_by_reading": loading["skipped_by_reading"],
+            "questions_phase": loading["phase"], "questions_version": survey_answers.QUESTION_SET_VERSION,
             "needs_review": [{"field": c["field"], "value": c["value"], "note": c["note"],
                               "evidence": c["evidence"]} for c in claims if c["needs_review"]]}
+
+
+def _screened_mark(conn, tenant_id: str, intake_id: UUID) -> dict[str, Any] | None:
+    """빠른 거름 기록(907). 칸이 없는 DB 면 None(경고) — 그때는 거른 접수가 없다."""
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT screened FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s", (tenant_id, intake_id))
+            row = cur.fetchone()
+    except Exception:                                  # noqa: BLE001
+        log.warning("intake screened mark unreadable intake=%s (migration 907?)", intake_id, exc_info=True)
+        return None
+    value = row[0] if row else None
+    return {"code": value.get("code"), "rule": value.get("rule")} if isinstance(value, dict) else None
 
 
 def _understanding(value: Any) -> dict[str, Any] | None:

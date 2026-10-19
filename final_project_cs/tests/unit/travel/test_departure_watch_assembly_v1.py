@@ -14,7 +14,7 @@ def test_default_case_watch_assembles_current_departure_observer(monkeypatch):
     monkeypatch.setattr(run_sweepers, 'get_settings', lambda: settings)
     monkeypatch.setattr(run_sweepers, '_run_trip_safety', lambda tenant: {})
     monkeypatch.setattr(base, 'build_travel_sources', lambda settings: sources)
-    monkeypatch.setattr(composition, 'build_controller', lambda: SimpleNamespace())
+    monkeypatch.setattr(composition, 'build_controller', lambda **kwargs: SimpleNamespace())
     monkeypatch.setattr(composition, 'build_mobility_departure_observer', lambda a, b: observer)
     class Opener:
         def __init__(self, **kwargs):

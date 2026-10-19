@@ -235,7 +235,13 @@ def unresolved_notice(*, item: Item, causes: list[dict[str, Any]], recheck_faile
     """
     safety = is_safety({"disruptions": causes})
     head = "⚠️ 안전 알림 — " if safety else ""
-    if recheck_failed:
+    departure = item.kind == "mobility" and any(cause.get("category") == "departure_revalidation" for cause in causes)
+    if departure:
+        problem = ("새 이동 경로가 일정 전체 검증을 통과하지 못해" if recheck_failed
+                   else "현재 조건에 맞는 이동 경로를 확인하지 못해")
+        text = f"{head}{item.title} — {_cause_text(causes)}. {problem} 일정은 그대로 두었어요. 출발 전에 경로를 다시 확인해 주세요."
+        kind = "recheck_failed" if recheck_failed else "no_alternate"
+    elif recheck_failed:
         # ★`[2026-10-03]` 바꿀 곳은 찾았는데 **일정 전체를 다시 판정하니** 앞뒤 일정과 안 맞았다(시간 · 이동 · 예산) — 바꾸지 않았다. 원인에 없는 말은 안 붙인다
         text = (f"{head}{item.title} — {_cause_text(causes)}. 바꿀 곳을 찾았지만 일정 전체와 맞지 않아 **일정은 그대로 두었어요.** "
                 "가시기 전에 한 번 확인해 주세요.")
@@ -259,6 +265,12 @@ def _cause_text(causes: list[dict[str, Any]]) -> str:
     """확인된 여러 원인을 빠뜨리지 않는다. 모르는 코드와 근거 없는 값은 쓰지 않는다."""
     texts = []
     for cause in causes:
+        if cause.get("category") == "departure_revalidation":
+            text = ("출발 경로를 확인하는 데 필요한 저장 자료가 없거나 형식이 맞지 않아요"
+                    if cause.get("kind") == "context_missing_or_version" else "출발 경로를 다시 확인해야 해요")
+            if text not in texts:
+                texts.append(text)
+            continue
         if cause.get("category") == "traffic_control" and cause.get("message"):
             text = str(cause["message"])
             end = cause.get("ends_at")

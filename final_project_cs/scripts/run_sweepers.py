@@ -127,7 +127,7 @@ def _in_round(method):
         from app import composition
 
         try:
-            controller = composition.build_controller()
+            controller = composition.build_controller(preload_mobility=False)
         except Exception as exc:
             logger.error("sweeper_composition_failed error_type=%s", type(exc).__name__)
             raise _CompositionFailed() from exc

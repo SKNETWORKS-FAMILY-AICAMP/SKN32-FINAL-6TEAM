@@ -182,6 +182,8 @@ def _parse_dt(v):
 
 def service_day(dt):
     """서울 시각 → (운행일, 운행일 분). 04:00 전은 전날 운행일의 24:xx(45 계약)."""
+    if dt.utcoffset() is not None:
+        dt = dt.astimezone(KST)
     m = dt.hour * 60 + dt.minute
     d = dt.date()
     if m < SERVICE_DAY_START_MIN:
