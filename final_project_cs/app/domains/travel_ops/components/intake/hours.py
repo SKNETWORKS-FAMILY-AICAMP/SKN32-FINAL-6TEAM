@@ -99,8 +99,33 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
     if kind == "activity" and activity_verdict:
         _apply_activity_ledger(conn, tenant_id, core_id, content_id, start, end, out)
     if not out.known:
-        out.why_unknown = _why_unknown(place, kind, content_id)
+        _apply_landmark(place, start, out)
+    if not out.known:
+        out.why_unknown = out.why_unknown or _why_unknown(place, kind, content_id)
     return out
+
+
+def _apply_landmark(place: dict[str, Any], start: datetime, out: HoursFacts) -> None:
+    """⑥ 대표 장소 운영시간 표(`config/seoul_landmarks.yaml`) — 위 자료가 모두 비어 있을 때만. `[2026-10-19 진단 포인트 3]`
+    ☆운영시간 「모름」 상위가 N서울타워 132 · 광장시장 94 · 창덕궁 79 · 청계천 49 였다(첫 검토판 1,770항목). 표의 값은 출처 · 확인 날짜를 붙여 둔 것이고
+    `source="landmark_table"` 로 다른 자료와 구별된다. 「점포마다 다름」(시장)은 값을 만들지 않고 **그 이유**를 모름 대신 보인다."""
+    from .landmarks import hours_attributes, landmark_named
+
+    landmark = landmark_named(place.get("name"))
+    if landmark is None or landmark.hours is None:
+        return
+    day = start.astimezone(_seoul()).date() if start.tzinfo else start.date()
+    attributes, conditions = hours_attributes(landmark, day)
+    if attributes is None:
+        if conditions:
+            out.why_unknown = conditions[0]
+        return
+    # 출처 · 확인 날짜는 읽은 기록(`hours_read`)에 둔다 — 조건 문장(`conditions`)에 넣으면 휴무 줄이 늘 「확인해 주세요」가 된다
+    out.attributes = {**out.attributes, **attributes,
+                      "hours_read": {"source": "landmark_table", "origin": landmark.hours.source, "checked": landmark.hours.checked,
+                                     **({"notes": list(landmark.hours.notes)} if landmark.hours.notes else {})}}
+    out.known, out.source = True, "landmark_table"
+    out.conditions = list(dict.fromkeys([*out.conditions, *conditions]))
 
 
 def _why_unknown(place: dict[str, Any], kind: str, content_id: str | None) -> str:

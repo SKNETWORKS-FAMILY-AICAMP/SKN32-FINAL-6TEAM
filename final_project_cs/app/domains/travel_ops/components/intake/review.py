@@ -107,6 +107,8 @@ def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
         return "none", None                # ★`[2026-10-13]` 등록한 여행의 「장소 없음」 일정을 다시 연 것(`reopen.py`)
     if evidence.get("method") == "nameless":
         return ("needs_name" if evidence.get("booked") is True else "needs_choice"), None
+    if evidence.get("method") == "move_phrase" and value is None:
+        return "none", None                # ★`[2026-10-19]` 이동을 적은 줄(「택시로 이동」) — 방문할 장소가 아니라 장소 없이 둔다(`pipeline._move_rows`)
     if not value or row["place"] is None:
         return "unresolved", None
     if evidence.get("method") == "kakao_nearest":
@@ -119,6 +121,8 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
     evidence = claim.get("evidence") or {}
     title = row["title"] or ""
     if state == "none":
+        if evidence.get("method") == "move_phrase":
+            return _line("place", "unknown", "이동을 적은 줄이라 장소를 찾지 않았어요 · 앞뒤 일정 사이의 이동으로 봐요")
         return _line("place", "unknown", "장소 없이 두었어요 · 운영시간과 이동은 확인하지 않아요")
     if state in NAMELESS_STATES:
         parts = evidence.get("parts") or {}

@@ -1191,6 +1191,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     `dining` `[2026-10-05]` — 요식 원장 이름 조회(`dining/place_lookup.py`, 관광공사 자리와 같은 계약 `find` + `misses`). 식사 항목은 이것이 먼저, 그 밖의 항목은 관광공사 자리 뒤다(`places.resolve`). 없으면(None) 건너뛴다."""
     from .dates import resolve_dates
     from .line_parts import parse as parse_line
+    from .landmarks import read_move
     from .llm_spans import ReadingFailed, label_lines
     from .places import _kind_hits, nearest, normalize, resolve
 
@@ -1324,6 +1325,19 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             # ★이름 없는 줄(종류 + 지역만) — 가게 이름으로 찾지 않는다. 고객이 앞서 이 글을 다른 이름으로 고친 적이 있으면(별칭) 그 이름으로 다시 찾는 옛 길이 먼저다
             # ★`[2026-10-15 숙박예약 점검 LB-01]` 장소는 체크인 · 체크아웃 말을 뺀 말로 찾는다(숙소 줄) — 고객이 이 글을 다른 이름으로 고친 적이 있으면(별칭) 원문 그대로
             query = _lookup_title(item["title"], aliases)
+            # ★`[2026-10-19 진단 포인트 2]` 이동을 적은 말(「택시로 이동」 · 「공항철도 타고 인천공항」)은 방문할 장소가 아니다 — 장소를 찾지 않는다.
+            #   ☆「택시로 이동」이 택시 회사 본사가 됐다. 「따릉이 타고 한강」처럼 끝점이 공항 · 역 · 터미널이 아니면 수단 말만 떼고 목적지를 찾는다
+            move = read_move(query) if normalize(item["title"]) not in (aliases or {}) else None
+            if move is not None and move.is_move:
+                early[index] = _move_rows(index, move, item)
+                send(early[index])
+                nameless.add(index)
+                placed += 1
+                if on_progress is not None:
+                    on_progress("places", placed, titled, index, item["title"])
+                continue
+            if move is not None and move.destination:
+                query = move.destination
             parts = parse_line(query, areas=areas, kind_hint="dining" if item["meal"] else None)
             meal_reference = item["meal"] and re.fullmatch(r"(?:(?:거기|여기|그곳|이곳)(?:서|에서)?\s*(?:식사|밥)?|식사|밥)", query.strip())
             if parts.nameless and not meal_reference and normalize(item["title"]) not in (aliases or {}):
@@ -1393,7 +1407,16 @@ def flag_differing(rows: list[dict[str, Any]], differs: dict[int, dict[str, Any]
 
 
 def _place_kind_hint(item: dict[str, Any]) -> str | None:
-    """장소를 찾을 종류 단서 — 활동 표현은 같은 줄 전체가 아닌 이 항목의 원문에서만 본다."""
+    """장소를 찾을 종류 단서 — 활동 표현은 같은 줄 전체가 아닌 이 항목의 원문에서만 본다.
+
+    ★`[2026-10-19 진단 포인트 2]` **숙소가 먼저다** — 에이전트가 숙소라고 읽었거나(`lodging`) 이 항목의 원문에 숙소 말(호텔 · 숙소 · 체크인 · ○○스테이 …)이
+      있으면 끼니 말이 있어도(「호텔 조식」 · 「롯데호텔 서울 조식」) 장소는 숙소 자료에서만 찾는다. 항목이 식사인지는 따로 남는다(종류 값 줄).
+      ★찾을 말(`lookup_title`)은 체크인 말을 뗀 것이라 여기서는 **원문 제목**을 본다(「노스텔지어 더블재 체크인」).
+      줄 전체(`segment`)는 보지 않는다 — 「체크인 후 경복궁」의 경복궁까지 숙소가 된다."""
+    from .landmarks import is_lodging_text
+
+    if item.get("lodging") or is_lodging_text(item.get("title")):
+        return "lodging"
     if item["meal"]:
         return "dining"
     text = (item.get("segment") or {}).get("text") or item.get("title") or ""
@@ -1467,6 +1490,17 @@ def _fitting(pool: list[dict[str, Any]], title: str, *, meal: bool, activity: bo
     key = normalize_full(title)
     same = [c for c in pool if normalize_full(c["name"]) == key]
     return same or pool
+
+
+def _move_rows(index: int, move: Any, item: dict[str, Any]) -> list[dict[str, Any]]:
+    """이동을 적은 줄(「택시로 이동」 · 「공항철도 타고 인천공항」)의 값 줄 — 장소 값은 비워 두고(찾지 않았다) 수단 · 목적지 원문을 근거에 남긴다. `[2026-10-19]`
+    확인 화면은 「장소 없이 둔」 줄로 보인다(`review.place_state`). 앞뒤 일정 사이 이동 수단으로 옮기는 일은 아직 하지 않는다(에이전트가 읽으면 이동 값 줄로 따로 온다)."""
+    return [{"field": f"items[{index}].place", "value": None, "method": "lookup",
+             "evidence": {"source": "rule", "method": "move_phrase", "line": item["line"], "query": item["title"],
+                          "mode": move.mode, "destination": move.destination},
+             "needs_review": False,
+             "note": f"이동을 적은 말(「{item['title']}」)이라 장소로 찾지 않았다"
+                     + (f" — 끝점 「{move.destination}」은 이동의 도착지로 둔다" if move.destination else "")}]
 
 
 def _nameless_rows(index: int, parts: Any, item: dict[str, Any], rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1638,8 +1672,10 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
                          "evidence": it.title.as_dict(), "needs_review": False, "note": "고객이 말한 출발 위치 — 체류 없음"})
         if it.date_guessed:
             guessed_dates.add(index)
+        # ★`[2026-10-19 진단 포인트 2]` 에이전트가 「숙소」라고 읽은 항목은 장소를 숙소 자료에서만 찾는다(`_place_kind_hint`) — 전에는 식사만 넘기고 숙소를 버렸다
         items.append({"line": it.title.line, "day": it.day, "date": it.date, "title": it.title.text,
-                      "meal": it.kind == "dining", "booked": booked, "segment": segment(it), "start": it.start})
+                      "meal": it.kind == "dining", "lodging": it.kind == "lodging", "booked": booked, "segment": segment(it),
+                      "start": it.start})
     agent_count = len(items)
 
     # 규칙이 읽은 시각 있는 줄 중 에이전트가 빠뜨린 줄

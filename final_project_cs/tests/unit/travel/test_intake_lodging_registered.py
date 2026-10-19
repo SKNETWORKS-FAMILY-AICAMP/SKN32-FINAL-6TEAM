@@ -24,7 +24,7 @@ class LocationConnection:
 
 def test_registered_lodging_uses_next_coordinates_and_nearby_district(monkeypatch):
     import app.core.settings as settings
-    monkeypatch.setattr(settings, 'get_guardrails', lambda: SimpleNamespace(get=lambda key: True))
+    monkeypatch.setattr(settings, 'get_guardrails', lambda: SimpleNamespace(get=lambda key: 15000 if key.endswith('radius_m') else True))
     asked=[]
 
     def rank(**kwargs):

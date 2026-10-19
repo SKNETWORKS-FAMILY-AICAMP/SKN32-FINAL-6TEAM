@@ -126,5 +126,6 @@ supersedes: program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md §0 「�
 | 6-A. 성향 · 조건 → 담당 열쇠 | 됨(`[2026-10-16 후속]` 매니저 브랜치만, x600 서버 배포 안 함) — 접수 → 등록 · 일정 짜기 두 길 모두. 빈 자리에만 채우고 `filled_by_reading` 에 남긴다. 확인 화면 `check.handoff` → 웹 「담당에 넘겨요」 | `intake/reading_prefs.py` · `entry/trip_api.py` `_with_reading` · `planning/planner.py` `day_bounds` · `planning/survey.py` · `itinerary/itinerary_quality.py` · 웹 `features/plan-check/parts.tsx` |
 | 7. 고객 선호 장부 | 자리만 — 성향 · 조건은 읽은 값 줄(`reading.agent`)에 근거 인용과 함께 남고, 따로 쌓는 장부(날짜 · 적용 기간 · 고객이 지우기)는 만들지 않았다 | — |
 | DB | 값 줄 방법 이름 `llm_agent` 를 받게 제약을 넓혔다(없으면 접수가 「읽기 실패」가 된다) | `app/infrastructure/db/migrations/905_intake_claims_llm_agent.sql` |
+| 3-A. 장소는 종류 먼저 `[2026-10-19]` | 격리 사본 구현 · 커밋 전(commit 세션 전달) · 세 서버 배포 안 함 — 에이전트가 읽은 `lodging` 을 버리지 않고 넘겨 숙소는 숙소 자료에서만 찾고, 원문 글자로 확인되는 숙소 말 · 이동 말 · 대표 장소 정답표 · 시장 구역을 장소 찾기 앞에서 본다. 장소 해석 순서는 「고객 별칭 → **종류 · 정답표** → 정확 → 자모 오타 → 카카오 · 관광공사」. [기록](../../final_project_cs/wiki/records/reports/2026-10-19_place-kind-first.md) | `intake/landmarks.py` · `config/seoul_landmarks.yaml` · `intake/places.py` · `intake/pipeline.py` |
 
 스위치: 가드레일 `travel.intake_reader` — `mode`(on · shadow · off, 운영 설정 같은 이름이 먼저) · `prefill`(on · off) · `chunk_chars` · `num_predict`.

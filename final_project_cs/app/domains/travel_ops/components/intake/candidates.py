@@ -402,12 +402,40 @@ def _team_lodging_places(conn, tenant_id: str, review: dict[str, Any], item: dic
         return None
     if got is None:
         return None
+    # ★`[2026-10-19 진단 포인트 2]` 같은 도시 · 반경 안만 — 숙소 비교 검색은 이름만으로 찾으면 다른 도시를 낸다(☆서울 호텔 대신 268km 광주 호텔).
+    #   팀 답을 받는 이 입구에서 서울 사각 밖 · 기준점에서 반경(`travel.candidates.lodging_team_radius_m`) 밖을 버린다(부르는 쪽 어느 길로 와도 같은 거르기).
+    #   남는 것이 없으면 None — 팀이 답하지 못한 것으로 보고 자체 고르기(관광공사 숙박 목록 · 반경 안)로 간다
+    kept = [(rank, alt) for rank, alt in enumerate(got["alternatives"]) if _stay_in_range(alt, anchor)]
+    if len(kept) < len(got["alternatives"]):
+        log.info("lodging alternatives: dropped %d of %d outside Seoul or radius", len(got["alternatives"]) - len(kept), len(got["alternatives"]))
+    if not kept:
+        return None
     # 고르면 화면이 `edits` 로 이 값을 보낸다 — 출처는 고른 장소가 받는 값(`search`)으로 싣는다(서버는 `customer_pick` 으로 적는다)
     return [{**_place(alt["name"], alt["latitude"], alt["longitude"], "search", kind="activity",
                       category=category_label(LODGING_TYPE), content_type_id=LODGING_TYPE),
              "basis": "lodging", "team_rank": rank, "offer": {"source": alt.get("source"), "price_per_night": alt.get("price_per_night"),
                                                               "rating": alt.get("rating"), "link": alt.get("link")}}
-            for rank, alt in enumerate(got["alternatives"])]
+            for rank, alt in kept]
+
+
+def _lodging_team_radius_m() -> float:
+    """숙소 팀 후보를 받는 반경(m) — 가드레일 `travel.candidates.lodging_team_radius_m`(근거는 그 설정의 주석)."""
+    from app.core.settings import get_guardrails
+
+    return float(get_guardrails().get("travel.candidates.lodging_team_radius_m"))
+
+
+def _stay_in_range(alt: dict[str, Any], anchor: tuple[float, float] | None) -> bool:
+    """숙소 후보가 서울 안이고(서울 사각 · `trip_here.SEOUL_BOX`) 기준점이 있으면 그 반경 안인가. 좌표가 없으면 받지 않는다(지도에 못 올린다)."""
+    from app.domains.travel_ops.components.conversation.trip_here import SEOUL_BOX
+
+    lat, lon = alt.get("latitude"), alt.get("longitude")
+    if lat is None or lon is None:
+        return False
+    lat_min, lat_max, lon_min, lon_max = SEOUL_BOX
+    if not (lat_min <= float(lat) <= lat_max and lon_min <= float(lon) <= lon_max):
+        return False
+    return anchor is None or distance_m(float(lat), float(lon), anchor[0], anchor[1]) <= _lodging_team_radius_m()
 
 
 def _experience_places(conn, tenant_id: str, ref: tuple[float, float], group: str, now: datetime, *,
