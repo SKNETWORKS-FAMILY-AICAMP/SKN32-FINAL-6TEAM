@@ -42,6 +42,7 @@ class EditOp:
     title: str | None = None
     item_kind: str | None = None     # 넣기: activity · dining
     reflow: bool = False             # 명시된 시각을 지키며 같은 날 뒤 일정을 맞춘다
+    end_said: bool = False           # 넣기: 끝 시각을 고객이 말했나(아니면 `DEFAULT_STAY` 로 채운 값 — 못 찾음 카드에 미리 채우지 않는다)
 
 
 class EditRefused(Exception):
@@ -72,6 +73,28 @@ def _refusal(code: str, message: str) -> str:
     if code in ("lock_with_changes", "locked_item", "item_locked"):
         return "고정한 일정이라 바꾸지 않았어요. 「○○ 고정 풀어줘」라고 먼저 말씀해 주세요."
     return f"일정을 바꾸지 못했어요 — {message}"
+
+
+def pick_card(ops: list[EditOp], code: str, message: str = "") -> dict[str, Any] | None:
+    """`[2026-10-19 사용자 결정 — 못 찾은 장소는 직접 고르기로 수정 · 추가 모드에 넘긴다]` 장소를 못 찾아 거절했을 때 화면이 넘길 곳.
+
+        바꾸기(「○○로 바꿔 줘」)  → `mode: "change"` + 그 일정 id — 화면은 「일정 수정」과 같은 전환으로 수정 모드를 그 일정이 골라진 채 연다
+        넣기(「○○ 넣어 줘」)      → `mode: "add"` + 미리 채울 값 — 화면은 수정 모드의 일정 추가 칸을 연다
+
+    ★미리 채우는 값은 채팅 고치기가 쓰려던 값뿐이다(지어내지 않는다). 끝 시각은 고객이 말했을 때만 — 기본 머무는 시간(`DEFAULT_STAY`)으로 채운 끝은 싣지 않는다.
+    ★후보는 싣지 않는다 — 수정 모드에는 그 일정의 후보 · 검색이 이미 있다. 장소를 못 찾은 거절이 아니면 None."""
+    if code != "place_not_found":
+        return None
+    named = [o for o in ops if o.kind in ("add", "place")]
+    op = next((o for o in named if o.place_name and f"「{o.place_name}」" in message), named[0] if named else None)
+    if op is None:
+        return None
+    base = {"query": op.place_name, "blocked": "막혀" in message, "actions": ["pick_myself"]}
+    if op.kind == "place":
+        return {"mode": "change", "item_id": str(op.item_id) if op.item_id else None, "prefill": {}, **base}
+    prefill = {"title": op.title or op.place_name, "date": op.date, "starts_at": op.starts_at,
+               "ends_at": op.ends_at if op.end_said else None, "kind": op.item_kind}
+    return {"mode": "add", "item_id": None, "prefill": {k: v for k, v in prefill.items() if v}, **base}
 
 
 def run(*, store: Any, connect: Callable[[], Any], tenant: str, customer_id: UUID, trip_id: UUID, base_version: int,
@@ -137,8 +160,11 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
                 from app.domains.travel_ops.components.intake.places import resolve
 
                 with connect() as conn:
-                    found = resolve(op.place_name or "", our_places=pipeline._our_places(conn, tenant, trip_id=trip_id), tour=tour,
-                                    kakao=kakao, dining=dining)
+                    ours = pipeline._our_places(conn, tenant, trip_id=trip_id)
+                    found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining)
+                    if found.status != "resolved" and found.blocked:
+                        # ★`[2026-10-19 사용자 결정]` 조회가 막혀서 못 찾은 것은 고객에게 돌려주기 전에 **한 번** 더 찾는다(없는 곳이라서 못 찾은 것은 다시 찾지 않는다)
+                        found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining)
                 if found.status != "resolved":
                     raise EditRefused("place_not_found", _refusal("place_not_found", found.note or "찾지 못함"))
                 op.item_kind = "dining" if found.kind == "dining" else "activity"
@@ -565,7 +591,7 @@ def _read_adds(message: str, read_plan: Callable[[str, Any], Any], *, stops: lis
             continue
         _same_day(when, it.start, end.strftime("%H:%M"), title)
         ops.append(EditOp("add", date=when, starts_at=it.start, ends_at=end.strftime("%H:%M"), place_name=title, title=title,
-                          item_kind="dining" if it.kind == "dining" else "activity"))
+                          item_kind="dining" if it.kind == "dining" else "activity", end_said=bool(it.end and it.end > it.start)))
     return ops
 
 

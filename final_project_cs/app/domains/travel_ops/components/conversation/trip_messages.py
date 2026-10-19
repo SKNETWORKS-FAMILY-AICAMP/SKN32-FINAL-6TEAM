@@ -366,7 +366,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             reply = (case.get("state_json") or {}).get("chat_reply") or {}
             return {"status": "duplicate", "case_id": str(existing[0]),
                     "case_status": str(case["status"]),
-                    **{k: v for k, v in reply.items() if k in ("choices", "choices_title", "more", "answer_web")},
+                    **{k: v for k, v in reply.items() if k in ("choices", "choices_title", "more", "answer_web", "pick")},
                     "answer": f"같은 요청을 이미 받았어요.{chr(10) + str(before) if before else ''}"}
         from app.domains.travel_ops.components.conversation.case_dispatch import resume_pending
         try:
@@ -1039,7 +1039,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
     status = outcome.get("status")
-    chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more") if k in outcome}
+    chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more", "pick") if k in outcome}
     if outcome.get("text_web"):
         chat_reply["answer_web"] = outcome["text_web"]
     if action in ("arrive_item", "complete_item", "advance_trip") and status in ("adjusted", "already_applied") and item is not None:
@@ -1072,6 +1072,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                  **({"more": outcome["more"]} if outcome.get("more") else {}),
                  **({"needs_location": True} if outcome.get("needs_location") else {}),
                  **({"choices_title": outcome["choices_title"]} if outcome.get("choices_title") else {}),
+                 # ★`[2026-10-19 사용자 결정]` 장소를 못 찾았을 때 「직접 고르기」 카드 — 화면이 수정 모드 · 일정 추가 칸으로 넘긴다(`chat_edit.pick_card`)
+                 **({"pick": outcome["pick"]} if outcome.get("pick") else {}),
                  # ★`[2026-09-29 ui 세션 요청]` 웹은 목록을 버튼으로 또 그려 두 번 보였다 — 웹 입구는 이 판을 `answer` 로 쓴다
                  **({"answer_web": outcome["text_web"]} if outcome.get("text_web") else {}),
                  **({"basis": basis} if basis else {})})

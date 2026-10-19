@@ -372,6 +372,7 @@ class TripDesk:
         action = getattr(decision, "action", None)
         with self._connect() as conn:
             trip, items = self.store.latest(conn, trip_id)
+        ops: list[Any] = []                 # 고칠 것을 읽기 전에 거절되면(「어느 일정이요?」) 못 찾음 카드도 없다
         try:
             ops, what = chat_edit.ops_for(decision, items=items, now=now, message=message or "", read_plan=self._read_plan())
             area_text = str(raw.get("place_text") or "").strip()
@@ -397,8 +398,11 @@ class TripDesk:
             requested = str(raw.get("destination_text") or "").strip()
             choices = ([{"label": requested + " (위치 확인 필요)", "message": requested + " 지점을 확인해 줘"}]
                        if requested and refused.code in ("place_not_found", "intake_incomplete") else [])
+            # ★`[2026-10-19 사용자 결정]` 장소를 못 찾았으면 「직접 고르기」 카드 — 화면이 수정 모드(바꾸기) · 일정 추가 칸(넣기)으로 넘긴다
+            pick = chat_edit.pick_card(ops, refused.code, refused.message)
             return {"status": status, "text": refused.message, "reason": refused.code,
-                    **({"choices": choices, "choices_title": "요청하신 장소"} if choices else {}), **refused.detail}
+                    **({"choices": choices, "choices_title": "요청하신 장소"} if choices else {}),
+                    **({"pick": pick} if pick else {}), **refused.detail}
         if not done["changed"]:
             return {"status": "already_applied", "text": "말씀하신 대로 이미 되어 있어 일정은 바꾸지 않았어요.", "reason": "unchanged"}
         with self._connect() as conn:

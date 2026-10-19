@@ -340,3 +340,27 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 `[2026-10-17 통합 회귀 보완]` 원문이 「호텔」처럼 일반 숙소 표현인 항목은 최초 자동 채움 뒤에도 같은 숙소 이름의 숙소·숙소 안 식사 후보 짝을 유지한다. 실제 체크인~체크아웃 숙박 항목(`kind: lodging`)에는 식사 짝을 붙이지 않는다. 숙소 안 식당의 존재를 확인한 것으로 표현하지 않는다. [원인·검증 기록](../../records/reports/2026-10-17_1835_lodging-meal-pairs.md).
 
 `[2026-10-17 실제 새 예시 후속 보완 계약]` 첫 회차에서 숙소를 채우지 못했더라도 다른 식당·활동 장소를 채워 실제 접수 판이 바뀌면, 미해결 숙소 빈칸만 다음 회차에 재검토한다. 장소 확정으로 전체 동선과 숙소 후보가 바뀌기 때문이다. 같은 판·같은 실패를 되풀이하지 않으며, 전체 최대 2회·후보 수·이동 계산 상한은 유지한다. 최종 요약은 빈칸별 마지막 시도만 사용하고 이전 실패도 전체 제안·회차 기록에 보존한다. 운영 기록에만 남기는 회차의 `retried_gaps`는 동선 변경 뒤 다시 본 숙소 빈칸이며, 새로 생긴 빈칸(`new_gaps`)과 구분한다. 전체 제안·회차 원본은 기존처럼 고객 응답에 싣지 않는다. 구현·검증·운영 재확인 상태는 [후속 기록](../../records/reports/2026-10-17_lodging-route-retry.md)을 따른다.
+
+### 장소를 못 찾았을 때 — 후보 보이고 묻기 + 직접 고르기 `[2026-10-19 사용자 결정]`
+
+결정 · 근거: [처리 확인 기록](../../records/reports/2026-10-19_계획읽기_종류모름_처리확인.md) 「사용자 결정」 · [설계](../../records/plans/2026-10-19_못찾은장소_후보와_직접고르기_설계.md). 화면은 화면 담당 세션 몫이다.
+
+**계획 확인 화면 — `GET /v1/web/trip-intakes/{id}` 의 `prefill`** (먼저 채운 기록 `{filled[], questions[], kept[]}` — 로딩 중 설문 `questions[]` 와 다른 칸이다)
+- 장소를 못 찾은 줄(`place_state: unresolved`)은 `prefill.questions[]` 에 이 모양으로 들어간다(다른 질문 — 첫날 · 숙소 이름 · 범위 — 과 같은 목록, 한 번에 보인다):
+  `{kind: "place_not_found", question, quote, item, source_id, index, mode: "change", actions: ["pick_candidate", "pick_myself", "no_place"], blocked}`
+  - `item` = 검사의 일정 id(`items[].id`), `source_id` · `index` = 후보 · 검색 · 고치기에 쓰는 열쇠.
+  - **후보는 여기에 없다** — 화면이 `GET …/candidates?source_id=&index=` 로 받는다(1~3, 같은 검사 · 같은 순서). 장소 이름 · 좌표는 자료에 있는 곳만이다.
+  - 단추: `pick_candidate` → `POST …/edits` 의 `items[n].place` 에 고른 후보를 그대로(`{name, latitude, longitude, source, kind?, content_id?}`) · `pick_myself` → 그 줄의 장소 바꾸기 · 장소 검색(`GET …/place-search`)을 연다 — **화면 전환 없음**(계획 확인 화면이 곧 수정 화면) · `no_place` → `{"none": true}`.
+  - `blocked: true` — 장소 조회가 막혀(한도 · 시간 초과 · 연결 실패) 못 찾은 줄을 **한 번 다시 찾았는데도** 못 찾았다. 질문 문장이 그 사실을 말한다.
+- 조회가 막혀서 못 찾은 줄은 묻기 전에 서버가 **한 번** 다시 찾는다. 찾으면 질문 대신 `prefill.filled[]` 에 `{item, title, owner: "refind", owner_label: "장소 다시 찾기", reason: "장소 조회가 막혀 못 찾았던 곳을 다시 찾아 채웠어요", gap: "place_not_found", new: false}` 로 남는다(「우리가 채움」 표시). 막힘 없이 못 찾은 줄(지도에 없는 곳)은 다시 찾지 않는다.
+
+**여행 화면 채팅 — `POST /v1/web/trips/{id}/messages` 답의 `pick`**
+- 채팅으로 장소를 바꾸거나(「○○로 바꿔 줘」) 넣으려다(「○○ 넣어 줘」) 이름을 못 찾으면(`status: "edit_refused"`, `reason: "place_not_found"`) 거절 문장과 함께 `pick` 이 실린다:
+  `pick = {mode: "change" | "add", item_id, query, prefill, blocked, actions: ["pick_myself"]}`
+  - `mode: "change"` — `item_id` = 바꾸려던 일정. 화면은 「일정 수정」과 같은 전환으로 **수정 모드를 그 일정이 골라진 채** 연다(`query` 를 장소 검색 칸에).
+  - `mode: "add"` — `item_id: null`. 화면은 수정 모드로 넘어가며 **일정 추가 칸**을 열고 `prefill`(`title` · `date` · `starts_at` · `ends_at`? · `kind`?)을 미리 채운다. 값은 채팅 고치기가 쓰려던 것뿐이고, `ends_at` 은 고객이 끝 시각을 말했을 때만 있다(기본 머무는 시간으로 채운 끝은 싣지 않는다).
+  - 채팅 카드에는 후보가 없다 — 수정 모드에 그 일정의 후보 · 검색이 이미 있다.
+  - 대화 기록(`GET …/chat` 의 `turns[].reply.pick`)과 같은 요청 되풀이(`status: "duplicate"`) 답에도 실린다.
+  - 「○○로 바꿔 줘」를 못 찾아 요청 목적지를 「위치 확인 필요」로 남기는 길(`requested_destination`)이 처리한 답에는 `pick` 이 없다(그 결과를 그대로 돌려준다).
+- 넣기의 종류를 정하려고 이름을 찾을 때 조회가 막혔으면 서버가 한 번 더 찾는다.
+- 등록 전 확인 화면에서 **대화로** 고르기는 아직 없다 — 확인 화면에 채팅 입구가 없다. D-026 2단계(대화와 계획서를 같은 고리로)에서 연다.
