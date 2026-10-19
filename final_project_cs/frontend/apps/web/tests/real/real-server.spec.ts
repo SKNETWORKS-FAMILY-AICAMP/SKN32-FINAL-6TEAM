@@ -92,7 +92,7 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
 
   // 내 여행: 같은 브라우저(같은 키)로 첫 화면에 돌아오면 방금 만든 여행이 카드에 있다
   await page.goto("/");
-  await expect(page.getByRole("region", { name: "내 여행", exact: true }).getByRole("link").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "최근 여행", exact: true }).getByRole("link").first()).toBeVisible();
   await page.goto(`/trips/${tripId}`);
   await expect(tripScreen(page)).toBeVisible();
 

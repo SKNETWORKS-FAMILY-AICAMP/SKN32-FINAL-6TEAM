@@ -111,8 +111,8 @@ export function SocialAccounts() {
       </div>}
 
       {(session?.kind !== "member" || loginOnly) && <div className={styles.row}>
-        <p className={styles.explain}>{t("계정으로 계속하면 기존 계정은 로그인되고, 처음이면 필수 약관 동의 후 가입이 완료돼요. 지금 작성한 일정과 이 기기의 게스트 여행도 함께 보관돼요.", "Continue with an account to sign in, or finish signing up after agreeing to the required terms. Your current plan and this device's guest trips will be kept together.")}</p>
-        <ul className={styles.providers} aria-label={t("계정으로 계속하기", "Continue with an account")}>{providers.data.map((provider) =>
+        <p className={styles.explain}>{t("이미 계정이 있으면 로그인되고, 처음이면 필수 약관에 동의한 뒤 새 계정이 만들어져요. 지금 작성한 일정과 이 기기의 게스트 여행도 함께 계정에 담겨요.", "If you already have an account you sign in; if you are new, an account is made after you agree to the required terms. Your current plan and this device's guest trips go into the account.")}</p>
+        <ul className={styles.providers} aria-label={t("로그인 방법", "Sign-in methods")}>{providers.data.map((provider) =>
           <li key={provider} data-provider={provider} className={styles.brandRow}><ProviderButton provider={provider} disabled={busy} onClick={() => start(provider, "login")} /></li>)}</ul>
       </div>}
       {waiting && TURNSTILE_SITE_KEY && <HumanCheck onToken={setToken} resetKey={checkRound} />}

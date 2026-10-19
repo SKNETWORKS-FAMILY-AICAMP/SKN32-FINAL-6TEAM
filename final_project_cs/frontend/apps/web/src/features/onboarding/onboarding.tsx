@@ -218,7 +218,7 @@ export function Onboarding({ termsRequired = false, signupRequired = false, retu
   function complete() {
     setState((current) => ({ ...current, complete: true, open: 2 }));
     feedback("complete");
-    setMessage(t("여행 취향 설정을 완료했어요.", "Your preferences are complete."));
+    setMessage(t("여행 취향 설문을 마쳤어요.", "Survey finished."));
   }
 
   const expanded = state.open !== null;
@@ -259,7 +259,7 @@ export function Onboarding({ termsRequired = false, signupRequired = false, retu
                 {savingConsents && <p role="status">{t("동의를 저장하고 있어요…", "Saving your consent…")}</p>}
                 {consentError && <p role="alert">{consentError}</p>}</>)}
             {showSurvey && card(2, state.complete,
-              cardHead(2, t("여행 취향 알아보기", "Your travel preferences"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문으로 더 나다운 여행.`, `${questions.length} questions for a trip that fits you.`), !state.agreed, state.complete),
+              cardHead(2, t("여행 취향 설문", "Travel preferences survey"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문 · 건너뛰어도 돼요`, `${questions.length} questions · skip any`), !state.agreed, state.complete),
               state.complete
                 ? <PreferencesSummary t={t} answers={state.answers} hasTrip={Boolean(latestTrip)}
                   onJourney={() => router.push(latestTrip ? routes.trip(latestTrip.id) : routes.newTrip)}

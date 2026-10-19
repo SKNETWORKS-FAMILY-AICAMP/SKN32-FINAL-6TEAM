@@ -41,7 +41,7 @@ export const options: Record<ChoiceKey, readonly Option[]> = {
   party: [["alone", "혼자", "Solo"], ["partner", "연인", "Partner"], ["friends", "친구", "Friends"], ["family", "가족", "Family"], ["other", "기타", "Other"]],
   indoorDining: indoorOutdoor,
   indoorActivity: indoorOutdoor,
-  onDisruption: [["replace", "비슷한 곳으로 바꿔줘", "Swap in something similar"], ["ask_first", "먼저 물어봐줘", "Ask me first"]],
+  onDisruption: [["replace", "비슷한 곳으로 바꿔 주세요", "Switch to something similar"], ["ask_first", "먼저 물어봐 주세요", "Ask me first"]],
   pace: [["relaxed", "여유롭게", "Relaxed"], ["moderate", "적당히", "Balanced"], ["packed", "꽉 차게", "Packed"]],
 };
 
@@ -96,10 +96,10 @@ export const questions: readonly Question[] = [
   },
   {
     id: "onDisruption", name: ["일정 변경 방식", "When plans change"], fields: ["onDisruption"], answered: (a) => Boolean(a.onDisruption),
-    title: ["갑자기 일정이 꼬이면 어떻게 했으면 좋겠어요?", "If plans suddenly go wrong, what should we do?"], helper: ["일정을 바꿔야 하는 일이 생겼을 때의 방식을 정해요.", "Choose how we handle it when something forces a change."],
+    title: ["일정에 문제가 생기면 어떻게 할까요?", "If something goes wrong, what should we do?"], helper: ["일정을 바꿔야 하는 일이 생겼을 때의 방식을 정해요.", "Choose how we handle it when something forces a change."],
   },
   {
-    id: "pace", name: ["여행 여유", "Your pace"], fields: ["pace"], answered: (a) => Boolean(a.pace),
+    id: "pace", name: ["하루 일정의 여유", "How full a day is"], fields: ["pace"], answered: (a) => Boolean(a.pace),
     title: ["여행할 때 어느 정도 여유가 좋으세요?", "How much breathing room do you like?"], helper: ["하루에 담을 일정의 양을 정할 때 쓰여요.", "We use this to decide how much to fit into each day."],
   },
 ];

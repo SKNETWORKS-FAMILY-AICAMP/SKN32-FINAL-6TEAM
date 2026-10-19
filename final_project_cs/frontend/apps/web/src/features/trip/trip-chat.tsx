@@ -213,7 +213,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.ask(t(`${selected.date} ${selected.time} ${selected.title} 다음 일정을 알려 주세요.`, `What comes after ${selected.title} on ${selected.date} at ${selected.time}?`))}>{t("다음 일정", "Next stop")}</button>
       <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 예약 표시를 알려 주세요.`, `Show booking notes for ${day}.`))}>{t("예약 표시", "Booking notes")}</button>
     </div>
-    <p className={styles.chatNote}>{t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")}</p>
+    <p className={styles.chatNote}>{t("채팅으로 일정을 바꾸면 여행계획서에 새 판이 생겨요. 숙소 · 항공 · 예약한 일정은 채팅으로 바꾸지 않아요 — 「일정 수정」에서 고쳐 주세요.", "Changes made in chat create a new version of your trip plan. Lodging, flights and booked stops are not changed from chat — use “Edit itinerary”.")}</p>
   </>;
 }
 

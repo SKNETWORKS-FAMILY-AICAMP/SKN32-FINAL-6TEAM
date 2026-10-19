@@ -16,7 +16,7 @@ test.beforeEach(async ({ page, request }) => { await mockServer(request).reset()
 // `[2026-10-03 user decision]` The recovery email is gone; the first card of the start screen asks only for the Discord webhook.
 const alertsHead = (page: Page) => page.getByRole("button", { name: /디스코드 알림/ });
 const termsHead = (page: Page) => page.getByRole("button", { name: /약관 동의/ });
-const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행 취향 알아보기/ });
+const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행 취향 설문/ });
 const webhook = (page: Page) => page.getByRole("textbox", { name: "디스코드 웹훅 URL" });
 const WEBHOOK_ERROR = "디스코드 웹훅 주소를 확인해 주세요. 예: https://discord.com/api/webhooks/…";
 const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";   // the server's rule: a 20–120 char token
@@ -52,7 +52,7 @@ async function skipPreferencesAndRegister(page: Page) {
     await skip.click();
     if (question < 5) await expect(page.locator(`#question-title-${question + 1}`)).toBeFocused();
   }
-  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 취향 설문을 마쳤어요", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await sendPlan(page);

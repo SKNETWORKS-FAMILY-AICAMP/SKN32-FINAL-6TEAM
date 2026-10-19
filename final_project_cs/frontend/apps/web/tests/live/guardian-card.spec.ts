@@ -24,7 +24,7 @@ test("「계획 확인하기」를 누르면 읽기 전에 항로 지킴이 카�
   await expect(card(page)).toContainText("되돌릴 수 있어요.");
   await expect(card(page)).toContainText("끄고 진행하면 문제가 생길 때 먼저 물어봐요.");
   await expect(card(page)).toContainText("켜 두어도 고정한 일정은 먼저 물어봐요.");
-  await expect(card(page)).toContainText("재난·지진이 나면 일정을 멈추고, 가까운 대피 장소와 안전 안내를 보내요.");
+  await expect(card(page)).toContainText("재난·지진이 나면 항로 지킴이를 꺼 두어도 일정을 멈추고, 가까운 대피 장소와 안전 안내를 보내요.");
   await expect(card(page)).toContainText("켠 뒤에도 언제든 화면 위 아이콘에서 끌 수 있어요.");
   // 주 단추 둘은 크기가 같고 44px 이상이다
   const on = await card(page).getByRole("button", { name: "켜고 진행" }).boundingBox();

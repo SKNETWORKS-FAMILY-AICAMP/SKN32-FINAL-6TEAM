@@ -26,8 +26,8 @@ for (const width of [375, 1280]) {
     await page.getByLabel("일정 이름", { exact: true }).fill("저녁 식사");
     await capture("add-stop");
     await page.goto("/mypage/account");
-    await expect(page.getByRole("list", { name: "계정으로 계속하기" })).toBeVisible();
-    await page.getByRole("list", { name: "계정으로 계속하기" }).scrollIntoViewIfNeeded();
+    await expect(page.getByRole("list", { name: "로그인 방법" })).toBeVisible();
+    await page.getByRole("list", { name: "로그인 방법" }).scrollIntoViewIfNeeded();
     await capture("account");
   });
 }

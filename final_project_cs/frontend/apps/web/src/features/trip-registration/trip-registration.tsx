@@ -45,14 +45,14 @@ function Preferences() {
   //   this browser, so this shows only when the questions were never finished.
   if (!complete) return <><div className={styles.preferences}>
     <Eyebrow>{t("여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
-    <p>{t("취향 설문을 마치지 않아서 이번 등록에는 취향이 반영되지 않아요. 메뉴의 「여행 취향 설문」에서도 설정할 수 있어요.", "The preference questions are not finished, so this registration goes without them. You can also set them from “Travel preferences survey” in the menu.")}</p>
-    <p><ButtonLink href={routes.start}>{t("취향 설정하기", "Set my preferences")}</ButtonLink></p>
+    <p>{t("여행 취향 설문을 하지 않아 이번 여행은 설문 답 없이 등록돼요. 「하루 일정의 여유」와 항로 지킴이 선택은 그대로 함께 보내요. 설문은 메뉴의 「여행 취향 설문」에서 할 수 있어요.", "You haven’t taken the travel preferences survey, so this trip goes without its answers. How full a day is and your Course Keeper choice still go with it. The survey is under “Travel preferences survey” in the menu.")}</p>
+    <p><ButtonLink href={routes.start}>{t("여행 취향 설문 하기", "Take the survey")}</ButtonLink></p>
   </div><hr /></>;
   const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
   return <><div className={styles.preferences}>
-    <Eyebrow>{t("함께 고른 여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
+    <Eyebrow>{t("여행 취향 설문", "TRAVEL PREFERENCES SURVEY")}</Eyebrow>
     <div className={styles.tags}>{answers.theme && <span className={styles.pill}>{labels[answers.theme]}</span>}{answers.party && <span className={styles.pill}>{partyLabel(answers, t)}</span>}</div>
-    <p>{t("홈에서 고른 취향을 이 여행과 함께 이어가요.", "The preferences you chose stay with this journey.")}</p>
+    <p>{t("설문 답을 이 여행에 함께 보내요.", "Your survey answers go with this trip.")}</p>
   </div><hr /></>;
 }
 
@@ -372,8 +372,8 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   );
 
   return <>
-    <PageHeading eyebrow="A PLAN THAT FEELS LIKE YOU" title={t("이제, 여행을 담아볼까요?", "Let’s put your trip together.")}
-      description={t("준비한 계획을 그대로 붙여 넣어 주세요.\n하나씩 살펴보고, 편안한 여행으로 이어갈게요.", "Paste the plan you have prepared.\nWe’ll walk through it, one step at a time.")} />
+    <PageHeading eyebrow="A PLAN THAT FEELS LIKE YOU" title={t("여행 계획 담기", "Add your travel plan")}
+      description={t("준비한 일정을 붙여 넣거나 직접 입력해 주세요.\n장소 · 운영시간 · 이동을 확인해 드려요.", "Paste or type in your plan.\nWe check places, opening hours and travel between them.")} />
     <form onSubmit={submit} noValidate>
       <div className={styles.layout}>
         <div className={styles.editor}>
@@ -392,7 +392,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
         <aside className={styles.tips}>
           <Panel>
             <Preferences />
-            <h2>{t("작은 준비, 더 편한 여행", "A little preparation goes a long way")}</h2>
+            <h2>{t("이렇게 적으면 잘 읽어요", "Tips for writing your plan")}</h2>
             <ol className={styles.tipList}>
               <li>{t("일차 제목에 날짜를 적어요.", "Start each day with a date.")}</li>
               <li>{t("시작 시간과 장소를 한 줄씩 적어요.", "Write each start time and place on a new line.")}</li>

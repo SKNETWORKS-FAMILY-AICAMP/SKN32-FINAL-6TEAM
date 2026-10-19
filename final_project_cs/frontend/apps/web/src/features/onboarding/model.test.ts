@@ -95,8 +95,8 @@ describe("onboarding preferences", () => {
   it("the finished-survey cards word every answer, keep `상관없음` as an answer, and say `응답하지 않음` only for skipped questions", () => {
     const lines = (a: Answers) => questions.map((question) => answerLines(question.id, a, ko));
     // `full` picked family after typing an "other" draft: the draft is not shown.
-    expect(lines(full)).toEqual([["맛집 탐방"], ["가족"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["식당 · 실내", "액티비티 · 상관없음"], ["먼저 물어봐줘"], ["여유롭게"]]);
-    expect(lines(skip(skip(full, 1), 3))).toEqual([["맛집 탐방"], ["응답하지 않음"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["응답하지 않음"], ["먼저 물어봐줘"], ["여유롭게"]]);
+    expect(lines(full)).toEqual([["맛집 탐방"], ["가족"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["식당 · 실내", "액티비티 · 상관없음"], ["먼저 물어봐 주세요"], ["여유롭게"]]);
+    expect(lines(skip(skip(full, 1), 3))).toEqual([["맛집 탐방"], ["응답하지 않음"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["응답하지 않음"], ["먼저 물어봐 주세요"], ["여유롭게"]]);
     const none = questions.reduce((a, _, index) => skip(a, index), initialAnswers);
     expect(lines(none)).toEqual(questions.map(() => ["응답하지 않음"]));
     expect(answerLines("indoor", full, translator("en"))).toEqual(["Dining · Indoors", "Activities · Either is fine"]);

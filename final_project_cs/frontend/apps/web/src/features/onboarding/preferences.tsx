@@ -235,7 +235,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
   const head = (sub: string) => <>
     <button type="button" className={styles.slideTop} aria-expanded="true" aria-controls="content-2" onClick={onCollapse}>
       <span className={styles.stepNumber}>02</span>
-      <span className={styles.stepCopy}><span className={styles.stepTitle}>{t("여행 취향 알아보기", "Your travel preferences")}</span><span className={styles.stepSub}>{sub}</span></span>
+      <span className={styles.stepCopy}><span className={styles.stepTitle}>{t("여행 취향 설문", "Travel preferences survey")}</span><span className={styles.stepSub}>{sub}</span></span>
       <span className={styles.slideCount} aria-label={`${t("답변한 질문", "Answered questions")} ${answered} / ${questions.length}`}>{pad(answered)} / {questions.length}</span>
       <span className={styles.chevron}><OnboardingIcon name="down" /></span>
     </button>
@@ -277,7 +277,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
               <p className={styles.error} id={`validation-${index}`} role="status">{error}</p>
               <div className={styles.questionNav}>
                 <button type="button" className={styles.previous} onClick={() => change(-1)}>{t("이전", "Back")}</button>
-                <button type="button" className={styles.next} disabled={!valid(index, answers)} onClick={() => change(1)}>{index === LAST_STEP ? t("설정 완료", "Finish setup") : t("다음", "Next")}<OnboardingIcon name="arrow" size={15} /></button>
+                <button type="button" className={styles.next} disabled={!valid(index, answers)} onClick={() => change(1)}>{index === LAST_STEP ? t("설문 마치기", "Finish the survey") : t("다음", "Next")}<OnboardingIcon name="arrow" size={15} /></button>
               </div>
               <button type="button" className={styles.skip} onClick={() => skip(index)}>{t("응답하지 않고 넘어가기", "Skip this question")}</button>
             </div>
@@ -352,7 +352,7 @@ export function PreferencesSummary({ t, answers, hasTrip, onJourney, onEdit }: {
 
   return <div className={styles.success}>
     <div className={`${styles.successSymbol} ${styles.completionMotion}`} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></div>
-    <h2>{t("여행 취향 설정 완료", "Travel preferences set")}</h2>
+    <h2>{t("여행 취향 설문을 마쳤어요", "Survey finished")}</h2>
     <p>{t("나의 여행 취향을 확인해요.", "Here’s how you like to travel.")}<br />{t("옆으로 넘겨 선택한 답변을 확인해 주세요.", "Swipe sideways to review your answers.")}</p>
     <div className={styles.summaryCarousel} role="region" aria-roledescription={t("캐러셀", "carousel")} aria-label={t("나의 여행 취향", "Your travel preferences")}>
       <div ref={slides} className={`${styles.summarySlides} ${dragging ? styles.summaryDragging : ""}`} onScroll={trackSlide} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>
@@ -374,6 +374,6 @@ export function PreferencesSummary({ t, answers, hasTrip, onJourney, onEdit }: {
     </div>
     <button type="button" className={`${styles.next} ${styles.homeContinue}`} onClick={onJourney}>{hasTrip ? t("내 여행 이어보기", "Continue my trip") : t("여행 계획 등록하기", "Add my travel plan")}<OnboardingIcon name="arrow" size={16} /></button>
     <button type="button" className={`${styles.next} ${styles.homeContinue} ${styles.editPreferences}`} onClick={onEdit}>{t("여행 취향 수정하기", "Edit your preferences")}<OnboardingIcon name="arrow" size={16} /></button>
-    <p className={styles.savedNote}>{t("답변은 이 브라우저에 저장돼요. 여행을 등록할 때 함께 서버로 보내져 일정을 살필 때 써요.", "Your answers are saved in this browser. They go to the server with a trip registration and are used when your plan is checked.")}</p>
+    <p className={styles.savedNote}>{t("답변은 이 브라우저에 저장돼요. 여행을 등록할 때 함께 보내 일정 확인에 써요.", "Your answers are saved in this browser and sent with your trip to check it.")}</p>
   </div>;
 }

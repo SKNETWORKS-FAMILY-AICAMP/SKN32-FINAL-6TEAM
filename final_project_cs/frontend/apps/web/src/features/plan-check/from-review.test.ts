@@ -212,7 +212,7 @@ describe("candidates and photos", () => {
   });
 });
 
-describe("D-025 「우리가 채움」 — the server filled in first", () => {
+describe("D-025 「먼저 채움」 — the server filled in first", () => {
   const filledIntake = (extra: Partial<ReviewedIntakeView>) => intake("review", "review", {
     review: { items: [item({ id: "0-0" }), item({ id: "0-1", title: "숙소 근처", status: "adjusted" })], moves: [] } as unknown as ReviewedIntakeView["review"],
     ...extra,
@@ -223,8 +223,8 @@ describe("D-025 「우리가 채움」 — the server filled in first", () => {
       reason: "계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요", gap: "meal_place", new: false }], questions: [], kept: [] } });
     const view = reviewResultOf(next, readingOf(next))!;
     const [plain, filled] = view.items;
-    expect(plain.checks.some((check) => check.text.startsWith("우리가 채움"))).toBe(false);
-    expect(filled.checks[0]).toEqual({ kind: "place", result: "filled", text: "우리가 채움 · 계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요" });
+    expect(plain.checks.some((check) => check.text.startsWith("먼저 채움"))).toBe(false);
+    expect(filled.checks[0]).toEqual({ kind: "place", result: "filled", text: "먼저 채움 · 계획서의 「저녁은 숙소 근처에서」 — 근처 식당으로 채웠어요" });
     expect(view.prefill).toEqual({ filledCount: 1, questions: [], understood: [], handoff: [] });
   });
 

@@ -3,7 +3,7 @@ import { mockServer, noHorizontalScroll, start } from "./helpers";
 import { needsBadge } from "./plan-check-kit";
 
 /**
- * `[2026-10-16 D-025]` 비서처럼 먼저 채우기 — 서버가 읽은 직후 빈칸을 채웠으면(`prefill.filled`) 그 일정의 첫 줄에 「✎ 우리가 채움 · 이유」가 보이고,
+ * `[2026-10-16 D-025]` 비서처럼 먼저 채우기 — 서버가 읽은 직후 빈칸을 채웠으면(`prefill.filled`) 그 일정의 첫 줄에 「✎ 먼저 채움 · 이유」가 보이고,
  * 목록 위 안내에 몇 곳을 채웠는지 · 이렇게 이해했어요(이동 · 조건 · 성향 원문) · 고객만 아는 질문이 보인다. 서버가 아무것도 안 보내면(옛 서버) 안내가 없다.
  * mock 서버의 화면 반응을 확인하는 자동 시험이다(실서버 아님) — 서버 응답은 `patchIntake` 로 서버가 그렇게 답한 것처럼 고쳐 쓴다.
  */
@@ -46,22 +46,22 @@ function filled(view: Json) {
   };
 }
 
-test("서버가 먼저 채운 일정에는 「우리가 채움 · 이유」가, 목록 위에는 채운 수 · 이해한 말 · 묻는 것이 보인다", async ({ page, request }) => {
+test("서버가 먼저 채운 일정에는 「먼저 채움 · 이유」가, 목록 위에는 채운 수 · 이해한 말 · 묻는 것이 보인다", async ({ page, request }) => {
   await open(page, request, filled);
   const note = page.locator("[data-prefill-note]");
   await expect(note).toBeVisible();
-  await expect(note).toContainText("우리가 1곳을 먼저 채웠어요");
+  await expect(note).toContainText("1곳은 비어 있어서 먼저 채웠어요");
   await expect(note).toContainText("이렇게 이해했어요");
   await expect(note).toContainText("「택시로 이동할 거야」");
   await expect(note).toContainText("「비 오면 실내」");
   await expect(note).toContainText("「애들 데리고」");
   await expect(note.getByRole("listitem")).toHaveText(["묵는 숙소 이름을 알려 주시면 숙소 기준으로 동선을 맞출게요"]);
-  // 일정 카드를 펼치면 첫 검사 줄이 「✎ 우리가 채움 · 이유」다(접힌 카드는 고칠 것만 보인다)
+  // 일정 카드를 펼치면 첫 검사 줄이 「✎ 먼저 채움 · 이유」다(접힌 카드는 고칠 것만 보인다)
   const head = page.getByRole("article", { name: "광장시장", exact: true }).getByRole("heading").getByRole("button");
   await head.click();
   await expect(head).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("article", { name: "광장시장", exact: true }).getByText(`우리가 채움 · ${REASON}`)).toHaveCount(1);
-  await expect(page.getByRole("article", { name: "경복궁 관람", exact: true }).getByText(/우리가 채움/)).toHaveCount(0);
+  await expect(page.getByRole("article", { name: "광장시장", exact: true }).getByText(`먼저 채움 · ${REASON}`)).toHaveCount(1);
+  await expect(page.getByRole("article", { name: "경복궁 관람", exact: true }).getByText(/먼저 채움/)).toHaveCount(0);
 });
 
 /** `[2026-10-16 D-025 후속]` 서버가 계획에서 읽은 성향 · 조건을 담당에 넘긴다고 알린 것(`check.handoff`) — 하나는 우리가 채움, 하나는 고객 답 그대로. */
@@ -90,10 +90,10 @@ test("계획에서 읽은 성향 · 조건을 어느 담당에 넘기는지 「�
   }
 });
 
-test("옛 서버(먼저 채운 기록 없음)에는 안내도 「우리가 채움」도 없다", async ({ page, request }) => {
+test("옛 서버(먼저 채운 기록 없음)에는 안내도 「먼저 채움」도 없다", async ({ page, request }) => {
   await open(page, request);
   await expect(page.locator("[data-prefill-note]")).toHaveCount(0);
-  await expect(page.getByText(/우리가 채움/)).toHaveCount(0);
+  await expect(page.getByText(/먼저 채움|우리가 채움/)).toHaveCount(0);
 });
 
 test("375px · 320px 에서 먼저 채운 안내가 가로로 넘치지 않는다", async ({ page, request }) => {

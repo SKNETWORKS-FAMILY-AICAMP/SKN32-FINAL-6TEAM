@@ -55,7 +55,7 @@ export function PlanningProgress({ phase, progress, waiting, notice, onBack }: {
             {onBack && <button type="button" className={base.back} onClick={onBack} aria-label={t("뒤로", "Back")}><ArrowLeft size={20} strokeWidth={1.6} aria-hidden="true" /></button>}
             <h1 className={base.title}>{t("일정을 짜는 중이에요", "Planning your trip")}</h1>
           </div>
-          <p className={base.desc}>{t("서버가 조건에 맞는 일정을 짜서 확인하고, 통과하면 곧바로 여행으로 등록해요. 1분쯤 걸려요.", "The server plans the days, checks them and registers the trip right away. It takes about a minute.")}</p>
+          <p className={base.desc}>{t("조건에 맞는 일정을 짜서 확인하고, 통과하면 바로 여행으로 등록해요. 1분쯤 걸려요.", "We plan the days, check them and register the trip right away. It takes about a minute.")}</p>
           <div className={base.progress} data-size="large" role="progressbar" aria-label={t("일정 짜기 진행", "Planning progress")}
             aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%`}>
             <div className={base.track}><span className={base.fill} style={{ width: `${value}%` }} /></div>
@@ -66,7 +66,7 @@ export function PlanningProgress({ phase, progress, waiting, notice, onBack }: {
           </div>
         </header>
         <p className={styles.status} role="status" data-lost={progress?.lost || undefined}>{phase === "planning" ? progressText(progress, t, waiting) : t(...waiting)}</p>
-        {phase === "planning" && <p className={styles.hint}>{t("서버가 일정을 짜는 동안에는 이 화면을 열어 두세요. 끝나면 여행 화면으로 가요.", "Keep this page open while the server plans. It moves on to your trip when it is done.")}</p>}
+        {phase === "planning" && <p className={styles.hint}>{t("일정을 짜는 동안 이 화면을 열어 두세요. 끝나면 여행 화면으로 가요.", "Keep this page open while we plan. It moves on to your trip when it is done.")}</p>}
       </div>
     </div>
   </DeviceFrame>;

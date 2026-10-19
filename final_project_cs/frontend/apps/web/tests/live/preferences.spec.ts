@@ -4,7 +4,7 @@ import { agreeTerms, forgetStartScreen, mockServer, noHorizontalScroll, openPref
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); });
 
 /** The six question titles, in order (no separate transport or nationality question). */
-const TITLES = ["어떤 여행을 좋아하세요?", "누구와 함께 떠나나요?", "어떤 것을 더 중요하게 생각하나요?", "실내와 실외 중 어디가 좋으세요?", "갑자기 일정이 꼬이면 어떻게 했으면 좋겠어요?", "여행할 때 어느 정도 여유가 좋으세요?"];
+const TITLES = ["어떤 여행을 좋아하세요?", "누구와 함께 떠나나요?", "어떤 것을 더 중요하게 생각하나요?", "실내와 실외 중 어디가 좋으세요?", "일정에 문제가 생기면 어떻게 할까요?", "여행할 때 어느 정도 여유가 좋으세요?"];
 const PARTY = 1, PRIORITY = 2, INDOOR = 3;
 const heading = (page: Page, name: string) => page.getByRole("heading", { name, exact: true });
 const skip = (page: Page) => page.getByRole("button", { name: "응답하지 않고 넘어가기" });
@@ -57,7 +57,7 @@ async function skipRest(page: Page, from: number) {
     await settled(page, at);
     await skip(page).click();
   }
-  await expect(heading(page, "여행 취향 설정 완료")).toBeVisible();
+  await expect(heading(page, "여행 취향 설문을 마쳤어요")).toBeVisible();
 }
 
 test("여행자 구성의 기타는 입력란을 열고, 공백만으로는 못 넘어가며, 입력한 내용이 요약에 보이고, 다른 선택지로 바꾸면 숨겨졌다가 다시 고르면 초안이 돌아온다", async ({ page }) => {
@@ -117,7 +117,7 @@ test("설문은 6문항이고 이동수단·내국인 여부 질문이 없으며
     await skip(page).click();
     if (at < TITLES.length - 1) await expect(progress).toHaveAttribute("aria-valuenow", String(at + 1));
   }
-  await expect(heading(page, "여행 취향 설정 완료")).toBeVisible();
+  await expect(heading(page, "여행 취향 설문을 마쳤어요")).toBeVisible();
 });
 
 test("분야는 누른 순서로 1·2·3이 붙고, 해제하면 뒤 번호가 당겨지고 세부 답이 지워지며, 다시 고르면 마지막에 붙는다 — 카드 위치는 그대로다", async ({ page }) => {
@@ -205,8 +205,8 @@ test("요약은 분야와 세부 항목을 실제로 고른 순서대로 보이�
   await settled(page, PRIORITY);
   await expect(rank(detail(page, "택시"))).toHaveText("1");
   // Fold the preferences card and open it again: the answers stay.
-  await page.getByRole("button", { name: /여행 취향 알아보기/ }).first().click();
-  await page.getByRole("button", { name: /여행 취향 알아보기/ }).click();
+  await page.getByRole("button", { name: /여행 취향 설문/ }).first().click();
+  await page.getByRole("button", { name: /여행 취향 설문/ }).click();
   await expect(heading(page, TITLES[PRIORITY])).toBeVisible();
   await expect(rank(detail(page, "청결"))).toHaveText("1");
   await next(page).click();
@@ -277,16 +277,16 @@ test("완료 화면은 기본사항·여행 방식 두 장에 선택 언어와 6
   await skip(page).click();
   await settled(page, 5);
   await page.getByRole("button", { name: "꽉 차게", exact: true }).click();
-  await page.getByRole("button", { name: "설정 완료" }).click();
+  await page.getByRole("button", { name: "설문 마치기" }).click();
 
-  await expect(heading(page, "여행 취향 설정 완료")).toBeVisible();
+  await expect(heading(page, "여행 취향 설문을 마쳤어요")).toBeVisible();
   await expect(page.getByText("옆으로 넘겨 선택한 답변을 확인해 주세요.")).toBeVisible();
   expect(await rows(summaryCard(page, "기본사항"))).toEqual([["선택 언어", "한국어"], ["여행 테마", "문화와 역사"], ["여행자 구성", "대학 동기 여섯 명과 그 가족들"]]);
   expect(await rows(summaryCard(page, "여행 방식"))).toEqual([
     ["여행 우선순위", "1. 활동 — 쇼핑 → 힐링", "2. 음식 — 청결 → 맛"],
     ["실내·실외", "식당 · 실내", "액티비티 · 상관없음"],
     ["일정 변경 방식", "응답하지 않음"],
-    ["여행 여유", "꽉 차게"],
+    ["하루 일정의 여유", "꽉 차게"],
   ]);
   await expect(summary(page)).not.toContainText("내국인");
 });
@@ -406,7 +406,7 @@ test("영어와 PC 기기 틀·375px·320px에서 긴 답도 카드 안에서 �
   await skipRest(page, INDOOR);
 
   await pickLanguage(page, "메뉴", "English");                                   // `[2026-10-13]` 언어는 설정 화면에서 고르고 뒤로 온다
-  await expect(heading(page, "Travel preferences set")).toBeVisible();
+  await expect(heading(page, "Survey finished")).toBeVisible();
   const cards = summaryCards(page, "Your travel preferences");
   await expect(cards.locator("p[aria-live]")).toHaveText("1 / 2 · The basics");
   expect(await rows(summaryCard(page, "The basics"))).toEqual([["Language", "English"], ["Travel theme", "Not answered"], ["Your companions", "대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리와 함께하는 아주 긴 여행"]]);
@@ -448,9 +448,9 @@ test("여행을 등록해 관리를 시작한 뒤 다시 요약을 열면 주 �
   // now goes straight to registering once the terms are agreed, so the preferences are reached from the menu (`[2026-10-13]` once My page).
   await page.getByRole("banner").getByRole("link", { name: "구구루트 — 소개 화면으로 돌아가기" }).click();
   await openPreferencesFromMenu(page);
-  const preferences = page.getByRole("button", { name: /여행 취향 알아보기/ }).first();
+  const preferences = page.getByRole("button", { name: /여행 취향 설문/ }).first();
   if (await preferences.getAttribute("aria-expanded") !== "true") await preferences.click();
-  await expect(heading(page, "여행 취향 설정 완료")).toBeVisible();
+  await expect(heading(page, "여행 취향 설문을 마쳤어요")).toBeVisible();
   await expect(page.getByRole("button", { name: "여행 계획 등록하기" })).toHaveCount(0);
   await page.getByRole("button", { name: "내 여행 이어보기" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${tripId}$`));

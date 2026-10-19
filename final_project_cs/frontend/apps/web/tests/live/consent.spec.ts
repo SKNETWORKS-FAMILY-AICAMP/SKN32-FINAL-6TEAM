@@ -38,7 +38,7 @@ test("동의하고 다음으로를 누르면 여섯 항목이 서버에 기록�
   await page.goto("/start");
   await expect(startCard(page)).toHaveAttribute("aria-expanded", "true");                // `[2026-10-16 ST4F-601]` 설문 입구(/start)는 약관 카드를 스스로 연다 — 머리를 누르면 접힌다
   await agreeTerms(page, ["location"]);
-  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("button", { name: /여행 취향 설문/ })).toHaveAttribute("aria-expanded", "true");
 
   await expect.poll(async () => (await server.received("POST", "/v1/web/consents")).length).toBe(1);
   const [post] = await server.received("POST", "/v1/web/consents");

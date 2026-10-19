@@ -223,13 +223,13 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
         {choices.map(({ proposal, stop, text }) => <div key={proposal.id} className={styles.choice} data-center-proposal={proposal.id} tabIndex={-1}
           ref={proposal.id === targetChoiceId ? choiceTarget : undefined}>
           <p className={styles.what}>{stop ? `${stop.time} · ${stop.title}` : t("이 여행의 일정", "A stop on this trip")}</p>
-          <p>{text ?? t(`서버가 이 일정에 대한 선택을 기다려요 (이유: ${proposal.reason}).`, `The server is waiting for your choice on this stop (reason: ${proposal.reason}).`)}</p>
+          <p>{text ?? t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
           <div className={styles.options}>
             {/* 2026-09-29: "should we change it?" first (indoor/outdoor unknown). The server computes options only after "change". */}
             {[CONSENT_REASON, FORECAST_REASON].includes(proposal.reason) && proposal.options.length === 0 && <Button variant="primary" disabled={choose.isPending}
               onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: CONSENT_KEY })}>{proposal.reason === FORECAST_REASON
                 ? t("예보에 맞게 일정 변경", "Adjust the plan for the forecast")
-                : t("바꿔 줘 — 다른 곳 보기", "Change it — show other places")}</Button>}
+                : t("다른 곳 찾아보기", "Show other places")}</Button>}
             {proposal.options.map((option) => <Button key={option.key} variant="primary" disabled={choose.isPending}
               onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: option.key })}>{option.note ? `${option.note} · ` : ""}{option.startsAt ? `${seoul(option.startsAt).time} ` : ""}{option.name}
               {option.warnings.length > 0 && <small className={styles.optionWarning}>{option.warnings.join(" · ")}</small>}</Button>)}

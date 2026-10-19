@@ -30,7 +30,7 @@ test("운영자가 공지를 올리면 새로고침 없이 15초 안에 배너�
   const server = mockServer(request);
   await page.clock.install();
   await page.goto("/trips");
-  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 목록", level: 1 })).toBeVisible();
   await expect(banner(page)).toHaveCount(0);
   await server.scenario({ serviceNotice: "one" });
   await page.clock.fastForward(16_000);
@@ -65,7 +65,7 @@ test("「공지 닫기」는 이 브라우저가 기억한다 — 새로고침�
   const read = page.waitForResponse((response) => response.url().endsWith("/v1/web/support/notices"));
   await page.reload();
   await read;
-  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 목록", level: 1 })).toBeVisible();
   await expect(banner(page)).toHaveCount(0);                                            // 옛: 새로고침하면 같은 공지가 다시 떴다
   await server.scenario({ serviceNotice: "two" });                                      // 닫은 공지 + 새 공지
   await page.reload();
@@ -76,7 +76,7 @@ test("「공지 닫기」는 이 브라우저가 기억한다 — 새로고침�
 test("탭으로 돌아오면 공지를 바로 다시 읽는다", async ({ page, request }) => {
   const server = mockServer(request);
   await page.goto("/trips");
-  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 목록", level: 1 })).toBeVisible();
   await expect(banner(page)).toHaveCount(0);
   await server.scenario({ serviceNotice: "one" });
   await tabComesBack(page);
@@ -87,7 +87,7 @@ test("문의함과 여행 목록은 탭으로 돌아오면 다시 읽고, 연 �
   const server = mockServer(request);
   const count = async (suffix: string) => (await server.received("GET", suffix)).length;
   await page.goto("/trips");
-  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 목록", level: 1 })).toBeVisible();
   await expect.poll(() => count("/v1/web/trips")).toBeGreaterThan(0);
   const tripsBefore = await count("/v1/web/trips");
   await tabComesBack(page);

@@ -84,7 +84,6 @@ export function GuardianCard({ kind, iconIn = "header", onPrimary, onSecondary, 
           <span className={styles.icon} aria-hidden="true"><ShieldIcon size={28} /></span>
           <div className={styles.heading}>
             <h2 id={titleId} ref={title} className={styles.title} tabIndex={-1}><span className={styles.reco}>{t("추천", "Recommended")}</span> {t("항로 지킴이", "Course Keeper")}</h2>
-            <p className={styles.en} lang="en">Course Keeper</p>
           </div>
           <button type="button" className={styles.close} onClick={() => dismiss()} aria-label={t("닫기", "Close")} data-tip={t("닫기", "Close")} data-kbd=" · Esc"><X strokeWidth={1.8} aria-hidden="true" /></button>
         </header>
@@ -94,7 +93,7 @@ export function GuardianCard({ kind, iconIn = "header", onPrimary, onSecondary, 
             {start && <li>{t("끄고 진행하면 문제가 생길 때 먼저 물어봐요.", "If you turn it off, it asks you first when something goes wrong.")}</li>}
             <li>{t("켜 두어도 고정한 일정은 먼저 물어봐요.", "Even when it is on, it asks you first about locked stops.")}</li>
             {/* 목업 v10: 「재난·지진이」는 줄 중간에서 끊지 않는다(가운뎃점 뒤에서 줄이 바뀌지 않게 묶는다). ★2026-10-07 사용자 결정: 대피 장소 자료가 서버에 들어가(1,580곳) 「가까운 대피 장소와」를 더해 늘렸다 — 자료가 없는 곳이면 서버가 알림 글에 그렇게 적는다 */}
-            <li>{language === "ko" ? <><span className={styles.nb}>재난·지진이</span> 나면 일정을 멈추고, 가까운 대피 장소와 안전 안내를 보내요.</> : "If a disaster or earthquake happens, it pauses your itinerary and sends nearby shelters and safety guidance."}</li>
+            <li>{language === "ko" ? <><span className={styles.nb}>재난·지진이</span> 나면 항로 지킴이를 꺼 두어도 일정을 멈추고, 가까운 대피 장소와 안전 안내를 보내요.</> : "If a disaster or earthquake happens, your itinerary is paused even with Course Keeper off, and nearby shelters and safety guidance are sent."}</li>
           </ul>
         </div>
         <footer className={styles.foot}>

@@ -154,8 +154,8 @@ test("설문을 마친 뒤 새로고침해도 답이 남아, 등록 화면이 �
   await start(page, "acop_u_known");
   await finishOnboarding(page);
   await page.goto("/trips/new");                 // 새로고침과 같다 — 2026-10-01 부터 답은 이 브라우저에 남는다
-  await expect(page.getByText("함께 고른 여행 취향")).toBeVisible();
-  await expect(page.getByText("취향 설문을 마치지 않아서", { exact: false })).toHaveCount(0);
+  await expect(page.getByText("여행 취향 설문", { exact: true })).toBeVisible();
+  await expect(page.getByText("여행 취향 설문을 하지 않아", { exact: false })).toHaveCount(0);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await checkPlan(page);
   await page.getByRole("button", { name: "여행 등록" }).click();
@@ -168,8 +168,8 @@ test("설문을 마치지 않았으면 등록 화면이 그 사실을 알리고,
   const server = mockServer(request);
   await start(page, "acop_u_known");
   await page.goto("/trips/new");
-  await expect(page.getByText("취향 설문을 마치지 않아서 이번 등록에는 취향이 반영되지 않아요", { exact: false })).toBeVisible();
-  await expect(page.getByRole("link", { name: "취향 설정하기" })).toHaveAttribute("href", "/start");
+  await expect(page.getByText("여행 취향 설문을 하지 않아 이번 여행은 설문 답 없이 등록돼요", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "여행 취향 설문 하기" })).toHaveAttribute("href", "/start");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await checkPlan(page);
   await page.getByRole("button", { name: "여행 등록" }).click();

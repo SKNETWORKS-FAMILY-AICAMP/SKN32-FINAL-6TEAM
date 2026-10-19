@@ -168,12 +168,12 @@ test("실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘�
   await openTrip(page);
   await openNotices(page);
   const ask = page.getByRole("region", { name: /선택이 필요해요/ });
-  await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toBeVisible();
-  await ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+  await expect(ask.getByRole("button", { name: "다른 곳 찾아보기" })).toBeVisible();
+  await ask.getByRole("button", { name: "다른 곳 찾아보기" }).click();
   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
   expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: "change" });
   await expect(ask.getByRole("button", { name: /실내 박물관/ })).toBeVisible();              // 같은 제안을 다시 읽었다
-  await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toHaveCount(0);  // 선택지가 생기면 물음은 사라진다
+  await expect(ask.getByRole("button", { name: "다른 곳 찾아보기" })).toHaveCount(0);  // 선택지가 생기면 물음은 사라진다
   await expect(page.getByText("다른 곳을 찾았어요 — 위에서 골라 주세요.")).toBeVisible();
 });
 
@@ -199,7 +199,7 @@ test("「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔
   await server.scenario({ proposals: "consent", choose: "no_alternate" });
   await openTrip(page);
   await openNotices(page);
-  await page.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+  await page.getByRole("button", { name: "다른 곳 찾아보기" }).click();
   await expect(page.getByText("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.")).toBeVisible();
 });
 

@@ -81,8 +81,8 @@ export async function startWithOldKey(page: Page, key = "acop_u_known") {
   await page.addInitScript(([storageKey, value]) => { if (!localStorage.getItem(storageKey)) localStorage.setItem(storageKey, value); }, [KEY_STORAGE, key] as const);
 }
 
-/** The head of a start-screen card: 「약관 동의」(card 1) or 「여행 취향 알아보기」(card 2). */
-export const startCardHead = (page: Page, card: "terms" | "preferences") => page.getByRole("button", { name: card === "terms" ? /약관 동의/ : /여행 취향 알아보기/ });
+/** The head of a start-screen card: 「약관 동의」(card 1) or 「여행 취향 설문」(card 2). */
+export const startCardHead = (page: Page, card: "terms" | "preferences") => page.getByRole("button", { name: card === "terms" ? /약관 동의/ : /여행 취향 설문/ });
 
 /**
  * `[2026-10-16 사용자 결정 — ST4F-601]` The survey way in (`/start` without `terms=required`) opens a card by itself once it has read this browser's copy:
@@ -119,8 +119,8 @@ export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<v
     await expect(page.locator(`#question-title-${index + 1}`)).toBeFocused();
   }
   await page.getByRole("button", { name: "여유롭게" }).click();
-  await page.getByRole("button", { name: "설정 완료" }).click();
-  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료" })).toBeVisible();
+  await page.getByRole("button", { name: "설문 마치기" }).click();
+  await expect(page.getByRole("heading", { name: "여행 취향 설문을 마쳤어요" })).toBeVisible();
 }
 
 /** Open the registration page once React has taken it over (a field filled before that is lost). */
@@ -223,7 +223,7 @@ export async function openPreferencesFromMenu(page: Page) {
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: /^여행 취향 설문/ }).click();
   await expect(page).toHaveURL(/\/start$/);
-  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("button", { name: /여행 취향 설문/ })).toHaveAttribute("aria-expanded", "true");
 }
 
 /**
