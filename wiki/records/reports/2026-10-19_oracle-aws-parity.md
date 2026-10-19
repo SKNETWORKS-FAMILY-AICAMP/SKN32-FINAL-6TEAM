@@ -56,7 +56,7 @@ impl_scope: cs — 오라클 ARM · AWS(EKS) 의 cs 프로젝트 서버(api · w
 | R14 출발 시각 시간대 · 출발 실패 사유 · 직접 이름 검색 종류 | 오라클 후보 컨테이너 r14(고객 경로 아님) | `scratch/r14-departure-search-20261019/` | r8 → r14 를 role-manager 에 3방향, 5파일 충돌 0 + 시험 4 · 계약 2 · 기록 3 | 191/191 |
 | 웹 직접 검색 결과 상태 표시(`place-search-status.ts`) | 없음(배포 안 됨) | `scratch/explicit-search-web-20261019/` | 기준 파일이 role-manager 판과 같아 그대로 | vitest plan-check 253/253 · tsc · eslint 통과 |
 
-공통 시험(합친 판 전체, DB 없는 것): 아래 「반영 상태」에 결과를 적는다.
+합친 판 전체(unit · architecture · contract, DB 없는 것) 비교는 이 PC 부하로 13분에 15%만 진행돼 중단했다 — commit 세션의 반영 전 전체 시험으로 판정한다. 격리 사본에서는 시험 4개(`test_car_fare` · `test_check_scripts` · `test_judgment_log` · `test_declared_refs_are_savable`)가 저장소 루트 자료가 없어 수집 단계에서 오류였고, 기준판 `eaa9a9c6` 에서도 같았다. worker 시험은 Git Bash 에서 묶음 15회 중 1회 1개 실패가 남았다(원인 미확인, README).
 
 ### (나) role-manager 가 더 새 판 — 넣을 것 없음
 
@@ -81,7 +81,10 @@ SNS 맛집 링크 · 요식 판정 에이전트 · 쇼핑 지점 운영시간(`s
 
 ## 반영 상태
 
-- 수정본 넷은 commit 세션에 넘김(아래 인계). 커밋 해시 · x600 반영은 받는 대로 이 절에 적는다.
+- **반영**: commit 세션이 4묶음 + 이 표를 `380e3909`(부모 `0a761e95`, 29파일, 두 원격 role-manager 같음)로 넣었다. commit 세션 시험: ruff F · E9, unit + architecture + contract 8,222 통과(새 실패 0), 웹 vitest 934/934 · tsc · eslint, worker 종료 시험 39/40(아래 후속).
+- **x600 서버**: 자동 배포가 21:03:38 `반영 완료 90d553923a (이전 0a761e950d)`(380e3909 포함). 21:05~21:15 읽기 확인 — worker 컨테이너 안 worker.sh 지문 `40e70fd4`(= 380e3909 판), R13(`preload_mobility=False`) · R14(`_DEPARTURE_INFEASIBLE_CODES`) 코드 들어감, 프로세스 구조 = 본 셸(PID1, `sleep 60`) + 배달 서브셸(`sleep 10`), 배달 1분에 5~6회, `{"job":…}` 실패 줄 0, worker · api 최근 15분 Traceback 0, 재시작 0, worker 메모리 7MiB(대기 중), 남은 발송 대기(pending · locked) 0, 공개 주소 `/` · `/health` 200.
+- **실서버 확인 범위**: 배포 뒤 새 고객 알림이 0건(마지막 `trip.notice` 는 19:01 건너뜀 2건)이라 **실제 고객 알림 발송 · 위험 안내 경로는 확인 안 함**. 16:38~16:52 dead_letter 3건은 수정(`505ca969`) 전 것이고 다시 보내지 않았다. 종료(TERM) 때의 회수는 다음 배포 교체 때 worker 로그로 본다.
+- **후속 v2**: commit 세션이 본 worker 시험 흔들림(`stop_at_job_completion[bash]`)은 배달 반복이 첫 신호 뒤 다음 신호를 무시해 생긴 것 — `scratch/worker-delivery-loop-20261019/followup-v2/`(worker.sh `643f8d6c` · 시험 대기 시한 10초 · 계약 한 줄)로 고쳐 commit 세션에 넘김→ commit 세션이 `9931b1ec`(부모 `90d55392`, 두 원격 같음)로 반영. x600 서버 21:21:33 `반영 완료 9931b1ecd7 (이전 90d553923a)`. 21:23 읽기 확인 — worker.sh `643f8d6c`, 본 셸 + 배달 서브셸 구조 그대로, 배달 1분 5회, 실패 줄 0, Traceback 0, 재시작 0, 발송 대기 0. 옛 worker 의 종료 회수 과정은 로그가 컨테이너와 함께 교체돼 확인 못 함(배포 시작 21:20:16 → 새 worker 기동 21:20:57).
 - 매니저가 이 대조 뒤 `0a761e95` 로 움직였다(로딩 설문 · 이름 등 24커밋). 수정본 파일과 겹치는 변경은 없다(이름 대조 0건).
 - mock 서버 시험: 없음(이 작업은 화면 반응 시험을 돌리지 않음). 실서버 확인(서버 응답): 아직 안 함 — 푸시 뒤 x600 배포 기록 · worker 로그로 확인한다.
 
