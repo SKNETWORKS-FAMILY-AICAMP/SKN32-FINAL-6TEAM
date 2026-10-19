@@ -10,7 +10,7 @@ import { agree, agreeTerms, beforeTheTrip, checkPlan, CONSENT_STORAGE, mockServe
  */
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-const ONBOARDING_STORAGE = "tripilot.web.onboarding.v1";
+const ONBOARDING_STORAGE = "tripilot.web.onboarding.v2";
 const DRAFT_STORAGE = "tripilot.web.registration-draft.v1";
 const card = (page: Page, id: 0 | 1 | 2) => page.locator(`[data-card="${id}"]`);
 const back = (page: Page) => page.getByRole("button", { name: "뒤로", exact: true });
@@ -71,7 +71,7 @@ test("취향 설문 입구(/start)는 동의 전이면 약관 · 취향 카드�
   await expect(card(page, 0)).toHaveCount(0);
   await agreeTerms(page, ["alert_channel"]);                                            // 주소는 /start 그대로, 취향 카드가 열린다(helpers 가 본다)
   await expect(page.getByRole("heading", { name: "여행 취향 설문을 시작할게요", exact: true })).toBeVisible();
-  await expect(page.getByText("6가지 질문에 답해 주세요. 나중에 다시 고칠 수 있어요.")).toBeVisible();
+  await expect(page.getByText("4가지 질문에 답해 주세요. 나중에 다시 고칠 수 있어요.")).toBeVisible();
   expect(await server.received("PUT", "/v1/web/profile")).toHaveLength(0);              // 알림 채널에 동의해도 게스트는 웹훅을 보내지 않는다
 });
 
@@ -115,7 +115,7 @@ test("로그아웃하면 이 기기의 동의 사본과 취향 답도 지워져,
   await start(page);
   // 취향 설문을 마친 기기(답이 남아 있다)
   await page.addInitScript((key) => {
-    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ complete: true, step: 5, answers: { theme: "", party: "", partyOther: "", priority: [], details: { food: [], activity: [], mobility: [] }, indoorDining: "", indoorActivity: "", onDisruption: "", pace: "relaxed", skipped: [0, 1, 2, 3, 4] } }));
+    if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ complete: true, step: 3, answers: { party: "", partyOther: "", priority: [], details: { food: [], activity: [], mobility: [] }, indoorDining: "", indoorActivity: "", pace: "relaxed", skipped: [0, 1, 2] } }));
   }, ONBOARDING_STORAGE);
   await page.goto("/trips");
   const stored = (key: string) => page.evaluate((name) => JSON.parse(localStorage.getItem(name) ?? "null") as Record<string, unknown> | null, key);
@@ -149,7 +149,7 @@ test("소셜 로그인을 마친 뒤 티켓 없이 /auth/done 을 다시 열면 
   await expect(page.getByRole("link", { name: "설정", exact: true })).toHaveAttribute("href", "/mypage");
 });
 
-test("세션이 끝났다는 오류(session_expired)면 여행 화면에 「로그인」이 주 단추로 뜨고, 「여행 계획 등록」은 보조 단추가 된다", async ({ page }) => {
+test("세션이 끝났다는 오류(session_expired)면 여행 화면에 「여행을 등록한 계정으로 로그인」이 주 단추로 뜨고, 「여행 계획 등록」은 보조 단추가 된다", async ({ page }) => {
   await start(page);
   await page.route((url) => url.pathname.endsWith(`/v1/web/trips/${TRIP_ID}`), async (route) => {
     if (route.request().method() !== "GET") return route.continue();
@@ -158,8 +158,9 @@ test("세션이 끝났다는 오류(session_expired)면 여행 화면에 「로�
   });
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(page.getByRole("alert").filter({ hasText: "로그인 상태가 끝났어요" })).toBeVisible();
-  const signIn = page.getByRole("link", { name: "로그인", exact: true });
-  await expect(signIn).toHaveAttribute("href", `/mypage/account?returnTo=${encodeURIComponent(`/trips/${TRIP_ID}`)}`);
+  // `[2026-10-19]` 56512ed1(알림 v5)이 이 화면에 자기 로그인 단추를 달았다 — 로그인하면 그 여행의 알림 센터로 돌아온다.
+  const signIn = page.getByRole("link", { name: "여행을 등록한 계정으로 로그인", exact: true });
+  await expect(signIn).toHaveAttribute("href", `/mypage/account?login=1&returnTo=${encodeURIComponent(`/trips/${TRIP_ID}?notices=1`)}`);
   await expect(signIn).toHaveClass(/primary/);
   await expect(page.getByRole("link", { name: "여행 계획 등록", exact: true })).toHaveClass(/secondary/);
 });

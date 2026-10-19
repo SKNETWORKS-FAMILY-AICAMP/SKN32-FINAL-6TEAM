@@ -38,16 +38,17 @@ const ReadyContext = createContext(false);
  * where the questions stand — is kept in this browser and read back on the next visit, so a reload or a later visit does
  * not start over. Nothing here is sent to the server. ★Which card is open stays page-only. 「Continue my trip」 is not kept here: it reads the server's trip list (`useTrips`).
  */
-const STORAGE_KEY = "tripilot.web.onboarding.v1";
+// `[2026-10-19 사용자 결정]` v2: 설문이 6문항 → 4문항으로 바뀌고 활동 세부 값도 바뀌었다. 건너뛴 질문을 위치로 적어 두므로 v1 답은 새 문항에 맞지 않는다 — 읽지 않고 설문을 다시 받는다.
+const STORAGE_KEY = "tripilot.web.onboarding.v2";
 const area = z.enum(["food", "activity", "mobility"]);
 const text = z.string().max(200);
 const saved = z.object({
   complete: z.boolean(),
   step: z.number().int().min(INTRO_STEP).max(questions.length - 1),
   answers: z.object({
-    theme: text, party: text, partyOther: text, priority: z.array(area).max(3),
+    party: text, partyOther: text, priority: z.array(area).max(3),
     details: z.object({ food: z.array(text).max(8), activity: z.array(text).max(8), mobility: z.array(text).max(8) }),
-    indoorDining: text, indoorActivity: text, onDisruption: text, pace: text, skipped: z.array(z.number().int().min(0).max(questions.length - 1)).max(questions.length),
+    indoorDining: text, indoorActivity: text, pace: text, skipped: z.array(z.number().int().min(0).max(questions.length - 1)).max(questions.length),
   }),
 });
 type Saved = z.infer<typeof saved>;

@@ -41,16 +41,16 @@ async function foldOpenedTerms(page: Page) {
   await expect(termsHead(page)).toHaveAttribute("aria-expanded", "false");
 }
 
-/** Preferences open: skip all six questions, then add a plan and start its check. */
+/** Preferences open: skip all four questions, then add a plan and start its check. */
 async function skipPreferencesAndRegister(page: Page) {
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
-  // 설문은 6문항이다. ★카드가 넘어가는 동안의 누름은 화면이 일부러 무시하므로(두 번 넘김 방지), 넘김이 끝나 다음 카드 제목으로
+  // 설문은 4문항이다(`[2026-10-19]` 여행 테마 · 일정 변경 방식을 뺐다). ★카드가 넘어가는 동안의 누름은 화면이 일부러 무시하므로(두 번 넘김 방지), 넘김이 끝나 다음 카드 제목으로
   //   초점이 옮겨진 것을 보고 다음을 누른다 — 안 기다리면 부하가 있을 때 한 번이 사라진다(2026-09-28 실제로 그랬다).
-  for (let question = 0; question < 6; question += 1) {
+  for (let question = 0; question < 4; question += 1) {
     await skip.click();
-    if (question < 5) await expect(page.locator(`#question-title-${question + 1}`)).toBeFocused();
+    if (question < 3) await expect(page.locator(`#question-title-${question + 1}`)).toBeFocused();
   }
   await expect(page.getByRole("heading", { name: "여행 취향 설문을 마쳤어요", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();

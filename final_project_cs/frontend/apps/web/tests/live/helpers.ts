@@ -114,7 +114,7 @@ export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<v
   await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
   // ★카드가 넘어가는 동안의 누름은 화면이 무시한다 — 넘김이 끝나 다음 카드 제목으로 초점이 옮겨진 것을 보고 다음을 누른다
-  for (let index = 0; index < 5; index += 1) {
+  for (let index = 0; index < 3; index += 1) {
     await skip.click();
     await expect(page.locator(`#question-title-${index + 1}`)).toBeFocused();
   }
@@ -242,7 +242,7 @@ export async function pickLanguage(page: Page, menu: "메뉴" | "Menu", language
 
 /** The start screen is asked once and kept in this browser. For a test that needs the first-time screen again: forget what it kept, then reload. */
 export async function forgetStartScreen(page: Page) {
-  await page.evaluate(() => localStorage.removeItem("tripilot.web.onboarding.v1"));
+  await page.evaluate(() => localStorage.removeItem("tripilot.web.onboarding.v2"));
   await page.reload();
 }
 

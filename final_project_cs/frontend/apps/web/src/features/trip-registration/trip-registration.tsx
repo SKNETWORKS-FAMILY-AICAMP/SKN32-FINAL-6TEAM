@@ -48,10 +48,9 @@ function Preferences() {
     <p>{t("여행 취향 설문을 하지 않아 이번 여행은 설문 답 없이 등록돼요. 「하루 일정의 여유」와 항로 지킴이 선택은 그대로 함께 보내요. 설문은 메뉴의 「여행 취향 설문」에서 할 수 있어요.", "You haven’t taken the travel preferences survey, so this trip goes without its answers. How full a day is and your Course Keeper choice still go with it. The survey is under “Travel preferences survey” in the menu.")}</p>
     <p><ButtonLink href={routes.start}>{t("여행 취향 설문 하기", "Take the survey")}</ButtonLink></p>
   </div><hr /></>;
-  const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
   return <><div className={styles.preferences}>
     <Eyebrow>{t("여행 취향 설문", "TRAVEL PREFERENCES SURVEY")}</Eyebrow>
-    <div className={styles.tags}>{answers.theme && <span className={styles.pill}>{labels[answers.theme]}</span>}{answers.party && <span className={styles.pill}>{partyLabel(answers, t)}</span>}</div>
+    <div className={styles.tags}>{answers.party && <span className={styles.pill}>{partyLabel(answers, t)}</span>}</div>
     <p>{t("설문 답을 이 여행에 함께 보내요.", "Your survey answers go with this trip.")}</p>
   </div><hr /></>;
 }

@@ -88,7 +88,7 @@ test("설정 화면의 언어 카드를 펼쳐 고르면 바로 적용·접히�
   await expect(toggle).toContainText("English");
   await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
   await page.goto("/");
-  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await expect(page.locator("#intro-title")).toContainText("Let’s check your");
 
   // Back to Korean on the settings screen — the only place the card lives.
   await page.goto("/mypage");

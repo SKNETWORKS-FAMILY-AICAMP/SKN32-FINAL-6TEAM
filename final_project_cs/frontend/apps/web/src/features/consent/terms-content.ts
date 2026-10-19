@@ -14,11 +14,11 @@ import type { ConsentCode } from "./consent-model";
  *   `wiki/records/plans/2026-10-05_약관_초안/00_법무확인_목록.md` 의 대조 표에 있다. 그 폴더의 01~05 는 이 파일의 한국어 본문 사본이다.
  * - ★정해지지 않은 값은 지어내지 않는다 — 본문에 「【확정 필요: …】」를 직접 쓰지 않고 `OPERATOR` · `RETENTION` 상수를 끼워 넣는다(시험이 지킨다).
  */
-export const TERMS_VERSION = "2026-10-17.1";   // `[2026-10-17 ST4F-610]` 서비스 이름 구구루트 · 「마이페이지」 → 실제 화면 이름(설정 › 약관 · 동의 / 알림 받는 곳) · 서비스 개선 선택 동의 받기를 한 판에.
-// 이전 판 2026-10-05.1 = 운영 주체 · 문의 연락처 · 보호책임자를 채웠다(글이 바뀌었으니 버전을 올린다). 서버 `consent.terms_version` 과 같이 올린다
+export const TERMS_VERSION = "2026-10-19.1";   // `[2026-10-19 ST4F-611]` 이용약관 제6조 ① — 설문 「갑자기 일정이 꼬이면」 문항 대신 항로 지킴이 켜짐 · 꺼짐 기준 · 처리방침의 설문 항목을 지금 묻는 것으로(여행 테마 · 일정 변경 방식 문항을 뺐다).
+// 이전 판 2026-10-17.1 = 서비스 이름 구구루트 · 「마이페이지」 → 실제 화면 이름 · 서비스 개선 선택 동의(ST4F-610). 그 앞 2026-10-05.1 = 운영 주체 · 문의 연락처 · 보호책임자. 서버 `consent.terms_version` 과 같이 올린다
 export const TERMS_STATUS: "draft" | "reviewed" = "reviewed";   // `[2026-10-07 사용자 결정]` 보관 기간 확정 · 안내문(「AI 작성 초안 …」)을 더 띄우지 않는다. ★변호사 검토를 했다는 뜻이 아니다 — 안내를 내리기로 한 사용자 결정이다
 /** 시행일("YYYY-MM-DD"). 확정 전에는 초안 작성일. */
-export const TERMS_EFFECTIVE = "2026-10-17";
+export const TERMS_EFFECTIVE = "2026-10-19";
 
 /**
  * 운영 주체 정보. ★확정되기 전에는 지어내지 않고 「【확정 필요: …】」 자리표시를 그대로 둔다 - 약관 본문은 이 값을 끼워 넣는다.
@@ -254,10 +254,10 @@ const serviceTerms: TermsDoc = {
       heading: ["제6조 (일정 변경과 되돌리기)", "Article 6 (Schedule changes and undoing them)"],
       body: [
         paras(
-          "① 회원이 등록한 여행에 문제(날씨 · 재난 · 장소 휴무 등)가 생기면, 서비스는 이용자가 여행 취향 설문의 「갑자기 일정이 꼬이면」 문항에서 고른 방식에 따라 다음과 같이 합니다.",
+          "① 회원이 등록한 여행에 문제(날씨 · 재난 · 장소 휴무 등)가 생기면, 서비스는 그 여행의 항로 지킴이가 켜져 있는지에 따라 다음과 같이 합니다. 항로 지킴이는 여행 계획을 확인할 때 켜거나 끌 수 있고, 등록한 뒤에도 여행 화면에서 언제든 바꿀 수 있습니다.",
           list(
-            "「먼저 물어봐줘」를 고른 경우: 서비스는 일정을 바꾸기 전에 이용자에게 묻습니다. 안전에 관한 사건(지진 · 재난 문자 · 기상 경보 등)은 바로 알립니다.",
-            "그 밖의 경우: 서비스는 고른 대체 일정을 먼저 반영하고 알립니다. 다만 원인이 날씨뿐이면, 이용자가 「비슷한 곳으로 바꿔줘」를 직접 고른 경우에만 먼저 반영하고, 그렇지 않으면 바꾸기 전에 묻습니다.",
+            "항로 지킴이를 켠 경우: 서비스는 고른 대체 일정을 먼저 반영하고 알립니다. 다만 원인이 날씨뿐이고 그 장소가 실내인지 확인하지 못했으면, 바꾸기 전에 묻습니다.",
+            "항로 지킴이를 끄거나 정하지 않은 경우: 서비스는 일정을 바꾸기 전에 이용자에게 묻습니다. 안전에 관한 사건(지진 · 재난 문자 · 기상 경보 등)은 바로 알립니다.",
           ),
           "② 이용자가 고정하거나 잠근 일정, 여행 계획에 예약 번호가 적힌 일정은 서비스가 묻지 않고 바꾸지 않습니다.",
           "③ 이용자는 서비스가 반영한 변경을 채팅 · 웹 화면 · API로 되돌리거나 다른 안으로 바꿔 달라고 요청할 수 있습니다.",
@@ -265,10 +265,10 @@ const serviceTerms: TermsDoc = {
           "⑤ 게스트의 여행은 지켜보기와 알림 대상이 아닙니다.",
         ),
         paras(
-          "(1) If a problem (weather, a disaster, a venue closure and so on) affects a trip a member has registered, the Service acts according to the answer the user chose for \"If plans suddenly go wrong\" in the travel preference questions:",
+          "(1) If a problem (weather, a disaster, a venue closure and so on) affects a trip a member has registered, the Service acts according to whether that trip's Course Keeper is on. The Course Keeper can be turned on or off when the plan is checked, and changed at any time on the trip screen after the trip is registered:",
           list(
-            "\"Ask me first\": the Service asks the user before changing the schedule. Safety events (earthquakes, emergency alerts, weather warnings and so on) are sent at once.",
-            "Otherwise: the Service applies the alternative it chose first and then tells the user. If the only cause is the weather, however, the Service applies the change first only when the user directly chose \"Swap in something similar\"; otherwise it asks before changing.",
+            "Course Keeper on: the Service applies the alternative it chose first and then tells the user. If the only cause is the weather and the Service could not confirm that the place is indoors, however, it asks before changing.",
+            "Course Keeper off or not chosen: the Service asks the user before changing the schedule. Safety events (earthquakes, emergency alerts, weather warnings and so on) are sent at once.",
           ),
           "(2) The Service does not change, without asking, an item the user has pinned or locked, or an item for which the travel plan contains a booking number.",
           "(3) The user may ask, by chat, on the web screens or through the API, to undo a change the Service applied or to switch to another option.",
@@ -535,7 +535,7 @@ const privacy: TermsDoc = {
           "운영자는 다음 정보를 적힌 목적에만 쓰고, 적힌 기간 동안만 보관합니다.",
           list(
             `이용 상태 정보 — 항목: 서비스가 만든 무작위 이용자 번호, 로그인 세션 쿠키(서버에는 원래 값 대신 해시값만 저장). 목적: 로그인 상태 유지, 요청이 본인에게서 왔는지 확인. 기간: 세션은 게스트 ${RETENTION.guestSession[0]}, 회원 ${RETENTION.memberSession[0]}. 이용자 번호는 아래 여행 정보와 같은 기간.`,
-            "여행 정보 — 항목: 여행 계획 원문(붙여 넣은 글, 파일 · 사진에서 읽어 낸 글과 파일 이름. 올린 파일 자체는 저장하지 않음), 읽어 낸 일정(장소 · 시각 · 인원 · 예산 · 예약 번호 등 계획에 적힌 내용), 여행 취향 설문 답(여행 테마, 동행 구성과 직접 적은 동행 설명, 우선순위, 실내 · 실외, 일정이 꼬일 때 방식, 여유), 그 밖에 이용자가 준 여행 조건, 일정 변경 기록. 목적: 계획 읽기 · 확인, 일정 짜기, 여행 지켜보기와 알림, 여행계획서 링크.",
+            "여행 정보 — 항목: 여행 계획 원문(붙여 넣은 글, 파일 · 사진에서 읽어 낸 글과 파일 이름. 올린 파일 자체는 저장하지 않음), 읽어 낸 일정(장소 · 시각 · 인원 · 예산 · 예약 번호 등 계획에 적힌 내용), 여행 취향 설문 답(동행 구성과 직접 적은 동행 설명, 우선순위, 실내 · 실외, 여유), 항로 지킴이 켜짐 · 꺼짐, 그 밖에 이용자가 준 여행 조건, 일정 변경 기록. 목적: 계획 읽기 · 확인, 일정 짜기, 여행 지켜보기와 알림, 여행계획서 링크.",
             "채팅 정보 — 항목: 이용자의 질문과 서비스의 답, 그 질문을 처리한 기록(처리 기록). 목적: 질문에 답하기, 일정 변경과 되돌리기 처리, 잘못된 처리 확인.",
             "회원 정보(구글 계정을 연결한 경우) — 항목: 구글 계정 고유 번호를 서버 비밀값으로 바꾼 값, 연결 시각. 구글 계정의 이메일 · 이름 · 사진은 받지 않습니다. 목적: 회원 로그인. 기간: 연결을 풀 때까지.",
             "에이전트 키 정보(회원이 만든 경우) — 항목: 키의 해시값, 키 이름, 권한 범위, 만든 · 마지막으로 쓴 · 만료 시각. 목적: 회원의 AI 에이전트가 그 회원의 여행만 다루게 하기. 키는 만든 뒤 최장 90일이 지나면 쓸 수 없습니다.",
@@ -548,7 +548,7 @@ const privacy: TermsDoc = {
           "The Operator uses the following information only for the stated purposes and keeps it only for the stated periods.",
           list(
             `Usage state — items: a random user number created by the Service, and the sign-in session cookie (the server stores only a hash of its value). Purpose: keeping the user signed in and confirming that requests come from that user. Period: sessions last ${RETENTION.guestSession[1]} for guests and ${RETENTION.memberSession[1]} for members; the user number is kept as long as the trip information below.`,
-            "Trip information — items: the original travel plan (pasted text, and the text and file names read from files and photos; the uploaded files themselves are not stored), the schedule read from it (places, times, party size, budget, booking numbers and anything else written in the plan), answers to the travel preference questions (theme, companions including any description typed in, priorities, indoors or outdoors, what to do when plans go wrong, pace), other trip conditions the user gives, and the schedule change history. Purpose: reading and checking plans, drafting schedules, watching trips and sending alerts, and trip plan links.",
+            "Trip information — items: the original travel plan (pasted text, and the text and file names read from files and photos; the uploaded files themselves are not stored), the schedule read from it (places, times, party size, budget, booking numbers and anything else written in the plan), answers to the travel preference questions (companions including any description typed in, priorities, indoors or outdoors, pace), whether the Course Keeper is on or off, other trip conditions the user gives, and the schedule change history. Purpose: reading and checking plans, drafting schedules, watching trips and sending alerts, and trip plan links.",
             "Chat information — items: the user's questions, the Service's answers, and the records of how each question was handled (handling records). Purpose: answering questions, applying and undoing schedule changes, and checking for mistakes.",
             "Member information (if a Google account is connected) — items: a value derived from the Google account's unique number using a server secret, and the time of connection. The Google account's email, name and photo are not received. Purpose: member sign-in. Period: until the account is disconnected.",
             "Agent key information (if a member creates one) — items: a hash of the key, the key's name, its permission scope, and when it was created, last used and expires. Purpose: letting a member's AI agent work only on that member's trips. A key stops working at most 90 days after it is created.",
