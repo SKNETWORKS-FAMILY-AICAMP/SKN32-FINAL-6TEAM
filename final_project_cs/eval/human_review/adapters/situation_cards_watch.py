@@ -69,3 +69,8 @@ def build(src: Sources | None = None, set_name: str = "v0") -> Bundle:
 def build_h2(src: Sources | None = None) -> Bundle:
     """`[2026-10-20]` holdout-2 감시 경로 판 — 고객 문장 없이 설문만."""
     return build(src, "h2")
+
+
+def build_h3(src: Sources | None = None) -> Bundle:
+    """`[2026-10-20]` holdout-3 감시 경로 판."""
+    return build(src, "h3")

@@ -38,7 +38,8 @@ WEEKDAY = "월화수목금토일"
 
 #: ★`[2026-10-20]` 자료 묶음 — v0(holdout 80) · h2(holdout-2, `eval.alternative_pick.holdout2`)
 SETS = {"v0": ("cards_llm_bound_v0.jsonl", "sheet_llm_bound_v0.csv", "responses_llm_bound_v0.csv"),
-        "h2": ("cards_llm_bound_h2.jsonl", "sheet_llm_bound_h2.csv", "responses_llm_bound_h2.csv")}
+        "h2": ("cards_llm_bound_h2.jsonl", "sheet_llm_bound_h2.csv", "responses_llm_bound_h2.csv"),
+        "h3": ("cards_llm_bound_h3.jsonl", "sheet_llm_bound_h3.csv", "responses_llm_bound_h3.csv")}
 
 
 def use_set(name: str) -> None:
@@ -167,11 +168,11 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("split")
     mg = sub.add_parser("merge")
     mg.add_argument("sheets", nargs="+")
-    mg.add_argument("--set", choices=("v0", "h2"), default="v0",
+    mg.add_argument("--set", choices=tuple(SETS), default="v0",
                     help="h2 = holdout-2(`cards_llm_bound_h2.jsonl` · `sheet_llm_bound_h2.csv` → `responses_llm_bound_h2.csv`)")
     args = ap.parse_args(argv)
-    if getattr(args, "set", "v0") == "h2":
-        use_set("h2")
+    if getattr(args, "set", "v0") != "v0":
+        use_set(args.set)
     {"review": cmd_review, "split": cmd_split, "merge": cmd_merge}[args.cmd](args)
 
 

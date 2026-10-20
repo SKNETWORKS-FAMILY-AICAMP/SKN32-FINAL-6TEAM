@@ -55,7 +55,8 @@ def assert_ai_labels_are_valid_choices(bundle):
 
 def test_registry_names_match_expected_bundles():
     assert set(REGISTRY) == {"activity", "g96", "rag", "e2_v2", "pointing_h", "pointing_mx_dispute", "pointing_mx_check",
-                             "situation_cards", "situation_cards_watch", "situation_cards_h2", "situation_cards_watch_h2"}
+                             "situation_cards", "situation_cards_watch", "situation_cards_h2", "situation_cards_watch_h2",
+                             "situation_cards_h3", "situation_cards_watch_h3"}
 
 
 # ───────── G96 ─────────

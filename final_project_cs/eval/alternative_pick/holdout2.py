@@ -30,6 +30,22 @@ from .dev import CARDS_DIR, bind_fresh, load_holdout, pick
 
 BOUND_H2 = CARDS_DIR / "cards_llm_bound_h2.jsonl"
 SHEET_H2 = CARDS_DIR / "sheet_llm_bound_h2.csv"
+#: ★`[2026-10-20]` holdout-3 — 운영판(v3 + 분류 이름 + 이유 문장 지킴이)을 처음 보는 자료로 한 번 더 판정(사용자 결정 ③).
+#:  (카드 틀 고르기, 카드 id 머리, 기본 seed). h3 는 dev 가 쓴 틀 40장을 새 장소에 다시 묶는다 — h2 와 틀이 겹치지 않게
+SETS = {"h2": ("remaining", "H-", 2021), "h3": ("pick", "K-", 2022)}
+
+
+def set_paths(name: str) -> tuple[Path, Path]:
+    return CARDS_DIR / f"cards_llm_bound_{name}.jsonl", CARDS_DIR / f"sheet_llm_bound_{name}.csv"
+
+
+def bound_places(name: str) -> set[str]:
+    """이미 만든 holdout-N 결합본의 원래 장소 · 후보 contentid."""
+    path = set_paths(name)[0]
+    if not path.exists():
+        return set()
+    cards = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return {c["origin"]["id"] for c in cards} | {x["id"] for c in cards for x in c["candidates"]}
 SHEET_COLUMNS = ["카드", "작성자", "상황", "참고", "고객이 보낼 말(1~2문장)", "메모"]
 WRITERS = ("작성자1", "작성자2")
 
@@ -132,7 +148,8 @@ def situation(card: dict, old_title: str, fixes) -> str:
 
     at = datetime.fromisoformat(card["at"])
     # ★결합본 원래 장소(다시 고른 이름)가 문장에 없으면 카드 틀 이름(`origin_hint`)으로 적혀 있다(E · F 「X 일정이 바뀌어」)
-    for name in dict.fromkeys((old_title, card.get("origin_hint") or old_title)):
+    # ★긴 이름부터 — 「쌈지길」만 바꾸면 「인사동 쌈지길」이 「인사동 새장소」가 된다(H-79 · K-13 · K-65)
+    for name in sorted(dict.fromkeys((old_title, card.get("origin_hint") or old_title)), key=len, reverse=True):
         if f"{name}에 가려 했는데" in card["situation"]:
             return fixes.situation_for(card, name, card["origin"]["title"], card["origin"].get("outdoor"), at)
         if name in card["situation"]:
@@ -168,24 +185,36 @@ def write_sheet(path: Path, rows: list[dict]) -> None:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", type=int, default=4000)
-    parser.add_argument("--seed", type=int, default=2021)
+    parser.add_argument("--name", choices=tuple(SETS), default="h2")
+    parser.add_argument("--seed", type=int)
     parser.add_argument("--allow-partial", action="store_true")
+    parser.add_argument("--top10-only", action="store_true",
+                        help="화면 3곳 결합(느림 — h2 는 81분)을 건너뛰고 처음부터 운영 순위 상위 10곳에서 고른다")
     args = parser.parse_args(argv)
-    if BOUND_H2.exists():
-        raise SystemExit(f"{BOUND_H2.name} 가 이미 있다 — 덮어쓰지 않는다")
+    templates, prefix, seed = SETS[args.name]
+    args.seed = args.seed if args.seed is not None else seed
+    bound_path, sheet_path = set_paths(args.name)
+    if bound_path.exists():
+        raise SystemExit(f"{bound_path.name} 가 이미 있다 — 덮어쓰지 않는다")
 
     holdout = load_holdout()
-    used = ({c["origin"]["id"] for c in holdout} | {x["id"] for c in holdout for x in c["candidates"]} | dev_places())
-    todo = {c["card_id"]: c for c in remaining(holdout)}
-    partial = BOUND_H2.with_name(BOUND_H2.stem + ".partial.json")
-    bound, missing, fixes = bind_fresh(todo, used, sample=args.sample, seed=args.seed, partial=partial)
+    used = ({c["origin"]["id"] for c in holdout} | {x["id"] for c in holdout for x in c["candidates"]} | dev_places()
+            | (bound_places("h2") if args.name != "h2" else set()))
+    todo = {c["card_id"]: c for c in (remaining(holdout) if templates == "remaining" else pick(holdout))}
+    partial = bound_path.with_name(bound_path.stem + ".partial.json")
+    if args.top10_only:
+        from .dev import card_tools
+
+        bound, missing, fixes = {}, sorted(todo, key=lambda x: int(x[2:])), card_tools()[0]
+    else:
+        bound, missing, fixes = bind_fresh(todo, used, sample=args.sample, seed=args.seed, partial=partial)
     if missing:
         # ★`[2026-10-20 사용자 결정 ①]` 화면 3곳으로 못 묶은 카드는 운영 순위 상위 10곳에서 고른다
         taken = used | {card["origin"]["id"] for card in bound.values()} | {c["id"] for card in bound.values()
                                                                              for c in card["candidates"]}
         extra, missing = bind_top10({cid: todo_card for cid, todo_card in remaining_cards(holdout, missing).items()},
                                     taken, sample=args.sample, seed=args.seed,
-                                    partial=BOUND_H2.with_name(BOUND_H2.stem + ".top10.partial.json"))
+                                    partial=bound_path.with_name(bound_path.stem + ".top10.partial.json"))
         bound = {**bound, **extra}
     if missing and not args.allow_partial:
         raise SystemExit(f"결합 실패 {len(missing)}장 {missing} — 묶은 {len(bound)}장은 중간 파일에 남겼다(--allow-partial)")
@@ -194,21 +223,21 @@ def main(argv: list[str] | None = None) -> None:
     cards = []
     for cid in sorted(bound, key=lambda x: int(x[2:])):
         card = bound[cid]
-        new_id = cid.replace("L-", "H-")
+        new_id = cid.replace("L-", prefix)
         cards.append({**card, "card_id": new_id, "from_card": cid, "situation": situation(card, old_titles[cid], fixes),
                       "acceptable_draft": [c["id"] for c in card["candidates"]
                                            if card["preference_target"]["attribute"] in fixes.strict_attrs(c)],
                       "label_by": "rule-draft(strict_attrs) — 사람 라벨 전", "needs_review": "",
                       "writer_saw_candidates": False})
     writer = assign(cards, args.seed)
-    with BOUND_H2.open("w", encoding="utf-8", newline="\n") as fh:
+    with bound_path.open("w", encoding="utf-8", newline="\n") as fh:
         for c in cards:
             fh.write(json.dumps({**c, "writer": writer[c["card_id"]]}, ensure_ascii=False) + "\n")
     rows = [{"카드": c["card_id"], "작성자": writer[c["card_id"]], "상황": c["situation"],
              "참고": c.get("writer_hint", ""), "고객이 보낼 말(1~2문장)": "", "메모": ""} for c in cards]
-    write_sheet(SHEET_H2, rows)
+    write_sheet(sheet_path, rows)
     for w in WRITERS:
-        write_sheet(CARDS_DIR / f"write_by_{w}_h2.csv", [r for r in rows if r["작성자"] == w])
+        write_sheet(CARDS_DIR / f"write_by_{w}_{args.name}.csv", [r for r in rows if r["작성자"] == w])
     by = {w: {} for w in WRITERS}
     for c in cards:
         by[writer[c["card_id"]]][c["stratum"]] = by[writer[c["card_id"]]].get(c["stratum"], 0) + 1

@@ -38,6 +38,8 @@ SETS = {
     "v0": (BOUND, RESPONSES, DATASET, WATCH, ""),
     "h2": (CARDS / "cards_llm_bound_h2.jsonl", CARDS / "responses_llm_bound_h2.csv", HERE / "cases_h2.jsonl",
            HERE / "cases_watch_h2.jsonl", "_h2"),
+    "h3": (CARDS / "cards_llm_bound_h3.jsonl", CARDS / "responses_llm_bound_h3.csv", HERE / "cases_h3.jsonl",
+           HERE / "cases_watch_h3.jsonl", "_h3"),
 }
 
 

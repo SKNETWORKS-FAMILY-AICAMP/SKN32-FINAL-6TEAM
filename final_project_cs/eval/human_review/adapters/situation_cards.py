@@ -93,3 +93,8 @@ def _check_overlap(entry: dict) -> dict:
 def build_h2(src: Sources | None = None) -> Bundle:
     """`[2026-10-20]` holdout-2(`cards_llm_bound_h2.jsonl` + `responses_llm_bound_h2.csv`) — 고객 요청 판 라벨."""
     return build(src, "h2")
+
+
+def build_h3(src: Sources | None = None) -> Bundle:
+    """`[2026-10-20]` holdout-3 — 운영판(v3 + 지킴이) 판정용 고객 요청 판."""
+    return build(src, "h3")

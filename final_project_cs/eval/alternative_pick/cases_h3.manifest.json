@@ -1,0 +1,23 @@
+{
+ "built_on": "2026-10-20",
+ "cases": 40,
+ "by_stratum": {
+  "A": 7,
+  "B": 14,
+  "C": 7,
+  "D": 4,
+  "E": 6,
+  "F": 2
+ },
+ "split": [
+  "holdout"
+ ],
+ "source": "cards_llm_bound_h3.jsonl",
+ "sha256": "946ebb8c64d436514d7a3fd2d39860a5265d2869b6f6eb93f905e03c95d4be3f",
+ "inputs_sha256": "7586a4321eae5fcb38d4d0a592b725b927dd4ba65c746dfa5d22879af0a4b09f",
+ "labeler": "합의",
+ "labels_file": "situation_cards_h3_human_합의_2026-10-20.json",
+ "texts": "responses_llm_bound_h3.csv",
+ "smoke": false,
+ "set": "h3"
+}
