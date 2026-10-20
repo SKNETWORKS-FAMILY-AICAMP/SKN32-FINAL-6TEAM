@@ -250,3 +250,30 @@ def test_production_sends_class_names_with_prompt_v3(monkeypatch):
     from app.domains.travel_ops.instances.activity.judge.llm import file_instructions
 
     assert "class_name" in file_instructions(alternative_order.KIND)            # 가장 높은 판(v3)이 그 칸을 설명한다
+
+
+# ── `[2026-10-20]` 이유 문장 지킴이 — 확인할 수 없는 말 · 「A 아니면 B」 거꾸로 읽기 · 장소 번호 ──────────────────
+
+def _guarded(reason, text):
+    pool = [{"contentid": "a", "title": "은평역사한옥박물관"}, {"contentid": "b", "title": "진관사"}]
+    out = alternative_order.apply(pool, {"order": ["a", "b"], "used_preference": True, "reason": reason},
+                                  customer_text=text, classes={"a": "VE070100", "b": "HS030100"})
+    return out[1]["reason"], out[1]["reason_guard"], [c["contentid"] for c in out[0]]
+
+
+def test_reason_guard_replaces_unverifiable_claims_but_keeps_the_order():
+    reason, why, order = _guarded("조용한 실내에 맞게 박물관을 1순위로 했어요.", "조용한 실내로 부탁해요")
+    assert why == "unverifiable" and "조용" not in reason and order == ["a", "b"]
+    assert reason == "요청에 맞춰 ‘은평역사한옥박물관’(박물관)을 먼저 보여 드려요."
+
+
+def test_reason_guard_catches_a_reversed_either_or_and_content_ids():
+    assert _guarded("박물관 후보는 1순위를 피했어요.", "박물관 아니면 전시 같은 거")[1] == "reversed_either"
+    assert _guarded("박물관 말고 다른 곳을 먼저 두었어요.", "박물관 말고 전시")[1] is None     # 고객이 정말 거부했다
+    assert _guarded("3080519 를 1순위로 했어요.", "실내")[1] == "content_id"
+
+
+def test_reason_guard_leaves_grounded_reasons_alone():
+    reason, why, _ = _guarded("실내를 원하셔서 전시시설인 박물관을 먼저 보여 드려요.", "실내로 바꿔 주세요")
+    assert why is None and reason.startswith("실내를 원하셔서")
+    assert alternative_order._particle("무인비행장치(드론)") == "을" and alternative_order._particle("놀이터") == "를"

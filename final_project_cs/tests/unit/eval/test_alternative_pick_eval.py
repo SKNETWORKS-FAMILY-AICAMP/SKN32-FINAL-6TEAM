@@ -252,13 +252,14 @@ def test_call_failures_block_the_gate_and_drafts_are_reference_only():
 
 
 def test_export_reasons_sheet_and_read_back(tmp_path):
-    c = case(claims=("후기",))
-    rows = [observe(c, answer(["b2", "a1", "c3"], reason="후기가 좋아요")),
+    # ★`[2026-10-20]` 「후기」 같은 말은 이제 운영 지킴이(`guard_reason`)가 먼저 바꾼다 — 지킴이가 안 다루는 말로 자동 표시를 본다
+    c = case(claims=("SNS",))
+    rows = [observe(c, answer(["b2", "a1", "c3"], reason="SNS 에서 본 곳이에요")),
             observe(c, answer(["b2", "a1", "c3"]), repeat=2)]
     path = score.export_reasons(tmp_path, {c["case_id"]: c}, rows)
     with path.open(encoding="utf-8-sig", newline="") as fh:
         sheet = list(csv.DictReader(fh))
-    assert [r["자동 표시"] for r in sheet] == ["후기", ""]                  # 표시된 것 먼저, 그다음 무작위 표본
+    assert [r["자동 표시"] for r in sheet] == ["SNS", ""]                   # 표시된 것 먼저, 그다음 무작위 표본
     sheet[0][score.VERDICT_COL] = score.FABRICATED
     sheet[1][score.VERDICT_COL] = score.GROUNDED
     with path.open("w", encoding="utf-8-sig", newline="") as fh:

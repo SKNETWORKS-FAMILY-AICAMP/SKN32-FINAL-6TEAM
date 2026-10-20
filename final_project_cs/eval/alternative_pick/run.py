@@ -99,7 +99,8 @@ async def observe(case: dict, variant: str, repeat: int, order: list[str], ask: 
         row.update(status="llm_error", error=f"{type(exc).__name__}: {str(exc)[:200]}")
         return row
     output = getattr(call, "output", None)
-    applied = alternative_order.apply(pool, output)
+    applied = alternative_order.apply(pool, output, customer_text=preference.get("customer_text"),
+                                      classes=classes_of(case))
     row.update(output=output, applied=applied[1] if applied else None, model=getattr(call, "model", None),
                **{k: getattr(call, k, None) for k in ("latency_ms", "input_tokens", "output_tokens", "reasoning_tokens")})
     return row

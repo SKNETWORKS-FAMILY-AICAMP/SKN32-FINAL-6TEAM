@@ -359,7 +359,8 @@ class ReplacementMixin:
 
             def work() -> None:
                 try:
-                    applied = alternative_order.apply(pool, _run(ask()).output)
+                    applied = alternative_order.apply(pool, _run(ask()).output,
+                                                      customer_text=preference.get("customer_text"), classes=classes)
                 except Exception as exc:  # noqa: BLE001 — 섀도는 고객 결과와 상관없다. 보이게만 남긴다
                     _order_log.warning(json.dumps({"event": "alternative_order_shadow_error",
                                                    "case_id": str(task.case_id), "error": type(exc).__name__},
@@ -383,7 +384,9 @@ class ReplacementMixin:
             self._record_failure(task, fc.LLM_ERROR, tool=alternative_order.KIND, error=type(exc).__name__)
             warnings.append("대체 후보 순서 LLM 을 부르지 못해 코드 순서로 보여 줬다")
             return {"by": "code", "failed": fc.LLM_ERROR, "error": type(exc).__name__}
-        applied = alternative_order.apply(pool, getattr(call, "output", None))
+        # ★`[2026-10-20]` 이유 문장 지킴이 — 확인할 수 없는 말 · 「A 아니면 B」 거꾸로 읽기 · 장소 번호는 정해진 문장으로
+        applied = alternative_order.apply(pool, getattr(call, "output", None),
+                                          customer_text=preference.get("customer_text"), classes=classes)
         if applied is None:
             warnings.append("대체 후보 순서 LLM 의 답을 쓸 수 없어 코드 순서로 보여 줬다")
             return {"by": "code", "failed": fc.LLM_SCHEMA_INVALID}

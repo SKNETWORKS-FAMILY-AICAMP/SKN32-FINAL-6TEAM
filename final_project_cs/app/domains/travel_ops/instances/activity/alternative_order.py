@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -134,10 +135,50 @@ def payload(origin_title: str | None, candidates: list[dict[str, Any]], preferen
             "candidates": candidate_rows(candidates, classes, with_class_name=with_class_name), "preference": preference}
 
 
-def apply(candidates: list[dict[str, Any]], output: Any) -> tuple[list[dict[str, Any]], dict[str, Any]] | None:
+#: ★`[2026-10-20]` 이유 문장 지킴이 — 후보 정보로 확인할 수 없는 말. 고객이 이 조건을 말해도 이유에서 「맞다」고 하면 지어냄이다
+#:  (holdout-2: 「조용한 전시관에 맞다」 · dev 스트레스: 지시문 v4 로도 「조용한 실내에 맞게」 34/48 이 남았다)
+UNVERIFIABLE = ("조용", "한적", "붐비", "붐빔", "혼잡", "사람이 적", "주차", "와이파이", "wifi", "WiFi", "대기", "줄 서", "줄 안",
+                "웨이팅", "후기", "리뷰", "평점", "별점", "인기", "유명", "요금", "입장료", "가격", "무료", "음식 반입", "음식 가지고")
+#: 고객이 둘 다 원한다고 한 말(「A 아니면 B」) — 이때 이유가 「제외 · 말고」면 거꾸로 읽은 것이다(holdout-2 심각 H-63)
+EITHER = re.compile(r"아니면|또는|이나 |이든|든지")
+REFUSED_IN_REASON = re.compile(r"제외|말고|피했|피해|빼고|빼서")
+#: 장소 번호를 이유에 쓰지 않는다(고객에게 의미 없는 내부 id)
+CONTENT_ID = re.compile(r"\d{5,}")
+
+
+def _particle(word: str) -> str:
+    """을/를 — 마지막 한글 글자의 받침으로(괄호 · 숫자 뒤는 건너뛴다: 「(드론)」 → 「론」)."""
+    last = next((ch for ch in reversed(word) if "가" <= ch <= "힣"), "")
+    return "을" if last and (ord(last) - 0xAC00) % 28 else "를"
+
+
+def guard_reason(reason: str, customer_text: str | None, first: dict[str, Any], class_code: str | None
+                 ) -> tuple[str, str | None]:
+    """이유 문장을 확인한다. 문제가 있으면 분류 이름으로 만든 정해진 문장으로 바꾼다 — (이유, 바꾼 까닭 | None).
+
+    ★순서는 LLM 답 그대로 쓴다. 바꾸는 것은 고객에게 보이는 문장뿐이다(지어낸 말이 화면에 나가지 않게).
+    """
+    why = None
+    if any(w in reason for w in UNVERIFIABLE):
+        why = "unverifiable"
+    elif customer_text and EITHER.search(customer_text) and REFUSED_IN_REASON.search(reason):
+        why = "reversed_either"
+    elif CONTENT_ID.search(reason):
+        why = "content_id"
+    if why is None:
+        return reason, None
+    leaf = (class_path(class_code) or "").split(" > ")[-1]
+    title = str(first.get("title") or "")
+    named = f"‘{title}’({leaf})" if leaf else f"‘{title}’"
+    return f"요청에 맞춰 {named}{_particle(leaf or title)} 먼저 보여 드려요.", why
+
+
+def apply(candidates: list[dict[str, Any]], output: Any, *, customer_text: str | None = None,
+          classes: dict[str, str] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]] | None:
     """모델 답을 검증해 후보 순서를 바꾼다. 쓸 수 없는 답이면 `None`(코드 순서 그대로).
 
-    반환: (새 순서의 후보 전부, `order` 기록 — by · ids · reason · dropped).
+    반환: (새 순서의 후보 전부, `order` 기록 — by · ids · reason · dropped · reason_guard).
+    `[2026-10-20]` `customer_text` · `classes` 를 주면 이유 문장 지킴이(`guard_reason`)를 거친다.
     """
     if not isinstance(output, dict) or not isinstance(output.get("order"), list):
         return None
@@ -159,5 +200,8 @@ def apply(candidates: list[dict[str, Any]], output: Any) -> tuple[list[dict[str,
     # ★`[2026-10-13]` 순서를 바꿨으면 이유가 있어야 한다 — 근거 없이 순서만 바뀌는 것을 받지 않는다(코드 순서 그대로)
     if ids != [str(c.get("contentid")) for c in pool] and not reason:
         return None
+    guard = None
+    if reason:
+        reason, guard = guard_reason(reason, customer_text, by_id[ids[0]], (classes or {}).get(ids[0]))
     ordered = [by_id[k] for k in ids] + candidates[MAX_CANDIDATES:]
-    return ordered, {"by": "llm", "ids": ids, "reason": reason or None, "dropped": dropped}
+    return ordered, {"by": "llm", "ids": ids, "reason": reason or None, "dropped": dropped, "reason_guard": guard}
