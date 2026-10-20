@@ -75,4 +75,5 @@ impl_scope: cs — final_project_cs 의 확인 화면(웹)과 접수 고치기 �
 
 - ~~commit 세션 반영 → x600 실서버 확인~~ — 위 절에서 했다.
 - 웹 mock 서버 화면 시험(plan-check-screen · server-review) — 메모리 여유가 있는 곳에서.
+- mock 서버 화면 시험(화면 반응): 대상 5파일 97/97 통과(기대값 6곳을 check:false 에 맞춘 뒤). 전체 870: 바탕 판과 같은 35건 실패는 이번 변경과 무관 — 별도 과제.
 - DB 종단 시험: `check: false` 로 고친 뒤 `confirm` 409 · `revalidate` 뒤 등록 성공을 e2e 로 추가(DB 가 되는 곳에서 — 실서버에서는 409 를 확인함).
