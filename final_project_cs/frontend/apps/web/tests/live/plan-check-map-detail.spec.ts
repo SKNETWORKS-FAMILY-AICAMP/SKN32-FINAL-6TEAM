@@ -155,12 +155,13 @@ test("확인이 끝나면 목록은 맨 위(첫날의 첫 일정)에서 시작�
   // 읽는 동안 그려지는 장면을 지나온 접수(readingPolls 3): 목록은 그려지는 줄을 따라 내려갔다가 끝나면 맨 위로 돌아와야 한다.
   const server = mockServer(request);
   // This exercises the polling path: the mock server's one-shot SSE snapshot cannot advance readingPolls.
-  await server.scenario({ review: "on", board: "rich", readingPolls: 3, intakeEvents: "off" });
+  // `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+  await server.scenario({ review: "on", board: "calm", readingPolls: 3, intakeEvents: "off" });
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
   await checkPlan(page);
-  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
+  await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 40_000 });
   await page.waitForTimeout(2500);                                                                      // 맨 위로 돌아오는 움직임이 끝나도록
   const top = await page.locator('[class*="sheetBody"]').first().evaluate((element) => element.scrollTop);
   expect(top).toBeLessThan(4);

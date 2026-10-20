@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exampleDone, exampleSnapshots } from "./test-views";
-import { nextStep, progress, tally, timeline, type PlanCheckView } from "./model";
+import { beginRecheck, nextStep, onlyCard, progress, rebase, stopAt, tally, timeline, type PlanCheckView } from "./model";
 
 /** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. */
 function walk(from: PlanCheckView, to: PlanCheckView): PlanCheckView[] {
@@ -122,3 +122,53 @@ describe("plan check — what the screen draws, one change at a time", () => {
     expect(steps.every((view) => JSON.stringify(view.items) === JSON.stringify(exampleDone.items))).toBe(true);
   });
 });
+
+describe("`[2026-10-20 C안]` the first check stops at a card that needs a look", () => {
+  const steps = walk(received, exampleDone);
+  /** The first drawn state where card b's verdict 「확인 필요」 is in. */
+  const atB = steps.find((view) => view.items.find((item) => item.id === "b")?.verdict === "review")!;
+
+  it("stops at the first drawn card that needs a look, once the server's check is final", () => {
+    expect(stopAt(atB, exampleDone)).toBe("b");
+    expect(stopAt(atB, { ...exampleDone, stage: "checking" })).toBeNull();
+    expect(stopAt(steps[steps.indexOf(atB) - 1], exampleDone)).toBeNull();      // b's checks are in, not its verdict yet
+  });
+
+  it("does not draw a 「확인 필요」 verdict before the check is final (the page stops there to ask)", () => {
+    const streaming: PlanCheckView = { ...exampleDone, stage: "checking", title: null };
+    const drawn = walk(steps.find((view) => view.stage === "checking")!, streaming);
+    const b = drawn.at(-1)!.items.find((item) => item.id === "b")!;
+    expect(b.checks.map((row) => row.result)).toEqual(["bad", "warn", "unknown", "unknown"]);
+    expect(b.verdict).toBeNull();
+    expect(drawn.at(-1)!.items.map((item) => item.id)).toEqual(["a", "b"]);
+  });
+
+  it("tells a step that changes only the stopped card from one that draws past it", () => {
+    const next = nextStep(atB, exampleDone)!;
+    expect(onlyCard(atB, next, "b")).toBe(false);                               // the leg to c and card c
+    expect(onlyCard(atB, beginRecheck(atB, "b"), "b")).toBe(true);
+  });
+
+  it("checks the picked card again where it stands: its checks wait with their words kept, then take the new plan's", () => {
+    const asked = beginRecheck(atB, "b");
+    const b = asked.items.find((item) => item.id === "b")!;
+    expect(b.checks.every((row) => row.result === "pending")).toBe(true);
+    expect(b.checks.map((row) => row.text)).toEqual(exampleDone.items[1].checks.map((row) => row.text));
+    expect(b.verdict).toBe("review");
+    const fixed: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
+      : { ...item, title: "올리브영 광화문점", place: "올리브영 광화문점", verdict: "keep", checks: [{ kind: "place", result: "ok", text: "고른 곳이에요" }, { kind: "time", result: "ok", text: "겹치지 않아요" }] }) };
+    const based = rebase(asked, fixed, "b");
+    const nb = based.items.find((item) => item.id === "b")!;
+    expect(nb).toMatchObject({ title: "올리브영 광화문점", verdict: "review" });
+    expect(nb.checks).toEqual([{ kind: "place", result: "pending", text: "지점이 여러 곳이라 정하지 못했어요" }, { kind: "time", result: "pending", text: "경복궁 관람과 30분 겹쳐요 · 등록 때 막힐 수 있어요" }]);
+    expect(based.items.map((item) => item.id)).toEqual(["a", "b"]);              // c and d are not drawn yet
+    expect(based.moves.map((move) => move.id)).toEqual(["a-b"]);
+    // Then each check is ticked in, the verdict last — and the check goes on past b.
+    const more = walk(based, fixed);
+    const passed = more.findIndex((view) => view.items.find((item) => item.id === "b")!.verdict === "keep");
+    expect(more.slice(0, passed).map((view) => view.items.find((item) => item.id === "b")!.checks.map((row) => row.result))).toEqual([["ok", "pending"], ["ok", "ok"]]);
+    expect(stopAt(more[passed], fixed)).toBeNull();
+    expect(more.at(-1)).toEqual(fixed);
+  });
+});
+

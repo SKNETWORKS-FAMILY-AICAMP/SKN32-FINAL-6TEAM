@@ -94,6 +94,12 @@ export interface PlanItem {
    * its candidates, 「직접 고르기」 and 「장소 없이」. `blocked` = the lookup was blocked and searched once more. Absent once the stop has a place or 「장소 없음」.
    */
   unfound?: { question: string; blocked: boolean };
+  /**
+   * `[2026-10-20 사용자 결정 — 계획 확인 C안]` How the server settled the place (`place_state`: `picked_nearest` = one of several, the nearest taken for now) and how many places
+   * matched the name (`candidates_hint`) — what the question asked at the stop says. Absent where the server did not say (the preview, an older server).
+   */
+  placeState?: string | null;
+  placeChoices?: number | null;
 }
 
 /**
@@ -280,6 +286,9 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheck
       const have = shown.items.find((item) => item.id === entry.id);
       const step = advance(have, want, "rows");
       if (step === undefined) continue;
+      // `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card that needs a look shows that only once the check is final: the screen stops there to ask (`stopAt`), so it waits rather than
+      //   draw past a verdict the server may still change.
+      if (have && step.verdict === "review" && have.verdict !== "review" && target.stage !== "done") return null;
       const items = have ? shown.items.map((item) => item.id === want.id ? step : item) : insertInOrder(shown.items, step, target.items);
       return { ...shown, items };
     }
@@ -319,6 +328,46 @@ function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have
 function insertInOrder(items: PlanItem[], item: PlanItem, order: PlanItem[]): PlanItem[] {
   const rank = (id: string) => order.findIndex((entry) => entry.id === id);
   return [...items, item].sort((a, b) => rank(a.id) - rank(b.id));
+}
+
+/**
+ * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` Where the first check stops to ask: the first card along the days whose drawn verdict is 「확인 필요」, once the server's check is final.
+ * Nothing past it is drawn until the customer picks and the card passes (flow mockup `mockups/tripilot-plan-flow-register.html` 4단계).
+ */
+export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | null {
+  if (target.stage !== "done") return null;
+  for (const entry of checkOrder(shown)) {
+    if (entry.type !== "item") continue;
+    if (shown.items.find((item) => item.id === entry.id)?.verdict === "review") return entry.id;
+  }
+  return null;
+}
+
+/** `[2026-10-20 C안]` Whether `next` changes nothing on screen but the card `id` (while the screen is stopped at it, nothing else is drawn). */
+export function onlyCard(shown: PlanCheckView, next: PlanCheckView, id: string): boolean {
+  const rest = (view: PlanCheckView) => JSON.stringify([view.stage, view.title, view.days, view.moves, view.items.filter((item) => item.id !== id)]);
+  return rest(shown) === rest(next);
+}
+
+/** `[2026-10-20 C안 — 고른 뒤 다시 확인]` The card picked for is checked again where it stands: every check waits again, its words kept until the new ones come. */
+export function beginRecheck(shown: PlanCheckView, id: string): PlanCheckView {
+  return { ...shown, items: shown.items.map((item) => item.id !== id ? item : { ...item, checks: item.checks.map((row) => ({ ...row, result: "pending" as const })) }) };
+}
+
+/**
+ * `[2026-10-20 C안 — 고른 뒤 다시 확인]` The server answered the pick with the new plan: what is drawn takes it at once (a stop or leg gone is dropped, a leg is kept where both its
+ * ends are drawn), except the card `id`, which takes the new place and times with its new checks still waiting (the words it had kept where the check is the same kind) —
+ * they are then ticked in one by one, and its verdict last.
+ */
+export function rebase(shown: PlanCheckView, target: PlanCheckView, id: string): PlanCheckView {
+  const drawn = new Set(shown.items.map((item) => item.id));
+  const items = target.items.filter((item) => drawn.has(item.id)).map((item) => {
+    if (item.id !== id) return item;
+    const was = shown.items.find((entry) => entry.id === id)!;
+    return { ...item, verdict: was.verdict, checks: item.checks.map((row, at) => ({ ...row, result: "pending" as const, text: was.checks[at]?.kind === row.kind ? was.checks[at].text : "" })) };
+  });
+  const kept = new Set(items.map((item) => item.id));
+  return { ...shown, items, moves: target.moves.filter((move) => kept.has(move.fromId) && kept.has(move.toId)) };
 }
 
 /**

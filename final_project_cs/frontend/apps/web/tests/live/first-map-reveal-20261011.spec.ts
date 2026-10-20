@@ -10,7 +10,8 @@ for (const width of [375, 1280]) {
     test("질문 뒤 전체 일정은 먼저 접혀 있고 마커만 하나씩 등장하며 읽기 화면은 되돌아오지 않는다", async ({ page, request }) => {
       const api = mockServer(request);
       await api.reset();
-      await api.scenario({ questions: "two", readingPolls: 999, board: "rich", review: "on" });
+      // `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+      await api.scenario({ questions: "two", readingPolls: 999, board: "calm", review: "on" });
       await start(page);
       const lines = ["10월 1일 서울 여행", "09:00 경복궁 관람", "11:00 올리브영", "12:30 광장시장"];
       await patchIntake(page, view => {

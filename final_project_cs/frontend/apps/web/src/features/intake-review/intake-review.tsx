@@ -217,7 +217,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       : silence?.stage === 60 ? { text: t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute"), sub: t("이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "Keep waiting here, or go back and send it again shortly."), note: t("60초 이상 새 진행 소식이 없어요.", "No new progress for at least 60 seconds.") }
       : silence?.stage === 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again."), note: t("30초 이상 새 진행 소식이 없어요.", "No new progress for at least 30 seconds.") }
       : null;
-    return <PlanCheck key="plan" view={reading} notice={streamNote ?? testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
+    // `[2026-10-20 사용자 결정 — 계획 확인 C안]` Once the server's check is final the replay can stop at a card that needs a look and ask inside it: the changes are wired here too.
+    return <PlanCheck key="plan" view={reading} notice={streamNote ?? testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined}
+      actions={view.status === "review" && view.review ? server.actions : undefined} />;
   }
   if (view.status === "fatal") {
     return shell(<Panel className={styles.waiting}>

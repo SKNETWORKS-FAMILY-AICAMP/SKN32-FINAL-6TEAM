@@ -17,7 +17,8 @@ export function Checks({ id, rows }: { id?: string; rows: CheckRow[] }) {
     <li key={`${row.kind}-${index}`} className={styles.check} data-result={row.result}>
       <span className={styles.mark} aria-hidden="true">{GLYPH[row.result]}</span>
       <b className={styles.checkKind}>{kindLabel(row.kind, t)}</b>
-      <span className={styles.checkText}>{row.result === "pending" ? t("확인하는 중…", "Checking…") : row.text}</span>
+      {/* `[2026-10-20 C안 — 고른 뒤 다시 확인]` A check asked again keeps its words while its mark spins; only one with no words yet says it is being checked. */}
+      <span className={styles.checkText}>{row.result === "pending" && !row.text ? t("확인하는 중…", "Checking…") : row.text}</span>
       <span className="sr-only">{resultLabel(row.result, t)}</span>
     </li>)}</ul>;
 }

@@ -87,14 +87,15 @@ test("설정의 「애니메이션 건너뛰기」를 켜면 읽는 중에서 �
 });
 
 test("시스템의 「동작 줄이기」가 켜져 있어도 단계별 재생은 그대로 보인다 — 읽는 화면이 먼저 나오고 결과는 한참 뒤에야 뜬다", async ({ page, request }) => {
-  await mockServer(request).scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
+  // `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+  await mockServer(request).scenario({ review: "on", board: "calm", intakeEvents: "on", readingPolls: 1 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
   await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", level: 1 })).toBeVisible({ timeout: 5_000 });
   await page.waitForTimeout(1_500);
-  await expect(needsBadge(page)).toHaveCount(0);                  // 1.5초 뒤에도 아직 재생 중이다
-  await expect(needsBadge(page)).toBeVisible({ timeout: 30_000 });   // 재생이 끝나면 결과가 뜬다
+  await expect(page.locator('main[data-stage="done"]')).toHaveCount(0);                  // 1.5초 뒤에도 아직 재생 중이다
+  await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 30_000 });   // 재생이 끝나면 결과가 뜬다
 });
 
 test("읽는 중 화면의 뒤로 화살표는 계획 입력 화면으로 돌아간다", async ({ page, request }) => {

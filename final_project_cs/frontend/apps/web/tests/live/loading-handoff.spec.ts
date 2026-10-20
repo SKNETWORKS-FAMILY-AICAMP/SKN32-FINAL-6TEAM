@@ -39,7 +39,8 @@ test("「직접 입력」은 입력 화면에서 보내고(ST4F-615 — 진행 �
 
 test("설문에 머무는 동안 재생이 소진되지 않고 다음을 누른 순간부터 축적된 결과를 재생한다", async ({ page, request }) => {
   const server = mockServer(request);
-  await server.scenario({ questions: "two", readingPolls: 999, intakeEvents: "on", review: "off", board: "rich" });
+  // `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+  await server.scenario({ questions: "two", readingPolls: 999, intakeEvents: "on", review: "off", board: "calm" });
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);

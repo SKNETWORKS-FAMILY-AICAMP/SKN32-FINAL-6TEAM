@@ -28,15 +28,18 @@ async function uploadPlan(page: Page) {
   await checkPlan(page);
 }
 
-test("읽는 동안 서버의 내용 이벤트로 장소 카드와 검사 줄이 차례로 채워지고, 끝나면 서버의 판정이 그대로 보인다", async ({ page, request }) => {
+// `[2026-10-20 사용자 결정 — 계획 확인 C안]` 서버 검사가 끝나면 첫 검사는 확인이 필요한 카드(올리브영)에서 멈춰 그 카드 안에서 묻는다 — 판정과 검사 줄은 서버 그대로.
+test("읽는 동안 서버의 내용 이벤트로 장소 카드와 검사 줄이 차례로 채워지고, 끝나면 확인이 필요한 카드에서 서버의 판정 그대로 멈춘다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
   await start(page);
   await uploadPlan(page);
 
-  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
+  await expect(page.locator("[data-stop-question]")).toBeVisible({ timeout: 40_000 });
   await expect(card(page, "경복궁 관람")).toBeVisible();
   await expect(card(page, "올리브영")).toContainText("확인 필요");
+  await expect(card(page, "올리브영")).toContainText("경복궁 관람과 30분 겹쳐요");                    // 서버가 쓴 문장 그대로
+  await expect(page.locator('li[data-entry-id="0-2"]')).toHaveAttribute("data-reveal-waiting", "true");   // 그 뒤 일정은 아직 확인하지 않는다
   await expect(card(page, "광장시장")).not.toContainText("조정");                                    // 「조정」은 더 말하지 않는다
   expect((await server.received("GET", `${INTAKE}/events`)).length).toBeGreaterThan(0);
   // 스트림이 일을 했으니 1.5초 폴링은 필요 없었다: 접수 조회는 처음 한 번과 끝난 뒤 몇 번뿐이다
@@ -49,7 +52,7 @@ test("실시간 진행이 열렸다가 아무 소식도 없으면 「연결이 �
   await start(page);
   await uploadPlan(page);
   await expect(page.getByText("연결이 끊겼어요", { exact: false })).toBeVisible({ timeout: 20_000 });
-  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
+  await expect(page.locator("[data-stop-question]")).toBeVisible({ timeout: 40_000 });               // `[2026-10-20 C안]` 끝까지 따라가 확인이 필요한 카드에서 멈춘다
 });
 
 test("결과: 카드는 서버의 판정(확인 필요만 말한다)과 검사 줄을 그대로 보이고, 이동 줄은 경로·수단·도착을 보인다", async ({ page, request }) => {

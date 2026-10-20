@@ -67,6 +67,7 @@ const DEFAULTS = {
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
+  //   | "calm" (`[2026-10-20 C안]` the rich board with nothing to fix — the first check runs to its end without stopping; see `calmBoard`)
   //   | "stay" (`[2026-10-15 ST4F-499]` three days with a two-night hotel — see `freshStayBoard`)
   board: "simple",
   // 받아쓰기 두 읽기 (2026-10-07): "on" = the first stop was read two ways off a photo (`rereads[]` + a warning row) — see `withReread`; "note_only" = the other value is unknown (`other: null`).
@@ -429,7 +430,7 @@ const place = (name, latitude, longitude, extra = {}) => ({ name, latitude, long
 /** The check of a plan — the shape of `review` in the real server's answer. "rich": three stops (one needs review) and two legs. */
 function freshBoard(kind = "simple") {
   const rich = freshRichBoard();
-  const board = kind === "rich" ? withUnfoundStop(rich) : kind === "stay" ? freshStayBoard() : { revision: 1, items: [rich.items[0]], moves: [] };
+  const board = kind === "rich" ? withUnfoundStop(rich) : kind === "calm" ? calmBoard(rich) : kind === "stay" ? freshStayBoard() : { revision: 1, items: [rich.items[0]], moves: [] };
   return scenario.reread === "on" || scenario.reread === "note_only" ? withReread(board) : board;
 }
 
@@ -445,6 +446,18 @@ function withReread(board) {
     rows: [row("place", "warn", REREAD_NOTE), ...first.rows.filter((line) => line.row !== "place")] }, ...rest] };
 }
 // ── 받아쓰기 두 읽기 (2026-10-07) ── 끝
+
+/**
+ * `[2026-10-20 C안]` `board: "calm"` — the rich board's three stops and two legs with nothing to fix: 올리브영 is a place it found (광화문점) and the leg to it arrives in time.
+ * The first check (`features/plan-check`) stops to ask at a stop that needs a look; this board lets a test watch the check run to its end (the map, the follow, the reveal).
+ */
+function calmBoard(rich) {
+  return { ...rich,
+    items: rich.items.map((item) => item.id !== "0-1" ? item : { ...item, status: "keep", can_lock: true, place_state: "found", candidates_hint: null,
+      place: place("올리브영 광화문점", 37.5717, 126.9791, { source: "kakao" }), rows: [row("place", "ok", "올리브영 광화문점으로 찾았어요"), row("time", "ok", "시간이 겹치지 않아요")] }),
+    moves: rich.moves.map((move) => move.to !== "0-1" ? move : { ...move, status: "keep", slack_min: 21,
+      rows: [row("route", "ok", "경복궁역 → 광화문역"), row("mode", "ok", "지하철 3호선 9분 · 0.6km"), row("arrival", "ok", "21분 여유")] }) };
+}
 
 function freshRichBoard() {
   return {

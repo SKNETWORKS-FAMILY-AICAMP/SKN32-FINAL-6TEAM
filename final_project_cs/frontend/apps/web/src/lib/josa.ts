@@ -9,3 +9,4 @@ export const eul = (word: string) => word + (final(word) ? "을" : "를");
 /** ㄹ-final words take 「로」 like vowels (「서울로」). */
 export const ro = (word: string) => word + (final(word) && final(word) !== 8 ? "으로" : "로");
 export const gwa = (word: string) => word + (final(word) ? "과" : "와");
+export const eun = (word: string) => word + (final(word) ? "은" : "는");

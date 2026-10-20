@@ -7,7 +7,8 @@ for (const width of [375, 1280]) {
     test("질문이 남아 완료 화면을 붙잡아도 마지막 7/8 진행 문구는 사라지고 결과 화면에서도 되살아나지 않는다", async ({ page, request }) => {
       const server = mockServer(request);
       await server.reset();
-      await server.scenario({ questions: "two", readingPolls: 999, board: "rich", review: "on" });
+      // `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+      await server.scenario({ questions: "two", readingPolls: 999, board: "calm", review: "on" });
       await start(page);
       // 실제 SSE 응답의 마지막 진행 값만 7/8로 바꾼다. 완료 이벤트와 결과 조회는 기존 mock 서버가 보낸다.
       let injected = false;
@@ -48,7 +49,7 @@ for (const width of [375, 1280]) {
       }
       await page.getByRole("button", { name: "읽어 온 계획 확인하기", exact: true }).click();
       await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", exact: true })).toHaveCount(0);
-      await expect(page.getByRole("button", { name: /^확인 필요 \d+곳$/ })).toBeVisible({ timeout: 20000 });
+      await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 20000 });
       await expect(page.getByText("7/8 · 인사동 → 창덕궁 이동 확인 중", { exact: true })).toHaveCount(0);
     });
   });

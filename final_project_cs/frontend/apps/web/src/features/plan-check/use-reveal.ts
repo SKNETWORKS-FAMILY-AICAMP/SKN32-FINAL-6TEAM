@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSettings } from "@/lib/settings";
-import { nextStep, type PlanCheckView } from "./model";
+import { beginRecheck, nextStep, onlyCard, rebase, stopAt, type PlanCheckView } from "./model";
 
 /**
  * ★`[2026-10-04 사용자 지시 · 코덱스 의견]` 확인 표시는 사용자가 「이건 확인됐구나」를 알아볼 속도로 켜진다 — 한 줄이 켜지고 다음 줄이 켜지기까지 300ms
@@ -85,8 +85,17 @@ export function pauseBefore(shown: PlanCheckView, next: PlanCheckView): number {
  * late open shows where things stand, without replaying); changes during the first check are reached one at a time (`nextStep`).
  * After the check is done, edits are shown together: another action must use the whole saved plan, not a partially replayed edit.
  * With the menu's 「애니메이션 건너뛰기」 on it is drawn at once.
+ *
+ * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` With `stops` on (the page can change places), the first check stops at the first card that needs a look once the server's check is final
+ * (`stopAt`): `stop` says which, and nothing past it is drawn. `recheck.begin` is called when the customer picks: the card's checks wait again where they stand and, once the
+ * server answers with a new revision, they are ticked in again (`rebase`) — the replay goes on when the card passes, or stops at it again. `settling` is true from the pick until
+ * the card's verdict is in. Not settled while stopped.
  */
-export function useReveal(target: PlanCheckView, paused = false): { view: PlanCheckView; settled: boolean } {
+export interface RevealStop { id: string; settling: boolean }
+export function useReveal(target: PlanCheckView, paused = false, stops = false): {
+  view: PlanCheckView; settled: boolean; stop: RevealStop | null;
+  recheck: { begin: (id: string) => void; fail: (id: string) => void };
+} {
   // ★`[2026-10-03 사용자 결정]` Skipping is the customer's own choice in the menu (「애니메이션 건너뛰기」), not the system's 「동작 줄이기」: the steps are
   //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
   const { skipAnimation: reduced } = useSettings();
@@ -101,12 +110,16 @@ export function useReveal(target: PlanCheckView, paused = false): { view: PlanCh
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
   if (immediate && shown !== target) setShown(target);
+  // `[2026-10-20 C안]` A pick sent for the stopped card, and the revision it was sent on: nothing is drawn until the server answers with another one.
+  const [asked, setAsked] = useState<{ id: string; revision: number | undefined } | null>(null);
+  if (asked && target.revision !== asked.revision) { setAsked(null); setShown(rebase(shown, target, asked.id)); }
+  const stopId = stops && !immediate ? stopAt(shown, target) : null;
   // The most reading steps that have been waiting since the screen last caught up: the reading pace is set by that, not by what is left.
   const peak = useRef(0);
   // When the stage of the top bar last changed on screen (the clock of `STAGE_MIN_MS`).
   const stageSince = useRef<{ stage: PlanCheckView["stage"]; at: number } | null>(null);
   useEffect(() => {
-    if (paused) return;
+    if (paused || asked) return;
     if (immediate) {
       peak.current = 0;
       if (stageSince.current?.stage !== target.stage) stageSince.current = { stage: target.stage, at: performance.now() };
@@ -115,6 +128,8 @@ export function useReveal(target: PlanCheckView, paused = false): { view: PlanCh
     if (stageSince.current?.stage !== shown.stage) stageSince.current = { stage: shown.stage, at: performance.now() };
     const upcoming = stepMany(shown, target, 1);
     if (!upcoming) { peak.current = 0; return; }
+    // Stopped at a card: only that card is drawn (its checks ticked in again after a pick); nothing past it.
+    if (stopId && !onlyCard(shown, upcoming, stopId)) return;
     // While lines are still being read they keep their own slow pace, one step at a time; the checks after them are drawn at the C안 pace (`pauseBefore`).
     const work = linesBacklog(shown, target);
     peak.current = work > 0 ? Math.max(peak.current, work) : 0;
@@ -123,8 +138,19 @@ export function useReveal(target: PlanCheckView, paused = false): { view: PlanCh
     if (upcoming.stage !== shown.stage && stageSince.current) wait = Math.max(wait, STAGE_MIN_MS - (performance.now() - stageSince.current.at));
     const timer = setTimeout(() => setShown(upcoming), wait);
     return () => clearTimeout(timer);
-  }, [shown, target, immediate, paused]);
+  }, [shown, target, immediate, paused, asked, stopId]);
   // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
   const live = useMemo(() => (shown.serverProgress === target.serverProgress ? shown : { ...shown, serverProgress: target.serverProgress }), [shown, target.serverProgress]);
-  return immediate ? { view: target, settled: true } : { view: live, settled: !paused && nextStep(shown, target) === null };
+  const recheck = {
+    begin: (id: string) => { setAsked({ id, revision: target.revision }); setShown((current) => beginRecheck(current, id)); },
+    // The pick was refused: the card is as the server still has it.
+    fail: (id: string) => {
+      setAsked(null);
+      const kept = target.items.find((item) => item.id === id);
+      setShown((current) => ({ ...current, items: current.items.map((item) => item.id === id && kept ? kept : item) }));
+    },
+  };
+  if (immediate) return { view: target, settled: true, stop: null, recheck };
+  const settling = Boolean(asked) || (stopId !== null && JSON.stringify(shown.items.find((item) => item.id === stopId)) !== JSON.stringify(target.items.find((item) => item.id === stopId)));
+  return { view: live, settled: !paused && !asked && !stopId && nextStep(shown, target) === null, stop: stopId ? { id: stopId, settling } : null, recheck };
 }

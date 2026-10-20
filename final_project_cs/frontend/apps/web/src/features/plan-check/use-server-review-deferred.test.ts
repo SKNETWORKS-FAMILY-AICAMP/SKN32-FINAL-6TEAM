@@ -96,4 +96,29 @@ describe("plan check saves changes and checks them once, when sent again", () =>
     await screen.actions.candidates!("0-0");
     expect(harness.stream).toHaveBeenCalledTimes(2);
   });
+
+  it("`[2026-10-20 C안]` saves a pick inside the first check's question WITH the check — no 「다시 제출」, no undo, the alternatives asked again", async () => {
+    harness.stream.mockResolvedValue({ candidates: [candidate("창덕궁", 1), candidate("덕수궁", 2)], notes: [] });
+    let view = plan();
+    const screen = draw(view, vi.fn((next: ReviewedIntakeView) => { view = next; }));
+    const first = await screen.actions.candidates!("0-0");
+    harness.edit.mockResolvedValue(plan(4, true));
+    await screen.actions.replace!("0-0", { candidate: first[1] }, { flow: true });
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3, expect.any(Array), "ko");
+    const after = draw(view);
+    expect(after.dirty).toBe(false);
+    expect(after.actions.canUndo!()).toBe(false);
+    await after.actions.candidates!("0-0");
+    expect(harness.stream).toHaveBeenCalledTimes(2);
+  });
+
+  it("`[2026-10-20 C안]` keeps the place the server took for now as the customer's pick", async () => {
+    const taken = { ...plan(), review: { ...plan().review!, items: [{ ...plan().review!.items[0], place_state: "picked_nearest",
+      place: { name: "올리브영 광화문점", latitude: 37.571, longitude: 126.976, source: "kakao", kind: null } }] } } as unknown as ReviewedIntakeView;
+    harness.edit.mockResolvedValue(plan(4, true));
+    const screen = draw(taken);
+    await screen.actions.confirmPlace!("0-0", { flow: true });
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3,
+      [{ source_id: "source-a", field: "items[0].place", value: { name: "올리브영 광화문점", latitude: 37.571, longitude: 126.976, source: "kakao" } }], "ko");
+  });
 });

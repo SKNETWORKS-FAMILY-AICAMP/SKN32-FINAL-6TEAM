@@ -38,7 +38,9 @@ export const nearBottom = (box: { scrollTop: number; clientHeight: number; scrol
  * `find` picks the row to follow in the list; `change` is whatever changes when rows are added (the drawn view). Spread
  * `handlers` on the list element.
  */
-export function useFollowScroll(box: RefObject<HTMLElement | null>, find: (box: HTMLElement) => HTMLElement | null, enabled: boolean, change: unknown, align: FollowAlign = "nearest") {
+export function useFollowScroll(box: RefObject<HTMLElement | null>, find: (box: HTMLElement) => HTMLElement | null, enabled: boolean, change: unknown, align: FollowAlign = "nearest",
+  /** `[2026-10-20 C안]` For `top`: the room above the followed row (under the stop banner while the check is stopped); `FOLLOW_TOP_PX` when left out. */
+  topRoom?: (box: HTMLElement) => number) {
   const [following, setFollowing] = useState(true);
   const touched = useRef(0);
 
@@ -58,13 +60,13 @@ export function useFollowScroll(box: RefObject<HTMLElement | null>, find: (box: 
     const element = box.current;
     const target = element && find(element);
     if (!element || !target) return;
-    const delta = scrollDelta(element.getBoundingClientRect(), target.getBoundingClientRect(), align === "top" ? FOLLOW_TOP_PX : FOLLOW_MARGIN_PX, align);
+    const delta = scrollDelta(element.getBoundingClientRect(), target.getBoundingClientRect(), align === "top" ? topRoom?.(element) ?? FOLLOW_TOP_PX : FOLLOW_MARGIN_PX, align);
     if (Math.abs(delta) < 1) return;
     // `[2026-10-20 사용자 결정 — 계획 확인 C안]` Pinned at the top, the list moves once per card (its checks tick in where it stands): the browser's own smooth scroll, at once when motion is reduced.
     if (align === "top") { element.scrollTo({ top: element.scrollTop + delta, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return; }
     // ★`[2026-10-06 사용자 지적]` A damped spring, not the browser's fixed smooth scroll that restarts at every row (it looked jerky): the list eases towards the newest row and keeps its speed as rows are added.
     dampedScrollTo(element, element.scrollTop + delta);
-  }, [box, find, enabled, following, change, align]);
+  }, [box, find, enabled, following, change, align, topRoom]);
 
   const note = useCallback(() => { touched.current = Date.now(); }, []);
   // ★A press on a row (a card, a button) is a click, not a scroll: counting it made the screen's own next scroll look like the customer's

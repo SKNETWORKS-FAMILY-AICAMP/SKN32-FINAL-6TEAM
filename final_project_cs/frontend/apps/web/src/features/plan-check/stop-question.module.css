@@ -1,0 +1,24 @@
+/* `[2026-10-20 사용자 결정 — 계획 확인 C안]` 검사가 멈춘 카드 안의 질문 칸(흐름 목업 `mockups/tripilot-plan-flow-register.html` 4단계와 같은 모양):
+   종류 · 질문 · 선택지(이유 · 오가는 길 · 고르면) · 「직접 수정」. 고르면 접히고(0.26초) 카드가 그 자리에서 다시 확인된다. */
+.box { margin: 2px 12px 12px; padding: 10px; border-radius: 12px; background: var(--color-warning-soft); max-height: 1600px; overflow: hidden; outline: none;
+  animation: rise .45s cubic-bezier(.2, .8, .2, 1); }
+.box[data-leaving] { animation: fold .26s ease forwards; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fold { to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; } }
+.kind { display: inline-block; margin-bottom: 6px; padding: 0 7px; border: 1px solid var(--color-warning-border); border-radius: 6px; background: var(--color-surface);
+  font-size: 11px; font-weight: 800; color: var(--color-warning); }
+.again { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--color-error); }
+.question { margin: 0 0 9px; font-size: 13.5px; font-weight: 700; line-height: 1.5; color: var(--color-text); overflow-wrap: anywhere; }
+.note { margin: 0 0 8px; font-size: 12px; color: var(--color-muted); }
+.options { display: grid; gap: 7px; }
+.option { display: grid; gap: 2px; width: 100%; padding: 9px 10px; border: 1.5px solid var(--color-border); border-radius: 10px; background: var(--color-surface);
+  color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.optionTop { font-size: 13.5px; font-weight: 700; overflow-wrap: anywhere; }
+.line { font-size: 11.5px; line-height: 1.45; color: var(--color-muted); overflow-wrap: anywhere; }
+.line[data-leg] { color: var(--color-text-secondary); }
+.option[aria-disabled="true"] { border-style: dashed; background: var(--color-subtle); cursor: not-allowed; }
+.buttons { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 9px; }
+.button { min-height: 44px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text);
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.option:focus-visible, .button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+@media (hover: hover) { .option:not([aria-disabled="true"]):hover { border-color: var(--color-adjusted-border); } }

@@ -135,6 +135,17 @@ button.time { cursor: pointer; }
 /* `[2026-10-20 사용자 결정 — 계획 확인 C안]` A stop the check has not reached yet: dashed and grey (flow mockup `tripilot-plan-flow-register.html`). */
 .entry[data-reveal-waiting] > .card { border-style: dashed; border-color: var(--color-border); background: var(--color-subtle); }
 .entry[data-reveal-waiting] .cardTitle { color: var(--color-faint); font-weight: 600; }
+/* `[2026-10-20 사용자 결정 — 계획 확인 C안]` Stopped at a card: everything else in the list (cards, legs, the rail) is dimmed and cannot be pressed; a banner over the list says
+   what to do (「다시 확인하는 중」 keeps its height, so the card does not move). */
+.page[data-stopped] .timeline > li:not([data-stop-focus]) { opacity: .38; pointer-events: none; transition: opacity .25s; }
+.stopBanner { position: sticky; top: 0; z-index: 6; display: flex; gap: 9px; align-items: flex-start; box-sizing: border-box; margin: 0 0 8px; padding: 9px 12px;
+  border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-soft); font-size: 12.5px; line-height: 1.5; }
+.stopMark { display: inline-grid; place-items: center; flex: none; width: 19px; height: 19px; border-radius: 50%; background: var(--color-warning); color: var(--color-on-primary); font-size: 11px; font-weight: 800; }
+.stopBanner b { display: block; color: var(--color-warning); }
+.stopBanner small { display: block; font-size: 11.5px; color: var(--color-text-secondary); }
+.stopBanner[data-tone="recheck"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.stopBanner[data-tone="recheck"] .stopMark { background: var(--color-adjusted); }
+.stopBanner[data-tone="recheck"] b { color: var(--color-adjusted); }
 .entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
 .entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
 .screen[data-stage="done"] .entry:where([data-type="item"]) .card { border-color: transparent; }

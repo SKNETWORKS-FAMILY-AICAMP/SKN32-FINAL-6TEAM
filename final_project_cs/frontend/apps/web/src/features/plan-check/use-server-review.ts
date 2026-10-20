@@ -14,7 +14,7 @@ import {
 } from "@/lib/live/intake-review";
 import { isLodgingReviewItem, planCandidate, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
-import type { AutoResult, PlaceChoice, PlanCheckActions } from "./plan-check";
+import type { AutoResult, EditHow, PlaceChoice, PlanCheckActions } from "./plan-check";
 import { retimeEdits } from "./retime-edits";
 import { ReviewUndo } from "./review-undo";
 import { newStopEdits } from "./new-stop";
@@ -134,16 +134,19 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
      * drawn: the other way round, the footer is drawn once with neither "nothing to fix" nor "check again" pending and offers
      * 「여행 등록」 for an instant (a click in that instant registered an unchecked plan — found by the browser test).
      */
-    async function save(edits: IntakeEdit[], changed = false) {
+    async function save(edits: IntakeEdit[], changed = false, how: EditHow = {}) {
       const before = plan();
       // ★`[2026-10-20 사용자 지시]` A change of the customer's (time · place · alternative · stop added or taken out) is only SAVED: the server does not
       //   measure the moves or re-place the stops around it now - 「다시 제출」 (`recheck`) checks the whole plan once. A lock or the plan's name is checked as before.
-      const next = await (changed ? editIntake(intakeId, before.revision, edits, language, { check: false })
+      // ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` A pick inside the first check's question (`how.flow`) is saved WITH its check: the card is checked again where it stands and
+      //   the check goes on — no 「다시 제출」 (the plan is not 「changed since the last check」) and no undo (the C안 flow has none).
+      const next = await (changed && !how.flow ? editIntake(intakeId, before.revision, edits, language, { check: false })
         : editIntake(intakeId, before.revision, edits, language)).catch(staleThenRethrow);
       if (!allUndo.active) throw gone();
-      if (edits.some((edit) => !edit.field.endsWith(".locked"))) allUndo.remember(before, next);
+      if (!how.flow && edits.some((edit) => !edit.field.endsWith(".locked"))) allUndo.remember(before, next);
       else allUndo.advance(next);
-      if (changed) setDirty(true);
+      if (changed && !how.flow) setDirty(true);
+      if (how.flow) alternatives.current.clear();                  // the plan is checked: alternatives are asked for the plan as it now is (as after 「다시 제출」)
       take(next);
     }
     /** The photos of one place the tourism service has (never stored here), as the change screen's `PlaceInfo`. */
@@ -160,15 +163,15 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       } catch { /* a photo that cannot be fetched is just not shown */ }
       return info;
     }
-    const replaceWith = async (id: string, edit: IntakeEdit, kind: string | null = null, time?: PlanCandidate["proposedTime"]) => {
+    const replaceWith = async (id: string, edit: IntakeEdit, kind: string | null = null, time?: PlanCandidate["proposedTime"], how: EditHow = {}) => {
       const item = itemOf(id);
       const back = restorePlace(targetOf(item), item.place);
       const timing = candidateTimeEdits(item, time);
       // ★`[2026-10-07 서버 c0ca7054 · 90d9e403]` A place of another kind than the stop (a meal place for an activity, a stay's own meal for a stay) changes the stop's kind with it - the server asks for both
       //   in the same request, or the meal lands in an activity. The undo puts the kind back too.
       const retype = kind !== null && kind !== item.kind;
-      await save([edit, ...(retype ? [itemEdit.kind(targetOf(item), kind)] : []), ...timing.edits], true);
-      undoEdits.current = back && timing.undo !== null ? [back,
+      await save([edit, ...(retype ? [itemEdit.kind(targetOf(item), kind)] : []), ...timing.edits], true, how);
+      undoEdits.current = !how.flow && back && timing.undo !== null ? [back,
         ...(retype && item.kind ? [itemEdit.kind(targetOf(item), item.kind)] : []), ...timing.undo] : null;
     };
 
@@ -181,20 +184,20 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         await save(edits, true);
         undoEdits.current = [{ source_id: source.source_id, field: `items[${index}].removed`, value: true }];
       },
-      edit: async (id, draft) => {
+      edit: async (id, draft, how) => {
         const item = itemOf(id);
         const row = rows(plan()).find((entry) => entry.source.source_id === item.source_id && entry.item.index === item.index);
         if (!row) throw gone();
         const edits = editsFor(row, draft);
         if (!edits.length) return;
-        await save(edits, true);
+        await save(edits, true, how);
         undoEdits.current = null;
       },
       // `[2026-10-04]` Several stops' new times in ONE request: the plan is saved and checked once, not once per stop.
-      retime: async (changes) => {
+      retime: async (changes, how) => {
         const edits = changes.flatMap((change) => retimeEdits(itemOf(change.id), change));
         if (!edits.length) return;
-        await save(edits, true);
+        await save(edits, true, how);
         undoEdits.current = null;
       },
       remove: async (id) => {
@@ -290,14 +293,22 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
           return card;
         });
       },
-      replace: async (id, choice: PlaceChoice) => {
+      replace: async (id, choice: PlaceChoice, how) => {
         const item = itemOf(id);
         const target = targetOf(item);
-        if (!("candidate" in choice)) return replaceWith(id, itemEdit.placeByName(target, choice.name));
+        if (!("candidate" in choice)) return replaceWith(id, itemEdit.placeByName(target, choice.name), null, undefined, how);
         const place = pickable.current.get(choice.candidate.id);
         const picked = place && pickedPlace(place);
         // A place the server gave coordinates for is taken as it is; one without them is looked up again by its name.
-        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null, choice.candidate.proposedTime);
+        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null, choice.candidate.proposedTime, how);
+      },
+      // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 「「…」 그대로」: the place the server took for now (one of several) is the one — sent back as the customer's pick, so the server checks it as chosen.
+      confirmPlace: async (id, how) => {
+        const item = itemOf(id);
+        const picked = item.place && pickedPlace({ ...item.place, address: null, category: item.place.category ?? null, ref: null });
+        if (!picked) throw new LiveError("place_missing", t("이 일정의 장소 위치를 몰라 그대로 정할 수 없어요 · 직접 수정에서 골라 주세요", "This stop's place has no position · pick it in Edit"));
+        await save([itemEdit.placePicked(targetOf(item), picked)], true, how);
+        undoEdits.current = null;
       },
       autoRecommend: async (id) => {
         const item = itemOf(id);

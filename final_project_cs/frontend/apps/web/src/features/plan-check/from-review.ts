@@ -68,6 +68,8 @@ function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanIt
     checks: [...(item.rows ?? []).filter((line) => line.row !== "risk").map(row), ...riskChecks(risk)], risk,
     rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
     ...(item.vendor_booking ? { vendorBooking: true } : {}),
+    // `[2026-10-20 C안]` What the question at the stop says (「맞는 곳이 n곳이라 가까운 …로 임시로 골랐어요」).
+    placeState: item.place_state ?? null, placeChoices: item.candidates_hint ?? null,
   };
 }
 

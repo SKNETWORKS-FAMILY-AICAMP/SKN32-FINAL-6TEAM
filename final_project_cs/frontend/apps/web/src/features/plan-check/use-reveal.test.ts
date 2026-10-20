@@ -36,14 +36,14 @@ vi.mock("react", () => ({
   },
 }));
 
-function draw(target: PlanCheckView, paused = false) {
+function draw(target: PlanCheckView, paused = false, stops = false) {
   let result: ReturnType<typeof useReveal>;
   do {
     hooks.again = false;
     hooks.cursor = 0;
     hooks.pending = [];
     // eslint-disable-next-line react-hooks/rules-of-hooks -- Node test harness replays renders with mocked hooks; this is not a React component.
-    result = useReveal(target, paused);
+    result = useReveal(target, paused, stops);
   } while (hooks.again);
   for (const effect of hooks.pending) {
     hooks.slots[effect.slot].cleanup?.();
@@ -70,7 +70,7 @@ describe("saved edits and paused replay", () => {
     vi.useFakeTimers();
     draw(exampleDone);
     const saved = { ...exampleDone, items: exampleDone.items.map((item) => ({ ...item, startsAt: "08:35", endsAt: "10:05" })) };
-    expect(draw(saved)).toEqual({ view: saved, settled: true });
+    expect(draw(saved)).toMatchObject({ view: saved, settled: true });
     expect(vi.getTimerCount()).toBe(0);
     // A paused next update must keep the saved times, not revive the original snapshot stored before the edit.
     const paused = draw(exampleDone, true);
@@ -78,7 +78,7 @@ describe("saved edits and paused replay", () => {
     expect(paused.settled).toBe(false);
     vi.advanceTimersByTime(5_000);
     expect(draw(exampleDone, true).view.items).toEqual(saved.items);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
   });
 
   it("keeps the first checking-to-done transition paced until its stage hold ends", () => {
@@ -89,13 +89,13 @@ describe("saved edits and paused replay", () => {
     vi.advanceTimersByTime(STAGE_MIN_MS - 1);
     expect(draw(exampleDone).settled).toBe(false);
     vi.advanceTimersByTime(1);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
   });
 
   it("reveals the first map cards after a survey without replaying completed reading", () => {
     vi.useFakeTimers();
     draw(received);
-    expect(draw(exampleDone, true)).toEqual({ view: received, settled: false });
+    expect(draw(exampleDone, true)).toMatchObject({ view: received, settled: false });
     vi.advanceTimersByTime(5_000);
     expect(draw(exampleDone, true).view).toBe(received);
     expect(vi.getTimerCount()).toBe(0);
@@ -111,7 +111,7 @@ describe("saved edits and paused replay", () => {
       if (next.settled) break;
     }
     expect(counts.some((count) => count > 0 && count < exampleDone.items.length)).toBe(true);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
   });
 
   it("respects explicit animation skipping when questions release", () => {
@@ -119,7 +119,7 @@ describe("saved edits and paused replay", () => {
     draw(received);
     draw(exampleDone, true);
     hooks.skip = true;
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -136,10 +136,10 @@ describe("saved edits and paused replay", () => {
     vi.useFakeTimers();
     draw(received);
     hooks.skip = true;
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
     hooks.skip = false;
     expect(draw(exampleDone, true).view).toBe(exampleDone);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
     expect(vi.getTimerCount()).toBe(0);
   });
 });
@@ -213,3 +213,61 @@ describe("how fast the plan check draws what the server sent", () => {
     expect(STAGE_MIN_MS).toBeGreaterThanOrEqual(800);
   });
 });
+
+describe("`[2026-10-20 C안]` stopping at a card that needs a look, and going on after a pick", () => {
+  const checking: PlanCheckView = { ...exampleDone, stage: "checking", title: null, items: [], moves: [] };
+  /** Let the timers run until `until` holds (or give up). */
+  function run(target: PlanCheckView, until: (result: ReturnType<typeof useReveal>) => boolean) {
+    let result = draw(target, false, true);
+    for (let step = 0; step < 200 && !until(result); step += 1) { vi.advanceTimersByTime(100); result = draw(target, false, true); }
+    return result;
+  }
+
+  it("stops at the card that needs a look: nothing past it is drawn, and it is not settled", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    const stopped = run(exampleDone, (result) => result.stop !== null);
+    expect(stopped.stop).toEqual({ id: "b", settling: false });
+    expect(stopped.settled).toBe(false);
+    vi.advanceTimersByTime(10_000);
+    const still = draw(exampleDone, false, true);
+    expect(still.view.items.map((item) => item.id)).toEqual(["a", "b"]);
+    expect(still.settled).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("waits for the server after a pick, ticks the card's new checks in where it stands, and goes on when it passes", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null).recheck.begin("b");
+    const asked = draw(exampleDone, false, true);
+    expect(asked.stop).toEqual({ id: "b", settling: true });
+    expect(asked.view.items.find((item) => item.id === "b")!.checks.every((row) => row.result === "pending" && row.text)).toBe(true);
+    vi.advanceTimersByTime(5_000);
+    expect(draw(exampleDone, false, true).view.items.find((item) => item.id === "b")!.checks[0].result).toBe("pending");   // not before the answer
+    const fixed: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
+      : { ...item, verdict: "keep", checks: item.checks.map((row) => ({ ...row, result: "ok" as const })) }) };
+    const done = run(fixed, (result) => result.settled);
+    expect(done.view).toEqual(fixed);
+    expect(done.stop).toBeNull();
+  });
+
+  it("puts the card back as the server has it when the pick is refused", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null).recheck.begin("b");
+    draw(exampleDone, false, true).recheck.fail("b");
+    const back = draw(exampleDone, false, true);
+    expect(back.view.items.find((item) => item.id === "b")).toEqual(exampleDone.items[1]);
+    expect(back.stop).toEqual({ id: "b", settling: false });
+  });
+
+  it("does not stop where the page cannot change places", () => {
+    vi.useFakeTimers();
+    draw(checking);
+    let result = draw(exampleDone);
+    for (let step = 0; step < 300 && !result.settled; step += 1) { vi.advanceTimersByTime(100); result = draw(exampleDone); }
+    expect(result).toMatchObject({ view: exampleDone, settled: true, stop: null });
+  });
+});
+
