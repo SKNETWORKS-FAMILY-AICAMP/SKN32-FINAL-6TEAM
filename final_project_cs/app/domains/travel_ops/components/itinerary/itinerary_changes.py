@@ -1068,8 +1068,13 @@ def plan_nearby_store(*, items: list[Item], places: list[dict[str, Any]], at: da
 def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
               places_by_id: dict[str, dict[str, Any]], item_id: UUID, choice: str | None,
               message: str | None, request_id: str | None,
-              check: Callable[..., dict[str, Any]] | None) -> Plan:
+              check: Callable[..., dict[str, Any]] | None, customer_pick: bool = False) -> Plan:
     """적용된 안을 들고 있던 「다른 안」으로 바꾼다. 원래 안은 다시 「다른 안」이 된다.
+
+    `customer_pick` — 고객이 직접 고른 교체(채팅 「바꿔 줘」 · 웹 「다른 안으로」 · 제안 고르기)일 때만 True.
+    그때만 사건이 없고 안전과 무관한 자료(대기질 · 예보 · 교통)만 못 읽은 안을 바꾸고 알린다(`swap_refusal`).
+    ★기본(False)은 고객에게 **보이기 전에** 미리 거르는 쪽(`watch_relaxed.verified_options` — 항로 지킴이 묻는 안 · 확인 화면 위험 대안)이다 —
+      못 읽은 자료가 하나라도 있으면 `alternate_invalid` 로 빼서 「확인 못 함」으로 센다. 확인 못 한 후보를 안전한 대안처럼 내밀지 않는다.
 
     ★고객이 **본 버전**(`base_version`)을 기준으로만 바꾼다. 그 사이 일정이 또
       바뀌었으면 `stale` — 고객이 보지 못한 일정 위에 요청을 얹지 않는다.
@@ -1099,15 +1104,24 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
     if pick.get("place_id") and place is None:
         return NoChange("not_found")
     rechecked = None
+    unchecked: list[str] = []
+    name = pick.get("option_label") or pick["name"]
     if place is not None and current.kind == "activity" and check is not None:
         # ★계산한 뒤로 시간이 흘렀다 — 그 시각에 다시 점검한다.
         report = check(place=place, starts_at=starts)
         rechecked = (report or {}).get("verdict")
         if rechecked != "clear":
-            return NoChange("alternate_invalid", {"verdict": rechecked, "report": report})
+            refused = swap_refusal(name, starts, report)
+            if refused is not None:
+                return refused
+            if not customer_pick:
+                # ★`[2026-10-20]` 미리 거르기 — 못 읽은 자료가 있으면 싣지 않는다(고객이 고른 교체만 느슨하게)
+                return NoChange("alternate_invalid", {"verdict": rechecked, "report": report})
+            # ★`[2026-10-20 사용자 결정 — D-018]` 사건이 없고 안전과 무관한 자료(대기질 · 예보 · 교통)만 못 읽었다 — 고객이 직접 고른 교체는 하고,
+            #   못 확인한 것을 알린다. ☆전에는 대기질 「모름」 하나로 교체 전체를 거절하고 채팅이 「요청을 완료하지 못했어요」로 끝났다(x600 2026-10-20)
+            unchecked = list(report.get("failed_categories") or [])
     applied = applied_record(current)
     remaining = [a for a in alternates if a is not pick] + [applied]
-    name = pick.get("option_label") or pick["name"]
     detail = {**current.detail, "alternates": remaining,
               "other_options": [a["name"] for a in remaining], "customer_requested": True}
     detail.pop("warnings", None)
@@ -1121,6 +1135,8 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
     text = (f"요청하신 대로 {applied['name']} 대신 {name}(으)로 바꿨습니다"
             f"({seoul(starts):%H:%M} 시작).")
     warnings = [f"{name}: {warning}" for warning in pick.get("warnings") or []]
+    if unchecked:
+        warnings.append(f"{name}: {unchecked_text(unchecked)}")
     if warnings:
         text += " " + " ".join(warnings)
     # ★`[2026-10-13]` 숙소 · 항공 후보(외부 소스 — 예약 전)는 고른 안을 그대로 남기고 예약 링크를 알린다(숙소 · 항공 팀의 `_choose` 와 같은 칸)
@@ -1146,7 +1162,55 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
         replacement = replace(replacement, ends_at=None)
     return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement, **shifted},
-                           summary={"to": name, "rechecked": rechecked})
+                           summary={"to": name, "rechecked": rechecked, **({"unchecked": unchecked} if unchecked else {})})
+
+
+#: ★`[2026-10-20]` 고객이 고른 교체라도 **못 읽으면 바꾸지 않는** 자료 — 몸이 다칠 수 있는 사건의 소스(`pending.SAFETY_CATEGORIES`)와 기상특보.
+#:  특보는 못 읽으면 「경보」인지 알 수 없다. 그 밖(대기질 · 예보 · 교통 통제)은 못 읽어도 바꾸고 알린다(D-018 — 실패한 자료에 기대는 작업만 보류)
+SWAP_HOLD_UNREAD = frozenset({"earthquake", "disaster_msg", "weather_warning"})
+#: 점검 항목의 고객용 이름
+CHECK_LABELS = {"forecast": "날씨 예보", "weather_warning": "기상특보", "disaster_msg": "재난문자", "traffic_control": "교통 통제",
+                "air_quality": "대기질", "earthquake": "지진 정보", "place_status": "영업 상태"}
+#: 사건 종류 중 영어 값으로 오는 것 — 영업 상태 확인의 「휴무」(`place_status.PlaceStatus.merge`)
+EVENT_KIND_LABELS = {"closed": "휴무"}
+
+
+def _labels(categories: list[str]) -> str:
+    return " · ".join(CHECK_LABELS.get(c, c) for c in categories)
+
+
+def unchecked_text(categories: list[str]) -> str:
+    """못 읽은 점검 항목 → 알림 한 문장(교체는 했다)."""
+    return f"{_labels(categories)} 정보는 지금 확인하지 못했어요 — 가시기 전에 한 번 더 살펴봐 주세요."
+
+
+def swap_refusal(name: str, starts: datetime, report: dict[str, Any] | None) -> NoChange | None:
+    """교체 직전 다시 점검이 `clear` 가 아닐 때 — 바꾸지 않을 이유가 있으면 그 답(`alternate_invalid` + 고객용 `text`), 바꿔도 되면 None.
+
+    바꾸지 않는다: ①실제 사건이 있다(`disruptions`) ②안전 자료(`SWAP_HOLD_UNREAD`)를 못 읽었다 ③점검 자체를 못 했다(도구 없음 · 한도 — 실패 항목 목록이 없다).
+    바꾼다(None): 사건이 없고 못 읽은 것이 안전과 무관한 자료뿐이다 — 부르는 쪽이 못 확인한 것을 알린다.
+    ☆`[2026-10-20]` 전에는 `clear` 가 아니면 모두 `alternate_invalid` 였고 문장이 없어 채팅이 `escalated`(「요청을 완료하지 못했어요」)로 끝났다."""
+    report = report or {}
+    verdict = report.get("verdict")
+    failed = list(report.get("failed_categories") or [])
+    disruptions = list(report.get("disruptions") or [])
+    detail = {"verdict": verdict, "report": report}
+    at = f"{seoul(starts):%H:%M}"
+    if disruptions:
+        kinds = []
+        for event in disruptions:
+            kind = event.get("kind")
+            label = str(EVENT_KIND_LABELS.get(kind, kind) if kind else CHECK_LABELS.get(event.get("category"), event.get("category") or "사건"))
+            if label not in kinds:
+                kinds.append(label)
+        return NoChange("alternate_invalid", {**detail, "text": (
+            f"{name}은(는) {at}에 {' · '.join(kinds[:3])} 소식이 있어 바꾸지 않았어요. 일정은 그대로예요.")})
+    hold = [c for c in failed if c in SWAP_HOLD_UNREAD]
+    if verdict == "fatal" and failed and not hold:
+        return None
+    what = _labels(hold) if hold else "안전 정보"
+    return NoChange("alternate_invalid", {**detail, "unchecked": hold or failed, "text": (
+        f"{name}의 {at} {what}를 지금 확인하지 못해 바꾸지 않았어요. 일정은 그대로예요. 잠시 뒤 다시 말씀해 주세요.")})
 
 
 def shift_moves_after(items: list[Item], current: Item, ends: datetime | None) -> tuple[dict[UUID, Item], Item | None]:

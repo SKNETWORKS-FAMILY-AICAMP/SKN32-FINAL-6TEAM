@@ -177,7 +177,7 @@ class TripDesk:
         plan = plan_swap(trip_version=trip["version"], base_version=base_version, items=items,
                          places_by_id={p["place_id"]: p for p in places}, item_id=item_id,
                          choice=choice, message=message, request_id=request_id,
-                         check=self._check)
+                         check=self._check, customer_pick=True)
         return self._outcome(trip_id, base_version, items, plan)
 
     def fresh_alternate(self, *, trip_id: UUID, item_id: UUID, base_version: int,

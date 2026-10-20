@@ -607,7 +607,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         #   「바꿀 다른 안이 없음」(`no_alternate`)도 오류가 아니라 답이다 — 사람 대기는 버그·오류 리포트에만(사용자 결정)
         if outcome.get("status") in ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back",
                                      "not_today", "no_meal", "clear", "gone", "no_alternate", "ask_rollback",
-                                     "ask_target", "knock_on", "rechecked"):
+                                     "ask_target", "knock_on", "rechecked", "alternate_invalid"):
             ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")
                                          else str(outcome.get("status")))
             # ★컨트롤러와 같은 모양 — 답은 `state_patch.answer` 로 Case 에 들어간다.
@@ -711,11 +711,30 @@ def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str,
     return opened.case_id
 
 
+def near_dining_change(decision: Any, *, items: list[Any], selected: UUID | None) -> bool:
+    """「○○ 근처로 바꿔 줘」를 요식 원장 근처 계산(`TripDesk.near_alternate` — **식사만**)으로 보낼까.
+
+    ★`[2026-10-20]` 대상이 식사가 **아닌** 것이 분명하면(해석이 고른 항목 · 화면에서 고른 항목) 보내지 않는다 — 원래 할 일(「다른 안으로」)로 둔다.
+    ☆x600 2026-10-20 09:47: 활동 「경복궁 다른 곳으로 바꿔 줘」(항목을 골라 보냄)를 해석 모델이 「경복궁 근처」로 읽어 이 길로 넘겼고,
+      등록 대안이 있는데도 「어느 식사 일정을 바꿀지 알려 주세요」(`clarify`)로 끝났다. 같은 문장이 앞서는 대기질 실패로 `escalated` 였다 —
+      해석 결과가 회차마다 달라 두 갈래가 번갈아 났다."""
+    spatial = (getattr(decision, "raw", None) or {}).get("place_search") or {}
+    if spatial.get("relation") != "near" or decision.action not in ("apply_change", "propose_alternatives", "replace_named"):
+        return False
+    if decision.action == "replace_named":
+        return True                      # 이름을 댄 바꾸기는 지금처럼 — 근처 기준이 이름 찾기로 새지 않게(위 「근처 조건을 상호명 조회로 넘기지 않는다」)
+    target = decision.item
+    if target is None and selected is not None:
+        target = next((i for i in items if str(i.item_id) == str(selected)), None)
+    return target is None or target.kind == "dining"
+
+
 #: 처리한 것(답이 나간 것) — 사람 대기가 아니다. 바꾸지 않고 물은 것 · 되물은 것도 여기다
 #: ★`[2026-10-05]` `needs_check`(영업 여부를 못 알아 바꾸지 않고 알린 것)도 답이다 — 사람 대기로 떨어지지 않게
 _DONE = ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
          "edit_refused",
-         "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked")
+         "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked",
+         "alternate_invalid")
 #: 바꾼 뒤 이 시간 안에 되돌리면 오변경 의심으로 표시한다 — ★우리가 고른 값(2026-09-29, Codex 합의의 「오변경 감지」)
 SUSPECT_UNDO_SECONDS = 15 * 60
 _CLARIFY = "어느 일정을 말씀하시는지 알려 주세요 — 화면에서 일정을 고르시거나 「2일차 점심 식당 바꿔 줘」처럼 날과 끼니(또는 이름)를 적어 주세요."
@@ -791,7 +810,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from .decision_unit import settle_near_search
     decision = settle_near_search(decision, context_items)
     spatial = (decision.raw or {}).get("place_search") or {}
-    near_change = spatial.get("relation") == "near" and decision.action in ("apply_change", "propose_alternatives", "replace_named")
+    near_change = near_dining_change(decision, items=context_items, selected=selected)
     if near_change:
         # 기존 업무 실행이 검색 위치를 버리지 않도록 이 조건 요청은 TripDesk의 같은 요식 계산으로 전달한다.
         from dataclasses import replace

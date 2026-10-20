@@ -737,7 +737,7 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
     if status == "not_found":
         raise _error(404, "not_found", "resource not found")
     if status in _CONFLICTS:
-        details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict")}
+        details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict", "text")}
         raise _error(409, _CONFLICTS[status], f"request not applied: {status}", **details)
     return outcome
 

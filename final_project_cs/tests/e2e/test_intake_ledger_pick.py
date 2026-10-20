@@ -144,6 +144,7 @@ def test_the_review_does_not_use_a_closed_ledger_shop(ledger):
 def test_the_registration_body_carries_the_ledger_number_of_a_pick():
     uid = str(uuid.uuid4())
     place = _place_in("p1", {**_pick(), "dining_place_uid": uid}, "dining")
-    assert place["attributes"] == {"source": "customer_pick", "pick_origin": "places", "dining_place_uid": uid}
+    # `[2026-10-20]` 서울 자치구(`district`)도 실린다 — 대기질 측정소를 고르는 값(assemble._seoul_district)
+    assert {k: v for k, v in place["attributes"].items() if k != "district"} == {"source": "customer_pick", "pick_origin": "places", "dining_place_uid": uid}
     plain = _place_in("p2", _pick(), "dining")
     assert "dining_place_uid" not in plain["attributes"]

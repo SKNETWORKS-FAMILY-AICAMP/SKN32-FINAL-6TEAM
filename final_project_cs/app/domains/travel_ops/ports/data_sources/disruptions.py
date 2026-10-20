@@ -438,6 +438,13 @@ class DisruptionCheck:
         if not sensitive:
             return {**base, "status": "not_applicable", "reason": "날씨 영향을 받지 않는 장소"}
         source = getattr(self.sources, "air", None)
+        if source is not None and isinstance(at, datetime) and at.tzinfo is not None:
+            from .air_quality import FORECAST_HOURS
+            if at - datetime.now(UTC) > timedelta(hours=FORECAST_HOURS):
+                # ★`[2026-10-20]` 아직 값을 낼 수 없는 먼 시각 — 실패가 아니다. 가까워지면 감시가 다시 본다.
+                #   ☆전에는 일주일 뒤 일정의 대기질이 늘 「1차 · 대체 모두 실패」(치명)가 되어 채팅 교체를 막았다(x600 2026-10-20)
+                return {**base, "status": "not_applicable",
+                        "reason": f"방문 시각이 대기질 예보 범위({FORECAST_HOURS}시간) 밖 — 가까워지면 다시 본다"}
         if source is None:
             reason = (getattr(self.sources, "unavailable", {}) or {}).get(
                 "air", "에어코리아 대기오염정보 소스 없음")

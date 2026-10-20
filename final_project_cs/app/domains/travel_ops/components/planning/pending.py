@@ -523,7 +523,7 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     probe = [i if i.item_id != current.item_id else _with_alternates(i, options) for i in items]
     plan = plan_swap(trip_version=trip["version"], base_version=proposal["base_version"], items=probe,
                      places_by_id=places_by_id, item_id=current.item_id, choice=key,
-                     message=None, request_id=f"proposal:{proposal_id}", check=check)
+                     message=None, request_id=f"proposal:{proposal_id}", check=check, customer_pick=True)
     if isinstance(plan, NoChange):
         raise ProposalRefused(plan.status, plan.detail)
     try:

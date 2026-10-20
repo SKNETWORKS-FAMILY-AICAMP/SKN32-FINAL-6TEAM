@@ -14,6 +14,8 @@ domain: travel
 
 추가 요청: 감시 화면에 6개 항목별 `확인하는 것 / 사용하는 정보 / 무엇을 판단하나 / API별 ENV 한도` 표를 함께 표시한다. 예보=kma·open_meteo, 특보=kma_warning, 재난문자=disaster_msg, 도로=utic·its, 대기질=airkorea·open_meteo_air, 지진=kma_earthquake로 연결한다. 9개 API의 일·월 한도는 [기존 한도 조회 API](api-environment-limits.md)를 재사용하며 합산하지 않는다. 예보는 주의사항이라는 설명을 유지한다. 설정 표시를 해당 회차에 실제 API를 호출했다는 뜻으로 쓰지 않으며, 실제 사용 출처는 회차 로그에서 확인한다. 조회 실패·목록 누락은 한도 미확인으로 표시하고 0으로 만들지 않는다.
 
+`[2026-10-20]` 대기질은 방문 시각이 지금부터 72시간(모델 소스의 예보 길이, `air_quality.FORECAST_HOURS`)보다 멀면 조회하지 않고 「해당 없음 — 예보 범위 밖」(`not_applicable`)으로 둔다. 실패(치명)로 세지 않고, 가까워지면 감시가 다시 본다. ☆전에는 일주일 뒤 일정의 대기질이 늘 실패해 판정이 `fatal` 이 됐다([기록](../records/reports/2026-10-20_채팅교체_대기질실패_원인.md)).
+
 2026-10-09: 6종 표의 API 한도 표시와 좁은 화면 배치를 구현하고 화면 시험 6/6을 통과했다. x600 서버 미배포. [추가 구현·검증 리포트](../records/reports/2026-10-09_2310_감시6종표_API한도.md).
 
 - 운영 앱에만 `GET /admin/api/watch-runs`, `GET /admin/api/watch-runs/{run_id}`를 등록한다. 운영자 인증과 `ops:introspect`가 필요하며 현재 테넌트만 조회한다. 쓰기·수동 실행은 제공하지 않는다.
