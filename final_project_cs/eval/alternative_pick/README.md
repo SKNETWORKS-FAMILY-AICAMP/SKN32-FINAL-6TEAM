@@ -61,6 +61,13 @@ python -m eval.alternative_pick.run --cases eval/alternative_pick/cases_watch.js
 - 실행 옵션: `run --prompt file --prompt-file alternative_order.v3.md --class-names`(v3 = E1 분류 이름 + E2 이유 규칙 + E3 받은 순서). 운영은 아직 v2 · 분류 이름 끔.
 - ★`[2026-10-20]` holdout-2 판정 뒤 v3 지시문을 `prompts/activity_judge/` 로 옮기고 운영이 분류 이름을 싣게 했다(kind_modes 는 shadow 그대로). 다음 실험판은 `eval/alternative_pick/prompts/` 에 둔다 — `prompts/` 에 두면 등록 스크립트가 가장 높은 판을 운영에 켠다.
 
+## dev 스트레스 · 이유 문장 지킴이 (2026-10-20)
+
+- `python -m eval.alternative_pick.stress` → `cases_dev_stress.jsonl`(54건): dev 카드에 「A 아니면 B」 · 「B 말고 A」 · 「조용한 A」 문장을 기계로 붙인다(규칙 라벨 · 비교용).
+  ★「말고」 꼴은 A · B 가 겹치는 조합(「실내 말고 전시」)을 거르지 않는다 — 그 위험 판정은 사례 결함이다.
+- 운영 `alternative_order.apply(…, customer_text=, classes=)` 가 이유 문장 지킴이(`guard_reason`)를 거친다 — 실행기도 같다.
+  그래서 지킴이 이전 실행 결과의 이유는 지킴이를 거치지 않은 문장이다.
+
 ## 채점 기준 요약
 
 - **보정 후(served)** = 고객 화면 1순위(실패 · 폐기면 코드 순서). **원답(raw)** = 모델 `order[0]`.
