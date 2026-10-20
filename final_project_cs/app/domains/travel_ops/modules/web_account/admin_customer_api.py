@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.application import admin_service
+from app.application import admin_service, deploy_notice
 from app.application.operations_diagnostics import Event, deployment_version, persist
 from app.core.redaction import masked
 from app.core.settings import get_settings
@@ -38,7 +38,10 @@ def build_router() -> APIRouter:
         if maintenance["enabled"] and datetime.fromisoformat(maintenance["endsAt"]).replace(tzinfo=admin_service.KST) <= now:
             maintenance["enabled"] = False
         # Operator identity belongs in the audit, not in the public notice.
-        return {"notices": [{k:v for k,v in n.items() if k in {'id','kind','title','body','titleEn','bodyEn','startsAt','endsAt'}} for n in active],
+        public = [{k:v for k,v in n.items() if k in {'id','kind','title','body','titleEn','bodyEn','startsAt','endsAt'}} for n in active]
+        # `[2026-10-20 D-CS-019]` 새 판 배포 중이면 자동 배포가 남긴 상태로 만든 공지 한 건을 맨 앞에 붙인다(정해 둔 문구 · 게시판에는 안 남는다).
+        deploying = deploy_notice.current_notice(now)
+        return {"notices": ([deploying] if deploying else []) + public,
                 "maintenance": {k:v for k,v in maintenance.items() if k in {'enabled','message','messageEn','endsAt'}}}
 
     @router.get("/notices/board")

@@ -30,18 +30,24 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
         forward_only: bool = False) -> list[dict[str, Any]]:
     """날짜별 시각순 rows를 앞뒤로 맞추고 시각 claim만 반환한다.
 
-    계산기가 꺼진 경우 기존 이동 계약대로 어림 근거를 남긴다. 켜진 계산기의 오류나
-    시간 상한 소진은 자동 배치 성공으로 바꾸지 않는다. 운영시간의 확인된 제약도 지킨다.
+    계산기가 꺼진 경우 기존 이동 계약대로 어림 근거를 남긴다. 켜진 계산기의 오류 · 자료 없음은
+    자동 배치 성공으로 바꾸지 않는다(거절). 운영시간의 확인된 제약도 지킨다.
+
+    ★`[2026-10-20 사용자 결정]` 요청 한 번의 이동 계산 시간 한도는 **이동 구간 하나마다** `ENGINE_BUDGET_S`(20초 — 같은 두 곳 사이를 도착 시각만 바꿔
+      다시 묻는 것도 그 구간 몫) · 요청 전체 `REQUEST_ENGINE_S` 다(앞 판은 여행 날짜마다 20초). 한도에 닿아 못 구한 구간은 **거절하지 않고** 직선 어림으로 맞춘다 — 그 시각의 근거는 `estimate`(메모 「어림 이동시간」)이고,
+      같은 판의 검사(`review.build(estimate_needs_review=True)`)가 시간표로 다시 판정해 못 구한 구간은 「확인 필요」로 센다.
+      로컬 재현: 덕수궁 → 종묘 바꾸기가 23.4초 뒤 `schedule_check_failed` 로 거절됐다(2026-10-20).
     """
     from . import review
-    from .autofix import ENGINE_BUDGET_S, earliest_start, latest_end
+    from .autofix import ENGINE_BUDGET_S, REQUEST_ENGINE_S, earliest_start, latest_end
     from .hours import facts_for
     from ..itinerary.itinerary_checks import Part, check_itinerary
 
     defaulted = engine is None and use_engine
     if defaulted:
         engine = review.default_engine(party_size)
-    budget = None
+    whole = review._Budgeted(engine, REQUEST_ENGINE_S) if engine is not None else None     # 요청 전체
+    per_leg = review._PerLeg(engine, ENGINE_BUDGET_S, within=whole) if engine is not None else None   # 이동 구간 하나마다
     by_mode: dict[str, Any] = {}
     days = {r["date"] for r in rows if key(r) in touched and r["date"]}
     out: list[dict[str, Any]] = []
@@ -63,18 +69,19 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
     def engine_for(a, b):
         mode = (mode_picks or {}).get(pair_of(a, b)) if defaulted else None
         if not mode or pair_of(a, b) in fell_back:
-            return budget
+            return per_leg
         if mode not in by_mode:
             eng = review.default_engine(party_size, [mode])
             if eng is None:
                 raise ScheduleConflict("고른 이동수단을 계산하지 못해 변경을 저장하지 않았어요.", code="schedule_check_failed")
-            by_mode[mode] = review._Budgeted(eng, ENGINE_BUDGET_S)
+            by_mode[mode] = review._PerLeg(eng, ENGINE_BUDGET_S, within=whole)
         return by_mode[mode]
 
     def leg(a, b):
         if not a.get("place") or not b.get("place"):
             return None
         eng = engine_for(a, b)
+        budget = per_leg
         got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
         if eng is not budget and budget is not None and got.basis == "estimate":
             # ★`[2026-10-15 x600 실서버 확인]` 다시 연 여행에 저장된 구간 수단(도보)이 **바뀐 장소 사이에서는 닿지 않으면** 고른 수단 안의 후보가 없다며 저장을 막았다
@@ -83,11 +90,14 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
             eng = budget
             got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
         # 상한은 다음 새 계산을 막는다. 이미 얻은 시간표 결과는 유효하다.
+        if eng is not None and got.basis == "estimate" and eng.exhausted_for(point(a), point(b)):
+            # ★`[2026-10-20 사용자 결정]` 시간 한도에 닿은 것만으로는 거절하지 않는다 — 어림으로 맞추고(근거 estimate) 검사가 시간표로 다시 본다
+            log.info("schedule leg estimated after the time limit: %s -> %s", a["place"].get("name"), b["place"].get("name"))
+            return got
         if eng is not None and got.basis == "estimate":
             # ★`[2026-10-15]` 이유를 남긴다 — x600 서버 채팅 「토속촌 대신 덕수궁」이 이유 없이 「끝내지 못해」로만 막혀 원인을 가리지 못했다
-            why = (got.why or "").strip() or ("이동 계산 시간 상한을 넘겼어요" if eng.exhausted else "계산기가 이 구간을 못 채웠어요")
-            log.warning("schedule leg not computed: %s -> %s (%s) exhausted=%s", a["place"].get("name"), b["place"].get("name"), why,
-                        eng.exhausted)
+            why = (got.why or "").strip() or "계산기가 이 구간을 못 채웠어요"
+            log.warning("schedule leg not computed: %s -> %s (%s)", a["place"].get("name"), b["place"].get("name"), why)
             raise ScheduleConflict(f"이동 계산을 끝내지 못해 변경을 저장하지 않았어요({a['place'].get('name')} → {b['place'].get('name')}: {why}). "
                                    "잠시 뒤 다시 시도해 주세요.", code="schedule_check_failed")
         return got
@@ -116,9 +126,6 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                 and (inferred or evidence.get("via") == "autofix" or evidence.get("derived_stay_end") is True))
 
     for day in sorted(days):
-        # 연결된 숙소도 날짜마다 같은 계산 몫을 쓴다. 첫날 소진이 다음 날을 막지 않는다.
-        budget = review._Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
-        by_mode.clear()
         chain = []
         for r in rows:
             if r["date"] != day:
@@ -162,7 +169,7 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
                     break
                 if protected(a):
                     raise ScheduleConflict("잠금·예약 일정 사이에 이동시간이 부족해요. 변경을 저장하지 않았어요.")
-                latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"])
+                latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"], known=route)
                 if latest is None:
                     raise ScheduleConflict("앞 일정에서 이동 가능한 시각을 찾지 못했어요.")
                 shift(a, latest - a["duration"], route.basis)
@@ -194,12 +201,12 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
             if protected(b):
                 if forward_only:
                     raise ScheduleConflict("지정한 시각과 뒤쪽 고정·예약 일정을 함께 지킬 수 없어 저장하지 않았어요.")
-                latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"])
+                latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"], known=route)
                 if latest is None:
                     raise ScheduleConflict("예약 일정에 도착 가능한 시각을 찾지 못했어요.")
                 backwards(i - 1, latest, route.basis)
             else:
-                earliest = earliest_start(engine_for(a, b), a["place"], b["place"], a["end_at"])
+                earliest = earliest_start(engine_for(a, b), a["place"], b["place"], a["end_at"], known=route)
                 if earliest is None:
                     raise ScheduleConflict("다음 일정에 도착 가능한 시각을 찾지 못했어요.")
                 earliest = max(b["start_at"], earliest)

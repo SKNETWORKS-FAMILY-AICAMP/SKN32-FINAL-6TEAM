@@ -24,6 +24,12 @@ describe("the customer's sentence for a server refusal (ST4F-611 · 문구 대�
     expect(refusalSentence("HTTP_502", undefined, undefined, "en")).toBe("The request could not be completed. Please try again shortly. (HTTP_502)");
   });
 
+  it("says the service is switching to a new version when Caddy answers for the server during a deploy (D-CS-019)", () => {
+    const caddy = "서비스를 새 판으로 바꾸는 중이거나 잠시 연결이 끊겼습니다. 잠시 뒤 다시 시도해 주세요.";
+    expect(refusalSentence("service_updating", caddy, undefined, "ko")).toBe(caddy);
+    expect(refusalSentence("service_updating", caddy, undefined, "en")).toBe("The service is switching to a new version. Please try again shortly.");
+  });
+
   it("has a Korean and an English sentence for every code, both ending politely", () => {
     for (const [code, text] of Object.entries(REFUSAL_TEXT)) {
       const [ko, en] = typeof text === "function" ? text({ cap: 2 }) : text;

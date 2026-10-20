@@ -280,3 +280,28 @@ def test_prepare_removes_only_old_migration_overrides_and_preserves_recovery(tmp
     assert config['services']['tripilot-web']['image'] == 'sha256:old-tripilot-web'
     assert [m['target'] for m in config['services']['tripilot-api']['volumes']] == ['/srv/retained']
     assert (tmp_path/'recovery.compose.json').read_bytes() == before
+
+
+# D-CS-019: the customer notice tells "previous kept" (exit 1) from "recovery also failed" (exit 3).
+def test_recovery_failure_is_its_own_error_and_recovered_failure_is_not(tmp_path):
+    docker = DockerSimulation('recovery')
+    guard.snapshot(docker, guard.compose(), tmp_path)
+    with pytest.raises(guard.RecoveryFailed):
+        guard.rollout(docker, guard.compose(), tmp_path, settle=0)
+    recovered = DockerSimulation('health')
+    other = tmp_path / 'recovered'
+    guard.snapshot(recovered, guard.compose(), other)
+    with pytest.raises(guard.DeployError) as caught:
+        guard.rollout(recovered, guard.compose(), other, timeout=8, settle=0)
+    assert not isinstance(caught.value, guard.RecoveryFailed)
+
+
+@pytest.mark.parametrize('failure, code', [('health', guard.EXIT_FAILED), ('recovery', guard.EXIT_RECOVERY_FAILED)])
+def test_rollout_exit_code_separates_kept_previous_from_recovery_failed(tmp_path, monkeypatch, failure, code):
+    docker = DockerSimulation(failure)
+    guard.snapshot(docker, guard.compose(), tmp_path)
+    monkeypatch.setattr(guard, 'Docker', lambda: docker)
+    monkeypatch.setattr('sys.argv', ['migration_safe_deploy.py', 'rollout', '--state-dir', str(tmp_path), '--timeout', '8', '--settle', '0'])
+    with pytest.raises(SystemExit) as caught:
+        guard.main()
+    assert caught.value.code == code

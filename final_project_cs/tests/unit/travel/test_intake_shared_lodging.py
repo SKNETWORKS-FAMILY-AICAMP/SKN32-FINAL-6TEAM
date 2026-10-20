@@ -68,6 +68,8 @@ def test_cold_route_calculation_budget_is_shared_by_day_not_exhausted_across_all
 
     clock = [0.0]
     monkeypatch.setattr(review_module.time, "monotonic", lambda: clock[0])
+    # `[2026-10-20]` 요청 전체 한도(`REQUEST_ENGINE_S` 25초)는 따로 본다 — 이 시험은 날짜마다 몫이 따로인지만 본다(6초 × 6번 = 36초)
+    monkeypatch.setattr(autofix, "REQUEST_ENGINE_S", 100.0)
     hotels = [{**HOTEL, "name": f"숙소 {n}", "latitude": HOTEL["latitude"] + n * 0.0001, "content_type_id": "32"} for n in range(3)]
     monkeypatch.setattr(candidates, "_catalog_places", lambda *a, **kw: hotels)
     monkeypatch.setattr(context, "score", lambda place, points: int(place["name"].split()[-1]))
