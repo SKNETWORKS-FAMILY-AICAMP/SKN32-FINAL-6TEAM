@@ -94,6 +94,48 @@ export interface PlanItem {
    * its candidates, 「직접 고르기」 and 「장소 없이」. `blocked` = the lookup was blocked and searched once more. Absent once the stop has a place or 「장소 없음」.
    */
   unfound?: { question: string; blocked: boolean };
+  /**
+   * `[2026-10-20 사용자 결정 — 계획 확인 C안]` How the server settled the place (`place_state`: `picked_nearest` = one of several, the nearest taken for now) and how many places
+   * matched the name (`candidates_hint`) — what the question asked at the stop says. Absent where the server did not say (the preview, an older server).
+   */
+  placeState?: string | null;
+  placeChoices?: number | null;
+  /**
+   * `[2026-10-21 사용자 결정 — P6 해석 확인 질문]` Not a stop: the place in the first check's list where it stopped to ask what a line of the plan means (`PlanAsk`) — a card-less question
+   * at the line's time. Only the list of the stopped check carries one (`withAskSlot`).
+   */
+  ask?: PlanAsk;
+}
+
+/**
+ * ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` A line of the plan the reading AI read as something other than a stop where the rule read one (`interpretations[]`, not answered yet): the
+ * stop is out for now (the AI's reading) and the first check stops at the line's time to ask (mockup `mockups/tripilot-plan-check-interpretation.html`). The words are the server's.
+ */
+export interface PlanAsk {
+  /** The server's question id (`q-…`). */
+  id: string;
+  /** The check's id of the stop on that line — what comes back when another option is picked. */
+  itemId: string;
+  day: number;
+  date: string;
+  /** "HH:MM" the rule read for the line ("" when none): where the question stands among the stops. */
+  startsAt: string;
+  /** The stop's name as the rule read it — searched for when the customer picks the place themselves. */
+  title: string;
+  question: string;
+  quote: string;
+  options: PlanAskOption[];
+}
+
+export interface PlanAskOption {
+  id: string;
+  label: string;
+  recommended: boolean;
+  reason: string | null;
+  effect: string | null;
+  /** Picked, the stop is put in and the change screen's place search opens (`query`). */
+  pickMyself: boolean;
+  query: string | null;
 }
 
 /**
@@ -199,6 +241,8 @@ export interface PlanCheckView {
    * `questions`: what only the traveller knows. `understood`: the traveller's own words the server read as a move, a condition or a preference.
    */
   prefill?: PrefillNotes | null;
+  /** `[2026-10-21 P6]` The interpretation questions not answered yet (`PlanAsk`). Absent on an older server and in the preview. */
+  asks?: PlanAsk[];
 }
 
 export interface PrefillNotes { filledCount: number; questions: string[]; understood: string[]; handoff: PrefillHandoff[] }
@@ -224,31 +268,63 @@ export function timeline(view: Pick<PlanCheckView, "items" | "moves">, day: numb
   return out;
 }
 
-/** Every item and move in check order: day by day, along each day's timeline. */
-function checkOrder(view: PlanCheckView): ({ type: "item"; id: string } | { type: "move"; id: string })[] {
-  const days = [...new Set(view.items.map((item) => item.day))].sort((a, b) => a - b);
-  return days.flatMap((day) => timeline(view, day).map((entry) => entry.type === "item" ? { type: "item" as const, id: entry.item.id } : { type: "move" as const, id: entry.move.id }));
+type OrderEntry = { type: "item"; id: string } | { type: "move"; id: string; to: string } | { type: "ask"; id: string };
+
+/**
+ * Every item and move in check order: day by day, along each day's timeline. `[2026-10-21 P6]` A question not answered yet (`asks`) stands at its line's time: after the stops that start
+ * by then, before the leg into the next one.
+ */
+function checkOrder(view: PlanCheckView): OrderEntry[] {
+  const asks = view.asks ?? [];
+  const days = [...new Set([...view.items.map((item) => item.day), ...asks.map((ask) => ask.day)])].sort((a, b) => a - b);
+  return days.flatMap((day) => {
+    const out: OrderEntry[] = timeline(view, day).map((entry) => entry.type === "item" ? { type: "item" as const, id: entry.item.id } : { type: "move" as const, id: entry.move.id, to: entry.move.toId });
+    for (const ask of asks.filter((entry) => entry.day === day).sort((a, b) => a.startsAt.localeCompare(b.startsAt))) {
+      const later = out.findIndex((entry) => entry.type === "item" && (view.items.find((item) => item.id === entry.id)?.startsAt ?? "") > ask.startsAt);
+      const before = later > 0 && out[later - 1].type === "move" && (out[later - 1] as { to: string }).to === out[later].id ? later - 1 : later;
+      out.splice(later < 0 ? out.length : before, 0, { type: "ask", id: ask.id });
+    }
+    return out;
+  });
+}
+
+/** `[2026-10-21 P6]` The stop of the check at an interpretation question — told apart from a stop's id. */
+export const askStopId = (id: string) => `ask:${id}`;
+export const askOfStop = (view: Pick<PlanCheckView, "asks">, stopId: string | null | undefined): PlanAsk | null =>
+  stopId?.startsWith("ask:") ? (view.asks ?? []).find((ask) => askStopId(ask.id) === stopId) ?? null : null;
+
+/**
+ * `[2026-10-21 P6]` The list with the question's place in it: a card-less entry (`PlanItem.ask`) at the line's time, after the stops of that day that start by then (the waiting ones too).
+ */
+export function withAskSlot(view: PlanCheckView, ask: PlanAsk): PlanCheckView {
+  const slot: PlanItem = { id: askStopId(ask.id), day: ask.day, date: ask.date, startsAt: ask.startsAt, endsAt: "", title: ask.quote, place: "", noPlace: true, coordinates: null,
+    checks: [], verdict: null, locked: false, booked: null, info: null, suggestion: null, ask };
+  const at = view.items.findIndex((item) => item.day > ask.day || (item.day === ask.day && item.startsAt > ask.startsAt));
+  return { ...view, items: at < 0 ? [...view.items, slot] : [...view.items.slice(0, at), slot, ...view.items.slice(at)] };
 }
 
 /**
  * ★`[2026-10-04 사용자 지시]` 빨강(못 찾음·고쳐야 함)과 회색(–, 아직 모름)은 어차피 확인이 안 된 것이라 「확인 중」 애니메이션 없이 처음부터 그 모양으로 나온다.
  * 천천히 켜지는 것은 통과(✓)·채움(✎)·주의(!)뿐이다 — 사용자가 「이건 확인됐구나」를 알아볼 수 있는 속도로.
+ * `[2026-10-20 사용자 결정 — 계획 확인 C안]` 처음 검사를 그릴 때는 빨강·회색 줄도 「확인 중」으로 나와 한 줄씩 켜진다(`pendingCopy`). 이 규칙은 「다시 제출」 뒤 다시 켜는 표시(`plan-check.tsx` `rowsFor`)에만 남는다.
  */
 export const isInstantRow = (row: CheckRow) => row.result === "bad" || row.result === "unknown";
 
+/** `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card comes with every check waiting, the red and grey ones too: its height is the finished card's, so nothing below it moves while its checks tick in. */
 const pendingCopy = <T extends { checks: CheckRow[]; verdict: Verdict | null }>(entity: T): T =>
-  ({ ...entity, checks: entity.checks.map((row) => isInstantRow(row) ? row : { ...row, result: "pending" as const, text: "" }), verdict: null });
+  ({ ...entity, checks: entity.checks.map((row) => ({ ...row, result: "pending" as const, text: "" })), verdict: null });
 
 /**
  * One visible change from `shown` toward `target`, or null when they already match.
  *
  * ★The server says what happened and in which order; the screen decides the pace. However many changes arrive at once
  *   (a stream burst, or a re-read after a poll), they are drawn one at a time in this order: reading starts → each line
- *   read → the days → checking starts → each place or move along the day (appear with its checks waiting → each check → its
- *   verdict) → done → title.
+ *   read → the days → checking starts → each place along the day (appear with its checks waiting → each check → its
+ *   verdict, a step of its own) → done → title. `[2026-10-20 사용자 결정 — 계획 확인 C안]` The leg to a place comes with that place, in one step
+ *   (a leg the server sends after its place is drawn comes alone, where it stands).
  *   Anything the screen cannot step toward (something removed, a line changed) jumps straight to `target`.
  */
-export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = false): PlanCheckView | null {
+export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheckView | null {
   if (JSON.stringify(shown) === JSON.stringify(target)) return null;
   const jump = () => target;
   if (stageIndex(target.stage) < stageIndex(shown.stage)) return jump();
@@ -270,12 +346,18 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = f
   if (shown.stage === "reading" && stageIndex(target.stage) > stageIndex("reading")) return { ...shown, stage: "checking" };
 
   // Places and moves along each day: appear (checks waiting) → each check → verdict.
-  for (const entry of checkOrder(target)) {
+  const order = checkOrder(target);
+  for (const [at, entry] of order.entries()) {
+    // `[2026-10-21 P6]` A question not answered yet: nothing past it is drawn (the check stops there to ask once it is final — `stopAt`).
+    if (entry.type === "ask") return null;
     if (entry.type === "item") {
       const want = target.items.find((item) => item.id === entry.id)!;
       const have = shown.items.find((item) => item.id === entry.id);
-      const step = advance(have, want, coarse ? "whole" : "rows");
+      const step = advance(have, want, "rows");
       if (step === undefined) continue;
+      // `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card that needs a look shows that only once the check is final: the screen stops there to ask (`stopAt`), so it waits rather than
+      //   draw past a verdict the server may still change.
+      if (have && step.verdict !== null && have.verdict !== step.verdict && target.stage !== "done" && stopsHere(step, shown)) return null;
       const items = have ? shown.items.map((item) => item.id === want.id ? step : item) : insertInOrder(shown.items, step, target.items);
       return { ...shown, items };
     }
@@ -285,7 +367,10 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = f
     const step = advance(have, want, "whole");
     if (step === undefined) continue;
     const moves = have ? shown.moves.map((move) => move.id === want.id ? step : move) : [...shown.moves, step];
-    return { ...shown, moves };
+    const next = order[at + 1];
+    const card = !have && next?.type === "item" && next.id === want.toId && !shown.items.some((item) => item.id === next.id)
+      ? target.items.find((item) => item.id === next.id) : undefined;
+    return card ? { ...shown, moves, items: insertInOrder(shown.items, pendingCopy(card), target.items) } : { ...shown, moves };
   }
   // Done only once every check is in, then the title.
   if (stageIndex(shown.stage) < stageIndex(target.stage)) return { ...shown, stage: STAGES[stageIndex(shown.stage) + 1] };
@@ -295,33 +380,113 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = f
 
 /**
  * The next state of one place or move toward `want`, or undefined when it already matches.
- * `rows`: a place appears with its checks waiting, then one drawn check at a time (the red and grey ones come with the check before them, at once),
- * the verdict with the last. `whole`: it appears finished — a move (its only visible part is its mark: no pretended search is replayed after the
- * server has answered) or, in a big plan, a card (drawn card by card instead of line by line).
+ * `rows`: a place appears with its checks waiting, then one check at a time, then — once every check is in — its verdict, a step of its own
+ * (`[2026-10-20 사용자 결정 — 계획 확인 C안]` the red and grey checks are ticked in like the others; the verdict used to land with the last check).
+ * `whole`: it appears finished — a move (its only visible part is its mark: no pretended search is replayed after the server has answered).
  */
 function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have: T | undefined, want: T, grain: "rows" | "whole"): T | undefined {
   if (!have) return grain === "whole" ? want : pendingCopy(want);
   if (JSON.stringify(have) === JSON.stringify(want)) return undefined;
   if (have.checks.length !== want.checks.length || have.checks.some((row, at) => row.kind !== want.checks[at].kind)) return want;
   if (grain === "whole") return { ...have, ...want };
-  const checks = have.checks.slice();
-  let ticked = false;
-  for (let at = 0; at < checks.length; at += 1) {
-    if (JSON.stringify(checks[at]) === JSON.stringify(want.checks[at])) continue;
-    if (!isInstantRow(want.checks[at])) {
-      if (ticked) break;
-      ticked = true;
-    }
-    checks[at] = want.checks[at];
-  }
-  const left = checks.some((row, at) => JSON.stringify(row) !== JSON.stringify(want.checks[at]));
-  return left ? { ...have, checks } : { ...have, ...want };
+  const at = have.checks.findIndex((row, index) => JSON.stringify(row) !== JSON.stringify(want.checks[index]));
+  return at < 0 ? { ...have, ...want } : { ...have, checks: have.checks.map((row, index) => index === at ? want.checks[at] : row) };
 }
 
 /** Put `item` where it stands in `order` (the server's order), among the items already shown. */
 function insertInOrder(items: PlanItem[], item: PlanItem, order: PlanItem[]): PlanItem[] {
   const rank = (id: string) => order.findIndex((entry) => entry.id === id);
   return [...items, item].sort((a, b) => rank(a.id) - rank(b.id));
+}
+
+/** `[2026-10-20 C안]` The leg into a stop (from the stop before it, or from the stay in the morning) — none for the first stop of a day without a stay. */
+export const incomingMove = (view: Pick<PlanCheckView, "moves">, id: string): PlanMove | null => view.moves.find((move) => move.toId === id) ?? null;
+
+/** `[2026-10-20 C안]` The way there arrives after the stop starts. */
+export const lateInto = (view: Pick<PlanCheckView, "moves">, id: string): boolean => {
+  const slack = incomingMove(view, id)?.slackMin;
+  return slack !== null && slack !== undefined && slack < 0;
+};
+
+/** `[2026-10-20 C안]` A card whose verdict is in stops the check: it needs a look, or the way to it arrives late (a place problem is asked first, then the arrival). */
+const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) => item.verdict === "review" || (item.verdict !== null && lateInto(view, item.id));
+
+/** `[2026-10-20 C안]` What the stopped card asks about: its place (or what else needs a look) first, then the way to it. */
+export const stopKind = (view: PlanCheckView, id: string): "place" | "arrival" =>
+  view.items.find((item) => item.id === id)?.verdict === "review" ? "place" : "arrival";
+
+/**
+ * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` Where the first check stops to ask: the first card along the days whose drawn verdict is 「확인 필요」 or whose way in arrives late, once the
+ * server's check is final. Nothing past it is drawn until the customer picks and the card passes (flow mockup `mockups/tripilot-plan-flow-register.html` 4단계).
+ */
+export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | null {
+  if (target.stage !== "done") return null;
+  // `[2026-10-21 P6]` Along the plan as the server has it: a question not answered yet stops it once every stop before it is drawn with its verdict (`askStopId`).
+  for (const entry of checkOrder(target)) {
+    if (entry.type === "move") continue;
+    if (entry.type === "ask") return askStopId(entry.id);
+    const item = shown.items.find((candidate) => candidate.id === entry.id);
+    // Not drawn yet, or its verdict still to come: the check goes on toward it first.
+    if (!item || (item.verdict === null && target.items.find((candidate) => candidate.id === entry.id)?.verdict != null)) return null;
+    if (stopsHere(item, shown)) return entry.id;
+  }
+  return null;
+}
+
+/**
+ * `[2026-10-20 C안]` The finished check cut where it stops: every card and leg up to the first card that needs a look (or arrives late), the rest not drawn yet — what a page shows at
+ * once that opens a checked plan with something to fix, or that skips the animation. The whole check when nothing stops it.
+ */
+export function cutAtStop(view: PlanCheckView): PlanCheckView {
+  if (view.stage !== "done") return view;
+  const order = checkOrder(view);
+  const at = order.findIndex((entry) => entry.type === "ask" || (entry.type === "item" && stopsHere(view.items.find((item) => item.id === entry.id)!, view)));
+  if (at < 0) return view;
+  // `[2026-10-21 P6]` At a question, up to the stop before it (the question has no card).
+  const drawn = new Set(order.slice(0, order[at].type === "ask" ? at : at + 1).map((entry) => entry.id));
+  return { ...view, stage: "checking", title: null, items: view.items.filter((item) => drawn.has(item.id)), moves: view.moves.filter((move) => drawn.has(move.id)) };
+}
+
+/**
+ * `[2026-10-20 사용자 결정 — 계획 확인 C안 · 이동 확인 C안]` Each stop's card carries the 「도착」 line of the way into it (the server's own line of that leg), so the stop is checked with
+ * how it is reached — and a late arrival is asked in the stop's own card. Only for the first check: the result shows the legs as before.
+ */
+export function withArrivalRows(view: PlanCheckView): PlanCheckView {
+  let added = false;
+  const items = view.items.map((item) => {
+    const row = incomingMove(view, item.id)?.checks.find((check) => check.kind === "arrival");
+    if (!row) return item;
+    added = true;
+    return { ...item, checks: [...item.checks, row] };
+  });
+  return added ? { ...view, items } : view;
+}
+
+/** `[2026-10-20 C안]` Whether `next` changes nothing on screen but the card `id` (while the screen is stopped at it, nothing else is drawn). */
+export function onlyCard(shown: PlanCheckView, next: PlanCheckView, id: string): boolean {
+  const rest = (view: PlanCheckView) => JSON.stringify([view.stage, view.title, view.days, view.moves, view.items.filter((item) => item.id !== id)]);
+  return rest(shown) === rest(next);
+}
+
+/** `[2026-10-20 C안 — 고른 뒤 다시 확인]` The card picked for is checked again where it stands: every check waits again, its words kept until the new ones come. */
+export function beginRecheck(shown: PlanCheckView, id: string): PlanCheckView {
+  return { ...shown, items: shown.items.map((item) => item.id !== id ? item : { ...item, checks: item.checks.map((row) => ({ ...row, result: "pending" as const })) }) };
+}
+
+/**
+ * `[2026-10-20 C안 — 고른 뒤 다시 확인]` The server answered the pick with the new plan: what is drawn takes it at once (a stop or leg gone is dropped, a leg is kept where both its
+ * ends are drawn), except the card `id`, which takes the new place and times with its new checks still waiting (the words it had kept where the check is the same kind) —
+ * they are then ticked in one by one, and its verdict last.
+ */
+export function rebase(shown: PlanCheckView, target: PlanCheckView, id: string): PlanCheckView {
+  const drawn = new Set(shown.items.map((item) => item.id));
+  const items = target.items.filter((item) => drawn.has(item.id)).map((item) => {
+    if (item.id !== id) return item;
+    const was = shown.items.find((entry) => entry.id === id)!;
+    return { ...item, verdict: was.verdict, checks: item.checks.map((row, at) => ({ ...row, result: "pending" as const, text: was.checks[at]?.kind === row.kind ? was.checks[at].text : "" })) };
+  });
+  const kept = new Set(items.map((item) => item.id));
+  return { ...shown, items, moves: target.moves.filter((move) => kept.has(move.fromId) && kept.has(move.toId)) };
 }
 
 /**

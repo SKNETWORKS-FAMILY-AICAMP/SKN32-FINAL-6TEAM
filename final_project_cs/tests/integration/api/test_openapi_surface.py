@@ -39,6 +39,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/support/inquiries",
     # 공개 계약 rest-endpoints.md에 이미 정의된 이동 선택·보관 정책·안전 복구 경로.
     "/v1/web/legal/retention",
+    # `[2026-10-19 ST4F-613]` 기능 스위치 공개 읽기(키 없음) — rest-endpoints/web-trips.md 「항로 지킴이 운영 스위치」.
+    "/v1/web/features",
     "/v1/web/trip-intakes/{intake_id}/moves/{pair}/mode",
     "/v1/web/trip-intakes/{intake_id}/moves/{pair}/options",
     "/v1/web/trips/{trip_id}/safety/recovery",

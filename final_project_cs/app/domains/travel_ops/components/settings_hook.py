@@ -146,6 +146,25 @@ def trip_now_label_enabled(tenant_id: str) -> bool:
     return guardrail_default()
 
 
+GUARDIAN = "travel.guardian.enabled"
+
+
+def guardian_enabled(tenant_id: str) -> bool:
+    """항로 지킴이를 쓰나. `[2026-10-19 사용자 결정 — ST4F-613]` 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다(켠 기록은 그대로).
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.guardian_enabled`, 기본 켜짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 끄는 것은 `false` 로 명시한 경우뿐이다.
+    읽는 곳: 판정(`planning/survey.on_disruption` · `auto_on_disruption` — 서비스 테넌트로) · 여행 조회의 `guardian` · 켜기 입구 ·
+    알림(`planning/guardian.annotate` · 알림 목록) · 공개 읽기 `GET /v1/web/features`. 계약 `rest-endpoints/web-trips.md` 「항로 지킴이 운영 스위치」.
+    """
+    value = operator_setting(tenant_id, GUARDIAN)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import guardian_enabled as guardrail_default
+
+    return guardrail_default()
+
+
 ACTIVITY_LIVE_CHECK = "travel.activity_judge.live_status_batch_enabled"
 
 

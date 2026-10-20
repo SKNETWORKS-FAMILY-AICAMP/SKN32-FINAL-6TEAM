@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { SURVEY_VERSION, tripSurveySchema, type TripSurvey } from "@/features/onboarding/payload";
+import { guardianSwitchedOff } from "@/lib/live/features";
 import { DEFAULT_PACE, disruptionOf, isPace, type Guardian, type Pace } from "./model";
 
 /**
@@ -78,8 +79,15 @@ export function paceOf(survey: TripSurvey | undefined, criteria: Criteria): Pace
 /**
  * The survey with what the plan screen decided laid over it (the latest choice wins). Not decided: the survey as it was (possibly none).
  * ★「건너뛰기 — 끄고 진행」 sends `on_disruption: "ask_first"` SAID OUT LOUD - sending nothing would let the server change plans for closures and traffic stops by itself.
+ * ★`[2026-10-19 사용자 결정 — ST4F-613]` The operator switched the Course Keeper off (`lib/live/features.ts`): no `on_disruption` goes at all - not the card's
+ *   choice, not one left in the survey - while the fullness still does (no card is shown then, so nothing waits for a decision). The server asks first anyway.
  */
 export function withCriteria(survey: TripSurvey | undefined, criteria: Criteria): TripSurvey | undefined {
+  if (guardianSwitchedOff()) {
+    const rest: Partial<TripSurvey> = { ...survey };
+    delete rest.on_disruption;
+    return tripSurveySchema.parse({ version: SURVEY_VERSION, ...rest, pace: paceOf(survey, criteria) });
+  }
   if (!criteria.decided || !criteria.guardian) return survey;
   return tripSurveySchema.parse({ version: SURVEY_VERSION, ...(survey ?? {}), pace: paceOf(survey, criteria), on_disruption: disruptionOf(criteria.guardian) });
 }

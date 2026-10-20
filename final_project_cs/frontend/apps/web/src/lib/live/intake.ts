@@ -124,6 +124,39 @@ export interface IntakeView {
   reopen?: { trip_id: string; version: number; frozen_item_ids: string[]; frozen?: { item_id: string; reason: FrozenReason | null }[] } | null;
   /** `[2026-10-16 D-025]` See `IntakePrefill`. Null (or absent) when nothing was filled first. */
   prefill?: IntakePrefill | null;
+  /**
+   * `[2026-10-20 서버 · 2026-10-21 사용자 결정 — 계획 확인 P6]` Lines the reading AI read as something other than a stop (a free time, a recommendation asked for …) where the rule read a stop:
+   * that stop is taken out for now (the AI's reading, option 1) and the customer is asked (`wiki/external/rest-endpoints/web-intakes.md` 「해석 확인 질문」). Absent on an older server.
+   */
+  interpretations?: IntakeInterpretation[];
+}
+
+/** One option of an interpretation question — the server's words. `reading` (the AI's reading, first, recommended) · `item` (the rule's stop put back) · `item_search` (put back, its place searched by the written name). */
+export interface IntakeInterpretationOption {
+  id: string;
+  label: string;
+  recommended: boolean;
+  reason: string | null;
+  effect: string | null;
+  /** `pick_myself`: picked, the stop is put in and the change screen's place search opens on `query`. */
+  action: string | null;
+  query: string | null;
+}
+
+/** One question of `interpretations[]`: `item` is the check's id of the stop on that line (`source_id` · `index` its keys), `answer` the option already picked (null when none), `applied` what the plan holds now. */
+export interface IntakeInterpretation {
+  id: string;
+  kind: string;
+  question: string;
+  quote: string | null;
+  line: number | null;
+  item: string;
+  source_id: string;
+  index: number;
+  options: IntakeInterpretationOption[];
+  answer: string | null;
+  applied: string | null;
+  actions?: string[];
 }
 
 /** `[2026-10-15 ST4F-490]` Why a stop of the trip is left out of an edit: over · runs past midnight · its place has no position · a kind the edit does not take. */
@@ -149,8 +182,14 @@ export interface IntakePlanInput { start_date: string; days: number; party_size:
 
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
+/**
+ * `[2026-10-20 사용자 결정 — ST4F-615]` What the door said: `screened` is the quick screen's word (an empty text or one with no travel clue) — such an intake
+ * is not read (`status: review`). `null` (or absent, an older server): taken, the reading has begun.
+ */
+export interface IntakeTaken { intake_id: string; status?: string; screened?: { code: string; rule?: string } | null }
+
 /** `humanToken` — the Turnstile token when the human check is on; the server checks it with Cloudflare. */
-export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<{ intake_id: string }> {
+export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<IntakeTaken> {
   const form = new FormData();
   form.append("text", text);
   for (const file of files) form.append("files", file, file.name);
@@ -171,6 +210,16 @@ export function editIntake(intakeId: string, revision: number, edits: IntakeEdit
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/edits`, language, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(options.check === false ? { revision, edits, check: false } : { revision, edits }),
+  });
+}
+
+/**
+ * `[2026-10-21 P6]` Answer interpretation questions (`{question id: option id}`). The AI's reading (already what the plan holds) is only saved; another option puts the stop back in a new
+ * revision, checked with it. While the server still reads, an answer is saved and put in before the check is said to be done (`interpretation.pending`).
+ */
+export function answerInterpretations(intakeId: string, revision: number, answers: Record<string, string>, language: Language): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/interpretations`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, answers }),
   });
 }
 

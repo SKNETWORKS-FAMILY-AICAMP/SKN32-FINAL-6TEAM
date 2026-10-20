@@ -165,20 +165,22 @@ test("카드 왼쪽의 시간을 누르면 그 자리에 시간 편집기가 열
 
 // ── 삭제는 보류 · 다시 제출 · 바뀐 곳 모아 보기 ──────────────────────────────────
 
-test("삭제는 바로 지우지 않는다: 카드가 회색이 되고 휴지통 자리에 되돌리기가 서며, 서버로는 「다시 제출」을 누를 때 간다", async ({ page, request }) => {
+// `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` 전에는 「다시 제출」 때 서버로 갔다(새로고침하면 표시가 사라졌다).
+test("삭제는 바로 지우지 않는다: 카드가 회색이 되고 휴지통 자리에 되돌리기가 서며, 서버에는 곧바로 저장만 하고 「다시 제출」이 한 번에 확인한다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "올리브영 삭제" }).click();
   await expect(card(page, "올리브영")).toContainText("삭제 예정");
   await expect(page.getByRole("button", { name: "올리브영 삭제 되돌리기" })).toBeVisible();          // 휴지통이 있던 자리
   await expect(page.getByRole("button", { name: "올리브영 삭제", exact: true })).toHaveCount(0);
-  expect(await server.received("POST", "/edits")).toHaveLength(0);                                   // 아직 아무것도 안 보냈다
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);           // 저장만(검사는 「다시 제출」 때)
+  expect((await server.received("POST", "/edits"))[0].body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[1].removed", value: true }], check: false });
   await expect(needsBadge(page)).toHaveCount(0);                                                     // 빼기로 한 일정은 「확인 필요」에서 빠진다(이동 하나는 남는다)
   await page.getByRole("button", { name: "올리브영 삭제 되돌리기" }).click();                          // 마음을 바꾸면 되돌린다
   await expect(card(page, "올리브영")).not.toContainText("삭제 예정");
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(2);           // 되돌리기도 저장만(removed: false)
   await page.getByRole("button", { name: "올리브영 삭제" }).click();
-  await page.getByRole("button", { name: "다시 제출" }).click();                                      // 이때 서버로 간다
-  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
-  expect(JSON.stringify((await server.received("POST", "/edits"))[0].body)).toContain('.removed"');
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(3);
+  await page.getByRole("button", { name: "다시 제출" }).click();                                      // 빼기를 다시 보내지 않고 전체를 한 번 확인한다
   await expect.poll(async () => (await server.received("POST", "/revalidate")).length).toBe(1);
   await expect(card(page, "올리브영")).toHaveCount(0);
 });

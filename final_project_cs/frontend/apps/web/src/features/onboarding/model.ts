@@ -1,3 +1,4 @@
+import { PLAN_PARTY } from "@/features/trip-registration/model";
 import type { Translate } from "@/lib/i18n";
 
 /** Areas of the priority question — the backend survey's `Area` (`food` · `activity` · `mobility`). */
@@ -13,6 +14,8 @@ export interface Answers {
   party: string;
   /** Typed for `party: other`. Kept while another choice is picked, so choosing `other` again brings it back; sent only with `other`. */
   partyOther: string;
+  /** How many travel, picked for `friends` · `family` · `other` (`null` until picked). `alone` · `partner` have a fixed size instead (`partySizeOf`); this is kept aside meanwhile, like `partyOther`. */
+  partySize: number | null;
   /** Areas in the order they were picked: the order is the ranking. */
   priority: Area[];
   /** Each area's details in the order they were picked, ranked the same way and kept per area. */
@@ -25,7 +28,7 @@ export interface Answers {
 }
 
 export const initialAnswers: Answers = {
-  party: "", partyOther: "", priority: [], details: { food: [], activity: [], mobility: [] },
+  party: "", partyOther: "", partySize: null, priority: [], details: { food: [], activity: [], mobility: [] },
   indoorDining: "", indoorActivity: "", pace: "", skipped: [],
 };
 
@@ -55,6 +58,31 @@ export const detailOptions: Record<Area, readonly Option[]> = {
 /** How many activity details a picked activity area needs — no more, no fewer. */
 export const ACTIVITY_PICKS = 3;
 
+/** `[2026-10-19 사용자 지시]` The sizes to pick from under the companions — the same 1–4 travelers the server plans for. */
+export const PARTY_SIZES = PLAN_PARTY;
+/** 혼자 · 연인 tell the size themselves (1 · 2), so it is set, not picked. */
+const FIXED_PARTY_SIZE: Readonly<Partial<Record<string, number>>> = { alone: 1, partner: 2 };
+/** `[2026-10-19 사용자 지시]` 친구 · 가족 are two or more: 1 is not offered, and they start at 2 until another size is picked. */
+const GROUP_PARTY_MIN: Readonly<Partial<Record<string, number>>> = { friends: 2, family: 2 };
+
+const fixedPartySize = (party: string): number | undefined => FIXED_PARTY_SIZE[party];
+
+/** Whether a size can be picked for these companions: never for 혼자 · 연인 (set), and not under 2 for 친구 · 가족. */
+export const canPickPartySize = (party: string, size: number): boolean => fixedPartySize(party) === undefined && size >= (GROUP_PARTY_MIN[party] ?? PARTY_SIZES[0]);
+
+/**
+ * How many travel: the set size for 혼자 · 연인; for 친구 · 가족 the size picked, or 2 until one is; for 기타 the size picked.
+ * `null` when no companions are chosen, or 기타 has no size yet. A size kept from another choice counts only where it can be picked.
+ * Only a picked size is stored (`partySize`), so a start of 2 that was never changed stays told apart from a picked 2.
+ */
+export function partySizeOf(a: Answers): number | null {
+  if (!a.party) return null;
+  const fixed = fixedPartySize(a.party);
+  if (fixed !== undefined) return fixed;
+  if (a.partySize !== null && canPickPartySize(a.party, a.partySize)) return a.partySize;
+  return GROUP_PARTY_MIN[a.party] ?? null;
+}
+
 export type QuestionId = "party" | "priority" | "indoor" | "pace";
 type Pair = readonly [ko: string, en: string];
 
@@ -76,8 +104,8 @@ interface Question {
  */
 export const questions: readonly Question[] = [
   {
-    id: "party", name: ["여행자 구성", "Your companions"], fields: ["party", "partyOther"],
-    answered: (a) => Boolean(a.party) && (a.party !== "other" || Boolean(a.partyOther.trim())),
+    id: "party", name: ["여행자 구성", "Your companions"], fields: ["party", "partyOther", "partySize"],
+    answered: (a) => Boolean(a.party) && (a.party !== "other" || Boolean(a.partyOther.trim())) && partySizeOf(a) !== null,
     title: ["누구와 함께 떠나나요?", "Who’s coming along?"], helper: ["함께 떠나는 사람을 하나 골라 주세요.", "Choose who you’re traveling with."],
   },
   {
@@ -129,6 +157,12 @@ export function chosenLabel(key: ChoiceKey, value: string, t: Translate) {
 /** Companions in words: what was typed for `other`, otherwise the choice. */
 export const partyLabel = (a: Answers, t: Translate) => a.party === "other" && a.partyOther.trim() ? a.partyOther.trim() : chosenLabel("party", a.party, t);
 
+/** `[2026-10-20 B안 · ST4F-581]` Companions with how many travel — 「친구 · 3명」. With no size yet (기타 not picked) only the companions. */
+export function partyLine(a: Answers, t: Translate): string {
+  const size = partySizeOf(a);
+  return size === null ? partyLabel(a, t) : `${partyLabel(a, t)} · ${t(`${size}명`, size === 1 ? "1 person" : `${size} people`)}`;
+}
+
 /** Priorities in picking order, one line per area: "1. 음식 — 청결 → 맛". */
 export function priorityLines(a: Answers, t: Translate): string[] {
   const detail = (area: Area, value: string) => {
@@ -145,7 +179,7 @@ export function priorityLines(a: Answers, t: Translate): string[] {
 export function answerLines(id: QuestionId, a: Answers, t: Translate): string[] {
   if (a.skipped.includes(questions.findIndex((question) => question.id === id))) return [t("응답하지 않음", "Not answered")];
   switch (id) {
-    case "party": return [partyLabel(a, t)];
+    case "party": return [partyLine(a, t)];
     case "priority": return a.priority.length ? priorityLines(a, t) : [t("미선택", "Not selected")];
     case "indoor": return [`${t("식당", "Dining")} · ${chosenLabel("indoorDining", a.indoorDining, t)}`, `${t("액티비티", "Activities")} · ${chosenLabel("indoorActivity", a.indoorActivity, t)}`];
     case "pace": return [chosenLabel("pace", a.pace, t)];
@@ -156,6 +190,9 @@ export function answerLines(id: QuestionId, a: Answers, t: Translate): string[] 
 export function toggle(a: Answers, key: ChoiceKey, value: string): Answers {
   return { ...a, [key]: a[key] === value ? "" : value };
 }
+
+/** Tap a size chip: it becomes the size. Tapping it again keeps it — the row always holds one size once there is one. */
+export const pickPartySize = (a: Answers, size: number): Answers => ({ ...a, partySize: size });
 
 /** Tap an area: picked areas rank in tapping order. Un-picking drops the area and its details; the ones behind move up. */
 export function toggleArea(a: Answers, area: Area): Answers {

@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SURVEY_VERSION, type TripSurvey } from "@/features/onboarding/payload";
+import { loadFeatures, resetFeatures } from "@/lib/live/features";
+import { resetSessionState } from "@/lib/live/client";
 import { paceOf, withCriteria, type Criteria } from "./criteria-store";
 
 const base: Criteria = { pace: "moderate", paceChosen: false, guardian: null, decided: false };
@@ -27,5 +29,25 @@ describe("what the plan screen lays over the survey", () => {
   it("the card's choice wins over the survey's on_disruption (the latest choice)", () => {
     const survey: TripSurvey = { version: SURVEY_VERSION, on_disruption: "replace" };
     expect(withCriteria(survey, { ...base, guardian: "off", decided: true })?.on_disruption).toBe("ask_first");
+  });
+});
+
+describe("`[2026-10-19 ST4F-613]` when the operator switched the Course Keeper off", () => {
+  beforeEach(async () => {
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ guardian: false }), { status: 200 }));
+    await loadFeatures("ko");
+  });
+  afterEach(() => { vi.unstubAllGlobals(); resetFeatures(); resetSessionState(); });
+
+  it("sends no on_disruption — not the card's choice, not one left in the survey", () => {
+    expect(withCriteria(undefined, { ...base, guardian: "on", decided: true })).toEqual({ version: SURVEY_VERSION, pace: "moderate" });
+    const survey: TripSurvey = { version: SURVEY_VERSION, on_disruption: "replace", theme: "history" };
+    expect(withCriteria(survey, { ...base, guardian: "off", decided: true })).toEqual({ version: SURVEY_VERSION, theme: "history", pace: "moderate" });
+  });
+
+  it("still sends the fullness, though no card was asked (nothing waits for a decision)", () => {
+    expect(withCriteria(undefined, base)).toEqual({ version: SURVEY_VERSION, pace: "moderate" });
+    expect(withCriteria({ version: SURVEY_VERSION, pace: "relaxed" }, base)).toEqual({ version: SURVEY_VERSION, pace: "relaxed" });
+    expect(withCriteria(undefined, { ...base, pace: "packed", paceChosen: true })).toEqual({ version: SURVEY_VERSION, pace: "packed" });
   });
 });

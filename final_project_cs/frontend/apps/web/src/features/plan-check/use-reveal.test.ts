@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { exampleDone, exampleSnapshots } from "./test-views";
 import { nextStep, STAGES, type PlanCheckView } from "./model";
-import { backlog, cardBacklog, COARSE_MIN_MS, linesBacklog, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_BUDGET_MS, REVEAL_MIN_MS, REVEAL_MS, revealPlan, STAGE_MIN_MS, stepMany, useReveal } from "./use-reveal";
+import { FIRST_CARD_MS, FOLD_MS, linesBacklog, pauseBefore, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_MS, ROW_MS, ROWS_LEAD_MS, STAGE_MIN_MS, stepMany, useReveal, VERDICT_MS } from "./use-reveal";
 
 // Exercise the hook's timer/state boundary in Node; the live tests cover React and browser rendering.
 const hooks = vi.hoisted(() => ({
@@ -13,7 +13,7 @@ vi.mock("@/lib/settings", () => ({ useSettings: () => ({ skipAnimation: hooks.sk
 vi.mock("react", () => ({
   useState: <T>(initial: T) => {
     const at = hooks.cursor++;
-    hooks.slots[at] ??= { value: initial };
+    hooks.slots[at] ??= { value: typeof initial === "function" ? (initial as () => T)() : initial };
     return [hooks.slots[at].value, (value: T | ((current: T) => T)) => {
       const next = typeof value === "function" ? (value as (current: T) => T)(hooks.slots[at].value as T) : value;
       if (Object.is(next, hooks.slots[at].value)) return;
@@ -36,14 +36,14 @@ vi.mock("react", () => ({
   },
 }));
 
-function draw(target: PlanCheckView, paused = false) {
+function draw(target: PlanCheckView, paused = false, stops = false) {
   let result: ReturnType<typeof useReveal>;
   do {
     hooks.again = false;
     hooks.cursor = 0;
     hooks.pending = [];
     // eslint-disable-next-line react-hooks/rules-of-hooks -- Node test harness replays renders with mocked hooks; this is not a React component.
-    result = useReveal(target, paused);
+    result = useReveal(target, paused, stops);
   } while (hooks.again);
   for (const effect of hooks.pending) {
     hooks.slots[effect.slot].cleanup?.();
@@ -70,7 +70,7 @@ describe("saved edits and paused replay", () => {
     vi.useFakeTimers();
     draw(exampleDone);
     const saved = { ...exampleDone, items: exampleDone.items.map((item) => ({ ...item, startsAt: "08:35", endsAt: "10:05" })) };
-    expect(draw(saved)).toEqual({ view: saved, settled: true });
+    expect(draw(saved)).toMatchObject({ view: saved, settled: true });
     expect(vi.getTimerCount()).toBe(0);
     // A paused next update must keep the saved times, not revive the original snapshot stored before the edit.
     const paused = draw(exampleDone, true);
@@ -78,7 +78,7 @@ describe("saved edits and paused replay", () => {
     expect(paused.settled).toBe(false);
     vi.advanceTimersByTime(5_000);
     expect(draw(exampleDone, true).view.items).toEqual(saved.items);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
   });
 
   it("keeps the first checking-to-done transition paced until its stage hold ends", () => {
@@ -89,13 +89,13 @@ describe("saved edits and paused replay", () => {
     vi.advanceTimersByTime(STAGE_MIN_MS - 1);
     expect(draw(exampleDone).settled).toBe(false);
     vi.advanceTimersByTime(1);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
   });
 
   it("reveals the first map cards after a survey without replaying completed reading", () => {
     vi.useFakeTimers();
     draw(received);
-    expect(draw(exampleDone, true)).toEqual({ view: received, settled: false });
+    expect(draw(exampleDone, true)).toMatchObject({ view: received, settled: false });
     vi.advanceTimersByTime(5_000);
     expect(draw(exampleDone, true).view).toBe(received);
     expect(vi.getTimerCount()).toBe(0);
@@ -111,7 +111,7 @@ describe("saved edits and paused replay", () => {
       if (next.settled) break;
     }
     expect(counts.some((count) => count > 0 && count < exampleDone.items.length)).toBe(true);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
   });
 
   it("respects explicit animation skipping when questions release", () => {
@@ -119,7 +119,7 @@ describe("saved edits and paused replay", () => {
     draw(received);
     draw(exampleDone, true);
     hooks.skip = true;
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -136,58 +136,38 @@ describe("saved edits and paused replay", () => {
     vi.useFakeTimers();
     draw(received);
     hooks.skip = true;
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
     hooks.skip = false;
     expect(draw(exampleDone, true).view).toBe(exampleDone);
-    expect(draw(exampleDone)).toEqual({ view: exampleDone, settled: true });
+    expect(draw(exampleDone)).toMatchObject({ view: exampleDone, settled: true });
     expect(vi.getTimerCount()).toBe(0);
   });
 });
 
 describe("how fast the plan check draws what the server sent", () => {
-  it("counts what is waiting to be drawn, and none once everything is drawn", () => {
-    expect(backlog(exampleDone, exampleDone)).toBe(0);
-    expect(cardBacklog(exampleDone, exampleDone)).toBe(0);
-    // One drawn change per step: the count falls as the screen walks to the target and ends at zero.
-    let shown: PlanCheckView = received;
-    let last = backlog(shown, exampleDone);
-    expect(last).toBeGreaterThan(20);
-    for (let step = nextStep(shown, exampleDone); step; step = nextStep(shown, exampleDone)) {
-      shown = step;
-      const now = backlog(shown, exampleDone);
-      expect(now).toBeLessThanOrEqual(last);
-      last = now;
-    }
-    expect(last).toBe(0);
+  it("`[2026-10-20 C안]` draws the first check at the chosen pace: the first card 0.7 s, its first line 0.65 s, each line 0.26 s, the verdict 0.28 s, the next card 0.45 s", () => {
+    expect([FIRST_CARD_MS, ROWS_LEAD_MS, ROW_MS, VERDICT_MS, FOLD_MS]).toEqual([700, 650, 260, 280, 450]);
+    let shown: PlanCheckView = { ...exampleDone, stage: "checking", title: null, items: [], moves: [] };
+    const pauses: number[] = [];
+    for (let next = nextStep(shown, exampleDone); next; next = nextStep(shown, exampleDone)) { pauses.push(pauseBefore(shown, next)); shown = next; }
+    expect(pauses).toEqual([
+      700, 650, 260, 260, 280,           // a: the card, its three lines, the verdict
+      450, 650, 260, 260, 260, 280,      // b, with the leg to it: the card, its four lines, the verdict
+      450, 650, 260, 260, 260, 280,      // c, with the leg to it
+      450, 650, 260, 260, 280,           // d
+      260, 260,                          // done, the title
+    ]);
   });
 
-  it("counts about the steps nextStep takes (the days and the title are not counted), so the pace is worked out from the real number of draws", () => {
-    let shown: PlanCheckView = received;
-    let steps = 0;
-    for (let step = nextStep(shown, exampleDone); step; step = nextStep(shown, exampleDone)) { shown = step; steps += 1; }
-    expect(steps - backlog(received, exampleDone)).toBe(2);                    // the step that sets the days, and the one that sets the title
-  });
-
-  it("`[2026-10-04]` draws a small plan one check at a time, 300 ms between two — slow enough to see which check came in", () => {
-    expect(REVEAL_MS).toBe(300);
-    expect(revealPlan(0, 0)).toEqual({ pause: REVEAL_MS, coarse: false });
-    expect(revealPlan(10, 5)).toEqual({ pause: REVEAL_MS, coarse: false });
-    // The example plan (4 places, 2 moves): the whole replay is well inside the budget at the full pause.
-    const plan = revealPlan(backlog(received, exampleDone), cardBacklog(received, exampleDone));
-    expect(plan).toEqual({ pause: REVEAL_MS, coarse: false });
-    expect(backlog(received, exampleDone) * REVEAL_MS).toBeLessThanOrEqual(REVEAL_BUDGET_MS);
-  });
-
-  it("shortens the pause only down to the least a check needs to be seen — a bigger plan is drawn card by card instead, never faster line by line", () => {
-    const fine = revealPlan(60, 30);
-    expect(fine.coarse).toBe(false);
-    expect(fine.pause).toBeGreaterThanOrEqual(REVEAL_MIN_MS);
-    expect(fine.pause).toBeLessThan(REVEAL_MS);
-    const big = revealPlan(200, 40);
-    expect(big.coarse).toBe(true);
-    expect(big.pause).toBe(REVEAL_MS);                                       // 40 cards at 300 ms = 12 s, inside the budget
-    expect(revealPlan(400, 400)).toEqual({ pause: COARSE_MIN_MS, coarse: true });   // a huge plan: the floor, never lower
-    expect(revealPlan(400, 100).pause * 100).toBeLessThanOrEqual(REVEAL_BUDGET_MS * 1.05);
+  it("`[2026-10-20 C안]` keeps the same pace however long the plan is (no time budget, no card-by-card drawing)", () => {
+    const many = (count: number): PlanCheckView => ({ ...exampleDone, items: Array.from({ length: count }, (_, at) => ({ ...exampleDone.items[0], id: `s${at}`, startsAt: `${String(8 + Math.floor(at / 4)).padStart(2, "0")}:${String((at % 4) * 15).padStart(2, "0")}` })), moves: [] });
+    const pacesOf = (target: PlanCheckView) => {
+      let shown: PlanCheckView = { ...target, stage: "checking", title: null, items: [], moves: [] };
+      const out = new Set<number>();
+      for (let next = nextStep(shown, target); next; next = nextStep(shown, target)) { out.add(pauseBefore(shown, next)); shown = next; }
+      return [...out].sort((x, y) => x - y);
+    };
+    expect(pacesOf(many(40))).toEqual(pacesOf(many(3)));
   });
 
   it("reads the lines at a pace of their own — all of them in about the reading budget, one step at a time, never flashing by", () => {
@@ -196,7 +176,7 @@ describe("how fast the plan check draws what the server sent", () => {
     const work = 34;                                                         // 17 lines, each appearing and then read
     expect(readPause(work)).toBeLessThan(REVEAL_MS);
     expect(readPause(work) * work).toBeLessThanOrEqual(READ_BUDGET_MS * 1.05);
-    expect(readPause(work)).toBeGreaterThan(REVEAL_MIN_MS * 0.5);
+    expect(readPause(work)).toBeGreaterThan(READ_MIN_MS);
     expect(readPause(100_000)).toBe(READ_MIN_MS);
   });
 
@@ -208,10 +188,11 @@ describe("how fast the plan check draws what the server sent", () => {
   });
 
   it("steps several changes toward the target at once, stopping at the target, and says nothing is left when it is there", () => {
+    const left = (from: PlanCheckView) => { let count = 0; for (let view = from, next = nextStep(view, exampleDone); next; view = next, next = nextStep(view, exampleDone)) count += 1; return count; };
     const one = stepMany(received, exampleDone, 1);
     const many = stepMany(received, exampleDone, 5);
     expect(one).toEqual(nextStep(received, exampleDone));
-    expect(backlog(many!, exampleDone)).toBeLessThan(backlog(one!, exampleDone));
+    expect(left(many!)).toBeLessThan(left(one!));
     // however many it is asked for, it goes on stage by stage and ends exactly at the target — never past it
     let view: PlanCheckView = received;
     for (let batch = stepMany(view, exampleDone, 100_000); batch; batch = stepMany(view, exampleDone, 100_000)) view = batch;
@@ -232,3 +213,62 @@ describe("how fast the plan check draws what the server sent", () => {
     expect(STAGE_MIN_MS).toBeGreaterThanOrEqual(800);
   });
 });
+
+describe("`[2026-10-20 C안]` stopping at a card that needs a look, and going on after a pick", () => {
+  const checking: PlanCheckView = { ...exampleDone, stage: "checking", title: null, items: [], moves: [] };
+  /** Let the timers run until `until` holds (or give up). */
+  function run(target: PlanCheckView, until: (result: ReturnType<typeof useReveal>) => boolean) {
+    let result = draw(target, false, true);
+    for (let step = 0; step < 200 && !until(result); step += 1) { vi.advanceTimersByTime(100); result = draw(target, false, true); }
+    return result;
+  }
+
+  it("stops at the card that needs a look: nothing past it is drawn, and it is not settled", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    const stopped = run(exampleDone, (result) => result.stop !== null);
+    expect(stopped.stop).toEqual({ id: "b", settling: false });
+    expect(stopped.settled).toBe(false);
+    vi.advanceTimersByTime(10_000);
+    const still = draw(exampleDone, false, true);
+    expect(still.view.items.map((item) => item.id)).toEqual(["a", "b"]);
+    expect(still.settled).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("waits for the server after a pick, ticks the card's new checks in where it stands, and goes on when it passes", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null).recheck.begin("b");
+    const asked = draw(exampleDone, false, true);
+    expect(asked.stop).toEqual({ id: "b", settling: true });
+    expect(asked.view.items.find((item) => item.id === "b")!.checks.every((row) => row.result === "pending" && row.text)).toBe(true);
+    vi.advanceTimersByTime(5_000);
+    expect(draw(exampleDone, false, true).view.items.find((item) => item.id === "b")!.checks[0].result).toBe("pending");   // not before the answer
+    const fixed: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
+      : { ...item, verdict: "keep", checks: item.checks.map((row) => ({ ...row, result: "ok" as const })) }),
+      moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, slackMin: 3, verdict: "keep" as const } : move) };    // the way in on time too (a late one stops again)
+    const done = run(fixed, (result) => result.settled);
+    expect(done.view).toEqual(fixed);
+    expect(done.stop).toBeNull();
+  });
+
+  it("puts the card back as the server has it when the pick is refused", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null).recheck.begin("b");
+    draw(exampleDone, false, true).recheck.fail("b");
+    const back = draw(exampleDone, false, true);
+    expect(back.view.items.find((item) => item.id === "b")).toEqual(exampleDone.items[1]);
+    expect(back.stop).toEqual({ id: "b", settling: false });
+  });
+
+  it("does not stop where the page cannot change places", () => {
+    vi.useFakeTimers();
+    draw(checking);
+    let result = draw(exampleDone);
+    for (let step = 0; step < 300 && !result.settled; step += 1) { vi.advanceTimersByTime(100); result = draw(exampleDone); }
+    expect(result).toMatchObject({ view: exampleDone, settled: true, stop: null });
+  });
+});
+

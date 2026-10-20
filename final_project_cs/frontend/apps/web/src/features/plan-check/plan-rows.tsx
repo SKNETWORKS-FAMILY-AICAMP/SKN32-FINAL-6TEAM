@@ -21,8 +21,11 @@ import styles from "./plan-check.module.css";
 export interface RowContext {
   revision?: number;
   done: boolean;
-  /** Only the currently revealed check opens; future read stops remain quiet and folded. */
-  reveal?: { activeId: string | null; waiting: ReadonlySet<string> };
+  /**
+   * Only the currently revealed check opens; future read stops remain quiet and folded. `[2026-10-20 C안]` `stop`: the card the first check stopped at (the rest of the list is
+   * dimmed), `ask`: the question drawn inside it.
+   */
+  reveal?: { activeId: string | null; waiting: ReadonlySet<string>; stop?: string | null; ask?: ReactNode };
   /** The card or move that is open, and the stop picked on the map or in the list. */
   open: string | null;
   selected: string | null;
@@ -138,7 +141,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, 
         </li>}{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
-            ? entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
+            ? entry.item.ask ? <AskRow item={entry.item} ctx={ctx} /> : entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
             : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={{ ...ctx, revision: view.revision }} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
         </Fragment>)}{points.at(-1) && ctx.insertion?.(points.at(-1)!)}</>;
       })()}</RailList>
@@ -171,6 +174,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   const { done, actions, explain, frozen } = ctx;
   const current = !done && ctx.reveal?.activeId === item.id;
   const waiting = !done && Boolean(ctx.reveal?.waiting.has(item.id));
+  const stopped = !done && ctx.reveal?.stop === item.id;
   const open = done ? ctx.open === item.id || item.verdict === null : current;
   const selected = done && ctx.selected === item.id;
   // `[2026-10-15 사용자 결정 — ST4F-498]` A stay's title is its name only; its card is still read as 「○○ … 체크인 · n박 · 날짜」 (the pill is named with it).
@@ -219,7 +223,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   //   height (they were — empty tall boxes above and below it — because only an opened card was left out of 「every folded card as tall as the tallest」).
   const editingTime = done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed;
   // `[2026-10-12 사용자 결정]` The rail (`rail-list.tsx`) reads the stop's start and end to draw it to scale; an opened card carries its line to the card's end.
-  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-stop-focus={stopped || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}
     data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={((open || editingTime) && !checking) || undefined}>
     {done
       // `[2026-10-12 사용자 결정 — A]` Every stop shows its end under its start (it was only the picked or opened one, 2026-10-10).
@@ -266,6 +270,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
           {note && <p className={styles.cardNote}>{note}</p>}
         </>}
       </div>}
+      {stopped && ctx.reveal?.ask}
       {/* 2026-10-08: 변경은 제목 옆 체크, 확인 필요와 시간 되돌리기는 펼친 카드에서도 맨 아래 오른쪽. */}
       {!removed && (showReview || (done && (changedFrom || adjusted || canUndoItem || (!open && !checking && needsOf(rows).length > 0)))) && <div className={styles.cardFoot}>
         <div className={styles.cardFootNote}>
@@ -280,6 +285,21 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
         </div>
       </div>}
     </article>
+  </li>;
+}
+
+/**
+ * ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` Where the first check stopped to ask what a line of the plan means (`PlanItem.ask`): the line's time on the rail and a dashed place with the
+ * question in it — no card, no tools (it is not a stop yet). The list follows it as the newest row.
+ */
+function AskRow({ item, ctx }: { item: PlanItem; ctx: RowContext }) {
+  const t = useT();
+  const stopped = ctx.reveal?.stop === item.id;
+  return <li className={styles.entry} data-type="ask" data-entry-id={item.id} data-reveal-current={ctx.reveal?.activeId === item.id || undefined} data-stop-focus={stopped || undefined}
+    data-rail="stay" data-start={item.startsAt || undefined}>
+    <span className={styles.time}>{item.startsAt || "–"}</span>
+    <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
+    <article className={styles.card} data-ask aria-label={t(`계획서 「${item.title}」`, `The plan's line “${item.title}”`)}>{stopped && ctx.reveal?.ask}</article>
   </li>;
 }
 

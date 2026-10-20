@@ -3,17 +3,20 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, CircleAlert, FileText, Paperclip, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlert, FileText, Paperclip, Plane, X } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel } from "@/components/ui";
+import { useGuardianShown } from "@/features/guardian/availability";
 import { decideGuardian, paceOf, readCriteria, setPace, useCriteria, withCriteria } from "@/features/guardian/criteria-store";
 import { GuardianCard } from "@/features/guardian/guardian-card";
 import { ReadingCriteria } from "@/features/guardian/reading-criteria";
 import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
+import { SLOW_AFTER_MS } from "@/features/intake-review/intake-starting";
 import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import { LiveError, probeSession, startSession } from "@/lib/live/client";
-import { beginIntake, clearIntakeFailure, intakeFailure, type PlanRequest } from "@/lib/live/intake-start";
+import { submitIntake } from "@/lib/live/intake";
+import { beginIntake, clearIntakeFailure, intakeFailure, loginRequiredBy, rememberIntakeArrival, type PlanRequest } from "@/lib/live/intake-start";
 import { previousPath } from "@/lib/nav-history";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -69,6 +72,19 @@ function Pane({ id, title, active, onActivate, children }: { id: RegistrationPan
   </Panel>;
 }
 
+/**
+ * `[2026-10-20 사용자 결정 — ST4F-615]` 「보내는 중」 while this screen waits for the server's first word: a plane gliding along a dashed line (still when animations are
+ * skipped in the settings or reduced by the device). After a few seconds it says the server is slow (the same words as the old sending screen).
+ */
+function SendingNote({ slow }: { slow: boolean }) {
+  const t = useT();
+  const { skipAnimation } = useSettings();
+  return <div className={styles.sending} role="status" aria-live="polite" data-still={skipAnimation || undefined}>
+    <span className={styles.sendingTrack} aria-hidden="true"><Plane className={styles.sendingPlane} size={18} strokeWidth={1.8} /></span>
+    <span>{slow ? t("서버가 답하는 데 시간이 걸리고 있어요 · 조금만 기다려 주세요…", "The server is taking a while to answer · one moment…") : t("계획을 서버로 보내는 중이에요…", "Sending your plan to the server…")}</span>
+  </div>;
+}
+
 // Today in Seoul is known only in the browser: the server render (and the first paint) has none, so no date check is shown before it.
 const never = () => () => undefined;
 
@@ -89,6 +105,27 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계]` 「읽는 기준」 (a day's fullness, 「적당히」 from the start) and the Course Keeper card that opens when 「계획 확인하기」 is pressed, before the plan is read.
   const criteria = useCriteria();
   const [card, setCard] = useState(false);
+  // ★`[2026-10-19 사용자 결정 — ST4F-613]` The operator's switch for the Course Keeper (`GET /v1/web/features`). Not said yet: as before (the card asks).
+  const guardianShown = useGuardianShown() !== false;
+  // ★`[2026-10-20 사용자 결정 — ST4F-615]` 「직접 입력」 is sent from THIS screen, and the screen waits for the server's first word — whether the quick screen at its door
+  //   (an empty text, or one with no travel clue) turned the plan back — before it moves on. Meanwhile the box is locked and 「보내는 중」 is shown.
+  const [screening, setScreening] = useState(false);
+  const [screeningSlow, setScreeningSlow] = useState(false);
+  // The intake the server took for the text now in the box: pressing again after the Course Keeper card was closed does not send it twice.
+  const taken = useRef<{ text: string; intakeId: string } | null>(null);
+  // A refusal on this screen that only an account gets past (a guest's trip limit): 「계정으로 계속하기」 under the sentence.
+  const [needLogin, setNeedLogin] = useState(false);
+  // Raised when the plan was turned back: the box takes the focus once it is unlocked again.
+  const [refocus, setRefocus] = useState(0);
+  useEffect(() => {
+    if (!screening) return;
+    const timer = setTimeout(() => setScreeningSlow(true), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [screening]);
+  useEffect(() => { if (refocus > 0) document.getElementById("plan-source")?.focus(); }, [refocus]);
+  // The sending in flight from this screen: leaving the screen stops waiting for it — a late answer must not pull the customer anywhere.
+  const sendingFrom = useRef<AbortController | null>(null);
+  useEffect(() => () => sendingFrom.current?.abort(), []);
   // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown, the attached files and the planning
   //   conditions are given back, and the panel it came from is the chosen one again.
   const [files, setFiles] = useState<File[]>(() => returned?.files ?? []);
@@ -146,6 +183,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   // ★글·파일·짜 달라는 조건을 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
   //   `[2026-10-03 사용자 지시]` 누르면 곧바로 진행 화면으로 넘어간다: 보내기는 여기서 시작하고(`beginIntake`) 서버의 답은 그 화면이
   //   기다린다. 사람 확인 뒤의 새 고객만 여기서 기다린다 — 세션 시작에 쓴 확인이 한 번 소비되고, 계획은 새 확인으로 간다(두 확인 모두 이 화면에 있다).
+  //   ★`[2026-10-20 사용자 결정 — ST4F-615]` 파일 · 계획 짜 주기만 그렇다. 「직접 입력」은 이 화면에서 접수 응답(빠른 거름)을 기다린 뒤 넘어간다(`sendText`).
   //   `[2026-10-04]` 이미 세션이 있으면(쿠키 · 옛 키 이전) 확인을 쓰지 않고 그대로 보낸다.
   //   ★`[2026-10-03 사용자 결정]` 마지막에 고른 칸만 보낸다: 직접 입력이면 글만, 파일이면 파일만, 계획 짜 주기면 그 조건만(고른 칸이 비어 있으면 단추가 꺼져 있다).
   const [sent, setSent] = useState(false);
@@ -157,8 +195,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
       const survey = withCriteria(onboarding.complete ? toSurvey(onboarding.answers) : undefined, readCriteria());      // what the plan screen decided is laid over the preference survey
       const plan: PlanRequest = { start_date: ask.start, days: ask.days, party_size: ask.party, wish: ask.wish, ...(survey && { survey }) };
       beginIntake({ ...base, text: ask.wish.trim(), files: [], plan });
-    } else if (active === "files") beginIntake({ ...base, text: "", files });
-    else beginIntake({ ...base, text: textToSend(value, testPlan), files: [] });
+    } else beginIntake({ ...base, text: "", files });       // 「직접 입력」 does not come here: it is sent by `sendText`
     onSending?.();
     router.push(routes.intakeStarting);
   }
@@ -172,7 +209,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     // The token was spent on this attempt; ask for a fresh one before the next.
     onError: () => setHumanReset((count) => count + 1),
   });
-  const pending = signUp.isPending || sent;
+  const pending = signUp.isPending || sent || screening;
   // The chosen panel has nothing to send yet: pressing 「계획 확인하기」 says why under the panels and moves the focus there (the button is NOT switched off).
   const reason = paneReason(active, { text: value, files: files.length, ask }, today);
 
@@ -226,6 +263,11 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     setRestored("");
+    setNeedLogin(false);
+    // ★`[2026-10-20 사용자 결정 — ST4F-615]` 「직접 입력」 goes to the server from here first; the Course Keeper card and the progress screen come once the server took it.
+    if (active === "text") { void sendText(); return; }
+    // ★`[2026-10-19 사용자 결정 — ST4F-613]` The operator switched the Course Keeper off: no card, the plan goes at once (and without `on_disruption` — `withCriteria`).
+    if (!guardianShown) { proceed(null); return; }
     // ★`[2026-10-06 사용자 지시 — 한 번 켜면 켜진 상태가 기본]` A Course Keeper choice already made (turned on once before, or answered in this tab) is not asked again; otherwise the card asks BEFORE the plan is read.
     const made = readCriteria();
     // ★`[2026-10-07 사용자 지시 — 켠 선택은 기억하고 끈 선택은 다시 물어본다]` Only a choice to turn it ON is kept and not asked again; a choice to leave it OFF is asked again with the next plan (the card is where it can be turned on).
@@ -233,18 +275,89 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     setCard(true);
   }
 
-  /** 「켜고 진행」 / 「건너뛰기 — 끄고 진행」: the choice is kept (and sent with the plan, `ask_first` said out loud when off), then the plan is sent as before. */
-  function proceed(guardian: "on" | "off") {
-    decideGuardian(guardian);
+  /** 「켜고 진행」 / 「건너뛰기 — 끄고 진행」: the choice is kept (and sent with the plan, `ask_first` said out loud when off), then the plan is sent as before.
+   *  `null`: the Course Keeper is switched off by the operator — nothing is chosen, the plan is sent. */
+  function proceed(guardian: "on" | "off" | null) {
+    if (guardian) decideGuardian(guardian);
     setCard(false);
+    // 「직접 입력」: the server already has it (it passed the quick screen) — straight on to that intake's progress screen.
+    if (active === "text" && taken.current) { goToIntake(taken.current); return; }
     if (checking) signUp.mutate();
     else send(humanToken);
+  }
+
+  /**
+   * `[2026-10-20 사용자 결정 — ST4F-615]` 「직접 입력」: send from this screen and wait for the server's answer, the box locked and 「보내는 중」 shown.
+   * Turned back by the quick screen (`screened`): stay, say so and put the focus in the box. Taken: on (`afterTaken`). A refusal stays here with its sentence.
+   */
+  async function sendText() {
+    const text = textToSend(value, testPlan);
+    if (taken.current?.text === text) { afterTaken(); return; }    // the same text was taken already (the card was closed): no second intake
+    taken.current = null;
+    setScreening(true);
+    setScreeningSlow(false);
+    const controller = new AbortController();
+    sendingFrom.current = controller;
+    try {
+      const answer = await submitIntake(text, [], language, await sessionToken(), controller.signal);
+      if (controller.signal.aborted) return;
+      if (answer.screened) {
+        renewHumanCheck();
+        setScreening(false);
+        setValidation(t("일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.", "No stops were found. Check the dates, times and places, then edit your plan or upload a file."));
+        setNudge((count) => count + 1);
+        setRefocus((count) => count + 1);
+        return;
+      }
+      taken.current = { text, intakeId: answer.intake_id };
+      afterTaken();
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      renewHumanCheck();
+      setScreening(false);
+      setNeedLogin(loginRequiredBy(error));
+      setValidation(error instanceof Error ? error.message : String(error));
+      setNudge((count) => count + 1);
+    }
+  }
+
+  /** The token the plan goes with. With the human check on, a customer without a session spends one on starting it and the plan takes a fresh one — as `signUp` does. */
+  async function sessionToken(): Promise<string | null> {
+    if (!checking) return humanToken;
+    try {
+      if (await probeSession(language)) return humanToken;
+      await startSession(language, humanToken);
+      return await freshToken();
+    } catch (error) { setHumanReset((count) => count + 1); throw error; }
+  }
+
+  /** A token is checked once: after a sending that did not move on, the next press needs a fresh one. */
+  function renewHumanCheck() {
+    if (!checking) return;
+    setHumanToken(null);
+    setHumanReset((count) => count + 1);
+  }
+
+  /** The server took the plan: the Course Keeper card when it is shown and not decided yet, then that intake's progress screen. */
+  function afterTaken() {
+    if (!guardianShown) { proceed(null); return; }
+    const made = readCriteria();
+    if (made.decided && made.guardian === "on") { proceed("on"); return; }
+    setScreening(false);                                          // the sending is over: the card asks (the box stays behind it)
+    setCard(true);
+  }
+
+  /** On to the progress screen of the intake the server took — the plan check follows the reading from there, as after the old sending screen. */
+  function goToIntake({ text, intakeId }: { text: string; intakeId: string }) {
+    setSent(true);
+    rememberIntakeArrival(intakeId, text);
+    router.push(routes.intake(intakeId));
   }
 
   const error = validation || signUp.error?.message || restored;
   // One notice, under the panel that is chosen (the input the customer is looking at) - never at the foot of the page.
   const errorNode = error ? <div id="plan-error" className={styles.error} role="alert"><CircleAlert size={18} strokeWidth={1.8} aria-hidden="true" /><span>{error}
-    {returned?.loginRequired && restored && <><br /><Button onClick={() => void continueWithAccount()}>{t("계정으로 계속하기", "Continue with an account")}</Button></>}
+    {((returned?.loginRequired && restored) || needLogin) && <><br /><Button onClick={() => void continueWithAccount()}>{t("계정으로 계속하기", "Continue with an account")}</Button></>}
   </span></div> : null;
 
   // The text box, the file picker and the planning conditions each sit in their own panel (`Pane`).
@@ -256,6 +369,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
     <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
       placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
     <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
+    {active === "text" && screening && <SendingNote slow={screeningSlow} />}
     {active === "text" && errorNode}
     <TestPlans value={value} onChoose={chooseTestPlan} disabled={pending} />
   </>;
@@ -405,7 +519,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
         <Button onClick={() => { if (previousPath() !== null) router.back(); else router.push(routes.home); }}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</Button>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
         {/* `[2026-10-06 사용자 지적]` Empty: it LOOKS switched off (grey) but still answers a press - it says what to do. It is not `disabled`, which would say nothing. */}
-        <Button variant="primary" type="submit" disabled={pending} className={reason ? styles.blocked : ""} aria-disabled={reason ? true : undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
+        <Button variant="primary" type="submit" disabled={pending && !screening} className={reason ? styles.blocked : ""} aria-disabled={reason || screening ? true : undefined} aria-busy={screening || undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>
     </form>
     {card && <GuardianCard kind="start" onPrimary={() => proceed("on")} onSecondary={() => proceed("off")} onClose={() => setCard(false)} />}

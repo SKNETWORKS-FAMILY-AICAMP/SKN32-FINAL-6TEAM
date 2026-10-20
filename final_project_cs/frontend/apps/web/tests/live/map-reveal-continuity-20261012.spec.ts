@@ -18,7 +18,8 @@ for (const width of [375, 1280]) {
       test.setTimeout(60000);
       const api = mockServer(request);
       await api.reset();
-      await api.scenario({ questions: "none", readingPolls: 999, board: "rich", review: "on" });
+      // `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+      await api.scenario({ questions: "none", readingPolls: 999, board: "calm", review: "on" });
       await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
       await start(page);
       await patchIntake(page, spread);

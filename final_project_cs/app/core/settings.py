@@ -651,3 +651,15 @@ def trip_now_label_enabled() -> bool:
         return get_guardrails().get("travel.trip_screen.now_label_enabled") is not False
     except ConfigError:
         return True
+
+
+def guardian_enabled() -> bool:
+    """항로 지킴이를 쓰나 — 가드레일 `travel.guardian.enabled`. ★기본 켜짐(지금 동작 그대로).
+
+    `[2026-10-19 사용자 결정 — ST4F-613]` 운영자가 관리 콘솔에서 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다.
+    가드레일을 못 읽으면 정한 기본(켜짐)으로 둔다 — 끄는 것은 `false` 로 명시한 경우뿐이다.
+    """
+    try:
+        return get_guardrails().get("travel.guardian.enabled") is not False
+    except ConfigError:
+        return True

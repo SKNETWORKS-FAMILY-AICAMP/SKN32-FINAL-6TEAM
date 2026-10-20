@@ -237,3 +237,11 @@
 @media (max-width: 560px) { .askGrid { grid-template-columns: minmax(0, 1fr); } .panes > .pane { padding: 15px; } }
 /* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
 @container page (max-width: 560px) { .askGrid { grid-template-columns: minmax(0, 1fr); } .panes > .pane { padding: 15px; } }
+
+/* `[2026-10-20 ST4F-615]` 「보내는 중」 — 입력 화면에서 서버의 첫 답(빠른 거름)을 기다리는 동안. 비행기가 점선을 따라 미끄러진다(애니메이션을 끄거나 줄이면 멈춘다). 색은 제품 토큰만. */
+.sending { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 16px; border-radius: 12px; background: var(--color-soft); color: var(--color-text); font-size: 14px; line-height: 1.5; }
+.sendingTrack { position: relative; flex: none; width: 56px; height: 20px; border-bottom: 1px dashed var(--color-selected-soft); overflow: hidden; }
+.sendingPlane { position: absolute; top: 0; left: 0; color: var(--color-primary); animation: planeGlide 1.6s ease-in-out infinite; }
+.sending[data-still] .sendingPlane { left: 19px; animation: none; }
+@keyframes planeGlide { from { transform: translateX(-20px); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } to { transform: translateX(56px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sendingPlane { left: 19px; animation: none; } }

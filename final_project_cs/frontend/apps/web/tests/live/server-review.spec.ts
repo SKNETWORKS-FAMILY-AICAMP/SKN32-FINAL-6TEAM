@@ -28,15 +28,18 @@ async function uploadPlan(page: Page) {
   await checkPlan(page);
 }
 
-test("읽는 동안 서버의 내용 이벤트로 장소 카드와 검사 줄이 차례로 채워지고, 끝나면 서버의 판정이 그대로 보인다", async ({ page, request }) => {
+// `[2026-10-20 사용자 결정 — 계획 확인 C안]` 서버 검사가 끝나면 첫 검사는 확인이 필요한 카드(올리브영)에서 멈춰 그 카드 안에서 묻는다 — 판정과 검사 줄은 서버 그대로.
+test("읽는 동안 서버의 내용 이벤트로 장소 카드와 검사 줄이 차례로 채워지고, 끝나면 확인이 필요한 카드에서 서버의 판정 그대로 멈춘다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
   await start(page);
   await uploadPlan(page);
 
-  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
+  await expect(page.locator("[data-stop-question]")).toBeVisible({ timeout: 40_000 });
   await expect(card(page, "경복궁 관람")).toBeVisible();
   await expect(card(page, "올리브영")).toContainText("확인 필요");
+  await expect(card(page, "올리브영")).toContainText("경복궁 관람과 30분 겹쳐요");                    // 서버가 쓴 문장 그대로
+  await expect(page.locator('li[data-entry-id="0-2"]')).toHaveAttribute("data-reveal-waiting", "true");   // 그 뒤 일정은 아직 확인하지 않는다
   await expect(card(page, "광장시장")).not.toContainText("조정");                                    // 「조정」은 더 말하지 않는다
   expect((await server.received("GET", `${INTAKE}/events`)).length).toBeGreaterThan(0);
   // 스트림이 일을 했으니 1.5초 폴링은 필요 없었다: 접수 조회는 처음 한 번과 끝난 뒤 몇 번뿐이다
@@ -49,7 +52,7 @@ test("실시간 진행이 열렸다가 아무 소식도 없으면 「연결이 �
   await start(page);
   await uploadPlan(page);
   await expect(page.getByText("연결이 끊겼어요", { exact: false })).toBeVisible({ timeout: 20_000 });
-  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
+  await expect(page.locator("[data-stop-question]")).toBeVisible({ timeout: 40_000 });               // `[2026-10-20 C안]` 끝까지 따라가 확인이 필요한 카드에서 멈춘다
 });
 
 test("결과: 카드는 서버의 판정(확인 필요만 말한다)과 검사 줄을 그대로 보이고, 이동 줄은 경로·수단·도착을 보인다", async ({ page, request }) => {
@@ -78,20 +81,24 @@ test("잠금: 확인이 끝난 일정은 서버에 알리고 고정되며, 확�
   expect((await server.received("POST", "/edits")).length).toBe(1);               // 보내지 않았다
 });
 
-test("삭제 → 되돌리기: 삭제는 표시만 하고 되돌리기는 서버로 가지 않으며, 다시 제출할 때 빼기가 서버로 간다", async ({ page, request }) => {
+// `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` 전에는 삭제를 표시만 하고 「다시 제출」 때 보냈다 — 새로고침하면 표시가 말없이 사라졌다.
+test("삭제 → 되돌리기: 삭제는 누르자마자 서버에 저장만 하고(되돌리기도 같은 길), 「다시 제출」은 빼기를 다시 보내지 않고 전체를 한 번 확인한다", async ({ page, request }) => {
   const server = await openFinished(page, request);
+  const edits = async () => server.received("POST", "/edits");
   await page.getByRole("button", { name: "광장시장 삭제" }).click();
-  await expect(card(page, "광장시장")).toContainText("삭제 예정");
-  expect(await server.received("POST", "/edits")).toHaveLength(0);
+  await expect(card(page, "광장시장")).toContainText("삭제 예정");                                   // 서버에서는 빠졌어도 「다시 제출」 전까지 회색으로 남는다
+  await expect.poll(async () => (await edits()).length).toBe(1);
+  expect((await edits())[0].body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[2].removed", value: true }], check: false });
   await page.getByRole("button", { name: "광장시장 삭제 되돌리기" }).click();
   await expect(card(page, "광장시장")).not.toContainText("삭제 예정");
-  expect(await server.received("POST", "/edits")).toHaveLength(0);                                 // 되돌리기도 서버와 상관없다
+  await expect.poll(async () => (await edits()).length).toBe(2);
+  expect((await edits())[1].body).toEqual({ revision: 2, edits: [{ source_id: "s1", field: "items[2].removed", value: false }], check: false });
   await page.getByRole("button", { name: "광장시장 삭제" }).click();
+  await expect.poll(async () => (await edits()).length).toBe(3);
   await page.getByRole("button", { name: "다시 제출" }).click();
   await expect(card(page, "광장시장")).toHaveCount(0);
-  const [removed] = await server.received("POST", "/edits");
-  expect(removed.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[2].removed", value: true }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
-  expect((await server.received("POST", "/revalidate")).length).toBe(1);                           // 이어서 전체를 다시 확인한다
+  expect(await edits()).toHaveLength(3);                                                             // 빼기는 다시 보내지 않는다
+  expect((await server.received("POST", "/revalidate")).length).toBe(1);                           // 전체를 한 번 다시 확인한다
 });
 
 test("수정 화면: 예약한 일정은 서버가 후보를 주지 않고(booked_needs_name) 화면은 그 이유와 이름을 쓰라는 안내를 말한다 — 일반 「다른 후보가 없어요」가 아니다", async ({ page, request }) => {
@@ -214,10 +221,10 @@ test("맨 아래: 확인할 것이 남으면 「다시 제출」은 이유를 �
 
 test("서버가 고친 것을 거절하면(409 item_locked) 서버의 문장이 그대로 알림으로 뜨고 화면은 그대로다", async ({ page, request }) => {
   await openFinished(page, request, { editRefusal: "locked" });
-  await page.getByRole("button", { name: "광장시장 삭제" }).click();
-  await page.getByRole("button", { name: "다시 제출" }).click();                                      // 빼기는 다시 제출할 때 서버로 간다 — 거절당한다
+  await page.getByRole("button", { name: "광장시장 삭제" }).click();                                   // `[2026-10-21]` 빼기는 누르자마자 서버로 간다(저장만) — 거절당한다
   await expect(page.getByText("고정한 일정이라 바꿀 수 없어요").first()).toBeVisible();
   await expect(card(page, "광장시장")).toBeVisible();
+  await expect(card(page, "광장시장")).not.toContainText("삭제 예정");                                   // 거절되면 회색 표시도 되돌린다
 });
 
 test("서버의 확인 결과를 못 만들었으면(review: null) 못 만들었다고 말하고 읽은 값만 보인다 — 이동·자동 추천 같은 서버 일은 열지 않는다", async ({ page, request }) => {

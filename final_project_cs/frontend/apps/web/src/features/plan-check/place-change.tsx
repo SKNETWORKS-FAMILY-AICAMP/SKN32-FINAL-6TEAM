@@ -162,19 +162,26 @@ export function kindNote(current: PlanItem, candidate: PlanCandidate, t: Transla
  */
 function LegLines({ candidate }: { candidate: PlanCandidate }) {
   const t = useT();
+  const lines = legLines(candidate, t);
+  if (!lines.length) return null;
+  return <ul className={styles.legLines} aria-live="polite">
+    {lines.map((line) => <li key={line.side} data-pending={line.pending || undefined}>{line.pending && <span className={styles.spinner} aria-hidden />}{line.text}</li>)}
+  </ul>;
+}
+
+/** `[2026-10-20 C안]` The way in and out as lines of words (`LegLines`; also the options of the question asked at a stop, `stop-question.tsx`). */
+export function legLines(candidate: PlanCandidate, t: Translate): { side: "before" | "after"; text: string; pending: boolean }[] {
   const legs = candidate.legs;
-  if (!legs || (!legs.before && !legs.after)) return null;
+  if (!legs) return [];
   const line = (side: "before" | "after", leg: PlanCandidateLeg) => {
     const pending = candidate.pending?.[side] === true;
     const where = side === "before" ? t(`${leg.with}에서 오는 길`, `From ${leg.with}`) : t(`${leg.with}까지 가는 길`, `To ${leg.with}`);
-    if (pending) return <>{<span className={styles.spinner} aria-hidden />}{t(`${where} 계산 중 · 어림 ${leg.minutes}분`, `${where}: working it out · about ${leg.minutes} min`)}</>;
+    if (pending) return { side, pending, text: t(`${where} 계산 중 · 어림 ${leg.minutes}분`, `${where}: working it out · about ${leg.minutes} min`) };
     const way = leg.estimated ? t(`직선 어림 ${leg.minutes}분`, `about ${leg.minutes} min (straight line)`) : `${leg.modeLabel} ${t(`${leg.minutes}분`, `${leg.minutes} min`)}`;
     const spare = side === "before" ? "" : leg.slackMin >= 0 ? t(` · ${leg.slackMin}분 여유`, ` · ${leg.slackMin} min to spare`) : t(` · ${-leg.slackMin}분 늦어요`, ` · ${-leg.slackMin} min late`);
-    return <>{`${where} · ${way}${spare}`}</>;
+    return { side, pending, text: `${where} · ${way}${spare}` };
   };
-  return <ul className={styles.legLines} aria-live="polite">
-    {(["before", "after"] as const).map((side) => legs[side] && <li key={side} data-pending={candidate.pending?.[side] || undefined}>{line(side, legs[side]!)}</li>)}
-  </ul>;
+  return (["before", "after"] as const).flatMap((side) => legs[side] ? [line(side, legs[side]!)] : []);
 }
 
 function CandidateCard({ candidate, current, index, active, applyWhy, explain, onApply }: {

@@ -98,6 +98,21 @@ test("마지막 날에서 더 밀면 고무줄처럼 조금만 밀리고 「마�
   await expect(page.getByText("마지막 날이에요")).toHaveCount(0);
 });
 
+test("`[2026-10-19 ST4F-614]` 1일차에서 뒤로 밀면 「전체」가 옆에 들어오고, 놓으면 전체 보기가 된다(전체 → 1일차의 반대)", async ({ page, request }) => {
+  await openFinished(page, request, withDays);
+  await expect(page.getByRole("tab", { name: /^1일차/ })).toHaveAttribute("aria-selected", "true");
+  await finger(page, "pointerdown", 120, 400);
+  await finger(page, "pointermove", 170, 402);
+  await finger(page, "pointermove", 260, 404);                                                       // 140px 오른쪽으로: 기준선을 넘었다
+  expect(await trackShift(page)).toBeCloseTo(140, 0);                                                // 고무줄이 아니라 손가락을 그대로 따라온다
+  await expect(page.locator("span[class*=peekBadge]")).toContainText("놓으면 전체");
+  await expect(page.getByText("첫날이에요")).toHaveCount(0);
+  await finger(page, "pointerup", 260, 404);
+  await expect(page.getByRole("tab", { name: /^전체/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("article", { name: "N서울타워", exact: true })).toBeVisible();          // 2일차 일정까지 한 목록에
+  await expect.poll(() => trackShift(page), { timeout: 3000 }).toBe(0);
+});
+
 test("두 손가락은 목록 크기와 날짜를 바꾸지 않고 진행 중인 날짜 넘기기를 취소한다", async ({ page, request }) => {
   await openFinished(page, request, withDays);
   await finger(page, "pointerdown", 150, 420, 1);
