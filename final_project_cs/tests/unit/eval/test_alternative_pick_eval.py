@@ -152,17 +152,49 @@ def test_summary_counts_and_gate():
     assert s["M7_consistent"]["num"] == 2
     assert s["M8_position_stable"]["num"] == 1 and s["M8_position_stable"]["den"] == 1
     assert s["M5_reason_grounded"]["status"] == "pending"
-    assert s["gate"]["checks"]["M5 = 100%"] is None and s["gate"]["verdict"].startswith("확인 전")
+    assert s["gate"]["checks"]["M5 심각 = 0"] is None and s["gate"]["verdict"].startswith("확인 전")
+    assert s["gate"]["checks_before"]["M5 = 100%"] is None
 
     keys = {("B-01", "base", r): score.GROUNDED for r in (1, 2, 3)} | {("B-01", "shuffle-1", 1): score.GROUNDED}
     s2 = summary_for(rows, reasons=keys)
     assert s2["M5_reason_grounded"]["status"] == "reviewed" and s2["M5_reason_grounded"]["pct"] == 100.0
-    assert s2["gate"]["final"] is True and s2["gate"]["checks"]["M2 하드 = 0"] and s2["gate"]["checks"]["M6e = 0"]
+    assert s2["gate"]["final"] is True and s2["gate"]["checks"]["M2 하드 = 0"] and s2["gate"]["checks"]["설정 오류 = 0"]
     # A안(10-19) — M3 은 참고값이라 전환 기준에 없다. 안전 지표만 넘으면 전환 가능
     assert "M3 하한 > 0" not in s2["gate"]["checks"] and s2["gate"]["verdict"] == "전환 가능"
     # M1 참고값 — 셋 다 허용(quiet)은 골라야 하는 사례에서 빠진다
     assert s["M1_discriminating"]["num"] == 3 and s["M1_discriminating"]["den"] == 3
     assert s["M1_excluded_cases"] == {"all_acceptable": 1, "no_fit": 0, "discriminating": 1}
+
+
+def test_relaxed_gate_allows_mild_reasons_shuffle_discards_and_rare_timeouts():
+    """`[2026-10-20 완화안]` 심각한 지어냄 0 · 경미 ≤ 5% · 원래 판 사용률 · 시간 초과 ≤ 1% · 설정 오류 0."""
+    c = case("B-01")
+
+    async def slow(_body):
+        await asyncio.sleep(5)
+
+    base = [observe(c, answer(["b2", "a1", "c3"]), repeat=r) for r in range(1, 101)]
+    shuffled = observe(c, answer(["b2", "a1", "c3"], used=False, reason=""), variant="shuffle-1", order=["c3", "b2", "a1"])
+    timed_out = observe(c, slow, repeat=101)
+    rows = [(c, [*base, shuffled, timed_out])]
+    mild = {("B-01", "base", r): (score.FAB_MILD if r <= 5 else score.GROUNDED) for r in range(1, 101)}
+    s = summary_for(rows, reasons=mild)
+    checks = s["gate"]["checks"]
+    assert s["M6b_base"]["num"] == 100 and s["M6b_base"]["den"] == 101 and s["M6d_discarded"]["num"] == 1   # 섞은 판 폐기는 원래 판에 안 든다
+    assert checks["시간 초과 ≤ 1%"] and checks["M5 경미 ≤ 5%"] and checks["M5 심각 = 0"]
+    assert checks["M6b 원래 판 ≥ 98%"] and s["gate"]["verdict"] == "전환 가능"
+    assert s["gate"]["checks_before"]["M5 = 100%"] is False and s["gate"]["checks_before"]["M6e = 0"] is False
+
+    severe = {**mild, ("B-01", "base", 1): score.FAB_SEVERE}
+    assert summary_for(rows, reasons=severe)["gate"]["verdict"] == "shadow 유지"
+    unsorted = {**mild, ("B-01", "base", 1): score.FABRICATED}                    # 단계 없는 「지어냄」 — 판정 미룸
+    assert summary_for(rows, reasons=unsorted)["gate"]["verdict"].startswith("확인 전")
+
+    async def broken(_body):
+        raise RuntimeError("no active prompt registered")
+
+    s3 = summary_for([(c, [*base, observe(c, broken, repeat=102)])], reasons=mild)
+    assert s3["gate"]["verdict"].startswith("환경 먼저")
 
 
 def test_no_fit_case_is_out_of_m1_but_still_counts_for_m2():
@@ -251,3 +283,100 @@ def test_dry_run_end_to_end(tmp_path):
     s = score.summarize({c["case_id"]: c for c in cases}, rows, {"split": ["smoke"], "smoke": True}, n_boot=100)
     assert s["M3_llm_minus_code"]["value"] == 0.0                          # 받은 순서 그대로 = 기준선
     assert s["M8_position_stable"]["num"] == 0                              # 받은 순서를 따르면 섞을 때마다 바뀐다
+
+
+# ── `[2026-10-19]` 감시 경로 판 — 고객 문장 없이 설문만 ───────────────────────────────────
+
+def test_watch_variants_split_by_what_production_sends_and_drop_duplicates():
+    from eval.alternative_pick import watch
+
+    chat = [case("X-01", survey={}), case("X-02", survey={"priority": ["mobility"]}),       # 우선순위만 — 10-20 부터 안 부름
+            case("X-03", survey={"theme": "자연", "priority": ["activity"]}),
+            case("X-04", text="다른 데로", survey={"theme": "자연", "priority": ["activity"]})]  # X-03 과 입력이 같다
+    cases, counts = watch.variants(chat)
+
+    assert [c["case_id"] for c in cases] == ["X-03-W"] and cases[0]["watch_kind"] == "human"
+    assert cases[0]["inputs"]["preference"]["customer_text"] is None and cases[0]["path"] == "watch"
+    assert counts["skipped"] == {"not_called": ["X-01", "X-02"], "duplicate": ["X-04=X-03"]}
+
+
+def test_watch_labels_need_people():
+    from eval.alternative_pick import watch
+
+    cases, _ = watch.variants([case("X-03", survey={"theme": "자연"})])
+    with pytest.raises(SystemExit):
+        watch.label(cases, {}, "합의")                                                    # 사람 라벨이 빠졌다
+    [labeled] = watch.label(cases, {"X-03-W": {"acceptable": ["3"], "forbidden": ["1"]}}, "합의")
+    assert labeled["acceptable"] == ["c3"] and labeled["forbidden"] == ["a1"] and labeled["label_by"] == "합의"
+
+
+def test_watch_variants_of_the_frozen_holdout_and_their_label_sheet():
+    from eval.alternative_pick import watch
+    from eval.human_review import adapters
+
+    chat, _ = build.load_cases(build.DATASET)
+    cases, counts = watch.variants(chat)
+    # ★10-19 판은 54(규칙 33 + 사람 21). 10-20 우선순위를 넘기지 않게 된 뒤 우선순위만 있던 33 + 중복 2 는 안 부름이 됐다
+    assert (counts["variants"], counts["human"], counts["not_called"], counts["duplicate"]) == (21, 21, 59, 0)
+    bundle = adapters.build("situation_cards_watch")
+    assert sorted(it.id for it in bundle.items) == sorted(c["case_id"] for c in cases)
+    assert "고객 문장" not in bundle.context_columns
+
+
+def test_scores_are_split_by_path():
+    from eval.alternative_pick import watch
+
+    chat = case("C-01")
+    [taste] = watch.label(watch.variants([case("Q-01", survey={"theme": "자연"})])[0],
+                          {"Q-01-W": {"acceptable": ["2"], "forbidden": []}}, "합의")
+    rule = {**case("R-01", text=None, acceptable=IDS, forbidden=(), quiet=True), "path": "watch", "watch_kind": "rule"}
+    s = summary_for([(chat, [observe(chat, answer(["b2", "a1", "c3"]))]),
+                     (taste, [observe(taste, answer(["b2", "a1", "c3"]))]),
+                     (rule, [observe(rule, answer(IDS, used=False, reason=""))])])        # 10-19 동결본의 규칙 사례 모양
+    assert set(s["by_path"]) == {"chat", "watch:human", "watch:rule"}
+    assert s["by_path"]["watch:human"]["M1_discriminating"]["num"] == 1
+    assert s["by_path"]["chat"]["M1_discriminating"]["num"] == 1
+
+
+def test_retry_failed_drops_only_call_failures_and_records_them(tmp_path):
+    rows = [observe(case("X-01"), answer(IDS, used=False, reason="")),
+            {**observe(case("X-01"), answer(IDS), repeat=2), "status": "llm_timeout", "applied": None, "output": None},
+            observe(case("X-02"), answer(["c3", "a1", "b2"], used=False, reason=""))]          # 폐기 — 답은 받았다
+    (tmp_path / "results.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    (tmp_path / "conditions.json").write_text("{}", encoding="utf-8")
+
+    assert run.drop_failed(tmp_path) == ["X-01/base/r2:llm_timeout"]
+    assert run.done_keys(tmp_path / "results.jsonl") == {("X-01", "base", 1), ("X-02", "base", 1)}
+    assert json.loads((tmp_path / "conditions.json").read_text(encoding="utf-8"))["retried"][0]["observations"] == \
+        ["X-01/base/r2:llm_timeout"]
+    assert len(list(tmp_path.glob("results.before_retry_*.jsonl"))) == 1
+    assert run.drop_failed(tmp_path) == []
+
+
+def test_runner_can_send_class_names_and_pick_a_prompt_file():
+    sent = []
+
+    async def ask(body):
+        sent.append(body)
+        return SimpleNamespace(output={"order": IDS, "used_preference": False, "reason": ""}, model="m",
+                               latency_ms=1, input_tokens=1, output_tokens=1, reasoning_tokens=0)
+
+    c = case()
+    asyncio.run(run.observe(c, "base", 1, IDS, ask, 1.0))
+    asyncio.run(run.observe(c, "base", 2, IDS, ask, 1.0, with_class_name=True))
+    assert "class_name" not in sent[0]["candidates"][0]
+    assert sent[1]["candidates"][0]["class_name"] == "역사관광 > 역사유적지 > 고궁"
+    assert "distance_km" in run.prompt_text("alternative_order.v3.md") and run.prompt_text("없는판.md") is None
+
+
+def test_dev_picks_half_of_each_stratum_and_labels_by_rule():
+    from eval.alternative_pick import dev
+
+    cards = build.load_cards()
+    picked = dev.pick(cards)
+    assert len(picked) == 40 and len({c["card_id"] for c in picked}) == 40
+    counts = {s: sum(c["stratum"] == s for c in picked) for s in dev.TARGET}
+    assert counts == dev.TARGET
+    card = next(c for c in cards if c["preference_target"]["attribute"] == "history")
+    shown = [{"id": "x", "class": "HS010100", "title": "궁"}, {"id": "y", "class": "VE030100", "title": "공원"}]
+    assert dev.label(card, shown, lambda c: {"history"} if c["class"].startswith("HS") else set()) == (["x"], False)

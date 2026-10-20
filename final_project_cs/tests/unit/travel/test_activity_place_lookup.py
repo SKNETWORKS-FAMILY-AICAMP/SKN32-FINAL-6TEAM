@@ -11,6 +11,9 @@ from datetime import datetime, timezone
 
 
 
+from app.domains.travel_ops.instances.activity.db_search.place_by_name import SQL_ALIAS_IDS, SQL_BY_ID
+from app.domains.travel_ops.instances.activity.db_search.place_candidates import ALIAS_EXISTS_SQL
+from app.domains.travel_ops.instances.activity.place_aliases import key_of
 from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
 from app.tools.read_tools import ReadToolbox
 
@@ -19,13 +22,24 @@ WHEN = datetime(2026, 10, 3, 15, tzinfo=timezone.utc)
 
 
 class _Cursor:
-    def __init__(self, rows):
-        self.rows = rows
+    def __init__(self, rows, aliases=None):
+        # `aliases` — {정규화한 별칭: content_id}. `None` 이면 별칭 표가 아직 없다(마이그레이션 306 전)
+        self.rows, self.aliases, self.sql, self.params = rows, aliases, None, None
 
-    def execute(self, sql, params):
-        self.params = params
+    def execute(self, sql, params=None):
+        self.sql, self.params = sql, params
+
+    def fetchone(self):
+        rows = self.fetchall()
+        return rows[0] if rows else None
 
     def fetchall(self):
+        if self.sql == ALIAS_EXISTS_SQL:
+            return [(self.aliases is not None,)]
+        if self.sql == SQL_ALIAS_IDS:
+            return [(cid,) for key, cid in (self.aliases or {}).items() if key == self.params[0]]
+        if self.sql == SQL_BY_ID:
+            return [r for r in self.rows if r[0] == self.params[1]]
         return self.rows
 
     def __enter__(self):
@@ -40,9 +54,9 @@ class _Conn(_Cursor):
         return self
 
 
-def _db(rows):
+def _db(rows, aliases=None):
     # (content_id, content_type_id, title, latitude, longitude, source)
-    return lambda: _Conn([tuple(r) for r in rows])
+    return lambda: _Conn([tuple(r) for r in rows], aliases)
 
 
 GYEONGBOK = ("126508", "12", "경복궁", 37.576, 126.977, "tour_api")
@@ -166,3 +180,33 @@ def test_fuzzy_does_not_pick_between_two_equally_close_names():
     rows = [("1", "12", "경복굴", 37.5, 127.0, "tour_api"), ("2", "12", "경복군", 37.6, 127.1, "tour_api")]
     out = lookup_place(_db(rows), "t", "경복궁", _Kakao([]), fuzzy=True)
     assert out["status"] == "not_found"          # 비율이 같은 서로 다른 이름 둘 — 고르지 않는다
+
+
+# ── 별칭(마이그레이션 306) `[2026-10-19]` ─────────────────────────
+
+def test_alias_finds_the_canonical_place_without_calling_kakao():
+    kakao = _Kakao(KAKAO_HIT)
+    out = lookup_place(_db([NAMSAN], {key_of("남산타워"): "126535", key_of("N서울타워"): "126535"}), "t", "N 서울 타워", kakao)
+    assert out["status"] == "found" and out["content_id"] == "126535" and out["match"] == "alias" and kakao.calls == []
+
+
+def test_name_that_is_not_an_alias_still_falls_through_to_kakao():
+    kakao = _Kakao(KAKAO_HIT)
+    out = lookup_place(_db([NAMSAN], {key_of("남산타워"): "126535"}), "t", "새로생긴전시관", kakao)
+    assert out["status"] == "exists_unregistered" and kakao.calls == ["새로생긴전시관"]
+
+
+def test_missing_alias_table_is_not_an_error_and_the_seed_file_still_applies():
+    """★DB 표가 없어도(마이그레이션 306 전 · 적재 전) 배포에 실린 시드 파일의 별칭은 늘 적용된다."""
+    assert lookup_place(_db([NAMSAN], None), "t", "남산타워", _Kakao([]))["content_id"] == "126535"
+    assert lookup_place(_db([NAMSAN], None), "t", "별칭도 아닌 이름", _Kakao([]))["status"] == "not_found"
+
+
+def test_database_alias_that_contradicts_the_seed_is_ambiguous_and_not_used():
+    out = lookup_place(_db([NAMSAN], {key_of("남산타워"): "999"}), "t", "남산타워", _Kakao([]))
+    assert out["status"] == "not_found"
+
+
+def test_alias_pointing_at_a_place_not_in_the_ledger_is_not_found():
+    out = lookup_place(_db([GYEONGBOK], {key_of("남산타워"): "126535"}), "t", "남산타워", _Kakao([]))
+    assert out["status"] == "not_found"

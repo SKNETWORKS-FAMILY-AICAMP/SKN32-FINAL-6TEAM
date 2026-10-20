@@ -12,7 +12,7 @@ from uuid import uuid4
 from app.tools.read_tools import ReadToolbox, ToolContext
 from app.domains.travel_ops.instances.activity.alternatives import RADIUS_MAX_KM, bounding_box
 from app.domains.travel_ops.instances.activity.db_search.place_candidates import (
-    DEFAULT_SOURCES, ORIGIN_SQL, POOL_EXCLUDED_CLASSES, POOL_SQL, find_place_candidates)
+    ALIAS_EXISTS_SQL, ALIAS_SQL, DEFAULT_SOURCES, ORIGIN_SQL, POOL_EXCLUDED_CLASSES, POOL_SQL, find_place_candidates)
 
 UTC = timezone.utc
 OLD = datetime(2026, 9, 20, tzinfo=UTC)
@@ -38,9 +38,15 @@ class FakeCursor:
     def __exit__(self, *exc):
         return False
 
-    def execute(self, sql, params):
-        self.conn.executed.append((sql, params))
-        self._result = self.conn.origin if sql == ORIGIN_SQL else self.conn.pool
+    def execute(self, sql, params=None):
+        # ★별칭 표 조회(`[2026-10-19]`)는 따로 센다 — 후보 풀 SQL 의 인자 · 횟수를 보는 시험이 그대로 성립하게
+        if sql == ALIAS_EXISTS_SQL:
+            self._result = [(self.conn.aliases is not None,)]
+        elif sql == ALIAS_SQL:
+            self._result = list(self.conn.aliases or [])
+        else:
+            self.conn.executed.append((sql, params))
+            self._result = self.conn.origin if sql == ORIGIN_SQL else self.conn.pool
 
     def fetchone(self):
         return self._result[0] if self._result else None
@@ -50,8 +56,9 @@ class FakeCursor:
 
 
 class FakeConnection:
-    def __init__(self, origin, pool):
-        self.origin, self.pool = origin, pool
+    def __init__(self, origin, pool, aliases=None):
+        # `aliases` — 별칭 표 행 `(alias, content_id)`. `None` 이면 표가 아직 없다(마이그레이션 306 전)
+        self.origin, self.pool, self.aliases = origin, pool, aliases
         self.executed: list = []
 
     def __enter__(self):
@@ -165,3 +172,15 @@ def test_festivals_and_delisted_places_are_not_candidates():
     """축제 · 행사(EV)는 기간 판정 전이라 후보로 내지 않는다(카탈로그 시절과 같은 동작) · 목록에서 내려간 곳도 뺀다."""
     assert "EV" in POOL_EXCLUDED_CLASSES
     assert "delisted_at IS NULL" in POOL_SQL and "delisted_at" not in ORIGIN_SQL
+
+
+def test_alias_table_rows_ride_along_with_the_pool():
+    """★`[2026-10-19]` 별칭 표 전체가 풀과 같이 온다 — 일정의 「N서울타워」가 후보 「남산서울타워」와 같은 곳인지 가리는 데 쓴다."""
+    conn = FakeConnection([ORIGIN], [NEAR], aliases=[("N서울타워", "126535"), ("남산타워", "126535")])
+    pool = find_place_candidates(lambda: conn, "t1", "126511")
+    assert pool["aliases"] == [{"alias": "N서울타워", "content_id": "126535"}, {"alias": "남산타워", "content_id": "126535"}]
+
+
+def test_missing_alias_table_means_no_aliases_not_an_error():
+    conn = FakeConnection([ORIGIN], [NEAR], aliases=None)
+    assert find_place_candidates(lambda: conn, "t1", "126511")["aliases"] == []

@@ -28,8 +28,9 @@ from typing import Any, Callable
 
 from app.domains.travel_ops.components.intake.places import normalize
 
+from .. import place_aliases
 from ..name_match import TypoIndex, word_set
-from .place_candidates import DEFAULT_SOURCES, SOURCE_SQL
+from .place_candidates import ALIAS_EXISTS_SQL, DEFAULT_SOURCES, SOURCE_SQL
 
 #: ambiguous 일 때 같이 내는 후보 이름 수(고객에게 보여 줄 만큼만)
 SHOW_LIMIT = 5
@@ -43,6 +44,12 @@ SQL = ("SELECT content_id, content_type_id, name_ko, lat, lng, source FROM "
        # ★지우는 문자가 `_loose` 와 같아야 한다(공백·`·`·`-`·`_`·`/`) — 다르면 SQL 이 제목을 놓친다
        "AND regexp_replace(name_ko, '[[:space:]·_/-]+', '', 'g') ILIKE %s "
        "ORDER BY content_id LIMIT %s")
+#: 별칭으로 찾은 장소 한 곳 — 같은 열 순서. 폐지된 곳은 뺀다
+SQL_BY_ID = ("SELECT content_id, content_type_id, name_ko, lat, lng, source FROM "
+             f"(SELECT *, {SOURCE_SQL} AS source FROM activity.ac_place WHERE delisted_at IS NULL) a "
+             "WHERE source = ANY(%s) AND content_id = %s LIMIT 1")
+#: 별칭(정규화한 키)이 가리키는 장소들 — 마이그레이션 306
+SQL_ALIAS_IDS = "SELECT content_id FROM activity.ac_place_alias WHERE alias_norm = %s"
 #: `fuzzy` 용 — 이름 조건 없이 원장 전체(같은 열 순서). 폐지된 곳은 뺀다
 SQL_ALL = ("SELECT content_id, content_type_id, name_ko, lat, lng, source FROM "
            f"(SELECT *, {SOURCE_SQL} AS source FROM activity.ac_place WHERE delisted_at IS NULL) a "
@@ -92,6 +99,31 @@ def _find_fuzzy(connection_factory: Callable[[], Any], query: str, key: str, sou
     return _fuzzy_hit(matched, "typo", f"오타로 보고 「{matched[0]['title']}」로 찾았다(자모 거리 비율 {ratio:.2f})")
 
 
+def _find_alias(connection_factory: Callable[[], Any], query: str, sources: tuple[str, ...]) -> dict[str, Any] | None:
+    """별칭(시드 파일 + DB 표)이 **한 장소**로 정하는 이름이면 그 장소. 별칭이 아니거나 모호하거나 원장에 없으면(폐지) `None`.
+
+    ★시드 파일은 배포에 실려 DB 적재와 상관없이 늘 적용된다. DB 표는 추가 별칭이다(표가 아직 없으면 시드만).
+    """
+    key = place_aliases.key_of(query)
+    ids = set(place_aliases.seed_table().content_ids_for(query))
+    if not key:
+        return None
+    with connection_factory() as conn, conn.cursor() as cur:
+        cur.execute(ALIAS_EXISTS_SQL)
+        exists = cur.fetchone()
+        if exists and exists[0]:
+            cur.execute(SQL_ALIAS_IDS, (key,))
+            ids |= {str(r[0]) for r in cur.fetchall()}
+        if len(ids) != 1:
+            return None                           # 별칭이 아니거나, 둘 이상을 가리키면(모호) 쓰지 않는다
+        cur.execute(SQL_BY_ID, (list(sources), next(iter(ids))))
+        rows = [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
+    if len(rows) != 1:
+        return None
+    return {"status": "found", "via": "place_catalog", **_hit(rows[0]), "match": "alias",
+            "note": f"별칭 「{query}」로 「{rows[0]['title']}」를 찾았다"}
+
+
 def find_place_by_name(connection_factory: Callable[[], Any], tenant_id: str, name: str | None, *,
                        sources: tuple[str, ...] = DEFAULT_SOURCES, fuzzy: bool = False) -> dict[str, Any]:
     """이름으로 원장에서 찾는다. 항상 `status` 가 있는 dict 를 준다(모름이 아니라 **없음**을 말할 수 있다). `tenant_id` 는 쓰지 않는다."""
@@ -106,6 +138,10 @@ def find_place_by_name(connection_factory: Callable[[], Any], tenant_id: str, na
     exact = [r for r in rows if _loose(r["title"]) == key]
     pool = exact or [r for r in rows if normalize(r["title"]) == normalize(query)]
     if not pool:
+        # ★`[2026-10-19]` 사람이 확인한 별칭(「남산타워」 → 「남산서울타워」) — 글자가 달라 위 비교가 못 찾은 이름. `fuzzy` 와 상관없이 확정이다
+        by_alias = _find_alias(connection_factory, query, sources)
+        if by_alias is not None:
+            return by_alias
         if fuzzy:
             guessed = _find_fuzzy(connection_factory, query, key, sources)
             if guessed is not None:

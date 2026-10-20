@@ -1,0 +1,81 @@
+{
+ "built_on": "2026-10-19",
+ "cases": 54,
+ "by_stratum": {
+  "A": 3,
+  "B": 27,
+  "C": 13,
+  "D": 10,
+  "E": 1
+ },
+ "split": [
+  "holdout"
+ ],
+ "source": "cards_llm_bound_v0.jsonl",
+ "sha256": "400bcd58ad95bd2df7294e964c2a81dd7536d2227bf5d0e6c1f5933568ecab17",
+ "inputs_sha256": "e452da6b8ab7c217feed76e2f56cf09a547f64fd1b5fba78c52a9d9a3ef82c92",
+ "path": "watch",
+ "from": {
+  "dataset": "cases.jsonl",
+  "sha256": "b2ab6812791331222215ae77aa5ac26d6d7a941605bf985013ad26dce72c081b"
+ },
+ "labeler": "합의",
+ "labels_file": "situation_cards_watch_human_합의_2026-10-19.json",
+ "texts": "없음(감시 경로 — customer_text=None)",
+ "smoke": false,
+ "watch": {
+  "variants": 54,
+  "rule": 33,
+  "human": 21,
+  "not_called": 24,
+  "duplicate": 2,
+  "skipped": {
+   "not_called": [
+    "L-02",
+    "L-03",
+    "L-04",
+    "L-05",
+    "L-06",
+    "L-07",
+    "L-08",
+    "L-09",
+    "L-11",
+    "L-13",
+    "L-25",
+    "L-65",
+    "L-66",
+    "L-67",
+    "L-68",
+    "L-71",
+    "L-72",
+    "L-73",
+    "L-74",
+    "L-75",
+    "L-77",
+    "L-78",
+    "L-79",
+    "L-80"
+   ],
+   "duplicate": [
+    "L-69=L-10",
+    "L-76=L-70"
+   ]
+  }
+ },
+ "rule_label": "rule:단서 없음(우선순위만) — 합의 관례 셋 다 허용",
+ "labeling": {
+  "labelers": [
+   "작성자1",
+   "작성자2"
+  ],
+  "blind": false,
+  "agreement_before_consensus": {
+   "acceptable": "20/21 = 95.2% · 평균 자카드 0.9683",
+   "forbidden": "21/21 = 100%"
+  },
+  "consensus_changed_cards": 1,
+  "consensus_note": "L-49-W 1 (2026-10-19 사용자 결정)",
+  "claude_assisted": "Claude 제안을 두 사람이 보고 확정 — 21행 중 20행이 제안과 같음. 블라인드 아님(일치도는 독립 판단 값이 아니다)",
+  "rule_cases": "우선순위만 33건은 규칙 라벨(셋 다 허용 · 위험 없음 · 코드 순서 유지 기대)"
+ }
+}

@@ -64,6 +64,21 @@ POOL_SQL = (_SELECT + "AND content_id <> %s AND delisted_at IS NULL "
             "ORDER BY content_id")
 
 
+#: ★`[2026-10-19]` 활동 장소 별칭(마이그레이션 306) — 표가 있을 때만 읽는다(없으면 별칭 없음). 후보 풀과 같이 싣는다(`aliases`).
+ALIAS_EXISTS_SQL = "SELECT to_regclass('activity.ac_place_alias') IS NOT NULL"
+ALIAS_SQL = "SELECT alias, content_id FROM activity.ac_place_alias ORDER BY alias_norm, content_id"
+
+
+def _read_aliases(cur: Any) -> list[dict[str, str]]:
+    """별칭 표 전체(수백 행) — 표가 아직 없으면 빈 목록. 이 별칭이 이름 · 거리와 상관없이 「같은 곳」을 정한다(`place_identity`)."""
+    cur.execute(ALIAS_EXISTS_SQL)
+    row = cur.fetchone()
+    if not row or not row[0]:
+        return []
+    cur.execute(ALIAS_SQL)
+    return [{"alias": str(a), "content_id": str(c)} for a, c in cur.fetchall()]
+
+
 def _text(value: Any) -> str | None:
     if value is None:
         return None
@@ -119,7 +134,9 @@ def find_place_candidates(connection_factory: Callable[[], Any], tenant_id: str,
                 cur.execute(POOL_SQL, (list(sources), content_id, list(POOL_EXCLUDED_CLASSES),
                                        *bounding_box(float(lat), float(lng), RADIUS_MAX_KM)))
                 records = [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
+            aliases = _read_aliases(cur)
     return {"origin": origin,
             "candidates": [to_candidate(r) for r in records],
+            "aliases": aliases,
             "source": "activity.ac_place:" + "+".join(sources),
             "confirmed_at": _oldest([origin_record, *records])}

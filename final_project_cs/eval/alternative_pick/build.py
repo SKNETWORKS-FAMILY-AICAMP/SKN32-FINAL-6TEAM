@@ -4,6 +4,8 @@
     python -m eval.alternative_pick.build                      # holdout 80: 작성자 문장 + 합의 라벨
     python -m eval.alternative_pick.build --labels 라벨.json    # 라벨 파일(human_review 형식)을 지정
     python -m eval.alternative_pick.build --smoke               # 도구 점검용: 템플릿 문장 + 분류 태그 초안 라벨
+    python -m eval.alternative_pick.build --watch --watch-labels 라벨.json   # 감시 경로 판(고객 문장 없음) — `watch.py`
+    python -m eval.alternative_pick.build --watch --draft        # 감시 판 도구 점검용(사람 라벨 자리를 셋 다 허용으로)
 
 계획: `docs/activity/대체 후보 3곳 중 최적 장소 판정 — LLM 테스트 계획.md` §3.
 ★사례 하나 = 카드 하나. `inputs` 는 운영 코드가 LLM 에 넘기는 재료(원래 장소 · 후보 3곳 코드 순서 · 설문 · 고객 문장)뿐이다.
@@ -29,6 +31,8 @@ RESPONSES = CARDS / "responses_llm_bound_v0.csv"
 TEXT_COL = "고객이 보낼 말(1~2문장)"
 DATASET = HERE / "cases.jsonl"
 SMOKE = HERE / "cases_smoke.jsonl"
+WATCH = HERE / "cases_watch.jsonl"
+WATCH_DRAFT = HERE / "cases_watch_draft.jsonl"
 
 
 def manifest_path(dataset: Path) -> Path:
@@ -154,9 +158,15 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--smoke", action="store_true", help="템플릿 문장 + 분류 태그 초안 라벨(도구 점검용 — 수치로 쓰지 않음)")
     parser.add_argument("--responses", type=Path, default=RESPONSES, help="작성자 문장(review_sheets.py merge 결과)")
     parser.add_argument("--labels", type=Path, help="합의 라벨 파일(human_review apply 형식, bundle=situation_cards)")
+    parser.add_argument("--watch", action="store_true", help="감시 경로 판 — 동결 holdout 에서 고객 문장을 뺀다")
+    parser.add_argument("--watch-labels", type=Path, help="감시 판 사람 라벨(human_review apply 형식, bundle=situation_cards_watch)")
+    parser.add_argument("--draft", action="store_true", help="--watch 와 함께 — 사람 라벨 없이 도구만 점검(수치로 쓰지 않음)")
     parser.add_argument("--out", type=Path)
     args = parser.parse_args(argv)
 
+    if args.watch:
+        build_watch(args)
+        return
     cards = load_cards()
     if args.smoke:
         cases = build(cards, smoke=True)
@@ -172,6 +182,33 @@ def main(argv: list[str] | None = None) -> None:
         out = args.out or DATASET
         extra = {"labeler": reviewer, "labels_file": args.labels.name, "texts": args.responses.name, "smoke": False}
     manifest = write(cases, out, extra)
+    print(json.dumps(manifest, ensure_ascii=False, indent=1))
+
+
+def build_watch(args) -> None:
+    """감시 경로 판 — 동결 holdout 의 입력을 그대로 쓰고 고객 문장만 뺀다(`watch.py`)."""
+    from . import watch
+
+    chat, chat_manifest = load_cases(DATASET)
+    cases, counts = watch.variants(chat)
+    if args.draft:
+        cases = [{**c, "split": "smoke", "acceptable": [x["id"] for x in c["inputs"]["candidates"]],
+                  "label_by": "auto-tag-draft"} for c in cases]
+        out, labeler = args.out or WATCH_DRAFT, "draft — 사람 라벨 전(셋 다 허용으로 채움)"
+    else:
+        if args.watch_labels is None:
+            raise SystemExit("--watch-labels 감시 판 합의 라벨을 지정한다(또는 --draft 로 도구만 점검)")
+        data = json.loads(args.watch_labels.read_text(encoding="utf-8"))
+        if data.get("bundle") != "situation_cards_watch":
+            raise SystemExit(f"{args.watch_labels}: situation_cards_watch 라벨 파일이 아니다(bundle={data.get('bundle')!r})")
+        human = {cid: entry for cid, entry in data["labels"].items()}
+        cases, out, labeler = watch.label(cases, human, data["reviewer"]), args.out or WATCH, data["reviewer"]
+    manifest = write(cases, out, {
+        "path": "watch", "from": {"dataset": DATASET.name, "sha256": chat_manifest["sha256"]},
+        "labeler": labeler, "labels_file": args.watch_labels.name if args.watch_labels else None,
+        "texts": "없음(감시 경로 — customer_text=None)", "smoke": bool(args.draft),
+        "watch": counts,
+    })
     print(json.dumps(manifest, ensure_ascii=False, indent=1))
 
 
