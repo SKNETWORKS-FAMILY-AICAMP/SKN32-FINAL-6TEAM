@@ -240,3 +240,13 @@ def test_class_names_come_from_the_kto_table_and_are_opt_in():
     named = alternative_order.candidate_rows(pool, {"a": "VE010100"}, with_class_name=True)
     assert "class_name" not in plain[0]                                                  # 운영은 아직 끔(v2)
     assert named[0]["class_name"] == "문화관광 > 랜드마크관광 > 건물" and named[0]["class"] == "VE010100"
+
+
+def test_production_sends_class_names_with_prompt_v3(monkeypatch):
+    """`[2026-10-20]` holdout-2 판정 뒤 운영 경로가 분류 이름을 싣는다 — 지시문 v3 가 그 칸을 읽는다."""
+    llm = OrderLLM({"order": ["a", "b"], "used_preference": False, "reason": ""})
+    _run(monkeypatch, llm)
+    assert all("class_name" in c for c in llm.calls[0]["payload"]["candidates"])
+    from app.domains.travel_ops.instances.activity.judge.llm import file_instructions
+
+    assert "class_name" in file_instructions(alternative_order.KIND)            # 가장 높은 판(v3)이 그 칸을 설명한다

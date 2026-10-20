@@ -101,7 +101,8 @@ def candidate_rows(candidates: list[dict[str, Any]], classes: dict[str, str] | N
     """모델에게 보낼 후보 — 이름 · 코드가 잰 이유 · 거리 · 관광공사 분류만. 좌표 · 주소 원문은 보내지 않는다.
 
     ★`[2026-10-20 실험 E1]` `with_class_name` 이면 분류 이름(`class_name`)도 싣는다 — 코드만 주면 모델이 뜻을 짐작해
-      팔각정(랜드마크 · 건물)을 궁궐로, 봉수대 터(역사)를 자연으로 읽었다. 프롬프트 v3 와 함께 켠다(운영은 아직 끔).
+      팔각정(랜드마크 · 건물)을 궁궐로, 봉수대 터(역사)를 자연으로 읽었다. 프롬프트 v3 와 함께 켠다.
+      `[2026-10-20]` holdout-2 판정 뒤 운영(`replacement._order_alternatives`)이 켠다 — 기본값 False 는 v2 비교 실행용이다.
     """
     rows = []
     for c in candidates[:MAX_CANDIDATES]:
