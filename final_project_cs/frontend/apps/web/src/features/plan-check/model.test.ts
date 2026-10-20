@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exampleDone, exampleSnapshots } from "./test-views";
-import { beginRecheck, nextStep, onlyCard, progress, rebase, stopAt, tally, timeline, type PlanCheckView } from "./model";
+import { beginRecheck, cutAtStop, nextStep, onlyCard, progress, rebase, stopAt, stopKind, tally, timeline, withArrivalRows, type PlanCheckView } from "./model";
 
 /** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. */
 function walk(from: PlanCheckView, to: PlanCheckView): PlanCheckView[] {
@@ -156,7 +156,8 @@ describe("`[2026-10-20 C안]` the first check stops at a card that needs a look"
     expect(b.checks.map((row) => row.text)).toEqual(exampleDone.items[1].checks.map((row) => row.text));
     expect(b.verdict).toBe("review");
     const fixed: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
-      : { ...item, title: "올리브영 광화문점", place: "올리브영 광화문점", verdict: "keep", checks: [{ kind: "place", result: "ok", text: "고른 곳이에요" }, { kind: "time", result: "ok", text: "겹치지 않아요" }] }) };
+      : { ...item, title: "올리브영 광화문점", place: "올리브영 광화문점", verdict: "keep", checks: [{ kind: "place", result: "ok", text: "고른 곳이에요" }, { kind: "time", result: "ok", text: "겹치지 않아요" }] }),
+      moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, slackMin: 3, verdict: "keep" as const } : move) };
     const based = rebase(asked, fixed, "b");
     const nb = based.items.find((item) => item.id === "b")!;
     expect(nb).toMatchObject({ title: "올리브영 광화문점", verdict: "review" });
@@ -169,6 +170,34 @@ describe("`[2026-10-20 C안]` the first check stops at a card that needs a look"
     expect(more.slice(0, passed).map((view) => view.items.find((item) => item.id === "b")!.checks.map((row) => row.result))).toEqual([["ok", "pending"], ["ok", "ok"]]);
     expect(stopAt(more[passed], fixed)).toBeNull();
     expect(more.at(-1)).toEqual(fixed);
+  });
+});
+
+describe("`[2026-10-20 C안 · 이동 확인 C안]` a late way in is asked in the stop's own card", () => {
+  it("stops at a card whose way in arrives late — after its place, in the same card", () => {
+    const late: PlanCheckView = { ...exampleDone, items: exampleDone.items.map((item) => item.id === "b" ? { ...item, verdict: "keep" as const } : item) };
+    const steps = walk(received, late);
+    const at = steps.find((view) => view.items.find((item) => item.id === "b")?.verdict === "keep")!;
+    expect(stopAt(at, late)).toBe("b");
+    expect(stopKind(at, "b")).toBe("arrival");
+    expect(stopKind(steps.at(-1)!, "b")).toBe("arrival");
+    expect(stopKind(exampleDone, "b")).toBe("place");                              // a place that needs a look is asked first
+  });
+
+  it("puts the 「도착」 line of the way in on each stop's card (none where there is no way in)", () => {
+    const view = withArrivalRows(exampleDone);
+    expect(view.items.find((item) => item.id === "b")!.checks.at(-1)).toEqual(exampleDone.moves[0].checks.find((row) => row.kind === "arrival"));
+    expect(view.items.find((item) => item.id === "a")!.checks).toEqual(exampleDone.items[0].checks);
+    expect(withArrivalRows({ ...exampleDone, moves: [] })).toEqual({ ...exampleDone, moves: [] });
+  });
+
+  it("opens a checked plan at the first stop: everything up to it drawn, nothing after", () => {
+    const cut = cutAtStop(exampleDone);
+    expect(cut.stage).toBe("checking");
+    expect(cut.items.map((item) => item.id)).toEqual(["a", "b"]);
+    expect(cut.moves.map((move) => move.id)).toEqual(["a-b"]);
+    const calm: PlanCheckView = { ...exampleDone, items: exampleDone.items.map((item) => ({ ...item, verdict: "keep" as const })), moves: exampleDone.moves.map((move) => ({ ...move, slackMin: 5 })) };
+    expect(cutAtStop(calm)).toBe(calm);
   });
 });
 

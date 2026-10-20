@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { LiveError } from "@/lib/live/client";
 import { MODE_WORDS, refusalWhy, type MoveOption, type MoveOptions, type MoveOptionMode } from "@/lib/live/move-options";
+import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import type { PlanItem, PlanMove } from "./model";
 import type { RowContext } from "./plan-rows";
@@ -20,6 +21,11 @@ type Load =
   | { status: "error"; message: string };
 
 const won = (value: number) => `${value.toLocaleString("ko-KR")}원`;
+
+/** What a way costs, as the server said it (`[2026-10-20 C안]` also the taxi option of the question asked at a late stop). */
+export function fareText(option: MoveOption, t: Translate): string {
+  return option.fareKrw === null ? t("요금 미상", "Fare unknown") : option.fareKrw === 0 ? t("요금 없음", "No fare") : option.fareIsEstimate ? t(`예상 ${won(option.fareKrw)}`, `Estimated ${won(option.fareKrw)}`) : option.fareIsFloor ? t(`약 ${won(option.fareKrw)}~`, `from about ${won(option.fareKrw)}`) : won(option.fareKrw);
+}
 
 /**
  * `[2026-10-07 사용자 지시 — 이동수단 고르기 · 화면 계획서 2026-10-05_이동수단_선택_화면_계획서.md]` In a leg that is open: 「이동 수단 [지금 수단 ▾]」. Opened, it asks the server for THIS leg only and lists the ways - subway, bus,
@@ -125,7 +131,7 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
       {options.map((option) => {
         const on = picked(option);
         const reaches = option.fits === true;
-        const fare = option.fareKrw === null ? t("요금 미상", "Fare unknown") : option.fareKrw === 0 ? t("요금 없음", "No fare") : option.fareIsEstimate ? t(`예상 ${won(option.fareKrw)}`, `Estimated ${won(option.fareKrw)}`) : option.fareIsFloor ? t(`약 ${won(option.fareKrw)}~`, `from about ${won(option.fareKrw)}`) : won(option.fareKrw);
+        const fare = fareText(option, t);
         const slack = option.fits === null ? t("확인 못 함", "Not checked")
           : option.slackMin === null ? "" : option.slackMin < 0 ? t(`늦어요 ${Math.abs(option.slackMin)}분`, `${Math.abs(option.slackMin)} min late`) : t(`여유 ${option.slackMin}분`, `${option.slackMin} min to spare`);
         const unsure = option.grade === "추정" || option.grade === "근거없음";

@@ -1461,6 +1461,26 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   }
   if (path === "/__test/photo.svg") { response.writeHead(200, { "Content-Type": "image/svg+xml", "Access-Control-Allow-Origin": "*" }); response.end('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><rect width="160" height="120" fill="#cfd8dc"/></svg>'); return; }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/autofix` && request.method === "POST") {
+    // `[2026-10-20 C안]` one stop (`item_id`, contract web-intakes.md): a stop whose way in arrives late starts after it — rounded up to 5 minutes, only the time changes.
+    const one = JSON.parse(raw || "{}");
+    if (one.item_id) {
+      const stop = board.items.find((item) => item.id === one.item_id);
+      if (!stop) return json(response, 404, { error: { code: "item_not_found", message: "그 일정이 없어요" } }, origin);
+      const way = board.moves.find((move) => move.to === stop.id);
+      const toMin = (hhmm) => { const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm ?? ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+      const toText = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+      const start = toMin(stop.starts_at);
+      if (!way || way.slack_min === null || way.slack_min >= 0 || start === null)
+        return json(response, 200, { applied: false, dry_run: one.dry_run === true, revision: board.revision, changed: [], kept: [{ id: stop.id, title: stop.title, reason: "nothing_to_change" }], view: intakeView(board.revision) }, origin);
+      const later = toText(Math.ceil((start - way.slack_min) / 5) * 5);
+      const change = { id: stop.id, source_id: stop.source_id, index: stop.index, title: stop.title, from: { place: stop.place, starts_at: stop.starts_at, ends_at: stop.ends_at },
+        to: { place: stop.place, starts_at: later, ends_at: stop.ends_at }, reason: "time" };
+      if (one.dry_run === true) return json(response, 200, { applied: false, dry_run: true, revision: board.revision, changed: [change], kept: [], view: { ...intakeView(board.revision), preview: true } }, origin);
+      stop.starts_at = later;
+      followTimes(board);
+      board.revision += 1;
+      return json(response, 200, { applied: true, dry_run: false, revision: board.revision, changed: [change], kept: [], view: intakeView(board.revision) }, origin);
+    }
     const before = reviewOf(board).needs.total;
     if (!before) return json(response, 200, { applied: false, revision: board.revision, changed: [], kept: [{ id: "0-0", title: "경복궁 관람", reason: "nothing_to_change" }], view: intakeView(board.revision) }, origin);
     if (scenario.autofix === "none") return json(response, 200, { applied: false, dry_run: JSON.parse(raw || "{}").dry_run === true, revision: board.revision, changed: [], kept: [{ id: "0-1", title: "올리브영", reason: "no_candidates" }], view: intakeView(board.revision) }, origin);

@@ -13,7 +13,7 @@ vi.mock("@/lib/settings", () => ({ useSettings: () => ({ skipAnimation: hooks.sk
 vi.mock("react", () => ({
   useState: <T>(initial: T) => {
     const at = hooks.cursor++;
-    hooks.slots[at] ??= { value: initial };
+    hooks.slots[at] ??= { value: typeof initial === "function" ? (initial as () => T)() : initial };
     return [hooks.slots[at].value, (value: T | ((current: T) => T)) => {
       const next = typeof value === "function" ? (value as (current: T) => T)(hooks.slots[at].value as T) : value;
       if (Object.is(next, hooks.slots[at].value)) return;
@@ -246,7 +246,8 @@ describe("`[2026-10-20 C안]` stopping at a card that needs a look, and going on
     vi.advanceTimersByTime(5_000);
     expect(draw(exampleDone, false, true).view.items.find((item) => item.id === "b")!.checks[0].result).toBe("pending");   // not before the answer
     const fixed: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
-      : { ...item, verdict: "keep", checks: item.checks.map((row) => ({ ...row, result: "ok" as const })) }) };
+      : { ...item, verdict: "keep", checks: item.checks.map((row) => ({ ...row, result: "ok" as const })) }),
+      moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, slackMin: 3, verdict: "keep" as const } : move) };    // the way in on time too (a late one stops again)
     const done = run(fixed, (result) => result.settled);
     expect(done.view).toEqual(fixed);
     expect(done.stop).toBeNull();

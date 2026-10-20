@@ -288,7 +288,7 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheck
       if (step === undefined) continue;
       // `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card that needs a look shows that only once the check is final: the screen stops there to ask (`stopAt`), so it waits rather than
       //   draw past a verdict the server may still change.
-      if (have && step.verdict === "review" && have.verdict !== "review" && target.stage !== "done") return null;
+      if (have && step.verdict !== null && have.verdict !== step.verdict && target.stage !== "done" && stopsHere(step, shown)) return null;
       const items = have ? shown.items.map((item) => item.id === want.id ? step : item) : insertInOrder(shown.items, step, target.items);
       return { ...shown, items };
     }
@@ -330,17 +330,62 @@ function insertInOrder(items: PlanItem[], item: PlanItem, order: PlanItem[]): Pl
   return [...items, item].sort((a, b) => rank(a.id) - rank(b.id));
 }
 
+/** `[2026-10-20 C안]` The leg into a stop (from the stop before it, or from the stay in the morning) — none for the first stop of a day without a stay. */
+export const incomingMove = (view: Pick<PlanCheckView, "moves">, id: string): PlanMove | null => view.moves.find((move) => move.toId === id) ?? null;
+
+/** `[2026-10-20 C안]` The way there arrives after the stop starts. */
+export const lateInto = (view: Pick<PlanCheckView, "moves">, id: string): boolean => {
+  const slack = incomingMove(view, id)?.slackMin;
+  return slack !== null && slack !== undefined && slack < 0;
+};
+
+/** `[2026-10-20 C안]` A card whose verdict is in stops the check: it needs a look, or the way to it arrives late (a place problem is asked first, then the arrival). */
+const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) => item.verdict === "review" || (item.verdict !== null && lateInto(view, item.id));
+
+/** `[2026-10-20 C안]` What the stopped card asks about: its place (or what else needs a look) first, then the way to it. */
+export const stopKind = (view: PlanCheckView, id: string): "place" | "arrival" =>
+  view.items.find((item) => item.id === id)?.verdict === "review" ? "place" : "arrival";
+
 /**
- * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` Where the first check stops to ask: the first card along the days whose drawn verdict is 「확인 필요」, once the server's check is final.
- * Nothing past it is drawn until the customer picks and the card passes (flow mockup `mockups/tripilot-plan-flow-register.html` 4단계).
+ * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` Where the first check stops to ask: the first card along the days whose drawn verdict is 「확인 필요」 or whose way in arrives late, once the
+ * server's check is final. Nothing past it is drawn until the customer picks and the card passes (flow mockup `mockups/tripilot-plan-flow-register.html` 4단계).
  */
 export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | null {
   if (target.stage !== "done") return null;
   for (const entry of checkOrder(shown)) {
     if (entry.type !== "item") continue;
-    if (shown.items.find((item) => item.id === entry.id)?.verdict === "review") return entry.id;
+    const item = shown.items.find((candidate) => candidate.id === entry.id);
+    if (item && stopsHere(item, shown)) return entry.id;
   }
   return null;
+}
+
+/**
+ * `[2026-10-20 C안]` The finished check cut where it stops: every card and leg up to the first card that needs a look (or arrives late), the rest not drawn yet — what a page shows at
+ * once that opens a checked plan with something to fix, or that skips the animation. The whole check when nothing stops it.
+ */
+export function cutAtStop(view: PlanCheckView): PlanCheckView {
+  if (view.stage !== "done") return view;
+  const order = checkOrder(view);
+  const at = order.findIndex((entry) => entry.type === "item" && stopsHere(view.items.find((item) => item.id === entry.id)!, view));
+  if (at < 0) return view;
+  const drawn = new Set(order.slice(0, at + 1).map((entry) => entry.id));
+  return { ...view, stage: "checking", title: null, items: view.items.filter((item) => drawn.has(item.id)), moves: view.moves.filter((move) => drawn.has(move.id)) };
+}
+
+/**
+ * `[2026-10-20 사용자 결정 — 계획 확인 C안 · 이동 확인 C안]` Each stop's card carries the 「도착」 line of the way into it (the server's own line of that leg), so the stop is checked with
+ * how it is reached — and a late arrival is asked in the stop's own card. Only for the first check: the result shows the legs as before.
+ */
+export function withArrivalRows(view: PlanCheckView): PlanCheckView {
+  let added = false;
+  const items = view.items.map((item) => {
+    const row = incomingMove(view, item.id)?.checks.find((check) => check.kind === "arrival");
+    if (!row) return item;
+    added = true;
+    return { ...item, checks: [...item.checks, row] };
+  });
+  return added ? { ...view, items } : view;
 }
 
 /** `[2026-10-20 C안]` Whether `next` changes nothing on screen but the card `id` (while the screen is stopped at it, nothing else is drawn). */

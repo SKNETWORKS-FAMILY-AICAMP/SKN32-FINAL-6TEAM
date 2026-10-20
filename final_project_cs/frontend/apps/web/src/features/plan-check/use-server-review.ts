@@ -302,6 +302,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         // A place the server gave coordinates for is taken as it is; one without them is looked up again by its name.
         return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null, choice.candidate.proposedTime, how);
       },
+      // `[2026-10-20 사용자 결정 — 계획 확인 C안 · 이동 확인 C안]` The way in arrives late: when could the stop start instead? The server works it out for this stop alone and saves nothing
+      //   (`autofix {item_id, dry_run}` — after the stop before ends and the way there is made, rounded up to 5 minutes; its end shortened when it must). Only a change of time is an answer here.
+      laterStart: async (id) => {
+        const result = await autofixIntake(intakeId, plan().revision, language, true, id).catch(staleThenRethrow);
+        const change = result.changed.find((entry) => entry.id === id && entry.reason === "time");
+        return change?.to.starts_at ? { start: change.to.starts_at, end: change.to.ends_at ?? "" } : null;
+      },
       // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 「「…」 그대로」: the place the server took for now (one of several) is the one — sent back as the customer's pick, so the server checks it as chosen.
       confirmPlace: async (id, how) => {
         const item = itemOf(id);

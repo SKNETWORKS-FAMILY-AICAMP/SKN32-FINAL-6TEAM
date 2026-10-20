@@ -852,3 +852,9 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **서버 호출**(`use-server-review.ts`): `{ flow: true }`(검사 포함 · `dirty` 없음 · 되돌리기 없음 · 대안 다시 받기), `confirmPlace`(지금 장소를 고객이 고른 곳으로).
 - 모방 서버: `board: "calm"`(rich 의 세 일정 · 두 이동을 고칠 것 없이 — 재생 · 지도를 보는 시험이 끝까지 보게). 재생 · 지도 시험 9개 파일은 `calm` 으로, `server-review` 첫 두 시험은 「올리브영에서 서버 판정 그대로 멈춘다」로, `plan-focus` 는 「가운데」 → 「위 14px」로 바꿨다. 새 시험 `stop-ask-flow-20261020.spec.ts`(멈춤 · 흐리게 · 안내 아래 · 고른 뒤 알림 없음 · 제자리로 · 거절 · 직접 수정).
 - 검증: tsc · lint 통과, 웹 단위 118파일 967/967, 모방 서버 화면 시험 — 확인 필요 판을 쓰는 24개 파일 + 새 시험: 다시 돌린 12개 파일 106/109(실패 3 = `my-location` — 모방 여행 날짜 10-01 이 지나 핀이 「지난 일정」 줄이 되는 날짜 의존 실패, 이번 변경과 무관 · 시계를 여행 전으로 두지 않는 시험) · 새 시험 5/5. 실서버 미확인. 기록: [작업 기록](../../../wiki/records/reports/2026-10-20_계획확인_C안_적용.md).
+
+## 2026-10-20 (이어서) — 계획 확인 C안 3단계: 도착 질문 · 건너뛰기 · 다시 열기(ST4F-683)
+
+- **도착 줄 · 도착 질문**(`model.ts` `withArrivalRows` · `stopKind` · `cutAtStop`, `stop-questions.ts` `arrivalQuestion`): 첫 검사 동안 카드에 오는 이동의 「도착」 줄, 오는 길이 늦으면 장소 다음에 같은 카드에서 묻는다(택시 · 늦추기 · 직접 수정). 택시는 기존 수단 고르기, 늦추기는 `laterStart`(서버 `autofix {item_id, dry_run}`) 시각을 기존 시각 고치기로.
+- **건너뛰기 · 다시 열기**(`use-reveal.ts`): 「애니메이션 건너뛰기」 · 검사가 끝난 접수를 다시 열 때도 첫 문제 카드까지 그리고 멈춘다.
+- 모방 서버 `autofix {item_id}` · 새 시험 `stop-ask-flow-20261020.spec.ts` 10/10. 단위 973/973. 실서버 미확인. 기록: [작업 기록](../../../wiki/records/reports/2026-10-20_계획확인_C안_적용.md).

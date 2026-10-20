@@ -1,7 +1,9 @@
 import { distanceM } from "@/features/map/map-geometry";
 import type { Language, Translate } from "@/lib/i18n";
 import { eun, ro } from "@/lib/josa";
-import type { PlanCandidate, PlanCheckView, PlanItem } from "./model";
+import type { MoveOptions } from "@/lib/live/move-options";
+import type { PlanCandidate, PlanCheckView, PlanItem, PlanMove } from "./model";
+import { fareText } from "./move-mode";
 
 /**
  * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` The question asked inside a card the first check stopped at (flow mockup `mockups/tripilot-plan-flow-register.html` 4단계):
@@ -10,8 +12,10 @@ import type { PlanCandidate, PlanCheckView, PlanItem } from "./model";
  * `confirm`: the server took a place for now and the customer says whether it is the one (「이 일정이 맞는지 먼저 확인해 주세요」); `fix`: something has to change.
  */
 export type StopNeed = "confirm" | "fix";
-export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "confirm" } | { type: "noplace" };
-export interface StopOption { key: string; label: string; reason: string | null; effect: string; act: StopAct }
+export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "confirm" } | { type: "noplace" }
+  | { type: "taxi"; moveId: string } | { type: "later"; start: string; end: string };
+/** `why`: the server's reason it cannot be picked (the option is shown, greyed, and says it when pressed) — null when it can. */
+export interface StopOption { key: string; label: string; reason: string | null; effect: string; act: StopAct; why?: string | null }
 export interface StopAsk { need: StopNeed; question: string; options: StopOption[] }
 
 /** As many alternatives as the card offers (A · B · C). */
@@ -84,4 +88,28 @@ export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: r
   return { need: "fix", options: picks, question: why
     ? t(`${quotedEun(item.title)} 확인이 필요해요 — ${why}. 어떻게 할까요?`, `“${item.title}” needs a look — ${why}. What should we do?`)
     : t(`${quotedEun(item.title)} 확인이 필요해요. 어떻게 할까요?`, `“${item.title}” needs a look. What should we do?`) };
+}
+
+/**
+ * `[2026-10-20 사용자 결정 — 계획 확인 C안 · 이동 확인 C안]` The way into the stopped card arrives late: asked in that card, after its place. Taxi from the leg's own ways (`GET …/moves/…/options` — its
+ * minutes, time to spare and fare as the server gave them; greyed with the server's reason when it does not reach), and the stop started later as the server works it out
+ * (`autofix {item_id, dry_run}` — `later`, none when it cannot). 「직접 수정」 opens the stop's own editor (its start and end).
+ */
+export function arrivalQuestion(item: PlanItem, move: PlanMove, from: PlanItem | null, ways: MoveOptions | null, later: { start: string; end: string } | null, t: Translate): StopAsk {
+  const late = Math.max(0, -(move.slackMin ?? 0));
+  const leg = `${from?.title ?? ""} → ${item.title}`;
+  const taxi = ways?.options.find((option) => option.mode === "taxi");
+  const options: StopOption[] = [];
+  if (taxi) {
+    const spare = taxi.slackMin === null ? null : taxi.slackMin < 0 ? t(`일정보다 ${-taxi.slackMin}분 늦어요`, `${-taxi.slackMin} min late`) : t(`${taxi.slackMin}분 여유`, `${taxi.slackMin} min to spare`);
+    options.push({ key: "taxi", label: t("택시로 바꾸기", "Take a taxi"),
+      reason: [taxi.minutes !== null ? t(`택시 ${taxi.minutes}분`, `Taxi ${taxi.minutes} min`) : null, spare, fareText(taxi, t)].filter(Boolean).join(" · "),
+      effect: t("이 구간만 다시 계산해요", "Only this leg is counted again"), act: { type: "taxi", moveId: move.id },
+      // The reason a way cannot be picked, as the travel mode box says it (`move-mode.tsx`).
+      why: taxi.fits === true ? null : taxi.whyNot ?? (taxi.fits === null ? t("계산이 오래 걸려 확인하지 못했어요", "The server could not finish counting this one")
+        : t("다음 일정 시작 안에 닿지 않아요", "It does not reach before the next stop starts")) });
+  }
+  if (later) options.push({ key: "later", label: t(`「${item.title}」 ${later.start} 시작으로 늦추기`, `Start “${item.title}” at ${later.start}`), reason: null,
+    effect: t("시작 시각을 바꾸고 뒤 일정과 이동을 다시 확인해요", "Changes the start and checks the stops and moves after it again"), act: { type: "later", start: later.start, end: later.end } });
+  return { need: "fix", options, question: t(`「${leg}」 이동이 일정보다 ${late}분 늦어요. 어떻게 할까요?`, `The way “${leg}” arrives ${late} min late. What should we do?`) };
 }

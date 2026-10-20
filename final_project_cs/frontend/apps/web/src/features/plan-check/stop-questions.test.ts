@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { translator } from "@/lib/i18n";
 import type { PlanCandidate, PlanCheckView, PlanItem } from "./model";
-import { placeQuestion, stopKindOf } from "./stop-questions";
+import { arrivalQuestion, placeQuestion, stopKindOf } from "./stop-questions";
+import type { MoveOption, MoveOptions } from "@/lib/live/move-options";
 import { exampleDone } from "./test-views";
 
 // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 검사가 멈춘 카드 안의 질문 — 서버 값(place_state · 휴무 줄 · prefill 질문 · 대안)으로 만들고 문장으로 가르지 않는다.
@@ -63,3 +64,29 @@ describe("the question asked at a card the check stopped at", () => {
     expect(ask.options).toHaveLength(3);
   });
 });
+
+describe("`[2026-10-20 이동 확인 C안]` the question asked when the way into the card arrives late", () => {
+  const move = { ...exampleDone.moves[0], slackMin: -42 };
+  const way = (fields: Partial<MoveOption>): MoveOption => ({ mode: "taxi", label: "택시", minutes: 7, km: 0.8, fareKrw: 6800, fareIsFloor: false, fareIsEstimate: true,
+    depart: "11:30", arrive: "11:37", slackMin: -37, fits: false, whyNot: null, basis: "estimate", grade: "추정", ...fields });
+  const ways = (option: MoveOption): MoveOptions => ({ revision: 1, currentMode: "walk", recommendedMode: "walk", options: [option] });
+
+  it("says the leg and how late, and offers a taxi with its time, spare and fare, and the later start", () => {
+    const ask = arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], ways(way({ slackMin: 4, fits: true })), { start: "12:15", end: "13:00" }, t);
+    expect(ask).toMatchObject({ need: "fix", question: "「경복궁 → 올리브영」 이동이 일정보다 42분 늦어요. 어떻게 할까요?" });
+    expect(ask.options.map((option) => option.label)).toEqual(["택시로 바꾸기", "「올리브영」 12:15 시작으로 늦추기"]);
+    expect(ask.options[0]).toMatchObject({ reason: "택시 7분 · 4분 여유 · 예상 6,800원", effect: "이 구간만 다시 계산해요", why: null, act: { type: "taxi", moveId: "a-b" } });
+    expect(ask.options[1]).toMatchObject({ reason: null, effect: "시작 시각을 바꾸고 뒤 일정과 이동을 다시 확인해요", act: { type: "later", start: "12:15", end: "13:00" } });
+  });
+
+  it("greys a taxi that does not reach, with the server's reason (or the travel box's own words)", () => {
+    expect(arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], ways(way({ whyNot: "택시로도 5분 늦어요" })), null, t).options[0].why).toBe("택시로도 5분 늦어요");
+    expect(arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], ways(way({})), null, t).options[0].why).toBe("다음 일정 시작 안에 닿지 않아요");
+    expect(arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], ways(way({ fits: null })), null, t).options[0].why).toBe("계산이 오래 걸려 확인하지 못했어요");
+  });
+
+  it("offers nothing it was not given (no ways, no later start): 「직접 수정」 is left", () => {
+    expect(arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], null, null, t).options).toEqual([]);
+  });
+});
+
