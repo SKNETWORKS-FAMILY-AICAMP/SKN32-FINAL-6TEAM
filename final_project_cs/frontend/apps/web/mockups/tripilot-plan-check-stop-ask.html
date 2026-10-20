@@ -1,0 +1,1339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계획 확인 — 멈추고 고르기</title>
+<!--
+  작성일: 2026-10-20 · 개정: 2026-10-20(role-eval-ui 31bc404d 기준 — 후보 준비 중 상태 · 후보 이동 줄 · 창덕궁 휴무 줄 문장, 사용자 지시) · 상태: 검토용 목업(멘토 피드백 + 팀 의견을 합침) · 실제 API 미연결
+  합친 원본(비교용으로 그대로 둔다): tripilot-plan-check-stop-fix.html(멈추고 고치기 — 흐름) + tripilot-plan-check-ask-card.html(확인 필요 선택지 카드 — 멈춘 카드 안 내용).
+  기준: SKN32 role-eval-ui 9ec5f2b9 의 계획 확인 화면(features/plan-check — 못 찾은 장소 카드 3a330f0e 포함),
+  서버 판단은 role-manager 의 intake(review.py · pipeline.py · places.py · prefill.py · candidates.py). 색은 앱 그린 테마 값.
+  장소 · 시각 · 운영시간 · 거리 · 후보는 예시 값이고 지도는 위치 개념도다. 줄마다 어느 서버 값에서 왔는지는 오른쪽 「이 카드를 만든 근거」.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --color-text: #24392f; --color-muted: #56645b; --color-faint: #66746b; --color-text-secondary: #4a5d52;
+  --color-border: #dce3dd; --color-border-strong: #c3cdc6; --color-divider: #e8ede9;
+  --color-surface: #ffffff; --color-background: #f3f5f3; --color-subtle: #f6f7f5; --color-subtle-strong: #e4e9e5;
+  --color-primary: #2e6047; --color-primary-hover: #254f3a; --color-on-primary: #ffffff; --color-soft: #e9f2eb;
+  --color-success: #3d7a56; --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a; --color-adjusted-soft: #e6eff6; --color-adjusted-border: #bcd0df;
+  --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1; --color-warning-surface: #fdfaf3;
+  --color-error: #965640; --color-error-soft: #fdf3ed;
+  --color-quote: #fbe7c4;
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  --ease-soft: cubic-bezier(.22, .8, .3, 1);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: #e8ece9; color: var(--color-text); font-family: var(--font-sans); }
+button { font-family: inherit; }
+
+/* ── 바깥: 머리 · 조작 · 폰 · 설명 ── */
+.page { max-width: 1320px; margin: 0 auto; padding: 20px 16px 48px; }
+.pageHead h1 { margin: 0 0 4px; font-size: 22px; }
+.pageHead p { margin: 0 0 4px; color: var(--color-muted); font-size: 13px; line-height: 1.6; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; }
+.controls + .controls { margin: 8px 0 16px; }
+.tabs { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--color-surface); border: 1px solid var(--color-border); }
+.tab { border: 0; background: none; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--color-muted); cursor: pointer; }
+.tab[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); }
+.ctl, .caseChip { border: 1px solid var(--color-border); background: var(--color-surface); border-radius: 999px; padding: 6px 11px; font-size: 12.5px; font-weight: 650; color: var(--color-text); cursor: pointer; }
+.ctl[aria-pressed="true"], .caseChip[aria-current="true"] { border-color: var(--color-primary); background: var(--color-soft); color: var(--color-primary); }
+.caseChip small { font-weight: 600; color: var(--color-faint); }
+.ctlNote { font-size: 12px; color: var(--color-faint); }
+.layout { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); justify-items: center; } .notes { width: 100%; } }
+
+/* ── 폰 ── */
+.phone { position: relative; width: 375px; max-width: 100%; height: 800px; border-radius: 34px; border: 8px solid #1d2a23; background: var(--color-background); overflow: hidden; box-shadow: 0 18px 40px #0003; }
+.map { position: absolute; inset: 0 0 auto 0; height: 330px; background: #eef1ea; overflow: hidden; }
+.map svg.streets { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pin { position: absolute; transform: translate(-50%, -100%); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50% 50% 50% 4px; rotate: -45deg; background: var(--color-surface); border: 2px solid var(--color-text); box-shadow: 0 2px 6px #0003; transition: left .5s var(--ease-soft), top .5s var(--ease-soft), scale .3s; }
+.pin span { rotate: 45deg; font-size: 13px; font-weight: 800; }
+.pin[data-state="review"] { border-color: var(--color-warning); background: var(--color-warning-soft); color: var(--color-warning); }
+.pin[data-state="current"] { scale: 1.2; border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.pin[data-state="candidate"] { border-color: var(--color-adjusted); background: var(--color-adjusted-soft); color: var(--color-adjusted); border-style: dashed; }
+.pin[data-state="stop"] { scale: 1.25; border-color: var(--color-warning); background: var(--color-warning); color: #fff; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px #82693e33; } }
+.mapChip { position: absolute; left: 10px; bottom: 58px; padding: 5px 10px; border-radius: 999px; background: var(--color-surface); font-size: 11.5px; font-weight: 700; box-shadow: 0 1px 4px #0002; }
+.phone[data-stopped] .mapChip { bottom: 128px; }
+.topBar { position: absolute; inset: 10px 10px auto 10px; display: flex; align-items: flex-start; gap: 8px; z-index: 5; }
+.appIcon, .iconBtn { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--color-surface); box-shadow: 0 1px 4px #0002; font-size: 18px; }
+.appIcon { background: var(--color-primary); color: #fff; font-weight: 800; font-size: 15px; }
+.stagePill { flex: 1; min-width: 0; padding: 7px 12px 8px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 1px 4px #0002; }
+.stageRow { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 800; }
+.stageRow b[data-stop] { color: var(--color-warning); }
+.bar { height: 4px; margin: 5px 0 4px; border-radius: 99px; background: var(--color-subtle-strong); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--color-primary); transition: width .4s var(--ease-soft); }
+.stagePill[data-stop] .bar i { background: var(--color-warning); }
+.stageSub { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultTitle { flex: 1; display: none; padding: 9px 14px; border-radius: 12px; background: var(--color-surface); box-shadow: 0 1px 4px #0002; font-weight: 800; font-size: 15px; }
+.phone[data-stage="result"] .resultTitle { display: block; }
+.phone[data-stage="result"] .stagePill { display: none; }
+
+.toast { position: absolute; left: 12px; right: 12px; top: 60px; z-index: 9; padding: 10px 14px; border-radius: 12px; background: var(--color-surface); border-left: 4px solid var(--color-primary); box-shadow: 0 4px 14px #0003; font-size: 13px; opacity: 0; transform: translateY(-8px); transition: opacity .25s, transform .25s var(--ease-soft); pointer-events: none; }
+.toast[data-show] { opacity: 1; transform: none; }
+.toast b { display: block; font-size: 13.5px; }
+.toast span { color: var(--color-muted); font-size: 12.5px; }
+
+.sheet { position: absolute; inset: 300px 0 0 0; display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -4px 16px #0002; z-index: 4; transition: top .45s var(--ease-soft); }
+/* 멈춘 동안 시트를 올려 멈춘 카드가 한 화면에 들어오게 한다. 아래 시트 형식이면 지도를 덮을 만큼 올린다(질문 시트가 아래 절반을 쓴다). */
+.phone[data-stopped] .sheet { top: 215px; }
+.phone[data-stopped][data-layout="sheet"] .sheet { top: 64px; }
+.phone[data-stopped][data-layout="sheet"] .list { padding-bottom: 470px; }
+.handle { width: 40px; height: 4px; margin: 8px auto 4px; border-radius: 99px; background: var(--color-border-strong); }
+.sheetHead { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 16px 8px; }
+.sheetHead h2 { margin: 0; font-size: 15px; }
+.sheetHead small { font-size: 12px; font-weight: 700; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.list { position: relative; flex: 1; overflow-y: auto; overflow-anchor: none; padding: 0 14px 16px; }
+.dayHead { margin: 6px 0 4px; font-size: 13.5px; font-weight: 800; }
+.dayHead small { font-weight: 600; color: var(--color-muted); margin-left: 4px; }
+.footer { padding: 10px 14px 14px; border-top: 1px solid var(--color-divider); font-size: 12.5px; color: var(--color-muted); }
+.footer .btnRow { display: flex; gap: 8px; margin-top: 8px; }
+
+/* 읽기 단계: 원문 줄 */
+.reading { list-style: none; margin: 4px 0 0; padding: 0; }
+.reading li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: center; padding: 7px 4px; font-size: 13px; color: var(--color-faint); border-bottom: 1px dashed var(--color-divider); }
+.reading li[data-read] { color: var(--color-text); }
+.stageDots { display: flex; justify-content: space-between; margin: 6px 0 10px; font-size: 11px; color: var(--color-faint); }
+.stageDots span[data-on] { color: var(--color-primary); font-weight: 800; }
+
+/* 일정 줄 (앱 plan-check.module.css 값) */
+.entry { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr); column-gap: 8px; transition: opacity .3s; }
+/* 다시 그릴 때마다 움직이지 않게: 처음 나온 줄 · 카드 · 검사 줄만 떠오른다(data-enter). */
+[data-enter] { animation: rise .45s var(--ease-soft); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+.time { padding-top: 18px; font-size: 13px; font-weight: 750; text-align: right; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; line-height: 18px; }
+.time small { display: block; font-size: 11px; font-weight: 500; color: var(--color-faint); }
+.rail { position: relative; }
+.rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--color-divider); }
+.dot { position: absolute; left: 3px; top: 21px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.entry[data-verdict="keep"] .dot, .entry[data-verdict="adjusted"] .dot { border-color: var(--color-success); background: var(--color-success-soft); }
+.entry[data-verdict="review"] .dot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); transition: border-color .2s, background-color .2s, box-shadow .3s; }
+.entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
+.entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
+.entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
+.entry[data-filled] .card { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.entry[data-waiting] .card { border-style: dashed; border-color: var(--color-border); background: var(--color-subtle); }
+.entry[data-waiting] .cardTitle { color: var(--color-faint); font-weight: 600; }
+.entry[data-stop] .card { border: 2px solid var(--color-warning); box-shadow: 0 0 0 4px #82693e1f; }
+.cardHead { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px; }
+.kindIcon { flex: none; width: 20px; text-align: center; color: var(--color-muted); font-size: 15px; }
+.cardName { flex: 1; min-width: 0; }
+.cardTitle { margin: 0; font-size: 16px; font-weight: 750; }
+.changedMark { color: var(--color-adjusted); font-weight: 800; margin-left: 4px; }
+.cardWritten { display: block; font-size: 11.5px; font-weight: 500; color: var(--color-faint); }
+.cardWritten[data-found] { color: var(--color-warning); font-weight: 650; }
+.spinner { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pill { flex: none; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; color: var(--color-text-secondary); white-space: nowrap; }
+.pill[data-state="review"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.pill[data-state="filled"] { border-color: var(--color-adjusted-border); background: var(--color-surface); color: var(--color-adjusted); }
+.checks { list-style: none; margin: 0; padding: 4px 12px 10px; border-top: 1px solid var(--color-divider); }
+.check { display: grid; grid-template-columns: 20px 56px minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; }
+.checkKind { font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.checkText { color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.check[data-result="pending"] .checkText { color: var(--color-faint); }
+.check[data-result="bad"] .checkText { color: var(--color-error); font-weight: 650; }
+.check[data-result="warn"] .checkText { color: var(--color-warning); }
+.check[data-result="unknown"] .checkText { color: var(--color-muted); }
+.mark { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 800; font-style: normal; line-height: 1; }
+.check[data-result="pending"] .mark { width: 18px; height: 18px; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+[data-result="ok"] > .mark, .mark[data-result="ok"] { background: var(--color-success-soft); color: var(--color-success); }
+[data-result="filled"] > .mark, .mark[data-result="filled"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+[data-result="warn"] > .mark, .mark[data-result="warn"] { background: var(--color-warning-soft); color: var(--color-warning); }
+[data-result="bad"] > .mark, .mark[data-result="bad"] { background: var(--color-error); color: var(--color-on-primary); }
+[data-result="unknown"] > .mark, .mark[data-result="unknown"] { background: var(--color-subtle-strong); color: var(--color-muted); }
+.check[data-enter][data-result="ok"] .mark { animation: pop .2s var(--ease-soft); }
+@keyframes pop { from { scale: .4; } }
+.recheckRow { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--color-divider); font-size: 12.5px; color: var(--color-muted); }
+.cardFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px 10px; }
+.cardFoot small { flex: 1; min-width: 0; font-size: 12px; color: var(--color-adjusted); font-weight: 700; }
+
+/* 이동 줄 */
+.entry[data-type="move"] { min-height: 40px; }
+.entry[data-type="move"] .time { padding-top: 10px; font-size: 11.5px; font-weight: 500; color: var(--color-faint); }
+.entry[data-type="move"] .dot { left: 5px; top: 15px; width: 8px; height: 8px; }
+.move { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 10px; font-size: 12.5px; color: var(--color-muted); }
+.move .mark { width: 16px; height: 16px; font-size: 9.5px; }
+.moveText { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.free { flex: none; font-size: 12px; color: var(--color-faint); }
+
+/* ★멈춤 — 멈춘 카드만 밝게, 위에 멈춤 띠 */
+.list[data-stopped] .entry:not([data-focus]):not([data-stop-move]) { opacity: .38; pointer-events: none; }
+.stopBanner { position: sticky; top: 0; z-index: 3; display: none; margin: 0 -14px 6px; padding: 10px 14px; background: var(--color-warning-soft); border-bottom: 1px solid var(--color-warning-border); font-size: 13px; }
+.list[data-stopped] .stopBanner { display: flex; gap: 10px; align-items: flex-start; }
+.stopBanner .mark { background: var(--color-warning); color: #fff; }
+.stopBanner b { display: block; color: var(--color-warning); }
+.stopBanner span.sub { color: var(--color-text-secondary); font-size: 12px; }
+.newTag { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: #fde68a; color: #6b4e00; font-size: 10px; font-weight: 800; vertical-align: 1px; white-space: nowrap; }
+
+/* ★멈춘 카드 안 선택지(카드 안 형식) — 질문 · 선택지(이유 · 고르면) · 직접 수정 · 삭제 */
+.ask { margin: 0 10px 10px; padding: 12px 10px 10px; border-radius: 10px; background: var(--color-warning-soft); }
+.again { margin: 0 0 8px; font-size: 12.5px; font-weight: 750; color: var(--color-error); }
+.askQ { margin: 0 0 10px; font-size: 14px; font-weight: 800; line-height: 1.5; }
+.askQ mark { background: var(--color-quote); color: var(--color-text); padding: 1px 4px; border-radius: 5px; }
+.opts { display: grid; gap: 8px; }
+.opt { display: grid; gap: 3px; padding: 10px 11px; border: 1.5px solid var(--color-border); border-radius: 10px; background: var(--color-surface); text-align: left; cursor: pointer; font: inherit; color: var(--color-text); }
+.opt:hover { border-color: var(--color-adjusted-border); }
+.optTop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
+.line { font-size: 12px; color: var(--color-muted); line-height: 1.45; }
+.opt[data-rec] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.opt[data-rec] .optTop { color: var(--color-adjusted); }
+.rec { padding: 0 6px; border: 1px solid var(--color-adjusted); border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--color-adjusted); background: var(--color-surface); }
+.tick { display: inline-grid; place-items: center; width: 17px; height: 17px; border: 1.5px solid currentColor; border-radius: 50%; font-size: 10px; }
+.pinNo { margin-left: auto; display: inline-grid; place-items: center; width: 19px; height: 19px; border: 1.5px dashed var(--color-adjusted); border-radius: 50%; font-size: 10.5px; font-weight: 800; color: var(--color-adjusted); }
+.opt[aria-disabled="true"] { cursor: not-allowed; background: var(--color-subtle); border-style: dashed; }
+.opt[aria-disabled="true"] .optTop { color: var(--color-faint); }
+.soon { padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 800; color: var(--color-muted); background: var(--color-subtle-strong); }
+.askBtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.askBtns[data-one] { grid-template-columns: 1fr; }
+.askBtn { min-height: 42px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); font-size: 13.5px; font-weight: 750; color: var(--color-text); cursor: pointer; }
+.askBtn[data-danger] { color: var(--color-error); }
+.linkBtn { display: block; margin: 10px auto 0; border: 0; background: none; color: var(--color-muted); font-size: 12.5px; cursor: pointer; text-decoration: underline; }
+.waitSave { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--color-muted); }
+/* 후보 받기(31bc404d) — 찾는 중 한 줄 · 재는 중인 이동 줄 · 쓰는 중인 이유 */
+.candWait { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 11px; border: 1.5px dashed var(--color-border); border-radius: 10px; background: var(--color-surface); font-size: 12.5px; color: var(--color-muted); }
+.line[data-pending] { display: flex; align-items: center; gap: 6px; color: var(--color-faint); }
+.line .spinner { width: 12px; height: 12px; border-width: 2px; }
+.line.leg:not([data-pending]) { color: var(--color-text-secondary); }
+
+/* ★아래 시트 형식 — 멈춘 카드는 목록 그 자리에 두고, 질문 · 선택지는 화면 아래에서 올라오는 시트로 */
+.askSheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; max-height: 450px; overflow-y: auto; padding: 14px 14px 16px; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -8px 28px #0003; animation: up .4s var(--ease-soft); }
+@keyframes up { from { transform: translateY(24px); opacity: 0; } }
+.askHead { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--color-muted); font-weight: 700; }
+.askSheet .askQ { margin: 10px 0 12px; font-size: 16px; }
+.askSheet .opt { padding: 12px 14px; border-radius: 12px; }
+.askSheet .optTop { font-size: 15px; }
+.askSheet .line { font-size: 12.5px; }
+.askSheet .askBtn { min-height: 46px; border-radius: 12px; font-size: 14px; }
+
+/* 결과 화면 */
+.resultCard .cardHead { min-height: 44px; padding: 10px 12px; gap: 8px; }
+.resultCard .cardTitle { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.actIcons { display: flex; gap: 6px; color: var(--color-muted); font-size: 12px; }
+.btn { border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); padding: 10px 12px; font-size: 13.5px; font-weight: 750; }
+.btn[data-primary] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+.btn[aria-disabled="true"] { opacity: .5; }
+.unfound { margin: 0 12px 12px; display: grid; gap: 6px; font-size: 12.5px; }
+.unfound p { margin: 0; font-weight: 650; }
+.unfound .cand { display: grid; gap: 1px; padding: 7px 9px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); }
+.unfound .cand small { color: var(--color-muted); }
+.unfound .row2 { display: flex; gap: 6px; }
+.unfound .row2 .btn { flex: 1; padding: 8px; font-size: 12.5px; text-align: center; }
+.appNote { font-size: 11px; color: var(--color-faint); }
+
+/* ── 설명 ── */
+.notes { display: grid; gap: 14px; }
+.box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 14px 16px; }
+.box h3 { margin: 0 0 8px; font-size: 14.5px; }
+.box h4 { margin: 14px 0 6px; font-size: 13px; color: var(--color-text-secondary); }
+.box p, .box li { font-size: 13px; line-height: 1.6; }
+.box p { margin: 0 0 6px; }
+.box ul, .box ol { margin: 0; padding-left: 18px; }
+.src { font-size: 12px; color: var(--color-muted); }
+pre { margin: 0; padding: 10px 12px; border-radius: 10px; background: #f4f6f4; font-size: 11.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow: auto; }
+code { font-size: 12px; background: var(--color-subtle); padding: 0 4px; border-radius: 4px; }
+.compare, .prov { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.compare th, .compare td, .prov th, .prov td { border-top: 1px solid var(--color-divider); padding: 7px 6px; text-align: left; vertical-align: top; line-height: 1.5; }
+.compare th, .prov th { color: var(--color-muted); font-weight: 700; }
+.compare th:first-child { width: 18%; }
+.prov th { width: 62px; white-space: nowrap; }
+.prov td.shown { width: 42%; }
+.prov td.shown s { color: var(--color-faint); }
+.prov tr[data-group="odd"] td, .prov tr[data-group="odd"] th { background: #fafbfa; }
+.srcChip { display: inline-block; margin: 0 4px 3px 0; padding: 1px 6px; border-radius: 6px; font-size: 11px; line-height: 1.5; }
+.srcChip b { font-weight: 800; margin-right: 4px; }
+.srcChip[data-kind="raw"] { background: var(--color-success-soft); color: var(--color-success); }
+.srcChip[data-kind="val"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.srcChip[data-kind="tpl"] { background: var(--color-subtle-strong); color: var(--color-text-secondary); }
+.srcChip[data-kind="app"] { background: #e3f1ef; color: #2f6f68; }
+.srcChip[data-kind="ex"] { background: #fff3cd; color: #7a5a00; }
+.srcChip[data-kind="ask"] { background: #fde8dc; color: #8a4b26; }
+.legend { margin-top: 8px; }
+.legend .srcChip { margin-right: 6px; }
+.tag { display: inline-block; padding: 0 6px; margin-right: 4px; border-radius: 4px; font-size: 11px; font-weight: 800; }
+.tag[data-k="now"] { background: var(--color-success-soft); color: var(--color-success); }
+.tag[data-k="talk"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.tag[data-k="idea"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.tag[data-k="screen"] { background: var(--color-subtle-strong); color: var(--color-muted); }
+.log { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow-y: auto; }
+.log li { padding: 5px 0; border-top: 1px solid var(--color-divider); font-size: 12.5px; }
+.log li:first-child { border-top: 0; }
+.log li[data-now] { font-weight: 750; color: var(--color-primary); }
+.calls li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="pageHead">
+    <h1>계획 확인 — 「확인 필요」 카드에서 멈추고, 카드 안 선택지로 고른 뒤 이어가기</h1>
+    <p>작성 2026-10-20 · 검토용 목업 · 「멈추고 고치기」(멘토 피드백 — 흐름)와 「확인 필요 선택지 카드」(팀 의견 — 멈춘 카드 안 내용)를 합쳤습니다. 두 원본은 비교용으로 그대로 있습니다 · 기준 SKN32 <code>role-eval-ui</code> <code>31bc404d</code>(2026-10-20 병합 판 — 못 찾은 장소 카드 <code>3a330f0e</code> · 후보 미리 준비 <code>50d6cdf0</code> · 창덕궁 방문 안내 <code>784a0fc6</code> 포함)의 계획 확인 화면과 서버 intake · 실제 API 미연결 · 장소 · 시각 · 거리 · 후보는 예시 값, 지도는 개념도</p>
+    <p><span class="newTag">새 문구</span> 표시가 붙은 글은 앱에 없어 새로 지은 것이고, 나머지 단추 · 문장은 지금 앱 문구, 검사 줄은 지금 서버가 쓰는 문장입니다. 「흐름」 · 「판」을 바꾸면 처음부터 다시 재생하고(멈춰 있던 카드가 있으면 그 카드까지 바로 감), 「형식」은 그 자리에서 바뀝니다.</p>
+  </header>
+
+  <div class="controls">
+    <div class="tabs" role="group" aria-label="흐름">
+      <button class="tab" data-mode="old" aria-pressed="false">지금 흐름</button>
+      <button class="tab" data-mode="new" aria-pressed="true">새 흐름 — 멈추고 고르기</button>
+    </div>
+    <div class="tabs" role="group" aria-label="판">
+      <button class="tab" data-version="now" aria-pressed="true">지금 서버 값만</button>
+      <button class="tab" data-version="ask" aria-pressed="false">서버 협의안(ask)</button>
+    </div>
+    <div class="tabs" role="group" aria-label="형식">
+      <button class="tab" data-layout="card" aria-pressed="true">카드 안</button>
+      <button class="tab" data-layout="sheet" aria-pressed="false">아래 시트</button>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="replay">↻ 처음부터</button>
+    <button class="ctl" id="speed" aria-pressed="false">빠르게 2×</button>
+    <button class="ctl" id="allowSkip" aria-pressed="false">건너뛰기 허용</button>
+    <button class="ctl" id="lateServer" aria-pressed="false">서버 확인이 늦을 때</button>
+    <button class="ctl" id="slowPrep" aria-pressed="false">후보 준비가 늦을 때</button>
+    <span class="ctlNote">바로 보기</span><span id="cases"></span>
+  </div>
+
+  <div class="layout">
+    <div class="phone" id="phone" data-stage="received" data-layout="card">
+      <div class="map" id="map">
+        <svg class="streets" viewBox="0 0 375 330" preserveAspectRatio="none" aria-hidden="true">
+          <rect width="375" height="330" fill="#eef1ea"/>
+          <path d="M0 150 C 80 140, 160 165, 375 150" stroke="#cfe0ea" stroke-width="10" fill="none"/>
+          <path d="M60 0 L 75 330" stroke="#fff" stroke-width="7" fill="none"/>
+          <path d="M190 0 L 200 330" stroke="#fff" stroke-width="7" fill="none"/>
+          <path d="M300 0 L 290 330" stroke="#fff" stroke-width="5" fill="none"/>
+          <path d="M0 90 L 375 100" stroke="#fff" stroke-width="6" fill="none"/>
+          <path d="M0 220 L 375 210" stroke="#fff" stroke-width="7" fill="none"/>
+          <path d="M0 280 L 375 290" stroke="#fff" stroke-width="5" fill="none"/>
+          <rect x="60" y="34" width="70" height="45" rx="6" fill="#dfe9dc"/>
+          <rect x="190" y="26" width="70" height="44" rx="6" fill="#dfe9dc"/>
+          <text x="95" y="60" font-size="10" fill="#8a988f" text-anchor="middle">경복궁</text>
+          <text x="225" y="52" font-size="10" fill="#8a988f" text-anchor="middle">창덕궁</text>
+          <text x="330" y="44" font-size="10" fill="#8a988f" text-anchor="middle">대학로</text>
+          <text x="100" y="128" font-size="10" fill="#8a988f" text-anchor="middle">광화문</text>
+          <text x="190" y="146" font-size="9" fill="#8fb1c6" text-anchor="middle">청계천</text>
+          <text x="280" y="190" font-size="10" fill="#8a988f" text-anchor="middle">종로 5가</text>
+          <text x="200" y="236" font-size="10" fill="#8a988f" text-anchor="middle">을지로</text>
+          <text x="140" y="300" font-size="10" fill="#8a988f" text-anchor="middle">남산</text>
+        </svg>
+        <div id="pins"></div>
+        <div class="mapChip" id="mapChip" hidden></div>
+      </div>
+      <div class="topBar">
+        <span class="appIcon" aria-hidden="true">구</span>
+        <div class="stagePill" id="stagePill">
+          <div class="stageRow"><b id="stageLabel">받았어요</b><span id="stagePct">0%</span></div>
+          <div class="bar"><i id="stageBar"></i></div>
+          <div class="stageSub" id="stageSub">&nbsp;</div>
+        </div>
+        <div class="resultTitle">계획 확인</div>
+        <span class="iconBtn" aria-hidden="true">⛨</span>
+        <span class="iconBtn" aria-hidden="true">☰</span>
+      </div>
+      <div class="toast" id="toast"><b></b><span></span></div>
+      <section class="sheet">
+        <div class="handle"></div>
+        <div class="sheetHead"><h2 id="sheetTitle">계획을 확인하고 있어요</h2><small id="sheetCount"></small></div>
+        <div class="list" id="list"></div>
+        <div class="footer" id="footer"><span id="footerText">계획을 받았어요.</span><div class="btnRow" id="footerBtns" hidden></div></div>
+      </section>
+      <div class="askSheet" id="askSheet" hidden></div>
+    </div>
+
+    <aside class="notes">
+      <section class="box">
+        <h3>합친 방식</h3>
+        <table class="compare">
+          <tr><th></th><th>가져온 곳</th><th>이 목업</th></tr>
+          <tr><th>흐름</th><td>멈추고 고치기</td><td>검사 재생이 「확인 필요」 카드에서 <b>멈춘다</b> → 그 카드 안에서 고른다 → 다시 확인해 통과하면 접고 <b>다음 카드부터 이어간다</b>. 통과하지 못하면 그 카드에 남는다(협의안 판의 남산 「오전 9시」로 볼 수 있다).</td></tr>
+          <tr><th>멈춘 카드 안</th><td>확인 필요 선택지 카드</td><td>질문 · 선택지(이유 · 고르면) · 「직접 수정」 · 「삭제」. 「지금 서버 값만 / 서버 협의안」 · 「카드 안 / 아래 시트」 스위치도 그대로.</td></tr>
+          <tr><th>사례</th><td>두 목업의 사례를 한 일정에</td><td>1일차 7곳 중 확인 필요 6곳 — 광화문 근처 한식 · 정도 · 창덕궁 관람 · 광장시장 · 을지로 그 집 · 남산서울타워. 남산은 <b>협의안 판에서만</b> 멈춘다(지금 서버는 ✎ 로 보낸다).</td></tr>
+          <tr><th>원본과 달라진 점</th><td>—</td><td>① 을지로 그 집: ✕ 장소 줄을 서버 실제 문장으로, 질문은 따로 한 줄(앱과 같게) ② 남산: 시간 줄을 서버 실제 문장(<code>pipeline.py</code> 「「9시」을 오후로 봤어요 — 다르면 고쳐 주세요」)으로, 선택지는 오후 · 오전 ③ 고른 뒤 통과하지 못하면 그 카드에 남는다 ④ 「나머지는 추천대로 두기」는 뒤에서 멈출 카드도 추천대로 정하며 지나간다 ⑤ 「바로 보기」는 앞 카드를 첫 선택지(협의안은 추천)로 정한 채 그 카드까지 바로 간다 ⑥ 선택지 카드 목업의 「확인이 필요해요 · n/5」 ‹ › 는 뺐다 — 뒤 카드는 아직 확인 전이라 오갈 곳이 없다.</td></tr>
+          <tr><th>31bc404d 반영</th><td>병합 판 서버 · 웹</td><td>① <b>후보 받기</b> — 서버가 접수 검사 뒤 문제 일정의 후보를 미리 준비한다(<code>prepared</code>). 창덕궁 · 을지로 그 집은 저장분이라 바로 나오고, 광화문 근처 한식은 카카오 후보라 미리 준비하지 않아 「후보를 찾는 중…」 → 어림 카드(이동 줄 「계산 중 · 어림 n분」 · 「추천 이유를 정리하고 있어요…」) → 잰 값 순서로 바뀐다. 「후보 준비가 늦을 때」를 켜면 저장분도 아직 준비 중인 경우(어림 카드 먼저 → 준비 결과를 한 번에)를 본다. 기다리는 동안에도 지금 장소 · 장소 없이 두기 · 직접 수정 · 삭제는 누를 수 있다 ② <b>후보 이동 줄</b>(<code>legs</code>) — 「바꾸기」 화면과 같은 「○○에서 오는 길 · 지하철 n분」 · 「○○까지 가는 길 · … · n분 여유」 ③ <b>창덕궁</b> — 「후원은 따로 예약」이 휴무 조건에서 방문 안내로 바뀌어 휴무 줄 뒤에 붙는다(전에는 휴무가 아닌 날에도 확인 필요였다). 휴무일 문장은 서버 틀대로 「월요일은 쉬는 날이에요 · 방문일이 휴무예요」, 운영시간 줄은 「쉬는 날이라 운영하지 않아요」로 고쳤다(앞 판의 「월요일 휴무 · 방문은 월요일」은 휴무가 아닌 날 문장이었다) ④ 「쉬는 요일이 없어요」 · 남산 오전 9시의 「10:30에 열어요 · 09:00 시작은 일러요」도 서버 문장 틀대로.</td></tr>
+        </table>
+      </section>
+
+      <section class="box" id="basis"></section>
+
+      <section class="box">
+        <h3>지금 화면에서 일어나는 일</h3>
+        <ol class="log" id="log"></ol>
+      </section>
+
+      <section class="box">
+        <h3>이유 · 고르면 원칙(지금 서버 값만)</h3>
+        <ol>
+          <li><b>이유는 사실이라 서버 값만</b> — 서버 문장(검사 줄 · 후보 조회의 <code>reason</code>)은 그대로, 숫자 · 이름은 서버 칸에서만 끼운다. 서버 값이 없으면 이유 줄을 뺀다(짓지 않는다).</li>
+          <li><b>고르면은 그 단추가 하는 일</b> — 프론트가 정한 고정 문장. 「바꾸고 · 다시 확인해요」까지만 말하고 결과는 약속하지 않는다 — 결과는 다시 확인한 뒤 검사 줄이 말한다. 앱에 있는 문장을 먼저 쓴다.</li>
+          <li><b>질문은 원인별 고정 틀 + 서버 값</b>(원문 제목 · 찾은 이름 · 날짜 · 후보 수). 못 찾은 장소만 서버 질문 문장 그대로.</li>
+          <li><b>카드 안 형식에서는 바로 위 검사 줄과 같은 이유를 숨긴다</b>(같은 말이 두 번 나오지 않게). 아래 시트 형식은 질문이 크게 보이는 대신 줄이 가려질 수 있어 보인다.</li>
+          <li>후보 이유는 후보 조회 응답이 와야 보인다 — 그동안 「후보를 찾는 중…」(지금 못 찾은 장소 카드와 같음). 서버 문장이 영어 화면에서 영어로 오는지는 계약에 없다(협의).</li>
+        </ol>
+        <p class="legend"><span class="srcChip" data-kind="raw"><b>서버 문장 그대로</b></span><span class="srcChip" data-kind="val"><b>서버 값</b>(끼움)</span><span class="srcChip" data-kind="tpl"><b>프론트 고정 문장</b></span><span class="srcChip" data-kind="app"><b>앱 문구 그대로</b></span><span class="srcChip" data-kind="ex"><b>예시 값</b></span><span class="srcChip" data-kind="ask"><b>협의안 ask</b></span></p>
+      </section>
+
+      <section class="box">
+        <h3>두 판의 차이</h3>
+        <table class="compare">
+          <tr><th></th><th>지금 서버 값만</th><th>서버 협의안(ask)</th></tr>
+          <tr><th>질문 · 선택지를 정하는 쪽</th><td>프론트 — 확인 필요 원인(구조 값)마다 정해 둔 틀</td><td>서버 — 일정마다 <code>ask</code>(질문 · 원문 인용 · 선택지 · 이유 · 고르면 · 추천 · 보낼 요청)</td></tr>
+          <tr><th>다른 해석(빈 시간 · 장소)</th><td><b>못 한다</b> — 서버가 해석 하나만 정해 보낸다. 빈칸으로 읽은 흔적(<code>understanding.gaps</code>)이 있어도 「그 시간대 채우기」 요청이 없어 「준비 중」</td><td>된다 — 버린 해석도 선택지로 온다</td></tr>
+          <tr><th>시간 짐작</th><td>✎(채움)로 와 확인 필요가 아니다 — <b>멈추지 않는다</b></td><td>확인 필요로 올리고 오후 · 오전을 묻는다</td></tr>
+          <tr><th>추천 · 나머지는 추천대로</th><td><b>없음</b> — 서버가 추천을 정해 보내지 않는다</td><td>된다</td></tr>
+          <tr><th>이유 · 고르면</th><td>이유 = 서버 문장 · 서버 값만(없으면 뺌), 고르면 = 프론트 고정 문장</td><td>서버가 보낸다</td></tr>
+          <tr><th>서버 변경</th><td>없음(지금 계약)</td><td>접수 응답에 <code>ask</code> 칸 · 「빈 시간 채우기」 요청 · 시간 짐작을 확인 필요로(협의)</td></tr>
+        </table>
+      </section>
+
+      <section class="box">
+        <h3>서버 · 계약</h3>
+        <ul>
+          <li><span class="tag" data-k="now">지금 계약</span>멈추는 기준 = 검사 결과의 <code>review.items[].status: "review"</code>(화면의 「확인 필요」). 「여행 등록」이 켜지는 <code>ready</code>(= 확인 필요 0)와 같은 기준이라, 끝까지 고르면 등록 버튼이 바로 켜진다. 칸의 <code>needs_review</code> 는 쓰지 않는다(오라클 10-12 기록에서 칸은 <code>true</code> 인데 일정은 통과인 경우가 있었다).</li>
+          <li><span class="tag" data-k="now">지금 계약</span>고르기 · 고치기는 지금 호출 그대로 — <code>POST …/edits</code>(장소 <code>{name}</code> · 고른 장소 <code>{name, latitude, longitude, source}</code> · 「장소 없음」 <code>{none:true}</code> · 종류 · 시각 · 삭제), 후보 <code>GET …/candidates</code>. 응답이 <b>새 판의 전체 검사</b>라 뒤에 아직 안 그린 카드도 새 판 값으로 이어 그린다.</li>
+          <li><span class="tag" data-k="now">지금 계약</span>못 찾은 장소는 서버가 질문을 정해 보낸다 — <code>prefill.questions[]</code> 의 <code>place_not_found</code>(<code>question</code> · <code>item</code> · <code>actions</code>). role-manager · role-eval-ui 에 있고 develop 에는 아직 없다.</li>
+          <li><span class="tag" data-k="now">31bc404d</span>후보는 서버가 접수 검사 뒤(고객은 기다리지 않음) 문제 일정마다 <b>미리 준비</b>한다 — 팀 대안 → 앞 · 뒤 이동 → 판정 → 이유 문장까지 저장(<code>intake_alternatives</code>). 저장분이 맞으면 <code>GET …/candidates</code> 가 계산 없이 돌려준다(<code>prepared: {revision, computed_at, stale}</code>, 기록상 0.23초). 문제 일정 2개 준비에 중앙값 41.8초(로컬 기록)라 <b>검사 직후 첫 멈춤에서는 아직 준비 중일 수 있다</b> — 실시간(SSE)이면 어림 카드(<code>waiting: "prepare"</code>)를 먼저 받고 최대 120초 기다린다. 카카오에 기대는 일정(같은 이름의 다른 지점 · 이름 없는 줄)은 준비하지 않고 누를 때 계산한다. 후보마다 <code>legs</code>(앞 · 뒤 일정과의 이동) 칸이 새로 붙는다. 고치기 · 되돌리기 뒤에는 낡은 것만 뒤에서 다시 준비한다. role-manager · role-eval-ui 에만 있다.</li>
+          <li><span class="tag" data-k="screen">화면만</span>지금 웹의 「바꾸기」 화면은 이것을 실시간으로 받는다(<code>streamCandidates</code>). 못 찾은 장소 카드(<code>unfound-place.tsx</code>)는 최종 목록만 기다린다 — 멈춘 카드에서도 실시간으로 받을지 정해야 한다(목업은 실시간).</li>
+          <li><span class="tag" data-k="talk">협의 필요</span>서버가 뒤 일정을 아직 확인하는 중(<code>status: reading</code>)이면 <code>/edits</code> 는 <code>409 intake_not_editable</code>. 안 1(화면만): 고른 값을 들고 있다가 끝나면 보낸다(「서버 확인이 늦을 때」 스위치). 안 2(서버): 읽는 중에도 이미 확인한 일정은 고칠 수 있게 연다.</li>
+          <li><span class="tag" data-k="talk">협의 필요</span>협의안 <code>ask</code> 를 어디에 실을지 — 새 칸 <code>review.items[].ask</code>(목업) / 이미 있는 질문 칸 <code>prefill.questions[]</code> 에 종류를 더하고 <code>actions</code>(정해진 값 셋)를 <code>options[]</code>(이름 · 이유 · 고르면 · 추천 · 요청)로 넓히기.</li>
+          <li><span class="tag" data-k="screen">화면만</span>멈춤 · 이어가기는 화면의 재생 조절(<code>use-reveal.ts</code>)이다. 서버가 검사하는 순서 · 내용은 그대로다.</li>
+        </ul>
+        <h4>프론트가 원인을 가르는 기준(지금 서버 값)</h4>
+        <p><code>rereads</code>(두 읽기) → <code>prefill.questions</code> 의 <code>place_not_found</code>(못 찾음) → <code>place_state</code>(<code>picked_nearest</code> 여러 곳 중 임시 · <code>needs_choice</code>/<code>needs_name</code> 이름 없는 줄) → 장소 줄 주의 + 근거 <code>evidence.method</code>(<code>typo</code> 오타 · <code>tried</code> 의 <code>alias:</code> 별칭 · 그 밖 원문과 다른 이름) → <code>closed</code>/<code>hours</code> 줄(휴무 · 운영시간) → 이동 <code>status</code>(늦게 닿음) 순.</p>
+      </section>
+
+      <section class="box">
+        <h3>조사 결과 — 「오후 13시~16시 정도」</h3>
+        <ol>
+          <li><b>규칙 읽기</b>가 이 줄을 <b>제목 「정도」 · 13:00~16:00 일정</b>으로 읽는다(「정도」(쯤)를 장소 이름으로 봄). <span class="tag" data-k="now">서버 코드 실행</span><code>rules.read_plan</code></li>
+          <li><b>장소 찾기</b>가 「정도」를 요식 원장 「정돈 대학로본점」과 <b>오타로 일치</b>시킨다(자모 거리 0.17 ≤ 기준 0.2). <span class="tag" data-k="now">서버 코드 실행</span><code>places.resolve</code> · 로컬 시험 DB(원장 1,888곳)</li>
+          <li>이해 에이전트가 이 줄을 「빈 시간」(<code>free_slot</code>)으로 읽어도, 빈칸 인용 안에 그 일정 제목이 들어 있으면 서버는 빈칸을 버린다(<code>prefill._item_for_quote</code>). 흔적은 <code>sources[].understanding.gaps</code>에만 남는다.</li>
+          <li>「식당 「정도」」는 만들 수 없는 선택지다 — 원장에 「정도」라는 가게가 없다. 두 판 모두 뺐다.</li>
+          <li>근본 원인은 「정도 · 쯤 · 경 · 즈음」 같은 말을 장소 이름으로 읽는 것이다 — 규칙 읽기에서 빼는 것은 서버 몫(협의).</li>
+        </ol>
+      </section>
+
+      <section class="box">
+        <h3>결정할 것</h3>
+        <ol>
+          <li><b>멈추는 기준</b> — 「확인 필요」 전부(✕ · !) / ✕ 만. 목업은 전부(등록 조건과 같음).</li>
+          <li><b>고르지 않고 넘어가기</b> — 막는다(목업 기본) / 「이대로 두고 다음으로」<span class="newTag">새 문구</span>(「건너뛰기 허용」 스위치) — 그 카드는 확인 필요로 남고 끝난 뒤 다시 고친다.</li>
+          <li><b>메뉴의 「애니메이션 건너뛰기」를 켠 사람</b> — 한 번에 다 그린 뒤 첫 「확인 필요」 카드로 옮겨 멈춘다(제안).</li>
+          <li><b>서버 확인이 화면보다 늦을 때</b> — 위 「협의 필요」 안 1 / 안 2.</li>
+          <li><b>어느 판으로</b> — 「지금 서버 값만」을 먼저 넣고 <code>ask</code> 는 서버 협의 뒤 / 처음부터 <code>ask</code>.</li>
+          <li><b>「빈 시간」 안</b> — 지금 판에서 「준비 중」으로 보일지 / 뺄지.</li>
+          <li><b>단추 이름</b> — 못 찾은 장소에서 지금 앱은 「직접 고르기」, 이 목업의 아래 단추는 팀 의견대로 「직접 수정」. 하나로.</li>
+          <li><b>후보 줄</b> — 앱의 못 찾은 장소 카드처럼 종류 · 주소 · 거리 / 이 목업처럼 서버 이유 문장(거리 · 운영시간 · 여유) + 앞뒤 이동 줄(<code>legs</code> — 31bc404d 「바꾸기」 화면과 같음). 이유 문장과 이동 줄의 여유가 겹치는 것을 그대로 둘지도.</li>
+          <li><s>「삭제」를 멈춘 카드 안에 둘지</s> — 두지 않는다(2026-10-20 결정 — 일정 추가 · 삭제는 등록 뒤 수정 모드에서만).</li>
+          <li><b>「나머지는 추천대로 두기」</b> — 멘토 피드백(먼저 고치고 넘어가기)과 부딪친다. 둘지, 협의안에서도 뺄지.</li>
+          <li><b>형식</b> — 카드 안(앞뒤 일정과 시각이 같이 보임) / 아래 시트(질문이 크게 보임, 목록은 위에 조금).</li>
+          <li><b>확정 전 카드 머리</b> — 원문 제목 + 「찾은 곳 「…」」 한 줄(목업) / 찾은 이름을 제목으로 + 「원문 「…」」.</li>
+          <li><b>시간 짐작도 멈춰 물을지</b> — 묻는다면 서버가 확인 필요로 올려야 한다(협의). 목업은 협의안 판에서만 묻는다.</li>
+        </ol>
+      </section>
+
+      <section class="box">
+        <h3>문구</h3>
+        <p><b>새로 지은 문구</b><span class="newTag">새 문구</span> — 「이 일정을 먼저 고쳐 주세요」 · 「이 일정이 맞는지 먼저 확인해 주세요」 · 「고치면(고르면) 다음 일정을 이어서 확인해요 · 남은 일정 n곳」 · 「고치면(고르면) 확인을 마쳐요」 · 「다음 일정을 이어서 확인해요」 · 「확인했어요」 · 「멈춤 · ○○」 · 「찾은 곳 「○○」」 · 「확인이 필요해요」 · 「고른 뒤에도 확인이 필요해요 · 다시 골라 주세요」 · 「아직 확인이 필요해요」 · 「이 카드에서 다시 골라 주세요」 · 질문 틀(「계획서의 「…」을 식당 「…」으로 찾았어요. 맞나요?」 · 「계획서의 「…」를 오타로 보고 「…」으로 찾았어요. 맞나요?」 · 「「…」은 … 쉬는 날이에요. 어떻게 할까요?」 · 「「…」은 맞는 곳이 n곳이라 가까운 「…」로 임시로 골랐어요. 어디로 갈까요?」) · 선택지 틀(「「…」 맞아요」 · 「「…」 그대로」 · 「「…」 그대로 찾기 · 식사 아님」 · 「「…」으로 바꾸기」 · 「「…」으로 정하기」) · 이유 틀(「계획서에는 「…」이라고 적혀 있어요」 · 「앞뒤 일정에서 평균 nm」 · 「계획서의 「…」를 빈 시간으로도 읽었어요」) · 고르면 틀(「「…」으로 확정하고 다시 확인해요」 · 「식사가 아닌 일정으로 「…」을 다시 찾고, 앞뒤 이동을 확인해요」 · 「그 시간대를 채워 달라는 요청이 아직 없어요」) · 「이유:」 · 「고르면:」 · 「추천」 · 「준비 중」 · 「직접 수정」 · 「나머지는 추천대로 두기」 · 「이대로 두고 다음으로」 · 「뒤 일정 확인이 끝나면 바로 저장해요」 · 「「…」 일정을 뺐어요」 · 「빈 시간에 2곳을 넣었어요」 · 「넣은 일정도 같이 확인했어요」. 협의안 판의 질문 · 선택지 · 이유 · 고르면은 서버가 보낼 문장의 예시다. 서버 문장 제안: 「확인한 곳이에요」 · 「「9시」을 오후로 봤어요 · 맞는지 확인해 주세요」.</p>
+        <p><b>앱 문구 그대로</b> — 단계(받았어요 · 일정 읽기 · 장소·운영시간 · 정리 완료) · 「계획을 받았어요.」 · 「계획을 확인하고 있어요」 · 「장소·운영시간 확인」 · 「장소 n/n · 이동 n/n」 · 「장소와 운영시간을 확인하고 있어요.」 · 「확인하는 중…」 · 「확인 필요」 · 「확인 필요 · ○○」 · 「위치 미정 · ○○」 · 「원문 「○○」」 · 「바뀜 · 이전 ○○」 · 「먼저 채움」 · 「삭제」 · 못 찾은 장소 카드(서버 질문 · 「후보를 찾는 중…」 · 「직접 고르기」 · 「장소 없이 두기」) · 「바뀐 장소와 앞뒤 이동을 다시 확인해요」 · 「앞뒤 이동은 장소가 정해지면 확인해요」 · 「○○ 일정은 장소 없이 두었어요」 · 「다시 확인하는 중…」 · 「다시 확인하는 중이에요 · 잠시만요」 · 「고친 내용을 다시 확인했어요」 · 「모두 확인했어요」 · 「확인을 마쳤어요. 장소 n곳 확인 필요.」 · 「계획 확인」 · 「계획 확인 화면이에요」 · 「일정을 수정하거나 권장 수정안을 확인해 주세요」 · 「아래로 스크롤하면 권장 수정안이 나와요」 · 「다시 제출」 · 「여행 등록」 · 「이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요」 · 후보 이동 줄(「○○에서 오는 길 · 지하철 n분」 · 「○○까지 가는 길 · 지하철 n분 · n분 여유」 · 「… n분 늦어요」 · 재는 중 「○○에서 오는 길 계산 중 · 어림 n분」) · 「추천 이유를 정리하고 있어요…」 · 「후보 준비가 늦을 때」는 목업 조작 단추(화면 문구 아님).</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ── 출처 꼬리표 — 화면의 줄마다 어디서 왔나 ───────────────────────────
+const SRC = {
+  raw: (path) => ({ kind: "raw", text: path }),
+  val: (path, value) => ({ kind: "val", text: value === undefined ? path : `${path} = ${JSON.stringify(value)}` }),
+  tpl: (note) => ({ kind: "tpl", text: note }),
+  app: (where) => ({ kind: "app", text: where }),
+  ex: (note) => ({ kind: "ex", text: note }),
+  ask: (path) => ({ kind: "ask", text: path }),
+};
+const KIND_LABEL = { raw: "서버 문장 그대로", val: "서버 값", tpl: "프론트 고정 문장", app: "앱 문구 그대로", ex: "예시 값", ask: "협의안 ask" };
+const APP_CHANGED = SRC.app("plan-check.tsx — 장소를 바꾼 뒤 알림의 둘째 줄");
+const APP_NO_PLACE = SRC.app("plan-check.tsx — 「장소 없이 두기」 뒤 알림의 둘째 줄");
+const CANDIDATE_EXAMPLE = SRC.ex("값은 서버 후보 이유 틀(candidates._reason: 고른 기준 · 거리 · 운영시간 · 다음 일정까지 여유)을 따른 예시");
+
+// ── 예시 계획 — 1일차 10.26(월) ───────────────────────────────────────
+const DAY = { label: "1일차", date: "10.26 월" };
+const LINES = ["10/26 09:30 경복궁 (11:00까지)", "11:20 광화문 근처 한식 점심", "오후 13시~16시 정도", "16:30 창덕궁 관람 (17:30까지)", "18:00 광장시장", "19:30 을지로 그 집", "9시 남산서울타워"];
+const KIND = { place: "장소", time: "시간", hours: "운영시간", closed: "휴무일" };
+const GLYPH = { ok: "✓", filled: "✎", warn: "!", bad: "✕", unknown: "–", pending: "" };
+const ICON = { activity: "⌖", dining: "🍴" };
+const END_FILLED = ["time", "filled", "끝 시각이 없어 60분으로 두었어요"];
+/** 장소마다 지도 위치(예시)와, 그 장소로 정한 뒤 다시 확인했을 때의 운영시간 · 휴무일 줄(예시 값 · 서버 문장 모양). */
+const PLACES = {
+  "경복궁": { pos: [24, 22] },
+  "두레에프엔씨": { pos: [27, 41], after: [["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"]] },
+  "광화문미진 본점": { pos: [30, 47], after: [["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "월요일은 열어요"]] },
+  "청진옥": { pos: [37, 40], after: [["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"]] },
+  "정돈 대학로본점": { pos: [90, 14], after: [["hours", "ok", "11:30–21:30 안에 머물러요"]] },
+  "서울공예박물관": { pos: [44, 20] },
+  "인사동 쌈지길": { pos: [46, 33] },
+  "창덕궁": { pos: [58, 15] },
+  "북촌한옥마을": { pos: [46, 9], after: [["hours", "ok", "10:00–17:00 안에 머물러요"], ["closed", "ok", "쉬는 요일이 없어요"]] },
+  "국립민속박물관": { pos: [31, 12], after: [["hours", "ok", "09:00–18:00 안에 머물러요"], ["closed", "ok", "쉬는 요일이 없어요"]] },
+  "순희네빈대떡": { pos: [74, 50], after: [["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "월요일은 열어요"]] },
+  "광장시장": { pos: [72, 46], after: [["hours", "unknown", "시장 안 점포마다 영업시간 · 쉬는 날이 달라요(한국관광공사)"]] },
+  "을지면옥": { pos: [56, 63], after: [["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "일요일 휴무 · 방문은 월요일"]] },
+  "을지로 칼국수": { pos: [62, 67], after: [["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"]] },
+  "남산서울타워": { pos: [40, 86] },
+};
+// rows = 지금 서버가 보내는 검사 줄, rowsAsk = 협의안 판에서만 다른 줄
+const STOPS = [
+  { id: "a", start: "09:30", end: "11:00", title: "경복궁", kind: "activity", place: "경복궁",
+    rows: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "ok", "09:00–18:00 안에 머물러요"], ["closed", "ok", "화요일 휴무 · 방문은 월요일"]] },
+  { id: "b", start: "11:20", end: "12:20", title: "광화문 근처 한식", kind: "dining", place: "두레에프엔씨", q: "q4",
+    rows: [["place", "warn", "이름이 여러 곳이라 가까운 「두레에프엔씨」으로 임시로 골랐어요 · 다르면 바꿔 주세요"], END_FILLED, ["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"], ["closed", "unknown", "휴무 정보가 없어요"]] },
+  { id: "c", start: "13:00", end: "16:00", title: "정도", kind: "dining", place: "정돈 대학로본점", q: "q2",
+    rows: [["place", "warn", "오타로 보고 「정돈 대학로본점」로 고쳐 찾았어요 · 맞는지 확인해 주세요"], ["hours", "ok", "11:30–21:30 안에 머물러요"]] },
+  { id: "d", start: "16:30", end: "17:30", title: "창덕궁 관람", kind: "activity", place: "창덕궁", q: "q3",
+    rows: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "unknown", "쉬는 날이라 운영하지 않아요"], ["closed", "bad", "월요일은 쉬는 날이에요 · 방문일이 휴무예요 · 후원은 따로 예약해야 들어갈 수 있어요"]] },
+  { id: "e", start: "18:00", end: "19:00", title: "광장시장", kind: "dining", place: "순희네빈대떡", q: "q1",
+    rows: [["place", "warn", "우리 식당 목록 정보로 「순희네빈대떡」을 찾았어요 · 맞는지 확인해 주세요"], END_FILLED, ["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "월요일은 열어요"]] },
+  { id: "f", start: "19:30", end: "20:30", title: "을지로 그 집", kind: "dining", place: "", q: "q5",
+    rows: [["place", "bad", "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요"], END_FILLED] },
+  { id: "g", start: "21:00", end: "22:30", title: "남산서울타워", kind: "activity", place: "남산서울타워", q: "q6",
+    rows: [["place", "ok", "관광공사 정보로 찾았어요"], ["time", "filled", "「9시」을 오후로 봤어요 — 다르면 고쳐 주세요"], ["hours", "ok", "10:30–22:30 안에 머물러요"]],
+    rowsAsk: [["place", "ok", "관광공사 정보로 찾았어요"], ["time", "warn", "「9시」을 오후로 봤어요 · 맞는지 확인해 주세요"], ["hours", "ok", "10:30–22:30 안에 머물러요"]] },
+];
+
+// ── 질문 — 확인 필요 일정마다 ────────────────────────────────────────
+//   need: confirm(애매함 — 맞는지 고르기) · fix(문제 — 고치기). 멈춤 띠의 말이 달라진다.
+//   now: 지금 서버 값으로 프론트가 만드는 질문 · 선택지(null 이면 지금 판에서는 멈추지 않음). 줄마다 { text, src }.
+//        이유는 조각 배열(dup: 바로 위 검사 줄과 같은 말 → 카드 안 형식에서 숨김). 서버 값이 없으면 빈 배열.
+//        act = 고르면 목업의 일정을 어떻게 바꾸나(confirm 지금 장소 확정 · pick 후보로 · refind 이름으로 다시 찾기 · noplace · fill 빈 시간 채우기 · time 시각).
+//   ask: 서버 협의안 — 서버가 보낼 ask 를 그대로 그린다(acts = 선택지 key 별로 목업 일정을 바꾸는 법).
+//   prep: 후보(GET …/candidates)를 어떻게 받나(31bc404d) — ready 접수 뒤 미리 준비한 저장분 · compute 카카오 후보라 미리 준비하지 않고 누를 때 계산.
+const QUESTIONS = [
+  { id: "q4", stop: "b", chip: "광화문 근처 한식", need: "confirm", prep: "compute",
+    source: "<b>실서버 기록</b> — 오라클 2026-10-12 <code>program/scripts/plan_qa_bench/results/arm_search_repair_20261012/live_intake_v1.json</code>(같은 줄 「12:00~13:00 광화문 근처 한식 점심」의 실제 응답 · 후보 10곳 이름 그대로). 목업은 시각만 11:20 으로 옮겼다. 후보 조회 응답은 기록에 없어 후보 이유는 예시. <b>31bc404d</b>: 카카오에서 온 후보라 서버가 미리 준비하지 않는다(약관상 저장 안 함) — 멈출 때 계산해 실시간으로 어림 카드 → 잰 이동 줄 → 이유 문장 순서로 온다(<code>prepared: null</code>).",
+    now: {
+      rules: ["<code>status</code> = review → 멈춰 묻는다", "<code>place_state</code> = <b>picked_nearest</b> → 「여러 곳 중 임시로 고른 곳 — 어디로 갈까요?」",
+              "선택지 = 지금 값 + 후보 조회 상위 2곳(이름은 근거 <code>evidence.chosen_from</code> 에도 있다). 지금 값의 이유 = <code>evidence.mean_distance_m</code>"],
+      server: {
+        "review.items[1]": { title: "광화문 근처 한식", kind: "dining", status: "review", place_state: "picked_nearest", candidates_hint: 10, can_lock: false,
+          place: { name: "두레에프엔씨", source: "kakao" },
+          rows: [{ row: "place", result: "warn", text: "이름이 여러 곳이라 가까운 「두레에프엔씨」으로 임시로 골랐어요 · 다르면 바꿔 주세요" },
+                 { row: "hours", result: "unknown", text: "카카오 지도 정보에는 운영시간이 없어요" }, { row: "closed", result: "unknown", text: "휴무 정보가 없어요" }] },
+        "sources[0].items[1].fields.place": { method: "lookup", needs_review: true,
+          evidence: { method: "kakao_nearest", neighbours: 2, mean_distance_m: 381,
+            chosen_from: ["무교동북어국집", "광화문미진 본점", "광화문국밥 본점", "종로도담", "청진옥", "두레에프엔씨", "홈코리안퀴진", "사간원", "꽃누리들밥 경복궁점", "황생가칼국수"] } },
+        "GET …/candidates?item=0-1 → candidates (예시 값)": [
+          { rank: 1, place: { name: "광화문미진 본점" }, distance_m: 290, reason_by: "template", reason: "두레에프엔씨에서 290m · 11:00–21:00 안에 머물러요 · 다음 일정까지 25분 여유가 있어요" },
+          { rank: 2, place: { name: "청진옥" }, distance_m: 380, reason_by: "template", reason: "두레에프엔씨에서 380m · 영업시간은 확인하지 못했어요 · 다음 일정까지 25분 여유가 있어요" }] },
+      question: { text: "<q>광화문 근처 한식</q>은 맞는 곳이 10곳이라 가까운 「두레에프엔씨」로 임시로 골랐어요. 어디로 갈까요?",
+        src: [SRC.tpl("질문 틀 — 원인 「여러 곳 중 임시」(place_state = picked_nearest)"), SRC.val("review.items[1].title", "광화문 근처 한식"), SRC.val("review.items[1].candidates_hint", 10), SRC.val("review.items[1].place.name", "두레에프엔씨")] },
+      options: [
+        { label: { text: "「두레에프엔씨」 그대로", src: [SRC.tpl("「{지금 이름}」 그대로"), SRC.val("review.items[1].place.name")] },
+          reason: [{ text: "앞뒤 일정에서 평균 381m", src: [SRC.tpl("앞뒤 일정에서 평균 {m}m"), SRC.val("sources[0].items[1].fields.place.evidence.mean_distance_m", 381)] },
+                   { text: "카카오 지도 정보에는 운영시간이 없어요", dup: true, src: [SRC.raw("review.items[1].rows[2].text")] }],
+          effect: { text: "「두레에프엔씨」로 확정하고 다시 확인해요", src: [SRC.tpl("「{지금 이름}」(으)로 확정하고 다시 확인해요"), SRC.val("review.items[1].place.name")] },
+          call: "POST …/edits — items[1].place = 지금 장소 그대로(고른 장소)", act: { type: "confirm" } },
+        { label: { text: "「광화문미진 본점」으로 바꾸기", src: [SRC.tpl("「{후보}」(으)로 바꾸기"), SRC.val("candidates[0].place.name", "광화문미진 본점"), SRC.val("evidence.chosen_from[1]", "광화문미진 본점")] },
+          reason: [{ text: "두레에프엔씨에서 290m · 11:00–21:00 안에 머물러요 · 다음 일정까지 25분 여유가 있어요", src: [SRC.raw("candidates[0].reason"), CANDIDATE_EXAMPLE] }],
+          effect: { text: "바뀐 장소와 앞뒤 이동을 다시 확인해요", src: [APP_CHANGED] },
+          call: "POST …/edits — items[1].place = 후보 {name, latitude, longitude, source}", act: { type: "pick", name: "광화문미진 본점" } },
+        { label: { text: "「청진옥」으로 바꾸기", src: [SRC.tpl("「{후보}」(으)로 바꾸기"), SRC.val("candidates[1].place.name", "청진옥"), SRC.val("evidence.chosen_from[4]", "청진옥")] },
+          reason: [{ text: "두레에프엔씨에서 380m · 영업시간은 확인하지 못했어요 · 다음 일정까지 25분 여유가 있어요", src: [SRC.raw("candidates[1].reason"), CANDIDATE_EXAMPLE] }],
+          effect: { text: "바뀐 장소와 앞뒤 이동을 다시 확인해요", src: [APP_CHANGED] },
+          call: "POST …/edits — items[1].place = 후보", act: { type: "pick", name: "청진옥" } },
+      ] },
+    ask: {
+      json: { item: "0-1", kind: "which_place", question: "「광화문 근처 한식」은 어디로 갈까요?", quote: "11:20 광화문 근처 한식 점심",
+        options: [
+          { key: "known_hours", label: "「광화문미진 본점」", reason: "운영시간을 아는 곳 중 앞뒤 일정에서 가장 가까워요", effect: "이 식당으로 넣고 영업 · 거리를 확인해요", recommended: true, action: { edits: [{ field: "items[1].place", value: "후보" }] } },
+          { key: "nearest", label: "「두레에프엔씨」(가장 가까운 곳)", reason: "앞뒤 일정에서 평균 381m · 운영시간을 몰라요", effect: "이 식당으로 확정해요", action: { edits: [{ field: "items[1].place", value: "지금 장소 그대로" }] } },
+          { key: "other", label: "「청진옥」", reason: "두레에프엔씨에서 380m · 운영시간을 몰라요", effect: "이 식당으로 넣고 영업 · 거리를 확인해요", action: { edits: [{ field: "items[1].place", value: "후보" }] } }] },
+      question: "<q>광화문 근처 한식</q>은 어디로 갈까요?",
+      acts: { known_hours: { type: "pick", name: "광화문미진 본점" }, nearest: { type: "confirm" }, other: { type: "pick", name: "청진옥" } } } },
+
+  { id: "q2", stop: "c", chip: "정도", need: "confirm",
+    source: "서버 코드로 재현(2026-10-19) — 규칙 읽기 <code>rules.read_plan(\"오후 13시~16시 정도\")</code> · 장소 찾기 <code>places.resolve(\"정도\")</code> 를 로컬 시험 DB(요식 원장 1,888곳)로 실행. 검사 줄 문장은 그 결과에 서버 문장 규칙(review.py)을 적용한 것. <code>understanding.gaps</code> 는 이해 에이전트를 썼을 때의 예시.",
+    now: {
+      rules: ["<code>status</code> = review → 멈춰 묻는다", "장소 줄 = warn + 근거 <code>evidence.method</code> = <b>typo</b> → 「오타로 고친 곳 — 맞나요?」(질문의 원문은 <code>evidence.query</code> — 찾을 때 쓴 말)",
+              "원문 그대로 찾기는 넣지 않는다 — 원문(정도)으로는 못 찾아서 오타로 고친 것이다",
+              "<code>understanding.gaps</code> 에 같은 시간대 <code>free_slot</code> 이 있으면 「빈 시간」 안을 보이되 <b>준비 중</b> — 그 시간대를 채워 달라는 웹 요청이 없다"],
+      server: {
+        "review.items[2]": { title: "정도", kind: "dining", status: "review", place_state: "found", place: { name: "정돈 대학로본점", kind: "dining", source: "places" },
+          rows: [{ row: "place", result: "warn", text: "오타로 보고 「정돈 대학로본점」로 고쳐 찾았어요 · 맞는지 확인해 주세요" }, { row: "hours", result: "ok", text: "11:30–21:30 안에 머물러요" }] },
+        "sources[0].items[2].fields": { title: { value: "정도", method: "rule", needs_review: false },
+          place: { method: "lookup", needs_review: true, note: "오타로 보고 「정돈 대학로본점」로 고쳤다(자모 거리 비율 0.17)",
+            evidence: { method: "typo", source: "places", query: "정도", tried: ["places:정도"] } } },
+        "sources[0].understanding.gaps (에이전트를 썼을 때 · 예시)": [{ kind: "free_slot", start: "13:00", end: "16:00", quote: "오후 13시~16시 정도" }] },
+      question: { text: "계획서의 <q>정도</q>를 오타로 보고 「정돈 대학로본점」으로 찾았어요. 맞나요?",
+        src: [SRC.tpl("질문 틀 — 원인 「오타로 고침」"), SRC.val("sources[0].items[2].fields.place.evidence.query", "정도"), SRC.val("sources[0].items[2].fields.place.evidence.method", "typo"), SRC.val("review.items[2].place.name", "정돈 대학로본점")] },
+      options: [
+        { label: { text: "「정돈 대학로본점」 맞아요", src: [SRC.tpl("「{찾은 이름}」 맞아요"), SRC.val("review.items[2].place.name")] },
+          reason: [{ text: "오타로 보고 「정돈 대학로본점」로 고쳐 찾았어요 · 맞는지 확인해 주세요", dup: true, src: [SRC.raw("review.items[2].rows[0].text")] }],
+          effect: { text: "「정돈 대학로본점」으로 확정하고 다시 확인해요", src: [SRC.tpl("「{찾은 이름}」(으)로 확정하고 다시 확인해요"), SRC.val("review.items[2].place.name")] },
+          call: "POST …/edits — items[2].place = 지금 장소 그대로(고른 장소)", act: { type: "confirm" } },
+        { label: { text: "13~16시 빈 시간 — 추천 받기", src: [SRC.tpl("{시작}~{끝}시 빈 시간 — 추천 받기"), SRC.val("sources[0].understanding.gaps[0].start · end", "13:00–16:00"), SRC.ex("에이전트가 빈칸으로 읽었을 때만 있는 값")] },
+          reason: [{ text: "계획서의 「오후 13시~16시 정도」를 빈 시간으로도 읽었어요", src: [SRC.tpl("계획서의 「{인용}」를 빈 시간으로도 읽었어요"), SRC.val("sources[0].understanding.gaps[0].quote"), SRC.ex("예시")] }],
+          effect: { text: "그 시간대를 채워 달라는 요청이 아직 없어요", src: [SRC.tpl("준비 중 — 보낼 요청이 없다")] },
+          disabled: true, call: "요청 없음 — 서버 협의(「빈 시간 채우기」)" },
+      ] },
+    ask: {
+      json: { item: "0-2", kind: "line_meaning", question: "계획서의 「오후 13시~16시 정도」를 어떻게 이해할까요?", quote: "오후 13시~16시 정도",
+        options: [
+          { key: "free_slot", label: "13~16시 빈 시간", reason: "「정도」는 '쯤'이라는 말이고, 가게 이름이 적혀 있지 않아요", effect: "추천 일정을 넣어 보여 줘요(최대 3곳)", recommended: true,
+            action: { type: "fill_slot", day: 1, start: "13:00", end: "16:00", remove: "items[2]" } },
+          { key: "typo", label: "「정돈 대학로본점」(오타로 볼 때)", reason: "「정도」를 오타로 보고 고쳐 찾은 곳이에요", effect: "대학로 식당으로 넣고 이동을 확인해요",
+            action: { edits: [{ field: "items[2].place", value: "지금 장소 그대로(고른 장소)" }] } }],
+        dropped: "「식당 「정도」」 — 원장에 같은 이름 가게가 없어 선택지로 내지 않는다" },
+      question: "계획서의 <q>오후 13시~16시 정도</q>를 어떻게 이해할까요?",
+      acts: { free_slot: { type: "fill" }, typo: { type: "confirm" } } } },
+
+  { id: "q3", stop: "d", chip: "창덕궁", need: "fix", prep: "ready",
+    source: "서버 검사 줄 · 후보 조회 모양(<code>GET …/candidates</code> — 오라클 기록 10-12 의 응답 모양) · 값은 예시. 사실 문제(휴무)라 두 판의 차이는 「추천」 표시뿐이다. 검사 줄은 서버 문장 틀(<code>review.py</code>) — 방문일 휴무는 「{요일}요일은 쉬는 날이에요 · 방문일이 휴무예요」, 운영시간은 「쉬는 날이라 운영하지 않아요」. <b>31bc404d</b> 부터 대표 장소 표의 방문 안내(「후원은 따로 예약해야 들어갈 수 있어요」)가 휴무 줄 뒤에 붙는다 — 전에는 휴무 조건이라 휴무가 아닌 날에도 「휴무·운영 조건을 확인해 주세요」로 확인 필요였다(<code>784a0fc6</code>). 후보는 접수 뒤 미리 준비한 저장분(<code>prepared</code>).",
+    now: {
+      rules: ["<code>status</code> = review → 멈춰 고친다", "검사 줄 <code>closed</code> = bad → 「쉬는 날이에요 — 어떻게 할까요?」",
+              "선택지 = 후보 조회 상위 2곳(<code>candidates[].place.name</code>), 이유 = 후보의 <code>reason</code> 그대로, <code>fits: true</code> 만"],
+      server: {
+        "review.items[3]": { title: "창덕궁 관람", date: "2026-10-26", status: "review", place_state: "found", place: { name: "창덕궁", source: "tour_api" },
+          rows: [{ row: "place", result: "ok", text: "관광공사 정보로 찾았어요" }, { row: "hours", result: "unknown", text: "쉬는 날이라 운영하지 않아요" },
+                 { row: "closed", result: "bad", text: "월요일은 쉬는 날이에요 · 방문일이 휴무예요 · 후원은 따로 예약해야 들어갈 수 있어요" }] },
+        "GET …/candidates?item=0-3 → candidates (예시 값)": [
+          { rank: 1, place: { name: "북촌한옥마을" }, distance_m: 600, fits: true, basis: "same_kind", reason_by: "template",
+            reason: "창덕궁과 같은 중분류(관광공사 분류)의 곳이에요 · 창덕궁에서 600m · 10:00–17:00 안에 머물러요 · 다음 일정까지 15분 여유가 있어요" },
+          { rank: 2, place: { name: "국립민속박물관" }, distance_m: 1400, fits: true, basis: "same_kind", reason_by: "template",
+            reason: "창덕궁과 같은 중분류(관광공사 분류)의 곳이에요 · 창덕궁에서 1400m · 09:00–18:00 안에 머물러요 · 다음 일정까지 13분 여유가 있어요" }] },
+      question: { text: "<q>창덕궁 관람</q>은 10.26(월) 쉬는 날이에요. 어떻게 할까요?",
+        src: [SRC.tpl("질문 틀 — 원인 「휴무」(rows 의 closed = bad)"), SRC.val("review.items[3].title", "창덕궁 관람"), SRC.val("review.items[3].date", "2026-10-26")] },
+      options: [
+        { label: { text: "「북촌한옥마을」로 바꾸기", src: [SRC.tpl("「{후보}」(으)로 바꾸기"), SRC.val("candidates[0].place.name", "북촌한옥마을"), CANDIDATE_EXAMPLE] },
+          reason: [{ text: "창덕궁과 같은 중분류(관광공사 분류)의 곳이에요 · 창덕궁에서 600m · 10:00–17:00 안에 머물러요 · 다음 일정까지 15분 여유가 있어요", src: [SRC.raw("candidates[0].reason"), CANDIDATE_EXAMPLE] }],
+          effect: { text: "바뀐 장소와 앞뒤 이동을 다시 확인해요", src: [APP_CHANGED] },
+          call: "POST …/edits — items[3].place = 후보 {name, latitude, longitude, source}", act: { type: "pick", name: "북촌한옥마을" } },
+        { label: { text: "「국립민속박물관」으로 바꾸기", src: [SRC.tpl("「{후보}」(으)로 바꾸기"), SRC.val("candidates[1].place.name", "국립민속박물관"), CANDIDATE_EXAMPLE] },
+          reason: [{ text: "창덕궁과 같은 중분류(관광공사 분류)의 곳이에요 · 창덕궁에서 1400m · 09:00–18:00 안에 머물러요 · 다음 일정까지 13분 여유가 있어요", src: [SRC.raw("candidates[1].reason"), CANDIDATE_EXAMPLE] }],
+          effect: { text: "바뀐 장소와 앞뒤 이동을 다시 확인해요", src: [APP_CHANGED] },
+          call: "POST …/edits — items[3].place = 후보", act: { type: "pick", name: "국립민속박물관" } },
+      ] },
+    ask: {
+      json: { item: "0-3", kind: "closed_day", question: "「창덕궁 관람」은 10.26(월) 쉬는 날이에요. 어떻게 할까요?", quote: "16:30 창덕궁 관람 (17:30까지)",
+        options: [
+          { key: "alt1", label: "「북촌한옥마을」로 바꾸기", reason: "창덕궁에서 600m · 다음 일정까지 15분 여유가 있어요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", recommended: true, action: { edits: [{ field: "items[3].place", value: "후보 1" }] } },
+          { key: "alt2", label: "「국립민속박물관」으로 바꾸기", reason: "창덕궁에서 1400m · 09:00–18:00 안에 머물러요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", action: { edits: [{ field: "items[3].place", value: "후보 2" }] } }] },
+      question: "<q>창덕궁 관람</q>은 10.26(월) 쉬는 날이에요. 어떻게 할까요?",
+      acts: { alt1: { type: "pick", name: "북촌한옥마을" }, alt2: { type: "pick", name: "국립민속박물관" } } } },
+
+  { id: "q1", stop: "e", chip: "광장시장", need: "confirm",
+    source: "오라클 화면(2026-10-19 사용자 사진 — 지금 develop 판 서버)의 검사 줄. 근거 칸(evidence)은 서버 코드(places._from_tour)로 짐작한 모양. role-manager 판은 대표 장소 정답표로 「광장시장」을 시장(구역) 그대로 둬 이 질문이 안 생긴다(7c255f38) — 같은 이름 지점 · 별칭 · 오타 · 임시 고르기는 계속 생긴다.",
+    now: {
+      rules: ["<code>status</code> = review → 멈춰 묻는다", "장소 줄 <code>result</code> = warn → 장소 확인", "근거 <code>evidence.method</code> = dining_ledger 이고 찾은 이름(순희네빈대떡) ≠ 원문(광장시장) → 「찾은 곳이 원문과 달라요 — 맞나요?」",
+              "선택지: 지금 값 확정 · 원문 그대로 찾기(오타가 아니므로 원문으로 찾을 수 있다)"],
+      server: {
+        "review.items[4]": { title: "광장시장", kind: "dining", status: "review", place_state: "found", place: { name: "순희네빈대떡", kind: "dining", source: "dining_ledger" },
+          rows: [{ row: "place", result: "warn", text: "우리 식당 목록 정보로 「순희네빈대떡」을 찾았어요 · 맞는지 확인해 주세요" },
+                 { row: "time", result: "filled", text: "끝 시각이 없어 60분으로 두었어요" }, { row: "hours", result: "ok", text: "11:00–21:00 안에 머물러요" }] },
+        "sources[0].items[4].fields.place": { method: "lookup", needs_review: true, evidence: { method: "dining_ledger", source: "dining_ledger", query: "광장시장", name: "순희네빈대떡" } } },
+      question: { text: "계획서의 <q>광장시장</q>을 식당 「순희네빈대떡」으로 찾았어요. 맞나요?",
+        src: [SRC.tpl("질문 틀 — 원인 「찾은 곳이 원문과 다름」"), SRC.val("review.items[4].title", "광장시장"), SRC.val("review.items[4].place.kind", "dining"), SRC.val("review.items[4].place.name", "순희네빈대떡")] },
+      options: [
+        { label: { text: "「순희네빈대떡」 맞아요", src: [SRC.tpl("「{찾은 이름}」 맞아요"), SRC.val("review.items[4].place.name")] },
+          reason: [{ text: "우리 식당 목록 정보로 「순희네빈대떡」을 찾았어요 · 맞는지 확인해 주세요", dup: true, src: [SRC.raw("review.items[4].rows[0].text")] }],
+          effect: { text: "「순희네빈대떡」으로 확정하고 다시 확인해요", src: [SRC.tpl("「{찾은 이름}」(으)로 확정하고 다시 확인해요"), SRC.val("review.items[4].place.name")] },
+          call: "POST …/edits — items[4].place = 지금 장소 그대로 {name, latitude, longitude, source} (고른 장소로 받아 확인 필요가 풀린다)", act: { type: "confirm" } },
+        { label: { text: "「광장시장」 그대로 찾기 · 식사 아님", src: [SRC.tpl("「{원문}」 그대로 찾기 · 식사 아님"), SRC.val("review.items[4].title")] },
+          reason: [{ text: "계획서에는 「광장시장」이라고 적혀 있어요", src: [SRC.tpl("계획서에는 「{원문}」(이)라고 적혀 있어요 — 원문 인용"), SRC.val("review.items[4].title")] }],
+          effect: { text: "식사가 아닌 일정으로 「광장시장」을 다시 찾고, 앞뒤 이동을 확인해요", src: [SRC.tpl("식사가 아닌 일정으로 「{원문}」을 다시 찾고, 앞뒤 이동을 확인해요"), SRC.val("review.items[4].title")] },
+          call: "POST …/edits — items[4].kind = activity + items[4].place = {name: \"광장시장\"} (한 요청)", act: { type: "refind", name: "광장시장", kind: "activity" } },
+      ] },
+    ask: {
+      json: { item: "0-4", kind: "place_meaning", question: "계획서의 「광장시장」을 어떻게 이해할까요?", quote: "18:00 광장시장",
+        options: [
+          { key: "zone", label: "광장시장 구경", reason: "가게 이름 없이 「광장시장」만 적혀 있어요", effect: "시장을 일정으로 넣고, 안의 가게는 그때 골라요", recommended: true,
+            action: { edits: [{ field: "items[4].kind", value: "activity" }, { field: "items[4].place", value: { name: "광장시장" } }] } },
+          { key: "ledger", label: "「순희네빈대떡」에서 식사", reason: "저녁 시간(18:00)이에요", effect: "식당으로 넣고 영업 · 거리를 확인해요",
+            action: { edits: [{ field: "items[4].place", value: "지금 장소 그대로(고른 장소)" }] } }] },
+      question: "계획서의 <q>18:00 광장시장</q>을 어떻게 이해할까요?",
+      acts: { zone: { type: "refind", name: "광장시장", kind: "activity" }, ledger: { type: "confirm" } } } },
+
+  { id: "q5", stop: "f", chip: "을지로 그 집", need: "fix", prep: "ready",
+    source: "서버 코드 모양(2026-10-19 「못 찾은 장소 — 후보 보이고 묻기」 결정 · <code>prefill.py</code>) · 값은 예시. <b>서버가 이미 질문 · 동작을 정해 보내는 경우</b>다 — 지금 앱(<code>unfound-place.tsx</code>, <code>3a330f0e</code>)은 이 질문을 검사가 끝난 뒤 카드 안에 그린다(role-manager · role-eval-ui 에 있고 develop 에는 아직 없음).",
+    now: {
+      rules: ["<code>status</code> = review → 멈춰 고친다", "<code>prefill.questions[]</code> 의 <code>kind</code> = <b>place_not_found</b> 이고 <code>item</code> 이 이 일정 → <b>서버 질문 문장 그대로</b>(앱과 같다)",
+              "선택지 = 서버 <code>actions</code>(pick_candidate · pick_myself · no_place) — 후보는 <code>GET …/candidates</code>, no_place 는 「장소 없이 두기」, pick_myself 는 아래 「직접 수정」(지금 앱 이름은 「직접 고르기」 — 결정할 것 7)"],
+      server: {
+        "review.items[5]": { title: "을지로 그 집", status: "review", place_state: "unresolved", place: null,
+          rows: [{ row: "place", result: "bad", text: "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요" }, { row: "time", result: "filled", text: "끝 시각이 없어 60분으로 두었어요" }] },
+        "prefill.questions[0]": { kind: "place_not_found", question: "「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요",
+          item: "0-5", source_id: "…", index: 5, mode: "change", actions: ["pick_candidate", "pick_myself", "no_place"], blocked: false },
+        "GET …/candidates?item=0-5 → candidates (예시 값)": [
+          { rank: 1, place: { name: "을지면옥" }, distance_m: 900, reason_by: "template", reason: "광장시장에서 900m · 11:00–21:00 안에 머물러요" },
+          { rank: 2, place: { name: "을지로 칼국수" }, distance_m: 1100, reason_by: "template", reason: "광장시장에서 1100m · 영업시간은 확인하지 못했어요" }] },
+      question: { text: "「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요",
+        src: [SRC.raw("prefill.questions[0].question")] },
+      options: [
+        { label: { text: "「을지면옥」으로 정하기", src: [SRC.tpl("「{후보}」(으)로 정하기"), SRC.val("candidates[0].place.name", "을지면옥"), CANDIDATE_EXAMPLE] },
+          reason: [{ text: "광장시장에서 900m · 11:00–21:00 안에 머물러요", src: [SRC.raw("candidates[0].reason"), CANDIDATE_EXAMPLE] }],
+          effect: { text: "바뀐 장소와 앞뒤 이동을 다시 확인해요", src: [APP_CHANGED] },
+          call: "POST …/edits — items[5].place = 후보", act: { type: "pick", name: "을지면옥" } },
+        { label: { text: "「을지로 칼국수」로 정하기", src: [SRC.tpl("「{후보}」(으)로 정하기"), SRC.val("candidates[1].place.name", "을지로 칼국수"), CANDIDATE_EXAMPLE] },
+          reason: [{ text: "광장시장에서 1100m · 영업시간은 확인하지 못했어요", src: [SRC.raw("candidates[1].reason"), CANDIDATE_EXAMPLE] }],
+          effect: { text: "바뀐 장소와 앞뒤 이동을 다시 확인해요", src: [APP_CHANGED] },
+          call: "POST …/edits — items[5].place = 후보", act: { type: "pick", name: "을지로 칼국수" } },
+        { label: { text: "장소 없이 두기", src: [SRC.app("unfound-place.tsx — 못 찾은 장소 카드의 단추"), SRC.val("prefill.questions[0].actions", "no_place")] },
+          reason: [],
+          effect: { text: "앞뒤 이동은 장소가 정해지면 확인해요", src: [APP_NO_PLACE] },
+          call: "POST …/edits — items[5].place = {none: true}", act: { type: "noplace" } },
+      ] },
+    ask: {
+      json: { item: "0-5", kind: "place_not_found", question: "「을지로 그 집」을 지도에서 찾지 못했어요. 어디로 갈까요?", quote: "19:30 을지로 그 집",
+        options: [
+          { key: "c1", label: "「을지면옥」", reason: "광장시장에서 900m · 11:00–21:00 안에 머물러요", effect: "이 식당으로 넣고 영업 · 거리를 확인해요", recommended: true, action: { edits: [{ field: "items[5].place", value: "후보 1" }] } },
+          { key: "c2", label: "「을지로 칼국수」", reason: "광장시장에서 1100m · 운영시간을 몰라요", effect: "이 식당으로 넣고 영업 · 거리를 확인해요", action: { edits: [{ field: "items[5].place", value: "후보 2" }] } },
+          { key: "none", label: "장소 없이 두기", reason: "가게를 아직 정하지 않았을 때", effect: "운영시간과 이동은 확인하지 않아요", action: { edits: [{ field: "items[5].place", value: { none: true } }] } }] },
+      question: "<q>을지로 그 집</q>을 지도에서 찾지 못했어요. 어디로 갈까요?",
+      acts: { c1: { type: "pick", name: "을지면옥" }, c2: { type: "pick", name: "을지로 칼국수" }, none: { type: "noplace" } } } },
+
+  { id: "q6", stop: "g", chip: "남산 9시", need: "confirm",
+    source: "서버 문장(<code>pipeline.py</code> — 시각을 짐작한 줄의 note 「「…」을 오후로 봤어요 — 다르면 고쳐 주세요」). 지금은 ✎(채움)로 와서 확인 필요가 아니다 — <b>지금 판은 이 카드에서 멈추지 않는다</b>. 협의안은 이 줄을 확인 필요로 올리고 오후 · 오전을 묻는다(문장 · 선택지는 예시).",
+    now: null,
+    nowNote: { rules: ["시간 줄 <code>result</code> = filled(✎) → 확인 필요가 아님 → 멈추지 않는다", "고치려면 결과 화면에서 카드 왼쪽 시각을 눌러 고친다(지금 앱)"],
+      server: { "review.items[6]": { title: "남산서울타워", status: "keep", place_state: "found",
+        rows: [{ row: "place", result: "ok", text: "관광공사 정보로 찾았어요" }, { row: "time", result: "filled", text: "「9시」을 오후로 봤어요 — 다르면 고쳐 주세요" }, { row: "hours", result: "ok", text: "10:30–22:30 안에 머물러요" }] } } },
+    ask: {
+      json: { item: "0-6", kind: "time_guess", question: "계획서의 「9시」를 몇 시로 볼까요?", quote: "9시 남산서울타워",
+        options: [
+          { key: "pm", label: "오후 9시(21:00)", reason: "앞 일정이 20:30에 끝나요", effect: "21:00으로 확정하고 다시 확인해요", recommended: true, action: { edits: [{ field: "items[6].starts_at", value: "21:00" }] } },
+          { key: "am", label: "오전 9시(09:00)", reason: "남산서울타워는 10:30에 열어요", effect: "09:00으로 옮기고 다시 확인해요", action: { edits: [{ field: "items[6].starts_at", value: "09:00" }] } }] },
+      question: "계획서의 <q>9시</q>를 몇 시로 볼까요?",
+      acts: { pm: { type: "time", start: "21:00", hours: "ok" }, am: { type: "time", start: "09:00", hours: "warn" } } } },
+];
+const QUESTION_OF = Object.fromEntries(QUESTIONS.map((q) => [q.stop, q]));
+
+// ── 상태 ────────────────────────────────────────────────────────────
+let mode = "new", version = "now", layout = "card", speed = 1, allowSkip = false, lateServer = false, slowPrep = false, runId = 0, waiter = null;
+let state;
+const $ = (id) => document.getElementById(id);
+const list = $("list"), pins = $("pins");
+class Cancelled extends Error {}
+const sleep = (ms) => { const id = runId; const wait = state?.ff ? 0 : ms / speed; return new Promise((ok, no) => setTimeout(() => id === runId ? ok() : no(new Cancelled()), wait)); };
+const userPick = () => new Promise((ok, no) => { waiter = { ok, no }; });
+const esc = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const NEW = `<span class="newTag">새 문구</span>`;
+const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const fromMin = (n) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+const span = (n) => n >= 60 ? `${Math.floor(n / 60)}시간${n % 60 ? ` ${n % 60}분` : ""}` : `${n}분`;
+const quoteHtml = (text) => text.replace(/<q>(.*?)<\/q>/g, (_, inner) => `<mark>${esc(inner)}</mark>`);
+const plain = (text) => text.replace(/<\/?q>/g, "");
+const seenKeys = new Set();
+const enter = (key) => { if (seenKeys.has(key)) return ""; seenKeys.add(key); return " data-enter"; };
+const stopOf = (id) => STOPS.find((stop) => stop.id === id);
+const rowsOf = (stop) => mode === "new" && version === "ask" && stop.rowsAsk ? stop.rowsAsk : stop.rows;
+
+function freshState(jump = null) {
+  const items = {};
+  for (const stop of STOPS) items[stop.id] = { id: stop.id, title: stop.title, kind: stop.kind, place: stop.place, pos: PLACES[stop.place]?.pos ?? null,
+    start: stop.start, end: stop.end, base: [], shown: [], verdict: null, waiting: true, open: false, stop: false, rechecking: false, saving: false,
+    written: null, changedFrom: null, noPlace: false, removed: false, filled: false };
+  return { items, stage: "received", pct: 0, sub: "", stoppedAt: null, lastQ: null, again: false, autoRest: false, ff: Boolean(jump), jump, cand: null };
+}
+/** 화면의 일정 — 지운 것을 빼고 시각 순. */
+const active = () => Object.values(state.items).filter((s) => !s.removed).sort((x, y) => toMin(x.start) - toMin(y.start));
+// ★「이전」 = 카드에 보이던 이름 그대로(제목 + 확정 전 「찾은 곳」). 지금 앱은 장소 이름을 먼저 써서 카드에 없던 이름이 나왔다.
+const wasText = (s) => foundOf(s) ? `${s.title} · ${s.place}` : s.title;
+/** 확정 전 「찾은 곳」 — 찾은 장소 이름이 제목에 없을 때만(「창덕궁 관람」의 「창덕궁」처럼 제목에 든 이름은 보이지 않는다). */
+const foundOf = (s) => Boolean(s.place) && !s.title.includes(s.place);
+
+// ── 선택지 ─────────────────────────────────────────────────────────
+/** 서버 협의안의 선택지 — 서버가 보낸 `ask.options` 를 그대로 그린다. 줄마다 온 곳 = ask 의 그 칸. */
+function askOptions(q) {
+  return q.ask.json.options.map((o, i) => ({ key: o.key, recommended: o.recommended,
+    label: { text: o.label, src: [SRC.ask(`review.items[n].ask.options[${i}].label`)] },
+    reason: o.reason ? [{ text: o.reason, src: [SRC.ask(`ask.options[${i}].reason`)] }] : [],
+    effect: { text: o.effect, src: [SRC.ask(`ask.options[${i}].effect`)] },
+    call: o.action.type === "fill_slot" ? `새 요청(협의) — 그 시간대 채우기 {day: ${o.action.day}, start: ${o.action.start}, end: ${o.action.end}} + ${o.action.remove} 빼기`
+      : `POST …/edits — ${o.action.edits.map((e) => `${e.field} = ${typeof e.value === "string" ? e.value : JSON.stringify(e.value)}`).join(" + ")}`,
+    act: q.ask.acts[o.key] }));
+}
+const sideOf = (q) => version === "ask" ? q.ask : q.now;
+const optionsOf = (q) => version === "ask" ? askOptions(q) : q.now.options;
+const questionOf = (q) => version === "ask" ? { text: q.ask.question, src: [SRC.ask("review.items[n].ask.question"), SRC.ask("ask.quote(원문 강조)")] } : q.now.question;
+/** 이유 줄 — 카드 안 형식에서는 바로 위 검사 줄과 같은 조각을 뺀다. */
+const reasonText = (o) => o.reason.filter((part) => !(layout === "card" && part.dup)).map((part) => part.text).join(" · ");
+/** 선택지가 가리키는 장소가 지도에 있으면 그 번호(지도 핀과 같은 번호). */
+const optPin = (o, s) => o.act?.name && o.act.name !== s.place && PLACES[o.act.name]?.pos ? true : false;
+/** 후보 조회(`GET …/candidates`)에서 온 선택지인가 — 이 선택지만 「찾는 중 → 어림 → 잰 값」을 거친다. */
+const isCand = (o) => o.act?.type === "pick";
+/** 멈춘 카드의 후보 단계(31bc404d) — loading 「후보를 찾는 중…」 · rough 어림 카드(이동 줄 계산 중 · 이유 쓰는 중) · legs 이동 줄은 잼 · done 이유까지. */
+const candPhase = (s) => state.cand?.id === s.id ? state.cand.phase : "done";
+/** 두 위치 사이 — 지도 개념도로 낸 예시 값(잰 값 · 직선 어림). */
+function travel(a, b) {
+  const km = Math.hypot(a[0] - b[0], (a[1] - b[1]) * 0.7) * 0.045;
+  const walk = km <= 1.0;
+  return { walk, minutes: walk ? Math.max(5, Math.round(km * 15)) : Math.round(7 + km * 4.5), rough: Math.max(5, Math.round(km * 6) + 5) };
+}
+/** 후보 이유 문장의 「다음 일정까지 n분 여유가 있어요」를 이동 줄과 같은 값으로 — 서버는 둘을 같은 여유(`slack.after`)에서 쓴다. 늦는 후보에는 여유를 쓰지 않는다(계약). */
+function syncReason(text, legs) {
+  if (!legs?.after) return text;
+  return text.replace(/ · 다음 일정까지 \d+분 여유가 있어요/, legs.after.slack >= 0 ? ` · 다음 일정까지 ${legs.after.slack}분 여유가 있어요` : "");
+}
+/** 후보로 바꾸면 앞 · 뒤 일정과의 이동 — 서버 후보의 `legs`{before, after}와 같은 모양(with · minutes · mode_label · slack_min). */
+function candLegs(s, name) {
+  const pos = PLACES[name]?.pos;
+  const order = active();
+  const at = order.findIndex((x) => x.id === s.id);
+  if (!pos || at < 0) return { before: null, after: null };
+  const prev = order.slice(0, at).reverse().find((x) => x.pos);
+  const next = order.slice(at + 1).find((x) => x.pos);
+  const make = (from, to, room, other) => { const t = travel(from, to); return { with: other.place || other.title, minutes: t.minutes, rough: t.rough, mode: t.walk ? "walk" : "subway", label: t.walk ? "도보" : "지하철", slack: room - t.minutes }; };
+  return { before: prev ? make(prev.pos, pos, toMin(s.start) - toMin(prev.end), prev) : null,
+           after: next ? make(pos, next.pos, toMin(next.start) - toMin(s.end), next) : null };
+}
+/** 앱 「바꾸기」 화면의 이동 줄 문장(place-change.tsx `LegLines`) — 재는 중이면 어림, 쟀으면 수단 · 분(뒤 구간은 여유 · 늦음). */
+function legText(side, leg, pending) {
+  const where = side === "before" ? `${leg.with}에서 오는 길` : `${leg.with}까지 가는 길`;
+  if (pending) return `${where} 계산 중 · 어림 ${leg.rough}분`;
+  const spare = side === "before" ? "" : leg.slack >= 0 ? ` · ${leg.slack}분 여유` : ` · ${-leg.slack}분 늦어요`;
+  return `${where} · ${leg.label} ${leg.minutes}분${spare}`;
+}
+function legLinesHtml(s, name, phase) {
+  const legs = candLegs(s, name);
+  return ["before", "after"].map((side) => {
+    const leg = legs[side];
+    if (!leg) return "";
+    const pending = phase === "rough";
+    return `<span class="line leg" ${pending ? "data-pending" : ""}>${pending ? `<span class="spinner"></span>` : ""}${esc(legText(side, leg, pending))}</span>`;
+  }).join("");
+}
+
+// ── 그리기 ──────────────────────────────────────────────────────────
+function checksHtml(rows, id) {
+  return `<ul class="checks">${rows.map(([kind, result, text], i) => `<li class="check" data-result="${result}"${enter(`${id}:${i}:${result}:${text}`)}><span class="mark">${GLYPH[result]}</span><b class="checkKind">${KIND[kind] ?? kind}</b><span class="checkText">${result === "pending" ? "확인하는 중…" : esc(text)}</span></li>`).join("")}</ul>`;
+}
+function nameHtml(s, result = false) {
+  const found = foundOf(s) && !s.waiting ?`<small class="cardWritten" data-found>찾은 곳 「${esc(s.place)}」${result ? "" : NEW}</small>` : "";
+  return `<div class="cardName"><h3 class="cardTitle">${esc(s.title)}${s.changedFrom ? `<span class="changedMark">✓</span>` : ""}</h3>${found}${
+    s.written ? `<small class="cardWritten">원문 「${esc(s.written)}」</small>` : ""}${s.noPlace ? `<small class="cardWritten">장소 없음</small>` : ""}</div>`;
+}
+function footHtml(s) {
+  return s.changedFrom ? `<div class="cardFoot"><small>바뀜 · 이전 ${esc(s.changedFrom)}</small></div>` : "";
+}
+function choicesHtml(q, s) {
+  const opts = optionsOf(q);
+  const phase = candPhase(s);
+  let pinNo = 0, waitShown = false;
+  return `${state.again ? `<p class="again">고른 뒤에도 확인이 필요해요 · 다시 골라 주세요${NEW}</p>` : ""}<p class="askQ">${quoteHtml(questionOf(q).text)}</p>
+    <div class="opts">${opts.map((o, i) => {
+      // 후보가 아직 안 왔다 — 후보 자리에 한 줄(앱 못 찾은 장소 카드 · 바꾸기 화면과 같은 문구). 지금 장소 · 장소 없이 두기 같은 선택지는 먼저 보인다
+      if (isCand(o) && phase === "loading") {
+        if (waitShown) return "";
+        waitShown = true;
+        return `<p class="candWait" role="status"><span class="spinner"></span>후보를 찾는 중…</p>`;
+      }
+      const reason = isCand(o) ? syncReason(reasonText(o), candLegs(s, o.act.name)) : reasonText(o);
+      const reasonPending = isCand(o) && (phase === "rough" || phase === "legs");
+      const pin = optPin(o, s) ? `<span class="pinNo" aria-label="지도 후보 ${pinNo + 1}">${++pinNo}</span>` : "";
+      return `<button type="button" class="opt" data-act="opt" data-key="${i}" ${o.recommended ? "data-rec" : ""} ${o.disabled ? 'aria-disabled="true"' : ""}>
+        <span class="optTop">${o.recommended ? `<span class="tick">✓</span>` : ""}${esc(o.label.text)}${o.recommended ? `<span class="rec">추천</span>` : ""}${o.disabled ? `<span class="soon">준비 중</span>` : ""}${pin}</span>
+        ${reasonPending ? `<span class="line" data-pending><span class="spinner"></span>추천 이유를 정리하고 있어요…</span>` : reason ? `<span class="line">이유: ${esc(reason)}</span>` : ""}
+        ${isCand(o) ? legLinesHtml(s, o.act.name, phase) : ""}
+        <span class="line">고르면: ${esc(o.effect.text)}</span></button>`;
+    }).join("")}</div>
+    <div class="askBtns" data-one><button type="button" class="askBtn" data-act="edit">직접 수정</button></div>
+    ${version === "ask" ? `<button type="button" class="linkBtn" data-act="rest">나머지는 추천대로 두기</button>` : ""}
+    ${allowSkip ? `<button type="button" class="linkBtn" data-act="skip">이대로 두고 다음으로</button>` : ""}`;
+}
+const waitHtml = `<div class="waitSave"><span class="spinner"></span>뒤 일정 확인이 끝나면 바로 저장해요${NEW}</div>`;
+function itemHtml(s) {
+  const verdict = s.waiting ? "checking" : s.verdict ?? "checking";
+  const checking = !s.waiting && s.verdict === null;
+  const status = checking && !s.rechecking ? `<span class="spinner" role="img" aria-label="확인하는 중"></span>`
+    : s.verdict === "review" && !s.stop ? `<span class="pill" data-state="review">확인 필요</span>`
+    : s.filled ? `<span class="pill" data-state="filled">먼저 채움</span>` : "";
+  const head = `<div class="cardHead"><span class="kindIcon">${ICON[s.kind]}</span>${nameHtml(s)}${status}</div>`;
+  const q = s.stop ? QUESTION_OF[s.id] : null;
+  const inCard = q && layout === "card" ? `<div class="ask"${enter(`ask:${s.id}:${version}:${state.again}`)}>${s.saving ? waitHtml : choicesHtml(q, s)}</div>` : "";
+  const body = s.open ? (s.rechecking ? `<div class="recheckRow"><span class="spinner"></span>다시 확인하는 중…</div>` : "") + checksHtml(s.shown, s.id) + inCard : "";
+  return `<div class="entry"${enter(`item:${s.id}`)} data-type="item" data-id="${s.id}" data-verdict="${verdict}" ${s.waiting ? "data-waiting" : ""} ${s.filled ? "data-filled" : ""} ${s.stop ? "data-stop" : ""} ${state.stoppedAt === s.id ? "data-focus" : ""}>
+    <div class="time">${s.start}<small>~${s.end}</small></div><div class="rail"><span class="dot"></span></div>
+    <article class="card">${head}${body}${s.open ? "" : footHtml(s)}</article></div>`;
+}
+/** 이동 — 두 장소의 위치 · 시각으로 계산한 예시 값. 한쪽이라도 장소를 모르면 「–」. */
+function legOf(f, t) {
+  if (!f.pos || !t.pos) return { mark: "unknown", text: "앞뒤 이동은 장소가 정해지면 확인해요", free: "" };
+  const km = Math.hypot(f.pos[0] - t.pos[0], (f.pos[1] - t.pos[1]) * 0.7) * 0.045;
+  const walk = km <= 1.0;
+  const minutes = walk ? Math.max(5, Math.round(km * 15)) : Math.round(7 + km * 4.5);
+  const slack = toMin(t.start) - toMin(f.end) - minutes;
+  return { mark: slack < 0 ? "warn" : "ok", text: `${walk ? "도보" : "지하철"} ${minutes}분 · ${km.toFixed(1)}km`, free: slack < 0 ? `${-slack}분 늦어요` : `여유 ${span(slack)}` };
+}
+function legHtml(f, t) {
+  if (f.waiting || t.waiting) return "";
+  const leg = legOf(f, t);
+  return `<div class="entry"${enter(`leg:${f.id}${t.id}:${leg.text}`)} data-type="move" data-verdict="${leg.mark === "unknown" ? "checking" : "keep"}" ${state.stoppedAt === t.id ? "data-stop-move" : ""}>
+    <div class="time">${f.end}</div><div class="rail"><span class="dot"></span></div>
+    <div class="move" data-result="${leg.mark}"><span class="mark">${GLYPH[leg.mark]}</span><span class="moveText">${esc(leg.text)}</span>${leg.free ? `<span class="free">${esc(leg.free)}</span>` : ""}</div></div>`;
+}
+const timelineHtml = (order, itemOf) => order.map((s, i) => itemOf(s) + (order[i + 1] ? legHtml(s, order[i + 1]) : "")).join("");
+
+function render() {
+  const phone = $("phone");
+  phone.dataset.stage = state.stage;
+  phone.dataset.layout = layout;
+  renderChips(); renderBasis();
+  if (state.stage === "received" || state.stage === "reading") { renderAskSheet(); return renderReading(); }
+  if (state.stage === "result") { renderAskSheet(); return renderResult(); }
+  const stopped = state.stoppedAt;
+  list.toggleAttribute("data-stopped", Boolean(stopped));
+  phone.toggleAttribute("data-stopped", Boolean(stopped));
+  const order = active();
+  const left = order.filter((s) => s.waiting).length;
+  const confirming = stopped && QUESTION_OF[stopped].need === "confirm";
+  const verb = confirming ? "고르면" : "고치면";
+  list.innerHTML = `<div class="stopBanner"><span class="mark">!</span><div><b>${confirming ? "이 일정이 맞는지 먼저 확인해 주세요" : "이 일정을 먼저 고쳐 주세요"}${NEW}</b><span class="sub">${left ? `${verb} 다음 일정을 이어서 확인해요 · 남은 일정 ${left}곳` : `${verb} 확인을 마쳐요`}${NEW}</span></div></div>
+    <div class="dayHead">${DAY.label}<small>${DAY.date}</small></div>` + timelineHtml(order, itemHtml);
+  $("sheetTitle").textContent = state.stage === "done" ? "정리 완료" : "장소·운영시간 확인";
+  const placesDone = order.filter((s) => !s.waiting && s.verdict).length;
+  const legsShown = order.slice(1).filter((s, i) => !s.waiting && !order[i].waiting).length;
+  $("sheetCount").textContent = `장소 ${placesDone}/${order.length} · 이동 ${legsShown}/${Math.max(0, order.length - 1)}`;
+  renderStage(stopped ? `멈춤 · ${state.items[stopped].title}` : state.sub);
+  renderPins(); renderAskSheet();
+}
+function renderAskSheet() {
+  const box = $("askSheet");
+  const s = state.stoppedAt && state.items[state.stoppedAt];
+  const show = Boolean(s && s.stop && layout === "sheet" && state.stage === "checking");
+  box.hidden = !show;
+  if (!show) { box.innerHTML = ""; delete box.dataset.key; return; }
+  const q = QUESTION_OF[s.id];
+  box.innerHTML = `<div class="askHead"><span>확인이 필요해요${NEW}</span><span>${esc(s.title)} · ${s.start}</span></div>${s.saving ? waitHtml : choicesHtml(q, s)}`;
+}
+function renderReading() {
+  list.removeAttribute("data-stopped");
+  $("phone").removeAttribute("data-stopped");
+  $("sheetTitle").textContent = "계획을 확인하고 있어요";
+  $("sheetCount").textContent = "";
+  const read = state.read ?? 0;
+  list.innerHTML = `<div class="stageDots">${["받았어요", "일정 읽기", "장소·운영시간", "정리 완료"].map((label, i) => `<span ${i <= (state.stage === "reading" ? 1 : 0) ? "data-on" : ""}>● ${label}</span>`).join("")}</div>
+    <ul class="reading">${LINES.slice(0, Math.max(read, state.lines ?? 0)).map((line, i) => `<li ${i < read ? "data-read" : ""}${enter(`line:${i}`)}><span class="mark" data-result="${i < read ? "ok" : "unknown"}">${i < read ? "✓" : ""}</span>${esc(line)}</li>`).join("")}</ul>`;
+  renderStage(state.sub);
+  renderPins();
+}
+function renderStage(sub) {
+  const labels = { received: "받았어요", reading: "일정 읽기", checking: "장소·운영시간", done: "정리 완료" };
+  $("stageLabel").textContent = labels[state.stage] ?? "";
+  $("stageLabel").toggleAttribute("data-stop", Boolean(state.stoppedAt));
+  $("stagePill").toggleAttribute("data-stop", Boolean(state.stoppedAt));
+  $("stagePct").textContent = `${Math.round(state.pct)}%`;
+  $("stageBar").style.width = `${state.pct}%`;
+  $("stageSub").innerHTML = sub ? esc(sub) + (state.stoppedAt ? NEW : "") : "&nbsp;";
+}
+// 핀은 지도의 보이는 칸(위 막대 아래 ~ 시트 위)에 들어오게 둔다 — 멈춰 시트가 올라오면 위쪽으로 모은다.
+const pinTop = (y) => 76 + y * (state.stoppedAt ? 1.3 : 2.0);
+function renderPins() {
+  const out = [];
+  let unresolved = null;
+  active().forEach((s, i) => {
+    if (s.waiting) return;
+    if (!s.pos) { if (!s.noPlace) unresolved = s.title; return; }
+    const st = state.stoppedAt === s.id ? "stop" : s.verdict === null ? "current" : s.verdict === "review" ? "review" : "";
+    out.push(`<div class="pin" data-state="${st}" style="left:${s.pos[0]}%;top:${pinTop(s.pos[1])}px"><span>${i + 1}</span></div>`);
+  });
+  const s = state.stoppedAt && state.items[state.stoppedAt];
+  if (s && s.stop) {
+    let n = 0;
+    for (const o of optionsOf(QUESTION_OF[s.id])) {
+      if (!optPin(o, s) || (isCand(o) && candPhase(s) === "loading")) continue;
+      const p = PLACES[o.act.name].pos;
+      out.push(`<div class="pin" data-state="candidate" style="left:${p[0]}%;top:${pinTop(p[1])}px"><span>${++n}</span></div>`);
+    }
+  }
+  pins.innerHTML = out.join("");
+  const chip = $("mapChip");
+  chip.hidden = !unresolved;
+  chip.textContent = unresolved ? `${state.stoppedAt ? "확인 필요" : "위치 미정"} · ${unresolved}` : "";
+}
+function renderResult() {
+  list.removeAttribute("data-stopped");
+  $("phone").removeAttribute("data-stopped");
+  $("sheetTitle").textContent = "계획 확인";
+  const needs = active().filter((s) => s.verdict === "review").length;
+  $("sheetCount").innerHTML = needs ? `<span class="pill" data-state="review">! ${needs}</span>` : `<span class="pill">✓</span>`;
+  const q5 = QUESTION_OF.f;
+  list.innerHTML = `<div class="dayHead">${DAY.label}<small>${DAY.date}</small></div>` + timelineHtml(active(), (s) => {
+    // 지금 흐름: 못 찾은 장소는 지금 앱(unfound-place.tsx)처럼 검사가 끝난 뒤 카드 안에 서버 질문 · 후보 · 단추 둘
+    const unfound = s.id === "f" && s.verdict === "review" && !s.place && !s.noPlace ? `<div class="unfound"><p>${esc(q5.now.question.text)}</p>
+        <span class="cand"><b>을지면옥</b><small>식당 · 냉면 · 서울 중구 · 광장시장에서 0.9km</small></span><span class="cand"><b>을지로 칼국수</b><small>식당 · 칼국수 · 서울 중구 · 광장시장에서 1.1km</small></span>
+        <div class="row2"><span class="btn" data-primary>직접 고르기</span><span class="btn">장소 없이 두기</span></div><span class="appNote">지금 앱의 못 찾은 장소 카드(3a330f0e) — 후보는 예시</span></div>` : "";
+    return `<div class="entry resultCard" data-type="item" data-verdict="${s.verdict}" ${s.filled ? "data-filled" : ""}><div class="time">${s.start}<small>~${s.end}</small></div><div class="rail"><span class="dot"></span></div>
+      <article class="card"><div class="cardHead"><span class="kindIcon">${ICON[s.kind]}</span>${nameHtml(s, true)}${s.verdict === "review" ? `<span class="pill" data-state="review">확인 필요</span>` : s.filled ? `<span class="pill" data-state="filled">먼저 채움</span>` : ""}<span class="actIcons">✨ ✎ 🗑</span></div>${unfound}${footHtml(s)}</article></div>`;
+  });
+  renderPins();
+}
+const chips = (src) => src.map((x) => `<span class="srcChip" data-kind="${x.kind}"><b>${KIND_LABEL[x.kind]}</b>${esc(x.text)}</span>`).join("");
+/** 줄마다 온 곳 — 화면에 보이는 질문 · 선택지 이름 · 이유 · 고르면이 각각 어느 서버 값(또는 프론트 문장)에서 왔나. */
+function provenanceHtml(q) {
+  const rows = [];
+  let group = 0;
+  const add = (head, shown, src) => rows.push(`<tr data-group="${group % 2 ? "odd" : "even"}"><th>${head}</th><td class="shown">${shown}</td><td>${chips(src)}</td></tr>`);
+  const question = questionOf(q);
+  add("질문", esc(plain(question.text)), question.src);
+  optionsOf(q).forEach((o, i) => {
+    group += 1;
+    add(`${i + 1} 이름`, esc(o.label.text) + (o.disabled ? " <small>(준비 중)</small>" : ""), o.label.src);
+    if (!o.reason.length) add(`${i + 1} 이유`, "<s>없음 — 보일 서버 값이 없어 줄을 뺌</s>", [SRC.tpl("원칙 1 — 짓지 않는다")]);
+    const legsOfOpt = isCand(o) ? candLegs(state.items[q.stop], o.act.name) : null;
+    o.reason.forEach((part) => add(`${i + 1} 이유`, layout === "card" && part.dup ? `<s>${esc(part.text)}</s><br><small>카드 안에서는 숨김 — 바로 위 검사 줄과 같은 말</small>` : esc(syncReason(part.text, legsOfOpt)), part.src));
+    if (isCand(o)) {
+      const legs = candLegs(state.items[q.stop], o.act.name);
+      for (const side of ["before", "after"]) {
+        if (!legs[side]) continue;
+        add(`${i + 1} 이동`, esc(legText(side, legs[side], false)), version === "ask"
+          ? [SRC.ask(`ask.options[${i}].legs.${side} — 협의(미리 준비한 대안의 legs 를 싣기)`)]
+          : [SRC.val(`candidates[n].legs.${side} — with · minutes · mode_label · slack_min`), SRC.app("place-change.tsx — 이동 줄 틀(「…에서 오는 길 · 수단 n분」 · 「…까지 가는 길 · … · n분 여유」 · 재는 중 「… 계산 중 · 어림 n분」)"), SRC.ex("분 · 수단 · 여유는 지도 개념도로 낸 예시")]);
+      }
+    }
+    add(`${i + 1} 고르면`, esc(o.effect.text), o.effect.src);
+  });
+  group += 1;
+  add("단추", "직접 수정", [SRC.tpl("「직접 수정」 새 문구 — 지금 「바꾸기」 화면을 연다")]);
+  if (version === "ask") add("링크", "나머지는 추천대로 두기", [SRC.tpl("새 문구 — 이 카드와 뒤에서 멈출 카드를 recommended 선택지로 정하며 지나간다")]);
+  return `<table class="prov">${rows.join("")}</table>`;
+}
+function renderBasis() {
+  const box = $("basis");
+  const q = QUESTIONS.find((x) => x.id === state.lastQ);
+  if (!q) { box.innerHTML = `<h3>이 카드를 만든 근거</h3><p>검사가 「확인 필요」 카드에서 멈추면, 그 카드의 질문 · 선택지가 어느 서버 값에서 왔는지 여기에 나와요. 위 「바로 보기」로 카드를 골라 바로 가도 돼요.</p>`; return; }
+  const head = `<h3>이 카드를 만든 근거 — ${esc(q.chip)} · ${version === "now" ? "지금 서버 값만" : "서버 협의안(ask)"} · ${layout === "card" ? "카드 안" : "아래 시트"}</h3><p class="src">${q.source}</p>`;
+  if (!sideOf(q)) {
+    box.innerHTML = `${head}<h4>프론트의 구분 규칙</h4><ol>${q.nowNote.rules.map((r) => `<li>${r}</li>`).join("")}</ol><h4>쓴 서버 값(응답 모양 그대로)</h4><pre>${esc(JSON.stringify(q.nowNote.server, null, 2))}</pre>`;
+    return;
+  }
+  const opts = optionsOf(q);
+  const calls = `<h4>선택지 → 보내는 요청</h4><ul class="calls">${opts.map((o) => `<li><b>${esc(o.label.text)}</b> → ${esc(o.call)}</li>`).join("")}
+      <li><b>직접 수정</b> → 지금 「바꾸기」 화면(후보 · 검색 · 이름 · 날짜 · 시각)</li><li><b>삭제</b> → POST …/edits — items[n].removed = true</li></ul>`;
+  const prov = `<h4>줄마다 온 곳</h4>${provenanceHtml(q)}`;
+  if (version === "now") {
+    box.innerHTML = `${head}${prov}<h4>프론트의 구분 규칙</h4><ol>${q.now.rules.map((r) => `<li>${r}</li>`).join("")}</ol>
+      <h4>쓴 서버 값(응답 모양 그대로)</h4><pre>${esc(JSON.stringify(withCandidateLegs(q), null, 2))}</pre>${calls}`;
+  } else {
+    box.innerHTML = `${head}${prov}<h4>서버가 보낼 <code>ask</code>(협의안 — 지금은 없음)</h4><pre>${esc(JSON.stringify(q.ask.json, null, 2))}</pre>${calls}`;
+  }
+}
+/** 근거 패널의 후보 조회 응답 — 31bc404d 모양(`prepared` · 후보마다 `legs`)으로, 화면에 보이는 이동 줄과 같은 값을 싣는다. */
+function withCandidateLegs(q) {
+  const server = JSON.parse(JSON.stringify(q.now.server));
+  const s = state.items[q.stop];
+  const legJson = (leg) => leg && { with: leg.with, minutes: leg.minutes, mode: leg.mode, mode_label: leg.label, estimated: false, slack_min: leg.slack };
+  for (const key of Object.keys(server)) {
+    if (!key.startsWith("GET …/candidates") || !Array.isArray(server[key])) continue;
+    server[key] = { prepared: q.prep === "ready" ? { revision: 1, computed_at: "2026-10-20T09:00:42+09:00", stale: [] } : null,
+      candidates: server[key].map((c) => { const legs = candLegs(s, c.place.name); return { ...c, reason: syncReason(c.reason, legs), legs: { before: legJson(legs.before), after: legJson(legs.after) } }; }),
+      notes: [] };
+  }
+  return server;
+}
+function renderChips() {
+  $("cases").innerHTML = QUESTIONS.map((q) => `<button type="button" class="caseChip" data-case="${q.stop}" ${state?.lastQ === q.id ? 'aria-current="true"' : ""}>${esc(q.chip)}${q.now ? "" : " <small>(협의안만)</small>"}</button>`).join(" ");
+}
+function toast(title, sub, ms = 2200) {
+  const box = $("toast");
+  box.querySelector("b").innerHTML = title;
+  box.querySelector("span").innerHTML = sub;
+  box.setAttribute("data-show", "");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => box.removeAttribute("data-show"), ms / speed);
+}
+function footer(text, buttons = "") {
+  $("footerText").innerHTML = text;
+  const row = $("footerBtns");
+  row.hidden = !buttons;
+  row.innerHTML = buttons;
+}
+const logItems = [];
+function log(text) {
+  logItems.push(text);
+  $("log").innerHTML = logItems.map((line, i) => `<li ${i === logItems.length - 1 ? "data-now" : ""}>${line}</li>`).join("");
+  $("log").scrollTop = $("log").scrollHeight;
+}
+function scrollTo(id) {
+  const target = list.querySelector(`[data-id="${id}"]`);
+  // 멈춤 띠(sticky)가 위를 가리므로 그만큼 남기고 카드 머리를 맞춘다.
+  if (target) list.scrollTo({ top: Math.max(0, target.offsetTop - (state.stoppedAt ? 64 : 12)), behavior: state.ff ? "auto" : "smooth" });
+}
+const setPct = (done) => { state.pct = Math.min(99, 33 + 66 * done / (active().length + 0.5)); };
+const verdictOf = (rows) => rows.some(([, r]) => r === "bad" || r === "warn") ? "review" : rows.some(([, r]) => r === "filled") ? "adjusted" : "keep";
+
+// ── 재생 ────────────────────────────────────────────────────────────
+async function revealChecks(s, rows) {
+  s.shown = rows.map(([kind]) => [kind, "pending", ""]);
+  render(); scrollTo(s.id);
+  await sleep(800);                                  // 새 핀에 눈이 갈 시간(NEW_PIN_HOLD_MS)
+  for (let i = 0; i < rows.length; i += 1) {
+    s.shown[i] = rows[i];
+    // 빨강 · 회색(✕ · –)은 앞 줄과 함께 바로 나온다(isInstantRow)
+    while (i + 1 < rows.length && (rows[i + 1][1] === "bad" || rows[i + 1][1] === "unknown")) { i += 1; s.shown[i] = rows[i]; }
+    render();
+    await sleep(300);                                // REVEAL_MS
+  }
+}
+
+async function run(jump = null) {
+  runId += 1;
+  if (waiter) { waiter.no(new Cancelled()); waiter = null; }
+  state = freshState(jump);
+  seenKeys.clear();
+  logItems.length = 0;
+  $("toast").removeAttribute("data-show");
+  footer("계획을 받았어요.");
+  try {
+    log(mode === "new" ? `새 흐름 — 「확인 필요」에서 멈추고 카드 안에서 고른 뒤 이어간다 · ${version === "now" ? "지금 서버 값만" : "서버 협의안(ask)"}` : "지금 흐름 — 끝까지 재생한 뒤 결과 화면에서 고친다(판 스위치와 상관없이 지금 서버 값)");
+    if (jump) log(`바로 보기 — 「${esc(state.items[jump].title)}」까지 앞 카드를 첫 선택지(협의안은 추천)로 정한 채 빠르게 지나간다`);
+    render(); await sleep(900);
+    state.stage = "reading"; state.pct = 4; state.lines = 0; state.read = 0;
+    footer("계획을 확인하고 있어요"); log("① 일정 읽기 — 원문을 한 줄씩 읽는다(지금과 같음)");
+    for (let i = 0; i < LINES.length; i += 1) {
+      state.lines = i + 1; state.sub = `읽는 중 ${i}/${LINES.length}줄`; render(); await sleep(200);
+      state.read = i + 1; state.pct = 4 + 29 * (i + 1) / LINES.length; state.sub = `읽는 중 ${i + 1}/${LINES.length}줄`; render(); await sleep(200);
+    }
+    await sleep(400);
+    state.stage = "checking"; state.pct = 33; state.sub = "";
+    footer("장소와 운영시간을 확인하고 있어요."); log("② 장소·운영시간 — 카드가 하나씩 열리고 검사 줄이 켜진다");
+    render(); await sleep(500);
+    let done = 0;
+    for (const stop of STOPS) {
+      const s = state.items[stop.id];
+      if (s.removed) continue;
+      if (state.jump === stop.id) state.ff = false;   // 바로 보기 — 고른 카드부터 보통 속도
+      s.waiting = false; s.open = true; s.verdict = null;
+      done += 1; setPct(done);
+      state.sub = `${done}/${active().length} · ${s.title}`;
+      const rows = rowsOf(stop);
+      s.base = rows;
+      await revealChecks(s, rows);
+      const verdict = verdictOf(rows);
+      const q = QUESTION_OF[stop.id];
+      if (mode === "new" && verdict === "review" && q && sideOf(q)) {
+        await stopAndFix(s, q);
+      } else {
+        s.verdict = verdict;
+        if (verdict === "review") log(`「${esc(s.title)}」 확인 필요 — 누를 것 없이 접고 다음으로(지금 흐름)`);
+        else if (q && mode === "new") log(`「${esc(s.title)}」 ✎ — 지금 서버는 시간 짐작을 채움으로 보내 멈추지 않는다(협의안 판에서 비교)`);
+        render(); await sleep(500);
+        s.open = false; render();
+      }
+      setPct(done + 0.5); render(); await sleep(250);
+    }
+    state.ff = false;
+    state.stage = "done"; state.pct = 100; state.sub = "서울 하루 여행";
+    const needs = active().filter((s) => s.verdict === "review").length;
+    footer(needs ? `확인을 마쳤어요. 장소 ${needs}곳 확인 필요.` : "모두 확인했어요");
+    log(needs ? `③ 정리 완료 — 확인 필요 ${needs}곳이 남은 채 끝` : "③ 정리 완료 — 확인 필요 0곳");
+    render(); await sleep(1300);
+    state.stage = "result"; render();
+    toast("계획 확인 화면이에요", "일정을 수정하거나 권장 수정안을 확인해 주세요", 3000);
+    if (needs) {
+      footer("아래로 스크롤하면 권장 수정안이 나와요", `<button class="btn" aria-disabled="true" style="flex:1">다시 제출</button>`);
+      log("④ 계획 확인 화면 — 카드를 골라 고치고 「다시 제출」 → 「여행 등록」(지금과 같음). 「맞는지 확인」 카드에는 「맞아요」로 끝낼 단추가 없다");
+    } else {
+      footer("이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요", `<button class="btn" data-primary style="flex:1">여행 등록</button>`);
+      log("④ 계획 확인 화면 — 고칠 곳이 없어 「여행 등록」이 바로 켜져 있다(지금 화면 그대로)");
+    }
+  } catch (error) { if (!(error instanceof Cancelled)) throw error; }
+}
+
+/** 고른 것을 목업 일정에 싣는다 — 다시 확인할 검사 줄 · 알림 · 기록을 돌려준다. */
+function applyAct(s, act) {
+  const was = wasText(s);
+  const keepTime = s.base.filter(([kind, result]) => kind === "time" && result === "filled" && s.id !== "g");
+  const after = (name) => PLACES[name]?.after ?? [];
+  const next = ["고친 내용을 다시 확인했어요", "다음 일정을 이어서 확인해요" + NEW];
+  switch (act.type) {
+    case "confirm":
+      Object.assign(s, { written: s.place !== s.title ? s.title : s.written, title: s.place });
+      return { rows: [["place", "ok", "확인한 곳이에요"], ...keepTime, ...after(s.place)], toast: ["확인했어요" + NEW, "다음 일정을 이어서 확인해요" + NEW],
+        log: "지금 장소를 고른 장소로 다시 보냄 — 바꾼 게 아니라 「바뀜」 없음. 확정 문장 「확인한 곳이에요」는 서버 문장 제안" };
+    case "pick":
+      Object.assign(s, { written: s.written ?? (s.title !== act.name ? s.title : null), title: act.name, place: act.name, pos: PLACES[act.name]?.pos ?? null, noPlace: false, changedFrom: was });
+      return { rows: [["place", "ok", "직접 고른 곳이에요"], ...keepTime, ...after(act.name)], toast: next, log: `「바뀜 · 이전 ${esc(was)}」(카드에 보이던 이름)` };
+    case "refind":
+      Object.assign(s, { title: act.name, place: act.name, kind: act.kind ?? s.kind, pos: PLACES[act.name]?.pos ?? null, changedFrom: was });
+      return { rows: [["place", "ok", "관광공사 정보로 찾았어요"], ...keepTime, ...after(act.name)], toast: next, log: `이름으로 다시 찾음 — 「바뀜 · 이전 ${esc(was)}」` };
+    case "noplace":
+      Object.assign(s, { place: "", pos: null, noPlace: true, changedFrom: was === s.title ? null : was });
+      return { rows: [["place", "unknown", "장소 없이 두었어요 · 운영시간과 이동은 확인하지 않아요"], ...keepTime], toast: [`${esc(s.title)} 일정은 장소 없이 두었어요`, "앞뒤 이동은 장소가 정해지면 확인해요"], log: "「장소 없음」으로 저장" };
+    case "time": {
+      const same = act.start === s.start;
+      if (!same) {
+        // 처음 시각으로 돌아오면 「바뀜」을 지운다(이전 = 계획서에서 읽은 시각)
+        s.changedFrom = act.start === stopOf(s.id).start ? null : s.changedFrom ?? `${s.start}~${s.end}`;
+        s.end = fromMin(toMin(act.start) + (toMin(s.end) - toMin(s.start))); s.start = act.start;
+      }
+      // 서버 문장 틀(review.py) — 여는 시각보다 이르면 「{여는 시각}에 열어요 · {시작} 시작은 일러요」
+      const hours = act.hours === "ok" ? ["hours", "ok", "10:30–22:30 안에 머물러요"] : ["hours", "warn", `10:30에 열어요 · ${act.start} 시작은 일러요`];
+      return { rows: [["place", "ok", "관광공사 정보로 찾았어요"], hours], toast: same ? ["확인했어요" + NEW, "다음 일정을 이어서 확인해요" + NEW] : next,
+        log: same ? "지금 시각을 고객 값으로 보냄 — 「바뀜」 없음" : `시각을 ${act.start} 로 — 「바뀜 · 이전 ${esc(s.changedFrom)}」` };
+    }
+    case "fill":
+      return { replace: [
+        { id: "c1", start: "13:10", end: "14:20", title: "서울공예박물관", kind: "activity", place: "서울공예박물관" },
+        { id: "c2", start: "14:40", end: "15:50", title: "인사동 쌈지길", kind: "activity", place: "인사동 쌈지길" }],
+        toast: ["빈 시간에 2곳을 넣었어요" + NEW, "넣은 일정도 같이 확인했어요" + NEW], log: "「정도」 일정을 빼고 13~16시에 추천 2곳(예시)을 넣음 — 넣은 일정은 「먼저 채움」" };
+    default: return null;
+  }
+}
+
+async function stopAndFix(s, q) {
+  s.verdict = "review"; s.stop = true; state.stoppedAt = s.id; state.lastQ = q.id; state.again = false;
+  const auto = () => state.ff || state.autoRest;
+  void feedCandidates(s, q);
+  if (!auto()) {
+    footer(`확인 필요 · ${esc(s.title)}`);
+    log(`「${esc(s.title)}」 확인 필요 → <b>재생 멈춤</b> — ${layout === "card" ? "카드 안에" : "아래 시트에"} 질문 · 선택지, 나머지는 흐리게`);
+    render(); scrollTo(s.id);
+    await sleep(480); scrollTo(s.id);              // 시트가 올라간 뒤 카드 머리를 다시 맞춘다
+  } else render();
+  for (;;) {
+    let act;
+    if (auto()) {
+      const opts = optionsOf(q);
+      let k = opts.findIndex((o) => o.recommended && !o.disabled);
+      if (k < 0) k = opts.findIndex((o) => !o.disabled);
+      act = { type: "opt", key: String(k) };
+      log(state.ff ? `바로 보기 — 「${esc(s.title)}」는 「${esc(opts[k].label.text)}」로 정한 채 지나감` : `나머지는 추천대로 — 「${esc(s.title)}」는 「${esc(opts[k].label.text)}」`);
+    } else {
+      act = await userPick();
+    }
+    if (act.type === "skip") {
+      s.stop = false; state.stoppedAt = null; s.open = false;
+      log(`「이대로 두고 다음으로」 — 「${esc(s.title)}」는 확인 필요로 남김(결정 2)`);
+      render(); return;
+    }
+    if (act.type === "edit") { toast("직접 수정" + NEW, "지금 「바꾸기」 화면이 열려요 — 후보 · 검색 · 이름 · 날짜 · 시각(목업에서는 생략)", 2600); continue; }
+    if (act.type === "remove") {
+      s.removed = true; s.stop = false; state.stoppedAt = null;
+      log(`「삭제」 → 「${esc(s.title)}」 일정을 빼고 이어감 — 앞뒤 이동은 다시 잰다`);
+      toast(`「${esc(s.title)}」 일정을 뺐어요${NEW}`, "다음 일정을 이어서 확인해요" + NEW);
+      render(); return;
+    }
+    if (act.type === "rest") { state.autoRest = true; log("「나머지는 추천대로 두기」 → 이 카드와 뒤에서 멈출 카드를 추천 선택지로 정하며 지나감(협의안)"); continue; }
+    if (act.type !== "opt") continue;
+    const o = optionsOf(q)[Number(act.key)];
+    if (o.disabled) { toast(esc(o.label.text) + " — 준비 중", esc(o.effect.text)); continue; }
+    // 고른 값 저장 — 서버가 아직 뒤 일정을 확인 중이면 기다렸다 보낸다(협의 안 1)
+    if (lateServer && !auto()) {
+      s.saving = true; render(); log("서버가 아직 뒤 일정을 확인 중(409 intake_not_editable) → 고른 값을 들고 기다림(협의 안 1)");
+      await sleep(1800); s.saving = false;
+    }
+    const result = applyAct(s, o.act);
+    log(`「${esc(o.label.text)}」 → ${esc(o.call)}${result.log ? ` — ${result.log}` : ""}`);
+    if (result.replace) {
+      // 빈 시간 채우기 — 그 일정을 빼고 넣은 일정을 확인이 끝난 상태로 싣는다
+      s.removed = true; s.stop = false; state.stoppedAt = null;
+      for (const add of result.replace) {
+        state.items[add.id] = { ...add, pos: PLACES[add.place]?.pos ?? null, base: [], shown: [["place", "ok", "계획 에이전트가 채웠어요(예시)"], ["hours", "ok", "10:00–18:00 안에 머물러요"]],
+          verdict: "adjusted", waiting: false, open: false, stop: false, rechecking: false, saving: false, written: null, changedFrom: null, noPlace: false, removed: false, filled: true };
+      }
+      render(); toast(...result.toast, 1800);
+      await sleep(900); return;
+    }
+    s.stop = false; s.rechecking = true; s.verdict = null;
+    footer("다시 확인하는 중이에요 · 잠시만요");
+    s.shown = result.rows.map(([kind]) => [kind, "pending", ""]);
+    render(); await sleep(700);
+    s.rechecking = false;
+    for (let i = 0; i < result.rows.length; i += 1) { s.shown[i] = result.rows[i]; render(); await sleep(300); }
+    const verdict = verdictOf(result.rows);
+    if (verdict === "review") {
+      // 통과하지 못하면 다음 카드로 넘어가지 않고 그 카드에 남는다
+      s.verdict = "review"; s.stop = true; state.again = true;
+      state.ff = false; state.autoRest = false;
+      footer(`확인 필요 · ${esc(s.title)}`);
+      toast("아직 확인이 필요해요" + NEW, "이 카드에서 다시 골라 주세요" + NEW, 2200);
+      log(`다시 확인했지만 「${esc(s.title)}」는 아직 확인 필요 → <b>그 카드에 남음</b>(다음 카드로 안 넘어감)`);
+      render(); scrollTo(s.id);
+      continue;
+    }
+    s.verdict = verdict; state.stoppedAt = null; state.again = false; render();
+    toast(...result.toast, 1800);
+    log(`통과 → 「${esc(s.title)}」 접고 <b>다음 카드부터 이어서</b> 재생`);
+    footer("장소와 운영시간을 확인하고 있어요.");
+    await sleep(900);
+    s.open = false; render();
+    return;
+  }
+}
+
+/**
+ * 멈춘 카드의 후보 받기(31bc404d `prepared`) — 기다리는 동안에도 고를 수 있다(지금 장소 · 장소 없이 두기는 먼저 보인다).
+ *  ready: 접수 뒤 미리 준비한 저장분 → 바로(「후보 준비가 늦을 때」를 켜면 준비가 아직 도는 중 → 어림 카드를 먼저 받고 준비 결과를 한 번에).
+ *  compute: 카카오에서 온 후보라 미리 준비하지 않는다 → 누를 때 계산 — 어림 카드 먼저 → 구간을 재는 대로 → 이유 문장.
+ */
+async function feedCandidates(s, q) {
+  if (!optionsOf(q).some(isCand)) { state.cand = null; return; }
+  if (version === "ask" || state.ff || state.autoRest) { state.cand = { id: s.id, phase: "done" }; return; }
+  if (q.prep === "ready" && !slowPrep) {
+    state.cand = { id: s.id, phase: "done" };
+    log("후보 — 접수 뒤 <b>미리 준비한 저장분</b>을 계산 없이 바로 받음(<code>prepared</code>)");
+    return;
+  }
+  const waiting = q.prep === "ready";
+  const id = runId;
+  state.cand = { id: s.id, phase: "loading" };
+  log(waiting ? "후보 — 미리 준비가 아직 도는 중 → 어림 카드(<code>waiting: prepare</code>)를 먼저 받고, 준비 결과를 기다려 한 번에 바꿈"
+    : "후보 — 카카오에서 온 후보라 미리 준비하지 않음 → 누를 때 계산(실시간: 어림 카드 먼저 → 구간을 재는 대로 → 이유 문장)");
+  render();
+  const steps = waiting ? [["rough", 900], ["done", 2800]] : [["rough", 900], ["legs", 1800], ["done", 1600]];
+  for (const [phase, ms] of steps) {
+    await new Promise((ok) => setTimeout(ok, ms / speed));
+    if (id !== runId || state.cand?.id !== s.id) return;
+    state.cand.phase = phase;
+    render();
+  }
+}
+
+// ── 조작 ────────────────────────────────────────────────────────────
+function onPick(event) {
+  const button = event.target.closest("[data-act]");
+  if (!button || !waiter) return;
+  const pending = waiter;
+  waiter = null;
+  pending.ok({ type: button.dataset.act, key: button.dataset.key });
+}
+list.addEventListener("click", onPick);
+$("askSheet").addEventListener("click", onPick);
+$("cases").addEventListener("click", (event) => {
+  const chip = event.target.closest("[data-case]");
+  if (!chip) return;
+  if (mode === "old") { mode = "new"; document.querySelectorAll(".tab[data-mode]").forEach((tab) => tab.setAttribute("aria-pressed", String(tab.dataset.mode === "new"))); }
+  run(chip.dataset.case);
+});
+document.querySelectorAll(".tab[data-mode]").forEach((tab) => tab.addEventListener("click", () => {
+  mode = tab.dataset.mode;
+  document.querySelectorAll(".tab[data-mode]").forEach((other) => other.setAttribute("aria-pressed", String(other === tab)));
+  run();
+}));
+// 판을 바꾸면 처음부터 다시 — 멈춰 있던 카드가 있으면 그 카드까지 바로 간다(같은 카드를 두 판으로 견주게)
+document.querySelectorAll(".tab[data-version]").forEach((tab) => tab.addEventListener("click", () => {
+  version = tab.dataset.version;
+  document.querySelectorAll(".tab[data-version]").forEach((other) => other.setAttribute("aria-pressed", String(other === tab)));
+  run(state?.stoppedAt ?? null);
+}));
+// 형식은 그 자리에서 바뀐다 — 보고 있는 카드 · 고른 결과는 그대로
+document.querySelectorAll(".tab[data-layout]").forEach((tab) => tab.addEventListener("click", () => {
+  layout = tab.dataset.layout;
+  document.querySelectorAll(".tab[data-layout]").forEach((other) => other.setAttribute("aria-pressed", String(other === tab)));
+  render();
+  if (state.stoppedAt) scrollTo(state.stoppedAt);
+}));
+$("replay").addEventListener("click", () => run());
+$("speed").addEventListener("click", (event) => { speed = speed === 1 ? 2 : 1; event.currentTarget.setAttribute("aria-pressed", String(speed === 2)); });
+$("allowSkip").addEventListener("click", (event) => { allowSkip = !allowSkip; event.currentTarget.setAttribute("aria-pressed", String(allowSkip)); if (state?.stoppedAt) render(); });
+$("lateServer").addEventListener("click", (event) => { lateServer = !lateServer; event.currentTarget.setAttribute("aria-pressed", String(lateServer)); });
+$("slowPrep").addEventListener("click", (event) => { slowPrep = !slowPrep; event.currentTarget.setAttribute("aria-pressed", String(slowPrep)); });
+run();
+</script>
+</body>
+</html>

@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계획 확인 — 멈추고 고치기</title>
+<!--
+  작성일: 2026-10-19(개정 2 — 「맞는지 확인」 카드에 고를 단추 · 「이전」 표시 · 애매한 판단 묻기) · 상태: 검토용 목업(멘토 피드백) · 실제 API 미연결
+  기준: SKN32 role-eval-ui 9ec5f2b9 의 계획 확인 화면(features/plan-check · intake-review), 서버 판단은 role-manager 0a761e95 의 intake(review.py · pipeline.py · places.py).
+  색은 앱 그린 테마 값(src/styles/tokens.css). 장소 · 시각 · 운영시간 · 거리 · 후보는 예시 값이다. 지도는 위치 개념도다.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --color-text: #24392f; --color-muted: #56645b; --color-faint: #66746b; --color-text-secondary: #4a5d52;
+  --color-border: #dce3dd; --color-border-strong: #c3cdc6; --color-divider: #e8ede9;
+  --color-surface: #ffffff; --color-background: #f3f5f3; --color-subtle: #f6f7f5; --color-subtle-strong: #e4e9e5;
+  --color-primary: #2e6047; --color-primary-hover: #254f3a; --color-on-primary: #ffffff; --color-soft: #e9f2eb;
+  --color-success: #3d7a56; --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a; --color-adjusted-soft: #e6eff6; --color-adjusted-border: #bcd0df;
+  --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1; --color-warning-surface: #fdfaf3;
+  --color-error: #965640; --color-error-soft: #fdf3ed; --color-error-border: #ecd2c7;
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  --ease-soft: cubic-bezier(.22, .8, .3, 1);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: #e8ece9; color: var(--color-text); font-family: var(--font-sans); }
+button { font-family: inherit; }
+
+/* ── 바깥: 머리 · 조작 · 폰 · 설명 ── */
+.page { max-width: 1240px; margin: 0 auto; padding: 20px 16px 48px; }
+.pageHead h1 { margin: 0 0 4px; font-size: 22px; }
+.pageHead p { margin: 0; color: var(--color-muted); font-size: 13px; line-height: 1.6; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 16px; }
+.tabs { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--color-surface); border: 1px solid var(--color-border); }
+.tab { border: 0; background: none; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--color-muted); cursor: pointer; }
+.tab[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); }
+.ctl { border: 1px solid var(--color-border); background: var(--color-surface); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 650; color: var(--color-text); cursor: pointer; }
+.ctl[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-soft); color: var(--color-primary); }
+.ctlNote { font-size: 12px; color: var(--color-faint); }
+.layout { display: grid; grid-template-columns: 390px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); justify-items: center; } .notes { width: 100%; } }
+
+/* ── 폰 ── */
+.phone { position: relative; width: 375px; max-width: 100%; height: 780px; border-radius: 34px; border: 8px solid #1d2a23; background: var(--color-background); overflow: hidden; box-shadow: 0 18px 40px #0003; }
+.map { position: absolute; inset: 0 0 auto 0; height: 330px; background: #eef1ea; overflow: hidden; }
+.map svg.streets { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pin { position: absolute; transform: translate(-50%, -100%); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50% 50% 50% 4px; rotate: -45deg; background: var(--color-surface); border: 2px solid var(--color-text); box-shadow: 0 2px 6px #0003; transition: left .5s var(--ease-soft), top .5s var(--ease-soft), scale .3s; }
+.pin span { rotate: 45deg; font-size: 13px; font-weight: 800; }
+.pin[data-state="review"] { border-color: var(--color-warning); background: var(--color-warning-soft); color: var(--color-warning); }
+.pin[data-state="current"] { scale: 1.2; border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.pin[data-state="candidate"] { border-color: var(--color-adjusted); background: var(--color-adjusted-soft); color: var(--color-adjusted); border-style: dashed; }
+.pin[data-state="stop"] { scale: 1.25; border-color: var(--color-warning); background: var(--color-warning); color: #fff; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px #82693e33; } }
+.mapChip { position: absolute; left: 10px; bottom: 58px; padding: 5px 10px; border-radius: 999px; background: var(--color-surface); font-size: 11.5px; font-weight: 700; box-shadow: 0 1px 4px #0002; }
+.phone[data-stopped] .mapChip { bottom: 128px; }
+.topBar { position: absolute; inset: 10px 10px auto 10px; display: flex; align-items: flex-start; gap: 8px; z-index: 5; }
+.appIcon, .iconBtn { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--color-surface); box-shadow: 0 1px 4px #0002; font-size: 18px; }
+.appIcon { background: var(--color-primary); color: #fff; font-weight: 800; font-size: 15px; }
+.stagePill { flex: 1; min-width: 0; padding: 7px 12px 8px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 1px 4px #0002; }
+.stageRow { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 800; }
+.stageRow b[data-stop] { color: var(--color-warning); }
+.bar { height: 4px; margin: 5px 0 4px; border-radius: 99px; background: var(--color-subtle-strong); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--color-primary); transition: width .4s var(--ease-soft); }
+.stagePill[data-stop] .bar i { background: var(--color-warning); }
+.stageSub { font-size: 11px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultTitle { flex: 1; display: none; padding: 9px 14px; border-radius: 12px; background: var(--color-surface); box-shadow: 0 1px 4px #0002; font-weight: 800; font-size: 15px; }
+.phone[data-stage="result"] .resultTitle { display: block; }
+.phone[data-stage="result"] .stagePill { display: none; }
+
+.toast { position: absolute; left: 12px; right: 12px; top: 60px; z-index: 8; padding: 10px 14px; border-radius: 12px; background: var(--color-surface); border-left: 4px solid var(--color-primary); box-shadow: 0 4px 14px #0003; font-size: 13px; opacity: 0; transform: translateY(-8px); transition: opacity .25s, transform .25s var(--ease-soft); pointer-events: none; }
+.toast[data-show] { opacity: 1; transform: none; }
+.toast b { display: block; font-size: 13.5px; }
+.toast span { color: var(--color-muted); font-size: 12.5px; }
+
+.sheet { position: absolute; inset: 300px 0 0 0; display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -4px 16px #0002; z-index: 4; transition: top .45s var(--ease-soft); }
+/* 제안: 멈춘 동안 시트를 올려 멈춘 카드(검사 줄 + 고르기 · 고치기)가 한 화면에 들어오게 한다. 지도는 위쪽에 그 카드 · 후보 핀만 남는다. */
+.phone[data-stopped] .sheet { top: 215px; }
+.handle { width: 40px; height: 4px; margin: 8px auto 4px; border-radius: 99px; background: var(--color-border-strong); }
+.sheetHead { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 16px 8px; }
+.sheetHead h2 { margin: 0; font-size: 15px; }
+.sheetHead small { font-size: 12px; font-weight: 700; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.list { position: relative; flex: 1; overflow-y: auto; overflow-anchor: none; padding: 0 14px 16px; }
+.dayHead { margin: 6px 0 4px; font-size: 13.5px; font-weight: 800; }
+.dayHead small { font-weight: 600; color: var(--color-muted); margin-left: 4px; }
+.footer { padding: 10px 14px 14px; border-top: 1px solid var(--color-divider); font-size: 12.5px; color: var(--color-muted); }
+.footer .btnRow { display: flex; gap: 8px; margin-top: 8px; }
+
+/* 읽기 단계: 원문 줄 */
+.reading { list-style: none; margin: 4px 0 0; padding: 0; }
+.reading li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: center; padding: 7px 4px; font-size: 13px; color: var(--color-faint); border-bottom: 1px dashed var(--color-divider); }
+.reading li[data-read] { color: var(--color-text); }
+.stageDots { display: flex; justify-content: space-between; margin: 6px 0 10px; font-size: 11px; color: var(--color-faint); }
+.stageDots span[data-on] { color: var(--color-primary); font-weight: 800; }
+
+/* 일정 줄 (앱 plan-check.module.css 값) */
+.entry { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr); column-gap: 8px; transition: opacity .3s; }
+/* 다시 그릴 때마다 움직이지 않게: 처음 나온 줄 · 카드 · 검사 줄만 떠오른다(data-enter). */
+[data-enter] { animation: rise .45s var(--ease-soft); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+.time { padding-top: 18px; font-size: 13px; font-weight: 750; text-align: right; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; line-height: 18px; }
+.time small { display: block; font-size: 11px; font-weight: 500; color: var(--color-faint); }
+.rail { position: relative; }
+.rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--color-divider); }
+.dot { position: absolute; left: 3px; top: 21px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.entry[data-verdict="keep"] .dot, .entry[data-verdict="adjusted"] .dot { border-color: var(--color-success); background: var(--color-success-soft); }
+.entry[data-verdict="review"] .dot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); transition: border-color .2s, background-color .2s, box-shadow .3s; }
+.entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
+.entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
+.entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
+.entry[data-waiting] .card { border-style: dashed; border-color: var(--color-border); background: var(--color-subtle); }
+.entry[data-waiting] .cardTitle { color: var(--color-faint); font-weight: 600; }
+.entry[data-stop] .card { border: 2px solid var(--color-warning); box-shadow: 0 0 0 4px #82693e1f; }
+.cardHead { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px; }
+.kindIcon { flex: none; width: 20px; text-align: center; color: var(--color-muted); font-size: 15px; }
+.cardName { flex: 1; min-width: 0; }
+.cardTitle { margin: 0; font-size: 16px; font-weight: 750; }
+.changedMark { color: var(--color-adjusted); font-weight: 800; margin-left: 4px; }
+.cardWritten { display: block; font-size: 11.5px; font-weight: 500; color: var(--color-faint); }
+.cardWritten[data-found] { color: var(--color-warning); font-weight: 650; }
+.spinner { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pill { flex: none; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; color: var(--color-text-secondary); white-space: nowrap; }
+.pill[data-state="review"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.checks { list-style: none; margin: 0; padding: 4px 12px 10px; border-top: 1px solid var(--color-divider); }
+.check { display: grid; grid-template-columns: 20px 56px minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; }
+.checkKind { font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.checkText { color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.check[data-result="pending"] .checkText { color: var(--color-faint); }
+.check[data-result="bad"] .checkText { color: var(--color-error); font-weight: 650; }
+.check[data-result="warn"] .checkText { color: var(--color-warning); }
+.check[data-result="unknown"] .checkText { color: var(--color-muted); }
+.mark { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 800; font-style: normal; line-height: 1; }
+.check[data-result="pending"] .mark { width: 18px; height: 18px; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+[data-result="ok"] > .mark, .mark[data-result="ok"] { background: var(--color-success-soft); color: var(--color-success); }
+[data-result="filled"] > .mark, .mark[data-result="filled"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+[data-result="warn"] > .mark, .mark[data-result="warn"] { background: var(--color-warning-soft); color: var(--color-warning); }
+[data-result="bad"] > .mark, .mark[data-result="bad"] { background: var(--color-error); color: var(--color-on-primary); }
+[data-result="unknown"] > .mark, .mark[data-result="unknown"] { background: var(--color-subtle-strong); color: var(--color-muted); }
+.check[data-enter][data-result="ok"] .mark { animation: pop .2s var(--ease-soft); }
+@keyframes pop { from { scale: .4; } }
+.recheckRow { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--color-divider); font-size: 12.5px; color: var(--color-muted); }
+.cardFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px 10px; }
+.cardFoot small { flex: 1; min-width: 0; font-size: 12px; color: var(--color-adjusted); font-weight: 700; }
+.undo { flex: none; white-space: nowrap; border: 1px solid var(--color-adjusted-border); border-radius: 999px; background: var(--color-surface); color: var(--color-adjusted); font-size: 12px; font-weight: 700; padding: 3px 10px; }
+
+/* 이동 줄 */
+.entry[data-type="move"] { min-height: 40px; }
+.entry[data-type="move"] .time { padding-top: 10px; font-size: 11.5px; font-weight: 500; color: var(--color-faint); }
+.entry[data-type="move"] .dot { left: 5px; top: 15px; width: 8px; height: 8px; }
+.move { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 10px; font-size: 12.5px; color: var(--color-muted); }
+.move .mark { width: 16px; height: 16px; font-size: 9.5px; }
+.moveText { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.free { flex: none; font-size: 12px; color: var(--color-faint); }
+
+/* ★새 흐름: 멈춤 */
+.list[data-stopped] .entry:not([data-focus]):not([data-stop-move]) { opacity: .38; pointer-events: none; }
+.stopBanner { position: sticky; top: 0; z-index: 3; display: none; margin: 0 -14px 6px; padding: 10px 14px; background: var(--color-warning-soft); border-bottom: 1px solid var(--color-warning-border); font-size: 13px; }
+.list[data-stopped] .stopBanner { display: flex; gap: 10px; align-items: flex-start; }
+.stopBanner b { display: block; color: var(--color-warning); }
+.stopBanner span { color: var(--color-text-secondary); font-size: 12px; }
+.newTag { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: #fde68a; color: #6b4e00; font-size: 10px; font-weight: 800; vertical-align: 1px; white-space: nowrap; }
+/* 고치기(문제) 상자 */
+.fix { padding: 10px 12px 12px; border-top: 1px solid var(--color-warning-border); display: grid; gap: 8px; }
+.cand { display: grid; grid-template-columns: 22px 1fr; gap: 2px 8px; text-align: left; padding: 9px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); cursor: pointer; font: inherit; color: var(--color-text); }
+.cand:hover { border-color: var(--color-primary); }
+.cand i { grid-row: span 2; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--color-adjusted-soft); color: var(--color-adjusted); font-style: normal; font-weight: 800; font-size: 12px; }
+.cand b { font-size: 14px; }
+.cand small { color: var(--color-muted); font-size: 12px; }
+.btn { border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); padding: 10px 12px; font-size: 13.5px; font-weight: 750; cursor: pointer; }
+.btn[data-primary] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+.btn[data-primary]:hover { background: var(--color-primary-hover); }
+.btn small { display: block; font-size: 11.5px; font-weight: 500; opacity: .85; margin-top: 2px; }
+.btnPair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.skip { justify-self: center; border: 0; background: none; color: var(--color-muted); font-size: 12.5px; text-decoration: underline; cursor: pointer; padding: 4px; }
+.waitSave { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--color-muted); }
+/* ★고르기(애매함) 상자 — 앱의 「사진 두 읽기」 상자(.reread)와 같은 모양 */
+.decide { margin: 0 12px 12px; padding: 10px; border-radius: 10px; background: var(--color-warning-soft); display: grid; gap: 8px; }
+.decideHint { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--color-warning); line-height: 1.45; }
+.decideOptions { display: grid; gap: 8px; }
+.decideOptions[data-row] { grid-template-columns: 1fr 1fr; }
+.decideOptions[data-row] > :first-child { grid-column: 1 / -1; }
+.decideOption { display: grid; gap: 2px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.decideOption small { font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.decideOption span { font-size: 13.5px; font-weight: 700; }
+.decideOption[data-current] { border-color: var(--color-primary); }
+.decideOption:hover { border-color: var(--color-primary); background: var(--color-soft); }
+.decide .cand { background: var(--color-surface); }
+
+/* 결과 화면 */
+.resultCard .cardHead { min-height: 44px; padding: 10px 12px; gap: 8px; }
+.resultCard .cardTitle { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.actIcons { display: flex; gap: 6px; color: var(--color-muted); font-size: 12px; }
+.btn[aria-disabled="true"] { opacity: .5; }
+
+/* ── 설명 ── */
+.notes { display: grid; gap: 14px; }
+.box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 14px 16px; }
+.box h3 { margin: 0 0 8px; font-size: 14.5px; }
+.box h4 { margin: 12px 0 6px; font-size: 13.5px; }
+.box p, .box li { font-size: 13px; line-height: 1.6; }
+.box p { margin: 0 0 6px; }
+.box ul, .box ol { margin: 0; padding-left: 18px; }
+.compare { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.compare th, .compare td { border-top: 1px solid var(--color-divider); padding: 7px 6px; text-align: left; vertical-align: top; line-height: 1.5; }
+.compare th { color: var(--color-muted); font-weight: 700; }
+.compare th:first-child { width: 18%; }
+.tag { display: inline-block; padding: 0 6px; margin-right: 4px; border-radius: 4px; font-size: 11px; font-weight: 800; }
+.tag[data-k="now"] { background: var(--color-success-soft); color: var(--color-success); }
+.tag[data-k="talk"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.tag[data-k="idea"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.tag[data-k="screen"] { background: var(--color-subtle-strong); color: var(--color-muted); }
+.log { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow-y: auto; }
+.log li { padding: 5px 0; border-top: 1px solid var(--color-divider); font-size: 12.5px; }
+.log li:first-child { border-top: 0; }
+.log li[data-now] { font-weight: 750; color: var(--color-primary); }
+code { font-size: 12px; background: var(--color-subtle); padding: 0 4px; border-radius: 4px; }
+/* 바꾸기 화면 조각 */
+.snipWrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+@media (max-width: 640px) { .snipWrap { grid-template-columns: 1fr; } }
+.snip { border: 1px solid var(--color-border); border-radius: 14px; padding: 12px; background: var(--color-subtle); font-size: 12.5px; }
+.snip > b { display: block; font-size: 16px; margin: 6px 0 2px; }
+.snip .chip { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--color-subtle-strong); font-size: 11.5px; font-weight: 800; color: var(--color-text-secondary); }
+.snip .row { display: grid; grid-template-columns: 20px 40px 1fr; gap: 6px; align-items: start; margin: 8px 0; color: var(--color-warning); }
+.snip .btn { width: 100%; margin-top: 4px; }
+.snip .muted { color: var(--color-faint); font-size: 12px; text-align: right; margin-top: 6px; }
+.snipLabel { font-size: 12px; font-weight: 800; color: var(--color-muted); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="pageHead">
+    <h1>계획 확인 — 「확인 필요」 카드에서 멈추고, 고르거나 고친 뒤 이어가기</h1>
+    <p>작성 2026-10-19 · 개정 2(「맞는지 확인」 카드에 고를 단추 · 「이전」 표시 · 애매한 판단 묻기 — 사용자 지적) · 검토용 목업(멘토 피드백) · 기준 SKN32 <code>role-eval-ui</code> <code>9ec5f2b9</code> 계획 확인 화면 · 실제 API 미연결 · 장소 · 시각 · 거리 · 후보는 예시 값, 지도는 개념도</p>
+    <p><span class="newTag">새 문구</span> 표시가 붙은 글은 앱에 없어 새로 지은 것이고, 나머지 단추 · 문장은 지금 앱 문구, 검사 줄은 지금 서버가 쓰는 문장(예시 값)입니다.</p>
+  </header>
+
+  <div class="controls">
+    <div class="tabs" role="group" aria-label="흐름">
+      <button class="tab" data-mode="old" aria-pressed="false">지금 흐름</button>
+      <button class="tab" data-mode="new" aria-pressed="true">새 흐름 — 멈추고 고르기 · 고치기</button>
+    </div>
+    <button class="ctl" id="replay">↻ 처음부터</button>
+    <button class="ctl" id="speed" aria-pressed="false">빠르게 2×</button>
+    <button class="ctl" id="allowSkip" aria-pressed="false">건너뛰기 허용</button>
+    <button class="ctl" id="lateServer" aria-pressed="false">서버 확인이 늦을 때</button>
+    <span class="ctlNote">「건너뛰기 허용」 · 「서버 확인이 늦을 때」는 결정할 것 2 · 4 를 보여 주는 스위치입니다.</span>
+  </div>
+
+  <div class="layout">
+    <div class="phone" id="phone" data-stage="received">
+      <div class="map" id="map">
+        <svg class="streets" viewBox="0 0 375 330" preserveAspectRatio="none" aria-hidden="true">
+          <rect width="375" height="330" fill="#eef1ea"/>
+          <path d="M0 150 C 80 140, 160 165, 375 150" stroke="#cfe0ea" stroke-width="10" fill="none"/>
+          <path d="M60 0 L 75 330" stroke="#fff" stroke-width="7"/>
+          <path d="M190 0 L 200 330" stroke="#fff" stroke-width="7"/>
+          <path d="M300 0 L 290 330" stroke="#fff" stroke-width="5"/>
+          <path d="M0 90 L 375 100" stroke="#fff" stroke-width="6"/>
+          <path d="M0 220 L 375 210" stroke="#fff" stroke-width="7"/>
+          <path d="M0 280 L 375 290" stroke="#fff" stroke-width="5"/>
+          <rect x="60" y="34" width="70" height="45" rx="6" fill="#dfe9dc"/>
+          <rect x="190" y="26" width="70" height="44" rx="6" fill="#dfe9dc"/>
+          <text x="95" y="60" font-size="10" fill="#8a988f" text-anchor="middle">경복궁</text>
+          <text x="225" y="52" font-size="10" fill="#8a988f" text-anchor="middle">창덕궁</text>
+          <text x="190" y="146" font-size="9" fill="#8fb1c6" text-anchor="middle">청계천</text>
+          <text x="280" y="190" font-size="10" fill="#8a988f" text-anchor="middle">종로 5가</text>
+          <text x="200" y="236" font-size="10" fill="#8a988f" text-anchor="middle">을지로</text>
+          <text x="140" y="300" font-size="10" fill="#8a988f" text-anchor="middle">남산</text>
+        </svg>
+        <div id="pins"></div>
+        <div class="mapChip" id="mapChip" hidden></div>
+      </div>
+      <div class="topBar">
+        <span class="appIcon" aria-hidden="true">구</span>
+        <div class="stagePill" id="stagePill">
+          <div class="stageRow"><b id="stageLabel">받았어요</b><span id="stagePct">0%</span></div>
+          <div class="bar"><i id="stageBar"></i></div>
+          <div class="stageSub" id="stageSub">&nbsp;</div>
+        </div>
+        <div class="resultTitle" id="resultTitle">계획 확인</div>
+        <span class="iconBtn" aria-hidden="true">⛨</span>
+        <span class="iconBtn" aria-hidden="true">☰</span>
+      </div>
+      <div class="toast" id="toast"><b></b><span></span></div>
+      <section class="sheet">
+        <div class="handle"></div>
+        <div class="sheetHead"><h2 id="sheetTitle">계획을 확인하고 있어요</h2><small id="sheetCount"></small></div>
+        <div class="list" id="list"></div>
+        <div class="footer" id="footer"><span id="footerText">계획을 받았어요.</span><div class="btnRow" id="footerBtns" hidden></div></div>
+      </section>
+    </div>
+
+    <aside class="notes">
+      <section class="box">
+        <h3>무엇이 바뀌나</h3>
+        <table class="compare">
+          <tr><th></th><th>지금 흐름</th><th>새 흐름</th></tr>
+          <tr><th>검사 재생</th><td>카드가 하나씩 열리며 검사 줄이 켜지고, 「확인 필요」 카드도 접고 끝까지 간다</td><td>「확인 필요」가 나온 카드에서 <b>재생이 멈추고</b> 그 카드만 열린 채 남는다(다른 줄은 흐리게)</td></tr>
+          <tr><th>「맞는지 확인」</th><td>「…찾았어요 · 맞는지 확인해 주세요」 <b>문장만 있고 누를 것이 없다</b> — 「바꾸기」 화면에도 「맞아요」가 없어 다른 후보로 바꾸는 수밖에 없다</td><td>카드 안 <b>고르기 상자</b>: 「지금 값 — 맞아요」 · 「다른 뜻」, 아래 「직접 수정」 · 「삭제」. 한 번 누르면 끝(광장시장 카드)</td></tr>
+          <tr><th>고쳐야 하는 문제</th><td>검사가 끝난 뒤 계획 확인 화면에서 카드를 골라 고친다 → 「다시 제출」</td><td>멈춘 카드 안에서 바로 고친다 — 지금 카드에 있는 동작 그대로(후보 · 직접 고르기 · 장소 없이 두기 · 자동 추천 · 수정 · 삭제)</td></tr>
+          <tr><th>고른 · 고친 뒤</th><td>—</td><td>그 카드를 다시 확인(검사 줄 다시 켜짐) → 통과하면 접고 <b>다음 카드부터 이어서</b> 재생</td></tr>
+          <tr><th>끝</th><td>「확인을 마쳤어요. 장소 3곳 확인 필요.」 → 고치고 「다시 제출」 → 「여행 등록」</td><td>「모두 확인했어요」 → 계획 확인 화면(지금과 같음) → 「여행 등록」이 바로 켜져 있다</td></tr>
+        </table>
+      </section>
+
+      <section class="box">
+        <h3>지금 화면에서 일어나는 일</h3>
+        <ol class="log" id="log"></ol>
+      </section>
+
+      <section class="box">
+        <h3>「맞는지 확인」 카드 — 먼저 고칠 것 (2026-10-19 오라클 화면 지적)</h3>
+        <p><b>원인 1 — 누를 것이 없다.</b> 서버는 애매한 장소를 장소 검사 줄의 <b>문장</b>으로만 보낸다(장소 값의 <code>needs_review</code> → <code>review.py</code> 의 「… · 맞는지 확인해 주세요」 주의 줄 → 일정이 「확인 필요」). 고를 거리(선택지)가 오지 않아 화면은 글자만 그리고, 확인 필요 일정은 잠금도 막혀 있어(<code>lock_needs_confirmed_item</code>) 「맞아요」로 끝낼 길이 없다.</p>
+        <p><b>원인 2 — 「이전」이 카드와 다르다.</b> 「바뀜 · 이전 …」은 장소 이름을 먼저 쓴다(<code>plan-check.tsx</code> <code>wasText = item.place || item.title</code>). 카드 제목은 원문 「광장시장」이었는데 서버가 고른 장소 「순희네빈대떡」이 「이전」으로 나왔다.</p>
+        <ul>
+          <li><span class="tag" data-k="now">지금 계약 · 웹만</span><b>고르기 상자</b> — 「지금 값 — 맞아요」는 지금 장소를 <b>고른 장소로 다시 보낸다</b>(<code>POST …/edits</code> place <code>{name, latitude, longitude, source}</code>, 웹의 <code>itemEdit.placePicked</code>) → 서버가 고객 값으로 받아 확인 필요가 풀린다(바꾼 것이 아니라 「바뀜」 표시 없음). 「광장시장 구경」은 한 요청에 <code>kind: activity</code> + place <code>{name: "광장시장"}</code>. 「직접 수정」은 지금 「바꾸기」 화면(후보 · 검색), 「삭제」는 <code>removed: true</code>.</li>
+          <li><span class="tag" data-k="now">웹만</span><b>「바꾸기」 화면의 「지금 일정」 카드</b>에도 「이대로 두기 — 맞아요」 단추(아래 그림).</li>
+          <li><span class="tag" data-k="now">웹만</span><b>「이전」 = 카드에 보이던 이름</b> — 「바뀜 · 이전 광장시장 · 순희네빈대떡」(제목 + 아래 「찾은 곳」 줄). 바꾼 뒤 제목은 고른 곳, 아래 「원문 「광장시장」」(지금과 같음).</li>
+          <li><span class="tag" data-k="idea">제안 · 웹만</span><b>확정 전 카드 머리</b>에 「찾은 곳 「순희네빈대떡」」 한 줄<span class="newTag">새 문구</span> — 접힌 카드만 봐도 무엇을 확인하라는지 보인다. 확정하면 제목이 그 가게가 되고 「원문 「광장시장」」.</li>
+          <li><span class="tag" data-k="talk">참고</span>「광장시장 → 시장 안 가게 하나」 오독 자체는 role-manager <code>7c255f38</code>(10-19 — 대표 장소 정답표, 시장 · 거리 · 동네는 구역)에서 고쳤다. develop(오라클 자동 배포)에는 아직 없어 오라클 화면에 남아 있다. 그래도 같은 이름 지점 · 별칭 · 오타 · 가까운 곳 임시 고르기는 계속 「맞는지 확인」이 되므로 위 단추는 필요하다.</li>
+        </ul>
+        <div class="snipWrap">
+          <div>
+            <div class="snipLabel">지금 — 「광장시장 바꾸기」의 지금 일정 카드</div>
+            <div class="snip"><span class="chip">지금 일정</span> <span class="pill" data-state="review">확인 필요</span>
+              <b>광장시장</b><span>1일차 12:30–13:30 · 식당</span>
+              <div class="row"><span class="mark" data-result="warn">!</span><span>장소</span><span>우리 식당 목록 정보로 「순희네빈대떡」을 찾았어요 · 맞는지 확인해 주세요</span></div>
+              <div class="muted">옆으로 넘기면 다른 후보 3곳 →</div></div>
+          </div>
+          <div>
+            <div class="snipLabel">제안 — 같은 카드에 확정 단추</div>
+            <div class="snip"><span class="chip">지금 일정</span> <span class="pill" data-state="review">확인 필요</span>
+              <b>광장시장</b><span>1일차 12:30–13:30 · 식당 · 찾은 곳 「순희네빈대떡」</span>
+              <div class="row"><span class="mark" data-result="warn">!</span><span>장소</span><span>우리 식당 목록 정보로 「순희네빈대떡」을 찾았어요 · 맞는지 확인해 주세요</span></div>
+              <button class="btn" data-primary type="button">이대로 두기 — 순희네빈대떡 맞아요<span class="newTag">새 문구</span></button>
+              <div class="muted">옆으로 넘기면 다른 후보 3곳 →</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="box">
+        <h3>애매한 판단을 고객이 정하는 방식 — 의견</h3>
+        <p><b>원칙.</b> 「확인 필요」는 막다른 길이 되면 안 된다 — 모든 확인 필요 줄에는 그 자리에서 끝낼 단추가 있어야 한다(최소 「맞아요」와 「다른 걸로」). 애매함은 <b>질문 하나 + 선택지 2~3개</b>로 묻고, 선택지마다 보낼 고치기(<code>/edits</code>)가 정해져 있어야 한다.</p>
+        <p><b>누가 무엇을.</b> 모델은 정하지 않고 <b>알린다</b> — 원문 근거(인용)와 해석 후보를 낸다. 코드는 후보를 실제로 찾아 검사(장소 조회 · 운영시간 · 이동)하고, 고객이 고른다. D-025 의 「모델은 분류, 코드는 사실 검사」를 묻는 자리까지 잇는 것이다.</p>
+        <table class="compare">
+          <tr><th>애매함</th><th>예</th><th>묻는 말 → 선택지</th></tr>
+          <tr><td>장소 종류(구경 · 식사)</td><td>「12:30 광장시장」이 시장 안 식당이 됨 · 「서촌 골목 걷다가」가 닭갈비집이 됨</td><td>「광장시장」을 식당 「순희네빈대떡」으로 찾았어요 → 식사 — 맞아요 · 광장시장 구경 · 직접 수정 · 삭제</td></tr>
+          <tr><td>장소(어느 곳)</td><td>같은 이름 여러 지점 · 별칭 · 오타로 찾음 · 가까운 곳 임시 고름</td><td>「○○」 맞나요 → 맞아요 · 후보 2~3 · 직접 고르기</td></tr>
+          <tr><td>시간</td><td>「저녁」 · 「오후」만 적음 · 「7시」를 오후로 봄</td><td>몇 시인가요 → 20:00 맞아요 · 20:30 · 21:00 · 시간 고치기</td></tr>
+          <tr><td>고객만 아는 것</td><td>첫날 날짜 · 예약한 숙소 · 가게 이름</td><td>읽는 동안 묻기(로딩 설문 자리 — 매니저 <code>f6e50405</code> 「빈 칸만 묻기」)</td></tr>
+        </table>
+        <p style="margin-top:8px"><b>덜 묻기.</b> 정답표 · 정확히 같은 이름은 묻지 않는다. 같은 오독이 되풀이되면 표 · 규칙으로 고친다(「시장 = 구역」처럼). 고객이 고친 이름은 이미 별칭으로 쌓인다(다음 계획에서 안 묻는다). 「끝 시각이 없어 60분」 같은 기본값은 묻지 않고 ✎(채움)로 둔다.</p>
+        <p><b>단계.</b> ① <span class="tag" data-k="now">지금 계약 · 웹만</span>장소 「맞아요」 · 「구경으로」 · 「직접 수정」 · 「삭제」 상자, 「이전」 표시, 바꾸기 화면 「이대로 두기」 — 서버를 바꾸지 않고 된다. ② <span class="tag" data-k="talk">서버 협의</span>애매함을 <b>모양으로</b> 보내기 — 검사 줄 또는 일정에 <code>ask: {kind, quote, options: [{label, edits}]}</code>(또는 <code>prefill.questions[]</code> 확장)를 실어, 웹이 문장을 읽어 짐작하지 않고 단추를 그리게 한다. 확정했을 때의 문장(「확인한 곳이에요」)과, 시간 짐작(지금 ✎ 「…두었어요 · 다르면 고쳐 주세요」)을 확인 필요로 올릴지도 같이 정한다.</p>
+      </section>
+
+      <section class="box">
+        <h3>서버 · 계약</h3>
+        <ul>
+          <li><span class="tag" data-k="now">지금 계약</span>멈추는 기준 = 검사 결과의 <code>review.items[].status: "review"</code>(화면의 「확인 필요」). 「여행 등록」이 켜지는 <code>ready</code>(= 확인 필요 0)와 같은 기준이라, 끝까지 고르고 고치면 등록 버튼이 바로 켜진다.</li>
+          <li><span class="tag" data-k="now">지금 계약</span>고르기 · 고치기는 지금 호출 그대로 — <code>POST …/edits</code>(장소 <code>{name}</code> · 고른 장소 <code>{name, latitude, longitude, source}</code> · 「장소 없음」 <code>{none:true}</code> · 종류 · 시각 · 삭제), 후보 <code>GET …/candidates</code>, 자동 추천. 응답이 <b>새 판의 전체 검사</b>라, 뒤에 아직 안 그린 카드도 새 판 값으로 이어 그린다.</li>
+          <li><span class="tag" data-k="talk">협의 필요</span>서버가 뒤 일정을 아직 확인하는 중(<code>status: reading</code>)이면 <code>/edits</code> 는 <code>409 intake_not_editable</code> 다. 안 1(화면만): 고른 값을 들고 있다가 서버 확인이 끝나면 바로 보낸다(「서버 확인이 늦을 때」 스위치). 안 2(서버): 읽는 중에도 이미 확인한 일정은 고칠 수 있게 연다.</li>
+          <li><span class="tag" data-k="talk">협의 필요</span>위 「의견」의 ② — 애매함을 모양(<code>ask</code>)으로, 확정 문장, 시간 짐작의 확인 필요 여부. 목업의 남산서울타워 시간 줄(!)은 이 제안을 넣은 모습이고, 지금 서버는 ✎ 로 보내 멈추지 않는다(「지금 흐름」에서 확인).</li>
+          <li><span class="tag" data-k="screen">화면만</span>멈춤 · 이어가기는 화면의 재생 조절(<code>use-reveal.ts</code>)이다. 서버가 검사하는 순서 · 내용은 그대로다.</li>
+          <li><span class="tag" data-k="idea">제안</span>이동 구간만 「확인 필요」(예: 도착이 늦음)면 그 구간이 닿는 <b>다음 카드에서 함께 멈춘다</b>. 장소를 몰라 「–」인 구간은 멈추지 않고, 카드를 고치면 같이 다시 잰다.</li>
+        </ul>
+      </section>
+
+      <section class="box">
+        <h3>결정할 것</h3>
+        <ol>
+          <li><b>멈추는 기준</b> — 「확인 필요」 전부(✕ 고쳐야 함 · ! 주의) / ✕ 만. 목업은 전부(등록 조건과 같음).</li>
+          <li><b>고르지 · 고치지 않고 넘어가기</b> — 멘토 피드백대로면 막는다(목업 기본). 열어 두면 「이대로 두고 다음으로」<span class="newTag">새 문구</span> → 그 카드는 확인 필요로 남고 끝난 뒤 다시 고친다.</li>
+          <li><b>메뉴의 「애니메이션 건너뛰기」를 켠 사람</b> — 한 번에 다 그린 뒤 첫 「확인 필요」 카드로 옮겨 멈춘다(제안).</li>
+          <li><b>서버 확인이 화면보다 늦을 때</b> — 위 「협의 필요」 안 1 / 안 2.</li>
+          <li><b>멈춘 동안 다른 동작</b> — 지도 · 다른 카드 · 「전체 자동 추천」은 눌리지 않게(목업).</li>
+          <li><b>확정 전 카드 머리</b> — 원문 제목 + 「찾은 곳 「…」」 한 줄(목업) / 찾은 가게 이름을 제목으로 + 「원문 「…」」.</li>
+          <li><b>시간 짐작도 멈춰 물을지</b> — 「저녁」 · 오후로 본 「7시」 같은 것. 묻는다면 서버가 확인 필요로 올려야 한다(협의).</li>
+        </ol>
+      </section>
+
+      <section class="box">
+        <h3>문구</h3>
+        <p><b>새로 지은 문구</b> <span class="newTag">새 문구</span> — 「이 일정을 먼저 고쳐 주세요」 · 「이 일정이 맞는지 먼저 확인해 주세요」 · 「고치면(고르면) 다음 일정을 이어서 확인해요 · 남은 일정 n곳」 · 「고치면(고르면) 확인을 마쳐요」 · 「다음 일정을 이어서 확인해요」 · 「확인했어요」 · 단계 칸의 「멈춤 · ○○」 · 「찾은 곳 「○○」」 · 고르기 상자의 안내 문장과 「다른 뜻」 · 「○○에서 식사 — 맞아요」 · 「○○ 구경 — 식당이 아니에요」 · 「직접 수정」 · 「20:00 맞아요」 · 「30분 늦게」 · 「1시간 늦게」 · 「이대로 두기 — ○○ 맞아요」 · 「이대로 두고 다음으로」 · 「뒤 일정 확인이 끝나면 바로 저장해요」. 서버 문장 제안: 「확인한 곳이에요 · …에서 찾았어요」 · 「「저녁」이라고만 적혀 있어 20:00으로 두었어요 · 맞는지 확인해 주세요」.</p>
+        <p><b>앱 문구 그대로</b> — 단계(받았어요 · 일정 읽기 · 장소·운영시간 · 정리 완료) · 「장소·운영시간 확인」 · 「장소 n/n · 이동 n/n」 · 「장소와 운영시간을 확인하고 있어요.」 · 「확인하는 중…」 · 「확인 필요」 · 「확인 필요 · ○○」 · 「위치 미정 · ○○」 · 「지금 값」 · 「원문 「○○」」 · 「바뀜 · 이전 ○○」 · 「되돌리기」 · 못 찾은 장소 카드(질문 · 후보 · 「직접 고르기」 · 「장소 없이 두기」) · 「자동 추천」 · 「대체 후보 1순위 · 바뀐 장소와 앞뒤 이동을 다시 확인해요」 · 「시간 고치기」 · 「다시 확인하는 중…」 · 「다시 확인하는 중이에요 · 잠시만요」 · 「고친 내용을 다시 확인했어요」 · 「○○ 일정은 장소 없이 두었어요」 · 「앞뒤 이동은 장소가 정해지면 확인해요」 · 「모두 확인했어요」 · 「확인을 마쳤어요. 장소 n곳 확인 필요.」 · 「계획 확인 화면이에요」 · 「일정을 수정하거나 권장 수정안을 확인해 주세요」 · 「다시 제출」 · 「여행 등록」 · 「이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요」 · 바꾸기 화면(「지금 일정」 · 「옆으로 넘기면 다른 후보 n곳 →」).</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ── 예시 계획(값은 예시 · 검사 줄 문장은 지금 서버가 쓰는 문장) ─────────────────────
+const DAY = { label: "1일차", date: "10.26 월" };
+const LINES = ["10/26 10:00 경복궁 (12시까지)", "12:30 광장시장", "15:00 창덕궁 관람 (16:30까지)", "18:00 을지로 그 집에서 저녁", "저녁에 남산타워"];
+const KIND = { place: "장소", time: "시간", hours: "운영시간", closed: "휴무일", route: "경로", mode: "수단", arrival: "도착" };
+const GLYPH = { ok: "✓", filled: "✎", warn: "!", bad: "✕", unknown: "–", pending: "" };
+const ICON = { activity: "⌖", dining: "🍴" };
+const END_FILLED = ["time", "filled", "끝 시각이 없어 60분으로 두었어요"];
+const PICKED = ["place", "ok", "직접 고른 곳이에요 · 우리 장소 목록에서 찾았어요"];
+
+// fix: confirm(애매함 — 고르기) · closed(문제 — 고치기) · unfound(문제 — 고치기) · time(애매함 — 고르기)
+// checksNow: 지금 서버가 보내는 줄(새 흐름의 제안과 다를 때만)
+const STOPS = [
+  { id: "a", start: "10:00", end: "12:00", title: "경복궁", kind: "activity", pos: [24, 22],
+    checks: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "ok", "09:00–18:00 안에 머물러요"], ["closed", "ok", "화요일 휴무 · 방문은 월요일"]] },
+  { id: "b", start: "12:30", end: "13:30", title: "광장시장", kind: "dining", found: "순희네빈대떡", pos: [74, 50], fix: "confirm",
+    checks: [["place", "warn", "우리 식당 목록 정보로 「순희네빈대떡」을 찾았어요 · 맞는지 확인해 주세요"], END_FILLED, ["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "월요일은 열어요"]],
+    confirm: { title: "순희네빈대떡", checks: [["place", "ok", "확인한 곳이에요 · 우리 식당 목록에서 찾았어요"], END_FILLED, ["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "월요일은 열어요"]] },
+    market: { title: "광장시장", kind: "activity", pos: [73, 47],
+      checks: [["place", "ok", "관광공사 정보로 찾았어요"], END_FILLED, ["hours", "unknown", "시장 안 점포마다 영업시간 · 쉬는 날이 달라요(한국관광공사)"]] },
+    shops: [
+      { key: "A", name: "오복함흥냉면", meta: "식당 · 냉면 · 광장시장에서 0.3km", pos: [69, 57],
+        checks: [PICKED, END_FILLED, ["hours", "ok", "11:00–20:30 안에 머물러요 · 브레이크 16:00–17:00"], ["closed", "ok", "월요일은 열어요"]] },
+      { key: "B", name: "박가네빈대떡", meta: "식당 · 빈대떡 · 광장시장 안", pos: [77, 53],
+        checks: [PICKED, END_FILLED, ["hours", "ok", "09:00–22:00 안에 머물러요"], ["closed", "ok", "월요일은 열어요"]] },
+    ] },
+  { id: "c", start: "15:00", end: "16:30", title: "창덕궁 관람", kind: "activity", pos: [58, 15], fix: "closed",
+    checks: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "ok", "09:00–18:00 안에 머물러요"], ["closed", "bad", "월요일 휴무 · 방문은 월요일"]],
+    recommend: { name: "북촌한옥마을", meta: "관광지 · 서울 종로구 · 창덕궁에서 0.6km", pos: [45, 11],
+      checks: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "ok", "10:00–17:00 안에 머물러요"], ["closed", "ok", "휴무일 없음"]] } },
+  { id: "d", start: "18:00", end: "19:00", title: "을지로 그 집", kind: "dining", pos: null, fix: "unfound",
+    checks: [["place", "bad", "「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"], ["hours", "unknown", "장소가 정해지면 확인해요"]],
+    candidates: [
+      { key: "A", name: "을지면옥", meta: "냉면 · 서울 중구 · 광장시장에서 1.2km", pos: [56, 64],
+        checks: [PICKED, ["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "일요일 휴무 · 방문은 월요일"]] },
+      { key: "B", name: "을지로 칼국수", meta: "칼국수 · 서울 중구 · 광장시장에서 1.4km", pos: [62, 68],
+        checks: [PICKED, ["hours", "ok", "10:30–20:00 안에 머물러요"], ["closed", "ok", "휴무일 없음"]] },
+    ] },
+  { id: "e", start: "20:00", end: "21:30", title: "남산서울타워", kind: "activity", pos: [40, 84], fix: "time",
+    checks: [["place", "ok", "관광공사 정보로 찾았어요"], ["time", "warn", "「저녁」이라고만 적혀 있어 20:00으로 두었어요 · 맞는지 확인해 주세요"], ["hours", "ok", "10:30–22:30 안에 머물러요"]],
+    checksNow: [["place", "ok", "관광공사 정보로 찾았어요"], ["time", "filled", "「저녁」이라고만 적혀 있어 20:00으로 두었어요 · 다르면 고쳐 주세요"], ["hours", "ok", "10:30–22:30 안에 머물러요"]],
+    times: [["20:00", "지금 값"], ["20:30", "30분 늦게"], ["21:00", "1시간 늦게"]] },
+];
+const ASK = new Set(["confirm", "time"]);          // 애매함(고르기) — 나머지는 문제(고치기)
+
+// ── 상태 ────────────────────────────────────────────────────────────
+let mode = "new", speed = 1, allowSkip = false, lateServer = false, runId = 0, waiter = null;
+const $ = (id) => document.getElementById(id);
+const list = $("list"), pins = $("pins");
+class Cancelled extends Error {}
+const sleep = (ms) => { const id = runId; return new Promise((ok, no) => setTimeout(() => id === runId ? ok() : no(new Cancelled()), ms / speed)); };
+const userPick = () => new Promise((ok, no) => { waiter = { ok, no }; });
+const esc = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const NEW = `<span class="newTag">새 문구</span>`;
+const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const fromMin = (n) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+const span = (n) => n >= 60 ? `${Math.floor(n / 60)}시간${n % 60 ? ` ${n % 60}분` : ""}` : `${n}분`;
+const stopOf = (id) => STOPS.find((stop) => stop.id === id);
+
+let state;
+const seenKeys = new Set();
+const enter = (key) => { if (seenKeys.has(key)) return ""; seenKeys.add(key); return " data-enter"; };
+function freshState() {
+  const items = {};
+  for (const stop of STOPS) items[stop.id] = { title: stop.title, kind: stop.kind, found: mode === "new" ? stop.found ?? null : null, written: null, pos: stop.pos,
+    start: stop.start, end: stop.end, shown: [], verdict: null, open: false, waiting: true, stop: false, rechecking: false, saving: false, panel: null,
+    changedFrom: null, noPlace: false, removed: false };
+  return { items, legs: new Set(), stage: "received", pct: 0, sub: "", stoppedAt: null };
+}
+const active = () => STOPS.filter((stop) => !state.items[stop.id].removed);
+function prevActive(id) { const order = active(); const at = order.findIndex((stop) => stop.id === id); return at > 0 ? order[at - 1].id : null; }
+// ★「이전」 = 카드에 보이던 이름 그대로(제목 + 확정 전 「찾은 곳」). 지금 앱은 장소 이름을 먼저 써서 카드에 없던 이름이 나왔다.
+const wasText = (s) => s.found ? `${s.title} · ${s.found}` : s.title;
+
+/** 이동 — 두 장소의 위치 · 시각으로 계산한 예시 값. 한쪽이라도 장소를 모르면 「–」. */
+function legOf(fromId, toId) {
+  const f = state.items[fromId], t = state.items[toId];
+  if (!f.pos || !t.pos) return { mark: "unknown", text: "앞뒤 이동은 장소가 정해지면 확인해요", free: "" };
+  const km = Math.hypot(f.pos[0] - t.pos[0], (f.pos[1] - t.pos[1]) * 0.7) * 0.045;
+  const walk = km <= 1.0;
+  const minutes = walk ? Math.max(5, Math.round(km * 15)) : Math.round(7 + km * 4.5);
+  const slack = toMin(t.start) - toMin(f.end) - minutes;
+  return { mark: slack < 0 ? "warn" : "ok", text: `${walk ? "도보" : "지하철"} ${minutes}분 · ${km.toFixed(1)}km`, free: slack < 0 ? `${-slack}분 늦어요` : `여유 ${span(slack)}` };
+}
+
+// ── 그리기 ──────────────────────────────────────────────────────────
+function checksHtml(rows, id) {
+  return `<ul class="checks">${rows.map(([kind, result, text], i) => `<li class="check" data-result="${result}"${enter(`${id}:${i}:${result}:${text}`)}><span class="mark">${GLYPH[result]}</span><b class="checkKind">${KIND[kind]}</b><span class="checkText">${result === "pending" ? "확인하는 중…" : esc(text)}</span></li>`).join("")}</ul>`;
+}
+function nameHtml(s, result = false) {
+  return `<div class="cardName"><h3 class="cardTitle">${esc(s.title)}${s.changedFrom ? `<span class="changedMark">✓</span>` : ""}</h3>${
+    s.found && !s.waiting ? `<small class="cardWritten" data-found>찾은 곳 「${esc(s.found)}」${result ? "" : NEW}</small>` : ""}${
+    s.written ? `<small class="cardWritten">원문 「${esc(s.written)}」</small>` : ""}</div>`;
+}
+function footHtml(s) {
+  return s.changedFrom ? `<div class="cardFoot"><small>바뀜 · 이전 ${esc(s.changedFrom)}</small><span class="undo">↶ 되돌리기</span></div>` : "";
+}
+function itemHtml(stop) {
+  const s = state.items[stop.id];
+  if (s.removed) return "";
+  const verdict = s.waiting ? "checking" : s.verdict ?? "checking";
+  const checking = !s.waiting && s.verdict === null;
+  const status = checking && !s.rechecking ? `<span class="spinner" role="img" aria-label="확인하는 중"></span>` : s.verdict === "review" && !s.stop ? `<span class="pill" data-state="review">확인 필요</span>` : "";
+  const head = `<div class="cardHead"><span class="kindIcon">${ICON[s.kind]}</span>${nameHtml(s)}${status}</div>`;
+  const body = s.open ? (s.rechecking ? `<div class="recheckRow"><span class="spinner"></span>다시 확인하는 중…</div>` : "") + checksHtml(s.shown, stop.id) + (s.stop ? fixHtml(stop) : "") : "";
+  return `<div class="entry"${enter(`item:${stop.id}`)} data-type="item" data-id="${stop.id}" data-verdict="${verdict}" ${s.waiting ? "data-waiting" : ""} ${s.stop ? "data-stop" : ""} ${state.stoppedAt === stop.id ? "data-focus" : ""}>
+    <div class="time">${s.start}<small>~${s.end}</small></div><div class="rail"><span class="dot"></span></div>
+    <article class="card">${head}${body}${s.open ? "" : footHtml(s)}</article></div>`;
+}
+function skipHtml() {
+  return allowSkip ? `<button class="skip" data-act="skip">이대로 두고 다음으로</button><span class="newTag" style="justify-self:center">새 문구 · 결정 2</span>` : "";
+}
+function fixHtml(stop) {
+  const s = state.items[stop.id];
+  if (s.saving) return `<div class="fix"><div class="waitSave"><span class="spinner"></span>뒤 일정 확인이 끝나면 바로 저장해요${NEW}</div></div>`;
+  if (stop.fix === "confirm") {
+    const shops = s.panel === "shops" ? stop.shops.map((c) => `<button class="cand" data-act="shop" data-key="${c.key}"><i>${c.key}</i><b>${esc(c.name)}</b><small>${esc(c.meta)}</small></button>`).join("")
+      + `<button class="btn" data-act="direct">직접 고르기</button>` : "";
+    return `<div class="decide"${enter(`decide:${stop.id}`)}>
+      <p class="decideHint">장소 · 계획서의 「${esc(stop.title)}」을 식당 「${esc(stop.found)}」으로 찾았어요 · 맞는 쪽을 눌러 주세요${NEW}</p>
+      <div class="decideOptions">
+        <button class="decideOption" data-current data-act="confirm"><small>지금 값</small><span>${esc(stop.found)}에서 식사 — 맞아요</span></button>
+        <button class="decideOption" data-act="market"><small>다른 뜻</small><span>${esc(stop.title)} 구경 — 식당이 아니에요</span></button>
+      </div>${shops}
+      <div class="btnPair"><button class="btn" data-act="shops">직접 수정</button><button class="btn" data-act="remove">삭제</button></div>${skipHtml()}</div>`;
+  }
+  if (stop.fix === "time") {
+    return `<div class="decide"${enter(`decide:${stop.id}`)}>
+      <p class="decideHint">시간 · 계획서에 「저녁」이라고만 적혀 있어요 · 맞는 시각을 눌러 주세요${NEW}</p>
+      <div class="decideOptions" data-row>${stop.times.map(([time, label], i) => `<button class="decideOption" ${i === 0 ? "data-current" : ""} data-act="time" data-key="${time}"><small>${label}</small><span>${time}${i === 0 ? " 맞아요" : ""}</span></button>`).join("")}</div>
+      <button class="skip" data-act="timeEdit" style="text-decoration:none">시간 고치기 ›</button>${skipHtml()}</div>`;
+  }
+  if (stop.fix === "unfound") {
+    // 질문 문장은 위 ✕ 장소 줄이 이미 말한다 — 후보부터 보인다(지금 못 찾은 장소 카드와 같은 단추).
+    return `<div class="fix"${enter(`fix:${stop.id}`)}>
+      ${stop.candidates.map((c) => `<button class="cand" data-act="pick" data-key="${c.key}"><i>${c.key}</i><b>${esc(c.name)}</b><small>${esc(c.meta)}</small></button>`).join("")}
+      <button class="btn" data-primary data-act="direct">직접 고르기</button>
+      <button class="btn" data-act="noplace">장소 없이 두기</button>${skipHtml()}</div>`;
+  }
+  const r = stop.recommend;
+  return `<div class="fix"${enter(`fix:${stop.id}`)}>
+    <button class="btn" data-primary data-act="recommend">자동 추천 — ${esc(r.name)}<small>대체 후보 1순위 · 바뀐 장소와 앞뒤 이동을 다시 확인해요</small></button>
+    <div class="btnPair"><button class="btn" data-act="edit">수정</button><button class="btn" data-act="remove">삭제</button></div>${skipHtml()}</div>`;
+}
+function legHtml(fromId, toId) {
+  if (!state.legs.has(fromId + toId)) return "";
+  const leg = legOf(fromId, toId);
+  return `<div class="entry"${enter(`leg:${fromId}${toId}:${leg.text}`)} data-type="move" data-verdict="${leg.mark === "unknown" ? "checking" : "keep"}" ${state.stoppedAt === toId ? "data-stop-move" : ""}>
+    <div class="time">${state.items[fromId].end}</div><div class="rail"><span class="dot"></span></div>
+    <div class="move" data-result="${leg.mark}"><span class="mark">${GLYPH[leg.mark]}</span><span class="moveText">${esc(leg.text)}</span>${leg.free ? `<span class="free">${esc(leg.free)}</span>` : ""}</div></div>`;
+}
+function timelineHtml(itemOf) {
+  const order = active();
+  return order.map((stop, i) => itemOf(stop) + (order[i + 1] ? legHtml(stop.id, order[i + 1].id) : "")).join("");
+}
+function render() {
+  const phone = $("phone");
+  phone.dataset.stage = state.stage;
+  if (state.stage === "received" || state.stage === "reading") return renderReading();
+  if (state.stage === "result") return renderResult();
+  const stopped = state.stoppedAt;
+  list.toggleAttribute("data-stopped", Boolean(stopped));
+  phone.toggleAttribute("data-stopped", Boolean(stopped));
+  const left = active().filter((stop) => state.items[stop.id].waiting).length;
+  const asking = stopped && ASK.has(stopOf(stopped).fix);
+  const verb = asking ? "고르면" : "고치면";
+  list.innerHTML = `<div class="stopBanner"><span class="mark" data-result="warn" style="background:var(--color-warning);color:#fff">!</span><div><b>${asking ? "이 일정이 맞는지 먼저 확인해 주세요" : "이 일정을 먼저 고쳐 주세요"}${NEW}</b><span>${left ? `${verb} 다음 일정을 이어서 확인해요 · 남은 일정 ${left}곳` : `${verb} 확인을 마쳐요`}</span></div></div>
+    <div class="dayHead">${DAY.label}<small>${DAY.date}</small></div>` + timelineHtml(itemHtml);
+  $("sheetTitle").textContent = state.stage === "done" ? "정리 완료" : "장소·운영시간 확인";
+  const order = active();
+  const placesDone = order.filter((stop) => !state.items[stop.id].waiting && state.items[stop.id].verdict).length;
+  const legsShown = order.slice(1).filter((stop, i) => state.legs.has(order[i].id + stop.id)).length;
+  $("sheetCount").textContent = `장소 ${placesDone}/${order.length} · 이동 ${legsShown}/${Math.max(0, order.length - 1)}`;
+  renderStage(stopped ? `멈춤 · ${state.items[stopped].title}` : state.sub);
+  renderPins();
+}
+function renderReading() {
+  list.removeAttribute("data-stopped");
+  $("phone").removeAttribute("data-stopped");
+  $("sheetTitle").textContent = "계획을 확인하고 있어요";
+  $("sheetCount").textContent = "";
+  const read = state.read ?? 0;
+  list.innerHTML = `<div class="stageDots">${["받았어요", "일정 읽기", "장소·운영시간", "정리 완료"].map((label, i) => `<span ${i <= (state.stage === "reading" ? 1 : 0) ? "data-on" : ""}>● ${label}</span>`).join("")}</div>
+    <ul class="reading">${LINES.slice(0, Math.max(read, state.lines ?? 0)).map((line, i) => `<li ${i < read ? "data-read" : ""}${enter(`line:${i}`)}><span class="mark" data-result="${i < read ? "ok" : "unknown"}">${i < read ? "✓" : ""}</span>${esc(line)}</li>`).join("")}</ul>`;
+  renderStage(state.sub);
+  renderPins();
+}
+function renderStage(sub) {
+  const labels = { received: "받았어요", reading: "일정 읽기", checking: "장소·운영시간", done: "정리 완료" };
+  $("stageLabel").textContent = labels[state.stage] ?? "";
+  $("stageLabel").toggleAttribute("data-stop", Boolean(state.stoppedAt));
+  $("stagePill").toggleAttribute("data-stop", Boolean(state.stoppedAt));
+  $("stagePct").textContent = `${Math.round(state.pct)}%`;
+  $("stageBar").style.width = `${state.pct}%`;
+  $("stageSub").innerHTML = sub ? esc(sub) + (state.stoppedAt ? NEW : "") : "&nbsp;";
+}
+// 핀은 지도의 보이는 칸(위 막대 아래 ~ 시트 위)에 들어오게 둔다 — 멈춰 시트가 올라오면 위쪽으로 모은다.
+const pinTop = (y) => 76 + y * (state.stoppedAt ? 1.3 : 2.0);
+function renderPins() {
+  const out = [];
+  let unresolved = null;
+  active().forEach((stop, i) => {
+    const s = state.items[stop.id];
+    if (s.waiting) return;
+    if (!s.pos) { if (!s.noPlace) unresolved = s.title; return; }
+    const st = state.stoppedAt === stop.id ? "stop" : s.verdict === null ? "current" : s.verdict === "review" ? "review" : "";
+    out.push(`<div class="pin" data-state="${st}" style="left:${s.pos[0]}%;top:${pinTop(s.pos[1])}px"><span>${i + 1}</span></div>`);
+  });
+  const stopped = state.stoppedAt && stopOf(state.stoppedAt);
+  const extra = stopped?.fix === "unfound" ? stopped.candidates : stopped?.fix === "confirm" && state.items[stopped.id].panel === "shops" ? stopped.shops : [];
+  for (const c of extra) out.push(`<div class="pin" data-state="candidate" style="left:${c.pos[0]}%;top:${pinTop(c.pos[1])}px"><span>${c.key}</span></div>`);
+  pins.innerHTML = out.join("");
+  const chip = $("mapChip");
+  chip.hidden = !unresolved;
+  chip.textContent = unresolved ? `${state.stoppedAt ? "확인 필요" : "위치 미정"} · ${unresolved}` : "";
+}
+function renderResult() {
+  list.removeAttribute("data-stopped");
+  $("phone").removeAttribute("data-stopped");
+  $("sheetTitle").textContent = "계획 확인";
+  const needs = active().filter((stop) => state.items[stop.id].verdict === "review").length;
+  $("sheetCount").innerHTML = needs ? `<span class="pill" data-state="review">! ${needs}</span>` : `<span class="pill">✓</span>`;
+  list.innerHTML = `<div class="dayHead">${DAY.label}<small>${DAY.date}</small></div>` + timelineHtml((stop) => {
+    const s = state.items[stop.id];
+    return `<div class="entry resultCard" data-type="item" data-verdict="${s.verdict}"><div class="time">${s.start}<small>~${s.end}</small></div><div class="rail"><span class="dot"></span></div>
+      <article class="card"><div class="cardHead"><span class="kindIcon">${ICON[s.kind]}</span>${nameHtml(s, true)}${s.verdict === "review" ? `<span class="pill" data-state="review">확인 필요</span>` : ""}<span class="actIcons">✨ ✎ 🗑</span></div>${footHtml(s)}</article></div>`;
+  });
+  renderPins();
+}
+function toast(title, sub, ms = 2200) {
+  const box = $("toast");
+  box.querySelector("b").innerHTML = title;
+  box.querySelector("span").innerHTML = sub;
+  box.setAttribute("data-show", "");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => box.removeAttribute("data-show"), ms / speed);
+}
+function footer(text, buttons = "") {
+  $("footerText").innerHTML = text;
+  const row = $("footerBtns");
+  row.hidden = !buttons;
+  row.innerHTML = buttons;
+}
+const logItems = [];
+function log(text) {
+  logItems.push(text);
+  $("log").innerHTML = logItems.map((line, i) => `<li ${i === logItems.length - 1 ? "data-now" : ""}>${line}</li>`).join("");
+  $("log").scrollTop = $("log").scrollHeight;
+}
+function scrollTo(id) {
+  const target = list.querySelector(`[data-id="${id}"]`);
+  // 멈춤 띠(sticky)가 위를 가리므로 그만큼 남기고 카드 머리를 맞춘다.
+  if (target) list.scrollTo({ top: Math.max(0, target.offsetTop - (state.stoppedAt ? 64 : 12)), behavior: "smooth" });
+}
+const stepsTotal = () => active().length * 2 - 1;
+const setPct = (done) => { state.pct = Math.min(99, 33 + 66 * done / stepsTotal()); };
+
+// ── 재생 ────────────────────────────────────────────────────────────
+async function revealChecks(id, rows) {
+  const s = state.items[id];
+  s.shown = rows.map(([kind]) => [kind, "pending", ""]);
+  render(); scrollTo(id);
+  await sleep(800);                                  // 새 핀에 눈이 갈 시간(NEW_PIN_HOLD_MS)
+  for (let i = 0; i < rows.length; i += 1) {
+    s.shown[i] = rows[i];
+    // 빨강 · 회색(✕ · –)은 앞 줄과 함께 바로 나온다(isInstantRow)
+    while (i + 1 < rows.length && (rows[i + 1][1] === "bad" || rows[i + 1][1] === "unknown")) { i += 1; s.shown[i] = rows[i]; }
+    render();
+    await sleep(300);                                // REVEAL_MS
+  }
+}
+const verdictOf = (rows) => rows.some(([, r]) => r === "bad" || r === "warn") ? "review" : rows.some(([, r]) => r === "filled") ? "adjusted" : "keep";
+
+async function run() {
+  runId += 1;
+  if (waiter) { waiter.no(new Cancelled()); waiter = null; }
+  state = freshState();
+  seenKeys.clear();
+  logItems.length = 0;
+  $("toast").removeAttribute("data-show");
+  footer("계획을 받았어요.");
+  try {
+    log(mode === "new" ? "새 흐름 — 「확인 필요」에서 멈추고, 고르거나 고친 뒤 이어간다" : "지금 흐름 — 끝까지 재생한 뒤 결과 화면에서 고친다");
+    render(); await sleep(900);
+    state.stage = "reading"; state.pct = 4; state.lines = 0; state.read = 0;
+    footer("계획을 확인하고 있어요"); log("① 일정 읽기 — 원문을 한 줄씩 읽는다(지금과 같음)");
+    for (let i = 0; i < LINES.length; i += 1) {
+      state.lines = i + 1; state.sub = `읽는 중 ${i}/${LINES.length}줄`; render(); await sleep(240);
+      state.read = i + 1; state.pct = 4 + 29 * (i + 1) / LINES.length; state.sub = `읽는 중 ${i + 1}/${LINES.length}줄`; render(); await sleep(240);
+    }
+    await sleep(500);
+    state.stage = "checking"; state.pct = 33; state.sub = "";
+    footer("장소와 운영시간을 확인하고 있어요."); log("② 장소·운영시간 — 카드가 하나씩 열리고 검사 줄이 켜진다");
+    render(); await sleep(600);
+    let done = 0;
+    for (const stop of STOPS) {
+      const s = state.items[stop.id];
+      if (s.removed) continue;
+      const prev = prevActive(stop.id);
+      if (prev && !state.legs.has(prev + stop.id)) { state.legs.add(prev + stop.id); done += 1; setPct(done); render(); await sleep(300); }
+      s.waiting = false; s.open = true; s.verdict = null;
+      state.sub = `${done + 1}/${stepsTotal()} · ${s.title}`;
+      const rows = mode === "old" && stop.checksNow ? stop.checksNow : stop.checks;
+      await revealChecks(stop.id, rows);
+      const verdict = verdictOf(rows);
+      if (verdict === "review" && mode === "new") {
+        await stopAndFix(stop);
+      } else {
+        s.verdict = verdict;
+        if (verdict === "review") log(`「${s.title}」 확인 필요 — 누를 것 없이 접고 다음으로(지금 흐름)`);
+        render(); await sleep(500);
+        s.open = false; render();
+      }
+      done += 1; setPct(done); render(); await sleep(250);
+    }
+    state.stage = "done"; state.pct = 100; state.sub = "서울 하루 여행";
+    const needs = active().filter((stop) => state.items[stop.id].verdict === "review").length;
+    footer(needs ? `확인을 마쳤어요. 장소 ${needs}곳 확인 필요.` : "모두 확인했어요");
+    log(needs ? `③ 정리 완료 — 확인 필요 ${needs}곳이 남은 채 끝` : "③ 정리 완료 — 확인 필요 0곳");
+    render(); await sleep(1400);
+    state.stage = "result"; render();
+    toast("계획 확인 화면이에요", "일정을 수정하거나 권장 수정안을 확인해 주세요", 3000);
+    if (needs) {
+      footer("아래로 스크롤하면 권장 수정안이 나와요", `<button class="btn" aria-disabled="true" style="flex:1">다시 제출</button>`);
+      log("④ 계획 확인 화면 — 카드를 골라 고치고 「다시 제출」 → 「여행 등록」(지금과 같음). 광장시장은 「맞아요」로 끝낼 단추가 없다");
+    } else {
+      footer("이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요", `<button class="btn" data-primary style="flex:1">여행 등록</button>`);
+      log("④ 계획 확인 화면 — 고칠 곳이 없어 「여행 등록」이 바로 켜져 있다(지금 화면 그대로)");
+    }
+  } catch (error) { if (!(error instanceof Cancelled)) throw error; }
+}
+
+/** 고른 것 · 고친 것을 카드에 싣는다 — 다시 확인할 검사 줄과 알림 문장을 돌려준다. */
+function applyChoice(stop, act) {
+  const s = state.items[stop.id], was = wasText(s);
+  switch (act.type) {
+    case "confirm":
+      Object.assign(s, { title: stop.confirm.title, written: stop.title, found: null });
+      return { rows: stop.confirm.checks, toast: ["확인했어요" + NEW, "다음 일정을 이어서 확인해요" + NEW],
+        log: "「지금 값 — 맞아요」 → 지금 장소를 고른 장소로 다시 보냄 <code>/edits</code> place {name, latitude, longitude, source}(지금 계약) — 바꾼 게 아니라 「바뀜」 없음" };
+    case "market":
+      Object.assign(s, { title: stop.market.title, kind: stop.market.kind, pos: stop.market.pos, found: null, changedFrom: was });
+      return { rows: stop.market.checks, toast: ["고친 내용을 다시 확인했어요", "다음 일정을 이어서 확인해요" + NEW],
+        log: "「구경 — 식당이 아니에요」 → 한 요청에 kind activity + place {name: 광장시장}(지금 계약) — 「바뀜 · 이전 광장시장 · 순희네빈대떡」" };
+    case "shop": {
+      const c = stop.shops.find((entry) => entry.key === act.key);
+      Object.assign(s, { title: c.name, written: stop.title, pos: c.pos, found: null, panel: null, changedFrom: was });
+      return { rows: c.checks, toast: ["고친 내용을 다시 확인했어요", "다음 일정을 이어서 확인해요" + NEW],
+        log: `직접 수정에서 ${c.key} 「${c.name}」 → 고른 장소로 <code>/edits</code> — 「바뀜 · 이전 ${was}」(카드에 보이던 이름)` };
+    }
+    case "pick": {
+      const c = stop.candidates.find((entry) => entry.key === act.key);
+      Object.assign(s, { title: c.name, written: stop.title, pos: c.pos, changedFrom: was });
+      return { rows: c.checks, toast: ["고친 내용을 다시 확인했어요", "다음 일정을 이어서 확인해요" + NEW],
+        log: `후보 ${c.key} 「${c.name}」 선택 → <code>POST …/edits</code> → 새 판` };
+    }
+    case "noplace":
+      s.noPlace = true;
+      return { rows: [["place", "unknown", "장소 없이 두었어요 · 운영시간과 이동은 확인하지 않아요"]], toast: [`${esc(s.title)} 일정은 장소 없이 두었어요`, "앞뒤 이동은 장소가 정해지면 확인해요"],
+        log: "「장소 없이 두기」 → <code>POST …/edits</code> place {none:true} → 새 판" };
+    case "recommend": {
+      const r = stop.recommend;
+      Object.assign(s, { title: r.name, written: stop.title, pos: r.pos, changedFrom: was });
+      return { rows: r.checks, toast: ["고친 내용을 다시 확인했어요", "다음 일정을 이어서 확인해요" + NEW], log: `「자동 추천」 → 대체 후보 1순위 「${r.name}」 → 새 판` };
+    }
+    case "time": {
+      const same = act.key === s.start;
+      if (!same) { s.changedFrom = `${s.start}~${s.end}`; s.end = fromMin(toMin(act.key) + (toMin(s.end) - toMin(s.start))); s.start = act.key; }
+      return { rows: [stop.checks[0], ["hours", "ok", "10:30–22:30 안에 머물러요"]], toast: same ? ["확인했어요" + NEW, "다음 일정을 이어서 확인해요" + NEW] : ["고친 내용을 다시 확인했어요", "다음 일정을 이어서 확인해요" + NEW],
+        log: same ? "「20:00 맞아요」 → 지금 시각을 고객 값으로 보냄 <code>/edits</code> starts_at(지금 계약) — 「바뀜」 없음" : `「${act.key}」 → <code>/edits</code> starts_at · ends_at → 새 판 — 「바뀜 · 이전 20:00~21:30」` };
+    }
+    default: return null;
+  }
+}
+
+async function stopAndFix(stop) {
+  const s = state.items[stop.id];
+  const asking = ASK.has(stop.fix);
+  s.verdict = "review"; s.stop = true; s.panel = null; state.stoppedAt = stop.id;
+  footer(`확인 필요 · ${esc(s.title)}`);
+  log(`「${s.title}」 확인 필요 → <b>재생 멈춤</b>. ${asking ? "고르기 상자(애매함)" : "고치기 단추(문제)"} — 이 카드만 열고 나머지는 흐리게`);
+  render(); scrollTo(stop.id);
+  await sleep(480); scrollTo(stop.id);              // 시트가 올라간 뒤 카드 머리를 다시 맞춘다
+  for (;;) {
+    const act = await userPick();
+    if (act.type === "skip") {
+      s.stop = false; state.stoppedAt = null; s.open = false;
+      log(`「이대로 두고 다음으로」 — 「${s.title}」는 확인 필요로 남김(결정 2)`);
+      render(); return;
+    }
+    if (act.type === "edit") { toast("수정", "날짜 · 시간 · 장소를 고치는 지금 화면이 열려요(목업에서는 생략) — 자동 추천으로 진행해 보세요", 2600); continue; }
+    if (act.type === "timeEdit") { toast("시간 고치기", "카드 왼쪽 시각을 눌러 고치는 지금 화면이 열려요(목업에서는 생략) — 위 시각 단추로 진행해 보세요", 2600); continue; }
+    if (act.type === "shops") { s.panel = "shops"; log("「직접 수정」 → 바꾸기 화면(후보 · 검색) — 목업은 이 자리 식당 후보 2곳만, 지도에 A · B"); render(); continue; }
+    if (act.type === "direct") {
+      toast("직접 고르기", "장소 찾기 화면이 열려요(지금 화면, 목업에서는 생략) — 후보 A 로 진행할게요", 2200);
+      act.type = stop.fix === "confirm" ? "shop" : "pick"; act.key = "A";
+    }
+    if (act.type === "remove") {
+      s.removed = true; s.stop = false; state.stoppedAt = null;
+      log(`「삭제」 → 「${stop.title}」 일정을 빼고 이어감(지금 카드의 삭제 · 되돌리기 그대로) — 앞뒤 이동은 다시 잰다`);
+      render(); return;
+    }
+    // 고른 값 저장 — 서버가 아직 뒤 일정을 확인 중이면 기다렸다 보낸다(협의 안 1)
+    if (lateServer) {
+      s.saving = true; render(); log("서버가 아직 뒤 일정을 확인 중(409 intake_not_editable) → 고른 값을 들고 기다림(협의 안 1)");
+      await sleep(1800); s.saving = false;
+    }
+    const result = applyChoice(stop, act);
+    if (!result) continue;
+    log(result.log);
+    s.stop = false; s.rechecking = true; s.verdict = null;
+    footer("다시 확인하는 중이에요 · 잠시만요");
+    s.shown = result.rows.map(([kind]) => [kind, "pending", ""]);
+    render(); await sleep(700);
+    s.rechecking = false;
+    for (let i = 0; i < result.rows.length; i += 1) { s.shown[i] = result.rows[i]; render(); await sleep(300); }
+    const verdict = verdictOf(result.rows);
+    s.verdict = verdict === "review" ? "review" : verdict;
+    state.stoppedAt = null; render();
+    toast(...result.toast, 1800);
+    log(`통과 → 「${s.title}」 접고 <b>다음 카드부터 이어서</b> 재생`);
+    footer("장소와 운영시간을 확인하고 있어요.");
+    await sleep(900);
+    s.open = false; render();
+    return;
+  }
+}
+
+// ── 조작 ────────────────────────────────────────────────────────────
+list.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-act]");
+  if (!button || !waiter) return;
+  const act = { type: button.dataset.act, key: button.dataset.key };
+  const pending = waiter;
+  waiter = null;
+  pending.ok(act);
+});
+document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => {
+  mode = tab.dataset.mode;
+  document.querySelectorAll(".tab").forEach((other) => other.setAttribute("aria-pressed", String(other === tab)));
+  run();
+}));
+$("replay").addEventListener("click", run);
+$("speed").addEventListener("click", (event) => { speed = speed === 1 ? 2 : 1; event.currentTarget.setAttribute("aria-pressed", String(speed === 2)); });
+$("allowSkip").addEventListener("click", (event) => { allowSkip = !allowSkip; event.currentTarget.setAttribute("aria-pressed", String(allowSkip)); if (state?.stoppedAt) render(); });
+$("lateServer").addEventListener("click", (event) => { lateServer = !lateServer; event.currentTarget.setAttribute("aria-pressed", String(lateServer)); });
+run();
+</script>
+</body>
+</html>
