@@ -144,6 +144,8 @@ export const reason = (error: unknown) => error instanceof Error ? error.message
 export function Act({ why, onPress, explain, className, children, title, tooltip, ...rest }: {
   why: string | null; onPress: () => void; explain: (why: string) => void; className?: string; children: ReactNode;
   id?: string; title?: string; tooltip?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
+  /** `[2026-10-20 C안]` A button that takes something out (the stopped stop's 「삭제」). */
+  "data-danger"?: boolean;
   /** `[2026-10-05]` Something a time is dragged by: the pointer handlers of a drag, and the mark for the cursor and the touch (`data-grab`). */
   "data-grab"?: boolean; onPointerDown?: Grab["onPointerDown"]; onPointerMove?: Grab["onPointerMove"]; onPointerUp?: Grab["onPointerUp"]; onPointerCancel?: Grab["onPointerCancel"];
 }) {

@@ -82,8 +82,9 @@ test("설정의 「애니메이션 건너뛰기」를 켜면 읽는 중에서 �
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
   // 단계별로 다시 그리면 이 판(장소 셋 · 이동 둘 · 검사 줄)을 다 그리는 데 읽기 5초 + 단계 머무름 + 검사 줄이 들어 7초 넘게 걸린다. 바로 그리면 한두 초 안에 끝난다.
-  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible({ timeout: 5_000 });
-  await expect(needsBadge(page)).toBeVisible({ timeout: 5_000 });
+  // `[2026-10-20 C안]` 건너뛰어도 확인이 필요한 카드(올리브영)에서는 멈춰 묻는다 — 그 카드까지 바로 그려진다.
+  await expect(page.locator("[data-stop-question]")).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator('li[data-entry-id="0-1"]')).toHaveAttribute("data-stop-focus", "true");
 });
 
 test("시스템의 「동작 줄이기」가 켜져 있어도 단계별 재생은 그대로 보인다 — 읽는 화면이 먼저 나오고 결과는 한참 뒤에야 뜬다", async ({ page, request }) => {

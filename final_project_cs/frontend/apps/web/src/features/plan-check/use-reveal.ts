@@ -89,8 +89,9 @@ export function pauseBefore(shown: PlanCheckView, next: PlanCheckView): number {
  * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` With `stops` on (the page can change places), the first check stops at the first card that needs a look once the server's check is final
  * (`stopAt`): `stop` says which, and nothing past it is drawn. `recheck.begin` is called when the customer picks: the card's checks wait again where they stand and, once the
  * server answers with a new revision, they are ticked in again (`rebase`) — the replay goes on when the card passes, or stops at it again. `settling` is true from the pick until
- * the card's verdict is in. Not settled while stopped. A page opened on a checked plan with something to fix — or with 「애니메이션 건너뛰기」 on — draws it at once up to that card
- * (`cutAtStop`) and stops there too: nothing is registered past a card that needs a look.
+ * the card's verdict is in. Not settled while stopped. With 「애니메이션 건너뛰기」 on, the check this page watches is drawn at once up to that card (`cutAtStop`) and stops there too.
+ * `[2026-10-20 사용자 결정 — 다시 들어오면 결과 화면]` A page that opens on a check already finished (left before registering, then opened again) shows the result as before — the
+ * result screen is where it is changed then (it keeps its tools: 2026-10-20 the read-only result was dropped) — so it does not stop.
  */
 export interface RevealStop { id: string; settling: boolean }
 export function useReveal(target: PlanCheckView, paused = false, stops = false): {
@@ -100,8 +101,11 @@ export function useReveal(target: PlanCheckView, paused = false, stops = false):
   // ★`[2026-10-03 사용자 결정]` Skipping is the customer's own choice in the menu (「애니메이션 건너뛰기」), not the system's 「동작 줄이기」: the steps are
   //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
   const { skipAnimation: reduced } = useSettings();
-  const [shown, setShown] = useState(() => stops ? cutAtStop(target) : target);
+  const [shown, setShown] = useState(target);
   const [wasPaused, setWasPaused] = useState(paused);
+  // `[2026-10-20]` The check was already finished when the page opened: the result, as before (it stops only for a check this page watches).
+  const [openedDone] = useState(target.stage === "done");
+  const stopping = stops && !openedDone;
   // `[2026-10-20 C안]` A pick sent for the stopped card, and the revision it was sent on: nothing is drawn until the server answers with another one.
   const [asked, setAsked] = useState<{ id: string; revision: number | undefined } | null>(null);
   // Questions showed the completed reading progress, but not the map's cards. Begin their first appearance at checking.
@@ -110,14 +114,14 @@ export function useReveal(target: PlanCheckView, paused = false, stops = false):
   if (wasPaused !== paused) setWasPaused(paused);
   if (firstMap) setShown({ ...target, stage: "checking", items: [], moves: [] });
   // `[2026-10-20 C안]` Skipping the animation still stops to ask: the check is drawn at once up to the first card that needs a look.
-  const cut = useMemo(() => stops && reduced ? cutAtStop(target) : target, [stops, reduced, target]);
+  const cut = useMemo(() => stopping && reduced ? cutAtStop(target) : target, [stopping, reduced, target]);
   const immediate = !paused && !firstMap && (reduced ? cut === target : shown.stage === "done" && target.stage === "done");
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
   if (immediate && shown !== target) setShown(target);
   if (asked && target.revision !== asked.revision) { setAsked(null); setShown(rebase(shown, target, asked.id)); }
   else if (!paused && !immediate && cut !== target && !asked && JSON.stringify(shown) !== JSON.stringify(cut)) setShown(cut);
-  const stopId = stops && !immediate ? stopAt(shown, target) : null;
+  const stopId = stopping && !immediate ? stopAt(shown, target) : null;
   // The most reading steps that have been waiting since the screen last caught up: the reading pace is set by that, not by what is left.
   const peak = useRef(0);
   // When the stage of the top bar last changed on screen (the clock of `STAGE_MIN_MS`).

@@ -429,7 +429,7 @@ code { font-size: 12px; background: var(--color-subtle); padding: 0 4px; border-
           <li><b>「빈 시간」 안</b> — 지금 판에서 「준비 중」으로 보일지 / 뺄지.</li>
           <li><b>단추 이름</b> — 못 찾은 장소에서 지금 앱은 「직접 고르기」, 이 목업의 아래 단추는 팀 의견대로 「직접 수정」. 하나로.</li>
           <li><b>후보 줄</b> — 앱의 못 찾은 장소 카드처럼 종류 · 주소 · 거리 / 이 목업처럼 서버 이유 문장(거리 · 운영시간 · 여유) + 앞뒤 이동 줄(<code>legs</code> — 31bc404d 「바꾸기」 화면과 같음). 이유 문장과 이동 줄의 여유가 겹치는 것을 그대로 둘지도.</li>
-          <li><s>「삭제」를 멈춘 카드 안에 둘지</s> — 두지 않는다(2026-10-20 결정 — 일정 추가 · 삭제는 등록 뒤 수정 모드에서만).</li>
+          <li>「삭제」를 멈춘 카드 안에 둘지 — 한때 두지 않는다(2026-10-20 결정 — 일정 추가 · 삭제는 등록 뒤 수정 모드에서만) → 되살렸다(2026-10-20 밤 재결정 — 질문 칸에도 「삭제」 · 확인 창 뒤 빼기. 결과 화면의 추가 · 삭제도 그대로).</li>
           <li><b>「나머지는 추천대로 두기」</b> — 멘토 피드백(먼저 고치고 넘어가기)과 부딪친다. 둘지, 협의안에서도 뺄지.</li>
           <li><b>형식</b> — 카드 안(앞뒤 일정과 시각이 같이 보임) / 아래 시트(질문이 크게 보임, 목록은 위에 조금).</li>
           <li><b>확정 전 카드 머리</b> — 원문 제목 + 「찾은 곳 「…」」 한 줄(목업) / 찾은 이름을 제목으로 + 「원문 「…」」.</li>
@@ -841,7 +841,7 @@ function choicesHtml(q, s) {
         ${isCand(o) ? legLinesHtml(s, o.act.name, phase) : ""}
         <span class="line">고르면: ${esc(o.effect.text)}</span></button>`;
     }).join("")}</div>
-    <div class="askBtns" data-one><button type="button" class="askBtn" data-act="edit">직접 수정</button></div>
+    <div class="askBtns"><button type="button" class="askBtn" data-act="edit">직접 수정</button><button type="button" class="askBtn" data-danger data-act="remove">삭제</button></div>
     ${version === "ask" ? `<button type="button" class="linkBtn" data-act="rest">나머지는 추천대로 두기</button>` : ""}
     ${allowSkip ? `<button type="button" class="linkBtn" data-act="skip">이대로 두고 다음으로</button>` : ""}`;
 }
@@ -998,7 +998,7 @@ function provenanceHtml(q) {
     add(`${i + 1} 고르면`, esc(o.effect.text), o.effect.src);
   });
   group += 1;
-  add("단추", "직접 수정", [SRC.tpl("「직접 수정」 새 문구 — 지금 「바꾸기」 화면을 연다")]);
+  add("단추", "직접 수정 · 삭제", [SRC.tpl("「직접 수정」 새 문구 — 지금 「바꾸기」 화면을 연다"), SRC.app("「삭제」 — 카드 삭제 단추 문구")]);
   if (version === "ask") add("링크", "나머지는 추천대로 두기", [SRC.tpl("새 문구 — 이 카드와 뒤에서 멈출 카드를 recommended 선택지로 정하며 지나간다")]);
   return `<table class="prov">${rows.join("")}</table>`;
 }

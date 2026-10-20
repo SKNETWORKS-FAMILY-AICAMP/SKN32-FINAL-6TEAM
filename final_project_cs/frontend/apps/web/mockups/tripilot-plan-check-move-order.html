@@ -429,7 +429,7 @@ class Flow {
         <span class="optTop">${esc(o.label)}${isMove ? NEW : ""}${o.disabled ? `<span class="soon">고를 수 없어요</span>` : ""}</span>
         ${o.reason ? `<span class="line">이유: ${esc(o.reason)}</span>` : ""}${o.act.type === "pick" && s ? this.legLines(s, o.act.name) : ""}
         <span class="line">고르면: ${esc(o.effect)}</span></button>`).join("")}</div>
-      <div class="askBtns" data-one><button type="button" class="askBtn" data-act="edit">직접 수정</button></div></div>`;
+      <div class="askBtns" ${isMove ? "data-one" : ""}><button type="button" class="askBtn" data-act="edit">직접 수정</button>${isMove ? "" : `<button type="button" class="askBtn" data-danger data-act="remove">삭제</button>`}</div></div>`;
   }
 
   // ── 그리기 ──

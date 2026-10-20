@@ -39,7 +39,7 @@ test("확인이 필요한 카드에서 멈춰 안내 · 질문을 보이고, 나
   await expect(question(page).getByRole("button", { name: /「올리브영 인사동점」 그대로/ })).toBeVisible();
   await expect(question(page).getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).toContainText("이유:");
   await expect(question(page).getByRole("button", { name: "직접 수정" })).toBeVisible();
-  await expect(question(page).getByRole("button", { name: "삭제" })).toHaveCount(0);                 // 일정 추가 · 삭제는 등록 뒤 수정 모드에서만
+  await expect(question(page).getByRole("button", { name: "삭제", exact: true })).toBeVisible();       // `[2026-10-20 사용자 재결정]` 질문 칸에도 삭제(한 번 묻고)
   // 멈춘 카드만 또렷하고 나머지(카드 · 이동 · 레일)는 흐리다. 확인 전 카드는 점선.
   await expect(page.locator('li[data-entry-id="0-1"]')).toHaveAttribute("data-stop-focus", "true");
   await expect(page.locator('li[data-entry-id="0-0"]')).toHaveCSS("opacity", "0.38");
@@ -143,13 +143,49 @@ test("시스템의 「동작 줄이기」여도 같은 순서로 멈추고 이�
   await expect(question(page)).toContainText("이동이 일정보다 39분 늦어요", { timeout: 15_000 });
 });
 
-test("검사가 끝난 접수를 다시 열어도 확인이 필요한 일정이 남았으면 그 카드까지 그리고 멈춰 묻는다", async ({ page, request }) => {
+// `[2026-10-20 사용자 결정 — 다시 들어오면 결과 화면]` 등록 전에 화면을 떠났다가(창 닫기 · 뒤로 가기 · 새로고침) 다시 들어오면 멈추지 않고 예전처럼 결과 화면 — 결과 화면이 고치는 자리다.
+test("검사가 끝난 접수를 다시 열면 멈추지 않고 결과 화면을 보인다 — 확인 필요는 결과 화면에 표시된다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.reset();
   await server.scenario({ review: "on", board: "rich", readingPolls: 0 });
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-  await expect(question(page)).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator('li[data-entry-id="0-1"]')).toHaveAttribute("data-stop-focus", "true");
-  await expect(page.getByRole("button", { name: "여행 등록" })).toHaveCount(0);
+  await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("button", { name: /^확인 필요 \d+곳$/ })).toBeVisible();
+  await expect(question(page)).toHaveCount(0);
+  await expect(card(page, "올리브영")).toContainText("확인 필요");
+});
+
+test("멈춘 동안 고른 것은 바로 서버에 저장돼, 그 뒤 새로고침하면 고친 그대로 결과 화면에 보인다", async ({ page, request }) => {
+  await stopped(page, request);
+  await question(page).getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ }).click();
+  await expect(question(page)).toContainText("이동이 일정보다 39분 늦어요", { timeout: 15_000 });     // 장소는 고쳤고, 도착을 묻는 중
+  await page.reload();
+  await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 15_000 });
+  await expect(question(page)).toHaveCount(0);
+  await expect(card(page, "올리브영 광화문점")).toBeVisible();                                         // 고친 장소는 서버에 있다
+});
+
+test("`[2026-10-20 사용자 재결정]` 질문 칸의 「삭제」는 한 번 묻고, 지우면 그 일정을 빼고 다음 일정을 이어서 확인한다", async ({ page, request }) => {
+  const server = await stopped(page, request);
+  await question(page).getByRole("button", { name: "삭제", exact: true }).click();
+  const dialog = page.getByRole("alertdialog", { name: "「올리브영」 일정을 삭제할까요?" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "취소" }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(await server.received("POST", "/edits")).toHaveLength(0);                                   // 취소하면 아무것도 보내지 않는다
+  await question(page).getByRole("button", { name: "삭제", exact: true }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "삭제", exact: true }).click();
+  await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 15_000 });
+  await expect(card(page, "올리브영")).toHaveCount(0);
+  const [sent] = await server.received("POST", "/edits");
+  expect(sent.body).toMatchObject({ edits: [{ field: "items[1].removed", value: true }] });
+  expect((sent.body as { check?: boolean }).check).toBeUndefined();                                  // 검사 포함으로 보낸다
+});
+
+test("늦은 도착을 묻는 질문 칸에는 「삭제」가 없다 — 고칠 것은 오는 길이다", async ({ page, request }) => {
+  await stopped(page, request);
+  await question(page).getByRole("button", { name: /「올리브영 인사동점」 그대로/ }).click();
+  await expect(question(page)).toContainText("이동이 일정보다 39분 늦어요", { timeout: 15_000 });
+  await expect(question(page).getByRole("button", { name: "삭제", exact: true })).toHaveCount(0);
 });

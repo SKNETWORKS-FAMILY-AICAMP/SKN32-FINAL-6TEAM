@@ -45,7 +45,7 @@ import { heldTexts, useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal, type RevealStop } from "./use-reveal";
 import { arrivalQuestion, placeQuestion, type StopOption } from "./stop-questions";
-import { StopQuestion } from "./stop-question";
+import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
 import type { InsertionPoint } from "./insertion-points";
 import { useCenterFocus } from "./use-center-focus";
@@ -152,8 +152,8 @@ export interface PlanCheckActions {
    * All changes go to the server in ONE request, so the plan is saved and checked again once. A change that changes nothing is skipped.
    */
   retime?: (changes: { id: string; start: string; end: string }[], how?: EditHow) => Promise<void>;
-  /** Take one stop out. */
-  remove?: (id: string) => Promise<void>;
+  /** Take one stop out (`[2026-10-20 C안]` `how.flow`: from the first check's question — taken out at once, with its check). */
+  remove?: (id: string, how?: EditHow) => Promise<void>;
   /** Answer a trip-wide detail. */
   editTrip?: (field: "first_day" | "party_size" | "title" | "taxi_pricing", value: string | number | WebTaxiPricing) => Promise<void>;
   /**
@@ -1093,6 +1093,8 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {
   const stopFor = (item: PlanItem) => Boolean(stopItem && stopItem.id === item.id && stopCheck);
   const [stopList, setStopList] = useState<{ id: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; message?: string } | null>(null);
   const [folding, setFolding] = useState(false);
+  // `[2026-10-20 사용자 재결정]` The stopped stop the customer asked to take out — asked once in a dialog before it goes.
+  const [deleting, setDeleting] = useState<PlanItem | null>(null);
   const [pickedFor, setPickedFor] = useState<string | null>(null);
   const asking = Boolean(stop && stopItem && !stop.settling);
   const stopNeed = stopItem ? stopKind(view, stopItem.id) : null;
@@ -1158,6 +1160,14 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {
     setFolding(true);
     // The question folds away first; then the card is checked again where it stands.
     setTimeout(() => { setFolding(false); flowSend(item, send, sentence); }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : STOP_FOLD_MS);
+  }
+  /** 「삭제」 confirmed: the question folds away and the stop goes at once (with its check); the stop after it comes next. */
+  function stopDelete(item: PlanItem) {
+    setDeleting(null);
+    follow.resume();
+    setFolding(true);
+    const sentence = t(`${item.title} 일정을 삭제했어요`, `Deleted ${item.title}`) + " · " + t("다음 일정을 이어서 확인해요", "The check goes on with the next stop");
+    setTimeout(() => { setFolding(false); flowSend(item, () => actions.remove!(item.id, { flow: true }), sentence); }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : STOP_FOLD_MS);
   }
   const stopBanner = useRef<HTMLDivElement>(null);
   const [bannerRoom, setBannerRoom] = useState(0);
@@ -1452,7 +1462,8 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {
         failed={!stopMove && stopList?.id === stopItem.id && stopList.state === "failed" ? stopList.message ?? null : null} again={pickedFor === `${stopItem.id}:${stopNeed}`} leaving={folding}
         why={frozen} explain={explain} onPick={(option) => stopPick(stopItem, option)}
         // A late arrival is fixed by the stop's own times: the change screen opens on its 「직접 고치기」.
-        onEdit={() => { void startChange(stopItem); if (stopMove) setDetails(true); }} /> : null },
+        onEdit={() => { void startChange(stopItem); if (stopMove) setDetails(true); }}
+        onDelete={stopMove || !actions.remove ? undefined : () => setDeleting(stopItem)} /> : null },
     prefix: list === "after" ? "after-" : "",
     onPick: (id) => pick(id, "list", list),
     onShowStay: (id) => showStay(id, list),
@@ -1723,6 +1734,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {
             previewing={previewing && side === "after"} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} editing={Boolean(edit)} />}
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}
+    {deleting && <StopDeleteDialog title={deleting.title} onCancel={() => setDeleting(null)} onConfirm={() => stopDelete(deleting)} />}
   </div>;
 }
 

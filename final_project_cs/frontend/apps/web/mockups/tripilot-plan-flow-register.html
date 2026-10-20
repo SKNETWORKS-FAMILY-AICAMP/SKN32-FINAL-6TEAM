@@ -116,7 +116,7 @@ code { font-size: 12px; background: var(--bg); border-radius: 4px; padding: 0 4p
         <li>결과 화면에 처음 뜨던 알림 「계획 확인 화면이에요 · 일정을 수정하거나 권장 수정안을 확인해 주세요」 — 자동 등록 막대와 겹쳐 이 목업에서는 띄우지 않았습니다. 없앨지, 막대를 닫았을 때만 띄울지 정해야 합니다.</li>
         <li>자동 등록 막대의 첫 줄 — 앱에 이미 있는 「모두 확인했어요」(지금은 화면 읽기 프로그램에만 읽히는 문장)를 썼습니다.</li>
         <li><b>알림(토스트) 원칙</b>(2026-10-20 결정) — ① C안 카드 안에서 고른 뒤의 성공 알림은 띄우지 않는다. ② <b>저장 실패 알림은 남긴다</b>: 고른 것이 저장되지 않았다는 것은 꼭 보여야 하므로 지금 앱처럼 닫을 때까지 남는 경고(<code>stay</code> · role=alert)로. ③ <b>화면 읽기용 안내는 남긴다</b>: 같은 문장(「○○을 △△로 바꿨어요 · 바뀐 장소와 앞뒤 이동을 다시 확인해요」 등)을 화면에 보이지 않는 상태 문장(sr-only · role=status)으로 읽어 준다 — 목업도 그렇게 바꿨다. ④ C안 밖의 변경(결과 화면의 고치기 · 삭제 · 이름 바꾸기 · 시간 · 이동 수단 등 「되돌리기」가 붙는 알림)은 지금 앱 그대로 — 바꿀지는 따로 정한다.</li>
-        <li>판(지금 서버 값만 / 서버 협의안 <code>ask</code>), 단추 이름(직접 수정) — 앞 목업과 같이 아직 미정. 카드 안 「삭제」는 두지 않는다(2026-10-20 결정 — 일정 추가 · 삭제는 등록 뒤 수정 모드에서만)</li>
+        <li>판(지금 서버 값만 / 서버 협의안 <code>ask</code>), 단추 이름(직접 수정) — 앞 목업과 같이 아직 미정. 카드 안 「삭제」는 한때 두지 않는다(2026-10-20 결정 — 일정 추가 · 삭제는 등록 뒤 수정 모드에서만) → 되살렸다(2026-10-20 밤 재결정 — 질문 칸에도 「삭제」 · 확인 창 뒤 빼기. 결과 화면의 추가 · 삭제도 그대로)</li>
       </ul>
     </article>
     <article class="card">
@@ -10394,7 +10394,7 @@ class CheckFlow {
       <div class="mk-opts">${q.options.map((o, i) => `<button type="button" class="mk-opt" data-mk-opt="${i}"${o.disabled ? ' aria-disabled="true"' : ""}>
         <span class="mk-optTop">${esc(o.label)}${o.fresh?.includes("label") ? NEW : ""}</span>${o.reason ? `<span class="mk-line">이유${i ? "" : NEW}: ${esc(o.reason)}${o.fresh?.includes("reason") ? NEW : ""}</span>` : ""}${o.act.type === "pick" ? this.legLines(s, o.act.name) : ""}
         <span class="mk-line">고르면${i ? "" : NEW}: ${esc(o.effect)}${o.fresh?.includes("effect") ? NEW : ""}</span></button>`).join("")}</div>
-      <div class="mk-askBtns" data-one><button type="button" class="mk-askBtn" data-mk="edit">직접 수정${NEW}</button></div>`;
+      <div class="mk-askBtns"${isMove ? " data-one" : ""}><button type="button" class="mk-askBtn" data-mk="edit">직접 수정${NEW}</button>${isMove ? "" : `<button type="button" class="mk-askBtn" data-danger data-mk="remove">삭제</button>`}</div>`;
   }
 
   // ── 그리기: 처음 한 번 만들고, 그 뒤로는 바뀐 속성 · 줄만 고친다 ──

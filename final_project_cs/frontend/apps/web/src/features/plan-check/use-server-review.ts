@@ -200,10 +200,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         await save(edits, true, how);
         undoEdits.current = null;
       },
-      remove: async (id) => {
+      remove: async (id, how) => {
         const item = itemOf(id);
-        await save([itemEdit.remove(targetOf(item), true)], true);
-        undoEdits.current = [itemEdit.remove(targetOf(item), false)];
+        await save([itemEdit.remove(targetOf(item), true)], true, how);
+        undoEdits.current = how?.flow ? null : [itemEdit.remove(targetOf(item), false)];
       },
       editTrip: (field, value) => save([{ field: `trip.${field}`, value }]),
 
