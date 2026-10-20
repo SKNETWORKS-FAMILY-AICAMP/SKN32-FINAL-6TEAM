@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from app.domains.travel_ops.components.intake import candidates as candidates_module
 from app.domains.travel_ops.components.intake import prepared
 from app.infrastructure.db.session import get_connection
@@ -29,6 +31,13 @@ from .test_intake_review import OPEN_ALL, TUE_CLOSED, _catalog, _client, _edit, 
 from .test_trip_api import api  # noqa: F401
 
 PLAN = "2026-10-13\n10시 경복궁\n13:30 광장시장"          # 화요일 — 경복궁을 화요일 휴무로 읽어 둔다
+
+
+@pytest.fixture(autouse=True)
+def _problems_only(monkeypatch):
+    """이 파일의 시험은 「문제 난 일정만」 준비하는 길을 본다. ★`[2026-10-20 사용자 지시]` 기본값은 확정 일정까지(`prepare_scope: all`) —
+    그 길은 맨 아래 `test_with_scope_all_settled_items_are_prepared_too` 가 본다."""
+    monkeypatch.setattr(prepared, "prepare_scope", lambda: "problems")
 
 
 def _world(rv):  # noqa: F811
@@ -332,3 +341,23 @@ def test_a_risky_activity_is_not_prepared_and_takes_the_safety_path_first(rv, mo
     names = [n for n, _b in _events(streamed.text)]
     assert "candidates" not in names and _events(streamed.text)[-1][1]["notes"] == ["risk_alternatives"]
     assert safe_calls and gathered == []
+
+
+def test_with_scope_all_settled_items_are_prepared_too(rv, monkeypatch):  # noqa: F811
+    """`[2026-10-20 사용자 지시]` 확정 일정의 대안도 처음에 뽑는다 — 문제 난 경복궁뿐 아니라 문제없는 광장시장도 저장된다.
+    확정 일정은 모델을 부르지 않고 틀 문장으로 이유를 쓴다(x600 서버 모델을 채팅과 나눠 쓴다)."""
+    monkeypatch.setattr(prepared, "prepare_scope", lambda: "all")
+    asked = []
+    real = prepared.prepare_one
+    monkeypatch.setattr(prepared, "prepare_one", lambda *a, **k: asked.append((k["item"]["title"], k["chat"])) or real(*a, **k))
+    _world(rv)
+    _catalog(rv, "900003", "38", "통인시장", 37.5810, 126.9700)
+    _hours(rv, "900003", OPEN_ALL)
+    client, _, _ = _client()
+    headers = _key(client)
+    view = _send(client, headers, PLAN)
+    palace, market = _item(view, "경복궁"), _item(view, "광장시장")
+    assert [title for title, _ in asked] == ["경복궁", "광장시장"]                                  # 문제 난 일정이 먼저
+    assert dict(asked)["광장시장"] is None                                                           # 확정 일정은 모델 없이
+    saved = {(s, i) for s, i, _r, _b in _rows(rv, view["intake_id"])}
+    assert (palace["source_id"], palace["index"]) in saved and (market["source_id"], market["index"]) in saved

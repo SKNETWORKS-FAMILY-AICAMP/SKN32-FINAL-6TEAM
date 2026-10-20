@@ -127,6 +127,55 @@ def test_lunch_target_and_search_anchor_survive_decision_separately():
     assert got.raw['place_search']['anchor_item']=='i1'
 
 
+def _near(target, anchor='none', place_text='', action='apply_change'):
+    return Decision(action=action,item=target,change=None,fact='none',minutes=None,question='',
+                    raw={'action':action,'place_search':{'relation':'near','anchor_item':anchor,'place_text':place_text,
+                                                          'evidence':'다른 데로'}})
+
+
+@pytest.mark.parametrize('anchor,place_text', [('i1',''),('none','북촌한옥마을'),('none','')])
+@pytest.mark.parametrize('action', ['apply_change','propose_alternatives'])
+def test_activity_near_itself_is_a_plain_change_not_a_meal_question(anchor,place_text,action):
+    """☆x600 서버 2026-10-20: 「북촌한옥마을 다른 데로 바꿔 줘」가 「어느 식사 일정을 바꿀지 알려 주세요」로 끝났다 — 근처 기준이 그 활동 자신이면 보통 바꾸기다."""
+    from app.domains.travel_ops.components.conversation.decision_unit import settle_near_search
+    bukchon=item('북촌한옥마을',start=10,end=12)
+    lunch=item('점심',start=13,end=14,seq=2,kind='dining')
+    got=settle_near_search(_near(bukchon,anchor,place_text,action),[bukchon,lunch])
+    assert got.action==action and got.item is bukchon
+    assert got.raw['place_search']['relation']=='none' and got.raw['near_dropped']['reason']=='anchor_is_target'
+
+
+def test_meal_near_another_item_keeps_the_near_search():
+    from app.domains.travel_ops.components.conversation.decision_unit import settle_near_search
+    festival=item('산책 행사',start=10,end=12)
+    lunch=item('원래 점심',start=13,end=14,seq=2,kind='dining')
+    original=_near(lunch,'i1')
+    assert settle_near_search(original,[festival,lunch]) is original
+
+
+def test_activity_near_another_item_asks_instead_of_dropping_the_condition():
+    from app.domains.travel_ops.components.conversation.decision_unit import settle_near_search
+    bukchon=item('북촌한옥마을',start=10,end=12)
+    insadong=item('인사동',start=14,end=16,seq=2)
+    got=settle_near_search(_near(bukchon,'i2'),[bukchon,insadong])
+    assert got.action=='clarify' and got.item is None
+    assert [c['item'] for c in got.choices]==[bukchon] and got.choices[0]['action']=='apply_change'
+    assert '인사동 근처' in got.question and got.raw['near_guard']['reason']=='non_dining_near_other'
+
+
+def test_anchor_without_target_asks_which_instead_of_meal_only_question():
+    from app.domains.travel_ops.components.conversation.decision_unit import settle_near_search
+    from app.domains.travel_ops.components.conversation.trip_messages import _clarify_with_choices
+    bukchon=item('북촌한옥마을',start=10,end=12)
+    lunch=item('점심',start=13,end=14,seq=2,kind='dining')
+    got=settle_near_search(_near(None,'i1'),[bukchon,lunch])
+    assert got.action=='clarify' and got.raw['near_guard']['reason']=='anchor_without_target'
+    reply=_clarify_with_choices(got,[bukchon,lunch],lead=got.question)
+    assert '어느 식사 일정' not in reply['text'] and reply['text'].startswith('어느 일정을 바꿀지')
+    assert reply['choices'][0]['message'].endswith('북촌한옥마을 다른 곳으로 바꿔 줘')
+    assert reply['choices'][0]['item_id']==str(bukchon.item_id)
+
+
 def test_restaurants_and_relaxed_options_remain_near_requested_origin():
     old=place('옛 점심',37.57,126.98)
     meal=replace(item('옛 점심',start=13,end=14,kind='dining'),place=old,place_id=old['place_id'])

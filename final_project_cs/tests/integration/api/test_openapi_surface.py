@@ -121,6 +121,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/confirm",
     # ★2026-10-06 로딩 중 질문의 답 — 한 문항씩 바로 저장(같은 문항은 덮어쓴다), 등록 때 설문에 합쳐진다. `wiki/external/rest-endpoints.md` 「설문 질문」
     "/v1/web/trip-intakes/{intake_id}/survey",
+    # ★2026-10-20 해석 확인 질문 — 고른 안 보내기(조회의 `interpretations[]` 와 짝, `Accept: text/event-stream` 이면 SSE).
+    #   `wiki/external/rest-endpoints/web-intakes.md` 「해석 확인 질문」
+    "/v1/web/trip-intakes/{intake_id}/interpretations",
     # 「일정 짜 줘」 — 조건을 확인해 누르면 일정 생성기 초안을 판정 뒤 등록(request_id = 접수 + plan + 판)
     "/v1/web/trip-intakes/{intake_id}/plan",
     # ★2026-10-02 접수 읽기 진행(SSE) — 뒤에서 도는 읽기가 어디까지 왔는지. 채팅(`/messages`)·일정 짜기(`/plan`)는 같은 경로가

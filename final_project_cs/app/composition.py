@@ -626,6 +626,10 @@ def wire_trip_scope() -> None:
     from app.domains.travel_ops.modules.web_account.guest_policy import watch_scope_sql
 
     trip_scope.register("web_account.guest", watch_scope_sql)
+    # ★`[2026-10-20 사용자 결정]` 「남길 시험 여행」 표시를 단 여행은 감시 · 안내에서 뺀다 — 지울 때 보관함에 담긴다(D-CS-018)
+    from app.domains.travel_ops.components.itinerary import trip_archive
+
+    trip_scope.register("trip_archive.marked", trip_archive.watch_scope_sql)
 
 
 def wire_operator_modes() -> None:

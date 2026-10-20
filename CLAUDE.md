@@ -41,6 +41,13 @@
 - ☆실제 사고(2026-10-19): 10-17~18 검증 세션들이 x600 서버에 시험 컨테이너 213개 · 손으로 이름 붙인 시험 이미지 85종을 남겨 E 여유가 2GB 밑으로 떨어졌고 주간 WSL 압축이 건너뛰어졌다. Claude 실행 전 훅(`tools/local_data_guard.py`)이 `docker run --rm` · `docker rm` 의 `rm` 글자까지 막고 있던 것도 원인이다 — 12:30 사용자가 도커 객체 삭제(`docker rm` · `rmi` · `run --rm` · `image/builder prune`)만 빼고 볼륨 삭제(`volume rm/prune` · `system prune` · `compose down -v`)는 새로 막는 수정판을 적용했다(자체 시험 33/33, 옛 판 `tools/_backup/2026-10-19_local_data_guard_docker_exception/`)([기록](wiki/records/reports/2026-10-19_x600-docker-cleanup-and-wsl-compact.md)).
 
 
+## 남길 시험 여행은 지우기 전에 보관함에 넣는다 — 2026-10-20 사용자 지시
+
+- 실서버 확인(x600 서버 · 게스트 등) · 시연용으로 **cs 프로젝트 서버에 만든 시험 여행**은 그냥 지우지 않는다. 지우기 직전에 「남길 시험 여행」 표시(`trip_archive.mark(…, marked_by="live_check", note="무슨 확인")`)를 달고 고객 삭제 기능으로 지운다 — 삭제가 여행 전체(일정 · 등록 대안 · 채팅 · Case · 알림 문장 · 미리 준비한 대안)를 `trip_archives` 에 담은 뒤 지운다. 시험 코드(`test1` …)로 만든 여행은 표시 없이도 담긴다.
+- 표시를 단 여행은 지우기 전에도 감시 · 안내 대상에서 빠진다. 보관함은 감시 · 알림이 읽지 않는다. 지우지 않고 남겨 두기만 하면 게스트 자료는 7일 뒤 자동 정리로 사라진다(그때도 표시가 있으면 보관함에 담긴다).
+- 실제 고객 여행은 이 규칙 밖이다 — 약관대로 함께 파기한다(넓히려면 사용자 결정이 따로 필요). 결정 [D-CS-018](final_project_cs/wiki/decisions/D-CS-018-test-trip-archive.md).
+- ☆계기(2026-10-20): 실서버 확인 뒤 시험 여행을 바로 지우자 「텍스트라 용량도 작은데 왜 자꾸 지우나 — 보관함 만들고 앞으로도 남길 건 거기에 넣게 해」.
+
 ## Claude 작업 재개
 
 세션을 이어받으면 [인계 안내 목차](wiki/handoff/index.md)의 **맨 위 인계**부터 읽습니다. 커밋되지 않은 Codex 작업이 많아 `git log` 만으로는 최근 상태가 보이지 않습니다 — `git status --short` 와 인계의 「한 일 목록」을 함께 봅니다. 자동 메모리(`~/.claude/projects/.../memory/`)의 프로젝트 사실은 기록 당시 값이며, 이 파일·wiki 와 다르면 이 파일·wiki 가 맞습니다.

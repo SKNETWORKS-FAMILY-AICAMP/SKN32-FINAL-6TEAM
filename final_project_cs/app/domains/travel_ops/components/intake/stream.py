@@ -8,6 +8,7 @@
                                                     찾은 일정 한 건 — 값이 채워질 때마다(시각 → 장소) 같은 id 로 다시 온다. status 는 검사가 끝난 뒤
     check  {item, row, result, text}                일정의 검사 줄 한 줄(row = place · time · hours · closed)
     move   {from, to, status, mode, minutes, …, rows}   앞뒤 일정 사이 이동 한 구간
+    interpretation {id, question, quote, options[], answer, applied, …}   `[2026-10-20]` 해석 확인 질문(`interpretations.py`) — 읽는 동안 생기는 대로
     done   {stage, revision, needs, ready}          검사가 끝났다 — 곧바로 `result` 가 온다
 
 ★**이벤트는 상태의 복사본이다**(순서가 있는 명령이 아니다). 같은 키(`line:원본:번호` · `item:id` · `check:id:row` · `move:from:to`)의 이벤트가 두 번 와도 나중 것으로 **덮으면** 된다.
@@ -131,6 +132,12 @@ class Feed:
                         "candidates_hint": None, "booked": review_module.booked_of(row, state_name),
                         "parts": review_module.nameless_parts(row, state_name)}
             self._emit(out, f"item:{item_id}", "item", body)
+
+        # ★`[2026-10-20 사용자 지시]` 해석 확인 질문 — 읽는 동안 생기는 대로(로딩 화면이 그 자리에서 멈추고 묻는다). 답 · 반영 상태가 바뀌면 같은 키로 다시
+        from . import interpretations
+
+        for question in interpretations.view(raw_claims, positions):
+            self._emit(out, f"interpretation:{question['id']}", "interpretation", question)
 
         # 검사 줄 · 이동 · 끝 — 검사가 만들어진 뒤에만
         if review is not None:

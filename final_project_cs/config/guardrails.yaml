@@ -366,6 +366,7 @@ travel:
     #   콘솔 값이 먼저고 이 값은 콘솔 값이 없을 때의 기본이다. 읽는 곳: `settings_hook.lodging_mode(tenant)`
     lodging_mode: "off"  # ★따옴표 필수 — YAML 은 맨 off 를 거짓(False)으로 읽는다
     prepare_on_intake: true   # ★`[2026-10-19 사용자 지시]` 접수 검사가 끝나면 문제 난 일정의 대안을 완성본으로 미리 준비해 둔다(`intake/prepared.py` · 061) — 「바꾸기」가 계산 없이 뜬다. false 면 준비하지 않고 「바꾸기」 때 계산한다
+    prepare_scope: "all"   # ★`[2026-10-20 사용자 지시]` 미리 준비할 일정 — all = 문제 난 일정 먼저, 그다음 **확정된 활동 · 식사**까지(계획서 「대안 추천을 다 해서 넣는다」 · 확정 일정의 이유 문장은 틀 문장 · 숙소는 문제 있을 때만). problems = 문제 난 일정만(옛 동작). 읽는 곳 `prepared.prepare_scope`
     team_first: true     # 활동 일정의 후보를 활동 팀 엔진(`team_hooks.activity_alternatives`)이 먼저 고른다. false 면 확인 화면 자체 고르기(`candidates.py`)만 쓴다
   # -- 후보 이유 문장을 모델이 쓴다 (2026-10-07 사용자 결정, 마이그레이션 057 · `components/intake/reasons.py`) --
   # ★「이유 문장만 모델이 확인된 값으로 쓴다 — 보이는 후보 2~3개만, 결과 저장, 실패하면 지금의 틀 문장」. 모델은 **사실 목록만** 받고(이름 · 단 · 거리 · 영업 · 여유 · 일정의 장소),
@@ -457,6 +458,7 @@ travel:
       intake: 600
       consents: 60
       candidates: 60   # ★`[2026-10-19]` 「바꾸기」 실시간 진행 — 후보 구간 계산(차례로 · 합계 12초 상한, 한 번 호출은 16초까지) + 이유 문장 기다림(6초)보다 넉넉히. 우리가 고른 값
+      interpret: 120   # ★`[2026-10-20]` 해석 확인 질문의 답 — 로딩 뒤면 그 일정을 되살리거나 빼고 검사(이동 계산)를 다시 한다. 「바꾸기」보다 넉넉히. 우리가 고른 값
     intake_poll_seconds: 1
     intake_stalled_seconds: 180
   # -- 계획 읽기의 남은 줄 모델 호출 — 한 번에 보내고 답을 조금씩 받으며 멈춤을 본다 (2026-10-16 2회차 합의 · 사용자 승인 — `components/intake/llm_spans.label_lines`) --

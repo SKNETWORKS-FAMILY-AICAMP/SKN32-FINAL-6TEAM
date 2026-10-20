@@ -65,6 +65,11 @@ class _Decider:
             talk = user.split("직전 대화:", 1)[1].split("화면에서 고른 일정:", 1)[0]
             target = self._alias(user, "성수 점심") if "성수 점심" in talk else "none"
             return {**none, "action": "answer_fact", "target_item": target, "fact": "phone"}
+        if "경복궁 한복 탐방 다른 데로 바꿔" in message:
+            # ☆x600 서버 2026-10-20 — 활동 「다른 데로」에 근처 검색 기준을 그 활동 자신으로 붙였다(식사 되물음으로 끝났던 모양)
+            palace = self._alias(user, "경복궁 한복 탐방")
+            return {**none, "action": "apply_change", "target_item": palace, "change_scope": "place",
+                    "place_search": {"relation": "near", "anchor_item": palace, "place_text": "", "evidence": "다른 데로"}}
         if "점심 다른 데로 바꿔" in message:
             return {**none, "action": "apply_change", "target_item": self._alias(user, "성수 점심")}
         if "저녁 다른 데로 바꿔" in message:
@@ -130,6 +135,16 @@ def test_the_previous_turn_is_given_to_the_model_so_that_that_restaurant_resolve
     turns = decided["client"].get(f"/v1/web/trips/{decided['trip']['trip_id']}/chat",
                                   headers=_h(decided["key"])).json()["turns"]
     assert [t["role"] for t in turns] == ["customer", "assistant", "customer", "assistant"]
+
+
+def test_an_activity_change_with_a_near_mark_on_itself_is_not_asked_as_a_meal(decided):
+    """☆x600 서버 2026-10-20: 「북촌한옥마을 다른 데로 바꿔 줘」 · 「경복궁 다른 곳으로 바꿔 줘」가 「어느 식사 일정을 바꿀지 알려 주세요」로 끝났다.
+    근처 기준이 바꿀 활동 자신이면 근처 표시를 떼고 활동 팀의 보통 바꾸기로 간다(`decision_unit.settle_near_search`)."""
+    body = _say(decided, "경복궁 한복 탐방 다른 데로 바꿔", "du-near-1")
+    assert "식사 일정" not in body["answer"], body
+    assert body["decision"]["action"] == "apply_change" and body["decision"]["item"] == "경복궁 한복 탐방", body
+    assert body["decision"]["raw"]["near_dropped"]["reason"] == "anchor_is_target"
+    assert body["status"] != "clarify" and body["classification"]["issue_code"].startswith("activity"), body
 
 
 def test_change_then_undo_without_a_number_goes_back_by_the_change_id(decided):
