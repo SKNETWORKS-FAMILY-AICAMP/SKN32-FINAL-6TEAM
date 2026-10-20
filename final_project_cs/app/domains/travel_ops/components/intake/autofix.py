@@ -23,9 +23,9 @@ from typing import Any, Callable
 from . import candidates as cand_module
 from . import lodging_context as stay_context
 from .hours import facts_for
-from .moves import leg_between
+from .moves import Leg, leg_between
 from .places import distance_m, normalize_full
-from .review import KST, _Budgeted, _dt, default_engine, public_place
+from .review import KST, _Budgeted, _dt, _PerLeg, default_engine, public_place
 
 MIN_STAY_MIN = 30           #: 머무는 시간이 이보다 짧아지면 못 맞춘 것 — 목업의 「최소 30분」
 #: 맞는 곳을 찾으려고 차례로 시간표로 맞춰 보는 후보 수의 상한 — 화면에 보이는 셋(`candidates.LIMIT`)보다 넓다: 순위는 싼 판정(어림 이동)이라 앞 셋이 시간표로는
@@ -37,6 +37,10 @@ MEAL_ROUTE_RADIUS_M = 800
 MEAL_QUERY = "음식점"
 ROUND_MIN = 5
 ENGINE_BUDGET_S = 20.0
+#: `[2026-10-20 사용자 결정 — 이동 구간 하나마다]` 위 `ENGINE_BUDGET_S` 는 **이동 구간 하나마다** 이동 계산에 쓰는 시간 한도다(시각 맞추기 · 전체 자동 추천 같은 기준).
+#: 한 요청이 너무 길어지지 않게 요청 전체로는 이만큼만 쓴다(초). ★우리가 고른 값 — 웹은 바꾸기 · 자동 추천 응답을 60초까지 기다리고,
+#: 그 뒤 같은 판의 검사(`review.ENGINE_BUDGET_S` 25초)가 따로 이동 계산을 하므로 둘을 합쳐 60초 안에 들게 25초로 둔다
+REQUEST_ENGINE_S = 25.0
 
 
 def _ceil5(moment: datetime) -> datetime:
@@ -57,9 +61,13 @@ def _pt(place: dict[str, Any], key: str) -> dict[str, Any]:
     return {"key": key, "name": place["name"], "lat": float(place["latitude"]), "lon": float(place["longitude"])}
 
 
-def earliest_start(engine: Any, prev_place: dict[str, Any], place: dict[str, Any], prev_end: datetime) -> datetime | None:
-    """앞 일정이 끝난 뒤 떠나 이 곳에 **시간표로 확인되게** 닿는 가장 이른 시작(5분 올림). 계산기 답이 모자라면 몇 번 다시 맞춰 본다 — 끝내 못 맞추면 None(맞춘 척하지 않는다)."""
-    start = prev_end + timedelta(minutes=1)
+def earliest_start(engine: Any, prev_place: dict[str, Any], place: dict[str, Any], prev_end: datetime, *,
+                   known: Leg | None = None) -> datetime | None:
+    """앞 일정이 끝난 뒤 떠나 이 곳에 **시간표로 확인되게** 닿는 가장 이른 시작(5분 올림). 계산기 답이 모자라면 몇 번 다시 맞춰 본다 — 끝내 못 맞추면 None(맞춘 척하지 않는다).
+
+    `known` `[2026-10-20 사용자 결정]` 같은 두 곳 사이를 이미 구한 이동(도착 목표만 다름) — 첫 추측을 「앞 일정 끝 + 그 이동 시간」에서 시작해
+      반드시 늦는 첫 물음(끝 1분 뒤 도착)을 건너뛴다(로컬 재현: 한 번에 4~5초 걸리는 구간을 시각만 바꿔 4번 물었다). 안 주면 종전과 같다(자동 추천)."""
+    start = prev_end + timedelta(minutes=max(1, known.minutes) if known is not None else 1)
     for _ in range(4):
         leg = leg_between(engine, _pt(prev_place, "prev"), _pt(place, "cand"), prev_end, start, deep=False)
         if leg.ok:
@@ -76,9 +84,10 @@ def earliest_start(engine: Any, prev_place: dict[str, Any], place: dict[str, Any
     return _ceil5(start) if leg.ok else None
 
 
-def latest_end(engine: Any, place: dict[str, Any], next_place: dict[str, Any], next_start: datetime) -> datetime | None:
-    """이 곳에서 늦게 나서도 다음 일정에 **시간표로 확인되게** 닿는 가장 늦은 끝(5분 내림). 끝내 못 맞추면 None."""
-    end = next_start - timedelta(minutes=1)
+def latest_end(engine: Any, place: dict[str, Any], next_place: dict[str, Any], next_start: datetime, *,
+               known: Leg | None = None) -> datetime | None:
+    """이 곳에서 늦게 나서도 다음 일정에 **시간표로 확인되게** 닿는 가장 늦은 끝(5분 내림). 끝내 못 맞추면 None. `known` 은 `earliest_start` 와 같다."""
+    end = next_start - timedelta(minutes=max(1, known.minutes) if known is not None else 1)
     for _ in range(4):
         leg = leg_between(engine, _pt(place, "cand"), _pt(next_place, "next"), end, next_start, deep=False)
         if leg.ok:
@@ -101,7 +110,10 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
     defaulted = engine is None and use_engine
     if defaulted:
         engine = default_engine(None)
-    budget = _Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
+    whole = _Budgeted(engine, REQUEST_ENGINE_S) if engine is not None else None     # 요청 전체
+
+    # `[2026-10-20 사용자 결정]` 이동 구간 하나마다 몫(요청 전체 한도 안에서) — 한 구간이 시간을 다 써도 다른 구간은 제 몫으로 계산한다
+    budget = _PerLeg(engine, ENGINE_BUDGET_S, within=whole) if engine is not None else None
     # ★`[2026-10-07 이동수단 고르기 · 계약 ⓒ]` 고객이 고른 수단이 살아 있는(`kept`) 구간은 그 수단의 계산기로 시각을 맞춘다 — 추천 수단으로 맞추면 적용한 뒤
     #   고른 수단이 안 닿아 추천으로 되돌아간다. 못 닿으면 그 구간은 새 판의 검사에서 `dropped` + 이유로 알린다(`review.build`).
     kept_modes = {f"{m['from']}~{m['to']}": m["mode_choice"]["mode"] for m in review.get("moves", [])
@@ -115,7 +127,7 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
         key = (scope, mode)
         if key not in by_mode:
             eng = default_engine(None, [mode]) if mode else engine
-            by_mode[key] = _Budgeted(eng, ENGINE_BUDGET_S) if eng is not None else budget
+            by_mode[key] = _PerLeg(eng, ENGINE_BUDGET_S, within=whole) if eng is not None else budget
         return by_mode[key]
     # 바꾸는 동안의 기준 상태 — 앞 일정이 바뀌면 그 값으로 다음 일정을 맞춘다
     items = [{**it, "rows": list(it["rows"])} for it in review["items"]]

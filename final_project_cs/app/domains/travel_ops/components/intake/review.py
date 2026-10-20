@@ -400,15 +400,18 @@ class _Budgeted:
     """이동 계산기를 부르는 시간에 상한을 건다 — 넘으면 못 채웠다고 답해 그 구간은 어림값으로 간다. 같은 질문은 다시 묻지 않고 기억한 답을 쓴다
     (시각을 맞추려고 같은 구간을 되풀이해 묻는 자동 추천이 계산기 시간을 두 번 쓰지 않게).
 
-    ☆한 번의 호출은 중간에 끊을 수 없다(2026-10-03 실측: 먼 구간 한 번이 16초) — 상한은 **다음 호출부터** 막는다."""
+    ☆한 번의 호출은 중간에 끊을 수 없다(2026-10-03 실측: 먼 구간 한 번이 16초) — 상한은 **다음 호출부터** 막는다.
 
-    def __init__(self, engine: Callable[..., Any], seconds: float) -> None:
-        self._engine, self._left = engine, seconds
-        self._memo: dict[tuple, Any] = {}
+    `within` `[2026-10-20 사용자 결정 — 이동 구간 하나마다, `_PerLeg`]` 요청 전체의 상한(이 클래스 하나) — 쓴 시간을 그쪽에도 빼고, 어느 한쪽이 다 되면 다 된 것이다.
+      같은 계산기면 기억한 답도 요청 전체가 함께 쓴다."""
+
+    def __init__(self, engine: Callable[..., Any], seconds: float, *, within: "_Budgeted | None" = None) -> None:
+        self._engine, self._left, self._within = engine, seconds, within
+        self._memo: dict[tuple, Any] = within._memo if within is not None and within._engine is engine else {}
 
     @property
     def exhausted(self) -> bool:
-        return self._left <= 0
+        return self._left <= 0 or (self._within is not None and self._within.exhausted)
 
     @staticmethod
     def _key(a: dict[str, Any], b: dict[str, Any], arrive: Any, not_before: Any) -> tuple:
@@ -418,15 +421,48 @@ class _Budgeted:
         key = self._key(a, b, arrive, not_before)
         if key in self._memo:
             return self._memo[key]
-        if self._left <= 0:
+        if self.exhausted:
             return None, {"code": "budget", "reason": "이동 계산에 시간이 오래 걸려 어림값으로 냈어요"}
         started = time.monotonic()
         try:
             answer = self._engine(a, b, arrive, not_before)
         finally:
-            self._left -= time.monotonic() - started
+            spent = time.monotonic() - started
+            self._left -= spent
+            if self._within is not None:
+                self._within._left -= spent
         self._memo[key] = answer
         return answer
+
+
+class _PerLeg:
+    """`[2026-10-20 사용자 결정 — 이동 구간 하나마다]` 이동 계산 시간 한도를 **이동 구간 하나마다**(두 곳의 좌표가 같으면 같은 구간 — 도착 목표 시각만
+    바꿔 다시 묻는 것은 같은 구간의 몫을 쓴다) 따로 준다. 요청 전체 한도(`within`) 안에서다. 한 구간이 몫을 다 쓰면 그 구간만 「못 채움」으로 답한다."""
+
+    def __init__(self, engine: Callable[..., Any], seconds: float, *, within: _Budgeted | None = None) -> None:
+        self._engine, self._seconds, self._within = engine, seconds, within
+        self._legs: dict[tuple, _Budgeted] = {}
+
+    @staticmethod
+    def _pair(a: dict[str, Any], b: dict[str, Any]) -> tuple:
+        return (round(a["lat"], 5), round(a["lon"], 5), round(b["lat"], 5), round(b["lon"], 5))
+
+    def leg(self, a: dict[str, Any], b: dict[str, Any]) -> _Budgeted:
+        pair = self._pair(a, b)
+        if pair not in self._legs:
+            self._legs[pair] = _Budgeted(self._engine, self._seconds, within=self._within)
+        return self._legs[pair]
+
+    def exhausted_for(self, a: dict[str, Any], b: dict[str, Any]) -> bool:
+        return self.leg(a, b).exhausted
+
+    @property
+    def exhausted(self) -> bool:
+        """요청 전체가 다 됐나(구간 하나의 몫은 `exhausted_for`)."""
+        return self._within is not None and self._within.exhausted
+
+    def __call__(self, a: dict[str, Any], b: dict[str, Any], arrive: Any, not_before: Any = None):
+        return self.leg(a, b)(a, b, arrive, not_before)
 
 
 def default_engine(party_size: int | None, modes: list[str] | None = None, *, constraints=None) -> Callable[..., Any] | None:
@@ -503,7 +539,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
           claims: list[dict[str, Any]], engine: Callable[..., Any] | None = None, use_engine: bool = True,
           previous: dict[str, Any] | None = None, now: datetime | None = None,
           on_event: Callable[[str, dict[str, Any]], None] | None = None,
-          engine_for_mode: Callable[[str], Any] | None = None) -> dict[str, Any]:
+          engine_for_mode: Callable[[str], Any] | None = None, estimate_needs_review: bool = False) -> dict[str, Any]:
     """한 판의 검사를 계산한다. `previous` = 앞 판의 검사 — 같은 구간(좌표 · 시각이 같음)은 그 값을 재사용한다(`sig`).
 
     `engine_for_mode(수단)` `[2026-10-07 이동수단 고르기]` — 고객이 구간 수단을 골랐을 때 그 수단만으로 계산하는 계산기. 안 주고 기본 계산기를 쓰면 기본 팩토리를 쓴다.
@@ -511,7 +547,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     `on_event(이름, 몸통)` `[2026-10-03 ui 세션 요청서 2번]` — **계산이 끝나는 대로** 알린다(검사는 끝나 커밋돼야 DB 에 보여서, 이게 없으면 실시간 진행이 끝에서 한꺼번에 낸다):
       `progress{phase: hours, done, total, current}` 운영시간 확인이 한 일정씩 · `item` 과 `check` 일정마다 검사 줄이 정해지는 대로(이동 계산 **전에**) ·
       `move` 와 `progress{phase: moves}` 이동이 한 구간씩. 이 값들은 **상태의 복사본**이라 끝에 DB 에서 읽은 최종 값이 같은 키로 와서 덮는다.
-    알림이 던져도 계산은 계속된다(진행 알림은 부가 기능)."""
+    알림이 던져도 계산은 계속된다(진행 알림은 부가 기능).
+    `estimate_needs_review` `[2026-10-20 사용자 결정]` 계산기가 켜져 있는데 시간표로 못 구한(시간 한도 · 오류 · 자료 없음) 구간을 「확인 필요」로 센다 —
+      고치기(`pipeline.edit`)가 시각 맞추기의 시간 한도에 닿아 어림으로 저장한 판이 등록 가능으로 보이지 않게 그 길에서 켠다."""
     def note(name: str, body: dict[str, Any]) -> None:
         if on_event is None:
             return
@@ -543,6 +581,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             else:
                 engine_for_mode = lambda mode: default_engine(party, [mode])  # noqa: E731
     budgeted = _Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
+    strict = estimate_needs_review and budgeted is not None          # 계산기가 꺼진 시험 · 개발 환경의 어림은 종전대로 둔다
     dates = sorted({r["date"] for r in rows if r["date"]})
     day_no = {d: i + 1 for i, d in enumerate(dates)}
 
@@ -714,7 +753,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         if pick:
             leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, a_end, b_start, b["start"])
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
-        add_move({**_move(ia, ib, leg, provisional, sig), "recommended_mode": recommended, "mode_choice": choice}, ia, ib)
+        add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice}, ia, ib)
 
     for (a, ia), (b, ib) in morning:
         floor, b_start = _dt(b["date"], STAY_MORNING_FROM), _dt(b["date"], b["start"])
@@ -735,7 +774,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         if pick:
             leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, floor, b_start, b["start"])
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
-        add_move({**_move(ia, ib, leg, provisional, sig), "recommended_mode": recommended, "mode_choice": choice,
+        add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice,
                   "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
 
     # 겹침은 보통 앞 구간이 「늦게 닿는다」로 잡혀 이동이 확인 필요를 센다. 이동으로 안 잡히는 겹침(한쪽 장소를 모르거나 같은 곳이라 이동이 없는 것)은
@@ -859,8 +898,9 @@ def _waiting_move(a: dict[str, Any], b: dict[str, Any], pick: str | None = None)
                      _line("arrival", "unknown", "장소를 정하면 확인해요")]}
 
 
-def _move(a: dict[str, Any], b: dict[str, Any], leg: Leg, provisional: list[str], sig: str) -> dict[str, Any]:
+def _move(a: dict[str, Any], b: dict[str, Any], leg: Leg, provisional: list[str], sig: str, *, unverified: bool = False) -> dict[str, Any]:
     estimate = leg.basis == "estimate"
+    unchecked = estimate and unverified          # 시간표로 못 구한 구간 — 늦지 않아 보여도 「확인 필요」(근거 없이 닿는다고 하지 않는다)
     if estimate:
         route = _line("route", "warn", f"이동 계산기로 구하지 못해 직선거리로 어림했어요 · {leg.why}")
     elif provisional:
@@ -871,9 +911,11 @@ def _move(a: dict[str, Any], b: dict[str, Any], leg: Leg, provisional: list[str]
     late = leg.slack_min < 0
     # 시간표로 확인하지 못한 값(이동 시간만 더함)이면 늦지 않아도 빠듯하다고 알린다 — 열차 · 버스를 기다리는 시간이 빠져 있다
     note = " · 시간표로 확인하지 못했어요(열차·버스를 놓치면 늦을 수 있어요)" if leg.tight else ""
-    arrival = _line("arrival", "warn" if late or leg.tight else "ok",
+    if unchecked:
+        note += " · 시간표로 확인하지 못해 도착은 어림이에요 — 확인이 필요해요"
+    arrival = _line("arrival", "warn" if late or leg.tight or unchecked else "ok",
                     f"{_hm(leg.depart)}에 나서면 {_hm(leg.arrive)} 도착 · {late_text(leg.slack_min)}{note}")
-    return {"from": a["id"], "to": b["id"], "day": a["day"], "date": a["date"], "status": "review" if late else "keep",
+    return {"from": a["id"], "to": b["id"], "day": a["day"], "date": a["date"], "status": "review" if late or unchecked else "keep",
             "mode": leg.mode, "mode_label": leg.mode_label, "minutes": leg.minutes, "km": leg.km,
             "depart": _hm(leg.depart), "arrive": _hm(leg.arrive), "slack_min": leg.slack_min, "basis": leg.basis,
             "summary": f"{leg.mode_label} {leg.minutes}분 · {leg.km}km" + (" [추정]" if estimate else ""),

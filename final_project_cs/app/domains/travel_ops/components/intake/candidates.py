@@ -30,7 +30,7 @@ from . import lodging_context as stay_context
 from .moves import leg_between, late_text
 from .terms import category_label
 from .places import distance_m, normalize_full
-from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _line, _worst, default_engine, public_place)
+from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _PerLeg, _line, _worst, default_engine, public_place)
 
 log = logging.getLogger(__name__)
 
@@ -1141,7 +1141,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
                       rank_only=rank_only, lodging_team=lodging_team)
     if engine is None and use_engine:
         engine = default_engine(None)
-    budget = engine if isinstance(engine, _Budgeted) else (_Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None)
+    budget = engine if isinstance(engine, (_Budgeted, _PerLeg)) else (_Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None)
     judged = [(place, cheap if rank_only else assess(conn, tenant_id, item, place, gathered.prev, gathered.nxt, budget))
               for place, cheap in gathered.pool]
     return finish(conn, tenant_id=tenant_id, gathered=gathered, judged=judged, chat=chat, reason_wait=reason_wait, budget=budget)
