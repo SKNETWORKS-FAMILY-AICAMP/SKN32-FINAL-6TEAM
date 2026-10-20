@@ -26,6 +26,7 @@ from app.core.settings import get_guardrails
 from app.core.transition import transition_case
 from app.core.case_lifecycle.events import REQUIRED_PAYLOAD_KEYS, TRANSITIONS, EventType
 from app.domains.travel_ops.components.intake import backup as intake_backup
+from app.domains.travel_ops.components.itinerary import trip_archive
 
 REASON = "trip_deleted"
 ACTOR_TYPE, ACTOR_ID = "system", "trip_delete"
@@ -114,7 +115,11 @@ def delete_trip(conn, *, tenant_id: str, customer_id: UUID, trip_id: UUID,
                     (tenant_id, trip_id, customer_id))
         if cur.fetchone() is None:
             return None
-    counts: dict[str, Any] = {"cases_closed": close_cases(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id)}
+    # ★`[2026-10-20 사용자 결정]` 시험 여행이면 **무엇이든 지우기 전에** 보관함에 통째로 담는다(D-CS-018 · `trip_archive.py`) —
+    #   Case 를 닫기 전 모습 · 알림 문장 · 채팅까지. 담기가 실패하면 예외로 삭제 전체가 되돌려진다. 실제 고객 여행은 0 (지금처럼 파기)
+    counts: dict[str, Any] = {"archived": trip_archive.archive_if_test(conn, tenant_id=tenant_id, customer_id=customer_id,
+                                                                       trip_id=trip_id, reason=backup_reason)}
+    counts["cases_closed"] = close_cases(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id)
     if get_guardrails().get("retention.case_follows_trip"):
         ids = case_ids_for_trip(conn, tenant_id=tenant_id, customer_id=customer_id, trip_id=trip_id)
         counts["cases_purged"] = purge_cases(conn, tenant_id=tenant_id, case_ids=ids)["customer_cases"]
