@@ -1,0 +1,35 @@
+{
+ "built_on": "2026-10-20",
+ "cases": 39,
+ "by_stratum": {
+  "A": 6,
+  "B": 14,
+  "C": 5,
+  "D": 6,
+  "E": 5,
+  "F": 3
+ },
+ "split": [
+  "holdout"
+ ],
+ "source": "cards_llm_bound_h2.jsonl",
+ "sha256": "7fc12dc383b4f6b4a40f7e1b624998c0b238fc5f3616a28cb61333d8e15a785c",
+ "inputs_sha256": "d2d31fa6fc7bfe91b4b5525a05b590ba28d24ebb990eb6e720c28dc4ef7656e5",
+ "labeler": "합의",
+ "labels_file": "situation_cards_h2_human_합의_2026-10-20.json",
+ "texts": "responses_llm_bound_h2.csv",
+ "smoke": false,
+ "set": "h2",
+ "labeling": {
+  "labelers": [
+   "작성자1",
+   "작성자2"
+  ],
+  "blind": false,
+  "agreement": "정답 39/39 · 위험 39/39",
+  "consensus_changed_cards": 0,
+  "claude_assisted": "Claude 제안을 두 시트에 채운 뒤 사람이 검수 — 바꾼 곳 H-64(1 → 없음) 하나",
+  "texts": "사람 작성자 2명(write_by_작성자N_h2.csv) — 후보 · 정답을 보지 않고 씀",
+  "candidates_note": "16장은 운영 순위 상위 10곳에서 고름(candidates_by)"
+ }
+}

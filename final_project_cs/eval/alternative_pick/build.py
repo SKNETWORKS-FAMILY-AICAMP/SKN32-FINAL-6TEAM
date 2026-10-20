@@ -33,6 +33,12 @@ DATASET = HERE / "cases.jsonl"
 SMOKE = HERE / "cases_smoke.jsonl"
 WATCH = HERE / "cases_watch.jsonl"
 WATCH_DRAFT = HERE / "cases_watch_draft.jsonl"
+#: ★`[2026-10-20]` 자료 묶음 — v0 = holdout 80, h2 = holdout-2(`holdout2.py`). (결합본, 작성자 문장, 고객 요청 판, 감시 판, 라벨 묶음 접미사)
+SETS = {
+    "v0": (BOUND, RESPONSES, DATASET, WATCH, ""),
+    "h2": (CARDS / "cards_llm_bound_h2.jsonl", CARDS / "responses_llm_bound_h2.csv", HERE / "cases_h2.jsonl",
+           HERE / "cases_watch_h2.jsonl", "_h2"),
+}
 
 
 def manifest_path(dataset: Path) -> Path:
@@ -79,11 +85,18 @@ def to_case(card: dict, text: str, acceptable: list[str], forbidden: list[str], 
         "label_by": label_by, "text_by": text_by,
         # ★`[2026-10-17]` 작성자를 바꾼 카드(L-01 · L-55) — 새 작성자가 문장을 쓰기 전에 후보를 봤다. 분석에서 가려 볼 수 있게
         "writer_saw_candidates": bool(card.get("writer_saw_candidates")),
+        # ★`[2026-10-20]` holdout-2 의 일부 카드는 운영 화면 3곳이 아니라 운영 순위 상위 10곳에서 골랐다(`holdout2.bind_top10`)
+        **({"candidates_by": card["candidates_by"]} if card.get("candidates_by") else {}),
     }
 
 
-def load_cards() -> list[dict]:
-    return [json.loads(line) for line in BOUND.read_text(encoding="utf-8").splitlines() if line.strip()]
+def load_cards(path: Path = BOUND) -> list[dict]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def cards_as_chat_cases(path: Path) -> list[dict]:
+    """결합본 카드 → 고객 문장 없는 사례(라벨 비움). 감시 판(`watch.variants`)의 재료 — 고객 요청 판 라벨을 기다리지 않는다."""
+    return [to_case(card, None, [], [], split="holdout", label_by=None, text_by="none") for card in load_cards(path)]
 
 
 def load_texts(path: Path) -> dict[str, str]:
@@ -91,10 +104,10 @@ def load_texts(path: Path) -> dict[str, str]:
         return {r["카드"]: r[TEXT_COL].strip() for r in csv.DictReader(fh)}
 
 
-def load_labels(path: Path) -> tuple[dict[str, dict], str]:
+def load_labels(path: Path, bundle: str = "situation_cards") -> tuple[dict[str, dict], str]:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("bundle") != "situation_cards":
-        raise SystemExit(f"{path}: situation_cards 라벨 파일이 아니다(bundle={data.get('bundle')!r})")
+    if data.get("bundle") != bundle:
+        raise SystemExit(f"{path}: {bundle} 라벨 파일이 아니다(bundle={data.get('bundle')!r})")
     return data["labels"], data["reviewer"]
 
 
@@ -161,13 +174,17 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--watch", action="store_true", help="감시 경로 판 — 동결 holdout 에서 고객 문장을 뺀다")
     parser.add_argument("--watch-labels", type=Path, help="감시 판 사람 라벨(human_review apply 형식, bundle=situation_cards_watch)")
     parser.add_argument("--draft", action="store_true", help="--watch 와 함께 — 사람 라벨 없이 도구만 점검(수치로 쓰지 않음)")
+    parser.add_argument("--set", choices=tuple(SETS), default="v0", help="h2 = holdout-2(`holdout2.py` 결합본)")
     parser.add_argument("--out", type=Path)
     args = parser.parse_args(argv)
+    bound, responses, dataset, _, suffix = SETS[args.set]
+    if args.set != "v0" and args.responses == RESPONSES:
+        args.responses = responses
 
     if args.watch:
         build_watch(args)
         return
-    cards = load_cards()
+    cards = load_cards(bound)
     if args.smoke:
         cases = build(cards, smoke=True)
         out = args.out or SMOKE
@@ -177,10 +194,11 @@ def main(argv: list[str] | None = None) -> None:
             raise SystemExit(f"{args.responses} 가 없다 — 작성자 문장을 먼저 합친다(review_sheets.py merge)")
         if args.labels is None:
             raise SystemExit("--labels 합의 라벨 파일을 지정한다(2인 라벨 → agree → 합의본)")
-        labels, reviewer = load_labels(args.labels)
+        labels, reviewer = load_labels(args.labels, f"situation_cards{suffix}")
         cases = build(cards, smoke=False, texts=load_texts(args.responses), labels=labels, labeler=reviewer)
-        out = args.out or DATASET
-        extra = {"labeler": reviewer, "labels_file": args.labels.name, "texts": args.responses.name, "smoke": False}
+        out = args.out or dataset
+        extra = {"labeler": reviewer, "labels_file": args.labels.name, "texts": args.responses.name, "smoke": False,
+                 "set": args.set, "source": bound.name}
     manifest = write(cases, out, extra)
     print(json.dumps(manifest, ensure_ascii=False, indent=1))
 
@@ -189,7 +207,13 @@ def build_watch(args) -> None:
     """감시 경로 판 — 동결 holdout 의 입력을 그대로 쓰고 고객 문장만 뺀다(`watch.py`)."""
     from . import watch
 
-    chat, chat_manifest = load_cases(DATASET)
+    bound, _, dataset, watch_out, suffix = SETS[args.set]
+    if args.set == "v0":
+        chat, chat_manifest = load_cases(dataset)
+        source = {"dataset": dataset.name, "sha256": chat_manifest["sha256"]}
+    else:
+        chat = cards_as_chat_cases(bound)
+        source = {"bound": bound.name, "sha256": hashlib.sha256(bound.read_bytes()).hexdigest()}
     cases, counts = watch.variants(chat)
     if args.draft:
         cases = [{**c, "split": "smoke", "acceptable": [x["id"] for x in c["inputs"]["candidates"]],
@@ -199,12 +223,12 @@ def build_watch(args) -> None:
         if args.watch_labels is None:
             raise SystemExit("--watch-labels 감시 판 합의 라벨을 지정한다(또는 --draft 로 도구만 점검)")
         data = json.loads(args.watch_labels.read_text(encoding="utf-8"))
-        if data.get("bundle") != "situation_cards_watch":
-            raise SystemExit(f"{args.watch_labels}: situation_cards_watch 라벨 파일이 아니다(bundle={data.get('bundle')!r})")
+        if data.get("bundle") != f"situation_cards_watch{suffix}":
+            raise SystemExit(f"{args.watch_labels}: situation_cards_watch{suffix} 라벨 파일이 아니다(bundle={data.get('bundle')!r})")
         human = {cid: entry for cid, entry in data["labels"].items()}
-        cases, out, labeler = watch.label(cases, human, data["reviewer"]), args.out or WATCH, data["reviewer"]
+        cases, out, labeler = watch.label(cases, human, data["reviewer"]), args.out or watch_out, data["reviewer"]
     manifest = write(cases, out, {
-        "path": "watch", "from": {"dataset": DATASET.name, "sha256": chat_manifest["sha256"]},
+        "path": "watch", "set": args.set, "from": source,
         "labeler": labeler, "labels_file": args.watch_labels.name if args.watch_labels else None,
         "texts": "없음(감시 경로 — customer_text=None)", "smoke": bool(args.draft),
         "watch": counts,

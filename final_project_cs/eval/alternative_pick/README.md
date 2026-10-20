@@ -59,7 +59,7 @@ python -m eval.alternative_pick.run --cases eval/alternative_pick/cases_watch.js
 
 - 결합은 `dev.bind_fresh`(운영 화면 3곳). holdout-2 는 그것으로 못 묶은 16장(C · D 대부분)을 **운영 순위 상위 10곳**에서 골랐다(`holdout2.bind_top10` · 카드 `candidates_by`) — 결과를 경로별로 따로 볼 수 있다.
 - 실행 옵션: `run --prompt file --prompt-file alternative_order.v3.md --class-names`(v3 = E1 분류 이름 + E2 이유 규칙 + E3 받은 순서). 운영은 아직 v2 · 분류 이름 끔.
-- ★v3 지시문은 `eval/alternative_pick/prompts/` 에 둔다 — `prompts/` 에 두면 프롬프트 등록(develop CI · 배포)이 가장 높은 판을 운영에 켠다. holdout-2 판정 뒤 옮긴다.
+- ★`[2026-10-20]` holdout-2 판정 뒤 v3 지시문을 `prompts/activity_judge/` 로 옮기고 운영이 분류 이름을 싣게 했다(kind_modes 는 shadow 그대로). 다음 실험판은 `eval/alternative_pick/prompts/` 에 둔다 — `prompts/` 에 두면 등록 스크립트가 가장 높은 판을 운영에 켠다.
 
 ## 채점 기준 요약
 

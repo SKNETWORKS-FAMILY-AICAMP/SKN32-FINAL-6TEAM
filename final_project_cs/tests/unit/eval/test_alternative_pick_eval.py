@@ -380,3 +380,67 @@ def test_dev_picks_half_of_each_stratum_and_labels_by_rule():
     card = next(c for c in cards if c["preference_target"]["attribute"] == "history")
     shown = [{"id": "x", "class": "HS010100", "title": "궁"}, {"id": "y", "class": "VE030100", "title": "공원"}]
     assert dev.label(card, shown, lambda c: {"history"} if c["class"].startswith("HS") else set()) == (["x"], False)
+
+
+# ── `[2026-10-20]` holdout-2 — 합치기 · 라벨 묶음 · 사례 만들기가 h2 파일을 쓴다 ─────────────────────────
+
+def test_holdout2_pipeline_end_to_end_on_copies(tmp_path, monkeypatch):
+    import shutil
+
+    from eval.alternative_pick import watch
+    from eval.human_review import adapters, core
+    from eval.human_review.adapters.paths import Sources
+    from eval.situation_cards import review_sheets as rs
+
+    real = build.CARDS
+    cs = tmp_path / "final_project_cs"
+    folder = cs / "eval" / "situation_cards"
+    folder.mkdir(parents=True)
+    for name in ("cards_llm_bound_h2.jsonl", "sheet_llm_bound_h2.csv"):
+        shutil.copy(real / name, folder / name)
+    monkeypatch.setattr(rs, "HERE", folder)
+    rs.use_set("h2")
+    try:
+        sheet = list(csv.DictReader(open(folder / "sheet_llm_bound_h2.csv", encoding="utf-8-sig")))
+        for r in sheet:
+            r[rs.TEXT_COL] = f"문장 {r['카드']}"
+        filled = tmp_path / "filled.csv"
+        with filled.open("w", encoding="utf-8-sig", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(sheet[0]))
+            w.writeheader()
+            w.writerows(sheet)
+        rs.cmd_merge(SimpleNamespace(sheets=[str(filled)]))
+        assert (folder / "responses_llm_bound_h2.csv").exists()
+    finally:
+        rs.use_set("v0")
+        monkeypatch.setattr(rs, "HERE", real)
+
+    src = Sources(repo_root=tmp_path)
+    chat = adapters.build("situation_cards_h2", src)
+    assert chat.name == "situation_cards_h2" and len(chat.items) == len(sheet)
+    assert chat.items[0].context["고객 문장"].startswith("문장 H-")
+
+    # 사례 만들기 — 라벨 파일(번호) → id, 원본은 h2 결합본
+    labels = {it.id: {"acceptable": ["1"], "forbidden": []} for it in chat.items}
+    label_file = tmp_path / "h2_labels.json"
+    label_file.write_text(json.dumps({"bundle": "situation_cards_h2", "reviewer": "합의", "labels": labels},
+                                     ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setitem(build.SETS, "h2", (folder / "cards_llm_bound_h2.jsonl", folder / "responses_llm_bound_h2.csv",
+                                          tmp_path / "cases_h2.jsonl", tmp_path / "cases_watch_h2.jsonl", "_h2"))
+    build.main(["--set", "h2", "--labels", str(label_file)])
+    cases, manifest = build.load_cases(tmp_path / "cases_h2.jsonl")
+    assert len(cases) == len(sheet) and manifest["set"] == "h2" and manifest["split"] == ["holdout"]
+    assert all(c["acceptable"] == [c["inputs"]["candidates"][0]["id"]] for c in cases)
+    assert any(c.get("candidates_by") for c in cases)                                    # 상위 10곳에서 고른 카드 표시
+
+    # 감시 판 — 고객 문장 없이, 라벨 묶음은 situation_cards_watch_h2
+    variants, _ = watch.variants(build.cards_as_chat_cases(folder / "cards_llm_bound_h2.jsonl"))
+    wl = tmp_path / "w.json"
+    wl.write_text(json.dumps({"bundle": "situation_cards_watch_h2", "reviewer": "합의",
+                              "labels": {c["case_id"]: {"acceptable": ["2"], "forbidden": []} for c in variants}},
+                             ensure_ascii=False), encoding="utf-8")
+    build.main(["--set", "h2", "--watch", "--watch-labels", str(wl)])
+    wcases, wman = build.load_cases(tmp_path / "cases_watch_h2.jsonl")
+    assert len(wcases) == len(variants) and wman["path"] == "watch" and wman["set"] == "h2"
+    assert all(c["inputs"]["preference"]["customer_text"] is None for c in wcases)
+    assert core.read_sheet  # 라벨 시트 읽기는 human_review 시험이 맡는다

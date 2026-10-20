@@ -23,14 +23,21 @@ CRITERIA = (
 )
 
 
-def build(src: Sources | None = None) -> Bundle:
+def build(src: Sources | None = None, set_name: str = "v0") -> Bundle:
     from eval.alternative_pick import watch
     from eval.alternative_pick.build import DATASET, load_cases
     from eval.situation_cards import review_sheets as rs
 
     src = src or Sources()
-    dataset = src.need(src.cs / "eval" / "alternative_pick" / DATASET.name, "동결 holdout 사례(cases.jsonl)")
-    chat, _ = load_cases(dataset)
+    if set_name == "v0":
+        dataset = src.need(src.cs / "eval" / "alternative_pick" / DATASET.name, "동결 holdout 사례(cases.jsonl)")
+        chat, _ = load_cases(dataset)
+    else:
+        # ★`[2026-10-20]` holdout-2 — 감시 판은 고객 문장이 필요 없어 결합본 카드에서 바로 만든다(고객 요청 판 라벨과 따로 단다)
+        from eval.alternative_pick.build import cards_as_chat_cases
+
+        bound = src.need(src.cs / "eval" / "situation_cards" / rs.SETS[set_name][0], "holdout-2 결합본")
+        chat = cards_as_chat_cases(bound)
     cases, _ = watch.variants(chat)
     items = []
     for c in cases:
@@ -49,7 +56,7 @@ def build(src: Sources | None = None) -> Bundle:
             meta={"ids": ids, "stratum": c["stratum"], "from_case": c["from_case"]},
         ))
     return Bundle(
-        name="situation_cards_watch", title="상황 카드 감시 경로 판 — 설문만 보고 1순위 허용 · 위험 라벨(2인 블라인드)",
+        name="situation_cards_watch" if set_name == "v0" else f"situation_cards_watch_{set_name}", title="상황 카드 감시 경로 판 — 설문만 보고 1순위 허용 · 위험 라벨(2인 블라인드)",
         fields=[Field("acceptable", "1순위로 나와도 정답(번호, ; 로 구분)", "set"),
                 Field("forbidden", "1순위로 나오면 위험(번호, 없으면 비움)", "set", required=False)],
         items=items,
@@ -57,3 +64,8 @@ def build(src: Sources | None = None) -> Bundle:
         notes="두 사람 모두 전부를 따로 단다. 고객 문장 판(situation_cards) 라벨을 보지 않는다.",
         normalize=_check_overlap,
     )
+
+
+def build_h2(src: Sources | None = None) -> Bundle:
+    """`[2026-10-20]` holdout-2 감시 경로 판 — 고객 문장 없이 설문만."""
+    return build(src, "h2")

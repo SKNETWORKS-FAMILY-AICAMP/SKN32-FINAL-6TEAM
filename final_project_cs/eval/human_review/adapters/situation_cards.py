@@ -28,13 +28,14 @@ CRITERIA = (
 )
 
 
-def build(src: Sources | None = None) -> Bundle:
+def build(src: Sources | None = None, set_name: str = "v0") -> Bundle:
     from eval.situation_cards import review_sheets as rs
 
     src = src or Sources()
     folder = src.cs / "eval" / "situation_cards"
-    bound_path = src.need(folder / "cards_llm_bound_v0.jsonl", "상황 카드 결합본")
-    responses_path = src.need(folder / "responses_llm_bound_v0.csv",
+    bound_name, _, responses_name = rs.SETS[set_name]
+    bound_path = src.need(folder / bound_name, "상황 카드 결합본")
+    responses_path = src.need(folder / responses_name,
                               "작성자 문장(`python eval/situation_cards/review_sheets.py merge …` 로 만든다)")
     cards = {(c := json.loads(line))["card_id"]: c for line in bound_path.open(encoding="utf-8")}
     with responses_path.open(encoding="utf-8-sig", newline="") as fh:
@@ -62,12 +63,13 @@ def build(src: Sources | None = None) -> Bundle:
 
     writers = sorted({it.meta["writer"] for it in items})
     return Bundle(
-        name="situation_cards", title="상황 카드 80장 — 대체 후보 1순위 허용 · 위험 라벨(2인 블라인드)",
+        name="situation_cards" if set_name == "v0" else f"situation_cards_{set_name}",
+        title=(f"상황 카드 {len(items)}장{'' if set_name == 'v0' else ' · holdout-2'} — 대체 후보 1순위 허용 · 위험 라벨(2인 블라인드)"),
         fields=[Field("acceptable", "1순위로 나와도 정답(번호, ; 로 구분)", "set"),
                 Field("forbidden", "1순위로 나오면 위험(번호, 없으면 비움)", "set", required=False)],
         items=items,
         context_columns=["고객 문장", "원래 장소", "방문 시각", "설문(priority 뺌)", "후보 1", "후보 2", "후보 3"],
-        notes="두 사람 모두 80장 전부를 따로 단다. 같은 번호를 acceptable 과 forbidden 에 함께 적지 않는다. "
+        notes="두 사람 모두 전부를 따로 단다. 같은 번호를 acceptable 과 forbidden 에 함께 적지 않는다. "
               "부분집합 writer_<작성자> 는 그 사람이 쓴 문장만.",
         subsets={f"writer_{w}": by_writer(w) for w in writers},
         normalize=_check_overlap,
@@ -86,3 +88,8 @@ def _check_overlap(entry: dict) -> dict:
     if both:
         raise SheetError(f"같은 후보 {both} 가 acceptable 과 forbidden 에 함께 있다")
     return entry
+
+
+def build_h2(src: Sources | None = None) -> Bundle:
+    """`[2026-10-20]` holdout-2(`cards_llm_bound_h2.jsonl` + `responses_llm_bound_h2.csv`) — 고객 요청 판 라벨."""
+    return build(src, "h2")

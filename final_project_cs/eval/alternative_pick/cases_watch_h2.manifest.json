@@ -1,0 +1,74 @@
+{
+ "built_on": "2026-10-20",
+ "cases": 9,
+ "by_stratum": {
+  "B": 4,
+  "C": 5
+ },
+ "split": [
+  "holdout"
+ ],
+ "source": "cards_llm_bound_v0.jsonl",
+ "sha256": "c69c0a269d97c727a52d07b273dcbeb09e5f1d0209e842cc3d5cc079dc490573",
+ "inputs_sha256": "c767c3f4099ce5fde5e859722e93963318ec7ea269b054d6265002da7ac0d3e9",
+ "path": "watch",
+ "set": "h2",
+ "from": {
+  "bound": "cards_llm_bound_h2.jsonl",
+  "sha256": "e2b381aaa20442fbb8f6c80a863e2d45bf6d446a4c9691e07c511d9898f35003"
+ },
+ "labeler": "합의",
+ "labels_file": "situation_cards_watch_h2_human_합의_2026-10-20.json",
+ "texts": "없음(감시 경로 — customer_text=None)",
+ "smoke": false,
+ "watch": {
+  "variants": 9,
+  "human": 9,
+  "not_called": 30,
+  "duplicate": 0,
+  "skipped": {
+   "not_called": [
+    "H-02",
+    "H-04",
+    "H-06",
+    "H-08",
+    "H-10",
+    "H-12",
+    "H-15",
+    "H-17",
+    "H-19",
+    "H-21",
+    "H-23",
+    "H-25",
+    "H-27",
+    "H-29",
+    "H-31",
+    "H-55",
+    "H-57",
+    "H-59",
+    "H-60",
+    "H-62",
+    "H-63",
+    "H-64",
+    "H-66",
+    "H-68",
+    "H-70",
+    "H-72",
+    "H-74",
+    "H-77",
+    "H-79",
+    "H-80"
+   ],
+   "duplicate": []
+  }
+ },
+ "labeling": {
+  "labelers": [
+   "작성자1",
+   "작성자2"
+  ],
+  "blind": false,
+  "agreement": "정답 9/9 · 위험 9/9",
+  "claude_assisted": "Claude 제안을 본 뒤 단 것으로 보임 — 제안과 다른 2행(H-37-W · H-46-W)을 두 사람이 똑같이 넓힘"
+ }
+}

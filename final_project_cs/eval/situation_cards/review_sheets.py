@@ -36,6 +36,16 @@ VERDICT_COL = f"판정({' / '.join(VERDICTS)})"
 WEEKDAY = "월화수목금토일"
 
 
+#: ★`[2026-10-20]` 자료 묶음 — v0(holdout 80) · h2(holdout-2, `eval.alternative_pick.holdout2`)
+SETS = {"v0": ("cards_llm_bound_v0.jsonl", "sheet_llm_bound_v0.csv", "responses_llm_bound_v0.csv"),
+        "h2": ("cards_llm_bound_h2.jsonl", "sheet_llm_bound_h2.csv", "responses_llm_bound_h2.csv")}
+
+
+def use_set(name: str) -> None:
+    global BOUND, SHEET, RESPONSES
+    BOUND, SHEET, RESPONSES = (HERE / f for f in SETS[name])
+
+
 def load_bound() -> dict[str, dict]:
     return {(c := json.loads(line))["card_id"]: c for line in BOUND.open(encoding="utf-8")}
 
@@ -157,7 +167,11 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("split")
     mg = sub.add_parser("merge")
     mg.add_argument("sheets", nargs="+")
+    mg.add_argument("--set", choices=("v0", "h2"), default="v0",
+                    help="h2 = holdout-2(`cards_llm_bound_h2.jsonl` · `sheet_llm_bound_h2.csv` → `responses_llm_bound_h2.csv`)")
     args = ap.parse_args(argv)
+    if getattr(args, "set", "v0") == "h2":
+        use_set("h2")
     {"review": cmd_review, "split": cmd_split, "merge": cmd_merge}[args.cmd](args)
 
 
