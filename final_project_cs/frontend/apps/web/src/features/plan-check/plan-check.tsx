@@ -732,7 +732,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       setChange(null); setQuery(""); setSearch(null); setDetails(false);
       setOpen(item.id); refocus(item.id, "edit");
       return { text: t(`${eul(item.title)} ${ro(name)} 바꿨어요`, `Changed ${item.title} to ${name}`),
-        sub: t("바뀐 장소와 앞뒤 이동을 다시 확인해요", "Checking the new place and the moves either side"), undo: undoNow() };
+        sub: t("앞뒤 이동은 「다시 제출」을 누르면 한 번에 확인해요", "The moves either side are checked when you send the plan again"), undo: undoNow() };
     });
   }
   /** `[2026-10-19]` 「장소 없이 두기」 on a stop whose place was not found: saved as 「장소 없음」 (`{"none": true}`), as the stop editor does. */
@@ -753,7 +753,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       markChanged(item.id, was);
       setOpen(item.id);
       return { text: item.suggestion ? t(`${eul(item.title)} ${ro(item.suggestion)} 바꿨어요`, `Changed ${item.title} to ${item.suggestion}`) : t("대체 후보 1순위로 바꿨어요", "Changed to the first alternative"),
-        sub: t("대체 후보 1순위 · 바뀐 장소와 앞뒤 이동을 다시 확인해요", "First alternative · checking the new place and the moves either side"), undo: undoNow() };
+        sub: t("대체 후보 1순위 · 앞뒤 이동은 「다시 제출」을 누르면 한 번에 확인해요", "First alternative · the moves either side are checked when you send the plan again"), undo: undoNow() };
     });
   }
   /** `[2026-10-07]` The customer said which reading of the photo is right. Keeping the current one only confirms it; the other one changes the name (or booking number). */

@@ -360,7 +360,7 @@ test("카드의 「자동 추천」은 시간이 맞는 첫 후보로 바꾸고,
   await expect(toast(page, "대체 후보 1순위로 바꿨어요")).toBeVisible();
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[1].place",
-    value: { name: "올리브영 광화문점", latitude: 37.5717, longitude: 126.9791, source: "kakao" } }] });
+    value: { name: "올리브영 광화문점", latitude: 37.5717, longitude: 126.9791, source: "kakao" } }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
   await expect(card(page, "올리브영 광화문점")).toBeVisible();
 });
 

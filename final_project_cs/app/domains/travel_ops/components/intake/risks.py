@@ -1,6 +1,7 @@
 """계획 확인에서도 감시와 같은 위험 근거와 검증한 실내 대안을 보여 준다."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta
 from typing import Any, Callable
 from uuid import NAMESPACE_URL, uuid5
@@ -11,6 +12,9 @@ from app.domains.travel_ops.components.watch import risk_report
 
 KST = ZoneInfo("Asia/Seoul")
 SCHEMA_VERSION = 1
+#: 고치기로 새 판을 만들 때 앞 판의 위험 점검 결과를 다시 쓰는 시간(초) — 바뀌지 않은 일정까지 바깥 조회를 다시 하지 않게(2026-10-20 「대안 적용 13.9초」).
+#:  공유 캐시가 같은 값을 주는 정도의 짧은 시간만 쓴다. ★우리가 고른 값
+REUSE_FRESH_S = 600
 #: ★`[2026-10-18 현장 피드백 「여행 날짜와 상관없이 현재 재난경보를 기준으로 일정 확인하라고 나온다」]` 「지금 발령 중」인 특보 · 재난문자 · 교통 통제 · 대기질 · 지진을
 #:  일정의 문제로 보이는 범위 — 시작이 지금부터 이 시간 안인 일정만. 그보다 먼 일정(예: 일주일 뒤 여행)에는 지금 경보가 그 날짜의 사실이 아니므로 문제로 세지 않고,
 #:  출발이 가까워지면 감시가 다시 점검한다. 예보는 그 시각을 보는 값이라 이 범위와 상관없이 그대로 보인다. 우리가 고른 값.
@@ -27,12 +31,38 @@ def check_for(mode: str) -> Callable[..., dict[str, Any]]:
     return DisruptionCheck(build_travel_sources(get_settings(), cache_only=mode == "cached", operation_snapshot=True)).check
 
 
+def _risk_sig(item: dict[str, Any]) -> str:
+    """위험 점검 결과를 정하는 일정 칸 — 이것이 같으면 같은 점검이다(종류 · 날짜 · 시각 · 고정 · 장소 이름과 좌표)."""
+    place = item.get("place") or {}
+    return json.dumps([item.get(k) for k in ("kind", "date", "end_date", "starts_at", "ends_at", "locked")]
+                      + [place.get(k) for k in ("name", "latitude", "longitude", "content_id")], ensure_ascii=False, default=str)
+
+
+def _reusable(previous: dict[str, Any] | None, now: datetime) -> dict[str, tuple[str, dict[str, Any]]]:
+    """앞 판에서 `REUSE_FRESH_S` 안에 새로 점검한 일정의 결과 — {일정 id: (서명, 위험)}. 한도에 걸려 못 본 것 · 점검 오류는 다시 본다."""
+    if not previous or previous.get("risk_schema_version") != SCHEMA_VERSION or previous.get("risk_mode") != "fresh":
+        return {}
+    try:
+        at = datetime.fromisoformat(str(previous.get("risk_checked_at")))
+    except ValueError:
+        return {}
+    if at.tzinfo is None or not timedelta(0) <= now - at <= timedelta(seconds=REUSE_FRESH_S):
+        return {}
+    return {str(it.get("id")): (_risk_sig(it), it["risk"]) for it in previous.get("items", [])
+            if isinstance(it.get("risk"), dict) and it["risk"].get("code") not in ("item_limit", "check_error")}
+
+
 def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
-             check: Callable[..., dict[str, Any]] | None = None, now: datetime | None = None) -> dict[str, Any]:
-    """위험을 덧붙인 사본. 일정·기존 검사 결과·등록 가능 판정은 바꾸지 않는다."""
+             check: Callable[..., dict[str, Any]] | None = None, now: datetime | None = None,
+             reuse: dict[str, Any] | None = None) -> dict[str, Any]:
+    """위험을 덧붙인 사본. 일정·기존 검사 결과·등록 가능 판정은 바꾸지 않는다.
+
+    `reuse` `[2026-10-20]` 앞 판의 검사(위험을 붙인 것) — 새로 점검(`fresh`)할 때 앞 판에서 방금(`REUSE_FRESH_S` 안) 점검한 일정이 그대로면
+    그 결과를 쓴다(바깥 조회를 다시 하지 않는다). 그 결과의 점검 시각(`checked_at`)은 앞 판 값 그대로 남는다."""
     from app.core.settings import get_guardrails
 
     now = now or datetime.now(KST)
+    earlier = _reusable(reuse, now) if mode == "fresh" else {}
     try:
         checker = check or check_for(mode)
     except Exception:  # noqa: BLE001 — 소스 조립 실패도 확인 불가로 보인다
@@ -45,6 +75,12 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
     for item in review.get("items", []):
         shown = dict(item)
         if item.get("kind") == "mobility":
+            items.append(shown)
+            continue
+        same = earlier.get(str(item.get("id")))
+        if same is not None and same[0] == _risk_sig(item):
+            shown["risk"] = same[1]
+            checked += same[1].get("status") != "not_applicable" and same[1].get("code") != "no_time"   # 한도는 앞 판과 같은 일정에 걸리게 센다
             items.append(shown)
             continue
         parsed = to_item(conn, tenant_id, item)

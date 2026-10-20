@@ -196,6 +196,8 @@ class IntakeEditIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     revision: int = Field(ge=1)
     edits: list[IntakeEditOne] = Field(min_length=1, max_length=50)
+    #: `[2026-10-20 사용자 지시]` false = 저장만 하고 검사(이동 계산 · 재배치 · 대안 준비)는 「다시 제출」(`revalidate`) 때 한 번에
+    check: bool = True
 
 
 class ReopenIn(BaseModel):
@@ -739,7 +741,7 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
     if status == "not_found":
         raise _error(404, "not_found", "resource not found")
     if status in _CONFLICTS:
-        details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict")}
+        details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict", "text")}
         raise _error(409, _CONFLICTS[status], f"request not applied: {status}", **details)
     return outcome
 
@@ -1521,9 +1523,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                      edits=[e.model_dump() for e in request.edits],
                      tour=_lazy("place", place_factory),
                      kakao=_kakao_raw,
-                     dining=_dining_lookup(_ctx))
+                     dining=_dining_lookup(_ctx), check=request.check)
                 shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
-            _prepare_later(background, tenant, intake_id, shown)
+            # ★`[2026-10-20 사용자 지시]` 저장만 한 판(`check: false`)은 대안도 다시 준비하지 않는다 — 「다시 제출」(재검증) 뒤에 한다
+            if request.check:
+                _prepare_later(background, tenant, intake_id, shown)
             return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
@@ -1715,7 +1719,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, exc.code, exc.message) from None
 
     @router.post("/v1/web/trip-intakes/{intake_id}/revalidate")
-    def web_intake_revalidate(intake_id: UUID, request: IntakeRevisionIn,
+    def web_intake_revalidate(intake_id: UUID, request: IntakeRevisionIn, background: BackgroundTasks,
                               who: tuple[str, UUID] = Depends(_web_customer)):
         """**재검증** — 새 판 없이 같은 판의 검사(운영시간·휴무·이동)를 처음부터 다시 계산해 저장된 검사를 새 값으로 바꾼다. 응답은 `GET …/{id}` 와 같은 모양이고
         `review.ready` 가 참이면 「여행 등록」을 켠다. 등록 판정(`confirm`)과 같은 판정기를 쓴다."""
@@ -1724,8 +1728,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         tenant, customer = who
         try:
             with get_connection() as conn:
-                return pipeline.revalidate(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                                           revision=request.revision)
+                shown = pipeline.revalidate(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                            revision=request.revision)
+            # `[2026-10-20]` 저장만 한 판들(`edits` 의 `check: false`)이 여기서 처음 검사된다 — 낡은 미리 준비 대안도 이제 다시 준비한다
+            _prepare_later(background, tenant, intake_id, shown)
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:
@@ -1806,6 +1813,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 status, existing_trip, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                                     revision=request.revision)
+                # ★`[2026-10-20 사용자 지시]` 저장만 하고 검사를 미룬 판(`edits` 의 `check: false`)은 등록하지 않는다 — 「다시 제출」(`revalidate`)이 먼저다
+                if status == "review" and review_module.unchecked(review_module.load(conn, tenant, intake_id, request.revision)):
+                    raise IntakeConflict("recheck_needed", "바꾼 일정을 아직 확인하지 않았어요 — 「다시 제출」을 먼저 눌러 주세요")
                 reopened = reopen.session(conn, tenant_id=tenant, intake_id=intake_id)
                 # 수정 접수는 「완료」 뒤에도 `_confirm_reopened` 가 같은 판을 돌려준다 — 보통 접수만 여기서 끝낸다
                 if reopened is None and status == "confirmed" and existing_trip:

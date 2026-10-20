@@ -123,6 +123,11 @@ export interface Review {
   needs: ReviewNeeds;
   /** No read problem and nothing to check — the 「여행 등록」 button turns on. */
   ready: boolean;
+  /**
+   * `[2026-10-20 사용자 지시]` false = the revision was only SAVED (`editIntake(..., { check: false })`): moves are not measured yet and `ready` is false
+   * until 「다시 제출」 (`revalidate`) checks it. Absent on older servers and older revisions — read as checked.
+   */
+  checked?: boolean;
 }
 
 /** `GET /v1/web/trip-intakes/{id}` — the read view plus the check. */

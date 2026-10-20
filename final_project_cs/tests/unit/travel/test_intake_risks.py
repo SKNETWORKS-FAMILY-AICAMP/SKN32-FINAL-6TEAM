@@ -183,3 +183,44 @@ def test_partial_traffic_coverage_keeps_a_customer_choice_with_explicit_warning(
     assert option["risk"]["unknown_categories"][0]["code"] == "partial"
     assert any(r["row"] == "risk" and r["result"] == "unknown" for r in option["rows"])
     assert "교통자료 일부 미확인" in option["reason"]
+
+
+# ── 앞 판 위험 점검 재사용 `[2026-10-20 「대안 적용 13.9초」]` ─────────────────
+def _previous(*items, at=NOW, mode="fresh"):
+    return risks.decorate(None, tenant_id="unit", review={"items": list(items)}, check=lambda **kw: report(WIND), now=at, mode=mode)
+
+
+def test_a_new_revision_rechecks_only_the_changed_item():
+    a, b = row(id="1-0"), row(id="1-1", index=1, title="광장", place={"name": "광장", "latitude": 37.56, "longitude": 126.97})
+    previous = _previous(a, b)
+    moved = {**b, "place": {"name": "아띠인력거", "latitude": 37.576, "longitude": 126.985}}
+    calls = []
+    out = risks.decorate(None, tenant_id="unit", review={"items": [a, moved]}, now=NOW, mode="fresh", reuse=previous,
+                         check=lambda **kw: calls.append(kw["place"]["name"]) or report())
+    assert calls == ["아띠인력거"]                                   # 안 바뀐 일정은 바깥 조회를 다시 하지 않는다
+    assert out["items"][0]["risk"] == previous["items"][0]["risk"]
+    assert out["items"][1]["risk"]["status"] == "clear"
+
+
+@pytest.mark.parametrize("change", [{"starts_at": "13:30"}, {"date": "2030-01-02"}, {"kind": "dining"}])
+def test_a_changed_time_or_kind_is_checked_again(change):
+    previous = _previous(row())
+    calls = []
+    risks.decorate(None, tenant_id="unit", review={"items": [row(**change)]}, now=NOW, mode="fresh", reuse=previous,
+                   check=lambda **kw: calls.append(1) or report())
+    assert calls == [1]
+
+
+def test_an_old_or_failed_previous_check_is_not_reused():
+    from datetime import timedelta
+
+    stale = _previous(row(), at=NOW - timedelta(seconds=risks.REUSE_FRESH_S + 1))
+    failed = risks.decorate(None, tenant_id="unit", review={"items": [row()]}, now=NOW, mode="fresh",
+                            check=lambda **kw: (_ for _ in ()).throw(RuntimeError("down")))
+    assert failed["items"][0]["risk"]["code"] == "check_error"
+    cached = _previous(row(), mode="cached")
+    for previous in (stale, failed, cached):
+        calls = []
+        risks.decorate(None, tenant_id="unit", review={"items": [row()]}, now=NOW, mode="fresh", reuse=previous,
+                       check=lambda **kw: calls.append(1) or report())
+        assert calls == [1]

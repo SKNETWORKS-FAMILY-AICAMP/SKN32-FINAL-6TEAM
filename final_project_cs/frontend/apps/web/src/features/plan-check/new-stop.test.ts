@@ -80,7 +80,7 @@ describe("신규 일정의 선택 장소 저장", () => {
     const apply = vi.fn(), screen = draw(plan(), apply);
     harness.edit.mockResolvedValue(plan("intake-a", 8));
     await screen.actions.add!(draft);
-    expect(harness.edit).toHaveBeenCalledExactlyOnceWith("intake-a", 7, newStopEdits(source, draft).edits, "ko");
+    expect(harness.edit).toHaveBeenCalledExactlyOnceWith("intake-a", 7, newStopEdits(source, draft).edits, "ko", { check: false });
     expect(apply).toHaveBeenCalledWith(expect.objectContaining({ revision: 8 }));
     expect(draw(plan("intake-a", 8)).dirty).toBe(true);
     expect(harness.search).not.toHaveBeenCalled();

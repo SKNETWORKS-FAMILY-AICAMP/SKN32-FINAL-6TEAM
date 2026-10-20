@@ -41,6 +41,9 @@ ALERT_THRESHOLDS: tuple[tuple[str, str, int], ...] = (
 )
 LABEL = {"pm10": "미세먼지(PM10)", "pm25": "초미세먼지(PM2.5)"}
 BASIS = "1시간 측정값을 발령 기준에 대 본 것 — 공식 발령은 2시간 평균이다"
+#: ★`[2026-10-20]` 대기질 값을 낼 수 있는 앞쪽 범위(시간) — 모델 소스(Open-Meteo)의 예보 길이이고, 에어코리아는 「지금 값」뿐이다.
+#:  이보다 먼 시각은 점검이 「아직 볼 때가 아님」(`not_applicable`)으로 둔다 — 실패(치명)로 세지 않는다(`disruptions._air`)
+FORECAST_HOURS = 72
 
 
 def alert_level(pm10: int | None, pm25: int | None) -> dict[str, Any] | None:
@@ -168,7 +171,7 @@ class OpenMeteoAir(TravelSource):
             #   가까운 장소끼리 캐시를 나눠 쓴다.
             "latitude": round(float(latitude), 2), "longitude": round(float(longitude), 2),
             "hourly": "pm10,pm2_5", "timezone": "Asia/Seoul",
-            "past_hours": 6, "forecast_hours": 72})
+            "past_hours": 6, "forecast_hours": FORECAST_HOURS})
         if payload is None:
             return None
         hourly = payload.get("hourly") or {}
@@ -220,5 +223,5 @@ class FallbackAir:
         return None
 
 
-__all__ = ["ALERT_THRESHOLDS", "AirKoreaRealtime", "FallbackAir", "MODEL_BASIS",
+__all__ = ["ALERT_THRESHOLDS", "AirKoreaRealtime", "FORECAST_HOURS", "FallbackAir", "MODEL_BASIS",
            "OpenMeteoAir", "alert_level", "reading"]

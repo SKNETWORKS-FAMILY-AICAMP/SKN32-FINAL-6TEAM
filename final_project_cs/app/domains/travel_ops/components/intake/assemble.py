@@ -453,6 +453,22 @@ def _plan_basis(trip, rows, sources, first_day) -> dict[str, Any]:
 
 
 # ── 부품 ─────────────────────────────────────────────────────────
+def _seoul_district(place: dict[str, Any]) -> str | None:
+    """★`[2026-10-20]` 등록 장소의 서울 자치구 — 성립 점검이 장소의 `district` 로 대기질 측정소(에어코리아)를 고른다.
+    ☆전에는 접수로 들어온 장소에 구가 없어 대기질 1차 소스가 늘 「구 모름」으로 실패했다(채팅 교체가 막힌 원인의 하나, x600 2026-10-20).
+    주소의 「서울(특별시) ○○구」가 먼저, 없으면 좌표 상자가 **한 구만** 가리킬 때만 쓴다(겹치면 비운다 — 엉뚱한 측정소를 고르지 않게)."""
+    from app.domains.travel_ops.ports.data_sources.disaster_msg import seoul_districts
+
+    if place.get("district"):
+        return str(place["district"])
+    try:
+        lat, lon = float(place["latitude"]), float(place["longitude"])
+    except (KeyError, TypeError, ValueError):
+        lat = lon = None
+    found, basis = seoul_districts(lat, lon, place.get("address"))
+    return found[0] if found and basis in ("address", "box") else None
+
+
 def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
     source = str(place.get("source") or "")
     attributes: dict[str, Any] = {}
@@ -478,6 +494,9 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
             attributes["dining_place_uid"] = str(place["dining_place_uid"])
     if place.get("provider_ref"):
         attributes["provider_ref"] = place["provider_ref"]
+    district = _seoul_district(place)
+    if district:
+        attributes["district"] = district
     return {"key": key, "name": place["name"], "kind": place.get("kind") or kind,
             "lat": float(place["latitude"]), "lon": float(place["longitude"]),
             "weather_sensitive": None, "attributes": attributes}   # ★`[2026-09-29]` 모름 — 확실한 분류로 채운다(`fill_weather_sensitive`)

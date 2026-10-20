@@ -91,7 +91,8 @@ domain: travel
 | 멱등 — 등록 | `request_id` → 서버 키(`trips.request_key`, 부분 UNIQUE). 같은 키·같은 몸통이면 기존 여행(`created:false`), **다른 몸통이면 `409 idempotency_key_reused`** |
 | 멱등 — 신고·재요청 | 원인 칸에 `request_id` 를 남긴다. 같은 요청이 다시 오면 `{"status":"duplicate","version":n}` — 일정을 또 밀지 않는다 |
 | 낡은 쓰기 | 재요청은 고객이 **본** `base_version` 위에만 쓴다. 다르면 `409 stale_itinerary`(+현재 `version`) |
-| 기타 `409` | `no_alternate` · `unknown_choice`(+`choices`) · `conflicts_next` · `alternate_invalid`(다시 점검해 깨짐) · `invalid_version` |
+| 기타 `409` | `no_alternate` · `unknown_choice`(+`choices`) · `conflicts_next` · `alternate_invalid`(다시 점검해 깨짐 — `verdict` + 고객용 `text`) · `invalid_version` |
+| ★**고른 안 다시 점검** `[2026-10-20 사용자 결정]` | 「다른 안으로」(웹 · 채팅 · 제안 고르기) 직전에 활동은 그 시각에 성립 점검을 다시 한다. **실제 사건이 있거나 안전 자료(재난문자 · 지진 · 기상특보)를 못 읽었거나 점검 자체를 못 했으면** 바꾸지 않고 `alternate_invalid` + 이유 문장(`text`) — 채팅은 처리 불가(`escalated`)가 아니라 그 문장으로 답한다. **사건이 없고 대기질 · 예보 · 교통 통제만 못 읽었으면 바꾸고** 알림에 「○○ 정보는 지금 확인하지 못했어요」를 싣는다(`summary.unchecked`). D-018(실패한 자료에 기대는 작업만 보류). 시험 `tests/unit/travel/test_chat_swap_air_failure.py` · [기록](../../records/reports/2026-10-20_채팅교체_대기질실패_원인.md) |
 | ★**등록 판정** `[2026-09-21]` | 받을 때 **보낸 값으로** 판정한다(v11 DoD-2). 불가능하면 `422 itinerary_infeasible` + `violations[]` — 각 칸은 `code`·`items`(seq)·`reason`·`remedy`(완화 조건, DoD-3). 거절하면 **아무것도 저장하지 않는다.** 보는 것: 시간 역전 · 겹침 · 이동 항목이 계획 수단 소요보다 짧음 · **구가 다른데** 이동 0분 · 영업시간·브레이크 · 결제 수단 · 예산(인원 곱) |
 | ★모르는 칸은 판정하지 않는다 | 영업시간·결제·예산·경로 소요가 보낸 값에 없으면 통과시킨다(결정 15 — 지어내지 않는다). 그 자리는 감시 루프가 실제 소스로 다시 본다 |
 | 장소 | 테넌트 안 `(name, kind)` 가 이미 있으면 **그것을 쓴다.** 보낸 속성은 빈 칸만 채운다 — 카탈로그 값을 덮지 않는다 |

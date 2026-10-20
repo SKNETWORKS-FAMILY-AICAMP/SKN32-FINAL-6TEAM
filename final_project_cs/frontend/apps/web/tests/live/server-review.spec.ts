@@ -90,7 +90,7 @@ test("삭제 → 되돌리기: 삭제는 표시만 하고 되돌리기는 서버
   await page.getByRole("button", { name: "다시 제출" }).click();
   await expect(card(page, "광장시장")).toHaveCount(0);
   const [removed] = await server.received("POST", "/edits");
-  expect(removed.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[2].removed", value: true }] });
+  expect(removed.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[2].removed", value: true }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
   expect((await server.received("POST", "/revalidate")).length).toBe(1);                           // 이어서 전체를 다시 확인한다
 });
 
@@ -118,13 +118,13 @@ test("수정 화면: 서버의 대체 후보가 순위·거리와 함께 나오�
   await expect(page.getByText("올리브영을 올리브영 광화문점으로 바꿨어요")).toBeVisible();
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[1].place",
-    value: { name: "올리브영 광화문점", latitude: 37.5717, longitude: 126.9791, source: "kakao" } }] });
+    value: { name: "올리브영 광화문점", latitude: 37.5717, longitude: 126.9791, source: "kakao" } }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
 
   await page.getByRole("button", { name: "되돌리기", exact: true }).click();
   await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(2);
   const [, undo] = await server.received("POST", "/edits");
   expect(undo.body).toEqual({ revision: 2, edits: [{ source_id: "s1", field: "items[1].place",
-    value: { name: "올리브영 인사동점", latitude: 37.5741, longitude: 126.9857, source: "kakao" } }] });
+    value: { name: "올리브영 인사동점", latitude: 37.5741, longitude: 126.9857, source: "kakao" } }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
 });
 
 test("같은 판에서는 대체 후보를 한 번만 받는다 — 수정 화면을 닫았다 다시 열어도 다시 묻지 않고 바로 보인다", async ({ page, request }) => {
@@ -357,7 +357,7 @@ test("사진을 두 가지로 읽은 일정: 두 읽기를 나란히 보이고, 
   await choices.getByRole("button", { name: "「창경궁 관람」 쪽으로 바꾸기" }).click();
   await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
   const [pick] = await server.received("POST", "/edits");
-  expect(pick.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].title", value: "창경궁 관람" }] });
+  expect(pick.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].title", value: "창경궁 관람" }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
   await expect(card(page, "창경궁 관람")).toBeVisible();
   await expect(card(page, "창경궁 관람")).not.toContainText("확인 필요");
   await expect(page.getByRole("group", { name: "이름 — 사진에서 두 가지로 읽었어요" })).toHaveCount(0);
@@ -369,7 +369,7 @@ test("사진을 두 가지로 읽은 일정: 지금 값이 맞으면 같은 값�
   await page.getByRole("button", { name: "「청경궁 관람」 그대로 두기" }).click();
   await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
   const [keep] = await server.received("POST", "/edits");
-  expect(keep.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].title", value: "청경궁 관람" }] });
+  expect(keep.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].title", value: "청경궁 관람" }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
   await expect(card(page, "청경궁 관람")).not.toContainText("확인 필요");
 });
 

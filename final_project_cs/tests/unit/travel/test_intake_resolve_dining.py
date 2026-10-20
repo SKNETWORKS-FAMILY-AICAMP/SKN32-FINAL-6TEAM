@@ -115,7 +115,8 @@ def test_a_ledger_place_is_registered_for_this_trip_only_with_its_content_id():
     place = _place_in("p0", {"name": "토속촌삼계탕", "kind": "dining", "latitude": 37.5777, "longitude": 126.9715,
                              "content_id": "c-1", "source": "dining_ledger"}, "dining")
 
-    assert place["attributes"] == {"source": "dining_ledger", "source_content_id": "c-1"}
+    # `[2026-10-20]` 서울 자치구(`district`)도 실린다 — 대기질 측정소를 고르는 값(assemble._seoul_district)
+    assert {k: v for k, v in place["attributes"].items() if k != "district"} == {"source": "dining_ledger", "source_content_id": "c-1"}
     assert "dining_ledger" in EXTERNAL_PLACE_SOURCES
 
 

@@ -159,7 +159,7 @@ test("카드 왼쪽의 시간을 누르면 그 자리에 시간 편집기가 열
   await form.getByRole("button", { name: "적용" }).click();
   await expect(toast(page, "1개 일정의 시간을 바꿨어요")).toBeVisible();
   const [edit] = await server.received("POST", "/edits");
-  expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].ends_at", value: "11:00" }] });
+  expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].ends_at", value: "11:00" }], check: false });   // 고객 고치기는 저장만 — 검사는 「다시 제출」 때 한 번(2026-10-20)
   await expect(card(page, "경복궁 관람").getByRole("img", { name: "변경 완료" })).toBeVisible();
 });
 

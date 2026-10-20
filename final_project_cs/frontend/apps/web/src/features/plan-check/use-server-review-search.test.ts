@@ -69,7 +69,7 @@ describe("explicit restaurant search actions", () => {
     expect(harness.edit).toHaveBeenCalledExactlyOnceWith("search-intake", 3, [
       { source_id: "source-a", field: "items[0].place", value: expect.objectContaining({ name: "레몬그라스타이 나점" }) },
       { source_id: "source-a", field: "items[0].kind", value: "dining" },
-    ], "ko");
+    ], "ko", { check: false });
     expect(original.review!.items[0]).toMatchObject({ kind: "activity", starts_at: "12:00", ends_at: "13:30" });
   });
 
