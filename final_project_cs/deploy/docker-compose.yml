@@ -47,6 +47,8 @@ services:
       - ${TRIPILOT_MOBILITY_DIR:-./datasets/mobility/processed}:/data/mobility/processed:ro      # 저장소 `datasets/mobility/processed` 와 같은 자리
       - tripilot_ops:/srv/var/ops
       - tripilot_diagnostics:/srv/var/operations-diagnostics
+      # 배포 공지 상태(D-CS-019) — 자동 반영(`auto_deploy.sh`)이 이 폴더에 쓰고 api 는 읽기만 한다(고객 공지 `GET /v1/web/support/notices` 맨 앞에 붙는다)
+      - ./state/service-notice:/srv/var/service-notice:ro
     networks:
       internal: {}
       proxy:

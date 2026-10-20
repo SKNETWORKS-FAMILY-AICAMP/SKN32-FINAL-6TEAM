@@ -9,6 +9,8 @@
 #   ③ 배포에 쓰이는 폴더(app · config · prompts · scripts · deploy · frontend/apps/web · requirements)가 **바뀌지 않았으면 다시 빌드하지 않는다**(문서만 바뀐 커밋).
 #   ④ 빌드 실패 → 실행 중인 것은 그대로(건드리지 않음). ⑤ 새 이미지로 기동했는데 건강하지 않으면 **이전 이미지로 되돌린다**. ⑥ 실패한 커밋은 다음 새 커밋이 올 때까지 다시 시도하지 않는다.
 #   ⑦ DB 는 절대 지우지 않는다 — 마이그레이션은 재실행 안전한 앞으로 가기뿐이다. ⑧ 이미지 정리 — 최근 3개 + 달마다 하나(복원용), 복구용 이미지는 최신 2세트(deploy/image_retention.py).
+#   ⑨ 고객 공지(D-CS-019) — 빌드 시작 · DB 이주 · 바꾸기 · 끝 · 실패를 `state/service-notice/notice.json` 에 적는다(api 가 읽기 전용으로 붙여 고객 공지로 낸다).
+#      공지 쓰기가 실패해도 배포는 계속한다(경고 한 줄).
 # ★마이그레이션은 되돌리지 않는다(앞으로 가기뿐) — 되돌려도 이전 이미지가 새 표 구조를 견딘다는 가정이다. 파괴적인 마이그레이션은 이 방식에 맞지 않는다.
 set -u
 
@@ -73,29 +75,41 @@ cd "$BASE" || exit 1
 export TRIPILOT_SRC="./repo/$CS"
 PREV="$(cat "$STATE/current_tag" 2>/dev/null || echo local)"
 
+# 고객 공지 — 실행 중 구성 확인(위)이 통과한 뒤에만 시작한다(구성 불일치로 5분마다 멈추는 동안 공지가 켜졌다 꺼졌다 하지 않게).
+NOTICE_DIR="$STATE/service-notice"
+mkdir -p "$NOTICE_DIR"
+notice() { python3 "$REPO/$CS/deploy/deploy_notice.py" --dir "$NOTICE_DIR" "$@" >>"$LOG" 2>&1 </dev/null || log "경고: 배포 공지 기록 실패($*) — 배포는 계속한다"; }
+notice begin --sha "$SHORT"
+
 # ── 3. 빌드 — 실패해도 실행 중인 것은 그대로 ─────────────────────
 if ! TRIPILOT_TAG="$SHORT" timeout --foreground --kill-after=15s 600 nice -n 10 docker compose build >"$STATE/build_$SHORT.log" 2>&1 </dev/null; then
   log "★빌드 실패 $SHORT — 실행 중인 것은 그대로 둔다(자세한 것: state/build_$SHORT.log)"
   echo "$SHORT" > "$STATE/bad_sha"; cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml" 2>/dev/null
+  notice end kept_previous
   exit 1
 fi
 
 # ── 4. 마이그레이션(앞으로 가기뿐) ───────────────────────────────
+notice step migrate
 if ! TRIPILOT_TAG="$SHORT" python3 "$GUARD" check --state-dir "$SAFETY_STATE" >>"$LOG" 2>&1; then
   log "★이미지 자체·Compose SQL 안전 계약 불일치 — DB 적용 전 중단"
   echo "$SHORT" > "$STATE/bad_sha"; cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml"
+  notice end kept_previous
   exit 1
 fi
 if ! TRIPILOT_TAG="$SHORT" timeout --foreground --kill-after=15s 120 docker compose up -d --no-recreate tripilot-db >>"$LOG" 2>&1 </dev/null \
    || ! TRIPILOT_TAG="$SHORT" python3 "$GUARD" migrate --state-dir "$SAFETY_STATE" --timeout 180 >>"$LOG" 2>&1 </dev/null; then
   log "★마이그레이션 실패 $SHORT — 실행 중인 것은 그대로 둔다"
   echo "$SHORT" > "$STATE/bad_sha"; cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml" 2>/dev/null
+  notice end kept_previous
   exit 1
 fi
 
 # ── 5. 반영 — 건강해질 때까지 기다린 뒤 **한 번 더 지켜본다** ─────────────
 # ★`up --wait` 만으로는 모자랐다(시험 E): 건강 검사가 없는 컨테이너(일꾼)가 죽었다 살아나기를 반복해도 「실행 중」으로 보고 통과시켰다.
 #   API·웹·일꾼별 이미지 ID와 건강 상태를 검사하고 관찰 중 재생성·재시작을 거부한다. DB는 재생성하지 않는다.
+# ★여기서 api · web 이 함께 새로 만들어진다 — 고객 화면이 끊기는 구간(D-CS-019). 열린 화면은 마지막 공지(「바꾸는 중」)로 안내한다.
+notice step switch
 if TRIPILOT_TAG="$SHORT" python3 "$GUARD" rollout --state-dir "$SAFETY_STATE" --timeout 240 --settle "${SETTLE_SECONDS:-30}" >>"$LOG" 2>&1 </dev/null; then
   echo "$SHORT" > "$STATE/current_tag"; echo "$FP" > "$STATE/deployed_fp"; echo "$NEW" > "$STATE/deployed_sha"
   : > "$STATE/bad_sha"
@@ -109,12 +123,15 @@ if TRIPILOT_TAG="$SHORT" python3 "$GUARD" rollout --state-dir "$SAFETY_STATE" --
   # 새 이름으로 쓴 뒤 바꿔 끼운다(mv) — 실행 중인 이 파일의 내용을 제자리에서 덮으면 아래 줄이 깨진다
   [ -f "$STATE/auto_deploy.next.sh" ] && { cp "$STATE/auto_deploy.next.sh" "$BASE/auto_deploy.sh.new" && chmod +x "$BASE/auto_deploy.sh.new" && mv "$BASE/auto_deploy.sh.new" "$BASE/auto_deploy.sh"; }
   log "반영 완료 $SHORT (이전 $PREV)"
+  notice end done
   if [ "${TRIPILOT_ADMIN_ENABLED:-0}" = 1 ]; then
     TRIPILOT_TAG="$SHORT" sh "$REPO/$CS/deploy/admin_up.sh" >>"$LOG" 2>&1 </dev/null \
       || log "★운영 웹앱 반영 실패 — 고객 서비스는 정상이며 운영 웹앱은 별도 확인 필요"
   fi
 else
+  RC=$?    # 1 = 바꾸기 실패 · 옛 이미지 복구 확인됨, 3 = 복구도 실패(사람이 봐야 함) — migration_safe_deploy.py
   log "★새 이미지 반영 실패 $SHORT — 저장한 실제 이미지 ID 복구 결과를 확인한다"
+  if [ "$RC" = 3 ]; then notice end trouble; else notice end kept_previous; fi
   echo "$SHORT" > "$STATE/bad_sha"
   cp -p "$STATE/docker-compose.prev.yml" "$BASE/docker-compose.yml" 2>/dev/null
   # rollout 자체가 실제 이전 이미지 ID로 복구하고 확인한다. 태그로 다시 덮지 않는다.
