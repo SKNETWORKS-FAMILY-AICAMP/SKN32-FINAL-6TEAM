@@ -866,3 +866,8 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **다시 들어오면 결과 화면**(`use-reveal.ts` `openedDone`): 검사가 끝난 접수를 연 화면은 멈추지 않는다(P3 의 「다시 열어도 멈춤」을 되돌림). 「애니메이션 건너뛰기」는 이 화면에서 지켜보는 검사라 그대로 멈춘다.
 - 시험: `stop-ask-flow-20261020.spec.ts` 13/13(다시 열면 결과 화면 · 고른 뒤 새로고침하면 고친 그대로 결과 화면 · 질문 칸 삭제 — 취소하면 안 보냄 · 지우면 이어 감 · 도착 질문엔 삭제 없음). 실서버 미확인.
 - 새로고침 때 처리(코드 확인)와 정할 것(결과 화면 「삭제 예정」이 새로고침에 사라짐)은 [작업 기록](../../../wiki/records/reports/2026-10-20_계획확인_C안_적용.md).
+
+## 2026-10-20 (이어서) — 계획 확인 C안 5단계: 5초 자동 등록 막대(ST4F-683)
+
+- `DoneFooter`(`survey-questions/reading-footer.tsx` 에서 꺼냄, 읽는 중 화면 출력 같음)를 결과 화면 아래에 띄운다 — 이 화면에서 지켜본 검사가 통과해 등록 가능할 때 한 번, 5초 뒤 `registration.onRegister()`. 「여행 등록」은 바로, 「자동으로 넘어가지 않기」는 닫기. 화면 누르기 · 키(막대의 두 단추 제외) · 휠(어디서든) · 다른 탭이나 앱으로 넘어감(`visibilitychange` · 창 `blur`) · 결과 화면에서 고치기 시작 · 등록 거절이면 닫히고 다시 안 켜짐. 다시 열린 화면 · 수정 모드에는 없음. 막대가 켜지면 첫 안내는 띄우지 않는다(`usePlanIntroToast` `skip`).
+- 시험: `auto-register-20261020.spec.ts` 7/7 · `use-plan-intro-toast.test.ts` 8/8. 기록: [작업 기록](../../../wiki/records/reports/2026-10-20_계획확인_C안_적용.md).

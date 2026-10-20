@@ -70,7 +70,8 @@ test("설문에 머무는 동안 재생이 소진되지 않고 다음을 누른 
     await page.clock.runFor(5_000);
     await page.screenshot({ path: `${process.env.LOADING_SHOTS}/03-check-replaying.png`, fullPage: true });
   }
-  await page.clock.runFor(24_000);
+  // `[2026-10-20 C안 · 5초 자동 등록]` 결과 화면에 닿으면 5초 막대가 켜진다 — 시계를 한 번에 끝까지 돌리면 스스로 등록해 이 화면을 떠나므로 결과 화면에 닿을 때까지만 돌린다.
+  for (let waited = 0; waited < 24_000 && await page.locator(screen).getAttribute("data-stage") !== "done"; waited += 1_000) await page.clock.runFor(1_000);
   await expect(page.locator(screen)).toHaveAttribute("data-stage", "done");
   await expect(page.getByRole("article", { name: "경복궁 관람", exact: true })).toBeVisible();
 });

@@ -97,6 +97,8 @@ export interface RevealStop { id: string; settling: boolean }
 export function useReveal(target: PlanCheckView, paused = false, stops = false): {
   view: PlanCheckView; settled: boolean; stop: RevealStop | null;
   recheck: { begin: (id: string) => void; fail: (id: string) => void };
+  /** `[2026-10-20 C안]` This page drew the check (it was not finished when the page opened) — the 5-second 「여행 등록」 bar is for such a check only. */
+  watched: boolean;
 } {
   // ★`[2026-10-03 사용자 결정]` Skipping is the customer's own choice in the menu (「애니메이션 건너뛰기」), not the system's 「동작 줄이기」: the steps are
   //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
@@ -158,7 +160,7 @@ export function useReveal(target: PlanCheckView, paused = false, stops = false):
       setShown((current) => ({ ...current, items: current.items.map((item) => item.id === id && kept ? kept : item) }));
     },
   };
-  if (immediate) return { view: target, settled: true, stop: null, recheck };
+  if (immediate) return { view: target, settled: true, stop: null, recheck, watched: !openedDone };
   const settling = Boolean(asked) || (stopId !== null && JSON.stringify(shown.items.find((item) => item.id === stopId)) !== JSON.stringify(target.items.find((item) => item.id === stopId)));
-  return { view: live, settled: !paused && !asked && !stopId && nextStep(shown, target) === null, stop: stopId ? { id: stopId, settling } : null, recheck };
+  return { view: live, settled: !paused && !asked && !stopId && nextStep(shown, target) === null, stop: stopId ? { id: stopId, settling } : null, recheck, watched: !openedDone };
 }

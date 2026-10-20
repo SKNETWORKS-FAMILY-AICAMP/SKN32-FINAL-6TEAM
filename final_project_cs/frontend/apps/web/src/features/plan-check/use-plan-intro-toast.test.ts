@@ -14,10 +14,10 @@ vi.mock("react", () => ({
   },
 }));
 const t = ((ko: string, en: string) => en || ko) as Translate;
-function draw(done: boolean, show: (toast: BusToast) => void) {
+function draw(done: boolean, show: (toast: BusToast) => void, skip = false) {
   hooks.cursor = 0;
   // eslint-disable-next-line react-hooks/rules-of-hooks -- Node lifecycle harness commits mocked effects in declaration order.
-  usePlanIntroToast(done, show, t);
+  usePlanIntroToast(done, show, t, undefined, skip);
   hooks.pending.splice(0).forEach((run) => run());
 }
 afterEach(() => {
@@ -50,6 +50,11 @@ it("shows the normal completed-plan introduction once", () => {
   draw(false, show); expect(show).not.toHaveBeenCalled();
   draw(true, show); expect(show).toHaveBeenCalledWith(expect.objectContaining({ text: "Check your plan" }));
   draw(true, show); expect(show).toHaveBeenCalledTimes(1);
+});
+it("`[2026-10-20 C안]` does not introduce the result while the 5-second 「여행 등록」 bar says what happens — and not later either", () => {
+  const show = vi.fn();
+  draw(true, show, true); expect(show).not.toHaveBeenCalled();
+  draw(true, show, false); expect(show).not.toHaveBeenCalled();
 });
 it("keeps an English guardian action when completion arrives later, including its action", () => {
   const show = vi.fn(); const action = { label: "Undo", run: vi.fn() };

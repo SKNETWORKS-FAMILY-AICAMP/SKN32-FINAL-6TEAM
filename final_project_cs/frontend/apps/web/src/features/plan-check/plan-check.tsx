@@ -46,6 +46,8 @@ import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal, type RevealStop } from "./use-reveal";
 import { arrivalQuestion, placeQuestion, type StopOption } from "./stop-questions";
 import { StopDeleteDialog, StopQuestion } from "./stop-question";
+import { DoneFooter } from "@/features/survey-questions/reading-footer";
+import { TIMING } from "@/features/survey-questions/use-question-flow";
 import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
 import type { InsertionPoint } from "./insertion-points";
 import { useCenterFocus } from "./use-center-focus";
@@ -224,7 +226,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
   const stops = !result.edit && Boolean(result.actions?.replace || result.actions?.edit);
   // `[2026-10-20 C안 · 이동 확인 C안]` During the first check each card carries the 「도착」 line of the way into it (a late arrival is asked in the card); the result shows the legs as before.
   const target = useMemo(() => stops ? withArrivalRows(latest) : latest, [stops, latest]);
-  const { view: revealed, settled, stop, recheck } = useReveal(target, Boolean(readingExtras), stops);
+  const { view: revealed, settled, stop, recheck, watched } = useReveal(target, Boolean(readingExtras), stops);
   const view = revealed.stage === "done" ? latest : revealed;
   // `[2026-10-20 C안]` What a pick did is not a notice on the screen (the card shows it): a screen reader is told it here instead.
   const [said, setSaid] = useState<string | null>(null);
@@ -257,7 +259,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, readingExt
   return <DeviceFrame floating={floating} guardianIcon>
     <main id="main-content" tabIndex={-1} className={styles.screen} data-stage={view.stage} data-replay={readingExtras ? "paused" : "playing"} data-floating={floating || undefined}
       {...(readingExtras && { onPointerDownCapture: readingExtras.onActivity, onKeyDownCapture: readingExtras.onActivity, onWheelCapture: readingExtras.onActivity, onTouchStartCapture: readingExtras.onActivity })}>
-      {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} stop={stop} stopCheck={recheck} onSay={setSaid} {...result} />}
+      {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} stop={stop} stopCheck={recheck} onSay={setSaid} watched={watched} {...result} />}
       {onReading && shownNotice && <ToastView key={shownNotice.stamp} toast={shownNotice.toast} onDone={hideNotice} />}
       <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : said && view.stage !== "done" ? said : announce(readingExtras ? latest : view, t)}</p>
     </main>
@@ -436,10 +438,12 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
+function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
   view: PlanCheckView; sourceView: PlanCheckView;
   /** `[2026-10-20 C안]` The card the first check stopped at, and the hook that checks it again after a pick (`useReveal`). */
   stop?: RevealStop | null; stopCheck?: ReturnType<typeof useReveal>["recheck"]; onSay?: (text: string) => void;
+  /** `[2026-10-20 C안]` This page drew the check (the 5-second 「여행 등록」 bar is for it). */
+  watched?: boolean;
 } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
@@ -470,7 +474,6 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {
       action: value.undo || value.revert ? { label: value.undoLabel ?? latest.current?.t("되돌리기", "Undo") ?? "", run: value.revert ?? (() => latest.current?.undo()) } : undefined,
     });
   }, [hideToast, showToast]);
-  usePlanIntroToast(done, showToast, t, edit?.intro);
   const [working, setWorking] = useState(false);
   const changingNow = useRef(false);
   const [changeToolsOpen, setChangeToolsOpen] = useState(false);
@@ -1250,6 +1253,42 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {
 
   // The counts in the head, and the filters they switch.
   const needCount = needsLeft(shown, removedSet).total;
+  // ★`[2026-10-20 사용자 결정 — 계획 확인 C안 · 5초 자동 등록]` The result of a check this page watched, with nothing left to fix, registers by itself after 5 s — the reading screen's own bar
+  //   (`DoneFooter`): 「여행 등록」 goes at once, 「자동으로 넘어가지 않기」 leaves the result to change things as before. It arms once: never on a page opened on a finished check, not once a change
+  //   has begun on the result, not again after a register that was refused (the result screen's footer then says why).
+  const autoReady = done && watched && !edit && Boolean(registration?.ready) && !registration?.registeredHref && !registration?.busy && !registration?.error
+    && needCount === 0 && !view.dirty && removed.length === 0 && !previewing && !changing && !inserting && !timeEdit.edit && !working;
+  const [autoRegister, setAutoRegister] = useState<"wait" | "on" | "off">("wait");
+  if (autoRegister === "wait" && done && working) setAutoRegister("off");
+  else if (autoRegister === "wait" && autoReady) setAutoRegister("on");
+  else if (autoRegister === "on" && !autoReady) setAutoRegister("off");
+  useEffect(() => {
+    if (autoRegister !== "on") return;
+    const timer = setTimeout(() => { setAutoRegister("off"); registration?.onRegister(); }, TIMING.doneMs);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- counted once, from when it arms
+  }, [autoRegister]);
+  // ★`[2026-10-20 사용자 결정]` A touch on the screen outside the bar (a press, a key, a wheel) or leaving the page (another tab or app) stops it like 「자동으로 넘어가지 않기」:
+  //   the customer is looking at the plan, or not looking at all. Only the bar's own buttons do what they say; a wheel counts anywhere (the bar lies over the end of the list).
+  useEffect(() => {
+    if (autoRegister !== "on") return;
+    const stopAuto = () => setAutoRegister("off");
+    const touched = (event: Event) => { if (!(event.target instanceof Element && event.target.closest("[data-register-bar] button"))) stopAuto(); };
+    const hidden = () => { if (document.visibilityState === "hidden") stopAuto(); };
+    const touches = ["pointerdown", "keydown"] as const;
+    for (const type of touches) document.addEventListener(type, touched, true);
+    document.addEventListener("wheel", stopAuto, true);
+    document.addEventListener("visibilitychange", hidden);
+    window.addEventListener("blur", stopAuto);
+    return () => {
+      for (const type of touches) document.removeEventListener(type, touched, true);
+      document.removeEventListener("wheel", stopAuto, true);
+      document.removeEventListener("visibilitychange", hidden);
+      window.removeEventListener("blur", stopAuto);
+    };
+  }, [autoRegister]);
+  // The first introduction waits for the result of a watched check, and is not shown while the bar says what happens instead.
+  usePlanIntroToast(done && (!watched || Boolean(registration) || Boolean(edit)), showToast, t, edit?.intro, autoRegister === "on");
   const changedMap: Record<string, string> = previewing && side === "after" && recommended ? { ...changed, ...recommended.was } : changed;
   const changedCount = Object.keys(changedMap).filter((id) => !removedSet.has(id)).length;
   const firstNeed = shown.items.find((item) => item.verdict === "review" && !removedSet.has(item.id));
@@ -1730,7 +1769,11 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, actions = {
     </section>
           {/* `[2026-10-14 실서버 확인]` 시간 고치기 창이 열려 있으면 숨긴다 — 창의 ✓ 「적용」이 아래쪽에 오면 같은 초록 ✓ 인 이 단추가 그 위를 덮어,
               「적용」을 누른 손님이 「완료」(수정 모드면 아무것도 쓰지 않고 닫힘)를 눌렀다. 창을 닫으면(적용 · 취소) 다시 나온다. */}
-          {done && !changing && !inserting && !timeEdit.edit && <ResultFooter footerRef={submitBox} atListEnd={atListEnd} muted={collapsed || (!atListEnd && quietSubmit.hidden) || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
+          {done && !changing && !inserting && !timeEdit.edit && autoRegister === "on" && <div className={styles.registerBar} data-register-bar>
+            <DoneFooter line={t("모두 확인했어요", "All checked")} sub={t(`${Math.round(TIMING.doneMs / 1000)}초 뒤에 여행을 등록해요.`, `The trip is registered in ${Math.round(TIMING.doneMs / 1000)} seconds.`)}
+              ms={TIMING.doneMs} primary={t("여행 등록", "Register trip")} onPrimary={() => { setAutoRegister("off"); registration?.onRegister(); }} onStop={() => setAutoRegister("off")} />
+          </div>}
+          {done && !changing && !inserting && !timeEdit.edit && autoRegister !== "on" && <ResultFooter footerRef={submitBox} atListEnd={atListEnd} muted={collapsed || (!atListEnd && quietSubmit.hidden) || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
             previewing={previewing && side === "after"} onRecheck={actions.recheck || actions.remove ? recheck : undefined} onRegisterPreview={registerPreview} editing={Boolean(edit)} />}
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}
