@@ -25,7 +25,7 @@ def test_score_marks_required_and_treats_an_omitted_flag_as_preference():
     rows = _rows({"m1": {"found": "ok", "open_at": "bad", "dietary": "bad"}}, {"m1": {"dietary": False}})
     req = [r for r in rows if r["kind"] == "required"]
     assert req == [{"case": "DG2-001", "item": "m1", "check": "dietary", "kind": "required", "slice": "cond_required",
-                    "expected": True, "got": False, "correct": False, "repeat": 0}]
+                    "expected": True, "got": False, "correct": False, "flag_missing": False, "repeat": 0}]
     assert all(r["slice"] == "cond_required" for r in rows)
 
 
@@ -61,6 +61,102 @@ def test_consistency_appears_only_with_repeats():
     assert "consistency" not in runner.quality(first)
     second = _rows({"m1": {"found": "ok", "open_at": "ok", "dietary": "bad"}}, repeat=1)
     assert runner.quality(first + second)["consistency"]["num"] == 2                    # open_at 만 두 판이 갈렸다
+
+
+def test_selection_scores_choosing_checks_apart_from_the_verdict():
+    # `[2026-10-19]` 체크 고르기 — 판정이 틀려도 고른 것은 고른 것이다(판정은 must_accuracy 가 본다)
+    rows = _rows({"m1": {"found": "ok", "open_at": "ok", "kids": "ok", "closed_day": "ok"}})
+    sel = runner.quality(rows)["selection"]
+    assert sel["recall"] == {"num": 2, "den": 3, "rate": 0.667}               # dietary 를 빠뜨림
+    assert sel["precision"] == {"num": 2, "den": 3, "rate": 0.667}            # kids 는 고르면 안 됐다 · closed_day 는 라벨이 없어 안 센다
+    assert sel["f1"] == {"num": 4, "den": 6, "rate": 0.667}
+    assert sel["f2"] == 0.667
+
+
+def test_pass_k_counts_a_case_only_when_every_check_is_right_and_nothing_extra():
+    right = {"m1": {"found": "ok", "open_at": "bad", "dietary": "bad"}}
+    extra = {"m1": {"found": "ok", "open_at": "bad", "dietary": "bad", "payment": "ok"}}
+    assert runner.quality(_rows(right))["pass_k"]["pass_hat_k"] == 1.0
+    assert runner.quality(_rows(extra))["pass_k"]["pass_hat_k"] == 0.0              # 쓸데없는 체크 하나로 과제 실패
+    three = _rows(right, repeat=0) + _rows(right, repeat=1) + _rows(extra, repeat=2)
+    got = runner.quality(three)["pass_k"]
+    assert got["k"] == 3 and got["pass_hat_k"] == 0.0 and got["pass_at_k"] == 1.0
+    assert got["all_trials_pass"] == {"num": 0, "den": 1, "rate": 0.0}
+
+
+# ── `[2026-10-19]` 도구 호출 · 모름 ───────────────────────────────
+
+UID, OTHER = "c7441880-a22b-5b8e-821e-bfecddbeafa1", "4ad0881d-de7b-5b78-b7f8-e10c0048c66c"
+PLAN_CASE = {**CASE, "plan": {"date": "2026-11-10", "items": [
+    {"item_id": "m1", "kind": "dining", "start": "2026-11-10T18:00", "end": "2026-11-10T19:00", "place": {"name": "미 피아체"}}]},
+    "expect": {"m1": {**CASE["expect"]["m1"], "place_uid": UID}}}
+
+
+def _run(calls, refused=(), mode="rule_tools"):
+    return {"case": PLAN_CASE["id"], "repeat": 0, "mode": mode, "calls": calls, "refused_calls": list(refused)}
+
+
+def test_tool_selection_covers_each_needed_check_and_flags_tools_nothing_needed():
+    calls = [{"tool": "find_place", "args": {"name": "미 피아체"}},
+             {"tool": "check_open_at", "args": {"place_uid": UID, "start": "2026-11-10T18:00", "end": "2026-11-10T19:00"}},
+             {"tool": "check_business", "args": {"place_uid": UID}},                    # 영업 ok 를 막는 근거라 쓰인 것으로 본다
+             {"tool": "nearby_places", "args": {"lat": 37.5, "lng": 127.0}}]            # 근처 찾기는 고를 이유가 없었다
+    got = runner.tool_use([PLAN_CASE], [_run(calls)])
+    sel = got["selection"]
+    assert sel["recall"] == {"num": 2, "den": 3, "rate": 0.667}                  # dietary 를 볼 check_attributes 가 없다
+    assert sel["precision"] == {"num": 3, "den": 4, "rate": 0.75}
+    assert got["missing_tools"] == {"check_attributes": 1} and got["extra_tools"] == {"nearby_places": 1}
+
+
+def test_argument_accuracy_checks_the_shop_and_the_whole_meal_slot():
+    calls = [{"tool": "check_open_at", "args": {"place_uid": UID, "start": "2026-11-10T18:00", "end": "2026-11-10T19:00"}},
+             {"tool": "check_open_at", "args": {"place_uid": UID, "start": "2026-11-10T18:00"}},          # 끝 시각을 빼먹음
+             {"tool": "check_attributes", "args": {"place_uid": OTHER, "wanted": ["halal"]}},             # 다른 가게
+             {"tool": "find_place", "args": {"name": "미피아체"}}]                                          # 이름 질의는 안 잰다
+    got = runner.tool_use([PLAN_CASE], [_run(calls)])
+    assert got["arguments"] == {"num": 1, "den": 3, "rate": 0.333}
+    assert got["argument_errors"] == {"check_open_at": 1, "check_attributes": 1}
+
+
+def test_repeats_count_refused_duplicates_and_the_same_question_asked_again():
+    calls = [{"tool": "check_open_at", "args": {"place_uid": UID, "start": "2026-11-10T18:00", "end": "2026-11-10T19:00"}},
+             {"tool": "check_open_at", "args": {"place_uid": UID, "start": "2026-11-10 18:00", "end": "2026-11-10 19:00"}}]
+    refused = [{"tool": "check_open_at", "why": "같은 도구를 같은 인자로 다시 불렀다 — 앞의 결과를 쓴다"},
+               {"tool": "check_open_at", "why": "필수 인자가 없다: ['start']"}]
+    got = runner.tool_use([PLAN_CASE], [_run(calls, refused)])
+    assert got["repeats"] == {"exact_refused": 1, "same_question": 1, "calls": 2, "attempts": 4,
+                              "rate": {"num": 2, "den": 4, "rate": 0.5}}
+    assert got["refused"] == 2
+
+
+def test_direct_mode_expects_the_data_tool_for_opening_hours():
+    calls = [{"tool": "find_place", "args": {"name": "미 피아체"}},
+             {"tool": "place_detail", "args": {"place_uid": UID, "date": "2026-11-10"}},
+             {"tool": "check_attributes", "args": {"place_uid": UID, "wanted": ["halal"]}}]
+    got = runner.tool_use([PLAN_CASE], [_run(calls, mode="llm_direct")])
+    assert got["selection"]["f1"]["rate"] == 1.0 and got["arguments"]["rate"] == 1.0
+
+
+def test_tool_use_is_absent_for_the_rule_config():
+    assert runner.tool_use([PLAN_CASE], [{"case": "DG2-001", "repeat": 0}]) is None
+
+
+def test_unknown_rate_separates_honest_unknowns_from_giving_up_on_knowable_checks():
+    rows = _rows({"m1": {"found": "ok", "open_at": "unknown", "dietary": "bad"}})
+    u = runner.quality(rows)["unknown"]
+    assert u["rate"] == {"num": 1, "den": 3, "rate": 0.333}                       # 낸 판정 중 모름
+    assert u["when_knowable"] == {"num": 1, "den": 3, "rate": 0.333}              # 기대가 ok · bad 인데 모름
+    assert u["answered_accuracy"] == {"num": 2, "den": 2, "rate": 1.0}           # 모름을 뺀 판정의 정확도
+
+
+def test_an_omitted_required_flag_is_counted_apart_from_an_explicit_false():
+    # `[2026-10-20]` 필수 조건을 선호로 읽은 것 중 — 모델이 required 를 아예 안 적은 것(서버가 선호로 본다)과 false 로 적은 것을 가른다
+    reported = {"m1": {"found": "ok", "open_at": "bad", "dietary": "bad"}}
+    omitted = runner.score(CASE, reported, {"m1": {"dietary": False}}, {"m1": ["dietary"]})
+    explicit = runner.score(CASE, reported, {"m1": {"dietary": False}}, {"m1": []})
+    assert runner.quality(omitted)["required"]["flag_missing"] == {"num": 1, "den": 1, "rate": 1.0, "ci95": runner.wilson(1, 1)}
+    assert runner.quality(explicit)["required"]["flag_missing"]["num"] == 0
+    assert runner.quality(explicit)["required"]["required_as_preference"]["num"] == 1
 
 
 def test_wilson_interval_is_wide_for_small_samples_and_bounded():

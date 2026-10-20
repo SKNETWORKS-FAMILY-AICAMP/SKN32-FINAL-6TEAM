@@ -27,20 +27,20 @@ import json
 import logging
 import uuid
 from collections import defaultdict
+from datetime import datetime, timezone
 from typing import Any, Callable
 
-from app.domains.travel_ops.instances.dining.agent import judge_day, shows_verdict
+from app.domains.travel_ops.instances.dining.agent import CHECKS, VERDICTS, judge_day, shows_verdict
 from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
 
 log = logging.getLogger(__name__)
 
 RULE_ROWS = {"place": "found", "hours": "open_at", "closed": "closed_day"}
 RULE_RESULT = {"ok": "ok", "filled": "ok", "warn": "ok", "bad": "bad", "unknown": "unknown"}
-#: 에이전트에게 넘기는 계획 원문 길이 상한(글자) — 조건 문장을 읽히는 데 충분하고 토큰을 아낀다
-NOTES_MAX = 2000
-
 #: 등록을 막을 수 있는 이용 가능성 확인(검증된 bad 일 때) — 「못 찾음」(found)은 넣지 않는다(자료 부족 → 확인 못 함)
 BLOCKING_CHECKS = frozenset({"open_at", "closed_day", "business"})
+#: 이용 가능성 확인 — 실패하면 그날 판정을 실패로 센다(고객 조건은 필수일 때만)
+AVAILABILITY_CHECKS = frozenset({"found", "open_at", "closed_day", "business"})
 
 
 def is_required(check: dict[str, Any]) -> bool:
@@ -92,6 +92,9 @@ def plans_from_review(review: dict[str, Any], notes: str) -> list[dict[str, Any]
         if item.get("date"):
             by_day[item["date"]].append(item)
     plans = []
+    context = [{"item_id": i["id"], **{key: i.get(key) for key in
+               ("day", "date", "kind", "title", "starts_at", "ends_at")}}
+               for i in review.get("items") or []]
     for day, items in sorted(by_day.items()):
         if not any(i.get("kind") == "dining" and i.get("place") for i in items):
             continue
@@ -103,7 +106,7 @@ def plans_from_review(review: dict[str, Any], notes: str) -> list[dict[str, Any]
                          "end": f"{day}T{i['ends_at']}" if i.get("ends_at") else None,
                          "place": {k: v for k, v in {"name": place.get("name"), "lat": place.get("latitude"),
                                                      "lng": place.get("longitude")}.items() if v is not None} or None})
-        plans.append({"date": day, "customer_notes": (notes or "")[:NOTES_MAX], "items": rows})
+        plans.append({"date": day, "customer_notes": notes or "", "items": rows, "itinerary_context": context})
     return plans
 
 
@@ -143,6 +146,8 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
         for check in checks:
             code, verdict, evidence = check["check"], check["verdict"], check["evidence"]
             agent = {"verdict": verdict, "agree": (verdict == rule[code]) if code in rule else None, "evidence": evidence}
+            if check.get("customer_request") is not None:
+                agent["customer_request"] = check["customer_request"]
             validated = check.get("validated") is True
             required = is_required(check)
             # `[2026-10-16 사용자 결정]` 「못 찾음」은 자료 부족 — 「확인 못 함」(unknown)으로 두고 이용 불가로 내리지 않는다
@@ -159,6 +164,12 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
             #   원문(place_detail)만 읽은 판정은 검증기가 문장의 뜻까지 못 보므로 줄에 에이전트 판정으로만 단다
             shown = shows_verdict(check)
             if row is not None:
+                previous_agent = row.get("agent") or {}
+                # 같은 확인의 뒤쪽 ok · unknown이 이미 검증한 필수 bad와 그 근거를 지우지 않는다.
+                if (row.get("blocks_registration") is True and row.get("result") == "bad"
+                        and previous_agent.get("validated") is True and previous_agent.get("verdict") == "bad"
+                        and previous_agent.get("evidence")):
+                    continue
                 row["agent"] = agent
                 downgrade = validated and required and verdict == "bad" and shown and rule.get(code) != "bad" and not not_found
                 if (rule.get(code) == "unknown" and verdict in ("ok", "bad") and shown) or downgrade:
@@ -169,10 +180,14 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
                     if code == "open_at":
                         row["open_at"] = verdict
                     changed += 1
-            elif code in ADDED and (code, verdict) in TEXT and shown and not any(r.get("row") == code for r in rows):
-                rows.append({"row": code, "result": result, "text": _text(code, verdict, evidence), "by": "agent",
-                             "agent": agent, **flags})
-                changed += 1
+            elif code in ADDED and (code, verdict) in TEXT and shown:
+                added = {"row": code, "result": result, "text": _text(code, verdict, evidence), "by": "agent",
+                         "agent": agent, **flags}
+                # 할랄 · 채식이 모두 dietary여도 근거와 판정은 각각 보존한다.
+                # 첫 ok · 선호 bad · unknown이 뒤의 검증된 필수 bad를 가리지 않는다.
+                if added not in rows:
+                    rows.append(added)
+                    changed += 1
         if any(r.get("result") == "bad" for r in rows) and item.get("status") != "review":
             item["status"], item["can_lock"] = "review", False
     items = review.get("items") or []
@@ -188,72 +203,160 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
 def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision: int, review: dict[str, Any],
         notes: str, chat: Any, model: str, deadline_s: float = 120.0,
         tools_factory: Callable[[Callable[[], Any]], DiningTools] = DiningTools) -> dict[str, Any]:
-    """날마다 에이전트를 돌리고, 근거를 기록하고, 검증을 통과한 판정을 그 판의 저장된 검사에 합친다. 돌려주는 값은 셈."""
+    """준비된 토큰을 맡고 잠금 밖에서 판정한다. 현재 토큰만 최신 검사에 합쳐 완료/실패를 저장한다.
+
+    metadata 없는 독립 호출은 예전 기록·합치기 경로를 유지한다. 실제 접수 pipeline은 먼저 prepare한다.
+    ★`[2026-10-20]` 판정 상태(`components/intake/dining_review` — 접수 담당 영역)는 metadata 가 있을 때만 불러온다.
+      그 모듈이 아직 없는 판(지금 develop)에서도 요식 판정은 예전 합치기 경로로 돈다.
+    """
     from app.domains.travel_ops.components.intake import review as review_module
 
-    run_id = uuid.uuid4()
+    metadata = review.get("dining_judge")
+    lifecycle = isinstance(metadata, dict)
+    run_id = str(metadata.get("run_id") or uuid.uuid4()) if lifecycle else str(uuid.uuid4())
     records: list[tuple] = []
     decided: dict[str, list[dict[str, Any]]] = {}
     counts = {"days": 0, "checks": 0, "used": 0, "failures": 0, "missing": 0, "changed": 0, "stale": 0}
-    rule_of = {i["id"]: rule_verdicts(i) for i in review.get("items") or [] if i.get("kind") == "dining"}
-    for plan in plans_from_review(review, notes):
-        counts["days"] += 1
-        tools = tools_factory(connect)
-        result = judge_day(plan, tools=tools, chat=chat, deadline_s=deadline_s)
-        records.append((None, "_run", None, None, None, result.failure,
-                        {"date": plan["date"], **result.stats, "tools": [c["tool"] for c in result.tool_calls]}))
-        if result.failure:
-            counts["failures"] += 1
-            continue                                         # 그날은 규칙 검사 그대로
-        for item in result.items:
-            item_id = str(item.get("item_id"))
-            if item_id not in rule_of:
-                continue
-            for check in item["checks"]:
-                code, verdict = check.get("check"), check.get("verdict")
-                rule = rule_of[item_id].get(code)
-                counts["checks"] += 1
-                records.append((item_id, code, verdict, rule, (verdict == rule) if rule is not None else None,
-                                check.get("failure"),
-                                {k: check.get(k) for k in ("why_chosen", "reason", "evidence", "claimed_verdict", "claimed_check",
-                                                           "required") if check.get(k) is not None}))
-                if check.get("failure") is None:
-                    counts["used"] += 1
-                    # 근거 검증(`agent.validate_check`)을 통과한 체크다 — 합치기가 필수 bad 로 줄을 내리고 필수 · 선호를 표시한다
-                    decided.setdefault(item_id, []).append(
-                        {"check": code, "verdict": verdict, "evidence": _tools_of(check, result.tool_calls),
-                         "validated": True, "required": is_required(check)})
-        for gap in result.missing:
-            counts["missing"] += 1
-            records.append((str(gap["item_id"]), gap["check"], None, rule_of.get(str(gap["item_id"]), {}).get(gap["check"]),
-                            None, gap["failure"], {}))
-    with connect() as conn, conn.transaction():
+    error_code = None
+
+    def record(conn, rows):
         with conn.cursor() as cur:
-            for item_id, code, agent, rule, agree, failure, detail in records:
+            for item_id, code, agent, rule, agree, failure, detail in rows:
                 cur.execute("INSERT INTO dining.dn_agent_judge (run_id, tenant_id, intake_id, revision, item_id, check_code, "
                             "agent_verdict, rule_verdict, agree, failure, detail, model) "
                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s)",
-                            (str(run_id), tenant_id, str(intake_id), revision, item_id, code, agent, rule, agree, failure,
+                            (run_id, tenant_id, str(intake_id), revision, item_id, code, agent, rule, agree, failure,
                              json.dumps(detail, ensure_ascii=False, default=str), model))
-        if decided:
-            # ★합치는 바탕은 **지금 저장된** 그 판의 검사다 — 넘겨받은 `review` 는 에이전트를 돌리는 사이 다시 계산됐을 수 있다
+
+    if lifecycle:
+        from app.domains.travel_ops.components.intake import dining_review
+
+        if metadata.get("status") == "disabled":
+            return {"run_id": metadata.get("run_id"), **counts}
+        with connect() as conn:
+            claimed = dining_review.begin(conn, tenant_id, intake_id, revision, run_id,
+                                          input_fingerprint=dining_review.fingerprint(review, notes))
+        if claimed is None:
+            counts["stale"] = 1
+            with connect() as conn, conn.transaction():
+                record(conn, [(None, "_stale", None, None, None, "intake_token_not_pending", {})])
+            return {"run_id": run_id, **counts}
+        review = claimed
+
+    rule_of = {str(i["id"]): rule_verdicts(i) for i in review.get("items") or [] if i.get("kind") == "dining"}
+    plans = plans_from_review(review, notes)
+    planned_ids = {str(i["item_id"]) for plan in plans for i in plan["items"] if i.get("kind") == "dining"}
+    if lifecycle and set(rule_of) - planned_ids:
+        counts["failures"] += 1
+        error_code = "dining_judge_input_incomplete"
+        records.append((None, "_run", None, None, None, error_code, {"item_ids": sorted(set(rule_of) - planned_ids)}))
+    for plan in plans:
+        counts["days"] += 1
+        try:
+            budget = deadline_s
+            if lifecycle:
+                remaining = (datetime.fromisoformat(metadata["deadline_at"]) - datetime.now(timezone.utc)).total_seconds()
+                if remaining <= 0:
+                    raise TimeoutError("dining judge deadline exceeded")
+                budget = min(deadline_s, remaining)
+            result = judge_day(plan, tools=tools_factory(connect), chat=chat, deadline_s=budget)
+            if not isinstance(result.items, list) or not isinstance(result.tool_calls, list):
+                raise ValueError("malformed agent result")
+            records.append((None, "_run", None, None, None, result.failure,
+                            {"date": plan["date"], **result.stats,
+                             "customer_requests": result.requests,
+                             "tools": [c["tool"] for c in result.tool_calls if isinstance(c, dict) and "tool" in c]}))
+            if result.failure:
+                counts["failures"] += 1
+                error_code = error_code or str(result.failure)
+                continue
+            answered: dict[str, set[str]] = defaultdict(set)
+            for item in result.items:
+                if not isinstance(item, dict) or not isinstance(item.get("checks"), list):
+                    raise ValueError("malformed item checks")
+                item_id = str(item.get("item_id"))
+                if item_id not in rule_of:
+                    continue
+                for check in item["checks"]:
+                    if not isinstance(check, dict):
+                        raise ValueError("malformed check")
+                    code, verdict = check.get("check"), check.get("verdict")
+                    rule = rule_of[item_id].get(code)
+                    counts["checks"] += 1
+                    failure = check.get("failure")
+                    evidence = check.get("evidence")
+                    if (code not in CHECKS or verdict not in VERDICTS or not isinstance(evidence, list)
+                            or any(not isinstance(ev, dict) for ev in (evidence or []))
+                            or (verdict in ("ok", "bad") and not evidence)
+                            or ("required" in check and not isinstance(check["required"], bool))):
+                        failure = failure or "malformed_check"
+                    records.append((item_id, str(code), verdict if verdict in VERDICTS else None, rule,
+                                    (verdict == rule) if rule is not None else None, failure,
+                                    {k: check.get(k) for k in ("why_chosen", "reason", "evidence", "claimed_verdict", "claimed_check",
+                                                               "required", "request_id", "customer_request")
+                                     if check.get(k) is not None}))
+                    if failure is not None:
+                        if code in AVAILABILITY_CHECKS or check.get("required") is True:
+                            counts["failures"] += 1
+                            error_code = error_code or str(failure)
+                        continue
+                    answered[item_id].add(code)
+                    counts["used"] += 1
+                    decided.setdefault(item_id, []).append(
+                        {"check": code, "verdict": verdict, "evidence": _tools_of(check, result.tool_calls),
+                         "validated": True,
+                         "customer_request": check.get("customer_request"),
+                         "required": is_required(check)})
+            gaps = {(str(gap["item_id"]), gap["check"], gap.get("request_id"), gap.get("failure")): gap
+                    for gap in result.missing}
+            if lifecycle:
+                # AgentResult 자체가 잘못 구성돼 missing을 누락하더라도 필수 확인을 성공으로 세지 않는다.
+                for planned in plan["items"]:
+                    if planned.get("kind") != "dining":
+                        continue
+                    item_id = str(planned["item_id"])
+                    need = {"found"} | ({"open_at"} if planned.get("start") else set())
+                    for code in need - answered[item_id]:
+                        if not any(key[:2] == (item_id, code) for key in gaps):
+                            gaps[(item_id, code, None, "missing_required_check")] = {"failure": "missing_required_check"}
+            for (item_id, code, _, _), gap in gaps.items():
+                failure = gap.get("failure") or "missing_required_check"
+                counts["missing"] += 1
+                error_code = error_code or str(failure)
+                records.append((item_id, code, None, rule_of.get(item_id, {}).get(code), None, failure,
+                                {k: gap[k] for k in ("attribute", "request_id", "quote", "required", "item_ids") if k in gap}))
+        except Exception as exc:                         # noqa: BLE001 — 상태를 failed로 닫되 앞서 확인한 줄은 보존한다
+            counts["failures"] += 1
+            failure = "dining_judge_deadline_exceeded" if isinstance(exc, TimeoutError) else "dining_judge_execution_failed"
+            error_code = error_code or failure
+            records.append((None, "_run", None, None, None, failure, {"date": plan["date"], "error_type": type(exc).__name__}))
+            log.warning("dining judge day failed intake=%s revision=%s date=%s", intake_id, revision, plan["date"], exc_info=True)
+
+    def apply(current):
+        merged, counts["changed"] = merge(current, decided)
+        merged["agent_judged"] = {"run_id": run_id, "model": model, "changed_rows": counts["changed"]}
+        return merged
+
+    with connect() as conn, conn.transaction():
+        record(conn, records)
+        if lifecycle:
+            from app.domains.travel_ops.components.intake import dining_review
+
+            current = dining_review.finish(conn, tenant_id, intake_id, revision, run_id,
+                                           error_code=error_code, update=apply)
+            if current is None or current["dining_judge"].get("error_code") == "dining_judge_input_changed":
+                counts["stale"] = 1
+        elif decided:
+            # 옛 독립 호출도 잠금 뒤에 읽는다. 신규 접수의 tokenless 작업은 현재 토큰을 덮을 수 없다.
+            state = review_module.intake_state(conn, tenant_id, intake_id)
             current = review_module.load(conn, tenant_id, intake_id, revision)
-            # ★`[2026-10-16 설계 대조 P2]` 그 사이 고객이 고쳐 새 판이 생겼거나 등록했으면 합치지 않는다 — 버린 것도 한 줄 남긴다.
-            #   새 판은 고치기 뒤의 다시 판정(`pipeline.rejudge`)이 맡는다. 접수 줄을 잠그고 보므로 합치는 동안 고치기 · 등록이 기다린다
-            state = review_module.intake_state(conn, tenant_id, intake_id) if current else None
-            if current and state != ("review", revision):
-                current, counts["stale"] = None, 1
-                with conn.cursor() as cur:
-                    cur.execute("INSERT INTO dining.dn_agent_judge (run_id, tenant_id, intake_id, revision, item_id, check_code, "
-                                "agent_verdict, rule_verdict, agree, failure, detail, model) "
-                                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s)",
-                                (str(run_id), tenant_id, str(intake_id), revision, None, "_stale", None, None, None,
-                                 "intake_moved_on", json.dumps({"now": list(state) if state else None}), model))
-            if current:
-                merged, counts["changed"] = merge(current, decided)
-                merged["agent_judged"] = {"run_id": str(run_id), "model": model, "changed_rows": counts["changed"]}
-                review_module.store(conn, tenant_id, intake_id, revision, merged)
-    return {"run_id": str(run_id), **counts}
+            if current and state == ("review", revision) and not current.get("dining_judge"):
+                review_module.store(conn, tenant_id, intake_id, revision, apply(current))
+            else:
+                counts["stale"] = 1
+        if counts["stale"]:
+            record(conn, [(None, "_stale", None, None, None, "intake_moved_on", {})])
+    return {"run_id": run_id, **counts}
 
 
 __all__ = ["ADDED", "RULE_ROWS", "ROW_OF", "TEXT", "merge", "plans_from_review", "rule_verdicts", "run"]
