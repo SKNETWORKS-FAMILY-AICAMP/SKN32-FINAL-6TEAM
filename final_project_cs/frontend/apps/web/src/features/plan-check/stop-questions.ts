@@ -2,7 +2,7 @@ import { distanceM } from "@/features/map/map-geometry";
 import type { Language, Translate } from "@/lib/i18n";
 import { eun, ro } from "@/lib/josa";
 import type { MoveOptions } from "@/lib/live/move-options";
-import type { PlanCandidate, PlanCheckView, PlanItem, PlanMove } from "./model";
+import type { PlanAsk, PlanCandidate, PlanCheckView, PlanItem, PlanMove } from "./model";
 import { fareText } from "./move-mode";
 
 /**
@@ -13,9 +13,14 @@ import { fareText } from "./move-mode";
  */
 export type StopNeed = "confirm" | "fix";
 export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "confirm" } | { type: "noplace" }
-  | { type: "taxi"; moveId: string } | { type: "later"; start: string; end: string };
-/** `why`: the server's reason it cannot be picked (the option is shown, greyed, and says it when pressed) — null when it can. */
-export interface StopOption { key: string; label: string; reason: string | null; effect: string; act: StopAct; why?: string | null }
+  | { type: "taxi"; moveId: string } | { type: "later"; start: string; end: string }
+  // `[2026-10-21 P6]` An option of an interpretation question; `search`: the stop is put back and the change screen's place search opens on these words.
+  | { type: "interpret"; option: string; search: string | null };
+/**
+ * `why`: the server's reason it cannot be picked (the option is shown, greyed, and says it when pressed) — null when it can.
+ * `recommended`: `[2026-10-21 P6]` the server's first option (its reading), marked 「추천」.
+ */
+export interface StopOption { key: string; label: string; reason: string | null; effect: string; act: StopAct; why?: string | null; recommended?: boolean }
 export interface StopAsk { need: StopNeed; question: string; options: StopOption[] }
 
 /** As many alternatives as the card offers (A · B · C). */
@@ -88,6 +93,23 @@ export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: r
   return { need: "fix", options: picks, question: why
     ? t(`${quotedEun(item.title)} 확인이 필요해요 — ${why}. 어떻게 할까요?`, `“${item.title}” needs a look — ${why}. What should we do?`)
     : t(`${quotedEun(item.title)} 확인이 필요해요. 어떻게 할까요?`, `“${item.title}” needs a look. What should we do?`) };
+}
+
+/**
+ * ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` What a line of the plan means, asked at its time (mockup `mockups/tripilot-plan-check-interpretation.html`): the server's question and options as
+ * they are (its first — the AI's reading — on top, marked), in the server's order. An option that puts the stop in and lets the customer pick its place carries the words to search for.
+ */
+export function interpretationQuestion(ask: PlanAsk): StopAsk {
+  return { need: "confirm", question: ask.question, options: ask.options.map((option) => ({
+    key: option.id, label: option.label, reason: option.reason, effect: option.effect ?? "", recommended: option.recommended,
+    act: { type: "interpret", option: option.id, search: option.pickMyself ? option.query ?? ask.title : null },
+  })) };
+}
+
+/** `[2026-10-21 P6]` 「직접 선택」 under the question: the option that puts the stop in for the customer to pick its place, else the one that puts it in — searched by its words either way. */
+export function pickMyselfAnswer(ask: PlanAsk): { option: string; search: string } | null {
+  const own = ask.options.find((option) => option.pickMyself) ?? ask.options.find((option) => option.id === "item");
+  return own ? { option: own.id, search: own.query ?? ask.title } : null;
 }
 
 /**

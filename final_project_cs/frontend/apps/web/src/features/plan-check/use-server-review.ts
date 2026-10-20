@@ -5,7 +5,7 @@ import { autofixUndo, restorePlace } from "@/features/intake-review/autofix-undo
 import { editsFor, rows } from "@/features/intake-review/model";
 import { translator, type Language, type Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
-import { editIntake, restoreIntake, type IntakeEdit } from "@/lib/live/intake";
+import { answerInterpretations, editIntake, restoreIntake, type IntakeEdit } from "@/lib/live/intake";
 import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
@@ -72,6 +72,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   // ★`[2026-10-20 사용자 지시]` Kept by stop, not by revision, until 「다시 제출」: after picking one of them (or moving a time) the change screen shows the
   //   same three again instead of working out the alternatives of the changed plan — the changed plan is checked once, when it is sent again.
   const alternatives = useRef(new Map<string, ReturnType<typeof getCandidates>>());
+  // `[2026-10-21]` The keys of the stops taken out, by id — what puts one back once the plan no longer holds it.
+  const taken = useRef(new Map<string, { source_id: string; index: number }>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
   const candidateNotes = useRef(new Map<string, string[]>());
   /**
@@ -203,7 +205,17 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       remove: async (id, how) => {
         const item = itemOf(id);
         await save([itemEdit.remove(targetOf(item), true)], true, how);
+        taken.current.set(id, targetOf(item));
         undoEdits.current = how?.flow ? null : [itemEdit.remove(targetOf(item), false)];
+      },
+      // ★`[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` A stop deleted on the result screen is out on the server at once (saved only — 「다시 제출」 checks it); its 「되돌리기」 puts it
+      //   back the same way (`removed: false`). The plan no longer holds it, so its keys are the ones kept when it was taken out.
+      putBack: async (id) => {
+        const target = taken.current.get(id);
+        if (!target) throw gone();
+        await save([itemEdit.remove(target, false)], true);
+        taken.current.delete(id);
+        undoEdits.current = null;
       },
       editTrip: (field, value) => save([{ field: `trip.${field}`, value }]),
 
@@ -308,6 +320,16 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const result = await autofixIntake(intakeId, plan().revision, language, true, id).catch(staleThenRethrow);
         const change = result.changed.find((entry) => entry.id === id && entry.reason === "time");
         return change?.to.starts_at ? { start: change.to.starts_at, end: change.to.ends_at ?? "" } : null;
+      },
+      // ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` The answer to what a line means: the AI's reading (what the plan holds) is only saved — the same revision comes back without the
+      //   question; another option puts the stop back in a new revision, checked as a whole (like a pick in the C안 flow: no 「다시 제출」, no undo).
+      interpret: async (question, option) => {
+        const before = plan();
+        const next = await answerInterpretations(intakeId, before.revision, { [question]: option }, language).catch(staleThenRethrow);
+        if (!allUndo.active) throw gone();
+        allUndo.advance(next);
+        if (next.revision !== before.revision) alternatives.current.clear();
+        take(next);
       },
       // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 「「…」 그대로」: the place the server took for now (one of several) is the one — sent back as the customer's pick, so the server checks it as chosen.
       confirmPlace: async (id, how) => {

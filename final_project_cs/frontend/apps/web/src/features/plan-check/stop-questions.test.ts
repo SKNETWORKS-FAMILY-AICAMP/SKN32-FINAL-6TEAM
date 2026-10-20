@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { translator } from "@/lib/i18n";
-import type { PlanCandidate, PlanCheckView, PlanItem } from "./model";
-import { arrivalQuestion, placeQuestion, stopKindOf } from "./stop-questions";
+import type { PlanAsk, PlanCandidate, PlanCheckView, PlanItem } from "./model";
+import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, stopKindOf } from "./stop-questions";
 import type { MoveOption, MoveOptions } from "@/lib/live/move-options";
 import { exampleDone } from "./test-views";
 
@@ -90,3 +90,25 @@ describe("`[2026-10-20 이동 확인 C안]` the question asked when the way into
   });
 });
 
+describe("`[2026-10-21 사용자 결정 — P6]` the question of what a line of the plan means", () => {
+  const ask: PlanAsk = { id: "q-0-5", itemId: "0-3", day: 1, date: "2026-10-01", startsAt: "14:00", title: "정도", question: "계획서의 「14시~16시 정도 시간이 비는데」를 어떻게 이해할까요?", quote: "14시~16시 정도 시간이 비는데",
+    options: [
+      { id: "reading", label: "14:00~16:00 빈 시간", recommended: true, reason: "읽기 AI 가 「14시~16시 정도 시간이 비는데」를 빈 시간으로 읽었어요", effect: "일정에 넣지 않고 14:00~16:00 빈 시간으로 둬요", pickMyself: false, query: null },
+      { id: "item", label: "「정돈 대학로본점」 14:00 일정(「정도」을 오타로 볼 때)", recommended: false, reason: null, effect: "14:00 일정으로 넣고 영업시간 · 이동을 확인해요", pickMyself: false, query: null },
+      { id: "item_search", label: "「정도」 이름 그대로 찾기", recommended: false, reason: null, effect: "14:00 일정으로 넣고 「정도」을 장소 검색에서 직접 골라요", pickMyself: true, query: "정도" },
+    ] };
+
+  it("asks the server's question with its options as they are, in its order — the first marked as recommended", () => {
+    const asked = interpretationQuestion(ask);
+    expect(asked.question).toBe(ask.question);
+    expect(asked.options.map((option) => [option.label, option.reason, option.effect, option.recommended])).toEqual(ask.options.map((option) => [option.label, option.reason, option.effect, option.recommended]));
+    expect(asked.options.map((option) => option.act)).toEqual([
+      { type: "interpret", option: "reading", search: null }, { type: "interpret", option: "item", search: null }, { type: "interpret", option: "item_search", search: "정도" }]);
+  });
+
+  it("「직접 선택」 puts the stop in with the option that lets the customer pick its place, else the stop's own option — searched by the words either way", () => {
+    expect(pickMyselfAnswer(ask)).toEqual({ option: "item_search", search: "정도" });
+    expect(pickMyselfAnswer({ ...ask, options: ask.options.slice(0, 2) })).toEqual({ option: "item", search: "정도" });
+    expect(pickMyselfAnswer({ ...ask, options: ask.options.slice(0, 1) })).toBeNull();
+  });
+});

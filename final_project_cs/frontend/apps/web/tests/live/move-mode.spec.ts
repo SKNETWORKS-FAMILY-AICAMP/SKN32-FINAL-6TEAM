@@ -148,14 +148,14 @@ test("키보드: 박스에서 Enter 로 열고 화살표로 줄을 오가며 Esc
   await expect(box(page)).toBeFocused();
 });
 
-test("삭제 예정 일정 옆 구간은 박스가 잠기고 이유를 말한다 · 320px 폭에서도 목록이 가로로 넘치지 않는다", async ({ page, request }) => {
-  await openFinished(page, request, undefined, { moveOptions: "on" });
-  await page.getByRole("button", { name: "올리브영 삭제" }).click();                                    // 올리브영 앞뒤 이동은 잠긴다
-  await openMove(page);
-  await expect(box(page)).toHaveAttribute("aria-disabled", "true");
-  await box(page).click({ force: true });
-  await expect(toast(page, "삭제할 일정 앞뒤의 이동이라 바꿀 수 없어요")).toBeVisible();
-  await expect(ways(page)).toHaveCount(0);
+// `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` 전에는 삭제 예정 일정 앞뒤 이동이 남아 박스가 잠겼다 — 이제 삭제는 곧바로 서버 판에서 빠지므로(저장만) 그 앞뒤 이동도 함께 빠진다.
+test("삭제한 일정의 앞뒤 이동은 서버 판에서 빠져 목록에 남지 않는다 — 잠긴 이동 박스가 남지 않는다", async ({ page, request }) => {
+  const server = await openFinished(page, request, undefined, { moveOptions: "on" });
+  await expect(first(page)).toBeVisible();
+  await page.getByRole("button", { name: "올리브영 삭제" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  await expect(page.getByRole("article", { name: "올리브영", exact: true })).toContainText("삭제 예정");
+  await expect(first(page)).toHaveCount(0);
 });
 
 test("320px 폭에서 목록이 가로로 넘치지 않는다", async ({ page, request }) => {

@@ -141,7 +141,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, 
         </li>}{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
-            ? entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
+            ? entry.item.ask ? <AskRow item={entry.item} ctx={ctx} /> : entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
             : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={{ ...ctx, revision: view.revision }} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
         </Fragment>)}{points.at(-1) && ctx.insertion?.(points.at(-1)!)}</>;
       })()}</RailList>
@@ -285,6 +285,21 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
         </div>
       </div>}
     </article>
+  </li>;
+}
+
+/**
+ * ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` Where the first check stopped to ask what a line of the plan means (`PlanItem.ask`): the line's time on the rail and a dashed place with the
+ * question in it — no card, no tools (it is not a stop yet). The list follows it as the newest row.
+ */
+function AskRow({ item, ctx }: { item: PlanItem; ctx: RowContext }) {
+  const t = useT();
+  const stopped = ctx.reveal?.stop === item.id;
+  return <li className={styles.entry} data-type="ask" data-entry-id={item.id} data-reveal-current={ctx.reveal?.activeId === item.id || undefined} data-stop-focus={stopped || undefined}
+    data-rail="stay" data-start={item.startsAt || undefined}>
+    <span className={styles.time}>{item.startsAt || "–"}</span>
+    <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
+    <article className={styles.card} data-ask aria-label={t(`계획서 「${item.title}」`, `The plan's line “${item.title}”`)}>{stopped && ctx.reveal?.ask}</article>
   </li>;
 }
 

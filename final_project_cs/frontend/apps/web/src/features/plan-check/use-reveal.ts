@@ -94,7 +94,7 @@ export function pauseBefore(shown: PlanCheckView, next: PlanCheckView): number {
  * result screen is where it is changed then (it keeps its tools: 2026-10-20 the read-only result was dropped) — so it does not stop.
  */
 export interface RevealStop { id: string; settling: boolean }
-export function useReveal(target: PlanCheckView, paused = false, stops = false): {
+export function useReveal(given: PlanCheckView, paused = false, stops = false): {
   view: PlanCheckView; settled: boolean; stop: RevealStop | null;
   recheck: { begin: (id: string) => void; fail: (id: string) => void };
   /** `[2026-10-20 C안]` This page drew the check (it was not finished when the page opened) — the 5-second 「여행 등록」 bar is for such a check only. */
@@ -103,11 +103,14 @@ export function useReveal(target: PlanCheckView, paused = false, stops = false):
   // ★`[2026-10-03 사용자 결정]` Skipping is the customer's own choice in the menu (「애니메이션 건너뛰기」), not the system's 「동작 줄이기」: the steps are
   //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
   const { skipAnimation: reduced } = useSettings();
+  // `[2026-10-20]` The check was already finished when the page opened: the result, as before (it stops only for a check this page watches).
+  const [openedDone] = useState(given.stage === "done");
+  const stopping = stops && !openedDone;
+  // `[2026-10-21 사용자 결정 — P6]` Interpretation questions are asked only where the check stops: elsewhere (a page opened on a finished check, the edit of a trip) they are left as the
+  //   server applied them (its first option), and nothing waits at their place.
+  const target = useMemo(() => stopping || !given.asks?.length ? given : { ...given, asks: [] }, [stopping, given]);
   const [shown, setShown] = useState(target);
   const [wasPaused, setWasPaused] = useState(paused);
-  // `[2026-10-20]` The check was already finished when the page opened: the result, as before (it stops only for a check this page watches).
-  const [openedDone] = useState(target.stage === "done");
-  const stopping = stops && !openedDone;
   // `[2026-10-20 C안]` A pick sent for the stopped card, and the revision it was sent on: nothing is drawn until the server answers with another one.
   const [asked, setAsked] = useState<{ id: string; revision: number | undefined } | null>(null);
   // Questions showed the completed reading progress, but not the map's cards. Begin their first appearance at checking.

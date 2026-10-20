@@ -373,7 +373,9 @@ test("삭제 예정 카드(회색 + 되돌리기)도 320px에서 화면 안에 �
   await expect(card(page, "올리브영")).toContainText("삭제 예정");
   await expect(page.getByRole("button", { name: "올리브영 삭제 되돌리기" })).toBeInViewport();
   await noHorizontalScroll(page);
-  expect(await server.received("POST", "/edits")).toHaveLength(0);                 // 표시만 했다: 서버로는 아무것도 가지 않았다
+  // `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` 표시와 함께 서버에는 저장만 했다(검사는 「다시 제출」 때).
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  expect((await server.received("POST", "/edits"))[0].body).toMatchObject({ check: false });
 });
 
 // ── 수정(바꾸기) 화면 ────────────────────────────────────────────────────────

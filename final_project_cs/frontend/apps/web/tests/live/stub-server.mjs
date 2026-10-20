@@ -70,6 +70,12 @@ const DEFAULTS = {
   //   | "calm" (`[2026-10-20 C안]` the rich board with nothing to fix — the first check runs to its end without stopping; see `calmBoard`)
   //   | "stay" (`[2026-10-15 ST4F-499]` three days with a two-night hotel — see `freshStayBoard`)
   board: "simple",
+  // `[2026-10-21 P6]` 해석 확인 질문(`interpretations[]` · `POST …/interpretations`): "off" | "on" — with `board: "calm"`, the plan's 5th line 「14시~16시 정도 시간이 비는데」 was read by the AI
+  //   as a free time while the rule read a stop 「정도」(found as 「정돈 대학로본점」, its typo): that stop is out for now and asked about (`withInterpretations`).
+  interpretations: "off",
+  // `[2026-10-21]` 「저장만」(`check: false`) as the server keeps it: "off" (the check of the plan is not told apart, as before) | "on" — a revision only saved has `review.checked: false` ·
+  //   `ready: false` until `POST …/revalidate` (contract web-intakes.md 「check: false」), so a reload keeps 「다시 제출」.
+  saveOnly: "off",
   // 받아쓰기 두 읽기 (2026-10-07): "on" = the first stop was read two ways off a photo (`rereads[]` + a warning row) — see `withReread`; "note_only" = the other value is unknown (`other: null`).
   reread: "off",
   // the trip screen's stops: "default" | "map" (three days for the map tests — see `mapItems`)
@@ -193,6 +199,8 @@ let log;
 let polls;
 // the answers saved through `POST …/trip-intakes/{id}/survey`: question id → option id
 let surveyAnswers = {};
+// `[2026-10-21 P6]` the interpretation answers saved (`POST …/interpretations`), by question id
+let interpretAnswers = {};
 // what `POST …/trips/{id}/guardian` last set: `{enabled, since, via}` (null: the scenario's own value stands)
 let guardianState = null;
 let confirmed;
@@ -308,6 +316,7 @@ function reset() {
   log = [];
   polls = 0;
   surveyAnswers = {};
+  interpretAnswers = {};
   guardianState = null;
   confirmed = false;
   board = freshBoard(scenario.board);
@@ -431,7 +440,8 @@ const place = (name, latitude, longitude, extra = {}) => ({ name, latitude, long
 function freshBoard(kind = "simple") {
   const rich = freshRichBoard();
   const board = kind === "rich" ? withUnfoundStop(rich) : kind === "calm" ? calmBoard(rich) : kind === "stay" ? freshStayBoard() : { revision: 1, items: [rich.items[0]], moves: [] };
-  return scenario.reread === "on" || scenario.reread === "note_only" ? withReread(board) : board;
+  const read = scenario.interpretations === "on" ? withInterpretStop(board) : board;
+  return scenario.reread === "on" || scenario.reread === "note_only" ? withReread(read) : read;
 }
 
 // ── 받아쓰기 두 읽기 (2026-10-07) ── 시작
@@ -573,7 +583,8 @@ function reviewOf(b) {
   const needsMoves = b.moves.filter((move) => move.status === "review").length;
   const needs = { items: needsItems, moves: needsMoves, total: needsItems + needsMoves };
   const ids = new Set(b.items.map((item) => item.id));
-  return { revision: b.revision, built_at: "2026-10-03T09:00:00+09:00", engine: "timetable", items: [...b.items].sort((a, z) => a.date.localeCompare(z.date) || (a.starts_at || "99:99").localeCompare(z.starts_at || "99:99") || a.index - z.index), moves: b.moves.filter((move) => ids.has(move.from) && ids.has(move.to)), needs, ready: needs.total === 0 };
+  return { revision: b.revision, built_at: "2026-10-03T09:00:00+09:00", engine: "timetable", items: [...b.items].sort((a, z) => a.date.localeCompare(z.date) || (a.starts_at || "99:99").localeCompare(z.starts_at || "99:99") || a.index - z.index), moves: b.moves.filter((move) => ids.has(move.from) && ids.has(move.to)), needs, ready: needs.total === 0 && !b.unchecked,
+    ...(scenario.saveOnly === "on" ? { checked: !b.unchecked } : {}) };
 }
 
 const CANDIDATES = [
@@ -637,7 +648,7 @@ function withQuestions(view) {
   return { ...view, questions: list, questions_version: "2" };
 }
 
-function intakeView(revision) { return withUnfoundQuestion(withQuestions(intakeBaseView(revision))); }
+function intakeView(revision) { return withInterpretations(withUnfoundQuestion(withQuestions(intakeBaseView(revision)))); }
 
 // ── 못 찾은 장소 (2026-10-19) ── 시작
 const UNFOUND_TITLE = "을지로 그 집";
@@ -659,6 +670,34 @@ function withUnfoundQuestion(view) {
     quote: UNFOUND_TITLE, item: "0-1", source_id: "s1", index: 1, mode: "change", actions: ["pick_candidate", "pick_myself", "no_place"], blocked }] } };
 }
 // ── 못 찾은 장소 (2026-10-19) ── 끝
+
+// ── 해석 확인 질문 (2026-10-21 P6) ── 시작
+const INTERPRET_QUOTE = "14시~16시 정도 시간이 비는데";
+const INTERPRET_ID = "q-0-5";
+/** The rule's stop on that line — out for now (in `board.removed`), with the leg into it ready for when it comes back (`reviewOf` keeps a leg only when both ends are in). */
+function withInterpretStop(board) {
+  const stop = { id: "0-3", source_id: "s1", index: 3, title: "정도", kind: "dining", day: 1, date: "2026-10-01", starts_at: "14:00", ends_at: "16:00", locked: false, status: "keep", can_lock: true,
+    place_state: "found", place: place("정돈 대학로본점", 37.5822, 127.0019, { source: "kakao", kind: "dining" }), candidates_hint: null,
+    rows: [row("place", "ok", "「정도」를 오타로 보고 「정돈 대학로본점」으로 찾았어요"), row("hours", "ok", "11:30–21:00 안에 머물러요")] };
+  const leg = { from: "0-2", to: "0-3", day: 1, date: "2026-10-01", status: "keep", mode: "subway", mode_label: "지하철 4호선", minutes: 12, km: 2.1, depart: "13:30", arrive: "13:42", slack_min: 18,
+    basis: "timetable", summary: "지하철 4호선 12분 · 2.1km", rows: [row("route", "ok", "종로5가역 → 혜화역"), row("mode", "ok", "지하철 4호선 12분 · 2.1km"), row("arrival", "ok", "18분 여유")] };
+  return { ...board, removed: [...(board.removed ?? []), stop], moves: [...board.moves, leg] };
+}
+/** The question as the server words it (`interpretations.py` `options_of` · `view`): the AI's reading first; the stop's line says it is out (`removed`, method `llm_agent`) while it is. */
+function withInterpretations(view) {
+  if (scenario.interpretations !== "on" || !view.review) return view;
+  const out = (board.removed ?? []).some((stop) => stop.id === "0-3");
+  const answer = interpretAnswers[INTERPRET_ID] ?? null;
+  const sources = view.sources.map((source) => ({ ...source, items: source.items.map((item) => item.index !== 3 ? item
+    : { ...item, fields: { ...item.fields, removed: { value: out, method: out ? "llm_agent" : "customer", evidence: { line: 5 }, needs_review: false, note: null } } }) }));
+  return { ...view, sources, interpretations: [{ id: INTERPRET_ID, kind: "interpretation", question: `계획서의 「${INTERPRET_QUOTE}」를 어떻게 이해할까요?`, quote: INTERPRET_QUOTE, line: 5,
+    item: "0-3", source_id: "s1", index: 3, answer, applied: out ? "reading" : answer === "item_search" ? "item_search" : "item", actions: ["pick_myself"], options: [
+      { id: "reading", label: "14:00~16:00 빈 시간", recommended: true, action: null, query: null, reason: `읽기 AI 가 「${INTERPRET_QUOTE}」를 빈 시간으로 읽었어요`, effect: "일정에 넣지 않고 14:00~16:00 빈 시간으로 둬요" },
+      { id: "item", label: "「정돈 대학로본점」 14:00 일정(「정도」을 오타로 볼 때)", recommended: false, action: null, query: null, reason: null, effect: "14:00 일정으로 넣고 영업시간 · 이동을 확인해요" },
+      { id: "item_search", label: "「정도」 이름 그대로 찾기", recommended: false, action: "pick_myself", query: "정도", reason: null, effect: "14:00 일정으로 넣고 「정도」을 장소 검색에서 직접 골라요" },
+    ] }] };
+}
+// ── 해석 확인 질문 (2026-10-21 P6) ── 끝
 
 function intakeBaseView(revision) {
   const base = { intake_id: INTAKE_ID, revision, fatal: null, trip_id: confirmed ? TRIP_ID : null, needs_review: [] };
@@ -798,7 +837,7 @@ createServer(async (request, response) => {
   if (path === "/__test/scenario") {
     const change = JSON.parse(raw || "{}");
     scenario = { ...scenario, ...change };
-    if ("board" in change || "reread" in change) { board = freshBoard(scenario.board); boardHistory = new Map(); }
+    if ("board" in change || "reread" in change || "interpretations" in change) { board = freshBoard(scenario.board); boardHistory = new Map(); }
     if ("trips" in change) rows = freshRows(scenario.trips);
     return json(response, 200, scenario, origin);
   }
@@ -1379,10 +1418,30 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     }
     return json(response, 200, intakeView(revision), origin);
   }
+  // `[2026-10-21 P6]` the answer to an interpretation question (contract web-intakes.md 「해석 확인 질문」): the AI's reading is only saved (the same revision);
+  //   another option puts the stop back in a new revision. `fail: "interpretations"` answers 500.
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/interpretations` && request.method === "POST") {
+    if (broken("interpretations")) return;
+    const { revision, answers = {} } = JSON.parse(raw || "{}");
+    if (revision !== board.revision) return json(response, 409, { error: { code: "stale_revision", message: "그 사이 다른 화면에서 고쳤습니다 — 새로 불러와 주세요", current_revision: board.revision } }, origin);
+    const option = answers[INTERPRET_ID];
+    if (scenario.interpretations !== "on" || Object.keys(answers).length !== 1 || !["reading", "item", "item_search"].includes(option))
+      return json(response, 422, { error: { code: "invalid_answers", message: "모르는 질문이나 선택지예요", problems: Object.keys(answers).map((key) => ({ key, reason: key === INTERPRET_ID ? "unknown_option" : "unknown_question" })) } }, origin);
+    interpretAnswers[INTERPRET_ID] = option;
+    const out = (board.removed ?? []).some((stop) => stop.id === "0-3");
+    if ((option === "reading") !== out) {
+      if (out) { const back = board.removed.find((stop) => stop.id === "0-3"); board.items = [...board.items, back].sort((a, b) => a.index - b.index); board.removed = board.removed.filter((stop) => stop !== back); }
+      else { const gone = board.items.find((stop) => stop.id === "0-3"); board.removed = [...(board.removed ?? []), gone]; board.items = board.items.filter((stop) => stop !== gone); }
+      board.revision += 1;
+    }
+    return json(response, 200, { ...intakeView(board.revision), interpretation: { applied: true, pending: false, revision: board.revision } }, origin);
+  }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
     if (scenario.edits === "stale") return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: 2 } }, origin);
     if (scenario.edits === "not_found") return json(response, 422, { error: { code: "place_not_found", message: "「없는 곳」: 이 이름으로 장소를 찾지 못했어요" } }, origin);
-    const { edits = [] } = JSON.parse(raw || "{}");
+    const { edits = [], check } = JSON.parse(raw || "{}");
+    // `[2026-10-21]` saved only, or checked with it (`saveOnly: "on"`): a later checked save or `revalidate` checks the whole plan
+    if (scenario.saveOnly === "on") board.unchecked = check === false;
     const newFields = new Map();
     for (const edit of edits) {
       const match = /^items\[(\d+)\]\.(\w+)$/.exec(edit.field);
@@ -1500,7 +1559,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (saved) board = JSON.parse(saved);
     return json(response, 200, answer, origin);
   }
-  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/revalidate` && request.method === "POST") return json(response, 200, intakeView(board.revision), origin);
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/revalidate` && request.method === "POST") { board.unchecked = false; return json(response, 200, intakeView(board.revision), origin); }
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {
     const planning = path.endsWith("/plan");
     if (!planning && broken("confirm")) return;

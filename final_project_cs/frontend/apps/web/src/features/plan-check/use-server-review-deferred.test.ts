@@ -5,9 +5,9 @@ import { useServerReview } from "./use-server-review";
 // `[2026-10-20 사용자 지시]` 수정 화면은 저장만 하고(시각 · 장소 · 대안), 무거운 검사는 「다시 제출」 때 한 번에 — 대안은 다시 제출 전까지 처음 받은 셋을 그대로 보인다.
 const harness = vi.hoisted(() => ({
   slots: [] as { value?: unknown; deps?: readonly unknown[]; cleanup?: () => void }[], cursor: 0,
-  effects: [] as (() => void)[], edit: vi.fn(), stream: vi.fn(), revalidate: vi.fn(), autofix: vi.fn(),
+  effects: [] as (() => void)[], edit: vi.fn(), stream: vi.fn(), revalidate: vi.fn(), autofix: vi.fn(), interpret: vi.fn(),
 }));
-vi.mock("@/lib/live/intake", () => ({ editIntake: harness.edit, restoreIntake: vi.fn() }));
+vi.mock("@/lib/live/intake", () => ({ editIntake: harness.edit, restoreIntake: vi.fn(), answerInterpretations: harness.interpret }));
 vi.mock("@/lib/live/intake-review", async (original) => ({
   ...await original<typeof import("@/lib/live/intake-review")>(),
   streamCandidates: harness.stream, revalidateIntake: harness.revalidate, autofixIntake: harness.autofix,
@@ -55,7 +55,7 @@ function draw(view: ReviewedIntakeView, apply = vi.fn()) {
 afterEach(() => {
   for (const slot of harness.slots) slot.cleanup?.();
   harness.slots = []; harness.cursor = 0; harness.effects = [];
-  harness.edit.mockReset(); harness.stream.mockReset(); harness.revalidate.mockReset(); harness.autofix.mockReset();
+  harness.edit.mockReset(); harness.stream.mockReset(); harness.revalidate.mockReset(); harness.autofix.mockReset(); harness.interpret.mockReset();
 });
 
 describe("plan check saves changes and checks them once, when sent again", () => {
@@ -120,5 +120,28 @@ describe("plan check saves changes and checks them once, when sent again", () =>
     await screen.actions.confirmPlace!("0-0", { flow: true });
     expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3,
       [{ source_id: "source-a", field: "items[0].place", value: { name: "올리브영 광화문점", latitude: 37.571, longitude: 126.976, source: "kakao" } }], "ko");
+  });
+});
+
+describe("`[2026-10-21 사용자 결정]` the answer to what a line means, and a deletion saved at once", () => {
+  it("sends the answer with the plan's revision and takes what comes back — the plan as it now is", async () => {
+    const apply = vi.fn();
+    harness.interpret.mockResolvedValue(plan(4));
+    const screen = draw(plan(), apply);
+    await screen.actions.interpret!("q-0-5", "item");
+    expect(harness.interpret).toHaveBeenCalledWith("deferred-intake", 3, { "q-0-5": "item" }, "ko");
+    expect(apply).toHaveBeenLastCalledWith(expect.objectContaining({ revision: 4 }));
+    expect(harness.edit).not.toHaveBeenCalled();
+  });
+
+  it("takes a stop out saved only, and its 「되돌리기」 puts it back the same way — by the keys kept when it went (the plan no longer holds it)", async () => {
+    harness.edit.mockResolvedValue({ ...plan(4, false), review: { ...plan(4, false).review!, items: [] } });
+    const screen = draw(plan());
+    await screen.actions.remove!("0-0");
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3, [{ source_id: "source-a", field: "items[0].removed", value: true }], "ko", { check: false });
+    harness.edit.mockResolvedValue(plan(5, false));
+    await screen.actions.putBack!("0-0");
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 4, [{ source_id: "source-a", field: "items[0].removed", value: false }], "ko", { check: false });
+    await expect(screen.actions.putBack!("0-0")).rejects.toThrow();                // put back already: nothing kept to put back
   });
 });

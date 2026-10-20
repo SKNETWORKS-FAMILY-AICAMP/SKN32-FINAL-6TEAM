@@ -100,6 +100,42 @@ export interface PlanItem {
    */
   placeState?: string | null;
   placeChoices?: number | null;
+  /**
+   * `[2026-10-21 사용자 결정 — P6 해석 확인 질문]` Not a stop: the place in the first check's list where it stopped to ask what a line of the plan means (`PlanAsk`) — a card-less question
+   * at the line's time. Only the list of the stopped check carries one (`withAskSlot`).
+   */
+  ask?: PlanAsk;
+}
+
+/**
+ * ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` A line of the plan the reading AI read as something other than a stop where the rule read one (`interpretations[]`, not answered yet): the
+ * stop is out for now (the AI's reading) and the first check stops at the line's time to ask (mockup `mockups/tripilot-plan-check-interpretation.html`). The words are the server's.
+ */
+export interface PlanAsk {
+  /** The server's question id (`q-…`). */
+  id: string;
+  /** The check's id of the stop on that line — what comes back when another option is picked. */
+  itemId: string;
+  day: number;
+  date: string;
+  /** "HH:MM" the rule read for the line ("" when none): where the question stands among the stops. */
+  startsAt: string;
+  /** The stop's name as the rule read it — searched for when the customer picks the place themselves. */
+  title: string;
+  question: string;
+  quote: string;
+  options: PlanAskOption[];
+}
+
+export interface PlanAskOption {
+  id: string;
+  label: string;
+  recommended: boolean;
+  reason: string | null;
+  effect: string | null;
+  /** Picked, the stop is put in and the change screen's place search opens (`query`). */
+  pickMyself: boolean;
+  query: string | null;
 }
 
 /**
@@ -205,6 +241,8 @@ export interface PlanCheckView {
    * `questions`: what only the traveller knows. `understood`: the traveller's own words the server read as a move, a condition or a preference.
    */
   prefill?: PrefillNotes | null;
+  /** `[2026-10-21 P6]` The interpretation questions not answered yet (`PlanAsk`). Absent on an older server and in the preview. */
+  asks?: PlanAsk[];
 }
 
 export interface PrefillNotes { filledCount: number; questions: string[]; understood: string[]; handoff: PrefillHandoff[] }
@@ -230,10 +268,39 @@ export function timeline(view: Pick<PlanCheckView, "items" | "moves">, day: numb
   return out;
 }
 
-/** Every item and move in check order: day by day, along each day's timeline. */
-function checkOrder(view: PlanCheckView): ({ type: "item"; id: string } | { type: "move"; id: string })[] {
-  const days = [...new Set(view.items.map((item) => item.day))].sort((a, b) => a - b);
-  return days.flatMap((day) => timeline(view, day).map((entry) => entry.type === "item" ? { type: "item" as const, id: entry.item.id } : { type: "move" as const, id: entry.move.id }));
+type OrderEntry = { type: "item"; id: string } | { type: "move"; id: string; to: string } | { type: "ask"; id: string };
+
+/**
+ * Every item and move in check order: day by day, along each day's timeline. `[2026-10-21 P6]` A question not answered yet (`asks`) stands at its line's time: after the stops that start
+ * by then, before the leg into the next one.
+ */
+function checkOrder(view: PlanCheckView): OrderEntry[] {
+  const asks = view.asks ?? [];
+  const days = [...new Set([...view.items.map((item) => item.day), ...asks.map((ask) => ask.day)])].sort((a, b) => a - b);
+  return days.flatMap((day) => {
+    const out: OrderEntry[] = timeline(view, day).map((entry) => entry.type === "item" ? { type: "item" as const, id: entry.item.id } : { type: "move" as const, id: entry.move.id, to: entry.move.toId });
+    for (const ask of asks.filter((entry) => entry.day === day).sort((a, b) => a.startsAt.localeCompare(b.startsAt))) {
+      const later = out.findIndex((entry) => entry.type === "item" && (view.items.find((item) => item.id === entry.id)?.startsAt ?? "") > ask.startsAt);
+      const before = later > 0 && out[later - 1].type === "move" && (out[later - 1] as { to: string }).to === out[later].id ? later - 1 : later;
+      out.splice(later < 0 ? out.length : before, 0, { type: "ask", id: ask.id });
+    }
+    return out;
+  });
+}
+
+/** `[2026-10-21 P6]` The stop of the check at an interpretation question — told apart from a stop's id. */
+export const askStopId = (id: string) => `ask:${id}`;
+export const askOfStop = (view: Pick<PlanCheckView, "asks">, stopId: string | null | undefined): PlanAsk | null =>
+  stopId?.startsWith("ask:") ? (view.asks ?? []).find((ask) => askStopId(ask.id) === stopId) ?? null : null;
+
+/**
+ * `[2026-10-21 P6]` The list with the question's place in it: a card-less entry (`PlanItem.ask`) at the line's time, after the stops of that day that start by then (the waiting ones too).
+ */
+export function withAskSlot(view: PlanCheckView, ask: PlanAsk): PlanCheckView {
+  const slot: PlanItem = { id: askStopId(ask.id), day: ask.day, date: ask.date, startsAt: ask.startsAt, endsAt: "", title: ask.quote, place: "", noPlace: true, coordinates: null,
+    checks: [], verdict: null, locked: false, booked: null, info: null, suggestion: null, ask };
+  const at = view.items.findIndex((item) => item.day > ask.day || (item.day === ask.day && item.startsAt > ask.startsAt));
+  return { ...view, items: at < 0 ? [...view.items, slot] : [...view.items.slice(0, at), slot, ...view.items.slice(at)] };
 }
 
 /**
@@ -281,6 +348,8 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheck
   // Places and moves along each day: appear (checks waiting) → each check → verdict.
   const order = checkOrder(target);
   for (const [at, entry] of order.entries()) {
+    // `[2026-10-21 P6]` A question not answered yet: nothing past it is drawn (the check stops there to ask once it is final — `stopAt`).
+    if (entry.type === "ask") return null;
     if (entry.type === "item") {
       const want = target.items.find((item) => item.id === entry.id)!;
       const have = shown.items.find((item) => item.id === entry.id);
@@ -352,10 +421,14 @@ export const stopKind = (view: PlanCheckView, id: string): "place" | "arrival" =
  */
 export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | null {
   if (target.stage !== "done") return null;
-  for (const entry of checkOrder(shown)) {
-    if (entry.type !== "item") continue;
+  // `[2026-10-21 P6]` Along the plan as the server has it: a question not answered yet stops it once every stop before it is drawn with its verdict (`askStopId`).
+  for (const entry of checkOrder(target)) {
+    if (entry.type === "move") continue;
+    if (entry.type === "ask") return askStopId(entry.id);
     const item = shown.items.find((candidate) => candidate.id === entry.id);
-    if (item && stopsHere(item, shown)) return entry.id;
+    // Not drawn yet, or its verdict still to come: the check goes on toward it first.
+    if (!item || (item.verdict === null && target.items.find((candidate) => candidate.id === entry.id)?.verdict != null)) return null;
+    if (stopsHere(item, shown)) return entry.id;
   }
   return null;
 }
@@ -367,9 +440,10 @@ export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | nu
 export function cutAtStop(view: PlanCheckView): PlanCheckView {
   if (view.stage !== "done") return view;
   const order = checkOrder(view);
-  const at = order.findIndex((entry) => entry.type === "item" && stopsHere(view.items.find((item) => item.id === entry.id)!, view));
+  const at = order.findIndex((entry) => entry.type === "ask" || (entry.type === "item" && stopsHere(view.items.find((item) => item.id === entry.id)!, view)));
   if (at < 0) return view;
-  const drawn = new Set(order.slice(0, at + 1).map((entry) => entry.id));
+  // `[2026-10-21 P6]` At a question, up to the stop before it (the question has no card).
+  const drawn = new Set(order.slice(0, order[at].type === "ask" ? at : at + 1).map((entry) => entry.id));
   return { ...view, stage: "checking", title: null, items: view.items.filter((item) => drawn.has(item.id)), moves: view.moves.filter((move) => drawn.has(move.id)) };
 }
 

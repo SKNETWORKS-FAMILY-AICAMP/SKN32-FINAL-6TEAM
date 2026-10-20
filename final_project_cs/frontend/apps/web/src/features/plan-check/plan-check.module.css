@@ -138,6 +138,8 @@ button.time { cursor: pointer; }
 /* `[2026-10-20 사용자 결정 — 계획 확인 C안]` Stopped at a card: everything else in the list (cards, legs, the rail) is dimmed and cannot be pressed; a banner over the list says
    what to do (「다시 확인하는 중」 keeps its height, so the card does not move). */
 .page[data-stopped] .timeline > li:not([data-stop-focus]) { opacity: .38; pointer-events: none; transition: opacity .25s; }
+/* `[2026-10-21 사용자 결정 — P6 해석 확인 질문]` 카드 없는 질문 자리: 그 줄의 시각에 점선 테두리 칸 하나(목업 tripilot-plan-check-interpretation.html) — 안에는 질문 칸만. */
+.card[data-ask] { border-style: dashed; border-color: var(--color-border-strong); background: var(--color-surface); box-shadow: none; }
 .stopBanner { position: sticky; top: 0; z-index: 6; display: flex; gap: 9px; align-items: flex-start; box-sizing: border-box; margin: 0 0 8px; padding: 9px 12px;
   border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-soft); font-size: 12.5px; line-height: 1.5; }
 .stopMark { display: inline-grid; place-items: center; flex: none; width: 19px; height: 19px; border-radius: 50%; background: var(--color-warning); color: var(--color-on-primary); font-size: 11px; font-weight: 800; }

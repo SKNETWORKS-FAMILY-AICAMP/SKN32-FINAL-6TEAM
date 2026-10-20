@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exampleDone, exampleSnapshots } from "./test-views";
-import { beginRecheck, cutAtStop, nextStep, onlyCard, progress, rebase, stopAt, stopKind, tally, timeline, withArrivalRows, type PlanCheckView } from "./model";
+import { askStopId, beginRecheck, cutAtStop, nextStep, onlyCard, progress, rebase, stopAt, stopKind, tally, timeline, withArrivalRows, withAskSlot, type PlanAsk, type PlanCheckView } from "./model";
 
 /** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. */
 function walk(from: PlanCheckView, to: PlanCheckView): PlanCheckView[] {
@@ -201,3 +201,45 @@ describe("`[2026-10-20 C안 · 이동 확인 C안]` a late way in is asked in th
   });
 });
 
+describe("`[2026-10-21 사용자 결정 — P6]` the first check stops at a line of the plan read as something other than a stop", () => {
+  /** Nothing to fix on the cards: only the question stops the check. */
+  const calm: PlanCheckView = { ...exampleDone, items: exampleDone.items.map((item) => ({ ...item, verdict: "keep" as const })), moves: exampleDone.moves.map((move) => ({ ...move, slackMin: 5, verdict: "keep" as const })) };
+  const ask = (startsAt: string): PlanAsk => ({ id: "q-0-5", itemId: "e", day: 1, date: "2026-10-01", startsAt, title: "정도", question: "계획서의 「14시~16시 정도」를 어떻게 이해할까요?", quote: "14시~16시 정도",
+    options: [{ id: "reading", label: "14:00~16:00 빈 시간", recommended: true, reason: "읽기 AI 가 빈 시간으로 읽었어요", effect: "일정에 넣지 않고 14:00~16:00 빈 시간으로 둬요", pickMyself: false, query: null }] });
+  const asked: PlanCheckView = { ...calm, asks: [ask("14:00")] };
+
+  it("draws every stop before the question's time, then stops there — nothing past it, not done", () => {
+    const steps = walk(received, asked);
+    const last = steps.at(-1)!;
+    expect(last.items.map((item) => item.id)).toEqual(["a", "b", "c"]);              // d (day 2) is past it
+    expect(last.items.every((item) => item.verdict === "keep")).toBe(true);
+    expect(last.stage).toBe("checking");
+    expect(nextStep(last, asked)).toBeNull();
+    expect(stopAt(last, asked)).toBe(askStopId("q-0-5"));
+    expect(stopAt(steps[steps.length - 2], asked)).toBeNull();                       // c's verdict still to come
+    expect(stopAt(last, { ...asked, stage: "checking" })).toBeNull();                 // the server's check is not final yet
+  });
+
+  it("stands after the stops that start by then and before the leg into the next one", () => {
+    const early: PlanCheckView = { ...calm, asks: [ask("11:30")] };
+    const cut = cutAtStop(early);
+    expect(cut.items.map((item) => item.id)).toEqual(["a", "b"]);
+    expect(cut.moves.map((move) => move.id)).toEqual(["a-b"]);                       // the leg b → c comes with c, after the question
+    expect(withAskSlot(cut, ask("11:30")).items.map((item) => item.id)).toEqual(["a", "b", askStopId("q-0-5")]);
+    expect(withAskSlot(calm, ask("11:30")).items.map((item) => item.id)).toEqual(["a", "b", askStopId("q-0-5"), "c", "d"]);
+    expect(withAskSlot(calm, ask("11:30")).items[2]).toMatchObject({ startsAt: "11:30", title: "14시~16시 정도", coordinates: null, ask: { id: "q-0-5" } });
+  });
+
+  it("goes on once it is answered: the AI's reading draws the rest, a stop put back is drawn in its place and checked", () => {
+    const last = walk(received, asked).at(-1)!;
+    expect(walk(last, calm).at(-1)).toEqual(calm);                                    // answered with the reading: the question is gone, the check finishes
+    const e = { ...calm.items[2], id: "e", startsAt: "14:00", endsAt: "16:00", title: "정돈 대학로본점", place: "정돈 대학로본점" };
+    const back: PlanCheckView = { ...calm, revision: 2, items: [...calm.items.slice(0, 3), e, calm.items[3]],
+      moves: [...calm.moves, { ...calm.moves[1], id: "c-e", fromId: "c", toId: "e", departAt: "13:30" }] };
+    const steps = walk(last, back);
+    expect(steps[0].items.map((item) => item.id)).toEqual(["a", "b", "c", "e"]);      // the leg c → e and card e in one step, its checks waiting
+    expect(steps[0].moves.map((move) => move.id)).toContain("c-e");
+    expect(steps[0].items[3].checks.every((row) => row.result === "pending")).toBe(true);
+    expect(steps.at(-1)).toEqual(back);
+  });
+});

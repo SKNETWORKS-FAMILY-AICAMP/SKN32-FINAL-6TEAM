@@ -17,7 +17,7 @@ import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { changeLines } from "./change-lines";
-import { draftOfItem, foundCount, incomingMove, isInstantRow, needs, stopKind, withArrivalRows, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
+import { askOfStop, askStopId, draftOfItem, foundCount, incomingMove, isInstantRow, needs, stopKind, withArrivalRows, withAskSlot, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanAsk, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
@@ -44,7 +44,7 @@ import { TimeDragOverlay } from "./time-drag-overlay";
 import { heldTexts, useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal, type RevealStop } from "./use-reveal";
-import { arrivalQuestion, placeQuestion, type StopOption } from "./stop-questions";
+import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type StopOption } from "./stop-questions";
 import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { DoneFooter } from "@/features/survey-questions/reading-footer";
 import { TIMING } from "@/features/survey-questions/use-question-flow";
@@ -173,6 +173,10 @@ export interface PlanCheckActions {
   confirmPlace?: (id: string, how?: EditHow) => Promise<void>;
   /** `[2026-10-20 C안]` When the stop could start instead, its way in being late (the server's dry run for this stop) — null when only another place would do. */
   laterStart?: (id: string) => Promise<{ start: string; end: string } | null>;
+  /** `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` Put back a stop deleted on the result screen (out on the server already, saved only). Without it a deletion is only marked until 「다시 제출」. */
+  putBack?: (id: string) => Promise<void>;
+  /** `[2026-10-21 P6]` Answer an interpretation question (`PlanAsk`) with one of its options: the AI's reading is only saved, another puts the stop back (a new revision, checked). */
+  interpret?: (question: string, option: string) => Promise<void>;
   /** The first alternative, in one press (the card's 「자동 추천」). */
   autoRecommend?: (id: string) => Promise<void>;
   /**
@@ -398,6 +402,22 @@ const stopRoom = (box: HTMLElement) => {
 const STOP_FOLD_MS = 260;
 
 /**
+ * `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` The stops deleted on this screen (out on the server already) stand where they stood — grey, with 「되돌리기」 — until the plan is sent
+ * again: put back among the stops of their day by their start.
+ */
+const withoutCard = (cards: Readonly<Record<string, PlanItem>>, id: string) => Object.fromEntries(Object.entries(cards).filter(([key]) => key !== id));
+function withRemovedCards(view: PlanCheckView, cards: Readonly<Record<string, PlanItem>>): PlanCheckView {
+  const missing = Object.values(cards).filter((card) => !view.items.some((item) => item.id === card.id));
+  if (!missing.length) return view;
+  const items = [...view.items];
+  for (const card of missing) {
+    const at = items.findIndex((item) => item.day > card.day || (item.day === card.day && item.startsAt > card.startsAt));
+    items.splice(at < 0 ? items.length : at, 0, card);
+  }
+  return { ...view, items };
+}
+
+/**
  * ①② The plan being read. ★`[2026-10-07 사용자 지시]` The 「올린 계획」 list (one row per line of the plan with a ✓ and the stop found) and its 「읽는 곳으로」 button are gone: the bar at the top says
  * how far the reading is, the number of stops found stays under it, and every line comes in detail on the next page (the check). The server still sends the lines (the bar counts them).
  */
@@ -521,6 +541,8 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   // `[2026-10-04]` Stops changed since the plan was last sent (and what each had been); stops marked for deletion (really taken out when the plan is sent again).
   const [changed, setChanged] = useState<Record<string, string>>({});
   const [removed, setRemoved] = useState<string[]>([]);
+  // `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` The cards of the stops deleted here and already out on the server: drawn grey where they stood until the plan is sent again.
+  const [removedCards, setRemovedCards] = useState<Record<string, PlanItem>>({});
   const [inserting, setInserting] = useState<(InsertionPoint & { prefill?: AddPrefill }) | null>(null);
   const [mapPicking, setMapPicking] = useState(false);
   const [mapCoordinate, setMapCoordinate] = useState<Coordinates | null>(null);
@@ -837,10 +859,32 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
       closeOpen(item.id);
       return { text: t(`${item.title} 일정을 뺄 거예요`, `${item.title} will be taken out`), sub: t("「다시 제출」을 누르면 지워져요 · 카드의 되돌리기로 살릴 수 있어요", "It goes when you send the plan again · Undo on the card keeps it") };
     };
+    // ★`[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` Taken out on the server at once (saved only — 「다시 제출」 checks it), so a reload keeps the deletion and 「다시 제출」. The card stays
+    //   here, grey with 「되돌리기」, until the plan is sent again (`removedCards` — the plan no longer holds it); after a reload the stop is just gone. Marked first, put back if it is refused.
+    if (actions.putBack) {
+      void run(async () => {
+        setRemovedCards((current) => ({ ...current, [item.id]: item }));
+        const said = mark();
+        try { await actions.remove!(item.id); }
+        catch (error) { setRemovedCards((current) => withoutCard(current, item.id)); setRemoved((current) => current.filter((id) => id !== item.id)); throw error; }
+        return said;
+      });
+      return;
+    }
     if (previewing && side === "after") void run(async () => mark(), false);   // changing the proposed plan saves it first
     else setToast(mark());
   }
   function restore(item: PlanItem) {
+    if (actions.putBack && removedCards[item.id]) {
+      void run(async () => {
+        await actions.putBack!(item.id);
+        setRemovedCards((current) => withoutCard(current, item.id));
+        setRemoved((current) => current.filter((id) => id !== item.id));
+        refocus(item.id, "delete");
+        return null;
+      });
+      return;
+    }
     setRemoved((current) => current.filter((id) => id !== item.id));
     refocus(item.id, "delete");
   }
@@ -1036,8 +1080,10 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   function recheck() {
     void run(async () => {
       for (const id of removed) {
-        await actions.remove!(id);
+        // `[2026-10-21]` A stop deleted on the result screen is out on the server already (saved only): only the mark goes.
+        if (!removedCards[id]) await actions.remove!(id);
         setRemoved((current) => current.filter((entry) => entry !== id));
+        setRemovedCards((current) => withoutCard(current, id));
         setChanged((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== id)));
         setSelected((current) => current === id ? null : current);
       }
@@ -1077,11 +1123,13 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     void run(async () => {
       if (!actions.canUndoAll?.()) {
         if (!removed.length) return null;
-        setRemoved([]);
+        // `[2026-10-21]` Stops already out on the server are put back the same way (saved only).
+        for (const id of removed) if (removedCards[id]) await actions.putBack!(id);
+        setRemoved([]); setRemovedCards({});
         return { text: t("삭제 대기를 취소했어요", "Cancelled pending deletions") };
       }
       await actions.undoAll!();
-      setChanged({}); setRemoved([]); setFilter(null); setChangeToolsOpen(false); setOpen(null);
+      setChanged({}); setRemoved([]); setRemovedCards({}); setFilter(null); setChangeToolsOpen(false); setOpen(null);
       setRecommended(null); setSide("before"); actions.discardPreview?.();
       requestAnimationFrame(() => checkingBox.current?.querySelector<HTMLButtonElement>(`button.${styles.mapNeeds}`)?.focus());
       return { text: t("변경사항을 모두 되돌렸어요", "All changes undone") };
@@ -1093,13 +1141,19 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   //   a banner over the list, everything else dimmed. A pick folds the question away (0.26 s), the card's checks spin where they stand (their words kept) and tick in with the
   //   server's answer; the check goes on when the card passes, or asks again. No notice is shown for a pick (the card shows what changed; a screen reader is told), only a refusal stays.
   const stopItem = !done && stop ? view.items.find((item) => item.id === stop.id) ?? null : null;
-  const stopFor = (item: PlanItem) => Boolean(stopItem && stopItem.id === item.id && stopCheck);
+  // ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` Or the check stopped at a line of the plan read as something other than a stop: a card-less question at the line's time (`withAskSlot`) with
+  //   the server's options. Its answer is sent at once; the check goes on from there (the stop put back is drawn and checked in its place).
+  const stopEntry = !done && stop ? askOfStop(sourceView, stop.id) : null;
+  const [askBusy, setAskBusy] = useState<string | null>(null);
+  // 「직접 선택」 · 「이름 그대로 찾기」: once the stop put back is drawn, its change screen opens on the place search with these words — its pick is checked where it stands (`stopFor`).
+  const [askSearch, setAskSearch] = useState<{ itemId: string; query: string; opened: boolean } | null>(null);
+  const stopFor = (item: PlanItem) => Boolean(stopCheck && ((stopItem && stopItem.id === item.id) || askSearch?.itemId === item.id));
   const [stopList, setStopList] = useState<{ id: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; message?: string } | null>(null);
   const [folding, setFolding] = useState(false);
   // `[2026-10-20 사용자 재결정]` The stopped stop the customer asked to take out — asked once in a dialog before it goes.
   const [deleting, setDeleting] = useState<PlanItem | null>(null);
   const [pickedFor, setPickedFor] = useState<string | null>(null);
-  const asking = Boolean(stop && stopItem && !stop.settling);
+  const asking = Boolean(stop && ((stopItem && !stop.settling) || (stopEntry && askBusy !== stopEntry.id)));
   const stopNeed = stopItem ? stopKind(view, stopItem.id) : null;
   const stopMove = stopItem && stopNeed === "arrival" ? incomingMove(view, stopItem.id) : null;
   const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: { start: string; end: string } | null } | null>(null);
@@ -1172,9 +1226,39 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     const sentence = t(`${item.title} 일정을 삭제했어요`, `Deleted ${item.title}`) + " · " + t("다음 일정을 이어서 확인해요", "The check goes on with the next stop");
     setTimeout(() => { setFolding(false); flowSend(item, () => actions.remove!(item.id, { flow: true }), sentence); }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : STOP_FOLD_MS);
   }
+  /** `[2026-10-21 P6]` An option of the interpretation question (or 「직접 선택」 — `option` null): the question folds away, the answer goes; a refusal stays on screen and the question comes back. */
+  function askPick(entry: PlanAsk, option: StopOption | null) {
+    const why = busyReason();
+    if (why) { explain(why); return; }
+    const answer = option ? option.act.type === "interpret" ? { option: option.act.option, search: option.act.search } : null : pickMyselfAnswer(entry);
+    if (!answer || !actions.interpret) return;
+    // Said only to a screen reader (as for a pick in the C안 flow): the server's own words for the option.
+    const sentence = option ? `${option.label} · ${option.effect}` : t(`「${entry.title}」 장소를 직접 골라요`, `Choose the place of “${entry.title}”`);
+    follow.resume();
+    setFolding(true);
+    setTimeout(() => {
+      setFolding(false);
+      setAskBusy(entry.id);
+      changingNow.current = true;
+      setWorking(true);
+      void actions.interpret!(entry.id, answer.option)
+        .then(() => { onSay?.(sentence); if (answer.search) setAskSearch({ itemId: entry.itemId, query: answer.search, opened: false }); },
+          (error: unknown) => setToast({ text: reason(error), stay: true }))
+        .finally(() => { setAskBusy(null); changingNow.current = false; setWorking(false); });
+    }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : STOP_FOLD_MS);
+  }
+  useEffect(() => {
+    if (!askSearch) return;
+    if (askSearch.opened) { if (!change) setAskSearch(null); return; }
+    const item = view.items.find((entry) => entry.id === askSearch.itemId);
+    if (!item) return;
+    setAskSearch({ ...askSearch, opened: true });
+    void startChange(item, { search: true, query: askSearch.query });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- opened once, when the stop put back is drawn
+  }, [askSearch, view.items, change]);
   const stopBanner = useRef<HTMLDivElement>(null);
   const [bannerRoom, setBannerRoom] = useState(0);
-  useLayoutEffect(() => { if (asking && !folding && stopBanner.current) setBannerRoom(stopBanner.current.offsetHeight); }, [asking, folding, stopAsk?.need]);
+  useLayoutEffect(() => { if (asking && !folding && stopBanner.current) setBannerRoom(stopBanner.current.offsetHeight); }, [asking, folding, stopAsk?.need, stopEntry?.id]);
 
   // The checks of the stops that were changed come in once more, one at a time, after the plan has been checked again.
   const replayQueue = useMemo(() => !replay ? [] : replay.ids.flatMap((id) => {
@@ -1496,13 +1580,16 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   };
   const contextFor = (was: Readonly<Record<string, string>>, list: "before" | "after"): RowContext => ({
     done, open: openAt?.list === list ? openAt.id : null, selected, frozen, actions, explain, rechecking: null, changed: new Set(Object.keys(was)), was, removed: removedSet, rowsFor,
-    reveal: done ? undefined : { activeId: readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? null,
+    // `[2026-10-21 P6]` Stopped at a question of the reading: its place is the newest row (the list follows it) and holds the question.
+    reveal: done ? undefined : { activeId: stopEntry ? askStopId(stopEntry.id) : readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? (stopEntry ? askStopId(stopEntry.id) : null),
       ask: stopItem && stopAsk && list === "before" ? <StopQuestion id={stopItem.id} kind={stopNeed ?? "place"} ask={stopAsk} loading={stopLoading}
         failed={!stopMove && stopList?.id === stopItem.id && stopList.state === "failed" ? stopList.message ?? null : null} again={pickedFor === `${stopItem.id}:${stopNeed}`} leaving={folding}
         why={frozen} explain={explain} onPick={(option) => stopPick(stopItem, option)}
         // A late arrival is fixed by the stop's own times: the change screen opens on its 「직접 고치기」.
         onEdit={() => { void startChange(stopItem); if (stopMove) setDetails(true); }}
-        onDelete={stopMove || !actions.remove ? undefined : () => setDeleting(stopItem)} /> : null },
+        onDelete={stopMove || !actions.remove ? undefined : () => setDeleting(stopItem)} />
+        : stopEntry && asking && list === "before" ? <StopQuestion id={askStopId(stopEntry.id)} kind="interpretation" ask={interpretationQuestion(stopEntry)} loading={false} failed={null} again={false}
+          leaving={folding} why={frozen} explain={explain} onPick={(option) => askPick(stopEntry, option)} onEdit={() => askPick(stopEntry, null)} /> : null },
     prefix: list === "after" ? "after-" : "",
     onPick: (id) => pick(id, "list", list),
     onShowStay: (id) => showStay(id, list),
@@ -1550,7 +1637,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   });
   // The plan as it would be with the time being edited (nothing saved): the editor's list is drawn from it, so the gaps move with the fingers.
   const editing = timeEdit.preview && !timeEdit.preview.problem ? timeEdit.preview.changes : [];
-  const listBefore = timeEdit.edit?.list === "before" ? withTimes(view, editing) : readingList.view;
+  const listBefore = withRemovedCards(timeEdit.edit?.list === "before" ? withTimes(view, editing) : stopEntry ? withAskSlot(readingList.view, stopEntry) : readingList.view, removedCards);
   const listAfter = previewView && timeEdit.edit?.list === "after" ? withTimes(previewView, editing) : previewView;
   const contextBefore = contextFor(changed, "before");
   const contextAfter = contextFor({ ...changed, ...(recommended?.was ?? {}) }, "after");
@@ -1688,10 +1775,14 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
                 : countText(view, t)}</p>}
           </header>
           <div ref={bodyBox} className={styles.sheetBody} data-next-preview={(canRecommend || (previewing && side === "before")) && !noFixNow || undefined} data-under-float={done && dayStrip ? true : undefined} {...quietSubmit.handlers} {...follow.handlers} onScroll={follow.handlers.onScroll}>
-            {stopItem && <div ref={stopBanner} className={styles.stopBanner} data-stop-banner data-tone={!asking || folding ? "recheck" : undefined}
+            {(stopItem || stopEntry) && <div ref={stopBanner} className={styles.stopBanner} data-stop-banner data-tone={!asking || folding ? "recheck" : undefined}
               style={!asking || folding ? { minHeight: bannerRoom || undefined } : undefined}>
               <span className={styles.stopMark} aria-hidden="true">{!asking || folding ? "↻" : "!"}</span>
               {!asking || folding ? <div><b>{t("다시 확인하는 중이에요 · 잠시만요", "Checking again · one moment")}</b></div>
+                // `[2026-10-21 P6]` At a question of the reading the customer picks what the line means (「고르면」, not 「고치면」).
+                : stopEntry ? <div><b>{t("이 줄을 어떻게 읽을지 먼저 골라 주세요", "Choose how to read this line first")}</b>
+                  <small>{readingList.waiting.size ? t(`고르면 다음 일정을 이어서 확인해요 · 남은 일정 ${readingList.waiting.size}곳`, `Once chosen the check goes on · ${readingList.waiting.size} stop${readingList.waiting.size > 1 ? "s" : ""} left`)
+                    : t("고르면 확인을 마쳐요", "Once chosen the check is done")}</small></div>
                 : <div><b>{stopAsk?.need === "confirm" ? t("이 일정이 맞는지 먼저 확인해 주세요", "Check this stop first") : t("이 일정을 먼저 고쳐 주세요", "Fix this stop first")}</b>
                   <small>{readingList.waiting.size ? t(`고치면 다음 일정을 이어서 확인해요 · 남은 일정 ${readingList.waiting.size}곳`, `Once it is fixed the check goes on · ${readingList.waiting.size} stop${readingList.waiting.size > 1 ? "s" : ""} left`)
                     : t("고치면 확인을 마쳐요", "Once it is fixed the check is done")}</small></div>}
@@ -1736,7 +1827,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
                 </div>}
                 {peek.side !== 0 && peek.edge && <p className={styles.edgeNote} data-side={peek.side} style={{ top: peek.top + 28 }} aria-hidden="true">{peek.side === 1 ? t("마지막 날이에요", "Last day") : t("첫날이에요", "First day")}</p>}
                 <div ref={zoomBox} className={styles.dayZoom} data-swap={swap ?? undefined} style={zoomStyle} onAnimationEnd={(event) => { if (event.target === event.currentTarget) setSwap(null); }}>
-              <div key={`${proposed ? "after" : "before"}:${String(listDay)}`} className={styles.page} data-stopped={stopItem ? true : undefined} data-slide={slide ?? undefined} data-proposed={proposed ? true : undefined} data-turn={turn ?? undefined}
+              <div key={`${proposed ? "after" : "before"}:${String(listDay)}`} className={styles.page} data-stopped={stopItem || stopEntry ? true : undefined} data-slide={slide ?? undefined} data-proposed={proposed ? true : undefined} data-turn={turn ?? undefined}
                 data-pull={pull.edge ?? undefined} data-shake={shake || undefined} style={{ "--pull": pull.progress } as CSSProperties} onAnimationEnd={(event) => { if (event.target === event.currentTarget) { setTurn(null); setSlide(null); } }}>
                 {proposed && <PreviewHint direction="up" text={t("계속 올리면 변경 전 일정이에요", "Keep going up for the plan as it was")} why={frozen} explain={explain} onPress={() => flip("before")} edge={pull.edge ?? undefined} progress={pull.edge === "start" ? pull.progress : 0} />}
                 {dayList(listDay)}

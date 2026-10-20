@@ -7,7 +7,7 @@ import { proposedTimeOf } from "./risk-candidate-edits";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
 import type { Candidate, CandidateLeg, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
-import type { CheckRow, PlaceInfo, PlanCandidate, PlanCandidateLeg, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
+import type { CheckRow, PlaceInfo, PlanAsk, PlanCandidate, PlanCandidateLeg, PlanCheckView, PlanDay, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
 
 /**
  * The plan-check screen's data from the server's own check (`review`, `wiki/external/rest-endpoints.md` 「확인 화면 검사 …」).
@@ -113,7 +113,33 @@ export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, 
     prefill: prefillNotesOf(intake), risksAvailable: intake.review.risk_schema_version === 1,
     riskMode: intake.review.risk_mode, riskCheckedAt: intake.review.risk_checked_at }, intake.review, "done", infos, filledReasons(intake));
   const unfound = unfoundQuestions(intake);
-  return unfound.size ? { ...view, items: view.items.map((item) => withUnfound(item, unfound.get(item.id))) } : view;
+  const asks = asksOf(intake, view.days);
+  return { ...(unfound.size ? { ...view, items: view.items.map((item) => withUnfound(item, unfound.get(item.id))) } : view), ...(asks.length ? { asks } : {}) };
+}
+
+const clockOf = (value: unknown): string => {
+  const match = typeof value === "string" ? /(\d{1,2}):(\d{2})/.exec(value) : null;
+  return match ? `${match[1].padStart(2, "0")}:${match[2]}` : "";
+};
+
+/**
+ * ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` The questions the first check stops to ask (`interpretations[]`): only those not answered whose stop is still out (the AI's reading is what
+ * the plan holds), each at its line's day and time as the rule read them (`sources[].items`). The words and options are the server's as they are; a question whose stop or options cannot be
+ * read is left out (never made up).
+ */
+export function asksOf(intake: Pick<IntakeView, "interpretations" | "sources">, days: readonly PlanDay[]): PlanAsk[] {
+  return (intake.interpretations ?? []).flatMap((entry) => {
+    if (entry?.kind !== "interpretation" || entry.answer != null || entry.applied !== "reading" || typeof entry.question !== "string" || !entry.question || !Array.isArray(entry.options)) return [];
+    const stop = intake.sources.find((source) => source.source_id === entry.source_id)?.items.find((item) => item.index === entry.index);
+    const options = entry.options.flatMap((option) => option && typeof option.id === "string" && typeof option.label === "string"
+      ? [{ id: option.id, label: option.label, recommended: option.recommended === true, reason: typeof option.reason === "string" ? option.reason : null,
+          effect: typeof option.effect === "string" ? option.effect : null, pickMyself: option.action === "pick_myself", query: typeof option.query === "string" && option.query ? option.query : null }] : []);
+    if (!stop || !options.length) return [];
+    const date = stop.date ?? (typeof stop.fields.date?.value === "string" ? stop.fields.date.value : "");
+    const day = stop.day ?? days.find((entry) => entry.date === date)?.day ?? days[0]?.day ?? 1;
+    const title = typeof stop.fields.title?.value === "string" ? stop.fields.title.value : "";
+    return [{ id: entry.id, itemId: entry.item, day, date, startsAt: clockOf(stop.fields.starts_at?.value), title, question: entry.question, quote: entry.quote ?? "", options }];
+  });
 }
 
 /**
@@ -197,7 +223,10 @@ export function streamingViewOf(intake: IntakeView, stream: StreamState, infos?:
   const streamed = streamedReview(stream);
   const checking = intake.stage === "checking" || streamed.items.length > 0 || streamed.moves.length > 0;
   const stage: PlanStage = intake.stage === "received" ? "received" : checking ? "checking" : "reading";
-  const view = viewOfReview({ ...base, lines }, { items: [...streamed.items].sort(compareItems), moves: streamed.moves }, stage, infos);
+  const drawnView = viewOfReview({ ...base, lines }, { items: [...streamed.items].sort(compareItems), moves: streamed.moves }, stage, infos);
+  // `[2026-10-21 P6]` The questions the intake already holds: the check does not draw past their place while the server works (it asks there once the check is final).
+  const asks = asksOf(intake, drawnView.days);
+  const view = asks.length ? { ...drawnView, asks } : drawnView;
   // ★`[2026-10-03]` The server's own count (`progress` packet) rides on the view as it is; with none (an older server) the bar is worked out from the rows as before.
   const packet = stream.progress;
   return packet ? { ...view, serverProgress: { phase: packet.phase, done: packet.done, total: packet.total, title: packet.current?.title ?? null } } : view;

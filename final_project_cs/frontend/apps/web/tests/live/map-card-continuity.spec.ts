@@ -57,7 +57,8 @@ test("정보 순서·아이콘 세 개·전체 복원은 한 흐름으로 동작
   expect(await api.received("POST", "/edits")).toHaveLength(1);
 });
 
-test("저장 전 삭제만 있어도 전체 되돌리기로 취소하고 복원 API는 부르지 않는다", async ({ page, request }) => {
+// `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` 삭제는 누르자마자 서버에 저장만 한다 — 전체 되돌리기는 같은 길(`removed: false`)로 되살린다(복원 API 아님).
+test("삭제만 있어도 전체 되돌리기로 취소하고, 저장만 해 둔 삭제는 같은 길로 되살린다 — 복원 API는 부르지 않는다", async ({ page, request }) => {
   const api = await openFinished(page, request, undefined, { intakeEvents: "off" });
   await pin(page, "1. 경복궁 관람").dispatchEvent("click");
   await card(page, "경복궁 관람").getByRole("button", { name: "경복궁 관람 삭제", exact: true }).click();
@@ -65,7 +66,10 @@ test("저장 전 삭제만 있어도 전체 되돌리기로 취소하고 복원 
   await page.getByRole("button", { name: "전체 되돌리기", exact: true }).click();
   await expect(card(page, "경복궁 관람")).not.toContainText("삭제 예정");
   expect(await api.received("POST", "/restore")).toHaveLength(0);
-  expect(await api.received("POST", "/edits")).toHaveLength(0);
+  await expect.poll(async () => (await api.received("POST", "/edits")).length).toBe(2);
+  expect((await api.received("POST", "/edits")).map((entry) => entry.body)).toEqual([
+    { revision: 1, edits: [{ source_id: "s1", field: "items[0].removed", value: true }], check: false },
+    { revision: 2, edits: [{ source_id: "s1", field: "items[0].removed", value: false }], check: false }]);
 });
 
 for (const width of [375, 1280]) {
