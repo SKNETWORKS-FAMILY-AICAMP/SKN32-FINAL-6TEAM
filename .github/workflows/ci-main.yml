@@ -2,11 +2,12 @@
 #   develop 관문(ci-develop.yml)이 보는 것에 더해 integration·e2e·security 와 Docker 빌드를 본다.
 #   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 뺀다 — 실제 키가 필요해서 CI 에 두지 않는다.
 #
-# ★언제 도나 `[2026-10-13 사용자 결정]` — **develop · main 에 push 할 때와 develop · main 으로 오는 PR 만.**
-#   role-manager 는 검사하지 않는다(사용자: 「롤매니저는 검사 필요 없어」). 같은 커밋을 role-manager → develop 으로
-#   올리면 develop 에서 1번만 돈다.
+# ★언제 도나 `[2026-10-19 사용자 결정 — 「develop 테스트 너무 많다, 풀 테스트는 main 만」]`
+#   **main 에 push 할 때와 main 으로 오는 PR 만.** develop 은 빠른 관문(ci-develop.yml)만 본다.
+#   role-manager 는 검사하지 않는다(10-13 사용자: 「롤매니저는 검사 필요 없어」).
+#   다른 가지에서 전체를 보고 싶으면 손으로 돌린다(Actions 탭 → CI (main) → Run workflow → 가지 고르기).
 #   ☆이력: 처음(09-24)은 main 에서만. 10-08 통합 커밋이 이유 기록 없이 빠른·전체 관문을 role-manager · develop
-#     모두로 넓혀 같은 커밋에 4번 → 10-12 1차 정리 2번 → 10-13 이 판에서 1번.
+#     모두로 넓혀 같은 커밋에 4번 → 10-12 1차 정리 2번 → 10-13 develop · main 에서 1번 → 10-19 다시 main 만.
 #   ★저장소 맨 위 문서(wiki/ · program/ · 맨 위 *.md)만 바뀐 push 는 건너뛴다 — 파이썬 시험·린트가 읽지 않는 곳이다.
 #     final_project_cs/wiki 는 건너뛰지 않는다(계약 시험이 그 문서를 코드와 대조한다).
 #     PR 에는 이 필터를 걸지 않는다 — 필수 검사가 「대기」로 남아 병합이 막히는 것을 피한다.
@@ -15,13 +16,13 @@ name: CI (main)
 
 on:
   push:
-    branches: [develop, main]
+    branches: [main]
     paths-ignore:
       - "wiki/**"
       - "program/**"
       - "*.md"
   pull_request:
-    branches: [develop, main]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

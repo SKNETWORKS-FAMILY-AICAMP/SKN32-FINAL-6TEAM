@@ -1,4 +1,6 @@
 # ★`[2026-10-13 사용자 결정]` GitHub 검사는 develop · main 에서만 돈다 — role-manager 는 검사하지 않는다(ci-main.yml 과 같다).
+# ★`[2026-10-19 사용자 결정 — 「풀 테스트는 main 만」]` develop 에서는 check(린트 · 타입 · 단위 · 데모 빌드)와 시연 HTML 대조만 돈다.
+#   브라우저 시험(e2e · unconfigured)은 main 에 push · main 으로 오는 PR · 손으로 돌릴 때만 돈다(env FULL).
 name: CI (admin)
 
 on:
@@ -12,6 +14,7 @@ on:
     paths:
       - "final_project_cs/frontend/apps/admin/**"
       - ".github/workflows/ci-admin.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -29,6 +32,8 @@ jobs:
       NEXT_PUBLIC_ADMIN_DATA_MODE: demo
       PLAYWRIGHT_CHANNEL: chromium
       TZ: Asia/Seoul
+      # 브라우저 시험까지 볼 때 — main push · main 으로 오는 PR · 손으로 돌릴 때. develop 은 'false'
+      FULL: ${{ github.ref == 'refs/heads/main' || github.base_ref == 'main' || github.event_name == 'workflow_dispatch' }}
     defaults:
       run:
         working-directory: final_project_cs/frontend/apps/admin
@@ -46,13 +51,16 @@ jobs:
         run: |
           npm run export:html
           git diff --exit-code --stat -- mockups/admin-scenario.html
-      - run: npx playwright install --with-deps chromium
+      - if: env.FULL == 'true'
+        run: npx playwright install --with-deps chromium
       - name: Demo app and offline HTML scenarios
+        if: env.FULL == 'true'
         run: npm run test:e2e
       - name: Reject unconfigured data mode
+        if: env.FULL == 'true'
         run: npm run test:unconfigured
       - name: Upload browser failure evidence
-        if: failure()
+        if: failure() && env.FULL == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: admin-browser-failure-${{ github.run_attempt }}
