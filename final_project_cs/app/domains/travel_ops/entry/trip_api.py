@@ -1296,8 +1296,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                          turnstile_token: str = Form(""),
                          who: tuple[str, UUID] = Depends(_web_customer)):
         """글(붙여 넣은 일정 · 채팅처럼 쓴 계획)과 파일(사진 · PDF · docx · xlsx)을 받는다. 곧바로 접수 id 를 돌려준다.
-        ★`[2026-09-28]` 사람 확인(폼 `turnstile_token`) → 횟수 세기(`intake`) 뒤에 받는다(`web_guard.py`)."""
-        from app.domains.travel_ops.components.intake.pipeline import IntakeRejected, open_intake, process
+        ★`[2026-09-28]` 사람 확인(폼 `turnstile_token`) → 횟수 세기(`intake`) 뒤에 받는다(`web_guard.py`).
+        ★`[2026-10-20 사용자 결정 — ST4F-615]` 응답이 빠른 거름 결과를 말한다(`screened`) — 걸린 접수는 `status: review` 로 답하고 읽기 작업을 걸지 않는다.
+          웹 「직접 입력」은 이 응답을 입력 화면에서 기다려, 걸렸으면 그 화면에 머문다(계약 web-intakes.md 「접수 입구의 빠른 거름」)."""
+        from app.domains.travel_ops.components.intake.pipeline import IntakeRejected, _screened_mark, open_intake, process
 
         tenant, customer = who
         human = _human(turnstile_token, http)
@@ -1306,11 +1308,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn:
                 intake_id = open_intake(conn, tenant_id=tenant, customer_id=customer, text=text, files=blobs)
+                screened = _screened_mark(conn, tenant, intake_id)
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
-        if not text.strip() and not blobs:
-            # ★`[2026-09-30 사용자 결정]` 빈 접수는 읽을 것이 없다 — 뒤에서 읽지 않고 곧바로 확인 화면(`review`)이다
-            return {"intake_id": str(intake_id), "status": "review", "stage": "review", "human_check": human}
+        if screened is not None or (not text.strip() and not blobs):
+            # ★`[2026-09-30 사용자 결정]` 빈 접수는 읽을 것이 없다 — 뒤에서 읽지 않고 곧바로 확인 화면(`review`)이다.
+            #   `[2026-10-19]` 빠른 거름에 걸린 접수(빈 글 · 여행 단서가 없는 글)도 같다 — 읽지 않는다.
+            return {"intake_id": str(intake_id), "status": "review", "stage": "review", "screened": screened, "human_check": human}
         offset = 1 if text.strip() else 0
         chat = _lazy("chat", chat_factory)
         _ctx = _PlaceCtx()
@@ -1322,7 +1326,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             tour=_lazy("place", place_factory),
                             kakao=_kakao_raw,
                             dining=_dining_lookup(_ctx))
-        return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "human_check": human}
+        return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "screened": None, "human_check": human}
 
     @router.get("/v1/web/test-scenarios")
     def web_test_scenarios():

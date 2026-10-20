@@ -17,6 +17,8 @@ const banner = (page: Page) => page.getByRole("status").filter({ hasText: "서�
 const intakeSent = (page: Page) => page.waitForRequest((r) => r.method() === "POST" && new URL(r.url()).pathname.endsWith("/v1/web/trip-intakes"));
 
 async function send(page: Page) {
+  // `[2026-10-20 ST4F-615]` 「직접 입력」은 서버가 받은 뒤에 카드가 묻는다 — 늦게 답하는 시험이 카드에 막히지 않게 켜 둔 고객으로 보낸다
+  await page.addInitScript(() => localStorage.setItem("triPilot.guardianDefault.v1", "on"));
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await checkPlan(page);
@@ -36,7 +38,7 @@ test("서버가 답을 안 주고 10초가 넘으면 맨 위에 안내가 뜨고
   await server.scenario({ intakeDelay: 8_000, readingPolls: 0 });
   const sent = intakeSent(page);
   await send(page);
-  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await expect(page).toHaveURL(/\/trips\/new$/);                                                     // ST4F-615: 입력 화면에서 기다린다
   await sent;
   await page.clock.fastForward(5_000);
   await page.waitForTimeout(300);
@@ -61,7 +63,7 @@ test("30초가 넘으면 더 강한 문장으로 바뀌고, 닫기를 누르면 
   await server.scenario({ intakeDelay: 10_000, readingPolls: 0 });
   const sent = intakeSent(page);
   await send(page);
-  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await expect(page).toHaveURL(/\/trips\/new$/);                                                     // ST4F-615: 입력 화면에서 기다린다
   await sent;                                                                                          // 늦은 호출이 나간 뒤에 건너뛴다
   await page.clock.fastForward(11_000);
   await expect(banner(page)).toBeVisible({ timeout: 5_000 });

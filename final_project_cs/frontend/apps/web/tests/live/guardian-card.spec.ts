@@ -11,7 +11,7 @@ const card = (page: Page) => page.getByRole("dialog");
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-test("「계획 확인하기」를 누르면 읽기 전에 항로 지킴이 카드가 열리고, 초점은 단추가 아니라 제목에 있고, 서버로는 아직 아무것도 가지 않는다", async ({ page, request }) => {
+test("「계획 확인하기」를 누르면 서버가 계획을 받은 뒤(빠른 거름 통과 — ST4F-615) 진행 화면으로 넘어가기 전에 항로 지킴이 카드가 열리고, 초점은 단추가 아니라 제목에 있다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
   await openRegistration(page);
@@ -33,12 +33,14 @@ test("「계획 확인하기」를 누르면 읽기 전에 항로 지킴이 카�
   expect(off!.height).toBeGreaterThanOrEqual(44);
   expect(Math.abs(on!.width - off!.width)).toBeLessThanOrEqual(1);
   expect(Math.abs(on!.height - off!.height)).toBeLessThanOrEqual(1);
-  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+  // `[2026-10-20 ST4F-615]` 접수는 한 번 나갔고(서버의 빠른 거름을 기다린 뒤 카드가 묻는다) 화면은 아직 넘어가지 않았다
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(1);
+  await expect(page).toHaveURL(/\/trips\/new$/);
   // 뒤의 화면은 닿지 않는다
   expect(await page.locator("form").first().evaluate((element) => Boolean(element.closest("[inert]")))).toBe(true);
 });
 
-test("Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. Tab 은 카드 안에서만 돈다", async ({ page, request }) => {
+test("Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지지 않고, 초점이 「계획 확인하기」로 돌아온다. 같은 글을 다시 눌러도 접수는 한 번뿐이다. Tab 은 카드 안에서만 돈다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
   await openRegistration(page);
@@ -58,7 +60,8 @@ test("Esc · 닫기 단추 · 바깥을 눌러 닫으면 아무것도 정해지�
     await expect(card(page)).toHaveCount(0);
     await expect(send(page)).toBeFocused();
   }
-  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+  // `[2026-10-20 ST4F-615]` 처음 누를 때 한 번 받았고(빠른 거름 통과), 같은 글을 다시 눌러도 다시 보내지 않는다
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(1);
   // 머리줄 아이콘은 정하기 전에는 없다
   await expect(page.getByRole("button", { name: /항로 지킴이 (끄기|켜기)/ })).toHaveCount(0);
   // Tab 을 여러 번 눌러도 카드 밖으로 나가지 않는다
@@ -195,12 +198,12 @@ test("영어 화면에서도 아이콘 이름 · 되돌리기 줄이 영어로 �
   await expect(page.getByRole("button", { name: "Turn Course Keeper on" })).toBeVisible();
 });
 
-test('시작 화면의 항로 지킴이 안내와 되돌리기가 접수 주소 교체 뒤에도 남는다',async({page})=>{
+test('파일 칸: 시작 화면의 항로 지킴이 안내와 되돌리기가 접수 주소 교체 뒤에도 남는다(「직접 입력」은 ST4F-615 부터 진행 화면을 거치지 않는다)',async({page})=>{
  await page.addInitScript(()=>localStorage.setItem('tripilot.web.settings.v1',JSON.stringify({language:'en'})));
  let release!:()=>void;const held=new Promise<void>(r=>release=r);
  await page.route('**/v1/web/trip-intakes',async route=>{if(route.request().method()!=='POST')return route.continue();const response=await route.fetch();await held;await route.fulfill({response});});
  try{
- await start(page);await openRegistration(page);await page.getByLabel('Your travel plan').fill('10/1 09:00 경복궁 관람');
+ await start(page);await openRegistration(page);await page.locator('#plan-files').setInputFiles({name:'plan.txt',mimeType:'text/plain',buffer:Buffer.from('10/1 09:00 경복궁 관람')});
  await page.getByRole('button',{name:'Check my plan'}).click();await page.getByRole('dialog').getByRole('button',{name:'Turn on and go on'}).click();
  await expect(page).toHaveURL(/intakes\/starting/);
  await page.getByRole('button',{name:'Turn Course Keeper off'}).click();

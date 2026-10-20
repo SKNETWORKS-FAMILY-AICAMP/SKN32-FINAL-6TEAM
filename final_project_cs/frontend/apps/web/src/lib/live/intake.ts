@@ -149,8 +149,14 @@ export interface IntakePlanInput { start_date: string; days: number; party_size:
 
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
+/**
+ * `[2026-10-20 사용자 결정 — ST4F-615]` What the door said: `screened` is the quick screen's word (an empty text or one with no travel clue) — such an intake
+ * is not read (`status: review`). `null` (or absent, an older server): taken, the reading has begun.
+ */
+export interface IntakeTaken { intake_id: string; status?: string; screened?: { code: string; rule?: string } | null }
+
 /** `humanToken` — the Turnstile token when the human check is on; the server checks it with Cloudflare. */
-export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<{ intake_id: string }> {
+export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<IntakeTaken> {
   const form = new FormData();
   form.append("text", text);
   for (const file of files) form.append("files", file, file.name);

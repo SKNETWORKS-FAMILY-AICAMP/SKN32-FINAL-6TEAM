@@ -5,16 +5,18 @@ const PLAN = "10/1 09:00 경복궁 관람\n12:00 광장시장 점심";
 const screen = '[data-replay]';
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-test("전송 요청 전에 클라이언트 진행 화면이 보이고, 첫 조회를 기다리는 동안에도 SSE는 먼저 연결된다", async ({ page, request }) => {
+test("「직접 입력」은 입력 화면에서 보내고(ST4F-615 — 진행 화면은 서버가 받은 뒤), 첫 조회를 기다리는 동안에도 SSE는 먼저 연결된다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ intakeDelay: 1200, readingPolls: 3, intakeEvents: "on", review: "on", board: "rich" });
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
-  let screenBeforeSending = false;
+  let screenBeforeSending: boolean | null = null;
+  let sendingFromEntry = false;
   await page.route("**/v1/web/trip-intakes", async (route) => {
     if (route.request().method() === "POST") {
       screenBeforeSending = await page.locator(screen).isVisible();
+      sendingFromEntry = await page.getByLabel("나의 여행 계획").isDisabled();
       if (process.env.LOADING_SHOTS) await page.screenshot({ path: `${process.env.LOADING_SHOTS}/01-before-send.png`, fullPage: true });
     }
     await route.continue();
@@ -25,7 +27,9 @@ test("전송 요청 전에 클라이언트 진행 화면이 보이고, 첫 조�
   });
   await checkPlan(page);
   await expect(page.locator(screen)).toBeVisible();
-  await expect.poll(() => screenBeforeSending).toBe(true);
+  // `[2026-10-20 ST4F-615]` 보낼 때는 아직 입력 화면이다(입력칸이 잠긴 채) — 진행 화면은 서버가 받은 뒤에 나온다
+  await expect.poll(() => screenBeforeSending).toBe(false);
+  expect(sendingFromEntry).toBe(true);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/);
   await expect.poll(async () => (await server.received("GET", "/events")).length).toBeGreaterThan(0);
   await expect(page.locator(screen)).toBeVisible();

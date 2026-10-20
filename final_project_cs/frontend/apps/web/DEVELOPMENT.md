@@ -821,3 +821,15 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **등록한 여행**: 서버가 꺼진 동안 여행 조회에 `guardian` 을 싣지 않아 메뉴 서랍 아이콘 · 카드 · 알림 링크 `?guardian=on` 이 저절로 없다(코드 변경 없음). 화면을 연 사이 운영자가 끄면 누른 것이 409 `guardian_disabled` → 여행을 다시 읽어 아이콘을 거두고 「지금은 항로 지킴이를 쓸 수 없어요.」(새로 지은 문구 · 영어 「Course Keeper is not available right now.」) — 「다시 시도하기」는 붙이지 않는다(`trip-guardian.tsx`).
 - mock 서버(`stub-server.mjs`): 시나리오 `features` — `off`(옛 서버 404, 기본) · `on` · `guardian_off`(서버처럼 여행 조회에 `guardian` 없음 · `POST …/guardian` 409).
 - 시험: 단위 `lib/live/features.test.ts`(새) · `criteria-store.test.ts`(꺼졌을 때 둘) — 웹 단위 전체 945/945 · 타입 0 · 린트(바뀐 파일) 0. 브라우저 시험(mock 서버) 새 `tests/live/guardian-switch.spec.ts` 6개 포함 5파일 46/46. 로컬 실서버 화면(API 8080 · 웹 3140 · 시험 DB): 켜짐이면 카드, 끄면 카드 없이 곧장 진행 · 머리 아이콘 없음 · 등록 설문에 `on_disruption` 없음(`survey_answered` = pace), 등록한 여행의 메뉴 서랍 아이콘 없음, 다시 켜면 돌아옴. 관리 콘솔 화면 눈 확인 · 실서버(배포) 확인은 아직.
+
+## 2026-10-20 — 「직접 입력」은 입력 화면에서 빠른 거름을 기다린 뒤 넘어간다 (ST4F-615)
+
+`[2026-10-20 사용자 결정]` 서버의 「빠른 거름」(2026-10-19 — 빈 글 · 여행 단서가 없는 글은 모델 읽기 전에 돌려보냄)을 그대로 쓴다. 지금까지는 「계획 확인하기」를 누르면 곧바로 진행 화면으로 넘어갔다가 걸리면 등록 화면으로 돌아왔다. 이제 「직접 입력」은 **누른 화면에서 서버의 판단을 기다린 뒤** 다음으로 간다(새 모델 판정 API 는 만들지 않았다 — 앞서의 변경안은 이 결정으로 대신했다). 계약 [web-intakes.md 「접수 입구의 빠른 거름」](../../../wiki/external/rest-endpoints/web-intakes.md) · 기록 [작업 기록](../../../wiki/records/reports/2026-10-20_0340_계획입력_사전확인_변경안_ST4F-615.md).
+- **서버**(`entry/trip_api.py`): 접수 응답에 `screened` — 걸렸으면 `{code, rule}` · `status: review` 이고 읽기 작업을 걸지 않는다, 아니면 `null` · `status: reading`. 전에는 걸린 접수도 `status: reading` 으로 답했다.
+- **계획 담기**(`trip-registration.tsx` `sendText`): 「직접 입력」이면 이 화면이 직접 보낸다(`submitIntake`). 기다리는 동안 입력칸 · 예시 · 시험 계획을 잠그고 입력칸 아래에 「계획을 서버로 보내는 중이에요…」(비행기가 점선을 따라 미끄러짐 — 설정의 「애니메이션 건너뛰기」 · 기기의 동작 줄이기면 멈춘다, 4초가 넘으면 「서버가 답하는 데 시간이 걸리고 있어요 · 조금만 기다려 주세요…」 — 옛 진행 화면의 문장 그대로)를 보인다. 「계획 확인하기」 단추는 끄지 않고(`aria-disabled` · `aria-busy`) 누름만 막는다 — 항로 지킴이 카드가 닫힐 때 초점을 돌려줄 수 있게.
+  - 걸리면(`screened`): 화면에 머물러 입력칸 아래에 「일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.」(확인 화면이 빈 접수를 돌려보낼 때의 문장 그대로) · 잠금을 풀고 입력칸에 초점.
+  - 받으면: 항로 지킴이 카드(켜짐 · 아직 안 정함일 때) → 그 접수의 확인 화면 `/intakes/{id}`(옛 `/intakes/starting` 을 거치지 않는다 — 접수 번호를 이미 안다). 카드를 그냥 닫았다가 같은 글로 다시 누르면 접수를 다시 보내지 않는다.
+  - 거절 · 연결 실패: 화면에 머물러 그 문장(손님 한도면 「계정으로 계속하기」). 기다리는 중에 화면을 떠나면 요청을 멈춰 늦은 답이 화면을 끌고 가지 않는다.
+- 파일 칸 · 「계획 짜 주기」는 그대로 곧바로 진행 화면이다(파일은 거르지 않는다).
+- mock 서버(`stub-server.mjs`): 시나리오 `screen` — `pass`(기본, `screened: null`) · `off_topic`(서버처럼 `status: review` + `screened`). 접수 응답에 `screened` 칸.
+- 바꾼 시험(옛 「곧바로 진행 화면」을 보던 것): `intake-start.spec.ts`(「직접 입력」은 입력 화면에서 기다림 · 걸림 · 거절 · 떠나기 · 새로고침 · 첫 방문 · 늦음, 파일 칸은 옛 흐름 그대로 셋) · `guardian-card.spec.ts`(카드는 서버가 받은 뒤 — 접수 1회) · `loading-handoff.spec.ts`(보낼 때는 입력 화면) · `server-slow.spec.ts`(입력 화면에서 기다림).

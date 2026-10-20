@@ -62,7 +62,8 @@ for (const features of ["off", "on"] as const) {
     await page.getByLabel("나의 여행 계획").fill(PLAN);
     await send(page).click();
     await expect(card(page)).toBeVisible();
-    expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+    // `[2026-10-20 ST4F-615]` 「직접 입력」은 서버가 받은 뒤(빠른 거름 통과)에 카드가 묻는다 — 접수 한 번
+    expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(1);
   });
 }
 

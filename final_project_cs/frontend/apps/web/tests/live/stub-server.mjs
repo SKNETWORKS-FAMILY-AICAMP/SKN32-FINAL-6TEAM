@@ -59,6 +59,8 @@ const DEFAULTS = {
   guardian: "absent",
   // the answer to `POST …/guardian`: "ok" | "fail" (500: nothing changes)
   guardianSave: "ok",
+  // `[2026-10-20 ST4F-615]` the quick screen at the door of `POST /v1/web/trip-intakes`: "pass" (`screened: null`, read as before) | "off_topic" (`status: review` + `screened` — the plan screen stays)
+  screen: "pass",
   // `[2026-10-19 ST4F-613]` the operator's switches, read without a session (`GET /v1/web/features`): "off" (an older server: 404 — the Course Keeper shows as before)
   //   | "on" (`{guardian: true}`) | "guardian_off" (`{guardian: false}` — and, as the server does then, the trip view has no `guardian` and `POST …/guardian` answers 409 guardian_disabled)
   features: "off",
@@ -1254,8 +1256,10 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (request.method === "POST" && path === "/v1/web/trip-intakes") {
     if (scenario.intakeDelay) await new Promise((resolve) => setTimeout(resolve, scenario.intakeDelay));
     if (scenario.intakeRefusal) return json(response, 422, { error: { code: "intake_refused", message: scenario.intakeRefusal } }, origin);
+    // `[2026-10-20 ST4F-615]` the quick screen at the door (server `intake/screen.py`): as the server answers a text with no travel clue — `status: review` with `screened`, nothing is read
+    if (scenario.screen === "off_topic") return json(response, 202, { intake_id: INTAKE_ID, status: "review", stage: "review", screened: { code: "off_topic", rule: "no_travel_clue" } }, origin);
     polls = 0; confirmed = false; board = freshBoard(scenario.board);
-    return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin);
+    return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received", screened: null }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/survey` && request.method === "POST") {
     if (scenario.surveySave === "fail") return json(response, 500, { error: { code: "internal_error", message: "저장하지 못했어요" } }, origin);
