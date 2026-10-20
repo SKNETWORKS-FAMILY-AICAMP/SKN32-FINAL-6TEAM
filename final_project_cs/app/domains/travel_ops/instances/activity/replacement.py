@@ -328,7 +328,9 @@ class ReplacementMixin:
             return None
         # ★`[2026-10-13 사용자 결정 A안]` 화면에 보일 3곳만 넘긴다 — 어떤 3곳이 보이는지는 코드가 정하고 LLM 은 그 순서만 정한다.
         pool = [a for a in alt["alternatives"] if a.get("revalidated")]
-        preference = alternative_order.preference_inputs(survey, task.input_text)
+        # ★`[2026-10-19]` 감시 Case 의 제목(시스템 문구)은 고객 문장이 아니다 — `customer_words` 가 고객이 쓴 말만 고른다
+        preference = alternative_order.preference_inputs(
+            survey, alternative_order.customer_words(task.input_text, task.context.current_state))
         if len(pool) < 2 or preference is None:
             return None
         budget = getattr(self, "judge_budget", None)

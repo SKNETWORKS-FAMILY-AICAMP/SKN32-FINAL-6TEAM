@@ -22,6 +22,9 @@
 """
 from __future__ import annotations
 
+import json
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from .alternatives import SHOW
@@ -34,7 +37,29 @@ MAX_CANDIDATES = SHOW
 #: 고객에게 보이는 이유의 최대 길이
 REASON_MAX = 120
 #: 설문에서 넘기는 칸 — 취향과 관계없는 칸(이동 수단 · 내국인 여부 · 일정 밀도 등)은 넘기지 않는다
-SURVEY_FIELDS = ("theme", "party", "priority", "indoor_outdoor", "theme_details", "custom_answers")
+#: ★`[2026-10-20 사용자 결정]` 우선순위(`priority` — 음식 · 활동 · 이동 중 무엇을 먼저)도 뺀다. 취향이 아니라 **후보를 뽑는 범위**다
+#:   (`alternatives.preference_from_survey`, 계획서 1-1). 감시 경로 실측(20261019T144241Z)에서 우선순위만 받은 사례 4/99 가
+#:   `mobility` 를 「이동 편의」 취향으로 읽고 순서를 바꿨다. 세부 취향(`priority_details.activity`)은 그대로 넘긴다.
+SURVEY_FIELDS = ("theme", "party", "indoor_outdoor", "theme_details", "custom_answers")
+
+
+#: 감시 루프가 연 Case 의 `trigger_source` — `trip_watch_cases` 가 `open_case(trigger_source="schedule")` 로 연다
+WATCH_TRIGGER = "schedule"
+
+
+def customer_words(input_text: str | None, state: dict[str, Any] | None) -> str | None:
+    """고객이 실제로 쓴 말만. `[2026-10-19]`
+
+    ★감시 루프가 연 Case 의 `input_text` 는 Case 제목(`[감시] 경복궁 — closure` 같은 시스템 문구)이다. 전에는 그것을
+      고객 문장으로 넘겨 ①설문이 비어도 취향 단서가 있는 것처럼 LLM 을 불렀고 ②모델이 시스템 문구를 취향으로 읽을 수 있었다.
+      감시 Case 는 고객이 답한 말(`customer_input`)만 쓰고, 없으면 고객 문장 없음이다.
+    ★고객이 연 Case 는 그대로 — `input_text` 가 고객 말이다(답이 있으면 코어가 「원래 요청 + 추가 답변」으로 합친다).
+    """
+    state = state or {}
+    if state.get("trigger_source") == WATCH_TRIGGER:
+        reply = state.get("customer_input")
+        return reply if isinstance(reply, str) else None
+    return input_text
 
 
 def preference_inputs(survey: dict[str, Any] | None, customer_text: str | None) -> dict[str, Any] | None:
@@ -53,11 +78,40 @@ def preference_inputs(survey: dict[str, Any] | None, customer_text: str | None) 
     return {"survey": picked, "customer_text": text or None}
 
 
-def candidate_rows(candidates: list[dict[str, Any]], classes: dict[str, str] | None = None) -> list[dict[str, Any]]:
-    """모델에게 보낼 후보 — 이름 · 코드가 잰 이유 · 거리 · 관광공사 분류만. 좌표 · 주소 원문은 보내지 않는다."""
-    return [{"id": str(c.get("contentid")), "title": c.get("title"), "code_reason": c.get("reason"),
-             "distance_km": c.get("distance_km"), "class": (classes or {}).get(str(c.get("contentid")))}
-            for c in candidates[:MAX_CANDIDATES]]
+#: 관광공사 분류 코드 → 이름(대 > 중 > 소). `[2026-10-20]` TourAPI `lclsSystmCode2` 를 한 번 받아 둔 것(ⓒ한국관광공사).
+CLASS_NAMES_FILE = Path(__file__).with_name("kto_class_names.json")
+
+
+@lru_cache(maxsize=1)
+def _class_names() -> dict[str, str]:
+    return json.loads(CLASS_NAMES_FILE.read_text(encoding="utf-8"))["names"]
+
+
+def class_path(code: str | None) -> str | None:
+    """`HS010100` → 「역사관광 > 역사유적지 > 고궁」. 모르는 코드는 아는 단계까지, 하나도 모르면 `None`."""
+    if not code:
+        return None
+    names = _class_names()
+    parts = [names[c] for c in (code[:2], code[:4], code) if c in names]
+    return " > ".join(dict.fromkeys(parts)) or None
+
+
+def candidate_rows(candidates: list[dict[str, Any]], classes: dict[str, str] | None = None, *,
+                   with_class_name: bool = False) -> list[dict[str, Any]]:
+    """모델에게 보낼 후보 — 이름 · 코드가 잰 이유 · 거리 · 관광공사 분류만. 좌표 · 주소 원문은 보내지 않는다.
+
+    ★`[2026-10-20 실험 E1]` `with_class_name` 이면 분류 이름(`class_name`)도 싣는다 — 코드만 주면 모델이 뜻을 짐작해
+      팔각정(랜드마크 · 건물)을 궁궐로, 봉수대 터(역사)를 자연으로 읽었다. 프롬프트 v3 와 함께 켠다(운영은 아직 끔).
+    """
+    rows = []
+    for c in candidates[:MAX_CANDIDATES]:
+        code = (classes or {}).get(str(c.get("contentid")))
+        row = {"id": str(c.get("contentid")), "title": c.get("title"), "code_reason": c.get("reason"),
+               "distance_km": c.get("distance_km"), "class": code}
+        if with_class_name:
+            row["class_name"] = class_path(code)
+        rows.append(row)
+    return rows
 
 
 def schema() -> dict[str, Any]:
@@ -74,9 +128,9 @@ def schema() -> dict[str, Any]:
 
 
 def payload(origin_title: str | None, candidates: list[dict[str, Any]], preference: dict[str, Any],
-            classes: dict[str, str] | None = None) -> dict[str, Any]:
-    return {"kind": KIND, "origin": origin_title, "candidates": candidate_rows(candidates, classes),
-            "preference": preference}
+            classes: dict[str, str] | None = None, *, with_class_name: bool = False) -> dict[str, Any]:
+    return {"kind": KIND, "origin": origin_title,
+            "candidates": candidate_rows(candidates, classes, with_class_name=with_class_name), "preference": preference}
 
 
 def apply(candidates: list[dict[str, Any]], output: Any) -> tuple[list[dict[str, Any]], dict[str, Any]] | None:
