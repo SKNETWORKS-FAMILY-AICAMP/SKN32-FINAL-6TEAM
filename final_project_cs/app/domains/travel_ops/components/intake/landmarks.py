@@ -54,8 +54,12 @@ class Hours:
     seasons: tuple[dict[str, Any], ...] = ()
     always_open: bool = False
     varies: str | None = None
-    conditions: tuple[str, ...] = ()            # 방문 전에 알아야 할 조건(후원 예약 · 비 오면 잠김) — 휴무 줄에 「확인해 주세요」로 보인다
+    conditions: tuple[str, ...] = ()            # 정말 휴무 · 입장 제한이 될 수 있는 조건(비 오면 잠김) — 휴무 줄이 「확인해 주세요」(warn)가 된다
     notes: tuple[str, ...] = ()                 # 출처끼리의 차이 같은 기록 — 화면 조건으로 띄우지 않는다
+    #: 방문 안내(부속 시설 따로 예약 같은 것) — 휴무 판정에 넣지 않고 휴무 줄 뒤에 안내로만 붙는다. `[2026-10-20]`
+    #  ☆창덕궁의 「후원은 따로 예약」이 `conditions` 에 있어 창덕궁 전체가 「확인해 주세요」 · 대체 후보 `fits: false` 가 되어
+    #  같은 종류(궁궐)인데도 공원 · 둘레길 뒤로 밀렸다(2026-10-19 알려진 시험 실패 조사 「결함 B」).
+    tips: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -91,7 +95,7 @@ class Table:
                 Hours(str(hours.get("source") or ""), str(hours.get("checked") or ""), dict(hours.get("week") or {}),
                       tuple(str(d) for d in hours.get("closed") or ()), tuple(dict(s) for s in hours.get("seasons") or ()),
                       bool(hours.get("always_open")), hours.get("varies"), tuple(str(c) for c in hours.get("conditions") or ()),
-                      tuple(str(n) for n in hours.get("notes") or ()))
+                      tuple(str(n) for n in hours.get("notes") or ()), tuple(str(t) for t in hours.get("tips") or ()))
                 if isinstance(hours, dict) else None)
             for alias in [landmark.name, *(entry.get("aliases") or [])]:
                 by_alias.setdefault(normalize_full(str(alias)), landmark)

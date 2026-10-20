@@ -49,10 +49,10 @@ def hotels(rv):  # noqa: F811
     yield rv
 
 
-def _plan(name, tour=None):
+def _plan(name, tour=None, plan=PLAN):
     client, _tour, kakao = _client(tour=tour or _NoTour())
     headers = _key(client)
-    return _send(client, headers, PLAN.format(name=name)), _tour, kakao
+    return _send(client, headers, plan.format(name=name)), _tour, kakao
 
 
 def test_a_hotel_written_with_other_spacing_is_found_in_our_list(hotels):
@@ -63,7 +63,8 @@ def test_a_hotel_written_with_other_spacing_is_found_in_our_list(hotels):
 
 
 def test_a_bracketed_alias_in_the_list_title_is_the_same_name(hotels):
-    view, _tour, _kakao = _plan("시험 기념관")
+    # ★`[2026-10-20]` 「체크인」 줄이면 숙소 자료에서만 찾는다(2026-10-19 장소 종류 먼저 판정) — 기념관은 관람 줄로 둔다
+    view, _tour, _kakao = _plan("시험 기념관", plan="2030-11-06\n15:00 {name}\n17:00 경복궁")
     spot = next(i for i in view["review"]["items"] if "기념관" in i["title"])
     assert spot["place_state"] == "found" and spot["place"]["name"] == "시험기념관(별칭)", spot      # 괄호 병기와 띄어쓰기를 무시하고 같은 이름
 

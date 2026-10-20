@@ -352,6 +352,9 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
         if facts.conditions:
             closed = _line("closed", "warn" if closed["result"] != "bad" else "bad",
                            "휴무·운영 조건을 확인해 주세요 (" + "; ".join(facts.conditions) + ")")
+    # ★방문 안내(대표 장소 표의 `tips`)는 결과를 바꾸지 않고 말만 붙인다 — 「후원은 따로 예약」이 창덕궁 전체를 「확인해 주세요」로 만들지 않게. `[2026-10-20]`
+    if facts.tips:
+        closed = _line("closed", closed["result"], closed["text"] + " · " + "; ".join(facts.tips))
     # 운영시간
     if today == "closed" or "closed_day" in codes:
         if act.get("closed") is True and act.get("closure_reason") == "live_status":

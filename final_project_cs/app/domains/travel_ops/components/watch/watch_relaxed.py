@@ -198,12 +198,15 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
 
 
 def try_offer(connect: Callable[[], Any], *, store: Any, trip_id: UUID, item_id: UUID, causes: list[dict[str, Any]],
-              check: Callable[..., dict[str, Any]] | None = None, recheck_failed: bool = False) -> dict[str, Any] | None:
-    """`offer_relaxed` 를 **자기 트랜잭션**으로 — 감시 반복이 쓴다. ★확인 실패는 `source_failed` — 대안 부재로 오안내하지 않고 기존 확인 지연 경로로 전달한다."""
+              check: Callable[..., dict[str, Any]] | None = None, recheck_failed: bool = False,
+              now: datetime | None = None) -> dict[str, Any] | None:
+    """`offer_relaxed` 를 **자기 트랜잭션**으로 — 감시 반복이 쓴다. ★확인 실패는 `source_failed` — 대안 부재로 오안내하지 않고 기존 확인 지연 경로로 전달한다.
+
+    ★`[2026-10-20]` `now` 는 감시의 시계(`clock()`)를 넘긴다 — 안 넘기면 「이미 끝난 일정」 판정이 벽시계를 써서 재생 · 시뮬레이션 · 시험 시계에서 늘 빠졌다."""
     try:
         with connect() as conn, conn.transaction():
             return offer_relaxed(conn, store=store, trip_id=trip_id, item_id=item_id, causes=causes, check=check,
-                                 recheck_failed=recheck_failed)
+                                 recheck_failed=recheck_failed, now=now)
     except VerificationUnavailable as exc:
         return {"status": "source_failed", "failed_categories": exc.categories, "options": []}
     except Exception as exc:                           # noqa: BLE001

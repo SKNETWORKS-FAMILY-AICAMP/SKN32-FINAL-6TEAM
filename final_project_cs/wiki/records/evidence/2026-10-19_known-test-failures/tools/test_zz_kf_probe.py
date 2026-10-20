@@ -21,7 +21,7 @@ from tests.e2e.test_decision_unit_web import decided  # noqa: E402,F401
 from tests.e2e.test_web_api import api, _fresh_limit_cache  # noqa: E402,F401
 
 
-def test_probe_named_destination_at_trip_time(decided):
+def test_probe_named_destination_at_trip_time(decided):  # noqa: F811 — 픽스처를 인자로 받는다
     from tests.e2e import test_decision_destination_condition_web as dest
 
     dest._answer_with(decided, destination_text="통인시장")
@@ -47,7 +47,7 @@ def test_probe_named_hotel_ready():
                         for i in review["items"]])
 
 
-def test_probe_same_kind_first(park_world):
+def test_probe_same_kind_first(park_world):  # noqa: F811 — 픽스처를 인자로 받는다
     tiers._row(park_world, "960006", "12", "창덕궁", 37.5794, 126.9910, "HS", "HS01", "HS010100")
     review, item = tiers._palace_review()
     got = tiers._alternatives(park_world, review, item)

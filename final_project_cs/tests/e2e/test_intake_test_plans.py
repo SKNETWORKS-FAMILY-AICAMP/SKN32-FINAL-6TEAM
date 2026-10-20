@@ -32,7 +32,8 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     assert ordinary["test_scenario"] is None
 
 
-@pytest.mark.parametrize("text,code", (("test51", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
+# ★`[2026-10-20]` 「없는 코드」 예는 시험 계획 수(`TOTAL`)보다 한참 큰 번호로 — test51 이 실제로 생겨 202 로 받아졌다
+@pytest.mark.parametrize("text,code", (("test99", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
 def test_rejected_code_does_not_create_empty_intake(rv, text, code):
     client, _, _ = _client()
     headers = _key(client)

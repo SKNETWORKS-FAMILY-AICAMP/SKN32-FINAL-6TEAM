@@ -602,7 +602,8 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
 
 def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: ItineraryChange,
                  report: dict[str, Any] | None = None,
-                 check: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
+                 check: Callable[..., dict[str, Any]] | None = None,
+                 now: datetime | None = None) -> dict[str, Any]:
     """★바꾸는 **한 문**(감시 · 새벽 확인) — 판정(`decide`)을 거쳐 새 버전을 쓰거나, 묻는다.
 
     돌려주는 `status`:
@@ -648,7 +649,7 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
             try:
                 with conn.transaction():
                     offered = offer_relaxed(conn, store=store, trip_id=trip_id, item_id=item_id, causes=plan.causes,
-                                            check=check, recheck_failed=True)
+                                            check=check, recheck_failed=True, now=now)
             except Exception:                                # noqa: BLE001
                 offered = None
         if offered is not None:

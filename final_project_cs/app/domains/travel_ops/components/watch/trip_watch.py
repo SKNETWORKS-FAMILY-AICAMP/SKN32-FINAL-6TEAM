@@ -191,7 +191,8 @@ class TripWatcher:
                 from app.domains.travel_ops.components.watch.watch_relaxed import try_offer
 
                 offered = try_offer(self._connect, store=self.store, trip_id=trip_id, item_id=item.item_id,
-                                    causes=list((plan.detail or {}).get("causes") or []), check=self.check)
+                                    causes=list((plan.detail or {}).get("causes") or []), check=self.check,
+                                    now=self.clock())
                 if offered is not None:
                     if not offered.get("already"):
                         result.asked.append({"trip_id": str(trip_id), "item": item.title, "proposal_id": offered["proposal_id"],
@@ -209,7 +210,7 @@ class TripWatcher:
         #   한 곳에 있다 — 새벽 확인(`dawn_check`)도 같은 문을 쓴다(2026-09-25).
         with self._connect() as conn, conn.transaction():
             outcome = apply_or_ask(conn, store=self.store, trip_id=trip_id, item_id=item.item_id,
-                                   plan=plan, report=report, check=self.check)
+                                   plan=plan, report=report, check=self.check, now=self.clock())
         if outcome["status"] == "asked" and not outcome.get("already"):
             result.asked.append({"trip_id": str(trip_id), "item": outcome["item"],
                                  "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],

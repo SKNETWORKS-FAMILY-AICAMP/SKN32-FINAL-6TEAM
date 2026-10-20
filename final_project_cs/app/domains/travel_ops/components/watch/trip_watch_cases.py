@@ -434,7 +434,7 @@ class TripWatchCaseOpener:
 
         with candidate_diagnostics.scope(case_id=str(case_id)):
             offered = try_offer(self._connect, store=self.store, trip_id=trip_id, item_id=item.item_id, causes=causes,
-                                check=self.check, recheck_failed=recheck_failed)
+                                check=self.check, recheck_failed=recheck_failed, now=self.clock())
         if offered is None:
             return False
         if offered.get("status") == "source_failed":

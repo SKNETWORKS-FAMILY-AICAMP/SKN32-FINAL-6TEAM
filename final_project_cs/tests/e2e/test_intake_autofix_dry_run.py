@@ -30,6 +30,11 @@ def _counts(intake_id) -> tuple[int, int, int]:
         return claims, reviews, cur.fetchone()[0]
 
 
+def _without_risk(part):
+    """`[2026-10-20]` 같은 판을 두 번 읽었는지 견줄 때 위험 확인(항목의 `risk` · 화면의 `risk_checked_at`)은 뺀다 — 확인 시각이 읽을 때마다 지금이다(`intake/risks.py`, 알려진 시험 실패 조사)."""
+    return [{k: v for k, v in i.items() if k != "risk"} for i in part] if isinstance(part, list) else part
+
+
 def _autofix(client, headers, view, **extra):
     return client.post(f"/v1/web/trip-intakes/{view['intake_id']}/autofix", headers=headers,
                        json={"revision": view["revision"], **extra})
@@ -60,7 +65,7 @@ def test_the_preview_view_is_exactly_what_a_real_apply_produces(rv):
     assert real["applied"] is True and real["revision"] == preview["revision"]
     assert "preview" not in real["view"]                                                       # 실제 적용 결과에는 표시가 없다
     for part in ("items", "moves", "needs", "ready"):
-        assert preview["review"][part] == real["view"]["review"][part], part               # 검사 결과가 같다
+        assert _without_risk(preview["review"][part]) == _without_risk(real["view"]["review"][part]), part   # 검사 결과가 같다
     assert _item(preview, "올리브영")["place"] == _item(real["view"], "올리브영")["place"]
 
 
