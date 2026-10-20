@@ -69,6 +69,27 @@ def needs_alternatives(item: dict[str, Any]) -> bool:
     return any(r.get("row") in PROBLEM_ROWS and r.get("result") in ("bad", "warn") for r in item.get("rows") or [])
 
 
+def settled_target(item: dict[str, Any]) -> bool:
+    """`[2026-10-20 사용자 지시]` 문제없이 **확정된 일정**도 대안을 미리 뽑는다(`travel.candidates.prepare_scope: all`) — 계획서는 「대안 추천을 다 해서 넣는다」.
+    활동 · 식사 중 장소가 정해진 것만. 빼지 않았고 고정 · 예약이 아니다. ★숙소는 문제가 있을 때만(숙소 팀 바깥 검색 한도를 아낀다 — 「숙소 모드」)."""
+    if item.get("removed") or item.get("locked") or item.get("booked") is True or cand.is_risk_item(item):
+        return False
+    if item.get("kind") not in ("activity", "dining") or _lodging(item):
+        return False
+    return item.get("place_state") in ("found", "customer") and bool(item.get("place"))
+
+
+def prepare_scope() -> str:
+    """`problems`(문제 난 일정만 — 옛 동작) · `all`(확정 일정까지). 설정을 못 읽으면 `problems`."""
+    from app.core.settings import get_guardrails
+
+    try:
+        value = get_guardrails().get("travel.candidates.prepare_scope")
+    except Exception:                                         # noqa: BLE001
+        return "problems"
+    return value if value in ("problems", "all") else "problems"
+
+
 def _place_sig(place: dict[str, Any] | None) -> list[Any]:
     if not place:
         return [None]
@@ -381,11 +402,16 @@ def prepare(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, kakao
                 cur.execute("SELECT source_id::text, item_index FROM intake_alternatives WHERE tenant_id=%s AND intake_id=%s",
                             (tenant_id, intake_id))
                 kept = {(s, int(i)) for s, i in cur.fetchall()}
-        targets = [x for x in review["items"] if not cand.is_risk_item(x)
-                   and (needs_alternatives(x) or (str(x["source_id"]), int(x["index"])) in kept)]
+        problems = [x for x in review["items"] if not cand.is_risk_item(x)
+                    and (needs_alternatives(x) or (str(x["source_id"]), int(x["index"])) in kept)]
+        # ★`[2026-10-20 사용자 지시]` 확정 일정의 대안도 처음에 뽑는다(`prepare_scope: all`) — 문제 난 일정을 먼저 맡기고 그 뒤에.
+        #   확정 일정의 이유 문장은 틀 문장(모델 호출 없음 — x600 서버 모델을 채팅과 나눠 쓴다). 「바꾸기」 때 저장된 모델 문장이 있으면 그것
+        picked = {id(x) for x in problems}
+        settled = [x for x in review["items"] if id(x) not in picked and settled_target(x)] if prepare_scope() == "all" else []
+        targets = problems + settled
         with ThreadPoolExecutor(max_workers=max(1, min(WORKERS, len(targets) or 1)), thread_name_prefix="prepare-items") as workers:
             jobs = [workers.submit(copy_context().run, prepare_one, connect, tenant_id=tenant_id, intake_id=intake_id, review=review,
-                                   item=x, kakao=kakao, chat=chat) for x in targets]
+                                   item=x, kakao=kakao, chat=chat if id(x) in picked else None) for x in targets]
             for job in jobs:
                 state = job.result()
                 counts[state] = counts.get(state, 0) + 1

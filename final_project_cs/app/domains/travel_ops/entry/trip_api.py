@@ -241,6 +241,14 @@ class MoveJudgeIn(BaseModel):
     trip_id: UUID | None = None
 
 
+class IntakeInterpretationIn(BaseModel):
+    """해석 확인 질문의 답 — `{질문 id: 선택지 id}`(`components/intake/interpretations.py`). `[2026-10-20 사용자 지시]`
+    `revision` = 화면이 보고 있던 판(낡으면 409). 모르는 질문 · 선택지는 422 `invalid_answers`(하나라도 틀리면 아무것도 저장하지 않는다)."""
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    answers: dict[str, str] = Field(min_length=1, max_length=20)
+
+
 class IntakeRevisionIn(BaseModel):
     """전체 자동 추천 · 재검증 — 화면이 보고 있던 판(낡으면 409)만 보낸다."""
     model_config = ConfigDict(extra="forbid")
@@ -1517,6 +1525,46 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/interpretations")
+    def web_intake_interpretations(intake_id: UUID, request: IntakeInterpretationIn, http: Request, background: BackgroundTasks,
+                                   who: tuple[str, UUID] = Depends(_web_customer)):
+        """`[2026-10-20 사용자 지시]` **해석 확인 질문의 답** — `GET …/{id}` 의 `interpretations[]` 에서 고른 선택지(1안 = 읽기 AI 의 읽기).
+
+        - 로딩 중(고객에게 「읽는 중」)이면 **저장만** 하고 곧바로 답한다(`pending: true`) — 서버는 1안으로 계속 계산하다가 첫 검사 직후(아직 첫 기다림 안)에 반영한다.
+        - 로딩 뒤면 그 자리에서 새 판(그 일정을 되살리거나 빼고 검사를 다시 — `edits` 와 같은 길)이고, 1안을 고르면 판을 만들지 않는다.
+        - 응답 = `GET …/{id}` 와 같은 모양 + `interpretation: {applied, pending, revision}`. `Accept: text/event-stream` 이면 실시간 진행
+          (`accepted` → `stage{applying}` → `beat` … → `result`(같은 본문) | `error`).
+        - 남의 접수 404 · 낡은 판 409 `stale_revision` · 등록한 접수 409 `intake_not_editable` · 모르는 질문 · 선택지 422 `invalid_answers`."""
+        from app.domains.travel_ops.components.intake import interpretations
+        from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, IntakeRejected, view
+
+        tenant, customer = who
+
+        def run(stage: Callable[[str], None] | None = None) -> dict[str, Any]:
+            try:
+                with get_connection() as conn:
+                    done = interpretations.answer(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                  revision=request.revision, answers=request.answers,
+                                                  tour=_lazy("place", place_factory), kakao=_lazy("kakao", kakao_factory),
+                                                  dining=_dining_lookup(), on_stage=stage)
+                    shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+            except LookupError:
+                raise _error(404, "not_found", "resource not found") from None
+            except interpretations.InvalidAnswers as invalid:
+                raise _error(422, "invalid_answers", "모르는 질문이거나 선택지가 아니다 — 아무것도 저장하지 않았다",
+                             problems=invalid.problems) from None
+            except IntakeConflict as exc:
+                raise _error(409, exc.code, exc.message, **exc.detail) from None
+            except IntakeRejected as exc:
+                raise _error(422, exc.code, exc.message) from None
+            if done["revision"] != request.revision:
+                _prepare_later(background, tenant, intake_id, shown)
+            return {**shown, "interpretation": done}
+
+        if _wants_stream(http):
+            return _sse_response(tenant, customer, op="interpret", http=http, work=lambda progress, defer: run(progress.stage))
+        return run()
 
     @router.post("/v1/web/trip-intakes/{intake_id}/restore")
     def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, background: BackgroundTasks,

@@ -28,6 +28,7 @@ from . import review as review_module
 from . import survey_answers
 from .areas import areas_for
 from . import agent_read as agent_module
+from . import interpretations as interpretations_module
 from . import schedule_cards
 from .assemble import assemble, effective
 from .catalog_names import with_catalog
@@ -281,14 +282,22 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         except Exception:                                  # noqa: BLE001 — 검사 장애가 읽기를 지우지 않는다
             log.warning("intake review failed intake=%s", intake_id, exc_info=True)
         filling = reader["prefill"] == "on" and reader["mode"] == "on"
+        # ★`[2026-10-20 사용자 지시]` 해석 확인 질문(`interpretations.py`)이 있으면 그 답을 반영할 때까지 고객에게는 「읽는 중」(첫 기다림)으로 둔다
+        asking = _has_questions(connect, tenant_id, intake_id)
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("UPDATE trip_intakes SET status='review', stage=%s, updated_at=now() "
-                        "WHERE tenant_id=%s AND intake_id=%s AND status='reading'", ("checking" if filling else "review", tenant_id, intake_id))
+                        "WHERE tenant_id=%s AND intake_id=%s AND status='reading'",
+                        ("checking" if filling or asking else "review", tenant_id, intake_id))
         if filling:
             _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+        if filling or asking:
+            # 로딩 중에 받아 둔 해석 답을 첫 검사 · 먼저 채우기 뒤에 반영한다(그 지점부터 다시 검사 — `pipeline.edit`)
+            _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
             with connect() as conn, conn.transaction(), conn.cursor() as cur:
                 cur.execute("UPDATE trip_intakes SET stage='review', updated_at=now() "
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
+            # 상태를 바꾸는 사이에 들어온 답(접수 행 잠금으로 순서가 정해진다 — `interpretations.answer`)을 한 번 더 본다
+            _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
         _dining_shadow(connect, tenant_id, intake_id, sources)
         # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
         #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
@@ -307,6 +316,33 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         if "beat" in locals():
             beat.__exit__()
         progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
+
+
+def _has_questions(connect: Callable[[], Any], tenant_id: str, intake_id: UUID) -> bool:
+    """이 접수에 해석 확인 질문이 있나(첫 판). 못 읽으면 False — 질문 장치가 접수를 막지 않는다."""
+    from . import interpretations
+
+    try:
+        with connect() as conn, conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 AND field LIKE %s LIMIT 1",
+                        (tenant_id, intake_id, interpretations.QUESTION_FIELD + "%"))
+            return cur.fetchone() is not None
+    except Exception:                                  # noqa: BLE001
+        log.warning("intake interpretation questions unreadable intake=%s", intake_id, exc_info=True)
+        return False
+
+
+def _apply_interpretations(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any) -> None:
+    """`[2026-10-20]` 로딩 중에 저장만 해 둔 해석 답 → 새 판(`interpretations.apply_pending`). 실패해도 확인 화면은 1안(AI 의 읽기)으로 간다."""
+    from . import interpretations
+
+    try:
+        with connect() as conn:
+            new = interpretations.apply_pending(conn, tenant_id=tenant_id, intake_id=intake_id, tour=tour, kakao=kakao, dining=dining)
+        if new is not None:
+            log.info("intake interpretation answers applied intake=%s revision=%s", intake_id, new)
+    except Exception:                                  # noqa: BLE001 — 답 반영 장애가 접수를 막지 않는다(고객이 확인 화면에서 다시 고른다)
+        log.warning("intake interpretation answers not applied intake=%s", intake_id, exc_info=True)
 
 
 def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, kakao: Any, chat: Any) -> None:
@@ -495,6 +531,8 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "sources": out_sources, "check": check, "review": review, "review_error": review_error,
             # ★`[2026-10-16 D-025]` 먼저 채운 기록 — 일정마다 「우리가 채움」 + 이유(`filled[].item` = 검사의 일정 id) · 고객에게 물을 것(`questions`)
             "prefill": _prefill_view(next((c["value"] for c in reversed(claims) if c["field"] == "reading.prefill"), None)),
+            # ★`[2026-10-20 사용자 지시]` 해석 확인 질문 — 읽기 AI 와 규칙이 다르게 읽은 줄. 1안(AI 의 읽기)이 맨 위 · 답은 `POST …/interpretations`
+            "interpretations": interpretations_module.view(raw_claims, {str(s["source_id"]): int(s["position"]) for s in sources}),
             # ★`[2026-10-06]` 로딩 중 질문. 답은 `POST …/survey` 로 한 문항씩 저장한다(`survey_answers.py`).
             #   `[2026-10-19]` 계획서에서 읽은 칸은 빼고(`skipped_by_reading`) 빈 칸만 · 상한 없음 · 두 번에 정한다(`questions_phase`)
             "questions": loading["questions"], "skipped_by_reading": loading["skipped_by_reading"],
@@ -1845,6 +1883,11 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
     noted: set[int] = set()
     for quote in [m.get("quote") for m in out.moves] + [c.get("quote") for c in out.conditions] + [p.get("quote") for p in out.preferences]:
         noted |= {n for n, line in enumerate(lines, start=1) if quote and quote in line}
+    # ★`[2026-10-20 사용자 지시]` 에이전트가 일정이 아니라 빈 시간 · 추천 요청 · 질문 · 잡담으로 읽은 줄 — 규칙 일정은 **뺀 채로** 두고 묻는다(`interpretations.py`).
+    #   ☆전에는 「오후 13시~16시 정도」(에이전트: 빈 시간)를 빠뜨린 줄로 보고 규칙 일정 「정도」를 넣어 오타 고침 「정돈 대학로본점」이 됐다
+    from . import interpretations
+
+    contested = interpretations.contested_lines(lines, out)
     if "correction" not in out.requests or copied_cards:
         claims_by_item: dict[int, list[Any]] = {}
         for claim in read.claims:
@@ -1859,11 +1902,16 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
                 if card is None or not schedule_cards.may_restore(card, out.requests, out.pieces):
                     continue
             index = len(items)
+            reading = contested.get(line)
             for claim in claims_by_item.get(k, []):
                 row = claim.as_dict()
                 row["field"] = f"items[{index}]" + claim.field[claim.field.index("]") + 1:]
-                row["note"] = ((row.get("note") or "") + " · 읽기 에이전트가 빠뜨린 줄이라 규칙으로 읽었다").lstrip(" ·")
+                row["note"] = ((row.get("note") or "") + (" · 규칙이 읽은 일정 — 읽기 에이전트는 이 줄을 다르게 읽었다" if reading
+                                                          else " · 읽기 에이전트가 빠뜨린 줄이라 규칙으로 읽었다")).lstrip(" ·")
                 rows.append(row)
+            if reading is not None:
+                rows.extend(interpretations.question_rows(index=index, position=position, line=line, line_text=lines[line - 1],
+                                                          reading=reading, rule_title=rule_item.title.text, rule_start=rule_item.start))
             items.append({"line": line, "day": rule_item.day, "date": rule_item.date, "title": rule_item.title.text,
                           "meal": any(c.field == f"items[{k}].kind" for c in claims_by_item.get(k, [])), "booked": rule_item.booked,
                           "start": rule_item.start})
