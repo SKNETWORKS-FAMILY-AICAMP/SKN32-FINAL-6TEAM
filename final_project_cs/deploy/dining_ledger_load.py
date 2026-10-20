@@ -190,6 +190,16 @@ def main() -> int:
                 with conn.transaction():
                     before = counts(conn)
                     report["before"] = before
+                    # ★기존 코어 장소 연결을 지키다 — 운영 중에 생긴 연결(고객이 고른 대체 식당 `nearby` · 실행 중 매칭 `runtime:*`)은
+                    #   재적재의 매칭기(`link_sql`)가 다시 만들지 못한다. ☆x600 시험(2026-10-20)에서 2,499 → 1,936 으로 줄었고 일정 항목
+                    #   장소 38곳의 연결이 섞여 있었다 — 끊기면 그 식당은 휴무 판정이 「모름」이 된다. 가게 번호가 고정값이라 그대로 되살린다
+                    keep = bool(before)
+                    if keep:
+                        conn.execute("CREATE TEMP TABLE _dining_keep_links ON COMMIT DROP AS "
+                                     "SELECT tenant_id, core_place_id, place_uid, linked_by, linked_at FROM dining.dn_core_place_link")
+                        conn.execute("CREATE TEMP TABLE _dining_item_links ON COMMIT DROP AS "
+                                     "SELECT DISTINCT l.tenant_id, l.core_place_id FROM dining.dn_core_place_link l "
+                                     "JOIN itinerary_items i ON i.tenant_id = l.tenant_id AND i.place_id = l.core_place_id")
                     conn.execute("DROP SCHEMA IF EXISTS dining CASCADE")
                     for path in migrations:
                         with open(path, encoding="utf-8") as f:
@@ -202,6 +212,17 @@ def main() -> int:
                     for name, sql in rebuild.AFTER_LOADS:
                         conn.execute(sql)
                         print(f"  계산 {name}", flush=True)
+                    if keep:
+                        # 매칭기 · 코어로 올리기 **앞에** 되살린다 — 그래야 매칭기가 그 장소를 다른 가게로 다시 잇지 않고,
+                        # 올리기가 이미 이어진 가게를 새 공용 장소로 한 번 더 만들지 않는다. 다시 채운 원장에 없는 가게(폐업 정리)는 못 살린다
+                        restored = conn.execute(
+                            "INSERT INTO dining.dn_core_place_link (tenant_id, core_place_id, place_uid, linked_by, linked_at) "
+                            "SELECT k.tenant_id, k.core_place_id, k.place_uid, k.linked_by, k.linked_at FROM _dining_keep_links k "
+                            "WHERE EXISTS (SELECT 1 FROM dining.dn_place p WHERE p.place_uid = k.place_uid) "
+                            "ON CONFLICT DO NOTHING").rowcount
+                        kept_total = conn.execute("SELECT count(*) FROM _dining_keep_links").fetchone()[0]
+                        report["restored_links"] = {"되살림": restored, "이전 연결": kept_total}
+                        print(f"  기존 연결 되살림 {restored}/{kept_total}", flush=True)
                     report["link"] = [list(r) for r in conn.execute(rebuild.link_sql(tenant)).fetchall()]
                     report["promote"] = [list(r) for r in conn.execute(rebuild.promote_sql(tenant)).fetchall()]
                     # 인허가 식당(이름 찾기 전용) — CSV 가 있을 때만. 요식팀 `load_license.py` 와 같은 줄을 같은 트랜잭션에 넣는다
@@ -230,6 +251,13 @@ def main() -> int:
                         problems.append("코어 장소와 하나도 안 이어졌다")
                     if before.get("인허가 식당(이름 찾기)") and not after.get("인허가 식당(이름 찾기)"):
                         problems.append("인허가 식당(이름 찾기)이 비었다 — 드라이브 raw 에 인허가 CSV 가 없다")
+                    if keep:
+                        lost = conn.execute(
+                            "SELECT count(*) FROM _dining_item_links k WHERE NOT EXISTS (SELECT 1 FROM dining.dn_core_place_link l "
+                            "WHERE l.tenant_id = k.tenant_id AND l.core_place_id = k.core_place_id)").fetchone()[0]
+                        report["item_links_lost"] = lost
+                        if lost:
+                            problems.append(f"일정 항목 장소 {lost}곳의 원장 연결이 끊긴다(휴무 판정이 「모름」이 된다)")
                     report["problems"] = problems
                     report["seconds"] = round(time.time() - started, 1)
                     if problems:
