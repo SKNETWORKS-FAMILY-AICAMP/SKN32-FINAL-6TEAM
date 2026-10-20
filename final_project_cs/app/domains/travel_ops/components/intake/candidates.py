@@ -590,6 +590,7 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
     late: list[str] = []
     estimated = False
     slacks: dict[str, int | None] = {"before": None, "after": None}
+    legs: dict[str, dict[str, Any] | None] = {"before": None, "after": None}
     if start is not None and place:
         pa = {"key": "cand", "name": place["name"], "lat": place["latitude"], "lon": place["longitude"]}
         if prev and prev["place"]:
@@ -598,6 +599,7 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
                 leg = leg_between(engine, {"key": "prev", "name": prev["place"]["name"], "lat": prev["place"]["latitude"],
                                            "lon": prev["place"]["longitude"]}, pa, p_end, start, deep=False)
                 slacks["before"] = leg.slack_min
+                legs["before"] = _leg_view(prev["place"]["name"], leg)
                 estimated = estimated or leg.basis == "estimate"
                 if leg.slack_min < 0:
                     late.append(f"{prev['place']['name']}에서 오면 {late_text(leg.slack_min)}")
@@ -608,6 +610,7 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
                 leg = leg_between(engine, pa, {"key": "next", "name": nxt["place"]["name"], "lat": nxt["place"]["latitude"],
                                                "lon": nxt["place"]["longitude"]}, leave, n_start, deep=False)
                 slacks["after"] = leg.slack_min
+                legs["after"] = _leg_view(nxt["place"]["name"], leg)
                 estimated = estimated or leg.basis == "estimate"
                 if leg.slack_min < 0:
                     late.append(f"{nxt['place']['name']}에는 {late_text(leg.slack_min)}")
@@ -617,7 +620,14 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
     worst = _worst([(ln["result"], "x") for ln in lines])[0]
     fits = worst in ("ok", "unknown") and hours_line["result"] != "warn"
     return {"rows": lines, "fits": fits, "status": "bad" if worst == "bad" else ("warn" if worst == "warn" else "ok"),
-            "slack": slacks, "estimated": estimated}
+            "slack": slacks, "estimated": estimated, "legs": legs}
+
+
+def _leg_view(other: str, leg: Any) -> dict[str, Any]:
+    """후보 카드의 이동 줄 하나 — `[2026-10-19 사용자 지시]` 「경복궁에서 오는 길 계산 중 · 어림 15분」 → 「버스 18분 · 12분 여유」.
+    `other` = 앞(또는 뒤) 일정 장소 이름 · `estimated` = 직선 어림(계산기를 안 썼거나 못 채움)."""
+    return {"with": other, "minutes": int(leg.minutes), "mode": leg.mode, "mode_label": leg.mode_label,
+            "estimated": leg.basis == "estimate", "slack_min": int(leg.slack_min)}
 
 
 #: 「운영시간을 못 읽음」 표시 문구 — 순위가 「확인한 곳 → 못 읽은 곳 → 닫는 것이 확인된 곳」을 가를 때 본다
@@ -653,7 +663,7 @@ def _present(place: dict[str, Any], assessed: dict[str, Any], prev, nxt, ref, ar
             dist = distance_m(float(place["latitude"]), float(place["longitude"]), ref[0], ref[1])
     return {"place": _public(place), "distance_m": round(dist) if dist is not None else None, "reference": name,
             "rows": assessed["rows"], "fits": assessed["fits"], "status": assessed["status"], "slack": assessed["slack"],
-            "estimated": assessed["estimated"],
+            "estimated": assessed["estimated"], "legs": assessed.get("legs") or {"before": None, "after": None},
             # ★`[2026-10-07]` 원래 장소와 분류 나무에서 맞은 단계 — 3 같은 소분류 · 2 같은 중분류 · 1 같은 대분류 · None 은 나무로 고른 것이 아니다(식당 · 지도 검색)
             "similarity": place.get("similarity"),
             # ★`[2026-10-07 사용자]` 어느 단계로 고른 후보인가 — same_kind(같은 종류, 분류 나무) · similar_experience(비슷한 경험) · meal_inferred(끼니 시간의 식당) · None(지도 검색 등).
@@ -836,22 +846,33 @@ def _eats_there(items: list[dict[str, Any]], item: dict[str, Any], cls: dict[str
     return True
 
 
+def is_risk_item(item: dict[str, Any]) -> bool:
+    """위험 날짜로 문제가 난 활동 — 대안은 안전 대안 경로(`risks.alternatives`)가 낸다(같은 판별을 그 함수가 맨 앞에서 한다)."""
+    return item.get("kind") == "activity" and (item.get("risk") or {}).get("status") == "problem"
+
+
 # ── 대체 후보 ─────────────────────────────────────────────────────
-def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], kakao: Any = None,
-                 engine: Callable[..., Any] | None = None, use_engine: bool = True, now: datetime | None = None,
-                 limit: int = LIMIT, rank_only: bool = False, chat: Any = None) -> dict[str, Any]:
-    """이 일정의 다른 안 — `{current, reference, candidates:[{rank, place, distance_m, reference, rows, fits, status}], notes}`.
+class Gathered:
+    """대체 후보를 **모은** 상태 — 판정(`assess`) 전의 후보 풀과 마무리(`finish`)가 쓰는 문맥. `[2026-10-19]`
 
-    `chat` — 주면 화면에 먼저 보이는 후보의 이유 문장을 **모델이 확인된 값으로** 다시 쓴다(`reasons.polish` — 저장 · 검사 · 실패하면 틀 문장). 안 주면 전부 틀 문장.
-    `rank_only` — 이동 계산기로 후보를 재지 않고 **싼 판정(운영시간 + 어림 이동)의 순서**만 낸다(자동 추천이 쓴다: 맞는 곳은 그쪽이 후보를
-    차례로 시간표로 맞춰 보며 찾으므로 후보마다 미리 재면 계산기 시간을 두 번 쓴다 — 2026-10-03 실서버 10초)."""
-    from . import risks
+    ★후보를 모으는 일(팀 대안 · 목록 · 지도 — 숙소 팀은 바깥 숙소 비교 1회)과 후보마다 앞뒤 이동을 재는 일(계산기)을 나눴다 —
+      접수 뒤 미리 준비(`prepared.py`)가 모은 풀을 저장해 두고, 앞뒤 일정만 바뀌면 **다시 모으지 않고** 판정만 다시 한다.
+    `pool` = [(내부 장소, 싼 판정)] — 싼 판정은 운영시간 + 직선 어림 이동이다."""
 
-    safe = risks.alternatives(conn, tenant_id=tenant_id, review=review, item=item, now=now, limit=limit,
-                              engine=engine, use_engine=use_engine)
-    if safe is not None:
-        return safe
+    __slots__ = ("item", "items", "prev", "nxt", "ref", "area", "members", "route_points", "current", "notes", "limit", "pool")
+
+    def __init__(self, **values: Any) -> None:
+        for name in self.__slots__:
+            setattr(self, name, values.get(name))
+
+
+def gather(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], kakao: Any = None,
+           now: datetime | None = None, limit: int = LIMIT, rank_only: bool = False,
+           lodging_team: bool | None = None) -> Gathered:
+    """이 일정의 후보를 모으고 싼 판정으로 줄 세운 풀(최대 `limit + POOL_EXTRA` 곳)을 돌려준다 — 이동 계산기는 부르지 않는다.
+    `lodging_team` — 숙소 줄 · 숙소 항목에서 숙소 팀(`_team_lodging_places`, 바깥 숙소 비교 1회)을 부를지. None 이면 `rank_only` 가 아닐 때만(종전 그대로)."""
     now = now or datetime.now(KST)
+    ask_lodging_team = (not rank_only) if lodging_team is None else bool(lodging_team)
     items = review["items"]
     prev, nxt = neighbours(items, item)
     ref = reference(item, prev, nxt)
@@ -891,7 +912,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
             notes.append("no_reference_point")
         else:
             # Names without a location still use the registered lodging team.
-            team = None if rank_only else _team_lodging_places(conn, tenant_id, review, item, current, items)
+            team = _team_lodging_places(conn, tenant_id, review, item, current, items) if ask_lodging_team else None
             if team is not None:
                 radius = float(area["radius_m"]) if area else RADIUS_M
                 found += [place for place in team if _is_stay_place(place)
@@ -935,8 +956,8 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
             else:
                 found += _ledger_places(conn, tenant_id, ref)
         elif stay_item:
-            # ★`[2026-10-16 사용자 결정]` 숙소 항목은 **숙소 팀이 먼저**다(숙소 비교 → 가격대 · 거리 순) — 자동 추천의 순서 매기기(`rank_only`)에서는 바깥 한도를 아끼려 부르지 않는다
-            team = None if rank_only else _team_lodging_places(conn, tenant_id, review, item, current, items)
+            # ★`[2026-10-16 사용자 결정]` 숙소 항목은 **숙소 팀이 먼저**다(숙소 비교 → 가격대 · 거리 순) — 부를지는 `lodging_team`(기본: 자동 추천의 `rank_only` 에서는 바깥 한도를 아끼려 부르지 않는다)
+            team = _team_lodging_places(conn, tenant_id, review, item, current, items) if ask_lodging_team else None
             if team is not None:
                 found += team
                 notes.append("team_ranked")
@@ -1006,10 +1027,6 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
         notes.append("stay_and_meal")
     if before and not found and "no_same_kind" not in notes:
         notes.append("no_same_kind")
-    if engine is None and use_engine:
-        engine = default_engine(None)
-    budget = engine if isinstance(engine, _Budgeted) else (_Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None)
-
     # 먼저 싼 판정(운영시간 + 어림 이동)으로 줄을 세우고, 앞선 `limit + POOL_EXTRA` 곳을 이동 계산기로 다시 잰 뒤 **전체 판정 순서로** `limit` 곳을 고른다
     # (어림으로 늦어 보이던 곳이 시간표로는 닿는 경우가 있어, 앞 셋만 재면 적합한 넷째가 올라오지 못한다)
     first: list[tuple[dict[str, Any], dict[str, Any]]] = []
@@ -1035,9 +1052,37 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     if "meal_inferred" in notes:
         eating_first = [pa for pa in first if pa[0].get("kind") == "dining"][:2]
         pool = [pa for pa in first if pa not in eating_first][:max(0, limit + POOL_EXTRA - len(eating_first))] + eating_first
+    return Gathered(item=item, items=items, prev=prev, nxt=nxt, ref=ref, area=area, members=members, route_points=route_points,
+                    current=current, notes=notes, limit=limit, pool=pool)
+
+
+def regather(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], places: list[dict[str, Any]],
+             notes: list[str], limit: int = LIMIT) -> Gathered:
+    """저장해 둔 풀(`places` — `gather` 의 내부 장소)로 문맥만 지금 판에 맞춰 다시 세운다 — **후보를 다시 모으지 않는다**(팀 · 지도 · 바깥 숙소 비교를 다시 부르지 않는다).
+    앞뒤 일정만 바뀐 일정의 이동 구간을 다시 잴 때 쓴다(`prepared.py`). 싼 판정은 새로 한다(운영시간 + 직선 어림, 바깥 호출 없음)."""
+    items = review["items"]
+    prev, nxt = neighbours(items, item)
+    ref = reference(item, prev, nxt)
+    members = stay_context.group_for(items, item)
+    route_points = stay_context.visits(items, members) if members else []
+    if members:
+        ref = stay_context.center(items, members) or ref
+    stay = _is_stay_line(item) and item["kind"] != "lodging"
+    if stay and (item["place_state"] == "needs_choice" or item["kind"] == "dining" or stay_context.generic(item)):
+        limit = limit * 2
+    pool = [(place, assess(conn, tenant_id, item, place, prev, nxt, None)) for place in places]
+    return Gathered(item=item, items=items, prev=prev, nxt=nxt, ref=ref, area=area_of(item), members=members, route_points=route_points,
+                    current=item["place"], notes=list(notes), limit=limit, pool=pool)
+
+
+def finish(conn, *, tenant_id: str, gathered: Gathered, judged: list[tuple[dict[str, Any], dict[str, Any]]], chat: Any = None,
+           reason_wait: float | None = None, budget: Any = None) -> dict[str, Any]:
+    """판정한 후보(`judged` — 풀과 같은 순서의 (내부 장소, 판정))를 응답 모양으로 — 전체 판정 순서로 `limit` 곳을 고르고 이유 문장을 붙인다."""
+    item, prev, nxt, ref, area = gathered.item, gathered.prev, gathered.nxt, gathered.ref, gathered.area
+    members, route_points, current, limit = gathered.members, gathered.route_points, gathered.current, gathered.limit
+    notes = list(gathered.notes)
     out = []
-    for place, cheap in pool:
-        full = cheap if rank_only else assess(conn, tenant_id, item, place, prev, nxt, budget)
+    for place, full in judged:
         out.append({"rank": 0, **_present(place, full, prev, nxt, ref, area)})
         if members and route_points and not area:
             out[-1].update(distance_m=round(stay_context.score(place, route_points)), reference="여행 전체 방문지(평균 직선거리)")
@@ -1063,7 +1108,7 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
     if chat is not None and out:
         from . import reasons
 
-        reasons.polish(conn, tenant_id, out, original_name, chat)
+        reasons.polish(conn, tenant_id, out, original_name, chat, wait_seconds=reason_wait)
     if budget is not None and budget.exhausted:
         notes.append("engine_budget_exhausted")                     # 일부 후보의 이동은 직선 어림값이다(후보의 `estimated`)
     for rank, c in enumerate(out, start=1):
@@ -1072,6 +1117,34 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
                                                                       "after": nxt and nxt["place"]["name"],
                                                                       **({"area": area["name"]} if area else {})},
             "candidates": out, "notes": notes}
+
+
+def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], kakao: Any = None,
+                 engine: Callable[..., Any] | None = None, use_engine: bool = True, now: datetime | None = None,
+                 limit: int = LIMIT, rank_only: bool = False, chat: Any = None, reason_wait: float | None = None,
+                 lodging_team: bool | None = None) -> dict[str, Any]:
+    """이 일정의 다른 안 — `{current, reference, candidates:[{rank, place, distance_m, reference, rows, fits, status}], notes}`.
+
+    `chat` — 주면 화면에 먼저 보이는 후보의 이유 문장을 **모델이 확인된 값으로** 다시 쓴다(`reasons.polish` — 저장 · 검사 · 실패하면 틀 문장). 안 주면 전부 틀 문장.
+    `reason_wait` — 모델 문장을 기다리는 초(`reasons.polish` 의 `wait_seconds`). None 이면 설정값, 0 이면 저장된 문장만 쓰고 기다리지 않는다(쓰는 일은 뒤에서).
+    `rank_only` — 이동 계산기로 후보를 재지 않고 **싼 판정(운영시간 + 어림 이동)의 순서**만 낸다(자동 추천이 쓴다: 맞는 곳은 그쪽이 후보를
+    차례로 시간표로 맞춰 보며 찾으므로 후보마다 미리 재면 계산기 시간을 두 번 쓴다 — 2026-10-03 실서버 10초).
+    `lodging_team` — `gather` 를 본다.
+    ★`[faabcd92 · 오라클 판]` 위험 날짜(날씨 등)로 문제가 난 활동은 **안전 대안 경로가 먼저**다(`risks.alternatives`) — 일반 대안을 먼저 내지 않는다."""
+    from . import risks
+
+    safe = risks.alternatives(conn, tenant_id=tenant_id, review=review, item=item, now=now, limit=limit,
+                              engine=engine, use_engine=use_engine)
+    if safe is not None:
+        return safe
+    gathered = gather(conn, tenant_id=tenant_id, review=review, item=item, kakao=kakao, now=now, limit=limit,
+                      rank_only=rank_only, lodging_team=lodging_team)
+    if engine is None and use_engine:
+        engine = default_engine(None)
+    budget = engine if isinstance(engine, _Budgeted) else (_Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None)
+    judged = [(place, cheap if rank_only else assess(conn, tenant_id, item, place, gathered.prev, gathered.nxt, budget))
+              for place, cheap in gathered.pool]
+    return finish(conn, tenant_id=tenant_id, gathered=gathered, judged=judged, chat=chat, reason_wait=reason_wait, budget=budget)
 
 
 # ── 장소 검색 ─────────────────────────────────────────────────────

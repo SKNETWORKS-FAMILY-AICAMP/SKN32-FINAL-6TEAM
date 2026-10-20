@@ -30,6 +30,8 @@ from .test_case_version_day import SCENARIO, Clock, _at, _classifier, _extractor
 
 LUNCH = next(p for p in SCENARIO["places"] if p["key"] == "seongsu_lunch")
 LUNCH_ALTERNATES = {p["name"] for p in SCENARIO["places"] if p["key"] in ("lunch_alt_a", "lunch_alt_b")}
+# 합성 입력을 격리하는 유효 구다. 기본 시나리오의 다른 장소 구와 겹치지 않는다.
+FIRE_DISTRICT = "금천구"
 
 
 class FireIn:
@@ -42,6 +44,7 @@ class FireIn:
 
     def active(self, *, region: str, at: datetime, district: str | None = None) -> dict:
         hits = ([{"kind": "화재", "step": "안전안내", "weather": False, "created_at": at.isoformat(),
+                  "regions": [f"서울특별시 {self.district}"], "serial": f"synthetic-fire-{self.district}",
                   "text": f"{self.district} 화재 발생 — 인근 통행을 자제해 주십시오"}]
                 if district == self.district else [])
         return {"covered": True, "mode": "replay", "source": self.name, "confirmed_at": at.isoformat(),
@@ -74,8 +77,8 @@ def _lunch(world):
 @pytest.fixture()
 def fire_at_lunch_only():
     """화재는 점심 식당의 구에만 — 대체 후보는 옆 구(700m 안)로 옮겨 둔다."""
-    world = _world("재난시험구")
-    _set_district(world["tenant"], LUNCH["name"], "재난시험구")
+    world = _world(FIRE_DISTRICT)
+    _set_district(world["tenant"], LUNCH["name"], FIRE_DISTRICT)
     yield world
     cleanup_tenant(world["tenant"])
 
@@ -83,9 +86,9 @@ def fire_at_lunch_only():
 @pytest.fixture()
 def fire_over_the_whole_block():
     """화재가 점심 식당과 대체 후보 모두의 구에 — 바꿀 곳이 없다."""
-    world = _world("재난시험구")
+    world = _world(FIRE_DISTRICT)
     for name in (LUNCH["name"], *LUNCH_ALTERNATES):
-        _set_district(world["tenant"], name, "재난시험구")
+        _set_district(world["tenant"], name, FIRE_DISTRICT)
     yield world
     cleanup_tenant(world["tenant"])
 

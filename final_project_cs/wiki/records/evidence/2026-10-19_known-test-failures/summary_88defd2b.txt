@@ -1,0 +1,5 @@
+e2e/test_decision_destination_condition_web.py :: 1 failed, 3 passed in 10.96s
+e2e/test_intake_catalog_names.py :: 7 passed in 21.94s
+e2e/test_intake_experience_tiers.py :: 16 passed in 9.62s
+e2e/test_intake_stay_lines.py :: 9 passed in 27.01s
+DONE

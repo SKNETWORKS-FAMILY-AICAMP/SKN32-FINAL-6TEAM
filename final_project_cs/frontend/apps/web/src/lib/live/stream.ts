@@ -65,7 +65,7 @@ function streamError(body: Body, t: Translate): LiveError {
 type Attempt<T> = { kind: "done"; value: T } | { kind: "lost" };
 
 async function attempt<T>(path: string, language: Language, init: RequestInit, timing: StreamTiming,
-  report: (next: Partial<OpProgress>) => void): Promise<Attempt<T>> {
+  report: (next: Partial<OpProgress>) => void, onEvent?: StreamEventHandler): Promise<Attempt<T>> {
   const t = translator(language);
   const sent = await sessionInit(language, { ...init, headers: { ...(init.headers as Record<string, string> | undefined), Accept: "text/event-stream" } });
   const url = `${API_BASE}${path}`;
@@ -109,6 +109,7 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, t
     else if (name === "stage") report({ stage: typeof body.stage === "string" ? body.stage : null, elapsed: seconds(body.elapsed) ?? 0, slow: false, lost: false });
     else if (name === "beat") report({ ...(typeof body.stage === "string" ? { stage: body.stage } : {}), elapsed: seconds(body.elapsed) ?? 0, slow: body.slow === true, lost: false });
     else if (name === "result" || name === "error") end.event = { name, body };
+    else onEvent?.(name, body);
   });
   arm();
   try {
@@ -133,8 +134,11 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, t
  * the server's refusal or `error` event, or `connection_lost` when the reconnects run out. `init` is sent again unchanged
  * on a reconnect — it must carry the request's own id (or the server must derive one) so nothing runs twice.
  */
+/** `[2026-10-19]` An event other than the progress and end ones (the plan check's `candidates` · `candidate`): its name and body, as it comes. */
+export type StreamEventHandler = (name: string, body: Record<string, unknown>) => void;
+
 export async function streamApi<T>(path: string, language: Language, init: RequestInit, onProgress?: (progress: OpProgress) => void,
-  timing: StreamTiming = STREAM_TIMING): Promise<T> {
+  timing: StreamTiming = STREAM_TIMING, onEvent?: StreamEventHandler): Promise<T> {
   let progress: OpProgress = { stage: null, elapsed: 0, slow: false, lost: false };
   // ★`[2026-10-06 사용자 지적]` A task that shows no new stage for long is told to the customer (`waiting.ts`): a heartbeat alone does not start the count over.
   const wait = beginWait(TASK_STEPS);
@@ -145,7 +149,7 @@ export async function streamApi<T>(path: string, language: Language, init: Reque
   };
   try {
     for (let tries = 0; ; tries += 1) {
-      const outcome = await attempt<T>(path, language, init, timing, report);
+      const outcome = await attempt<T>(path, language, init, timing, report, onEvent);
       if (outcome.kind === "done") return outcome.value;
       if (tries >= timing.reconnectMs.length) {
         const t = translator(language);

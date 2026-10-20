@@ -9,8 +9,8 @@ import { editIntake, restoreIntake, type IntakeEdit } from "@/lib/live/intake";
 import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
-  autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces,
-  type CandidatePlace, type ReviewItem, type ReviewedIntakeView,
+  autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
+  type CandidateList, type CandidatePlace, type CandidateUpdate, type ReviewItem, type ReviewedIntakeView,
 } from "@/lib/live/intake-review";
 import { isLodgingReviewItem, planCandidate, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
@@ -104,14 +104,18 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       throw error;
     };
     /** The stop's alternatives for the revision shown — asked once (a failure is not kept, so it is asked again). */
-    const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1]) => {
+    // `[2026-10-19 사용자 지시]` Asked as a live answer: prepared alternatives come at once; otherwise the cards come first with straight-line
+    // guesses and each measured leg / model reason as it lands (`onFirst` · `onUpdate`), then the final list. A later ask for the same revision gets the final list.
+    const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1],
+      onFirst?: (list: CandidateList) => void, onUpdate?: (update: CandidateUpdate) => void) => {
       const revision = plan().revision;
       const currentRisk = itemRiskOf(itemOf(id).risk);
       const key = `${revision}:${id}:${currentRisk ? riskSignature([currentRisk]) : ""}`;
       for (const old of [...alternatives.current.keys()]) if (!old.startsWith(`${revision}:`)) alternatives.current.delete(old);
       const kept = alternatives.current.get(key);
       if (kept) return kept;
-      const ask = getCandidates(intakeId, item, revision, language).catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
+      const ask = streamCandidates(intakeId, item, revision, language, onFirst ?? (() => undefined), onUpdate ?? (() => undefined))
+        .catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
       alternatives.current.set(key, ask);
       return ask;
     };
@@ -218,9 +222,34 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         take(next);
       },
 
-      candidates: async (id) => {
+      candidates: async (id, onLive) => {
         const item = itemOf(id);
-        const found = await alternativesOf(id, item);
+        // The live cards: the first list as the server sent it, changed in place by each update, drawn again each time (photos as they come).
+        let first: CandidateList | null = null;
+        let photos: (PlaceInfo | null)[] = [];
+        let finished = false;
+        const draw = () => {
+          if (finished || !first || !onLive) return;
+          onLive(first.candidates.map((candidate, at) => {
+            const card = planCandidate(candidate, id, "candidate", photos[at] ?? null);
+            pickable.current.set(card.id, candidate.place);
+            return card;
+          }));
+        };
+        const found = await alternativesOf(id, item, (list) => {
+          first = { ...list, candidates: list.candidates.map((candidate) => ({ ...candidate })) };
+          photos = list.candidates.map(() => null);
+          draw();
+          void Promise.all(list.candidates.map((candidate, at) => infoOf(candidate.place, at < PHOTO_CANDIDATES))).then((got) => { photos = got; draw(); });
+        }, (update) => {
+          const candidate = first?.candidates[update.rank - 1];
+          if (!candidate) return;
+          const { pending, ...rest } = update;
+          Object.assign(candidate, { ...rest, rank: candidate.rank });
+          candidate.pending = { before: false, after: false, reason: false, ...candidate.pending, ...pending };
+          draw();
+        });
+        finished = true;
         candidateNotes.current.set(id, found.notes ?? []);
         // The stop's own photos fill its 「지금 일정」 card.
         if (item.place) void infoOf({ ...item.place, category: null, address: null }, true).then((info) => setInfos((current) => ({ ...current, [id]: info })));

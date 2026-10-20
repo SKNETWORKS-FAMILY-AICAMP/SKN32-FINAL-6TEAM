@@ -296,6 +296,23 @@ class MixedCandidate:
         return tuple((l.get("route") or l.get("line"), l["from"], l["to"]) for l in self.legs)
 
 
+class _ServiceView:
+    """버스→버스 후보를 만들기 전에 운행 시간 확인(`service_check`)에 넘기는 가벼운 모양 — 확인이 읽는 칸만(모양 · 추정 소요 ·
+    버스마다 승차 · 승차까지 분 · 첫 노선 · 첫 승차 정류장 · 구간열). 만들 후보와 같은 값이다(2026-10-19 속도).
+    구간열(`legs`)은 읽을 때만 만든다 — 운행 시간 확인은 승차 정보만 읽어 대개 만들 일이 없다."""
+    __slots__ = ("shape", "est_min", "bus_boards", "bus_board_offsets", "route_id", "board", "_alights")
+
+    def __init__(self, shape, est_min, bus_boards, bus_board_offsets, route_id, board, alights):
+        self.shape, self.est_min = shape, est_min
+        self.bus_boards, self.bus_board_offsets = bus_boards, bus_board_offsets
+        self.route_id, self.board = route_id, board
+        self._alights = alights
+
+    @property
+    def legs(self):
+        return [bus_leg(r, x, y) for (r, x), y in zip(self.bus_boards, self._alights)]
+
+
 class _PointIndex:
     """좌표 목록의 근처 찾기 — numpy 가 있으면 한 번에, 없으면 파이썬 반복(같은 식 · geo.meters 평면 근사)."""
 
@@ -679,31 +696,55 @@ class MixedGenerator:
         best = {}
         board_rows = [row for _rid, rows in sorted(board_a.items(), key=lambda kv: kv[1][0][0])
                       for row in rows]
+        # ☆`[2026-10-19 속도]` 안쪽 반복이 (승차 정류장 × 환승점 × 환승 정류장 × 하차 정류장)마다 같은 값을 다시 셌다 — 환승점의 도착점 거리 ·
+        #   첫 버스 승차 분 · 둘째 버스 승차 분 · 도보 분을 한 번만 센다. 추정 소요는 **같은 순서로 더해** 소수점까지 종전과 같다.
+        far_of = {}                                            # 환승점 → 도착점에서 너무 멀어지나
+        ride2_of = {}                                          # (환승 정류장, 하차 정류장) → 둘째 버스 승차 분
         for da, x, r1 in board_rows:
             rid1 = r1.route_id
+            head = self._walk_min(da) + (r1.term_min or 0) / 2
             for sp in self.bus.stops.get(rid1, []):
                 if sp["seq"] <= x["seq"] or _VIRTUAL in str(sp.get("station_nm")) or sp.get("lat") is None:
                     continue
-                if m(sp["lat"], sp["lng"], b_lat, b_lng) >= ab + slack_m:
+                far = far_of.get(id(sp))
+                if far is None:
+                    far = far_of[id(sp)] = m(sp["lat"], sp["lng"], b_lat, b_lng) >= ab + slack_m
+                if far:
                     continue                                   # 도착점에서 너무 멀어지는 지점은 환승점이 아니다(slack_m 까지는 돌아가는 노선을 봐준다)
                 point = (sp['lat'], sp['lng'])
                 if point not in nearby_transfer:
                     nearby_transfer[point] = index.near(*point, link_lim)
+                ride1 = self._ride(r1, x, sp)
+                if ride1 is None:
+                    continue                                   # 첫 버스 승차 분을 못 내면 이 환승점의 모든 조합이 빠진다(종전과 같음)
+                head1 = head + ride1
                 for dl, t in nearby_transfer[point]:
                     rid2 = t["route_id"]
                     if rid2 == rid1 or rid2 not in alight_b or _VIRTUAL in str(t.get("station_nm")):
                         continue
+                    mid = head1 + self._walk_min(dl) + self.wayfinding
                     for db, y, r2 in alight_b[rid2]:
                         if t["seq"] >= y["seq"] or r2.route_nm == r1.route_nm:
                             continue
-                        ride1, ride2 = self._ride(r1, x, sp), self._ride(r2, t, y)
-                        if ride1 is None or ride2 is None:
+                        rk = (id(t), id(y))
+                        if rk in ride2_of:
+                            ride2 = ride2_of[rk]
+                        else:
+                            ride2 = ride2_of[rk] = self._ride(r2, t, y)
+                        if ride2 is None:
                             continue
-                        est = (self._walk_min(da) + (r1.term_min or 0) / 2 + ride1 + self._walk_min(dl) + self.wayfinding
-                               + (r2.term_min or 0) / 2 + ride2 + self._walk_min(db))
+                        est = (mid + (r2.term_min or 0) / 2 + ride2 + self._walk_min(db))
                         key = (rid1, rid2)
                         cur = best.get(key)
                         if cur is not None and cur.est_min <= est:
+                            continue
+                        boards = [(r1, x), (r2, t)]
+                        offsets = [head, mid + (r2.term_min or 0) / 2]   # 첫 승차 · 둘째 승차까지 분(종전 식과 같은 순서의 덧셈)
+                        # ☆`[2026-10-19 속도]` 운행 시간 확인을 후보를 만들기 **전에** 한다 — 통과 못 할 조합마다 후보 객체와 버스 구간 기록을
+                        #   만들고 버렸다(구간 하나에 수십만 개). 확인이 읽는 값(승차 · 승차까지 분 · 추정 소요)은 만들 후보와 같다.
+                        if self.service_check is not None and not self.service_check(
+                                _ServiceView("C", round(est, 1), boards, offsets, r1.route_id, x, (sp, y))):
+                            self.skipped_service += 1
                             continue
                         c = MixedCandidate(
                             "C", [bus_leg(r1, x, sp), bus_leg(r2, t, y)],
@@ -711,13 +752,8 @@ class MixedGenerator:
                             0.0, "추정")
                         c._rank, c._sub_lines, c._tg, c._done = est, [], [], True
                         c.route_id, c.board = r1.route_id, x
-                        c.bus_boards = [(r1, x), (r2, t)]
-                        first_board = self._walk_min(da) + (r1.term_min or 0) / 2
-                        c.bus_board_offsets = [first_board, first_board + ride1 + self._walk_min(dl)
-                                               + self.wayfinding + (r2.term_min or 0) / 2]
-                        if self.service_check is not None and not self.service_check(c):
-                            self.skipped_service += 1
-                            continue
+                        c.bus_boards = boards
+                        c.bus_board_offsets = offsets
                         best[key] = c
         return sorted(best.values(), key=lambda c: (c.est_min, c.route_nm))[:top]
 

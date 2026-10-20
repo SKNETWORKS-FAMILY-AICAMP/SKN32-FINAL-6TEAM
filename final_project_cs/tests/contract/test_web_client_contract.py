@@ -22,7 +22,8 @@ LIVE = WEB / "src" / "lib" / "live"
 PAYLOAD = WEB / "src" / "features" / "onboarding" / "payload.ts"
 
 #: `api("/v1/web/…", …)` · `api<T>(`…`, …)` · `openApi(` · `streamApi(` · `send(`${API_BASE}/v1/web/…`, …)` — 첫 인자가 경로인 호출
-_CALL = re.compile(r"\b(?:api|openApi|streamApi|send)\s*(?:<[^()]*?>)?\(\s*([`\"])(?:\$\{API_BASE\})?(/v1/web/[^`\"]*)\1")
+#: ★`[2026-10-20]` 경로 안의 `${…}` 는 통째로 건너뛴다 — `?fresh=${fresh ? "true" : "false"}` 의 큰따옴표에서 멈춰 risks.ts 를 못 읽었다
+_CALL = re.compile(r"\b(?:api|openApi|streamApi|send)\s*(?:<[^()]*?>)?\(\s*([`\"])(?:\$\{API_BASE\})?(/v1/web/(?:\$\{[^}]*\}|[^`\"$])*)\1")
 #: `fetch(`${API_BASE}/v1/web/…`, …)` — 실시간(SSE) 줄기는 `api` 를 거치지 않고 직접 부른다
 _FETCH = re.compile(r"\bfetch\(\s*`\$\{API_BASE\}(/v1/web/[^`]*)`")
 #: `const base = (id: string) => `/v1/web/trip-intakes/${…}`` 와 `api(`${base(id)}/candidates…`)` — 앞머리를 도우미로 빼 둔 모양

@@ -58,7 +58,7 @@ def test_original_23_turns_with_explicit_semantic_responses(nambu_scene, monkeyp
         kwargs['edit_lookups']=lambda:(None,None,None)
         original_init(self,**kwargs)
     monkeypatch.setattr(TripDesk,'__init__',init)
-    turns=json.loads((Path(__file__).parents[1]/'fixtures/travel/nambu_field_chat.json').read_text())
+    turns=json.loads((Path(__file__).parents[1]/'fixtures/travel/nambu_field_chat.json').read_text(encoding='utf-8'))
     records=[]
     for index,turn in enumerate(turns,1):
         scene['now']=datetime.fromisoformat(turn['at'])

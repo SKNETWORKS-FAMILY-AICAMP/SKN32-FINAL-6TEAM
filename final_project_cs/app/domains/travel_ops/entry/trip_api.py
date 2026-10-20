@@ -927,6 +927,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return store_place(conn, cur, tenant, trip_id, name=name, kind=kind, lat=lat, lon=lon,
                            weather_sensitive=weather_sensitive, attributes=attributes)
 
+    def _bound_alternates(detail: dict[str, Any], ids: dict[str, UUID]) -> dict[str, Any]:
+        from app.domains.travel_ops.components.intake.prepared import bind_alternate_places
+
+        return bind_alternate_places(detail, ids)
+
     def _insert(conn, store: TripStore, request: CreateTrip, key: str, body_sha: str) -> UUID:
         tenant = store.tenant_id
         ids: dict[str, UUID] = {}
@@ -945,7 +950,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         items = [Item(item_id=uuid4(), seq=it.seq, kind=it.kind, title=it.title,
                       place_id=ids.get(it.place) if it.place else None,
                       starts_at=_seoul(it.starts_at), ends_at=_seoul(it.ends_at),
-                      detail={**it.detail,
+                      detail={**_bound_alternates(it.detail, ids),
                               **({"route": it.route, "route_def": request.routes[it.route]}
                                  if it.route else {})})
                  for it in request.items]
@@ -1476,8 +1481,22 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return StreamingResponse(flow(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
+    def _prepare_later(background: BackgroundTasks, tenant: str, intake_id: UUID, shown: dict[str, Any] | None) -> None:
+        """★`[2026-10-19 사용자 지시]` 새 판(고치기 · 되돌리기 · 자동 추천 적용) — 미리 준비한 대안 중 **낡은 것만** 뒤에서 다시 준비한다
+        (바꾼 일정 · 그 앞뒤 일정의 이동 구간 — `intake/prepared.py`). 응답은 기다리지 않는다. 미리 보기(`preview`)는 판이 아니라 하지 않는다."""
+        from app.domains.travel_ops.components.intake import prepared
+
+        revision = (shown or {}).get("revision")
+        if not isinstance(revision, int) or (shown or {}).get("preview"):
+            return
+        if settings_module.get_guardrails().get("travel.candidates.prepare_on_intake") is False:
+            return
+        background.add_task(prepared.prepare, get_connection, tenant_id=tenant, intake_id=intake_id,
+                            kakao=_lazy("kakao", kakao_factory), chat=_lazy("chat", chat_factory))
+
     @router.post("/v1/web/trip-intakes/{intake_id}/edits")
-    def web_intake_edit(intake_id: UUID, request: IntakeEditIn, who: tuple[str, UUID] = Depends(_web_customer)):
+    def web_intake_edit(intake_id: UUID, request: IntakeEditIn, background: BackgroundTasks,
+                        who: tuple[str, UUID] = Depends(_web_customer)):
         """확인 화면에서 고친 값 → 새 판. ★낡은 판(다른 탭에서 먼저 고침)은 409 — 조용히 덮지 않는다."""
         from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, IntakeRejected, edit, view
 
@@ -1491,7 +1510,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                      tour=_lazy("place", place_factory),
                      kakao=_kakao_raw,
                      dining=_dining_lookup(_ctx))
-                return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+                shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+            _prepare_later(background, tenant, intake_id, shown)
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1500,16 +1521,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, exc.code, exc.message) from None
 
     @router.post("/v1/web/trip-intakes/{intake_id}/restore")
-    def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, who: tuple[str, UUID] = Depends(_web_customer)):
+    def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, background: BackgroundTasks,
+                           who: tuple[str, UUID] = Depends(_web_customer)):
         """완료된 원판을 새 판으로 전체 복원한다. 현재 잠금·예약·판 충돌은 부분 저장 없이 거절한다."""
         from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, restore
 
         tenant, customer = who
         try:
             with get_connection() as conn:
-                return restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                               revision=request.revision, restore_revision=request.restore_revision,
-                               item=(request.item.source_id, request.item.index) if request.item else None)
+                shown = restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                revision=request.revision, restore_revision=request.restore_revision,
+                                item=(request.item.source_id, request.item.index) if request.item else None)
+            _prepare_later(background, tenant, intake_id, shown)
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except IntakeConflict as exc:
@@ -1544,17 +1568,35 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                               who: tuple[str, UUID] = Depends(_web_customer)):
         """이 일정의 **다른 안 셋**(목업의 후보 A·B·C) — 같은 날 앞뒤 일정에 가까운 순, 후보마다 그 일정의 날짜·시각에 맞는지 검사 줄을 붙인다.
         이름이 모호한 곳은 같은 이름의 다른 지점, 아니면 같은 종류의 다른 곳. 고르면 `POST …/edits` 의 `items[n].place` 로 이 `place` 객체를 그대로 보낸다.
-        읽기 전용 — 아무것도 저장하지 않는다(카카오 값은 약관상 저장하지 않는다)."""
-        from app.domains.travel_ops.components.intake import candidates
+        ★`[2026-10-19 사용자 지시]` 접수 때 **미리 준비한 대안**(`intake/prepared.py`)이 지금 판에 맞으면 계산 없이 그것을 돌려준다(`prepared` 칸).
+        `Accept: text/event-stream` 이면 실시간 진행 — 저장분이 없으면 어림으로 먼저(`candidates`) 보이고 끝난 줄부터(`candidate`) 바꾼 뒤 `result`.
+        카카오 값은 약관상 저장하지 않는다(카카오 후보가 섞인 일정은 저장분을 만들지 않는다)."""
+        from app.domains.travel_ops.components.intake import candidates, prepared
 
         tenant, customer = who
+        chat = _lazy("chat", chat_factory)
+        kakao = _lazy("kakao", kakao_factory)
+
+        if _wants_stream(http):
+            found = _review_call(intake_id, customer, tenant, revision, lambda conn, found: found)
+            item = _review_item(found, source_id, index)
+            _count("place_search", tenant, customer, http)
+
+            def work(progress, _defer):
+                return prepared.stream(get_connection, tenant_id=tenant, intake_id=intake_id, review=found, item=item,
+                                       kakao=kakao, chat=chat, emit=progress.emit)
+
+            return _sse_response(tenant, customer, op="candidates", http=http, work=work)
 
         def use(conn, found):
             item = _review_item(found, source_id, index)
             _count("place_search", tenant, customer, http)
-            return {"revision": found["revision"], **candidates.alternatives(
-                conn, tenant_id=tenant, review=found, item=item, kakao=_lazy("kakao", kakao_factory),
-                chat=_lazy("chat", chat_factory))}      # ★`[2026-10-07]` 이유 문장은 모델이 확인된 값으로 쓴다(저장 · 검사 · 실패하면 틀 문장)
+            ready = prepared.serve(get_connection, conn, tenant_id=tenant, intake_id=intake_id, review=found, item=item, chat=chat)
+            if ready is not None:
+                return {"revision": found["revision"], **ready}
+            return {"revision": found["revision"], "prepared": None, **candidates.alternatives(
+                conn, tenant_id=tenant, review=found, item=item, kakao=kakao,
+                chat=chat)}      # ★`[2026-10-07]` 이유 문장은 모델이 확인된 값으로 쓴다(저장 · 검사 · 실패하면 틀 문장)
 
         return _review_call(intake_id, customer, tenant, revision, use)
 
@@ -1592,7 +1634,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return candidates.photos(_lazy("place", place_factory), ref)
 
     @router.post("/v1/web/trip-intakes/{intake_id}/autofix")
-    def web_intake_autofix(intake_id: UUID, request: IntakeAutofixIn, http: Request,
+    def web_intake_autofix(intake_id: UUID, request: IntakeAutofixIn, http: Request, background: BackgroundTasks,
                            who: tuple[str, UUID] = Depends(_web_customer)):
         """**전체 자동 추천** — 확인이 필요한 일정을 운영시간·휴무·앞뒤 이동까지 검증한 대체 일정(장소+시각)으로 한 번에 바꾼다(`intake/autofix.py`).
         고정한 일정은 건드리지 않는다. 바꿀 것이 있으면 `edits` 와 같은 길로 새 판이 되고(`applied: true`), 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
@@ -1609,7 +1651,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                         kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run, item_id=request.item_id,
                                         dining=_dining_lookup())
                 # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
-                return {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
+                shown = {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
+            if done.get("applied"):
+                _prepare_later(background, tenant, intake_id, shown["view"])
+            return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:
@@ -1729,6 +1774,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         with get_connection() as conn:
             checked = review_module.load(conn, tenant, intake_id, request.revision)
         body = {**registered_moves.with_review_moves(built.body, checked), "customer_id": str(customer)}
+        # ★`[2026-10-19 사용자 지시]` 접수 때 미리 준비한 대안을 일정 항목에 남긴다 — 채팅 「바꿔 줘」가 그것으로 바로 바꾼다(`intake/prepared.py`)
+        try:
+            from app.domains.travel_ops.components.intake import prepared
+
+            with get_connection() as conn:
+                body = prepared.with_alternates(conn, tenant_id=tenant, intake_id=intake_id, body=body, review=checked)
+        except Exception:                                  # noqa: BLE001 — 대안을 못 남겨도 등록은 한다(채팅이 그때 새로 찾는다)
+            logger.warning("registering prepared alternates failed intake=%s", intake_id, exc_info=True)
         survey = _intake_survey(tenant, intake_id, request.survey)
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}

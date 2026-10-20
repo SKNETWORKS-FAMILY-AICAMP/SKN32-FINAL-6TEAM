@@ -160,7 +160,7 @@ def _compose(body: str, values: dict[str, Any], payload: dict[str, Any], *,
             lines.append(f"(일정 버전 {payload['version']})")
     # ★`[2026-10-06 사용자 결정 · 항로 지킴이]` 알림에 실린 항로 지킴이 몫(`payload.guardian`) — 디스코드 · 텔레그램은 로그인이 없어 **링크로 웹을 연다**(켜기는 웹이 확인한 뒤 서버에 요청한다).
     #   덧붙이는 줄이라 이 값이 없는 알림의 문구는 한 글자도 안 바뀐다. 주소가 없으면(웹 주소 미설정) 켜기 줄은 붙이지 않는다.
-    #   ★계획서 링크 **앞**에 둔다 — 알림은 계획서 링크로 끝난다(`test_a_change_notice_carries_the_plan_link`).
+    #   ★앱 주소가 없는 알림은 계획서 링크로 끝난다(아래) — 그 링크 **앞**에 둔다. 앱 주소가 있으면 두 링크 모두 본문 앞이다(알림 v5 · `test_a_change_notice_carries_the_plan_link`).
     guardian = payload.get("guardian") or {}
     if guardian.get("changed"):
         lines.append("항로 지킴이가 바꿨어요. 마음에 안 들면 웹에서 되돌릴 수 있어요.")

@@ -43,6 +43,8 @@ class HoursFacts:
     why_unknown: str | None = None
     #: 요일표로 펴지 않은 조건 원문(공휴일 등)
     conditions: list[str] = field(default_factory=list)
+    #: 방문 안내(대표 장소 표의 `tips` — 「후원은 따로 예약」) — 휴무 판정에 넣지 않고 휴무 줄 뒤에 안내로만 붙인다. `[2026-10-20]`
+    tips: list[str] = field(default_factory=list)
     #: 활동 원장 판정(`activity_ledger.state` 반환 — `closed` · `within_hours` · `cut_short` · `closes_at` · `usable_minutes` · `quote` …).
     #  None 은 판정을 못 받았다(미등록 · 원장에 없는 곳 · 관광지가 아님)
     activity: dict[str, Any] | None = None
@@ -116,6 +118,7 @@ def _apply_landmark(place: dict[str, Any], start: datetime, out: HoursFacts) -> 
         return
     day = start.astimezone(_seoul()).date() if start.tzinfo else start.date()
     attributes, conditions = hours_attributes(landmark, day)
+    out.tips = list(dict.fromkeys([*out.tips, *landmark.hours.tips]))
     if attributes is None:
         if conditions:
             out.why_unknown = conditions[0]

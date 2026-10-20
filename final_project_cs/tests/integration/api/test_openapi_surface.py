@@ -149,6 +149,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/safety/resume",
     # ★2026-10-06 개인 AI 입구(MCP) 읽기 도구의 웹 입구 둘 — 일정 위험 점검 · 이동 판정(둘 다 읽기 · 본인 여행만). `wiki/external/rest-endpoints.md` 「일정 위험 점검 · 이동 판정」
     "/v1/web/trips/{trip_id}/risks",
+    # ★2026-10-18 위험이 걸린 일정의 대안 요청(보류 제안만 연다 · 일정은 안 바꾼다). `wiki/external/rest-endpoints/web-trips.md` 「일정 위험 점검 · 이동 판정」
+    "/v1/web/trips/{trip_id}/risks/{item_id}/alternatives",
     "/v1/web/moves/judge",
     # ★2026-10-04 에이전트 키(D-CS-012) — 쿠키 로그인한 회원만 만들고 관리한다
     "/v1/web/agent-keys",

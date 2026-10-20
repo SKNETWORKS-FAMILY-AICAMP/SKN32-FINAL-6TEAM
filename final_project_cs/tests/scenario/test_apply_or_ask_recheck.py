@@ -102,7 +102,7 @@ def test_a_change_that_fits_the_whole_itinerary_is_still_written(case_world):
     assert any(i.title == harmless.title for i in _trip(case_world)[1])
 
 
-def test_when_the_best_option_fails_the_next_ranked_option_is_used_and_the_notice_says_why(case_world):
+def test_when_the_best_option_fails_the_notice_describes_the_selected_option_without_internal_rejections(case_world):
     trip, items = _trip(case_world)
     item, later = _activity_followed_by_something(items)
     second = item.replaced_by(place=item.place, title=item.title + "(2순위)")
@@ -113,7 +113,8 @@ def test_when_the_best_option_fails_the_next_ranked_option_is_used_and_the_notic
 
     assert outcome["status"] == "adjusted" and outcome["summary"]["fit_rank"] == 2
     text = outcome["notice"]["text"]
-    assert "1순위" in text and "2순위로 골랐어요" in text                           # 왜 1순위가 아닌지 알림에 적힌다
+    assert text == f"{second.title} 로 바꿨어요"
+    assert "1순위" not in text and "skipped" not in outcome["notice"]
     assert any(i.title == second.title for i in _trip(case_world)[1])
     assert not any(i.title.endswith("(겹침)") for i in _trip(case_world)[1])
 

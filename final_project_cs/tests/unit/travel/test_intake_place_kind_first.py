@@ -292,6 +292,13 @@ def test_changdeokgung_hours_and_monday_closing_come_from_the_table():
     assert mon.attributes["hours_week"] == {"mon": "closed"}
 
 
+def test_the_secret_garden_reservation_is_a_tip_not_a_closing_condition():
+    """`[2026-10-20]` 「후원은 따로 예약」은 방문 안내다 — 휴무 판정 조건에 넣으면 창덕궁 전체가 「확인해 주세요」 · 대체 후보 `fits: false` 가 된다(알려진 시험 실패 조사 「결함 B」)."""
+    wed = _hours("창덕궁과 후원", datetime(2026, 10, 21, 10, 0, tzinfo=KST))
+    assert wed.conditions == []
+    assert wed.tips == ["후원은 따로 예약해야 들어갈 수 있어요"]
+
+
 def test_n_seoul_tower_and_cheonggyecheon_hours_are_known():
     sat = _hours("N서울타워", datetime(2026, 10, 24, 20, 0, tzinfo=KST))
     assert sat.known and sat.attributes["hours_week"]["sat"] == {"open": "10:00", "close": "23:00"}
