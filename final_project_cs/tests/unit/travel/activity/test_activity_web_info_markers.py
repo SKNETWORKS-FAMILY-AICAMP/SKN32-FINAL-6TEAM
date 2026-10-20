@@ -5,7 +5,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from app.domains.travel_ops.instances.activity import place_enrichment as pe
 from app.domains.travel_ops.instances.activity import web_info as wi

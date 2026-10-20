@@ -8,7 +8,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
-import pytest
 
 from app.domains.travel_ops.instances.activity import geocode as g
 from app.domains.travel_ops.instances.activity import place_enrichment as pe
