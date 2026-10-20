@@ -7,7 +7,7 @@ from typing import Any
 
 from app.core.contracts import NextAction, TeamResult, TeamTask
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (
-    NoChange, plan_fresh_alternate, plan_swap,
+    NoChange, plan_fresh_alternate, plan_swap, stored_alternates,
 )
 
 
@@ -285,15 +285,22 @@ def _fresh_plan(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> An
 def _propose_alternatives(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> TeamResult:
     from app.domains.travel_ops.components.planning.pending import options_from
 
-    plan = _fresh_plan(work, task, ctx, item)
-    if isinstance(plan, TeamResult):
-        return plan
-    if isinstance(plan, NoChange):
-        if plan.status != "relaxed":
-            return work.settle(task, ctx, plan)
-        options = plan.detail.get("options") or []
+    # ★`[2026-10-20]` 등록 때 남긴 「다른 안」이 있으면 그것을 먼저 묻는다 — 새로 찾는 것은 저장분이 없거나 낡았을 때만(`stored_alternates`).
+    #   고르는 둘째 차례도 같은 저장분으로 맞춘다(아래 `selected` 는 이 목록에서 찾는다)
+    places = work.catalog(task, ctx)
+    stored = stored_alternates(item, {str(p["place_id"]): p for p in places or []}, ctx["at"]) if places is not None else []
+    if stored:
+        options = stored
     else:
-        options = options_from(plan, item)
+        plan = _fresh_plan(work, task, ctx, item)
+        if isinstance(plan, TeamResult):
+            return plan
+        if isinstance(plan, NoChange):
+            if plan.status != "relaxed":
+                return work.settle(task, ctx, plan)
+            options = plan.detail.get("options") or []
+        else:
+            options = options_from(plan, item)
     original = str((item.place or {}).get("place_id") or item.place_id)
     options = work._plain({"options": [{**o, "rank": n} for n, o in enumerate(
         (o for o in options if str(o.get("place_id") or "") != original), start=1)]})["options"]

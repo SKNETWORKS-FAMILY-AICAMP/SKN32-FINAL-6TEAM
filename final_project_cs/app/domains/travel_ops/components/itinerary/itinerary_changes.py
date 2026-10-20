@@ -1213,6 +1213,25 @@ def swap_refusal(name: str, starts: datetime, report: dict[str, Any] | None) -> 
         f"{name}의 {at} {what}를 지금 확인하지 못해 바꾸지 않았어요. 일정은 그대로예요. 잠시 뒤 다시 말씀해 주세요.")})
 
 
+def stored_alternates(item: Item, places_by_id: dict[str, dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
+    """이 항목이 들고 있는 「다른 안」 가운데 **지금 고를 수 있는 것** — 채팅 「다른 데로 바꿔 줘」 · 「후보 알아봐 줘」가 새로 찾기 전에 먼저 쓴다.
+
+    빼는 것(낡음): 지금 적용된 곳과 같은 곳 · 장소 행이 이 여행에 없는 곳(place_id 가 있는데 목록에 없다) · 시작 시각이 이미 지난 안.
+    ★`[2026-10-20 x600 실서버 확인 — 사용자 사양 「등록 → 채팅 바꿔 줘 → 저장 대안으로」]` 등록 때 남긴 대안(빨래골 · 은평한옥마을 · 서울 관상감 관천대)이
+      있는데 「북촌한옥마을 다른 데로 바꿔 줘」가 「후보 알아봐 줘」(`propose_alternatives`)로 읽히자 늘 새로 찾아 다른 곳(북촌전망대 …)을 보였다."""
+    here = str(item.place_id or (item.place or {}).get("place_id") or "")
+    usable = []
+    for record in item.detail.get("alternates") or []:
+        place_id = str(record.get("place_id") or "")
+        if place_id and (place_id == here or place_id not in places_by_id):
+            continue
+        starts = datetime.fromisoformat(record["starts_at"]) if record.get("starts_at") else item.starts_at
+        if starts is not None and starts <= now:
+            continue
+        usable.append(record)
+    return usable
+
+
 def shift_moves_after(items: list[Item], current: Item, ends: datetime | None) -> tuple[dict[UUID, Item], Item | None]:
     """`current` 가 `ends` 에 끝나면 — 바로 뒤 이동 항목들을 소요 그대로 뒤로 민다. (민 이동들, 늦게 되는 다음 항목 또는 None).
 
