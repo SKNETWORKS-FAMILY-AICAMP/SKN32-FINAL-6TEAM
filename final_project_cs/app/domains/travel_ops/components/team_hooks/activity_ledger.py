@@ -22,24 +22,27 @@ _state: Callable[..., dict[str, Any] | None] | None = None
 _state_by_content: Callable[..., dict[str, Any] | None] | None = None
 _indoor: Callable[..., dict[str, Any] | None] | None = None
 _disaster: Callable[..., dict[str, Any]] | None = None
+_closure: Callable[..., Any] | None = None
 
 
 def register(*, state: Callable[..., dict[str, Any] | None],
              indoor: Callable[..., dict[str, Any] | None],
              disaster: Callable[..., dict[str, Any]],
-             state_by_content: Callable[..., dict[str, Any] | None] | None = None) -> None:
+             state_by_content: Callable[..., dict[str, Any] | None] | None = None,
+             closure: Callable[..., Any] | None = None) -> None:
     """조립 때 한 번. 셋은 꼭 줘야 한다 — 빠뜨리면 여기서 `TypeError` 로 바로 드러난다.
 
-    `state_by_content` 는 아직 장소 행이 없는 확인 화면 단계(관광공사 번호만 아는 곳)의 판정이다. 없으면 그 단계는 모름이다."""
+    `state_by_content` 는 아직 장소 행이 없는 확인 화면 단계(관광공사 번호만 아는 곳)의 판정이다. 없으면 그 단계는 모름이다.
+    `closure` 는 휴무 원문 한 조각이 그날 휴무인가(`closure_rules.read_closure` 모양) — 원장에 없는 곳의 조건 문장을 읽는다. 없으면 모름이다."""
     if collect_registration("activity_ledger", locals()):
         return
-    global _state, _state_by_content, _indoor, _disaster
-    _state, _state_by_content, _indoor, _disaster = state, state_by_content, indoor, disaster
+    global _state, _state_by_content, _indoor, _disaster, _closure
+    _state, _state_by_content, _indoor, _disaster, _closure = state, state_by_content, indoor, disaster, closure
 
 
 def clear() -> None:
-    global _state, _state_by_content, _indoor, _disaster
-    _state = _state_by_content = _indoor = _disaster = None
+    global _state, _state_by_content, _indoor, _disaster, _closure
+    _state = _state_by_content = _indoor = _disaster = _closure = None
 
 
 def is_registered() -> bool:
@@ -63,6 +66,20 @@ def state_by_content(conn, content_id: str | None, at: datetime | None, until: d
     if selected is None or not content_id:
         return None
     return selected(conn, content_id, at, until, holiday=holiday)
+
+
+def closure(text: str | None, at: datetime | None, *, holiday: Callable[..., Any] | None = None) -> dict[str, Any] | None:
+    """휴무 원문 한 조각(관광공사 운영시간을 읽을 때 따로 남긴 조건 문장)이 그 시각에 휴무인가. `[2026-10-20]`
+
+    반환 `{"closed": True|False|None, "reason", "quote"}` — `closed` 는 휴무 · 그날엔 해당 없음 · 모름.
+    `holiday` 는 날짜 → `{"is_holiday", "holiday_name"}` · None(모름) — 부르는 쪽이 DB 달력에서 넘긴다.
+    ★미등록 · 시각을 모름이면 `None`(모름). 판정 규칙은 활동 팀 것이다 — 코어는 원문 · 달력만 넘긴다."""
+    selected = read_binding("activity_ledger", "closure", globals()["_closure"])
+    if selected is None or not text or not isinstance(at, datetime):
+        return None
+    read = selected(text, at, holiday)
+    return {"closed": getattr(read, "value", None), "reason": getattr(read, "reason", None),
+            "quote": getattr(read, "quote", None)}
 
 
 def indoor(conn, tenant_id: str, place_id: str | None) -> dict[str, Any] | None:

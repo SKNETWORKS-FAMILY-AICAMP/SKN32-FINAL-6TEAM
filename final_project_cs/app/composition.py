@@ -866,13 +866,16 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                             distance_first=activity_similarity.distance_first)
 
         # 활동 — 휴무 · 운영시간 · 재난 영향 판정의 정본(활동 원장). 확인 화면 · 감시가 고객 문의와 같은 판정을 쓴다
+        from app.domains.travel_ops.instances.activity import closure_rules as activity_closure_rules
         from app.domains.travel_ops.instances.activity import ledger as activity_ledger_impl
         from app.domains.travel_ops.instances.activity import verdicts as activity_verdicts
 
+        # `closure` — 원장에 없는 곳의 읽어 둔 휴무 조건 문장도 같은 휴무 규칙으로 읽는다(`[2026-10-20]` 창덕궁 공휴일 단서 경고)
         activity_ledger.register(state=activity_ledger_impl.state,
                                  state_by_content=activity_ledger_impl.state_by_content,
                                  indoor=activity_ledger_impl.indoor,
-                                 disaster=activity_verdicts.disaster_verdict)
+                                 disaster=activity_verdicts.disaster_verdict,
+                                 closure=activity_closure_rules.read_closure)
 
         # 활동 — 확인 화면 「다른 곳」 후보를 고르는 대체안 엔진(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
         from app.domains.travel_ops.instances.activity import review_alternatives as activity_review_alternatives

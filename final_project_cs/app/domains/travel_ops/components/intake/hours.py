@@ -8,6 +8,8 @@
     ① 그 장소 행(`places` — 우리 장소 표 · 요식 원장에서 올린 식당) 의 속성  ② 관광공사 운영시간 표(`catalog_hours`, 새벽 작업)
     ③ 다른 여행에서 이미 읽어 둔 같은 관광공사 id 의 장소 행(14일 안)  ④ 요식 원장(`dining_state` — 식당만, 이름·150m 로 이은 곳 포함)
     ⑤ 활동 원장(`activity_ledger.state` — 관광지만. `[2026-10-13]` 활동 팀이 꽂은 자리, 미등록이면 건너뛴다)
+      · 읽어 둔 조건 문장 중 그날엔 해당 없는 것을 활동 팀 휴무 규칙 + DB 공휴일 달력으로 뺀다(`_settle_stored_conditions`, `[2026-10-20]`)
+    ⑥ 대표 장소 표(`config/seoul_landmarks.yaml`) — 운영시간은 위가 모두 비었을 때만, 방문 안내(`tips`)는 늘
 ★모르는 것은 모른다고 돌려준다(`known=False` + 이유) — 「열려 있다」고 지어내지 않는다. 카카오로만 찾은 곳은 운영시간이 없다.
 ★판정은 **등록 판정과 같은 함수**(`itinerary_checks.check_itinerary`)가 한다 — 여기서는 사실만 모은다. 그래서 확인 화면의 「주의」와
   등록 때의 거절이 어긋나지 않는다.
@@ -15,6 +17,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any
@@ -26,6 +29,8 @@ REUSE_DAYS = 14
 #: 요식 원장에서 라스트오더 여유로 보는 분 — `replan.ORDER_MARGIN_MIN` 과 같은 값(탈락 기준 20분)
 ORDER_MARGIN_MIN = 20
 _DAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+#: 날짜 범위 — 「12월 29일~1월 2일」 · 「12월 29일 - 1월 2일」 (`_settle_stored_conditions`)
+_DATE_RANGE = re.compile(r"\d{1,2}\s*월\s*\d{1,2}\s*일\s*[~\-–～]\s*\d{1,2}\s*(?:월|일)")
 
 
 @dataclass
@@ -100,11 +105,85 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
     # ⑤ 활동 원장 — 관광지만. 장소 행이 있으면 그 행으로, 없거나 원장과 안 이어졌으면 관광공사 번호로
     if kind == "activity" and activity_verdict:
         _apply_activity_ledger(conn, tenant_id, core_id, content_id, start, end, out)
+        _settle_stored_conditions(conn, start, out)
     if not out.known:
         _apply_landmark(place, start, out)
+    else:
+        _landmark_tips(place, out)
     if not out.known:
         out.why_unknown = out.why_unknown or _why_unknown(place, kind, content_id)
     return out
+
+
+def _settle_stored_conditions(conn, start: datetime, out: HoursFacts) -> None:
+    """⑤-2 읽어 둔 조건 문장(`hours_read.conditions` — 관광공사 휴무 원문 가운데 요일표로 못 편 것) 가운데 **그날엔 해당 없다**고
+    확정되는 것을 뺀다. `[2026-10-20 x600 실서버 확인]`
+
+    ☆왜. 「매주 월요일 (단, 월요일이 공휴일인 경우 개방하며, 그 다음 첫 번째 평일에 휴관)」(창덕궁)처럼 공휴일 단서가 붙은 원문은 통째로
+      조건에 남는다. 확인 화면은 조건이 있으면 요일과 상관없이 휴무 줄을 「확인해 주세요」로 올리고, 대체 후보에서도 「맞는 곳」이 아니게 된다
+      — 수요일 창덕궁이 경고, 화요일 경복궁 대체 후보에서 창덕궁이 빠졌다. x600 서버 관광공사 운영시간 2,569곳 중 1,034곳에 조건이 있다.
+    ★판정은 활동 팀 휴무 규칙이 한다(`activity_ledger.closure` — 원장 판정과 같은 `closure_rules.read_closure`). 코어는 문장과 DB 공휴일 달력만 넘긴다.
+    ★「해당 없음」(`False`)만 뺀다. 휴무(`True`) · 모름(`None`)은 지금처럼 남겨 「확인해 주세요」로 둔다 — 헛걸음 쪽으로 틀리지 않게.
+      「홈페이지 참조」 · 「월 1회」 같은 문장은 규칙이 모름으로 읽어 그대로 남는다. 미등록이거나 달력이 그해를 모르면 아무것도 빼지 않는다."""
+    stored = set(_stored_conditions(out.attributes))
+    if not stored or not any(text in stored for text in out.conditions):
+        return
+    from app.domains.travel_ops.components.team_hooks import activity_ledger
+
+    holiday = _HolidayCalendar(conn)
+    kept: list[str] = []
+    for text in out.conditions:
+        # ★날짜 범위(「12월 29일~1월 2일」)는 규칙이 양 끝 날짜만 본다 — 사이 날짜를 「해당 없음」으로 읽으니 묻지 않고 남긴다(2026-10-20 x600 자료 1건)
+        settle = text in stored and not _DATE_RANGE.search(text)
+        verdict = activity_ledger.closure(text, start, holiday=holiday) if settle else None
+        if verdict is not None and verdict.get("closed") is False:
+            continue
+        kept.append(text)
+    out.conditions = kept
+
+
+class _HolidayCalendar:
+    """DB 공휴일 달력(`dining.v_holiday` — 한국천문연구원 특일, 관보 고시 기준. 이동 쪽 달력 파일에서 적재) → 날짜마다 `read.holiday` 모양.
+
+    ★바깥을 부르지 않는다(이 모듈 머리말). 달력이 덮는 해가 아니거나 표가 없는 DB 면 `None`(모름) — 「공휴일 아님」으로 바꾸지 않는다.
+    ★처음 물을 때 한 번만 읽는다 — 규칙이 공휴일을 묻지 않는 문장이면 DB 를 부르지 않는다."""
+
+    def __init__(self, conn) -> None:
+        self._conn = conn
+        self._days: dict[date, str] | None = None
+        self._years: set[int] = set()
+
+    def __call__(self, day: date) -> dict[str, Any] | None:
+        if self._days is None:
+            self._days = self._load()
+            self._years = {d.year for d in self._days}
+        if day.year not in self._years:
+            return None
+        name = self._days.get(day)
+        return {"is_holiday": name is not None, "holiday_name": name}
+
+    def _load(self) -> dict[date, str]:
+        try:
+            with self._conn.transaction():
+                with self._conn.cursor() as cur:
+                    cur.execute("SELECT holiday_date, name FROM dining.v_holiday")
+                    rows = cur.fetchall()
+        except Exception as exc:                # noqa: BLE001 — 달력 표가 없는 DB(시험 · 다른 조립)면 모름으로 간다
+            if type(exc).__name__ not in ("UndefinedTable", "UndefinedFunction", "InvalidSchemaName"):
+                raise
+            logger.warning("intake hours: holiday calendar not readable reason=%s", type(exc).__name__)
+            return {}
+        return {row[0]: str(row[1]) for row in rows if isinstance(row[0], date)}
+
+
+def _landmark_tips(place: dict[str, Any], out: HoursFacts) -> None:
+    """⑥-2 다른 자료로 운영시간을 안 곳에도 대표 장소 표의 방문 안내(`tips` — 「후원은 따로 예약」)는 붙인다. `[2026-10-20]`
+    ☆x600 서버의 창덕궁은 관광공사 운영시간이 있어 ⑥ 을 지나지 않았고, 후원 안내가 한 번도 안 보였다. 안내는 휴무 판정을 바꾸지 않는다."""
+    from .landmarks import landmark_named
+
+    landmark = landmark_named(place.get("name"))
+    if landmark is not None and landmark.hours is not None and landmark.hours.tips:
+        out.tips = list(dict.fromkeys([*out.tips, *landmark.hours.tips]))
 
 
 def _apply_landmark(place: dict[str, Any], start: datetime, out: HoursFacts) -> None:
@@ -222,7 +301,8 @@ def _apply_activity_ledger(conn, tenant_id: str, core_id: str | None, content_id
     ★판정은 활동 팀이 한다(휴무 원문 · 「둘째 주 월요일」 · 공휴일 조건 · 끝나는 시각까지 운영 · 중간에 닫힘).
       여기서는 받은 답을 화면 · 등록 판정이 읽는 모양으로 옮기기만 한다.
     ★공휴일 소스는 넘기지 않는다 — 확인 화면은 DB 만 본다(이 모듈 머리말). 공휴일 조건은 활동 판정이 「모름」으로 두고
-      `needs_caveat` 로 알린다 → 휴무 줄에 「공휴일 조건이 있어요」.
+      `needs_caveat` 로 알린다 → 휴무 줄에 「공휴일 조건이 있어요」. (`[2026-10-20]` 원장에 없는 곳의 읽어 둔 조건 문장은
+      `_settle_stored_conditions` 가 DB 달력과 함께 같은 휴무 규칙에 묻는다 — 이 원장 판정에는 아직 달력을 넘기지 않는다)
     ★「쉰다」만 요일표에 더한다. 원장이 「연다」고 해도 다른 자료가 쉰다고 적은 칸은 지우지 않는다 — 헛걸음 쪽으로 틀리지 않게."""
     from app.domains.travel_ops.components.team_hooks import activity_ledger
 
