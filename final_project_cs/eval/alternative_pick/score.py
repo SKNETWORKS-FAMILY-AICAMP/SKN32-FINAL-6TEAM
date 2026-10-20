@@ -41,7 +41,12 @@ WON = re.compile(r"\d[\d,]*\s*원")
 REVIEW_SAMPLE = 20
 VERDICT_COL = "판정(근거 있음 / 지어냄)"
 GROUNDED, FABRICATED = "근거 있음", "지어냄"
-TARGETS = {"M1": 0.85, "M6b": 0.98, "M7": 0.90, "M8": 0.90}
+#: ★`[2026-10-20 사용자 결정 — 완화안]` 지어냄을 둘로 나눈다(`docs/activity/대체 후보 판정 — 허용 기준과 성능 향상 테스트 계획.md` 1-3).
+#:  심각 = 입력과 반대되는 말(거리 · 분류 · 고객 문장을 거꾸로) 또는 금지 사실(요금 · 혼잡 · 후기 · 평점 · 인기).
+#:  경미 = 입력에 없는 장소 특성 추측 · 취향 부합 해석. 단계 없이 「지어냄」 만 적힌 판정은 「단계 미정」으로 판정을 미룬다.
+FAB_SEVERE, FAB_MILD = "지어냄(심각)", "지어냄(경미)"
+VERDICTS = (GROUNDED, FAB_SEVERE, FAB_MILD, FABRICATED)
+TARGETS = {"M1": 0.85, "M6b": 0.98, "M7": 0.90, "M8": 0.90, "M5_mild": 0.05, "timeout": 0.01}
 
 
 def discriminating(case: dict) -> bool:
@@ -125,8 +130,8 @@ def load_reasons(path: Path) -> dict[tuple[str, str, int], str]:
         out = {}
         for r in csv.DictReader(fh):
             verdict = (r.get(VERDICT_COL) or "").strip()
-            if verdict and verdict not in (GROUNDED, FABRICATED):
-                raise SystemExit(f"{r['사례']} {r['변형']} r{r['회차']}: 판정은 「{GROUNDED}」 또는 「{FABRICATED}」")
+            if verdict and verdict not in VERDICTS:
+                raise SystemExit(f"{r['사례']} {r['변형']} r{r['회차']}: 판정은 {' / '.join(f'「{v}」' for v in VERDICTS[:3])}")
             if verdict:
                 out[(r["사례"], r["변형"], int(r["회차"]))] = verdict
     return out
@@ -198,6 +203,7 @@ def summarize(cases: dict[str, dict], rows: list[dict], conditions: dict,
     out["baseline_code_order"] = baseline
     out["M3_llm_minus_code"] = delta
     out["by_stratum"] = _by_stratum(base)
+    out["by_path"] = _by_path(base)
 
     # M4 단서 없음 → 코드 순서 유지
     quiet = [x for x in base if x[1]["expects_code_order"]]
@@ -217,6 +223,11 @@ def summarize(cases: dict[str, dict], rows: list[dict], conditions: dict,
     out["M6c_corrected"] = ratio(count["corrected"], n_called)
     out["M6d_discarded"] = ratio(count["discarded"], n_called)
     out["M6e_call_failed"] = ratio(count["failed"], n_called)
+    # ★`[2026-10-20 완화안]` 사용률은 원래 판(운영 입력 모양)으로, 호출 실패는 설정 오류 · 시간 초과로 나눠 판정한다
+    base_called = [x for x in called if x[0]["variant"] == "base"]
+    out["M6b_base"] = ratio(sum(x[2]["usage"] in ("valid", "corrected") for x in base_called), len(base_called))
+    out["M6e_config_error"] = ratio(sum(r["status"] == "llm_error" for r, _, _ in called), n_called)
+    out["M6e_timeout"] = ratio(sum(r["status"] == "llm_timeout" for r, _, _ in called), n_called)
     out["not_called"] = ratio(len(judged) - n_called, len(judged))
     errors = defaultdict(int)
     for r, _, _ in called:
@@ -291,6 +302,28 @@ def _by_stratum(base: list[tuple]) -> dict[str, Any]:
     return out
 
 
+def path_of(case: dict) -> str:
+    """`[2026-10-19]` 사례 경로 — 고객 요청(`chat`, 동결 holdout 은 칸이 없다) · 감시(`watch:rule` · `watch:human`)."""
+    path = case.get("path") or "chat"
+    return f"{path}:{case['watch_kind']}" if path == "watch" else path
+
+
+def _by_path(base: list[tuple]) -> dict[str, Any]:
+    groups: dict[str, list[tuple]] = defaultdict(list)
+    for x in base:
+        groups[path_of(x[1])].append(x)
+    out = {}
+    for path, items in sorted(groups.items()):
+        quiet = [x for x in items if x[1]["expects_code_order"]]
+        picking = [x for x in items if discriminating(x[1])]
+        out[path] = {"cases": len({r["case_id"] for r, _, _ in items}),
+                     "M1_discriminating": ratio(sum(j["served_outcome"] == "correct" for _, _, j in picking), len(picking)),
+                     "M2_dangerous": ratio(sum(j["dangerous"] for _, _, j in items), len(items)),
+                     "M4_keep_code_order": ratio(sum(j["kept_order"] for _, _, j in quiet), len(quiet)),
+                     "not_called": ratio(sum(j["usage"] == "not_called" for _, _, j in items), len(items))}
+    return out
+
+
 def _grounding(judged: list[tuple], reasons: dict | None) -> dict[str, Any]:
     written = [(r, j) for r, _, j in judged if j["reason"]]
     flagged = [(r, j) for r, j in written if j["flags"]]
@@ -303,9 +336,12 @@ def _grounding(judged: list[tuple], reasons: dict | None) -> dict[str, Any]:
         return out
     key = lambda r: (r["case_id"], r["variant"], r["repeat"])  # noqa: E731
     unreviewed_flagged = [r for r, _ in flagged if key(r) not in reasons]
-    fabricated = sum(reasons.get(key(r)) == FABRICATED for r, _ in written)
+    verdicts = [reasons.get(key(r)) for r, _ in written]
+    fabricated = sum(str(v).startswith(FABRICATED) for v in verdicts)
     reviewed = sum(key(r) in reasons for r, _ in written)
     out.update(reviewed=reviewed, fabricated=fabricated, **ratio(len(written) - fabricated, len(written)),
+               severe=ratio(verdicts.count(FAB_SEVERE), len(written)), mild=ratio(verdicts.count(FAB_MILD), len(written)),
+               unclassified=verdicts.count(FABRICATED),
                unreviewed_flagged=len(unreviewed_flagged),
                status="pending" if unreviewed_flagged else "reviewed",
                note=f"표시 안 되고 표본에도 안 든 {len(written) - reviewed}건은 사람이 보지 않았다(근거 있음으로 셈)")
@@ -334,22 +370,41 @@ def _gate(out: dict, conditions: dict, cases: dict[str, dict]) -> dict[str, Any]
     # ★`[2026-10-19 사용자 결정 M2-1 + M2-2]` 「M2 = 0」 을 셋으로 나눴다 — 10-19 에 위험을 「명시 조건 위반까지」 넓혀 원래 0건 기준이
     #   겨냥한 안전 문제(못 가는 곳 · 후보 밖)와 선호 위반이 섞였기 때문이다. 하드 위험은 0건 그대로, 선호 위반은
     #   「켜도 지금(코드 순서)보다 나빠지지 않음」 으로 본다. 원래 기준 값(`M2_dangerous`)도 계속 낸다.
+    # ★`[2026-10-20 사용자 결정 — 완화안]` 결과(holdout v2 · 감시 v2)를 본 뒤 바꾼 기준이다(계획서 5절). 하한(하드 위험 · 새 위험 ·
+    #   설정 오류 · 심각한 지어냄 = 0)은 그대로, 사용률은 원래 판, 시간 초과 ≤ 1%, 경미한 지어냄 ≤ 5%(이유 쓴 답 수 기준).
+    #   10-19 판 기준(M5 = 100% · M6b 전체 ≥ 98% · M6e = 0)도 `checks_before` 로 같이 낸다.
+    if m5["status"] in ("pending",) or m5.get("unclassified"):
+        severe_ok = mild_ok = None
+    elif m5["status"] == "no_reasons":
+        severe_ok = mild_ok = True
+    else:
+        severe_ok = m5["severe"]["num"] == 0
+        mild_ok = m5["mild"]["num"] <= TARGETS["M5_mild"] * m5["mild"]["den"]
+    timeout = out["M6e_timeout"]
     checks = {
         "M2 하드 = 0": out["M2_hard"]["num"] == 0,
         "M2 새 위험 = 0": out["M2_new_danger"]["num"] == 0,
         "M2 ≤ 코드 순서": out["M2_dangerous"]["num"] <= out["M2_code_order"]["num"],
+        "설정 오류 = 0": out["M6e_config_error"]["num"] == 0,
+        "시간 초과 ≤ 1%": timeout["den"] > 0 and timeout["num"] <= TARGETS["timeout"] * timeout["den"],
+        "M5 심각 = 0": severe_ok,
+        "M5 경미 ≤ 5%": mild_ok,
+        "M6b 원래 판 ≥ 98%": out["M6b_base"]["den"] > 0
+                            and out["M6b_base"]["num"] / out["M6b_base"]["den"] >= TARGETS["M6b"],
+    }
+    checks_before = {
         "M5 = 100%": (None if m5["status"] == "pending"
                       else m5["status"] == "no_reasons" or m5.get("num") == m5.get("den")),
         "M6b ≥ 98%": out["M6b_used"]["den"] > 0 and out["M6b_used"]["num"] / out["M6b_used"]["den"] >= TARGETS["M6b"],
         "M6e = 0": out["M6e_call_failed"]["num"] == 0,
     }
-    if not checks["M6e = 0"]:
-        verdict = "환경 먼저 — 호출 실패가 있어 판정하지 않는다(프롬프트 등록 · 키 · 시간 제한)"
+    if not checks["설정 오류 = 0"]:
+        verdict = "환경 먼저 — 설정 오류(프롬프트 등록 · 키)가 있어 판정하지 않는다"
     elif None in checks.values():
-        verdict = "확인 전 — M5 사람 확인이 남았다"
+        verdict = "확인 전 — M5 사람 확인(지어냄 심각 · 경미 구분 포함)이 남았다"
     else:
         verdict = "전환 가능" if all(checks.values()) else "shadow 유지"
-    return {"final": final, "checks": checks,
+    return {"final": final, "checks": checks, "checks_before": checks_before, "criteria": "2026-10-20 완화안",
             "verdict": verdict if final else f"참고만 — holdout · 사람 라벨 · 실호출이 아니다 ({verdict})"}
 
 
@@ -367,9 +422,12 @@ def report_lines(s: dict) -> list[str]:
         f"   (원답 후보 밖 {r(s['M2_raw_outside'])} · 보정 후만 {r(s['M2_served_only'])} · 원래 기준 「M2 = 0」 "
         f"{'통과' if s['M2_dangerous']['num'] == 0 else '미달'})",
         f"M5 이유 근거율 {s['M5_reason_grounded']['status']} · 자동 표시 {r(s['M5_reason_grounded']['auto_flagged'])}"
-        + (f" · {r(s['M5_reason_grounded'])}" if "num" in s["M5_reason_grounded"] else ""),
-        f"M6 유효 {r(s['M6a_valid'])} · 사용 {r(s['M6b_used'])} · 보정 {r(s['M6c_corrected'])} · "
-        f"폐기 {r(s['M6d_discarded'])} · 호출 실패 {r(s['M6e_call_failed'])} · 안 부름 {r(s['not_called'])}",
+        + (f" · {r(s['M5_reason_grounded'])} · 심각 {r(s['M5_reason_grounded']['severe'])} · "
+           f"경미 {r(s['M5_reason_grounded']['mild'])} · 단계 미정 {s['M5_reason_grounded']['unclassified']}"
+           if "severe" in s["M5_reason_grounded"] else ""),
+        f"M6 유효 {r(s['M6a_valid'])} · 사용 {r(s['M6b_used'])}(원래 판 {r(s['M6b_base'])}) · 보정 {r(s['M6c_corrected'])} · "
+        f"폐기 {r(s['M6d_discarded'])} · 호출 실패 {r(s['M6e_call_failed'])}(설정 오류 {r(s['M6e_config_error'])} · "
+        f"시간 초과 {r(s['M6e_timeout'])}) · 안 부름 {r(s['not_called'])}",
         "── 참고(A안 — 순서가 결과를 거의 바꾸지 않는다) ──",
         f"M1 골라야 하는 사례 {r(s['M1_discriminating'])} · CI {s['M1_discriminating'].get('ci95')} "
         f"(사례 {ex['discriminating']} · 뺀 사례: 셋 다 허용 {ex['all_acceptable']} · 없음 {ex['no_fit']})",
@@ -380,7 +438,10 @@ def report_lines(s: dict) -> list[str]:
         f"M9 지연 p50 {s['M9']['latency_ms']['p50']}ms · p95 {s['M9']['latency_ms']['p95']}ms · 비용 ${s['M9']['cost_usd_total']}",
         "묶음별: " + " · ".join(f"{k} {v['M1_served']['num']}/{v['M1_served']['den']}(기준선 {v['baseline']['num']}/{v['baseline']['den']})"
                               for k, v in s["by_stratum"].items()),
-        f"전환 기준: {s['gate']['verdict']} — {s['gate']['checks']}",
+        "경로별: " + " · ".join(f"{k} 사례 {v['cases']} · M1 {r(v['M1_discriminating'])} · M2 {r(v['M2_dangerous'])} · "
+                              f"M4 {r(v['M4_keep_code_order'])}" for k, v in s["by_path"].items()),
+        f"전환 기준({s['gate']['criteria']}): {s['gate']['verdict']} — {s['gate']['checks']}",
+        f"   10-19 판 기준: {s['gate']['checks_before']}",
     ]
     return lines
 

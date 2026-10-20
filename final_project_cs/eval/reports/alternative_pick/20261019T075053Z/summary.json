@@ -274,6 +274,31 @@
    }
   }
  },
+ "by_path": {
+  "chat": {
+   "cases": 80,
+   "M1_discriminating": {
+    "num": 91,
+    "den": 114,
+    "pct": 79.8
+   },
+   "M2_dangerous": {
+    "num": 6,
+    "den": 240,
+    "pct": 2.5
+   },
+   "M4_keep_code_order": {
+    "num": 39,
+    "den": 39,
+    "pct": 100.0
+   },
+   "not_called": {
+    "num": 0,
+    "den": 240,
+    "pct": 0.0
+   }
+  }
+ },
  "M4_keep_code_order": {
   "num": 39,
   "den": 39,
@@ -291,6 +316,17 @@
   "num": 129,
   "den": 155,
   "pct": 83.2,
+  "severe": {
+   "num": 6,
+   "den": 155,
+   "pct": 3.9
+  },
+  "mild": {
+   "num": 20,
+   "den": 155,
+   "pct": 12.9
+  },
+  "unclassified": 0,
   "unreviewed_flagged": 0,
   "status": "reviewed",
   "note": "표시 안 되고 표본에도 안 든 0건은 사람이 보지 않았다(근거 있음으로 셈)"
@@ -316,6 +352,21 @@
   "pct": 0.6
  },
  "M6e_call_failed": {
+  "num": 0,
+  "den": 320,
+  "pct": 0.0
+ },
+ "M6b_base": {
+  "num": 240,
+  "den": 240,
+  "pct": 100.0
+ },
+ "M6e_config_error": {
+  "num": 0,
+  "den": 320,
+  "pct": 0.0
+ },
+ "M6e_timeout": {
   "num": 0,
   "den": 320,
   "pct": 0.0
@@ -360,10 +411,18 @@
    "M2 하드 = 0": true,
    "M2 새 위험 = 0": true,
    "M2 ≤ 코드 순서": true,
+   "설정 오류 = 0": true,
+   "시간 초과 ≤ 1%": true,
+   "M5 심각 = 0": false,
+   "M5 경미 ≤ 5%": false,
+   "M6b 원래 판 ≥ 98%": true
+  },
+  "checks_before": {
    "M5 = 100%": false,
    "M6b ≥ 98%": true,
    "M6e = 0": true
   },
+  "criteria": "2026-10-20 완화안",
   "verdict": "shadow 유지"
  }
 }

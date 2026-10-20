@@ -1,0 +1,402 @@
+{
+ "conditions": {
+  "eval_run": "20261019T144241Z",
+  "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_watch.jsonl",
+  "inputs_sha256": "e452da6b8ab7c217feed76e2f56cf09a547f64fd1b5fba78c52a9d9a3ef82c92",
+  "dataset_sha256": "400bcd58ad95bd2df7294e964c2a81dd7536d2227bf5d0e6c1f5933568ecab17",
+  "split": [
+   "holdout"
+  ],
+  "smoke": false,
+  "labeler": "합의",
+  "cases": 54,
+  "repeats": 3,
+  "shuffle": {
+   "cases": 40,
+   "per_case": 2,
+   "seed": 7
+  },
+  "dry_run": false,
+  "model": "gpt-5.4-nano",
+  "reasoning_effort": "low",
+  "web_search": false,
+  "prompt_file": "alternative_order.v2.md",
+  "timeout_s": 8.0,
+  "temperature": null,
+  "seed_model": null,
+  "prompt": "db",
+  "prompt_id": "cc0f028a-3b42-4007-99b4-9de0b35cc470",
+  "prompt_chars": 1072,
+  "retried": [
+   {
+    "at": "20261019T153221Z",
+    "observations": [
+     "L-01-W/base/r1:llm_timeout",
+     "L-01-W/base/r3:llm_timeout",
+     "L-01-W/base/r2:llm_timeout",
+     "L-10-W/base/r1:llm_timeout"
+    ]
+   },
+   {
+    "at": "20261020T001057Z",
+    "observations": [
+     "L-01-W/base/r1:llm_timeout"
+    ]
+   }
+  ],
+  "labels_sha256": "400bcd58ad95bd2df7294e964c2a81dd7536d2227bf5d0e6c1f5933568ecab17"
+ },
+ "observations": 242,
+ "base_observations": 162,
+ "cases": 54,
+ "M1_served": {
+  "num": 148,
+  "den": 162,
+  "pct": 91.4,
+  "ci95": [
+   0.8333,
+   0.9815
+  ],
+  "mean_of_cases": 0.9136,
+  "outcomes": {
+   "correct": 148,
+   "suboptimal": 14
+  }
+ },
+ "M1_raw": {
+  "num": 148,
+  "den": 162,
+  "pct": 91.4,
+  "ci95": [
+   0.8333,
+   0.9815
+  ],
+  "mean_of_cases": 0.9136,
+  "outcomes": {
+   "correct": 148,
+   "suboptimal": 14
+  }
+ },
+ "M1_discriminating": {
+  "num": 43,
+  "den": 57,
+  "pct": 75.4,
+  "ci95": [
+   0.5439,
+   0.9298
+  ],
+  "mean_of_cases": 0.7544,
+  "outcomes": {
+   "suboptimal": 14,
+   "correct": 43
+  }
+ },
+ "M1_excluded_cases": {
+  "all_acceptable": 35,
+  "no_fit": 0,
+  "discriminating": 19
+ },
+ "M2_dangerous": {
+  "num": 0,
+  "den": 162,
+  "pct": 0.0
+ },
+ "M2_raw_outside": {
+  "num": 0,
+  "den": 162,
+  "pct": 0.0
+ },
+ "M2_served_only": {
+  "num": 0,
+  "den": 162,
+  "pct": 0.0
+ },
+ "M2_hard": {
+  "num": 0,
+  "den": 162,
+  "pct": 0.0
+ },
+ "M2_new_danger": {
+  "num": 0,
+  "den": 162,
+  "pct": 0.0
+ },
+ "M2_code_order": {
+  "num": 0,
+  "den": 162,
+  "pct": 0.0
+ },
+ "baseline_code_order": {
+  "num": 45,
+  "den": 54,
+  "pct": 83.3,
+  "ci95": [
+   0.7222,
+   0.9259
+  ],
+  "dangerous": {
+   "num": 0,
+   "den": 54,
+   "pct": 0.0
+  }
+ },
+ "M3_llm_minus_code": {
+  "value": 0.0802,
+  "ci95": [
+   0.0185,
+   0.1543
+  ],
+  "paired_cases": 54
+ },
+ "by_stratum": {
+  "A": {
+   "cases": 3,
+   "M1_served": {
+    "num": 9,
+    "den": 9,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 9,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 9,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 3,
+    "den": 3,
+    "pct": 100.0
+   }
+  },
+  "B": {
+   "cases": 27,
+   "M1_served": {
+    "num": 70,
+    "den": 81,
+    "pct": 86.4
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 81,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 11,
+    "den": 81,
+    "pct": 13.6
+   },
+   "baseline": {
+    "num": 21,
+    "den": 27,
+    "pct": 77.8
+   }
+  },
+  "C": {
+   "cases": 13,
+   "M1_served": {
+    "num": 36,
+    "den": 39,
+    "pct": 92.3
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 39,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 3,
+    "den": 39,
+    "pct": 7.7
+   },
+   "baseline": {
+    "num": 10,
+    "den": 13,
+    "pct": 76.9
+   }
+  },
+  "D": {
+   "cases": 10,
+   "M1_served": {
+    "num": 30,
+    "den": 30,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 30,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 30,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 10,
+    "den": 10,
+    "pct": 100.0
+   }
+  },
+  "E": {
+   "cases": 1,
+   "M1_served": {
+    "num": 3,
+    "den": 3,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 3,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 3,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 1,
+    "den": 1,
+    "pct": 100.0
+   }
+  }
+ },
+ "by_path": {
+  "watch:human": {
+   "cases": 21,
+   "M1_discriminating": {
+    "num": 43,
+    "den": 57,
+    "pct": 75.4
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 63,
+    "pct": 0.0
+   },
+   "M4_keep_code_order": {
+    "num": 0,
+    "den": 0,
+    "pct": null
+   },
+   "not_called": {
+    "num": 0,
+    "den": 63,
+    "pct": 0.0
+   }
+  },
+  "watch:rule": {
+   "cases": 33,
+   "M1_discriminating": {
+    "num": 0,
+    "den": 0,
+    "pct": null
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 99,
+    "pct": 0.0
+   },
+   "M4_keep_code_order": {
+    "num": 95,
+    "den": 99,
+    "pct": 96.0
+   },
+   "not_called": {
+    "num": 0,
+    "den": 99,
+    "pct": 0.0
+   }
+  }
+ },
+ "M4_keep_code_order": {
+  "num": 95,
+  "den": 99,
+  "pct": 96.0
+ },
+ "M5_reason_grounded": {
+  "reasons_written": 86,
+  "auto_flagged": {
+   "num": 0,
+   "den": 86,
+   "pct": 0.0
+  },
+  "status": "pending",
+  "note": "사람 확인 전 — --export-reasons 로 시트를 내고 채운 뒤 --reasons 로 넣는다"
+ },
+ "M6a_valid": {
+  "num": 236,
+  "den": 242,
+  "pct": 97.5
+ },
+ "M6b_used": {
+  "num": 236,
+  "den": 242,
+  "pct": 97.5
+ },
+ "M6c_corrected": {
+  "num": 0,
+  "den": 242,
+  "pct": 0.0
+ },
+ "M6d_discarded": {
+  "num": 6,
+  "den": 242,
+  "pct": 2.5
+ },
+ "M6e_call_failed": {
+  "num": 0,
+  "den": 242,
+  "pct": 0.0
+ },
+ "not_called": {
+  "num": 0,
+  "den": 242,
+  "pct": 0.0
+ },
+ "call_failures": {},
+ "M7_consistent": {
+  "num": 52,
+  "den": 54,
+  "pct": 96.3
+ },
+ "M8_position_stable": {
+  "num": 19,
+  "den": 40,
+  "pct": 47.5,
+  "unit": "사례(섞은 판 모두 같음)",
+  "observations": {
+   "num": 42,
+   "den": 80,
+   "pct": 52.5
+  },
+  "excluded": 0,
+  "note": "LLM 1순위 = 코드가 쓴 답의 1순위. 원래 판이나 섞은 판이 폐기 · 실패면 비교에서 뺀다(excluded)"
+ },
+ "M9": {
+  "latency_ms": {
+   "p50": 2969,
+   "p95": 3156,
+   "n": 242
+  },
+  "cost_usd_total": 0.074682,
+  "cost_usd_per_call_mean": 0.000309,
+  "pricing": "eval.activity_judge.metrics 의 gpt-5.4-nano 요율 — 다른 모델이면 추정이 틀린다"
+ },
+ "gate": {
+  "final": true,
+  "checks": {
+   "M2 하드 = 0": true,
+   "M2 새 위험 = 0": true,
+   "M2 ≤ 코드 순서": true,
+   "M5 = 100%": null,
+   "M6b ≥ 98%": false,
+   "M6e = 0": true
+  },
+  "verdict": "확인 전 — M5 사람 확인이 남았다"
+ }
+}
