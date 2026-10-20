@@ -787,6 +787,9 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from . import edit_intent
     decision = edit_intent.resume(decision, items=context_items, turns=turns, version=current_context["version"],
                                   now=context_now, ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    # ★`[2026-10-20 x600 실서버 확인]` 근처 찾기는 식사만 바꾼다 — 활동 「북촌한옥마을 다른 데로」가 식사 되물음으로 끝나지 않게 먼저 맞춘다
+    from .decision_unit import settle_near_search
+    decision = settle_near_search(decision, context_items)
     spatial = (decision.raw or {}).get("place_search") or {}
     near_change = spatial.get("relation") == "near" and decision.action in ("apply_change", "propose_alternatives", "replace_named")
     if near_change:
@@ -1099,7 +1102,9 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
     if decision.question:
         request["question"] = decision.question
     if action == "clarify":
-        question = _clarify_with_choices(decision, current_items, at=at, selected=selected)
+        # ★`[2026-10-20]` 근처 조건을 실행할 수 없어 되묻는 경우(`decision_unit.settle_near_search`)는 왜 묻는지 먼저 말한다
+        lead = decision.question if (decision.raw or {}).get("near_guard") else None
+        question = _clarify_with_choices(decision, current_items, lead=lead, at=at, selected=selected)
         request.update(question=question["text"], choices=question.get("choices") or [])
     if action == "rollback":
         explicit = re.search(r"(\d+)\s*번\s*(?:일정|버전|판)", message or "")

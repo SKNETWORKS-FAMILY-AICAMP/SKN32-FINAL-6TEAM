@@ -905,6 +905,57 @@ def guard_target(decision: Decision, *, stops: list[Stop], changes: list[Change]
                    choices=[{"action": decision.action, "item": s.item, "change": None, "fact": "none"} for s in ordered])
 
 
+#: 근처 조건이 붙을 수 있는 장소 바꾸기 — `trip_messages._run_decision` 이 `replace_named`(요식 근처 찾기)로 옮기는 할 일과 같다
+_NEAR_CHANGING = ("apply_change", "propose_alternatives", "replace_named")
+
+
+def settle_near_search(decision: Decision, items: list[Any]) -> Decision:
+    """★`[2026-10-20 x600 실서버 확인]` 장소 바꾸기에 붙은 「근처 검색」(`place_search.relation=near`)이 **식사 근처 찾기**로만 실행되게 서버가 맞춘다.
+
+    근처 찾기 실행기(`TripDesk.near_alternate`)는 요식 원장만 읽어 **식사 일정만** 바꾼다. 그런데 「북촌한옥마을 다른 데로 바꿔 줘」(활동 일정)에
+    근처 검색이 붙으면 요청 전체가 그 길로 넘어가 「어느 식사 일정을 바꿀지 알려 주세요」로 되물었다(x600 서버 여행 474bc648, 두 문장 모두 —
+    등록 대안 3개가 있는데도 바꾸지 못함).
+    - 바꿀 일정이 식사면 그대로 둔다(근처 찾기 길).
+    - 식사가 아니고 기준이 **그 일정 자신**(기준 id 같음 · 기준 지명이 일정 이름과 겹침 · 기준 없음)이면 「그 곳을 다른 곳으로」라는 보통 장소 바꾸기다 —
+      근처 조건을 떼고(`near_dropped` 로 남긴다) 할 일은 그대로 둔다 → 그 팀의 바꾸기(등록 대안이 있으면 그것).
+    - 식사가 아니고 기준이 **다른 곳**이면 「활동을 다른 곳 근처로」는 실행 길이 없다 — 근처 조건을 말없이 버리고 바꾸지 않는다: 되묻는다(보통 바꾸기를 후보로).
+    - 바꿀 일정을 비우고 기준만 식사가 아닌 일정이면 — 그 일정을 바꾸라는 뜻인지 그 근처로 식사를 바꾸라는 뜻인지 대신 정하지 않고 되묻는다."""
+    raw = decision.raw or {}
+    search = raw.get("place_search") or {}
+    if search.get("relation") != "near" or decision.action not in _NEAR_CHANGING:
+        return decision
+    target = decision.item
+    if target is not None and target.kind == "dining":
+        return decision
+    by_alias = {s.alias: s.item for s in stops_of(items)}
+    anchor = by_alias.get(str(search.get("anchor_item") or "none"))
+    place_text = str(search.get("place_text") or "").strip()
+
+    def is_target(item: Any) -> bool:
+        if anchor is not None:
+            return anchor.item_id == item.item_id
+        names = [n for n in (item.title or "", (item.place or {}).get("name") or "") if len(n) >= 2]
+        return not place_text or any(place_text in n or n in place_text for n in names)
+
+    if target is not None and is_target(target):
+        cleared = {**search, "relation": "none", "anchor_item": "none", "place_text": ""}
+        return replace(decision, raw={**raw, "place_search": cleared,
+                                      "near_dropped": {"reason": "anchor_is_target", "kind": target.kind, "was": search}})
+    if target is not None:
+        where = getattr(anchor, "title", None) or place_text
+        return replace(decision, action="clarify", item=None, change=None,
+                       choices=[{"action": "apply_change", "item": target, "change": None, "fact": "none"}],
+                       question=f"{target.title}은(는) 식사 일정이 아니라 「{where} 근처」로 찾아 바꾸지는 못해요(일정은 그대로예요).",
+                       raw={**raw, "near_guard": {"reason": "non_dining_near_other", "kind": target.kind, "was": search}})
+    if anchor is not None and anchor.kind != "dining":
+        return replace(decision, action="clarify", item=None, change=None,
+                       choices=[{"action": "apply_change", "item": anchor, "change": None, "fact": "none"}],
+                       question=(f"어느 일정을 바꿀지 확실하지 않아 일정은 그대로 두었어요. {anchor.title} 근처로 식사를 바꾸시려면 "
+                                 f"「점심을 {anchor.title} 근처로 바꿔 줘」처럼 끼니를 알려 주세요."),
+                       raw={**raw, "near_guard": {"reason": "anchor_without_target", "kind": anchor.kind, "was": search}})
+    return decision
+
+
 _FACT_KO = {"detail": "자세히", "address": "주소", "phone": "전화번호", "hours": "운영시간", "time": "몇 시에 가는지",
             "next": "다음 일정", "booking": "예약", "day": "하루 일정", "move": "가는 길",
             "route_here": "지금 위치에서 가는 길", "nearby_dining": "가까운 식당", "nearby_activity": "가까운 볼거리",
