@@ -63,11 +63,12 @@ class LedgerPlaceLookup:
             return None
         return self._seen(found)
 
-    def find_meal_near(self, latitude: float, longitude: float) -> dict[str, Any] | None:
-        """장소(시장 · 동네) 좌표 근처의 원장 식당 하나(「광장시장 점심」). 언제나 확인 필요."""
+    def find_meal_near(self, latitude: float, longitude: float, at: Any = None) -> dict[str, Any] | None:
+        """장소(시장 · 동네) 좌표 근처의 원장 식당 하나(「광장시장 점심」). 언제나 확인 필요.
+        `at`(방문 시각)을 주면 그 시각에 확실히 닫힌 가게는 건너뛴다(`ledger.find_meal_near`)."""
         try:
             with self._connect() as conn:
-                found = find_meal_near(conn, (float(latitude), float(longitude)))
+                found = find_meal_near(conn, (float(latitude), float(longitude)), at=at)
         except Exception:   # noqa: BLE001
             self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
             return None

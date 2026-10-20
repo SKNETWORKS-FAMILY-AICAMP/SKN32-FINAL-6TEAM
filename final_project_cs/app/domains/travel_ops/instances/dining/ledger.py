@@ -662,12 +662,17 @@ def dish_words(text: str | None) -> list[str]:
 
 
 def find_meal_near(conn, near: tuple[float, float], *, radius_m: int = DISH_RADIUS_M,
-                   shops: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
+                   shops: list[dict[str, Any]] | None = None, at: Any = None,
+                   opened: Any = None) -> dict[str, Any] | None:
     """`near`(시장 · 동네 좌표)에서 가장 가까운 원장 식당(반경 안, 카페 · 디저트 제외). `[2026-10-13]`
 
     「광장시장 점심」 — 원문은 가게를 말하지 않았다. 그 자리 **안이나 근처**의 식당 하나를 고르고 언제나 확인 필요로 둔다.
     ☆테스트 서버에서 「광장시장 바베큐 용산점」(이름만 「광장시장」으로 시작하는 용산 가게)이 골라졌다 — 기준점이 시장이 아니었다.
     ★영업 판정은 여기서 하지 않는다 — 등록 뒤 `dining_states` 가 방문 시각으로 하고, 닫혀 있으면 대체가 바꾼다.
+    ★`[2026-10-19 사용자 지시]` 다만 방문 시각(`at`)을 알면 **그 시각에 확실히 닫힌(False) 가게는 건너뛰고** 다음 가까운 곳을 고른다 —
+      실측: 「광장시장 점심」(화요일)이 원장상 화요일 휴무인 순희네빈대떡이 됐고, 대체가 북촌 식당으로 바꿨다. 모름(None)은 닫힌 것이 아니다(그대로 고른다).
+      모두 닫혔거나 판정을 못 읽으면 예전처럼 가장 가까운 곳 — 확인 화면의 판정이 휴무를 드러낸다(숨기지 않는다).
+      `opened(uids, at) -> {uid: True|False|None}` — 기본은 원장 `open_at_slot`(`open_among`).
     """
     if shops is None:
         try:
@@ -681,6 +686,13 @@ def find_meal_near(conn, near: tuple[float, float], *, radius_m: int = DISH_RADI
     if not hits:
         return None
     metres, shop = hits[0]
+    if at is not None:
+        try:
+            states = (opened or (lambda uids, when: open_among(conn, uids, when)))([s["place_uid"] for _, s in hits], at)
+        except Exception as exc:   # noqa: BLE001 — 판정을 못 읽으면 예전처럼 가장 가까운 곳(경고로 남긴다)
+            logger.warning("dining find_meal_near hours not read reason=%s", type(exc).__name__)
+            states = {}
+        metres, shop = next(((m, s) for m, s in hits if states.get(s["place_uid"]) is not False), hits[0])
     return _found(shop, match="meal_near", review=True, others=len(hits) - 1,
                   note=f"가장 가까운 식당 「{shop['name']}」({round(metres):,}m) — 다르면 고쳐 주세요")
 

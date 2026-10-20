@@ -627,6 +627,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             "_lodging_parts": (((r.get("claims") or {}).get("place") or {}).get("evidence") or {}).get("lodging_parts"),
             # `[2026-10-15 ST4F-490]` 업체 예약 표에 묶인 일정(수정 접수만) — 화면은 잠금을 풀 때 「업체 예약은 따로 취소 · 변경해야 해요」를 알린다
             "vendor_booking": ((r["claims"].get("vendor_booking") or {}).get("value") is True),
+            # `[2026-10-19]` 「광장시장 점심」처럼 장소 근처에서 고른 식당의 기준 장소(그 밖은 None) — 대안을 그 둘레에서 찾는다(`candidates.area_of`)
+            "near_area": (((r["claims"].get("place") or {}).get("evidence") or {}).get("near_area") or None),
             # 두 번 다르게 읽은 제목 · 예약번호 — `[{field: title | booking_no, current, other(null 이면 두 읽기 문장만), note}]`. 없으면 [] (고객이 고르면 사라진다)
             "rereads": [{k: v for k, v in reread.items() if k != "note"} for reread in rereads],
             "rows": lines})
