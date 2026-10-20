@@ -10,7 +10,8 @@ import { ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import { useCriteria, withCriteria } from "@/features/guardian/criteria-store";
-import { questionsOf } from "@/features/survey-questions/model";
+import { questionsOf, startAnswers } from "@/features/survey-questions/model";
+import { preloadAnswers } from "@/features/survey-questions/preload";
 import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-footer";
 import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
 import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
@@ -60,13 +61,17 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // `[2026-10-06]` What the plan screen decided (a day's fullness, the Course Keeper on or off) is laid over it - the latest choice wins, and 「끄고 진행」 says `ask_first` out loud.
   const criteria = useCriteria();
   const survey = withCriteria(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria);
+  // ★`[2026-10-20 ST4F-665]` A plan this page watched arrive: what that survey already answers (the start survey with the plan screen's choices — who and how many,
+  //   priorities, indoors or out, pace) goes to the intake BEFORE its first read, so the loading questions do not ask it again (`survey-questions/preload.ts`).
+  //   Every read waits for it (not a disabled query: a progress event that comes meanwhile must still lead to a read). Arriving means the app, and the answers it keeps, is loaded.
+  const [preloaded] = useState(() => arriving ? preloadAnswers(intakeId, startAnswers(survey), language) : null);
   const key = ["intake", intakeId, language] as const;
   // ★`[2026-10-02]` While the server reads, its progress stream says when to read the intake again (`useIntakeEvents`).
   //   Only where there is no stream (an older server, or the stream limit) is the intake asked for every 1.5 s, as before.
   const [polling, setPolling] = useState(false);
   const query = useQuery({
     queryKey: key,
-    queryFn: () => getIntake(intakeId, language),
+    queryFn: async () => { await preloaded; return getIntake(intakeId, language); },
     retry: false,
     refetchOnWindowFocus: false,
     // Keep recently read data when reopening; a new submission opens its progress screen before this first GET finishes.

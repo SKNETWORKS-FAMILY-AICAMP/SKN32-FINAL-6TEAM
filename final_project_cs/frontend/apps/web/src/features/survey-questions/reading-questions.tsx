@@ -15,7 +15,8 @@ export function ReadingQuestions({ flow }: { flow: QuestionFlow }) {
   const reading = flow.phase === "read";
   return <>
     {reading
-      ? <p className={styles.notice}>{t("기다리는 동안 하나씩 여쭤볼게요. 원하는 답을 직접 적어도 좋아요.", "While you wait, choose an answer or write your own.")}</p>
+      // `[2026-10-20 ST4F-665]` The questions are the start survey's cards now: only the companions take one's own words, so the line no longer offers it for every question.
+      ? <p className={styles.notice}>{t("기다리는 동안 여행 취향을 하나씩 여쭤볼게요.", "While you wait, a few questions about how you like to travel.")}</p>
       : <p className={styles.successLine}><Check size={16} strokeWidth={1.8} aria-hidden="true" />{t("계획을 다 읽었어요", "We have read your plan")}</p>}
     {flow.stopAuto && !reading && <p className={styles.notice}>{t("이제 자동으로 넘어가지 않아요.", "It will not go on by itself now.")}</p>}
     <QuestionPager flow={flow} />

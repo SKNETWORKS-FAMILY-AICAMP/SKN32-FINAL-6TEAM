@@ -1,5 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { checkPlan, mockServer, noHorizontalScroll, start } from "./helpers";
+import { answerCard, checkPlan, mockServer, noHorizontalScroll, start } from "./helpers";
 
 const result = (page: Page) => page.getByRole("button", { name: /^확인 필요 \d+곳$/ });
 const questions = (page: Page) => page.getByRole("region", { name: "질문 2개" });
@@ -22,7 +22,7 @@ async function completedQuestions(page: Page, request: APIRequestContext, touche
   await checkPlan(page);
   await expect(questions(page)).toBeVisible();
   if (touched) {
-    await questions(page).getByRole("button", { name: "택시", exact: true }).click();
+    await answerCard(page, "혼자");                                       // `[2026-10-20 ST4F-665]` 시작 설문 카드 — 고르고 「다음」
     await expect(questions(page)).toContainText("2 / 2");
   }
   await server.scenario({ readingPolls: 0 });
@@ -126,7 +126,7 @@ for (const width of [375, 1280]) {
         await expect(questions(page)).toBeVisible();
         await expect(questions(page)).toContainText("2 / 2");
         await questions(page).getByRole("button", { name: "이전 질문 보기" }).click();
-        await expect(questions(page).getByRole("button", { name: "택시", exact: true })).toHaveAttribute("aria-pressed", "true");
+        await expect(questions(page).getByRole("button", { name: "혼자", exact: true })).toHaveAttribute("aria-pressed", "true");
         await page.getByRole("button", { name: "읽어 온 계획 확인하기", exact: true }).click();
         await completedResult(page);
       });
