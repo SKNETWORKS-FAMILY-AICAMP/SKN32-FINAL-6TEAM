@@ -571,9 +571,12 @@ travel:
     # 규칙이 거른 상위 3곳 중 하나를 모델이 고객 취향에 맞춰 고른다(`components/planning/meal_pick.py`). 취향 문장이 없으면 부르지 않는다.
     # 취향 = 일정 constraints.meal_preference > 설문 custom_answers.food > 설문 음식 세부 선택지(맛 · 미쉐린 · 노포 …).
     # 모델 답은 서버가 확인하고 어기면 규칙 1등 — 고객 결과가 바뀐다(그림자 아님). ★기본 꺼짐 — 켜는 것은 사람이 정한다.
+    # ★`[2026-10-20 사용자 결정 · dining 담당]` 켰다. 조립이 꽂는 것은 「흐름 한 칸」(`make_flow_picker`, 2026-10-16 결정) — 규칙 1위는
+    #   그대로 두고, 모델은 2 · 3위 중 하나를 「다른 안」 맨 앞에 「그날 흐름: 이유」와 함께 올린다(고객이 고른다). 끄려면 false.
+    #   ☆평가 보고서의 「luna 선택 95.0%」는 1위를 바꾸는 `make_picker`(평가용)의 수치라 이 방식의 성능이 아니다.
     # 쓰는 곳: 채팅 신고(늦음 · 휴무)와 요식 팀 Case. 새벽 확인에는 쓰지 않는다. 읽는 곳: `app.core.settings.dining_meal_pick()`.
     meal_pick:
-      enabled: false
+      enabled: true
       # `[2026-10-15]` 기본 모델 luna — 실측 12/12(gpt-4o-mini 10/12) · 위반 0 · 평균 3.8초
       model: "openai:gpt-6-luna"
     # -- 캐치테이블 시험 값 화면 표시 (2026-10-19 사용자 지시 · 계획 wiki/records/plans/2026-10-16_catchtable_trial_live_card.md) --

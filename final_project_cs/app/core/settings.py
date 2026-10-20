@@ -571,7 +571,8 @@ def dining_agent_judge() -> dict[str, Any] | None:
 
 
 def dining_meal_pick() -> dict[str, Any] | None:
-    """대체 식당 셋 중 고르기 설정 — 가드레일 `travel.dining.meal_pick`. 켜져 있으면 `{model}`, 아니면 None. ★기본 꺼짐.
+    """대체 식당 셋 중 고르기 설정 — 가드레일 `travel.dining.meal_pick`. 켜져 있으면 `{model}`, 아니면 None.
+    `[2026-10-20 사용자 결정]` 가드레일 기본값을 켰다(흐름 한 칸 — 1위는 규칙 그대로).
 
     `[2026-10-15]` 켜면 고객 결과가 바뀐다(그림자 아님) — 가드레일을 못 읽어도 **꺼짐**으로 본다.
     """

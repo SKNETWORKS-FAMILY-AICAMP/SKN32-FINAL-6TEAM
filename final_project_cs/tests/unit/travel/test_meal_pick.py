@@ -153,7 +153,7 @@ def test_the_picker_is_wired_only_when_the_guardrail_is_on(monkeypatch):
     from app.infrastructure.llm_failover import OpenAIChat
 
     monkeypatch.setattr(settings_module, "dining_meal_pick", lambda: None)
-    assert composition._dining_meal_picker() is None                               # 기본 꺼짐 — 규칙 1등
+    assert composition._dining_meal_picker() is None                               # 꺼지면 — 규칙 1등
 
     made = []
     monkeypatch.setattr(settings_module, "dining_meal_pick", lambda: {"model": "openai:gpt-4o-mini"})
@@ -164,6 +164,14 @@ def test_the_picker_is_wired_only_when_the_guardrail_is_on(monkeypatch):
     monkeypatch.setattr(meal_pick, "make_flow_picker", lambda chat, **_: made.append(chat) or "picker")
     assert composition._dining_meal_picker() == "picker"
     assert isinstance(made[0], OpenAIChat) and made[0].model == "gpt-4o-mini"
+
+
+def test_the_shipped_guardrail_turns_the_flow_picker_on():
+    """`[2026-10-20 사용자 결정]` 배포 가드레일은 켜짐 · 모델 luna — 꽂히는 것은 흐름 한 칸 선택기(1위는 규칙 그대로)다."""
+    from app.core.settings import dining_meal_pick, get_guardrails
+
+    get_guardrails.cache_clear()                                                  # 다른 시험이 바꾼 값이 남지 않게
+    assert dining_meal_pick() == {"model": "openai:gpt-6-luna"}
 
 
 def test_without_a_wired_picker_the_hook_answers_none():

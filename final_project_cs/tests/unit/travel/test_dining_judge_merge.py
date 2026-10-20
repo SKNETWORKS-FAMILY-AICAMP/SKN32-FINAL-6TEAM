@@ -13,7 +13,7 @@ from contextlib import contextmanager
 import pytest
 
 from app.domains.travel_ops.instances.dining import judge
-from app.domains.travel_ops.instances.dining.agent import AgentResult
+from app.domains.travel_ops.instances.dining.agent import AgentResult, normalize_check
 
 RULE_HOURS_TEXT = "운영시간을 확인하지 못했어요"
 
@@ -81,6 +81,25 @@ def test_a_bad_verdict_makes_the_item_need_review_and_recounts():
     assert merged["needs"] == {"items": 1, "moves": 0, "total": 1} and merged["ready"] is False
 
 
+@pytest.mark.parametrize("code, row_name, tool", [
+    ("open_at", "hours", "check_open_at"),
+    ("closed_day", "closed", "check_closed_day"),
+])
+@pytest.mark.parametrize("other_verdict", ["ok", "unknown"])
+@pytest.mark.parametrize("bad_first", [False, True])
+def test_duplicate_availability_checks_preserve_validated_bad_in_either_order(
+        code, row_name, tool, other_verdict, bad_first):
+    bad = {**_check(code, "bad", tool=tool), "validated": True}
+    other = {**_check(code, other_verdict, tool=tool), "validated": True}
+    merged, _ = judge.merge(_review(), {"0-1": [bad, other] if bad_first else [other, bad]})
+
+    row = _rows(merged)[row_name]
+    assert row["result"] == "bad" and row["blocks_registration"] is True
+    assert row["agent"]["verdict"] == "bad" and row["agent"]["validated"] is True
+    assert row["agent"]["evidence"][0]["value"] == "bad"
+    assert _meal(merged)["status"] == "review" and merged["ready"] is False
+
+
 def test_customer_conditions_are_added_as_rows():
     decided = {"0-1": [_check("dietary", "bad", tool="check_attributes"), _check("kids", "unknown", tool="check_attributes"),
                        _check("payment", "ok", tool="check_attributes")]}
@@ -97,8 +116,8 @@ def test_customer_conditions_are_added_as_rows():
 
 @pytest.mark.parametrize("required", [True, False])
 def test_a_validated_dietary_bad_blocks_registration_only_when_required(required):
-    """필수 식이 bad 만 확인 필요(review)로 올려 등록 가능(ready)을 끄고, 선호는 주의로 둔다.
-    ☆화면의 「여행 등록」은 `ready` 를 보지만 등록 API(`confirm`)는 아직 이 판정을 다시 보지 않는다 — 그 관문은 이 판에 없다(2026-10-19 기준)."""
+    """합치기가 식이 줄에 등록 관문용 신호(`blocks_registration`)를 단다 — 필수만 막고 선호는 주의로 둔다.
+    `[2026-10-20]` 신호를 읽어 등록을 막는 관문은 접수(매니저) 영역이라 여기서 부르지 않는다."""
     check = {**_check("dietary", "bad", tool="check_attributes"), "validated": True, "required": required}
     merged, changed = judge.merge(_review(), {"0-1": [check]})
     dietary = _rows(merged)["dietary"]
@@ -106,6 +125,48 @@ def test_a_validated_dietary_bad_blocks_registration_only_when_required(required
     assert dietary["requirement"] == ("required" if required else "preference")
     assert dietary["result"] == ("bad" if required else "warn") and dietary["blocks_registration"] is required
     assert _meal(merged)["status"] == ("review" if required else "keep") and merged["ready"] is not required
+
+
+@pytest.mark.parametrize("other_verdict, other_required, other_result, other_value", [
+    ("ok", True, "ok", "yes"),
+    ("bad", False, "warn", "no"),
+    ("unknown", True, "unknown", "unknown"),
+])
+@pytest.mark.parametrize("bad_first", [False, True])
+def test_normalized_dietary_attributes_keep_required_bad_in_either_order(
+        other_verdict, other_required, other_result, other_value, bad_first):
+    """할랄의 ok·선호 bad·미확인이 채식 필수 bad를 가리거나 그 반대가 되지 않는다."""
+    halal = normalize_check({
+        "check": "halal", "verdict": other_verdict, "required": other_required, "validated": True,
+        "evidence": [{"tool": "check_attributes", "call_id": "c1", "path": "attributes.halal.state", "value": other_value}],
+    })
+    vegetarian = normalize_check({
+        "check": "vegetarian", "verdict": "bad", "required": True, "validated": True,
+        "evidence": [{"tool": "check_attributes", "call_id": "c2", "path": "attributes.vegetarian.state", "value": "no"}],
+    })
+    decided = {"0-1": [vegetarian, halal] if bad_first else [halal, vegetarian]}
+
+    merged, changed = judge.merge(_review(), decided)
+    rows = [row for row in _meal(merged)["rows"] if row["row"] == "dietary"]
+    assert changed == 2 and len(rows) == 2
+    by_attribute = {row["agent"]["evidence"][0]["path"]: row for row in rows}
+    assert by_attribute["attributes.halal.state"]["result"] == other_result
+    assert "(할랄)" in by_attribute["attributes.halal.state"]["text"]
+    assert by_attribute["attributes.halal.state"]["blocks_registration"] is False
+    assert by_attribute["attributes.vegetarian.state"]["result"] == "bad"
+    assert "(채식)" in by_attribute["attributes.vegetarian.state"]["text"]
+    assert by_attribute["attributes.vegetarian.state"]["blocks_registration"] is True
+    assert [r["agent"]["evidence"][0]["path"] for r in rows if r.get("blocks_registration")] == ["attributes.vegetarian.state"]
+    repeated, repeated_changes = judge.merge(copy.deepcopy(merged), decided)
+    assert repeated_changes == 0 and len([row for row in _meal(repeated)["rows"] if row["row"] == "dietary"]) == 2
+
+
+def test_rejected_required_dietary_claim_does_not_become_a_registration_problem(monkeypatch):
+    """검증에 실패한 필수 bad 주장을 보존할 행으로 승격하지 않는다."""
+    rejected = {"check": "dietary", "verdict": "unknown", "required": True, "claimed_verdict": "bad",
+                "failure": "evidence_path_missing", "evidence": [{"call_id": "c9", "path": "attributes.vegetarian.state", "value": "no"}]}
+    _, _, saved = _run(monkeypatch, _result([rejected]), _review())
+    assert saved == []
 
 
 def test_business_is_added_only_when_closed_down():
