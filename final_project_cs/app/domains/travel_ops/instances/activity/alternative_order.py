@@ -170,7 +170,9 @@ def guard_reason(reason: str, customer_text: str | None, first: dict[str, Any], 
     leaf = (class_path(class_code) or "").split(" > ")[-1]
     title = str(first.get("title") or "")
     named = f"‘{title}’({leaf})" if leaf else f"‘{title}’"
-    return f"요청에 맞춰 {named}{_particle(leaf or title)} 먼저 보여 드려요.", why
+    # ★`[2026-10-20]` 「요청에 맞춰」를 붙이지 않는다 — 지킴이는 1순위가 요청에 맞는지 모른다. holdout-3 K-51: 실내를 원한 고객에게
+    #  야외 공원을 「요청에 맞춰」라고 해 고객 뜻을 거꾸로 전했다(심각 1/72). 이 문장은 무엇을 먼저 보이는지만 말한다.
+    return f"{named}{_particle(leaf or title)} 먼저 보여 드려요.", why
 
 
 def apply(candidates: list[dict[str, Any]], output: Any, *, customer_text: str | None = None,

@@ -264,7 +264,7 @@ def _guarded(reason, text):
 def test_reason_guard_replaces_unverifiable_claims_but_keeps_the_order():
     reason, why, order = _guarded("조용한 실내에 맞게 박물관을 1순위로 했어요.", "조용한 실내로 부탁해요")
     assert why == "unverifiable" and "조용" not in reason and order == ["a", "b"]
-    assert reason == "요청에 맞춰 ‘은평역사한옥박물관’(박물관)을 먼저 보여 드려요."
+    assert reason == "‘은평역사한옥박물관’(박물관)을 먼저 보여 드려요."     # 요청에 맞는지 주장하지 않는다(holdout-3 K-51)
 
 
 def test_reason_guard_catches_a_reversed_either_or_and_content_ids():
