@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { checkPlan, mockServer, start } from "./helpers";
-import { card, mapSettled, needsBadge, openFinished, pin, sheet, type Json } from "./plan-check-kit";
+import { card, mapSettled, openFinished, pin, sheet, type Json } from "./plan-check-kit";
 
 /**
  * `[2026-10-06 사용자 지시]` 계획 확인 화면: 핀을 누르면 목록의 해당 일정만 열기 · 경로선을 누르면 그 구간 설명 + 목록의 이동 줄 열기 · 핀 선과 점은 핀 몸통 아래 층 · 「전체 · 1일차 · 2일차」 줄이 「계획 확인」 줄과 한 줄 ·
