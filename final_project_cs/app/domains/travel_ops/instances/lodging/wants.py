@@ -23,16 +23,21 @@ _KIND_WORDS = (("한옥", "한옥"), ("게스트하우스", "게스트하우스"
                ("모텔", "모텔"), ("펜션", "펜션"), ("리조트", "리조트"), ("호텔", "호텔"),
                # `[2026-10-16 평가 2차]` 오타 · 영어 — 「호탤」 「hotel」 「guesthouse」 「게스트하우쓰」를 못 읽어 호텔 요청에 게스트하우스가 섞였다
                ("hanok", "한옥"), ("게스트하우쓰", "게스트하우스"), ("게스트 하우스", "게스트하우스"), ("guesthouse", "게스트하우스"),
-               ("guest house", "게스트하우스"), ("hostel", "호스텔"), ("motel", "모텔"), ("호탤", "호텔"), ("hotel", "호텔"))
+               ("guest house", "게스트하우스"), ("hostel", "호스텔"), ("motel", "모텔"), ("호탤", "호텔"), ("hotel", "호텔"),
+               # `[2026-10-17 D18 · 사용자 결정]` 레지던스 — 호텔 요청에서 뺀다(설명 칸 「레지던스」 · 이름 「레지던스 · residence」)
+               ("레지던스", "레지던스"), ("residence", "레지던스"))
 #: 숙소 이름 · 설명에서 유형을 알아보는 낱말(영어 포함). 「호스텔」 · 「hostel」에는 「호텔」 · 「hotel」이 들어 있지 않다
 _STAY_KIND_WORDS = (("한옥", "한옥"), ("hanok", "한옥"), ("han-ok", "한옥"), ("韓屋", "한옥"), ("韩屋", "한옥"), ("ハノク", "한옥"), ("게스트하우스", "게스트하우스"), ("guesthouse", "게스트하우스"),
                     ("guest house", "게스트하우스"), ("호스텔", "호스텔"), ("hostel", "호스텔"), ("모텔", "모텔"), ("motel", "모텔"),
                     ("펜션", "펜션"), ("리조트", "리조트"), ("resort", "리조트"), ("호텔", "호텔"), ("hotel", "호텔"),
                     # `[2026-10-16 최종 평가 뒤]` 이름의 「여관 · 여인숙 · 무인텔」은 모텔 — 호텔 요청에 「애플여관」이 섞였다
-                    ("여관", "모텔"), ("여인숙", "모텔"), ("무인텔", "모텔"))
+                    ("여관", "모텔"), ("여인숙", "모텔"), ("무인텔", "모텔"), ("레지던스", "레지던스"), ("residence", "레지던스"))
 DORMS = frozenset({"게스트하우스", "호스텔"})
 #: 「호텔」을 원할 때 뺄 유형(유형을 모르면 남긴다)
-NOT_HOTEL = frozenset({"게스트하우스", "호스텔", "모텔", "한옥", "펜션"})
+NOT_HOTEL = frozenset({"게스트하우스", "호스텔", "모텔", "한옥", "펜션", "레지던스"})
+#: `[2026-10-17 GPT 검수 2차 · N10-23]` 「호스텔이나 호텔」 — 두 유형 중 아무거나면 유형으로 거르지 않는다(묵을 분 먼저 묻기 L05 도 안 한다)
+_EITHER = re.compile(r"(한옥|게스트\s*하우스|게하|호스텔|모텔|펜션|리조트|호텔)\s*(?:이나|나|또는|혹은|아니면|이든|든|/|or)\s*"
+                     r"(한옥|게스트\s*하우스|게하|호스텔|모텔|펜션|리조트|호텔)", re.I)
 _AVOID = re.compile(r"(한옥|게스트하우스|게하|호스텔|모텔|펜션|리조트)\s*(?:은|는|이나|나)?\s*(?:말고|빼고|제외|싫|아니)")
 _STARS = re.compile(r"(?<![\d.])([1-5](?:\.5)?)\s*성(?!인)(?:급|짜리)?")
 _NO_DORM = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|연인|기념일|분위기|신혼|허니문|프러포즈|프로포즈|고급|럭셔리")
@@ -41,6 +46,10 @@ _COMPANION = re.compile(r"여자\s*친구|남자\s*친구|여친|남친|커플|�
 _CHEAP = re.compile(r"(?<!비)싼|(?<!비)싸게|저렴|가성비|최저가")
 _WALK = re.compile(r"도보|걸어서|걸어\s*갈|걸어\s*다닐|걸을\s*수|역세권|walk|on\s*foot", re.I)
 _NEAR = re.compile(r"근처|가까운|가까이|가깝|인근|주변|바로\s*앞")
+#: `[2026-10-17 D21]` 역 이름 없이 「지하철역 걸어서 7분」 「역까지 걸어서 십분」 「역에서 걸어갈 만한」 — 기준은 지역 기준점(구청)이 아니라
+#:  숙소에서 가장 가까운 지하철역이다(☆4차 qa_1017_222129: 용산구청에서 7분으로 걸렀다, 8건). 이름 있는 역(「서울대입구역」)이 있으면 아니다
+_ANY_STATION = re.compile(r"(?:지하철|전철)\s*역|(?<![가-힣A-Za-z0-9])역\s*(?:까지|에서|이랑|하고|과|와|으로|근처|가까|부터|에|도보)|역세권")
+_NAMED_STATION = re.compile(r"(?<![가-힣A-Za-z0-9])(?!지하철역|전철역)[가-힣A-Za-z0-9]{1,10}역(?!세권)")
 
 
 #: `[2026-10-16 사용자 판정 L05]` 묵을 사람 — 게스트하우스 · 호스텔은 여성 전용 · 외국인 전용 · 나이 제한이 붙은 곳이 많아
@@ -98,6 +107,8 @@ def read_guest(text: str | None) -> Guest:
 @dataclass(frozen=True)
 class Wants:
     kind: str | None = None
+    #: `[2026-10-17 D17]` 「게스트하우스나 호텔」 — 둘 중 하나면 된다(`kind` 는 비우고, 둘 다 아닌 게 보이는 곳만 뺀다)
+    either: frozenset[str] = frozenset()
     avoid: frozenset[str] = frozenset()
     stars: float | None = None
     no_dorm: bool = False
@@ -110,6 +121,10 @@ class Wants:
     min_price: int | None = None
     band_max: int | None = None
     walk_min: int | None = None
+    #: `[2026-10-17 D21]` 걸어서 거리를 「가장 가까운 지하철역」에서 잰다(역 이름 없이 역을 말했을 때)
+    station_walk: bool = False
+    #: `[2026-10-18 D22 · 사용자 결정]` 문장에 말한 서울 구(「영등포구」) — 다른 구 숙소는 싣지 않는다
+    gu: str | None = None
 
     @property
     def asks_guest(self) -> list[str]:
@@ -118,7 +133,15 @@ class Wants:
 
     @property
     def any(self) -> bool:
-        return bool(self.kind or self.avoid or self.stars or self.no_dorm or self.cheapest or self.near)
+        return bool(self.kind or self.either or self.avoid or self.stars or self.no_dorm or self.cheapest or self.near)
+
+
+#: `[2026-10-18 D22]` 서울 25개 구 — 「영등포구」 요청에 용산구 숙소가 섞였다(☆5차 GPT 검수 높음 ①, 30건)
+SEOUL_GU = ("종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구", "성북구", "강북구", "도봉구", "노원구", "은평구", "서대문구",
+            "마포구", "양천구", "강서구", "구로구", "금천구", "영등포구", "동작구", "관악구", "서초구", "강남구", "송파구", "강동구")
+_GU_SAID = re.compile(r"(?<![가-힣])(" + "|".join(sorted(SEOUL_GU, key=len, reverse=True)) + r")(?![가-힣]*청)")
+#: 「펜션이나 숙소」 「모텔이든 아무 데나」 — 유형을 고르지 않은 말(☆5차 N28-07: 펜션만 남겨 0곳)
+_KIND_ANY = re.compile(r"(한옥|게스트\s*하우스|게하|호스텔|모텔|펜션|리조트|호텔)\s*(?:이나|나|또는|아니면|이든|든)\s*(?:그냥\s*)?(?:숙소|아무|다른|일반|어디)")
 
 
 def read_wants(text: str | None) -> Wants:
@@ -129,10 +152,12 @@ def read_wants(text: str | None) -> Wants:
         avoid.add(dict(_KIND_WORDS)[match.group(1)])
         words.append(match.group(0))
     rest = _AVOID.sub(" ", text).lower()
+    rest = re.sub(r"한옥\s*마을", " ", rest)       # `[2026-10-18 D23]` 「은평구 한옥마을 호텔」의 한옥마을은 동네 이름이다(☆6차 N32-29)
     kind = next((name for word, name in _KIND_WORDS if word in rest), None)
     if kind:
         words += [match.group(0) for word, name in _KIND_WORDS if name == kind
-                  for match in re.finditer(re.escape(word), text, re.I)]
+                  for match in re.finditer(re.escape(word), text, re.I)
+                  if not (word == "한옥" and re.match(r"\s*마을", text[match.end():]))]
     star = _STARS.search(text)
     stars = float(star.group(1)) if star else None
     if star:
@@ -147,14 +172,24 @@ def read_wants(text: str | None) -> Wants:
         found = pattern.search(text)
         if found:
             words.append(found.group(0))
-    if kind in avoid:
+    if kind in avoid or _KIND_ANY.search(text):
         kind = None
+    either = _EITHER.search(text)
+    pair: frozenset[str] = frozenset()
+    if either and dict(_KIND_WORDS).get(either.group(1).replace(" ", "")) != dict(_KIND_WORDS).get(either.group(2).replace(" ", "")):
+        kind = None
+        words.append(either.group(0))
+        pair = frozenset(dict(_KIND_WORDS)[word.replace(" ", "")] for word in either.groups())
+        if pair & DORMS:
+            pair |= DORMS                            # 게스트하우스 · 호스텔은 한 묶음으로 본다
     guest = read_guest(text)
     low, high, price_words = read_price_band(text)
     minutes, minute_word = read_walk_minutes(text) if near == "walk" else (None, None)
-    return Wants(kind=kind, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
+    return Wants(kind=kind, either=pair, avoid=frozenset(avoid), stars=stars, no_dorm=no_dorm, cheapest=bool(cheap), near=near,
                  words=tuple(words) + guest.words + price_words + ((minute_word,) if minute_word else ()), guest=guest,
-                 min_price=low, band_max=high, walk_min=minutes)
+                 min_price=low, band_max=high, walk_min=minutes,
+                 station_walk=near == "walk" and bool(_ANY_STATION.search(text)) and not _NAMED_STATION.search(text),
+                 gu=(_GU_SAID.search(text).group(1) if len(set(_GU_SAID.findall(text))) == 1 else None))
 
 
 #: `[2026-10-16 평가 2차]` 1박 가격의 아래 끝 — 해석 칸에 최저가가 없어 「10만 원대」 「15만~20만」에서 하한 아래 숙소가 나왔다
@@ -165,9 +200,34 @@ _RANGE_WON = re.compile(r"(?<![\d,])(\d{1,3}(?:,\d{3})+|\d{5,7})\s*(?:원|krw)?\
 _AT_LEAST = re.compile(r"(?:최소\s*)?(\d{1,3})\s*만\s*원?\s*(?:이상|부터|넘는)")
 
 
+_SINO_DIGIT = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6, "칠": 7, "팔": 8, "구": 9}
+#: `[2026-10-18 D22]` 「십이만 원대」 「칠만 원」(한자어 수사, ☆5차 N25-08 — 아래 끝을 못 읽었다)
+_SINO_MAN = re.compile(r"(?<![가-힣\d])([이삼사오육칠팔구]?십[일이삼사오육칠팔구]?|[이삼사오육칠팔구])\s*(?=만)")
+
+
+def _sino_man(text: str) -> str:
+    def value(m: re.Match) -> str:
+        word = m.group(1)
+        if "십" in word:
+            head, _, tail = word.partition("십")
+            return str((_SINO_DIGIT.get(head, 1)) * 10 + _SINO_DIGIT.get(tail, 0))
+        return str(_SINO_DIGIT[word])
+    return _SINO_MAN.sub(value, text)
+
+
+#: `[2026-10-18 D23]` 「7만 원 아래」 「10만 원 미만」 — 그 값은 넣지 않는다(☆6차 N33-26: 70,000원을 냈다). 「N만 원대 아래」는 구간 말이라 아니다
+_BELOW = re.compile(r"(?<![\d,])(\d{1,3})\s*만\s*원?\s*(?:아래|미만|밑)")
+
+
+def strict_below(text: str | None) -> int | None:
+    """「N만 원 아래 · 미만」이 하나로 정해지면 N만 원(그 값은 빼야 하는 상한). 아니면 `None`."""
+    found = {int(value) for value in _BELOW.findall(_sino_man(str(text or "")))}
+    return found.pop() * 10000 if len(found) == 1 else None
+
+
 def read_price_band(text: str | None) -> tuple[int | None, int | None, tuple[str, ...]]:
     """문장의 1박 가격 아래 끝(과 「N만 원대」의 위 끝). (최저, 구간 상한, 읽은 말). 하나로 정해지지 않으면 `None`."""
-    text = str(text or "")
+    text = _sino_man(str(text or ""))
     ranges = _RANGE_MAN.findall(text)
     if len(ranges) == 1:
         low, high = int(ranges[0][0]) * 10000, int(ranges[0][1]) * 10000
@@ -179,7 +239,12 @@ def read_price_band(text: str | None) -> tuple[int | None, int | None, tuple[str
     bands = _BAND_WORD.findall(text)
     if len(bands) == 1:
         n = _KO_TENS.get(bands[0]) or int(bands[0])
-        return n * 10000, n * 10000 + (99999 if n % 10 == 0 else 9999), (_BAND_WORD.search(text).group(0),)
+        high = n * 10000 + (99999 if n % 10 == 0 else 9999)
+        word = _BAND_WORD.search(text)
+        # `[2026-10-17 D17]` 「15만 원대 이하」는 위 끝만 — 아래 끝(15만)을 걸어 맞는 곳 13곳을 모두 뺐다(☆N10-10)
+        if re.match(r"\s*(?:이하|까지|아래|안쪽|내|미만|선)", text[word.end():]):
+            return None, high, (word.group(0),)
+        return n * 10000, high, (word.group(0),)
     least = _AT_LEAST.findall(text)
     if len(least) == 1:
         return int(least[0]) * 10000, None, (_AT_LEAST.search(text).group(0),)
@@ -238,6 +303,22 @@ def stay_city(description: str | None) -> str | None:
     return last
 
 
+def stay_gu(description: str | None) -> str | None:
+    """설명의 구 칸 — 「3성급 · 호텔 · 용산구 · 서울」 · 「모텔 · 용산 · 서울」 → 용산구. 서울이 아니거나 없으면 `None`. `[2026-10-18 D22]`"""
+    parts = _parts(description)
+    if len(parts) < 2 or parts[-1] != "서울":
+        return None
+    word = parts[-2]
+    name = word if word.endswith("구") else word + "구"
+    return name if name in SEOUL_GU else None
+
+
+def address_gu(address: str | None) -> str | None:
+    """주소 → 서울 구(「서울특별시 용산구 …」 → 용산구). 없으면 `None`."""
+    found = re.match(r"\s*서울(?:특별시|시)?\s+(\S+구)", str(address or ""))
+    return found.group(1) if found and found.group(1) in SEOUL_GU else None
+
+
 def price_reason(wants: Wants, price: float | None, max_price: int | None = None) -> str | None:
     """1박 가격이 아래 끝보다 낮거나 위 끝보다 높으면 까닭. 가격을 모르면 `None`(다른 곳에서 뺀다)."""
     if price is None:
@@ -256,7 +337,8 @@ def kind_reason(wants: Wants, kinds: frozenset[str], *, strict: bool = True) -> 
     if wants.no_dorm and kinds & DORMS:
         return "dorm"
     if wants.kind is None:
-        return None
+        # 「A나 B」 — 유형이 보이는데 둘 다 아니면 뺀다(모르면 남긴다). ☆N12-24 「게스트하우스나 호텔」에 「동경모텔」
+        return "kind" if wants.either and kinds and not kinds & wants.either else None
     if wants.kind == "호텔":
         return "kind" if kinds and kinds & NOT_HOTEL and "호텔" not in kinds else None
     if wants.kind in kinds:
@@ -333,7 +415,9 @@ _UNSUPPORTED = (("욕조", r"욕조"), ("아기침대", r"아기\s*침대|유아
                 ("수영장", r"수영장|풀\s*빌라|인피니티\s*풀"), ("영어 응대", r"영어|english"), ("금연", r"금연|흡연"),
                 ("객실 정원", r"정원\s*\d|최대\s*\d+\s*명|\d+\s*명\s*까지(?:만)?\s*(?:투숙|숙박)"), ("온돌", r"온돌"),
                 ("발코니 · 테라스", r"발코니|테라스"), ("취사", r"취사|주방|부엌"), ("얼리 체크인 · 레이트 체크아웃", r"얼리\s*체크\s*인|레이트\s*체크\s*아웃"),
-                ("셔틀", r"셔틀"), ("안전 · 여성 전용층", r"안전한|여성\s*전용\s*층"))
+                ("셔틀", r"셔틀"), ("안전 · 여성 전용층", r"안전(?:한|하게|하고|해야|할|함|성)|여성\s*전용\s*층"),
+                # `[2026-10-17 D17]` ☆N12-23 「파티룸이나 큰 숙소」 — 반영 못 함에 없었다
+                ("파티룸 · 단체 숙소", r"파티\s*룸|파티\s*(?:하|할|용)|단체\s*(?:숙소|방)|큰\s*숙소"))
 
 
 def unsupported_requests(text: str, already: list[str]) -> list[str]:
@@ -351,7 +435,9 @@ def summary(wants: Wants) -> list[str]:
     """답에 적을 「반영한 조건」 조각."""
     out = []
     if wants.kind:
-        out.append(f"{wants.kind}만" if wants.kind != "호텔" else "호텔(게스트하우스 · 호스텔 · 모텔 제외)")
+        out.append(f"{wants.kind}만" if wants.kind != "호텔" else "호텔(게스트하우스 · 호스텔 · 모텔 · 레지던스 제외)")
+    if wants.either:
+        out.append(" · ".join(sorted(wants.either)) + " 중 하나")
     if wants.avoid:
         out.append(" · ".join(sorted(wants.avoid)) + " 제외")
     if wants.stars:
@@ -367,5 +453,5 @@ def summary(wants: Wants) -> list[str]:
     return out
 
 
-__all__ = ["DORMS", "NOT_HOTEL", "Guest", "Wants", "guest_block", "price_reason", "read_guest", "read_price_band", "read_walk_minutes", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
+__all__ = ["SEOUL_GU", "address_gu", "stay_gu", "DORMS", "NOT_HOTEL", "Guest", "Wants", "guest_block", "price_reason", "read_guest", "read_price_band", "read_walk_minutes", "kind_reason", "read_wants", "restriction", "wants_pet", "stars_reason", "stay_city", "stay_kinds", "stay_stars",
            "strip_handled", "summary"]

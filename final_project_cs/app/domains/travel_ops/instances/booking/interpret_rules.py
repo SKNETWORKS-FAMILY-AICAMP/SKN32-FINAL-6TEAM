@@ -325,7 +325,14 @@ def _dates(text: str, *, today: date, trip: dict[str, Any] | None) -> list[tuple
                 continue
             if pattern is _BARE_WEEKDAY:
                 # `[2026-10-14]` 「토요일에 가서 일요일 저녁에」 — 주(週) 말 없이 요일만: 오늘 이후 가장 가까운 그 요일(오늘이 그 요일이면 오늘)
-                put(m.start(), m.end(), today + timedelta(days=(weekday - today.weekday()) % 7), m.group(0))
+                #   `[2026-10-18]` 앞에 이미 날짜가 있으면 그 날 **뒤** 가장 가까운 그 요일 — 일요일에 「토요일에 가서 일요일에 오는」이
+                #   가는 날 다음 토요일 · 오는 날 오늘(일)로 거꾸로 나왔다(시험이 일요일에만 실패)
+                earlier = [value for start, value, _ in sorted(out) if start < m.start()]
+                if earlier:
+                    base = earlier[-1]
+                    put(m.start(), m.end(), base + timedelta(days=(weekday - base.weekday()) % 7 or 7), m.group(0))
+                else:
+                    put(m.start(), m.end(), today + timedelta(days=(weekday - today.weekday()) % 7), m.group(0))
     if trip and ("이번 여행" in text or "이 여행" in text) and not out and trip.get("first_day"):
         try:
             out.append((text.index("여행"), date.fromisoformat(str(trip["first_day"])), "trip"))
