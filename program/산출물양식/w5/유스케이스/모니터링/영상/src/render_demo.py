@@ -1,4 +1,4 @@
-"""triPilot product film. Deterministic local graphics and original synthesized score.
+"""guguroute product film. Deterministic local graphics and original synthesized score.
 
 Run: python -X utf8 render_demo.py [--preview]
 Existing generated artifacts are copied to _backup before replacement.
@@ -26,7 +26,7 @@ BOLD = 'C:/Windows/Fonts/malgunbd.ttf'
 FFMPEG = shutil.which('ffmpeg')
 SCENES = [(0,4,'여행의 변수'),(4,9,'여섯 가지 감시'),(9,19,'예보와 일정'),
           (19,25,'알림의 역할'),(25,33,'감시 현황과 로그'),
-          (33,39,'API 한도'),(39,48,'재난 시뮬레이션'),(48,53,'triPilot')]
+          (33,39,'API 한도'),(39,48,'재난 시뮬레이션'),(48,53,'guguroute')]
 
 def backup(path):
     if path.exists():
@@ -119,7 +119,7 @@ def icon(im,kind,x,y,color=BLUE,scale=1):
 def chrome(im,index,t,dark=False):
     fg='#e9edf4' if dark else INK
     muted='#9aa4b6' if dark else MUTED
-    txt(im,'triPilot',64,40,25,fg,True)
+    txt(im,'guguroute',64,40,25,fg,True)
     circle(im,194,57,4,BLUE)
     txt(im,'여행 모니터링',210,47,15,muted)
     txt(im,'로컬 구현 기준 · 예시 데이터',1216,49,14,muted,anchor='right')
@@ -194,7 +194,7 @@ def scene(index,u):
         p=ease(u/.85)
         txt(im,'여행 중,',64,188+30*(1-p),70,'#e9edf4',True,alpha=p)
         txt(im,'일정이 흔들리면?',64,282+30*(1-p),70,'#e9edf4',True,alpha=p)
-        txt(im,'계획한 다음도, triPilot이 지켜봅니다.',68,414,25,'#9aa4b6',alpha=ease((u-.65)/.7))
+        txt(im,'계획한 다음도, guguroute이 지켜봅니다.',68,414,25,'#9aa4b6',alpha=ease((u-.65)/.7))
         yy=187+14*math.sin(u*.9)
         rect(im,827,yy,341,298,'#1c222d','#343c4c',12)
         pill(im,'오늘의 일정',850,yy+25,'#2b3448','#b7c9ff',size=16)
@@ -294,7 +294,7 @@ def scene(index,u):
         txt(im,'여행은 계속.',640,182+24*(1-p),72,'#e9edf4',True,alpha=p,anchor='center')
         txt(im,'변화는 먼저 확인.',640,282+24*(1-p),72,'#e9edf4',True,alpha=p,anchor='center')
         txt(im,'여행자는 최신 일정을, 운영자는 확인 근거를.',640,403,25,'#9aa4b6',alpha=ease((u-.5)/.7),anchor='center')
-        txt(im,'triPilot',640,505,46,'#e9edf4',True,alpha=ease((u-1)/.7),anchor='center')
+        txt(im,'guguroute',640,505,46,'#e9edf4',True,alpha=ease((u-1)/.7),anchor='center')
     return im
 
 def frame(t):

@@ -17,7 +17,7 @@ NAMES = {
     'subway_notice': '지하철 공지', 'seoul_subway_arrival': '서울 지하철 도착',
     'seoul_bus_arrival': '서울 버스 도착', 'seoul_bike': '서울 따릉이',
     'kakao': '카카오', 'naver_search': '네이버 검색', 'google_places': 'Google Places',
-    'google_routes': 'Google Routes',
+    'google_routes': 'Google Routes', 'serpapi': 'SerpApi 구글 호텔 · 항공권',
 }
 
 
@@ -61,8 +61,10 @@ def snapshot(*, connection_factory, settings=None, now=None):
         # 한 트랜잭션에서 읽기만 한다. 조회 때문에 예산 줄을 만들거나 갱신하지 않는다.
         with connection_factory() as conn, conn.cursor() as cur:
             ids = [row['id'] for row in limits]
+            # ★`[2026-10-19]` `<id>:uncapped` — 언리미티드 모드 · 숙소 시연 모드가 한도를 넘겨 부른 수(`CallBudget._over`). 상한 있는 줄은 used ≤ cap 이라 따로 센다
             cur.execute('SELECT meter,period,used,cap,updated_at FROM external_call_budget '
-                        'WHERE meter=ANY(%s) AND period=ANY(%s)', (ids, sorted({period for value in periods.values() for period in value.values()})))
+                        'WHERE meter=ANY(%s) AND period=ANY(%s)', (ids + [f'{i}:uncapped' for i in ids],
+                                                                   sorted({period for value in periods.values() for period in value.values()})))
             records = {(meter, period): dict(used=int(used), cap=int(cap), updated_at=at.isoformat())
                        for meter, period, used, cap, at in cur.fetchall()}
             cur.execute('SELECT meter,daily,monthly FROM admin_api_caps WHERE meter=ANY(%s)', (ids,))
@@ -75,6 +77,8 @@ def snapshot(*, connection_factory, settings=None, now=None):
     for row in limits:
         row['recorded'] = {kind: records.get((row['id'], periods[row['id']][kind])) for kind in ('day', 'month')}
         row['operator_cap'] = overrides.get(row['id'])
+        over = {kind: records.get((f"{row['id']}:uncapped", periods[row['id']][kind])) for kind in ('day', 'month')}
+        row['over_cap'] = {kind: value['used'] for kind, value in over.items() if value} or None
         # 화면의 「조정」 — DB 예산을 거치는 소스만 운영자 상한이 실제 호출에 걸린다. 나머지는 이유를 싣는다(눌러도 안 먹는 단추를 만들지 않는다)
         row['adjustable'] = row['id'] in bounds
         row['adjust_note'] = None if row['adjustable'] else (

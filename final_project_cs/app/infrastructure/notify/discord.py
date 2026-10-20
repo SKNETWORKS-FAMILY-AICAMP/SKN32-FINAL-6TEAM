@@ -53,6 +53,7 @@ MAX_RETRY_AFTER_SECONDS = 900.0
 #:  이름을 쓰지 않는다 — 겹치면 값이 엉킨다(`_compose` 가 막는다).
 _OPTIONS, _VERSION, _URL = "_options", "_version", "_url"
 _GUARDIAN_URL = "_guardian_url"
+_APP_URL = "_app_url"
 
 
 class RetryAfter(RuntimeError):
@@ -134,7 +135,16 @@ def _compose(body: str, values: dict[str, Any], payload: dict[str, Any], *,
       알림마다 다르므로 틀에 박으면 캐시 열쇠가 알림마다 달라지고(재사용 0), 무엇보다
       값이 틀에 섞인다. 담아 두지 않는 통지는 전처럼 그대로 박는다(문구가 한 글자도 안 바뀐다).
     """
-    lines = [("[재생] " if payload.get("replay") else "") + body]
+    lines = []
+    if payload.get("app_url"):
+        # 링크는 본문 앞에 두어 채널 길이 제한으로 잘리지 않게 한다.
+        # 생성 문장도 주소는 번역 대상에서 빼고 원값으로 채운다.
+        values[_APP_URL] = str(payload["app_url"])
+        lines.append("앱에서 대안 선택·여행 관리: {%s}" % _APP_URL)
+        if payload.get("plan_url"):
+            values[_URL] = str(payload["plan_url"])
+            lines.append("계획서 보기: {%s}" % _URL)
+    lines.append(("[재생] " if payload.get("replay") else "") + body)
     others = [str(option) for option in (payload.get("other_options") or [])]
     if others and "다른 안" not in _filled(body, values):
         if cacheable:
@@ -150,7 +160,7 @@ def _compose(body: str, values: dict[str, Any], payload: dict[str, Any], *,
             lines.append(f"(일정 버전 {payload['version']})")
     # ★`[2026-10-06 사용자 결정 · 항로 지킴이]` 알림에 실린 항로 지킴이 몫(`payload.guardian`) — 디스코드 · 텔레그램은 로그인이 없어 **링크로 웹을 연다**(켜기는 웹이 확인한 뒤 서버에 요청한다).
     #   덧붙이는 줄이라 이 값이 없는 알림의 문구는 한 글자도 안 바뀐다. 주소가 없으면(웹 주소 미설정) 켜기 줄은 붙이지 않는다.
-    #   ★계획서 링크 **앞**에 둔다 — 알림은 계획서 링크로 끝난다(`test_a_change_notice_carries_the_plan_link`).
+    #   ★앱 주소가 없는 알림은 계획서 링크로 끝난다(아래) — 그 링크 **앞**에 둔다. 앱 주소가 있으면 두 링크 모두 본문 앞이다(알림 v5 · `test_a_change_notice_carries_the_plan_link`).
     guardian = payload.get("guardian") or {}
     if guardian.get("changed"):
         lines.append("항로 지킴이가 바꿨어요. 마음에 안 들면 웹에서 되돌릴 수 있어요.")
@@ -161,7 +171,7 @@ def _compose(body: str, values: dict[str, Any], payload: dict[str, Any], *,
             lines.append("항로 지킴이를 켜면 다음부터 알아서 바꿔 드려요: {%s}" % _GUARDIAN_URL)
         else:
             lines.append(f"항로 지킴이를 켜면 다음부터 알아서 바꿔 드려요: {offer_url}")
-    if payload.get("plan_url"):
+    if payload.get("plan_url") and not payload.get("app_url"):
         # ★상태의 정본은 링크다(v11 §6-A) — 안내에는 늘 붙인다. 주소는 옮기지 않는다.
         if cacheable:
             values[_URL] = str(payload["plan_url"])

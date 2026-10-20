@@ -43,6 +43,73 @@ from .simulation_hook import inputs, record_result, resolve
 #:    지금은 비어 있다 — 소스가 없을 때의 이유는 조립이 `unavailable` 에 적는다.
 NOT_CONNECTED: dict[str, str] = {}
 
+# 기상청 특보구역 표의 서울 권역. 장소 이름이나 행정구 중심점으로 짐작하지 않는다.
+SEOUL_WARNING_ZONES = {
+    "서울동남권": frozenset({"강동구", "송파구", "강남구", "서초구"}),
+    "서울동북권": frozenset({"도봉구", "노원구", "강북구", "성북구", "동대문구", "중랑구", "성동구", "광진구"}),
+    "서울서남권": frozenset({"강서구", "양천구", "구로구", "영등포구", "동작구", "관악구", "금천구"}),
+    "서울서북권": frozenset({"은평구", "종로구", "마포구", "서대문구", "중구", "용산구"}),
+}
+
+
+def _seoul_warning_districts(area: str) -> frozenset[str] | None:
+    """서울 특보 원문의 포함 구. 모르는 서울 표현은 None, 다른 도시는 빈 집합."""
+    import re
+
+    from .disaster_msg import SEOUL_GU_NAMES
+
+    text = re.sub(r"\s+", "", area).replace("서울특별시", "서울")
+    if not text.startswith("서울"):
+        return frozenset()
+    match = re.fullmatch(r"([^()]+)(?:\(([^()]*)\))?", text)
+    if match is None:
+        return None
+    base, detail = match.groups()
+    if base == "서울":
+        covered = SEOUL_GU_NAMES
+    elif base in SEOUL_WARNING_ZONES:
+        covered = SEOUL_WARNING_ZONES[base]
+    else:
+        return None
+    if detail is None:
+        return covered
+    excluded = detail.endswith("제외")
+    detail = detail[:-2] if excluded else detail
+    parts = re.split(r"[,·ㆍ]", detail)
+    selected = set()
+    for part in parts:
+        part = part.removeprefix("서울")
+        if part in SEOUL_GU_NAMES:
+            selected.add(part)
+        elif "서울" + part in SEOUL_WARNING_ZONES:
+            selected.update(SEOUL_WARNING_ZONES["서울" + part])
+        else:
+            return None
+    return frozenset(covered - selected if excluded else covered & selected)
+
+
+def _warning_relation(areas: list[str], target: dict[str, Any]) -> str:
+    """구 후보가 모두 같은 결론일 때만 적용/비적용을 확정한다."""
+    from .disaster_msg import SEOUL_GU_NAMES
+
+    district = target.get("district")
+    districts = [district] if isinstance(district, str) else district
+    results = []
+    for area in areas:
+        covered = _seoul_warning_districts(area)
+        if covered is None:
+            results.append("unassessed")
+        elif not covered:
+            results.append("unrelated")
+        elif covered == SEOUL_GU_NAMES:
+            results.append("matched")
+        elif not districts:
+            results.append("unassessed")
+        else:
+            hits = [name in covered for name in districts]
+            results.append("matched" if all(hits) else "unassessed" if any(hits) else "unrelated")
+    return "matched" if "matched" in results else "unassessed" if not results or "unassessed" in results else "unrelated"
+
 
 def forecast_advisories(forecast: dict[str, Any], *, pop_limit: float | None,
                         wind_limit: float | None) -> list[dict[str, Any]]:
@@ -103,7 +170,7 @@ class DisruptionCheck:
         sensitive = True if indoor_unknown else bool(place.get("weather_sensitive"))
         jobs: dict[str, Callable[[], dict[str, Any]]] = {
             "forecast": lambda: self._forecast(place, starts_at, sensitive),
-            "weather_warning": lambda: self._warning(region, sensitive),
+            "weather_warning": lambda: self._warning(region, sensitive, place),
             "disaster_msg": lambda: self._disaster(place, starts_at, region, sensitive),
             "traffic_control": lambda: self._traffic(place, starts_at),
             "air_quality": lambda: self._air(place, starts_at, sensitive),
@@ -222,7 +289,7 @@ class DisruptionCheck:
                 "_advisories": forecast_advisories(value, pop_limit=pop_limit,
                                                    wind_limit=wind_limit)}
 
-    def _warning(self, region: str, sensitive: bool) -> dict[str, Any]:
+    def _warning(self, region: str, sensitive: bool, place: dict[str, Any] | None = None) -> dict[str, Any]:
         base = {"category": "weather_warning"}
         if not sensitive:
             return {**base, "status": "not_applicable", "reason": "날씨 영향을 받지 않는 장소"}
@@ -234,12 +301,29 @@ class DisruptionCheck:
         if value is None:
             return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
                     "reason": "특보 발효 현황을 못 읽었다"}
+        selected = list(value.get("for_region") or [])
+        unassessed = []
+        if region in {"서울", "서울특별시"} and place is not None:
+            from .notice_area import place_area
+
+            target = place_area(place, "서울")
+            selected = []
+            for item in value.get("for_region") or []:
+                related = _warning_relation(item.get("areas") or [], target)
+                if related == "matched":
+                    selected.append(item)
+                elif related == "unassessed":
+                    unassessed.append(item)
+            value = {**value, "for_place": selected, "unassessed_for_place": unassessed,
+                     "district": target["district"], "district_basis": target["district_basis"]}
         disruptions = [{"category": "weather_warning", "kind": item.get("kind"),
                         "areas": item.get("areas", []), "source": value.get("source"),
                         "announced_at": value.get("announced_at"),
                         "confirmed_at": value.get("confirmed_at")}
-                       for item in value.get("for_region") or []]
-        return {**base, "status": "ok", "source": value.get("source"),
+                       for item in selected]
+        return {**base, "status": "failed" if unassessed else "ok", "source": value.get("source"),
+                **({"reason": "장소와 특보구역의 관계를 확인할 수 없다",
+                    "unassessed_areas": [item.get("areas") or [] for item in unassessed]} if unassessed else {}),
                 "confirmed_at": value.get("confirmed_at"), "value": value,
                 "_disruptions": disruptions}
 
@@ -322,6 +406,10 @@ class DisruptionCheck:
         disruptions = [{"category": "traffic_control", "kind": item.get("reason"),
                         "road": item.get("road"), "distance_m": item.get("distance_m"),
                         "message": item.get("message"),
+                        # 수신한 사건 정체·기간만 보존한다. 거리·조회 시각은 사건 정체가 아니다.
+                        **{name: item[name] for name in ("incident_id", "section", "starts_at", "ends_at",
+                                                         "control_type", "lanes") if item.get(name) is not None},
+                        "confirmed_at": value.get("confirmed_at"),
                         "source": item.get("source") or value.get("source")}
                        for item in value.get("for_place") or []]
         advisories = [{"category": "traffic_control", "field": "partial_lane",
@@ -350,6 +438,13 @@ class DisruptionCheck:
         if not sensitive:
             return {**base, "status": "not_applicable", "reason": "날씨 영향을 받지 않는 장소"}
         source = getattr(self.sources, "air", None)
+        if source is not None and isinstance(at, datetime) and at.tzinfo is not None:
+            from .air_quality import FORECAST_HOURS
+            if at - datetime.now(UTC) > timedelta(hours=FORECAST_HOURS):
+                # ★`[2026-10-20]` 아직 값을 낼 수 없는 먼 시각 — 실패가 아니다. 가까워지면 감시가 다시 본다.
+                #   ☆전에는 일주일 뒤 일정의 대기질이 늘 「1차 · 대체 모두 실패」(치명)가 되어 채팅 교체를 막았다(x600 2026-10-20)
+                return {**base, "status": "not_applicable",
+                        "reason": f"방문 시각이 대기질 예보 범위({FORECAST_HOURS}시간) 밖 — 가까워지면 다시 본다"}
         if source is None:
             reason = (getattr(self.sources, "unavailable", {}) or {}).get(
                 "air", "에어코리아 대기오염정보 소스 없음")

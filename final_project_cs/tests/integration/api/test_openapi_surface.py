@@ -119,6 +119,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/confirm",
     # ★2026-10-06 로딩 중 질문의 답 — 한 문항씩 바로 저장(같은 문항은 덮어쓴다), 등록 때 설문에 합쳐진다. `wiki/external/rest-endpoints.md` 「설문 질문」
     "/v1/web/trip-intakes/{intake_id}/survey",
+    # ★2026-10-20 해석 확인 질문 — 고른 안 보내기(조회의 `interpretations[]` 와 짝, `Accept: text/event-stream` 이면 SSE).
+    #   `wiki/external/rest-endpoints/web-intakes.md` 「해석 확인 질문」
+    "/v1/web/trip-intakes/{intake_id}/interpretations",
     # 「일정 짜 줘」 — 조건을 확인해 누르면 일정 생성기 초안을 판정 뒤 등록(request_id = 접수 + plan + 판)
     "/v1/web/trip-intakes/{intake_id}/plan",
     # ★2026-10-02 접수 읽기 진행(SSE) — 뒤에서 도는 읽기가 어디까지 왔는지. 채팅(`/messages`)·일정 짜기(`/plan`)는 같은 경로가
@@ -154,6 +157,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/safety/resume",
     # ★2026-10-06 개인 AI 입구(MCP) 읽기 도구의 웹 입구 둘 — 일정 위험 점검 · 이동 판정(둘 다 읽기 · 본인 여행만). `wiki/external/rest-endpoints.md` 「일정 위험 점검 · 이동 판정」
     "/v1/web/trips/{trip_id}/risks",
+    # ★2026-10-18 위험이 걸린 일정의 대안 요청(보류 제안만 연다 · 일정은 안 바꾼다). `wiki/external/rest-endpoints/web-trips.md` 「일정 위험 점검 · 이동 판정」
+    "/v1/web/trips/{trip_id}/risks/{item_id}/alternatives",
     "/v1/web/moves/judge",
     # ★2026-10-04 에이전트 키(D-CS-012) — 쿠키 로그인한 회원만 만들고 관리한다
     "/v1/web/agent-keys",

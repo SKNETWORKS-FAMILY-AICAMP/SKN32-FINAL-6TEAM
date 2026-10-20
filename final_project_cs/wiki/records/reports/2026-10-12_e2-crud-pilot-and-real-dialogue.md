@@ -20,7 +20,7 @@ domain: travel
 | 사람 정답 검수 | 미실행 | 0/467 = 0% |
 | 새 문항의 실제 모델 평가 | 미실행 | 0/467 = 0% |
 
-[실측] 관측 시각: 2026-10-12T15:08:33.671627+09:00. 수량 정본은 [coverage](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/coverage.json), 해시는 [manifest](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/manifest.json)입니다. 위 표는 이 시점의 스냅샷이며 모델 정확도 표가 아닙니다.
+[실측] 관측 시각: 2026-10-12T15:08:33.671627+09:00. 수량 정본은 [coverage](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/coverage.json), 해시는 [manifest](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/manifest.json)입니다. 위 표는 이 시점의 스냅샷이며 모델 정확도 표가 아닙니다.
 
 ## 무엇을 보강했나
 
@@ -39,25 +39,25 @@ domain: travel
 
 해당 실제 웹 시험은 x600 서버의 cs 프로젝트 앱에서 수행한 테스트 이용 기록입니다. Oracle ARM에서 동일하게 재현했다고 하지 않습니다. 실제 일반 고객을 모집한 표본도 아닙니다. 과거에 발견한 오류가 후속 수정 뒤에도 모두 남아 있다고 하지 않습니다. 시간→장소 변경 사고의 당시 원시 모델 출력은 이 작업으로 확보하지 못했으므로 특정 모델의 오분류로 확정하지 않습니다.
 
-[미확보] 원래 질문 당시의 전체 DB 스냅샷·권한·모델 원시 출력. E2는 질문을 합성 여행 문맥에 재구성하고 그 문맥에 대한 정답을 새로 작성했습니다. 원래 답변을 정답으로 복사하거나 완전한 역사 재생이라고 부르지 않습니다. 원문·출처·이미지 해시 목록은 git 밖 [로컬 근거 목록](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/raw/real_evidence_catalog.json)에 두었습니다. 공용 문서에는 개인 여행 토큰이나 접속 정보를 옮기지 않았습니다.
+[미확보] 원래 질문 당시의 전체 DB 스냅샷·권한·모델 원시 출력. E2는 질문을 합성 여행 문맥에 재구성하고 그 문맥에 대한 정답을 새로 작성했습니다. 원래 답변을 정답으로 복사하거나 완전한 역사 재생이라고 부르지 않습니다. 원문·출처·이미지 해시 목록은 git 밖 [로컬 근거 목록](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/raw/real_evidence_catalog.json)에 두었습니다. 공용 문서에는 개인 여행 토큰이나 접속 정보를 옮기지 않았습니다.
 
 ## 소넷·Codex 검토와 추가 항목
 
 [실측] 독립 기계 검토 두 개가 요청 집합+최종 상태+금지 부작용 평가에 일치했습니다. 소넷이 제안한 중복 재시도·취소/정정·오래된 문맥·권한·조건부 실행을 문항에 반영했습니다. Codex가 짚은 누락된 N번째 요청·문체 가족 단위 분리·도구 기록의 검증도 반영했습니다. 사람이 검수한 의견은 아닙니다.
 
-삭제 후 재생성을 수정과 동등하게 취급하지 않는 제한을 추가했습니다. 미지원 기능의 안전한 거절을 제품 업무 성공으로 세지 않습니다. 배치의 부분 성공·자동 복구 정책은 기계 의견으로 제품 계약을 바꾸지 않고 별도 검토 대상으로 남겼습니다. 자세한 [채택·기각 기록](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/review_decision.md)과 CLI 원문은 로컬에 보존했습니다.
+삭제 후 재생성을 수정과 동등하게 취급하지 않는 제한을 추가했습니다. 미지원 기능의 안전한 거절을 제품 업무 성공으로 세지 않습니다. 배치의 부분 성공·자동 복구 정책은 기계 의견으로 제품 계약을 바꾸지 않고 별도 검토 대상으로 남겼습니다. 자세한 [채택·기각 기록](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/review_decision.md)과 CLI 원문은 로컬에 보존했습니다.
 
 소넷 실제 모델: `claude-sonnet-5-5`, effort `high`. CLI 로그 입력2·캐시 생성35,891·캐시 재사용0·출력18,740토큰(추론10,199 포함)입니다. 출력과 추론 토큰을 중복 합산하지 않습니다. 계정 잔여 사용량은 확인 불가입니다. CLI의 가격표 환산값은 실제 청구액으로 보고하지 않았습니다. Codex 실제 선택 모델은 `gpt-6-sol`입니다. 실제 대화·화면·민원 원문은 외부 검토 프롬프트에 첨부하지 않았습니다.
 
 ## 참조 데이터·웹 근거
 
-[실측] 지정하신 AIHub instruction 파일2,700행의 스키마·분류 메타데이터와 Kaggle 선택5파일 각100행, 공공 민원1파일100행을 참고했습니다. 전 데이터셋 본문을 전수 검수한 결과는 아닙니다. 원문 고객 이름·연락처·민원번호·답변을 E2 문장으로 복사하지 않았습니다. 상거래 자료는 사용자 지시에 따른 비여행 주제·문체 참고로 제한하고 여행 RAG나 긍정 업무 자료로 복원하지 않았습니다. KR3 비상업 조건을 포함한 원본 REPORT·라이선스는 유지합니다. [범위 기록](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/reference_audit.json).
+[실측] 지정하신 AIHub instruction 파일2,700행의 스키마·분류 메타데이터와 Kaggle 선택5파일 각100행, 공공 민원1파일100행을 참고했습니다. 전 데이터셋 본문을 전수 검수한 결과는 아닙니다. 원문 고객 이름·연락처·민원번호·답변을 E2 문장으로 복사하지 않았습니다. 상거래 자료는 사용자 지시에 따른 비여행 주제·문체 참고로 제한하고 여행 RAG나 긍정 업무 자료로 복원하지 않았습니다. KR3 비상업 조건을 포함한 원본 REPORT·라이선스는 유지합니다. [범위 기록](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/reference_audit.json).
 
-[외부] [Tau-bench](https://arxiv.org/abs/2406.12045)의 상태 기반 평가, [ToolSandbox](https://arxiv.org/abs/2408.04682)의 상태 의존 경로, [BFCL V2](https://gorilla.cs.berkeley.edu/blogs/12_bfcl_v2_live.html)·[V3](https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html)의 복수 호출·후속 대화, [TimeBench](https://arxiv.org/abs/2311.17667)의 시간 추론을 설계 참고로 사용했습니다. [AIHub SNS](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&dataSetSn=114) 등 공개 기관 자료로 구어체 범주를 확인했습니다. 최신 SNS 전체 분포를 대표한다고 주장하지 않으며 사적 게시물 수집이나 신규 원문 다운로드는 하지 않았습니다. [전체 출처와 적용 한계](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/sources.json).
+[외부] [Tau-bench](https://arxiv.org/abs/2406.12045)의 상태 기반 평가, [ToolSandbox](https://arxiv.org/abs/2408.04682)의 상태 의존 경로, [BFCL V2](https://gorilla.cs.berkeley.edu/blogs/12_bfcl_v2_live.html)·[V3](https://gorilla.cs.berkeley.edu/blogs/13_bfcl_v3_multi_turn.html)의 복수 호출·후속 대화, [TimeBench](https://arxiv.org/abs/2311.17667)의 시간 추론을 설계 참고로 사용했습니다. [AIHub SNS](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&dataSetSn=114) 등 공개 기관 자료로 구어체 범주를 확인했습니다. 최신 SNS 전체 분포를 대표한다고 주장하지 않으며 사적 게시물 수집이나 신규 원문 다운로드는 하지 않았습니다. [전체 출처와 적용 한계](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/sources.json).
 
 ## 구현·검증과 남은 범위
 
-[실측] [자료 검사15개](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/bundle_validation.json), [오류 주입21개](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/scorer_test_result.json)가 통과했습니다. 시간 대신 장소 변경, 대상 오선택, 다섯째 요청 누락, 잘못 변경했다 복구, update 대신 delete+create, 타인 자료 접근, 시간 초과·중복 ID·깨진 JSON을 검사했습니다. 누락·실패는 계획한 전체 분모에 남습니다.
+[실측] [자료 검사15개](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/bundle_validation.json), [오류 주입21개](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/scorer_test_result.json)가 통과했습니다. 시간 대신 장소 변경, 대상 오선택, 다섯째 요청 누락, 잘못 변경했다 복구, update 대신 delete+create, 타인 자료 접근, 시간 초과·중복 ID·깨진 JSON을 검사했습니다. 누락·실패는 계획한 전체 분모에 남습니다.
 
 제작 중 문법·인코딩 오류, 0분 일정 정답, 오래된 시험 분모를 발견해 백업 후 수정했습니다. 자동 구조 검사는 의미상 모든 정답의 타당성을 증명하지 않습니다. 현재 엄격 요청 표현과 의미가 같은 다른 표현은 정규화 또는 사람 판정이 필요합니다. 자유 답변 근거 검수·요청 precision/recall 세부 지표·과도한 추가 질문 비율은 아직 구현/측정 전입니다.
 
@@ -69,7 +69,7 @@ mock 서버 시험: 해당 없음 — 이번 작업은 평가 자료·오프라�
 
 ## 산출물·보존
 
-- [E2 검토 화면](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/review.html) · [검수표](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/review.csv)
-- [평가 계약](../../quality/itinerary-crud-e2-evaluation.md) · [자료 안내](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/REPORT.md)
-- [한 회차 검사 흐름](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/evaluation-flow.html)
-- [수정 전 초안 백업](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/_backup/) · [문서 백업 목록](../../../../datasets/travel/e2_itinerary_crud_20261012_v1/backup_manifest.json)
+- [E2 검토 화면](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/review.html) · [검수표](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/review.csv)
+- [평가 계약](../../quality/itinerary-crud-e2-evaluation.md) · [자료 안내](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/REPORT.md)
+- [한 회차 검사 흐름](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/evaluation-flow.html)
+- [수정 전 초안 백업](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/_backup/) · [문서 백업 목록](../../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v1/backup_manifest.json)

@@ -118,7 +118,7 @@ export function TripShare({ trip, title, planUrl, onClose, notify }: { trip: Tri
     app("more", t("더보기", "More"), <MoreHorizontal size={24} strokeWidth={1.8} aria-hidden="true" />, "plain"),
   ];
   const press = (key: string) => {
-    if (key === "kakao") explain(t("카카오톡 공유는 준비 중이에요 · 카카오 앱 키가 아직 없어요. 링크 복사로 보내 주세요.", "KakaoTalk sharing is coming · there is no Kakao app key yet. Copy the link instead."));
+    if (key === "kakao") explain(t("카카오톡 공유는 준비 중이에요. 링크 복사로 보내 주세요.", "KakaoTalk sharing is coming. Copy the link instead."));
     else if (key === "discord") shareSheet(t("이 브라우저에서는 디스코드로 바로 보낼 수 없어요 · 링크를 복사해 보내 주세요.", "This browser cannot send to Discord directly · copy the link instead."));
     else if (key === "copy") void copy();
     else if (key === "more") shareSheet(t("이 브라우저에는 공유 창이 없어요 · 링크 복사로 보내 주세요.", "This browser has no share sheet · copy the link instead."));
@@ -142,7 +142,7 @@ export function TripShare({ trip, title, planUrl, onClose, notify }: { trip: Tri
           : <button type="button" className={styles.shareApp} onClick={() => press(target.key)}>{face}</button>}</li>;
       })}</ul>
       {download && <a className={styles.shareDownload} href={download} data-plan-download onClick={() => done()}>
-        <Download size={20} strokeWidth={1.8} aria-hidden="true" />{t("파일로 내려받기", "Download as a file")}<small>{`triPilot-${title}.html`}</small></a>}
+        <Download size={20} strokeWidth={1.8} aria-hidden="true" />{t("파일로 내려받기", "Download as a file")}<small>{`구구루트-${title}.html`}</small></a>}
     </section>
   </div>;
 }

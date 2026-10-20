@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot · 살펴볼 점·알림 배치 아이디어</title>
+<title>guguroute · 살펴볼 점·알림 배치 아이디어</title>
 <style>
 /* 색은 앱 src/styles/tokens.css 의 그린 테마 값(2026-10-06, 091a4b9)을 옮겼다. 크기는 plan-check.module.css 를 따른다. */
 :root {
@@ -597,7 +597,7 @@ button { cursor: pointer; }
         if (n.type === "safety_alert" && D.safety) extra = `<div class="opts"><button type="button" class="btn" data-danger data-action="panel" data-panel="safety">안전 안내 보기</button></div>`;
         return { at: n.at, order: 1, html: `<article class="msg" data-role="assistant"><p class="msgMeta"><span class="tag" data-type="${n.type}">${TYPE_LABEL[n.type]}</span>${md(n.at.slice(0, 10))} ${n.at.slice(11)}</p><p class="bubble">${esc(n.text)}</p>${extra}</article>` };
       }),
-      ...st.messages.map((m, at) => ({ at: `9999-${at}`, order: 2, html: `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "triPilot"}</p><p class="bubble">${esc(m.text)}</p></article>` })),
+      ...st.messages.map((m, at) => ({ at: `9999-${at}`, order: 2, html: `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "guguroute"}</p><p class="bubble">${esc(m.text)}</p></article>` })),
     ].sort((a, b) => a.at.localeCompare(b.at) || a.order - b.order);
     markSeen(D);
     // ⑦ 은 살펴볼 점이 일정 옆에 있어 채팅에는 고정하지 않는다.
@@ -668,7 +668,7 @@ button { cursor: pointer; }
     const fabN = unread(D).length;
     const latest = [...D.notices].sort((a, b) => b.at.localeCompare(a.at)).find((n) => !st.seen.has(n.id));
     phone.innerHTML = `<div class="map">${mapSvg(D)}</div>
-      <div class="top"><button type="button" class="logo" data-action="soon" aria-label="triPilot 처음으로"><span>t</span></button><button type="button" class="titlePill" data-action="soon">내 여행</button><span class="gap"></span>
+      <div class="top"><button type="button" class="logo" data-action="soon" aria-label="guguroute 처음으로"><span>t</span></button><button type="button" class="titlePill" data-action="soon">내 여행</button><span class="gap"></span>
         ${has.bell(v) ? `<button type="button" class="bell" data-action="panel" data-panel="center" aria-label="알림 센터 열기${bellN ? ` · 새 알림 ${bellN}개` : ""}">${icon("bell", "i big")}${bellN ? `<span class="badge">${bellN}</span>` : ""}</button>` : ""}
         <button type="button" class="shield" data-action="soon" aria-label="항로 지킴이">${icon("shield", "i big")}</button>
         <button type="button" class="menu" data-action="${v === 5 ? "menu" : "soon"}" aria-label="메뉴" aria-expanded="${v === 5 && st.menuOpen}">${icon("menu", "i big")}</button></div>

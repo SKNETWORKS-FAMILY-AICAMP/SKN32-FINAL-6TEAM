@@ -16,7 +16,7 @@ base.OUT = OUT
 base.VER = VER = "v13"
 ALL = [("UC2_에이전트흐름_일정지키기", fig_uc2), ("UC1_에이전트흐름_계획확인", fig_uc1)]
 
-TITLE = "triPilot 에이전트 흐름 — 누가 다음 단계를 정하나"
+TITLE = "guguroute 에이전트 흐름 — 누가 다음 단계를 정하나"
 
 from doc_data import CARD_FIELDS, CARD_INTRO, CARDS, DEFECTS, HONEST, LANGGRAPH, RULES, SECTIONS
 
@@ -27,7 +27,7 @@ def card_table(name, vals):
 
 
 def doc_html(figs):
-    p = [f'<p class="eyebrow">triPilot · Agent Flow · {VER} · 2026-10-03 · 멘토링 문서 「유스케이스 &amp; 멀티 에이전트 다이어그램」 규칙 반영</p>',
+    p = [f'<p class="eyebrow">guguroute · Agent Flow · {VER} · 2026-10-03 · 멘토링 문서 「유스케이스 &amp; 멀티 에이전트 다이어그램」 규칙 반영</p>',
          f"<h1>{escape(TITLE)}</h1>", f'<p class="lead">{HONEST}</p>',
          "<h2>멘토링 문서 규칙 → 이 그림에서</h2>",
          "<table><thead><tr><th>규칙(문서 7~14쪽)</th><th>이 그림에서</th></tr></thead><tbody>"
@@ -43,10 +43,10 @@ def doc_html(figs):
              + "".join(f"<tr><td>{escape(a)}</td><td>{escape(b)}</td></tr>" for a, b in LANGGRAPH) + "</tbody></table>")
     p.append("<h2>이번 검토로 드러난 제품 결함 — 그림에 그대로 적었다</h2>")
     p.append('<div class="status"><ul>' + "".join(f"<li>{escape(d)}</li>" for d in DEFECTS) + "</ul></div>")
-    p.append(f"<footer>triPilot · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 사실: v12 합의본 + 코드 · {VER}</footer>")
+    p.append(f"<footer>guguroute · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 사실: v12 합의본 + 코드 · {VER}</footer>")
     css = base.CSS + " .card-table td:first-child{width:180px;white-space:nowrap} h3{margin:1.5rem 0 .4rem;font-size:16px}"
     return (f'<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
-            f"<title>triPilot 에이전트 흐름 {VER}</title>{base.FONT_LINK}<style>{css}</style></head><body><div class=\"frame\">"
+            f"<title>guguroute 에이전트 흐름 {VER}</title>{base.FONT_LINK}<style>{css}</style></head><body><div class=\"frame\">"
             + "\n".join(p) + "</div></body></html>")
 
 

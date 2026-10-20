@@ -57,7 +57,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--rule);font-fa
 @media (max-width:760px){.cards{grid-template-columns:1fr}body{padding:2rem 1rem}}
 """
 
-INTRO = ("triPilot 은 <strong>외부 에이전트가 짠 여행 일정을 받아 확인하고, 여행이 끝날 때까지 지키는</strong> 서비스입니다. "
+INTRO = ("guguroute 은 <strong>외부 에이전트가 짠 여행 일정을 받아 확인하고, 여행이 끝날 때까지 지키는</strong> 서비스입니다. "
          "에이전트는 <strong>요식 · 액티비티 둘</strong>이고, 이동은 에이전트가 아니라 <strong>모두가 부르는 공용 판정 툴</strong>입니다. "
          "루프는 둘입니다 — <strong>바깥 루프</strong>는 여행 기간 동안 1분마다 감시 → 배정 → 재점검 → 검증 · 반영 → 알림을 돌고, "
          "<strong>안쪽 루프</strong>는 에이전트가 통과하는 곳이 나올 때까지 다음 후보를 다시 점검합니다. "
@@ -118,7 +118,7 @@ TABLE = [
 ]
 
 CYCLE = ("대표 순환은 <strong>감시 → Case → 오케스트레이터 → 에이전트(후보 재점검 루프) → 검증 · 묻기 · 반영 → 알림 → 다음 1분 감시</strong>입니다. "
-         "이 순환이 triPilot 의 핵심 — 계획을 받아 여행이 끝날 때까지 지킨다 — 을 보여 줍니다. "
+         "이 순환이 guguroute 의 핵심 — 계획을 받아 여행이 끝날 때까지 지킨다 — 을 보여 줍니다. "
          "고객 채팅 · 새벽 영업 확인 · 일정 생성 · 정기 안내(하루 시작 · 다음 일정 · 출발)는 별도 길이며 같은 계산과 버전 저장을 함께 씁니다.")
 
 STATUS = ("지금 상태 — <strong>구현</strong>: 일정 등록 거절(이유 + 고칠 방법) · 고객 채팅 · 다른 안 · 되돌리기 · 일정 생성 · 정기 안내 · 일정 변경 SSE. "
@@ -136,12 +136,12 @@ CARDS = [
 def fig_html(name, f):
     return (f'<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
             f'<title>{escape(f.title)}</title>{FONT_LINK}<style>{CSS} body{{display:flex;justify-content:center}}</style></head>'
-            f'<body><div class="frame"><p class="eyebrow">triPilot · 시스템 아키텍처 {VER}</p><h1>{escape(f.title)}</h1>'
+            f'<body><div class="frame"><p class="eyebrow">guguroute · 시스템 아키텍처 {VER}</p><h1>{escape(f.title)}</h1>'
             f'<figure class="fig-wide">{f.svg()}</figure></div></body></html>')
 
 
 def doc_html(figs):
-    parts = [f'<p class="eyebrow">triPilot · Multi-Agent 구조 · {VER} · 2026-10-02</p>',
+    parts = [f'<p class="eyebrow">guguroute · Multi-Agent 구조 · {VER} · 2026-10-02</p>',
              "<h1>계획을 받아 여행이 끝날 때까지 지키는 구조</h1>",
              f'<p class="lead">{INTRO}</p>',
              '<div class="cards">' + "".join(
@@ -157,9 +157,9 @@ def doc_html(figs):
                  + "".join("<tr>" + "".join(f"<td>{escape(c)}</td>" for c in row) + "</tr>" for row in TABLE) + "</tbody></table>")
     parts.append(f"<p>{CYCLE}</p>")
     parts.append(f'<p class="status">{STATUS}</p>')
-    parts.append(f"<footer>triPilot · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 사실 근거: v9 코덱스 검토(../v9/코덱스_검토결과_v8.md) · {VER}</footer>")
+    parts.append(f"<footer>guguroute · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 사실 근거: v9 코덱스 검토(../v9/코덱스_검토결과_v8.md) · {VER}</footer>")
     return (f'<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
-            f'<title>triPilot 아키텍처 {VER}</title>{FONT_LINK}<style>{CSS}</style></head><body><div class="frame">'
+            f'<title>guguroute 아키텍처 {VER}</title>{FONT_LINK}<style>{CSS}</style></head><body><div class="frame">'
             + "\n".join(parts) + "</div></body></html>")
 
 

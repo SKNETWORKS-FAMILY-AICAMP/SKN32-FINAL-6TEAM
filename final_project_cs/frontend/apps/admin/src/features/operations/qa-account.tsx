@@ -75,7 +75,8 @@ export function QaAccount() {
         {!query.data.enabled ? <button ref={start} className="primary" disabled={busy} onClick={() => void perform('start')}>{busy ? '처리 중…' : '테스트 시작'}</button> : <button className="primary" disabled={busy} onClick={() => void perform('open')}>{busy ? '처리 중…' : '테스트 로그인 링크 만들기'}</button>}
         <button disabled={busy} onClick={() => { setLink(null); void query.refetch(); }}>현재 상태 다시 읽기</button>
       </div>
-      {link && <form action={link.url} method="post" target="_blank" rel="noopener noreferrer"><input type="hidden" name="ticket" value={link.ticket} /><button type="submit">테스트 화면 열기</button><p>발급 후 {link.expires_in_seconds}초 동안 한 번만 사용할 수 있습니다.</p></form>}
+      {/* `[2026-10-19 사용자 지시]` 같은 탭에서 연다 — 새 탭(target=_blank)은 새 탭을 주소로만 다시 여는 브라우저(앱 안 브라우저 창 등)에서 POST 본문(표)을 잃어 405 가 났다. 표는 여전히 본문으로만 보낸다. */}
+      {link && <form action={link.url} method="post" rel="noreferrer"><input type="hidden" name="ticket" value={link.ticket} /><button type="submit">테스트 화면 열기</button><p>발급 후 {link.expires_in_seconds}초 동안 한 번만 사용할 수 있습니다.</p></form>}
       {query.data.enabled && <div className={styles.danger}><h2>테스트 종료</h2><p>전용 계정과 시험 여행 {query.data.trips}개, 접수·대화·세션·키를 삭제합니다. 일반 계정은 변경하지 않습니다.</p><button ref={stop} className={styles.delete} disabled={busy} onClick={() => { if (!validReason()) return; setDeleting(query.data); dialog.current?.showModal(); cancel.current?.focus(); }}>종료하고 시험 데이터 삭제</button></div>}
     </>}
     {error && <p role="alert" className="error">{error}</p>}

@@ -101,4 +101,5 @@
   .page { transition: none !important; background-size: 100% 100%, auto 100% !important; }
 }
 /* The white theme has no landscape behind the intro pages. */
-:global(:root[data-theme="neutral"]) .page { background: var(--color-paper); }
+/* `[2026-10-17 사용자 결정]` 다크에서는 같은 그림의 밤판(후보 2 「서울 불빛」 — 강가 불빛 · 등불색 길) — 덮개(위쪽 바탕색)는 그대로. */
+:global(:root[data-theme="dark"]) .page { --intro-bg: var(--intro-bg-night); }

@@ -64,6 +64,54 @@ def google_price_enabled(tenant_id: str) -> bool:
     return guardrail_default()
 
 
+LODGING_MODE = "travel.lodging.alternatives_mode"
+#: 숙소 모드 값 — demo(숙소 시연 모드) · test(테스트 모드) · off(끄기)
+LODGING_MODES = ("demo", "test", "off")
+
+
+def lodging_mode(tenant_id: str) -> str:
+    """숙소 모드 — "demo"(숙소 시연 모드) · "test"(테스트 모드) · "off"(끄기). `[2026-10-19 사용자 결정]`
+
+    숙소 팀 · 숙소 대안이 구글 호텔(SerpApi)을 부를지 정한다 — off 는 부르지 않음, test 는 하루 한도(확인 화면은 몫)까지,
+    demo 는 하루 한도 · 몫 없이 월 한도만. 읽는 곳: 구글 호텔 어댑터의 호출 문(조립이 `operator_modes` 에 꽂는다) · `composition._lodging_rank`.
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽거나 목록 밖이면 가드레일(`lodging_mode_default`, 기본 off).
+    """
+    value = operator_setting(tenant_id, LODGING_MODE)
+    if isinstance(value, str) and value in LODGING_MODES:
+        return value
+    return lodging_mode_default()
+
+
+def lodging_mode_default() -> str:
+    """숙소 모드 기본값 — 가드레일 `travel.candidates.lodging_mode`. 못 읽거나 목록 밖이면 **off**(켜는 것은 명시한 경우뿐).
+    ★공통 설정(`app/core`)에 두지 않는다 — 업무 낱말(숙소)은 도메인 쪽에 둔다(구조 시험 `test_basement_is_domain_free`)."""
+    from app.core.settings import ConfigError, get_guardrails
+
+    try:
+        raw = get_guardrails().get("travel.candidates.lodging_mode")
+    except ConfigError:
+        return "off"
+    value = "off" if raw is None or raw is False else str(raw)
+    return value if value in LODGING_MODES else "off"
+
+
+UNLIMITED_MODE = "api.unlimited_mode"
+
+
+def unlimited_mode(tenant_id: str) -> bool:
+    """언리미티드 모드 — 켜면 바깥 API 호출 한도를 풀고 세기만 한다. `[2026-10-19 사용자 결정]` 기본 꺼짐.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.unlimited_mode`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다.
+    """
+    value = operator_setting(tenant_id, UNLIMITED_MODE)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import unlimited_mode as guardrail_default
+
+    return guardrail_default()
+
+
 TAXI_CALL_PRODUCT = "travel.mobility.taxi_call_product_enabled"
 
 

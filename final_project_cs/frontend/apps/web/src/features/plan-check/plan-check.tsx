@@ -12,10 +12,12 @@ import type { RouteShapes } from "@/lib/live/route-shapes";
 import type { Coordinates, PinLook } from "@/features/map/model";
 import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
+import { RiskPanel } from "@/features/risk/risk-panel";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
-import { foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
+import { changeLines } from "./change-lines";
+import { draftOfItem, foundCount, isInstantRow, needs, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
@@ -86,6 +88,18 @@ export interface PlanCheckProps {
   onMapZoom?: (zoom: number) => void;
   /** `[2026-10-13 사용자 결정 — 수정 모드]` The screen edits a registered trip (`features/trip/trip-edit.tsx`) instead of checking a new plan. */
   edit?: TripEditMode;
+  /**
+   * `[2026-10-19 사용자 결정 — 못 찾은 장소는 직접 고르기로 수정 · 추가 모드에]` What to open once the check is there and can change things: one stop's place change with the search open
+   * (`change` — the chat could not find the place it was asked to change to), or the add form filled in (`add` — the chat could not find the place it was asked to add). Opened once per `key`.
+   */
+  opening?: PlanOpening | null;
+}
+
+/** See `PlanCheckProps.opening`. `query` goes in the place search; `add` holds only what the chat had (an end the customer did not say is left to the form). */
+export interface PlanOpening {
+  key: string;
+  change?: { itemId: string; query: string };
+  add?: { title: string; date: string | null; start: string | null; end: string | null; kind: string | null; query: string };
 }
 
 /**
@@ -134,8 +148,11 @@ export interface PlanCheckActions {
   remove?: (id: string) => Promise<void>;
   /** Answer a trip-wide detail. */
   editTrip?: (field: "first_day" | "party_size" | "title" | "taxi_pricing", value: string | number | WebTaxiPricing) => Promise<void>;
-  /** The alternatives for one stop, best first (mockup 「대체 후보 A · B · C」). */
-  candidates?: (id: string) => Promise<PlanCandidate[]>;
+  /**
+   * The alternatives for one stop, best first (mockup 「대체 후보 A · B · C」). `[2026-10-19]` `onLive` gets the cards while the server still works them
+   * out (straight-line guesses first, then each measured leg and the model's reason); the promise ends with the final list.
+   */
+  candidates?: (id: string, onLive?: (cards: PlanCandidate[]) => void) => Promise<PlanCandidate[]>;
   /** Why the list for a stop is short or empty (the server's `notes`: `no_same_kind` · `booked_needs_name` · …) — read after `candidates` has answered. */
   candidateNotes?: (id: string) => string[];
   /** Places matching words, nearest first (the change screen's search bar). */
@@ -383,7 +400,7 @@ const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit" | "opening">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -393,7 +410,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
+function Checking({ view, sourceView, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: { view: PlanCheckView; sourceView: PlanCheckView } & ResultProps) {
   const t = useT();
   const { language, skipAnimation } = useSettings();
   const done = view.stage === "done";
@@ -410,6 +427,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<SearchState | null>(null);
   const [details, setDetails] = useState(false);
+  // `[2026-10-19]` The change was opened to pick the place by hand (「직접 고르기」): the top bar's search takes the focus, not the change screen's title.
+  const [searchFirst, setSearchFirst] = useState(false);
   // ★`[2026-10-06 사용자 지시 — 알림은 하나의 포맷으로]` This screen's notices are shown by the one bar every screen uses (`components/toast-view.tsx`): `setToast` turns what the screen says into it. The words of 「되돌리기」 and the
   //   plan-wide undo are read when the button is pressed (`latest`), not when the notice was made.
   const { shown: shownToast, show: showToast, hide: hideToast } = useToastState();
@@ -469,7 +488,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   // `[2026-10-04]` Stops changed since the plan was last sent (and what each had been); stops marked for deletion (really taken out when the plan is sent again).
   const [changed, setChanged] = useState<Record<string, string>>({});
   const [removed, setRemoved] = useState<string[]>([]);
-  const [inserting, setInserting] = useState<InsertionPoint | null>(null);
+  const [inserting, setInserting] = useState<(InsertionPoint & { prefill?: AddPrefill }) | null>(null);
   const [mapPicking, setMapPicking] = useState(false);
   const [mapCoordinate, setMapCoordinate] = useState<Coordinates | null>(null);
   const [addingBusy, setAddingBusy] = useState(false);
@@ -644,16 +663,19 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   }
 
   /** ⑤ Open the change screen for one stop: the map shows it and its alternatives, the top bar becomes a search. */
-  async function startChange(item: PlanItem) {
+  async function startChange(item: PlanItem, how: { search?: boolean; query?: string } = {}) {
     timeEdit.close();
     setOpen(item.id); setSelected(item.id); setChosenDay(item.day);
     if (sheet === "peek") setSheet("half");
-    setQuery(""); setDetails(false);
+    setQuery(how.query ?? ""); setDetails(false); setSearchFirst(Boolean(how.search));
     setChange({ id: item.id, list: [], index: 0, state: actions.candidates ? "loading" : "ready" });
-    requestAnimationFrame(() => document.getElementById("plan-change-title")?.focus({ preventScroll: true }));
+    if (!how.search) requestAnimationFrame(() => document.getElementById("plan-change-title")?.focus({ preventScroll: true }));
     if (!actions.candidates) return;
     try {
-      const list = await actions.candidates(item.id);
+      const list = await actions.candidates(item.id, (live) => {
+        // The cards show at once with straight-line guesses; each line changes when the server has measured it
+        setChange((current) => current?.id === item.id ? { ...current, list: live, state: "ready" } : current);
+      });
       const notes = actions.candidateNotes?.(item.id) ?? [];
       setChange((current) => current?.id === item.id ? { ...current, list, notes, state: "ready" } : current);
     } catch (error) {
@@ -662,7 +684,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   }
   function endChange() {
     const id = change?.id;
-    setChange(null); setQuery(""); setSearch(null); setDetails(false);
+    setChange(null); setQuery(""); setSearch(null); setDetails(false); setSearchFirst(false);
     if (id) refocus(id, "edit");
   }
 
@@ -710,7 +732,18 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       setChange(null); setQuery(""); setSearch(null); setDetails(false);
       setOpen(item.id); refocus(item.id, "edit");
       return { text: t(`${eul(item.title)} ${ro(name)} 바꿨어요`, `Changed ${item.title} to ${name}`),
-        sub: t("바뀐 장소와 앞뒤 이동을 다시 확인해요", "Checking the new place and the moves either side"), undo: undoNow() };
+        sub: t("앞뒤 이동은 「다시 제출」을 누르면 한 번에 확인해요", "The moves either side are checked when you send the plan again"), undo: undoNow() };
+    });
+  }
+  /** `[2026-10-19]` 「장소 없이 두기」 on a stop whose place was not found: saved as 「장소 없음」 (`{"none": true}`), as the stop editor does. */
+  function keepWithoutPlace(item: PlanItem) {
+    if (!actions.edit) { explain(t("장소 없음으로 저장하는 기능은 준비 중이에요", "Saving without a place is coming")); return; }
+    const was = wasText(item);
+    void run(async () => {
+      await actions.edit!(item.id, { ...draftOfItem(item), noPlace: true });
+      markChanged(item.id, was);
+      setOpen(item.id); refocus(item.id, "edit");
+      return { text: t(`${item.title} 일정은 장소 없이 두었어요`, `${item.title} is kept without a place`), sub: t("앞뒤 이동은 장소가 정해지면 확인해요", "Moves around it are checked once a place is set"), undo: undoNow() };
     });
   }
   function recommend(item: PlanItem) {
@@ -720,7 +753,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       markChanged(item.id, was);
       setOpen(item.id);
       return { text: item.suggestion ? t(`${eul(item.title)} ${ro(item.suggestion)} 바꿨어요`, `Changed ${item.title} to ${item.suggestion}`) : t("대체 후보 1순위로 바꿨어요", "Changed to the first alternative"),
-        sub: t("대체 후보 1순위 · 바뀐 장소와 앞뒤 이동을 다시 확인해요", "First alternative · checking the new place and the moves either side"), undo: undoNow() };
+        sub: t("대체 후보 1순위 · 앞뒤 이동은 「다시 제출」을 누르면 한 번에 확인해요", "First alternative · the moves either side are checked when you send the plan again"), undo: undoNow() };
     });
   }
   /** `[2026-10-07]` The customer said which reading of the photo is right. Keeping the current one only confirms it; the other one changes the name (or booking number). */
@@ -1201,6 +1234,25 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     });
   };
   const backGesture = useBackgroundBack(Boolean(inserting) && !addingBusy, () => { if (mapPicking) setMapPicking(false); else if (inserting) closeInsertion(inserting.key); });
+  // `[2026-10-19 사용자 결정 — 못 찾은 장소는 직접 고르기로 수정 · 추가 모드에]` What the page asked to open (`opening`), once the check is there and its changes are wired (an edit being
+  //   prepared has none yet): the stop's place change with the search open and the chat's words in it, or the add form filled in with what the chat had.
+  const opened = useRef<string | null>(null);
+  const openingReady = Boolean(opening) && done && !edit?.preparing && !registered
+    && (opening?.add ? Boolean(actions.add) : Boolean(actions.replace || actions.edit || actions.candidates));
+  useEffect(() => {
+    if (!opening || !openingReady || opened.current === opening.key) return;
+    opened.current = opening.key;
+    if (opening.change) {
+      const item = view.items.find((entry) => entry.id === opening.change!.itemId && !entry.past);
+      if (item) void startChange(item, { search: true, query: opening.change.query });
+      else setToast({ text: t("바꿀 일정을 찾지 못했어요 · 목록에서 일정을 골라 장소를 바꿔 주세요", "That stop is not here · pick a stop in the list to change its place"), stay: true });
+    } else if (opening.add) {
+      setAddingBusy(false);
+      setInserting(addPointOf(view, opening.key, opening.add));
+      if (sheet === "peek") setSheet("half");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- opened once per key, when the screen can act on it
+  }, [opening?.key, openingReady]);
   const renderInsertion = (point: InsertionPoint) => {
     // `[2026-10-13 사용자 결정 — 수정 모드]` No ＋ in a gap that is over or going on now: after a stop that is over (or before one, at the start of a day).
     const stops = shown.items.filter((item) => item.date === point.date);
@@ -1251,7 +1303,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
   function onLine(lineId: string) { if (done && !changing) pickLine(lineId); }
 
   // The lines belong to the plan as it is: for the proposed one only those between stops it did not change are still true (a changed place moves its ends).
-  const lineShapes = !routes || changing ? null : previewing && side === "after" && recommended
+  const lineShapes = changing ? (change ? changeLines(view, changing, cards, change.index) : null) : !routes ? null : previewing && side === "after" && recommended
     ? { ...routes, shapes: routes.shapes.filter((shape) => !(shape.fromItemId in recommended.was) && !(shape.toItemId in recommended.was)) } : routes;
   // The lines of the day on the map, for attribution and source notes.
   const drawn = visibleShapes(lineShapes?.shapes, mapStops);
@@ -1305,6 +1357,11 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       });
     },
     onChange: (item) => void startChange(item),
+    unfound: list === "before" && (actions.replace || actions.edit) ? {
+      pick: (item, candidate) => replace(item, { candidate }),
+      myself: (item) => void startChange(item, { search: true }),
+      none: keepWithoutPlace,
+    } : undefined,
     onDelete: markRemoved,
     onRestore: restore,
     onLock: lock,
@@ -1387,7 +1444,7 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
         aria-label={t("전체 되돌리기", "Undo all changes")} tooltip={t("전체 되돌리기", "Undo all changes")}><RotateCcw size={17} strokeWidth={1.8} aria-hidden="true" /></Act>}
       </div>
     </div>}
-    {changing && <PlaceSearchHeader query={query} onQuery={setQuery} onBack={endChange} backLabel={t("바꾸기 그만두기", "Stop changing")} escapeClears placeholder={t(`${changing.title} 대신 찾을 장소`, `A place instead of ${changing.title}`)} />}
+    {changing && <PlaceSearchHeader key={changing.id} query={query} onQuery={setQuery} onBack={endChange} backLabel={t("바꾸기 그만두기", "Stop changing")} autoFocus={searchFirst} escapeClears placeholder={t(`${changing.title} 대신 찾을 장소`, `A place instead of ${changing.title}`)} />}
     {!changing && !inserting && headerSlot && createPortal(
       <div className={styles.headInfo} data-title={(done && view.title) ? true : undefined}>
         {done && view.title
@@ -1398,9 +1455,9 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
       {done && <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
         onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>}
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
-        <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
+        <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
           mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
-          search={actions.searchToAdd ? (query) => actions.searchToAdd!(inserting.anchorId, query) : undefined}
+          search={actions.searchToAdd && inserting.anchorId ? (query) => actions.searchToAdd!(inserting.anchorId, query) : undefined}
           onSave={async (draft) => { await actions.add!(draft); setAddingBusy(false); setInserting(null); setSlide("prev"); setToast({ text: t("일정을 추가하고 앞뒤 이동시간을 다시 확인했어요.", "Added the stop and checked travel times around it.") }); }} />
       </div> : changing && change
         ? <PlaceChange item={changing} session={change} search={search} explain={explain} applyWhy={applyWhy} candidatesSupported={Boolean(actions.candidates)}
@@ -1458,6 +1515,10 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
           <div ref={bodyBox} className={styles.sheetBody} data-next-preview={(canRecommend || (previewing && side === "before")) && !noFixNow || undefined} data-under-float={done && dayStrip ? true : undefined} {...quietSubmit.handlers} {...follow.handlers} onScroll={follow.handlers.onScroll}>
             {emptyMapInList && <p className={styles.emptyMapNotice} role="status" data-empty-map-notice>{t("표시할 장소 좌표가 없어요.", "There are no place coordinates to display.")}<span>{t("일정에서 장소를 수정해 주세요.", "Edit the places in your stops.")}</span></p>}
             {done && !registered && !previewing && !view.items.length && actions.add && <AddStop date={days[0]?.date ?? ""} blocked={frozen} onSave={actions.add} />}
+            {done && !changing && view.risksAvailable !== undefined && <RiskPanel items={view.items.flatMap((item) => item.risk ? [item.risk] : [])}
+              at={view.riskCheckedAt} mode={view.riskMode} unavailable={!view.risksAvailable}
+              retry={actions.recheck && !frozen ? () => { void run(async () => { await actions.recheck!(); return null; }); } : undefined} busy={Boolean(view.rechecking)}
+              onAlternatives={actions.candidates && !registered && !frozen ? (id) => { const item = view.items.find((entry) => entry.id === id); if (item) void startChange(item); } : undefined} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {done && !registered && !previewing && view.prefill && <PrefillNote notes={view.prefill} />}
             {done && !registered && !previewing && view.taxiPricing && actions.editTrip &&
@@ -1526,6 +1587,28 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     {timeEdit.drag && <TimeDragOverlay drag={timeEdit.drag} />}
     {shownToast && <ToastView key={shownToast.stamp} toast={shownToast.toast} onDone={hideToast} />}
   </div>;
+}
+
+/** The add form's values from the chat (`PlanOpening.add`): its words, and the kinds the form has. */
+export interface AddPrefill { title?: string; kind?: NewStop["kind"]; query?: string }
+
+const DEFAULT_STAY_MIN = 60;
+
+/**
+ * `[2026-10-19]` Where the add form opened from the chat stands: on the chat's day (the first day when it said none), at its time — with an end an hour on when the customer said none
+ * (the form's own default, as the ＋ between stops gives). Searches are made around the stop of that day just before it (else that day's first, else the plan's first).
+ */
+export function addPointOf(view: PlanCheckView, key: string, add: NonNullable<PlanOpening["add"]>): InsertionPoint & { prefill: AddPrefill } {
+  const live = view.items.filter((item) => !item.past);
+  const date = add.date ?? view.days[0]?.date ?? "";
+  const start = add.start ?? "";
+  const at = start ? parseHm(start) : null;
+  const end = add.end ?? (at !== null ? formatHm(Math.min(at + DEFAULT_STAY_MIN, 23 * 60 + 59)) : "");
+  const sameDay = live.filter((item) => item.date === date).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const anchor = [...sameDay].reverse().find((item) => start && item.startsAt && item.startsAt <= start) ?? sameDay[0] ?? live[0];
+  const kind = add.kind === "dining" || add.kind === "activity" ? add.kind : undefined;
+  return { key: `chat-add-${key}`, anchorId: anchor?.id ?? "", date, start, end, previous: null, next: null, side: "after-stop",
+    prefill: { title: add.title, query: add.query, ...(kind ? { kind } : {}) } };
 }
 
 function dayHeading(day: { day: number; date: string }, language: Language, t: Translate) {

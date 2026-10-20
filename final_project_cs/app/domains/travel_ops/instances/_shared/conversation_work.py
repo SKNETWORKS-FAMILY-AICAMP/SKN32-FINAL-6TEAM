@@ -317,7 +317,7 @@ def _propose_alternatives(work: Any, task: TeamTask, ctx: dict[str, Any], item: 
                          places_by_id={str(p["place_id"]): p for p in places}, item_id=item.item_id,
                          choice=selected["key"], message=task.input_text,
                          request_id=task.context.current_state.get("request_id"),
-                         check=work.recheck(task, ctx) if item.kind == "activity" else None)
+                         check=work.recheck(task, ctx) if item.kind == "activity" else None, customer_pick=True)
         return work.settle(task, ctx, swap)
     choices = [{**o, "label": (str(o.get("note") or "") + " " + str(o.get("option_label") or o["name"])).strip(),
                 "message": str(o.get("option_label") or o["name"]), "item_id": str(item.item_id),
@@ -355,5 +355,5 @@ def _fresh_change(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any, *,
                          places_by_id={p["place_id"]: p for p in places}, item_id=item.item_id,
                          choice=option["key"], message=task.input_text,
                          request_id=task.context.current_state.get("request_id"),
-                         check=work.recheck(task, ctx) if not dining else None)
+                         check=work.recheck(task, ctx) if not dining else None, customer_pick=True)
     return work.settle(task, ctx, plan)

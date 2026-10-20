@@ -1629,7 +1629,7 @@
     "valen_d2_counts": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_d2_a2/native_counts.json",
     "valen_mapping_audit": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/Valen_D2_mapping_audit.json",
     "finch_seed13_basic": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/FINCH_seed13_basic_counts.json",
-    "adapter_directory": "datasets/travel/train_oos/oos2r_finch_5e5_seed20261013_20261009",
+    "adapter_directory": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261013_20261009",
     "adapter_sha256": "efbfc01207517ace92b4bde9b880b006ee5b4fc84c488e3844d809367ec60429",
     "report": "final_project_cs/wiki/records/reports/2026-10-09_140358_gpu-finch-seed2-completion-valen-final-refill.md"
   },
@@ -1866,7 +1866,7 @@
       835,
       835
     ],
-    "adapter_directory": "datasets/travel/train_oos/oos2r_cosine_5e5_seed20261013_20261009",
+    "adapter_directory": "datasets/core/pointing/trainset/train_oos/oos2r_cosine_5e5_seed20261013_20261009",
     "adapter_sha256": "9832e316c7df17aa41649ab0847f98c36f4281cc403bce180e1665413641517f",
     "dataset_verification": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/dataset_verification.json",
     "report": "final_project_cs/wiki/records/reports/2026-10-09_200918_gpu-seed2-results-cosine-refill-local-feeder.md",

@@ -2,7 +2,7 @@
 
 v2 진단(design-critique): 장마다 같은 무게의 연두 · 베이지 상자가 가득해 눈이 갈 곳이 없음 · 오피스 기본 차트 ·
 본문 10~11pt 로 작음 · 「이 장의 말」 칸이 반쯤 비어 있음 · 흐름도 선이 엇갈림.
-v3 규칙(design-system = triPilot 사용자 웹 토큰, diagram-design = 밀도 4/10 · 강조 1~2개):
+v3 규칙(design-system = guguroute 사용자 웹 토큰, diagram-design = 밀도 4/10 · 강조 1~2개):
 - 바탕 color-paper, 글 color-text, 강조는 color-primary 하나. 경고 · 오류만 따뜻한 톤
 - 장마다 주인공 하나(큰 숫자 · 그림 · 화면), 나머지는 작고 조용하게. 상자는 꼭 필요할 때만, 모서리 크게
 - 제목 위 영어 대문자 눈썹 문구(디자인 시스템의 Eyebrow), 숫자 아래 작은 글씨로 출처
@@ -222,12 +222,12 @@ s = new()
 pic(s, SCENE / "tripilot-home-02-paper-seoul.png", 0, 0, w=13.333)
 pic(s, A / "veil_left.png", 0, 0, w=13.333)
 mark(s, L, 1.25)
-text(s, L + 0.78, 1.3, 4, 0.55, "triPilot", size=26, bold=True, spacing=-0.5)
+text(s, L + 0.78, 1.3, 4, 0.55, "guguroute", size=26, bold=True, spacing=-0.5)
 text(s, L, 2.55, 6.4, 0.3, "WEEK 5 STANDUP  ·  SKN32 6팀 A-COPilot", size=11, bold=True, color=PRIMARY, spacing=2)
 text(s, L, 2.95, 6.4, 1.0, "5주차 진행 경과", size=50, bold=True, spacing=-1.5)
 text(s, L, 4.2, 6.0, 1.0, "자유여행자가 올린 여행 계획을\n여행이 끝날 때까지 지켜 주는 서비스", size=19, color=CAPTION, line=1.25)
 text(s, L, 6.55, 6, 0.35, "2026.09.29 ~ 10.06", size=13, bold=True, color=MUTED)
-notes(s, "triPilot 5주차 진행 경과를 말씀드리겠습니다. triPilot 은 자유여행자가 이미 짠 여행 계획을 받아서, 여행이 끝날 때까지 문제가 생기지 않는지 지켜보고 바꿔 주는 서비스입니다.")
+notes(s, "guguroute 5주차 진행 경과를 말씀드리겠습니다. guguroute 은 자유여행자가 이미 짠 여행 계획을 받아서, 여행이 끝날 때까지 문제가 생기지 않는지 지켜보고 바꿔 주는 서비스입니다.")
 
 # ================================================================ 1-2 순서
 s = new("AGENDA", "오늘은 다섯 파트로 말씀드립니다")
@@ -348,7 +348,7 @@ for j, x in enumerate((L, L + 6.07)):
     box(s, x, 1.75, 5.76, 3.9, fill=SURFACE, line=BORDER, r=0.22)
 x = L + 0.35
 text(s, x, 1.98, 5, 0.3, "개인 AI 입구", size=15, bold=True)
-pills = [("고객의 AI 비서", SUBTLE), ("triPilot 입구", SOFT), ("본인 여행만", SOFT)]
+pills = [("고객의 AI 비서", SUBTLE), ("guguroute 입구", SOFT), ("본인 여행만", SOFT)]
 px = x
 for k, (t, f) in enumerate(pills):
     w = 1.5
@@ -381,7 +381,7 @@ for k, (big, lab, how) in enumerate((("10 / 10", "에이전트 다시 고르기"
     text(s, xx + 1.95, 5.97, 3.9, 0.3, lab, size=12.5, bold=True)
     text(s, xx + 1.95, 6.26, 3.9, 0.3, how, size=10, color=CAPTION)
 foot(s, "개인 AI 입구는 MCP 서버입니다. 디스코드 · 텔레그램 연결과 여행 삭제는 코드에 들어갔지만 x600 서버 반영과 실제 연결은 아직 확인하지 않았습니다.")
-notes(s, "서버 쪽은 두 가지가 컸습니다. 고객이 평소 쓰는 AI 비서가 triPilot 에 들어와 본인 여행만 읽을 수 있고, 고치는 기능은 기본으로 꺼 두었습니다. 오래 걸리는 일을 하는 동안에는 몇 단계인지와 살아 있다는 신호를 3초마다 보내서, 고객이 멈췄는지 기다리는 중인지 알 수 있게 했습니다.")
+notes(s, "서버 쪽은 두 가지가 컸습니다. 고객이 평소 쓰는 AI 비서가 guguroute 에 들어와 본인 여행만 읽을 수 있고, 고치는 기능은 기본으로 꺼 두었습니다. 오래 걸리는 일을 하는 동안에는 몇 단계인지와 살아 있다는 신호를 3초마다 보내서, 고객이 멈췄는지 기다리는 중인지 알 수 있게 했습니다.")
 
 # ================================================================ 5-2 이동 판정 (2026-10-07 사용자: 이동 모듈 개선이 안 담겼다)
 # 근거: final_project_cs/wiki/records/reports/2026-10-06_이동_엔진_구글대조_걷기모델_점검.md · 2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md ·
@@ -484,7 +484,7 @@ for k, (n, tm, t, hi) in enumerate(rows):
     text(s, L + 1.8, yy, 2.2, 0.6, t, size=13, bold=hi, anchor=MSO_ANCHOR.MIDDLE)
 bx = L + 4.75
 bubble(s, bx, 1.75, 3.6, "금요일에 전시 뭐 봐?", "고객", mine=True)
-bubble(s, bx + 0.6, 2.5, 4.5, "13:30 대림미술관, 16:30 피크닉 전시가 있어요.", "triPilot")
+bubble(s, bx + 0.6, 2.5, 4.5, "13:30 대림미술관, 16:30 피크닉 전시가 있어요.", "guguroute")
 bubble(s, bx, 3.25, 3.6, "뒤에 거 예매해야 돼?", "고객", mine=True)
 text(s, bx + 3.8, 3.33, 0.5, 0.5, "→", size=22, bold=True, color=PRIMARY)
 box(s, bx + 4.35, 3.25, 2.7, 0.62, fill=PRIMARY, line=None, r=0.31)
@@ -960,7 +960,7 @@ notes(s, "다음 주에는 오응답을 실제 제품 경로에서 다시 재고
 CH = None
 # ================================================================ 16 부록
 s = new("APPENDIX", "이 발표의 시험 · 자료 · 구성 이름", "팀이 붙인 이름만 모았습니다. 표준 기술 용어는 풀지 않았습니다.")
-gl = [("mock 서버", "서버 응답 모양만 흉내 내는 시험용 대역 서버"), ("cs 프로젝트 서버", "고객 요청을 처리하는 triPilot 앱(api · worker · web · db)"),
+gl = [("mock 서버", "서버 응답 모양만 흉내 내는 시험용 대역 서버"), ("cs 프로젝트 서버", "고객 요청을 처리하는 guguroute 앱(api · worker · web · db)"),
       ("x600 서버", "cs 프로젝트 서버가 올라가 있는 팀 기계"), ("GPU 서버 A · B · C", "모델 학습 · 시험용으로 빌린 원격 GPU 기계"),
       ("항로 지킴이", "문제가 생기면 서비스가 먼저 바꿔 두고 알릴지 고르는 스위치"), ("Jev 계열 모델", "선택지 중 하나를 고르는 결정 전용 공개 모델 묶음(Winnow-E4B 등)"),
       ("Jev API(유료)", "같은 계열의 종량 과금 외부 결정 API"), ("시험 세트 mix8~12", "일정 항목 매칭 5묶음 835문제(AI 합성). mix8~11 Codex · mix12 Claude"),
@@ -983,5 +983,5 @@ notes(s, "부록은 이 발표에서 팀이 붙인 이름을 모은 것입니다
 
 prs.save(OUT)
 (V3 / "[발표] triPilot_진행경과_2026-10-06_Claude_v3_대본.md").write_text(
-    "# triPilot 5주차 스탠드업 v3 대본 (Claude 판)\n\n" + "\n\n".join(f"## {i + 1}장\n\n{t}" for i, t in enumerate(SCRIPT)) + "\n", encoding="utf-8")
+    "# guguroute 5주차 스탠드업 v3 대본 (Claude 판)\n\n" + "\n\n".join(f"## {i + 1}장\n\n{t}" for i, t in enumerate(SCRIPT)) + "\n", encoding="utf-8")
 print("saved", OUT)

@@ -1,8 +1,8 @@
-# triPilot — 현재 작업 규칙
+# guguroute — 현재 작업 규칙
 
 세션을 이어받으면 [인계 안내 목차](../wiki/handoff/index.md)의 맨 위 인계부터 읽습니다(커밋 안 된 작업은 `git log` 에 안 보입니다).
 
-현재 제품은 **여행 CS triPilot**, 개발 팀은 **A-COPilot**입니다. Activity·Dining·Mobility는 요청을 처리하는 에이전트 팀입니다. 개발 담당자와 혼동하지 않습니다.
+현재 제품은 **여행 CS guguroute**, 개발 팀은 **A-COPilot**입니다. Activity·Dining·Mobility는 요청을 처리하는 에이전트 팀입니다. 개발 담당자와 혼동하지 않습니다.
 
 ## 정본과 적용 범위
 

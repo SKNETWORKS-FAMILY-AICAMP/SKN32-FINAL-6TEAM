@@ -3,16 +3,20 @@
 - [재난 수신 기록 계약](operations/receipt-history.md) · [구현 보고](records/reports/2026-10-17_1530_receipt-history-and-targets.md) · [매니저 독립 검토](records/reports/2026-10-17_receipt-history-manager-review.md)
 type: guide
 title: cs 프로젝트 구현 wiki
-description: 여행 CS triPilot의 현재 계약·구현 안내입니다
+description: 여행 CS guguroute의 현재 계약·구현 안내입니다
 status: draft
 domain: travel
 ---
 
 # cs 프로젝트 구현 wiki
 
+2026-10-18 추가 확인: 공개 식당 자료를 넣어 지역 검색·실제 도착 기준을 보완했습니다. 로컬 확장 100/100, 새 실서버 검증은 WSL 시작 오류로 대기 중이며 배포 전입니다. [최신 결과와 실패 범위](records/reports/2026-10-18_nambu-field-fixes.md).
+
+2026-10-18 남부터미널 실사용 네 분야를 격리 사본에서 수정했습니다. 관련 회귀 6315건 통과, 운영 배포 전입니다. [변경·원인·시험 한계](records/reports/2026-10-18_nambu-field-fixes.md) · [진행·목적지·조회 상태 계약](actions/journey-progress.md).
+
 2026-10-18 관리자 여행 상세: 여행을 눌러 저장 대화·최초/현재 계획을 조회합니다. 양쪽 매니저 코드 반영·운영 자동배포 완료, 지정 다섯 여행의 세 탭 15/15을 실제 화면과 DB로 대조했습니다. [운영 확인·시험 한계](records/reports/2026-10-17_admin-trip-release.md) · [초기 구현 기록](records/reports/2026-10-17_admin-trip-detail.md).
 
-여행 CS triPilot의 현재 계약·구현 안내입니다. 제품 사양은 [상위 wiki](../../wiki/index.md)의 후속 확정 결정과 대조하며, 이력 문서는 당시 상태를 확인할 때만 엽니다.
+여행 CS guguroute의 현재 계약·구현 안내입니다. 제품 사양은 [상위 wiki](../../wiki/index.md)의 후속 확정 결정과 대조하며, 이력 문서는 당시 상태를 확인할 때만 엽니다.
 
 세션을 이어받는 경우 [인계 안내 목차](../../wiki/handoff/index.md)에서 가장 최근 인계부터 읽습니다.
 

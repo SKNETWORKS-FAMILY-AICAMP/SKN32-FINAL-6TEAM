@@ -68,7 +68,7 @@ for suite in ['smoke12', 'd3', 'mx', 'h', 'd', 'd2']:
     jobs.append(dict(id='saluki_original_'+suite+'_a1', suite=suite,
                      label='Underdog-Saluki-27B-1.0 IQ2-mix publisher original',
                      our_training=False,
-                     publisher_training='Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning',
+                     publisher_training='Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no guguroute fine-tuning',
                      model=model, model_sha256=SHA,
                      model_revision='1336c0b5d74dfe6ad7f793577092f5effd9f97c6',
                      prompts=prompts, prompt_sha256=digest, expected=expected,

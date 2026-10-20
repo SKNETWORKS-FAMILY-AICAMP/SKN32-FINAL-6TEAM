@@ -44,6 +44,7 @@ def test_single_and_batch_replan_with_current_time_and_party(monkeypatch, batch,
     task = SimpleNamespace(context=SimpleNamespace(current_state={'trigger': trigger}))
     work = SimpleNamespace(_moment=lambda value: current,
         _read=lambda *a: pytest.fail('확인할 사건 대상 없는 경로는 사건 소스를 요구하지 않습니다'),
+        _evidence=lambda *a, value, base, **k: [*base, value],
         _escalate=lambda *a, **k: 'fatal_source_failure')
     ctx = {'items': [before, move, after], 'at': T('10:50'), 'trip': trip, 'seen': set(), 'evidence': []}
     got = plan_mobility_trigger(work, task, ctx, move)
@@ -55,5 +56,6 @@ def test_single_and_batch_replan_with_current_time_and_party(monkeypatch, batch,
         assert new.detail['route_def'] == fresh_route and new.item_id != move.item_id
     elif result_kind == 'no_path':
         assert isinstance(got, NoChange) and got.status == 'unresolved'
+        assert ctx['evidence'] == [{'code': 'no_path'}]
     else:
         assert got == 'fatal_source_failure'

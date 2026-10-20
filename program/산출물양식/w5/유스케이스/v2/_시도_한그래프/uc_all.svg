@@ -9,12 +9,12 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(28.8 1679.6)">
 <title>UC</title>
 <polygon fill="#ffffff" stroke="none" points="-28.8,28.8 -28.8,-1679.6 1897.09,-1679.6 1897.09,28.8 -28.8,28.8"/>
-<text xml:space="preserve" text-anchor="start" x="771.02" y="-1626.9" font-family="Malgun Gothic" font-weight="bold" font-size="22.00">triPilot 유스케이스 — 전체 한 장</text>
+<text xml:space="preserve" text-anchor="start" x="771.02" y="-1626.9" font-family="Malgun Gothic" font-weight="bold" font-size="22.00">guguroute 유스케이스 — 전체 한 장</text>
 <text xml:space="preserve" text-anchor="start" x="745.9" y="-1613.45" font-family="Malgun Gothic" font-size="13.00" fill="#5f6b64">v2 · 2026&#45;10&#45;02 · 실제 API · 코드 기준 · 구역별 세부는 그림 1~4</text>
 <g id="clust1" class="cluster">
 <title>cluster_sys</title>
 <path fill="#ffffff" stroke="#2d5f48" stroke-width="2.4" d="M175.34,-328.12C175.34,-328.12 1620.54,-328.12 1620.54,-328.12 1626.54,-328.12 1632.54,-334.12 1632.54,-340.12 1632.54,-340.12 1632.54,-1451.12 1632.54,-1451.12 1632.54,-1457.12 1626.54,-1463.12 1620.54,-1463.12 1620.54,-1463.12 175.34,-1463.12 175.34,-1463.12 169.34,-1463.12 163.34,-1457.12 163.34,-1451.12 163.34,-1451.12 163.34,-340.12 163.34,-340.12 163.34,-334.12 169.34,-328.12 175.34,-328.12"/>
-<text xml:space="preserve" text-anchor="start" x="868.69" y="-1443.02" font-family="Malgun Gothic" font-weight="bold" font-size="18.00">triPilot</text>
+<text xml:space="preserve" text-anchor="start" x="868.69" y="-1443.02" font-family="Malgun Gothic" font-weight="bold" font-size="18.00">guguroute</text>
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_prep</title>

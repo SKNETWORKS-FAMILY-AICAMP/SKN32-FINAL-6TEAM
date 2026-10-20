@@ -161,7 +161,7 @@ def kpi(s, x, y, w, value, label, tone):
 s = p.slides.add_slide(BLANK)
 s.shapes.add_picture(io.BytesIO(BG_COVER), 0, 0, p.slide_width, p.slide_height)
 pill(s, 0.46, 1.75, "PROGRESS · 2026. 9. 28.", "blue", 2.6)
-text(s, 0.46, 2.2, 12, 0.9, "triPilot 진행 공유", 40, True)
+text(s, 0.46, 2.2, 12, 0.9, "guguroute 진행 공유", 40, True)
 text(s, 0.46, 3.05, 12, 0.5, "팀 A-COPilot · 여행 전체를 끝까지 관리하는 Headless Agentic CS 플랫폼", 15, False,
      RGBColor(0x33, 0x41, 0x55))
 agenda = [("01", "CI/CD", "합칠 때마다 자동 검사", "blue"), ("02", "유스케이스", "행위자·묶음·점검", "violet"),

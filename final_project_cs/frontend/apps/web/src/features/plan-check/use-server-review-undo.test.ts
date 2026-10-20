@@ -132,7 +132,7 @@ describe("server review atomic whole undo", () => {
     await screen.actions.remove!("0-0");
     harness.edit.mockResolvedValueOnce(plan("intake-a", 3));
     await screen.actions.undo!();
-    expect(harness.edit).toHaveBeenLastCalledWith("intake-a", 2, [{ source_id: "source-a", field: "items[0].removed", value: false }], "ko");
+    expect(harness.edit).toHaveBeenLastCalledWith("intake-a", 2, [{ source_id: "source-a", field: "items[0].removed", value: false }], "ko", { check: false });
     expect(screen.actions.canUndoAll!()).toBe(false);
   });
 

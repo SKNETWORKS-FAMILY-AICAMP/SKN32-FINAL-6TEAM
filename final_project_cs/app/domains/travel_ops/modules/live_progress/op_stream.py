@@ -147,6 +147,13 @@ class Progress:
     def stage(self, name: str) -> None:
         self._put(("stage", name))
 
+    def emit(self, event: str, data: dict[str, Any]) -> None:
+        """중간 결과 이벤트(`[2026-10-19]` 「바꾸기」의 `candidates` · `candidate`) — 흐름은 그대로 흘리고 끝내지 않는다.
+        이름이 `result` · `error` · `stage` · `beat` · `accepted` 인 것은 받지 않는다(끝 · 진행 이벤트와 섞이지 않게)."""
+        if event in ("result", "error", "stage", "beat", "accepted", "tick"):
+            raise ValueError(f"reserved event name: {event}")
+        self._put(("emit", (event, data)))
+
 
 class _Run:
     """일꾼과 흐름이 **끝내는 쪽을 서로 모를 때**의 뒷정리 장부 — 응답 뒤 일(`defer`)이 정확히 한 번 돌게 한다."""
@@ -237,6 +244,9 @@ async def run(work: Callable[[Progress, Callable[..., None]], dict[str, Any]], *
                 label, waiting_on = label_of(stage)
                 yield sse("stage", {"stage": stage, "label": label, "waiting_on": waiting_on,
                                     "elapsed": round(now - started, 1)})
+            elif kind == "emit":                   # 중간 결과 — 흘리고 계속 기다린다
+                name, body = data
+                yield sse(name, body)
             else:                                  # result | error — 끝
                 yield sse(kind, data)
                 return

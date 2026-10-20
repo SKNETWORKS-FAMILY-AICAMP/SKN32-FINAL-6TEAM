@@ -1,5 +1,7 @@
 "use client";
 
+import { stopDisplayName } from "./stop-display";
+
 import { useContext, useEffect, useRef, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
@@ -45,7 +47,7 @@ export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, on
   const index = list.indexOf(stop);
   return <div className={styles.detail}>
     <header className={pc.changeHead}>
-      <h3 id="trip-detail-title" ref={heading} className={pc.changeTitle} tabIndex={-1}>{t(`${stop.title} 상세`, `${stop.title} · details`)}</h3>
+      <h3 id="trip-detail-title" ref={heading} className={pc.changeTitle} tabIndex={-1}>{t(`${stopDisplayName(stop)} 상세`, `${stopDisplayName(stop)} · details`)}</h3>
       <span className={pc.changePos}>{t(`${dayNumber}일차 · ${index + 1}/${list.length}`, `Day ${dayNumber} · ${index + 1}/${list.length}`)}</span>
     </header>
     <div className={styles.detailBody}>
@@ -53,7 +55,7 @@ export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, on
         {list.map((entry, at) => <DetailCard key={entry.id} stop={entry} next={list[at + 1]} dayNumber={dayNumber} active={entry.id === stop.id} onAsk={() => onAsk(entry)} askBusy={askBusy} />)}
       </Carousel>
       {list.length > 1 && <div className={pc.dots} role="group" aria-label={t("일정 고르기", "Choose a stop")}>{list.map((entry, at) =>
-        <button key={entry.id} type="button" aria-pressed={at === index} aria-label={`${at + 1}. ${entry.title}`} onClick={() => onStop(entry.id)}><span aria-hidden="true" /></button>)}</div>}
+        <button key={entry.id} type="button" aria-pressed={at === index} aria-label={`${at + 1}. ${stopDisplayName(entry)}`} onClick={() => onStop(entry.id)}><span aria-hidden="true" /></button>)}</div>}
       <Photos stop={stop} onSheetFull={onSheetFull} />
     </div>
   </div>;
@@ -70,7 +72,7 @@ function Photos({ stop, onSheetFull }: { stop: TripStop; onSheetFull: () => void
   const found = useQuery({ queryKey: ["place-photos", ref, language], queryFn: () => getPlacePhotos(ref!, language), enabled: Boolean(ref), staleTime: 5 * 60_000, retry: false });
   const photos = (found.data?.photos ?? []).flatMap((photo) => {
     const url = safePhotoUrl(photo.url);
-    return url ? [{ url, caption: [photo.name ?? stop.title, found.data?.source_note].filter(Boolean).join(" ") }] : [];
+    return url ? [{ url, caption: [photo.name ?? stopDisplayName(stop), found.data?.source_note].filter(Boolean).join(" ") }] : [];
   });
   const empty = !ref ? t("등록된 사진이 없어요 · 장소 사진은 준비 중이에요", "No photos yet · place photos are coming")
     : found.isPending ? t("사진을 불러오고 있어요…", "Loading the photos…")
@@ -78,10 +80,10 @@ function Photos({ stop, onSheetFull }: { stop: TripStop; onSheetFull: () => void
         : t("등록된 사진이 없어요.", "No photos for this place.");
   return <>
     <button type="button" className={pc.hint} onClick={onSheetFull}>{photos.length
-      ? t(`시트를 위로 올리면 ${stop.title} 사진 ${photos.length}장 ↑`, `Slide the sheet up for ${photos.length} photos of ${stop.title} ↑`)
+      ? t(`시트를 위로 올리면 ${stopDisplayName(stop)} 사진 ${photos.length}장 ↑`, `Slide the sheet up for ${photos.length} photos of ${stopDisplayName(stop)} ↑`)
       : t("시트를 위로 올리면 사진 안내 ↑", "Slide the sheet up for photos ↑")}</button>
     <section className={pc.photos} aria-labelledby="trip-photos-title">
-      <h4 id="trip-photos-title">{t(`등록된 사진 · ${stop.title}`, `Photos · ${stop.title}`)}{photos.length > 0 && <small>{t(`${photos.length}장`, `${photos.length}`)}</small>}</h4>
+      <h4 id="trip-photos-title">{t(`등록된 사진 · ${stopDisplayName(stop)}`, `Photos · ${stopDisplayName(stop)}`)}{photos.length > 0 && <small>{t(`${photos.length}장`, `${photos.length}`)}</small>}</h4>
       {photos.length
         ? <div className={pc.photoGrid}>{photos.map((photo, index) => <figure key={`${photo.url}-${index}`} className={pc.photo}>
             {/* eslint-disable-next-line @next/next/no-img-element -- place photos come from hosts the place data names, not configured in advance */}
@@ -106,7 +108,7 @@ function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy }: { stop: T
       {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}
       {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
     </div>
-    <div className={pc.nameRow}><h4 id={`trip-detail-card-${stop.id}`} className={pc.changeName}>{stop.title}</h4>{info?.sourceNote && <span className={pc.sourceTag}>{info.sourceNote}</span>}</div>
+    <div className={pc.nameRow}><h4 id={`trip-detail-card-${stop.id}`} className={pc.changeName}>{stopDisplayName(stop)}</h4>{info?.sourceNote && <span className={pc.sourceTag}>{info.sourceNote}</span>}</div>
     <p className={pc.changeSub}>{where || t("장소 정보 없음", "No place details")}</p>
     <StopFacts stop={stop} next={next} brief />
     <div className={styles.detailActions}>

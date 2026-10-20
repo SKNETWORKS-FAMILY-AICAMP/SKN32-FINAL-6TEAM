@@ -73,7 +73,7 @@ body = markdown.markdown(md, extensions=["fenced_code", "tables"])
 # fenced code(글자 그림) → 칸 그림판
 body = re.sub(r'<pre><code class="language-text">(.*?)</code></pre>',
               lambda m: '<pre class="art">' + cells(_html.unescape(m.group(1)).rstrip(chr(10))) + "</pre>", body, flags=re.S)
-title = "triPilot Multi-Agent 구조도"
+title = "guguroute Multi-Agent 구조도"
 page = (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         f'<title>{title}</title><style>{CSS}</style></head><body><main>{body}</main></body></html>')
 html_path = OUT / f"triPilot_Multi-Agent구조도_{ver}.html"

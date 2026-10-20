@@ -10,7 +10,7 @@ import { useRouteDetail } from "@/features/map/use-route-detail";
 import { readingOf } from "@/features/plan-check/from-intake";
 import { reviewResultOf } from "@/features/plan-check/from-review";
 import type { PlanCheckView, PlanItem } from "@/features/plan-check/model";
-import { PlanCheck, type TripEditMode } from "@/features/plan-check/plan-check";
+import { PlanCheck, type PlanOpening, type TripEditMode } from "@/features/plan-check/plan-check";
 import type { RailNow } from "@/features/plan-check/rail-list";
 import { formatHm } from "@/features/plan-check/time-plan";
 import { useServerReview } from "@/features/plan-check/use-server-review";
@@ -20,7 +20,7 @@ import type { ReviewedIntakeView } from "@/lib/live/intake-review";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
 import { useSettings, useT } from "@/lib/settings";
 import { pushToast } from "@/lib/toast-bus";
-import type { Trip, TripStop } from "./model";
+import type { Trip, TripPick, TripStop } from "./model";
 import { tripKey, tripsKey } from "./use-trip";
 import { useSeoulNow } from "./use-seoul-now";
 import { useRouteShapes } from "./use-route-shapes";
@@ -34,7 +34,9 @@ import dialogStyles from "./trip-list.module.css";
  * ★Stops that are over are not in the intake (the server keeps them as they are): they stand in the list as the trip screen's grey lines and cannot change.
  * ★The trip's name, party and first day are not changed here (the server refuses them), and the plan check's 「일정 짜 주기」 is not offered.
  */
-export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
+export function TripEdit({ trip, pick = null, onExit }: { trip: Trip;
+  /** `[2026-10-19 사용자 결정]` Opened from the chat's 「직접 고르기」: the stop (or the add form) it opens on once the edit is ready — null from 「일정 수정」. */
+  pick?: TripPick | null; onExit: () => void }) {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
@@ -86,6 +88,9 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
   const result = useMemo(() => reviewed && withTrip({ ...reviewed, dirty: server.dirty, rechecking: server.rechecking }, trip, frozen ?? [], reasons), [reviewed, server.dirty, server.rechecking, trip, frozen, reasons]);
   const preview = useMemo(() => previewed && withTrip({ ...previewed, dirty: false, rechecking: null }, trip, frozen ?? [], reasons), [previewed, trip, frozen, reasons]);
   // The lines between the stops for the plan being edited (the intake's `route-shapes`), as on the plan check; failures are shown with a retry, while an older API (404) is unsupported.
+  // The trip's stop is a stop of the edit under the edit's own id (`0-<n>`): found through the stop each line was opened from (`evidence.item_id`).
+  const data = query.data;
+  const start = useMemo(() => pick && data?.review ? openingOf(pick, data) : null, [pick, data]);
   const routeShapes = useIntakeRoutes(intakeId ?? "", query.data?.revision ?? 0, language, Boolean(reviewed));
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId ?? "", query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId!, language, { detail: true }));
 
@@ -142,9 +147,35 @@ export function TripEdit({ trip, onExit }: { trip: Trip; onExit: () => void }) {
     return <JourneyShell view="other" title={["나의 여행", "Your trip"]}><QueryState loading={false} error={query.error} retry={reread} /></JourneyShell>;
   }
   return <>
-    <PlanCheck key="edit" view={result ?? opening} previewView={preview} routes={result ? routeDetail.routes : savedRoutes.data} onMapZoom={routeDetail.onZoom} routeState={{ loading: routeShapes.isFetching, error: routeShapes.isError, retry: () => { void routeShapes.refetch(); } }} onBack={() => setAsking(true)} actions={result ? actions : {}} registration={registration} edit={edit} />
+    <PlanCheck key="edit" view={result ?? opening} previewView={preview} routes={result ? routeDetail.routes : savedRoutes.data} onMapZoom={routeDetail.onZoom} routeState={{ loading: routeShapes.isFetching, error: routeShapes.isError, retry: () => { void routeShapes.refetch(); } }} onBack={() => setAsking(true)} actions={result ? actions : {}} registration={registration} edit={edit} opening={start} />
     {asking && <CancelDialog pending={drop.isPending} onKeep={() => setAsking(false)} onDrop={() => drop.mutate()} />}
   </>;
+}
+
+/**
+ * `[2026-10-19 사용자 결정 — 못 찾은 장소는 직접 고르기로 수정 · 추가 모드에]` What the edit opens on for the chat's `pick`: `change` — the trip's stop under the edit's id (the plan check
+ * says so when the stop is not in the edit); `add` — the add form with what the chat had. The key holds the edit and the pick, so it is opened once.
+ */
+export function openingOf(pick: TripPick, intake: ReviewedIntakeView): PlanOpening {
+  const key = `${intake.intake_id}:${pick.mode}:${pick.itemId ?? ""}:${pick.query}`;
+  if (pick.mode === "add") {
+    return { key, add: { title: pick.prefill.title ?? pick.query, date: pick.prefill.date ?? null, start: pick.prefill.startsAt ?? null, end: pick.prefill.endsAt ?? null,
+      kind: pick.prefill.kind ?? null, query: pick.query } };
+  }
+  return { key, change: { itemId: editItemIdOf(intake, pick.itemId ?? "") ?? pick.itemId ?? "", query: pick.query } };
+}
+
+/** The edit's id (`review.items[].id`) of a trip stop, through the stop the reopened line was read from — null when the stop is not in the edit (over, or kept out). */
+export function editItemIdOf(intake: ReviewedIntakeView, tripItemId: string): string | null {
+  if (!tripItemId) return null;
+  for (const source of intake.sources) {
+    for (const item of source.items) {
+      if (!Object.values(item.fields).some((field) => field?.evidence?.item_id === tripItemId)) continue;
+      const found = intake.review?.items.find((entry) => entry.source_id === source.source_id && entry.index === item.index);
+      if (found) return found.id;
+    }
+  }
+  return null;
 }
 
 /** 저장된 여행을 즉시 그린다. 접수 검사·수정 권한을 받기 전에는 확인 결과를 만들지 않는다. */

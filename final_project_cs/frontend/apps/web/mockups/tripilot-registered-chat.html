@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot · 등록 후 채팅 배치 비교</title>
+<title>guguroute · 등록 후 채팅 배치 비교</title>
 <style>
 /* 색은 앱 src/styles/tokens.css 의 그린 테마 값(2026-10-06, 091a4b9)을 옮겼다. 크기는 plan-check.module.css 를 따른다. */
 :root {
@@ -469,7 +469,7 @@ button { cursor: pointer; }
     const ctxText = st.day === "all" ? "전체 일정" : `${st.day}일차 · ${dayInfo(st.day).label}`;
     const hint = where === "sheet" ? "지도 핀이나 일차를 누르면 물어볼 일정이 바뀌어요" : "선택한 일정이 없어요";
     const selChip = sel ? `<span class="selChip">선택: ${esc(sel.title)}<button type="button" data-action="clearSel" data-k="clearSel" aria-label="선택 해제">${icon("x")}</button></span>` : `<span>${hint}</span>`;
-    const messages = st.messages.map((m) => `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "triPilot"}</p><p class="bubble">${esc(m.text)}</p>
+    const messages = st.messages.map((m) => `<article class="msg" data-role="${m.role}"><p class="msgMeta">${m.role === "user" ? "나" : "guguroute"}</p><p class="bubble">${esc(m.text)}</p>
       ${m.places && m.places.length ? `<div class="places">${m.places.map((id) => `<button type="button" class="placeChip" data-action="place" data-id="${id}">${icon("pin")}${esc(byId(id).title)}${where === "page" ? "<em>· 지도에서 보기</em>" : ""}</button>`).join("")}</div>` : ""}</article>`).join("");
     const prompts = [["summary", "하루 요약", false], ["selected", "선택 일정", !sel], ["next", "다음 일정", !sel], ["booking", "예약 표시", false]]
       .map(([kind, label, needsSel]) => `<button type="button" class="prompt" data-action="prompt" data-kind="${kind}" data-k="prompt-${kind}"${st.pending || needsSel ? " disabled" : ""}>${label}</button>`).join("");
@@ -724,7 +724,7 @@ button { cursor: pointer; }
     const st = { ...fresh(), variant, root, uid: `phone-${variant}` };
     root.innerHTML = `<div class="map"></div>
       <div class="top">
-        <button type="button" class="logo" data-action="soon" aria-label="triPilot 처음으로"><span>t</span></button>
+        <button type="button" class="logo" data-action="soon" aria-label="guguroute 처음으로"><span>t</span></button>
         <button type="button" class="titlePill" data-action="soon">내 여행</button><span class="gap"></span>
         <button type="button" class="shield" data-action="soon" aria-label="항로 지킴이">${icon("shield", "i big")}</button>
         <button type="button" class="menu" data-action="soon" aria-label="메뉴">${icon("menu", "i big")}</button>

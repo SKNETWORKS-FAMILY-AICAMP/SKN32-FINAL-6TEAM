@@ -120,6 +120,18 @@ class BusSegProfile:
         v = self.arr[i, j, Q[q], hour]
         return None if np.isnan(v) else float(v)
 
+    def min_cell(self, i, q, min_days):
+        """행 i 의 분위 q 칸 가운데 **가장 짧은 값(초)** — 요일형 · 시간 전부 중 `cell` 이 값을 내는 칸만. 없으면 None.
+        ☆`[2026-10-19 속도]` 마지막 성립 출발 역산이 「아무리 빨라도 이보다 늦게 닿는다」는 하한으로 볼 것 없는 출발 시각을 건너뛸 때 쓴다."""
+        memo = self.__dict__.setdefault("_min_cell_memo", {})
+        key = (i, q, min_days)
+        if key not in memo:
+            n = self.arr[i, :, 0, :]
+            v = self.arr[i, :, Q[q], :]
+            ok = (n >= min_days) & ~np.isnan(v)
+            memo[key] = float(v[ok].min()) if ok.any() else None
+        return memo[key]
+
     def walk(self, route_id, stops, a_seq, b_seq, depart_min, day_types, q, min_days, fallback, pick=max):
         """a → b 승차를 구간마다 진입 시각대로 누적한다.
 

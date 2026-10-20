@@ -27,12 +27,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import json
 import math
 import re
+import threading
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from .base import TravelSource
+import httpx
+
+from .base import TravelSource, _is_call_failure
 
 ENDPOINT = "https://openapi.its.go.kr:9443/eventInfo"
 KST = ZoneInfo("Asia/Seoul")
@@ -98,19 +102,126 @@ def classify(item: dict[str, Any]) -> tuple[str, str]:
 class ItsTrafficEvents(TravelSource):
     name = "its"
 
-    def __init__(self, *, service_key: str, now=None, **kwargs: Any) -> None:
+    def __init__(self, *, service_key: str, service_keys: str = "", key_budget: Any = None,
+                 operation_snapshot: bool = False, now=None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self._key = service_key
+        self._keys = service_key_ring(service_key, service_keys)
+        self._key = self._keys[0] if self._keys else ""
+        self._key_budget = key_budget
         self._now = now or (lambda: datetime.now(KST))
+        self._operation_snapshot = operation_snapshot
+        self._operation_guard = threading.Lock()
+        self._operation_locks: dict[tuple, Any] = {}
+        self._operation_failures: set[tuple] = set()
+
+    def _fetch_json(self, url: str, params: dict[str, Any]) -> dict[str, Any] | None:
+        """선택한 점검기 안에서만 같은 실패를 재사용한다. 다음 요청을 막지 않는다."""
+        if not self._operation_snapshot:
+            return self._fetch_json_once(url, params)
+        identity = self._cache_key(url, params)
+        with self._operation_guard:
+            lock = self._operation_locks.setdefault(identity, threading.Lock())
+        with lock:
+            with self._operation_guard:
+                failed = identity in self._operation_failures
+            if failed:
+                # 다른 요청이 정상 자료를 채웠다면 그 자료는 바로 사용할 수 있다.
+                cached = self._from_cache(url, params)
+                if cached is not None:
+                    return cached
+                self.misses["operation_failure_reused"] += 1
+                return None
+            value = self._fetch_json_once(url, params)
+            if value is None:
+                with self._operation_guard:
+                    self._operation_failures.add(identity)
+            return value
+
+    def _fetch_json_once(self, url: str, params: dict[str, Any]) -> dict[str, Any] | None:
+        """공개 응답은 키와 무관하게 재사용한다. 키 소진 때만 다음 키를 검토한다."""
+        cached = self._from_cache(url, params)
+        if cached is not None:
+            return cached
+        if not self._keys:
+            self._miss("no_service_key")
+            return None
+        if not self._allow():
+            return None
+        for key in self._keys:
+            self._fetch_state.current_key = key
+            # 먼저 공유 DB에서 확인하므로 이미 소진이 알려진 키는 확인 호출도 하지 않는다.
+            if self._key_budget is not None:
+                try:
+                    status = self._key_budget.reserve(key)
+                except Exception:  # 예산을 세지 못하는 요청은 ITS에서 항상 차단한다.
+                    self._miss("budget_unavailable")
+                    return None
+                if status == "key_exhausted":
+                    self._miss("key_budget_exhausted")
+                    continue
+                if status != "allowed":
+                    self._miss("budget_exhausted")
+                    return None
+            try:
+                response = self._get(url, {**params, "apiKey": key})
+            except httpx.TimeoutException:
+                self._miss("timeout")
+                return None
+            except httpx.HTTPError:
+                self._miss("transport_error")
+                return None
+            scope = self._quota_signal(response)
+            if scope:
+                try:
+                    if self._key_budget is None:
+                        self._provider_quota(scope)  # 단일 키를 직접 조립한 기존 호출과 호환한다.
+                    else:
+                        self._key_budget.mark_exhausted(key, scope)
+                except Exception:
+                    self._miss("budget_unavailable")
+                    return None
+                self._miss(f"http_{response.status_code}" if response.status_code != 200 else "body_error")
+                continue
+            if response.status_code != 200:
+                self._miss(f"http_{response.status_code}")
+                return None
+            try:
+                payload = response.json()
+            except ValueError:
+                self._miss("not_json")
+                return None
+            if not isinstance(payload, dict):
+                self._miss("unexpected_shape")
+                return None
+            if self._body_error(payload) is not None:
+                self._miss("body_error")
+                return None
+            self._remember(url, params, payload)
+            return payload
+        return None
+
+    def _cache_key(self, url: str, params: dict[str, Any]) -> tuple:
+        return super()._cache_key(url, {k: v for k, v in params.items() if k != "apiKey"})
+
+    def _miss(self, reason: str, detail: str = "") -> None:
+        # 인증키를 포함할 수 있는 요청 주소·제공처 오류 원문은 로그에 넘기지 않는다.
+        super()._miss(reason)
+        key = getattr(self._fetch_state, "current_key", None)
+        if self._key_budget is not None and key and _is_call_failure(reason):
+            try:
+                self._key_budget.record_failure(key)
+            except Exception:
+                self.misses["budget_failure_count_unavailable"] += 1
 
     def _quota_signal(self, response: Any) -> str | None:
         """ITS 는 월 한도가 차면 **HTTP 401 + `header.resultCode 4001`**(「월간 API 호출 한도를 초과하였습니다」)로 답한다(2026-09-30 · 10-02 실측) — 월 줄을 멈춘다.
         글자(한글)가 아니라 **숫자 코드**로 알아본다(인코딩이 달라도 같은 결과)."""
         try:
-            compact = response.text.replace(" ", "")
-        except Exception:                                  # noqa: BLE001
+            payload = response.json()
+            code = str(payload.get("header", {}).get("resultCode"))
+        except (ValueError, AttributeError, TypeError):
             return None
-        return "month" if response.status_code == 401 and '"resultCode":4001' in compact else None
+        return "month" if response.status_code in (200, 401) and code == "4001" else None
 
     @staticmethod
     def _body_error(payload: dict[str, Any]) -> str | None:
@@ -201,6 +312,18 @@ class ItsTrafficEvents(TravelSource):
                            "total_in_box": len(items), "box": "seoul" if in_seoul else "place", "for_place": disruptions,
                            "advisories": advisories, "kind": "traffic_events"},
                           source=self.name)
+
+
+def service_key_ring(primary: str, additional: str = "") -> tuple[str, ...]:
+    """비공개 설정의 JSON 목록 또는 쉼표 목록을 순서대로 읽고 중복을 제거한다."""
+    raw = additional.strip()
+    try:
+        extra = json.loads(raw) if raw.startswith("[") else raw.split(",")
+        if not isinstance(extra, list) or not all(isinstance(k, str) for k in extra):
+            raise ValueError
+    except (ValueError, TypeError):
+        raise ValueError("ITS 예비 키 설정은 문자열의 JSON 목록 또는 쉼표 목록이어야 합니다") from None
+    return tuple(dict.fromkeys(key.strip() for key in [primary, *extra] if key.strip()))
 
 
 class ItsRouteEvents:

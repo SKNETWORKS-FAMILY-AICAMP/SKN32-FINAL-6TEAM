@@ -17,6 +17,8 @@
 ★기록: 어느 경로로 답했는지(`local` · `api`)와 넘긴 이유를 로그(`app.llm_failover`)와 프로세스 안 지표(`snapshot()`)에 남긴다. 호출 직후 `current_path()` 로 읽을 수 있다.
 ★스위치 `llm_failover_enabled` 는 기본 꺼짐 — 꺼져 있거나 서버용 키가 비어 있으면 지금처럼 Ollama 만 쓴다(`wrap_from_settings` 가 원래 객체를 그대로 돌려준다).
 ★실패는 `OllamaError` 로 올린다(부르는 쪽이 이미 이것을 「모름」으로 바꾼다). 키 값은 어떤 메시지에도 싣지 않는다 — 상태 코드와 이유 이름만.
+★`[2026-10-16]` `json_stream` — 답을 조금씩 받으며 첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(`model_stream.py`). 한 답은 한 경로가 처음부터 끝까지 쓰고,
+  로컬이 멈추면 유료가 처음부터 다시 읽는다. 로컬 모델이 안 올라와 있으면 곧바로 유료로 간다(`ModelNotLoaded`). 다른 메서드의 동작은 그대로다.
 """
 from __future__ import annotations
 
@@ -32,7 +34,7 @@ from typing import Any, Callable
 import httpx
 
 from app.core.redaction import masked
-from app.infrastructure.ollama_chat import OllamaChat, OllamaContentError, OllamaError
+from app.infrastructure.ollama_chat import OllamaChat, OllamaContentError, OllamaError, validate_content, validate_structured
 
 log = logging.getLogger("app.llm_failover")
 
@@ -164,7 +166,23 @@ class Failure:
     counts: bool = True              # 서버 문제로 서킷에 센다(모양이 틀린 답은 안 센다 — 서버는 살아 있다)
 
 
+class ModelNotLoaded(OllamaError):
+    """로컬 모델이 메모리에 올라와 있지 않다 — 올리느라 오래 걸리므로 다음 경로로 간다(서버 장애가 아니라 서킷에 세지 않는다). `[2026-10-16]`"""
+
+
+class ModelSkipped(OllamaError):
+    """이 호출은 이 경로를 쓰지 않는다(예: 유료만 쓰는 호출의 로컬) — 서킷에 세지 않는다. `[2026-10-16]`"""
+
+
 def classify(exc: BaseException) -> Failure:
+    if isinstance(exc, ModelSkipped):
+        return Failure("skipped", counts=False)
+    if isinstance(exc, ModelNotLoaded):
+        return Failure("not_loaded", counts=False)
+    from app.infrastructure.model_stream import StreamStalled
+
+    if isinstance(exc, StreamStalled):
+        return Failure("timeout")                            # 조각이 끊겼다(첫 조각 · 조각 사이 · 맨 위 상한) — 서버가 멈춘 것으로 센다
     if isinstance(exc, OllamaContentError):
         return Failure("content", counts=False)
     if isinstance(exc, ModelCallError):
@@ -333,6 +351,86 @@ class OpenAIChat:
                               response_format={"type": "json_object"})
         return self._object(text)
 
+    def json_stream(self, system: str, user: str, *, on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0,
+                    stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0) -> dict[str, Any]:
+        """`json` 과 같은 답을 **조금씩 받는다**(`stream=True`) — 멈춤 감시는 로컬과 같다(`model_stream.collect`). `[2026-10-16]`
+        ★`max_tokens` 를 부르는 쪽이 정한다(0 이면 `json` 과 같은 600) — `json` 의 600토큰은 긴 계획 읽기 답을 잘랐다(실측 6/6).
+        답 상한에 걸려 끝나면(`finish_reason=length`) 잘린 JSON 이므로 `OllamaContentError`."""
+        sys_text = system if "json" in system.lower() else system + "\nReply with a single JSON object only."
+        text = self._stream_text([{"role": "system", "content": sys_text}, {"role": "user", "content": user}], {"type": "json_object"},
+                                 max_tokens or 600, on_piece=on_piece, first_wait=first_wait, stall=stall, max_seconds=max_seconds)
+        return self._object(text)
+
+    def structured_stream(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160,
+                          on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
+                          max_seconds: float = 180.0) -> dict[str, Any]:
+        """`structured` 와 같은 답(엄격 스키마)을 **조금씩 받는다** — 계획 읽기 에이전트가 쓴다. `[2026-10-16]`
+        답 토큰 상한은 `structured` 와 같다(`num_predict` × 4, 최소 300). 깨진 JSON 은 `structured` 처럼 **한 번만** 다시 받고,
+        이 모델이 스키마를 거부하면(`bad_request`) 스키마를 글로 적어 JSON 모드로 다시 받는다."""
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+        budget = max(300, int(num_predict) * 4)
+        strict = {"type": "json_schema", "json_schema": {"name": "answer", "schema": strict_schema(schema), "strict": True}}
+        watch = {"on_piece": on_piece, "first_wait": first_wait, "stall": stall, "max_seconds": max_seconds}
+        try:
+            text = self._stream_text(messages, strict, budget, **watch)
+            try:
+                return _drop_optional_nulls(self._object(text), schema)
+            except OllamaContentError:
+                text = self._stream_text(messages, strict, budget, **watch)
+                return _drop_optional_nulls(self._object(text), schema)
+        except ModelCallError as exc:
+            if exc.reason != "bad_request":
+                raise
+            messages[0] = {"role": "system", "content": system + "\nReply with a single JSON object that matches this JSON schema:\n"
+                           + json.dumps(schema, ensure_ascii=False)}
+            return self._object(self._stream_text(messages, {"type": "json_object"}, budget, **watch))
+
+    def _stream_text(self, messages: list[dict[str, Any]], response_format: dict[str, Any], max_tokens: int, *,
+                     on_piece: Callable[[str], None] | None, first_wait: float, stall: float, max_seconds: float) -> str:
+        from app.infrastructure.model_stream import collect
+
+        token_limit = "max_completion_tokens" if self.model.startswith("gpt-6") else "max_tokens"
+        kwargs: dict[str, Any] = {"model": self.model, "stream": True, token_limit: int(max_tokens), "response_format": response_format,
+                                  "timeout": float(max_seconds), "messages": messages}
+        if self.model.startswith("gpt-6-luna"):
+            kwargs["reasoning_effort"] = "none"
+        if not self.model.startswith(_NO_TEMPERATURE):
+            kwargs["temperature"] = 0
+        held: dict[str, Any] = {}
+
+        def pieces():
+            try:
+                stream = self._api().chat.completions.create(**kwargs)
+            except ModelCallError:
+                raise
+            except Exception as exc:                          # noqa: BLE001 — SDK 예외를 이유 이름으로 바꾼다
+                raise _api_error(exc) from None
+            held["stream"] = stream
+            try:
+                for chunk in stream:
+                    for choice in getattr(chunk, "choices", None) or []:
+                        if getattr(choice, "finish_reason", None) == "length":
+                            held["length"] = True
+                        piece = getattr(choice.delta, "content", None) or ""
+                        if piece:
+                            yield piece
+            except ModelCallError:
+                raise
+            except Exception as exc:                          # noqa: BLE001
+                raise _api_error(exc) from None
+
+        def close() -> None:
+            stream = held.get("stream")
+            if stream is not None:
+                stream.close()
+
+        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, close=close).strip()
+        if held.get("length"):
+            raise OllamaContentError(f"답이 상한({max_tokens}토큰)에 걸려 잘렸다")
+        if not text:
+            raise ModelCallError("OpenAI 가 빈 답을 냈다", reason="empty")
+        return text
+
     def text(self, system: str, user: str) -> str:
         return self._complete([{"role": "system", "content": system}, {"role": "user", "content": user}], max_tokens=800)
 
@@ -345,11 +443,12 @@ class OpenAIChat:
         try:
             text = self._complete(messages, response_format=strict, max_tokens=budget)
             try:
-                return _drop_optional_nulls(self._object(text), schema)
+                value = self._object(text)
             except OllamaContentError:
-                # ★`[2026-10-15]` 엄격 모드에서도 가끔(5번 중 1번 실측) 깨진 문자가 섞인 JSON 을 낸다 — 같은 요청을 **한 번만** 다시 보낸다
+                # Existing parse retry applies only to malformed JSON, not schema/evidence failures.
                 text = self._complete(messages, response_format=strict, max_tokens=budget)
-                return _drop_optional_nulls(self._object(text), schema)
+                value = self._object(text)
+            return validate_structured(_drop_optional_nulls(value, schema), schema)
         except ModelCallError as exc:
             if exc.reason != "bad_request":
                 raise
@@ -357,7 +456,11 @@ class OpenAIChat:
             messages[0] = {"role": "system", "content": system + "\nReply with a single JSON object that matches this JSON schema:\n"
                            + json.dumps(schema, ensure_ascii=False)}
             text = self._complete(messages, response_format={"type": "json_object"}, max_tokens=budget)
-        return self._object(text)
+        return validate_structured(self._object(text), schema)
+
+    def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+        return validate_content(self.structured(system, user, schema, num_predict=num_predict), validator)
 
     def see(self, prompt: str, image: bytes, *, timeout: float = 60.0) -> str:
         mime = "image/jpeg" if image[:3] == b"\xff\xd8\xff" else "image/png"
@@ -469,11 +572,53 @@ class FailoverChat:
     def json(self, system: str, user: str) -> dict[str, Any]:
         return self._run("json", lambda chat, api: chat.json(system, masked(user) if api else user))
 
+    def json_stream(self, system: str, user: str, *, on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
+                    stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0) -> dict[str, Any]:
+        """`json` 을 **조금씩 받기 + 멈춤 감시**로. `[2026-10-16 2회차 합의 · 사용자 승인]`
+        ★한 답은 한 경로가 처음부터 끝까지 쓴다 — 로컬이 멈추거나(조각 끊김) 실패하면 받다 만 답을 버리고 **다음 경로(유료)가 처음부터 다시** 읽는다.
+        ★로컬 Ollama 는 부르기 전에 모델이 올라와 있나 본다(`loaded`) — 안 올라와 있으면 올리느라 수십 초 걸리므로 곧바로 다음 경로로 간다(서버 장애로 세지 않는다).
+        `on_piece(지금까지 모은 글, 경로)` — 경로는 `local` · `api`. 경로가 바뀌면 글이 처음부터 다시 쌓인다."""
+        return self._run("json_stream", self._streaming(
+            lambda chat, text, relay: chat.json_stream(system, text, on_piece=relay, first_wait=first_wait, stall=stall,
+                                                       max_seconds=max_seconds, max_tokens=max_tokens), user, on_piece, api_only=False))
+
+    def structured_stream(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160,
+                          on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
+                          max_seconds: float = 180.0, api_only: bool = False) -> dict[str, Any]:
+        """`structured` 를 **조금씩 받기 + 멈춤 감시**로 — 넘김 규칙은 `json_stream` 과 같다. `[2026-10-16]`
+        `api_only` — 로컬을 건너뛰고 유료만 쓴다. 계획 읽기 에이전트가 긴 글을 조각으로 읽다 한 조각이 유료로 넘어가면 **처음 조각부터 유료로** 다시 읽을 때 쓴다
+        (한 계획은 한 모델이 읽는다 — `intake/agent_read.read`)."""
+        return self._run("structured_stream", self._streaming(
+            lambda chat, text, relay: chat.structured_stream(system, text, schema, num_predict=num_predict, on_piece=relay,
+                                                             first_wait=first_wait, stall=stall, max_seconds=max_seconds),
+            user, on_piece, api_only=api_only))
+
+    @staticmethod
+    def _streaming(call: Callable[[Any, str, Any], Any], user: str, on_piece: Callable[[str, str], None] | None, *,
+                   api_only: bool) -> Callable[[Any, bool], Any]:
+        def run(chat: Any, api: bool) -> Any:
+            if not api and api_only:
+                raise ModelSkipped("유료만 쓰는 호출이다")
+            if not api and hasattr(chat, "loaded") and not chat.loaded(timeout=2.0):
+                raise ModelNotLoaded(f"모델이 올라와 있지 않다: {getattr(chat, 'model', '')}")
+            path = "api" if api else "local"
+            relay = (lambda text: on_piece(text, path)) if on_piece is not None else None
+            return call(chat, masked(user) if api else user, relay)
+        return run
+
     def text(self, system: str, user: str) -> str:
         return self._run("text", lambda chat, api: chat.text(system, masked(user) if api else user))
 
     def structured(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160) -> dict[str, Any]:
         return self._run("structured", lambda chat, api: chat.structured(system, masked(user) if api else user, schema, num_predict=num_predict))
+
+    def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+        def call(chat: Any, api: bool) -> dict[str, Any]:
+            result = chat.structured(system, masked(user) if api else user, schema, num_predict=num_predict)
+            return validate_content(result, validator)
+
+        return self._run("structured", call)
 
     def see(self, prompt: str, image: bytes, *, timeout: float = 240.0) -> str:
         return self._run("see", lambda chat, api: chat.see(prompt, image, timeout=60.0 if api else timeout), image=True)
@@ -515,7 +660,8 @@ def server_api_chat(settings: Any, *, model: str, timeout: float) -> OpenAIChat:
 
 def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[], bool] | None = None, api_client: Any = None,
                        clock: Callable[[], float] = time.monotonic, sleep: Callable[[float], None] = time.sleep,
-                       extra_urls: tuple[str, ...] = (), api_first: bool = False) -> Any:
+                       extra_urls: tuple[str, ...] = (), api_first: bool = False,
+                       local_fallback: OllamaChat | None = None) -> Any:
     """스위치가 꺼져 있거나 서버용 키가 없으면 `primary` 를 **그대로** 돌려준다. 켜져 있으면 `FailoverChat`.
 
     ★`[2026-10-15]` 관리 콘솔 「모델 경로」 — `extra_urls` 는 `primary` 바로 뒤에 시도할 Ollama(SSH 를 골랐을 때 이 기계의 Ollama),
@@ -523,7 +669,7 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     if not getattr(settings, "llm_failover_enabled", False) and not api_first:
         return primary
     key = (getattr(settings, "openai_api_key_server", "") or "").strip()
-    if not key:
+    if not key and local_fallback is None:
         log.warning("llm_failover enabled but ACOP_OPENAI_API_KEY_SERVER is empty — failover is off")
         return primary
     threshold = int(settings.llm_failover_failures)
@@ -544,10 +690,18 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
     gate = budget or (_budget_provider(settings) if _budget_provider is not None else None)
     if gate is None:
         log.warning("llm_failover has no call-budget gate registered — API calls are not capped")
-    api = _Backend("openai", OpenAIChat(api_key=key, model=model, timeout=api_timeout, client=api_client),
-                   breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock), is_api=True, timeout=api_timeout,
-                   budget=gate)
-    backends = [api] + backends if api_first else backends + [api]
+    if key:
+        api = _Backend("openai", OpenAIChat(api_key=key, model=model, timeout=api_timeout, client=api_client),
+                       breaker_for("openai", threshold=threshold, open_seconds=open_seconds, clock=clock),
+                       is_api=True, timeout=api_timeout, budget=gate)
+        backends = [api] + backends if api_first else backends + [api]
+    else:
+        log.warning("llm_failover server API key absent — preserving final internal model recovery")
+    if local_fallback is not None:
+        backends.append(_Backend("local", local_fallback,
+                                 breaker_for(f"local@{local_fallback.base_url}", threshold=threshold,
+                                             open_seconds=open_seconds, clock=clock),
+                                 timeout=float(local_fallback.timeout)))
     return FailoverChat(backends, total_seconds=float(settings.llm_failover_total_seconds), vision=bool(settings.llm_failover_vision),
                         sleep=sleep, clock=clock, warm_chat=primary)
 
@@ -587,5 +741,5 @@ def record_fallback(op: str, reason: str, *, backend: str = "openai") -> None:
     log.warning("llm_failover op=%s path=api backend=%s reasons=ollama:%s", op, backend, reason)
 
 
-__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "reset_state",
+__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "ModelNotLoaded", "ModelSkipped", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "reset_state",
            "snapshot", "wrap_from_settings"]

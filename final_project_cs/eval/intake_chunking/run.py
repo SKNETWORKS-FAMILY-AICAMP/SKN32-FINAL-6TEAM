@@ -103,6 +103,12 @@ def main() -> None:
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
+    import inspect
+    from app.domains.travel_ops.components.intake.pipeline import read_source as _probe
+    if "chunk_lines" not in inspect.signature(_probe).parameters:
+        # ★`[2026-10-16 2회차 합의]` 묶음 나누기는 제품에서 빠졌다(한 번에 보내고 조금씩 받기로 바뀜) — 이 실행기는 그 판(d618279f)에서 돌린다.
+        #   지금 방식은 `stream_probe.py` 로 잰다
+        raise SystemExit("묶음 나누기 실행기 — 제품에 묶음 나누기가 없다. git checkout d618279f 뒤에 돌리거나 stream_probe.py 를 쓴다")
 
     sys.path.insert(0, str(HERE.parents[1]))
     from eval.intake_diverse.run_current import _DUMMY_ENV

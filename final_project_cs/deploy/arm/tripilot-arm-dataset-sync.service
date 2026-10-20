@@ -1,5 +1,5 @@
 [Unit]
-Description=triPilot ARM dataset sync from Google Drive
+Description=guguroute ARM dataset sync from Google Drive
 After=network-online.target
 Wants=network-online.target
 

@@ -20,7 +20,7 @@ for name in ('manifest.json', 'arm_serving_queue.py'):
     if not (root/name).is_file():
         raise FileNotFoundError(name)
 content = f'''[Unit]
-Description=triPilot ARM travel inference validation queue
+Description=guguroute ARM travel inference validation queue
 After=network.target
 StartLimitIntervalSec=600
 StartLimitBurst=3

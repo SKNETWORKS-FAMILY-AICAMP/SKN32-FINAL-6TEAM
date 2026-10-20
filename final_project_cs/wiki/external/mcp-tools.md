@@ -61,7 +61,7 @@ domain: travel
 
 **접속.**
 ```
-원격(Claude Code)   claude mcp add --transport http tripilot https://<주소>/mcp/ --header "Authorization: Bearer <사용자 키>"
+원격(Claude Code)   claude mcp add --transport http guguroute https://<주소>/mcp/ --header "Authorization: Bearer <사용자 키>"
 로컬(stdio 프록시)  TRIPILOT_USER_KEY=<사용자 키> python -m app.domains.travel_ops.modules.mcp.mcp_server --base-url http://127.0.0.1:8042 [--write]
 ```
 사용자 키는 웹에 처음 접속할 때 한 번 보여 준다(`POST /v1/web/session`). 시험 `tests/e2e/test_mcp_server.py` 는 **MCP 프로토콜로 실제 접속**한다(initialize → 도구 호출) — 도구 이름 개수만 세던 옛 검사가 못 보던 것이다. 시험용 로컬 개발 서버(uvicorn)에 SDK 클라이언트로 HTTP 접속해 `/mcp/` · `/mcp` 둘 다 열리고 키 없이는 401 임을 확인했다(2026-10-02).

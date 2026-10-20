@@ -11,12 +11,13 @@
 # ★ 승차 소요 = 구간 거리 합 ÷ 표정속도. 2026-09-10 저녁에 근거를 확보해 해제됐다.
 #   거리는 `sect_dist_m` 누적(확정), 속도는 rules.bus.표정속도(추정), 환산한 소요는 추정이다.
 #   값_우선순위: **노선별 실측 > 노선유형별 통계 > 근거없음**.
-import json, collections
+import collections
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from .timeutil import to_min
+from .json_rows import load_shared_row
 
 
 @dataclass
@@ -62,8 +63,8 @@ class BusRoutes:
         rp, sp = Path(route_path), Path(stop_path)
         if not rp.exists() or not sp.exists():
             return None
-        rd = [json.loads(l) for l in rp.read_text(encoding="utf-8").splitlines() if l.strip()]
-        sd = [json.loads(l) for l in sp.read_text(encoding="utf-8").splitlines() if l.strip()]
+        rd = [load_shared_row(l) for l in rp.read_text(encoding="utf-8").splitlines() if l.strip()]
+        sd = [load_shared_row(l) for l in sp.read_text(encoding="utf-8").splitlines() if l.strip()]
         return cls(rd, sd)
 
     def route(self, name):

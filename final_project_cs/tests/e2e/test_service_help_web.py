@@ -40,7 +40,7 @@ def test_service_help_resolves_without_changing_trip_and_is_idempotent(help_clie
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["status"] == "answered" and body["reason"] == "decision_answer_service"
-    assert "triPilot 여행 도우미" in body["answer"] and "basis" not in body
+    assert "구구루트 여행 도우미" in body["answer"] and "basis" not in body
     after = client.get(path, headers=_h(me["user_key"])).json()
     assert (after["version"], after["items"]) == (before["version"], before["items"])
     assert requests[0]["tenant_id"] == api["tenant"] and requests[0]["allowed_scopes"] == ["travel_service"]
@@ -66,5 +66,5 @@ def test_service_help_sse_returns_the_same_grounded_answer(help_client):
                            headers={**_h(me["user_key"]), "Accept": "text/event-stream"},
                            json={"request_id": "service-stream", "message": "어떤 기능이 있어?"})
     assert response.status_code == 200 and response.headers["content-type"].startswith("text/event-stream")
-    assert "decision_answer_service" in response.text and "triPilot 여행 도우미" in response.text
+    assert "decision_answer_service" in response.text and "구구루트 여행 도우미" in response.text
     assert len(requests) == 1

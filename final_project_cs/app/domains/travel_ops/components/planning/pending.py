@@ -235,7 +235,13 @@ def unresolved_notice(*, item: Item, causes: list[dict[str, Any]], recheck_faile
     """
     safety = is_safety({"disruptions": causes})
     head = "⚠️ 안전 알림 — " if safety else ""
-    if recheck_failed:
+    departure = item.kind == "mobility" and any(cause.get("category") == "departure_revalidation" for cause in causes)
+    if departure:
+        problem = ("새 이동 경로가 일정 전체 검증을 통과하지 못해" if recheck_failed
+                   else "현재 조건에 맞는 이동 경로를 확인하지 못해")
+        text = f"{head}{item.title} — {_cause_text(causes)}. {problem} 일정은 그대로 두었어요. 출발 전에 경로를 다시 확인해 주세요."
+        kind = "recheck_failed" if recheck_failed else "no_alternate"
+    elif recheck_failed:
         # ★`[2026-10-03]` 바꿀 곳은 찾았는데 **일정 전체를 다시 판정하니** 앞뒤 일정과 안 맞았다(시간 · 이동 · 예산) — 바꾸지 않았다. 원인에 없는 말은 안 붙인다
         text = (f"{head}{item.title} — {_cause_text(causes)}. 바꿀 곳을 찾았지만 일정 전체와 맞지 않아 일정은 그대로 두었어요. "
                 "가시기 전에 한 번 확인해 주세요.")
@@ -256,8 +262,29 @@ _CODE_TEXT = {"closed_on_day": "오늘은 쉬는 곳이에요", "closed_today": 
 
 
 def _cause_text(causes: list[dict[str, Any]]) -> str:
-    """원인에 **있는 말**만 쓴다. 코드 이름(`closed_on_day` — 영문 소문자·밑줄)은 고객 문장에 싣지 않고 알려진 것만 말로 바꾼다 — 모르는 코드는 건너뛴다."""
+    """확인된 여러 원인을 빠뜨리지 않는다. 모르는 코드와 근거 없는 값은 쓰지 않는다."""
+    texts = []
     for cause in causes:
+        if cause.get("category") == "departure_revalidation":
+            text = ("출발 경로를 확인하는 데 필요한 저장 자료가 없거나 형식이 맞지 않아요"
+                    if cause.get("kind") == "context_missing_or_version" else "출발 경로를 다시 확인해야 해요")
+            if text not in texts:
+                texts.append(text)
+            continue
+        if cause.get("category") == "traffic_control" and cause.get("message"):
+            text = str(cause["message"])
+            end = cause.get("ends_at")
+            if end:
+                try:
+                    moment = datetime.fromisoformat(str(end))
+                    if moment.tzinfo is not None:
+                        end = moment.astimezone(ZoneInfo("Asia/Seoul")).strftime("%m월 %d일 %H:%M")
+                except ValueError:
+                    pass
+                text += f" (통제 종료 예정: {end})"
+            if text not in texts:
+                texts.append(text)
+            continue
         for field in ("summary", "kind", "reason", "type", "category"):
             value = cause.get(field)
             if not value:
@@ -265,10 +292,34 @@ def _cause_text(causes: list[dict[str, Any]]) -> str:
             text = str(value)
             if re.fullmatch(r"[a-z][a-z0-9_]*", text):          # 코드 이름
                 if text in _CODE_TEXT:
-                    return _CODE_TEXT[text]
-                continue
-            return text
-    return "일정에 문제가 생겼어요"
+                    text = _CODE_TEXT[text]
+                else:
+                    continue
+            if text not in texts:
+                texts.append(text)
+            break
+    return "; ".join(texts) or "일정에 문제가 생겼어요"
+
+
+def traffic_detail_notice(*, item: Item, causes: list[dict[str, Any]], previous: dict[str, Any]) -> tuple[str, dict[str, Any]] | None:
+    """현재도 확인되는 사건 중 앞선 발송 문장에서 누락된 도로통제만 한 번 보완한다."""
+    if previous.get("kind") not in {"no_alternate", "recheck_failed"}:
+        return None
+
+    def identity(cause):
+        return cause.get("incident_id") or cause.get("message")
+
+    known = {identity(c) for c in previous.get("causes") or [] if c.get("category") == "traffic_control"}
+    missing = [c for c in causes if c.get("category") == "traffic_control" and c.get("message")
+               and identity(c) in known and str(c["message"]) not in str(previous.get("text") or "")]
+    if not missing:
+        return None
+    keys = sorted({str(identity(c)) for c in missing})
+    fingerprint = hashlib.sha256(json.dumps(keys, ensure_ascii=False).encode()).hexdigest()[:16]
+    text = (f"도로통제 안내 보완 — {item.title}. {_cause_text(missing)}. "
+            "앞선 알림에서 도로통제 설명이 빠져 추가로 알려 드려요. 일정은 바꾸지 않았어요.")
+    return fingerprint, {"type": "guidance", "kind": "traffic_control_detail", "reason": "notice_text_incomplete",
+                         "text": text, "language": "ko", "causes": missing, "item_id": str(item.item_id), "replay": False}
 
 
 def proposal_notice(*, item: Item, decision: Decision, causes: list[dict[str, Any]],
@@ -475,7 +526,7 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     probe = [i if i.item_id != current.item_id else _with_alternates(i, options) for i in items]
     plan = plan_swap(trip_version=trip["version"], base_version=proposal["base_version"], items=probe,
                      places_by_id=places_by_id, item_id=current.item_id, choice=key,
-                     message=None, request_id=f"proposal:{proposal_id}", check=check)
+                     message=None, request_id=f"proposal:{proposal_id}", check=check, customer_pick=True)
     if isinstance(plan, NoChange):
         raise ProposalRefused(plan.status, plan.detail)
     try:
@@ -554,7 +605,8 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
 
 def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: ItineraryChange,
                  report: dict[str, Any] | None = None,
-                 check: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
+                 check: Callable[..., dict[str, Any]] | None = None,
+                 now: datetime | None = None) -> dict[str, Any]:
     """★바꾸는 **한 문**(감시 · 새벽 확인) — 판정(`decide`)을 거쳐 새 버전을 쓰거나, 묻는다.
 
     돌려주는 `status`:
@@ -600,7 +652,7 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
             try:
                 with conn.transaction():
                     offered = offer_relaxed(conn, store=store, trip_id=trip_id, item_id=item_id, causes=plan.causes,
-                                            check=check, recheck_failed=True)
+                                            check=check, recheck_failed=True, now=now)
             except Exception:                                # noqa: BLE001
                 offered = None
         if offered is not None:

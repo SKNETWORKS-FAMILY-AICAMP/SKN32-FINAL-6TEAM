@@ -26,6 +26,7 @@ import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 from app.infrastructure import oauth_providers as oauth
 from app.infrastructure.db.session import get_connection
+from app.domains.travel_ops.components.customer import registration
 
 from app.domains.travel_ops.modules.web_account import web_agent_keys
 from app.domains.travel_ops.modules.web_account import web_auth
@@ -146,7 +147,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             if got is None:
                 raise _error(410, "ticket_invalid", "이 로그인 표를 쓸 수 없다 — 처음부터 다시 한다")
             out: dict[str, Any] = {"outcome": got["outcome"], "provider": got["provider"],
-                                   "trips": web_auth.trip_count(conn, tenant_id=tenant, customer_id=got["customer_id"])}
+                                   "trips": web_auth.trip_count(conn, tenant_id=tenant, customer_id=got["customer_id"]),
+                                   "registration_required": registration.pending(conn, tenant, got["customer_id"])}
             if got["outcome"] == "linked" and body.session == "cookie":
                 # ★게스트가 구글 계정을 연결했다 — 같은 세션이 이제 회원이다. 브라우저 세션 쿠키였던 같은 값을 **오래가는 쿠키로 다시** 내린다(안 그러면 창을 닫을 때 회원 세션도 사라진다)
                 existing = http.cookies.get(web_cookie.cookie_name())
@@ -208,10 +210,17 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
                                            persistent=session.kind == "member")
 
     @router.get("/v1/web/auth/me")
-    def auth_me(who: web_cookie.Identity = Depends(web_cookie.require_identity)):
+    def auth_me(trip_id: UUID | None = None, who: web_cookie.Identity = Depends(web_cookie.require_identity)):
         if who.session is None:                                   # 키로 부른 호출 — 세션이 아니다
             return JSONResponse({"kind": "key"}, headers={"Cache-Control": "no-store"})
-        return JSONResponse(web_cookie.session_body(who.session, tenant_id=who.tenant_id), headers={"Cache-Control": "no-store"})
+        with get_connection() as conn:
+            incomplete = registration.pending(conn, who.tenant_id, who.customer_id)
+            body = web_cookie.session_body(who.session, tenant_id=who.tenant_id, registration_required=incomplete)
+            if trip_id is not None:
+                body["trip_access"] = conn.execute(
+                    "SELECT EXISTS (SELECT 1 FROM trips WHERE tenant_id=%s AND customer_id=%s AND trip_id=%s)",
+                    (who.tenant_id, who.customer_id, trip_id)).fetchone()[0]
+        return JSONResponse(body, headers={"Cache-Control": "no-store"})
 
     @router.post("/v1/web/auth/logout")
     def auth_logout(http: Request, who: web_cookie.Identity = Depends(web_cookie.require_identity)):

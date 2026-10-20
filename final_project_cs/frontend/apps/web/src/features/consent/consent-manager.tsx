@@ -7,7 +7,7 @@ import type { Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
 import { serverPending, type ConsentCode } from "./consent-model";
 import { consentedAt, readConsents, useConsent } from "./consent-store";
-import { saveConsents, type SendResult } from "./consent-sync";
+import { saveConsents, saveOptionalConsent, type SendResult } from "./consent-sync";
 import { plainTitle } from "./terms-text";
 import { TermsBody } from "./terms-body";
 import { TermsViewer } from "./terms-viewer";
@@ -29,7 +29,9 @@ function resultText(result: SendResult, agreed: boolean, t: Translate): { ok: bo
   switch (result) {
     case "recorded": case "local_only": return { ok: true, text: agreed ? t("동의를 기록했어요.", "Your consent is recorded.") : t("동의를 철회했어요.", "Your consent is withdrawn.") };
     case "outdated": return { ok: false, text: t("약관이 새 버전으로 바뀌었어요. 화면을 새로 고침해 주세요.", "The terms have a newer version. Please reload.") };
-    default: return { ok: false, text: t("서버에 기록하지 못했어요. 이 브라우저에는 저장했고, 연결되면 다시 보내요.", "Could not record it on the server. It is saved in this browser and will be sent again when connected.") };
+    default: return { ok: false, text: agreed
+      ? t("동의 기록을 저장하지 못했어요. 연결을 확인한 뒤 다시 눌러 주세요.", "Your consent could not be recorded. Check your connection and try again.")
+      : t("서버에 기록하지 못했어요. 이 브라우저에는 저장했고, 연결되면 다시 보내요.", "Could not record it on the server. It is saved in this browser and will be sent again when connected.") };
   }
 }
 
@@ -52,7 +54,9 @@ function Row({ doc }: { doc: TermsDoc }) {
     setMessage(null);
     setConfirming(false);
     try {
-      const result = await saveConsents({ ...readConsents(), [doc.code]: next }, language);
+      const result = next
+        ? await saveOptionalConsent(doc.code, language)
+        : await saveConsents({ ...readConsents(), [doc.code]: false }, language);
       setMessage(resultText(result, next, t));
       // A withdrawn item takes its data with it (a webhook, a chat link, answers): the lists that show them are read again.
       void queryClient.invalidateQueries();

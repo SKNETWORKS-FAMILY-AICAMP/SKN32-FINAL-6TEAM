@@ -21,7 +21,7 @@ tags: [finetuning, evaluation]
 
 ## 정확한 자료와 검토 범위
 
-[실측] [기존 train_oos2](../../../../datasets/travel/train_oos2/train_oos2.jsonl)는 정상1,377행·NONE1,236행이며 추가 H-train900행에는 정상300행·NONE600행이 있습니다. 원본 해시는 [전용 상태](../../../../program/research/daily_rag_slm/saluki_finetune_2026-10-09.json)에 고정했습니다. [직접 대조 결과](../../../../program/scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/reviewed_train_oos2_audit_1206.json)는 추가900행 모두 원 H-train의 `agree` 상태·정답과 일치하고, 기존1,713행 전체가 유지됨을 확인했습니다.
+[실측] [기존 train_oos2](../../../../datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl)는 정상1,377행·NONE1,236행이며 추가 H-train900행에는 정상300행·NONE600행이 있습니다. 원본 해시는 [전용 상태](../../../../program/research/daily_rag_slm/saluki_finetune_2026-10-09.json)에 고정했습니다. [직접 대조 결과](../../../../program/scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/reviewed_train_oos2_audit_1206.json)는 추가900행 모두 원 H-train의 `agree` 상태·정답과 일치하고, 기존1,713행 전체가 유지됨을 확인했습니다.
 
 [실측] [H 자료 생성기](../../../../program/scripts/plan_qa_bench/build_hard_set.py)의 생성 모델은 `gpt-6.1-sol`, 별도 라벨 모델은 `gpt-6-luna`입니다. 추가900행은 이 둘의 **AI 합의**이며 사람900행 검수를 확인한 것은 아닙니다. 첫1,713행은 증류1,313＋잡담 부정400으로, 전체가 동일한 두 AI 검토를 받았다고 넓혀 말하지 않습니다. [보강판 생성 근거](../../../../program/scripts/plan_qa_bench/results/train_oos2_report.json)는 H-test/D2/D3와 높은 표현 중복 후보99개 제외 및 H-train에서 기존 모델 오답 우선 채굴을 기록합니다.
 

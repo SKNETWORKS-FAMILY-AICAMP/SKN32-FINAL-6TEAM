@@ -169,10 +169,16 @@ def plan_mobility_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, An
                 return work._escalate(task, "fatal_source_failure", ctx["evidence"])
             events = view["events"]
         try:
-            return plan_departure_adjustment(item=item, previous=place_before(ctx["items"], item),
+            plan = plan_departure_adjustment(item=item, previous=place_before(ctx["items"], item),
                 following=next_after(ctx["items"], item), now=now, events=events, trip=ctx["trip"])
         except DepartureReplanUnavailable as exc:
+            ctx["evidence"] = work._evidence(task, source_id="mobility.departure_replan",
+                claim="현재 출발 재경로를 확인하지 못한 계산 사유", value=exc.report, base=ctx["evidence"])
             return work._escalate(task, "fatal_source_failure", ctx["evidence"], warnings=[str(exc)])
+        if isinstance(plan, NoChange) and plan.detail.get("departure_replan"):
+            ctx["evidence"] = work._evidence(task, source_id="mobility.departure_replan",
+                claim="현재 출발 재경로 계산의 불성립 사유", value=plan.detail["departure_replan"], base=ctx["evidence"])
+        return plan
     if route is None:
         return work._unknown(task, "경로 정의", ctx["evidence"])
     view = work._read(task, "read.route_events", {"targets": route_targets(route)}, ctx["seen"])

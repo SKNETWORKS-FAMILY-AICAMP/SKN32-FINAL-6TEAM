@@ -50,14 +50,15 @@ class LoopbackOnly:
 
 def create_ops_app(*, routers: list | None = None) -> FastAPI:
     """운영 앱을 조립한다. `routers` — 시험이 도메인 경로를 갈아 끼우는 자리(없으면 `composition.build_ops_routers()`)."""
-    app = FastAPI(title="triPilot 운영 콘솔")
+    app = FastAPI(title="구구루트 운영 콘솔")
     app.add_middleware(LoopbackOnly)
     composition.wire_trip_scope()              # 관리자 화면의 여행 목록이 감시 대상과 같게(게스트 여행 빼기) `[2026-10-16]`
     mount_ui(app)
     # 관리자 웹앱의 JSON 표면도 이 운영 프로세스에만 등록한다.
     from app.presentation.admin_api import build_router as build_admin_router, operator, require
 
-    app.include_router(build_admin_router(snapshot_provider=composition.build_admin_snapshot))
+    app.include_router(build_admin_router(snapshot_provider=composition.build_admin_snapshot,
+                                        users_provider=composition.build_admin_users))
     from app.presentation.admin_limits_api import build_router as build_limits_router
     app.include_router(build_limits_router(operator_dependency=operator, require_permission=require))
     from app.presentation.admin_operations_api import build_router as build_operations_router
@@ -85,7 +86,7 @@ def create_ops_app(*, routers: list | None = None) -> FastAPI:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="triPilot 운영 앱 — 이 기계 안에서만")
+    parser = argparse.ArgumentParser(description="guguroute 운영 앱 — 이 기계 안에서만")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=None)
     args = parser.parse_args(argv)

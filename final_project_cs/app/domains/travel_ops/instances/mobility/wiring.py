@@ -14,7 +14,10 @@
 """
 from __future__ import annotations
 
+import collections
+import copy
 import logging
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -51,6 +54,7 @@ def configure(*, data_dir: str | None, gh_url: str = "", seoul_key: str = "",
               verify_hash: bool = True, local_router: bool = True, warm_router: bool = False,
               bike_gate: Any = None) -> dict[str, Any]:
     """계산기를 켜거나 끈다. 켤 때는 자료를 확인하고(없거나 다르면 MobilityUnavailable) 적재까지 한다."""
+    clear_leg_cache()                                     # 자료 · 정책이 바뀔 수 있다 — 요청 사이 재사용 칸을 비운다
     if not data_dir:
         paths.disable()
         _STATE.update(mode="disabled", kw=None, datacheck=None)
@@ -97,6 +101,16 @@ def _warm_local_router(rt) -> None:
             _announce(("router_warm", id(router)), "이동 계산기 길찾기(로컬 도로 그래프) 준비됨 - %.1f초", time.monotonic() - started)
         except Exception as ex:                                  # noqa: BLE001 - 서버를 죽이지 않는다(원인은 로그에)
             _SERVER_LOG.warning("이동 계산기 길찾기 미리 올리기 실패(첫 호출 때 다시 시도): %s", type(ex).__name__)
+        # ☆`[2026-10-19 속도]` 택시 속도 그래프도 미리 올린다 — 대중교통 판정(verify_multi)이 택시 비교 후보를 늘 세서 첫 구간 계산 때
+        #   어차피 올라가고(약 125MB), 그 첫 구간이 10초 넘게 걸렸다(실측 13.5초 중 적재 약 10초). 쓰는 메모리는 같고 첫 요청만 빨라진다.
+        car = getattr(getattr(rt, "_v", None), "car", None)
+        if car is not None and hasattr(car, "_service"):
+            started = time.monotonic()
+            try:
+                car._service()
+                _announce(("car_warm", id(car)), "이동 계산기 택시 속도 그래프 준비됨 - %.1f초", time.monotonic() - started)
+            except Exception as ex:                              # noqa: BLE001 - 없으면 첫 택시 때 RouterDown(근거없음) 그대로
+                _SERVER_LOG.warning("이동 계산기 택시 속도 그래프 미리 올리기 실패(첫 택시 때 다시 시도): %s", type(ex).__name__)
 
     import threading
     threading.Thread(target=run, name="mobility-router-warm", daemon=True).start()
@@ -182,7 +196,7 @@ def disruptions_from_events(events: dict[str, dict[str, Any]]) -> tuple[list[dic
     return out, unmapped
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None):
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None, stage="planning"):
     """일정 짜기(planner.add_moves)가 부를 **구간 계산기**. 꺼져 있으면 None — 부르는 쪽이 직선 어림값으로 간다.
 
     돌려주는 함수 leg(a_place, b_place, arrive_dt, not_before_dt) → (결과 dict, None) 또는 (None, 이유 dict).
@@ -198,17 +212,25 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
     from .engine.plan import Planner, iso_of, party_of
     rt = engine_runtime.get_verifier(**_STATE["kw"])
     c = dict(constraints or {})
-    planner = Planner(rt, stage="planning", modes=(list(modes) if modes else modes_from_survey(c)),
+    if stage not in ("planning", "pre_departure"):
+        raise ValueError("unsupported leg planning stage")
+    planner = Planner(rt, stage=stage, modes=(list(modes) if modes else modes_from_survey(c)),
                       taxi_option_fees=c.get('taxi_option_fees'),
                       taxi_call_product=c.get('taxi_call_product'),taxi_call_quotes=c.get('taxi_call_quotes'))
     if disruptions:
         planner.disruptions = tuple(dict(d) for d in disruptions)     # #38 — 사고를 모든 판정 호출에 싣는다
     party = party_of(party_size, c)
     first_visit = c.get("first_visit", True)
-    buffer = rt._v.rv("buffer", "by_stage", "planning")
+    buffer = rt._v.rv("buffer", "by_stage", stage)
     counter = {"n": 0}
+    lock = threading.Lock()
+    # 요청 사이 재사용 칸(LEG_CACHE_TTL_S) — 이 계산기를 정하는 입력 전부. 실시간 값을 읽는 설정이면 재사용하지 않는다:
+    #   자전거(따릉이 대여 가능 대수) · 택시 사전 견적(견적 유효 시간을 지금 시각으로 본다)
+    reusable = not ("bike" in (planner.modes or ()) or c.get("taxi_call_quotes"))
+    setup_key = _cache_key(rt, planner.stage, sorted(planner.modes) if planner.modes else None, planner.disruptions, party,
+                           first_visit, c.get("taxi_option_fees"), c.get("taxi_call_product"), c.get("taxi_call_quotes"))
 
-    def leg(a_place, b_place, arrive_dt, not_before_dt=None):
+    def compute(a_place, b_place, arrive_dt, not_before_dt):
         counter["n"] += 1
         planner.trace = []
         try:
@@ -232,7 +254,89 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
         return {"route": route, "starts_at": datetime.fromisoformat(iso_of(sdate, start)),
                 "ends_at": datetime.fromisoformat(iso_of(sdate, end)), "eta_min": int(planned["eta_min"]),
                 "left_out": left, "departure_context": planner.departure_context}, None
+
+    def leg(a_place, b_place, arrive_dt, not_before_dt=None):
+        # ☆`[2026-10-19]` 이 함수는 계획기 하나의 trace · departure_context 를 부를 때마다 덮어쓴다 — 여러 스레드가 같이 부르면 한 구간의
+        #   출발 문맥이 다른 구간 결과에 붙을 수 있었다. 잠금으로 한 번에 하나만 센다(파이썬 계산이라 스레드로 나눠도 빨라지지 않는다 — 실측).
+        key = _cache_key(setup_key, a_place, b_place, arrive_dt, not_before_dt) if reusable else None
+        hit = _cache_get(key)
+        if hit is not None:
+            return hit
+        with lock:
+            answer = compute(a_place, b_place, arrive_dt, not_before_dt)
+        _cache_put(key, answer)
+        return copy.deepcopy(answer)
+
+    def many(jobs):
+        """여러 구간을 한 번에 — `jobs` = [(a, b, 도착 목표, 그전엔 안 됨)] → 같은 순서의 [(결과, 이유)].
+        같은 구간은 한 번만 세고(요청 사이 재사용 칸도 본다), 차례로 센다(프로세스를 나누지 않는다 — 2026-10-19 보고서)."""
+        seen: dict[str, Any] = {}
+        out = []
+        for a_place, b_place, arrive_dt, not_before_dt in jobs:
+            k = _cache_key(a_place, b_place, arrive_dt, not_before_dt)
+            if k not in seen:
+                seen[k] = leg(a_place, b_place, arrive_dt, not_before_dt)
+                out.append(seen[k])
+            else:
+                out.append(copy.deepcopy(seen[k]))
+        return out
+
+    leg.many = many
     return leg
+
+
+#: 같은 구간 · 같은 입력의 계산기 답을 요청 사이에 다시 쓰는 시간(초). 시간표는 정적 자료이고, 실시간 값을 읽는 설정(자전거 · 택시 사전 견적)은
+#: 재사용하지 않는다. ★우리가 고른 값 — 대안 화면을 다시 열거나 같은 일정을 거듭 검사할 때 그대로 쓰일 만큼(2026-10-19)
+LEG_CACHE_TTL_S = 300
+LEG_CACHE_MAX = 2048
+_LEG_CACHE: "collections.OrderedDict[str, tuple[float, Any]]" = collections.OrderedDict()
+_LEG_CACHE_LOCK = threading.Lock()
+
+
+def _cache_key(*parts: Any) -> str:
+    """입력 → 문자열 키. 시간표 판이 바뀌면(다시 적재) 키도 바뀐다."""
+    import json
+
+    def norm(x):
+        if hasattr(x, "timetable_built_at"):                 # 계산기 런타임 — 객체 · 시간표 판 · 규칙 판
+            return ["rt", id(x), str(getattr(x, "timetable_built_at", "")), str(getattr(x, "rules_version", ""))]
+        if hasattr(x, "isoformat"):
+            return x.isoformat()
+        return x
+    return json.dumps([norm(p) for p in parts], sort_keys=True, ensure_ascii=False, default=str)
+
+
+def _cache_get(key: str | None):
+    if key is None:
+        return None
+    now = time.monotonic()
+    with _LEG_CACHE_LOCK:
+        hit = _LEG_CACHE.get(key)
+        if hit is None:
+            return None
+        if hit[0] < now:
+            _LEG_CACHE.pop(key, None)
+            return None
+        _LEG_CACHE.move_to_end(key)
+        value = hit[1]
+    return copy.deepcopy(value)
+
+
+def _cache_put(key: str | None, answer: Any) -> None:
+    if key is None:
+        return
+    value = copy.deepcopy(answer)
+    with _LEG_CACHE_LOCK:
+        _LEG_CACHE[key] = (time.monotonic() + LEG_CACHE_TTL_S, value)
+        _LEG_CACHE.move_to_end(key)
+        while len(_LEG_CACHE) > LEG_CACHE_MAX:
+            _LEG_CACHE.popitem(last=False)
+
+
+def clear_leg_cache() -> None:
+    """요청 사이 재사용 칸을 비운다 — 자료를 다시 적재하거나 시험이 계산기 상태를 갈아 끼울 때."""
+    with _LEG_CACHE_LOCK:
+        _LEG_CACHE.clear()
 
 
 def basis() -> dict[str, Any]:

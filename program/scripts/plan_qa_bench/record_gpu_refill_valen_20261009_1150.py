@@ -10,7 +10,7 @@ def read(p):return json.loads(p.read_text(encoding='utf-8'))
 def new(p,v):
     with p.open('x',encoding='utf-8') as f:json.dump(v,f,ensure_ascii=False,indent=2)
 failed=R/'valen_08b_original_d2_a1';started=read(failed/'started.json')
-goldpath=ROOT/'datasets/travel/valen_native_eval_20261009/d2.json'
+goldpath=ROOT/'datasets/core/pointing/evaluations/valen_native_eval_20261009/d2.json'
 assert hashlib.sha256(goldpath.read_bytes()).hexdigest()==started['prompt_sha256']
 gold=read(goldpath);assert len(gold)==1000 and not (failed/'d_test_valen_08b_original_d2_a1.jsonl').exists()
 new(failed/'failed_preload_counts.json',dict(expected=1000,saved=0,missing=1000,failed_or_missing=1000,

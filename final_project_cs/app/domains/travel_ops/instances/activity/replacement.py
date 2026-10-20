@@ -14,7 +14,7 @@ from typing import Any
 from app.core.contracts import TeamTask
 
 from . import failure_codes as fc
-from app.domains.travel_ops.components.intake.survey_answers import QUESTIONS as SURVEY_QUESTIONS
+from app.domains.travel_ops.components.intake.survey_answers import REPLACEMENT_QUESTION
 from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
 
 from . import alternative_order, place_aliases, place_identity
@@ -33,8 +33,11 @@ REPLY_PHRASES = {"activity": "활동이비슷한", "mobility": "이동이편한"
 
 
 def ask_question():
-    """다시 물을 설문 문항(`survey_answers.QUESTIONS` 의 `priority`)."""
-    return next(q for q in SURVEY_QUESTIONS if q.id == ASK_QUESTION_ID)
+    """다시 물을 질문 — 대체할 곳을 무엇을 먼저 볼까(`survey_answers.REPLACEMENT_QUESTION`).
+
+    ★`[2026-10-19]` 로딩 중 질문이 시작 설문의 다섯 문항으로 바뀌어 이 질문은 로딩 문항이 아니다 — 묶음 2의 문항을 그대로 따로 두었다.
+      지난 답(`read.last_survey_answer`)은 새 우선순위 답에서 활동 · 이동 중 앞선 것을 이 질문의 선택지로 돌려준다."""
+    return REPLACEMENT_QUESTION
 
 
 def reply_choice(text: str | None) -> str | None:

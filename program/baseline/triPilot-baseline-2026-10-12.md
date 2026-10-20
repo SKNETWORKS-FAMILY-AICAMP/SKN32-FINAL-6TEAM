@@ -1,6 +1,6 @@
 ---
 type: reference
-title: triPilot 제품 전체 기준선 — 2026-10-12 검토본
+title: guguroute 제품 전체 기준선 — 2026-10-12 검토본
 status: draft
 decision_status: accepted
 implementation_status: partial
@@ -8,7 +8,7 @@ validation_status: partial
 domain: travel
 ---
 
-# triPilot 제품 전체 기준선 — 2026-10-12
+# guguroute 제품 전체 기준선 — 2026-10-12
 
 이 문서는 제품 전체의 사양·구성·시험·환경 증거를 하나로 연결하는 **최종 인수 전 검토본**입니다. 기준선 ID는 `TRP-BL-2026-10-12`이며 아직 확정하지 않았습니다. 최신 전체 실행을 마쳤으나 필수 자료·외부 연결 조건이 남아 있으므로 제품 완료·출시 승인을 표시하지 않습니다.
 

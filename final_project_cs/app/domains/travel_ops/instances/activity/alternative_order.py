@@ -28,6 +28,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from app.domains.travel_ops.components.planning.survey import ACTIVITY_DETAILS
+
 from .alternatives import SHOW
 
 #: 판정 종류 · 프롬프트 키 — `kind_modes.alternative_order` 로 켜고 끈다(표에 없으면 `rule` = 부르지 않음)
@@ -72,7 +74,8 @@ def preference_inputs(survey: dict[str, Any] | None, customer_text: str | None) 
             picked[field] = value
     details = ((survey or {}).get("priority_details") or {}).get("activity")
     if details:
-        picked["activity_details"] = details
+        # ★`[2026-10-19]` 세부는 관광 분류 코드(EV · EX …)로 온다 — 모델에는 뜻을 알 수 있게 화면 글로 넘긴다(모르는 옛 값은 그대로)
+        picked["activity_details"] = [ACTIVITY_DETAILS.get(code, code) for code in details]
     text = (customer_text or "").strip()
     if not picked and not text:
         return None

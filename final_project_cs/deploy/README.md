@@ -1,4 +1,4 @@
-# triPilot 공개 배포 (Docker)
+# guguroute 공개 배포 (Docker)
 
 서버 한 대(WSL2 Docker)에 **DB · API · 상시 작업 일꾼 · 웹**을 올리는 파일 모음이다. 역방향 프록시(Caddy)는 서버에 이미 있는 것을 쓰고, 이 프로젝트는 그 Caddy 에 **사이트 한 블록**만 붙인다.
 

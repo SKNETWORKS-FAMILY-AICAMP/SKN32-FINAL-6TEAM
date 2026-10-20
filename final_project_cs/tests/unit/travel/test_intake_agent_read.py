@@ -82,11 +82,25 @@ def test_a_correction_in_the_message_keeps_the_agent_plan_without_refilling_from
     assert items[2]["starts_at"] == "15:00"
 
 
-def test_agent_failure_falls_back_to_the_rule_reading():
+def test_an_agent_model_failure_is_a_reading_failure_not_a_quiet_rule_preview():
+    """`[2026-10-16 2회차 합의 ②]` 모델 쪽 실패(로컬 · 유료 모두 답 못 함)는 같은 모델을 또 부르지 않고 「읽기 실패」 — 못 읽은 줄을 조용히 남기지 않는다.
+    ☆D-025 첫 판은 규칙 미리보기 + 못 읽은 줄로 끝냈다."""
+    import pytest
+
+    from app.domains.travel_ops.components.intake.pipeline import READING_FAILED_TEXT, IntakeRejected
+
+    with pytest.raises(IntakeRejected) as caught:
+        read_source(TEXT, today=TODAY, agent=Agent(error=TimeoutError("slow")), agent_mode="on")
+    assert caught.value.code == "reading_model_failed" and caught.value.message == READING_FAILED_TEXT
+
+
+def test_an_agent_answer_failure_reads_the_lines_instead_and_says_so():
+    """답 내용 쪽 실패(모양 · 스키마 — 모델은 답했다)는 줄 읽기로 한 번 더 읽는다. 어느 길로 읽었는지 `reading.agent.outcome` 에 남는다."""
     off = read_source(TEXT, today=TODAY)
-    failed = read_source(TEXT, today=TODAY, agent=Agent(error=TimeoutError("slow")), agent_mode="on")
+    failed = read_source(TEXT, today=TODAY, agent=Agent(error=ValueError("읽기 에이전트 답의 모양이 다르다")), agent_mode="on")
     assert _items([r for r in failed if r["field"] != "reading.agent"]) == _items(off)
-    assert next(r["value"] for r in failed if r["field"] == "reading.agent") == {"error": "TimeoutError: slow", "used": False}
+    assert next(r["value"] for r in failed if r["field"] == "reading.agent") == {
+        "error": "ValueError: 읽기 에이전트 답의 모양이 다르다", "used": False, "outcome": "lines_instead"}
 
 
 def test_shadow_records_the_agent_but_keeps_the_rule_items_and_off_never_calls_it():
@@ -106,17 +120,33 @@ def test_reader_is_on_in_the_guardrails_and_uses_the_chat_fallback_device():
     assert "timeout_seconds" not in config
 
 
-def test_when_the_reader_fails_the_same_model_is_not_called_again_for_leftover_lines():
+def test_when_the_reader_model_fails_the_same_model_is_not_called_again_for_leftover_lines():
+    import pytest
+
+    from app.domains.travel_ops.components.intake.pipeline import IntakeRejected
+
     class Chat(Agent):
         def json(self, system, user):
             self.json_calls = getattr(self, "json_calls", 0) + 1
             return {"spans": []}
 
     chat = Chat(error=TimeoutError("slow"))
+    with pytest.raises(IntakeRejected):                       # ★`[2026-10-16 2회차 합의 ②]` 곧바로 「읽기 실패」
+        read_source("경복궁 갔다가 근처에서 밥", today=TODAY, chat=chat, agent=chat, agent_mode="on")
+    assert getattr(chat, "json_calls", 0) == 0                # 유료를 두 번 태우지 않는다 — 같은 모델을 다시 부르지 않는다
+
+
+def test_when_the_reader_answer_is_unusable_the_lines_are_read_by_the_line_reader():
+    class Chat(Agent):
+        def json(self, system, user):
+            self.json_calls = getattr(self, "json_calls", 0) + 1
+            return {"spans": [{"line": 1, "quote": "경복궁", "role": "place"}]}
+
+    chat = Chat(answer={"items": "모양이 다르다"})
     rows = read_source("경복궁 갔다가 근처에서 밥", today=TODAY, chat=chat, agent=chat, agent_mode="on")
-    assert getattr(chat, "json_calls", 0) == 0                # 규칙 미리보기 + 못 읽은 줄로 끝낸다
-    assert next(r["value"] for r in rows if r["field"] == "reading.agent")["used"] is False
-    assert not any(r["field"] == "reading.llm" for r in rows)
+    assert chat.json_calls == 1                                # 줄 읽기로 한 번 더
+    assert [r["value"] for r in rows if r["field"].endswith(".title")] == ["경복궁"]
+    assert next(r["value"] for r in rows if r["field"] == "reading.agent")["outcome"] == "lines_instead"
 
 
 def test_pieces_gaps_guard_and_preferences_are_grounded_in_the_text():

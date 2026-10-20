@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1350" role="img" aria-label="triPilot 프로젝트 폴더 구조 1장 전체 내용">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1350" role="img" aria-label="guguroute 프로젝트 폴더 구조 1장 전체 내용">
 <rect width="2400" height="1350" fill="#fbfcfd"/>
-<text x="60" y="70" font-family="'Geist','Noto Sans KR',sans-serif" font-size="52" font-weight="600" fill="#161c28">triPilot 프로젝트 폴더 구조</text>
+<text x="60" y="70" font-family="'Geist','Noto Sans KR',sans-serif" font-size="52" font-weight="600" fill="#161c28">guguroute 프로젝트 폴더 구조</text>
 <text x="60" y="112" font-family="'Geist','Noto Sans KR',sans-serif" font-size="24" font-weight="400" fill="#6b7488">원본 HTML 트리 76줄 전체 수록 · 16:9 한 장용 2열 구성</text>
 <text x="2340" y="70" text-anchor="end" font-family="'Geist Mono',Consolas,'Noto Sans KR',monospace" font-size="30" font-weight="600" fill="#161c28">project/</text>
 <line x1="60" y1="138" x2="2340" y2="138" stroke="#161c28" stroke-width="1.2"/>
@@ -249,5 +249,5 @@
 <text x="872" y="1293" font-family="'Geist','Noto Sans KR',sans-serif" font-size="20" font-weight="600" fill="#161c28">Team</text>
 <rect x="1020" y="1274" width="22" height="22" rx="4" fill="#a8720c"/>
 <text x="1052" y="1293" font-family="'Geist','Noto Sans KR',sans-serif" font-size="20" font-weight="600" fill="#161c28">검증·기록</text>
-<text x="2340" y="1293" text-anchor="end" font-family="'Geist','Noto Sans KR',sans-serif" font-size="18" fill="#6b7488">프로젝트명 triPilot · 팀명 A-COPilot</text>
+<text x="2340" y="1293" text-anchor="end" font-family="'Geist','Noto Sans KR',sans-serif" font-size="18" fill="#6b7488">프로젝트명 guguroute · 팀명 A-COPilot</text>
 </svg>

@@ -8,7 +8,7 @@ import unicodedata
 from typing import Any
 
 ITEM_FACTS = frozenset({"detail", "address", "hours", "phone", "time", "move", "next", "booking", "route_here",
-                        "description", "duration", "price", "entry_booking", "food"})
+                        "description", "duration", "price", "entry_booking", "food", "weather", "outdoor"})
 
 
 def _compact(text: str) -> str:
@@ -32,7 +32,8 @@ def named_items(items: list[Any], message: str) -> list[Any]:
 
 def resolve(decision, *, items, message, selected, turns, version, now, ttl_seconds):
     """(확인된 결정, 근거, 만료된 명시 선택). 쓰기 행동과 해석 실패에는 적용하지 않는다."""
-    if decision.action != "answer_fact" or decision.fact not in ITEM_FACTS:
+    if (decision.action != "answer_fact" or decision.fact not in ITEM_FACTS
+            or (decision.fact in {"weather", "outdoor"} and decision.query is not None)):
         return decision, None, False
     by_id = {str(i.item_id): i for i in items if i.kind != "mobility"}
     if selected is not None and str(selected) not in by_id:
@@ -68,7 +69,7 @@ def resolve(decision, *, items, message, selected, turns, version, now, ttl_seco
                     if decision.item is not None and not bare and not pointing else None)
         if selected is not None and not scoped and reference not in ("explicit", "previous"):
             source, item = "selection", by_id[str(selected)]
-        elif bare or (reference == "previous" and not scoped):
+        elif bare or ((reference == "previous" or pointing) and not scoped):
             # 날짜·시각·끼니를 말한 문장(`scoped`)은 「앞에서 말한 것」 표시가 있어도 옛 일정을 덮어씌우지 않는다 — 아래 `decision` 으로 간다
             previous = next((t for t in reversed(turns) if t.get("role") == "assistant"), {})
             focus = (previous.get("reply") or {}).get("focus") or {}

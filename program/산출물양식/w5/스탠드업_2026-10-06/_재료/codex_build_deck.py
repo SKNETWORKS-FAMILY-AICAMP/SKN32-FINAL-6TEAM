@@ -41,9 +41,9 @@ WHITE = "FFFFFF"
 prs = Presentation()
 prs.slide_width = Inches(13.333)
 prs.slide_height = Inches(7.5)
-prs.core_properties.title = "triPilot 5주차 진행경과"
+prs.core_properties.title = "guguroute 5주차 진행경과"
 prs.core_properties.subject = "2026-09-29 ~ 2026-10-06 스탠드업"
-prs.core_properties.author = "triPilot"
+prs.core_properties.author = "guguroute"
 prs.core_properties.language = "ko-KR"
 
 SCRIPT_NOTES = []
@@ -113,7 +113,7 @@ def slide(title, notes, dark=False):
     s.background.fill.fore_color.rgb = color(NAVY if dark else WHITE)
     text(s, title, 0.55, 0.38, 12.15, 0.85, 28, True,
          WHITE if dark else NAVY)
-    text(s, "triPilot  ·  5주차  ·  2026-10-06",
+    text(s, "guguroute  ·  5주차  ·  2026-10-06",
          0.58, 7.11, 10.6, 0.22, 9, fill="CBD7DE" if dark else MUTED)
     text(s, str(len(prs.slides)), 12.1, 7.07, 0.65, 0.3, 10,
          fill="CBD7DE" if dark else MUTED, align=PP_ALIGN.RIGHT)
@@ -174,7 +174,7 @@ def build():
         "작은 모델 학습과 규정 검색도 검증했지만, 바뀐 화면의 실제 응답과 가르친 모델의 제품 연결은 남아 있습니다.",
         dark=True
     )
-    text(s, "triPilot", 0.6, 1.55, 11.8, 0.9, 54, True, WHITE)
+    text(s, "guguroute", 0.6, 1.55, 11.8, 0.9, 54, True, WHITE)
     text(s, "5주차 진행경과\n2026-09-29 ~ 2026-10-06",
          0.65, 2.62, 11.8, 0.9, 23, fill="D8E5ED")
     metric(s, "402건", "작업 브랜치 커밋",

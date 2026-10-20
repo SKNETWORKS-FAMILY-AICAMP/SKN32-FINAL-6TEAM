@@ -127,7 +127,7 @@ def _in_round(method):
         from app import composition
 
         try:
-            controller = composition.build_controller()
+            controller = composition.build_controller(preload_mobility=False)
         except Exception as exc:
             logger.error("sweeper_composition_failed error_type=%s", type(exc).__name__)
             raise _CompositionFailed() from exc
@@ -430,6 +430,11 @@ def _run_web_guard(tenant_id: str) -> dict[str, object]:
     from app.domains.travel_ops.components.customer.service_improvement import prune_expired
     with get_connection() as conn:
         out["synthetic_batches_purged"] = prune_expired(conn, tenant_id)
+    # ★`[2026-10-16 사용자 지시]` 계획서 접수 백업 — 관리 화면의 보관 일수(`retention.intake_backup_days`, 0 = 지우지 않음)가 지난 것만 지운다
+    from app.domains.travel_ops.components.intake.backup import purge_expired as purge_intake_backups
+    from app.domains.travel_ops.modules.web_account.web_guard import values as limit_values
+    with get_connection() as conn:
+        out["intake_backups"] = purge_intake_backups(conn, tenant_id, days=int(limit_values(tenant_id)["retention.intake_backup_days"]))
     return out
 
 

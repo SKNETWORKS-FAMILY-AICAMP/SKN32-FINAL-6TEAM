@@ -14,8 +14,10 @@ import { useSettings, useT } from "@/lib/settings";
 import { LinkedText } from "./linked-text";
 import { useChatFollow } from "./use-chat-follow";
 import { tripKey } from "./use-trip";
-import { noticesKey, proposalsKey } from "./use-trip-extras";
-import type { Trip, TripMessage, TripStop } from "./model";
+import { noticesKey, proposalsKey, useNotices } from "./use-trip-extras";
+import { chatRecords } from "./trip-chat-records";
+import { ChatNotice, ChatProposalChoices } from "./trip-chat-notices";
+import type { Trip, TripMessage, TripPick, TripStop } from "./model";
 import styles from "./trip-screen.module.css";
 
 /**
@@ -158,16 +160,23 @@ export type TripChat = ReturnType<typeof useTripChat>;
  * The chat pane of the sheet (mockup C안 「채팅」): the context of the question (the day and the stop picked) at the top of the conversation, the conversation, the quick questions and
  * what a message does. Typing is the chat bar's (`ChatBar`) — it stays at the bottom of the frame.
  */
-export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }: { trip: Trip; chat: TripChat; day: string; dayText: string; selected: TripStop | null; logRef: RefObject<HTMLDivElement | null>; active: boolean }) {
+export function ChatPane({ trip, chat, day, dayText, selected, logRef, active, onPick }: { trip: Trip; chat: TripChat; day: string; dayText: string; selected: TripStop | null; logRef: RefObject<HTMLDivElement | null>; active: boolean;
+  /** `[2026-10-19 사용자 결정]` 「직접 고르기」 under an answer that could not find the place: the screen turns into the edit, as 「일정 수정」 does (`TripPick`). */
+  onPick?: (pick: TripPick) => void }) {
   const t = useT();
   const { message, undo } = chat;
-  const latest = useChatFollow(logRef, active, trip.messages.at(-1)?.id, message.isPending);
+  const notices = useNotices(trip.id);
+  const records = chatRecords(trip.messages, notices.data ?? []);
+  const latest = useChatFollow(logRef, active, `${records.length}:${records.at(-1)?.id ?? ""}`, message.isPending);
   return <>
     <div ref={logRef} className={styles.chatLog} tabIndex={0} onScroll={latest.onScroll} role="log" aria-label={t("여행 대화 이력", "Travel conversation")} aria-live="polite" aria-relevant="additions text" aria-busy={message.isPending}>
       <div className={styles.chatContext}><strong>{dayText} · {day}</strong>
         <span>{selected ? t(`선택: ${selected.title}`, `Selected: ${selected.title}`) : t("선택한 일정이 없어요.", "No stop selected.")}</span></div>
-      {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>triPilot</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
-      {trip.messages.map((item, index) => <article key={item.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : "triPilot"}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /> : item.text}</p>
+      {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>{t("구구루트", "GuguRoute")}</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
+      {records.map(record => {
+        if (record.kind === "notice") return <ChatNotice key={record.id} notice={record.notice} />;
+        const { message: item, index } = record;
+        return <article key={record.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : t("구구루트", "GuguRoute")}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /> : item.text}</p>
         {item.awaitingReply && index === trip.messages.length - 1 && <p className={styles.undoHint}>{t("답변을 기다리고 있어요. 아래에 답하시면 같은 요청을 이어서 처리해요.", "Waiting for your reply. Answer below to continue this request.")}</p>}
         {item.more && <details className={styles.more}><summary>{t("더 보기", "More")}</summary><p><LinkedText text={item.more} mapLabel={t("지도 앱으로 열기", "Open in maps app")} siteLabel={(site) => t(`${site}에서 열기`, `Open on ${site}`)} /></p></details>}
         {item.basis && item.basis.length > 0 && <p className={styles.devBasis}>{t("개발 모드 · 근거 ", "Dev mode · basis ")}{item.basis.join(", ")}</p>}
@@ -179,9 +188,19 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
         {item.choices && item.choices.length > 0 && index === trip.messages.length - 1 && <div className={styles.choices}>
           {item.choicesTitle && <span className={styles.choicesTitle}>{item.choicesTitle}</span>}{item.choices.map((choice) =>
           <button key={choice.message} type="button" className={styles.choice} disabled={message.isPending} onClick={() => chat.ask(choice.message, false, choice.itemId ?? null)}>{choice.label}</button>)}</div>}
+        {/* `[2026-10-19 사용자 결정 — 못 찾은 장소는 직접 고르기로]` Only on the latest answer, like its choices: the edit opens on that stop (or on the add form, filled in). */}
+        {item.pick && onPick && index === trip.messages.length - 1 && <div className={styles.choices} data-pick={item.pick.mode}>
+          <button type="button" className={styles.choice} disabled={message.isPending} onClick={() => onPick(item.pick!)}>{t("직접 고르기", "Choose myself")}</button>
+          <span className={styles.undoHint}>{item.pick.mode === "add"
+            ? t("수정 화면의 일정 추가 칸에서 장소를 찾아 넣어요.", "Find the place in the edit's add form.")
+            : t("수정 화면에서 이 일정의 장소를 직접 골라요.", "Pick this stop's place yourself in the edit.")}</span></div>}
         {item.needsLocation && index === trip.messages.length - 1 && trip.messages[index - 1]?.role === "user" && <div className={styles.choices}>
           <button type="button" className={styles.choice} disabled={message.isPending || chat.locating} onClick={() => void chat.askWithLocation(trip.messages[index - 1].text)}><LocateFixed size={15} strokeWidth={1.6} aria-hidden="true" />{chat.locating ? t("위치 찾는 중…", "Finding your location…") : t("내 위치 알려 주고 다시 묻기", "Share my location and ask again")}</button>
-          <span className={styles.undoHint}>{t("누르면 브라우저가 위치 권한을 물어요. 위치는 이 질문에 답하는 데 써요.", "Your browser will ask first. The location is used to answer this question.")}</span></div>}</article>)}
+          <span className={styles.undoHint}>{t("누르면 브라우저가 위치 권한을 물어요. 위치는 이 질문에 답하는 데 써요.", "Your browser will ask first. The location is used to answer this question.")}</span></div>}</article>;
+      })}
+      {notices.error && <p className={styles.error} role="alert">{t("여행 알림을 읽지 못했어요.", "Travel notices could not be loaded.")}
+        <button type="button" className={styles.choice} onClick={() => void notices.refetch()}>{t("알림 다시 읽기", "Reload notices")}</button></p>}
+      <ChatProposalChoices key={trip.id} trip={trip} notices={notices.data ?? []} />
       {chat.locationQuestion !== null && <OptionalConsentPrompt code="location" why={t("내 위치로 답하려면 개인위치정보 수집·이용에 동의해야 해요.", "To answer from where you are, we need your agreement to the personal location item.")}
         onAgreed={() => void chat.askWithLocation(chat.locationQuestion!)} onCancel={() => chat.setLocationQuestion(null)} />}
       {chat.locationError && <p className={styles.error} role="alert">{chat.locationError}</p>}
@@ -202,7 +221,7 @@ export function ChatPane({ trip, chat, day, dayText, selected, logRef, active }:
       <button type="button" className={styles.prompt} disabled={!selected || message.isPending} onClick={() => selected && chat.ask(t(`${selected.date} ${selected.time} ${selected.title} 다음 일정을 알려 주세요.`, `What comes after ${selected.title} on ${selected.date} at ${selected.time}?`))}>{t("다음 일정", "Next stop")}</button>
       <button type="button" className={styles.prompt} disabled={message.isPending} onClick={() => chat.ask(t(`${day} 예약 표시를 알려 주세요.`, `Show booking notes for ${day}.`))}>{t("예약 표시", "Booking notes")}</button>
     </div>
-    <p className={styles.chatNote}>{t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")}</p>
+    <p className={styles.chatNote}>{t("채팅으로 일정을 바꾸면 여행계획서에 새 판이 생겨요. 숙소 · 항공 · 예약한 일정은 채팅으로 바꾸지 않아요 — 「일정 수정」에서 고쳐 주세요.", "Changes made in chat create a new version of your trip plan. Lodging, flights and booked stops are not changed from chat — use “Edit itinerary”.")}</p>
   </>;
 }
 

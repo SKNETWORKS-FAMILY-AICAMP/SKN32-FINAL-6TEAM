@@ -1,4 +1,5 @@
 import { translator, type Language, type Translate } from "../i18n";
+import { refusalSentence } from "./error-text";
 import { beginWait, CALL_STEPS, SHOWN_STEPS } from "./waiting";
 
 /** A refusal from the live server — its own code (`stale_revision`, `intake_incomplete` …) and body. */
@@ -11,7 +12,7 @@ export class LiveError extends Error {
 }
 
 /**
- * Live connection to the triPilot server (`/v1/web/*`).
+ * Live connection to the guguroute server (`/v1/web/*`).
  *
  * ★`[2026-10-04 사용자 결정 · 서버 D-CS-011]` The browser no longer holds a key. The server gives a session cookie (HttpOnly — no script of
  *   this page can read it), and every call carries it (`credentials: "include"`). A write also carries `X-CSRF-Token`, the token the
@@ -30,6 +31,7 @@ export type SessionKind = "guest" | "member";
 /** The session the server gave this browser. `csrf` is memory-only. */
 export interface WebSession {
   kind: SessionKind;
+  registrationPending?: boolean;
   csrf: string;
   /** Guests only: hours without use after which the session (and its trips) go away. */
   guestIdleHours: number | null;
@@ -87,6 +89,7 @@ export function sessionOf(body: unknown): WebSession | null {
   if (!csrf || !kind) return null;
   const hours = Number(entry.guest_idle_hours);
   return {
+    ...(entry.registration_required === true ? { registrationPending: true } : {}),
     kind, csrf, guestIdleHours: kind === "guest" && Number.isFinite(hours) && hours > 0 ? hours : null,
     idleExpiresAt: text(entry.idle_expires_at), absoluteExpiresAt: text(entry.absolute_expires_at),
   };
@@ -148,18 +151,23 @@ function safePath(url: string): string {
   try { return new URL(url).pathname; } catch { return url; }
 }
 
-/** A non-2xx answer → the server's own code and sentence (`{"error": {...}}`), with when a limit opens again. */
+/**
+ * A non-2xx answer → the server's code (`{"error": {...}}`) and the customer's sentence for it, with when a limit opens again.
+ * `[2026-10-17 사용자 승인 · ST4F-611 문구 대조표 113]` The server's own sentence is shown only when it is already polite Korean on
+ * the Korean screen; otherwise the web's sentence for the code (`error-text.ts`). The server's sentence stays in `detail.message`.
+ */
 export async function refusal(response: Response, language: Language): Promise<LiveError> {
   const t = translator(language);
   let code = `HTTP_${response.status}`;
-  let message = t(`요청을 처리하지 못했어요 (${response.status}).`, `The request failed (${response.status}).`);
+  let serverMessage: string | undefined;
   let detail: unknown;
   try {
     const body = await response.json() as { error?: { code?: string; message?: string } & Record<string, unknown> };
     if (body.error?.code) code = body.error.code;
-    if (body.error?.message) message = body.error.message;
+    if (typeof body.error?.message === "string") serverMessage = body.error.message;
     detail = body.error;
   } catch { /* not JSON */ }
+  let message = refusalSentence(code, serverMessage, detail, language);
   // ★A limit says when it opens again (`Retry-After`, or `retry_after_seconds` in the body) — say it, so the
   //   customer is not left guessing whether to press again.
   if (["usage_limit", "service_daily_cap", "too_many_sessions"].includes(code)) {

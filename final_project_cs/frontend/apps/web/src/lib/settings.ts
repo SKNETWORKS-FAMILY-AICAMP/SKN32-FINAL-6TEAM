@@ -2,7 +2,7 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { languages, translator, type Language, type Translate } from "./i18n";
-import { settingsStorageKey as storageKey, themes, type Theme } from "./theme";
+import { darkQuery, settingsStorageKey as storageKey, themes, type Theme } from "./theme";
 
 export interface Settings {
   language: Language;
@@ -16,7 +16,8 @@ export interface Settings {
 
 // `[2026-10-03 사용자 결정]` 기본 언어는 한국어다 — 처음 여는 사람에게 한국어로 보인다(바꾸면 이 브라우저가 기억한다).
 // `[2026-10-07 사용자 결정]` 「플로팅 버튼 사용」(여행 화면 하단 탭 ↔ 떠 있는 버튼)은 없앴다 — 새 여행 화면에는 하단 탭이 없다. 옛 버전이 저장한 `navigation` 은 읽지 않는다.
-const defaults: Settings = { language: "ko", theme: "green", skipAnimation: false };
+// `[2026-10-17 사용자 결정]` 테마는 기본으로 기기의 라이트 · 다크 설정을 따른다(「system」) — 옛 「화이트」를 저장한 사람도 여기로 온다.
+const defaults: Settings = { language: "ko", theme: "system", skipAnimation: false };
 const listeners = new Set<() => void>();
 let current: Settings | null = null;
 
@@ -51,6 +52,17 @@ export function updateSettings(next: Partial<Settings>) {
 /** Server rendering and hydration use the defaults; the saved choice applies right after. */
 export function useSettings(): Settings {
   return useSyncExternalStore(subscribe, read, () => defaults);
+}
+
+function subscribeDevice(listener: () => void) {
+  const query = matchMedia(darkQuery);
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
+}
+
+/** The device's light/dark setting, following a change while the page is open. Server rendering assumes light. */
+export function useDeviceDark(): boolean {
+  return useSyncExternalStore(subscribeDevice, () => matchMedia(darkQuery).matches, () => false);
 }
 
 export function useT(): Translate {

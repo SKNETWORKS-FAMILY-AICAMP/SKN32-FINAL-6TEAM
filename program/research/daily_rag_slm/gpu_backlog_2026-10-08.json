@@ -504,8 +504,8 @@
         "training_minutes": 193.9,
         "max_gpu_gb_log": 10.6
       },
-      "hf_local": "datasets/travel/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308",
-      "gguf_local": "datasets/travel/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf",
+      "hf_local": "datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308",
+      "gguf_local": "datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf",
       "hashes_verified": true,
       "basic_evaluation": {
         "saved_archived": 835,

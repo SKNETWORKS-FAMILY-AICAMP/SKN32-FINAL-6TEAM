@@ -7,7 +7,7 @@
 
     읽은 것(코드)                                  → 담당이 읽는 열쇠                         누가 읽나
     prefer_taxi · prefer_transit · prefer_walking  → survey.priority_details.mobility        이동 판정 · 일정 짜기(`mobility/wiring.modes_from_survey`)
-      + 여행 전체 이동(「다 지하철로」 — moves scope all)
+      + 여행 전체 이동(「다 지하철로」 — moves scope all, 원문 조각에 「다 · 늘 · 주로 · 웬만하면」류가 있을 때만 — `whole_trip_said`)
     slow_pace · late_start                         → survey.pace = relaxed                   일정 짜기 밀도(`planning/survey.apply_survey`)
     food_focus · nice_restaurants (+ 원문 조각)    → constraints.meal_preference             식당 고르기(`planning/meal_pick.preference_of`)
     if_rain_indoor                                 → survey.indoor_outdoor.activity = indoor 활동 대안 순서(`activity/alternative_order`)
@@ -40,6 +40,19 @@ _PACE_PREF = ("slow_pace", "late_start")
 _FOOD_WORDS = {"food_focus": "맛있는 곳(먹는 게 중요)", "nice_restaurants": "분위기 좋은 식당"}
 _REST_PREF = ("avoid_walking", "elderly_friendly", "avoid_stairs")
 _CLOCK = re.compile(r"^(finish_by|start_after):(([01]\d|2[0-3]):[0-5]\d)$")
+#: 여행 전체를 말하는 낱말 — 띄어 쓴 한 낱말(「다 지하철로」의 「다」 · 「늘」)과 글 안 어디에 있어도 되는 말(「주로」 · 「웬만하면」)
+_WHOLE_TRIP_WORDS = frozenset({"다", "늘", "모두", "전부", "항상", "내내", "줄곧", "언제나"})
+_WHOLE_TRIP_PHRASES = ("주로", "웬만하면", "웬만해선", "웬만해서는", "대부분", "여행 내내", "모든 이동", "이동은 다")
+
+
+def whole_trip_said(quote: Any) -> bool:
+    """원문 조각이 여행 전체의 이동을 말하나 — 「다 지하철로」 · 「웬만하면 택시」는 예, 「택시로 이동」 · 「다녀와요」는 아니다."""
+    text = str(quote or "")
+    if any(phrase in text for phrase in _WHOLE_TRIP_PHRASES):
+        return True
+    return any(token in _WHOLE_TRIP_WORDS for token in re.split(r"[\s,.!?·~()\[\]「」'\"]+", text))
+
+
 #: 원문 조각을 식당 취향 문장에 붙일 때의 상한 — 선택기 문장(`meal_pick.preference_of` 의 설문 원문 200자)과 같다
 MEAL_PREFERENCE_MAX = 200
 
@@ -89,7 +102,9 @@ def proposals(values: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
             elif code in _REST_PREF:
                 put("constraints.mobility_ease", "needs_rest", code, quote)
         for move in value.get("moves") or []:
-            if move.get("scope") == "all" and move.get("mode") in _MOVE_MODE:
+            # ★`[2026-10-19 설계 §4]` 여행 전체 수단은 원문 조각에 「다 · 늘 · 주로 · 웬만하면」 같은 말이 있을 때만 받는다 — 한 구간 「택시로 이동」을
+            #   여행 내내 택시로 읽은 사례(x600 서버 2건)가 이동 질문을 빼고 설문을 채우지 않게. 구간 수단은 이동 판정에만 쓴다
+            if move.get("scope") == "all" and move.get("mode") in _MOVE_MODE and whole_trip_said(move.get("quote")):
                 put("survey.priority_details.mobility", [_MOVE_MODE[move["mode"]]], f"move_all:{move['mode']}", move.get("quote"),
                     merge_list=True)
         for cond in value.get("conditions") or []:
@@ -220,4 +235,5 @@ def apply(constraints: Mapping[str, Any] | None) -> dict[str, Any]:
     return out
 
 
-__all__ = ["CARRY_KEY", "FILLED_KEY", "LABELS", "agent_values", "apply", "carry", "proposals", "status", "value_text", "view"]
+__all__ = ["CARRY_KEY", "FILLED_KEY", "LABELS", "agent_values", "apply", "carry", "proposals", "status", "value_text", "view",
+           "whole_trip_said"]

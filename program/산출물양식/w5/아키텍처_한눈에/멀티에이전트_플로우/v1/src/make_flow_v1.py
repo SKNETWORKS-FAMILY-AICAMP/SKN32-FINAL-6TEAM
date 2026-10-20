@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 멀티 에이전트 흐름 v1 — 참고 구조(층마다 「받는 것 · 돌려주는 것」, 도구 층, 검사 · 복구 순환)의 모양으로
+"""guguroute 멀티 에이전트 흐름 v1 — 참고 구조(층마다 「받는 것 · 돌려주는 것」, 도구 층, 검사 · 복구 순환)의 모양으로
 우리 실제 구조를 그린다. 2026-10-02.
 
     python make_flow_v1.py   → ../triPilot_멀티에이전트_플로우_v1.html · ../triPilot_멀티에이전트_플로우_v1.txt
@@ -126,7 +126,7 @@ def fig1():
     RX = CX + CW + 50          # 오른쪽 기둥(도구 · 복구)
     RW = W - RX - 30
     text(40, 40, "그림 1 · 사건 하나가 에이전트를 거쳐 새 일정이 되기까지 — 여행이 끝날 때까지 되풀이", "svg-label")
-    text(40, 74, "triPilot 멀티 에이전트 흐름", "title")
+    text(40, 74, "guguroute 멀티 에이전트 흐름", "title")
     text(40, 98, "2026-10-02 · final_project_cs 코드 기준 · 가운데 = 코어(매니저)와 에이전트 · 오른쪽 = 조회 도구 층 · 금색 점선 = 되풀이(루프) · 붉은 점선 = 못 했을 때", "svg-note")
 
     # 왼쪽: 깨우는 것
@@ -265,7 +265,7 @@ def fig1():
     H = y7b + 70
     text(40, H - 30, "출처: final_project_cs — 감시 trip_watch_cases.py · 처리 건 case_intake.py · 담당 routing.py · registry.py · 일감 contracts.py TeamTask · 에이전트 dining/activity/mobility team.py · itinerary_team.py ·", "svg-note")
     text(40, H - 12, "결과 검사 contracts.py TeamResult · controller.py _reject_unverified · 적용 itinerary_actions.py · 설문 pending.py · 알림 messaging/worker.py · notify/discord.py (줄 근거: w5/코어_에이전트_입출력 v3)", "svg-note")
-    return svg_wrap(W, H, "triPilot 멀티 에이전트 흐름")
+    return svg_wrap(W, H, "guguroute 멀티 에이전트 흐름")
 
 
 # ───────────────────────── 그림 2 — 도구 · 데이터 층 ─────────────────────────
@@ -444,7 +444,7 @@ def main():
     art = ascii_art()
     (OUT / "triPilot_멀티에이전트_플로우_v1.txt").write_text(art + "\n", encoding="utf-8")
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot 멀티 에이전트 흐름</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap"><style>
+<title>guguroute 멀티 에이전트 흐름</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap"><style>
 body{{margin:0;background:var(--paper);color:var(--ink);font-family:{SANS};line-height:1.6}}
 main{{max-width:1600px;margin:0 auto;padding:24px 16px 60px}}
 h1{{font-size:28px;margin:0 0 6px}} h2{{font-size:21px;margin:34px 0 8px;border-bottom:1px solid var(--rule-solid);padding-bottom:6px}}
@@ -455,7 +455,7 @@ pre{{background:var(--card);border:1px solid var(--rule-solid);border-radius:6px
 {CSS}
 @media print{{.diagram{{break-inside:avoid;overflow:visible}}.diagram svg{{min-width:0 !important;max-height:250mm;width:auto !important;max-width:100%;margin:0 auto}}pre{{font-size:9px}}}}
 </style></head><body><main>
-<h1>triPilot 멀티 에이전트 흐름 v1</h1>
+<h1>guguroute 멀티 에이전트 흐름 v1</h1>
 <p class="note">2026-10-02 · 참고 구조(층마다 받는 것 · 돌려주는 것, 도구 층, 검사 · 복구 순환)의 모양으로 우리 실제 구조를 그렸다 · 사실 기준: final_project_cs 코드 · 줄 근거는 w5/코어_에이전트_입출력 v3</p>
 <div class="lead">일정이 깨지면 코어가 처리 건을 열고, 담당 에이전트 하나(요식 · 액티비티 · 이동)에게 일감을 줍니다. 에이전트는 조회 도구로만 값을 읽어 다시 점검하고, 대체 후보를 차례로 다시 점검해 통과한 안을 <b>제안</b>으로 돌려줍니다. 코어가 그 제안을 코드로 검사하고, 통과하면 새 일정 판과 알림 1번을 냅니다. 이 일을 감시(1분) · 새벽 점검 · 신고가 여행이 끝날 때까지 되풀이합니다.<br>
 참고 구조와 다른 점 셋 — <b>판정은 AI 가 아니라 코드</b>가 합니다(세 에이전트는 AI 모델을 부르지 않음) · <b>검사와 복구는 별도 에이전트가 아니라 코어</b>가 합니다 · <b>에이전트끼리 서로 부르지 않습니다</b>(코어를 거침).</div>

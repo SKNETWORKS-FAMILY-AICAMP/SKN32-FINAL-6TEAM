@@ -33,7 +33,7 @@ FORBIDDEN = [
     (r"webhooks/|discord(?:app)?\.com/api", "웹훅 주소"),
     (r"\w@\d", "계정@주소 모양"),
     (r"★|☆", "별표 기호"),
-    (r"A-COP(?!ilot)", "옛 제품 이름(A-COP) — 제품은 triPilot, 팀은 A-COPilot"),
+    (r"A-COP(?!ilot)", "옛 제품 이름(A-COP) — 제품은 guguroute, 팀은 A-COPilot"),
 ]
 # 영문·숫자 바로 뒤 조사를 띄어 쓴 곳(「Case 를」) — 제출물은 붙인다(「Case를」).
 JOSA_SPACE = re.compile(r"[A-Za-z0-9)\]] (?:을|를|이|가|은|는|에|에서|에게|의|로|으로|와|과|도|만)(?=[\s.,·)]|$)")

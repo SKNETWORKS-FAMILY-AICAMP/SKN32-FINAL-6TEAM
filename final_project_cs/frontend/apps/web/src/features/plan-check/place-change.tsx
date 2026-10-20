@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
 import { ro } from "@/lib/josa";
 import { useT } from "@/lib/settings";
-import type { PlacePhoto, PlanCandidate, PlanItem } from "./model";
+import type { PlacePhoto, PlanCandidate, PlanCandidateLeg, PlanItem } from "./model";
 import { Act, Checks, letter, placeKindLabel, placeMeta, SourceTag, VerdictPill } from "./parts";
 import styles from "./plan-check.module.css";
 
@@ -27,6 +27,11 @@ export interface ChangeSession {
  */
 export function candidateNoteText(notes: readonly string[] | undefined, t: Translate): string | null {
   const has = (note: string) => notes?.includes(note);
+  if (has("verification_unavailable")) return t("실내 후보의 안전·운영시간·이동을 확인하지 못했어요. 일정은 그대로예요. 다시 확인하거나 직접 장소를 찾아 주세요.", "Indoor options could not be verified for safety, hours and travel. Your plan is kept. Check again or search for a place.");
+  if (has("indoor_with_coverage_warning")) return t("교통 통제 자료 일부를 확인하지 못한 실내 후보예요. 확인한 범위에서 위험은 발견되지 않았지만, 출발 전에 도로 상황을 다시 확인해 주세요.", "Some traffic-control data is unavailable for these indoor options. No risk was found in the available data; check road conditions again before leaving.");
+  if (has("protected_schedule")) return t("예약·고정 일정은 그대로 보존했어요. 고정 조건을 확인한 뒤 직접 수정해 주세요.", "The booked or pinned stop was kept. Check its constraints before editing it.");
+  if (has("no_verified_alternative")) return t("확인한 실내 후보 중 안전·운영시간·이동 조건을 모두 만족하는 곳이 없었어요. 일정은 그대로예요. 다시 확인하거나 직접 장소를 찾아 주세요.", "None of the checked indoor options met safety, hours and travel conditions. Your plan is kept. Check again or search for a place.");
+  if (has("verified_indoor")) return t("안전·운영시간·이동을 확인한 실내 대안이에요. 표시된 방문 시각도 함께 적용돼요.", "These indoor alternatives were checked for safety, hours and travel. The shown visit time is applied with the place.");
   if (has("booked_needs_name")) return t("예약하신 곳이라 다른 후보를 권하지 않아요 · 위 검색창에 예약한 곳의 이름을 쓰면 바꿔요", "This is booked, so no other places are offered · type the booked place's name above to set it");
   if (has("no_candidates_in_area")) return t("글에 적힌 지역 둘레에 같은 종류의 장소가 없어요 · 위 검색창에서 찾아 보세요", "Nothing of the same kind around the area you wrote · search above");
   if (has("no_same_kind")) return t("같은 종류의 후보가 없어요 · 위 검색창에서 찾아 바꿀 수 있어요", "No place of the same kind · search above to change it");
@@ -151,6 +156,27 @@ export function kindNote(current: PlanItem, candidate: PlanCandidate, t: Transla
   return null;
 }
 
+/**
+ * `[2026-10-19 사용자 지시]` The way in from the stop before and out to the stop after. While the server still measures one it says so with the
+ * straight-line guess (「경복궁에서 오는 길 계산 중 · 어림 15분」); measured, it is the way and the minutes (「버스 18분 · 12분 여유」).
+ */
+function LegLines({ candidate }: { candidate: PlanCandidate }) {
+  const t = useT();
+  const legs = candidate.legs;
+  if (!legs || (!legs.before && !legs.after)) return null;
+  const line = (side: "before" | "after", leg: PlanCandidateLeg) => {
+    const pending = candidate.pending?.[side] === true;
+    const where = side === "before" ? t(`${leg.with}에서 오는 길`, `From ${leg.with}`) : t(`${leg.with}까지 가는 길`, `To ${leg.with}`);
+    if (pending) return <>{<span className={styles.spinner} aria-hidden />}{t(`${where} 계산 중 · 어림 ${leg.minutes}분`, `${where}: working it out · about ${leg.minutes} min`)}</>;
+    const way = leg.estimated ? t(`직선 어림 ${leg.minutes}분`, `about ${leg.minutes} min (straight line)`) : `${leg.modeLabel} ${t(`${leg.minutes}분`, `${leg.minutes} min`)}`;
+    const spare = side === "before" ? "" : leg.slackMin >= 0 ? t(` · ${leg.slackMin}분 여유`, ` · ${leg.slackMin} min to spare`) : t(` · ${-leg.slackMin}분 늦어요`, ` · ${-leg.slackMin} min late`);
+    return <>{`${where} · ${way}${spare}`}</>;
+  };
+  return <ul className={styles.legLines} aria-live="polite">
+    {(["before", "after"] as const).map((side) => legs[side] && <li key={side} data-pending={candidate.pending?.[side] || undefined}>{line(side, legs[side]!)}</li>)}
+  </ul>;
+}
+
 function CandidateCard({ candidate, current, index, active, applyWhy, explain, onApply }: {
   candidate: PlanCandidate; current: PlanItem; index: number; active: boolean; applyWhy: string | null; explain: (why: string) => void; onApply: () => void;
 }) {
@@ -172,7 +198,10 @@ function CandidateCard({ candidate, current, index, active, applyWhy, explain, o
     </div>
     <div className={styles.nameRow}><h4 id={headingId} className={styles.changeName}>{candidate.name}</h4><SourceTag origin={candidate.info?.origin} /></div>
     {placeMeta(candidate.info, t) && <p className={styles.changeSub}>{placeMeta(candidate.info, t)}</p>}
-    {candidate.reason && <p className={styles.changeReason}>{candidate.reason}</p>}
+    {candidate.pending?.reason
+      ? <p className={styles.changeReason} data-pending aria-live="polite">{t("추천 이유를 정리하고 있어요…", "Putting the reason into words…")}</p>
+      : candidate.reason && <p className={styles.changeReason}>{candidate.reason}</p>}
+    <LegLines candidate={candidate} />
     {note && <p className={styles.kindNote} data-mismatch={note.mismatch || undefined}>{note.text}</p>}
     {candidate.checks.length
       ? <Checks rows={candidate.checks} />

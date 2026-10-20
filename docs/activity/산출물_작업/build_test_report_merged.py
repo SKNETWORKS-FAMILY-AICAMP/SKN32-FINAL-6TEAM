@@ -114,7 +114,7 @@ set_cell(cells[1][1], "2026. 10. 14.")
 set_cell(cells[2][1], "https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM (final_project_cs/, 브랜치 role-activity-b)")
 
 # ── 1. 테스트 개요 ───────────────────────────────────────────
-set_p(K[10], "이 보고서는 triPilot 멀티 에이전트 시스템 가운데 Activity(활동) 에이전트를 검증한 결과이다. 검증 항목은 다음과 같다. "
+set_p(K[10], "이 보고서는 guguroute 멀티 에이전트 시스템 가운데 Activity(활동) 에이전트를 검증한 결과이다. 검증 항목은 다음과 같다. "
               "① 판정 정확성 — 성립·취소·휴무·운영시간·재난·실내외 판정이 규칙대로 나오고 「모름」을 「성립」이나 「휴무 아님」으로 바꾸지 않는다. "
               "② 판정 LLM의 안전성 — shadow로 동작할 때 고객 결과를 바꾸지 않고, llm 모드에서는 조심하는 쪽 값만 받으며 인용·출처 검증을 통과하지 못하면 unknown이 된다. "
               "③ 에이전트 간 협업 — Core(분류·라우팅·Controller)를 거쳐 Activity에 도달하고, 감시 루프의 묶음 재계획에서 식당·이동 항목과 하나의 초안·버전·알림을 만든다. "
@@ -261,7 +261,7 @@ set_p(K[40], "개선 방향(결정 D-CS-015 개정 2): 휴무·재난은 규칙�
 
 # ── 4. 시나리오 기반 통합 테스트 ──────────────────────────────
 set_p(K[44], "4.1 워크플로우 실행 검증 (Controller · Case 상태기계)")
-set_p(K[45], "triPilot은 LangGraph를 쓰지 않는다. 워크플로우는 Controller와 12상태 Case 상태기계(new → classifying → routing → running → resolved / waiting_* / resuming / escalated …)가 제어한다.")
+set_p(K[45], "guguroute은 LangGraph를 쓰지 않는다. 워크플로우는 Controller와 12상태 Case 상태기계(new → classifying → routing → running → resolved / waiting_* / resuming / escalated …)가 제어한다.")
 set_p(K[46], "시나리오 A — 감시 루프의 묶음 재계획(tests/scenario/test_watch_batch.py): ① 감시 루프가 한 여행의 항목 두 개가 깨진 것을 감지한다. ② 여행당 Case 1건을 연다. "
               "③ Activity가 조정자가 되어 활동 → 식당 → 이동 순으로 앞 초안을 다음 항목에 넘긴다. ④ 합친 초안을 전체 재판정하고 새 버전 1개 + 알림 1건으로 적용한다.")
 set_p(K[47], "시나리오 B — 실내외를 모르는 활동에 날씨 사건(tests/e2e/test_indoor_unknown_consent.py): 실내외를 모르는 장소에 날씨 사건이 걸리면 Activity는 대체안을 계산하지 않고 「바꿀까요?」만 묻는다. "

@@ -1,5 +1,6 @@
 import type { Coordinates } from "@/features/map/model";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
+import type { ItemRisk } from "@/lib/live/risks";
 
 /**
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
@@ -13,7 +14,7 @@ import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 /** One check's result (mockup `result`): passed · filled in by the server · warning · must fix · not known yet · not checked yet. */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pending";
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
-export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival";
+export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival" | "risk";
 export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
 /** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
 export interface Reread { field: "title" | "booking_no"; current: string; other: string }
@@ -38,6 +39,7 @@ export interface PlaceInfo {
 }
 
 export interface PlanItem {
+  risk?: ItemRisk | null;
   id: string;
   day: number;
   /** "YYYY-MM-DD", or "" when the server has no date for it. */
@@ -87,6 +89,11 @@ export interface PlanItem {
   fixedReason?: "past" | "overnight" | "no_place" | "kind" | null;
   /** `[2026-10-15 사용자 결정 — 연결 유지 + 안내]` Tied to a vendor's booking: unlocking it says the booking is changed with the vendor (`vendor_booking`). */
   vendorBooking?: boolean;
+  /**
+   * `[2026-10-19 사용자 결정 — 못 찾은 장소]` The server could not find this stop's place and asks (`prefill.questions[]` `kind: "place_not_found"`): the card shows `question` as it is,
+   * its candidates, 「직접 고르기」 and 「장소 없이」. `blocked` = the lookup was blocked and searched once more. Absent once the stop has a place or 「장소 없음」.
+   */
+  unfound?: { question: string; blocked: boolean };
 }
 
 /**
@@ -94,6 +101,8 @@ export interface PlanItem {
  * a search. `checks` are this place checked at the stop's time (empty when they have not been).
  */
 export interface PlanCandidate {
+  risk?: ItemRisk | null;
+  proposedTime?: { date: string | null; startsAt: string | null; endsAt: string | null };
   id: string;
   name: string;
   source: "candidate" | "search";
@@ -108,7 +117,13 @@ export interface PlanCandidate {
   /** What kind of stop the place makes (`dining` · `activity`) when the server says so — picked for a stop of another kind, the kind is sent with it. */
   placeKind?: string | null;
   reason?: string | null;
+  /** `[2026-10-19]` The way in from the stop before / out to the stop after (whose stop, minutes, the way, a straight-line guess or not). */
+  legs?: { before: PlanCandidateLeg | null; after: PlanCandidateLeg | null };
+  /** `[2026-10-19]` While the live answer works the card out: the way in / out still being measured, the model's reason still being written. */
+  pending?: { before: boolean; after: boolean; reason: boolean };
 }
+
+export interface PlanCandidateLeg { with: string; minutes: number; modeLabel: string; estimated: boolean; slackMin: number }
 
 /** The way from one place to the next on the same day. */
 export interface PlanMove {
@@ -152,6 +167,9 @@ export type PlanStage = "received" | "reading" | "checking" | "done";
 export const STAGES: readonly PlanStage[] = ["received", "reading", "checking", "done"];
 
 export interface PlanCheckView {
+  risksAvailable?: boolean;
+  riskMode?: string | null;
+  riskCheckedAt?: string | null;
   /** 이동 후보의 이전 판 상태를 폐기할 때 쓰는 실제 접수 revision. */
   revision?: number;
   /** 이번 접수의 응답에 있는 호출 상품만 표시합니다. */

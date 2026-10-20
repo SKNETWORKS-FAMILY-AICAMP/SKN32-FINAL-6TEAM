@@ -2,10 +2,12 @@ import { compareItems, streamedReview } from "@/features/intake-review/stream-mo
 import type { IntakeView } from "@/lib/live/intake";
 import { modeChoiceOf } from "@/lib/live/move-options";
 import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
+import { itemRiskOf, problemText, type ItemRisk } from "@/lib/live/risks";
+import { proposedTimeOf } from "./risk-candidate-edits";
 import type { StreamLine, StreamState } from "@/lib/live/intake-events";
-import type { Candidate, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
+import type { Candidate, CandidateLeg, CheckLine, ItemRow, MoveRow, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
-import type { CheckRow, PlaceInfo, PlanCandidate, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
+import type { CheckRow, PlaceInfo, PlanCandidate, PlanCandidateLeg, PlanCheckView, PlanItem, PlanLine, PlanMove, PlanStage, PrefillNotes, Reread, Verdict } from "./model";
 
 /**
  * The plan-check screen's data from the server's own check (`review`, `wiki/external/rest-endpoints.md` 「확인 화면 검사 …」).
@@ -55,13 +57,16 @@ export function isLodgingReviewItem(item: ReviewItem): boolean {
 function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanItem {
   // The place the customer picked names the card; the words they wrote stay for the editor and as a small line under it.
   const picked = item.place_state === "customer" && item.place?.name && item.place.name !== item.title ? item.place.name : null;
+  const risk = itemRiskOf(item.risk);
+  if (risk) { risk.itemId = item.id; risk.title = picked ?? item.title; }
   return {
     id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "", ...(item.end_date ? { endDate: item.end_date } : {}),
     title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none", kind: item.kind ?? item.place?.kind ?? null,
     ...(isLodgingReviewItem(item) ? { displayKind: "lodging" } : {}),
     ...(item.lodging_group ? { lodgingGroup: { ...item.lodging_group, place: item.lodging_group.place?.name ?? null } } : {}),
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
-    checks: (item.rows ?? []).map(row), rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
+    checks: [...(item.rows ?? []).filter((line) => line.row !== "risk").map(row), ...riskChecks(risk)], risk,
+    rereads: rereadsOf(item), verdict: verdictOf(item.status), locked: item.locked, booked: item.booked ?? null, info, suggestion: null,
     ...(item.vendor_booking ? { vendorBooking: true } : {}),
   };
 }
@@ -102,8 +107,30 @@ export function viewOfReview(base: PlanCheckView, review: ReviewShape, stage: Pl
  */
 export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, infos?: Readonly<Record<string, PlaceInfo>>): PlanCheckView | null {
   if (!intake.review) return null;
-  return viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing),
-    prefill: prefillNotesOf(intake) }, intake.review, "done", infos, filledReasons(intake));
+  const view = viewOfReview({ ...base, revision: intake.revision, title: intake.check?.title ?? null, taxiPricing: webTaxiPricingOf(intake.review.taxi_pricing),
+    prefill: prefillNotesOf(intake), risksAvailable: intake.review.risk_schema_version === 1,
+    riskMode: intake.review.risk_mode, riskCheckedAt: intake.review.risk_checked_at }, intake.review, "done", infos, filledReasons(intake));
+  const unfound = unfoundQuestions(intake);
+  return unfound.size ? { ...view, items: view.items.map((item) => withUnfound(item, unfound.get(item.id))) } : view;
+}
+
+/**
+ * `[2026-10-19 사용자 결정 — 못 찾은 장소는 후보 보이고 묻기]` The questions about a stop whose place was not found (`prefill.questions[]` `kind: "place_not_found"`), by the check's stop id.
+ * Only those that name a stop of the check — the card of that stop carries the question; one that names none stays in the note above the list.
+ */
+export function unfoundQuestions(intake: Pick<IntakeView, "prefill"> & { review?: { items: readonly { id: string }[] } | null }): Map<string, { question: string; blocked: boolean }> {
+  const ids = new Set((intake.review?.items ?? []).map((item) => item.id));
+  const out = new Map<string, { question: string; blocked: boolean }>();
+  for (const entry of intake.prefill?.questions ?? []) {
+    if (entry?.kind !== "place_not_found" || typeof entry.item !== "string" || !ids.has(entry.item) || typeof entry.question !== "string" || !entry.question) continue;
+    if (!out.has(entry.item)) out.set(entry.item, { question: entry.question, blocked: entry.blocked === true });
+  }
+  return out;
+}
+
+/** A stop that has a place now (picked, or 「장소 없음」) is not asked about any more, whatever the record of the first fill still says. */
+function withUnfound(item: PlanItem, unfound: { question: string; blocked: boolean } | undefined): PlanItem {
+  return unfound && !item.coordinates && !item.noPlace ? { ...item, unfound } : item;
 }
 
 /**
@@ -111,7 +138,7 @@ export function reviewResultOf(intake: ReviewedIntakeView, base: PlanCheckView, 
  * Only stops the server names in `prefill.filled`; a stop the customer changed afterwards keeps the line until the server drops it.
  */
 function withFilled(item: PlanItem, reason: string | undefined): PlanItem {
-  return reason ? { ...item, checks: [{ kind: "place", result: "filled", text: `우리가 채움 · ${reason}` }, ...item.checks] } : item;
+  return reason ? { ...item, checks: [{ kind: "place", result: "filled", text: `먼저 채움 · ${reason}` }, ...item.checks] } : item;
 }
 
 export function filledReasons(intake: Pick<IntakeView, "prefill">): Map<string, string> {
@@ -121,8 +148,12 @@ export function filledReasons(intake: Pick<IntakeView, "prefill">): Map<string, 
 }
 
 /** The note above the list: questions only the traveller can answer, and the traveller's own words read as a move, a condition or a preference. Null when there is nothing to say. */
-export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources"> & Partial<Pick<IntakeView, "check">>): PrefillNotes | null {
-  const questions = [...new Set((intake.prefill?.questions ?? []).map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
+export function prefillNotesOf(intake: Pick<IntakeView, "prefill" | "sources"> & Partial<Pick<IntakeView, "check">> & { review?: { items: readonly { id: string }[] } | null }): PrefillNotes | null {
+  // `[2026-10-19]` A question about a stop's place not found is asked on that stop's card, not here.
+  const onCards = new Set(unfoundQuestions(intake).keys());
+  const questions = [...new Set((intake.prefill?.questions ?? [])
+    .filter((entry) => !(entry?.kind === "place_not_found" && typeof entry.item === "string" && onCards.has(entry.item)))
+    .map((entry) => entry?.question).filter((text): text is string => typeof text === "string" && text.length > 0))];
   const understood = [...new Set(intake.sources.flatMap((source) => {
     const read = source.understanding;
     if (!read) return [];
@@ -172,14 +203,33 @@ export function streamingViewOf(intake: IntakeView, stream: StreamState, infos?:
 
 /** Candidates → the change screen's cards. `distance.from` is the nearby stop the distance was measured from. */
 export function planCandidate(candidate: Candidate, itemId: string, source: PlanCandidate["source"], info: PlaceInfo | null): PlanCandidate {
+  const risk = itemRiskOf(candidate.risk);
+  const proposedTime = proposedTimeOf(candidate);
+  const timing = proposedTime ? [proposedTime.date, `${proposedTime.startsAt}${proposedTime.endsAt ? `–${proposedTime.endsAt}` : ""}`].filter(Boolean).join(" · ") : null;
+  const reason = [candidate.reason?.trim(), timing].filter(Boolean).join(" · ");
   return {
     id: `${itemId}:${candidate.place.ref ?? candidate.place.name}:${candidate.rank}`,
     name: candidate.place.name, source, rank: source === "candidate" ? candidate.rank : null,
     distance: typeof candidate.distance_m === "number" && candidate.reference ? { km: candidate.distance_m / 1000, from: candidate.reference } : null,
     coordinates: located(candidate.place) ? { lat: candidate.place.latitude, lng: candidate.place.longitude } : null,
-    info, checks: candidate.rows.map(row),
+    info, checks: [...candidate.rows.filter((line) => line.row !== "risk").map(row), ...riskChecks(risk)], risk,
+    ...(proposedTime ? { proposedTime } : {}),
     ...(candidate.basis ? { basis: candidate.basis } : {}),
     ...(candidate.basis === "meal_inferred" ? { placeKind: "dining" } : candidate.place.kind === "dining" || candidate.place.kind === "activity" ? { placeKind: candidate.place.kind } : {}),
-    ...(typeof candidate.reason === "string" && candidate.reason.trim() ? { reason: candidate.reason.trim() } : {}),
+    ...(reason ? { reason } : {}),
+    ...(candidate.legs ? { legs: { before: legOf(candidate.legs.before), after: legOf(candidate.legs.after) } } : {}),
+    ...(candidate.pending ? { pending: { before: candidate.pending.before === true, after: candidate.pending.after === true, reason: candidate.pending.reason === true } } : {}),
   };
+}
+
+function legOf(leg: CandidateLeg | null | undefined): PlanCandidateLeg | null {
+  return leg ? { with: leg.with, minutes: leg.minutes, modeLabel: leg.mode_label, estimated: leg.estimated, slackMin: leg.slack_min } : null;
+}
+
+function riskChecks(risk: ItemRisk | null): CheckRow[] {
+  if (!risk) return [];
+  const text = risk.problems.map(problemText).filter(Boolean).join("; ");
+  return [{ kind: "risk", result: risk.status === "problem" ? "warn" : risk.status === "clear" ? "ok" : "unknown",
+    text: text || (risk.status === "clear" ? "확인한 위험 정보에서 겹치는 문제가 없어요"
+      : risk.reason || `확인 불가: ${risk.unknownCategories.join(" · ") || "위험 정보"}`) }];
 }

@@ -17,7 +17,7 @@ domain: travel
 | 경로 | 인증 | 뜻 |
 |---|---|---|
 | `POST /v1/web/trip-intakes` | 키 | 폼 — `text`(붙여 넣은 일정 · 채팅처럼 쓴 계획) + `files`(사진 · PDF · docx · xlsx, 종류는 **바이트로** 가린다). 곧바로 `202 {intake_id, status: reading}`, 읽기는 뒤에서 돈다(사진 한 장 ~45~60초). ★`[2026-09-30 사용자 결정 — ui 세션 전달]` **글 · 파일이 모두 비어도 거절하지 않는다** — 읽을 것이 없으니 뒤에서 읽지 않고 곧바로 `202 {status: review, stage: review}`(확인 화면 상태)다. 조회하면 `sources: []` · `check.plan.requested: false`(「짜 달라는 요청」 표시를 지어내지 않는다) · `check.ready: false` · 문제 `no_items` — 확인 화면의 「읽은 일정이 없어요 — 대신 짜 드릴까요?」 짜기 칸에서 `/plan` 으로 짜서 등록한다. 사람 확인 · 남용 방어 한도는 그대로(빈 접수도 한 건). ☆전에는 422 `empty_intake` 였다 |
-| `GET /v1/web/trip-intakes/{intake_id}` | 키 | 단계 · 원본별 줄 번호 글(`lines[].read` = 읽은 줄) · 항목(`fields` 의 값마다 근거) · `reading`(남은 줄에 모델이 가리킨 결과 — 받은 수 · 버린 인용 · 장애) · `needs_review`. ★`[2026-10-06]` `questions[]` — 로딩 중에 물을 문항(최대 3, 아래 「설문 질문」). ★`[2026-10-06 사용자 지시 — 값 변조 줄이기]` `sources[].differs: [{line, text, other, half, ratio}]` — 사진 · 스캔을 받아쓸 때 **전체 받아쓰기와 위·아래 반쪽이 같은 줄을 다르게 읽은 곳**(`line` = `lines[].no`, `text` = 전체 받아쓰기의 줄, `other` = 반쪽의 비슷한 줄). 그 줄에서 읽은 제목 · 예약번호는 `needs_review: true` + `evidence.transcription_differs{text, other, ratio, other_value}` + `note`(「사진에서 이 줄을 두 가지로 읽었어요 — … / … · 원본과 맞는 쪽을 골라 주세요」)가 붙는다(값은 그대로 — 어느 쪽이 맞는지 서버는 모른다). ★`other_value`(`[2026-10-07 uiux 요청]`) = **반쪽 받아쓰기에서 이 값이 무엇으로 읽혔나**(줄 전체가 아니라 값만 — 화면이 「지금 값 / 다른 읽기」 두 단추를 그리고 고른 값을 그 값의 칸(`items[i].title` · `booking_no`)으로 보낸다). 값이 줄 안에서 글자 그대로 안 보이거나 맞춤이 어긋나면 `null`(그때는 두 읽기 문장만 보인다). 없으면 `[]`(마이그레이션 055). **남의 접수는 404** |
+| `GET /v1/web/trip-intakes/{intake_id}` | 키 | 단계 · 원본별 줄 번호 글(`lines[].read` = 읽은 줄) · 항목(`fields` 의 값마다 근거) · `reading`(남은 줄에 모델이 가리킨 결과 — 받은 수 · 버린 인용 · 장애) · `needs_review`. ★`[2026-10-06]` `questions[]` — 로딩 중에 물을 문항(`[2026-10-19]` 계획서에서 읽은 칸은 빼고 빈 칸만 · 상한 없음 · `skipped_by_reading[]` · `questions_phase`, 아래 「설문 질문」). `[2026-10-19]` `screened` — 빈 글 · 여행과 무관한 글을 모델 읽기 전에 돌려보낸 접수(아래 「접수 입구의 빠른 거름」). ★`[2026-10-06 사용자 지시 — 값 변조 줄이기]` `sources[].differs: [{line, text, other, half, ratio}]` — 사진 · 스캔을 받아쓸 때 **전체 받아쓰기와 위·아래 반쪽이 같은 줄을 다르게 읽은 곳**(`line` = `lines[].no`, `text` = 전체 받아쓰기의 줄, `other` = 반쪽의 비슷한 줄). 그 줄에서 읽은 제목 · 예약번호는 `needs_review: true` + `evidence.transcription_differs{text, other, ratio, other_value}` + `note`(「사진에서 이 줄을 두 가지로 읽었어요 — … / … · 원본과 맞는 쪽을 골라 주세요」)가 붙는다(값은 그대로 — 어느 쪽이 맞는지 서버는 모른다). ★`other_value`(`[2026-10-07 uiux 요청]`) = **반쪽 받아쓰기에서 이 값이 무엇으로 읽혔나**(줄 전체가 아니라 값만 — 화면이 「지금 값 / 다른 읽기」 두 단추를 그리고 고른 값을 그 값의 칸(`items[i].title` · `booking_no`)으로 보낸다). 값이 줄 안에서 글자 그대로 안 보이거나 맞춤이 어긋나면 `null`(그때는 두 읽기 문장만 보인다). 없으면 `[]`(마이그레이션 055). **남의 접수는 404** |
 | `POST /v1/web/trip-intakes/{intake_id}/survey` | 키 | ★`[2026-10-06]` 로딩 중 질문의 답을 **한 문항씩 바로** 저장 `{answers: {문항 id: 선택지 id}}` → `{ok, answered[], questions_version}` — 아래 「설문 질문」 |
 | `POST /v1/web/trip-intakes/{intake_id}/edits` | 키 | 확인 화면에서 고친 값 `{revision, edits:[{source_id, field, value}]}` → **새 판**(앞 판의 값은 남는다). 칸: `items[n].title·date·starts_at·ends_at·kind·place·booking_no·removed` · `trip.title·party_size·first_day`. 장소는 `{"name":…}` 로 받아 **다시 찾고**(못 찾으면 422 `place_not_found`), `{"none": true}` 는 「장소 없음」. 낡은 판은 **409 `stale_revision`** |
 | `POST /v1/web/trip-intakes/{intake_id}/restore` | 키 | 전체 되돌리기 `{revision, restore_revision}` → 과거 완료 판의 값을 새 판으로 복원한 접수 전체 응답. 본인 접수·현재 판·원판을 검증하고 잠금/예약 보호 위반 및 검사 실패는 전체 취소한다. [복원 계약](../web-intake-restore.md) |
@@ -29,6 +29,13 @@ domain: travel
 장소(별칭 → 우리 장소 표 → 자모 오타 → 관광공사 서울 → 카카오로 이름 찾고 관광공사 재확인 → 관광공사에 없으면 카카오 값을 그 항목에만
 → 이름이 특정하지 않으면(「한강 카약」·「북한산 둘레길」) **종류가 맞는 후보 중 같은 날 앞뒤 일정에 가장 가까운 곳** — 카카오 근처 거리순 재검색 포함, 확인 필요).
 ★후보는 원문을 좁혀 찾기가 모두 실패한 뒤에만 쓴다 — 「광장시장 빈대떡」은 광장시장 + 항목 종류 식사(가게를 지어내지 않는다).
+★`[2026-10-19 계획서 진단 포인트 2]` **찾기 전에 종류와 가리키는 곳을 정한다**(`intake/landmarks.py` · 표 `config/seoul_landmarks.yaml`) — 고객 별칭 다음, 이름 찾기 앞.
+  ① **숙소** — 읽기 에이전트가 `lodging` 으로 읽었거나 원문 제목에 숙소 말(호텔 · 숙소 · 체크인 · 「○○스테이」 · 숙소 상표)이 있으면 우리 장소 표(숙소 행) → 관광공사 숙박(32) → 카카오 숙박(AD5)에서만 찾는다. 요식 원장 · 관광지 · 음식점 결과는 버리고, 하나로 못 정하면 정하지 않는다(장소 값 `content_type_id: "32"`). 끼니 말이 있어도(「롯데호텔 서울 조식」) 장소는 숙소, 항목 종류는 식사.
+  ② **이동 말** — 「택시로 이동」 · 「공항철도 타고 인천공항」(끝점이 공항 · 역 · 터미널)은 장소를 찾지 않는다. 장소 값은 `null`, 근거 `method: move_phrase`(+ `mode` · `destination`), 확인 화면은 「장소 없이 둔」 줄(`place_state: none`). 「따릉이 타고 한강」은 수단 말만 떼고 「한강」을 찾는다. `[2026-10-19 후속]` 이동 말 줄은 원문에서 바로 앞 · 뒤 일정(같은 날)이 있으면 **일정에서 빼고**(`items[n].removed`, 방법 `rule`) 그 구간의 수단 값 줄 `moves[{앞}~{뒤}].mode`(방법 `rule` — `review.picked_modes` 가 고른 수단으로 본다)을 싣는다. 화면 수단으로 옮김: 택시 → taxi · 지하철 · 전철 · 공항철도 → subway · 버스 · 리무진 · 셔틀 → bus · 걸어서 · 도보 → walk(자전거 · 렌터카 · 기차는 구간에 넣지 않는다). 앞이나 뒤가 없으면(마지막 「공항철도 타고 인천공항」) 그 시각의 장소 없는 출발로 남긴다. 읽기 에이전트가 이동의 앞뒤 장소를 비워 두면 같은 규칙으로 수단 말이 적힌 자리의 앞 · 뒤 일정 구간에 넣는다.
+  ③ **대표 장소 정답표** — 표의 별칭(남산타워 → N서울타워, 창덕궁 → 창덕궁과 후원 …)이면 정답 이름 하나로 찾고 **자료가 낸 이름이 정답과 같을 때만** 받는다. 다르면(운현궁 · 그곳의 축제 · 안의 가옥) 버리고 「찾지 못했다」로 둔다.
+  ④ **구역** — 시장(관광공사 쇼핑 38 중 이름에 「시장」 · 카카오 분류 「시장」)과 표의 거리 · 동네(인사동 · 익선동 · 성수동 카페거리 · 청계천)는 구역 그대로 두고 가게 하나로 좁히지 않는다(전에는 시장 끼니가 근처 원장 식당 하나가 됐다). 식사면 항목 종류만 식사, 구역 밖 말(「빈대떡」)이 있으면 확인 필요.
+  ⑤ 대표 장소 운영시간 — 다른 자료가 모두 비면 표의 값(출처 · 확인 날짜 포함, `source: landmark_table`). 「점포마다 다름」(광장시장)은 값을 만들지 않고 그 이유를 「모름」 대신 보인다.
+  숙소 팀 후보(숙소 비교)는 서울 사각 밖과 기준점에서 `travel.candidates.lodging_team_radius_m`(15km) 밖을 버린다 — 남는 것이 없으면 자체 고르기. [기록](../../records/reports/2026-10-19_place-kind-first.md)
 확인 화면에서 장소 이름을 고치면 별칭(`place_aliases`, 030)이 쌓여 **그 고객의** 다음 계획의 같은 말은 그 이름으로(`[2026-09-30]` 다른 고객에게는 쓰이지 않는다 — 038. 기본값 별칭만 모두에게) 다시 찾는다.
 - 모델·관광공사·카카오 중 없는 것은 그 단계만 건너뛴다. 모델 장애는 `reading.error` 에 이름으로 남는다.
 - ★장소 조회가 **막힌 것**(속도 제한 · 시간 초과 · 예산)은 근거의 `blocked` 에 남기고 「없는 곳이라는 뜻이 아니다」라고 적는다.
@@ -143,9 +150,25 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 **편집 칸 확장** `POST …/edits` (`{revision, edits:[{source_id, field, value}]}`, 새 판 · 낡은 판 409):
 - `items[n].locked`: `true` 고정 · `false` 풀기. 고정은 **장소가 정해지고 확인 필요가 아닌 일정만**(아니면 422 `lock_needs_confirmed_item`). 고정한 일정에 다른 칸(`place` · 시각 · `removed` …)을 고치면 **409 `item_locked`** — 같은 요청에 잠금 풀기가 있으면 함께 된다. 반대로 **고정하는 요청에 같은 일정의 다른 고치기를 섞으면 422 `lock_with_changes`**(고정은 따로 보낸다). 이 접수에 없는 일정 번호를 고치면 **422 `unknown_item`**(일정은 새로 만들어지지 않는다). 고정한 일정은 등록되면 `detail.customer_pinned` 가 되어 **감시 루프가 다시 자동으로 바꾸지 않는다**(`pending.protected_reason`).
 - `items[n].removed`: `true` 빼기 · **`false` 되돌리기**(전에는 true 만 받았다).
+- `[2026-10-20 「대안 적용 13.9초」]` **새 판의 위험 점검**(`items[].risk`)은 앞 판에서 10분(`risks.REUSE_FRESH_S`) 안에 새로 점검한 일정이 그대로면(종류 · 날짜 · 시각 · 고정 · 장소 이름과 좌표가 같음) **그 결과를 다시 쓴다** — 바꾼 일정만 바깥 조회를 다시 한다. 다시 쓴 일정의 `risk.checked_at` 은 앞 판 점검 시각이다(판 전체의 `risk_checked_at` 은 이번 시각). 앞 판이 한도(`item_limit`) · 점검 오류(`check_error`)였던 일정은 다시 본다. 시각 맞추기와 검사는 같은 장소 키(일정 `id`)로 이동 계산기를 불러, 같은 구간 · 같은 도착 목표를 한 번만 센다(요청 사이 재사용 칸). 응답 모양은 그대로다.
 - `items[n].place` 는 세 모양: `{"name": …}`(서버가 다시 찾는다 — 못 찾으면 422 `place_not_found`) · `{"none": true}`(장소 없음) · **`{name, latitude, longitude, source, kind?, content_id?}`**(후보 · 검색 결과에서 **고객이 고른 것**을 그대로 받는다. 서버는 다시 찾지 않고 모양만 본다: 이름 1~80자 · 좌표는 숫자이고 **서울 범위 안**(위도 37.4~37.72 · 경도 126.7~127.3, 아니면 422 `place_out_of_seoul`) · `source` ∈ `customer_pick|kakao|tour_api|places|search|map`(저장은 늘 `customer_pick`, 보낸 값은 `origin`) · `content_id` 는 숫자이고 서버의 관광공사 목록과 대조한다 — 그 번호의 장소가 보낸 좌표 500m 안이 아니면 번호만 뗀다 · `place_id` 는 받지 않는다(남의 장소 행을 가리킬 수 있다)). 이 값은 등록되면 **그 여행 전용 장소 행**(`attributes.source = customer_pick`)이고 공용 장소 표에 섞이지 않는다. 별칭(`place_aliases`)에는 쌓지 않는다.
+- ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` **`check: false`**(선택, 기본 `true`) — 새 판을 **저장만** 하고 무거운 검사를 미룬다: 이동 계산기를 부르지 않고(바뀐 구간은 직선 어림값, 안 바뀐 구간은 앞 판의 시간표 값을 그대로), 장소를 바꿀 때 앞뒤 시각을 맞추는 재배치(`direct_schedule.fit`)도 하지 않으며, 미리 준비한 대안을 다시 준비하지도 않는다. 그 판의 `review` 는 **`checked: false` · `ready: false`** 다(운영시간 · 휴무 줄은 DB 값으로 그대로 계산되고, 위험(날씨 · 재난)은 바깥 조회 없이 저장해 둔 값만 읽는다). 확인 화면은 시각 · 장소 · 대안 · 삭제를 이렇게 보내고, 「다시 제출」이 `POST …/revalidate` 로 **한 번에** 검사한다(재검증은 어림 구간을 계산기로 다시 잰다). `checked: false` 인 판은 **`/confirm` 이 409 `recheck_needed`** — 검사 안 된 판은 등록하지 않는다. 고정(`locked`) · 여행 이름 같은 칸은 화면이 `check` 없이(검사 포함) 보낸다. 옛 판의 저장된 검사에는 `checked` 칸이 없다 — 없으면 검사된 것으로 읽는다.
 
-**`GET …/candidates?source_id=&index=[&revision=]`** — 이 일정의 **다른 안 셋**(후보 A·B·C). 같은 날 앞뒤 일정에 가까운 순, 맞는 곳(`fits`)이 먼저. 이름이 모호한 일정은 같은 이름의 다른 지점(카카오 키워드 검색, 앞뒤 일정 가운데에서 거리순), 아니면 같은 종류(활동 = 관광공사 목록 DB · 같은 분류 우선 · 3km, 식사 = 요식 원장 DB · 2km). 응답 `{revision, item, current, reference: {before, after}, candidates: [{rank, place: {name, latitude, longitude, source, kind, address, category, content_id, content_type_id, ref}, distance_m, reference, rows[], fits, status: ok|warn|bad, slack: {before, after}, estimated}], notes}`. `estimated: true` = 앞뒤 이동 중 하나가 계산기 대신 직선 어림값(계산기가 꺼졌거나 그 구간을 못 채웠거나 시간 상한이 닿음). 같은 적합성 안에서는 시간표로 잰 곳이 어림으로 잰 곳보다 앞이다. 어림이 섞였는지(`engine_budget_exhausted`) · 같은 분류의 대체가 없는지(`no_same_kind`) · 같은 이름의 다른 지점이 없는지(`no_other_branches`) · 카카오를 못 불렀는지(`kakao:<이유>`)는 `notes` 로 말한다. 최종 셋은 상위 5곳을 이동 계산기로 잰 뒤 전체 판정 순서로 고른다. 후보마다 **그 일정의 날짜 · 시각**으로 운영시간 · 휴무 · 앞뒤에 닿는 시간을 검사한 줄이 붙는다. `place` 객체를 그대로 `edits` 의 `items[n].place` 에 보내면 된다. 읽기 전용 — 아무것도 저장하지 않는다(카카오 값은 약관상 저장하지 않는다). `notes` 에 `kakao:budget_exhausted` 같은 이유가 있으면 카카오를 못 불렀다는 뜻이다(후보가 비어도 「없다」가 아니다).
+**`GET …/candidates?source_id=&index=[&revision=]`** — 이 일정의 **다른 안 셋**(후보 A·B·C). 같은 날 앞뒤 일정에 가까운 순, 맞는 곳(`fits`)이 먼저. 이름이 모호한 일정은 같은 이름의 다른 지점(카카오 키워드 검색, 앞뒤 일정 가운데에서 거리순), 아니면 같은 종류(활동 = 관광공사 목록 DB · 같은 분류 우선 · 3km, 식사 = 요식 원장 DB · 2km). 응답 `{revision, item, current, reference: {before, after}, candidates: [{rank, place: {name, latitude, longitude, source, kind, address, category, content_id, content_type_id, ref}, distance_m, reference, rows[], fits, status: ok|warn|bad, slack: {before, after}, estimated}], notes}`. `estimated: true` = 앞뒤 이동 중 하나가 계산기 대신 직선 어림값(계산기가 꺼졌거나 그 구간을 못 채웠거나 시간 상한이 닿음). 같은 적합성 안에서는 시간표로 잰 곳이 어림으로 잰 곳보다 앞이다. 어림이 섞였는지(`engine_budget_exhausted`) · 같은 분류의 대체가 없는지(`no_same_kind`) · 같은 이름의 다른 지점이 없는지(`no_other_branches`) · 카카오를 못 불렀는지(`kakao:<이유>`)는 `notes` 로 말한다. ★`[2026-10-19 사용자 지시]` **미리 준비한 대안이 있으면 그것을 계산 없이 돌려준다** — 아래 「대안 미리 준비」. 없으면 이 문단의 계산을 그대로 한다(JSON). 실시간 진행(SSE)으로 부르면 계산을 기다리지 않고 어림으로 먼저 보이고 끝난 줄부터 바꾼다(아래). 후보마다 **그 일정의 날짜 · 시각**으로 운영시간 · 휴무 · 앞뒤에 닿는 시간을 검사한 줄이 붙는다. `place` 객체를 그대로 `edits` 의 `items[n].place` 에 보내면 된다. 읽기 전용 — 아무것도 저장하지 않는다(카카오 값은 약관상 저장하지 않는다). `notes` 에 `kakao:budget_exhausted` 같은 이유가 있으면 카카오를 못 불렀다는 뜻이다(후보가 비어도 「없다」가 아니다).
+**대안 미리 준비 · 「바꾸기」 저장분** `[2026-10-19 사용자 지시]` (`components/intake/prepared.py` · 저장 061 `intake_alternatives`) — 사용자: 「계획서 접수에서 문제 난 일정은 에이전트가 대안을 보내오잖아, 그거 받아서 반영하면 되잖아」.
+- **언제**: 접수 읽기 · 검사가 끝나 확인 화면으로 넘긴 **뒤**(뒤에서 읽는 일꾼 안 — 요식 판정 다음, 고객은 기다리지 않는다). 새 판이 생길 때(고치기 · 되돌리기 · 전체 자동 추천 적용)도 뒤에서 **낡은 줄만** 다시 준비한다.
+- **어느 일정**: 빼지 않았고 고정 · 예약 표시가 없는 일정 중 `place_state` 가 `picked_nearest` · `unresolved` · `needs_choice` 이거나, 검사 줄(`place` · `hours` · `closed` · `time`) 중 `bad` · `warn` 이 있는 것. `needs_name`(예약한 곳 이름을 묻는 줄)은 후보를 권하지 않으므로 뺀다. ★위험 날짜(날씨 등)로 문제가 난 활동(`risk.status: problem`)도 뺀다 — 「바꾸기」는 그 일정에서 안전 대안 경로(`risks.alternatives`, 응답 `notes: ["risk_alternatives"]`)가 **먼저** 내고 저장분 · 어림 카드를 쓰지 않는다. 숙소 항목 · 숙소 줄도 넣는다(숙소 팀 — 바깥 숙소 비교는 숙소 모드 · 한도 몫을 따른다).
+- **무엇을**: `GET …/candidates`(JSON)와 **같은 계산 결과 전부** — 팀 대안(활동 · 요식 · 숙소) → 앞 · 뒤 두 구간 이동 계산기 → 운영시간 · 휴무 판정 → 이유 문장(모델, `budget_seconds` 안에 못 쓰면 틀 문장). 일정끼리 · 후보끼리 병렬(작업자 4개 — 2026-10-19 로컬 실측 문제 일정 2개 중앙값 27초, 작업자 1개면 55초). ★**미리 준비는 카카오를 부르지 않는다** — 카카오에 기대는 일정(같은 이름의 다른 지점 · 이름 없는 줄 · 숙소인데 팀이 답하지 않고 우리 목록이 모자람)은 준비하지 않고 「바꾸기」 때 계산한다(카카오 값은 저장할 수 없다).
+- **저장**: 일정 줄(`source_id` + `index`)마다 한 행 — 계산한 판(`revision`) · 그 일정의 서명(`item_sig` — 장소 이름 · 좌표 · 날짜 · 시각 · 종류 · `place_state`) · 앞 · 뒤 일정의 서명(`before_sig` · `after_sig` — 장소 · 시각) · 응답 본문 · 걸린 시간. 접수를 지우면 같이 지워진다(CASCADE).
+  ★**카카오 값은 저장하지 않는다**(약관) — 최종 후보에 카카오에서 온 곳(`source: kakao`)이 하나라도 있으면 그 일정은 저장하지 않고(`notes` 에 남기지 않는다) 「바꾸기」 때 지금처럼 계산한다(체인점의 다른 지점 · 지도에서 채운 곳).
+- **쓸 수 있나**: 지금 판의 그 일정 서명이 같으면 후보는 그대로 쓴다. 앞(뒤) 일정 서명만 다르면 **그쪽 구간만** 낡은 것이다 — 후보는 다시 모으지 않고(저장해 둔 풀) JSON 은 그 구간을 다시 재고, SSE 는 그 줄만 「계산 중」으로 보인다. 그 일정 서명이 다르면(고객이 장소 · 시각을 바꿈) 저장분은 쓰지 않는다 — 단 **숙소**는 저장해 둔 풀(지금 고른 숙소를 뺀)로 다시 판정한다(바깥 숙소 검색은 접수 1건의 문제 난 숙소 항목마다 1회만 — `prepared.stale: ["item"]`).
+- **후보의 새 칸 `legs`**: `{before, after}` 각각 `{with: 앞(뒤) 일정 장소 이름, minutes, mode, mode_label, estimated, slack_min}` 또는 null — 화면의 「경복궁에서 오는 길 · 버스 18분」 · 「광장시장까지 가는 길 계산 중 · 어림 20분」.
+- **`GET …/candidates` 응답**: 저장분을 쓰면 `prepared: {revision, computed_at, stale: []}`(`stale` = 다시 잰 구간 `before` · `after`), 계산했으면 `prepared: null`. 나머지 모양은 그대로.
+- **잰 시간**(2026-10-19 로컬 · 실제 이동 자료 · 모델은 2초 지연 대역 — [기록](../../records/reports/2026-10-19_접수대안_미리준비.md)): role-manager 판 기준 접수 뒤 완성본 저장(문제 일정 2개) 중앙값 41.8초 · 저장분 「바꾸기」 0.23초 · 저장분 없을 때 첫 카드 0.08초 · 이동 줄 마지막 실측 13.4초 · 이유 문장 15.9초.
+- **실시간 진행(SSE)** `Accept: text/event-stream` — `accepted` → ①저장분이 그대로 맞으면 곧바로 `result`(JSON 과 같은 본문). ②아니면 먼저 `candidates`(같은 본문 — 운영시간 판정 + **직선 어림** 이동, 후보마다 `pending: {before, after, reason}` 참/거짓)를 보내고, 구간 계산이 끝날 때마다 `candidate{rank, rows, fits, status, slack, estimated, legs, pending}`(고객이 기다리므로 **차례로** · 보이는 카드 먼저 · 계산기 시간 합계 12초 상한 — 넘은 후보는 어림으로 남는다. ☆병렬로 재면 계산기 호출이 서로 느려져 마지막 실측이 33~38초였다), 이유 문장이 저장되면 `candidate{rank, reason, reason_by, pending}`, 끝에 `result`(최종 판정 순서로 다시 고른 셋 — 넷째가 올라올 수 있다). 사이에 `beat`. `rank` 는 `candidates` 이벤트의 순서(1부터). 끝난 결과는 저장분으로 남긴다(카카오 값이 없을 때).
+- **준비가 아직 도는 중이면**: 그 일정의 「바꾸기」는 같은 계산을 다시 돌리지 않는다 — SSE 는 바깥 호출 없이 모은 어림 카드(`candidates`, `waiting: "prepare"`, 모든 줄 `pending`)를 먼저 보내고 준비 결과를 기다려(최대 120초) 그것을 `result` 로 보낸다. JSON 은 기다렸다가 저장분을 돌려준다. 준비가 저장하지 못했으면(카카오에 기대는 일정 · 실패) 그때 계산한다. 카카오에 기대는 일정은 처음부터 준비하지 않으므로 SSE 의 어림 먼저 길로 보인다.
+- **등록**: 「여행 등록」 때 저장분이 쓸 수 있는 일정은 그 대안(`status` 가 `bad` 가 아닌 것, 최대 3)을 일정 항목의 `detail.alternates`(+ `other_options`)로 남긴다 — 장소는 그 여행 전용 장소 행으로 넣는다. 채팅 「바꿔 줘」(`trip_desk.swap_alternate`)가 이것을 그대로 쓴다(활동은 바꿀 때 그 시각에 다시 점검한다 — 못 읽은 자료가 대기질 · 예보 · 교통뿐이면 바꾸고 알린다, [여행 API 「고른 안 다시 점검」](trips.md)). `[2026-10-20]` 접수로 등록하는 장소(대안 포함)에는 서울 자치구(`attributes.district`)를 채운다 — 주소의 「서울(특별시) ○○구」, 없으면 좌표가 한 구만 가리킬 때. 대기질 측정소(에어코리아)를 고르는 값이다.
+- **바깥 비용**: 숙소 팀(구글 호텔 검색 1회)만 바깥 한도를 쓴다 — 부를지는 관리 콘솔 「숙소 모드」(숙소 시연 모드 · 테스트 모드 · 끄기(기본), 읽는 곳 `settings_hook.lodging_mode` → 조립 `_lodging_rank` — 별도 작업 「관리 콘솔 숙소 모드 · 언리미티드 모드 스위치」)가 정한다. 끄기면 바깥에 나가지 않고 우리 숙박 목록 · 카카오 지도로 고른다. 이 길은 `_lodging_rank` 를 그대로 부르기만 한다. 이유 문장 모델은 문제 난 일정마다 최대 `visible`(3)회, 같은 사실이면 저장된 문장을 쓴다.
 **`GET …/place-search?q=(2자 이상)&source_id=&index=[&revision=]`** — 수정 화면의 장소 검색. 관광공사 목록 · 요식 원장(DB)과 카카오를 함께 찾아 이름이 검색어로 시작하는 곳 먼저, 앞뒤 일정에서 가까운 순으로 최대 8곳, 각각 같은 검사 줄을 붙인다. 응답 `{revision, item, query, results[], notes}`(`results[]` 는 `candidates[]` 와 같은 모양).
 **이름 없는 줄(종류 + 지역만)** `[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` — 「성수 예약 식당 · 예약 있음」 · 「서울역 인근 저녁 식당」 · 「이태원 소품숍」 · 「호텔 조식」처럼 **가게 이름이 없는 줄**.
   ☆전에는 이런 줄도 가게 이름으로 찾았고(없는 가게를 글자를 줄여 가며) 종류를 활동으로 읽었고 후보를 앞뒤 일정의 한가운데에서 찾았다 — 성수 식당 자리에 동대문 활동이 권해졌고 예약한 식당을 바꾸자고 했다(실서버 실측).
@@ -185,7 +208,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 - **경로선**: 고른 뒤 `GET …/route-shapes` 가 고른 수단을 그린다(택시는 `car` 길 그래프).
 - **그 밖에 바뀐 것**: `moves.mode_of` 가 택시(`taxi`)를 도보로 읽던 것을 고쳤다. 이동 계산기 입구(`wiring.leg_planner` · `team_hooks/legs.py`)가 `modes` 를 받는다. 이동 팀의 `plan-v2.10` 은 대중교통이 운행 시간 때문에 하나도 안 맞으면(첫차 전 · 막차 뒤) 택시로 대체한다 — 확인 화면 구간에도 같다.
 
-**`POST …/revalidate {revision}`** — **재검증**. **새 판을 만들지 않고**(고객이 고친 값은 그대로) 같은 판의 검사(운영시간 · 휴무 · 이동)를 처음부터 다시 계산해 그 판의 저장된 검사를 **새 값으로 바꾼다**(운영시간 표가 새벽에 바뀌었거나 계산기 답이 달라졌을 수 있다 — 조회는 판마다 한 번 계산한 값을 주므로 재검증 뒤의 조회도 새 값이다). 이동은 앞 판의 값을 재사용하지 않고 다시 잰다. 응답 = `GET …/{id}` 와 같은 모양, `review.ready` 가 참이면 「여행 등록」.
+**`POST …/revalidate {revision}`** — **재검증**. **새 판을 만들지 않고**(고객이 고친 값은 그대로) 같은 판의 검사(운영시간 · 휴무 · 이동)를 처음부터 다시 계산해 그 판의 저장된 검사를 **새 값으로 바꾼다**(운영시간 표가 새벽에 바뀌었거나 계산기 답이 달라졌을 수 있다 — 조회는 판마다 한 번 계산한 값을 주므로 재검증 뒤의 조회도 새 값이다). 이동은 앞 판의 값을 재사용하지 않고 다시 잰다. 응답 = `GET …/{id}` 와 같은 모양, `review.ready` 가 참이면 「여행 등록」. `[2026-10-20]` `check: false` 로 저장만 한 판도 여기서 검사되어 `checked` 가 참이 되고, 그 판의 낡은 미리 준비 대안을 뒤에서 다시 준비한다.
 
 **내용 이벤트** `GET …/events` — 기존 `accepted` · `stage` · `beat` · `result` · `error` 사이에 흐른다. ★**이벤트는 상태의 복사본(덮어쓰는 값)이다**: 같은 키가 다시 와도 나중 것으로 덮으면 되고, 다시 연결하면 지금까지의 상태가 처음부터 다시 온다(서버는 누가 어디까지 받았는지 기억하지 않는다). 정본은 `GET …/{id}` 다. 서버는 **순서만** 맞춘다(줄 → 일정 → 검사 줄 → 이동 → done) — 보이는 속도는 웹이 정한다(받은 이벤트를 차례 줄에 쌓아 최소 표시 시간을 두고 그린다). 값은 읽는 **동안** 적히므로(전에는 끝에 한꺼번에) 이벤트도 그때그때 나간다: 규칙으로 읽은 줄 → 모델이 가리킨 줄 → 날짜 → 이름이 특정된 장소가 하나씩 → 모호한 장소(앞뒤가 다 찾아진 뒤) → `checking` 단계 → 검사.
 
@@ -196,7 +219,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 | `check` | `{item, row, result, text}` | `item` + `row` |
 | `move` | `moves[]` 한 건 | `from` + `to` |
 | `progress` `[2026-10-03]` | `{phase: places\|hours\|moves, done, total, current: {id, title}}` — 「3/14 · 광장시장 운영시간 확인 중」. `places` 는 **읽는 동안** 장소 찾기가 일정마다(찾든 못 찾든 그 일정의 장소 값이 정해지면 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤), `hours` 는 검사의 운영시간 확인이 일정마다, `moves` 는 이동이 구간마다(`current.title` = 「A → B」). `done` 은 1씩 늘어 `total` 에서 끝난다. 접수에 원본이 여럿이면 `places` 는 원본마다 센다 | `phase` |
-| `progress{reading}` `[2026-10-16]` | `{phase: reading, done, total, failed, skipped}` — 「읽는 중 2/6」. 규칙이 못 읽은 줄을 모델에 **줄 묶음으로** 나눠 보낼 때(가드레일 `travel.intake_reading.chunk_lines`), **처음 한 번 `done: 0`** 으로 묶음 수를 알리고 묶음 하나가 끝날 때마다(답을 받았든 실패했든) `done` 이 1씩 는다. `failed` = 그중 모델이 답하지 못한 묶음(그 줄은 남은 줄로 남는다), `skipped` = 이 단계 전체 상한(`travel.intake_reading.total_seconds`)을 넘어 **보내지 않은** 묶음 — 마지막 알림에서 정해지고 그때 `done + skipped = total`. ★분모는 모델에 보낼 묶음 수이지 읽어 낸 비율이 아니다 · 지어낸 진행이 아니라 끝난 묶음만 센다 · `current` 없음. 규칙이 다 읽은 글(남은 줄 0)이나 모델이 꺼진 환경에서는 오지 않는다 — 그때는 곧바로 `places` 로 간다. 원본이 여럿이면 원본마다 0부터 다시 센다(`places` 와 같다). 상한 · 실패로 못 읽은 줄은 `GET` 의 `reading.error`(예 「1/6 묶음 실패 — …」)와 `lines[].read=false` 로 보인다 | `phase` |
+| `progress{reading}` · `progress{reading_api}` `[2026-10-16 2회차 합의]` | `{phase: reading\|reading_api, done, total, final?}` — 「읽는 중 24/54줄」. 규칙이 못 읽은 줄을 모델에 **한 번에** 보내고 답을 **조금씩 받는** 동안(`llm_spans.label_lines`) — 시작할 때 `done: 0`, 그다음 약 5초마다(`travel.intake_reading.progress_seconds`), 끝에 `final: true`. `done` = 받은 답에서 **원문 검사를 통과한 서로 다른 줄 수**(원문에 글자 그대로 있는 인용이 하나라도 있는 줄), `total` = 모델에 보낸 줄 수. 줄 순서와 상관없이 늘어나고, 끝나도 `total` 에 못 미칠 수 있다(장소 · 시각이 없는 줄). ★지어낸 진행이 아니다 · 분모는 보낸 줄 수이지 정확도가 아니다 · 느린 한 줄을 쓰는 동안은 안 늘 수 있다(멈춤 판정은 서버가 조각 도착으로 따로 한다). 로컬 모델이 멈추거나 올라와 있지 않아 **유료 모델이 처음부터 다시 읽으면** `phase` 가 `reading_api` 로 바뀌고 `done` 이 0 부터 다시 센다 — 화면은 `reading` 을 지우고 이것으로 바꾸면 된다(키가 `phase` 라 둘은 따로 쌓인다). 읽기 에이전트(D-025, `agent_mode: on`)가 읽을 때도 같은 모양으로 온다 — 그때 `total` 은 원본의 비지 않은 줄 수이고, 에이전트가 긴 글을 묶음으로 읽다 한 묶음이 유료로 넘어가면 첫 묶음부터 유료로 다시 읽어 `reading_api` 로 0 부터 센다(한 계획은 한 모델). 규칙이 다 읽은 글(남은 줄 0)이나 모델이 꺼진 환경에서는 오지 않는다. 원본이 여럿이면 원본마다 0부터 다시 센다. ★로컬 · 유료 모두 끝내 답하지 못하면 접수가 `fatal`(`fatal_code: reading_model_failed`, `fatal_detail` = 「계획을 읽는 모델이 지금 답하지 않아 계획을 다 읽지 못했어요. 잠시 뒤 같은 계획을 다시 보내 주세요.」)이 된다 — 예전처럼 그 줄을 조용히 「못 읽은 줄」로 두지 않는다. 다시 시도는 같은 계획을 새로 보내는 것이다. ☆앞 판(d618279f)의 `{done, total, failed, skipped}` 묶음 진행은 없어졌다 | `phase` |
 | `done` | `{stage: review, revision, needs, ready}` — 검사가 끝났다, 곧 `result`. 검사할 것이 없는 접수(빈 접수)는 `done` 없이 곧바로 `result` | — |
 
 **검사 진행을 끝에서 한꺼번에 내지 않는다** `[2026-10-03 ui 세션 요청서 2번]` — 검사(`review.build`)는 한 트랜잭션 안에서 돌고 끝나 커밋돼야 DB 에 보이므로, 전에는 검사 줄 56개 · 이동 12개가 끝난 4.9초에 한꺼번에 나갔다(이동 계산이 대부분의 시간인데 화면은 아무것도 몰랐다). 이제 계산이 **끝나는 대로**: ①일정마다 `item` · `check` 를 이동 계산 **전에**(`status` 는 이때 정해진 값이고, 겹침 확인 필요는 끝에서 바뀔 수 있어 최종 값이 같은 키로 덮는다) ②이동은 구간마다 `move` + `progress{moves}` ③운영시간은 일정마다 `progress{hours}`. ★이 중간 진행은 **프로세스 안 보관소**(`intake/progress.py`)를 거친다 — DB 에 쓰지 않고(접수 하나에 150개 안팎), 읽는 일꾼(스레드)과 SSE 연결이 **같은 프로세스**일 때만 보인다(배포는 한 프로세스). 여러 프로세스(`--workers N`)에서 다른 프로세스의 연결은 전처럼 끝에서 받는다 — 깨지지 않고 **중간 진행만 안 보인다**. 접수 하나당 600개 상한(앞에서부터 버림) · 15분 지나면 버림 · 읽기가 끝나면 비운다(최종 값은 DB 에서 읽힌다). 서버는 DB 의 덜 채운 값(`status: null`)으로 이미 검사 줄까지 낸 일정을 **되돌리지 않는다**.
@@ -280,36 +303,77 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 - 여행을 지우면(`POST /v1/web/trips/{trip_id}/delete`) 그 여행의 수정 접수도 지운다.
 - `[미정]` 재난으로 일정이 정지된 동안 수정을 막을지 · 진행 중 일정의 시작을 앞당기는 것(지금은 화면만 막는다) · 등록한 여행의 이름 · 인원 바꾸기(화면 요청 ①).
 
+### 접수 입구의 빠른 거름 — `screened` `[2026-10-19 사용자 결정]`
+
+빈 글 · **분명히 여행과 무관한 글**은 모델 읽기 전에 바로 돌려보낸다. 로딩 설문은 거름을 통과한 접수에만 낸다. 설계 [§5](../../records/plans/2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md) · D-025 덧붙임 · 구현 `components/intake/screen.py` · `pipeline.open_intake` · 저장 `trip_intakes.screened`(907) · 시험 `tests/unit/travel/test_intake_screen.py` · `tests/e2e/test_intake_screen.py`.
+
+- **거름 위치**: `POST /v1/web/trip-intakes` 가 접수를 받은 직후, 모델 읽기 전. **규칙만**(모델 · 유료 호출 0). 응답은 지금처럼 202 `{intake_id}`.
+- **거르는 것**: ① 글 · 파일이 모두 비었다 → `empty` ② 글만 있고 여행 단서가 **하나도 없다** → `off_topic`(`rule`: 코드 · 숙제 · 번역 같은 다른 일 낱말이 있었으면 `other_task`, 아니면 `no_travel_clue`).
+  여행 단서 = 날짜 · 시각(「10월 3일」 「모레」 「1일차」 「10시」 「오후」) · 서울 장소(우리 장소 표 · 관광공사 목록의 이름 · 대표 장소 정답표 · 지명 사전 · 「역 · 궁 · 시장 · 공원 · 박물관 · 호텔 · 식당 · 카페」류 꼬리말) · 여행 낱말(「여행 · 일정 · 숙소 · 관광 · 맛집 · 코스」 등).
+- **거르지 않는 것**: 여행 단서가 하나라도 있는 글(「편안한 강남여행」 · 「내일 경복궁」 — 애매하면 지금처럼 읽는다) · **파일이 붙은 접수** · 한글 · 로마자가 아닌 글자가 섞인 글(이 규칙이 단서를 모른다).
+- **거른 접수**: 읽지 않고 곧바로 `status: review` · `stage: review`. `GET /v1/web/trip-intakes/{id}` 에 `screened: {code: "empty" | "off_topic", rule}`(거르지 않았으면 `null`), `questions: []` · `skipped_by_reading: []` · `questions_phase: null`, 읽은 일정 0개. 원문은 `sources[0].lines` 에 남는다(사후에 오판을 센다).
+- **웹**: `screened` 가 있으면 로딩 화면 · 로딩 설문을 띄우지 않고 지금의 「일정을 찾지 못했어요 …」 문구로 입력 화면에 되돌린다(고객이 쓴 글은 입력칸에 그대로). 로딩 설문 단계는 서버가 「읽는 중」을 알린 뒤에만 그린다(도착 즉시 그리던 `fresh` 를 거름 통과 뒤로) — 화면 몫([UI 팀 반영 기록](../../records/reports/2026-10-19_로딩설문_화면_UI팀_반영기록.md)).
+- 채팅(여행 중 대화)에는 이 거름을 쓰지 않는다.
+
 ### 설문 질문 — `questions[]` · `POST /v1/web/trip-intakes/{intake_id}/survey` `[2026-10-06 사용자 지시 · uiux 인계]`
 
-`[2026-10-08 사용자 지시]` 새 계획 접수는 같은 고객이 이전 로딩 설문에서 저장한 최신 답을 이어받는다. 현재 질문 묶음 버전과 선택지의 의미가 같은 답만 새 접수에 기록하며 다른 고객·테넌트의 답, 항로 지킴이·밀도 같은 직접 설정은 이어받지 않는다. 웹은 첫 미응답 문항부터 보여 준다. 설문 중에도 SSE 결과를 수신하지만 확인 애니메이션은 재생하지 않으며, 설문에서 다음으로 넘어가는 순간부터 축적된 결과를 재생한다.
+`[2026-10-19 개편 — 읽은 칸은 빼고 빈 칸만 · 사용자 지시]` 로딩 중 질문은 **계획서에서 못 얻은 것만** 묻는다. 후보는 시작 설문에서 「일정이 꼬이면」(항로 지킴이 카드 몫)을 뺀 **네 문항**이고 **상한이 없다**(옛 「최대 3」은 없앴다). 설계 [2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md](../../records/plans/2026-10-19_로딩설문_읽은칸빼고_빈칸만묻기.md) · 구현 기록 [2026-10-19_로딩설문_빈칸만묻기.md](../../records/reports/2026-10-19_로딩설문_빈칸만묻기.md). 질문 묶음 버전 `questions_version` = **`"3"`**.
 
-`[실측]` 구현 `app/domains/travel_ops/components/intake/survey_answers.py` · `entry/trip_api.py` · 저장 `trip_intakes.survey`(마이그레이션 051) · 시험 `tests/e2e/test_intake_survey_questions.py` 24건. 기획 `wiki/records/plans/2026-10-05_설문_계획서에서_읽고_로딩에서_묻기_기획.md` 「서버 몫」 1.
-★**쓰는 문항만 묻는다** — 설문 문항 가운데 판정에 이어진 것만(`survey.py` 머리말). 받기만 하고 쓰는 곳이 없는 문항과 **식사 제한 · 접근성은 묻지 않는다**(민감 정보 — 동의 화면에서만 받는다).
+`[2026-10-08 사용자 지시]` 새 계획 접수는 같은 고객이 이전 로딩 설문에서 저장한 최신 답을 이어받는다. 현재 질문 묶음 버전과 선택지의 의미가 같은 답만 새 접수에 기록하며 다른 고객·테넌트의 답, 항로 지킴이 같은 직접 설정은 이어받지 않는다. 웹은 첫 미응답 문항부터 보여 준다. 설문 중에도 SSE 결과를 수신하지만 확인 애니메이션은 재생하지 않으며, 설문에서 다음으로 넘어가는 순간부터 축적된 결과를 재생한다.
 
-**`GET /v1/web/trip-intakes/{id}` 의 `questions[]`** — 접수와 상관없이 **같은 순서 · 같은 문항**이다(답에 따라 사라지지 않는다 — 화면의 `i / N` 이 흔들리지 않는다). 이미 답한 문항도 **그대로 남고** `answer` 에 고른 선택지 id 가 있다(없으면 null) — 화면이 새로 고쳐져도 앞 질문으로 돌아가 고칠 수 있다.
+`[실측]` 구현 `app/domains/travel_ops/components/intake/survey_answers.py` · `pipeline.view` · `reading_prefs.py` · `entry/trip_api.py` · 저장 `trip_intakes.survey`(051) · 답 이력 `trip_intake_survey_answers`(053) · 문항 목록 `trip_intakes.survey_plan`(907) · 시험 `tests/e2e/test_intake_survey_questions.py` · `tests/unit/travel/test_intake_loading_questions.py`.
 
-| 문항 `id` | `title` | 선택지 `id` → 글 | 설문에 닿는 곳 |
-|---|---|---|---|
-| `preferred_mobility` | 이동은 주로 어떻게 하세요? | `public` 대중교통 · `taxi` 택시 · `walk` 걷기 위주 | `priority_details.mobility` → 이동 계산기 수단(`mobility/wiring.modes_from_survey`). ★렌트카는 계산기가 아직 못 다뤄 선택지에 없다. ☆`walk` 만 고르면 계산기 수단이 걷기뿐이다(설문 「도보」 선택과 같은 기존 동작) |
-| `priority` | 일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요? | `activity` 하고 싶은 활동이 비슷한 곳 · `mobility` 이동이 편한 곳 | `priority`(앞이 먼저) → 대체 활동 비슷함의 가중(`activity/similarity.preference_of`) |
+**문항 넷** — 문구 · 선택지는 시작 설문 화면(`features/onboarding/model.ts`, 팀 SKN role-manager `9ec5f2b9` 판의 네 문항)과 같다. ★`[2026-10-19 사용자 지시]` 활동 세부는 관광 분류 일곱 코드(`EV · EX · HS · LS · NA · SH · VE`)다. ★`[2026-10-19 UI 팀 4문항에 맞춰 theme 제외]` 처음 구현은 「여행 테마」까지 다섯이었지만 UI 팀이 시작 설문에서 테마를 뺐고 로딩 문항 = 시작 설문 − 「일정이 꼬이면」 이라 같이 뺐다. 테마 답(`theme`: `food · nature · culture · activity · shopping · local`)은 문항이 아니라 `on_disruption` 처럼 **받아 두기만 하는 입구**로 남겨, 옛 화면이 보내도 거절하지 않고 등록 때 설문 `theme` 칸에 싣는다.
 
-각 문항은 `{id, kind: "single", title, why, options: [{id, label}], answer, allow_custom, custom_max_length, custom_answer}`. 글은 한국어다(영어 화면은 문항 `id` 로 옮긴다). `on_disruption` · `pace` 는 **문항이 아니다**(항로 지킴이 카드 · 계획 담기 화면이 보낸다).
+| 문항 `id` | `kind` | `title` | 선택지 `id` 글 | 계획서에서 읽어 빠지는 칸 | 설문에 닿는 곳 | 정하는 때 |
+|---|---|---|---|---|---|---|
+| `party` | `single` + 직접 입력(「기타」) | 누구와 함께 떠나나요? | `alone` 혼자 · `partner` 연인 · `friends` 친구 · `family` 가족 | 없음 — 읽은 아이 · 어르신 성향으로 구성을 추정해 채우지 않는다 | `party`(직접 입력은 그 글 + `custom_answers.party`) | 처음 |
+| `priority` | `priority` | 어떤 것을 더 중요하게 생각하나요? | 분야 `food` 음식 · `activity` 활동 · `mobility` 이동(고른 순서가 순위) + 분야별 세부 — 음식 `taste` 맛 · `kindness` 친절 · `clean` 청결 · `michelin` 미쉐린 · `nopo` 노포 / 활동 `EV` 축제/공연/행사 · `EX` 체험관광 · `HS` 역사관광 · `LS` 레저스포츠 · `NA` 자연관광 · `SH` 쇼핑 · `VE` 문화관광 / 이동 `public` 대중교통 · `walk` 도보 · `car` 렌트카 · `taxi` 택시 | **세부만** — 이동 ← 읽은 이동 수단, 음식 ← 읽은 식당 취향. 분야 순서는 늘 묻는다 | `priority` · `priority_details` | 처음(읽은 세부는 둘째에 `groups[].read` 로 표시) |
+| `indoor_outdoor` | `pair` | 실내와 실외 중 어디가 좋으세요? | 칸 `dining` 식당 · `activity` 액티비티 — 칸마다 `indoor` 실내 · `outdoor` 실외 · `any` 상관없음 | 활동 칸 ← 「비 오면 실내」 | `indoor_outdoor` | 둘째 |
+| `pace` | `single` | 여행할 때 어느 정도 여유가 좋으세요? | `relaxed` 여유롭게 · `moderate` 적당히 · `packed` 꽉 차게 | 통째로 ← 읽은 일정 여유(천천히 · 늦게 시작) | `pace` → 밀도 목표 | 둘째 |
 
-`[2026-10-09]` 질문별 건너뛰기 버튼을 제거했다. 자유입력은 `{custom: "택시 + 버스"}`(공백 정리 후 1~1000자), 답 취소는 `null`로 저장한다. 선택지 답은 `answer`, 자유 답은 `custom_answer`로 다시 내려준다. 원문은 `constraints.survey.custom_answers`에 보존하며 명확히 구분된 이동수단·우선순위 단어만 기존 계산용 값으로 함께 전달한다. 취소 이력을 남겨 다음 접수에서 예전 답이 되살아나지 않게 한다. 직접 설정 `on_disruption/pace`는 자유입력·취소 대상이 아니다. [상세 계약](../web-flow-2026-10-09.md).
+- **묻지 않는 것**: `on_disruption`(항로 지킴이 카드가 받는다 — 같은 입구가 값만 받는다) · 내국인 여부(쓰는 곳 없음) · 덜 걷게(이동 약자와 이어지는 민감 정보 — 동의 화면에서만) · 하루 시작 · 끝 시각(문항이 없다 — 읽은 값은 확인 화면 「이렇게 이해했어요」) · 식사 제한 · 접근성.
+- 렌트카(`car`)는 시작 설문과 같게 선택지에 있지만 이동 계산기가 아직 못 다룬다(`mobility/wiring.SURVEY_MODES` 에 없어 계산기 기본 수단으로 간다 — 옛 동작 그대로).
 
-**`POST /v1/web/trip-intakes/{id}/survey`** `{answers: {문항 id: 선택지 id}}` → `{ok: true, answered: [지금까지 답한 모든 문항 id, 정렬], questions_version: "2"}`
-- 한 번에 1~8개 · **부분 답 · 멱등**이다. ★**같은 문항을 다시 보내면 덮어쓴다**(마지막 값이 이긴다 — 앞 질문으로 돌아가 고치는 화면).
-- 문항 id 는 위 두 문항 + `on_disruption`(`replace` · `ask_first`) + `pace`(`relaxed` · `moderate` · `packed`)를 받는다 — 뒤 둘은 카드 · 계획 담기 화면의 값을 접수에 실어 두는 용도다. 모르는 문항 · 선택지는 **422 `invalid_answers`**(`problems[{key, reason}]`) — **하나라도 틀리면 아무것도 저장하지 않는다.** 빈 `answers` · 모르는 칸 · 계약에 맞지 않는 답 객체는 422 오류다.
-- 남의 접수 · 없는 접수는 같은 404. **이미 등록된 접수는 409 `intake_confirmed`**. 저장은 접수의 `updated_at` 을 **건드리지 않는다**(읽기가 멈췄는지 가르는 기준).
-- 답은 접수에 모아 두었다가 **`confirm` · `plan` 할 때 설문(`constraints.survey`)에 합쳐진다** — 요청이 직접 준 `survey` 가 이긴다(`priority_details` 는 영역마다 합친다). 안 답한 문항은 **채워 넣지 않는다**(예: `on_disruption` 을 안 줬으면 「직접 고른 것」이 아니라 자동 변경이 켜지지 않는다). 답이 하나도 없고 `survey` 도 안 보내면 등록 동작은 옛 그대로(설문 없음).
+**고르는 규칙 — 문항마다**
+1. 이 접수의 **첫 조회 때 이미 답이 있다**(이전 접수 답을 이어받음 · 첫 조회 전에 저장된 답) → 목록에 넣지 않는다.
+2. **계획서 읽기가 그 칸을 채웠다** → 넣지 않고 `skipped_by_reading[]` 에 싣는다(확인 화면 「이렇게 이해했어요」에서 고칠 수 있고 고친 답이 이긴다 — `reading_prefs.status`). 칸 일부만 읽었으면(우선순위 세부 · 실내외의 활동 칸) 문항은 남고 그 칸만 `read` 로 표시된다 — 화면은 그 칸을 묻지 않는다.
+3. 둘 다 아니다 → 묻는다.
+- 첫 조회 **뒤에** 이 접수에서 답한 문항은 목록에 남고 `answer` 가 채워진다(앞 질문으로 돌아가 고칠 수 있다 — 옛 계약 그대로).
+- 시작 설문 답은 서버에 없다(웹이 등록 때 `survey` 로 보낸다). 로딩에서 같은 것을 다시 묻지 않으려면 웹이 그 답을 `POST …/survey` 로 접수에 실어야 한다 — 화면 몫([UI 팀 반영 기록](../../records/reports/2026-10-19_로딩설문_화면_UI팀_반영기록.md)).
 
-**★질문 묶음 · 문항 번호와 슬롯 · 답 이력** `[2026-10-06 uiux 요청 — 맞춤 질문 의논 §7]` — 나중에 질문을 모델이 만들게 되어도 웹은 바꾸지 않도록 지금 지키는 것이다(구현 `survey_answers.py` · 마이그레이션 053 · 시험 6건 추가).
-- **웹은 `questions[]` 만 그린다.** 문구 · 선택지의 뜻을 하드코딩하지 않는다. 모르는 `kind`(지금은 `single` 만)는 그 문항만 건너뛴다. `questions[]` 는 슬롯 · 값을 **싣지 않는다**(웹은 모른다).
-- **문항 번호(`id`)와 슬롯(구조화 값이 들어가는 자리)은 다른 칸이다.** 선택지 번호 ↔ 구조화 값의 **매핑은 서버가 소유**한다(`Question.slot` · `Option.value`). 문구를 바꿔도 번호를 새로 만들지 않고 **같은 선택지 번호의 뜻을 바꾸지 않는다.** 지금 두 문항은 번호 = 슬롯 이름 · 선택지 번호 = 값으로 같지만 코드는 번호 → 슬롯 → 값으로만 읽는다(번호가 다른 묶음으로도 시험했다).
-- **질문 묶음에 버전이 있다** — `QUESTION_SET_VERSION`(지금 `"2"`). 접수 조회(`GET /v1/web/trip-intakes/{id}`)의 `questions_version` 과 `POST …/survey` 응답의 `questions_version`(이 답을 해석한 묶음)으로 내려간다. 문구만 고치면 안 올리고, **선택지 목록 · 값 매핑 · 문항 추가/삭제**처럼 답의 뜻이 달라지면 올린다.
-- **저장할 때 그때의 묶음을 남긴다** — 답 이력(`trip_intake_survey_answers`, 추가만 · 053): 문항 번호 · 선택지 번호 · **슬롯 · 해석한 값** · 그때 화면에 보인 문구와 라벨 · 묶음 버전. 같은 답을 다시 보내면(멱등) 줄이 늘지 않고, 고치면 줄이 하나 더 쌓인다. **등록 때는 저장 때 해석한 값으로 설문을 만든다** — 묶음이 바뀐 뒤에도 옛 답이 새 매핑으로 잘못 읽히지 않는다. 이력이 없는 옛 답은 지금 묶음의 매핑으로 읽는다(경고).
-- **지금 하지 않는 것**: 자유 선택지 생성 · 추정값으로 기존 답 덮어쓰기 · 로딩 경로의 모델 여러 번 호출. `[미확인]` 다음 단계가 필요로 할 값(프로필의 `source`(user_answer · inferred) · `scope`(trip · day) · `question_id` · 가설 목록)은 설계하지 않았다 — 질문 생성 모델 · 제한 시간(실측) · 외부 전송 정책 · 슬롯 목록 확정이 먼저이고 서버 · RAG 몫이거나 사용자 결정이다(`wiki/records/plans/2026-10-06_맞춤_질문_생성_방향_의논.md` §8).
+**두 번에 정한다** — 무엇이 비었는지는 이해 단계 결과가 나와야 안다.
+- **처음**(접수 응답 · 첫 조회): `party` · `priority`. `questions_phase: 1`.
+- **둘째** — 이해 단계 결과(`reading.agent` 값 줄)가 원본마다 다 나왔거나 읽기가 끝났을 때(확인 화면 · 실패): `indoor_outdoor` · `pace` 를 규칙대로 **뒤에 붙이고**, `priority` 의 읽은 세부를 표시한다. `questions_phase: 2`.
+- 목록은 **한 번만 늘고**, 이미 보인 문항은 지워지거나 순서가 바뀌지 않는다. 그 뒤로는 그 접수에서 흔들리지 않는다(접수 행 `survey_plan` — 907. 이 칸이 없는 DB 는 저장 없이 그때그때 계산한다 — 경고).
+- 읽기가 실패하거나(`fatal` — `reading_model_failed` 등) 이해 에이전트를 안 쓰면(꺼짐 · 그림자) 읽은 칸이 없으므로 네 문항 중 안 답한 것을 **모두** 묻는다.
+- ★**여행 전체 이동 수단**(이해 결과 `moves[].scope: all`)은 그 원문 조각에 「다 · 늘 · 모두 · 전부 · 항상 · 내내 · 주로 · 웬만하면 · 대부분」 같은 말이 있을 때만 읽은 값으로 받는다(코드의 사실 검사 — D-025 「인용은 원문에 글자 그대로」와 같은 자리). 「택시로 이동」 한 구간은 질문을 빼는 근거도, 등록 때 설문을 채우는 근거도 아니다(구간 수단은 이동 판정에만 쓴다). ☆x600 서버에서 이 말을 여행 전체로 읽은 사례 2건(설계서 §4).
+
+**`GET /v1/web/trip-intakes/{id}` 의 칸**
+- `questions[]` — 문항마다 공통 `{id, kind, title, why, answer}`.
+  - `single`: `options[{id, label}]` · `allow_custom` · `custom_max_length` · `custom_label`(직접 입력 단추 글 — `party` 는 「기타」) · `custom_answer`. `answer` = 선택지 id | null.
+  - `priority`: `options[{id, label}]`(분야) · `groups[{id(분야 id), label, options[{id, label}], read}]`. `answer` = `{areas: [분야 id, 순위대로], details: {분야 id: [세부 id, 순위대로]}}` | null.
+  - `pair`: `parts[{id, label, options[{id, label}], read}]`. `answer` = `{칸 id: 선택지 id}` | null.
+  - `read` = null | `{key, value, text, quotes[]}` — 계획서에서 읽어 채운 칸(이 칸은 묻지 않는다).
+- `skipped_by_reading[]` = `[{question, part, key, value, text, quotes[]}]` — 읽은 칸 때문에 빠졌거나 칸 일부가 빠진 문항. `part` = 칸 · 분야 id(문항이 통째로 빠졌으면 null), `key` = 읽기 열쇠(`survey.pace` 등), `text` = 고객 말로 바꾼 값, `quotes` = 원문 조각.
+- `questions_phase` = 1 | 2 · `questions_version` = `"3"`.
+- 글은 한국어다(영어 화면은 문항 · 선택지 `id` 로 옮긴다). ★웹이 모르는 `kind` 는 **그 문항만** 건너뛴다 — 2026-10-19 웹은 `single` 만 그리므로 `priority` · `pair` 는 화면 담당이 그릴 때까지 화면에 안 나온다.
+
+**`POST /v1/web/trip-intakes/{id}/survey`** `{answers: {문항 id: 답}}` → `{ok: true, answered: [지금까지 답한 모든 문항 id, 정렬], questions_version: "3"}`
+- 답 모양: `single` = 선택지 id, 또는 `{custom: "글"}`(`allow_custom` 문항만 — 지금 `party`, 공백 정리 후 1~1000자) · `priority` = `{areas: [1~3개, 겹침 없이], details: {고른 분야만: [그 분야 세부, 겹침 없이]}}`(세부를 안 준 분야는 비어 있는 채) · `pair` = `{칸 id: 선택지 id}`(1칸 이상) · `null` = 답 취소(이력에 취소가 남아 다음 접수에서 되살아나지 않는다).
+- `on_disruption`(`replace` · `ask_first`)과 `theme`(`food · nature · culture · activity · shopping · local`)은 문항이 아니지만 같은 입구가 받는다(항로 지킴이 카드 · 옛 화면의 테마 — 받아 두기만). `pace` 는 이제 문항이고 계획 담기 화면도 같은 선택지 id 로 보낸다.
+- 한 번에 1~8개 · **부분 답 · 멱등** · 같은 문항을 다시 보내면 **덮어쓴다**. 모르는 문항 · 선택지 · 모양이 틀린 답은 **422 `invalid_answers`**(`problems[{key, reason}]`) — **하나라도 틀리면 아무것도 저장하지 않는다.** 남의 접수 · 없는 접수는 같은 404, 이미 등록된 접수는 409 `intake_confirmed`. 저장은 접수의 `updated_at` 을 건드리지 않는다.
+- 답은 접수에 모아 두었다가 **`confirm` · `plan` 할 때 설문(`constraints.survey`)에 합쳐진다** — 요청이 직접 준 `survey` 가 이긴다(`priority_details` 는 영역마다 합친다). 안 답한 문항은 채워 넣지 않는다. 답이 하나도 없고 `survey` 도 안 보내면 등록 동작은 옛 그대로(설문 없음).
+
+**★질문 묶음 · 문항 번호와 슬롯 · 답 이력** `[2026-10-06 uiux 요청 — 맞춤 질문 의논 §7]`
+- **웹은 `questions[]` 만 그린다.** 문구 · 선택지의 뜻을 하드코딩하지 않는다. `questions[]` 는 슬롯 · 값을 싣지 않는다.
+- **문항 번호(`id`)와 슬롯(구조화 값이 들어가는 자리)은 다른 칸이다.** 선택지 번호 ↔ 구조화 값의 매핑은 서버가 소유한다(`Question.slot` · `Option.value`). 같은 선택지 번호의 뜻을 바꾸지 않는다. ★`[2026-10-19]` 묶음 3의 `priority` 는 묶음 2의 `priority`(대체할 곳 — 활동/이동 하나)와 **문항 번호는 같고 슬롯이 다르다**(`priority_rank`) — 옛 답은 053 이력에 남은 해석 값(슬롯 `priority`)으로 읽고, 이력 없는 옛 답은 새 매핑으로 읽히지 않는다(경고 후 버린다).
+- **질문 묶음 버전** `QUESTION_SET_VERSION` = `"3"`. 2 → 3 에서 바뀐 것: 문항 `preferred_mobility` · 옛 `priority`(단일) 삭제, 네 문항 새로(위 표). 버전이 다른 이전 답은 이어받지 않는다. ("3" 은 어느 서버에도 배포된 적 없다 — 다섯 문항 판은 격리 사본에서만 있었고 테마를 뺀 지금 모양이 "3" 의 첫 모양이다.)
+- **저장할 때 그때의 묶음을 남긴다** — 답 이력(`trip_intake_survey_answers`, 추가만 · 053): 문항 번호 · 선택지 번호 · 슬롯 · 해석한 값 · 그때 화면에 보인 문구와 라벨 · 묶음 버전. 여러 칸 답(`priority` · `pair`)은 **키를 정렬한 JSON 글**로 접수(`trip_intakes.survey`)와 이력의 `option_id` · `value` 에 남는다. 등록 때는 저장 때 해석한 값으로 설문을 만든다.
+- 활동 팀이 채팅에서 다시 묻는 질문(「일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?」 — 활동이 비슷한 곳 / 이동이 편한 곳)은 **로딩 문항이 아니다** — 따로 둔 질문(`survey_answers.REPLACEMENT_QUESTION`)이다. 지난 답 조회(`read.last_survey_answer`, `question_id: priority`)는 새 묶음의 우선순위 답에서 활동 · 이동 가운데 앞선 것을 고른다.
+- **지금 하지 않는 것**: 자유 선택지 생성 · 추정값으로 기존 답 덮어쓰기 · 로딩 경로의 모델 여러 번 호출 · 로딩이 끝날 때까지 못 물은 문항을 확인 화면 카드로 잇기(10-05 범위 변경 1 — 「나중에 답하기」 카드는 만들지 않는다).
+
+`[2026-10-09]` 질문별 건너뛰기 버튼을 제거했다. 직접 입력 원문은 `constraints.survey.custom_answers` 에 보존한다. [상세 계약](../web-flow-2026-10-09.md). ☆2026-10-06~10-18 의 묶음 2(`preferred_mobility` · 대체할 곳 `priority`, 최대 3)는 2026-10-19 에 위 다섯 문항으로 바꿨다.
 
 
 ## 관계
@@ -336,3 +400,56 @@ Team이 추가 정보를 요청하면 **`case_status: "waiting_input"`**이며 �
 `[2026-10-17 통합 회귀 보완]` 원문이 「호텔」처럼 일반 숙소 표현인 항목은 최초 자동 채움 뒤에도 같은 숙소 이름의 숙소·숙소 안 식사 후보 짝을 유지한다. 실제 체크인~체크아웃 숙박 항목(`kind: lodging`)에는 식사 짝을 붙이지 않는다. 숙소 안 식당의 존재를 확인한 것으로 표현하지 않는다. [원인·검증 기록](../../records/reports/2026-10-17_1835_lodging-meal-pairs.md).
 
 `[2026-10-17 실제 새 예시 후속 보완 계약]` 첫 회차에서 숙소를 채우지 못했더라도 다른 식당·활동 장소를 채워 실제 접수 판이 바뀌면, 미해결 숙소 빈칸만 다음 회차에 재검토한다. 장소 확정으로 전체 동선과 숙소 후보가 바뀌기 때문이다. 같은 판·같은 실패를 되풀이하지 않으며, 전체 최대 2회·후보 수·이동 계산 상한은 유지한다. 최종 요약은 빈칸별 마지막 시도만 사용하고 이전 실패도 전체 제안·회차 기록에 보존한다. 운영 기록에만 남기는 회차의 `retried_gaps`는 동선 변경 뒤 다시 본 숙소 빈칸이며, 새로 생긴 빈칸(`new_gaps`)과 구분한다. 전체 제안·회차 원본은 기존처럼 고객 응답에 싣지 않는다. 구현·검증·운영 재확인 상태는 [후속 기록](../../records/reports/2026-10-17_lodging-route-retry.md)을 따른다.
+
+### 해석 확인 질문 — `interpretations[]` · `POST …/interpretations` `[2026-10-20 사용자 지시]`
+
+사용자 지시(요지): 「13시 정도」처럼 한 말이 **시간의 뜻 · 실제 가게 이름 · 다른 가게의 오타**로 모두 읽힐 수 있다. AI 가 최선의 안 하나를 내고, 코드는 규칙으로 덮지 말고 AI 가 잘 했는지 검사만 한다. 확인 화면은 로딩 중 확인이 필요한 곳에서 멈추고, AI 가 판단한 안들을 보이되 **가장 유력한 1안을 맨 위**에, 그 아래 「직접 선택」. 서버는 그동안 1안으로 계속 계산하고, 다른 안을 고르면 그 지점부터 다시 계산한다(첫 기다림 안이면 고객의 기다림이 늘지 않게). 확정된 일정의 대안은 처음에 먼저 뽑는다. 화면의 애니메이션 · 로딩은 UI 팀 몫이다.
+☆계기: 2026-10-19 오라클 ARM 접수 — 읽기 AI 는 「오후 13시~16시 정도 약 3시간 일정이 비는데」를 **빈 시간**으로 읽었는데, 코드가 그 줄을 「AI 가 빠뜨린 줄」로 보고 규칙 일정 「정도」를 넣었고 장소 찾기의 오타 고침이 「정돈 대학로본점」으로 바꿨다([경위 기록](../../records/reports/2026-10-19_사또갈비_다른안_지역말.md)).
+구현 `components/intake/interpretations.py` · `pipeline._agent_rows`(묻는 줄) · `pipeline.view` · `stream.Feed` · `entry/trip_api.web_intake_interpretations` · 시험 `tests/unit/travel/test_intake_interpretations.py`.
+
+- **언제 묻나(지금 판)**: 규칙이 시각을 읽은 줄을 읽기 AI 가 일정이 아니라 **빈칸**(`gaps` — 빈 시간 · 추천받을 끼니 · 활동 자리) 또는 **추천 요청 · 질문 · 잡담 조각**(`pieces` 의 `plan_ask` · `question` · `chitchat`)으로 읽었을 때. AI 인용이 여러 줄을 이으면 그 줄 모두(공백 뺀 4자 이상인 줄만). 읽기 AI 를 안 쓰는 접수(꺼짐 · 그림자 · 실패)에는 없다.
+  - 그 줄의 규칙 일정은 **뺀 채로**(`items[n].removed: true`, 방법 `llm_agent` — 근거는 AI 의 읽기) 남는다 = 1안이 기본값. 장소는 찾아 둔다(2안 선택지에 쓴다). ☆전에는 일정으로 넣었다.
+  - 그 밖의 「AI 가 빠뜨린 줄」(AI 가 아무것으로도 읽지 않은 시각 줄)은 전처럼 규칙 일정을 넣는다.
+- **`GET /v1/web/trip-intakes/{id}` 의 `interpretations[]`**(없으면 `[]`, 읽는 동안에도 생긴 대로 보인다) — 원본 · 줄 순:
+  `{id: "q-{원본 위치}-{줄}", kind: "interpretation", question: "계획서의 「…」를 어떻게 이해할까요?", quote(그 줄 원문), line, item(검사의 일정 id), source_id, index, options[], answer(고른 선택지 id | null), applied(지금 판에 들어간 선택지 id), actions: ["pick_myself"]}`
+  - `options[]` = `{id, label, recommended, reason, effect, action, query}` — **1안이 맨 앞**(`recommended: true`):
+    - `reading` — AI 의 읽기(「13:00~16:00 빈 시간」 · 「식당을 추천받을 끼니」 · 「추천 요청」 …). `reason` = 「읽기 AI 가 「(인용)」를 …으로 읽었어요」 · `effect` = 「일정에 넣지 않고 13:00~16:00 빈 시간으로 둬요」.
+    - `item` — 규칙 일정으로 넣기. 장소를 찾았으면 그 이름(「「정돈 대학로본점」 13:00 일정(「정도」을 오타로 볼 때)」 — 찾은 방법이 오타 고침이면 괄호), 못 찾았으면 「「정도」 13:00 일정」 + `action: "pick_myself"`.
+    - `item_search` — 찾은 이름이 원문과 다를 때만: 「「정도」 이름 그대로 찾기」 · `action: "pick_myself"` · `query: "정도"` — 고르면 일정으로 넣고 화면이 그 일정의 장소 검색(`GET …/place-search?q=`)을 연다.
+    - 이름 · 좌표는 **이미 읽은 값뿐**이다(서버가 장소 이름을 지어내지 않는다). `reason` 은 1안에만, 나머지는 null.
+  - `applied` = 지금 판에 실제로 들어간 것(`reading` = 뺀 채, `item` · `item_search` = 넣음). 화면은 `answer` 가 없으면 `applied` 를 미리 고른 채로 보이면 된다.
+- **실시간 진행** `GET …/events` 에 내용 이벤트 **`interpretation`**(몸통 = 위 한 건, 키 `id`) — 질문이 생기면 곧바로(줄 · 일정 이벤트와 같은 때), 답 · 반영이 바뀌면 같은 키로 다시. 화면은 이 이벤트에서 로딩을 멈추고 묻는다.
+- **`POST /v1/web/trip-intakes/{id}/interpretations`** `{revision, answers: {질문 id: 선택지 id}}`(1~20개) → `GET …/{id}` 와 같은 모양 + `interpretation: {applied, pending, revision}`.
+  - **로딩 중**(고객에게 `status: reading` — 읽기 · 검사 · 먼저 채우기 중)이면 **저장만**(`pending: true` — 1안이 아닌 답) 하고 곧바로 답한다. 서버는 1안으로 계속 계산하다가 **첫 검사 · 먼저 채우기 직후, 고객에게 「검사 끝」을 알리기 전에** 저장된 답을 반영한다(그 일정을 되살리고 검사를 다시 — 아래 「새 판」). 질문이 있는 접수는 그 반영이 끝날 때까지 `status: reading` 으로 보인다.
+  - **로딩 뒤**(`status: review`)면 그 자리에서 반영한다 — 1안(`reading`)이면 판을 만들지 않고 답만 저장(`applied: true`), 다른 안이면 `edits` 와 같은 길로 **새 판**(`items[n].removed: false` — 근거 `via: interpretation`, 검사 · 이동을 그 판으로 다시 계산)을 만든다. 되돌리기(다른 안 → 1안)도 같다.
+  - 새 판이 생기면 미리 준비한 대안 중 **낡은 것만** 뒤에서 다시 준비한다(「대안 미리 준비」 — 일정 서명 · 앞뒤 서명이 바뀐 것만이라 질문 바로 옆 일정과 그 이동 구간이 다시 계산된다).
+  - `Accept: text/event-stream` 이면 실시간 진행 — `accepted` → `stage{applying}` → `beat` … → `result`(위 JSON 과 같은 본문) | `error`(남의 접수 404 · 낡은 판 409 · 모르는 답 422 도 스트림 안의 `error` 로 온다). 상한 `travel.op_stream.max_seconds.interpret`(120초).
+  - 오류: 남의 접수 · 없는 접수 404 · 낡은 판 409 `stale_revision` · 등록 · 실패한 접수 409 `intake_not_editable` · 모르는 질문 · 선택지 422 `invalid_answers`(`problems[{key, reason: unknown_question | unknown_option}]` — 하나라도 틀리면 아무것도 저장하지 않는다) · 그 일정을 고정했으면 409 `item_locked`.
+  - 저장: 답은 값 줄 `reading.answer:{질문 id}`(방법 `customer`), 질문은 `reading.question:{질문 id}`(방법 `llm_agent`) — 둘 다 `intake_claims`(마이그레이션 없음). 다시 읽는 접수에서도 고객의 답은 남는다.
+- **확정 일정의 대안 먼저**(`travel.candidates.prepare_scope`, 기본 `all`): 접수 검사가 끝나면 문제 난 일정의 대안을 먼저, 그다음 **확정된 활동 · 식사**(장소가 정해지고 고정 · 예약 · 위험 날짜가 아닌 것)의 대안도 같은 계산으로 미리 준비해 저장한다(「대안 미리 준비」 절 그대로 — 카카오에 기대는 일정은 저장하지 않는다). 확정 일정의 이유 문장은 **틀 문장**(모델 호출 없음 — x600 서버의 모델을 채팅과 나눠 쓴다). 숙소는 문제가 있을 때만(숙소 팀의 바깥 검색 한도). `problems` 로 두면 옛 동작. 등록 때 `detail.alternates` 에 실리는 것도 같다.
+- **아직 하지 않는 것**: 읽기 AI 가 처음부터 여러 해석(시간 / 가게 / 오타)을 함께 내는 것(지금은 AI 의 읽기 + 규칙 일정 + 찾은 장소로 선택지를 만든다 — 지시문 · 학습은 D-026 몫) · 「말로 알려 주기」(확인 화면 채팅 입구 — D-026 2단계) · 이름이 모호한 장소(`picked_nearest`) · 오타 고침 단독 줄을 이 질문으로 묻기(지금은 「다른 안」 · 「바꾸기」 길) · 고객 선택 기록을 학습 자료로 모으기(계속 학습 — 따로 정한다).
+
+### 장소를 못 찾았을 때 — 후보 보이고 묻기 + 직접 고르기 `[2026-10-19 사용자 결정]`
+
+결정 · 근거: [처리 확인 기록](../../records/reports/2026-10-19_계획읽기_종류모름_처리확인.md) 「사용자 결정」 · [설계](../../records/plans/2026-10-19_못찾은장소_후보와_직접고르기_설계.md). 화면은 화면 담당 세션 몫이다.
+화면 구현(2026-10-19, mock 서버 시험 · 실서버 서버 응답 확인 — 넣기 `pick` 확인, 바꾸기는 `requested_destination` 길이 먼저 잡아 `pick` 이 안 나옴): [화면 구현 기록](../../records/reports/2026-10-19_못찾은장소_카드_화면_구현.md).
+
+**계획 확인 화면 — `GET /v1/web/trip-intakes/{id}` 의 `prefill`** (먼저 채운 기록 `{filled[], questions[], kept[]}` — 로딩 중 설문 `questions[]` 와 다른 칸이다)
+- 장소를 못 찾은 줄(`place_state: unresolved`)은 `prefill.questions[]` 에 이 모양으로 들어간다(다른 질문 — 첫날 · 숙소 이름 · 범위 — 과 같은 목록, 한 번에 보인다):
+  `{kind: "place_not_found", question, quote, item, source_id, index, mode: "change", actions: ["pick_candidate", "pick_myself", "no_place"], blocked}`
+  - `item` = 검사의 일정 id(`items[].id`), `source_id` · `index` = 후보 · 검색 · 고치기에 쓰는 열쇠.
+  - **후보는 여기에 없다** — 화면이 `GET …/candidates?source_id=&index=` 로 받는다(1~3, 같은 검사 · 같은 순서). 장소 이름 · 좌표는 자료에 있는 곳만이다.
+  - 단추: `pick_candidate` → `POST …/edits` 의 `items[n].place` 에 고른 후보를 그대로(`{name, latitude, longitude, source, kind?, content_id?}`) · `pick_myself` → 그 줄의 장소 바꾸기 · 장소 검색(`GET …/place-search`)을 연다 — **화면 전환 없음**(계획 확인 화면이 곧 수정 화면) · `no_place` → `{"none": true}`.
+  - `blocked: true` — 장소 조회가 막혀(한도 · 시간 초과 · 연결 실패) 못 찾은 줄을 **한 번 다시 찾았는데도** 못 찾았다. 질문 문장이 그 사실을 말한다.
+- 조회가 막혀서 못 찾은 줄은 묻기 전에 서버가 **한 번** 다시 찾는다. 찾으면 질문 대신 `prefill.filled[]` 에 `{item, title, owner: "refind", owner_label: "장소 다시 찾기", reason: "장소 조회가 막혀 못 찾았던 곳을 다시 찾아 채웠어요", gap: "place_not_found", new: false}` 로 남는다(「우리가 채움」 표시). 막힘 없이 못 찾은 줄(지도에 없는 곳)은 다시 찾지 않는다.
+
+**여행 화면 채팅 — `POST /v1/web/trips/{id}/messages` 답의 `pick`**
+- 채팅으로 장소를 넣으려다(「○○ 넣어 줘」) 이름을 못 찾으면 거절 답(`status: "edit_refused"`)에 거절 문장과 함께 `pick` 이 실린다. 맨 위 `reason` 은 해석한 할 일(`decision_add_item` 등 `decision_<할 일>`)이고, 못 찾았다는 코드는 `outcome.reason: "place_not_found"` 에 있다 `[2026-10-19 실서버 확인으로 정정 — 앞 문장은 맨 위 reason 을 place_not_found 로 적었다]`. 장소를 바꾸려다(「○○로 바꿔 줘」) 못 찾은 경우는 아래 「위치 확인 필요로 저장」 줄이다:
+  `pick = {mode: "change" | "add", item_id, query, prefill, blocked, actions: ["pick_myself"]}`
+  - `mode: "change"` — `item_id` = 바꾸려던 일정. 화면은 「일정 수정」과 같은 전환으로 **수정 모드를 그 일정이 골라진 채** 연다(`query` 를 장소 검색 칸에).
+  - `mode: "add"` — `item_id: null`. 화면은 수정 모드로 넘어가며 **일정 추가 칸**을 열고 `prefill`(`title` · `date` · `starts_at` · `ends_at`? · `kind`?)을 미리 채운다. 값은 채팅 고치기가 쓰려던 것뿐이고, `ends_at` 은 고객이 끝 시각을 말했을 때만 있다(기본 머무는 시간으로 채운 끝은 싣지 않는다).
+  - 채팅 카드에는 후보가 없다 — 수정 모드에 그 일정의 후보 · 검색이 이미 있다.
+  - 대화 기록(`GET …/chat` 의 `turns[].reply.pick`)과 같은 요청 되풀이(`status: "duplicate"`) 답에도 실린다.
+  - `[2026-10-19 사용자 결정 A]` 「○○로 바꿔 줘」를 못 찾으면 서버는 요청한 이름을 **「위치 확인 필요」로 저장**하고(`requested_destination` — `status: "adjusted"`, `reason: "decision_replace_named"`, `outcome.navigation: "needs_location"`, 요청한 이름이 든 새 일정) **같은 답에 `pick` 도 싣는다** — `mode: "change"`, `item_id` = **바뀐(새) 일정**의 id, `query` = 요청한 이름. 화면은 수정 모드를 그 일정이 골라진 채 연다. 저장이 바꾼 것이 없으면(이미 반영 · 완료한 방문 안내) `pick` 이 없다. 저장 길로 갈 수 없는 경우(고정 · 예약 · 고객이 고정한 일정 · 대상 일정을 모름 · 판정 위반)는 위 거절 답과 같다(`edit_refused` + `pick: change`, `item_id` = 원래 일정).
+- 넣기의 종류를 정하려고 이름을 찾을 때 조회가 막혔으면 서버가 한 번 더 찾는다.
+- 등록 전 확인 화면에서 **대화로** 고르기는 아직 없다 — 확인 화면에 채팅 입구가 없다. D-026 2단계(대화와 계획서를 같은 고리로)에서 연다.

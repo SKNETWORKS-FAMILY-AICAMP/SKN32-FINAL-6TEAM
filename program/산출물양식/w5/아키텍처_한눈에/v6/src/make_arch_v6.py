@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 한눈에 — 멀티 에이전트 워크플로 · 시스템 아키텍처 (2026-10-02, v1)
+"""guguroute 한눈에 — 멀티 에이전트 워크플로 · 시스템 아키텍처 (2026-10-02, v1)
 
     python make_arch_v1.py   → ../triPilot_아키텍처_멘토반영_v6.html
 
@@ -108,7 +108,7 @@ def ioflow(x, y, w, h, num, title, gets, gives, cls="node", status=None):
 def workflow():
     S.clear()
     W, H = 1800, 1600
-    T(40, 40, "triPilot 멀티 에이전트 플로우 — 한 장", "big", "start")
+    T(40, 40, "guguroute 멀티 에이전트 플로우 — 한 장", "big", "start")
     T(40, 66, "① 계획을 올릴 때 한 번 검증하고 ② 여행이 끝날 때까지 지킨다 · 받음 = 이 단계가 받는 것 · 냄 = 다음 단계로 넘기는 것 · 금색 선 = 반복 · 붉은 선 = 실패", "s", "start")
     tx = 1330
     for k in ("done", "wip", "plan"):
@@ -283,7 +283,7 @@ def architecture():
     S.clear()
     W, H = 1500, 1160
     R(330, 14, 840, 48, "titlebar", 10)
-    T(750, 47, "triPilot — 시스템 구성도", "title-w")
+    T(750, 47, "guguroute — 시스템 구성도", "title-w")
     T(750, 90, "모바일 앱 + FastAPI 서버 + 오케스트레이터 + 에이전트 2 + 공용 툴 + 상시 감시 — 여행 일정을 끝날 때까지 지킨다", "sub")
 
     # 1 사용자
@@ -318,7 +318,7 @@ def architecture():
 
     # 3 처리 서버
     R(660, 110, 360, 270, "b-purple", 12)
-    T(840, 136, "3. triPilot 처리 서버", "bh-purple")
+    T(840, 136, "3. guguroute 처리 서버", "bh-purple")
     T(840, 155, "(같은 FastAPI 서버 안)", "fl2")
     cards = [(676, 168, "계획 읽기", "규칙 우선", "AI는 줄 위치만"), (848, 168, "계획 검증", "체크리스트 ✔ / ✖", "유형별 항목 (진행 중)"),
              (676, 272, "채팅 처리", "대안 추천", "재입력 안내"), (848, 272, "오케스트레이터", "담당 에이전트 고르기", "흐름 관리")]
@@ -550,8 +550,8 @@ def table(head, rows):
 def main():
     f1, f2 = workflow(), architecture()
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot 멘토 반영 플로우</title><style>{CSS}</style></head><body><main>
-<h1>triPilot — 멀티 에이전트 플로우 · 시스템 구성도 (멘토링 반영)</h1>
+<title>guguroute 멘토 반영 플로우</title><style>{CSS}</style></head><body><main>
+<h1>guguroute — 멀티 에이전트 플로우 · 시스템 구성도 (멘토링 반영)</h1>
 <p class="note">2026-10-02 · v6 · 멘토링 수행일지 2~4회차(09-11 · 09-14 · 10-01)에서 시스템 아키텍처 · 에이전트 플로우에 대한 지적만 골라 반영 · 형식은 부트캠프 참고 구성도(AI Agent 구현실습3 원본 7 · 29쪽) · 사실은 final_project_cs 코드</p>
 <div class="lead">멘토 지적 19개를 반영했습니다. 그림 1은 <b>한 장</b>에 ① 계획을 올릴 때의 검증과 ② 여행 중 지속 관리를 담고, 에이전트마다 <b>트리거 · 받음 · 점검 · 냄 · 평가</b>를 적었습니다. 그림 2는 세부를 빼고 <b>큰 그림</b>으로 줄였습니다. 아직 없는 것(SSE 검증 스트림 · 로그인 · 대화형 성향 질문 · AWS 배포)은 「예정」으로 표시했습니다.</div>
 

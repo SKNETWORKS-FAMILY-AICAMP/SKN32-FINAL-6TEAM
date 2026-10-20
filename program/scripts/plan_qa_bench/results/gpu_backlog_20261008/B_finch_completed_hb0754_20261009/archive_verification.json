@@ -2,31 +2,31 @@
   "files": [
     {
       "source": "/root/adapters/oos2r_finch_5e5_20261008/recipe.json",
-      "local": "datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009/recipe.json",
+      "local": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/recipe.json",
       "bytes": 584,
       "sha256": "a0ed16f626497d6a6591b43915c284d3102a9bb1990a3a9511628e597b205ca3"
     },
     {
       "source": "/root/adapters/oos2r_finch_5e5_20261008/README.md",
-      "local": "datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009/README.md",
+      "local": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/README.md",
       "bytes": 5214,
       "sha256": "a03a6bdbafb14b484b7ad2d36f2621efcbc0c2a0225287f27dcdc8901700f58f"
     },
     {
       "source": "/root/adapters/oos2r_finch_5e5_20261008/adapter_model.safetensors",
-      "local": "datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009/adapter_model.safetensors",
+      "local": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/adapter_model.safetensors",
       "bytes": 139602808,
       "sha256": "0913cb609290a99f7cdc0b91f29cc6e4d0a303d4ac7375d6913c551b6cb6d2d4"
     },
     {
       "source": "/root/adapters/oos2r_finch_5e5_20261008/adapter_config.json",
-      "local": "datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009/adapter_config.json",
+      "local": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/adapter_config.json",
       "bytes": 1157,
       "sha256": "4d42e6ad0e0b987e9dd67abcb747c5ca85783cae97c70f9e1f16c00c981886de"
     },
     {
       "source": "/root/adapters/oos2r_finch_5e5_20261008/recipe_complete.json",
-      "local": "datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009/recipe_complete.json",
+      "local": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/recipe_complete.json",
       "bytes": 80275,
       "sha256": "4378a1845fe7aa86bd45be686a742c819a09e0d4ea98341a00009da91a01457b"
     },
@@ -56,7 +56,7 @@
     },
     {
       "source": "/root/daily_rag_20261008/oos2r_finch_5e5_20261008_lora_f16.gguf",
-      "local": "datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009/oos2r_finch_5e5_20261008_lora_f16.gguf",
+      "local": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/oos2r_finch_5e5_20261008_lora_f16.gguf",
       "bytes": 69798912,
       "sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd"
     },

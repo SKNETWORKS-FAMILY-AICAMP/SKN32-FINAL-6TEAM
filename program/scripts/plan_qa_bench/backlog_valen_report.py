@@ -32,7 +32,7 @@ def main():
     ap=argparse.ArgumentParser();ap.add_argument('job');ap.add_argument('suite',choices=['d','d2','d3','h','mx','smoke12']);a=ap.parse_args()
     folder=HERE/'results/gpu_backlog_20261008'/a.job
     start=json.loads((folder/'started.json').read_text(encoding='utf-8'))
-    native_folder=ROOT/'datasets/travel/valen_native_eval_20261009'
+    native_folder=ROOT/'datasets/core/pointing/evaluations/valen_native_eval_20261009'
     prompt=native_folder/(a.suite+'.json')
     assert hashlib.sha256(prompt.read_bytes()).hexdigest()==start['prompt_sha256']
     gold=json.loads(prompt.read_text(encoding='utf-8'));ref={x['i']:x for x in gold}

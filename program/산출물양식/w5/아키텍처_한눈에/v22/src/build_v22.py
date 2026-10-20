@@ -48,7 +48,7 @@ def flow_section(uc, f):
 
 def doc_html(figs):
     f1, f2, f3, f4 = figs[0][1], figs[1][1], figs[2][1], figs[3][1]
-    p = [f'<p class="eyebrow">triPilot · 에이전트 흐름 · {VER} · 2026-10-03</p>', f"<h1>{escape(T.TITLE)}</h1>",
+    p = [f'<p class="eyebrow">guguroute · 에이전트 흐름 · {VER} · 2026-10-03</p>', f"<h1>{escape(T.TITLE)}</h1>",
          ul(T.TOP, "top lead"),
          "<h2>그림 읽는 법</h2>", table(["모양", "뜻"], T.READ_GUIDE, "guide"),
          flow_section(T.UC1, f1), flow_section(T.UC2, f2),
@@ -65,10 +65,10 @@ def doc_html(figs):
     p += ["<h2>부록 B. 멘토링 문서 규칙 → 이 그림에서</h2>", table(["규칙(문서 7~14쪽)", "이 그림에서"], RULES),
           "<h2>부록 C. 결함 — 고친 것 · 남은 것 · 정할 것</h2>", ul([escape(d) for d in DEFECTS]),
           "<h2>부록 D. 랭그래프 확인</h2>", table(["질문", "답"], LANGGRAPH), "</div>",
-          f"<footer>triPilot · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 글: 전역 설명 규칙 + technical-writing 검토 기준 · "
+          f"<footer>guguroute · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 글: 전역 설명 규칙 + technical-writing 검토 기준 · "
           f"사실: v13(코덱스 적대 검토 3회) · 읽기: 코덱스 읽기 검토 2회 · {VER}</footer>"]
     return (f'<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
-            f"<title>triPilot 에이전트 흐름 {VER}</title>{base.FONT_LINK}<style>{base.CSS}{CSS_EXTRA}</style></head><body><div class=\"frame\">"
+            f"<title>guguroute 에이전트 흐름 {VER}</title>{base.FONT_LINK}<style>{base.CSS}{CSS_EXTRA}</style></head><body><div class=\"frame\">"
             + "\n".join(p) + "</div></body></html>")
 
 

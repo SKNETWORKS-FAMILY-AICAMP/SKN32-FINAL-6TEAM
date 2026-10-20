@@ -63,7 +63,7 @@ LIMIT %s
 
 
 def _delete_one(conn, tenant_id: str, customer_id: UUID) -> dict[str, int]:
-    return member_cleanup.erase_customer(conn, tenant_id, customer_id)
+    return member_cleanup.erase_customer(conn, tenant_id, customer_id, reason="guest_cleanup")     # 계획서 접수는 지우기 전에 백업된다(`intake/backup.py`)
 
 
 def cleanup_guests(conn, tenant_id: str, now: datetime | None = None, *, limit: int = 200) -> dict[str, Any]:

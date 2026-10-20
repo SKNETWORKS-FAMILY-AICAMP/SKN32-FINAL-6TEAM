@@ -282,7 +282,11 @@ def test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up(api):
     assert kakao.asked == ["토속촌"]                                           # 카카오는 관광공사에 없을 때만
 
 
-def test_a_model_outage_only_skips_the_pointing_step(api):
+def test_a_model_outage_fails_the_reading_openly_instead_of_dropping_lines(api):
+    """`[2026-10-16 2회차 합의 · 사용자 승인]` 남은 줄 모델이 로컬 · 유료 모두 답하지 못하면 접수를 「읽기 실패」로 드러낸다.
+    ☆전에는 이 단계만 건너뛰어 규칙이 읽은 「경복궁」만 확인 화면에 남고 나머지 두 줄은 조용히 「못 읽은 줄」이 됐다(버리는 줄)."""
+    from app.domains.travel_ops.components.intake.pipeline import READING_FAILED_TEXT
+
     class Down(Labeler):
         def json(self, system, user):
             raise TimeoutError("ollama down")
@@ -291,11 +295,8 @@ def test_a_model_outage_only_skips_the_pointing_step(api):
         classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
         domain_routers=[build_trip_router(chat_factory=Down)]))
     view = _send(client, _key(client), text=CHAT_PLAN)
-    assert view["status"] == "review"
-    items = view["sources"][0]["items"]
-    assert [i["fields"]["title"]["value"] for i in items] == ["경복궁"]    # 규칙이 읽은 것은 그대로
-    assert [line["read"] for line in view["sources"][0]["lines"]] == [True, True, False, False]
-    assert view["sources"][0]["reading"]["error"].startswith("TimeoutError")   # ★장애는 이름으로 남는다
+    assert view["status"] == "fatal"
+    assert view["fatal"] == {"code": "reading_model_failed", "detail": READING_FAILED_TEXT}      # 고객이 다시 보내면 된다는 말
 
 
 # ── 3주차: 확인 화면 → 고치기 → 등록 ─────────────────────────────────────

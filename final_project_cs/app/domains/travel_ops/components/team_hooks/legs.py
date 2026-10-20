@@ -59,20 +59,35 @@ def is_registered() -> bool:
     return _selected_0 is not None
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None):
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None, stage=None):
     """구간 계산기를 만든다 → `leg(a, b, 도착목표, 그전엔안됨)` → (결과, None) 또는 (None, 이유).
     운영에서는 이동 팀 부재·계산기 준비 실패를 명시적으로 거절한다.
     `modes`(`["subway"]` 처럼 이 수단만으로) 는 주었을 때만 이동 팀에 넘긴다 — 안 받는 옛 등록 함수도 그대로 돈다."""
     _selected_0 = read_binding("legs", "leg_planner", globals()["_leg_planner"], required_team="mobility")
     if _selected_0 is None:
         return None
+    options = {"disruptions": disruptions}
     if modes:
-        result = _selected_0(party_size, constraints, disruptions=disruptions, modes=modes)
-    else:
-        result = _selected_0(party_size, constraints, disruptions=disruptions)
+        options["modes"] = modes
+    if stage is not None:
+        options["stage"] = stage
+    result = _selected_0(party_size, constraints, **options)
     if result is None and current_bindings() is not None:
         raise TeamUnavailable("mobility", "engine_unavailable")
     return result
+
+
+def legs_many(engine: Callable[..., Any] | None, jobs: list[tuple[Any, Any, Any, Any]]) -> list[tuple[Any, Any]]:
+    """여러 구간을 한 번에 — `engine` 은 `leg_planner(...)` 가 준 계산기, `jobs` = [(a, b, 도착 목표, 그전엔 안 됨)].
+    같은 순서의 [(결과, 이유)] 를 돌려준다. 같은 구간은 한 번만 센다. `[2026-10-19]`
+    ★계산기는 순수 파이썬 계산이라 스레드로 나눠도 빨라지지 않는다(실측) — 이 함수도 차례로 센다. 계산기가 이 기능을 모르는
+      옛 등록 · 시험 대역이면 하나씩 부른다(결과는 같다). `engine` 이 None 이면 빈 목록이 아니라 구간마다 (None, 이유)."""
+    if engine is None:
+        return [(None, {"code": "engine_off", "reason": "이동 계산기가 꺼져 있다"}) for _ in jobs]
+    many = getattr(engine, "many", None)
+    if callable(many):
+        return many(list(jobs))
+    return [engine(a, b, arrive, not_before) for a, b, arrive, not_before in jobs]
 
 
 def disruptions_from_events(events: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:

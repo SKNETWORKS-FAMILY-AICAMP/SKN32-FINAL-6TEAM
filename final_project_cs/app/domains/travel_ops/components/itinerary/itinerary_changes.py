@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from app.domains.travel_ops.components.planning.replan import Candidate
 
 from dataclasses import dataclass, field, replace
+from copy import deepcopy
 from datetime import datetime, time, timedelta
 from typing import Any, Callable
 from uuid import UUID, uuid4
@@ -693,11 +694,15 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
                     ) -> ItineraryChange | None:
     """저장된 후보가 다 막혔을 때 이동 계산기로 사고를 피하는 새 경로를 찾는다. 못 찾으면 None(종전 unresolved)."""
     if previous is None or following is None:
+        if current_departure:
+            raise DepartureReplanUnavailable("adjacent_visit_missing")
         return None
     from app.domains.travel_ops.components.team_hooks import legs
     from app.domains.travel_ops.components.planning.replan import Candidate
     a, b = _leg_place(previous), _leg_place(following)
     if a is None or b is None:
+        if current_departure:
+            raise DepartureReplanUnavailable("current_place_missing")
         return None
     disruptions, unmapped = legs.disruptions_from_events(events)
     if current_departure and unmapped:
@@ -710,8 +715,11 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
     start_floor = max(now, leave_at(previous))   # `[2026-10-13]` 숙소면 체크인 시각
     got, _why = leg(a, b, following.starts_at, start_floor)
     if got is None:
-        if current_departure and (_why or {}).get("code") == "no_data":
-            raise DepartureReplanUnavailable("mobility_source_unavailable")
+        if current_departure:
+            why = deepcopy(_why) if isinstance(_why, dict) else {"code": "invalid_replan_result"}
+            rejected.append(why)
+            if why.get("code") not in _DEPARTURE_INFEASIBLE_CODES:
+                raise DepartureReplanUnavailable("mobility_source_unavailable", report=why)
         return None
     if current_departure:
         try:
@@ -750,6 +758,15 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
 class DepartureReplanUnavailable(RuntimeError):
     """현재 경로를 계산할 소스/유효한 계산 결과가 없어 기존 일정으로 우회할 수 없다."""
 
+    def __init__(self, code: str, *, report: dict[str, Any] | None = None):
+        self.report = deepcopy(report) if report is not None else {"code": code}
+        super().__init__(code)
+
+
+_DEPARTURE_INFEASIBLE_CODES = frozenset({
+    "arrive_late", "before_first", "service_gap", "after_last", "no_path", "no_walk_path",
+})
+
 
 def plan_departure_adjustment(*, item: Item, previous: Item | None, following: Item | None,
                               events: dict[str, Any], now: datetime, trip: dict[str, Any]) -> Plan:
@@ -757,10 +774,11 @@ def plan_departure_adjustment(*, item: Item, previous: Item | None, following: I
     route = route_of(item) or {}
     _, planned = planned_option(item, route) if route else (None, {"label": item.title})
     causes = [{"category": "departure_revalidation", "kind": "current_route_replan"}]
+    rejected = []
     change = _engine_reroute(item=item, previous=previous, following=following, events=events,
-        now=now, causes=causes, rejected=[], planned=planned, party_size=trip.get("party_size"),
+        now=now, causes=causes, rejected=rejected, planned=planned, party_size=trip.get("party_size"),
         constraints=trip.get("constraints") or {}, current_departure=True)
-    return change or NoChange("unresolved", {"causes": causes})
+    return change or NoChange("unresolved", {"causes": causes, "departure_replan": rejected[-1]})
 
 
 # ── 고객 신고 — 식당 ───────────────────────────────────────────
@@ -1093,8 +1111,13 @@ def plan_nearby_store(*, items: list[Item], places: list[dict[str, Any]], at: da
 def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
               places_by_id: dict[str, dict[str, Any]], item_id: UUID, choice: str | None,
               message: str | None, request_id: str | None,
-              check: Callable[..., dict[str, Any]] | None) -> Plan:
+              check: Callable[..., dict[str, Any]] | None, customer_pick: bool = False) -> Plan:
     """적용된 안을 들고 있던 「다른 안」으로 바꾼다. 원래 안은 다시 「다른 안」이 된다.
+
+    `customer_pick` — 고객이 직접 고른 교체(채팅 「바꿔 줘」 · 웹 「다른 안으로」 · 제안 고르기)일 때만 True.
+    그때만 사건이 없고 안전과 무관한 자료(대기질 · 예보 · 교통)만 못 읽은 안을 바꾸고 알린다(`swap_refusal`).
+    ★기본(False)은 고객에게 **보이기 전에** 미리 거르는 쪽(`watch_relaxed.verified_options` — 항로 지킴이 묻는 안 · 확인 화면 위험 대안)이다 —
+      못 읽은 자료가 하나라도 있으면 `alternate_invalid` 로 빼서 「확인 못 함」으로 센다. 확인 못 한 후보를 안전한 대안처럼 내밀지 않는다.
 
     ★고객이 **본 버전**(`base_version`)을 기준으로만 바꾼다. 그 사이 일정이 또
       바뀌었으면 `stale` — 고객이 보지 못한 일정 위에 요청을 얹지 않는다.
@@ -1124,15 +1147,24 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
     if pick.get("place_id") and place is None:
         return NoChange("not_found")
     rechecked = None
+    unchecked: list[str] = []
+    name = pick.get("option_label") or pick["name"]
     if place is not None and current.kind == "activity" and check is not None:
         # ★계산한 뒤로 시간이 흘렀다 — 그 시각에 다시 점검한다.
         report = check(place=place, starts_at=starts)
         rechecked = (report or {}).get("verdict")
         if rechecked != "clear":
-            return NoChange("alternate_invalid", {"verdict": rechecked, "report": report})
+            refused = swap_refusal(name, starts, report)
+            if refused is not None:
+                return refused
+            if not customer_pick:
+                # ★`[2026-10-20]` 미리 거르기 — 못 읽은 자료가 있으면 싣지 않는다(고객이 고른 교체만 느슨하게)
+                return NoChange("alternate_invalid", {"verdict": rechecked, "report": report})
+            # ★`[2026-10-20 사용자 결정 — D-018]` 사건이 없고 안전과 무관한 자료(대기질 · 예보 · 교통)만 못 읽었다 — 고객이 직접 고른 교체는 하고,
+            #   못 확인한 것을 알린다. ☆전에는 대기질 「모름」 하나로 교체 전체를 거절하고 채팅이 「요청을 완료하지 못했어요」로 끝났다(x600 2026-10-20)
+            unchecked = list(report.get("failed_categories") or [])
     applied = applied_record(current)
     remaining = [a for a in alternates if a is not pick] + [applied]
-    name = pick.get("option_label") or pick["name"]
     detail = {**current.detail, "alternates": remaining,
               "other_options": [a["name"] for a in remaining], "customer_requested": True}
     detail.pop("warnings", None)
@@ -1146,6 +1178,8 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
     text = (f"요청하신 대로 {applied['name']} 대신 {name}(으)로 바꿨습니다"
             f"({seoul(starts):%H:%M} 시작).")
     warnings = [f"{name}: {warning}" for warning in pick.get("warnings") or []]
+    if unchecked:
+        warnings.append(f"{name}: {unchecked_text(unchecked)}")
     if warnings:
         text += " " + " ".join(warnings)
     # ★`[2026-10-13]` 숙소 · 항공 후보(외부 소스 — 예약 전)는 고른 안을 그대로 남기고 예약 링크를 알린다(숙소 · 항공 팀의 `_choose` 와 같은 칸)
@@ -1171,7 +1205,55 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
         replacement = replace(replacement, ends_at=None)
     return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement, **shifted},
-                           summary={"to": name, "rechecked": rechecked})
+                           summary={"to": name, "rechecked": rechecked, **({"unchecked": unchecked} if unchecked else {})})
+
+
+#: ★`[2026-10-20]` 고객이 고른 교체라도 **못 읽으면 바꾸지 않는** 자료 — 몸이 다칠 수 있는 사건의 소스(`pending.SAFETY_CATEGORIES`)와 기상특보.
+#:  특보는 못 읽으면 「경보」인지 알 수 없다. 그 밖(대기질 · 예보 · 교통 통제)은 못 읽어도 바꾸고 알린다(D-018 — 실패한 자료에 기대는 작업만 보류)
+SWAP_HOLD_UNREAD = frozenset({"earthquake", "disaster_msg", "weather_warning"})
+#: 점검 항목의 고객용 이름
+CHECK_LABELS = {"forecast": "날씨 예보", "weather_warning": "기상특보", "disaster_msg": "재난문자", "traffic_control": "교통 통제",
+                "air_quality": "대기질", "earthquake": "지진 정보", "place_status": "영업 상태"}
+#: 사건 종류 중 영어 값으로 오는 것 — 영업 상태 확인의 「휴무」(`place_status.PlaceStatus.merge`)
+EVENT_KIND_LABELS = {"closed": "휴무"}
+
+
+def _labels(categories: list[str]) -> str:
+    return " · ".join(CHECK_LABELS.get(c, c) for c in categories)
+
+
+def unchecked_text(categories: list[str]) -> str:
+    """못 읽은 점검 항목 → 알림 한 문장(교체는 했다)."""
+    return f"{_labels(categories)} 정보는 지금 확인하지 못했어요 — 가시기 전에 한 번 더 살펴봐 주세요."
+
+
+def swap_refusal(name: str, starts: datetime, report: dict[str, Any] | None) -> NoChange | None:
+    """교체 직전 다시 점검이 `clear` 가 아닐 때 — 바꾸지 않을 이유가 있으면 그 답(`alternate_invalid` + 고객용 `text`), 바꿔도 되면 None.
+
+    바꾸지 않는다: ①실제 사건이 있다(`disruptions`) ②안전 자료(`SWAP_HOLD_UNREAD`)를 못 읽었다 ③점검 자체를 못 했다(도구 없음 · 한도 — 실패 항목 목록이 없다).
+    바꾼다(None): 사건이 없고 못 읽은 것이 안전과 무관한 자료뿐이다 — 부르는 쪽이 못 확인한 것을 알린다.
+    ☆`[2026-10-20]` 전에는 `clear` 가 아니면 모두 `alternate_invalid` 였고 문장이 없어 채팅이 `escalated`(「요청을 완료하지 못했어요」)로 끝났다."""
+    report = report or {}
+    verdict = report.get("verdict")
+    failed = list(report.get("failed_categories") or [])
+    disruptions = list(report.get("disruptions") or [])
+    detail = {"verdict": verdict, "report": report}
+    at = f"{seoul(starts):%H:%M}"
+    if disruptions:
+        kinds = []
+        for event in disruptions:
+            kind = event.get("kind")
+            label = str(EVENT_KIND_LABELS.get(kind, kind) if kind else CHECK_LABELS.get(event.get("category"), event.get("category") or "사건"))
+            if label not in kinds:
+                kinds.append(label)
+        return NoChange("alternate_invalid", {**detail, "text": (
+            f"{name}은(는) {at}에 {' · '.join(kinds[:3])} 소식이 있어 바꾸지 않았어요. 일정은 그대로예요.")})
+    hold = [c for c in failed if c in SWAP_HOLD_UNREAD]
+    if verdict == "fatal" and failed and not hold:
+        return None
+    what = _labels(hold) if hold else "안전 정보"
+    return NoChange("alternate_invalid", {**detail, "unchecked": hold or failed, "text": (
+        f"{name}의 {at} {what}를 지금 확인하지 못해 바꾸지 않았어요. 일정은 그대로예요. 잠시 뒤 다시 말씀해 주세요.")})
 
 
 def shift_moves_after(items: list[Item], current: Item, ends: datetime | None) -> tuple[dict[UUID, Item], Item | None]:
@@ -1214,6 +1296,7 @@ RELAX_SHIFTS_MIN = (30, 60, 90, 120)
 RELAX_RADIUS_M = 1500
 #: 반경을 넓힌 안의 반경 · 고르게 할 안 수 — ★우리가 고른 값(2026-09-29 사용자 요구 「3개를 뽑아 추천」). 5km 는 지하철 네댓 정거장
 RELAX_WIDE_M = 5000
+RELAX_ACTIVITY_RADII_M = (RELAX_WIDE_M, 10_000, 15_000)
 RELAX_WANT = 3
 
 
@@ -1263,7 +1346,8 @@ def plan_nearby(kind: str, *, trip: dict[str, Any], places: list[dict[str, Any]]
 
 def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
                     state_lookup: DiningStateLookup | None = None, exclude: set[str] = frozenset(),
-                    causes: list[dict[str, Any]] = ()) -> list[dict[str, Any]]:
+                    causes: list[dict[str, Any]] = (), now: datetime | None = None,
+                    wide_radius_m: int = RELAX_WIDE_M) -> list[dict[str, Any]]:
     """같은 조건으로 0곳일 때 **조건을 하나씩 풀어** 실제로 되는 안. `[2026-09-29 사용자 지적 — ui 세션 전달]`
 
     ☆왜 — 「08:00에 갈 수 있는 식당이 3km 안에 없어요」로 끝나면 고객이 할 수 있는 것이 없다. 되는 안을 계산해 준다.
@@ -1277,9 +1361,21 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
     돌려주는 것: 적용에 필요한 값을 그대로 적은 안(`alternate_record` 모양 + `relaxed` · `note`), 되는 것만.
     """
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
-    duration = minutes_between(current.starts_at, current.ends_at)
+    ongoing = now is not None and current.starts_at < now
+    if ongoing and current.ends_at is not None and current.ends_at <= now:
+        return []
+    base_start = max(current.starts_at, now) if now is not None else current.starts_at
+    duration = minutes_between(base_start, current.ends_at)
     original = str(current.place["place_id"])
     constraints = trip.get("constraints") or {}
+    travel_minutes: dict[str, tuple[int, str]] = {}
+    route_probe = MealRoute(planned_end=base_start, leg=_leg_engine(trip)) if ongoing and current.kind == "activity" else None
+    # 다음 방문과 그 앞 이동을 보존하면서 방문을 줄이는 선택지도 만든다.
+    latest_finish = None
+    if ongoing and current.kind == "activity" and following is not None:
+        onward = sum(((i.ends_at or i.starts_at) - i.starts_at for i in items
+                      if current.seq < i.seq < following.seq and i.kind == "mobility"), timedelta())
+        latest_finish = following.starts_at - onward
 
     def best_at(center: dict[str, Any], start: datetime, radius: int):
         end = start + timedelta(minutes=duration)
@@ -1290,9 +1386,45 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
                                       exclude={original, str(center["place_id"])}, state_lookup=state_lookup,
                                       route=meal_route(items, current, leg=_leg_engine(trip)))
         else:
-            found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
-                                                    radius_m=radius)
-                     if str(c.place["place_id"]) not in (original, str(center["place_id"]))]
+            if ongoing:
+                from app.domains.travel_ops.components.planning.replan import WEATHER_LIKE, distance_m, walk_minutes
+
+                found = []
+                indoor_only = any(c.get("category") in WEATHER_LIKE for c in causes)
+                for spot in places:
+                    key = str(spot["place_id"])
+                    if (spot.get("kind") != "activity" or spot.get("latitude") is None or spot.get("longitude") is None
+                            or key in {original, str(center["place_id"])} or distance_m(center, spot) > radius):
+                        continue
+                    if indoor_only and not ((spot.get("attributes") or {}).get("indoor") or spot.get("weather_sensitive") is False):
+                        continue
+                    if key not in travel_minutes:
+                        eta = route_probe._eta(current.place, spot, base_start) if route_probe.leg is not None else None
+                        travel_minutes[key] = (max(0, eta), "이동 계산") if eta is not None else (
+                            walk_minutes(distance_m(current.place, spot)), "도보 추정")
+                    eta, basis = travel_minutes[key]
+                    arrival = max(start, base_start + timedelta(minutes=eta))
+                    finish = arrival + timedelta(minutes=duration)
+                    if latest_finish is not None:
+                        finish = min(finish, latest_finish)
+                    visit_minutes = int((finish - arrival).total_seconds() // 60)
+                    if visit_minutes < min(duration, 25):
+                        from app.domains.travel_ops.components import candidate_diagnostics
+                        candidate_diagnostics.record(key=key, name=spot.get("name"), outcome="rejected",
+                                                     reasons=["다음 일정 전 최소 방문 시간이 부족하다"])
+                        continue
+                    got = activity_candidates(original=center, places=[spot], start=arrival, end=finish,
+                                              causes=list(causes), radius_m=radius)
+                    for candidate in got:
+                        candidate.starts_at, candidate.ends_at = arrival, finish
+                        candidate.note = f"지금 출발 · {basis} {eta}분 · {seoul(arrival):%H:%M}~{seoul(finish):%H:%M} 방문"
+                        if visit_minutes < duration:
+                            candidate.note += f" · 다음 일정에 맞춰 방문 {visit_minutes}분으로 줄임"
+                    found.extend(got)
+            else:
+                found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
+                                                        radius_m=radius)
+                         if str(c.place["place_id"]) not in (original, str(center["place_id"]))]
             for candidate in found:
                 candidate.rejected = [r for r in candidate.rejected if not r.startswith("가격을 몰라")]
         # `exclude` — 이미 고른 곳(바꾼 뒤의 다른 안을 모을 때 바꾼 곳 · 통과한 나머지)은 다시 내지 않는다
@@ -1310,11 +1442,12 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
             if current.kind == "activity" and any(_same_activity_site(candidate, other) for other in picked):
                 continue
             picked.append(candidate)
-            out.append({**alternate_record(candidate), "starts_at": start.isoformat(), "ends_at": end.isoformat(),
-                        "relaxed": relaxed, "note": note})
+            out.append({**alternate_record(candidate), "starts_at": (candidate.starts_at or start).isoformat(),
+                        "ends_at": (candidate.ends_at or end).isoformat(), "relaxed": relaxed,
+                        "note": " · ".join(part for part in [note, candidate.note] if part)})
 
     for shift in RELAX_SHIFTS_MIN:
-        start = current.starts_at + timedelta(minutes=shift)
+        start = base_start + timedelta(minutes=shift)
         # ★고를 때(`plan_swap`)와 같은 기준 — 뒤 이동을 밀고도 다음 장소 일정에 닿아야 올린다(고를 수 없는 안을 보이지 않는다)
         if shift_moves_after(items, current, start + timedelta(minutes=duration))[1] is not None:
             break
@@ -1323,11 +1456,11 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
             add(ranked, start, end, "time", f"{seoul(start):%H:%M}으로 늦추면", take=1)
             break
     if following is not None and following.place and following.place.get("latitude") is not None:
-        ranked, end = best_at(following.place, current.starts_at, RELAX_RADIUS_M)
-        add(ranked, current.starts_at, end, "near_next", f"다음 일정({following.place['name']}) 근처", take=1)
+        ranked, end = best_at(following.place, base_start, RELAX_RADIUS_M)
+        add(ranked, base_start, end, "near_next", f"다음 일정({following.place['name']}) 근처", take=1)
     # ★`[2026-09-29 사용자 요구 — ui 세션 전달]` 반경을 넓힌 안까지 더해 **3개**를 고르게 한다(「범위를 넓혀 찾아서 알려 주고」)
-    ranked, end = best_at(current.place, current.starts_at, RELAX_WIDE_M)
-    add(ranked, current.starts_at, end, "wider", f"{RELAX_WIDE_M / 1000:g}km 안으로 넓히면", take=RELAX_WANT)
+    ranked, end = best_at(current.place, base_start, wide_radius_m)
+    add(ranked, base_start, end, "wider", f"{wide_radius_m / 1000:g}km 안으로 넓히면", take=RELAX_WANT)
     return out
 
 
@@ -1347,7 +1480,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
                          request_id: str | None, state_lookup: DiningStateLookup | None = None,
                          price_lookup: PriceLookup | None = None, reported_closed: bool = False,
-                         meal_picker: MealPicker | None = None) -> Plan:
+                         meal_picker: MealPicker | None = None, search_origin: dict[str, Any] | None = None) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
 
     ★`[2026-10-16]` `reported_closed` — 「○○ 문 닫았대」(지금 식사가 아닌 항목의 휴무 신고)도 같은 계산을 쓴다. 다만 **신고**다:
@@ -1381,6 +1514,10 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                           {"category": "customer_request", "type": "alternate", "from": current.place["name"],
                            "message": message, "evidence": "고객 요청"}), request_id)
     original = str(current.place["place_id"])
+    if search_origin is not None:
+        from app.domains.travel_ops.components.planning.replan import distance_m
+        places = [p for p in places if p.get("latitude") is not None and p.get("longitude") is not None
+                  and distance_m(search_origin, p) <= max(ALTERNATE_RADII_M["dining"])]
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
     # ★`[2026-09-29 ui 세션 지적]` 0곳이면 **반경을 넓혀 다시** 찾는다 — 700m 는 설계 근거 없는 구현 선택이었고, 08:00 아침처럼
     #   그 시각에 여는 곳이 드문 때 「없어요」가 쉽게 나왔다(실서버 「첫날 아침 일정 바꿔」). 식사 700m → 1.5km → 3km,
@@ -1390,7 +1527,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
         duration = minutes_between(current.starts_at, current.ends_at)
         for radius in ALTERNATE_RADII_M["dining"]:
             candidates = dining_candidates(
-                original=current.place, places=places, arrival=current.starts_at, minutes=duration,
+                original=search_origin or current.place, places=places, arrival=current.starts_at, minutes=duration,
                 constraints=trip.get("constraints") or {}, radius_m=radius,
                 next_start=following.starts_at if following else None, exclude={original},
                 state_lookup=state_lookup,

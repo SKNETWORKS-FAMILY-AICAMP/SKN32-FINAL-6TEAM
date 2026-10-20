@@ -1,4 +1,4 @@
-// 테스트용 mock 서버 — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
+// 테스트용 mock 서버 — ★실제 서버가 아니다. guguroute 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
 // 실제 앱(개발 서버 3100 · 배포)은 이 파일을 쓰지 않는다. 실제 서버 확인은 `tests/real/` 이 한다.
 //
 // ★Why a test mock server: registering on the real server sends a notice to the team's chat channel and leaves data behind.
@@ -37,6 +37,7 @@ const DEFAULTS = {
   choose: "ok",
   // chat: "answered" (server gives an answer) | "escalated_bare" (an old server: escalated with no answer)
   //   | "summary" (a 「요약」 question gets the day's stops as the real server writes them — for the pictures of `scripts/guide-shots.mjs`)
+  //   | "pick_change" · "pick_add" `[2026-10-19 사용자 결정 — 못 찾은 장소]` (the chat could not find 「민수네」: `edit_refused` with `pick` — change 점심 식당(i-c) / add on day 1 at 19:00)
   chat: "answered",
   // intake once read: "items" (has stops, ready) | "empty_plan" (nothing read, the customer asks us to plan)
   //   | "blocked" (has a stop whose place the server could not settle: not ready, one problem)
@@ -153,6 +154,9 @@ const DEFAULTS = {
   candidateNotes: [],
   // `[2026-10-07]` "on": candidates carry `basis` (same_kind · similar_experience · meal_inferred) and `reason`, as the server does since c0ca7054
   candidateBasis: "off",
+  // `[2026-10-19 사용자 결정 — 못 찾은 장소는 후보 보이고 묻기]` (board "rich"): "on" — the 2nd stop 「을지로 그 집」 has no place (`place_state: unresolved`) and `prefill.questions` asks about it
+  //   (`kind: place_not_found`); "blocked" — the same, the lookup was blocked and searched once more. Its candidates are `CANDIDATES` (two) unless `candidateNotes` empties them.
+  unfound: "off",
   // the whole-plan recommendation (`POST …/autofix`): "on" | "none" (it finds nothing to change although something needs a look) | "unknown_from" (what it changes had no known place before: it cannot be put back)
   autofix: "on",
   // social sign-in (`/v1/web/auth/*`, `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): "on" | "off" (an older server: 404) | "none" (no provider set up)
@@ -236,11 +240,11 @@ function telegramChannelRefusal(body) {
 let attempts = new Map();
 // ── 동의 기록 (2026-10-05) ── 시작
 /** The terms version the page under test carries (`src/features/consent/terms-content.ts` `TERMS_VERSION`) - keep the two the same; a different one is what "server_ahead" plays. */
-const TERMS_VERSION = "2026-10-10.1";   // 웹 `terms-content.ts` 와 같은 값(2026-10-07 보관 기간 확정)
-// `[2026-10-12]` The codes the cs server records (`consents.py` `CODES`) - not the page's list. The page's sixth, `service_improvement`, is
-// not on the server yet and the server refuses the whole save when it comes (wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md);
-// the stub had it, which is why the browser tests passed. Add it here when the server takes it.
-const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel"];
+const TERMS_VERSION = "2026-10-19.1";   // 웹 `terms-content.ts` 와 같은 값(`[2026-10-19]` 제6조 항로 지킴이 기준 · 처리방침 설문 항목)
+// `[2026-10-12]` The codes the cs server records (`consents.py` `CODES`) - not the page's list (a code the server does not know made it refuse the
+// whole save while the stub took it: wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md). `[2026-10-17]` The server records the sixth,
+// `service_improvement`.
+const CONSENT_CODES = ["service_terms", "privacy", "sensitive", "location", "alert_channel", "service_improvement"];
 const CONSENT_REQUIRED = ["service_terms", "privacy"];
 /** code → { agreed, version, at } - the latest line of the append-only record (the stub keeps only that; the requests it received are the log). */
 let consentRecords = new Map();
@@ -420,7 +424,7 @@ const place = (name, latitude, longitude, extra = {}) => ({ name, latitude, long
 /** The check of a plan — the shape of `review` in the real server's answer. "rich": three stops (one needs review) and two legs. */
 function freshBoard(kind = "simple") {
   const rich = freshRichBoard();
-  const board = kind === "rich" ? rich : kind === "stay" ? freshStayBoard() : { revision: 1, items: [rich.items[0]], moves: [] };
+  const board = kind === "rich" ? withUnfoundStop(rich) : kind === "stay" ? freshStayBoard() : { revision: 1, items: [rich.items[0]], moves: [] };
   return scenario.reread === "on" || scenario.reread === "note_only" ? withReread(board) : board;
 }
 
@@ -615,7 +619,28 @@ function withQuestions(view) {
   return { ...view, questions: list, questions_version: "2" };
 }
 
-function intakeView(revision) { return withQuestions(intakeBaseView(revision)); }
+function intakeView(revision) { return withUnfoundQuestion(withQuestions(intakeBaseView(revision))); }
+
+// ── 못 찾은 장소 (2026-10-19) ── 시작
+const UNFOUND_TITLE = "을지로 그 집";
+/** `unfound: "on" | "blocked"` — the 2nd stop's place was not found; the legs either side wait for it (the server checks them once it has a place). */
+function withUnfoundStop(board) {
+  if (scenario.unfound === "off" || !board.items[1]) return board;
+  const items = board.items.map((item, at) => at !== 1 ? item : { ...item, title: UNFOUND_TITLE, kind: "dining", place: null, place_state: "unresolved", status: "review", can_lock: false,
+    candidates_hint: 2, rows: [row("place", "warn", "지도에서 이 장소를 찾지 못했어요")] });
+  const moves = board.moves.map((move) => move.from === "0-1" || move.to === "0-1" ? { ...move, status: "waiting", mode: null, mode_label: null, minutes: null, km: null, depart: null, arrive: null,
+    slack_min: null, summary: "", rows: [row("route", "unknown", "장소가 정해지면 이동을 확인해요")] } : move);
+  return { ...board, items, moves };
+}
+/** The record of the first fill, as the server keeps it: the question stays after the stop gets a place (the screen stops asking once the stop has one). */
+function withUnfoundQuestion(view) {
+  if (scenario.unfound === "off" || !view.review) return view;
+  const blocked = scenario.unfound === "blocked";
+  return { ...view, prefill: { filled: [], kept: [], questions: [{ kind: "place_not_found",
+    question: blocked ? `장소 조회가 막혀 다시 찾아봤지만 「${UNFOUND_TITLE}」을 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요` : `「${UNFOUND_TITLE}」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요`,
+    quote: UNFOUND_TITLE, item: "0-1", source_id: "s1", index: 1, mode: "change", actions: ["pick_candidate", "pick_myself", "no_place"], blocked }] } };
+}
+// ── 못 찾은 장소 (2026-10-19) ── 끝
 
 function intakeBaseView(revision) {
   const base = { intake_id: INTAKE_ID, revision, fatal: null, trip_id: confirmed ? TRIP_ID : null, needs_review: [] };
@@ -638,7 +663,9 @@ function intakeBaseView(revision) {
     source.items = [...board.items, ...(board.removed ?? [])].map((stop) => ({
       index: stop.index, line: stop.index + 1, day: stop.day, date: stop.date,
       fields: Object.fromEntries(["title", "date", "starts_at", "ends_at", "kind", "place"].map((key) =>
-        [key, { value: stop[key], method: "customer", evidence: { line: stop.index + 1 }, needs_review: false, note: null }])),
+        // `[2026-10-19]` a place not found is the name looked up with no position (not the customer's 「장소 없음」, which is `null` by the customer)
+        [key, key === "place" && stop.place_state === "unresolved" ? { value: { name: stop.title }, method: "lookup", evidence: { line: stop.index + 1 }, needs_review: true, note: null }
+          : { value: stop[key], method: "customer", evidence: { line: stop.index + 1 }, needs_review: false, note: null }])),
     }));
   }
   const withReview = scenario.review === "on" && scenario.intake === "items"
@@ -775,8 +802,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   if (path === "/__test/hangup") { const closed = bells.size; bells.forEach((stream) => stream.end()); bells.clear(); return json(response, 200, { closed }, origin); }
   if (path.startsWith("/plan/")) {
-    // `download=1` → the same page sent as a file (the server writes `Content-Disposition: attachment; filename*=UTF-8''triPilot-<제목>.html`)
-    const file = url.searchParams.get("download") === "1" ? { "Content-Disposition": "attachment; filename*=UTF-8''triPilot-" + encodeURIComponent("내 여행") + ".html" } : {};
+    // `download=1` → the same page sent as a file (the server writes `Content-Disposition: attachment; filename*=UTF-8''구구루트-<제목>.html`)
+    const file = url.searchParams.get("download") === "1" ? { "Content-Disposition": "attachment; filename*=UTF-8''" + encodeURIComponent("구구루트-내 여행") + ".html" } : {};
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", ...file });
     response.end("<h1>여행계획서(스텁)</h1>");
     return;
@@ -1464,6 +1491,16 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
 /** The chat answer — the same body for the JSON answer and for the stream's `result`. */
 function chatReply(body) {
   if (scenario.chat === "escalated_bare") return { case_id: "c-1", case_status: "escalated", status: "escalated", reason: "not_understood", report: null };
+  if (scenario.chat === "pick_change" || scenario.chat === "pick_add") {
+    // `[2026-10-19]` the server's refusal when the place it was asked for is not found (`conversation/chat_edit.pick_card`): the sentence, and where 「직접 고르기」 goes
+    const add = scenario.chat === "pick_add";
+    const answer = "「민수네」를 지도에서 찾지 못해 일정은 바꾸지 않았어요. 정확한 이름이나 주소를 알려 주시거나 직접 골라 주세요.";
+    const pick = add ? { mode: "add", item_id: null, query: "민수네", prefill: { title: "민수네", date: "2026-10-01", starts_at: "19:00", kind: "dining" }, blocked: false, actions: ["pick_myself"] }
+      : { mode: "change", item_id: "i-c", query: "민수네", prefill: {}, blocked: false, actions: ["pick_myself"] };
+    turns.push({ role: "customer", text: body.message, case_id: "c-pick", at: new Date(Date.now() - 50).toISOString() },
+      { role: "assistant", text: answer, case_id: "c-pick", at: new Date(Date.now() - 40).toISOString(), reply: { pick } });
+    return { case_id: "c-pick", case_status: "resolved", status: "edit_refused", reason: "place_not_found", answer, pick };
+  }
   // a question about where the customer is now: the real server's decision unit says so with `needs_location`
   //   (this test mock server only looks for 「여기서」). With a position it answers from there.
   const here = String(body.message).includes("여기서");

@@ -19,11 +19,11 @@ export const REQUIRED_CONSENTS: readonly ConsentCode[] = ["service_terms", "priv
 export const OPTIONAL_CONSENTS: readonly ConsentCode[] = CONSENT_CODES.filter((code) => !REQUIRED_CONSENTS.includes(code));
 
 /**
- * `[2026-10-12 임시]` 서버 동의 기록(`consents.py` `CODES`, 계약 `rest-endpoints.md` 「항목 다섯」)이 아직 모르는 항목. 보내면 서버가 저장 **전체**를
- * 422 `invalid_items` 로 거부해 필수 동의까지 기록되지 않는다(`wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md`).
- * 서버가 받을 때까지 보내지 않고, 화면은 전문만 보이며 「준비 중」이다. 서버가 받으면 이 목록에서 뺀다.
+ * 서버 동의 기록(`consents.py` `CODES`)이 아직 모르는 항목 — 보내면 서버가 저장 **전체**를 422 `invalid_items` 로 거부해 필수 동의까지 기록되지 않는다
+ * (`wiki/records/reports/debugs/2026-10-12_2024_동의저장_422_웹6항목_서버5항목.md`). 여기 든 항목은 보내지 않고 화면은 전문만 보이며 「준비 중」이다.
+ * `[2026-10-17 ST4F-609]` 서버가 `service_improvement` 를 기록해(CODES 여섯) 비웠다 — 약관 판 2026-10-17.1 과 함께 서버 · 웹을 같이 올린다.
  */
-export const SERVER_PENDING_CONSENTS: readonly ConsentCode[] = ["service_improvement"];
+export const SERVER_PENDING_CONSENTS: readonly ConsentCode[] = [];
 export const serverPending = (code: ConsentCode): boolean => SERVER_PENDING_CONSENTS.includes(code);
 
 export type ConsentMap = Record<ConsentCode, boolean>;

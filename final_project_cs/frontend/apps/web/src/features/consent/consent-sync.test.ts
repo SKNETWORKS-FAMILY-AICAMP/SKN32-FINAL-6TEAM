@@ -3,9 +3,9 @@ import { resetSessionState } from "@/lib/live/client";
 import { answeringSession } from "@/lib/live/session-kit";
 import { noConsents, requiredAgreed } from "./consent-model";
 import { consentsSynced, forgetConsents, readConsents, replaceConsents } from "./consent-store";
-import { adoptServer, reconcileConsents, saveConsents, sendConsents, type ConsentCheckProgress } from "./consent-sync";
+import { adoptServer, reconcileConsents, saveConsents, saveOptionalConsent, sendConsents, type ConsentCheckProgress } from "./consent-sync";
 import { TERMS_VERSION } from "./terms-content";
-import { resetLiveTerms, termsVersion } from "./terms-live";
+import { loadLiveTerms, resetLiveTerms, termsVersion } from "./terms-live";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 const row = (code: string, agreed: boolean, version = TERMS_VERSION) => ({ code, agreed, version, agreed_at: "2026-10-05T09:00:00+09:00" });
@@ -36,6 +36,18 @@ describe("the browser's copy of the consents and the server's record", () => {
   afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
   const consentCalls = () => calls.filter((call) => new URL(call.url).pathname === "/v1/web/consents");
+
+  it("필수 동의를 저장했다는 응답이어도 서버 ok가 거짓이면 완료하지 않는다", async () => {
+    replies.push(json({ current_version: TERMS_VERSION, ok: false, items: [] }));
+    expect(await saveConsents({ ...noConsents(), service_terms: true, privacy: true }, "ko")).toBe("failed");
+    expect(consentsSynced()).toBe(false);
+  });
+
+  it("저장 도중 약관 버전이 바뀌면 이전 동의를 완료 처리하지 않는다", async () => {
+    replies.push(json({ current_version: "changed-version", ok: true, items: requiredOn }));
+    expect(await saveConsents({ ...noConsents(), service_terms: true, privacy: true }, "ko")).toBe("outdated");
+    expect(consentsSynced()).toBe(false);
+  });
 
   it("follows actual streamed phases without completing the browser sync until the result arrives", async () => {
     let controller!: ReadableStreamDefaultController<Uint8Array>;
@@ -80,7 +92,7 @@ describe("the browser's copy of the consents and the server's record", () => {
     expect(post.init.method).toBe("POST");
     const body = JSON.parse(String(post.init.body)) as { version: string; items: { code: string; agreed: boolean; text_sha256: string }[] };
     expect(body.version).toBe(TERMS_VERSION);
-    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false]]);   // `[2026-10-12 임시]` service_improvement 는 서버가 아직 몰라 보내지 않는다
+    expect(body.items.map((item) => [item.code, item.agreed])).toEqual([["service_terms", true], ["privacy", true], ["sensitive", false], ["location", true], ["alert_channel", false], ["service_improvement", false]]);
     for (const item of body.items) expect(item.text_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(consentsSynced()).toBe(true);
   });
@@ -165,13 +177,15 @@ describe("the browser's copy of the consents and the server's record", () => {
     { key: "a_cell_this_page_does_not_know", text_ko: "모름", text_en: "unknown" },
   ] };
 
-  it("sends the consents with the server's terms version and the fingerprint of the text with the server's retention wording", async () => {
+  it("처음 읽은 약관이 바뀌면 보내지 않고 최신 전문에서 다시 선택한 값만 보낸다", async () => {
     retention = () => json(retentionBody);
     replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, "2026-10-07T09:00:00Z", false);
     const fingerprintsBefore = await import("./consent-sync").then((sync) => sync.choicesOf(readConsents()));
     replies.push(json({ current_version: SERVER_VERSION, required: ["service_terms", "privacy"], ok: true, items: [row("service_terms", true, SERVER_VERSION), row("privacy", true, SERVER_VERSION)] }));
-    expect(await sendConsents("ko")).toBe("recorded");
+    expect(await sendConsents("ko")).toBe("outdated");
+    expect(consentCalls()).toHaveLength(0);
     expect(termsVersion()).toBe(SERVER_VERSION);
+    expect(await saveConsents({ ...noConsents(), service_terms: true, privacy: true }, "ko")).toBe("recorded");
     const body = JSON.parse(String(consentCalls()[0].init.body)) as { version: string; items: { code: string; text_sha256: string }[] };
     expect(body.version).toBe(SERVER_VERSION);
     const privacyBefore = fingerprintsBefore.find((choice) => choice.code === "privacy")!.textSha256;
@@ -195,5 +209,95 @@ describe("the browser's copy of the consents and the server's record", () => {
     replies.push(json({ error: { code: "terms_version_changed", message: "new terms" } }, 409));
     expect(await sendConsents("ko")).toBe("outdated");
     expect(termsVersion()).toBe(SERVER_VERSION);
+  });
+
+  it("위치 저장 성공 응답이어도 해당 항목이 미동의면 계속 진행하지 않는다", async () => {
+    replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, null, true);
+    replies.push(json({ current_version: TERMS_VERSION, ok: true, items: [...requiredOn, row("location", false)] }));
+    expect(await saveOptionalConsent("location", "ko")).toBe("failed");
+    expect(readConsents().location).toBe(false);
+  });
+
+  it("위치 동의 성공은 확인하고 알림 수신 동의는 대신 켜지 않는다", async () => {
+    replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, null, true);
+    replies.push(json({ current_version: TERMS_VERSION, ok: true, items: [...requiredOn, row("location", true)] }));
+    expect(await saveOptionalConsent("location", "ko")).toBe("recorded");
+    expect(readConsents().location).toBe(true);
+    expect(readConsents().alert_channel).toBe(false);
+  });
+
+  it("위치 저장 실패와 약관 변경은 완료로 바꾸지 않는다", async () => {
+    replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, null, true);
+    replies.push(json({ error: { code: "unavailable" } }, 503));
+    expect(await saveOptionalConsent("location", "ko")).toBe("failed");
+    replies.push(json({ current_version: "changed-version", ok: true, items: requiredOn }));
+    expect(await saveOptionalConsent("location", "ko")).toBe("outdated");
+  });
+
+  it("앞선 동의 조회를 기다리는 동안 약관이 바뀌면 옛 선택을 새 버전에 저장하지 않는다", async () => {
+    replaceConsents({ ...noConsents(), service_terms: true, privacy: true }, null, true);
+    let release: (response: Response) => void = () => {};
+    const slowGet = new Promise<Response>((resolve) => { release = resolve; });
+    vi.stubGlobal("fetch", answeringSession(legal(async (url, init) => {
+      calls.push({ url, init });
+      return slowGet;
+    }), { kind: "guest" }));
+    const checking = reconcileConsents("ko");
+    await vi.waitFor(() => expect(consentCalls()).toHaveLength(1));
+    const saving = saveOptionalConsent("location", "ko");
+    retention = () => json(retentionBody);
+    await loadLiveTerms("ko", true);
+    release(json({ current_version: SERVER_VERSION, ok: false, items: requiredOn }));
+    await checking;
+    expect(await saving).toBe("outdated");
+    expect(consentCalls().filter((call) => call.init.method === "POST")).toHaveLength(0);
+    expect(readConsents().location).toBe(false);
+  });
+
+  it.each([
+    ["저장 실패", 503, { error: { code: "unavailable" } }],
+    ["미지원 404", 404, { error: { code: "not_found" } }],
+    ["미지원 405", 405, { error: { code: "method_not_allowed" } }],
+    ["빈 응답", 200, { current_version: TERMS_VERSION, ok: true, items: [] }],
+    ["선택 항목 누락", 200, { current_version: TERMS_VERSION, ok: true, items: requiredOn }],
+    ["선택 항목 미동의", 200, { current_version: TERMS_VERSION, ok: true, items: [...requiredOn, row("location", false)] }],
+    ["필수 기록 누락", 200, { current_version: TERMS_VERSION, ok: true, items: [row("location", true)] }],
+  ])("%s 동안 위치 동의를 먼저 공개하지 않고 기존 사본을 보존한다", async (_name, status, body) => {
+    const initial = { ...noConsents(), service_terms: true, privacy: true };
+    replaceConsents(initial, null, true);
+    let release: (response: Response) => void = () => {};
+    const slowPost = new Promise<Response>((resolve) => { release = resolve; });
+    vi.stubGlobal("fetch", answeringSession(legal(async (url, init) => {
+      calls.push({ url, init });
+      return slowPost;
+    }), { kind: "guest" }));
+    const saving = saveOptionalConsent("location", "ko");
+    expect(readConsents()).toEqual(initial);
+    await vi.waitFor(() => expect(consentCalls()).toHaveLength(1));
+    expect(readConsents()).toEqual(initial);
+    expect(consentsSynced()).toBe(true);
+    release(json(body, status));
+    expect(await saving).toBe("failed");
+    expect(readConsents()).toEqual(initial);
+    expect(consentsSynced()).toBe(true);
+  });
+
+  it("현재 버전의 수신 확인 이후에만 위치 소비자가 참을 읽을 수 있다", async () => {
+    const initial = { ...noConsents(), service_terms: true, privacy: true };
+    replaceConsents(initial, null, true);
+    let release: (response: Response) => void = () => {};
+    const slowPost = new Promise<Response>((resolve) => { release = resolve; });
+    vi.stubGlobal("fetch", answeringSession(legal(async (url, init) => {
+      calls.push({ url, init });
+      return slowPost;
+    }), { kind: "guest" }));
+    const saving = saveOptionalConsent("location", "ko");
+    await vi.waitFor(() => expect(consentCalls()).toHaveLength(1));
+    expect(readConsents().location).toBe(false);
+    release(json({ current_version: TERMS_VERSION, ok: true, items: [...requiredOn, row("location", true)] }));
+    expect(await saving).toBe("recorded");
+    expect(readConsents().location).toBe(true);
+    expect(readConsents().alert_channel).toBe(false);
+    expect(consentsSynced()).toBe(true);
   });
 });

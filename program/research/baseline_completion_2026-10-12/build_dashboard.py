@@ -46,9 +46,9 @@ for s in plan['existing_sessions']:
     label=s['title'] or '실경보 원문·서울 28건 재현 담당 세션(설명)'
     old_rows.append(f'<tr><td>{html.escape(label)}</td><td>{html.escape(s["scope"])}</td></tr>')
 
-page='''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>triPilot · 후속 작업 분담·완료 순서</title>
+page='''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>guguroute · 후속 작업 분담·완료 순서</title>
 <style>body{margin:0;background:#fbfcfd;color:#161c28;font:16px/1.65 system-ui,sans-serif}main{max-width:1200px;margin:auto;padding:32px 24px}h1{font-size:30px}h2{font-size:22px;margin-top:36px}p{max-width:960px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;vertical-align:top;padding:12px;border:1px solid #cbd2df}th{background:#f3efe6}.notice{padding:16px 20px;background:#f7f2e7;border-left:4px solid #a8720c}a{color:#765000}a:focus-visible{outline:3px solid #a8720c;outline-offset:3px}.scroll{overflow:auto}small{color:#586277}li{margin:8px 0}@media(max-width:650px){main{padding:20px 12px}h1{font-size:24px}table{min-width:680px}}</style>
-<main><small>triPilot · '''+now.strftime('%Y-%m-%d %H:%M 한국 시간')+'''</small><h1>남은 구현·검증과 최종 문서 작업</h1>
+<main><small>guguroute · '''+now.strftime('%Y-%m-%d %H:%M 한국 시간')+'''</small><h1>남은 구현·검증과 최종 문서 작업</h1>
 <p class="notice">후속 세션 6/6개의 실제 착수를 확인했습니다. 이것은 기능·시험·최종 문서가 완성됐다는 뜻이 아닙니다. 기존 세션 7개를 읽어 같은 기능의 중복 구현을 제외했습니다.</p>
 <h2>새 세션의 담당</h2><div class="scroll"><table><thead><tr><th>세션</th><th>항목</th><th>확인 상태</th><th>선행 결과</th><th>상세</th></tr></thead><tbody>'''+''.join(rows)+'''</tbody></table></div>
 <h2>기존 담당을 유지하는 작업</h2><div class="scroll"><table><thead><tr><th>기존 세션</th><th>새로 만들지 않는 작업</th></tr></thead><tbody>'''+''.join(old_rows)+'''</tbody></table></div>

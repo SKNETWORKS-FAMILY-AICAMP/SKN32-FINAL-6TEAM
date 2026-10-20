@@ -6,7 +6,7 @@ import { watchTrip, type ChangeKind } from "@/lib/live/events";
 import { useSettings } from "@/lib/settings";
 import { tripKey } from "../../lib/gateway";
 import type { Trip } from "./model";
-import { noticesKey, proposalsKey, recoveryKey } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey, risksKey } from "./use-trip-extras";
 import { setWatchMode } from "./watch-mode";
 
 /**
@@ -41,6 +41,7 @@ export function useTripEvents(tripId: string) {
     let wake: (() => void) | null = null;
 
     const reread = (kinds: readonly ChangeKind[]) => {
+      if (kinds.includes("itinerary") || kinds.includes("notice")) void queryClient.invalidateQueries({ queryKey: risksKey(tripId, language) });
       if (kinds.includes("itinerary")) void queryClient.invalidateQueries({ queryKey: tripKey(tripId, language) });
       if (kinds.includes("notice")) {
         void queryClient.invalidateQueries({ queryKey: noticesKey(tripId, language) });

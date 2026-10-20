@@ -14,11 +14,11 @@ import type { ConsentCode } from "./consent-model";
  *   `wiki/records/plans/2026-10-05_약관_초안/00_법무확인_목록.md` 의 대조 표에 있다. 그 폴더의 01~05 는 이 파일의 한국어 본문 사본이다.
  * - ★정해지지 않은 값은 지어내지 않는다 — 본문에 「【확정 필요: …】」를 직접 쓰지 않고 `OPERATOR` · `RETENTION` 상수를 끼워 넣는다(시험이 지킨다).
  */
-export const TERMS_VERSION = "2026-10-10.1";   // 서비스 개선 선택 동의 추가. cs 프로젝트 서버 consent.terms_version과 함께 변경한다.
-// 이전 판 2026-10-05.1 = 운영 주체 · 문의 연락처 · 보호책임자를 채웠다(글이 바뀌었으니 버전을 올린다). 서버 `consent.terms_version` 과 같이 올린다
+export const TERMS_VERSION = "2026-10-19.1";   // `[2026-10-19 ST4F-611]` 이용약관 제6조 ① — 설문 「갑자기 일정이 꼬이면」 문항 대신 항로 지킴이 켜짐 · 꺼짐 기준 · 처리방침의 설문 항목을 지금 묻는 것으로(여행 테마 · 일정 변경 방식 문항을 뺐다).
+// 이전 판 2026-10-17.1 = 서비스 이름 구구루트 · 「마이페이지」 → 실제 화면 이름 · 서비스 개선 선택 동의(ST4F-610). 그 앞 2026-10-05.1 = 운영 주체 · 문의 연락처 · 보호책임자. 서버 `consent.terms_version` 과 같이 올린다
 export const TERMS_STATUS: "draft" | "reviewed" = "reviewed";   // `[2026-10-07 사용자 결정]` 보관 기간 확정 · 안내문(「AI 작성 초안 …」)을 더 띄우지 않는다. ★변호사 검토를 했다는 뜻이 아니다 — 안내를 내리기로 한 사용자 결정이다
 /** 시행일("YYYY-MM-DD"). 확정 전에는 초안 작성일. */
-export const TERMS_EFFECTIVE = "2026-10-10";
+export const TERMS_EFFECTIVE = "2026-10-19";
 
 /**
  * 운영 주체 정보. ★확정되기 전에는 지어내지 않고 「【확정 필요: …】」 자리표시를 그대로 둔다 - 약관 본문은 이 값을 끼워 넣는다.
@@ -143,26 +143,26 @@ export function buildTermsDocs(RETENTION: Retention): readonly TermsDoc[] {
 const serviceTerms: TermsDoc = {
   code: "service_terms",
   required: true,
-  title: ["triPilot 서비스 이용약관", "triPilot Terms of Service"],
+  title: ["구구루트 서비스 이용약관", "GuguRoute Terms of Service"],
   summary: [
-    "triPilot은 올리신 여행 계획을 읽고 확인하며, 회원의 여행은 끝날 때까지 지켜보고 바뀐 점을 알려 드립니다. 대신 예약하거나 결제하지 않습니다. 동의하지 않으면 서비스를 이용할 수 없습니다.",
-    "triPilot reads and checks the travel plan you upload and, for members, watches the trip until it ends and tells you what changed. It does not book or pay for anything on your behalf. You cannot use the service without agreeing.",
+    "구구루트는 올리신 여행 계획을 읽고 확인하며, 회원의 여행은 끝날 때까지 지켜보고 바뀐 점을 알려 드립니다. 대신 예약하거나 결제하지 않습니다. 동의하지 않으면 서비스를 이용할 수 없습니다.",
+    "GuguRoute reads and checks the travel plan you upload and, for members, watches the trip until it ends and tells you what changed. It does not book or pay for anything on your behalf. You cannot use the service without agreeing.",
   ],
   sections: [
     {
       heading: ["제1조 (목적)", "Article 1 (Purpose)"],
       body: [
-        `이 약관은 ${OPERATOR.name}(이하 「운영자」)가 제공하는 triPilot 서비스를 이용하는 조건과 절차, 운영자와 이용자의 권리와 의무를 정합니다.`,
-        `These terms set out the conditions and procedures for using the triPilot service provided by ${OPERATOR.name} (the "Operator"), and the rights and obligations of the Operator and users.`,
+        `이 약관은 ${OPERATOR.name}(이하 「운영자」)가 제공하는 구구루트 서비스를 이용하는 조건과 절차, 운영자와 이용자의 권리와 의무를 정합니다.`,
+        `These terms set out the conditions and procedures for using the GuguRoute service provided by ${OPERATOR.name} (the "Operator"), and the rights and obligations of the Operator and users.`,
       ],
     },
     {
       heading: ["제2조 (정의)", "Article 2 (Definitions)"],
       body: [
         paras(
-          "이 약관에서 쓰는 말의 뜻은 다음과 같습니다. triPilot의 다른 동의 문서(개인정보 · 민감정보 · 개인위치정보 · 알림 채널)도 같은 뜻으로 씁니다.",
+          "이 약관에서 쓰는 말의 뜻은 다음과 같습니다. 구구루트의 다른 동의 문서(개인정보 · 민감정보 · 개인위치정보 · 알림 채널)도 같은 뜻으로 씁니다.",
           list(
-            "「서비스」: 이용자가 올린 여행 계획을 읽고 확인하며, 등록한 여행을 여행이 끝날 때까지 지켜보고 알리는 triPilot 웹 서비스와 그에 딸린 API를 말합니다.",
+            "「서비스」: 이용자가 올린 여행 계획을 읽고 확인하며, 등록한 여행을 여행이 끝날 때까지 지켜보고 알리는 구구루트 웹 서비스와 그에 딸린 API를 말합니다.",
             "「이용자」: 이 약관에 동의하고 서비스를 이용하는 사람을 말합니다. 이용자는 게스트와 회원으로 나뉩니다.",
             "「게스트」: 소셜 계정을 연결하지 않고 서비스를 이용하는 이용자를 말합니다.",
             "「회원」: 소셜 계정(현재는 구글 계정)을 연결한 이용자를 말합니다.",
@@ -173,9 +173,9 @@ const serviceTerms: TermsDoc = {
           ),
         ),
         paras(
-          "The words below have these meanings in these terms and in triPilot's other consent documents (personal data, sensitive data, personal location data and alert channel).",
+          "The words below have these meanings in these terms and in GuguRoute's other consent documents (personal data, sensitive data, personal location data and alert channel).",
           list(
-            "\"Service\": the triPilot web service and its APIs, which read and check the travel plan a user uploads and watch a registered trip until it ends and send alerts.",
+            "\"Service\": the GuguRoute web service and its APIs, which read and check the travel plan a user uploads and watch a registered trip until it ends and send alerts.",
             "\"User\": a person who has agreed to these terms and uses the Service. Users are either guests or members.",
             "\"Guest\": a user who uses the Service without connecting a social account.",
             "\"Member\": a user who has connected a social account (currently a Google account).",
@@ -254,10 +254,10 @@ const serviceTerms: TermsDoc = {
       heading: ["제6조 (일정 변경과 되돌리기)", "Article 6 (Schedule changes and undoing them)"],
       body: [
         paras(
-          "① 회원이 등록한 여행에 문제(날씨 · 재난 · 장소 휴무 등)가 생기면, 서비스는 이용자가 여행 취향 설문의 「갑자기 일정이 꼬이면」 문항에서 고른 방식에 따라 다음과 같이 합니다.",
+          "① 회원이 등록한 여행에 문제(날씨 · 재난 · 장소 휴무 등)가 생기면, 서비스는 그 여행의 항로 지킴이가 켜져 있는지에 따라 다음과 같이 합니다. 항로 지킴이는 여행 계획을 확인할 때 켜거나 끌 수 있고, 등록한 뒤에도 여행 화면에서 언제든 바꿀 수 있습니다.",
           list(
-            "「먼저 물어봐줘」를 고른 경우: 서비스는 일정을 바꾸기 전에 이용자에게 묻습니다. 안전에 관한 사건(지진 · 재난 문자 · 기상 경보 등)은 바로 알립니다.",
-            "그 밖의 경우: 서비스는 고른 대체 일정을 먼저 반영하고 알립니다. 다만 원인이 날씨뿐이면, 이용자가 「비슷한 곳으로 바꿔줘」를 직접 고른 경우에만 먼저 반영하고, 그렇지 않으면 바꾸기 전에 묻습니다.",
+            "항로 지킴이를 켠 경우: 서비스는 고른 대체 일정을 먼저 반영하고 알립니다. 다만 원인이 날씨뿐이고 그 장소가 실내인지 확인하지 못했으면, 바꾸기 전에 묻습니다.",
+            "항로 지킴이를 끄거나 정하지 않은 경우: 서비스는 일정을 바꾸기 전에 이용자에게 묻습니다. 안전에 관한 사건(지진 · 재난 문자 · 기상 경보 등)은 바로 알립니다.",
           ),
           "② 이용자가 고정하거나 잠근 일정, 여행 계획에 예약 번호가 적힌 일정은 서비스가 묻지 않고 바꾸지 않습니다.",
           "③ 이용자는 서비스가 반영한 변경을 채팅 · 웹 화면 · API로 되돌리거나 다른 안으로 바꿔 달라고 요청할 수 있습니다.",
@@ -265,10 +265,10 @@ const serviceTerms: TermsDoc = {
           "⑤ 게스트의 여행은 지켜보기와 알림 대상이 아닙니다.",
         ),
         paras(
-          "(1) If a problem (weather, a disaster, a venue closure and so on) affects a trip a member has registered, the Service acts according to the answer the user chose for \"If plans suddenly go wrong\" in the travel preference questions:",
+          "(1) If a problem (weather, a disaster, a venue closure and so on) affects a trip a member has registered, the Service acts according to whether that trip's Course Keeper is on. The Course Keeper can be turned on or off when the plan is checked, and changed at any time on the trip screen after the trip is registered:",
           list(
-            "\"Ask me first\": the Service asks the user before changing the schedule. Safety events (earthquakes, emergency alerts, weather warnings and so on) are sent at once.",
-            "Otherwise: the Service applies the alternative it chose first and then tells the user. If the only cause is the weather, however, the Service applies the change first only when the user directly chose \"Swap in something similar\"; otherwise it asks before changing.",
+            "Course Keeper on: the Service applies the alternative it chose first and then tells the user. If the only cause is the weather and the Service could not confirm that the place is indoors, however, it asks before changing.",
+            "Course Keeper off or not chosen: the Service asks the user before changing the schedule. Safety events (earthquakes, emergency alerts, weather warnings and so on) are sent at once.",
           ),
           "(2) The Service does not change, without asking, an item the user has pinned or locked, or an item for which the travel plan contains a booking number.",
           "(3) The user may ask, by chat, on the web screens or through the API, to undo a change the Service applied or to switch to another option.",
@@ -519,11 +519,11 @@ const privacy: TermsDoc = {
       heading: ["제1조 (이 문서에 대하여)", "Article 1 (About this document)"],
       body: [
         paras(
-          `${OPERATOR.name}(이하 「운영자」)는 triPilot 서비스에서 이용자의 개인정보를 이 문서에 따라 처리합니다. 이 문서에서 쓰는 말의 뜻은 「triPilot 서비스 이용약관」 제2조(정의)와 같습니다.`,
+          `${OPERATOR.name}(이하 「운영자」)는 구구루트 서비스에서 이용자의 개인정보를 이 문서에 따라 처리합니다. 이 문서에서 쓰는 말의 뜻은 「구구루트 서비스 이용약관」 제2조(정의)와 같습니다.`,
           "제2조와 제3조는 꼭 필요한 정보의 수집 · 이용에 대한 동의 내용이고, 제4조부터는 개인정보 처리방침입니다. 서비스 개선용 정보 이용, 민감정보, 개인위치정보, 알림 채널 정보는 이 문서가 아니라 각각의 선택 동의 문서가 정합니다.",
         ),
         paras(
-          `${OPERATOR.name} (the "Operator") processes users' personal data in the triPilot service as described in this document. Words used here have the meanings given in Article 2 (Definitions) of the "triPilot Terms of Service".`,
+          `${OPERATOR.name} (the "Operator") processes users' personal data in the GuguRoute service as described in this document. Words used here have the meanings given in Article 2 (Definitions) of the "GuguRoute Terms of Service".`,
           "Articles 2 and 3 are the consent to collect and use the information the Service needs; Article 4 onwards is the privacy policy. Service improvement processing, sensitive data, personal location data and alert channel data are governed not by this document but by their own optional consent documents.",
         ),
       ],
@@ -535,7 +535,7 @@ const privacy: TermsDoc = {
           "운영자는 다음 정보를 적힌 목적에만 쓰고, 적힌 기간 동안만 보관합니다.",
           list(
             `이용 상태 정보 — 항목: 서비스가 만든 무작위 이용자 번호, 로그인 세션 쿠키(서버에는 원래 값 대신 해시값만 저장). 목적: 로그인 상태 유지, 요청이 본인에게서 왔는지 확인. 기간: 세션은 게스트 ${RETENTION.guestSession[0]}, 회원 ${RETENTION.memberSession[0]}. 이용자 번호는 아래 여행 정보와 같은 기간.`,
-            "여행 정보 — 항목: 여행 계획 원문(붙여 넣은 글, 파일 · 사진에서 읽어 낸 글과 파일 이름. 올린 파일 자체는 저장하지 않음), 읽어 낸 일정(장소 · 시각 · 인원 · 예산 · 예약 번호 등 계획에 적힌 내용), 여행 취향 설문 답(여행 테마, 동행 구성과 직접 적은 동행 설명, 우선순위, 실내 · 실외, 일정이 꼬일 때 방식, 여유), 그 밖에 이용자가 준 여행 조건, 일정 변경 기록. 목적: 계획 읽기 · 확인, 일정 짜기, 여행 지켜보기와 알림, 여행계획서 링크.",
+            "여행 정보 — 항목: 여행 계획 원문(붙여 넣은 글, 파일 · 사진에서 읽어 낸 글과 파일 이름. 올린 파일 자체는 저장하지 않음), 읽어 낸 일정(장소 · 시각 · 인원 · 예산 · 예약 번호 등 계획에 적힌 내용), 여행 취향 설문 답(동행 구성과 직접 적은 동행 설명, 우선순위, 실내 · 실외, 여유), 항로 지킴이 켜짐 · 꺼짐, 그 밖에 이용자가 준 여행 조건, 일정 변경 기록. 목적: 계획 읽기 · 확인, 일정 짜기, 여행 지켜보기와 알림, 여행계획서 링크.",
             "채팅 정보 — 항목: 이용자의 질문과 서비스의 답, 그 질문을 처리한 기록(처리 기록). 목적: 질문에 답하기, 일정 변경과 되돌리기 처리, 잘못된 처리 확인.",
             "회원 정보(구글 계정을 연결한 경우) — 항목: 구글 계정 고유 번호를 서버 비밀값으로 바꾼 값, 연결 시각. 구글 계정의 이메일 · 이름 · 사진은 받지 않습니다. 목적: 회원 로그인. 기간: 연결을 풀 때까지.",
             "에이전트 키 정보(회원이 만든 경우) — 항목: 키의 해시값, 키 이름, 권한 범위, 만든 · 마지막으로 쓴 · 만료 시각. 목적: 회원의 AI 에이전트가 그 회원의 여행만 다루게 하기. 키는 만든 뒤 최장 90일이 지나면 쓸 수 없습니다.",
@@ -548,7 +548,7 @@ const privacy: TermsDoc = {
           "The Operator uses the following information only for the stated purposes and keeps it only for the stated periods.",
           list(
             `Usage state — items: a random user number created by the Service, and the sign-in session cookie (the server stores only a hash of its value). Purpose: keeping the user signed in and confirming that requests come from that user. Period: sessions last ${RETENTION.guestSession[1]} for guests and ${RETENTION.memberSession[1]} for members; the user number is kept as long as the trip information below.`,
-            "Trip information — items: the original travel plan (pasted text, and the text and file names read from files and photos; the uploaded files themselves are not stored), the schedule read from it (places, times, party size, budget, booking numbers and anything else written in the plan), answers to the travel preference questions (theme, companions including any description typed in, priorities, indoors or outdoors, what to do when plans go wrong, pace), other trip conditions the user gives, and the schedule change history. Purpose: reading and checking plans, drafting schedules, watching trips and sending alerts, and trip plan links.",
+            "Trip information — items: the original travel plan (pasted text, and the text and file names read from files and photos; the uploaded files themselves are not stored), the schedule read from it (places, times, party size, budget, booking numbers and anything else written in the plan), answers to the travel preference questions (companions including any description typed in, priorities, indoors or outdoors, pace), whether the Course Keeper is on or off, other trip conditions the user gives, and the schedule change history. Purpose: reading and checking plans, drafting schedules, watching trips and sending alerts, and trip plan links.",
             "Chat information — items: the user's questions, the Service's answers, and the records of how each question was handled (handling records). Purpose: answering questions, applying and undoing schedule changes, and checking for mistakes.",
             "Member information (if a Google account is connected) — items: a value derived from the Google account's unique number using a server secret, and the time of connection. The Google account's email, name and photo are not received. Purpose: member sign-in. Period: until the account is disconnected.",
             "Agent key information (if a member creates one) — items: a hash of the key, the key's name, its permission scope, and when it was created, last used and expires. Purpose: letting a member's AI agent work only on that member's trips. A key stops working at most 90 days after it is created.",
@@ -659,7 +659,7 @@ const privacy: TermsDoc = {
           "② 다음은 서비스 화면에서 직접 할 수 있습니다.",
           list(
             "여행 삭제(바로 지워짐), 일정 수정, 계획서 내려받기",
-            "선택 동의의 철회(마이페이지)",
+            "선택 동의의 철회(설정 › 「약관 · 동의」)",
             "소셜 계정 연결 해제, 에이전트 키 폐기, 디스코드 웹훅 삭제",
           ),
           `③ 화면에서 할 수 없는 요구(회원 자료 전체의 삭제, 처리 기록의 열람 · 삭제 등)는 문의처(${OPERATOR.contact})로 할 수 있습니다. 운영자는 관계 법령이 정한 기간 안에 처리하고 결과를 알려야 합니다.`,
@@ -671,7 +671,7 @@ const privacy: TermsDoc = {
           "(2) The following can be done directly on the Service screens:",
           list(
             "deleting a trip (deleted at once), editing the schedule, downloading the plan;",
-            "withdrawing optional consents (My Page);",
+            "withdrawing optional consents (Settings → “Terms & consents”);",
             "disconnecting a social account, revoking an agent key, deleting the Discord webhook.",
           ),
           `(3) Requests that cannot be made on screen (deleting all of a member's data, seeing or deleting handling records, and so on) may be sent to ${OPERATOR.contact}. The Operator must handle them within the period set by law and report the result.`,
@@ -683,8 +683,8 @@ const privacy: TermsDoc = {
     {
       heading: ["제8조 (자동화된 판단)", "Article 8 (Automated decisions)"],
       body: [
-        "서비스는 사람의 개입 없이, 일정에 문제가 생겼을 때 일정을 바꿀지 · 무엇으로 바꿀지 · 먼저 물을지를 자동으로 판단합니다(「triPilot 서비스 이용약관」 제6조(일정 변경과 되돌리기)). 이용자는 그 판단의 이유를 물을 수 있고, 반영된 변경을 되돌리거나 다른 안을 요청할 수 있습니다.",
-        "The Service decides automatically, without human involvement, whether to change the schedule when a problem arises, what to change it to, and whether to ask first (Article 6, Schedule changes and undoing them, of the \"triPilot Terms of Service\"). The user may ask for the reasons for a decision, and may undo an applied change or ask for another option.",
+        "서비스는 사람의 개입 없이, 일정에 문제가 생겼을 때 일정을 바꿀지 · 무엇으로 바꿀지 · 먼저 물을지를 자동으로 판단합니다(「구구루트 서비스 이용약관」 제6조(일정 변경과 되돌리기)). 이용자는 그 판단의 이유를 물을 수 있고, 반영된 변경을 되돌리거나 다른 안을 요청할 수 있습니다.",
+        "The Service decides automatically, without human involvement, whether to change the schedule when a problem arises, what to change it to, and whether to ask first (Article 6, Schedule changes and undoing them, of the \"GuguRoute Terms of Service\"). The user may ask for the reasons for a decision, and may undo an applied change or ask for another option.",
       ],
     },
     {
@@ -746,8 +746,8 @@ const privacy: TermsDoc = {
     {
       heading: ["제11조 (만 14세 미만 아동)", "Article 11 (Children under 14)"],
       body: [
-        "서비스는 만 14세 미만 아동이 이용할 수 없으며(「triPilot 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인정보를 알고서 수집하지 않습니다.",
-        "Children under 14 may not use the Service (Article 7 of the \"triPilot Terms of Service\"), and the Operator does not knowingly collect personal data of children under 14.",
+        "서비스는 만 14세 미만 아동이 이용할 수 없으며(「구구루트 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인정보를 알고서 수집하지 않습니다.",
+        "Children under 14 may not use the Service (Article 7 of the \"GuguRoute Terms of Service\"), and the Operator does not knowingly collect personal data of children under 14.",
       ],
     },
     {
@@ -779,8 +779,8 @@ const privacy: TermsDoc = {
     {
       heading: ["제14조 (처리방침의 변경)", "Article 14 (Changes to this policy)"],
       body: [
-        `이 처리방침은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 내용이 바뀌면 운영자는 「triPilot 서비스 이용약관」 제3조(약관의 게시와 변경)와 같은 방법으로 알리고, 이용자의 동의를 다시 받습니다.`,
-        `This policy applies from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). If it changes, the Operator announces the change in the same way as Article 3 (Posting and changing these terms) of the "triPilot Terms of Service" and asks users to agree again.`,
+        `이 처리방침은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 내용이 바뀌면 운영자는 「구구루트 서비스 이용약관」 제3조(약관의 게시와 변경)와 같은 방법으로 알리고, 이용자의 동의를 다시 받습니다.`,
+        `This policy applies from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). If it changes, the Operator announces the change in the same way as Article 3 (Posting and changing these terms) of the "GuguRoute Terms of Service" and asks users to agree again.`,
       ],
     },
     LANGUAGE_SECTION,
@@ -870,8 +870,8 @@ const sensitive: TermsDoc = {
     {
       heading: ["제6조 (동의를 거부할 권리와 불이익)", "Article 6 (Right to refuse and its effect)"],
       body: [
-        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 식당을 확인하거나 바꿀 때 종교 · 신념과 관련된 식사 조건이 반영되지 않는 것 말고는 불이익이 없습니다. 이용자는 동의한 뒤에도 마이페이지에서 언제든 철회할 수 있습니다.",
-        "The user may refuse this consent. The user can still use the Service; the only effect is that food conditions related to religion or beliefs are not taken into account when restaurants are checked or replaced. The user may withdraw this consent at any time on My Page.",
+        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 식당을 확인하거나 바꿀 때 종교 · 신념과 관련된 식사 조건이 반영되지 않는 것 말고는 불이익이 없습니다. 이용자는 동의한 뒤에도 설정 › 「약관 · 동의」에서 언제든 철회할 수 있습니다.",
+        "The user may refuse this consent. The user can still use the Service; the only effect is that food conditions related to religion or beliefs are not taken into account when restaurants are checked or replaced. The user may withdraw this consent at any time in Settings → “Terms & consents”.",
       ],
     },
     LANGUAGE_SECTION,
@@ -890,8 +890,8 @@ const location: TermsDoc = {
     {
       heading: ["제1조 (목적)", "Article 1 (Purpose)"],
       body: [
-        "이 약관은 운영자가 제공하는 위치기반서비스의 이용 조건과, 운영자가 이용자의 개인위치정보를 수집 · 이용하는 데 필요한 사항을 정합니다. 이 약관에 없는 사항은 「triPilot 서비스 이용약관」과 「개인정보 수집 · 이용 동의 및 처리방침」을 따르며, 말의 뜻도 같습니다.",
-        "These terms set out the conditions of the location-based service the Operator provides and what is needed for the Operator to collect and use users' personal location data. Matters not covered here follow the \"triPilot Terms of Service\" and the \"Consent to Collection and Use of Personal Data and Privacy Policy\", and words have the same meanings.",
+        "이 약관은 운영자가 제공하는 위치기반서비스의 이용 조건과, 운영자가 이용자의 개인위치정보를 수집 · 이용하는 데 필요한 사항을 정합니다. 이 약관에 없는 사항은 「구구루트 서비스 이용약관」과 「개인정보 수집 · 이용 동의 및 처리방침」을 따르며, 말의 뜻도 같습니다.",
+        "These terms set out the conditions of the location-based service the Operator provides and what is needed for the Operator to collect and use users' personal location data. Matters not covered here follow the \"GuguRoute Terms of Service\" and the \"Consent to Collection and Use of Personal Data and Privacy Policy\", and words have the same meanings.",
       ],
     },
     {
@@ -996,13 +996,13 @@ const location: TermsDoc = {
       heading: ["제8조 (이용자의 권리와 행사 방법)", "Article 8 (Users' rights and how to use them)"],
       body: [
         paras(
-          "① 이용자는 언제든 이 동의의 전부 또는 일부를 철회할 수 있습니다. 마이페이지에서 위치 동의를 끄면 됩니다.",
+          "① 이용자는 언제든 이 동의의 전부 또는 일부를 철회할 수 있습니다. 설정 › 「약관 · 동의」에서 위치 동의를 끄면 됩니다.",
           "② 이용자는 언제든 위치 수집 · 이용의 일시 중지를 요구할 수 있습니다. 브라우저(기기) 설정에서 이 사이트의 위치 권한을 끄면 그때부터 위치를 읽지 않습니다.",
           `③ 이용자는 자기에 대한 확인자료와 개인위치정보를 제3자에게 제공한 이유 · 내용의 열람이나 고지를 요구할 수 있고, 오류가 있으면 정정을 요구할 수 있습니다. 이 요구는 ${OPERATOR.contact}로 합니다.`,
           "④ 운영자는 이 요구를 거절하지 않으며, 지체 없이 처리해야 합니다.",
         ),
         paras(
-          "(1) The user may withdraw all or part of this consent at any time by turning off the location consent on My Page.",
+          "(1) The user may withdraw all or part of this consent at any time by turning off the location consent in Settings → “Terms & consents”.",
           "(2) The user may at any time ask for the collection and use of their position to be paused. Turning off this site's location permission in the browser (device) settings stops the Service from reading the position from then on.",
           `(3) The user may ask to see, or be told about, the records about themselves and the reasons for and contents of any provision of their personal location data to third parties, and may ask for errors to be corrected. These requests go to ${OPERATOR.contact}.`,
           "(4) The Operator does not refuse these requests and must handle them without delay.",
@@ -1019,8 +1019,8 @@ const location: TermsDoc = {
     {
       heading: ["제10조 (만 14세 미만 아동)", "Article 10 (Children under 14)"],
       body: [
-        "만 14세 미만은 서비스를 이용할 수 없으므로(「triPilot 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인위치정보를 수집하지 않으며 법정대리인이나 보호의무자의 동의로 위치정보를 처리하지 않습니다.",
-        "Because people under 14 may not use the Service (Article 7 of the \"triPilot Terms of Service\"), the Operator does not collect personal location data of children under 14 and does not process location data on the consent of a legal representative or guardian.",
+        "만 14세 미만은 서비스를 이용할 수 없으므로(「구구루트 서비스 이용약관」 제7조), 운영자는 만 14세 미만 아동의 개인위치정보를 수집하지 않으며 법정대리인이나 보호의무자의 동의로 위치정보를 처리하지 않습니다.",
+        "Because people under 14 may not use the Service (Article 7 of the \"GuguRoute Terms of Service\"), the Operator does not collect personal location data of children under 14 and does not process location data on the consent of a legal representative or guardian.",
       ],
     },
     {
@@ -1040,8 +1040,8 @@ const location: TermsDoc = {
     {
       heading: ["제13조 (약관의 변경)", "Article 13 (Changes to these terms)"],
       body: [
-        `이 약관은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 이 약관을 바꿀 때는 「triPilot 서비스 이용약관」 제3조(약관의 게시와 변경)를 따르며, 바뀐 뒤에는 다시 동의한 이용자의 위치만 읽습니다.`,
-        `These terms apply from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). Changes follow Article 3 (Posting and changing these terms) of the "triPilot Terms of Service", and after a change the Service reads positions only of users who have agreed again.`,
+        `이 약관은 ${TERMS_EFFECTIVE}부터 적용됩니다(약관 버전 ${TERMS_VERSION}). 이 약관을 바꿀 때는 「구구루트 서비스 이용약관」 제3조(약관의 게시와 변경)를 따르며, 바뀐 뒤에는 다시 동의한 이용자의 위치만 읽습니다.`,
+        `These terms apply from ${TERMS_EFFECTIVE} (terms version ${TERMS_VERSION}). Changes follow Article 3 (Posting and changing these terms) of the "GuguRoute Terms of Service", and after a change the Service reads positions only of users who have agreed again.`,
       ],
     },
     LANGUAGE_SECTION,
@@ -1073,7 +1073,7 @@ const alertChannel: TermsDoc = {
             "텔레그램(서비스가 제공하는 경우): 대화 번호, 연결 시각, 연결 상태. 텔레그램 이름 · 사용자명 · 전화번호 · 프로필 사진은 받더라도 저장하지 않습니다.",
             "알림을 받을 곳(어느 메신저인지)",
           ),
-          "알림은 한 번에 한 곳으로만 보냅니다. 여러 메신저를 연결했다면 이용자가 마지막에 연결했거나 마이페이지에서 고른 곳으로 보냅니다.",
+          "알림은 한 번에 한 곳으로만 보냅니다. 여러 메신저를 연결했다면 이용자가 마지막에 연결했거나 설정 › 「알림 받는 곳」에서 고른 곳으로 보냅니다.",
         ),
         paras(
           list(
@@ -1081,7 +1081,7 @@ const alertChannel: TermsDoc = {
             "Telegram (where the Service offers it): the chat number, the time of connection and the connection status. Telegram names, usernames, phone numbers and profile photos are not stored even if received.",
             "Which messenger alerts go to",
           ),
-          "Each alert is sent to one place only. If the user has connected more than one messenger, alerts go to the one connected last or chosen on My Page.",
+          "Each alert is sent to one place only. If the user has connected more than one messenger, alerts go to the one connected last or chosen in Settings → “Where alerts go”.",
         ),
       ],
     },
@@ -1114,8 +1114,8 @@ const alertChannel: TermsDoc = {
     {
       heading: ["제5조 (동의를 거부할 권리와 불이익)", "Article 5 (Right to refuse and its effect)"],
       body: [
-        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 메신저로 알림을 받지 못하는 것 말고는 불이익이 없습니다. 최신 일정은 웹 화면과 여행계획서 링크에서 볼 수 있습니다. 이용자는 마이페이지에서 언제든 연결을 풀거나 이 동의를 철회할 수 있습니다.",
-        "The user may refuse this consent. The user can still use the Service; the only effect is that alerts are not sent to a messenger. The latest schedule is shown on the web screens and the trip plan link. The user may disconnect a messenger or withdraw this consent at any time on My Page.",
+        "이용자는 이 동의를 거부할 수 있습니다. 거부해도 서비스를 이용할 수 있으며, 메신저로 알림을 받지 못하는 것 말고는 불이익이 없습니다. 최신 일정은 웹 화면과 여행계획서 링크에서 볼 수 있습니다. 이용자는 언제든 설정 › 「알림 받는 곳」에서 연결을 풀거나 「약관 · 동의」에서 이 동의를 철회할 수 있습니다.",
+        "The user may refuse this consent. The user can still use the Service; the only effect is that alerts are not sent to a messenger. The latest schedule is shown on the web screens and the trip plan link. The user may at any time disconnect a messenger in Settings → “Where alerts go” or withdraw this consent in “Terms & consents”.",
       ],
     },
     LANGUAGE_SECTION,
@@ -1148,8 +1148,8 @@ const serviceImprovement: TermsDoc = {
     {
       heading: ["제3조 (거부·철회와 효과)", "Article 3 (Refusal and withdrawal)"],
       body: [
-        "이 동의는 선택입니다. 거부하거나 철회해도 기본 서비스를 계속 이용할 수 있습니다. 마이페이지의 약관 동의 관리에서 철회하면 이후 추출에서 제외하고 검토 대기 합성 후보를 폐기합니다. 이미 익명성 검토를 마친 합성본에는 개인과 연결하는 표를 두지 않아 특정 이용자의 기여분을 찾아 개별 회수할 수 없습니다. 문의는 개인정보 보호 문의 창구로 할 수 있습니다.",
-        "This consent is optional. Refusal or withdrawal does not restrict the basic service. Withdraw through consent management in My Page; future extraction excludes you and pending synthetic candidates are discarded. Approved anonymous data has no table linking it to individuals, so a particular user's contribution cannot be individually located or recalled. Contact the privacy inquiry channel for questions.",
+        "이 동의는 선택입니다. 거부하거나 철회해도 기본 서비스를 계속 이용할 수 있습니다. 설정 › 「약관 · 동의」에서 철회하면 이후 추출에서 제외하고 검토 대기 합성 후보를 폐기합니다. 이미 익명성 검토를 마친 합성본에는 개인과 연결하는 표를 두지 않아 특정 이용자의 기여분을 찾아 개별 회수할 수 없습니다. 문의는 개인정보 보호 문의 창구로 할 수 있습니다.",
+        "This consent is optional. Refusal or withdrawal does not restrict the basic service. Withdraw in Settings → “Terms & consents”; future extraction excludes you and pending synthetic candidates are discarded. Approved anonymous data has no table linking it to individuals, so a particular user's contribution cannot be individually located or recalled. Contact the privacy inquiry channel for questions.",
       ],
     },
     LANGUAGE_SECTION,

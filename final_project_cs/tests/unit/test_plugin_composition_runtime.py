@@ -186,7 +186,8 @@ def test_first_engine_configuration_failure_can_retry_without_live_generation(mo
     state = {"mode": "unconfigured", "calls": 0}
     monkeypatch.setattr(wiring, "mode", lambda: state["mode"])
     monkeypatch.setattr(composition, "_mobility_configuration_key", None)
-    def configure(settings):
+    def configure(settings, *, preload=True):
+        assert preload is True
         state["calls"] += 1
         if state["calls"] == 1:
             state["mode"] = "broken"

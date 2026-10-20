@@ -22,7 +22,12 @@ def _origin_matches(items, phrase):
     fragment = fact_context._compact(phrase)
     if len(fragment) < 2:
         return []
-    return [i for i in items if i.kind != "mobility" and any(fragment in fact_context._compact(name)
+    stops = [i for i in items if i.kind != "mobility"]
+    exact = [i for i in stops if any(fragment == fact_context._compact(name)
+             for name in (i.title, (i.place or {}).get("name") or ""))]
+    if exact:
+        return exact
+    return [i for i in stops if any(fragment in fact_context._compact(name)
             for name in (i.title, (i.place or {}).get("name") or ""))]
 
 
@@ -60,7 +65,7 @@ def _route(origin, destination, mode):
             f"(시간표 기준, {trip_facts._hm(got['starts_at'])} 출발). 일정은 바꾸지 않았어요."), None
 
 
-def reply(decision, *, items, message, selected, turns, version, now, context_now, ttl_seconds, place_source):
+def reply(decision, *, items, message, selected, turns, version, now, context_now, ttl_seconds, place_source, weather_lookup=None):
     by_alias = {f"i{n}": item for n, item in enumerate(trip_facts._stops(items), 1)}
     answers, details, evidence = [], [], []
     focus = None
@@ -82,10 +87,18 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
         if (fact == "next" and request.get("relation", "at") == "at"
                 and (request.get("anchor_kind", "none") != "none" or request.get("target_item", "none") == "none")):
             anchor_read = {**request, "relation": "after"}
+        anchor_read = ({**anchor_read, "anchor_kind": "none"}
+                       if fact == "weather" and request.get("anchor_kind") == "now"
+                       and request.get("relation", "at") == "at" else anchor_read)
+        previous = time_anchor.previous_item(turns, items, version=version, now=context_now, ttl_seconds=ttl_seconds)
+        previous_required = (fact in {"weather", "outdoor"} and request.get("query") is None
+                             and (request.get("reference") == "previous" or request.get("anchor_kind") == "previous"))
         anchored, anchor_basis = time_anchor.resolve(
             anchor_read, items=items, anchor=by_alias.get(request.get("anchor_item") or "none"),
-            previous=time_anchor.previous_item(turns, items, version=version, now=context_now, ttl_seconds=ttl_seconds),
-            named=fact_context.named_items(items, clause), now=now, target=item)
+            previous=previous,
+            named=fact_context.named_items(items, clause), now=now,
+            target=(None if fact in {"weather", "outdoor"} and anchor_read.get("anchor_kind") == "previous"
+                    and anchor_read.get("relation", "at") == "at" else item))
         anchor_conflict = bool(anchor_basis and anchor_basis.get("time_anchor") == "anchor_conflict")
         if anchored is not None:
             item, fact = anchored, ("time" if fact == "next" else fact)
@@ -97,6 +110,8 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
         sub, resolved, stale = fact_context.resolve(
             sub, items=items, message=scoped_message, selected=selected, turns=turns, version=version,
             now=context_now, ttl_seconds=ttl_seconds)
+        if previous_required and previous is None:
+            sub, resolved, stale = replace(sub, item=None), None, True
         item = sub.item
         basis = {"kind": fact, "item_id": str(item.item_id) if item else None, "version": version}
         if anchor_basis:
@@ -120,6 +135,41 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
         elif stale:
             text = "가리키는 일정을 현재 여행에서 하나로 확인하지 못했어요. 일정 이름이나 날짜를 알려 주세요."
             basis["unresolved"] = "target"
+        elif fact == "weather":
+            from .weather_read import reply as weather_reply
+
+            query = request.get("query")
+            targets = (schedule_query.matching(query, items=items, now=now)[0] if query is not None
+                       else [item] if item is not None else [])
+            lines, forecasts = [], []
+            for target in targets:
+                when = now if request.get("anchor_kind") == "now" and request.get("relation", "at") == "at" else target.starts_at
+                line, forecast = weather_reply(target, at=when, lookup=weather_lookup)
+                lines.append(line)
+                forecasts.append({"item_id": str(target.item_id), **forecast})
+            text = "\n".join(lines) if lines else "날씨를 확인할 일정을 찾지 못했어요. 일정 이름이나 날짜를 알려 주세요."
+            basis.update(forecasts=forecasts, item_ids=[str(t.item_id) for t in targets])
+            if query is not None:
+                basis["query"] = query
+            if not targets:
+                basis["unresolved"] = "weather_target"
+            elif len(targets) == 1:
+                basis["item_id"] = str(targets[0].item_id)
+                resolved = {"item_id": str(targets[0].item_id), "version": version,
+                            "at": context_now.isoformat(), "source": "weather_target"}
+        elif fact == "outdoor" and request.get("query") is None:
+            if item is None:
+                text = "어느 일정의 실내·야외 여부인지 확인할 수 있도록 일정 이름을 알려 주세요."
+                basis["unresolved"] = "target"
+            else:
+                indoor = ((item.place or {}).get("attributes") or {}).get("indoor")
+                basis.update(source="latest_itinerary", indoor=indoor)
+                if isinstance(indoor, bool):
+                    label = "실내" if indoor else "야외"
+                    text = f"{item.title}: 등록된 장소 정보 기준으로 {label} 일정이에요. 일정은 바꾸지 않았어요."
+                else:
+                    text = f"{item.title}의 실내·야외 분류는 등록된 장소 정보에서 확인되지 않았어요. 일정은 바꾸지 않았어요."
+                    basis["unresolved"] = "indoor"
         elif fact in (*schedule_query.QUERY_FACTS, "day", "outdoor"):
             text, query_basis = schedule_query.reply("schedule" if fact in ("day", "outdoor") else fact,
                                                       request["query"], items=items, now=now)

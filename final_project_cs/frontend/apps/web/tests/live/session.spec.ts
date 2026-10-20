@@ -13,7 +13,7 @@ const paths = async (request: Parameters<typeof mockServer>[0]) => (await mockSe
 test("내 여행이 있으면 첫 화면의 「내 여행」 카드에 뜨고 그 여행으로 간다", async ({ page }) => {
   await start(page);
   await page.goto("/");
-  const card = page.getByRole("region", { name: "내 여행", exact: true });
+  const card = page.getByRole("region", { name: "최근 여행", exact: true });
   await expect(card).toBeVisible();
   await expect(card).toContainText("내 여행");
   await card.getByRole("link").click();
@@ -25,13 +25,13 @@ test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 
   await server.scenario({ trips: "none" });
   await start(page);
   await page.goto("/");
-  await expect(page.getByRole("region", { name: "내 여행", exact: true })).toContainText("아직 등록한 여행이 없어요.");
+  await expect(page.getByRole("region", { name: "최근 여행", exact: true })).toContainText("아직 등록한 여행이 없어요.");
 
   await server.reset();
   const fresh = await page.context().browser()!.newContext();
   const first = await fresh.newPage();
   await first.goto(`${APP}/`);
-  await expect(first.getByRole("region", { name: /내 여행|My trips/, exact: false }).first()).toBeVisible();
+  await expect(first.getByRole("region", { name: /최근 여행|Recent trips/, exact: false }).first()).toBeVisible();
   const log = await paths(request);
   expect(log).toContain("GET /v1/web/auth/me");                          // 누구인지만 묻는다
   expect(log).not.toContain("POST /v1/web/auth/session");               // 새 게스트를 만들지 않는다
@@ -87,7 +87,7 @@ test("회원의 로그인 · 계정 화면: 로그아웃은 확인 창을 거치
   expect(out.session).toBe(KNOWN_SESSION);
   await expect(status).toContainText("아직 시작하지 않았어요");
   await page.goto("/");
-  await expect(page.getByRole("region", { name: "내 여행", exact: true })).toContainText("아직 등록한 여행이 없어요.");
+  await expect(page.getByRole("region", { name: "최근 여행", exact: true })).toContainText("아직 등록한 여행이 없어요.");
 });
 
 test("로그아웃하면 이전 계정의 여행이 화면 캐시에 남지 않는다: 앱 안에서 뒤로 가도 옛 일정이 먼저 보이지 않고 다시 읽는 동안은 읽는 중이다 (`[2026-10-05 · 팀 develop 점검]`)", async ({ page, request }) => {
@@ -95,7 +95,7 @@ test("로그아웃하면 이전 계정의 여행이 화면 캐시에 남지 않�
   await server.scenario({ sessionKind: "member" });
   await start(page);
   await page.goto("/");
-  await page.getByRole("region", { name: "내 여행", exact: true }).getByRole("link").click();
+  await page.getByRole("region", { name: "최근 여행", exact: true }).getByRole("link").click();
   await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();
   await page.evaluate(() => { (window as unknown as { __stayed?: boolean }).__stayed = true; });                   // 이 표시가 남아 있으면 페이지를 새로 읽지 않은 것이다
   // `[2026-10-13]` 로그아웃은 설정 › 「로그인 · 계정」 화면의 확인 창에만 있다(읽어 둔 것을 버린다) — 메뉴 → 설정 → 그 화면까지 앱 안에서 옮겨 간다.
@@ -125,7 +125,7 @@ test("옛 키만 있는 브라우저: 처음 열 때 키 하나로 세션으로 
   await startWithOldKey(page);
   await page.goto("/");
   // ★「내 여행」 머리글은 목록이 오기 전에도 있다 — 여행 링크가 보여야 키 이전과 목록 호출이 끝난 것이다(머리글만 보고 기록을 읽으면 앞선다).
-  await expect(page.getByRole("region", { name: "내 여행", exact: true }).getByRole("link").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "최근 여행", exact: true }).getByRole("link").first()).toBeVisible();
   const [adopt] = await server.received("POST", "/v1/web/auth/adopt");
   expect(adopt.key).toBe("acop_u_known");
   expect(adopt.session).toBeNull();                                       // ★키와 쿠키를 함께 보내지 않는다(서버는 400 ambiguous_credentials)
@@ -203,7 +203,7 @@ test("내 여행 목록을 읽지 못해도(서버 500) 첫 화면은 그대로 
   await mockServer(request).scenario({ fail: "trips" });
   await start(page);
   await page.goto("/");
-  const card = page.getByRole("region", { name: "내 여행", exact: true });
+  const card = page.getByRole("region", { name: "최근 여행", exact: true });
   await expect(card.getByRole("alert")).toBeVisible();
   await expect(card.getByRole("button", { name: "다시 불러오기" })).toBeVisible();
   await expect(card).not.toContainText("아직 등록한 여행이 없어요");

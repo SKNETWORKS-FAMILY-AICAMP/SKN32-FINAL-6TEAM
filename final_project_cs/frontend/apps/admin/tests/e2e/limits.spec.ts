@@ -19,7 +19,8 @@ test('차단·해제와 예외 한도는 사유를 요구하고 사용자와 운
   await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: '차단 해제', exact: true }).click();
   await expect(page.getByLabel('차단·해제 사유 (필수)', { exact: true })).toHaveValue('');
-  await expect(main(page).getByRole('status')).toHaveCount(0);
+  // 해제 양식을 연 것만으로는 성공 안내가 뜨면 안 된다. 사용자 상세의 대화 목록은 별도 상태 안내(role=status)를 갖는다.
+  await expect(main(page).locator('[role="status"].success')).toHaveCount(0);
   await page.getByRole('button', { name: '차단 해제 확정', exact: true }).click();
   await expect(main(page).getByRole('alert')).toContainText('사유');
   await expect(page.getByRole('button', { name: '차단 해제', exact: true })).toBeVisible();

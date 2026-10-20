@@ -1,0 +1,99 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { Candidate, ReviewedIntakeView } from "@/lib/live/intake-review";
+import { useServerReview } from "./use-server-review";
+
+// `[2026-10-20 사용자 지시]` 수정 화면은 저장만 하고(시각 · 장소 · 대안), 무거운 검사는 「다시 제출」 때 한 번에 — 대안은 다시 제출 전까지 처음 받은 셋을 그대로 보인다.
+const harness = vi.hoisted(() => ({
+  slots: [] as { value?: unknown; deps?: readonly unknown[]; cleanup?: () => void }[], cursor: 0,
+  effects: [] as (() => void)[], edit: vi.fn(), stream: vi.fn(), revalidate: vi.fn(), autofix: vi.fn(),
+}));
+vi.mock("@/lib/live/intake", () => ({ editIntake: harness.edit, restoreIntake: vi.fn() }));
+vi.mock("@/lib/live/intake-review", async (original) => ({
+  ...await original<typeof import("@/lib/live/intake-review")>(),
+  streamCandidates: harness.stream, revalidateIntake: harness.revalidate, autofixIntake: harness.autofix,
+  getPlacePhotos: vi.fn().mockResolvedValue({ photos: [], source_note: null }),
+}));
+vi.mock("react", () => ({
+  useState: (value: unknown) => {
+    const at = harness.cursor++, slot = harness.slots[at] ??= { value };
+    return [slot.value, (next: unknown) => { slot.value = typeof next === "function" ? next(slot.value) : next; }];
+  },
+  useRef: (value: unknown) => (harness.slots[harness.cursor++] ??= { value: { current: value } }).value,
+  useMemo: (make: () => unknown, deps: readonly unknown[]) => {
+    const at = harness.cursor++, old = harness.slots[at];
+    if (!old?.deps || deps.some((value, index) => !Object.is(value, old.deps![index]))) harness.slots[at] = { value: make(), deps };
+    return harness.slots[at].value;
+  },
+  useEffect: (run: () => void | (() => void), deps?: readonly unknown[]) => {
+    const slot = harness.slots[harness.cursor++] ??= {};
+    if (deps && slot.deps && deps.every((value, index) => Object.is(value, slot.deps![index]))) return;
+    slot.deps = deps;
+    harness.effects.push(() => { slot.cleanup?.(); const cleanup = run(); slot.cleanup = typeof cleanup === "function" ? cleanup : undefined; });
+  },
+}));
+
+function plan(revision = 3, checked?: boolean, needs = 0): ReviewedIntakeView {
+  return { intake_id: "deferred-intake", revision, status: "review", sources: [{ source_id: "source-a", trip: {}, items: [] }],
+    review: { revision, needs: { total: needs }, ...(checked === undefined ? {} : { checked }), items: [{ id: "0-0", source_id: "source-a", index: 0, kind: "activity",
+      title: "경복궁", date: "2030-01-05", starts_at: "12:00", ends_at: "13:30", place: null, locked: false }] } } as unknown as ReviewedIntakeView;
+}
+
+function candidate(name: string, rank: number): Candidate {
+  return { rank, place: { name, kind: "activity", source: "tour_api", latitude: 37.57, longitude: 126.98,
+    address: null, category: null, ref: `tour:${rank}`, content_id: String(rank), content_type_id: null },
+    rows: [], fits: true, status: "ok", distance_m: null, reference: null, slack: { before: null, after: null }, estimated: false };
+}
+
+function draw(view: ReviewedIntakeView, apply = vi.fn()) {
+  harness.cursor = 0; harness.effects = [];
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- Real action boundaries use controlled React storage in this Node harness.
+  const screen = useServerReview({ intakeId: view.intake_id, view, apply, reread: vi.fn(), language: "ko" });
+  for (const run of harness.effects) run();
+  return screen;
+}
+
+afterEach(() => {
+  for (const slot of harness.slots) slot.cleanup?.();
+  harness.slots = []; harness.cursor = 0; harness.effects = [];
+  harness.edit.mockReset(); harness.stream.mockReset(); harness.revalidate.mockReset(); harness.autofix.mockReset();
+});
+
+describe("plan check saves changes and checks them once, when sent again", () => {
+  it("saves a time change without the check and keeps a lock checked", async () => {
+    harness.edit.mockResolvedValue(plan(4, false));
+    const screen = draw(plan());
+    await screen.actions.retime!([{ id: "0-0", start: "13:00", end: "14:30" }]);
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3, expect.any(Array), "ko", { check: false });
+    harness.edit.mockResolvedValue(plan(5));
+    await screen.actions.lock!("0-0", true);
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 4, [{ source_id: "source-a", field: "items[0].locked", value: true }], "ko");
+  });
+
+  it("keeps 「다시 제출」 for a revision only saved, and asks no recommendation for it", () => {
+    const screen = draw(plan(4, false, 1));
+    expect(screen.dirty).toBe(true);
+    expect(harness.autofix).not.toHaveBeenCalled();
+    harness.autofix.mockReturnValue(new Promise(() => undefined));
+    expect(draw(plan(5, true, 1)).dirty).toBe(false);
+    expect(harness.autofix).toHaveBeenCalledOnce();
+  });
+
+  it("shows the same three alternatives after one is picked, and asks again only after the plan is sent again", async () => {
+    harness.stream.mockResolvedValue({ candidates: [candidate("창덕궁", 1), candidate("덕수궁", 2), candidate("창경궁", 3)], notes: [] });
+    let view = plan();
+    const screen = draw(view, vi.fn((next: ReviewedIntakeView) => { view = next; }));
+    const first = await screen.actions.candidates!("0-0");
+    expect(first.map((card) => card.name)).toEqual(["창덕궁", "덕수궁", "창경궁"]);
+    harness.edit.mockResolvedValue(plan(4, false));
+    await screen.actions.replace!("0-0", { candidate: first[1] });
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3, expect.any(Array), "ko", { check: false });
+    draw(view);
+    const again = await screen.actions.candidates!("0-0");
+    expect(again.map((card) => card.name)).toEqual(["창덕궁", "덕수궁", "창경궁"]);
+    expect(harness.stream).toHaveBeenCalledOnce();
+    harness.revalidate.mockResolvedValue(plan(4, true));
+    await screen.actions.recheck!();
+    await screen.actions.candidates!("0-0");
+    expect(harness.stream).toHaveBeenCalledTimes(2);
+  });
+});

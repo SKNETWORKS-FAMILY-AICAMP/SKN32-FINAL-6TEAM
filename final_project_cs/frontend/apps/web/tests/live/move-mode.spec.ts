@@ -110,7 +110,7 @@ test("서버가 못 읽어 주면 서버 문장과 「다시 불러오기」, �
   await openFinished(page, request, undefined, { moveOptions: "fail" });
   await openMove(page);
   await box(page).click();
-  await expect(ways(page).getByRole("alert")).toContainText("서버 오류");
+  await expect(ways(page).getByRole("alert")).toContainText("요청을 처리하지 못했어요");   // `[2026-10-17 ST4F-611]` 서버의 개발 문장(「서버 오류」)은 그대로 보이지 않는다 — error-text.ts
   await expect(ways(page).getByRole("button", { name: "다시 불러오기" })).toBeVisible();
 });
 

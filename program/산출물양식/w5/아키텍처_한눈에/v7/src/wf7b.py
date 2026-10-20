@@ -23,7 +23,7 @@ def nbox(x, y, w, h, title, lines=(), cls="node", status=None):
 def workflow():
     S.clear()
     W, H = 1800, 1480
-    T(40, 40, "triPilot 멀티 에이전트 플로우 — 한 장", "big", "start")
+    T(40, 40, "guguroute 멀티 에이전트 플로우 — 한 장", "big", "start")
     T(40, 66, "① 계획을 올릴 때 한 번 검증하고 ② 여행이 끝날 때까지 루프를 돈다 · 금색 굵은 선 = 되돌아가는 루프 · 붉은 점선 = 실패 · 판정은 코드(AI 아님)", "s", "start")
     tx = 1400
     for k in ("done", "wip", "plan"):

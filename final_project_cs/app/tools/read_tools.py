@@ -18,6 +18,20 @@ from app.infrastructure.rag.retriever import search_policy
 
 #: `[2026-10-16]` 기준점 줄임말 → 역 이름(우리가 고른 짧은 목록)
 _LANDMARK_ALIASES = {"홍대": "홍대입구역", "건대": "건대입구역", "서울대": "서울대입구역", "고터": "고속터미널역"}
+#: `[2026-10-17 GPT 검수 2차]` 서울 밖이지만 서울 여행에서 자주 쓰는 기준점 — 카카오 어댑터는 서울 안만 찾아 「인천공항」이
+#:   「인천공항 주차장 주차대행」(서울시청 근처 업체)으로 잡혔다(☆10-16 새 문장 N7-13 · N8-13 · N9-14 · N10-05 · N11-05).
+#:   좌표는 터미널 대략 위치(공개 지도에서 옮김, **카카오로 다시 확인 안 함**) — 거리 확인(수 km 단위)에만 쓴다
+_FIXED_LANDMARKS = (("인천공항2터미널", "인천국제공항 제2여객터미널", 37.4687, 126.4335),
+                    ("인천국제공항2터미널", "인천국제공항 제2여객터미널", 37.4687, 126.4335),
+                    ("인천공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507),
+                    ("인천국제공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507))
+#: 서울 밖 도시 이름으로 시작하는 검색어 — 카카오(서울 안)의 답은 이름만 같은 서울 가게라 기준점으로 쓰지 않는다
+#: `[2026-10-17 D20]` 구 이름만 말하면 그 구청을 기준점으로 — 「성북구」→「서울한양도성 낙산구간」, 「영등포구」→「한강」, 「서초구」→「헌릉과 인릉」처럼
+#:  관련도 1위 관광지가 잡혀 다른 구 숙소가 나왔다(☆4차 held-out qa_1017_214452, 17건)
+_SEOUL_GU = frozenset("종로구 중구 용산구 성동구 광진구 동대문구 중랑구 성북구 강북구 도봉구 노원구 은평구 서대문구 마포구 양천구 강서구 구로구 "
+                      "금천구 영등포구 동작구 관악구 서초구 강남구 송파구 강동구".split())
+_OUTSIDE_SEOUL = re.compile(r"^(?:인천|부천|일산|고양|성남|분당|판교|수원|용인|안양(?!천)|과천|광명|하남|구리|남양주|의정부|파주|"
+                            r"부산|해운대|대구|대전|울산|제주|서귀포|강릉|속초|춘천|경주|전주|여수|송도|영종)")
 
 
 class ToolBudgetExceeded(RuntimeError):
@@ -208,9 +222,15 @@ class ReadToolbox:
             "read.booking_search_stays": self.booking_search_stays,
             # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
             "read.stay_lookup": self.stay_lookup,
+            # ★`[2026-10-17 D21]` 숙소 이름 여럿 → 위치(카카오 숙박, 한 번에 최대 12곳). 숙소 팀이 걷기 · 근처 조건에서 목록의 위치를 한꺼번에 찾는다
+            #   (도구 호출 예산 `max_steps` 안에서 — 전에는 이름 하나씩 2곳까지라 나머지는 「거리 확인 안 함」이었다)
+            "read.stays_lookup": self.stays_lookup,
             # ★`[2026-10-15]` 지역 · 장소 이름 → 기준점 하나(이름 · 좌표, 카카오 · 서울 안). 숙소 팀이 「강남역 도보」 「경복궁 근처」의 거리와
             #   검색 지역이 서울인지 볼 때 쓴다(검수 D · 사용자 결정 「카카오로 기준점 찾기」)
             "read.landmark": self.landmark,
+            # ★`[2026-10-17 D21]` 좌표 둘레의 지하철역 목록(카카오 · 거리순 최대 15). 숙소 팀이 「지하철역 걸어서 N분」(역 이름 없음)을
+            #   숙소마다 가장 가까운 역에서 잴 때 쓴다 — 한 번 불러 목록을 받고, 숙소별 거리는 팀이 계산한다(도구 호출 예산 `max_steps`)
+            "read.stations_near": self.stations_near,
             # ★`[2026-10-13]` 구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 동시에 — 숙소 팀이 후보마다 판매처 가격을 붙일 때
             "read.stay_google_details": self.stay_google_details,
             # ★`[2026-10-13]` 숙소 · 항공 일정 항목에 앞서 보여 준 후보(숙소 · 항공 원장) — 「또 바꿔 줘」에서 뺀다
@@ -975,6 +995,26 @@ class ReadToolbox:
                                                          "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
         return {"source": None, "stays": []} if answered else None
 
+    #: 한 번에 위치를 찾는 숙소 수 상한(카카오 호출 수 = 이름 수). 우리가 고른 값
+    STAYS_LOOKUP_MAX = 20                     # `[2026-10-18 D22]` 12 → 20: 구를 말하면 구글 숙소 이름도 함께 찾는다
+
+    def stays_lookup(self, scope: ToolContext, *, names: Any = None, **_: Any) -> dict[str, Any] | None:
+        """숙소 이름 여럿 → 이름마다 카카오 로컬 숙박(`AD5`, 서울 전역) 결과. `[2026-10-17 D21]`
+
+        돌려주는 것: `{"source": "kakao", "stays": {이름: [{name, address, latitude, longitude}]}}` — 이름 · 주소 · 좌표만(응답은 저장하지 않는다,
+        카카오 약관). 앞의 `STAYS_LOOKUP_MAX` 곳까지만 부른다. 카카오를 부를 수 없으면 `None`."""
+        if self.kakao is None or not names:
+            return None
+        out: dict[str, list[dict[str, Any]]] = {}
+        answered = False
+        for name in list(dict.fromkeys(str(n).strip() for n in names if str(n or "").strip()))[: self.STAYS_LOOKUP_MAX]:
+            found = self.kakao.search(name, size=5, category_group_code="AD5", anywhere=True)
+            if found is None:
+                continue
+            answered = True
+            out[name] = [{key: row.get(key) for key in ("name", "address", "latitude", "longitude")} for row in found]
+        return {"source": "kakao", "stays": out} if answered else None
+
     def landmark(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
         """지역 · 장소 이름 → 기준점 하나(이름 · 위도 · 경도). `[2026-10-15]` 숙소 팀 — 「강남역 걸어서」 「경복궁 근처」 「김포공항 근처」의 기준점,
         그리고 검색 지역이 서울인지(카카오 어댑터는 서울 주소만 돌려준다).
@@ -984,9 +1024,16 @@ class ReadToolbox:
         서울에서 못 찾았으면 `{"source": "kakao", "found": False}`, 카카오를 부를 수 없었으면 `None`(모름).
         """
         word = str(name or "").strip()
+        fixed = next((row for row in _FIXED_LANDMARKS if "".join(word.split()).startswith(row[0])), None)
+        if fixed:
+            return {"source": "fixed", "found": True, "name": fixed[1], "latitude": fixed[2], "longitude": fixed[3]}
         if not word or self.kakao is None:
             return None
+        if _OUTSIDE_SEOUL.match(re.sub(r"^서울(?:특별시|시)?\s*", "", word) if word.startswith("서울") else word):
+            return {"source": "kakao", "found": False, "outside_seoul": True}
         word = re.sub(r"^서울(?:특별시|시)?\s+", "", word) or word      # 「서울 강남」 → 「강남」(카카오는 이미 서울 안만 찾는다)
+        # `[2026-10-17 D17]` 「홍대/신촌」 · 「홍대, 신촌」 — 앞 지역으로(☆N10-23: 통째로 찾아 「홍대선원」이 기준점이 됐다)
+        word = re.split(r"\s*[/,·]\s*|\s+(?:이나|또는|아니면)\s+", word)[0].strip() or word
         # `[2026-10-16 최종 평가 뒤]` 줄임말 → 역 이름(「홍대」가 「머큐어 앰배서더 서울 홍대」 호텔로 잡혔다)
         word = _LANDMARK_ALIASES.get("".join(word.split()), word)
         compact = "".join(word.split())
@@ -997,6 +1044,8 @@ class ReadToolbox:
         station_first = bool(re.fullmatch(r"[가-힣]{2,6}", stem)) and not re.search(r"[역구동로길]$", stem)
         tries = ([(word, {"category_group_code": "SW8"}, None), (word, {}, compact)] if word.endswith("역") else
                  ([(stem + "역", {"category_group_code": "SW8"}, stem + "역")] if station_first else []) + [(word, {}, compact)])
+        if compact in _SEOUL_GU:
+            tries = [(compact + "청", {"category_group_code": "PO3"}, compact + "청"), *tries]     # PO3 = 공공기관
         answered = False
         for query, options, must in tries:
             found = self.kakao.search(query, size=5, anywhere=True, **options)
@@ -1014,6 +1063,38 @@ class ReadToolbox:
                 return {"source": "kakao", "found": True, "name": top.get("name"),
                         "latitude": top.get("latitude"), "longitude": top.get("longitude")}
         return {"source": "kakao", "found": False} if answered else None
+
+    #: 한 번에 둘레 역을 찾는 점 수 상한(카카오 호출 수 = 점 수). 우리가 고른 값
+    STATION_POINTS_MAX = 6
+
+    def stations_near(self, scope: ToolContext, *, points: Any = None, latitude: Any = None, longitude: Any = None,
+                      radius: Any = None, **_: Any) -> dict[str, Any] | None:
+        """점(들) 둘레 반경(미터, 기본 1500) 안 지하철역 — 점마다 거리순 최대 15곳(카카오 한 쪽 상한)을 모아 중복을 뺀다. `[2026-10-17 D21]`
+
+        `points=[[위도, 경도], …]`(앞의 `STATION_POINTS_MAX` 개) 또는 `latitude` · `longitude` 하나. 카카오 로컬 키워드 검색(「역」, 지하철역 `SW8`).
+        돌려주는 것: `{"source": "kakao", "stations": [{name, latitude, longitude}]}` — 이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관).
+        카카오를 부를 수 없으면 `None`."""
+        raw = points if points else [[latitude, longitude]]
+        spots = []
+        for point in list(raw)[: self.STATION_POINTS_MAX]:
+            try:
+                spots.append((float(point[0]), float(point[1])))
+            except (TypeError, ValueError, IndexError):
+                continue
+        if self.kakao is None or not spots:
+            return None
+        out, seen, answered = [], set(), False
+        for spot in spots:
+            found = self.kakao.search("역", size=15, near=spot, radius=int(radius or 1500), category_group_code="SW8")
+            if found is None:
+                continue
+            answered = True
+            for row in found:
+                key = (row.get("name"), round(float(row.get("latitude") or 0), 5), round(float(row.get("longitude") or 0), 5))
+                if key not in seen:
+                    seen.add(key)
+                    out.append({k: row.get(k) for k in ("name", "latitude", "longitude")})
+        return {"source": "kakao", "stations": out} if answered else None
 
     def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
                             check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
