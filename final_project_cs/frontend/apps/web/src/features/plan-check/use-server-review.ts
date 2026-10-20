@@ -49,7 +49,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   reread: () => void;
 }): { actions: PlanCheckActions; dirty: boolean; rechecking: string | null; infos: Readonly<Record<string, PlaceInfo>>; preview: ReviewedIntakeView | null } {
   const [dirtyState, setDirtyState] = useState({ intakeId, value: false });
-  const dirty = dirtyState.intakeId === intakeId && dirtyState.value;
+  // `[2026-10-20 사용자 지시]` A revision only saved (`review.checked === false`) is a change still to send: a reload keeps 「다시 제출」, not 「여행 등록」.
+  const unchecked = view?.intake_id === intakeId && view.review?.checked === false;
+  const dirty = (dirtyState.intakeId === intakeId && dirtyState.value) || unchecked;
   const setDirty = useMemo(() => (value: boolean) => setDirtyState({ intakeId, value }), [intakeId]);
   // `[2026-10-03]` 「전체 자동 추천」 is first only SHOWN (the server's dry run saves nothing): the plan as it would be, kept with the revision it was asked on.
   const [previewed, setPreviewed] = useState<{ view: ReviewedIntakeView; base: number } | null>(null);
@@ -66,7 +68,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const pickable = useRef(new Map<string, CandidatePlace>());
   /** `[2026-10-07]` The ways to go for a leg, asked when its box is opened and kept for the revision they were asked on (a re-opened box asks nothing). */
   const moveWays = useRef(new Map<string, Promise<MoveOptions | null>>());
-  // `[2026-10-07 사용자 지적 — 이미 받은 대안을 다시 열 때도 로딩이 있다]` The alternatives of a stop, kept for the revision they were asked for: opening the change screen again, or 「자동 추천」 after it, does not ask again.
+  // `[2026-10-07 사용자 지적 — 이미 받은 대안을 다시 열 때도 로딩이 있다]` The alternatives of a stop: opening the change screen again, or 「자동 추천」 after it, does not ask again.
+  // ★`[2026-10-20 사용자 지시]` Kept by stop, not by revision, until 「다시 제출」: after picking one of them (or moving a time) the change screen shows the
+  //   same three again instead of working out the alternatives of the changed plan — the changed plan is checked once, when it is sent again.
   const alternatives = useRef(new Map<string, ReturnType<typeof getCandidates>>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
   const candidateNotes = useRef(new Map<string, string[]>());
@@ -77,7 +81,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
    */
   const warmed = useRef<{ intakeId: string; base: number; ask: Promise<Awaited<ReturnType<typeof autofixIntake>>> } | null>(null);
   const needsLook = (view?.review?.needs?.total ?? 0) > 0;
-  const warmRevision = view?.status === "review" ? view.revision : null;
+  // `[2026-10-20]` Not for a revision only saved: its moves are not measured yet (the dry run would work on guesses) - it is asked once the plan is sent again.
+  const warmRevision = view?.status === "review" && !unchecked ? view.revision : null;
   useEffect(() => {
     if (warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
     const ask = autofixIntake(intakeId, warmRevision, language, true);
@@ -109,10 +114,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1],
       onFirst?: (list: CandidateList) => void, onUpdate?: (update: CandidateUpdate) => void) => {
       const revision = plan().revision;
+      // `[2026-10-20 사용자 지시]` By stop until 「다시 제출」 (see `alternatives`): a stop whose risk changed since (the changed plan's quick look) keeps the three it had.
       const currentRisk = itemRiskOf(itemOf(id).risk);
-      const key = `${revision}:${id}:${currentRisk ? riskSignature([currentRisk]) : ""}`;
-      for (const old of [...alternatives.current.keys()]) if (!old.startsWith(`${revision}:`)) alternatives.current.delete(old);
-      const kept = alternatives.current.get(key);
+      const key = `${id}:${currentRisk ? riskSignature([currentRisk]) : ""}`;
+      const kept = alternatives.current.get(key) ?? [...alternatives.current.entries()].find(([old]) => old.startsWith(`${id}:`))?.[1];
       if (kept) return kept;
       const ask = streamCandidates(intakeId, item, revision, language, onFirst ?? (() => undefined), onUpdate ?? (() => undefined))
         .catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
@@ -131,7 +136,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
      */
     async function save(edits: IntakeEdit[], changed = false) {
       const before = plan();
-      const next = await editIntake(intakeId, before.revision, edits, language).catch(staleThenRethrow);
+      // ★`[2026-10-20 사용자 지시]` A change of the customer's (time · place · alternative · stop added or taken out) is only SAVED: the server does not
+      //   measure the moves or re-place the stops around it now - 「다시 제출」 (`recheck`) checks the whole plan once. A lock or the plan's name is checked as before.
+      const next = await (changed ? editIntake(intakeId, before.revision, edits, language, { check: false })
+        : editIntake(intakeId, before.revision, edits, language)).catch(staleThenRethrow);
       if (!allUndo.active) throw gone();
       if (edits.some((edit) => !edit.field.endsWith(".locked"))) allUndo.remember(before, next);
       else allUndo.advance(next);
@@ -382,6 +390,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         if (!allUndo.active) return;
         allUndo.restored(next);
         undoEdits.current = null;
+        alternatives.current.clear();
         setDirty(false);                            // restore saved the final check in the same transaction
         take(next);
       },
@@ -400,6 +409,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         try {
           const next = await revalidateIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
           if (!allUndo.active) return;
+          alternatives.current.clear();                             // `[2026-10-20]` the plan is checked: alternatives are asked for the plan as it now is
           setDirty(false);                                          // before the checked plan is drawn (see `save`)
           take(next);
         } finally {

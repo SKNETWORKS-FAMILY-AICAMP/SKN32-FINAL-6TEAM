@@ -903,8 +903,12 @@ def store(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str
 
 def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
            claims: list[dict[str, Any]], force: bool = False, previous_revision: int | None = None,
-           **options: Any) -> dict[str, Any]:
-    """그 판의 검사를 돌려준다 — 저장된 것이 있으면 그것, 없거나 `force` 면 새로 계산해 저장한다."""
+           quick: bool = False, **options: Any) -> dict[str, Any]:
+    """그 판의 검사를 돌려준다 — 저장된 것이 있으면 그것, 없거나 `force` 면 새로 계산해 저장한다.
+
+    ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `quick` = 이동 계산기를 부르지 않는 **미룬 검사**: 바뀐 구간은 직선 어림값,
+    안 바뀐 구간은 앞 판의 시간표 값(`sig`)을 그대로 쓴다. 위험(날씨 · 재난)은 저장해 둔 값만 읽는다. 저장본에 `checked: false` · `ready: false` 를 남긴다 — 등록(`confirm`)은 이 판을 받지 않고
+    재검증(`revalidate`, `force`)이 계산기로 다시 잰다(어림 구간은 `basis` 가 시간표가 아니라 재사용되지 않는다). 옛 저장본에는 `checked` 가 없다 — 검사된 것으로 읽는다."""
     if not force:
         cached = load(conn, tenant_id, intake_id, revision)
         if cached is not None:
@@ -916,15 +920,24 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
                 store(conn, tenant_id, intake_id, revision, payload)
             return payload
     previous = load(conn, tenant_id, intake_id, previous_revision) if previous_revision else None
+    if quick:
+        options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
                     previous=previous, **options)
+    payload = {**payload, "checked": not quick, **({"ready": False} if quick else {})}
     from . import risks
 
     # ★`[2026-10-20 「대안 적용 13.9초」]` 앞 판에서 방금 점검한 일정(장소 · 날짜 · 시각이 같음)은 그 결과를 쓴다 — 바꾼 일정만 바깥 조회를 다시 한다
-    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="fresh", reuse=previous)
+    # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
+    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
     store(conn, tenant_id, intake_id, revision, payload)
     return payload
 
 
-__all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "place_state", "store"]
+def unchecked(payload: dict[str, Any] | None) -> bool:
+    """`[2026-10-20]` 저장만 하고 검사를 미룬 판(`ensure(quick=True)`)인가 — 옛 저장본(칸 없음)은 검사된 것이다."""
+    return isinstance(payload, dict) and payload.get("checked") is False
+
+
+__all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "place_state", "store", "unchecked"]
 

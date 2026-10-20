@@ -570,13 +570,13 @@ def _prefill_view(value: Any) -> dict[str, Any] | None:
 
 
 def _review_of(conn, tenant_id: str, intake_id: UUID, revision: int, sources: list[dict[str, Any]],
-               claims: list[dict[str, Any]], *, force: bool = False) -> tuple[dict[str, Any] | None, str | None]:
+               claims: list[dict[str, Any]], *, force: bool = False, quick: bool = False) -> tuple[dict[str, Any] | None, str | None]:
     """그 판의 검사(`review.py`) — 저장된 것이 있으면 그것, 없으면 지금 계산한다. 실패하면 (None, 코드): 확인 화면은 읽은 값으로 계속 간다.
     ★DB 오류가 바깥 트랜잭션을 망가뜨리지 않게 세이브포인트 안에서 부른다(마이그레이션 040 이 안 올라간 DB 도 읽기는 된다)."""
     try:
         with conn.transaction():
             return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
-                                        sources=sources, claims=claims, force=force,
+                                        sources=sources, claims=claims, force=force, quick=quick,
                                         previous_revision=revision - 1 if revision > 1 else None), None
     except Exception:                                     # noqa: BLE001
         log.warning("intake review failed intake=%s revision=%s", intake_id, revision, exc_info=True)
@@ -608,8 +608,12 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None, learn_aliases: bool = True, reflow: bool = False) -> int:
+         dining: Any = None, learn_aliases: bool = True, reflow: bool = False, check: bool = True) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
+
+    ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `check=False` 면 **저장만** 한다: 장소를 바꿔도 앞뒤 시각 재배치
+    (`direct_schedule.fit` — 이동 계산기를 부른다)를 하지 않고, 새 판의 검사는 계산기 없이(`review.ensure(quick=True)`) `checked: false` 로 남긴다.
+    고객이 「다시 제출」을 누르면 `revalidate` 가 계산기로 한 번에 검사한다. 일정 수 · 기간(7일) 같은 값 검사는 그대로 한다.
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
     싣는다. `{"none": true}` 는 「장소 없음」(자유시간 · 이름 없는 호텔). 돌려주는 값은 새 판 번호.
@@ -709,7 +713,18 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         explicit_times = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
                           if field.startswith("items[") and field.endswith((".starts_at", ".ends_at", ".date"))} if reflow else set()
         touched |= explicit_times
-        if (touched or added) and via != "autofix":
+        if added and not check:
+            from ..planning.planner import MAX_DAYS
+            from .assemble import collect
+            prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
+                           for c in current_claims] + [
+                {"source_id": sid, "field": field, "value": value, "method": "customer", "evidence": evidence,
+                 "needs_review": False, "note": note} for sid, field, value, evidence, note in rows]
+            got = collect(sources=[{**s, "source_id": str(s["source_id"])} for s in source_rows], claims=prospective)
+            dates = sorted({r["date"] for r in got.rows if r["date"]})
+            if dates and (date.fromisoformat(dates[-1]) - date.fromisoformat(dates[0])).days >= MAX_DAYS:
+                raise IntakeRejected("trip_too_long", "서울 여행은 최대 7일까지 추가할 수 있습니다")
+        if (touched or added) and via != "autofix" and check:
             from . import direct_schedule
             from .assemble import collect
             prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
@@ -753,7 +768,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         # 검사까지 같은 트랜잭션에 저장한다. 새 장소만 반영되고 이동 검사는
         # 옛 상태인 중간 판을 다른 화면에서 읽지 않게 한다.
         found, error = _review_of(conn, tenant_id, intake_id, new, source_rows,
-                                  effective(_claims(conn, tenant_id, intake_id, new)), force=True)
+                                  effective(_claims(conn, tenant_id, intake_id, new)), force=True, quick=not check)
         if found is None:
             raise IntakeConflict("schedule_check_failed", "변경 후 검사를 끝내지 못해 저장하지 않았어요. 다시 시도해 주세요.", reason=error)
     return new
