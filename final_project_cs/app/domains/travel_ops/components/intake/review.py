@@ -920,7 +920,8 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
                     previous=previous, **options)
     from . import risks
 
-    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="fresh")
+    # ★`[2026-10-20 「대안 적용 13.9초」]` 앞 판에서 방금 점검한 일정(장소 · 날짜 · 시각이 같음)은 그 결과를 쓴다 — 바꾼 일정만 바깥 조회를 다시 한다
+    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="fresh", reuse=previous)
     store(conn, tenant_id, intake_id, revision, payload)
     return payload
 

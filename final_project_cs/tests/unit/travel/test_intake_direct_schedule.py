@@ -235,3 +235,16 @@ def test_ordinary_restaurant_does_not_use_the_hotel_breakfast_rule():
                    row(1,"10:05","11:05")])
     assert values(changes) == {"items[0].ends_at":"10:00", "items[1].starts_at":"10:15", "items[1].ends_at":"11:15"}
     assert not any(c.get("derived_stay_end") for c in changes)
+
+
+def test_engine_place_keys_match_the_review_item_ids():
+    # `[2026-10-20 「대안 적용 13.9초」]` 이동 계산기의 요청 사이 재사용 칸은 장소 키까지 본다 — 시각 맞추기가 검사(`review.build`)와 같은 키
+    #   (`원본 위치-번호`)로 물어야 바로 뒤 검사가 같은 구간을 다시 세지 않는다
+    seen = []
+
+    def engine(a, b, arrive, not_before=None):
+        seen.append((a["key"], b["key"]))
+        return walk11(a, b, arrive, not_before)
+    fit([row(0, "09:00", "10:00", order=(2, 5, 0)), row(1, "10:05", "11:05", order=(2, 6, 1))], engine=engine)
+    assert ("2-0", "2-1") in seen                                     # 시각을 고르는 탐색(`autofix` 의 prev · cand)은 도착 목표가 달라 따로 센다
+    assert not any(":" in k for pair in seen for k in pair)          # 옛 키(`원본:번호`)는 쓰지 않는다

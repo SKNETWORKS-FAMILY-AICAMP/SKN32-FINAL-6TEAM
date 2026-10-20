@@ -48,7 +48,9 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
 
     def point(row):
         p = row["place"]
-        return {"key": f"{row['source_id']}:{row['index']}", "name": p["name"],
+        # ★`[2026-10-20 「대안 적용 13.9초」]` 장소 키는 검사(`review.build`)의 일정 id(`원본 위치-번호`)와 같게 둔다 — 이동 계산기의 요청 사이 재사용 칸은
+        #   키까지 열쇠에 넣어서, 전에는 같은 구간 · 같은 도착 목표를 시각 맞추기와 검사가 따로 셌다(로컬 실측: 바꾼 일정 앞뒤 2구간을 두 번, 약 4.5초)
+        return {"key": f"{row.get('order', (0,))[0]}-{row['index']}", "name": p["name"],
                 "lat": float(p["latitude"]), "lon": float(p["longitude"])}
 
     fell_back: set[str] = set()                    # 고른 수단이 안 닿아 추천 계산기로 돌아온 구간
