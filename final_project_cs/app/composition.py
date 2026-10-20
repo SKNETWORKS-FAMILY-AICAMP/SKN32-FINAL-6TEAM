@@ -759,7 +759,8 @@ def _dining_agent_judge():
 
 
 def _dining_meal_picker():
-    """대체 식당 셋 중 고르기 — 가드레일 `travel.dining.meal_pick.enabled` 를 켰을 때만 선택기를 만든다(기본 꺼짐 → None). `[2026-10-15]`
+    """대체 식당 셋 중 고르기 — 가드레일 `travel.dining.meal_pick.enabled` 를 켰을 때만 선택기를 만든다(끄면 None). `[2026-10-15]`
+    `[2026-10-20 사용자 결정]` 가드레일 기본값은 켜짐 — 꽂는 것은 아래 「흐름 한 칸」 선택기다(1위는 규칙 그대로).
 
     모델은 가드레일 `model` — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
     ★키 · 주소가 없으면 만들지 않고 경고만 남긴다 — 선택기가 없으면 규칙 1등 그대로다(기동을 막지 않는다)."""
