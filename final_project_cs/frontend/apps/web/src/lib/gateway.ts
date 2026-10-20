@@ -19,7 +19,7 @@ const unavailableGateway: TripGateway = {
   deleteTrip: (_tripId, language) => unavailable(language),
 };
 
-// ★`[2026-10-03 사용자 지시]` There is no imitation gateway any more. `live` talks to the triPilot server
+// ★`[2026-10-03 사용자 지시]` There is no imitation gateway any more. `live` talks to the guguroute server
 //   (`NEXT_PUBLIC_API_BASE`, `/v1/web/*`) with a per-user key; any other build says the server is not connected.
 export const tripGateway: TripGateway = DATA_MODE === "live" ? createLiveGateway() : unavailableGateway;
 export const tripKey = (tripId: string, language: Language) => ["trip", tripId, language] as const;

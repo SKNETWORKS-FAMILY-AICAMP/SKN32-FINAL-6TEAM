@@ -123,8 +123,8 @@ class TravelSource:
     def _miss(self, reason: str, detail: str = "") -> None:
         """★`None` 을 돌려주기 **전에** 반드시 부른다. 이유 없는 모름은 못 고친다."""
         self.misses[reason] += 1
-        if reason == "cache_only":
-            # 캐시만 읽는 호출(`CacheOnlyLimiter`)의 정상 갈래 — 경고도 실패 수도 아니다
+        if reason in ("cache_only", "lodging_mode_off"):
+            # 캐시만 읽는 호출(`CacheOnlyLimiter`) · 숙소 모드 끄기(`LodgingModeLimiter`)의 정상 갈래 — 경고도 실패 수도 아니다
             logger.debug("travel source miss: %s", SourceMiss(self.name, reason, detail))
             return
         logger.warning("travel source miss: %s", SourceMiss(self.name, reason, detail))
@@ -403,11 +403,11 @@ def apply_outbound_proxy(sources: TravelSources, *, url: str, names: str) -> str
     return None
 
 def _with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int], names: list[str], *,
-                    on_db_error: str = "allow", share: float = 1.0) -> Any:
+                    on_db_error: str = "allow", share: float = 1.0, soft_day: frozenset[str] = frozenset()) -> Any:
     """안쪽 제한기에 **DB 예산**을 얹는다 — 본체는 `source_budget.with_db_budget`(한도를 모르는 소스는 세지 않는다)."""
     from .source_budget import with_db_budget
 
-    return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error, share=share)
+    return with_db_budget(limiter, limits, monthly, names, on_db_error=on_db_error, share=share, soft_day=soft_day)
 
 
 #: 부른 뒤 **쓸 수 있는 답을 못 받은** 이유 — 응답이 오지 않았거나(시간 초과 · 연결 오류 · HTTP 오류) 와도 읽을 수 없었다(JSON · XML 이 아님 · 모양이 다름 · 본문이 오류).
@@ -421,13 +421,16 @@ def _is_call_failure(reason: str) -> bool:
     return reason in _CALL_FAILURE_REASONS or reason.startswith("http_")
 
 
-def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priority_share: float | None = None) -> TravelSources:
+def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priority_share: float | None = None,
+                         operation_snapshot: bool = False) -> TravelSources:
     """설정을 보고 붙일 수 있는 것만 붙인다.
 
     `cache_only` — ★`[2026-10-06]` 바깥으로 **한 번도 나가지 않고** 공유 응답 캐시(`source_response_cache`)에 있는 것만 읽는 소스 묶음(`CacheOnlyLimiter`).
     감시가 모아 둔 최근 결과를 읽기만 해야 하는 읽기 입구(MCP 일정 위험 점검)가 쓴다 — 하루 한도 칸을 안 쓴다. 캐시에 없으면 그 소스는 「모름」이다.
     `low_priority_share` — 낮은 우선순위로 **새로 부르는** 소스 묶음: 소스의 하루 · 이번 달 한도의 이 비율(0 < 몫 ≤ 1)까지만 쓰고(`CallBudget.share` — 같은 SQL 안에서 비교), 나머지는 감시 · 채팅 몫이다.
     ★DB 를 못 읽으면 **부르지 않는다**(일반 호출의 `allow` 정책과 반대 — `with_db_budget`). `cache_only` 가 이긴다.
+    `operation_snapshot` — 이 소스 묶음 안에서는 같은 ITS 원문 요청의 실패를 재사용한다.
+    실패는 공유 캐시에 저장하지 않으며 새 소스 묶음은 다시 확인할 수 있다.
 
     ★키가 없으면 **그 소스만** 빠진다. 앱이 죽지도 않고, 가짜로 채우지도
       않는다. 무엇이 왜 빠졌는지는 `unavailable` 이 들고 있고
@@ -448,19 +451,34 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
               if hasattr(settings, "source_rate_limits") else {})
     by_source = guardrails.get("travel.rate_burst_by_source") or {}
     bursts = {name: max(1, int(by_source.get(name) or burst)) for name in limits}
-    limiter = RateLimiter(
-        intervals={name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()},
-        bursts=bursts,
-        max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
-    if guardrails.get("travel.source_budget_shared"):
-        limiter = _with_db_budget(limiter, limits, getattr(settings, "source_monthly_limits", lambda: {})(),
-                                  list(guardrails.get("travel.source_budget_sources") or []),
-                                  on_db_error=str(guardrails.get("travel.source_budget_on_db_error") or "allow"),
-                                  share=1.0 if low_priority_share is None else float(low_priority_share))
+    intervals = {name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()}
+
+    def _limiter(intervals: dict[str, float], share: float, soft_day: frozenset[str] = frozenset(), raw: Any = None) -> Any:
+        made: Any = raw if raw is not None else RateLimiter(intervals=intervals, bursts=bursts,
+                                                            max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
+        if guardrails.get("travel.source_budget_shared"):
+            made = _with_db_budget(made, limits, getattr(settings, "source_monthly_limits", lambda: {})(),
+                                   list(guardrails.get("travel.source_budget_sources") or []),
+                                   on_db_error=str(guardrails.get("travel.source_budget_on_db_error") or "allow"),
+                                   share=share, soft_day=soft_day)
+        return made
+
+    its_limiter: Any = RateLimiter(intervals=intervals, bursts=bursts,
+                                   max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
+    # ITS는 전체·키별 예산을 한 트랜잭션으로 확보하는 전용 문을 쓴다 — DB 예산으로 감싸기 **전**의 원래 제한기(같은 인스턴스)를 준다.
+    limiter = _limiter(intervals, 1.0 if low_priority_share is None else float(low_priority_share), raw=its_limiter)
+    #: ★`[2026-10-19 사용자 결정]` 구글 호텔 어댑터의 호출 문 — 숙소 모드(관리 콘솔)를 부를 때마다 읽는다(`LodgingModeLimiter`).
+    #:  시연(demo) 제한기는 `serpapi` 의 호출 간격 · 하루 줄 · 몫을 빼고 월 줄만 지킨다. 만드는 것은 I/O 가 없다
+    from .source_budget import LodgingModeLimiter
+
+    hotel_limiter: Any = LodgingModeLimiter(
+        test=limiter, demo=_limiter({n: v for n, v in intervals.items() if n != "serpapi"}, 1.0, frozenset({"serpapi"})))
     if cache_only:
         from .ratelimit import CacheOnlyLimiter
 
         limiter = CacheOnlyLimiter()                  # 예산 칸에도 닿지 않는다 — 위에서 만든 제한기를 쓰지 않는다
+        its_limiter = limiter
+        hotel_limiter = limiter
 
     ttl = float(guardrails.get("travel.source_cache_seconds") or 0)
     if ttl > 0 and guardrails.get("travel.source_cache_shared"):
@@ -492,7 +510,7 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
         from .serpapi_flights import SerpApiFlights
         sources.flight_google = SerpApiFlights(api_key=serpapi_key, limiter=limiter)
         from .serpapi_hotels import SerpApiHotels
-        sources.stay_google = SerpApiHotels(api_key=serpapi_key, limiter=limiter)
+        sources.stay_google = SerpApiHotels(api_key=serpapi_key, limiter=hotel_limiter)    # 숙소 모드를 따른다(위 `hotel_limiter`)
     else:
         sources.unavailable["flight_google"] = "serpapi_api_key 없음 — 구글 항공권 비교 안 함"
         sources.unavailable["stay_google"] = "serpapi_api_key 없음 — 구글 호텔 비교 안 함"
@@ -592,9 +610,21 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     its: Any = None
     # ★ITS 는 공공데이터포털 공통 키가 아니라 **ITS 가 발급한 키**를 쓴다.
     its_key = getattr(settings, "its_api_key", "") or ""
-    if its_key:
+    its_keys = getattr(settings, "its_api_keys", "") or ""
+    if its_key or its_keys:
+        from app.infrastructure.db.session import get_connection
+
+        from .its_key_budget import ItsKeyBudget
         from .its_traffic import ItsTrafficEvents
-        its = ItsTrafficEvents(service_key=its_key, limiter=limiter, cache=cache)
+
+        key_budget = ItsKeyBudget(connection_factory=get_connection,
+            day_limit=int(limits.get("its", 0)),
+            month_limit=int(getattr(settings, "rate_its_per_month", 0)),
+            key_day_limit=int(getattr(settings, "rate_its_key_per_day", 0)),
+            key_month_limit=int(getattr(settings, "rate_its_key_per_month", 0)),
+            share=1.0 if low_priority_share is None else float(low_priority_share))
+        its = ItsTrafficEvents(service_key=its_key, service_keys=its_keys, key_budget=key_budget,
+                               limiter=its_limiter, cache=cache, operation_snapshot=operation_snapshot)
         traffic_sources.append(its)
     else:
         sources.unavailable["traffic_its"] = (
@@ -606,7 +636,8 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     utic_key = settings.utic_key(proxied=proxied) if hasattr(settings, "utic_key") else ""
     if utic_key:
         from .utic import UticIncidents, UticRouteEvents
-        utic = UticIncidents(service_key=utic_key, limiter=limiter, cache=cache)
+        utic = UticIncidents(service_key=utic_key, limiter=limiter, cache=cache,
+                             timeout=float(guardrails.get("travel.utic_timeout_seconds")))
         traffic_sources.append(utic)
         # ★같은 레코드로 감시 루프의 **경로 사건**(도로 통제)도 답한다 — 요청은 캐시로 나눠 쓴다.
         road_events: Any = UticRouteEvents(utic)

@@ -1,0 +1,55 @@
+--- a/final_project_cs/app/domains/travel_ops/components/intake/risks.py
++++ b/final_project_cs/app/domains/travel_ops/components/intake/risks.py
+@@ -1,7 +1,7 @@
+ """계획 확인에서도 감시와 같은 위험 근거와 검증한 실내 대안을 보여 준다."""
+ from __future__ import annotations
+ 
+-from datetime import datetime
++from datetime import datetime, timedelta
+ from typing import Any, Callable
+ from uuid import NAMESPACE_URL, uuid5
+ from zoneinfo import ZoneInfo
+@@ -11,6 +11,11 @@
+ 
+ KST = ZoneInfo("Asia/Seoul")
+ SCHEMA_VERSION = 1
++#: ★`[2026-10-18 현장 피드백 「여행 날짜와 상관없이 현재 재난경보를 기준으로 일정 확인하라고 나온다」]` 「지금 발령 중」인 특보 · 재난문자 · 교통 통제 · 대기질 · 지진을
++#:  일정의 문제로 보이는 범위 — 시작이 지금부터 이 시간 안인 일정만. 그보다 먼 일정(예: 일주일 뒤 여행)에는 지금 경보가 그 날짜의 사실이 아니므로 문제로 세지 않고,
++#:  출발이 가까워지면 감시가 다시 점검한다. 예보는 그 시각을 보는 값이라 이 범위와 상관없이 그대로 보인다. 우리가 고른 값.
++CURRENT_ALERT_HOURS = 24
++FAR_REASON = "여행 날짜가 아직 멀어 지금 발령된 기상 특보 · 재난문자 · 교통 통제는 반영하지 않았어요 — 출발이 가까워지면 다시 확인해요"
+ 
+ 
+ def check_for(mode: str) -> Callable[..., dict[str, Any]]:
+@@ -51,6 +56,7 @@
+             risk = _unknown(item, "item_limit", "한 번에 확인할 수 있는 일정 수에 닿았어요 · 이 일정은 아직 확인하지 못했어요")
+         else:
+             risk = risk_report.judge_item(checker, parsed, mode=mode, at=now, snapshot_hours=snapshot)
++            risk = _for_trip_date(risk, far=parsed.starts_at - now > timedelta(hours=CURRENT_ALERT_HOURS))
+             checked += 1
+         shown["risk"] = _present(risk, mode, now)
+         items.append(shown)
+@@ -202,6 +208,23 @@
+         place["weather_sensitive"] = None
+ 
+ 
++def _for_trip_date(risk: dict[str, Any], *, far: bool) -> dict[str, Any]:
++    """먼 일정이면 「지금 상태」 원인(`as_of_now` — 점검기가 시작이 먼 일정에 붙인다)을 문제에서 뺀다. 예보처럼 그 시각을 본 원인은 남긴다.
++
++    뺀 원인이 있고 남은 문제가 없으면 「문제」가 아니라 「아직 확인 전」(`unknown` · `too_early`)이다 — 「문제 없음」이라고 말하지도 않는다(지금 상태 종류는 그 날짜를 확인하지 못했다).
++    뺀 개수는 `deferred_current` 에 남긴다(조용히 버리지 않는다). 일정 · 등록 가능 판정은 바꾸지 않는다."""
++    if not far:
++        return risk
++    problems = list(risk.get("problems") or [])
++    dated = [p for p in problems if not p.get("as_of_now")]
++    if len(dated) == len(problems):
++        return risk
++    out = {**risk, "problems": dated, "deferred_current": len(problems) - len(dated)}
++    if dated:
++        return out
++    return {**out, "status": "unknown", "code": "too_early", "reason": FAR_REASON}
++
++
+ def _unknown(item: dict[str, Any], code: str, reason: str) -> dict[str, Any]:
+     return {"item_id": item.get("id"), "status": "unknown", "problems": [], "categories": [],
+             "unknown_categories": [], "cautions": [], "code": code, "reason": reason}

@@ -96,8 +96,12 @@ class PlaceStatus:
     @staticmethod
     def merge(report, status):
         if status['status'] == 'unverifiable':
-            return {**report, 'verdict': 'fatal', 'failed_categories': sorted(set(report.get('failed_categories', [])) | {'place_status'}),
-                    'error_code': status['reason'], 'place_status': status, 'diagnostic': status.get('diagnostic')}
+            # A missing exceptional-closure observation neither invalidates the stored
+            # weekly hours nor establishes that this business is closed or open.
+            return {**report, 'place_status': status,
+                    'unverified_checks': [*report.get('unverified_checks', []),
+                        {'category': 'temporary_closure', 'reason': status.get('reason', 'unverifiable'), 'status': 'unverifiable'}],
+                    'diagnostic': status.get('diagnostic') or report.get('diagnostic')}
         if status['status'] == 'closed':
             causes = list(report.get('disruptions', [])) + [{'category': 'place_status', 'kind': 'closed',
                        'source': status['source'], 'checked_at': status['checked_at']}]

@@ -1,6 +1,6 @@
 # systemd 서비스 — 자동 반영 한 회차(`auto_deploy.sh`). 타이머가 부른다.
 [Unit]
-Description=triPilot 자동 반영 (새 커밋 확인 → 빌드 → 반영 → 실패하면 되돌림)
+Description=guguroute 자동 반영 (새 커밋 확인 → 빌드 → 반영 → 실패하면 되돌림)
 After=docker.service network-online.target
 Wants=network-online.target
 

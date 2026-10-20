@@ -204,6 +204,8 @@ class IntakeEditIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     revision: int = Field(ge=1)
     edits: list[IntakeEditOne] = Field(min_length=1, max_length=50)
+    #: `[2026-10-20 사용자 지시]` false = 저장만 하고 검사(이동 계산 · 재배치 · 대안 준비)는 「다시 제출」(`revalidate`) 때 한 번에
+    check: bool = True
 
 
 class ReopenIn(BaseModel):
@@ -221,9 +223,12 @@ class IntakeConfirmIn(BaseModel):
 
 
 class IntakeSurveyIn(BaseModel):
-    """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`)."""
+    """로딩 중 질문의 답 — `{문항: 선택지 번호}`. 한 개 이상 · 부분 답 · 같은 문항을 다시 보내면 덮어쓴다(`components/intake/survey_answers.py`).
+
+    `[2026-10-19]` 여러 칸 문항은 객체로 — 우선순위 `{areas: [...], details: {분야: [...]}}` · 실내외 `{dining: …, activity: …}`. 직접 입력은 `{custom: 글}`.
+    모양은 `survey_answers.check` 가 문항 종류대로 확인한다(틀리면 422 `invalid_answers`)."""
     model_config = ConfigDict(extra="forbid")
-    answers: dict[str, str | dict[str, str] | None] = Field(min_length=1, max_length=8)
+    answers: dict[str, str | dict[str, Any] | None] = Field(min_length=1, max_length=8)
 
 
 class MoveEndIn(BaseModel):
@@ -244,6 +249,14 @@ class MoveJudgeIn(BaseModel):
     arrive_by: datetime | None = None
     #: 일정 항목으로 한쪽 끝을 가리킬 때 필요하다. 주면 그 여행의 인원 · 이동 선호(설문)도 판정에 쓴다 — **본인 여행만**
     trip_id: UUID | None = None
+
+
+class IntakeInterpretationIn(BaseModel):
+    """해석 확인 질문의 답 — `{질문 id: 선택지 id}`(`components/intake/interpretations.py`). `[2026-10-20 사용자 지시]`
+    `revision` = 화면이 보고 있던 판(낡으면 409). 모르는 질문 · 선택지는 422 `invalid_answers`(하나라도 틀리면 아무것도 저장하지 않는다)."""
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    answers: dict[str, str] = Field(min_length=1, max_length=20)
 
 
 class IntakeRevisionIn(BaseModel):
@@ -746,7 +759,7 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
     if status == "not_found":
         raise _error(404, "not_found", "resource not found")
     if status in _CONFLICTS:
-        details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict")}
+        details = {k: v for k, v in outcome.items() if k in ("version", "choices", "next", "verdict", "text")}
         raise _error(409, _CONFLICTS[status], f"request not applied: {status}", **details)
     return outcome
 
@@ -766,6 +779,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
                       chat_factory: Callable[[], Any] | None = None,
                       place_factory: Callable[[], Any] | None = None,
+                      weather_factory: Callable[[], Any] | None = None,
                       kakao_factory: Callable[[], Any] | None = None,
                       policy_search_factory: Callable[[], Any] | None = None,
                       human_verify: Callable[..., dict[str, Any]] | None = None,
@@ -833,7 +847,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         edit_lookups=lambda: (_lazy("place", place_factory), _lazy("kakao", kakao_factory),
                                               _dining_lookup(_PlaceCtx())),
                         # ★`[2026-10-16 D-025]` 채팅 「넣기」를 계획서와 같은 이해 에이전트로 읽는다(같은 모델 클라이언트)
-                        reader=lambda: _lazy("chat", chat_factory))
+                        reader=lambda: _lazy("chat", chat_factory),
+                        weather=lambda **query: (source.forecast(**query)
+                                                 if (source := _lazy("weather", weather_factory)) is not None else None))
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:
@@ -939,6 +955,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return store_place(conn, cur, tenant, trip_id, name=name, kind=kind, lat=lat, lon=lon,
                            weather_sensitive=weather_sensitive, attributes=attributes)
 
+    def _bound_alternates(detail: dict[str, Any], ids: dict[str, UUID]) -> dict[str, Any]:
+        from app.domains.travel_ops.components.intake.prepared import bind_alternate_places
+
+        return bind_alternate_places(detail, ids)
+
     def _insert(conn, store: TripStore, request: CreateTrip, key: str, body_sha: str) -> UUID:
         tenant = store.tenant_id
         ids: dict[str, UUID] = {}
@@ -957,7 +978,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         items = [Item(item_id=uuid4(), seq=it.seq, kind=it.kind, title=it.title,
                       place_id=ids.get(it.place) if it.place else None,
                       starts_at=_seoul(it.starts_at), ends_at=_seoul(it.ends_at),
-                      detail={**it.detail,
+                      detail={**_bound_alternates(it.detail, ids),
                               **({"route": it.route, "route_def": request.routes[it.route]}
                                  if it.route else {})})
                  for it in request.items]
@@ -1155,7 +1176,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             # ★`[2026-10-04 사용자 결정]` 계획서 **내려받기** — 게스트 데이터는 보존 시간 뒤 지워지니 파일로 가져갈 수 있게 한다. 이 HTML 은 외부 파일 없이 혼자 열린다(밖으로 나가는 것은 지도 링크뿐)
             name = "".join(ch for ch in str(view.get("title") or "plan") if ch not in _FILENAME_BAD).strip()[:60] or "plan"
             return HTMLResponse(_render_plan(view), headers={
-                "Content-Disposition": f"attachment; filename=\"triPilot-plan.html\"; filename*=UTF-8''{quote('triPilot-' + name + '.html')}",
+                "Content-Disposition": f"attachment; filename=\"GuguRoute-plan.html\"; filename*=UTF-8''{quote('구구루트-' + name + '.html')}",
                 "Cache-Control": "no-store"})
         return HTMLResponse(_render_plan(view))
 
@@ -1497,6 +1518,18 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         revision = (shown or {}).get("revision")
         if isinstance(revision, int) and not (shown or {}).get("preview"):
             background.add_task(rejudge, get_connection, tenant, intake_id, revision)
+    def _prepare_later(background: BackgroundTasks, tenant: str, intake_id: UUID, shown: dict[str, Any] | None) -> None:
+        """★`[2026-10-19 사용자 지시]` 새 판(고치기 · 되돌리기 · 자동 추천 적용) — 미리 준비한 대안 중 **낡은 것만** 뒤에서 다시 준비한다
+        (바꾼 일정 · 그 앞뒤 일정의 이동 구간 — `intake/prepared.py`). 응답은 기다리지 않는다. 미리 보기(`preview`)는 판이 아니라 하지 않는다."""
+        from app.domains.travel_ops.components.intake import prepared
+
+        revision = (shown or {}).get("revision")
+        if not isinstance(revision, int) or (shown or {}).get("preview"):
+            return
+        if settings_module.get_guardrails().get("travel.candidates.prepare_on_intake") is False:
+            return
+        background.add_task(prepared.prepare, get_connection, tenant_id=tenant, intake_id=intake_id,
+                            kakao=_lazy("kakao", kakao_factory), chat=_lazy("chat", chat_factory))
 
     @router.post("/v1/web/trip-intakes/{intake_id}/edits")
     def web_intake_edit(intake_id: UUID, request: IntakeEditIn, background: BackgroundTasks,
@@ -1513,9 +1546,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                      edits=[e.model_dump() for e in request.edits],
                      tour=_lazy("place", place_factory),
                      kakao=_kakao_raw,
-                     dining=_dining_lookup(_ctx))
+                     dining=_dining_lookup(_ctx), check=request.check)
                 shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
-            _rejudge_later(background, tenant, intake_id, shown)
+            # ★`[2026-10-20 사용자 지시]` 저장만 한 판(`check: false`)은 대안도 다시 준비하지 않는다 — 「다시 제출」(재검증) 뒤에 한다
+            if request.check:
+                _rejudge_later(background, tenant, intake_id, shown)
+                _prepare_later(background, tenant, intake_id, shown)
             return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
@@ -1523,6 +1559,46 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/interpretations")
+    def web_intake_interpretations(intake_id: UUID, request: IntakeInterpretationIn, http: Request, background: BackgroundTasks,
+                                   who: tuple[str, UUID] = Depends(_web_customer)):
+        """`[2026-10-20 사용자 지시]` **해석 확인 질문의 답** — `GET …/{id}` 의 `interpretations[]` 에서 고른 선택지(1안 = 읽기 AI 의 읽기).
+
+        - 로딩 중(고객에게 「읽는 중」)이면 **저장만** 하고 곧바로 답한다(`pending: true`) — 서버는 1안으로 계속 계산하다가 첫 검사 직후(아직 첫 기다림 안)에 반영한다.
+        - 로딩 뒤면 그 자리에서 새 판(그 일정을 되살리거나 빼고 검사를 다시 — `edits` 와 같은 길)이고, 1안을 고르면 판을 만들지 않는다.
+        - 응답 = `GET …/{id}` 와 같은 모양 + `interpretation: {applied, pending, revision}`. `Accept: text/event-stream` 이면 실시간 진행
+          (`accepted` → `stage{applying}` → `beat` … → `result`(같은 본문) | `error`).
+        - 남의 접수 404 · 낡은 판 409 `stale_revision` · 등록한 접수 409 `intake_not_editable` · 모르는 질문 · 선택지 422 `invalid_answers`."""
+        from app.domains.travel_ops.components.intake import interpretations
+        from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, IntakeRejected, view
+
+        tenant, customer = who
+
+        def run(stage: Callable[[str], None] | None = None) -> dict[str, Any]:
+            try:
+                with get_connection() as conn:
+                    done = interpretations.answer(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                  revision=request.revision, answers=request.answers,
+                                                  tour=_lazy("place", place_factory), kakao=_lazy("kakao", kakao_factory),
+                                                  dining=_dining_lookup(), on_stage=stage)
+                    shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+            except LookupError:
+                raise _error(404, "not_found", "resource not found") from None
+            except interpretations.InvalidAnswers as invalid:
+                raise _error(422, "invalid_answers", "모르는 질문이거나 선택지가 아니다 — 아무것도 저장하지 않았다",
+                             problems=invalid.problems) from None
+            except IntakeConflict as exc:
+                raise _error(409, exc.code, exc.message, **exc.detail) from None
+            except IntakeRejected as exc:
+                raise _error(422, exc.code, exc.message) from None
+            if done["revision"] != request.revision:
+                _prepare_later(background, tenant, intake_id, shown)
+            return {**shown, "interpretation": done}
+
+        if _wants_stream(http):
+            return _sse_response(tenant, customer, op="interpret", http=http, work=lambda progress, defer: run(progress.stage))
+        return run()
 
     @router.post("/v1/web/trip-intakes/{intake_id}/restore")
     def web_intake_restore(intake_id: UUID, request: IntakeRestoreIn, background: BackgroundTasks,
@@ -1537,6 +1613,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                 revision=request.revision, restore_revision=request.restore_revision,
                                 item=(request.item.source_id, request.item.index) if request.item else None)
             _rejudge_later(background, tenant, intake_id, shown)
+            _prepare_later(background, tenant, intake_id, shown)
             return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
@@ -1572,17 +1649,35 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                               who: tuple[str, UUID] = Depends(_web_customer)):
         """이 일정의 **다른 안 셋**(목업의 후보 A·B·C) — 같은 날 앞뒤 일정에 가까운 순, 후보마다 그 일정의 날짜·시각에 맞는지 검사 줄을 붙인다.
         이름이 모호한 곳은 같은 이름의 다른 지점, 아니면 같은 종류의 다른 곳. 고르면 `POST …/edits` 의 `items[n].place` 로 이 `place` 객체를 그대로 보낸다.
-        읽기 전용 — 아무것도 저장하지 않는다(카카오 값은 약관상 저장하지 않는다)."""
-        from app.domains.travel_ops.components.intake import candidates
+        ★`[2026-10-19 사용자 지시]` 접수 때 **미리 준비한 대안**(`intake/prepared.py`)이 지금 판에 맞으면 계산 없이 그것을 돌려준다(`prepared` 칸).
+        `Accept: text/event-stream` 이면 실시간 진행 — 저장분이 없으면 어림으로 먼저(`candidates`) 보이고 끝난 줄부터(`candidate`) 바꾼 뒤 `result`.
+        카카오 값은 약관상 저장하지 않는다(카카오 후보가 섞인 일정은 저장분을 만들지 않는다)."""
+        from app.domains.travel_ops.components.intake import candidates, prepared
 
         tenant, customer = who
+        chat = _lazy("chat", chat_factory)
+        kakao = _lazy("kakao", kakao_factory)
+
+        if _wants_stream(http):
+            found = _review_call(intake_id, customer, tenant, revision, lambda conn, found: found)
+            item = _review_item(found, source_id, index)
+            _count("place_search", tenant, customer, http)
+
+            def work(progress, _defer):
+                return prepared.stream(get_connection, tenant_id=tenant, intake_id=intake_id, review=found, item=item,
+                                       kakao=kakao, chat=chat, emit=progress.emit)
+
+            return _sse_response(tenant, customer, op="candidates", http=http, work=work)
 
         def use(conn, found):
             item = _review_item(found, source_id, index)
             _count("place_search", tenant, customer, http)
-            return {"revision": found["revision"], **candidates.alternatives(
-                conn, tenant_id=tenant, review=found, item=item, kakao=_lazy("kakao", kakao_factory),
-                chat=_lazy("chat", chat_factory))}      # ★`[2026-10-07]` 이유 문장은 모델이 확인된 값으로 쓴다(저장 · 검사 · 실패하면 틀 문장)
+            ready = prepared.serve(get_connection, conn, tenant_id=tenant, intake_id=intake_id, review=found, item=item, chat=chat)
+            if ready is not None:
+                return {"revision": found["revision"], **ready}
+            return {"revision": found["revision"], "prepared": None, **candidates.alternatives(
+                conn, tenant_id=tenant, review=found, item=item, kakao=kakao,
+                chat=chat)}      # ★`[2026-10-07]` 이유 문장은 모델이 확인된 값으로 쓴다(저장 · 검사 · 실패하면 틀 문장)
 
         return _review_call(intake_id, customer, tenant, revision, use)
 
@@ -1640,6 +1735,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 shown = {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
             if done.get("applied"):
                 _rejudge_later(background, tenant, intake_id, shown["view"])
+                _prepare_later(background, tenant, intake_id, shown["view"])
             return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
@@ -1661,6 +1757,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 shown = pipeline.revalidate(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                             revision=request.revision)
             _rejudge_later(background, tenant, intake_id, shown)     # 다시 계산한 검사에는 판정 줄이 없다
+            # `[2026-10-20]` 저장만 한 판들(`edits` 의 `check: false`)이 여기서 처음 검사된다 — 낡은 미리 준비 대안도 이제 다시 준비한다
+            _prepare_later(background, tenant, intake_id, shown)
             return shown
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
@@ -1696,9 +1794,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def web_intake_survey(intake_id: UUID, request: IntakeSurveyIn, who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-06 사용자 지시]` 로딩 중 질문의 답을 **한 문항씩 바로** 저장한다 → `{ok, answered, questions_version}`(지금까지 답한 모든 문항 번호 · 이 답을 해석한 질문 묶음 버전).
 
-        - 질문은 `GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 답 = `{문항 id: 선택지 id}` — 모르는 문항 · 선택지는 422 `invalid_answers`(하나라도 틀리면 **아무것도 저장하지 않는다**).
+        - 질문은 `GET /v1/web/trip-intakes/{id}` 의 `questions[]`. 답 = `{문항 id: 선택지 id}`(여러 칸 문항은 객체 — 계약 「설문 질문」) — 모르는 문항 · 선택지 · 모양은 422 `invalid_answers`(하나라도 틀리면 **아무것도 저장하지 않는다**).
         - 부분 답 · 멱등이다. ★**같은 문항을 다시 보내면 덮어쓴다**(마지막 값이 이긴다) — 화면이 앞 질문으로 돌아가 고칠 수 있다.
-        - `on_disruption`(replace · ask_first)과 `pace`(relaxed · moderate · packed)도 받는다 — 항로 지킴이 카드 · 계획 담기 화면의 값을 접수에 실어 두기 위해서다(질문 목록에는 없다).
+        - `on_disruption`(replace · ask_first)도 받는다 — 항로 지킴이 카드의 값을 접수에 실어 두기 위해서다(질문 목록에는 없다). `[2026-10-19]` `pace` 는 이제 문항이다(계획 담기 화면도 같은 선택지로 보낸다).
         - ★`[2026-10-06 uiux 요청]` 서버가 그때의 질문 묶음 버전 · 문구 · 라벨 · 슬롯 · 해석한 값을 **답 이력**(`trip_intake_survey_answers`)에 남기고, 등록 때는 **저장 때 해석한 값**으로 설문을 만든다.
           웹은 선택지 번호만 보내고 뜻(구조화 값)을 모른다 — 문항 번호와 슬롯은 다른 칸이고 선택지 ↔ 값 매핑은 서버가 소유한다.
         - 답은 접수에 모아 두었다가 **등록(`confirm` · `plan`)할 때 설문에 합쳐진다.** 등록 요청이 직접 준 `survey` 가 이긴다. 이미 등록된 접수는 409 `intake_confirmed`. 남의 접수는 404.
@@ -1736,6 +1834,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 status, existing_trip, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                                     revision=request.revision)
+                # ★`[2026-10-20 사용자 지시]` 저장만 하고 검사를 미룬 판(`edits` 의 `check: false`)은 등록하지 않는다 — 「다시 제출」(`revalidate`)이 먼저다
+                if status == "review" and review_module.unchecked(review_module.load(conn, tenant, intake_id, request.revision)):
+                    raise IntakeConflict("recheck_needed", "바꾼 일정을 아직 확인하지 않았어요 — 「다시 제출」을 먼저 눌러 주세요")
                 reopened = reopen.session(conn, tenant_id=tenant, intake_id=intake_id)
                 # 수정 접수는 「완료」 뒤에도 `_confirm_reopened` 가 같은 판을 돌려준다 — 보통 접수만 여기서 끝낸다
                 if reopened is None and status == "confirmed" and existing_trip:
@@ -1756,6 +1857,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         with get_connection() as conn:
             checked = review_module.load(conn, tenant, intake_id, request.revision)
         body = {**registered_moves.with_review_moves(built.body, checked), "customer_id": str(customer)}
+        # ★`[2026-10-19 사용자 지시]` 접수 때 미리 준비한 대안을 일정 항목에 남긴다 — 채팅 「바꿔 줘」가 그것으로 바로 바꾼다(`intake/prepared.py`)
+        try:
+            from app.domains.travel_ops.components.intake import prepared
+
+            with get_connection() as conn:
+                body = prepared.with_alternates(conn, tenant_id=tenant, intake_id=intake_id, body=body, review=checked)
+        except Exception:                                  # noqa: BLE001 — 대안을 못 남겨도 등록은 한다(채팅이 그때 새로 찾는다)
+            logger.warning("registering prepared alternates failed intake=%s", intake_id, exc_info=True)
         survey = _intake_survey(tenant, intake_id, request.survey, (built.body.get("constraints") or {}).get("survey"))
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
@@ -2544,8 +2653,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             _trip_or_404(conn, TripStore(tenant), trip_id, customer)
             with conn.cursor() as cur:
                 cur.execute("SELECT dedupe_key, payload_json, status, available_at FROM outbox "
-                            "WHERE tenant_id=%s AND topic='trip.notice' AND dedupe_key LIKE %s "
-                            "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%"))
+                            "WHERE tenant_id=%s AND ((topic='trip.notice' AND dedupe_key LIKE %s) "
+                            "OR (topic='customer.notice' AND dedupe_key LIKE %s "
+                            "AND (payload_json->>'visible_at')::timestamptz<=now())) "
+                            "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%", f"{customer}:service:%"))
                 rows = cur.fetchall()
         return {"notices": [{"key": key.split(":", 1)[1], "type": payload.get("type") or "change_notice",
                              "kind": payload.get("kind"), "text": payload.get("text"),
@@ -2624,6 +2735,36 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             return build_report(trip_id=trip_id, version=int(trip["version"]), items=items, check=_lazy("risk_" + ("fresh" if fresh else "cached"), factory),
                                 at=_seoul(at) or datetime.now(KST), horizon_hours=horizon, max_items=limit, item_id=item_id, mode="fresh" if fresh else "cached",
                                 snapshot_hours=float(guard.get("travel.mcp.risk_check.snapshot_hours")))
+
+    @router.post("/v1/web/trips/{trip_id}/risks/{item_id}/alternatives")
+    def web_risk_alternatives(trip_id: UUID, item_id: UUID, http: Request,
+                              who: tuple[str, UUID] = Depends(_web_customer)):
+        """본인 일정의 현재 위험을 확인하고 검증된 보류 제안만 연다. 일정은 바꾸지 않는다."""
+        from app.domains.travel_ops.components.watch import risk_alternatives
+
+        tenant, customer = who
+        _, items = _owned_trip_items(tenant, trip_id, customer)
+        if not any(item.item_id == item_id for item in items):
+            raise _error(404, "not_found", "resource not found")
+        if check_factory is None:
+            raise _error(503, "risk_check_unavailable", "일정 위험 점검 소스를 사용할 수 없습니다")
+        _count("risk_check", tenant, customer, http)
+        def may_notify(conn, tenant_id, customer_id):
+            from app.domains.travel_ops.components.customer import consents
+
+            if guest_policy.is_guest(conn, tenant_id=tenant_id, customer_id=customer_id):
+                return False
+            try:
+                consents.require(conn, tenant_id, customer_id, "alert_channel")
+            except consents.ConsentError:
+                return False
+            return True
+        try:
+            with _slot("risk_check"):
+                return risk_alternatives.request(get_connection, tenant_id=tenant, customer_id=customer,
+                    trip_id=trip_id, item_id=item_id, check=_check(), may_notify=may_notify)
+        except (LookupError, KeyError):
+            raise _error(404, "not_found", "resource not found") from None
 
     @router.post("/v1/web/moves/judge")
     def web_move_judge(request: MoveJudgeIn, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):

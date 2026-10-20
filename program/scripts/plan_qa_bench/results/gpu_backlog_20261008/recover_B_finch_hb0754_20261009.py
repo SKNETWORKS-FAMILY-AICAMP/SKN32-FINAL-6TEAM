@@ -5,7 +5,7 @@ root=Path(__file__).resolve().parents[5]
 base=Path(__file__).parent
 detail=json.loads((base/'B_completion_detail_hb0754_20261009.json').read_text(encoding='utf-8'))
 out=base/'B_finch_completed_hb0754_20261009';out.mkdir(exist_ok=False)
-weights=root/'datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009';weights.mkdir(exist_ok=False)
+weights=root/'datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009';weights.mkdir(exist_ok=False)
 rows=[]
 for file in detail['finch_files']:
     if '/root/adapters/' in file['path'] or file['path'].endswith('.gguf'):

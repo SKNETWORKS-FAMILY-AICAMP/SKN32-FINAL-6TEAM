@@ -20,9 +20,9 @@ base.VER = VER = "v12"
 
 ALL = [("그림A_전체지도", fig_a), ("그림B_감시처리건", fig_b), ("그림C_응답_채팅_새벽", fig_c)]
 
-TITLE = "triPilot 멀티에이전트 플로우 — 규칙 기반 요식 · 활동 워커와 선택적 개인 AI 연결"
+TITLE = "guguroute 멀티에이전트 플로우 — 규칙 기반 요식 · 활동 워커와 선택적 개인 AI 연결"
 
-INTRO = ("triPilot 은 <strong>고객이 낸 여행 계획을 확인해 등록하고, 여행이 끝날 때까지 지키는</strong> 서비스입니다. "
+INTRO = ("guguroute 은 <strong>고객이 낸 여행 계획을 확인해 등록하고, 여행이 끝날 때까지 지키는</strong> 서비스입니다. "
          "이 플로우에는 <strong>네 종류의 참여자</strong>가 있고 그림의 색과 모양으로 가릅니다 — "
          "<strong>LLM 에이전트</strong>(고객이 연결한 개인 AI · 선택, 파란 실선), "
          "<strong>워커 에이전트 둘</strong>(요식 · 액티비티 — 역할 · 허용 툴 · 할 일 계약을 받지만 <strong>판단은 규칙 코드</strong>, 굵은 테두리), "
@@ -85,7 +85,7 @@ DEFECTS = [
 
 
 def doc_html(figs):
-    parts = [f'<p class="eyebrow">triPilot · Multi-Agent Flow · {VER} · 2026-10-03</p>',
+    parts = [f'<p class="eyebrow">guguroute · Multi-Agent Flow · {VER} · 2026-10-03</p>',
              f"<h1>{escape(TITLE)}</h1>",
              f'<p class="lead">{INTRO}</p>',
              f"<p>{HONEST}</p>"]
@@ -97,10 +97,10 @@ def doc_html(figs):
                  + "".join("<tr>" + "".join(f"<td>{escape(c)}</td>" for c in row) + "</tr>" for row in TABLE) + "</tbody></table>")
     parts.append("<h2>이번 검토로 드러난 것 — 결정과 구현이 다른 곳</h2>")
     parts.append('<div class="status"><ul>' + "".join(f"<li>{escape(d)}</li>" for d in DEFECTS) + "</ul></div>")
-    parts.append(f"<footer>triPilot · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 단계 정의: 플로우_단계정의_v3_합의.md "
+    parts.append(f"<footer>guguroute · A-COPilot · 그림: diagram-design 스킬(acop 스킨) · 단계 정의: 플로우_단계정의_v3_합의.md "
                  f"(Claude 작성 → 코덱스 1 · 2차 적대 검토 → 합의 → 코덱스 3차 그림 검토 → 반영) · {VER}</footer>")
     return (f'<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">'
-            f'<title>triPilot 멀티에이전트 플로우 {VER}</title>{base.FONT_LINK}<style>{base.CSS} .status ul{{padding-left:1.1rem}}</style></head>'
+            f'<title>guguroute 멀티에이전트 플로우 {VER}</title>{base.FONT_LINK}<style>{base.CSS} .status ul{{padding-left:1.1rem}}</style></head>'
             f'<body><div class="frame">' + "\n".join(parts) + "</div></body></html>")
 
 

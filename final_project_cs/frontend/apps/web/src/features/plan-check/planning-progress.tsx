@@ -13,15 +13,19 @@ export type PlanningPhase = "sending" | "reading" | "planning";
 
 /** The stages the server says while it plans (`planning` → `checking` when it merges with read stops → `registering`). */
 const STEPS = ["planning", "checking", "registering"] as const;
+/** `[2026-10-18 사용자 결정 · ST4F-612]` The point before them: the request is on its way and the server reads it (`sending` · `reading`). */
+const REQUEST_STEP = 0;
 
 /**
  * `[2026-10-03 사용자 지시]` The progress screen of 「계획 짜 주기」: 「일정을 짜는 중이에요」 and, under it, the stage the server says it is in
  * (`progressText` — the same words the chat and the old review used). Unlike the plan check there are no lines of a plan to draw: the
  * customer gave conditions, not a plan.
  *
- * ★Nothing here is invented progress: the three points follow the stages the server reports, and the bar stands where the stage is.
- *   `checking` is only reported when the server merges its plan with stops it read, so it can be skipped — it then shows as done once
- *   `registering` arrives.
+ * ★Nothing here is invented progress: the first point is the request (sent · being read), the other three follow the stages the server
+ *   reports, and the bar stands where the stage is. `checking` is only reported when the server merges its plan with stops it read, so it
+ *   can be skipped — it then shows as done once `registering` arrives.
+ *   `[2026-10-18 ST4F-612]` Before, the three server stages sat in the plan check's four-slot bar (the line ran on past 「여행 등록」) and
+ *   nothing was current while the request was being read (user's phone screen on the deployed server).
  *
  * While the server plans (`phase="planning"`) there is no back arrow: the request is out and the server registers the trip when it is done,
  * so leaving would only hide that.
@@ -38,10 +42,10 @@ export function PlanningProgress({ phase, progress, waiting, notice, onBack }: {
 }) {
   const t = useT();
   const stage = progress?.stage ? STEPS.indexOf(progress.stage as (typeof STEPS)[number]) : -1;
-  // The plan call is out: the first point is the current one even before the server names a stage.
-  const current = phase === "planning" ? Math.max(0, stage) : -1;
-  const value = current <= 0 ? 0 : Math.round(current / (STEPS.length - 1) * 100);
-  const labels = [t("일정 짜기", "Planning"), t("조건 확인", "Checking"), t("여행 등록", "Registering")];
+  // The plan call is out: 「일정 짜기」 is the current point even before the server names a stage.
+  const current = phase === "planning" ? 1 + Math.max(0, stage) : REQUEST_STEP;
+  const value = Math.round(current / STEPS.length * 100);
+  const labels = [t("요청 읽기", "Reading"), t("일정 짜기", "Planning"), t("조건 확인", "Checking"), t("여행 등록", "Registering")];
   return <DeviceFrame guardianIcon>
     <div className={base.screen} data-phase={phase}>
       {notice}
@@ -51,9 +55,9 @@ export function PlanningProgress({ phase, progress, waiting, notice, onBack }: {
             {onBack && <button type="button" className={base.back} onClick={onBack} aria-label={t("뒤로", "Back")}><ArrowLeft size={20} strokeWidth={1.6} aria-hidden="true" /></button>}
             <h1 className={base.title}>{t("일정을 짜는 중이에요", "Planning your trip")}</h1>
           </div>
-          <p className={base.desc}>{t("서버가 조건에 맞는 일정을 짜서 확인하고, 통과하면 곧바로 여행으로 등록해요. 1분쯤 걸려요.", "The server plans the days, checks them and registers the trip right away. It takes about a minute.")}</p>
+          <p className={base.desc}>{t("조건에 맞는 일정을 짜서 확인하고, 통과하면 바로 여행으로 등록해요. 1분쯤 걸려요.", "We plan the days, check them and register the trip right away. It takes about a minute.")}</p>
           <div className={base.progress} data-size="large" role="progressbar" aria-label={t("일정 짜기 진행", "Planning progress")}
-            aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={current < 0 ? t("아직 시작 전", "Not started yet") : `${labels[current]} · ${value}%`}>
+            aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%`}>
             <div className={base.track}><span className={base.fill} style={{ width: `${value}%` }} /></div>
             <ol className={base.steps}>{labels.map((label, index) =>
               <li key={label} data-state={index < current ? "done" : index === current ? "current" : "waiting"}>
@@ -62,7 +66,7 @@ export function PlanningProgress({ phase, progress, waiting, notice, onBack }: {
           </div>
         </header>
         <p className={styles.status} role="status" data-lost={progress?.lost || undefined}>{phase === "planning" ? progressText(progress, t, waiting) : t(...waiting)}</p>
-        {phase === "planning" && <p className={styles.hint}>{t("서버가 일정을 짜는 동안에는 이 화면을 열어 두세요. 끝나면 여행 화면으로 가요.", "Keep this page open while the server plans. It moves on to your trip when it is done.")}</p>}
+        {phase === "planning" && <p className={styles.hint}>{t("일정을 짜는 동안 이 화면을 열어 두세요. 끝나면 여행 화면으로 가요.", "Keep this page open while we plan. It moves on to your trip when it is done.")}</p>}
       </div>
     </div>
   </DeviceFrame>;

@@ -233,12 +233,12 @@ if title_border is not None:
 title = doc.add_paragraph(style="Title")
 title.alignment = WD_ALIGN_PARAGRAPH.LEFT
 title.paragraph_format.space_after = Pt(8)
-r = title.add_run("triPilot 경쟁 서비스 기능 비교")
+r = title.add_run("guguroute 경쟁 서비스 기능 비교")
 font_run(r, size=24, bold=True)
 
 p = doc.add_paragraph()
 p.paragraph_format.space_after = Pt(12)
-r = p.add_run("서비스별 기능과 공식 근거 링크를 정리하고 triPilot triPilot의 차별점을 실무 관점에서 압축한 자료입니다. 조사 기준일은 2026년 9월 11일입니다.")
+r = p.add_run("서비스별 기능과 공식 근거 링크를 정리하고 guguroute guguroute의 차별점을 실무 관점에서 압축한 자료입니다. 조사 기준일은 2026년 9월 11일입니다.")
 font_run(r, size=10)
 
 add_heading(doc, "핵심 차별점 세 가지", 1)
@@ -248,13 +248,13 @@ r = p.add_run("개별 기능보다 아래 세 요소가 하나의 운영 흐름�
 font_run(r, size=9.5)
 
 summary = doc.add_table(rows=1, cols=3)
-headers = ["핵심", "triPilot이 하는 일", "기존 서비스와의 차이"]
+headers = ["핵심", "guguroute이 하는 일", "기존 서비스와의 차이"]
 for i, h in enumerate(headers):
     cell_text(summary.rows[0].cells[i], h, bold=True, size=9.2, color="FFFFFF", align=WD_ALIGN_PARAGRAPH.CENTER)
 summary_rows = [
     ("1  여행 전체 지속 감시", "항공·숙박·활동·이동·예산을 하나의 상태로 유지하고 변경이 남은 일정에 미치는 영향을 다시 계산한다.", "TripIt은 항공편, TripMazer는 날씨·지연 대응이 강하지만 여러 예약의 연쇄 충돌을 결정론적으로 검증하는 구조는 공개 자료에서 확인되지 않았다."),
     ("2  검증된 대안만 제시", "LLM이 만든 후보를 영업시간·이동시간·예산·예약조건과 대조한다. 위반 후보는 폐기하고 검증 불가 시 결과를 내보내지 않는다.", "여러 서비스의 직접 테스트에서 휴무일·운영시간·경기 일정 오류가 확인됐다. TripMazer도 AI 가격·일정 제안을 추정치로 규정한다."),
-    ("3  개인 에이전트용 상태형 API", "개인 에이전트가 예약·선호·피드백을 전달하면 triPilot이 이를 지속 상태에 반영하고 수락·거절 이후에도 재계획한다.", "Tripsy는 MCP·API와 CRUD를 제공하지만 자동 감지·영향 분석·검증·재제안을 묶은 운영 루프는 공개 자료에서 확인되지 않았다."),
+    ("3  개인 에이전트용 상태형 API", "개인 에이전트가 예약·선호·피드백을 전달하면 guguroute이 이를 지속 상태에 반영하고 수락·거절 이후에도 재계획한다.", "Tripsy는 MCP·API와 CRUD를 제공하지만 자동 감지·영향 분석·검증·재제안을 묶은 운영 루프는 공개 자료에서 확인되지 않았다."),
 ]
 for a, b, c in summary_rows:
     cells = summary.add_row().cells
@@ -266,7 +266,7 @@ style_table(summary, [Inches(1.35), Inches(2.45), Inches(3.15)])
 add_heading(doc, "실무용 한 문장", 1)
 p = doc.add_paragraph()
 p.paragraph_format.space_after = Pt(7)
-r = p.add_run("triPilot은 여행 중 변화를 전체 예약과 대조하고 실제 데이터 검증을 통과한 대안만 실행 후보로 제시하는 여행 운영 서비스다.")
+r = p.add_run("guguroute은 여행 중 변화를 전체 예약과 대조하고 실제 데이터 검증을 통과한 대안만 실행 후보로 제시하는 여행 운영 서비스다.")
 font_run(r, size=11, bold=True, color="17365D")
 
 p = doc.add_paragraph()
@@ -274,7 +274,7 @@ p.paragraph_format.space_before = Pt(5)
 p.paragraph_format.space_after = Pt(0)
 r = p.add_run("표현 주의  ")
 font_run(r, size=9, bold=True)
-r = p.add_run("triPilot 기능은 제공 문서에서 설계 또는 제공 예정으로 표현돼 있다. 현재 구현 범위와 검증 결과를 별도로 표시해야 한다.")
+r = p.add_run("guguroute 기능은 제공 문서에서 설계 또는 제공 예정으로 표현돼 있다. 현재 구현 범위와 검증 결과를 별도로 표시해야 한다.")
 font_run(r, size=9)
 
 land = doc.add_section(WD_SECTION.NEW_PAGE)
@@ -322,12 +322,12 @@ for group_index, service_group in enumerate([services[:13], services[13:-3], ser
 doc.add_page_break()
 diff_heading = add_heading(doc, "세 가지 차별점의 근거 비교", 1)
 diff = doc.add_table(rows=1, cols=4)
-for i, h in enumerate(["차별점", "경쟁 서비스에서 확인된 수준", "triPilot 설계", "핵심 근거"]):
+for i, h in enumerate(["차별점", "경쟁 서비스에서 확인된 수준", "guguroute 설계", "핵심 근거"]):
     cell_text(diff.rows[0].cells[i], h, bold=True, size=9, color="FFFFFF", align=WD_ALIGN_PARAGRAPH.CENTER)
 diff_rows = [
-    ("여행 전체 지속 감시", "TripIt은 항공 상태, KAYAK은 예약·항공 업데이트, Expedia와 TripMazer는 날씨·돌발상황 대응을 제공한다. 공개 근거에서는 변경 이후 모든 예약·동선·예산을 함께 재검증하는 과정이 명확하지 않다.", "변경 이벤트가 발생하면 항공·숙박·활동·이동시간·예산을 다시 대조해 남은 여행 전체의 실행 가능성을 판정한다.", [("TripIt", "https://www.tripit.com/web/pro"), ("KAYAK", "https://www.kayak.com/trips"), ("Expedia", "https://www.expedia.com/newsroom/spring-product-release-2024/"), ("TripMazer", "https://mazerlabs.in/products/trip-mazer/"), ("triPilot 내부 설계", INTERNAL["김지혜"])]),
-    ("검증된 대안만 제시", "일부 서비스는 최신 정보 또는 실시간 추천을 표방하지만 직접 테스트에서 휴무일·영업시간·경기 일정 오류가 관찰됐다. TripMazer는 AI 가격과 일정이 추정치임을 명시한다.", "LLM은 후보를 만들고, 코드는 DB의 영업시간·이동시간·예산·원 예약값과 대조한다. 위반 후보를 폐기하고 검증되지 않은 값은 출력하지 않는다.", [("TripMazer 면책", "https://tripmazer.com/legal/cancellation-refunds"), ("테스트 보고서", INTERNAL["서유현"]), ("Tripomatic·IVisitKorea 테스트", INTERNAL["최상욱"]), ("triPilot 검증 설계", INTERNAL["정세환"])]),
-    ("개인 에이전트용 상태형 API", "Tripsy는 외부 AI와 연결되는 MCP·API를 제공하며 일정 CRUD가 가능하다. NOL API는 상품·주문·결제 중심이다. 다수 서비스는 자체 앱·웹·채팅 인터페이스 중심이다.", "개인 에이전트가 희망 장소·예약·선호·피드백을 전달하면 서버가 여행 상태에 반영한다. 이후 변경 감지, 영향 분석, 대안 검증, 수락·거절 반영을 반복한다.", [("Tripsy MCP", "https://tripsy.app/ai"), ("Tripsy API", "https://docs.api.tripsy.app/"), ("NOL API", "https://open-api.swallow.goglobal.travel/"), ("triPilot 내부 설계", INTERNAL["최연우"])]),
+    ("여행 전체 지속 감시", "TripIt은 항공 상태, KAYAK은 예약·항공 업데이트, Expedia와 TripMazer는 날씨·돌발상황 대응을 제공한다. 공개 근거에서는 변경 이후 모든 예약·동선·예산을 함께 재검증하는 과정이 명확하지 않다.", "변경 이벤트가 발생하면 항공·숙박·활동·이동시간·예산을 다시 대조해 남은 여행 전체의 실행 가능성을 판정한다.", [("TripIt", "https://www.tripit.com/web/pro"), ("KAYAK", "https://www.kayak.com/trips"), ("Expedia", "https://www.expedia.com/newsroom/spring-product-release-2024/"), ("TripMazer", "https://mazerlabs.in/products/trip-mazer/"), ("guguroute 내부 설계", INTERNAL["김지혜"])]),
+    ("검증된 대안만 제시", "일부 서비스는 최신 정보 또는 실시간 추천을 표방하지만 직접 테스트에서 휴무일·영업시간·경기 일정 오류가 관찰됐다. TripMazer는 AI 가격과 일정이 추정치임을 명시한다.", "LLM은 후보를 만들고, 코드는 DB의 영업시간·이동시간·예산·원 예약값과 대조한다. 위반 후보를 폐기하고 검증되지 않은 값은 출력하지 않는다.", [("TripMazer 면책", "https://tripmazer.com/legal/cancellation-refunds"), ("테스트 보고서", INTERNAL["서유현"]), ("Tripomatic·IVisitKorea 테스트", INTERNAL["최상욱"]), ("guguroute 검증 설계", INTERNAL["정세환"])]),
+    ("개인 에이전트용 상태형 API", "Tripsy는 외부 AI와 연결되는 MCP·API를 제공하며 일정 CRUD가 가능하다. NOL API는 상품·주문·결제 중심이다. 다수 서비스는 자체 앱·웹·채팅 인터페이스 중심이다.", "개인 에이전트가 희망 장소·예약·선호·피드백을 전달하면 서버가 여행 상태에 반영한다. 이후 변경 감지, 영향 분석, 대안 검증, 수락·거절 반영을 반복한다.", [("Tripsy MCP", "https://tripsy.app/ai"), ("Tripsy API", "https://docs.api.tripsy.app/"), ("NOL API", "https://open-api.swallow.goglobal.travel/"), ("guguroute 내부 설계", INTERNAL["최연우"])]),
 ]
 for a, b, c, links in diff_rows:
     cells = diff.add_row().cells
@@ -356,7 +356,7 @@ for sec in doc.sections:
     for run in list(p.runs):
         p._p.remove(run._r)
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r = p.add_run("triPilot 경쟁 서비스 기능 비교  |  2026-09-11")
+    r = p.add_run("guguroute 경쟁 서비스 기능 비교  |  2026-09-11")
     font_run(r, size=8, color="666666")
 
 doc.save(OUT)

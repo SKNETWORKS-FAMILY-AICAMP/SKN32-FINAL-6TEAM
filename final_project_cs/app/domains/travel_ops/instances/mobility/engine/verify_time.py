@@ -302,6 +302,11 @@ class CaseResult:
     out: dict = None                         # 밖으로 나가는 판 — _out() 이 만든다
 
 
+#: candidates() 기억 칸 개수 상한 — 넘으면 비운다. ★우리가 고른 값(2026-10-19): 깊은 탐색 한 구간이 쓰는 칸은 수십 개라 넉넉하고,
+#: 칸 하나가 편성 수백 개를 붙잡아 앱 컨테이너 메모리 상한(2 GiB)에 부담을 주지 않을 만큼
+CAND_CACHE_MAX = 256
+
+
 # ── 검증기 ────────────────────────────────────────────────────────────────
 class Verifier:
     def __init__(self, tt, lo, rules, holidays, tw=None, bus=None, sc=None, ex=None, car=None,
@@ -331,6 +336,7 @@ class Verifier:
         self._passes_cache = {}
         self._origin_cache = {}
         self._dominant_cache = {}
+        self._cand_cache = {}       # candidates() — (노선, 출발역, 도착역, 요일형, 끊긴 간선) → 목록(2026-10-19 속도)
         sj = rules["last_train"]["신정지선_토요일_예외"]["value"]
         self.sinjeong = (sj["line"], set(sj["stations"]))
         self.disr = []          # 이 케이스의 이슈 조건. verify_case 가 매 건 갈아 끼운다.
@@ -463,14 +469,32 @@ class Verifier:
 
     # ── 출발 후보 고르기 — 막차 4종이 전부 여기 있다 ──
     def candidates(self, line, origin, target, day_type):
-        """그 역 출발행에서 **목적지까지 가는 열차**만 남긴다. 막차 4종이 전부 여기 있다."""
+        """그 역 출발행에서 **목적지까지 가는 열차**만 남긴다. 막차 4종이 전부 여기 있다.
+
+        ☆`[2026-10-19 속도]` 마지막 성립 출발 역산은 출발 시각 하나를 볼 때마다 이 목록을 처음부터 다시 만들었다(깊은 탐색 한 구간에
+          2,904번 · 14초). 값은 시간표 · 규칙 · 그 노선의 끊긴 구간만으로 정해져, 그 넷을 키로 기억한다(`_origin_cache` 와 같은 칸 —
+          판정기 사본이 나눠 쓴다). 받는 쪽이 고쳐도 기억이 바뀌지 않게 목록 · 개수표는 복사해 준다."""
+        closed = self._disr_edges(line)
+        key = (line, origin, target, day_type, frozenset(closed))
+        cache = getattr(self, "_cand_cache", None)
+        if cache is None:                    # __init__ 를 거치지 않고 만든 판정기(시험 대역)
+            cache = self._cand_cache = {}
+        hit = cache.get(key)
+        if hit is None:
+            if len(cache) >= CAND_CACHE_MAX:
+                cache.clear()                    # 칸 하나가 편성 수백 개라 끝없이 두지 않는다(서버는 오래 돈다)
+            hit = cache[key] = self._candidates_uncached(line, origin, target, day_type, closed)
+        out, drop, is_origin = hit
+        return list(out), collections.Counter(drop), is_origin
+
+    def _candidates_uncached(self, line, origin, target, day_type, closed):
         deps = self.tt.departures(line, origin, day_type)
         is_origin = self.is_origin_station(line, origin, day_type)
         # ★ 한 바퀴 가정은 운행 시간대 안에서만 성립한다. 막차는 돌지 않는다.
         tdeps = self.tt.departures(line, target, day_type)
         last_at_target = tdeps[-1].min if tdeps else None
         margin = self.rv("last_train", "한바퀴_도착_여유_분")
-        closed = self._disr_edges(line)      # 끊긴 간선 — 그 위를 지나는 편성은 쓸 수 없다
+        # closed = 끊긴 간선 — 그 위를 지나는 편성은 쓸 수 없다(부르는 쪽이 넘긴다)
         out, drop = [], collections.Counter()
         for d in deps:
             if not d.dest:                                    # ② dest_nm 없음
@@ -2554,11 +2578,22 @@ class Verifier:
             if hi is None:
                 return None
             times = range(int(hi), int(lo) - 1, -1)
+        # ☆`[2026-10-19 속도]` 버스로 시작하면 도착 목표부터 1분씩 내려오며 매번 버스 구간 전체를 셌다 — 승차 소요가 40분이면 앞 40번은 볼 것
+        #   없이 늦는다. 승차 시각은 출발보다 이르지 않고(막차 통과 상한도 출발 뒤) 승차 소요는 구간마다 가장 빠른 값의 합보다 짧지 않으니,
+        #   「출발 + 그 하한 + 버퍼」가 목표를 넘는 출발은 셀 필요 없이 불성립이다. 그 분만 건너뛰고 탐색 상한(max_probe)은 건너뛴 분까지
+        #   그대로 센다 — 고르는 출발과 「못 찾았다」 판정이 종전과 같다.
+        skip_above = None
+        if mode == "bus" and arrive_by is not None and buffer_min is not None:
+            floor_min = self._bus_ride_floor(first, day_type)
+            if floor_min:
+                skip_above = arrive_by - buffer_min - math.floor(floor_min)
         cap = self.rv("judgment", "last_feasible_depart", "max_probe")
         for n, t in enumerate(times):
             if n >= cap:
                 self.lfd_capped = True          # 「없다」가 아니라 「못 찾았다」 — verify_case 가 경고로 드러낸다
                 break
+            if skip_above is not None and t > skip_above:
+                continue
             w = self._chain(case, t, day_type, is_sat, party, worst=True)
             if not w["ok"] or w["arrive"] is None or w["transfers"] > lim:
                 continue
@@ -2568,6 +2603,41 @@ class Verifier:
                 return None                     # 확인 못 한 막차 상한에 걸린 값 — 「늦어도」를 비운다(73 후속 · GPT Q3)
             return t
         return None
+
+    def _bus_ride_floor(self, leg, day_type):
+        """버스 구간 승차 소요의 **하한(분)** — worst 판정(p90 누적 · 프로파일 없는 칸은 종전 모델)이 이보다 짧게 낼 수 없다.
+        구간마다 min(그 행 p90 칸 중 가장 짧은 값, 종전 모델 값)을 더한다(요일형 · 시간 무관). 모르면 0(건너뛰지 않는다).
+        ☆`[2026-10-19 속도]` `_last_feasible_depart` 가 볼 것 없는 출발을 건너뛸 때만 쓴다 — 판정 값에는 쓰지 않는다."""
+        if self.bus is None or self.bus_prof is None:
+            return 0
+        r = route_for_leg(self.bus, leg)
+        seg = segment_for_leg(self.bus, r, leg) if r is not None else None
+        if seg is None:
+            return 0
+        a, b, _span = seg
+        rows = [s for s in self.bus.stops.get(r.route_id, ()) if a["seq"] <= s["seq"] <= b["seq"]]
+        if len(rows) != b["seq"] - a["seq"] + 1 or not rows or rows[0]["seq"] != a["seq"] or rows[-1]["seq"] != b["seq"]:
+            return 0
+        md = self.rv("bus", "구간_프로파일", "min_days")
+        if md is None:
+            return 0
+        speed = self.bus_speed(r, day_type)[0]
+        total = 0.0
+        for s, nxt in zip(rows, rows[1:]):
+            vals = []
+            i, _bad = self.bus_prof.row(r.route_id, s, nxt)
+            if i is not None:
+                c = self.bus_prof.min_cell(i, "p90", md)
+                if c is not None:
+                    vals.append(c / 60.0)
+            dist = nxt.get("sect_dist_m")
+            if (speed and not isinstance(dist, bool) and isinstance(dist, (int, float))
+                    and math.isfinite(dist) and dist >= 0):
+                vals.append(dist / 1000 / speed * 60)
+            if not vals:
+                return 0
+            total += min(vals)
+        return total
 
     def _out(self, res, case, depart_min, arrive_by):
         """밖으로 나가는 판(v0.8). 판정 둘 · 이유 코드 · 예정/최악 도착 · @ · 여유 · 마지막 성립 출발 · 소요 셋.

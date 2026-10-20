@@ -180,7 +180,7 @@ def test_the_same_event_and_version_ask_once_and_a_repeat_makes_no_second_messag
     assert second.relaxed == [] and len([m for m in _messages(world) if m.get("reason") == "relaxed"]) == count
     # 직접 다시 불러도 제안은 하나 — 이미 있다고 답한다
     again = watch_relaxed.try_offer(get_connection, store=world["store"], trip_id=world["trip_id"], item_id=_palace(world).item_id,
-                                    causes=DISRUPTED["disruptions"], check=_only({PALACE}))
+                                    causes=DISRUPTED["disruptions"], check=_only({PALACE}), now=opener.clock())   # 감시와 같은 시계
     assert again is not None and again["already"] is True and len([m for m in _messages(world) if m.get("reason") == "relaxed"]) == count
 
 

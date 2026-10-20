@@ -63,7 +63,7 @@ def audit(train_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train', type=Path, default=ROOT / 'datasets/travel/train_oos/train_oos.jsonl')
+    parser.add_argument('--train', type=Path, default=ROOT / 'datasets/core/pointing/trainset/train_oos/train_oos.jsonl')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     output = audit(args.train)

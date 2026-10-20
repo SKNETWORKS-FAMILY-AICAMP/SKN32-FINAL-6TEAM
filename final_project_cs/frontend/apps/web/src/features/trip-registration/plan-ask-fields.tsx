@@ -16,8 +16,8 @@ export function PlanAskFields({ ask, today, disabled, onChange }: { ask: PlanAsk
   const t = useT();
   return <div className={styles.ask}>
     <p className={styles.askNote}>{t(
-      "서울 안에서 하루하루를 서버가 짜 드려요. 이 칸을 고르고 「계획 확인하기」를 누르면, 짠 일정이 서버의 판정을 통과하는 대로 바로 여행으로 등록돼요.",
-      "The server plans each day in Seoul. With this box chosen, pressing “Check my plan” registers the trip as soon as the plan passes the server’s checks.")}</p>
+      "서울 안에서 하루하루 일정을 짜 드려요. 이 칸을 고르고 「계획 확인하기」를 누르면 짠 일정을 확인하고, 통과하면 바로 여행으로 등록해요.",
+      "We plan each day in Seoul. Choose this box and press “Check my plan”: the plan is checked and, if it passes, registered as a trip.")}</p>
     <div className={styles.askGrid}>
       <div className={styles.askField}>
         <label htmlFor="plan-start">{t("첫날", "First day")}</label>

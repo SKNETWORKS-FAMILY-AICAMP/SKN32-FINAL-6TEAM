@@ -63,7 +63,8 @@ test('점검 전환은 사유 없이 거절하고 공지는 본문과 게시 기
   await page.getByLabel('게시 끝 (한국 시각)', { exact: true }).fill('2026-09-29T17:00');
   await page.getByRole('button', { name: '미리보기', exact: true }).click();
   await expect(page.getByRole('region', { name: '사용자 웹 미리보기', exact: true })).toContainText('This is a demo notice.');
-  await page.getByRole('button', { name: '공지 게시', exact: true }).click();
+  // 알림 v5: 고객 알림을 함께 보낼 때는 단추 이름이 「공지 게시·고객 알림 보내기」로 바뀐다(screens.tsx 의 notifyUsers).
+  await page.getByRole('button', { name: /^공지 게시(·고객 알림 보내기)?$/ }).click();
   await expect(main(page).locator('summary').filter({ hasText: 'QA 점검 안내' })).toBeVisible();
   await page.getByRole('navigation', { name: '운영 메뉴' }).getByRole('button', { name: '운영 기록', exact: true }).click();
   await expect(main(page).getByRole('row').filter({ hasText: '점검 모드 전환' })).toContainText('점검 배너 전환 동작 확인');

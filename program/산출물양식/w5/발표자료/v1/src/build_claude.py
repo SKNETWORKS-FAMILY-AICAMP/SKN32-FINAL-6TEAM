@@ -28,7 +28,7 @@ slide(f'''
 <div class="row" style="height:100%;align-items:center;gap:60px">
   <div style="flex:1">
     <div class="kicker">A-COPilot · 멘토링 2026-10-02</div>
-    <h1>계획은 여행자가,<br><span class="hl">지키는 건 triPilot이.</span></h1>
+    <h1>계획은 여행자가,<br><span class="hl">지키는 건 guguroute이.</span></h1>
     <p class="lead" style="margin-top:30px">외국인 자유여행자가 만든 여행 계획을 받아<br>여행이 끝날 때까지 지켜보는 여행 운영 에이전트</p>
     <div class="row" style="margin-top:44px;gap:14px"><span class="pill">서울 · 최대 7일 · 4인</span><span class="pill gold">팀당 49,000원</span><span class="pill blue">지금 실제로 동작</span></div>
   </div>
@@ -107,7 +107,7 @@ for n, t, d, sub, img in three:
              f'<div style="font-size:23px;line-height:1.5;font-weight:600">{d}</div><div class="small" style="margin-top:14px">{sub}</div></div>'
              f'<div class="phone" style="width:150px;height:324px;border-radius:26px;padding:6px"><img src="{A}{img}" style="border-radius:21px"></div></div>')
 slide(f'''
-<div class="kicker">triPilot이 하는 일</div>
+<div class="kicker">guguroute이 하는 일</div>
 <h2>계획을 만들어 주는 앱이 아니라, <span class="hl">이미 있는 계획을 지키는 에이전트</span></h2>
 <div class="row" style="margin-top:40px;gap:24px">{cols}</div>
 <p class="small" style="margin-top:26px">계획이 없으면 짜 주기도 합니다 — 서울 3일 2인 요청 시 후보 1,779곳 중 12곳을 골라 등록.</p>''',
@@ -118,10 +118,10 @@ rows = [("TripIt Pro", "항공편", "항공 지연·취소 알림", "식당·활
         ("TripMazer", "여행 일정", "날씨·파업·지연 감시", "AI 제안은 약관상 추정치", "—"),
         ("Tripsy", "여행 일정", "일정 편집(API)", "자동 감지→재제안 루프 확인 못 함", "—"),
         ("토모트래블 (사람)", "설계 상담", "사람이 일정 설계", "여행 중 실시간 감시는 사람 몫", "29,000원~249,000원"),
-        ("triPilot", "내 계획 전체", "식당·활동·이동을 스스로 재확인", "대안 적용 + 다른 안 3개 + 알림", "팀당 49,000원")]
+        ("guguroute", "내 계획 전체", "식당·활동·이동을 스스로 재확인", "대안 적용 + 다른 안 3개 + 알림", "팀당 49,000원")]
 trs = ""
 for i, r in enumerate(rows):
-    me = r[0] == "triPilot"
+    me = r[0] == "guguroute"
     st = "background:var(--g1);color:#fff;" if me else ""
     trs += (f'<tr class="step" style="{st}"><td style="font-weight:800;font-size:26px">{r[0]}</td>' + "".join(f'<td>{c}</td>' for c in r[1:]) + "</tr>")
 slide(f'''

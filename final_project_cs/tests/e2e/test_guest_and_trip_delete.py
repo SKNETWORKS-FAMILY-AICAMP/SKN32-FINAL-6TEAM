@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import threading
 from datetime import datetime, timedelta
+from urllib.parse import quote
 from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
@@ -223,6 +224,7 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
         "ops_lookup_usage", "ops_lookup_checks",                                      # 명시 파기 + trips 외래 키 CASCADE
         "ops_diagnostic_events",                                                       # trips 외래 키 SET NULL, 보존 기한까지 발생 보존
         "lg_offer_shown", "lg_core_place_link",                                        # 숙소 · 항공 원장(240) — trip_delete._PURGE
+        "trip_archive_marks",                                                          # 「남길 시험 여행」 표시(062) — trips 외래 키 CASCADE, 지우기 전에 보관함이 담는다(D-CS-018)
     }
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT table_schema, table_name FROM information_schema.columns WHERE column_name IN ('trip_id','trip_scope') "
@@ -231,7 +233,7 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
         cur.execute("SELECT confdeltype FROM pg_constraint WHERE conrelid=to_regclass('travel_watch_checks') "
                     "AND confrelid=to_regclass('trips') AND contype='f'")
         assert cur.fetchall() == [("c",)], "감시 관측은 여행 삭제와 함께 CASCADE로 파기되어야 합니다"
-        for table, action in (("ops_lookup_usage", "c"), ("ops_lookup_checks", "c"), ("ops_diagnostic_events", "n")):
+        for table, action in (("ops_lookup_usage", "c"), ("ops_lookup_checks", "c"), ("ops_diagnostic_events", "n"), ("trip_archive_marks", "c")):
             cur.execute("SELECT confdeltype FROM pg_constraint WHERE conrelid=to_regclass(%s) "
                         "AND confrelid=to_regclass('trips') AND contype='f'", (table,))
             assert cur.fetchall() == [(action,)], table
@@ -256,7 +258,7 @@ def test_the_plan_link_can_be_downloaded_as_a_file_without_logging_in(cookies):
     got = anon.get(f"/plan/{trip_id}", params={"t": token, "download": "1"})
     assert got.status_code == 200 and got.text == shown.text                                # 같은 내용
     disposition = got.headers["content-disposition"]
-    assert disposition.startswith("attachment;") and "filename*=UTF-8''triPilot-" in disposition and disposition.endswith(".html")
+    assert disposition.startswith("attachment;") and "filename*=UTF-8''" + quote("구구루트-") in disposition and disposition.endswith(".html")
     assert "/" not in disposition.split("filename*=UTF-8''")[1]                              # 제목의 경로 글자는 이름에 안 들어간다
     assert "<script src" not in got.text and "<link " not in got.text                      # 외부 파일 없이 혼자 열린다
     assert anon.get(f"/plan/{trip_id}", params={"t": "wrong", "download": "1"}).status_code == 404   # 틀린 토큰은 있는지도 말하지 않는다

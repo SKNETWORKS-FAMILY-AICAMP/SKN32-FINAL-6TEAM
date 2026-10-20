@@ -14,7 +14,8 @@ type Field = "title" | "date" | "start" | "end" | "place";
 /** 선택한 경계 바로 아래에 연다. 저장 전 검색·취소는 계획을 바꾸지 않는다. */
 export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBusy, mapPicker }: {
   mapPicker?: { active: boolean; value: Coordinates | null; onStart: () => void; onClose: () => void };
-  date: string; blocked: string | null; initial?: { start: string; end: string };
+  /** `[2026-10-19]` `title` · `kind` · `query` (the place search's words) — the add form opened from the chat comes filled in with what the chat had. */
+  date: string; blocked: string | null; initial?: { start: string; end: string; title?: string; kind?: NewStop["kind"]; query?: string };
   onSave: (draft: NewStop) => Promise<void>; onCancel?: () => void;
   search?: (query: string) => Promise<AddStopPlace[]>;
   onBusy?: (busy: boolean) => void;
@@ -25,11 +26,11 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
   const form = useRef<HTMLFormElement>(null);
   const first = useRef<HTMLInputElement>(null);
   const searchInput = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initial?.query ?? "");
   const [mapName, setMapName] = useState("");
   const mapStart = useRef<HTMLButtonElement>(null);
   const mapHeading = useRef<HTMLHeadingElement>(null);
-  const [draft, setDraft] = useState<NewStop>({ title: "", date, start: initial?.start ?? "", end: initial?.end ?? "", place: "", kind: "activity" });
+  const [draft, setDraft] = useState<NewStop>({ title: initial?.title ?? "", date, start: initial?.start ?? "", end: initial?.end ?? "", place: "", kind: initial?.kind ?? "activity" });
   const [selected, setSelected] = useState<AddStopPlace | null>(null);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");

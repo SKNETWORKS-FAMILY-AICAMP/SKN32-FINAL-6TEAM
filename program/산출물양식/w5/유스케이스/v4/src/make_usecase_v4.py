@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 v4 — v3(「한눈에」 스타일 배치)에 v2 의 정확한 문구 · UML 관계 표기를 되살리고,
+"""guguroute 유스케이스 v4 — v3(「한눈에」 스타일 배치)에 v2 의 정확한 문구 · UML 관계 표기를 되살리고,
 코덱스(gpt-6.1-sol)와 Claude 의 v2 · v3 비교 검토에서 합의한 고칠 점을 반영한다(2026-10-02).
 
     python make_usecase_v4.py   → ../triPilot_유스케이스_한장_v4.html · .svg · uc_v4_A~D.html · .svg
@@ -328,12 +328,12 @@ CSS = f"""
 """
 
 
-def render(which="ABCD", out="triPilot_유스케이스_한장_v4", title="triPilot 유스케이스 — 전체 한 장"):
+def render(which="ABCD", out="triPilot_유스케이스_한장_v4", title="guguroute 유스케이스 — 전체 한 장"):
     S.clear(); N.clear()
     bottom = build(which)
     H, W = bottom + 74, RIGHT_X + RIGHT_W + 30
     head = (f'<text class="svg-label" x="{LEFT_X}" y="40">사람 · 앱</text>'
-            f'<text class="svg-label" x="{FRAME_X1 + 10}" y="40">유스케이스 — triPilot</text>'
+            f'<text class="svg-label" x="{FRAME_X1 + 10}" y="40">유스케이스 — guguroute</text>'
             f'<text class="svg-label" x="{RIGHT_X}" y="40">시스템 행위자</text>'
             f'<text class="title" x="{LEFT_X}" y="80">{esc(title)}</text>'
             f'<text class="svg-note" x="{LEFT_X}" y="104">v4 · 2026-10-02 · 실제 API · 코드 기준 · 알약 = 사용자에게 보이는 유스케이스(UC 번호) · 모서리 상자 = 그 안의 처리 단계 · '
@@ -355,7 +355,7 @@ def render(which="ABCD", out="triPilot_유스케이스_한장_v4", title="triPil
     print("ok", out, W, "x", H)
 
 
-FIGS = [("ABCD", "triPilot_유스케이스_한장_v4", "triPilot 유스케이스 — 전체 한 장"),
+FIGS = [("ABCD", "triPilot_유스케이스_한장_v4", "guguroute 유스케이스 — 전체 한 장"),
         ("A", "uc_v4_A", "A · 여행 준비 — 계획을 받아 일정으로 읽는다"),
         ("B", "uc_v4_B", "B · 여행 중 요청 — 읽고, 근거로 답하고, 바꿀 일은 조율로"),
         ("C", "uc_v4_C", "C · 일정 조율 — 전부 통과할 때까지 다시 맞춘다"),

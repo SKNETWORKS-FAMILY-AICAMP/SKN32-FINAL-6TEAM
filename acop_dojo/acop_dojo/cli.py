@@ -586,7 +586,7 @@ def cmd_refs(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="acop-dojo", description="triPilot 코드 학습 프로그램")
+    parser = argparse.ArgumentParser(prog="acop-dojo", description="guguroute 코드 학습 프로그램")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("doctor", help="환경 점검").set_defaults(func=cmd_doctor)

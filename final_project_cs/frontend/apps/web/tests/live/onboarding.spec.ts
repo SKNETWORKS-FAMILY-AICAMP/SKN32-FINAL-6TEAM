@@ -15,7 +15,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await mockServer(request).scenario({ trips: "none" });           // 동의를 기록하면 서버가 게스트 세션을 만든다 - 그 세션에 여행은 아직 없다
   await useKorean(page);
   await page.goto("/");
-  await expect(page.locator("#intro-title")).toHaveText("계획부터 여행까지,당신 곁의 triPilot.");
+  await expect(page.locator("#intro-title")).toHaveText("서울 여행 일정을함께 확인해요.");
   await page.getByRole("button", { name: "다음 화면" }).first().click();
   await expect(page.locator("#how-title")).toBeInViewport();
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
@@ -71,13 +71,13 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await expect(page.getByText(/‘응답하지 않고 넘어가기’를 눌러 건너뛸 수 있어요/)).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "답변한 질문" })).toHaveAttribute("aria-valuenow", "0");
   await page.getByRole("button", { name: "시작하기" }).click();
-  await expect(heading("어떤 여행을 좋아하세요?")).toBeVisible();
+  await expect(heading("누구와 함께 떠나나요?")).toBeVisible();
   await settled(0);
   await page.getByRole("button", { name: "이전", exact: true }).click();
   await expect(heading("여행 취향 설문을 시작할게요")).toBeVisible();
   await settled("intro");
   await page.getByRole("button", { name: "시작하기" }).click();
-  await expect(heading("어떤 여행을 좋아하세요?")).toBeVisible();
+  await expect(heading("누구와 함께 떠나나요?")).toBeVisible();
   await settled(0);
   const next = page.getByRole("button", { name: "다음", exact: true });
   const progress = page.getByRole("progressbar", { name: "답변한 질문" });
@@ -85,65 +85,61 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await expect(next).toBeDisabled();
   // No `optional` mark on the preference cards (the Discord alerts card above carries its own).
   await expect(page.locator("#card-2").getByText("선택", { exact: true })).toHaveCount(0);
-  // One theme only (backend `theme` is a single value): a second choice replaces the first.
-  await page.getByRole("button", { name: "자연과 힐링" }).click();
-  await page.getByRole("button", { name: "맛집 탐방" }).click();
-  await expect(page.getByRole("button", { name: "자연과 힐링" })).toHaveAttribute("aria-pressed", "false");
-  await expect(progress).toHaveAttribute("aria-valuenow", "1");
-  await page.getByRole("button", { name: "맛집 탐방" }).press("ArrowRight");
-  await expect(heading("누구와 함께 떠나나요?")).toBeVisible();
-  await settled(1);
-
+  // `[2026-10-19 사용자 지시]` No theme question any more: companions come first. One choice only — a second choice replaces the first.
   await expect(page.getByRole("button", { name: /인원 늘리기/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "친구" }).click();
   await page.getByRole("button", { name: "가족" }).click();
-  await next.click();
+  await expect(page.getByRole("button", { name: "친구" })).toHaveAttribute("aria-pressed", "false");
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await page.getByRole("button", { name: "가족" }).press("ArrowRight");
 
-  // No separate transport or nationality question: the priorities card comes third.
+  // No theme, transport or nationality question: the priorities card comes second.
   await expect(heading("어떤 것을 더 중요하게 생각하나요?")).toBeVisible();
-  await settled(2);
+  await settled(1);
   await page.getByRole("button", { name: /^활동/ }).click();
-  await page.getByRole("button", { name: /^힐링/ }).click();
+  await page.getByRole("button", { name: /^자연관광/ }).click();
   // Skipping clears the answer but still counts toward progress; going back shows it cleared.
   await skip.click();
-  await expect(progress).toHaveAttribute("aria-valuenow", "3");
-  await settled(3);
+  await expect(progress).toHaveAttribute("aria-valuenow", "2");
+  await settled(2);
   await page.getByRole("button", { name: "이전", exact: true }).click();
   await expect(heading("어떤 것을 더 중요하게 생각하나요?")).toBeVisible();
-  await settled(2);
+  await settled(1);
   await expect(page.getByRole("button", { name: /^활동/ })).toHaveAttribute("aria-pressed", "false");
   await expect(next).toBeDisabled();
   await page.getByRole("button", { name: /^활동/ }).click();
   await expect(next).toBeDisabled();
-  await page.getByRole("button", { name: /^힐링/ }).click();
+  // Activities take exactly three of the seven tourism classes.
+  for (const name of ["자연관광", "역사관광"]) {
+    await page.getByRole("button", { name: new RegExp(`^${name}`) }).click();
+    await expect(next).toBeDisabled();
+  }
+  await page.getByRole("button", { name: /^축제\/공연\/행사/ }).click();
   await next.click();
   await expect(heading("실내와 실외 중 어디가 좋으세요?")).toBeVisible();
-  await settled(3);
+  await settled(2);
   await page.getByRole("button", { name: "실내", exact: true }).first().click();
   await expect(next).toBeDisabled();
   await page.getByRole("button", { name: "상관없음", exact: true }).last().click();
   await next.click();
-  await expect(heading("갑자기 일정이 꼬이면 어떻게 했으면 좋겠어요?")).toBeVisible();
-  await settled(4);
-  await page.getByRole("button", { name: "먼저 물어봐줘" }).click();
-  await next.click();
+  // No plan-change question: the Course Keeper card decides that (`[2026-10-19 사용자 지시]`).
   await expect(heading("여행할 때 어느 정도 여유가 좋으세요?")).toBeVisible();
-  await settled(5);
-  await expect(page.getByRole("button", { name: "설정 완료" })).toBeDisabled();
+  await settled(3);
+  await expect(page.getByRole("button", { name: "설문 마치기" })).toBeDisabled();
   await skip.click();
 
-  await expect(heading("여행 취향 설정 완료")).toBeVisible();
-  await expect(page.getByText("맛집 탐방", { exact: true })).toBeVisible();
+  await expect(heading("여행 취향 설문을 마쳤어요")).toBeVisible();
   await expect(page.getByText("가족", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
-  await expect(page.getByText("함께 고른 여행 취향")).toBeVisible();
+  await expect(page.getByText("여행 취향 설문", { exact: true })).toBeVisible();
   await expect(page.getByText("가족", { exact: true })).toBeVisible();
 
   await page.locator("form").getByRole("button", { name: "이전", exact: true }).click();
   // ★`[2026-10-16 ST4F-601]` 「이전」은 계획 담기를 연 화면으로 돌아간다 — 여기서는 설문의 「여행 계획 등록하기」(전에는 늘 소개 화면).
   await expect(page).toHaveURL(/\/start$/);
   await openPreferencesFromMenu(page);
-  await expect(heading("여행 취향 설정 완료")).toBeVisible();
+  await expect(heading("여행 취향 설문을 마쳤어요")).toBeVisible();
 
   // The finished survey rides with the trip registration (`flow.spec.ts` checks what the server receives); here the plan goes on to its check.
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
@@ -157,22 +153,22 @@ test("설정에서 바꾼 언어는 새로고침 후에도 유지되고, 여행 
   // `[2026-10-03 사용자 결정]` 기본은 한국어다. 영어로 바꾸면 새로고침 뒤에도 영어로 남고, 다시 한국어로 돌릴 수 있다.
   // `[2026-10-13 메뉴 = 마이페이지]` 언어 카드는 메뉴가 아니라 설정 화면(메뉴 › 설정)에 있다.
   await expect(page.locator("html")).toHaveAttribute("lang", "ko");
-  await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
+  await expect(page.locator("#intro-title")).toContainText("서울 여행 일정을");
   await noHorizontalScroll(page);
 
   await pickLanguage(page, "메뉴", "English");
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await expect(page.locator("#intro-title")).toContainText("Let’s check your");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await expect(page.locator("#intro-title")).toContainText("Let’s check your");
 
   await pickLanguage(page, "Menu", "한국어");
-  await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
-  await expect(page).toHaveTitle("triPilot · 당신다운 여행의 시작");
+  await expect(page.locator("#intro-title")).toContainText("서울 여행 일정을");
+  await expect(page).toHaveTitle("구구루트 · 당신다운 여행의 시작");
 
   await page.reload();
-  await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
+  await expect(page.locator("#intro-title")).toContainText("서울 여행 일정을");
   await registerStubTrip(page);
   // `[2026-10-07 사용자 결정 — 목업 C안]` 여행 화면은 시트의 「일정 | 채팅」으로 칸을 바꾼다(플로팅 버튼 스위치는 없다).
   await openPane(page, "채팅");
@@ -198,15 +194,15 @@ test("설정 화면에서 언어를 고르면 카드가 접히고 첫 화면 문
   await expect(card).toBeFocused();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await page.goto("/");
-  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await expect(page.locator("#intro-title")).toContainText("Let’s check your");
   await page.reload();
-  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await expect(page.locator("#intro-title")).toContainText("Let’s check your");
   // Back to Korean — the guide below is read in Korean.
   await pickLanguage(page, "Menu", "한국어");
-  await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
+  await expect(page.locator("#intro-title")).toContainText("서울 여행 일정을");
 
   await page.getByRole("button", { name: "다음 화면" }).first().click();
-  const guide = page.getByRole("region", { name: "triPilot 이용 방법" });
+  const guide = page.getByRole("region", { name: "구구루트 이용 방법" });
   const firstShot = guide.getByRole("group", { name: "1 / 4" }).getByRole("img");
   await expect(firstShot).toHaveAccessibleName("앱 화면: 나의 여행 취향 알려주기");
   await expect.poll(() => firstShot.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
@@ -248,17 +244,17 @@ test("시작 화면은 한 번만: 마친 뒤 새로고침해도 약관·취향�
   await page.goto("/start");
   await agreeTerms(page);                                                                // `[2026-10-16 ST4F-601]` 약관 카드는 스스로 열리고, 동의하면 그 자리에서 취향 카드가 열린다
   await page.getByRole("button", { name: "시작하기" }).click();
-  for (let at = 0; at < 6; at += 1) {
+  for (let at = 0; at < 4; at += 1) {
     await expect(page.locator(`#question-title-${at}`)).toBeFocused();
     await page.getByRole("button", { name: "응답하지 않고 넘어가기" }).click();
   }
-  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 취향 설문을 마쳤어요", exact: true })).toBeVisible();
 
   // A reload (or a later visit) does not start over.
   await page.reload();
   await expect(page.getByRole("button", { name: /약관 동의/ })).toContainText("필수 내용을 확인했어요.");
-  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toContainText("6가지 질문을 모두 마쳤어요.");
-  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toBeEnabled();
+  await expect(page.getByRole("button", { name: /여행 취향 설문/ })).toContainText("4가지 질문을 모두 마쳤어요.");
+  await expect(page.getByRole("button", { name: /여행 취향 설문/ })).toBeEnabled();
 
   // The intro button no longer sends the customer through it again.
   await page.goto("/");
@@ -266,19 +262,19 @@ test("시작 화면은 한 번만: 마친 뒤 새로고침해도 약관·취향�
   await expect(page.getByText("약관에 동의했어요. 취향 설문은 메뉴에서 할 수 있어요.")).toBeVisible();   // `[2026-10-16 ST4F-601]` 문구
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
-  await expect(page.getByText("함께 고른 여행 취향")).toBeVisible();
+  await expect(page.getByText("여행 취향 설문", { exact: true })).toBeVisible();
 
   // The menu's 「여행 취향」 row opens the preferences for changes (`[2026-10-13]` the row left My page, which is the settings screen now).
   await openPreferencesFromMenu(page);
-  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 취향 설문을 마쳤어요", exact: true })).toBeVisible();
 });
 
-test("소개의 첫 단어는 「나의 계획」이고, 처음 동의하면 취향 설문 없이 바로 계획 올리는 화면으로 가며, 취향 설문은 메뉴에서 따로 연다 (2026-10-06 사용자 지시)", async ({ page, request }) => {
+test("소개의 첫 단어는 「계획 담기」이고, 처음 동의하면 취향 설문 없이 바로 계획 올리는 화면으로 가며, 취향 설문은 메뉴에서 따로 연다 (2026-10-06 사용자 지시)", async ({ page, request }) => {
   await mockServer(request).scenario({ trips: "none" });
   await useKorean(page);
   await page.goto("/");
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
-  await expect(page.getByText("나의 계획", { exact: true })).toBeVisible();
+  await expect(page.getByText("계획 담기", { exact: true })).toBeVisible();
   await expect(page.getByText("나의 취향", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
   await expect(page).toHaveURL(/\/start\?terms=required&returnTo=%2Ftrips%2Fnew$/);   // 약관 미동의 진입은 필수 항목을 펼쳐 보여준다
@@ -315,10 +311,10 @@ test("약관에 동의하지 않았으면 소개 버튼은 시작 화면으로 �
 
 test("저장된 값이 깨져 있어도 시작 화면은 처음 상태로 열린다", async ({ page }) => {
   await useKorean(page);
-  await page.addInitScript(() => localStorage.setItem("tripilot.web.onboarding.v1", '{"agreed":"yes","answers":42}'));
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.onboarding.v2", '{"agreed":"yes","answers":42}'));
   await page.goto("/start");
   await expect(page.getByRole("button", { name: /약관 동의/ })).toContainText("시작하기 전에 확인해 주세요.");
-  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /여행 취향 설문/ })).toBeDisabled();
 });
 
 test("계획 확인 전 화면(첫 화면 · 시작(약관) · 계획 담기)에는 메뉴 옆 지구본이 있어 약관 동의 전에도 언어를 바꾸고, 계획 담기의 항로 지킴이 아이콘은 없으며, 그 뒤 화면에는 지구본이 없다 (2026-10-13 사용자 결정)", async ({ page }) => {
@@ -345,7 +341,7 @@ test("계획 확인 전 화면(첫 화면 · 시작(약관) · 계획 담기)에
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("button", { name: "English", exact: true })).toHaveCount(0);   // 고르면 목록이 닫히고
   await expect(header.getByRole("button", { name: "Language · English", exact: true })).toBeFocused();
-  await expect(page.locator('li[data-doc="service_terms"]')).toContainText("triPilot Terms of Service");   // 약관을 영어로 읽는다
+  await expect(page.locator('li[data-doc="service_terms"]')).toContainText("GuguRoute Terms of Service");   // 약관을 영어로 읽는다
 
   // 계획 담기(계획 올리기)에도 지구본이 있고, 그 자리에 있던 항로 지킴이 아이콘은 없다. 그 뒤 화면(내 여행 목록)은 메뉴 › 설정에서만 바꾼다.
   await header.getByRole("button", { name: "Language · English", exact: true }).click();

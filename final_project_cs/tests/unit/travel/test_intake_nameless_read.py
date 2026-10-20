@@ -92,7 +92,8 @@ def test_the_kind_the_rules_already_decided_is_not_overwritten_and_an_activity_l
 
 def test_a_line_with_a_name_still_goes_the_old_way():
     rows, tour, _ = _rows("2026-10-15\n10:00 경복궁 관람\n13:00 성수 식당")
-    assert "경복궁 관람" in tour.asked and _field(rows, "items[0].place")["value"]["name"] == "경복궁"
+    # `[2026-10-19]` 경복궁은 대표 장소 정답표에 있어 정답 이름 「경복궁」으로 바로 찾는다(전에는 「경복궁 관람」부터 물었다)
+    assert "경복궁" in tour.asked and _field(rows, "items[0].place")["value"]["name"] == "경복궁"
     assert _field(rows, "items[0].place")["evidence"].get("method") != "nameless"
     assert _field(rows, "items[1].place")["evidence"]["method"] == "nameless"
 

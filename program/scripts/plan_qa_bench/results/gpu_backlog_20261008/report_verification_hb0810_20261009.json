@@ -31,7 +31,7 @@
     },
     {
       "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
-      "target": "../../../../datasets/travel/train_oos/oos2r_finch_5e5_seed20261012_20261009/REPORT.md",
+      "target": "../../../../datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/REPORT.md",
       "exists": true
     },
     {

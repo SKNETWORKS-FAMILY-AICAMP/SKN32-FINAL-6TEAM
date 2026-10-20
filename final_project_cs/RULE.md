@@ -1,4 +1,4 @@
-# triPilot — 작업 절차
+# guguroute — 작업 절차
 
 현재 사양은 wiki의 후속 확정 결정·계약이 정본입니다. 과거 계획 번호나 동결 handoff에 현재 구현을 억지로 맞추지 않습니다. 도메인 안전 규칙은 [AGENTS.md](AGENTS.md)를 따릅니다.
 

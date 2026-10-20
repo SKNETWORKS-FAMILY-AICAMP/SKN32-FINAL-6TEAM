@@ -1,0 +1,16 @@
+contract/test_web_client_contract.py :: 5 passed in 5.05s
+e2e/test_decision_destination_condition_web.py :: 4 passed in 12.49s
+e2e/test_intake_autofix_dry_run.py :: 5 passed in 22.59s
+e2e/test_intake_catalog_names.py :: 7 passed in 16.75s
+e2e/test_intake_direct_schedule.py :: 10 passed in 26.85s
+e2e/test_intake_experience_tiers.py :: 16 passed in 12.53s
+e2e/test_intake_stay_lines.py :: 9 passed in 19.86s
+e2e/test_nambu_recorded_replay.py :: no tests ran in 0.00s
+e2e/test_watch_relaxed.py :: 11 passed in 17.39s
+scenario/test_apply_or_ask_recheck.py :: 5 passed in 4.16s
+scenario/test_case_watch_dining.py :: 3 passed in 5.47s
+scenario/test_trip_reminders.py :: 13 passed in 8.30s
+integration/api/test_openapi_surface.py :: 7 passed in 4.23s
+unit/core/test_debug_report_status.py :: 190 passed in 2.85s
+e2e/test_intake_test_plans.py :: 42 passed in 76.21s (0:01:16)
+DONE

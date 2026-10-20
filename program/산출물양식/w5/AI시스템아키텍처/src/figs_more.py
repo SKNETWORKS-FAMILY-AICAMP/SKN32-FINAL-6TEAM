@@ -10,7 +10,7 @@ from dd import Fig
 
 def fig_containers():
     W, H = 1600, 840
-    f = Fig("ctr", W, H, "triPilot 컨테이너도 — 무엇이 따로 뜨고 무엇으로 이어지나",
+    f = Fig("ctr", W, H, "guguroute 컨테이너도 — 무엇이 따로 뜨고 무엇으로 이어지나",
             "고객의 웹 브라우저와 개인 AI 는 HTTPS 프록시를 거쳐 웹 · API 에 닿는다. API 안에 오케스트레이터 · 에이전트 · 이동 판정기 · MCP 서버가 있고, "
             "백그라운드 워커가 1분마다 모니터링 · 되잡기 · 알림 보내기를 돌린다. 둘 다 같은 PostgreSQL 을 쓴다.")
     f.max_nodes, f.max_arrows, f.max_accents = 11, 12, 2

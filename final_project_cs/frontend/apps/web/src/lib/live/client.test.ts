@@ -159,12 +159,12 @@ describe("the session the browser has (cookie, never a key it keeps)", () => {
     await expect(probeSession("ko", true)).rejects.toMatchObject({ code: "bad_session" });
   });
 
-  it("adds when a limit opens again to the server's sentence (body seconds first, else Retry-After)", async () => {
+  it("adds when a limit opens again to the customer's sentence (body seconds first, else Retry-After)", async () => {
     stub({ has: true });
     replies.push(json({ error: { code: "usage_limit", message: "오늘 계획 읽기 횟수를 다 썼다", limit: "per_key", action: "intake", used: 4, cap: 4, retry_after_seconds: 12_000 } }, 429));
-    await expect(api("/v1/web/trip-intakes", "ko", { method: "POST" })).rejects.toMatchObject({ code: "usage_limit", message: "오늘 계획 읽기 횟수를 다 썼다 (3시간 20분 뒤에 다시 할 수 있어요.)" });
+    await expect(api("/v1/web/trip-intakes", "ko", { method: "POST" })).rejects.toMatchObject({ code: "usage_limit", message: "오늘 쓸 수 있는 횟수(4번)를 다 썼어요. (3시간 20분 뒤에 다시 할 수 있어요.)" });
     replies.push(new Response(JSON.stringify({ error: { code: "service_daily_cap", message: "오늘은 더 받지 않는다" } }), { status: 503, headers: { "Retry-After": "90" } }));
-    await expect(api("/v1/web/trip-intakes", "ko", { method: "POST" })).rejects.toMatchObject({ code: "service_daily_cap", message: "오늘은 더 받지 않는다 (2분 뒤에 다시 할 수 있어요.)" });
+    await expect(api("/v1/web/trip-intakes", "ko", { method: "POST" })).rejects.toMatchObject({ code: "service_daily_cap", message: "오늘 서비스 사용량이 다 찼어요. (2분 뒤에 다시 할 수 있어요.)" });
   });
 
   it("carries the HTTP status of a refusal (a lost connection has none): the trip screen tells an outage from a refusal by it", async () => {

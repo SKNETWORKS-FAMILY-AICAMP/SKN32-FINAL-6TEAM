@@ -211,7 +211,7 @@ export function TripList() {
     focusNext.current = asking.from;
   }
 
-  const scope = t("서버에 저장된 이 여행과 대화 기록, 여행계획서 링크가 삭제되고 알림도 멈춰요. 삭제한 내용은 되돌릴 수 없어요.", "The trip, its chat and its plan link saved on the server will be deleted, and its alerts stop. This can’t be undone.");
+  const scope = t("이 여행과 채팅 기록, 여행계획서 링크가 지워지고 알림도 멈춰요. 지운 여행은 되돌릴 수 없어요.", "The trip, its chat and its plan link are deleted and its alerts stop. This can’t be undone.");
   const action = trips.length === 0 ? undefined
     : selection ? <div className={styles.selectActions}>
       <Button ref={cancelSelect} variant="quiet" disabled={pending} onClick={stopSelecting}>{t("취소", "Cancel")}</Button>
@@ -221,16 +221,16 @@ export function TripList() {
   const single = asking?.single, singleTime = single ? added(single) : null, count = asking?.ids.length ?? 0;
 
   return <>
-    <PageHeading eyebrow="MY TRIPS" title={t("내 여행", "My trips")} action={action}
-      description={t("이 브라우저에서 등록한 여행이에요. 최근에 등록한 여행이 위에 있어요.", "Trips added in this browser, newest first.")} />
+    <PageHeading eyebrow="MY TRIPS" title={t("여행 목록", "Trip list")} action={action}
+      description={t("등록한 여행이에요. 최근에 등록한 여행이 위에 있어요.", "Your trips, newest first.")} />
     <p className={styles.notice} role="status">{notice && !notice.failed ? notice.text : ""}</p>
     <p className={`${styles.notice} ${styles.noticeFailed}`} role="alert">{notice?.failed ? notice.text : ""}</p>
     {trips.length === 0
       ? <Panel className={styles.empty}>
         <p>{t("아직 등록한 여행이 없어요.", "No trips yet.")}</p>
         {/* `[2026-10-04]` 게스트 여행은 한동안 쓰지 않으면 사라지고, 계정에 보관한 여행은 로그인하면 다시 열린다 — 빈 목록이 그 까닭일 수 있다. */}
-        <p className={styles.emptyHint}>{t("전에 만든 여행이 안 보이나요? 게스트로 만든 여행은 창을 닫으면 이어 볼 수 없고 얼마 뒤 서버에서도 지워져요. 계정에 보관한 여행이라면 ", "Cannot see a trip you made before? A guest trip cannot be continued after the window is closed and is deleted from the server after a while. If it is kept with an account, ")}
-          <Link href={`${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.trips)}`}>{t("계정으로 로그인", "sign in with that account")}</Link>{t("하면 다시 열려요.", " to open it again.")}</p>
+        <p className={styles.emptyHint}>{t("전에 만든 여행이 안 보이나요? 게스트로 만든 여행은 창을 닫으면 이어 볼 수 없고 얼마 뒤 지워져요. 계정에 보관한 여행이라면 ", "Cannot see a trip you made before? A guest trip cannot be continued after the window is closed and is deleted after a while. If it is kept with an account, ")}
+          <Link href={`${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.trips)}`}>{t("로그인", "sign in")}</Link>{t("하면 다시 열려요.", " to open it again.")}</p>
       </Panel>
       : <TripRows trips={trips} controls={{ selection, onToggle: toggle, onDelete: (trip, control) => ask([trip.id], trip, control), unsupported, busy: pending }} />}
     {/* Hidden while picking, so select mode is only about picking and deleting. */}
@@ -254,8 +254,8 @@ export function RecentTrips() {
   const trips = query.data ?? [];
   return <section className={styles.recent} aria-labelledby="recent-trips-title">
     <header className={styles.recentHead}>
-      <h2 id="recent-trips-title">{t("내 여행", "My trips")}</h2>
-      {trips.length > RECENT && <Link href={routes.trips} className={styles.all}>{t("전체일정 보기", "View all")}<ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>}
+      <h2 id="recent-trips-title">{t("최근 여행", "Recent trips")}</h2>
+      {trips.length > RECENT && <Link href={routes.trips} className={styles.all}>{t("여행 목록 보기", "View trip list")}<ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>}
     </header>
     {query.isPending ? <p className={styles.state} role="status">{t("여행을 불러오고 있어요.", "Loading your trips.")}</p>
       : query.error ? <div className={styles.failed} role="alert">

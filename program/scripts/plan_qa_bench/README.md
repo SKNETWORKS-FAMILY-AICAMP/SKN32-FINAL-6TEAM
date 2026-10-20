@@ -25,7 +25,7 @@
 
 | 파일 | 왜 없나 | 어디에 있나·다시 만드는 법 |
 |---|---|---|
-| `pairs.json` · `scores.json` · `emb_rr_out.json` | 커서(0.5~0.85MB) — 질문·항목 쌍 3,498개와 모델이 매긴 점수 | 로컬 `datasets/travel/plan_qa_bench/raw/` (깃 제외). 다시 만들려면 `server/emb_rr.py` |
+| `pairs.json` · `scores.json` · `emb_rr_out.json` | 커서(0.5~0.85MB) — 질문·항목 쌍 3,498개와 모델이 매긴 점수 | 로컬 `datasets/core/pointing/benchmarks/plan_qa_bench/raw/` (깃 제외). 다시 만들려면 `server/emb_rr.py` |
 | `kakao_cats.json` | 카카오 장소 검색이 준 분류 이름(장소 약 30개) — 카카오 약관상 공용 저장소에 두지 않는다 | 로컬 데이터 폴더에만. 다시 받으려면 카카오 키워드 검색 API 로 각 장소의 `category_name` |
 | `alias_cache.json` | 위 분류로 모델이 만든 별칭 색인 | 로컬 데이터 폴더에만. `recog_v2.RecognizerV3` 가 없으면 다시 만든다 |
 | 관광공사 소개글 | 창작물이라 저장하지 않는다(2026-09-28 결정). v4 실험에만 쓰였고 효과가 없었다 | 보관하지 않음 |

@@ -13,6 +13,7 @@ import type { PlanCheckActions } from "./plan-check";
 import { insertionPoints, type InsertionPoint } from "./insertion-points";
 import { RailList, type RailNow } from "./rail-list";
 import { StopKind } from "./stop-kind";
+import { UnfoundPlace, type UnfoundActions } from "./unfound-place";
 import type { Grab, TimeEditHandles, TimeKind } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
@@ -48,6 +49,8 @@ export interface RowContext {
   onRestore: (item: PlanItem) => void;
   onLock: (item: PlanItem) => void;
   onRecommend: (item: PlanItem) => void;
+  /** `[2026-10-19 사용자 결정 — 못 찾은 장소]` The answers of a stop's 「장소를 못 찾았어요」 card (`item.unfound`) — none (the card is not drawn) where the page cannot change places. */
+  unfound?: UnfoundActions;
   onUndoItem?: (item: PlanItem) => void;
   canUndoItem?: (item: PlanItem) => boolean;
   /** `[2026-10-07]` Keep one of two readings of a photo's line (null = the page cannot send it: the buttons are not drawn, the row's note still says it). */
@@ -251,6 +254,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
             </span>
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
+      {done && item.unfound && !removed && !checking && ctx.unfound && <UnfoundPlace item={{ ...item, unfound: item.unfound }} prefix={ctx.prefix} candidates={actions.candidates}
+        why={changeWhy} explain={explain} on={ctx.unfound} />}
       {editingTime && <TimeEditor item={item} ui={ctx.time!} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
         {rows.length

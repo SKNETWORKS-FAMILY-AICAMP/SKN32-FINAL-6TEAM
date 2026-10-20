@@ -9,8 +9,8 @@ import { editIntake, restoreIntake, type IntakeEdit } from "@/lib/live/intake";
 import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
-  autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces,
-  type CandidatePlace, type ReviewItem, type ReviewedIntakeView,
+  autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
+  type CandidateList, type CandidatePlace, type CandidateUpdate, type ReviewItem, type ReviewedIntakeView,
 } from "@/lib/live/intake-review";
 import { isLodgingReviewItem, planCandidate, safePhotoUrl } from "./from-review";
 import type { PlaceInfo } from "./model";
@@ -18,6 +18,10 @@ import type { AutoResult, PlaceChoice, PlanCheckActions } from "./plan-check";
 import { retimeEdits } from "./retime-edits";
 import { ReviewUndo } from "./review-undo";
 import { newStopEdits } from "./new-stop";
+import { candidateTimeEdits, proposedTimeOf } from "./risk-candidate-edits";
+import { itemRiskOf, riskSignature } from "@/lib/live/risks";
+import type { PlanCandidate } from "./model";
+import { assertPlaceSearchComplete } from "./place-search-status";
 
 /** How many alternatives get their photos fetched (A, B, C) — each is one call to the tourism photo service. */
 const PHOTO_CANDIDATES = 3;
@@ -45,7 +49,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   reread: () => void;
 }): { actions: PlanCheckActions; dirty: boolean; rechecking: string | null; infos: Readonly<Record<string, PlaceInfo>>; preview: ReviewedIntakeView | null } {
   const [dirtyState, setDirtyState] = useState({ intakeId, value: false });
-  const dirty = dirtyState.intakeId === intakeId && dirtyState.value;
+  // `[2026-10-20 사용자 지시]` A revision only saved (`review.checked === false`) is a change still to send: a reload keeps 「다시 제출」, not 「여행 등록」.
+  const unchecked = view?.intake_id === intakeId && view.review?.checked === false;
+  const dirty = (dirtyState.intakeId === intakeId && dirtyState.value) || unchecked;
   const setDirty = useMemo(() => (value: boolean) => setDirtyState({ intakeId, value }), [intakeId]);
   // `[2026-10-03]` 「전체 자동 추천」 is first only SHOWN (the server's dry run saves nothing): the plan as it would be, kept with the revision it was asked on.
   const [previewed, setPreviewed] = useState<{ view: ReviewedIntakeView; base: number } | null>(null);
@@ -62,7 +68,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const pickable = useRef(new Map<string, CandidatePlace>());
   /** `[2026-10-07]` The ways to go for a leg, asked when its box is opened and kept for the revision they were asked on (a re-opened box asks nothing). */
   const moveWays = useRef(new Map<string, Promise<MoveOptions | null>>());
-  // `[2026-10-07 사용자 지적 — 이미 받은 대안을 다시 열 때도 로딩이 있다]` The alternatives of a stop, kept for the revision they were asked for: opening the change screen again, or 「자동 추천」 after it, does not ask again.
+  // `[2026-10-07 사용자 지적 — 이미 받은 대안을 다시 열 때도 로딩이 있다]` The alternatives of a stop: opening the change screen again, or 「자동 추천」 after it, does not ask again.
+  // ★`[2026-10-20 사용자 지시]` Kept by stop, not by revision, until 「다시 제출」: after picking one of them (or moving a time) the change screen shows the
+  //   same three again instead of working out the alternatives of the changed plan — the changed plan is checked once, when it is sent again.
   const alternatives = useRef(new Map<string, ReturnType<typeof getCandidates>>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
   const candidateNotes = useRef(new Map<string, string[]>());
@@ -73,7 +81,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
    */
   const warmed = useRef<{ intakeId: string; base: number; ask: Promise<Awaited<ReturnType<typeof autofixIntake>>> } | null>(null);
   const needsLook = (view?.review?.needs?.total ?? 0) > 0;
-  const warmRevision = view?.status === "review" ? view.revision : null;
+  // `[2026-10-20]` Not for a revision only saved: its moves are not measured yet (the dry run would work on guesses) - it is asked once the plan is sent again.
+  const warmRevision = view?.status === "review" && !unchecked ? view.revision : null;
   useEffect(() => {
     if (warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
     const ask = autofixIntake(intakeId, warmRevision, language, true);
@@ -100,13 +109,18 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       throw error;
     };
     /** The stop's alternatives for the revision shown — asked once (a failure is not kept, so it is asked again). */
-    const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1]) => {
+    // `[2026-10-19 사용자 지시]` Asked as a live answer: prepared alternatives come at once; otherwise the cards come first with straight-line
+    // guesses and each measured leg / model reason as it lands (`onFirst` · `onUpdate`), then the final list. A later ask for the same revision gets the final list.
+    const alternativesOf = (id: string, item: Parameters<typeof getCandidates>[1],
+      onFirst?: (list: CandidateList) => void, onUpdate?: (update: CandidateUpdate) => void) => {
       const revision = plan().revision;
-      const key = `${revision}:${id}`;
-      for (const old of [...alternatives.current.keys()]) if (!old.startsWith(`${revision}:`)) alternatives.current.delete(old);
-      const kept = alternatives.current.get(key);
+      // `[2026-10-20 사용자 지시]` By stop until 「다시 제출」 (see `alternatives`): a stop whose risk changed since (the changed plan's quick look) keeps the three it had.
+      const currentRisk = itemRiskOf(itemOf(id).risk);
+      const key = `${id}:${currentRisk ? riskSignature([currentRisk]) : ""}`;
+      const kept = alternatives.current.get(key) ?? [...alternatives.current.entries()].find(([old]) => old.startsWith(`${id}:`))?.[1];
       if (kept) return kept;
-      const ask = getCandidates(intakeId, item, revision, language).catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
+      const ask = streamCandidates(intakeId, item, revision, language, onFirst ?? (() => undefined), onUpdate ?? (() => undefined))
+        .catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
       alternatives.current.set(key, ask);
       return ask;
     };
@@ -122,7 +136,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
      */
     async function save(edits: IntakeEdit[], changed = false) {
       const before = plan();
-      const next = await editIntake(intakeId, before.revision, edits, language).catch(staleThenRethrow);
+      // ★`[2026-10-20 사용자 지시]` A change of the customer's (time · place · alternative · stop added or taken out) is only SAVED: the server does not
+      //   measure the moves or re-place the stops around it now - 「다시 제출」 (`recheck`) checks the whole plan once. A lock or the plan's name is checked as before.
+      const next = await (changed ? editIntake(intakeId, before.revision, edits, language, { check: false })
+        : editIntake(intakeId, before.revision, edits, language)).catch(staleThenRethrow);
       if (!allUndo.active) throw gone();
       if (edits.some((edit) => !edit.field.endsWith(".locked"))) allUndo.remember(before, next);
       else allUndo.advance(next);
@@ -143,14 +160,16 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       } catch { /* a photo that cannot be fetched is just not shown */ }
       return info;
     }
-    const replaceWith = async (id: string, edit: IntakeEdit, kind: string | null = null) => {
+    const replaceWith = async (id: string, edit: IntakeEdit, kind: string | null = null, time?: PlanCandidate["proposedTime"]) => {
       const item = itemOf(id);
       const back = restorePlace(targetOf(item), item.place);
+      const timing = candidateTimeEdits(item, time);
       // ★`[2026-10-07 서버 c0ca7054 · 90d9e403]` A place of another kind than the stop (a meal place for an activity, a stay's own meal for a stay) changes the stop's kind with it - the server asks for both
       //   in the same request, or the meal lands in an activity. The undo puts the kind back too.
       const retype = kind !== null && kind !== item.kind;
-      await save(retype ? [edit, itemEdit.kind(targetOf(item), kind)] : [edit], true);
-      undoEdits.current = back ? (retype && item.kind ? [back, itemEdit.kind(targetOf(item), item.kind)] : [back]) : null;
+      await save([edit, ...(retype ? [itemEdit.kind(targetOf(item), kind)] : []), ...timing.edits], true);
+      undoEdits.current = back && timing.undo !== null ? [back,
+        ...(retype && item.kind ? [itemEdit.kind(targetOf(item), item.kind)] : []), ...timing.undo] : null;
     };
 
     return {
@@ -211,9 +230,34 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         take(next);
       },
 
-      candidates: async (id) => {
+      candidates: async (id, onLive) => {
         const item = itemOf(id);
-        const found = await alternativesOf(id, item);
+        // The live cards: the first list as the server sent it, changed in place by each update, drawn again each time (photos as they come).
+        let first: CandidateList | null = null;
+        let photos: (PlaceInfo | null)[] = [];
+        let finished = false;
+        const draw = () => {
+          if (finished || !first || !onLive) return;
+          onLive(first.candidates.map((candidate, at) => {
+            const card = planCandidate(candidate, id, "candidate", photos[at] ?? null);
+            pickable.current.set(card.id, candidate.place);
+            return card;
+          }));
+        };
+        const found = await alternativesOf(id, item, (list) => {
+          first = { ...list, candidates: list.candidates.map((candidate) => ({ ...candidate })) };
+          photos = list.candidates.map(() => null);
+          draw();
+          void Promise.all(list.candidates.map((candidate, at) => infoOf(candidate.place, at < PHOTO_CANDIDATES))).then((got) => { photos = got; draw(); });
+        }, (update) => {
+          const candidate = first?.candidates[update.rank - 1];
+          if (!candidate) return;
+          const { pending, ...rest } = update;
+          Object.assign(candidate, { ...rest, rank: candidate.rank });
+          candidate.pending = { before: false, after: false, reason: false, ...candidate.pending, ...pending };
+          draw();
+        });
+        finished = true;
         candidateNotes.current.set(id, found.notes ?? []);
         // The stop's own photos fill its 「지금 일정」 card.
         if (item.place) void infoOf({ ...item.place, category: null, address: null }, true).then((info) => setInfos((current) => ({ ...current, [id]: info })));
@@ -230,6 +274,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const item = itemOf(id);
         const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
         if (!allUndo.active) throw gone();
+        assertPlaceSearchComplete(found, t);
         return found.results.map((result) => ({
           ...planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source }),
           pickedPlace: pickedPlace(result.place),
@@ -238,6 +283,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       search: async (id, words) => {
         const item = itemOf(id);
         const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
+        assertPlaceSearchComplete(found, t);
         return found.results.map((result) => {
           const card = planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source });
           pickable.current.set(card.id, result.place);
@@ -251,7 +297,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const place = pickable.current.get(choice.candidate.id);
         const picked = place && pickedPlace(place);
         // A place the server gave coordinates for is taken as it is; one without them is looked up again by its name.
-        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null);
+        return replaceWith(id, picked ? itemEdit.placePicked(target, picked) : itemEdit.placeByName(target, choice.candidate.name), choice.candidate.placeKind ?? null, choice.candidate.proposedTime);
       },
       autoRecommend: async (id) => {
         const item = itemOf(id);
@@ -260,7 +306,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
           const best = found.candidates.find((candidate) => candidate.fits && pickedPlace(candidate.place));
           const picked = best && pickedPlace(best.place);
           if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
-          await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null);
+          await replaceWith(id, itemEdit.placePicked(targetOf(item), picked), best.basis === "meal_inferred" ? "dining" : best.place.kind === "dining" || best.place.kind === "activity" ? best.place.kind : null, proposedTimeOf(best));
           return;
         }
         const before = plan();
@@ -344,6 +390,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         if (!allUndo.active) return;
         allUndo.restored(next);
         undoEdits.current = null;
+        alternatives.current.clear();
         setDirty(false);                            // restore saved the final check in the same transaction
         take(next);
       },
@@ -362,6 +409,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         try {
           const next = await revalidateIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
           if (!allUndo.active) return;
+          alternatives.current.clear();                             // `[2026-10-20]` the plan is checked: alternatives are asked for the plan as it now is
           setDirty(false);                                          // before the checked plan is drawn (see `save`)
           take(next);
         } finally {

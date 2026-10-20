@@ -4,7 +4,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 root=Path.cwd();here=Path(__file__).parent;bench=root/'program/scripts/plan_qa_bench'
 spec=importlib.util.spec_from_file_location('valen_contract',bench/'server/queues/prepare_valen_contract_20261009.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 gold=json.loads((bench/'results/empty_probe/all_prompts_d2.json').read_text(encoding='utf-8'))
-native=json.loads((root/'datasets/travel/valen_native_eval_20261009/d2.json').read_text(encoding='utf-8'))
+native=json.loads((root/'datasets/core/pointing/evaluations/valen_native_eval_20261009/d2.json').read_text(encoding='utf-8'))
 answers=[json.loads(x) for x in (bench/'results/gpu_backlog_20261008/valen_08b_original_d2_a2/d_test_valen_08b_original_d2_a2.jsonl').read_text(encoding='utf-8').splitlines()]
 ref={x['i']:x for x in native};passed=0;none_chosen=0;samples=[]
 assert len(answers)==len(ref)==len(gold)==1000

@@ -75,7 +75,13 @@ KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike", "taxi"}
 #   지도 원본(OSM)에 지하 통로·건물 안 연결이 없고 역 복합시설 둘레를 돌아가는 값이다. 같은 구간을 구글 Routes(TRANSIT)에 물으니 걷기 거리가 직선의 0.99~1.06 배(표본 19 · 중앙 1.00)였다.
 #   그래서 길 거리를 직선의 이 배수로 **상한**한다 — 우회계수(1.4)보다는 크게 두어 진짜 우회(철도·하천 건너편)는 거의 그대로 둔다. 상한이 걸리면 `Planner.walk_capped` 에 남고 로그가 난다(조용한 보정이 아니다).
 #   ★우리가 고른 값이다 — 측정으로 나온 상수가 아니다. 규칙 파일(rules)에 올리는 것은 다음 규칙판에서 한 번에(STATION_K_PROPOSED 와 같은 취급).
-WALK_ROUTED_CAP_PROPOSED = 2.0
+# ☆`[2026-10-18 사용자 결정 · 끔]` 상한을 끈다(None). 처음 상한을 넣게 한 세 곳이 이제 다른 장치로 풀렸다 — 남대문시장→시청은
+#   다른 출구 고르기(674 m · 1.39배), 서울역 광장은 서울시 도보 그래프(137 m · 1.43배), 롯데월드→잠실은 역 연결 건물 목록(직선 × 1.2).
+#   예시 일정 2개 + 택시 비교 12쌍의 접근 걷기 314건 중 상한이 걸린 18건을 출구 전부로 다시 재면 최종 걷기는 역 출구에서 0~42 m 만
+#   늘고, 남산(N서울타워) → 정류장 두 곳만 실제 산길(1.4~1.6 km)이 900 m 대로 깎이던 것이 바로잡힌다 — 상한이 하는 일이 「실제로 먼 길을
+#   짧게 보이게 하는 것」뿐이라 끈다(records/reports/2026-10-18_walk_cap_off_and_taxi_receipts/REPORT.md). 지하 통로 자료가 없는 역에서는
+#   길게 나올 수 있다(짧게 지어내지 않는 쪽).
+WALK_ROUTED_CAP_PROPOSED = None
 #: 택시 `링크:` 표기의 번호 모양 — 계약(route_uses._LINK_ID)과 같다: 숫자 6~12자리
 LINK_ID_RE = re.compile(r"^\d{6,12}$")
 #: 역과 지하로 이어진 건물(연결통로 표 — connectors.py)까지 걷는 거리 = 역~장소 직선 × 이 값(추정 — 표에 거리가 없다). 지상 우회보다 길면 안 쓴다
@@ -138,6 +144,8 @@ MIX_EST_TOL_MIN = 3
 MIX_WALK_TOL_MIN = 1
 #: 버스 운행 시간 거르기 여유(분) — 구간 [도착 목표 − 추정 소요, 도착 목표] 가 그 노선 첫차~막차 ±이 값과 안 겹치면 판정하지 않는다
 MIX_WINDOW_TOL_MIN = 60
+#: 버스 구간에서 승차 정류장을 정하는 칸 — `_in_service` 가 후보에 기억한 승차 정보가 이 값들이 같을 때만 다시 쓰인다
+_BOARD_KEY_FIELDS = ("route", "from", "to", "route_id", "from_sequence", "to_sequence", "from_stop_id", "to_stop_id")
 #: 혼합 후보 마지막 성립 출발 찾기(_mix_latest) 판정 호출 상한(성능)
 MIX_LFD_STEPS = 10
 #: 빠른 길 첫 출발이 이 이유로 불가면 판정기 역산(느린 길)으로 넘긴다 — 출발을 당기면 될 수 있는 이유(GPT 87 #1)
@@ -176,6 +184,8 @@ def _parse_dt(v):
 
 def service_day(dt):
     """서울 시각 → (운행일, 운행일 분). 04:00 전은 전날 운행일의 24:xx(45 계약)."""
+    if dt.utcoffset() is not None:
+        dt = dt.astimezone(KST)
     m = dt.hour * 60 + dt.minute
     d = dt.date()
     if m < SERVICE_DAY_START_MIN:
@@ -369,8 +379,8 @@ class Planner:
                 routed = float(r["distance_m"])
                 if r.get("optimistic"):
                     routed = max(routed, straight_m * self.detour)
-                cap = straight_m * WALK_ROUTED_CAP_PROPOSED
-                if routed > cap:
+                cap = straight_m * WALK_ROUTED_CAP_PROPOSED if WALK_ROUTED_CAP_PROPOSED else None
+                if cap is not None and routed > cap:
                     # 지도 원본의 끊김(지하 통로·역 복합시설)으로 길이 직선의 수 배로 나온 값 — 상한을 건다. 신호 없는 보정이 아니다: 기록 + 로그
                     self.__dict__.setdefault("walk_capped", []).append(
                         {"straight_m": round(straight_m), "routed_m": round(routed), "used_m": round(cap)})
@@ -418,6 +428,8 @@ class Planner:
                         evidence["walk_candidates"] = r["walk_candidates"]
                     if r.get("indoor"):                             # 역·지하상가 안 통로를 지난 거리
                         evidence["indoor"] = r["indoor"]
+                    if r.get("building_entrance"):                  # 건물 안 장소를 출입구 → 도로 연결선 끝에서 이어 찾음
+                        evidence["building_entrance"] = r["building_entrance"]
                 routed_m = float(r["distance_m"])
                 used_m = routed_m
                 seconds = used_m / self.speed
@@ -832,33 +844,47 @@ class Planner:
             return True
         boards = getattr(mc, "bus_boards", None)
         if boards is None:
-            boards = []
-            for leg in getattr(mc, "legs", ()):
-                if leg_mode(leg) != "bus":
-                    continue
-                r = route_for_leg(bus, leg)
-                seg = segment_for_leg(bus, r, leg) if r is not None else None
-                boards.append((r, seg[0] if seg else None))
-            if not boards:
-                boards = [(bus.by_id.get(getattr(mc, "route_id", None)), getattr(mc, "board", None))]
+            # ☆`[2026-10-19 속도]` 버스→지하철 · 지하철→버스 후보는 승차 정보를 안 달고 와서, 부를 때마다 노선 정류장 전체를 훑어
+            #   승차 정류장을 다시 찾았다(구간 하나에 수만 번). 버스 구간 식별값이 같으면 같은 답이라 후보에 기억해 둔다.
+            bus_legs = tuple(leg for leg in getattr(mc, "legs", ()) if leg_mode(leg) == "bus")
+            key = tuple(tuple(leg.get(k) for k in _BOARD_KEY_FIELDS) for leg in bus_legs)
+            memo = getattr(mc, "_service_boards", None)
+            if memo is not None and memo[0] == key and memo[1] is bus:
+                boards = memo[2]
+            else:
+                boards = []
+                for leg in bus_legs:
+                    r = route_for_leg(bus, leg)
+                    seg = segment_for_leg(bus, r, leg) if r is not None else None
+                    boards.append((r, seg[0] if seg else None))
+                if not boards:
+                    boards = [(bus.by_id.get(getattr(mc, "route_id", None)), getattr(mc, "board", None))]
+                mc._service_boards = (key, bus, boards)
         offsets = getattr(mc, 'bus_board_offsets', None)
         total = getattr(mc, 'est_min', None)
+        ride = getattr(self, "_ride_est", None)
+        use_offsets = offsets is not None and len(offsets) == len(boards) and total is not None
         for index, (r, board) in enumerate(boards):
             if r is None or r.first_min is None or r.last_min is None:
                 continue                         # 운행창을 모르면 확정 탈락시키지 않는다
+            if ride is None or board is None:
+                continue
             rows = bus.stops.get(r.route_id, [])
-            ride = getattr(self, "_ride_est", None)
-            off = ride(r, rows[0], board) if ride is not None and rows and board is not None else None
+            if not rows:
+                continue
+            off = ride(r, rows[0], board)
             if off is None:
                 continue
             last_min = r.last_min + (MIN_DAY if r.last_min < r.first_min else 0)
             board_lo, board_hi = lo, hi
-            if offsets is not None and len(offsets) == len(boards) and total is not None:
+            if use_offsets:
                 board_lo = lo + offsets[index]
                 board_hi = hi - (total - offsets[index])
-            if not any(not (r.first_min + off + day - MIX_WINDOW_TOL_MIN > board_hi
-                            or last_min + off + day + MIX_WINDOW_TOL_MIN < board_lo)
-                       for day in (-MIN_DAY, 0, MIN_DAY)):
+            first_off, last_off = r.first_min + off, last_min + off
+            for day in (-MIN_DAY, 0, MIN_DAY):
+                if not (first_off + day - MIX_WINDOW_TOL_MIN > board_hi or last_off + day + MIX_WINDOW_TOL_MIN < board_lo):
+                    break
+            else:
                 return False
         return True
 

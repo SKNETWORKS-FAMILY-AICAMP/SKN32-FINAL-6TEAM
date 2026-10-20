@@ -38,7 +38,7 @@
     "reason": "실패·DB 연결 오류를 관측한 후 범위를 줄인 검사로 전환. 전체 통과율은 계산하지 않음"
   },
   "training_data": {
-    "path": "datasets/travel/train_oos2/train_oos2.jsonl",
+    "path": "datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl",
     "available": true,
     "rows": 2613,
     "sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",

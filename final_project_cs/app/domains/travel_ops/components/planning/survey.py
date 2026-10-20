@@ -29,6 +29,12 @@ SURVEY_VERSION = "2026-09-24.v1"
 
 Area = Literal["food", "activity", "mobility"]
 
+#: `[2026-10-19 사용자 지시]` 활동 우선순위 세부(`priority_details.activity`) — 관광 분류 일곱 코드와 화면 글(앞이 화면 순서).
+#:  시작 설문 · 로딩 중 질문(`intake/survey_answers.py`)이 같은 코드를 보낸다. ★`TripSurvey` 는 좁히지 않는다 — 전에 받은 여행에는
+#:  옛 세부(extreme · healing · diy · shopping)가 남아 있다. 받기만 하던 값이라 판정이 코드를 읽는 곳은 없다(대체 순서 모델에는 글로 넘긴다)
+ACTIVITY_DETAILS: dict[str, str] = {"EV": "축제/공연/행사", "EX": "체험관광", "HS": "역사관광", "LS": "레저스포츠",
+                                    "NA": "자연관광", "SH": "쇼핑", "VE": "문화관광"}
+
 
 class TripSurvey(BaseModel):
     """설문 한 벌. `extra="forbid"` — 모르는 문항은 조용히 흘리지 않고 거절한다."""
@@ -157,5 +163,5 @@ def likes_from_survey(constraints: Mapping[str, Any] | None) -> tuple[str, ...]:
     return tuple(code for code in SURVEY_LIKES.values() if code in codes)
 
 
-__all__ = ["SURVEY_LIKES", "SURVEY_VERSION", "TripSurvey", "apply_survey", "auto_on_disruption",
+__all__ = ["ACTIVITY_DETAILS", "SURVEY_LIKES", "SURVEY_VERSION", "TripSurvey", "apply_survey", "auto_on_disruption",
            "likes_from_survey", "on_disruption"]

@@ -110,6 +110,8 @@ def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
         return "none", None                # ★`[2026-10-13]` 등록한 여행의 「장소 없음」 일정을 다시 연 것(`reopen.py`)
     if evidence.get("method") == "nameless":
         return ("needs_name" if evidence.get("booked") is True else "needs_choice"), None
+    if evidence.get("method") == "move_phrase" and value is None:
+        return "none", None                # ★`[2026-10-19]` 이동을 적은 줄(「택시로 이동」) — 방문할 장소가 아니라 장소 없이 둔다(`pipeline._move_rows`)
     if not value or row["place"] is None:
         return "unresolved", None
     if evidence.get("method") == "kakao_nearest":
@@ -122,6 +124,8 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
     evidence = claim.get("evidence") or {}
     title = row["title"] or ""
     if state == "none":
+        if evidence.get("method") == "move_phrase":
+            return _line("place", "unknown", "이동을 적은 줄이라 장소를 찾지 않았어요 · 앞뒤 일정 사이의 이동으로 봐요")
         return _line("place", "unknown", "장소 없이 두었어요 · 운영시간과 이동은 확인하지 않아요")
     if state in NAMELESS_STATES:
         parts = evidence.get("parts") or {}
@@ -350,7 +354,10 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
             closed = _line("closed", "unknown", "휴무 정보가 없어요")
         if facts.conditions:
             closed = _line("closed", "warn" if closed["result"] != "bad" else "bad",
-                           closed["text"] + " · 공휴일 조건이 있어요(" + "; ".join(facts.conditions[:1]) + ")")
+                           "휴무·운영 조건을 확인해 주세요 (" + "; ".join(facts.conditions) + ")")
+    # ★방문 안내(대표 장소 표의 `tips`)는 결과를 바꾸지 않고 말만 붙인다 — 「후원은 따로 예약」이 창덕궁 전체를 「확인해 주세요」로 만들지 않게. `[2026-10-20]`
+    if facts.tips:
+        closed = _line("closed", closed["result"], closed["text"] + " · " + "; ".join(facts.tips))
     # 운영시간
     if today == "closed" or "closed_day" in codes:
         if act.get("closed") is True and act.get("closure_reason") == "live_status":
@@ -791,12 +798,13 @@ def picked_modes(claims: list[dict[str, Any]]) -> dict[str, str]:
 
     ★`[2026-10-14]` 수정 접수는 등록한 여행에 이미 정해 둔 수단을 `method: "trip"` 값 줄로 싣는다(`reopen.open_for_trip`) — 그것도 고른 수단으로 본다.
     ★`[2026-10-16]` 계획서에 적힌 수단(「택시로 이동」)을 읽기 에이전트가 `method: "llm_agent"` 값 줄로 싣는다(`pipeline._agent_rows`) — 그것도 고른 수단으로 본다.
+    ★`[2026-10-19]` 규칙으로 읽은 이동 말 줄(「11:30 택시로 이동」)도 앞 · 뒤 일정 사이 구간의 수단으로 `method: "rule"` 값 줄로 싣는다(`pipeline._move_segments`).
     안 그러면 다시 연 수정 화면이 저장된 수단(예: 지하철) 대신 추천(예: 도보)을 보였다(x600 실서버 확인). 칸마다 **마지막 값**이 이긴다 — 고객이 뒤에
     「추천으로」(빈 값)를 고르면 여행에서 가져온 수단도 빠진다."""
     out: dict[str, str] = {}
     for c in claims:
         field = str(c.get("field") or "")
-        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip", "llm_agent")):
+        if not (field.startswith("moves[") and field.endswith("].mode") and c.get("method") in ("customer", "trip", "llm_agent", "rule")):
             continue
         pair = field[len("moves["):-len("].mode")]
         if c.get("value") in MOVE_MODES:
@@ -910,18 +918,41 @@ def intake_state(conn, tenant_id: str, intake_id: Any) -> tuple[str, int] | None
 
 def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
            claims: list[dict[str, Any]], force: bool = False, previous_revision: int | None = None,
-           **options: Any) -> dict[str, Any]:
-    """그 판의 검사를 돌려준다 — 저장된 것이 있으면 그것, 없거나 `force` 면 새로 계산해 저장한다."""
+           quick: bool = False, **options: Any) -> dict[str, Any]:
+    """그 판의 검사를 돌려준다 — 저장된 것이 있으면 그것, 없거나 `force` 면 새로 계산해 저장한다.
+
+    ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `quick` = 이동 계산기를 부르지 않는 **미룬 검사**: 바뀐 구간은 직선 어림값,
+    안 바뀐 구간은 앞 판의 시간표 값(`sig`)을 그대로 쓴다. 위험(날씨 · 재난)은 저장해 둔 값만 읽는다. 저장본에 `checked: false` · `ready: false` 를 남긴다 — 등록(`confirm`)은 이 판을 받지 않고
+    재검증(`revalidate`, `force`)이 계산기로 다시 잰다(어림 구간은 `basis` 가 시간표가 아니라 재사용되지 않는다). 옛 저장본에는 `checked` 가 없다 — 검사된 것으로 읽는다."""
     if not force:
         cached = load(conn, tenant_id, intake_id, revision)
         if cached is not None:
-            return cached
+            from . import risks
+
+            mode = "cached" if cached.get("risk_schema_version") == risks.SCHEMA_VERSION else "fresh"
+            payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
+            if mode == "fresh":
+                store(conn, tenant_id, intake_id, revision, payload)
+            return payload
     previous = load(conn, tenant_id, intake_id, previous_revision) if previous_revision else None
+    if quick:
+        options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
                     previous=previous, **options)
+    payload = {**payload, "checked": not quick, **({"ready": False} if quick else {})}
+    from . import risks
+
+    # ★`[2026-10-20 「대안 적용 13.9초」]` 앞 판에서 방금 점검한 일정(장소 · 날짜 · 시각이 같음)은 그 결과를 쓴다 — 바꾼 일정만 바깥 조회를 다시 한다
+    # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
+    payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
     store(conn, tenant_id, intake_id, revision, payload)
     return payload
 
 
-__all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "place_state", "store"]
+def unchecked(payload: dict[str, Any] | None) -> bool:
+    """`[2026-10-20]` 저장만 하고 검사를 미룬 판(`ensure(quick=True)`)인가 — 옛 저장본(칸 없음)은 검사된 것이다."""
+    return isinstance(payload, dict) and payload.get("checked") is False
+
+
+__all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "place_state", "store", "unchecked"]
 

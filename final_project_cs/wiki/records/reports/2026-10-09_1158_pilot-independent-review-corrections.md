@@ -22,7 +22,7 @@ v1의 정답 ID 노출24/24·근거 상태 부재0/24와 ‘independent_families
 
 새 v3는 모든 ID를 무의미한 번호로 만들고, 참고 답변의 인용을 실제 출처 ID로 바꿨습니다. 정답 근거 상태는 충분15개·불필요9개입니다. 대체 소스·조회 실패 사례가 없으므로 완전한 계약 구현은 여전히 대기입니다. 모델의 실제 요청 payload는 실행기를 만들 때 입력 허용 목록으로 다시 검사해야 합니다.
 
-- [현재 개발 예시·원본·검수 대기](../../../../datasets/travel/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md)
+- [현재 개발 예시·원본·검수 대기](../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md)
 - [수정 반영한 설계 계획](../../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md)
 - [현재 단계 상태](../../../../program/research/daily_rag_slm/selection_answer_review_2026-10-09_v2.json)
 - [초기 작업 기록](2026-10-09_1150_selection-answer-plan-and-training-review.md)

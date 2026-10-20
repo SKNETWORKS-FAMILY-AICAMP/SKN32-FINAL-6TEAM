@@ -12,7 +12,7 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     headers = _key(client)
     listing = client.get("/v1/web/test-scenarios")
     assert listing.status_code == 200
-    assert len(listing.json()["scenarios"]) == plans.TOTAL == 50
+    assert len(listing.json()["scenarios"]) == plans.TOTAL == 51
     view = _send(client, headers, " TEST1 ")
     assert view["status"] == "review"
     assert sum(len(s["items"]) for s in view["sources"]) == 6
@@ -32,7 +32,8 @@ def test_code_expands_before_reading_and_remains_scoped_through_recheck(rv):
     assert ordinary["test_scenario"] is None
 
 
-@pytest.mark.parametrize("text,code", (("test51", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
+# ★`[2026-10-20]` 「없는 코드」 예는 시험 계획 수(`TOTAL`)보다 한참 큰 번호로 — test51 이 실제로 생겨 202 로 받아졌다
+@pytest.mark.parametrize("text,code", (("test99", "unknown_test_scenario"), ("test1rt", "live_test_not_ready")))
 def test_rejected_code_does_not_create_empty_intake(rv, text, code):
     client, _, _ = _client()
     headers = _key(client)

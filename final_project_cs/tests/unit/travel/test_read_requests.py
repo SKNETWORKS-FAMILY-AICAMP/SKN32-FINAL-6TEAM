@@ -219,3 +219,10 @@ def test_a_time_question_about_an_item_is_not_taken_for_the_clock():
     a = item("솔빛전시관", 1)
     result, basis, _ = render([a], [{**read("time", "i1"), "text": "솔빛전시관 몇 시야?"}], "솔빛전시관 몇 시야?")
     assert basis["questions"][0]["kind"] == "time" and a.title in result["text"]
+
+
+def test_exact_origin_name_is_not_ambiguous_with_nearby_branch_names():
+    station=item("남부터미널",1)
+    shop=item("다이소 남부터미널점",2)
+    singing=item("남부터미널 노래방",3)
+    assert read_requests._origin_matches([station,shop,singing],"남부터미널")==[station]

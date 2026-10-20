@@ -15,6 +15,7 @@ import hashlib
 import json
 import logging
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor, wait
 from typing import Any
 
@@ -141,8 +142,25 @@ def _write(chat: Any, tenant_id: str, facts: dict[str, Any], sha: str) -> str | 
 
 
 # ── 후보에 적용 ─────────────────────────────────────────────────
-def polish(conn, tenant_id: str, candidates: list[dict[str, Any]], original: str | None, chat: Any) -> dict[str, int]:
-    """화면에 먼저 보이는 후보 `visible` 개의 이유를 모델 문장으로 바꾼다(제자리). 후보마다 `reason_by` 를 단다. 센 값을 돌려준다."""
+#: 뒤에서 쓰는 중인 사실 열쇠 — 같은 후보를 연달아 눌러도 모델 호출을 겹쳐 쌓지 않는다(기다리지 않는 길은 누를 때마다 맡기므로)
+_inflight: set[str] = set()
+_inflight_lock = threading.Lock()
+
+
+def _write_once(chat: Any, tenant_id: str, facts: dict[str, Any], sha: str) -> str | None:
+    try:
+        return _write(chat, tenant_id, facts, sha)
+    finally:
+        with _inflight_lock:
+            _inflight.discard(sha)
+
+
+def polish(conn, tenant_id: str, candidates: list[dict[str, Any]], original: str | None, chat: Any,
+           *, wait_seconds: float | None = None) -> dict[str, int]:
+    """화면에 먼저 보이는 후보 `visible` 개의 이유를 모델 문장으로 바꾼다(제자리). 후보마다 `reason_by` 를 단다. 센 값을 돌려준다.
+
+    `wait_seconds` — 모델 문장을 기다리는 시간(초). None 이면 설정(`budget_seconds`). ★`[2026-10-19 사용자 결정]` 수정 화면 「바꾸기」는 0 —
+    저장된 모델 문장만 쓰고 나머지는 틀 문장으로 바로 나가며, 모델 호출은 뒤에서 끝나 저장된다(다음 요청부터 모델 문장). 쓰는 중인 열쇠는 다시 맡기지 않는다."""
     out = {"model": 0, "cached": 0, "template": 0, "pending": 0}
     for c in candidates:
         c["reason_by"] = "template"
@@ -160,9 +178,17 @@ def polish(conn, tenant_id: str, candidates: list[dict[str, Any]], original: str
             c["reason"], c["reason_by"] = stored, "model"
             out["cached"] += 1
             continue
-        jobs.append((c, _pool.submit(_write, chat, tenant_id, facts, sha)))
+        with _inflight_lock:
+            busy = sha in _inflight
+            if not busy:
+                _inflight.add(sha)
+        if busy:
+            out["pending"] += 1                           # 앞 요청이 맡긴 문장이 아직 쓰이는 중 — 틀 문장으로 나간다
+            continue
+        jobs.append((c, _pool.submit(_write_once, chat, tenant_id, facts, sha)))
     if jobs:
-        done, late = wait([f for _c, f in jobs], timeout=float(_cfg("budget_seconds")))
+        limit = float(_cfg("budget_seconds")) if wait_seconds is None else max(0.0, float(wait_seconds))
+        done, late = wait([f for _c, f in jobs], timeout=limit)
         for c, future in jobs:
             if future in late:
                 out["pending"] += 1                       # 시간 안에 못 썼다 — 틀 문장으로 나가고, 쓰는 일은 뒤에서 끝나 저장된다

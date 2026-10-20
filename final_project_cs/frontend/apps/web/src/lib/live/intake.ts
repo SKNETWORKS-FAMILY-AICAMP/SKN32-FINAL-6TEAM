@@ -57,8 +57,24 @@ export interface IntakeUnderstanding {
  */
 export interface IntakePrefill {
   filled: { item: string | null; title: string | null; owner: string; owner_label: string; reason: string; gap: string; new: boolean }[];
-  questions: { kind: string; question: string; quote: string | null }[];
+  questions: IntakePrefillQuestion[];
   kept: { kind: string; item: string | null; owner: string; reason: string }[];
+}
+
+/**
+ * One question of `prefill.questions`. `[2026-10-19 사용자 결정 — 못 찾은 장소]` `kind: "place_not_found"` is a stop whose place was not found: `item` is the check's stop id (its card carries
+ * the question), `source_id` · `index` the keys of its candidates, `blocked` = the place lookup was blocked and searched once more. The other kinds carry only the words.
+ */
+export interface IntakePrefillQuestion {
+  kind: string;
+  question: string;
+  quote: string | null;
+  item?: string | null;
+  source_id?: string | null;
+  index?: number | null;
+  mode?: string;
+  actions?: string[];
+  blocked?: boolean;
 }
 
 /**
@@ -147,9 +163,14 @@ export function getIntake(intakeId: string, language: Language): Promise<Reviewe
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}`, language);
 }
 
-export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language): Promise<ReviewedIntakeView> {
+/**
+ * `[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `check: false` saves the new revision without the heavy check (no move
+ * measuring, no re-placing of the stops around a new place): the answer's `review.checked` is false until `revalidateIntake` checks it.
+ */
+export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language, options: { check?: boolean } = {}): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/edits`, language, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, edits }),
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(options.check === false ? { revision, edits, check: false } : { revision, edits }),
   });
 }
 

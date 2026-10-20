@@ -1,0 +1,13 @@
+contract/test_web_client_contract.py :: 2 failed, 3 passed in 3.07s
+e2e/test_decision_destination_condition_web.py :: 4 passed in 9.55s
+e2e/test_intake_autofix_dry_run.py :: 1 failed, 4 passed in 13.15s
+e2e/test_intake_catalog_names.py :: 7 passed in 21.72s
+e2e/test_intake_direct_schedule.py :: 2 failed, 8 passed in 23.54s
+e2e/test_intake_experience_tiers.py :: 16 passed in 10.76s
+e2e/test_intake_stay_lines.py :: 9 passed in 27.46s
+e2e/test_watch_relaxed.py :: 7 failed, 4 passed in 14.37s
+scenario/test_apply_or_ask_recheck.py :: 1 failed, 4 passed in 4.00s
+scenario/test_case_watch_dining.py :: 3 failed in 3.61s
+scenario/test_trip_reminders.py :: 2 failed, 11 passed in 7.05s
+integration/api/test_openapi_surface.py :: 1 failed, 6 passed in 3.96s
+DONE

@@ -112,6 +112,8 @@ def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules,
     `revalidate_departures` — 현재 경로를 재검증할 때만 미발행 출발 후보를 다음 방문 전까지 유지한다.
     """
     due: list[Reminder] = []
+    from app.domains.travel_ops.components.conversation.journey_progress import terminal
+    items = [i for i in items if not terminal(i)]
     ordered = sorted(items, key=lambda i: i.seq)
     for day, day_items in _by_day(items).items():
         first = day_items[0]
@@ -449,6 +451,14 @@ class TripReminders:
                  waiting: set | None = None) -> dict[str, Any] | None:
         waiting = waiting or set()
         base = {"type": "guidance", "kind": reminder.kind, "version": trip["version"]}
+        referenced = [i for i in (reminder.move, reminder.current, reminder.following) if i is not None]
+        if reminder.kind == "departure" and reminder.move is not None:
+            target = next((i for i in items if i.seq > reminder.move.seq and i.kind != "mobility"), None)
+            if target is not None:
+                referenced.append(target)
+        if referenced:
+            base["schedule_basis"] = [{"item_id": str(i.item_id), "starts_at": i.starts_at.isoformat(),
+                "ends_at": i.ends_at.isoformat() if i.ends_at else None} for i in referenced]
         if self.link is not None:
             base["plan_url"] = self.link(trip_id)
         if reminder.kind == "next_item":

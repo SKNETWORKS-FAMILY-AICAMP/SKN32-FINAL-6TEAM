@@ -10,6 +10,7 @@
 .bell:hover { border-color: var(--color-primary); }
 /* `[2026-10-07 목업 C안]` The unread count on the bell (this browser's reads). */
 .badge { position: absolute; top: -4px; right: -4px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 2px solid var(--color-surface); border-radius: 10px; background: var(--color-error); color: var(--color-on-primary); font-size: 11px; font-weight: 800; line-height: 1; }
+.riskBadge { position: absolute; right: 48px; display: block; width: max-content; padding: 3px 7px; border: 1px solid var(--color-error-border); border-radius: 7px; background: var(--color-surface); color: var(--color-error); font-size: 12px; font-weight: 650; line-height: 1.5; }
 
 /* ── Sheet head: the chat button stays at the right while the chips scroll (`[2026-10-08 사용자 지시 · 2026-10-12 반영]` 「일정 | 채팅」 → 채팅 버튼 하나) ── */
 .headTools { display: flex; flex: none; align-items: center; gap: 6px; }
@@ -80,6 +81,9 @@
 .stopCard .stopHead .toggleEnd { min-height: 38px; }
 .stopPast { flex: none; margin-top: 8px; }
 .stopBody { padding: 10px 13px 13px; border-top: 1px solid var(--color-divider); }
+.stopRisk { display: grid; gap: 6px; min-width: 0; padding: 8px 12px 10px; border-top: 1px solid var(--color-error-border); color: var(--color-error); font-size: 12.5px; line-height: 1.6; }
+.stopRisk p { display: -webkit-box; overflow: hidden; margin: 0; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+.stopRisk .action { justify-self: start; max-width: 100%; white-space: normal; }
 .details { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 14px; margin: 0; font-size: 12.5px; line-height: 1.7; }
 .details dt { color: var(--color-muted); white-space: nowrap; }
 .details dd { margin: 0; text-align: right; word-break: keep-all; overflow-wrap: anywhere; }

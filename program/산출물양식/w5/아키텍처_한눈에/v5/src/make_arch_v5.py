@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 한눈에 — 멀티 에이전트 워크플로 · 시스템 아키텍처 (2026-10-02, v1)
+"""guguroute 한눈에 — 멀티 에이전트 워크플로 · 시스템 아키텍처 (2026-10-02, v1)
 
     python make_arch_v1.py   → ../triPilot_아키텍처_한눈에_v5.html
 
@@ -279,7 +279,7 @@ def architecture():
     S.clear()
     W, H = 1500, 1090
     R(330, 14, 840, 48, "titlebar", 10)
-    T(750, 47, "triPilot — 시스템 구성도", "title-w")
+    T(750, 47, "guguroute — 시스템 구성도", "title-w")
     T(750, 90, "FastAPI 서버 + 오케스트레이터 + 워커 에이전트 2 + 공용 툴 + 상시 감시 — 여행 일정을 끝날 때까지 지킨다", "sub")
 
     # 1 사용자
@@ -310,7 +310,7 @@ def architecture():
 
     # 3 처리 서버
     R(660, 110, 360, 270, "b-purple", 12)
-    T(840, 136, "3. triPilot 처리 서버", "bh-purple")
+    T(840, 136, "3. guguroute 처리 서버", "bh-purple")
     T(840, 155, "(같은 FastAPI 프로세스 안 · 파이썬 코드)", "fl2")
     cards = [(676, 168, "계획서 파싱", "규칙 우선", "AI는 줄 위치만"), (848, 168, "일정 생성", "후보는 우리 DB에서", "AI는 순서만"),
              (676, 272, "채팅 처리", "분류 → 대안 선택", "에이전트 안 거침"), (848, 272, "오케스트레이터", "상태 머신 12개", "담당 라우팅")]
@@ -528,8 +528,8 @@ def table(head, rows):
 def main():
     f1, f2 = workflow(), architecture()
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot 한눈에</title><style>{CSS}</style></head><body><main>
-<h1>triPilot 한눈에 — 멀티 에이전트 워크플로 · 시스템 아키텍처</h1>
+<title>guguroute 한눈에</title><style>{CSS}</style></head><body><main>
+<h1>guguroute 한눈에 — 멀티 에이전트 워크플로 · 시스템 아키텍처</h1>
 <p class="note">2026-10-02 · v5 · 그리는 내용: 부트캠프 양식 「AI 시스템 아키텍처(멀티 에이전트)」 · 「시스템 구성도」 작성 가이드 · 그리는 법: 교재 0715 · 0716 LangGraph 멀티에이전트 · 사실: final_project_cs 코드</p>
 <div class="lead">일정이 깨지면 <b>오케스트레이터</b>(흐름을 정하는 서버 코드 — 우리 문서에서 「코어」라고 부르던 것)가 담당 에이전트 하나에게 맡기고, 에이전트는 대체 후보를 통과할 때까지 다시 점검해 <b>제안</b>만 돌려줍니다. 코어가 검사해 새 일정 판과 알림을 내고, 이것을 <b>여행이 끝날 때까지</b> 되풀이합니다. 시스템은 휴대폰 웹 · 개인 AI 비서 앱으로 들어와 백엔드 한 곳에서 처리되고, 공유 State 와 알림 큐는 PostgreSQL 하나에 둡니다.</div>
 

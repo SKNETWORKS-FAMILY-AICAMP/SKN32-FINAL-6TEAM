@@ -9,6 +9,6 @@ try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved)form.filt
 form.filter(x=>confirmed[x.name]).forEach(x=>{x.checked=confirmed[x.name]===x.value;x.disabled=true;});
 form.forEach(x=>x.addEventListener('change',()=>{try{localStorage.setItem(key,JSON.stringify(selected()));}catch(e){}notify();}));
 document.getElementById('reset').addEventListener('click',()=>{form.filter(x=>!confirmed[x.name]).forEach(x=>x.checked=x.value==='A');try{localStorage.setItem(key,JSON.stringify(selected()));}catch(e){}notify();});
-document.getElementById('export').addEventListener('click',()=>{const data={document:'triPilot wiki review v2 updated',confirmed,selections:selected(),deferred:{W11:'v11 보존; 전체 정리 후 v12 신규 작성'},scope:'instruction and document updates; implementation status is separate'};document.getElementById('export-panel').hidden=false;const text=document.getElementById('export-text');text.value=JSON.stringify(data,null,2);text.focus();text.select();});
+document.getElementById('export').addEventListener('click',()=>{const data={document:'guguroute wiki review v2 updated',confirmed,selections:selected(),deferred:{W11:'v11 보존; 전체 정리 후 v12 신규 작성'},scope:'instruction and document updates; implementation status is separate'};document.getElementById('export-panel').hidden=false;const text=document.getElementById('export-text');text.value=JSON.stringify(data,null,2);text.focus();text.select();});
 document.getElementById('print').addEventListener('click',()=>{document.querySelectorAll('details').forEach(d=>d.open=true);window.print();});
 notify();

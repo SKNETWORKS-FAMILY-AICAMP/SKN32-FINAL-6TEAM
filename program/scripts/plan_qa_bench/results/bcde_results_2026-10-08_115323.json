@@ -1030,7 +1030,7 @@
     "program/scripts/plan_qa_bench/results/codexcli_gpt-6-astra_mix11_multi.json": "ba5eb4ac1ebfea728f6b231ae057ba463e08c3ecfb23e0456f3c4f0e6e4d4a4c",
     "program/scripts/plan_qa_bench/results/codexcli_gpt-6-astra_mix12_multi.json": "20bf79c9f6d04951e7e4e9a542fba46a46ddecdee6ca99b75db7cdf5c369210e",
     "program/scripts/plan_qa_bench/results/empty_probe/all_prompts.json": "7c6836c3ad76eb94f5d3919322a39177f618e813859cd83e7c1ab64bb655c4d0",
-    "datasets/travel/mx_testset/mx_main_prompts.json": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+    "datasets/core/pointing/legacy_runs/mx_testset/mx_main_prompts.json": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
     "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_e4bt.jsonl": "19b38b666bf046fb8ce578050068a4eaef3f1604107f9f45b94fdafad839d096",
     "program/scripts/plan_qa_bench/results/d_test/d_test_lp_mx_q4km_e4bt.jsonl": "42926a7a1f6cc80a925a461c951c1c82b0d21d514b574ecf3c643bcb4d716936",
     "program/scripts/plan_qa_bench/results/d_test/d_test_lp_q4km_e4bs2.jsonl": "c066b05ef5a36d41200a2bbe51d551089b843d24a61e073b0a0aa56c73fee7b4",

@@ -138,7 +138,8 @@ def test_a_plan_with_a_named_hotel_goes_all_the_way_to_a_registered_trip(hotels)
     client, tour, kakao = _client(kakao=_StayKakao())
     publish_fixed_mobility(client.app, source="stay_lines")
     headers = _key(client)
-    view = _send(client, headers, "2026-12-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2026-12-07\n09:30 N서울타워\n11:00 체크아웃")
+    # ★`[2026-10-20]` N서울타워는 대표 장소 운영시간 표(`config/seoul_landmarks.yaml`, 7c255f38)대로 10:30 에 연다 — 09:30 이면 「일러요」 경고로 준비가 안 된다
+    view = _send(client, headers, "2026-12-06\n15:00 더 플라자 호텔 서울 체크인\n17:00 경복궁\n2026-12-07\n10:30 N서울타워\n11:00 체크아웃")
     assert view["review"]["ready"] is True, [(i["title"], i["place_state"]) for i in view["review"]["items"]]
     done = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/confirm", headers=headers, json={"revision": view["revision"]})
     assert done.status_code == 200, done.text

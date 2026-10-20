@@ -189,7 +189,7 @@ def test_the_test_send_posts_one_line_to_the_saved_address_and_records_the_resul
     [request] = sent["requests"]
     assert str(request.url) == GOOD and request.method == "POST"                        # 저장한 주소 그대로 · 쿼리 없음
     payload = json.loads(request.content)
-    assert "triPilot" in payload["content"] and payload["allowed_mentions"] == {"parse": []}   # 누구도 호출(@)하지 않는다
+    assert "구구루트" in payload["content"] and payload["allowed_mentions"] == {"parse": []}   # 누구도 호출(@)하지 않는다
 
 
 @pytest.mark.parametrize("code, result, stored", [(404, "invalid", "invalid"), (401, "invalid", "invalid"),

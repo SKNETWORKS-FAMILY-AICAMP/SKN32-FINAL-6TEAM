@@ -68,7 +68,7 @@ class Consent:
 
 
 #: 문장이 **계산 결과에 따라** 달라서 `NoChange.detail["text"]` 로 내려오는 답
-TEXT_ANSWERS = frozenset({"knock_on"})
+TEXT_ANSWERS = frozenset({"knock_on", "alternate_invalid"})   # ★`[2026-10-20]` 고른 안을 다시 점검해 안 바꾼 이유(`itinerary_changes.swap_refusal`)
 
 
 class ItineraryWork:
@@ -201,7 +201,7 @@ class ItineraryWork:
                          items=items, places_by_id={p["place_id"]: p for p in places},
                          item_id=UUID(str(target)), choice=ctx["request"].get("choice"),
                          message=task.input_text, request_id=task.context.current_state.get("request_id"),
-                         check=check)
+                         check=check, customer_pick=True)
         return self.settle(task, ctx, plan)
 
     def _rollback(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:

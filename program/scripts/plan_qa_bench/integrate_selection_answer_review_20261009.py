@@ -17,7 +17,7 @@ def main():
         stream.write(updated)
     state_path = ROOT / "program/research/daily_rag_slm/selection_answer_review_2026-10-09_v1.json"
     x = json.loads(state_path.read_text(encoding="utf-8"))
-    x.update(plan="program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md", dataset="datasets/travel/selection_answer_bench/2026-10-09_pilot_v3", pilot_nominal_family_ids=3, pilot_unique_itinerary_contents=1, pilot_independence_verified=False, evidence_status_counts={"sufficient":15, "not_required":9}, independent_agent_review=True, report="final_project_cs/wiki/records/reports/"+RECORD)
+    x.update(plan="program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md", dataset="datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3", pilot_nominal_family_ids=3, pilot_unique_itinerary_contents=1, pilot_independence_verified=False, evidence_status_counts={"sufficient":15, "not_required":9}, independent_agent_review=True, report="final_project_cs/wiki/records/reports/"+RECORD)
     x.pop("pilot_independent_families", None)
     x["resume"].append("Implement backup/unavailable evidence cases; current pilot does not implement full contract")
     x["limitations_corrected"] = ["Initial v1 ID contained gold scope; no model calls occurred", "Three nominal IDs were one itinerary; no independence claim", "Gold evidence_status and full citation IDs now present"]

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""접근 걷기 길 거리 상한 — 2026-10-06 구글·시제품 대조에서 나온 결함.
+"""접근 걷기 길 거리 상한 — 2026-10-06 도입 · ☆2026-10-18 끔(사용자 결정).
 
-도로 그래프(OSM)에 지하 통로·역 복합시설 연결이 없어 길 거리가 직선의 수 배로 나오는 자리가 있다(서울역 1호선 출구 73 m → 1,502 m ·
-롯데월드→잠실역 195 m → 699 m). 구글은 같은 구간의 걷기 거리가 직선의 0.99~1.06 배였다. 그래서 길 거리를 직선의 `WALK_ROUTED_CAP_PROPOSED` 배로 상한한다.
-상한은 **신호 없는 보정이 아니다** — `Planner.walk_capped` 에 남고 로그가 난다.
+도로 그래프(OSM)에 지하 통로·역 복합시설 연결이 없어 길 거리가 직선의 수 배로 나오던 자리를 막으려고 길 거리를 직선의 2배로 상한했다
+(서울역 1호선 출구 73 m → 1,502 m · 롯데월드→잠실역 195 m → 699 m). 2026-10-18 점검에서 그 자리들은 다른 출구 고르기 · 서울시 도보 그래프 ·
+역 연결 건물 목록으로 풀렸고, 상한이 실제로 하는 일은 남산 산길처럼 진짜 먼 길을 짧게 보이게 하는 것뿐이라 껐다
+(records/reports/2026-10-18_walk_cap_off_and_taxi_receipts/REPORT.md). 아래 시험은 「꺼져 있다 · 길 거리를 그대로 쓴다 · 기록을 안 남긴다」를 본다.
 """
 from __future__ import annotations
 
@@ -39,40 +40,31 @@ def _eff(p, straight):
     return p._eff(37.57, 126.98, 37.5736, 126.98, straight)
 
 
-def test_the_cap_constant_is_above_the_detour_factor_so_real_detours_survive():
-    assert P.WALK_ROUTED_CAP_PROPOSED > DETOUR, "우회계수보다 커야 진짜 우회(철도·하천 건너편)가 거의 그대로 남는다"
+def test_the_cap_is_off():
+    assert P.WALK_ROUTED_CAP_PROPOSED is None, "2026-10-18 사용자 결정으로 껐다 — 켜려면 근거와 함께 다시 정한다"
 
 
-def test_an_inflated_routed_distance_is_capped_and_recorded(caplog):
-    p = _planner(699.0)                                   # 롯데월드→잠실역: 직선(출구) 195 m 인데 길 699 m (3.6배)
+def test_an_inflated_routed_distance_is_used_as_is_and_not_recorded(caplog):
+    p = _planner(699.0)                                   # 직선 195 m 인데 길 699 m (3.6배) — 이제 깎지 않는다
     with caplog.at_level(logging.INFO):
         got = _eff(p, 195)
-    cap = 195 * P.WALK_ROUTED_CAP_PROPOSED
-    assert math.isclose(got, cap / DETOUR), "상한 거리를 우회계수로 나눈 직선 환산 값"
-    assert p._walk(got) == math.ceil(cap / SPEED / 60) == 7, "12분 → 7분"
-    assert p.walk_capped == [{"straight_m": 195, "routed_m": 699, "used_m": 390}], "조용한 보정이 아니다 — 기록이 남는다"
-    assert any("접근 걷기 상한" in r.getMessage() for r in caplog.records)
+    assert math.isclose(got, 699.0 / DETOUR), "길 거리를 우회계수로 나눈 직선 환산 값 그대로"
+    assert getattr(p, "walk_capped", []) == []
+    assert not any("접근 걷기 상한" in r.getMessage() for r in caplog.records)
 
 
-def test_an_extreme_artifact_is_pulled_back_to_a_walkable_value():
-    p = _planner(1502.0)                                  # 서울역 1호선 출구: 직선 73 m 인데 길 1,502 m (20배 · 25분)
-    assert p._walk(_eff(p, 73)) == math.ceil(73 * P.WALK_ROUTED_CAP_PROPOSED / SPEED / 60) == 3
+def test_a_real_long_walk_keeps_its_length():
+    p = _planner(1624.0)                                  # 남산(N서울타워) → 정류장: 직선 473 m · 산길 1,624 m
+    assert p._walk(_eff(p, 473)) == math.ceil(1624.0 / SPEED / 60) == 27
 
 
-def test_a_normal_detour_is_left_alone_and_nothing_is_recorded():
-    p = _planner(300.0)                                   # 직선 195 에 길 300 (1.5배) — 상한(2배) 안
+def test_a_normal_detour_is_left_alone():
+    p = _planner(300.0)
     assert math.isclose(_eff(p, 195), 300.0 / DETOUR)
     assert getattr(p, "walk_capped", []) == []
 
 
-def test_exactly_at_the_cap_is_not_capped():
-    straight = 200
-    p = _planner(straight * P.WALK_ROUTED_CAP_PROPOSED)
-    assert math.isclose(_eff(p, straight), straight * P.WALK_ROUTED_CAP_PROPOSED / DETOUR)
-    assert getattr(p, "walk_capped", []) == []
-
-
-def test_the_optimistic_floor_still_applies_before_the_cap():
+def test_the_optimistic_floor_still_applies():
     p = _planner(100.0, optimistic=True)                  # 길 밖 접근이 길어 짧게 나온 값 — 직선×우회계수 와 큰 쪽(종전 규칙)
     assert math.isclose(_eff(p, 195), 195 * DETOUR / DETOUR) and getattr(p, "walk_capped", []) == []
 

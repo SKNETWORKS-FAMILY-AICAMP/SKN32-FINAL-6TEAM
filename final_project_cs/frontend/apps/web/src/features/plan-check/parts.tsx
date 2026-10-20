@@ -47,8 +47,8 @@ export function PrefillNote({ notes }: { notes: PrefillNotes }) {
   const t = useT();
   return <section className={styles.prefill} aria-label={t("먼저 채운 것", "What we filled in first")} data-prefill-note>
     {notes.filledCount > 0 && <p className={styles.prefillHead}><span className={styles.mark} data-result="filled" aria-hidden="true">{GLYPH.filled}</span>
-      {t(`우리가 ${notes.filledCount}곳을 먼저 채웠어요 — 일정마다 이유가 있어요. 등록하기 전에 바꿀 수 있어요.`,
-        `We filled in ${notes.filledCount} for you first — each says why. You can change them before registering.`)}</p>}
+      {t(`${notes.filledCount}곳은 비어 있어서 먼저 채웠어요. 일정마다 이유가 적혀 있고, 등록하기 전에 바꿀 수 있어요.`,
+        `${notes.filledCount} were empty, so we filled them in. Each says why; you can change them before registering.`)}</p>}
     {notes.understood.length > 0 && <p className={styles.prefillLine}><b>{t("이렇게 이해했어요", "What we understood")}</b> {notes.understood.map((quote) => `「${quote}」`).join(" · ")}</p>}
     {notes.handoff.length > 0 && <ul className={styles.prefillHandoff} aria-label={t("담당에 넘겨요", "Handed to")} data-prefill-handoff>
       {notes.handoff.map((entry) => <li key={`${entry.label}-${entry.owner}`} data-mine={entry.mine ? "true" : "false"}>
@@ -88,6 +88,7 @@ export function kindLabel(kind: CheckKind, t: Translate): string {
   return {
     place: t("장소", "Place"), time: t("시간", "Time"), hours: t("운영시간", "Hours"), closed: t("휴무일", "Closed"), booking: t("예약", "Booking"),
     route: t("경로", "Route"), mode: t("수단", "Mode"), arrival: t("도착", "Arrival"),
+    risk: t("날씨·도로", "Weather · roads"),
   }[kind];
 }
 

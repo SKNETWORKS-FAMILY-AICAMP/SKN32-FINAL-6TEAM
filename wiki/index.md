@@ -1,12 +1,12 @@
 ---
 type: guide
-title: triPilot wiki
+title: guguroute wiki
 description: 현재 제품 사양은 확정 결정·현재 계약, 구현·배포 상태는 코드·환경별 실행 기록으로 확인합니다
 status: draft
 domain: travel
 ---
 
-# triPilot wiki
+# guguroute wiki
 
 현재 제품 사양은 **확정 결정·현재 계약**, 구현·배포 상태는 **코드·환경별 실행 기록**으로 확인합니다. 과거 계획·보고서를 현재 사실로 사용하지 않습니다.
 

@@ -38,7 +38,7 @@ domain: travel
 - [모델 평가 기준](slm-model-evaluation.md): 모델·우리 학습 여부·비교 조건과 채택 기준의 소유 문서입니다.
 - [선택·근거 답변 평가](selection-grounded-answer-evaluation.md): 검색·대상 선택·응답 근거를 세분합니다.
 - [현재 여행 대화 계약](../external/trip-chat-context.md): 앱이 실제 지원하는 대화와 문맥 경계입니다.
-- [E2 자료 안내](../../../datasets/travel/e2_itinerary_crud_20261012_v2/REPORT.md): 입력·정답·검수표·보존본의 위치입니다.
+- [E2 자료 안내](../../../datasets/core/itinerary_crud/e2_itinerary_crud_20261012_v2/REPORT.md): 입력·정답·검수표·보존본의 위치입니다.
 - [최초 제작·검증 보고](../records/reports/2026-10-12_e2-crud-pilot-and-real-dialogue.md): 실측·검토 의견과 미완료 항목입니다.
 
 ## 결정

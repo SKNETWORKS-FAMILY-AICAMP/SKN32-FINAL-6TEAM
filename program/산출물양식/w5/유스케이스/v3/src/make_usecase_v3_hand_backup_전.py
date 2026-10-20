@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 v3 — 「유스케이스 2026-10-02 v6」 브리핑 「한눈에」 그림처럼 좌표를 손으로 잡아 그린다.
+"""guguroute 유스케이스 v3 — 「유스케이스 2026-10-02 v6」 브리핑 「한눈에」 그림처럼 좌표를 손으로 잡아 그린다.
 
     python make_usecase_v3_hand.py   → ../triPilot_유스케이스_한장_v3.html · .svg
 
@@ -286,9 +286,9 @@ def main():
     H = bottom + 70
     W = RIGHT_X + RIGHT_W + 30
     head = (f'<text class="svg-label" x="{LEFT_X}" y="40">사람 · 앱</text>'
-            f'<text class="svg-label" x="{FRAME_X1 + 10}" y="40">유스케이스 — triPilot</text>'
+            f'<text class="svg-label" x="{FRAME_X1 + 10}" y="40">유스케이스 — guguroute</text>'
             f'<text class="svg-label" x="{RIGHT_X}" y="40">시스템 행위자</text>'
-            f'<text class="title" x="{LEFT_X}" y="80">triPilot 유스케이스 — 전체 한 장</text>'
+            f'<text class="title" x="{LEFT_X}" y="80">guguroute 유스케이스 — 전체 한 장</text>'
             f'<text class="svg-note" x="{LEFT_X}" y="104">v3 · 2026-10-02 · 실제 API · 코드 기준 · 실선 = 연관 · 회색 점선 → = 반드시 쓰는 공통 기능(«include») · '
             f'금색 점선 → = 조건이 맞을 때만(«extend») · 빈 삼각형 = 일반화 · 금색 상자 = 핵심 처리 · 점선 상자 = 다른 구역 참조</text>')
     frame = f'<rect class="sys-frame" x="{FRAME_X1}" y="116" width="{FRAME_X2 - FRAME_X1}" height="{bottom - 116 + 12}" rx="10"/>'
@@ -327,10 +327,10 @@ body{{margin:0;background:var(--paper);color:var(--ink)}}
 .diagram .svg-note{{fill:var(--muted);font-size:12px}}
 .diagram .svg-letter{{fill:var(--accent);font-family:{MONO};font-size:12px}}
 """
-    svg = (f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="triPilot 유스케이스 전체 한 장">'
+    svg = (f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="guguroute 유스케이스 전체 한 장">'
            f'{defs}{head}{frame}{"".join(S)}{foot}</svg>')
     page = (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<title>triPilot 유스케이스 한 장 v3</title><style>{css}</style></head><body><div class="wrap"><div class="diagram">{svg}</div></div></body></html>')
+            f'<title>guguroute 유스케이스 한 장 v3</title><style>{css}</style></head><body><div class="wrap"><div class="diagram">{svg}</div></div></body></html>')
     (OUT / "triPilot_유스케이스_한장_v3.html").write_text(page, encoding="utf-8")
     print("ok", W, "x", H)
 

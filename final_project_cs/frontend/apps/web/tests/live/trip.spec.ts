@@ -168,12 +168,12 @@ test("실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘�
   await openTrip(page);
   await openNotices(page);
   const ask = page.getByRole("region", { name: /선택이 필요해요/ });
-  await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toBeVisible();
-  await ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+  await expect(ask.getByRole("button", { name: "다른 곳 찾아보기" })).toBeVisible();
+  await ask.getByRole("button", { name: "다른 곳 찾아보기" }).click();
   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
   expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: "change" });
   await expect(ask.getByRole("button", { name: /실내 박물관/ })).toBeVisible();              // 같은 제안을 다시 읽었다
-  await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toHaveCount(0);  // 선택지가 생기면 물음은 사라진다
+  await expect(ask.getByRole("button", { name: "다른 곳 찾아보기" })).toHaveCount(0);  // 선택지가 생기면 물음은 사라진다
   await expect(page.getByText("다른 곳을 찾았어요 — 위에서 골라 주세요.")).toBeVisible();
 });
 
@@ -198,8 +198,9 @@ test("「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔
   const server = mockServer(request);
   await server.scenario({ proposals: "consent", choose: "no_alternate" });
   await openTrip(page);
-  await openNotices(page);
-  await page.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+  const center = await openNotices(page);
+  // `[2026-10-19]` 99c55867 이 알림 센터 단추를 「다른 곳 찾아보기」로 바꿔 채팅 알림의 같은 이름 단추와 겹친다 — 알림 센터 안에서 누른다.
+  await center.getByRole("button", { name: "다른 곳 찾아보기" }).click();
   await expect(page.getByText("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.")).toBeVisible();
 });
 
@@ -518,7 +519,7 @@ test("「공유하기」의 「파일로 내려받기」는 계획서 링크와 
   expect(downloadHref.searchParams.get("download")).toBe("1");
   expect(openHref.searchParams.get("download")).toBeNull();                                         // 여는 링크는 그대로 — 파일로 받지 않는다
   const answer = await request.get(downloadHref.toString());
-  expect(answer.headers()["content-disposition"]).toMatch(/^attachment; filename\*=UTF-8''triPilot-/);
+  expect(answer.headers()["content-disposition"]).toMatch(new RegExp(`^attachment; filename\\*=UTF-8''${encodeURIComponent("구구루트-")}`));
   expect((await request.get(openHref.toString())).headers()["content-disposition"]).toBeUndefined();
 });
 

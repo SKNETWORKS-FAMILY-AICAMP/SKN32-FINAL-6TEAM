@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { LanguageButton } from "@/components/ui/language-picker";
-import { requiredAgreed, type ConsentCode } from "@/features/consent/consent-model";
+import { noConsents, requiredAgreed, type ConsentCode } from "@/features/consent/consent-model";
 import { saveConsents } from "@/features/consent/consent-sync";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
 import { useTrips } from "@/features/trip/use-trip";
 import { localPath } from "@/lib/live/auth";
+import { probeSession } from "@/lib/live/client";
 import { nextIsReplace } from "@/lib/nav-history";
 import { useProfile } from "@/lib/profile";
 import { saveDiscordWebhook, webhookWaiting } from "@/lib/webhook";
@@ -37,16 +38,19 @@ let termsShownOnce = false;
  *   - otherwise — the preference survey (menu 「여행 취향 설문」, 「취향 설정하기」). Agreed: the survey card opens; not yet: the terms card first, and agreeing opens the survey in place.
  *   The Discord card shows to a signed-in member only — a guest gets no alerts (web README 「게스트」).
  */
-export function Onboarding({ termsRequired = false, returnTo = null }: { termsRequired?: boolean; returnTo?: string | null } = {}) {
+export function Onboarding({ termsRequired = false, signupRequired = false, returnTo = null }: { termsRequired?: boolean; signupRequired?: boolean; returnTo?: string | null } = {}) {
   const [quietOpen] = useState(() => termsRequired && termsShownOnce);
   useEffect(() => { termsShownOnce = termsRequired && !quietOpen; }, [termsRequired, quietOpen]);
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
   const [storedState, setState] = useOnboarding();
-  const state = termsRequired && !storedState.agreed ? { ...storedState, open: 1 as const } : storedState;
+  // 새 계정의 동의는 이 브라우저에서 전에 쓴 다른 계정의 선택을 승계하지 않는다.
+  const [signupChoices, setSignupChoices] = useState(noConsents);
+  const state = signupRequired ? { ...storedState, choices: signupChoices, agreed: false, open: 1 as const }
+    : termsRequired && !storedState.agreed ? { ...storedState, open: 1 as const } : storedState;
   // ★「Continue my trip」 follows the server's list (newest first), not a value this page happened to see: another tab or device counts too.
-  const latestTrip = useTrips().data?.[0];
+  const latestTrip = useTrips({ enabled: !termsRequired }).data?.[0];
   const member = useProfile()?.session?.kind === "member";
   const showContact = !termsRequired && member;
   const showSurvey = !termsRequired;
@@ -60,6 +64,8 @@ export function Onboarding({ termsRequired = false, returnTo = null }: { termsRe
   const [sceneStage, setSceneStage] = useState<SceneStage>(state.open ?? 0);
   const [pulse, setPulse] = useState<ScenePulse>();
   const [consentMotion, setConsentMotion] = useState(false);
+  const [savingConsents, setSavingConsents] = useState(false);
+  const [consentError, setConsentError] = useState("");
   const [message, setMessage] = useState("");
   const [webhookError, setWebhookError] = useState(false);
   const webhookInput = useRef<HTMLInputElement>(null);
@@ -68,7 +74,7 @@ export function Onboarding({ termsRequired = false, returnTo = null }: { termsRe
   // The webhook this screen last sent: the server never answers it back, so this is how a second pass does not resend it.
   const sentWebhook = useRef<string | null>(null);
   const cards = useRef<Record<0 | 1 | 2, HTMLElement | null>>({ 0: null, 1: null, 2: null });
-  useDocumentTitle(termsRequired ? t("triPilot · 약관 동의", "triPilot · Terms & consent") : t("triPilot · 여행 취향 설문", "triPilot · Travel preferences"));
+  useDocumentTitle(termsRequired ? t("구구루트 · 약관 동의", "GuguRoute · Terms & consent") : t("구구루트 · 여행 취향 설문", "GuguRoute · Travel preferences"));
 
   // The survey way in opens its card at once — the terms card first when they are not agreed yet (the same for every survey link — flow check F15).
   useEffect(() => {
@@ -158,6 +164,7 @@ export function Onboarding({ termsRequired = false, returnTo = null }: { termsRe
 
   /** Tick or untick one item (`[2026-10-05 사용자 지시]` a required item too, at once - the full text is in the card, and 「전문 보기」 only enlarges it). */
   function toggle(code: ConsentCode, checked: boolean) {
+    if (signupRequired) setSignupChoices((current) => ({ ...current, [code]: checked }));
     setState((current) => ({ ...current, choices: { ...current.choices, [code]: checked }, open: 1 }));
     setConsentMotion(checked);
     feedback(checked ? "complete" : "soft");
@@ -172,10 +179,25 @@ export function Onboarding({ termsRequired = false, returnTo = null }: { termsRe
    * ★`[2026-10-16 사용자 결정 — ST4F-601]` Sent here by the gate: back to the screen being opened (`returnTo`), replacing this one; without it, as above.
    *   Come in for the survey: the survey card opens in place (it used to leave for the plan screen — flow check F3 · F14).
    */
-  function continueTerms() {
-    if (!requiredAgreed(state.choices)) return;
+  async function continueTerms() {
+    if (savingConsents || !requiredAgreed(state.choices)) return;
+    setSavingConsents(true); setConsentError("");
     const firstAgreement = !state.agreed;
-    void saveConsents(state.choices, language);
+    const saved = await saveConsents(state.choices, language).catch(() => "failed" as const);
+    if (saved === "failed" || saved === "outdated" || (signupRequired && saved !== "recorded")) {
+      setSavingConsents(false);
+      setConsentError(saved === "outdated" ? t("약관이 바뀌었어요. 표시된 새 내용을 확인한 뒤 다시 동의해 주세요.", "The terms changed. Read the updated text and agree again.") : t("동의를 저장하지 못했어요. 이 화면에서 다시 시도해 주세요.", "Your consent could not be saved. Please try again here."));
+      return;
+    }
+    if (signupRequired) {
+      const session = await probeSession(language, true).catch(() => null);
+      if (!session || session.kind !== "member" || session.registrationPending) {
+        setSavingConsents(false);
+        setConsentError(t("가입 완료를 확인하지 못했어요. 이 화면에서 다시 시도해 주세요.", "Could not confirm sign-up. Please try again."));
+        return;
+      }
+    }
+    setSavingConsents(false);
     flushWebhook(showContact && state.choices.alert_channel);
     feedback("complete");
     if (termsRequired) {
@@ -196,7 +218,7 @@ export function Onboarding({ termsRequired = false, returnTo = null }: { termsRe
   function complete() {
     setState((current) => ({ ...current, complete: true, open: 2 }));
     feedback("complete");
-    setMessage(t("여행 취향 설정을 완료했어요.", "Your preferences are complete."));
+    setMessage(t("여행 취향 설문을 마쳤어요.", "Survey finished."));
   }
 
   const expanded = state.open !== null;
@@ -221,7 +243,7 @@ export function Onboarding({ termsRequired = false, returnTo = null }: { termsRe
           {/* ★`[2026-10-16 ST4F-601 F4]` The heading says what this screen is for — it used to promise preferences first on the terms screen too. */}
           <section className={styles.intro} inert={expanded}>
             {termsRequired
-              ? <><h1>{t("약관 동의", "Terms & consent")}</h1><p>{safeReturn ? t("동의하면 보던 화면으로 돌아가요.", "Agree and you go back to the screen you were opening.") : t("동의하면 바로 시작해요.", "Agree and you can start.")}</p></>
+              ? <><h1>{signupRequired ? t("가입을 마무리해 주세요", "Finish signing up") : t("약관 동의", "Terms & consent")}</h1><p>{signupRequired ? t("필수 약관 동의를 저장하면 가입이 완료돼요. 선택 항목은 동의하지 않아도 돼요.", "Sign-up completes after your required consent is saved. Optional items are not required.") : safeReturn ? t("동의하면 보던 화면으로 돌아가요.", "Agree and you go back to the screen you were opening.") : t("동의하면 바로 시작해요.", "Agree and you can start.")}</p></>
               : <><h1>{t("여행 취향 설문", "Travel preferences")}</h1><p>{storedState.agreed ? t(`${questions.length}가지 질문에 답해 주세요. 나중에 다시 고칠 수 있어요.`, `Answer ${questions.length} questions. You can change them later.`) : t("설문을 하려면 먼저 약관에 동의해 주세요.", "Please agree to the terms before the questions.")}</p></>}
           </section>
           <div className={styles.stack}>
@@ -233,9 +255,11 @@ export function Onboarding({ termsRequired = false, returnTo = null }: { termsRe
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
               <>{termsRequired && !state.agreed && <p className={styles.termsIntro} role="status">{t("이용을 위해서는 필수 약관 동의가 필요해요.", "Please agree to the required terms to use the service.")}</p>}<TermsCardBody t={t} choices={state.choices} consentMotion={consentMotion} alertTyped={showContact && Boolean(state.webhook.trim())}
-                onReadDoc={setReaderCode} onToggle={toggle} onContinue={continueTerms} /></>)}
+                onReadDoc={setReaderCode} onToggle={toggle} onContinue={() => void continueTerms()} saving={savingConsents} signup={signupRequired} />
+                {savingConsents && <p role="status">{t("동의를 저장하고 있어요…", "Saving your consent…")}</p>}
+                {consentError && <p role="alert">{consentError}</p>}</>)}
             {showSurvey && card(2, state.complete,
-              cardHead(2, t("여행 취향 알아보기", "Your travel preferences"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문으로 더 나다운 여행.`, `${questions.length} questions for a trip that fits you.`), !state.agreed, state.complete),
+              cardHead(2, t("여행 취향 설문", "Travel preferences survey"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문 · 건너뛰어도 돼요`, `${questions.length} questions · skip any`), !state.agreed, state.complete),
               state.complete
                 ? <PreferencesSummary t={t} answers={state.answers} hasTrip={Boolean(latestTrip)}
                   onJourney={() => router.push(latestTrip ? routes.trip(latestTrip.id) : routes.newTrip)}

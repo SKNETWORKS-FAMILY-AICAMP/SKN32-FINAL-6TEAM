@@ -63,6 +63,6 @@ describe("what the credits say — only what the server sent or the screen sees"
   });
 
   it("makes no picture where it cannot draw (no page)", async () => {
-    expect(await drawEndPicture({ heading: "t", dates: "", kicker: "COOKIE", line: "l", cells: [], brand: "triPilot" }, { background: "", ink: "", accent: "", font: "" })).toBeNull();
+    expect(await drawEndPicture({ heading: "t", dates: "", kicker: "COOKIE", line: "l", cells: [], brand: "guguroute" }, { background: "", ink: "", accent: "", font: "" })).toBeNull();
   });
 });

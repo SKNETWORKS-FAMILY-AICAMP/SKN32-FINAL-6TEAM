@@ -1,5 +1,6 @@
 import type { Language } from "../i18n";
 import { api } from "./client";
+import { STREAM_TIMING, streamApi } from "./stream";
 import type { IntakeView } from "./intake";
 import type { WebTaxiPricing } from "./taxi-pricing";
 
@@ -13,7 +14,7 @@ import type { WebTaxiPricing } from "./taxi-pricing";
 /** ✓ ok · ✎ filled (a rule filled it in) · ! warn · ✕ bad (must be fixed) · – unknown (not known yet). */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown";
 /** `booking` (2026-10-03, server 8b0d4c88): shown only for a booking word or a meal line with no name — 예약 있음 · 예약 없이 간다 · 예약 있다는데 장소 모름 · 예약 여부 모름. */
-export type ItemRow = "place" | "time" | "hours" | "closed" | "booking";
+export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk";
 export type MoveRow = "route" | "mode" | "arrival";
 export interface CheckLine<Row extends string = string> { row: Row; result: CheckResult; text: string }
 
@@ -40,6 +41,8 @@ export interface ReviewPlace {
 }
 
 export interface ReviewItem {
+  /** The same six-source risk result used by the watcher. Missing on an older deployment. */
+  risk?: unknown;
   /** `<source position>-<index>` — the key that events, moves and candidates use to point at each other. */
   id: string;
   source_id: string;
@@ -108,6 +111,9 @@ export interface ReviewMove {
 export interface ReviewNeeds { items: number; moves: number; total: number }
 
 export interface Review {
+  risk_mode?: "fresh" | "cached";
+  risk_checked_at?: string | null;
+  risk_schema_version?: number;
   taxi_pricing?: WebTaxiPricing;
   revision: number;
   built_at: string;
@@ -117,6 +123,11 @@ export interface Review {
   needs: ReviewNeeds;
   /** No read problem and nothing to check — the 「여행 등록」 button turns on. */
   ready: boolean;
+  /**
+   * `[2026-10-20 사용자 지시]` false = the revision was only SAVED (`editIntake(..., { check: false })`): moves are not measured yet and `ready` is false
+   * until 「다시 제출」 (`revalidate`) checks it. Absent on older servers and older revisions — read as checked.
+   */
+  checked?: boolean;
 }
 
 /** `GET /v1/web/trip-intakes/{id}` — the read view plus the check. */
@@ -130,6 +141,7 @@ export interface ReviewedIntakeView extends IntakeView {
 
 /** One place, in the shape `POST …/edits` takes for `items[n].place` when the customer picked it from a list. */
 export interface PickedPlace {
+  provider_ref?: string | null;
   name: string;
   latitude: number;
   longitude: number;
@@ -146,6 +158,11 @@ export interface CandidatePlace extends ReviewPlace {
 }
 
 export interface Candidate {
+  risk?: unknown;
+  date?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  end_date?: string | null;
   rank: number;
   place: CandidatePlace;
   distance_m: number | null;
@@ -165,7 +182,16 @@ export interface Candidate {
   reason?: string | null;
   similarity?: number | null;
   experience?: string | null;
+  /** `[2026-10-19]` Whether the reason was written by the model or is the plain template. */
+  reason_by?: "model" | "template";
+  /** `[2026-10-19]` The way in from the stop before and out to the stop after: whose stop, minutes, the way (`mode_label`), and whether it is a straight-line guess. */
+  legs?: { before: CandidateLeg | null; after: CandidateLeg | null };
+  /** `[2026-10-19]` Only in the live answer (`streamCandidates`): what is still being worked out — the way in, the way out, the model's reason. */
+  pending?: CandidatePending;
 }
+
+export interface CandidateLeg { with: string; minutes: number; mode: string; mode_label: string; estimated: boolean; slack_min: number }
+export interface CandidatePending { before: boolean; after: boolean; reason: boolean }
 
 export interface CandidateList {
   revision: number;
@@ -175,6 +201,16 @@ export interface CandidateList {
   candidates: Candidate[];
   /** Why the list is short or approximate (`engine_budget_exhausted` · `no_same_kind` · `no_other_branches` · `kakao:<reason>`). */
   notes: string[];
+  /** `[2026-10-19]` The alternatives were made ready when the plan was read (no wait): when, for which revision, and which legs were measured again (`before` · `after`). Null when worked out now. */
+  prepared?: { revision: number; computed_at: string; stale: string[] } | null;
+}
+
+/** `[2026-10-19]` One change to a card while the live answer works it out: the measured legs (`rows` … `legs`), or the model's reason. `rank` is the card's place in the first list. */
+export interface CandidateUpdate {
+  rank: number;
+  rows?: Candidate["rows"]; fits?: boolean; status?: Candidate["status"]; slack?: Candidate["slack"]; estimated?: boolean; legs?: Candidate["legs"];
+  reason?: string; reason_by?: "model" | "template";
+  pending?: Partial<CandidatePending>;
 }
 
 export interface PlaceSearchResult {
@@ -225,6 +261,20 @@ export function getCandidates(intakeId: string, item: Pick<ReviewItem, "source_i
   return api(`${base(intakeId)}/candidates?${query}`, language);
 }
 
+/**
+ * `[2026-10-19 사용자 지시]` The alternatives as a live answer: prepared ones come at once (only the result); otherwise the cards come first with
+ * straight-line guesses (`onFirst`), each measured leg and each model reason as it lands (`onUpdate`), then the final list (resolved — the server picks
+ * the three again by the full check). A server without streams answers once in JSON — then only the result comes.
+ */
+export function streamCandidates(intakeId: string, item: Pick<ReviewItem, "source_id" | "index">, revision: number, language: Language,
+  onFirst: (list: CandidateList) => void, onUpdate: (update: CandidateUpdate) => void): Promise<CandidateList> {
+  const query = new URLSearchParams({ source_id: item.source_id, index: String(item.index), revision: String(revision) });
+  return streamApi<CandidateList>(`${base(intakeId)}/candidates?${query}`, language, { method: "GET" }, undefined, STREAM_TIMING, (name, body) => {
+    if (name === "candidates") onFirst(body as unknown as CandidateList);
+    else if (name === "candidate" && typeof body.rank === "number") onUpdate(body as unknown as CandidateUpdate);
+  });
+}
+
 export function searchPlaces(intakeId: string, item: Pick<ReviewItem, "source_id" | "index">, revision: number, q: string, language: Language, signal?: AbortSignal): Promise<PlaceSearchResult> {
   const query = new URLSearchParams({ q, source_id: item.source_id, index: String(item.index), revision: String(revision) });
   return api(`${base(intakeId)}/place-search?${query}`, language, { signal });
@@ -259,5 +309,6 @@ export function pickedPlace(place: CandidatePlace): PickedPlace | null {
     source: place.source && PICK_SOURCES.includes(place.source) ? place.source as PickedPlace["source"] : "search",
     ...(place.kind ? { kind: place.kind } : {}),
     ...(place.content_id ? { content_id: place.content_id } : {}),
+    ...(place.ref && /^(?:kakao|tour):[0-9]{1,30}$/.test(place.ref) ? { provider_ref: place.ref } : {}),
   };
 }

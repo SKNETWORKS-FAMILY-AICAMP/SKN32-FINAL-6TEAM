@@ -12,8 +12,9 @@ v0.8 이 최악값 계산에 넣는다 — 매우혼잡(≥100%) + 조건(luggag
   · congestion=null 은 0% 가 아니라 근거없음(reason) — 조회 결과 None
 Timetable 처럼 케이스에 나오는 (노선, 역)만 올린다.
 """
-import json
 from pathlib import Path
+
+from .json_rows import load_shared_row
 
 LEVELS = ("여유", "보통", "혼잡", "매우혼잡", "극심")
 
@@ -39,7 +40,7 @@ class Congestion:
                     raw = raw.strip()
                     if not raw:
                         continue
-                    r = json.loads(raw)
+                    r = load_shared_row(raw)
                     if wanted is not None and (r.get("line"), r.get("station_nm")) not in wanted:
                         continue
                     if r.get("service") not in (None, "local", "express"):

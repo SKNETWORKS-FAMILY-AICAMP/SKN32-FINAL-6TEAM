@@ -87,6 +87,31 @@ def system_for(today: date) -> str:
     return SYSTEM.format(today=today.isoformat(), weekday=WEEKDAY[today.weekday()] + "요일", ex_date=(today + timedelta(days=2)).isoformat())
 
 
+#: `[2026-10-16]` 지시문 2판 — 1판은 예가 「성향 없음」 하나뿐이라 모델이 성향을 거의 안 냈다(가르친 E4B 69건 중 1건 · Winnow 0건).
+#: 성향 말마다 뜻풀이를 붙이고 성향 · 조건 · 빠진 값이 든 예를 하나 더 둔다. ★뜻풀이 · 예의 문장은 시험지 문장과 겹치지 않게 다른 말로 썼다
+#: (같은 사람이 시험지 정답 어휘를 정했으니 어휘는 맞춰져 있다 — 보고서에 적는다).
+PREF_GLOSS = """- preferences meanings (use only when the traveller says it about themselves): prefer_taxi = wants to ride taxis; avoid_taxi = does not want taxis;
+  avoid_walking = walking is hard or unwanted (오래 걷기 힘들다, 다리가 아프다); prefer_walking = wants to go on foot; prefer_transit = wants subway/bus;
+  kid_friendly = travelling with children; elderly_friendly = travelling with older people or someone with limited mobility;
+  late_start = wants to start the day late; slow_pace = wants a relaxed, light schedule (느긋하게, 몇 군데만); avoid_stairs = wants to avoid stairs/slopes;
+  food_focus = wants the trip built around good food; night_view = wants night views; nice_restaurants = wants restaurants with atmosphere."""
+
+EXAMPLE2 = """
+Example 2
+Message: 어르신 모시고 다음 주 금요일 하루 다녀요. 오래 걷기 힘드셔서 이동은 택시로 하고 저녁 7시 전에는 숙소 들어가려고요. 점심은 을지로 노포, 오후엔 서울숲인데 비 오면 실내로 바꿔 주세요.
+Output: {{"items":[{{"place_quote":"을지로 노포","day":1,"date":"{ex_fri}","date_quote":"다음 주 금요일","start":null,"end":null,"time_quote":null,"kind":"dining"}},{{"place_quote":"서울숲","day":1,"date":"{ex_fri}","date_quote":"다음 주 금요일","start":null,"end":null,"time_quote":null,"kind":"activity"}}],"moves":[{{"mode":"taxi","scope":"all","day":null,"from_quote":null,"to_quote":null,"quote":"이동은 택시로"}}],"conditions":[{{"code":"finish_by:19:00","quote":"저녁 7시 전에는 숙소 들어가려고요"}},{{"code":"if_rain_indoor","quote":"비 오면 실내로 바꿔 주세요"}}],"preferences":[{{"code":"elderly_friendly","quote":"어르신 모시고"}},{{"code":"avoid_walking","quote":"오래 걷기 힘드셔서"}},{{"code":"prefer_taxi","quote":"이동은 택시로"}}],"requests":["register"],"missing":["lodging_name"],"trip":{{"party_size":null,"days":1,"nights":null}}}}"""
+
+
+def system_for_v2(today: date) -> str:
+    from datetime import timedelta
+
+    next_monday = today + timedelta(days=7 - today.weekday())
+    base = SYSTEM.replace("- preferences: only codes from the schema list; quote = exact words.",
+                          "- preferences: only codes from the schema list; quote = exact words.\n" + PREF_GLOSS)
+    return (base + EXAMPLE2).format(today=today.isoformat(), weekday=WEEKDAY[today.weekday()] + "요일",
+                                    ex_date=(today + timedelta(days=2)).isoformat(), ex_fri=(next_monday + timedelta(days=4)).isoformat())
+
+
 class OllamaBackend:
     def __init__(self, base: str, model: str, num_ctx: int) -> None:
         self.base, self.model, self.num_ctx = base.rstrip("/"), model, num_ctx
@@ -111,6 +136,26 @@ class LlamaBackend:
         r = httpx.post(f"{self.base}/v1/chat/completions", json=payload, timeout=300)
         r.raise_for_status()
         return r.json()["choices"][0]["message"]["content"]
+
+
+class CodexBackend:
+    """Codex CLI(구독)로 문제마다 한 번 — 저장소의 `program/scripts/eval_kit/codex_percall.call`(JSON 스키마 강제 · 읽기 전용 · 대화 저장 안 함)을 쓴다.
+    ★CLI 한 번이 도구를 갖춘 에이전트 세션 하나라 시간은 API 직접 호출보다 길다 — 「CLI 기준」으로만 읽는다. 추론 강도는 CLI 전역 설정값."""
+
+    def __init__(self, model: str, helper: str) -> None:
+        import sys as _sys
+
+        _sys.path.insert(0, helper)
+        from codex_percall import call  # noqa: E402
+
+        self.model, self._call = model, call
+
+    def ask(self, system: str, user: str) -> str:
+        prompt = f"{system}\n\n---\nMessage:\n{user}\n\n위 지시대로 JSON 한 개로만 답하라. 파일을 만들거나 명령을 실행하지 마라."
+        value, _seconds, err = self._call(self.model, prompt, SCHEMA, timeout=300, retries=1)
+        if value is None:
+            raise RuntimeError(f"codex 호출 실패: {err}")
+        return json.dumps(value, ensure_ascii=False)
 
 
 def ground(raw: dict[str, Any], text: str) -> tuple[dict[str, Any], dict[str, int]]:
@@ -170,11 +215,14 @@ def ground(raw: dict[str, Any], text: str) -> tuple[dict[str, Any], dict[str, in
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--backend", choices=["ollama", "llama"], required=True)
-    parser.add_argument("--base", required=True)
+    parser.add_argument("--backend", choices=["ollama", "llama", "codex"], required=True)
+    parser.add_argument("--base", default="")
+    parser.add_argument("--codex-helper", default=str(HERE.parents[2] / "program" / "scripts" / "eval_kit"),
+                        help="codex_percall.py 가 있는 폴더(저장소 루트의 program/scripts/eval_kit)")
     parser.add_argument("--model", default="tripilot-pointer:e4b-ft")
     parser.add_argument("--label", default="")
     parser.add_argument("--num-ctx", type=int, default=8192)
+    parser.add_argument("--prompt", choices=["v1", "v2"], default="v1", help="v2 = 성향 뜻풀이 + 성향 · 조건이 든 예 하나 더")
     parser.add_argument("--out", required=True)
     parser.add_argument("--only", nargs="*")
     args = parser.parse_args(argv)
@@ -185,11 +233,12 @@ def main(argv: list[str] | None = None) -> int:
     cases = [json.loads(x) for x in (HERE / "cases.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
     if args.only:
         cases = [c for c in cases if c["case_id"] in set(args.only)]
-    backend = OllamaBackend(args.base, args.model, args.num_ctx) if args.backend == "ollama" else LlamaBackend(args.base)
+    backend = (OllamaBackend(args.base, args.model, args.num_ctx) if args.backend == "ollama" else
+               CodexBackend(args.model, args.codex_helper) if args.backend == "codex" else LlamaBackend(args.base))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     meta = {"started_kst": datetime.now(KST).isoformat(timespec="seconds"), "backend": args.backend,
-            "model": args.model if args.backend == "ollama" else args.label, "num_ctx": args.num_ctx}
+            "model": args.model if args.backend in ("ollama", "codex") else args.label, "num_ctx": args.num_ctx, "prompt": args.prompt}
     preds: dict[str, dict[str, Any]] = {}
     drops_total: dict[str, int] = {}
     with (out / "raw.jsonl").open("w", encoding="utf-8") as raw_file:
@@ -198,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
             started = time.perf_counter()
             error, raw, answer = None, {}, ""
             try:
-                answer = backend.ask(system_for(today), case["source_text"])
+                answer = backend.ask((system_for_v2 if args.prompt == "v2" else system_for)(today), case["source_text"])
                 raw = json.loads(answer)
                 if not isinstance(raw, dict):
                     raise ValueError("JSON 객체가 아니다")

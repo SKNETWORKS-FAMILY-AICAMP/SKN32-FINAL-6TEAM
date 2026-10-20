@@ -88,6 +88,8 @@ def _place_value(place: dict[str, Any], kind: str) -> dict[str, Any]:
         value["dining_place_uid"] = str(attributes["dining_place_uid"])
     if attributes.get("pick_origin"):
         value["origin"] = str(attributes["pick_origin"])
+    if attributes.get("provider_ref"):
+        value["provider_ref"] = attributes["provider_ref"]
     return value
 
 
@@ -259,6 +261,8 @@ class EditPlan:
     #: 부르는 쪽이 그 행을 쓰거나(공용 · 이 여행의 행일 때만) 등록과 같은 규칙으로 넣어 `place_id` 를 채운다
     places: dict[UUID, dict[str, Any]] = field(default_factory=dict)
     changed: list[str] = field(default_factory=list)
+    changed_ids: list[UUID] = field(default_factory=list)
+    added_ids: list[UUID] = field(default_factory=list)
     added: list[str] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
     #: 이미 끝난 일정을 바꾸거나 빼거나 지난 때에 더한 것(제목) — 하나라도 있으면 쓰지 않는다
@@ -332,6 +336,13 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
         inherited = {k: v for k, v in (origin.detail or {}).items()
                      if k not in ("provenance", "intake", "booking", "customer_pinned")} if inherit else {}
         detail: dict[str, Any] = {**inherited, "provenance": row["provenance"], "intake": {"intake_id": intake_id, "revision": revision}}
+        if origin is not None and origin.detail.get("execution"):
+            from copy import deepcopy
+            execution = deepcopy(origin.detail["execution"])
+            if same_spot and starts.date() == origin.starts_at.date():
+                detail["execution"] = execution
+            else:
+                detail["execution_history"] = [*origin.detail.get("execution_history", []), execution]
         vendor = origin is not None and origin.booking_id is not None
         if row["booking_no"] or row["booked"] is True:
             old_booking = dict((origin.detail or {}).get("booking") or {}) if inherit else {}
@@ -359,10 +370,12 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
         if origin is not None:
             replaced.add(origin.item_id)
             plan.changed.append(title if title == origin.title else f"{origin.title} → {title}")
+            plan.changed_ids.append(item.item_id)
             if _end(origin) <= now or _end(item) <= now:
                 plan.past.append(title)
         else:
             plan.added.append(title)
+            plan.added_ids.append(item.item_id)
             if _end(item) <= now:
                 plan.past.append(title)
         plan.items.append(item)
@@ -385,7 +398,7 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
             continue
         before = next((i for i in reversed(ordered_base[:n]) if i.kind != "mobility"), None)
         after = next((i for i in ordered_base[n + 1:] if i.kind != "mobility"), None)
-        if _end(move) <= now:
+        if _end(move) <= now and before is not None and after is not None and before.item_id in (stays | set(replaced)) and after.item_id in (stays | set(replaced)):
             moves.append(move)
         elif before is not None and after is not None and before.item_id in stays and after.item_id in stays \
                 and before.item_id in order and after.item_id in order \

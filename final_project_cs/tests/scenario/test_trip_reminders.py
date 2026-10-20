@@ -102,7 +102,8 @@ def test_a_day_of_ticks_sends_each_reminder_once(world):
     assert "10:50 출발" in departure["text"] and "다음 일정: 11:15" in departure["text"]
     assert "가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:50)" in departure["text"]
     rendered = render(departure)
-    assert rendered.endswith(f"https://plan.example/{world['trip_id']}")     # 링크는 늘 붙는다
+    # 링크는 늘 붙는다 — ★`[2026-10-20]` 알림 v5 부터 본문 **앞**(채널 길이 제한에 잘리지 않게 · `discord._compose`). 주소는 보낼 때 이 여행의 정식 주소로 바뀐다
+    assert f"계획서 보기: {departure['plan_url']}" in rendered.splitlines()[:2], rendered
     day = next(p for k, p in notices if k.startswith("day_start:"))
     assert day["text"].startswith("좋은 아침") and "09:00" in day["text"] and day["locale"] == "zh-TW"
 
@@ -188,7 +189,7 @@ def test_a_change_notice_carries_the_plan_link(world):
     assert len(watcher.tick().adjusted) == 1
     key, payload = _notices(world)[0]
     assert key == "v2" and payload["plan_url"] == plan_url(world["tenant"], world["trip_id"])
-    assert render(payload).endswith(payload["plan_url"])
+    assert f"계획서 보기: {payload['plan_url']}" in render(payload).splitlines()[:2]   # ★`[2026-10-20]` 알림 v5 — 링크는 본문 앞
 
 
 # ── 새 흐름 (2026-09-24, D-020) ────────────────────────────────

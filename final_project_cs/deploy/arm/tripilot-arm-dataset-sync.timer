@@ -1,5 +1,5 @@
 [Unit]
-Description=Sync triPilot datasets from Google Drive every ten minutes
+Description=Sync guguroute datasets from Google Drive every ten minutes
 
 [Timer]
 OnBootSec=5min

@@ -52,7 +52,7 @@ for source in sources:
         role='Previously missing multi-item B/C role; not a rerun of completed single-item D/E and not independent holdout',
         automatic_retry=False,comparison_runs=1)
     if old.get('lora'):job['lora_sha256']=hashes[old['lora']]
-    if source=='g12bbase_d':job['publisher_training']='Google Instruct release; no triPilot fine-tuning'
+    if source=='g12bbase_d':job['publisher_training']='Google Instruct release; no guguroute fine-tuning'
     jobs.append(job);compat.append(dict(source_job=source,source_state=state[source],new_id=ident,
         existing_base_and_adapter_engine_execution=True,new_multi_output_accuracy_unmeasured=True))
 stamp=datetime.now(timezone.utc).strftime('%Y-%m-%d_%H%M%S')+'_missing_multi_role_refill'

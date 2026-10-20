@@ -32,6 +32,12 @@ def fetch(client, headers, view):
     return client.get(f"/v1/web/trip-intakes/{view['intake_id']}", headers=headers).json()
 
 
+def without_risk(screen):
+    """`[2026-10-20]` 같은 판을 두 번 읽었는지 견줄 때 위험 확인(항목의 `risk` · 화면의 `risk_checked_at`)은 뺀다 — 확인 시각이 읽을 때마다 지금이다(`intake/risks.py`, 알려진 시험 실패 조사)."""
+    return {**{k: v for k, v in screen.items() if k != "risk_checked_at"},
+            "items": [{k: v for k, v in i.items() if k != "risk"} for i in screen.get("items", [])]}
+
+
 @pytest.fixture()
 def direct(rv, monkeypatch):
     monkeypatch.setattr(review, "default_engine", lambda party=None, modes=None: walk11)
@@ -54,7 +60,7 @@ def test_hotel_change_immediately_updates_next_time_in_same_revision(direct):
     assert after["review"]["items"][1]["ends_at"] == "11:15"
     assert after["review"]["items"][2]["starts_at"] == c["starts_at"]
     assert all(m["status"] != "review" for m in after["review"]["moves"])
-    assert fetch(client, headers, before)["review"] == after["review"]
+    assert without_risk(fetch(client, headers, before)["review"]) == without_risk(after["review"])
 
 
 def new_fields(view, **overrides):
@@ -156,4 +162,4 @@ def test_hotel_breakfast_pick_preserves_next_visit_and_records_derived_end(direc
     assert after["review"]["items"][1]["starts_at"] == "10:05"
     fields = after["sources"][0]["items"][0]["fields"]
     assert fields["ends_at"]["evidence"]["derived_stay_end"] is True
-    assert fetch(client, headers, before)["review"] == after["review"]
+    assert without_risk(fetch(client, headers, before)["review"]) == without_risk(after["review"])

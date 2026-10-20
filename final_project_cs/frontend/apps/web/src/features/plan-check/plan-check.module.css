@@ -863,3 +863,10 @@ button.time[data-adjusted] { color: var(--color-adjusted); }
 .mapChips > [data-route-load-error] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .mapChips > [data-route-load-error] button { min-height: 44px; padding: 8px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-primary); font: inherit; cursor: pointer; }
 .mapChips > [data-route-load-error] button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* `[2026-10-19 사용자 지시]` 후보 카드의 앞 · 뒤 이동 줄 — 계산 중이면 돌아가는 표시와 어림 분, 끝나면 수단 · 분 · 여유. 이유 자리의 「정리하고 있어요…」는 흐리게 */
+.legLines { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+.legLines li { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.legLines li[data-pending] { color: var(--color-muted); }
+.legLines .spinner { width: 12px; height: 12px; border-width: 2px; }
+.changeReason[data-pending] { color: var(--color-muted); opacity: .75; }
+@media (prefers-reduced-motion: reduce) { .legLines .spinner { animation: none; } }

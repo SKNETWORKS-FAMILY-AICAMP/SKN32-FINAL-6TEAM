@@ -17,5 +17,5 @@
   .camera, .layer { transform: none; transition: none; }
   .light { display: none; }
 }
-/* The white theme has no landscape: only the page colour stays. The veil and light colours belong to the green pictures. */
-:global(:root[data-theme="neutral"]) .camera { display: none; }
+/* The dark theme has no landscape (the survey's pictures are daylight): only the page colour stays. The veil and light colours belong to the green pictures. */
+:global(:root[data-theme="dark"]) .camera { display: none; }

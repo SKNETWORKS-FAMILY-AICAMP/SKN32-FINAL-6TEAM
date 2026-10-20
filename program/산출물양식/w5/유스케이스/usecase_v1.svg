@@ -9,13 +9,13 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(21.6 869.35)">
 <title>UC</title>
 <polygon fill="#ffffff" stroke="none" points="-21.6,21.6 -21.6,-869.35 1353.06,-869.35 1353.06,21.6 -21.6,21.6"/>
-<text xml:space="preserve" text-anchor="start" x="416.36" y="-825.75" font-family="Malgun Gothic" font-weight="bold" font-size="20.00">triPilot 유스케이스 다이어그램</text>
+<text xml:space="preserve" text-anchor="start" x="416.36" y="-825.75" font-family="Malgun Gothic" font-weight="bold" font-size="20.00">guguroute 유스케이스 다이어그램</text>
 <text xml:space="preserve" text-anchor="start" x="696.11" y="-825.75" font-family="Malgun Gothic" font-size="20.00"> </text>
 <text xml:space="preserve" text-anchor="start" x="702.86" y="-825.75" font-family="Malgun Gothic" font-size="12.00" fill="#5f6b64">v1 · 2026&#45;10&#45;02 · 실제 API · 코드 기준</text>
 <g id="clust2" class="cluster">
 <title>cluster_sys</title>
 <path fill="#ffffff" stroke="#2d5f48" stroke-width="2.2" d="M215.56,-8C215.56,-8 1024.46,-8 1024.46,-8 1030.46,-8 1036.46,-14 1036.46,-20 1036.46,-20 1036.46,-792 1036.46,-792 1036.46,-798 1030.46,-804 1024.46,-804 1024.46,-804 215.56,-804 215.56,-804 209.56,-804 203.56,-798 203.56,-792 203.56,-792 203.56,-20 203.56,-20 203.56,-14 209.56,-8 215.56,-8"/>
-<text xml:space="preserve" text-anchor="start" x="592.64" y="-784.85" font-family="Malgun Gothic" font-weight="bold" font-size="17.00">triPilot</text>
+<text xml:space="preserve" text-anchor="start" x="592.64" y="-784.85" font-family="Malgun Gothic" font-weight="bold" font-size="17.00">guguroute</text>
 </g>
 <!-- traveler -->
 <g id="node1" class="node">

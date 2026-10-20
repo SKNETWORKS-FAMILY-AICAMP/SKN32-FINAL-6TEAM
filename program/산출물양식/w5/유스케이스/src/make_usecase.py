@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""triPilot 유스케이스 다이어그램 — 공식 Graphviz(16)로 로컬에서 그린다. 바깥 서버로 보내지 않는다.
+"""guguroute 유스케이스 다이어그램 — 공식 Graphviz(16)로 로컬에서 그린다. 바깥 서버로 보내지 않는다.
 
     python make_usecase.py   → ../usecase_v1.dot · .svg · .png
 
@@ -58,7 +58,7 @@ def uc(key, code, name, kind=""):
 LINES = [
     "digraph UC {",
     f'  graph [rankdir=LR, splines=true, nodesep=0.32, ranksep=1.25, pad=0.3, fontname="{FONT}", bgcolor="#ffffff",'
-    f'         label=<<B>triPilot 유스케이스 다이어그램</B> <FONT POINT-SIZE="12" COLOR="#5f6b64">v1 · 2026-10-02 · 실제 API · 코드 기준</FONT>>,'
+    f'         label=<<B>guguroute 유스케이스 다이어그램</B> <FONT POINT-SIZE="12" COLOR="#5f6b64">v1 · 2026-10-02 · 실제 API · 코드 기준</FONT>>,'
     '         labelloc=t, fontsize=20];',
     f'  node [fontname="{FONT}", fontsize=13];',
     f'  edge [fontname="{FONT}", fontsize=11, color="#5f6b64", penwidth=1.3, arrowhead=none];',
@@ -69,7 +69,7 @@ LINES = [
     "    " + system("aiapp", "개인 AI 비서 앱", note="우리 API로 연결"),
     "  }",
     # 경계 — 우리가 만드는 것
-    '  subgraph cluster_sys { label=<<B>triPilot</B>>; fontsize=17; style="rounded"; color="#2d5f48"; penwidth=2.2; margin=22;',
+    '  subgraph cluster_sys { label=<<B>guguroute</B>>; fontsize=17; style="rounded"; color="#2d5f48"; penwidth=2.2; margin=22;',
     "    " + uc("u01", "UC-01", "여행 시작하기<BR/>(언어 · 취향 설문)"),
     "    " + uc("u02", "UC-02", "계획 올리기"),
     "    " + uc("u03", "UC-03", "읽힌 일정<BR/>확인 · 고치기"),

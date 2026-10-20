@@ -221,7 +221,7 @@ _mobility_configuration_lock = threading.Lock()
 _mobility_configuration_key = None
 
 
-def _configure_mobility(settings):
+def _configure_mobility(settings, *, preload: bool = True):
     """Engine configuration is process-scoped; reload never edits a live engine.
 
     Changed engine settings require a process restart. Team enable/disable and
@@ -240,12 +240,12 @@ def _configure_mobility(settings):
             if key != _mobility_configuration_key:
                 raise CompositionError("live mobility engine settings require a process restart")
             return {"mode": mobility_wiring.mode()}
-        result = _configure_mobility_once(settings)
+        result = _configure_mobility_once(settings, preload=preload)
         _mobility_configuration_key = key
         return result
 
 
-def _configure_mobility_once(settings):
+def _configure_mobility_once(settings, *, preload: bool = True):
     """요청 조립과 출발 안내 단독 실행이 같은 이동 기동·호출 예산을 사용한다."""
     from app.domains.travel_ops.instances.mobility import wiring as mobility_wiring
     bike_gate = None
@@ -256,7 +256,7 @@ def _configure_mobility_once(settings):
         except Exception as exc:  # noqa: BLE001 — 문 없이는 따릉이 실시간을 끈다
             import logging
             logging.getLogger(__name__).warning('따릉이 실시간 한도 문 준비 실패: %s', type(exc).__name__)
-    return mobility_wiring.configure_from_settings(settings, bike_gate=bike_gate)
+    return mobility_wiring.configure_from_settings(settings, bike_gate=bike_gate, preload=preload)
 
 
 def build_mobility_departure_observer(settings, sources, *, guardrails=None):
@@ -508,7 +508,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      config_path: str | Path | None = None,
                      config: ProjectConfig | None = None,
                      action_handlers: Any | None = None,
-                     execution_planner: Any | None = None) -> Controller:
+                     execution_planner: Any | None = None,
+                     preload_mobility: bool = True) -> Controller:
     """Assemble the application Controller and inject every concrete adapter.
 
     ★`config` 를 주면 **그 선언 그대로** 조립한다(2026-09-06, reload 계약).
@@ -558,7 +559,7 @@ def build_controller(*, registry: TeamRegistry | None = None,
     controller.project_config = config.model_copy(deep=True)
     controller.service_bindings = BindingTable(bindings, registry, controller.composition_revision)
     if tools is None and ("legs", "leg_planner") in bindings:
-        _configure_mobility(get_settings())
+        _configure_mobility(get_settings(), preload=preload_mobility)
     return controller
 
 
@@ -625,6 +626,23 @@ def wire_trip_scope() -> None:
     from app.domains.travel_ops.modules.web_account.guest_policy import watch_scope_sql
 
     trip_scope.register("web_account.guest", watch_scope_sql)
+    # ★`[2026-10-20 사용자 결정]` 「남길 시험 여행」 표시를 단 여행은 감시 · 안내에서 뺀다 — 지울 때 보관함에 담긴다(D-CS-018)
+    from app.domains.travel_ops.components.itinerary import trip_archive
+
+    trip_scope.register("trip_archive.marked", trip_archive.watch_scope_sql)
+
+
+def wire_operator_modes() -> None:
+    """★`[2026-10-19 사용자 결정]` 언리미티드 모드 · 숙소 모드 — 바깥 호출 문(제한기 · 호출 예산 · 구글 호텔 어댑터)이 부를 때마다 읽는다.
+
+    ports 는 운영 설정 표를 모르므로 조립이 꽂는다. 안 꽂으면(시험 · 도구) 한도 그대로 · 숙소 모드 off 다.
+    테넌트는 부를 때 설정에서 읽는다(설정은 캐시돼 있다). 시험이 이것만 부를 수 있게 따로 둔다(다른 전역 등록을 남기지 않게)."""
+    import app.core.settings as settings_module
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.ports.data_sources import operator_modes
+
+    operator_modes.register(unlimited=lambda: settings_hook.unlimited_mode(settings_module.get_settings().tenant_id),
+                            lodging_mode=lambda: settings_hook.lodging_mode(settings_module.get_settings().tenant_id))
 
 
 def wire_optional_features() -> list[str]:
@@ -645,6 +663,8 @@ def wire_optional_features() -> list[str]:
     from app.domains.travel_ops.modules.web_account import web_guard
 
     settings_hook.register(lambda tenant_id, name: web_guard.values(tenant_id).get(name))
+
+    wire_operator_modes()
 
     # ★`[2026-10-15 · 10-16 사용자 지시]` 관리 콘솔 「모델 경로」 — 상황마다(채팅 · 일정 짚기 · 공지 확인) off(환경 파일 따름) · local · ssh · api. 채팅은 부를 때마다,
     #  일정 짚기 · 공지 확인은 주소를 부를 때마다 읽는다(재기동 없이 반영, 운영 설정 캐시만큼 늦을 수 있다). SSH 터널은 앱 밖 프로그램이 연다.
@@ -896,10 +916,15 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         #   숙소 비교는 바깥 소스 하루 한도를 쓰므로 낮은 우선순위 몫(`travel.candidates.lodging_source_share`)으로 **부를 때** 소스를 만든다(만드는 것은 I/O 없음)
         from app.domains.travel_ops.instances.lodging import review_alternatives as lodging_review_alternatives
 
+        #   ★`[2026-10-19 사용자 결정]` 숙소 모드(관리 콘솔)를 따른다 — off(기본)면 바깥에 나가지 않고 `None`(확인 화면 자체 고르기: DB → 카카오 · 관광공사),
+        #   test 면 위 몫까지, demo 면 하루 줄 · 몫 없이 월 한도만(구글 호텔 어댑터의 호출 문 `LodgingModeLimiter` 가 고른다)
         def _lodging_rank(**query):
             from app.core.settings import get_guardrails, get_settings
+            from app.domains.travel_ops.components.settings_hook import lodging_mode
             from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
 
+            if lodging_mode(get_settings().tenant_id) == "off":
+                return None
             share = float(get_guardrails().get("travel.candidates.lodging_source_share"))
             return lodging_review_alternatives.rank(travel=build_travel_sources(get_settings(), low_priority_share=share), **query)
 
@@ -1024,6 +1049,12 @@ def build_domain_routers() -> list:
     from app.domains.travel_ops.entry.delegation_api import build_delegation_router
     from app.domains.travel_ops.modules.web_account.web_auth_api import build_auth_router
 
+    def weather_factory():
+        from app.core.settings import get_settings
+        from app.domains.travel_ops.ports.data_sources import build_travel_sources
+
+        return build_travel_sources(get_settings()).weather
+
     def place_factory():
         # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
         #   실제로 불린다. 키가 없으면 `None` 이고 그러면 그 경로가 아예 안 열린다.
@@ -1042,7 +1073,7 @@ def build_domain_routers() -> list:
         return build_policy_search()
 
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
-                              chat_factory=chat_factory, place_factory=place_factory,
+                              chat_factory=chat_factory, place_factory=place_factory, weather_factory=weather_factory,
                               kakao_factory=kakao_factory,
                               # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
                               policy_search_factory=policy_search_factory,
@@ -1054,6 +1085,12 @@ def build_domain_routers() -> list:
             # ★소셜 로그인(구글 먼저) — 업체 설정이 없으면 `GET /v1/web/auth/providers` 가 빈 목록이고 나머지는 「쓸 수 없다」로 답한다(2026-10-03)
             build_auth_router(),
             build_customer_support_router()]
+
+
+def build_admin_users(conn, tenant_id: str, default_chat_limit: int, kind: str, **options):
+    from app.domains.travel_ops.modules.web_account.admin_users import read
+
+    return read(conn, tenant_id, default_chat_limit, kind, **options)
 
 
 def build_admin_snapshot(conn, tenant_id: str, default_chat_limit: int):

@@ -16,7 +16,7 @@ base=xml('base-backend-v2.xml');changes=xml('changes-backend-v2.xml')
 front_raw=json.loads((HERE/'checks/frontend-v2.json').read_text(encoding='utf-8'))
 frontend=dict(passed=front_raw['numPassedTests'],failed=front_raw['numFailedTests'],total=front_raw['numTotalTests'],success=front_raw['success'],files=[dict(path=Path(s['name']).relative_to(WORK).as_posix(),status=s['status'],tests=len(s.get('assertionResults',[]))) for s in front_raw['testResults']])
 combined={k:base['counts'][k]+changes['counts'][k] for k in ['passed','failed','error','skipped']}
-train=WORK/'datasets/travel/train_oos2/train_oos2.jsonl'
+train=WORK/'datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl'
 training=dict(path=train.relative_to(WORK).as_posix(),rows=sum(bool(x.strip()) for x in train.read_text(encoding='utf-8').splitlines()),sha256=hashlib.sha256(train.read_bytes()).hexdigest())
 summary=dict(date_kst='2026-10-10',baseline_id='triPilot-BL-2026-10-10-v2',selected_tests=combined,selected_total=sum(combined.values()),base_backend=base,changed_backend=changes,frontend=frontend,training_data=training,
  dataset_check=dict(exit_code=0,golden=72,holdout=24,label_by={'claude-draft':96},meaning='형식·라벨 검사. 사람 정답 검수·모델 정확도·독립성 검증 아님'),

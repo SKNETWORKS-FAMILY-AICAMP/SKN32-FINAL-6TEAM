@@ -64,4 +64,4 @@ tags: [evaluation, embedding, data]
 | 무엇 | 위치 |
 |---|---|
 | 실행 스크립트 | [`emb_cmp_20261016.py`](../../../../program/scripts/plan_qa_bench/server/emb_cmp_20261016.py) |
-| 결과 원본(점수 배열 · 로그) | 로컬 `datasets/travel/plan_qa_bench/emb_cmp_20261016/` (git 밖) |
+| 결과 원본(점수 배열 · 로그) | 로컬 `datasets/core/pointing/benchmarks/plan_qa_bench/emb_cmp_20261016/` (git 밖) |

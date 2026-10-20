@@ -135,14 +135,8 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
     if current is None or current.place is None or current.kind not in ("dining", "activity"):
         return None
     now = now or datetime.now(KST)
-    if current.kind == "activity":
-        # 활동은 관광공사 목록(DB)에서 반경을 넓혀 후보를 더한다 — 고객 요청 길(`TripDesk._widen_activities`)과 같다. 바깥을 부르지 않는다
-        from app.domains.travel_ops.components.places.catalog_pool import widen_activity_pool
-        from app.domains.travel_ops.components.itinerary.itinerary_changes import RELAX_WIDE_M
-
-        known = {str(p.get("name")) for p in store.places(conn, trip_id)}
-        widen_activity_pool(conn, tenant_id=store.tenant_id, trip_id=trip_id, place=current.place, known_names=known,
-                            radius_m=RELAX_WIDE_M, now=now)
+    if current.ends_at is not None and current.ends_at <= now:
+        return None
     all_places = store.places(conn, trip_id)
     candidates = unused_places(all_places, items, current)             # 같은 여행에 이미 있는 곳은 후보가 아니다
     if current.kind == "activity":
@@ -158,11 +152,34 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
             all_places = more
             candidates = unused_places(all_places, items, current)
         state_lookup = ledger_states(conn, store.tenant_id)
-    with candidate_diagnostics.scope(trip_id=str(trip_id), item_id=str(item_id), target_title=current.title,
-                                     phase="relaxed_search"):
-        options = relaxed_options(trip=trip, items=items, places=candidates, current=current, state_lookup=state_lookup,
-                                  causes=causes)
-        options = verified_options(trip=trip, items=items, places=all_places, current=current, options=options, check=check)
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import RELAX_WIDE_M, RELAX_ACTIVITY_RADII_M
+    from app.domains.travel_ops.components.planning.replan import WEATHER_LIKE
+
+    radii = RELAX_ACTIVITY_RADII_M if current.kind == "activity" else (RELAX_WIDE_M,)
+    unavailable = []
+    options = []
+    for radius in radii:
+        if current.kind == "activity":
+            from app.domains.travel_ops.components.places.catalog_pool import widen_activity_pool
+
+            known = {str(p.get("name")) for p in all_places}
+            widen_activity_pool(conn, tenant_id=store.tenant_id, trip_id=trip_id, place=current.place, known_names=known,
+                                radius_m=radius, now=now, indoor_only=any(c.get("category") in WEATHER_LIKE for c in causes))
+            all_places = store.places(conn, trip_id)
+            candidates = other_sites(unused_places(all_places, items, current), current.place, items)
+        with candidate_diagnostics.scope(trip_id=str(trip_id), item_id=str(item_id), target_title=current.title,
+                                         phase="relaxed_search"):
+            options = relaxed_options(trip=trip, items=items, places=candidates, current=current, state_lookup=state_lookup,
+                                      causes=causes, now=now, wide_radius_m=radius)
+            try:
+                options = verified_options(trip=trip, items=items, places=all_places, current=current, options=options, check=check)
+            except VerificationUnavailable as exc:
+                unavailable.extend(exc.categories)
+                options = []
+        if options:
+            break
+    if not options and unavailable:
+        raise VerificationUnavailable(unavailable)
     if not options:
         return None
     text = relaxed_text(item=current, causes=causes, options=options, recheck_failed=recheck_failed)
@@ -181,12 +198,15 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
 
 
 def try_offer(connect: Callable[[], Any], *, store: Any, trip_id: UUID, item_id: UUID, causes: list[dict[str, Any]],
-              check: Callable[..., dict[str, Any]] | None = None, recheck_failed: bool = False) -> dict[str, Any] | None:
-    """`offer_relaxed` 를 **자기 트랜잭션**으로 — 감시 반복이 쓴다. ★확인 실패는 `source_failed` — 대안 부재로 오안내하지 않고 기존 확인 지연 경로로 전달한다."""
+              check: Callable[..., dict[str, Any]] | None = None, recheck_failed: bool = False,
+              now: datetime | None = None) -> dict[str, Any] | None:
+    """`offer_relaxed` 를 **자기 트랜잭션**으로 — 감시 반복이 쓴다. ★확인 실패는 `source_failed` — 대안 부재로 오안내하지 않고 기존 확인 지연 경로로 전달한다.
+
+    ★`[2026-10-20]` `now` 는 감시의 시계(`clock()`)를 넘긴다 — 안 넘기면 「이미 끝난 일정」 판정이 벽시계를 써서 재생 · 시뮬레이션 · 시험 시계에서 늘 빠졌다."""
     try:
         with connect() as conn, conn.transaction():
             return offer_relaxed(conn, store=store, trip_id=trip_id, item_id=item_id, causes=causes, check=check,
-                                 recheck_failed=recheck_failed)
+                                 recheck_failed=recheck_failed, now=now)
     except VerificationUnavailable as exc:
         return {"status": "source_failed", "failed_categories": exc.categories, "options": []}
     except Exception as exc:                           # noqa: BLE001

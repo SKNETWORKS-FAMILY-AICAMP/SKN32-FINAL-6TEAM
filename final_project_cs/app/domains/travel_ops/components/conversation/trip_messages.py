@@ -366,7 +366,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             reply = (case.get("state_json") or {}).get("chat_reply") or {}
             return {"status": "duplicate", "case_id": str(existing[0]),
                     "case_status": str(case["status"]),
-                    **{k: v for k, v in reply.items() if k in ("choices", "choices_title", "more", "answer_web")},
+                    **{k: v for k, v in reply.items() if k in ("choices", "choices_title", "more", "answer_web", "pick")},
                     "answer": f"같은 요청을 이미 받았어요.{chr(10) + str(before) if before else ''}"}
         from app.domains.travel_ops.components.conversation.case_dispatch import resume_pending
         try:
@@ -551,7 +551,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                         message=message, request_id=request_id)
     elif report["type"] == "rollback":
         # ★`[2026-09-26]` 전에는 이 분기가 없어 「N번 일정으로 되돌려 주세요」가 아래 「다른 안으로 바꾸기」로
-        #   떨어졌다 — 되돌리는 대신 **다른 장소로 바꿨다**(시험으로 확인, triPilot : RAG 세션이 코드를 읽고 찾았다).
+        #   떨어졌다 — 되돌리는 대신 **다른 장소로 바꿨다**(시험으로 확인, guguroute : RAG 세션이 코드를 읽고 찾았다).
         #   기준 버전은 지금 최신 — 그 사이 바뀌었으면 되돌리기가 `stale` 로 답한다.
         with get_connection() as conn:
             current, latest_items = store.latest(conn, trip_id)
@@ -607,7 +607,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         #   「바꿀 다른 안이 없음」(`no_alternate`)도 오류가 아니라 답이다 — 사람 대기는 버그·오류 리포트에만(사용자 결정)
         if outcome.get("status") in ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back",
                                      "not_today", "no_meal", "clear", "gone", "no_alternate", "ask_rollback",
-                                     "ask_target", "knock_on", "rechecked"):
+                                     "ask_target", "knock_on", "rechecked", "alternate_invalid"):
             ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")
                                          else str(outcome.get("status")))
             # ★컨트롤러와 같은 모양 — 답은 `state_patch.answer` 로 Case 에 들어간다.
@@ -711,11 +711,30 @@ def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str,
     return opened.case_id
 
 
+def near_dining_change(decision: Any, *, items: list[Any], selected: UUID | None) -> bool:
+    """「○○ 근처로 바꿔 줘」를 요식 원장 근처 계산(`TripDesk.near_alternate` — **식사만**)으로 보낼까.
+
+    ★`[2026-10-20]` 대상이 식사가 **아닌** 것이 분명하면(해석이 고른 항목 · 화면에서 고른 항목) 보내지 않는다 — 원래 할 일(「다른 안으로」)로 둔다.
+    ☆x600 2026-10-20 09:47: 활동 「경복궁 다른 곳으로 바꿔 줘」(항목을 골라 보냄)를 해석 모델이 「경복궁 근처」로 읽어 이 길로 넘겼고,
+      등록 대안이 있는데도 「어느 식사 일정을 바꿀지 알려 주세요」(`clarify`)로 끝났다. 같은 문장이 앞서는 대기질 실패로 `escalated` 였다 —
+      해석 결과가 회차마다 달라 두 갈래가 번갈아 났다."""
+    spatial = (getattr(decision, "raw", None) or {}).get("place_search") or {}
+    if spatial.get("relation") != "near" or decision.action not in ("apply_change", "propose_alternatives", "replace_named"):
+        return False
+    if decision.action == "replace_named":
+        return True                      # 이름을 댄 바꾸기는 지금처럼 — 근처 기준이 이름 찾기로 새지 않게(위 「근처 조건을 상호명 조회로 넘기지 않는다」)
+    target = decision.item
+    if target is None and selected is not None:
+        target = next((i for i in items if str(i.item_id) == str(selected)), None)
+    return target is None or target.kind == "dining"
+
+
 #: 처리한 것(답이 나간 것) — 사람 대기가 아니다. 바꾸지 않고 물은 것 · 되물은 것도 여기다
 #: ★`[2026-10-05]` `needs_check`(영업 여부를 못 알아 바꾸지 않고 알린 것)도 답이다 — 사람 대기로 떨어지지 않게
 _DONE = ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
          "edit_refused",
-         "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked")
+         "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked",
+         "alternate_invalid")
 #: 바꾼 뒤 이 시간 안에 되돌리면 오변경 의심으로 표시한다 — ★우리가 고른 값(2026-09-29, Codex 합의의 「오변경 감지」)
 SUSPECT_UNDO_SECONDS = 15 * 60
 _CLARIFY = "어느 일정을 말씀하시는지 알려 주세요 — 화면에서 일정을 고르시거나 「2일차 점심 식당 바꿔 줘」처럼 날과 끼니(또는 이름)를 적어 주세요."
@@ -784,23 +803,19 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         turns=turns,
         version=current_context["version"], now=context_now,
         ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
-    if decision.action == "replace_named":
-        # ★`[2026-10-15]` 말한 곳을 **먼저 찾는다**(웹 「일정 수정」과 같은 이름 찾기). 한 곳으로 찾으면 그곳으로 바꾸고(`TripDesk.edit`),
-        #   못 찾으면 — 「다른 식당」 같은 설명이거나 모르는 이름이다 — 바꾸지 않고 다른 안을 보여 고르게 한다(찾지 못했다고 먼저 밝힌다, `case_dispatch.response`)
-        named = dict((decision.raw or {}).get("named_destination") or {})
-        # ★`[2026-10-15 x600 실서버 확인]` 종류 힌트 없이 **이름으로 먼저** 찾는다 — 식사 일정에 「덕수궁」이라고 말하면 식당에서만 찾아 「탁사발두부공방 덕수궁점」으로 바뀌었다.
-        #   못 찾았고 바꿀 일정이 식사면 식사 힌트로 한 번 더 찾는다(식당 이름만 말한 경우)
-        text = str(named.get("text") or "")
-        found = desk.find_place(text)
-        if found is None and getattr(decision.item, "kind", None) == "dining":
-            found = desk.find_place(text, kind_hint="dining")
-        if found is None:
-            from dataclasses import replace as _replace
-
-            decision = _replace(decision, action="propose_alternatives",
-                                raw={**decision.raw, "named_destination": {**named, "found": False}})
-        else:
-            decision.raw["named_destination"] = {**named, "found": True, "name": found.name}
+    from . import edit_intent
+    decision = edit_intent.resume(decision, items=context_items, turns=turns, version=current_context["version"],
+                                  now=context_now, ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    # ★`[2026-10-20 x600 실서버 확인]` 근처 찾기는 식사만 바꾼다 — 활동 「북촌한옥마을 다른 데로」가 식사 되물음으로 끝나지 않게 먼저 맞춘다
+    from .decision_unit import settle_near_search
+    decision = settle_near_search(decision, context_items)
+    spatial = (decision.raw or {}).get("place_search") or {}
+    near_change = near_dining_change(decision, items=context_items, selected=selected)
+    if near_change:
+        # 기존 업무 실행이 검색 위치를 버리지 않도록 이 조건 요청은 TripDesk의 같은 요식 계산으로 전달한다.
+        from dataclasses import replace
+        mode = "propose" if decision.action == "propose_alternatives" else "apply"
+        decision = replace(decision, action="replace_named", raw={**decision.raw, "near_mode": mode})
     # 복합 읽기는 각 질문의 대상·범위를 따로 검증한다.
     if decision.reads:
         focus, stale_selection = None, False
@@ -880,7 +895,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
             turns=([{"role": "assistant", "reply": {"focus": read_snapshot.get("focus") or {}}}]
                    if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id)),
             version=base, now=at, context_now=context_now,
-            ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")), place_source=place_source)
+            ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")), place_source=place_source,
+            weather_lookup=getattr(desk, "weather", None))
     elif stale_selection:
         outcome = {"status": "clarify", "text": "가리키는 일정 하나를 현재 여행에서 확인하지 못했어요. 최신 일정에서 다시 선택해 주세요."}
     elif action == "clarify":
@@ -995,6 +1011,32 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         else:
             outcome = desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                     request_id=request_id)
+    elif action == "replace_named" and near_change:
+        from .decision_unit import stops_of
+        anchor = next((s.item for s in stops_of(now_items) if s.alias == spatial.get("anchor_item")), None)
+        if anchor is not None:
+            origin = anchor.place
+        else:
+            from dataclasses import replace
+            origin, _ = _near_anchor(replace(decision, item=None, raw={**decision.raw, "place_text": spatial.get("place_text", "")}),
+                                    message=message, items=now_items, at=at, store=store, conn=conn, trip_id=trip_id,
+                                    place_source=place_source, kakao_source=kakao_source)
+        if origin is None or origin.get("latitude") is None or origin.get("longitude") is None:
+            outcome = {"status": "clarify", "reason": "need_search_origin", "text": "어느 곳 근처로 식당을 바꿀까요? 기준이 될 일정이나 동네를 알려 주세요."}
+        elif item is None or item.kind != "dining":
+            outcome = {"status": "clarify", "reason": "need_target", "text": "어느 식사 일정을 바꿀지 알려 주세요."}
+        else:
+            outcome = desk.near_alternate(trip_id=trip_id, item_id=item.item_id, base_version=base,
+                                          origin=origin, message=message, request_id=request_id,
+                                          propose=decision.raw.get("near_mode") == "propose")
+    elif action in ("arrive_item", "complete_item", "advance_trip", "finish_day"):
+        from .journey_progress import apply as apply_progress, arrival_anchor
+        outcome = apply_progress(store=store, connect=get_connection, trip_id=trip_id, base_version=base,
+                                 decision=decision, now=at, request_id=request_id, message=message,
+                                 destination=(desk.find_place(str(decision.raw.get("destination_text")),
+                                     kind_hint=getattr(decision.item, "kind", None), trip_id=trip_id,
+                                     near=arrival_anchor(items,decision.item,here,at))
+                                     if action == "arrive_item" and decision.raw.get("destination_text") else None))
     elif action in EDIT_ACTIONS:
         # ★`[2026-10-15 사용자 지시]` 시각 옮기기 · 넣기 · 빼기 · 이름 말한 곳 · 순서 · 고정 — 웹 「일정 수정」과 같은 길로 실행한다(`TripDesk.edit`)
         outcome = desk.edit(trip_id=trip_id, base_version=base, decision=decision, now=at, message=message,
@@ -1019,11 +1061,20 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
 
     answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
     status = outcome.get("status")
-    chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more") if k in outcome}
+    chat_reply = {k: outcome[k] for k in ("choices", "choices_title", "more", "pick") if k in outcome}
     if outcome.get("text_web"):
         chat_reply["answer_web"] = outcome["text_web"]
-    if focus and status == "answered":
+    if action in ("arrive_item", "complete_item", "advance_trip") and status in ("adjusted", "already_applied") and item is not None:
+        focus = {"item_id": outcome.get("item_id") or str(item.item_id), "version": outcome.get("version") or base,
+                 "at": at.isoformat(), "source": "customer_progress"}
+    if focus and (status == "answered" or action in ("arrive_item", "complete_item", "advance_trip")):
         chat_reply["focus"] = focus
+    elif status == "adjusted" and action in EDIT_ACTIONS and outcome.get("focus"):
+        chat_reply["focus"] = outcome["focus"]
+    if action == "change_time" and status in ("clarify", "edit_refused"):
+        goal = edit_intent.pending_goal(decision, version=base, now=context_now)
+        if goal:
+            chat_reply["edit_goal"] = goal
     kept = {k: outcome[k] for k in ("status", "reason", "radius_m", "seen", "rejected", "version", "proposal_id",
                                     "choices") if k in outcome}
     if basis.get("suspect_wrong_change"):
@@ -1043,6 +1094,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                  **({"more": outcome["more"]} if outcome.get("more") else {}),
                  **({"needs_location": True} if outcome.get("needs_location") else {}),
                  **({"choices_title": outcome["choices_title"]} if outcome.get("choices_title") else {}),
+                 # ★`[2026-10-19 사용자 결정]` 장소를 못 찾았을 때 「직접 고르기」 카드 — 화면이 수정 모드 · 일정 추가 칸으로 넘긴다(`chat_edit.pick_card`)
+                 **({"pick": outcome["pick"]} if outcome.get("pick") else {}),
                  # ★`[2026-09-29 ui 세션 요청]` 웹은 목록을 버튼으로 또 그려 두 번 보였다 — 웹 입구는 이 판을 `answer` 로 쓴다
                  **({"answer_web": outcome["text_web"]} if outcome.get("text_web") else {}),
                  **({"basis": basis} if basis else {})})
@@ -1068,7 +1121,9 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
     if decision.question:
         request["question"] = decision.question
     if action == "clarify":
-        question = _clarify_with_choices(decision, current_items, at=at, selected=selected)
+        # ★`[2026-10-20]` 근처 조건을 실행할 수 없어 되묻는 경우(`decision_unit.settle_near_search`)는 왜 묻는지 먼저 말한다
+        lead = decision.question if (decision.raw or {}).get("near_guard") else None
+        question = _clarify_with_choices(decision, current_items, lead=lead, at=at, selected=selected)
         request.update(question=question["text"], choices=question.get("choices") or [])
     if action == "rollback":
         explicit = re.search(r"(\d+)\s*번\s*(?:일정|버전|판)", message or "")

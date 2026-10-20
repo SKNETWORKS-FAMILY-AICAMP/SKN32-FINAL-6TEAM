@@ -60,7 +60,7 @@ test("채팅: 열린 실시간 연결이 상한이면(429) 서버 문장을 보�
   await server.scenario({ stream: "busy" });
   const chat = await openChat(page);
   await chat.getByRole("button", { name: "하루 요약" }).click();
-  await expect(chat.getByRole("alert").filter({ hasText: "메시지를 보내지 못했어요" })).toContainText("열어 둔 실시간 연결이 너무 많다");
+  await expect(chat.getByRole("alert").filter({ hasText: "메시지를 보내지 못했어요" })).toContainText("열어 둔 화면이 너무 많아요");   // `[2026-10-17 ST4F-611]` 개발 문장 대신 웹 문장 — error-text.ts
   await server.scenario({ stream: "off" });
   await chat.getByRole("alert").getByRole("button", { name: "다시 보내기" }).click();
   await expect(chat.locator("article[data-role=assistant]").last()).toContainText("서버 답: 2026-10-01 하루 일정을 요약해 주세요.");

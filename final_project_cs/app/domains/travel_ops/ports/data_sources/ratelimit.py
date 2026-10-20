@@ -115,6 +115,11 @@ class RateLimiter:
         interval = self.intervals.get(source, 0.0)
         if interval <= 0:
             return
+        from .operator_modes import unlimited
+
+        if unlimited():
+            # ★`[2026-10-19 사용자 결정]` 언리미티드 모드 — 호출 간격으로 거절하지 않는다(하루 · 월 수는 `CallBudget` 이 계속 센다)
+            return
         burst = float(max(1, int(self.bursts.get(source, 1))))
 
         with self._lock:

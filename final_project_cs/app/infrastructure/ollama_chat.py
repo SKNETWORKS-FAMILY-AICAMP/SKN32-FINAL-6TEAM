@@ -28,6 +28,31 @@ class OllamaContentError(OllamaError):
     모델 서버 넘김 장치(`llm_failover.py`)가 이 한 번만 다음 경로로 넘기고 서킷에는 세지 않는다. 부르는 쪽에는 `OllamaError` 와 같다."""
 
 
+def validate_structured(value: Any, schema: dict[str, Any]) -> dict[str, Any]:
+    """Reject malformed model output while failover still owns the call."""
+    from jsonschema import Draft202012Validator
+    from jsonschema.exceptions import ValidationError
+
+    try:
+        Draft202012Validator(schema).validate(value)
+    except ValidationError as exc:
+        # Values and model output may include personal data; report only the path and rule.
+        location = ".".join(str(part) for part in exc.absolute_path) or "$"
+        raise OllamaContentError(f"구조화 답의 스키마가 다르다: {location} ({exc.validator})") from None
+    if not isinstance(value, dict):
+        raise OllamaContentError("구조화 답이 JSON 객체가 아니다")
+    return value
+
+
+def validate_content(value: dict[str, Any], validator: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
+    """Run caller evidence checks before a backend result becomes successful."""
+    try:
+        validator(value)
+    except ValueError as exc:
+        raise OllamaContentError(f"구조화 답의 근거 검증 실패: {type(exc).__name__}") from None
+    return value
+
+
 class OllamaChat:
     def __init__(self, *, base_url: str, model: str, timeout: float = 60.0,
                  transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "", num_ctx: int = 0) -> None:
@@ -84,6 +109,79 @@ class OllamaChat:
             raise OllamaContentError("JSON 객체가 아니다")
         return value
 
+    def json_stream(self, system: str, user: str, *, on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0,
+                    stall: float = 5.0, max_seconds: float = 180.0, max_tokens: int = 0) -> dict[str, Any]:
+        """`json` 과 같은 답을 **조금씩 받아** 모은다 — 첫 조각 · 조각 사이 · 맨 위 상한을 따로 본다(`model_stream.collect`). `[2026-10-16]`
+        `max_tokens` 는 답 토큰 상한(Ollama `num_predict`) — 같은 말을 되풀이하는 답을 끊는다. 상한에 걸려 잘린 답은 JSON 이 아니어서 `OllamaContentError`.
+        ★시험이 넣은 가짜(`transport`)는 조금씩 주지 못한다 — 그때는 `json` 으로 한 번에 받고 `on_piece` 를 한 번 부른다."""
+        if self._injected:
+            value = self.json(system, user)
+            if on_piece is not None:
+                on_piece(json.dumps(value, ensure_ascii=False))
+            return value
+        return self._stream(system, user, "json", max_tokens, on_piece=on_piece, first_wait=first_wait, stall=stall,
+                            max_seconds=max_seconds)
+
+    def structured_stream(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160,
+                          on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
+                          max_seconds: float = 180.0) -> dict[str, Any]:
+        """`structured`(JSON 스키마 강제)와 같은 답을 **조금씩 받는다** — 계획 읽기 에이전트(`intake/agent_read`)가 쓴다. `[2026-10-16]`
+        `num_predict` 는 답 토큰 상한 그대로. 시험이 넣은 가짜(`transport`)는 `structured` 로 한 번에 받는다."""
+        if self._injected:
+            value = self.structured(system, user, schema, num_predict=num_predict)
+            if on_piece is not None:
+                on_piece(json.dumps(value, ensure_ascii=False))
+            return value
+        return self._stream(system, user, schema, num_predict, on_piece=on_piece, first_wait=first_wait, stall=stall,
+                            max_seconds=max_seconds)
+
+    def _stream(self, system: str, user: str, fmt: Any, max_tokens: int, *, on_piece: Callable[[str], None] | None,
+                first_wait: float, stall: float, max_seconds: float) -> dict[str, Any]:
+        from app.infrastructure.model_stream import collect
+
+        options: dict[str, Any] = {"temperature": 0}
+        if max_tokens > 0:
+            options["num_predict"] = int(max_tokens)
+        payload: dict[str, Any] = {"model": self.model, "stream": True, "think": False, "format": fmt,
+                                   "options": self._options(options),
+                                   "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+        if self.keep_alive:
+            payload["keep_alive"] = self.keep_alive
+        held: dict[str, Any] = {}
+
+        def pieces():
+            try:
+                with httpx.stream("POST", f"{self.base_url}/api/chat", json=payload,
+                                  timeout=httpx.Timeout(max_seconds, connect=min(5.0, max_seconds))) as response:
+                    held["response"] = response
+                    if response.status_code != 200:
+                        raise OllamaError(f"Ollama HTTP {response.status_code}: {response.read()[:160]!r}")
+                    for line in response.iter_lines():
+                        if not line:
+                            continue
+                        part = json.loads(line)
+                        if part.get("error"):
+                            raise OllamaError(f"Ollama 오류: {str(part['error'])[:160]}")
+                        yield (part.get("message") or {}).get("content") or ""
+            except httpx.HTTPError as exc:
+                raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
+
+        def close() -> None:
+            response = held.get("response")
+            if response is not None:
+                response.close()
+
+        text = collect(pieces, first_wait=first_wait, stall=stall, max_seconds=max_seconds, on_piece=on_piece, close=close).strip()
+        if not text:
+            raise OllamaError("Ollama 가 빈 답을 냈다")
+        try:
+            value = json.loads(text)
+        except ValueError as exc:
+            raise OllamaContentError(f"JSON 이 아니다(답 상한에 잘렸을 수 있다): {text[-80:]}") from exc
+        if not isinstance(value, dict):
+            raise OllamaContentError("JSON 객체가 아니다")
+        return value
+
     def text(self, system: str, user: str) -> str:
         return self._chat(system, user, json_mode=False)
 
@@ -106,9 +204,11 @@ class OllamaChat:
             value = json.loads(response.json()["message"]["content"])
         except (ValueError, KeyError, TypeError) as exc:
             raise OllamaContentError(f"구조화 답이 JSON 이 아니다: {response.text[:160]}") from exc
-        if not isinstance(value, dict):
-            raise OllamaContentError("구조화 답이 JSON 객체가 아니다")
-        return value
+        return validate_structured(value, schema)
+
+    def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+        return validate_content(self.structured(system, user, schema, num_predict=num_predict), validator)
 
     # ── 예열 `[2026-09-29]` — 식은 모델의 첫 호출이 30초 넘게 걸렸다(ui 세션 실측). 화면이 채팅을 열 때 미리 깨운다 ──
     def loaded(self, *, timeout: float = 5.0) -> bool:
@@ -137,7 +237,7 @@ class OllamaChat:
     def see(self, prompt: str, image: bytes, *, timeout: float = 240.0) -> str:
         """이미지 한 장을 보고 글로 답한다(비전). `[2026-09-27]` 계획 읽기의 **받아쓰기** 전용.
 
-        ★실측(2026-09-26, triPilot : RAG): 「사진 → 일정 JSON」을 한 번에 시키면 6항목 중 3을 잃었고,
+        ★실측(2026-09-26, guguroute : RAG): 「사진 → 일정 JSON」을 한 번에 시키면 6항목 중 3을 잃었고,
           「한 줄씩 그대로 받아 적어라」만 시키면 6/6 을 그대로 적었다(쪽당 약 45초). 그래서 구조화를 시키지 않는다.
         ★실패는 예외(`OllamaError`) — 빈 받아쓰기를 성공처럼 돌려주지 않는다.
         """
@@ -243,8 +343,8 @@ def _build(settings: Any, route: str) -> Any:
     if not base:
         return None
 
-    def ollama(url: str) -> OllamaChat:
-        return OllamaChat(base_url=url, model=getattr(settings, "ollama_model", "tripilot-pointer:e4b-ft"),
+    def ollama(url: str, model: str = "") -> OllamaChat:
+        return OllamaChat(base_url=url, model=model or getattr(settings, "ollama_model", "tripilot-pointer:e4b-ft"),
                           timeout=float(getattr(settings, "ollama_timeout_seconds", 60.0)),
                           keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""),
                           num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0))
@@ -256,7 +356,12 @@ def _build(settings: Any, route: str) -> Any:
             from app.infrastructure.llm_failover import wrap_from_settings
 
             # 넘김이 꺼져 있으면 지금처럼 한 경로만 — 넘김 순서는 넘김 장치 몫이다
-            return wrap_from_settings(ollama(ssh), settings, extra_urls=(base,)) if failover else ollama(ssh)
+            primary = ollama(ssh, str(getattr(settings, "ollama_ssh_model", "") or ""))
+            if not failover:
+                return primary
+            if getattr(settings, "llm_failover_local_last", False):
+                return wrap_from_settings(primary, settings, local_fallback=ollama(base))
+            return wrap_from_settings(primary, settings, extra_urls=(base,))
         _warn_once("ssh:empty:chat", "model route 'ssh' chosen but ACOP_OLLAMA_SSH_BASE_URL is empty — using local Ollama")
     if route == "api":
         from app.infrastructure.llm_failover import server_api_ready, wrap_from_settings

@@ -248,7 +248,7 @@ def plot(summary, records, folder):
     ax.set_xticks([0, 1, 3, 4], ["네이버\n대기 포함", "네이버\n대기 제거", "구글\n대기 포함", "구글\n대기 제거"])
     ax.axhline(0, color=gray, lw=1)
     ax.set(ylim=(-2.2, 7.5), ylabel="우리 소요 - 지도 첫 추천 소요 (분)", title="같은 도착 목표로 재계산 · 서로 다른 출발·추천안")
-    fig.suptitle("triPilot 이동 · 네이버·구글 브라우저 대조군 추가", fontsize=18)
+    fig.suptitle("guguroute 이동 · 네이버·구글 브라우저 대조군 추가", fontsize=18)
     fig.supxlabel("서울 12쌍: 짧은·중간·긴 구간 각 4쌍 · 직접 외부 API 호출 0 · 요금 규칙 변경 0\n막대: 중앙값 · 선: 부트스트랩 95% 범위 · 실제 운행 정확도 판정은 아님", fontsize=10)
     for ext in ("png", "svg", "pdf"):
         fig.savefig(folder / f"multi-provider-overview.{ext}", dpi=170)

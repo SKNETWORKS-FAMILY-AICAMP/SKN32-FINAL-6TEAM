@@ -27,6 +27,7 @@ python -m eval.intake_diverse.run_current --ollama <x600 과 같은 구성의 Ol
 - 새 구조는 같은 `score.score_all` 에 중립 모양 예측(`score.py` 맨 위 설명)을 넣으면 같은 표가 나온다.
 - `[2026-10-16]` 읽기 에이전트 **초안**(제품 반영 안 함 — 새 세션이 이어받는다)과 시제품 두 모델의 점수: [results/2026-10-16_agent/](results/2026-10-16_agent/)
   (`draft_agent_*` = 초안을 제품 함수 그대로 잰 값, `proto_*` = 시제품) · 보고서 `wiki/records/reports/2026-10-16_계획읽기_에이전트_초안_측정.md`.
+- `[2026-10-16]` `run_agent_proto.py --prompt v2`(성향 뜻풀이 · 예 하나 더) · `--backend codex --model <gpt-6.1-sol | gpt-6-luna | gpt-6-astra>`(구독 CLI, 저장소의 `program/scripts/eval_kit/codex_percall.py` 를 쓴다). 점수: [results/2026-10-16_compare/](results/2026-10-16_compare/) · 보고서 `wiki/records/reports/2026-10-16_계획읽기_Codex_Winnow2_비교.md`.
 
 - `[2026-10-16 D-025]` **새 구조**(이해 · 분류 에이전트 + 사실 검사) 점수: [results/2026-10-16_new/](results/2026-10-16_new/) — `agent_answers.jsonl` 은 모델 답 원본(건마다 답 · 걸린 초), `model_run_scores.json` 은 그 답을 받은 첫 판, `scores.json` 은 고친 코드로 같은 답을 재생한 판(`python -m eval.intake_diverse.run_current --no-model --agent-mode on --agent-replay eval/intake_diverse/results/2026-10-16_new/agent_answers.jsonl --out <폴더>`, 카카오 키를 주면 장소 찾기도). 보고서 `wiki/records/reports/2026-10-16_계획읽기_새구조_반영.md`.
 

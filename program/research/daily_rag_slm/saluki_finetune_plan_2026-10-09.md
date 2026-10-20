@@ -68,7 +68,7 @@ tags: [slm, finetuning, evaluation]
 
 ## 데이터 확인과 남은 검수
 
-[실측] 첫 판 자료는 [기존 train_oos2 원문](../../../datasets/travel/train_oos2/train_oos2.jsonl)이며 SHA256은 `07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c`입니다. [검토 범위 대조](../../scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/reviewed_train_oos2_audit_1206.json)에서 총2,613행·정상1,377행·NONE1,236행, 추가900행 중 정상300·NONE600을 확인했습니다. 기존1,713행은 1,713/1,713 그대로 남았고, 전체 완성문 정답은2,613/2,613 일치했습니다.
+[실측] 첫 판 자료는 [기존 train_oos2 원문](../../../datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl)이며 SHA256은 `07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c`입니다. [검토 범위 대조](../../scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/reviewed_train_oos2_audit_1206.json)에서 총2,613행·정상1,377행·NONE1,236행, 추가900행 중 정상300·NONE600을 확인했습니다. 기존1,713행은 1,713/1,713 그대로 남았고, 전체 완성문 정답은2,613/2,613 일치했습니다.
 
 [실측] 추가900행의 원본은 H-train 생성/라벨 자료입니다. 생성 모델 `gpt-6.1-sol`, 별도 라벨 모델 `gpt-6-luna`의 일치(`agree`) 상태900/900·정답 일치900/900을 원문에서 확인했습니다. AI 합의이며 **사람이 900행을 검수했다고 말하지 않습니다.** 첫1,713행은 기존 증류자료1,313＋잡담 부정400이며, 모든1,713행이 두 AI 적대 검토를 통과했다고 확대하지 않습니다. 추가판 생성 시 H-test/D2/D3와 3-gram Jaccard≥0.6 후보99개를 제외했고 H-train에서 기존 모델 오답을 우선 뽑았습니다. 이는 개발 채굴 근거이며 독립 최종 검증을 대신하지 않습니다.
 

@@ -61,10 +61,10 @@ PDF_MAP = [
 def index_html():
     o = [
         "<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
-        "<title>triPilot 모든 기능별 입출력 — 목차</title>",
+        "<title>guguroute 모든 기능별 입출력 — 목차</title>",
         '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">',
         f"<style>{CSS}</style></head><body><div class=\"wrap\">",
-        '<p class="eyebrow">triPilot · 모든 기능별 입출력 · 2026-10-12</p>',
+        '<p class="eyebrow">guguroute · 모든 기능별 입출력 · 2026-10-12</p>',
         "<h1>모든 기능별 입출력 — 목차</h1>",
         '<div class="sub">기능 15장과 공통 계약 두 장 · 밑줄 친 말과 그림의 상자에 마우스를 올리면 설명이 뜹니다 · 누르면 다른 곳을 누를 때까지 남습니다 · 스크립트 없이 동작</div>',
         "<ul class=\"top\">",

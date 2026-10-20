@@ -149,11 +149,13 @@ class BudgetedLimiter:
 
 
 def with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int], names: list[str], *,
-                   on_db_error: str = DEFAULT_ON_DB_ERROR, share: float = 1.0) -> Any:
+                   on_db_error: str = DEFAULT_ON_DB_ERROR, share: float = 1.0, soft_day: frozenset[str] = frozenset()) -> Any:
     """안쪽 제한기에 **DB 예산**을 얹는다. 하루 한도를 모르는(env 에 없거나 0) 소스는 세지 않는다. 월 한도를 모르면(0) 월 줄은 세기만 하고 막지 않는다(`UNLIMITED`).
 
     `share` — ★`[2026-10-06]` 낮은 우선순위 호출(MCP 「새로 확인」)의 몫(0 < share ≤ 1). 일 · 월 줄이 `상한 × share` 에 닿으면 거절한다 — 같은 SQL 안에서 비교하므로 동시 호출도 몫을 못 넘는다(`CallBudget`).
-    ★몫을 주면 DB 를 못 읽을 때의 정책은 **`refuse` 로 고정**한다 — 낮은 우선순위가 한도를 모르고 쓰지 않게(일반 호출의 `allow` 와 반대)."""
+    ★몫을 주면 DB 를 못 읽을 때의 정책은 **`refuse` 로 고정**한다 — 낮은 우선순위가 한도를 모르고 쓰지 않게(일반 호출의 `allow` 와 반대).
+    `soft_day` — ★`[2026-10-19]` 하루 줄로는 거절하지 않는 소스(숙소 시연 모드의 `serpapi` — 월 줄만 지킨다, `CallBudget.soft_day`). 이때도 DB 를 못 읽으면 **`refuse`** 다 —
+    월 한도가 유일한 둑이라 세지 못하는 호출을 내보내지 않는다."""
     from zoneinfo import ZoneInfo
 
     from app.infrastructure.db.session import get_connection
@@ -162,8 +164,57 @@ def with_db_budget(limiter: Any, limits: dict[str, int], monthly: dict[str, int]
             for name in names if limits.get(name, 0) > 0}
     if not caps:
         return limiter
-    budget = CallBudget(connection_factory=get_connection, caps=caps, tz=ZoneInfo("Asia/Seoul"), share=share)
-    return BudgetedLimiter(limiter, budget, frozenset(caps), on_db_error="refuse" if share < 1.0 else on_db_error)
+    budget = CallBudget(connection_factory=get_connection, caps=caps, tz=ZoneInfo("Asia/Seoul"), share=share,
+                        soft_day=frozenset(soft_day) & frozenset(caps))
+    return BudgetedLimiter(limiter, budget, frozenset(caps), on_db_error="refuse" if (share < 1.0 or soft_day) else on_db_error)
+
+
+class LodgingModeOff(RateLimited):
+    """숙소 모드가 「끄기」라 구글 호텔(SerpApi)을 부르지 않았다 — **정상 갈래**다(어댑터가 「모름」으로 바꾼다). 한도 · 실패로 세지 않는다."""
+
+    reason = "lodging_mode_off"
+
+    def __init__(self, source: str) -> None:
+        RuntimeError.__init__(self, f"{source}: 숙소 모드가 끄기라 구글 호텔을 부르지 않는다(관리 콘솔 「운영 설정」)")
+        self.source, self.wait_seconds = source, 0.0
+
+
+class LodgingModeLimiter:
+    """구글 호텔 어댑터 전용 호출 문 — `[2026-10-19 사용자 결정]` 숙소 모드(`operator_modes.lodging_mode()`)를 **부를 때마다** 읽는다.
+
+        off   거절(`LodgingModeOff`) — 바깥으로 나가지 않는다
+        test  보통 제한기(`test`) — 하루 · 월 한도(확인 화면은 몫)
+        demo  시연 제한기(`demo`) — 하루 줄 · 호출 간격 · 몫 없이 월 한도만
+
+    구글 항공권은 이 문을 쓰지 않는다(같은 SerpApi 계정이라도 숙소 모드와 무관). 나머지 속성은 보통 제한기에 넘긴다."""
+
+    def __init__(self, test: Any, demo: Any) -> None:
+        self._test, self._demo = test, demo
+
+    def _pick(self) -> Any:
+        from .operator_modes import lodging_mode
+
+        mode = lodging_mode()
+        return None if mode == "off" else self._demo if mode == "demo" else self._test
+
+    def acquire(self, source: str) -> None:
+        chosen = self._pick()
+        if chosen is None:
+            raise LodgingModeOff(source)
+        chosen.acquire(source)
+
+    def mark_provider_exhausted(self, source: str, scope: str = "day") -> None:
+        mark = getattr(self._test, "mark_provider_exhausted", None)    # 같은 DB 줄 — 어느 쪽으로 찍어도 같다
+        if mark is not None:
+            mark(source, scope)
+
+    def record_failure(self, source: str) -> None:
+        count = getattr(self._test, "record_failure", None)
+        if count is not None:
+            count(source)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._test, name)
 
 
 def build_gate(settings: Any, names: list[str], *, on_db_error: str | None = None) -> Any:
@@ -183,4 +234,5 @@ def build_gate(settings: Any, names: list[str], *, on_db_error: str | None = Non
     return with_db_budget(inner, limits, settings.source_monthly_limits(), list(names), on_db_error=policy)
 
 
-__all__ = ["BudgetExhausted", "BudgetUnavailable", "BudgetedLimiter", "DEFAULT_ON_DB_ERROR", "RETRY_AFTER_SECONDS", "build_gate", "with_db_budget"]
+__all__ = ["BudgetExhausted", "BudgetUnavailable", "BudgetedLimiter", "DEFAULT_ON_DB_ERROR", "LodgingModeLimiter", "LodgingModeOff",
+           "RETRY_AFTER_SECONDS", "build_gate", "with_db_budget"]

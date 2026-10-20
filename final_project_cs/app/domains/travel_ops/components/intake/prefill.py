@@ -32,6 +32,12 @@ OWNER_LABEL = {"dining_team": "식당 팀", "activity_team": "활동 팀", "mobi
 MAX_PLANNER_SLOTS = 3
 MISSING_QUESTION = {"first_day_date": "여행 첫날이 언제인가요?", "lodging_name": "묵는 숙소 이름을 알려 주시면 숙소 기준으로 동선을 맞출게요",
                     "booked_place_name": "예약하신 곳의 이름을 알려 주세요 — 예약 일정은 우리가 바꾸지 않아요"}
+#: `[2026-10-19 사용자 결정 — 못 찾은 줄은 후보 보이고 묻기 + 직접 고르기]` 못 찾은 줄의 질문 카드.
+#:   후보는 질문에 싣지 않는다 — 화면이 이미 있는 `GET …/candidates` 로 받는다(같은 검사 · 같은 순서, 판이 바뀌어도 낡지 않게).
+#:   「직접 고르기」는 그 줄의 장소 바꾸기 · 검색을 연다(새 화면 없음). 설계 `wiki/records/plans/2026-10-19_못찾은장소_후보와_직접고르기_설계.md`
+PLACE_NOT_FOUND_QUESTION = "「{title}」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
+PLACE_NOT_FOUND_BLOCKED_QUESTION = "「{title}」은 장소 조회가 막혀 다시 찾아봤지만 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요"
+PLACE_NOT_FOUND_ACTIONS = ("pick_candidate", "pick_myself", "no_place")
 
 
 def _open_stay(item: Mapping[str, Any]) -> bool:
@@ -78,7 +84,7 @@ def check_gaps(review: Mapping[str, Any], *, trip: Mapping[str, Any] | None = No
 
         이름 없는 자리(`needs_choice` — 「성수 식당」처럼 종류 · 동네만)   → 식당 팀 · 활동 팀이 채운다
         예약했다는데 이름이 없다(`needs_name`)                             → 고객 질문(예약 일정은 우리가 고르지 않는다)
-        장소를 못 찾았다(`unresolved`)                                       → 고객 질문(이름을 지어내지 않는다)
+        장소를 못 찾았다(`unresolved`)                                       → 고객 질문(이름을 지어내지 않는다) — 후보 · 직접 고르기 카드(`run` 의 질문 모양)
         상품 범위(서울 · 7일 · 4인)                                         → 고객 질문(거절하지 않는다)
     """
     from ..planning.planner import MAX_DAYS, MAX_PARTY
@@ -103,7 +109,7 @@ def check_gaps(review: Mapping[str, Any], *, trip: Mapping[str, Any] | None = No
         elif state == "needs_name":
             out.append(Gap("booked_place_name", {"item": item["id"]}, f"「{title}」 — 예약하신 곳의 이름을 알려 주세요", source="check"))
         elif state == "unresolved":
-            out.append(Gap("place_not_found", {"item": item["id"]}, f"「{title}」을 지도에서 찾지 못했어요 — 정확한 이름을 알려 주세요",
+            out.append(Gap("place_not_found", {"item": item["id"]}, PLACE_NOT_FOUND_QUESTION.format(title=title),
                            source="check", quote=item.get("title")))
     trip = trip or {}
     out.extend(scope_gaps(party_size=_int(trip.get("party_size")), days=_int(trip.get("days")),
@@ -282,19 +288,85 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
         return check_gaps(state["review"], trip=trip)
 
     first = gaps_module.collect(model_gaps(claims, found.get("items") or []), check_gaps(found, trip=trip))
+
+    def refind(item: Mapping[str, Any], query: str) -> bool:
+        """막힌 조회를 같은 말로 한 번 더 — 고객이 이름을 고친 길(`pipeline.edit`)과 같다. 찾으면 새 판, 못 찾으면 그대로."""
+        try:
+            new = pipeline.edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=state["revision"],
+                                edits=[{"source_id": item["source_id"], "field": f"items[{item['index']}].place", "value": {"name": query}}],
+                                tour=tour, kakao=kakao, via="autofix", dining=dining, learn_aliases=False)
+        except (pipeline.IntakeRejected, pipeline.IntakeConflict) as exc:
+            log.info("prefill refind kept item=%s code=%s", item.get("id"), getattr(exc, "code", None))
+            return False
+        state["revision"] = new
+        _, state["review"] = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new)
+        return True
+
+    first, refound, still_blocked = retry_blocked(first, claims=claims, items=found.get("items") or [], refind=refind)
     # 다른 장소를 채우면 전체 동선과 숙소 후보도 바뀐다. 같은 판의 실패를 반복하지 않고 바뀐 판에서만 다시 본다.
-    draft, used, rounds = gaps_module.settle({"revision": revision}, first, owners, apply, recheck, max_rounds=max_rounds,
+    draft, used, rounds = gaps_module.settle({"revision": state["revision"]}, first, owners, apply, recheck, max_rounds=max_rounds,
                                            retry_unfilled=lambda p: p.gap.kind == "lodging_place" and p.owner == "lodging_team")
     latest = {p.gap.key: p for p in used}
-    filled = [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
-    questions = [{"kind": p.gap.kind, "question": (p.candidates[0] or {}).get("question") or p.gap.reason, "quote": p.gap.quote}
-                 for p in latest.values() if p.owner == "ask_customer"]
+    filled = refound + [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
+    items_now = {i.get("id"): i for i in (state["review"].get("items") or [])}
+    questions = [_question(p, items_now, still_blocked) for p in latest.values() if p.owner == "ask_customer"]
     kept = [{"kind": p.gap.kind, "item": p.gap.where.get("item"), "owner": p.owner, "reason": p.reason}
             for p in latest.values() if p.owner != "ask_customer" and not p.candidates]
     record = {"filled": [f for f in filled if f], "questions": _unique(questions), "kept": kept, "rounds": rounds,
               "proposals": [p.as_dict() for p in used]}
     _store(conn, tenant_id=tenant_id, intake_id=intake_id, revision=draft["revision"], record=record)
     return {"revision": draft["revision"], **record}
+
+
+def blocked_query(claims: list[Mapping[str, Any]], item: Mapping[str, Any]) -> str | None:
+    """이 일정의 장소 근거에 **막힌 조회**(`blocked` — 한도 · 시간 초과 · 연결 실패)가 남아 있으면 다시 찾을 말, 아니면 None.
+    없는 곳이라서 못 찾은 줄은 다시 찾지 않는다(같은 답이 나온다)."""
+    field = f"items[{item.get('index')}].place"
+    row = next((c for c in reversed(claims) if c.get("field") == field and str(c.get("source_id")) == str(item.get("source_id"))), None)
+    evidence = (row or {}).get("evidence") or {}
+    if not isinstance(evidence, Mapping) or not evidence.get("blocked"):
+        return None
+    return str(item.get("title") or evidence.get("query") or "").strip() or None
+
+
+def retry_blocked(gaps: list[Gap], *, claims: list[Mapping[str, Any]], items: list[Mapping[str, Any]],
+                  refind: Callable[[Mapping[str, Any], str], bool]) -> tuple[list[Gap], list[dict[str, Any]], set[Any]]:
+    """`[2026-10-19 사용자 결정]` 못 찾은 줄 중 **조회가 막혀서** 못 찾은 것은 고객에게 묻기 전에 **한 번** 다시 찾는다(횟수는 우리가 고른 값 —
+    읽기 직후라 한도가 찼으면 대개 또 막힌다. 시간 초과 · 일시 실패를 건지는 몫이다).
+
+    돌려주는 값: (남은 빈칸, 다시 찾아 채운 기록, 다시 찾아도 못 찾은 일정 id). 다시 찾아도 막힌 줄은 질문에 `blocked: true` 로 남는다."""
+    by_id = {i.get("id"): i for i in items}
+    left: list[Gap] = []
+    filled: list[dict[str, Any]] = []
+    still: set[Any] = set()
+    for gap in gaps:
+        item = by_id.get(gap.where.get("item")) if gap.kind == "place_not_found" else None
+        query = blocked_query(claims, item) if item is not None else None
+        if query is None:
+            left.append(gap)
+            continue
+        if refind(item, query):
+            filled.append({"item": item.get("id"), "title": query, "owner": "refind", "owner_label": "장소 다시 찾기",
+                           "reason": "장소 조회가 막혀 못 찾았던 곳을 다시 찾아 채웠어요", "gap": gap.kind, "from": None, "to": None,
+                           "new": False})
+        else:
+            still.add(item.get("id"))
+            left.append(gap)
+    return left, filled, still
+
+
+def _question(p: Proposal, items: Mapping[Any, Mapping[str, Any]], blocked: set[Any]) -> dict[str, Any]:
+    """질문 하나 — 다른 질문(첫날 · 숙소 이름 · 범위)과 같은 목록에 모은다. 못 찾은 줄은 그 일정을 가리키는 칸과 단추를 싣는다."""
+    row = {"kind": p.gap.kind, "question": (p.candidates[0] or {}).get("question") or p.gap.reason, "quote": p.gap.quote}
+    if p.gap.kind != "place_not_found":
+        return row
+    item_id = p.gap.where.get("item")
+    item = items.get(item_id) or {}
+    title = item.get("title") or p.gap.quote or "이름 없는 일정"
+    was_blocked = item_id in blocked
+    return {**row, "question": (PLACE_NOT_FOUND_BLOCKED_QUESTION if was_blocked else PLACE_NOT_FOUND_QUESTION).format(title=title),
+            "item": item_id, "source_id": item.get("source_id"), "index": item.get("index"), "mode": "change",
+            "actions": list(PLACE_NOT_FOUND_ACTIONS), "blocked": was_blocked}
 
 
 def _add_item(conn, pipeline, *, tenant_id, customer_id, intake_id, revision, pick, source_id, tour, kakao, dining) -> int | None:
@@ -376,4 +448,4 @@ def _int(value: Any) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
-__all__ = ["autofix_owner", "check_gaps", "model_gaps", "planner_owner", "run"]
+__all__ = ["autofix_owner", "blocked_query", "check_gaps", "model_gaps", "planner_owner", "retry_blocked", "run"]

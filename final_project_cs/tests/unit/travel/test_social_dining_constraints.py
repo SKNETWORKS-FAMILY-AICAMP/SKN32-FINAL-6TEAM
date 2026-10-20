@@ -58,7 +58,9 @@ def test_confirmation_keeps_staged_food_and_merges_later_survey_answers(monkeypa
     monkeypatch.setattr(reopen, "session", lambda *args, **kwargs: None)
     monkeypatch.setattr(review, "load", lambda *args, **kwargs: None)
     monkeypatch.setattr(survey_answers, "stored", lambda *args, **kwargs: {"preferred_mobility": "public"})
-    monkeypatch.setattr(survey_answers, "stored_resolved", lambda *args, **kwargs: {})
+    # `[2026-10-20 develop 병합]` 옛 슬롯 답은 저장 때 해석 이력이 있어야 읽힌다(role-manager 설문 묶음 개편 10-19)
+    monkeypatch.setattr(survey_answers, "stored_resolved",
+                        lambda *args, **kwargs: {"preferred_mobility": ("public", "preferred_mobility", "public")})
     # Bypass customer DB writes only after the real confirmation endpoint has
     # assembled and validated the final registration request.
     router = trip_api.build_trip_router()

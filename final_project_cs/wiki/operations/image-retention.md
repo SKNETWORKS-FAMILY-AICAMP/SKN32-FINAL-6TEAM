@@ -47,7 +47,7 @@ impl_scope: cs — 정리 코드는 final_project_cs/deploy 에 있고 x600 서�
 
 ## WSL 가상 디스크 압축 (x600 서버)
 
-이미지를 지워도 `WSL-Ubuntu.vhdx` 파일 크기는 압축하기 전까지 줄지 않습니다. 압축 스크립트 `C:\ProgramData\WslMaintenance\wsl_maint.ps1`(매주 일요일 05:30 `WslCompactWeekly`, 수동은 `WslMaintenanceFirstRun`)는 건강 확인·복구 절차를 갖추고 있고 11~17분이 걸리며, 그동안 triPilot 과 jikimi 가 같이 멈춥니다. **E 드라이브 여유가 2GiB 미만이면 건너뜁니다.**
+이미지를 지워도 `WSL-Ubuntu.vhdx` 파일 크기는 압축하기 전까지 줄지 않습니다. 압축 스크립트 `C:\ProgramData\WslMaintenance\wsl_maint.ps1`(매주 일요일 05:30 `WslCompactWeekly`, 수동은 `WslMaintenanceFirstRun`)는 건강 확인·복구 절차를 갖추고 있고 11~17분이 걸리며, 그동안 guguroute 과 jikimi 가 같이 멈춥니다. **E 드라이브 여유가 2GiB 미만이면 건너뜁니다.**
 
 `[실측 2026-10-14]` 226.3GiB → 149.7GiB, E 드라이브 여유 1.45GiB → 79.8GiB(15:59~16:10, 컨테이너 건강 확인 통과). 여유가 부족할 때 안전장치 기준을 낮춘 사본으로 실행했으며, 이 변경은 자동 권한 심사가 막아 사용자가 직접 실행했습니다. 사본은 일회용입니다.
 

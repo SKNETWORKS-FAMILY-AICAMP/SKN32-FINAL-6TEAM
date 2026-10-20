@@ -34,7 +34,7 @@ ARROW = '<div class="arw">→</div>'
 P.append(f'''<section class="page cover">
 <div class="row" style="height:100%;align-items:center;gap:70px">
  <div style="flex:1"><div class="kicker">A-COPilot · 멘토링 2026-10-02</div>
-  <h1>여행 계획을 받아,<br><span class="hl">여행이 끝날 때까지 지키는</span><br>에이전트 triPilot</h1>
+  <h1>여행 계획을 받아,<br><span class="hl">여행이 끝날 때까지 지키는</span><br>에이전트 guguroute</h1>
   <p class="lead">외국인 자유여행자 · 서울 · 최대 7일 · 4인</p></div>
  <div class="row" style="gap:24px;align-items:flex-end">{phone("s1_home.jpg", w=220)}<div style="margin-bottom:50px">{phone("s3_choice.jpg", w=240)}</div></div>
 </div></section>''')
@@ -64,7 +64,7 @@ page("한국에서는 예약·지도·결제 정보에 닿기 어려워,<br>깨�
   <div style="flex:1">
     <div class="q">예: 1시에 예약한 식당이 임시휴무, 3시엔 체험 예약이 있다면</div>
     <div class="nine">{steps}</div>
-    <p class="say" style="margin-top:22px">triPilot이 대신하는 것이 바로 <b>이 아홉 단계</b>입니다.</p>
+    <p class="say" style="margin-top:22px">guguroute이 대신하는 것이 바로 <b>이 아홉 단계</b>입니다.</p>
   </div>
 </div>''', "문제 ② 복구가 어렵다", "출처: 불편 언급 한국 11% vs 일본 7%(야놀자리서치 2026-05 보도), 언어소통 어려움 26.6%(대한상공회의소 조사, KDI 경제정보센터). 9단계는 팀 인트로 근거 문서의 정리.")
 
@@ -86,7 +86,7 @@ three = [("올린다", "쓰던 계획을 그대로 올리면 일정으로 읽어
          ("지킨다", "식당·활동·이동을 여행 내내 다시 확인", "s4_schedule.jpg"),
          ("알린다", "먼저 고쳐 두고, 다른 안을 함께 알림", "s5_alerts.jpg")]
 c3 = "".join(f'<div class="card f3"><div class="t3">{t}</div><div class="d3">{d}</div>{phone(i, w=170)}</div>' for t, d, i in three)
-page("그래서 triPilot은 계획을 새로 짜는 앱이 아니라,<br>이미 있는 계획을 받아 여행 내내 지킵니다",
+page("그래서 guguroute은 계획을 새로 짜는 앱이 아니라,<br>이미 있는 계획을 받아 여행 내내 지킵니다",
      f'<div class="row" style="gap:26px">{c3}</div><p class="ns" style="margin-top:18px;font-size:19px">계획이 없으면 짜 주기도 합니다(서울 3일 2인 요청 → 후보 1,779곳 중 12곳을 골라 등록).</p>',
      "해결")
 
@@ -95,8 +95,8 @@ rows = [("TripIt Pro", "항공편", "항공 지연·취소 알림", "식당·활
         ("TripMazer", "여행 일정", "날씨·파업·지연 감시, 재계획", "AI 제안은 약관상 추정치", "—"),
         ("Tripsy", "여행 일정", "일정 편집(API)", "자동 감지→재제안 흐름은 확인 못 함", "—"),
         ("토모트래블 (사람)", "여행 전 설계", "사람이 상담·설계", "여행 중 실시간 확인은 확인 못 함", "29,000~249,000원"),
-        ("triPilot", "내 계획 전체", "식당·활동·이동을 스스로 재확인", "먼저 고치고 다른 안 3개 + 알림", "팀당 49,000원")]
-tr = "".join(f'<tr class="{"me" if r[0] == "triPilot" else ""}">' + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
+        ("guguroute", "내 계획 전체", "식당·활동·이동을 스스로 재확인", "먼저 고치고 다른 안 3개 + 알림", "팀당 49,000원")]
+tr = "".join(f'<tr class="{"me" if r[0] == "guguroute" else ""}">' + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
 page("비슷한 서비스는 항공 알림이나 사전 설계에 머물고,<br>여행 중 식당·활동·이동을 함께 다시 확인하는 곳은 찾지 못했습니다",
      f'<table class="cmp"><thead><tr><th>서비스</th><th>무엇을 지키나</th><th>하는 것</th><th>여행 중 문제가 생기면</th><th>가격</th></tr></thead><tbody>{tr}</tbody></table>'
      '<p class="ns" style="margin-top:16px;font-size:19px">「확인 못 함」은 기능이 없다는 뜻이 아니라, 공개 자료와 팀의 직접 시험에서 확인하지 못했다는 뜻입니다. '
@@ -113,7 +113,7 @@ page("사용자는 로그인 없이 쓰던 계획을 붙여 넣고,<br>읽힌 �
  <div class="card mini" style="width:auto;background:#e5efe8"><div class="t3" style="font-size:24px">등록 즉시</div><div class="ns">디스코드 알림 + 로그인 없이 열리는 여행계획서 링크(늘 최신)</div></div></div>
 </div>''', "유스케이스 ① 여행 전", "실제 화면 캡처(2026-10-01, 개발 중인 서비스). 이메일은 복구용으로만 받고 저장하지 않는다.")
 
-page("여행 중 문제가 생기면 triPilot이 먼저 고쳐 두고,<br>다른 안을 함께 알립니다",
+page("여행 중 문제가 생기면 guguroute이 먼저 고쳐 두고,<br>다른 안을 함께 알립니다",
      f'''<div class="row" style="gap:26px;justify-content:center">
  {phone("s3_choice.jpg", "선택이 필요해요<br>먼저 바꾼 안 + 다른 안 3개", 196)}
  {phone("s5_alerts.jpg", "받은 알림<br>변경 · 선택 요청 · 출발 안내", 196)}
@@ -331,7 +331,7 @@ page("다음 한 달은 각 에이전트가<br>지금 못 하는 것을 하나�
 
 # 22 정리 ----------------------------------------------------------------------------
 P.append(f'''<section class="page cover"><div class="row" style="height:100%;align-items:center;gap:70px"><div style="flex:1">
-<div class="kicker">정리</div><h1 style="font-size:62px">계획은 한 번 짜면 끝이 아니라<br>여행 내내 깨지고,<br><span class="hl">triPilot은 그때마다 지킵니다.</span></h1>
+<div class="kicker">정리</div><h1 style="font-size:62px">계획은 한 번 짜면 끝이 아니라<br>여행 내내 깨지고,<br><span class="hl">guguroute은 그때마다 지킵니다.</span></h1>
 <div class="col" style="margin-top:36px;gap:12px;font-size:28px;font-weight:700"><div>올린다 — 쓰던 그대로, 근거 있는 값만</div><div>지킨다 — 요식·액티비티·이동이 다시 확인</div><div>알린다 — 먼저 고치고, 고를 수 있게</div></div>
 <p class="lead" style="margin-top:40px">질문 받겠습니다.</p></div>{phone("s7_chat.jpg", w=250)}</div></section>''')
 
@@ -392,7 +392,7 @@ svg text{font-family:Pretendard,"Malgun Gothic",sans-serif}
 """
 pages = "\n".join(p.replace("</section>", f'<div class="pn">{i + 1} / {len(P)}</div></section>', 1) for i, p in enumerate(P))
 html = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>triPilot 멘토 발표 v2</title>
+<title>guguroute 멘토 발표 v2</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>{CSS}</style></head><body><div class="wrap" id="w">{pages}</div>
 <script>/* 화면 폭에 맞춰 크기만 맞춘다(움직임 없음) */(function(){{var w=document.getElementById('w');function f(){{if(matchMedia('print').matches)return;var k=Math.min(1,(innerWidth-20)/1600);w.style.transform='scale('+k+')';w.style.marginLeft=Math.max(10,(innerWidth-1600*k)/2)+'px';document.body.style.height=(w.scrollHeight*k+20)+'px'}}addEventListener('resize',f);f()}})();</script>

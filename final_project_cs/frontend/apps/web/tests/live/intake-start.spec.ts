@@ -136,3 +136,16 @@ test("서버가 몇 초 넘게 답이 없으면 진행 화면이 「서버가 �
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/, { timeout: 15_000 });
   await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
 });
+
+test("그리기 신호가 오지 않는 화면(숨은 브라우저 창 · 뒤쪽 탭)에서도 계획이 나가고 접수 화면으로 넘어간다 — 옛: 「보내는 중」에서 요청 없이 멈춤 (ST4F-596)", async ({ page, request }) => {
+  const server = mockServer(request);
+  await page.addInitScript(() => localStorage.setItem("triPilot.guardianDefault.v1", "on"));       // 항로 지킴이를 켜 둔 고객 — 카드 없이 바로 보낸다
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  // 숨은 창처럼 requestAnimationFrame 이 아예 오지 않는다(화면 상태는 「보임」 그대로 — 2026-10-17 앱 브라우저 창을 숨긴 채 재현: 28초 동안 요청 0)
+  await page.evaluate(() => { window.requestAnimationFrame = () => 0; });
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page).toHaveURL(/\/intakes\/(?!starting)[^/]+$/);
+  expect(await server.received("POST", "/trip-intakes")).toHaveLength(1);                        // 그리기 신호 대신 타이머로 한 번
+});

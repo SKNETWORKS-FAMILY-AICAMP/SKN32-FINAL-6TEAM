@@ -35,10 +35,10 @@ function DraftNote({ t }: { t: Translate }) {
   return <p className={styles.termsDraft} role="note">{t(DRAFT_NOTICE[0], DRAFT_NOTICE[1])}</p>;
 }
 
-export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, onReadDoc, onToggle, onContinue }: {
+export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, onReadDoc, onToggle, onContinue, saving = false, signup = false }: {
   t: Translate; choices: ConsentMap; consentMotion: boolean;
   /** The customer typed a Discord address on the first card: it is kept only if the alert-channel item is ticked. */
-  alertTyped?: boolean;
+  alertTyped?: boolean; saving?: boolean; signup?: boolean;
   onReadDoc: (code: ConsentCode) => void; onToggle: (code: ConsentCode, checked: boolean) => void; onContinue: () => void;
 }) {
   const { docs } = useLiveTerms(useSettings().language);
@@ -63,7 +63,7 @@ export function TermsCardBody({ t, choices, consentMotion, alertTyped = false, o
         </li>;
       })}
     </ul>
-    <button type="button" className={`${styles.next} ${styles.termsContinue}`} disabled={!requiredAgreed(choices)} onClick={onContinue}>{t("동의하고 다음으로", "Agree and continue")}<OnboardingIcon name="arrow" size={15} /></button>
+    <button type="button" className={`${styles.next} ${styles.termsContinue}`} disabled={saving || !requiredAgreed(choices)} onClick={onContinue}>{saving ? t("동의 저장 중…", "Saving consent…") : signup ? t("동의하고 가입 완료", "Agree and finish sign-up") : t("동의하고 다음으로", "Agree and continue")}<OnboardingIcon name="arrow" size={15} /></button>
   </>;
 }
 
@@ -83,7 +83,7 @@ export function TermsReader({ t, doc, agreed, onAgree, onClose }: {
   const title = t(doc.title[0], doc.title[1]);
   return <div className={styles.termsDialog} role="dialog" aria-modal="true" aria-labelledby="terms-full-title" onKeyDown={escape}>
     <header className={styles.termsHeader}>
-      <div><small>{t("이용 안내", "NOTICE")} · {t(`버전 ${version} · 시행 ${TERMS_EFFECTIVE}`, `Version ${version} · effective ${TERMS_EFFECTIVE}`)}</small><h2 id="terms-full-title">{title}</h2></div>
+      <div><small>{t("약관", "Terms")} · {t(`버전 ${version} · 시행 ${TERMS_EFFECTIVE}`, `Version ${version} · effective ${TERMS_EFFECTIVE}`)}</small><h2 id="terms-full-title">{title}</h2></div>
       <button type="button" className={styles.termsClose} aria-label={t("약관 닫기", "Close terms")} onClick={onClose}>×</button>
     </header>
     <article ref={scroller} className={styles.termsScroll} tabIndex={0} aria-label={t("약관 전체 내용", "Full terms")}>
