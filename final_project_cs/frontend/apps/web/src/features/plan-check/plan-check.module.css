@@ -132,6 +132,9 @@ button.time { cursor: pointer; }
 
 .card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
 .entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
+/* `[2026-10-20 사용자 결정 — 계획 확인 C안]` A stop the check has not reached yet: dashed and grey (flow mockup `tripilot-plan-flow-register.html`). */
+.entry[data-reveal-waiting] > .card { border-style: dashed; border-color: var(--color-border); background: var(--color-subtle); }
+.entry[data-reveal-waiting] .cardTitle { color: var(--color-faint); font-weight: 600; }
 .entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
 .entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
 .screen[data-stage="done"] .entry:where([data-type="item"]) .card { border-color: transparent; }

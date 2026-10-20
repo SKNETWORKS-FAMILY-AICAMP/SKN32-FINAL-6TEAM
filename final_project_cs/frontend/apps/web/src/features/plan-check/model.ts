@@ -233,22 +233,25 @@ function checkOrder(view: PlanCheckView): ({ type: "item"; id: string } | { type
 /**
  * ★`[2026-10-04 사용자 지시]` 빨강(못 찾음·고쳐야 함)과 회색(–, 아직 모름)은 어차피 확인이 안 된 것이라 「확인 중」 애니메이션 없이 처음부터 그 모양으로 나온다.
  * 천천히 켜지는 것은 통과(✓)·채움(✎)·주의(!)뿐이다 — 사용자가 「이건 확인됐구나」를 알아볼 수 있는 속도로.
+ * `[2026-10-20 사용자 결정 — 계획 확인 C안]` 처음 검사를 그릴 때는 빨강·회색 줄도 「확인 중」으로 나와 한 줄씩 켜진다(`pendingCopy`). 이 규칙은 「다시 제출」 뒤 다시 켜는 표시(`plan-check.tsx` `rowsFor`)에만 남는다.
  */
 export const isInstantRow = (row: CheckRow) => row.result === "bad" || row.result === "unknown";
 
+/** `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card comes with every check waiting, the red and grey ones too: its height is the finished card's, so nothing below it moves while its checks tick in. */
 const pendingCopy = <T extends { checks: CheckRow[]; verdict: Verdict | null }>(entity: T): T =>
-  ({ ...entity, checks: entity.checks.map((row) => isInstantRow(row) ? row : { ...row, result: "pending" as const, text: "" }), verdict: null });
+  ({ ...entity, checks: entity.checks.map((row) => ({ ...row, result: "pending" as const, text: "" })), verdict: null });
 
 /**
  * One visible change from `shown` toward `target`, or null when they already match.
  *
  * ★The server says what happened and in which order; the screen decides the pace. However many changes arrive at once
  *   (a stream burst, or a re-read after a poll), they are drawn one at a time in this order: reading starts → each line
- *   read → the days → checking starts → each place or move along the day (appear with its checks waiting → each check → its
- *   verdict) → done → title.
+ *   read → the days → checking starts → each place along the day (appear with its checks waiting → each check → its
+ *   verdict, a step of its own) → done → title. `[2026-10-20 사용자 결정 — 계획 확인 C안]` The leg to a place comes with that place, in one step
+ *   (a leg the server sends after its place is drawn comes alone, where it stands).
  *   Anything the screen cannot step toward (something removed, a line changed) jumps straight to `target`.
  */
-export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = false): PlanCheckView | null {
+export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheckView | null {
   if (JSON.stringify(shown) === JSON.stringify(target)) return null;
   const jump = () => target;
   if (stageIndex(target.stage) < stageIndex(shown.stage)) return jump();
@@ -270,11 +273,12 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = f
   if (shown.stage === "reading" && stageIndex(target.stage) > stageIndex("reading")) return { ...shown, stage: "checking" };
 
   // Places and moves along each day: appear (checks waiting) → each check → verdict.
-  for (const entry of checkOrder(target)) {
+  const order = checkOrder(target);
+  for (const [at, entry] of order.entries()) {
     if (entry.type === "item") {
       const want = target.items.find((item) => item.id === entry.id)!;
       const have = shown.items.find((item) => item.id === entry.id);
-      const step = advance(have, want, coarse ? "whole" : "rows");
+      const step = advance(have, want, "rows");
       if (step === undefined) continue;
       const items = have ? shown.items.map((item) => item.id === want.id ? step : item) : insertInOrder(shown.items, step, target.items);
       return { ...shown, items };
@@ -285,7 +289,10 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = f
     const step = advance(have, want, "whole");
     if (step === undefined) continue;
     const moves = have ? shown.moves.map((move) => move.id === want.id ? step : move) : [...shown.moves, step];
-    return { ...shown, moves };
+    const next = order[at + 1];
+    const card = !have && next?.type === "item" && next.id === want.toId && !shown.items.some((item) => item.id === next.id)
+      ? target.items.find((item) => item.id === next.id) : undefined;
+    return card ? { ...shown, moves, items: insertInOrder(shown.items, pendingCopy(card), target.items) } : { ...shown, moves };
   }
   // Done only once every check is in, then the title.
   if (stageIndex(shown.stage) < stageIndex(target.stage)) return { ...shown, stage: STAGES[stageIndex(shown.stage) + 1] };
@@ -295,27 +302,17 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView, coarse = f
 
 /**
  * The next state of one place or move toward `want`, or undefined when it already matches.
- * `rows`: a place appears with its checks waiting, then one drawn check at a time (the red and grey ones come with the check before them, at once),
- * the verdict with the last. `whole`: it appears finished — a move (its only visible part is its mark: no pretended search is replayed after the
- * server has answered) or, in a big plan, a card (drawn card by card instead of line by line).
+ * `rows`: a place appears with its checks waiting, then one check at a time, then — once every check is in — its verdict, a step of its own
+ * (`[2026-10-20 사용자 결정 — 계획 확인 C안]` the red and grey checks are ticked in like the others; the verdict used to land with the last check).
+ * `whole`: it appears finished — a move (its only visible part is its mark: no pretended search is replayed after the server has answered).
  */
 function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have: T | undefined, want: T, grain: "rows" | "whole"): T | undefined {
   if (!have) return grain === "whole" ? want : pendingCopy(want);
   if (JSON.stringify(have) === JSON.stringify(want)) return undefined;
   if (have.checks.length !== want.checks.length || have.checks.some((row, at) => row.kind !== want.checks[at].kind)) return want;
   if (grain === "whole") return { ...have, ...want };
-  const checks = have.checks.slice();
-  let ticked = false;
-  for (let at = 0; at < checks.length; at += 1) {
-    if (JSON.stringify(checks[at]) === JSON.stringify(want.checks[at])) continue;
-    if (!isInstantRow(want.checks[at])) {
-      if (ticked) break;
-      ticked = true;
-    }
-    checks[at] = want.checks[at];
-  }
-  const left = checks.some((row, at) => JSON.stringify(row) !== JSON.stringify(want.checks[at]));
-  return left ? { ...have, checks } : { ...have, ...want };
+  const at = have.checks.findIndex((row, index) => JSON.stringify(row) !== JSON.stringify(want.checks[index]));
+  return at < 0 ? { ...have, ...want } : { ...have, checks: have.checks.map((row, index) => index === at ? want.checks[at] : row) };
 }
 
 /** Put `item` where it stands in `order` (the server's order), among the items already shown. */

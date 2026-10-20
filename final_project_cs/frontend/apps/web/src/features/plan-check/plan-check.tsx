@@ -1219,7 +1219,8 @@ function Checking({ view, sourceView, actions = {}, registration, tripIssues = [
     return () => clearTimeout(timer);
   }, [slide, turn, swap]);
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
-  const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "center");
+  // `[2026-10-20 사용자 결정 — 계획 확인 C안]` The card being checked is pinned at the top of the list (it was brought to the middle).
+  const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "top");
   const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !timeEdit.edit && !removed.length;
   useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
   // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (a card or a way) wears a grey border, by the ＋'s measure — chosen apart from the ＋, so both can show.

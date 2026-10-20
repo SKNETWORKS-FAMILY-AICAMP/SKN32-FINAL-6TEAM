@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { exampleDone, exampleSnapshots } from "./test-views";
 import { nextStep, STAGES, type PlanCheckView } from "./model";
-import { backlog, cardBacklog, COARSE_MIN_MS, linesBacklog, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_BUDGET_MS, REVEAL_MIN_MS, REVEAL_MS, revealPlan, STAGE_MIN_MS, stepMany, useReveal } from "./use-reveal";
+import { FIRST_CARD_MS, FOLD_MS, linesBacklog, pauseBefore, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_MS, ROW_MS, ROWS_LEAD_MS, STAGE_MIN_MS, stepMany, useReveal, VERDICT_MS } from "./use-reveal";
 
 // Exercise the hook's timer/state boundary in Node; the live tests cover React and browser rendering.
 const hooks = vi.hoisted(() => ({
@@ -145,49 +145,29 @@ describe("saved edits and paused replay", () => {
 });
 
 describe("how fast the plan check draws what the server sent", () => {
-  it("counts what is waiting to be drawn, and none once everything is drawn", () => {
-    expect(backlog(exampleDone, exampleDone)).toBe(0);
-    expect(cardBacklog(exampleDone, exampleDone)).toBe(0);
-    // One drawn change per step: the count falls as the screen walks to the target and ends at zero.
-    let shown: PlanCheckView = received;
-    let last = backlog(shown, exampleDone);
-    expect(last).toBeGreaterThan(20);
-    for (let step = nextStep(shown, exampleDone); step; step = nextStep(shown, exampleDone)) {
-      shown = step;
-      const now = backlog(shown, exampleDone);
-      expect(now).toBeLessThanOrEqual(last);
-      last = now;
-    }
-    expect(last).toBe(0);
+  it("`[2026-10-20 C안]` draws the first check at the chosen pace: the first card 0.7 s, its first line 0.65 s, each line 0.26 s, the verdict 0.28 s, the next card 0.45 s", () => {
+    expect([FIRST_CARD_MS, ROWS_LEAD_MS, ROW_MS, VERDICT_MS, FOLD_MS]).toEqual([700, 650, 260, 280, 450]);
+    let shown: PlanCheckView = { ...exampleDone, stage: "checking", title: null, items: [], moves: [] };
+    const pauses: number[] = [];
+    for (let next = nextStep(shown, exampleDone); next; next = nextStep(shown, exampleDone)) { pauses.push(pauseBefore(shown, next)); shown = next; }
+    expect(pauses).toEqual([
+      700, 650, 260, 260, 280,           // a: the card, its three lines, the verdict
+      450, 650, 260, 260, 260, 280,      // b, with the leg to it: the card, its four lines, the verdict
+      450, 650, 260, 260, 260, 280,      // c, with the leg to it
+      450, 650, 260, 260, 280,           // d
+      260, 260,                          // done, the title
+    ]);
   });
 
-  it("counts about the steps nextStep takes (the days and the title are not counted), so the pace is worked out from the real number of draws", () => {
-    let shown: PlanCheckView = received;
-    let steps = 0;
-    for (let step = nextStep(shown, exampleDone); step; step = nextStep(shown, exampleDone)) { shown = step; steps += 1; }
-    expect(steps - backlog(received, exampleDone)).toBe(2);                    // the step that sets the days, and the one that sets the title
-  });
-
-  it("`[2026-10-04]` draws a small plan one check at a time, 300 ms between two — slow enough to see which check came in", () => {
-    expect(REVEAL_MS).toBe(300);
-    expect(revealPlan(0, 0)).toEqual({ pause: REVEAL_MS, coarse: false });
-    expect(revealPlan(10, 5)).toEqual({ pause: REVEAL_MS, coarse: false });
-    // The example plan (4 places, 2 moves): the whole replay is well inside the budget at the full pause.
-    const plan = revealPlan(backlog(received, exampleDone), cardBacklog(received, exampleDone));
-    expect(plan).toEqual({ pause: REVEAL_MS, coarse: false });
-    expect(backlog(received, exampleDone) * REVEAL_MS).toBeLessThanOrEqual(REVEAL_BUDGET_MS);
-  });
-
-  it("shortens the pause only down to the least a check needs to be seen — a bigger plan is drawn card by card instead, never faster line by line", () => {
-    const fine = revealPlan(60, 30);
-    expect(fine.coarse).toBe(false);
-    expect(fine.pause).toBeGreaterThanOrEqual(REVEAL_MIN_MS);
-    expect(fine.pause).toBeLessThan(REVEAL_MS);
-    const big = revealPlan(200, 40);
-    expect(big.coarse).toBe(true);
-    expect(big.pause).toBe(REVEAL_MS);                                       // 40 cards at 300 ms = 12 s, inside the budget
-    expect(revealPlan(400, 400)).toEqual({ pause: COARSE_MIN_MS, coarse: true });   // a huge plan: the floor, never lower
-    expect(revealPlan(400, 100).pause * 100).toBeLessThanOrEqual(REVEAL_BUDGET_MS * 1.05);
+  it("`[2026-10-20 C안]` keeps the same pace however long the plan is (no time budget, no card-by-card drawing)", () => {
+    const many = (count: number): PlanCheckView => ({ ...exampleDone, items: Array.from({ length: count }, (_, at) => ({ ...exampleDone.items[0], id: `s${at}`, startsAt: `${String(8 + Math.floor(at / 4)).padStart(2, "0")}:${String((at % 4) * 15).padStart(2, "0")}` })), moves: [] });
+    const pacesOf = (target: PlanCheckView) => {
+      let shown: PlanCheckView = { ...target, stage: "checking", title: null, items: [], moves: [] };
+      const out = new Set<number>();
+      for (let next = nextStep(shown, target); next; next = nextStep(shown, target)) { out.add(pauseBefore(shown, next)); shown = next; }
+      return [...out].sort((x, y) => x - y);
+    };
+    expect(pacesOf(many(40))).toEqual(pacesOf(many(3)));
   });
 
   it("reads the lines at a pace of their own — all of them in about the reading budget, one step at a time, never flashing by", () => {
@@ -196,7 +176,7 @@ describe("how fast the plan check draws what the server sent", () => {
     const work = 34;                                                         // 17 lines, each appearing and then read
     expect(readPause(work)).toBeLessThan(REVEAL_MS);
     expect(readPause(work) * work).toBeLessThanOrEqual(READ_BUDGET_MS * 1.05);
-    expect(readPause(work)).toBeGreaterThan(REVEAL_MIN_MS * 0.5);
+    expect(readPause(work)).toBeGreaterThan(READ_MIN_MS);
     expect(readPause(100_000)).toBe(READ_MIN_MS);
   });
 
@@ -208,10 +188,11 @@ describe("how fast the plan check draws what the server sent", () => {
   });
 
   it("steps several changes toward the target at once, stopping at the target, and says nothing is left when it is there", () => {
+    const left = (from: PlanCheckView) => { let count = 0; for (let view = from, next = nextStep(view, exampleDone); next; view = next, next = nextStep(view, exampleDone)) count += 1; return count; };
     const one = stepMany(received, exampleDone, 1);
     const many = stepMany(received, exampleDone, 5);
     expect(one).toEqual(nextStep(received, exampleDone));
-    expect(backlog(many!, exampleDone)).toBeLessThan(backlog(one!, exampleDone));
+    expect(left(many!)).toBeLessThan(left(one!));
     // however many it is asked for, it goes on stage by stage and ends exactly at the target — never past it
     let view: PlanCheckView = received;
     for (let batch = stepMany(view, exampleDone, 100_000); batch; batch = stepMany(view, exampleDone, 100_000)) view = batch;

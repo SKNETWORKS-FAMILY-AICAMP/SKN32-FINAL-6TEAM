@@ -26,28 +26,31 @@ describe("plan check — what the screen draws, one change at a time", () => {
   it("goes from received to done in order: reading, each line, the days, checking, each place or move with its checks, done, title", () => {
     const steps = walk(received, exampleDone);
     expect(steps.at(-1)).toEqual(exampleDone);
-    // 1 reading + 5 lines + 1 days + 1 checking + done + title, and along the day (`[2026-10-04]` the red and grey lines come at once with the line before
-    // them, the verdict with the last line, a move comes whole): a 1+3 · move 1 · b 1+1 (only its one amber line is ticked in) · move 1 · c 1+3 · d 1+3
-    expect(steps).toHaveLength(1 + 5 + 1 + 1 + (4 + 1 + 2 + 1 + 4 + 4) + 1 + 1);
+    // 1 reading + 5 lines + 1 days + 1 checking + done + title, and along the day (`[2026-10-20 C안]` a card appears, each of its lines is ticked in — the red and grey
+    // ones too —, then its verdict; a move comes whole with the card it leads to): a 1+3+1 · b (with a-b) 1+4+1 · c (with b-c) 1+4+1 · d 1+3+1
+    expect(steps).toHaveLength(1 + 5 + 1 + 1 + (5 + 6 + 6 + 5) + 1 + 1);
     expect(steps[0].stage).toBe("reading");
     expect(steps[0].lines.every((line) => !line.read)).toBe(true);           // reading starts before the first line is read
     expect(steps.slice(1, 6).map((view) => view.lines.filter((line) => line.read).length)).toEqual([1, 2, 3, 4, 5]);
     expect(steps[6]).toMatchObject({ stage: "reading", days: exampleDone.days });
     expect(steps[7].stage).toBe("checking");
-    // A place appears with every check waiting, then each check comes in, the verdict with the last.
+    // A place appears with every check waiting, then each check comes in, then the verdict on its own.
     const firstPlace = steps.find((view) => view.items.length === 1)!;
     expect(firstPlace.items[0]).toMatchObject({ id: "a", verdict: null });
     expect(firstPlace.items[0].checks.every((row) => row.result === "pending")).toBe(true);
     const secondTick = steps[steps.indexOf(firstPlace) + 1];
     expect(secondTick.items[0].checks.map((row) => row.result)).toEqual(["ok", "pending", "pending"]);
     expect(secondTick.items[0].verdict).toBeNull();
-    expect(steps[steps.indexOf(firstPlace) + 3].items[0].verdict).toBe("keep");               // the last line carries the verdict
-    const order = steps.flatMap((view, index) => {
+    expect(steps[steps.indexOf(firstPlace) + 3].items[0].verdict).toBeNull();                 // every line in, the verdict not yet
+    expect(steps[steps.indexOf(firstPlace) + 4].items[0].verdict).toBe("keep");               // the verdict, a step of its own
+    const added = steps.map((view, index) => {
       const before = index ? steps[index - 1] : received;
-      return [...view.items.filter((item) => !before.items.some((other) => other.id === item.id)).map((item) => item.id),
-        ...view.moves.filter((move) => !before.moves.some((other) => other.id === move.id)).map((move) => move.id)];
+      return [...view.moves.filter((move) => !before.moves.some((other) => other.id === move.id)).map((move) => move.id),
+        ...view.items.filter((item) => !before.items.some((other) => other.id === item.id)).map((item) => item.id)];
     });
-    expect(order).toEqual(["a", "a-b", "b", "b-c", "c", "d"]);
+    expect(added.flat()).toEqual(["a", "a-b", "b", "b-c", "c", "d"]);
+    // `[2026-10-20 C안]` The leg to a place comes in the same step as that place.
+    expect(added.filter((ids) => ids.length > 1)).toEqual([["a-b", "b"], ["b-c", "c"]]);
     // Done comes only after every check, and the title last.
     const doneAt = steps.findIndex((view) => view.stage === "done");
     expect(steps[doneAt].items.every((item) => item.verdict !== null)).toBe(true);
@@ -93,15 +96,16 @@ describe("plan check — what the screen draws, one change at a time", () => {
     expect(tally(checking)).toMatchObject({ places: 4, placesDone: 1, moves: 2, movesDone: 1 });
   });
 
-  it("`[2026-10-04]` shows a red or grey line at once, in its final shape — it is not ticked in like a pass (the customer must fix it anyway)", () => {
+  it("`[2026-10-20 C안]` ticks the red and grey lines in like the others — the card comes with every line waiting, so it does not grow while it is checked", () => {
     const steps = walk(received, exampleDone);
     const appear = steps.find((view) => view.items.some((item) => item.id === "b"))!;
-    const b = appear.items.find((item) => item.id === "b")!;
-    expect(b.checks.map((row) => row.result)).toEqual(["bad", "pending", "unknown", "unknown"]);   // only the amber line waits to be ticked in
-    const next = steps[steps.indexOf(appear) + 1];
-    const done = next.items.find((item) => item.id === "b")!;
-    expect(done.checks.map((row) => row.result)).toEqual(["bad", "warn", "unknown", "unknown"]);
-    expect(done.verdict).toBe("review");
+    const rows = (view: PlanCheckView) => view.items.find((item) => item.id === "b")!.checks.map((row) => row.result);
+    const at = steps.indexOf(appear);
+    expect(rows(appear)).toEqual(["pending", "pending", "pending", "pending"]);
+    expect(steps.slice(at + 1, at + 5).map(rows)).toEqual([
+      ["bad", "pending", "pending", "pending"], ["bad", "warn", "pending", "pending"], ["bad", "warn", "unknown", "pending"], ["bad", "warn", "unknown", "unknown"]]);
+    expect(steps[at + 4].items.find((item) => item.id === "b")!.verdict).toBeNull();
+    expect(steps[at + 5].items.find((item) => item.id === "b")!.verdict).toBe("review");
   });
 
   it("`[2026-10-04]` draws a move whole — only its mark is on show, so no pretended search is replayed after the server has answered", () => {
@@ -110,14 +114,11 @@ describe("plan check — what the screen draws, one change at a time", () => {
     expect(appear.moves[0]).toEqual(exampleDone.moves[0]);
   });
 
-  it("`[2026-10-04]` draws a card whole when asked to draw card by card (a plan too big to tick in line by line)", () => {
-    const base = walk(received, exampleDone).find((view) => view.stage === "checking")!;
-    const first = nextStep(base, exampleDone, true)!;
-    expect(first.items).toEqual([exampleDone.items[0]]);                      // the first card, finished, in one step
-    let shown = base;
-    let steps = 0;
-    for (let step = nextStep(shown, exampleDone, true); step; step = nextStep(shown, exampleDone, true)) { shown = step; steps += 1; }
-    expect(shown).toEqual(exampleDone);
-    expect(steps).toBe(4 + 2 + 1 + 1);                                         // 4 cards, 2 legs, done, title
+  it("`[2026-10-20 C안]` draws a leg the server sent after its place alone, where it stands", () => {
+    const noLegs: PlanCheckView = { ...exampleDone, moves: [] };
+    const drawn = walk(received, noLegs).at(-1)!;
+    const steps = walk(drawn, exampleDone);
+    expect(steps.map((view) => view.moves.length)).toEqual([1, 2]);
+    expect(steps.every((view) => JSON.stringify(view.items) === JSON.stringify(exampleDone.items))).toBe(true);
   });
 });

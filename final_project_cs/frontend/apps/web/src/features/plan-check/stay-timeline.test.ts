@@ -32,7 +32,7 @@ describe("plan check — a stay and its morning move", () => {
     let shown: PlanCheckView = { ...view, stage: "checking", items: [], moves: [] };
     const order: string[] = [];
     for (let guard = 0; guard < 500; guard += 1) {
-      const next = nextStep(shown, view, true);
+      const next = nextStep(shown, view);
       if (!next) break;
       for (const move of next.moves) if (!shown.moves.some((other) => other.id === move.id)) order.push(move.id);
       for (const item of next.items) if (!shown.items.some((other) => other.id === item.id)) order.push(item.id);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nearBottom, scrollDelta } from "./use-follow-scroll";
+import { FOLLOW_TOP_PX, nearBottom, scrollDelta } from "./use-follow-scroll";
 
 const box = { top: 100, bottom: 400 };
 
@@ -24,12 +24,14 @@ describe("following the newest row of the list", () => {
     expect(nearBottom({ scrollTop: 560, clientHeight: 300, scrollHeight: 900 })).toBe(true);
     expect(nearBottom({ scrollTop: 400, clientHeight: 300, scrollHeight: 900 })).toBe(false);
   });
-  it("centres a checked row instead of keeping it at the bottom", () => {
-    expect(scrollDelta(box, { top: 380, bottom: 480 }, 12, "center")).toBe(180);
-    expect(scrollDelta(box, { top: 200, bottom: 300 }, 12, "center")).toBe(0);
+  it("`[2026-10-20 C안]` pins a checked card at the top of the list, whether it is below, above or already in view", () => {
+    expect(scrollDelta(box, { top: 380, bottom: 480 }, FOLLOW_TOP_PX, "top")).toBe(380 - 100 - FOLLOW_TOP_PX);
+    expect(scrollDelta(box, { top: 200, bottom: 300 }, FOLLOW_TOP_PX, "top")).toBe(200 - 100 - FOLLOW_TOP_PX);
+    expect(scrollDelta(box, { top: 60, bottom: 160 }, FOLLOW_TOP_PX, "top")).toBe(60 - 100 - FOLLOW_TOP_PX);
+    expect(scrollDelta(box, { top: 100 + FOLLOW_TOP_PX, bottom: 300 }, FOLLOW_TOP_PX, "top")).toBe(0);
   });
 
-  it("keeps the start visible when a checked row cannot fit in the centre", () => {
-    expect(scrollDelta(box, { top: 300, bottom: 900 }, 12, "center")).toBe(188);
+  it("keeps the start of a card taller than the list at the top too", () => {
+    expect(scrollDelta(box, { top: 300, bottom: 900 }, FOLLOW_TOP_PX, "top")).toBe(300 - 100 - FOLLOW_TOP_PX);
   });
 });
