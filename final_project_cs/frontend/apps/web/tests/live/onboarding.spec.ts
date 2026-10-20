@@ -129,7 +129,8 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await skip.click();
 
   await expect(heading("여행 취향 설문을 마쳤어요")).toBeVisible();
-  await expect(page.getByText("가족", { exact: true })).toBeVisible();
+  // `[2026-10-20 B안 · ST4F-581]` 요약은 인원을 붙인다(가족은 2명으로 시작). 계획 담기 화면의 꼬리표는 구성만이다(아래).
+  await expect(page.getByText("가족 · 2명", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await expect(page.getByText("여행 취향 설문", { exact: true })).toBeVisible();
