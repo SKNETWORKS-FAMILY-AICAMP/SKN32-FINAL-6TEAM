@@ -665,7 +665,7 @@ button.time:focus-visible { outline: 2px solid var(--color-selected); outline-of
 .wheel { position: relative; display: flex; justify-content: center; align-items: stretch; height: 170px; user-select: none; -webkit-user-select: none; }
 .wheel::before { content: ""; position: absolute; left: 4px; right: 4px; top: 68px; height: 34px; border-radius: 10px; background: var(--color-subtle-strong); pointer-events: none; }
 .wheelCol { position: relative; z-index: 1; width: 60px; height: 170px; overflow-x: hidden; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; outline: none; cursor: grab; touch-action: pan-y;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34%, #000 66%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 34%, #000 66%, transparent 100%); }
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, var(--color-text) 34%, var(--color-text) 66%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, var(--color-text) 34%, var(--color-text) 66%, transparent 100%); }
 .wheelCol::-webkit-scrollbar { display: none; }
 .wheelCol[data-dragging] { scroll-snap-type: none; cursor: grabbing; }
 .wheelCol[data-part="half"] { width: 72px; }
@@ -703,7 +703,7 @@ button.time[data-grab], .dot[data-grab] { touch-action: pan-y pinch-zoom; user-s
 @keyframes holdPop { 0% { transform: scale(1.3); } 55% { transform: scale(2); } 100% { transform: scale(1.6); } }
 .entry[data-time-press="held"] .card { border-color: var(--color-primary); box-shadow: 0 10px 24px color-mix(in srgb, var(--color-text) 18%, transparent); transform: translateY(-1px); transition: box-shadow .2s, transform .2s; }
 .entry[data-time-press="held"] button.time { color: var(--color-primary); font-weight: 750; }
-.holdBubble { position: absolute; left: 50%; bottom: calc(100% + 10px); display: grid; justify-items: center; padding: 4px 10px 3px; border-radius: 10px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 15px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 6px 14px #0003; pointer-events: none; transform: translateX(-50%); }
+.holdBubble { position: absolute; left: 50%; bottom: calc(100% + 10px); display: grid; justify-items: center; padding: 4px 10px 3px; border-radius: 10px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 15px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 6px 14px color-mix(in srgb, var(--color-text) 20%, transparent); pointer-events: none; transform: translateX(-50%); }
 .entry[data-type="item"][data-time-press="held"] .holdBubble { transform: translateX(-50%) scale(.625); transform-origin: 50% 100%; }   /* the dot is scaled 1.6: the bubble keeps its own size */
 .holdBubble small { font-size: 10.5px; font-weight: 650; opacity: .8; }
 .holdBubble::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 2px; background: inherit; transform: rotate(45deg); }
