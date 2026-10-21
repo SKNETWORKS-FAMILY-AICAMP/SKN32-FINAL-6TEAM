@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from copy import deepcopy
 from datetime import date, datetime, time as dtime
@@ -535,6 +536,17 @@ _ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date"
                       "can_lock", "place_state", "place", "candidates_hint", "booked", "parts", "rereads")
 
 
+#: 구간 키(`sig`)의 장소 상태 칸 — 뒤 일정 시각(「…+09:00」) 바로 뒤 「#」 다음 두 상태가 붙어 있다(「#customerfound」)
+_SIG_STATES = re.compile(r"(\d\d:\d\d)#([a-z_]+)")
+
+
+def _reuse_key(sig: str) -> str:
+    """앞 판 구간을 찾는 열쇠 — `[2026-10-21 ST4F-705]` 키의 장소 상태에서 고객이 고른 장소(`customer`)를 찾은 장소(`found`)와 같게 본다. 두 상태는 같은 구간을 낸다
+    (경로 문구가 갈리는 것은 임시로 고른 곳 `picked_nearest` 뿐 — `_move`). 등록 때 고른 장소를 다시 연 수정 접수는 `found` 로 읽어(`reopen` 값 줄 `method: trip`)
+    키가 갈려 같은 구간을 다시 쟀다. 저장되는 `sig` 는 그대로다 — 찾을 때만 맞춘다(이미 저장된 검사의 키도 같은 규칙으로 읽힌다)."""
+    return _SIG_STATES.sub(lambda m: f"{m.group(1)}#{m.group(2).replace('customer', 'found')}", sig, count=1)
+
+
 def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
           claims: list[dict[str, Any]], engine: Callable[..., Any] | None = None, use_engine: bool = True,
           previous: dict[str, Any] | None = None, now: datetime | None = None,
@@ -681,7 +693,15 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     from .lodging_context import annotate
     annotate(items)
     mode_pick = picked_modes(claims)            # {"0-0~0-1": "taxi"} — 고객이 구간마다 고른 수단(없으면 추천)
-    old_moves = {m.get("sig"): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
+    old_moves = {_reuse_key(m["sig"]): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
+    # ★`[2026-10-21 ST4F-705]` 수정 접수는 등록한 수단을 구간마다 고른 수단으로 싣는다(`reopen._trip_modes`) — 고른 수단이 없던 앞 판(등록한 접수)의 같은 구간이
+    #   추천으로 그 수단을 탔으면 그 계산을 쓴다. 고른 수단으로 다시 재면 같은 구간을 두 번(추천 · 고른 수단) 잰다(`_apply_pick`)
+    unpicked = {sig: m for sig, m in old_moves.items() if not m.get("mode_choice")}
+
+    def same_unpicked(plain: str, pick: str | None) -> dict[str, Any] | None:
+        old = unpicked.get(plain) if pick else None
+        return old if old is not None and old.get("mode") == pick else None
+
     moves: list[dict[str, Any]] = []
     # 구간을 셀 일정 줄 — 접수 일정(값 줄 순서 그대로)에 `[2026-10-15 ST4F-490]` 수정 접수의 고정 일정을 시각 순서로 끼운다. 보통 접수는 접수 일정 그대로다
     order: list[tuple[dict[str, Any], dict[str, Any]]] = list(zip(rows, items))
@@ -742,11 +762,17 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         pb = {"key": ib["id"], "name": b["place"]["name"], "lat": float(b["place"]["latitude"]), "lon": float(b["place"]["longitude"])}
         # ★재사용 키 — 이름과 정확한 좌표까지 넣는다(같은 자리에서 지점 이름만 바뀌어도 앞 판의 경로 문구가 남지 않게)
         pick = mode_pick.get(f"{ia['id']}~{ib['id']}")
-        sig = (f"{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{a_end.isoformat()}>{b_start.isoformat()}"
-               f"#{ia['place_state']}{ib['place_state']}" + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing))
-        if sig in old_moves:
+        core = (f"{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{a_end.isoformat()}>{b_start.isoformat()}"
+                f"#{ia['place_state']}{ib['place_state']}")
+        sig = core + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing)
+        if _reuse_key(sig) in old_moves:
             # 재사용하는 것은 경로 계산뿐이다 — 어느 일정 · 몇째 날인지는 지금 판의 것으로 채운다(앞에 날짜가 하나 늘어 일차만 바뀐 경우)
-            add_move({**old_moves[sig], "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
+            add_move({**old_moves[_reuse_key(sig)], "sig": sig, "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
+            continue
+        same = same_unpicked(_reuse_key(core + taxi_pricing.signature(pricing)), pick)
+        if same is not None:
+            add_move({**same, "sig": sig, "recommended_mode": same["mode"], "mode_choice": {"mode": pick, "state": "kept"},
+                      "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
             continue
         leg = leg_between(budgeted, pa, pb, a_end, b_start)
         choice, recommended = None, leg.mode
@@ -764,10 +790,16 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         pa = {"key": ia["id"], "name": a["place"]["name"], "lat": float(a["place"]["latitude"]), "lon": float(a["place"]["longitude"])}
         pb = {"key": ib["id"], "name": b["place"]["name"], "lat": float(b["place"]["latitude"]), "lon": float(b["place"]["longitude"])}
         pick = mode_pick.get(f"{ia['id']}~{ib['id']}")
-        sig = (f"stay:{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{floor.isoformat()}>{b_start.isoformat()}"
-               f"#{ia['place_state']}{ib['place_state']}" + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing))
-        if sig in old_moves:
-            add_move({**old_moves[sig], "from": ia["id"], "to": ib["id"], "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
+        core = (f"stay:{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{floor.isoformat()}>{b_start.isoformat()}"
+                f"#{ia['place_state']}{ib['place_state']}")
+        sig = core + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing)
+        if _reuse_key(sig) in old_moves:
+            add_move({**old_moves[_reuse_key(sig)], "sig": sig, "from": ia["id"], "to": ib["id"], "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
+            continue
+        same = same_unpicked(_reuse_key(core + taxi_pricing.signature(pricing)), pick)
+        if same is not None:
+            add_move({**same, "sig": sig, "recommended_mode": same["mode"], "mode_choice": {"mode": pick, "state": "kept"},
+                      "from": ia["id"], "to": ib["id"], "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
             continue
         leg = leg_between(budgeted, pa, pb, floor, b_start)
         choice, recommended = None, leg.mode
@@ -943,6 +975,21 @@ def store(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str
                     (tenant_id, intake_id, revision, json.dumps(payload, ensure_ascii=False, default=str)))
 
 
+def _reopened_from(conn, tenant_id: str, intake_id: Any) -> dict[str, Any] | None:
+    """★`[2026-10-21 ST4F-705 — 수정 모드 열기 16초]` 수정 접수(등록한 여행을 다시 연 것)의 첫 판이 앞 판으로 쓸 검사 — 같은 여행을 앞서 검사한 가장 최근 판
+    (등록한 접수 · 앞서 연 수정 접수). 같은 구간(`sig` — 좌표 · 시각 · 상태 · 수단이 같음)의 경로 계산과 방금 본 위험만 다시 쓰고, 바뀐 것은 지금처럼 잰다.
+    보통 접수 · 앞 검사가 없는 여행은 None(종전처럼 처음부터)."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT r.intake_id, r.revision FROM trip_intakes me "
+                    "JOIN trip_intakes t ON t.tenant_id = me.tenant_id AND t.intake_id <> me.intake_id "
+                    " AND (t.reopen_trip_id = me.reopen_trip_id OR t.trip_id = me.reopen_trip_id) "
+                    "JOIN intake_reviews r ON r.tenant_id = t.tenant_id AND r.intake_id = t.intake_id "
+                    "WHERE me.tenant_id=%s AND me.intake_id=%s AND me.reopen_trip_id IS NOT NULL "
+                    "ORDER BY r.built_at DESC LIMIT 1", (tenant_id, intake_id))
+        row = cur.fetchone()
+    return load(conn, tenant_id, row[0], row[1]) if row else None
+
+
 def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
            claims: list[dict[str, Any]], force: bool = False, previous_revision: int | None = None,
            quick: bool = False, **options: Any) -> dict[str, Any]:
@@ -961,7 +1008,8 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
             if mode == "fresh":
                 store(conn, tenant_id, intake_id, revision, payload)
             return payload
-    previous = load(conn, tenant_id, intake_id, previous_revision) if previous_revision else None
+    previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
+                else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
     if quick:
         options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
