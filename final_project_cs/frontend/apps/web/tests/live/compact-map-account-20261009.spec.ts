@@ -3,7 +3,7 @@ import { mkdir, access } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { mockServer, start, noHorizontalScroll } from "./helpers";
-import { openFinished, head, pin, toast } from "./plan-check-kit";
+import { openFinished, head, pin, toast, typeTimes } from "./plan-check-kit";
 import { useMapTiles } from "./capture-map-tiles";
 
 const output = process.env.COMPACT_UI_SHOTS;
@@ -53,7 +53,7 @@ for (const width of [375, 1280]) {
     await expect(intro).toHaveCount(0);
     await pin(page, "1. 경복궁 관람").dispatchEvent("click");
     await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click();
-    const time = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
+    const time = await typeTimes(page.getByRole("form", { name: "경복궁 관람 시간 고치기" }));
     await time.getByLabel("끝", { exact: true }).fill("11:00");
     await time.getByRole("button", { name: "적용", exact: true }).click();
     await expect(page.getByRole("button", { name: "전체 되돌리기", exact: true })).toBeVisible();

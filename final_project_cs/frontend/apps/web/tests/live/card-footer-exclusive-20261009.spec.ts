@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { card, head, openFinished, toast } from "./plan-check-kit";
+import { card, head, openFinished, toast, typeTimes } from "./plan-check-kit";
 import { useMapTiles } from "./capture-map-tiles";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
@@ -38,7 +38,7 @@ for (const width of [375, 1280]) {
     await expect(head(page, "올리브영")).toHaveAttribute("aria-expanded", "true");
     await lowerRight();
     await page.getByRole("button", { name: /^올리브영 시간 고치기/ }).click();
-    const form = page.getByRole("form", { name: "올리브영 시간 고치기" });
+    const form = await typeTimes(page.getByRole("form", { name: "올리브영 시간 고치기" }));
     const together = form.getByLabel("앞뒤 일정도 함께 밀기");
     if (await together.count()) await together.uncheck();
     await form.getByLabel("끝", { exact: true }).fill("12:05");

@@ -41,7 +41,7 @@ import { usePullPastEnd } from "./use-pull-past-end";
 import { useDayGestures } from "./use-day-gestures";
 import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
 import { TimeDragOverlay } from "./time-drag-overlay";
-import { heldTexts, useTimeEdit } from "./use-time-edit";
+import { useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal, type RevealStop } from "./use-reveal";
 import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type StopOption } from "./stop-questions";
@@ -969,9 +969,23 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   const timeEdit = useTimeEdit({
     views: { before: view, after: previewing ? previewView : null },
     commit: (list, changes) => sendTimes(list, changes, t(`${changes.length}개 일정의 시간을 바꿨어요`, `Changed the time of ${changes.length} stop${changes.length > 1 ? "s" : ""}`)),
-    // `[2026-10-05]` The free time is used up while dragging: said once, with the notice the screen already has.
-    onNotice: (kind, held) => setToast({ text: t(...heldTexts(kind, held)) }),
   });
+  // ★`[2026-10-21 사용자 결정 — ST4F-702]` The wheel card is taller than the list of the half sheet (its ✕ · ✓ went under the edge): opening it raises the sheet to full and brings the card
+  //   into view; closing it puts the sheet back where it was - unless the customer moved the sheet in between.
+  const timeOpen = timeEdit.edit && !timeEdit.edit.direct ? `${timeEdit.edit.list}:${timeEdit.edit.kind}:${timeEdit.edit.id}` : null;
+  const raisedFor = useRef<{ sheet: Sheet; custom: number | null } | null>(null);
+  useEffect(() => {
+    if (!timeOpen) {
+      const was = raisedFor.current;
+      raisedFor.current = null;
+      if (was && sheet === "full" && custom === null) { setSheet(was.sheet); setCustom(was.custom); }
+      return;
+    }
+    if (!raisedFor.current && (sheet !== "full" || custom !== null)) { raisedFor.current = { sheet, custom }; setCustom(null); setSheet("full"); }
+    const frame = requestAnimationFrame(() => requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>("form[data-time-editor]")?.closest("li")
+      ?.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })));
+    return () => cancelAnimationFrame(frame);
+  }, [timeOpen]); // eslint-disable-line react-hooks/exhaustive-deps -- the sheet is raised when a card opens and put back when it closes, not on every move of the sheet
   /** One stop back to the time it had when the screen opened (the stops around it are pushed only if that is needed to make room). */
   function revertTime(item: PlanItem) {
     if (item.locked || item.booked === true) { setToast({ text: t("고정·예약 일정의 시간은 바꿀 수 없어요", "Locked or booked times cannot change") }); return; }
@@ -1579,7 +1593,9 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
   // `[2026-10-20 사용자 결정 — 계획 확인 C안]` The card being checked is pinned at the top of the list (it was brought to the middle).
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "top", stopRoom);
-  const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !timeEdit.edit && !removed.length;
+  // `[2026-10-21 사용자 확인 — ST4F-702]` A time dragged straight from the list (`direct`, no form) keeps the ＋ between the rows: taking them away shrank the list under the finger and the
+  //   held dot ran off from under it (2446 → 2038 px). The open time form still hides them.
+  const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !(timeEdit.edit && !timeEdit.edit.direct) && !removed.length;
   useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
   // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (a card or a way) wears a grey border, by the ＋'s measure — chosen apart from the ＋, so both can show.
   useCenterFocus(bodyBox, done && !changing, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
@@ -1681,7 +1697,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     return {
       kind: edit.kind, id: edit.id, start: edit.start, end: edit.end, push: edit.push, busy: timeEdit.busy, problem: preview.problem,
       range: { min: formatHm(preview.range.min), max: formatHm(preview.range.max) }, along: preview.along, count: preview.changes.length,
-      setStart: timeEdit.setStart, setEnd: timeEdit.setEnd, setPush: timeEdit.setPush, step: timeEdit.step, apply: () => void timeEdit.apply(), cancel: timeEdit.close, grip: timeEdit.grip,
+      setStart: timeEdit.setStart, setEnd: timeEdit.setEnd, setPush: timeEdit.setPush, apply: () => void timeEdit.apply(), cancel: timeEdit.close,
       direct: Boolean(edit.direct),
       undo: (() => {
         const plan = list === "after" && previewView ? previewView : view;
@@ -1743,6 +1759,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     onOpenTime: (item) => timeEdit.open(item, list),
     timeHandle: (item, kind) => timeEdit.handle(item, list, kind),
     dragEnded: timeEdit.dragEnded,
+    timePress: timeEdit.press?.list === list ? { ...timeEdit.press, from: timeEdit.drag?.from ?? null, to: timeEdit.drag?.to ?? null } : null,
     onOpenDepart: (fromId) => { const item = (list === "after" && previewView ? previewView : view).items.find((entry) => entry.id === fromId); if (item) timeEdit.open(item, list, "depart"); },
     timeAdjusted: adjustedIn(list === "after" ? previewView : view),
     onRevertTime: revertTime,

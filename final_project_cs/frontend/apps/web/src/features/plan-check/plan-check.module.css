@@ -625,11 +625,8 @@ button.time:focus-visible { outline: 2px solid var(--color-selected); outline-of
 .timeButtons > * { flex: 1; justify-content: center; }
 .timeEditor .editorError { grid-column: 1 / -1; }
 
-/* ★`[2026-10-04 사용자 지시]` 시간 고치기 — 시간을 누르면 카드 안에 열리는 편집기: 끌개(위로 끌면 일찍, 아래로 끌면 늦게) · 시작/끝 · −5분/+5분 · 앞뒤 일정 함께 밀기. */
-.timeEditor { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: end; margin: 0 12px 12px; padding-top: 10px; border-top: 1px solid var(--color-divider); }
-.timeGrip { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-subtle); color: var(--color-text); cursor: ns-resize; touch-action: pinch-zoom; user-select: none; }
-.timeGrip:active { background: var(--color-selected-soft); border-color: var(--color-selected); }
-.timeGrip:disabled { opacity: .4; cursor: not-allowed; }
+/* ★`[2026-10-04 사용자 지시]` 시간 고치기 — 시간을 누르면 카드 안에 열리는 편집기. `[2026-10-21 ST4F-702 A 휠]` 시작 · 끝 칸 + 오전/오후 · 시 · 분 휠 · ⌨ 직접 입력 · 앞뒤 일정 함께 밀기. */
+.timeEditor { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0 12px 12px; padding-top: 10px; border-top: 1px solid var(--color-divider); }
 /* `[2026-10-05 사용자 지시]` While a time is dragged: what moves and by how much, the notice at the end of the free time, and the whole day as a strip (outline = where it was, filled = where it would be). */
 .dragOverlay { position: absolute; left: 12px; right: 12px; top: 64px; z-index: 16; display: grid; gap: 5px; padding: 10px 12px 9px; border: 1px solid var(--color-border-strong); border-radius: 14px; background: color-mix(in srgb, var(--color-surface) 95%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text) 20%, transparent); pointer-events: none; }
 .dragHead { display: flex; align-items: baseline; gap: 8px; margin: 0; font-size: 13px; }
@@ -645,33 +642,73 @@ button.time:focus-visible { outline: 2px solid var(--color-selected); outline-of
 .miniGhost { border: 1px dashed var(--color-muted); }
 .miniAxis { display: flex; justify-content: space-between; margin: 0; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-muted); }
 .dragSum { margin: 0; font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
-.timeEditor[data-kind="depart"] { grid-template-columns: 44px minmax(0, 1fr); }
-/* Two big fields on a line of their own (the clock icon of the browser hidden - the numbers are the thing); the grip, −5 and +5 stand on the next line. */
-.timeEditor { grid-template-columns: 1fr 1fr; align-items: start; }
-.timeEditor[data-kind="depart"] { grid-template-columns: 1fr; }
+/* ⌨: the two big fields on a line of their own (the clock icon of the browser hidden - the numbers are the thing). */
+.timeFields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.timeEditor[data-kind="depart"] .timeFields { grid-template-columns: 1fr; }
 /* `[2026-10-14 실서버 확인]` 19px · 10px 여백이면 휴대폰 폭(칸 약 109px)에서 「오후 12:30」이 「오후 12:3」으로 잘렸다 — 16px · 8px 로 줄인다 */
 .timeEditor input[type="time"] { width: 100%; min-width: 0; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; padding-inline: 8px; }
 .timeEditor input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
-.timeSteps .timeGrip { width: 44px; height: 38px; border-radius: 999px; }
 .timeEditor { animation: timePop .3s cubic-bezier(.2, .9, .3, 1.2); transform-origin: 30px 0; }
 @keyframes timePop { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
-.timeIcons { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: 8px; }
+/* `[2026-10-21 ST4F-702 A 휠]` 시작 · 끝(출발) 칸 — 누른 칸을 휠이 돌린다 — 과 ⌨. */
+.timeBoxes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px; gap: 6px; }
+.timeEditor[data-kind="depart"] .timeBoxes { grid-template-columns: minmax(0, 1fr) 40px; }
+.timeBox { display: grid; justify-items: start; min-width: 0; min-height: 50px; padding: 5px 10px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.timeBox small { font-size: 11.5px; font-weight: 700; line-height: 1.4; color: var(--color-muted); }
+.timeBox b { font-size: 17px; font-weight: 800; line-height: 1.25; letter-spacing: -.2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.timeBox[aria-pressed="true"] { border-color: var(--color-selected); background: var(--color-selected-soft); box-shadow: inset 0 0 0 1px var(--color-selected); }
+.timeBox[aria-pressed="true"] b { color: var(--color-primary); }
+.timeKeys { display: grid; place-items: center; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-muted); cursor: pointer; }
+.timeKeys[aria-pressed="true"] { border-color: var(--color-selected); background: var(--color-selected-soft); color: var(--color-primary); }
+.timeBox:focus-visible, .timeKeys:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* 휠 — 가운데 띠 + 위아래로 흐려짐. 다섯 줄(34px)이 보이고 가운데 줄이 값이다. */
+.wheel { position: relative; display: flex; justify-content: center; align-items: stretch; height: 170px; user-select: none; -webkit-user-select: none; }
+.wheel::before { content: ""; position: absolute; left: 4px; right: 4px; top: 68px; height: 34px; border-radius: 10px; background: var(--color-subtle-strong); pointer-events: none; }
+.wheelCol { position: relative; z-index: 1; width: 60px; height: 170px; overflow-x: hidden; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; outline: none; cursor: grab; touch-action: pan-y;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 34%, #000 66%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 34%, #000 66%, transparent 100%); }
+.wheelCol::-webkit-scrollbar { display: none; }
+.wheelCol[data-dragging] { scroll-snap-type: none; cursor: grabbing; }
+.wheelCol[data-part="half"] { width: 72px; }
+.wheelCol > i { display: block; height: 34px; scroll-snap-align: center; font-style: normal; font-size: 21px; line-height: 34px; text-align: center; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.wheelCol[data-part="half"] > i { font-size: 18px; }
+.wheelCol > i[data-on] { color: var(--color-text); font-weight: 750; }
+.wheelCol > i[data-off] { color: var(--color-border-strong); }
+.wheelCol:focus-visible { box-shadow: inset 0 0 0 2px var(--color-selected); border-radius: 10px; }
+.wheelPad { display: block; height: 68px; }
+.wheelColon { position: relative; z-index: 1; align-self: center; margin: 0 -3px 2px; font-size: 20px; font-weight: 750; }
+.timeLine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; font-size: 12px; color: var(--color-text-secondary); }
+.timeStay { font-weight: 750; font-variant-numeric: tabular-nums; color: var(--color-text); }
+.timeBounce { margin: 0; padding: 6px 10px; border-radius: 9px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 12px; font-weight: 650; line-height: 1.5; }
+.timeFoot { display: flex; align-items: center; gap: 8px; }
+.timeFoot .timePush { flex: 1; min-width: 0; line-height: 1.35; }
+.timeIcons { display: flex; flex: none; justify-content: flex-end; gap: 8px; }
 .timeIcon { display: grid; place-items: center; width: 44px; height: 40px; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
 .timeIcon[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
 .timeIcon[data-undo] { margin-right: auto; border-color: var(--color-adjusted-border); color: var(--color-adjusted); }
 .timeIcon:disabled { opacity: .4; cursor: not-allowed; }
 .timeIcon:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
-/* The time and its dot are taken and dragged at once (up = earlier, down = later): the finger must not scroll the list from them. */
-button.time[data-grab], .dot[data-grab] { touch-action: pinch-zoom; user-select: none; -webkit-user-select: none; cursor: ns-resize; }
+/* The time and its dot are taken and dragged (up = earlier, down = later). ★`[2026-10-21 ST4F-702 꾹 눌러 잡기]` A finger scrolls the list from them (`pan-y`) until it has held one for
+   `HOLD_MS` (`use-time-edit.ts`); the phone's long-press menu and text selection stay off them. */
+button.time[data-grab], .dot[data-grab] { touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: ns-resize; }
 .dot[data-grab]::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; }
 .dot[data-grab]:hover { border-color: var(--color-primary); }
+/* Holding: the dot swells and a ring fills round it (it shows only after a quarter of the hold - a tap does not flash it). Taken: the dot pops, the card lifts, a bubble says the new time. */
+.entry[data-time-press] .dot { z-index: 6; }
+.entry[data-time-press="pressing"] .dot { transform: scale(1.3); transition: transform .35s ease-out; }
+.holdRing { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; overflow: visible; pointer-events: none; transform: rotate(-90deg); }
+.holdRing circle { fill: none; stroke: var(--color-primary); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 81.7; stroke-dashoffset: 81.7; animation: holdRing var(--hold-ms, 450ms) linear forwards; }
+@keyframes holdRing { 0%, 24% { stroke-dashoffset: 81.7; opacity: 0; } 25% { opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+.entry[data-type="item"][data-time-press="held"] .dot { border-color: var(--color-primary); background: var(--color-primary); box-shadow: 0 0 0 4px var(--color-selected-soft), 0 4px 10px color-mix(in srgb, var(--color-text) 30%, transparent); animation: holdPop .34s cubic-bezier(.3, 1.6, .5, 1) forwards; }
+.entry[data-type="move"][data-time-press="held"] .departureMark { color: var(--color-primary); }
+@keyframes holdPop { 0% { transform: scale(1.3); } 55% { transform: scale(2); } 100% { transform: scale(1.6); } }
+.entry[data-time-press="held"] .card { border-color: var(--color-primary); box-shadow: 0 10px 24px color-mix(in srgb, var(--color-text) 18%, transparent); transform: translateY(-1px); transition: box-shadow .2s, transform .2s; }
+.entry[data-time-press="held"] button.time { color: var(--color-primary); font-weight: 750; }
+.holdBubble { position: absolute; left: 50%; bottom: calc(100% + 10px); display: grid; justify-items: center; padding: 4px 10px 3px; border-radius: 10px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 15px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 6px 14px #0003; pointer-events: none; transform: translateX(-50%); }
+.entry[data-type="item"][data-time-press="held"] .holdBubble { transform: translateX(-50%) scale(.625); transform-origin: 50% 100%; }   /* the dot is scaled 1.6: the bubble keeps its own size */
+.holdBubble small { font-size: 10.5px; font-weight: 650; opacity: .8; }
+.holdBubble::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 2px; background: inherit; transform: rotate(45deg); }
+@media (prefers-reduced-motion: reduce) { .holdRing circle, .entry[data-time-press="held"] .dot { animation-duration: 1ms; } }
 
-.timeGrip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
-.timeSteps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; grid-column: 1 / -1; }
-/* `[2026-10-05 사용자 선택 — 시간 조정 합친 안]` −5 / +5 are two small icons beside the range; the numbers of the fields are big and pop in when the form opens; apply / cancel / undo are icons on ONE line. */
-.timeStep { display: inline-flex; align-items: center; justify-content: center; gap: 2px; min-width: 52px; min-height: 36px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; font-variant-numeric: tabular-nums; }
-.timeStep:disabled { opacity: .4; cursor: not-allowed; }
-.timeStep:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .timeRange { margin-left: auto; font-size: 11.5px; font-weight: 650; color: var(--color-muted); font-variant-numeric: tabular-nums; }
 .timePush { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; font-size: 12.5px; color: var(--color-text-secondary); }
 .timeNote { grid-column: 1 / -1; margin: 0; padding: 7px 10px; border-radius: 9px; background: var(--color-adjusted-soft); color: var(--color-adjusted); font-size: 12px; font-weight: 650; line-height: 1.5; }
