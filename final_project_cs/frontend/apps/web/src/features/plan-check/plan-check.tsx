@@ -44,7 +44,7 @@ import { TimeDragOverlay } from "./time-drag-overlay";
 import { useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal, type RevealStop } from "./use-reveal";
-import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type StopOption } from "./stop-questions";
+import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type StopOption } from "./stop-questions";
 import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { DoneFooter } from "@/features/survey-questions/reading-footer";
 import { TIMING } from "@/features/survey-questions/use-question-flow";
@@ -177,7 +177,7 @@ export interface PlanCheckActions {
   /** `[2026-10-20 C안]` The place the server took for now (one of several, the nearest) is the one: sent back as the customer's pick. */
   confirmPlace?: (id: string, how?: EditHow) => Promise<void>;
   /** `[2026-10-20 C안]` When the stop could start instead, its way in being late (the server's dry run for this stop) — null when only another place would do. */
-  laterStart?: (id: string) => Promise<{ start: string; end: string } | null>;
+  laterStart?: (id: string) => Promise<LaterStart | null>;
   /** `[2026-10-21 사용자 결정 — 결과 화면 삭제는 바로 저장만]` Put back a stop deleted on the result screen (out on the server already, saved only). Without it a deletion is only marked until 「다시 제출」. */
   putBack?: (id: string) => Promise<void>;
   /** `[2026-10-21]` Hold the 「전체 자동 추천」 dry run back (true) while the first check is drawn and stopped at its questions, so their alternatives are not queued behind it. */
@@ -1210,7 +1210,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   const asking = Boolean(stop && ((stopItem && !stop.settling) || (stopEntry && askBusy !== stopEntry.id)));
   const stopNeed = stopItem ? stopKind(view, stopItem.id) : null;
   const stopMove = stopItem && stopNeed === "arrival" ? incomingMove(view, stopItem.id) : null;
-  const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: { start: string; end: string } | null } | null>(null);
+  const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: LaterStart | null } | null>(null);
   useEffect(() => {
     if (!asking || !stopItem) return;
     const id = stopItem.id;
@@ -1248,7 +1248,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   const askCards = resultAsks ? view.items.filter((item) => !removedSet.has(item.id) && stopsHere(item, view)
     && !((item.unfound || item.rereads?.length) && stopKind(view, item.id) === "place")) : [];
   const askKeys = askCards.map((item) => `${item.id}:${stopKind(view, item.id)}:${view.revision ?? ""}`);
-  const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: { start: string; end: string } | null; message?: string }>>({});
+  const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: LaterStart | null; message?: string }>>({});
   const [cardBusy, setCardBusy] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
@@ -1332,7 +1332,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
       : act.type === "noplace" ? t(`${item.title} 일정은 장소 없이 두었어요`, `${item.title} is kept without a place`) + " · " + t("앞뒤 이동은 장소가 정해지면 확인해요", "Moves around it are checked once a place is set")
         : act.type === "taxi" ? t(`${ro("택시")} 바꿨어요`, "Changed to taxi") + " · " + t("이 구간만 다시 계산했어요", "Only this leg was counted again")
           : act.type === "later" ? t("1개 일정의 시간을 바꿨어요", "Changed the time of 1 stop") + ` · ${item.title} → ${act.start}${act.end ? `–${act.end}` : ""}`
-            : `${option.label} · ${option.effect}`;
+            : [option.label, option.effect].filter(Boolean).join(" · ");
   }
   function stopPick(item: PlanItem, option: StopOption) {
     const why = busyReason();
@@ -1359,7 +1359,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     const answer = option ? option.act.type === "interpret" ? { option: option.act.option, search: option.act.search } : null : pickMyselfAnswer(entry);
     if (!answer || !actions.interpret) return;
     // Said only to a screen reader (as for a pick in the C안 flow): the server's own words for the option.
-    const sentence = option ? `${option.label} · ${option.effect}` : t(`「${entry.title}」 장소를 직접 골라요`, `Choose the place of “${entry.title}”`);
+    const sentence = option ? [option.label, option.effect].filter(Boolean).join(" · ") : t(`「${entry.title}」 장소를 직접 골라요`, `Choose the place of “${entry.title}”`);
     follow.resume();
     setFolding(true);
     setTimeout(() => {

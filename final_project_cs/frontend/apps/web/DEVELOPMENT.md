@@ -901,3 +901,9 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - 「전체 자동 추천」 미리 계산 미루기: `holdWarmUp` 은 `Checking` 이 아니라 `PlanCheck` 가 부른다(서버 검사가 끝나는 순간 화면이 아직 읽는 중 단계면 `Checking` 이 없어 한 번 나가던 것). `use-server-review.ts` 는 ref 로도 읽는다(같은 커밋에서 화면 효과가 먼저 돈다).
 - 시험 도구: 알림을 보는 감시가 개발용 클래스 이름(`toast-view-module`)만 찾아 빌드 화면에서는 늘 빈 목록이었다 — 빌드 이름(`_toast`)도 찾게 고침.
 - 모방 서버: `intakeEvents: "held"`(검사 결과는 다 보내고 끝은 안 알림). 기록: [작업 기록](../../../wiki/records/reports/2026-10-20_계획확인_C안_적용.md) 「결과 화면 질문 칸 · 멈춘 동안 느림 알림」.
+
+## 2026-10-21 — 계획 확인 C안: 질문 칸 「이유:」 · 「고르면:」은 필요한 것만(ST4F-683)
+
+- `stop-questions.ts`: 후보는 `candidateFact`(사실 한 줄 — 쉬는 날은 영업 먼저, 숙소는 거리만) · `candidateReason`(다른 종류만 — `basis` 로 앱 문장, 비슷한 경험은 `experience` 갈래, 식사 시간 식당은 그 시각의 끼니) · 「고르면」은 식사 일정이 될 때만. 「「X」에서 식사하기」. `StopOption.fact` 새 칸, `effect` 가 빈 문자열이면 「고르면」 줄 없음. 「그대로」 · 택시도 사실 줄로.
+- 늦추기: `use-server-review.ts` `laterStart` 가 `autofix {item_id, dry_run}` 의 `view.review` 에서 다음 일정과 겹치는 분 · 그 구간의 `slack_min` 을 읽어 `LaterStart.next` 로 돌려준다 → `laterEffect` 문장. 미리 보기에 검사가 없으면 옛 문장.
+- `model.ts` `PlanCandidate.experience` · `from-review.ts` 가 서버 `experience` 를 싣는다. 목업: `mockups/tripilot-plan-check-option-lines.html`.
