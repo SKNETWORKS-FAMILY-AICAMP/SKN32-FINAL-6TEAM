@@ -86,4 +86,10 @@ describe("[2026-10-19] the chat's 「직접 고르기」 opens the edit there", 
     expect(openingOf({ mode: "add", itemId: null, query: "민수네", prefill: { title: "민수네", date: "2026-10-21", startsAt: "19:00", kind: "dining" }, blocked: false }, intake))
       .toEqual({ key: "edit-1:add::민수네", add: { title: "민수네", date: "2026-10-21", start: "19:00", end: null, kind: "dining", query: "민수네" } });
   });
+
+  it("opens the stop from its detail as ✎ does, or with 「직접 고치기」 open — each its own opening", () => {
+    const pick = { mode: "change", itemId: "trip-b", query: "", prefill: {}, blocked: false } as const;
+    expect(openingOf({ ...pick, open: "plain" }, intake)).toEqual({ key: "edit-1:change:trip-b::plain", change: { itemId: "0-1", query: "", how: "plain" } });
+    expect(openingOf({ ...pick, open: "direct" }, intake)).toEqual({ key: "edit-1:change:trip-b::direct", change: { itemId: "0-1", query: "", how: "direct" } });
+  });
 });

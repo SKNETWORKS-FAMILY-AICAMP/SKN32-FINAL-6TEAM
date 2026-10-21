@@ -59,7 +59,10 @@ import { RiskPanel } from "@/features/risk/risk-panel";
 import { problemText, riskSignature } from "@/lib/live/risks";
 import { useRiskAlternatives } from "./use-risk-alternatives";
 import type { Recovery } from "@/lib/live/recovery";
-import type { Trip, TripPick } from "./model";
+import type { Trip, TripPick, TripStop } from "./model";
+import { openChoices, type OpenChoice } from "./attention";
+import { proposalAvailable } from "./trip-chat-records";
+import { CONSENT_KEY, chooseFailure, chooseOutcome, useChooseProposal } from "./proposal-ask";
 import styles from "./trip-screen.module.css";
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다. */
@@ -122,6 +125,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const currentRisks = risks.data?.items ?? [];
   const riskCount = currentRisks.filter((item) => item.status === "problem").length;
   const riskAlternatives = useRiskAlternatives(trip.id, () => openCenter("warnings"));
+  // `[2026-10-21 사용자 결정 — ST4F-704]` The choices the server waits for (the notice center's list): their stops' cards say so and their details answer them.
+  const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops).filter((choice) => Boolean(choice.stop) && proposalAvailable(choice.proposal, trip.version));
+  const choiceOf = (stopId: string) => choices.find((choice) => choice.stop?.id === stopId);
+  const choose = useChooseProposal(trip.id);
+  // 「예보에 맞게 일정 변경」 · 「다른 곳 찾아보기」: the server finds the options now — the list is greyed and locked until it answers (the plan check's 「서버로 전송중입니다.」 veil).
+  const findingOptions = choose.isPending && choose.variables?.key === CONSENT_KEY;
   // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
   const seen = useSeenNotices(trip.id);
   const tripUnread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
@@ -504,6 +513,23 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     if (sheet === "peek") setSheet("half");
   }
   function detailTo(id: string) { setDetailId(id); setSelectedId(id); }
+  /** A choice answered on a detail: what came of it in the notice bar (none while the options come in — they stand on the card). */
+  function answer(choice: OpenChoice, key: string | null) {
+    choose.mutate({ proposalId: choice.proposal.id, key }, {
+      onSuccess: (result) => { const said = chooseOutcome(result.status, t); if (said) showToast({ text: said }); },
+      onError: (error) => showToast({ text: chooseFailure(error, t), stay: true }),
+    });
+  }
+  /** `[2026-10-21 ST4F-704]` The edit opened on a stop from its detail: as its ✎ opens it, or with 「직접 고치기」 open (`TripPick.open`). */
+  function editStop(stop: TripStop, how: "plain" | "direct") {
+    onEdit({ mode: "change", itemId: stop.id, query: "", prefill: {}, blocked: false, open: how });
+  }
+  /** The stops of a day that are over — drawn as past in the list (`dayList`): their detail offers no edit and no choice. */
+  const pastStops = (date: string) => {
+    const entries = dayTimeline(trip, date, shapes);
+    const live = entryTimes(entries, date, shapeNow).findIndex((time) => time.state !== "past");
+    return new Set(entries.slice(0, live < 0 ? entries.length : live).flatMap((entry) => entry.type === "stop" ? [entry.stop.id] : []));
+  };
   function closeDetail() {
     const id = detailId;
     setDetailId(null);
@@ -582,7 +608,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
                 past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps}
-                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} />;
+                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} choice={choiceOf(entry.stop.id)} />;
         }
         return past
           ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
@@ -633,7 +659,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
           {/* `[2026-10-07 사용자 결정]` 머리는 날짜 칩 줄 하나: 칩은 옆으로 스크롤되고 오른쪽 버튼은 고정. 「등록 완료」 표시는 두지 않는다.
                `[2026-10-08 사용자 지시 · 2026-10-12 반영 — C]` 「일정 | 채팅」 대신 채팅 버튼 하나: 칩을 누르면 일정 칸, 채팅 버튼은 채팅 칸(채팅 칸에서는 버튼이 눌린 표시, 칩은 선택 표시 없음). */}
           {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={detailTo}
-            onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }} />}
+            onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }}
+            choiceOf={choiceOf} past={pastStops(detailStop.date)} chooseBusy={choose.isPending} onChoose={answer} onEdit={editStop} />}
           {/* The list and the chat stay mounted under the detail (their gestures and scroll are kept), only hidden. */}
           <header className={`${pc.sheetHead} ${styles.sharedHead} ${detailStop ? styles.away : ""}`} data-float data-done onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             {days.length > 0 && <div ref={stripBox} className={pc.dayStrip} data-at-top={quietDays.atTop || undefined} data-quiet={quietDays.hidden || undefined} data-chat={!plan || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
@@ -700,6 +727,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
             </div>
           </div>
         </section>
+        {/* `[2026-10-21 사용자 지시 — ST4F-704]` 서버가 대안을 찾는 동안 일정 칸을 회색으로 잠근다(계획 확인 「서버로 전송중입니다.」와 같은 막 · 같은 자리) */}
+        {findingOptions && <div className={pc.sendingVeil} data-sending-veil><p role="status">{t("서버로부터 대안을 받고 있습니다.", "Getting alternatives from the server.")}</p></div>}
       </div>
       {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
       {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}

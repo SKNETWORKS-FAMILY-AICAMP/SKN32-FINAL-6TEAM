@@ -134,6 +134,11 @@ export interface TripPick {
   query: string;
   prefill: { title?: string; date?: string; startsAt?: string; endsAt?: string; kind?: string };
   blocked: boolean;
+  /**
+   * `[2026-10-21 사용자 결정 — ST4F-704]` How the stop's change screen opens: none — the chat's place search holding `query`; `plain` — as its ✎ opens it (the stop's detail 「일정 수정」);
+   * `direct` — with 「직접 고치기」 open (「직접 수정」 under a choice the server asks on the stop's detail).
+   */
+  open?: "plain" | "direct";
 }
 
 /** An explicit reply to an open request. Kept in memory; never persisted with chat messages. */
