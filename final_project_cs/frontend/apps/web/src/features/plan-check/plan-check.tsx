@@ -107,7 +107,8 @@ export interface PlanCheckProps {
 /** See `PlanCheckProps.opening`. `query` goes in the place search; `add` holds only what the chat had (an end the customer did not say is left to the form). */
 export interface PlanOpening {
   key: string;
-  change?: { itemId: string; query: string };
+  /** `how` (`[2026-10-21 ST4F-704]`): none — the place search open with `query`; `plain` — as the stop's ✎ opens it; `direct` — with 「직접 고치기」 open. */
+  change?: { itemId: string; query: string; how?: "plain" | "direct" };
   add?: { title: string; date: string | null; start: string | null; end: string | null; kind: string | null; query: string };
 }
 
@@ -1620,7 +1621,17 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     opened.current = opening.key;
     if (opening.change) {
       const item = view.items.find((entry) => entry.id === opening.change!.itemId && !entry.past);
-      if (item) void startChange(item, { search: true, query: opening.change.query });
+      const { how, query } = opening.change;
+      // ★`[2026-10-21 ST4F-704]` A frame later: the page's actions read the view the edit hands over in its own effect, which runs after this one in the commit the view
+      //   first arrives — asked at once, the stop's alternatives failed with 「그 일정은 이미 없어요」.
+      if (item) requestAnimationFrame(() => {
+        void startChange(item, how ? {} : { search: true, query });
+        // 「직접 수정」 (a choice on the trip's detail): the stop's own times and place, as a late arrival's 「직접 수정」 opens them — and the list goes down to them
+        if (how === "direct") {
+          setDetails(true);
+          requestAnimationFrame(() => document.getElementById("plan-direct-edit")?.scrollIntoView({ block: "start" }));
+        }
+      });
       else setToast({ text: t("바꿀 일정을 찾지 못했어요 · 목록에서 일정을 골라 장소를 바꿔 주세요", "That stop is not here · pick a stop in the list to change its place"), stay: true });
     } else if (opening.add) {
       setAddingBusy(false);
@@ -1855,7 +1866,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
               setChange({ ...change, list, index: at >= 0 ? at + 1 : 1 }); setQuery("");
             }}
             onSheetFull={() => { setCustom(null); setSheet("full"); }}
-            editor={actions.edit && <details className={styles.details} open={details} onToggle={(event) => setDetails(event.currentTarget.open)}>
+            editor={actions.edit && <details id="plan-direct-edit" className={styles.details} open={details} onToggle={(event) => setDetails(event.currentTarget.open)}>
               <summary>{t("직접 고치기 · 이름·날짜·시각·장소 없음", "Edit directly · name, date, time, no place")}</summary>
               {details && <StopEditor key={changing.id} item={changing} autoFocus={false} onCancel={() => setDetails(false)}
                 onSave={async (draft) => {

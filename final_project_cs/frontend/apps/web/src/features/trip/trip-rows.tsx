@@ -13,6 +13,7 @@ import { freeText } from "@/features/plan-check/day-times";
 import pc from "@/features/plan-check/plan-check.module.css";
 import { kindLook } from "@/features/plan-check/stop-kind";
 import { placeLinks, placeTarget, routeLinks, routeTarget, type MapTarget } from "./map-apps";
+import type { OpenChoice } from "./attention";
 import { distanceText, isStay, stayNights, type StayMark, type TripLeg } from "./trip-timeline";
 import type { TripStop } from "./model";
 import styles from "./trip-screen.module.css";
@@ -83,11 +84,15 @@ function visitHours(stop: TripStop): string | null {
  * `[2026-10-12 사용자 결정 — E]` 「상세 보기」 is no longer in the card's head: it takes the place of 「지도에서 보기」 among the buttons (that button only lowered the sheet — the customer sets its height).
  * `past` (its end has passed): the same card in grey with 「지난 일정」 at the right of its head; `started` fills its dot (now has passed its start).
  * `[2026-10-14 사용자 결정 — ST4F-492]` 「이 일정 질문하기」 is no longer in the card (the detail keeps it), and 「지도 앱으로 열기」 opens the sheet of three map apps (`map-apps.tsx`).
+ * `[2026-10-21 사용자 결정 — ST4F-704 D안]` `choice` (a choice the server waits for on this stop): the card is painted as the plan check's 「확인 필요」 and says 「선택이 필요해요 · 서버 문장」
+ * above its 「주의」 line, then 「상세 보기에서 확인하세요」 — the choice is made on the stop's detail (the opened card's 「상세 보기」; a button of its own here was the same twice).
+ * Not on a stop that is over (as 「주의」).
  */
-export function StopRow({ stop, open, selected, past = false, started = false, onToggle, onDetail, onMapApps, risk, onRisk }: {
+export function StopRow({ stop, open, selected, past = false, started = false, onToggle, onDetail, onMapApps, risk, onRisk, choice }: {
   stop: TripStop; open: boolean; selected: boolean; past?: boolean; started?: boolean;
   onToggle: () => void; onDetail: () => void; onMapApps: (target: MapTarget) => void;
   risk?: ItemRisk; onRisk?: () => void;
+  choice?: OpenChoice;
 }) {
   const t = useT();
   const id = `trip-stop-${stop.id}`;
@@ -101,9 +106,10 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
   const address = stop.placeInfo?.address;
   const hours = visitHours(stop);
   const maps = placeLinks(stop);
+  const ask = !past && choice?.stop?.id === stop.id ? choice : null;
   // `[2026-10-13]` A stay's end is on its check-out day — it is not this day's end, so the line does not read it (`data-end`).
   return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}
-    data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-rail-open={open || undefined} data-past-open={past || undefined} data-passed={started || undefined}>
+    data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-rail-open={open || undefined} data-past-open={past || undefined} data-passed={started || undefined} data-verdict={ask ? "review" : undefined}>
     <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end>{stay
       // `[2026-10-15 ST4F-498]` 「~10/4 11:00」 on one line ran out of the time column (left of the sheet): the day, then the time.
       ? <>~{monthDay(stop.endDate!)}<br /> {stop.endTime || "—"}</>
@@ -135,6 +141,11 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
         {past && <span className={`${pc.pill} ${styles.stopPast}`} data-state="past">{t("지난 일정", "Past")}</span>}
         <button type="button" className={styles.toggleEnd} onClick={onToggle} tabIndex={-1} aria-hidden="true" data-toggle-mark><span className={styles.toggleMark}>{open ? "−" : "+"}</span></button>
       </div>
+      {/* `[2026-10-21 사용자 지시]` 줄 안 「상세 보기」 단추는 뺐다 — 펼친 카드의 「상세 보기」와 겹쳤다. 고르는 곳은 안내 한 줄로 */}
+      {ask && <div className={styles.stopAsk} data-stop-ask={stop.id}>
+        <p><b>{t("선택이 필요해요", "Your choice is needed")}</b> · {ask.text ?? t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
+        <small>{t("상세 보기에서 확인하세요", "Check it in the details")}</small>
+      </div>}
       {!past && risk?.itemId === stop.id && risk.status === "problem" && <div className={styles.stopRisk} data-stop-risk={stop.id}>
         <p><b>{t("주의", "Attention")}</b> · {risk.problems.map((problem) => problemText(problem)).filter(Boolean).join(" · ") || t("확인된 위험이 있어요", "A risk was found")}</p>
         {onRisk && <button type="button" className={styles.action} onClick={onRisk}
@@ -191,7 +202,7 @@ export function StopFacts({ stop, next, brief = false }: { stop: TripStop; next:
     <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
     {stop.otherOptions && stop.otherOptions.length > 0 && <><dt>{t("다른 안", "Other options")}</dt><dd>{stop.otherOptions.map((option) => option.name).join(" · ")}</dd></>}
     {marks.length > 0 && <><dt>{t("식당 표시", "Restaurant marks")}</dt><dd>{marks.map((badge) => badge.label).join(" · ")}</dd></>}
-    <dt>{t("입력한 메모", "Your notes")}</dt><dd>{stop.notes || t("등록된 메모가 없어요.", "No notes added.")}</dd>
+    {/* `[2026-10-21 사용자 지시 — ST4F-704]` 「입력한 메모」 줄은 뺐다 — 고객이 메모를 적는 칸이 없고 서버가 보내는 메모도 없어 「등록된 메모가 없어요」만 보였다 */}
   </dl>;
 }
 
