@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { checkPlan, mockServer, noHorizontalScroll, start } from "./helpers";
+import { answerCard, checkPlan, mockServer, noHorizontalScroll, start } from "./helpers";
 
 const notice = "일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.";
 const source = "서울 여행을 가려고 해요. 아직 방문 날짜와 장소는 정하지 않았어요.";
@@ -22,7 +22,7 @@ for (const width of [375, 1280]) {
     await checkPlan(page);
     const questions = page.getByRole("region", { name: "질문 2개" });
     await expect(questions).toBeVisible();
-    await questions.getByRole("button", { name: "택시", exact: true }).click();
+    await answerCard(page, "혼자");
     await expect(page.getByText("찾은 일정", { exact: false })).toContainText("0");
     await page.waitForTimeout(600);
     await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/);

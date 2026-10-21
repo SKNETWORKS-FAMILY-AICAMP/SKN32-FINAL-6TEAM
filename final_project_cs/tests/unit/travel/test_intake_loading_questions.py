@@ -42,14 +42,15 @@ def test_the_four_questions_are_the_start_survey_without_on_disruption():
 
 
 def test_titles_and_choices_match_the_start_survey_screen():
-    """시작 설문 화면(웹 `onboarding/model.ts`)과 같은 문구 · 선택지 글. ★활동 세부는 2026-10-19 사용자 지시로 서버가 먼저 바꿨다(화면은 UI 팀 브랜치)."""
+    """시작 설문 화면(웹 `onboarding/model.ts`)과 같은 문구 · 선택지 글. `[2026-10-20 ST4F-665]` 활동 세부 일곱 코드도 같이 대조한다 — 웹이 같은 일곱 코드를 쓰게 된 뒤로 예외를 뺐다
+    (2026-10-19 에는 서버가 먼저 바꿔 웹과 달랐다). 로딩 질문 카드가 시작 설문 카드를 그대로 쓰므로 두 화면의 선택지는 이 대조 하나로 지킨다."""
     if not ONBOARDING.exists():
         pytest.skip("웹 소스가 없는 사본")
     text = ONBOARDING.read_text(encoding="utf-8")
     for question in sa.QUESTIONS:
         assert f'"{question.title}"' in text, question.id
         options = (list(question.options) if question.kind != "priority" else []) + \
-            [o for g in question.groups if g.id != "activity" for o in g.options]
+            [o for g in question.groups for o in g.options]
         for option in options:
             assert re.search(rf'\["{re.escape(option.id)}", "{re.escape(option.label)}"', text), (question.id, option.id)
         if question.kind == "priority":                                                # 분야 글은 화면의 `areaNames`

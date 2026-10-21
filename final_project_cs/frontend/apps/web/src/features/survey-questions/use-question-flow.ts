@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Language } from "@/lib/i18n";
-import { submitSurveyAnswers } from "@/lib/live/intake";
-import { allAnswered, nextOpen, openIndexes, unanswered, type Answers, type SurveyQuestion } from "./model";
+import { submitSurveyAnswers, type IntakeSurveyAnswer } from "@/lib/live/intake";
+import { allAnswered, answerOf, nextOpen, openIndexes, unanswered, type Answers, type Draft, type SurveyAnswer, type SurveyQuestion } from "./model";
 
 /** Times of the loading-time questions (mockup v9 `TIMING`; the movement times live in the CSS). */
 export const TIMING = {
@@ -31,6 +31,9 @@ export type Phase = "read" | "late" | "idle" | "done" | "gone";
 
 type Slide = "" | "from-right" | "from-left";
 
+/** One save: the question, the answers sent (`null` = cleared) and what it leaves on screen. */
+interface Sending { id: string; answers: Record<string, IntakeSurveyAnswer>; value: SurveyAnswer | null; draft: Draft | null }
+
 export interface QuestionFlow {
   phase: Phase;
   /** The reading screen is held for the questions though the server has finished (`late` · `idle` · `done`). */
@@ -49,15 +52,20 @@ export interface QuestionFlow {
   busy: boolean;
   /** 「저장했어요」 is up for the question on view. */
   saved: boolean;
-  /** An answer the server did not take: the question and the option the customer picked (kept picked, with 「다시 시도하기」). */
-  failed: { id: string; option: string | null } | null;
+  /** An answer the server did not take: the question and what was sent (the card stays as the customer left it, with 「다시 시도하기」). */
+  failed: Sending | null;
+  /** The cards as the customer last left them (a size picked on the companions card is not in the server's answer), by question id. */
+  drafts: Readonly<Record<string, Draft>>;
   slide: Slide;
   /** Raised when the focus should go to the title of the question on view (a move the customer asked for). */
   focusNonce: number;
   seconds: number;
   stopAuto: boolean;
   navigate: (delta: 1 | -1) => void;
-  choose: (optionId: string | null) => void;
+  /** 「다음」 on a complete card: save it (`payloadOf`), then go on to the next open question. */
+  commit: (answers: Record<string, IntakeSurveyAnswer>, value: SurveyAnswer, draft: Draft) => void;
+  /** 「답변 취소하고 다시 입력」: the question's answer is taken back (`null`). */
+  clear: () => void;
   retry: () => void;
   /** Go on to the plan check now. */
   release: () => void;
@@ -75,8 +83,8 @@ export interface QuestionFlow {
  * `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계 · 목업 v9 `finishLoading` · `answer` · `navigate`]` The state of the questions asked while the server reads, and what happens to the screen
  * when the reading is done: it goes straight on when nothing was touched (or nothing is open), waits in `late` while the customer answers, and in `done` shows a 3-second bar once all are answered.
  *
- * ★An answer is saved at once, one question at a time (`POST …/trip-intakes/{id}/survey`); the server keeps the last value of a question, so going back to correct it is just another answer.
- *   A save that fails keeps the picked option picked, says so with 「다시 시도하기」 and does not move on.
+ * ★An answer is saved one question at a time (`POST …/trip-intakes/{id}/survey`) when its card is complete and 「다음」 is pressed (`[2026-10-20 ST4F-665]` the start survey's card and rule);
+ *   the server keeps the last value of a question, so going back to correct it is just another answer. A save that fails keeps the card as it was, says so with 「다시 시도하기」 and does not move on.
  */
 export function useQuestionFlow({ intakeId, language, questions, loadingDone, fresh = false }: { intakeId: string; language: Language; questions: readonly SurveyQuestion[]; loadingDone: boolean; fresh?: boolean }): QuestionFlow {
   // ★`[2026-10-07 사용자 지적 — 뒤로 갔다가 다시 열면 읽는 화면이 5초 뜨고 확인이 처음부터 다시 그려진다]` A plan that is already read when the page opens (opened again with the back and forward arrows, or from the list) was
@@ -89,7 +97,8 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone, fr
   const [stopAuto, setStopAuto] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [failed, setFailed] = useState<{ id: string; option: string | null } | null>(null);
+  const [failed, setFailed] = useState<Sending | null>(null);
+  const [drafts, setDrafts] = useState<Readonly<Record<string, Draft>>>({});
   const [slide, setSlide] = useState<Slide>("");
   const [focusNonce, setFocusNonce] = useState(0);
   const [seconds, setSeconds] = useState<number>(TIMING.countdownS);
@@ -97,8 +106,17 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone, fr
   const skipped = new Set(skippedIds);
   const open = openIndexes(questions, answers, skipped);
   const allDone = allAnswered(questions, answers);
-  const [pickedFirst, setPickedFirst] = useState(false);
-  if (questions.length && !pickedFirst) { setPickedFirst(true); setAt(open[0] ?? 0); }
+  // ★`[2026-10-19 계약 「두 번에 정한다」]` The list grows once: questions the plan did not answer are added at the END after the reading's first result (a question shown stays where it is).
+  //   The first list opens on its first open question; when the list grows while the customer sits on an answered question, the first new open one slides in.
+  const [seen, setSeen] = useState(0);
+  if (questions.length !== seen) {
+    setSeen(questions.length);
+    if (seen === 0) setAt(open[0] ?? 0);
+    else if (questions.length > seen && questions[at] && answerOf(questions[at], answers) && !busy) {
+      const added = open.find((index) => index >= seen);
+      if (added !== undefined) { setAt(added); setSlide("from-right"); }
+    }
+  }
 
   // Reading is done (the server has finished): decide ONCE what the screen does (mockup `finishLoading`).
   // ★`[2026-10-06 사용자 지적]` Untouched questions no longer send the customer straight on: the notice is shown and the screen waits `doneMs`, then goes (it used to jump at once).
@@ -155,35 +173,46 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone, fr
     move(to, delta);
   }, [questions.length, at, busy, touchQuestions, move]);
 
-  const choose = useCallback((optionId: string | null) => {
+  const send = useCallback((sending: Sending) => {
     const question = questions[at];
-    if (!question || busy) return;
+    if (!question || question.id !== sending.id || busy) return;
     touchQuestions();
     const wasAll = allAnswered(questions, answers);
     setFailed(null);
     setSaved(false);
     setBusy(true);
-    const value = optionId?.startsWith("custom:") ? { custom: optionId.slice(7) } : optionId;
-    void submitSurveyAnswers(intakeId, { [question.id]: value }, language).then(() => {
-      const next: Answers = { ...answers, [question.id]: optionId };
+    void submitSurveyAnswers(intakeId, sending.answers, language).then(() => {
+      const next: Answers = { ...answers, [question.id]: sending.value };
       setAnswers(next);
+      const draft = sending.draft;
+      // A card taken back (`null`) forgets what was left on it, so coming back shows it empty.
+      setDrafts((current) => draft ? { ...current, [question.id]: draft } : Object.fromEntries(Object.entries(current).filter(([id]) => id !== question.id)));
       setSaved(true);
       clearTimeout(timer.current);
       timer.current = setTimeout(() => {
         setBusy(false);
         const now = latest.current;
-        if (optionId === null) return;
+        if (sending.value === null) return;
         if (now.phase === "late" && !now.stopAuto && !wasAll && allAnswered(now.questions, next)) { setPhase("done"); return; }
         const target = nextOpen(openIndexes(now.questions, next, new Set(now.skippedIds)), at);
         if (target !== null) move(target, 1);
       }, TIMING.advanceMs);
     }, () => {
-      setFailed({ id: question.id, option: optionId });
+      setFailed(sending);
       setBusy(false);
     });
   }, [questions, at, busy, answers, intakeId, language, touchQuestions, move]);
 
-  const retry = useCallback(() => { if (failed) choose(failed.option); }, [failed, choose]);
+  const commit = useCallback((sent: Record<string, IntakeSurveyAnswer>, value: SurveyAnswer, draft: Draft) => {
+    const question = questions[at];
+    if (question) send({ id: question.id, answers: sent, value, draft });
+  }, [questions, at, send]);
+  const clear = useCallback(() => {
+    const question = questions[at];
+    if (question) send({ id: question.id, answers: { [question.id]: null }, value: null, draft: null });
+  }, [questions, at, send]);
+
+  const retry = useCallback(() => { if (failed) send(failed); }, [failed, send]);
 
   const release = useCallback(() => setPhase("gone"), [setPhase]);
   const stop = useCallback(() => { setStopAuto(true); setPhase("late"); setActivity((value) => value + 1); }, [setStopAuto, setPhase, setActivity]);
@@ -191,7 +220,7 @@ export function useQuestionFlow({ intakeId, language, questions, loadingDone, fr
 
   return {
     phase, hold: phase === "late" || phase === "idle" || phase === "done", shown: questions.length > 0 && phase !== "gone",
-    questions, at, answers, skipped, open, allDone, left: unanswered(questions, answers), busy, saved, failed, slide, focusNonce, seconds, stopAuto,
-    navigate, choose, retry, release, stop, keepAnswering, touch, touchQuestions,
+    questions, at, answers, skipped, open, allDone, left: unanswered(questions, answers), busy, saved, failed, drafts, slide, focusNonce, seconds, stopAuto,
+    navigate, commit, clear, retry, release, stop, keepAnswering, touch, touchQuestions,
   };
 }

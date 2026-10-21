@@ -16,7 +16,8 @@ for (const width of [375, 1280]) {
     await page.goto("/trips/new");
     await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
     await checkPlan(page);
-    await page.getByLabel("직접 입력").fill("택시 + 버스");
+    await page.getByRole("button", { name: "기타", exact: true }).click();                        // `[2026-10-20 ST4F-665]` 시작 설문 카드의 「기타」
+    await page.getByLabel("누구와 함께 여행하는지 알려 주세요.").fill("직장 동료");
     await capture("survey");
     await mock.scenario({ review: "on", board: "rich", readingPolls: 0 });
     await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
