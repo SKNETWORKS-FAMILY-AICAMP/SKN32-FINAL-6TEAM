@@ -436,7 +436,7 @@ def _price_note(check: dict[str, Any]) -> str:
     return ""
 
 
-def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any]:
+def _lodging_option(rank: int, pick: dict[str, Any], item: Any, *, price_limit: float | None = None) -> dict[str, Any]:
     """새 후보 하나 → 식당 · 활동의 「다른 안」 기록 모양(`itinerary_changes.applied_record` 와 같은 칸) + 숙소 칸(가격 · 평점 · 링크 · 좌표).
     `place_id` 는 비운다 — 우리 후보는 장소 표에 없다(고르면 `detail.chosen` 에 이름 · 좌표 · 링크를 둔다)."""
     return {"key": pick["key"], "rank": rank, "name": pick["name"], "place_id": None, "option": None, "option_label": None,
@@ -452,7 +452,10 @@ def _lodging_option(rank: int, pick: dict[str, Any], item: Any) -> dict[str, Any
             "source_name": pick.get("source_name"),
             # `[2026-10-13 사용자 결정]` 판매처를 읽은 곳의 「1박 ○원~」 — 목록 최저가와 판매처 가격 중 가장 싼 값. 없으면 `None`
             "price_from": pick.get("price_from"),
-            "property_token": pick.get("property_token")}
+            "property_token": pick.get("property_token"),
+            # `[2026-10-21 LB-05]` 고객이 말한 1박 상한(「1박 ○원 이하」 · 「더 싸게」면 원래 가격 - 1). 고를 때 다시 본 값이 이걸 넘는지
+            #   고르기 쪽(`trip_api._choose` · `pending.choose`)이 볼 수 있게 후보에 싣는다. 상한이 없으면 `None`
+            "price_limit": price_limit}
 
 
 #: `[2026-10-13]` 구글 호텔 판매처 중 답에 보여 줄 곳 — 한국인이 많이 쓰는 곳 위주(사용자 결정). 이름은 상세 응답의 `source` 를 소문자로 맞춘다
@@ -1379,7 +1382,7 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
             return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
                                 next_action=NextAction.RESPOND, decisions=[record],
                                 answer=f"{item.title} 대신 갈 수 있는 {asked + ' ' if asked else ''}숙소를 더 찾지 못했어요. 일정은 그대로 두었어요.")
-        options = [_lodging_option(rank, pick, item) for rank, pick in enumerate(picks, start=1)]
+        options = [_lodging_option(rank, pick, item, price_limit=price_limit) for rank, pick in enumerate(picks, start=1)]
         def note(option: dict[str, Any]) -> str:
             if option.get("price_from") is not None:
                 parts = [f"1박 {_won(option['price_from'])}~"]
