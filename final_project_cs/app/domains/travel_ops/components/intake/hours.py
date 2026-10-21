@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any
@@ -29,8 +28,6 @@ REUSE_DAYS = 14
 #: 요식 원장에서 라스트오더 여유로 보는 분 — `replan.ORDER_MARGIN_MIN` 과 같은 값(탈락 기준 20분)
 ORDER_MARGIN_MIN = 20
 _DAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
-#: 날짜 범위 — 「12월 29일~1월 2일」 · 「12월 29일 - 1월 2일」 (`_settle_stored_conditions`)
-_DATE_RANGE = re.compile(r"\d{1,2}\s*월\s*\d{1,2}\s*일\s*[~\-–～]\s*\d{1,2}\s*(?:월|일)")
 
 
 @dataclass
@@ -133,9 +130,7 @@ def _settle_stored_conditions(conn, start: datetime, out: HoursFacts) -> None:
     holiday = _HolidayCalendar(conn)
     kept: list[str] = []
     for text in out.conditions:
-        # ★날짜 범위(「12월 29일~1월 2일」)는 규칙이 양 끝 날짜만 본다 — 사이 날짜를 「해당 없음」으로 읽으니 묻지 않고 남긴다(2026-10-20 x600 자료 1건)
-        settle = text in stored and not _DATE_RANGE.search(text)
-        verdict = activity_ledger.closure(text, start, holiday=holiday) if settle else None
+        verdict = activity_ledger.closure(text, start, holiday=holiday) if text in stored else None
         if verdict is not None and verdict.get("closed") is False:
             continue
         kept.append(text)
