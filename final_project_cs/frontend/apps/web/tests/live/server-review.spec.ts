@@ -102,8 +102,8 @@ test("삭제 → 되돌리기: 삭제는 누르자마자 서버에 저장만 하
 });
 
 test("수정 화면: 예약한 일정은 서버가 후보를 주지 않고(booked_needs_name) 화면은 그 이유와 이름을 쓰라는 안내를 말한다 — 일반 「다른 후보가 없어요」가 아니다", async ({ page, request }) => {
-  const server = await openFinished(page, request);
-  await server.scenario({ candidateNotes: ["booked_needs_name"] });
+  // `[2026-10-21]` 결과 화면의 확인 필요 카드는 질문 칸이 후보를 먼저 부른다 — 서버의 알림 값은 화면을 열기 전에 정한다
+  await openFinished(page, request, { candidateNotes: ["booked_needs_name"] });
   await page.getByRole("button", { name: "올리브영 수정" }).click();
   await expect(page.getByText("올리브영 바꾸기")).toBeVisible();
   await expect(page.getByText("예약하신 곳이라 다른 후보를 권하지 않아요")).toBeVisible();
@@ -383,6 +383,7 @@ test("사진을 두 가지로 읽은 일정: 지금 값이 맞으면 같은 값�
 test("사진을 두 가지로 읽었는데 다른 읽기의 값을 못 정했으면(other null) 서버 문장만 보이고 고르는 단추는 없다", async ({ page, request }) => {
   await openFinished(page, request, { reread: "note_only" });
   await card(page, "청경궁 관람").getByRole("heading").getByRole("button").click();
-  await expect(page.getByText("사진에서 이 줄을 두 가지로 읽었어요", { exact: false })).toBeVisible();
+  // `[2026-10-21]` 고를 읽기가 없어 결과 화면 질문 칸이 같은 서버 문장으로 묻는다 — 검사 줄의 문장을 본다
+  await expect(card(page, "청경궁 관람").locator('[id$="-checks"]').getByText("사진에서 이 줄을 두 가지로 읽었어요", { exact: false })).toBeVisible();
   await expect(page.getByRole("group", { name: "이름 — 사진에서 두 가지로 읽었어요" })).toHaveCount(0);
 });

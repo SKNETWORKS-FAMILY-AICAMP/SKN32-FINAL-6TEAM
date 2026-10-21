@@ -149,6 +149,8 @@
 .rankedChip:disabled { opacity: .45; cursor: default; }
 .rankedChip:disabled:hover { border-color: var(--color-border); }
 .pickCount { flex-basis: 100%; margin: 0; font-size: 11px; line-height: 1.6; font-weight: 650; color: var(--color-muted); }
+/* `[2026-10-20 ST4F-665]` A part the plan already told (loading questions): what it said, in place of the chips. */
+.readNote { flex-basis: 100%; margin: 0; padding: 11px 13px; border-radius: 11px; background: var(--color-subtle); font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); }
 .chipRank { position: absolute; top: 50%; right: 8px; min-width: 19px; height: 19px; padding: 0 5px; transform: translateY(-50%); font-size: 11px; }
 .optionCheck { position: absolute; right: 9px; top: 50%; width: 13px; height: 13px; transform: translateY(-50%); opacity: 0; pointer-events: none; }
 .chip.selected .optionCheck { opacity: 1; }

@@ -116,6 +116,11 @@ export interface IntakeView {
   /** The question set these come from; a change in meaning of an option raises it. Kept for the record - the page does not branch on it. */
   questions_version?: string;
   /**
+   * `[2026-10-19]` 1 = the first list (asked at once), 2 = the list after the reading's first result, with the questions the plan did not answer added at the END
+   * (a question already shown is never removed or moved). Absent on an older server.
+   */
+  questions_phase?: 1 | 2 | null;
+  /**
    * `[2026-10-13]` An edit of a registered trip (`reopenTrip`): the trip and the version it reopened, and the trip's stops left out of the intake — they stay as they are when the edit is done.
    * Null (or absent, an older server) on an intake read from a plan.
    * `[2026-10-15 ST4F-490]` `frozen` says why each is left out (`reason` null on an edit opened before the server said so; absent on an older server). Stays, flights and vendor bookings
@@ -162,18 +167,45 @@ export interface IntakeInterpretation {
 /** `[2026-10-15 ST4F-490]` Why a stop of the trip is left out of an edit: over · runs past midnight · its place has no position · a kind the edit does not take. */
 export type FrozenReason = "past" | "overnight" | "no_place" | "kind";
 
-/** One question of `questions[]`. Only `kind: "single"` (pick one option) is drawn today; the fields are read as data and checked again before drawing (`features/survey-questions/model.ts`). */
+/**
+ * One question of `questions[]` (`web-intakes.md` 「설문 질문」). `[2026-10-20 ST4F-665]` Three kinds are drawn: `single` (pick one, `party` also takes its own words), `priority` (areas in order,
+ * each with its details in order — `options` are the areas, `groups` their details) and `pair` (one pick per part — `parts`). A group or part with `read` was told by the plan and is not asked.
+ * The fields are read as data and checked again before drawing (`features/survey-questions/model.ts`).
+ */
 export interface IntakeQuestion {
   id: string;
   kind: string;
   title?: string;
   why?: string;
   options?: { id: string; label: string }[];
-  answer?: string | null;
+  /** `single`: the option id held · `priority`: `{areas, details}` · `pair`: `{part: option}`. */
+  answer?: string | IntakePriorityAnswer | Record<string, string> | null;
   allow_custom?: boolean;
   custom_max_length?: number;
+  /** The label of the button that opens the own-words field (`party`: 「기타」). */
+  custom_label?: string | null;
   custom_answer?: string | null;
+  groups?: IntakeQuestionPart[];
+  parts?: IntakeQuestionPart[];
 }
+
+/** A group of a `priority` question (an area's details) or a part of a `pair` question. */
+export interface IntakeQuestionPart {
+  id: string;
+  label: string;
+  options: { id: string; label: string }[];
+  /** What the plan told for this part (`text` in the customer's words, `quotes` from the plan); null when it is asked. */
+  read: { key: string; value: unknown; text: string; quotes: string[] } | null;
+}
+
+/** The answer of a `priority` question: areas in order, and the details of the areas picked, each in order. */
+export interface IntakePriorityAnswer { areas: string[]; details: Record<string, string[]> }
+
+/**
+ * What `POST …/survey` takes for one key: an option id; `{custom}` (own words); `{areas, details}` (priority); `{part: option}` (pair); `null` (clear).
+ * `party_size` (`"1"`–`"4"`) is not a question but rides the same call with the companions.
+ */
+export type IntakeSurveyAnswer = string | { custom: string } | IntakePriorityAnswer | Record<string, string> | null;
 
 /** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
 export interface IntakePlanBasis { requested: boolean; start_date: string | null; days: number | null; party_size: number | null; preferences: string }
@@ -243,10 +275,11 @@ export function planIntake(intakeId: string, revision: number, input: IntakePlan
 }
 
 /**
- * `[2026-10-06]` Save the answers to the questions asked while the server reads: `{question id: option id}`, one question at a time as the customer answers. The server keeps the LAST value of a
- * question (answering again corrects it) and refuses a whole request with `422 invalid_answers` when one id or option is unknown. A registered intake answers `409 intake_confirmed`.
+ * `[2026-10-06]` Save the answers to the questions asked while the server reads: `{question id: answer}`, one question at a time as the customer answers. The server keeps the LAST value of a
+ * question (answering again corrects it) and refuses a whole request with `422 invalid_answers` when one id, option or shape is unknown. A registered intake answers `409 intake_confirmed`.
+ * `[2026-10-20 ST4F-665]` The answer takes the question's shape (`IntakeSurveyAnswer`), and the start survey's answers ride the same call before the first read of the intake.
  */
-export function submitSurveyAnswers(intakeId: string, answers: Record<string, string | { custom: string } | null>, language: Language): Promise<{ ok: true; answered: string[]; questions_version: string }> {
+export function submitSurveyAnswers(intakeId: string, answers: Record<string, IntakeSurveyAnswer>, language: Language): Promise<{ ok: true; answered: string[]; questions_version: string }> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/survey`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }),
   });

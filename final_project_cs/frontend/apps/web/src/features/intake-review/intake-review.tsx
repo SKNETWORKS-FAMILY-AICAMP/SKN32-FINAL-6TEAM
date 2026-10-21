@@ -10,7 +10,8 @@ import { ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import { useCriteria, withCriteria } from "@/features/guardian/criteria-store";
-import { questionsOf } from "@/features/survey-questions/model";
+import { questionsOf, startAnswers } from "@/features/survey-questions/model";
+import { preloadAnswers } from "@/features/survey-questions/preload";
 import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-footer";
 import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
 import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
@@ -20,7 +21,7 @@ import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
 import { clearRegistrationDraft } from "@/features/trip-registration/trip-registration";
-import { tripsKey } from "@/lib/gateway";
+import { tripGateway, tripKey, tripsKey } from "@/lib/gateway";
 import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
@@ -60,13 +61,17 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // `[2026-10-06]` What the plan screen decided (a day's fullness, the Course Keeper on or off) is laid over it - the latest choice wins, and 「끄고 진행」 says `ask_first` out loud.
   const criteria = useCriteria();
   const survey = withCriteria(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria);
+  // ★`[2026-10-20 ST4F-665]` A plan this page watched arrive: what that survey already answers (the start survey with the plan screen's choices — who and how many,
+  //   priorities, indoors or out, pace) goes to the intake BEFORE its first read, so the loading questions do not ask it again (`survey-questions/preload.ts`).
+  //   Every read waits for it (not a disabled query: a progress event that comes meanwhile must still lead to a read). Arriving means the app, and the answers it keeps, is loaded.
+  const [preloaded] = useState(() => arriving ? preloadAnswers(intakeId, startAnswers(survey), language) : null);
   const key = ["intake", intakeId, language] as const;
   // ★`[2026-10-02]` While the server reads, its progress stream says when to read the intake again (`useIntakeEvents`).
   //   Only where there is no stream (an older server, or the stream limit) is the intake asked for every 1.5 s, as before.
   const [polling, setPolling] = useState(false);
   const query = useQuery({
     queryKey: key,
-    queryFn: () => getIntake(intakeId, language),
+    queryFn: async () => { await preloaded; return getIntake(intakeId, language); },
     retry: false,
     refetchOnWindowFocus: false,
     // Keep recently read data when reopening; a new submission opens its progress screen before this first GET finishes.
@@ -123,7 +128,16 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
-  const registered = (tripId: string) => { clearRegistrationDraft(); queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
+  // `[2026-10-21 사용자 지시]` The trip is read before going there: the trip screen then opens on it, not on its 「여행 정보를 불러오고 있어요」 page. Until then this screen stays,
+  //   still 「서버로 전송중입니다.」 (`leaving` keeps the button busy). A failed read only means the trip screen reads it itself, as before.
+  const [leaving, setLeaving] = useState(false);
+  const registered = async (tripId: string) => {
+    setLeaving(true);
+    clearRegistrationDraft();
+    queryClient.removeQueries({ queryKey: tripsKey });
+    await queryClient.prefetchQuery({ queryKey: tripKey(tripId, language), queryFn: () => tripGateway.getTrip(tripId, language), retry: false });
+    router.push(routes.trip(tripId));
+  };
   const confirm = useMutation({
     mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
     onSuccess: (result) => registered(result.trip.trip_id),
@@ -208,8 +222,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     return <PlanCheck key="plan" view={reading ?? readingOf(view)} notice={testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />;
   }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
-    const streamNote: BusToast | null = view.status !== "reading" ? null
-      : follow.follow === "lost" ? { text: t("서버와 연결이 끊겼어요", "Lost the connection to the server"), sub: t("다시 연결하는 중이에요…", "Reconnecting…") }
+    const lostNote: BusToast | null = view.status === "reading" && follow.follow === "lost" ? { text: t("서버와 연결이 끊겼어요", "Lost the connection to the server"), sub: t("다시 연결하는 중이에요…", "Reconnecting…") } : null;
+    // `[2026-10-21 사용자 지적]` Slow and quiet are not said while the check is stopped at a question (`slowNotice`); a lost connection still is.
+    const slowNote: BusToast | null = view.status !== "reading" || lostNote ? null
       : follow.slow ? { text: t("서버 응답이 늦어지고 있어요", "The server is slow to answer"), sub: stream.progress?.current?.title
         // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
         ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
@@ -218,7 +233,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       : silence?.stage === 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again."), note: t("30초 이상 새 진행 소식이 없어요.", "No new progress for at least 30 seconds.") }
       : null;
     // `[2026-10-20 사용자 결정 — 계획 확인 C안]` Once the server's check is final the replay can stop at a card that needs a look and ask inside it: the changes are wired here too.
-    return <PlanCheck key="plan" view={reading} notice={streamNote ?? testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined}
+    return <PlanCheck key="plan" view={reading} notice={lostNote ?? testNote} slowNotice={slowNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined}
       actions={view.status === "review" && view.review ? server.actions : undefined} />;
   }
   if (view.status === "fatal") {
@@ -279,7 +294,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
     }}
     registration={{
-      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending,
+      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending || leaving,
       // The plan the server holds when it is pressed — a plan saved a moment before (the proposed one, registered from) has a newer revision than this render's.
       onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
       error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],

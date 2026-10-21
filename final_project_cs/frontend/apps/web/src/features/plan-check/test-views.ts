@@ -41,6 +41,15 @@ const lines: PlanLine[] = [
 
 const days = [{ day: 1, date: "2026-10-01" }, { day: 2, date: "2026-10-02" }];
 
+/**
+ * `[2026-10-21 ST4F-703]` What a new read of a finished check looks like when the server stamps every stop's risk check anew (`review.py` ensure → `risks.decorate`,
+ * `checked_at` = the time of the read): the plan as it was, each stop's `risk` with the time `at`.
+ */
+export function readAgain(view: PlanCheckView, at: string): PlanCheckView {
+  return { ...view, items: view.items.map((item) => ({ ...item, risk: { itemId: item.id, title: item.title, status: "unknown" as const, problems: [], categories: [], unknownCategories: ["기상 특보"],
+    reason: null, checkedAt: at, checkedFor: null, mode: "cached" as const, dataConfirmedAt: null, stale: true } })) };
+}
+
 /** The final state: every check in, the trip titled. */
 export const exampleDone: PlanCheckView = { stage: "done", title: "10월 서울 여행", days, lines, items, moves, dirty: false, rechecking: null };
 

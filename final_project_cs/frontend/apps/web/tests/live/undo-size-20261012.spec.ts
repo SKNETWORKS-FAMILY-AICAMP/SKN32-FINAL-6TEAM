@@ -1,7 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { captureShots, mockServer, noHorizontalScroll } from "./helpers";
-import { openFinished } from "./plan-check-kit";
+import { openFinished, typeTimes } from "./plan-check-kit";
 
 async function metrics(control: Locator) {
   return control.evaluate(element => {
@@ -40,7 +40,7 @@ for (const width of [375, 1280]) {
     await page.keyboard.press("Enter");
     await expect(first.getByRole("button", { name: /변경 되돌리기$/ })).toHaveCount(0);
     await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click();
-    const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
+    const form = await typeTimes(page.getByRole("form", { name: "경복궁 관람 시간 고치기" }));
     await form.getByLabel("시작", { exact: true }).fill("09:10");
     await form.getByRole("button", { name: "적용", exact: true }).click();
     const undoTime = first.getByRole("button", { name: "경복궁 관람 시간 되돌리기" });

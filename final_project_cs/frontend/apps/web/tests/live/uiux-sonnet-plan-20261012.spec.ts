@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { changedBadge, head, openFinished, type Json } from "./plan-check-kit";
+import { changedBadge, head, openFinished, typeTimes, type Json } from "./plan-check-kit";
 
 // mock 서버 시험: 필터·키보드·동시 변경 요청의 화면 반응을 확인합니다.
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
@@ -9,7 +9,7 @@ const title = (page: Page) => page.getByRole("button", { name: /^계획 이름 �
 const timeNotice = (page: Page) => page.getByRole("status").filter({ hasText: /개 일정의 시간을 바꿨어요/ });
 async function changeTime(page: Page) {
   await page.getByRole("button", { name: /^광장시장 시간 고치기/ }).click();
-  const form = page.getByRole("form", { name: "광장시장 시간 고치기" });
+  const form = await typeTimes(page.getByRole("form", { name: "광장시장 시간 고치기" }));
   await form.getByLabel("시작", { exact: true }).fill("11:30");
   await form.getByRole("button", { name: "적용", exact: true }).click();
   await expect(timeNotice(page)).toBeVisible();

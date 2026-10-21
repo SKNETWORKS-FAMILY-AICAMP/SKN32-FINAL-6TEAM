@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { card, head, needsBadge, changedBadge, openFinished, pin, toast } from "./plan-check-kit";
+import { card, head, needsBadge, changedBadge, openFinished, pin, toast, typeTimes } from "./plan-check-kit";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 const shot = async (page: Page, name: string) => {
@@ -30,7 +30,7 @@ test("정보 순서·아이콘 세 개·전체 복원은 한 흐름으로 동작
   await expect(item.getByRole("button", { name: "경복궁 관람 수정", exact: true })).toHaveCount(1);
   await expect(item.getByRole("button", { name: "경복궁 관람 자동 추천", exact: true })).toHaveCount(1);
   await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click();
-  const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
+  const form = await typeTimes(page.getByRole("form", { name: "경복궁 관람 시간 고치기" }));
   await form.getByLabel("끝", { exact: true }).fill("11:00");
   await form.getByRole("button", { name: "적용", exact: true }).click();
   await expect(changedBadge(page)).toHaveText("1");

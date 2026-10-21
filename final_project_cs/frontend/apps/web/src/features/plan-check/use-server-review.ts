@@ -38,6 +38,14 @@ const RECHECK_STEP_MS = 380;
  * ★「되돌리기」 puts back the last change only when everything it changed can be put back; otherwise it says so (the screen
  *   offers it after a change, so a change that cannot be undone is told when it is pressed — never half-undone).
  */
+/** `[2026-10-21]` One live answer of a stop's alternatives, shared by every ask of it: what it has said so far and who still waits for its first cards or its updates. */
+interface CandidateStream {
+  first: CandidateList | null;
+  updates: CandidateUpdate[];
+  firsts: Set<(list: CandidateList) => void>;
+  listeners: Set<(update: CandidateUpdate) => void>;
+}
+
 export function useServerReview({ intakeId, view, language, apply, reread }: {
   intakeId: string;
   /** Undefined until the plan is read; the actions are only used once it is on screen. */
@@ -72,6 +80,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   // ★`[2026-10-20 사용자 지시]` Kept by stop, not by revision, until 「다시 제출」: after picking one of them (or moving a time) the change screen shows the
   //   same three again instead of working out the alternatives of the changed plan — the changed plan is checked once, when it is sent again.
   const alternatives = useRef(new Map<string, ReturnType<typeof getCandidates>>());
+  // `[2026-10-21]` What each live answer above has said so far (its first cards, its updates) and who is waiting on it — by the answer.
+  const streams = useRef(new WeakMap<object, CandidateStream>());
   // `[2026-10-21]` The keys of the stops taken out, by id — what puts one back once the plan no longer holds it.
   const taken = useRef(new Map<string, { source_id: string; index: number }>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
@@ -85,12 +95,17 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const needsLook = (view?.review?.needs?.total ?? 0) > 0;
   // `[2026-10-20]` Not for a revision only saved: its moves are not measured yet (the dry run would work on guesses) - it is asked once the plan is sent again.
   const warmRevision = view?.status === "review" && !unchecked ? view.revision : null;
+  // ★`[2026-10-21 사용자 지시]` Held while the first check is drawn and stopped at its questions (`holdWarmUp`): the dry run (about 20 s of place searches and model
+  //   calls) used to start the moment the server's check was final — the stopped question's alternatives then waited behind it. It is asked once the result is on screen.
+  //   The hold is read from a ref too: the page sets it in its own effect, which runs before this one in the commit the server's check turns final (a state update would land after it).
+  const warmHold = useRef(false);
+  const [warmHeld, setWarmHeld] = useState(false);
   useEffect(() => {
-    if (warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
+    if (warmHold.current || warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
     const ask = autofixIntake(intakeId, warmRevision, language, true);
     warmed.current = { intakeId, base: warmRevision, ask };
     ask.catch(() => { if (warmed.current?.ask === ask) warmed.current = null; });
-  }, [intakeId, language, warmRevision, needsLook]);
+  }, [intakeId, language, warmRevision, needsLook, warmHeld]);
   useEffect(() => { latest.current = view?.intake_id === intakeId ? view : undefined; }, [view, intakeId]);
 
   const actions = useMemo<PlanCheckActions>(() => {
@@ -120,10 +135,24 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       const currentRisk = itemRiskOf(itemOf(id).risk);
       const key = `${id}:${currentRisk ? riskSignature([currentRisk]) : ""}`;
       const kept = alternatives.current.get(key) ?? [...alternatives.current.entries()].find(([old]) => old.startsWith(`${id}:`))?.[1];
-      if (kept) return kept;
-      const ask = streamCandidates(intakeId, item, revision, language, onFirst ?? (() => undefined), onUpdate ?? (() => undefined))
+      if (kept) {
+        // ★`[2026-10-21 사용자 지적 — 멈춘 질문 칸이 「후보를 찾는 중…」에 오래 머묾]` A later ask for the same stop shares the answer still coming: it is given the first cards
+        //   (and every update so far) at once, and each update after — it used to wait for the whole answer (up to the 120 s the server waits for prepared alternatives).
+        const hub = streams.current.get(kept);
+        if (hub) {
+          if (hub.first) { onFirst?.(hub.first); hub.updates.forEach((update) => onUpdate?.(update)); }
+          else if (onFirst) hub.firsts.add(onFirst);
+          if (onUpdate) hub.listeners.add(onUpdate);
+        }
+        return kept;
+      }
+      const hub: CandidateStream = { first: null, updates: [], firsts: new Set(onFirst ? [onFirst] : []), listeners: new Set(onUpdate ? [onUpdate] : []) };
+      const ask = streamCandidates(intakeId, item, revision, language,
+        (list) => { hub.first = list; hub.firsts.forEach((call) => call(list)); hub.firsts.clear(); },
+        (update) => { hub.updates.push(update); hub.listeners.forEach((call) => call(update)); })
         .catch((error: unknown) => { alternatives.current.delete(key); return staleThenRethrow(error); });
       alternatives.current.set(key, ask);
+      streams.current.set(ask, hub);
       return ask;
     };
     // Any answer that is the plan itself (a change, an undo, a re-check) ends a preview: it was a picture of the plan before that.
@@ -178,6 +207,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     };
 
     return {
+      holdWarmUp: (hold) => { warmHold.current = hold; setWarmHeld(hold); },
       add: async (draft) => {
         const current = plan();
         const source = current.sources[0];
@@ -319,7 +349,21 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       laterStart: async (id) => {
         const result = await autofixIntake(intakeId, plan().revision, language, true, id).catch(staleThenRethrow);
         const change = result.changed.find((entry) => entry.id === id && entry.reason === "time");
-        return change?.to.starts_at ? { start: change.to.starts_at, end: change.to.ends_at ?? "" } : null;
+        if (!change?.to.starts_at) return null;
+        // ★`[2026-10-21 사용자 결정]` Only this stop moves (`item_id`): what the stop after it on that day comes to in the preview — overlapped, or reached late (its leg's `slack_min`).
+        const review = result.view.review;
+        const moved = review?.items.find((entry) => entry.id === id);
+        const day = review && moved ? review.items.filter((entry) => entry.day === moved.day && entry.date === moved.date) : [];
+        const after = day[day.findIndex((entry) => entry.id === id) + 1];
+        const minutes = (time: string | null | undefined) => time && /^\d{2}:\d{2}$/.test(time) ? Number(time.slice(0, 2)) * 60 + Number(time.slice(3)) : null;
+        const end = minutes(change.to.ends_at), start = minutes(after?.starts_at);
+        const leg = after ? review?.moves.find((entry) => entry.from === id && entry.to === after.id) : undefined;
+        const next = !review ? undefined : !after ? null : {
+          title: after.title, start: after.starts_at,
+          overlapMin: end !== null && start !== null ? Math.max(0, end - start) : 0,
+          lateMin: typeof leg?.slack_min === "number" ? Math.max(0, -leg.slack_min) : 0,
+        };
+        return { start: change.to.starts_at, end: change.to.ends_at ?? "", next };
       },
       // ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` The answer to what a line means: the AI's reading (what the plan holds) is only saved — the same revision comes back without the
       //   question; another option puts the stop back in a new revision, checked as a whole (like a pick in the C안 flow: no 「다시 제출」, no undo).
@@ -331,7 +375,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         if (next.revision !== before.revision) alternatives.current.clear();
         take(next);
       },
-      // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 「「…」 그대로」: the place the server took for now (one of several) is the one — sent back as the customer's pick, so the server checks it as chosen.
+      // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 「「…」 맞아요」(10-21 ST4F-708 — 「그대로」에서 목업 문구로): the place the server took for now (one of several), or found and asks about, is the one —
+      //   sent back as the customer's pick, so the server checks it as chosen.
       confirmPlace: async (id, how) => {
         const item = itemOf(id);
         const picked = item.place && pickedPlace({ ...item.place, address: null, category: item.place.category ?? null, ref: null });

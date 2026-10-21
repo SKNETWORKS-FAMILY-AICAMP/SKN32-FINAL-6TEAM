@@ -250,6 +250,16 @@ export async function forgetStartScreen(page: Page) {
  * `[2026-10-06 사용자 지시]` 「계획 확인하기」: before the plan is read the Course Keeper card opens - 「켜고 진행」 goes on (or 「건너뛰기 — 끄고 진행」, which sends `on_disruption: "ask_first"`).
  * A test that is not about the card goes through it with this.
  */
+/** `[2026-10-20 ST4F-665]` The question card while a plan is read (「질문 N개」). */
+export const questionPager = (page: Page) => page.getByRole("region", { name: /^(질문 \d+개|\d+ questions)$/ });
+
+/** Answer the loading question on view as the start survey's card is answered: tap its chips in order, then 「다음」 (「답변 저장」 on the last open one). */
+export async function answerCard(page: Page, ...chips: string[]) {
+  const pager = questionPager(page);
+  for (const chip of chips) await pager.getByRole("button", { name: chip, exact: true }).click();
+  await pager.getByRole("button", { name: /^(다음|답변 저장|Next|Save answer)$/ }).click();
+}
+
 export async function checkPlan(page: Page, choice: "켜고 진행" | "건너뛰기 — 끄고 진행" = "켜고 진행") {
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   // `[2026-10-06 사용자 지시]` Turned on once, it stays on for the next plan and the card is not asked again - so the card may not come.

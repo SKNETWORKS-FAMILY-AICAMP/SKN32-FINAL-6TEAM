@@ -26,6 +26,11 @@ export interface TripStop {
   placeInfo?: PlaceInfo | null;
   /** `[2026-10-06]` The trip is paused for a disaster and this stop falls in the pause (a day's pause pauses only that day's stops). The plan itself is not changed. */
   paused?: boolean;
+  /**
+   * `[2026-10-21 ST4F-706 후속]` The server says this stop took the place of an earlier one (`changed` — the chat, the watch or the edit changed it): the detail marks it 「변경됨」,
+   * as the server's own plan page does. It was only in 「입력한 메모」 (「지켜보다 바뀐 일정이에요.」), a line taken out of the detail on 10-21.
+   */
+  changed?: boolean;
   /** `[2026-10-13]` The day the stop ends (Seoul) when the server sent an end — a stay ends on its check-out day. */
   endDate?: string;
   /** `[2026-10-08]` The place's ref for its registered photos (「tour:<ID>」) — only when the server sends one (`place_ref`, asked of the backend). */
@@ -134,6 +139,11 @@ export interface TripPick {
   query: string;
   prefill: { title?: string; date?: string; startsAt?: string; endsAt?: string; kind?: string };
   blocked: boolean;
+  /**
+   * `[2026-10-21 사용자 결정 — ST4F-704]` How the stop's change screen opens: none — the chat's place search holding `query`; `plain` — as its ✎ opens it (the stop's detail 「일정 수정」);
+   * `direct` — with 「직접 고치기」 open (「직접 수정」 under a choice the server asks on the stop's detail).
+   */
+  open?: "plain" | "direct";
 }
 
 /** An explicit reply to an open request. Kept in memory; never persisted with chat messages. */

@@ -148,6 +148,8 @@ export function Act({ why, onPress, explain, className, children, title, tooltip
   "data-danger"?: boolean;
   /** `[2026-10-05]` Something a time is dragged by: the pointer handlers of a drag, and the mark for the cursor and the touch (`data-grab`). */
   "data-grab"?: boolean; onPointerDown?: Grab["onPointerDown"]; onPointerMove?: Grab["onPointerMove"]; onPointerUp?: Grab["onPointerUp"]; onPointerCancel?: Grab["onPointerCancel"];
+  /** `[2026-10-21 ST4F-702]` A finger holds the time to take it: no phone menu on that long press, and the list kept still once it is taken. */
+  onContextMenu?: Grab["onContextMenu"]; ref?: Grab["ref"];
 }) {
   const tip = useId();
   return <button type="button" className={className} aria-disabled={why ? true : undefined} title={tooltip ? undefined : why ?? title} aria-describedby={tooltip ? tip : undefined} {...rest}

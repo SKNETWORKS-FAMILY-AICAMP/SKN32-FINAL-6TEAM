@@ -1,7 +1,5 @@
 "use client";
 
-import { mapStopsWithPlaceNames, stopDisplayName } from "./stop-display";
-
 import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bell, ChevronDown, ChevronsRight, OctagonAlert, Pencil } from "lucide-react";
@@ -59,7 +57,10 @@ import { RiskPanel } from "@/features/risk/risk-panel";
 import { problemText, riskSignature } from "@/lib/live/risks";
 import { useRiskAlternatives } from "./use-risk-alternatives";
 import type { Recovery } from "@/lib/live/recovery";
-import type { Trip, TripPick } from "./model";
+import type { Trip, TripPick, TripStop } from "./model";
+import { openChoices, type OpenChoice } from "./attention";
+import { proposalAvailable } from "./trip-chat-records";
+import { CONSENT_KEY, chooseFailure, chooseOutcome, useChooseProposal } from "./proposal-ask";
 import styles from "./trip-screen.module.css";
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다. */
@@ -122,6 +123,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const currentRisks = risks.data?.items ?? [];
   const riskCount = currentRisks.filter((item) => item.status === "problem").length;
   const riskAlternatives = useRiskAlternatives(trip.id, () => openCenter("warnings"));
+  // `[2026-10-21 사용자 결정 — ST4F-704]` The choices the server waits for (the notice center's list): their stops' cards say so and their details answer them.
+  const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops).filter((choice) => Boolean(choice.stop) && proposalAvailable(choice.proposal, trip.version));
+  const choiceOf = (stopId: string) => choices.find((choice) => choice.stop?.id === stopId);
+  const choose = useChooseProposal(trip.id);
+  // 「예보에 맞게 일정 변경」 · 「다른 곳 찾아보기」: the server finds the options now — the list is greyed and locked until it answers (the plan check's 「서버로 전송중입니다.」 veil).
+  const findingOptions = choose.isPending && choose.variables?.key === CONSENT_KEY;
   // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
   const seen = useSeenNotices(trip.id);
   const tripUnread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
@@ -408,7 +415,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   });
 
   // ── Picks on the map and in the list ──
-  const mapStops = mapStopsWithPlaceNames(trip.stops.filter((stop) => stop.date === mapDay));
+  const mapStops = trip.stops.filter((stop) => stop.date === mapDay);
   const legsOf = (date: string) => dayTimeline(trip, date, shapes).flatMap((entry) => entry.type === "leg" ? [entry.leg] : []);
   const bringUp = (id: string) => requestAnimationFrame(() => bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
   /** A stop picked on the map or with 「지도에서 보기」 is marked and opened in the list without a notice. Pressed again on the map it is let go. */
@@ -504,6 +511,23 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     if (sheet === "peek") setSheet("half");
   }
   function detailTo(id: string) { setDetailId(id); setSelectedId(id); }
+  /** A choice answered on a detail: what came of it in the notice bar (none while the options come in — they stand on the card). */
+  function answer(choice: OpenChoice, key: string | null) {
+    choose.mutate({ proposalId: choice.proposal.id, key }, {
+      onSuccess: (result) => { const said = chooseOutcome(result.status, t); if (said) showToast({ text: said }); },
+      onError: (error) => showToast({ text: chooseFailure(error, t), stay: true }),
+    });
+  }
+  /** `[2026-10-21 ST4F-704]` The edit opened on a stop from its detail: as its ✎ opens it, or with 「직접 고치기」 open (`TripPick.open`). */
+  function editStop(stop: TripStop, how: "plain" | "direct") {
+    onEdit({ mode: "change", itemId: stop.id, query: "", prefill: {}, blocked: false, open: how });
+  }
+  /** The stops of a day that are over — drawn as past in the list (`dayList`): their detail offers no edit and no choice. */
+  const pastStops = (date: string) => {
+    const entries = dayTimeline(trip, date, shapes);
+    const live = entryTimes(entries, date, shapeNow).findIndex((time) => time.state !== "past");
+    return new Set(entries.slice(0, live < 0 ? entries.length : live).flatMap((entry) => entry.type === "stop" ? [entry.stop.id] : []));
+  };
   function closeDetail() {
     const id = detailId;
     setDetailId(null);
@@ -517,7 +541,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
   const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
     const needsChoice = notice.type === "safety_alert" || notice.type === "proposal_request";
-    const view = () => openCenter(needsChoice ? "warnings" : "notices", needsChoice ? notice : undefined);
+    // `[2026-10-21 사용자 결정 — 문서 기준]` 「알림 보기」는 받은 알림 탭을 연다(DEVELOPMENT.md 「새 알림 막대」). 선택이 필요한 알림은 넘겨서 그 대안 고르기가 위 「답이 필요해요」에 뜬다.
+    const view = () => openCenter("notices", needsChoice ? notice : undefined);
     const toast = noticeToast(notice, trip, targets, t, view);
     if (!centerOpen) showToast(toast);
     else if (needsChoice) { setCenterNotice(notice); setCenterItemId(null); }
@@ -581,7 +606,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
                 past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps}
-                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} />;
+                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} choice={choiceOf(entry.stop.id)} />;
         }
         return past
           ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
@@ -608,7 +633,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       {riskCount > 0 && <span className={styles.riskBadge}>{t(`위험 ${riskCount}`, `${riskCount} risks`)}</span>}
       <Bell size={20} strokeWidth={2} aria-hidden="true" />{unread > 0 && <span className={styles.badge} aria-hidden="true">{unread > 99 ? "99+" : unread}</span>}</button>}>
     <main id="main-content" tabIndex={-1} className={`${pc.screen} ${styles.screen}`} data-stage="done" data-floating onKeyDown={onKey}>
-      {detailStop ? <DetailHeader title={stopDisplayName(detailStop)} onBack={closeDetail} />
+      {detailStop ? <DetailHeader title={detailStop.title} onBack={closeDetail} />
         : <TripTitle title={tripTitle} open={titleOpen} editing={titleEditing} onOpen={() => setTitleOpen(true)} onClose={closeTitle}
           onEdit={() => setTitleEditing(true)} onEditEnd={closeTitle}
           // ★The server cannot rename a registered trip yet: said, and the name stays.
@@ -623,7 +648,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
         </div>
         {/* 지도 아래 안내 줄(계획 확인 화면과 같다): 핀이 없는 일정 · 경로선을 읽지 못함. 수단 태그(지하철 · 버스 · 도보)는 띄우지 않는다(2026-10-07 사용자 결정). */}
         {(unlocated.length > 0 || routeShapes.isError) && <div className={pc.mapChips}>
-          {unlocated.length > 0 && <p className={pc.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((stop) => stopDisplayName(stop)).join(", ")}</p>}
+          {unlocated.length > 0 && <p className={pc.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((stop) => stop.title).join(", ")}</p>}
           {routeShapes.isError && <p className={pc.unlocated} role="status">{t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.")}</p>}
         </div>}
         <section ref={sheetBox} className={pc.sheet} aria-label={t("일정 목록", "Itinerary")}>
@@ -632,7 +657,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
           {/* `[2026-10-07 사용자 결정]` 머리는 날짜 칩 줄 하나: 칩은 옆으로 스크롤되고 오른쪽 버튼은 고정. 「등록 완료」 표시는 두지 않는다.
                `[2026-10-08 사용자 지시 · 2026-10-12 반영 — C]` 「일정 | 채팅」 대신 채팅 버튼 하나: 칩을 누르면 일정 칸, 채팅 버튼은 채팅 칸(채팅 칸에서는 버튼이 눌린 표시, 칩은 선택 표시 없음). */}
           {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={detailTo}
-            onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }} />}
+            onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }}
+            choiceOf={choiceOf} past={pastStops(detailStop.date)} chooseBusy={choose.isPending} onChoose={answer} onEdit={editStop} />}
           {/* The list and the chat stay mounted under the detail (their gestures and scroll are kept), only hidden. */}
           <header className={`${pc.sheetHead} ${styles.sharedHead} ${detailStop ? styles.away : ""}`} data-float data-done onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             {days.length > 0 && <div ref={stripBox} className={pc.dayStrip} data-at-top={quietDays.atTop || undefined} data-quiet={quietDays.hidden || undefined} data-chat={!plan || undefined} aria-hidden={quietDays.hidden || undefined} inert={quietDays.hidden} {...quietDays.focusHandlers} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
@@ -699,6 +725,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
             </div>
           </div>
         </section>
+        {/* `[2026-10-21 사용자 지시 — ST4F-704]` 서버가 대안을 찾는 동안 일정 칸을 회색으로 잠근다(계획 확인 「서버로 전송중입니다.」와 같은 막 · 같은 자리) */}
+        {findingOptions && <div className={pc.sendingVeil} data-sending-veil><p role="status">{t("서버로부터 대안을 받고 있습니다.", "Getting alternatives from the server.")}</p></div>}
       </div>
       {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
       {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}
@@ -786,7 +814,7 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
     const proposal = proposals.find((entry) => entry.id === notice.proposalId);
     const stop = trip.stops.find((entry) => entry.id === proposal?.itemId);
     const order = stop ? trip.stops.filter((entry) => entry.date === stop.date).indexOf(stop) + 1 : 0;
-    return { badge: stop ? String(order) : undefined, text: stop ? stopDisplayName(stop) : kind, chip: { text: kind, tone: "warn" }, sub,
+    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, sub,
       note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined, action };
   }
   if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, action };
@@ -796,7 +824,7 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
 function legToast(leg: TripLeg, t: Translate, onList: () => void) {
   const times = leg.move ? [t(`${leg.move.departAt} 출발`, `Leave ${leg.move.departAt}`), leg.move.arriveAt && t(`${leg.move.arriveAt} 도착`, `arrive ${leg.move.arriveAt}`)].filter(Boolean).join(" → ") : null;
   return {
-    badge: "→", text: `${stopDisplayName(leg.from)} → ${stopDisplayName(leg.to)}`,
+    badge: "→", text: `${leg.from.title} → ${leg.to.title}`,
     sub: [legSummary(leg, t), times, ...(leg.shape ? rideLines(leg.shape, t) : [])].filter(Boolean).join("\n"),
     note: leg.slack !== null && leg.slack < 0 ? t(`다음 일정보다 ${Math.abs(leg.slack)}분 늦어요`, `${Math.abs(leg.slack)} min late for the next stop`) : undefined,
     action: { label: t("목록에서 보기", "Show in list"), run: onList }, ms: READ_MS,

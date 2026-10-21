@@ -46,6 +46,11 @@ export const options: Record<ChoiceKey, readonly Option[]> = {
 
 export const areaNames: Record<Area, readonly [ko: string, en: string]> = { food: ["음식", "Food"], activity: ["활동", "Activities"], mobility: ["이동", "Getting around"] };
 
+/** The two rows of the indoors-or-out question: the server's part id (`indoor_outdoor` · `dining` / `activity`), the answer field here, and the row label. */
+export const indoorParts: readonly (readonly [part: "dining" | "activity", key: "indoorDining" | "indoorActivity", ko: string, en: string])[] = [
+  ["dining", "indoorDining", "식당", "Dining"], ["activity", "indoorActivity", "액티비티", "Activities"],
+];
+
 /** Details per area. Mobility keeps its codes: `car` is now shown as a rental car, and taxi is added. */
 export const detailOptions: Record<Area, readonly Option[]> = {
   // `michelin` · `nopo` — the planner puts restaurants with that mark first (backend `dining/survey.py` SURVEY_LIKES). Nothing is filtered out.
@@ -75,12 +80,15 @@ export const canPickPartySize = (party: string, size: number): boolean => fixedP
  * `null` when no companions are chosen, or 기타 has no size yet. A size kept from another choice counts only where it can be picked.
  * Only a picked size is stored (`partySize`), so a start of 2 that was never changed stays told apart from a picked 2.
  */
-export function partySizeOf(a: Answers): number | null {
-  if (!a.party) return null;
-  const fixed = fixedPartySize(a.party);
+export const partySizeOf = (a: Answers): number | null => sizeFor(a.party, a.partySize);
+
+/** `partySizeOf` for companions and a picked size held anywhere — `[2026-10-20 ST4F-665]` the loading questions' companions card keeps its own. */
+export function sizeFor(party: string, picked: number | null): number | null {
+  if (!party) return null;
+  const fixed = fixedPartySize(party);
   if (fixed !== undefined) return fixed;
-  if (a.partySize !== null && canPickPartySize(a.party, a.partySize)) return a.partySize;
-  return GROUP_PARTY_MIN[a.party] ?? null;
+  if (picked !== null && canPickPartySize(party, picked)) return picked;
+  return GROUP_PARTY_MIN[party] ?? null;
 }
 
 export type QuestionId = "party" | "priority" | "indoor" | "pace";

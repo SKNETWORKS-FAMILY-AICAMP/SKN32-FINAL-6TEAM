@@ -145,3 +145,38 @@ describe("`[2026-10-21 사용자 결정]` the answer to what a line means, and a
     await expect(screen.actions.putBack!("0-0")).rejects.toThrow();                // put back already: nothing kept to put back
   });
 });
+
+describe("`[2026-10-21 사용자 지적 — 멈춘 질문 칸이 「후보를 찾는 중…」에 오래 머묾]` the alternatives come to every ask at once", () => {
+  it("gives a second ask of the same stop the first cards already come and each update after — not only the whole answer at its end", async () => {
+    let first!: (list: unknown) => void;
+    let update!: (change: unknown) => void;
+    let end!: (list: unknown) => void;
+    harness.stream.mockImplementation((_id: string, _item: unknown, _revision: number, _language: string, onFirst: (list: unknown) => void, onUpdate: (change: unknown) => void) => {
+      first = onFirst; update = onUpdate;
+      return new Promise((resolve) => { end = resolve; });
+    });
+    const screen = draw(plan());
+    const one = screen.actions.candidates!("0-0", vi.fn());
+    first({ candidates: [candidate("창덕궁", 1), candidate("덕수궁", 2)], notes: [] });
+    const later = vi.fn();
+    const two = screen.actions.candidates!("0-0", later);
+    await vi.waitFor(() => expect(later).toHaveBeenCalled());
+    expect(later.mock.calls.at(-1)![0].map((card: { name: string }) => card.name)).toEqual(["창덕궁", "덕수궁"]);
+    update({ rank: 1, reason: "경복궁에서 가까워요", pending: { reason: false } });
+    await vi.waitFor(() => expect(later.mock.calls.at(-1)![0][0].reason).toContain("경복궁에서 가까워요"));
+    end({ candidates: [candidate("창덕궁", 1), candidate("덕수궁", 2)], notes: [] });
+    await Promise.all([one, two]);
+    expect(harness.stream).toHaveBeenCalledOnce();                                  // one live answer for both
+  });
+
+  it("holds the 「전체 자동 추천」 dry run back while the page asks it to, and asks it once released", () => {
+    harness.autofix.mockReturnValue(new Promise(() => undefined));
+    const screen = draw({ ...plan(5, true, 1), status: "reading" } as ReviewedIntakeView);
+    screen.actions.holdWarmUp!(true);
+    draw(plan(5, true, 1));
+    expect(harness.autofix).not.toHaveBeenCalled();
+    screen.actions.holdWarmUp!(false);
+    draw(plan(5, true, 1));
+    expect(harness.autofix).toHaveBeenCalledOnce();
+  });
+});

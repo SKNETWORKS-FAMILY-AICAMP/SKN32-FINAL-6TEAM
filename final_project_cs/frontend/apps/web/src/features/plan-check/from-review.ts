@@ -246,6 +246,7 @@ export function planCandidate(candidate: Candidate, itemId: string, source: Plan
     info, checks: [...candidate.rows.filter((line) => line.row !== "risk").map(row), ...riskChecks(risk)], risk,
     ...(proposedTime ? { proposedTime } : {}),
     ...(candidate.basis ? { basis: candidate.basis } : {}),
+    ...(candidate.experience ? { experience: candidate.experience } : {}),
     ...(candidate.basis === "meal_inferred" ? { placeKind: "dining" } : candidate.place.kind === "dining" || candidate.place.kind === "activity" ? { placeKind: candidate.place.kind } : {}),
     ...(reason ? { reason } : {}),
     ...(candidate.legs ? { legs: { before: legOf(candidate.legs.before), after: legOf(candidate.legs.after) } } : {}),

@@ -156,6 +156,8 @@ export interface PlanCandidate {
   checks: CheckRow[];
   /** `[2026-10-07]` Which step of the server's ladder it came from, and its one-sentence reason (both only when the server sent them). */
   basis?: "same_kind" | "similar_experience" | "meal_inferred" | "lodging" | "lodging_meal" | "taste" | null;
+  /** `[2026-10-21]` The group of a 「비슷한 경험」 alternative (`indoor_exhibit` · `outdoor_walk` …), as the server named it. */
+  experience?: string | null;
   /** What kind of stop the place makes (`dining` · `activity`) when the server says so — picked for a stop of another kind, the kind is sent with it. */
   placeKind?: string | null;
   reason?: string | null;
@@ -409,7 +411,27 @@ export const lateInto = (view: Pick<PlanCheckView, "moves">, id: string): boolea
 };
 
 /** `[2026-10-20 C안]` A card whose verdict is in stops the check: it needs a look, or the way to it arrives late (a place problem is asked first, then the arrival). */
-const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) => item.verdict === "review" || (item.verdict !== null && lateInto(view, item.id));
+export const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) => item.verdict === "review" || (item.verdict !== null && lateInto(view, item.id));
+
+/**
+ * `[2026-10-21 사용자 지적]` The card the check is held at while the server still checks the rest: its verdict needs a look (or its way in is late) and is drawn only once the
+ * check is final (`nextStep`). To the customer the check has stopped there — the screen waits for the server only to ask.
+ */
+export function heldAt(shown: PlanCheckView, target: PlanCheckView): string | null {
+  if (target.stage === "done" || shown.stage !== "checking") return null;
+  for (const entry of checkOrder(target)) {
+    if (entry.type === "ask") return null;
+    if (entry.type === "move") {
+      if (advance(shown.moves.find((move) => move.id === entry.id), target.moves.find((move) => move.id === entry.id)!, "whole") === undefined) continue;
+      return null;
+    }
+    const have = shown.items.find((item) => item.id === entry.id);
+    const step = advance(have, target.items.find((item) => item.id === entry.id)!, "rows");
+    if (step === undefined) continue;
+    return have && step.verdict !== null && have.verdict !== step.verdict && stopsHere(step, shown) ? entry.id : null;
+  }
+  return null;
+}
 
 /** `[2026-10-20 C안]` What the stopped card asks about: its place (or what else needs a look) first, then the way to it. */
 export const stopKind = (view: PlanCheckView, id: string): "place" | "arrival" =>
@@ -487,6 +509,22 @@ export function rebase(shown: PlanCheckView, target: PlanCheckView, id: string):
   });
   const kept = new Set(items.map((item) => item.id));
   return { ...shown, items, moves: target.moves.filter((move) => kept.has(move.fromId) && kept.has(move.toId)) };
+}
+
+/**
+ * ★`[2026-10-21 결함 — ST4F-703]` While the check stands stopped at a card (nothing picked), a new read of the server (the 3-minute re-read, which stamps every stop's risk check
+ * anew; the card's place info when its alternatives arrive; another tab's change) is taken into what is drawn at once: the cards and legs on screen take the server's values, one
+ * the server took out goes, a leg between two drawn cards comes, nothing past the stop is drawn. The stop could only draw its own card, so a change to an earlier card used to hold
+ * the replay for good — the card looked 「다시 확인하는 중」 with its question gone. `keep` (the card whose checks are ticked in again after a pick) is left as drawn: it steps on.
+ */
+export function syncDrawn(shown: PlanCheckView, target: PlanCheckView, keep: string | null = null): PlanCheckView {
+  const drawn = new Set(shown.items.map((item) => item.id));
+  const items = target.items.filter((item) => drawn.has(item.id)).map((item) => item.id === keep ? shown.items.find((entry) => entry.id === keep)! : item);
+  const kept = new Set(items.map((item) => item.id));
+  const legs = new Set(shown.moves.map((move) => move.id));
+  const moves = target.moves.filter((move) => legs.has(move.id) || (kept.has(move.fromId) && kept.has(move.toId)));
+  const next = { ...shown, lines: target.lines, days: target.days, items, moves };
+  return JSON.stringify(next) === JSON.stringify(shown) ? shown : next;
 }
 
 /**

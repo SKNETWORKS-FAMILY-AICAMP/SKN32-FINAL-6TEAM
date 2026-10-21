@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { exampleDone, exampleSnapshots } from "./test-views";
+import { exampleDone, exampleSnapshots, readAgain } from "./test-views";
 import { nextStep, STAGES, type PlanCheckView } from "./model";
 import { FIRST_CARD_MS, FOLD_MS, linesBacklog, pauseBefore, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_MS, ROW_MS, ROWS_LEAD_MS, STAGE_MIN_MS, stepMany, useReveal, VERDICT_MS } from "./use-reveal";
 
@@ -261,6 +261,55 @@ describe("`[2026-10-20 C안]` stopping at a card that needs a look, and going on
     const back = draw(exampleDone, false, true);
     expect(back.view.items.find((item) => item.id === "b")).toEqual(exampleDone.items[1]);
     expect(back.stop).toEqual({ id: "b", settling: false });
+  });
+
+  it("`[2026-10-21 ST4F-703]` keeps asking when the server is read again while stopped: the drawn cards take its values, the stop stays and is not 「다시 확인하는 중」", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null);
+    // The 3-minute re-read: every stop's risk check stamped anew (the plan itself unchanged) — it used to hold the replay on card a and hide the question for good.
+    const reread = readAgain(exampleDone, "2026-10-21T13:45:00+09:00");
+    const after = draw(reread, false, true);
+    expect(after.stop).toEqual({ id: "b", settling: false });
+    expect(after.view.items).toEqual(reread.items.slice(0, 2));
+    vi.advanceTimersByTime(10_000);
+    const again = draw(readAgain(exampleDone, "2026-10-21T13:48:00+09:00"), false, true);
+    expect(again.stop).toEqual({ id: "b", settling: false });
+    expect(again.view.items.map((item) => item.id)).toEqual(["a", "b"]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("`[2026-10-21 ST4F-703]` goes on when a new read has the stopped card passed (fixed in another tab) — no pick needed", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null);
+    const elsewhere: PlanCheckView = readAgain({ ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
+      : { ...item, title: "올리브영 광화문점", verdict: "keep", checks: item.checks.map((row) => ({ ...row, result: "ok" as const })) }),
+      moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, slackMin: 3, verdict: "keep" as const } : move) }, "2026-10-21T13:45:00+09:00");
+    expect(draw(elsewhere, false, true).stop).toBeNull();
+    const done = run(elsewhere, (result) => result.settled);
+    expect(done.view).toEqual(elsewhere);
+  });
+
+  it("`[2026-10-21 ST4F-703]` still ticks the picked card's checks in one by one when the server is read again meanwhile", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null).recheck.begin("b");
+    draw(exampleDone, false, true);
+    const fixed: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
+      : { ...item, verdict: "keep", checks: item.checks.map((row) => ({ ...row, result: "ok" as const })) }),
+      moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, slackMin: 3, verdict: "keep" as const } : move) };
+    const answered = draw(fixed, false, true);
+    expect(answered.stop).toEqual({ id: "b", settling: true });
+    const reread = readAgain(fixed, "2026-10-21T13:45:00+09:00");
+    const meanwhile = draw(reread, false, true);
+    expect(meanwhile.stop).toEqual({ id: "b", settling: true });
+    expect(meanwhile.view.items[0]).toEqual(reread.items[0]);                                  // card a takes the new read at once
+    expect(meanwhile.view.items[1].checks.some((row) => row.result === "pending")).toBe(true);  // card b keeps stepping
+    const results: string[] = [];
+    const done = run(reread, (result) => { results.push(result.view.items[1]?.checks.map((row) => row.result).join(",")); return result.settled; });
+    expect(new Set(results).size).toBeGreaterThan(2);                                          // its checks came in one at a time
+    expect(done.view).toEqual(reread);
   });
 
   it("does not stop where the page cannot change places", () => {

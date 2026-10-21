@@ -50,9 +50,16 @@ const DEFAULTS = {
   // the check of the read plan (`review` in the intake view): "absent" = a server without it (the screen says only what was read) | "on"
   //   | "off" = a server that could not build it (review: null + review_error)
   review: "absent",
-  // `[2026-10-06]` the questions asked while the server reads (`questions[]` of the intake view, `POST …/trip-intakes/{id}/survey`):
-  //   "none" (an older server: no list — nothing is asked) | "two" (the server's two) | "unknown_kind" (the two and a third of a kind the page does not know)
+  // `[2026-10-06]` the questions asked while the server reads (`questions[]` of the intake view, `POST …/trip-intakes/{id}/survey`).
+  //   `[2026-10-20 ST4F-665]` as the server's question set "3" (`survey_answers.py`): the first list (who · priorities) is fixed at the intake's first read and leaves out what is
+  //   answered by then; after the reading the rest (indoors or out · pace) is added at the END unless the plan told it.
+  //   "none" (an older server: no list — nothing is asked) | "two" (the first two; the plan told the other two, so nothing is added) | "four" (the first two, then the other two added)
+  //   | "unknown_kind" (the first two and a third of a kind the page does not know)
   questions: "none",
+  // "four": the reading poll after which the second list comes while still reading (null: when the reading ends)
+  questionsPhase2After: null,
+  // "on": the plan told the mobility details (「웬만하면 택시로」) and the activities' indoors-or-out (「비 오면 실내」) — shown with the second list, not asked
+  questionsRead: "off",
   // the answer to `POST …/survey`: "ok" | "fail" (500: the answer is not saved) | "refuse" (422 invalid_answers) | "confirmed" (409 intake_confirmed)
   surveySave: "ok",
   // `[2026-10-06]` the Course Keeper of the trip (`guardian` of the trip view, `POST …/trips/{id}/guardian`): "absent" (an older server: no `guardian` — no icon) | "on" | "off"
@@ -156,6 +163,7 @@ const DEFAULTS = {
   stream: "on",
   // the intake reading stream (`GET …/trip-intakes/{id}/events`): "on" | "off" (an older server: 404 — the screen re-reads every 1.5 s)
   //   | "stalled" (the server's reader died) | "silent" (opens, says "accepted" and then nothing at all — a dead line; with the check "on")
+  //   | "held" (`[2026-10-21]` says everything checked but not that the check is done, and then nothing — the server still checking the rest; with the check "on")
   //   With the check "on" the stream also carries what was checked (line · item · check · move · done); without it, only the stage.
   intakeEvents: "on",
   //   `[2026-10-03]` the "how far" packets (`progress {phase, done, total, current}`): "on" | "off" (a server without them — the bar is worked out from the rows)
@@ -197,10 +205,12 @@ let board;
 let boardHistory = new Map();
 let log;
 let polls;
-// the answers saved through `POST …/trip-intakes/{id}/survey`: question id → option id
+// the answers saved through `POST …/trip-intakes/{id}/survey`: question id → its answer (kept for the next intake, as the server carries a customer's answers over)
 let surveyAnswers = {};
 // `[2026-10-21 P6]` the interpretation answers saved (`POST …/interpretations`), by question id
 let interpretAnswers = {};
+// the list of loading questions of the intake: fixed at its first read, grown once (`survey_plan`); a new intake starts again
+let surveyPlan = null;
 // what `POST …/trips/{id}/guardian` last set: `{enabled, since, via}` (null: the scenario's own value stands)
 let guardianState = null;
 let confirmed;
@@ -317,6 +327,7 @@ function reset() {
   polls = 0;
   surveyAnswers = {};
   interpretAnswers = {};
+  surveyPlan = null;
   guardianState = null;
   confirmed = false;
   board = freshBoard(scenario.board);
@@ -631,21 +642,82 @@ function intakeStream() {
 
 reset();                                   // after the board's helpers above are declared
 
-// The questions as the server sends them (`survey_answers.py`): the same list in the same order whatever was answered, `answer` = the saved option id or null.
+// The questions as the server sends them (`survey_answers.py`, question set "3" — the start survey's four without 「일정이 꼬이면」).
+const INDOOR = [{ id: "indoor", label: "실내" }, { id: "outdoor", label: "실외" }, { id: "any", label: "상관없음" }];
+const ACTIVITY = [["EV", "축제/공연/행사"], ["EX", "체험관광"], ["HS", "역사관광"], ["LS", "레저스포츠"], ["NA", "자연관광"], ["SH", "쇼핑"], ["VE", "문화관광"]].map(([id, label]) => ({ id, label }));
 const QUESTIONS = [
-  { id: "preferred_mobility", kind: "single", title: "이동은 주로 어떻게 하세요?", why: "계획서만으로는 이동 방법을 알 수 없어서 여쭤요",
-    options: [{ id: "public", label: "대중교통" }, { id: "taxi", label: "택시" }, { id: "walk", label: "걷기 위주" }] },
-  { id: "priority", kind: "single", title: "일정이 바뀔 때 대체할 곳은 무엇을 먼저 볼까요?", why: "계획서만으로는 알 수 없어요",
-    options: [{ id: "activity", label: "하고 싶은 활동이 비슷한 곳" }, { id: "mobility", label: "이동이 편한 곳" }] },
+  { id: "party", kind: "single", phase: 1, title: "누구와 함께 떠나나요?", why: "함께 떠나는 사람을 하나 골라 주세요.",
+    options: [{ id: "alone", label: "혼자" }, { id: "partner", label: "연인" }, { id: "friends", label: "친구" }, { id: "family", label: "가족" }], allow_custom: true, custom_label: "기타" },
+  { id: "priority", kind: "priority", phase: 1, title: "어떤 것을 더 중요하게 생각하나요?", why: "중요한 순서대로 분야와 세부 항목을 선택해 주세요.",
+    options: [{ id: "food", label: "음식" }, { id: "activity", label: "활동" }, { id: "mobility", label: "이동" }],
+    groups: [
+      { id: "food", label: "음식", options: [{ id: "taste", label: "맛" }, { id: "kindness", label: "친절" }, { id: "clean", label: "청결" }, { id: "michelin", label: "미쉐린" }, { id: "nopo", label: "노포" }] },
+      { id: "activity", label: "활동", options: ACTIVITY },
+      { id: "mobility", label: "이동", options: [{ id: "public", label: "대중교통" }, { id: "walk", label: "도보" }, { id: "car", label: "렌트카" }, { id: "taxi", label: "택시" }],
+        read: { key: "survey.priority_details.mobility", value: ["taxi"], text: "택시", quotes: ["웬만하면 택시로"] } },
+    ] },
+  { id: "indoor_outdoor", kind: "pair", phase: 2, title: "실내와 실외 중 어디가 좋으세요?", why: "식당과 액티비티에서 각각 하나씩 골라 주세요.",
+    parts: [{ id: "dining", label: "식당", options: INDOOR },
+      { id: "activity", label: "액티비티", options: INDOOR, read: { key: "survey.indoor_outdoor.activity", value: "indoor", text: "실내", quotes: ["비 오면 실내"] } }] },
+  { id: "pace", kind: "single", phase: 2, title: "여행할 때 어느 정도 여유가 좋으세요?", why: "하루에 담을 일정의 양을 정할 때 쓰여요.",
+    options: [{ id: "relaxed", label: "여유롭게" }, { id: "moderate", label: "적당히" }, { id: "packed", label: "꽉 차게" }] },
 ];
 const QUESTION_IDS = new Set(QUESTIONS.map((question) => question.id));
+/** Not questions, but the same call takes them (the companions' size · the Course Keeper card · an old screen's theme). */
+const DIRECT = { party_size: ["1", "2", "3", "4"], on_disruption: ["replace", "ask_first"], theme: ["food", "nature", "culture", "activity", "shopping", "local"] };
+const answered = (id) => Object.hasOwn(surveyAnswers, id);
+
+/** Why the server would refuse this answer (422 `invalid_answers`), or null — the shapes of `survey_answers.check`. */
+function answerProblem(key, value) {
+  const question = QUESTIONS.find((entry) => entry.id === key);
+  if (!question) return !DIRECT[key] ? "모르는 문항이다" : typeof value === "string" && DIRECT[key].includes(value) ? null : "선택지가 아니다";
+  if (value === null) return null;
+  const ids = (list) => list.map((option) => option.id);
+  const unique = (list, allowed) => Array.isArray(list) && list.every((item) => allowed.includes(item)) && new Set(list).size === list.length;
+  if (question.kind === "single") {
+    const custom = question.allow_custom && value && typeof value === "object" && Object.keys(value).length === 1 && typeof value.custom === "string" && value.custom.trim() && value.custom.length <= 1000;
+    return custom || ids(question.options).includes(value) ? null : "모르는 선택지다";
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "모양이 틀렸다";
+  if (question.kind === "priority") {
+    const areas = ids(question.options);
+    if (!unique(value.areas, areas) || !value.areas.length || Object.keys(value).some((field) => !["areas", "details"].includes(field))) return "분야가 틀렸다";
+    return Object.entries(value.details ?? {}).every(([area, picked]) => value.areas.includes(area) && unique(picked, ids(question.groups.find((group) => group.id === area).options))) ? null : "세부가 틀렸다";
+  }
+  const parts = Object.entries(value);
+  return parts.length && parts.every(([part, option]) => question.parts.some((entry) => entry.id === part && ids(entry.options).includes(option))) ? null : "칸이 틀렸다";
+}
+
+function shownQuestion(question, second) {
+  const held = surveyAnswers[question.id];
+  const shown = Object.fromEntries(Object.entries(question).filter(([field]) => field !== "phase"));
+  if (question.kind === "single") {
+    const custom = held && typeof held === "object" ? held.custom : null;
+    return { ...shown, allow_custom: Boolean(question.allow_custom), custom_max_length: 1000, custom_label: question.custom_label ?? null,
+      answer: typeof held === "string" ? held : null, custom_answer: custom ?? null };
+  }
+  const told = (part) => second && scenario.questionsRead === "on" ? part.read ?? null : null;
+  const parts = (question.groups ?? question.parts).map((part) => ({ id: part.id, label: part.label, options: part.options, read: told(part) }));
+  return { ...shown, [question.kind === "priority" ? "groups" : "parts"]: parts, answer: held && typeof held === "object" ? held : null };
+}
+
 function withQuestions(view) {
   if (scenario.questions === "none") return view;
-  const list = QUESTIONS.map((question) => ({ ...question, allow_custom: true, custom_max_length: 1000,
-    answer: typeof surveyAnswers[question.id] === "string" ? surveyAnswers[question.id] : null,
-    custom_answer: surveyAnswers[question.id]?.custom ?? null }));
+  const reading = view.status === "reading";
+  // Fixed at the first read: what is answered by then is not asked (an answer laid on before it, or carried over from the last intake).
+  surveyPlan ??= { phase: 1, asked: QUESTIONS.filter((question) => question.phase === 1 && !answered(question.id)).map((question) => question.id) };
+  const after = scenario.questionsPhase2After;
+  if (surveyPlan.phase === 1 && (!reading || (typeof after === "number" && polls > after))) {
+    // The second list: the rest is added at the END unless it is answered — "two" stands for a plan that told both (nothing to add).
+    const rest = scenario.questions === "four" ? QUESTIONS.filter((question) => question.phase === 2 && !answered(question.id)).map((question) => question.id) : [];
+    surveyPlan = { phase: 2, asked: [...surveyPlan.asked, ...rest] };
+  }
+  const second = surveyPlan.phase === 2;
+  const list = surveyPlan.asked.map((id) => shownQuestion(QUESTIONS.find((question) => question.id === id), second));
   if (scenario.questions === "unknown_kind") list.push({ id: "future_pick", kind: "multi", title: "미래의 질문", why: "", options: [{ id: "a", label: "에이" }], answer: null });
-  return { ...view, questions: list, questions_version: "2" };
+  const told = second && scenario.questions === "two" ? [{ question: "indoor_outdoor", part: null, key: "survey.indoor_outdoor.activity", value: "indoor", text: "실내", quotes: ["비 오면 실내"] },
+    { question: "pace", part: null, key: "survey.pace", value: "relaxed", text: "여유롭게", quotes: ["천천히"] }] : [];
+  return { ...view, questions: list, skipped_by_reading: told, questions_phase: surveyPlan.phase, questions_version: "3" };
 }
 
 function intakeView(revision) { return withInterpretations(withUnfoundQuestion(withQuestions(intakeBaseView(revision)))); }
@@ -1310,22 +1382,18 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (scenario.intakeRefusal) return json(response, 422, { error: { code: "intake_refused", message: scenario.intakeRefusal } }, origin);
     // `[2026-10-20 ST4F-615]` the quick screen at the door (server `intake/screen.py`): as the server answers a text with no travel clue — `status: review` with `screened`, nothing is read
     if (scenario.screen === "off_topic") return json(response, 202, { intake_id: INTAKE_ID, status: "review", stage: "review", screened: { code: "off_topic", rule: "no_travel_clue" } }, origin);
-    polls = 0; confirmed = false; board = freshBoard(scenario.board);
+    polls = 0; confirmed = false; board = freshBoard(scenario.board); surveyPlan = null;
     return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received", screened: null }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/survey` && request.method === "POST") {
     if (scenario.surveySave === "fail") return json(response, 500, { error: { code: "internal_error", message: "저장하지 못했어요" } }, origin);
     if (scenario.surveySave === "confirmed" || confirmed) return json(response, 409, { error: { code: "intake_confirmed", message: "이미 등록한 접수예요" } }, origin);
     const answers = JSON.parse(raw || "{}").answers ?? {};
-    const problems = Object.entries(answers).flatMap(([key, value]) => {
-      const question = QUESTIONS.find((entry) => entry.id === key);
-      const custom = value && typeof value === "object" && typeof value.custom === "string" && value.custom.trim() && value.custom.length <= 1000 && Object.keys(value).length === 1;
-      return !question ? [{ key, reason: "모르는 문항이다" }] : value === null || custom || question.options.some((option) => option.id === value) ? [] : [{ key, reason: "모르는 선택지다" }];
-    });
+    const problems = Object.entries(answers).flatMap(([key, value]) => { const reason = answerProblem(key, value); return reason ? [{ key, reason }] : []; });
     if (scenario.surveySave === "refuse" || problems.length) return json(response, 422, { error: { code: "invalid_answers", message: "답을 받을 수 없어요", problems } }, origin);
     surveyAnswers = { ...surveyAnswers, ...answers };
     surveyAnswers = Object.fromEntries(Object.entries(surveyAnswers).filter(([, value]) => value !== null));
-    return json(response, 200, { ok: true, answered: Object.keys(surveyAnswers).filter((key) => QUESTION_IDS.has(key)).sort(), questions_version: "2" }, origin);
+    return json(response, 200, { ok: true, answered: Object.keys(surveyAnswers).filter((key) => QUESTION_IDS.has(key)).sort(), questions_version: "3" }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(board.revision), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/route-shapes` && request.method === "GET" && scenario.intakeRoutes !== "off") {
@@ -1347,9 +1415,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     // Without the server's own check there is no content to stream: only the stage (and "stalled"), as an older server did.
     if (scenario.review !== "on" || scenario.intakeEvents === "stalled") return intakeEvents(request, response, origin);
     response.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", ...cors(origin) });
-    const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : intakeStream();
+    const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : scenario.intakeEvents === "held" ? intakeStream().slice(0, -2) : intakeStream();
     chunks.forEach((chunk) => response.write(chunk));
-    if (scenario.intakeEvents !== "silent") response.end();                  // "silent" leaves the line open and says nothing more
+    if (scenario.intakeEvents !== "silent" && scenario.intakeEvents !== "held") response.end();   // "silent" · "held" leave the line open and say nothing more
     return;
   }
   // `[2026-10-07]` The ways to go for one leg, and picking one (see `moveOptions` in the scenario).

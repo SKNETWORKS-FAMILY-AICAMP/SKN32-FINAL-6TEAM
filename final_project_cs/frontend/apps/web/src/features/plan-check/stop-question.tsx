@@ -15,7 +15,7 @@ import styles from "./stop-question.module.css";
  * check it is, the question, the options (each with 「이유:」, the way in and out for a place, 「고르면:」), 「직접 수정」 (the stop's own change screen) and, for a place, 「삭제」
  * (`[2026-10-20 사용자 재결정]` back in the question, asked once in a dialog — `StopDeleteDialog`). `leaving` folds it away (the pick was made; the card is checked again where it stands).
  */
-export function StopQuestion({ id, kind, ask, loading, failed, again, leaving, why, explain, onPick, onEdit, onDelete }: {
+export function StopQuestion({ id, kind, ask, loading, failed, again, leaving, why, explain, onPick, onEdit, onDelete, takeFocus = true }: {
   id: string;
   /**
    * What the card stopped for: its place (or what else needs a look), or the way into it arriving late (`[2026-10-20 이동 확인 C안]`).
@@ -37,12 +37,14 @@ export function StopQuestion({ id, kind, ask, loading, failed, again, leaving, w
   onEdit: () => void;
   /** Take the stop out (asked first); none for a late arrival (the way in is fixed, not the stop). */
   onDelete?: () => void;
+  /** `[2026-10-21]` The check stopped here: the question takes the focus. Not on the result screen's cards (nothing stopped there — the focus stays where the customer is). */
+  takeFocus?: boolean;
 }) {
   const t = useT();
   const titleId = `plan-stop-question-${id}`;
   const box = useRef<HTMLElement>(null);
   // The question takes the focus once (not the scroll: the list keeps the card where it stands).
-  useEffect(() => { box.current?.focus({ preventScroll: true }); }, [id, again]);
+  useEffect(() => { if (takeFocus) box.current?.focus({ preventScroll: true }); }, [id, again, takeFocus]);
   return <section ref={box} tabIndex={-1} className={styles.box} aria-labelledby={titleId} data-stop-question={id} data-leaving={leaving || undefined} data-details>
     <span className={styles.kind}>{kind === "interpretation" ? t("읽은 뜻", "Reading") : kindLabel(kind, t)}</span>
     {again && <p className={styles.again}>{t("고른 뒤에도 확인이 필요해요 · 다시 골라 주세요", "It still needs a look after the pick · please choose again")}</p>}
@@ -51,11 +53,12 @@ export function StopQuestion({ id, kind, ask, loading, failed, again, leaving, w
     {failed && <p className={styles.note} role="alert">{failed}</p>}
     {ask.options.length > 0 && <div className={styles.options}>{ask.options.map((option) =>
       <Act key={option.key} className={styles.option} why={why ?? option.why ?? null} explain={explain} onPress={() => onPick(option)}>
-        <span className={styles.optionTop}>{option.label}{option.recommended && <small className={styles.recommended}>{t("추천", "Recommended")}</small>}</span>
+        <span className={styles.optionTop}>{option.label}{option.tag && <small className={styles.tag} data-basis={option.tag.basis}>{option.tag.text}</small>}{option.recommended && <small className={styles.recommended}>{t("추천", "Recommended")}</small>}</span>
+        {option.fact && <span className={styles.line} data-fact>{option.fact}</span>}
         {option.reason && <span className={styles.line}>{t("이유:", "Why:")} {option.reason}</span>}
         {option.act.type === "pick" && legLines(option.act.candidate, t).map((line) =>
           <span key={line.side} className={styles.line} data-leg data-pending={line.pending || undefined}>{line.text}</span>)}
-        <span className={styles.line}>{t("고르면:", "If picked:")} {option.effect}</span>
+        {option.effect && <span className={styles.line}>{t("고르면:", "If picked:")} {option.effect}</span>}
       </Act>)}</div>}
     <div className={styles.buttons} data-two={onDelete ? true : undefined}>
       <Act className={styles.button} why={why} explain={explain} onPress={onEdit}>{kind === "interpretation" ? t("직접 선택", "Choose myself") : t("직접 수정", "Edit myself")}</Act>

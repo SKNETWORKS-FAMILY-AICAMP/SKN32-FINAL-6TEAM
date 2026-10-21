@@ -157,12 +157,13 @@ export function TripEdit({ trip, pick = null, onExit }: { trip: Trip;
  * says so when the stop is not in the edit); `add` — the add form with what the chat had. The key holds the edit and the pick, so it is opened once.
  */
 export function openingOf(pick: TripPick, intake: ReviewedIntakeView): PlanOpening {
-  const key = `${intake.intake_id}:${pick.mode}:${pick.itemId ?? ""}:${pick.query}`;
+  const key = `${intake.intake_id}:${pick.mode}:${pick.itemId ?? ""}:${pick.query}${pick.open ? `:${pick.open}` : ""}`;
   if (pick.mode === "add") {
     return { key, add: { title: pick.prefill.title ?? pick.query, date: pick.prefill.date ?? null, start: pick.prefill.startsAt ?? null, end: pick.prefill.endsAt ?? null,
       kind: pick.prefill.kind ?? null, query: pick.query } };
   }
-  return { key, change: { itemId: editItemIdOf(intake, pick.itemId ?? "") ?? pick.itemId ?? "", query: pick.query } };
+  // `[2026-10-21 ST4F-704]` The stop's detail opens it as ✎ does (`plain`) or with 「직접 고치기」 open (`direct`); the chat's pick opens the place search (no `how`).
+  return { key, change: { itemId: editItemIdOf(intake, pick.itemId ?? "") ?? pick.itemId ?? "", query: pick.query, ...(pick.open ? { how: pick.open } : {}) } };
 }
 
 /** The edit's id (`review.items[].id`) of a trip stop, through the stop the reopened line was read from — null when the stop is not in the edit (over, or kept out). */

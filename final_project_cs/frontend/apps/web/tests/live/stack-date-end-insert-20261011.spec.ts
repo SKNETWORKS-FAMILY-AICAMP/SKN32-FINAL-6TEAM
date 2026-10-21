@@ -35,7 +35,8 @@ for (const width of [375, 1280]) {
     const stack = page.locator('[data-edge-chip][data-multiple]');
     await expect(stack).toHaveCount(1); await expect(stack).toContainText('×3');
     const badge = stack.locator(':scope > span');
-    await expect(badge).toHaveCSS('background-color', 'rgb(32, 32, 32)');
+    // `[2026-10-21 사용자 결정 — B안]` 번호는 바탕 없이 칩 글자색(--color-text)
+    await expect(badge).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)'); await expect(badge).toHaveCSS('color', 'rgb(36, 57, 47)');
     const geometry = await badge.evaluate(e => {
       const r = e.getBoundingClientRect();
       return Array.from(e.children).every(c => { const b = c.getBoundingClientRect(); return b.left >= r.left && b.right <= r.right; });
