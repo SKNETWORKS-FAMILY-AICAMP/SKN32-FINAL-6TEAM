@@ -51,13 +51,18 @@ class RawIndex:
             path = raw_dir / f"{env}.jsonl"
             if not path.exists():
                 continue
-            pending_events: list[dict] = []
+            # ★읽는 순서: 사본 파일은 표 단위로 쓰여 `case` 줄이 `case_event` 줄보다 앞이다 → 필요한 Case 의 기록만 그 자리에서 골라 담는다
+            #   (전부 담으면 x600 사본이 가상 메모리를 넘는다 — 2026-10-20 MemoryError). 근거 목록(`evidence`)은 큰데 재구성에 필요 없어 뺀다.
             with path.open(encoding="utf-8") as fh:
                 for line in fh:
                     rec = json.loads(line)
                     t, r = rec["t"], rec["r"]
                     if t == "case_event":
-                        pending_events.append(r)
+                        if str(r["case_id"]) in case_trip:
+                            patch = (r.get("payload") or {}).get("state_patch")
+                            if isinstance(patch, dict) and "evidence" in patch:
+                                patch.pop("evidence", None)
+                            idx.events[str(r["case_id"])].append(r)
                         continue
                     tid = str(r.get("trip_id") or "")
                     if tid not in trip_ids:
@@ -65,9 +70,6 @@ class RawIndex:
                     idx.rows[tid][t].append(r)
                     if t == "case":
                         case_trip[str(r["case_id"])] = tid
-            for e in pending_events:
-                if str(e["case_id"]) in case_trip:
-                    idx.events[str(e["case_id"])].append(e)
         if places_file and places_file.exists():
             with places_file.open(encoding="utf-8") as fh:
                 for line in fh:
@@ -176,6 +178,7 @@ def seed_episode(conn, ep: dict[str, Any], raw: RawIndex | None, *, run_tag: str
     title = ep.get("trip_title") or "재생 시험 여행"
     item_map: dict[str, str] = {}
     place_map: dict[str, UUID] = {}
+    name_map: dict[tuple[str, str], UUID] = {}
     out = Seeded(trip_id=trip_id, customer_id=customer_id, user_key=user_key, item_map=item_map, notes=notes)
     with conn.cursor() as cur:
         cur.execute("INSERT INTO trips (trip_id, tenant_id, customer_id, title, locale, party_size, latest_version, status, constraints, created_at) "
@@ -217,11 +220,19 @@ def seed_episode(conn, ep: dict[str, Any], raw: RawIndex | None, *, run_tag: str
                         place_id = UUID(str(ref["place_id"]))
                         out.place_rows += 1
                     else:
-                        place_id = place_map.setdefault(old_place, _uid(ns, f"place:{old_place}"))
                         name = ((r.get("detail") or {}).get("provenance") or {}).get("place", {}).get("query") or r.get("place_name") or r.get("title")
-                        used = _insert_place(cur, place_id=place_id, name=name, kind=r.get("kind"), row=ref, trip_scope=trip_id)
-                        out.place_rows += int(used)
-                        out.place_placeholders += int(not used)
+                        # 같은 여행 안에서 이름 · 종류가 같은 장소는 한 행만 둔다(원래 DB 에는 같은 이름의 장소 행이 둘일 수 있다 — 유일 조건)
+                        final_name = (ref or {}).get("name") or name
+                        final_kind = (ref or {}).get("kind") or (r.get("kind") if r.get("kind") in ("dining", "activity", "lodging") else "activity")
+                        existing = name_map.get((final_name, final_kind))
+                        if existing is not None:
+                            place_id = place_map.setdefault(old_place, existing)
+                        else:
+                            place_id = place_map.setdefault(old_place, _uid(ns, f"place:{old_place}"))
+                            used = _insert_place(cur, place_id=place_id, name=name, kind=r.get("kind"), row=ref, trip_scope=trip_id)
+                            name_map[(final_name, final_kind)] = place_id
+                            out.place_rows += int(used)
+                            out.place_placeholders += int(not used)
                     if r.get("place_id"):
                         place_map.setdefault(str(r["place_id"]), place_id)
                 detail = dict(r.get("detail") or {})
@@ -266,10 +277,13 @@ def seed_episode(conn, ep: dict[str, Any], raw: RawIndex | None, *, run_tag: str
             cur.execute("INSERT INTO trip_chat_turns (tenant_id, trip_id, role, text, case_id, created_at) VALUES (%s,%s,%s,%s,%s,%s)",
                         (TENANT, trip_id, t["role"], t["text"], cid, t.get("created_at")))
         if not turns and (seed.get("prior_turns") or ep["start"].get("prior_turns")):
-            for t in seed.get("prior_turns") or []:
+            prior = seed.get("prior_turns") or []
+            for j, t in enumerate(prior):
+                # 표적 에피소드의 앞 대화에는 시각이 없다 — 지금 시각 바로 앞 몇 분으로 둔다(대화 순서만 맞으면 된다)
+                at = t.get("at") or (start_at - timedelta(minutes=len(prior) - j)).isoformat()
                 cur.execute("INSERT INTO trip_chat_turns (tenant_id, trip_id, role, text, created_at) VALUES (%s,%s,%s,%s,%s)",
-                            (TENANT, trip_id, t.get("role") if t.get("role") in ("customer", "assistant") else "customer",
-                             t.get("text") or "", t.get("at")))
+                            (TENANT, trip_id, "assistant" if t.get("role") in ("assistant", "bot") else "customer",
+                             t.get("text") or "", at))
         waiting = 0
         for old, c in cases.items():
             created = parse_dt(c.get("created_at"))

@@ -41,6 +41,17 @@ X600_LIKE = {
 }
 
 
+#: x600 서버 값과 **다르게 둔** 설정 — 시험 기계(GPU 서버)가 x600 서버보다 느려서 운영에서는 거의 안 나는 시간 초과가 많이 나기 때문이다.
+#:   측정(2026-10-20, 새 GPU 서버 RTX 2000 Ada): 해석 한 번이 약 6~8초(x600 서버 실사용 중앙 5.9초 · 95번째 백분위 8.4초) → 9초 제한에서
+#:   절반 가까이가 유료 대체로 넘어가고, 유료 대체 모델(gpt-6-luna)도 4~15초 걸려 둘 다 실패하는 연쇄가 생겼다(기준선 1회차 앞 136개에서 확인).
+#:   첫 제한을 9→12초(속도 차 약 1.3배), 전체를 15→20초로 늘린다. 결과의 「유료 대체 비율」 · 「지연」은 운영 값이 아니라 이 기계 값이다.
+HARDWARE_ADJUST = {"ACOP_LLM_FAILOVER_PRIMARY_TIMEOUT_SECONDS": "12", "ACOP_LLM_FAILOVER_TOTAL_SECONDS": "20", "ACOP_OLLAMA_KEEP_ALIVE": "30m"}
+
+
+#: 턴 이름 → 그 턴에 제품 안에서 난 예외(스레드 여럿이 한 앱을 나눠 쓰므로 인스턴스 값이 아니라 턴 이름으로 찾는다)
+LAST_EXC: dict[str, str] = {}
+
+
 def prepare_env(*, db_url: str, ollama_url: str, keys_files: list[Path], extra: dict[str, str] | None = None) -> list[str]:
     """앱을 import 하기 **전에** 부른다(설정은 처음 읽을 때 고정). 비밀 값은 화면에 내지 않는다 — 넣은 이름만 돌려준다."""
     from .seed import assert_test_db
@@ -56,10 +67,20 @@ def prepare_env(*, db_url: str, ollama_url: str, keys_files: list[Path], extra: 
                 continue
             k, v = line.split("=", 1)
             k = k.strip()
-            if k.startswith("ACOP_") and k not in ("ACOP_DATABASE_URL", "ACOP_OLLAMA_BASE_URL", "ACOP_ENV") and k not in X600_LIKE:
+            # ★키 파일에서는 **키 · 비밀 · 요금 한도 · 바깥 경유 설정만** 가져온다 — 모델 · 경로 · 지침 파일 같은 설정은
+            #   x600 서버 값(`X600_LIKE`)을 쓰고, 로컬 개발용 값(예: 다른 지침 파일 경로 · 시나리오 모드)이 섞이지 않게 한다
+            wanted = (k.endswith(("_KEY", "_KEY_SERVER", "_SECRET", "_KEY_1", "_KEY_2")) or k.startswith("ACOP_RATE_")
+                      or k in ("ACOP_OUTBOUND_PROXY_URL", "ACOP_OUTBOUND_PROXY_SOURCES"))
+            if k.startswith("ACOP_") and wanted and k not in X600_LIKE:
                 os.environ[k] = v.strip().strip('"').strip("'")
                 names.append(k)
+    # ★이 PC 의 `.env` 에는 키가 둘인데 일반 키는 크레딧이 없어 모든 유료 호출이 429 로 실패한다(2026-10-20 점검) —
+    #   x600 서버는 크레딧이 있는 키를 쓰므로, 시험에서는 서버용 키를 일반 키 자리에도 쓴다(프로세스 환경에서만, 파일은 안 바꾼다)
+    if os.environ.get("ACOP_OPENAI_API_KEY_SERVER"):
+        os.environ["ACOP_OPENAI_API_KEY"] = os.environ["ACOP_OPENAI_API_KEY_SERVER"]
+        names.append("ACOP_OPENAI_API_KEY<-SERVER")
     os.environ.update(X600_LIKE)
+    os.environ.update(HARDWARE_ADJUST)
     os.environ.update({"ACOP_DATABASE_URL": db_url, "ACOP_OLLAMA_BASE_URL": ollama_url, "ACOP_TENANT_ID": "demo",
                        "TZ": "Asia/Seoul", "PGTZ": "Asia/Seoul"})
     os.environ.update(extra or {})
@@ -75,6 +96,7 @@ class Harness:
         self.judge = judge
         self.log = log
         self.client = None
+        self.app = None
         self.raw = None
         import uuid as _uuid
 
@@ -104,29 +126,31 @@ class Harness:
         return self._catalog.get(norm(name))
 
     # ── 앱 ─────────────────────────────────────────────────────
-    def start(self) -> None:
+    def start(self, app: Any = None) -> None:
+        """앱과 시험용 클라이언트를 만든다. `app` 이 주어지면(여러 스레드가 한 앱을 나눠 쓸 때) 그 앱에 클라이언트만 새로 붙인다."""
         from fastapi.testclient import TestClient
 
-        from app.domains.travel_ops.modules.web_account import web_guard
-        from app.presentation.api.app import create_app
+        if app is None:
+            from app.domains.travel_ops.modules.web_account import web_guard
+            from app.presentation.api.app import create_app
 
-        real = web_guard.values
-        web_guard.values = lambda tenant: {**real(tenant), "web.dev_mode": "on", "web.limits_enabled": False}
-        # ★제품 안의 예외는 운영처럼 500 답으로 받는다(시험 도구가 멈추지 않게) — 그 턴은 오류 턴으로 센다
-        app = create_app()
-        self.last_exc = None
+            real = web_guard.values
+            web_guard.values = lambda tenant: {**real(tenant), "web.dev_mode": "on", "web.limits_enabled": False}
+            # ★제품 안의 예외는 운영처럼 500 답으로 받는다(시험 도구가 멈추지 않게) — 그 턴은 오류 턴으로 센다
+            app = create_app()
 
-        async def _record_exc(request, exc):          # 500 의 원인(예외 종류 · 위치)을 결과에 남긴다 — 답은 운영처럼 500
-            import traceback
+            async def _record_exc(request, exc):          # 500 의 원인(예외 종류 · 위치)을 턴 이름으로 남긴다 — 답은 운영처럼 500
+                import traceback
 
-            from starlette.responses import JSONResponse
+                from starlette.responses import JSONResponse
 
-            tb = traceback.extract_tb(exc.__traceback__)
-            where = f" @ {tb[-1].filename.split('final_project_cs')[-1]}:{tb[-1].lineno}" if tb else ""
-            self.last_exc = f"{type(exc).__name__}: {str(exc)[:200]}{where}"
-            return JSONResponse({"error": {"code": "internal_error"}}, status_code=500)
+                tb = traceback.extract_tb(exc.__traceback__)
+                where = f" @ {tb[-1].filename.split('final_project_cs')[-1]}:{tb[-1].lineno}" if tb else ""
+                LAST_EXC[R._turn.get() or ""] = f"{type(exc).__name__}: {str(exc)[:200]}{where}"
+                return JSONResponse({"error": {"code": "internal_error"}}, status_code=500)
 
-        app.add_exception_handler(Exception, _record_exc)
+            app.add_exception_handler(Exception, _record_exc)
+        self.app = app
         self.client = TestClient(app, raise_server_exceptions=False)
 
     def _post(self, seeded, text: str, at: datetime, rid: str) -> tuple[int, dict[str, Any], float]:
@@ -147,16 +171,15 @@ class Harness:
         from .seed import read_view
 
         rev = {v: k_ for k_, v in seeded.item_map.items()}
-        R.set_turn(f"{tag}:{ep['episode_id']}#{k}")
-        mark = len(self.rec.calls)
+        turn_name = f"{tag}:{ep['episode_id']}#{k}"
+        R.set_turn(turn_name)
         with get_connection() as conn:
             before = read_view(conn, seeded.trip_id, rev)
-        self.last_exc = None
         status, body, secs = self._post(seeded, text, at, f"rp-{tag}-{k}")
         with get_connection() as conn:
             after = read_view(conn, seeded.trip_id, rev)
             model_path, evidence_db = _case_extras(conn, body.get("case_id"), after, before)
-        calls = self.rec.calls[mark:]
+        calls = [c for c in list(self.rec.calls) if c.get("turn") == turn_name]
         answer = str(body.get("answer") or "")
         evidence = "\n".join([evidence_db, json.dumps(body.get("basis") or {}, ensure_ascii=False, default=str),
                               *[(self.rec._store.get(c.get("key") or "", {}) or {}).get("text", "")[:20000] for c in calls]])
@@ -170,7 +193,7 @@ class Harness:
                 "lookups": [{"rule": c["rule"], "how": c["how"], "host": c.get("host"), "path": c.get("path")} for c in calls],
                 "live_lookups": sum(1 for c in calls if c["how"] == "live"), "evidence": evidence[:60000],
                 "error": None if status == 200 else f"http {status}: {json.dumps(body, ensure_ascii=False)[:300]}",
-                "exception": self.last_exc}
+                "exception": LAST_EXC.pop(turn_name, None)}
 
     # ── 에피소드 ─────────────────────────────────────────────────
     def run_episode(self, ep: dict, compiled: dict, *, tag: str, b_from: int | None = None) -> dict[str, Any]:

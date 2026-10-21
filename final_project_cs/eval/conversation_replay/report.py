@@ -23,7 +23,12 @@ ZERO_COLS = [("wrong_save", "잘못된 저장"), ("false_done", "거짓 완료")
 
 def load(folder: Path, name: str = "scores") -> list[dict[str, Any]]:
     path = folder / f"{name}.jsonl"
-    return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+    last: dict[str, dict[str, Any]] = {}
+    for x in path.read_text(encoding="utf-8").splitlines():
+        if x.strip():
+            row = json.loads(x)
+            last[row["episode_id"]] = row          # 이어 돌린 에피소드는 뒤 줄이 앞 줄(오류로 끝난 것)을 대신한다
+    return list(last.values())
 
 
 def _zero(rows: list[dict], key: str) -> tuple[int, int, int]:
