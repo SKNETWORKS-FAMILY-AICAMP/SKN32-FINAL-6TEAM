@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockServer, openNotices, start, TRIP_ID, tripScreen } from "./helpers";
+import { beforeTheTrip, mockServer, openNotices, start, TRIP_ID, tripScreen } from "./helpers";
 
 /**
  * `[2026-10-07 사용자 결정 — 목업 C안 ① 알림 센터]` 종 · 알림 센터 · 새 알림 막대. mock 서버 시험이다 — 화면 반응만 본다.
@@ -49,6 +49,7 @@ test("탭은 화살표 키로 옮겨 가고, 탭마다 서버가 준 수를 단�
 });
 
 test("화면이 열려 있는 동안 서버가 선택 요청을 보내면 그 일정의 번호 · 이름 · 「선택 요청」 막대가 뜨고, 「알림 보기」로 받은 알림 탭이 열린다", async ({ page, request }) => {
+  await beforeTheTrip(page);                                                                                  // `[2026-10-21]` 모방 제안은 10-01 23:00 에 끝난다 — 지난 제안은 고를 수 없어 걸러진다
   const server = mockServer(request);
   await server.scenario({ bell: "on" });
   await page.goto(`/trips/${TRIP_ID}`);
@@ -70,6 +71,8 @@ test("화면이 열려 있는 동안 서버가 선택 요청을 보내면 그 �
 });
 
 test("선택 요청의 「일정에서 보기」는 센터를 닫고 그 일정을 목록에서 펼친다", async ({ page, request }) => {
+  // `[2026-10-22 ST4F-715]` 화면은 만료된 제안을 거른다 — 모방 서버 제안(2026-10-01 23:00 만료) 앞의 시각으로 시계를 둔다
+  await beforeTheTrip(page);
   await mockServer(request).scenario({ proposals: "open" });
   await page.goto(`/trips/${TRIP_ID}`);
   const center = await openNotices(page);

@@ -62,7 +62,7 @@ export function TripCredits({ facts, skipAnimation, onClose }: { facts: CreditFa
     drawing.current = true;
     const css = getComputedStyle(shade.current);
     drawEndPicture({ heading: facts.title, dates: facts.dates, kicker: "COOKIE", line, cells: numbers, brand: t("구구루트", "GuguRoute") }, {
-      background: css.getPropertyValue("--color-inverse").trim(), ink: css.getPropertyValue("--color-on-inverse").trim(),
+      background: css.getPropertyValue("--color-credits-bg").trim(), ink: css.getPropertyValue("--color-credits-ink").trim(),
       accent: css.getPropertyValue("--color-credits-accent").trim(), font: css.fontFamily,
     }).then((blob) => setPicture(blob ? new File([blob], "guguroute-credits.png", { type: "image/png" }) : null), () => setPicture(null));
   }, [phase, facts, line, numbers, shade, t]);
@@ -85,7 +85,9 @@ export function TripCredits({ facts, skipAnimation, onClose }: { facts: CreditFa
     setShared("saved");
   }
 
-  return <div ref={shade} className={styles.shade} onKeyDown={keys}>
+  // `[2026-10-19 · 10-20 사용자 지시]` The credits are black in every theme (`--color-credits-bg` · `-ink`), and keep the green theme's gold for headings, so the dark theme
+  // does not turn them light.
+  return <div ref={shade} className={styles.shade} data-theme="green" onKeyDown={keys}>
     <section ref={sheet} className={styles.credits} role="dialog" aria-modal="true" aria-labelledby="trip-credits-title" data-phase={phase}>
       <h2 id="trip-credits-title" ref={heading} tabIndex={-1} className="sr-only">{t("엔딩 크레딧", "End credits")} · {facts.title}</h2>
       {phase === "roll" ? <>

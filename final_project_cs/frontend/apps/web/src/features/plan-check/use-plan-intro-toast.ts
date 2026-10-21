@@ -28,7 +28,9 @@ export function useReadingToastHandoff(reading: boolean, notice: { toast: BusToa
 /**
  * A header action takes priority over the delayed first completed-plan introduction. `intro` replaces the plan check's own words (`[2026-10-13]` the edit of a registered trip says what it is).
  */
-export function usePlanIntroToast(done: boolean, show: (toast: BusToast) => void, t: Translate, intro?: BusToast) {
+export function usePlanIntroToast(done: boolean, show: (toast: BusToast) => void, t: Translate, intro?: BusToast,
+  /** `[2026-10-20 C안]` The 5-second 「여행 등록」 bar says what happens instead: no introduction then. */
+  skip = false) {
   const introduced = useRef(false);
   const received = useRef(false);
   // Subscribe first: pending header notices may be delivered synchronously at registration.
@@ -39,7 +41,7 @@ export function usePlanIntroToast(done: boolean, show: (toast: BusToast) => void
   useEffect(() => {
     if (!done || introduced.current) return;
     introduced.current = true;
-    if (received.current) return;
+    if (received.current || skip) return;
     show(intro ?? { text: t("계획 확인 화면이에요", "Check your plan"), sub: t("일정을 수정하거나 권장 수정안을 확인해 주세요.", "Edit stops or view the proposed plan."), ms: 3_500 });
-  }, [done, show, t, intro]);
+  }, [done, show, t, intro, skip]);
 }

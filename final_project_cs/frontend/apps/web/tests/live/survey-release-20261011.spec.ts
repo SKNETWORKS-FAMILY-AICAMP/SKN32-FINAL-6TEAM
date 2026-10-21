@@ -1,13 +1,15 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { checkPlan, mockServer, noHorizontalScroll, start } from "./helpers";
+import { answerCard, checkPlan, mockServer, noHorizontalScroll, start } from "./helpers";
 
-const result = (page: Page) => page.getByRole("button", { name: /^확인 필요 \d+곳$/ });
+// `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+//   그 판에는 「확인 필요」가 없으니 결과 화면은 화면의 단계(`done`)로 안다.
+const result = (page: Page) => page.locator('main[data-stage="done"]');
 const questions = (page: Page) => page.getByRole("region", { name: "질문 2개" });
 
 async function completedQuestions(page: Page, request: APIRequestContext, touched = false) {
   const server = mockServer(request);
   await server.reset();
-  await server.scenario({ questions: "two", readingPolls: 999, board: "rich", review: "on" });
+  await server.scenario({ questions: "two", readingPolls: 999, board: "calm", review: "on" });
   await start(page);
   let release!: () => void;
   const ready = new Promise<void>((resolve) => { release = resolve; });
@@ -22,7 +24,7 @@ async function completedQuestions(page: Page, request: APIRequestContext, touche
   await checkPlan(page);
   await expect(questions(page)).toBeVisible();
   if (touched) {
-    await questions(page).getByRole("button", { name: "택시", exact: true }).click();
+    await answerCard(page, "혼자");                                       // `[2026-10-20 ST4F-665]` 시작 설문 카드 — 고르고 「다음」
     await expect(questions(page)).toContainText("2 / 2");
   }
   await server.scenario({ readingPolls: 0 });
@@ -126,7 +128,7 @@ for (const width of [375, 1280]) {
         await expect(questions(page)).toBeVisible();
         await expect(questions(page)).toContainText("2 / 2");
         await questions(page).getByRole("button", { name: "이전 질문 보기" }).click();
-        await expect(questions(page).getByRole("button", { name: "택시", exact: true })).toHaveAttribute("aria-pressed", "true");
+        await expect(questions(page).getByRole("button", { name: "혼자", exact: true })).toHaveAttribute("aria-pressed", "true");
         await page.getByRole("button", { name: "읽어 온 계획 확인하기", exact: true }).click();
         await completedResult(page);
       });

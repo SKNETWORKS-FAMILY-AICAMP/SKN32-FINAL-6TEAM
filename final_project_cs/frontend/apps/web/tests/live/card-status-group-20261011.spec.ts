@@ -37,7 +37,7 @@ for (const width of [375, 1280]) {
       await noHorizontalScroll(page);
       await target.screenshot({ path: test.info().outputPath(`card-status-${crowded ? "wrap" : "group"}-${width}.png`), animations: "disabled" });
       await head(page, "올리브영").click();
-      await expect(target.locator("[data-details]")).toBeVisible();
+      await expect(target.locator('[id$="-checks"][data-details]')).toBeVisible();          // `[2026-10-21]` 결과 화면 질문 칸도 data-details 를 단다
       await expect(target.locator('[class*="needsInline"]')).toHaveCount(0);
       await expect(status).toBeVisible();
     });

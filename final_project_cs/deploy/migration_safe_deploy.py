@@ -24,6 +24,14 @@ class DeployError(RuntimeError):
     pass
 
 
+class RecoveryFailed(DeployError):
+    """Rollout and exact-image recovery both failed (exit 3): the service may be down."""
+
+
+#: Exit codes read by auto_deploy.sh for the customer notice (D-CS-019): 1 = failed, previous kept; 3 = recovery failed.
+EXIT_FAILED, EXIT_RECOVERY_FAILED = 1, 3
+
+
 class Docker:
     def run(self, args, timeout=60):
         try:
@@ -235,7 +243,7 @@ def rollout(docker, command, directory, timeout=300, settle=30):
         try:
             recover(docker, directory, timeout, settle)
         except (DeployError, KeyboardInterrupt) as recovery:
-            raise DeployError("Rollout failed; exact-image recovery also failed; manual action required") from recovery
+            raise RecoveryFailed("Rollout failed; exact-image recovery also failed; manual action required") from recovery
         raise DeployError("Rollout failed; exact-image recovery verified") from original
     return images
 
@@ -296,7 +304,7 @@ def main():
             recover(docker, args.state_dir, args.timeout, args.settle)
     except (DeployError, ValueError, KeyError, OSError) as exc:
         print(f"Deployment safety check failed: {type(exc).__name__}: {exc}")
-        raise SystemExit(1)
+        raise SystemExit(EXIT_RECOVERY_FAILED if isinstance(exc, RecoveryFailed) else EXIT_FAILED)
     print(f"Deployment safety {args.action}: passed")
 
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { BedDouble, Bike, Bus, Car, Check, ChevronsUpDown, Footprints, Lock, LockOpen, Minus, Pencil, Plus, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
-import { Fragment, type MouseEvent, type ReactNode } from "react";
+import { AlarmClock, BedDouble, Bike, Bus, Car, Check, Footprints, Keyboard, Lock, LockOpen, Minus, Pencil, Sparkles, Trash2, TrainFront, Undo2, X } from "lucide-react";
+import { Fragment, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import type { MoveOptionMode } from "@/lib/live/move-options";
 import { ro } from "@/lib/josa";
-import { useT } from "@/lib/settings";
+import { useSettings, useT } from "@/lib/settings";
 import { dayTimes, freeText, moveSlack } from "./day-times";
 import { timeline, type CheckRow, type PlanCheckView, type PlanDay, type PlanItem, type PlanMove, type Reread } from "./model";
 import { MoveModeBox } from "./move-mode";
@@ -14,15 +14,22 @@ import { insertionPoints, type InsertionPoint } from "./insertion-points";
 import { RailList, type RailNow } from "./rail-list";
 import { StopKind } from "./stop-kind";
 import { UnfoundPlace, type UnfoundActions } from "./unfound-place";
-import type { Grab, TimeEditHandles, TimeKind } from "./use-time-edit";
+import { formatHm, parseHm, SNAP } from "./time-plan";
+import { clockText, stayText, TimeWheel } from "./time-wheel";
+import { HOLD_MS, type Grab, type TimeKind, type TimePress } from "./use-time-edit";
 import styles from "./plan-check.module.css";
 
 /** Everything a row of the list needs from the screen, in one place (the list is drawn twice when a preview stands under the plan). */
 export interface RowContext {
   revision?: number;
   done: boolean;
-  /** Only the currently revealed check opens; future read stops remain quiet and folded. */
-  reveal?: { activeId: string | null; waiting: ReadonlySet<string> };
+  /**
+   * Only the currently revealed check opens; future read stops remain quiet and folded. `[2026-10-20 C안]` `stop`: the card the first check stopped at (the rest of the list is
+   * dimmed), `ask`: the question drawn inside it.
+   */
+  reveal?: { activeId: string | null; waiting: ReadonlySet<string>; stop?: string | null; ask?: ReactNode };
+  /** `[2026-10-21 사용자 지시]` On the result screen before registering: the question a card that needs a look asks (the first check's question box), or null. */
+  question?: (item: PlanItem) => ReactNode;
   /** The card or move that is open, and the stop picked on the map or in the list. */
   open: string | null;
   selected: string | null;
@@ -67,6 +74,8 @@ export interface RowContext {
    */
   timeHandle: (item: PlanItem, kind: TimeKind) => Grab;
   dragEnded: () => boolean;
+  /** `[2026-10-21 ST4F-702]` A finger holding a time of THIS list (its dot fills up), or holding it taken: where the time goes now (`to`) and from where (`from`), for the bubble over the dot. */
+  timePress?: (TimePress & { from: number | null; to: number | null }) | null;
   /** `[2026-10-05]` The time of LEAVING a stop (the time at the left of the leg after it) is pressed: its end changes (free time first, then the next stops are pushed). Takes the id of that stop. */
   onOpenDepart: (fromId: string) => void;
   timeAdjusted: ReadonlySet<string>;
@@ -90,8 +99,7 @@ export interface TimeEditUi {
   /** How many stops change in all. */
   count: number;
   setStart: (text: string) => void; setEnd: (text: string) => void; setPush: (push: boolean) => void;
-  step: (minutes: number) => void; apply: () => void; cancel: () => void;
-  grip: TimeEditHandles["grip"];
+  apply: () => void; cancel: () => void;
   /** Dragged straight from the time: the form stays shut while it is held. */
   direct: boolean;
   /** Put the time back to what it was when the screen opened - null when it was never changed. */
@@ -138,7 +146,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, 
         </li>}{timeline(view, day.day).filter(ctx.visible).map((entry, index) => <Fragment key={entry.type === "item" ? entry.item.id : entry.move.id}>
           {points[index] && ctx.insertion?.(points[index])}
           {entry.type === "item"
-            ? entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
+            ? entry.item.ask ? <AskRow item={entry.item} ctx={ctx} /> : entry.item.past ? <PastItemRow item={entry.item} ctx={ctx} /> : <ItemRow item={entry.item} ctx={ctx} rechecking={view.rechecking === entry.item.id || ctx.rechecking === entry.item.id} />
             : <MoveRow move={entry.move} from={view.items.find((item) => item.id === entry.move.fromId)} to={view.items.find((item) => item.id === entry.move.toId)} ctx={{ ...ctx, revision: view.revision }} slack={moveSlack(times, entry.move)} dim={ctx.removed.has(entry.move.fromId) || ctx.removed.has(entry.move.toId)} />}
         </Fragment>)}{points.at(-1) && ctx.insertion?.(points.at(-1)!)}</>;
       })()}</RailList>
@@ -171,6 +179,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   const { done, actions, explain, frozen } = ctx;
   const current = !done && ctx.reveal?.activeId === item.id;
   const waiting = !done && Boolean(ctx.reveal?.waiting.has(item.id));
+  const stopped = !done && ctx.reveal?.stop === item.id;
   const open = done ? ctx.open === item.id || item.verdict === null : current;
   const selected = done && ctx.selected === item.id;
   // `[2026-10-15 사용자 결정 — ST4F-498]` A stay's title is its name only; its card is still read as 「○○ … 체크인 · n박 · 날짜」 (the pill is named with it).
@@ -202,12 +211,14 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
     : !actions.autoRecommend ? t("자동 추천은 준비 중이에요 · 수정에서 장소를 바꿀 수 있어요", "Recommending is coming · change the place in Edit")
       : item.suggestion ? t(`자동 추천은 1순위 ${ro(item.suggestion)} 바로 바꿔요`, `Recommend changes it to the first alternative, ${item.suggestion}`) : null;
   const rows = ctx.rowsFor(item) ?? item.checks;
+  const question = done && !removed && !checking && !rechecking ? ctx.question?.(item) ?? null : null;
   const timeWhy = removed ? removedWhy : !actions.retime && !actions.edit ? t("시간 고치기는 준비 중이에요", "Changing the time is coming") : item.locked ? lockedWhy : item.booked === true ? t("예약한 일정이라 시간을 바꿀 수 없어요", "Booked: its time cannot be changed") : frozen;
   const adjusted = ctx.timeAdjusted.has(item.id) && !removed;
   const showUndo = done && (adjusted || canUndoItem);
   const showReview = review && !checking && !rechecking && !showUndo && !waiting;
   // The time and its dot are taken and dragged at once - unless the time cannot be changed (then the time says why when pressed, and the dot is just a dot).
   const grab = done && !timeWhy ? ctx.timeHandle(item, "start") : undefined;
+  const press = grab && ctx.timePress?.id === item.id && ctx.timePress.kind === "start" ? ctx.timePress : null;
   // ★`[2026-10-07 사용자 지시 — 상자 전체가 상세정보를 여닫는 자리]` Once done, the whole card opens and closes the checks - not only the name. A press on anything that is its own button (lock, edit, delete, the time, the
   //   tools), on the time editor and inside the opened checks does not: it does what it says. The name stays the one real button of it (keyboard and screen reader).
   const pickCard = (event: MouseEvent<HTMLElement>) => {
@@ -219,8 +230,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   //   height (they were — empty tall boxes above and below it — because only an opened card was left out of 「every folded card as tall as the tallest」).
   const editingTime = done && ctx.time?.id === item.id && ctx.time.kind === "start" && !ctx.time.direct && !removed;
   // `[2026-10-12 사용자 결정]` The rail (`rail-list.tsx`) reads the stop's start and end to draw it to scale; an opened card carries its line to the card's end.
-  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}
-    data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={((open || editingTime) && !checking) || undefined}>
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-reveal-current={current || undefined} data-reveal-waiting={waiting || undefined} data-stop-focus={stopped || undefined} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined} data-time-follow={done && (open || review || showUndo || removed || Boolean(changedFrom && actions.canUndoAll?.())) || undefined} data-time-focused={timeFocused || undefined} data-changed={changed || undefined} data-removed={removed || undefined}
+    data-rail="stay" data-start={item.startsAt || undefined} data-end={item.endsAt || undefined} data-rail-open={((open || editingTime) && !checking) || undefined} data-time-press={press ? (press.held ? "held" : "pressing") : undefined}>
     {done
       // `[2026-10-12 사용자 결정 — A]` Every stop shows its end under its start (it was only the picked or opened one, 2026-10-10).
       ? <Act className={styles.time} data-editing={(ctx.time?.id === item.id && ctx.time.kind === "start") || undefined} data-adjusted={adjusted || undefined} data-grab={grab ? true : undefined} {...grab} why={timeWhy} explain={explain}
@@ -228,7 +239,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
           title={t("눌러서 시간 고치기 · 잡고 위아래로 끌어도 돼요", "Press to change the time · or take it and drag up or down")} aria-label={t(`${item.title} 시간 고치기 · 지금 ${item.startsAt || "시간 없음"} · 끝 ${item.endsAt || "시간 없음"}`, `Change the time of ${item.title} · now ${item.startsAt || "no time"} · ends ${item.endsAt || "no time"}`)}>
           <span className={styles.timeStack}><time data-stop-start>{item.startsAt || "–"}</time><time className={styles.rangeEnd} data-stop-end>~{item.endsAt || "—"}</time></span></Act>
       : <span className={styles.time}>{item.startsAt || "–"}</span>}
-    <span className={styles.rail} aria-hidden="true"><span className={styles.dot} data-grab={grab ? true : undefined} {...grab} /></span>
+    <span className={styles.rail} aria-hidden="true"><span className={styles.dot} data-grab={grab ? true : undefined} {...grab}>{press && <HoldMark press={press} />}</span></span>
     <article id={`${ctx.prefix}plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} data-pickable={done && !checking && !removed ? true : undefined} data-open={open && !checking ? true : undefined} aria-labelledby={labelledBy} aria-busy={checking && !waiting} onClick={pickCard}>
       {done
         // Once done a card opens and closes (accordion: the heading holds the button).
@@ -254,7 +265,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
             </span>
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
-      {done && item.unfound && !removed && !checking && ctx.unfound && <UnfoundPlace item={{ ...item, unfound: item.unfound }} prefix={ctx.prefix} candidates={actions.candidates}
+      {done && item.unfound && !removed && !checking && ctx.unfound && !question && <UnfoundPlace item={{ ...item, unfound: item.unfound }} prefix={ctx.prefix} candidates={actions.candidates}
         why={changeWhy} explain={explain} on={ctx.unfound} />}
       {editingTime && <TimeEditor item={item} ui={ctx.time!} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
@@ -266,6 +277,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
           {note && <p className={styles.cardNote}>{note}</p>}
         </>}
       </div>}
+      {stopped && ctx.reveal?.ask}
+      {question}
       {/* 2026-10-08: 변경은 제목 옆 체크, 확인 필요와 시간 되돌리기는 펼친 카드에서도 맨 아래 오른쪽. */}
       {!removed && (showReview || (done && (changedFrom || adjusted || canUndoItem || (!open && !checking && needsOf(rows).length > 0)))) && <div className={styles.cardFoot}>
         <div className={styles.cardFootNote}>
@@ -280,6 +293,21 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
         </div>
       </div>}
     </article>
+  </li>;
+}
+
+/**
+ * ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` Where the first check stopped to ask what a line of the plan means (`PlanItem.ask`): the line's time on the rail and a dashed place with the
+ * question in it — no card, no tools (it is not a stop yet). The list follows it as the newest row.
+ */
+function AskRow({ item, ctx }: { item: PlanItem; ctx: RowContext }) {
+  const t = useT();
+  const stopped = ctx.reveal?.stop === item.id;
+  return <li className={styles.entry} data-type="ask" data-entry-id={item.id} data-reveal-current={ctx.reveal?.activeId === item.id || undefined} data-stop-focus={stopped || undefined}
+    data-rail="stay" data-start={item.startsAt || undefined}>
+    <span className={styles.time}>{item.startsAt || "–"}</span>
+    <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
+    <article className={styles.card} data-ask aria-label={t(`계획서 「${item.title}」`, `The plan's line “${item.title}”`)}>{stopped && ctx.reveal?.ask}</article>
   </li>;
 }
 
@@ -324,41 +352,86 @@ function Rereading({ item, reread, onPick }: { item: PlanItem; reread: Reread; o
   </div>;
 }
 
+/** The latest time a wheel offers for the end of a stop. */
+const LAST = 24 * 60 - SNAP;
+
 /**
- * ★`[2026-10-04 사용자 지시]` The stop's time, changed in place (the time at the left of the card was pressed): the start and the end can be typed, the start can be dragged by the grip
- * (up = earlier, down = later; 10 px is 5 minutes) or stepped by 5 minutes, and the stops around it can be pushed along or left alone. What the new time would do is shown before it is
- * sent - which other stops move, and by how much - and the range it may take. Whether it fits the place's hours or the way there is the server's to say when it checks the plan again.
+ * ★`[2026-10-04 사용자 지시]` The stop's time, changed in place (the time at the left of the card was pressed); the stops around it can be pushed along or left alone. What the new time would do
+ * is shown before it is sent - which other stops move, and by how much - and the range it may take. Whether it fits the place's hours or the way there is the server's to say when it checks the plan again.
+ * ★`[2026-10-21 사용자 결정 — ST4F-702 A 휠]` The start and the end (or the time of leaving) are boxes over a wheel of 오전/오후 · 시 · 분 (`TimeWheel`): the box pressed is the one the wheel turns,
+ * and ⌨ swaps the wheel for the two fields (to type to the minute). The grip and 「−5 / +5」 of the form before are gone; the time and its dot are still dragged in the list.
  */
 function TimeEditor({ item, ui }: { item: PlanItem; ui: TimeEditUi }) {
   const t = useT();
+  const { language } = useSettings();
+  const english = language === "en";
   const leaving = ui.kind === "depart";
+  const [side, setSide] = useState<"start" | "end">(leaving ? "end" : "start");
+  const [typing, setTyping] = useState(false);
+  const [bounced, setBounced] = useState("");
+  const start = parseHm(ui.start), end = parseHm(ui.end);
+  // The end of a stop can be any time after its start (the server checks it against the place when it checks the plan again); the start and the time of leaving keep to their range.
+  const range = side === "end" && !leaving ? { min: (start ?? 0) + SNAP, max: LAST } : { min: parseHm(ui.range.min) ?? 0, max: parseHm(ui.range.max) ?? LAST };
+  const value = (side === "start" ? start : end) ?? start ?? range.min;
+  const stay = !leaving && start !== null && end !== null && end > start ? end - start : null;
   const along = ui.along.slice(0, 3).map((stop) => `${stop.title} ${stop.minutes > 0 ? "+" : "−"}${Math.abs(stop.minutes)}분`).join(" · ");
-  return <form className={styles.timeEditor} data-kind={ui.kind} aria-label={leaving ? t(`${item.title}에서 나서는 시각 고치기`, `Change when to leave ${item.title}`) : t(`${item.title} 시간 고치기`, `Change the time of ${item.title}`)} noValidate
+  const pick = (minutes: number, how: { settled: boolean; bounced: boolean }) => {
+    if (how.bounced) setBounced(side === "end" && !leaving ? t("끝 시각이 시작보다 빨라요.", "The end is before the start.")
+      : range.min === range.max ? t(`지금 시각(${formatHm(range.min)})에서 움직일 수 없어요.`, `It cannot move from ${formatHm(range.min)} now.`)
+        : t(`가능한 시각은 ${formatHm(range.min)} ~ ${formatHm(range.max)}이에요${ui.push ? "" : " · 앞뒤 일정도 함께 밀면 더 넓어져요"}.`, `Possible: ${formatHm(range.min)} – ${formatHm(range.max)}${ui.push ? "" : " · pushing the stops around it allows more"}.`));
+    else if (how.settled) setBounced("");
+    if (minutes < range.min || minutes > range.max) return;                 // turned past the range: not taken (the wheel goes back when it stops)
+    const text = formatHm(minutes);
+    if (side === "start") { if (text !== ui.start) ui.setStart(text); }
+    else if (text !== ui.end) ui.setEnd(text);
+  };
+  const box = (which: "start" | "end", word: string, minutes: number | null) => <button type="button" className={styles.timeBox} aria-pressed={!typing && side === which}
+    onClick={() => { setSide(which); setTyping(false); setBounced(""); }}><small>{word}</small><b>{minutes === null ? "–" : clockText(minutes, english)}</b></button>;
+  const keys = typing ? t("휠로 고르기", "Pick on the wheel") : t("직접 입력", "Type it");
+  return <form className={styles.timeEditor} data-kind={ui.kind} data-time-editor aria-label={leaving ? t(`${item.title}에서 나서는 시각 고치기`, `Change when to leave ${item.title}`) : t(`${item.title} 시간 고치기`, `Change the time of ${item.title}`)} noValidate
     onSubmit={(event) => { event.preventDefault(); ui.apply(); }}
     onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); ui.cancel(); } }}>
-    {leaving
-      ? <label className={styles.field}>{t("출발", "Leave")}<input type="time" value={ui.end} aria-invalid={Boolean(ui.problem)} autoFocus onChange={(event) => ui.setEnd(event.target.value)} /></label>
-      : <>
-        <label className={styles.field}>{t("시작", "Start")}<input type="time" value={ui.start} aria-invalid={Boolean(ui.problem)} autoFocus onChange={(event) => ui.setStart(event.target.value)} /></label>
-        <label className={styles.field}>{t("끝", "End")}<input type="time" value={ui.end} aria-invalid={Boolean(ui.problem)} onChange={(event) => ui.setEnd(event.target.value)} /></label></>}
-    <div className={styles.timeSteps}>
-      <button type="button" className={styles.timeGrip} {...ui.grip} disabled={ui.busy}
-        aria-label={leaving ? t("끌어서 출발 시각 바꾸기 · 위아래 화살표로도 바꿔요", "Drag to change when to leave · the arrow keys work too") : t("끌어서 시작 시각 바꾸기 · 위아래 화살표로도 바꿔요", "Drag to change the start · the arrow keys work too")}
-        title={t("위로 끌면 일찍, 아래로 끌면 늦게 (10px = 5분) · 여유를 다 쓰면 한 번 멈춰요", "Drag up for earlier, down for later (10 px = 5 minutes) · it stops once when the free time is used up")}>
-        <ChevronsUpDown size={18} strokeWidth={1.8} aria-hidden="true" /></button>
-      <button type="button" className={styles.timeStep} onClick={() => ui.step(-5)} disabled={ui.busy} aria-label={t("−5분", "−5 min")} title={t("5분 일찍", "5 minutes earlier")}><Minus size={14} strokeWidth={2} aria-hidden="true" />5</button>
-      <button type="button" className={styles.timeStep} onClick={() => ui.step(5)} disabled={ui.busy} aria-label={t("+5분", "+5 min")} title={t("5분 늦게", "5 minutes later")}><Plus size={14} strokeWidth={2} aria-hidden="true" />5</button>
-      <span className={styles.timeRange}>{t(`가능한 시각 ${ui.range.min} ~ ${ui.range.max}`, `Possible: ${ui.range.min} – ${ui.range.max}`)}</span>
+    <div className={styles.timeBoxes}>
+      {leaving ? box("end", t("출발", "Leave"), end) : <>{box("start", t("시작", "Start"), start)}{box("end", t("끝", "End"), end)}</>}
+      <button type="button" className={styles.timeKeys} aria-pressed={typing} onClick={() => { setTyping((now) => !now); setBounced(""); }} aria-label={keys} title={keys}>
+        {typing ? <AlarmClock size={18} strokeWidth={1.8} aria-hidden="true" /> : <Keyboard size={18} strokeWidth={1.8} aria-hidden="true" />}</button>
     </div>
-    <label className={styles.timePush}><input type="checkbox" checked={ui.push} onChange={(event) => ui.setPush(event.target.checked)} />{leaving ? t("다음 일정도 함께 밀기", "Push the next stops along") : t("앞뒤 일정도 함께 밀기", "Push the stops around it along")}</label>
+    {typing
+      ? <div className={styles.timeFields}>{leaving
+        ? <label className={styles.field}>{t("출발", "Leave")}<input type="time" value={ui.end} aria-invalid={Boolean(ui.problem)} autoFocus onChange={(event) => ui.setEnd(event.target.value)} /></label>
+        : <>
+          <label className={styles.field}>{t("시작", "Start")}<input type="time" value={ui.start} aria-invalid={Boolean(ui.problem)} autoFocus={side === "start"} onChange={(event) => ui.setStart(event.target.value)} /></label>
+          <label className={styles.field}>{t("끝", "End")}<input type="time" value={ui.end} aria-invalid={Boolean(ui.problem)} autoFocus={side === "end"} onChange={(event) => ui.setEnd(event.target.value)} /></label></>}</div>
+      : <TimeWheel key={side} value={value} range={range} onPick={pick} autoFocus
+        label={side === "start" ? t(`${item.title} 시작 시각`, `Start of ${item.title}`) : leaving ? t(`${item.title}에서 나서는 시각`, `When to leave ${item.title}`) : t(`${item.title} 끝 시각`, `End of ${item.title}`)} />}
+    <p className={styles.timeLine}>
+      {stay !== null && <span>{t("머무는 시간", "Stay")} <b className={styles.timeStay}>{stayText(stay, english)}</b></span>}
+      {(side === "start" || leaving) && <span className={styles.timeRange}>{t(`가능한 시각 ${ui.range.min} ~ ${ui.range.max}`, `Possible: ${ui.range.min} – ${ui.range.max}`)}</span>}
+    </p>
+    {bounced && <p className={styles.timeBounce} role="status">{bounced}</p>}
     {ui.count > 1 && !ui.problem && <p className={styles.timeNote} role="status">{t(`함께 바뀌는 일정 ${ui.count - 1}개 · ${along}${ui.along.length > 3 ? ` 외 ${ui.along.length - 3}개` : ""}`, `${ui.count - 1} more stop${ui.count > 2 ? "s" : ""} move: ${along}`)}</p>}
-    <div className={styles.timeIcons}>
-      {ui.undo && <button type="button" className={styles.timeIcon} data-undo onClick={ui.undo} disabled={ui.busy} aria-label={t("처음 시간으로 되돌리기", "Put the time back")} title={t("처음 시간으로 되돌리기", "Put the time back")}><Undo2 size={18} strokeWidth={1.9} aria-hidden="true" /></button>}
-      <button type="button" className={styles.timeIcon} onClick={ui.cancel} disabled={ui.busy} aria-label={t("취소", "Cancel")} title={t("취소", "Cancel")}><X size={19} strokeWidth={2} aria-hidden="true" /></button>
-      <button type="submit" className={styles.timeIcon} data-primary disabled={ui.busy || Boolean(ui.problem) || ui.count === 0} aria-label={ui.busy ? t("저장하는 중…", "Saving…") : t("적용", "Apply")} title={t("적용", "Apply")}>{ui.busy ? <span className={styles.spinner} aria-hidden="true" /> : <Check size={19} strokeWidth={2.2} aria-hidden="true" />}</button>
-    </div>
     {ui.problem && <p className={styles.editorError} role="alert">{ui.problem}</p>}
+    <div className={styles.timeFoot}>
+      <label className={styles.timePush}><input type="checkbox" checked={ui.push} onChange={(event) => ui.setPush(event.target.checked)} />{leaving ? t("다음 일정도 함께 밀기", "Push the next stops along") : t("앞뒤 일정도 함께 밀기", "Push the stops around it along")}</label>
+      <div className={styles.timeIcons}>
+        {ui.undo && <button type="button" className={styles.timeIcon} data-undo onClick={ui.undo} disabled={ui.busy} aria-label={t("처음 시간으로 되돌리기", "Put the time back")} title={t("처음 시간으로 되돌리기", "Put the time back")}><Undo2 size={18} strokeWidth={1.9} aria-hidden="true" /></button>}
+        <button type="button" className={styles.timeIcon} onClick={ui.cancel} disabled={ui.busy} aria-label={t("취소", "Cancel")} title={t("취소", "Cancel")}><X size={19} strokeWidth={2} aria-hidden="true" /></button>
+        <button type="submit" className={styles.timeIcon} data-primary disabled={ui.busy || Boolean(ui.problem) || ui.count === 0} aria-label={ui.busy ? t("저장하는 중…", "Saving…") : t("적용", "Apply")} title={t("적용", "Apply")}>{ui.busy ? <span className={styles.spinner} aria-hidden="true" /> : <Check size={19} strokeWidth={2.2} aria-hidden="true" />}</button>
+      </div>
+    </div>
   </form>;
+}
+
+/**
+ * `[2026-10-21 사용자 결정 — ST4F-702 꾹 눌러 잡기]` On the dot a finger holds: a ring that fills up while it holds (`HOLD_MS`), then - taken - a bubble with the time it goes to and by how much
+ * (the finger covers the time at the left).
+ */
+function HoldMark({ press }: { press: NonNullable<RowContext["timePress"]> }) {
+  const t = useT();
+  if (!press.held) return <svg className={styles.holdRing} viewBox="0 0 30 30" style={{ "--hold-ms": `${HOLD_MS}ms` } as CSSProperties} aria-hidden="true"><circle cx="15" cy="15" r="13" /></svg>;
+  if (press.to === null) return null;
+  const by = press.from === null ? 0 : press.to - press.from;
+  return <span className={styles.holdBubble} aria-hidden="true">{formatHm(press.to)}{by !== 0 && <small>{by > 0 ? "+" : "−"}{t(`${Math.abs(by)}분`, `${Math.abs(by)} min`)}</small>}</span>;
 }
 
 /** The icon for how the leg is travelled — chosen from the server's own words for the mode; none when they say something else. */
@@ -418,15 +491,16 @@ function MoveRow({ move, from, to, ctx, slack, dim }: { move: PlanMove; from: Pl
       : from.locked ? t("고정한 일정에서 나서는 시각이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요", "Locked · unlock the stop to change when to leave")
         : from.booked === true ? t("예약한 일정에서 나서는 시각이라 바꿀 수 없어요", "Booked: when to leave cannot be changed") : ctx.frozen;
   const grab = done && !checking && from && !leaveWhy ? ctx.timeHandle(from, "depart") : undefined;
+  const press = grab && ctx.timePress?.id === move.fromId && ctx.timePress.kind === "depart" ? ctx.timePress : null;
   return <li className={styles.entry} data-type="move" data-entry-id={move.id} data-reveal-current={!done && ctx.reveal?.activeId === move.id || undefined} data-verdict={move.verdict ?? "checking"} data-time-focused={timeFocused || undefined} data-dim={dim || undefined}
-    data-rail="move" data-dep={move.departAt || undefined} data-arr={move.arriveAt || undefined} data-rail-open={open || undefined}>
+    data-rail="move" data-dep={move.departAt || undefined} data-arr={move.arriveAt || undefined} data-rail-open={open || undefined} data-time-press={press ? (press.held ? "held" : "pressing") : undefined}>
     <div className={styles.moveClock}>
     {done && !checking && from
       ? <Act className={styles.time} data-editing={leaveEditing || undefined} data-grab={grab ? true : undefined} {...grab} why={leaveWhy} explain={ctx.explain} onPress={() => { if (!ctx.dragEnded()) ctx.onOpenDepart(move.fromId); }}
           title={t("눌러서 출발 시각 고치기", "Press to change when to leave")} aria-label={t(`${from.title}에서 나서는 시각 고치기 · 지금 ${move.departAt || "미정"} · 도착 ${move.arriveAt || "미정"}`, `Change when to leave ${from.title} · now ${move.departAt || "TBD"} · arrival ${move.arriveAt || "TBD"}`)}>{leaving}</Act>
       : <span className={styles.time}>{!checking && leaving}</span>}
     </div>
-    <span className={styles.rail} aria-hidden="true"><span className={`${styles.dot} ${styles.departureMark}`} data-departure-mark title={t("출발", "Depart")} data-grab={grab ? true : undefined} {...grab}><Minus size={16} strokeWidth={2} /></span></span>
+    <span className={styles.rail} aria-hidden="true"><span className={`${styles.dot} ${styles.departureMark}`} data-departure-mark title={t("출발", "Depart")} data-grab={grab ? true : undefined} {...grab}><Minus size={16} strokeWidth={2} />{press && <HoldMark press={press} />}</span></span>
     <div className={styles.moveCol}>
     <div className={styles.move} data-open={open || undefined} data-rail-box>{checking
       ? <span className={styles.waiting}>{done ? t("이동 경로 다시 찾는 중…", "Finding the way again…") : t("이동 경로를 찾는 중…", "Finding the way…")}</span>

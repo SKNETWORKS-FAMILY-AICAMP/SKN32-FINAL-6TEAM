@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계획 확인 C안 — 고른 뒤 다시 확인</title>
+<!--
+  작성일: 2026-10-20 · 상태: 검토용 비교 목업(사용자 지시 — C안 확정 뒤, 고르면 카드는 그대로 두고 검사 줄만 다시 돌게) · 실제 API 미연결
+  전제: 「새 흐름(멈추고 고르기)」 + 「카드 안」 + 이동 확인 C안(장소 카드에서 함께) 확정 · 이동 줄은 한 번에 그림(확정).
+  예시 일정 · 장소 질문 · 이동 계산은 tripilot-plan-check-move-order.html(이동 확인 순서 비교)의 C안과 같다. 서버 문장 틀은 SKN32 role-eval-ui 31bc404d.
+  장소 · 시각 · 거리 · 후보는 예시 값이다(위치 개념도로 계산). 두 화면은 같은 일정을 동시에 재생한다.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --color-text: #24392f; --color-muted: #56645b; --color-faint: #66746b; --color-text-secondary: #4a5d52;
+  --color-border: #dce3dd; --color-border-strong: #c3cdc6; --color-divider: #e8ede9;
+  --color-surface: #ffffff; --color-background: #f3f5f3; --color-subtle: #f6f7f5; --color-subtle-strong: #e4e9e5;
+  --color-primary: #2e6047; --color-primary-hover: #254f3a; --color-on-primary: #ffffff; --color-soft: #e9f2eb;
+  --color-success: #3d7a56; --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a; --color-adjusted-soft: #e6eff6; --color-adjusted-border: #bcd0df;
+  --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1; --color-warning-surface: #fdfaf3;
+  --color-error: #965640; --color-error-soft: #fdf3ed;
+  --color-quote: #fbe7c4;
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  --ease-soft: cubic-bezier(.22, .8, .3, 1);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: #e8ece9; color: var(--color-text); font-family: var(--font-sans); }
+button { font-family: inherit; }
+.page { max-width: 1640px; margin: 0 auto; padding: 20px 16px 48px; }
+.pageHead h1 { margin: 0 0 4px; font-size: 22px; }
+.pageHead p { margin: 0 0 4px; color: var(--color-muted); font-size: 13px; line-height: 1.6; max-width: 1100px; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 16px; }
+.ctl { border: 1px solid var(--color-border); background: var(--color-surface); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 650; color: var(--color-text); cursor: pointer; }
+.ctl[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-soft); color: var(--color-primary); }
+.ctlNote { font-size: 12px; color: var(--color-faint); }
+
+/* ── 네 화면 ── */
+.flows { display: grid; grid-template-columns: repeat(auto-fit, minmax(372px, 1fr)); gap: 18px; align-items: start; }
+.flow { display: grid; gap: 8px; justify-items: center; }
+.flowHead { width: 100%; max-width: 372px; }
+.flowHead h2 { margin: 0; font-size: 15.5px; }
+.flowHead p { margin: 2px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--color-muted); min-height: 56px; }
+.flowHead .tag { display: inline-block; padding: 0 6px; margin-left: 4px; border-radius: 4px; font-size: 10.5px; font-weight: 800; vertical-align: 2px; }
+.flowHead .tag[data-k="user"] { background: var(--color-soft); color: var(--color-primary); }
+.flowHead .tag[data-k="idea"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.stats { width: 100%; max-width: 372px; padding: 8px 10px; border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--color-text); }
+.replayOne { border: 0; background: none; padding: 0; font-size: 12px; color: var(--color-muted); text-decoration: underline; cursor: pointer; }
+
+.phone { position: relative; width: 360px; max-width: 100%; height: 720px; border-radius: 30px; border: 7px solid #1d2a23; background: var(--color-background); overflow: hidden; box-shadow: 0 14px 32px #0003; }
+.topBar { position: absolute; inset: 9px 9px auto 9px; display: flex; gap: 7px; z-index: 5; }
+.appIcon { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--color-primary); color: #fff; font-weight: 800; font-size: 14px; box-shadow: 0 1px 4px #0002; }
+.stagePill { flex: 1; min-width: 0; padding: 6px 11px 7px; border-radius: 13px; background: var(--color-surface); box-shadow: 0 1px 4px #0002; }
+.stageRow { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; }
+.stageRow b[data-stop] { color: var(--color-warning); }
+.bar { height: 4px; margin: 4px 0 3px; border-radius: 99px; background: var(--color-subtle-strong); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--color-primary); transition: width .4s var(--ease-soft); }
+.stagePill[data-stop] .bar i { background: var(--color-warning); }
+.stageSub { font-size: 10.5px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet { position: absolute; inset: 58px 0 0 0; display: flex; flex-direction: column; border-radius: 18px 18px 0 0; background: var(--color-surface); box-shadow: 0 -4px 16px #0002; }
+.sheetHead { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 14px 6px; }
+.sheetHead h3 { margin: 0; font-size: 14.5px; }
+.sheetHead small { font-size: 11.5px; font-weight: 700; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.list { position: relative; flex: 1; overflow-y: auto; overflow-anchor: none; padding: 0 12px 14px; }
+.dayHead { margin: 6px 0 4px; font-size: 13px; font-weight: 800; }
+.dayHead small { font-weight: 600; color: var(--color-muted); margin-left: 4px; }
+.footer { padding: 9px 12px 12px; border-top: 1px solid var(--color-divider); font-size: 12px; color: var(--color-muted); }
+.footer .primary { display: block; width: 100%; margin-top: 7px; min-height: 40px; border: 0; border-radius: 11px; background: var(--color-primary); color: #fff; font-size: 14px; font-weight: 800; }
+.toast { position: absolute; left: 10px; right: 10px; top: 54px; z-index: 9; padding: 9px 12px; border-radius: 11px; background: var(--color-surface); border-left: 4px solid var(--color-primary); box-shadow: 0 4px 14px #0003; font-size: 12.5px; opacity: 0; transform: translateY(-8px); transition: opacity .25s, transform .25s var(--ease-soft); pointer-events: none; }
+.toast[data-show] { opacity: 1; transform: none; }
+.toast b { display: block; font-size: 13px; }
+.toast span { color: var(--color-muted); font-size: 12px; }
+
+/* 일정 줄 (앱 plan-check.module.css 값) */
+.entry { display: grid; grid-template-columns: 40px 16px minmax(0, 1fr); column-gap: 7px; transition: opacity .3s; }
+[data-enter] { animation: rise .45s var(--ease-soft); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+.time { padding-top: 16px; font-size: 12.5px; font-weight: 750; text-align: right; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; line-height: 17px; }
+.time small { display: block; font-size: 10.5px; font-weight: 500; color: var(--color-faint); }
+.rail { position: relative; }
+.rail::before { content: ""; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: var(--color-divider); }
+.dot { position: absolute; left: 2px; top: 19px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.entry[data-verdict="keep"] .dot, .entry[data-verdict="adjusted"] .dot { border-color: var(--color-success); background: var(--color-success-soft); }
+.entry[data-verdict="review"] .dot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); transition: border-color .2s, background-color .2s, box-shadow .3s; }
+.entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
+.entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
+.entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
+.entry[data-waiting] .card { border-style: dashed; border-color: var(--color-border); background: var(--color-subtle); }
+.entry[data-waiting] .cardTitle { color: var(--color-faint); font-weight: 600; }
+.entry[data-stop] .card { border: 2px solid var(--color-warning); box-shadow: 0 0 0 4px #82693e1f; }
+.cardHead { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 11px; }
+.kindIcon { flex: none; width: 18px; text-align: center; color: var(--color-muted); font-size: 14px; }
+.cardName { flex: 1; min-width: 0; }
+.cardTitle { margin: 0; font-size: 15px; font-weight: 750; }
+.changedMark { color: var(--color-adjusted); font-weight: 800; margin-left: 4px; }
+.cardWritten { display: block; font-size: 11px; font-weight: 500; color: var(--color-faint); }
+.cardWritten[data-found] { color: var(--color-warning); font-weight: 650; }
+.spinner { flex: none; width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pill { flex: none; padding: 2px 7px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11px; font-weight: 750; color: var(--color-text-secondary); white-space: nowrap; }
+.pill[data-state="review"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.checks { list-style: none; margin: 0; padding: 3px 11px 9px; border-top: 1px solid var(--color-divider); }
+.check { display: grid; grid-template-columns: 19px 50px minmax(0, 1fr); gap: 7px; align-items: center; padding: 5px 0; font-size: 12.5px; }
+.checkKind { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+.checkText { color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.check[data-result="pending"] .checkText { color: var(--color-faint); }
+.check[data-result="bad"] .checkText { color: var(--color-error); font-weight: 650; }
+.check[data-result="warn"] .checkText { color: var(--color-warning); }
+.check[data-result="unknown"] .checkText { color: var(--color-muted); }
+.mark { display: inline-grid; place-items: center; flex: none; width: 19px; height: 19px; border-radius: 50%; font-size: 10.5px; font-weight: 800; font-style: normal; line-height: 1; }
+.check[data-result="pending"] .mark { width: 17px; height: 17px; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+[data-result="ok"] > .mark { background: var(--color-success-soft); color: var(--color-success); }
+[data-result="filled"] > .mark { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+[data-result="warn"] > .mark { background: var(--color-warning-soft); color: var(--color-warning); }
+[data-result="bad"] > .mark { background: var(--color-error); color: var(--color-on-primary); }
+[data-result="unknown"] > .mark, [data-result="pending"] > .mark { background: var(--color-subtle-strong); color: var(--color-muted); }
+.recheckRow { display: flex; align-items: center; gap: 7px; padding: 7px 11px; border-top: 1px solid var(--color-divider); font-size: 12px; color: var(--color-muted); }
+.cardFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 11px 9px; }
+.cardFoot small { flex: 1; min-width: 0; font-size: 11.5px; color: var(--color-adjusted); font-weight: 700; }
+
+/* 이동 줄 */
+.entry[data-type="move"] { min-height: 38px; }
+.entry[data-type="move"] .time { padding-top: 10px; font-size: 11px; font-weight: 500; color: var(--color-faint); }
+.entry[data-type="move"] .dot { left: 4px; top: 15px; width: 8px; height: 8px; }
+.move { display: flex; align-items: center; gap: 7px; min-height: 34px; padding: 4px 8px; font-size: 12px; color: var(--color-muted); }
+.move .mark { width: 16px; height: 16px; font-size: 9.5px; }
+.move[data-result="pending"] { color: var(--color-faint); font-style: italic; }
+.move[data-result="warn"] .moveText { color: var(--color-warning); }
+.moveText { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.free { flex: none; font-size: 11.5px; color: var(--color-faint); }
+.move[data-result="warn"] .free { color: var(--color-warning); font-weight: 700; }
+.autoTag { flex: none; padding: 0 6px; border-radius: 6px; font-size: 10.5px; font-weight: 800; color: var(--color-adjusted); background: var(--color-adjusted-soft); }
+.moveCard .cardHead { min-height: 38px; padding: 8px 11px; }
+.moveCard .cardTitle { font-size: 13.5px; }
+
+/* 멈춤 */
+.list[data-stopped] .entry:not([data-focus]) { opacity: .38; pointer-events: none; }
+.banner { position: sticky; top: 0; z-index: 3; display: flex; gap: 9px; align-items: flex-start; margin: 0 -12px 6px; padding: 9px 12px; background: var(--color-warning-soft); border-bottom: 1px solid var(--color-warning-border); font-size: 12.5px; }
+.banner .mark { background: var(--color-warning); color: #fff; }
+.banner b { display: block; color: var(--color-warning); }
+.banner span.sub { color: var(--color-text-secondary); font-size: 11.5px; }
+.banner[data-tone="pass"] { background: var(--color-adjusted-soft); border-color: var(--color-adjusted-border); }
+.banner[data-tone="pass"] .mark { background: var(--color-adjusted); }
+.banner[data-tone="pass"] b { color: var(--color-adjusted); }
+.newTag { display: inline-block; margin-left: 4px; padding: 0 4px; border-radius: 4px; background: #fde68a; color: #6b4e00; font-size: 9.5px; font-weight: 800; vertical-align: 1px; white-space: nowrap; }
+
+/* 카드 안 질문 상자(「지금 서버 값만」 판 모양) */
+.ask { margin: 0 9px 9px; padding: 10px 9px 9px; border-radius: 10px; background: var(--color-warning-soft); }
+.again { margin: 0 0 7px; font-size: 12px; font-weight: 750; color: var(--color-error); }
+.askQ { margin: 0 0 9px; font-size: 13.5px; font-weight: 800; line-height: 1.5; }
+.askQ mark { background: var(--color-quote); color: var(--color-text); padding: 1px 4px; border-radius: 5px; }
+.opts { display: grid; gap: 7px; }
+.opt { display: grid; gap: 2px; padding: 9px 10px; border: 1.5px solid var(--color-border); border-radius: 10px; background: var(--color-surface); text-align: left; cursor: pointer; font: inherit; color: var(--color-text); }
+.opt:hover { border-color: var(--color-adjusted-border); }
+.optTop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 800; }
+.line { font-size: 11.5px; color: var(--color-muted); line-height: 1.45; }
+.line.leg { color: var(--color-text-secondary); }
+.opt[aria-disabled="true"] { cursor: not-allowed; background: var(--color-subtle); border-style: dashed; }
+.opt[aria-disabled="true"] .optTop { color: var(--color-faint); }
+.soon { padding: 0 6px; border-radius: 6px; font-size: 10.5px; font-weight: 800; color: var(--color-muted); background: var(--color-subtle-strong); }
+.askBtns { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 9px; }
+.askBtns[data-one] { grid-template-columns: 1fr; }
+.askBtn { min-height: 38px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); font-size: 13px; font-weight: 750; color: var(--color-text); cursor: pointer; }
+.askBtn[data-danger] { color: var(--color-error); }
+.askKind { display: inline-block; margin-bottom: 6px; padding: 0 6px; border-radius: 6px; font-size: 10.5px; font-weight: 800; color: var(--color-warning); background: var(--color-surface); border: 1px solid var(--color-warning-border); }
+
+/* ── 설명 ── */
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 14px; margin-top: 22px; }
+.box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 14px 16px; }
+.box h3 { margin: 0 0 8px; font-size: 14.5px; }
+.box p, .box li { font-size: 13px; line-height: 1.6; }
+.box p { margin: 0 0 6px; }
+.box ul, .box ol { margin: 0; padding-left: 18px; }
+.wide { grid-column: 1 / -1; }
+.compare { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.compare th, .compare td { border-top: 1px solid var(--color-divider); padding: 7px 6px; text-align: left; vertical-align: top; line-height: 1.5; }
+.compare th { color: var(--color-muted); font-weight: 700; }
+.compare th:first-child { width: 14%; }
+.compare td[data-good] { background: #f1f8f3; }
+.compare td[data-bad] { background: #fbf4ee; }
+code { font-size: 12px; background: var(--color-subtle); padding: 0 4px; border-radius: 4px; }
+.k { display: inline-block; padding: 0 6px; margin-right: 4px; border-radius: 4px; font-size: 11px; font-weight: 800; }
+.k[data-k="now"] { background: var(--color-success-soft); color: var(--color-success); }
+.k[data-k="talk"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.k[data-k="screen"] { background: var(--color-subtle-strong); color: var(--color-muted); }
+.flows.two { grid-template-columns: repeat(auto-fit, minmax(372px, 440px)); justify-content: center; }
+.flowHead .tag[data-k="now"] { background: var(--color-subtle-strong); color: var(--color-muted); }
+.flowHead .tag[data-k="new"] { background: var(--color-soft); color: var(--color-primary); }
+/* 바꿀 모습 — 검사 줄 표시만 그 자리에서 다시 돈다(앞 문장은 흐리게 남는다) */
+.check[data-result="rerun"] .mark { width: 17px; height: 17px; border: 2px solid var(--color-border); border-top-color: var(--color-muted); background: none; color: transparent; animation: spin .8s linear infinite; }
+.check[data-result="rerun"] .checkText { color: var(--color-faint); }
+.check[data-pop] .mark { animation: pop .22s var(--ease-soft); }
+.check[data-pop] .checkText { animation: textIn .3s var(--ease-soft); }
+@keyframes pop { from { scale: .4; } }
+@keyframes textIn { from { opacity: .3; } }
+/* 선택 칸이 접히며 사라진다 */
+.ask { max-height: 1400px; overflow: hidden; }
+.ask[data-leaving] { animation: fold .26s var(--ease-soft) forwards; }
+@keyframes fold { to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; } }
+.entry[data-refreshing] .card { transition: none; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="pageHead">
+    <h1>계획 확인 C안 — 고른 뒤 다시 확인하는 방식 (지금 목업 · 바꿀 모습)</h1>
+    <p>작성 2026-10-20 · 검토용 비교 목업 · 전제: 「새 흐름(멈추고 고르기)」 + 「카드 안」 + 이동 확인은 <b>C안(장소 카드에서 함께)</b>(2026-10-20 확정) · 이동 줄은 한 번에 그림(확정) · 기준 SKN32 <code>role-eval-ui</code> <code>31bc404d</code> · 실제 API 미연결 · 장소 · 시각 · 거리 · 후보는 예시 값</p>
+    <p>같은 일정을 두 화면에서 동시에 재생한다. <b>왼쪽</b>은 지금 목업 방식 — 고르면 카드가 「확인하는 중」 모양으로 돌아가 「다시 확인하는 중…」 줄이 생기고 검사 줄을 처음부터 다시 켠다. <b>오른쪽</b>은 바꿀 모습 — 고르면 선택 칸만 접히고, 카드는 색 · 테두리 · 위치를 그대로 둔 채 검사 줄 표시만 그 자리에서 다시 돌아 새 값으로 바뀐다. 「자동 진행」을 켜면 매번 첫 선택지를 골라 두 화면을 나란히 볼 수 있다.</p>
+  </header>
+
+  <div class="controls">
+    <button class="ctl" id="replay">↻ 두 화면 모두 처음부터</button>
+    <button class="ctl" id="speed" aria-pressed="false">빠르게 2×</button>
+    <button class="ctl" id="auto" aria-pressed="false">자동 진행(첫 선택지)</button>
+    <span class="ctlNote">광화문 근처 한식 카드에서 장소를 고르면 → 검사 줄이 다시 돌고 → 같은 카드에 「오는 길」 질문이 이어진다(C안). 차이는 그 「다시 도는」 순간에 보인다.</span>
+  </div>
+
+  <div class="flows two" id="flows"></div>
+
+  <div class="notes">
+    <section class="box wide">
+      <h3>무엇이 다른가 — 고른 직후</h3>
+      <table class="compare">
+        <tr><th></th><th>지금 목업</th><th>바꿀 모습</th></tr>
+        <tr><th>선택 칸</th><td>바로 사라짐(카드 아래가 통째로 다시 그려짐)</td><td data-good>접히며 사라짐(0.26초) — 무엇을 골랐는지 알림으로</td></tr>
+        <tr><th>카드 색 · 테두리</th><td data-bad>「확인하는 중」 모양(회색 테두리 · 흰 바탕)으로 돌아감 — 카드가 처음 나온 것처럼 보인다</td><td data-good>그대로(확인 필요 테두리 · 바탕) — 다 통과하면 그때 초록으로 바뀐다</td></tr>
+        <tr><th>「다시 확인하는 중…」 줄</th><td>카드 안 맨 위에 한 줄 생김</td><td data-good>없음 — 줄마다의 돌기 표시가 같은 뜻을 한다(아래 고정 칸 · 위 띠에 「다시 확인하는 중이에요 · 잠시만요」)</td></tr>
+        <tr><th>검사 줄</th><td data-bad>모두 「확인하는 중…」으로 지워졌다가 처음부터 하나씩 다시 켜짐 — 앞 값이 사라져 무엇이 바뀌는지 안 보인다</td><td data-good>표시(✓ · ! · ✕)만 도는 표시로 바뀌고 앞 문장은 흐리게 남은 채, 위에서부터 하나씩 새 값으로 바뀜 — 바뀐 줄이 보인다</td></tr>
+        <tr><th>카드 제목 · 원문</th><td colspan="2">둘 다 고른 순간 바뀐다(「광화문미진 본점」 + 원문 「광화문 근처 한식」, 「바뀜 · 이전 …」은 접힌 뒤)</td></tr>
+        <tr><th>다른 카드</th><td>흐림이 풀렸다가 다음 질문에서 다시 흐려짐</td><td data-good>통과할 때까지 흐린 채 — 이 카드에 머문다는 것이 이어진다</td></tr>
+        <tr><th>같은 카드의 다음 질문(C안)</th><td colspan="2">둘 다 다시 확인 뒤 오는 길이 늦으면 같은 카드에 「오는 길」 질문이 이어진다 — 바꿀 모습은 카드가 그대로라 「같은 카드의 다음 질문」으로 읽힌다</td></tr>
+      </table>
+    </section>
+
+    <section class="box">
+      <h3>화면 · 서버</h3>
+      <ul>
+        <li><span class="k" data-k="screen">화면만</span>서버 요청 · 응답은 같다 — 고르면 <code>POST …/edits</code>(또는 수단 바꾸기) → 새 판의 전체 검사. 다른 것은 화면이 그 카드의 새 검사 줄을 <b>어떻게 다시 보여 주나</b>뿐이다.</li>
+        <li><span class="k" data-k="screen">화면만</span>구현 메모: 멈춘 카드는 판정(<code>verdict</code>)을 「확인 필요」로 둔 채 검사 줄만 한 줄씩 새 값으로 바꾸고(지금 재생의 줄 단위 <code>advance(…, "rows")</code>를 그 카드에만), 마지막 줄 뒤에 판정을 바꾼다. 줄 수가 바뀌면(운영시간 · 휴무 줄이 생기거나 없어짐) 새 줄은 도는 표시로 들어와 같은 순서로 바뀐다.</li>
+        <li><span class="k" data-k="now">지금 계약</span>서버가 검사하는 동안(<code>status: reading</code>) 고치기는 <code>409</code> — 멈추고 고르기의 「서버 확인이 늦을 때」(고른 값을 들고 기다렸다 보냄)와 같이 쓴다. 기다리는 동안도 선택 칸만 접힌 채 줄 표시가 돈다.</li>
+      </ul>
+    </section>
+
+    <section class="box">
+      <h3>결정할 것</h3>
+      <ol>
+        <li><b>다시 도는 줄</b> — 그 카드의 검사 줄 전부(목업) / 값이 바뀐 줄만(안 바뀐 줄은 그대로).</li>
+        <li><b>다시 확인하는 동안 알림</b> — 위 띠 · 아래 고정 칸의 「다시 확인하는 중이에요 · 잠시만요」(목업) / 줄 표시만.</li>
+        <li><b>다 통과한 뒤</b> — 초록으로 바뀌고 잠깐 뒤 접힘(목업) / 바로 접힘.</li>
+        <li><b>다시 확인해도 문제가 남을 때</b> — 같은 카드에 질문이 다시 나오고 위에 「고른 뒤에도 확인이 필요해요 · 다시 골라 주세요」(목업).</li>
+      </ol>
+    </section>
+
+    <section class="box">
+      <h3>문구</h3>
+      <p><b>앱 문구 그대로</b> — 「다시 확인하는 중이에요 · 잠시만요」 · 「다시 확인하는 중…」(지금 목업 쪽) · 「확인하는 중…」 · 「고친 내용을 다시 확인했어요」 · 「바뀐 장소와 앞뒤 이동을 다시 확인해요」 · 「택시로 바꿨어요」 · 「이 구간만 다시 계산했어요」 · 「바뀜 · 이전 ○○」 · 「확인 필요」 · 「모두 확인했어요」 · 「여행 등록」 · 서버 검사 줄 문장 틀.</p>
+      <p><b>새로 지은 문구</b><span class="newTag">새 문구</span> — 바꿀 모습에 새 문구는 없다. 질문 · 선택지 · 멈춤 띠는 이동 확인 순서 비교 목업(C안)과 같다.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ── 예시 일정 — 1일차 10.26(월) ───────────────────────────────────────
+const DAY = { label: "1일차", date: "10.26 월" };
+const KIND = { place: "장소", time: "시간", hours: "운영시간", closed: "휴무일", route: "경로", mode: "수단", arrival: "도착" };
+const GLYPH = { ok: "✓", filled: "✎", warn: "!", bad: "✕", unknown: "–", pending: "" };
+const ICON = { activity: "⌖", dining: "🍴" };
+const NEW = `<span class="newTag">새 문구</span>`;
+const END_FILLED = ["time", "filled", "끝 시각이 없어 60분으로 두었어요"];
+/** 위치(개념도)와 그 장소로 정한 뒤 다시 확인했을 때의 운영시간 · 휴무일 줄(예시 값 · 서버 문장 틀). */
+const PLACES = {
+  "경복궁": { pos: [24, 22] },
+  "두레에프엔씨": { pos: [27, 41], after: [["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"]] },
+  "광화문미진 본점": { pos: [30, 47], after: [["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "월요일은 열어요"]] },
+  "청진옥": { pos: [37, 40], after: [["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"]] },
+  "창덕궁": { pos: [58, 15] },
+  "북촌한옥마을": { pos: [46, 9], after: [["hours", "ok", "10:00–17:00 안에 머물러요"], ["closed", "ok", "쉬는 요일이 없어요"]] },
+  "국립민속박물관": { pos: [31, 12], after: [["hours", "ok", "09:00–18:00 안에 머물러요"], ["closed", "ok", "쉬는 요일이 없어요"]] },
+  "광장시장": { pos: [72, 46] },
+  "을지면옥": { pos: [56, 63], after: [["hours", "ok", "11:00–21:00 안에 머물러요"], ["closed", "ok", "일요일 휴무 · 방문은 월요일"]] },
+  "을지로 칼국수": { pos: [62, 67], after: [["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"]] },
+  "남산서울타워": { pos: [40, 86] },
+};
+const STOPS = [
+  { id: "s1", start: "09:30", end: "11:00", title: "경복궁", kind: "activity", place: "경복궁",
+    rows: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "ok", "09:00–18:00 안에 머물러요"], ["closed", "ok", "화요일 휴무 · 방문은 월요일"]] },
+  { id: "s2", start: "11:05", end: "12:05", title: "광화문 근처 한식", kind: "dining", place: "두레에프엔씨", q: "q2",
+    rows: [["place", "warn", "이름이 여러 곳이라 가까운 「두레에프엔씨」으로 임시로 골랐어요 · 다르면 바꿔 주세요"], END_FILLED, ["hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요"]] },
+  { id: "s3", start: "13:00", end: "14:30", title: "창덕궁 관람", kind: "activity", place: "창덕궁", q: "q3",
+    rows: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "unknown", "쉬는 날이라 운영하지 않아요"], ["closed", "bad", "월요일은 쉬는 날이에요 · 방문일이 휴무예요 · 후원은 따로 예약해야 들어갈 수 있어요"]] },
+  { id: "s4", start: "14:40", end: "15:40", title: "광장시장", kind: "activity", place: "광장시장",
+    rows: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "unknown", "시장 안 점포마다 영업시간 · 쉬는 날이 달라요(한국관광공사)"]] },
+  { id: "s5", start: "16:00", end: "17:00", title: "을지로 그 집", kind: "dining", place: "", q: "q5",
+    rows: [["place", "bad", "장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요"], END_FILLED] },
+  { id: "s6", start: "17:30", end: "19:00", title: "남산서울타워", kind: "activity", place: "남산서울타워",
+    rows: [["place", "ok", "관광공사 정보로 찾았어요"], ["hours", "ok", "10:30–22:30 안에 머물러요"]] },
+];
+/** 장소 질문 — 합친 목업의 「지금 서버 값만」 판과 같은 틀(이유는 후보 조회의 reason 예시, 이동 줄은 후보의 legs). */
+const PLACE_Q = {
+  q2: { need: "confirm", question: "<q>광화문 근처 한식</q>은 맞는 곳이 10곳이라 가까운 「두레에프엔씨」로 임시로 골랐어요. 어디로 갈까요?",
+    options: [
+      { label: "「두레에프엔씨」 그대로", reason: "앞뒤 일정에서 평균 381m", effect: "「두레에프엔씨」로 확정하고 다시 확인해요", act: { type: "confirm" } },
+      { label: "「광화문미진 본점」으로 바꾸기", reason: "두레에프엔씨에서 290m · 11:00–21:00 안에 머물러요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", act: { type: "pick", name: "광화문미진 본점" } },
+      { label: "「청진옥」으로 바꾸기", reason: "두레에프엔씨에서 380m · 영업시간은 확인하지 못했어요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", act: { type: "pick", name: "청진옥" } }] },
+  q3: { need: "fix", question: "<q>창덕궁 관람</q>은 10.26(월) 쉬는 날이에요. 어떻게 할까요?",
+    options: [
+      { label: "「북촌한옥마을」로 바꾸기", reason: "창덕궁과 같은 중분류(관광공사 분류)의 곳이에요 · 창덕궁에서 600m · 10:00–17:00 안에 머물러요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", act: { type: "pick", name: "북촌한옥마을" } },
+      { label: "「국립민속박물관」으로 바꾸기", reason: "창덕궁과 같은 중분류(관광공사 분류)의 곳이에요 · 창덕궁에서 1400m · 09:00–18:00 안에 머물러요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", act: { type: "pick", name: "국립민속박물관" } }] },
+  q5: { need: "fix", question: "「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요",
+    options: [
+      { label: "「을지면옥」으로 정하기", reason: "광장시장에서 900m · 11:00–21:00 안에 머물러요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", act: { type: "pick", name: "을지면옥" } },
+      { label: "「을지로 칼국수」로 정하기", reason: "광장시장에서 800m · 영업시간은 확인하지 못했어요", effect: "바뀐 장소와 앞뒤 이동을 다시 확인해요", act: { type: "pick", name: "을지로 칼국수" } },
+      { label: "장소 없이 두기", reason: "", effect: "앞뒤 이동은 장소가 정해지면 확인해요", act: { type: "noplace" } }] },
+};
+
+const FLOWS = [
+  { key: "reset", title: "지금 목업 — 카드가 처음 상태로 돌아가 처음부터", tag: ["now", "지금"],
+    sub: "고르면 카드가 「확인하는 중」 모양(회색 테두리)으로 돌아가고, 위에 「다시 확인하는 중…」 줄이 생긴 뒤 검사 줄을 처음부터 하나씩 다시 켠다." },
+  { key: "inplace", title: "바꿀 모습 — 카드 그대로, 검사 줄만 다시", tag: ["new", "C안 · 제안"],
+    sub: "고르면 선택 칸만 접힌다. 카드는 색 · 테두리 · 위치를 그대로 두고, 검사 줄 표시만 그 자리에서 다시 돌아 새 값으로 바뀐다." },
+];
+
+// ── 공통 ────────────────────────────────────────────────────────────
+let speed = 1, autoPlay = false;
+class Cancelled extends Error {}
+const esc = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const quoteHtml = (text) => text.replace(/<q>(.*?)<\/q>/g, (_, inner) => `<mark>${esc(inner)}</mark>`);
+const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const fromMin = (n) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+const span = (n) => n >= 60 ? `${Math.floor(n / 60)}시간${n % 60 ? ` ${n % 60}분` : ""}` : `${n}분`;
+const ceil5 = (n) => Math.ceil(n / 5) * 5;
+const nameOf = (s) => s.place || s.title;
+const verdictOf = (rows) => rows.some(([, r]) => r === "bad" || r === "warn") ? "review" : rows.some(([, r]) => r === "filled") ? "adjusted" : "keep";
+const dist = (a, b) => Math.hypot(a[0] - b[0], (a[1] - b[1]) * 0.7) * 0.045;
+/** 서버 `late_text` 와 같은 말(moves.py). */
+const lateText = (slack) => slack < 0 ? `일정보다 ${-slack}분 늦어요` : slack ? `${slack}분 여유` : "딱 맞게 닿아요";
+GLYPH.rerun = "";
+
+class Flow {
+  constructor(def, root) {
+    this.def = def; this.key = def.key; this.root = root;
+    root.innerHTML = `<div class="flowHead"><h2>${esc(def.title)}<span class="tag" data-k="${def.tag[0]}">${def.tag[1]}</span></h2><p>${esc(def.sub)}</p></div>
+      <div class="phone"><div class="topBar"><span class="appIcon">구</span><div class="stagePill"><div class="stageRow"><b class="stageLabel">장소·운영시간</b><span class="stagePct">0%</span></div><div class="bar"><i></i></div><div class="stageSub">&nbsp;</div></div></div>
+        <div class="toast"><b></b><span class="toastSub"></span></div>
+        <section class="sheet"><div class="sheetHead"><h3>장소·운영시간 확인</h3><small class="count"></small></div><div class="list"></div>
+          <div class="footer"><span class="footText"></span><div class="footBtns"></div></div></section></div>
+      <div class="stats"></div>`;
+    this.list = root.querySelector(".list");
+    this.runId = 0; this.waiter = null; this.seen = new Set();
+    root.addEventListener("click", (event) => this.onClick(event));
+  }
+  $(sel) { return this.root.querySelector(sel); }
+  enter(key) { if (this.seen.has(key)) return ""; this.seen.add(key); return " data-enter"; }
+  sleep(ms) { const id = this.runId; return new Promise((ok, no) => setTimeout(() => id === this.runId ? ok() : no(new Cancelled()), ms / speed)); }
+
+  fresh() {
+    this.items = {};
+    for (const stop of STOPS) this.items[stop.id] = { ...stop, base: stop.rows, pos: PLACES[stop.place]?.pos ?? null, shown: [], verdict: null, waiting: true, open: false,
+      stop: false, leaving: false, refreshing: false, rechecking: false, written: null, changedFrom: null, noPlace: false, removed: false, askKind: null };
+    this.moves = {};
+    this.stage = "checking"; this.stopped = null; this.again = false; this.sub = "";
+    this.stats = { stops: 0, questions: 0, rechecks: 0, resets: 0, start: Date.now(), end: null };
+    this.seen.clear();
+  }
+  active() { return Object.values(this.items).filter((s) => !s.removed).sort((x, y) => toMin(x.start) - toMin(y.start)); }
+  prevOf(s) { const order = this.active(); const at = order.findIndex((x) => x.id === s.id); return at > 0 ? order[at - 1] : null; }
+  ms(a, b) { const key = `${a.id}>${b.id}`; return this.moves[key] ??= { key, checked: false, mode: null }; }
+
+  /** 구간 — 서버 이동 검사의 모양(경로 · 수단 · 도착 줄). 값은 개념도로 낸 예시. */
+  moveFacts(a, b) {
+    const ms = this.ms(a, b);
+    if (!a.pos || !b.pos) return { waiting: true, late: false, rows: [["route", "unknown", "한쪽 장소가 정해지지 않았어요"], ["mode", "unknown", "장소를 정하면 찾아요"], ["arrival", "unknown", "장소를 정하면 확인해요"]] };
+    const km = dist(a.pos, b.pos);
+    const walk = km <= 1.0;
+    const best = walk ? { label: "도보", minutes: Math.max(5, Math.round(km * 15)) } : { label: "지하철", minutes: Math.round(7 + km * 4.5) };
+    const taxi = { label: "택시", minutes: Math.max(4, Math.round(3 + km * 3)) };
+    const use = ms.mode === "taxi" ? taxi : best;
+    const room = toMin(b.start) - toMin(a.end);
+    const slack = room - use.minutes;
+    return { km, use, taxi: { ...taxi, slack: room - taxi.minutes }, slack, late: slack < 0,
+      rows: [["route", "ok", `${nameOf(a)} → ${nameOf(b)}`], ["mode", "ok", `${use.label} ${use.minutes}분 · ${km.toFixed(1)}km`],
+             ["arrival", slack < 0 ? "warn" : "ok", `${a.end}에 나서면 ${fromMin(toMin(a.end) + use.minutes)} 도착 · ${lateText(slack)}`]] };
+  }
+  /** C안 — 장소 카드에 그 장소로 오는 구간의 「도착」 줄을 붙인다. */
+  rowsOf(s) { const p = this.prevOf(s); return p ? [...s.base, this.moveFacts(p, s).rows[2]] : s.base; }
+
+  // ── 질문 ──
+  moveQuestion(a, b) {
+    const f = this.moveFacts(a, b);
+    const shiftTo = fromMin(toMin(b.start) + ceil5(-f.slack));
+    return { need: "move", question: `<q>${nameOf(a)} → ${b.title}</q> 이동이 일정보다 ${-f.slack}분 늦어요. 어떻게 할까요?`,
+      options: [
+        { label: "택시로 바꾸기", reason: `택시 ${f.taxi.minutes}분 · ${f.taxi.slack < 0 ? `늦어요 ${-f.taxi.slack}분` : `여유 ${f.taxi.slack}분`} · 예상 요금은 수단 목록에`, effect: "이 구간만 다시 계산해요", act: { type: "taxi" }, disabled: f.taxi.slack < 0 },
+        { label: `「${b.title}」 ${shiftTo} 시작으로 늦추기`, reason: "", effect: "시작 시각을 바꾸고 뒤 일정과 이동을 다시 확인해요", act: { type: "shift", to: shiftTo } }] };
+  }
+  questionOf(s) { return s.askKind === "move" ? this.moveQuestion(this.prevOf(s), s) : PLACE_Q[s.q]; }
+  legLines(s, name) {
+    const pos = PLACES[name]?.pos;
+    const order = this.active();
+    const at = order.findIndex((x) => x.id === s.id);
+    if (!pos || at < 0) return "";
+    const prev = order.slice(0, at).reverse().find((x) => x.pos), next = order.slice(at + 1).find((x) => x.pos);
+    const leg = (from, to, room) => { const km = dist(from, to); const walk = km <= 1.0; const minutes = walk ? Math.max(5, Math.round(km * 15)) : Math.round(7 + km * 4.5); return { label: walk ? "도보" : "지하철", minutes, slack: room - minutes }; };
+    const out = [];
+    if (prev) { const l = leg(prev.pos, pos, toMin(s.start) - toMin(prev.end)); out.push(`${nameOf(prev)}에서 오는 길 · ${l.label} ${l.minutes}분`); }
+    if (next) { const l = leg(pos, next.pos, toMin(next.start) - toMin(s.end)); out.push(`${nameOf(next)}까지 가는 길 · ${l.label} ${l.minutes}분${l.slack >= 0 ? ` · ${l.slack}분 여유` : ` · ${-l.slack}분 늦어요`}`); }
+    return out.map((t) => `<span class="line leg">${esc(t)}</span>`).join("");
+  }
+  askHtml(q, s) {
+    const isMove = q.need === "move";
+    return `<div class="ask"${this.enter(`ask:${q.question}:${this.again}`)} ${s.leaving ? "data-leaving" : ""}><span class="askKind">${isMove ? `오는 길${NEW}` : "장소"}</span>
+      ${this.again ? `<p class="again">고른 뒤에도 확인이 필요해요 · 다시 골라 주세요${NEW}</p>` : ""}<p class="askQ">${quoteHtml(q.question)}${isMove ? NEW : ""}</p>
+      <div class="opts">${q.options.map((o, i) => `<button type="button" class="opt" data-act="opt" data-key="${i}" ${o.disabled ? 'aria-disabled="true"' : ""}>
+        <span class="optTop">${esc(o.label)}${isMove ? NEW : ""}${o.disabled ? `<span class="soon">고를 수 없어요</span>` : ""}</span>
+        ${o.reason ? `<span class="line">이유: ${esc(o.reason)}</span>` : ""}${o.act.type === "pick" ? this.legLines(s, o.act.name) : ""}
+        <span class="line">고르면: ${esc(o.effect)}</span></button>`).join("")}</div>
+      <div class="askBtns" ${isMove ? "data-one" : ""}><button type="button" class="askBtn" data-act="edit">직접 수정</button>${isMove ? "" : `<button type="button" class="askBtn" data-danger data-act="remove">삭제</button>`}</div></div>`;
+  }
+
+  // ── 그리기 ──
+  /** 검사 줄 — `soft` 는 바꿀 모습의 다시 확인(줄이 떠오르지 않고 표시만 바뀐다). */
+  checksHtml(rows, id, soft) {
+    return `<ul class="checks">${rows.map(([kind, result, text], i) => {
+      const fresh = !this.seen.has(`${id}:${i}:${result}:${text}`);
+      this.seen.add(`${id}:${i}:${result}:${text}`);
+      const anim = fresh ? (soft ? " data-pop" : " data-enter") : "";
+      return `<li class="check" data-result="${result}"${result === "rerun" ? "" : anim}><span class="mark">${GLYPH[result]}</span><b class="checkKind">${KIND[kind] ?? kind}</b><span class="checkText">${result === "pending" ? "확인하는 중…" : esc(text)}</span></li>`;
+    }).join("")}</ul>`;
+  }
+  itemHtml(s) {
+    const verdict = s.waiting ? "checking" : s.refreshing ? "review" : s.verdict ?? "checking";
+    const checking = !s.waiting && s.verdict === null && !s.refreshing;
+    const status = checking && !s.rechecking ? `<span class="spinner"></span>` : s.verdict === "review" && !s.stop && !s.refreshing ? `<span class="pill" data-state="review">확인 필요</span>` : "";
+    const found = s.place && !s.title.includes(s.place) && !s.waiting ? `<small class="cardWritten" data-found>찾은 곳 「${esc(s.place)}」${NEW}</small>` : "";
+    const name = `<div class="cardName"><h4 class="cardTitle">${esc(s.title)}${s.changedFrom ? `<span class="changedMark">✓</span>` : ""}</h4>${found}${s.written ? `<small class="cardWritten">원문 「${esc(s.written)}」</small>` : ""}${s.noPlace ? `<small class="cardWritten">장소 없음</small>` : ""}</div>`;
+    const q = s.stop ? this.questionOf(s) : null;
+    const body = s.open ? (s.rechecking ? `<div class="recheckRow"><span class="spinner"></span>다시 확인하는 중…</div>` : "") + this.checksHtml(s.shown, s.id, this.key === "inplace") + (q ? this.askHtml(q, s) : "") : "";
+    const foot = !s.open && s.changedFrom ? `<div class="cardFoot"><small>바뀜 · 이전 ${esc(s.changedFrom)}</small></div>` : "";
+    const focus = this.stopped?.s === s;
+    return `<div class="entry"${this.enter(`item:${s.id}`)} data-type="item" data-id="${s.id}" data-verdict="${verdict}" ${s.waiting ? "data-waiting" : ""} ${s.stop || s.refreshing ? "data-stop" : ""} ${s.refreshing ? "data-refreshing" : ""} ${focus ? "data-focus" : ""}>
+      <div class="time">${s.start}<small>~${s.end}</small></div><div class="rail"><span class="dot"></span></div>
+      <article class="card"><div class="cardHead"><span class="kindIcon">${ICON[s.kind]}</span>${name}${status}</div>${body}${foot}</article></div>`;
+  }
+  moveHtml(a, b) {
+    const ms = this.ms(a, b);
+    if (!ms.checked) return "";
+    const f = this.moveFacts(a, b);
+    if (f.waiting) return `<div class="entry" data-type="move" data-verdict="checking"><div class="time">${a.end}</div><div class="rail"><span class="dot"></span></div><div class="move" data-result="unknown"><span class="mark">–</span><span class="moveText">앞뒤 이동은 장소가 정해지면 확인해요</span></div></div>`;
+    const result = f.late ? "warn" : "ok";
+    return `<div class="entry"${this.enter(`mv:${ms.key}:${f.use.label}:${f.slack}`)} data-type="move" data-verdict="${f.late ? "review" : "keep"}"><div class="time">${a.end}</div><div class="rail"><span class="dot"></span></div>
+      <div class="move" data-result="${result}"><span class="mark">${GLYPH[result]}</span><span class="moveText">${f.use.label} ${f.use.minutes}분 · ${f.km.toFixed(1)}km</span><span class="free">${f.late ? `${-f.slack}분 늦어요` : `여유 ${span(f.slack)}`}</span></div></div>`;
+  }
+  render() {
+    const order = this.active();
+    const st = this.stopped;
+    this.list.toggleAttribute("data-stopped", Boolean(st));
+    let banner = "";
+    if (st) {
+      const s = st.s;
+      if (s.refreshing) banner = `<div class="banner" data-tone="pass"><span class="mark">↻</span><div><b>다시 확인하는 중이에요 · 잠시만요</b></div></div>`;
+      else {
+        const q = this.questionOf(s);
+        const head = q.need === "confirm" ? `이 일정이 맞는지 먼저 확인해 주세요${NEW}` : `이 일정을 먼저 고쳐 주세요${NEW}`;
+        const left = order.filter((x) => x.waiting).length;
+        banner = `<div class="banner"><span class="mark">!</span><div><b>${head}</b><span class="sub">${left ? `고치면 다음 일정을 이어서 확인해요 · 남은 일정 ${left}곳` : "고치면 확인을 마쳐요"}${NEW}</span></div></div>`;
+      }
+    }
+    this.list.innerHTML = banner + `<div class="dayHead">${DAY.label}<small>${DAY.date}</small></div>` +
+      order.map((s, i) => this.itemHtml(s) + (order[i + 1] ? this.moveHtml(s, order[i + 1]) : "")).join("");
+    const placesDone = order.filter((s) => !s.waiting && s.verdict).length;
+    const movesDone = order.slice(1).filter((s, i) => this.ms(order[i], s).checked).length;
+    const total = order.length * 2 - 1;
+    const pct = this.stage === "done" ? 100 : Math.min(99, Math.round(100 * (placesDone + movesDone) / total));
+    this.$(".count").textContent = `장소 ${placesDone}/${order.length} · 이동 ${movesDone}/${order.length - 1}`;
+    this.$(".stageLabel").textContent = this.stage === "done" ? "정리 완료" : "장소·운영시간";
+    this.$(".stageLabel").toggleAttribute("data-stop", Boolean(st));
+    this.$(".stagePill").toggleAttribute("data-stop", Boolean(st));
+    this.$(".stagePct").textContent = `${pct}%`;
+    this.$(".bar i").style.width = `${pct}%`;
+    const subText = st ? `멈춤 · ${st.s.title}` : this.sub;
+    this.$(".stageSub").innerHTML = subText ? esc(subText) + (st ? NEW : "") : "&nbsp;";
+    this.renderStats();
+  }
+  renderStats() {
+    const t = this.stats;
+    const secs = Math.round(((t.end ?? Date.now()) - t.start) / 1000 * speed);
+    this.$(".stats").innerHTML = `${t.end ? "<b>끝</b> · " : ""}멈춤 <b>${t.stops}번</b> · 질문 ${t.questions}개 · 다시 확인 ${t.rechecks}번${this.key === "reset" ? ` · 카드가 처음 모양으로 돌아감 <b>${t.resets}번</b>` : " · 카드 모양 그대로"} · 재생 ${secs}초 <button type="button" class="replayOne" data-act="replay">이 화면만 처음부터</button>`;
+  }
+  footer(text, button = "") { this.$(".footText").innerHTML = text; this.$(".footBtns").innerHTML = button; }
+  toast(title, sub) {
+    const box = this.$(".toast");
+    box.querySelector("b").innerHTML = title;
+    box.querySelector(".toastSub").innerHTML = sub;
+    box.setAttribute("data-show", "");
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => box.removeAttribute("data-show"), 2000 / speed);
+  }
+  scrollTo(selector) {
+    const target = this.list.querySelector(selector);
+    if (target) this.list.scrollTo({ top: Math.max(0, target.offsetTop - (this.stopped ? 64 : 10)), behavior: "smooth" });
+  }
+
+  // ── 고르기 ──
+  pick() {
+    return new Promise((ok, no) => {
+      this.waiter = { ok, no };
+      if (autoPlay) this.autoTimer = setTimeout(() => this.autoChoose(), 1600 / speed);
+    });
+  }
+  autoChoose() {
+    const s = this.stopped?.s;
+    const q = s && !s.refreshing ? this.questionOf(s) : null;
+    const k = q ? q.options.findIndex((o) => !o.disabled) : -1;
+    if (this.waiter && k >= 0) this.resolve({ type: "opt", key: String(k) });
+  }
+  resolve(act) { const w = this.waiter; this.waiter = null; clearTimeout(this.autoTimer); w?.ok(act); }
+  onClick(event) {
+    const button = event.target.closest("[data-act]");
+    if (!button) return;
+    if (button.dataset.act === "replay") { this.run(); return; }
+    if (this.waiter) this.resolve({ type: button.dataset.act, key: button.dataset.key });
+  }
+
+  // ── 재생 ──
+  async reveal(s, rows) {
+    s.shown = rows.map(([kind]) => [kind, "pending", ""]);
+    this.render(); this.scrollTo(`[data-id="${s.id}"]`);
+    await this.sleep(650);
+    for (let i = 0; i < rows.length; i += 1) {
+      s.shown[i] = rows[i];
+      while (i + 1 < rows.length && (rows[i + 1][1] === "bad" || rows[i + 1][1] === "unknown")) { i += 1; s.shown[i] = rows[i]; }
+      this.render(); await this.sleep(260);
+    }
+  }
+  async run() {
+    this.runId += 1;
+    if (this.waiter) { this.waiter.no(new Cancelled()); this.waiter = null; }
+    clearTimeout(this.autoTimer);
+    this.fresh();
+    this.$(".toast").removeAttribute("data-show");
+    this.footer("장소와 운영시간을 확인하고 있어요.");
+    this.render();
+    try {
+      await this.sleep(500);
+      for (const def of STOPS) {
+        const s = this.items[def.id];
+        if (s.removed) continue;
+        s.waiting = false; s.open = true; s.verdict = null; this.sub = s.title;
+        const p = this.prevOf(s);
+        if (p) this.ms(p, s).checked = true;
+        await this.reveal(s, this.rowsOf(s));
+        await this.settleStop(s);
+      }
+      this.finish();
+    } catch (error) { if (!(error instanceof Cancelled)) throw error; }
+  }
+  /** 장소 카드를 마무리 — 장소 문제 · 오는 길 문제가 없으면 접고, 있으면 그 카드에서 멈춰 고친다(C안). */
+  async settleStop(s) {
+    let kind = null;
+    for (;;) {
+      const rows = this.rowsOf(s);
+      const p = this.prevOf(s);
+      const placeIssue = verdictOf(s.base) === "review" && s.q;
+      const moveIssue = p && this.moveFacts(p, s).late;
+      if (!placeIssue && !moveIssue) {
+        s.verdict = verdictOf(rows); s.stop = false; this.stopped = null; this.again = false;
+        this.footer("장소와 운영시간을 확인하고 있어요.");
+        this.render(); await this.sleep(450); s.open = false; this.render();
+        return;
+      }
+      const next = placeIssue ? "place" : "move";
+      if (kind === null) this.stats.stops += 1;
+      if (next !== kind) this.stats.questions += 1;
+      this.again = next === kind;
+      kind = next;
+      s.askKind = next; s.verdict = "review"; s.stop = true; this.stopped = { s };
+      this.footer(`확인 필요 · ${esc(s.title)}`);
+      this.render(); this.scrollTo(`[data-id="${s.id}"]`);
+      if (await this.answer(s) === "removed") return;
+    }
+  }
+  async answer(s) {
+    const id = this.runId;
+    for (;;) {
+      const act = await this.pick();
+      if (id !== this.runId) throw new Cancelled();          // 고르는 사이 「처음부터」 — 앞 재생은 여기서 멈춘다(새 재생의 숫자에 섞이지 않게)
+      if (act.type === "edit") { this.toast(`직접 수정${NEW}`, "지금 「바꾸기」 · 시간 고치기 화면이 열려요(목업에서는 생략)"); continue; }
+      if (act.type === "remove") {
+        s.removed = true; s.stop = false; this.stopped = null;
+        this.toast(`「${esc(s.title)}」 일정을 뺐어요${NEW}`, `다음 일정을 이어서 확인해요${NEW}`); this.render();
+        return "removed";
+      }
+      if (act.type !== "opt") continue;
+      const o = this.questionOf(s).options[Number(act.key)];
+      if (o.disabled) { this.toast(`${esc(o.label)} — 고를 수 없어요`, "여유 안에 닿지 않아요"); continue; }
+      const toast = s.askKind === "move" ? this.applyMove(this.prevOf(s), s, o.act) : this.applyPlace(s, o.act);
+      this.stats.rechecks += 1;
+      this.footer("다시 확인하는 중이에요 · 잠시만요");
+      const old = s.shown;
+      const rows = this.rowsOf(s);
+      if (this.key === "reset") {
+        // 지금 목업: 카드가 「확인하는 중」 모양으로 돌아가 검사 줄을 처음부터
+        this.stats.resets += 1;
+        s.stop = false; this.stopped = null; s.rechecking = true; s.verdict = null;
+        s.shown = rows.map(([kind]) => [kind, "pending", ""]);
+        this.render(); await this.sleep(600);
+        s.rechecking = false;
+        for (let i = 0; i < rows.length; i += 1) { s.shown[i] = rows[i]; this.render(); await this.sleep(260); }
+      } else {
+        // 바꿀 모습: 선택 칸만 접고, 카드는 그대로 — 표시만 도는 표시로 바뀌고 위에서부터 새 값으로
+        s.leaving = true; this.render(); await this.sleep(260);
+        s.leaving = false; s.stop = false; s.refreshing = true;
+        s.shown = rows.map(([kind], i) => [kind, "rerun", old[i] && old[i][0] === kind ? old[i][2] : "확인하는 중…"]);
+        this.render(); await this.sleep(420);
+        for (let i = 0; i < rows.length; i += 1) { s.shown[i] = rows[i]; this.render(); await this.sleep(300); }
+        s.refreshing = false;
+      }
+      this.toast(...toast);
+      return "picked";
+    }
+  }
+  applyPlace(s, act) {
+    const was = s.place && !s.title.includes(s.place) ? `${s.title} · ${s.place}` : s.title;
+    const after = (name) => PLACES[name]?.after ?? [];
+    const keepTime = s.base.filter(([k, r]) => k === "time" && r === "filled");
+    if (act.type === "confirm") {
+      Object.assign(s, { written: s.place !== s.title ? s.title : s.written, title: s.place, base: [["place", "ok", "확인한 곳이에요"], ...keepTime, ...after(s.place)] });
+      return [`확인했어요${NEW}`, "고친 내용을 다시 확인했어요"];
+    }
+    if (act.type === "pick") {
+      Object.assign(s, { written: s.written ?? s.title, title: act.name, place: act.name, pos: PLACES[act.name].pos, noPlace: false, changedFrom: was,
+        base: [["place", "ok", "직접 고른 곳이에요"], ...keepTime, ...after(act.name)] });
+      return ["고친 내용을 다시 확인했어요", "바뀐 장소와 앞뒤 이동을 다시 확인해요"];
+    }
+    Object.assign(s, { place: "", pos: null, noPlace: true, base: [["place", "unknown", "장소 없이 두었어요 · 운영시간과 이동은 확인하지 않아요"], ...keepTime] });
+    return [`${esc(s.title)} 일정은 장소 없이 두었어요`, "앞뒤 이동은 장소가 정해지면 확인해요"];
+  }
+  applyMove(a, b, act) {
+    if (act.type === "taxi") { this.ms(a, b).mode = "taxi"; return ["택시로 바꿨어요", "이 구간만 다시 계산했어요"]; }
+    const old = `${b.start}~${b.end}`;
+    const length = toMin(b.end) - toMin(b.start);
+    b.start = act.to; b.end = fromMin(toMin(act.to) + length); b.changedFrom = b.changedFrom ?? old;
+    return [`「${esc(b.title)}」 시작을 ${act.to}에 맞췄어요${NEW}`, `뒤 일정과 이동을 다시 확인했어요${NEW}`];
+  }
+  finish() {
+    this.stage = "done"; this.stopped = null; this.stats.end = Date.now();
+    this.render();
+    this.footer("모두 확인했어요 · 이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요", `<button class="primary" type="button">여행 등록</button>`);
+  }
+}
+
+// ── 두 화면 ──────────────────────────────────────────────────────────
+const flows = FLOWS.map((def) => {
+  const root = document.createElement("div");
+  root.className = "flow";
+  document.getElementById("flows").appendChild(root);
+  return new Flow(def, root);
+});
+const runAll = () => flows.forEach((flow) => flow.run());
+document.getElementById("replay").addEventListener("click", runAll);
+document.getElementById("speed").addEventListener("click", (event) => { speed = speed === 1 ? 2 : 1; event.currentTarget.setAttribute("aria-pressed", String(speed === 2)); });
+document.getElementById("auto").addEventListener("click", (event) => {
+  autoPlay = !autoPlay; event.currentTarget.setAttribute("aria-pressed", String(autoPlay));
+  if (autoPlay) flows.forEach((flow) => { if (flow.waiter) flow.autoChoose(); });
+});
+setInterval(() => flows.forEach((flow) => { if (!flow.stats.end) flow.renderStats(); }), 1000);
+runAll();
+</script>
+</body>
+</html>

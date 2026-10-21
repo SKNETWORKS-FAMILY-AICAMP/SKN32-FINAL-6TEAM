@@ -52,6 +52,8 @@ describe("live trip gateway", () => {
     expect(trip.stops[0].coordinates).toEqual({ lat: 37.5796, lng: 126.977 });
     expect(trip.stops[1].coordinates).toBeNull();                 // ★no coordinates → no pin, never guessed
     expect(trip.stops[1].notes).toContain("바뀐");
+    // `[2026-10-21 ST4F-706 후속]` the detail's 「변경됨」 reads the server's flag itself (the notes line is no longer shown)
+    expect(trip.stops.map((stop) => stop.changed)).toEqual([undefined, true]);
     // ★the cookie goes with every call — never a key kept in the browser, never a server scope key
     expect(sessionCalls.map((call) => new URL(call.url).pathname)).toEqual(["/v1/web/auth/me"]);
     expect(calls[0].init.credentials).toBe("include");

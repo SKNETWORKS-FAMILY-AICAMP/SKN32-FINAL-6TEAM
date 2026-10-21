@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { mockServer, start } from "./helpers";
 
 /**
@@ -21,6 +21,19 @@ export const toast = (page: Page, text: string) => page.getByRole("status").filt
 /** 머리의 「! 2」 표시(확인이 필요한 곳) — 결과가 그려졌다는 신호로도 쓴다. */
 export const needsBadge = (page: Page) => page.getByRole("button", { name: /^확인 필요 \d+곳$/ });
 export const changedBadge = (page: Page) => page.getByRole("button", { name: /^바뀐 일정 \d+곳$/ });
+
+/** `[2026-10-21 ST4F-702]` 시간 편집기는 휠로 열린다 — ⌨ 「직접 입력」을 눌러 시작 · 끝(출발) 입력칸을 꺼낸다(1분 단위로 적는 시험). */
+export async function typeTimes(form: Locator) {
+  await form.getByRole("button", { name: "직접 입력", exact: true }).click();
+  return form;
+}
+/** 시간 편집기 휠의 한 칸(「오전 오후」 · 「시」 · 「분」)을 화살표 키로 `rows` 줄 돌린다(양수 = 아래 = 늦게). */
+export async function turnWheel(form: Locator, column: "오전 오후" | "시" | "분", rows: number) {
+  const wheel = form.getByRole("spinbutton", { name: column, exact: true });
+  for (let at = 0; at < Math.abs(rows); at += 1) await wheel.press(rows > 0 ? "ArrowDown" : "ArrowUp");
+}
+/** 시간 편집기 머리의 칸(「시작」 · 「끝」 · 「출발」) — 글자는 「오전 9:20」 꼴. */
+export const timeBox = (form: Locator, word: "시작" | "끝" | "출발") => form.getByRole("button", { name: new RegExp(`^${word}`) });
 
 /** 접수 조회(GET)의 mock 서버 응답을 `change` 로 고쳐서 돌려 준다 — 쓰기 요청은 그대로 통과. 화면을 열기 전에 건다. */
 export async function patchIntake(page: Page, change: (view: Json) => void) {

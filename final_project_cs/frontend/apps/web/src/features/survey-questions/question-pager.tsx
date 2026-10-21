@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { OnboardingIcon } from "@/features/onboarding/icons";
+import startCard from "@/features/onboarding/onboarding.module.css";
 import { useT } from "@/lib/settings";
-import { answerOf } from "./model";
+import { answerOf, complete, draftOf, EMPTY_DRAFT, payloadOf, type Draft, type SurveyQuestion } from "./model";
+import { QuestionCard } from "./question-card";
 import type { QuestionFlow } from "./use-question-flow";
 import styles from "./survey-questions.module.css";
 
@@ -13,8 +16,9 @@ const SWIPE_DOMINANCE = 1.5;
 
 /**
  * `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계 · 목업 v9 `questionCard`]` The questions asked while the server reads: one card, ‹ › buttons with `i / N`, swipe or the arrow keys to move,
- * options as 48 px buttons (the picked one shows a check), 「이 질문 건너뛰기」 for an unanswered one, dots, and the line under it.
- * What is asked and what the options say is the server's (`questions[]`); nothing is built into this card. An answered question can be picked again to correct it (saved at once).
+ * dots, and the line under it. What is asked and what the options say is the server's (`questions[]`).
+ * `[2026-10-20 ST4F-665]` Inside, the start survey's card (`question-card.tsx`): its chips, travelers row, area cards and dining / activities rows, under its rules, and its 「다음」 —
+ * on only when the card is complete; pressing it saves the question and goes on. An answered question can be changed and sent again, or taken back.
  */
 export function QuestionPager({ flow }: { flow: QuestionFlow }) {
   const t = useT();
@@ -35,7 +39,6 @@ export function QuestionPager({ flow }: { flow: QuestionFlow }) {
 
   if (!question) return null;
   const count = questions.length;
-  const picked = failed?.id === question.id && failed.option !== null ? failed.option : answerOf(question, flow.answers);
   const note = saved && answerOf(question, flow.answers) ? <><Check size={16} strokeWidth={1.8} aria-hidden="true" /> {t("저장했어요", "Saved")}</>
     : saved ? t("답을 취소했어요. 다시 입력해 주세요.", "Answer cleared. You can answer again.") : null;
 
@@ -68,53 +71,49 @@ export function QuestionPager({ flow }: { flow: QuestionFlow }) {
         aria-label={t("다음 질문 보기", "Next question")} data-tip={t("다음 질문 보기", "Next question")} data-kbd=" · →"><ChevronRight strokeWidth={1.8} aria-hidden="true" /></button>
     </div>
     <div key={question.id} className={styles.slide} data-slide={flow.slide || undefined} aria-roledescription="slide" aria-label={`${at + 1} / ${count}`} onPointerDown={down} onPointerUp={up} onPointerCancel={() => { swipe.current = null; }}>
-      <h3 ref={title} className={styles.title} tabIndex={-1}>{question.title}</h3>
-      {question.why && <p className={styles.reason}>{question.why}</p>}
-      <div className={styles.choices}>
-        {question.options.map((option) => {
-          const on = picked === option.id;
-          return <button key={option.id} type="button" className={styles.choice} aria-pressed={on} data-selected={on || undefined} disabled={busy} onClick={() => flow.choose(option.id)}>
-            {on && <Check size={16} strokeWidth={1.8} aria-hidden="true" />}{option.label}</button>;
-        })}
+      <div className={startCard.question}>
+        <h3 ref={title} className={styles.title} tabIndex={-1}>{question.title}</h3>
+        {question.why && <p className={startCard.helper}>{question.why}</p>}
+        <Answering key={question.id} flow={flow} question={question} />
       </div>
-      {question.allowCustom && <CustomAnswer key={`${question.id}:${answerOf(question, flow.answers) ?? ""}`}
-        questionId={question.id} answer={picked ?? null} maxLength={question.customMaxLength ?? 1000} busy={busy}
-        onSave={(value) => flow.choose(`custom:${value}`)} />}
       <div className={styles.saved} role="status" aria-live="polite">{note}</div>
       {failed?.id === question.id && <div className={styles.error} role="alert">
         <span>{t("답을 저장하지 못했어요. 연결을 확인하고 다시 시도해 주세요.", "We could not save your answer. Check the connection and try again.")}</span>
         <button type="button" onClick={flow.retry} disabled={busy}>{t("다시 시도하기", "Try again")}</button>
       </div>}
-      {answerOf(question, flow.answers) && <button type="button" className={styles.textButton} onClick={() => flow.choose(null)} disabled={busy}>{t("답변 취소하고 다시 입력", "Clear answer and enter again")}</button>}
     </div>
     <div className={styles.dots} aria-hidden="true">{questions.map((entry, index) => <span key={entry.id} data-on={index === at || undefined} />)}</div>
     <p className={styles.hint}>{t("좌우로 밀면 이전 · 다음 질문을 볼 수 있어요", "Swipe left or right to see the previous or next question")}</p>
   </section>;
 }
 
-function CustomAnswer({ questionId, answer, maxLength, busy, onSave }: {
-  questionId: string; answer: string | null; maxLength: number; busy: boolean; onSave: (value: string) => void;
-}) {
+/**
+ * The card being answered and its buttons. Its state starts from what was last left on it (a size picked stays), else from the answer held; 「다음」 sends it when complete
+ * (「답변 저장」 when no other question is open), and 「답변 취소하고 다시 입력」 takes a held answer back.
+ */
+function Answering({ flow, question }: { flow: QuestionFlow; question: SurveyQuestion }) {
   const t = useT();
-  const [draft, setDraft] = useState(answer?.startsWith("custom:") ? answer.slice(7) : "");
-  const [problem, setProblem] = useState("");
-  const input = useRef<HTMLInputElement>(null);
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (busy) return;
-    if (!draft.trim()) { setProblem(t("원하는 답을 적어 주세요.", "Write your answer.")); input.current?.focus(); return; }
-    onSave(draft.trim());
+  const [draft, setDraft] = useState<Draft>(() => flow.drafts[question.id] ?? draftOf(question, answerOf(question, flow.answers)));
+  const ready = complete(question, draft);
+  const held = Boolean(answerOf(question, flow.answers));
+  const last = flow.open.every((index) => flow.questions[index]?.id === question.id);
+  const send = () => {
+    if (!ready || flow.busy) return;
+    const { answers, value } = payloadOf(question, draft);
+    flow.commit(answers, value, draft);
   };
-  return <form className={styles.customAnswer} onSubmit={submit}>
-    <label htmlFor={`survey-custom-${questionId}`}>{t("직접 입력", "Your own answer")}</label>
-    <div><input ref={input} id={`survey-custom-${questionId}`} value={draft} maxLength={maxLength}
-      placeholder={questionId === "preferred_mobility" ? t("예: 택시 + 버스", "e.g. taxi + bus") : t("원하는 답을 적어 주세요", "Write your preference")}
-      aria-invalid={Boolean(problem)} aria-describedby={problem ? `survey-custom-${questionId}-error` : undefined}
-      onBlur={() => { if (draft.length > 0 && !draft.trim()) setProblem(t("원하는 답을 적어 주세요.", "Write your answer.")); }}
-      onFocus={() => setProblem("")} onChange={(event) => { setDraft(event.target.value); setProblem(""); }} />
-      <button type="submit" aria-busy={busy}>{busy ? t("저장 중…", "Saving…") : t("답변 저장", "Save answer")}</button></div>
-    {problem && <p id={`survey-custom-${questionId}-error`} role="alert">{problem}</p>}
-  </form>;
+  return <>
+    <div>
+      <QuestionCard question={question} draft={draft} setDraft={setDraft} />
+    </div>
+    <div className={startCard.questionNav}>
+      <button type="button" className={startCard.next} disabled={!ready || flow.busy} aria-busy={flow.busy} onClick={send}>
+        {last ? t("답변 저장", "Save answer") : t("다음", "Next")}<OnboardingIcon name="arrow" size={15} />
+      </button>
+    </div>
+    {held && <button type="button" className={styles.textButton} onClick={() => { setDraft(EMPTY_DRAFT); flow.clear(); }} disabled={flow.busy}>
+      {t("답변 취소하고 다시 입력", "Clear answer and enter again")}</button>}
+  </>;
 }
 
 /** The line under the card once nothing is open (mockup `pagerStatus`): what happens next. */

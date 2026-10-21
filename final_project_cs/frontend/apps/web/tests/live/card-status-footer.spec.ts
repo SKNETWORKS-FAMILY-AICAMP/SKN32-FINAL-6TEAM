@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { card, head, openFinished, pin, toast } from "./plan-check-kit";
+import { card, head, openFinished, pin, toast, typeTimes } from "./plan-check-kit";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 const shot = async (page: Page, name: string) => {
@@ -32,7 +32,7 @@ test("시간 변경은 제목 옆 체크만 보이고 되돌리기는 펼친 카
   await page.setViewportSize({ width: 375, height: 812 });
   const server = await openFinished(page, request, undefined, { intakeEvents: "off" });
   await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click();
-  const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
+  const form = await typeTimes(page.getByRole("form", { name: "경복궁 관람 시간 고치기" }));
   await form.getByLabel("끝", { exact: true }).fill("11:00");
   await form.getByRole("button", { name: "적용" }).click();
   const item = card(page, "경복궁 관람");

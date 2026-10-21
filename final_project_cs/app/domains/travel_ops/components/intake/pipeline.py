@@ -601,14 +601,15 @@ def _prefill_view(value: Any) -> dict[str, Any] | None:
 
 
 def _review_of(conn, tenant_id: str, intake_id: UUID, revision: int, sources: list[dict[str, Any]],
-               claims: list[dict[str, Any]], *, force: bool = False, quick: bool = False) -> tuple[dict[str, Any] | None, str | None]:
+               claims: list[dict[str, Any]], *, force: bool = False, quick: bool = False,
+               **options: Any) -> tuple[dict[str, Any] | None, str | None]:
     """그 판의 검사(`review.py`) — 저장된 것이 있으면 그것, 없으면 지금 계산한다. 실패하면 (None, 코드): 확인 화면은 읽은 값으로 계속 간다.
     ★DB 오류가 바깥 트랜잭션을 망가뜨리지 않게 세이브포인트 안에서 부른다(마이그레이션 040 이 안 올라간 DB 도 읽기는 된다)."""
     try:
         with conn.transaction():
             return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
                                         sources=sources, claims=claims, force=force, quick=quick,
-                                        previous_revision=revision - 1 if revision > 1 else None), None
+                                        previous_revision=revision - 1 if revision > 1 else None, **options), None
     except Exception:                                     # noqa: BLE001
         log.warning("intake review failed intake=%s revision=%s", intake_id, revision, exc_info=True)
         return None, "review_failed"
@@ -798,8 +799,10 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                     (new, tenant_id, intake_id))
         # 검사까지 같은 트랜잭션에 저장한다. 새 장소만 반영되고 이동 검사는
         # 옛 상태인 중간 판을 다른 화면에서 읽지 않게 한다.
+        # ★`[2026-10-20 사용자 결정]` 시각 맞추기가 이동 계산 시간 한도에 닿아 어림으로 맞춘 판이 있으므로, 시간표로 못 구한 구간은 「확인 필요」로 센다
         found, error = _review_of(conn, tenant_id, intake_id, new, source_rows,
-                                  effective(_claims(conn, tenant_id, intake_id, new)), force=True, quick=not check)
+                                  effective(_claims(conn, tenant_id, intake_id, new)), force=True, quick=not check,
+                                  estimate_needs_review=check)
         if found is None:
             raise IntakeConflict("schedule_check_failed", "변경 후 검사를 끝내지 못해 저장하지 않았어요. 다시 시도해 주세요.", reason=error)
     return new

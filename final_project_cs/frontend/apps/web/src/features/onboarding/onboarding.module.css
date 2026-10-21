@@ -125,6 +125,13 @@
 /* Companions: the field under the chips when `other` is picked. */
 .otherField { margin-top: 14px; }
 .otherField .groupLabel { display: block; margin: 0 0 7px; }
+/* Companions: how many travel, under the chips once one is picked. 혼자 · 연인 set it, so the set chip stays marked and the rest fade. */
+.sizeField { margin-top: 14px; }
+.sizeField .groupLabel { margin: 0 0 7px; }
+.sizeChip:disabled { cursor: default; }
+.sizeChip:disabled:not(.selected) { opacity: .45; }
+.sizeChip:disabled:hover { border-color: var(--color-border); }
+.sizeChip.selected:disabled:hover { border-color: var(--color-selected); }
 /* Priorities: three area cards in a fixed order; the picking order shows as numbers on the right. */
 .areas { display: grid; gap: 10px; }
 .area { border: 1px solid var(--color-border); border-radius: 13px; background: var(--color-surface); overflow: hidden; transition: border-color .2s; }
@@ -142,6 +149,8 @@
 .rankedChip:disabled { opacity: .45; cursor: default; }
 .rankedChip:disabled:hover { border-color: var(--color-border); }
 .pickCount { flex-basis: 100%; margin: 0; font-size: 11px; line-height: 1.6; font-weight: 650; color: var(--color-muted); }
+/* `[2026-10-20 ST4F-665]` A part the plan already told (loading questions): what it said, in place of the chips. */
+.readNote { flex-basis: 100%; margin: 0; padding: 11px 13px; border-radius: 11px; background: var(--color-subtle); font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); }
 .chipRank { position: absolute; top: 50%; right: 8px; min-width: 19px; height: 19px; padding: 0 5px; transform: translateY(-50%); font-size: 11px; }
 .optionCheck { position: absolute; right: 9px; top: 50%; width: 13px; height: 13px; transform: translateY(-50%); opacity: 0; pointer-events: none; }
 .chip.selected .optionCheck { opacity: 1; }

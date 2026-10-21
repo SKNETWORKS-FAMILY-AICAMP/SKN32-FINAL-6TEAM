@@ -79,10 +79,14 @@ export function endIntakeStart(start: IntakeStart): void {
   if (current === start) current = null;
 }
 
-export function rememberIntakeFailure(start: IntakeStart, error: unknown): void {
+/** A refusal that only an account can get past (a guest's trip limit, or the server says a sign-in is needed): the entry page offers 「계정으로 계속하기」. */
+export function loginRequiredBy(error: unknown): boolean {
   const detail = error instanceof LiveError ? error.detail as { login_required?: boolean } | undefined : undefined;
-  failure = { message: error instanceof Error ? error.message : String(error), files: start.files, plan: start.plan,
-    loginRequired: error instanceof LiveError && (detail?.login_required === true || error.code.startsWith("guest_trip_")) };
+  return error instanceof LiveError && (detail?.login_required === true || error.code.startsWith("guest_trip_"));
+}
+
+export function rememberIntakeFailure(start: IntakeStart, error: unknown): void {
+  failure = { message: error instanceof Error ? error.message : String(error), files: start.files, plan: start.plan, loginRequired: loginRequiredBy(error) };
 }
 
 export const intakeFailure = (): IntakeFailure | null => failure;

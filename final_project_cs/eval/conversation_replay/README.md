@@ -38,8 +38,9 @@ python -m eval.conversation_replay.compile_model --episodes <episodes_v7.jsonl> 
 # 2) 녹화 실행(실조회 — 예산 상한에서 멈춤) → 3) 녹화 재생으로 기준선 · 재실행
 python -m eval.conversation_replay.run --episodes … --targets … --compiled <conditions_v1/compiled.jsonl> --raw-dir <raw/20261019_more> \
   --db <시험 DB 주소(replay)> --ollama <x600 재현 올라마 주소> --keys-file <키 파일> --cassette <replay/cassettes/v1.jsonl> \
-  --mode record|replay --out <replay/runs/<이름>> --rep 1
-# 4) 요약 · 재실행 일치
+  --mode record|replay --out <replay/runs/<이름>> --rep 1 --reset-paid-counters
+# (--reset-paid-counters: 시험 DB 의 유료 대체 호출 하루 상한 사용량을 0 으로. 상한이 차 있으면 이어 도는 회차 전체가 무효가 된다 — 2026-10-21 사고)
+# 4) 요약 · 재실행 일치 (summary 의 rerun_agreement.without_excluded = 로컬 모델 회로 차단기가 열린 에피소드를 뺀 일치율)
 python -m eval.conversation_replay.report <run 폴더> --rerun <재실행 폴더> --latency <지연 폴더>
 # 사람 검수로 정답만 바뀌었으면 — 모델을 다시 부르지 않는다
 python -m eval.conversation_replay.rescore <run 폴더> --episodes <새 판> --targets … --compiled <새 옮김> --name scores_reviewed

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAppToast } from "@/components/app-toast";
 import { useT } from "@/lib/settings";
+import { useGuardianShown } from "./availability";
 import { GuardianCard } from "./guardian-card";
 import { GuardianToggle } from "./guardian-toggle";
 import { decideGuardian, useCriteria } from "./criteria-store";
@@ -12,13 +13,15 @@ import { decideGuardian, useCriteria } from "./criteria-store";
  * It is shown once the choice is made (the card, or 「켜진 상태가 기본」 - a customer who turned it on once starts every plan with it on). Pressing it while on turns it off AT ONCE and says so in the app's notice
  * bar (`useAppToast`: gone by itself after a few seconds, with 「되돌리기」); pressing it while off opens the card once more (the version for a notification: 「켜기」 / 「그대로 두기」).
  * ★Only the page's state: the choice is sent with the plan and again when it is confirmed. (On a registered trip the icon is the server's, `POST /v1/web/trips/{id}/guardian`.)
+ * ★`[2026-10-19 사용자 결정 — ST4F-613]` Not shown while the operator has the Course Keeper switched off, nor before the server has said (`useGuardianShown`).
  */
 export function GuardianHeaderControl() {
   const t = useT();
   const criteria = useCriteria();
+  const shown = useGuardianShown();
   const [card, setCard] = useState(false);
   const { show, node } = useAppToast();
-  if (!criteria.decided || !criteria.guardian) return null;
+  if (shown !== true || !criteria.decided || !criteria.guardian) return null;
   const on = criteria.guardian === "on";
   function press() {
     if (on) {

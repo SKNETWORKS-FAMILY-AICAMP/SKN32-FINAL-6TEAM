@@ -71,6 +71,9 @@ test("여행자 구성의 기타는 입력란을 열고, 공백만으로는 못 
   await field.fill("   ");
   await expect(next(page)).toBeDisabled();
   await field.fill("  직장 동료  ");
+  // `[2026-10-19]` 기타는 인원도 골라야 넘어간다(친구 · 가족은 2명으로 시작).
+  await expect(next(page)).toBeDisabled();
+  await page.getByRole("button", { name: "1명", exact: true }).click();
   await expect(next(page)).toBeEnabled();
 
   await page.getByRole("button", { name: "친구", exact: true }).click();
@@ -279,6 +282,7 @@ test("완료 화면은 기본사항·여행 방식 두 장에 선택 언어와 4
   await openSurvey(page);
   await page.getByRole("button", { name: "기타", exact: true }).click();
   await page.getByRole("textbox", { name: "누구와 함께 여행하는지 알려 주세요." }).fill("  대학 동기 여섯 명과 그 가족들  ");
+  await page.getByRole("button", { name: "4명", exact: true }).click();
   await next(page).click();
   await settled(page, PRIORITY);
   await area(page, "활동").click();
@@ -293,7 +297,7 @@ test("완료 화면은 기본사항·여행 방식 두 장에 선택 언어와 4
 
   await expect(heading(page, "여행 취향 설문을 마쳤어요")).toBeVisible();
   await expect(page.getByText("옆으로 넘겨 선택한 답변을 확인해 주세요.")).toBeVisible();
-  expect(await rows(summaryCard(page, "기본사항"))).toEqual([["선택 언어", "한국어"], ["여행자 구성", "대학 동기 여섯 명과 그 가족들"]]);
+  expect(await rows(summaryCard(page, "기본사항"))).toEqual([["선택 언어", "한국어"], ["여행자 구성", "대학 동기 여섯 명과 그 가족들 · 4명"]]);
   expect(await rows(summaryCard(page, "여행 방식"))).toEqual([
     ["여행 우선순위", "1. 활동 — 쇼핑 → 자연관광 → 역사관광", "2. 음식 — 청결 → 맛"],
     ["실내·실외", "응답하지 않음"],
@@ -388,7 +392,7 @@ test("여행 취향 수정하기는 답을 지킨 채 설문으로 돌아가고,
   await page.getByRole("button", { name: "가족", exact: true }).click();
   await next(page).click();
   await skipRest(page, PRIORITY);
-  expect(await rows(summaryCard(page, "기본사항"))).toEqual([["선택 언어", "한국어"], ["여행자 구성", "가족"]]);
+  expect(await rows(summaryCard(page, "기본사항"))).toEqual([["선택 언어", "한국어"], ["여행자 구성", "가족 · 2명"]]);
 
   await page.getByRole("button", { name: "여행 취향 수정하기" }).click();
   await page.getByRole("button", { name: "시작하기" }).click();
@@ -398,7 +402,7 @@ test("여행 취향 수정하기는 답을 지킨 채 설문으로 돌아가고,
   await next(page).click();
   await skipRest(page, PRIORITY);
   await expect(place(page)).toHaveText("1 / 2 · 기본사항");
-  expect(await rows(summaryCard(page, "기본사항"))).toEqual([["선택 언어", "한국어"], ["여행자 구성", "친구"]]);
+  expect(await rows(summaryCard(page, "기본사항"))).toEqual([["선택 언어", "한국어"], ["여행자 구성", "친구 · 2명"]]);
 });
 
 test("영어와 PC 기기 틀·375px·320px에서 긴 답도 카드 안에서 줄바꿈되어 잘리지 않고, 두 카드 높이가 같고, 가로로 넘치지 않는다", async ({ page }) => {
@@ -406,6 +410,7 @@ test("영어와 PC 기기 틀·375px·320px에서 긴 답도 카드 안에서 �
   await skipTo(page, PARTY);
   await page.getByRole("button", { name: "기타", exact: true }).click();
   await page.getByRole("textbox", { name: "누구와 함께 여행하는지 알려 주세요." }).fill("대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리와 함께하는 아주 긴 여행");
+  await page.getByRole("button", { name: "4명", exact: true }).click();
   await next(page).click();
   await settled(page, PRIORITY);
   for (const name of ["음식", "이동", "활동"] as const) await area(page, name).click();
@@ -417,7 +422,7 @@ test("영어와 PC 기기 틀·375px·320px에서 긴 답도 카드 안에서 �
   await expect(heading(page, "Survey finished")).toBeVisible();
   const cards = summaryCards(page, "Your travel preferences");
   await expect(cards.locator("p[aria-live]")).toHaveText("1 / 2 · The basics");
-  expect(await rows(summaryCard(page, "The basics"))).toEqual([["Language", "English"], ["Your companions", "대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리와 함께하는 아주 긴 여행"]]);
+  expect(await rows(summaryCard(page, "The basics"))).toEqual([["Language", "English"], ["Your companions", "대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리와 함께하는 아주 긴 여행 · 4 people"]]);
   // `[2026-10-19]` 「How full a day is」 — the pace name changed in 99c55867 (ST4F-611); this line still said 「Your pace」.
   expect(await rows(summaryCard(page, "How you travel"))).toEqual([
     ["Your priorities", "1. Food — Cleanliness → Taste → Kindness", "2. Getting around — Taxi → Public transit → Walking → Rental car", "3. Activities — Festivals/Performances/Events → Leisure sports → Hands-on experiences"],

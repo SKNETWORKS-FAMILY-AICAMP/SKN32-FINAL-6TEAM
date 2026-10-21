@@ -32,7 +32,7 @@ import hashlib
 import hmac
 import html
 import logging
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, Mapping
 from uuid import UUID, uuid4
 from urllib.parse import quote       # 계획서 내려받기 파일 이름(`/plan/{id}?download=1` — D-CS-011)
 from zoneinfo import ZoneInfo
@@ -610,8 +610,10 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
             "simulation": trip.get("simulation"),
             "version": trip["version"],
             # ★`[2026-10-06]` 항로 지킴이(일정이 꼬이면 알아서 고치는 모드) 켜짐 여부 — 상단 아이콘이 읽는다(`components/planning/guardian.py`)
-            "guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
-                                             constraints=trip.get("constraints")),
+            #   ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 칸을 싣지 않는다 — 화면이 아이콘 · 카드를 그리지 않는다(계약 web-trips.md)
+            **({"guardian": guardian_module.view(conn, tenant_id=store.tenant_id, trip_id=trip["trip_id"],
+                                                 constraints=trip.get("constraints"))}
+               if settings_hook.guardian_enabled(store.tenant_id) else {}),
             "safety": safety,
             # ★`[2026-10-15 사용자 결정 — ST4F-494]` 여행 화면 「지금 HH:MM」 시각 꼬리표 — 관리 콘솔 스위치(기본 켜짐). 계약 rest-endpoints/web-trips.md
             "now_label": settings_hook.trip_now_label_enabled(store.tenant_id),
@@ -1324,8 +1326,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                          turnstile_token: str = Form(""),
                          who: tuple[str, UUID] = Depends(_web_customer)):
         """글(붙여 넣은 일정 · 채팅처럼 쓴 계획)과 파일(사진 · PDF · docx · xlsx)을 받는다. 곧바로 접수 id 를 돌려준다.
-        ★`[2026-09-28]` 사람 확인(폼 `turnstile_token`) → 횟수 세기(`intake`) 뒤에 받는다(`web_guard.py`)."""
-        from app.domains.travel_ops.components.intake.pipeline import IntakeRejected, open_intake, process
+        ★`[2026-09-28]` 사람 확인(폼 `turnstile_token`) → 횟수 세기(`intake`) 뒤에 받는다(`web_guard.py`).
+        ★`[2026-10-20 사용자 결정 — ST4F-615]` 응답이 빠른 거름 결과를 말한다(`screened`) — 걸린 접수는 `status: review` 로 답하고 읽기 작업을 걸지 않는다.
+          웹 「직접 입력」은 이 응답을 입력 화면에서 기다려, 걸렸으면 그 화면에 머문다(계약 web-intakes.md 「접수 입구의 빠른 거름」)."""
+        from app.domains.travel_ops.components.intake.pipeline import IntakeRejected, _screened_mark, open_intake, process
 
         tenant, customer = who
         human = _human(turnstile_token, http)
@@ -1334,11 +1338,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn:
                 intake_id = open_intake(conn, tenant_id=tenant, customer_id=customer, text=text, files=blobs)
+                screened = _screened_mark(conn, tenant, intake_id)
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
-        if not text.strip() and not blobs:
-            # ★`[2026-09-30 사용자 결정]` 빈 접수는 읽을 것이 없다 — 뒤에서 읽지 않고 곧바로 확인 화면(`review`)이다
-            return {"intake_id": str(intake_id), "status": "review", "stage": "review", "human_check": human}
+        if screened is not None or (not text.strip() and not blobs):
+            # ★`[2026-09-30 사용자 결정]` 빈 접수는 읽을 것이 없다 — 뒤에서 읽지 않고 곧바로 확인 화면(`review`)이다.
+            #   `[2026-10-19]` 빠른 거름에 걸린 접수(빈 글 · 여행 단서가 없는 글)도 같다 — 읽지 않는다.
+            return {"intake_id": str(intake_id), "status": "review", "stage": "review", "screened": screened, "human_check": human}
         offset = 1 if text.strip() else 0
         chat = _lazy("chat", chat_factory)
         _ctx = _PlaceCtx()
@@ -1350,7 +1356,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             tour=_lazy("place", place_factory),
                             kakao=_kakao_raw,
                             dining=_dining_lookup(_ctx))
-        return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "human_check": human}
+        return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "screened": None, "human_check": human}
 
     @router.get("/v1/web/test-scenarios")
     def web_test_scenarios():
@@ -1772,6 +1778,21 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         return reading_prefs.apply({**(constraints or {}), reading_prefs.CARRY_KEY: list(getattr(built, "reading", None) or [])})
 
+    def _party_from_survey(body: dict[str, Any], survey: Mapping[str, Any]) -> None:
+        """★`[2026-10-20 사용자 결정 — B안 · ST4F-581]` 여행 인원이 비었을 때만 설문의 여행자 구성 인원을 쓴다.
+
+        계획 확인에서 고친 인원 · 계획서에서 읽은 인원(`body.party_size`)이 먼저다. 상품 범위 밖이면 옮기지 않는다 — 설문 확인(`apply_survey`)이 422 로 거절한다.
+        어디서 채웠는지 `constraints.derived.party_size` 에 남긴다."""
+        from app.domains.travel_ops.components.planning.planner import MAX_PARTY
+
+        size = survey.get("party_size")
+        if body.get("party_size") is not None or not isinstance(size, int) or isinstance(size, bool) or not 1 <= size <= MAX_PARTY:
+            return
+        body["party_size"] = size
+        constraints = dict(body.get("constraints") or {})
+        constraints["derived"] = {**dict(constraints.get("derived") or {}), "party_size": f"여행 인원이 비어 설문 여행자 구성의 인원({size}명)을 썼다"}
+        body["constraints"] = constraints
+
     def _intake_survey(tenant: str, intake_id: UUID, given: dict[str, Any] | None,
                        base: dict[str, Any] | None = None) -> dict[str, Any] | None:
         """초안 설문을 바탕으로 저장된 답과 직접 요청을 합친다. 직접 요청이 이기고 미응답 영역은 보존한다."""
@@ -1868,6 +1889,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         survey = _intake_survey(tenant, intake_id, request.survey, (built.body.get("constraints") or {}).get("survey"))
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
+            _party_from_survey(body, survey)
         body["constraints"] = _with_reading(body.get("constraints"), built)
         try:
             create = CreateTrip.model_validate(body)
@@ -2191,8 +2213,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
           자동 변경은 일정을 실제로 바꾸는 권한이라서다. 디스코드 · 텔레그램 알림에서는 링크로 웹을 열고 **웹이 확인한 뒤** 이 입구를 부른다.
         - 본인 여행이 아니거나 없으면 404. 같은 값을 다시 보내면 아무것도 바꾸지 않고 현재 값을 돌려준다.
         - `since`·`via` 는 **마지막으로 바뀐** 시각 · 곳이다(`trip_guardian_changes`, 추가만 하는 기록).
+        - ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 409 `guardian_disabled` — 아무것도 바꾸지 않고 기록도 더하지 않는다(본인 여행인지 보기 전에).
         """
         tenant, customer = who
+        if not settings_hook.guardian_enabled(tenant):
+            raise _error(409, "guardian_disabled", "항로 지킴이는 지금 쓸 수 없다 — 운영자가 꺼 두었다")
         with get_connection() as conn, conn.transaction():
             result = guardian_module.set_enabled(conn, tenant_id=tenant, trip_id=trip_id,
                                                  customer_id=customer, enabled=request.enabled, via=request.via)
@@ -2658,6 +2683,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             "AND (payload_json->>'visible_at')::timestamptz<=now())) "
                             "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%", f"{customer}:service:%"))
                 rows = cur.fetchall()
+        # ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 이미 쌓인 알림의 항로 지킴이 몫도 싣지 않는다(켤 수 없는 「켜기」 단추를 보이지 않게)
+        guardian_on = settings_hook.guardian_enabled(tenant)
         return {"notices": [{"key": key.split(":", 1)[1], "type": payload.get("type") or "change_notice",
                              "kind": payload.get("kind"), "text": payload.get("text"),
                              "version": payload.get("version"), "proposal_id": payload.get("proposal_id"),
@@ -2666,7 +2693,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "rollback": payload.get("rollback"), "consent": bool(payload.get("consent")),
                              "consent_key": payload.get("consent_key"),
                              # ★`[2026-10-06]` 항로 지킴이 몫 — `{changed: true}`(켜 둔 사용자에게 자동으로 바꿨다는 표시) · `{offer: {label, via, path, url}}`(꺼 둔 사용자에게 켜기 단추)
-                             "guardian": payload.get("guardian"),
+                             "guardian": payload.get("guardian") if guardian_on else None,
                              # ★`[2026-10-06]` 재난 안전 알림의 안내(공식 안내 · 가까운 대피 장소 · 「일정 다시 시작」) — 안전 알림(`safety_pause` · `safety_release`)에만 있다
                              "safety": payload.get("guidance") if payload.get("reason") in ("safety_pause", "safety_release") else None,
                              "at": at.isoformat()} for key, payload, status, at in rows]}

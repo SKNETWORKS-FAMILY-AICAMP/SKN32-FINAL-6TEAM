@@ -21,6 +21,7 @@ API 계약은 호출 주체와 업무 책임별로 나눕니다. 인증·동의�
 | [계획 읽기·설문 API](web-intakes.md) | 계획 읽기·설문 API의 요청·응답·실패 조건 |
 | [항로 지킴이·위험·안전·지도](web-trips.md) | 항로 지킴이·위험·안전·지도의 요청·응답·실패 조건 |
 | [위임 API](delegations.md) | 위임 API의 요청·응답·실패 조건 |
+| [배포 중 서비스 공지](../../decisions/D-CS-019-deploy-service-notice.md) | 고객 공지 `GET /v1/web/support/notices` 의 맨 앞에 붙는 배포 공지 한 건(`id` `deploy:…` · 고정 문구) `[2026-10-20]` |
 
 ## 불변식
 

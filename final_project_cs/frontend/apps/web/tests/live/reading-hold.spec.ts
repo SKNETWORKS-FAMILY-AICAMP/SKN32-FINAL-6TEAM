@@ -39,7 +39,10 @@ test("질문이 붙은 계획을 보내면 읽는 화면이 질문과 함께 그
   await checkPlan(page);
   await page.waitForURL(/\/intakes\/[^/]+$/, { timeout: 30_000 });
   await watch(page, 16_000);
+  // `[2026-10-20 C안 · 5초 자동 등록]` 지켜본 검사가 통과하면 5초 뒤 스스로 등록해 이 화면을 떠난다 — 확인 화면에 머무는지 보는 이 시험은 막대를 멈춘다(나타나면).
+  const hold = page.locator("[data-register-bar]").getByRole("button", { name: "자동으로 넘어가지 않기" }).click({ timeout: 16_000 }).catch(() => undefined);
   await page.waitForTimeout(16_500);
+  await hold;
   const log = await screens(page);
   expect(log.every((entry) => !entry.includes("(-)"))).toBe(true);
   expect(log.length).toBeGreaterThan(0);

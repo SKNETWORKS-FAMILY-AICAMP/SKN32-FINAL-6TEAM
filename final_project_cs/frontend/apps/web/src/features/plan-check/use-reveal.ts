@@ -2,22 +2,26 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSettings } from "@/lib/settings";
-import { isInstantRow, nextStep, STAGES, type CheckRow, type PlanCheckView, type Verdict } from "./model";
+import { beginRecheck, cutAtStop, nextStep, onlyCard, rebase, stopAt, syncDrawn, type PlanCheckView } from "./model";
 
 /**
  * ★`[2026-10-04 사용자 지시 · 코덱스 의견]` 확인 표시는 사용자가 「이건 확인됐구나」를 알아볼 속도로 켜진다 — 한 줄이 켜지고 다음 줄이 켜지기까지 300ms
  * (켜지는 표시 자체는 그 안의 200ms, `plan-check.module.css` 의 `markPop`). 앞 판은 4초 안에 전부 그리려고 줄당 35ms까지 줄이고 한꺼번에 여러 개를 그려서
- * 「후루룩 지나가 뭘 확인했는지 알 수 없다」는 지적을 받았다. 빨강·회색 줄은 애니메이션 없이 확정되고(`isInstantRow`), 이동 줄은 한 번에 나온다.
+ * 「후루룩 지나가 뭘 확인했는지 알 수 없다」는 지적을 받았다.
+ * `[2026-10-20]` 이 간격은 이제 줄 읽기(`readPause`)와 「다시 제출」 뒤 다시 켜는 표시에 쓴다. 처음 검사의 속도는 아래 C안 값이다.
  */
 export const REVEAL_MS = 300;
+
 /**
- * 서버 답이 온 뒤의 재생 상한. 줄 하나씩 그리면 이 안에 끝나지 않을 만큼 큰 계획(줄 간격이 `REVEAL_MIN_MS` 아래로 내려가야 하는 경우)은 줄 단위가 아니라
- * **카드 단위**로 그린다 — 한 카드가 완성된 채 나오고 다음 카드가 그 뒤에 나온다. 줄 간격을 더 줄이지 않는다(줄이면 다시 후루룩 지나간다).
+ * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` 처음 검사를 그리는 속도(흐름 목업 `mockups/tripilot-plan-flow-register.html` 4단계 · 비교 화면의 「끊김 고친 첫 판」):
+ * 검사가 시작되고 0.7초 뒤 첫 카드가 모든 줄 「확인 중」으로 나오고 → 0.65초 → 줄마다 0.26초 → 마지막 줄 0.28초 뒤 판정 → 0.45초 뒤 다음 카드(그리로 가는 이동 줄과 함께)가 나오며
+ * 앞 카드는 접힌다. 계획이 길어도 같은 속도다(앞 판의 14초 상한 · 카드 단위 그리기는 없앴다 — 기다리기 싫으면 메뉴의 「애니메이션 건너뛰기」).
  */
-export const REVEAL_BUDGET_MS = 14_000;
-export const REVEAL_MIN_MS = 200;
-/** 카드 단위로 그릴 때 카드 사이의 가장 짧은 간격. */
-export const COARSE_MIN_MS = 120;
+export const FIRST_CARD_MS = 700;
+export const ROWS_LEAD_MS = 650;
+export const ROW_MS = 260;
+export const VERDICT_MS = 280;
+export const FOLD_MS = 450;
 
 /**
  * ★`[2026-10-03 사용자 지적]` 맨 위 단계 표시(받았어요 → 일정 읽기 → 장소·운영시간 → 정리 완료)에도 속도 조절이 있어야 한다. Each step of that bar
@@ -25,18 +29,12 @@ export const COARSE_MIN_MS = 120;
  */
 export const STAGE_MIN_MS = 900;
 
-/**
- * `[2026-10-06 사용자 지시 — 새 마커가 생겼을 때 거기에 시선이 한 번 갈 시간을 주고, 그다음 일정이 보이게]` After a new card (and with it a new pin on the map, which flies to it) is drawn, the next step waits this long
- * first: the eye can follow the map to the new pin before the card's checks tick on.
- */
-export const NEW_PIN_HOLD_MS = 800;
-
-/** Up to `count` changes toward `target` (fewer when it is reached first); null when nothing is left to draw. `coarse` = card by card, not line by line. */
-export function stepMany(shown: PlanCheckView, target: PlanCheckView, count: number, coarse = false): PlanCheckView | null {
+/** Up to `count` changes toward `target` (fewer when it is reached first); null when nothing is left to draw. */
+export function stepMany(shown: PlanCheckView, target: PlanCheckView, count: number): PlanCheckView | null {
   let view: PlanCheckView | null = null;
   for (let at = 0; at < count; at += 1) {
     const from = view ?? shown;
-    const next = nextStep(from, target, coarse);
+    const next = nextStep(from, target);
     if (!next) break;
     // ★A batch never crosses from one stage of the top bar to the next: the change of stage is the first step of a tick of its own, which waits `STAGE_MIN_MS`.
     if (view && next.stage !== from.stage) break;
@@ -66,40 +64,20 @@ export function linesBacklog(shown: PlanCheckView, target: PlanCheckView): numbe
   }, 0);
 }
 
-type Checked = { id: string; checks: CheckRow[]; verdict: Verdict | null };
-
-/** The drawn changes line by line still ahead of `shown` for places (a card appearing, each check that is ticked in, the verdict when no check carries it) and legs (one each). */
-function lineSteps<T extends Checked>(have: T[], want: T[], leg: boolean): number {
-  return want.reduce((sum, entity) => {
-    const seen = have.find((other) => other.id === entity.id);
-    if (leg) return sum + (seen && JSON.stringify(seen) === JSON.stringify(entity) ? 0 : 1);
-    const ticks = (rows: CheckRow[], from?: CheckRow[]) => rows.filter((row, at) => !isInstantRow(row) && (!from || JSON.stringify(row) !== JSON.stringify(from[at]))).length;
-    if (!seen) return sum + 1 + Math.max(1, ticks(entity.checks));
-    const left = seen.checks.length === entity.checks.length ? ticks(entity.checks, seen.checks) : 1;
-    return sum + left + (left === 0 && seen.verdict !== entity.verdict ? 1 : 0);
-  }, 0);
-}
-
-/** About how many drawn changes lie between `shown` and `target` when each check is drawn on its own: lines read, cards, checks, verdicts, legs, stages. */
-export function backlog(shown: PlanCheckView, target: PlanCheckView): number {
-  return linesBacklog(shown, target) + lineSteps(shown.items, target.items, false) + lineSteps(shown.moves, target.moves, true)
-    + Math.max(0, STAGES.indexOf(target.stage) - STAGES.indexOf(shown.stage));
-}
-
-/** The same count when a card is drawn whole: one for each card or leg not yet as it should be. */
-export function cardBacklog(shown: PlanCheckView, target: PlanCheckView): number {
-  const behind = (have: Checked[], want: Checked[]) => want.filter((entity) => JSON.stringify(have.find((other) => other.id === entity.id)) !== JSON.stringify(entity)).length;
-  return behind(shown.items, target.items) + behind(shown.moves, target.moves);
-}
-
 /**
- * How the waiting changes are drawn: the pause before the next one, and whether line by line or card by card. `lines` is the most that has been waiting
- * line by line, `cards` card by card (the most since the screen last caught up: the pace is set by that, not by what is left).
+ * How long the screen rests before it draws `next` after `shown` (outside the reading of the lines — `readPause`): the C안 pace above. A new card waits the
+ * fold of the one before (the first card a little longer: the map has just come), its first check the lead, each check after it `ROW_MS`, the verdict `VERDICT_MS`.
+ * Anything else (a leg the server sent late, the days, the title) one check's pause.
  */
-export function revealPlan(lines: number, cards: number): { pause: number; coarse: boolean } {
-  const fine = Math.min(REVEAL_MS, Math.round(REVEAL_BUDGET_MS / Math.max(1, lines)));
-  if (fine >= REVEAL_MIN_MS) return { pause: fine, coarse: false };
-  return { pause: Math.min(REVEAL_MS, Math.max(COARSE_MIN_MS, Math.round(REVEAL_BUDGET_MS / Math.max(1, cards)))), coarse: true };
+export function pauseBefore(shown: PlanCheckView, next: PlanCheckView): number {
+  if (next.items.some((item) => !shown.items.some((other) => other.id === item.id))) return shown.items.length ? FOLD_MS : FIRST_CARD_MS;
+  for (const item of next.items) {
+    const was = shown.items.find((other) => other.id === item.id);
+    if (!was || JSON.stringify(was) === JSON.stringify(item)) continue;
+    if (JSON.stringify(was.checks) === JSON.stringify(item.checks)) return VERDICT_MS;
+    return was.checks.every((row) => row.result === "pending") ? ROWS_LEAD_MS : ROW_MS;
+  }
+  return ROW_MS;
 }
 
 /**
@@ -107,57 +85,98 @@ export function revealPlan(lines: number, cards: number): { pause: number; coars
  * late open shows where things stand, without replaying); changes during the first check are reached one at a time (`nextStep`).
  * After the check is done, edits are shown together: another action must use the whole saved plan, not a partially replayed edit.
  * With the menu's 「애니메이션 건너뛰기」 on it is drawn at once.
+ *
+ * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` With `stops` on (the page can change places), the first check stops at the first card that needs a look once the server's check is final
+ * (`stopAt`): `stop` says which, and nothing past it is drawn. `recheck.begin` is called when the customer picks: the card's checks wait again where they stand and, once the
+ * server answers with a new revision, they are ticked in again (`rebase`) — the replay goes on when the card passes, or stops at it again. `settling` is true from the pick until
+ * the card's verdict is in. Not settled while stopped. With 「애니메이션 건너뛰기」 on, the check this page watches is drawn at once up to that card (`cutAtStop`) and stops there too.
+ * ★`[2026-10-21 결함 — ST4F-703]` While stopped with nothing picked, a new read of the server is taken into what is drawn at once (`syncDrawn`) — `settling` comes from a pick
+ * only, never from the server's values moving on (the 3-minute re-read stamped every card anew and the question hid behind 「다시 확인하는 중」 for good).
+ * `[2026-10-20 사용자 결정 — 다시 들어오면 결과 화면]` A page that opens on a check already finished (left before registering, then opened again) shows the result as before — the
+ * result screen is where it is changed then (it keeps its tools: 2026-10-20 the read-only result was dropped) — so it does not stop.
  */
-export function useReveal(target: PlanCheckView, paused = false): { view: PlanCheckView; settled: boolean } {
+export interface RevealStop { id: string; settling: boolean }
+export function useReveal(given: PlanCheckView, paused = false, stops = false): {
+  view: PlanCheckView; settled: boolean; stop: RevealStop | null;
+  recheck: { begin: (id: string) => void; fail: (id: string) => void };
+  /** `[2026-10-20 C안]` This page drew the check (it was not finished when the page opened) — the 5-second 「여행 등록」 bar is for such a check only. */
+  watched: boolean;
+} {
   // ★`[2026-10-03 사용자 결정]` Skipping is the customer's own choice in the menu (「애니메이션 건너뛰기」), not the system's 「동작 줄이기」: the steps are
   //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
   const { skipAnimation: reduced } = useSettings();
+  // `[2026-10-20]` The check was already finished when the page opened: the result, as before (it stops only for a check this page watches).
+  const [openedDone] = useState(given.stage === "done");
+  const stopping = stops && !openedDone;
+  // `[2026-10-21 사용자 결정 — P6]` Interpretation questions are asked only where the check stops: elsewhere (a page opened on a finished check, the edit of a trip) they are left as the
+  //   server applied them (its first option), and nothing waits at their place.
+  const target = useMemo(() => stopping || !given.asks?.length ? given : { ...given, asks: [] }, [stopping, given]);
   const [shown, setShown] = useState(target);
   const [wasPaused, setWasPaused] = useState(paused);
+  // `[2026-10-20 C안]` A pick sent for the stopped card, and the revision it was sent on: nothing is drawn until the server answers with another one.
+  const [asked, setAsked] = useState<{ id: string; revision: number | undefined } | null>(null);
+  // `[2026-10-21 ST4F-703]` The card picked for while its checks are ticked in again after the server answered (`rebase`), until it is drawn as the server has it.
+  const [ticking, setTicking] = useState<string | null>(null);
   // Questions showed the completed reading progress, but not the map's cards. Begin their first appearance at checking.
   const completedHold = wasPaused && !paused && target.stage === "done";
   const firstMap = completedHold && shown.stage !== "done" && !reduced;
   if (wasPaused !== paused) setWasPaused(paused);
   if (firstMap) setShown({ ...target, stage: "checking", items: [], moves: [] });
-  const immediate = !paused && !firstMap && (reduced || (shown.stage === "done" && target.stage === "done"));
+  // `[2026-10-20 C안]` Skipping the animation still stops to ask: the check is drawn at once up to the first card that needs a look.
+  const cut = useMemo(() => stopping && reduced ? cutAtStop(target) : target, [stopping, reduced, target]);
+  const immediate = !paused && !firstMap && (reduced ? cut === target : shown.stage === "done" && target.stage === "done");
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
   if (immediate && shown !== target) setShown(target);
-  // The most that has been waiting since the screen last caught up: the pace is set by that, not by what is left.
-  const peak = useRef({ lines: 0, cards: 0, reading: 0 });
+  if (asked && target.revision !== asked.revision) { setAsked(null); setTicking(asked.id); setShown(rebase(shown, target, asked.id)); }
+  else if (!paused && !immediate && cut !== target && !asked && JSON.stringify(shown) !== JSON.stringify(cut)) setShown(cut);
+  const stopId = stopping && !immediate ? stopAt(shown, target) : null;
+  const cardOf = (view: PlanCheckView, id: string) => JSON.stringify(view.items.find((item) => item.id === id));
+  if (ticking && cardOf(shown, ticking) === cardOf(target, ticking)) setTicking(null);
+  // ★`[2026-10-21 ST4F-703]` Stopped, nothing picked: what is drawn takes the server's values at once (the card being ticked in again steps on). Skipping the animation draws
+  //   `cut` instead, which already holds them.
+  if (stopId && !asked && !paused && !reduced && !firstMap) {
+    const synced = syncDrawn(shown, target, ticking === stopId ? ticking : null);
+    if (synced !== shown) setShown(synced);
+  }
+  // The most reading steps that have been waiting since the screen last caught up: the reading pace is set by that, not by what is left.
+  const peak = useRef(0);
   // When the stage of the top bar last changed on screen (the clock of `STAGE_MIN_MS`).
   const stageSince = useRef<{ stage: PlanCheckView["stage"]; at: number } | null>(null);
-  // How many cards were on screen at the last step, and until when the screen rests on a card that has just come.
-  const cardsSeen = useRef(shown.items.length);
-  const holdUntil = useRef(0);
   useEffect(() => {
-    if (paused) return;
+    if (paused || asked) return;
     if (immediate) {
-      peak.current = { lines: 0, cards: 0, reading: 0 };
-      cardsSeen.current = target.items.length;
-      holdUntil.current = 0;
+      peak.current = 0;
       if (stageSince.current?.stage !== target.stage) stageSince.current = { stage: target.stage, at: performance.now() };
       return;
     }
-    if (shown.items.length > cardsSeen.current) holdUntil.current = performance.now() + NEW_PIN_HOLD_MS;
-    cardsSeen.current = shown.items.length;
     if (stageSince.current?.stage !== shown.stage) stageSince.current = { stage: shown.stage, at: performance.now() };
-    if (!nextStep(shown, target)) { peak.current = { lines: 0, cards: 0, reading: 0 }; return; }
-    peak.current = { lines: Math.max(peak.current.lines, backlog(shown, target)), cards: Math.max(peak.current.cards, cardBacklog(shown, target)), reading: peak.current.reading };
-    // While lines are still being read they keep their own slow pace, one step at a time; the checks after them are drawn at the pace of `revealPlan`.
+    const upcoming = stepMany(shown, target, 1);
+    if (!upcoming) { peak.current = 0; return; }
+    // Stopped at a card: only that card is drawn (its checks ticked in again after a pick); nothing past it.
+    if (stopId && !onlyCard(shown, upcoming, stopId)) return;
+    // While lines are still being read they keep their own slow pace, one step at a time; the checks after them are drawn at the C안 pace (`pauseBefore`).
     const work = linesBacklog(shown, target);
-    peak.current.reading = work > 0 ? Math.max(peak.current.reading, work) : 0;
-    const reading = work > 0;
-    const plan = revealPlan(peak.current.lines, peak.current.cards);
-    let wait = reading ? readPause(peak.current.reading) : plan.pause;
+    peak.current = work > 0 ? Math.max(peak.current, work) : 0;
+    let wait = work > 0 ? readPause(peak.current) : pauseBefore(shown, upcoming);
     // The next change moves the top bar on to its next stage: the stage that is showing has been there long enough first.
-    const upcoming = nextStep(shown, target);
-    if (upcoming && upcoming.stage !== shown.stage && stageSince.current) wait = Math.max(wait, STAGE_MIN_MS - (performance.now() - stageSince.current.at));
-    wait = Math.max(wait, holdUntil.current - performance.now());
-    const timer = setTimeout(() => { const next = stepMany(shown, target, 1, !reading && plan.coarse); if (next) setShown(next); }, wait);
+    if (upcoming.stage !== shown.stage && stageSince.current) wait = Math.max(wait, STAGE_MIN_MS - (performance.now() - stageSince.current.at));
+    const timer = setTimeout(() => setShown(upcoming), wait);
     return () => clearTimeout(timer);
-  }, [shown, target, immediate, paused]);
+  }, [shown, target, immediate, paused, asked, stopId]);
   // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
   const live = useMemo(() => (shown.serverProgress === target.serverProgress ? shown : { ...shown, serverProgress: target.serverProgress }), [shown, target.serverProgress]);
-  return immediate ? { view: target, settled: true } : { view: live, settled: !paused && nextStep(shown, target) === null };
+  const recheck = {
+    begin: (id: string) => { setAsked({ id, revision: target.revision }); setShown((current) => beginRecheck(current, id)); },
+    // The pick was refused: the card is as the server still has it.
+    fail: (id: string) => {
+      setAsked(null);
+      setTicking(null);
+      const kept = target.items.find((item) => item.id === id);
+      setShown((current) => ({ ...current, items: current.items.map((item) => item.id === id && kept ? kept : item) }));
+    },
+  };
+  if (immediate) return { view: target, settled: true, stop: null, recheck, watched: !openedDone };
+  const settling = Boolean(asked) || (ticking !== null && ticking === stopId);
+  return { view: live, settled: !paused && !asked && !stopId && nextStep(shown, target) === null, stop: stopId ? { id: stopId, settling } : null, recheck, watched: !openedDone };
 }

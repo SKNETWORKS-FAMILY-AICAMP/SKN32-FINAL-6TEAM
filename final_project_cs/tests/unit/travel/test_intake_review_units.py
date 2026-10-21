@@ -445,3 +445,56 @@ def test_time_notes_are_said_politely_and_worst_result_wins():
     assert review._time_line(row, {}, None, False) is None
     assert review._time_line({**row, "date": None}, {}, None, False)["result"] == "bad"
     assert review._time_line(row, {}, None, True)["text"] == "끝나는 시각(12:30)이 시작(11:00)보다 빨라요"
+
+
+def test_an_estimated_leg_is_not_called_reachable_on_the_edit_path():
+    # `[2026-10-20 사용자 결정]` 고치기가 시간 한도에 닿아 어림으로 저장한 판 — 검사도 시간표로 못 구한 구간은 「확인 필요」(근거 없이 닿는다고 하지 않는다)
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+
+    from app.domains.travel_ops.components.intake import review as review_module
+    from app.domains.travel_ops.components.intake.moves import Leg
+
+    at = datetime(2026, 10, 27, 11, 0, tzinfo=ZoneInfo("Asia/Seoul"))
+    leg = Leg("estimate", "직선 어림", "경복궁 → 종묘", 20, 1.5, at, at + timedelta(minutes=20), 10, "estimate", "이동 계산에 시간이 오래 걸려 어림값으로 냈어요")
+    a = {"id": "0-0", "day": 1, "date": "2026-10-27"}
+    b = {"id": "0-1", "day": 1, "date": "2026-10-27"}
+    loose = review_module._move(a, b, leg, [], "sig")
+    strict = review_module._move(a, b, leg, [], "sig", unverified=True)
+    assert loose["status"] == "keep"                          # 계산기가 꺼진 시험 · 개발 환경은 종전대로
+    assert strict["status"] == "review"
+    assert next(r for r in strict["rows"] if r["row"] == "arrival")["result"] == "warn"
+
+
+def test_each_leg_has_its_own_time_limit_inside_the_request_limit(monkeypatch):
+    # `[2026-10-20 사용자 결정 — 이동 구간 하나마다]` 같은 두 곳 사이는 도착 시각이 달라도 한 몫, 다른 구간은 제 몫, 요청 전체 한도는 함께 줄어든다
+    from types import SimpleNamespace
+
+    clock = [0.0]
+    monkeypatch.setattr(review, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+
+    def engine(a, b, arrive, not_before=None):
+        clock[0] += 15
+        return {"ok": True}, None
+    whole = review._Budgeted(engine, 100)
+    legs = review._PerLeg(engine, 20, within=whole)
+    jongmyo, market, tower = {"lat": 37.5746, "lon": 126.9941}, {"lat": 37.57, "lon": 126.9996}, {"lat": 37.5512, "lon": 126.9882}
+    assert legs(jongmyo, market, 1)[0] is not None and legs(jongmyo, market, 2)[0] is not None   # 15 + 15 = 30 — 둘째 물음 뒤 이 구간 몫(20)이 다 됨
+    assert legs(jongmyo, market, 3)[0] is None and legs.exhausted_for(jongmyo, market)
+    assert legs(market, tower, 1)[0] is not None and not legs.exhausted_for(market, tower)        # 다른 구간은 제 몫으로 계산한다
+    assert not legs.exhausted                                                                     # 요청 전체는 45/100
+
+
+def test_the_request_limit_stops_every_leg_even_with_its_own_time_left(monkeypatch):
+    from types import SimpleNamespace
+
+    clock = [0.0]
+    monkeypatch.setattr(review, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+
+    def engine(a, b, arrive, not_before=None):
+        clock[0] += 15
+        return {"ok": True}, None
+    legs = review._PerLeg(engine, 20, within=review._Budgeted(engine, 25))
+    one, two, three = {"lat": 37.1, "lon": 127.1}, {"lat": 37.2, "lon": 127.2}, {"lat": 37.3, "lon": 127.3}
+    assert legs(one, two, 1)[0] is not None and legs(two, three, 1)[0] is not None               # 15 + 15 = 30 > 25
+    assert legs.exhausted and legs(three, one, 1)[0] is None and legs.exhausted_for(three, one)

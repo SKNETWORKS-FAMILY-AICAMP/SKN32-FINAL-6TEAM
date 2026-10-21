@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import { mockServer, noHorizontalScroll } from './helpers';
-import { card, head, openFinished, toast } from './plan-check-kit';
+import { card, head, openFinished, toast, typeTimes } from './plan-check-kit';
 import { useMapTiles } from './capture-map-tiles';
 
 const shots=process.env.FOCUSED_TIME_SHOTS;
@@ -105,7 +105,7 @@ test('잠금은 시작·출발 드래그와 내용 변경을 막고 이웃 일�
   }
   await expect.poll(async()=>(await api.received('POST','/edits')).length).toBe(1);
   await page.getByRole('button',{name:/^올리브영 시간 고치기/}).click();
-  const form=page.getByRole('form',{name:'올리브영 시간 고치기'});
+  const form=await typeTimes(page.getByRole('form',{name:'올리브영 시간 고치기'}));
   await expect(form.getByText('가능한 시각 10:39 ~ ',{exact:false})).toBeVisible();
   await form.getByLabel('시작',{exact:true}).fill('10:45');await form.getByRole('button',{name:'적용',exact:true}).click();
   await expect.poll(async()=>(await api.received('POST','/edits')).length).toBe(2);
@@ -117,7 +117,7 @@ test('잠금은 시작·출발 드래그와 내용 변경을 막고 이웃 일�
 test('시간 변경 후 잠그면 되돌리기를 먼저 막고 요청을 보내지 않는다',async({page,request})=>{
   const api=await openFinished(page,request,undefined,{intakeEvents:'off'});
   await page.getByRole('button',{name:/^경복궁 관람 시간 고치기/}).click();
-  const form=page.getByRole('form',{name:'경복궁 관람 시간 고치기'});
+  const form=await typeTimes(page.getByRole('form',{name:'경복궁 관람 시간 고치기'}));
   await form.getByLabel('시작',{exact:true}).fill('09:10');await form.getByRole('button',{name:'적용',exact:true}).click();
   await expect.poll(async()=>(await api.received('POST','/edits')).length).toBe(1);
   await openCard(page,'경복궁 관람');await page.getByRole('button',{name:'경복궁 관람 꼭 넣을 일정으로 고정'}).click();

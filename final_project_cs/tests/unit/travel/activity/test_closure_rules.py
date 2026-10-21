@@ -145,6 +145,42 @@ def test_no_monthly_count_text_in_the_csv_closes_every_week():
     assert len(monthly) > 90 and closed == [], closed[:5]
 
 
+@pytest.mark.parametrize("text, when, expected", [
+    # 해를 넘기는 범위 — x600 서버 관광공사 운영시간 표의 실제 문장(2026-10-21). ★전에는 양 끝만 True, 사이(12-30 · 12-31 · 1-1)는 False
+    ("12월 29일~1월 2일", at(12, 28), False),              # 시작 전날
+    ("12월 29일~1월 2일", at(12, 29), True),               # 시작일
+    ("12월 29일~1월 2일", at(12, 30), True),               # 사이
+    ("12월 29일~1월 2일", at(12, 31), True),               # 사이 — 실제 결함 재현
+    ("12월 29일~1월 2일", at(1, 1, y=2027), True),          # 사이(해 넘김)
+    ("12월 29일~1월 2일", at(1, 2, y=2027), True),          # 끝일
+    ("12월 29일~1월 2일", at(1, 3, y=2027), False),         # 끝 다음 날
+    ("12월 29일~1월 2일", at(7, 15), False),               # 한참 밖
+    # 같은 해 안의 범위 · 끝의 달 생략 · 글자 모양 달라도 같다
+    ("3월 1일~3월 10일", at(3, 5, y=2027), True),
+    ("3월 1일~3월 10일", at(3, 11, y=2027), False),
+    ("3월 1일 ~ 3월 10일", at(3, 10, y=2027), True),
+    ("12월 29일-31일", at(12, 30), True),                  # 끝의 달을 빼면 시작과 같은 달
+    ("12월 29일-31일", at(1, 1, y=2027), False),
+    ("12월 29일부터 1월 2일까지", at(12, 31), True),
+    ("12월 29일부터 1월 2일까지", at(1, 3, y=2027), False),
+    ("매주 월요일 / 설·추석 연휴 / 근로자의 날 / 선거일 / 12월 29일~1월 2일", at(1, 1, y=2027), True),   # 실제 문장 전체
+])
+def test_date_range_covers_every_day_between_its_ends(text, when, expected):
+    """날짜 범위는 양 끝만이 아니라 사이 날짜까지 휴무다. 해를 넘기면(끝이 시작보다 앞서면) 연말에서 연초로 이어진다."""
+    assert read_closure(text, when, known).value is expected
+
+
+def test_date_range_inside_the_range_is_reported_as_a_date_range_closure():
+    result = read_closure("12월 29일~1월 2일", at(12, 31))
+    assert (result.value, result.reason, result.quote) == (True, "date_range", "12월 29일~1월 2일")
+
+
+def test_date_range_with_only_a_month_at_the_end_is_unknown():
+    """「12월 29일~1월 초」 — 끝 날짜를 모르면 사이를 정하지 못한다. 「아님」으로 확정하지 않는다(CLAUDE.md §0)."""
+    for day in (at(12, 28), at(12, 31), at(1, 15, y=2027)):
+        assert read_closure("12월 29일~1월 초", day).value is None
+
+
 def test_holiday_dates_needed():
     assert holiday_dates_needed("매주 월요일", at(10, 12)) == []        # 공휴일 조건 없음 — 도구를 부르지 않는다
     assert holiday_dates_needed("매주 월요일 / 법정공휴일", at(10, 12)) == [date(2026, 10, 12)]

@@ -122,8 +122,9 @@ def test_chosen_mode_is_used_for_reflow(monkeypatch):
     monkeypatch.setattr(review, "default_engine", factory)
     got = schedule.fit(None, tenant_id="test", rows=[row(0, "09:00", "10:00"), row(1, "10:02", "11:02")],
                        touched={("source", 0)}, mode_picks={"0-0~0-1": "taxi"})
-    # 도보 외 수단은 기존 시간표 맞춤의 5분 탐색·올림 여유까지 포함한다.
-    assert values(got) == {"items[1].starts_at": "10:10", "items[1].ends_at": "11:10"}
+    # 도보 외 수단도 시간표로 확인된 가장 이른 시각을 5분 올림한다. `[2026-10-20]` 첫 추측을 이미 구한 이동 시간(택시 3분)에서 시작하므로
+    #   10:03 도착이 바로 확인되어 10:05 다(앞 판은 반드시 늦는 「끝 1분 뒤 도착」부터 5분씩 건너뛰어 10:10 이었다)
+    assert values(got) == {"items[1].starts_at": "10:05", "items[1].ends_at": "11:05"}
     assert ["taxi"] in asked
 
 
@@ -176,13 +177,43 @@ def test_completed_timetable_is_kept_when_its_call_uses_the_remaining_budget(mon
     assert len(calls) == 1
 
 
-def test_spent_budget_still_refuses_the_next_uncalculated_leg(monkeypatch):
+def test_spent_request_limit_saves_the_next_leg_as_an_estimate_instead_of_refusing(monkeypatch):
+    # `[2026-10-20 사용자 결정]` 이동 계산 시간 한도에 닿은 것만으로는 고객이 고른 값을 거절하지 않는다(앞 판: `schedule_check_failed`).
+    #   한 번에 11초 — 이동 구간 하나마다 20초라도 요청 전체 25초가 셋째 계산 뒤 다 되어, 넷째 구간은 계산기를 부르지 않고 어림으로 간다
     engine, calls = slow_clock_engine(monkeypatch, 11)
     rows = [row(0,"09:00","10:00"),row(1,"11:00","12:00"),row(2,"13:00","14:00"),row(3,"15:00","16:00")]
-    with pytest.raises(schedule.ScheduleConflict) as refused:
-        fit(rows, touched={("source",0),("source",1),("source",2)}, engine=engine)
-    assert refused.value.code == "schedule_check_failed"
-    assert len(calls) == 2
+    assert fit(rows, touched={("source",0),("source",1),("source",2)}, engine=engine) == []    # 어림으로도 늦지 않아 옮길 것 없음
+    assert len(calls) == 3
+
+
+def test_a_leg_estimated_after_the_limit_moves_the_next_visit_with_estimate_provenance(monkeypatch):
+    # 한도가 다 된 뒤의 구간이 늦으면 어림 이동 시간으로 뒤 일정을 민다 — 근거는 `estimate`(검사가 시간표로 다시 보고, 못 구하면 「확인 필요」)
+    from app.domains.travel_ops.components.intake import autofix
+
+    monkeypatch.setattr(autofix, "REQUEST_ENGINE_S", 0.0)
+    got = fit([row(0, "09:00", "10:00"), row(1, "10:00", "11:00", place={"name": "먼 곳", "latitude": 37.60, "longitude": 127.05})])
+    assert got and all(c["basis"] == "estimate" for c in got)
+    assert values(got)["items[1].starts_at"] > "10:00"
+
+
+def test_an_engine_error_after_the_limit_change_is_still_refused():
+    # 오류 · 자료 없음은 종전대로 거절한다(시간 한도만 어림으로 간다)
+    def failed(*args):
+        raise TimeoutError("test")
+    with pytest.raises(schedule.ScheduleConflict) as raised:
+        fit([row(0, "09:00", "10:00"), row(1, "10:05", "11:05")], engine=failed)
+    assert raised.value.code == "schedule_check_failed"
+
+
+def test_each_leg_gets_its_own_time_limit(monkeypatch):
+    # `[2026-10-20 사용자 결정 — 이동 구간 하나마다]` 한 구간이 자기 몫 20초를 다 써도 다른 구간은 제 몫으로 계산한다(요청 전체 한도 안에서)
+    from app.domains.travel_ops.components.intake import autofix
+
+    monkeypatch.setattr(autofix, "REQUEST_ENGINE_S", 100.0)
+    engine, calls = slow_clock_engine(monkeypatch, 21)
+    rows = [row(0, "09:00", "10:00"), row(1, "11:00", "12:00"), row(2, "13:00", "14:00")]
+    assert fit(rows, touched={("source", 0), ("source", 1)}, engine=engine) == []
+    assert len(calls) == 2                      # 앞 판(여행 날짜마다 20초)이면 둘째 구간은 계산하지 못했다
 
 
 def breakfast_claims(end_evidence):

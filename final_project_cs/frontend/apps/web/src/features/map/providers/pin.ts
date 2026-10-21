@@ -131,7 +131,8 @@ export function createPin(point: MapPoint, detachLeader = false): HTMLDivElement
   body.textContent = point.label ?? String(point.order);
   Object.assign(body.style, {
     position: "absolute", display: "grid", placeItems: "center", width: `${PIN_BODY}px`, height: `${PIN_BODY}px`, boxSizing: "border-box",
-    border: "2px solid var(--color-text)", font: "700 14px/1 system-ui, sans-serif", boxShadow: `0 2px 8px ${shadow}`, cursor: "pointer", pointerEvents: "auto",
+    // `[2026-10-21 사용자 결정 — 목업 tripilot-map-edge-chip-dark.html]` 번호 핀의 기본 테두리는 초록(--color-selected) — 다크에서 흰 테두리였다
+    border: "2px solid var(--color-selected)", font: "700 14px/1 system-ui, sans-serif", boxShadow: `0 2px 8px ${shadow}`, cursor: "pointer", pointerEvents: "auto",
     transition: "transform .15s ease",
   });
   // ★`[2026-10-06 사용자 지적 — 점과 선이 핀 위에 막 찍혀 있다]` The line back to the coordinate and its dot belong UNDER every pin. Inside the pin's own marker they stack with that marker only (one pin's line crossed
@@ -198,7 +199,7 @@ export function setPinSelected(pin: HTMLElement, selected: boolean, reveal = fal
   const lit = selected || reveal;
   body.style.background = lit ? "var(--color-selected)" : tone === "current" ? "var(--color-text)" : tone === "warn" ? "var(--color-warning-soft)" : "var(--color-surface)";
   body.style.color = lit || tone === "current" ? "var(--color-on-primary)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
-  body.style.borderColor = lit ? "var(--color-selected)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-text)";
+  body.style.borderColor = lit ? "var(--color-selected)" : tone === "candidate" ? "var(--color-success)" : tone === "warn" ? "var(--color-warning)" : "var(--color-selected)";
   body.style.boxShadow = lit ? `0 0 0 3px color-mix(in srgb, var(--color-selected) 35%, var(--color-surface)), 0 3px 12px ${shadow}` : `0 2px 8px ${shadow}`;
   body.style.transform = reveal ? `scale(${REVEAL_SCALE})` : selected ? "scale(1.14)" : "none";
   body.style.pointerEvents = "auto";

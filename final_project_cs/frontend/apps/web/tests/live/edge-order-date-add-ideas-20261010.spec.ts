@@ -47,8 +47,9 @@ for (const width of [375, 1280]) {
       expect(side.direction).toBe(side.side === 'left' ? 'row-reverse' : 'row');
       expect(xs[0] < xs[1] && xs[1] < xs[2]).toBe(side.side === 'right');
     }
-    const fill = await chips.first().locator(':scope > span').evaluate(e => getComputedStyle(e).backgroundColor);
-    expect(fill).toBe('rgb(32, 32, 32)');
+    // `[2026-10-21 사용자 결정 — B안]` 번호는 바탕 없이 칩 글자색(--color-text)
+    const fill = await chips.first().locator(':scope > span').evaluate(e => [getComputedStyle(e).backgroundColor, getComputedStyle(e).color]);
+    expect(fill).toEqual(['rgba(0, 0, 0, 0)', 'rgb(36, 57, 47)']);
     await expect(page.locator('[role=tablist]')).toHaveCSS('opacity', '1');
     await capture(page, `01-both-sides-${width}`);
     const box = (await map.boundingBox())!;

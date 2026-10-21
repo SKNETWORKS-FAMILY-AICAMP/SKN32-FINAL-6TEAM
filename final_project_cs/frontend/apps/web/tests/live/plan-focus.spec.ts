@@ -48,10 +48,12 @@ test("마커로 연 일정의 윗부분은 전체·일차 줄 아래에 놓인�
   await shot(page, "06-marker-below-days");
 });
 
-test("검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마커도 함께 보인다", async ({ page, request }) => {
+// `[2026-10-20 사용자 결정 — 계획 확인 C안]` 검사 중인 카드는 목록 가운데가 아니라 위(14px)에 고정된다.
+test("검증 중 지금 카드는 목록 위에 고정되어 따라오고 지도 마커도 함께 보인다", async ({ page, request }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   const server = mockServer(request);
-  await server.scenario({ readingPolls: 99, intakeEvents: "off", review: "on", board: "rich" });
+  // `[2026-10-20 C안]` 확인이 필요한 일정이 있으면 첫 검사가 그 카드에서 멈춰 묻는다 — 재생 · 지도를 보는 이 시험은 고칠 것이 없는 판(`calm`)으로 끝까지 본다.
+  await server.scenario({ readingPolls: 99, intakeEvents: "off", review: "on", board: "calm" });
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
   await expect(page.locator('[data-stage="reading"]')).toBeVisible();
@@ -61,9 +63,9 @@ test("검증 중 마지막 일정은 목록 가운데에 따라오고 지도 마
   await expect.poll(async () => {
     if (await page.locator('[data-stage="done"]').count()) return 999;
     const box = await body.boundingBox();
-    const row = await body.locator("li[data-type]").last().boundingBox();
-    return box && row ? Math.abs(row.y + row.height / 2 - box.y - box.height / 2) : 999;
-  }, { intervals: [50], timeout: 5000 }).toBeLessThan(22);
+    const row = await body.locator('li[data-reveal-current="true"]').boundingBox();
+    return box && row ? Math.abs(row.y - box.y - 14) : 999;
+  }, { intervals: [50], timeout: 5000 }).toBeLessThan(8);
   await expect(page.getByRole("region", { name: "여행 지도" })).toBeVisible();
   await expect(page.locator("[data-pin-body]").first()).toBeVisible();
   await shot(page, "07-check-centered");

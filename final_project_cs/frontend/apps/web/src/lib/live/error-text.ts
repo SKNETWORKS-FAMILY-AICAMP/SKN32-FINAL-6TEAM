@@ -59,6 +59,8 @@ export const REFUSAL_TEXT: Record<string, Text> = {
   },
   busy: [`지금 요청이 몰려 있어요. ${AGAIN[0]}`, `It's busy right now. ${AGAIN[1]}`],
   maintenance: [`지금 점검 중이에요. ${AGAIN[0]}`, `We're under maintenance. ${AGAIN[1]}`],
+  // `[2026-10-20 D-CS-019]` 새 판으로 바꾸는 동안 api 대신 Caddy 가 답한다(`deploy/Caddyfile.tripilot` 「handle_errors」)
+  service_updating: [`서비스를 새 판으로 바꾸는 중이에요. ${AGAIN[0]}`, `The service is switching to a new version. ${AGAIN[1]}`],
   risk_check_unavailable: [`지금은 일정 위험을 점검할 수 없어요. ${AGAIN[0]}`, `The trip risk check is unavailable right now. ${AGAIN[1]}`],
   // 여행 · 계획
   not_found: ["찾을 수 없어요. 지워졌거나 주소가 바뀌었을 수 있어요.", "Not found. It may have been removed."],

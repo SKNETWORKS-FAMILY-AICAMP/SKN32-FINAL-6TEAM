@@ -144,7 +144,9 @@ test("고른 칸에 값이 없으면 「계획 확인하기」를 눌러도 넘�
   await heading(page, "text").click();
   await send(page).click({ force: true });
   await expect(card).toBeVisible();
-  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);                      // 카드에서 정하기 전에는 서버로 아무것도 가지 않는다
+  // `[2026-10-20 ST4F-615]` 「직접 입력」은 서버가 받은 뒤(빠른 거름 통과)에 카드가 묻는다 — 접수는 한 번, 화면은 아직 넘어가지 않았다
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(1);
+  await expect(page).toHaveURL(/\/trips\/new$/);
 });
 
 test("첫날은 오늘(서울 날짜)부터 고를 수 있고, 지난 날을 적고 누르면 이유를 말한다", async ({ page }) => {

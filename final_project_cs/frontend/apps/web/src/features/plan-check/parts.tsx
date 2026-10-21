@@ -17,7 +17,8 @@ export function Checks({ id, rows }: { id?: string; rows: CheckRow[] }) {
     <li key={`${row.kind}-${index}`} className={styles.check} data-result={row.result}>
       <span className={styles.mark} aria-hidden="true">{GLYPH[row.result]}</span>
       <b className={styles.checkKind}>{kindLabel(row.kind, t)}</b>
-      <span className={styles.checkText}>{row.result === "pending" ? t("확인하는 중…", "Checking…") : row.text}</span>
+      {/* `[2026-10-20 C안 — 고른 뒤 다시 확인]` A check asked again keeps its words while its mark spins; only one with no words yet says it is being checked. */}
+      <span className={styles.checkText}>{row.result === "pending" && !row.text ? t("확인하는 중…", "Checking…") : row.text}</span>
       <span className="sr-only">{resultLabel(row.result, t)}</span>
     </li>)}</ul>;
 }
@@ -143,8 +144,12 @@ export const reason = (error: unknown) => error instanceof Error ? error.message
 export function Act({ why, onPress, explain, className, children, title, tooltip, ...rest }: {
   why: string | null; onPress: () => void; explain: (why: string) => void; className?: string; children: ReactNode;
   id?: string; title?: string; tooltip?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
+  /** `[2026-10-20 C안]` A button that takes something out (the stopped stop's 「삭제」). */
+  "data-danger"?: boolean;
   /** `[2026-10-05]` Something a time is dragged by: the pointer handlers of a drag, and the mark for the cursor and the touch (`data-grab`). */
   "data-grab"?: boolean; onPointerDown?: Grab["onPointerDown"]; onPointerMove?: Grab["onPointerMove"]; onPointerUp?: Grab["onPointerUp"]; onPointerCancel?: Grab["onPointerCancel"];
+  /** `[2026-10-21 ST4F-702]` A finger holds the time to take it: no phone menu on that long press, and the list kept still once it is taken. */
+  onContextMenu?: Grab["onContextMenu"]; ref?: Grab["ref"];
 }) {
   const tip = useId();
   return <button type="button" className={className} aria-disabled={why ? true : undefined} title={tooltip ? undefined : why ?? title} aria-describedby={tooltip ? tip : undefined} {...rest}

@@ -4,16 +4,15 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import {
-  ACTIVITY_PICKS, answeredCount, answerLines, areaNames, areas, detailOptions, done, INTRO_STEP, LAST_STEP, options, questions, skip as skipQuestion,
-  toggle, toggleArea, toggleDetail, unskip, valid, type Answers, type Area, type ChoiceKey, type Option, type QuestionId,
+  ACTIVITY_PICKS, answeredCount, answerLines, areaNames, areas, canPickPartySize, detailOptions, done, indoorParts, INTRO_STEP, LAST_STEP, options, partySizeOf, pickPartySize, questions,
+  skip as skipQuestion, toggle, toggleArea, toggleDetail, unskip, valid, type Answers, type Area, type ChoiceKey, type QuestionId,
 } from "./model";
+import { AREA_ICONS, ChoiceChips, fieldOptions, OtherField, PairRows, PriorityAreas, TravelerSizes, usePressFeedback } from "./survey-fields";
 import styles from "./onboarding.module.css";
 
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const pad = (value: number) => String(value).padStart(2, "0");
 const titleId = (index: number) => index === INTRO_STEP ? "question-title-intro" : `question-title-${index}`;
-/** Icons of the three priority areas (onboarding line icons). */
-const areaIcons: Record<Area, string> = { food: "food", activity: "activity", mobility: "public" };
 
 /** The survey explanation card, then the question cards on one track: tap, swipe or use the arrow keys to move. */
 export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirstBack, onComplete, onCollapse, onFeedback, announce }: {
@@ -36,7 +35,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
   const gesture = useRef<{ id: number; x: number; y: number; dx: number; dragging: boolean } | null>(null);
   const suppressClickUntil = useRef(0);
   const [forcedError, setForcedError] = useState<{ step: number; text: string } | null>(null);
-  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
+  const { touched, feedback } = usePressFeedback(onFeedback);
   const answered = answeredCount(answers);
   const introTitle = t("여행 취향 설문을 시작할게요", "A quick survey on how you travel");
   // Slide position on the track: the intro card comes first.
@@ -112,18 +111,6 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     feedback(event.currentTarget, key);
   }
 
-  function feedback(control: HTMLButtonElement, key: string) {
-    control.focus({ preventScroll: true });
-    onFeedback();
-    if (reducedMotion()) return;
-    setTouched((current) => new Set(current).add(key));
-    control.animate([
-      { transform: "scale(.97)", boxShadow: "0 0 0 0 transparent" },
-      { transform: "scale(1.015)", boxShadow: "0 0 0 3px color-mix(in srgb, var(--color-selected) 8%, transparent)", offset: .6 },
-      { transform: "scale(1)", boxShadow: "0 0 0 0 transparent" },
-    ], { duration: 220, easing: "cubic-bezier(.2,.8,.2,1)" });
-  }
-
   function skip(index: number) {
     if (busy.current) return;
     const next = skipQuestion(answers, index);
@@ -132,63 +119,36 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     advance(1, false, next);
   }
 
-  function chip(key: ChoiceKey, option: Option) {
-    const selected = answers[key] === option[0];
-    const feedbackClass = touched.has(`${key}:${option[0]}`) ? styles.selectionFeedback : "";
-    return <button key={option[0]} type="button" className={`${styles.chip} ${selected ? styles.selected : ""} ${feedbackClass}`} aria-pressed={selected} onClick={(event) => press(event, toggle(answers, key, option[0]), `${key}:${option[0]}`)}>
-      <span className={styles.optionCheck} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
-      {t(option[1], option[2])}
-    </button>;
-  }
+  // `[2026-10-20 ST4F-665]` The card pieces are shared with the questions asked while a plan is read (`survey-fields.tsx`) — same look, same rules.
+  const chips = (key: ChoiceKey) => <ChoiceChips name={key} options={fieldOptions(options[key], t)} selected={answers[key]} touched={touched}
+    onPick={(event, value) => press(event, toggle(answers, key, value), `${key}:${value}`)} />;
 
-  const chips = (key: ChoiceKey) => <div className={styles.chips} role="group">{options[key].map((option) => chip(key, option))}</div>;
-  const label = (ko: string, en: string) => <p className={styles.groupLabel}>{t(ko, en)}</p>;
-  const rank = (order: number, ko: string, en: string, className: string) => <span className={className}><span aria-hidden="true">{order}</span><span className="sr-only">{t(ko, en)}</span></span>;
-
-  /** `other` opens a field for who it is; the draft stays when another choice is picked, but only `other` sends it. */
+  /** `other` opens a field for who it is; the draft stays when another choice is picked, but only `other` sends it. Under it, how many travel. */
   const party = () => <>
     {chips("party")}
-    {answers.party === "other" && <div className={styles.otherField}>
-      <label htmlFor="party-other" className={styles.groupLabel}>{t("누구와 함께 여행하는지 알려 주세요.", "Tell us who you’re traveling with.")}</label>
-      <input id="party-other" className={styles.otherInput} value={answers.partyOther} autoComplete="off" placeholder={t("예: 직장 동료", "e.g. coworkers")}
-        onChange={(event) => update({ ...answers, partyOther: event.target.value })} />
-    </div>}
+    {answers.party === "other" && <OtherField t={t} id="party-other" value={answers.partyOther} onChange={(value) => update({ ...answers, partyOther: value })} />}
+    {answers.party && <TravelerSizes t={t} labelId="party-size-label" size={partySizeOf(answers)} canPick={(n) => canPickPartySize(answers.party, n)} touched={touched}
+      onPick={(event, n) => press(event, pickPartySize(answers, n), `partySize:${n}`)} />}
   </>;
 
-  /**
-   * Three area cards in a fixed order. Tapping an area ranks it (1, 2, 3 in tapping order) and opens its details, which
-   * rank the same way inside the area. Un-picking an area clears and folds its details. Nothing moves on screen.
-   * Activities take exactly `ACTIVITY_PICKS`: a counter says how many, and once full the rest wait until one is un-picked.
-   */
-  const priority = () => <div className={styles.areas}>{areas.map((area) => {
-    const order = answers.priority.indexOf(area) + 1;
-    const name = t(...areaNames[area]);
-    const full = area === "activity" && answers.details.activity.length >= ACTIVITY_PICKS;
-    return <div key={area} className={`${styles.area} ${order ? styles.areaOn : ""}`}>
-      <button type="button" className={styles.areaHead} aria-pressed={order > 0} aria-expanded={order > 0} aria-controls={`details-${area}`}
-        onClick={(event) => press(event, toggleArea(answers, area), `area:${area}`)}>
-        <span className={styles.areaIcon}><OnboardingIcon name={areaIcons[area]} size={18} /></span>
-        <span className={styles.areaName}>{name}</span>
-        {order > 0 && rank(order, `, ${order}순위`, `, rank ${order}`, styles.rank)}
-      </button>
-      <div id={`details-${area}`} className={styles.areaDetails} role="group" aria-label={t(`${name} 세부 항목`, `${name} details`)} hidden={!order}>
-        {area === "activity" && <p className={styles.pickCount}>{t(`누른 순서대로 ${ACTIVITY_PICKS}개를 골라 주세요 · ${answers.details.activity.length}/${ACTIVITY_PICKS}`, `Pick ${ACTIVITY_PICKS} in order of importance · ${answers.details.activity.length}/${ACTIVITY_PICKS}`)}</p>}
-        {detailOptions[area].map((option) => {
-          const place = answers.details[area].indexOf(option[0]) + 1;
-          return <button key={option[0]} type="button" className={`${styles.chip} ${styles.rankedChip} ${place ? styles.selected : ""}`} aria-pressed={place > 0} disabled={full && !place}
-            onClick={(event) => press(event, toggleDetail(answers, area, option[0]), `${area}:${option[0]}`)}>
-            {t(option[1], option[2])}{place > 0 && rank(place, `, ${place}순위`, `, rank ${place}`, styles.chipRank)}
-          </button>;
-        })}
-      </div>
-    </div>;
-  })}</div>;
+  /** Un-picking an area clears and folds its details. Activities take exactly `ACTIVITY_PICKS`. */
+  const priority = () => <PriorityAreas t={t} order={answers.priority} details={answers.details}
+    areas={areas.map((area) => ({ id: area, label: t(...areaNames[area]), icon: AREA_ICONS[area], options: fieldOptions(detailOptions[area], t), exact: area === "activity" ? ACTIVITY_PICKS : undefined }))}
+    onArea={(event, area) => press(event, toggleArea(answers, area as Area), `area:${area}`)}
+    onDetail={(event, area, value) => press(event, toggleDetail(answers, area as Area, value), `${area}:${value}`)} />;
+
+  const indoor = () => <PairRows t={t} touched={touched} selected={{ dining: answers.indoorDining, activity: answers.indoorActivity }}
+    parts={indoorParts.map(([part, key, ko, en]) => ({ id: part, name: key, label: t(ko, en), options: fieldOptions(options[key], t) }))}
+    onPick={(event, part, value) => {
+      const key = indoorParts.find((entry) => entry[0] === part)![1];
+      press(event, toggle(answers, key, value), `${key}:${value}`);
+    }} />;
 
   function body(index: number): ReactNode {
     switch (questions[index].id) {
       case "party": return party();
       case "priority": return priority();
-      case "indoor": return <>{label("식당", "Dining")}{chips("indoorDining")}{label("액티비티", "Activities")}{chips("indoorActivity")}</>;
+      case "indoor": return indoor();
       case "pace": return chips("pace");
     }
   }

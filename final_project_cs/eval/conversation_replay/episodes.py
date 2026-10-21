@@ -47,12 +47,26 @@ def _real_items(ep: dict[str, Any]) -> list[Item]:
     return out
 
 
+def _target_time(value: Any, now: Any):
+    """표적 에피소드 시각 — 「2026-10-20T13:00:00+09:00」 또는 날짜 없는 「13:00」(지금 시각의 날짜로 읽는다)."""
+    import re
+
+    text = str(value or "").strip()
+    if re.fullmatch(r"[0-2]?\d:[0-5]\d", text):
+        base = parse_dt(now)
+        if base is None:
+            return None
+        h, m = (int(x) for x in text.split(":"))
+        return base.replace(hour=h, minute=m, second=0, microsecond=0)
+    return parse_dt(value)
+
+
 def _target_items(ep: dict[str, Any]) -> list[Item]:
     out = []
     for r in (ep.get("start_state") or {}).get("items") or []:
         out.append(Item(item_id=f"T{ep['episode_id']}-{r.get('seq')}", seq=int(r.get("seq") or 0), kind=str(r.get("kind") or ""),
-                        title=str(r.get("title") or ""), place=r.get("place"), start=parse_dt(r.get("s")), end=parse_dt(r.get("e")),
-                        pinned=bool(r.get("pinned")), indoor=r.get("indoor")))
+                        title=str(r.get("title") or ""), place=r.get("place"), start=_target_time(r.get("s"), ep.get("now")),
+                        end=_target_time(r.get("e"), ep.get("now")), pinned=bool(r.get("pinned")), indoor=r.get("indoor")))
     return out
 
 

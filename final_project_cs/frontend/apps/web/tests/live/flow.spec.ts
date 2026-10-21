@@ -220,8 +220,9 @@ test("아무것도 넣지 않고 「계획 확인하기」를 누르면 입력�
   await page.getByLabel("나의 여행 계획").fill("경복궁");                                                // 쓰기 시작하면 이유가 사라진다
   await expect(page.locator("#plan-error")).toHaveCount(0);
   await send.click({ force: true });
-  await expect(page.getByRole("dialog")).toBeVisible();                                               // 값이 있으니 항로 지킴이 카드가 열린다(읽기는 아직 시작 전)
-  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+  // `[2026-10-20 ST4F-615]` 값이 있으니 서버가 받은 뒤(빠른 거름 통과) 항로 지킴이 카드가 열린다 — 접수는 그때 한 번 나갔다
+  await expect(page.getByRole("dialog")).toBeVisible();
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(1);
 });
 
 test("파일 칸: 고른 파일이 이름·크기 칩으로 보이고, 빼기로 뺄 수 있으며, 남은 파일만 서버로 간다", async ({ page, request }) => {
@@ -344,7 +345,7 @@ test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」�
   await expect(card.getByText("확인 필요")).toBeVisible();
   await expect(needsBadge(page)).toHaveText("!1");
   await card.getByRole("heading").getByRole("button").click();
-  await expect(card.getByText("장소를 정하지 못했습니다")).toBeVisible();                      // the server's own message
+  await expect(card.getByText("장소를 정하지 못했습니다", { exact: true })).toBeVisible();     // the server's own message (`[2026-10-21]` the card's question says it too)
   await expect(page.getByRole("button", { name: "여행 등록" })).toHaveCount(0);
   const recheck = page.getByRole("button", { name: "다시 제출" });
   await expect(recheck).toHaveAttribute("aria-disabled", "true");

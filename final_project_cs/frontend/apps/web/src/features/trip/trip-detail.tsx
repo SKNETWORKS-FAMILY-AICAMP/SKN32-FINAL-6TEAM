@@ -1,18 +1,20 @@
 "use client";
 
-import { stopDisplayName } from "./stop-display";
+import { stopDisplayName, stopPlaceNote } from "./stop-display";
 
 import { useContext, useEffect, useRef, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, MessageCircle, Pencil } from "lucide-react";
 import { HeaderSlot } from "@/components/layout/device-frame";
 import { safePhotoUrl } from "@/features/plan-check/from-review";
 import pc from "@/features/plan-check/plan-check.module.css";
 import { getPlacePhotos } from "@/lib/live/intake-review";
 import { useSettings, useT } from "@/lib/settings";
 import { mapAppName, placeLinks } from "./map-apps";
+import type { OpenChoice } from "./attention";
 import type { Trip, TripStop } from "./model";
+import { ProposalAsk } from "./proposal-ask";
 import { bookingLabel, StopFacts } from "./trip-rows";
 import styles from "./trip-screen.module.css";
 
@@ -33,10 +35,15 @@ export function DetailHeader({ title, onBack }: { title: string; onBack: () => v
  * `[2026-10-14 사용자 결정 — ST4F-492]` 「지도 앱으로 열기」 became three buttons in a row under the ask button — the place in Naver Map · KakaoMap · Google Maps (`map-apps.tsx`).
  * Photos: the plan check's change screen asks the same call for a place's registered photos (`GET /v1/web/places/photos?ref=tour:…`). A stop of a registered trip has that ref only when
  * the server sends it (`place_ref` — not yet, asked of the backend); without it the photo part says they are coming. ★Only what the server gave — no photo is made up.
+ * `[2026-10-21 사용자 결정 — ST4F-704]` A card answers here the choice the server waits for on its stop (`ProposalAsk` — the trip card says 「상세 보기에서 확인하세요」; not the notice center),
+ * and every stop still to come has ✎ 「일정 수정」 at the right of its day and times: the edit opens on that stop as its ✎ opens it (「직접 수정」 of a choice — with 「직접 고치기」 open).
+ * A stop that is over has neither (the edit keeps it as it is).
  */
-export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, onSheetFull }: {
+export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, onSheetFull, choiceOf, past, chooseBusy, onChoose, onEdit }: {
   trip: Trip; stopId: string; dayNumber: number;
   onStop: (id: string) => void; onAsk: (stop: TripStop) => void; askBusy: boolean; onSheetFull: () => void;
+  choiceOf: (stopId: string) => OpenChoice | undefined; past: ReadonlySet<string>; chooseBusy: boolean;
+  onChoose: (choice: OpenChoice, key: string | null) => void; onEdit: (stop: TripStop, how: "plain" | "direct") => void;
 }) {
   const t = useT();
   const stop = trip.stops.find((entry) => entry.id === stopId);
@@ -47,15 +54,20 @@ export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, on
   const index = list.indexOf(stop);
   return <div className={styles.detail}>
     <header className={pc.changeHead}>
-      <h3 id="trip-detail-title" ref={heading} className={pc.changeTitle} tabIndex={-1}>{t(`${stopDisplayName(stop)} 상세`, `${stopDisplayName(stop)} · details`)}</h3>
+      <h3 id="trip-detail-title" ref={heading} className={pc.changeTitle} tabIndex={-1}>{t(`${stop.title} 상세`, `${stop.title} · details`)}</h3>
       <span className={pc.changePos}>{t(`${dayNumber}일차 · ${index + 1}/${list.length}`, `Day ${dayNumber} · ${index + 1}/${list.length}`)}</span>
     </header>
     <div className={styles.detailBody}>
       <Carousel index={index} onIndex={(at) => onStop(list[at].id)} label={t(`${dayNumber}일차 일정 상세 · 옆으로 넘기면 다른 일정`, `Day ${dayNumber} details · swipe for the other stops`)}>
-        {list.map((entry, at) => <DetailCard key={entry.id} stop={entry} next={list[at + 1]} dayNumber={dayNumber} active={entry.id === stop.id} onAsk={() => onAsk(entry)} askBusy={askBusy} />)}
+        {list.map((entry, at) => {
+          const over = past.has(entry.id), choice = over ? undefined : choiceOf(entry.id);
+          return <DetailCard key={entry.id} stop={entry} next={list[at + 1]} dayNumber={dayNumber} active={entry.id === stop.id} onAsk={() => onAsk(entry)} askBusy={askBusy}
+            onEdit={over ? undefined : (how) => onEdit(entry, how)}
+            ask={choice && <ProposalAsk choice={choice} busy={chooseBusy} onChoose={(key) => onChoose(choice, key)} onEdit={() => onEdit(entry, "direct")} />} />;
+        })}
       </Carousel>
       {list.length > 1 && <div className={pc.dots} role="group" aria-label={t("일정 고르기", "Choose a stop")}>{list.map((entry, at) =>
-        <button key={entry.id} type="button" aria-pressed={at === index} aria-label={`${at + 1}. ${stopDisplayName(entry)}`} onClick={() => onStop(entry.id)}><span aria-hidden="true" /></button>)}</div>}
+        <button key={entry.id} type="button" aria-pressed={at === index} aria-label={`${at + 1}. ${entry.title}`} onClick={() => onStop(entry.id)}><span aria-hidden="true" /></button>)}</div>}
       <Photos stop={stop} onSheetFull={onSheetFull} />
     </div>
   </div>;
@@ -95,10 +107,12 @@ function Photos({ stop, onSheetFull }: { stop: TripStop; onSheetFull: () => void
   </>;
 }
 
-function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy }: { stop: TripStop; next: TripStop | undefined; dayNumber: number; active: boolean; onAsk: () => void; askBusy: boolean }) {
+function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy, onEdit, ask }: { stop: TripStop; next: TripStop | undefined; dayNumber: number; active: boolean; onAsk: () => void; askBusy: boolean;
+  onEdit?: (how: "plain" | "direct") => void; ask?: ReactNode }) {
   const t = useT();
   const info = stop.placeInfo;
   const where = [info?.category, info?.address].filter(Boolean).join(" · ");
+  const place = stopPlaceNote(stop);
   const maps = placeLinks(stop);
   return <article className={pc.changeCard} data-active={active || undefined} data-card-id={stop.id} aria-labelledby={`trip-detail-card-${stop.id}`}>
     <div className={styles.detailChips}>
@@ -107,9 +121,17 @@ function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy }: { stop: T
       {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
       {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}
       {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
+      {/* `[2026-10-21 ST4F-706 후속]` 앞 일정을 대신한 일정(서버 `changed`) — 「입력한 메모」 줄을 빼며 함께 사라진 표시를 이 줄로(서버 공유 계획서의 「변경됨」과 같은 말) */}
+      {stop.changed && <span className={pc.pill} data-state="changed">{t("변경됨", "Changed")}</span>}
+      {/* `[2026-10-21 사용자 지시 — ST4F-704]` 이 줄 오른쪽 끝, 「전체」 일차 칩 모양 — 수정 모드를 이 일정의 ✎ 자리로 연다 */}
+      {onEdit && <button type="button" className={`${pc.dayChip} ${styles.detailEdit}`} onClick={() => onEdit("plain")}
+        aria-label={t(`${stop.title} 일정 수정`, `Edit ${stop.title}`)}><Pencil size={14} strokeWidth={1.8} aria-hidden="true" />{t("일정 수정", "Edit itinerary")}</button>}
     </div>
-    <div className={pc.nameRow}><h4 id={`trip-detail-card-${stop.id}`} className={pc.changeName}>{stopDisplayName(stop)}</h4>{info?.sourceNote && <span className={pc.sourceTag}>{info.sourceNote}</span>}</div>
+    <div className={pc.nameRow}><h4 id={`trip-detail-card-${stop.id}`} className={pc.changeName}>{stop.title}</h4>{info?.sourceNote && <span className={pc.sourceTag}>{info.sourceNote}</span>}</div>
+    {/* `[2026-10-21 사용자 결정 C — ST4F-706]` 제목 아래 선택한 장소 이름(제목과 다를 때) — 카드와 같다 */}
+    {place && <p className={`${pc.changeSub} ${styles.detailPlace}`} data-stop-place><MapPin size={14} strokeWidth={1.8} aria-hidden="true" />{place}</p>}
     <p className={pc.changeSub}>{where || t("장소 정보 없음", "No place details")}</p>
+    {ask}
     <StopFacts stop={stop} next={next} brief />
     <div className={styles.detailActions}>
       <button type="button" className={styles.action} disabled={askBusy} onClick={onAsk}><MessageCircle size={16} strokeWidth={1.6} aria-hidden="true" />{t("이 일정 질문하기", "Ask about this stop")}</button>

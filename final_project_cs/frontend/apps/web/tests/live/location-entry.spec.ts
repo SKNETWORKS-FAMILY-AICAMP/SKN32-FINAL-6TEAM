@@ -52,7 +52,8 @@ test("버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으�
   await page.setViewportSize({ width: 375, height: 900 });
   await allowLocation(context, { latitude: 37.5512, longitude: 126.9882 });
   await countLocationAsks(page);
-  await openFinished(page, request);
+  // `[2026-10-22 ST4F-715]` 선택 동의는 서버 기록이 있어야 진행한다(`saveOptionalConsent`) — 동의 기록이 있는 서버로 연다
+  await openFinished(page, request, undefined, { consents: "on" });
   await expand(page);
   await locate(page).click();
   await page.getByRole("dialog", { name: "내 위치로 이동" }).getByRole("button", { name: /에 동의하고 계속/ }).click();

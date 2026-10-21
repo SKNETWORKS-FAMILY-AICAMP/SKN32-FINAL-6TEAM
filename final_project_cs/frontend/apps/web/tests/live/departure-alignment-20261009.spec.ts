@@ -58,7 +58,8 @@ for(const width of [375,1280]) {
 test('출발 화살표를 끌면 출발 시각 변경을 저장한다',async({page,request})=>{
   await page.setViewportSize({width:375,height:812});
   const api=await openFinished(page,request,undefined,{intakeEvents:'off'});
-  const mark=page.locator('[data-departure-mark]').first(),box=(await mark.boundingBox())!;
+  // `[2026-10-22 ST4F-715]` 결과 화면 맨 위 위험 칸에 밀려 첫 출발 표시가 812px 아래에 있다 — 끌기 전에 화면 안으로(plan-check-redesign 의 f486ff9f 와 같다)
+  const mark=page.locator('[data-departure-mark]').first();await mark.scrollIntoViewIfNeeded();const box=(await mark.boundingBox())!;
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2+20,{steps:5});
   await expect(page.getByRole('group',{name:'하루 일정 미니맵'})).toBeVisible();

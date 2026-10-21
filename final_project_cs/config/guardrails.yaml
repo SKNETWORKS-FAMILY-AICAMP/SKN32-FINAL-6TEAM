@@ -613,6 +613,12 @@ travel:
   # 꺼짐: 여행 조회 응답의 `now_label` 이 false — 화면은 점만 보인다. 읽는 곳: `settings_hook.trip_now_label_enabled(tenant)`.
   trip_screen:
     now_label_enabled: true
+  # -- 항로 지킴이 운영 스위치 (2026-10-19 사용자 결정 · ST4F-613) --
+  # 끄면 웹에서 항로 지킴이(계획 담기 카드 · 머리 아이콘 · 여행 화면)를 숨기고 서버의 자동 일정 변경도 멈춘다 — 켠 여행도 끈 동안은 먼저 묻는다.
+  # 켠 기록(`constraints.survey.on_disruption` · `trip_guardian_changes`)은 지우지 않아 다시 켜면 원래대로다. **관리 콘솔 「운영 설정」** 의 같은 이름 스위치가 먼저.
+  # 읽는 곳: `settings_hook.guardian_enabled(tenant)` — 판정(`survey.on_disruption` · `auto_on_disruption`) · 여행 조회 · 켜기 입구 · 알림 · 공개 읽기 `GET /v1/web/features`.
+  guardian:
+    enabled: true
   # -- 카카오 호출 예산 (2026-09-27) --
   # 키워드 검색 무료 한도는 하루 100,000건이지만 처음 켠 앱 하나에만 준다 — 한도 초과 사용 자체가 약관 위반이라
   # 설정의 하루 상한(ACOP_RATE_KAKAO_PER_DAY=1000)과 같은 값으로 DB 예산을 건다(모든 프로세스가 같이 센다).

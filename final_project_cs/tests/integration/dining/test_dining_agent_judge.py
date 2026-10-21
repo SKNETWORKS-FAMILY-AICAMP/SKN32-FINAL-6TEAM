@@ -34,7 +34,8 @@ def test_rule_rows_map_to_checks_and_days_without_meals_are_skipped():
     review = _review("가게")
     assert rule_verdicts(review["items"][1]) == {"found": "ok", "open_at": "ok", "closed_day": "unknown"}
     plans = plans_from_review(review, "할랄만 " * 1000)
-    assert len(plans) == 1 and plans[0]["date"] == DAY and len(plans[0]["customer_notes"]) == 2000
+    # `[2026-10-20 82eecd6b2]` 자유문 고객 조건을 끝까지 읽게 메모를 자르지 않는다(옛 `NOTES_MAX = 2000` 을 뺐다)
+    assert len(plans) == 1 and plans[0]["date"] == DAY and plans[0]["customer_notes"] == "할랄만 " * 1000
     assert [i["item_id"] for i in plans[0]["items"]] == ["0-0", "0-1"]
     review["items"] = review["items"][:1]
     assert plans_from_review(review, "") == []                                      # 식사가 없는 날은 돌리지 않는다

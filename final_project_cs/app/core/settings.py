@@ -359,6 +359,9 @@ class Settings(BaseSettings):
     #:  이어 쓴다. 담기는 것은 **틀**뿐이고 시각·장소·금액 같은 값은 들어가지 않는다
     #:  (`app/infrastructure/notify/phrase.py`). 비우면 그 프로세스 안에서만 재사용한다.
     notice_phrasebook_path: str = "var/notice_phrasebook.json"
+    #: 배포 공지 상태 파일(D-CS-019) — x600 서버 자동 배포가 쓰고, 고객 공지(`GET /v1/web/support/notices`)가 정해 둔 문구의 배포 공지 한 건으로 붙인다.
+    #:  compose 가 배포 폴더의 `state/service-notice` 를 `/srv/var/service-notice` 에 읽기 전용으로 붙인다. 파일이 없으면 공지 없음.
+    service_notice_path: str = "var/service-notice/notice.json"
     #: 여행계획서 링크의 앞부분(v11 §1 접점 ②). 알림에 **누를 수 있는 주소**로 싣는다.
     #:  ★비밀이 아니다 — 링크의 보호는 여행별 토큰(HMAC)이 맡는다.
     #:  기본값은 로컬 개발 서버(`.claude/launch.json` 의 `acop-cs-ui`, 8042).
@@ -647,6 +650,18 @@ def trip_now_label_enabled() -> bool:
     """
     try:
         return get_guardrails().get("travel.trip_screen.now_label_enabled") is not False
+    except ConfigError:
+        return True
+
+
+def guardian_enabled() -> bool:
+    """항로 지킴이를 쓰나 — 가드레일 `travel.guardian.enabled`. ★기본 켜짐(지금 동작 그대로).
+
+    `[2026-10-19 사용자 결정 — ST4F-613]` 운영자가 관리 콘솔에서 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다.
+    가드레일을 못 읽으면 정한 기본(켜짐)으로 둔다 — 끄는 것은 `false` 로 명시한 경우뿐이다.
+    """
+    try:
+        return get_guardrails().get("travel.guardian.enabled") is not False
     except ConfigError:
         return True
 

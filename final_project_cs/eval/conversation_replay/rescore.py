@@ -46,10 +46,12 @@ def main(argv: list[str] | None = None) -> None:
     out = args.run / f"{args.name}.jsonl"
     n = 0
     with out.open("w", encoding="utf-8", newline="\n") as fh:
+        last: dict[str, dict] = {}
         for line in (args.run / "results.jsonl").read_text(encoding="utf-8").splitlines():
-            if not line.strip():
-                continue
-            res = json.loads(line)
+            if line.strip():
+                row = json.loads(line)
+                last[row["episode_id"]] = row          # 이어 돌린 에피소드는 뒤 줄이 앞 줄을 대신한다
+        for res in last.values():
             ep = eps.get(res["episode_id"])
             if ep is None:
                 continue

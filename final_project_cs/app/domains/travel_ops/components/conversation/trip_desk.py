@@ -37,7 +37,8 @@ from uuid import UUID
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleItinerary, TripStore
 from app.domains.travel_ops.components.itinerary.itinerary_changes import (ALTERNATE_RADII_M, DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
-                                plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap)
+                                plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap,
+                                stored_alternates)
 from app.domains.travel_ops.components.planning.pending import PendingStore, decide, options_from, proposal_notice
 # 요식 끼움 자리 — 생성자 인자 `dining_ledger`(원장을 쓰나)와 이름이 겹치지 않게 별칭으로 둔다
 from app.domains.travel_ops.components.team_hooks import dining_ledger as dining_hook
@@ -265,7 +266,19 @@ class TripDesk:
                              message: str | None = None, request_id: str | None = None,
                              keep: Callable[[list[dict[str, Any]]], list[dict[str, Any]]] | None = None) -> dict[str, Any]:
         """★`[2026-09-29]` 결정 단위의 「후보만 알아봐 줘 · 추천해 줘」 — **바꾸지 않고** 후보를 계산해 고르게 한다.
-        계산은 「다른 데로 바꿔 줘」와 같다(`plan_fresh_alternate` — 반경 넓힘 · 같은 곳 제외 · 조건 풀기). 고르면 기존 고르기 경로."""
+        계산은 「다른 데로 바꿔 줘」와 같다(`plan_fresh_alternate` — 반경 넓힘 · 같은 곳 제외 · 조건 풀기). 고르면 기존 고르기 경로.
+        ★`[2026-10-20]` 등록 때 남긴 「다른 안」이 있으면 계산하지 않고 그것을 먼저 묻는다(`stored_alternates` — 낡은 것은 뺀다)."""
+        trip, items, places = self._read(trip_id)
+        current = next(i for i in items if i.item_id == item_id)
+        stored = [] if keep is not None else stored_alternates(current, {str(p["place_id"]): p for p in places},
+                                                                datetime.now(timezone.utc))
+        if stored:
+            options = [{**o, "note": None, "rank": n} for n, o in enumerate(stored, start=1)]
+            listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}" for o in options[:3])
+            text = (f"{current.title} 대신 갈 수 있는 곳이에요 — {listed}. 고르시면 바꿀게요. "
+                    "고르지 않으시면 원래 일정을 그대로 둡니다.")
+            return self._ask_options(trip_id, item_id, reason="requested_options", text=text, options=options,
+                                     causes=[], extra={"summary": {"from": "stored_alternates"}})
         self._widen_activities(trip_id, item_id)
         trip, items, places = self._read(trip_id)
         plan = self._fresh_plan(trip_id, trip, items, places, item_id=item_id, base_version=base_version,

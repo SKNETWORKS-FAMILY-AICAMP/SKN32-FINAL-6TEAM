@@ -22,7 +22,7 @@
 
 | # | 질문 | 화면 선택 | 백엔드 칸 | 보내는 값 |
 |---|---|---|---|---|
-| 1 | 여행자 구성 | 하나(`기타`면 직접 입력) | `party` | `alone` `partner` `friends` `family`, 또는 `기타`에 적은 글(앞뒤 공백 제거). `other`라는 글자는 보내지 않는다 |
+| 1 | 여행자 구성 | 하나(`기타`면 직접 입력) · 인원 | `party` · `party_size` | `alone` `partner` `friends` `family`, 또는 `기타`에 적은 글(앞뒤 공백 제거). `other`라는 글자는 보내지 않는다 · `[2026-10-20 B안 · ST4F-581]` 인원 `party_size`(1~4, 카드에 보인 값 — 혼자 1 · 연인 2 · 친구 · 가족 2~4, 처음 2 · 기타 직접). 서버는 여행 인원이 비었을 때만 쓴다(계획 확인에서 고친 값 · 계획서에서 읽은 값이 먼저) |
 | 2 | 여행 우선순위 | 분야와 분야별 세부 항목을 **누른 순서대로** | `priority[]` · `priority_details{…}` | 아래 「우선순위 변환」 |
 | 3 | 실내·실외 | 식당·액티비티 각 하나 | `indoor_outdoor{dining, activity}` | `indoor` `outdoor` `any` |
 | 4 | 하루 일정의 여유(16번) | 하나 | `pace` | `relaxed` · `moderate` · `packed` |
@@ -56,6 +56,7 @@
 - 다음으로 가려면 분야 하나 이상, 고른 분야마다 세부 하나 이상 — 활동은 정확히 셋이다. 셋을 고르면 나머지는 하나를 풀 때까지 눌리지 않고, 「누른 순서대로 3개를 골라 주세요 · n/3」으로 개수를 보인다. 고르지 않은 분야는 묻지 않는다. 건너뛰면 두 칸 모두 보내지 않는다.
 - 세부 테마(`theme_details[]`)는 선택지가 정해지지 않아 묻지 않고 보내지 않는다.
 - 이전 화면의 기피 음식·예산·종교·인원 수는 백엔드 설문에 칸이 없어 뺐다(모르는 칸은 422로 거절). 예산(`constraints.budget_krw`)·인원(`party_size`)은 설문이 아닌 등록 요청의 다른 칸이다.
+- `[2026-10-20 사용자 결정 — B안]` 인원은 이제 설문 칸(`TripSurvey.party_size`)으로도 간다 — 서버 계약을 먼저 고치고 같이 배포한다(옛 서버는 모르는 칸이라 422). 등록 요청의 `party_size`(계획 짜 주기)와 계획 확인의 인원 칸은 그대로다. 계약: [trips.md](../../../wiki/external/rest-endpoints/trips.md) 「constraints.survey」 · [web-intakes.md](../../../wiki/external/rest-endpoints/web-intakes.md) 「confirm」.
 
 ## 3. 건너뛴 질문
 

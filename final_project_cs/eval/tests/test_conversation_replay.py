@@ -223,3 +223,35 @@ def test_recorder_stops_at_the_paid_budget(tmp_path):
 def test_turn_cap_is_p95_plus_two(eps):
     real = [{"set": "real", "script": [{}] * n} for n in [1] * 90 + [2] * 6 + [5] * 4]
     assert E.turn_cap(real) == 4
+
+
+def _score_row(eid, *, fail_reply=False):
+    return {"episode_id": eid, "done": {"verdict": "pass"}, "wrong_save": {"fail": 0}, "false_done": {"fail": 0},
+            "condition": {"verdict": "pass"}, "invented": {"fail": 0}, "fail_reply": {"any": fail_reply}}
+
+
+def test_agreement_can_leave_out_breaker_episodes(tmp_path):
+    from eval.conversation_replay import report
+
+    a = [_score_row("e1"), _score_row("e2"), _score_row("e3", fail_reply=True)]
+    b = [_score_row("e1"), _score_row("e2", fail_reply=True), _score_row("e3")]
+    plain = report.agreement(a, b)
+    assert (plain["same"], plain["n"]) == (1, 3)
+    cut = report.agreement(a, b, exclude={"e2", "e3"})["without_excluded"]
+    assert (cut["excluded"], cut["same"], cut["n"], cut["below_95"]) == (2, 1, 1, False)
+
+    def _write(folder, rows):
+        folder.mkdir()
+        (folder / "results.jsonl").write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows), encoding="utf-8")
+
+    _write(tmp_path / "r", [{"episode_id": "e1", "turns": [{"model_path": {"path": "local", "reasons": []}}]},
+                            {"episode_id": "e2", "turns": [{"model_path": {"path": "api", "reasons": [["ollama", "circuit_open"]]}}]},
+                            {"episode_id": "e2", "turns": [{"model_path": {"path": "api", "reasons": [["ollama", "circuit_open"]]}}]}])
+    assert report.breaker_episodes(tmp_path / "r") == {"e2"}
+
+
+def test_paid_counter_reset_refuses_a_non_test_db():
+    from eval.conversation_replay.seed import reset_paid_counters
+
+    with pytest.raises(RuntimeError, match="재생 시험 DB"):
+        reset_paid_counters("postgresql+psycopg://postgres@127.0.0.1:5433/acop")

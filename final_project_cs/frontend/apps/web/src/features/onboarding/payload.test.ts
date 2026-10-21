@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialAnswers, questions, skip, toggle, toggleArea, toggleDetail } from "./model";
+import { initialAnswers, pickPartySize, questions, skip, toggle, toggleArea, toggleDetail } from "./model";
 import { SURVEY_VERSION, toSurvey, tripSurveySchema } from "./payload";
 
 describe("trip survey (backend constraints.survey)", () => {
@@ -15,10 +15,10 @@ describe("trip survey (backend constraints.survey)", () => {
     a = toggleArea(a, "activity");
     a = toggleDetail(toggleDetail(a, "food", "clean"), "food", "taste");
     a = toggleDetail(toggleDetail(a, "mobility", "taxi"), "mobility", "public");
-    const answers = { ...a, party: "family", indoorDining: "indoor", indoorActivity: "any", pace: "relaxed" };
+    const answers = { ...a, party: "family", partySize: 3, indoorDining: "indoor", indoorActivity: "any", pace: "relaxed" };
     const survey = toSurvey(answers);
     expect(survey).toEqual({
-      version: SURVEY_VERSION, party: "family",
+      version: SURVEY_VERSION, party: "family", party_size: 3,
       priority: ["food", "mobility"], priority_details: { food: ["clean", "taste"], mobility: ["taxi", "public"] },
       indoor_outdoor: { dining: "indoor", activity: "any" }, pace: "relaxed",
     });
@@ -43,10 +43,21 @@ describe("trip survey (backend constraints.survey)", () => {
   });
 
   it("sends typed companions for `other` (trimmed) in `party`, and never once another choice is picked", () => {
-    const other = { ...toggle(initialAnswers, "party", "other"), partyOther: "  직장 동료  " };
+    const other = { ...toggle(initialAnswers, "party", "other"), partyOther: "  직장 동료  ", partySize: 3 };
     expect(toSurvey(other).party).toBe("직장 동료");
     expect(toSurvey(toggle(other, "party", "friends")).party).toBe("friends");
+    expect(toSurvey(other).party_size).toBe(3);
+    expect(toSurvey({ ...other, partyOther: "   " })).not.toHaveProperty("party_size");
     expect(toSurvey({ ...other, partyOther: "   " })).not.toHaveProperty("party");
+  });
+
+  it("`[2026-10-20 B안 · ST4F-581]` sends the size the companions card shows: set for 혼자 · 연인, 2 until changed for 친구 · 가족", () => {
+    expect(toSurvey(toggle(initialAnswers, "party", "alone")).party_size).toBe(1);
+    expect(toSurvey(toggle(initialAnswers, "party", "partner")).party_size).toBe(2);
+    const family = toggle(initialAnswers, "party", "family");
+    expect(toSurvey(family).party_size).toBe(2);
+    expect(toSurvey(pickPartySize(family, 4)).party_size).toBe(4);
+    expect(tripSurveySchema.safeParse({ ...toSurvey(family), party_size: 5 }).success).toBe(false);
   });
 
   it("rejects what the backend rejects: unknown fields, values outside the contract and another version", () => {

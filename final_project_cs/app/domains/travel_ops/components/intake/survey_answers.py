@@ -137,6 +137,16 @@ DIRECT: dict[str, tuple[str, ...]] = {
 }
 
 
+def _direct_allowed(key: str) -> tuple[str, ...] | None:
+    """`DIRECT` 의 값 + `[2026-10-20 B안 · ST4F-581]` 여행자 구성 카드의 인원(`party_size` — 글자 "1"~상한, 설문 `party_size` 칸에 정수로).
+    인원 상한은 쓰는 순간에 계획기에서 읽는다 — 이 모듈을 불러오는 것만으로 서버 설정이 필요해지지 않게."""
+    if key == "party_size":
+        from app.domains.travel_ops.components.planning.planner import MAX_PARTY
+
+        return tuple(str(size) for size in range(1, MAX_PARTY + 1))
+    return DIRECT.get(key)
+
+
 def _encode(value: Mapping[str, Any]) -> str:
     """여러 칸 답의 저장 글 — 키를 정렬한 JSON. 같은 답은 늘 같은 글이다(멱등 재전송 · 이어받기 비교)."""
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -215,7 +225,7 @@ def check(answers: Mapping[str, Any]) -> dict[str, str | None]:
     for key, value in answers.items():
         question = known.get(key)
         if question is None:
-            allowed = DIRECT.get(key)
+            allowed = _direct_allowed(key)
             if allowed is None:
                 problems.append({"key": str(key), "reason": "모르는 문항이다"})
             elif not isinstance(value, str) or value not in allowed:
@@ -521,7 +531,7 @@ def resolve(key: str, option_id: str) -> tuple[str, str] | None:
             return (question.slot, option_id) if question.allow_custom else None
         value = question.value_of(option_id)
         return None if value is None else (question.slot, value)
-    if key in DIRECT and option_id in DIRECT[key]:
+    if option_id in (_direct_allowed(key) or ()):
         return key, option_id
     return None
 
@@ -585,6 +595,8 @@ def _place(survey: dict[str, Any], slot: str, value: str) -> None:
         survey["indoor_outdoor"] = dict(_decode(value) or {})
     elif slot in ("theme", "party", "pace", "on_disruption"):
         survey[slot] = value
+    elif slot == "party_size":                                         # 입구는 글자로 받고 설문 칸은 정수다
+        survey[slot] = int(value)
     else:                                                              # 묶음이 모르는 슬롯 — 조용히 버리지 않는다
         log.warning("intake survey answer for an unknown slot=%s", slot)
 

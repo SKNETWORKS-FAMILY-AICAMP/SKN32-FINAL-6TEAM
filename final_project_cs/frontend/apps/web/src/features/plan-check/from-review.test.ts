@@ -4,7 +4,7 @@ import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/li
 import type { Candidate, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
 import { draftOfItem } from "./model";
-import { planCandidate, reviewResultOf, safePhotoUrl, streamingViewOf } from "./from-review";
+import { asksOf, planCandidate, reviewResultOf, safePhotoUrl, streamingViewOf } from "./from-review";
 
 const place = (name: string, latitude: number | null = 37.57, longitude: number | null = 126.98) =>
   ({ name, latitude, longitude, source: "kakao", kind: null });
@@ -286,5 +286,32 @@ describe("[2026-10-19] 못 찾은 장소 — the question rides on the stop's ca
     const elsewhere = withQuestions([question({ item: "0-9" })]);
     expect(reviewResultOf(elsewhere, readingOf(elsewhere))!.items.some((entry) => entry.unfound)).toBe(false);
     expect(reviewResultOf(elsewhere, readingOf(elsewhere))!.prefill?.questions).toEqual([question().question]);
+  });
+});
+
+describe("`[2026-10-21 사용자 결정 — P6]` the interpretation questions the first check stops to ask", () => {
+  const field = (value: unknown) => ({ value, method: "customer" as const, evidence: {}, needs_review: false, note: null });
+  const question = (fields: Record<string, unknown> = {}) => ({ id: "q-0-5", kind: "interpretation", question: "계획서의 「14시~16시 정도 시간이 비는데」를 어떻게 이해할까요?", quote: "14시~16시 정도 시간이 비는데",
+    line: 5, item: "0-3", source_id: "s1", index: 3, answer: null, applied: "reading", actions: ["pick_myself"], options: [
+      { id: "reading", label: "14:00~16:00 빈 시간", recommended: true, reason: "읽기 AI 가 빈 시간으로 읽었어요", effect: "일정에 넣지 않고 14:00~16:00 빈 시간으로 둬요", action: null, query: null },
+      { id: "item_search", label: "「정도」 이름 그대로 찾기", recommended: false, reason: null, effect: "14:00 일정으로 넣고 「정도」을 장소 검색에서 직접 골라요", action: "pick_myself", query: "정도" }], ...fields });
+  const intake = (interpretations: unknown[]) => ({ interpretations, sources: [{ source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [], trip: {}, items: [
+    { index: 3, line: 5, day: null, date: "2026-10-01", fields: { title: field("정도"), starts_at: field("14:00"), removed: { ...field(true), method: "llm_agent" as const } } }] }] }) as unknown as Pick<IntakeView, "interpretations" | "sources">;
+  const days = [{ day: 1, date: "2026-10-01" }];
+
+  it("places a question not answered at its line's day and time, with the server's words and options", () => {
+    expect(asksOf(intake([question()]), days)).toEqual([{ id: "q-0-5", itemId: "0-3", day: 1, date: "2026-10-01", startsAt: "14:00", title: "정도",
+      question: "계획서의 「14시~16시 정도 시간이 비는데」를 어떻게 이해할까요?", quote: "14시~16시 정도 시간이 비는데", options: [
+        { id: "reading", label: "14:00~16:00 빈 시간", recommended: true, reason: "읽기 AI 가 빈 시간으로 읽었어요", effect: "일정에 넣지 않고 14:00~16:00 빈 시간으로 둬요", pickMyself: false, query: null },
+        { id: "item_search", label: "「정도」 이름 그대로 찾기", recommended: false, reason: null, effect: "14:00 일정으로 넣고 「정도」을 장소 검색에서 직접 골라요", pickMyself: true, query: "정도" }] }]);
+  });
+
+  it("leaves out a question already answered, one whose stop the plan holds again, and one it cannot read", () => {
+    expect(asksOf(intake([question({ answer: "reading" })]), days)).toEqual([]);
+    expect(asksOf(intake([question({ applied: "item" })]), days)).toEqual([]);
+    expect(asksOf(intake([question({ index: 9 })]), days)).toEqual([]);
+    expect(asksOf(intake([question({ options: [] })]), days)).toEqual([]);
+    expect(asksOf(intake([question({ kind: "other" })]), days)).toEqual([]);
+    expect(asksOf({ sources: [] } as unknown as Pick<IntakeView, "interpretations" | "sources">, days)).toEqual([]);
   });
 });
