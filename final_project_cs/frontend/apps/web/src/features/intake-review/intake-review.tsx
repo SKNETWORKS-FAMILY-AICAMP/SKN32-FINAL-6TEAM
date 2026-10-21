@@ -213,8 +213,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     return <PlanCheck key="plan" view={reading ?? readingOf(view)} notice={testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} />;
   }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
-    const streamNote: BusToast | null = view.status !== "reading" ? null
-      : follow.follow === "lost" ? { text: t("서버와 연결이 끊겼어요", "Lost the connection to the server"), sub: t("다시 연결하는 중이에요…", "Reconnecting…") }
+    const lostNote: BusToast | null = view.status === "reading" && follow.follow === "lost" ? { text: t("서버와 연결이 끊겼어요", "Lost the connection to the server"), sub: t("다시 연결하는 중이에요…", "Reconnecting…") } : null;
+    // `[2026-10-21 사용자 지적]` Slow and quiet are not said while the check is stopped at a question (`slowNotice`); a lost connection still is.
+    const slowNote: BusToast | null = view.status !== "reading" || lostNote ? null
       : follow.slow ? { text: t("서버 응답이 늦어지고 있어요", "The server is slow to answer"), sub: stream.progress?.current?.title
         // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
         ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
@@ -223,7 +224,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       : silence?.stage === 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again."), note: t("30초 이상 새 진행 소식이 없어요.", "No new progress for at least 30 seconds.") }
       : null;
     // `[2026-10-20 사용자 결정 — 계획 확인 C안]` Once the server's check is final the replay can stop at a card that needs a look and ask inside it: the changes are wired here too.
-    return <PlanCheck key="plan" view={reading} notice={streamNote ?? testNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined}
+    return <PlanCheck key="plan" view={reading} notice={lostNote ?? testNote} slowNotice={slowNote} readingExtras={readingExtras} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined}
       actions={view.status === "review" && view.review ? server.actions : undefined} />;
   }
   if (view.status === "fatal") {

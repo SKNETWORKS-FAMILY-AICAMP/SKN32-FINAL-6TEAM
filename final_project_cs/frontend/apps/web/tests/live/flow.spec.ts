@@ -345,7 +345,7 @@ test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」�
   await expect(card.getByText("확인 필요")).toBeVisible();
   await expect(needsBadge(page)).toHaveText("!1");
   await card.getByRole("heading").getByRole("button").click();
-  await expect(card.getByText("장소를 정하지 못했습니다")).toBeVisible();                      // the server's own message
+  await expect(card.getByText("장소를 정하지 못했습니다", { exact: true })).toBeVisible();     // the server's own message (`[2026-10-21]` the card's question says it too)
   await expect(page.getByRole("button", { name: "여행 등록" })).toHaveCount(0);
   const recheck = page.getByRole("button", { name: "다시 제출" });
   await expect(recheck).toHaveAttribute("aria-disabled", "true");

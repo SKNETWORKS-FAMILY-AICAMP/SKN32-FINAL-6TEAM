@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exampleDone, exampleSnapshots } from "./test-views";
-import { askStopId, beginRecheck, cutAtStop, nextStep, onlyCard, progress, rebase, stopAt, stopKind, tally, timeline, withArrivalRows, withAskSlot, type PlanAsk, type PlanCheckView } from "./model";
+import { askStopId, beginRecheck, cutAtStop, heldAt, nextStep, onlyCard, progress, rebase, stopAt, stopKind, tally, timeline, withArrivalRows, withAskSlot, type PlanAsk, type PlanCheckView } from "./model";
 
 /** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. */
 function walk(from: PlanCheckView, to: PlanCheckView): PlanCheckView[] {
@@ -141,6 +141,14 @@ describe("`[2026-10-20 C안]` the first check stops at a card that needs a look"
     expect(b.checks.map((row) => row.result)).toEqual(["bad", "warn", "unknown", "unknown"]);
     expect(b.verdict).toBeNull();
     expect(drawn.at(-1)!.items.map((item) => item.id)).toEqual(["a", "b"]);
+  });
+
+  it("`[2026-10-21]` says where the check is held while the server still checks the rest — none while it draws, none once the check is final", () => {
+    const streaming: PlanCheckView = { ...exampleDone, stage: "checking", title: null };
+    const drawn = walk(steps.find((view) => view.stage === "checking")!, streaming);
+    expect(heldAt(drawn.at(-1)!, streaming)).toBe("b");
+    expect(drawn.slice(0, -1).map((view) => heldAt(view, streaming)).filter(Boolean)).toEqual([]);   // drawing toward it is not held
+    expect(heldAt(drawn.at(-1)!, exampleDone)).toBeNull();                                            // final: it stops there to ask instead (`stopAt`)
   });
 
   it("tells a step that changes only the stopped card from one that draws past it", () => {

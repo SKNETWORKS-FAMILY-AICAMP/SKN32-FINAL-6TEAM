@@ -163,6 +163,7 @@ const DEFAULTS = {
   stream: "on",
   // the intake reading stream (`GET …/trip-intakes/{id}/events`): "on" | "off" (an older server: 404 — the screen re-reads every 1.5 s)
   //   | "stalled" (the server's reader died) | "silent" (opens, says "accepted" and then nothing at all — a dead line; with the check "on")
+  //   | "held" (`[2026-10-21]` says everything checked but not that the check is done, and then nothing — the server still checking the rest; with the check "on")
   //   With the check "on" the stream also carries what was checked (line · item · check · move · done); without it, only the stage.
   intakeEvents: "on",
   //   `[2026-10-03]` the "how far" packets (`progress {phase, done, total, current}`): "on" | "off" (a server without them — the bar is worked out from the rows)
@@ -1414,9 +1415,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     // Without the server's own check there is no content to stream: only the stage (and "stalled"), as an older server did.
     if (scenario.review !== "on" || scenario.intakeEvents === "stalled") return intakeEvents(request, response, origin);
     response.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", ...cors(origin) });
-    const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : intakeStream();
+    const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : scenario.intakeEvents === "held" ? intakeStream().slice(0, -2) : intakeStream();
     chunks.forEach((chunk) => response.write(chunk));
-    if (scenario.intakeEvents !== "silent") response.end();                  // "silent" leaves the line open and says nothing more
+    if (scenario.intakeEvents !== "silent" && scenario.intakeEvents !== "held") response.end();   // "silent" · "held" leave the line open and say nothing more
     return;
   }
   // `[2026-10-07]` The ways to go for one leg, and picking one (see `moveOptions` in the scenario).

@@ -26,6 +26,8 @@ export interface RowContext {
    * dimmed), `ask`: the question drawn inside it.
    */
   reveal?: { activeId: string | null; waiting: ReadonlySet<string>; stop?: string | null; ask?: ReactNode };
+  /** `[2026-10-21 사용자 지시]` On the result screen before registering: the question a card that needs a look asks (the first check's question box), or null. */
+  question?: (item: PlanItem) => ReactNode;
   /** The card or move that is open, and the stop picked on the map or in the list. */
   open: string | null;
   selected: string | null;
@@ -206,6 +208,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
     : !actions.autoRecommend ? t("자동 추천은 준비 중이에요 · 수정에서 장소를 바꿀 수 있어요", "Recommending is coming · change the place in Edit")
       : item.suggestion ? t(`자동 추천은 1순위 ${ro(item.suggestion)} 바로 바꿔요`, `Recommend changes it to the first alternative, ${item.suggestion}`) : null;
   const rows = ctx.rowsFor(item) ?? item.checks;
+  const question = done && !removed && !checking && !rechecking ? ctx.question?.(item) ?? null : null;
   const timeWhy = removed ? removedWhy : !actions.retime && !actions.edit ? t("시간 고치기는 준비 중이에요", "Changing the time is coming") : item.locked ? lockedWhy : item.booked === true ? t("예약한 일정이라 시간을 바꿀 수 없어요", "Booked: its time cannot be changed") : frozen;
   const adjusted = ctx.timeAdjusted.has(item.id) && !removed;
   const showUndo = done && (adjusted || canUndoItem);
@@ -258,7 +261,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
             </span>
           </div>
         : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
-      {done && item.unfound && !removed && !checking && ctx.unfound && <UnfoundPlace item={{ ...item, unfound: item.unfound }} prefix={ctx.prefix} candidates={actions.candidates}
+      {done && item.unfound && !removed && !checking && ctx.unfound && !question && <UnfoundPlace item={{ ...item, unfound: item.unfound }} prefix={ctx.prefix} candidates={actions.candidates}
         why={changeWhy} explain={explain} on={ctx.unfound} />}
       {editingTime && <TimeEditor item={item} ui={ctx.time!} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
@@ -271,6 +274,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
         </>}
       </div>}
       {stopped && ctx.reveal?.ask}
+      {question}
       {/* 2026-10-08: 변경은 제목 옆 체크, 확인 필요와 시간 되돌리기는 펼친 카드에서도 맨 아래 오른쪽. */}
       {!removed && (showReview || (done && (changedFrom || adjusted || canUndoItem || (!open && !checking && needsOf(rows).length > 0)))) && <div className={styles.cardFoot}>
         <div className={styles.cardFootNote}>

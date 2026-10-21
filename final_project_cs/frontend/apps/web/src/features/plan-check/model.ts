@@ -409,7 +409,27 @@ export const lateInto = (view: Pick<PlanCheckView, "moves">, id: string): boolea
 };
 
 /** `[2026-10-20 C안]` A card whose verdict is in stops the check: it needs a look, or the way to it arrives late (a place problem is asked first, then the arrival). */
-const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) => item.verdict === "review" || (item.verdict !== null && lateInto(view, item.id));
+export const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) => item.verdict === "review" || (item.verdict !== null && lateInto(view, item.id));
+
+/**
+ * `[2026-10-21 사용자 지적]` The card the check is held at while the server still checks the rest: its verdict needs a look (or its way in is late) and is drawn only once the
+ * check is final (`nextStep`). To the customer the check has stopped there — the screen waits for the server only to ask.
+ */
+export function heldAt(shown: PlanCheckView, target: PlanCheckView): string | null {
+  if (target.stage === "done" || shown.stage !== "checking") return null;
+  for (const entry of checkOrder(target)) {
+    if (entry.type === "ask") return null;
+    if (entry.type === "move") {
+      if (advance(shown.moves.find((move) => move.id === entry.id), target.moves.find((move) => move.id === entry.id)!, "whole") === undefined) continue;
+      return null;
+    }
+    const have = shown.items.find((item) => item.id === entry.id);
+    const step = advance(have, target.items.find((item) => item.id === entry.id)!, "rows");
+    if (step === undefined) continue;
+    return have && step.verdict !== null && have.verdict !== step.verdict && stopsHere(step, shown) ? entry.id : null;
+  }
+  return null;
+}
 
 /** `[2026-10-20 C안]` What the stopped card asks about: its place (or what else needs a look) first, then the way to it. */
 export const stopKind = (view: PlanCheckView, id: string): "place" | "arrival" =>
