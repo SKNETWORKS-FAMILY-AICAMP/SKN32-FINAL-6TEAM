@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from .ledger import find_dish_near, find_license_shop_by_name, find_meal_near, find_place_by_name
+from .ledger import find_dish_near, find_license_shop_by_name, find_meal_near, find_place_by_name, find_place_inside_name
 
 
 class LedgerPlaceLookup:
@@ -53,11 +53,22 @@ class LedgerPlaceLookup:
             return None
         return self._seen(found)
 
-    def find_meal_near(self, latitude: float, longitude: float) -> dict[str, Any] | None:
-        """장소(시장 · 동네) 좌표 근처의 원장 식당 하나(「광장시장 점심」). 언제나 확인 필요."""
+    def find_inside_name(self, text: str, latitude: float, longitude: float) -> dict[str, Any] | None:
+        """그 자리 가게 이름 안에 원장 이름이 든 곳(「광화문미진 본점」 → 「미진」). 언제나 확인 필요. `[2026-10-15]`"""
         try:
             with self._connect() as conn:
-                found = find_meal_near(conn, (float(latitude), float(longitude)))
+                found = find_place_inside_name(conn, text, (float(latitude), float(longitude)))
+        except Exception:   # noqa: BLE001
+            self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
+            return None
+        return self._seen(found)
+
+    def find_meal_near(self, latitude: float, longitude: float, at: Any = None) -> dict[str, Any] | None:
+        """장소(시장 · 동네) 좌표 근처의 원장 식당 하나(「광장시장 점심」). 언제나 확인 필요.
+        `at`(방문 시각)을 주면 그 시각에 확실히 닫힌 가게는 건너뛴다(`ledger.find_meal_near`)."""
+        try:
+            with self._connect() as conn:
+                found = find_meal_near(conn, (float(latitude), float(longitude)), at=at)
         except Exception:   # noqa: BLE001
             self.misses["unavailable"] = self.misses.get("unavailable", 0) + 1
             return None

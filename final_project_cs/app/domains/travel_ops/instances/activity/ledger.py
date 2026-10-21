@@ -16,11 +16,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable
 
 from app.domains.travel_ops.components.places.place_hours import read_by_rule
 
+from . import web_info
+from .db_search import web_info_store
 from .verdicts import HolidayLookup, holidays_needed, hours_verdict
 
 SOURCE = "activity.ac_place"
@@ -34,16 +36,70 @@ _PLACE_SQL = (
 _ROW = ("content_id", "name_ko", "usetime_text", "restdate_text", "hours_week", "hours_read")
 
 
+#: 웹 값이 채울 수 있는 원장 칸 — 운영시간 · 휴무만 판정에 쓴다(나머지 칸은 판정과 상관없다)
+_WEB_COLUMNS = {"business_hours": "usetime_text", "closed_days": "restdate_text"}
+
+
+def _web_entries(conn, key: str | None) -> dict[str, web_info.Entry]:
+    """그 장소의 웹 정보 줄들(`activity.ac_place_web_info`). 표가 없거나 읽지 못하면 빈 dict — 원장만으로 판정하던 때와 같다."""
+    if not key:
+        return {}
+    try:
+        with conn.transaction(), conn.cursor() as cur:          # 세이브포인트 — 실패한 읽기가 부르는 쪽 트랜잭션을 막지 않게
+            return web_info_store.read_entries(cur, [key]).get(key, {})
+    except Exception as exc:  # noqa: BLE001 — 읽지 못한 웹 값은 없는 것으로 둔다(「열었다」로 바꾸지 않는다). 종류만 남긴다
+        _log.warning("web_info_lookup_failed %s", type(exc).__name__)
+        return {}
+
+
+def _merge_web(conn, row: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
+    """원장 행의 **비어 있는** 운영시간 · 휴무 칸을 웹 값(만료 전)으로 채운다. `[2026-10-19 사용자 결정]` 원장 값이 있으면 그대로다.
+
+    채운 칸은 `web_info` 에 출처(URL · 인용 · 확인 시각)를 싣는다 — 고객 안내가 「웹에서 확인한 값」이라고 말할 수 있게.
+    웹 값으로 채웠으면 미리 편 요일표(`hours_week`)는 그 원문이 아니라서 쓰지 않는다 — 규칙이 새 원문으로 다시 편다(`hours_from_row`).
+    """
+    entries = _web_entries(conn, web_info.place_key(row.get("content_id"), row.get("name_ko")))
+    if not entries:
+        return row
+    now = now or datetime.now(timezone.utc)
+    merged, used = dict(row), {}
+    for field, column in _WEB_COLUMNS.items():
+        value, source = web_info.effective(field, row.get(column), entries.get(field), now)
+        if source == "web":
+            entry = entries[field]
+            merged[column] = value
+            used[field] = {"value": value, "url": entry.url, "quote": entry.quote,
+                           "checked": entry.expires_at.isoformat() if entry.expires_at else None}
+    if used:
+        merged["web_info"] = used
+        merged["hours_week"], merged["hours_read"] = None, None
+    return merged
+
+
+def _off_ledger_row(conn, tenant_id: str, place_id: str) -> dict[str, Any] | None:
+    """원장에 없는 장소(카카오로 실존만 확인해 일정에 들어온 곳) — 코어 장소 이름으로 웹 정보 줄을 찾아 행을 만든다. 웹 값이 없으면 `None`(모름)."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT name FROM places WHERE tenant_id = %s AND place_id = %s LIMIT 1", (tenant_id, str(place_id)))
+        found = cur.fetchone()
+    name = found[0] if found else None
+    if not name:
+        return None
+    row = {"content_id": None, "name_ko": name, "usetime_text": None, "restdate_text": None, "hours_week": None, "hours_read": None}
+    merged = _merge_web(conn, row)
+    return merged if merged.get("web_info") else None
+
+
 def place_row(conn, tenant_id: str, place_id: str | None) -> dict[str, Any] | None:
-    """코어 장소 하나 → 원장 행(`_ROW` 칸). 연결이 없으면 `None`."""
+    """코어 장소 하나 → 원장 행(`_ROW` 칸). 연결이 없으면 `None`. `[2026-10-19]` 비어 있는 운영시간 · 휴무는 웹 값으로 채운다(`_merge_web`).
+    원장에 없는 장소는 웹 정보 줄이 있을 때만 행을 만든다(`_off_ledger_row`)."""
     if place_id is None:
         return None
     with conn.cursor() as cur:
         cur.execute(_PLACE_SQL, (tenant_id, str(place_id)))
         row = cur.fetchone()
     if row is None:
-        return None
-    return dict(zip(_ROW, row))
+        return _off_ledger_row(conn, tenant_id, str(place_id))
+    return _merge_web(conn, dict(zip(_ROW, row)))
 
 
 def hours_from_row(row: dict[str, Any]) -> dict[str, Any]:
@@ -68,7 +124,7 @@ def indoor(conn, tenant_id: str, place_id: str | None) -> dict[str, Any] | None:
     from .notices import INDOOR_AUTO
 
     row = place_row(conn, tenant_id, place_id)
-    if row is None:
+    if row is None or not row.get("content_id"):                # 원장 밖 장소(웹 정보만 있는 곳)는 실내외 줄이 없다
         return None
     found = indoor_store.read(conn, row["content_id"])
     if found is None:
@@ -91,7 +147,7 @@ def state(conn, tenant_id: str, place_id: str | None, at: datetime | None, until
     from . import live_store
 
     return _with_live_status(_state_of_row(place_row(conn, tenant_id, place_id), at, until, holiday), at,
-                             lambda day: live_store.lookup(conn, tenant_id, place_id, day))
+                             _in_savepoint(conn, lambda day: live_store.lookup(conn, tenant_id, place_id, day)))
 
 
 def content_row(conn, content_id: str | None) -> dict[str, Any] | None:
@@ -102,7 +158,7 @@ def content_row(conn, content_id: str | None) -> dict[str, Any] | None:
         cur.execute("SELECT " + ", ".join(_ROW) + " FROM activity.ac_place WHERE content_id = %s LIMIT 1",
                     (str(content_id),))
         row = cur.fetchone()
-    return dict(zip(_ROW, row)) if row is not None else None
+    return _merge_web(conn, dict(zip(_ROW, row))) if row is not None else None
 
 
 def state_by_content(conn, content_id: str | None, at: datetime | None, until: datetime | None = None, *,
@@ -117,7 +173,21 @@ def state_by_content(conn, content_id: str | None, at: datetime | None, until: d
     from . import live_store
 
     return _with_live_status(_state_of_row(content_row(conn, content_id), at, until, holiday), at,
-                             lambda day: live_store.read(conn, content_id, day))
+                             _in_savepoint(conn, lambda day: live_store.read(conn, content_id, day)))
+
+
+def _in_savepoint(conn, read: Callable[[Any], dict[str, Any] | None]) -> Callable[[Any], dict[str, Any] | None]:
+    """실시간 운영 상태 읽기를 **세이브포인트 안에서** 한다. `[2026-10-16]`
+
+    ★`_live_status` 는 읽기 실패를 잡아 「모름」으로 싣는다. 그런데 PostgreSQL 은 실패한 문장 뒤 트랜잭션 전체를 막아서(aborted),
+      예외만 잡으면 **같은 연결의 다음 쿼리가 모두** `InFailedSqlTransaction` 으로 깨졌다 — 로컬 DB 에 마이그레이션 304
+      (`activity.ac_live_status`)가 빠져 있을 때 확인 화면이 원장에 있는 장소마다 이렇게 멈췄다(2026-10-16 확인).
+      세이브포인트로 감싸면 실패한 읽기만 되돌리고 부르는 쪽의 트랜잭션은 살아 있다. 예외는 그대로 올려 `_live_status` 가 기록한다."""
+    def guarded(day: Any) -> dict[str, Any] | None:
+        with conn.transaction():
+            return read(day)
+
+    return guarded
 
 
 def _state_of_row(row: dict[str, Any] | None, at: datetime, until: datetime | None,
@@ -133,6 +203,8 @@ def _state_of_row(row: dict[str, Any] | None, at: datetime, until: datetime | No
                 break      # ★같은 소스가 또 모른다고 할 것이다(team._hours_check 와 같다)
     verdict = hours_verdict(hours, at, until=until if isinstance(until, datetime) else None, holiday=facts.get)
     out = {**verdict, "content_id": row["content_id"], "name": row["name_ko"]}
+    if row.get("web_info"):
+        out["web_info"] = row["web_info"]            # 어느 칸을 웹 값으로 채웠나(출처 · 인용) — 고객 안내가 쓴다
     return out
 
 

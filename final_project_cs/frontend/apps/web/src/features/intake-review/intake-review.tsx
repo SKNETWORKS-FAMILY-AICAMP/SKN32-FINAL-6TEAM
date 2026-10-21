@@ -172,7 +172,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     return reviewed ? { ...reviewed, dirty: server.dirty, rechecking: server.rechecking } : resultOf(query.data);
   }, [query.data, reviewed, server.dirty, server.rechecking]);
   // ★`[2026-10-04 사용자 지시]` The lines to draw between the stops on the map (`trip-intakes/{id}/route-shapes`): asked once the check is on screen and again when the plan moves on
-  //   (`revision`). A failure or an older server (404) just means no lines — the pins are the map.
+  //   (`revision`). Failures are shown with a retry; an older API (404) means route lines are unsupported.
   const routeShapes = useIntakeRoutes(intakeId, query.data?.revision ?? 0, language, Boolean(reviewed));
   // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));

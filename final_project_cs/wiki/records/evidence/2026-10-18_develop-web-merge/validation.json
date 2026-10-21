@@ -1,0 +1,63 @@
+{
+  "team_develop_base": "999e30c03488bb317dc92932e6471af610a6c557",
+  "manager_base": "4d76597837a49b412de17846b53c682666c997dc",
+  "tested_code_tree": "8fecddd06b4955cda7a7283935c30ca8b6f245c7",
+  "required": {
+    "initial_passed": 7992,
+    "initial_failed": 1,
+    "skipped": 133,
+    "selected": 8126,
+    "retry_group_passed": 53,
+    "final_unique_passed": 7993,
+    "initial_failure": "closed-port fallback: 3.42 seconds exceeded the 3 second threshold; retry group passed"
+  },
+  "related": {
+    "initial_passed": 202,
+    "initial_skipped": 25,
+    "selected": 227,
+    "final_unique_passed": 227,
+    "isolated_db_module": "@electric-sql/pglite@0.5.10",
+    "supplemental_passed": 12,
+    "supplemental_skipped": 8,
+    "supplemental_skip_reason": "separate task-owned PostgreSQL opt-in not configured"
+  },
+  "dod": {
+    "selectors": 74,
+    "executed_cases": 204,
+    "passed_cases": 204,
+    "skipped_cases": 0,
+    "phase_errors": [],
+    "pytest_exit": 0,
+    "dod_passed": 26,
+    "dod_total": 26
+  },
+  "web": {
+    "lint": 0,
+    "typecheck": 0,
+    "unit_passed": 805,
+    "build": 0,
+    "mock_browser_passed": 97
+  },
+  "admin": {
+    "lint": 0,
+    "typecheck": 0,
+    "unit_passed": 22,
+    "build": 0,
+    "live_build": 0,
+    "mock_browser_passed": 16
+  },
+  "operational_service_verified": false,
+  "original_workspace_git_or_datasets_modified": false,
+  "main_modified": false,
+  "unfinished_feature_packages_included": false,
+  "supplemental_visual": {
+    "initial_failed": 2,
+    "cause": "additional private capture test omitted the mock reopen response",
+    "retry_passed": 2,
+    "widths": [
+      375,
+      1280
+    ],
+    "synthetic_screens_inspected": true
+  }
+}

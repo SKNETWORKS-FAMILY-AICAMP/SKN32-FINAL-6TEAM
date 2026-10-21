@@ -84,13 +84,19 @@ class Resolved:
     chain_deferred: bool = False
     #: 항목 종류 단서 — 원문 전체로 찾은 카카오 결과가 대부분 음식점이면 「dining」(「광장시장 빈대떡」 → 광장시장 + 식사)
     item_kind: str | None = None
+    #: `[2026-10-19 사용자 지시]` 「광장시장 점심」처럼 장소 근처에서 고른 식당이면 그 **기준 장소** — `{name, kind: "landmark", latitude, longitude, radius_m}`.
+    #: 대안(후보 · 전체 자동 추천)이 앞뒤 일정의 가운데가 아니라 이 둘레에서 찾게 한다(`candidates.area_of`). 그 밖에는 None
+    near_area: dict[str, Any] | None = None
 
     def evidence(self) -> dict[str, Any]:
         source = {"places": "places", "typo": "places", "tour_api": "tour_api", "kakao": "kakao",
                   "kakao_branch": "kakao", "dining_ledger": "dining_ledger", "dining_license": "dining_license"}.get(self.method or "")
-        return {"source": source, "method": self.method, "name": self.name, "query": self.query,
-                "place_id": self.place_id, "content_id": self.content_id, "tried": self.tried,
-                "blocked": self.blocked}
+        out = {"source": source, "method": self.method, "name": self.name, "query": self.query,
+               "place_id": self.place_id, "content_id": self.content_id, "tried": self.tried,
+               "blocked": self.blocked}
+        if self.near_area:
+            out["near_area"] = dict(self.near_area)
+        return out
 
 
 def normalize_full(name: str) -> str:
@@ -161,7 +167,7 @@ def narrowings(title: str) -> list[str]:
 
 def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,
             kind_hint: str | None = None, aliases: dict[str, str] | None = None, dining: Any = None,
-            near: tuple[float, float] | None = None, choose_near: bool = False) -> Resolved:
+            near: tuple[float, float] | None = None, at: Any = None, choose_near: bool = False) -> Resolved:
     # ★앞에 끼니 말이 있으면 식사다 — 규칙 읽기는 「12:00 점심 토속촌삼계탕」에 식사 표시를 하지 않는다(모델이 읽은 줄만)
     original_title = title
     condition = re.sub(r"\s*(?:파는|먹을|먹는)\s*(?:곳|데|식당).*$", "", title).strip()
@@ -269,7 +275,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                     # ★`[2026-10-13]` 식사인데 찾은 곳이 식당이 아니다(시장 · 관광지) — 그 안이나 근처의 식당이다
                     landmark = {"name": found.get("matched_title"), "latitude": found.get("latitude"),
                                 "longitude": found.get("longitude")}
-                    near_meal = _meal_near(dining, kakao, query, landmark, tried, blocked)
+                    near_meal = _meal_near(dining, kakao, query, landmark, tried, blocked, at=at)
                     if near_meal is not None:
                         return near_meal
                     # ★`[2026-10-13 develop 병합]` 근처 식당이 없을 때 그 자리를 식사 장소로 두는 것은 **시장(쇼핑 38)** 뿐이다 —
@@ -335,7 +341,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                                       note="카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다"), title, meal=meal)
             if landmark is not None:
                 spot = {"name": landmark["name"], "latitude": landmark["latitude"], "longitude": landmark["longitude"]}
-                near_meal = _meal_near(dining, kakao, query, spot, tried, blocked)
+                near_meal = _meal_near(dining, kakao, query, spot, tried, blocked, at=at)
                 if near_meal is not None:
                     return near_meal
             # 명시적 산책·관람은 식당 체인으로도 바꾸지 않는다. full_hits는 식사 단서 근거라 그대로 둔다.
@@ -361,6 +367,13 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                     if slot == "dining":
                         again = (_tour(dining, match["name"], blocked, label="dining_ledger", near=near)
                                  if dining is not None and match["name"] != query else None)
+                        if again is None and dining is not None and match["name"] != query and match.get("latitude") is not None:
+                            # ★`[2026-10-15]` 앞뒤 일정 자리(`near`)로 못 찾았을 때만 — 카카오가 찾은 **그 가게 자리**에서 한 번 더 본다.
+                            #   「광화문미진 본점」(카카오)과 원장 「미진」(6m)을 잇지 못해 원장 영업시간을 두고도 「운영시간을 모른다」가 됐다.
+                            #   앞뒤 일정 기준(같은 이름 여럿 중 고르기)은 위에서 그대로 쓴다 — 이 줄은 그때 못 찾은 경우만 바꾼다
+                            inside = getattr(dining, "find_inside_name", None)
+                            again = (inside(match["name"], float(match["latitude"]), float(match["longitude"]))
+                                     if inside is not None else None)
                         if again is not None and (not activity or _fits_item_kind(again, query, meal=False, activity=True)):
                             tried.append(f"dining_ledger:{match['name']}")
                             return _from_tour(again, query, title, tried, via=match["name"],
@@ -432,6 +445,11 @@ def _zone(done: Resolved, title: str, *, meal: bool) -> Resolved:
         done.note if done.method not in ("tour_api", "places") else None,
         f"「{where}」 구역 그대로 두었어요(시장 · 거리 · 동네는 가게 하나로 좁히지 않아요)",
         f"원문의 「{' '.join(rest)}」은 {where} 안에서 고르시면 바꿔 드려요" if rest else None]))
+    if meal and done.latitude is not None and done.longitude is not None:
+        # `[2026-10-20 develop 병합]` 식사 구역도 둘레 기준을 남긴다 — 고객이 고른 가게가 닫혀 대안을 찾을 때 이 둘레에서(요식 팀 near_area 와 같은 모양).
+        #   가게는 여전히 고르지 않는다(위 진단 포인트 2) — 기준만 기억한다
+        done.near_area = {"name": where, "kind": "landmark", "latitude": float(done.latitude),
+                          "longitude": float(done.longitude), "radius_m": MEAL_NEAR_RADIUS_M}
     return done
 
 
@@ -723,7 +741,7 @@ def _landmark(query: str, hits: list[dict[str, Any]]) -> dict[str, Any] | None:
 
 
 def _meal_near(dining: Any, kakao: Any, query: str, spot: dict[str, Any], tried: list[str],
-               blocked: list[str]) -> Resolved | None:
+               blocked: list[str], *, at: Any = None) -> Resolved | None:
     """시장 · 동네 이름의 식사(「광장시장 점심」) — 그 장소 좌표 근처의 식당 하나. `[2026-10-13]`
 
     원장 식당이 먼저(영업시간을 안다) → 없으면 카카오 근처 음식점(그 여행에만 — 영업시간은 모른다). 둘 다 없으면 None —
@@ -732,14 +750,19 @@ def _meal_near(dining: Any, kakao: Any, query: str, spot: dict[str, Any], tried:
     lat, lon = spot.get("latitude"), spot.get("longitude")
     if lat is None or lon is None:
         return None
+    # `[2026-10-19 사용자 지시]` 기준 장소를 남긴다 — 고른 가게가 닫혀 대안을 찾을 때도 이 둘레에서(실측: 광장시장 점심 → 북촌 식당이 대안이 됐다)
+    anchor = {"name": spot["name"] or query, "kind": "landmark", "latitude": float(lat), "longitude": float(lon),
+              "radius_m": MEAL_NEAR_RADIUS_M}
     finder = getattr(dining, "find_meal_near", None)
     if finder is not None:
-        shop = finder(lat, lon)
+        # `[2026-10-19]` 방문 시각을 알면 넘긴다 — 원장이 그 시각에 확실히 닫힌 가게를 건너뛴다. 모르면 예전 부르기 그대로
+        shop = finder(lat, lon, at=at) if at is not None else finder(lat, lon)
         tried.append(f"dining_ledger:{query} 근처 식당")
         if shop is not None:
             done = _from_tour(shop, query, query, tried, method="dining_ledger")
             done.kind, done.needs_review = "dining", True
             done.note = " · ".join(filter(None, [f"「{spot['name']}」 안이나 근처의 식당으로 보고 골랐다", done.note]))
+            done.near_area = anchor
             return done
     if kakao is not None:
         around = kakao.search(spot["name"] or query, near=(lat, lon), radius=MEAL_NEAR_RADIUS_M,
@@ -759,7 +782,7 @@ def _meal_near(dining: Any, kakao: Any, query: str, spot: dict[str, Any], tried:
             return Resolved("resolved", "kakao", pick["name"], query, "dining", pick["latitude"], pick["longitude"],
                             needs_review=True, tried=tried,
                             note=(f"「{spot['name']}」 근처 음식점 중 가까운 곳 — 원장에 없어 카카오에서 찾았다(이 여행에만 싣는다 · "
-                                  "영업시간은 아직 모른다). 다르면 고쳐 주세요"))
+                                  "영업시간은 아직 모른다). 다르면 고쳐 주세요"), near_area=anchor)
     return None
 
 

@@ -367,7 +367,7 @@ class PolicyRerank:
         info["backend"] = cfg.backend
         if api:
             target = "openai"
-            if self._chat_factory is None and not (getattr(settings, "openai_api_key_server", "") or "").strip():
+            if self._chat_factory is None and not llm_failover.server_api_ready(settings):
                 STATS["skipped"] += 1
                 return plain_result("no_api_key: 서버용 OpenAI 키가 없다")
         else:
@@ -442,10 +442,10 @@ class PolicyRerank:
 
     @staticmethod
     def _api_chat(cfg: RerankSettings, settings: Any, timeout: float) -> Any:
-        from app.infrastructure.llm_failover import OpenAIChat
+        from app.infrastructure.llm_failover import server_api_chat
 
         model = (cfg.api_model or getattr(settings, "llm_failover_model", "") or getattr(settings, "llm_model", "")).strip()
-        return OpenAIChat(api_key=settings.openai_api_key_server.strip(), model=model, timeout=timeout)
+        return server_api_chat(settings, model=model, timeout=timeout)
 
     @staticmethod
     def _default_chat(cfg: RerankSettings, settings: Any, timeout: float) -> Any:

@@ -1,0 +1,189 @@
+{
+ "bundle": "situation_cards_watch_h3",
+ "subset": null,
+ "reviewer": "합의",
+ "reviewed_on": "2026-10-20",
+ "sheet": "라벨_감시_작성자1_h3.csv + 라벨_감시_작성자2_h3.csv + 라벨_감시_합의_h3.csv",
+ "saw_ai_labels": false,
+ "n": 11,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "consensus": {
+  "changed": {
+   "K-36-W": {
+    "작성자1": {
+     "acceptable": [
+      "2"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "작성자2": {
+     "acceptable": [],
+     "forbidden": [],
+     "no_fit": true
+    },
+    "합의": {
+     "acceptable": [],
+     "forbidden": [],
+     "no_fit": true
+    }
+   },
+   "K-40-W": {
+    "작성자1": {
+     "acceptable": [
+      "1",
+      "2"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "작성자2": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "합의": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    }
+   },
+   "K-43-W": {
+    "작성자1": {
+     "acceptable": [
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "작성자2": {
+     "acceptable": [
+      "1",
+      "2"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "합의": {
+     "acceptable": [
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    }
+   }
+  },
+  "agreement": "정답 8/11 · 위험 11/11 · 다른 행 3/11 (블라인드 — 두 사람 따로 담)",
+  "claude_assisted": "없음 — Claude 제안 없이 두 사람이 따로 달고 다른 3행만 합의(Claude 는 같은 입력의 고객 요청 합의를 참고로 보여 줌)"
+ },
+ "labels": {
+  "K-34-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "K-36-W": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": "합의 — 고객 요청 K-36 과 같은 입력 · 같은 답(전시 후보 없음)"
+  },
+  "K-38-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "K-40-W": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": "합의 — 고객 요청 K-40 과 같은 입력 · 같은 답(셋 다 야외)"
+  },
+  "K-41-W": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "K-43-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": "합의 — 실내 설문 · 3번 무대륙만 실내(고객 요청 K-43 합의와 같은 판단)"
+  },
+  "K-45-W": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "K-47-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "K-49-W": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "K-51-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "K-53-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  }
+ }
+}

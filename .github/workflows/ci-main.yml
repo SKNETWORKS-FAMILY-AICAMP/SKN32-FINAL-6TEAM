@@ -67,6 +67,8 @@ jobs:
       PGTZ: Asia/Seoul
       # 값은 전부 시험용 가짜다. 실제 키·서버 주소는 넣지 않는다.
       ACOP_DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/acop_ci
+      # 진단 회귀는 명시한 시험 DB의 연결별 TEMP 표만 사용한다. 업무 DB로 대체하지 않는다.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/acop_ci
       ACOP_LLM_PROVIDER: mock
       ACOP_OPENAI_API_KEY: sk-dummy-for-ci
       ACOP_LLM_MODEL: gpt-4o-mini

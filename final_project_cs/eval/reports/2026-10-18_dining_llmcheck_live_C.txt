@@ -1,0 +1,180 @@
+LLM provider: openai | judge: openai:gpt-6-luna
+{
+ "C_halal_meals_only": {
+  "submit": 202,
+  "seconds_to_review": 20.5,
+  "status": "review",
+  "revision": 1,
+  "dining_judge": {
+   "run_id": "b5d77567-5cbf-4379-91d9-8fa596cd04a6",
+   "status": "completed",
+   "revision": 1,
+   "error_code": null,
+   "started_at": "2026-10-17T15:22:42.139295+00:00",
+   "deadline_at": "2026-10-17T15:26:41.984384+00:00",
+   "completed_at": "2026-10-17T15:22:52.584256+00:00",
+   "input_fingerprint": "15baae62908f427a5a86b7ce4060991f3b113b5f7578c1ecb73df9b70a4f5fb5",
+   "notes_fingerprint": "aba597b7589cb53cd73cc60f8ba4a06a159cd6b47e5871fa499207d6bc9981c6",
+   "blocks_registration": false
+  },
+  "agent_judged": {
+   "model": "openai:gpt-6-luna",
+   "run_id": "b5d77567-5cbf-4379-91d9-8fa596cd04a6",
+   "changed_rows": 2
+  },
+  "ready": false,
+  "items": [
+   [
+    "dining",
+    "할랄부산집",
+    "review"
+   ],
+   [
+    "dining",
+    "구르카",
+    "adjusted"
+   ]
+  ],
+  "dining": [
+   {
+    "title": "할랄부산집",
+    "status": "review",
+    "rows": [
+     {
+      "row": "place",
+      "result": "warn",
+      "text": "우리 장소 목록 정보로 찾았어요 · 맞는지 확인해 주세요"
+     },
+     {
+      "row": "time",
+      "result": "filled",
+      "text": "끝 시각이 없어 60분으로 두었어요"
+     },
+     {
+      "row": "hours",
+      "result": "ok",
+      "text": "11:30–22:40 안에 머물러요"
+     },
+     {
+      "row": "closed",
+      "result": "ok",
+      "text": "쉬는 요일이 없어요"
+     },
+     {
+      "row": "dietary",
+      "result": "ok",
+      "text": "요청하신 식사 조건(할랄 · 채식)에 맞는 곳이에요",
+      "by": "agent",
+      "requirement": "required",
+      "blocks_registration": false
+     }
+    ]
+   },
+   {
+    "title": "구르카",
+    "status": "adjusted",
+    "rows": [
+     {
+      "row": "place",
+      "result": "ok",
+      "text": "우리 장소 목록 정보로 찾았어요"
+     },
+     {
+      "row": "time",
+      "result": "filled",
+      "text": "끝 시각이 없어 60분으로 두었어요"
+     },
+     {
+      "row": "hours",
+      "result": "ok",
+      "text": "10:30–22:00 안에 머물러요"
+     },
+     {
+      "row": "closed",
+      "result": "ok",
+      "text": "쉬는 요일이 없어요"
+     },
+     {
+      "row": "dietary",
+      "result": "ok",
+      "text": "요청하신 식사 조건(할랄 · 채식)에 맞는 곳이에요",
+      "by": "agent",
+      "requirement": "required",
+      "blocks_registration": false
+     }
+    ]
+   }
+  ],
+  "judge_records": [
+   [
+    "None",
+    "_run",
+    "None",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-0",
+    "found",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-0",
+    "open_at",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-0",
+    "dietary",
+    "ok",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "found",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "open_at",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "dietary",
+    "ok",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ]
+  ],
+  "confirm": 200,
+  "confirm_body": {
+   "status": "confirmed",
+   "trip_id": "2f84b806-b619-4e3a-9d74-b345029502a7"
+  },
+  "total_seconds": 20.9
+ }
+}

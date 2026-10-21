@@ -140,17 +140,31 @@ def official_web_note(read: dict[str, Any]) -> tuple[str | None, list[dict[str, 
     columns = [column for column in _HOURS_COLUMN_LABEL if isinstance(sources.get(column), dict)]
     if not columns:
         return None, None
-    checked = max(str(sources[column].get("checked") or "") for column in columns)
-    # ★`[2026-10-12 사용자]` Claude 가 찾은 값(`by=claude`, 사람 검토 전)은 「AI 확인」으로 구분한다
-    who = "AI 확인" if any(sources[column].get("by") == "claude" for column in columns) else "확인"
-    # url 없는 사람 값(사용자가 직접 확인)은 「공식 페이지」라고 하지 않는다
-    labels = " · ".join(_HOURS_COLUMN_LABEL[column] for column in columns)
-    if all(sources[column].get("url") for column in columns):
-        note = f"{labels}: 공식 페이지({checked} {who})"
-    else:
-        note = f"{labels}: 직접 확인({checked})"
-    return note, [{"column": column, "url": sources[column].get("url"), "checked": sources[column].get("checked"),
-                   "by": sources[column].get("by")} for column in columns]
+    # ★`[2026-10-16 사용자]` 같은 입점 매장 · 브랜드의 다른 지점 값을 옮겨 적은 칸(`by=sibling`)은 확인한 값이 아니라 추정이다
+    sibling = [column for column in columns if sources[column].get("by") == "sibling"]
+    checked_columns = [column for column in columns if column not in sibling]
+    notes = []
+    if checked_columns:
+        checked = max(str(sources[column].get("checked") or "") for column in checked_columns)
+        # ★`[2026-10-12 사용자]` Claude 가 찾은 값(`by=claude`, 사람 검토 전)은 「AI 확인」으로 구분한다
+        who = "AI 확인" if any(sources[column].get("by") == "claude" for column in checked_columns) else "확인"
+        # url 없는 사람 값(사용자가 직접 확인)은 「공식 페이지」라고 하지 않는다
+        labels = " · ".join(_HOURS_COLUMN_LABEL[column] for column in checked_columns)
+        if all(sources[column].get("url") for column in checked_columns):
+            notes.append(f"{labels}: 공식 페이지({checked} {who})")
+        else:
+            notes.append(f"{labels}: 직접 확인({checked})")
+    if sibling:
+        notes.append(f"{' · '.join(_HOURS_COLUMN_LABEL[column] for column in sibling)}: {sibling_label(sources[sibling[0]])}")
+    return " · ".join(notes), [{"column": column, "url": sources[column].get("url"),
+                                "checked": sources[column].get("checked"), "by": sources[column].get("by")}
+                               for column in columns]
+
+
+def sibling_label(entry: dict[str, Any]) -> str:
+    """`by=sibling` 출처 한 마디 — 「같은 매장 다른 지점 값(추정)」 · 「같은 브랜드 다른 지점 값(추정)」."""
+    kind = "매장" if str(entry.get("group") or "").startswith("venue:") else "브랜드"
+    return f"같은 {kind} 다른 지점 값(추정)"
 
 
 _FACT_LABEL = {"tel": "연락처"}

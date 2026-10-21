@@ -1,0 +1,109 @@
+{
+ "prompt_version": "social_dining_extract.v2",
+ "prompt_hash": "19324102d372636ed759a26d000d5d8ed897b4416d5d215a99069e9d011e1895",
+ "model_path": "failover api (gpt-4.1)",
+ "runs": [
+  {
+   "url": "https://www.instagram.com/seoul_thehotple/p/DeayvzLk3_Y/",
+   "seconds": 10.2,
+   "status": "identified",
+   "reason": null,
+   "restaurants": [
+    {
+     "name": "잠실대하구이 꽃게구이 사계절집",
+     "area": "잠실",
+     "branch": "송파본점",
+     "menu": [
+      "왕새우 소금구이",
+      "생새우회",
+      "새우튀김",
+      "새우라면",
+      "전어구이",
+      "꽃게구이"
+     ]
+    }
+   ]
+  },
+  {
+   "url": "https://www.instagram.com/p/DPFpDORCG_Z/",
+   "seconds": 2.7,
+   "status": "needs_info",
+   "reason": "restaurant_not_found",
+   "restaurants": []
+  },
+  {
+   "url": "https://www.instagram.com/bbo_muksta/p/Deart4jkrJf/",
+   "seconds": 3.1,
+   "status": "identified",
+   "reason": null,
+   "restaurants": [
+    {
+     "name": "이복희해장",
+     "area": "종로",
+     "branch": null,
+     "menu": [
+      "차돌수육",
+      "마늘소스",
+      "스지볶음",
+      "선지국밥"
+     ]
+    }
+   ]
+  },
+  {
+   "url": "https://www.instagram.com/seoul_places/reel/DWghO_0k1rc/",
+   "seconds": 2.8,
+   "status": "identified",
+   "reason": null,
+   "restaurants": [
+    {
+     "name": "두꺼비집",
+     "area": "연신내",
+     "branch": null,
+     "menu": [
+      "오징어",
+      "볶음밥"
+     ]
+    }
+   ]
+  },
+  {
+   "url": "https://www.instagram.com/p/Dea5n8ECHEn/",
+   "seconds": 4.4,
+   "status": "needs_choice",
+   "reason": "restaurant_limit_exceeded",
+   "restaurants": [
+    {
+     "name": "운치",
+     "area": "안암동1가",
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "해방촌닭",
+     "area": "용산동2가",
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "초원식당",
+     "area": "낙원동",
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "김막회",
+     "area": "도화동",
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "순라길 비비",
+     "area": "봉익동",
+     "branch": null,
+     "menu": null
+    }
+   ]
+  }
+ ]
+}

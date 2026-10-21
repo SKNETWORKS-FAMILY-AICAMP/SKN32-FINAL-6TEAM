@@ -39,8 +39,11 @@ from app.domains.travel_ops.components import settings_hook
 KST = ZoneInfo("Asia/Seoul")
 #: 한 번 계산하는 동안 이동 계산기에 쓰는 시간 상한(초). 넘으면 남은 구간은 어림값으로 낸다(이유가 줄에 적힌다) — 화면이 끝없이 기다리지 않게. ★우리가 고른 값
 ENGINE_BUDGET_S = 25.0
+#: ★`[2026-10-16 화면 점검]` 요식 원장(`dining_ledger`)이 없어 기본값 「장소 정보」 뒤에 「정보로」가 붙어 「장소 정보 정보로」가 됐다 —
+#:  원장을 넣고 기본값도 「장소 목록」으로 바꿨다(문장이 늘 「{이름표} 정보로」다)
 SOURCE_LABEL = {"places": "우리 장소 목록", "tour_api": "관광공사", "kakao": "카카오 지도", "customer_pick": "직접 고른 곳",
-                "customer": "직접 고른 곳"}
+                "customer": "직접 고른 곳", "dining_ledger": "우리 식당 목록"}
+SOURCE_DEFAULT = "장소 목록"
 _HOURS_CODES = {"before_opening", "after_closing", "after_last_entry", "break_time", "outside_hours"}
 _RANK = {"bad": 4, "warn": 3, "filled": 2, "ok": 1, "unknown": 0}
 
@@ -147,7 +150,7 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
     if state == "picked_nearest":
         return _line("place", "warn", f"이름이 여러 곳이라 가까운 「{name}」으로 임시로 골랐어요 · 다르면 바꿔 주세요")
     source = str(value.get("source") or evidence.get("source") or "")
-    label = SOURCE_LABEL.get(source, "장소 정보")
+    label = SOURCE_LABEL.get(source, SOURCE_DEFAULT)
     if state == "customer":
         # ★`[2026-10-03]` 「직접 고른 곳이에요 · 직접 고른 곳」으로 겹쳐 나왔다 — 뒤에는 **어디서 찾았는지**(고른 값의 출처)가 온다
         origin = str(value.get("origin") or (source if source not in ("customer_pick", "customer") else ""))
@@ -682,6 +685,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             "_lodging_parts": (((r.get("claims") or {}).get("place") or {}).get("evidence") or {}).get("lodging_parts"),
             # `[2026-10-15 ST4F-490]` 업체 예약 표에 묶인 일정(수정 접수만) — 화면은 잠금을 풀 때 「업체 예약은 따로 취소 · 변경해야 해요」를 알린다
             "vendor_booking": ((r["claims"].get("vendor_booking") or {}).get("value") is True),
+            # `[2026-10-19]` 「광장시장 점심」처럼 장소 근처에서 고른 식당의 기준 장소(그 밖은 None) — 대안을 그 둘레에서 찾는다(`candidates.area_of`)
+            "near_area": (((r["claims"].get("place") or {}).get("evidence") or {}).get("near_area") or None),
             # 두 번 다르게 읽은 제목 · 예약번호 — `[{field: title | booking_no, current, other(null 이면 두 읽기 문장만), note}]`. 없으면 [] (고객이 고르면 사라진다)
             "rereads": [{k: v for k, v in reread.items() if k != "note"} for reread in rereads],
             "rows": lines})
@@ -988,6 +993,16 @@ def _reopened_from(conn, tenant_id: str, intake_id: Any) -> dict[str, Any] | Non
                     "ORDER BY r.built_at DESC LIMIT 1", (tenant_id, intake_id))
         row = cur.fetchone()
     return load(conn, tenant_id, row[0], row[1]) if row else None
+
+
+def intake_state(conn, tenant_id: str, intake_id: Any) -> tuple[str, int] | None:
+    """접수의 지금 (상태, 판 번호) — 줄을 잠근다(같은 트랜잭션의 고치기 · 등록이 끝날 때까지 기다리게). 늦게 끝난 일이 지난 판에 쓰지 않게 본다.
+    `[2026-10-16 설계 대조 P2]`"""
+    with conn.cursor() as cur:
+        cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s FOR UPDATE",
+                    (tenant_id, intake_id))
+        row = cur.fetchone()
+    return (row[0], int(row[1])) if row else None
 
 
 def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],

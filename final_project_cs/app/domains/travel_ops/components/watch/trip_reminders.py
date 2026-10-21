@@ -49,6 +49,8 @@ from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
+import logging
+
 from app.infrastructure.notify.phrase import Phrase
 
 from app.domains.travel_ops.components.itinerary.itinerary import Item, StaleDeparture, TripStore
@@ -57,6 +59,7 @@ from app.domains.travel_ops.components.planning.pending import PendingStore
 from app.domains.travel_ops.components.itinerary.itinerary_checks import STAY_KINDS
 
 KST = ZoneInfo("Asia/Seoul")
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -275,6 +278,46 @@ def departure_text(move: Item, following: Item | None, how: dict[str, Any] | Non
     return departure_phrase(move, following, how).render()
 
 
+#: `[2026-10-19 사용자 지시]` 캐치테이블 시험 값을 안내 한 줄로 — 말은 틀에, 수 · 시각 · 이름은 값에(언어마다 틀만 옮긴다)
+_TRIAL_SAID = {("waiting", "no"): "웨이팅 없음", ("vacancy", "yes"): "예약 가능한 시간 있음",
+               ("vacancy", "no"): "예약 가능한 시간 없음"}
+
+
+def with_trial_live(phrase: Phrase, place: str, rows: list[dict[str, Any]] | None) -> Phrase:
+    """다음 식당의 시험 값(웨이팅 · 빈자리)을 안내 끝에 한 줄 붙인다 — 「참고 · 하동관 웨이팅 41팀 (12:03 확인 · 제휴 전제 시험)」.
+
+    ★`[2026-10-19 사용자 지시 — 계획 wiki/records/plans/2026-10-16_catchtable_trial_live_card.md]` 새 알림을 만들지 않고 이미 가는
+      ② 다음 일정 · ③ 출발 안내에만 얹는다. 값은 사람이 다리로 읽어 둔 것뿐이고(무인 조회 없음) 판정 · 대안에 쓰지 않는다.
+      읽은 시각을 반드시 함께 적는다 — 보낸 메시지는 지울 수 없으니 낡은 정도를 고객이 보게 한다.
+    모양이 다른 줄은 버리고, 남는 것이 없으면 원래 문구 그대로다."""
+    said, values, latest = [], {"trial_place": place}, None
+    for row in rows or []:
+        topic, state = row.get("topic"), row.get("state")
+        try:
+            asked = datetime.fromisoformat(str(row.get("asked_at")))
+        except ValueError:
+            continue
+        if asked.utcoffset() is None:
+            continue
+        if topic == "waiting" and state == "yes":
+            num = row.get("num")
+            if isinstance(num, int) and not isinstance(num, bool) and num >= 0:
+                said.append("웨이팅 {trial_waiting}팀")
+                values["trial_waiting"] = num
+            else:
+                said.append("웨이팅 있음")
+        elif (topic, state) in _TRIAL_SAID:
+            said.append(_TRIAL_SAID[(topic, state)])
+        else:
+            continue
+        latest = asked if latest is None or asked > latest else latest
+    if not said:
+        return phrase
+    values["trial_at"] = _hm(latest)
+    template = phrase.template + "\n참고 · {trial_place} " + " · ".join(said) + " ({trial_at} 확인 · 제휴 전제 시험)"
+    return Phrase(template, {**phrase.values, **values}, cacheable=phrase.cacheable)
+
+
 def notice_fields(phrase: Phrase) -> dict[str, Any]:
     """통지 payload 에 실을 칸 — 완성 문장(`text`)과 **틀·원값**을 같이 싣는다.
 
@@ -309,10 +352,13 @@ class TripReminders:
                  clock: Callable[[], datetime], route_events: Any = None,
                  rules: ReminderRules | None = None, routes: dict[str, Any] | None = None,
                  link: Callable[[Any], str] | None = None,
-                 departure_observer: Callable[..., dict[str, Any]] | None = None) -> None:
+                 departure_observer: Callable[..., dict[str, Any]] | None = None,
+                 trial_live: Callable[[Item, datetime], list[dict[str, Any]]] | None = None) -> None:
         self.store, self._connect, self.clock = store, connection_factory, clock
         self.route_events, self.routes, self.link = route_events, routes or {}, link
         self.departure_observer = departure_observer
+        #: `[2026-10-19]` 다음 식당의 시험 값을 읽는 끼움 자리(조립이 꽂는다 — `composition.build_dining_trial_live`). 없으면 안 붙인다
+        self.trial_live = trial_live
         self.rules = rules or ReminderRules.from_guardrails()
 
     def tick(self) -> ReminderTickResult:
@@ -389,6 +435,18 @@ class TripReminders:
                         (self.store.tenant_id, trip_id, due_at - timedelta(days=1), due_at))
             return int(cur.fetchone()[0])
 
+    def _with_trial(self, phrase: Phrase, target: Item | None, now: datetime) -> Phrase:
+        """다음 일정이 식당이면 시험 값 한 줄을 얹는다. ★읽기가 실패해도 안내는 그대로 간다 — 덧붙이는 참고 한 줄 때문에
+        출발 안내를 막지 않는다. 대신 조용히 넘기지 않고 경고로 남긴다."""
+        if self.trial_live is None or target is None or target.kind != "dining":
+            return phrase
+        try:
+            rows = self.trial_live(target, now)
+        except Exception as exc:  # noqa: BLE001 — 참고 한 줄의 실패가 안내를 막지 않는다(경고로 남긴다)
+            _log.warning("trial_live_unavailable", extra={"item_id": str(target.item_id), "error": type(exc).__name__})
+            return phrase
+        return with_trial_live(phrase, target.title, rows)
+
     def _payload(self, trip_id, trip, items, reminder: Reminder, now, result,
                  waiting: set | None = None) -> dict[str, Any] | None:
         waiting = waiting or set()
@@ -406,7 +464,8 @@ class TripReminders:
         if reminder.kind == "next_item":
             move = next((i for i in items if i.kind == "mobility"
                          and reminder.current.seq < i.seq < reminder.following.seq), None)
-            fields = notice_fields(next_item_phrase(reminder.current, reminder.following, move))
+            fields = notice_fields(self._with_trial(next_item_phrase(reminder.current, reminder.following, move),
+                                                    reminder.following, now))
             if reminder.following.item_id in waiting:
                 fields = notice_fields(waiting_phrase(reminder.following))
                 base["waiting"] = True
@@ -445,7 +504,7 @@ class TripReminders:
             result.no_route += 1
         if status == "unchecked":
             result.unchecked.append(entry)
-        return {**base, **notice_fields(phrase), "item_id": str(reminder.move.item_id),
+        return {**base, **notice_fields(self._with_trial(phrase, target, now)), "item_id": str(reminder.move.item_id),
                 **({'departure_observation': observations[-1]} if observations else {})}
 
 

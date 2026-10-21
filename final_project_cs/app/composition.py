@@ -739,36 +739,48 @@ def wire_domain_teams(*, config: ProjectConfig | None = None, registry: TeamRegi
     return connected
 
 
-def _dining_agent_shadow():
-    """요식 판정 에이전트 그림자 운행 — 가드레일 `travel.dining.agent_shadow.enabled` 를 켰을 때만 실행기를 만든다(기본 꺼짐 → None). `[2026-10-13]`
+def _dining_agent_judge():
+    """요식 판정 에이전트 — 가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐)일 때 실행기를 만든다. `[2026-10-13 · 2026-10-16]`
+    ★실행기는 `instances/dining/judge.run` — 판정을 접수 확인 줄에 합친다(화면 문장은 지금처럼 코드가 만든다).
+    ★모의 모델(`ACOP_LLM_PROVIDER=mock` — 시험 · CI)이면 만들지 않는다 — 가짜 키로 실제 모델을 부르지 않게.
 
     모델은 가드레일 `model` 로 고른다 — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
-    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(그림자는 없어도 되는 것이다 — 기동을 막지 않는다)."""
-    from app.core.settings import dining_agent_shadow, get_settings
+    ★키 · 주소가 없으면 만들지 않고 경고만 남긴다(없으면 규칙 검사 그대로 — 기동을 막지 않는다)."""
+    from app.core.settings import dining_agent_judge, get_settings
 
-    shadow_settings = dining_agent_shadow()
-    if shadow_settings is None:
+    judge_settings = dining_agent_judge()
+    if judge_settings is None:
         return None
     from functools import partial
 
-    from app.domains.travel_ops.instances.dining import shadow as dining_shadow
+    from app.domains.travel_ops.instances.dining import judge as dining_judge
     from app.infrastructure.llm.tool_chat import OllamaToolChat, OpenAIToolChat
 
     settings = get_settings()
-    kind, _, model = shadow_settings["model"].partition(":")
+    if getattr(settings, "llm_provider", "") == "mock":
+        return None
+    kind, _, model = judge_settings["model"].partition(":")
     if kind == "openai" and (settings.openai_api_key or "").strip():
         chat = OpenAIToolChat(api_key=settings.openai_api_key, model=model or "gpt-6-luna")
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
         chat = OllamaToolChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model)
     else:
-        logging.getLogger(__name__).warning("dining agent shadow enabled but model %s has no key/address — shadow is off",
-                                            shadow_settings["model"])
+        logging.getLogger(__name__).warning("dining agent judge enabled but model %s has no key/address — rule review only",
+                                            judge_settings["model"])
         return None
-    return partial(dining_shadow.run, chat=chat, model=shadow_settings["model"], deadline_s=shadow_settings["deadline_s"])
+    # ★`[2026-10-16]` 원장이 모를 때 에이전트가 고를 바깥 조회 — 지도(카카오 `map_search`) · 실시간 영업(구글 `live_open_check`).
+    #   ☆전에는 기본 `DiningTools(connect)` 라 둘 다 None — 스위치를 켜도 바깥 조회는 늘 「모름」이었다(LLM 켜짐 점검).
+    #   키가 없으면 그 도구만 「모름」(어댑터 None). 호출 예산은 각 어댑터의 DB 예산 그대로다
+    from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
+
+    tools_factory = partial(DiningTools, kakao=build_kakao_local(), google=build_google_places())
+    return partial(dining_judge.run, chat=chat, model=judge_settings["model"], deadline_s=judge_settings["deadline_s"],
+                   tools_factory=tools_factory)
 
 
 def _dining_meal_picker():
-    """대체 식당 셋 중 고르기 — 가드레일 `travel.dining.meal_pick.enabled` 를 켰을 때만 선택기를 만든다(기본 꺼짐 → None). `[2026-10-15]`
+    """대체 식당 셋 중 고르기 — 가드레일 `travel.dining.meal_pick.enabled` 를 켰을 때만 선택기를 만든다(끄면 None). `[2026-10-15]`
+    `[2026-10-20 사용자 결정]` 가드레일 기본값은 켜짐 — 꽂는 것은 아래 「흐름 한 칸」 선택기다(1위는 규칙 그대로).
 
     모델은 가드레일 `model` — `openai:<모델>`(키 `ACOP_OPENAI_API_KEY`) · `ollama:<모델>`(주소 `ACOP_OLLAMA_BASE_URL`).
     ★키 · 주소가 없으면 만들지 않고 경고만 남긴다 — 선택기가 없으면 규칙 1등 그대로다(기동을 막지 않는다)."""
@@ -793,7 +805,9 @@ def _dining_meal_picker():
         logging.getLogger(__name__).warning("dining meal_pick enabled but model %s has no key/address — rule pick only",
                                             pick_settings["model"])
         return None
-    return meal_pick.make_picker(chat)
+    # ★`[2026-10-16 사용자 결정]` 「흐름 한 칸」 — 규칙 1위는 그대로 두고 모델이 그날 흐름 · 취향으로 다른 안 하나를 고른다(고객이 고른다).
+    #   1위를 바꾸는 `make_picker` 는 평가용으로 남긴다(eval/runners/dining_alternatives)
+    return meal_pick.make_flow_picker(chat)
 
 
 def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> list[str]:
@@ -849,13 +863,13 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
                                planner_factory=dining_ledger_impl.PlannerLedger,
                                link_core_place=dining_ledger_impl.link_core_place_to,
                                closure_observation=dining_ledger_impl.closure_observation,
-                               agent_shadow=_dining_agent_shadow(),
+                               agent_judge=_dining_agent_judge(),
                                meal_picker=_dining_meal_picker())
 
         # 요식 — 확인 화면 「다른 식당」 후보(`[2026-10-15]` 후보 공급은 팀이, 조립은 우리가). 미등록이면 확인 화면 자체 고르기로 간다
         from app.domains.travel_ops.instances.dining import review_alternatives as dining_review_alternatives
 
-        dining_alternatives.register(rank=dining_review_alternatives.rank)
+        dining_alternatives.register(rank=dining_review_alternatives.rank, near=dining_review_alternatives.rank_near)
 
     if "activity" in active_ids:
         # 활동 — 비슷한 곳 순서와 설문 선호.
@@ -959,6 +973,34 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
 def build_place_status(google=None):
     from app.domains.travel_ops.components.watch.place_status import PlaceStatus
     return PlaceStatus(get_connection, google=google)
+
+
+def build_dining_trial_live(tenant_id: str):
+    """일정 안내(`TripReminders`)에 꽂는 캐치테이블 시험 값 읽기 — `(식당 항목, 지금) -> [{topic, state, num, asked_at, …}]`.
+
+    `[2026-10-19 사용자 지시]` 이미 가는 ② 다음 일정 · ③ 출발 안내에 참고 한 줄만 얹는다(새 알림 없음). 조건은 카드와 같다 —
+    관리 콘솔 스위치(`settings_hook.dining_trial_live_view_enabled`, 기본 꺼짐) · 식사 시작 1시간 전 ~ 시작 전 · 최근 30분 안에 읽은 값.
+    스위치는 부를 때마다 본다(운영 중에 켜고 끈다). 요식 팀이 꺼져 있으면 None — 안내에 아무것도 안 붙는다.
+    """
+    from app.core.service_bindings import current_bindings
+    from app.core.team_availability import TeamUnavailable
+
+    table = current_bindings()
+    if table is not None:
+        try:
+            table.registry.require_runnable("dining")
+        except TeamUnavailable:
+            return None
+    from app.domains.travel_ops.components import settings_hook
+    from app.domains.travel_ops.instances.dining import ledger as dining_ledger
+
+    def read(item, now):
+        if not settings_hook.dining_trial_live_view_enabled(tenant_id) or not dining_ledger.trial_due(item.starts_at, now):
+            return []
+        with get_connection() as conn:
+            return dining_ledger.trial_live(conn, tenant_id, [item.place])[0]
+
+    return read
 
 
 def build_domain_routers() -> list:

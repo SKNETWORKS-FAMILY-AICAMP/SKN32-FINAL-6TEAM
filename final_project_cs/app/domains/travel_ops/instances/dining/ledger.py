@@ -132,6 +132,9 @@ def _catalog_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | N
         #   좌표가 없으면 거리를 못 재니 예전처럼 **정확히 같은 이름 하나**만 받는다.
         here = _coords(place)
         found = find_place_by_name(conn, str(place.get("name") or ""), near=here)
+        if not found and here is not None:
+            # ★`[2026-10-15]` 「광화문미진 본점」(카카오) — 원장은 「미진」(6m). 이름 단계가 못 맞추면 이 장소 100m 안에서 이름 안의 원장 가게
+            found = find_place_inside_name(conn, str(place.get("name") or ""), here)
         if not found or not found.get("dining_place_uid"):
             return None
         if here is None:
@@ -457,6 +460,8 @@ class PlannerLedger:
 #: ★`[2026-10-07]` 이름 찾기 단계 — 정확히 같은 이름 하나가 아니면 모두 확인 필요(`needs_review`)로 낸다
 NAME_TYPO_RATIO = 0.2               # 자모 거리 / 긴 쪽 길이 — 이 이하면 오타로 본다(`intake/places.TYPO_RATIO` 와 같다)
 NAME_PREFIX_MIN = 4                 # 앞부분 일치로 받는 최소 글자 수(「진옥화할매」 → 「진옥화할매원조닭한마리」)
+#: 「광화문 미진」 → 원장 「미진」 — 입력 안에 원장 이름이 들어 있을 때 같은 가게로 보는 거리(m). 좌표 없이 포함만 보면 짧은 이름이 아무 데나 붙는다
+NAME_CONTAINS_NEAR_M = 100
 NAME_PREFIX_UNIQUE_MIN = 3          # ★`[2026-10-10 사용자 결정]` 이 글자 수부터는 앞부분이 맞는 가게가 **하나뿐일 때만** 받는다(「편강율」 → 「편강 율 플래그십&티하우스」)
 #: ★`[2026-10-12]` 3글자 앞부분 찾기에서 받지 않는 끝말 — 동네 · 역 · 길 이름이다. 접수가 「성수동 소문난 감자탕」을 「성수동」으로
 #:  좁혔을 때 「성수동」으로 시작하는 가게가 하나(「성수동 대림창고 갤러리」)라 그 가게가 골라졌다(장소 찾기 평가 PL-034)
@@ -589,6 +594,31 @@ def find_place_by_name(conn, name: str | None, *, near: tuple[float, float] | No
     return None
 
 
+def find_place_inside_name(conn, name: str | None, at: tuple[float, float]) -> dict[str, Any] | None:
+    """`at` 자리의 가게 이름 **안에** 원장 이름이 들어 있으면 그 원장 가게 — 「광화문미진 본점」(카카오) → 원장 「미진」. `[2026-10-15]`
+
+    ★`find_place_by_name` 과 따로 둔다 — 앞에 지역명이 붙은 이름은 그 단계들(같음 · 지점 · 앞부분 · 오타 · 메뉴)이 못 맞췄다.
+      `at` 은 **그 가게 자체의 좌표**(카카오가 찾은 자리)여야 한다. 앞뒤 일정 좌표로 부르지 않는다 — 그 기준은 `find_place_by_name` 이 쓴다.
+    ★짧은 이름은 아무 데나 붙기 쉬워 좌표가 `NAME_CONTAINS_NEAR_M` 안인 곳만 받는다. 긴 이름 · 가까운 곳 먼저. 언제나 확인 필요.
+    """
+    base = _base_key(name)
+    if len(base) < 3:
+        return None
+    try:
+        shops = _shops(conn)
+    except Exception as exc:   # noqa: BLE001 — 못 읽으면 못 찾음
+        logger.warning("dining find_place_inside_name not read reason=%s", type(exc).__name__)
+        return None
+    inside = [(s, _metres(at, (s["latitude"], s["longitude"]))) for s in shops
+              if len(s["base"]) >= 2 and s["base"] != base and s["base"] in base]
+    inside = [(s, m) for s, m in inside if m <= NAME_CONTAINS_NEAR_M]
+    if not inside:
+        return None
+    shop, metres = min(inside, key=lambda pair: (-len(pair[0]["base"]), pair[1]))
+    return _found(shop, match="contains_near", review=True, others=len(inside) - 1,
+                  note=f"「{name}」 안의 이름인 원장의 「{shop['name']}」({round(metres)}m)로 찾았어요 — 다르면 고쳐 주세요")
+
+
 def _typo_match(base: str, shops: list[dict[str, Any]]) -> tuple[dict[str, Any], float] | None:
     """자모 거리 비율이 가장 작은 이름 — 기준 이하이고, 같은 거리의 **다른 이름**이 없을 때만."""
     from app.domains.travel_ops.components.intake.places import edit_distance, jamo
@@ -632,12 +662,17 @@ def dish_words(text: str | None) -> list[str]:
 
 
 def find_meal_near(conn, near: tuple[float, float], *, radius_m: int = DISH_RADIUS_M,
-                   shops: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
+                   shops: list[dict[str, Any]] | None = None, at: Any = None,
+                   opened: Any = None) -> dict[str, Any] | None:
     """`near`(시장 · 동네 좌표)에서 가장 가까운 원장 식당(반경 안, 카페 · 디저트 제외). `[2026-10-13]`
 
     「광장시장 점심」 — 원문은 가게를 말하지 않았다. 그 자리 **안이나 근처**의 식당 하나를 고르고 언제나 확인 필요로 둔다.
     ☆테스트 서버에서 「광장시장 바베큐 용산점」(이름만 「광장시장」으로 시작하는 용산 가게)이 골라졌다 — 기준점이 시장이 아니었다.
     ★영업 판정은 여기서 하지 않는다 — 등록 뒤 `dining_states` 가 방문 시각으로 하고, 닫혀 있으면 대체가 바꾼다.
+    ★`[2026-10-19 사용자 지시]` 다만 방문 시각(`at`)을 알면 **그 시각에 확실히 닫힌(False) 가게는 건너뛰고** 다음 가까운 곳을 고른다 —
+      실측: 「광장시장 점심」(화요일)이 원장상 화요일 휴무인 순희네빈대떡이 됐고, 대체가 북촌 식당으로 바꿨다. 모름(None)은 닫힌 것이 아니다(그대로 고른다).
+      모두 닫혔거나 판정을 못 읽으면 예전처럼 가장 가까운 곳 — 확인 화면의 판정이 휴무를 드러낸다(숨기지 않는다).
+      `opened(uids, at) -> {uid: True|False|None}` — 기본은 원장 `open_at_slot`(`open_among`).
     """
     if shops is None:
         try:
@@ -651,6 +686,13 @@ def find_meal_near(conn, near: tuple[float, float], *, radius_m: int = DISH_RADI
     if not hits:
         return None
     metres, shop = hits[0]
+    if at is not None:
+        try:
+            states = (opened or (lambda uids, when: open_among(conn, uids, when)))([s["place_uid"] for _, s in hits], at)
+        except Exception as exc:   # noqa: BLE001 — 판정을 못 읽으면 예전처럼 가장 가까운 곳(경고로 남긴다)
+            logger.warning("dining find_meal_near hours not read reason=%s", type(exc).__name__)
+            states = {}
+        metres, shop = next(((m, s) for m, s in hits if states.get(s["place_uid"]) is not False), hits[0])
     return _found(shop, match="meal_near", review=True, others=len(hits) - 1,
                   note=f"가장 가까운 식당 「{shop['name']}」({round(metres):,}m) — 다르면 고쳐 주세요")
 
@@ -839,3 +881,69 @@ def enrich_place(conn, tenant_id: str, place: dict[str, Any] | None,
         return None
     state = dining_state(conn, tenant_id, place.get("place_id"), at, until)
     return merge_state(place, state)
+
+
+#: 화면에 보일 시험 출처 — 제휴 전제 시험 구현(`scripts/dining/catchtable.py`). 이 이름을 아는 곳은 여기 하나다
+TRIAL_SOURCE = "catchtable_trial"
+#: 시험 출처에서 화면에 보일 주제 — 몇 분이면 바뀌는 둘. 영업시간 · 휴무는 원장 · 본 갈래가 말한다
+TRIAL_TOPICS = ("waiting", "vacancy")
+#: `[2026-10-19 사용자 결정]` 곧 갈 식사에만 보인다 — 식사 시작 60분 전부터 시작 시각까지.
+#: 사람이 1시간 전 · 30분 전에 다리로 한 번씩 읽고(무인 반복 없음), 카드는 그중 최신 값을 보인다. 사흘 뒤 저녁의 「지금 웨이팅」은 쓸모가 없다
+TRIAL_WINDOW = timedelta(minutes=60)
+#: `[2026-10-19 사용자 결정]` 보여 주기에만 쓰는 신선도 — 최근 30분 안에 읽은 값. 사람이 읽는 간격(1시간 전 → 30분 전)과 맞췄다.
+#: DB 기한(빈자리 · 웨이팅 300초, 마이그레이션 206)은 그대로다 — 그것은 시험 갈래 판정과 「다시 물을지」가 쓴다.
+#: 화면 · 알림은 늘 읽은 시각을 함께 적어 낡은 정도를 고객이 보게 한다
+TRIAL_SHOW = timedelta(minutes=30)
+
+
+def trial_due(starts_at: datetime | None, now: datetime) -> bool:
+    """이 식사가 시험 값을 보일 때인가 — 시작 `TRIAL_WINDOW` 전부터 시작 시각 전까지. 시각을 모르면 아니다."""
+    start = _as_datetime(starts_at)
+    return start is not None and start - TRIAL_WINDOW <= now < start
+
+
+def trial_live(conn, tenant_id: str, places: list[dict[str, Any] | None]) -> list[list[dict[str, Any]]]:
+    """장소마다 시험 출처의 지금 값(웨이팅 · 빈자리) — `places` 와 같은 순서. 값이 없으면 그 자리는 빈 목록.
+
+    ★`[2026-10-19 사용자 지시 — 계획 wiki/records/plans/2026-10-16_catchtable_trial_live_card.md]` **화면 표시만** 한다.
+      판정 · 재계획은 이 값을 보지 않는다(본 갈래 `v_live_check_fresh` 는 시험 출처를 빼고, 그대로 둔다).
+      보는 곳은 둘 — 여행 화면 식당 카드(`trip_api._trip_view`)와 일정 안내의 참고 한 줄(`composition.build_dining_trial_live`).
+    ★조회하지 않는다 — 사람이 다리로 읽어 적은 것(`dn_live_check`)만 읽는다(robots.txt · `catchtable.py` 머리말 4).
+    ★최근 `TRIAL_SHOW`(30분) 안에 읽은 값만 — 주제마다 **가장 최근 읽기**를 보고, 그것이 실패 · 모름이면 그 주제는 싣지 않는다
+      (실패 직전의 옛 값을 꺼내 보이지 않는다). DB 기한(5분)과 따로 둔 이유는 위 `TRIAL_SHOW` 주석.
+    원장과 이어지지 않은 장소(`dining_place_uid` 도 `dn_core_place_link` 도 없음)는 빈 목록 — 이름으로 짐작해 잇지 않는다.
+    """
+    out: list[list[dict[str, Any]]] = [[] for _ in places]
+    if not places or not ledger_ready(conn):
+        return out
+    with conn.cursor() as cur:
+        uids: list[str | None] = []
+        for place in places:
+            uid = str(((place or {}).get("attributes") or {}).get("dining_place_uid") or "").strip()
+            uids.append(uid or None)
+        core_ids = sorted({str(place["place_id"]) for place, uid in zip(places, uids)
+                           if uid is None and place and place.get("place_id")})
+        linked: dict[str, str] = {}
+        if core_ids:
+            cur.execute("SELECT core_place_id, place_uid::text FROM dining.dn_core_place_link "
+                        "WHERE tenant_id=%s AND core_place_id = ANY(%s)", (tenant_id, core_ids))
+            linked = {str(core): uid for core, uid in cur.fetchall()}
+        uids = [uid or linked.get(str((place or {}).get("place_id"))) for place, uid in zip(places, uids)]
+        wanted = sorted({uid for uid in uids if uid})
+        if not wanted:
+            return out
+        cur.execute("SELECT DISTINCT ON (place_uid, topic) place_uid::text, topic, outcome, value_state, value_num, value_detail, asked_at "
+                    "FROM dining.dn_live_check "
+                    "WHERE source_code=%s AND topic = ANY(%s) AND place_uid::text = ANY(%s) "
+                    "AND asked_at <= now() AND asked_at > now() - make_interval(secs => %s) "
+                    "ORDER BY place_uid, topic, asked_at DESC, check_id DESC",
+                    (TRIAL_SOURCE, list(TRIAL_TOPICS), wanted, TRIAL_SHOW.total_seconds()))
+        rows = cur.fetchall()
+    found: dict[str, list[dict[str, Any]]] = {}
+    for uid, topic, outcome, state, num, detail, asked_at in rows:
+        if outcome != "ok" or state not in ("yes", "no"):
+            continue
+        found.setdefault(uid, []).append({"topic": topic, "state": state, "num": num, "detail": detail,
+                                          "asked_at": asked_at.astimezone(KST).isoformat(), "source": TRIAL_SOURCE})
+    return [sorted(found.get(uid, []), key=lambda row: TRIAL_TOPICS.index(row["topic"])) if uid else []
+            for uid in uids]

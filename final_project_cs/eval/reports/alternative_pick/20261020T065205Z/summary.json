@@ -1,0 +1,432 @@
+{
+ "conditions": {
+  "eval_run": "20261020T065205Z",
+  "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_h2.jsonl",
+  "inputs_sha256": "d2d31fa6fc7bfe91b4b5525a05b590ba28d24ebb990eb6e720c28dc4ef7656e5",
+  "dataset_sha256": "7fc12dc383b4f6b4a40f7e1b624998c0b238fc5f3616a28cb61333d8e15a785c",
+  "split": [
+   "holdout"
+  ],
+  "smoke": false,
+  "labeler": "합의",
+  "cases": 39,
+  "repeats": 3,
+  "shuffle": {
+   "cases": 40,
+   "per_case": 2,
+   "seed": 7
+  },
+  "dry_run": false,
+  "model": "gpt-5.4-nano",
+  "reasoning_effort": "low",
+  "web_search": false,
+  "prompt_file": null,
+  "payload": "v2",
+  "timeout_s": 8.0,
+  "temperature": null,
+  "seed_model": null,
+  "prompt": "db",
+  "prompt_id": "cc0f028a-3b42-4007-99b4-9de0b35cc470",
+  "prompt_chars": 1072,
+  "m5_review": {
+   "sheet": "reasons_review_all.csv",
+   "scope": "이유 전수",
+   "role": "v2 고객 요청(비교용)",
+   "claude_assisted": "Claude 제안 — 비교용이라 사람 검수 안 함"
+  },
+  "labels_sha256": "7fc12dc383b4f6b4a40f7e1b624998c0b238fc5f3616a28cb61333d8e15a785c"
+ },
+ "observations": 195,
+ "base_observations": 117,
+ "cases": 39,
+ "M1_served": {
+  "num": 90,
+  "den": 117,
+  "pct": 76.9,
+  "ci95": [
+   0.641,
+   0.8889
+  ],
+  "mean_of_cases": 0.7692,
+  "outcomes": {
+   "correct": 90,
+   "suboptimal": 27
+  }
+ },
+ "M1_raw": {
+  "num": 91,
+  "den": 117,
+  "pct": 77.8,
+  "ci95": [
+   0.6496,
+   0.8974
+  ],
+  "mean_of_cases": 0.7778,
+  "outcomes": {
+   "correct": 91,
+   "suboptimal": 26
+  }
+ },
+ "M1_discriminating": {
+  "num": 39,
+  "den": 60,
+  "pct": 65.0,
+  "ci95": [
+   0.45,
+   0.8333
+  ],
+  "mean_of_cases": 0.65,
+  "outcomes": {
+   "correct": 39,
+   "suboptimal": 21
+  }
+ },
+ "M1_excluded_cases": {
+  "all_acceptable": 17,
+  "no_fit": 2,
+  "discriminating": 20
+ },
+ "M2_dangerous": {
+  "num": 0,
+  "den": 117,
+  "pct": 0.0
+ },
+ "M2_raw_outside": {
+  "num": 0,
+  "den": 117,
+  "pct": 0.0
+ },
+ "M2_served_only": {
+  "num": 0,
+  "den": 117,
+  "pct": 0.0
+ },
+ "M2_hard": {
+  "num": 0,
+  "den": 117,
+  "pct": 0.0
+ },
+ "M2_new_danger": {
+  "num": 0,
+  "den": 117,
+  "pct": 0.0
+ },
+ "M2_code_order": {
+  "num": 3,
+  "den": 117,
+  "pct": 2.6
+ },
+ "baseline_code_order": {
+  "num": 18,
+  "den": 39,
+  "pct": 46.2,
+  "ci95": [
+   0.3077,
+   0.6154
+  ],
+  "dangerous": {
+   "num": 1,
+   "den": 39,
+   "pct": 2.6
+  }
+ },
+ "M3_llm_minus_code": {
+  "value": 0.3077,
+  "ci95": [
+   0.1709,
+   0.453
+  ],
+  "paired_cases": 39
+ },
+ "by_stratum": {
+  "A": {
+   "cases": 6,
+   "M1_served": {
+    "num": 18,
+    "den": 18,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 18,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 18,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 6,
+    "den": 6,
+    "pct": 100.0
+   }
+  },
+  "B": {
+   "cases": 14,
+   "M1_served": {
+    "num": 24,
+    "den": 42,
+    "pct": 57.1
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 42,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 18,
+    "den": 42,
+    "pct": 42.9
+   },
+   "baseline": {
+    "num": 4,
+    "den": 14,
+    "pct": 28.6
+   }
+  },
+  "C": {
+   "cases": 5,
+   "M1_served": {
+    "num": 13,
+    "den": 15,
+    "pct": 86.7
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 15,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 2,
+    "den": 15,
+    "pct": 13.3
+   },
+   "baseline": {
+    "num": 0,
+    "den": 5,
+    "pct": 0.0
+   }
+  },
+  "D": {
+   "cases": 6,
+   "M1_served": {
+    "num": 11,
+    "den": 18,
+    "pct": 61.1
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 18,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 7,
+    "den": 18,
+    "pct": 38.9
+   },
+   "baseline": {
+    "num": 0,
+    "den": 6,
+    "pct": 0.0
+   }
+  },
+  "E": {
+   "cases": 5,
+   "M1_served": {
+    "num": 15,
+    "den": 15,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 15,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 15,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 5,
+    "den": 5,
+    "pct": 100.0
+   }
+  },
+  "F": {
+   "cases": 3,
+   "M1_served": {
+    "num": 9,
+    "den": 9,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 9,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 9,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 3,
+    "den": 3,
+    "pct": 100.0
+   }
+  }
+ },
+ "by_path": {
+  "chat": {
+   "cases": 39,
+   "M1_discriminating": {
+    "num": 39,
+    "den": 60,
+    "pct": 65.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 117,
+    "pct": 0.0
+   },
+   "M4_keep_code_order": {
+    "num": 18,
+    "den": 18,
+    "pct": 100.0
+   },
+   "not_called": {
+    "num": 0,
+    "den": 117,
+    "pct": 0.0
+   }
+  }
+ },
+ "M4_keep_code_order": {
+  "num": 18,
+  "den": 18,
+  "pct": 100.0
+ },
+ "M5_reason_grounded": {
+  "reasons_written": 85,
+  "auto_flagged": {
+   "num": 3,
+   "den": 85,
+   "pct": 3.5
+  },
+  "reviewed": 85,
+  "fabricated": 27,
+  "num": 58,
+  "den": 85,
+  "pct": 68.2,
+  "severe": {
+   "num": 2,
+   "den": 85,
+   "pct": 2.4
+  },
+  "mild": {
+   "num": 25,
+   "den": 85,
+   "pct": 29.4
+  },
+  "unclassified": 0,
+  "unreviewed_flagged": 0,
+  "status": "reviewed",
+  "note": "표시 안 되고 표본에도 안 든 0건은 사람이 보지 않았다(근거 있음으로 셈)"
+ },
+ "M6a_valid": {
+  "num": 192,
+  "den": 195,
+  "pct": 98.5
+ },
+ "M6b_used": {
+  "num": 192,
+  "den": 195,
+  "pct": 98.5
+ },
+ "M6c_corrected": {
+  "num": 0,
+  "den": 195,
+  "pct": 0.0
+ },
+ "M6d_discarded": {
+  "num": 3,
+  "den": 195,
+  "pct": 1.5
+ },
+ "M6e_call_failed": {
+  "num": 0,
+  "den": 195,
+  "pct": 0.0
+ },
+ "M6b_base": {
+  "num": 116,
+  "den": 117,
+  "pct": 99.1
+ },
+ "M6e_config_error": {
+  "num": 0,
+  "den": 195,
+  "pct": 0.0
+ },
+ "M6e_timeout": {
+  "num": 0,
+  "den": 195,
+  "pct": 0.0
+ },
+ "not_called": {
+  "num": 0,
+  "den": 195,
+  "pct": 0.0
+ },
+ "call_failures": {},
+ "M7_consistent": {
+  "num": 34,
+  "den": 39,
+  "pct": 87.2
+ },
+ "M8_position_stable": {
+  "num": 11,
+  "den": 39,
+  "pct": 28.2,
+  "unit": "사례(섞은 판 모두 같음)",
+  "observations": {
+   "num": 27,
+   "den": 78,
+   "pct": 34.6
+  },
+  "excluded": 0,
+  "note": "LLM 1순위 = 코드가 쓴 답의 1순위. 원래 판이나 섞은 판이 폐기 · 실패면 비교에서 뺀다(excluded)"
+ },
+ "M9": {
+  "latency_ms": {
+   "p50": 1656,
+   "p95": 2563,
+   "n": 195
+  },
+  "cost_usd_total": 0.062958,
+  "cost_usd_per_call_mean": 0.000323,
+  "pricing": "eval.activity_judge.metrics 의 gpt-5.4-nano 요율 — 다른 모델이면 추정이 틀린다"
+ },
+ "gate": {
+  "final": true,
+  "checks": {
+   "M2 하드 = 0": true,
+   "M2 새 위험 = 0": true,
+   "M2 ≤ 코드 순서": true,
+   "설정 오류 = 0": true,
+   "시간 초과 ≤ 1%": true,
+   "M5 심각 = 0": false,
+   "M5 경미 ≤ 5%": false,
+   "M6b 원래 판 ≥ 98%": true
+  },
+  "checks_before": {
+   "M5 = 100%": false,
+   "M6b ≥ 98%": true,
+   "M6e = 0": true
+  },
+  "criteria": "2026-10-20 완화안",
+  "verdict": "shadow 유지"
+ }
+}

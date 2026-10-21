@@ -495,14 +495,16 @@ def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
     from app.domains.travel_ops.entry.trip_api import plan_url
     from app.domains.travel_ops.components.watch.trip_reminders import TripReminders
 
-    from app.composition import build_mobility_departure_observer
+    from app.composition import build_dining_trial_live, build_mobility_departure_observer
     settings = get_settings()
     sources = build_travel_sources(settings)
+    # `[2026-10-19]` 다음 식당의 캐치테이블 시험 값을 안내에 참고 한 줄로 — 관리 콘솔 스위치(기본 꺼짐)가 켜졌을 때만
     reminders = TripReminders(store=TripStore(tenant_id), connection_factory=get_connection,
                               clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
                               route_events=sources.route_events,
                               departure_observer=build_mobility_departure_observer(settings, sources),
-                              link=lambda trip_id: plan_url(tenant_id, trip_id))
+                              link=lambda trip_id: plan_url(tenant_id, trip_id),
+                              trial_live=build_dining_trial_live(tenant_id))
     outcome = reminders.tick()
     return {"trips": outcome.trips, "sent": len(outcome.sent), "already": outcome.already,
             "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route,

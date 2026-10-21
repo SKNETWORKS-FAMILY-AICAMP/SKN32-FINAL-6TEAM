@@ -133,6 +133,14 @@ def _dining_lookup(ctx: _PlaceCtx | None = None) -> Any:
         def find_dish_near(self, *args, **kwargs):
             return self._provider().find_dish_near(*args, **kwargs)
 
+        # ★`[2026-10-15]` 이 두 길이 빠져 있었다 — 접수가 `getattr(dining, …)` 로 찾아 없으면 건너뛰어, 웹 접수에서
+        #   「통인시장 근처 점심」이 원장 식당 대신 카카오 첫 가게(타코야끼집)가 됐고 「광화문미진 본점」을 원장 「미진」에 잇지 못했다
+        def find_meal_near(self, *args, **kwargs):
+            return self._provider().find_meal_near(*args, **kwargs)
+
+        def find_inside_name(self, *args, **kwargs):
+            return self._provider().find_inside_name(*args, **kwargs)
+
     return DeferredDiningLookup()
 
 
@@ -305,6 +313,8 @@ class IntakePlanIn(BaseModel):
     party_size: int = Field(ge=1, le=4)
     #: 읽은 일정(고객이 이미 정한 것)은 그대로 두고 빈 곳만 채운다. 끄면 읽은 일정 없이 새로 짠다
     keep_read_items: bool = True
+    #: SNS 후보를 반영하기 전, 같은 빈 접수에 초안만 만든다. 기본 등록 경로는 유지한다.
+    review_only: bool = False
     #: ★`[2026-09-28]` 여행 시작 설문 — 선택. 일정 생성기가 먼저 적용하고(16번 여유 → 하루 곳 수) 등록에도 실린다
     survey: dict[str, Any] | None = None
     #: ★`[2026-10-07]` 재난 뒤 다시 짤 때 사용자가 고른 제약 — 선택. 없으면 아무것도 안 바뀐다
@@ -585,6 +595,16 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     for item, shown in zip(items, views):
         shown["paused"] = bool(since is not None and (item.ends_at or item.starts_at) >= since
                                and (safety["level"] == "trip" or _seoul(item.starts_at).date().isoformat() == safety["day"]))
+    # ★`[2026-10-19 사용자 지시]` 캐치테이블 시험 값(웨이팅 · 빈자리) — 관리 콘솔 스위치(기본 꺼짐)가 켜졌을 때만 식당 항목에 `trial_live` 를 싣는다.
+    #   보여 주기뿐(판정 · 재계획에 안 닿는다 — 일정 안내의 참고 한 줄은 `trip_reminders.with_trial_live`) · 조회하지 않고 적힌 값만 읽는다 · 값이 없으면 필드도 없다(`instances/dining/ledger.trial_live`)
+    #   `[2026-10-19 사용자 결정]` 곧 갈 식사에만 — 시작 1시간 전부터 시작 시각까지(`ledger.trial_due`)
+    if settings_hook.dining_trial_live_view_enabled(store.tenant_id):
+        from app.domains.travel_ops.instances.dining.ledger import trial_due, trial_live
+        now = datetime.now(ZoneInfo("Asia/Seoul"))
+        dining = [(item, shown) for item, shown in zip(items, views) if item.kind == "dining" and trial_due(item.starts_at, now)]
+        for (item, shown), live in zip(dining, trial_live(conn, store.tenant_id, [item.place for item, _ in dining])):
+            if live:
+                shown["trial_live"] = live
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "simulation": trip.get("simulation"),
@@ -1495,6 +1515,15 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return StreamingResponse(flow(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
+    def _rejudge_later(background: BackgroundTasks, tenant: str, intake_id: UUID, shown: dict[str, Any] | None) -> None:
+        """확인 화면의 검사가 새로 계산된 판(고치기 · 자동 추천 · 복원 · 재검증)의 식사를 **뒤에서** 다시 판정한다(`pipeline.rejudge`).
+        `[2026-10-16 설계 대조 P2]` 새로 계산한 검사에는 앞 판의 판정 줄이 없다 — 응답은 기다리지 않고 다음 조회에서 판정 줄을 본다.
+        판정이 꺼져 있으면(시험 · 모의 모델 포함) 아무것도 안 한다."""
+        from app.domains.travel_ops.components.intake.pipeline import rejudge
+
+        revision = (shown or {}).get("revision")
+        if isinstance(revision, int) and not (shown or {}).get("preview"):
+            background.add_task(rejudge, get_connection, tenant, intake_id, revision)
     def _prepare_later(background: BackgroundTasks, tenant: str, intake_id: UUID, shown: dict[str, Any] | None) -> None:
         """★`[2026-10-19 사용자 지시]` 새 판(고치기 · 되돌리기 · 자동 추천 적용) — 미리 준비한 대안 중 **낡은 것만** 뒤에서 다시 준비한다
         (바꾼 일정 · 그 앞뒤 일정의 이동 구간 — `intake/prepared.py`). 응답은 기다리지 않는다. 미리 보기(`preview`)는 판이 아니라 하지 않는다."""
@@ -1527,6 +1556,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
             # ★`[2026-10-20 사용자 지시]` 저장만 한 판(`check: false`)은 대안도 다시 준비하지 않는다 — 「다시 제출」(재검증) 뒤에 한다
             if request.check:
+                _rejudge_later(background, tenant, intake_id, shown)
                 _prepare_later(background, tenant, intake_id, shown)
             return shown
         except LookupError:
@@ -1588,6 +1618,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 shown = restore(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                 revision=request.revision, restore_revision=request.restore_revision,
                                 item=(request.item.source_id, request.item.index) if request.item else None)
+            _rejudge_later(background, tenant, intake_id, shown)
             _prepare_later(background, tenant, intake_id, shown)
             return shown
         except LookupError:
@@ -1709,6 +1740,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
                 shown = {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
             if done.get("applied"):
+                _rejudge_later(background, tenant, intake_id, shown["view"])
                 _prepare_later(background, tenant, intake_id, shown["view"])
             return shown
         except LookupError:
@@ -1730,6 +1762,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 shown = pipeline.revalidate(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                             revision=request.revision)
+            _rejudge_later(background, tenant, intake_id, shown)     # 다시 계산한 검사에는 판정 줄이 없다
             # `[2026-10-20]` 저장만 한 판들(`edits` 의 `check: false`)이 여기서 처음 검사된다 — 낡은 미리 준비 대안도 이제 다시 준비한다
             _prepare_later(background, tenant, intake_id, shown)
             return shown
@@ -1760,14 +1793,23 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         constraints["derived"] = {**dict(constraints.get("derived") or {}), "party_size": f"여행 인원이 비어 설문 여행자 구성의 인원({size}명)을 썼다"}
         body["constraints"] = constraints
 
-    def _intake_survey(tenant: str, intake_id: UUID, given: dict[str, Any] | None) -> dict[str, Any] | None:
-        """★`[2026-10-06]` 등록에 실을 설문 = 로딩 중 질문으로 접수에 모아 둔 답 + 등록 요청이 직접 준 설문(요청이 준 값이 이긴다). 둘 다 없으면 None."""
+    def _intake_survey(tenant: str, intake_id: UUID, given: dict[str, Any] | None,
+                       base: dict[str, Any] | None = None) -> dict[str, Any] | None:
+        """초안 설문을 바탕으로 저장된 답과 직접 요청을 합친다. 직접 요청이 이기고 미응답 영역은 보존한다."""
         from app.domains.travel_ops.components.intake import survey_answers
 
         with get_connection() as conn:
             # ★저장 때 해석한 값(`stored_resolved`)으로 읽는다 — 질문 묶음이 바뀐 뒤에도 옛 답이 새 매핑으로 잘못 읽히지 않는다
-            return survey_answers.merged_survey(survey_answers.stored(conn, tenant_id=tenant, intake_id=intake_id), given,
-                                                survey_answers.stored_resolved(conn, tenant_id=tenant, intake_id=intake_id))
+            current = survey_answers.merged_survey(survey_answers.stored(conn, tenant_id=tenant, intake_id=intake_id), given,
+                                                   survey_answers.stored_resolved(conn, tenant_id=tenant, intake_id=intake_id))
+        if base is None:
+            return current
+        merged = {**base, **(current or {})}
+        for field in ("priority_details", "custom_answers"):
+            values = {**(base.get(field) or {}), **((current or {}).get(field) or {})}
+            if values:
+                merged[field] = values
+        return merged
 
     @router.post("/v1/web/trip-intakes/{intake_id}/survey")
     def web_intake_survey(intake_id: UUID, request: IntakeSurveyIn, who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1844,7 +1886,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 body = prepared.with_alternates(conn, tenant_id=tenant, intake_id=intake_id, body=body, review=checked)
         except Exception:                                  # noqa: BLE001 — 대안을 못 남겨도 등록은 한다(채팅이 그때 새로 찾는다)
             logger.warning("registering prepared alternates failed intake=%s", intake_id, exc_info=True)
-        survey = _intake_survey(tenant, intake_id, request.survey)
+        survey = _intake_survey(tenant, intake_id, request.survey, (built.body.get("constraints") or {}).get("survey"))
         if survey is not None:
             body["constraints"] = {**body.get("constraints", {}), "survey": survey}
             _party_from_survey(body, survey)
@@ -1907,8 +1949,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         tenant, customer = who
         try:
             with get_connection() as conn:
-                _, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                                    revision=request.revision)
+                intake_status, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                revision=request.revision)
                 reopened = reopen.session(conn, tenant_id=tenant, intake_id=intake_id)
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
@@ -1917,6 +1959,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         if reopened is not None:
             # ★`[2026-10-13]` 일정 짜기는 새 여행을 만든다 — 등록한 여행을 고치는 수정 접수에서는 하지 않는다
             raise _error(409, "intake_reopened", "등록한 여행을 고치는 중이에요 — 일정 짜기는 새 여행에서 해 주세요")
+        if request.review_only and (intake_status != "review" or built.body["items"]):
+            raise _error(409, "draft_already_present", "이미 읽은 일정은 그대로 두고 맛집 반영안을 확인해 주세요")
         store = TripStore(tenant)
         request_id = f"intake:{intake_id}:plan:r{request.revision}"
         key = idempotency_key(tenant_id=tenant, request_id=request_id, action_type="trip.create",
@@ -1930,7 +1974,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                     return _sse_response(tenant, customer, op="plan", http=http, work=None, instant=done)
                 return done
         _count("plan", tenant, customer, http)      # ★같은 판 되풀이는 위에서 끝나 세지 않는다
-        survey = _intake_survey(tenant, intake_id, request.survey)
+        survey = _intake_survey(tenant, intake_id, request.survey, (built.body.get("constraints") or {}).get("survey"))
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
@@ -1974,8 +2018,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 fixed_items = [{**it, "place": f"fixed-{it['place']}" if it.get("place") else None}
                                for it in built.body["items"]]
                 draft, merged = planner_module.plan_around(outcome, fixed_items=fixed_items, fixed_places=fixed_places)
-            say("registering")
             body = draft.as_create_body(request_id=request_id, customer_id=customer)
+            if request.review_only:
+                from app.domains.travel_ops.components.intake.social_dining_plan import stage_generated
+
+                say("checking")
+                try:
+                    with get_connection() as conn:
+                        return stage_generated(conn, tenant_id=tenant, customer_id=customer,
+                                               intake_id=intake_id, revision=request.revision, body=body)
+                except LookupError:
+                    raise _error(404, "not_found", "resource not found") from None
+                except IntakeConflict as exc:
+                    raise _error(409, exc.code, exc.message, **exc.detail) from None
+            say("registering")
             trip = _create_trip(tenant, CreateTrip.model_validate(body))
             with get_connection() as conn:
                 mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
@@ -2795,6 +2851,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return {"trip_id": str(trip_id), "detail": detail, "shapes": mobility_shapes.items(items, detail=detail),
                 "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
 
+    from .social_dining_api import register_routes as register_social_dining
+    register_social_dining(router, web_customer=_web_customer, count=_count, lazy=_lazy,
+                           chat_factory=chat_factory, kakao_factory=kakao_factory,
+                           dining_factory=_dining_lookup, error=_error, sse_response=_sse_response,
+                           connection_factory=lambda: get_connection())
     return router
 
 

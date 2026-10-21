@@ -352,6 +352,17 @@ class Controller:
             # ── A. 시작·라우팅·재개 ────────────────────────────────────────────
             rerouted_capability: str | None = None            # 재배분으로 새로 정한 기능 — 아래 B 의 `_task` 에 그대로 넘긴다
             with conn.transaction():
+                # 활성 실행이 끝난 사이에도 읽었던 RUNNING 상태로 Team을 다시 부르지 않는다.
+                # 상태 확인과 시작 기록은 같은 Case 행 잠금 안에서 최신 값을 기준으로 한다.
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1 FROM customer_cases WHERE tenant_id=%s AND case_id=%s FOR UPDATE",
+                                (tenant_id, case_id))
+                case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
+                if case is None:
+                    raise ControllerError("case not found")
+                if case["status"] not in RUNNABLE_STATUSES:
+                    return {"case_id": str(case_id), "status": str(case["status"]), "version": case["version"],
+                            "skipped": "not_runnable"}
                 run_id = self.case_service.start_run(conn, tenant_id=tenant_id, case_id=case_id)
                 if case["status"] == CaseStatus.ROUTING:
                     try:
@@ -870,7 +881,10 @@ class Controller:
                             self.require_team(case.get("owner_team_id"), case_id=case_id)
                             conn.rollback()
                             try:
-                                return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+                                outcome = await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+                                if outcome.get("skipped") == "not_runnable":
+                                    return {**outcome, "idempotent": True}
+                                return outcome
                             except (ActiveRunError, StateConflict):
                                 # 같은 재시도가 먼저 시작된 경우 완료라고 하지 않고 현재 상태를 돌려준다.
                                 # ★`[2026-10-13]` StateConflict 도 같은 경우다 — 같은 답장 둘이 동시에 와서 둘 다
@@ -964,7 +978,10 @@ class Controller:
                 return {"case_id": str(case_id), "status": latest["status"],
                         "version": latest["version"], "stale": True}
         try:
-            return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+            outcome = await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+            if outcome.get("skipped") == "not_runnable":
+                return {**outcome, "idempotent": True}
+            return outcome
         except ActiveRunError:
             # 답변 저장 직후 같은 요청의 재전송이 먼저 실행을 시작할 수 있다.
             # 이미 실행 중인 업무를 실패로 닫거나 한 번 더 실행하지 않는다.

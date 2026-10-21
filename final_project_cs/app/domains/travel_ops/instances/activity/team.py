@@ -89,7 +89,9 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
         #   문서가 있어 검색이 0건으로 떨어지지 않는다. `policy` 를 선언해야 Controller 가 RAG 를
         #   돌고(`app/application/controller.py:134`) 그 결과가 ContextPack·Evidence 에 실린다 —
         #   「근거 없는 문장 금지」(CLAUDE.md §0.1)를 지키려면 근거가 실제로 실려야 한다.
-        required_context=["case_state", "policy", "db_facts", "history"],
+        # ★`[2026-10-16]` 규정 검색(RAG)을 Activity 에서 뺐다 — 멘토링 결론(핵심 플로우 집중 · 일정상 범위 밖). `"policy"` 를 선언에서 뺐으므로
+        #   Controller 가 이 팀의 Case 마다 RAG 를 돌지 않는다. 코어 RAG 와 다른 팀은 그대로다. 되돌리려면 `"policy"` 를 다시 넣고 `_read` 의 `_RAG_OFF` 를 `False` 로.
+        required_context=["case_state", "db_facts", "history"],
         # ★일정 관리만 면제한다 — 예보·운행·영업 같은 **실시간 사실**로 판단하는 일이라
         #   정책 검색 결과에 막히면 안 된다(감시 루프가 여는 Case 가 전부 사람에게 간다).
         # ★`[2026-10-09]` 일정 제출 안내도 규정을 쓰지 않는다 — 정책 검색 0건으로 사람에게 가지 않게.
@@ -147,6 +149,9 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
     #:  ★`[2026-10-12]` 종류별 `llm`(실시간 운영 · 휴무 · 재난)은 전역 `shadow` 로 판정 LLM 을 꽂은 뒤 `kind_modes` 로 켠다.
     judge_modes = ("rule", "shadow")
 
+    #: ★`[2026-10-16]` True 면 Activity 는 규정 검색(`read.policy`)을 부르지 않는다. 코드는 그대로 두고 호출만 막는다(되돌리기 쉽게).
+    _RAG_OFF = True
+
     @staticmethod
     def _hours_until(when: Any) -> float | None:
         """예약 시각까지 남은 시간. 모르면 `None`."""
@@ -168,6 +173,8 @@ class ActivityTeam(ReplacementMixin, ItineraryWork, TravelTeamBase):
 
     def _read(self, task: TeamTask, name: str, arguments: dict[str, Any], seen: set[str]) -> Any:
         """도구 예외(API·DB 실패)를 코드로 남기고 **그대로 다시 던진다** — 삼켜서 「모름」으로 바꾸지 않는다(RULE §3.2)."""
+        if name == "read.policy" and self._RAG_OFF:
+            return None     # ★`[2026-10-16]` 규정 검색 호출 안 함 — 「규정 없음」과 같다(취소·변경 판정은 모름으로 끝난다, 성립 판정은 영향 없음)
         if name == "read.policy" and isinstance(arguments.get("query"), str):
             arguments = {**arguments, "query": self._policy_query(arguments["query"])}
         try:

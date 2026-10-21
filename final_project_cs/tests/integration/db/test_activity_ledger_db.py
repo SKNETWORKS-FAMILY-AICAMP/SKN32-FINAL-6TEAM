@@ -82,3 +82,36 @@ def test_unlinked_place_or_other_tenant_is_unknown(seeded):
     with get_connection() as conn:
         assert ledger.state(conn, tenant, unlinked, at) is None
         assert ledger.state(conn, "other_" + tenant, linked, at) is None
+
+
+@pytest.mark.parametrize("by_content", [False, True])
+def test_a_failed_live_status_read_does_not_break_the_callers_transaction(seeded, monkeypatch, by_content):
+    """★`[2026-10-16]` 실시간 운영 상태 읽기가 DB 오류로 실패해도 「모름」으로 싣고, **같은 연결의 다음 쿼리는 그대로 돈다**.
+
+    전에는 예외만 잡아 트랜잭션이 막힌 채(aborted) 돌아와 다음 쿼리가 모두 `InFailedSqlTransaction` 으로 깨졌다
+    (로컬 DB 에 304 `ac_live_status` 가 빠졌을 때 확인 화면). 표가 없는 상황을 실패하는 SQL 로 흉내 낸다."""
+    from app.domains.travel_ops.instances.activity import live_store
+    from app.domains.travel_ops.instances.activity.judge import modes
+
+    def broken(conn, *args):
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM activity.no_such_table_for_test")
+
+    monkeypatch.setattr(live_store, "lookup", broken)
+    monkeypatch.setattr(live_store, "read", broken)
+    real = modes.kind_mode
+    monkeypatch.setattr(modes, "kind_mode", lambda kind, m=None: "shadow" if kind == "live_status" else real(kind, m))
+    tenant, linked, _, _ = seeded
+    at = datetime(2026, 10, 14, 10, tzinfo=KST)
+    with get_connection() as conn, conn.transaction():                       # 확인 화면처럼 바깥 트랜잭션 안에서 부른다
+        if by_content:
+            with conn.cursor() as cur:
+                cur.execute("SELECT source_content_id FROM places WHERE place_id = %s", (linked,))
+                out = ledger.state_by_content(conn, cur.fetchone()[0], at)
+        else:
+            out = ledger.state(conn, tenant, linked, at)
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")                                           # ★전에는 여기서 InFailedSqlTransaction
+            assert cur.fetchone() == (1,)
+    assert out["name"] == "시험궁" and out["closed"] is False
+    assert out["live_status"]["value"] == "unknown" and out["live_status"]["why"] == "lookup_failed:UndefinedTable"

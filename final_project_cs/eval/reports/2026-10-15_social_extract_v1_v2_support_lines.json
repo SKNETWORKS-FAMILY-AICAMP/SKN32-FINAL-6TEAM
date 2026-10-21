@@ -1,0 +1,541 @@
+{
+  "kind": "one_off_synthetic_support_line_validation",
+  "definition": "One item per expected non-null area and per expected menu value; exact restaurant-name and actual-value matching, plus an evidence quote from its stated source containing an entire stripped original line with the expected value. Missing items fail; extra menus are checked by the original exact-field comparison, not this coverage metric.",
+  "case_sha256": "a7b7339e9a8426e22d95edd3907373c3aca18db25c463c70c74e95d8fd1b89e9",
+  "comparison_sha256": "d005f51121ab5aa0bcd9c6a85dba2a71ac2bf4fee1b6d888402f0a1af215bf47",
+  "comparison_complete": true,
+  "versions": {
+    "social_dining_extract.v1": {
+      "passed": 6,
+      "total": 17,
+      "percent": 35.29,
+      "area": {
+        "passed": 3,
+        "total": 7,
+        "percent": 42.86
+      },
+      "menu": {
+        "passed": 3,
+        "total": 10,
+        "percent": 30.0
+      },
+      "runs_present": 8,
+      "runs_expected": 8,
+      "checks": [
+        {
+          "case_id": "synthetic-01",
+          "restaurant": "모래빛식당",
+          "field": "area",
+          "expected": "성동구",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": {
+            "source": "metadata",
+            "line": "주소: 서울 성동구 성수이로 77",
+            "quote": "식당: 모래빛식당\n주소: 서울 성동구 성수이로 77\n지점: 성수직영점\n메뉴: 들깨수제비"
+          },
+          "passed": false,
+          "reason": "expected_value_missing_or_incorrect"
+        },
+        {
+          "case_id": "synthetic-01",
+          "restaurant": "모래빛식당",
+          "field": "menu",
+          "expected": "들깨수제비",
+          "actual": "들깨수제비",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 들깨수제비",
+            "quote": "식당: 모래빛식당\n주소: 서울 성동구 성수이로 77\n지점: 성수직영점\n메뉴: 들깨수제비"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-02",
+          "restaurant": "낮달국수",
+          "field": "area",
+          "expected": "망원",
+          "actual": "망원",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "가게 이름: 낮달국수 망원점",
+            "quote": "가게 이름: 낮달국수 망원점\n찾아가는 지역: 망원\n행정구역: 서울 마포구\n메뉴: 잔치국수, 비빔국수"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-02",
+          "restaurant": "낮달국수",
+          "field": "menu",
+          "expected": "잔치국수",
+          "actual": "잔치국수, 비빔국수",
+          "actual_value_correct": false,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 잔치국수, 비빔국수",
+            "quote": "가게 이름: 낮달국수 망원점\n찾아가는 지역: 망원\n행정구역: 서울 마포구\n메뉴: 잔치국수, 비빔국수"
+          },
+          "passed": false,
+          "reason": "expected_value_missing_or_incorrect"
+        },
+        {
+          "case_id": "synthetic-02",
+          "restaurant": "낮달국수",
+          "field": "menu",
+          "expected": "비빔국수",
+          "actual": "잔치국수, 비빔국수",
+          "actual_value_correct": false,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 잔치국수, 비빔국수",
+            "quote": "가게 이름: 낮달국수 망원점\n찾아가는 지역: 망원\n행정구역: 서울 마포구\n메뉴: 잔치국수, 비빔국수"
+          },
+          "passed": false,
+          "reason": "expected_value_missing_or_incorrect"
+        },
+        {
+          "case_id": "synthetic-03",
+          "restaurant": "푸른정원",
+          "field": "area",
+          "expected": "연남동",
+          "actual": "연남동",
+          "actual_value_correct": true,
+          "support": {
+            "source": "customer_note",
+            "line": "푸른정원의 지역은 연남동입니다.",
+            "quote": "푸른정원의 지역은 연남동입니다."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-03",
+          "restaurant": "푸른정원",
+          "field": "menu",
+          "expected": "바질파스타",
+          "actual": "바질파스타",
+          "actual_value_correct": true,
+          "support": {
+            "source": "customer_note",
+            "line": "푸른정원의 메뉴는 바질파스타입니다.",
+            "quote": "푸른정원의 메뉴는 바질파스타입니다."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "돌담밥상",
+          "field": "area",
+          "expected": "역삼동",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "돌담밥상",
+          "field": "menu",
+          "expected": "제육정식",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "나루면옥",
+          "field": "area",
+          "expected": "익선동",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "나루면옥",
+          "field": "menu",
+          "expected": "물냉면",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "나루면옥",
+          "field": "menu",
+          "expected": "비빔냉면",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-06",
+          "restaurant": "구름식탁",
+          "field": "area",
+          "expected": "문래동",
+          "actual": "문래동",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "지역: 문래동",
+            "quote": "식당: 구름식탁\n지역: 문래동\n메뉴: 감자전"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-06",
+          "restaurant": "구름식탁",
+          "field": "menu",
+          "expected": "감자전",
+          "actual": "감자전",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 감자전",
+            "quote": "식당: 구름식탁\n지역: 문래동\n메뉴: 감자전"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-08",
+          "restaurant": "은솔만두",
+          "field": "area",
+          "expected": "서울역",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-08",
+          "restaurant": "은솔만두",
+          "field": "menu",
+          "expected": "고기만두",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-08",
+          "restaurant": "은솔만두",
+          "field": "menu",
+          "expected": "김치만두",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        }
+      ]
+    },
+    "social_dining_extract.v2": {
+      "passed": 15,
+      "total": 17,
+      "percent": 88.24,
+      "area": {
+        "passed": 6,
+        "total": 7,
+        "percent": 85.71
+      },
+      "menu": {
+        "passed": 9,
+        "total": 10,
+        "percent": 90.0
+      },
+      "runs_present": 8,
+      "runs_expected": 8,
+      "checks": [
+        {
+          "case_id": "synthetic-01",
+          "restaurant": "모래빛식당",
+          "field": "area",
+          "expected": "성동구",
+          "actual": "성동구",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "주소: 서울 성동구 성수이로 77",
+            "quote": "주소: 서울 성동구 성수이로 77"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-01",
+          "restaurant": "모래빛식당",
+          "field": "menu",
+          "expected": "들깨수제비",
+          "actual": [
+            "들깨수제비"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 들깨수제비",
+            "quote": "메뉴: 들깨수제비"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-02",
+          "restaurant": "낮달국수",
+          "field": "area",
+          "expected": "망원",
+          "actual": "망원",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "가게 이름: 낮달국수 망원점",
+            "quote": "가게 이름: 낮달국수 망원점"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-02",
+          "restaurant": "낮달국수",
+          "field": "menu",
+          "expected": "잔치국수",
+          "actual": [
+            "잔치국수",
+            "비빔국수"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 잔치국수, 비빔국수",
+            "quote": "메뉴: 잔치국수, 비빔국수"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-02",
+          "restaurant": "낮달국수",
+          "field": "menu",
+          "expected": "비빔국수",
+          "actual": [
+            "잔치국수",
+            "비빔국수"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 잔치국수, 비빔국수",
+            "quote": "메뉴: 잔치국수, 비빔국수"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-03",
+          "restaurant": "푸른정원",
+          "field": "area",
+          "expected": "연남동",
+          "actual": "연남동",
+          "actual_value_correct": true,
+          "support": {
+            "source": "customer_note",
+            "line": "푸른정원의 지역은 연남동입니다.",
+            "quote": "푸른정원의 지역은 연남동입니다."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-03",
+          "restaurant": "푸른정원",
+          "field": "menu",
+          "expected": "바질파스타",
+          "actual": [
+            "바질파스타"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "customer_note",
+            "line": "푸른정원의 메뉴는 바질파스타입니다.",
+            "quote": "푸른정원의 메뉴는 바질파스타입니다."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "돌담밥상",
+          "field": "area",
+          "expected": "역삼동",
+          "actual": "역삼동",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "지역: 역삼동",
+            "quote": "지역: 역삼동"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "돌담밥상",
+          "field": "menu",
+          "expected": "제육정식",
+          "actual": [
+            "제육정식"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 제육정식",
+            "quote": "메뉴: 제육정식"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "나루면옥",
+          "field": "area",
+          "expected": "익선동",
+          "actual": "익선동",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "지역: 익선동",
+            "quote": "지역: 익선동"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "나루면옥",
+          "field": "menu",
+          "expected": "물냉면",
+          "actual": [
+            "물냉면",
+            "비빔냉면"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 물냉면, 비빔냉면",
+            "quote": "메뉴: 물냉면, 비빔냉면"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-04",
+          "restaurant": "나루면옥",
+          "field": "menu",
+          "expected": "비빔냉면",
+          "actual": [
+            "물냉면",
+            "비빔냉면"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 물냉면, 비빔냉면",
+            "quote": "메뉴: 물냉면, 비빔냉면"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-06",
+          "restaurant": "구름식탁",
+          "field": "area",
+          "expected": "문래동",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-06",
+          "restaurant": "구름식탁",
+          "field": "menu",
+          "expected": "감자전",
+          "actual": null,
+          "actual_value_correct": false,
+          "support": null,
+          "passed": false,
+          "reason": "restaurant_missing"
+        },
+        {
+          "case_id": "synthetic-08",
+          "restaurant": "은솔만두",
+          "field": "area",
+          "expected": "서울역",
+          "actual": "서울역",
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "가게명: 은솔만두서울역점",
+            "quote": "가게명: 은솔만두서울역점"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-08",
+          "restaurant": "은솔만두",
+          "field": "menu",
+          "expected": "고기만두",
+          "actual": [
+            "고기만두",
+            "김치만두"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 고기만두, 김치만두",
+            "quote": "메뉴: 고기만두, 김치만두"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "case_id": "synthetic-08",
+          "restaurant": "은솔만두",
+          "field": "menu",
+          "expected": "김치만두",
+          "actual": [
+            "고기만두",
+            "김치만두"
+          ],
+          "actual_value_correct": true,
+          "support": {
+            "source": "metadata",
+            "line": "메뉴: 고기만두, 김치만두",
+            "quote": "메뉴: 고기만두, 김치만두"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ]
+    }
+  }
+}

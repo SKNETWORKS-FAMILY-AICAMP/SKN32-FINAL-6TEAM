@@ -1,0 +1,50 @@
+{
+ "case_id": "edge-08",
+ "format": "edge",
+ "defect": "c8_days_out_of_range",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "서울 7박8일 여행 (2명)\n1일차 · 10월 20일\n10:00 경복궁\n12:30 명동교자\n8일차 · 10월 27일\n10:00 국립중앙박물관"
+  }
+ ],
+ "lines": [
+  "서울 7박8일 여행 (2명)",
+  "1일차 · 10월 20일",
+  "10:00 경복궁",
+  "12:30 명동교자",
+  "8일차 · 10월 27일",
+  "10:00 국립중앙박물관"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": "10:00",
+   "title": "경복궁",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": "10:00",
+   "title": "국립중앙박물관",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [
+  "days_out_of_range"
+ ],
+ "why": "최대 7일을 넘는 일정 — 일수를 조용히 버린다(인원은 범위 밖 문제를 낸다)"
+}

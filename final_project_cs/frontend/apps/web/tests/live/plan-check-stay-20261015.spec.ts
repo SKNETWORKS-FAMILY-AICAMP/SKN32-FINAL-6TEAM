@@ -57,4 +57,5 @@ test("체크인 날은 숙소 카드와 박 수, 묵는 날은 맨 위 「숙소
   await expect(day(page, 1).locator('li[data-entry-id="0-1"]')).toHaveAttribute("data-selected", "true");
   await expect(page.locator("#plan-card-0-1")).toHaveAttribute("data-open", "true");
   await expect(page.locator("#plan-card-0-1")).toBeInViewport();
+  await expect(page.locator('p[aria-live="polite"]').filter({ hasText: "\uB86F\uB370\uD638\uD154 \uC11C\uC6B8" })).toContainText("\uC219\uBC15");
 });

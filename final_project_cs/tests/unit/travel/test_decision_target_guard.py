@@ -48,6 +48,7 @@ def _run(trip, message, action, target, *, selected=None, history=(), **extra):
 
 
 # ── ① 사고 기록 ───────────────────────────────────────────────────
+# invariant: INV-CS-RT-027
 def test_the_recorded_failure_a_dinner_on_another_day_is_asked_about_not_changed():
     got, alias = _run("long7", "저녁 식당 바꿔 줘", "apply_change", "i35", selected="i22")        # 모델이 3일차 저녁 식당(i35)을 골랐다
     assert got.action == "clarify" and got.item is None and got.change is None

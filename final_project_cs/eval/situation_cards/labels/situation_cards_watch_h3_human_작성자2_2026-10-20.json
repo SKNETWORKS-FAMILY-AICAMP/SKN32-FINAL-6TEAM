@@ -1,0 +1,104 @@
+{
+ "bundle": "situation_cards_watch_h3",
+ "subset": null,
+ "reviewer": "작성자2",
+ "reviewed_on": "2026-10-20",
+ "sheet": "라벨_감시_작성자2_h3.csv",
+ "saw_ai_labels": false,
+ "n": 11,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "labels": {
+  "K-34-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-36-W": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "K-38-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-40-W": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-41-W": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-43-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-45-W": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "K-47-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-49-W": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-51-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-53-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  }
+ }
+}

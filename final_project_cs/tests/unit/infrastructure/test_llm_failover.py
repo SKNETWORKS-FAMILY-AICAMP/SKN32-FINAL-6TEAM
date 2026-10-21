@@ -115,6 +115,7 @@ def test_switch_on_without_the_server_key_returns_the_plain_ollama_chat():
     assert type(from_settings(settings(openai_api_key_server="   "))) is OllamaChat
 
 
+# invariant: INV-CS-SEC-015
 def test_personal_key_does_not_enable_failover_without_a_server_key():
     assert type(from_settings(settings(openai_api_key_server="", openai_api_key="personal-test-key"))) is OllamaChat
 
@@ -266,6 +267,7 @@ def test_while_a_probe_is_in_flight_other_calls_skip_the_server():
 
 
 # ───────────── 모두 안 될 때 · 비밀 · 상한 ─────────────
+# invariant: INV-CS-SEC-013
 def test_when_every_path_fails_the_error_names_the_reasons_and_never_the_key():
     server = Server(CONNECT)
     api = Api(status_error(openai.AuthenticationError, 401))
@@ -335,6 +337,7 @@ def test_the_text_sent_to_ollama_is_left_as_the_caller_made_it():
 
 
 # ───────────── 이미지 · 스키마 · 여러 서버 ─────────────
+# invariant: INV-CS-SEC-014
 def test_images_do_not_go_to_the_api_unless_vision_is_switched_on():
     server, api = Server(CONNECT), Api("받아쓴 글")
     chat, _ = build(server, api)

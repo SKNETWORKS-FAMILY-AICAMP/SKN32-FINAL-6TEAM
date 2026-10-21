@@ -38,10 +38,11 @@ def _row(cid, l3, *, x, y, closed="연중무휴"):
             "brand": None}
 
 
-# 같은 소분류는 멀고(약 4.4km), 다른 소분류는 가깝다(약 0.2km) — 취향에 따라 1순위가 갈리는 묶음
+# 같은 소분류는 조금 멀고(약 1.9km), 다른 소분류는 가깝다(약 0.2km) — 취향에 따라 1순위가 갈리는 묶음
 POOL = {"origin": _row("origin", "HS010100", x=126.9770, y=37.5796, closed="매주 화요일"),
         "source": "place_catalog", "confirmed_at": "2026-10-12T03:00:00+09:00",
-        "candidates": [_row("same_far", "HS010100", x=127.0270, y=37.5796),
+        # ★`[2026-10-19]` 같은 소분류는 약 1.9km — 전에는 4.4km 였는데 거리 구간(3km)을 넘으면 가까운 중분류 뒤로 간다(alternatives `zone_of`)
+        "candidates": [_row("same_far", "HS010100", x=126.9990, y=37.5796),
                        _row("near_other", "HS010200", x=126.9790, y=37.5800),
                        _row("near_other2", "HS010300", x=126.9800, y=37.5805)]}
 

@@ -1,0 +1,351 @@
+{
+ "bundle": "situation_cards_h4",
+ "subset": null,
+ "reviewer": "작성자2",
+ "reviewed_on": "2026-10-21",
+ "sheet": "라벨_작성자2_h4.csv",
+ "saw_ai_labels": false,
+ "n": 40,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "labels": {
+  "M-02": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-04": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-06": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-08": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-10": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-12": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-15": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-17": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-19": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-21": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "M-23": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-25": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-27": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-29": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-31": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "M-33": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-35": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-37": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-39": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-41": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-43": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-44": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "M-47": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-51": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-52": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "M-55": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-57": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-59": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-60": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-62": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-63": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-64": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-66": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-68": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-70": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-72": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-74": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-77": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-79": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "M-80": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  }
+ }
+}

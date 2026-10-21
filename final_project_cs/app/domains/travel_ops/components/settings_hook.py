@@ -165,6 +165,23 @@ def guardian_enabled(tenant_id: str) -> bool:
     return guardrail_default()
 
 
+DINING_TRIAL_LIVE_VIEW = "travel.dining.trial_live_view_enabled"
+
+
+def dining_trial_live_view_enabled(tenant_id: str) -> bool:
+    """등록 여행 식당 카드에 캐치테이블 시험 값을 보이나. `[2026-10-19 사용자 지시]` 제휴 전제 시험 — 시연 때만 관리 콘솔에서 켠다.
+
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.dining_trial_live_view_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다 — 켜는 것은 명시한 경우뿐이다. 읽는 곳은 여행 조회 응답의 항목 `trial_live`(`trip_api._trip_view`) 하나다.
+    """
+    value = operator_setting(tenant_id, DINING_TRIAL_LIVE_VIEW)
+    if isinstance(value, bool):
+        return value
+    from app.core.settings import dining_trial_live_view_enabled as guardrail_default
+
+    return guardrail_default()
+
+
 ACTIVITY_LIVE_CHECK = "travel.activity_judge.live_status_batch_enabled"
 
 

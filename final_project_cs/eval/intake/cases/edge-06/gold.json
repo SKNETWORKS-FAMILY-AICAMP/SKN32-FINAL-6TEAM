@@ -1,0 +1,46 @@
+{
+ "case_id": "edge-06",
+ "format": "edge",
+ "defect": "c6_past_midnight",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "10월 20일\n21:00 광장시장\n23:30 동대문디자인플라자\n01:00 숙소 복귀"
+  }
+ ],
+ "lines": [
+  "10월 20일",
+  "21:00 광장시장",
+  "23:30 동대문디자인플라자",
+  "01:00 숙소 복귀"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": "21:00",
+   "title": "광장시장",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "23:30",
+   "title": "동대문디자인플라자",
+   "place": "동대문디자인플라자",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-21",
+   "start": "01:00",
+   "title": "숙소 복귀",
+   "place": null,
+   "kind": "lodging",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [],
+ "why": "자정 넘김 — 23:30 다음 01:00 은 다음 날이다"
+}

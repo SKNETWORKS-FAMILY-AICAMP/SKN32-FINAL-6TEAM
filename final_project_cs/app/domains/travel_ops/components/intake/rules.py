@@ -61,7 +61,10 @@ PARTY_KO = re.compile(r"(혼자|둘이서|둘이|셋이서|셋이|넷이서|넷�
 ARROW = re.compile(r"\s*(?:→|->|⇒|>)\s*")
 
 # 이름 조각을 좁히는 데 쓰는 것 — ★잘라 낼 뿐 바꾸지 않는다
-_LEAD = re.compile(r"^[\s,.:·|/\-~에는은도]+")
+#: ★`[2026-10-16]` 조사 글자(에·는·은·도)는 **뒤에 띄어쓰기·구두점이 올 때만** 뗀다 — 「9시 반에 경복궁」의 「에」.
+#:  ☆전에는 글자만 보고 뗐다 — 「도산공원 → 산공원」 · 「은평한옥마을 → 평한옥마을」 · 「에버랜드 → 버랜드」
+#:  (eval/intake/edge.py edge-01). 붙여 쓴 「10시에경복궁」의 「에」는 이제 이름에 남는다
+_LEAD = re.compile(r"^(?:[\s,.:·|/\-~]|[에는은도]+(?=[\s,.:·|/\-~]|$))+")
 #: 이름 뒤에 붙는 **말**(동사·식사·연결어) — 이것이 있을 때만 그 앞의 조사도 함께 자른다.
 #: ☆`[2026-09-27]` 조사만 있어도 잘랐더니 「북촌한옥마을」이 「북촌한옥마」가 됐다 — 이름 끝 글자가 조사와 같다.
 _WORDS = (r"(?:점심|저녁|아침|식사|밥|커피|쇼핑|구경|관람|체험|산책)?\s*"
@@ -146,6 +149,10 @@ def _meal_tail(line: str, start: int, end: int) -> tuple[int, re.Match | None]:
 _EAT_BEFORE = re.compile(r"\s*(?:나서|나와서|후|뒤|다음|이후)")
 
 
+#: 장소 이름 뒤에 붙어 「거기서」를 뜻하는 말 — 「먹는다」 말로 제목을 자를 때 이름 끝을 찾는다
+_AT_PLACE = re.compile(r"(?<=\S)\s*(?:에서|에\s*가서|가서|들러서|들려서)(?=\s|$)")
+
+
 def _eat_claim(result: "ReadResult", position: int, number: int, line: str, s: int, region_end: int) -> int | None:
     """끼니 말이 없을 때 — 이름 첫 글자 **뒤**의 「먹고」 · 「맛집」 · 「한잔」이면 식사다(`eat_mention`). `[2026-10-15 사용자 결정 (가)]`
     제목 안에서 찾았으면(「익선동 맛집」) 그 앞까지가 이름이다 — 새 이름 끝을 돌려준다. 못 찾으면 None."""
@@ -154,7 +161,10 @@ def _eat_claim(result: "ReadResult", position: int, number: int, line: str, s: i
         return None
     result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, eat.start(), eat.end(), eat.group(0)),
                                note="이름 뒤의 「먹는다」 말"))
-    return eat.start()
+    # ★`[2026-10-15]` 「통인시장에서 뭐 좀 먹고」 · 「광장시장에서 빈대떡 먹기」 — 「먹고」 앞에서만 자르면 「에서 뭐 좀」이 이름에 남아
+    #   장소를 못 찾았다(로컬 접수 실측). 이름 뒤 첫 「에서 · 가서 · 들러서」 자리에서 자른다
+    place_end = _AT_PLACE.search(line, s + 1, eat.start())
+    return place_end.start() if place_end else eat.start()
 
 
 def _meal_claim(result: "ReadResult", position: int, number: int, line: str, meal: re.Match | None) -> None:
@@ -302,6 +312,12 @@ def read_plan(text: str) -> ReadResult:
                 date = None                     # 새 날인데 날짜가 없다 — 앞 날짜를 끌어 쓰지 않는다
             result.read_lines.add(number)
             if not times:
+                # ★`[2026-10-16]` 머리줄 · 날짜 뒤의 화살표 나열 — 「1일차 · 10월 20일: 경복궁 → 북촌 → 인사동」.
+                #   ☆전에는 이 줄을 머리줄로만 읽고 넘어가 항목이 통째로 사라졌고, 줄은 「읽음」이라 모델에게도 안 갔다(edge-02)
+                rest_at = max(m.end() for m in (heading, date_match) if m)
+                if _arrow_list(line[rest_at:]):
+                    _arrow_items(result, number, line, day, date, begin=rest_at)
+                    continue
                 # ★표 행 — 「1일차 | 2026-10-10 | 광장시장 빈대떡」(시각 칸이 빈 행). 머리줄·날짜 뒤에 제목이 더 있으면
                 #   시각 없는 항목이다. ☆2026-09-28 평가셋: 이 행이 머리줄로 흡수돼 항목이 통째로 사라졌다
                 rest = _table_rest(line, heading, date_match)
@@ -319,7 +335,7 @@ def read_plan(text: str) -> ReadResult:
         if times:
             _time_items(result, number, line, times, day, date)
             continue
-        if ARROW.search(line) and len(ARROW.split(line.strip())) >= 2:
+        if _arrow_list(line):
             _arrow_items(result, number, line, day, date)
     _sandwiched(result)
     return result
@@ -542,9 +558,15 @@ def _time_items(result: ReadResult, number: int, line: str, times: list[re.Match
         result.read_lines.add(number)
 
 
-def _arrow_items(result: ReadResult, number: int, line: str, day: int | None, date: str | None) -> None:
-    cursor = 0
-    for piece in ARROW.split(line):
+def _arrow_list(text: str) -> bool:
+    return bool(ARROW.search(text)) and len(ARROW.split(text.strip())) >= 2
+
+
+def _arrow_items(result: ReadResult, number: int, line: str, day: int | None, date: str | None, *,
+                 begin: int = 0) -> None:
+    """화살표로 이은 이름들. `begin` 앞(머리줄 · 날짜)은 이름으로 읽지 않는다."""
+    cursor = begin
+    for piece in ARROW.split(line[begin:]):
         start = line.index(piece, cursor) if piece else cursor
         end = start + len(piece)
         cursor = end

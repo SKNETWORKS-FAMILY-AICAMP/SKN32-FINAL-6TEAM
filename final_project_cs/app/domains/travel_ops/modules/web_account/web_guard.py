@@ -170,6 +170,11 @@ def specs() -> dict[str, LimitSpec]:
     out["travel.guardian.enabled"] = LimitSpec(
         "travel.guardian.enabled", "항로 지킴이(끄면 웹에서 숨기고 자동 일정 변경도 멈춤)", "", "bool",
         guard.get("travel.guardian.enabled") is not False, help=_guardian_help(guard))
+    # ★`[2026-10-19 사용자 지시]` 등록 여행 식당 카드의 캐치테이블 시험 값(웨이팅 · 빈자리) — 제휴 전제 시험이라 기본 꺼짐, 시연 때만 켠다.
+    #   읽는 곳은 `settings_hook.dining_trial_live_view_enabled` 하나다(여행 조회 응답의 항목 `trial_live` · 일정 안내의 참고 한 줄). 판정 · 재계획에는 닿지 않는다
+    out["travel.dining.trial_live_view_enabled"] = LimitSpec(
+        "travel.dining.trial_live_view_enabled", "식당 카드 · 일정 안내에 캐치테이블 시험 값 보이기(제휴 전제 시험 — 시연 때만 켜기)", "", "bool",
+        guard.get("travel.dining.trial_live_view_enabled") is True)
     # ★`[2026-10-14 사용자 지시]` 활동 장소 임시휴무 · 폐업 새벽 웹 확인 — 유료라 기본 꺼짐. 읽는 곳은 `settings_hook.activity_live_check_enabled` 하나다
     #   (정기 작업 `activity_live_status`). 설명에 **지금 이 서버에서 켜면 실제로 도는지**를 함께 싣는다(값은 싣지 않는다).
     out["travel.activity_judge.live_status_batch_enabled"] = LimitSpec(
@@ -253,10 +258,11 @@ def _route_labels(purpose: str, choices: tuple[str, ...]) -> tuple[tuple[str, st
 def _model_route_help(purpose: str) -> str:
     """모델 경로 설명 — 무엇이 바뀌고, 지금 이 기계에서 각 경로를 쓸 수 있는지(주소 · 키 값은 싣지 않는다)."""
     from app.core.settings import get_settings
+    from app.infrastructure.llm_failover import server_api_ready
 
     settings = get_settings()
     has = lambda name: bool((getattr(settings, name, "") or "").strip())                      # noqa: E731
-    ready = {"local": has("ollama_base_url"), "ssh": has("ollama_ssh_base_url"), "api": has("openai_api_key_server")}
+    ready = {"local": has("ollama_base_url"), "ssh": has("ollama_ssh_base_url"), "api": server_api_ready(settings)}
     shown = ("local", "ssh", "api") if purpose == "chat" else ("local", "ssh")
     state = " · ".join(f"{_ROUTE_NAME[key]} {'준비됨' if ready[key] else '설정 없음'}" for key in shown)
     failover = "켜짐" if getattr(settings, "llm_failover_enabled", False) else "꺼짐"

@@ -175,3 +175,110 @@ def test_the_planner_keeps_one_of_the_same_site():
                            cand("국립고궁박물관", 37.57659, 126.97497), cand("창덕궁과 후원", 37.5794, 126.9910),
                            cand("창덕궁 다래나무", 37.5830, 126.9920)])
     assert [c.name for c in kept] == ["경복궁", "국립고궁박물관", "창덕궁과 후원"]
+
+
+
+# ── 2026-10-16 요식 점검 장면 3 — 닫았다는 식당을 같은 가게(이름만 다른 행)로 바꾸지 않는다 ─────────
+#: 실측(로컬 dining_rebuild): 카카오 「하동관 명동본점」과 원장 「하동관」 — 4.6m · 첫 낱말 같음
+HADONG_KAKAO = (37.564430, 126.985023)
+HADONG_LEDGER = (37.56439, 126.98501)
+
+
+def test_a_meal_is_not_replaced_by_the_same_restaurant_under_another_name():
+    """☆`[2026-10-16 화면 점검]` 「하동관 명동본점 오늘 문 닫았대」 → 「하동관」으로 바꿨다 — 같은 가게다(명동9길 12).
+    식당은 같은 건물에 다른 가게가 흔해 활동의 `same_site`(30m 안이면 같은 곳)를 쓰지 않는다 — 이름 첫 낱말까지 같을 때만 같은 가게다."""
+    home = _place("하동관 명동본점", "dining", *HADONG_KAKAO)
+    twin = _place("하동관", "dining", *HADONG_LEDGER)                       # 가장 가깝다 — 전에는 이게 골라졌다
+    upstairs = _place("미진 명동점", "dining", 37.56446, 126.98505)         # 같은 건물(약 4m)의 다른 가게 — 대안이 될 수 있다
+    other = _place("명동교자 본점", "dining", 37.5625, 126.9855)
+    plan = _plan(_item(home, 12), [home, twin, upstairs, other])
+    assert not isinstance(plan, NoChange), plan
+    assert plan.summary["to"] == "미진 명동점", plan.summary
+    assert "하동관" not in plan.notice["other_options"], plan.notice
+
+
+def test_a_closed_meal_reported_at_the_door_is_not_replaced_by_the_same_restaurant():
+    """가게 앞 신고(`plan_closed`) · 새벽 확인(`plan_closed_on_day`)도 같은 가게를 대안으로 고르지 않는다."""
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import plan_closed, plan_closed_on_day
+
+    home = _place("하동관 명동본점", "dining", *HADONG_KAKAO)
+    twin = _place("하동관", "dining", *HADONG_LEDGER)
+    other = _place("명동교자 본점", "dining", 37.5640, 126.9853)
+    meal = _item(home, 12)
+    at_door = plan_closed(trip={"constraints": {}}, items=[meal], places=[home, twin, other],
+                          at=datetime(2030, 1, 1, 12, 5, tzinfo=KST), message="오늘 문 닫았대", request_id="r3")
+    assert not isinstance(at_door, NoChange), at_door
+    assert at_door.summary["to"] == "명동교자 본점", at_door.summary
+    dawn = plan_closed_on_day(trip={"constraints": {}}, items=[meal], places=[home, twin, other], meal=meal,
+                              source="dining_ledger", detail="그날 휴무", checked_at=datetime(2030, 1, 1, 3, tzinfo=KST))
+    assert not isinstance(dawn, NoChange), dawn
+    assert dawn.summary["to"] == "명동교자 본점", dawn.summary
+
+
+
+def test_same_restaurant_needs_one_name_inside_the_other_and_the_same_spot():
+    """같은 가게 = 한 이름이 다른 이름을 통째로 품고(표시 · 괄호 · 빈칸 무시) 같은 주소거나 30m 안. 첫 낱말만 같으면 다른 가게다."""
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import same_restaurant
+
+    def spot(name, lat=HADONG_LEDGER[0], lon=HADONG_LEDGER[1], address=None):
+        return {"name": name, "latitude": lat, "longitude": lon, "attributes": {"address": address} if address else {}}
+
+    assert same_restaurant(spot("하동관 명동본점", *HADONG_KAKAO), spot("하동관"))
+    assert same_restaurant(spot("[백년가게] 진미옥설농탕"), spot("진미옥설농탕"))
+    assert same_restaurant(spot("하동관", 37.0, 127.0, "서울 중구 명동9길 12"), spot("하동관 명동본점", address="서울 중구 명동9길 12"))
+    assert not same_restaurant(spot("서울 김밥"), spot("서울 떡볶이"))          # 첫 낱말만 같다
+    assert not same_restaurant(spot("미진 명동점"), spot("하동관"))             # 같은 건물의 다른 가게
+    assert not same_restaurant(spot("하동관"), spot("하동관", 37.5700, 126.9900))  # 같은 이름 다른 지점(약 500m)
+
+
+
+# ── 2026-10-16 취향 선택기(`meal_pick`) — 「다른 데로」 · 나중 식사 휴무 신고의 새 다른 안 계산에도 ─────────
+def _second_picker(calls):
+    """규칙 상위 셋 중 **둘째**를 고르는 가짜 선택기 — 실제 `meal_pick.make_picker` 와 같은 모양(`Pick`)을 돌려준다."""
+    from app.domains.travel_ops.components.planning.meal_pick import Pick
+
+    def pick(best, alternates, context):
+        calls.append((best.name, [a.name for a in alternates], context))
+        chosen = alternates[0]
+        return Pick(best=chosen, alternates=[best] + alternates[1:], by="llm", reason="취향: 비빔밥",
+                    cited=[{"id": "2", "field": "menu", "value": "산채비빔밥"}])
+    return pick
+
+
+def test_a_fresh_alternate_for_a_meal_lets_the_picker_choose_among_the_rule_top_three():
+    """☆`[2026-10-16 LLM 켜짐 점검]` 나중 식사 휴무 신고(`plan_fresh_alternate(reported_closed=True)`)는 선택기를 받지 않아
+    「산채비빔밥을 원해요」를 줘도 규칙 1위 국밥이었다(실제 gpt-6-luna 호출 0회). 가게 앞 신고(`plan_closed`)와 같게 고른다."""
+    home = _place("원래 국밥", "dining", 37.5700, 126.9800)
+    near = _place("가까운 국밥", "dining", 37.5703, 126.9803)
+    bibim = _place("산채 비빔밥", "dining", 37.5708, 126.9808)
+    calls = []
+    item = _item(home, 12)
+    plan = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[item],
+                                places=[home, near, bibim], item_id=item.item_id, message="원래 국밥 문 닫았대",
+                                request_id="r1", reported_closed=True, meal_picker=_second_picker(calls))
+    assert not isinstance(plan, NoChange), plan
+    assert len(calls) == 1 and calls[0][0] == "가까운 국밥", calls          # 규칙 1위를 선택기에 넘겼다
+    assert plan.summary["to"] == "산채 비빔밥", plan.summary
+    detail = plan.replacements[item.item_id].detail
+    assert detail["meal_pick"]["by"] == "llm" and detail["meal_pick"]["cited"], detail
+    assert "가까운 국밥" in plan.notice["other_options"], plan.notice           # 규칙 1위는 다른 안으로 남는다
+
+
+def test_without_a_picker_or_for_an_activity_the_rule_first_stays():
+    home = _place("원래 국밥", "dining", 37.5700, 126.9800)
+    near = _place("가까운 국밥", "dining", 37.5703, 126.9803)
+    bibim = _place("산채 비빔밥", "dining", 37.5708, 126.9808)
+    item = _item(home, 12)
+    plan = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[item],
+                                places=[home, near, bibim], item_id=item.item_id, message="다른 데로", request_id="r2")
+    assert plan.summary["to"] == "가까운 국밥" and "meal_pick" not in plan.replacements[item.item_id].detail
+
+    calls = []
+    hall = _place("원래 전시관", "activity", 37.5700, 126.9800)
+    museum = _place("가까운 박물관", "activity", 37.5703, 126.9803)
+    gallery = _place("먼 미술관", "activity", 37.5720, 126.9820)
+    visit = _item(hall, 10)
+    activity = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[visit],
+                                    places=[hall, museum, gallery], item_id=visit.item_id, message="다른 데로",
+                                    request_id="r3", meal_picker=_second_picker(calls))
+    assert calls == [] and activity.summary["to"] == "가까운 박물관", activity.summary   # 활동에는 식사 선택기를 쓰지 않는다

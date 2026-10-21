@@ -112,7 +112,7 @@ def rv(api, monkeypatch):  # noqa: F811
     monkeypatch.setattr(LedgerPlaceLookup, "find_dish_near", lambda self, text, latitude, longitude: None)
     # ★`[2026-10-13]` 같은 이유로 「시장 · 동네 근처 식당 찾기」(`find_meal_near`)도 끈다 — 개발 DB 원장의 광장시장 근처 식당을 따라가지 않게
     #   (근처 식당 찾기 자체는 tests/unit/travel/test_intake_meal_landmark.py)
-    monkeypatch.setattr(LedgerPlaceLookup, "find_meal_near", lambda self, latitude, longitude: None)
+    monkeypatch.setattr(LedgerPlaceLookup, "find_meal_near", lambda self, latitude, longitude, at=None: None)
     op_stream._OPEN.clear()
     yield api
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:

@@ -56,13 +56,20 @@ LON_DEG_PER_KM = 0.0113
 
 #: ③ 선호도별 폴백 — 모자라면 **앞에서부터 한 단계씩** 뺀다(2026-10-01 팀 합의, 2026-10-02 반경으로 교체).
 #:  - 이동 1순위: 거리 우선 — 반경마다 ①소분류 ②중분류 ③대분류(+타입)를 먼저 빼 보고, 그래도 모자라면 반경을 넓힌다.
-#:  - 활동 1순위: 대분류(+타입) 고정 — 분류 단계마다 반경을 1→10km 넓혀 보고, 그래도 모자라면 ①소분류 ②중분류를 뺀다.
+#:  - 활동 1순위: 대분류(+타입) 고정 — `[2026-10-19]` 거리 구간(`ACTIVITY_ZONES`: 1~3 · 4~5 · 6~10km)마다 분류 단계별로 반경을 넓혀 보고,
+#:    구간 안에서 모자라면 ①소분류 ②중분류를 빼며(먼 구간은 소분류만), 그래도 모자라면 다음 구간으로 간다.
 #:  ★타입(`contenttypeid`)은 **대분류와 한 묶음**이다. 대분류와 거의 1:1 이라(관광타입 38=쇼핑, 15=행사,
 #:   14=문화시설) 따로 풀 이유가 없고, 풀어야 한다면 대분류와 함께 **맨 마지막**에 푼다.
 FALLBACK_DROPS: dict[str, tuple[tuple[str, ...], ...]] = {
     "mobility": (("lclsSystm3",), ("lclsSystm2",), ("lclsSystm1", "contenttypeid")),
     "activity": (("lclsSystm3",), ("lclsSystm2",)),
 }
+
+#: ③' 활동 1순위의 **거리 구간** `[2026-10-19 사용자 결정]` — `(구간 바깥 경계 km, 그 구간에서 풀 수 있는 `FALLBACK_DROPS` 묶음 수)`.
+#:  가까운 구간(1~3km)·조금 먼 구간(4~5km)은 소분류 → 중분류까지 풀고, 먼 구간(6~10km)은 **소분류만** 푼다(멀수록 분류가 더 같아야 한다).
+#:  한 구간을 다 보고도 `KEEP` 곳이 안 차면 다음 구간으로 간다. 순위도 구간이 먼저다(`zone_of`) — 같은 소분류 8km 가 같은 중분류 2km 앞에 서지 않게.
+#:  ★경계값(3·5·10km)은 문헌 값이 아니라 팀이 정한 시작값이다 — 이 표만 고치면 검색·순위가 같이 바뀐다.
+ACTIVITY_ZONES: tuple[tuple[float, int], ...] = ((3.0, 2), (5.0, 2), (10.0, 1))
 
 #: 선호도 `None` 일 때 **「더보기」에만** 푸는 조건(2026-10-03). 화면 3곳은 정확한 분류만 쓴다.
 MORE_ONLY_DROPS = ("lclsSystm3",)
@@ -238,7 +245,26 @@ def search_steps(preference: str | None) -> list[tuple[float, tuple[str, ...]]]:
         levels.append(levels[-1] + group)
     if preference == "mobility":
         return [(r, dropped) for r in radii() for dropped in levels]
+    if preference == "activity":
+        # 활동 중요 — 거리 구간(`ACTIVITY_ZONES`) 안에서는 분류 순서대로(같은 분류를 먼저 반경 끝까지), 구간이 바뀌면 거리를 넓힌다
+        steps: list[tuple[float, tuple[str, ...]]] = []
+        floor = 0.0
+        for limit, allowed in ACTIVITY_ZONES:
+            zone_radii = [r for r in radii() if floor < r <= limit]
+            for dropped in levels[:allowed + 1]:
+                steps += [(r, dropped) for r in zone_radii]
+            floor = limit
+        return steps
     return [(r, dropped) for dropped in levels for r in radii()]
+
+
+def zone_of(km: float) -> int:
+    """거리 구간 번호(0 가까움 · 1 조금 멂 · 2 멂). 순위에서 분류 점수보다 **먼저** 본다 — 멀리 있는 같은 소분류가
+    가까이 있는 같은 중분류보다 앞서지 않게(`[2026-10-19 사용자 결정]`)."""
+    for index, (limit, _) in enumerate(ACTIVITY_ZONES):
+        if km <= limit:
+            return index
+    return len(ACTIVITY_ZONES) - 1
 
 
 def radii() -> list[float]:
@@ -376,7 +402,8 @@ def rank_alternatives(origin: dict[str, Any], pool: list[dict[str, Any]], at: da
     #    이동 중요: 거리 → 분류 가까움 / 그 밖: 분류 가까움 → 거리.
     def sort_key(c: dict[str, Any]) -> tuple:
         level, d = category_level(origin, c), distance[id(c)]
-        tail = (d, level) if preference == "mobility" else (level, d)
+        # ★`[2026-10-19]` 이동 중요는 거리가 먼저라 구간이 따로 필요 없고, 그 밖은 **거리 구간 → 분류 → 거리** 순이다
+        tail = (d, level) if preference == "mobility" else (zone_of(d), level, d)
         return (not confirmed(c), not same_brand_nearby(origin, c), *tail)
 
     def availability(c: dict[str, Any]) -> str:

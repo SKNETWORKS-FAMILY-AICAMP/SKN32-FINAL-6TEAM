@@ -2,6 +2,7 @@
 """`app/domains/travel_ops/instances/activity/db_search/place_candidates.py` — `read.place_candidates` 의 DB 조회.
 
 가짜 연결로 SQL 인자와 행 → 계약 모양 변환을 본다(실 DB 없이).
+★`[2026-10-16 사용자 결정]` 활동 원장(`activity.ac_place`)만 읽는다 — `place_catalog` 를 쓰지 않고 테넌트를 나누지 않는다.
 """
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ from uuid import uuid4
 from app.tools.read_tools import ReadToolbox, ToolContext
 from app.domains.travel_ops.instances.activity.alternatives import RADIUS_MAX_KM, bounding_box
 from app.domains.travel_ops.instances.activity.db_search.place_candidates import (
-    DEFAULT_SOURCES, ORIGIN_SQL, POOL_SQL, find_place_candidates)
+    ALIAS_EXISTS_SQL, ALIAS_SQL, DEFAULT_SOURCES, ORIGIN_SQL, POOL_EXCLUDED_CLASSES, POOL_SQL, find_place_candidates)
 
 UTC = timezone.utc
 OLD = datetime(2026, 9, 20, tzinfo=UTC)
@@ -19,12 +20,11 @@ NEW = datetime(2026, 9, 28, tzinfo=UTC)
 
 
 def _record(cid, *, title, l1="HS", sgg="23", lon=126.98, lat=37.58,
-            closed="연중무휴", fetched=NEW):
-    raw = {"contentid": cid, "title": title, "lclsSystm1": l1, "lclsSystm2": l1 + "01",
-           "lclsSystm3": l1 + "010100", "lDongSignguCd": sgg,
-           "mapx": "117.99", "mapy": "19.69",        # ★원본 좌표 — 쓰지 않아야 한다
-           "closed_days": closed, "business_hours": "09:00~18:00"}
-    return (cid, "12", title, lat, lon, l1, raw, fetched)
+            closed="연중무휴", fetched=NEW, brand=None):
+    # 원장 칸 순서(`_COLUMNS`): content_id · content_type_id · name_ko · lat · lng · lcls1~3 · sigungu_code · brand ·
+    #   usetime_text · restdate_text · addr1 · updated_at
+    return (cid, "12", title, lat, lon, l1, l1 + "01", l1 + "010100", sgg, brand,
+            "09:00~18:00", closed, None, fetched)
 
 
 class FakeCursor:
@@ -38,9 +38,15 @@ class FakeCursor:
     def __exit__(self, *exc):
         return False
 
-    def execute(self, sql, params):
-        self.conn.executed.append((sql, params))
-        self._result = self.conn.origin if sql == ORIGIN_SQL else self.conn.pool
+    def execute(self, sql, params=None):
+        # ★별칭 표 조회(`[2026-10-19]`)는 따로 센다 — 후보 풀 SQL 의 인자 · 횟수를 보는 시험이 그대로 성립하게
+        if sql == ALIAS_EXISTS_SQL:
+            self._result = [(self.conn.aliases is not None,)]
+        elif sql == ALIAS_SQL:
+            self._result = list(self.conn.aliases or [])
+        else:
+            self.conn.executed.append((sql, params))
+            self._result = self.conn.origin if sql == ORIGIN_SQL else self.conn.pool
 
     def fetchone(self):
         return self._result[0] if self._result else None
@@ -50,8 +56,9 @@ class FakeCursor:
 
 
 class FakeConnection:
-    def __init__(self, origin, pool):
-        self.origin, self.pool = origin, pool
+    def __init__(self, origin, pool, aliases=None):
+        # `aliases` — 별칭 표 행 `(alias, content_id)`. `None` 이면 표가 아직 없다(마이그레이션 306 전)
+        self.origin, self.pool, self.aliases = origin, pool, aliases
         self.executed: list = []
 
     def __enter__(self):
@@ -82,19 +89,18 @@ def test_returns_origin_and_candidates_in_the_csv_shape():
                      "lDongSignguCd": "23", "brand": None, "mapx": "126.98", "mapy": "37.58",
                      "closed_days": "연중무휴", "business_hours": "09:00~18:00",
                      "addr1": None}   # ★`[2026-10-07]` 재난문자를 후보의 구로 거르는 데 쓴다(이 행은 주소 없음)
-    assert pool["source"] == "place_catalog:" + "+".join(DEFAULT_SOURCES)
+    assert pool["source"] == "activity.ac_place:" + "+".join(DEFAULT_SOURCES)
 
 
-def test_brand_comes_from_raw_json():
-    rec = _record("OY1", title="올영")
-    rec[6]["brand"] = "올리브영"
+def test_brand_comes_from_the_ledger_column():
+    rec = _record("OY1", title="올영", brand="올리브영")
     conn = FakeConnection([rec], [rec])
     pool = find_place_candidates(lambda: conn, "t1", "OY1")
     assert pool["origin"]["brand"] == "올리브영" and pool["candidates"][0]["brand"] == "올리브영"
 
 
 def test_nulled_coordinates_stay_unknown():
-    """★적재 때 NULL 로 넣은 좌표를 raw_json 원본(자리표시값)으로 되살리지 않는다."""
+    """★적재 때 NULL 로 넣은 좌표는 모름 그대로다."""
     conn = FakeConnection([ORIGIN], [NO_COORD])
     candidate = find_place_candidates(lambda: conn, "t1", "126511")["candidates"][0]
     assert candidate["mapx"] is None and candidate["mapy"] is None
@@ -110,9 +116,10 @@ def test_pool_is_narrowed_by_the_max_radius_bounding_box():
     conn = FakeConnection([ORIGIN], [])
     find_place_candidates(lambda: conn, "t1", "126511")
     (sql1, p1), (sql2, p2) = conn.executed
-    assert (sql1, p1) == (ORIGIN_SQL, ("t1", list(DEFAULT_SOURCES), "126511"))
-    assert sql2 == POOL_SQL and "lDongSignguCd" not in POOL_SQL
-    assert p2 == ("t1", list(DEFAULT_SOURCES), "126511", *bounding_box(37.58, 126.98, RADIUS_MAX_KM))
+    assert (sql1, p1) == (ORIGIN_SQL, (list(DEFAULT_SOURCES), "126511"))
+    assert sql2 == POOL_SQL and "sigungu_code =" not in POOL_SQL
+    assert p2 == (list(DEFAULT_SOURCES), "126511", list(POOL_EXCLUDED_CLASSES),
+                  *bounding_box(37.58, 126.98, RADIUS_MAX_KM))
 
 
 def test_origin_without_coordinates_reads_no_pool():
@@ -124,14 +131,14 @@ def test_origin_without_coordinates_reads_no_pool():
 def test_pool_reads_brand_sources_too():
     """★TourAPI 만 보면 브랜드 매장(OY/DS/AB/MS)이 후보에도, 원래 장소에도 못 든다."""
     assert {"tour_api", "oliveyoung", "daiso", "artbox", "musinsa"} <= set(DEFAULT_SOURCES)
-    assert "source = ANY(%s)" in ORIGIN_SQL and "source = ANY(%s)" in POOL_SQL
+    assert ") = ANY(%s)" in ORIGIN_SQL and ") = ANY(%s)" in POOL_SQL
 
 
 def test_sources_can_be_narrowed():
     conn = FakeConnection([ORIGIN], [])
     pool = find_place_candidates(lambda: conn, "t1", "126511", sources=("tour_api",))
-    assert conn.executed[0][1] == ("t1", ["tour_api"], "126511")
-    assert pool["source"] == "place_catalog:tour_api"
+    assert conn.executed[0][1] == (["tour_api"], "126511")
+    assert pool["source"] == "activity.ac_place:tour_api"
 
 
 def test_unknown_origin_is_unknown():
@@ -146,9 +153,34 @@ def test_no_content_id_does_not_open_a_connection():
     assert find_place_candidates(boom, "t1", "  ") is None
 
 
-def test_read_tool_passes_the_tenant_scope():
+def test_read_tool_reads_the_shared_ledger_whatever_the_tenant():
+    """★원장은 공공 장소 자료라 테넌트로 나누지 않는다(`ledger.py` 와 같다) — SQL 인자에 테넌트가 없다."""
     conn = FakeConnection([ORIGIN], [NEAR])
     scope = ToolContext("tenant-x", uuid4(), uuid4(), ["activity"])
     pool = ReadToolbox(lambda: conn).place_candidates(scope, content_id="126511")
     assert pool["origin"]["contentid"] == "126511"
-    assert conn.executed[0][1][0] == "tenant-x"
+    assert "tenant-x" not in conn.executed[0][1] and "tenant_id" not in ORIGIN_SQL + POOL_SQL
+
+
+def test_reads_only_the_activity_ledger():
+    """★`[2026-10-16 사용자 결정]` 운영시간 기준 표는 원장 하나 — 코어 `place_catalog` 를 읽지 않는다."""
+    assert "activity.ac_place" in ORIGIN_SQL and "activity.ac_place" in POOL_SQL
+    assert "place_catalog" not in ORIGIN_SQL + POOL_SQL
+
+
+def test_festivals_and_delisted_places_are_not_candidates():
+    """축제 · 행사(EV)는 기간 판정 전이라 후보로 내지 않는다(카탈로그 시절과 같은 동작) · 목록에서 내려간 곳도 뺀다."""
+    assert "EV" in POOL_EXCLUDED_CLASSES
+    assert "delisted_at IS NULL" in POOL_SQL and "delisted_at" not in ORIGIN_SQL
+
+
+def test_alias_table_rows_ride_along_with_the_pool():
+    """★`[2026-10-19]` 별칭 표 전체가 풀과 같이 온다 — 일정의 「N서울타워」가 후보 「남산서울타워」와 같은 곳인지 가리는 데 쓴다."""
+    conn = FakeConnection([ORIGIN], [NEAR], aliases=[("N서울타워", "126535"), ("남산타워", "126535")])
+    pool = find_place_candidates(lambda: conn, "t1", "126511")
+    assert pool["aliases"] == [{"alias": "N서울타워", "content_id": "126535"}, {"alias": "남산타워", "content_id": "126535"}]
+
+
+def test_missing_alias_table_means_no_aliases_not_an_error():
+    conn = FakeConnection([ORIGIN], [NEAR], aliases=None)
+    assert find_place_candidates(lambda: conn, "t1", "126511")["aliases"] == []

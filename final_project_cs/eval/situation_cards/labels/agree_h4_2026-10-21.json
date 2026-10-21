@@ -1,0 +1,28 @@
+{
+ "a": "사람 작성자1",
+ "b": "사람 작성자2",
+ "ids_in_a": 40,
+ "ids_in_b": 40,
+ "ids_paired": 40,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "n": 40,
+   "excluded": 0,
+   "exact_match": 0.95,
+   "mean_jaccard": 0.9583,
+   "disagree_ids": [
+    "M-27",
+    "M-80"
+   ]
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "n": 40,
+   "excluded": 0,
+   "exact_match": 1.0,
+   "mean_jaccard": 1.0,
+   "disagree_ids": []
+  }
+ }
+}

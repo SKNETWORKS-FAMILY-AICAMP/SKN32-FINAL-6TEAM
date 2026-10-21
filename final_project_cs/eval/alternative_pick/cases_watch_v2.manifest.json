@@ -1,0 +1,113 @@
+{
+ "built_on": "2026-10-20",
+ "cases": 21,
+ "by_stratum": {
+  "B": 8,
+  "C": 13
+ },
+ "split": [
+  "holdout"
+ ],
+ "source": "cards_llm_bound_v0.jsonl",
+ "sha256": "0445abb58e0cc5df6e7adcc6ce09d16d5303ff559d29b64c2d53855c65762379",
+ "inputs_sha256": "b4e8eff1aba1b936f17ce7012f678eed15791053290f29da9126fef91c212603",
+ "path": "watch",
+ "from": {
+  "dataset": "cases.jsonl",
+  "sha256": "b2ab6812791331222215ae77aa5ac26d6d7a941605bf985013ad26dce72c081b"
+ },
+ "labeler": "합의",
+ "labels_file": "situation_cards_watch_human_합의_2026-10-19.json",
+ "texts": "없음(감시 경로 — customer_text=None)",
+ "smoke": false,
+ "watch": {
+  "variants": 21,
+  "human": 21,
+  "not_called": 59,
+  "duplicate": 0,
+  "skipped": {
+   "not_called": [
+    "L-01",
+    "L-02",
+    "L-03",
+    "L-04",
+    "L-05",
+    "L-06",
+    "L-07",
+    "L-08",
+    "L-09",
+    "L-10",
+    "L-11",
+    "L-12",
+    "L-13",
+    "L-14",
+    "L-15",
+    "L-16",
+    "L-17",
+    "L-18",
+    "L-19",
+    "L-20",
+    "L-21",
+    "L-22",
+    "L-23",
+    "L-24",
+    "L-25",
+    "L-26",
+    "L-27",
+    "L-28",
+    "L-29",
+    "L-30",
+    "L-31",
+    "L-32",
+    "L-54",
+    "L-55",
+    "L-56",
+    "L-57",
+    "L-58",
+    "L-59",
+    "L-60",
+    "L-61",
+    "L-62",
+    "L-63",
+    "L-64",
+    "L-65",
+    "L-66",
+    "L-67",
+    "L-68",
+    "L-69",
+    "L-70",
+    "L-71",
+    "L-72",
+    "L-73",
+    "L-74",
+    "L-75",
+    "L-76",
+    "L-77",
+    "L-78",
+    "L-79",
+    "L-80"
+   ],
+   "duplicate": []
+  }
+ },
+ "labeling": {
+  "labelers": [
+   "작성자1",
+   "작성자2"
+  ],
+  "blind": false,
+  "agreement_before_consensus": {
+   "acceptable": "20/21 = 95.2% · 평균 자카드 0.9683",
+   "forbidden": "21/21 = 100%"
+  },
+  "consensus_changed_cards": 1,
+  "consensus_note": "L-49-W 1 (2026-10-19 사용자 결정)",
+  "claude_assisted": "Claude 제안을 두 사람이 보고 확정 — 21행 중 20행이 제안과 같음. 블라인드 아님(일치도는 독립 판단 값이 아니다)",
+  "rule_cases": "없음 — 2026-10-20 우선순위를 LLM 에 넘기지 않게 돼 우선순위만 있던 33건은 운영에서 안 부름"
+ },
+ "supersedes": {
+  "dataset": "cases_watch.jsonl",
+  "sha256": "400bcd58ad95bd2df7294e964c2a81dd7536d2227bf5d0e6c1f5933568ecab17",
+  "why": "2026-10-20 SURVEY_FIELDS 에서 priority 뺌"
+ }
+}

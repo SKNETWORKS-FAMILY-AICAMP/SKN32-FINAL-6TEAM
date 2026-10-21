@@ -1,0 +1,30 @@
+{
+ "eval_run": "20261020T140319Z",
+ "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_h3.jsonl",
+ "inputs_sha256": "7586a4321eae5fcb38d4d0a592b725b927dd4ba65c746dfa5d22879af0a4b09f",
+ "dataset_sha256": "946ebb8c64d436514d7a3fd2d39860a5265d2869b6f6eb93f905e03c95d4be3f",
+ "split": [
+  "holdout"
+ ],
+ "smoke": false,
+ "labeler": "합의",
+ "cases": 40,
+ "repeats": 3,
+ "shuffle": {
+  "cases": 40,
+  "per_case": 2,
+  "seed": 7
+ },
+ "dry_run": false,
+ "model": "gpt-5.4-nano",
+ "reasoning_effort": "low",
+ "web_search": false,
+ "prompt_file": null,
+ "payload": "v3(class_name)",
+ "timeout_s": 8.0,
+ "temperature": null,
+ "seed_model": null,
+ "prompt": "db",
+ "prompt_id": "a6f54f80-f7e5-47ac-b5f3-19ecfc09f523",
+ "prompt_chars": 1664
+}
