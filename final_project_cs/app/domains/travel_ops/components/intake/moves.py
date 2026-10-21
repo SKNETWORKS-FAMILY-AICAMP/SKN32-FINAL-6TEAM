@@ -79,6 +79,24 @@ def straight_km(a: dict[str, Any], b: dict[str, Any]) -> float:
     return distance_m({"latitude": a["lat"], "longitude": a["lon"]}, {"latitude": b["lat"], "longitude": b["lon"]}) / 1000
 
 
+#: 같은 곳으로 보는 거리(m) — 이름이 같고 이 안이면 같은 장소다. ★우리가 고른 값(2026-10-21): 같은 건물 안 출입구 차이를 넘기되 이웃 가게는 가른다
+SAME_PLACE_M = 100.0
+
+
+def same_place(a: dict[str, Any] | None, b: dict[str, Any] | None) -> bool:
+    """이웃한 두 칸의 장소가 같은 곳인가 — 같은 `place_id`, 또는 이름이 같고 좌표가 `SAME_PLACE_M` 안. 장소가 없거나 좌표를 모르면 같다고 하지 않는다.
+    ★같은 곳 사이에는 이동 구간을 만들지 않는다(`review.build`) — 전에는 「도보 1분 · 0.0km」 구간이 붙었다(2026-10-21 사용자 지적)."""
+    if not a or not b:
+        return False
+    if a.get("place_id") and a.get("place_id") == b.get("place_id"):
+        return True
+    if not a.get("name") or a.get("name") != b.get("name"):
+        return False
+    if None in (a.get("latitude"), a.get("longitude"), b.get("latitude"), b.get("longitude")):
+        return False
+    return distance_m(a, b) <= SAME_PLACE_M
+
+
 def mode_of(option: dict[str, Any]) -> tuple[str, str]:
     """계산기가 고른 경로 후보 → (수단 코드, 화면 말). 타는 노선(`uses` — 「5호선:광화문」 · 「버스:103」)에서 읽는다."""
     if str(option.get("id")) == "taxi":
@@ -177,4 +195,4 @@ def ceil_to(minutes: float, step: int = 5) -> int:
     return int(math.ceil(minutes / step) * step)
 
 
-__all__ = ["Leg", "late_text", "leg_between", "mode_of", "straight_km"]
+__all__ = ["Leg", "SAME_PLACE_M", "late_text", "leg_between", "mode_of", "same_place", "straight_km"]

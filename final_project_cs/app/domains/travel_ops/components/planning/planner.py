@@ -94,6 +94,29 @@ def day_bounds(constraints: Mapping[str, Any] | None) -> tuple[time, time]:
     if start >= end:                        # 읽은 값이 서로 어긋나면 기본값 — 짐작으로 고르지 않는다
         return DAY_START, DAY_END
     return start, end
+
+
+def _from_moment(request: "PlanRequest", moment: datetime) -> "PlanRequest":
+    """오늘 시작하는 계획은 **지금**(서울, 5분 단위 올림)부터 짠다. `[2026-10-21 사용자 지시]` 지난 칸을 오늘 계획에 넣지 않는다.
+
+    ★지금은 요청이 들어올 때 **한 번만** 정해(`plan_trip`) 이 함수로 요청 안의 「하루 첫 시각」(`constraints.day_hours.start`)을 올린다.
+      그 아래 함수들은 `day_bounds` 로 늘 읽던 값을 그대로 읽는다 — 시계를 다시 보는 곳이 없다.
+    오늘이 시작 날짜가 아니거나, 지금이 하루 첫 시각 이전이거나 마감 이후면 요청을 그대로 둔다(짐작으로 바꾸지 않는다)."""
+    from dataclasses import replace
+
+    if request.start_date != moment.date():
+        return request
+    first, last = day_bounds(request.constraints)
+    rounded = moment.replace(second=0, microsecond=0)
+    if moment.second or moment.microsecond or rounded.minute % 5:
+        rounded += timedelta(minutes=5 - rounded.minute % 5 if rounded.minute % 5 else 5)
+    now_time = rounded.time()
+    if not first < now_time < last:
+        return request
+    constraints = dict(request.constraints or {})
+    hours = dict(constraints.get("day_hours") or {})
+    hours["start"] = f"{now_time:%H:%M}"
+    return replace(request, constraints={**constraints, "day_hours": hours})
 ACTIVITY_MIN = 90                #: 활동 한 건에 두는 시간
 MEAL_MIN = 60                    #: 식사 한 건에 두는 시간
 LUNCH_FROM = time(12, 0)
@@ -1358,19 +1381,25 @@ def _rate_limited(source: Any) -> int:
 def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None, search: Callable[..., Any] | None = None,
               exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = (),
-              ledger: Any | None = None) -> PlanOutcome:
+              ledger: Any | None = None, start_at: datetime | None = None) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
 
     ★`[2026-09-28]` 이 요청 중에 관광공사 조회가 **속도 한도**에 걸렸고 그래서 못 짰으면, 조건 문제처럼 보이는
       거절(「후보 부족」 등) 대신 `source_busy`(몇 초 뒤 다시)로 바꿔 올린다 — 실서버에서 「후보 부족」 422 가 나고
       1분 뒤 다시 누르니 됐다(ui 세션 실측). 원래 거절은 `underlying` 에 그대로 싣는다.
+
+    ★`[2026-10-21 사용자 지시]` `start_at` = 계획을 짜는 **지금**. 안 주면 여기서 한 번만 서울 시각으로 정하고, 오늘 시작하는 계획은
+      그 시각부터 짠다(`_from_moment`). 아래 함수들은 시계를 다시 보지 않는다.
     """
     import math
 
+    moment = (start_at or datetime.now(KST)).astimezone(KST)
+    request = _from_moment(request, moment)
     limited = _rate_limited(tour_api)
     try:
         return _plan_trip(conn=conn, tenant_id=tenant_id, request=request, chat=chat, tour_api=tour_api,
-                          search=search, exclude_names=exclude_names, exclude_sites=exclude_sites, ledger=ledger)
+                          search=search, exclude_names=exclude_names, exclude_sites=exclude_sites, ledger=ledger,
+                          start_at=moment)
     except PlanRefused as refused:
         if _rate_limited(tour_api) <= limited:
             raise
@@ -1384,9 +1413,10 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
               tour_api: Any | None = None,
               search: Callable[..., Any] | None = None,
               exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = (),
-              ledger: Any | None = None) -> PlanOutcome:
+              ledger: Any | None = None, start_at: datetime | None = None) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
 
+    `start_at` — `plan_trip` 이 요청 입구에서 정한 지금(서울). 이 안에서는 시계를 다시 보지 않는다.
     `exclude_names` — 후보에서 뺄 장소 이름(고객이 이미 정한 일정의 장소 — 같은 곳을 두 번 넣지 않게, `plan_around`).
     `exclude_sites` — 같은 용도의 **장소 자체**(`name` · `latitude` · `longitude` · `attributes.address`). 이름이 달라도 **같은 곳**
       (`itinerary_changes.same_site` — 같은 주소 · 30m 안 · 이름 첫 낱말이 같고 1.5km 안)인 활동 후보를 뺀다.
@@ -1545,7 +1575,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     spares = [cand for cand in ranked if cand.key not in used]
     rounds, fixed = 0, []
     # ★`[2026-09-28]` 판정 전에 고른 장소의 영업시간을 관광공사 원문에서 채운다 — 판정기가 실제로 그 칸을 보게
-    now = datetime.now(KST)
+    now = start_at or datetime.now(KST)
     hours_stats = enrich_hours(chosen.values(), source=tour_api, chat=chat, now=now)
     violations = _check(items, chosen, request, ledger=ledger)
     while violations and rounds < MAX_REPAIR_ROUNDS:
