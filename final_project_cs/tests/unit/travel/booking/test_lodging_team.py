@@ -1796,6 +1796,14 @@ def test_d23_spoken_ends_labelled_ranges_and_next_day():
     assert dates("12월 3일부터 2박 3일, 1박 10만 원", check_in="2026-12-03", check_out="2026-12-05", check_in_text="12월 3일",
                  check_out_text="2박") == ("2026-12-03", "2026-12-05"), "맞게 읽은 값은 그대로"
     assert dates("마포구 성인 둘, 1월 16일 토욜~18일 월욜 방 있을까?", check_in_text="1월 16일") == ("2027-01-16", "2027-01-18"), "D23b 요일 낀 범위"
+    # `[2026-10-18 D24]` 7차 — 가격 말의 「하루 · 하룻밤」은 박수가 아니다(D23 회귀) · 「십일월 십사일 … 십육일 퇴실」 · 「열흘째 되는 날」
+    assert dates("중구에서 11/06~11/08 성인 한 명, 하루 숙박비 팔만 원 넘지 않는 데", check_in="2026-11-06", check_out="2026-11-08",
+                 check_in_text="11/06", check_out_text="11/08") == ("2026-11-06", "2026-11-08")
+    assert dates("마포구에 11/7~11/9 두 명, 하룻밤 팔만 원 안 넘었음", check_in="2026-11-07", check_out="2026-11-09",
+                 check_in_text="11/7", check_out_text="11/9") == ("2026-11-07", "2026-11-09")
+    assert dates("성북구 한옥 있을까요? 십일월 십사일 입실, 십육일 퇴실이고", check_in_text="십일월 십사일", check_out_text="십육일") == ("2026-11-14", "2026-11-16")
+    assert dates("종로구에 십일월 사일부터 이틀 묵을 곳", check_in_text="십일월 사일부터", check_out_text="이틀") == ("2026-11-04", "2026-11-06")
+    assert dates("11월 열흘째 되는 날 들어가서 사흘 자고 나올 거", check_in_text="11월 열흘째", check_out_text="사흘") == ("2026-11-10", "2026-11-13")
 
 
 def test_d23_hanok_village_is_a_place_and_below_excludes_the_price():

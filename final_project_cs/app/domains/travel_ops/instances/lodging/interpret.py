@@ -454,7 +454,7 @@ _NATIVE_DAY = re.compile(rf"(?:(열흘|보름)|(열|스물|스무|서른)\s*({_O
 _ORDINAL_DAY = re.compile(rf"(?<![가-힣])((?:열|스물|스무|서른)(?:\s*(?:{_ONES}))?|{_ONES}|첫)\s*(?:번\s*)?째\s*날")   # `[2026-10-18 D23]` 「스물두 번째 날」(☆6차 N31-28)
 _ISO_DAY = re.compile(r"(?<![\d\-/.])(?:(20\d{2})\s*-\s*)?(\d{1,2})\s*-\s*(\d{1,2})(?![\d\-])")
 _SPAN_WORDS = {"하루": 1, "이틀": 2, "사흘": 3, "나흘": 4, "닷새": 5}
-_SPAN = re.compile(r"(하루|이틀|사흘|나흘|닷새)(?=\s*(?:만\s*)?(?:자|묵|숙박|머물|지내|밤|동안|뒤|후|있))")
+_SPAN = re.compile(r"(하루|이틀|사흘|나흘|닷새)(?=\s*(?:만\s*)?(?:자|묵|숙박(?!비|료)|머물|지내|밤(?!\s*(?:에\s*)?\S*\s*\S*만)|동안|뒤|후|있))")   # `[2026-10-18 D24]` 「하루 숙박비」는 가격
 #: `[2026-10-18 D23]` 「…부터 이틀이야」 「…부터 사흘!」 「숙박은 하루예요」 — 날 수를 박 수로(평가 라벨: 이틀 = 2박 · 사흘 = 3박, ☆6차 N31-15 · N31-20 · N31-27 · N33-03)
 _SPAN_FROM = re.compile(r"(?:부터|에서)\s*(하루|이틀|사흘|나흘|닷새)(?![가-힣]*(?:\s*(?:뒤|후|전)))(?=\s*(?:이야|이에요|예요|요|만|간|동안|지낼|지내|묵|머물|자|!|,|\.|$|\s))"
                         r"|(?:숙박|묵는\s*건|자는\s*건|머무는\s*건|머무르는\s*건)\s*(?:은|는|이|기간은)?\s*(하루|이틀|사흘|나흘|닷새)")
@@ -486,7 +486,11 @@ def _sino(word: str) -> int | None:
 def spoken_days(text: str) -> str:
     """말로 쓴 날짜 · 박수를 숫자로 바꾼 문장. 바꿀 것이 없으면 그대로. 「N월」 뒤이거나, 들어가고 나오는 말 · 「째 날」이 붙은 것만 날로 본다."""
     out = text or ""
+    out = re.sub(r"(?<![가-힣])(십일|십이|시)\s*월", lambda m: {"십일": "11", "십이": "12", "시": "10"}[m.group(1)] + "월", out)   # `[2026-10-18 D24]` 「십일월 십사일」(☆7차 N39-04 · N41-01)
     out = _SINO_DAY.sub(lambda m: f"{m.group(1)}월 {_sino(m.group(2))}일" if _sino(m.group(2)) and _sino(m.group(2)) <= 31 else m.group(0), out)
+    # `[2026-10-18 D24]` 달 없이 쓴 끝날 「십육일 퇴실」(☆7차 N39-04)
+    out = re.sub(r"(?<![가-힣\d])((?:[이삼]?십)[일이삼사오육칠팔구]?)\s*일(?=\s*(?:에\s*)?(?:퇴실|체크\s*아웃|나오|나와|나올|나가|까지))",
+                 lambda m: f"{_sino(m.group(1))}일" if _sino(m.group(1)) and _sino(m.group(1)) <= 31 else m.group(0), out)
 
     def last_day(m: re.Match) -> str:
         month = int(m.group(1))
@@ -496,6 +500,7 @@ def spoken_days(text: str) -> str:
         return f"{month}월 {(nxt - timedelta(days=1)).day}일"
     out = _MONTH_LAST.sub(last_day, out)
     out = re.sub(r"새해\s*첫\s*날", "1월 1일", out)
+    out = re.sub(r"(\d{1,2}\s*월\s*)(열흘|보름)\s*째\s*(?:되는\s*)?날", lambda m: m.group(1) + ("10일" if m.group(2) == "열흘" else "15일"), out)   # `[2026-10-18 D24]` 「11월 열흘째 되는 날」(☆7차 N37-03)
     out = re.sub(r"(?<![가-힣])(열한|열두|열)\s*월", lambda m: {"열": "10", "열한": "11", "열두": "12"}[m.group(1)] + "월", out)   # `[2026-10-18 D23]` 「열한 월」(☆6차 N33-03)
     out = re.sub(r"새해\s*(?=\d{1,2}\s*월)", "", out)
     out = _ISO_DAY.sub(lambda m: f"{int(m.group(2))}월 {int(m.group(3))}일" if 1 <= int(m.group(2)) <= 12 and 1 <= int(m.group(3)) <= 31
@@ -600,8 +605,12 @@ def rule_end_fix(found: Interpretation, spoken: str) -> tuple[Interpretation, bo
     (☆6차 N33-21 · N35-20 · N31-20). 문장에 끝을 정하는 말이 **하나**(이튿날 · 다음 날 / N박 · 숫자로 바꾼 날 수)이고 끝 날짜 · 요일을 말하지 않았을 때만. (해석, 고쳤나)"""
     if found.task != "search" or found.check_in is None:
         return found, False
+    # `[2026-10-18 D24]` 「11/06~11/08 … 하루 숙박비 팔만 원」 「하룻밤 팔만 원」 — 범위를 말했거나, 박수 말이 가격 말이면 고치지 않는다(☆7차 N37-02 · N39-02 · N41-28 회귀)
+    if any(pattern.search(spoken) for pattern in (_RANGE_KO, _RANGE_WORDS, _RANGE_SLASH, _RANGE_FROM_TO, _RANGE_LABELS)):
+        return found, False
     others = bool(_END_DAY.search(spoken) or _END_WEEKDAY.search(spoken))
-    ends = {int(m.group(1)) if m.group(1) else _NIGHT_WORDS["".join(m.group(2).split())] for m in _NIGHTS.finditer(spoken)}
+    ends = {int(m.group(1)) if m.group(1) else _NIGHT_WORDS["".join(m.group(2).split())] for m in _NIGHTS.finditer(spoken)
+            if not re.match(r"\s*(?:에|당)?\s*(?:숙박비|방값|요금|가격|비용)?\s*(?:은|는|이)?\s*[\d,일이삼사오육칠팔구십]+\s*(?:만|천|원)", spoken[m.end():])}
     if _END_NEXT.search(spoken):
         ends.add(1)
     if others or len(ends) != 1 or not 1 <= min(ends) <= 30:
