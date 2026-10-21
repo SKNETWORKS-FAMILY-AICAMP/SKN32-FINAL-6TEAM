@@ -1889,3 +1889,14 @@ def test_lb11_no_seller_link_sends_the_button_to_the_google_hotel_page_of_that_s
                                        "read.stay_google_details": lambda a: {"details": {t: {**detail, "sellers": []} for t in a["tokens"]}}})
     option = plain.action_proposals[0].arguments["ask_options"]["options"][0]
     assert option["link_seller"] is None and option["link"] == google["stays"][2]["link"], "판매처가 없으면 목록 링크 그대로"
+
+
+def test_lb05_options_carry_the_price_limit_the_customer_said():
+    """`[2026-10-21 LB-05]` 「1박 ○원 이하」 · 「더 싸게」로 낸 후보에 그 상한을 싣는다 — 고를 때 다시 본 값이 상한을 넘는지
+    고르기 쪽(`trip_api._choose`)이 볼 수 있게. 상한이 없으면 `None`."""
+    result, _, _ = _with_conditions(_plan(), max_price=130000)
+    assert {o["price_limit"] for o in result.action_proposals[0].arguments["ask_options"]["options"]} == {130000}
+    result, _, _ = _with_conditions(_plan(stay_detail={"price_per_night": 120000}), cheaper=True)
+    assert {o["price_limit"] for o in result.action_proposals[0].arguments["ask_options"]["options"]} == {119999}, "원래 가격 - 1"
+    result, _, _ = _itinerary(_plan())
+    assert {o["price_limit"] for o in result.action_proposals[0].arguments["ask_options"]["options"]} == {None}
