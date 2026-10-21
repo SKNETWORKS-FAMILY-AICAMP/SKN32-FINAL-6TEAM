@@ -34,7 +34,8 @@ SHEET_H2 = CARDS_DIR / "sheet_llm_bound_h2.csv"
 #:  (카드 틀 고르기, 카드 id 머리, 기본 seed). h3 는 dev 가 쓴 틀 40장을 새 장소에 다시 묶는다 — h2 와 틀이 겹치지 않게
 #: ★`[2026-10-21]` holdout-4 — 지킴이 문구를 고친 운영판을 고객 요청 경로만 다시 판정(holdout-3 결과 뒤 사용자 지시). h2 의 틀 40장을 새 장소에
 #:  다시 묶는다 — h2 · h3 의 장소를 모두 뺀다
-SETS = {"h2": ("remaining", "H-", 2021), "h3": ("pick", "K-", 2022), "h4": ("remaining", "M-", 2023)}
+#: ★`[2026-10-21]` holdout-5 — 실험 지시문 v5 + 고친 지킴이(아님 · 존댓말)를 고객 요청 경로로 판정. dev · h3 의 틀 40장을 새 장소에
+SETS = {"h2": ("remaining", "H-", 2021), "h3": ("pick", "K-", 2022), "h4": ("remaining", "M-", 2023), "h5": ("pick", "N-", 2024)}
 
 
 def set_paths(name: str) -> tuple[Path, Path]:

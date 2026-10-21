@@ -43,6 +43,8 @@ SETS = {
     #: ★`[2026-10-21]` holdout-4 — 고객 요청 경로만(감시 경로는 h2 · h3 에서 통과)
     "h4": (CARDS / "cards_llm_bound_h4.jsonl", CARDS / "responses_llm_bound_h4.csv", HERE / "cases_h4.jsonl",
            HERE / "cases_watch_h4.jsonl", "_h4"),
+    "h5": (CARDS / "cards_llm_bound_h5.jsonl", CARDS / "responses_llm_bound_h5.csv", HERE / "cases_h5.jsonl",
+           HERE / "cases_watch_h5.jsonl", "_h5"),
 }
 
 

@@ -177,7 +177,8 @@ def prompt_text(name: str | None) -> str | None:
     from app.domains.travel_ops.instances.activity.judge.llm import PROMPT_DIR
 
     # ★`[2026-10-20]` 실험판은 `eval/alternative_pick/prompts/` 에 둔다 — `prompts/` 에 두면 프롬프트 등록
-    #   (`register_prompt_files`, develop CI · 배포)이 가장 높은 판을 운영 프롬프트로 켠다. v3 는 holdout-2 판정 뒤 `prompts/` 로 옮겼다.
+    #   (`register_prompt_files`, develop CI · 배포)이 가장 높은 판을 운영 프롬프트로 켠다. v3 는 holdout-2 판정 뒤, v5 는 holdout-5 판정 뒤
+    #   (`[2026-10-21 사용자 결정]`) `prompts/` 로 옮겼다 — 옮긴 판도 같은 이름으로 찾는다.
     for path in (EXPERIMENT_PROMPTS / name, REPO_ROOT / "prompts" / PROMPT_DIR / name):
         if path.exists():
             return path.read_text(encoding="utf-8")

@@ -103,3 +103,8 @@ def build_h3(src: Sources | None = None) -> Bundle:
 def build_h4(src: Sources | None = None) -> Bundle:
     """`[2026-10-21]` holdout-4 — 지킴이 문구를 고친 운영판의 고객 요청 경로 재판정용."""
     return build(src, "h4")
+
+
+def build_h5(src: Sources | None = None) -> Bundle:
+    """`[2026-10-21]` holdout-5 — 실험 지시문 v5 + 고친 지킴이의 고객 요청 경로 판정용."""
+    return build(src, "h5")
