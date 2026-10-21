@@ -29,6 +29,7 @@ REGISTRY: dict[str, Callable[[Sources | None], Bundle]] = {
     "situation_cards_watch_h2": _lazy("situation_cards_watch", "build_h2"),
     "situation_cards_h3": _lazy("situation_cards", "build_h3"),
     "situation_cards_watch_h3": _lazy("situation_cards_watch", "build_h3"),
+    "situation_cards_h4": _lazy("situation_cards", "build_h4"),
 }
 
 

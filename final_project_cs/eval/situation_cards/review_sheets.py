@@ -39,7 +39,8 @@ WEEKDAY = "월화수목금토일"
 #: ★`[2026-10-20]` 자료 묶음 — v0(holdout 80) · h2(holdout-2, `eval.alternative_pick.holdout2`)
 SETS = {"v0": ("cards_llm_bound_v0.jsonl", "sheet_llm_bound_v0.csv", "responses_llm_bound_v0.csv"),
         "h2": ("cards_llm_bound_h2.jsonl", "sheet_llm_bound_h2.csv", "responses_llm_bound_h2.csv"),
-        "h3": ("cards_llm_bound_h3.jsonl", "sheet_llm_bound_h3.csv", "responses_llm_bound_h3.csv")}
+        "h3": ("cards_llm_bound_h3.jsonl", "sheet_llm_bound_h3.csv", "responses_llm_bound_h3.csv"),
+        "h4": ("cards_llm_bound_h4.jsonl", "sheet_llm_bound_h4.csv", "responses_llm_bound_h4.csv")}
 
 
 def use_set(name: str) -> None:

@@ -64,7 +64,7 @@ def build(src: Sources | None = None, set_name: str = "v0") -> Bundle:
     writers = sorted({it.meta["writer"] for it in items})
     return Bundle(
         name="situation_cards" if set_name == "v0" else f"situation_cards_{set_name}",
-        title=(f"상황 카드 {len(items)}장{'' if set_name == 'v0' else ' · holdout-2'} — 대체 후보 1순위 허용 · 위험 라벨(2인 블라인드)"),
+        title=(f"상황 카드 {len(items)}장{'' if set_name == 'v0' else f' · holdout-{set_name[1:]}'} — 대체 후보 1순위 허용 · 위험 라벨(2인 블라인드)"),
         fields=[Field("acceptable", "1순위로 나와도 정답(번호, ; 로 구분)", "set"),
                 Field("forbidden", "1순위로 나오면 위험(번호, 없으면 비움)", "set", required=False)],
         items=items,
@@ -98,3 +98,8 @@ def build_h2(src: Sources | None = None) -> Bundle:
 def build_h3(src: Sources | None = None) -> Bundle:
     """`[2026-10-20]` holdout-3 — 운영판(v3 + 지킴이) 판정용 고객 요청 판."""
     return build(src, "h3")
+
+
+def build_h4(src: Sources | None = None) -> Bundle:
+    """`[2026-10-21]` holdout-4 — 지킴이 문구를 고친 운영판의 고객 요청 경로 재판정용."""
+    return build(src, "h4")

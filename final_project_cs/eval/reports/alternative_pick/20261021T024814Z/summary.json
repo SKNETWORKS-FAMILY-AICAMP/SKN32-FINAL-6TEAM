@@ -1,0 +1,408 @@
+{
+ "conditions": {
+  "eval_run": "20261021T024814Z",
+  "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_dev.jsonl",
+  "inputs_sha256": "8391e0dd658e453b37bc10d8423cf727476200ef43966f974c93c61c174d85b2",
+  "dataset_sha256": "255c2ea2c2d503a65d6474168003420f9973a21a16f965bd92218824dea76de4",
+  "split": [
+   "dev"
+  ],
+  "smoke": false,
+  "labeler": "rule:strict_attrs(dev) — 사람 검토 전",
+  "cases": 38,
+  "repeats": 3,
+  "shuffle": {
+   "cases": 40,
+   "per_case": 2,
+   "seed": 7
+  },
+  "dry_run": false,
+  "model": "gpt-5.4-nano",
+  "reasoning_effort": "low",
+  "web_search": false,
+  "prompt_file": "alternative_order.v5.md",
+  "payload": "v3(class_name)",
+  "timeout_s": 8.0,
+  "temperature": null,
+  "seed_model": null,
+  "prompt": "file",
+  "prompt_chars": 1967,
+  "labels_sha256": "255c2ea2c2d503a65d6474168003420f9973a21a16f965bd92218824dea76de4"
+ },
+ "observations": 190,
+ "base_observations": 114,
+ "cases": 38,
+ "M1_served": {
+  "num": 92,
+  "den": 114,
+  "pct": 80.7,
+  "ci95": [
+   0.6754,
+   0.9211
+  ],
+  "mean_of_cases": 0.807,
+  "outcomes": {
+   "correct": 92,
+   "suboptimal": 22
+  }
+ },
+ "M1_raw": {
+  "num": 92,
+  "den": 114,
+  "pct": 80.7,
+  "ci95": [
+   0.6754,
+   0.9211
+  ],
+  "mean_of_cases": 0.807,
+  "outcomes": {
+   "correct": 92,
+   "suboptimal": 22
+  }
+ },
+ "M1_discriminating": {
+  "num": 47,
+  "den": 69,
+  "pct": 68.1,
+  "ci95": [
+   0.4928,
+   0.8551
+  ],
+  "mean_of_cases": 0.6812,
+  "outcomes": {
+   "correct": 47,
+   "suboptimal": 22
+  }
+ },
+ "M1_excluded_cases": {
+  "all_acceptable": 15,
+  "no_fit": 0,
+  "discriminating": 23
+ },
+ "M2_dangerous": {
+  "num": 0,
+  "den": 114,
+  "pct": 0.0
+ },
+ "M2_raw_outside": {
+  "num": 0,
+  "den": 114,
+  "pct": 0.0
+ },
+ "M2_served_only": {
+  "num": 0,
+  "den": 114,
+  "pct": 0.0
+ },
+ "M2_hard": {
+  "num": 0,
+  "den": 114,
+  "pct": 0.0
+ },
+ "M2_new_danger": {
+  "num": 0,
+  "den": 114,
+  "pct": 0.0
+ },
+ "M2_code_order": {
+  "num": 0,
+  "den": 114,
+  "pct": 0.0
+ },
+ "baseline_code_order": {
+  "num": 15,
+  "den": 38,
+  "pct": 39.5,
+  "ci95": [
+   0.2368,
+   0.5526
+  ],
+  "dangerous": {
+   "num": 0,
+   "den": 38,
+   "pct": 0.0
+  }
+ },
+ "M3_llm_minus_code": {
+  "value": 0.4123,
+  "ci95": [
+   0.2632,
+   0.5702
+  ],
+  "paired_cases": 38
+ },
+ "by_stratum": {
+  "A": {
+   "cases": 7,
+   "M1_served": {
+    "num": 21,
+    "den": 21,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 21,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 21,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 7,
+    "den": 7,
+    "pct": 100.0
+   }
+  },
+  "B": {
+   "cases": 14,
+   "M1_served": {
+    "num": 23,
+    "den": 42,
+    "pct": 54.8
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 42,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 19,
+    "den": 42,
+    "pct": 45.2
+   },
+   "baseline": {
+    "num": 0,
+    "den": 14,
+    "pct": 0.0
+   }
+  },
+  "C": {
+   "cases": 6,
+   "M1_served": {
+    "num": 15,
+    "den": 18,
+    "pct": 83.3
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 18,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 3,
+    "den": 18,
+    "pct": 16.7
+   },
+   "baseline": {
+    "num": 0,
+    "den": 6,
+    "pct": 0.0
+   }
+  },
+  "D": {
+   "cases": 3,
+   "M1_served": {
+    "num": 9,
+    "den": 9,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 9,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 9,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 0,
+    "den": 3,
+    "pct": 0.0
+   }
+  },
+  "E": {
+   "cases": 6,
+   "M1_served": {
+    "num": 18,
+    "den": 18,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 18,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 18,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 6,
+    "den": 6,
+    "pct": 100.0
+   }
+  },
+  "F": {
+   "cases": 2,
+   "M1_served": {
+    "num": 6,
+    "den": 6,
+    "pct": 100.0
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 6,
+    "pct": 0.0
+   },
+   "suboptimal": {
+    "num": 0,
+    "den": 6,
+    "pct": 0.0
+   },
+   "baseline": {
+    "num": 2,
+    "den": 2,
+    "pct": 100.0
+   }
+  }
+ },
+ "by_path": {
+  "chat": {
+   "cases": 38,
+   "M1_discriminating": {
+    "num": 47,
+    "den": 69,
+    "pct": 68.1
+   },
+   "M2_dangerous": {
+    "num": 0,
+    "den": 114,
+    "pct": 0.0
+   },
+   "M4_keep_code_order": {
+    "num": 21,
+    "den": 21,
+    "pct": 100.0
+   },
+   "not_called": {
+    "num": 0,
+    "den": 114,
+    "pct": 0.0
+   }
+  }
+ },
+ "M4_keep_code_order": {
+  "num": 21,
+  "den": 21,
+  "pct": 100.0
+ },
+ "M5_reason_grounded": {
+  "reasons_written": 77,
+  "auto_flagged": {
+   "num": 0,
+   "den": 77,
+   "pct": 0.0
+  },
+  "status": "pending",
+  "note": "사람 확인 전 — --export-reasons 로 시트를 내고 채운 뒤 --reasons 로 넣는다"
+ },
+ "M6a_valid": {
+  "num": 189,
+  "den": 190,
+  "pct": 99.5
+ },
+ "M6b_used": {
+  "num": 189,
+  "den": 190,
+  "pct": 99.5
+ },
+ "M6c_corrected": {
+  "num": 0,
+  "den": 190,
+  "pct": 0.0
+ },
+ "M6d_discarded": {
+  "num": 1,
+  "den": 190,
+  "pct": 0.5
+ },
+ "M6e_call_failed": {
+  "num": 0,
+  "den": 190,
+  "pct": 0.0
+ },
+ "M6b_base": {
+  "num": 114,
+  "den": 114,
+  "pct": 100.0
+ },
+ "M6e_config_error": {
+  "num": 0,
+  "den": 190,
+  "pct": 0.0
+ },
+ "M6e_timeout": {
+  "num": 0,
+  "den": 190,
+  "pct": 0.0
+ },
+ "not_called": {
+  "num": 0,
+  "den": 190,
+  "pct": 0.0
+ },
+ "call_failures": {},
+ "M7_consistent": {
+  "num": 36,
+  "den": 38,
+  "pct": 94.7
+ },
+ "M8_position_stable": {
+  "num": 11,
+  "den": 38,
+  "pct": 28.9,
+  "unit": "사례(섞은 판 모두 같음)",
+  "observations": {
+   "num": 27,
+   "den": 76,
+   "pct": 35.5
+  },
+  "excluded": 0,
+  "note": "LLM 1순위 = 코드가 쓴 답의 1순위. 원래 판이나 섞은 판이 폐기 · 실패면 비교에서 뺀다(excluded)"
+ },
+ "M9": {
+  "latency_ms": {
+   "p50": 1656,
+   "p95": 2750,
+   "n": 190
+  },
+  "cost_usd_total": 0.080567,
+  "cost_usd_per_call_mean": 0.000424,
+  "pricing": "eval.activity_judge.metrics 의 gpt-5.4-nano 요율 — 다른 모델이면 추정이 틀린다"
+ },
+ "gate": {
+  "final": false,
+  "checks": {
+   "M2 하드 = 0": true,
+   "M2 새 위험 = 0": true,
+   "M2 ≤ 코드 순서": true,
+   "설정 오류 = 0": true,
+   "시간 초과 ≤ 1%": true,
+   "M5 심각 = 0": null,
+   "M5 경미 ≤ 5%": null,
+   "M6b 원래 판 ≥ 98%": true
+  },
+  "checks_before": {
+   "M5 = 100%": null,
+   "M6b ≥ 98%": true,
+   "M6e = 0": true
+  },
+  "criteria": "2026-10-20 완화안",
+  "verdict": "참고만 — holdout · 사람 라벨 · 실호출이 아니다 (확인 전 — M5 사람 확인(지어냄 심각 · 경미 구분 포함)이 남았다)"
+ }
+}

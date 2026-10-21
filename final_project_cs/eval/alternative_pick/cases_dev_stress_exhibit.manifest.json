@@ -1,0 +1,24 @@
+{
+ "built_on": "2026-10-21",
+ "cases": 13,
+ "by_stratum": {
+  "A": 2,
+  "B": 7,
+  "C": 3,
+  "D": 1
+ },
+ "split": [
+  "dev"
+ ],
+ "source": "cards_llm_bound_v0.jsonl",
+ "sha256": "03b3e0216f87a50be36bda4c752aced452af7450a308a6c511a085e515f1204c",
+ "inputs_sha256": "ee8cf337abcfacefca14e8b87e22c23e150d7001632d9bb53b719439df6f40ba",
+ "labeler": "rule:strict_attrs(stress)",
+ "texts": "stress-template",
+ "smoke": false,
+ "stress": {
+  "exhibit_mixed": 9,
+  "exhibit_none": 4
+ },
+ "from": "cases_dev.partial.json(dev 38 결합 카드)"
+}

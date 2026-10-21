@@ -1,0 +1,450 @@
+{
+ "bundle": "situation_cards_h4",
+ "subset": null,
+ "reviewer": "합의",
+ "reviewed_on": "2026-10-21",
+ "sheet": "라벨_작성자1_h4.csv + 라벨_작성자2_h4.csv + 라벨_합의_h4.csv",
+ "saw_ai_labels": false,
+ "n": 40,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "consensus": {
+  "changed": {
+   "M-27": {
+    "작성자1": {
+     "acceptable": [
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "작성자2": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "합의": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    }
+   },
+   "M-80": {
+    "작성자1": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "작성자2": {
+     "acceptable": [],
+     "forbidden": [],
+     "no_fit": true
+    },
+    "합의": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    }
+   }
+  },
+  "agreement": "정답 38/40 · 위험 40/40 · 다른 행 2/40 (블라인드 — 두 사람 따로 담)",
+  "claude_assisted": "없음 — Claude 제안 없이 두 사람이 따로 달고 다른 2행만 합의(Claude 는 앞 회차 같은 꼴 합의를 참고로 보여 줌)"
+ },
+ "labels": {
+  "M-02": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-04": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-06": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-08": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-10": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-12": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-15": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-17": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-19": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-21": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "M-23": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-25": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-27": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": "합의 — 유모차 접근은 후보 정보(이름 · 분류)로 가릴 수 없다 → 셋 다 허용(holdout-2 H-27 과 같은 기준)"
+  },
+  "M-29": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-31": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "M-33": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-35": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-37": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-39": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-41": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-43": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-44": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-47": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-51": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-52": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-55": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-57": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-59": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-60": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-62": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-63": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-64": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-66": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-68": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-70": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-72": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-74": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-77": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-79": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "M-80": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": "합의 — 목록 밖 요청(강남) → 순서는 무엇이든 허용(holdout-2 H-80 · holdout-3 F 카드와 같은 기준)"
+  }
+ }
+}

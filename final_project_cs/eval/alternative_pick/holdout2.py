@@ -32,7 +32,9 @@ BOUND_H2 = CARDS_DIR / "cards_llm_bound_h2.jsonl"
 SHEET_H2 = CARDS_DIR / "sheet_llm_bound_h2.csv"
 #: ★`[2026-10-20]` holdout-3 — 운영판(v3 + 분류 이름 + 이유 문장 지킴이)을 처음 보는 자료로 한 번 더 판정(사용자 결정 ③).
 #:  (카드 틀 고르기, 카드 id 머리, 기본 seed). h3 는 dev 가 쓴 틀 40장을 새 장소에 다시 묶는다 — h2 와 틀이 겹치지 않게
-SETS = {"h2": ("remaining", "H-", 2021), "h3": ("pick", "K-", 2022)}
+#: ★`[2026-10-21]` holdout-4 — 지킴이 문구를 고친 운영판을 고객 요청 경로만 다시 판정(holdout-3 결과 뒤 사용자 지시). h2 의 틀 40장을 새 장소에
+#:  다시 묶는다 — h2 · h3 의 장소를 모두 뺀다
+SETS = {"h2": ("remaining", "H-", 2021), "h3": ("pick", "K-", 2022), "h4": ("remaining", "M-", 2023)}
 
 
 def set_paths(name: str) -> tuple[Path, Path]:
@@ -71,7 +73,8 @@ def dev_places() -> set[str]:
 TOP10_NOTE = "운영 순위 상위 10곳(화면 3곳 + 더보기)에서 카드 조건에 맞는 3곳을 순위 순서대로 고름 — 화면에 보이는 3곳은 아님"
 
 
-def bind_top10(todo: dict[str, dict], used: set[str], *, sample: int, seed: int, partial: Path) -> tuple[dict, list[str]]:
+def bind_top10(todo: dict[str, dict], used: set[str], *, sample: int, seed: int, partial: Path,
+               quota: dict[str, int] | None = None) -> tuple[dict, list[str]]:
     """`[2026-10-20 사용자 결정 ①]` 화면 3곳으로 못 묶은 카드 — 운영 순위 상위 10곳 안에서 3곳을 고른다.
 
     ★운영 화면 3곳만으로는 충돌(C) · 동점(D) 조합이 드물어 원래 장소 1,087곳을 다 보고도 C 0/6 · D 1/6 였다(81분).
@@ -92,7 +95,13 @@ def bind_top10(todo: dict[str, dict], used: set[str], *, sample: int, seed: int,
     random.Random(seed + 1).shuffle(origins)
     total, started = len(origins), time.monotonic()
     print(f"상위 10곳에서 고르기 — 남은 카드 {len(todo)}장 · 원래 장소 {total}곳", flush=True)
+    def full(stratum: str) -> bool:
+        return quota is not None and sum(1 for b in bound.values() if b["stratum"] == stratum) >= quota.get(stratum, 0)
+
     for n, origin in enumerate(origins, start=1):
+        if quota is not None:
+            for cid in [cid for cid, card in todo.items() if full(card["stratum"])]:
+                del todo[cid]
         if not todo:
             break
         if n % 25 == 0:
@@ -190,6 +199,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--allow-partial", action="store_true")
     parser.add_argument("--top10-only", action="store_true",
                         help="화면 3곳 결합(느림 — h2 는 81분)을 건너뛰고 처음부터 운영 순위 상위 10곳에서 고른다")
+    parser.add_argument("--fill-same-stratum", action="store_true",
+                        help="못 묶은 카드를 다른 틀 묶음(pick ↔ remaining)의 같은 묶음 틀로 채운다(장 수 · 묶음 구성 유지)")
     args = parser.parse_args(argv)
     templates, prefix, seed = SETS[args.name]
     args.seed = args.seed if args.seed is not None else seed
@@ -199,7 +210,7 @@ def main(argv: list[str] | None = None) -> None:
 
     holdout = load_holdout()
     used = ({c["origin"]["id"] for c in holdout} | {x["id"] for c in holdout for x in c["candidates"]} | dev_places()
-            | (bound_places("h2") if args.name != "h2" else set()))
+            | set().union(*(bound_places(name) for name in SETS if name != args.name)))
     todo = {c["card_id"]: c for c in (remaining(holdout) if templates == "remaining" else pick(holdout))}
     partial = bound_path.with_name(bound_path.stem + ".partial.json")
     if args.top10_only:
@@ -216,6 +227,21 @@ def main(argv: list[str] | None = None) -> None:
                                     taken, sample=args.sample, seed=args.seed,
                                     partial=bound_path.with_name(bound_path.stem + ".top10.partial.json"))
         bound = {**bound, **extra}
+    if missing and args.fill_same_stratum:
+        # ★`[2026-10-21]` h4 에서 C 4장(고객 문장이 설문보다 앞섬)이 남은 원래 장소 778곳으로도 안 묶였다 — C 는 고객 요청 경로의
+        #  핵심이라 장 수를 줄이지 않고 다른 틀 묶음의 같은 묶음 틀로 채운다(틀은 dev · h3 가 쓴 것 — 장소는 새것)
+        need: dict[str, int] = {}
+        for cid in missing:
+            need[todo[cid]["stratum"]] = need.get(todo[cid]["stratum"], 0) + 1
+        other = remaining(holdout) if templates != "remaining" else pick(holdout)
+        spare = {c["card_id"]: c for c in other if c["stratum"] in need and c["card_id"] not in bound}
+        taken = used | {card["origin"]["id"] for card in bound.values()} | {c["id"] for card in bound.values()
+                                                                             for c in card["candidates"]}
+        filled, _ = bind_top10(spare, taken, sample=args.sample, seed=args.seed + 100,
+                               partial=bound_path.with_name(bound_path.stem + ".fill.partial.json"), quota=need)
+        print(json.dumps({"fill_need": need, "filled": sorted(filled)}, ensure_ascii=False), flush=True)
+        bound = {**bound, **filled}
+        missing = [cid for cid in missing if sum(1 for b in filled.values() if b["stratum"] == todo[cid]["stratum"]) < need[todo[cid]["stratum"]]]
     if missing and not args.allow_partial:
         raise SystemExit(f"결합 실패 {len(missing)}장 {missing} — 묶은 {len(bound)}장은 중간 파일에 남겼다(--allow-partial)")
 

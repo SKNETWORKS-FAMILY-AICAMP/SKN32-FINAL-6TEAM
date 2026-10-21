@@ -40,6 +40,9 @@ SETS = {
            HERE / "cases_watch_h2.jsonl", "_h2"),
     "h3": (CARDS / "cards_llm_bound_h3.jsonl", CARDS / "responses_llm_bound_h3.csv", HERE / "cases_h3.jsonl",
            HERE / "cases_watch_h3.jsonl", "_h3"),
+    #: ★`[2026-10-21]` holdout-4 — 고객 요청 경로만(감시 경로는 h2 · h3 에서 통과)
+    "h4": (CARDS / "cards_llm_bound_h4.jsonl", CARDS / "responses_llm_bound_h4.csv", HERE / "cases_h4.jsonl",
+           HERE / "cases_watch_h4.jsonl", "_h4"),
 }
 
 
