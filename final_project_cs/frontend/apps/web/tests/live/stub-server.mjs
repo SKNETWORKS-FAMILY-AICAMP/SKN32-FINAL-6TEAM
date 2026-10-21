@@ -71,6 +71,9 @@ const DEFAULTS = {
   // `[2026-10-19 ST4F-613]` the operator's switches, read without a session (`GET /v1/web/features`): "off" (an older server: 404 — the Course Keeper shows as before)
   //   | "on" (`{guardian: true}`) | "guardian_off" (`{guardian: false}` — and, as the server does then, the trip view has no `guardian` and `POST …/guardian` answers 409 guardian_disabled)
   features: "off",
+  // `[2026-10-22 ST4F-715]` the trip screen's current-risk check (`GET …/trips/{id}/risks`): "off" (404 — the risk panel says it could not check, with a status line)
+  //   | "clear" (`items: []` — nothing in the check scope, no status line)
+  risks: "off",
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
@@ -1330,6 +1333,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 200, { trip_id: id, status: "deleted" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
+  if (path === `/v1/web/trips/${TRIP_ID}/risks` && request.method === "GET" && scenario.risks === "clear") {
+    return json(response, 200, { trip_id: TRIP_ID, version: 1, at: at(9), mode: "cached", items: [] }, origin);
+  }
   if (path === `/v1/web/trips/${TRIP_ID}/events` && request.method === "GET" && scenario.bell === "busy") {
     return json(response, 429, { error: { code: "too_many_streams", message: "열린 연결이 너무 많아요" } }, origin);
   }

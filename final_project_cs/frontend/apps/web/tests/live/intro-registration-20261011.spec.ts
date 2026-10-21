@@ -27,8 +27,7 @@ for (const width of [375, 1280]) {
       const cta = page.getByRole("button", { name: "내 일정 시작하기" });
       await cta.scrollIntoViewIfNeeded();
       await expect(page.getByText("약관에 동의했어요.", { exact: false })).toBeVisible();   // `[2026-10-16 ST4F-601]` 동의한 사람의 안내 문구
-      // 약관 재확인은 기존 흐름을 유지한다. 이 시험은 브라우저 초안 읽기만 관찰한다.
-      await expect.poll(async () => (await mockServer(request).received("GET", "/v1/web/consents")).length).toBeGreaterThan(0);
+      // `[2026-10-22 ST4F-715]` 홈 `/` 은 공개 화면이라 동의 관문이 서버 동의를 다시 읽지 않는다(`consent-gate.tsx`) — 그 요청은 기다리지 않는다
       await watchLoading(page);
       await cta.click();
       await expect(page).toHaveURL(/\/trips\/new$/);

@@ -71,6 +71,8 @@ test("화면이 열려 있는 동안 서버가 선택 요청을 보내면 그 �
 });
 
 test("선택 요청의 「일정에서 보기」는 센터를 닫고 그 일정을 목록에서 펼친다", async ({ page, request }) => {
+  // `[2026-10-22 ST4F-715]` 화면은 만료된 제안을 거른다 — 모방 서버 제안(2026-10-01 23:00 만료) 앞의 시각으로 시계를 둔다
+  await beforeTheTrip(page);
   await mockServer(request).scenario({ proposals: "open" });
   await page.goto(`/trips/${TRIP_ID}`);
   const center = await openNotices(page);

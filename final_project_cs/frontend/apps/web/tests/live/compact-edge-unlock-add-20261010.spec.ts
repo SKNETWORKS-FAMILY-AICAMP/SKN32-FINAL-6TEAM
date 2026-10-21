@@ -41,7 +41,8 @@ for(const width of [375,1280]){
     // `[2026-10-15 ST4F-494]` 두 단추는 첫 날짜 제목 줄 오른쪽 묶음(dayTools)에 있다 — 자동 추천 뒤(같은 줄 오른쪽, 폭이 모자라면 아래 줄 오른쪽 정렬)
     expect(await all.evaluate(el=>Boolean(el.closest('[class*=dayTools]')))).toBe(true);expect(await recommend.evaluate(el=>Boolean(el.closest('[class*=dayTools]')))).toBe(true);
     if(Math.abs(a.y-b.y)<1)expect(a.x).toBeGreaterThan(b.x+b.width);else expect(a.y).toBeGreaterThan(b.y);await capture(page,`03-top-actions-${width}`);
-    await body.evaluate(el=>{el.scrollTop=250;});await expect(all).not.toBeInViewport();await capture(page,`04-scrolled-${width}`);
+    // `[2026-10-22 ST4F-715]` 결과 화면 맨 위 위험 칸만큼 단추가 내려와 있다 — 고정 250px 대신 단추 아래 끝이 목록 위로 넘어가게 굴린다
+    await all.evaluate(el=>{const sheet=el.closest('[class*=sheetBody]')!;sheet.scrollTop+=el.getBoundingClientRect().bottom-sheet.getBoundingClientRect().top+40;});await expect(all).not.toBeInViewport();await capture(page,`04-scrolled-${width}`);
     await body.evaluate(el=>{el.scrollTop=0;});await all.click();await expect(all).toHaveCount(0);
     const writes=await server.received('POST',`/${INTAKE}/edits`);expect(writes).toHaveLength(1);
     expect(writes[0].body!.edits).toEqual(expect.arrayContaining([expect.objectContaining({field:'items[0].locked',value:false}),expect.objectContaining({field:'items[2].locked',value:false})]));
