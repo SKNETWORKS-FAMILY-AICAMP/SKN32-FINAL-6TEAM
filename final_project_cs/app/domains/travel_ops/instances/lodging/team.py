@@ -610,6 +610,23 @@ def _google_page(name: str, dates: dict[str, str] | None = None, adults: int | N
     return url
 
 
+#: `[2026-10-21 LB-11]` 판매처에 바로 갈 주소가 하나도 없을 때 예약 버튼 이름 — 구글 호텔의 그 숙소 화면(판매처별 가격이 날짜 · 인원대로 보인다)
+SELLER_COMPARE = "구글 호텔 판매처 비교"
+
+
+def _seller_button(sellers: list[dict[str, Any]], name: str, token: str | None, dates: dict[str, Any] | None,
+                   adults: int | None) -> tuple[str, str] | None:
+    """예약 버튼 — 보여 주는 판매처 중 바로 갈 주소가 있는 가장 싼 곳. 판매처 가격을 보여 주는데 주소가 하나도 없으면
+    구글 호텔의 그 숙소 화면(`qs`)으로. 판매처가 없으면 `None`(호텔 링크 그대로).
+    ☆팀장 점검 LB-11(10-14 x600): 판매처 링크가 모두 비어 「부킹닷컴 1박 233,173원」이라고 보이는데 버튼은 숙소 자체 사이트로 갔다."""
+    direct = next((seller for seller in sellers if seller.get("link")), None)
+    if direct:
+        return direct["link"], direct["name"]
+    if sellers and token:
+        return _google_page(name, dates, adults, token=token), SELLER_COMPARE
+    return None
+
+
 class LodgingTeam(ItineraryWork, TravelTeamBase):
     conversation_change_by_team = True        # ★`[2026-10-15 LB-02]` 웹 채팅의 「다른 숙소」도 이 팀의 `_change`(MCP 후보 → 「선택이 필요해요」)로 온다
     manifest = TeamManifest(
@@ -1258,9 +1275,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         out["sellers"] = _sellers(detail)
         out["image"] = out["image"] or detail.get("image")
         out["address"] = out.get("address") or detail.get("address") or None
-        direct = next((seller for seller in out["sellers"] if seller.get("link")), None)
-        if direct:
-            out["link"], out["link_seller"] = direct["link"], direct["name"]
+        button = _seller_button(out["sellers"], same["name"], same["property_token"], dates, found.adults)
+        if button:
+            out["link"], out["link_seller"] = button
         prices = [p for p in [out.get("price_per_night"), *(s["price_per_night"] for s in out["sellers"])] if isinstance(p, (int, float))]
         out["price_from"] = min(prices) if out["sellers"] and prices else None
         return out, evidence, google
@@ -1380,9 +1397,9 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
                     pick["address"] = found.get("address") or None
                     pick["image"] = pick.get("image") or found.get("image")
                     # 예약 버튼 — 보여 주는 판매처 중 바로 갈 주소가 있는 가장 싼 곳(날짜가 채워진 판매처 화면). 없으면 호텔 링크 그대로
-                    direct = next((seller for seller in pick["sellers"] if seller.get("link")), None)
-                    if direct:
-                        pick["link"], pick["link_seller"] = direct["link"], direct["name"]
+                    button = _seller_button(pick["sellers"], pick["name"], pick.get("property_token"), dates, query["adults"])
+                    if button:
+                        pick["link"], pick["link_seller"] = button
                     # `[2026-10-13 사용자 결정]` 대표 가격은 가장 싼 곳 「1박 ○원~」 — ☆10:40 playdata 스테이7 명동: 목록 255,093원인데
                     #   판매처 최저는 아고다 245,429원이라 대표 가격과 판매처 가격이 어긋나 보였다. 순서 · 재확인은 목록 값(`price_per_night`) 그대로
                     prices = [p for p in [pick.get("price_per_night"), *(s["price_per_night"] for s in pick["sellers"])]
@@ -1527,9 +1544,10 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         check = {"status": status, "before": before, "now": now, "basis": "sellers"}
         if status == "same":
             return pick, check
-        direct = next((seller for seller in sellers if seller.get("link")), None)
+        button = _seller_button(sellers, pick.get("source_name") or pick["name"], token,
+                                {"check_in": query["check_in"], "check_out": query["check_out"]}, query["adults"])
         fresh = {**pick, "sellers": sellers, "price_from": now, "price_basis": "sellers",
-                 **({"link": direct["link"], "link_seller": direct["name"]} if direct else {})}
+                 **({"link": button[0], "link_seller": button[1]} if button else {})}
         return fresh, check
 
     @staticmethod

@@ -1868,3 +1868,24 @@ def test_d25_month_end_without_a_day_asks_and_lookup_skips_places_dropped_anyway
     _run(reply, {"read.landmark": sadang, "read.stay_search": listing, "read.stay_google": google, "read.stay_detail": lambda a: None,
                  "read.stays_lookup": lookup}, text="동작구 사당역 근처 호텔로 다음 달 6일부터 3박, 성인 2명. 역에서 걸어서 3분, 1박 30만 원 이하")
     assert asked == [["에스알호텔"]], "모텔 · 관악구 · 상한 초과 · 군산(구글 좌표)은 찾지 않는다"
+
+
+def test_lb11_no_seller_link_sends_the_button_to_the_google_hotel_page_of_that_stay():
+    """`[2026-10-21 LB-11]` 팀장 점검(10-14 x600): 판매처 링크가 모두 비어 「부킹닷컴 1박 233,173원」이라고 보이는데 예약 버튼은 숙소 자체 사이트로 갔다.
+    판매처 가격을 보여 주는데 바로 갈 주소가 하나도 없으면, 그 숙소의 구글 호텔 화면(날짜 · 인원 · qs)으로 보낸다 — 판매처별 가격이 거기 있다."""
+    from app.domains.travel_ops.instances.lodging.team import SELLER_COMPARE, google_qs
+
+    google = {**NEAR_GOOGLE, "stays": [{**row, "property_token": f"tok-{i}", "image": None} for i, row in enumerate(NEAR_GOOGLE["stays"])]}
+    detail = {"address": "서울 용산구 어딘가", "image": None, "sellers": [
+        {"seller": "Booking.com", "price_per_night": 233173.0, "link": None, "official": False},
+        {"seller": "Agoda", "price_per_night": 240000.0, "link": None, "official": False}]}
+    result, _, _ = _itinerary(_plan(), {"read.stay_google": google,
+                                        "read.stay_google_details": lambda a: {"details": {t: detail for t in a["tokens"]}}})
+    option = result.action_proposals[0].arguments["ask_options"]["options"][0]
+    assert option["link_seller"] == SELLER_COMPARE
+    assert option["link"].startswith("https://www.google.com/travel/search?") and "&ts=" in option["link"] \
+        and option["link"].endswith("&qs=" + google_qs("tok-2")), "그 숙소 화면 · 날짜 · 인원 채움"
+    plain, _, _ = _itinerary(_plan(), {"read.stay_google": google,
+                                       "read.stay_google_details": lambda a: {"details": {t: {**detail, "sellers": []} for t in a["tokens"]}}})
+    option = plain.action_proposals[0].arguments["ask_options"]["options"][0]
+    assert option["link_seller"] is None and option["link"] == google["stays"][2]["link"], "판매처가 없으면 목록 링크 그대로"
