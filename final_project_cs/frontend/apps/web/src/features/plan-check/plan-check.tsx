@@ -758,6 +758,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   }
   function endChange() {
     const id = change?.id;
+    setCardEditing(null);
     setChange(null); setQuery(""); setSearch(null); setDetails(false); setSearchFirst(false);
     if (id) refocus(id, "edit");
   }
@@ -1228,8 +1229,10 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   //   question the first check stops at: the same options, 「직접 수정」 and 「삭제」. A pick is saved with its check (no 「다시 제출」, no undo); the card says 「재검증」 meanwhile and the
   //   plan comes back checked. Interpretation questions are not asked again here (decision ①: a page opened again is not stopped). A place not found keeps the result screen's
   //   own box for it (`UnfoundPlace` — `[2026-10-19 사용자 결정]`, with 「직접 고르기」 on the search) once its place is the question; its late arrival is asked here.
+  //   So does a line read two ways from a photo (`Rereading` — its two readings to pick from in the opened card).
   const resultAsks = done && !edit && !registered && Boolean(actions.replace || actions.edit);
-  const askCards = resultAsks ? view.items.filter((item) => !removedSet.has(item.id) && stopsHere(item, view) && !(item.unfound && stopKind(view, item.id) === "place")) : [];
+  const askCards = resultAsks ? view.items.filter((item) => !removedSet.has(item.id) && stopsHere(item, view)
+    && !((item.unfound || item.rereads?.length) && stopKind(view, item.id) === "place")) : [];
   const askKeys = askCards.map((item) => `${item.id}:${stopKind(view, item.id)}:${view.revision ?? ""}`);
   const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: { start: string; end: string } | null; message?: string }>>({});
   const [cardBusy, setCardBusy] = useState<string | null>(null);
@@ -1265,7 +1268,9 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
       return null;
     });
   }
-  const asksOnCard = (item: PlanItem) => askCards.some((entry) => entry.id === item.id);
+  // The change screen opened from a result card's question (「직접 수정」): what is saved there goes with the check, like the question's options. ✎ on the card saves only, as before.
+  const [cardEditing, setCardEditing] = useState<string | null>(null);
+  const asksOnCard = (item: PlanItem) => cardEditing === item.id && askCards.some((entry) => entry.id === item.id);
   /** 「삭제」 of a result card's question, confirmed: the stop goes at once with the plan's check (as in the C안 flow). */
   function cardDelete(item: PlanItem) {
     setDeleting(null);
@@ -1273,7 +1278,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   }
   /** The question inside a result card that needs a look (none while it is checked again). */
   function cardQuestion(item: PlanItem): ReactNode {
-    if (!asksOnCard(item) || cardBusy === item.id) return null;
+    if (!askCards.some((entry) => entry.id === item.id) || cardBusy === item.id) return null;
     const need = stopKind(view, item.id);
     const move = need === "arrival" ? incomingMove(view, item.id) : null;
     const got = cardAsks[item.id]?.key === `${item.id}:${need}:${view.revision ?? ""}` ? cardAsks[item.id] : null;
@@ -1282,7 +1287,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     const loading = !got || (got.state === "loading" && (Boolean(move) || !got.list.length));
     return <StopQuestion id={item.id} kind={need} ask={ask} loading={loading} failed={!move && got?.state === "failed" ? got.message ?? null : null} again={false} leaving={false} takeFocus={false}
       why={frozen} explain={explain} onPick={(option) => cardSend(item, sendOf(item, option.act), sentenceOf(item, option))}
-      onEdit={() => { void startChange(item); if (move) setDetails(true); }}
+      onEdit={() => { setCardEditing(item.id); void startChange(item); if (move) setDetails(true); }}
       onDelete={move || !actions.remove ? undefined : () => setDeleting(item)} />;
   }
   /** Send a change of the stopped card the C안 way: checked again where it stands, said only to a screen reader, a refusal kept on screen. */
@@ -1962,8 +1967,10 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
               </Act>
               : <PreviewHint direction="down" text={previewing ? t("아래로 스크롤하면 수정안이 나와요", "Scroll down for the proposed plan") : t("아래로 스크롤하면 권장 수정안이 나와요", "Scroll down for the recommended plan")} why={frozen} explain={explain} onPress={previewing ? () => flip("after") : () => recommendAll("button")} edge={pull.edge ?? undefined} progress={pull.progress} />)}
             {done && !view.items.length && <p className={styles.empty}>{t("남은 일정이 없어요", "No stops left")}</p>}
-            {!done && !follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("확인 중인 곳으로", "Follow the check")}</button>}
           </div>
+          {/* ★`[2026-10-21 사용자 지적 — 내리면 가려져 제 기능을 못 한다]` Over the list, not in it: it stays at the sheet's bottom wherever the list is scrolled (it used to stick
+              to the list's end, which is near the top while the cards are drawn to scale — scrolled away with them). */}
+          {!done && !follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("확인 중인 곳으로", "Follow the check")}</button>}
           {done && previewing && <div className={styles.pager} role="group" aria-label={t("보는 일정", "Plan shown")}>
             <button type="button" className={styles.pagerDot} aria-current={side === "before" ? "step" : undefined} aria-label={t("1. 변경 전 일정", "1. The plan as it was")} onClick={() => turnTo("before")}><span aria-hidden="true" /></button>
             <button type="button" className={styles.pagerDot} aria-current={side === "after" ? "step" : undefined} aria-label={t("2. 수정안", "2. The proposed plan")} onClick={() => turnTo("after")}><span aria-hidden="true" /></button>

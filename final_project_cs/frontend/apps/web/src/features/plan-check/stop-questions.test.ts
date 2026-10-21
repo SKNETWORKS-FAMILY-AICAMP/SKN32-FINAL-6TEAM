@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { translator } from "@/lib/i18n";
 import type { PlanAsk, PlanCandidate, PlanCheckView, PlanItem } from "./model";
-import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, stopKindOf } from "./stop-questions";
+import { arrivalQuestion, basisTag, interpretationQuestion, pickMyselfAnswer, placeQuestion, stopKindOf } from "./stop-questions";
 import type { MoveOption, MoveOptions } from "@/lib/live/move-options";
 import { exampleDone } from "./test-views";
 
@@ -25,6 +25,13 @@ describe("the question asked at a card the check stopped at", () => {
     expect(ask.options[0].reason).toBe("같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 0.6km · 10:00–17:00 안에 머물러요");
     expect(ask.options[0].effect).toBe("바뀐 장소와 앞뒤 이동을 다시 확인해요");
     expect(ask.options[1]).toMatchObject({ reason: null, effect: "앞뒤 이동은 장소가 정해지면 확인해요", act: { type: "noplace" } });
+  });
+
+  // `[2026-10-21 사용자 지적]` 「호텔 조식」: 서버는 같은 숙소를 묵을 곳 · 그 안 식사로 두 번 준다 — 바꾸기 화면과 같은 꼬리표로 가른다
+  it("tags each alternative with the step the server took it from, so a stay and a meal at it are told apart", () => {
+    const item = stop({ title: "호텔 조식", checks: [{ kind: "place", result: "bad", text: "숙소를 정해야 해요" }] });
+    const ask = placeQuestion(item, plan(item), [candidate("호텔 더 디자이너스 종로점", { basis: "lodging" }), candidate("호텔 더 디자이너스 종로점", { id: "cand-meal", basis: "lodging_meal" }), candidate("롯데시티호텔 명동")], t, "ko");
+    expect(ask.options.map((option) => option.tag?.text ?? null)).toEqual(["숙소", "숙소 안 식사", null]);
   });
 
   it("says the closed day for a stop on its day off", () => {
@@ -110,5 +117,11 @@ describe("`[2026-10-21 사용자 결정 — P6]` the question of what a line of 
     expect(pickMyselfAnswer(ask)).toEqual({ option: "item_search", search: "정도" });
     expect(pickMyselfAnswer({ ...ask, options: ask.options.slice(0, 2) })).toEqual({ option: "item", search: "정도" });
     expect(pickMyselfAnswer({ ...ask, options: ask.options.slice(0, 1) })).toBeNull();
+  });
+});
+
+describe("`[2026-10-21]` the tag of an alternative's step", () => {
+  it("says the same words as the change screen, and none for a step it does not know", () => {
+    expect([basisTag("lodging", t), basisTag("lodging_meal", t), basisTag("same_kind", t), basisTag(null, t)]).toEqual(["숙소", "숙소 안 식사", "같은 종류", null]);
   });
 });

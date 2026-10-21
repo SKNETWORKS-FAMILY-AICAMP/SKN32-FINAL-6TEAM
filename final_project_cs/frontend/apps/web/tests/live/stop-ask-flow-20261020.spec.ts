@@ -290,3 +290,49 @@ test("멈출 카드 없이 서버를 기다리면 전처럼 「서버 소식이 
   const said = await heldCheck(page, request, "calm");
   expect(said.some((text) => text.includes("서버 소식이 한동안 없어요"))).toBe(true);
 });
+
+// `[2026-10-21 사용자 지적 — 「확인 중인 곳으로」가 목록 맨 위에 붙어 내리면 가려진다]` 단추는 목록 위에 떠 있어 어디로 내려도 시트 아래쪽 같은 자리에 보이고, 누르면 확인 중인 곳을 다시 따라간다.
+test("검사 중 목록을 내려도 「확인 중인 곳으로」는 시트 아래쪽에 떠 있고, 누르면 다시 따라간다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.reset();
+  await server.scenario({ review: "on", board: "rich", intakeEvents: "held", readingPolls: 999 });
+  await start(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill("10/1 09:00 경복궁 관람");
+  await checkPlan(page);
+  await expect(page.locator('li[data-entry-id="0-1"]')).toBeVisible({ timeout: 20_000 });
+  const pill = page.getByRole("button", { name: "확인 중인 곳으로" });
+  const sheet = page.locator("section[aria-labelledby='plan-check-sheet-title']");
+  await body(page).hover();
+  await page.mouse.wheel(0, 300);
+  await expect(pill).toBeVisible();
+  const sheetBox = (await sheet.boundingBox())!;
+  const first = (await pill.boundingBox())!;
+  expect(sheetBox.y + sheetBox.height - (first.y + first.height)).toBeGreaterThanOrEqual(8);      // 시트 아래쪽 안에 떠 있다
+  expect(sheetBox.y + sheetBox.height - (first.y + first.height)).toBeLessThanOrEqual(24);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(300);
+  expect((await pill.boundingBox())!.y).toBeCloseTo(first.y, 0);                                  // 더 내려도 같은 자리
+  await page.mouse.wheel(0, -900);
+  await page.waitForTimeout(300);
+  expect((await pill.boundingBox())!.y).toBeCloseTo(first.y, 0);                                  // 올려도 같은 자리
+  await pill.click();
+  await expect(pill).toHaveCount(0);
+});
+
+// `[2026-10-21 사용자 지적 — 「호텔 조식」 후보 1 · 2번이 같은 호텔]` 서버는 숙소와 그 숙소 안 식사를 짝으로 준다 — 질문 칸 선택지에도 바꾸기 화면과 같은 꼬리표가 붙어 둘을 가른다.
+test("질문 칸의 후보 선택지에는 바꾸기 화면과 같은 꼬리표(숙소 · 숙소 안 식사)가 붙는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.reset();
+  await server.scenario({ review: "on", board: "rich", readingPolls: 0, candidateBasis: "lodging" });
+  await start(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+  await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 15_000 });
+  const options = asked(page, "올리브영").getByRole("button", { name: /바꾸기/ });
+  await expect(options.first()).toBeVisible({ timeout: 15_000 });
+  await expect(options.nth(0)).toContainText("숙소");
+  await expect(options.nth(0)).not.toContainText("숙소 안 식사");
+  await expect(options.nth(1)).toContainText("숙소 안 식사");
+});

@@ -12,6 +12,16 @@ import { fareText } from "./move-mode";
  * `confirm`: the server took a place for now and the customer says whether it is the one (「이 일정이 맞는지 먼저 확인해 주세요」); `fix`: something has to change.
  */
 export type StopNeed = "confirm" | "fix";
+
+/**
+ * `[2026-10-07 서버 c0ca7054]` Which step of the ladder the server took an alternative from — the tag beside it on the change screen and (`[2026-10-21 사용자 지시]`) in the
+ * question box: the same stay offered twice (to stay · to eat there, 「호텔 조식」) is told apart by it.
+ */
+export function basisTag(basis: PlanCandidate["basis"], t: Translate): string | null {
+  return basis === "same_kind" ? t("같은 종류", "Same kind") : basis === "similar_experience" ? t("비슷한 경험", "Similar experience")
+    : basis === "meal_inferred" ? t("식사 시간 식당", "Meal-time place") : basis === "lodging" ? t("숙소", "Stay")
+      : basis === "lodging_meal" ? t("숙소 안 식사", "Meal at the stay") : basis === "taste" ? t("취향 추천", "For your taste") : null;
+}
 export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "confirm" } | { type: "noplace" }
   | { type: "taxi"; moveId: string } | { type: "later"; start: string; end: string }
   // `[2026-10-21 P6]` An option of an interpretation question; `search`: the stop is put back and the change screen's place search opens on these words.
@@ -20,7 +30,7 @@ export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "conf
  * `why`: the server's reason it cannot be picked (the option is shown, greyed, and says it when pressed) — null when it can.
  * `recommended`: `[2026-10-21 P6]` the server's first option (its reading), marked 「추천」.
  */
-export interface StopOption { key: string; label: string; reason: string | null; effect: string; act: StopAct; why?: string | null; recommended?: boolean }
+export interface StopOption { key: string; label: string; reason: string | null; effect: string; act: StopAct; why?: string | null; recommended?: boolean; tag?: { text: string; basis: string } | null }
 export interface StopAsk { need: StopNeed; question: string; options: StopOption[] }
 
 /** As many alternatives as the card offers (A · B · C). */
@@ -66,6 +76,7 @@ export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: r
     key: candidate.id,
     label: kind === "unfound" ? t(`${quotedRo(candidate.name)} 정하기`, `Choose “${candidate.name}”`) : t(`${quotedRo(candidate.name)} 바꾸기`, `Change to “${candidate.name}”`),
     reason: candidateReason(candidate, t), effect: changed, act: { type: "pick", candidate },
+    tag: candidate.basis && basisTag(candidate.basis, t) ? { text: basisTag(candidate.basis, t)!, basis: candidate.basis } : null,
   }));
   if (kind === "unfound") {
     return { need: "fix", question: item.unfound!.question, options: [...picks,

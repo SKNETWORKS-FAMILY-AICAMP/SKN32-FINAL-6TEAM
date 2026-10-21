@@ -14,6 +14,11 @@
 .option { display: grid; gap: 2px; width: 100%; padding: 9px 10px; border: 1.5px solid var(--color-border); border-radius: 10px; background: var(--color-surface);
   color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
 .optionTop { font-size: 13.5px; font-weight: 700; overflow-wrap: anywhere; }
+/* `[2026-10-21 사용자 지시]` 후보가 어느 단계에서 왔는지(바꾸기 화면의 .stepTag 와 같은 꼬리표) — 「호텔 조식」의 숙소 · 숙소 안 식사를 가른다 */
+.tag { display: inline-block; margin-left: 6px; padding: 0 7px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-text-secondary);
+  font-size: 11px; font-weight: 750; line-height: 1.5; vertical-align: 1px; white-space: nowrap; }
+.tag[data-basis="similar_experience"] { border-color: var(--color-adjusted-border); color: var(--color-adjusted); }
+.tag[data-basis="meal_inferred"] { border-color: var(--color-warning-border); color: var(--color-warning); }
 /* `[2026-10-21 P6]` 해석 확인 질문의 1안(서버 recommended)에 붙는 「추천」 */
 .recommended { display: inline-block; margin-left: 6px; padding: 0 7px; border: 1px solid currentColor; border-radius: 999px; color: var(--color-primary);
   font-size: 11px; font-weight: 700; line-height: 1.5; vertical-align: 1px; }

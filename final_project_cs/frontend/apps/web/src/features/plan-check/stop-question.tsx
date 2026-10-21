@@ -53,7 +53,7 @@ export function StopQuestion({ id, kind, ask, loading, failed, again, leaving, w
     {failed && <p className={styles.note} role="alert">{failed}</p>}
     {ask.options.length > 0 && <div className={styles.options}>{ask.options.map((option) =>
       <Act key={option.key} className={styles.option} why={why ?? option.why ?? null} explain={explain} onPress={() => onPick(option)}>
-        <span className={styles.optionTop}>{option.label}{option.recommended && <small className={styles.recommended}>{t("추천", "Recommended")}</small>}</span>
+        <span className={styles.optionTop}>{option.label}{option.tag && <small className={styles.tag} data-basis={option.tag.basis}>{option.tag.text}</small>}{option.recommended && <small className={styles.recommended}>{t("추천", "Recommended")}</small>}</span>
         {option.reason && <span className={styles.line}>{t("이유:", "Why:")} {option.reason}</span>}
         {option.act.type === "pick" && legLines(option.act.candidate, t).map((line) =>
           <span key={line.side} className={styles.line} data-leg data-pending={line.pending || undefined}>{line.text}</span>)}
