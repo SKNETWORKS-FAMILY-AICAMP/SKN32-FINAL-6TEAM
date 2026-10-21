@@ -68,6 +68,11 @@
 .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); animation: rise .45s var(--soft); }
 /* ★`[2026-10-06 사용자 지적 — 일정 창 확대·축소가 부드럽지 않다]` The height changes at once (the content never re-flows while it moves) and the sheet SLIDES there on the compositor (a transform, `plan-check.tsx` `useLayoutEffect`). When it gets shorter its bottom edge rises for a moment: this fills what is under it. */
 .sheet::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 100vh; background: var(--color-surface); pointer-events: none; }
+/* `[2026-10-21 사용자 지시]` 「다시 제출」 · 「여행 등록」을 보내는 동안 일정 칸(시트)을 회색으로 덮는다 — 시트는 `inert` 라 눌리지 않고, 둥근 단추(.footer, z 7)는 위에 남아 돈다. */
+.sendingVeil { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; height: var(--sheet-h); display: grid; place-items: center; border-radius: 20px 20px 0 0;
+  background: color-mix(in srgb, var(--color-subtle-strong) 78%, transparent); backdrop-filter: grayscale(1); }
+.sendingVeil p { margin: 0; padding: 10px 18px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-size: 14px; font-weight: 750;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-text) 12%, transparent); }
 /* `[2026-10-04 사용자]` 손잡이는 머리의 윗가장자리에 얹혀 있다(따로 한 줄을 차지하지 않는다) — 제목 줄과 합쳐 공간을 아낀다. */
 .sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 22px 16px 6px; border-bottom: 1px solid var(--color-divider); }
 .sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }

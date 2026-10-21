@@ -21,7 +21,7 @@ import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
 import { clearRegistrationDraft } from "@/features/trip-registration/trip-registration";
-import { tripsKey } from "@/lib/gateway";
+import { tripGateway, tripKey, tripsKey } from "@/lib/gateway";
 import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
@@ -128,7 +128,16 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
-  const registered = (tripId: string) => { clearRegistrationDraft(); queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
+  // `[2026-10-21 사용자 지시]` The trip is read before going there: the trip screen then opens on it, not on its 「여행 정보를 불러오고 있어요」 page. Until then this screen stays,
+  //   still 「서버로 전송중입니다.」 (`leaving` keeps the button busy). A failed read only means the trip screen reads it itself, as before.
+  const [leaving, setLeaving] = useState(false);
+  const registered = async (tripId: string) => {
+    setLeaving(true);
+    clearRegistrationDraft();
+    queryClient.removeQueries({ queryKey: tripsKey });
+    await queryClient.prefetchQuery({ queryKey: tripKey(tripId, language), queryFn: () => tripGateway.getTrip(tripId, language), retry: false });
+    router.push(routes.trip(tripId));
+  };
   const confirm = useMutation({
     mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
     onSuccess: (result) => registered(result.trip.trip_id),
@@ -285,7 +294,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
     }}
     registration={{
-      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending,
+      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending || leaving,
       // The plan the server holds when it is pressed — a plan saved a moment before (the proposed one, registered from) has a newer revision than this render's.
       onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
       error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],

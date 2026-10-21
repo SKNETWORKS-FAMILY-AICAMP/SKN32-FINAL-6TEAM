@@ -563,6 +563,9 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   const [mapPicking, setMapPicking] = useState(false);
   const [mapCoordinate, setMapCoordinate] = useState<Coordinates | null>(null);
   const [addingBusy, setAddingBusy] = useState(false);
+  // `[2026-10-21 사용자 지시]` 「다시 제출」 · 「여행 등록」이 서버로 가는 동안 일정 칸은 회색으로 덮여 눌리지 않고, 가운데에 「서버로 전송중입니다.」가 선다.
+  const [sendingPlan, setSendingPlan] = useState(false);
+  const sendingNow = sendingPlan || Boolean(registration?.busy);
   const removedSet = useMemo(() => new Set(removed), [removed]);
   // `[2026-10-04 사용자]` 한 번 더 확인할 때 바뀐 곳만 확인 표시가 다시 하나씩 켜진다.
   const [replay, setReplay] = useState<{ ids: string[]; at: number } | null>(null);
@@ -1100,6 +1103,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
    */
   function recheck() {
     void run(async () => {
+      setSendingPlan(true);
       for (const id of removed) {
         // `[2026-10-21]` A stop deleted on the result screen is out on the server already (saved only): only the mark goes.
         if (!removedCards[id]) await actions.remove!(id);
@@ -1117,7 +1121,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
       return actions.recheck
         ? { text: t("고친 내용을 다시 확인했어요", "Checked the changes again"), sub: edit ? t("이대로 진행할 수 있어요 · 오른쪽 버튼이 「완료」로 바뀌었어요", "You can go ahead · the right button is now 「Done」") : t("이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요", "You can go ahead · the right button is now 「Register trip」") }
         : { text: t("뺄 일정을 지웠어요", "Took the stops out"), sub: t("이대로 진행할 수 있어요", "You can go ahead") };
-    });
+    }).finally(() => setSendingPlan(false));
   }
   /** 「여행 등록」 pressed while looking at the proposed plan: that plan is saved, and then registered. */
   function registerPreview() {
@@ -1812,7 +1816,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
           ? <TripTitle title={view.title} onSave={actions.editTrip && !frozen && !registered ? renameTrip : undefined} />
           : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={sourceView.stage === "done" ? sourceView : view} /></>}
       </div>, headerSlot)}
-    <section ref={sheetBox} className={styles.sheet} aria-labelledby={inserting ? undefined : changing ? "plan-change-title" : "plan-check-sheet-title"} aria-label={inserting ? t("일정 추가", "Add a stop") : undefined}>
+    <section ref={sheetBox} className={styles.sheet} aria-labelledby={inserting ? undefined : changing ? "plan-change-title" : "plan-check-sheet-title"} aria-label={inserting ? t("일정 추가", "Add a stop") : undefined} inert={sendingNow}>
       {done && <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
         onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>}
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
@@ -1967,6 +1971,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
 
         </>}
     </section>
+    {sendingNow && <div className={styles.sendingVeil} data-sending-veil><p role="status">{t("서버로 전송중입니다.", "Sending to the server.")}</p></div>}
           {/* `[2026-10-14 실서버 확인]` 시간 고치기 창이 열려 있으면 숨긴다 — 창의 ✓ 「적용」이 아래쪽에 오면 같은 초록 ✓ 인 이 단추가 그 위를 덮어,
               「적용」을 누른 손님이 「완료」(수정 모드면 아무것도 쓰지 않고 닫힘)를 눌렀다. 창을 닫으면(적용 · 취소) 다시 나온다. */}
           {done && !changing && !inserting && !timeEdit.edit && autoRegister === "on" && <div className={styles.registerBar} data-register-bar>
