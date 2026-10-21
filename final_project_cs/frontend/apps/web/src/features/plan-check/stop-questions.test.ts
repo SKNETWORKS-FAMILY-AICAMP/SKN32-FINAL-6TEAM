@@ -48,9 +48,30 @@ describe("the question asked at a card the check stopped at", () => {
     expect(stopKindOf(item)).toBe("nearest");
     expect(ask.need).toBe("confirm");
     expect(ask.question).toBe("「광화문 근처 한식」은 맞는 곳이 10곳이라 가까운 「두레에프엔씨」로 임시로 골랐어요. 어디로 갈까요?");
-    expect(ask.options.map((option) => option.label)).toEqual(["「두레에프엔씨」 그대로", "「광화문미진 본점」으로 바꾸기"]);
+    expect(ask.options.map((option) => option.label)).toEqual(["「두레에프엔씨」 맞아요", "「광화문미진 본점」으로 바꾸기"]);
     expect(ask.options[0]).toMatchObject({ effect: "", reason: null, act: { type: "confirm" } });
     expect(ask.options[0].fact).toMatch(/^앞뒤 일정에서 평균 \d+m$/);
+  });
+
+  // `[2026-10-21 사용자 지적 · ST4F-708]` 서버가 장소를 찾았지만 「맞는지 확인해 주세요」 경고만 단 일정 — 질문 칸이 「맞아요」로 끝낼 수 있어야 한다
+  it("asks to confirm a place the server found but warns about, keeping it first", () => {
+    const warn = "「15:00 국립중앙박물관」 중 「국립중앙박물관」 부분을 우리 장소 목록 정보로 찾았어요 · 맞는지 확인해 주세요";
+    const item = stop({ title: "15:00 국립중앙박물관", place: "국립중앙박물관", placeState: "found", coordinates: { lat: 37.5239, lng: 126.9804 },
+      checks: [{ kind: "place", result: "warn", text: warn }, { kind: "hours", result: "unknown", text: "운영시간 정보를 아직 못 찾았어요" }] });
+    const ask = placeQuestion(item, plan(item), [candidate("국립극장 공연예술박물관")], t, "ko");
+    expect(stopKindOf(item)).toBe("other");
+    expect(ask.need).toBe("confirm");
+    expect(ask.question).toBe(`「15:00 국립중앙박물관」은 확인이 필요해요 — ${warn}. 어떻게 할까요?`);
+    expect(ask.options.map((option) => option.label)).toEqual(["「국립중앙박물관」 맞아요", "「국립극장 공연예술박물관」으로 바꾸기"]);
+    expect(ask.options[0].act).toEqual({ type: "confirm" });
+  });
+
+  it("still asks only to fix when the place row must change, even with a warning beside it", () => {
+    const item = stop({ title: "광장시장", place: "순희네빈대떡", placeState: "found", coordinates: { lat: 37.57, lng: 126.99 },
+      checks: [{ kind: "place", result: "warn", text: "맞는지 확인해 주세요" }, { kind: "closed", result: "bad", text: "그날 쉬어요" }] });
+    const ask = placeQuestion(item, plan(item), [candidate("광장시장")], t, "ko");
+    expect(ask.need).toBe("fix");
+    expect(ask.options.map((option) => option.act.type)).toEqual(["pick"]);
   });
 
   it("does not offer to keep a place that has no position", () => {

@@ -111,6 +111,17 @@ function neighbours(view: PlanCheckView, item: PlanItem): PlanItem[] {
   return [day.slice(0, at).reverse().find((entry) => entry.coordinates), day.slice(at + 1).find((entry) => entry.coordinates)].filter((entry): entry is PlanItem => Boolean(entry));
 }
 
+/** 「「…」 맞아요」 (mockup `tripilot-plan-check-stop-ask.html`): the place the server has is the one — sent back as the customer's pick. None for a place with no position. */
+function keepOption(item: PlanItem, plan: PlanCheckView, place: string, t: Translate): StopOption[] {
+  if (!item.coordinates) return [];
+  const near = neighbours(plan, item).map((entry) => distanceM(item.coordinates!, entry.coordinates!));
+  return [{
+    key: "confirm", label: t(`「${place}」 맞아요`, `“${place}” is right`), reason: null,
+    fact: near.length ? t(`앞뒤 일정에서 평균 ${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)}m`, `${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)} m from the stops either side on average`) : null,
+    effect: "", act: { type: "confirm" },
+  }];
+}
+
 export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: readonly PlanCandidate[], t: Translate, language: Language): StopAsk {
   const kind = stopKindOf(item);
   // A pick that makes the stop a meal says so (a meal place for a market, a meal at the stay); a place for a place says nothing more than its label.
@@ -134,19 +145,17 @@ export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: r
   }
   if (kind === "nearest") {
     const place = item.place || item.title;
-    const near = item.coordinates ? neighbours(plan, item).map((entry) => distanceM(item.coordinates!, entry.coordinates!)) : [];
-    const keep: StopOption[] = item.coordinates ? [{
-      key: "confirm", label: t(`「${place}」 그대로`, `Keep “${place}”`), reason: null,
-      fact: near.length ? t(`앞뒤 일정에서 평균 ${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)}m`, `${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)} m from the stops either side on average`) : null,
-      effect: "", act: { type: "confirm" },
-    }] : [];
+    const keep = keepOption(item, plan, place, t);
     const question = item.placeChoices && item.placeChoices > 1
       ? t(`${quotedEun(item.title)} 맞는 곳이 ${item.placeChoices}곳이라 가까운 ${quotedRo(place)} 임시로 골랐어요. 어디로 갈까요?`, `${item.placeChoices} places match “${item.title}”, so the nearest, “${place}”, was taken for now. Where should we go?`)
       : t(`${quotedEun(item.title)} 이름이 여러 곳이라 가까운 ${quotedRo(place)} 임시로 골랐어요. 어디로 갈까요?`, `Several places match “${item.title}”, so the nearest, “${place}”, was taken for now. Where should we go?`);
     return { need: "confirm", question, options: [...keep, ...picks] };
   }
+  // ★`[2026-10-21 사용자 지적 · ST4F-708]` The server found a place but asks whether it is the one (a warning on its place row, nothing that must change — 「… 부분을 우리 장소 목록 정보로
+  //   찾았어요 · 맞는지 확인해 주세요」): the question is 「맞는지 확인」, so its first option ends it there (mockup `tripilot-plan-check-stop-ask.html`), then the alternatives.
+  const confirm = Boolean(item.place) && !item.checks.some((row) => row.result === "bad") && item.checks.some((row) => row.kind === "place" && row.result === "warn");
   const why = item.checks.find((row) => row.result === "bad")?.text ?? item.checks.find((row) => row.result === "warn")?.text ?? null;
-  return { need: "fix", options: picks, question: why
+  return { need: confirm ? "confirm" : "fix", options: confirm ? [...keepOption(item, plan, item.place!, t), ...picks] : picks, question: why
     ? t(`${quotedEun(item.title)} 확인이 필요해요 — ${why}. 어떻게 할까요?`, `“${item.title}” needs a look — ${why}. What should we do?`)
     : t(`${quotedEun(item.title)} 확인이 필요해요. 어떻게 할까요?`, `“${item.title}” needs a look. What should we do?`) };
 }

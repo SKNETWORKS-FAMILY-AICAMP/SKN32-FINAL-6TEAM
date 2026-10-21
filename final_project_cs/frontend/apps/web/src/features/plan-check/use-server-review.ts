@@ -375,7 +375,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         if (next.revision !== before.revision) alternatives.current.clear();
         take(next);
       },
-      // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 「「…」 그대로」: the place the server took for now (one of several) is the one — sent back as the customer's pick, so the server checks it as chosen.
+      // `[2026-10-20 사용자 결정 — 계획 확인 C안]` 「「…」 맞아요」(10-21 ST4F-708 — 「그대로」에서 목업 문구로): the place the server took for now (one of several), or found and asks about, is the one —
+      //   sent back as the customer's pick, so the server checks it as chosen.
       confirmPlace: async (id, how) => {
         const item = itemOf(id);
         const picked = item.place && pickedPlace({ ...item.place, address: null, category: item.place.category ?? null, ref: null });
