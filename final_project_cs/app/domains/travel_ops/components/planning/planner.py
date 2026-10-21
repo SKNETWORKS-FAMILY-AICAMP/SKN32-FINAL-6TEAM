@@ -57,7 +57,8 @@ logger = logging.getLogger(__name__)
 # ── 우리가 고른 값 (측정 아님) ────────────────────────────────────
 def _day_window() -> tuple[time, time]:
     """★`[2026-09-24]` 하루 시간은 **가드레일 한 곳**(`travel.day_window`)에서 읽는다(D-020).
-    팀 결정 — 하루 시작 08:00(평균 일정 시작 9시보다 식사 1시간 앞), 마감 22:00. 생성기는 식사를 짜지
+    팀 결정 — 하루 시작 08:00(평균 일정 시작 9시보다 식사 1시간 앞), 마감 22:00. ★이 둘은 **우리가 스스로 정해야 할 때만 쓰는 기본값**이다
+    (`[2026-10-21 사용자 지시]` 고객이 시각을 요청하지 않았거나 알아서 짜 달라고 맡긴 경우. 고객 요청이 명확하면 — 계획서에 시간이 적혀 있거나 요청대로 이후 시간이 정해지면 — 24시간 어느 시각이든 그대로 만든다, `_first_day_window`). 생성기는 식사를 짜지
     않으니 **첫 활동은 시작 + 1시간(09:00)** 이다. 전에는 09:30~21:30 이 코드에 박혀 팀 결정과 달랐다."""
     from app.core.settings import get_guardrails
 
@@ -81,7 +82,7 @@ BREAKFAST_AT = _day_open()
 
 
 def day_bounds(constraints: Mapping[str, Any] | None) -> tuple[time, time]:
-    """하루 첫 활동 · 마감 시각 — 고객 계획에서 읽은 「몇 시 이후 시작 · 몇 시까지 끝」(`constraints.day_hours`)이 있으면 그것, 없으면 팀 기본값.
+    """하루 첫 활동 · 마감 시각 — 고객 계획에서 읽은 「몇 시 이후 시작 · 몇 시까지 끝」(`constraints.day_hours`)이 있으면 그것, 없으면 팀 기본값(우리가 스스로 정해야 할 때만 쓴다 — 고객이 시각을 요청하지 않았거나 맡긴 경우).
     ★`[2026-10-16 D-025 후속]` 계획 읽기가 `finish_by` · `start_after` 를 읽어도 일정 짜기는 늘 22:00 마감으로 짰다(`intake/reading_prefs`)."""
     hours = (constraints or {}).get("day_hours")
     start, end = DAY_START, DAY_END
@@ -96,27 +97,36 @@ def day_bounds(constraints: Mapping[str, Any] | None) -> tuple[time, time]:
     return start, end
 
 
-def _from_moment(request: "PlanRequest", moment: datetime) -> "PlanRequest":
-    """오늘 시작하는 계획은 **지금**(서울, 5분 단위 올림)부터 짠다. `[2026-10-21 사용자 지시]` 지난 칸을 오늘 계획에 넣지 않는다.
+#: 하루가 끝나는 가장 늦은 시각 — 한 날의 일정은 같은 날짜 안에 둔다(자정을 넘는 일정은 접수가 다루지 않는다 — `intake/reopen` 의 `overnight`)
+LAST_MINUTE_OF_DAY = time(23, 59)
 
-    ★지금은 요청이 들어올 때 **한 번만** 정해(`plan_trip`) 이 함수로 요청 안의 「하루 첫 시각」(`constraints.day_hours.start`)을 올린다.
-      그 아래 함수들은 `day_bounds` 로 늘 읽던 값을 그대로 읽는다 — 시계를 다시 보는 곳이 없다.
-    오늘이 시작 날짜가 아니거나, 지금이 하루 첫 시각 이전이거나 마감 이후면 요청을 그대로 둔다(짐작으로 바꾸지 않는다)."""
-    from dataclasses import replace
 
+def _first_day_window(request: "PlanRequest", moment: datetime) -> tuple[time, time] | None:
+    """**첫날이 오늘이면 첫날의 (첫 활동, 마감)** — 지금(서울, 5분 단위 올림)부터 짠다. 아니면 None(평소 하루 창). `[2026-10-21 사용자 지시]`
+
+    ★고객이 지금 만들어 달라고 한 시각이 먼저다. 하루 시작 08:00 · 마감 22:00 은 **우리가 스스로 정해야 할 때만**(고객이 시각을 요청하지 않았거나 알아서 짜 달라고 맡긴 경우) 쓰는 기본값이라,
+      마감 뒤에 요청해도 그 시각부터 만든다(마감을 이유로 거절하거나 내일로 미루지 않는다). 시작이 지금이라는 것은 고객 요청이고, 고객이 마감을 말하지 않았을 때의 마감(평소 22:00, 이미 지났으면 그날 끝 23:59)만 우리가 정한다. 지금은 요청이 들어올 때 **한 번만** 정해(`plan_trip`) 이 함수에 넘긴다 — 시계를 다시 보는 곳이 없다.
+    - 지금이 평소(또는 고객이 정한) 첫 활동 시각 **이전**이면 None — 아직 지난 시각이 없으니 평소 창 그대로.
+    - 지금이 마감 **전**이면 (지금, 마감). 마감 **뒤**인데 고객이 마감을 따로 말하지 않았으면 (지금, 23:59) — 기본 마감은 요청이 없을 때만 쓰는 값이다.
+    - 고객이 말한 마감이 이미 지났으면 None(두 요청을 함께 들어줄 수 없다 — 짐작으로 고르지 않는다). 올림이 자정을 넘으면 None.
+    ★첫날만이다 — 며칠짜리 계획이어도 둘째 날부터는 평소 창이다(`day_bounds`)."""
     if request.start_date != moment.date():
-        return request
+        return None
     first, last = day_bounds(request.constraints)
     rounded = moment.replace(second=0, microsecond=0)
     if moment.second or moment.microsecond or rounded.minute % 5:
         rounded += timedelta(minutes=5 - rounded.minute % 5 if rounded.minute % 5 else 5)
-    now_time = rounded.time()
-    if not first < now_time < last:
-        return request
-    constraints = dict(request.constraints or {})
-    hours = dict(constraints.get("day_hours") or {})
-    hours["start"] = f"{now_time:%H:%M}"
-    return replace(request, constraints={**constraints, "day_hours": hours})
+    if rounded.date() != moment.date():
+        return None
+    start = rounded.time()
+    if start <= first:
+        return None
+    if start < last:
+        return start, last
+    hours = (request.constraints or {}).get("day_hours")
+    if isinstance(hours, Mapping) and isinstance(hours.get("end"), str):
+        return None
+    return start, LAST_MINUTE_OF_DAY
 ACTIVITY_MIN = 90                #: 활동 한 건에 두는 시간
 MEAL_MIN = 60                    #: 식사 한 건에 두는 시간
 LUNCH_FROM = time(12, 0)
@@ -1010,7 +1020,7 @@ def _parts_of(items: list[dict[str, Any]], places: Mapping[str, Cand],
 
 def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Mapping[str, Cand],
             constraints: Mapping[str, Any], seq_from: int,
-            breakfast: Cand | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+            breakfast: Cand | None = None, window: tuple[time, time] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """★밀도 목표 안에서 **활동을 가장 많이** 넣은 하루. (항목들, 잰 결과).
 
     곳 수를 표로 박지 않는다 — 활동 n 곳으로 하루를 **실제로 짜고**(이동 항목 포함) `measure_density` 로
@@ -1020,7 +1030,7 @@ def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Ma
     """
     top = min(MAX_ACTIVITIES_PER_DAY, len(activities))
     tried: list[dict[str, Any]] = []
-    first, last = day_bounds(constraints)
+    first, last = window or day_bounds(constraints)       # `window` = 지금부터 짜는 첫날의 (첫 활동, 마감) — 없으면 평소 하루 창
     for count in range(top, MIN_ACTIVITIES_PER_DAY - 1, -1):
         items = build_day(day, activities[:count], dining, seq_from=seq_from, breakfast=breakfast, day_start=first)
         trial, routes, _ = add_moves(copy.deepcopy(items), places)
@@ -1388,13 +1398,13 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
       거절(「후보 부족」 등) 대신 `source_busy`(몇 초 뒤 다시)로 바꿔 올린다 — 실서버에서 「후보 부족」 422 가 나고
       1분 뒤 다시 누르니 됐다(ui 세션 실측). 원래 거절은 `underlying` 에 그대로 싣는다.
 
-    ★`[2026-10-21 사용자 지시]` `start_at` = 계획을 짜는 **지금**. 안 주면 여기서 한 번만 서울 시각으로 정하고, 오늘 시작하는 계획은
-      그 시각부터 짠다(`_from_moment`). 아래 함수들은 시계를 다시 보지 않는다.
+    ★`[2026-10-21 사용자 지시]` `start_at` = 계획을 짜는 **지금**. 안 주면 여기서 한 번만 서울 시각으로 정하고, 첫날이 오늘이면 첫날을
+      그 시각부터 짠다(`_first_day_window`) — 고객 요청이 명확하면 그 시각 그대로이고, 하루 시작 · 마감 기본값은 우리가 스스로 정해야 할 때(시각을 요청하지 않았거나 맡긴 경우)만 쓴다.
+      아래 함수들은 시계를 다시 보지 않는다.
     """
     import math
 
     moment = (start_at or datetime.now(KST)).astimezone(KST)
-    request = _from_moment(request, moment)
     limited = _rate_limited(tour_api)
     try:
         return _plan_trip(conn=conn, tenant_id=tenant_id, request=request, chat=chat, tour_api=tour_api,
@@ -1515,6 +1525,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     model_calls, from_model = 0, 0        # ★몇 번 불렀고 **그중 몇 개가 실제로 쓰였나**
     fits: list[dict[str, Any]] = []       # ★하루마다 밀도 목표에 맞춘 결과(설문 16번)
     want = 0
+    # ★`[2026-10-21 사용자 지시]` 첫날이 오늘이면 첫날만 지금부터 짠다 — 요청 입구에서 정한 지금(`start_at`)을 한 번 읽는다(여기서 시계를 다시 보지 않는다).
+    first_window = _first_day_window(request, start_at or datetime.now(KST))
     for index, (day_acts, day_dine) in enumerate(pools):
         # ★**같은 곳을 이틀 넣지 않는다.** 하루치 후보에서 이미 쓴 것을 빼고, 모자라면 전체
         #   순위에서 아직 안 쓴 것으로 채운다.
@@ -1535,7 +1547,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
         day_act = _merge(picks["activities"], day_acts, per_day)
         day_din = _merge(picks["dining"], day_dine, DINING_PER_DAY)
         breakfast = None
-        if want_breakfast:
+        today_window = first_window if index == 0 else None       # 지금부터 짜는 날 — 아침 식사는 이미 지난 시각이라 넣지 않는다
+        if want_breakfast and today_window is None:
             taken = used | {cand.key for cand in day_din}
             anchor = day_act[0] if day_act else None
             breakfast = _pick_breakfast(reserve, taken, anchor) or _pick_breakfast(morning, taken, anchor)
@@ -1547,12 +1560,12 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             day_items, fit = fit_day(day, day_act, day_din,
                                      places={c.key: c for c in day_act + day_din + extra},
                                      constraints=request.constraints, seq_from=len(items) + 1,
-                                     breakfast=breakfast)
+                                     breakfast=breakfast, window=today_window)
             day_act = day_act[:fit["activities"]]
             fits.append(fit)
         else:
             day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1, breakfast=breakfast,
-                                  day_start=day_bounds(request.constraints)[0])
+                                  day_start=(today_window or day_bounds(request.constraints))[0])
         day_din = extra + day_din
         from_model += sum(1 for cand in day_act if cand.key in picks["activities"])
         from_model += sum(1 for cand in day_din if cand.key in picks["dining"])
@@ -1603,7 +1616,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
             remedy="완화 조건을 하나 풀거나(예산·결제 조건) 후보를 더 받는다")
-    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니", day_end=day_bounds(request.constraints)[1])
+    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니", day_end=day_bounds(request.constraints)[1],
+                     day_ends={request.start_date.isoformat(): first_window[1]} if first_window else None)
     # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
     #   자리가 모자라 민 항목이 영업시간을 넘길 수 있다. 여기서 걸리면 고친 척하지 않고 거절한다.
     # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
@@ -1621,7 +1635,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
             remedy="하루 항목을 줄이거나 가까운 장소로 바꾼다")
-    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="이동 시간을 넣고 나니", day_end=day_bounds(request.constraints)[1])
+    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="이동 시간을 넣고 나니", day_end=day_bounds(request.constraints)[1],
+                     day_ends={request.start_date.isoformat(): first_window[1]} if first_window else None)
     _remeasure_density_after_moves(fits, items, chosen, routes, request.constraints)
 
     draft = PlanDraft(
@@ -1781,13 +1796,15 @@ def plan_around(outcome: PlanOutcome, *, fixed_items: list[dict[str, Any]],
                       constraints=draft.constraints, places=new_places, items=items, routes=routes), done)
 
 
-def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[str], why: str, day_end: time = DAY_END) -> None:
+def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[str], why: str, day_end: time = DAY_END,
+                     day_ends: Mapping[str, time] | None = None) -> None:
     """★★`check_itinerary` 는 **하루가 몇 시에 끝나야 하는지 모른다** — 그건 우리 상품의 약속이지
     일정의 성립 조건이 아니다. 고치는 과정이나 이동 자리를 내는 과정에서 뒤로 민 항목이 한밤중으로
-    넘어갈 수 있으므로 따로 본다. 넘으면 「고쳤다」고 하지 않고 거절한다."""
+    넘어갈 수 있으므로 따로 본다. 넘으면 「고쳤다」고 하지 않고 거절한다.
+    `day_ends` — 날짜(ISO)별 마감. 지금부터 짜는 첫날은 고객이 요청한 시각이 먼저라 평소 마감보다 늦을 수 있다(`_first_day_window`)."""
     overflow = [item for item in items if item["kind"] not in STAY_KINDS   # `[2026-10-13]` 숙소 끝은 체크아웃 날이다
                 and (item["ends_at"] or item["starts_at"])
-                > _at(date.fromisoformat(_planned_day(item)), day_end)]
+                > _at(date.fromisoformat(_planned_day(item)), (day_ends or {}).get(_planned_day(item), day_end))]
     if overflow:
         raise PlanRefused(
             "day_overflow",

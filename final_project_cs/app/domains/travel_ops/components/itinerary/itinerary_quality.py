@@ -247,9 +247,17 @@ def _day_end(day: date, parts: list[Part], limit_text: str | None = None) -> lis
     생성기는 마감을 넘기면 거절하지만(「상품의 약속」) 고객·외부 에이전트가 준 일정에는 거절하지 않고 알린다 — 일부러 늦게까지 가는 일정(야경 · 공연)도 가능은 하다.
     끝 시각이 없으면 시작 시각으로 본다. 늦게 끝나는 항목을 모두 이름으로 말한다."""
     # ★`[2026-10-16 D-025 후속]` 고객 계획에서 읽은 「몇 시까지 끝」(`constraints.day_hours.end`)이 있으면 그 시각이 마감이다
+    customer_limit = limit_text is not None
     limit_text = limit_text or str(get_guardrails().get("travel.day_window.default_end"))
     limit = datetime.combine(day, _clock(limit_text), tzinfo=KST)
-    late = [p for p in parts if (p.ends_at or p.starts_at) > limit]
+    # ★`[2026-10-21 사용자 지시]` 하루 마감 22:00 은 **우리가 스스로 정해야 할 때만** 쓰는 기본값이다(고객이 시각을 요청하지 않았거나 알아서 짜 달라고 맡긴 경우).
+    #   고객 요청이 명확하면 — 계획서에 시간이 적혀 있거나 요청대로 이후 시간이 정해지면 — 24시간 어느 시각이든 그대로이니, 기본 마감으로 늦다고 알리지 않는다:
+    #   ① 고객이 마감을 말했으면(`customer_limit`) 그 마감으로 모든 항목을 본다 ② 말하지 않았으면 **우리가 시각을 정한 항목**(생성기가 짠 것 — `detail.planner`)만 기본 마감으로 본다
+    #   ③ 그날 첫 일정이 마감 뒤에 시작하면 고객이 그 시각에 만들어 달라고 한 일정이라 알리지 않는다
+    if parts and min(p.starts_at for p in parts) >= limit:
+        return []
+    judged = parts if customer_limit else [p for p in parts if (p.detail or {}).get("planner")]
+    late = [p for p in judged if (p.ends_at or p.starts_at) > limit]
     if not late:
         return []
     last = max(late, key=lambda p: (p.ends_at or p.starts_at))
