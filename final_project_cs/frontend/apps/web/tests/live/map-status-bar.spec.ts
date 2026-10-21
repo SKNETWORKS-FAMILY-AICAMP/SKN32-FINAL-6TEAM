@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { changedBadge, mapSettled, needsBadge, openFinished, pin, type Json } from "./plan-check-kit";
+import { changedBadge, mapSettled, needsBadge, openFinished, pin, typeTimes, type Json } from "./plan-check-kit";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 const shot = async (page: Page, name: string) => {
@@ -22,7 +22,7 @@ test("위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 �
   // All responses use the four-stop fixture; the mock server's default SSE stream has only three stops.
   const server = await openFinished(page, request, addHotel, { intakeRoutes: "on", intakeEvents: "off" });
   await page.getByRole("button", { name: /^광장시장 시간 고치기/ }).click();
-  const form = page.getByRole("form", { name: "광장시장 시간 고치기" });
+  const form = await typeTimes(page.getByRole("form", { name: "광장시장 시간 고치기" }));
   await form.getByLabel("시작", { exact: true }).fill("11:30");
   await form.getByRole("button", { name: "적용" }).click();
   await expect(changedBadge(page)).toHaveText("3");
@@ -69,7 +69,7 @@ test("위치·확인·변경 표시가 독립된 칩으로 나란히 놓이고 �
 test("변경 메뉴는 키보드로 열고 이동하며 Escape를 누르면 변경 버튼으로 초점이 돌아온다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: /^광장시장 시간 고치기/ }).click();
-  const form = page.getByRole("form", { name: "광장시장 시간 고치기" });
+  const form = await typeTimes(page.getByRole("form", { name: "광장시장 시간 고치기" }));
   await form.getByLabel("시작", { exact: true }).fill("11:30");
   await form.getByRole("button", { name: "적용" }).click();
   await expect(page.getByRole("status").filter({ hasText: "3개 일정의 시간을 바꿨어요" })).toBeVisible();

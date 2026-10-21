@@ -111,7 +111,8 @@ export function TimeWheel({ value, range, onPick, label, autoFocus = false }: {
     const node = nodes.current[part];
     delete settling.current[part];
     if (!node) return;
-    let row = clampRow(part, Math.round(node.scrollTop / ROW));
+    // A column the code is still turning (keys) stops where it is going, not where its scrolling has got to.
+    let row = target.current[part] ?? clampRow(part, Math.round(node.scrollTop / ROW));
     if (LOOPS[part]) row = homeRow(part, indexOf(part, row));                    // back to the middle copy, unseen
     turn(part, row, "auto");
     if (Object.keys(settling.current).length) return;                            // another column is still turning
@@ -172,12 +173,21 @@ export function TimeWheel({ value, range, onPick, label, autoFocus = false }: {
   const names: Record<Part, string> = { half: t("오전 오후", "AM PM"), hour: t("시", "Hour"), minute: t("분", "Minute") };
   const order: Part[] = english ? ["hour", "minute", "half"] : ["half", "hour", "minute"];
 
+  // A key moves the column at once (the value follows the key, not the scrolling - keys pressed fast each count) and the column scrolls after it.
   const onKey = (part: Part) => (event: KeyboardEvent<HTMLDivElement>) => {
     const by = ({ ArrowUp: -1, ArrowDown: 1, PageUp: -3, PageDown: 3 } as Record<string, number>)[event.key];
     if (!by) return;
     event.preventDefault();
     event.stopPropagation();
-    take(part, rows.current[part] + by);
+    const from = rows.current[part], to = clampRow(part, from + by);
+    if (part === "hour" && crossesNoon(from, to)) turn("half", 1 - rows.current.half, smooth());
+    turn(part, to, smooth());
+    const next = now();
+    setAt(next);
+    const minutes = wheelMinutes(next);
+    if (minutes !== said.current) { said.current = minutes; latest.current.onPick(minutes, { settled: false, bounced: false }); }
+    window.clearTimeout(settling.current[part]);
+    settling.current[part] = window.setTimeout(() => stopped(part), SETTLE_MS * 3);
   };
   const onDown = (part: Part) => (event: PointerEvent<HTMLDivElement>) => {
     delete target.current[part];

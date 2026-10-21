@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { mockServer } from "./helpers";
-import { card, openFinished, pin, toast } from "./plan-check-kit";
+import { card, openFinished, pin, toast, typeTimes } from "./plan-check-kit";
 
 // 선택 실행하는 촬영: 일정 API는 mock 응답, 배경은 공개 지도 타일이며 제품 코드를 그대로 렌더링한다.
 const destination = process.env.CONTINUITY_REAL_MAP_SHOTS;
@@ -64,7 +64,7 @@ for (const width of [375, 1280]) {
     await openFinished(page, request, undefined, { intakeEvents: "off", intakeRoutes: "on" });
     await pin(page, "1. 경복궁 관람").dispatchEvent("click");
     await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click();
-    const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
+    const form = await typeTimes(page.getByRole("form", { name: "경복궁 관람 시간 고치기" }));
     await form.getByLabel("끝", { exact: true }).fill("11:00");
     await form.getByRole("button", { name: "적용", exact: true }).click();
     await expect(page.getByRole("button", { name: "전체 되돌리기", exact: true })).toBeVisible();

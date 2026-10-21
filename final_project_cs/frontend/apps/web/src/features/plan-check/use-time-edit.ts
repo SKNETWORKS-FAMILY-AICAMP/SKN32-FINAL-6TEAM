@@ -133,8 +133,11 @@ export function useTimeEdit({ views, commit }: {
   const [dragging, setDragging] = useState(false);
   const [held, setHeld] = useState<Held>(null);
   const [press, setPress] = useState<TimePress | null>(null);
-  /** The drag going on: where it was taken, minutes per px, and - for a finger - the list it scrolls along (`along`: how far it has scrolled it) and the last time it buzzed for. */
-  const grabbed = useRef<{ y: number; origin: number; perPx: number; scroller: HTMLElement | null; along: number; touch: boolean; last: number } | null>(null);
+  /**
+   * The drag going on: where it was taken, minutes per px, and - for a finger - the list it scrolls along (`along`: how far it has scrolled it), the last time it went to, and the dot it
+   * holds (`dotY`: where that dot stood when taken).
+   */
+  const grabbed = useRef<{ y: number; origin: number; perPx: number; scroller: HTMLElement | null; along: number; touch: boolean; last: number; dot: HTMLElement | null; dotY: number } | null>(null);
   const heldBefore = useRef<Held>(null);
   /** A finger has taken a time: its moves drag the time, not the list. */
   const holding = useRef(false);
@@ -264,10 +267,21 @@ export function useTimeEdit({ views, commit }: {
   };
   const dragAt = useRef(dragTo);
   useLayoutEffect(() => { dragAt.current = dragTo; });
-  /** The drag ends: no more holding, the list no longer scrolls along. */
+  // ★`[2026-10-21 사용자 확인]` The held dot is drawn where the finger has taken the time to (the time's own px, held where the time is held): a row is as tall as its time only when
+  //   its content is shorter, so the list alone did not keep the dot under the finger (11 px of 24 in a short gap). Placed after the list has laid out its rows, before it is painted.
+  useLayoutEffect(() => {
+    const taken = grabbed.current;
+    if (!taken?.touch || !taken.dot || !holding.current) return;
+    taken.dot.style.removeProperty("translate");
+    const box = taken.dot.getBoundingClientRect();
+    const off = taken.dotY + (taken.last - taken.origin) / taken.perPx - taken.along - (box.top + box.height / 2);
+    if (Math.abs(off) >= 0.5) taken.dot.style.translate = `0 ${off}px`;
+  });
+  /** The drag ends: no more holding, the list no longer scrolls along, the dot goes back to its row. */
   function letGo() {
     const taken = lift.current;
     if (taken?.timer) window.clearTimeout(taken.timer);
+    grabbed.current?.dot?.style.removeProperty("translate");
     holding.current = false;
     if (edge.current !== null) cancelAnimationFrame(edge.current);
     edge.current = null;
@@ -308,11 +322,12 @@ export function useTimeEdit({ views, commit }: {
   const handle = (item: PlanItem, list: List, kind: TimeKind = "start"): Grab => {
     const already = edit?.id === item.id && edit.list === list && edit.kind === kind;
     /** The drag starts: the edit opens with its form shut, unless it is open on this time already. */
-    const take = (taken: NonNullable<typeof lift.current>, scroller: HTMLElement | null, perPx = DRAG_MINUTES_PER_PX) => {
+    const take = (taken: NonNullable<typeof lift.current>, scroller: HTMLElement | null, perPx = DRAG_MINUTES_PER_PX, dot: HTMLElement | null = null) => {
       taken.moved = true;
       swallow.current = true;                                              // the click that follows this drag is not a tap
       if (!already) { setFailure(""); setEdit(build(item, list, kind, true)); }
-      grabbed.current = { y: taken.touch ? taken.lastY : taken.y, origin: taken.origin, perPx, scroller, along: 0, touch: taken.touch, last: taken.origin };
+      const spot = dot?.getBoundingClientRect();
+      grabbed.current = { y: taken.touch ? taken.lastY : taken.y, origin: taken.origin, perPx, scroller, along: 0, touch: taken.touch, last: taken.origin, dot, dotY: spot ? spot.top + spot.height / 2 : 0 };
       heldBefore.current = null;
       setDragging(true);
     };
@@ -338,7 +353,7 @@ export function useTimeEdit({ views, commit }: {
           // ★`[2026-10-21 사용자 확인]` The held dot stays under the finger: the list is drawn to scale (1 minute = `RAIL_PX_PER_MIN`, times the list's zoom), so a finger moves the time by
           //   that much - at 10 px = 5 minutes the dot fell behind the finger (60 px for every 100). The mouse keeps 10 px = 5 minutes.
           const zoom = (element as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom || 1;
-          take(taken, scrollerOf(element), 1 / (RAIL_PX_PER_MIN * zoom));
+          take(taken, scrollerOf(element), 1 / (RAIL_PX_PER_MIN * zoom), element.closest("li")?.querySelector<HTMLElement>("span[data-grab]") ?? null);
           setPress({ id: item.id, list, kind, held: true });
           buzz(12);
           edge.current = requestAnimationFrame(scrollAlong);

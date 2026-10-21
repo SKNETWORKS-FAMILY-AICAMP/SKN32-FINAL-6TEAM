@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { openFinished, toast } from "./plan-check-kit";
+import { openFinished, toast, turnWheel } from "./plan-check-kit";
 
 /**
  * `[2026-10-05 사용자 선택 — 시간 조정 합친 안]` 시간(또는 그 옆 원)을 탭 없이 바로 잡고 끌면 시간이 바뀐다(위 = 일찍, 아래 = 늦게). 끄는 동안 폼은 안 열리고 미니맵만 뜬다.
@@ -63,7 +63,7 @@ test("폼이 열린 뒤에는 한 줄의 아이콘(되돌리기 · 취소 · 적
   await timeButton(page, "경복궁 관람").click();
   const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
   await expect(form.getByRole("button", { name: "처음 시간으로 되돌리기" })).toHaveCount(0);       // 아직 안 바꿨다
-  await form.getByRole("button", { name: "+5분" }).click();
+  await turnWheel(form, "분", 1);                                                                   // `[2026-10-21 ST4F-702]` +5분 단추 대신 휠 한 칸
   await form.getByRole("button", { name: "적용" }).click();
   await expect.poll(async () => (await editsOf(server)).length).toBe(1);
   await timeButton(page, "경복궁 관람").click();

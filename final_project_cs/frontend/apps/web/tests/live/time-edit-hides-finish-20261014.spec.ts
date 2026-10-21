@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { openFinished } from "./plan-check-kit";
+import { openFinished, turnWheel } from "./plan-check-kit";
 
 /**
  * `[2026-10-14 x600 실서버 확인]` 시간 고치기 창이 열려 있는 동안 오른쪽 아래 둥근 단추(「여행 등록」 · 「다시 제출」 · 수정 모드의 「완료」)를 숨긴다.
@@ -18,7 +18,7 @@ test("시간 고치기 창을 여는 동안 둥근 단추가 사라지고, 「�
   const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
   await expect(form).toBeVisible();
   await expect(finish(page)).toHaveCount(0);                                                       // ★창이 열린 동안은 없다 — 「적용」을 덮지 않는다
-  await form.getByRole("button", { name: "+5분" }).click();
+  await turnWheel(form, "분", 1);                                                                   // `[2026-10-21 ST4F-702]` +5분 단추 대신 휠 한 칸
   await form.getByRole("button", { name: "적용", exact: true }).click();
   await expect(form).toHaveCount(0);
   await expect(page.getByRole("button", { name: "다시 제출", exact: true })).toBeVisible();        // 닫으면 다시 나온다

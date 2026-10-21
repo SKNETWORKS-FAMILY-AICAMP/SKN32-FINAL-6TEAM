@@ -106,15 +106,15 @@ test("진짜 터치: 수정 · 삭제는 평소엔 숨어 있고, 목록을 스�
   void cdp;
 });
 
-test("진짜 터치: 일정 시간을 잡고 끌면 시간이 바뀌고 목록은 스크롤되지 않는다", async ({ page, request }) => {
+test("진짜 터치: 일정 시간을 꾹 눌러 잡고 끌면 시간이 바뀌고 목록은 스크롤되지 않는다", async ({ page, request }) => {
   await openFinished(page, request);
   const cdp = await page.context().newCDPSession(page);
   const handle = page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ });
   const box = (await handle.boundingBox())!;
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
   const scrollBefore = await sheetBody(page).evaluate((element) => element.scrollTop);
-  await touch(cdp, "touchStart", [{ x, y, id: 1 }]);
-  for (let step = 1; step <= 10; step += 1) await touch(cdp, "touchMove", [{ x, y: y + step * 3, id: 1 }], 25);      // 30px = 15분
+  await touch(cdp, "touchStart", [{ x, y, id: 1 }], 600);                                              // `[2026-10-21 ST4F-702]` 손가락은 0.45초 꾹 눌러야 잡힌다
+  for (let step = 1; step <= 10; step += 1) await touch(cdp, "touchMove", [{ x, y: y + step * 3, id: 1 }], 25);      // 30px = 25분(손가락은 목록 축척 1분 = 1.2px)
   await expect(page.locator('[data-overlay="time"]')).toBeVisible();                                 // 끄는 동안 하루 미니맵
   await touch(cdp, "touchEnd", [], 80);
   await expect(page.getByRole("status").filter({ hasText: "1개 일정의 시간을 바꿨어요" })).toBeVisible();

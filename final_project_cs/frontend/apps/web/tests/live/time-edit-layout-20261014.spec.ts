@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { mockServer } from "./helpers";
-import { openFinished } from "./plan-check-kit";
+import { openFinished, timeBox, typeTimes } from "./plan-check-kit";
 
 /**
  * `[2026-10-14 x600 실서버 확인]` 시간 고치기 창의 모양 두 가지.
@@ -32,6 +32,12 @@ test.describe("휴대폰 폭 · 한국어", () => {
     await openFinished(page, request);
     await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click();
     const form = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
+    // `[2026-10-21 ST4F-702]` 창은 휠로 열린다 — 머리의 시작 · 끝 칸 글자(「오전 9:00」 꼴)가 잘리지 않고, ⌨ 를 누르면 나오는 입력칸도 넓다
+    for (const word of ["시작", "끝"] as const) {
+      const fits = await timeBox(form, word).evaluate((element) => [...element.children].every((child) => child.scrollWidth <= (element as HTMLElement).clientWidth));
+      expect(fits).toBe(true);
+    }
+    await typeTimes(form);
     for (const name of ["시작", "끝"]) {
       const input = form.getByLabel(name, { exact: true });
       await expect(input).toBeVisible();
