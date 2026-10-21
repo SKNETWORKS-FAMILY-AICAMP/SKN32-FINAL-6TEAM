@@ -271,6 +271,18 @@ def test_reason_guard_catches_a_reversed_either_or_and_content_ids():
     assert _guarded("박물관 후보는 1순위를 피했어요.", "박물관 아니면 전시 같은 거")[1] == "reversed_either"
     assert _guarded("박물관 말고 다른 곳을 먼저 두었어요.", "박물관 말고 전시")[1] is None     # 고객이 정말 거부했다
     assert _guarded("3080519 를 1순위로 했어요.", "실내")[1] == "content_id"
+    # 구어 「A 아님 B」(holdout-4 M-63) — 「대신」 · 고객 말을 「아님」으로 되받는 것도 거꾸로 읽은 것이다
+    assert _guarded("박물관 2곳 대신 진관사를 1순위로 했어요.", "박물관 아님 전시로")[1] == "reversed_either"
+    assert _guarded("고객이 ‘박물관 아님’이라 하셔서 진관사부터 보여 드려요.", "박물관 아님 전시로")[1] == "reversed_either"
+    assert _guarded("박물관 말고 다른 곳을 먼저 두었어요.", "박물관 아님")[1] is None     # 문장 끝 「아님」은 거부일 수 있다
+
+
+def test_reason_guard_replaces_reasons_that_are_not_polite():
+    # holdout-4 사람 메모 — 고객 화면에 반말 · 끊긴 문장이 나갔다
+    for reason in ("역사유적지인 장소를 1순위로 올렸어.", "요청에 따라 진관사부터 제시했다.", "박물관을 1순위로."):
+        assert _guarded(reason, "실내로")[1] == "not_polite"
+    for reason in ("박물관이 먼저예요(문화관광 > 전시시설 > 박물관).", "박물관을 먼저 보여 드립니다.", "박물관을 1순위로 했어요"):
+        assert _guarded(reason, "실내로")[1] is None
 
 
 def test_reason_guard_leaves_grounded_reasons_alone():

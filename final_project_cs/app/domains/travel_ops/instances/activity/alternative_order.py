@@ -143,10 +143,24 @@ def payload(origin_title: str | None, candidates: list[dict[str, Any]], preferen
 UNVERIFIABLE = ("조용", "한적", "붐비", "붐빔", "혼잡", "사람이 적", "주차", "와이파이", "wifi", "WiFi", "대기", "줄 서", "줄 안",
                 "웨이팅", "후기", "리뷰", "평점", "별점", "인기", "유명", "요금", "입장료", "가격", "무료", "음식 반입", "음식 가지고")
 #: 고객이 둘 다 원한다고 한 말(「A 아니면 B」) — 이때 이유가 「제외 · 말고」면 거꾸로 읽은 것이다(holdout-2 심각 H-63)
-EITHER = re.compile(r"아니면|또는|이나 |이든|든지")
-REFUSED_IN_REASON = re.compile(r"제외|말고|피했|피해|빼고|빼서")
+#: ★`[2026-10-21]` 구어 「A 아님 B」(= 아니면)를 더했다 — holdout-4 M-63 「박물관 아님 전시로」를 「박물관 2곳 대신」 · 「‘박물관 아님’이라 하셔서」로
+#:  거꾸로 읽은 2건(심각)을 지킴이가 못 잡았다. 「아님」 뒤에 다른 말이 올 때만 본다(문장 끝 「박물관 아님」은 거부일 수 있다)
+EITHER = re.compile(r"아니면|아님\s+\S|또는|이나 |이든|든지")
+#:  ☆「뒤로」는 넣지 않는다 — dev 스트레스 S-34-or 의 바르게 읽은 이유(「원치 않은 레저는 뒤로」)까지 잡았다(10-21 시험)
+REFUSED_IN_REASON = re.compile(r"제외|말고|피했|피해|빼고|빼서|대신|아님")
 #: 장소 번호를 이유에 쓰지 않는다(고객에게 의미 없는 내부 id)
 CONTENT_ID = re.compile(r"\d{5,}")
+#: ★`[2026-10-21]` 이유는 고객 화면에 그대로 나가므로 존댓말(「~요」 · 「~니다」)로 끝나야 한다 — holdout-4 사람 메모: 「올렸어」 · 「생각했어」 ·
+#:  「제시했다」 3건, 기록된 답에는 「… 1순위로.」 · 「… 우선.」처럼 끊긴 문장도 있었다. 끝의 괄호 덧붙임(「…예요(자연공원 > 정원).」)은 빼고 본다
+POLITE_END = re.compile(r"(요|니다)$")
+TRAILING_NOTE = re.compile(r"\s*\([^()]*\)$")
+
+
+def _polite(reason: str) -> bool:
+    text = reason.strip().rstrip(".!")
+    while TRAILING_NOTE.search(text):
+        text = TRAILING_NOTE.sub("", text).rstrip(".! ")
+    return bool(POLITE_END.search(text))
 
 
 def _particle(word: str) -> str:
@@ -168,6 +182,8 @@ def guard_reason(reason: str, customer_text: str | None, first: dict[str, Any], 
         why = "reversed_either"
     elif CONTENT_ID.search(reason):
         why = "content_id"
+    elif not _polite(reason):
+        why = "not_polite"
     if why is None:
         return reason, None
     leaf = (class_path(class_code) or "").split(" > ")[-1]
