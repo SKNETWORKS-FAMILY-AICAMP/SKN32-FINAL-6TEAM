@@ -96,8 +96,21 @@ def summarize(rows: list[dict], *, label: str, date: str, real_human: bool) -> d
     return out
 
 
-def agreement(a: list[dict], b: list[dict]) -> dict[str, Any]:
-    """같은 판 재실행 일치율 — 에피소드별 (일 끝남 · ① 위반 여부 · 실패형 답) 이 같은 비율."""
+def breaker_episodes(folder: Path) -> set[str]:
+    """로컬 모델 회로 차단기가 열린 턴을 가진 에피소드 — 시험 기계 속도 · 동시 실행 때문에 켜지는 환경 현상이라 일치율을 따로 본다. `[2026-10-21]`"""
+    path = folder / "results.jsonl"
+    last: dict[str, dict] = {}
+    for x in path.read_text(encoding="utf-8").splitlines():
+        if x.strip():
+            row = json.loads(x)
+            last[row["episode_id"]] = row
+    return {e for e, r in last.items()
+            if any("circuit_open" in json.dumps(t.get("model_path") or {}) for t in r.get("turns", []))}
+
+
+def agreement(a: list[dict], b: list[dict], *, exclude: set[str] | None = None) -> dict[str, Any]:
+    """같은 판 재실행 일치율 — 에피소드별 (일 끝남 · ① 위반 여부 · 실패형 답) 이 같은 비율.
+    `exclude` 를 주면 그 에피소드(예: 차단기가 열린 것)를 뺀 일치율을 `without_excluded` 에 더한다."""
     def key(r):
         if "crash" in r:
             return ("crash",)
@@ -107,8 +120,15 @@ def agreement(a: list[dict], b: list[dict]) -> dict[str, Any]:
     kb = {r["episode_id"]: key(r) for r in b}
     both = sorted(set(ka) & set(kb))
     same = sum(1 for e in both if ka[e] == kb[e])
-    return {"n": len(both), "same": same, "rate": same / len(both) if both else None,
-            "differ": [e for e in both if ka[e] != kb[e]][:50], "below_95": bool(both) and same / len(both) < 0.95}
+    out = {"n": len(both), "same": same, "rate": same / len(both) if both else None,
+           "differ": [e for e in both if ka[e] != kb[e]][:50], "below_95": bool(both) and same / len(both) < 0.95}
+    if exclude is not None:
+        kept = [e for e in both if e not in exclude]
+        kept_same = sum(1 for e in kept if ka[e] == kb[e])
+        out["without_excluded"] = {"excluded": len(both) - len(kept), "n": len(kept), "same": kept_same,
+                                   "rate": kept_same / len(kept) if kept else None,
+                                   "below_95": bool(kept) and kept_same / len(kept) < 0.95}
+    return out
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -127,7 +147,8 @@ def main(argv: list[str] | None = None) -> None:
            "target": summarize(ids_tgt, label=args.label + " · 표적", date=args.date, real_human=False),
            "all": summarize(rows, label=args.label + " · 합친 값", date=args.date, real_human=False)}
     if args.rerun:
-        out["rerun_agreement"] = agreement(rows, load(args.rerun, args.scores))
+        out["rerun_agreement"] = agreement(rows, load(args.rerun, args.scores),
+                                           exclude=breaker_episodes(args.run) | breaker_episodes(args.rerun))
     lat = []
     for folder in [args.run, *([args.rerun] if args.rerun else []), *args.latency]:
         for r in load(folder):

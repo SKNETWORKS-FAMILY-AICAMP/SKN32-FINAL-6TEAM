@@ -121,6 +121,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--paid-budget", type=int, default=600, help="유료 모델(대체 · 팀 답) 호출 상한 — 넘으면 멈춤")
     ap.add_argument("--min-free-mb", type=int, default=700, help="남은 메모리가 이 값 밑이면 에피소드 사이에서 쉰다(다른 세션 보호)")
     ap.add_argument("--threads", type=int, default=1, help="한 실행기 안에서 동시에 도는 에피소드 수(앱 · 도로 그래프는 한 벌만 올린다 — 메모리 절약)")
+    ap.add_argument("--reset-paid-counters", action="store_true",
+                    help="시작 전에 시험 DB 의 유료 대체 호출 사용량(openai_failover)을 0 으로 되돌린다(하루 상한이 차 있으면 회차가 무효가 된다). 되돌리기 전 값은 meta.json 에 남긴다")
     ap.add_argument("--shard", help="K/N — 에피소드 목록을 N 등분해 K 번째(0부터)만 돈다(여러 실행기를 나눠 돌릴 때, 실행기마다 `--out` · `--db` · `--cassette` 를 따로 쓴다)")
     ap.add_argument("--skip-done-from", type=Path, action="append", default=[],
                     help="이 결과 폴더에서 이미 끝난 에피소드는 건너뛴다(실행기를 둘로 나눠 돌릴 때, 앞 실행이 끝낸 것 제외)")
@@ -201,6 +203,11 @@ def main(argv: list[str] | None = None) -> int:
         warm_seconds = f"실패 {type(exc).__name__}"
     finally:
         R.resume(warm)
+    paid_counters_before = None
+    if args.reset_paid_counters:
+        from .seed import reset_paid_counters
+
+        paid_counters_before = reset_paid_counters(args.db)
     meta = {"label": args.label, "started_at": datetime.now().isoformat(timespec="seconds"), "argv": [str(a) for a in (argv or sys.argv[1:])
                                                                                                      if "key" not in str(a).lower()],
             "code": _code_hash(), "model": _model_info(args.ollama), "settings": runner.X600_LIKE, "settings_adjusted_vs_x600": runner.HARDWARE_ADJUST, "keys_loaded": names,
@@ -208,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
             "seed": args.seed, "mode": args.mode, "closed": args.closed, "shard": args.shard, "threads": args.threads,
             "data": {"episodes": _sha(args.episodes) if args.episodes else None, "targets": _sha(args.targets) if args.targets else None,
                      "compiled": _sha(args.compiled) if args.compiled else None, "cassette_before": _sha(args.cassette)},
-            "paid_budget": args.paid_budget, "warmup_seconds": warm_seconds}
+            "paid_budget": args.paid_budget, "warmup_seconds": warm_seconds, "paid_counters_reset_before": paid_counters_before}
     (args.out / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     t0 = time.time()
     stopped = None

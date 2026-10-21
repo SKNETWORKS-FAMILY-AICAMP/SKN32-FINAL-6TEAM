@@ -32,6 +32,21 @@ def assert_test_db(url: str) -> None:
         raise RuntimeError("재생 시험 DB 가 아니다 — 접속 주소에 'replay' 가 있는 DB 에만 쓴다(운영 DB 보호)")
 
 
+def reset_paid_counters(url: str) -> list[dict]:
+    """시험 DB 의 유료 대체 호출 사용량(`external_call_budget` · `openai_failover`)을 0 으로 되돌린다. `[2026-10-21]`
+    ★이 줄이 하루 상한(기본 2,000)에 차 있으면 이어 도는 회차의 유료 대체가 전부 `budget_exhausted` 로 거절돼 회차가 무효가 된다(2026-10-21 2차 첫 시도).
+    시험 DB 에만 쓴다(`assert_test_db`). 되돌리기 전 값을 돌려줘 `meta.json` 에 남긴다."""
+    assert_test_db(url)
+    import psycopg
+
+    dsn = url.replace("postgresql+psycopg://", "postgresql://")
+    with psycopg.connect(dsn, autocommit=True) as conn, conn.cursor() as cur:
+        cur.execute("select meter, period, used, rejected from external_call_budget where meter = 'openai_failover' order by period")
+        before = [{"meter": m, "period": p, "used": u, "rejected": r} for m, p, u, r in cur.fetchall()]
+        cur.execute("update external_call_budget set used = 0, rejected = 0, exhausted_at = null where meter = 'openai_failover'")
+    return before
+
+
 def _uid(ns: str, old: Any) -> UUID:
     return uuid5(NAMESPACE_URL, f"replay:{ns}:{old}")
 
