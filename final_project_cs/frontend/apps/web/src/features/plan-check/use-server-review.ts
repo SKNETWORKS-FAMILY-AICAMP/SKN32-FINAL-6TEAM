@@ -349,7 +349,21 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       laterStart: async (id) => {
         const result = await autofixIntake(intakeId, plan().revision, language, true, id).catch(staleThenRethrow);
         const change = result.changed.find((entry) => entry.id === id && entry.reason === "time");
-        return change?.to.starts_at ? { start: change.to.starts_at, end: change.to.ends_at ?? "" } : null;
+        if (!change?.to.starts_at) return null;
+        // ★`[2026-10-21 사용자 결정]` Only this stop moves (`item_id`): what the stop after it on that day comes to in the preview — overlapped, or reached late (its leg's `slack_min`).
+        const review = result.view.review;
+        const moved = review?.items.find((entry) => entry.id === id);
+        const day = review && moved ? review.items.filter((entry) => entry.day === moved.day && entry.date === moved.date) : [];
+        const after = day[day.findIndex((entry) => entry.id === id) + 1];
+        const minutes = (time: string | null | undefined) => time && /^\d{2}:\d{2}$/.test(time) ? Number(time.slice(0, 2)) * 60 + Number(time.slice(3)) : null;
+        const end = minutes(change.to.ends_at), start = minutes(after?.starts_at);
+        const leg = after ? review?.moves.find((entry) => entry.from === id && entry.to === after.id) : undefined;
+        const next = !review ? undefined : !after ? null : {
+          title: after.title, start: after.starts_at,
+          overlapMin: end !== null && start !== null ? Math.max(0, end - start) : 0,
+          lateMin: typeof leg?.slack_min === "number" ? Math.max(0, -leg.slack_min) : 0,
+        };
+        return { start: change.to.starts_at, end: change.to.ends_at ?? "", next };
       },
       // ★`[2026-10-21 사용자 결정 — P6 해석 확인 질문]` The answer to what a line means: the AI's reading (what the plan holds) is only saved — the same revision comes back without the
       //   question; another option puts the stop back in a new revision, checked as a whole (like a pick in the C안 flow: no 「다시 제출」, no undo).

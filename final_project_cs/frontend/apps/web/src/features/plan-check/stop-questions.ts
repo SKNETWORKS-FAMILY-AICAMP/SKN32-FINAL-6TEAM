@@ -30,7 +30,16 @@ export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "conf
  * `why`: the server's reason it cannot be picked (the option is shown, greyed, and says it when pressed) — null when it can.
  * `recommended`: `[2026-10-21 P6]` the server's first option (its reading), marked 「추천」.
  */
-export interface StopOption { key: string; label: string; reason: string | null; effect: string; act: StopAct; why?: string | null; recommended?: boolean; tag?: { text: string; basis: string } | null }
+export interface StopOption {
+  key: string; label: string;
+  /** `[2026-10-21 사용자 결정 — 이유 · 고르면은 필요한 것만]` The one fact this question tells the options apart by (distance · that day's hours · a taxi's time and fare), shown without a lead word. */
+  fact?: string | null;
+  /** 「이유:」 — only where the option is another kind than asked (a similar experience, a meal place, a meal at the stay, the customer's taste), or the server's own (interpretation). */
+  reason: string | null;
+  /** 「고르면:」 — only where the label does not say what happens (empty = no line). */
+  effect: string;
+  act: StopAct; why?: string | null; recommended?: boolean; tag?: { text: string; basis: string } | null;
+}
 export interface StopAsk { need: StopNeed; question: string; options: StopOption[] }
 
 /** As many alternatives as the card offers (A · B · C). */
@@ -54,12 +63,45 @@ function dayText(date: string, language: Language): string {
   return `${date.slice(5, 7)}.${date.slice(8, 10)}(${weekday})`;
 }
 
-/** Why a candidate: the server's own reason, how far it is, and its opening-hours check at the stop's time — what the server said, joined (none when it said none). */
-function candidateReason(candidate: PlanCandidate, t: Translate): string | null {
-  const parts = [candidate.reason ?? null,
-    candidate.distance ? t(`${candidate.distance.from}에서 ${candidate.distance.km.toFixed(1)}km`, `${candidate.distance.km.toFixed(1)} km from ${candidate.distance.from}`) : null,
-    candidate.checks.find((row) => row.kind === "hours")?.text ?? null].filter((part): part is string => Boolean(part));
-  return parts.length ? parts.join(" · ") : null;
+/**
+ * ★`[2026-10-21 사용자 결정 — 이유 · 고르면은 필요한 것만]` (목업 `mockups/tripilot-plan-check-option-lines.html`) The server's reason sentence says the step, the distance, the hours and the time
+ * to spare in one sentence — values that come on their own too (the tag, `distance`, the hours check, the legs). The question box shows them as such, not the sentence:
+ * one fact line, the one this question tells the options apart by — that day's hours first for a stop closed that day, the distance otherwise (no hours for a stay).
+ */
+function candidateFact(candidate: PlanCandidate, kind: ReturnType<typeof stopKindOf>, t: Translate): string | null {
+  const distance = candidate.distance ? t(`${candidate.distance.from}에서 ${candidate.distance.km.toFixed(1)}km`, `${candidate.distance.km.toFixed(1)} km from ${candidate.distance.from}`) : null;
+  const stay = candidate.basis === "lodging" || candidate.basis === "lodging_meal";
+  const row = stay ? undefined : candidate.checks.find((check) => check.kind === "hours");
+  const hours = !row ? null : row.result === "unknown" ? t("운영시간을 몰라요", "Opening hours unknown") : row.text || null;
+  const parts = kind === "closed" ? [hours, distance] : [distance, hours];
+  const line = parts.filter((part): part is string => Boolean(part)).join(" · ");
+  return line || null;
+}
+
+/** The meal of a stop's time (the server's meal windows, `candidates.py` 「끼니 시간의 시장」), or null outside them. */
+function mealOf(start: string | null | undefined, t: Translate): string | null {
+  const at = start && /^\d{2}:\d{2}$/.test(start) ? Number(start.slice(0, 2)) * 60 + Number(start.slice(3)) : null;
+  if (at === null) return null;
+  return at >= 420 && at <= 600 ? t("아침", "Breakfast") : at >= 690 && at <= 870 ? t("점심", "Lunch") : at >= 1050 && at <= 1230 ? t("저녁", "Dinner") : null;
+}
+
+const EXPERIENCES: Record<string, [string, string]> = { indoor_exhibit: ["실내 전시를 하는", "an indoor exhibition"], outdoor_walk: ["야외에서 걷고 둘러보는", "an outdoor walk"] };
+
+/** 「이유:」 for an alternative of another kind than asked — told from its step (`basis`), in the app's own words; none for the same kind (its tag says it). */
+function candidateReason(candidate: PlanCandidate, item: PlanItem, t: Translate): string | null {
+  if (candidate.basis === "similar_experience") {
+    const group = candidate.experience ? EXPERIENCES[candidate.experience] : undefined;
+    return group ? t(`같은 종류는 가까이에 없어 ${group[0]} 곳이에요`, `Nothing of the same kind is near, so a place for ${group[1]}`)
+      : t("같은 종류는 가까이에 없어 비슷한 경험을 하는 곳이에요", "Nothing of the same kind is near, so a place for a similar experience");
+  }
+  if (candidate.basis === "meal_inferred") {
+    const meal = mealOf(item.startsAt, t);
+    return meal ? t(`${meal} 시간이고 그 시간에 식사 일정이 따로 없어 식당도 보여 드려요`, `It is ${meal.toLowerCase()} time with no meal planned then, so places to eat are shown too`)
+      : t("식사 시간이고 그 시간에 식사 일정이 따로 없어 식당도 보여 드려요", "It is a meal time with no meal planned then, so places to eat are shown too");
+  }
+  if (candidate.basis === "lodging_meal") return t("이 숙소 안에서 식사하는 경우예요 · 숙소 안 식당이 있는지는 확인하지 못했어요", "A meal at this stay · whether it has a restaurant was not checked");
+  if (candidate.basis === "taste") return candidate.reason ?? null;          // what of the customer's taste it follows — the server's own words
+  return null;
 }
 
 /** The stops either side on the same day that have a place (the plan as the server has it, not only what is drawn). */
@@ -71,11 +113,14 @@ function neighbours(view: PlanCheckView, item: PlanItem): PlanItem[] {
 
 export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: readonly PlanCandidate[], t: Translate, language: Language): StopAsk {
   const kind = stopKindOf(item);
-  const changed = t("바뀐 장소와 앞뒤 이동을 다시 확인해요", "Checking the new place and the moves either side");
+  // A pick that makes the stop a meal says so (a meal place for a market, a meal at the stay); a place for a place says nothing more than its label.
+  const toMeal = t("식사 일정으로 넣고 앞뒤 이동을 다시 확인해요", "Puts it in as a meal and checks the moves either side again");
   const picks: StopOption[] = candidates.slice(0, STOP_CANDIDATES).map((candidate) => ({
     key: candidate.id,
-    label: kind === "unfound" ? t(`${quotedRo(candidate.name)} 정하기`, `Choose “${candidate.name}”`) : t(`${quotedRo(candidate.name)} 바꾸기`, `Change to “${candidate.name}”`),
-    reason: candidateReason(candidate, t), effect: changed, act: { type: "pick", candidate },
+    label: candidate.basis === "lodging_meal" ? t(`「${candidate.name}」에서 식사하기`, `Eat at “${candidate.name}”`)
+      : kind === "unfound" ? t(`${quotedRo(candidate.name)} 정하기`, `Choose “${candidate.name}”`) : t(`${quotedRo(candidate.name)} 바꾸기`, `Change to “${candidate.name}”`),
+    fact: candidateFact(candidate, kind, t), reason: candidateReason(candidate, item, t),
+    effect: candidate.basis === "lodging_meal" || candidate.basis === "meal_inferred" ? toMeal : "", act: { type: "pick", candidate },
     tag: candidate.basis && basisTag(candidate.basis, t) ? { text: basisTag(candidate.basis, t)!, basis: candidate.basis } : null,
   }));
   if (kind === "unfound") {
@@ -91,9 +136,9 @@ export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: r
     const place = item.place || item.title;
     const near = item.coordinates ? neighbours(plan, item).map((entry) => distanceM(item.coordinates!, entry.coordinates!)) : [];
     const keep: StopOption[] = item.coordinates ? [{
-      key: "confirm", label: t(`「${place}」 그대로`, `Keep “${place}”`),
-      reason: near.length ? t(`앞뒤 일정에서 평균 ${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)}m`, `${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)} m from the stops either side on average`) : null,
-      effect: t(`${quotedRo(place)} 확정하고 다시 확인해요`, `Settles on “${place}” and checks again`), act: { type: "confirm" },
+      key: "confirm", label: t(`「${place}」 그대로`, `Keep “${place}”`), reason: null,
+      fact: near.length ? t(`앞뒤 일정에서 평균 ${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)}m`, `${Math.round(near.reduce((sum, value) => sum + value, 0) / near.length)} m from the stops either side on average`) : null,
+      effect: "", act: { type: "confirm" },
     }] : [];
     const question = item.placeChoices && item.placeChoices > 1
       ? t(`${quotedEun(item.title)} 맞는 곳이 ${item.placeChoices}곳이라 가까운 ${quotedRo(place)} 임시로 골랐어요. 어디로 갈까요?`, `${item.placeChoices} places match “${item.title}”, so the nearest, “${place}”, was taken for now. Where should we go?`)
@@ -128,21 +173,39 @@ export function pickMyselfAnswer(ask: PlanAsk): { option: string; search: string
  * minutes, time to spare and fare as the server gave them; greyed with the server's reason when it does not reach), and the stop started later as the server works it out
  * (`autofix {item_id, dry_run}` — `later`, none when it cannot). 「직접 수정」 opens the stop's own editor (its start and end).
  */
-export function arrivalQuestion(item: PlanItem, move: PlanMove, from: PlanItem | null, ways: MoveOptions | null, later: { start: string; end: string } | null, t: Translate): StopAsk {
+export interface LaterStart {
+  start: string; end: string;
+  /** `[2026-10-21 사용자 결정]` The stop after it on that day in the server's preview (`autofix {item_id, dry_run}` moves only this stop): how much it would overlap it, or be late to it. Absent when unknown. */
+  next?: { title: string; start: string | null; overlapMin: number; lateMin: number } | null;
+}
+
+/** 「고르면:」 of 「늦추기」 — its new times and what that does to the stop after it, as the server's preview has it. */
+function laterEffect(later: LaterStart, t: Translate): string {
+  const span = `${later.start}${later.end ? `–${later.end}` : ""}`;
+  if (later.next === undefined) return t("시작 시각을 바꾸고 뒤 일정과 이동을 다시 확인해요", "Changes the start and checks the stops and moves after it again");
+  const next = later.next;
+  if (!next || (next.overlapMin <= 0 && next.lateMin <= 0)) return t(`${span} · 뒤 일정은 그대로 맞아요`, `${span} · the stops after it still fit`);
+  const when = next.start ? `(${next.start})` : "";
+  return next.overlapMin > 0
+    ? t(`${span} · 다음 「${next.title}」${when}과 ${next.overlapMin}분 겹쳐요 — 그 일정을 이어서 물어요`, `${span} · overlaps the next stop “${next.title}”${when} by ${next.overlapMin} min — it is asked next`)
+    : t(`${span} · 다음 「${next.title}」${when}에 ${next.lateMin}분 늦게 닿아요 — 그 일정을 이어서 물어요`, `${span} · reaches the next stop “${next.title}”${when} ${next.lateMin} min late — it is asked next`);
+}
+
+export function arrivalQuestion(item: PlanItem, move: PlanMove, from: PlanItem | null, ways: MoveOptions | null, later: LaterStart | null, t: Translate): StopAsk {
   const late = Math.max(0, -(move.slackMin ?? 0));
   const leg = `${from?.title ?? ""} → ${item.title}`;
   const taxi = ways?.options.find((option) => option.mode === "taxi");
   const options: StopOption[] = [];
   if (taxi) {
     const spare = taxi.slackMin === null ? null : taxi.slackMin < 0 ? t(`일정보다 ${-taxi.slackMin}분 늦어요`, `${-taxi.slackMin} min late`) : t(`${taxi.slackMin}분 여유`, `${taxi.slackMin} min to spare`);
-    options.push({ key: "taxi", label: t("택시로 바꾸기", "Take a taxi"),
-      reason: [taxi.minutes !== null ? t(`택시 ${taxi.minutes}분`, `Taxi ${taxi.minutes} min`) : null, spare, fareText(taxi, t)].filter(Boolean).join(" · "),
-      effect: t("이 구간만 다시 계산해요", "Only this leg is counted again"), act: { type: "taxi", moveId: move.id },
+    options.push({ key: "taxi", label: t("택시로 바꾸기", "Take a taxi"), reason: null,
+      fact: [taxi.minutes !== null ? t(`택시 ${taxi.minutes}분`, `Taxi ${taxi.minutes} min`) : null, spare, fareText(taxi, t)].filter(Boolean).join(" · "),
+      effect: "", act: { type: "taxi", moveId: move.id },
       // The reason a way cannot be picked, as the travel mode box says it (`move-mode.tsx`).
       why: taxi.fits === true ? null : taxi.whyNot ?? (taxi.fits === null ? t("계산이 오래 걸려 확인하지 못했어요", "The server could not finish counting this one")
         : t("다음 일정 시작 안에 닿지 않아요", "It does not reach before the next stop starts")) });
   }
   if (later) options.push({ key: "later", label: t(`「${item.title}」 ${later.start} 시작으로 늦추기`, `Start “${item.title}” at ${later.start}`), reason: null,
-    effect: t("시작 시각을 바꾸고 뒤 일정과 이동을 다시 확인해요", "Changes the start and checks the stops and moves after it again"), act: { type: "later", start: later.start, end: later.end } });
+    effect: laterEffect(later, t), act: { type: "later", start: later.start, end: later.end } });
   return { need: "fix", options, question: t(`「${leg}」 이동이 일정보다 ${late}분 늦어요. 어떻게 할까요?`, `The way “${leg}” arrives ${late} min late. What should we do?`) };
 }

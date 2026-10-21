@@ -37,7 +37,9 @@ test("확인이 필요한 카드에서 멈춰 안내 · 질문을 보이고, 나
   await expect(banner(page)).toContainText("고치면 다음 일정을 이어서 확인해요 · 남은 일정 1곳");
   await expect(question(page)).toContainText("「올리브영」은 맞는 곳이 3곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요. 어디로 갈까요?");
   await expect(question(page).getByRole("button", { name: /「올리브영 인사동점」 그대로/ })).toBeVisible();
-  await expect(question(page).getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).toContainText("이유:");
+  // `[2026-10-21 사용자 결정]` 같은 이름의 다른 지점: 사실 한 줄과 길 줄만 — 「이유:」 · 「고르면:」 없음
+  await expect(question(page).getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).not.toContainText("이유:");
+  await expect(question(page).getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).not.toContainText("고르면:");
   await expect(question(page).getByRole("button", { name: "직접 수정" })).toBeVisible();
   await expect(question(page).getByRole("button", { name: "삭제", exact: true })).toBeVisible();       // `[2026-10-20 사용자 재결정]` 질문 칸에도 삭제(한 번 묻고)
   // 멈춘 카드만 또렷하고 나머지(카드 · 이동 · 레일)는 흐리다. 확인 전 카드는 점선.
@@ -111,6 +113,8 @@ test("`[2026-10-20 이동 확인 C안]` 오는 길이 늦을 때 「늦추기」
   const later = question(page).getByRole("button", { name: /시작으로 늦추기/ });
   await expect(later).toBeVisible({ timeout: 15_000 });
   await expect(later).toContainText("「올리브영 인사동점」 11:40 시작으로 늦추기");          // 고른 곳이 카드 이름이 된다
+  // `[2026-10-21 사용자 결정]` 고르면: 미리 보기에서 뒤 일정이 어떻게 되는지(모방 서버의 미리 보기는 뒤 일정을 그대로 둔다)
+  await expect(later).toContainText(/고르면: 11:40–\d{2}:\d{2} · 뒤 일정은 그대로 맞아요/);
   await later.click();
   await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 15_000 });
   const edits = await server.received("POST", "/edits");
@@ -165,7 +169,7 @@ test("검사가 끝난 접수를 다시 열면 멈추지 않고 결과 화면을
   await expect(card(page, "올리브영")).toContainText("확인 필요");
   await expect(asked(page, "올리브영")).toContainText("「올리브영」은 맞는 곳이 3곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요. 어디로 갈까요?");
   await expect(asked(page, "올리브영").getByRole("button", { name: /「올리브영 인사동점」 그대로/ })).toBeVisible();
-  await expect(asked(page, "올리브영").getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).toContainText("이유:");
+  await expect(asked(page, "올리브영").getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).not.toContainText("고르면:");
   await expect(asked(page, "올리브영").getByRole("button", { name: "직접 수정" })).toBeVisible();
   await expect(asked(page, "올리브영").getByRole("button", { name: "삭제", exact: true })).toBeVisible();
   await expect(question(page)).toHaveCount(1);                                                       // 확인이 필요한 카드에만
@@ -330,9 +334,13 @@ test("질문 칸의 후보 선택지에는 바꾸기 화면과 같은 꼬리표(
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
   await expect(page.locator('main[data-stage="done"]')).toBeVisible({ timeout: 15_000 });
-  const options = asked(page, "올리브영").getByRole("button", { name: /바꾸기/ });
+  const options = asked(page, "올리브영").getByRole("button", { name: /바꾸기|식사하기/ });          // 숙소 안 식사는 「「X」에서 식사하기」
   await expect(options.first()).toBeVisible({ timeout: 15_000 });
   await expect(options.nth(0)).toContainText("숙소");
   await expect(options.nth(0)).not.toContainText("숙소 안 식사");
   await expect(options.nth(1)).toContainText("숙소 안 식사");
+  await expect(options.nth(1)).toContainText("에서 식사하기");
+  await expect(options.nth(1)).toContainText("이유: 이 숙소 안에서 식사하는 경우예요");
+  await expect(options.nth(1)).toContainText("고르면: 식사 일정으로 넣고 앞뒤 이동을 다시 확인해요");
+  await expect(options.nth(0)).not.toContainText("고르면:");
 });
