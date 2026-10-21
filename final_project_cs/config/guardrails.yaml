@@ -893,7 +893,10 @@ travel:
       #   (`instances/activity/alternative_order.py`). 기본은 끔 — 프롬프트 허용 목록 · 모델 인자(코어)가 붙은 뒤 shadow → llm 으로.
       # ★`[2026-10-13 코어 회신 11번]` **`shadow`** — 코어가 허용 목록(`ALLOWED_PROMPT_KEYS`)과 판정 어댑터 모델 인자(`judge(model=)`)를
       #   붙였다. 고객 순서는 코드 그대로, LLM 순서는 뒤에서 구해 로그에만 남긴다. 모델 선택(gpt-6-luna)은 섀도 기록이 쌓인 뒤 정한다.
-      alternative_order: shadow
+      # ★`[2026-10-21 사용자 결정]` **`llm`** — 고객 화면 순서를 LLM 순서로(두 경로 — 고객 요청 · 감시). 지시문 v5 + 이유 지킴이.
+      #   근거: holdout-5 고객 요청 38장 · 감시 holdout-2 · 3 의 20장을 v5 로 — 위험 0 · 오류 0 · 이유 전부 사람 판정 심각 0 · 경미 ≤ 1.2%.
+      #   실패 · 시간 초과(`alternative_order_timeout_seconds`) · 예산 초과 · 쓸 수 없는 답이면 코드 순서. 되돌리는 조건은 D-CS-015 「대체 후보 순서 llm」.
+      alternative_order: llm
     # ★`[2026-10-12]` 판정 LLM 호출 상한(구현 계획 4.6) — 일 · 월. 넘으면 그 판정은 부르지 않고 `skipped`(budget_exhausted)로 남긴다.
     #   웹 검색(실시간 운영)은 따로 센다 — 호출당 약 $0.032(text 는 약 $0.0003, 10-06 측정 · 구현 계획 §1.2).
     #   text 2,000/일 ≈ $0.6 · 30,000/월 ≈ $9, web 50/일 ≈ $1.6 · 1,000/월 ≈ $32 (추정 상한).

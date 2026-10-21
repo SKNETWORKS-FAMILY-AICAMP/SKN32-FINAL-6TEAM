@@ -345,7 +345,7 @@ class ReplacementMixin:
         rows = {str(c.get("contentid")): c for c in candidates}
         classes = {k: str(v.get("lclsSystm3") or v.get("lclsSystm2") or "") for k, v in rows.items()}
         # ★`[2026-10-20 사용자 결정]` 분류 이름(class_name)도 싣는다 — 지시문 v3 와 짝(holdout-2: 골라야 하는 사례 적중
-        #   65.0% → 83.3%, 경미 지어냄 29.4% → 7.8%). 고객 요청 경로가 아직 기준 미달이라 kind_modes 는 shadow 그대로다.
+        #   65.0% → 83.3%, 경미 지어냄 29.4% → 7.8%). `[2026-10-21 사용자 결정]` 지시문 v5 로 두 경로 통과 → kind_modes 는 llm.
         body = alternative_order.payload(place.get("name") if isinstance(place, dict) else None, pool, preference, classes,
                                          with_class_name=True)
         from app.core.settings import get_guardrails

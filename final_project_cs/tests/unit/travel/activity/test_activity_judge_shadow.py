@@ -213,14 +213,15 @@ def _with_kind_modes(monkeypatch, **modes):
 
 
 def test_the_configured_default_keeps_todays_shadows():
-    """기본 설정 — 휴무 · 실내외 · 재난 · 실시간 운영 · 대체 후보 순서는 섀도, 운영시간은 부르지 않는다.
-    ★`[2026-10-13 코어 회신 9 · 11번]` 실시간 운영(웹)을 `llm` → `shadow` 로 낮췄다(정확도 미측정 · 고객 대기 p95 40.7초)."""
+    """기본 설정 — 휴무 · 실내외 · 재난 · 실시간 운영은 섀도, 운영시간은 부르지 않는다, 대체 후보 순서는 `llm`.
+    ★`[2026-10-13 코어 회신 9 · 11번]` 실시간 운영(웹)을 `llm` → `shadow` 로 낮췄다(정확도 미측정 · 고객 대기 p95 40.7초).
+    ★`[2026-10-21 사용자 결정]` 대체 후보 순서를 `shadow` → `llm` 으로 올렸다(D-CS-015 「대체 후보 순서 llm」 · holdout-5)."""
     from app.domains.travel_ops.instances.activity.judge.modes import kind_mode
 
     modes = get_guardrails().get("travel.activity_judge.kind_modes")
     assert [kind_mode(k, modes) for k in ("closure", "weather_sensitive", "disaster_effect")] == ["shadow"] * 3
     assert kind_mode("operating_hours", modes) == "rule"
-    assert kind_mode("live_status", modes) == "shadow" and kind_mode("alternative_order", modes) == "shadow"
+    assert kind_mode("live_status", modes) == "shadow" and kind_mode("alternative_order", modes) == "llm"
 
 
 def test_a_kind_set_to_rule_is_not_called_and_the_others_still_are(monkeypatch):
