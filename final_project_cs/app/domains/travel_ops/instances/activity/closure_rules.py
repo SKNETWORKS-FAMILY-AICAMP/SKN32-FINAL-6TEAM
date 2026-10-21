@@ -9,7 +9,8 @@
 ★원칙
   1. 원문을 **절**로 나눈다(`/` · 줄바꿈 · `<br>` · 괄호 · `※`). 절마다 판정하고 합친다 —
      하나라도 휴무면 휴무, 아니면 하나라도 모름이면 모름, 다 아니면 아님.
-  2. 한 절 안의 패턴(요일 · 몇째 주 · 날짜 · 명절 · 공휴일)은 **모두** 본다. 하나라도 맞으면 휴무다.
+  2. 한 절 안의 패턴(요일 · 몇째 주 · 날짜 · 날짜 범위 · 명절 · 공휴일)은 **모두** 본다. 하나라도 맞으면 휴무다.
+     날짜 범위(「12월 29일~1월 2일」)는 양 끝만이 아니라 **사이 날짜까지** 휴무로 본다(해 넘김 포함) — `[2026-10-21]`
   3. **못 읽은 조각이 남으면 그 절은 모름**이다 — 전처럼 「아님」으로 확정하지 않는다(CLAUDE.md §0).
   4. 공휴일이 걸린 조건은 `holiday(날짜)` 로 묻는다(`read.holiday` — 한국천문연구원 특일). 모르면(`None`) 모름이다.
      ★예외 — 「매주 X요일 (단, 공휴일이면 개방)」은 요일이 맞고 공휴일 여부를 모르면 **휴무**로 두고 단서를 단다
@@ -56,6 +57,11 @@ _ORD_TOKEN = rf"(?:{_ORD_WORD}|{_ORD_NUM})"
 _NTH = re.compile(rf"((?:{_ORD_TOKEN})(?:\s*(?:주차|주|째))?(?:\s*[·,/및]\s*(?:{_ORD_TOKEN})(?:\s*(?:주차|주|째))?)*)"
                   rf"\s*(?:주차|주)?\s*([월화수목금토일])요일")
 _DATE = re.compile(r"(\d{1,2})\s*월\s*(\d{1,2})\s*일")
+#: 날짜 범위 — 「12월 29일~1월 2일」 · 「12월 29일 - 31일」 · 「12월 29일부터 1월 2일까지」. 끝의 달을 빼면 시작과 같은 달이다.
+#: ★양 끝 날짜만 맞춰 보면 사이 날짜(12-30 · 12-31 · 1-1)를 「해당 없음」으로 읽는다(2026-10-21 x600 서버 자료 1건). 해를 넘길 수 있다.
+_DATE_RANGE = re.compile(r"(\d{1,2})\s*월\s*(\d{1,2})\s*일\s*(?:부터|[~\-–～])\s*(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일(?:\s*까지)?")
+#: 끝에 달만 있는 범위 — 「12월 29일~1월 초」. 끝 날짜를 모르니 어느 날이 사이인지 정하지 못한다(모름).
+_DATE_RANGE_OPEN_END = re.compile(r"\d{1,2}\s*월\s*\d{1,2}\s*일\s*(?:부터|[~\-–～])\s*\d{1,2}\s*월(?!\s*\d)")
 _MONTH_LIST = re.compile(r"(\d{1,2})\s*월")
 _HOLIDAY = re.compile(r"공휴일|국경일|대체\s*휴일")
 _FESTIVE = re.compile(r"명절|설날|설|추석|구정")
@@ -152,6 +158,12 @@ def _nth_of(d: date) -> tuple[int, bool]:
     return (d.day - 1) // 7 + 1, (d + timedelta(days=7)).month != d.month
 
 
+def _in_date_range(start: tuple[int, int], end: tuple[int, int], day: date) -> bool:
+    """(월, 일) 범위에 그 날이 드는가 — 양 끝 포함. 끝이 시작보다 앞이면 해를 넘기는 범위(12월 29일~1월 2일)다."""
+    today = (day.month, day.day)
+    return start <= today <= end if start <= end else (today >= start or today <= end)
+
+
 def _weekday_days(c: str) -> set[str]:
     found = days_in(c)
     if not found and ("매주" in c or "휴" in c):
@@ -178,6 +190,15 @@ def _clause(c: str, d: date, holiday: HolidayLookup) -> tuple[bool | None, str]:
         hit = in_month and d.weekday() == wd and any((w == -1 and last) or w == n for w in wanted)
         verdicts.append((hit, "nth_weekday"))
         rest = rest.replace(m.group(0), " ")
+
+    for m in _DATE_RANGE.finditer(rest):
+        start = (int(m.group(1)), int(m.group(2)))
+        end = (int(m.group(3) or m.group(1)), int(m.group(4)))
+        verdicts.append((_in_date_range(start, end, d), "date_range"))
+    rest = _DATE_RANGE.sub(" ", rest)
+    if _DATE_RANGE_OPEN_END.search(rest):
+        verdicts.append((None, "date_range_open_end"))
+        rest = _DATE_RANGE_OPEN_END.sub(" ", rest)
 
     for m in _DATE.finditer(rest):
         verdicts.append((int(m.group(1)) == d.month and int(m.group(2)) == d.day, "date"))

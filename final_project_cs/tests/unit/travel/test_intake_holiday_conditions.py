@@ -133,10 +133,23 @@ def test_only_conditions_settled_as_not_applying_are_dropped():
     assert chuseok.conditions == list(texts)
 
 
-def test_a_date_range_is_kept_because_the_rule_reads_only_its_two_ends():
-    """「12월 29일~1월 2일」 — 활동 팀 규칙은 양 끝 날짜만 맞춰 12-31 을 「해당 없음」으로 읽는다. 헛걸음 쪽으로 틀리지 않게 빼지 않는다."""
-    facts, closed = _review(_Conn(conditions=("12월 29일~1월 2일",)), datetime(2026, 12, 31, 10, 0, tzinfo=KST))
-    assert facts.conditions == ["12월 29일~1월 2일"] and closed["result"] == "warn"
+def test_a_date_range_keeps_the_condition_on_every_day_inside_it_and_drops_it_outside():
+    """「12월 29일~1월 2일」(x600 서버 자료 1건) — 휴무 규칙이 사이 날짜까지 읽으므로(2026-10-21 고침) 코어가 범위를 따로 빼 두지 않는다.
+    양 끝과 사이 날짜(12-30 · 12-31 · 1-1)는 휴무라 「확인해 주세요」로 남고, 범위 밖은 해당 없음으로 빠진다."""
+    text = "12월 29일~1월 2일"
+    for day in (date(2026, 12, 29), date(2026, 12, 30), date(2026, 12, 31), date(2027, 1, 1), date(2027, 1, 2)):
+        facts, closed = _review(_Conn(conditions=(text,)), datetime(day.year, day.month, day.day, 10, 0, tzinfo=KST))
+        assert facts.conditions == [text] and closed["result"] == "warn", day
+    for day in (date(2026, 12, 28), date(2027, 1, 3), date(2026, 10, 28)):
+        facts, closed = _review(_Conn(conditions=(text,)), datetime(day.year, day.month, day.day, 10, 0, tzinfo=KST))
+        assert facts.conditions == [], day
+
+
+def test_a_date_range_whose_end_is_only_a_month_is_kept_because_the_rule_cannot_place_it():
+    """「12월 29일~1월 초」 — 끝 날짜를 모르면 규칙이 모름으로 읽고, 코어는 빼지 않는다."""
+    text = "12월 29일~1월 초"
+    facts, closed = _review(_Conn(conditions=(text,)), datetime(2026, 12, 31, 10, 0, tzinfo=KST))
+    assert facts.conditions == [text] and closed["result"] == "warn"
 
 
 def test_the_calendar_is_not_read_when_the_rule_does_not_ask():
