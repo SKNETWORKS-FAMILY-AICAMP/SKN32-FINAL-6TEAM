@@ -56,6 +56,17 @@ def cases() -> list[dict[str, Any]]:
         ("other_day", "오늘 점심은 아이 동반이 꼭 돼야 하고, 다음 날 점심은 할랄이어야 해요.", [("lunch", "kids", True)]),
         ("other_day", "2일차 점심은 꼭 할랄로 부탁해요. 1일차 저녁은 채식 메뉴가 있으면 좋겠고요.", [("dinner", "vegetarian", False)]),
         ("other_day", "첫째 날은 조건 없고, 그다음 날 점심 때 아이들이 합류해서 아이 입장이 되는 곳이어야 합니다.", []),
+        # `[2026-10-21]` 강도 말 없이 사실만 말한 동반 · 결제 · 종교 조건을 선호로 낮추던 문제(독립 v2 16/210) — 개발 자료로만 확인한다.
+        #   독립 v1 · v2 문장과 겹치지 않게 새로 썼다. 대안을 함께 말한 반례(선호)도 같이 둬 과하게 필수로 올리는지 본다
+        ("fact_required", "저녁 자리엔 초등학생 딸도 앉아요.", [("dinner", "kids", True)]),
+        ("fact_required", "네 살 조카를 하루 종일 맡고 있어요.", [("lunch", "kids", True), ("dinner", "kids", True)]),
+        ("fact_required", "점심 일행 중에 갓난아기가 하나 있습니다.", [("lunch", "kids", True)]),
+        ("fact_required", "지갑을 숙소에 두고 와서 오늘은 휴대폰 카드 결제만 가능해요.", [("lunch", "card", True), ("dinner", "card", True)]),
+        ("fact_required", "엄마가 불교 신자라 고기를 입에 안 대세요. 저녁은 엄마도 같이 드세요.", [("dinner", "vegetarian", True)]),
+        ("fact_preference", "저녁엔 아들도 올지 몰라요. 못 들어가면 아들은 호텔에서 룸서비스 먹으면 돼요.", [("dinner", "kids", False)]),
+        ("fact_preference", "점심에 동생네 아이가 올 수도 있는데, 안 되면 동생이 근처 카페에서 기다린대요.", [("lunch", "kids", False)]),
+        ("fact_preference", "주로 카드 쓰는데 비상용 현금도 좀 있어요. 두 끼 다요.", [("lunch", "card", False), ("dinner", "card", False)]),
+        ("fact_none", "아이는 오늘 유치원 소풍이라 저희 둘만 먹어요.", []),
     ]
     return build(rows)
 
