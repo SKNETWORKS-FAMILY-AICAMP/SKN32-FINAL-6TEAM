@@ -1,11 +1,11 @@
 "use client";
 
-import { stopDisplayName } from "./stop-display";
+import { stopDisplayName, stopPlaceNote } from "./stop-display";
 
 import { useContext, useEffect, useRef, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { ArrowLeft, MessageCircle, Pencil } from "lucide-react";
+import { ArrowLeft, MapPin, MessageCircle, Pencil } from "lucide-react";
 import { HeaderSlot } from "@/components/layout/device-frame";
 import { safePhotoUrl } from "@/features/plan-check/from-review";
 import pc from "@/features/plan-check/plan-check.module.css";
@@ -54,7 +54,7 @@ export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, on
   const index = list.indexOf(stop);
   return <div className={styles.detail}>
     <header className={pc.changeHead}>
-      <h3 id="trip-detail-title" ref={heading} className={pc.changeTitle} tabIndex={-1}>{t(`${stopDisplayName(stop)} 상세`, `${stopDisplayName(stop)} · details`)}</h3>
+      <h3 id="trip-detail-title" ref={heading} className={pc.changeTitle} tabIndex={-1}>{t(`${stop.title} 상세`, `${stop.title} · details`)}</h3>
       <span className={pc.changePos}>{t(`${dayNumber}일차 · ${index + 1}/${list.length}`, `Day ${dayNumber} · ${index + 1}/${list.length}`)}</span>
     </header>
     <div className={styles.detailBody}>
@@ -67,7 +67,7 @@ export function TripDetail({ trip, stopId, dayNumber, onStop, onAsk, askBusy, on
         })}
       </Carousel>
       {list.length > 1 && <div className={pc.dots} role="group" aria-label={t("일정 고르기", "Choose a stop")}>{list.map((entry, at) =>
-        <button key={entry.id} type="button" aria-pressed={at === index} aria-label={`${at + 1}. ${stopDisplayName(entry)}`} onClick={() => onStop(entry.id)}><span aria-hidden="true" /></button>)}</div>}
+        <button key={entry.id} type="button" aria-pressed={at === index} aria-label={`${at + 1}. ${entry.title}`} onClick={() => onStop(entry.id)}><span aria-hidden="true" /></button>)}</div>}
       <Photos stop={stop} onSheetFull={onSheetFull} />
     </div>
   </div>;
@@ -112,6 +112,7 @@ function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy, onEdit, ask
   const t = useT();
   const info = stop.placeInfo;
   const where = [info?.category, info?.address].filter(Boolean).join(" · ");
+  const place = stopPlaceNote(stop);
   const maps = placeLinks(stop);
   return <article className={pc.changeCard} data-active={active || undefined} data-card-id={stop.id} aria-labelledby={`trip-detail-card-${stop.id}`}>
     <div className={styles.detailChips}>
@@ -122,9 +123,11 @@ function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy, onEdit, ask
       {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
       {/* `[2026-10-21 사용자 지시 — ST4F-704]` 이 줄 오른쪽 끝, 「전체」 일차 칩 모양 — 수정 모드를 이 일정의 ✎ 자리로 연다 */}
       {onEdit && <button type="button" className={`${pc.dayChip} ${styles.detailEdit}`} onClick={() => onEdit("plain")}
-        aria-label={t(`${stopDisplayName(stop)} 일정 수정`, `Edit ${stopDisplayName(stop)}`)}><Pencil size={14} strokeWidth={1.8} aria-hidden="true" />{t("일정 수정", "Edit itinerary")}</button>}
+        aria-label={t(`${stop.title} 일정 수정`, `Edit ${stop.title}`)}><Pencil size={14} strokeWidth={1.8} aria-hidden="true" />{t("일정 수정", "Edit itinerary")}</button>}
     </div>
-    <div className={pc.nameRow}><h4 id={`trip-detail-card-${stop.id}`} className={pc.changeName}>{stopDisplayName(stop)}</h4>{info?.sourceNote && <span className={pc.sourceTag}>{info.sourceNote}</span>}</div>
+    <div className={pc.nameRow}><h4 id={`trip-detail-card-${stop.id}`} className={pc.changeName}>{stop.title}</h4>{info?.sourceNote && <span className={pc.sourceTag}>{info.sourceNote}</span>}</div>
+    {/* `[2026-10-21 사용자 결정 C — ST4F-706]` 제목 아래 선택한 장소 이름(제목과 다를 때) — 카드와 같다 */}
+    {place && <p className={`${pc.changeSub} ${styles.detailPlace}`} data-stop-place><MapPin size={14} strokeWidth={1.8} aria-hidden="true" />{place}</p>}
     <p className={pc.changeSub}>{where || t("장소 정보 없음", "No place details")}</p>
     {ask}
     <StopFacts stop={stop} next={next} brief />

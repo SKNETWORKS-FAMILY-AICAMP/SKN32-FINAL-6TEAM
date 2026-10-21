@@ -73,6 +73,8 @@
 .stopFact > svg { justify-self: center; color: var(--color-faint); }
 .stopFact > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .stopFact[data-missing] > span { color: var(--color-faint); }
+/* `[2026-10-21 사용자 결정 C — ST4F-706]` 제목 아래 선택한 장소 이름 — 다른 사실 줄보다 진하게 */
+.stopFact[data-stop-place] > span { color: var(--color-text); font-weight: 650; }
 .stopCard .stopHead .toggleEnd { min-height: 38px; }
 .stopPast { flex: none; margin-top: 8px; }
 .stopBody { padding: 10px 13px 13px; border-top: 1px solid var(--color-divider); }
@@ -248,6 +250,8 @@
 .detailChips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 /* `[2026-10-21 사용자 지시 — ST4F-704]` 상세 카드 「n일차 시각」 줄 오른쪽 끝 ✎ 「일정 수정」 — 여행 화면 위 「전체」 일차 칩 모양(pc.dayChip) 그대로 */
 .detailEdit { margin-left: auto; }
+.detailPlace { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; color: var(--color-text); font-weight: 650; }
+.detailPlace > svg { flex: none; color: var(--color-faint); }
 /* 상세 카드 안 선택 칸(계획 확인 질문 칸 stop-question.module.css 의 .box) — 카드 안쪽 여백에 맞춘 바깥 여백(.box 의 좌우 12px 를 이긴다) */
 .detail .detailAsk { margin: 10px 0 12px; }
 .detail .detailAsk button:disabled { opacity: .55; cursor: not-allowed; }

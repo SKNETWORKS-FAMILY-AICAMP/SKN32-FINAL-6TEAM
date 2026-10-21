@@ -907,3 +907,11 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - `stop-questions.ts`: 후보는 `candidateFact`(사실 한 줄 — 쉬는 날은 영업 먼저, 숙소는 거리만) · `candidateReason`(다른 종류만 — `basis` 로 앱 문장, 비슷한 경험은 `experience` 갈래, 식사 시간 식당은 그 시각의 끼니) · 「고르면」은 식사 일정이 될 때만. 「「X」에서 식사하기」. `StopOption.fact` 새 칸, `effect` 가 빈 문자열이면 「고르면」 줄 없음. 「그대로」 · 택시도 사실 줄로.
 - 늦추기: `use-server-review.ts` `laterStart` 가 `autofix {item_id, dry_run}` 의 `view.review` 에서 다음 일정과 겹치는 분 · 그 구간의 `slack_min` 을 읽어 `LaterStart.next` 로 돌려준다 → `laterEffect` 문장. 미리 보기에 검사가 없으면 옛 문장.
 - `model.ts` `PlanCandidate.experience` · `from-review.ts` 가 서버 `experience` 를 싣는다. 목업: `mockups/tripilot-plan-check-option-lines.html`.
+
+## 2026-10-21 — 여행 화면: 일정 이름은 고객이 쓴 제목, 선택한 장소가 다르면 그 아래 (ST4F-706)
+
+`[2026-10-21 사용자 결정 C]` 10-19 `3f18ae06`(선택 장소 이름 v5b)부터 여행 화면이 일정 제목 대신 장소 이름만 보이던 것을 공유 계획서 계약([공유 계획서의 실제 선택 장소 표시](../../../wiki/external/public-plan-place-display.md))과 같은 규칙으로 맞췄다. 근거 · 다른 안(A 장소만 · B 제목만 · D 장소 + 원문)은 [기존 실패 35건 원인 조사](../../../wiki/records/reports/2026-10-21_웹_화면시험_기존실패35_원인조사.md) 「결정이 필요한 것」.
+- **이름 = 제목**(`stop.title`): 카드 · 「… 상세 보기」 단추 · 지난 일정 줄 · 체크아웃 카드 · 상세 머리 · 상세 카드 이름 · 일정 점 단추 · 「일정 수정」 단추 · 지도 핀 · 「위치 미정」 줄 · 살펴볼 점 줄. 지도 핀용 사본(`mapStopsWithPlaceNames`)은 쓰는 곳이 없어져 뺐다.
+- **장소 줄**(`stop-display.ts` `stopPlaceNote`): 저장된 장소 이름(`items[].place`, 앞뒤 공백 제외)이 제목과 다를 때만 이름 바로 아래 한 줄 — 카드 · 체크아웃 카드는 사실 줄 모양(핀 아이콘, `data-stop-place`), 상세는 이름 아래. 같거나 비면 없다. 카드가 한 줄 길어진다.
+- **장소를 가리키는 문구는 장소 이름 그대로**(`stopDisplayName`): 「…에서 출발」 띠, 사진 제목 · 안내 · 설명. 사진은 그 장소의 사진이다. 채팅 입력칸 안내(위 「채팅 입력칸 안내 문구」)도 그대로.
+- 시험: 단위 `selected-place.test.ts` 5개를 새 규칙으로 바꿨다(제목 + 아래 장소 · 지난 줄은 제목 · 같거나 비면 줄 없음 · 장소 문구 · 이스케이프). 화면 시험 `trip-title` 사진 기대값을 「등록된 사진 · 경복궁」으로. 나머지 이름 시험은 10-19 전 기대값(「경복궁 관람」) 그대로 맞는다.

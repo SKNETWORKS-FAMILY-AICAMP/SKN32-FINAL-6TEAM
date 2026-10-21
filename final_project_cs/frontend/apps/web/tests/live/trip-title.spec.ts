@@ -189,10 +189,11 @@ test("상세 보기의 사진: 일정에 장소 ref(place_ref)가 오면 계획 
   await openTrip(page);
   await page.locator("#stop-button-i-b").click();
   await page.getByRole("button", { name: "경복궁 관람 상세 보기" }).click();
-  const photos = page.getByRole("region", { name: /등록된 사진 · 경복궁 관람/ });
+  // `[2026-10-21 사용자 결정 C — ST4F-706]` 이름은 제목(「경복궁 관람」), 사진은 그 장소(「경복궁」)의 사진이라 장소 이름으로 말한다
+  const photos = page.getByRole("region", { name: /등록된 사진 · 경복궁/ });
   await expect(photos.getByRole("img", { name: "경복궁_1 ⓒ한국관광공사" })).toBeVisible();
   await expect(photos).toContainText("1장");
-  await expect(page.getByRole("button", { name: "시트를 위로 올리면 경복궁 관람 사진 1장 ↑" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "시트를 위로 올리면 경복궁 사진 1장 ↑" })).toBeVisible();
   expect((await server.received("GET", "/places/photos")).map((entry) => entry.query)).toEqual(["?ref=tour%3A126508"]);
   // ref 가 없는 일정(아침 식당)으로 넘기면 부르지 않고 준비 중이라 말한다
   await page.getByRole("group", { name: "일정 고르기" }).getByRole("button", { name: "1. 아침 식당" }).click();
