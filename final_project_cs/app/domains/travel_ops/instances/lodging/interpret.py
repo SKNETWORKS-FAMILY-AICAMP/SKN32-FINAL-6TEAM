@@ -621,6 +621,12 @@ def rule_end_fix(found: Interpretation, spoken: str) -> tuple[Interpretation, bo
     return found.model_copy(update={"check_out": end}), True
 
 
+#: `[2026-10-21 D25]` 달의 초 · 중순 · 하순 · 말(주말 · 말일은 아님)과 날을 정한 말
+_MONTH_PART = re.compile(r"(?:\d{1,2}\s*월|다음\s*달|담달|이번\s*달)\s*(?:의\s*)?(?:초순|중순|하순|초|말)(?!일)(?!\s*(?:쯤\s*)?(?:의\s*|에\s*)?주말)")
+_PART_DAY = re.compile(r"(?<!박)(?<!박\s)(?<!\d)\d{1,2}\s*일(?!\s*(?:간|동안|정도|짜리))|\d{1,2}\s*[/.]\s*\d{1,2}|\d{1,2}\s*월\s*\d{1,2}(?!\d|\s*박)|[일이삼]?십[일이삼사오육칠팔구]?\s*일|"
+                       r"(?:[첫둘셋넷]째|마지막|첫)\s*(?:주\s*)?(?:[월화수목금토일]요일|주말)")
+
+
 def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[str]]:
     """모델 값 가운데 문장에 근거가 약한 것을 비운다(되묻게 된다). (해석, 비운 칸)"""
     if found.task != "search":
@@ -628,6 +634,11 @@ def rule_checks(found: Interpretation, text: str) -> tuple[Interpretation, list[
     cleared, update = [], {}
     quote = found.check_in_text or ""
     if found.check_in is not None and quote and not _DAY_GIVEN.search(quote):
+        update.update(check_in=None, check_out=None)
+        cleared.append("check_in")
+    elif found.check_in is not None and _MONTH_PART.search(text or "") and not _PART_DAY.search(text or ""):
+        # `[2026-10-21 D25]` 「다음 달 말에 2박」 — 날을 정하지 않은 말. 모델이 11/01(말 = 끝을 못 읽음)로 정했다(☆7차 N38-16).
+        #   「12월 중순쯤」은 근거에 날이 없어 이미 되묻는다 — 「다음 달 · 이번 달」도 같게 되묻는다. 「말 주말」은 `rule_weekdays` 가 정한다
         update.update(check_in=None, check_out=None)
         cleared.append("check_in")
     elif found.check_in is not None and re.search(r"오늘|내일|모레", quote) and not _RELATIVE_STAY.search(text or ""):

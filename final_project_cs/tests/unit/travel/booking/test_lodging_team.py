@@ -1838,3 +1838,33 @@ def test_d23_name_lookup_keeps_only_the_same_district_or_the_same_spot():
     result, _, _ = _run(reply, {"read.landmark": nowon, "read.stay_search": _listing([]), "read.stay_google": google, "read.stays_lookup": other},
                         text="다음 달 6일부터 3박 노원구 성인 2명")
     assert "· 럭스 —" not in result.answer, "구글 좌표와 4km 떨어진 같은 이름(노원 럭스)의 구를 쓰지 않는다"
+
+
+def test_d25_month_end_without_a_day_asks_and_lookup_skips_places_dropped_anyway():
+    """`[2026-10-21 D25]` ① 「다음 달 말에 2박」 — 모델이 11/01 로 정했다(☆7차 N38-16). 날을 정하지 않은 말이라 「12월 중순쯤」처럼 되묻는다.
+    ② 위치를 몰라도 어차피 빠질 곳(유형 · 구 · 가격)은 이름으로 찾지 않는다 — ☆7차 N42-24 는 20곳 중 18곳이 그렇게 빠졌는데 20곳을 모두 찾았다."""
+    from datetime import date as day
+
+    from app.domains.travel_ops.instances.lodging.interpret import Interpretation, rule_checks
+
+    month_end = Interpretation(task="search", check_in=day(2026, 11, 1), check_out=day(2026, 11, 3), check_in_text="다음 달", adults=2)
+    assert rule_checks(month_end, "다음 달 말에 송파구 잠실 쪽으로 성인 2명 2박 3일 머물 숙소")[1] == ["check_in"], "「2박 3일」의 3일은 날이 아니다"
+    assert rule_checks(month_end, "다음 달 말에 28일부터 2박 잠실 성인 2명")[1] == [], "날을 말했으면 그대로"
+    assert rule_checks(month_end, "11월 말일에 1박 잠실 성인 2명")[1] == [], "말일은 정해진 날"
+    assert rule_checks(month_end, "다음 달 말 주말 잠실 성인 2명 1박")[1] == [], "말 주말은 rule_weekdays 몫"
+
+    sadang = {"source": "kakao", "found": True, "name": "사당역 2호선", "latitude": 37.47656, "longitude": 126.98156}
+    asked: list[list[str]] = []
+
+    def lookup(arguments):
+        asked.append(list(arguments["names"]))
+        return {"source": "kakao", "stays": {name: [] for name in arguments["names"]}}
+
+    listing = _listing([(1, "에스알호텔", "호텔 · 동작 · 서울", 120000), (2, "로얄모텔", "모텔 · 동작 · 서울", 60000),
+                        (3, "카리스 호텔", "호텔 · 관악 · 서울", 90000), (4, "비싼 호텔", "호텔 · 동작 · 서울", 900000)])
+    google = _google([("에스알호텔", 120000.0, 3, 37.4770, 126.9810), ("코자자 모텔", 50000.0, None, 37.4770, 126.9820),
+                      ("먼 호텔", 80000.0, 3, 35.9676, 126.7369)])
+    reply = {**SEARCH, "keyword": "동작구 사당역", "min_rating": None, "max_price_per_night": 300000}
+    _run(reply, {"read.landmark": sadang, "read.stay_search": listing, "read.stay_google": google, "read.stay_detail": lambda a: None,
+                 "read.stays_lookup": lookup}, text="동작구 사당역 근처 호텔로 다음 달 6일부터 3박, 성인 2명. 역에서 걸어서 3분, 1박 30만 원 이하")
+    assert asked == [["에스알호텔"]], "모텔 · 관악구 · 상한 초과 · 군산(구글 좌표)은 찾지 않는다"

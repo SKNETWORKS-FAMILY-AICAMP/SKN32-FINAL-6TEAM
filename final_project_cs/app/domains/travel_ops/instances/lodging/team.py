@@ -497,6 +497,27 @@ def _listing_reason(stay: dict[str, Any], wants: Wants, seoul: bool, *, anchored
     return stars_reason(wants, stay_stars(description))
 
 
+def _google_skips(stay: dict[str, Any], wants: Wants, anchor: dict[str, Any] | None, *, children: int = 0,
+                  max_price: int | None = None) -> bool:
+    """`[2026-10-21 D25]` 구글 숙소 가운데 위치(구)를 몰라도 `_google_block` 에서 어차피 빠질 곳 — 이름으로 찾지 않는다(카카오 호출 줄이기).
+    `_google_block` 의 규칙 가운데 위치와 상관없는 것(숙박 공유 · 가격 없음 · 링크 없음 · 이용 조건 · 1박 상한 · 이름 유형 · 성급)과
+    기준점에서 `REGION_KM` 넘게 먼 곳만 본다. 구를 몰라 「gu」로 빠져도 빠지는 것은 같다(까닭 이름만 달라질 수 있다)."""
+    hanok = wants.kind == "한옥"
+    if stay.get("type") == "vacation rental" and not (hanok and "한옥" in stay_kinds(None, stay.get("name"))):
+        return True
+    if stay.get("price_per_night") is None or not stay.get("link"):
+        return True
+    if guest_block(stay.get("name"), wants.guest, children=children):
+        return True
+    where = _coords(stay)
+    if anchor and where and _km(anchor["latitude"], anchor["longitude"], *where) > REGION_KM:
+        return True
+    return bool(price_reason(wants, stay["price_per_night"], max_price)
+                or kind_reason(wants, stay_kinds(None, stay.get("name")) or (frozenset({"호텔"}) if stay.get("hotel_class") else frozenset()),
+                               strict=False)
+                or stars_reason(wants, stay_stars(None, stay.get("hotel_class"))))
+
+
 def _restricted_text(guest: Any) -> str:
     """뺀 이용 조건 숙소를 말하는 조각 — 묵을 분을 알면 「묵을 분과 맞지 않는」, 모르면 「…이 붙은」."""
     if not guest.missing():
@@ -790,8 +811,14 @@ class LodgingTeam(ItineraryWork, TravelTeamBase):
         # `[2026-10-18 D22 · 사용자 결정]` 구를 말했으면 구글 숙소의 구도 같은 한 번에 찾는다(구글 목록에는 주소가 없다)
         located_by_name: dict[str, tuple[float, float]] = {}
         gu_by_name: dict[str, str] = {}
-        lookup_names = ([stay["name"] for stay in (listing or {}).get("stays") or [] if stay.get("price_per_night") is not None]
-                        if limit is not None else []) + ([stay["name"] for stay in (google or {}).get("stays") or []] if wants.gu else [])
+        # `[2026-10-21 D25]` 위치를 몰라도 어차피 빠질 곳(목록 칸 · 이름 · 가격으로 빠지는 곳)은 찾지 않는다 — 카카오 호출 줄이기.
+        #   ☆7차 N42-24: 20곳 중 18곳이 유형 · 구 · 지역으로 빠졌는데 20곳 모두 위치를 찾았다. 빼는 규칙 · 결과는 그대로
+        lookup_names = ([stay["name"] for stay in (listing or {}).get("stays") or [] if stay.get("price_per_night") is not None
+                         and not _listing_reason(stay, wants, seoul, anchored=anchor is not None, children=children, max_price=max_price)]
+                        if limit is not None else []) \
+            + ([stay["name"] for stay in (google or {}).get("stays") or []
+                if not _google_skips(stay, wants, anchor, children=children, max_price=max_price)] if wants.gu else [])
+        lookup_names = list(dict.fromkeys(lookup_names))       # 목록 · 구글에 같은 이름이면 한 번만(도구도 합치지만 상한 20 안에 더 넣으려고)
         # `[2026-10-18 D23]` 이름이 같은 다른 곳을 잡지 않게 — 목록 설명의 구 · 구글 좌표를 함께 넘긴다(☆6차 럭스 · 코지스테이)
         hints: dict[str, dict[str, Any]] = {}
         for stay in (listing or {}).get("stays") or []:
