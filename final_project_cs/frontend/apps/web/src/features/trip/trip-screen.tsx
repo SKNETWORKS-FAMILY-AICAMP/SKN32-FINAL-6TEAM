@@ -517,7 +517,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
   const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
     const needsChoice = notice.type === "safety_alert" || notice.type === "proposal_request";
-    const view = () => openCenter(needsChoice ? "warnings" : "notices", needsChoice ? notice : undefined);
+    // `[2026-10-21 사용자 결정 — 문서 기준]` 「알림 보기」는 받은 알림 탭을 연다(DEVELOPMENT.md 「새 알림 막대」). 선택이 필요한 알림은 넘겨서 그 대안 고르기가 위 「답이 필요해요」에 뜬다.
+    const view = () => openCenter("notices", needsChoice ? notice : undefined);
     const toast = noticeToast(notice, trip, targets, t, view);
     if (!centerOpen) showToast(toast);
     else if (needsChoice) { setCenterNotice(notice); setCenterItemId(null); }
