@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { dayTimes, type DayTimes } from "./day-times";
 import type { PlanCheckView, PlanItem } from "./model";
+import { RAIL_PX_PER_MIN } from "./time-rail";
 import { ASSUMED_MINUTES, endRanges, formatHm, holdAtLimit, moveEnd, moveStop, ownRange, parseHm, pushRange, PUSH_DAY_START, SNAP, type Held, type Retime, type TimeRange } from "./time-plan";
 
 type List = "before" | "after";
@@ -54,58 +55,90 @@ export const pushingTexts = (kind: TimeKind, delta: number): readonly [string, s
     ? ["여유를 다 썼어요 · 다음 일정이 밀리고 있어요", "The free time is used up · the next stops are being pushed"]
     : ["여유를 다 썼어요 · 뒤 일정이 밀리고 있어요", "The free time is used up · the stops behind are being pushed"];
 
-/** The pointer handlers of something a time is dragged by (the grip in the form, the time itself, its dot). */
-export interface Grab { onPointerDown: (event: PointerEvent<HTMLElement>) => void; onPointerMove: (event: PointerEvent<HTMLElement>) => void; onPointerUp: (event: PointerEvent<HTMLElement>) => void; onPointerCancel: (event: PointerEvent<HTMLElement>) => void }
+/** The handlers of something a time is dragged by (the time itself, its dot). `ref` lets a finger that has taken it stop the list from scrolling. */
+export interface Grab {
+  onPointerDown: (event: PointerEvent<HTMLElement>) => void; onPointerMove: (event: PointerEvent<HTMLElement>) => void; onPointerUp: (event: PointerEvent<HTMLElement>) => void; onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
+  onContextMenu: (event: MouseEvent<HTMLElement>) => void;
+  ref: (element: HTMLElement | null) => (() => void) | undefined;
+}
 /** A press that moves this far (px) up or down is a drag; one that does not is a tap (it opens the form). */
 const LIFT_PX = 6;
+/**
+ * ★`[2026-10-21 사용자 결정 — ST4F-702 꾹 눌러 잡기]` A FINGER takes the time (or its dot) only after holding it this long: a finger that passes over it while scrolling the list no longer moves
+ * the time (it did at `LIFT_PX`). The mouse still takes it at once.
+ */
+export const HOLD_MS = 450;
+/** A finger that moves this far (px) before the hold is up is scrolling (or swiping the day): the hold is let go and the browser goes on with it. */
+const HOLD_SLOP = 8;
+/** A held time this close (px) to the top or the bottom of the list scrolls the list along, so the drag can go on past the edge - once the finger has gone `EDGE_ARM_PX` that way since it took the time
+ *  (`[2026-10-21 사용자 확인]` a dot taken near the bottom ran off from under the finger at once: the list scrolled as soon as it was taken). */
+const EDGE_PX = 48;
+const EDGE_ARM_PX = 16;
+
+/** A finger on the time of a stop (or of leaving it): holding (not taken yet) or `held` (taken - it moves the time). */
+export interface TimePress { id: string; list: List; kind: TimeKind; held: boolean }
 
 export interface TimeEditHandles {
   edit: TimeEdit | null;
   preview: TimePreview | null;
   busy: boolean;
-  /** The grip is being dragged (the screen shows the strip of the day), and what that would do. */
+  /** The time is being dragged (the screen shows the strip of the day), and what that would do. */
   drag: TimeDrag | null;
+  press: TimePress | null;
   open: (item: PlanItem, list: List, kind?: TimeKind) => void;
   close: () => void;
   setStart: (text: string) => void;
   setEnd: (text: string) => void;
   setPush: (push: boolean) => void;
-  /** Move the time being changed by `minutes` (kept inside the range; the end of the free time stops a step once and says so). */
-  step: (minutes: number) => void;
   /** Send what is previewed (the screen decides how: it may have to save the proposed plan first). */
   apply: () => Promise<void>;
-  /** Handlers for the grip: drag up and down, or arrow keys for 5 minutes (Shift 30). A release applies. */
-  grip: Grab & { onKeyDown: (event: KeyboardEvent<HTMLElement>) => void };
   /**
-   * `[2026-10-05 사용자 선택 — 시간 조정 합친 안]` The time of a stop (or of leaving it) and its dot can be taken and dragged AT ONCE, no tap first: up = earlier, down = later, the same rules as the grip.
-   * A press that does not move is a tap and opens the form as before (`dragEnded` says the click that ends a drag is not one of those).
+   * `[2026-10-05 사용자 선택 — 시간 조정 합친 안]` The time of a stop (or of leaving it) and its dot can be taken and dragged with no form open: up = earlier, down = later.
+   * A press that does not move is a tap and opens the form as before (`dragEnded` says the click that ends a drag is not one of those). `[2026-10-21]` A finger holds first (`HOLD_MS`).
    */
   handle: (item: PlanItem, list: List, kind?: TimeKind) => Grab;
   dragEnded: () => boolean;
 }
 
+/** The list a held time scrolls: the nearest box around it that scrolls up and down. */
+function scrollerOf(element: HTMLElement): HTMLElement | null {
+  for (let box = element.parentElement; box; box = box.parentElement) {
+    const { overflowY } = getComputedStyle(box);
+    if ((overflowY === "auto" || overflowY === "scroll") && box.scrollHeight > box.clientHeight) return box;
+  }
+  return null;
+}
+/** A short buzz where the phone can (Android; Safari has none - the dot and the bubble are the signal there). */
+function buzz(ms: number) {
+  if (typeof navigator === "undefined" || !("vibrate" in navigator) || navigator.userActivation?.hasBeenActive === false) return;
+  try { navigator.vibrate(ms); } catch { /* a phone that says no: the screen says it anyway */ }
+}
+
 /**
- * `[2026-10-04 사용자 지시]` Changing the time of a stop in place: the time pressed opens an editor with the start and end fields, a grip to drag the start up and down,
- * 「−5분 / +5분」, and a switch for pushing the stops around it. Everything shown while it is open is a preview worked out from the plan as it is (`time-plan.ts`),
+ * `[2026-10-04 사용자 지시]` Changing the time of a stop in place: the time pressed opens an editor with the start and end (`[2026-10-21 ST4F-702]` picked on a wheel, or typed),
+ * and a switch for pushing the stops around it. Everything shown while it is open is a preview worked out from the plan as it is (`time-plan.ts`),
  * nothing is sent until `apply`. `views` are the two pictures of the plan (the plan as it is, and the proposed one under it); `commit` is how the screen sends a batch.
  *
  * ★`[2026-10-05 사용자 지시]` Free time first: a time moved later (or earlier) uses up the free minutes before anybody else moves. When they are gone the drag stops there for a few more
- *   minutes of dragging (`holdAtLimit`) and `onNotice` says so once; only a drag that goes on pushes the next stops one after the other. The same for the time of LEAVING (`kind: "depart"` -
- *   the stop's end): leaving later eats the free time, then pushes the next stops. While the grip is dragged `drag` carries what the strip of the day needs.
+ *   minutes of dragging (`holdAtLimit`); only a drag that goes on pushes the next stops one after the other. The same for the time of LEAVING (`kind: "depart"` -
+ *   the stop's end): leaving later eats the free time, then pushes the next stops. While a time is dragged `drag` carries what the strip of the day needs.
  */
-export function useTimeEdit({ views, commit, onNotice }: {
+export function useTimeEdit({ views, commit }: {
   views: Record<List, PlanCheckView | null>;
   commit: (list: List, changes: Retime[]) => Promise<void>;
-  onNotice?: (kind: TimeKind, held: Exclude<Held, null>) => void;
 }): TimeEditHandles {
   const [edit, setEdit] = useState<TimeEdit | null>(null);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
   const [dragging, setDragging] = useState(false);
   const [held, setHeld] = useState<Held>(null);
-  const grabbed = useRef<{ y: number; origin: number } | null>(null);
+  const [press, setPress] = useState<TimePress | null>(null);
+  /** The drag going on: where it was taken, minutes per px, and - for a finger - the list it scrolls along (`along`: how far it has scrolled it) and the last time it buzzed for. */
+  const grabbed = useRef<{ y: number; origin: number; perPx: number; scroller: HTMLElement | null; along: number; touch: boolean; last: number } | null>(null);
   const heldBefore = useRef<Held>(null);
-  const saidAt = useRef(0);
+  /** A finger has taken a time: its moves drag the time, not the list. */
+  const holding = useRef(false);
+  const edge = useRef<number | null>(null);
 
   /** The stop being changed, its day and its place in it. */
   const subject = useMemo(() => {
@@ -177,7 +210,7 @@ export function useTimeEdit({ views, commit, onNotice }: {
   };
   /** What was dragged cannot be sent as it stands: the form opens, to say why and to be fixed by hand. */
   const showForm = () => setEdit((current) => current?.direct ? { ...current, direct: false } : current);
-  const close = () => { grabbed.current = null; heldBefore.current = null; setDragging(false); setHeld(null); setFailure(""); setEdit(null); };
+  const close = () => { letGo(); grabbed.current = null; heldBefore.current = null; setDragging(false); setHeld(null); setFailure(""); setEdit(null); };
   const patch = (change: Partial<TimeEdit>) => { setFailure(""); setEdit((current) => current && { ...current, ...change }); };
   /** A new start: the end field follows it by the same distance until the customer types an end of his own. */
   const moveStart = (text: string) => {
@@ -204,30 +237,12 @@ export function useTimeEdit({ views, commit, onNotice }: {
     finally { setBusy(false); }
   }
 
-  /** Say that the free time is used up - once, and not again while the first notice is still on the screen. */
-  const say = (kind: TimeKind, now: Exclude<Held, null>) => {
-    const at = Date.now();
-    if (at - saidAt.current < 3500) return;
-    saidAt.current = at;
-    onNotice?.(kind, now);
-  };
-
   const rangeNow = () => limits && edit ? (edit.push ? limits.reach : limits.own) : null;
-  const step = (minutes: number) => {
-    const now = valueMinutes();
-    const range = rangeNow();
-    if (now === null || !range || !limits || !edit) return;
-    let next = now + minutes;
-    // Going out of the free time stops at its end once and says so; the next step goes on into the pushing.
-    if (edit.push && minutes > 0 && now < limits.own.max && next > limits.own.max && limits.reach.max > limits.own.max) { next = limits.own.max; say(edit.kind, "max"); }
-    else if (edit.push && minutes < 0 && now > limits.own.min && next < limits.own.min && limits.reach.min < limits.own.min) { next = limits.own.min; say(edit.kind, "min"); }
-    setValue(formatHm(Math.min(range.max, Math.max(range.min, next))));
-  };
 
   /** Where a drag of `dy` px leaves the time: 5-minute steps from where it began, held at the end of the free time, sticking to where it began and to the ends of the range. */
-  const draggedTo = (origin: number, dy: number): { value: number; held: Held } => {
+  const draggedTo = (origin: number, dy: number, perPx = DRAG_MINUTES_PER_PX): { value: number; held: Held } => {
     const range = rangeNow();
-    let wanted = origin + Math.round((dy * DRAG_MINUTES_PER_PX) / SNAP) * SNAP;
+    let wanted = origin + Math.round((dy * perPx) / SNAP) * SNAP;
     if (!range || !limits || !edit) return { value: wanted, held: null };
     let now: Held = null;
     if (edit.push) { const result = holdAtLimit(wanted, limits.own, limits.reach); wanted = result.value; now = result.held; }
@@ -235,99 +250,144 @@ export function useTimeEdit({ views, commit, onNotice }: {
     if (!now) for (const stick of [origin, range.min, range.max]) if (Math.abs(wanted - stick) <= MAGNET) wanted = stick;
     return { value: wanted, held: now };
   };
-  const grip: TimeEditHandles["grip"] = {
-    onPointerDown: (event) => {
-      if (!edit || busy) return;
-      const origin = valueMinutes();
-      if (origin === null) return;
-      event.preventDefault();
-      event.currentTarget.setPointerCapture(event.pointerId);
-      grabbed.current = { y: event.clientY, origin };
-      heldBefore.current = null;
-      setDragging(true);
-    },
-    onPointerMove: (event) => {
-      const taken = grabbed.current;
-      if (!taken) return;
-      const { value, held: now } = draggedTo(taken.origin, event.clientY - taken.y);
-      // ★`[2026-10-07 사용자 지시]` No notice while dragging: the overlay of the day says it (and keeps saying it while the next stops are pushed) - the notice stood right over that overlay and hid it.
-      heldBefore.current = now;
-      setHeld(now);
-      setValue(formatHm(value));
-    },
-    onPointerUp: (event) => {
-      const taken = grabbed.current;
-      grabbed.current = null;
-      heldBefore.current = null;
-      setDragging(false);
-      setHeld(null);
-      if (!taken) return;
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-      if (Math.abs(event.clientY - taken.y) >= 3) void apply();          // a press with no move is not a drag
-    },
-    onPointerCancel: (event) => {
-      const taken = grabbed.current;
-      grabbed.current = null;
-      heldBefore.current = null;
-      setDragging(false);
-      setHeld(null);
-      if (taken) setValue(formatHm(taken.origin));                        // let go without applying: back to where it was
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-    },
-    onKeyDown: (event) => {
-      if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
-      event.preventDefault();
-      step((event.key === "ArrowUp" ? -1 : 1) * (event.shiftKey ? 30 : SNAP));
-    },
+  /** The drag goes on to `clientY` - and, for a held finger, as far again as the list scrolled under it. */
+  const dragTo = (clientY: number) => {
+    const taken = grabbed.current;
+    if (!taken) return;
+    const { value, held: now } = draggedTo(taken.origin, clientY - taken.y + taken.along, taken.perPx);
+    // ★`[2026-10-07 사용자 지시]` No notice while dragging: the overlay of the day says it (and keeps saying it while the next stops are pushed) - the notice stood right over that overlay and hid it.
+    heldBefore.current = now;
+    setHeld(now);
+    if (taken.touch && value !== taken.last) buzz(4);
+    taken.last = value;
+    setValue(formatHm(value));
+  };
+  const dragAt = useRef(dragTo);
+  useLayoutEffect(() => { dragAt.current = dragTo; });
+  /** The drag ends: no more holding, the list no longer scrolls along. */
+  function letGo() {
+    const taken = lift.current;
+    if (taken?.timer) window.clearTimeout(taken.timer);
+    holding.current = false;
+    if (edge.current !== null) cancelAnimationFrame(edge.current);
+    edge.current = null;
+    setPress(null);
+  }
+  /** A held finger near the top or the bottom of the list: the list scrolls along, and the time with it. */
+  const scrollAlong = () => {
+    const taken = grabbed.current, finger = lift.current;
+    if (!taken?.scroller || !finger || !holding.current) { edge.current = null; return; }
+    const box = taken.scroller.getBoundingClientRect();
+    const y = finger.lastY, went = y - taken.y;
+    const speed = went < -EDGE_ARM_PX && y < box.top + EDGE_PX ? -Math.min(9, (box.top + EDGE_PX - y) / 6)
+      : went > EDGE_ARM_PX && y > box.bottom - EDGE_PX ? Math.min(9, (y - (box.bottom - EDGE_PX)) / 6) : 0;
+    if (speed) {
+      const was = taken.scroller.scrollTop;
+      taken.scroller.scrollTop += speed;
+      // Only what this loop scrolled counts as dragging: the list may move for other reasons too (it is laid out again as the times change).
+      const moved = taken.scroller.scrollTop - was;
+      if (moved) { taken.along += moved; dragAt.current(y); }
+    }
+    edge.current = requestAnimationFrame(scrollAlong);
   };
 
-  // ★`[2026-10-05]` Taking the time (or its dot) and dragging with no tap first. The edit opens (shut form: `direct`) when the press has moved `LIFT_PX`; from then on it is the grip's own drag.
-  const lift = useRef<{ id: string; kind: TimeKind; list: List; y: number; origin: number; moved: boolean } | null>(null);
+  // ★`[2026-10-05]` Taking the time (or its dot) and dragging with no tap first. The edit opens (shut form: `direct`) when a mouse has moved `LIFT_PX`, or a finger has held it `HOLD_MS`.
+  const lift = useRef<{ x: number; y: number; lastY: number; origin: number; moved: boolean; touch: boolean; timer: number | null } | null>(null);
   const swallow = useRef(false);
-  const handle = (item: PlanItem, list: List, kind: TimeKind = "start"): Grab => ({
-    onPointerDown: (event) => {
-      swallow.current = false;
-      if (busy || item.locked || item.booked === true || (event.pointerType === "mouse" && event.button !== 0)) return;
-      const already = edit?.id === item.id && edit.list === list && edit.kind === kind;
-      const origin = already ? valueMinutes() : parseHm(kind === "depart" ? build(item, list, kind).end : item.startsAt);
-      if (origin === null) return;
-      lift.current = { id: item.id, kind, list, y: event.clientY, origin, moved: false };
-      event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    onPointerMove: (event) => {
-      const taken = lift.current;
-      if (!taken) return;
-      if (!taken.moved) {
-        if (Math.abs(event.clientY - taken.y) < LIFT_PX) return;
-        taken.moved = true;
-        swallow.current = true;                                              // the click that follows this drag is not a tap
-        if (!(edit?.id === item.id && edit.list === list && edit.kind === kind)) { setFailure(""); setEdit(build(item, list, kind, true)); }
-        grabbed.current = { y: taken.y, origin: taken.origin };
+  /** A finger that has taken a time keeps the list still: React's own touch listeners cannot stop the scrolling, this one can (it is only listened to on the times and their dots). */
+  const keepStill = useCallback((element: HTMLElement | null) => {
+    if (!element) return undefined;
+    const stop = (event: TouchEvent) => { if (holding.current && event.cancelable) event.preventDefault(); };
+    element.addEventListener("touchmove", stop, { passive: false });
+    return () => element.removeEventListener("touchmove", stop);
+  }, []);
+  useEffect(() => () => {
+    if (lift.current?.timer) window.clearTimeout(lift.current.timer);
+    if (edge.current !== null) cancelAnimationFrame(edge.current);
+  }, []);
+  const handle = (item: PlanItem, list: List, kind: TimeKind = "start"): Grab => {
+    const already = edit?.id === item.id && edit.list === list && edit.kind === kind;
+    /** The drag starts: the edit opens with its form shut, unless it is open on this time already. */
+    const take = (taken: NonNullable<typeof lift.current>, scroller: HTMLElement | null, perPx = DRAG_MINUTES_PER_PX) => {
+      taken.moved = true;
+      swallow.current = true;                                              // the click that follows this drag is not a tap
+      if (!already) { setFailure(""); setEdit(build(item, list, kind, true)); }
+      grabbed.current = { y: taken.touch ? taken.lastY : taken.y, origin: taken.origin, perPx, scroller, along: 0, touch: taken.touch, last: taken.origin };
+      heldBefore.current = null;
+      setDragging(true);
+    };
+    return {
+      ref: keepStill,
+      onContextMenu: (event) => { if (holding.current || lift.current?.touch) event.preventDefault(); },   // a long press is the time's, not the phone's menu
+      onPointerDown: (event) => {
+        swallow.current = false;
+        if (busy || item.locked || item.booked === true || (event.pointerType === "mouse" && event.button !== 0)) return;
+        const origin = already ? valueMinutes() : parseHm(kind === "depart" ? build(item, list, kind).end : item.startsAt);
+        if (origin === null) return;
+        const element = event.currentTarget;
+        const taken = { x: event.clientX, y: event.clientY, lastY: event.clientY, origin, moved: false, touch: event.pointerType !== "mouse", timer: null as number | null };
+        lift.current = taken;
+        element.setPointerCapture(event.pointerId);
+        if (!taken.touch) return;
+        // A finger holds first: the dot fills up while it does (`press`), and once it is full the time is taken.
+        setPress({ id: item.id, list, kind, held: false });
+        taken.timer = window.setTimeout(() => {
+          if (lift.current !== taken) return;
+          taken.timer = null;
+          holding.current = true;
+          // ★`[2026-10-21 사용자 확인]` The held dot stays under the finger: the list is drawn to scale (1 minute = `RAIL_PX_PER_MIN`, times the list's zoom), so a finger moves the time by
+          //   that much - at 10 px = 5 minutes the dot fell behind the finger (60 px for every 100). The mouse keeps 10 px = 5 minutes.
+          const zoom = (element as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom || 1;
+          take(taken, scrollerOf(element), 1 / (RAIL_PX_PER_MIN * zoom));
+          setPress({ id: item.id, list, kind, held: true });
+          buzz(12);
+          edge.current = requestAnimationFrame(scrollAlong);
+        }, HOLD_MS);
+      },
+      onPointerMove: (event) => {
+        const taken = lift.current;
+        if (!taken) return;
+        taken.lastY = event.clientY;
+        if (taken.touch && !taken.moved) {
+          // Moved on before the hold was up: the finger is scrolling the list (or swiping the day) - let it.
+          if (Math.hypot(event.clientX - taken.x, event.clientY - taken.y) <= HOLD_SLOP) return;
+          letGo();
+          lift.current = null;
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          return;
+        }
+        if (!taken.moved) {
+          if (Math.abs(event.clientY - taken.y) >= LIFT_PX) take(taken, null);
+          return;
+        }
+        dragTo(event.clientY);
+      },
+      onPointerUp: (event) => {
+        const taken = lift.current;
+        if (taken?.touch) letGo();
+        lift.current = null;
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+        if (!taken?.moved || !grabbed.current) return;                     // a tap: its click opens the form
+        grabbed.current = null;
         heldBefore.current = null;
-        setDragging(true);
-        return;
-      }
-      grip.onPointerMove(event);
-    },
-    onPointerUp: (event) => {
-      const taken = lift.current;
-      lift.current = null;
-      if (!taken?.moved) { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); return; }
-      grip.onPointerUp(event);
-    },
-    onPointerCancel: (event) => {
-      const taken = lift.current;
-      lift.current = null;
-      if (!taken?.moved) return;
-      grip.onPointerCancel(event);
-      close();
-    },
-  });
+        setDragging(false);
+        setHeld(null);
+        void apply();                                                         // sent at once (a drag that ended where it began changes nothing and closes)
+      },
+      onPointerCancel: () => {
+        const taken = lift.current;
+        if (taken?.touch) letGo();
+        lift.current = null;
+        if (!taken?.moved) return;
+        close();                                                              // let go without applying: back to where it was
+      },
+    };
+  };
   const dragEnded = () => { const was = swallow.current; swallow.current = false; return was; };
 
   const shown = preview && failure ? { ...preview, problem: failure } : preview;
   const drag: TimeDrag | null = dragging && edit && shown && shown.day && !shown.problem
     ? { id: edit.id, kind: edit.kind, title: shown.title, from: edit.kind === "depart" ? edit.first.end : edit.first.start, to: valueMinutes(), held, day: shown.day, changes: shown.changes }
     : null;
-  return { edit, preview: shown, busy, drag, open, close, setStart: moveStart, setEnd: (end) => patch({ end, endTouched: true }), setPush: (push) => patch({ push }), step, apply, grip, handle, dragEnded };
+  return { edit, preview: shown, busy, drag, press, open, close, setStart: moveStart, setEnd: (end) => patch({ end, endTouched: true }), setPush: (push) => patch({ push }), apply, handle, dragEnded };
 }
