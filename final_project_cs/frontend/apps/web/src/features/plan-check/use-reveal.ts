@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSettings } from "@/lib/settings";
-import { beginRecheck, cutAtStop, nextStep, onlyCard, rebase, stopAt, type PlanCheckView } from "./model";
+import { beginRecheck, cutAtStop, nextStep, onlyCard, rebase, stopAt, syncDrawn, type PlanCheckView } from "./model";
 
 /**
  * ★`[2026-10-04 사용자 지시 · 코덱스 의견]` 확인 표시는 사용자가 「이건 확인됐구나」를 알아볼 속도로 켜진다 — 한 줄이 켜지고 다음 줄이 켜지기까지 300ms
@@ -90,6 +90,8 @@ export function pauseBefore(shown: PlanCheckView, next: PlanCheckView): number {
  * (`stopAt`): `stop` says which, and nothing past it is drawn. `recheck.begin` is called when the customer picks: the card's checks wait again where they stand and, once the
  * server answers with a new revision, they are ticked in again (`rebase`) — the replay goes on when the card passes, or stops at it again. `settling` is true from the pick until
  * the card's verdict is in. Not settled while stopped. With 「애니메이션 건너뛰기」 on, the check this page watches is drawn at once up to that card (`cutAtStop`) and stops there too.
+ * ★`[2026-10-21 결함 — ST4F-703]` While stopped with nothing picked, a new read of the server is taken into what is drawn at once (`syncDrawn`) — `settling` comes from a pick
+ * only, never from the server's values moving on (the 3-minute re-read stamped every card anew and the question hid behind 「다시 확인하는 중」 for good).
  * `[2026-10-20 사용자 결정 — 다시 들어오면 결과 화면]` A page that opens on a check already finished (left before registering, then opened again) shows the result as before — the
  * result screen is where it is changed then (it keeps its tools: 2026-10-20 the read-only result was dropped) — so it does not stop.
  */
@@ -113,6 +115,8 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
   const [wasPaused, setWasPaused] = useState(paused);
   // `[2026-10-20 C안]` A pick sent for the stopped card, and the revision it was sent on: nothing is drawn until the server answers with another one.
   const [asked, setAsked] = useState<{ id: string; revision: number | undefined } | null>(null);
+  // `[2026-10-21 ST4F-703]` The card picked for while its checks are ticked in again after the server answered (`rebase`), until it is drawn as the server has it.
+  const [ticking, setTicking] = useState<string | null>(null);
   // Questions showed the completed reading progress, but not the map's cards. Begin their first appearance at checking.
   const completedHold = wasPaused && !paused && target.stage === "done";
   const firstMap = completedHold && shown.stage !== "done" && !reduced;
@@ -124,9 +128,17 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
   if (immediate && shown !== target) setShown(target);
-  if (asked && target.revision !== asked.revision) { setAsked(null); setShown(rebase(shown, target, asked.id)); }
+  if (asked && target.revision !== asked.revision) { setAsked(null); setTicking(asked.id); setShown(rebase(shown, target, asked.id)); }
   else if (!paused && !immediate && cut !== target && !asked && JSON.stringify(shown) !== JSON.stringify(cut)) setShown(cut);
   const stopId = stopping && !immediate ? stopAt(shown, target) : null;
+  const cardOf = (view: PlanCheckView, id: string) => JSON.stringify(view.items.find((item) => item.id === id));
+  if (ticking && cardOf(shown, ticking) === cardOf(target, ticking)) setTicking(null);
+  // ★`[2026-10-21 ST4F-703]` Stopped, nothing picked: what is drawn takes the server's values at once (the card being ticked in again steps on). Skipping the animation draws
+  //   `cut` instead, which already holds them.
+  if (stopId && !asked && !paused && !reduced && !firstMap) {
+    const synced = syncDrawn(shown, target, ticking === stopId ? ticking : null);
+    if (synced !== shown) setShown(synced);
+  }
   // The most reading steps that have been waiting since the screen last caught up: the reading pace is set by that, not by what is left.
   const peak = useRef(0);
   // When the stage of the top bar last changed on screen (the clock of `STAGE_MIN_MS`).
@@ -159,11 +171,12 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
     // The pick was refused: the card is as the server still has it.
     fail: (id: string) => {
       setAsked(null);
+      setTicking(null);
       const kept = target.items.find((item) => item.id === id);
       setShown((current) => ({ ...current, items: current.items.map((item) => item.id === id && kept ? kept : item) }));
     },
   };
   if (immediate) return { view: target, settled: true, stop: null, recheck, watched: !openedDone };
-  const settling = Boolean(asked) || (stopId !== null && JSON.stringify(shown.items.find((item) => item.id === stopId)) !== JSON.stringify(target.items.find((item) => item.id === stopId)));
+  const settling = Boolean(asked) || (ticking !== null && ticking === stopId);
   return { view: live, settled: !paused && !asked && !stopId && nextStep(shown, target) === null, stop: stopId ? { id: stopId, settling } : null, recheck, watched: !openedDone };
 }

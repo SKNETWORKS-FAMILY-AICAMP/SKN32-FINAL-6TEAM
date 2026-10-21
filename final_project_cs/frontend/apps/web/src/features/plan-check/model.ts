@@ -512,6 +512,22 @@ export function rebase(shown: PlanCheckView, target: PlanCheckView, id: string):
 }
 
 /**
+ * ★`[2026-10-21 결함 — ST4F-703]` While the check stands stopped at a card (nothing picked), a new read of the server (the 3-minute re-read, which stamps every stop's risk check
+ * anew; the card's place info when its alternatives arrive; another tab's change) is taken into what is drawn at once: the cards and legs on screen take the server's values, one
+ * the server took out goes, a leg between two drawn cards comes, nothing past the stop is drawn. The stop could only draw its own card, so a change to an earlier card used to hold
+ * the replay for good — the card looked 「다시 확인하는 중」 with its question gone. `keep` (the card whose checks are ticked in again after a pick) is left as drawn: it steps on.
+ */
+export function syncDrawn(shown: PlanCheckView, target: PlanCheckView, keep: string | null = null): PlanCheckView {
+  const drawn = new Set(shown.items.map((item) => item.id));
+  const items = target.items.filter((item) => drawn.has(item.id)).map((item) => item.id === keep ? shown.items.find((entry) => entry.id === keep)! : item);
+  const kept = new Set(items.map((item) => item.id));
+  const legs = new Set(shown.moves.map((move) => move.id));
+  const moves = target.moves.filter((move) => legs.has(move.id) || (kept.has(move.fromId) && kept.has(move.toId)));
+  const next = { ...shown, lines: target.lines, days: target.days, items, moves };
+  return JSON.stringify(next) === JSON.stringify(shown) ? shown : next;
+}
+
+/**
  * How many places and moves there will be. Places come from the lines read (a line that turned into a stop), moves from
  * the stops of each day (one between two stops) — so the counts and the bar know the whole before every card is shown.
  * What the screen already shows counts when it is more.

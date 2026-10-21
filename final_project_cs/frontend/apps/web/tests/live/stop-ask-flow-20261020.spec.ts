@@ -344,3 +344,40 @@ test("질문 칸의 후보 선택지에는 바꾸기 화면과 같은 꼬리표(
   await expect(options.nth(1)).toContainText("고르면: 식사 일정으로 넣고 앞뒤 이동을 다시 확인해요");
   await expect(options.nth(0)).not.toContainText("고르면:");
 });
+
+// `[2026-10-21 결함 — ST4F-703]` 첫 검사가 끝난 접수는 3분마다 다시 읽고(`intake-review.tsx` refetchInterval), 실제 서버는 그때마다 일정마다 위험 점검 시각을 새로 찍는다
+//   (`review.py` ensure → `risks.decorate`). 멈춘 질문이 그 재조회 뒤 「다시 확인하는 중이에요 · 잠시만요」로 굳던 결함 — 모방 서버에는 위험 정보가 없어서, 브라우저가 받는
+//   접수 응답에 실제 서버 모양(`risk_mode: cached` · 읽은 시각)으로 붙인다. 고르지 않았으니 「다시 확인하는 중」은 한순간도 나오지 않아야 한다(후보 도착 때의 깜빡임 포함).
+test("멈춰 묻는 동안 3분 재조회가 와도 질문이 그대로 남는다 — 서버가 위험 점검 시각을 새로 찍어도, 한순간도 「다시 확인하는 중」이 되지 않는다", async ({ page, request }) => {
+  test.setTimeout(90_000);
+  const reads: string[] = [];
+  await page.route(/\/v1\/web\/trip-intakes\/[^/?]+(\?.*)?$/, async (route) => {
+    if (route.request().method() !== "GET") return route.continue();
+    const response = await route.fetch();
+    const body = await response.json().catch(() => null) as { status?: string; review?: { items: { id: string }[] } } | null;
+    if (body?.status !== "review" || !body.review) return route.fulfill({ response });
+    const at = new Date().toISOString();
+    reads.push(at);
+    return route.fulfill({ response, json: { ...body, review: { ...body.review, risk_schema_version: 1, risk_mode: "cached", risk_checked_at: at,
+      items: body.review.items.map((item) => ({ ...item, risk: { item_id: item.id, status: "unknown", problems: [], categories: [],
+        unknown_categories: [{ category: "weather_alert", label: "기상 특보" }], reason: null, checked_at: at, mode: "cached", stale: true } })) } } });
+  });
+  await page.addInitScript(() => {
+    new MutationObserver(() => {
+      if (document.querySelector("[data-stop-banner]")?.textContent?.includes("다시 확인하는 중")) (window as unknown as { zzRecheckSeen?: boolean }).zzRecheckSeen = true;
+    }).observe(document, { subtree: true, childList: true, characterData: true });
+  });
+  await page.clock.install();
+  await stopped(page, request);
+  await expect(question(page).getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).toBeVisible();
+  const first = reads.length;
+  for (const round of [1, 2]) {
+    await page.clock.fastForward(181_000);
+    await expect.poll(() => reads.length).toBeGreaterThanOrEqual(first + round);
+    await page.waitForTimeout(800);
+    await expect(banner(page)).toContainText("이 일정이 맞는지 먼저 확인해 주세요");
+    await expect(question(page).getByRole("button", { name: /「올리브영 광화문점」으로 바꾸기/ })).toBeVisible();
+  }
+  await expect(page.locator('main[data-stage="checking"]')).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { zzRecheckSeen?: boolean }).zzRecheckSeen ?? false)).toBe(false);
+});

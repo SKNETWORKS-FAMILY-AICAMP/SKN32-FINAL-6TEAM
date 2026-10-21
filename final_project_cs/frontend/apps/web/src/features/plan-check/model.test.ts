@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { exampleDone, exampleSnapshots } from "./test-views";
-import { askStopId, beginRecheck, cutAtStop, heldAt, nextStep, onlyCard, progress, rebase, stopAt, stopKind, tally, timeline, withArrivalRows, withAskSlot, type PlanAsk, type PlanCheckView } from "./model";
+import { exampleDone, exampleSnapshots, readAgain } from "./test-views";
+import { askStopId, beginRecheck, cutAtStop, heldAt, nextStep, onlyCard, progress, rebase, stopAt, stopKind, syncDrawn, tally, timeline, withArrivalRows, withAskSlot, type PlanAsk, type PlanCheckView } from "./model";
 
 /** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. */
 function walk(from: PlanCheckView, to: PlanCheckView): PlanCheckView[] {
@@ -178,6 +178,31 @@ describe("`[2026-10-20 C안]` the first check stops at a card that needs a look"
     expect(more.slice(0, passed).map((view) => view.items.find((item) => item.id === "b")!.checks.map((row) => row.result))).toEqual([["ok", "pending"], ["ok", "ok"]]);
     expect(stopAt(more[passed], fixed)).toBeNull();
     expect(more.at(-1)).toEqual(fixed);
+  });
+
+  describe("`[2026-10-21 ST4F-703]` a new read of the server while stopped", () => {
+    it("takes it into what is drawn at once — the drawn cards and legs, nothing past the stop — so the stop no longer holds on an earlier card", () => {
+      const reread = readAgain(exampleDone, "2026-10-21T13:45:00+09:00");
+      expect(onlyCard(atB, nextStep(atB, reread)!, "b")).toBe(false);          // the bug: the first change is card a, which a stopped replay never draws
+      const synced = syncDrawn(atB, reread);
+      expect(synced.items).toEqual(reread.items.slice(0, 2));
+      expect(synced.moves.map((move) => move.id)).toEqual(["a-b"]);
+      expect(stopAt(synced, reread)).toBe("b");
+      expect(onlyCard(synced, nextStep(synced, reread)!, "b")).toBe(false);    // what is left is past the stop: the leg to c and card c
+    });
+
+    it("leaves the card being ticked in again as drawn, drops what the server took out, and takes a new leg between drawn cards", () => {
+      const reread = readAgain(exampleDone, "2026-10-21T13:45:00+09:00");
+      expect(syncDrawn(atB, reread, "b").items[1]).toBe(atB.items[1]);
+      const rerouted: PlanCheckView = { ...exampleDone, moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, id: "a-b#2" } : move) };
+      expect(syncDrawn(atB, rerouted).moves.map((move) => move.id)).toEqual(["a-b#2"]);
+      const without: PlanCheckView = { ...exampleDone, items: exampleDone.items.slice(1), moves: exampleDone.moves.slice(1) };
+      expect(syncDrawn(atB, without)).toMatchObject({ items: [exampleDone.items[1]], moves: [] });
+    });
+
+    it("keeps the same snapshot when the server says nothing new", () => {
+      expect(syncDrawn(atB, exampleDone)).toBe(atB);
+    });
   });
 });
 
