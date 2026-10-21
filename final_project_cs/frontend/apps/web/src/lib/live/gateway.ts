@@ -97,6 +97,7 @@ function stop(item: ServerItem, t: Translate): TripStop {
     mapUrl: mapLink(item.map_url),
     ...(text(item.place) ? { place: text(item.place) } : {}),
     ...(item.paused === true ? { paused: true } : {}),
+    ...(item.changed === true ? { changed: true } : {}),
     ...(text(item.place_ref) ? { placeRef: text(item.place_ref) } : {}),
     ...(text(item.kind) ? { kind: text(item.kind) } : {}),
     ...(text(item.kind_label) ? { kindLabel: text(item.kind_label) } : {}),

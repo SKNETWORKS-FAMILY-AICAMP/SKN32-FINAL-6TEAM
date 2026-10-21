@@ -121,6 +121,8 @@ function DetailCard({ stop, next, dayNumber, active, onAsk, askBusy, onEdit, ask
       {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
       {stop.badges?.map((badge) => <span key={badge.code} className={pc.pill}>{badge.label}</span>)}
       {stop.paused && <span className={pc.pill} data-state="review">{t("일정 정지", "Paused")}</span>}
+      {/* `[2026-10-21 ST4F-706 후속]` 앞 일정을 대신한 일정(서버 `changed`) — 「입력한 메모」 줄을 빼며 함께 사라진 표시를 이 줄로(서버 공유 계획서의 「변경됨」과 같은 말) */}
+      {stop.changed && <span className={pc.pill} data-state="changed">{t("변경됨", "Changed")}</span>}
       {/* `[2026-10-21 사용자 지시 — ST4F-704]` 이 줄 오른쪽 끝, 「전체」 일차 칩 모양 — 수정 모드를 이 일정의 ✎ 자리로 연다 */}
       {onEdit && <button type="button" className={`${pc.dayChip} ${styles.detailEdit}`} onClick={() => onEdit("plain")}
         aria-label={t(`${stop.title} 일정 수정`, `Edit ${stop.title}`)}><Pencil size={14} strokeWidth={1.8} aria-hidden="true" />{t("일정 수정", "Edit itinerary")}</button>}
