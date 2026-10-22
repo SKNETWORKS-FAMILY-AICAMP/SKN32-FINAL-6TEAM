@@ -44,7 +44,7 @@ import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
 import { TimeDragOverlay } from "./time-drag-overlay";
 import { useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
-import { REVEAL_MS, useReveal, type RevealStop } from "./use-reveal";
+import { REVEAL_MS, useReveal, type RevealRowCut, type RevealStop } from "./use-reveal";
 import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type StopOption } from "./stop-questions";
 import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { DoneFooter } from "@/features/survey-questions/reading-footer";
@@ -239,7 +239,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   const stops = !result.edit && Boolean(result.actions?.replace || result.actions?.edit);
   // `[2026-10-20 C안 · 이동 확인 C안]` During the first check each card carries the 「도착」 line of the way into it (a late arrival is asked in the card); the result shows the legs as before.
   const target = useMemo(() => stops ? withArrivalRows(latest) : latest, [stops, latest]);
-  const { view: revealed, settled, stop, recheck, watched } = useReveal(target, Boolean(readingExtras), stops);
+  const { view: revealed, settled, stop, rowCut, recheck, watched } = useReveal(target, Boolean(readingExtras), stops);
   const view = revealed.stage === "done" ? latest : revealed;
   // `[2026-10-21]` The 「전체 자동 추천」 dry run waits while the first check is drawn (from its reading lines on) and stopped at its questions — held here, where the page is
   //   from the first moment the server's check is final (the list is not drawn yet then).
@@ -251,7 +251,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   // The result screen reads its own state out: a pick said during the check is not said there — only one made on it (a card's question).
   const [said, setSaid] = useState<{ text: string; done: boolean } | null>(null);
   // Held at a card that needs a look (the server still checks the rest) or stopped at its question: the server's pace is not what the customer waits for there.
-  const notice = (stop || heldAt(revealed, target) ? null : slowNotice) ?? given;
+  const notice = (stop || heldAt(revealed, target, stops) ? null : slowNotice) ?? given;
   const { shown: shownNotice, show: showNotice, hide: hideNotice } = useToastState();
   const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
   // The reading screen owns one notice; the header hands notices to this owner.
@@ -281,7 +281,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   return <DeviceFrame floating={floating} guardianIcon>
     <main id="main-content" tabIndex={-1} className={styles.screen} data-stage={view.stage} data-replay={readingExtras ? "paused" : "playing"} data-floating={floating || undefined}
       {...(readingExtras && { onPointerDownCapture: readingExtras.onActivity, onKeyDownCapture: readingExtras.onActivity, onWheelCapture: readingExtras.onActivity, onTouchStartCapture: readingExtras.onActivity })}>
-      {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} stop={stop} stopCheck={recheck} onSay={(text) => setSaid({ text, done: view.stage === "done" })} watched={watched} {...result} />}
+      {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} stop={stop} rowCut={rowCut} stopCheck={recheck} onSay={(text) => setSaid({ text, done: view.stage === "done" })} watched={watched} {...result} />}
       {onReading && shownNotice && <ToastView key={shownNotice.stamp} toast={shownNotice.toast} onDone={hideNotice} />}
       <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : said && said.done === (view.stage === "done") ? said.text : announce(readingExtras ? latest : view, t)}</p>
     </main>
@@ -476,10 +476,12 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
+function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
   view: PlanCheckView; sourceView: PlanCheckView;
   /** `[2026-10-20 C안]` The card the first check stopped at, and the hook that checks it again after a pick (`useReveal`). */
   stop?: RevealStop | null; stopCheck?: ReturnType<typeof useReveal>["recheck"]; onSay?: (text: string) => void;
+  /** `[2026-10-22 문제 줄에서 멈추기]` How far the checks of the card stopped (or about to stop) at are drawn (`useReveal`). */
+  rowCut?: RevealRowCut | null;
   /** `[2026-10-20 C안]` This page drew the check (the 5-second 「여행 등록」 bar is for it). */
   watched?: boolean;
 } & ResultProps) {
@@ -1723,7 +1725,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     done, open: openAt?.list === list ? openAt.id : null, selected, frozen, actions, explain, rechecking: list === "before" ? cardBusy : null, changed: new Set(Object.keys(was)), was, removed: removedSet, rowsFor,
     question: list === "before" && resultAsks ? cardQuestion : undefined,
     // `[2026-10-21 P6]` Stopped at a question of the reading: its place is the newest row (the list follows it) and holds the question.
-    reveal: done ? undefined : { activeId: stopEntry ? askStopId(stopEntry.id) : readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? (stopEntry ? askStopId(stopEntry.id) : null),
+    reveal: done ? undefined : { activeId: stopEntry ? askStopId(stopEntry.id) : readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? (stopEntry ? askStopId(stopEntry.id) : null), rowCut,
       ask: stopItem && stopAsk && list === "before" ? <StopQuestion id={stopItem.id} kind={stopNeed ?? "place"} ask={stopAsk} loading={stopLoading}
         failed={!stopMove && stopList?.id === stopItem.id && stopList.state === "failed" ? stopList.message ?? null : null} again={pickedFor === `${stopItem.id}:${stopNeed}`} leaving={folding}
         why={frozen} explain={explain} onPick={(option) => stopPick(stopItem, option)}

@@ -6,7 +6,7 @@ import type { MoveOptionMode } from "@/lib/live/move-options";
 import { ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { dayTimes, freeText, moveSlack } from "./day-times";
-import { timeline, type CheckRow, type PlanCheckView, type PlanDay, type PlanItem, type PlanMove, type Reread } from "./model";
+import { revealedRows, timeline, type CheckRow, type PlanCheckView, type PlanDay, type PlanItem, type PlanMove, type Reread } from "./model";
 import { MoveModeBox } from "./move-mode";
 import { Act, Checks, NeedsLine, needsOf, VerdictMark } from "./parts";
 import type { PlanCheckActions } from "./plan-check";
@@ -17,6 +17,7 @@ import { UnfoundPlace, type UnfoundActions } from "./unfound-place";
 import { formatHm, parseHm, SNAP } from "./time-plan";
 import { clockText, stayText, TimeWheel } from "./time-wheel";
 import { HOLD_MS, type Grab, type TimeKind, type TimePress } from "./use-time-edit";
+import type { RevealRowCut } from "./use-reveal";
 import styles from "./plan-check.module.css";
 
 /** Everything a row of the list needs from the screen, in one place (the list is drawn twice when a preview stands under the plan). */
@@ -25,9 +26,9 @@ export interface RowContext {
   done: boolean;
   /**
    * Only the currently revealed check opens; future read stops remain quiet and folded. `[2026-10-20 C안]` `stop`: the card the first check stopped at (the rest of the list is
-   * dimmed), `ask`: the question drawn inside it.
+   * dimmed), `ask`: the question drawn inside it. `[2026-10-22]` `rowCut`: how far that card's checks are drawn — the question comes right under its stop row.
    */
-  reveal?: { activeId: string | null; waiting: ReadonlySet<string>; stop?: string | null; ask?: ReactNode };
+  reveal?: { activeId: string | null; waiting: ReadonlySet<string>; stop?: string | null; ask?: ReactNode; rowCut?: RevealRowCut | null };
   /** `[2026-10-21 사용자 지시]` On the result screen before registering: the question a card that needs a look asks (the first check's question box), or null. */
   question?: (item: PlanItem) => ReactNode;
   /** The card or move that is open, and the stop picked on the map or in the list. */
@@ -211,6 +212,10 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
     : !actions.autoRecommend ? t("자동 추천은 준비 중이에요 · 수정에서 장소를 바꿀 수 있어요", "Recommending is coming · change the place in Edit")
       : item.suggestion ? t(`자동 추천은 1순위 ${ro(item.suggestion)} 바로 바꿔요`, `Recommend changes it to the first alternative, ${item.suggestion}`) : null;
   const rows = ctx.rowsFor(item) ?? item.checks;
+  // ★`[2026-10-22 사용자 결정 — 한 줄씩 · 문제 줄에서 멈추기]` During the first check the checks come one at a time, and a card that stops is drawn down to its stop row only — the
+  //   question opens right under it. Only which rows are drawn changes: their words are the server's.
+  const cut = ctx.reveal?.rowCut?.id === item.id ? ctx.reveal.rowCut : null;
+  const drawnRows = done ? rows : revealedRows(rows, cut);
   const question = done && !removed && !checking && !rechecking ? ctx.question?.(item) ?? null : null;
   const timeWhy = removed ? removedWhy : !actions.retime && !actions.edit ? t("시간 고치기는 준비 중이에요", "Changing the time is coming") : item.locked ? lockedWhy : item.booked === true ? t("예약한 일정이라 시간을 바꿀 수 없어요", "Booked: its time cannot be changed") : frozen;
   const adjusted = ctx.timeAdjusted.has(item.id) && !removed;
@@ -269,8 +274,8 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
         why={changeWhy} explain={explain} on={ctx.unfound} />}
       {editingTime && <TimeEditor item={item} ui={ctx.time!} />}
       {open && !removed && <div id={`${ctx.prefix}plan-item-${item.id}-checks`} data-details>
-        {rows.length
-          ? <Checks rows={rows} />
+        {drawnRows.length
+          ? <Checks rows={drawnRows} />
           : !checking && <p className={styles.noChecks}>{t("서버가 이 일정에 따로 알린 것이 없어요.", "The server has nothing more on this stop.")}</p>}
         {done && !checking && ctx.onPickReading && (item.rereads ?? []).map((reread) => <Rereading key={reread.field} item={item} reread={reread} onPick={ctx.onPickReading!} />)}
         {done && !checking && <>
