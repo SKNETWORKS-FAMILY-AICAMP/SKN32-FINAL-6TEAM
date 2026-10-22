@@ -1,0 +1,136 @@
+/*
+ * `[2026-10-22 사용자 결정 — ST4F-719 · 목업 guguroute-chat-ui-2026-10-22.html ② + ⓑ]` The chat pane: answers as cards (a heading badge, the server's text, a card of what it is about) and one
+ * sliding row of chips that follow the situation. The bar, the pane frame and the jump-to-latest button stay in `trip-screen.module.css`.
+ */
+
+/* ── The conversation ── */
+.user { align-self: flex-end; max-width: 82%; margin: 0; padding: 9px 13px; border-radius: 18px 18px 4px 18px; background: var(--color-soft); color: var(--color-primary); font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.avatar { display: inline-flex; flex: none; }
+.card { flex: none; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 8%, transparent); overflow: hidden; }
+.head { display: flex; align-items: center; gap: 7px; padding: 10px 12px 0; }
+.name { font-size: 12px; font-weight: 750; }
+.badge { --tone: var(--color-primary); --tone-soft: var(--color-soft); display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px 2px 7px; border-radius: 999px; background: var(--tone-soft); color: var(--tone); font-size: 11.5px; font-weight: 750; }
+.badge[data-tone="success"] { --tone: var(--color-success); --tone-soft: var(--color-success-soft); }
+.badge[data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+.badge[data-tone="adjusted"] { --tone: var(--color-adjusted); --tone-soft: var(--color-adjusted-soft); }
+.badge[data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
+.badge[data-tone="muted"] { --tone: var(--color-muted); --tone-soft: var(--color-subtle-strong); }
+.when { margin-left: auto; font-size: 11px; color: var(--color-faint); }
+.body { margin: 0; padding: 7px 12px 10px; font-size: 14px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.body a { color: var(--color-primary); font-weight: 650; text-underline-offset: 3px; }
+
+/* A place the answer is about */
+.place { display: grid; grid-template-columns: 38px 1fr; gap: 2px 10px; margin: 0 12px 10px; padding: 10px; border: 1px solid var(--color-divider); border-radius: 12px; background: var(--color-subtle); }
+.placeIcon { grid-row: span 3; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--color-surface); color: var(--color-primary); }
+.place b { font-size: 14px; }
+.place span { font-size: 12.5px; color: var(--color-muted); line-height: 1.45; }
+.place span em { font-style: normal; color: var(--color-success); font-weight: 700; }
+.acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+/* 44px: the touch target the chat's choice buttons had (trip-chat-notices.test.ts) */
+.button { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 0 10px; white-space: nowrap; border: 1px solid var(--color-border-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.button svg { color: var(--color-primary); }
+.button[data-primary] { border-color: transparent; background: var(--color-primary); color: var(--color-on-primary); }
+.button[data-primary] svg { color: inherit; }
+.button:disabled { opacity: .45; cursor: not-allowed; }
+.button:focus-visible, .chip:focus-visible, .noteMore:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* What a change changed (before → after) */
+.diff, .day { margin: 0 12px 10px; padding: 10px 10px 8px; border-radius: 12px; background: var(--color-subtle); }
+.diff h3, .day h3 { margin: 0 0 6px; font-size: 11.5px; color: var(--color-muted); }
+.row { display: grid; grid-template-columns: 96px 1fr; align-items: baseline; gap: 8px; padding: 4px 0; font-size: 13px; }
+.row + .row { border-top: 1px dashed var(--color-divider); }
+.row s { margin-right: 4px; color: var(--color-faint); font-size: 12px; }
+.new { color: var(--color-success); font-weight: 800; }
+.row[data-keep] { color: var(--color-muted); }
+.keepTag { margin-left: 6px; padding: 0 6px; border-radius: 6px; background: var(--color-subtle-strong); font-size: 11px; }
+.diff .acts { margin-top: 8px; }
+.hint { margin: 6px 0 0; font-size: 11.5px; color: var(--color-muted); }
+
+/* A day's summary as a small timeline */
+.timeline { margin: 0; padding: 0; list-style: none; }
+.timeline li { position: relative; display: grid; grid-template-columns: 44px 18px 1fr; align-items: center; min-height: 28px; font-size: 13px; }
+.timeline time { font-size: 12.5px; font-weight: 700; }
+.dot { justify-self: center; width: 9px; height: 9px; border-radius: 50%; background: var(--color-primary); }
+.timeline li:not(:last-child)::after { content: ""; position: absolute; left: 52px; top: 18px; bottom: -10px; width: 2px; background: var(--color-border-strong); }
+.timeline small { font-size: 11.5px; color: var(--color-muted); }
+.timeline li[data-move] { min-height: 22px; font-size: 11.5px; color: var(--color-muted); }
+.timeline li[data-move]::after { top: 0; bottom: 0; }
+
+/* Under the answer: waiting, the server's choices, 직접 고르기 */
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 12px 10px; border-top: 1px solid var(--color-divider); }
+.footTitle { flex: 1 1 100%; font-size: 12px; color: var(--color-muted); }
+.more, .steps { padding: 0 12px; border-top: 1px solid var(--color-divider); }
+.more summary, .steps summary { display: flex; align-items: center; gap: 6px; min-height: 34px; list-style: none; font-size: 12px; color: var(--color-muted); cursor: pointer; }
+.more summary::-webkit-details-marker, .steps summary::-webkit-details-marker { display: none; }
+.more > div { padding: 0 0 10px; font-size: 13px; line-height: 1.65; color: var(--color-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.stepList { display: flex; flex-direction: column; gap: 5px; margin: 0; padding: 0 0 10px; list-style: none; }
+.stepList li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--color-text-secondary); }
+.stepList li svg { flex: none; color: var(--color-success); }
+.stepList li[data-active] { color: var(--color-text); font-weight: 650; }
+.stepList li[data-active] svg { color: var(--color-primary); animation: spin 1s linear infinite; }
+.stepList li[data-lost] { color: var(--color-warning); }
+.pending { padding: 10px 12px 2px; }
+.devBasis { margin: 0; padding: 0 12px 8px; font-size: 11px; color: var(--color-muted); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .stepList li[data-active] svg { animation: none; } }
+
+/* A notice and the alternatives to choose */
+.notice { border-color: var(--tone-border, var(--color-adjusted-border)); }
+.noticeHead { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--tone-soft, var(--color-adjusted-soft)); color: var(--tone, var(--color-adjusted)); font-size: 12px; font-weight: 750; }
+.noticeHead time { margin-left: auto; font-weight: 500; opacity: .85; }
+.notice[data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); --tone-border: var(--color-error-border); }
+.notice[data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); --tone-border: var(--color-warning-border); }
+.notice[data-tone="muted"] { --tone: var(--color-muted); --tone-soft: var(--color-subtle-strong); --tone-border: var(--color-border); }
+.carousel { display: flex; gap: 8px; margin-top: 10px; padding: 0 12px 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.carousel::-webkit-scrollbar { display: none; }
+.option { display: flex; flex: 0 0 72%; flex-direction: column; gap: 3px; min-height: 92px; padding: 10px 12px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; scroll-snap-align: start; cursor: pointer; }
+.option b { font-size: 14px; }
+.option span { font-size: 12.5px; color: var(--color-muted); }
+.option small { margin-top: auto; font-size: 11.5px; color: var(--color-warning); }
+.option:disabled { opacity: .55; cursor: not-allowed; }
+.option:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.error { border-color: var(--color-error-border); }
+.status { flex: none; margin: 0; font-size: 12px; line-height: 1.6; color: var(--color-muted); }
+.statusError { color: var(--color-error); }
+
+/* ── Chips: one row that slides sideways (`use-slide.ts`), above the bar ── */
+.chips { position: relative; flex: none; padding: 6px 0 8px; border-top: 1px solid var(--color-divider); }
+.chips[data-hidden] { display: none; }
+.caption { display: flex; align-items: center; gap: 5px; margin: 0 14px 5px; font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.caption svg { color: var(--color-primary); }
+.row2 { display: flex; gap: 6px; padding: 0 14px; overflow-x: auto; scrollbar-width: none; }
+.row2::-webkit-scrollbar { display: none; }
+.chip { display: inline-flex; flex: none; align-items: center; gap: 6px; max-width: 240px; height: 36px; padding: 0 13px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13px; font-weight: 650; white-space: nowrap; cursor: pointer; }
+.chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip svg { flex: none; color: var(--color-primary); }
+.chip:disabled { opacity: .45; cursor: not-allowed; }
+.chip[data-solid] { border-color: transparent; background: var(--color-primary); color: var(--color-on-primary); }
+.chip[data-solid] svg { color: inherit; }
+.chip[data-risk] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.chip[data-risk] svg { color: inherit; }
+/* A quick answer the screen made (the server sends only the field's name) — dashed */
+.chip[data-made] { border: 1px dashed var(--color-text); }
+/* The server's choices under an answer are whole sentences: they wrap */
+.chip[data-wrap] { height: auto; min-height: 36px; max-width: 100%; padding: 7px 13px; border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border-strong)); border-radius: 18px; color: var(--color-primary); line-height: 1.4; text-align: left; white-space: normal; }
+.sep { flex: none; width: 1px; margin: 6px 2px; background: var(--color-divider); }
+.slide { --fade-l: 0px; --fade-r: 0px; touch-action: pan-x pinch-zoom; overscroll-behavior-x: contain; cursor: grab;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, var(--color-text) var(--fade-l), var(--color-text) calc(100% - var(--fade-r)), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, var(--color-text) var(--fade-l), var(--color-text) calc(100% - var(--fade-r)), transparent 100%); }
+.slide[data-more-left] { --fade-l: 28px; }
+.slide[data-more-right] { --fade-r: 28px; }
+.slide[data-dragging] { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+
+/* ── Under the field: one short line + 「자세히」 (the whole sentence floats above the bar until a press anywhere else) ── */
+.note { position: relative; flex: 1 1 100%; margin: 6px 16px 0; font-size: 11px; line-height: 1.5; color: var(--color-muted); text-align: center; }
+.noteMore { padding: 0 2px; border: 0; background: none; color: var(--color-primary); font: inherit; font-size: 11px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.notePop { position: absolute; z-index: 6; left: 12px; right: 12px; bottom: calc(100% + 6px); margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 12px; line-height: 1.6; text-align: left; box-shadow: 0 8px 20px color-mix(in srgb, var(--color-text) 22%, transparent); }
+
+/* The chips and the jump to the latest answer, above the bar */
+.dock { position: relative; flex: none; }
+.dock .latest { bottom: calc(100% + 8px); right: 14px; }
+
+/* Older alternatives that can no longer be chosen, folded */
+.older { flex: none; }
+.older > summary { width: max-content; list-style: none; }
+.older > summary::-webkit-details-marker { display: none; }
+.older[open] > summary { margin-bottom: 8px; }

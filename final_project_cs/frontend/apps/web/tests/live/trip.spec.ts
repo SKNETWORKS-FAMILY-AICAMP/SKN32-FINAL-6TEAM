@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { beforeTheTrip, alsoAgree, APP, start, mockServer, openNotices, openTitle, TRIP_ID, tripScreen, openPane } from "./helpers";
+import { beforeTheTrip, alsoAgree, APP, start, mockServer, openNotices, openTitle, TRIP_ID, tripScreen, openPane, chooseDayOne, dayTab } from "./helpers";
 
 // `[2026-10-13]` 가짜 서버 여행(2026-10-01)이 「지난 일정」으로 그려지지 않게 여행 전날로 시계를 고정한다(helpers.ts beforeTheTrip).
 test.beforeEach(async ({ page }) => { await beforeTheTrip(page); });
@@ -36,6 +36,10 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
   await expect(page.getByRole("heading", { level: 1, name: "내 여행" })).toBeVisible();          // 머리줄 제목은 서버가 준 여행 이름
   await expect(page.getByRole("tablist", { name: "일차 고르기" }).getByRole("tab")).toHaveText([/전체/, /1일차/, /2일차/]);
   const schedule = tripScreen(page);
+  // `[2026-10-22 ST4F-718]` 시작 전(시계 09-30)이라 「전체」로 열린다 — 하루씩은 일차 칩으로
+  await expect(dayTab(page, /^전체/)).toHaveAttribute("aria-selected", "true");
+  await expect(schedule.getByText("둘째 날 박물관", { exact: true }).first()).toBeVisible();
+  await chooseDayOne(page);
   await expect(schedule.getByText("아침 식당", { exact: true })).toBeVisible();                   // (목록 끝 출처 줄의 「아침 식당 → 경복궁: …」 말고 카드 제목)
   await expect(schedule.getByText("둘째 날 박물관")).toHaveCount(0);                          // 하루씩 — 다음 날은 칩이나 옆으로 밀어서
 

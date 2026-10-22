@@ -37,7 +37,7 @@ describe("채팅의 현재 대안 첫 노출", () => {
     expect(history).not.toContain('data-chat-proposal="current"');
     expect(html.indexOf('</details>')).toBeLessThan(html.indexOf('data-chat-proposal="current"'));
     expect(html.slice(html.indexOf('</details>'))).toContain("current 실내 전시관");
-    expect(history).toMatch(/<button[^>]*disabled=""[^>]*>expired 실내 전시관/);
+    expect(history).toMatch(/<button[^>]*disabled=""[^>]*><b>expired 실내 전시관/);
     expect(state.mutate).not.toHaveBeenCalled();
   });
 
@@ -47,7 +47,8 @@ describe("채팅의 현재 대안 첫 노출", () => {
     expect(previous(html)).toBe("");
     expect(html).toContain("current 실내 전시관");
     expect(html).not.toContain('disabled=""');
-    expect(html).toContain('min-height:44px');
+    // `[2026-10-22 ST4F-719]` the options are cards in a row that slides (`data-no-swipe` — the chat pane's swipe back does not start there); the 44px target is in the CSS
+    expect(html).toMatch(/<div[^>]*data-slide[^>]*data-no-swipe[^>]*><button[^>]*><b>current 실내 전시관/);
     expect(state.mutate).not.toHaveBeenCalled();
   });
 

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { dayTab, mockServer, TRIP_ID, tripScreen } from "./helpers";
+import { chooseDayOne, dayTab, mockServer, TRIP_ID, tripScreen } from "./helpers";
 import { allowLocation, changeLocationConsent, countLocationAsks, locationAsks, north, setPageHidden, startWithLocationConsent } from "./location-kit";
 import { INTAKE, needsBadge } from "./plan-check-kit";
 
@@ -34,6 +34,7 @@ async function openTripMap(page: Page, agreed: boolean) {
   await startWithLocationConsent(page, agreed);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
+  await chooseDayOne(page);
   await expect(mapPane(page).locator(".leaflet-marker-icon[title]").first()).toBeVisible();
 }
 

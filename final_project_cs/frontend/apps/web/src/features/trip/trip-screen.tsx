@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bell, ChevronDown, ChevronsRight, OctagonAlert, Pencil } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
@@ -37,7 +37,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
 import { MapAppsSheet, type MapTarget } from "./map-apps";
 import { LegRow, legSummary, PastLegRow, PastStopRow, StayRow, StopRow } from "./trip-rows";
-import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
+import { dayTimeline, entryTimes, seoulKey, tripDays, type SeoulNow, type TripLeg } from "./trip-timeline";
 import { liveStop, ownNotice, progressToast } from "./stop-progress";
 import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
@@ -48,7 +48,7 @@ import { DetailHeader, TripDetail } from "./trip-detail";
 import { TripEdit } from "./trip-edit";
 import { TitleMenu, TripShare, TripTitle } from "./trip-title";
 import { SafetyPanel, shelterMeta } from "./trip-safety";
-import { creditFacts, tripEnded } from "./ending-credits";
+import { claimCreditsAutoPlay, creditFacts, openingView, tripEnded } from "./ending-credits";
 import { EndCard, TripCredits } from "./trip-credits";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
@@ -91,6 +91,8 @@ export function TripScreen({ tripId }: { tripId: string }) {
   // `[2026-10-13 사용자 결정 — D 수정 모드]` 「일정 수정」: the same page becomes the plan check of this trip (`trip-edit.tsx`) until 「완료」, then the trip is drawn afresh.
   // `[2026-10-19 사용자 결정]` The chat's 「직접 고르기」 opens the edit on a stop or on the add form (`TripPick`); 「일정 수정」 opens it as it is (`pick` null).
   const [editing, setEditing] = useState<{ pick: TripPick | null } | null>(null);
+  // `[2026-10-22 사용자 결정 — ST4F-718 · D5]` The day (or 「전체」) the trip was showing: back from the edit it is shown again, not the opening view.
+  const view = useRef<TripViewState | null>(null);
   // ★A failed re-read keeps the plan already on screen (react-query keeps the last data). Only a trip that never loaded shows the error page — the change bell re-reads often.
   // ★`[2026-10-05]` But a trip that is gone (`not_found`) or a session that ended (`session_expired`) is not drawn from the cache: another account's plan must not stay on the screen.
   const gone = query.error instanceof LiveError && ["not_found", "session_expired"].includes(query.error.code);
@@ -100,8 +102,11 @@ export function TripScreen({ tripId }: { tripId: string }) {
   }
   if (editing) return <TripEdit trip={query.data} pick={editing.pick} onExit={() => setEditing(null)} />;
   // `useTripGuardian` reads the address (`?guardian=on`): wait for it outside the server render.
-  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} onEdit={(pick = null) => setEditing({ pick })} /></Suspense>;
+  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} onEdit={(pick = null) => setEditing({ pick })} view={view} /></Suspense>;
 }
+
+/** What the plan was showing (`TripScreen` keeps it while the edit is open). */
+type TripViewState = { tripId: string; day: string; all: boolean };
 
 const monthDay = (date: string) => `${date.slice(5, 7)}.${date.slice(8, 10)}`;
 const weekday = (date: string, language: Language) =>
@@ -109,7 +114,7 @@ const weekday = (date: string, language: Language) =>
 const dayLabel = (date: string, language: Language) => `${monthDay(date)} ${weekday(date, language)}`;
 const dayName = (index: number, t: Translate) => t(`${index + 1}일차`, `Day ${index + 1}`);
 
-function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: (pick?: TripPick | null) => void }) {
+function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: (pick?: TripPick | null) => void; view: RefObject<TripViewState | null> }) {
   const t = useT();
   const search = useSearchParams();
   const { language, skipAnimation } = useSettings();
@@ -150,9 +155,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const now = useSeoulNow();
   const [shapeNow, setShapeNow] = useState(now);
   const today = days.includes(now.date) ? now.date : null;
-  // On entering: today's day while the trip is on (else the first day).
-  const [day, setDay] = useState(() => days.includes(now.date) ? now.date : days[0] ?? "");
-  const [all, setAll] = useState(false);
+  // On entering — by any way in: today's day while the trip is on (else the first day). `[2026-10-22 사용자 결정 — ST4F-718]` Before it starts and once it is over, 「전체」 (`openingView`);
+  // back from the edit, what it was showing (D5).
+  const [opening] = useState(() => view.current?.tripId === trip.id ? view.current : openingView(trip, now));
+  const [day, setDay] = useState(opening.day);
+  const [all, setAll] = useState(opening.all);
+  useEffect(() => { view.current = { tripId: trip.id, day, all }; }, [view, trip.id, day, all]);
   // `[2026-10-15 사용자 결정 — ST4F-496]` Once the trip is over: the end card at the top of 「전체」 and the ending credits over the screen.
   const [creditsOpen, setCreditsOpen] = useState(false);
   const creditsButton = useRef<HTMLButtonElement>(null);
@@ -404,6 +412,24 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     const row = Array.from(body.querySelectorAll<HTMLElement>(`[data-entry-id="${CSS.escape(before.id)}"]`)).find((entry) => !entry.closest("[inert]"));
     if (row) body.scrollTop += row.getBoundingClientRect().top - before.top;
   }, [shapeNow]);
+  // `[2026-10-22 사용자 결정 — ST4F-718 · D3]` The last stop ending while the trip is open: the plan turns to 「전체」 (its end card at the top, the last day behind it — D4) and the ending
+  // credits start, once per trip on this device (`claimCreditsAutoPlay`). Read on the list's clock (`shapeNow`), so it waits while the list is touched, and only a minute passing starts it — a
+  // change of the trip itself (a stop added or taken out) never does. With a stop's detail, the notice center or the chat open, only the plan behind them turns: nothing is drawn over them.
+  const shownAt = useRef(shapeNow);
+  const reachEnd = useEffectEvent((before: SeoulNow) => {
+    if (tripEnded(trip, before) || !tripEnded(trip, shapeNow)) return;
+    setSlide(null);
+    setAll(true);
+    setDay(days.at(-1) ?? day);
+    if (pane !== "plan" || detailId || centerOpen) return;
+    bodyBox.current?.scrollTo({ top: 0 });
+    if (claimCreditsAutoPlay(trip.id)) setCreditsOpen(true);
+  });
+  useEffect(() => {
+    const before = shownAt.current;
+    shownAt.current = shapeNow;
+    if (before !== shapeNow) reachEnd(before);
+  }, [shapeNow]);
   // On entering: today's 「지금」 mark 40 % down the list. Only here — time passing never scrolls the list.
   const entered = useRef(false);
   useLayoutEffect(() => {
@@ -525,10 +551,28 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   function openDetail(id: string) {
     const stop = trip.stops.find((entry) => entry.id === id);
     if (!stop) return;
+    detailFromChat.current = null;
     hideToast();
     closeTitle();
     setBarOpen(false);
     goPane("plan");
+    if (stop.date !== mapDay) showDay(stop.date);
+    setSelectedLine(null);
+    setSelectedId(id);
+    setDetailId(id);
+    if (sheet === "peek") setSheet("half");
+  }
+  /**
+   * `[2026-10-22 사용자 결정 — ST4F-719]` 「상세 보기」 on an answer card in the chat: the stop's detail over the sheet, as from the list, but the pane stays the chat — ← (or Esc) comes back to the
+   * conversation where it was (the hidden log loses its scroll, so it is kept here).
+   */
+  const detailFromChat = useRef<number | null>(null);
+  function openDetailFromChat(id: string) {
+    const stop = trip.stops.find((entry) => entry.id === id);
+    if (!stop) return;
+    hideToast();
+    closeTitle();
+    detailFromChat.current = chatLog.current?.scrollTop ?? 0;
     if (stop.date !== mapDay) showDay(stop.date);
     setSelectedLine(null);
     setSelectedId(id);
@@ -557,6 +601,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     const id = detailId;
     setDetailId(null);
     if (!id) return;
+    const chatAt = detailFromChat.current;
+    if (chatAt !== null) {
+      detailFromChat.current = null;
+      requestAnimationFrame(() => { if (chatLog.current) { chatLog.current.scrollTop = chatAt; chatLog.current.focus({ preventScroll: true }); } });
+      return;
+    }
     setSelectedId(id);
     setOpenId(id);
     bringUp(id);
@@ -757,7 +807,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                 </div>
               </div>
               <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="group" aria-label={t("채팅", "Chat")} inert={plan}>
-                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} selected={selected} logRef={chatLog} active={!plan} onPick={onEdit} />
+                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} dayHeading={(date) => `${dayName(days.indexOf(date), t)} ${dayLabel(date, language)}`} now={now}
+                  selected={selected} logRef={chatLog} active={!plan} onPick={onEdit} onDetail={openDetailFromChat} onMapApps={openMapApps} />
               </div>
             </div>
           </div>

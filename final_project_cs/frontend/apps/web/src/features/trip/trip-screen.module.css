@@ -128,29 +128,12 @@
 /* ── The chat pane (the old trip screen's chat, in the sheet) ── */
 /* `[2026-10-19 ST4F-614]` Up and down stay the browser's; a sideways move is the pane's own swipe back to the plan (as on the plan's list, `.sheetBody`). Without it a phone took the
    sideways move as a pan of its own and cancelled the swipe (`pointercancel`). */
-.chatPane { position: relative; padding-top: 80px; padding-bottom: 84px; touch-action: pan-y pinch-zoom; }
+/* `[2026-10-22 ST4F-719]` 84px → 106px: the docked bar's note line under the field. */
+.chatPane { position: relative; padding-top: 80px; padding-bottom: 106px; touch-action: pan-y pinch-zoom; }
 .chatLog { display: flex; flex: 1; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 12px 14px; touch-action: pan-y pinch-zoom; }
-.chatContext { flex: none; padding: 8px 12px; border-radius: 10px; background: var(--color-soft); color: var(--color-primary); font-size: 12.5px; line-height: 1.6; }
-.chatContext span { display: block; }
-.message { display: flex; flex-direction: column; align-items: flex-start; }
-.message[data-role="user"] { align-items: flex-end; }
-.messageMeta { margin: 0 2px 3px; font-size: 11px; color: var(--color-muted); }
-.bubble { max-width: 88%; margin: 0; padding: 10px 12px; border-radius: 0 13px 13px; background: var(--color-subtle); color: var(--color-text); font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
-.message[data-role="user"] .bubble { border-radius: 13px 0 13px 13px; background: var(--color-soft); color: var(--color-primary); }
-.more { margin-top: 4px; font-size: 13px; }
-.devBasis { margin: 4px 0 0; font-size: 11px; color: var(--color-muted); }
-.choices { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
-.choicesTitle { flex: 1 1 100%; font-size: 12px; color: var(--color-muted); }
 .choice { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 .choice:disabled { opacity: .45; cursor: not-allowed; }
-.undoHint { font-size: 11.5px; color: var(--color-muted); }
 .error { margin: 0; color: var(--color-error); font-size: 12.5px; }
-.pending { margin: 0; font-size: 12.5px; color: var(--color-muted); }
-.pending[data-lost] { color: var(--color-warning); }
-.prompts { display: flex; flex: none; flex-wrap: wrap; gap: 5px; padding: 8px 14px 4px; border-top: 1px solid var(--color-divider); }
-.prompt { flex: none; min-height: 40px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.prompt:disabled { opacity: .45; cursor: not-allowed; }
-.chatNote { flex: none; margin: 4px 14px 0; font-size: 11px; line-height: 1.6; color: var(--color-muted); }
 
 /* ── The chat bar at the bottom of the frame: a round button that grows into the bar ── */
 .chatBar { position: absolute; z-index: 7; right: 18px; bottom: 22px; display: flex; align-items: center; width: 58px; height: 58px; border: 1px solid transparent; border-radius: 29px; background: var(--color-primary); box-shadow: 0 10px 24px color-mix(in srgb, var(--color-text) 35%, transparent); transition: width .3s var(--ease-soft); }
@@ -177,6 +160,8 @@
 .chatBar[data-open][data-docked] { right: 0; bottom: 0; width: 100%; border-radius: 0; border-color: transparent; border-top-color: var(--color-divider); padding: 8px 3px 14px; box-shadow: none;
   transition: width .38s cubic-bezier(.2, .8, .2, 1), right .38s cubic-bezier(.2, .8, .2, 1), bottom .38s cubic-bezier(.2, .8, .2, 1), border-radius .38s, padding .38s, box-shadow .3s, border-color .3s; }
 .chatBar[data-open][data-docked]:focus-within { border-color: transparent; border-top-color: var(--color-divider); box-shadow: none; }
+/* `[2026-10-22 사용자 결정 — ST4F-719]` Docked, the bar has a second line under the field: the short note on what chat does not change + 「자세히」 (`trip-chat.module.css` `.note`). */
+.chatBar[data-open][data-docked] { flex-wrap: wrap; }
 .chatBar[data-open][data-docked] .chatField { padding: 0 10px; border-radius: 22px; background: var(--color-subtle); transition: box-shadow .3s, background-color .3s; }
 .chatBar[data-open][data-docked] .chatHint { left: 12px; right: 12px; }
 .chatBar[data-open][data-docked] .chatField:focus-within { box-shadow: inset 0 0 0 1px var(--color-selected), 0 0 0 4px var(--color-selected-soft); }
@@ -284,8 +269,6 @@
 .screen .stopHead { padding: 0 4px; }
 .chatLatest { position: absolute; z-index: 2; right: 16px; bottom: 188px; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; max-width: calc(100% - 32px); padding: 0 14px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-primary); font: inherit; font-size: 13px; box-shadow: 0 3px 10px color-mix(in srgb, var(--color-text) 16%, transparent); cursor: pointer; }
 .chatLatest:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
-.prompts { position: relative; }
-.prompts .chatLatest { bottom: calc(100% + 8px); right: 14px; }
 .chatLog:focus-visible { outline: 2px solid var(--color-selected); outline-offset: -2px; }
 
 /* `[2026-10-13 사용자 결정 — 숙소 항목 B안]` A stay: the check-in card and the check-out row in the stay's soft green, and on the days between a band 「○○에서 출발」 at the top. */
