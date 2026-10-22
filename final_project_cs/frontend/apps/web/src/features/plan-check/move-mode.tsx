@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { LiveError } from "@/lib/live/client";
-import { MODE_WORDS, refusalWhy, type MoveOption, type MoveOptions, type MoveOptionMode, type MoveRoute } from "@/lib/live/move-options";
+import { MODE_WORDS, refusalWhy, retryRoutesPage, ROUTES_RETRY_MS, type MoveOption, type MoveOptions, type MoveOptionMode, type MoveRoute } from "@/lib/live/move-options";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import type { PlanItem, PlanMove } from "./model";
@@ -15,7 +15,7 @@ const STILL_MS = 8_000;
 const LONG_MS = 20_000;
 
 /** `[2026-10-23]` The routes after the first ones: nothing asked yet, being asked, all there, or the server could not finish (ask again). */
-type More = { status: "idle" | "loading" | "done" } | { status: "error"; message: string };
+type More = { status: "idle" | "done" } | { status: "loading"; again?: boolean } | { status: "error"; message: string };
 
 type Load =
   | { status: "idle" }
@@ -57,12 +57,28 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
   const askRoutes = ctx.actions.moveRoutes;
   const canRoute = Boolean(askRoutes && ctx.actions.setMoveRoute) && routes.length > 0;
 
+  // `[2026-10-23]` The one ask-again timer (cleared when the box goes away).
+  const again = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (again.current) clearTimeout(again.current); }, []);
+
   function loadMore() {
     if (!askRoutes || more.status === "loading") return;
-    setMore({ status: "loading" });
-    void askRoutes(move.id, routes.length).then(
+    fetchMore(false);
+  }
+
+  /** One page after the routes shown. An empty page the server could not finish in time is asked again once by itself, a few seconds later (`retryRoutesPage`). */
+  function fetchMore(retried: boolean) {
+    if (!askRoutes) return;
+    const offset = routes.length;
+    setMore({ status: "loading", again: retried });
+    void askRoutes(move.id, offset).then(
       (page) => {
         if (!page) { setHasMore(false); setMore({ status: "done" }); return; }
+        if (retryRoutesPage(page, retried)) {
+          setMore({ status: "loading", again: true });
+          again.current = setTimeout(() => { again.current = null; fetchMore(true); }, ROUTES_RETRY_MS);
+          return;
+        }
         setExtra((current) => [...current, ...page.routes.filter((route) => !current.some((shown) => shown.key === route.key))]);
         setHasMore(page.hasMore);
         setMore(page.routes.length === 0 && page.why ? { status: "error", message: page.why } : { status: page.hasMore ? "idle" : "done" });
@@ -239,7 +255,7 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
             </span>
           </button>;
         })}
-        {more.status === "loading" && <div className={styles.modeWait} role="status">{t("경로를 더 찾는 중…", "Looking for more routes…")}</div>}
+        {more.status === "loading" && <div className={styles.modeWait} role="status">{more.again ? t("아직 찾고 있어요 · 곧 다시 불러와요", "Still looking - asking again in a moment") : t("경로를 더 찾는 중…", "Looking for more routes…")}</div>}
         {more.status === "error" && <p className={styles.modeNote} role="alert">{more.message} <button type="button" className={styles.modeRetry} onClick={() => { setMore({ status: "idle" }); loadMore(); }}>{t("다시 불러오기", "Ask again")}</button></p>}
         {hasMore && more.status === "idle" && <button type="button" className={styles.modeRetry} onClick={loadMore}>{t("경로 더 보기", "More routes")}</button>}
         {!hasMore && extra.length > 0 && <p className={styles.modeNote}>{t("찾은 경로를 다 보여 드렸어요", "These are all the routes found")}</p>}

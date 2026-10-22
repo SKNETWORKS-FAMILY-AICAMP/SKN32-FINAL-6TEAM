@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LiveError } from "./client";
-import { modeChoiceOf, moveOptionsOf, moveRouteOf, moveRoutesOf, refusalWhy, routeChoiceOf } from "./move-options";
+import { modeChoiceOf, moveOptionsOf, moveRouteOf, moveRoutesOf, refusalWhy, retryRoutesPage, routeChoiceOf } from "./move-options";
 
 const BODY = {
   intake_id: "i1", revision: 3, from: "0-0", to: "0-1", current_mode: "subway", recommended_mode: "subway",
@@ -66,6 +66,20 @@ describe("refusalWhy — the server's own reason for a pick it did not take", ()
     expect(refusalWhy(new LiveError("mode_not_fit", "그 수단은 고를 수 없어요", { code: "mode_not_fit" }, 422))).toBe("그 수단은 고를 수 없어요");
     expect(refusalWhy(new LiveError("mode_not_fit", "그 수단은 고를 수 없어요", { why: "  " }, 422))).toBe("그 수단은 고를 수 없어요");
     expect(refusalWhy(new Error("x"))).toBeNull();
+  });
+});
+
+describe("retryRoutesPage — ask the same page again by itself once when the server ran out of time (2026-10-23)", () => {
+  const slow = { routes: [], nextOffset: 3, hasMore: true, total: null, why: "계산이 오래 걸려 확인하지 못했어요" };
+  it("asks again once for an empty page the server could not finish", () => {
+    expect(retryRoutesPage(slow, false)).toBe(true);
+    expect(retryRoutesPage(slow, true)).toBe(false);
+  });
+  it("does not ask again for a page with routes, a last page, a page without a reason, or no answer", () => {
+    expect(retryRoutesPage({ ...slow, routes: moveRoutesOf([{ key: "walk" }]) }, false)).toBe(false);
+    expect(retryRoutesPage({ ...slow, hasMore: false, why: "이 구간은 시간표로 경로를 찾지 못했어요" }, false)).toBe(false);
+    expect(retryRoutesPage({ ...slow, why: null }, false)).toBe(false);
+    expect(retryRoutesPage(null, false)).toBe(false);
   });
 });
 

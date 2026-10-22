@@ -153,6 +153,17 @@ export async function getMoveRoutes(intakeId: string, fromId: string, toId: stri
   }
 }
 
+/**
+ * `[2026-10-23 사용자 지시 — 배포 직후 첫 「더 보기」]` How long the screen waits before asking once more by itself when the server answered 「it took too long」 (an empty page with `why` and `hasMore`).
+ * The server keeps counting after it answers and keeps the result, so the second ask is quick (x600 right after a deploy: 25 s and nothing, asked again 6 s and five routes; warm about 1 s).
+ */
+export const ROUTES_RETRY_MS = 3_000;
+
+/** Ask the same page again by itself: only for an empty page the server could not finish in time, and only once (a second one waits for 「다시 불러오기」). */
+export function retryRoutesPage(page: MoveRoutesPage | null, retried: boolean): boolean {
+  return !retried && page !== null && page.routes.length === 0 && page.why !== null && page.hasMore;
+}
+
 /** `POST …/route` `{revision, key}` (`"recommended"` = back to the calculator's route): the server counts the leg again and takes the route only if it is still there and reaches in time; it answers with the whole plan. */
 export async function setMoveRoute(intakeId: string, fromId: string, toId: string, revision: number, key: string, language: Language): Promise<{ revision: number; review: Review }> {
   const body = await api<{ revision?: unknown; review?: unknown }>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/moves/${pair(fromId, toId)}/route`, language, {
