@@ -270,6 +270,11 @@ class IntakeModeIn(IntakeRevisionIn):
     mode: str = Field(min_length=1, max_length=16)
 
 
+class IntakeRouteIn(IntakeRevisionIn):
+    """경로 고르기 — `key` = 검사 · 더 보기가 준 `routes[].key` · `recommended`(추천 경로로 되돌리기). `[2026-10-23]`"""
+    key: str = Field(min_length=1, max_length=600)
+
+
 class IntakeRestoreItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source_id: UUID
@@ -1480,6 +1485,55 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, "mode_not_fit", exc.why, why=exc.why) from None
         except move_options.NotAvailable:
             raise _error(404, "not_available", "이 구간은 수단을 고를 수 없다") from None
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+
+    @router.get("/v1/web/trip-intakes/{intake_id}/moves/{pair}/routes")
+    def web_intake_move_routes(intake_id: UUID, pair: str, http: Request, revision: int | None = Query(default=None, ge=1),
+                               offset: int = Query(default=3, ge=0, le=100), limit: int = Query(default=5, ge=1, le=20),
+                               who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-23 사용자 지시 — 경로 후보 먼저 3개 · 목록을 내리면 더]` 이동 한 구간의 **경로 후보 다음 쪽**. 검사(`moves[].routes`)가 앞의 3개를 이미 싣고,
+        이 읽기는 후보 상한을 넓힌 계산으로 그 구간을 한 번 더 세어 `offset`(화면이 이미 보인 수) 다음 `limit` 개를 준다 → `{routes[], next_offset, has_more, total}`.
+        줄 모양은 검사의 `routes[]` 와 같다(`key` · 수단 · 소요 · 출발 · 도착 · 여유 · 환승 · 탄 노선). 시간 안에 못 세면 빈 `routes` + `why`(`has_more: true` — 다시 부를 수 있다).
+        읽기 전용. ★남의 접수 404 · 낡은 판 409 · 대상이 아닌 구간 404 `not_available`."""
+        from app.domains.travel_ops.components.intake import move_options, pipeline
+
+        tenant, customer = who
+        from_id, _, to_id = pair.partition("~")
+        _count("place_search", tenant, customer, http)
+        try:
+            with get_connection() as conn:
+                return {"intake_id": str(intake_id), **move_options.read_routes(
+                    conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=revision,
+                    from_id=from_id, to_id=to_id, offset=offset, limit=limit)}
+        except move_options.NotAvailable:
+            raise _error(404, "not_available", "이 구간은 경로를 고를 수 없다") from None
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/moves/{pair}/route")
+    def web_intake_move_route(intake_id: UUID, pair: str, request: IntakeRouteIn, http: Request,
+                              who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-23]` 이동 한 구간의 **경로**를 고른다 → `{revision, review}`(새 판 · 그 구간이 고른 경로로 다시 계산된 확인 결과 전체 · `moves[i].route_choice`).
+        서버가 그 구간을 다시 세어 **그 경로가 있고 다음 일정 안에 닿을 때만** 받는다. `key` = `recommended` 는 되돌리기. 고른 경로가 있는 구간은 고른 수단보다 앞서고,
+        수단을 새로 고르면 고른 경로는 비워진다. ★낡은 판 409 · 없는 경로 · 안 닿는 경로 422 `mode_not_fit`(`why`) · 남의 접수 · 없는 구간 404."""
+        from app.domains.travel_ops.components.intake import move_options, pipeline
+
+        tenant, customer = who
+        from_id, _, to_id = pair.partition("~")
+        _count("place_search", tenant, customer, http)
+        try:
+            with get_connection() as conn:
+                return move_options.choose_route(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                 revision=request.revision, from_id=from_id, to_id=to_id, key=request.key)
+        except move_options.ModeNotFit as exc:
+            raise _error(422, "mode_not_fit", exc.why, why=exc.why) from None
+        except move_options.NotAvailable:
+            raise _error(404, "not_available", "이 구간은 경로를 고를 수 없다") from None
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:

@@ -96,6 +96,80 @@ export async function getMoveOptions(intakeId: string, fromId: string, toId: str
   }
 }
 
+/**
+ * `[2026-10-23 사용자 지시 — 경로 후보 먼저 3개 · 목록을 내리면 더]` One route the calculator found for a leg: the lines ridden (「3호선 → 2호선」), how long, when to leave and arrive, the time left.
+ * The checked plan carries the first three of each leg (`moves[].routes`, the same calculation - no wait); the rest come from `GET …/routes` when the list is scrolled to its end.
+ * `early` = it leaves before the plan's departure (still after the stop before ends). `key` is what is sent back to take it.
+ */
+export interface MoveRoute {
+  key: string;
+  mode: string;
+  modeLabel: string;
+  label: string;
+  minutes: number | null;
+  depart: string | null;
+  arrive: string | null;
+  slackMin: number | null;
+  fareKrw: number | null;
+  walkM: number | null;
+  transfers: number | null;
+  lines: string[];
+  planned: boolean;
+  early: boolean;
+}
+
+/** One `routes[]` entry of the server; one without a key is not shown (it could not be taken). */
+export function moveRouteOf(raw: unknown): MoveRoute | null {
+  if (!isRecord(raw)) return null;
+  const key = text(raw.key);
+  if (!key) return null;
+  const lines = Array.isArray(raw.lines) ? raw.lines.flatMap((line) => (text(line) ? [text(line) as string] : [])) : [];
+  return {
+    key, mode: text(raw.mode) ?? "transit", modeLabel: text(raw.mode_label) ?? "", label: text(raw.label) ?? "", minutes: number(raw.minutes),
+    depart: text(raw.depart), arrive: text(raw.arrive), slackMin: number(raw.slack_min), fareKrw: number(raw.fare_krw), walkM: number(raw.walk_m),
+    transfers: number(raw.transfers), lines, planned: raw.planned === true, early: raw.early === true,
+  };
+}
+
+export const moveRoutesOf = (raw: unknown): MoveRoute[] => (Array.isArray(raw) ? raw.flatMap((entry) => { const route = moveRouteOf(entry); return route ? [route] : []; }) : []);
+
+export interface MoveRoutesPage { routes: MoveRoute[]; nextOffset: number; hasMore: boolean; total: number | null; why: string | null }
+
+/**
+ * `GET /v1/web/trip-intakes/{id}/moves/{from}~{to}/routes?offset=&limit=`: the routes after the ones shown (`offset` = how many are on the screen). The server counts the leg once more with more
+ * routes allowed (about 0.6-2.2 s on a test PC, 2026-10-23). null = the server has nothing for this leg (an older server: 404/405). An empty page with `why` and `hasMore` = it ran out of time; ask again.
+ */
+export async function getMoveRoutes(intakeId: string, fromId: string, toId: string, offset: number, limit: number, language: Language, revision?: number | null): Promise<MoveRoutesPage | null> {
+  const query = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (typeof revision === "number") query.set("revision", String(revision));
+  try {
+    const raw = await api<unknown>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/moves/${pair(fromId, toId)}/routes?${query.toString()}`, language);
+    if (!isRecord(raw)) return null;
+    const routes = moveRoutesOf(raw.routes);
+    return { routes, nextOffset: number(raw.next_offset) ?? offset + routes.length, hasMore: raw.has_more === true, total: number(raw.total), why: text(raw.why) };
+  } catch (error) {
+    if (error instanceof LiveError && (error.status === 404 || error.status === 405)) return null;
+    throw error;
+  }
+}
+
+/** `POST …/route` `{revision, key}` (`"recommended"` = back to the calculator's route): the server counts the leg again and takes the route only if it is still there and reaches in time; it answers with the whole plan. */
+export async function setMoveRoute(intakeId: string, fromId: string, toId: string, revision: number, key: string, language: Language): Promise<{ revision: number; review: Review }> {
+  const body = await api<{ revision?: unknown; review?: unknown }>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/moves/${pair(fromId, toId)}/route`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, key }),
+  });
+  if (!isRecord(body.review) || typeof body.revision !== "number") throw new LiveError("bad_answer", "The server did not send the plan back");
+  return { revision: body.revision, review: body.review as unknown as Review };
+}
+
+/** What became of the customer's route after the stops around the leg changed: kept, or back to the recommended route (with the reason). */
+export interface RouteChoice { key: string | null; state: "kept" | "dropped" | null; why: string | null }
+
+export function routeChoiceOf(raw: unknown): RouteChoice | null {
+  if (!isRecord(raw)) return null;
+  return { key: text(raw.key), state: raw.state === "kept" || raw.state === "dropped" ? raw.state : null, why: text(raw.why) };
+}
+
 /** What 「…」 the server wrote about a leg's choice after a change of the stops around it: the choice was kept, or went back to the recommendation (with the reason). */
 export interface ModeChoice { mode: string | null; state: "kept" | "dropped" | null; why: string | null }
 

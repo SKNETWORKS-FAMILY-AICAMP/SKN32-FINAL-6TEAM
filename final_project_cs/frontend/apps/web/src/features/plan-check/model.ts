@@ -1,6 +1,7 @@
 import type { Coordinates } from "@/features/map/model";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import type { ItemRisk } from "@/lib/live/risks";
+import type { MoveRoute, RouteChoice } from "@/lib/live/move-options";
 
 /**
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
@@ -195,6 +196,11 @@ export interface PlanMove {
   modeKey?: string | null;
   recommendedMode?: string | null;
   modeChoice?: { mode: string | null; state: "kept" | "dropped" | null; why: string | null } | null;
+  /** `[2026-10-23 사용자 지시]` The first route candidates of the leg (the one it uses first), whether more can be asked for, the route it uses and what became of the customer's route. */
+  routes?: MoveRoute[];
+  routesMore?: boolean;
+  routeKey?: string | null;
+  routeChoice?: RouteChoice | null;
   /** `[2026-10-13]` A morning move 「숙소 → 그날 첫 일정」 — it opens its day (`day` is the day of `toId`), it does not follow `fromId` on the check-in day. */
   fromStay?: boolean;
   checks: CheckRow[];

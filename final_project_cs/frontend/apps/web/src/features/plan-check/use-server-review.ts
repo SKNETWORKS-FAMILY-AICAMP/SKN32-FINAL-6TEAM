@@ -6,7 +6,7 @@ import { editsFor, rows } from "@/features/intake-review/model";
 import { translator, type Language, type Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
 import { answerInterpretations, editIntake, restoreIntake, type IntakeEdit } from "@/lib/live/intake";
-import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
+import { getMoveOptions, getMoveRoutes, setMoveMode as postMoveMode, setMoveRoute as postMoveRoute, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
   addSearch, autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
@@ -269,6 +269,22 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
         if (!move) throw gone();
         const answer = await postMoveMode(intakeId, move.from, move.to, plan().revision, mode, language).catch(staleThenRethrow);
+        if (!allUndo.active) return;
+        const next = { ...plan(), revision: answer.revision, review: answer.review };
+        allUndo.advance(next);
+        take(next);
+      },
+
+      // `[2026-10-23 사용자 지시]` The routes after the ones shown, asked when the list reaches its end (one leg at a time · nothing is kept: each page is one more count).
+      moveRoutes: (id, offset) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) return Promise.reject(gone());
+        return getMoveRoutes(intakeId, move.from, move.to, offset, 5, language, plan().revision).catch(staleThenRethrow);
+      },
+      setMoveRoute: async (id, key) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) throw gone();
+        const answer = await postMoveRoute(intakeId, move.from, move.to, plan().revision, key, language).catch(staleThenRethrow);
         if (!allUndo.active) return;
         const next = { ...plan(), revision: answer.revision, review: answer.review };
         allUndo.advance(next);

@@ -43,6 +43,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/features",
     "/v1/web/trip-intakes/{intake_id}/moves/{pair}/mode",
     "/v1/web/trip-intakes/{intake_id}/moves/{pair}/options",
+    # `[2026-10-23]` 경로 후보 더 보기 · 고르기 — rest-endpoints/web-intakes.md 「경로 후보 더 보기 · 고르기」.
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/routes",
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/route",
     "/v1/web/trips/{trip_id}/safety/recovery",
     "/v1/cases",
     "/v1/cases/{case_id}",

@@ -28,7 +28,7 @@ import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } 
 import { TaxiPricing } from "./taxi-pricing";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import { dampedScrollTo } from "@/lib/damped-scroll";
-import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
+import type { MoveOptions, MoveOptionMode, MoveRoutesPage } from "@/lib/live/move-options";
 import { moveToast } from "./map-description";
 import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { FOLLOW_TOP_PX, useFollowScroll } from "./use-follow-scroll";
@@ -225,6 +225,9 @@ export interface PlanCheckActions {
   moveOptions?: (moveId: string) => Promise<MoveOptions | null>;
   /** Take one way for a leg (`"recommended"` = what the calculator chose). The server counts it again and takes it only if it reaches in time; the plan then shown is the server's. No 「다시 제출」 is needed. */
   setMoveMode?: (moveId: string, mode: MoveOptionMode | "recommended") => Promise<void>;
+  /** `[2026-10-23 사용자 지시]` The route candidates after the first `offset` of a leg (asked when its list is scrolled to the end) · take one route (`"recommended"` = the calculator's). */
+  moveRoutes?: (moveId: string, offset: number) => Promise<MoveRoutesPage | null>;
+  setMoveRoute?: (moveId: string, key: string) => Promise<void>;
 }
 
 /** How long the screen stays on what it has drawn before `onCaughtUp` — so the last line read is seen, not skipped. */
@@ -1764,6 +1767,16 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
         text: choice.mode === "recommended" ? t("추천 수단으로 돌아갔어요", "Back to the recommended way") : t(`${ro(choice.label)} 바꿨어요`, `Changed to ${choice.label}`),
         sub: t("이 구간만 다시 계산했어요", "Only this leg was counted again"), undo: true,
         revert: () => { void actions.setMoveMode!(move.id, back).catch((error: unknown) => setToast({ text: reason(error), stay: true })); },
+      });
+    },
+    // `[2026-10-23]` A route was taken: the server counted the leg again; 「되돌리기」 takes the route it used before (or the recommended one).
+    onSetRoute: async (move, route) => {
+      const before = move.routeChoice?.state === "kept" && move.routeChoice.key ? move.routeChoice.key : "recommended";
+      await actions.setMoveRoute!(move.id, route.key);
+      setToast({
+        text: route.key === "recommended" ? t("추천 경로로 돌아갔어요", "Back to the recommended route") : t(`${route.label} 경로로 바꿨어요`, `Changed to ${route.label}`),
+        sub: t("이 구간만 다시 계산했어요", "Only this leg was counted again"), undo: true,
+        revert: () => { void actions.setMoveRoute!(move.id, before).catch((error: unknown) => setToast({ text: reason(error), stay: true })); },
       });
     },
     onChange: (item) => void startChange(item),

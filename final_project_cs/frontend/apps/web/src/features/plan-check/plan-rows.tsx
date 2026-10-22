@@ -52,6 +52,8 @@ export interface RowContext {
   onToggleMove: (id: string) => void;
   /** `[2026-10-07]` The customer picked a way for a leg (`mode`, and its name for the notice): the screen sends it and says what was done, with 「되돌리기」. Rejects with the server's refusal. */
   onSetMode: (move: PlanMove, choice: { mode: MoveOptionMode | "recommended"; label: string }) => Promise<void>;
+  /** `[2026-10-23]` The customer took a route of a leg (`key`, and its name for the notice). Rejects with the server's refusal. */
+  onSetRoute: (move: PlanMove, route: { key: string; label: string }) => Promise<void>;
   onChange: (item: PlanItem) => void;
   onDelete: (item: PlanItem) => void;
   onRestore: (item: PlanItem) => void;

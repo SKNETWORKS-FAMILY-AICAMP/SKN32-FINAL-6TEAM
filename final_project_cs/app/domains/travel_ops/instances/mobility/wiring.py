@@ -196,16 +196,19 @@ def disruptions_from_events(events: dict[str, dict[str, Any]]) -> tuple[list[dic
     return out, unmapped
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None, stage="planning"):
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None, modes=None, stage="planning",
+                wide: bool = False):
     """일정 짜기(planner.add_moves)가 부를 **구간 계산기**. 꺼져 있으면 None — 부르는 쪽이 직선 어림값으로 간다.
 
     돌려주는 함수 leg(a_place, b_place, arrive_dt, not_before_dt) → (결과 dict, None) 또는 (None, 이유 dict).
       결과: starts_at · ends_at(도착 목표 − 여유 기준 출발 · 도착) · eta_min · route(options·uses 포함) · left_out
       route 에 밀도 검사(density.py)가 읽는 칸을 채운다 — average_eta_min(계획 수단 소요) · p95_eta_min(최악 소요) ·
       distance_m(계획 수단 도보 거리). ☆`[2026-09-29 문제목록 #43]` 앞 판 계산기는 이 칸을 내지 않았다.
+      more_options `[2026-10-23]` 계획 출발보다 일찍 떠나야 닿는 다른 경로(후보마다 starts_at · 앞 일정 끝 뒤) — `engine.plan.MORE_CODES`.
 
     `modes` `[2026-10-07 이동수단 고르기]` 이 수단만으로 후보를 만든다(["subway"] · ["bus"] · ["taxi"] · ["walk"]) — 설문 수단보다 앞선다.
     없으면 설문의 수단 선호(`modes_from_survey`)를 따른다.
+    `wide` `[2026-10-23 경로 후보 더 보기]` 후보 상한을 넓혀 센다(`Planner(wide=True)` · `engine.plan.WIDE_*`) — 경로 목록을 끝까지 내렸을 때만 쓴다.
     """
     if _STATE["mode"] != "enabled":
         return None
@@ -216,7 +219,7 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
         raise ValueError("unsupported leg planning stage")
     planner = Planner(rt, stage=stage, modes=(list(modes) if modes else modes_from_survey(c)),
                       taxi_option_fees=c.get('taxi_option_fees'),
-                      taxi_call_product=c.get('taxi_call_product'),taxi_call_quotes=c.get('taxi_call_quotes'))
+                      taxi_call_product=c.get('taxi_call_product'),taxi_call_quotes=c.get('taxi_call_quotes'), wide=wide)
     if disruptions:
         planner.disruptions = tuple(dict(d) for d in disruptions)     # #38 — 사고를 모든 판정 호출에 싣는다
     party = party_of(party_size, c)
@@ -228,7 +231,8 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
     #   자전거(따릉이 대여 가능 대수) · 택시 사전 견적(견적 유효 시간을 지금 시각으로 본다)
     reusable = not ("bike" in (planner.modes or ()) or c.get("taxi_call_quotes"))
     setup_key = _cache_key(rt, planner.stage, sorted(planner.modes) if planner.modes else None, planner.disruptions, party,
-                           first_visit, c.get("taxi_option_fees"), c.get("taxi_call_product"), c.get("taxi_call_quotes"))
+                           first_visit, c.get("taxi_option_fees"), c.get("taxi_call_product"), c.get("taxi_call_quotes"),
+                           *(("wide",) if wide else ()))
 
     def compute(a_place, b_place, arrive_dt, not_before_dt):
         counter["n"] += 1
@@ -253,7 +257,9 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
         from datetime import datetime
         return {"route": route, "starts_at": datetime.fromisoformat(iso_of(sdate, start)),
                 "ends_at": datetime.fromisoformat(iso_of(sdate, end)), "eta_min": int(planned["eta_min"]),
-                "left_out": left, "departure_context": planner.departure_context}, None
+                "left_out": left, "departure_context": planner.departure_context,
+                # `[2026-10-23]` 조금 일찍 떠나면 닿는 다른 경로(후보별 `starts_at`) — 확인 화면의 경로 후보 목록만 읽는다(코어 계약 밖)
+                "more_options": list(getattr(planner, "more_options", None) or ())}, None
 
     def leg(a_place, b_place, arrive_dt, not_before_dt=None):
         # ☆`[2026-10-19]` 이 함수는 계획기 하나의 trace · departure_context 를 부를 때마다 덮어쓴다 — 여러 스레드가 같이 부르면 한 구간의
