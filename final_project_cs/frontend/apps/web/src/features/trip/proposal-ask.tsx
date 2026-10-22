@@ -34,11 +34,15 @@ export function useChooseProposal(tripId: string) {
   });
 }
 
-/** What came of a choice, in the notice center's words — null while it goes on (`options`: the options stand on the card now). */
+/**
+ * What came of a choice, in the notice center's words — null while it goes on (`options`: the options stand on the card now).
+ * `[2026-10-22 ST4F-723 · 실서버 확인]` The server answers a picked option with `chosen` (`pending.py` choose), not `adjusted` — the screen showed 「처리 결과: chosen」. The notice center,
+ * a stop's detail and the chat all say the result with this one function.
+ */
 export function chooseOutcome(status: string | undefined, t: Translate): string | null {
   if (status === "options") return null;
   if (status === "no_alternate") return t("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.", "No other place was found — the plan stays as it is.");
-  if (status === "adjusted") return t("고르신 곳으로 일정을 바꿨어요.", "Your plan now uses the place you picked.");
+  if (status === "chosen") return t("고르신 곳으로 일정을 바꿨어요.", "Your plan now uses the place you picked.");
   if (status === "kept") return t("지금 일정을 그대로 두었어요.", "Your plan stays as it is.");
   return t(`처리 결과: ${status ?? "-"}`, `Result: ${status ?? "-"}`);
 }

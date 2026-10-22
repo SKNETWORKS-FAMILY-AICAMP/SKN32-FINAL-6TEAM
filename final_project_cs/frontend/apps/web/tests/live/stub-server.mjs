@@ -1375,7 +1375,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       return json(response, 200, { status: "options" }, origin);
     }
     scenario = { ...scenario, proposals: "none" };
-    return json(response, 200, body.key === null ? { status: "kept" } : { status: "adjusted" }, origin);
+    // 서버(pending.py choose)는 고른 안에 「chosen」을 준다 — 2026-10-22 까지 이 모방이 「adjusted」를 줘서 실서버의 「처리 결과: chosen」을 놓쳤다(ST4F-723)
+    return json(response, 200, body.key === null ? { status: "kept" } : { status: "chosen" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/messages` && request.method === "POST") {
     if (broken("messages")) return;

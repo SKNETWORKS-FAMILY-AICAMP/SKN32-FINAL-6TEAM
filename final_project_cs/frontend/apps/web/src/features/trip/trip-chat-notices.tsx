@@ -9,6 +9,7 @@ import { useSettings, useT } from "@/lib/settings";
 import { LinkedText } from "./linked-text";
 import { openChoices, type OpenChoice } from "./attention";
 import { proposalAvailable } from "./trip-chat-records";
+import { chooseOutcome } from "./proposal-ask";
 import { noticesKey, proposalsKey, useProposals } from "./use-trip-extras";
 import { tripKey } from "./use-trip";
 import { useSlide } from "./use-slide";
@@ -67,11 +68,8 @@ export function ChatProposalChoices({ trip, notices }: { trip: Trip; notices: No
       ? t("이미 정해졌거나 일정이 바뀌었어요. 현재 상태를 다시 불러왔어요.", "The choice was already made or the plan changed. The current state has been reloaded.")
       : choose.error.message}</p>}
     {choose.data?.status && !choose.error && <p className={c.status} role="status">{
-      choose.data.status === "adjusted" ? t("고르신 대안을 일정에 적용했어요.", "Your chosen alternative was applied.")
-      : choose.data.status === "kept" ? t("현재 일정을 그대로 두었어요.", "The current plan was kept.")
-      : choose.data.status === "options" ? t("확보한 대안에서 골라 주세요.", "Choose one of the available alternatives.")
-      : choose.data.status === "no_alternate" ? t("이번 확인에서 조건을 만족한 대안을 확보하지 못했어요. 현재 일정은 그대로예요.", "No alternative met the current conditions. The current plan is kept.")
-      : t("선택 결과를 받았어요. 최신 일정과 제안을 다시 읽고 있어요.", "The result arrived. Reloading the current plan and proposals.")}</p>}
+      choose.data.status === "options" ? t("확보한 대안에서 골라 주세요.", "Choose one of the available alternatives.")
+      : chooseOutcome(choose.data.status, t)}</p>}
   </section>;
 }
 

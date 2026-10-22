@@ -13,6 +13,7 @@ import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
 import { useSettings, useT } from "@/lib/settings";
 import { openChoices, recentNotices, undoableChange } from "./attention";
 import { proposalAvailable } from "./trip-chat-records";
+import { chooseOutcome } from "./proposal-ask";
 import { LinkedText } from "./linked-text";
 import type { Trip } from "./model";
 import { markNoticesSeen, useSeenNotices } from "./notice-reads";
@@ -250,10 +251,7 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
           : choose.error.message}</div>}
       {choose.data?.status && !choose.error && <p className={styles.said}>{
           choose.data.status === "options" ? t("다른 곳을 찾았어요 — 위에서 골라 주세요.", "Found other places — pick one above.")
-            : choose.data.status === "no_alternate" ? t("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.", "No other place was found — the plan stays as it is.")
-            : choose.data.status === "adjusted" ? t("고르신 곳으로 일정을 바꿨어요.", "Your plan now uses the place you picked.")
-            : choose.data.status === "kept" ? t("지금 일정을 그대로 두었어요.", "Your plan stays as it is.")
-              : t(`처리 결과: ${choose.data.status}`, `Result: ${choose.data.status}`)}</p>}
+            : chooseOutcome(choose.data.status, t)}</p>}
 
       {undoable && <section className={styles.act} data-tone="info" aria-labelledby="trip-undo">
         <h4 id="trip-undo">{t("자동으로 바꾼 일정", "Changed automatically")}</h4>

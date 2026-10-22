@@ -79,7 +79,8 @@ describe("고른 결과 문구", () => {
   it("대안을 받는 중에는 말하지 않고, 끝난 결과는 알림 센터 문구로", () => {
     expect(chooseOutcome("options", t)).toBeNull();
     expect(chooseOutcome("no_alternate", t)).toBe("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.");
-    expect(chooseOutcome("adjusted", t)).toBe("고르신 곳으로 일정을 바꿨어요.");
+    expect(chooseOutcome("chosen", t)).toBe("고르신 곳으로 일정을 바꿨어요.");   // 서버가 고른 안에 주는 이름(pending.py) — 2026-10-22 실서버에서 「처리 결과: chosen」으로 보였다
+    expect(chooseOutcome("adjusted", t)).toBe("처리 결과: adjusted");
     expect(chooseOutcome("kept", t)).toBe("지금 일정을 그대로 두었어요.");
   });
   it("이미 정해졌거나 일정이 바뀌었으면 그렇게, 그 밖에는 서버 말 그대로", () => {
