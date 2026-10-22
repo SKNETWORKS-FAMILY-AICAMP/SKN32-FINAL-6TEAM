@@ -92,24 +92,38 @@ def distance_between(a: Spot, b: Spot) -> float | None:
     return distance_m(a.latitude, a.longitude, b.latitude, b.longitude)
 
 
-def verdict(item: Spot, candidate: Spot, aliases: place_aliases.AliasTable = place_aliases.EMPTY) -> str:
-    """`same` · `different` · `ambiguous` — 규칙만. 모르는 값은 같다고 읽지 않는다. `aliases` 는 후보 조회가 읽은 별칭 표."""
+def explain(item: Spot, candidate: Spot, aliases: place_aliases.AliasTable = place_aliases.EMPTY) -> tuple[str, str]:
+    """`(판정, 이유)` — `same` · `different` · `ambiguous` 와 **어느 규칙이 정했나**(사람이 읽는 한 줄). 규칙만. 모르는 값은 같다고 읽지 않는다.
+    `aliases` 는 후보 조회가 읽은 별칭 표. 이유는 입력으로 직접 확인하는 도구(`scripts/activity/try_place_names.py`)가 보여 준다."""
     if item.content_id and item.content_id == candidate.content_id:
-        return "same"
+        return "same", f"같은 contentid({item.content_id})"
     a, b = normalize_full(item.name), normalize_full(candidate.name)
     if not a or not b:
-        return "different"
+        return "different", "이름이 비었다"
     # ★`[2026-10-19]` 사람이 확인한 별칭이 먼저다 — 이름이 완전히 달라도(「N서울타워」 = 「남산서울타워」) 같은 곳이다.
     #   다만 좌표를 둘 다 알고 `ALIAS_MAX_M` 보다 멀면 같은 이름의 다른 곳일 수 있다 — `ambiguous`(별칭은 이름만 증명하고 위치는 증명하지 않는다)
     if aliases.is_alias_of(item.name, candidate.content_id) or aliases.is_alias_of(candidate.name, item.content_id):
         d = distance_between(item, candidate)
-        return "ambiguous" if d is not None and d > ALIAS_MAX_M else "same"   # 멀면 같은 이름의 다른 곳일 수 있다 — 빼지 않고 경고로 센다
+        if d is not None and d > ALIAS_MAX_M:
+            return "ambiguous", f"별칭이지만 {d / 1000:.1f}km 떨어져 있다(> {ALIAS_MAX_M / 1000:g}km) — 같은 이름의 다른 곳일 수 있다"
+        where = "좌표를 몰라 별칭을 믿는다" if d is None else f"{d:.0f}m 거리"
+        return "same", f"별칭 일치({where})"
     if a == b:
-        return "same"                      # 지금까지의 동작 — 이름이 같으면 같은 곳으로 본다(거리와 상관없이)
+        return "same", "정규화한 이름이 같다(띄어쓰기·기호·괄호·대소문자 무시)"
     d = distance_between(item, candidate)
-    if d is None or d > NEAR_M:
-        return "different"
-    return "ambiguous" if name_similarity(item.name, candidate.name) >= NAME_SIM_MIN else "different"
+    if d is None:
+        return "different", "좌표를 몰라 이름 닮음을 따지지 않는다(별칭도 아니다)"
+    if d > NEAR_M:
+        return "different", f"{d:.0f}m 떨어져 있다(> {NEAR_M}m)이고 별칭도 아니다"
+    similarity = name_similarity(item.name, candidate.name)
+    if similarity >= NAME_SIM_MIN:
+        return "ambiguous", f"{d:.0f}m 안 + 이름이 닮았다(유사도 {similarity:.2f} ≥ {NAME_SIM_MIN}) — 별칭이 아니라 같다고 확정하지 않는다"
+    return "different", f"{d:.0f}m 안이지만 이름이 닮지 않았다(유사도 {similarity:.2f} < {NAME_SIM_MIN})"
+
+
+def verdict(item: Spot, candidate: Spot, aliases: place_aliases.AliasTable = place_aliases.EMPTY) -> str:
+    """`same` · `different` · `ambiguous` — `explain` 의 판정만."""
+    return explain(item, candidate, aliases)[0]
 
 
 def split(items: Iterable[Spot], candidates: list[dict[str, Any]],
