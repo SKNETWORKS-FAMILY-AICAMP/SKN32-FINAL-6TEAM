@@ -45,6 +45,9 @@ class Leg:
     #: 등록 전후 지도·출발 재검증에 쓰는 내부 선택 문맥. 공개 검사 응답에는 싣지 않는다.
     departure_context: dict[str, Any] | None = None
     selected_option_id: str | None = None
+    #: 어림으로 간 이유의 갈래 — `engine_off`(계산기 꺼짐) · `engine_error`(일시적 오류) · 계산기가 준 코드(`no_data` · `budget` 등). 시간표로 낸 값은 None.
+    #: 부르는 쪽이 「다시 해 보면 풀릴 수 있는 것」과 「몇 번을 해도 같은 것」을 가르는 데 쓴다(응답에는 싣지 않는다)
+    why_code: str | None = None
 
     @property
     def tight(self) -> bool:
@@ -119,7 +122,7 @@ def mode_of(option: dict[str, Any]) -> tuple[str, str]:
     return "transit", "대중교통"
 
 
-def _estimate(a: dict[str, Any], b: dict[str, Any], a_end: datetime, b_start: datetime, why: str) -> Leg:
+def _estimate(a: dict[str, Any], b: dict[str, Any], a_end: datetime, b_start: datetime, why: str, code: str | None = None) -> Leg:
     from app.domains.travel_ops.components.planning.planner import Cand, _transfer_minutes
 
     here = Cand(a["key"], a["name"], "activity", a["lat"], a["lon"], {}, "intake")
@@ -127,7 +130,7 @@ def _estimate(a: dict[str, Any], b: dict[str, Any], a_end: datetime, b_start: da
     minutes, _basis, _label = _transfer_minutes(here, there)
     arrive = a_end + timedelta(minutes=minutes)
     return Leg("estimate", "직선 어림", f"{a['name']} → {b['name']}", minutes, round(straight_km(a, b), 1), a_end, arrive,
-               int((b_start - arrive).total_seconds() // 60), "estimate", why)
+               int((b_start - arrive).total_seconds() // 60), "estimate", why, why_code=code)
 
 
 #: 「앞 일정이 끝난 뒤 떠나면 닿는 다른 경로」를 깊이 찾을 만큼 아슬아슬한 정도(분) — 가장 늦은 출발이 앞 일정 끝보다 이만큼 이르기까지.
@@ -145,7 +148,7 @@ def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: dateti
       「끝난 뒤 떠나서 닿는 다른 경로」를 깊이 찾는다. `deep=False` 면 깊은 탐색을 아예 안 한다 — 시각을 맞추려고 여러 번 묻는 쪽(자동 추천 ·
       후보)이 쓴다: 그쪽은 어차피 보수적으로(앞 일정이 끝나는 대로 떠난다고) 맞추고, 최종 판정은 깊은 탐색을 하는 검사가 다시 한다."""
     if engine is None:
-        return _estimate(a, b, a_end, b_start, "이동 계산기가 꺼져 있어요")
+        return _estimate(a, b, a_end, b_start, "이동 계산기가 꺼져 있어요", "engine_off")
     pa, pb = _place(a["key"], a["name"], a["lat"], a["lon"]), _place(b["key"], b["name"], b["lat"], b["lon"])
     try:
         got, why = engine(pa, pb, b_start, None)
@@ -166,10 +169,10 @@ def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: dateti
     except TeamUnavailable:
         raise
     except Exception as exc:                          # noqa: BLE001 — 일반 계산 오류의 기존 화면 정책 유지
-        return _estimate(a, b, a_end, b_start, f"이동 계산기 오류({type(exc).__name__})")
+        return _estimate(a, b, a_end, b_start, f"이동 계산기 오류({type(exc).__name__})", "engine_error")
     if got is None:
         reason = str((why or {}).get("reason") or (why or {}).get("code") or "계산기가 이 구간을 못 채웠어요")
-        return _estimate(a, b, a_end, b_start, reason)
+        return _estimate(a, b, a_end, b_start, reason, str((why or {}).get("code") or "unfilled"))
     route = got.get("route") or {}
     option = next((o for o in route.get("options") or [] if o.get("id") == route.get("planned")), {})
     code, label = mode_of(option)
