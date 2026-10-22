@@ -148,6 +148,11 @@ def alias_target(conn: Any | None, name: str | None, *, sources: tuple[str, ...]
         try:
             with conn.transaction(), conn.cursor() as cur:
                 rows = _alias_rows(cur, query, sources)
+                if rows and len(rows) == 1:
+                    # ★관광공사 목록(`place_catalog`)에 행이 없어도 지역 확인(「서울」)을 통과하게 활동 원장 주소를 싣는다
+                    cur.execute("SELECT addr1 FROM activity.ac_place WHERE content_id = %s", (str(rows[0]["content_id"]),))
+                    found = cur.fetchone()
+                    rows[0]["address"] = found[0] if found else None
         except Exception as exc:  # noqa: BLE001 — 원장 · 별칭 표를 못 읽으면 시드만 본다(별칭이 없는 것과 다르지 않게)
             logging.getLogger(__name__).warning("activity alias_target db read failed reason=%s", type(exc).__name__)
         else:
@@ -155,7 +160,7 @@ def alias_target(conn: Any | None, name: str | None, *, sources: tuple[str, ...]
                 return None
             r = rows[0]
             return {"content_id": str(r["content_id"]), "title": r["title"], "content_type_id": str(r["content_type_id"] or ""),
-                    "latitude": r["latitude"], "longitude": r["longitude"], "source": r["source"]}
+                    "latitude": r["latitude"], "longitude": r["longitude"], "source": r["source"], "address": r.get("address")}
         conn = None
     key = place_aliases.key_of(query)
     ids = set(place_aliases.seed_table().content_ids_for(query))

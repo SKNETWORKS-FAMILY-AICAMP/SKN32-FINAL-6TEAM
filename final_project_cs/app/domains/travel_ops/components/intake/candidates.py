@@ -702,7 +702,7 @@ def _alias_places(conn, tenant_id: str, query: str, name_query: str, found: list
     if not rows and target.get("latitude") is not None and target.get("longitude") is not None:
         ctype = str(target.get("content_type_id") or "") or None
         rows = [_place(target["title"], target["latitude"], target["longitude"], "tour_api",
-                       kind="dining" if ctype == "39" else "activity", content_id=str(target["content_id"]),
+                       kind="dining" if ctype == "39" else "activity", address=target.get("address"), content_id=str(target["content_id"]),
                        content_type_id=ctype, ref=f"tour:{target['content_id']}", category=category_label(ctype) if ctype else None)]
     return [{**row, "match": "alias", "alias_of": query} for row in rows]
 
