@@ -130,7 +130,7 @@ export function DayList({ view, days, listDay, ctx, mapDay, onShowDay, heading, 
       {at === 0 && tools ? <div className={styles.dayRow}>{title}<div className={styles.dayTools}>{tools}</div></div> : title}
       <RailList className={styles.timeline} now={now?.(day.date)} toScale>{(() => {
         const times = dayTimes(view, day.day);
-        const points = ctx.insertion ? insertionPoints(view, day) : [];
+        const points = ctx.insertion ? insertionPoints(view, day, ctx.removed) : [];
         // `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top (the move from it follows, when the check found one).
         const stay = view.items.find((item) => isStayItem(item) && item.date < day.date && day.date <= item.endDate!);
         const common = view.items.find((item) => item.day === day.day && item.lodgingGroup?.place && item.lodgingGroup.members.length > 1);
