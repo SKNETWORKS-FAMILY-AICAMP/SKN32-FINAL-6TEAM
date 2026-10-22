@@ -1497,12 +1497,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         """★`[2026-10-23 사용자 지시 — 경로 후보 먼저 3개 · 목록을 내리면 더]` 이동 한 구간의 **경로 후보 다음 쪽**. 검사(`moves[].routes`)가 앞의 3개를 이미 싣고,
         이 읽기는 후보 상한을 넓힌 계산으로 그 구간을 한 번 더 세어 `offset`(화면이 이미 보인 수) 다음 `limit` 개를 준다 → `{routes[], next_offset, has_more, total}`.
         줄 모양은 검사의 `routes[]` 와 같다(`key` · 수단 · 소요 · 출발 · 도착 · 여유 · 환승 · 탄 노선). 시간 안에 못 세면 빈 `routes` + `why`(`has_more: true` — 다시 부를 수 있다).
-        읽기 전용. ★남의 접수 404 · 낡은 판 409 · 대상이 아닌 구간 404 `not_available`."""
+        읽기 전용. ★남의 접수 404 · 낡은 판 409 · 대상이 아닌 구간 404 `not_available`.
+        횟수는 `move_judge`(이동 판정)로 센다 — 바깥 유료 소스 없이 이 서버의 시간표 계산기만 쓴다(카카오를 부르는 `place_search` 와 나눈다 · D-CS-020 등급 한도도 이 칸)."""
         from app.domains.travel_ops.components.intake import move_options, pipeline
 
         tenant, customer = who
         from_id, _, to_id = pair.partition("~")
-        _count("place_search", tenant, customer, http)
+        _count("move_judge", tenant, customer, http)
         try:
             with get_connection() as conn:
                 return {"intake_id": str(intake_id), **move_options.read_routes(
@@ -1520,12 +1521,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                               who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-23]` 이동 한 구간의 **경로**를 고른다 → `{revision, review}`(새 판 · 그 구간이 고른 경로로 다시 계산된 확인 결과 전체 · `moves[i].route_choice`).
         서버가 그 구간을 다시 세어 **그 경로가 있고 다음 일정 안에 닿을 때만** 받는다. `key` = `recommended` 는 되돌리기. 고른 경로가 있는 구간은 고른 수단보다 앞서고,
-        수단을 새로 고르면 고른 경로는 비워진다. ★낡은 판 409 · 없는 경로 · 안 닿는 경로 422 `mode_not_fit`(`why`) · 남의 접수 · 없는 구간 404."""
+        수단을 새로 고르면 고른 경로는 비워진다. ★낡은 판 409 · 없는 경로 · 안 닿는 경로 422 `mode_not_fit`(`why`) · 남의 접수 · 없는 구간 404.
+        횟수는 `move_judge` 로 센다(위 더 보기와 같다)."""
         from app.domains.travel_ops.components.intake import move_options, pipeline
 
         tenant, customer = who
         from_id, _, to_id = pair.partition("~")
-        _count("place_search", tenant, customer, http)
+        _count("move_judge", tenant, customer, http)
         try:
             with get_connection() as conn:
                 return move_options.choose_route(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,

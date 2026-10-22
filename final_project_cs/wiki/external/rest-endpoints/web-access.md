@@ -123,6 +123,7 @@ domain: travel
 - 넘으면 → `429 hourly_limit` + `Retry-After`(다음 정시까지 초), 본문 `{limit: member_hour|guest_hour, action, used, cap, retry_after_seconds}`. 막힌 요청은 하루 칸도 올리지 않는다(한 트랜잭션).
 - 화면 문구: 웹 `error-text.ts` `hourly_limit` — 게스트면 「로그인하면 더 쓸 수 있어요」를 붙인다. 관리 콘솔 「운영 설정」의 「서비스 모드」 칸(스위치 + 작업 × 등급 표)에서 바꾼다.
 - 시험 `tests/e2e/test_web_guard_service_mode.py`.
+- `[2026-10-23]` 확인 화면 경로 후보 「더 보기」(`GET …/trip-intakes/{id}/moves/{pair}/routes`)와 경로 고르기(`POST …/route`)는 **`move_judge`** 칸으로 센다 — 카카오 · 유료 소스를 부르지 않고 시간표 계산기만 쓴다([web-intakes 「경로 후보 더 보기 · 고르기」](web-intakes.md)). 수단 고르기(`…/options` · `…/mode`)는 종전대로 `place_search` 다.
 
 **사람 확인(Cloudflare Turnstile).** `POST /v1/web/session`(헤더 `X-Turnstile-Token` 또는 JSON `{"turnstile_token"}`) ·
 `POST /v1/web/trip-intakes`(폼 칸 `turnstile_token`). 서버가 `siteverify` 에 비밀키·토큰·원 주소를 보내 확인한다.
