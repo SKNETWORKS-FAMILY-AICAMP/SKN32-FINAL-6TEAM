@@ -25,8 +25,12 @@ test("접기 단추에 거리가 함께 나오고 확대·축소·모든 일정 
   await openFinished(page, request);
   await wake(page);
   const names = await group(page).getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label")));
-  expect(names).toEqual(["지도 단추 접기", "확대", "축소", "모든 일정 보기", "내 위치로"]);
-  await expect(group(page).getByRole("button", { name: /내 위치/ })).toBeVisible();
+  // `[2026-10-22 ST4F-721]` 「내 위치로」는 묶음 밖 — 지도 오른쪽 아래에 따로, 묶음보다 아래에 선다
+  expect(names).toEqual(["지도 단추 접기", "확대", "축소", "모든 일정 보기"]);
+  const locate = map(page).getByRole("button", { name: "내 위치로", exact: true });
+  await expect(locate).toBeVisible();
+  const [groupBox, locateBox] = await Promise.all([group(page).boundingBox(), locate.boundingBox()]);
+  expect(locateBox!.y).toBeGreaterThan(groupBox!.y + groupBox!.height);
   const [plus, ruler, minus] = await Promise.all([group(page).getByRole("button", { name: "확대" }), scale(page), group(page).getByRole("button", { name: "축소" })].map((item) => item.boundingBox()));
   expect(ruler!.y).toBeLessThan(plus!.y);
   expect(plus!.y).toBeLessThan(minus!.y);
@@ -55,6 +59,7 @@ test("접으면 눈금과 탭이 남고 다시 열어도 기본은 접힌 상태
   await group(page).getByRole("button", { name: "지도 단추 접기" }).click();
   await expect(group(page).getByRole("button", { name: "확대" })).toHaveCount(0);
   await expect(group(page).getByRole("button", { name: "지도 단추 펼치기" })).toBeVisible();
+  await expect(map(page).getByRole("button", { name: "내 위치로", exact: true })).toBeVisible();          // ST4F-721: 접어도 남는다
   await page.reload();
   await expect(needsBadgeOrSheet(page)).toBeVisible();
   await expect(group(page).getByRole("button", { name: "지도 단추 펼치기" })).toBeVisible();          // 다시 열어도 접혀 있다
