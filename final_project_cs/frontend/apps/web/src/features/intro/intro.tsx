@@ -5,6 +5,7 @@ import { ChevronsDown, Plane } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { HelpButton } from "@/components/ui/help-button";
 import { LanguageButton } from "@/components/ui/language-picker";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { RecentTrips } from "@/features/trip/trip-list";
@@ -12,6 +13,7 @@ import type { Language } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import { useSettings } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { guideImage, guideSteps, SHOT_H, SHOT_W } from "./guide-steps";
 import styles from "./intro.module.css";
 
 const copy: Record<Language, Record<string, string>> = {
@@ -21,15 +23,6 @@ const copy: Record<Language, Record<string, string>> = {
     introDescription: "Upload your plan and we check places, opening hours and travel between them.\nSigned in, we keep watching it during the trip.",
     badge: "Seoul · up to 7 days · up to 4 people", badgeCta: "Add my trip",
     how: "How to use it",
-    step1: "Paste the plan you have", detail1: "Enter your trip like the example, or write it freely.",
-    step2: "Share your style while we read", detail2: "While we read your plan, we ask who’s coming and what you enjoy.",
-    step3: "Check it stop by stop", detail3: "Places, opening hours and travel are checked for each stop. We pause and ask when one needs a fix.",
-    step4: "Fix it and register", detail4: "Adjust times and places, check again, then register it as your trip.",
-    step5: "See your trip at a glance", detail5: "Each day’s stops, the map and the travel between them on one screen.",
-    step6: "Watched during the trip", detail6: "If a place closes or the weather or a disaster hits, we tell you and ask first. Turn on the Course Keeper to let it fix things.",
-    step7: "Refine as you go", detail7: "Ask about your plan or tell us what to change in chat.",
-    chip1: "Write it freely", chip2: "Questions while we read", chip3: "Checked stop by stop", chip4: "Registered once checked",
-    chip5: "Stops and travel at a glance", chip6: "We ask first when it changes", chip7: "Change it by chatting",
     guide: "How to use GuguRoute", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
     start: "Your next journey\nstarts right here.",
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
@@ -47,15 +40,6 @@ const copy: Record<Language, Record<string, string>> = {
     introDescription: "준비한 일정을 올리면 장소 · 운영시간 · 이동을 확인해요.\n로그인하면 여행 중에도 일정을 지켜봐요.",
     badge: "서울 · 최대 7일 · 4명까지", badgeCta: "여행 등록하기",
     how: "이렇게 사용할 수 있어요",
-    step1: "준비한 일정 붙여 넣기", detail1: "여행 일정을 예시와 같이 입력하거나 자유롭게 입력해 주세요.",
-    step2: "읽는 동안 취향 알려 주기", detail2: "계획을 읽는 동안 함께 가는 사람과 여행 취향을 물어봐요.",
-    step3: "하나씩 함께 확인하기", detail3: "장소 · 운영시간 · 이동을 일정마다 확인하고, 고칠 곳이 있으면 멈춰서 물어봐요.",
-    step4: "고치고 여행 등록하기", detail4: "시간과 장소를 고치고 다시 확인한 뒤 여행으로 등록해요.",
-    step5: "내 여행 한눈에 보기", detail5: "일차별 일정과 지도, 이동을 한 화면에서 봐요.",
-    step6: "여행 중에도 지켜보기", detail6: "휴무 · 날씨 · 재난이 생기면 알리고 대안을 먼저 물어봐요. 항로 지킴이를 켜면 알아서 고쳐요.",
-    step7: "대화하며 다듬기", detail7: "궁금한 점이나 바꾸고 싶은 일정을 채팅으로 말해 보세요.",
-    chip1: "자유롭게 입력", chip2: "읽는 동안 취향 질문", chip3: "일정마다 확인", chip4: "확인 끝나면 바로 등록",
-    chip5: "일정 · 이동 한눈에", chip6: "문제 생기면 먼저 묻기", chip7: "말로 바꾸기",
     guide: "구구루트 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
     start: "다음 여행의 첫걸음,\n여기서 시작해요.",
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
@@ -77,24 +61,9 @@ const background = imageSet(srcSet);
 const { props: { srcSet: nightSrcSet } } = getImageProps({ alt: "", src: "/images/tripilot-home-03-journey-night.png", width: 1672, height: 941, quality: 75 });
 const nightBackground = imageSet(nightSrcSet);
 
-/**
- * How-it-works slides; each has a screen capture per language in `public/images/guguroute-guide-<language>-<slide>.jpg`.
- * `[2026-10-22 사용자 지시]` Seven whole phone screens (780×1594 — a 375×766 screen, its rounded corners kept), shown uncropped: plan → reading and
- * survey → check → fix and register → trip → notices → chat.
- * `[2026-10-22 사용자 결정 — 목업 A+E]` Over the dimmed screen, the part of each screen that step is about pops out: the same picture cut to `area`
- * (x0, y0, x1, y1 in the 780×1594 picture, inside the screen's own borders), wider than the screen, with a glow ring and a chip above it.
- * `fill` is the cut's own background, for the card's inner margin. Mockup: `mockups/guguroute-guide-highlight-2026-10-22.html`.
- */
-const guide = [
-  { shot: "1-input", area: [44, 560, 726, 1345], fill: "#ffffff" },
-  { shot: "2-reading", area: [45, 745, 725, 1250], fill: "#ffffff" },
-  { shot: "3-check", area: [188, 527, 731, 1060], fill: "#ffffff" },
-  { shot: "4-result", area: [10, 1180, 770, 1560], fill: "#ffffff" },
-  { shot: "5-trip", area: [24, 778, 756, 1565], fill: "#ffffff" },
-  { shot: "6-notices", area: [44, 248, 736, 805], fill: "#fbf7ec" },
-  { shot: "7-chat", area: [20, 430, 760, 1185], fill: "#ffffff" },
-] as const;
-const SHOT_W = 780, SHOT_H = 1594, LIFT = 1.1;          // the cut is 1.1 × the screen's width
+/** How-it-works slides — the steps, their pictures and highlighted areas are in `guide-steps.ts` (the 「이용 방법」 screen shows the same seven). */
+const guide = guideSteps;
+const LIFT = 1.1;                                       // the cut is 1.1 × the screen's width
 
 /** Where the cut sits, as fractions of the screen picture — the card follows whatever size the slide gives the screen. */
 function liftStyle([x0, y0, x1, y1]: readonly number[], fill: string): CSSProperties {
@@ -122,6 +91,7 @@ function Reveal({ text, mode }: { text: string; mode: "char" | "word" }) {
 export function Intro() {
   const { language } = useSettings();
   const text = copy[language];
+  const pick = (pair: readonly [ko: string, en: string]) => pair[language === "ko" ? 0 : 1];
   const router = useRouter();
   // ★`[2026-10-06 user decision]` The button always goes straight to registering a plan. The terms are still required: a visitor who has not
   //   agreed is sent to the start screen by `ConsentGate` and, once they agree there, on to the plan (`onboarding.tsx`). The preference survey is
@@ -260,7 +230,7 @@ export function Intro() {
   </div>;
   const page = (index: number) => `${styles.page} ${shown[index] && !(replaying && index === current) ? styles.in : ""}`;
 
-  return <DeviceFrame onBrand={backToStart} headerExtra={<LanguageButton />}>
+  return <DeviceFrame onBrand={backToStart} headerExtra={<><HelpButton /><LanguageButton /></>}>
     <div className={styles.progress} style={{ "--fx-p": progress.toFixed(3) } as CSSProperties} aria-hidden="true" />
     <main ref={pages} id="main-content" className={styles.pages} tabIndex={0} aria-label={text.pages} onKeyDown={keys} style={{ "--intro-bg": background, "--intro-bg-night": nightBackground } as CSSProperties}>
       <section className={`${page(0)} ${styles.hero}`} aria-labelledby="intro-title">
@@ -282,18 +252,18 @@ export function Intro() {
         <p className={styles.eyebrow} data-fx="up" style={delay(.05)}>{text.howEyebrow}</p>
         <h2 id="how-title" className={styles.title}><Reveal key={language} text={text.how} mode="word" /></h2>
         <div className={styles.guide} role="region" aria-roledescription="carousel" aria-label={text.guide} data-fx="left" style={delay(.45)}>
-          <div ref={slides} className={`${styles.slides} ${dragging ? styles.dragging : ""}`} onScroll={trackSlide} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>{guide.map(({ shot, area, fill }, index) => (
+          <div ref={slides} className={`${styles.slides} ${dragging ? styles.dragging : ""}`} onScroll={trackSlide} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>{guide.map(({ shot, area, fill, title, detail, chip }, index) => (
             <div key={shot} className={styles.slide} role="group" aria-roledescription="slide" aria-label={`${index + 1} / ${guide.length}`}>
               <div className={styles.slideHead}>
                 <span className={styles.stepNo}>0{index + 1}</span>
-                <div><h3>{text[`step${index + 1}`]}</h3><p>{text[`detail${index + 1}`]}</p></div>
+                <div><h3>{pick(title)}</h3><p>{pick(detail)}</p></div>
               </div>
               <div className={styles.shot}>
                 <div className={styles.frame} style={liftStyle(area, fill)}>
-                  <Image className={styles.screen} src={`/images/guguroute-guide-${language}-${shot}.jpg`} alt={`${text.shot}: ${text[`step${index + 1}`]}`} width={SHOT_W} height={SHOT_H} sizes="300px" draggable={false} />
+                  <Image className={styles.screen} src={guideImage(language, shot)} alt={`${text.shot}: ${pick(title)}`} width={SHOT_W} height={SHOT_H} sizes="300px" draggable={false} />
                   <div className={styles.lift} aria-hidden="true">
-                    <div className={styles.cut}><Image src={`/images/guguroute-guide-${language}-${shot}.jpg`} alt="" width={SHOT_W} height={SHOT_H} sizes="640px" draggable={false} /></div>
-                    <span className={styles.pin}><span className={styles.chip}>{text[`chip${index + 1}`]}</span><span className={styles.wire} /></span>
+                    <div className={styles.cut}><Image src={guideImage(language, shot)} alt="" width={SHOT_W} height={SHOT_H} sizes="640px" draggable={false} /></div>
+                    <span className={styles.pin}><span className={styles.chip}>{pick(chip)}</span><span className={styles.wire} /></span>
                   </div>
                 </div>
               </div>

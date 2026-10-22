@@ -13,6 +13,9 @@
 .actions > :first-child { flex: 0 1 auto; min-width: 0; }
 .actions > :last-child { flex: none; }
 .iconButton { width: 46px; padding: 0; flex: none; }
+/* `[2026-10-22 ST4F-717]` 문의함 위 한 줄 — 이용 방법의 자주 묻는 질문으로 */
+.helpLine { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px 0 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-soft); color: var(--color-primary); font-weight: 650; text-decoration: none; }
+.helpLine:hover { border-color: var(--color-primary); }
 /* `[2026-10-12 사용자 지시]` 「내 문의」: 높이를 고정한 흰 칸 — 한 줄 44px × 5(`INQUIRIES_PER_PAGE`) + 구분선 4 + 위아래 여백 8 + 테두리 2 = 234px.
    비어 있으면 안내가 칸 가운데, 있으면 다섯 줄. 내용은 상세 창(`.detail`)에서 본다 — 칸은 늘지 않는다. */
 .box { height: 234px; padding: 4px 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); display: flex; flex-direction: column; overflow: hidden; }
