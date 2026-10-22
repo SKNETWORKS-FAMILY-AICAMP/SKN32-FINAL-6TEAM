@@ -1600,8 +1600,10 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "top", stopRoom);
   // `[2026-10-21 사용자 확인 — ST4F-702]` A time dragged straight from the list (`direct`, no form) keeps the ＋ between the rows: taking them away shrank the list under the finger and the
   //   held dot ran off from under it (2446 → 2038 px). The open time form still hides them.
-  const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !(timeEdit.edit && !timeEdit.edit.direct) && !removed.length;
-  useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
+  // ★`[2026-10-22 사용자 결정 — ST4F-720]` Stops marked for deletion keep the ＋ too (they hid every one since 10-09): the seams around a grey card are worked out without it (`insertion-points.ts`),
+  //   and marking or putting one back picks the ＋ to show again.
+  const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !(timeEdit.edit && !timeEdit.edit.direct);
+  useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}|${removed.length}`);
   // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (a card or a way) wears a grey border, by the ＋'s measure — chosen apart from the ＋, so both can show.
   useCenterFocus(bodyBox, done && !changing, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
   const closeInsertion = (key: string) => {
@@ -1646,7 +1648,8 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   }, [opening?.key, openingReady]);
   const renderInsertion = (point: InsertionPoint) => {
     // `[2026-10-13 사용자 결정 — 수정 모드]` No ＋ in a gap that is over or going on now: after a stop that is over (or before one, at the start of a day).
-    const stops = shown.items.filter((item) => item.date === point.date);
+    //   `[2026-10-22 ST4F-720]` A stop marked for deletion is not one of the gap's sides.
+    const stops = shown.items.filter((item) => item.date === point.date && !removedSet.has(item.id));
     const at = stops.findIndex((item) => item.id === point.anchorId);
     const before = point.side === "before-stop" ? stops[at - 1] : stops[at];
     if (before?.past || (!before && stops[at]?.past)) return null;
