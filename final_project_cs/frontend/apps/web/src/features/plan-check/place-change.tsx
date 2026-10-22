@@ -254,17 +254,41 @@ function SearchResults({ search, onPick, onApplyName, applyWhy, explain }: {
       <Act className={styles.action} data-primary why={applyWhy} explain={explain} onPress={() => onApplyName(query)}>{t(`「${query}」${ro(query).slice(query.length)} 바꾸기`, `Change to “${query}”`)}</Act>
     </div>;
   }
+  // `[2026-10-22 사용자 지시]` A server that sends two lists tags each result: nearest to the stop being changed (`distance`), best name match (`relevance`).
+  //   Each list is drawn under its own heading and each row says which order it came from, as the source tag says where it came from. An older server's one list is drawn as before.
+  const nearest = search.list.filter((entry) => entry.order === "distance");
+  const matching = search.list.filter((entry) => entry.order === "relevance");
+  const split = nearest.length + matching.length > 0;
+  const from = nearest.find((entry) => entry.distance)?.distance?.from ?? matching.find((entry) => entry.distance)?.distance?.from;
   const near = search.list.some((entry) => entry.distance);
+  const rows = (list: PlanCandidate[]) => <ol className={styles.resultList}>{list.map((entry, index) => <li key={entry.id}><button type="button" className={styles.result} onClick={() => onPick(entry)}>
+    <span className={styles.resultNo}>{index + 1}</span>
+    <span className={styles.resultBody}><span className={styles.nameRow}><b>{entry.name}</b><SourceTag origin={entry.info?.origin} /><OrderTag order={entry.order} /></span>{placeMeta(entry.info, t) && <small>{placeMeta(entry.info, t)}</small>}</span>
+    {entry.distance && <span className={styles.resultKm}>{entry.distance.km.toFixed(1)}km</span>}
+  </button></li>)}</ol>;
+  const total = split ? new Set(search.list.map((entry) => entry.id.replace(/:(distance|relevance)$/, ""))).size : search.list.length;
   return <div className={styles.results} aria-busy={search.state === "loading"}>
-    <p className={styles.resultsHead}>{t(`‘${query}’ 검색 결과 ${search.list.length}곳`, `${search.list.length} result${search.list.length === 1 ? "" : "s"} for ‘${query}’`)}{near && <small>{t("가까운 순", "nearest first")}</small>}</p>
+    <p className={styles.resultsHead}>{t(`‘${query}’ 검색 결과 ${total}곳`, `${total} result${total === 1 ? "" : "s"} for ‘${query}’`)}{!split && near && <small>{t("가까운 순", "nearest first")}</small>}</p>
     {search.state === "loading" ? <p className={styles.empty}>{t("찾는 중…", "Searching…")}</p>
       : search.state === "failed" ? <p className={styles.empty} role="alert">{search.message}</p>
-        : search.list.length
-          ? <ol className={styles.resultList}>{search.list.map((entry, index) => <li key={entry.id}><button type="button" className={styles.result} onClick={() => onPick(entry)}>
-              <span className={styles.resultNo}>{index + 1}</span>
-              <span className={styles.resultBody}><span className={styles.nameRow}><b>{entry.name}</b><SourceTag origin={entry.info?.origin} /></span>{placeMeta(entry.info, t) && <small>{placeMeta(entry.info, t)}</small>}</span>
-              {entry.distance && <span className={styles.resultKm}>{entry.distance.km.toFixed(1)}km</span>}
-            </button></li>)}</ol>
-          : <p className={styles.empty}>{t(`‘${query}’에 맞는 장소가 없어요 · 이름을 다시 확인해 주세요`, `No place matches ‘${query}’ · check the name`)}</p>}
+        : !search.list.length ? <p className={styles.empty}>{t(`‘${query}’에 맞는 장소가 없어요 · 이름을 다시 확인해 주세요`, `No place matches ‘${query}’ · check the name`)}</p>
+          : !split ? rows(search.list)
+            : <>
+              {nearest.length > 0 && <section aria-label={t("가까운 순 결과", "Nearest results")}>
+                <p className={styles.resultsGroup}>{t("가까운 순", "Nearest first")}{from && <small>{t(`${from} 기준 거리`, `distance from ${from}`)}</small>}</p>
+                {rows(nearest)}
+              </section>}
+              {matching.length > 0 && <section aria-label={t("이름이 잘 맞는 순 결과", "Best name match results")}>
+                <p className={styles.resultsGroup}>{t("이름이 잘 맞는 순", "Best name match first")}<small>{t("거리와 상관없이 서울 전체에서", "anywhere in Seoul, whatever the distance")}</small></p>
+                {rows(matching)}
+              </section>}
+            </>}
   </div>;
+}
+
+/** `[2026-10-22]` Which order a search result came from — beside the source tag (카카오 · 관광공사). */
+function OrderTag({ order }: { order: PlanCandidate["order"] }) {
+  const t = useT();
+  if (!order) return null;
+  return <span className={styles.orderTag} data-order={order}>{order === "distance" ? t("거리순", "Nearest") : t("일치도순", "Name match")}</span>;
 }

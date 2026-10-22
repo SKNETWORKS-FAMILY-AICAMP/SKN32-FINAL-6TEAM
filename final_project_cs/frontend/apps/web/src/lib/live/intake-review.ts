@@ -168,6 +168,8 @@ export interface Candidate {
   distance_m: number | null;
   /** The nearby stop the distance is measured from. */
   reference: string | null;
+  /** `[2026-10-22]` Place search only: which list the result belongs to — nearest first or best name match first. */
+  order?: "distance" | "relevance";
   rows: CheckLine<ItemRow>[];
   fits: boolean;
   status: "ok" | "warn" | "bad";
@@ -217,7 +219,12 @@ export interface PlaceSearchResult {
   revision: number;
   item: string;
   query: string;
+  /** `[2026-10-22]` Nearest first, measured from `center` (the stop being changed when it has a place) — each `order: "distance"`. */
   results: Candidate[];
+  /** `[2026-10-22]` Best name match first, wherever it is in Seoul — each `order: "relevance"`. Absent from an older server. */
+  relevance?: Candidate[];
+  /** `[2026-10-22]` Where the distances are measured from: the stop's own place (`selected`), the area its line names (`area`), or the stops around it (`neighbours`). */
+  center?: { name: string | null; basis: "selected" | "area" | "neighbours" } | null;
   notes: string[];
 }
 

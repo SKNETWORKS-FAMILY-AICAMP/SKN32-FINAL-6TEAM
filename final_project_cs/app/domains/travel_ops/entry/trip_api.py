@@ -1694,8 +1694,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                                 source_id: UUID = Query(), index: int = Query(ge=0, le=500),
                                 revision: int | None = Query(default=None, ge=1),
                                 who: tuple[str, UUID] = Depends(_web_customer)):
-        """수정 화면의 **장소 검색** — 이름·분류로 관광공사 목록 · 요식 원장 · 카카오를 함께 찾고 앞뒤 일정에서 가까운 순으로 보인다.
-        결과마다 그 일정의 날짜·시각에 맞는지 검사 줄이 붙는다. 읽기 전용."""
+        """수정 화면의 **장소 검색** — 이름·분류로 관광공사 목록 · 요식 원장 · 카카오를 함께 찾는다. 결과마다 그 일정의 날짜·시각에 맞는지 검사 줄이 붙는다. 읽기 전용.
+        ★`[2026-10-22 사용자 지시]` 두 목록 — `results` 는 **고르고 있는 일정의 지금 장소**에서 가까운 순(`order: "distance"`), `relevance` 는 이름이 잘 맞는 순
+        (`order: "relevance"`), `center` 는 거리를 잰 기준(`candidates.search` 의 `around_self` · `by_relevance`)."""
         from app.domains.travel_ops.components.intake import candidates
 
         tenant, customer = who
@@ -1706,7 +1707,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             item = _review_item(found, source_id, index)
             _count("place_search", tenant, customer, http)
             return {"revision": found["revision"], **candidates.search(
-                conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory))}
+                conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory),
+                around_self=True, by_relevance=True)}
 
         return _review_call(intake_id, customer, tenant, revision, use)
 
