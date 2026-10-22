@@ -27,9 +27,11 @@ def _at(hhmm: str, day: int = 23) -> datetime:
     return datetime(2026, 9, day, int(hour), int(minute), tzinfo=KST)
 
 
-def _part(seq, title, start, end=None, *, kind="activity", attributes=None, day=23):
+def _part(seq, title, start, end=None, *, kind="activity", attributes=None, day=23, generated=True):
     place = {"name": title, "place_id": f"p{seq}", "latitude": 37.5, "longitude": 127.0, "attributes": dict(attributes or {})}
-    return Part(seq=seq, kind=kind, title=title, starts_at=_at(start, day), ends_at=_at(end, day) if end else None, place=place)
+    # `generated` = 우리가 시각을 정한 항목(생성기가 짠 것 — `detail.planner`). 아니면 고객이 쓴 계획서의 시간 · 고객 요청으로 정해진 시간이다
+    detail = {"planner": {"day": f"2026-09-{day}"}} if generated else None
+    return Part(seq=seq, kind=kind, title=title, starts_at=_at(start, day), ends_at=_at(end, day) if end else None, place=place, detail=detail)
 
 
 def _codes(found):
@@ -49,6 +51,37 @@ def test_a_day_that_ends_exactly_on_the_day_end_is_fine():
     assert "past_day_end" not in _codes(quality_warnings([_part(1, "경복궁", "10:00", "11:30"), _part(2, "저녁", "20:00", "22:00", kind="dining")]))
 
 
+def test_a_day_that_only_starts_after_the_day_end_is_what_the_customer_asked_for_so_it_is_not_called_late():
+    # `[2026-10-21 사용자 지시]` 22:00 은 요청에 시각이 없을 때 쓰는 기본값 — 밤에 지금부터 만들어 달라고 한 일정은 늦다고 알리지 않는다
+    found = quality_warnings([_part(1, "야경 산책", "23:10", "23:50"), _part(2, "야식", "23:50", "23:59", kind="dining")])
+    assert "past_day_end" not in _codes(found)
+
+
+def test_times_the_customer_wrote_are_not_judged_by_our_default_end():
+    # `[2026-10-21 사용자 지시]` 22:00 은 우리가 시각을 정할 때만 쓰는 기본값 — 계획서에 고객이 적은 시간은 그대로이니 늦다고 알리지 않는다
+    found = quality_warnings([_part(1, "경복궁", "10:00", "11:30", generated=False), _part(2, "공연", "21:00", "23:30", generated=False)])
+    assert "past_day_end" not in _codes(found)
+
+
+def test_a_mixed_day_only_names_the_late_items_we_placed_ourselves():
+    found = quality_warnings([_part(1, "경복궁", "10:00", "11:30"), _part(2, "고객 공연", "21:00", "23:30", generated=False),
+                              _part(3, "야식", "22:30", "23:30", kind="dining")])
+    [warning] = [w for w in found if w["code"] == "past_day_end"]
+    assert warning["items"] == [3]
+
+
+def test_when_the_customer_names_an_end_every_item_is_judged_by_it():
+    found = quality_warnings([_part(1, "경복궁", "10:00", "11:30", generated=False), _part(2, "공연", "20:00", "21:30", generated=False)],
+                             constraints={"day_hours": {"end": "21:00"}})
+    [warning] = [w for w in found if w["code"] == "past_day_end"]
+    assert warning["items"] == [2] and "21:00" in warning["reason"]
+
+
+def test_a_day_that_starts_before_the_day_end_but_runs_past_it_is_still_a_warning():
+    found = quality_warnings([_part(1, "공연", "21:00", "23:00")])
+    assert "past_day_end" in _codes(found)
+
+
 def test_every_late_item_is_named_and_each_day_is_judged_on_its_own():
     found = quality_warnings([
         _part(1, "공연", "20:00", "22:30"), _part(2, "야식", "22:30", "23:30", kind="dining"),
@@ -59,7 +92,7 @@ def test_every_late_item_is_named_and_each_day_is_judged_on_its_own():
 
 
 def test_an_item_without_an_end_is_judged_by_its_start():
-    assert "past_day_end" in _codes(quality_warnings([_part(1, "심야 영화", "22:30")]))
+    assert "past_day_end" in _codes(quality_warnings([_part(1, "경복궁", "10:00", "11:00"), _part(2, "심야 영화", "22:30")]))
     assert "past_day_end" not in _codes(quality_warnings([_part(1, "저녁 산책", "21:30")]))
 
 

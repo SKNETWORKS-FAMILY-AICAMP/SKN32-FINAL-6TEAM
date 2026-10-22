@@ -165,6 +165,13 @@ def specs() -> dict[str, LimitSpec]:
     out["travel.trip_screen.now_label_enabled"] = LimitSpec(
         "travel.trip_screen.now_label_enabled", "여행 화면 「지금 HH:MM」 시각 표시(시험 기간 — 배포 때 끄기)", "", "bool",
         guard.get("travel.trip_screen.now_label_enabled") is not False)
+    # ★`[2026-10-22 사용자 지시]` 여행 화면 일정 목록 위 위험 점검 칸 — 3분 점검 · 재난 경고 확인용이라 기본 켜짐, 배포 · 시연 때 끈다.
+    #   읽는 곳은 `settings_hook.trip_risk_panel_enabled` 하나다(여행 조회 응답의 `risk_panel`)
+    out["travel.trip_screen.risk_panel_enabled"] = LimitSpec(
+        "travel.trip_screen.risk_panel_enabled", "여행 화면 위험 점검 칸(3분 점검 · 재난 경고 확인용 — 배포 · 시연 때 끄기)", "", "bool",
+        guard.get("travel.trip_screen.risk_panel_enabled") is not False,
+        help="여행 화면 일정 목록 위의 「현재 점검 대상 일정이 없어요 · 지금부터 n시간 이내 대상 · 확인 시각」 칸입니다.\n"
+             "끄면 그 칸만 숨습니다. 3분마다 하는 점검 · 종 표시 · 위험 알림 · 알림 센터 「주의」 탭의 점검 결과는 그대로입니다.")
     # ★`[2026-10-19 사용자 결정 — ST4F-613]` 항로 지킴이 — 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다. 기본 켜짐.
     #   읽는 곳은 `settings_hook.guardian_enabled` 하나다(판정 · 여행 조회 · 켜기 입구 · 알림 · 공개 읽기)
     out["travel.guardian.enabled"] = LimitSpec(

@@ -617,6 +617,8 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
             "safety": safety,
             # ★`[2026-10-15 사용자 결정 — ST4F-494]` 여행 화면 「지금 HH:MM」 시각 꼬리표 — 관리 콘솔 스위치(기본 켜짐). 계약 rest-endpoints/web-trips.md
             "now_label": settings_hook.trip_now_label_enabled(store.tenant_id),
+            # ★`[2026-10-22 사용자 지시]` 여행 화면 일정 목록 위 위험 점검 칸 — 관리 콘솔 스위치(기본 켜짐). 칸만 숨기고 점검은 그대로. 계약 rest-endpoints/web-trips.md
+            "risk_panel": settings_hook.trip_risk_panel_enabled(store.tenant_id),
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
             # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다

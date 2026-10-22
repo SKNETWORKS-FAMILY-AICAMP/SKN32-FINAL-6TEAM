@@ -31,7 +31,7 @@ from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, V
 from app.domains.travel_ops.components.places.place_hours import DayHours, break_span, hours_on
 from .assemble import collect
 from .hours import HoursFacts, closed_weekdays, facts_for, week_known_all, weekday_ko
-from .moves import Leg, late_text, leg_between
+from .moves import Leg, late_text, leg_between, same_place
 from .terms import category_label
 from . import taxi_pricing
 from app.domains.travel_ops.components import settings_hook
@@ -721,6 +721,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         """이 두 이웃 사이 구간을 세나 — 같은 날이고, 고정끼리가 아니고, 고정 일정이 낀 구간이면 아직 지나지 않았을 때(뒤 일정 시작 > 지금)."""
         if not x["date"] or x["date"] != y["date"] or (x.get("fixed") and y.get("fixed")):
             return False
+        # `[2026-10-21 사용자 지적]` 같은 곳을 잇는 구간은 만들지 않는다 — 「도보 1분 · 0.0km」 (`moves.same_place`). 장소 없는 칸(미정)은 그대로 구간을 만든다
+        if same_place(x.get("place"), y.get("place")):
+            return False
         if x.get("fixed") or y.get("fixed"):
             start = _dt(y["date"], y["start"])
             return start is not None and start > now_at
@@ -747,6 +750,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             start = _dt(day, first[0]["start"]) if first else None
             if first is not None and not first[0].get("fixed") and start is not None and start > now_at:
                 morning.append(((stay, stay_item), first))
+    morning = [pair for pair in morning if not same_place(pair[0][0].get("place"), pair[1][0].get("place"))]       # 같은 곳이면 아침 구간도 없다
     move_total += len(morning)
 
     def add_move(move: dict[str, Any], ia: dict[str, Any], ib: dict[str, Any]) -> None:
