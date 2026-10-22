@@ -94,6 +94,14 @@ domain: travel
 - 서비스 전체 한도 → `503 service_daily_cap` + `Retry-After`. 사용자 잘못이 아니라 가른다.
 - 제안 기본값과 산정 근거는 `config/guardrails.yaml` `web_guard.limits` 주석(전부 `[추정]`).
 
+**서비스 모드 — 회원 · 게스트 한 시간 한도 `[2026-10-22 사용자 지시]`.** 결정 [D-CS-020](../../decisions/D-CS-020-service-mode-hourly-limits.md).
+- 운영 설정 `service.mode_enabled`(기본 **꺼짐** — 지금은 시험 단계). 켜면 ①위 하루 한도가 함께 켜진다(`web.limits_enabled` 를 따로 켜지 않아도) ②**사람(키) 한 명의 한 시간** 횟수 한도가 더해진다.
+- 등급: **회원**(소셜 로그인이 붙은 계정 — 지금 유료 등급은 없다) · **게스트**(로그인 안 함, `guest_policy.is_guest`). 이름 `service.<member|guest>.<작업>.per_hour`(작업 = 위 하루 한도와 같은 10개). 기본값은 가드레일 `web_guard.service_mode.per_hour`(우리가 고른 값 — 게스트가 늘 더 적다), 범위 1~100000.
+- QA 예외 계정(`usage_exempt`)은 등급 한도를 받지 않는다. 꺼져 있으면 한 시간 칸은 세지도 않는다(DB 를 더 부르지 않는다).
+- 넘으면 → `429 hourly_limit` + `Retry-After`(다음 정시까지 초), 본문 `{limit: member_hour|guest_hour, action, used, cap, retry_after_seconds}`. 막힌 요청은 하루 칸도 올리지 않는다(한 트랜잭션).
+- 화면 문구: 웹 `error-text.ts` `hourly_limit` — 게스트면 「로그인하면 더 쓸 수 있어요」를 붙인다. 관리 콘솔 「운영 설정」의 「서비스 모드」 칸(스위치 + 작업 × 등급 표)에서 바꾼다.
+- 시험 `tests/e2e/test_web_guard_service_mode.py`.
+
 **사람 확인(Cloudflare Turnstile).** `POST /v1/web/session`(헤더 `X-Turnstile-Token` 또는 JSON `{"turnstile_token"}`) ·
 `POST /v1/web/trip-intakes`(폼 칸 `turnstile_token`). 서버가 `siteverify` 에 비밀키·토큰·원 주소를 보내 확인한다.
 - 설정 `ACOP_TURNSTILE_SECRET` 이 있으면 **늘 확인한다.** 토큰이 없거나 실패 → `403 human_check_failed`(`reasons` = Cloudflare `error-codes`).
@@ -129,7 +137,8 @@ GET   /admin/limits/events?limit=50      scope limits:read
   200 {"events": [{"at", "revision", "actor", "key_id", "name", "old", "new", "reason"}, …]}   // 새것부터
 ```
 - 이름: `web.limits_enabled` · `web.<intake|plan|confirm|trip_create|message|warmup>.<per_key_day|per_ip_day|service_day>` ·
-  `web.session.per_ip_hour` · `web.guest_idle_hours` · `web.member_idle_hours` · `web.session_max_hours` · `web.guest_cleanup_enabled`(★`[2026-10-04]` 옛 `web.idle_key_*` 를 대신한다). 기본값·범위는 가드레일, 바꾼 값은 `runtime_limits`.
+  `web.session.per_ip_hour` · `web.guest_idle_hours` · `web.member_idle_hours` · `web.session_max_hours` · `web.guest_cleanup_enabled`(★`[2026-10-04]` 옛 `web.idle_key_*` 를 대신한다) ·
+  ★`[2026-10-22]` `service.mode_enabled` · `service.<member|guest>.<작업>.per_hour`(위 「서비스 모드」). 기본값·범위는 가드레일, 바꾼 값은 `runtime_limits`.
 - 바꾼 값은 각 프로세스가 최대 30초 캐시해 늦게 반영된다(`applies_within_seconds`). 감사 줄(`runtime_limit_events`)은 고치지도 지우지도 못한다(트리거).
 - 시험 `tests/e2e/test_web_api.py` 10건.
 

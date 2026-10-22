@@ -95,6 +95,15 @@ describe("explicit restaurant search actions", () => {
     expect(cards[0].distance).toEqual({ km: 0.3, from: "경복궁" });
   });
 
+  it("`[2026-10-22]` passes the abort signal on, and the add-stop search asks for the nearest list only (no second map call)", async () => {
+    harness.search.mockResolvedValue({ results: [restaurant()], notes: [] });
+    const screen = draw(), stop = new AbortController();
+    await screen.actions.search!("0-0", "레몬그라스", stop.signal);
+    await screen.actions.searchToAdd!("0-0", "레몬그라스", stop.signal);
+    expect(harness.search.mock.calls[0].slice(5)).toEqual([stop.signal]);
+    expect(harness.search.mock.calls[1].slice(5)).toEqual([stop.signal, { relevance: false }]);
+  });
+
   it("draws an older server's single list as it was (no order tags)", async () => {
     harness.search.mockResolvedValue({ results: [restaurant()], notes: [] });
     const [card] = await draw().actions.search!("0-0", "레몬그라스");

@@ -79,6 +79,12 @@ describe("the calls of the check screen", () => {
     expect(path().pathname).toBe("/v1/web/trip-intakes/i1/place-search");
     expect(path().searchParams.get("q")).toBe("올리브영 & 명동");
     expect(path().searchParams.get("revision")).toBe("3");
+    expect(path().searchParams.has("relevance")).toBe(false);
+  });
+
+  it("`[2026-10-22]` asks for the nearest list only when told to (no second map call on the server)", async () => {
+    await searchPlaces("i1", ITEM, 3, "광장시장", "ko", undefined, { relevance: false });
+    expect(path().searchParams.get("relevance")).toBe("false");
   });
 
   it("can drop a search that the customer typed past", async () => {

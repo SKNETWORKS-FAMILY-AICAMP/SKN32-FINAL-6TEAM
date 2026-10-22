@@ -153,7 +153,8 @@ export interface EditHow { flow?: boolean }
 
 export interface PlanCheckActions {
   add?: (draft: NewStop) => Promise<void>;
-  searchToAdd?: (anchorId: string, query: string) => Promise<AddStopPlace[]>;
+  /** `signal` — `[2026-10-22]` aborted when the words change, so a search nobody will read stops there. */
+  searchToAdd?: (anchorId: string, query: string, signal?: AbortSignal) => Promise<AddStopPlace[]>;
   /** Save one stop's details as drafted (the server looks a typed place up again and checks the plan again). */
   edit?: (id: string, draft: ItemDraft, how?: EditHow) => Promise<void>;
   /**
@@ -172,8 +173,8 @@ export interface PlanCheckActions {
   candidates?: (id: string, onLive?: (cards: PlanCandidate[]) => void) => Promise<PlanCandidate[]>;
   /** Why the list for a stop is short or empty (the server's `notes`: `no_same_kind` · `booked_needs_name` · …) — read after `candidates` has answered. */
   candidateNotes?: (id: string) => string[];
-  /** Places matching words, nearest first (the change screen's search bar). */
-  search?: (id: string, query: string) => Promise<PlanCandidate[]>;
+  /** Places matching words: nearest first, then best name match (the change screen's search bar). `signal` is aborted when the words change. */
+  search?: (id: string, query: string, signal?: AbortSignal) => Promise<PlanCandidate[]>;
   /** Put a place in one stop: a candidate or search result, or a name the server looks up. */
   replace?: (id: string, choice: PlaceChoice, how?: EditHow) => Promise<void>;
   /** `[2026-10-20 C안]` The place the server took for now (one of several, the nearest) is the one: sent back as the customer's pick. */
@@ -658,13 +659,17 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
     const words = query.trim();
     if (!change || !words) { setSearch(null); return; }
     if (!actions.search) { setSearch({ query: words, list: [], state: "unsupported" }); return; }
+    // `[2026-10-22 사용자 지시]` No search for one letter (the server answers 422 and the map call is wasted), and a search the next letter makes
+    //   stale is aborted instead of left to run: each one costs the map search budget (twice when both lists are asked).
+    if (words.replace(/\s/g, "").length < 2) { setSearch({ query: words, list: [], state: "short" }); return; }
     setSearch({ query: words, list: [], state: "loading" });
     let live = true;
+    const stop = new AbortController();
     const timer = setTimeout(() => {
-      actions.search!(change.id, words).then((list) => { if (live) setSearch({ query: words, list, state: "ready" }); })
+      actions.search!(change.id, words, stop.signal).then((list) => { if (live) setSearch({ query: words, list, state: "ready" }); })
         .catch((error: unknown) => { if (live) setSearch({ query: words, list: [], state: "failed", message: reason(error) }); });
     }, 250);
-    return () => { live = false; clearTimeout(timer); };
+    return () => { live = false; clearTimeout(timer); stop.abort(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a new search only when the words or the stop change
   }, [query, change?.id]);
 
@@ -1862,7 +1867,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
         <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
           mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
-          search={actions.searchToAdd && inserting.anchorId ? (query) => actions.searchToAdd!(inserting.anchorId, query) : undefined}
+          search={actions.searchToAdd && inserting.anchorId ? (query, signal) => actions.searchToAdd!(inserting.anchorId, query, signal) : undefined}
           onSave={async (draft) => { await actions.add!(draft); setAddingBusy(false); setInserting(null); setSlide("prev"); setToast({ text: t("일정을 추가하고 앞뒤 이동시간을 다시 확인했어요.", "Added the stop and checked travel times around it.") }); }} />
       </div> : changing && change
         ? <PlaceChange item={changing} session={change} search={search} explain={explain} applyWhy={applyWhy} candidatesSupported={Boolean(actions.candidates)}

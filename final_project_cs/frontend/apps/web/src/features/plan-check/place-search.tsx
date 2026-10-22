@@ -7,7 +7,7 @@ import { reason } from "./parts";
 import styles from "./add-stop.module.css";
 import { PlaceSearchHeader } from "./place-search-header";
 
-type Search = (query: string) => Promise<AddStopPlace[]>;
+type Search = (query: string, signal?: AbortSignal) => Promise<AddStopPlace[]>;
 const SEARCH_DELAY_MS = 300;
 
 /** 장소 식별값은 검색 결과에서만 고른다. 늦은 응답은 새 검색 결과를 덮지 않는다. */
@@ -25,13 +25,15 @@ export function PlaceSearch({ search, value, onPick, error, onBlur, onFocus, bus
     const ask = latestSearch.current, words = query.trim();
     if (!ask || words.length < 2 || value) return;
     let active = true;
+    // `[2026-10-22]` A search the next letter makes stale is aborted, not left to spend the map search budget.
+    const stop = new AbortController();
     const timer = setTimeout(() => {
       setResult({ state: "loading", list: [] });
-      void ask(words).then((list) => {
+      void ask(words, stop.signal).then((list) => {
         if (active) setResult({ state: "ready", list });
       }, (problem: unknown) => { if (active) setResult({ state: "failed", list: [], message: reason(problem) }); });
     }, SEARCH_DELAY_MS);
-    return () => { active = false; clearTimeout(timer); };
+    return () => { active = false; clearTimeout(timer); stop.abort(); };
   }, [query, retry, value]);
 
   return <div className={styles.place}>

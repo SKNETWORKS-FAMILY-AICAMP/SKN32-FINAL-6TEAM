@@ -1418,7 +1418,8 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
             if not lodging and not stay_item:
                 found += _ledger_places(conn, tenant_id, ref, query=name_q, radius_m=None, **area_kwargs)
     kakao_kind = "activity" if lodging else place_kind_of(item)
-    found += _kakao_places(kakao, q, ref, kakao_kind, notes, size=10)
+    # ★`[2026-10-22 사용자 지시]` 웹 검색은 한 번에 받을 수 있는 최대(15)를 받는다 — 카카오는 호출 수로 세서 비용이 같고, 거른 뒤에도 8곳을 채우기 쉽다
+    found += _kakao_places(kakao, q, ref, kakao_kind, notes, size=15 if around_self else 10)
     key = _search_name_key(name_q, branch_hint)
     current = item["place"]
     mine = None
@@ -1476,12 +1477,19 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     if around_self or by_relevance:
         answer["center"] = {"name": area.get("name") if area else None, "basis": "area" if hint_area else basis}
     if by_relevance:
-        # 거리와 상관없이 이름이 잘 맞는 곳 — 우리 목록은 서울 전역 이름 일치(짧은 이름 먼저), 카카오는 중심 없이 서울 관련도 순으로 한 번 더 부른다
+        # 거리와 상관없이 이름이 잘 맞는 곳 — 우리 목록은 서울 전역 이름 일치(짧은 이름 먼저), 카카오는 중심 없이 서울 관련도 순
+        # ★`[2026-10-22 사용자 지시]` 카카오 두 번째 호출은 **필요할 때만** — 거리순으로 모은 곳에 이름이 검색어와 똑같은 곳이 이미 있으면 부르지 않고
+        #   거리순 호출에서 받은 카카오 결과를 다시 쓴다(하루 1,000건 예산 `travel.kakao_budget`). 없을 때만 한 번 더 부른다 — `relevance_kakao` 가 어느 쪽인지 적는다
         said: list[str] = []
+        exact_near = any(normalize_full(p["name"]) == key for p in found)
         pool = _db_places_by_name(conn, tenant_id, name_q, None, now, **area_kwargs)
         if not lodging and not stay_item:
             pool += _ledger_places(conn, tenant_id, None, query=name_q, radius_m=None, **area_kwargs)
-        pool += _kakao_places(kakao, q, None, kakao_kind, said, size=15)
+        if exact_near:
+            pool += [dict(p) for p in found if p.get("source") == "kakao"]
+        else:
+            pool += _kakao_places(kakao, q, None, kakao_kind, said, size=15)
+        answer["relevance_kakao"] = "reused" if exact_near else "called"
         if mine:
             pool.insert(0, dict(mine))
         pool = narrow(pool, said)

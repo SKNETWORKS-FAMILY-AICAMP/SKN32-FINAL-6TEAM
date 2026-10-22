@@ -315,9 +315,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         return cards;
       },
       candidateNotes: (id) => candidateNotes.current.get(id) ?? [],
-      searchToAdd: async (id, words) => {
+      searchToAdd: async (id, words, signal) => {
         const item = itemOf(id);
-        const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
+        const found = await searchPlaces(intakeId, item, plan().revision, words, language, signal, { relevance: false }).catch(staleThenRethrow);
         if (!allUndo.active) throw gone();
         assertPlaceSearchComplete(found, t);
         return found.results.map((result) => ({
@@ -325,9 +325,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
           pickedPlace: pickedPlace(result.place),
         }));
       },
-      search: async (id, words) => {
+      search: async (id, words, signal) => {
         const item = itemOf(id);
-        const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
+        const found = await searchPlaces(intakeId, item, plan().revision, words, language, signal).catch(staleThenRethrow);
         // `[2026-10-22 사용자 지시]` Two lists: nearest to the stop being changed, then the best name matches. A place can stand in both, so each list keeps its own card ids.
         const both = [...found.results, ...(found.relevance ?? [])];
         assertPlaceSearchComplete({ results: both, notes: found.notes }, t);
