@@ -168,10 +168,10 @@ def specs() -> dict[str, LimitSpec]:
     # ★`[2026-10-22 사용자 지시]` 여행 화면 일정 목록 위 · 계획 확인 화면의 위험 점검 칸 — 3분 점검 · 재난 경고 확인용이라 기본 꺼짐, 시험 때 켠다.
     #   읽는 곳은 `settings_hook.trip_risk_panel_enabled` 하나다(여행 조회 응답 · 공개 읽기 `GET /v1/web/features` 의 `risk_panel`)
     out["travel.trip_screen.risk_panel_enabled"] = LimitSpec(
-        "travel.trip_screen.risk_panel_enabled", "여행 화면 · 계획 확인 화면 위험 점검 칸(3분 점검 · 재난 경고 확인용 — 시험 때만 켜기)", "", "bool",
+        "travel.trip_screen.risk_panel_enabled", "위험 점검 칸 — 여행 화면 · 알림 센터 · 계획 확인 화면(3분 점검 · 재난 경고 확인용 — 시험 때만 켜기)", "", "bool",
         guard.get("travel.trip_screen.risk_panel_enabled") is True,
-        help="여행 화면 일정 목록 위와 계획 확인 화면(등록 전 · 일정 수정)의 「현재 점검 대상 일정이 없어요 · 일부 확인이 안 된 일정 n개 · 확인 시각」 칸입니다.\n"
-             "끄면 그 칸만 숨습니다. 3분마다 하는 점검 · 종 표시 · 위험 알림 · 알림 센터 「주의」 탭의 점검 결과는 그대로입니다.")
+        help="여행 화면 일정 목록 위 · 알림 센터 「살펴볼 점」 탭 · 계획 확인 화면(등록 전 · 일정 수정)의 「현재 점검 대상 일정이 없어요 · 일부 확인이 안 된 일정 n개 · 확인 시각」 칸입니다.\n"
+             "끄면 이 칸이 숨고, 알림 센터에는 실제 위험이 있는 일정(실내 대안 보기)만 남습니다. 3분마다 하는 점검 · 종의 「위험 n」 · 위험 알림 · 일정 카드의 위험 표시는 그대로입니다.")
     # ★`[2026-10-19 사용자 결정 — ST4F-613]` 항로 지킴이 — 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다. 기본 켜짐.
     #   읽는 곳은 `settings_hook.guardian_enabled` 하나다(판정 · 여행 조회 · 켜기 입구 · 알림 · 공개 읽기)
     out["travel.guardian.enabled"] = LimitSpec(

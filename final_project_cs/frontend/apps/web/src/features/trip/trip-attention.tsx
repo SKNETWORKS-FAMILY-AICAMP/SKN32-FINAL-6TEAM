@@ -18,7 +18,7 @@ import type { Trip } from "./model";
 import { markNoticesSeen, useSeenNotices } from "./notice-reads";
 import { tripKey } from "./use-trip";
 import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery, useTripRisks } from "./use-trip-extras";
-import { RiskPanel } from "@/features/risk/risk-panel";
+import { panelRisks, RiskPanel } from "@/features/risk/risk-panel";
 import { useRiskAlternatives } from "./use-risk-alternatives";
 import { SafetyPanel } from "./trip-safety";
 import { RecoveryPanel } from "./trip-recovery";
@@ -104,6 +104,9 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
   const recovery = useRecovery(trip.id);
   const risks = useTripRisks(trip.id, trip.version);
   const currentRisks = risks.data?.items ?? [];
+  // `[2026-10-22 사용자 지시]` 운영자가 위험 점검 칸을 끄면(`trip.riskPanel`) 「살펴볼 점」 탭에는 실제 위험 일정만 남는다(위험 알림 · 종 · 카드 표시가 여기로 온다).
+  const riskPanelShown = trip.riskPanel !== false;
+  const shownRisks = panelRisks(currentRisks, riskPanelShown);
   const riskAlternatives = useRiskAlternatives(trip.id, () => onTab("warnings"));
   const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops)
     .filter((choice) => Boolean(choice.stop) && proposalAvailable(choice.proposal, trip.version));
@@ -273,9 +276,9 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
     </div>
     <div id="trip-center-panel" role="tabpanel" aria-labelledby={`trip-center-tab-${tab}`}>
       {tab === "warnings" && <>
-        <RiskPanel items={currentRisks} at={risks.data?.at} mode={risks.data?.mode} scope={risks.data}
-          loading={risks.isPending} busy={risks.isFetching} error={risks.isError} retry={risks.refresh}
-          onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />
+        {(riskPanelShown || shownRisks.length > 0) && <RiskPanel items={shownRisks} at={risks.data?.at} mode={risks.data?.mode} scope={riskPanelShown ? risks.data : undefined}
+          loading={riskPanelShown && risks.isPending} busy={risks.isFetching} error={riskPanelShown && risks.isError} retry={risks.refresh}
+          onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />}
         {warnings.length > 0 && <ul className={styles.list}>{warnings.map((warning, index) => <li key={`${warning.code}-${warning.date ?? ""}-${index}`}>
           {warning.date && <span className={styles.tag}>{warning.date}</span>}
           <p>{warning.reason}</p>
