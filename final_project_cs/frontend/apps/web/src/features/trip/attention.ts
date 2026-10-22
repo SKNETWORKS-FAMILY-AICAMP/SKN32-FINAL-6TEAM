@@ -1,5 +1,5 @@
 import type { Notice, Proposal, ProposalOption } from "@/lib/live/extras";
-import type { TripStop } from "./model";
+import type { TripChange, TripStop } from "./model";
 
 /** A choice the server is waiting for, with the server's own sentence about it when a notice carries one. */
 export interface OpenChoice {
@@ -51,13 +51,16 @@ export function undoableChange(notices: Notice[], version: number | undefined): 
  */
 export type FeedEntry =
   | { kind: "notice"; notice: Notice; at: string }
-  | { kind: "proposal"; proposalId: string; proposal: Proposal | null; notices: Notice[]; at: string };
+  | { kind: "proposal"; proposalId: string; proposal: Proposal | null; notices: Notice[]; at: string }
+  | { kind: "version"; change: TripChange; at: string };
 
 /**
  * 「소식」, newest first. What waits for the customer stays in 「할 일」 until answered (`held` — the open choices and the undoable change), and a service notice sent to
- * the customer too (`kind: service_notice`) is shown under 「공지」 only, where the service's notices are.
+ * the customer too (`kind: service_notice`) is shown under 「공지」 only, where the service's notices are. A version of the trip that no notice carries (the old 「변경 이력」 tab's
+ * rows) is an entry of its own — the others are named on their notice's card.
  */
-export function noticeFeed(notices: readonly Notice[], proposals: readonly Proposal[], held: { proposals: ReadonlySet<string>; notices: ReadonlySet<string> }): FeedEntry[] {
+export function noticeFeed(notices: readonly Notice[], proposals: readonly Proposal[], held: { proposals: ReadonlySet<string>; notices: ReadonlySet<string> },
+  history: readonly TripChange[] = []): FeedEntry[] {
   const groups = new Map<string, Notice[]>();
   const entries: FeedEntry[] = [];
   for (const notice of notices) {
@@ -73,7 +76,34 @@ export function noticeFeed(notices: readonly Notice[], proposals: readonly Propo
     const ordered = [...list].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
     entries.push({ kind: "proposal", proposalId, proposal: proposals.find((proposal) => proposal.id === proposalId) ?? null, notices: ordered, at: ordered[ordered.length - 1].at });
   }
+  const told = new Set(notices.map((notice) => notice.version));
+  // A version's time is Seoul's wall clock (「2026-09-28 12:23」, gateway `history`) — made an instant to sort with the notices.
+  for (const change of history) if (!told.has(change.version)) entries.push({ kind: "version", change, at: `${change.at.replace(" ", "T")}:00+09:00` });
   return entries.sort(newestFirst);
+}
+
+/** Which version's reason names a change notice (「처음 등록」 · 「자동으로 바꿈」 …): the trip's history row of the version it made. */
+export const changeOf = (notice: Pick<Notice, "type" | "version">, history: readonly TripChange[]) =>
+  notice.type === "change_notice" && notice.version !== null ? history.find((change) => change.version === notice.version) ?? null : null;
+
+/**
+ * `[2026-10-22 ST4F-723]` The registration notice (`trip_api` 「여행 일정이 준비되었습니다 — {제목}. 계획서: {url}」) without the plan's address, which the card shows as 「여행계획서 열기」 —
+ * only when it is this trip's own plan address in that frame to the letter. `null`: leave the sentence as the server wrote it (its address stays a link).
+ */
+export function withoutPlanLink(text: string, planUrl: string | null | undefined): string | null {
+  if (!planUrl) return null;
+  const tail = ` 계획서: ${planUrl}`;
+  return text.endsWith(tail) ? text.slice(0, -tail.length) : null;
+}
+
+/** A cause the server sent as its own code only (gateway `causeText` falls back to the code: 「closed」 · 「customer_request · alternate」) tells the customer nothing — left out. */
+export const causeLines = (causes: readonly string[]) => causes.filter((cause) => !/^[a-z_]+( · [a-z_]+)*$/.test(cause));
+
+/** The day before a Seoul date (「2026-10-22」 → 「2026-10-21」) — 「어제」 of 「소식」's date heads. */
+export function dayBefore(date: string): string {
+  const noon = new Date(`${date}T12:00:00+09:00`);
+  noon.setUTCDate(noon.getUTCDate() - 1);
+  return new Date(noon.getTime() + 9 * 3_600_000).toISOString().slice(0, 10);
 }
 
 /**

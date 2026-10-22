@@ -21,20 +21,20 @@ for (const width of [375, 1280]) test(`알림 센터 탭·재렌더 초점 유�
   await page.locator("#trip-bell").click();
   const center = page.getByRole("dialog", { name: "알림", exact: true });
   await expect(center.getByRole("heading", { name: "알림", exact: true })).toBeFocused();
-  const history = center.getByRole("tab", { name: /변경 이력/ });
-  await history.click();
-  await expect(history).toBeFocused();
-  await expect(history).toHaveAttribute("aria-selected", "true");
+  const todo = center.getByRole("tab", { name: /^할 일/ });                             // `[2026-10-22 ST4F-723 구성 Ⓑ]` 탭 셋(할 일 · 소식 · 공지) — 옛 「변경 이력」은 소식 안에
+  await todo.click();
+  await expect(todo).toBeFocused();
+  await expect(todo).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowRight");
-  const warnings = center.getByRole("tab", { name: /^공지/ });                         // `[2026-10-17 ST4F-606]` 변경 이력 다음은 넷째 탭 「공지」
-  await expect(warnings).toBeFocused();
-  await expect(warnings).toHaveAttribute("aria-selected", "true");
+  const feed = center.getByRole("tab", { name: /^소식/ });                              // 할 일 다음은 둘째 탭 「소식」
+  await expect(feed).toBeFocused();
+  await expect(feed).toHaveAttribute("aria-selected", "true");
   await mockServer(request).ring(["itinerary"]);
   // Wait for the actual trip re-read, then confirm it did not refocus the heading.
   const readsBefore = (await mockServer(request).received("GET", `/trips/${TRIP_ID}`)).length;
   await mockServer(request).ring(["itinerary"]);
   await expect.poll(async () => (await mockServer(request).received("GET", `/trips/${TRIP_ID}`)).length).toBeGreaterThan(readsBefore);
-  await expect(warnings).toBeFocused();
+  await expect(feed).toBeFocused();
   expect(await page.getByRole("button", { name: "메뉴", exact: true, includeHidden: true }).evaluate(element => Boolean(element.closest("[inert]")))).toBe(true);
   for (let at = 0; at < 20; at += 1) {
     await page.keyboard.press("Tab");
@@ -49,27 +49,37 @@ for (const width of [375, 1280]) test(`알림 센터 탭·재렌더 초점 유�
   expect(await page.getByRole("button", { name: "메뉴", exact: true }).evaluate(element => Boolean(element.closest("[inert]")))).toBe(false);
 });
 
-test("알림의 일정에서 보기는 채팅·상세에서 목록을 열고 해당 제목으로 키보드 초점을 옮긴다", async ({ page, request }) => {
+// `[2026-10-22 ST4F-723 구성 Ⓑ]` 옛 「일정에서 보기」(센터를 닫고 목록 카드를 펼침)는 없다 — 선택 요청 카드의 일정 줄 「상세 보기」가 센터를 닫고 그 일정의 상세 보기를 연다
+//   (목록 카드의 「상세 보기」와 같다). 상세의 ← 로 돌아오면 그 일정이 목록에서 펼쳐지고 초점이 그 제목에 간다.
+test("알림의 「상세 보기」는 채팅·다른 일정의 상세에서도 센터를 닫고 그 일정의 상세를 열며, ← 로 돌아오면 목록의 그 제목으로 키보드 초점을 옮긴다", async ({ page, request }) => {
   await mockServer(request).scenario({ proposals: "open" });
   await openTrip(page);
   await openPane(page, "채팅");
+  await expect(page.locator('[data-stop-ask="i-c"]')).toBeAttached();                                       // 제안을 읽은 뒤에 연다 — 첫 탭(할 일)은 열 때 한 번 정한다
   const target = page.locator("#stop-button-i-c");
-  async function goFromNotice() {
+  const heading = page.getByRole("heading", { name: "점심 식당 상세", level: 3 });
+  async function detailFromNotice() {
     await page.locator("#trip-bell").click();
     const center = page.getByRole("dialog", { name: "알림", exact: true });
-    const go = center.getByRole("region", { name: /선택이 필요해요/ }).getByRole("button", { name: "일정에서 보기", exact: true });
+    const go = center.locator('[data-center-proposal="p-1"]').getByRole("button", { name: "상세 보기", exact: true });
     await go.focus(); await go.press("Enter");
     await expect(center).toHaveCount(0);
-    await expect(target).toBeVisible();
-    await expect(target).toHaveAttribute("aria-expanded", "true");
-    await expect(target).toBeFocused();
-    expect(await target.evaluate(element => Boolean(element.closest("[inert]")))).toBe(false);
+    await expect(heading).toBeVisible();
+    await expect(page.locator('[data-card-id="i-c"]')).toHaveAttribute("data-active", "true");
     await expect(page.locator("#trip-pane-schedule")).not.toHaveAttribute("inert");                            // `[ST4F-493]` 일정 칸(시트 머리의 채팅 단추는 없다)
   }
-  await goFromNotice();
-  await page.getByRole("button", { name: "점심 식당 상세 보기", exact: true }).click();
+  await detailFromNotice();                                                                                   // 채팅에서
+  await expect(heading).toBeFocused();                                                                        // 상세가 새로 열려 그 제목에 초점
+  await page.getByRole("button", { name: "상세 보기 닫기", exact: true }).click();
+  await expect(target).toBeVisible();
+  await expect(target).toHaveAttribute("aria-expanded", "true");
+  await expect(target).toBeFocused();
+  expect(await target.evaluate(element => Boolean(element.closest("[inert]")))).toBe(false);
+  await page.locator("#stop-button-i-b").click();                                                             // 다른 일정(경복궁 관람)의 상세에서
+  await page.getByRole("button", { name: "경복궁 관람 상세 보기", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "경복궁 관람 상세", level: 3 })).toBeVisible();
+  await detailFromNotice();
   await expect(target).not.toBeVisible();
-  await goFromNotice();
 });
 
 for (const empty of [false, true]) test(`등록 여행 ${empty ? "일정0개는 날짜줄 숨김" : "하루 일정도 날짜줄 표시"}`, async ({ page }) => {

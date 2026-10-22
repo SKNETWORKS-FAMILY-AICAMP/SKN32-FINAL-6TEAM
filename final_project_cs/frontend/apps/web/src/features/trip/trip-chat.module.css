@@ -78,6 +78,10 @@
 .notice { border-color: var(--tone-border, var(--color-adjusted-border)); }
 .noticeHead { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--tone-soft, var(--color-adjusted-soft)); color: var(--tone, var(--color-adjusted)); font-size: 12px; font-weight: 750; }
 .noticeHead time { margin-left: auto; font-weight: 500; opacity: .85; }
+/* `[ST4F-723]` What state the notice is in (선택이 필요해요 · 고른 안 적용 …) and an unread dot */
+.noticeState { padding: 1px 7px; border-radius: 999px; background: var(--color-surface); color: var(--tone, var(--color-adjusted)); font-size: 11px; font-weight: 750; }
+.noticeState[data-done] { color: var(--color-muted); font-weight: 650; }
+.noticeNew { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--color-error); }
 .notice[data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); --tone-border: var(--color-error-border); }
 .notice[data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); --tone-border: var(--color-warning-border); }
 .notice[data-tone="muted"] { --tone: var(--color-muted); --tone-soft: var(--color-subtle-strong); --tone-border: var(--color-border); }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Notice, Proposal } from "@/lib/live/extras";
-import { NOTICE_LIMIT, noticeFeed, openChoices, proposalText, recentNotices, undoableChange } from "./attention";
+import { causeLines, changeOf, dayBefore, NOTICE_LIMIT, noticeFeed, openChoices, proposalText, recentNotices, undoableChange, withoutPlanLink } from "./attention";
 import type { TripStop } from "./model";
 
 const stop = (id: string): TripStop => ({ id, date: "2026-09-28", time: "12:00", title: "황생가칼국수", booking: "unknown", notes: "" });
@@ -73,6 +73,34 @@ describe("「소식」 — one card per proposal, what waits stays in 「할 일
   it("leaves out what 「할 일」 holds and a service notice (it is under 「공지」)", () => {
     const feed = noticeFeed([registered, asked, options, service], [proposal("p0", "open")], { proposals: new Set(["p0"]), notices: new Set(["v1"]) });
     expect(feed).toEqual([]);
+  });
+
+  it("puts a version no notice told about in the list as its own line (the old 「변경 이력」), at its Seoul time", () => {
+    const history = [{ version: 1, reason: "created", at: "2026-10-22 11:40", causes: [] }, { version: 3, reason: "customer_request", at: "2026-10-22 15:10", causes: ["점심을 옮겼어요."] }];
+    const feed = noticeFeed([{ ...registered, version: 1 }], [], none, history);
+    expect(feed.map((entry) => entry.kind)).toEqual(["version", "notice"]);
+    expect(feed[0].at).toBe("2026-10-22T15:10:00+09:00");
+    expect(changeOf({ type: "change_notice", version: 1 }, history)?.reason).toBe("created");
+    expect(changeOf({ type: "proposal_request", version: 1 }, history)).toBeNull();
+  });
+});
+
+describe("what the notice cards show of the server's words", () => {
+  const url = "http://127.0.0.1:8062/plan/34f919ba?t=9a0e";
+  it("takes the plan's address off the registration sentence only in the server's frame, for this trip's address (2026-10-22 실서버 문장)", () => {
+    expect(withoutPlanLink(`여행 일정이 준비되었습니다 — 내 여행. 계획서: ${url}`, url)).toBe("여행 일정이 준비되었습니다 — 내 여행.");
+    expect(withoutPlanLink(`여행 일정이 준비되었습니다 — 내 여행. 계획서: ${url}`, "http://other/plan/x")).toBeNull();
+    expect(withoutPlanLink(`계획서는 ${url} 에서 보세요.`, url)).toBeNull();
+    expect(withoutPlanLink("문장", undefined)).toBeNull();
+  });
+
+  it("leaves out a cause that is the server's code only", () => {
+    expect(causeLines(["closed", "customer_request · alternate", "식당이 문을 닫았어요."])).toEqual(["식당이 문을 닫았어요."]);
+  });
+
+  it("knows yesterday across a month", () => {
+    expect(dayBefore("2026-10-22")).toBe("2026-10-21");
+    expect(dayBefore("2026-11-01")).toBe("2026-10-31");
   });
 });
 

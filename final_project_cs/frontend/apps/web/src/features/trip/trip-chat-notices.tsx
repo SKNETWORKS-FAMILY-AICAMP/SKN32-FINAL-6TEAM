@@ -1,52 +1,60 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { Bell, CloudRain, OctagonAlert, Sparkles } from "lucide-react";
-import { chooseProposal, type Notice, type Proposal } from "@/lib/live/extras";
-import { LiveError } from "@/lib/live/client";
+import type { Notice, Proposal, ProposalOption } from "@/lib/live/extras";
 import { seoul } from "@/lib/live/gateway";
-import { useSettings, useT } from "@/lib/settings";
+import { useT } from "@/lib/settings";
 import { LinkedText } from "./linked-text";
-import { openChoices, type OpenChoice } from "./attention";
+import { openChoices, proposalText, type OpenChoice } from "./attention";
 import { proposalAvailable } from "./trip-chat-records";
-import { chooseOutcome } from "./proposal-ask";
-import { noticesKey, proposalsKey, useProposals } from "./use-trip-extras";
-import { tripKey } from "./use-trip";
+import { chooseFailure, chooseOutcome, useChooseProposal } from "./proposal-ask";
+import { useProposals } from "./use-trip-extras";
 import { useSlide } from "./use-slide";
 import type { Trip } from "./model";
 import c from "./trip-chat.module.css";
 
-/** `[2026-10-22 ST4F-719 · 목업 ⓑ]` A notice in the chat: a card with a band of its kind's colour (안전 알림 red · 선택 요청 amber · 안내 grey · 변경 알림 blue) and when it came. */
-export function ChatNotice({ notice }: { notice: Notice }) {
+/** A notice's kind in the cards' words and colour (안전 알림 red · 선택 요청 amber · 안내 grey · 변경 알림 blue). */
+export function noticeKind(type: string, t: ReturnType<typeof useT>): { label: string; tone: "error" | "warning" | "muted" | undefined; Icon: typeof Bell } {
+  if (type === "safety_alert") return { label: t("안전 알림", "Safety alert"), tone: "error", Icon: OctagonAlert };
+  if (type === "proposal_request") return { label: t("선택 요청", "Your choice"), tone: "warning", Icon: CloudRain };
+  if (type === "guidance") return { label: t("안내", "Guidance"), tone: "muted", Icon: Bell };
+  return { label: t("변경 알림", "Change notice"), tone: undefined, Icon: Bell };
+}
+
+/**
+ * `[2026-10-22 사용자 결정 — ST4F-723 카드 ⓑ]` A notice as a card — the chat's, and the notice center's (the same part): a band of its kind's colour with its name, what state it is in,
+ * when it came; then what is in it.
+ */
+export function NoticeCard({ tone, Icon, label, state, unread, at, when, children, ...rest }: {
+  tone: "error" | "warning" | "muted" | undefined; Icon: typeof Bell; label: string; state?: { text: string; done?: boolean } | null; unread?: string | null;
+  at: string; when: string; children: ReactNode } & Record<`data-${string}`, string | boolean | undefined>) {
+  return <article className={`${c.card} ${c.notice}`} data-role="assistant" data-tone={tone} {...rest}>
+    <p className={c.noticeHead}><Icon size={15} strokeWidth={1.9} aria-hidden="true" />{label}
+      {state && <span className={c.noticeState} data-done={state.done || undefined}>{state.text}</span>}
+      {unread && <span className={c.noticeNew} role="img" aria-label={unread} />}
+      <time dateTime={at}>{when}</time></p>
+    {children}
+  </article>;
+}
+
+/** `[2026-10-22 ST4F-719 · 목업 ⓑ]` A notice in the chat. `cover`: what a card drawn below already shows — the server's proposal sentence leaves it out (`proposalText`). */
+export function ChatNotice({ notice, cover }: { notice: Notice; cover?: readonly ProposalOption[] }) {
   const t = useT();
   const at = seoul(notice.at);
-  const label = notice.type === "safety_alert" ? t("안전 알림", "Safety alert")
-    : notice.type === "proposal_request" ? t("선택 요청", "Your choice")
-    : notice.type === "guidance" ? t("안내", "Guidance") : t("변경 알림", "Change notice");
-  const tone = notice.type === "safety_alert" ? "error" : notice.type === "proposal_request" ? "warning" : notice.type === "guidance" ? "muted" : undefined;
-  const Icon = notice.type === "safety_alert" ? OctagonAlert : notice.type === "proposal_request" ? CloudRain : Bell;
-  return <article className={`${c.card} ${c.notice}`} data-role="assistant" data-tone={tone} data-trip-notice={notice.key}>
-    <p className={c.noticeHead}><Icon size={15} strokeWidth={1.9} aria-hidden="true" />{label}<time dateTime={notice.at}>{at.date} {at.time}</time></p>
-    <p className={c.body}>{notice.text ? <LinkedText text={notice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} />
+  const kind = noticeKind(notice.type, t);
+  const text = notice.text && cover ? proposalText(notice.text, { options: cover }) : notice.text;
+  return <NoticeCard {...kind} at={notice.at} when={`${at.date} ${at.time}`} data-trip-notice={notice.key}>
+    <p className={c.body}>{text ? <LinkedText text={text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} />
       : t("이 알림의 본문을 받지 못했어요. 알림을 다시 읽어 주세요.", "This notice has no text. Reload notices.")}</p>
-  </article>;
+  </NoticeCard>;
 }
 
 /** Buttons use the same authoritative proposal and choose API as the notice center. */
 export function ChatProposalChoices({ trip, notices }: { trip: Trip; notices: Notice[] }) {
-  const { language } = useSettings();
   const t = useT();
-  const client = useQueryClient();
   const proposals = useProposals(trip.id);
-  const refresh = () => {
-    void client.invalidateQueries({ queryKey: tripKey(trip.id, language) });
-    void client.invalidateQueries({ queryKey: proposalsKey(trip.id, language) });
-    void client.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
-  };
-  const choose = useMutation({
-    mutationFn: ({ proposalId, key }: { proposalId: string; key: string | null }) => chooseProposal(trip.id, proposalId, key, language),
-    onSettled: refresh,
-  });
+  const choose = useChooseProposal(trip.id, trip.version);
   const choices = openChoices(proposals.data ?? [], notices, trip.stops);
   const availableChoices: OpenChoice[] = [];
   const unavailableChoices: OpenChoice[] = [];
@@ -64,21 +72,19 @@ export function ChatProposalChoices({ trip, notices }: { trip: Trip; notices: No
       {unavailableChoices.map(choice => renderChoice(choice, false))}
     </details>}
     {availableChoices.map(choice => renderChoice(choice, true))}
-    {choose.error && <p className={`${c.status} ${c.statusError}`} role="alert">{choose.error instanceof LiveError && ["already_decided", "stale", "stale_itinerary"].includes(choose.error.code)
-      ? t("이미 정해졌거나 일정이 바뀌었어요. 현재 상태를 다시 불러왔어요.", "The choice was already made or the plan changed. The current state has been reloaded.")
-      : choose.error.message}</p>}
-    {choose.data?.status && !choose.error && <p className={c.status} role="status">{
-      choose.data.status === "options" ? t("확보한 대안에서 골라 주세요.", "Choose one of the available alternatives.")
-      : chooseOutcome(choose.data.status, t)}</p>}
+    {choose.error && <p className={`${c.status} ${c.statusError}`} role="alert">{chooseFailure(choose.error, t)}</p>}
+    {/* `[2026-10-22 사용자 결정 — ST4F-723]` The options coming in say nothing (「확보한 대안에서 골라 주세요.」 is gone) — they stand on the card. */}
+    {choose.data && !choose.error && chooseOutcome(choose.data.status, t) && <p className={c.status} role="status">{chooseOutcome(choose.data.status, t)}</p>}
   </section>;
 }
 
 /**
  * `[2026-10-22 ST4F-719 · 목업 ⓑ]` One proposal to choose from: its options as cards in a row that slides sideways (`data-no-swipe` — the pane's swipe back does not start there), then what
  * else can be done (look for others · keep the plan). A forecast or indoor question starts with no options — 「예보에 맞게 일정 변경」 · 「다른 곳 찾아보기」 asks the server for them.
+ * `[2026-10-22 ST4F-723]` The notice center's 「할 일」 draws the same card; `meta` is a line it adds at the foot (until when the server waits for the answer).
  */
-function ProposalCard({ proposal, title, time, available, busy, onReload, onChoose }: { proposal: Proposal; title: string | null; time: string | null; available: boolean; busy: boolean;
-  onReload: () => void; onChoose: (key: string | null) => void }) {
+export function ProposalCard({ proposal, title, time, available, busy, onReload, onChoose, meta }: { proposal: Proposal; title: string | null; time: string | null; available: boolean;
+  busy: boolean; onReload: () => void; onChoose: (key: string | null) => void; meta?: string | null }) {
   const t = useT();
   const row = useSlide<HTMLDivElement>(`${proposal.id}:${proposal.options.length}`);
   const search = ["indoor_unknown", "forecast_advisory"].includes(proposal.reason) && proposal.options.length === 0;
@@ -97,6 +103,7 @@ function ProposalCard({ proposal, title, time, available, busy, onReload, onChoo
         {proposal.reason === "forecast_advisory" && <CloudRain size={15} strokeWidth={1.8} aria-hidden="true" />}
         {proposal.reason === "forecast_advisory" ? t("예보에 맞게 일정 변경", "Adjust the plan for the forecast") : t("다른 곳 찾아보기", "Find other places")}</button>}
       <button type="button" className={c.button} disabled={!available || busy} onClick={() => onChoose(null)}>{t("지금 일정 그대로 두기", "Keep the current plan")}</button>
+      {meta && <span className={c.footTitle}>{meta}</span>}
     </div>
   </article>;
 }

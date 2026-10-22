@@ -96,19 +96,19 @@ test("여행 화면(지도 + 시트)은 서버가 준 일정·고정·다른 안
   await expect(facts).not.toContainText("michelin_selected");
   await page.keyboard.press("Escape");
 
-  // 종 — 알림 센터: 답이 필요해요 · 탭 넷(서버가 찾은 것 · 보낸 것 · 바꾼 것 · `[2026-10-17 ST4F-606]` 운영 앱 공지)
+  // 종 — 알림 센터: `[2026-10-22 ST4F-723 구성 Ⓑ]` 탭 셋(할 일 = 기다리는 답 + 살펴볼 점 · 소식 = 옛 받은 알림 + 변경 이력 · `[2026-10-17 ST4F-606]` 공지 = 운영 앱 공지)
   const notices = await openNotices(page);
   const tabs = notices.getByRole("tablist", { name: "알림 종류" }).getByRole("tab");
-  await expect(tabs).toHaveText([/^살펴볼 점 \d+$/, "받은 알림 2", /^변경 이력 \d+$/, /^공지 \d+$/]);
+  await expect(tabs).toHaveText([/^할 일 \d+$/, "소식 2", /^공지 \d+$/]);
   const list = notices.getByRole("tabpanel");
-  await expect(notices.getByRole("tab", { name: /받은 알림/ })).toHaveAttribute("aria-selected", "true");   // 안 읽은 알림이 있으면 받은 알림부터
+  await expect(notices.getByRole("tab", { name: /^소식/ })).toHaveAttribute("aria-selected", "true");   // 기다리는 답이 없고 안 읽은 알림이 있으면 소식부터
+  await expect(list.getByRole("heading", { name: "10월 1일(목)", level: 4 })).toBeVisible();           // 날짜 머리(시계는 09-30 이라 「오늘 · 」 「어제 · 」가 붙지 않는다)
   await expect(list).toContainText("오늘 첫 일정은 08:00 아침 식당이에요.");
   await expect(list.getByRole("img", { name: "새 알림" })).toHaveCount(2);
-  await notices.getByRole("tab", { name: /살펴볼 점/ }).click();
-  await expect(list).toContainText("하루가 빡빡해요");
+  await expect(list).toContainText("처음 등록");                                                     // 옛 「변경 이력」 — 판을 만든 알림 카드 머리에 그 판의 이유
+  await notices.getByRole("tab", { name: /^할 일/ }).click();
+  await expect(list).toContainText("하루가 빡빡해요");                                               // 할 일 아래 「살펴볼 점」
   await expect(list).toContainText("일정을 줄이세요");
-  await notices.getByRole("tab", { name: /변경 이력/ }).click();
-  await expect(list).toContainText("처음 등록");
   // 여행계획서 — 제목을 펼친 줄(목업 C안 B)
   await notices.getByRole("button", { name: "알림 센터 닫기" }).click();
   const plan = (await openTitle(page)).getByRole("link", { name: "여행계획서 열기" });
@@ -141,17 +141,25 @@ test("경고와 알림이 없으면 탭은 0 과 「없어요」만 말하고 �
   await openTrip(page);
   await expect(page.getByRole("button", { name: "알림 센터 열기", exact: true })).toBeVisible();     // 읽지 않은 알림이 없다
   const notices = await openNotices(page);
-  await expect(notices.getByRole("tab", { name: /살펴볼 점/ })).toHaveText("살펴볼 점 0");
-  await expect(notices.getByRole("tab", { name: /받은 알림/ })).toHaveText("받은 알림 0");
-  // `[2026-10-22 ST4F-715]` 「살펴볼 점」 탭은 위험 칸 + 경고 목록이다(「살펴볼 점이 없어요.」 문장은 위험 칸으로 바뀌었다)
+  // `[2026-10-22 ST4F-723 구성 Ⓑ]` 탭 셋 — 새 알림이 없으면 「할 일」(처음 연 탭)부터. 기다리는 답이 없으면 할 일의 수는 살펴볼 점의 수(강조 없음).
+  //   「소식」은 옛 「변경 이력」도 담는다 — 알림이 싣지 않은 서버의 판 기록(v1 처음 등록) 한 줄이 남아 1
+  await expect(notices.getByRole("tablist", { name: "알림 종류" }).getByRole("tab")).toHaveText(["할 일 0", "소식 1", "공지 0"]);
+  await expect(notices.getByRole("tab", { name: /^할 일/ })).toHaveAttribute("aria-selected", "true");
+  await expect(notices.getByRole("tab", { name: /^할 일/ }).locator("[data-hot]")).toHaveCount(0);
+  // `[2026-10-22 ST4F-715]` 「살펴볼 점」은 위험 칸 + 경고 목록이다(「살펴볼 점이 없어요.」 문장은 위험 칸으로 바뀌었다) — `[ST4F-723]` 이제 「할 일」 탭 아래쪽
   await expect(notices.getByRole("tabpanel")).toContainText("현재 점검 대상 일정이 없어요");
   await expect(notices.getByRole("tabpanel").getByRole("listitem")).toHaveCount(0);
   await expect(notices.getByText("지금 처리할 일은 없어요.")).toBeVisible();
+  // 소식에는 서버의 판 기록 한 줄뿐 — 알림 카드를 지어내지 않는다
+  await notices.getByRole("tab", { name: /^소식/ }).click();
+  await expect(notices.getByRole("tabpanel").locator("[data-feed-entry]")).toHaveCount(1);
+  await expect(notices.getByRole("tabpanel").locator('[data-feed-entry="v1"]')).toContainText("처음 등록");
+  await expect(notices.getByRole("tabpanel").getByRole("article")).toHaveCount(0);
 });
 
 // `[2026-10-22 사용자 지시]` 위험 점검 칸은 운영자 스위치(`risk_panel`)를 따른다 — 칸이 없는 응답은 보이고, 끄면 일정 목록 위 칸이 숨고
-//   알림 센터 「살펴볼 점」 탭에는 실제 위험 일정만 남는다(여기서는 위험이 없어 칸이 없다 — 실제 위험만 남기는 것은 risk-panel.test.ts `panelRisks`)
-test("운영자가 위험 점검 칸을 끄면 일정 목록 위 칸과 알림 센터 「살펴볼 점」 탭의 점검 칸이 숨는다", async ({ page, request }) => {
+//   알림 센터 「살펴볼 점」(`[2026-10-22 ST4F-723]` 「할 일」 탭 아래쪽)에는 실제 위험 일정만 남는다(여기서는 위험이 없어 칸이 없다 — 실제 위험만 남기는 것은 risk-panel.test.ts `panelRisks`)
+test("운영자가 위험 점검 칸을 끄면 일정 목록 위 칸과 알림 센터 「할 일」 탭 「살펴볼 점」의 점검 칸이 숨는다", async ({ page, request }) => {
   const server = mockServer(request);
   const schedulePanel = page.locator("#trip-pane-schedule [data-risk-panel]");
   await server.scenario({ warnings: "none", notices: "none", risks: "clear" });
@@ -163,49 +171,66 @@ test("운영자가 위험 점검 칸을 끄면 일정 목록 위 칸과 알림 �
   await expect(page.getByRole("button", { name: "알림 센터 열기", exact: true })).toBeVisible();
   await expect(schedulePanel).toHaveCount(0);
   const notices = await openNotices(page);
-  await expect(notices.getByRole("tab", { name: /살펴볼 점/ })).toHaveText("살펴볼 점 0");
+  await expect(notices.getByRole("tab", { name: /^할 일/ })).toHaveText("할 일 0");
+  await expect(notices.getByRole("tab", { name: /^할 일/ })).toHaveAttribute("aria-selected", "true");
   await expect(notices.getByRole("tabpanel").locator("[data-risk-panel]")).toHaveCount(0);
 });
 
-test("서버가 기다리는 선택이 있으면 「선택이 필요해요」가 뜨고, 고르면 그 안의 key 가 서버로 가고 칸이 사라진다", async ({ page, request }) => {
+// `[2026-10-22 ST4F-723 구성 Ⓑ]` 기다리는 선택은 「할 일」 탭의 선택 요청 카드(`data-center-proposal` — 알림 카드 + 채팅과 같은 「선택할 대안」 카드)다. 옛 「선택이 필요해요」 칸(region)은 없다.
+const choiceCard = (page: import("@playwright/test").Page) => page.getByRole("dialog", { name: "알림" }).locator('[data-center-proposal="p-1"]');
+/**
+ * 센터의 첫 탭은 열 때 한 번 정한다 — 제안을 읽기 전(알림만 읽은 때)에 열면 「소식」이 열릴 수 있다. 그 일정 카드의 「선택이 필요해요」(`data-stop-ask` — 제안과 일정을 읽었다는 표시)를
+ * 본 뒤 종을 누르고, 기다리는 선택이 있으면 「할 일」부터 열리는지 본다.
+ */
+async function openWithChoice(page: import("@playwright/test").Page, stopId: string) {
+  await expect(page.locator(`[data-stop-ask="${stopId}"]`)).toBeAttached();
+  const center = await openNotices(page);
+  await expect(center.getByRole("tab", { name: /^할 일/ })).toHaveAttribute("aria-selected", "true");
+  return center;
+}
+
+test("서버가 기다리는 선택이 있으면 「할 일」에 선택 요청 카드가 서고, 고르면 그 안의 key 가 서버로 가고 카드가 사라진다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ proposals: "open" });
   await openTrip(page);
-  await openNotices(page);
-  const ask = page.getByRole("region", { name: /선택이 필요해요/ });
+  const center = await openWithChoice(page, "i-c");                                         // 기다리는 답이 있으면 할 일부터
+  const ask = choiceCard(page);
   await expect(ask).toBeVisible();
+  await expect(ask).toContainText("선택이 필요해요");                                       // 알림 카드의 상태 딱지
   await expect(ask).toContainText("점심 식당이 문을 닫았어요. 대체 식당을 골라 주세요.");   // 서버 통지 문장 그대로
-  await expect(ask).toContainText("12:00 · 점심 식당");
+  await expect(ask).toContainText("점심 식당");
+  await expect(ask).toContainText("1일차 12:00");
+  await expect(ask.locator("[data-chat-proposal]")).toContainText("선택할 대안");
   await ask.getByRole("button", { name: /대체 식당 A/ }).click();
 
   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
   const [choose] = await server.received("POST", "/choose");
   expect(choose.body).toEqual({ key: "o-1" });
-  await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toHaveCount(0);
-  await expect(page.getByText("고르신 곳으로 일정을 바꿨어요.")).toBeVisible();          // 칸이 사라져도 결과는 말한다
+  await expect(center.locator("[data-center-proposal]")).toHaveCount(0);
+  await expect(page.getByText("고르신 곳으로 일정을 바꿨어요.")).toBeVisible();          // 카드가 사라져도 결과는 말한다
 });
 
 test("실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ proposals: "consent" });
   await openTrip(page);
-  await openNotices(page);
-  const ask = page.getByRole("region", { name: /선택이 필요해요/ });
+  await openWithChoice(page, "i-b");
+  const ask = choiceCard(page);
   await expect(ask.getByRole("button", { name: "다른 곳 찾아보기" })).toBeVisible();
   await ask.getByRole("button", { name: "다른 곳 찾아보기" }).click();
   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
   expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: "change" });
   await expect(ask.getByRole("button", { name: /실내 박물관/ })).toBeVisible();              // 같은 제안을 다시 읽었다
   await expect(ask.getByRole("button", { name: "다른 곳 찾아보기" })).toHaveCount(0);  // 선택지가 생기면 물음은 사라진다
-  await expect(page.getByText("다른 곳을 찾았어요 — 위에서 골라 주세요.")).toBeVisible();
+  await expect(page.getByText("다른 곳을 찾았어요 — 위에서 골라 주세요.")).toHaveCount(0);       // `[2026-10-22 사용자 결정 — ST4F-723]` 대안이 오면 말없이 그 카드에
 });
 
 test("예보 주의 알림은 외부 발송을 건너뛰어도 변경 버튼을 보이고 누르면 대체안을 요청한다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ proposals: "forecast" });
   await openTrip(page);
-  await openNotices(page);
-  const ask = page.getByRole("region", { name: /선택이 필요해요/ });
+  await openWithChoice(page, "i-b");
+  const ask = choiceCard(page);
   await expect(ask).toContainText("예보 주의사항이 있어요(강수확률 80% · 풍속 35km/h)");
   await expect(ask).toContainText("답이 없으면 원래 일정을 그대로 둡니다.");
   await ask.getByRole("button", { name: "예보에 맞게 일정 변경", exact: true }).click();
@@ -221,32 +246,34 @@ test("「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔
   const server = mockServer(request);
   await server.scenario({ proposals: "consent", choose: "no_alternate" });
   await openTrip(page);
-  const center = await openNotices(page);
+  const center = await openWithChoice(page, "i-b");
   // `[2026-10-19]` 99c55867 이 알림 센터 단추를 「다른 곳 찾아보기」로 바꿔 채팅 알림의 같은 이름 단추와 겹친다 — 알림 센터 안에서 누른다.
   await center.getByRole("button", { name: "다른 곳 찾아보기" }).click();
   await expect(page.getByText("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.")).toBeVisible();
 });
 
+// `[2026-10-22 ST4F-723 구성 Ⓑ]` 되돌릴 수 있는 자동 변경은 「할 일」의 알림 카드(`data-center-undo`)다 — 옛 「자동으로 바꾼 일정」 칸(region)은 없다.
 test("자동으로 바꾼 일정은 「되돌리기」로 서버가 준 값 그대로 되돌리고, 서버의 답을 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ undo: "open" });
   await openTrip(page);
-  await openNotices(page);
-  const card = page.getByRole("region", { name: "자동으로 바꾼 일정" });
+  const center = await openNotices(page);
+  await expect(center.getByRole("tab", { name: /^할 일/ })).toHaveAttribute("aria-selected", "true");   // 되돌릴 수 있는 변경도 기다리는 답 — 할 일부터
+  const card = center.locator("[data-center-undo]");
   await expect(card).toContainText("비 소식이 있어 09:30 경복궁 관람을 실내 박물관으로 바꿨어요.");
   await card.getByRole("button", { name: "되돌리기" }).click();
   await expect.poll(async () => (await server.received("POST", "/rollback")).length).toBe(1);
   expect((await server.received("POST", "/rollback"))[0].body).toEqual({ request_id: "rollback:v1->v0", base_version: 1, to_version: 0 });
   await expect(page.getByText("09:30 일정을 원래대로(경복궁 관람) 되돌렸어요.")).toBeVisible();
-  await expect(page.getByRole("region", { name: "자동으로 바꾼 일정" })).toHaveCount(0);   // 되돌린 뒤엔 칸이 없다
+  await expect(center.locator("[data-center-undo]")).toHaveCount(0);   // 되돌린 뒤엔 카드가 없다
 });
 
 test("그 사이 일정이 또 바뀌어 되돌리기가 거절되면(409) 아무것도 안 바뀌었다고 알린다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ undo: "stale" });
   await openTrip(page);
-  await openNotices(page);
-  await page.getByRole("region", { name: "자동으로 바꾼 일정" }).getByRole("button", { name: "되돌리기" }).click();
+  const center = await openNotices(page);
+  await center.locator("[data-center-undo]").getByRole("button", { name: "되돌리기" }).click();
   await expect(page.getByText("그 사이 일정이 다시 바뀌어 되돌리지 않았어요. 지금 상태를 다시 불러왔어요.")).toBeVisible();
 });
 
@@ -255,7 +282,7 @@ test("「지금 일정 그대로 두기」는 key 를 null 로 보낸다", async
   await server.scenario({ proposals: "open" });
   await openTrip(page);
   // `[2026-10-22 ST4F-715]` 채팅에도 같은 선택 단추가 있다 — 알림 센터 안에서 누른다(위 「다른 곳 찾아보기」와 같다)
-  const center = await openNotices(page);
+  const center = await openWithChoice(page, "i-c");
   await center.getByRole("button", { name: "지금 일정 그대로 두기" }).click();
   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
   expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: null });
@@ -265,7 +292,7 @@ test("이미 정해진 선택(409)은 「아무것도 바뀌지 않았다」고 
   const server = mockServer(request);
   await server.scenario({ proposals: "open", choose: "conflict" });
   await openTrip(page);
-  const center = await openNotices(page);                                                         // 채팅의 같은 단추와 겹치지 않게 센터 안에서
+  const center = await openWithChoice(page, "i-c");                                               // 채팅의 같은 단추와 겹치지 않게 센터 안에서
   await center.getByRole("button", { name: /대체 식당 B/ }).click();
   await expect(page.getByRole("alert").filter({ hasText: "이미 정해졌거나" })).toContainText("아무것도 바뀌지 않았고");
   // 알림 뒤에 화면이 서버를 다시 읽는다
@@ -382,7 +409,7 @@ test("선택·알림을 읽지 못해도(서버 500) 여행 화면은 그대로 
   await expect(tripScreen(page).getByText("경복궁 관람")).toBeVisible();
   const notices = await openNotices(page);
   await expect(notices.getByRole("alert").filter({ hasText: "선택과 알림을 읽지 못했어요" })).toBeVisible();
-  await expect(notices.getByRole("tab", { name: /살펴볼 점/ })).toBeVisible();     // 다른 칸은 영향받지 않는다
+  await expect(notices.getByRole("tab", { name: /^할 일/ })).toBeVisible();     // 다른 칸은 영향받지 않는다
 });
 
 test("없는 여행 주소는 빈 화면이 아니라 이유와 다시 시도 단추를 보인다", async ({ page, request }) => {
@@ -443,26 +470,29 @@ test("서버가 「이 여행 바뀜」 신호를 보내면 새로고침 없이 
   const server = mockServer(request);
   await server.scenario({ bell: "on" });
   await openTrip(page);
-  await openNotices(page);
-  await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toHaveCount(0);
+  const center = await openNotices(page);
+  // `[2026-10-22 ST4F-723 구성 Ⓑ]` 새 알림(n-1 · n-2)을 읽은 뒤면 센터는 「소식」으로 열린다 — 선택이 서는 「할 일」 탭을 보고 기다린다(열린 센터의 탭은 저절로 바뀌지 않는다)
+  await center.getByRole("tab", { name: /^할 일/ }).click();
+  await expect(center.locator("[data-center-proposal]")).toHaveCount(0);
   await server.scenario({ proposals: "open" });
   // the stream opens a moment after the screen: ring until it is there
   // `[2026-10-22 ST4F-715]` 열린 제안은 여행 판 2 의 것이다 — 화면은 판이 다른 제안을 거르므로 일정과 제안이 함께 바뀐 신호를 보낸다
   await expect.poll(() => server.ring(["itinerary", "proposal"])).toBeGreaterThan(0);
-  await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A");
+  await expect(choiceCard(page)).toContainText("대체 식당 A");
 });
 
 test("신호 연결이 끊겼다 다시 붙으면 그 사이 바뀐 것을 전부 다시 읽는다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ bell: "on" });
   await openTrip(page);
-  await openNotices(page);
+  const center = await openNotices(page);
+  await center.getByRole("tab", { name: /^할 일/ }).click();                                      // `[2026-10-22 ST4F-723 구성 Ⓑ]` 선택이 서는 탭(새 소식을 읽은 뒤면 센터는 「소식」으로 열린다)
   await expect.poll(() => server.ring(["notice"])).toBeGreaterThan(0);
   // changed while the line is down — no bell reaches the screen for this one
   await server.scenario({ proposals: "open" });
   expect(await server.hangup()).toBeGreaterThan(0);
   await expect.poll(async () => (await server.received("GET", "/events")).length).toBeGreaterThan(1);
-  await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A", { timeout: 10_000 });
+  await expect(choiceCard(page)).toContainText("대체 식당 A", { timeout: 10_000 });
   expect((await server.received("GET", "/events")).length).toBeGreaterThan(1);
 });
 

@@ -181,7 +181,7 @@ export async function setGuardian(tripId: string, enabled: boolean, via: Guardia
  * The server refuses with 409 `already_decided` / `stale` when someone (or a newer version) got there first —
  * those come back as a `LiveError` with the server's code.
  */
-export function chooseProposal(tripId: string, proposalId: string, key: string | null, language: Language): Promise<{ status?: string }> {
+export function chooseProposal(tripId: string, proposalId: string, key: string | null, language: Language): Promise<{ status?: string; version?: number }> {
   return api(`/v1/web/trips/${encodeURIComponent(tripId)}/proposals/${encodeURIComponent(proposalId)}/choose`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }),
   });
@@ -251,8 +251,9 @@ export async function mapLoad(language: Language): Promise<MapLoad> {
 /**
  * Undo an automatic change (`POST /v1/web/trips/{id}/rollback`). The server answers 409 when the trip has already moved
  * to another version — that comes back as a `LiveError`; nothing changed. The same `requestId` sent twice is one undo.
+ * `[2026-10-22 ST4F-723]` The server's own sentence about it is `notice.text` (「… 되돌렸어요.」, `trip_desk` rollback) — there is no `answer`.
  */
-export function undoChange(tripId: string, rollback: NonNullable<Notice["rollback"]>, language: Language): Promise<{ status?: string; answer?: string }> {
+export function undoChange(tripId: string, rollback: NonNullable<Notice["rollback"]>, language: Language): Promise<{ status?: string; answer?: string; version?: number; notice?: { text?: string } }> {
   return api(`/v1/web/trips/${encodeURIComponent(tripId)}/rollback`, language, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ request_id: rollback.requestId, base_version: rollback.baseVersion, to_version: rollback.toVersion }),

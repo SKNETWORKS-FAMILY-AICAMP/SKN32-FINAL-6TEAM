@@ -85,7 +85,7 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(schedule.getByText("경복궁").first()).toBeVisible();
   await expect(schedule.getByText("광장시장").first()).toBeVisible();
   const center = await openNotices(page);
-  await center.getByRole("tab", { name: /받은 알림/ }).click();
+  await center.getByRole("tab", { name: /^소식/ }).click();                                   // `[2026-10-22 ST4F-723]` 옛 「받은 알림」
   await expect(center.getByRole("tabpanel")).toContainText("여행 일정이 준비되었습니다");
   await center.getByRole("button", { name: "알림 센터 닫기" }).click();
   await expect((await openTitle(page)).getByRole("link", { name: "여행계획서 열기" })).toHaveAttribute("href", /\/plan\/[0-9a-f-]{36}\?t=/);

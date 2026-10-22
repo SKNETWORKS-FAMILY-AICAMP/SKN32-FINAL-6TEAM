@@ -43,6 +43,7 @@
 .title em[data-tone="ok"] { background: var(--color-success-soft); color: var(--color-success); }
 .title em[data-tone="changed"] { background: var(--color-selected-soft); color: var(--color-selected); }
 .sub { white-space: pre-line; }
+.sub[data-lines] { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
 .note { color: var(--color-warning); font-weight: 600; }
 .action { grid-area: action; justify-self: start; min-height: 32px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; pointer-events: auto; }
 .toast:not([data-stacked]) .action { align-self: center; }

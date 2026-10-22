@@ -22,6 +22,7 @@ import { noticesKey, proposalsKey, useNotices, useProposals } from "./use-trip-e
 import { chatRecords, proposalAvailable } from "./trip-chat-records";
 import { ChatNotice, ChatProposalChoices } from "./trip-chat-notices";
 import { openChoices } from "./attention";
+import { ownChange } from "./own-changes";
 import { answerCard, answerLook, coveredLines, shownText, type AnswerCard, type AnswerLook } from "./chat-cards";
 import { diffStops, keepDiff, readDiffs, type ChatDiff } from "./chat-diff";
 import { placeLinks, placeTarget, type MapTarget } from "./map-apps";
@@ -112,7 +113,7 @@ export function useTripChat(trip: Trip, selectedId: string | null, onAsked: () =
 
   // ★Undo a change made from chat (user decision 2026-09-29). Same server call as the automatic-change undo; 409 = the plan moved on, nothing changed.
   const undo = useMutation({
-    mutationFn: (version: number) => undoChange(trip.id, { baseVersion: version, toVersion: version - 1, requestId: `chat-undo:v${version}->v${version - 1}` }, language),
+    mutationFn: (version: number) => ownChange(trip.id, version, () => undoChange(trip.id, { baseVersion: version, toVersion: version - 1, requestId: `chat-undo:v${version}->v${version - 1}` }, language)),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: tripKey(trip.id, language) });
       void queryClient.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
@@ -218,7 +219,9 @@ export function ChatPane({ trip, chat, day, dayText, dayHeading, now, selected, 
       {trip.messages.length === 0 && <div className={c.card}><div className={c.head}><Speaker /></div>
         <p className={c.body}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></div>}
       {records.map(record => {
-        if (record.kind === "notice") return <ChatNotice key={record.id} notice={record.notice} />;
+        // `[2026-10-22 ST4F-723 c]` A proposal's notice under which its card (`ChatProposalChoices`) draws the options: their numbered list and warnings are left out of the sentence.
+        if (record.kind === "notice") return <ChatNotice key={record.id} notice={record.notice}
+          cover={(proposals.data ?? []).find((proposal) => proposal.status === "open" && proposal.id === record.notice.proposalId)?.options} />;
         const { message: item, index } = record;
         if (item.role === "user") return <p key={record.id} className={c.user} data-chat-user>{item.text}</p>;
         return <Answer key={record.id} trip={trip} chat={chat} item={item} latest={index === last} previous={trip.messages[index - 1]} dayHeading={dayHeading}
@@ -232,7 +235,7 @@ export function ChatPane({ trip, chat, day, dayText, dayHeading, now, selected, 
       {chat.locationError && <p className={`${c.status} ${c.statusError}`} role="alert">{chat.locationError}</p>}
       {undo.error && <p className={`${c.status} ${c.statusError}`} role="alert">{undo.error instanceof LiveError && ["stale_itinerary", "stale", "invalid_version"].includes(undo.error.code)
         ? t("그 사이 일정이 다시 바뀌어 되돌리지 않았어요.", "The plan changed again meanwhile, so nothing was undone.") : undo.error.message}</p>}
-      {undo.data && !undo.error && <p className={c.status} role="status">{undo.data.answer ?? t("바꾸기 전 일정으로 되돌렸어요.", "Your plan is back to how it was.")}</p>}
+      {undo.data && !undo.error && <p className={c.status} role="status">{undo.data.notice?.text ?? undo.data.answer ?? t("바꾸기 전 일정으로 되돌렸어요.", "Your plan is back to how it was.")}</p>}
       {message.isPending && <>
         <p className={c.user} data-chat-user>{message.variables.text}</p>
         <div className={c.card} data-chat-pending><div className={c.head}><Speaker /><span className={c.badge} role={chat.stages.length || chat.progress?.lost ? undefined : "status"}><LoaderCircle size={13} strokeWidth={2.2} aria-hidden="true" />{t("답변을 준비하고 있어요…", "Preparing a reply…")}</span></div>

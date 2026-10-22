@@ -38,7 +38,8 @@ import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
 import { MapAppsSheet, type MapTarget } from "./map-apps";
 import { LegRow, legSummary, PastLegRow, PastStopRow, StayRow, StopRow } from "./trip-rows";
 import { dayTimeline, entryTimes, seoulKey, tripDays, type SeoulNow, type TripLeg } from "./trip-timeline";
-import { liveStop, ownNotice, progressToast } from "./stop-progress";
+import { liveStop, progressToast } from "./stop-progress";
+import { ownChange, ownTripNotice } from "./own-changes";
 import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
@@ -53,13 +54,13 @@ import { EndCard, TripCredits } from "./trip-credits";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
 import { useTripEvents } from "./use-trip-events";
-import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useTripRisks } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery, useTripRisks } from "./use-trip-extras";
 import { RiskPanel } from "@/features/risk/risk-panel";
 import { problemText, riskSignature } from "@/lib/live/risks";
 import { useRiskAlternatives } from "./use-risk-alternatives";
 import type { Recovery } from "@/lib/live/recovery";
 import type { Trip, TripPick, TripStop } from "./model";
-import { openChoices, type OpenChoice } from "./attention";
+import { openChoices, proposalText, undoableChange, type OpenChoice } from "./attention";
 import { proposalAvailable } from "./trip-chat-records";
 import { CONSENT_KEY, chooseFailure, chooseOutcome, useChooseProposal } from "./proposal-ask";
 import styles from "./trip-screen.module.css";
@@ -128,11 +129,11 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
   const risks = useTripRisks(trip.id, trip.version);
   const currentRisks = risks.data?.items ?? [];
   const riskCount = currentRisks.filter((item) => item.status === "problem").length;
-  const riskAlternatives = useRiskAlternatives(trip.id, () => openCenter("warnings"));
+  const riskAlternatives = useRiskAlternatives(trip.id, () => openCenter("todo"));
   // `[2026-10-21 사용자 결정 — ST4F-704]` The choices the server waits for (the notice center's list): their stops' cards say so and their details answer them.
   const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops).filter((choice) => Boolean(choice.stop) && proposalAvailable(choice.proposal, trip.version));
   const choiceOf = (stopId: string) => choices.find((choice) => choice.stop?.id === stopId);
-  const choose = useChooseProposal(trip.id);
+  const choose = useChooseProposal(trip.id, trip.version);
   // 「예보에 맞게 일정 변경」 · 「다른 곳 찾아보기」: the server finds the options now — the list is greyed and locked until it answers (the plan check's 「서버로 전송중입니다.」 veil).
   const findingOptions = choose.isPending && choose.variables?.key === CONSENT_KEY;
   // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
@@ -144,6 +145,15 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
   const serviceKey = (service.data?.notices ?? []).map((notice) => notice.id).join("\n");
   const serviceUnread = serviceKey ? serviceKey.split("\n").filter((id) => !seenService.includes(id)).length : 0;
   const unread = tripUnread + serviceUnread;
+  // `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ]` What the center opens on: 「할 일」 while something waits for an answer (the pause · going on after it, not chosen yet · a choice · an
+  // undoable change — what its count counts), else 「소식」 with a notice not seen yet (what 「할 일」 holds and a service notice sent as a trip notice are not in it), else 「공지」 with a
+  // new one, else the tab seen last. The going-on brief is the center's own read (same key — read once).
+  const undoable = undoableChange(notices.data ?? [], trip.version);
+  const recovery = useRecovery(trip.id);
+  const waiting = Boolean(trip.safety?.paused) || Boolean(recovery.data && !recovery.data.chosen) || choices.length > 0 || undoable !== null;
+  const feedUnread = (notices.data ?? []).some((notice) => !seen.includes(notice.key) && notice.kind !== "service_notice" && notice.key !== undoable?.key
+    && !(notice.proposalId && choices.some((choice) => choice.proposal.id === notice.proposalId)));
+  const openingTab = (last: CenterTab): CenterTab => waiting ? "todo" : feedUnread ? "feed" : serviceUnread > 0 ? "service" : last;
   // `[2026-10-04]` The lines between the stops (never holding the page up); zoomed in, the detailed lines replace them.
   const routeShapes = useRouteShapes(trip.id, trip.version);
   const routeDetail = useRouteDetail(routeShapes.data, ["trip", trip.id, trip.version ?? 0, language], () => getRouteShapes(trip.id, language, { detail: true }));
@@ -176,7 +186,15 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
   const [centerOpen, setCenterOpen] = useState(() => search.get("notices") === "1");
-  const [centerTab, setCenterTab] = useState<CenterTab>(() => search.get("notices") === "1" ? "notices" : "warnings");
+  const [centerTab, setCenterTab] = useState<CenterTab>("todo");
+  // Opened from a notice's link (`?notices=1`, `plan_link`): the tab is picked by the rule above once the notices and choices are read.
+  const linkTab = useRef(search.get("notices") === "1");
+  const pickLinkTab = useEffectEvent(() => {
+    if (!linkTab.current || !notices.data || !proposals.data) return;
+    linkTab.current = false;
+    setCenterTab(openingTab("todo"));
+  });
+  useEffect(() => { pickLinkTab(); }, [notices.data, proposals.data]);
   const [centerNotice, setCenterNotice] = useState<Notice | null>(null);
   const [centerItemId, setCenterItemId] = useState<string | null>(null);
   // `[2026-10-07 목업 C안 3단계]` The title row (opened · being renamed), the share sheet, and the stop whose detail is open.
@@ -204,7 +222,7 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
     const first = currentRisks.find((item) => item.status === "problem");
     if (first && !centerOpen) showToast({ text: t(`현재 일정에 주의할 점 ${riskCount}개가 있어요`, `${riskCount} current stops need attention`),
       sub: [first.title, ...first.problems.map(problemText)].filter(Boolean).join(" · "),
-      action: { label: t("위험·대안 보기", "See risks and choices"), run: () => openCenter("warnings", undefined, first.itemId) } });
+      action: { label: t("위험·대안 보기", "See risks and choices"), run: () => openCenter("todo", undefined, first.itemId) } });
   });
   useEffect(() => { announceRisk(); }, [risks.data]);
 
@@ -483,38 +501,31 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
   // (`journey_progress` — the hours of the next stop checked first). The list is greyed until it answers (the plan check's 「서버로 전송중입니다.」 veil); what came of it is the
   // server's sentence in the notice bar, and the trip is read again. ──
   const [asking, setAsking] = useState<string | null>(null);
-  // `[2026-10-22 사용자 결정 — A]` The versions this device's reports wrote: their change notice is not barred again over the result toast (`ownNotice`). The server writes the
-  // base version + 1, and its notice can come in before the answer — so that version is held from the press, and put right (or dropped) when the answer comes.
-  const ownVersions = useRef(new Set<number>());
+  // `[2026-10-22 사용자 결정 — A]` The version this device's report writes is its own (`own-changes.ts`): its change notice is not barred again over the result toast.
   const progress = useMutation({
     mutationFn: (report: { stop: TripStop; action: "advance_trip" | "complete_item"; requestId: string; expected: number }) =>
-      reportProgress(trip.id, { requestId: report.requestId, baseVersion: report.expected - 1, itemId: report.stop.id, action: report.action }, language),
-    onSuccess: (result, report) => {
-      if (result.version !== report.expected) ownVersions.current.delete(report.expected);
-      if (result.version !== undefined) ownVersions.current.add(result.version);
+      ownChange(trip.id, report.expected - 1, () => reportProgress(trip.id, { requestId: report.requestId, baseVersion: report.expected - 1, itemId: report.stop.id, action: report.action }, language)),
+    onSuccess: (result) => {
       setAsking(null);
       showToast(progressToast(result, t));
     },
-    onError: (error, report) => { ownVersions.current.delete(report.expected); showToast({ text: error.message, stay: true }); },
+    onError: (error) => showToast({ text: error.message, stay: true }),
     onSettled: refresh,
   });
   const finish = (stop: TripStop, action: "advance_trip" | "complete_item") => {
-    const expected = (trip.version ?? 1) + 1;
-    ownVersions.current.add(expected);
-    progress.mutate({ stop, action, requestId: crypto.randomUUID(), expected });
+    progress.mutate({ stop, action, requestId: crypto.randomUUID(), expected: (trip.version ?? 1) + 1 });
   };
   const resumed = (brief: Recovery | null) => {
     queryClient.setQueryData(recoveryKey(trip.id, language), brief);
     showToast({ text: t("일정을 다시 시작했어요", "The itinerary is running again"), sub: brief ? t("재난 뒤 이어가기에서 어떻게 이어갈지 골라 주세요.", "Choose how to go on under 「Going on after the disaster」.") : undefined });
   };
 
-  // ── The notice center: opened by the bell (unread notices first), by a notice's 「알림 보기」, by 「일정 정지 중」. ──
+  // ── The notice center: opened by the bell, by a notice's 「알림 보기」, by 「일정 정지 중」 — on the tab `openingTab` picks unless the opener names one. ──
   function openCenter(tab?: CenterTab, notice?: Notice, itemId?: string) {
     hideToast();
     setCenterNotice(notice ?? null);
     setCenterItemId(itemId ?? null);
-    // `[2026-10-17 ST4F-606]` 처음 보이는 탭: 새 여행 알림 > 새 공지 > 마지막에 본 탭
-    setCenterTab(tab ?? (tripUnread > 0 ? "notices" : serviceUnread > 0 ? "service" : centerTab));
+    setCenterTab(tab ?? openingTab(centerTab));
     setTitleOpen(false);
     setCenterOpen(true);
   }
@@ -615,16 +626,15 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
   const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
-    // `[2026-10-22 사용자 결정 — A]` 이 기기에서 누른 「끝났어요」의 변경 알림은 막대로 다시 띄우지 않는다 — 결과 토스트가 이미 맞는 칩으로 말했다(알림 센터 · 다른 기기는 그대로)
-    if (ownNotice(notice, ownVersions.current)) return;
+    // `[2026-10-22 사용자 결정 — ST4F-716 A · ST4F-723 g]` 이 기기에서 누른 것(「끝났어요」 · 대안 고르기 · 대안 받기 · 되돌리기)이 가져온 알림은 막대로 다시 띄우지 않는다 — 누른 자리가
+    //   이미 결과를 말했다(알림 센터 · 다른 기기는 그대로)
+    if (ownTripNotice(trip.id, notice)) return;
     const needsChoice = notice.type === "safety_alert" || notice.type === "proposal_request";
-    // `[2026-10-21 사용자 결정 — 문서 기준]` 「알림 보기」는 받은 알림 탭을 연다(DEVELOPMENT.md 「새 알림 막대」). 선택이 필요한 알림은 넘겨서 그 대안 고르기가 위 「답이 필요해요」에 뜬다.
-    const view = () => openCenter("notices", needsChoice ? notice : undefined);
-    const toast = noticeToast(notice, trip, targets, t, view);
+    const toast = noticeToast(notice, trip, targets, t, { center: openCenter, detail: openDetail });
     if (!centerOpen) showToast(toast);
     else if (needsChoice) { setCenterNotice(notice); setCenterItemId(null); }
-    // `[2026-10-16]` 이 탭을 보고 있지 않으면 브라우저(운영체제) 알림도 — 고객이 「받은 알림」에서 켰을 때만. 누르면 이 화면의 받은 알림으로 온다.
-    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, view);
+    // `[2026-10-16]` 이 탭을 보고 있지 않으면 브라우저(운영체제) 알림도 — 고객이 「소식」에서 켰을 때만. 누르면 막대의 단추와 같은 곳으로 온다.
+    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, () => toast.action?.run());
   });
   const known = useRef<Set<string> | null>(null);
   const newestNotice = useRef<string | null>(null);
@@ -685,7 +695,7 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
                 past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps}
-                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} choice={choiceOf(entry.stop.id)}
+                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("todo")} choice={choiceOf(entry.stop.id)}
                 live={going?.stop.id === entry.stop.id ? {
                   asking: asking === entry.stop.id, next: going.next, fixed: going.fixed, busy: progress.isPending,
                   onStill: () => setAsking(null),
@@ -823,17 +833,12 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
       {mapTarget && <MapAppsSheet target={mapTarget} onClose={closeMapApps} />}
       {creditsOpen && facts && <TripCredits facts={facts} skipAnimation={skipAnimation} onClose={closeCredits} />}
       {!detailStop && <ChatBar chat={chat} open={barOpen} inChat={!plan} subject={selected ? (selected.place ?? selected.title) : null} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} onLeaveChat={() => goPane("plan")} />}
-      {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 제목을 펼친 줄에 있다. */}
+      {/* `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ]` 탭 셋(할 일 · 소식 · 공지). 여행계획서 링크는 제목을 펼친 줄과 첫 등록 알림 카드에 있다. */}
       {centerOpen && <NoticeCenter onClose={closeCenter}>
         <TripAttention trip={trip} tab={centerTab} onTab={setCenterTab} onResumed={resumed}
           focusItemId={centerItemId}
           focusNotice={centerNotice ?? (!centerItemId && search.get("notices") === "1" ? [...(notices.data ?? [])].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).find((notice) => notice.type === "safety_alert" || notice.type === "proposal_request") ?? null : null)}
-          onGoto={(stopId) => {
-            setCenterOpen(false);
-            setDetailId(null);
-            pick(stopId, "list");
-            requestAnimationFrame(() => (document.getElementById(`stop-button-${stopId}`) ?? document.getElementById("trip-bell"))?.focus({ preventScroll: true }));
-          }} />
+          onDetail={(stopId) => { setCenterOpen(false); openDetail(stopId); }} />
       </NoticeCenter>}
     </main>
     {guardian.overlay}
@@ -885,10 +890,14 @@ function NoticeCenter({ onClose, children }: { onClose: () => void; children: Re
 /** What a pressed route line says, in the one notice bar: from where to where, how, when, what it rides — only what the server gave. */
 /**
  * `[2026-10-07 목업 C안]` A notice the server just sent, in the notice bar: the stop's number and name when the notice is about one (a choice), the kind as a chip, the server's sentence
- * under it, 「알림 보기」 to the center. A safety alert says the pause and the nearest shelter and stays 9 s. ★Nothing is written for the server — no sentence, no stop it did not name.
+ * under it. A safety alert says the pause and the nearest shelter and stays 9 s. ★Nothing is written for the server — no sentence, no stop it did not name.
+ * `[2026-10-22 사용자 결정 — ST4F-723 Ⓣ1]` Its button opens where the notice asks something of the customer: a choice → 「상세 보기」 (the stop's detail, where it is answered —
+ * ST4F-704); a safety alert or an automatic change that can be undone → 「알림 보기」 on 「할 일」; anything else → 「알림 보기」 on 「소식」, its card lit once. The sentence leaves out what
+ * the bar or the detail already shows (the stop's name, the numbered options — `proposalText`) and is cut to a few lines.
  */
-function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[], t: Translate, view: () => void): BusToast {
-  const action = { label: t("알림 보기", "View notices"), run: view };
+function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[], t: Translate,
+  go: { center: (tab: CenterTab, notice: Notice) => void; detail: (stopId: string) => void }): BusToast {
+  const view = (tab: CenterTab) => ({ label: t("알림 보기", "View notices"), run: () => go.center(tab, notice) });
   const label = NOTICE_LABEL[notice.type];
   const kind = label ? t(label[0], label[1]) : notice.type;
   const sub = notice.text ?? undefined;
@@ -897,18 +906,21 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
     const meta = shelter ? shelterMeta(shelter, t) : "";
     // A pause alert (`safety_pause_<level>` — the server pauses with it) says so even before the trip is read again.
     const pausing = trip.safety?.paused || /^safety_pause_/.test(notice.kind ?? "");
-    return { text: pausing ? t("일정 정지 중", "Itinerary paused") : kind, chip: { text: kind, tone: "warn" }, sub,
-      note: shelter ? [t("가까운 대피 장소", "Nearest shelter"), shelter.name, meta].filter(Boolean).join(" · ") : undefined, action, ms: URGENT_MS };
+    return { text: pausing ? t("일정 정지 중", "Itinerary paused") : kind, chip: { text: kind, tone: "warn" }, sub, lines: 3,
+      note: shelter ? [t("가까운 대피 장소", "Nearest shelter"), shelter.name, meta].filter(Boolean).join(" · ") : undefined, action: view("todo"), ms: URGENT_MS };
   }
   if (notice.type === "proposal_request") {
     const proposal = proposals.find((entry) => entry.id === notice.proposalId);
     const stop = trip.stops.find((entry) => entry.id === proposal?.itemId);
     const order = stop ? trip.stops.filter((entry) => entry.date === stop.date).indexOf(stop) + 1 : 0;
-    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, sub,
-      note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined, action };
+    const open = proposal?.status === "open" && proposalAvailable(proposal, trip.version);
+    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, lines: 2,
+      sub: notice.text ? proposalText(notice.text, { stopTitle: stop?.title, options: proposal?.options }) : undefined,
+      note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined,
+      action: stop && open ? { label: t("상세 보기", "Details"), run: () => go.detail(stop.id) } : view(open ? "todo" : "feed") };
   }
-  if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, action };
-  return { text: kind, sub, action };
+  if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, lines: 2, action: view(notice.rollback ? "todo" : "feed") };
+  return { text: kind, sub, lines: 2, action: view("feed") };
 }
 
 function legToast(leg: TripLeg, t: Translate, onList: () => void) {
