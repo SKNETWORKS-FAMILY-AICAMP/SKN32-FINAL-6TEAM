@@ -127,6 +127,20 @@ export interface Notice {
   rollback: { baseVersion: number; toVersion: number; requestId: string } | null;
   /** `[2026-10-06]` A safety alert's guidance (what to follow, where to go); null on any other notice. */
   safety: SafetyGuidance | null;
+  /**
+   * `[2026-10-23 ST4F-723]` What the notice changed, 「무엇 → 무엇」 (server `changed`, contract `rest-endpoints/web-access.md` 「알림 목록의 `changed`」) — null when it changed no stop by name
+   * (registration, guidance, a choice, a safety alert, an undo, 「끝났어요」 …). One row per stop: a watch batch changes several in one notice.
+   */
+  changed: NoticeChange[] | null;
+}
+
+/** One stop a notice changed: the stop before (`itemId`) and after (`newItemId` — only a picked proposal's notice carries it), the names, when it starts (Seoul). Only what the server wrote. */
+export interface NoticeChange {
+  itemId: string | null;
+  newItemId: string | null;
+  from: string | null;
+  to: string | null;
+  at: string | null;
 }
 
 interface ServerNotice {
@@ -134,6 +148,16 @@ interface ServerNotice {
   proposal_id?: string | null; delivery: string; at: string;
   rollback?: { base_version?: unknown; to_version?: unknown; request_id?: unknown } | null;
   safety?: unknown;
+  changed?: unknown;
+}
+
+const named = (value: unknown) => typeof value === "string" && value ? value : null;
+
+function changedOf(raw: unknown): Notice["changed"] {
+  if (!Array.isArray(raw)) return null;
+  const rows = raw.flatMap((row): NoticeChange[] => row && typeof row === "object"
+    ? [{ itemId: named(row.item_id), newItemId: named(row.new_item_id), from: named(row.from), to: named(row.to), at: named(row.at) }] : []);
+  return rows.some((row) => row.from || row.to) ? rows : null;
 }
 
 function rollbackOf(raw: ServerNotice["rollback"]): Notice["rollback"] {
@@ -149,6 +173,7 @@ export async function getNotices(tripId: string, language: Language): Promise<No
     version: row.version ?? null, proposalId: row.proposal_id ?? null, delivery: row.delivery, at: row.at,
     rollback: rollbackOf(row.rollback),
     safety: guidanceOf(row.safety),
+    changed: changedOf(row.changed),
   }));
 }
 

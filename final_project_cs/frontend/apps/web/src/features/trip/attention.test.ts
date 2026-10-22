@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Notice, Proposal } from "@/lib/live/extras";
-import { causeLines, changeOf, dayBefore, NOTICE_LIMIT, noticeFeed, openChoices, proposalText, recentNotices, undoableChange, withoutPlanLink } from "./attention";
+import { causeLines, changeOf, dayBefore, NOTICE_LIMIT, noticeFeed, openChoices, proposalStop, proposalText, recentNotices, undoableChange, withoutPlanLink } from "./attention";
 import type { TripStop } from "./model";
 
 const stop = (id: string): TripStop => ({ id, date: "2026-09-28", time: "12:00", title: "황생가칼국수", booking: "unknown", notes: "" });
 const proposal = (id: string, status: string): Proposal => ({ id, itemId: "i1", baseVersion: 1, reason: "closed", status, safety: false, expiresAt: null, options: [] });
-const notice = (key: string, at: string, over: Partial<Notice> = {}): Notice => ({ key, type: "change_notice", kind: null, text: "t", version: 1, proposalId: null, delivery: "sent", at, rollback: null, safety: null, ...over });
+const notice = (key: string, at: string, over: Partial<Notice> = {}): Notice => ({ key, type: "change_notice", kind: null, text: "t", version: 1, proposalId: null, delivery: "sent", at, rollback: null, safety: null, changed: null, ...over });
 
 describe("what the trip screen asks the customer to decide", () => {
   it("lists only proposals that are still open, with the stop they are about", () => {
@@ -82,6 +82,18 @@ describe("「소식」 — one card per proposal, what waits stays in 「할 일
     expect(feed[0].at).toBe("2026-10-22T15:10:00+09:00");
     expect(changeOf({ type: "change_notice", version: 1 }, history)?.reason).toBe("created");
     expect(changeOf({ type: "proposal_request", version: 1 }, history)).toBeNull();
+  });
+});
+
+describe("the stop a closed proposal is about now (server changed[].new_item_id, 2026-10-23)", () => {
+  const moved = notice("v2", "2026-10-22T20:53:00+09:00", { proposalId: "p1", changed: [{ itemId: "i1", newItemId: "i2", from: "학고재", to: "이솝 삼청", at: "2026-10-29T10:45:00+09:00" }] });
+  it("a picked one is the new stop its change notice names", () => {
+    expect(proposalStop([moved], proposal("p1", "chosen"), [stop("i2")])?.id).toBe("i2");
+  });
+  it("kept or expired, the stop it asked about; none when that stop is gone or the pick predates the new id", () => {
+    expect(proposalStop([], proposal("p1", "kept"), [stop("i1")])?.id).toBe("i1");
+    expect(proposalStop([moved], proposal("p1", "chosen"), [stop("i1")])).toBeNull();
+    expect(proposalStop([notice("v2", "2026-10-22T20:53:00+09:00", { proposalId: "p1" })], proposal("p1", "chosen"), [stop("i9")])).toBeNull();
   });
 });
 

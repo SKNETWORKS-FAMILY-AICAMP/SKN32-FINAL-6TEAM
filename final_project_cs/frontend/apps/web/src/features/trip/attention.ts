@@ -96,6 +96,16 @@ export function withoutPlanLink(text: string, planUrl: string | null | undefined
   return text.endsWith(tail) ? text.slice(0, -tail.length) : null;
 }
 
+/**
+ * `[2026-10-23 ST4F-723]` The stop a closed proposal is about now: a picked one became a new stop (its change notice's `changed[].newItemId`); kept or expired, the stop it asked
+ * about. null when that stop is no longer on the trip (changed again since) or the pick predates the server writing the new id — the card then draws no stop row.
+ */
+export function proposalStop(notices: readonly Notice[], proposal: Proposal | null, stops: readonly TripStop[]): TripStop | null {
+  const moved = notices.flatMap((notice) => notice.changed ?? []).find((row) => row.newItemId)?.newItemId;
+  const id = moved ?? proposal?.itemId;
+  return stops.find((stop) => stop.id === id) ?? null;
+}
+
 /** A cause the server sent as its own code only (gateway `causeText` falls back to the code: 「closed」 · 「customer_request · alternate」) tells the customer nothing — left out. */
 export const causeLines = (causes: readonly string[]) => causes.filter((cause) => !/^[a-z_]+( · [a-z_]+)*$/.test(cause));
 

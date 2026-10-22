@@ -10,10 +10,10 @@ import { markServiceNoticesSeen, useSeenServiceNotices } from "@/features/suppor
 import { routes } from "@/lib/routes";
 import { seoul } from "@/lib/live/gateway";
 import { LiveError } from "@/lib/live/client";
-import { undoChange, type Notice } from "@/lib/live/extras";
+import { undoChange, type Notice, type NoticeChange } from "@/lib/live/extras";
 import { useSettings, useT } from "@/lib/settings";
 import type { Translate } from "@/lib/i18n";
-import { causeLines, changeOf, dayBefore, NOTICE_LIMIT, noticeFeed, openChoices, proposalText, undoableChange, withoutPlanLink, type FeedEntry, type OpenChoice } from "./attention";
+import { causeLines, changeOf, dayBefore, NOTICE_LIMIT, noticeFeed, openChoices, proposalStop, proposalText, undoableChange, withoutPlanLink, type FeedEntry, type OpenChoice } from "./attention";
 import { proposalAvailable } from "./trip-chat-records";
 import { chooseFailure, chooseOutcome, useChooseProposal } from "./proposal-ask";
 import { NoticeCard, noticeKind, ProposalCard } from "./trip-chat-notices";
@@ -261,6 +261,22 @@ export function TripAttention({ trip, tab, onTab, onDetail, onResumed, focusNoti
     <ol>{list.map((notice) => <li key={notice.key}><b>{noticeWhen(notice.at)} · {noticeKind(notice.type, t).label}</b>
       {notice.text ? <LinkedText text={notice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /> : t("서버가 문장을 보내지 않았어요.", "The server sent no text.")}</li>)}</ol>
   </details>;
+  /**
+   * `[2026-10-23 사용자 지시 — ST4F-723]` What a notice changed, from the server's `changed`: one row per stop — when it starts (n일차 HH:MM), 「전 → 후」 — in the chat's 「바뀐 일정」 box.
+   * Only the server's values: a missing name or time is left out, not filled in.
+   */
+  const changedWhen = (iso: string) => {
+    const at = seoul(iso);
+    const index = days.indexOf(at.date);
+    return index >= 0 ? t(`${index + 1}일차 ${at.time}`, `Day ${index + 1} ${at.time}`) : `${t(serverDayLabel(at.date), at.date)} ${at.time}`;
+  };
+  const changedRows = (rows: readonly NoticeChange[]) => rows.length > 0 && <div className={c.diff} data-feed-changed>
+    <h3>{t("바뀐 일정", "What changed")}</h3>
+    {rows.map((row, index) => <div key={`${row.itemId ?? ""}-${index}`} className={c.row}>
+      <span>{row.at ? changedWhen(row.at) : ""}</span>
+      <span>{row.from && <s>{row.from}</s>}{row.from && row.to ? "→ " : ""}{row.to && <span className={c.new}>{row.to}</span>}</span>
+    </div>)}
+  </div>;
 
   const choiceTask = ({ proposal, stop, text }: OpenChoice) => {
     const list = all.filter((notice) => notice.proposalId === proposal.id).sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
@@ -288,6 +304,7 @@ export function TripAttention({ trip, tab, onTab, onDetail, onResumed, focusNoti
     return <NoticeCard key={notice.key} {...kind} label={change ? reasonLabel(change, t) : kind.label} unread={fresh([notice])} at={notice.at} when={noticeWhen(notice.at)}
       data-feed-entry={notice.key} data-flash={flashKey === notice.key || undefined}>
       {body(notice.key, planText ?? notice.text, notice.type === "safety_alert" || notice.type === "guidance")}
+      {changedRows(notice.changed ?? [])}
       {(planText !== null || causes.length > 0) && <div className={c.foot}>
         {causes.length > 0 && <span className={c.footTitle}>{causes.join(" · ")}</span>}
         {planText !== null && trip.planUrl && <a className={c.button} href={trip.planUrl} target="_blank" rel="noopener noreferrer">
@@ -303,9 +320,13 @@ export function TripAttention({ trip, tab, onTab, onDetail, onResumed, focusNoti
       : PROPOSAL_STATE[proposal.status] ? [t(PROPOSAL_STATE[proposal.status][0], PROPOSAL_STATE[proposal.status][1]), PROPOSAL_STATE[proposal.status][2]] as const : [proposal.status, true] as const : null;
     const ask = [...entry.notices].reverse().find((notice) => notice.type === "proposal_request" || notice.type === "safety_alert") ?? latest;
     const kind = noticeKind(ask.type, t);
+    // `[2026-10-23 사용자 지시 — ST4F-723]` The stop it is about now (a picked one: the new stop the server names in `changed[].new_item_id`) — its row and 「상세 보기」; what it changed under it.
+    const stop = proposalStop(entry.notices, proposal, trip.stops);
     return <NoticeCard key={entry.proposalId} {...kind} tone="muted" state={state && { text: state[0], done: state[1] }} unread={fresh(entry.notices)} at={latest.at} when={noticeWhen(latest.at)}
       data-feed-entry={entry.proposalId} data-flash={flashKey === entry.proposalId || undefined}>
-      {body(entry.proposalId, latest.text, true)}
+      {stop && stopRow(stop)}
+      {body(entry.proposalId, latest.text && stop ? proposalText(latest.text, { stopTitle: stop.title }) : latest.text, true)}
+      {changedRows(entry.notices.flatMap((notice) => notice.changed ?? []))}
       {flow(entry.notices)}
     </NoticeCard>;
   };
@@ -367,6 +388,7 @@ export function TripAttention({ trip, tab, onTab, onDetail, onResumed, focusNoti
           const kind = noticeKind(undoable.type, t);
           return <NoticeCard {...kind} label={change ? reasonLabel(change, t) : kind.label} unread={fresh([undoable])} at={undoable.at} when={noticeWhen(undoable.at)} data-task data-center-undo>
             {body(undoable.key, undoable.text, false)}
+            {changedRows(undoable.changed ?? [])}
             <div className={c.foot}>
               <button type="button" className={c.button} disabled={undo.isPending} onClick={() => undo.mutate(undoable)}>
                 <Undo2 size={15} strokeWidth={1.8} aria-hidden="true" />{undo.isPending ? t("되돌리는 중…", "Undoing…") : t("되돌리기", "Undo")}</button>
