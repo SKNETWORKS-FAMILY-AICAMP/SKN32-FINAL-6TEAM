@@ -1,0 +1,22 @@
+[
+  {
+    "app": "admin",
+    "task": "lint",
+    "exit": 0
+  },
+  {
+    "app": "admin",
+    "task": "typecheck",
+    "exit": 0
+  },
+  {
+    "app": "admin",
+    "task": "test",
+    "exit": 0
+  },
+  {
+    "app": "admin",
+    "task": "build",
+    "exit": 0
+  }
+]

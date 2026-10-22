@@ -1,0 +1,48 @@
+
+> @tripilot/web@0.1.0 build
+> next build
+
+▲ Next.js 16.4.0 (Turbopack)
+✓ Running next.config.ts took 320ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 13.7s
+  Running TypeScript ...
+  Finished TypeScript in 36.3s ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/18) ...
+  Generating static pages using 19 workers (4/18) 
+  Generating static pages using 19 workers (8/18) 
+  Generating static pages using 19 workers (13/18) 
+✓ Generating static pages using 19 workers (18/18) in 1503ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /auth/done
+├ ƒ /help
+├ ƒ /intakes/[intakeId]
+├ ○ /intakes/starting
+├ ○ /mypage
+├ ○ /mypage/account
+├ ○ /mypage/agents
+├ ○ /mypage/alerts
+├ ○ /mypage/consents
+├ ○ /mypage/edit
+├ ○ /notices
+├ ƒ /notices/[noticeId]
+├ ƒ /start
+├ ƒ /support
+├ ƒ /support/[inquiryId]
+├ ○ /support/new
+├ ○ /trips
+├ ƒ /trips/[tripId]
+├ ƒ /trips/[tripId]/results
+├ ƒ /trips/[tripId]/verification
+└ ○ /trips/new
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
