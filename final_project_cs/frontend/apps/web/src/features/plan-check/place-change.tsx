@@ -40,8 +40,8 @@ export function candidateNoteText(notes: readonly string[] | undefined, t: Trans
   return null;
 }
 
-/** What the top bar's search found. `unsupported` — no search on this server yet (the place can still be changed by name). */
-export interface SearchState { query: string; list: PlanCandidate[]; state: "loading" | "ready" | "failed" | "unsupported"; message?: string }
+/** What the top bar's search found. `unsupported` — no search on this server yet (the place can still be changed by name). `short` — one letter: nothing is asked yet. */
+export interface SearchState { query: string; list: PlanCandidate[]; state: "loading" | "ready" | "failed" | "unsupported" | "short"; message?: string }
 
 /**
  * ⑤ Changing one stop's place (mockup scenario 4, 개정 4): the map and the sheet stay, the content changes. Cards to swipe —
@@ -248,6 +248,7 @@ function SearchResults({ search, onPick, onApplyName, applyWhy, explain }: {
 }) {
   const t = useT();
   const query = search.query.trim();
+  if (search.state === "short") return <div className={styles.results}><p className={styles.empty}>{t("두 글자 이상 입력하면 찾아요", "Type at least two letters to search")}</p></div>;
   if (search.state === "unsupported") {
     return <div className={styles.results}>
       <p className={styles.empty}>{t("장소 검색은 준비 중이에요.", "Place search is coming.")}<br />{t("이름을 그대로 보내면 서버가 그 이름으로 장소를 찾아 다시 확인해요.", "Send the name as it is and the server looks the place up and checks the plan again.")}</p>

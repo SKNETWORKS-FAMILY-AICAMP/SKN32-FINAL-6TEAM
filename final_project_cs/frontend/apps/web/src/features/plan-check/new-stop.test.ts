@@ -100,7 +100,8 @@ describe("일정 경계를 기준으로 장소 검색", () => {
     const screen = draw();
     harness.search.mockResolvedValue({ results: [result()] });
     const found = await screen.actions.searchToAdd!("0-0", "광장시장");
-    expect(harness.search).toHaveBeenCalledExactlyOnceWith("intake-a", expect.objectContaining({ source_id: "source-a", index: 0 }), 7, "광장시장", "ko");
+    // `[2026-10-22]` 일정 추가 검색은 가까운 순만 묻는다(이름순 목록을 그리지 않아 두 번째 지도 호출이 필요 없다)
+    expect(harness.search).toHaveBeenCalledExactlyOnceWith("intake-a", expect.objectContaining({ source_id: "source-a", index: 0 }), 7, "광장시장", "ko", undefined, { relevance: false });
     expect(found[0].pickedPlace).toEqual(chosen);
     expect(found[0].info?.address).toBe("서울 종로구 시험 주소");
     expect(harness.edit).not.toHaveBeenCalled();

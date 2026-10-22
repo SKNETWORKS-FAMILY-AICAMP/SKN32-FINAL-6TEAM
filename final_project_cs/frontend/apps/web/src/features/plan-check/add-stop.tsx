@@ -17,7 +17,7 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
   /** `[2026-10-19]` `title` · `kind` · `query` (the place search's words) — the add form opened from the chat comes filled in with what the chat had. */
   date: string; blocked: string | null; initial?: { start: string; end: string; title?: string; kind?: NewStop["kind"]; query?: string };
   onSave: (draft: NewStop) => Promise<void>; onCancel?: () => void;
-  search?: (query: string) => Promise<AddStopPlace[]>;
+  search?: (query: string, signal?: AbortSignal) => Promise<AddStopPlace[]>;
   onBusy?: (busy: boolean) => void;
 }) {
   const t = useT();

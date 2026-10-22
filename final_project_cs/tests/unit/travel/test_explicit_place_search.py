@@ -129,16 +129,30 @@ def test_web_search_also_lists_best_name_matches(monkeypatch):
     item, review, _ = two_stops_around(monkeypatch)
     exact_far = shop('국수집', 'x', 37.5000, 127.0500)
     near_gbg = shop('옛날국수집 경복궁', 'a', 37.5790, 126.9760)
-    source = TwoOrderKakao([near_gbg, exact_far], [exact_far, near_gbg])
+    source = TwoOrderKakao([near_gbg], [exact_far, near_gbg])
     found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source,
                               around_self=True, by_relevance=True)
-    assert [r['place']['name'] for r in found['results']] == ['옛날국수집 경복궁', '국수집']
+    assert [r['place']['name'] for r in found['results']] == ['옛날국수집 경복궁']
     assert [r['place']['name'] for r in found['relevance']] == ['국수집', '옛날국수집 경복궁']
     assert all(r['order'] == 'relevance' for r in found['relevance'])
     assert [r['rank'] for r in found['relevance']] == [1, 2]
-    # 일치도 목록은 카카오를 중심 없이(서울 관련도 순) 한 번 더 부른다 · 거리는 여전히 고른 장소에서 잰다
+    # 가까운 곳에 이름이 똑같은 곳이 없으니 카카오를 중심 없이(서울 관련도 순) 한 번 더 부른다 · 거리는 여전히 고른 장소에서 잰다
     assert len(source.calls) == 2 and 'near' not in source.calls[1][1]
+    assert found['relevance_kakao'] == 'called'
     assert found['relevance'][0]['reference'] == '경복궁'
+
+
+def test_second_map_call_is_skipped_when_an_exact_name_is_already_near(monkeypatch):
+    """`[2026-10-22 사용자 지시]` 거리순으로 모은 곳에 이름이 검색어와 똑같은 곳이 있으면 카카오를 한 번만 부르고 그 결과를 일치도 목록에도 쓴다."""
+    item, review, _ = two_stops_around(monkeypatch)
+    exact_near = shop('국수집', 'x', 37.5780, 126.9750)
+    other = shop('옛날국수집 경복궁', 'a', 37.5790, 126.9760)
+    source = TwoOrderKakao([other, exact_near], [exact_near, other])
+    found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source,
+                              around_self=True, by_relevance=True)
+    assert len(source.calls) == 1 and found['relevance_kakao'] == 'reused'
+    assert [r['place']['name'] for r in found['relevance']] == ['국수집', '옛날국수집 경복궁']
+    assert [r['place']['name'] for r in found['results']] == ['옛날국수집 경복궁', '국수집']
 
 
 def test_relevance_failure_is_reported_once(monkeypatch):
