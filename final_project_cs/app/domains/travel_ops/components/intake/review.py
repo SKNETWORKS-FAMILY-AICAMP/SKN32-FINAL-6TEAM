@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import time
 from copy import deepcopy
@@ -37,8 +38,13 @@ from . import taxi_pricing
 from app.domains.travel_ops.components import settings_hook
 
 KST = ZoneInfo("Asia/Seoul")
+_LOG = logging.getLogger(__name__)
 #: 한 번 계산하는 동안 이동 계산기에 쓰는 시간 상한(초). 넘으면 남은 구간은 어림값으로 낸다(이유가 줄에 적힌다) — 화면이 끝없이 기다리지 않게. ★우리가 고른 값
 ENGINE_BUDGET_S = 25.0
+#: `[2026-10-22]` 「앞 일정이 끝난 뒤 떠나서 닿는 다른 경로」를 찾는 깊은 탐색은 한 번에 1~3.5초(실측 — 2026-10-19 속도 보고서)라, 앞 구간들이 쓰면 25초 한 통이 먼저 바닥나
+#: 뒷날짜가 통째로 어림값이 된다. 남은 구간 하나마다 이 시간이 남아 있을 때만 깊이 찾고, 모자라면 빠른 한 번(`deep=False`)으로 모든 구간을 먼저 채운다.
+#: ★우리가 고른 값 — 깊은 탐색 한 번의 가운데값(1.0초)보다 약간 큰 몫
+DEEP_MIN_SHARE_S = 1.5
 #: ★`[2026-10-16 화면 점검]` 요식 원장(`dining_ledger`)이 없어 기본값 「장소 정보」 뒤에 「정보로」가 붙어 「장소 정보 정보로」가 됐다 —
 #:  원장을 넣고 기본값도 「장소 목록」으로 바꿨다(문장이 늘 「{이름표} 정보로」다)
 SOURCE_LABEL = {"places": "우리 장소 목록", "tour_api": "관광공사", "kakao": "카카오 지도", "customer_pick": "직접 고른 곳",
@@ -425,6 +431,11 @@ class _Budgeted:
     def exhausted(self) -> bool:
         return self._left <= 0 or (self._within is not None and self._within.exhausted)
 
+    @property
+    def left(self) -> float:
+        """이 상한(요청 전체 한도 안이면 둘 중 적은 쪽)에 남은 초 — 깊은 탐색을 해도 되는지 가를 때 본다."""
+        return min(self._left, self._within.left) if self._within is not None else self._left
+
     @staticmethod
     def _key(a: dict[str, Any], b: dict[str, Any], arrive: Any, not_before: Any) -> tuple:
         return (round(a["lat"], 5), round(a["lon"], 5), round(b["lat"], 5), round(b["lon"], 5), arrive, not_before)
@@ -761,6 +772,20 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     morning = [pair for pair in morning if not same_place(pair[0][0].get("place"), pair[1][0].get("place"))]       # 같은 곳이면 아침 구간도 없다
     move_total += len(morning)
 
+    estimate_codes: dict[str, int] = {}
+
+    def tally(leg: Leg) -> None:
+        """어림값이 된 구간을 이유 갈래별로 센다 — 끝에 한 줄 로그로 남긴다(운영에서 어림이 얼마나 · 왜 나는지 보이게)."""
+        if leg.basis == "estimate":
+            code = leg.why_code or "unfilled"
+            estimate_codes[code] = estimate_codes.get(code, 0) + 1
+
+    def deep_ok() -> bool:
+        """깊은 탐색을 해도 되나 — 아직 못 채운 구간 하나마다 `DEEP_MIN_SHARE_S` 이상 남아 있을 때만."""
+        if budgeted is None:
+            return True
+        return budgeted.left / max(move_total - len(moves), 1) >= DEEP_MIN_SHARE_S
+
     def add_move(move: dict[str, Any], ia: dict[str, Any], ib: dict[str, Any]) -> None:
         """구간 하나가 정해졌다 — 모으고 곧바로 알린다(이동 계산이 시간의 대부분이라 화면이 이 알림으로 진행을 안다)."""
         moves.append(move)
@@ -791,10 +816,11 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             add_move({**same, "sig": sig, "recommended_mode": same["mode"], "mode_choice": {"mode": pick, "state": "kept"},
                       "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
             continue
-        leg = leg_between(budgeted, pa, pb, a_end, b_start)
+        leg = leg_between(budgeted, pa, pb, a_end, b_start, deep=deep_ok())
         choice, recommended = None, leg.mode
         if pick:
             leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, a_end, b_start, b["start"])
+        tally(leg)
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
         add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice}, ia, ib)
 
@@ -818,10 +844,11 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             add_move({**same, "sig": sig, "recommended_mode": same["mode"], "mode_choice": {"mode": pick, "state": "kept"},
                       "from": ia["id"], "to": ib["id"], "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
             continue
-        leg = leg_between(budgeted, pa, pb, floor, b_start)
+        leg = leg_between(budgeted, pa, pb, floor, b_start, deep=deep_ok())
         choice, recommended = None, leg.mode
         if pick:
             leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, floor, b_start, b["start"])
+        tally(leg)
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
         add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice,
                   "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
@@ -836,6 +863,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     needs_moves = sum(1 for m in moves if m["status"] == "review")
     # 지도 모양: 일차별로 목록을 읽는 화면이 묶기 쉽게 항목 순서는 날짜 · 시각 순 그대로 둔다
     engines = {m["basis"] for m in moves if m.get("basis")}
+    if estimate_codes:
+        _LOG.info("검사 이동 어림 %d/%d구간 · 이유 %s · 남은 한도 %.1f초", sum(estimate_codes.values()), len(moves),
+                  dict(sorted(estimate_codes.items())), budgeted.left if budgeted is not None else 0.0)
     return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),

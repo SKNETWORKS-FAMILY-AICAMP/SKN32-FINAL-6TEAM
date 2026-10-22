@@ -1,9 +1,10 @@
 # develop 관문 — 빠르게 도는 것만 둔다(2026-09-23 신설).
 #   린트: 버그만 잡는 최소 규칙(F·E9). 규칙 범위는 루트 ruff.toml 이 정한다.
-#   시험: DB 없이도 대부분 도는 architecture·contract·unit.
-#         contract·unit 중 9개 파일이 DB 를 쓰기 때문에 PostgreSQL 은 띄운다.
-#   보안(scope · PII · 추적 파일)은 RULE.md §5 에 따라 같은 시험 DB 에서 검사한다 — `[2026-10-05]` 팀 저장소 develop 판에서 가져옴(우리 로컬에서 22개 통과 확인).
-#   통합·e2e 와 Docker 빌드는 main 관문(ci-main.yml)에서 본다.
+#   시험: **DB 없이** 도는 architecture·contract·unit·security 만 돈다. `[2026-10-22]`
+#         DB 가 있어야 도는 12개 파일은 tests/conftest.py 의 DB_TEST_FILES 로 `db` 표시를 붙여 `-m "not db"` 로 건너뛴다.
+#         파일당 몇 초씩 걸리는 6개 파일은 `slow` 표시로 같이 건너뛴다(DB_TEST_FILES 옆 SLOW_TEST_FILES).
+#         건너뛴 시험과 통합·e2e 와 Docker 빌드는 DB 가 있는 main 관문(ci-main.yml)에서 본다.
+#         PostgreSQL 을 띄우고 스키마·프롬프트를 넣던 단계도 함께 뺐다.
 #   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 빼 둔다.
 #
 # ★언제 도나 `[2026-10-19 사용자 결정 — 「develop 테스트 너무 많다, 풀 테스트는 main 만」]`
@@ -49,19 +50,8 @@ jobs:
   test:
     name: architecture · contract · unit
     runs-on: ubuntu-latest
-    # 기본 제한은 6시간이다 — 멈춘 시험 하나가 러너를 6시간 붙잡지 않게 평소(약 2분)의 여러 배로 끊는다.
-    timeout-minutes: 20
-    services:
-      postgres:
-        # pgvector 확장이 들어 있는 이미지. 기본 postgres 이미지로는 벡터 열을 만들지 못한다.
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: acop_ci
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s --health-timeout 5s --health-retries 20
+    # 기본 제한은 6시간이다 — 멈춘 시험 하나가 러너를 6시간 붙잡지 않게 짧게 끊는다(DB 없는 빠른 단계).
+    timeout-minutes: 10
     env:
       # ★서버 시각을 한국 시간으로(2026-09-28). GitHub 러너는 UTC 인데, 시각을 현지 시간으로 다루는
       #   코드·시험이 9시간씩 밀려 main 관문에서 43건이 깨졌다(경복궁 09:00 → 00:00). 로컬(KST)과 맞춘다.
@@ -96,21 +86,10 @@ jobs:
           cache: pip
           cache-dependency-path: final_project_cs/requirements.txt
       - run: python -m pip install -r requirements.txt
-      - name: DB 세션 시간대 확인 (Asia/Seoul 이 아니면 멈춘다)
-        run: >-
-          python -c "import psycopg; from app.infrastructure.db.session import database_dsn;
-          tz = psycopg.connect(database_dsn()).execute('SHOW TIME ZONE').fetchone()[0];
-          print('DB session TimeZone =', tz); assert tz == 'Asia/Seoul', tz"
-      - name: DB 스키마 만들기
-        run: python -m app.infrastructure.db.migrate
-      # 새 DB 에는 프롬프트가 없다. 계약 시험이 배포 중인 프롬프트를 확인하므로 먼저 등록한다.
-      - name: 프롬프트 등록
-        run: python -m scripts.register_prompts
       # ☆2026-09-24 test_deactivating_does_not_erase_history 를 여기서 빼 두었다가 되돌렸다 —
       #   「DB 에 비활성 프롬프트가 있나」(개발 DB 이력)를 세던 시험을, 시험 안에서 한 판을 올리고
       #   바꾼 뒤 옛 판이 남는지 보게(롤백되는 트랜잭션 안에서) 고쳤다. 빈 DB 에서도 성립한다.
-      - name: 시험
+      - name: 시험 (DB 없이)
         run: >-
-          python -m pytest tests/architecture tests/contract tests/unit -q
-      - name: 보안 (scope · PII · 추적 파일)
-        run: python -m pytest tests/security -q
+          python -m pytest tests/architecture tests/contract tests/unit tests/security
+          -q -m "not live and not db and not slow"
