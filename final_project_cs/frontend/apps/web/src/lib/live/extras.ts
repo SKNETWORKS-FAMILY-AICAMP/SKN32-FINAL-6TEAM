@@ -256,3 +256,23 @@ export function undoChange(tripId: string, rollback: NonNullable<Notice["rollbac
     body: JSON.stringify({ request_id: rollback.requestId, base_version: rollback.baseVersion, to_version: rollback.toVersion }),
   });
 }
+
+/**
+ * `[2026-10-22 사용자 결정 — ST4F-716]` 「끝났어요」 on the stop going on now (`POST /v1/web/trips/{id}/progress`): `advance_trip` ends it now and starts the next stop of the day
+ * after the way from here (the server re-times the way and checks the next stop's hours before it moves it); `complete_item` only records the end. The server's own sentence
+ * comes back (`text`, Korean); `navigation` says the next stop was kept (fixed · hours · no route …). 409 when the trip moved on or the stop has not started — a `LiveError`, nothing changed.
+ * The same `requestId` sent twice is one report.
+ */
+export interface ProgressResult { status: string; text: string; state?: string; navigation?: string; version?: number }
+
+export async function reportProgress(tripId: string, report: { requestId: string; baseVersion: number; itemId: string; action: "advance_trip" | "complete_item" },
+  language: Language): Promise<ProgressResult> {
+  const raw = await api<{ status?: unknown; text?: unknown; state?: unknown; navigation?: unknown; version?: unknown }>(
+    `/v1/web/trips/${encodeURIComponent(tripId)}/progress`, language, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ request_id: report.requestId, base_version: report.baseVersion, item_id: report.itemId, action: report.action }),
+    });
+  const text = (value: unknown) => typeof value === "string" ? value : undefined;
+  return { status: text(raw.status) ?? "", text: text(raw.text) ?? "", state: text(raw.state), navigation: text(raw.navigation),
+    version: typeof raw.version === "number" ? raw.version : undefined };
+}
