@@ -1549,11 +1549,20 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
     for it in out.items:
         by_line.setdefault(it.title.line, []).append(it)
 
+    from .span_segments import split_segments
+
+    segments: dict[tuple[int, int, int], dict[str, Any]] = {}
+    for line_no, line_items in by_line.items():
+        line = lines[line_no - 1]
+        ordered = sorted(line_items, key=lambda item: item.title.start)
+        bounds = split_segments(line, [(item.title.start, item.title.end) for item in ordered])
+        for item, (start, end) in zip(ordered, bounds):
+            segments[(line_no, item.title.start, item.title.end)] = {
+                "line": line_no, "start": start, "end": end, "text": line[start:end]}
+
     def segment(it: Any) -> dict[str, Any]:
-        line = lines[it.title.line - 1]
-        later = [o.title.start for o in by_line.get(it.title.line, []) if o.title.start > it.title.start]
-        end = min(later) if later else len(line)
-        return {"line": it.title.line, "start": it.title.start, "end": end, "text": line[it.title.start:end]}
+        # 다음 장소 앞의 「저녁」·시각은 그 장소 몫이다. 조립과 같은 경계를 저장한다.
+        return segments[(it.title.line, it.title.start, it.title.end)]
 
     # ★`[2026-10-16 D-025 사실 검사]` 같은 줄에 규칙이 읽은 시각 — 에이전트가 항목은 읽고 시각을 비웠거나(실제 접수 R08: 9곳) 시각 근거를 **다른 줄**에서
     #   가져왔으면(R19: 경복궁 10:00 → 12:00) 그 줄의 원문 시각을 쓴다. 같은 줄 근거로 오후를 판단한 값(「1시 점심」→13:00)은 그대로 둔다.
