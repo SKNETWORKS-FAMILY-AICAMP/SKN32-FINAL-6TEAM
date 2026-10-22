@@ -12,6 +12,12 @@ export function riskTime(value: string | null): string | null {
   return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(at);
 }
 
+/**
+ * `[2026-10-22 사용자 지시]` With the operator's risk panel switch off (`risk_panel: false`), the notice center keeps only real dangers: the risk toast,
+ * the bell's 「위험 n」 and the card marks lead there for the indoor alternatives. Unchecked stops and the check scope are for testing and go.
+ */
+export const panelRisks = (items: readonly ItemRisk[], shown: boolean): readonly ItemRisk[] => shown ? items : items.filter((item) => item.status === "problem");
+
 /** Current server findings stay visible; old notices are never replayed into this panel. */
 export function RiskPanel({ items, at = null, mode = null, loading = false, error = false, unavailable = false,
   retry, busy = false, onAlternatives, alternativeBusy, alternativeMessage, compact = false, scope }: {
