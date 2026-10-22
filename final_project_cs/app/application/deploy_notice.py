@@ -13,10 +13,13 @@ import logging
 import math
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from app.core.settings import get_settings
 
 logger = logging.getLogger(__name__)
+
+KST = ZoneInfo("Asia/Seoul")
 
 RUNNING = ("preparing", "switching")
 #: 끝난 공지를 보이는 시간 — 그 뒤엔 공지 없음. 문제(`trouble`)는 사람이 볼 때까지 더 오래 둔다.
@@ -44,8 +47,8 @@ def _clock(value: str) -> str:
     return value[11:16]
 
 
-def read_state(path: Path, now: datetime) -> dict | None:
-    """상태 파일 → 지금 보일 상태(없으면 `None`)."""
+def load_state(path: Path) -> dict | None:
+    """상태 파일 → 모양이 맞는 상태(없거나 틀렸으면 `None`). 보이는 시간 창은 따지지 않는다 — 게시판 기록 맞추기(`sync_board`)가 쓴다."""
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
@@ -61,11 +64,24 @@ def read_state(path: Path, now: datetime) -> dict | None:
             or not isinstance(outage, int) or isinstance(outage, bool) or outage <= 0):
         logger.warning("배포 공지 파일 모양이 틀렸다: phase=%r", phase)
         return None
+    return raw
+
+
+def read_state(path: Path, now: datetime) -> dict | None:
+    """상태 파일 → 지금 **띠로** 보일 상태(없으면 `None`)."""
+    raw = load_state(path)
+    if raw is None:
+        return None
+    phase, updated = raw["phase"], _when(raw["updated_at"])
     if phase in RUNNING and now - updated > RUNNING_STALE_AFTER:
         return None
     if phase in SHOWN_AFTER_END and now - updated > SHOWN_AFTER_END[phase]:
         return None
     return raw
+
+
+def board_id(state: dict) -> str:
+    return f"deploy:{state['deploy_id']}"
 
 
 def customer_notice(state: dict) -> dict:
@@ -104,7 +120,8 @@ def customer_notice(state: dict) -> dict:
         kind, ko, en = KIND_DISRUPTION, (
             "새 판으로 바꾸다 문제가 생겼어요", f"{finished}부터 일부 기능이 안 될 수 있어요. 안 되면 잠시 뒤 다시 시도해 주세요."), (
             "A problem occurred while switching versions", f"Since {finished} KST some features may not work. If something fails, please try again shortly.")
-    return {"id": f"deploy:{state['deploy_id']}:{phase}", "kind": kind, "title": ko[0], "body": ko[1], "titleEn": en[0], "bodyEn": en[1],
+    # ★`[2026-10-23 사용자 결정]` id 는 **배포 한 번에 하나** — 단계가 바뀌어도 같은 건이다(전에는 단계마다 새 id 라 앞 단계를 닫아도 다시 떴다).
+    return {"id": board_id(state), "kind": kind, "title": ko[0], "body": ko[1], "titleEn": en[0], "bodyEn": en[1],
             "startsAt": state["started_at"][:16], "endsAt": None}
 
 
@@ -112,3 +129,39 @@ def current_notice(now: datetime, path: Path | None = None) -> dict | None:
     """지금 고객에게 보일 배포 공지(없으면 `None`). `now` 는 시간대가 있는 시각."""
     state = read_state(path or Path(get_settings().service_notice_path), now)
     return customer_notice(state) if state else None
+
+
+def board_record(state: dict) -> dict:
+    """공지사항 게시판(`admin_records` 의 `notice`)에 남길 배포 한 건 — 띠와 같은 문구, 배포 한 번에 하나.
+
+    끝나지 않은 동안은 `endsAt` 을 「마지막 갱신 + 30분」으로 둔다(배포 프로세스가 죽어도 그때 지나면 저절로 종료). 끝나면(`done` · `kept_previous` ·
+    `trouble`) 끝난 시각이 `endsAt` 이라 게시판에서 「종료」로 보인다. 단계별 변화는 `admin_audit` 에 남는다(관리자 앱에서만 본다)."""
+    notice = customer_notice(state)
+    phase = state["phase"]
+    if phase in RUNNING:
+        ends = (_when(state["updated_at"]) + RUNNING_STALE_AFTER).astimezone(KST).strftime("%Y-%m-%dT%H:%M")
+    else:
+        ends = (state["finished_at"] if _when(state.get("finished_at")) else state["updated_at"])[:16]
+    return {"kind": notice["kind"], "title": notice["title"], "body": notice["body"], "titleEn": notice["titleEn"], "bodyEn": notice["bodyEn"],
+            "startsAt": notice["startsAt"], "endsAt": ends, "audience": "all", "author": "auto-deploy", "source": "deploy",
+            "deployId": state["deploy_id"], "phase": phase}
+
+
+def sync_board(conn, tenant: str, path: Path | None = None) -> None:
+    """상태 파일의 배포 한 건을 게시판 기록에 맞춘다 — 없으면 만들고, 단계가 바뀌었으면 같은 건을 고친다(값이 같으면 쓰지 않는다).
+
+    고객 공지 경로 · 게시판 경로가 읽을 때 부른다. 실패해도 읽기는 계속한다(경고만). 알림 · 발송은 하지 않는다."""
+    from app.application import admin_service
+
+    state = load_state(path or Path(get_settings().service_notice_path))
+    if state is None:
+        return
+    value = board_record(state)
+    rid = board_id(state)
+    try:
+        if admin_service.record(conn, tenant, "notice", rid) == value:
+            return
+        with conn.transaction():
+            admin_service.put(conn, tenant, "notice", rid, value, actor="auto-deploy", action="deploy-notice", reason=f"배포 {state['phase']}")
+    except Exception as exc:  # noqa: BLE001 — 게시판 기록이 안 맞춰져도 고객 공지 읽기는 막지 않는다
+        logger.warning("배포 공지 게시판 기록을 맞추지 못했다: %s", type(exc).__name__)

@@ -23,7 +23,7 @@ domain: travel
 | GET /admin/api/api-limits | ops:introspect 권한; 현재 프로세스의 API 일·월 ENV 한도와 기본값·DB 기록. [세부 계약](api-environment-limits.md) |
 | POST /admin/api/commands | model.ts의 13가지 명령. 서버에서 입력·권한·대상·사유 재검증 |
 | GET /v1/web/support/notices | 고객 API의 공개 공지·점검 상태; 고객 인증정보 불필요 |
-| GET /v1/web/support/notices/board | `[2026-10-17 사용자 결정 · ST4F-604]` 고객 웹 「공지사항」 게시판; 고객 인증정보 불필요. 운영 앱 「공지 목록」의 공지 중 **게시를 시작한 것만** `{notices: [...]}` 로 낸다 — 게시 중(`status: "posted"`) 먼저, 종료(`"ended"`) 그다음, 각각 게시 시작이 늦은 것부터. 예약(시작 전)과 작성 운영자(`author`)는 내지 않는다. 판정은 운영 앱 목록과 같다(한국 시각 시작 ≤ 지금 < 끝이면 게시 중, 끝 ≤ 지금이면 종료). 쪽 나누기는 화면이 한다(서버는 전체 목록). UI·검증 담당 추가 — 매니저 검토 전 |
+| GET /v1/web/support/notices/board | `[2026-10-17 사용자 결정 · ST4F-604]` 고객 웹 「공지사항」 게시판; 고객 인증정보 불필요. 운영 앱 「공지 목록」의 공지 중 **게시를 시작한 것만** `{notices: [...]}` 로 낸다 — 게시 중(`status: "posted"`) 먼저, 종료(`"ended"`) 그다음, 각각 게시 시작이 늦은 것부터. 예약(시작 전)과 작성 운영자(`author`)는 내지 않는다. 판정은 운영 앱 목록과 같다(한국 시각 시작 ≤ 지금 < 끝이면 게시 중, 끝 ≤ 지금이면 종료). 쪽 나누기는 화면이 한다(서버는 전체 목록). UI·검증 담당 추가 — 매니저 검토 전 `[2026-10-23 사용자 결정]` 새 판 배포도 **배포 한 번에 한 건**(`source: "deploy"`, 단계가 바뀌어도 같은 건)이 이 목록에 들어온다 — 진행 중이면 `posted`, 끝나면 `ended`. 만들고 고치기는 이 경로를 읽을 때 `sync_board` 가 한다([D-CS-019](../decisions/D-CS-019-deploy-service-notice.md)). |
 | GET /v1/web/support/inquiries | 고객 인증으로 본인 문의와 답변 조회 |
 | POST /v1/web/support/inquiries | 고객 인증·CSRF; requestId UUID, title, body, language; 동일 요청은 같은 문의 반환 |
 

@@ -32,14 +32,15 @@ def build_router() -> APIRouter:
         tenant = get_settings().tenant_id
         now = datetime.now(admin_service.KST)
         with get_connection() as conn:
-            items = admin_service.records(conn, tenant, "notice")
+            deploy_notice.sync_board(conn, tenant)          # 배포 한 건을 게시판 기록에 맞춘다(띠는 아래 `deploying` 이 따로 맨 앞에 붙인다)
+            items = [n for n in admin_service.records(conn, tenant, "notice") if n.get("source") != "deploy"]
             maintenance = admin_service.record(conn, tenant, "settings", "maintenance") or {"enabled": False, "message": "", "messageEn": "", "endsAt": ""}
         active = [n for n in items if n.get('audience','all') == 'all' and datetime.fromisoformat(n["startsAt"]).replace(tzinfo=admin_service.KST) <= now < datetime.fromisoformat(n["endsAt"]).replace(tzinfo=admin_service.KST)]
         if maintenance["enabled"] and datetime.fromisoformat(maintenance["endsAt"]).replace(tzinfo=admin_service.KST) <= now:
             maintenance["enabled"] = False
         # Operator identity belongs in the audit, not in the public notice.
         public = [{k:v for k,v in n.items() if k in {'id','kind','title','body','titleEn','bodyEn','startsAt','endsAt'}} for n in active]
-        # `[2026-10-20 D-CS-019]` 새 판 배포 중이면 자동 배포가 남긴 상태로 만든 공지 한 건을 맨 앞에 붙인다(정해 둔 문구 · 게시판에는 안 남는다).
+        # `[2026-10-20 D-CS-019]` 새 판 배포 중이면 자동 배포가 남긴 상태로 만든 공지 한 건을 맨 앞에 붙인다(정해 둔 문구). 같은 배포 한 건은 게시판 기록으로도 남는다(`sync_board`).
         deploying = deploy_notice.current_notice(now)
         return {"notices": ([deploying] if deploying else []) + public,
                 "maintenance": {k:v for k,v in maintenance.items() if k in {'enabled','message','messageEn','endsAt'}}}
@@ -48,7 +49,9 @@ def build_router() -> APIRouter:
     def notice_board():
         # `[2026-10-17 ST4F-604]` 「공지사항」 게시판 — 게시 중 · 종료(예약 · 작성 운영자 제외). 쪽 나누기는 화면이 한다.
         with get_connection() as conn:
-            return {"notices": admin_service.notice_board(conn, get_settings().tenant_id)}
+            tenant = get_settings().tenant_id
+            deploy_notice.sync_board(conn, tenant)          # `[2026-10-23]` 배포 한 번에 한 건 — 진행 중이면 게시 중, 끝나면 종료로 보인다
+            return {"notices": admin_service.notice_board(conn, tenant)}
 
     @router.get("/inquiries")
     def inquiries(before: UUID | None = None, limit: Annotated[int, Query(ge=1, le=50)] = 50, identity=Depends(web_cookie.require_identity)):
