@@ -100,8 +100,8 @@ def _find_fuzzy(connection_factory: Callable[[], Any], query: str, key: str, sou
     return _fuzzy_hit(matched, "typo", f"오타로 보고 「{matched[0]['title']}」로 찾았다(자모 거리 비율 {ratio:.2f})")
 
 
-def _alias_rows(cur: Any, query: str, sources: tuple[str, ...]) -> list[dict[str, Any]] | None:
-    """별칭(시드 파일 + DB 표)이 가리키는 원장 행. 별칭이 아니거나 둘 이상을 가리키면(모호) `None`."""
+def _alias_id(cur: Any, query: str) -> str | None:
+    """별칭(시드 파일 + DB 표)이 가리키는 장소 번호 **하나**. 별칭이 아니거나 둘 이상을 가리키면(모호) `None`."""
     key = place_aliases.key_of(query)
     if not key:
         return None
@@ -111,9 +111,15 @@ def _alias_rows(cur: Any, query: str, sources: tuple[str, ...]) -> list[dict[str
     if exists and exists[0]:
         cur.execute(SQL_ALIAS_IDS, (key,))
         ids |= {str(r[0]) for r in cur.fetchall()}
-    if len(ids) != 1:
-        return None                               # 별칭이 아니거나, 둘 이상을 가리키면(모호) 쓰지 않는다
-    cur.execute(SQL_BY_ID, (list(sources), next(iter(ids))))
+    return next(iter(ids)) if len(ids) == 1 else None   # 별칭이 아니거나, 둘 이상을 가리키면(모호) 쓰지 않는다
+
+
+def _alias_rows(cur: Any, query: str, sources: tuple[str, ...]) -> list[dict[str, Any]] | None:
+    """별칭(시드 파일 + DB 표)이 가리키는 원장 행. 별칭이 아니거나 둘 이상을 가리키면(모호) `None`."""
+    content_id = _alias_id(cur, query)
+    if content_id is None:
+        return None
+    cur.execute(SQL_BY_ID, (list(sources), content_id))
     return [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
 
 
@@ -148,14 +154,25 @@ def alias_target(conn: Any | None, name: str | None, *, sources: tuple[str, ...]
         try:
             with conn.transaction(), conn.cursor() as cur:
                 rows = _alias_rows(cur, query, sources)
+                not_in_ledger = None
                 if rows and len(rows) == 1:
                     # ★관광공사 목록(`place_catalog`)에 행이 없어도 지역 확인(「서울」)을 통과하게 활동 원장 주소를 싣는다
                     cur.execute("SELECT addr1 FROM activity.ac_place WHERE content_id = %s", (str(rows[0]["content_id"]),))
                     found = cur.fetchone()
                     rows[0]["address"] = found[0] if found else None
+                elif rows == []:
+                    # ★`[2026-10-23]` 활동 원장에 그 번호의 행이 아예 없으면(폐지 표시가 아니라 행 없음) 시드 파일의 정식 제목으로 넘어간다 —
+                    #   x600 서버에서 「mmca 서울」(1934593)이 원장에는 없고 관광공사 목록에만 있어 별칭 단계가 비었다. 폐지된 곳은 그대로 `None`
+                    content_id = _alias_id(cur, query)
+                    cur.execute("SELECT 1 FROM activity.ac_place WHERE content_id = %s LIMIT 1", (content_id,))
+                    not_in_ledger = None if cur.fetchone() else content_id
         except Exception as exc:  # noqa: BLE001 — 원장 · 별칭 표를 못 읽으면 시드만 본다(별칭이 없는 것과 다르지 않게)
             logging.getLogger(__name__).warning("activity alias_target db read failed reason=%s", type(exc).__name__)
         else:
+            if rows == [] and not_in_ledger is not None:
+                title = place_aliases.seed_title(not_in_ledger)
+                return {"content_id": not_in_ledger, "title": title, "content_type_id": None, "latitude": None, "longitude": None,
+                        "source": "seed"} if title else None
             if rows is None or len(rows) != 1:
                 return None
             r = rows[0]
