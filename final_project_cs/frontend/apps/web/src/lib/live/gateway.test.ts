@@ -272,6 +272,15 @@ describe("live trip gateway", () => {
     expect((await gateway.getTrip(TRIP.trip_id, "ko")).nowLabel).toBe(true);
   });
 
+  // `[2026-10-22 사용자 지시]` The operator's risk panel switch: off only when the server says false; a server without the field shows it (the decided default).
+  it("reads the trip screen's risk panel switch", async () => {
+    replies.push({ ...TRIP, risk_panel: false }, { ...TRIP, risk_panel: true }, { ...TRIP });
+    const gateway = createLiveGateway();
+    expect((await gateway.getTrip(TRIP.trip_id, "ko")).riskPanel).toBe(false);
+    expect((await gateway.getTrip(TRIP.trip_id, "ko")).riskPanel).toBe(true);
+    expect((await gateway.getTrip(TRIP.trip_id, "ko")).riskPanel).toBe(true);
+  });
+
   it("keeps only Google Maps links for the map app: each stop and each day's route", async () => {
     replies.push({ ...TRIP,
       items: [{ ...TRIP.items[0], map_url: "https://www.google.com/maps/search/?api=1&query=%EA%B2%BD%EB%B3%B5%EA%B6%81" },

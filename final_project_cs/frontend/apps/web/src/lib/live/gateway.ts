@@ -57,6 +57,8 @@ interface ServerTrip {
   trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
   /** `[2026-10-15 사용자 결정 — ST4F-494]` The 「지금 HH:MM」 label on the trip screen — the operator's switch; a server without the field shows it (the decided default). */
   now_label?: boolean;
+  /** `[2026-10-22 사용자 지시]` The risk check panel above the stop list — the operator's switch; a server without the field shows it (the decided default). */
+  risk_panel?: boolean;
   history?: ServerHistory[]; warnings?: ServerWarning[];
   safety?: ServerSafety | null;
   /** `guardian` of the trip view (rest-endpoints 「항로 지킴이」): `{enabled, since, via}`. */
@@ -355,6 +357,7 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     messages: await conversation(tripId, language),
     planUrl: server.plan_url || undefined,
     nowLabel: server.now_label !== false,
+    riskPanel: server.risk_panel !== false,
     version: typeof server.version === "number" ? server.version : undefined,
     safety: safetyOf(server.safety),
     simulation: server.simulation ?? null,

@@ -694,9 +694,10 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                     <button type="button" className={styles.action} onClick={stale.reload} disabled={stale.fetching}>{t("다시 불러오기", "Reload")}</button></div>}
                   {trip.simulation && <div role="status" className={styles.safetyTop}>{t(trip.simulation.active ? `[시뮬레이션] 재난 ${trip.simulation.categories.length}종 시험 중입니다. 시험으로 일정·알림이 바뀔 수 있습니다.` : '[시뮬레이션 기록] 시험 입력은 종료됐습니다. 이미 적용한 변경·정지는 유지됩니다.', trip.simulation.active ? '[Simulation] Disaster inputs are active. This test may change the itinerary and notifications.' : '[Simulation history] Test inputs have ended. Applied changes and pauses remain.')}</div>}
                   {trip.safety?.paused && <div className={styles.safetyTop}><SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} onResumed={resumed} /></div>}
-                  <RiskPanel items={currentRisks} at={risks.data?.at} mode={risks.data?.mode} scope={risks.data} compact
+                  {/* `[2026-10-22 사용자 지시]` 3분 점검 · 재난 경고 확인용 칸 — 운영자가 끄면(`trip.riskPanel`) 이 칸만 숨는다. 점검 · 종 · 알림 센터 「주의」 탭은 그대로. */}
+                  {trip.riskPanel !== false && <RiskPanel items={currentRisks} at={risks.data?.at} mode={risks.data?.mode} scope={risks.data} compact
                     loading={risks.isPending} busy={risks.isFetching} error={risks.isError} retry={risks.refresh}
-                    onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />
+                    onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />}
                   <div ref={dayTrack} className={pc.dayTrack} style={listZoom === 1 ? undefined : { zoom: listZoom }}>
                     {near && <div className={pc.peek} data-side={peek.side} style={{ top: peek.top }} aria-hidden="true" inert>{dayList(near)}</div>}
                     {nearAll && <div className={pc.peek} data-side={peek.side} style={{ top: peek.top }} aria-hidden="true" inert>{days.map(dayList)}</div>}

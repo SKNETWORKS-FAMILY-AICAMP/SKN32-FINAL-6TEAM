@@ -145,6 +145,22 @@ test("경고와 알림이 없으면 탭은 0 과 「없어요」만 말하고 �
   await expect(notices.getByText("지금 처리할 일은 없어요.")).toBeVisible();
 });
 
+// `[2026-10-22 사용자 지시]` 일정 목록 위 위험 점검 칸은 운영자 스위치(`risk_panel`)를 따른다 — 칸이 없는 응답은 보이고, 끄면 그 칸만 숨는다
+test("운영자가 위험 점검 칸을 끄면 일정 목록 위 칸만 숨고, 알림 센터 「살펴볼 점」 탭의 점검 결과는 그대로다", async ({ page, request }) => {
+  const server = mockServer(request);
+  const schedulePanel = page.locator("#trip-pane-schedule [data-risk-panel]");
+  await server.scenario({ warnings: "none", notices: "none", risks: "clear" });
+  await openTrip(page);
+  await expect(schedulePanel).toContainText("현재 점검 대상 일정이 없어요");                       // 칸이 없는 응답(옛 서버) = 켜짐
+
+  await server.scenario({ warnings: "none", notices: "none", risks: "clear", riskPanel: "off" });
+  await openTrip(page);
+  await expect(page.getByRole("button", { name: "알림 센터 열기", exact: true })).toBeVisible();
+  await expect(schedulePanel).toHaveCount(0);
+  const notices = await openNotices(page);
+  await expect(notices.getByRole("tabpanel")).toContainText("현재 점검 대상 일정이 없어요");
+});
+
 test("서버가 기다리는 선택이 있으면 「선택이 필요해요」가 뜨고, 고르면 그 안의 key 가 서버로 가고 칸이 사라진다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ proposals: "open" });
