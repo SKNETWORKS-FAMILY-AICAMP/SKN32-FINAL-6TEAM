@@ -15,10 +15,31 @@
 .heroCopy { z-index: 1; }
 /* The first page never cuts its content: when the trip card makes it taller than the screen, the page scrolls. */
 .hero { overflow-y: auto; }
+/*
+ * `[2026-10-22 사용자 지시]` 첫 장 「아래로 넘겨 보세요」는 아래(점 줄 바로 위)로 붙인다 — 배지 자리는 그대로 두고, 줄인 아래 여백만큼 안내 위를 띄운다
+ * (배지 아래 끝 = 아래 여백 + 안내 줄 + 위 띄움 + 6px, 전과 같은 124px). 오른쪽 맨 아래에는 마지막 장으로 바로 가는 아이콘 단추(이용 방법 장의 ↓ 와 같은 자리).
+ */
+.hero { padding-bottom: 44px; }
+.hero .controls { margin-top: 30px; }
+.toEnd { position: absolute; z-index: 6; right: 14px; bottom: 6px; display: grid; place-items: center; width: 44px; height: 44px; color: var(--color-primary); }
 .trips { z-index: 1; margin: 16px 0 10px; }
 .badge { margin-top: auto; margin-bottom: 6px; align-self: flex-start; max-width: 100%; background: color-mix(in srgb, var(--color-surface) 94%, transparent); border: 1px solid var(--color-surface); padding: 15px 17px; border-radius: 15px; box-shadow: 0 8px 30px color-mix(in srgb, var(--color-text) 4%, transparent); }
 .badge small { font-size: 9px; color: var(--color-primary); letter-spacing: 1.5px; display: block; margin-bottom: 7px; }
 .badge strong { font-size: 13px; font-weight: 600; }
+/*
+ * `[2026-10-22 사용자 결정]` 카드 = 여행 등록 단추(목업 intro-badge-cta A 「비행기 길」). 아래 줄: 「여행 등록하기」 + 점선 길을 따라 비행기가 핀까지 날아간다 —
+ * 4초에 한 번 1.6초쯤 움직이고 나머지는 쉰다. 이 장이 보일 때만 움직이고, 움직임 줄이기에서는 비행기가 길 처음에 멈춰 있다(아래 reduced-motion 규칙).
+ */
+.badge { text-align: left; color: var(--color-text); }
+.badge:active { scale: .97; }
+.badgeGo { display: flex; align-items: center; gap: 12px; margin-top: 11px; padding-top: 10px; border-top: 1px dashed color-mix(in srgb, var(--color-primary) 35%, transparent); }
+.badgeLabel { color: var(--color-primary); font-size: 13px; font-weight: 700; letter-spacing: -.2px; white-space: nowrap; }
+.badgeRoute { position: relative; flex: 1; min-width: 64px; height: 16px; }
+.badgeRoute::before { content: ""; position: absolute; left: 0; right: 7px; top: 50%; border-top: 2px dotted color-mix(in srgb, var(--color-primary) 55%, transparent); }
+.badgePin { position: absolute; right: 0; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent); }
+.badgePlane { position: absolute; left: 0; top: 0; color: var(--color-primary); rotate: 45deg; }
+.page.in .badgePlane { animation: glide 4s cubic-bezier(.45, 0, .25, 1) 2.2s infinite; }
+@keyframes glide { 0% { left: -4px; opacity: 0; } 8% { opacity: 1; } 42% { left: calc(100% - 30px); opacity: 1; } 50%, 100% { left: calc(100% - 26px); opacity: 0; } }
 /* The card around the shared language picker (`components/ui/language-picker`). */
 .guide { flex: 1; min-height: 250px; display: flex; flex-direction: column; margin-top: 16px; }
 /* Slides bleed to the frame edges so the next card peeks in from the right. */
@@ -107,8 +128,11 @@
   .description { margin-top: 11px; }
   .ticket { margin: 20px 0; padding: 18px; }
   .badge { padding: 12px 15px; }
+  .badgeGo { margin-top: 9px; padding-top: 8px; }
   .controls { gap: 0; }
   .down { height: 36px; }
+  .hero { padding-bottom: 40px; }
+  .hero .controls { margin-top: 18px; }
 }
 @media (max-height: 660px) { .page { overflow-y: auto; } }
 @media (max-height: 580px) { .description { font-size: 11px; } .ticket { margin: 12px 0; } .route { padding: 12px 0; } .badge { margin-top: 22px; } }

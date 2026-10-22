@@ -45,6 +45,7 @@ python -m http.server 3102 --bind 127.0.0.1
 | 온보딩·후속 여행 흐름 | [기본형](tripilot-mobile-onboarding.html) · [캐러셀형](tripilot-mobile-onboarding-carousel.html) · [확장형](tripilot-onboarding-expanded.html) |
 | 첫 여행 등록과 발표 시나리오 | [등록 와이어프레임](tripilot-intake-wireframe.html) · [발표 시연](tripilot-scenario-demo.html) |
 | 소개 둘째 장 「이용 방법」 7장 — 휴대폰 화면 전체 위에 그 단계에서 볼 부분만 흰 카드로 크게 띄운 강조 방식(앱 장터 소개 그림 방식), A 크게 띄운 강조 카드(그늘 10%) · E 제자리 강조 + 설명 칩(그늘 10%) · A+E 크게 띄운 카드 + 빛 테두리 + 설명 칩을 단추로 바꿔 보거나 나란히 — **A+E 로 결정 · 앱 반영(2026-10-22)**(B 그대로 · C 기울인 화면 · D 유리 카드는 검토 뒤 뺌 · 요즘 흐름 조사와 출처는 목업 머리), 카드마다 강조 영역 좌표(780×1594 그림 기준, 원래 화면 테두리 안쪽) 표 — 그림은 앱에 들어간 `public/images/guguroute-guide-ko-*.jpg` 그대로(2026-10-22 · 검토 중) | [이용 방법 강조](guguroute-guide-highlight-2026-10-22.html) — 그림을 상대 경로로 읽으므로 웹 앱 폴더를 임시 서버로 열어 본다(`python -m http.server <포트> --bind 127.0.0.1` → `/mockups/…`) |
+| 소개 첫 장 「A LITTLE MORE YOU · 서울 · 최대 7일 · 4명까지」 카드를 여행 등록 단추로(누르면 셋째 장 「내 일정 시작하기」와 같은 계획 담기 화면) — 단추라는 것을 알리는 8가지: A 비행기 길(사용자 안) · B 이륙 · C 탑승권 · D 빛 테두리 · E 반짝 빛 · F 둥근 단추 + 물결 · G 아래 단추 띠 · H 밀어서 출발, 실제 첫 장(role-eval-ui `52873e76` 로컬 화면, 카드만 지움) 위에 얹어 그린 · 다크 · 글자(여행 등록하기 / 내 일정 시작하기) · 움직임 줄이기로 비교(2026-10-22) — **A 비행기 길로 결정 · 앱 반영(글자 「여행 등록하기」)** | [첫 장 카드 단추](intro-badge-cta-2026-10-22-v1/index.html) |
 
 ## 계획 확인 시나리오 목업
 

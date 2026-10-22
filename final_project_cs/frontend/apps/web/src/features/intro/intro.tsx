@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { getImageProps } from "next/image";
+import { ChevronsDown, Plane } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
@@ -18,7 +19,7 @@ const copy: Record<Language, Record<string, string>> = {
     title: "GuguRoute · Your next journey",
     intro: "Let’s check your\nSeoul trip plan.",
     introDescription: "Upload your plan and we check places, opening hours and travel between them.\nSigned in, we keep watching it during the trip.",
-    badge: "Seoul · up to 7 days · up to 4 people",
+    badge: "Seoul · up to 7 days · up to 4 people", badgeCta: "Add my trip",
     how: "How to use it",
     step1: "Paste the plan you have", detail1: "Enter your trip like the example, or write it freely.",
     step2: "Share your style while we read", detail2: "While we read your plan, we ask who’s coming and what you enjoy.",
@@ -35,7 +36,7 @@ const copy: Record<Language, Record<string, string>> = {
     taste: "Add plan", trip: "Start trip", cta: "Start my itinerary",
     actionNote: "Review the terms, then add your plan.",
     actionNoteDone: "You have agreed to the terms. The preference questions are in the menu.",
-    scrollHint: "Scroll down to explore", next: "Next screen",
+    scrollHint: "Scroll down to explore", next: "Next screen", toEnd: "Skip to the end",
     pages: "GuguRoute introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
     label0: "Introduction", label1: "How it works", label2: "Start your itinerary",
     howEyebrow: "HOW IT WORKS", ticketLabel: "YOUR NEXT JOURNEY", ticketPartner: "TRAVEL PARTNER",
@@ -44,7 +45,7 @@ const copy: Record<Language, Record<string, string>> = {
     title: "구구루트 · 당신다운 여행의 시작",
     intro: "서울 여행 일정을\n함께 확인해요.",
     introDescription: "준비한 일정을 올리면 장소 · 운영시간 · 이동을 확인해요.\n로그인하면 여행 중에도 일정을 지켜봐요.",
-    badge: "서울 · 최대 7일 · 4명까지",
+    badge: "서울 · 최대 7일 · 4명까지", badgeCta: "여행 등록하기",
     how: "이렇게 사용할 수 있어요",
     step1: "준비한 일정 붙여 넣기", detail1: "여행 일정을 예시와 같이 입력하거나 자유롭게 입력해 주세요.",
     step2: "읽는 동안 취향 알려 주기", detail2: "계획을 읽는 동안 함께 가는 사람과 여행 취향을 물어봐요.",
@@ -61,7 +62,7 @@ const copy: Record<Language, Record<string, string>> = {
     taste: "계획 담기", trip: "여행 시작", cta: "내 일정 시작하기",
     actionNote: "약관 확인부터 함께할게요.",
     actionNoteDone: "약관에 동의했어요. 취향 설문은 메뉴에서 할 수 있어요.",
-    scrollHint: "아래로 넘겨 보세요", next: "다음 화면",
+    scrollHint: "아래로 넘겨 보세요", next: "다음 화면", toEnd: "맨 아래로 넘어가기",
     pages: "구구루트 서비스 소개. 아래로 넘기면 다음 화면으로 가요.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
     howEyebrow: "이용 방법", ticketLabel: "다음 여행", ticketPartner: "구구루트",
@@ -269,7 +270,12 @@ export function Intro() {
           <p className={styles.description} data-fx="up" style={delay(.5)}><Lines text={text.introDescription} /></p>
         </div>
         <div className={styles.trips} data-fx="up" style={delay(.75)}><RecentTrips /></div>
-        <div className={styles.badge} data-fx="scale" style={delay(.8)}><small>A LITTLE MORE YOU</small><strong>{text.badge}</strong></div>
+        {/* `[2026-10-22 사용자 결정]` 이 카드가 여행 등록 단추 — 셋째 장 「내 일정 시작하기」와 같은 곳으로 간다. 모양은 그대로 두고 아래 줄(글자 · 점선 길 · 핀 ·
+            비행기)로 단추임을 알린다. 목업 `mockups/intro-badge-cta-2026-10-22-v1` 의 A 「비행기 길」. */}
+        <button type="button" className={styles.badge} data-fx="scale" style={delay(.8)} onClick={() => router.push(routes.newTrip)} aria-label={`${text.badgeCta} · ${text.badge}`}>
+          <small>A LITTLE MORE YOU</small><strong>{text.badge}</strong>
+          <span className={styles.badgeGo}><span className={styles.badgeLabel}>{text.badgeCta}</span><span className={styles.badgeRoute} aria-hidden="true"><i className={styles.badgePin} /><Plane className={styles.badgePlane} size={16} strokeWidth={2} /></span></span>
+        </button>
         {controls(1)}
       </section>
       <section className={`${page(1)} ${styles.how}`} aria-labelledby="how-title">
@@ -319,5 +325,7 @@ export function Intro() {
     <nav className={styles.pagination} aria-label={text.navigation}>{[0, 1, 2].map((index) => (
       <button key={index} type="button" className={styles.dot} onClick={() => go(index)} aria-current={index === current ? "step" : undefined} aria-label={`${index + 1}. ${text[`label${index}`]}`} />
     ))}</nav>
+    {/* `[2026-10-22 사용자 지시]` 첫 장에서 마지막 장(일정 시작)으로 바로 — 이용 방법 장은 제 ↓ 가 같은 자리에서 마지막 장으로 간다. */}
+    {current === 0 && <button type="button" className={styles.toEnd} onClick={() => go(2)} aria-label={text.toEnd} title={text.toEnd}><ChevronsDown size={24} strokeWidth={2} aria-hidden="true" /></button>}
   </DeviceFrame>;
 }
