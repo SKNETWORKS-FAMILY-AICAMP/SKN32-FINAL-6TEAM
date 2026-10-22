@@ -141,6 +141,9 @@ SYSTEM = """너는 여행 일정의 식사 항목을 점검하는 요식 담당�
    최종 checks에 넣을 조건은 해당 request의 state가 active이고 그 식사 id가 item_ids에 포함된 것뿐이다.
    excluded·unclear 조건은 requests에만 남기고 조건 checks를 만들지 않는다. 이미 도구로 알아본 속성이 있어도 적용 대상이 모호하면 그 결과를 식사에 붙이지 않는다.
 3. 영업 · 휴무 · 폐업 · 속성은 규칙 도구(check_*)를 불러 그 판정을 그대로 쓴다. 다시 계산하지 않는다.
+   find_place 가 원장 밖 가게(place_uid=null, source=license · map)를 주면 원장 번호가 없어 check_* · place_detail 은 부를 수 없다.
+   그 가게의 open_at 은 live_open_check 에 find_call_id(그 find_place 의 call_id)를 넣어 확인하고,
+   최종 place 에는 place_uid=null 과 그 call_id 를 적는다. 그래도 모르면 unknown 이다.
 4. 규칙 도구가 unknown 이면 place_detail 의 원문을 읽고 판정할 수 있다. 그래도 모르면 unknown 이다. 지어내지 않는다.
 5. 값은 반드시 도구 결과에서만 가져온다. evidence 에는 도구 결과의 call_id 와 그 결과 안의 경로(path, 점으로 잇는다 예: verdict · attributes.halal.state)와 그 값(value)을 그대로 적는다.
 6. 확인이 끝나면 도구를 더 부르지 말고 아래 JSON 하나로만 답한다.
@@ -226,17 +229,28 @@ def _same_time(call: dict[str, Any], start: str | None, end: str | None = None) 
     return True
 
 
-def _same_slot(call: dict[str, Any], place_uid: str, start: str | None) -> bool:
-    """그 호출이 이 항목의 가게 · 시각(날)을 물은 것인가."""
-    return (call.get("args") or {}).get("place_uid") == place_uid and _same_time(call, start)
+def _same_slot(call: dict[str, Any], place_uid: str | None, start: str | None, find_call_id: str | None = None) -> bool:
+    """그 호출이 이 항목의 가게 · 시각(날)을 물은 것인가. 원장 밖 가게는 그 가게를 찾은 호출(`find_call_id`)로 가린다."""
+    args = call.get("args") or {}
+    same = (args.get("place_uid") == place_uid) if place_uid else (find_call_id is not None and args.get("find_call_id") == find_call_id)
+    return same and _same_time(call, start)
+
+
+def _other_place(args: dict[str, Any], place_uid: str | None, find_call_id: str | None) -> bool:
+    """남의 가게를 물은 호출인가. ★원장 밖 가게를 물은 호출(`find_call_id`)은 그 항목이 같은 찾기 결과를 가리킬 때만 근거다 —
+    항목의 찾기를 모르면(None) 받지 않는다(어느 가게의 구글 결과인지 가릴 수 없다)."""
+    if place_uid and args.get("place_uid") not in (None, place_uid):
+        return True
+    return args.get("find_call_id") is not None and (place_uid is not None or args["find_call_id"] != find_call_id)
 
 
 def validate_check(check: dict[str, Any], tools: DiningTools, *, place_uid: str | None = None,
-                   start: str | None = None, end: str | None = None) -> str | None:
+                   start: str | None = None, end: str | None = None, find_call_id: str | None = None) -> str | None:
     """체크 하나의 근거를 검증한다. 문제없으면 None, 있으면 이유 이름(§6).
 
     `place_uid` · `start` · `end` 는 그 식사 항목의 가게 · 시작 · 끝 시각 — 주면 남의 가게나 다른 시각(날)을 물은 근거를 거절하고,
-    인용하지 않은 같은 가게 · 같은 시각(날)의 규칙 도구 bad 와 어긋나는 ok 도 거절한다."""
+    인용하지 않은 같은 가게 · 같은 시각(날)의 규칙 도구 bad 와 어긋나는 ok 도 거절한다.
+    `find_call_id` 는 원장 밖 가게(원장 번호 없음)를 찾은 `find_place` 의 call_id — 그 가게를 물은 구글 확인만 근거로 받는다(`[2026-10-21]`)."""
     check = normalize_check(check)
     if check.get("check") not in CHECKS:
         return "unknown_check"
@@ -261,7 +275,7 @@ def validate_check(check: dict[str, Any], tools: DiningTools, *, place_uid: str 
             return "evidence_path_missing"
         if not _same(ev.get("value"), value):
             return "evidence_value_mismatch"
-        if place_uid and (call.get("args") or {}).get("place_uid") not in (None, place_uid):
+        if _other_place(call.get("args") or {}, place_uid, find_call_id):
             return "evidence_other_place"
         if start and not _same_time(call, start, end):
             return "evidence_other_time"
@@ -284,9 +298,9 @@ def validate_check(check: dict[str, Any], tools: DiningTools, *, place_uid: str 
     known = [v for v in rule_verdicts if v != "unknown"]
     if known and check["verdict"] != "unknown" and check["verdict"] not in known:
         return "contradicts_rule_tool"           # 규칙 도구가 bad 라고 했는데 ok 라고 판정
-    if check["verdict"] == "ok" and place_uid:
+    if check["verdict"] == "ok" and (place_uid or find_call_id):
         for call in tools.calls:                 # 인용하지 않은 같은 가게 · 같은 시각의 bad 도 본다
-            if (call["tool"] in _BLOCKERS.get(check["check"], ()) and _same_slot(call, place_uid, start)
+            if (call["tool"] in _BLOCKERS.get(check["check"], ()) and _same_slot(call, place_uid, start, find_call_id)
                     and _RULE_VERDICT.get(str((call.get("result") or {}).get("verdict"))) == "bad"):
                 return "contradicts_rule_tool"
     if check["verdict"] != "unknown" and check["check"] in DECISIVE_TOOLS:
@@ -476,7 +490,8 @@ def judge_day(plan: dict[str, Any], *, tools: DiningTools, chat: Any, max_turns:
                 continue
             check = normalize_check(check)
             why = place_failure or validate_check(check, tools, place_uid=place_uid, start=planned.get("start"),
-                                                  end=planned.get("end"))
+                                                  end=planned.get("end"),
+                                                  find_call_id=None if place_uid else (place or {}).get("call_id"))
             why = why or request_audit.validate(str(item.get("item_id")), check)
             source_request = request_audit.source_for(check)
             if source_request is not None:
