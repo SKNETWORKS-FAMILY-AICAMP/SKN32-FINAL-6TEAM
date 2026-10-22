@@ -44,6 +44,7 @@ CPU·메모리·요청 지연처럼 계측하지 않은 값은 null(미계측)�
 연결 실패는 명시적으로 오류를 표시하고 데모로 대체하지 않는다. demo 모드만 예시 자료를 허용한다.
 문의 작성·답변 조회 및 활성 공지는 고객 인증으로 본인 테넌트·본인 문의만 접근한다.
 기존 제한값과 보관 설정은 /admin/limits 및 /admin/retention 계약을 그대로 재사용한다.
+`[2026-10-22 사용자 지시 — D-CS-020]` 「운영 설정」 화면은 `service.mode_enabled` · `service.<member|guest>.<작업>.per_hour` 를 일반 목록에서 빼고 「서비스 모드」 칸(스위치 + 작업 × 회원/게스트 표)으로 모아 그린다 — 같은 `/admin/limits` 로 같은 저장 단추 · 변경 사유와 함께 저장한다(`features/operations/service-mode.tsx`).
 
 
 ## 기존 운영 기능 연결

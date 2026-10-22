@@ -830,7 +830,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             web_guard.count(tenant, action, customer_id=customer, ip=_ip(http))
         except web_guard.UsageRefused as refused:
-            message = ("오늘 이 작업을 할 수 있는 횟수를 다 썼다 — 내일 다시 한다" if refused.status == 429
+            # `[2026-10-22]` 서비스 모드의 한 시간 한도(`hourly_limit`)는 다음 정시에 풀린다
+            message = ("한 시간에 이 작업을 할 수 있는 횟수를 다 썼다 — 다음 정시에 다시 한다" if refused.code == "hourly_limit"
+                       else "오늘 이 작업을 할 수 있는 횟수를 다 썼다 — 내일 다시 한다" if refused.status == 429
                        else "오늘 서비스 전체가 이 작업을 할 수 있는 횟수를 다 썼다 — 내일 다시 한다")
             error = _error(refused.status, refused.code, message, **refused.detail())
             error.headers = {"Retry-After": str(refused.retry_after)}
@@ -1701,10 +1703,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.get("/v1/web/trip-intakes/{intake_id}/place-search")
     def web_intake_place_search(intake_id: UUID, http: Request, q: str = Query(min_length=2, max_length=60),
                                 source_id: UUID = Query(), index: int = Query(ge=0, le=500),
-                                revision: int | None = Query(default=None, ge=1),
+                                revision: int | None = Query(default=None, ge=1), relevance: bool = Query(default=True),
                                 who: tuple[str, UUID] = Depends(_web_customer)):
-        """수정 화면의 **장소 검색** — 이름·분류로 관광공사 목록 · 요식 원장 · 카카오를 함께 찾고 앞뒤 일정에서 가까운 순으로 보인다.
-        결과마다 그 일정의 날짜·시각에 맞는지 검사 줄이 붙는다. 읽기 전용."""
+        """수정 화면의 **장소 검색** — 이름·분류로 관광공사 목록 · 요식 원장 · 카카오를 함께 찾는다. 결과마다 그 일정의 날짜·시각에 맞는지 검사 줄이 붙는다. 읽기 전용.
+        ★`[2026-10-22 사용자 지시]` 두 목록 — `results` 는 **고르고 있는 일정의 지금 장소**에서 가까운 순(`order: "distance"`), `relevance` 는 이름이 잘 맞는 순
+        (`order: "relevance"`), `center` 는 거리를 잰 기준(`candidates.search` 의 `around_self` · `by_relevance`).
+        `relevance=false` 면 가까운 순만 — 일정 추가 화면처럼 일치도 목록을 그리지 않는 곳은 카카오 두 번째 호출을 하지 않는다."""
         from app.domains.travel_ops.components.intake import candidates
 
         tenant, customer = who
@@ -1715,7 +1719,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             item = _review_item(found, source_id, index)
             _count("place_search", tenant, customer, http)
             return {"revision": found["revision"], **candidates.search(
-                conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory))}
+                conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory),
+                around_self=True, by_relevance=relevance)}
 
         return _review_call(intake_id, customer, tenant, revision, use)
 

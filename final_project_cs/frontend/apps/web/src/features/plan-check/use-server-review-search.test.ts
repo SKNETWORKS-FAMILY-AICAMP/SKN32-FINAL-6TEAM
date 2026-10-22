@@ -83,6 +83,33 @@ describe("explicit restaurant search actions", () => {
     expect(original.review!.items[0].kind).toBe("activity");
   });
 
+  it("`[2026-10-22]` keeps the nearest list and the best-name-match list apart, even when one place stands in both", async () => {
+    const near = { ...restaurant("레몬그라스타이 가점"), order: "distance" as const, distance_m: 300, reference: "경복궁" };
+    const exact = { ...restaurant("레몬그라스타이"), rank: 2, order: "distance" as const, distance_m: 6200, reference: "경복궁" };
+    harness.search.mockResolvedValue({ results: [near, exact], relevance: [{ ...exact, rank: 1, order: "relevance" }, { ...near, rank: 2, order: "relevance" }],
+      center: { name: "경복궁", basis: "selected" }, notes: [] });
+    const cards = await draw().actions.search!("0-0", "레몬그라스");
+    expect(cards.map((card) => [card.name, card.order])).toEqual([
+      ["레몬그라스타이 가점", "distance"], ["레몬그라스타이", "distance"], ["레몬그라스타이", "relevance"], ["레몬그라스타이 가점", "relevance"]]);
+    expect(new Set(cards.map((card) => card.id)).size).toBe(4);
+    expect(cards[0].distance).toEqual({ km: 0.3, from: "경복궁" });
+  });
+
+  it("`[2026-10-22]` passes the abort signal on, and the add-stop search asks for the nearest list only (no second map call)", async () => {
+    harness.search.mockResolvedValue({ results: [restaurant()], notes: [] });
+    const screen = draw(), stop = new AbortController();
+    await screen.actions.search!("0-0", "레몬그라스", stop.signal);
+    await screen.actions.searchToAdd!("0-0", "레몬그라스", stop.signal);
+    expect(harness.search.mock.calls[0].slice(5)).toEqual([stop.signal]);
+    expect(harness.search.mock.calls[1].slice(5)).toEqual([stop.signal, { relevance: false }]);
+  });
+
+  it("draws an older server's single list as it was (no order tags)", async () => {
+    harness.search.mockResolvedValue({ results: [restaurant()], notes: [] });
+    const [card] = await draw().actions.search!("0-0", "레몬그라스");
+    expect(card.order).toBeUndefined(); expect(card.id.endsWith(":distance")).toBe(false);
+  });
+
   it.each(["search", "searchToAdd"] as const)("shows a source failure from %s instead of an absent shop", async (action) => {
     harness.search.mockResolvedValue({ results: [], notes: ["kakao:timeout"] });
     const screen = draw();

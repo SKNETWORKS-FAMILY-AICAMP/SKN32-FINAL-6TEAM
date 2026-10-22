@@ -170,7 +170,7 @@ export async function refusal(response: Response, language: Language): Promise<L
   let message = refusalSentence(code, serverMessage, detail, language);
   // ★A limit says when it opens again (`Retry-After`, or `retry_after_seconds` in the body) — say it, so the
   //   customer is not left guessing whether to press again.
-  if (["usage_limit", "service_daily_cap", "too_many_sessions"].includes(code)) {
+  if (["usage_limit", "service_daily_cap", "too_many_sessions", "hourly_limit"].includes(code)) {
     const seconds = Number((detail as { retry_after_seconds?: unknown } | undefined)?.retry_after_seconds ?? response.headers.get("Retry-After"));
     if (Number.isFinite(seconds) && seconds > 0) message = `${message} ${waitText(seconds, t)}`;
   }

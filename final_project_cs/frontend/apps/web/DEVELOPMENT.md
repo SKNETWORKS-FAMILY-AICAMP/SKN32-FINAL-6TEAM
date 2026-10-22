@@ -960,3 +960,9 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **운영 스위치** — 항목의 `needs` · `ruleNeeds` 가 `GET /v1/web/features`(`guardian` · `risk_panel`)와 맞물려, 운영자가 끈 기능은 안내 · 번호 · 질문 · 검색 결과에서 같이 빠진다. 못 읽으면 다른 화면처럼 켜짐.
 - **들어오는 길** — `components/ui/help-button.tsx`(지구본과 같은 단추) · 메뉴 `settings-menu.tsx` 새 줄 · 문의함 `support.tsx` 한 줄. 약관 전에도 열린다(`consent-gate.tsx` `OPEN_PATHS`).
 - 시험: 단위 1,056/1,056(새 `features/help/model.test.ts`) · typecheck · lint 0 · 로컬 모방 서버 화면 확인. 브라우저 시험 `menu.spec.ts` 는 메뉴 여섯 줄로 고치고 아직 돌리지 않았다. 실서버 · 실기기 확인은 안 함.
+
+## 2026-10-22 — 삭제 예정 일정이 있어도 일정 사이 ＋(ST4F-720)
+
+`[2026-10-22 사용자 결정]` 계획 확인 · 수정 모드에서 일정을 삭제해 회색 「삭제 예정」 카드가 있어도 일정 사이 ＋ 를 보인다(10-09 부터 삭제 대기 중에는 ＋ 를 모두 숨겼다 — `canInsert` 의 `!removed.length`).
+- **회색 카드 앞뒤는 한 자리**(`insertion-points.ts` `insertionPoints(view, day, removed)`): 회색 일정과 그 일정에 닿은 이동 줄 바로 위 자리에는 ＋ 가 없고, 바로 아래(다음 일정 위) 자리 하나가 그 틈의 ＋ 다. 이름 · 기본 시각은 회색 카드가 없는 것처럼 앞뒤 일정(앞 이동 줄이 있으면 그 도착)으로 잡는다. 지난 틈 판단(`renderInsertion`)에서도 회색 일정을 뺀다.
+- 확인: 단위 1,044/1,044 · typecheck · lint 0 · 로컬 실서버(이 가지 웹 3138 + API 8076) 수정 모드 ＋ 자리 14 → 삭제 12 → 되돌리기 14 → 다시 제출 12. 등록 전 계획 확인 화면 · 브라우저 시험(모방 서버)은 안 돌림. 기록: [작업 기록](../../../wiki/records/reports/2026-10-22_계획확인_삭제예정_일정사이추가.md).

@@ -73,3 +73,110 @@ def test_failed_map_lookup_is_distinct_from_zero_matches(monkeypatch):
     absent = candidates.search(None, tenant_id='test', review=review, item=item, query='레몬그라스', kakao=None)
     assert failed['results'] == empty['results'] == absent['results'] == []
     assert failed['notes'] == ['kakao:timeout'] and empty['notes'] == [] and absent['notes'] == ['kakao:unavailable']
+
+
+def two_stops_around(monkeypatch):
+    """앞 일정(서쪽) · 고르는 일정(북쪽 경복궁) · 뒤 일정(서쪽) — 예전 중심(앞뒤 가운데)과 고른 장소가 4km 넘게 떨어진다."""
+    item, review, assessed = setup_search(monkeypatch, 'dining')
+    item.update({'id': '0-1', 'place': {'name': '경복궁', 'latitude': 37.5796, 'longitude': 126.9770, 'kind': 'activity'}})
+    before = {'id': '0-0', 'kind': 'activity', 'date': item['date'], 'place': {'name': '홍대', 'latitude': 37.5563, 'longitude': 126.9220}}
+    after = {'id': '0-2', 'kind': 'activity', 'date': item['date'], 'place': {'name': '합정', 'latitude': 37.5495, 'longitude': 126.9135}}
+    review['items'] = [before, item, after]
+    return item, review, assessed
+
+
+class TwoOrderKakao(Kakao):
+    """중심을 주면 거리순 답, 안 주면 관련도 순 답 — 실제 카카오처럼 부르는 방식에 따라 순서가 다르다."""
+    def __init__(self, near_rows, plain_rows):
+        super().__init__(near_rows)
+        self.plain_rows = plain_rows
+
+    def search(self, query, **kwargs):
+        self.calls.append((query, kwargs))
+        return deepcopy(self.rows if kwargs.get('near') else self.plain_rows)
+
+
+def shop(name, ident, lat, lon):
+    return {**restaurant(name, ident), 'latitude': lat, 'longitude': lon}
+
+
+def test_web_search_measures_from_the_stop_being_changed(monkeypatch):
+    item, review, _ = two_stops_around(monkeypatch)
+    near_gbg = shop('국수집 경복궁점', 'a', 37.5790, 126.9760)
+    near_hongdae = shop('국수집 홍대점', 'b', 37.5560, 126.9230)
+    source = TwoOrderKakao([near_hongdae, near_gbg], [near_hongdae, near_gbg])
+    found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source, around_self=True)
+    # 기준은 고르는 일정(경복궁) — 앞뒤 일정(홍대 · 합정) 가운데가 아니다
+    assert source.calls[0][1]['near'] == (37.5796, 126.9770)
+    assert [r['place']['name'] for r in found['results']] == ['국수집 경복궁점', '국수집 홍대점']
+    assert {r['reference'] for r in found['results']} == {'경복궁'}
+    assert found['results'][0]['distance_m'] < 200 and found['results'][1]['distance_m'] > 5000
+    assert found['center'] == {'name': '경복궁', 'basis': 'selected'}
+    assert all(r['order'] == 'distance' for r in found['results'])
+
+
+def test_other_stop_gives_another_centre(monkeypatch):
+    item, review, _ = two_stops_around(monkeypatch)
+    other = review['items'][0]
+    other.update({'title': '점심', 'starts_at': '11:00', 'ends_at': '12:00', 'parts': {}})
+    source = Kakao([shop('국수집 홍대점', 'b', 37.5560, 126.9230)])
+    candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source, around_self=True)
+    candidates.search(None, tenant_id='test', review=review, item=other, query='국수집', kakao=source, around_self=True)
+    assert [call[1]['near'] for call in source.calls] == [(37.5796, 126.9770), (37.5563, 126.9220)]
+
+
+def test_web_search_also_lists_best_name_matches(monkeypatch):
+    item, review, _ = two_stops_around(monkeypatch)
+    exact_far = shop('국수집', 'x', 37.5000, 127.0500)
+    near_gbg = shop('옛날국수집 경복궁', 'a', 37.5790, 126.9760)
+    source = TwoOrderKakao([near_gbg], [exact_far, near_gbg])
+    found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source,
+                              around_self=True, by_relevance=True)
+    assert [r['place']['name'] for r in found['results']] == ['옛날국수집 경복궁']
+    assert [r['place']['name'] for r in found['relevance']] == ['국수집', '옛날국수집 경복궁']
+    assert all(r['order'] == 'relevance' for r in found['relevance'])
+    assert [r['rank'] for r in found['relevance']] == [1, 2]
+    # 가까운 곳에 이름이 똑같은 곳이 없으니 카카오를 중심 없이(서울 관련도 순) 한 번 더 부른다 · 거리는 여전히 고른 장소에서 잰다
+    assert len(source.calls) == 2 and 'near' not in source.calls[1][1]
+    assert found['relevance_kakao'] == 'called'
+    assert found['relevance'][0]['reference'] == '경복궁'
+
+
+def test_second_map_call_is_skipped_when_an_exact_name_is_already_near(monkeypatch):
+    """`[2026-10-22 사용자 지시]` 거리순으로 모은 곳에 이름이 검색어와 똑같은 곳이 있으면 카카오를 한 번만 부르고 그 결과를 일치도 목록에도 쓴다."""
+    item, review, _ = two_stops_around(monkeypatch)
+    exact_near = shop('국수집', 'x', 37.5780, 126.9750)
+    other = shop('옛날국수집 경복궁', 'a', 37.5790, 126.9760)
+    source = TwoOrderKakao([other, exact_near], [exact_near, other])
+    found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source,
+                              around_self=True, by_relevance=True)
+    assert len(source.calls) == 1 and found['relevance_kakao'] == 'reused'
+    assert [r['place']['name'] for r in found['relevance']] == ['국수집', '옛날국수집 경복궁']
+    assert [r['place']['name'] for r in found['results']] == ['옛날국수집 경복궁', '국수집']
+
+
+def test_relevance_failure_is_reported_once(monkeypatch):
+    item, review, _ = two_stops_around(monkeypatch)
+    source = TwoOrderKakao(None, None)
+    found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source,
+                              around_self=True, by_relevance=True)
+    assert found['results'] == found['relevance'] == [] and found['notes'] == ['kakao:timeout']
+
+
+def test_stop_without_a_place_keeps_the_old_centre(monkeypatch):
+    item, review, _ = two_stops_around(monkeypatch)
+    item['place'] = None
+    source = Kakao([shop('국수집 홍대점', 'b', 37.5560, 126.9230)])
+    found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source, around_self=True)
+    lat, lon = source.calls[0][1]['near']
+    assert abs(lat - (37.5563 + 37.5495) / 2) < 1e-9 and abs(lon - (126.9220 + 126.9135) / 2) < 1e-9
+    assert found['center']['basis'] == 'neighbours'
+
+
+def test_zero_metres_counts_as_the_nearest_stop():
+    """`[2026-10-22 점검]` 앞 일정과 같은 자리(0m)인 후보는 앞 일정 기준 0m — 뒤 일정 기준 거리로 적지 않는다."""
+    here = {'name': '홍대', 'latitude': 37.5563, 'longitude': 126.9220}
+    prev, nxt = {'place': here}, {'place': {'name': '경복궁', 'latitude': 37.5796, 'longitude': 126.9770}}
+    shown = candidates._present({**here, 'name': '같은 자리 가게'}, {'rows': [], 'fits': True, 'status': 'ok', 'slack': {}, 'estimated': False},
+                                prev, nxt, None)
+    assert shown['reference'] == '홍대' and shown['distance_m'] == 0

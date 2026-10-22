@@ -183,6 +183,22 @@ def mutate(conn, tenant: str, actor: str, command: dict) -> None:
             raise AdminServiceError(422, '예상 종료 시각은 현재보다 뒤로 지정해 주세요.')
         value = {k: command[k] for k in ('enabled', 'message', 'messageEn', 'endsAt')}
         value['deliveryRequestId'] = command.get('requestId')
+        previous = record(conn, tenant, "settings", "maintenance")
+        # `[2026-10-22 사용자 결정]` 점검 모드를 켜면 공지사항 게시판에 한 건이 생기고, 끄면 그 건이 지금 시각에 종료된다.
+        # 점검이 켜진 채 다시 저장하면 같은 한 건을 고친다(건이 쌓이지 않게).
+        if command['enabled']:
+            board_id = previous.get('noticeId') if previous.get('enabled') else None
+            board_id = board_id or str(uuid4())
+            board = record(conn, tenant, "notice", board_id) if board_id and previous.get('enabled') else {}
+            put(conn, tenant, "notice", board_id, {**board, "kind": "점검 예고", "title": "서비스 점검 안내", "titleEn": "Service maintenance",
+                "body": command['message'], "bodyEn": command['messageEn'], "startsAt": board.get('startsAt') or now.strftime('%Y-%m-%dT%H:%M'),
+                "endsAt": command['endsAt'], "author": actor, "source": "maintenance"}, actor=actor, action="maintenance-notice", reason='점검 공지 게시')
+            value['noticeId'] = board_id
+        elif previous.get('noticeId'):
+            board = record(conn, tenant, "notice", previous['noticeId'])
+            if board:
+                put(conn, tenant, "notice", previous['noticeId'], {**board, "endsAt": now.strftime('%Y-%m-%dT%H:%M')},
+                    actor=actor, action="maintenance-notice-ended", reason='점검 종료')
         put(conn, tenant, "settings", "maintenance", value, actor=actor, action=kind, reason=reason)
         service_notifications.persist(conn, tenant, actor, command,
             title='서비스 점검 안내' if command['enabled'] else '서비스 점검 종료',
