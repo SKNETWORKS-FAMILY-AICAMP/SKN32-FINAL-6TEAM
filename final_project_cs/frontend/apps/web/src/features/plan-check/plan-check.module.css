@@ -364,6 +364,10 @@ button.moveHead { cursor: pointer; }
 .results > .action { width: 100%; }
 .resultsHead { display: flex; align-items: baseline; gap: 6px; margin: 4px 4px 6px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
 .resultsHead small { font-weight: 600; color: var(--color-muted); }
+/* `[2026-10-22]` Two search lists (nearest · best name match): a small heading over each, and a tag beside the source tag on each row. */
+.resultsGroup { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 12px 4px 2px; font-size: 12.5px; font-weight: 800; color: var(--color-text); }
+.resultsGroup small { font-weight: 600; color: var(--color-muted); }
+.orderTag { flex: none; padding: 0 5px; border: 1px solid var(--color-border); border-radius: 6px; color: var(--color-text-secondary); font-size: 10.5px; font-weight: 750; white-space: nowrap; }
 .resultList { list-style: none; margin: 0; padding: 0; }
 .result { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; padding: 10px 6px; border: 0; border-bottom: 1px solid var(--color-divider); border-radius: 8px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .result:hover { background: var(--color-subtle); }
