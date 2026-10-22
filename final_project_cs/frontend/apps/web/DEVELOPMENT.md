@@ -951,6 +951,16 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - 시험: `trip-list.spec.ts` 의 「첫 장에는 등록 버튼 없이」 시험을 새 결정에 맞게 고쳤다(첫 장 카드 단추가 보이고, 눌러도 마지막 장 단추와 같은 약관 화면으로 간다).
 - 확인: 로컬(개발 서버 3100 + API 8042) 그린 · 다크, 402×874 · 375×667 · 320×568. typecheck · lint 0 · 단위 1,038/1,038 · 브라우저(모방 서버) trip-list · onboarding · intro-registration · registration · preferences · menu · uiux-sonnet-remaining 54/54. 실서버 · 실기기 확인 전.
 
+## 2026-10-22 — 「이용 방법」 화면(ST4F-717)
+
+`[2026-10-22 사용자 결정]` 소개 둘째 장 7장은 그대로 두고, 메뉴 · 머리줄 (?) · 문의함 위 한 줄에서 여는 `/help` 를 더했다(목업 [이용 방법 화면](mockups/guguroute-help-center-2026-10-22.html) D1~D5). 기록: [리포트](../../../wiki/records/reports/2026-10-22_이용방법_화면_ST4F-717.md).
+
+- **내용은 앱 안 문구** — `features/help/content.ts`(한국어 · 영어). 「」(영어 “ ”)는 앱 단추 · 화면 이름 그대로다. 화면 · 단추 이름을 바꾸면 같은 작업에서 이 파일도 고친다(자동으로 따라오는 장치는 넣지 않기로 — 사용자 결정).
+- **소개 7단계는 한 곳** — `features/intro/guide-steps.ts` 를 소개와 이용 방법이 함께 읽는다. 단계 · 그림을 바꾸면 두 화면이 같이 바뀐다.
+- **운영 스위치** — 항목의 `needs` · `ruleNeeds` 가 `GET /v1/web/features`(`guardian` · `risk_panel`)와 맞물려, 운영자가 끈 기능은 안내 · 번호 · 질문 · 검색 결과에서 같이 빠진다. 못 읽으면 다른 화면처럼 켜짐.
+- **들어오는 길** — `components/ui/help-button.tsx`(지구본과 같은 단추) · 메뉴 `settings-menu.tsx` 새 줄 · 문의함 `support.tsx` 한 줄. 약관 전에도 열린다(`consent-gate.tsx` `OPEN_PATHS`).
+- 시험: 단위 1,056/1,056(새 `features/help/model.test.ts`) · typecheck · lint 0 · 로컬 모방 서버 화면 확인. 브라우저 시험 `menu.spec.ts` 는 메뉴 여섯 줄로 고치고 아직 돌리지 않았다. 실서버 · 실기기 확인은 안 함.
+
 ## 2026-10-22 — 삭제 예정 일정이 있어도 일정 사이 ＋(ST4F-720)
 
 `[2026-10-22 사용자 결정]` 계획 확인 · 수정 모드에서 일정을 삭제해 회색 「삭제 예정」 카드가 있어도 일정 사이 ＋ 를 보인다(10-09 부터 삭제 대기 중에는 ＋ 를 모두 숨겼다 — `canInsert` 의 `!removed.length`).
