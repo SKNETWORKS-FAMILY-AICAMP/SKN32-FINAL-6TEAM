@@ -24,10 +24,12 @@ export interface Proposal {
   safety: boolean;
   expiresAt: string | null;
   options: ProposalOption[];
+  /** `[2026-10-22 ST4F-723]` A closed proposal's picked option (`chosen_key` — the server lists closed proposals too): the notice center's 「바뀐 일정」 names it. */
+  chosenKey?: string | null;
 }
 
 interface ServerProposal {
-  proposal_id: string; item_id: string; base_version: number; reason: string; status: string; safety?: unknown;
+  proposal_id: string; item_id: string; base_version: number; reason: string; status: string; safety?: unknown; chosen_key?: string | null;
   expires_at?: string | null; options?: { key: string; rank?: number | null; name?: string | null; starts_at?: string | null; note?: string | null; warnings?: unknown[] | null }[];
 }
 
@@ -35,7 +37,7 @@ export async function getProposals(tripId: string, language: Language): Promise<
   const body = await api<{ proposals?: ServerProposal[] }>(`/v1/web/trips/${encodeURIComponent(tripId)}/proposals`, language);
   return (body.proposals ?? []).map((row) => ({
     id: row.proposal_id, itemId: row.item_id, baseVersion: row.base_version, reason: row.reason, status: row.status,
-    safety: Boolean(row.safety), expiresAt: row.expires_at ?? null,
+    safety: Boolean(row.safety), expiresAt: row.expires_at ?? null, chosenKey: row.chosen_key ?? null,
     // ★An option without a name is dropped: there is nothing true to show for it.
     options: (row.options ?? []).filter((option) => option.name).map((option) => ({
       key: option.key, rank: option.rank ?? null, name: option.name as string, startsAt: option.starts_at ?? null,
