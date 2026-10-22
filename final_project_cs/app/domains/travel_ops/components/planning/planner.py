@@ -1018,6 +1018,23 @@ def _parts_of(items: list[dict[str, Any]], places: Mapping[str, Cand],
             for item in items]
 
 
+def _trim_to_window(items: list[dict[str, Any]], places: Mapping[str, Cand], day: date, last: time,
+                    ) -> list[dict[str, Any]]:
+    """지금부터 짜는 첫날 — 남은 창(`last` 까지)에 이동을 넣고도 **들어가는 만큼만** 남긴다. `[2026-10-22]`
+
+    ★남은 시간이 짧을 때(밤 11시 43분에 「오늘부터 2일」) 하루 최소 곳 수로 짜면 항목이 마감 뒤로 밀려 `day_overflow` 로 거절됐다.
+      가장 늦은 항목부터 덜어 내 창 안에 끝나게 한다 — 하나도 안 들어가면 그날은 비운다(둘째 날부터 평소대로).
+    """
+    kept = sorted(items, key=lambda it: (it["starts_at"], it["seq"]))
+    limit = _at(day, last)
+    while kept:
+        trial, _, _ = add_moves(copy.deepcopy(kept), places)
+        if max((it["ends_at"] or it["starts_at"]) for it in trial) <= limit:
+            break
+        kept.pop()
+    return kept
+
+
 def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Mapping[str, Cand],
             constraints: Mapping[str, Any], seq_from: int,
             breakfast: Cand | None = None, window: tuple[time, time] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -1527,7 +1544,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     used: set[str] = set()
     model_calls, from_model = 0, 0        # ★몇 번 불렀고 **그중 몇 개가 실제로 쓰였나**
     fits: list[dict[str, Any]] = []       # ★하루마다 밀도 목표에 맞춘 결과(설문 16번)
-    want = 0
+    want, first_day_cut = 0, 0            # 지금부터 짠 첫날 창에 안 들어가 덜어 낸 항목 수
     # ★`[2026-10-21 사용자 지시]` 첫날이 오늘이면 첫날만 지금부터 짠다 — 요청 입구에서 정한 지금(`start_at`)을 한 번 읽는다(여기서 시계를 다시 보지 않는다).
     first_window = _first_day_window(request, start_at or datetime.now(KST))
     for index, (day_acts, day_dine) in enumerate(pools):
@@ -1569,6 +1586,16 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
         else:
             day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1, breakfast=breakfast,
                                   day_start=(today_window or day_bounds(request.constraints))[0])
+        if today_window is not None:
+            kept = _trim_to_window(day_items, {c.key: c for c in day_act + day_din + extra}, day, today_window[1])
+            if len(kept) != len(day_items):
+                first_day_cut = len(day_items) - len(kept)
+                keys = {item["place"] for item in kept}
+                day_act = [cand for cand in day_act if cand.key in keys]
+                day_din = [cand for cand in day_din if cand.key in keys]
+                for number, item in enumerate(kept, start=len(items) + 1):
+                    item["seq"] = number
+                day_items = kept
         day_din = extra + day_din
         from_model += sum(1 for cand in day_act if cand.key in picks["activities"])
         from_model += sum(1 for cand in day_din if cand.key in picks["dining"])
@@ -1582,7 +1609,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     # ★★**조용히 짧아지지 않게 센다.** 후보가 모자라면 `_merge` 가 자리를 덜 채우고, 그러면
     #   「3일 일정」이라며 항목이 덜 든 초안이 나간다 — 아무 신호 없이. 위에서 총량을 확인했으니
     #   여기 걸리면 그건 **우리 쪽 결함**이고, 그때도 조용히 넘기지 않는다.
-    if len(items) != want or want < request.days * (floor_per_day + DINING_PER_DAY):
+    if len(items) != want or want + first_day_cut < request.days * (floor_per_day + DINING_PER_DAY):
         raise PlanRefused("plan_short",
                           f"{request.days}일치는 항목 {want}개여야 하는데 {len(items)}개만 짜였다",
                           have=len(items), need=want,
@@ -1674,6 +1701,9 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
                     if (lighter_note is not None or area_note is not None) else {}),
                  # ★아침 식사 — 날마다 무엇을 넣었고 영업시간을 아는지(모르면 그날 새벽 확인이 본다)
                  "breakfast": {"wanted": want_breakfast, "days": breakfasts},
+                 # ★`[2026-10-22]` 오늘 시작이면 첫날을 지금부터 짰다 — 남은 창과, 창에 안 들어가 덜어 낸 항목 수(없으면 칸이 없다)
+                 **({"first_day": {"from": first_window[0].strftime("%H:%M"), "until": first_window[1].strftime("%H:%M"),
+                                   "dropped_items": first_day_cut}} if first_window else {}),
                  # ★설문 16번 → 밀도 목표 → 하루 활동 수. 목표가 없으면 기본 수로 짰다고 적는다
                  "density": ({"target_density": target, "days": fits} if target is not None else
                              {"target_density": None,
