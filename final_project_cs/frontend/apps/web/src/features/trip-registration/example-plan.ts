@@ -29,8 +29,7 @@ export function examplePlan(language: Language, now: Date = new Date()): string 
 09:00 호텔 조식
 10:00 북촌한옥마을 · 산책
 12:00 인사동 · 점심
-14:00 창덕궁 · 후원 관람
-17:00 청계천 · 산책`
+14:00 창덕궁 · 후원 관람`
     : `DAY 1 · ${first}
 09:00 Hotel breakfast
 10:00 Gyeongbokgung Palace · Hanbok experience, ends 12:00
@@ -42,6 +41,5 @@ DAY 2 · ${second}
 09:00 Hotel breakfast
 10:00 Bukchon Hanok Village · Walk
 12:00 Insadong · Lunch
-14:00 Changdeokgung Palace · Secret Garden tour
-17:00 Cheonggyecheon Stream · Walk`;
+14:00 Changdeokgung Palace · Secret Garden tour`;
 }

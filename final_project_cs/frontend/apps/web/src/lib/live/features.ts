@@ -9,11 +9,13 @@ import { openApi } from "./client";
  * not shown and the plan goes without `on_disruption` (`guardian/criteria-store.ts` `withCriteria`); the server asks first for every trip while it is
  * off, whatever it is sent. A registered trip learns it from its own view (no `guardian` there while it is off — `features/guardian/trip-guardian.tsx`).
  * ★Not readable (an older server without the read — 404 — or no connection): ON, as before. The server decides either way.
- * Contract: `wiki/external/rest-endpoints/web-trips.md` 「항로 지킴이 운영 스위치」.
+ * `[2026-10-22 사용자 지시]` `risk_panel`: whether the plan check (before registering · editing a trip) shows its risk check panel — the same operator switch
+ * as the trip screen's panel (which reads `risk_panel` of its own trip view). The check itself runs either way.
+ * Contract: `wiki/external/rest-endpoints/web-trips.md` 「항로 지킴이 운영 스위치」 · 「여행 화면 위험 점검 칸」.
  */
-export interface WebFeatures { guardian: boolean }
+export interface WebFeatures { guardian: boolean; riskPanel: boolean }
 
-const AS_BEFORE: WebFeatures = { guardian: true };
+const AS_BEFORE: WebFeatures = { guardian: true, riskPanel: true };
 
 let known: WebFeatures | null = null;
 let loading: Promise<WebFeatures> | null = null;
@@ -41,8 +43,8 @@ export function loadFeatures(language: Language): Promise<WebFeatures> {
   loading ??= (async () => {
     let next = AS_BEFORE;
     try {
-      const body = await openApi<{ guardian?: unknown }>("/v1/web/features", language);
-      next = { guardian: body.guardian !== false };       // only a plain `false` switches it off
+      const body = await openApi<{ guardian?: unknown; risk_panel?: unknown }>("/v1/web/features", language);
+      next = { guardian: body.guardian !== false, riskPanel: body.risk_panel !== false };       // only a plain `false` switches one off
     } catch { /* older server (404) · no connection: as before */ }
     set(next);
     return next;
