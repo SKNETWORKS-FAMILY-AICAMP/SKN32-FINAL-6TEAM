@@ -9,7 +9,7 @@ const harness = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/live/intake", () => ({ editIntake: harness.edit, restoreIntake: vi.fn() }));
 vi.mock("@/lib/live/intake-review", async (original) => ({
-  ...await original<typeof import("@/lib/live/intake-review")>(), searchPlaces: harness.search,
+  ...await original<typeof import("@/lib/live/intake-review")>(), searchPlaces: harness.search, addSearch: harness.search,
 }));
 vi.mock("react", () => ({
   useState: (value: unknown) => {
@@ -95,13 +95,25 @@ describe("explicit restaurant search actions", () => {
     expect(cards[0].distance).toEqual({ km: 0.3, from: "경복궁" });
   });
 
-  it("`[2026-10-22]` passes the abort signal on, and the add-stop search asks for the nearest list only (no second map call)", async () => {
+  it("`[2026-10-22]` passes the abort signal on to both searches", async () => {
     harness.search.mockResolvedValue({ results: [restaurant()], notes: [] });
     const screen = draw(), stop = new AbortController();
     await screen.actions.search!("0-0", "레몬그라스", stop.signal);
-    await screen.actions.searchToAdd!("0-0", "레몬그라스", stop.signal);
+    await screen.actions.searchToAdd!({ previousId: "0-0", nextId: null }, "레몬그라스", stop.signal);
     expect(harness.search.mock.calls[0].slice(5)).toEqual([stop.signal]);
-    expect(harness.search.mock.calls[1].slice(5)).toEqual([stop.signal, { relevance: false }]);
+    expect(harness.search.mock.calls[1].at(-1)).toBe(stop.signal);
+  });
+
+  it("`[2026-10-23]` the add search sends the stops either side and the new stop's values, and keeps its two lists apart", async () => {
+    const near = { ...restaurant("레몬그라스타이 가점"), order: "route" as const, distance_m: 120, reference: "경복궁" };
+    harness.search.mockResolvedValue({ results: [near], relevance: [{ ...near, order: "relevance" }], notes: [] });
+    const found = await draw().actions.searchToAdd!({ previousId: "0-0", nextId: "0-1" }, "레몬그라스", undefined,
+      { date: "2030-01-05", start: "12:30", end: "13:30", kind: "dining" });
+    expect(harness.search).toHaveBeenCalledExactlyOnceWith("search-intake", 3,
+      { q: "레몬그라스", previous: "0-0", next: "0-1", date: "2030-01-05", start: "12:30", end: "13:30", kind: "dining" }, "ko", undefined);
+    expect(found.map((card) => card.order)).toEqual(["route", "relevance"]);
+    expect(new Set(found.map((card) => card.id)).size).toBe(2);
+    expect(found[0].pickedPlace).not.toBeNull();
   });
 
   it("draws an older server's single list as it was (no order tags)", async () => {
@@ -113,7 +125,8 @@ describe("explicit restaurant search actions", () => {
   it.each(["search", "searchToAdd"] as const)("shows a source failure from %s instead of an absent shop", async (action) => {
     harness.search.mockResolvedValue({ results: [], notes: ["kakao:timeout"] });
     const screen = draw();
-    await expect(screen.actions[action]!("0-0", "레몬그라스")).rejects.toMatchObject({ code: "place_search_unavailable" });
+    const run = action === "search" ? screen.actions.search!("0-0", "레몬그라스") : screen.actions.searchToAdd!({ previousId: "0-0", nextId: null }, "레몬그라스");
+    await expect(run).rejects.toMatchObject({ code: "place_search_unavailable" });
     expect(harness.edit).not.toHaveBeenCalled();
   });
 });

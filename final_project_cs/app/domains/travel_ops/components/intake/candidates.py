@@ -38,6 +38,8 @@ log = logging.getLogger(__name__)
 LIMIT = 3                    #: 목업의 후보 A · B · C
 POOL_EXTRA = 2               #: 최종 셋을 고르기 전에 이동 계산기로 더 재 보는 후보 수
 SEARCH_LIMIT = 8
+#: ★`[2026-10-23 사용자 지시]` 웹 장소 검색은 목록마다 15곳(가까운 순 15 · 이름순 15) — 카카오가 한 번에 주는 최대와 같다. 채팅 · 함께 먹기 검색은 8 그대로
+WEB_SEARCH_LIMIT = 15
 SEARCH_POOL = 40             #: 검색 결과 중 일정에 맞는지 판정해 순위에 반영하는 수(이름 일치 · 가까운 순으로 고른 앞 40곳)
 RADIUS_M = 3000              #: 같은 종류 후보를 찾는 반경 — `catalog_pool` 이 바꾸기 후보에 쓰는 3km 와 같다
 #: 끼니 식사 후보에서 빼는 종류 말 — 카카오 분류(「음식점 > 카페 > …」 · 「음식점 > 간식 > 제과,베이커리」) · 요식 원장 요리 갈래(「카페디저트」)
@@ -1401,8 +1403,13 @@ def _relevance_key(place: dict[str, Any], key: str) -> tuple[int, int]:
 def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], query: str, kakao: Any = None,
            now: datetime | None = None, limit: int = SEARCH_LIMIT, name_hint: str | None = None,
            area_hint: str | None = None, branch_hint: str | None = None,
-           around_self: bool = False, by_relevance: bool = False) -> dict[str, Any]:
+           around_self: bool = False, by_relevance: bool = False,
+           between: tuple[dict[str, Any] | None, dict[str, Any] | None] | None = None) -> dict[str, Any]:
     """검색어로 찾은 장소. 분리된 상호는 DB 이름검색에, 원문은 외부검색에 쓴다.
+
+    ★`[2026-10-23 사용자 지시 — Codex 1회차 합의]` 일정 추가 검색(`between=(앞 일정, 뒤 일정)` — `add_search` 가 넘긴다): `item` 은 **새 일정 폼 값**
+      (날짜 · 시작 · 끝 · 종류)으로 만든 일정이라 판정 · 거름이 새 일정 기준이다. 후보는 앞 · 뒤 일정 장소의 가운데 둘레에서 모으고, 첫 목록은
+      **앞 → 후보 → 뒤 직선 우회 거리**가 작은 순(`order: "route"` · 화면 「동선순」, 한쪽만 있으면 그 장소에서 가까운 순 `distance`).
 
     지역은 실제 좌표/주소로 확인한다. 지점 표기가 없는 행도 실존 장소 대조용으로 남기며,
     지점 확정은 호출자가 한다. 힌트가 없는 웹 검색은 전체 상호 검색이 실패한 때만 지명을 나눈다.
@@ -1418,12 +1425,21 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     name_q = " ".join((name_hint or q).split())
     area_hint = " ".join((area_hint or "").split())
     items = review["items"]
-    prev, nxt = neighbours(items, item)
-    ref = reference(item, prev, nxt)
     notes: list[str] = []
-    area = area_of(item)
-    basis = "area" if area else "neighbours"
-    own = _own_anchor(item) if around_self else None
+    ends: list[dict[str, Any]] = []                     # 일정 추가 — 좌표가 있는 앞 · 뒤 일정 장소(동선순 계산)
+    if between is not None:
+        prev, nxt = between
+        ends = [x["place"] for x in (prev, nxt) if x and x.get("place") and x["place"].get("latitude") is not None
+                and x["place"].get("longitude") is not None]
+        ref = ((sum(float(p["latitude"]) for p in ends) / len(ends), sum(float(p["longitude"]) for p in ends) / len(ends))
+               if ends else None)
+        area, basis = None, "between"
+    else:
+        prev, nxt = neighbours(items, item)
+        ref = reference(item, prev, nxt)
+        area = area_of(item)
+        basis = "area" if area else "neighbours"
+    own = _own_anchor(item) if around_self and between is None else None
     if own:
         area, ref, basis = own, (own["latitude"], own["longitude"]), "selected"
     hint_area = None
@@ -1506,13 +1522,18 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     found = narrow(found, notes)
     if not found and kakao is None:
         notes.append("kakao:unavailable")
-    distance = lambda p: _score(p, prev, nxt, ref, bool(area))  # noqa: E731
+    if len(ends) == 2:
+        # 일정 추가의 동선순 — 앞 → 후보 → 뒤 직선거리 합에서 앞 → 뒤 직선거리를 뺀 「더 도는 거리」(가는 길에 있으면 0 에 가깝다)
+        direct = _near(ends[0], ends[1]) or 0.0
+        distance = lambda p: (_near(ends[0], p) or 0.0) + (_near(p, ends[1]) or 0.0) - direct  # noqa: E731
+    else:
+        distance = lambda p: _score(p, prev, nxt, ref, bool(area))  # noqa: E731
     # 별칭으로 찾은 곳(`match: alias`)은 이름이 정확히 같은 곳과 같은 자리다 — 고객이 쓴 말이 그곳을 가리킨다
     def name_rank(p: dict[str, Any]) -> int:
         name = normalize_full(p["name"])
         return 0 if (name == key or p.get("match") == "alias") else 1 if name.startswith(key) else 2
 
-    if around_self:
+    if around_self or between is not None:
         # 거리 목록은 고른 일정의 장소에서 **가까운 순** 그대로 — 이름 일치는 일치도 목록이 맡는다
         found.sort(key=distance)
         judged = [(p, assess(conn, tenant_id, item, p, prev, nxt, None)) for p in found[:SEARCH_POOL]]
@@ -1524,11 +1545,12 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
         judged = [(p, assess(conn, tenant_id, item, p, prev, nxt, None)) for p in found[:SEARCH_POOL]]
         judged.sort(key=lambda pa: (name_rank(pa[0]), pa[1]["status"] == "bad",
                                     not pa[1]["fits"], distance(pa[0])))
-    tagged = {"order": "distance"} if (around_self or by_relevance) else {}
+    tagged = {"order": "route" if len(ends) == 2 else "distance"} if (around_self or by_relevance or between is not None) else {}
     out = [{"rank": rank, **tagged, **_present(p, a, prev, nxt, ref, area)} for rank, (p, a) in enumerate(judged[:limit], start=1)]
     answer: dict[str, Any] = {"item": item["id"], "query": q, "results": out, "notes": notes}
-    if around_self or by_relevance:
-        answer["center"] = {"name": area.get("name") if area else None, "basis": "area" if hint_area else basis}
+    if around_self or by_relevance or between is not None:
+        name = area.get("name") if area else (" · ".join(str(x["place"]["name"]) for x in (prev, nxt) if x and x.get("place")) or None) if between is not None else None
+        answer["center"] = {"name": name, "basis": "area" if hint_area else basis}
     if by_relevance:
         # 거리와 상관없이 이름이 잘 맞는 곳 — 우리 목록은 서울 전역 이름 일치(짧은 이름 먼저), 카카오는 중심 없이 서울 관련도 순
         # ★`[2026-10-22 사용자 지시]` 카카오 두 번째 호출은 **필요할 때만** — 거리순으로 모은 곳에 이름이 검색어와 똑같은 곳이 이미 있으면 부르지 않고
@@ -1562,6 +1584,26 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     return answer
 
 
+
+#: 일정 추가 폼이 고르는 종류 — 그 밖의 값은 활동으로 본다(활동 · 식사 검색은 둘 다 허용한다)
+ADD_KINDS = ("activity", "dining", "lodging")
+
+
+def add_search(conn, *, tenant_id: str, review: dict[str, Any], query: str, previous_id: str | None, next_id: str | None,
+               date: str | None, starts_at: str | None, ends_at: str | None, kind: str | None, kakao: Any = None,
+               now: datetime | None = None, limit: int = WEB_SEARCH_LIMIT) -> dict[str, Any]:
+    """`[2026-10-23 사용자 지시 — Codex 1회차 합의]` 일정 추가 폼의 장소 검색 — 앞 · 뒤 일정 사이 **동선순** + 이름순, 판정은 **새 일정 폼 값**으로.
+
+    ☆전에는 끼우는 자리 옆 일정 하나의 「장소 바꾸기」 검색을 빌려 써서 그 일정의 날짜 · 시각 · 종류로 판정했다(숙소 뒤 식당 추가 때 숙소만 남음).
+    폼 값이 비면(시각 미정) 판정 줄은 「모름」이 되고 거름은 종류만 본다."""
+    by_id = {x["id"]: x for x in review["items"]}
+    prev, nxt = by_id.get(previous_id or ""), by_id.get(next_id or "")
+    item = {"id": "__new__", "title": "", "kind": kind if kind in ADD_KINDS else "activity",
+            "date": date or (prev or nxt or {}).get("date"), "starts_at": starts_at or None, "ends_at": ends_at or None,
+            "end_date": None, "place": None, "parts": {}, "near_area": None}
+    return search(conn, tenant_id=tenant_id, review=review, item=item, query=query, kakao=kakao, now=now, limit=limit,
+                  by_relevance=True, between=(prev, nxt))
+
 # ── 사진 ─────────────────────────────────────────────────────────
 def photos(tour: Any, ref: str) -> dict[str, Any]:
     """`ref` = `tour:<관광공사 번호>` — 그 장소에 등록된 사진 주소. 저장하지 않고 부를 때마다 받는다. 다른 출처는 사진이 없다고 답한다(지어내지 않는다)."""
@@ -1578,4 +1620,4 @@ def photos(tour: Any, ref: str) -> dict[str, Any]:
     return {"ref": ref, "photos": got, "source_note": "ⓒ한국관광공사" if got else None, "reason": None if got else "no_photos"}
 
 
-__all__ = ["LIMIT", "alternatives", "assess", "neighbours", "photos", "reference", "search"]
+__all__ = ["LIMIT", "add_search", "alternatives", "assess", "neighbours", "photos", "reference", "search"]

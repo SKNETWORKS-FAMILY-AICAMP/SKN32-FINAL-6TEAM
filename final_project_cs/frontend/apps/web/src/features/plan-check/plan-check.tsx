@@ -50,6 +50,7 @@ import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { DoneFooter } from "@/features/survey-questions/reading-footer";
 import { TIMING } from "@/features/survey-questions/use-question-flow";
 import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
+import type { AddSearchForm } from "./new-stop";
 import type { InsertionPoint } from "./insertion-points";
 import { useCenterFocus } from "./use-center-focus";
 import { useInsertionPoint } from "./use-insertion-point";
@@ -154,7 +155,7 @@ export interface EditHow { flow?: boolean }
 export interface PlanCheckActions {
   add?: (draft: NewStop) => Promise<void>;
   /** `signal` — `[2026-10-22]` aborted when the words change, so a search nobody will read stops there. */
-  searchToAdd?: (anchorId: string, query: string, signal?: AbortSignal) => Promise<AddStopPlace[]>;
+  searchToAdd?: (gap: { previousId: string | null; nextId: string | null }, query: string, signal?: AbortSignal, form?: AddSearchForm) => Promise<AddStopPlace[]>;
   /** Save one stop's details as drafted (the server looks a typed place up again and checks the plan again). */
   edit?: (id: string, draft: ItemDraft, how?: EditHow) => Promise<void>;
   /**
@@ -1867,7 +1868,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
         <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
           mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
-          search={actions.searchToAdd && inserting.anchorId ? (query, signal) => actions.searchToAdd!(inserting.anchorId, query, signal) : undefined}
+          search={actions.searchToAdd && (inserting.previousId || inserting.nextId) ? (query, signal, form) => actions.searchToAdd!({ previousId: inserting.previousId, nextId: inserting.nextId }, query, signal, form) : undefined}
           onSave={async (draft) => { await actions.add!(draft); setAddingBusy(false); setInserting(null); setSlide("prev"); setToast({ text: t("일정을 추가하고 앞뒤 이동시간을 다시 확인했어요.", "Added the stop and checked travel times around it.") }); }} />
       </div> : changing && change
         ? <PlaceChange item={changing} session={change} search={search} explain={explain} applyWhy={applyWhy} candidatesSupported={Boolean(actions.candidates)}
@@ -2052,7 +2053,7 @@ export function addPointOf(view: PlanCheckView, key: string, add: NonNullable<Pl
   const sameDay = live.filter((item) => item.date === date).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const anchor = [...sameDay].reverse().find((item) => start && item.startsAt && item.startsAt <= start) ?? sameDay[0] ?? live[0];
   const kind = add.kind === "dining" || add.kind === "activity" ? add.kind : undefined;
-  return { key: `chat-add-${key}`, anchorId: anchor?.id ?? "", date, start, end, previous: null, next: null, side: "after-stop",
+  return { key: `chat-add-${key}`, anchorId: anchor?.id ?? "", date, start, end, previous: null, next: null, previousId: anchor?.id ?? null, nextId: null, side: "after-stop",
     prefill: { title: add.title, query: add.query, ...(kind ? { kind } : {}) } };
 }
 

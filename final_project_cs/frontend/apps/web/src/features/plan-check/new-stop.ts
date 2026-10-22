@@ -10,6 +10,9 @@ export interface NewStop {
 
 export interface AddStopPlace extends PlanCandidate { pickedPlace: PickedPlace | null }
 
+/** `[2026-10-23]` The new stop's own values, sent with the add search so the results are checked as the new stop (not the stop beside the gap). */
+export interface AddSearchForm { date?: string; start?: string; end?: string; kind?: string }
+
 /** 삭제 이력의 번호도 보존하며 기존 원본에 새 항목 하나를 append한다. */
 export function newStopEdits(source: Pick<IntakeSource, "source_id" | "items">, draft: NewStop): { index: number; edits: IntakeEdit[] } {
   const index = Math.max(-1, ...source.items.map((item) => item.index)) + 1;

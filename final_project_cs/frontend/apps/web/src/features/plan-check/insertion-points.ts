@@ -9,6 +9,9 @@ export interface InsertionPoint {
   end: string;
   previous: string | null;
   next: string | null;
+  /** `[2026-10-23]` The stops either side of the gap (review item ids) — the add search measures the way between them. */
+  previousId: string | null;
+  nextId: string | null;
   side: "before-stop" | "before-move" | "after-stop";
 }
 
@@ -51,6 +54,8 @@ function seams(entries: Entry[], day: PlanDay): InsertionPoint[] {
       end: start !== null && end !== null && start < end ? formatHm(end) : "",
       previous: previous?.title ?? null,
       next: next?.title ?? null,
+      previousId: previous?.id ?? null,
+      nextId: next?.id ?? null,
       side: entry ? entry.type === "move" ? "before-move" : "before-stop" : "after-stop",
     };
   });

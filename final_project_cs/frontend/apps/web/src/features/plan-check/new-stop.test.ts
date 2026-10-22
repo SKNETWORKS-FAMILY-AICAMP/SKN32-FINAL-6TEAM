@@ -11,7 +11,7 @@ const harness = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/live/intake", () => ({ editIntake: harness.edit, restoreIntake: vi.fn() }));
 vi.mock("@/lib/live/intake-review", async (original) => ({
-  ...await original<typeof import("@/lib/live/intake-review")>(), searchPlaces: harness.search,
+  ...await original<typeof import("@/lib/live/intake-review")>(), searchPlaces: harness.search, addSearch: harness.search,
 }));
 vi.mock("react", () => ({
   useState: (value: unknown) => {
@@ -99,9 +99,9 @@ describe("일정 경계를 기준으로 장소 검색", () => {
   it("경계의 실제 일정과 최신 판을 보내고 출처·좌표·관광 식별값을 모두 보존한다", async () => {
     const screen = draw();
     harness.search.mockResolvedValue({ results: [result()] });
-    const found = await screen.actions.searchToAdd!("0-0", "광장시장");
-    // `[2026-10-22]` 일정 추가 검색은 가까운 순만 묻는다(이름순 목록을 그리지 않아 두 번째 지도 호출이 필요 없다)
-    expect(harness.search).toHaveBeenCalledExactlyOnceWith("intake-a", expect.objectContaining({ source_id: "source-a", index: 0 }), 7, "광장시장", "ko", undefined, { relevance: false });
+    const found = await screen.actions.searchToAdd!({ previousId: "0-0", nextId: null }, "광장시장");
+    // `[2026-10-23]` 일정 추가는 전용 검색 — 끼우는 자리의 앞 · 뒤 일정과 최신 판을 보낸다
+    expect(harness.search).toHaveBeenCalledExactlyOnceWith("intake-a", 7, { q: "광장시장", previous: "0-0", next: null }, "ko", undefined);
     expect(found[0].pickedPlace).toEqual(chosen);
     expect(found[0].info?.address).toBe("서울 종로구 시험 주소");
     expect(harness.edit).not.toHaveBeenCalled();
@@ -109,12 +109,12 @@ describe("일정 경계를 기준으로 장소 검색", () => {
   it("좌표 없는 검색 결과는 선택 가능한 장소로 만들지 않는다", async () => {
     const screen = draw();
     harness.search.mockResolvedValue({ results: [result(false)] });
-    expect((await screen.actions.searchToAdd!("0-0", "광장시장"))[0].pickedPlace).toBeNull();
+    expect((await screen.actions.searchToAdd!({ previousId: "0-0", nextId: null }, "광장시장"))[0].pickedPlace).toBeNull();
   });
   it("오래된 판 검색 거절은 다시 읽고 쓰기 요청을 만들지 않는다", async () => {
     const reread = vi.fn(), screen = draw(plan(), vi.fn(), reread);
     harness.search.mockRejectedValueOnce(new LiveError("stale_revision", "다시 읽어요"));
-    await expect(screen.actions.searchToAdd!("0-0", "광장시장")).rejects.toMatchObject({ code: "stale_revision" });
+    await expect(screen.actions.searchToAdd!({ previousId: "0-0", nextId: null }, "광장시장")).rejects.toMatchObject({ code: "stale_revision" });
     expect(reread).toHaveBeenCalledOnce();
     expect(harness.edit).not.toHaveBeenCalled();
   });
@@ -122,7 +122,7 @@ describe("일정 경계를 기준으로 장소 검색", () => {
     const first = draw();
     let release: (value: { results: Candidate[] }) => void = () => undefined;
     harness.search.mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
-    const pending = first.actions.searchToAdd!("0-0", "광장시장");
+    const pending = first.actions.searchToAdd!({ previousId: "0-0", nextId: null }, "광장시장");
     draw(plan("intake-b"));
     release({ results: [result()] });
     await expect(pending).rejects.toMatchObject({ code: "item_gone" });

@@ -140,6 +140,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/dining-links/apply",
     "/v1/web/trip-intakes/{intake_id}/dining-links/{key}",
     "/v1/web/trip-intakes/{intake_id}/place-search",
+    # ★2026-10-23 일정 추가 폼의 장소 검색(동선순 + 이름순, 새 일정 기준 판정) — `wiki/external/rest-endpoints/web-intakes.md`
+    "/v1/web/trip-intakes/{intake_id}/add-search",
     "/v1/web/trip-intakes/{intake_id}/autofix",
     "/v1/web/trip-intakes/{intake_id}/revalidate",
     "/v1/web/places/photos",

@@ -168,8 +168,8 @@ export interface Candidate {
   distance_m: number | null;
   /** The nearby stop the distance is measured from. */
   reference: string | null;
-  /** `[2026-10-22]` Place search only: which list the result belongs to — nearest first or best name match first. */
-  order?: "distance" | "relevance";
+  /** `[2026-10-22]` Place search only: which list the result belongs to — nearest first, best name match first, or `[2026-10-23]` least out of the way between two stops (add search). */
+  order?: "distance" | "relevance" | "route";
   rows: CheckLine<ItemRow>[];
   fits: boolean;
   status: "ok" | "warn" | "bad";
@@ -287,6 +287,15 @@ export function searchPlaces(intakeId: string, item: Pick<ReviewItem, "source_id
   { relevance = true }: { relevance?: boolean } = {}): Promise<PlaceSearchResult> {
   const query = new URLSearchParams({ q, source_id: item.source_id, index: String(item.index), revision: String(revision), ...(relevance ? {} : { relevance: "false" }) });
   return api(`${base(intakeId)}/place-search?${query}`, language, { signal });
+}
+
+/** `[2026-10-23 사용자 지시 — Codex 합의]` The add-stop form's place search: the stops either side of the gap and the new stop's own values (judged as the new stop). */
+export interface AddSearchQuery { q: string; previous: string | null; next: string | null; date?: string; start?: string; end?: string; kind?: string }
+
+export function addSearch(intakeId: string, revision: number, query: AddSearchQuery, language: Language, signal?: AbortSignal): Promise<PlaceSearchResult> {
+  const params = new URLSearchParams({ q: query.q, revision: String(revision) });
+  for (const key of ["previous", "next", "date", "start", "end", "kind"] as const) { const value = query[key]; if (value) params.set(key, value); }
+  return api(`${base(intakeId)}/add-search?${params}`, language, { signal });
 }
 
 export function getPlacePhotos(ref: string, language: Language): Promise<PlacePhotos> {
