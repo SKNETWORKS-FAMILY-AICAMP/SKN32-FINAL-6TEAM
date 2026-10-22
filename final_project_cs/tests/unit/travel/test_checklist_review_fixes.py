@@ -38,7 +38,9 @@ def _at(hhmm: str, day: int = 6, month: int = 10) -> datetime:
 
 def _part(seq, title, start, end=None, *, kind="activity", attributes=None, day=6, lat=37.5, lon=127.0):
     place = {"name": title, "place_id": f"p{seq}", "latitude": lat, "longitude": lon, "attributes": dict(attributes or {})}
-    return Part(seq=seq, kind=kind, title=title, starts_at=_at(start, day), ends_at=_at(end, day) if end else None, place=place)
+    # 우리가 시각을 정한 항목(생성기가 짠 것 — `detail.planner`). 하루 마감 22:00 기본값은 이런 항목에만 댄다(2026-10-21 사용자 지시)
+    return Part(seq=seq, kind=kind, title=title, starts_at=_at(start, day), ends_at=_at(end, day) if end else None, place=place,
+                detail={"planner": {"day": f"2026-10-{day:02d}"}})
 
 
 def _codes(found):
