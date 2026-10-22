@@ -6,6 +6,10 @@
 .eyebrow::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--color-primary); border-radius: 50%; margin: 0 7px 2px 0; }
 .title { font-size: 33px; line-height: 1.4; letter-spacing: -1.7px; font-weight: 700; }
 .how .title { font-size: 30px; }
+/* `[2026-10-22 사용자 지시]` 이용 방법 장 — 위 여백을 줄이고 아래로 가는 화살표는 오른쪽 맨 아래(점 줄)로 빼서, 남는 높이를 카드(휴대폰 화면 전체)에 준다. */
+.how { padding-top: 84px; padding-bottom: 54px; }
+.how .eyebrow { margin-bottom: 10px; }
+.how .controls { position: absolute; z-index: 6; right: 14px; bottom: 6px; }
 :global(html[lang="en"]) .title { font-size: 30px; line-height: 1.3; letter-spacing: -1px; }
 .description { font-size: 13px; color: var(--color-muted); line-height: 1.9; margin: 16px 0 0; }
 .heroCopy { z-index: 1; }
@@ -16,7 +20,7 @@
 .badge small { font-size: 9px; color: var(--color-primary); letter-spacing: 1.5px; display: block; margin-bottom: 7px; }
 .badge strong { font-size: 13px; font-weight: 600; }
 /* The card around the shared language picker (`components/ui/language-picker`). */
-.guide { flex: 1; min-height: 250px; display: flex; flex-direction: column; margin-top: 20px; }
+.guide { flex: 1; min-height: 250px; display: flex; flex-direction: column; margin-top: 16px; }
 /* Slides bleed to the frame edges so the next card peeks in from the right. */
 .slides { flex: 1; min-height: 0; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 27px; margin: 0 -27px; padding: 2px 27px 8px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
 .slides::-webkit-scrollbar { display: none; }
@@ -25,8 +29,23 @@
 .slideHead { display: flex; gap: 12px; }
 .slideHead h3 { font-size: 14px; margin: 1px 0 5px; letter-spacing: -.3px; word-break: keep-all; }
 .slideHead p { font-size: 11px; line-height: 1.7; color: var(--color-muted); word-break: keep-all; }
-.shot { flex: 1; min-height: 0; margin-top: 13px; border: 1px solid var(--color-border); border-bottom: 0; border-radius: 12px 12px 0 0; overflow: hidden; background: var(--color-paper); }
-.shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+/* `[2026-10-22 사용자 지시]` The whole phone screen, never cropped: as tall as the card allows, narrower when the card is short. */
+.shot { flex: 1; min-height: 0; position: relative; margin: 13px 0 14px; }
+/* `[2026-10-22 사용자 결정 — 목업 A+E]` The screen as tall as the slide allows; everything on it is placed in fractions of it (`liftStyle`). */
+.frame { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); aspect-ratio: 780 / 1594; max-width: 100%; }
+.frame::after { content: ""; position: absolute; inset: 0; border-radius: 5.5% / 2.7%; background: color-mix(in srgb, var(--color-scrim) 22%, transparent); pointer-events: none; }
+.screen { display: block; width: 100%; height: 100%; border: 1px solid var(--color-border); border-radius: 5.5% / 2.7%; background: var(--color-surface); }
+/* The cut: 1.1 × the screen's width plus a 10px margin in its own background, a white and green glow ring, centred on the part it shows. */
+.lift { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: calc(var(--lift) * 100% + 20px); padding: 10px; border-radius: 14px; background: var(--fill);
+  top: clamp(-6px, calc((var(--cut-mid) - var(--cut-h) / 2) * 100% - 10px), calc((1 - var(--cut-h)) * 100% - 14px));
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px color-mix(in srgb, var(--color-primary) 65%, transparent), 0 0 20px 6px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 18px 40px var(--color-shadow-soft); }
+.cut { position: relative; overflow: hidden; aspect-ratio: var(--cut-ratio); }
+.cut img { position: absolute; max-width: none; width: calc(var(--cut-zoom) * 100%); height: auto; left: calc(var(--cut-x) * -100%); top: calc(var(--cut-y) * -100%); }
+/* The chip above the cut, its line from the chip's middle down to the cut's top edge. */
+.pin { position: absolute; bottom: 100%; right: 14px; display: flex; flex-direction: column; align-items: center; }
+.chip { background: var(--color-primary); color: var(--color-on-primary); font-size: 11px; font-weight: 700; line-height: 1; padding: 7px 11px; border-radius: 99px; white-space: nowrap; box-shadow: 0 6px 16px var(--color-shadow-soft); }
+.wire { position: relative; width: 2px; height: 15px; background: var(--color-primary); }
+.wire::after { content: ""; position: absolute; left: -3px; bottom: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 2px var(--color-surface); }
 .guideNav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
 .guideNav button { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: color-mix(in srgb, var(--color-surface) 79%, transparent); color: var(--color-primary); font-size: 16px; }
 .guideNav button[aria-disabled="true"] { opacity: .35; cursor: default; }
@@ -48,7 +67,6 @@
 .scrollCue { display: flex; align-items: center; gap: 4px; }
 .scrollHint { font-size: 11px; line-height: 1.6; color: var(--color-primary); }
 .down { display: grid; place-items: center; width: 44px; height: 44px; color: var(--color-primary); font-size: 24px; }
-.skip { min-height: 44px; padding: 10px 0 10px 14px; font-size: 11px; color: var(--color-text-secondary); }
 .pagination { position: absolute; z-index: 5; bottom: 18px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 7px; }
 .dot { padding: 10px 3px; }
 .dot::after { content: ""; display: block; width: 5px; height: 5px; background: var(--color-faint); border-radius: 10px; transition: width .25s, background .25s; }
@@ -81,6 +99,7 @@
 @media (max-height: 700px) { .slideHead p { display: none; } }
 @media (max-height: 740px) {
   .page { padding-top: 88px; padding-bottom: 58px; }
+  .how { padding-top: 74px; padding-bottom: 50px; }
   .title { font-size: 29px; }
   .how .title { font-size: 27px; }
   :global(html[lang="en"]) .title { font-size: 27px; }

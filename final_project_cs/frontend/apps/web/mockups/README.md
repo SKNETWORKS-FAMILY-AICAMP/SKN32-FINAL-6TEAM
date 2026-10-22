@@ -44,6 +44,7 @@ python -m http.server 3102 --bind 127.0.0.1
 | 인트로 개별 변형 | [시작](tripilot-intro-start.html) · [카드](tripilot-intro-cards.html) · [확장](tripilot-intro-expanded.html) · [고정 탭](tripilot-intro-nav-fixed.html) · [플로팅](tripilot-intro-nav-floating.html) |
 | 온보딩·후속 여행 흐름 | [기본형](tripilot-mobile-onboarding.html) · [캐러셀형](tripilot-mobile-onboarding-carousel.html) · [확장형](tripilot-onboarding-expanded.html) |
 | 첫 여행 등록과 발표 시나리오 | [등록 와이어프레임](tripilot-intake-wireframe.html) · [발표 시연](tripilot-scenario-demo.html) |
+| 소개 둘째 장 「이용 방법」 7장 — 휴대폰 화면 전체 위에 그 단계에서 볼 부분만 흰 카드로 크게 띄운 강조 방식(앱 장터 소개 그림 방식), A 크게 띄운 강조 카드(그늘 10%) · E 제자리 강조 + 설명 칩(그늘 10%) · A+E 크게 띄운 카드 + 빛 테두리 + 설명 칩을 단추로 바꿔 보거나 나란히 — **A+E 로 결정 · 앱 반영(2026-10-22)**(B 그대로 · C 기울인 화면 · D 유리 카드는 검토 뒤 뺌 · 요즘 흐름 조사와 출처는 목업 머리), 카드마다 강조 영역 좌표(780×1594 그림 기준, 원래 화면 테두리 안쪽) 표 — 그림은 앱에 들어간 `public/images/guguroute-guide-ko-*.jpg` 그대로(2026-10-22 · 검토 중) | [이용 방법 강조](guguroute-guide-highlight-2026-10-22.html) — 그림을 상대 경로로 읽으므로 웹 앱 폴더를 임시 서버로 열어 본다(`python -m http.server <포트> --bind 127.0.0.1` → `/mockups/…`) |
 
 ## 계획 확인 시나리오 목업
 

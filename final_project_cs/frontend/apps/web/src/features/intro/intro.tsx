@@ -20,17 +20,22 @@ const copy: Record<Language, Record<string, string>> = {
     introDescription: "Upload your plan and we check places, opening hours and travel between them.\nSigned in, we keep watching it during the trip.",
     badge: "Seoul · up to 7 days · up to 4 people",
     how: "How to use it",
-    step1: "Tell us what you love", detail1: "Your favorite experiences and travel companions. Set the starting point for a trip that fits you.",
-    step2: "Bring your travel plans", detail2: "Add the places and plans you have in mind. See each day come together at a glance.",
-    step3: "Review it together", detail3: "We look over travel times and visiting requirements. See what changed and what needs a look.",
-    step4: "Refine as you go", detail4: "Browse your itinerary and visit order, and ask about your plans in chat.",
+    step1: "Paste the plan you have", detail1: "Enter your trip like the example, or write it freely.",
+    step2: "Share your style while we read", detail2: "While we read your plan, we ask who’s coming and what you enjoy.",
+    step3: "Check it stop by stop", detail3: "Places, opening hours and travel are checked for each stop. We pause and ask when one needs a fix.",
+    step4: "Fix it and register", detail4: "Adjust times and places, check again, then register it as your trip.",
+    step5: "See your trip at a glance", detail5: "Each day’s stops, the map and the travel between them on one screen.",
+    step6: "Watched during the trip", detail6: "If a place closes or the weather or a disaster hits, we tell you and ask first. Turn on the Course Keeper to let it fix things.",
+    step7: "Refine as you go", detail7: "Ask about your plan or tell us what to change in chat.",
+    chip1: "Write it freely", chip2: "Questions while we read", chip3: "Checked stop by stop", chip4: "Registered once checked",
+    chip5: "Stops and travel at a glance", chip6: "We ask first when it changes", chip7: "Change it by chatting",
     guide: "How to use GuguRoute", shot: "App screen", swipe: "Swipe to see each step", prevStep: "Previous step", nextStep: "Next step",
     start: "Your next journey\nstarts right here.",
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
     taste: "Add plan", trip: "Start trip", cta: "Start my itinerary",
     actionNote: "Review the terms, then add your plan.",
     actionNoteDone: "You have agreed to the terms. The preference questions are in the menu.",
-    scrollHint: "Scroll down to explore", skip: "Skip intro", next: "Next screen",
+    scrollHint: "Scroll down to explore", next: "Next screen",
     pages: "GuguRoute introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
     label0: "Introduction", label1: "How it works", label2: "Start your itinerary",
     howEyebrow: "HOW IT WORKS", ticketLabel: "YOUR NEXT JOURNEY", ticketPartner: "TRAVEL PARTNER",
@@ -41,17 +46,22 @@ const copy: Record<Language, Record<string, string>> = {
     introDescription: "준비한 일정을 올리면 장소 · 운영시간 · 이동을 확인해요.\n로그인하면 여행 중에도 일정을 지켜봐요.",
     badge: "서울 · 최대 7일 · 4명까지",
     how: "이렇게 사용할 수 있어요",
-    step1: "나의 여행 취향 알려주기", detail1: "좋아하는 테마부터 함께 가는 사람까지. 나에게 맞는 여행의 기준을 정해요.",
-    step2: "준비한 일정 가져오기", detail2: "가고 싶은 장소와 여행 계획을 등록하면 하루의 흐름을 한눈에 정리해요.",
-    step3: "함께 점검하기", detail3: "이동 시간과 방문 조건을 살펴보고, 바뀐 일정과 확인할 일정을 보여줘요.",
-    step4: "대화하며 다듬기", detail4: "일정과 방문 순서를 한눈에 보고, 궁금한 점은 채팅으로 물어보세요.",
+    step1: "준비한 일정 붙여 넣기", detail1: "여행 일정을 예시와 같이 입력하거나 자유롭게 입력해 주세요.",
+    step2: "읽는 동안 취향 알려 주기", detail2: "계획을 읽는 동안 함께 가는 사람과 여행 취향을 물어봐요.",
+    step3: "하나씩 함께 확인하기", detail3: "장소 · 운영시간 · 이동을 일정마다 확인하고, 고칠 곳이 있으면 멈춰서 물어봐요.",
+    step4: "고치고 여행 등록하기", detail4: "시간과 장소를 고치고 다시 확인한 뒤 여행으로 등록해요.",
+    step5: "내 여행 한눈에 보기", detail5: "일차별 일정과 지도, 이동을 한 화면에서 봐요.",
+    step6: "여행 중에도 지켜보기", detail6: "휴무 · 날씨 · 재난이 생기면 알리고 대안을 먼저 물어봐요. 항로 지킴이를 켜면 알아서 고쳐요.",
+    step7: "대화하며 다듬기", detail7: "궁금한 점이나 바꾸고 싶은 일정을 채팅으로 말해 보세요.",
+    chip1: "자유롭게 입력", chip2: "읽는 동안 취향 질문", chip3: "일정마다 확인", chip4: "확인 끝나면 바로 등록",
+    chip5: "일정 · 이동 한눈에", chip6: "문제 생기면 먼저 묻기", chip7: "말로 바꾸기",
     guide: "구구루트 이용 방법", shot: "앱 화면", swipe: "옆으로 넘겨 단계별로 확인하세요", prevStep: "이전 단계", nextStep: "다음 단계",
     start: "다음 여행의 첫걸음,\n여기서 시작해요.",
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
     taste: "계획 담기", trip: "여행 시작", cta: "내 일정 시작하기",
     actionNote: "약관 확인부터 함께할게요.",
     actionNoteDone: "약관에 동의했어요. 취향 설문은 메뉴에서 할 수 있어요.",
-    scrollHint: "아래로 넘겨 보세요", skip: "소개 건너뛰기", next: "다음 화면",
+    scrollHint: "아래로 넘겨 보세요", next: "다음 화면",
     pages: "구구루트 서비스 소개. 아래로 넘기면 다음 화면으로 가요.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
     howEyebrow: "이용 방법", ticketLabel: "다음 여행", ticketPartner: "구구루트",
@@ -66,8 +76,31 @@ const background = imageSet(srcSet);
 const { props: { srcSet: nightSrcSet } } = getImageProps({ alt: "", src: "/images/tripilot-home-03-journey-night.png", width: 1672, height: 941, quality: 75 });
 const nightBackground = imageSet(nightSrcSet);
 
-/** How-it-works slides; each has a screen capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
-const guide = ["1-preferences", "2-plan", "3-results", "4-chat"] as const;
+/**
+ * How-it-works slides; each has a screen capture per language in `public/images/guguroute-guide-<language>-<slide>.jpg`.
+ * `[2026-10-22 사용자 지시]` Seven whole phone screens (780×1594 — a 375×766 screen, its rounded corners kept), shown uncropped: plan → reading and
+ * survey → check → fix and register → trip → notices → chat.
+ * `[2026-10-22 사용자 결정 — 목업 A+E]` Over the dimmed screen, the part of each screen that step is about pops out: the same picture cut to `area`
+ * (x0, y0, x1, y1 in the 780×1594 picture, inside the screen's own borders), wider than the screen, with a glow ring and a chip above it.
+ * `fill` is the cut's own background, for the card's inner margin. Mockup: `mockups/guguroute-guide-highlight-2026-10-22.html`.
+ */
+const guide = [
+  { shot: "1-input", area: [44, 560, 726, 1345], fill: "#ffffff" },
+  { shot: "2-reading", area: [45, 745, 725, 1250], fill: "#ffffff" },
+  { shot: "3-check", area: [188, 527, 731, 1060], fill: "#ffffff" },
+  { shot: "4-result", area: [10, 1180, 770, 1560], fill: "#ffffff" },
+  { shot: "5-trip", area: [24, 778, 756, 1565], fill: "#ffffff" },
+  { shot: "6-notices", area: [44, 248, 736, 805], fill: "#fbf7ec" },
+  { shot: "7-chat", area: [20, 430, 760, 1185], fill: "#ffffff" },
+] as const;
+const SHOT_W = 780, SHOT_H = 1594, LIFT = 1.1;          // the cut is 1.1 × the screen's width
+
+/** Where the cut sits, as fractions of the screen picture — the card follows whatever size the slide gives the screen. */
+function liftStyle([x0, y0, x1, y1]: readonly number[], fill: string): CSSProperties {
+  const width = x1 - x0, height = y1 - y0;
+  return { "--fill": fill, "--lift": LIFT, "--cut-ratio": `${width} / ${height}`, "--cut-zoom": SHOT_W / width, "--cut-x": x0 / width, "--cut-y": y0 / height,
+    "--cut-h": LIFT * (SHOT_W / SHOT_H) * (height / width), "--cut-mid": (y0 + y1) / 2 / SHOT_H } as CSSProperties;
+}
 
 const delay = (seconds: number) => ({ "--d": `${seconds.toFixed(3)}s` }) as CSSProperties;
 
@@ -222,8 +255,7 @@ export function Intro() {
 
   const controls = (next: number): ReactNode => <div className={styles.controls} data-fx="fade" style={delay(1.1)}>
     <div className={styles.scrollCue}>{next === 1 && <span className={styles.scrollHint}>{text.scrollHint}</span>}<button type="button" className={styles.down} onClick={() => go(next)} aria-label={text.next}><span aria-hidden="true">↓</span></button></div>
-    {/* The first page offers only the way down; skipping the introduction starts from the second page. */}
-    {next !== 1 && <button type="button" className={styles.skip} onClick={() => go(2)}>{text.skip}<span aria-hidden="true"> ↗</span></button>}
+    {/* `[2026-10-22 사용자 지시]` 「소개 건너뛰기」는 뺐다 — 아래로 넘기면 같은 곳(마지막 장)으로 간다. */}
   </div>;
   const page = (index: number) => `${styles.page} ${shown[index] && !(replaying && index === current) ? styles.in : ""}`;
 
@@ -244,13 +276,21 @@ export function Intro() {
         <p className={styles.eyebrow} data-fx="up" style={delay(.05)}>{text.howEyebrow}</p>
         <h2 id="how-title" className={styles.title}><Reveal key={language} text={text.how} mode="word" /></h2>
         <div className={styles.guide} role="region" aria-roledescription="carousel" aria-label={text.guide} data-fx="left" style={delay(.45)}>
-          <div ref={slides} className={`${styles.slides} ${dragging ? styles.dragging : ""}`} onScroll={trackSlide} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>{guide.map((shot, index) => (
+          <div ref={slides} className={`${styles.slides} ${dragging ? styles.dragging : ""}`} onScroll={trackSlide} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>{guide.map(({ shot, area, fill }, index) => (
             <div key={shot} className={styles.slide} role="group" aria-roledescription="slide" aria-label={`${index + 1} / ${guide.length}`}>
               <div className={styles.slideHead}>
                 <span className={styles.stepNo}>0{index + 1}</span>
                 <div><h3>{text[`step${index + 1}`]}</h3><p>{text[`detail${index + 1}`]}</p></div>
               </div>
-              <div className={styles.shot}><Image src={`/images/tripilot-guide-${language}-${shot}.jpg`} alt={`${text.shot}: ${text[`step${index + 1}`]}`} width={780} height={1120} sizes="300px" draggable={false} /></div>
+              <div className={styles.shot}>
+                <div className={styles.frame} style={liftStyle(area, fill)}>
+                  <Image className={styles.screen} src={`/images/guguroute-guide-${language}-${shot}.jpg`} alt={`${text.shot}: ${text[`step${index + 1}`]}`} width={SHOT_W} height={SHOT_H} sizes="300px" draggable={false} />
+                  <div className={styles.lift} aria-hidden="true">
+                    <div className={styles.cut}><Image src={`/images/guguroute-guide-${language}-${shot}.jpg`} alt="" width={SHOT_W} height={SHOT_H} sizes="640px" draggable={false} /></div>
+                    <span className={styles.pin}><span className={styles.chip}>{text[`chip${index + 1}`]}</span><span className={styles.wire} /></span>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}</div>
           <div className={styles.guideNav}>
