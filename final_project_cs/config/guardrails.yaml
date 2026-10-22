@@ -449,6 +449,29 @@ travel:
   # slow 8초 — 깨어 있는 모델은 2초 안팎에 답한다(ui 세션 실측 2.0·2.1초) → 8초면 평소보다 확실히 느린 것이라 「모델이 느려요」를 알린다.
   # max_seconds — 채팅은 식은 모델 첫 호출 34초 + 모델 시간 제한 20초 여유로 90초, 일정 짜기는 생성기가 더 오래 걸려 240초, 접수 읽기는 사진·PDF 라 600초.
   # 한 사용자가 열 수 있는 실시간 작업 3개(채팅 · 일정 짜기 · 접수 읽기 동시). intake_stalled_seconds — 읽는 일꾼이 갱신 없이 이만큼 조용하면 죽은 것으로 본다.
+  # 고객이 보낸 공개 SNS 맛집 링크. 수치는 첫 범위의 요청/조회 예산으로 고른 값이다.
+  social_dining:
+    max_links: 10
+    max_url_chars: 2048
+    timeout_seconds: 8
+    # [2026-10-15 실측] YouTube 영상 페이지는 1.4MB, og:title 은 약 770KB 지점. HTML 은 </head> 에서 멈춘다
+    max_response_bytes: 1048576
+    max_redirects: 3
+    max_metadata_chars: 6000
+    max_restaurants_per_link: 5
+    max_preview_pairs: 40
+    allowed_hosts:
+      - instagram.com
+      - www.instagram.com
+      - tiktok.com
+      - www.tiktok.com
+      - m.tiktok.com
+      - vm.tiktok.com
+      - vt.tiktok.com
+      - youtube.com
+      - www.youtube.com
+      - m.youtube.com
+      - youtu.be
   op_stream:
     beat_seconds: 3
     slow_seconds: 8
@@ -549,24 +572,37 @@ travel:
   #   콘솔에서 바꾼 값이 먼저고, 이 값은 콘솔 값이 없을 때의 기본이다. 실제로 읽는 곳: `settings_hook.google_price_enabled(tenant)`.
   dining:
     google_price_enabled: false
-    # -- 요식 판정 에이전트 그림자 운행 (2026-10-13 · 설계 §10 단계 5) --
-    # 접수 확인의 규칙 검사와 나란히 에이전트(LLM 이 체크를 고르고 규칙 도구를 인용)가 판정하고 `dining.dn_agent_shadow`(232)에 남긴다.
-    # ★고객 결과는 바뀌지 않는다(기록만) · 새벽 확인에는 쓰지 않는다. ★기본 꺼짐 — 모델 호출 비용이 들어 켜는 것은 사람이 정한다.
-    # model = openai:<모델>(키 ACOP_OPENAI_API_KEY) · ollama:<모델>(주소 ACOP_OLLAMA_BASE_URL). 읽는 곳: `app.core.settings.dining_agent_shadow()`.
-    agent_shadow:
-      enabled: false
-      # `[2026-10-15]` 기본 모델 luna — 실측 그림자 규칙과 같음 8/10 · 하루 약 $0.001~0.002(eval/reports/2026-10-15_intake_meal_kind.md §6)
+    # -- 요식 판정 에이전트 (2026-10-13 · 2026-10-16 그림자 모드를 빼고 이름을 agent_shadow → agent_judge 로 바꿈) --
+    # 접수 확인 뒤 에이전트(LLM 이 체크를 고르고 규칙 도구 · 카카오 · 구글을 부른다)가 식사를 판정해 **확인 줄에 합친다**(`instances/dining/judge.py`):
+    # 규칙이 모르던 영업 · 휴무 줄을 도구 근거로 정하고, 고객 조건(식이 · 아이 · 결제) · 폐업(bad)은 줄을 더한다. 화면 문장은 코드가 만든다.
+    # 근거는 `dining.dn_agent_judge`(232)에 남는다. 새벽 확인에는 쓰지 않는다.
+    # ★`[2026-10-16 사용자 지시]` **기본 켜짐**(전에는 그림자 시절이라 꺼짐). 모델 키 · 주소가 없거나 모의 모델(ACOP_LLM_PROVIDER=mock — 시험 · CI)이면
+    #   돌지 않고 규칙 검사 그대로다. 비용은 하루 약 $0.001~0.002(luna 실측) — 끄려면 false.
+    # model = openai:<모델>(키 ACOP_OPENAI_API_KEY) · ollama:<모델>(주소 ACOP_OLLAMA_BASE_URL). 읽는 곳: `app.core.settings.dining_agent_judge()`.
+    agent_judge:
+      enabled: true
+      # `[2026-10-15]` 기본 모델 luna — 실측 규칙과 같음 8/10 · 하루 약 $0.001~0.002(eval/reports/2026-10-15_intake_meal_kind.md §6)
       model: "openai:gpt-6-luna"
       deadline_s: 120
     # -- 대체 식당 셋 중 고르기 (2026-10-15 · 설계 §7-2 연결) --
     # 규칙이 거른 상위 3곳 중 하나를 모델이 고객 취향에 맞춰 고른다(`components/planning/meal_pick.py`). 취향 문장이 없으면 부르지 않는다.
     # 취향 = 일정 constraints.meal_preference > 설문 custom_answers.food > 설문 음식 세부 선택지(맛 · 미쉐린 · 노포 …).
     # 모델 답은 서버가 확인하고 어기면 규칙 1등 — 고객 결과가 바뀐다(그림자 아님). ★기본 꺼짐 — 켜는 것은 사람이 정한다.
+    # ★`[2026-10-20 사용자 결정 · dining 담당]` 켰다. 조립이 꽂는 것은 「흐름 한 칸」(`make_flow_picker`, 2026-10-16 결정) — 규칙 1위는
+    #   그대로 두고, 모델은 2 · 3위 중 하나를 「다른 안」 맨 앞에 「그날 흐름: 이유」와 함께 올린다(고객이 고른다). 끄려면 false.
+    #   ☆평가 보고서의 「luna 선택 95.0%」는 1위를 바꾸는 `make_picker`(평가용)의 수치라 이 방식의 성능이 아니다.
     # 쓰는 곳: 채팅 신고(늦음 · 휴무)와 요식 팀 Case. 새벽 확인에는 쓰지 않는다. 읽는 곳: `app.core.settings.dining_meal_pick()`.
     meal_pick:
-      enabled: false
+      enabled: true
       # `[2026-10-15]` 기본 모델 luna — 실측 12/12(gpt-4o-mini 10/12) · 위반 0 · 평균 3.8초
       model: "openai:gpt-6-luna"
+    # -- 캐치테이블 시험 값 화면 표시 (2026-10-19 사용자 지시 · 계획 wiki/records/plans/2026-10-16_catchtable_trial_live_card.md) --
+    # 켜면 등록 여행 화면의 식당 카드에 시험 출처(catchtable_trial)의 지금 웨이팅 · 빈자리를 「제휴 전제 시험」 표시와 함께 한 줄 보인다.
+    # ★보여 주기뿐 — 판정 · 재계획은 이 값을 보지 않는다. 화면을 열어도 조회하지 않고 사람이 다리로 적은 값만 읽는다.
+    # `[2026-10-19]` 이미 가는 일정 안내(② 다음 일정 · ③ 출발)에도 다음 식당의 값을 「참고 · … (읽은 시각 확인 · 제휴 전제 시험)」 한 줄로 얹는다(새 알림 없음).
+    # 곧 갈 식사만(시작 1시간 전 ~ 시작 전) · 최근 30분 안에 읽은 값만(DB 기한 5분은 그대로).
+    # ★기본 꺼짐 — 시연 때만 **관리 콘솔 「운영 설정」** 의 같은 이름 스위치로 켠다(콘솔 값이 먼저). 읽는 곳: `settings_hook.dining_trial_live_view_enabled(tenant)`.
+    trial_live_view_enabled: false
   # -- 확인 화면의 「택시 호출 상품」 고르기 (2026-10-14 사용자 지시 · 핫픽스) --
   # 택시 요금(호출 상품별 이용료) 계산이 아직 믿을 만하지 않아 고객 화면의 상품 고르기 칸을 **기본 꺼짐**으로 둔다.
   # 꺼짐: 검사 응답에 `taxi_pricing` 을 싣지 않아 칸이 사라지고, 고르기 요청(`trip.taxi_pricing`)은 거절하고, 이미 저장된 고른 값은 계산에 쓰지 않는다.
@@ -576,8 +612,14 @@ travel:
   # -- 여행 화면 「지금 HH:MM」 시각 표시 (2026-10-15 사용자 결정 · ST4F-494) --
   # 여행 화면 일정 줄의 빨간 「지금」 점 옆 시각 꼬리표. 시험 기간에 확인하려고 **기본 켜짐**, 배포 때 **관리 콘솔 「운영 설정」** 의 같은 이름 스위치로 끈다(콘솔 값이 먼저).
   # 꺼짐: 여행 조회 응답의 `now_label` 이 false — 화면은 점만 보인다. 읽는 곳: `settings_hook.trip_now_label_enabled(tenant)`.
+  # -- 여행 화면 위험 점검 칸 (2026-10-22 사용자 지시) --
+  # 일정 목록 위의 「현재 점검 대상 일정이 없어요 · 지금부터 n시간 이내 대상 · 확인 HH:MM」 칸. 3분 점검 · 재난 경고가 실제로 반영되는지 시험 중에 보려고 둔 칸이라
+  # **기본 켜짐**, 배포 · 시연 때 **관리 콘솔 「운영 설정」** 의 같은 이름 스위치로 끈다(콘솔 값이 먼저).
+  # 꺼짐: 여행 조회 응답의 `risk_panel` 이 false — 일정 목록 위 칸만 숨는다. 3분 점검 · 종 표시 · 위험 알림 · 알림 센터 「주의」 탭의 점검 결과는 그대로.
+  # 읽는 곳: `settings_hook.trip_risk_panel_enabled(tenant)`.
   trip_screen:
     now_label_enabled: true
+    risk_panel_enabled: true
   # -- 항로 지킴이 운영 스위치 (2026-10-19 사용자 결정 · ST4F-613) --
   # 끄면 웹에서 항로 지킴이(계획 담기 카드 · 머리 아이콘 · 여행 화면)를 숨기고 서버의 자동 일정 변경도 멈춘다 — 켠 여행도 끈 동안은 먼저 묻는다.
   # 켠 기록(`constraints.survey.on_disruption` · `trip_guardian_changes`)은 지우지 않아 다시 켜면 원래대로다. **관리 콘솔 「운영 설정」** 의 같은 이름 스위치가 먼저.
@@ -864,7 +906,10 @@ travel:
       #   (`instances/activity/alternative_order.py`). 기본은 끔 — 프롬프트 허용 목록 · 모델 인자(코어)가 붙은 뒤 shadow → llm 으로.
       # ★`[2026-10-13 코어 회신 11번]` **`shadow`** — 코어가 허용 목록(`ALLOWED_PROMPT_KEYS`)과 판정 어댑터 모델 인자(`judge(model=)`)를
       #   붙였다. 고객 순서는 코드 그대로, LLM 순서는 뒤에서 구해 로그에만 남긴다. 모델 선택(gpt-6-luna)은 섀도 기록이 쌓인 뒤 정한다.
-      alternative_order: shadow
+      # ★`[2026-10-21 사용자 결정]` **`llm`** — 고객 화면 순서를 LLM 순서로(두 경로 — 고객 요청 · 감시). 지시문 v5 + 이유 지킴이.
+      #   근거: holdout-5 고객 요청 38장 · 감시 holdout-2 · 3 의 20장을 v5 로 — 위험 0 · 오류 0 · 이유 전부 사람 판정 심각 0 · 경미 ≤ 1.2%.
+      #   실패 · 시간 초과(`alternative_order_timeout_seconds`) · 예산 초과 · 쓸 수 없는 답이면 코드 순서. 되돌리는 조건은 D-CS-015 「대체 후보 순서 llm」.
+      alternative_order: llm
     # ★`[2026-10-12]` 판정 LLM 호출 상한(구현 계획 4.6) — 일 · 월. 넘으면 그 판정은 부르지 않고 `skipped`(budget_exhausted)로 남긴다.
     #   웹 검색(실시간 운영)은 따로 센다 — 호출당 약 $0.032(text 는 약 $0.0003, 10-06 측정 · 구현 계획 §1.2).
     #   text 2,000/일 ≈ $0.6 · 30,000/월 ≈ $9, web 50/일 ≈ $1.6 · 1,000/월 ≈ $32 (추정 상한).

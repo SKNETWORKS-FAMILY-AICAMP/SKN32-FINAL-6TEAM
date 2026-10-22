@@ -1,0 +1,35 @@
+{
+ "eval_run": "20261020T064826Z",
+ "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_h2.jsonl",
+ "inputs_sha256": "d2d31fa6fc7bfe91b4b5525a05b590ba28d24ebb990eb6e720c28dc4ef7656e5",
+ "dataset_sha256": "7fc12dc383b4f6b4a40f7e1b624998c0b238fc5f3616a28cb61333d8e15a785c",
+ "split": [
+  "holdout"
+ ],
+ "smoke": false,
+ "labeler": "합의",
+ "cases": 39,
+ "repeats": 3,
+ "shuffle": {
+  "cases": 40,
+  "per_case": 2,
+  "seed": 7
+ },
+ "dry_run": false,
+ "model": "gpt-5.4-nano",
+ "reasoning_effort": "low",
+ "web_search": false,
+ "prompt_file": "alternative_order.v3.md",
+ "payload": "v3(class_name)",
+ "timeout_s": 8.0,
+ "temperature": null,
+ "seed_model": null,
+ "prompt": "file",
+ "prompt_chars": 1664,
+ "m5_review": {
+  "sheet": "reasons_review_all.csv",
+  "scope": "이유 전수",
+  "role": "v3 고객 요청",
+  "claude_assisted": "Claude 제안(심각 · 경미 단계 포함)을 사용자가 검수 · 그대로 확정(2026-10-20)"
+ }
+}

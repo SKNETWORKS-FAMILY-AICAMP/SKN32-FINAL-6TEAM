@@ -129,6 +129,10 @@ DOMAIN_WORDS = (
 | `INV-CS-SEC-009` | **MCP 호출자는 사용자 키가 정한다** — 키가 없거나 틀리면 연결 단계에서 401, `mcp` 모듈 토글을 끄면 404. 도구 인자에 `customer_id` 가 없어 본인 여행만 열린다(남의 여행은 404) | automated | `tests/e2e/test_mcp_server.py::test_without_a_key_or_with_a_wrong_key_the_connection_is_401_and_a_disabled_module_is_404` |
 | `INV-CS-SEC-010` | **MCP 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록된다**(기본 꺼짐 — 「MCP 는 read-only」). 읽기 도구만 있을 땐 전부 `readOnlyHint` | automated | `tests/e2e/test_mcp_server.py::test_by_default_only_read_tools_exist_and_all_say_they_are_read_only` |
 | `INV-CS-SEC-011` | **바깥 소스 응답 공유 캐시는 허용된 공개 소스만 DB 에 두고, 요청 인자의 서비스 키 원문을 두지 않는다**(열쇠는 해시). 고객 검색어가 담기는 소스(카카오 · 구글 장소)는 메모리에만 — DB 가 안 되면 메모리로 계속한다 | automated | `tests/unit/travel/test_shared_source_cache.py::test_only_allowed_sources_reach_the_db_and_the_service_key_is_not_stored` |
+| `INV-CS-SEC-012` | **서버용 OpenAI 키를 읽는 제품 코드는 모델 서버 장애 넘김 한 곳뿐이다** — 개발 중 호출 · 시험 · 측정으로 새면 요금과 노출 위험이 생긴다(사용자 지시 2026-10-07, [D-CS-016](../decisions/D-CS-016-llm-failover-server-key.md)) | automated | `tests/architecture/test_server_key_readers.py::test_only_the_settings_declaration_and_the_failover_read_the_server_key` |
+| `INV-CS-SEC-013` | **모델 서버 넘김 장치가 모든 경로에 실패해도 오류 · 로그에 키 값을 싣지 않는다**(상태 코드와 이유 이름만) | automated | `tests/unit/infrastructure/test_llm_failover.py::test_when_every_path_fails_the_error_names_the_reasons_and_never_the_key` |
+| `INV-CS-SEC-014` | **사진 · 스캔 이미지는 `llm_failover_vision` 을 따로 켜지 않으면 API 로 넘어가지 않는다** — 이미지의 이름 · 예약번호는 가릴 수 없다 | automated | `tests/unit/infrastructure/test_llm_failover.py::test_images_do_not_go_to_the_api_unless_vision_is_switched_on` |
+| `INV-CS-SEC-015` | **서버용 키가 비어 있으면 스위치가 켜져 있어도, 개인 키가 있어도 OpenAI 로 넘어가지 않는다**(Ollama 만 쓴다) | automated | `tests/unit/infrastructure/test_llm_failover.py::test_personal_key_does_not_enable_failover_without_a_server_key` |
 
 **`INV-CS-SEC-004`가 셋을 한 번에 본다.** DB에만 마스킹하고 audit에 원본이 남는 실수를 막는다.
 
@@ -225,6 +229,8 @@ Action을 실행하기 전 근거를 대조한다.
 | `INV-CS-RT-024` | **못 고르게 된 제안(끝난 일정 · 낡은 기준 버전)은 열린 채 두지 않고 그 자리에서 닫는다** — 닫은 기록은 커밋되고 부르는 쪽은 409 를 받는다 | automated | `tests/e2e/test_watch_failures.py::test_choosing_a_proposal_whose_item_has_ended_is_refused_and_the_closing_is_kept` |
 | `INV-CS-RT-025` | **여행 감시는 주기 문(3분)을 지난 회차에서만 돌고 일꾼이 몇이 떠도 한 번 돈다** — 일꾼은 1분마다 돌아도 외부 소스를 3배로 부르지 않는다(D-017) | automated | `tests/integration/test_watch_cadence.py::test_two_workers_at_the_same_moment_only_one_wins` |
 | `INV-CS-RT-026` | **고객이 「바꾸지 말 것」으로 고정한 일정도 감시한다 — 일정은 바꾸지 않고 알린다**(바꾸지 않는 것과 알림을 끄는 것은 별개, D-020) | automated | `tests/scenario/test_pinned_items_are_watched.py::test_a_pinned_activity_is_checked_and_the_customer_is_told_but_the_itinerary_is_not_changed` |
+| `INV-CS-RT-027` | **채팅 결정에서 모델이 바꾸는 할 일(바꾸기 · 대안 · 되돌리기 · 다시 · 닫힘 알림)의 대상을 근거 없이 골랐으면 일정을 바꾸지 않고 되묻는다**(`guard_target` — 실제 모델 재생 172문장에서 엉뚱한 대상 변경 1건 → 0건, 2026-10-07) | automated | `tests/unit/travel/test_decision_target_guard.py::test_the_recorded_failure_a_dinner_on_another_day_is_asked_about_not_changed` |
+| `INV-CS-RT-028` | **사진 · 스캔 받아쓰기가 같은 줄을 두 번 다르게 읽었으면 그 줄의 제목 · 예약번호는 값을 고치지 않고 「확인 필요」로 두며, 고객이 고르기 전에는 그 일정을 확정(등록)하지 않는다** — 고르면 표시가 사라진다 | automated | `tests/e2e/test_intake_transcription_differs_db.py::test_the_review_marks_the_item_for_review_and_gives_the_two_readings_to_draw_buttons` |
 
 ---
 

@@ -40,6 +40,19 @@ export interface TripStop {
   kind?: string;
   /** The server's name for that kind (`kind_label`: 식사 · 활동 · 숙소 · 항공), said for the icon as it came. */
   kindLabel?: string;
+  /**
+   * `[2026-10-19 사용자 지시]` A restaurant's waiting line and open tables read just now from the pre-partnership trial (`items[].trial_live`) — sent only while the admin switch is on and
+   * only values read in the last 30 minutes, for a meal starting within the hour. Shown, never judged: the plan and its checks do not use it.
+   */
+  trialLive?: TrialLive[];
+}
+
+/** One trial reading: `waiting` (yes with the team count, or no line) or `vacancy` (a table free or not), and when it was read. */
+export interface TrialLive {
+  topic: "waiting" | "vacancy";
+  state: "yes" | "no";
+  num: number | null;
+  askedAt: string;
 }
 
 /**
@@ -183,6 +196,8 @@ export interface Trip {
   planUrl?: string;
   /** `[2026-10-15 사용자 결정 — ST4F-494]` Whether the 「지금 HH:MM」 label stands beside the 「지금」 dot (`now_label` — an operator switch, on by default). */
   nowLabel?: boolean;
+  /** `[2026-10-22 사용자 지시]` Whether the risk check panel stands above the stop list (`risk_panel` — an operator switch, on by default; the check itself keeps running). */
+  riskPanel?: boolean;
   /** The itinerary version on the server now (an undo is offered only for the change that made it). */
   version?: number;
   /** The day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */

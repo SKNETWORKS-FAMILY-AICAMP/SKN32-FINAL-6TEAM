@@ -1,4 +1,4 @@
-"""접수 확인 운영시간 줄의 「시작 시각에 열려 있나」(`open_at`) · 요식 판정 그림자 비교. `[2026-10-15]`
+"""접수 확인 운영시간 줄의 「시작 시각에 열려 있나」(`open_at`) · 요식 판정의 규칙 판정 읽기. `[2026-10-15]`
 
 운영시간 줄의 결과 warn 에는 「시작 때 이미 닫힘」과 「끝나기 전에 닫음 · 마지막 주문 임박」이 함께 담긴다.
 그림자가 warn 을 통째로 ok 로 세어 같은 판단(「영업 안 함」)을 어긋남으로 잡았다(로컬 접수 8건 중 3줄 — 정식당 11:30 · 하동관 18:00 · 진진 23:30).
@@ -7,7 +7,7 @@ import pytest
 
 from app.domains.travel_ops.components.intake.hours import HoursFacts
 from app.domains.travel_ops.components.intake.review import _hours_lines
-from app.domains.travel_ops.instances.dining.shadow import rule_verdicts
+from app.domains.travel_ops.instances.dining.judge import rule_verdicts
 
 DAY = "2026-10-28"                                       # 수요일
 PLACE = {"name": "가게"}

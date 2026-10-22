@@ -97,3 +97,7 @@ domain: travel
 - 2026-10-18: 재난문자 내용·지역 관련성 v2. 담당 격리842/842·완료관문26/26·mock 서버 화면8/8; 통합·운영 상태는 [검증 기록](records/reports/2026-10-18_receipt-message-relevance.md)에 구분.
 
 - 2026-10-18: 재난문자 지역·내용 v2는 양쪽 매니저와 운영 api·worker·admin 반영 및 실제 동일 시각 문제 카드 확인 완료. [운영 응답·화면·시험 한계](records/reports/2026-10-18_receipt-message-relevance-live.md).
+
+2026-10-18: develop 웹앱 보존 병합의 로컬 검증을 완료했다. 게시·운영 상태와 분리한 [검증 기록](records/reports/2026-10-18_develop-web-merge-review.md).
+
+2026-10-18: develop CI 실패 원인을 보완하고 독립 전체 검증을 완료했다. 게시 후 CI·운영 확인은 별도다. [기록](records/reports/2026-10-18_develop-ci-repair.md).

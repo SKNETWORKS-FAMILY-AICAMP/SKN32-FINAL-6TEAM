@@ -1,0 +1,184 @@
+{
+ "bundle": "situation_cards_watch",
+ "subset": null,
+ "reviewer": "합의",
+ "reviewed_on": "2026-10-19",
+ "sheet": "라벨_감시_작성자1.csv + 라벨_감시_작성자2.csv",
+ "saw_ai_labels": false,
+ "n": 21,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "labels": {
+  "L-33-W": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-34-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-35-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-36-W": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-37-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-38-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-39-W": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-40-W": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-41-W": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-42-W": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-43-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-44-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-45-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-46-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-47-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-48-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-49-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-50-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-51-W": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-52-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-53-W": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  }
+ },
+ "consensus": {
+  "changed": {
+   "L-49-W": "작성자2 1;2;3 → 1(2026-10-19 사용자 결정 — 「문화」는 미술관, 쉼터 · 공원은 아님)"
+  },
+  "claude_assisted": "Claude 제안(라벨_감시_제안.csv)을 두 사람이 보고 확정 — 21행 중 20행이 두 사람 · 제안 모두 같음. 블라인드 아님"
+ }
+}

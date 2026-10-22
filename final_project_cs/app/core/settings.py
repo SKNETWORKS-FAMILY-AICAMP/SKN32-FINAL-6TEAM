@@ -568,13 +568,13 @@ def get_guardrails() -> Guardrails:
     return Guardrails(data, path)
 
 
-def dining_agent_shadow() -> dict[str, Any] | None:
-    """요식 판정 에이전트 그림자 운행 설정 — 가드레일 `travel.dining.agent_shadow`. 켜져 있으면 `{model, deadline_s}`, 아니면 None. ★기본 꺼짐.
+def dining_agent_judge() -> dict[str, Any] | None:
+    """요식 판정 에이전트 설정 — 가드레일 `travel.dining.agent_judge`. 켜져 있으면 `{model, deadline_s}`, 아니면 None. ★기본 켜짐(가드레일 값).
 
-    `[2026-10-13]` 접수 확인의 규칙 검사와 나란히 판정해 기록만 한다(고객 결과는 그대로). 가드레일을 못 읽어도 **꺼짐**으로 본다.
+    `[2026-10-16]` 판정이 접수 확인 줄에 합쳐진다(`instances/dining/judge.run`). 가드레일을 못 읽으면 **꺼짐**으로 본다.
     """
     try:
-        section = get_guardrails().get("travel.dining.agent_shadow")
+        section = get_guardrails().get("travel.dining.agent_judge")
     except ConfigError:
         return None
     if not isinstance(section, dict) or section.get("enabled") is not True:
@@ -583,7 +583,8 @@ def dining_agent_shadow() -> dict[str, Any] | None:
 
 
 def dining_meal_pick() -> dict[str, Any] | None:
-    """대체 식당 셋 중 고르기 설정 — 가드레일 `travel.dining.meal_pick`. 켜져 있으면 `{model}`, 아니면 None. ★기본 꺼짐.
+    """대체 식당 셋 중 고르기 설정 — 가드레일 `travel.dining.meal_pick`. 켜져 있으면 `{model}`, 아니면 None.
+    `[2026-10-20 사용자 결정]` 가드레일 기본값을 켰다(흐름 한 칸 — 1위는 규칙 그대로).
 
     `[2026-10-15]` 켜면 고객 결과가 바뀐다(그림자 아님) — 가드레일을 못 읽어도 **꺼짐**으로 본다.
     """
@@ -653,6 +654,18 @@ def trip_now_label_enabled() -> bool:
         return True
 
 
+def trip_risk_panel_enabled() -> bool:
+    """여행 화면 일정 목록 위의 위험 점검 칸을 보이나 — 가드레일 `travel.trip_screen.risk_panel_enabled`. ★기본 켜짐.
+
+    `[2026-10-22 사용자 지시]` 3분 점검 · 재난 경고가 반영되는지 시험 중에 보려고 둔 칸이라 켜 두고 배포 · 시연 때 관리 콘솔에서 끈다.
+    가드레일을 못 읽으면 정한 기본(켜짐)으로 둔다 — 끄는 것은 `false` 로 명시한 경우뿐이다.
+    """
+    try:
+        return get_guardrails().get("travel.trip_screen.risk_panel_enabled") is not False
+    except ConfigError:
+        return True
+
+
 def guardian_enabled() -> bool:
     """항로 지킴이를 쓰나 — 가드레일 `travel.guardian.enabled`. ★기본 켜짐(지금 동작 그대로).
 
@@ -663,3 +676,14 @@ def guardian_enabled() -> bool:
         return get_guardrails().get("travel.guardian.enabled") is not False
     except ConfigError:
         return True
+
+
+def dining_trial_live_view_enabled() -> bool:
+    """등록 여행 식당 카드에 캐치테이블 시험 값(웨이팅 · 빈자리)을 보이나 — 가드레일 `travel.dining.trial_live_view_enabled`. ★기본 꺼짐.
+
+    `[2026-10-19 사용자 지시]` 제휴 전제 시험 구현이라 시연 때만 켠다. 가드레일을 못 읽어도 **꺼짐**이다(켜는 것은 명시한 경우뿐).
+    """
+    try:
+        return get_guardrails().get("travel.dining.trial_live_view_enabled") is True
+    except ConfigError:
+        return False

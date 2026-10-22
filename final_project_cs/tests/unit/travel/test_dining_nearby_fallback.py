@@ -171,3 +171,24 @@ def test_dawn_check_replans_when_ledger_shops_are_added_or_an_existing_alias_is_
         assert result.adjusted == [] and result.unresolved and applied == []
     else:
         assert len(result.adjusted) == 1 and "마지" in applied[0].notice["text"]
+
+
+
+def test_a_closed_report_on_a_later_meal_passes_the_meal_picker(monkeypatch):
+    """☆`[2026-10-16 LLM 켜짐 점검]` 지금 식사가 아닌 항목의 휴무 신고(`report_closed_ahead`)도 가게 앞 신고처럼 선택기를 넘긴다."""
+    from app.domains.travel_ops.components.planning.meal_pick import Pick
+
+    lunch, near, bibim = _place("원래 국밥"), _place("가까운 국밥", 37.5779, 126.9717), _place("산채 비빔밥", 37.5782, 126.9720)
+    desk, _ = _desk(monkeypatch, [_item(lunch, "12:00")], [lunch], [near, bibim])
+    picked = []
+
+    def picker(best, alternates, context):
+        picked.append(best.name)
+        return Pick(best=alternates[0], alternates=[best] + alternates[1:], by="llm", reason="취향")
+    monkeypatch.setattr(dining_ledger, "meal_picker", lambda: picker)
+    meal = desk._read(None)[1][0]
+
+    plan = desk.report_closed_ahead(trip_id=uuid.uuid4(), item_id=meal.item_id, base_version=1, message="원래 국밥 문 닫았대")
+
+    assert picked, "나중 식사 휴무 신고에서 선택기를 부르지 않았다"
+    assert plan.summary["to"] == "산채 비빔밥", plan.summary

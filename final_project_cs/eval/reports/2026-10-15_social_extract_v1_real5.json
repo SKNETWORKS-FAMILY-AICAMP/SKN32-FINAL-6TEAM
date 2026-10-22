@@ -1,0 +1,94 @@
+{
+ "prompt_version": "social_dining_extract.v1",
+ "prompt_hash": "31e3451e49c5cd2c11efb4615aa29a7bfdab5d28623955d08f6004e3bdd1d006",
+ "model_path": "failover api (gpt-4.1)",
+ "runs": [
+  {
+   "url": "https://www.instagram.com/seoul_thehotple/p/DeayvzLk3_Y/",
+   "seconds": 4.8,
+   "status": "identified",
+   "reason": null,
+   "restaurants": [
+    {
+     "name": "잠실대하구이 꽃게구이 사계절집 송파본점",
+     "area": null,
+     "branch": null,
+     "menu": null
+    }
+   ]
+  },
+  {
+   "url": "https://www.instagram.com/p/DPFpDORCG_Z/",
+   "seconds": 2.5,
+   "status": "needs_info",
+   "reason": "restaurant_not_found",
+   "restaurants": []
+  },
+  {
+   "url": "https://www.instagram.com/bbo_muksta/p/Deart4jkrJf/",
+   "seconds": 2.5,
+   "status": "identified",
+   "reason": null,
+   "restaurants": [
+    {
+     "name": "이복희해장",
+     "area": null,
+     "branch": null,
+     "menu": null
+    }
+   ]
+  },
+  {
+   "url": "https://www.instagram.com/seoul_places/reel/DWghO_0k1rc/",
+   "seconds": 1.6,
+   "status": "identified",
+   "reason": null,
+   "restaurants": [
+    {
+     "name": "연신내 두꺼비집",
+     "area": null,
+     "branch": null,
+     "menu": null
+    }
+   ]
+  },
+  {
+   "url": "https://www.instagram.com/p/Dea5n8ECHEn/",
+   "seconds": 3.5,
+   "status": "needs_choice",
+   "reason": "restaurant_limit_exceeded",
+   "restaurants": [
+    {
+     "name": "운치",
+     "area": null,
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "해방촌닭",
+     "area": null,
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "초원식당",
+     "area": null,
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "김막회",
+     "area": null,
+     "branch": null,
+     "menu": null
+    },
+    {
+     "name": "순라길 비비",
+     "area": null,
+     "branch": null,
+     "menu": null
+    }
+   ]
+  }
+ ]
+}

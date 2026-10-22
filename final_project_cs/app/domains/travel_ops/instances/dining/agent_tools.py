@@ -17,9 +17,10 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Callable
+from uuid import UUID
 
 from app.domains.travel_ops.instances.dining.ledger import (DEFAULT_ORDER_MARGIN_MIN, _as_datetime, find_license_shop_by_name,
-                                                            find_place_by_name)
+                                                            find_place_by_name, find_place_inside_name)
 
 KST = timezone(timedelta(hours=9))
 #: 판정 한 번의 도구 호출 상한 — 설계 §4 「식사 항목당 8회」 × 식사 넷 안팎
@@ -68,7 +69,9 @@ SPECS: dict[str, ToolSpec] = {s.name: s for s in [
     ToolSpec("check_business", "rule", "폐업 · 이전 · 상호 변경 상태(원장 기록 · 폐업 대조).", _obj(["place_uid"], place_uid=_UID)),
     ToolSpec("check_attributes", "rule",
              "가게 속성을 원장에서 읽는다 — 속성마다 yes · limited · no · unknown 과 출처 원문 · 확인일. "
-             f"wanted 는 {sorted(ATTRIBUTES)} 중에서.",
+             f"wanted 는 {sorted(ATTRIBUTES)} 중에서. "
+             "고객이 요청한 조건(결제 · 아이 · 식이)은 그 조건이 적용되는 식사마다 반드시 이 도구로 확인한다. "
+             "고객이 말하지 않은 조건만 확인하지 않는다.",
              _obj(["place_uid", "wanted"], place_uid=_UID,
                   wanted={"type": "array", "items": {"type": "string", "enum": sorted(ATTRIBUTES)}})),
     ToolSpec("live_open_check", "rule",
@@ -110,6 +113,11 @@ def _plain(value: Any) -> Any:
     return json.loads(json.dumps(value, ensure_ascii=False, default=str))
 
 
+def scope_key(name: Any) -> str:
+    """장소 이름 비교용 — 띄어쓰기 · 대소문자를 무시한다."""
+    return "".join(str(name or "").split()).lower()
+
+
 @dataclass
 class DiningTools:
     """한 번의 판정 동안 쓰는 도구 묶음. `connect()` 는 DB 연결을 여는 컨텍스트 관리자를 돌려준다."""
@@ -120,6 +128,8 @@ class DiningTools:
     max_calls: int = DEFAULT_MAX_CALLS
     #: 이 판정에서 쓸 수 있는 도구(없으면 전부) — 비교 실험 A(「LLM 직접」)는 규칙 도구를 빼고 자료 도구만 준다(설계 §7)
     allowed: frozenset[str] | None = None
+    #: `[2026-10-20]` 식사가 아닌 일정 항목의 장소 이름(띄어쓰기 · 대소문자 무시) — 이 이름으로 찾기를 부르면 거절한다(`agent.off_scope_names`)
+    off_scope: frozenset[str] = frozenset()
     calls: list[dict[str, Any]] = field(default_factory=list)
     refused: list[dict[str, Any]] = field(default_factory=list)
 
@@ -132,6 +142,10 @@ class DiningTools:
                 raise ToolRefused(f"모르는 도구: {name}")
             if self.allowed is not None and name not in self.allowed:
                 raise ToolRefused(f"이 판정에서 쓸 수 없는 도구: {name}")
+            query = args.get("name") if name == "find_place" else args.get("query") if name == "map_search" else None
+            if query is not None and scope_key(query) in self.off_scope:
+                # ☆`[2026-10-19 실측]` 활동 장소(경복궁)를 식당처럼 찾고 영업 · 휴무 · 폐업 도구까지 불렀다(gpt-4o-mini 개발용 18/240판)
+                raise ToolRefused(f"「{query}」는 식사가 아닌 일정 항목의 장소다 — 식사 항목의 가게만 찾는다")
             if len(self.calls) >= self.max_calls:
                 raise ToolRefused(f"도구 호출 상한({self.max_calls}회)을 넘었다")
             key = (name, json.dumps(args, sort_keys=True, ensure_ascii=False))
@@ -140,6 +154,13 @@ class DiningTools:
             missing = [p for p in SPECS[name].parameters["required"] if args.get(p) in (None, "", [])]
             if missing:
                 raise ToolRefused(f"필수 인자가 없다: {missing}")
+            # ★`[2026-10-16 luna 실측]` 모델이 가게 번호의 한 칸을 빼고 넘겨 SQL 이 uuid 오류를 냈고 그날 판정이 통째로 사라졌다(3번 중 2번).
+            #   DB 에 보내기 전에 거절로 돌려준다 — 모델이 읽고 find_place 결과의 번호를 다시 옮긴다
+            if "place_uid" in args:
+                try:
+                    UUID(str(args["place_uid"]))
+                except ValueError:
+                    raise ToolRefused(f"place_uid 형식이 아니다: {args['place_uid']!r} — find_place 결과의 place_uid 를 그대로 옮긴다") from None
             result = _plain(getattr(self, f"_{name}")(**args))
         except ToolRefused as exc:
             self.refused.append({"tool": name, "args": args, "why": str(exc)})
@@ -171,6 +192,9 @@ class DiningTools:
         near = (float(lat), float(lng)) if lat is not None and lng is not None else None
         with self.connect() as conn:
             found = find_place_by_name(conn, name, near=near)
+            if found is None and near is not None:
+                # ★`[2026-10-15]` 「광화문 미진」 — 원장은 「미진」. 이름 단계가 못 맞추면 준 좌표(그 항목 장소) 100m 안에서 이름 안의 원장 가게를 본다
+                found = find_place_inside_name(conn, name, near)
             if found is not None:
                 return {"found": True, "source": "ledger", "place_uid": found.get("dining_place_uid"),
                         "name": found["matched_title"], "address": found.get("address"),

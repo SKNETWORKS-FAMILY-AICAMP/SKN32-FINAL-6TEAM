@@ -50,7 +50,7 @@ def _modes(monkeypatch, order_mode):
         monkeypatch.setattr(module, "kind_mode", lambda kind, _m=None: kind_mode(kind, modes))
 
 
-def _run(monkeypatch, llm, *, mode="llm", survey=SURVEY, text="아이랑 갈 만한 데로 바꿔 주세요"):
+def _run(monkeypatch, llm, *, mode="llm", survey=SURVEY, text="아이랑 갈 만한 데로 바꿔 주세요", extra_state=None):
     _modes(monkeypatch, mode)
     values = {"read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": TUESDAY,
                                "party_size": 2, "capacity": 4},
@@ -58,7 +58,7 @@ def _run(monkeypatch, llm, *, mode="llm", survey=SURVEY, text="아이랑 갈 만
               "read.place_hours": _hours({**WEEK, "tue": "closed"}), "read.place_candidates": POOL}
     team = ActivityTeam(FakeTools(values))
     team.judge_llm, team.judge_runner = llm, Inline()
-    state = {"survey": survey} if survey else None
+    state = {**({"survey": survey} if survey else {}), **(extra_state or {})} or None
     context = pack("activity", scope=["activity"], state=state)
     result = asyncio.run(team.execute(task("activity", "activity.check_feasible", context, ALLOWED, input_text=text)))
     alternatives = result.decisions[0]["alternatives"]
@@ -114,6 +114,57 @@ def test_preference_inputs_need_a_clue():
     assert alternative_order.preference_inputs({"pace": "relaxed", "domestic": True}, "") is None   # 취향과 무관한 칸뿐
     picked = alternative_order.preference_inputs({"theme": "힐링", "priority_details": {"activity": ["힐링"]}}, None)
     assert picked == {"survey": {"theme": "힐링", "activity_details": ["힐링"]}, "customer_text": None}
+
+
+def test_priority_is_not_a_taste_and_is_not_sent():
+    """`[2026-10-20]` 우선순위는 후보를 뽑는 범위다 — LLM 에 넘기지 않고, 그것만 있으면 단서 없음(부르지 않음)."""
+    assert alternative_order.preference_inputs({"priority": ["mobility"]}, None) is None
+    picked = alternative_order.preference_inputs({"priority": ["activity"], "theme": "자연"}, "바꿔 주세요")
+    assert picked["survey"] == {"theme": "자연"}
+
+
+def test_the_llm_does_not_see_the_priority(monkeypatch):
+    llm = OrderLLM({"order": ["a", "b"], "used_preference": False, "reason": ""})
+    _run(monkeypatch, llm)
+    assert "priority" not in llm.calls[0]["payload"]["preference"]["survey"]
+
+
+# ── `[2026-10-19]` 감시 루프가 연 Case — 제목(시스템 문구)을 고객 문장으로 넘기지 않는다 ──────────────────
+
+WATCH = {"trigger_source": alternative_order.WATCH_TRIGGER}
+WATCH_SUBJECT = "[감시] 경복궁 — closure"
+
+
+def test_a_watch_case_sends_the_survey_but_not_its_system_subject(monkeypatch):
+    llm = OrderLLM({"order": ["b", "a"], "used_preference": True, "reason": "아이와 함께라 체험이 있는 덕수궁을 먼저 보여 드려요"})
+    _, alternatives, titles = _run(monkeypatch, llm, text=WATCH_SUBJECT, extra_state=WATCH)
+
+    sent = llm.calls[0]["payload"]["preference"]
+    assert sent["customer_text"] is None and sent["survey"]["theme"] == "체험"
+    assert "[감시]" not in str(llm.calls[0]["payload"])
+    assert titles == ["덕수궁", "창덕궁"] and alternatives["order"]["by"] == "llm"
+
+
+def test_a_watch_case_without_survey_does_not_call_the_llm(monkeypatch):
+    llm = OrderLLM({"order": ["b", "a"], "used_preference": True, "reason": "x"})
+    _, alternatives, titles = _run(monkeypatch, llm, survey=None, text=WATCH_SUBJECT, extra_state=WATCH)
+
+    assert llm.calls == [] and titles == CODE_ORDER and "order" not in alternatives     # 전에는 시스템 문구 때문에 불렀다
+
+
+def test_a_watch_case_sends_only_what_the_customer_answered(monkeypatch):
+    llm = OrderLLM({"order": ["a", "b"], "used_preference": False, "reason": ""})
+    text = f"원래 요청: {WATCH_SUBJECT}\n추가 답변: 아이랑 실내가 좋아요"
+    _run(monkeypatch, llm, survey=None, text=text, extra_state={**WATCH, "customer_input": "아이랑 실내가 좋아요"})
+
+    assert llm.calls[0]["payload"]["preference"]["customer_text"] == "아이랑 실내가 좋아요"
+
+
+def test_customer_words_keeps_customer_cases_as_they_are():
+    assert alternative_order.customer_words("비 와서 실내로 바꿔 주세요", {}) == "비 와서 실내로 바꿔 주세요"
+    assert alternative_order.customer_words("비 와서 실내로", {"customer_input": "아이도 있어요"}) == "비 와서 실내로"
+    assert alternative_order.customer_words(WATCH_SUBJECT, WATCH) is None
+    assert alternative_order.customer_words(WATCH_SUBJECT, {**WATCH, "customer_input": {"choice": 1}}) is None
 
 
 # ── `[2026-10-13 사용자 결정 A안]` 3곳 → 3곳 순서만 ─────────────────────────────────────
@@ -176,3 +227,65 @@ def test_the_same_order_needs_no_reason(monkeypatch):
     _, _, shown_code, _ = _run_six(monkeypatch, OrderLLM({"order": [], "used_preference": False, "reason": ""}))
     _, alt, shown, _ = _run_six(monkeypatch, OrderLLM({"order": shown_code, "used_preference": False, "reason": ""}))
     assert shown == shown_code and alt["order"]["by"] == "llm" and alt["order"]["reason"] is None
+
+
+# ── `[2026-10-20 실험 E1]` 분류 이름 — 코드만 주면 모델이 뜻을 짐작했다 ─────────────────────────────
+
+def test_class_names_come_from_the_kto_table_and_are_opt_in():
+    assert alternative_order.class_path("HS010100") == "역사관광 > 역사유적지 > 고궁"
+    assert alternative_order.class_path("VE010100") == "문화관광 > 랜드마크관광 > 건물"      # 팔각정 — 궁궐이 아니다
+    assert alternative_order.class_path(None) is None and alternative_order.class_path("ZZ000000") is None
+    pool = [{"contentid": "a", "title": "팔각정", "reason": "0.1km", "distance_km": 0.1}]
+    plain = alternative_order.candidate_rows(pool, {"a": "VE010100"})
+    named = alternative_order.candidate_rows(pool, {"a": "VE010100"}, with_class_name=True)
+    assert "class_name" not in plain[0]                                                  # 운영은 아직 끔(v2)
+    assert named[0]["class_name"] == "문화관광 > 랜드마크관광 > 건물" and named[0]["class"] == "VE010100"
+
+
+def test_production_sends_class_names_with_prompt_v3(monkeypatch):
+    """`[2026-10-20]` holdout-2 판정 뒤 운영 경로가 분류 이름을 싣는다 — 지시문 v3 가 그 칸을 읽는다."""
+    llm = OrderLLM({"order": ["a", "b"], "used_preference": False, "reason": ""})
+    _run(monkeypatch, llm)
+    assert all("class_name" in c for c in llm.calls[0]["payload"]["candidates"])
+    from app.domains.travel_ops.instances.activity.judge.llm import file_instructions
+
+    assert "class_name" in file_instructions(alternative_order.KIND)            # 가장 높은 판(v3)이 그 칸을 설명한다
+
+
+# ── `[2026-10-20]` 이유 문장 지킴이 — 확인할 수 없는 말 · 「A 아니면 B」 거꾸로 읽기 · 장소 번호 ──────────────────
+
+def _guarded(reason, text):
+    pool = [{"contentid": "a", "title": "은평역사한옥박물관"}, {"contentid": "b", "title": "진관사"}]
+    out = alternative_order.apply(pool, {"order": ["a", "b"], "used_preference": True, "reason": reason},
+                                  customer_text=text, classes={"a": "VE070100", "b": "HS030100"})
+    return out[1]["reason"], out[1]["reason_guard"], [c["contentid"] for c in out[0]]
+
+
+def test_reason_guard_replaces_unverifiable_claims_but_keeps_the_order():
+    reason, why, order = _guarded("조용한 실내에 맞게 박물관을 1순위로 했어요.", "조용한 실내로 부탁해요")
+    assert why == "unverifiable" and "조용" not in reason and order == ["a", "b"]
+    assert reason == "‘은평역사한옥박물관’(박물관)을 먼저 보여 드려요."     # 요청에 맞는지 주장하지 않는다(holdout-3 K-51)
+
+
+def test_reason_guard_catches_a_reversed_either_or_and_content_ids():
+    assert _guarded("박물관 후보는 1순위를 피했어요.", "박물관 아니면 전시 같은 거")[1] == "reversed_either"
+    assert _guarded("박물관 말고 다른 곳을 먼저 두었어요.", "박물관 말고 전시")[1] is None     # 고객이 정말 거부했다
+    assert _guarded("3080519 를 1순위로 했어요.", "실내")[1] == "content_id"
+    # 구어 「A 아님 B」(holdout-4 M-63) — 「대신」 · 고객 말을 「아님」으로 되받는 것도 거꾸로 읽은 것이다
+    assert _guarded("박물관 2곳 대신 진관사를 1순위로 했어요.", "박물관 아님 전시로")[1] == "reversed_either"
+    assert _guarded("고객이 ‘박물관 아님’이라 하셔서 진관사부터 보여 드려요.", "박물관 아님 전시로")[1] == "reversed_either"
+    assert _guarded("박물관 말고 다른 곳을 먼저 두었어요.", "박물관 아님")[1] is None     # 문장 끝 「아님」은 거부일 수 있다
+
+
+def test_reason_guard_replaces_reasons_that_are_not_polite():
+    # holdout-4 사람 메모 — 고객 화면에 반말 · 끊긴 문장이 나갔다
+    for reason in ("역사유적지인 장소를 1순위로 올렸어.", "요청에 따라 진관사부터 제시했다.", "박물관을 1순위로."):
+        assert _guarded(reason, "실내로")[1] == "not_polite"
+    for reason in ("박물관이 먼저예요(문화관광 > 전시시설 > 박물관).", "박물관을 먼저 보여 드립니다.", "박물관을 1순위로 했어요"):
+        assert _guarded(reason, "실내로")[1] is None
+
+
+def test_reason_guard_leaves_grounded_reasons_alone():
+    reason, why, _ = _guarded("실내를 원하셔서 전시시설인 박물관을 먼저 보여 드려요.", "실내로 바꿔 주세요")
+    assert why is None and reason.startswith("실내를 원하셔서")
+    assert alternative_order._particle("무인비행장치(드론)") == "을" and alternative_order._particle("놀이터") == "를"

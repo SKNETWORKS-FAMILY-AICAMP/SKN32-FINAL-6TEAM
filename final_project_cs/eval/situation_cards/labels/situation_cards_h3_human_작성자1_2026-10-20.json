@@ -1,0 +1,364 @@
+{
+ "bundle": "situation_cards_h3",
+ "subset": null,
+ "reviewer": "작성자1",
+ "reviewed_on": "2026-10-20",
+ "sheet": "라벨_작성자1_h3.csv",
+ "saw_ai_labels": false,
+ "n": 40,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "labels": {
+  "K-01": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-03": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-05": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-07": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-09": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-11": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-13": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-14": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "K-16": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": ""
+  },
+  "K-18": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-20": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "K-22": {
+   "acceptable": [],
+   "forbidden": [
+    "1",
+    "3"
+   ],
+   "no_fit": true,
+   "note": ""
+  },
+  "K-24": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-26": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-28": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-30": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-32": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-34": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-36": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "K-38": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-40": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-41": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [
+    "2"
+   ],
+   "note": ""
+  },
+  "K-43": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": ""
+  },
+  "K-45": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": ""
+  },
+  "K-47": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-49": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": ""
+  },
+  "K-51": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": ""
+  },
+  "K-53": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": ""
+  },
+  "K-54": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "K-56": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-58": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-61": {
+   "acceptable": [
+    "1"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-65": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "가격 정보 확인 불가"
+  },
+  "K-67": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "후기 정보 확인 불가"
+  },
+  "K-69": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "무료 정보 확인 불가"
+  },
+  "K-71": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "SNS 정보 확인 불가"
+  },
+  "K-73": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "인파 정보 확인 불가"
+  },
+  "K-75": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "휠체어 가능 정보 확인 불가"
+  },
+  "K-76": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "K-78": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  }
+ }
+}

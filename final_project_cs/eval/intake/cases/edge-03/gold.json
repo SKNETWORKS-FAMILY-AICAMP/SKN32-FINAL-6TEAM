@@ -1,0 +1,45 @@
+{
+ "case_id": "edge-03",
+ "format": "edge",
+ "defect": "c3_kakao_export",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "[민지] [오후 3:12] 우리 10월 20일에 경복궁 10시 어때\n[준호] [오후 3:13] 좋아 점심은 광장시장\n[민지] [오후 3:14] 저녁 7시엔 N서울타워 가자"
+  }
+ ],
+ "lines": [
+  "[민지] [오후 3:12] 우리 10월 20일에 경복궁 10시 어때",
+  "[준호] [오후 3:13] 좋아 점심은 광장시장",
+  "[민지] [오후 3:14] 저녁 7시엔 N서울타워 가자"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": "10:00",
+   "title": "경복궁",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": null,
+   "title": "광장시장",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "19:00",
+   "title": "N서울타워",
+   "place": "N서울타워",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [],
+ "why": "카톡 대화 내보내기 — 메시지 보낸 시각(오후 3:12)을 일정 시각으로 읽는다"
+}

@@ -69,6 +69,16 @@ PROFILE = os.path.join(DINING_DATA, "_build", "catchtable_profile")
 #: 한 걸음마다 기다리는 상한. 넘으면 모름으로 끝낸다. 매달리지 않는다.
 STEP_MS = 15000
 
+#: 매장 웨이팅 줄의 머리. 이 다음 줄이 상태다.
+#: `[2026-10-19 실측]` 화면이 「매장 식사」에서 「매장 내 취식」으로 바뀌었다(런던베이글뮤지엄 안국).
+#: 둘 다 받는다 — 옛 말이 돌아와도 읽는다. 그 밖의 줄은 머리로 보지 않는다.
+STORE_HEADS = ("매장 식사", "매장 내 취식")
+
+#: 검색칸 자리(1280×720 창 기준, 홈 맨 위 가운데). `[2026-10-19 실측]` 검색칸이 placeholder 를 가진
+#: 입력칸이 아니라 글자가 돌아가는 단추가 됐다 — 글자로도 placeholder 로도 잡히지 않아 자리를 누른다.
+#: 누르면 검색 화면(/ct/search/total)으로 넘어가고 거기서 진짜 입력칸이 새로 뜬다.
+SEARCH_AT = (615, 28)
+
 
 def guard(args) -> str | None:
     """켜져 있는가. 꺼져 있으면 왜 안 도는지 한 줄로 돌려준다."""
@@ -97,7 +107,7 @@ def parse_waiting(text: str) -> dict | None:
     """
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     for i, line in enumerate(lines):
-        if line != "매장 식사":
+        if line not in STORE_HEADS:
             continue
         if i + 1 >= len(lines):
             return None
@@ -108,6 +118,12 @@ def parse_waiting(text: str) -> dict | None:
         if got and "이상" not in status:
             return {"state": "yes", "num": int(got.group(1)), "detail": status[:120]}
         return None
+    # `[2026-10-19 실측]` 결과에서 매장 페이지 대신 지도 위 미리보기 카드가 열리기도 한다. 거기는 「현재 대기 26팀」 한 줄이다.
+    # 이 문구는 매장 대기열에만 쓰여 하단 「2팀 이상부터」 같은 줄과 섞이지 않는다. 숫자가 있어야만 읽는다.
+    for line in lines:
+        got = re.fullmatch(r"현재\s*대기\s*(\d+)\s*팀", line)
+        if got:
+            return {"state": "yes" if int(got.group(1)) > 0 else "no", "num": int(got.group(1)), "detail": line[:120]}
     return None
 
 
@@ -122,8 +138,29 @@ def parse_hours(text: str) -> dict | None:
     return {"state": "unknown", "detail": " / ".join(hours)[:200]}
 
 
-def read_one(place_name: str, show: bool) -> dict:
-    """한 곳을 읽는다. 돌려주는 것은 {url, seen} 이며 판단은 하지 않는다."""
+def dismiss_popups(page) -> None:
+    """광고 팝업을 닫는다. `[2026-10-19 실측]` 홈(「스시로드 OPEN」)과 검색 결과(「블루리본 맛집」)에
+    팝업이 떠서 화면을 덮었고, 그 아래 검색칸 · 결과를 누르지 못해 시간 초과 → 모름으로 끝났다.
+    「닫기」만 누른다. 「다시 보지 않기」 · 「확인하기」 같은 다른 단추는 누르지 않는다."""
+    import re as _re
+    for _ in range(3):
+        for loc in (page.get_by_role("button", name=_re.compile("닫기|close", _re.I)),
+                    page.get_by_text("닫기", exact=True)):
+            if loc.count() and loc.first.is_visible():
+                loc.first.click()
+                page.wait_for_timeout(700)
+                break
+        else:
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(500)
+            return
+
+
+def read_one(place_name: str, show: bool, with_hours: bool = False) -> dict:
+    """한 곳을 읽는다. 돌려주는 것은 {url, seen} 이며 판단은 하지 않는다.
+
+    `[2026-10-19 사용자 지시]` 기본은 **웨이팅만** 읽고 끝낸다 — 웨이팅이 보이면(지도 미리보기 카드든 매장 페이지든) 더 들어가지 않고,
+    매장정보(영업시간) 페이지도 들르지 않는다. 영업시간은 원장이 정본이다. 필요하면 `with_hours` 로 예전처럼 읽는다."""
     from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
     seen: dict[str, dict] = {}
@@ -137,22 +174,44 @@ def read_one(place_name: str, show: bool) -> dict:
         page.set_default_timeout(STEP_MS)
         try:
             # 1  홈. /ct/search?keyword= 는 껍데기만 오는 죽은 경로라 쓰지 않는다.
-            page.goto(HOME, wait_until="domcontentloaded")
+            page.goto(HOME, wait_until="networkidle")
+            page.wait_for_timeout(2000)            # 팝업은 다 그려진 뒤에 늦게 뜬다 — 일찍 닫으면 뒤에 떠서 검색칸을 가린다
+            dismiss_popups(page)
 
             # 2  검색창에 상호를 친다. 사람이 하던 것과 같은 길이다.
-            # 검색칸을 누르면 검색 화면으로 넘어가며 칸이 새로 그려진다.
-            # 누른 요소에 fill 하면 이미 떨어진 요소라 시간 초과가 난다.
-            # 그래서 누른 뒤에는 포커스를 가진 곳에 키보드로 친다.
-            page.get_by_placeholder(re.compile("검색")).first.click()
-            page.wait_for_timeout(1500)
-            page.keyboard.type(place_name, delay=60)
+            # 검색칸을 누르면 검색 화면으로 넘어가며 입력칸이 새로 그려진다.
+            # 그 입력칸이 보일 때까지 기다렸다가 친다 — 일찍 치면 글자가 사라진다(2026-10-19 실측).
+            # 팝업이 늦게 떠서 누른 자리를 가로채면 검색 화면으로 안 넘어간다 — 확인하고 닫고 다시 누른다(최대 3번)
+            for _ in range(3):
+                page.mouse.click(*SEARCH_AT)
+                page.wait_for_timeout(1500)
+                if "/ct/search" in page.url:
+                    break
+                dismiss_popups(page)
+            box = page.locator("input:visible").first
+            box.wait_for(state="visible")
+            page.wait_for_timeout(1000)
+            box.click()
+            box.fill(place_name)
             page.keyboard.press("Enter")
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(3500)
+            dismiss_popups(page)
 
             # 3  결과에서 그 이름을 고른다. 없으면 여기서 끝이다.
-            hit = page.get_by_text(place_name, exact=False).first
-            hit.click()
-            page.wait_for_timeout(3000)
+            # `[2026-10-19 실측]` 결과 화면은 지도 위 핀 이름표에도 같은 이름이 있다 — 그걸 누르면 매장 페이지로 안 간다.
+            # 누른 뒤 매장 페이지(/ct/shop/)가 아니면 다음 같은 이름을 누른다(최대 4곳). 끝내 못 가면 아래에서 모름이다.
+            hits = page.get_by_text(place_name, exact=False)
+            for i in range(min(hits.count(), 4)):
+                hit = hits.nth(i)
+                if not hit.is_visible():
+                    continue
+                hit.click()
+                page.wait_for_timeout(3000)
+                # 누른 곳에 웨이팅이 보이면 거기서 끝 — 지도 미리보기 카드의 「현재 대기 N팀」도 같은 값이다
+                waiting = parse_waiting(page.inner_text("body"))
+                if waiting or "/ct/shop/" in page.url:
+                    break
+                dismiss_popups(page)
             url = page.url
 
             waiting = parse_waiting(page.inner_text("body"))
@@ -160,8 +219,8 @@ def read_one(place_name: str, show: bool) -> dict:
                 seen["waiting"] = waiting
             # 못 읽었으면 아무것도 적지 않는다. 빈 칸이 모름이다.
 
-            # 4  매장정보. 요일별 영업시간과 라스트오더가 여기에 있다.
-            if "/ct/shop/" in url:
+            # 4  매장정보. 요일별 영업시간과 라스트오더가 여기에 있다. 기본은 건너뛴다(웨이팅만 빠르게).
+            if with_hours and "/ct/shop/" in url:
                 info = url.split("?")[0].rstrip("/") + "/info"
                 page.goto(info, wait_until="domcontentloaded")
                 page.wait_for_timeout(2500)
@@ -206,6 +265,7 @@ def main() -> int:
     ap.add_argument("--i-know", action="store_true",
                     help="robots.txt 를 알고도 켠다")
     ap.add_argument("--show", action="store_true", help="창을 보이게")
+    ap.add_argument("--with-hours", action="store_true", help="매장정보 페이지의 영업시간도 읽는다(느리다 · 기본은 웨이팅만)")
     ap.add_argument("--login", action="store_true", help="한 번만. 사람이 로그인")
     args = ap.parse_args()
 
@@ -230,7 +290,10 @@ def main() -> int:
         return 1
 
     print(f"{args.place} — 한 곳만 읽는다")
-    got = read_one(args.place, args.show)
+    import time as _time
+    started = _time.monotonic()
+    got = read_one(args.place, args.show, args.with_hours)
+    print(f"  읽는 데 {_time.monotonic() - started:.1f}초")
     seen = got["seen"]
 
     if not seen:

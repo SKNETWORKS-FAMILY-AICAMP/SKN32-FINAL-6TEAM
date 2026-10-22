@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""장소 이름 찾기 — 우리 카탈로그 → (없으면) 카카오로 **존재만** 확인. `read.place_lookup` 의 본체.
+"""장소 이름 찾기 — 우리 활동 원장 → (없으면) 카카오로 **존재만** 확인. `read.place_lookup` 의 본체.
 
-    ① `place_catalog` 에서 이름 조회(`db_search/place_by_name.py`)
+    ① 활동 원장(`activity.ac_place`)에서 이름 조회(`db_search/place_by_name.py`)
          found · ambiguous → 그대로 돌려준다
          not_found         → ②
     ② 카카오 키워드 검색 — 실재하는지만 본다
@@ -25,9 +25,12 @@ from .db_search.place_by_name import find_place_by_name
 
 
 def lookup_place(connection_factory: Callable[[], Any], tenant_id: str, name: str | None,
-                 kakao: Any | None) -> dict[str, Any]:
-    """항상 `status` 가 있는 dict. `status`: found · ambiguous · exists_unregistered · not_found · unknown."""
-    found = find_place_by_name(connection_factory, tenant_id, name)
+                 kakao: Any | None, *, fuzzy: bool = False) -> dict[str, Any]:
+    """항상 `status` 가 있는 dict. `status`: found · ambiguous · exists_unregistered · not_found · unknown.
+
+    `fuzzy=True` 면 원장 조회가 어순 · 오타로도 찾는다(결과에 `needs_review` · `match`). 기본은 꺼짐.
+    """
+    found = find_place_by_name(connection_factory, tenant_id, name, fuzzy=fuzzy)
     if found["status"] != "not_found" or found.get("reason") == "name_too_short":
         return found
 

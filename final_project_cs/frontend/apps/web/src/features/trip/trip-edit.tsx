@@ -87,7 +87,7 @@ export function TripEdit({ trip, pick = null, onExit }: { trip: Trip;
   const previewed = useMemo(() => server.preview?.review ? reviewResultOf(server.preview, readingOf(server.preview), server.infos) : null, [server.preview, server.infos]);
   const result = useMemo(() => reviewed && withTrip({ ...reviewed, dirty: server.dirty, rechecking: server.rechecking }, trip, frozen ?? [], reasons), [reviewed, server.dirty, server.rechecking, trip, frozen, reasons]);
   const preview = useMemo(() => previewed && withTrip({ ...previewed, dirty: false, rechecking: null }, trip, frozen ?? [], reasons), [previewed, trip, frozen, reasons]);
-  // The lines between the stops for the plan being edited (the intake's `route-shapes`), as on the plan check; none on a failure.
+  // The lines between the stops for the plan being edited (the intake's `route-shapes`), as on the plan check; failures are shown with a retry, while an older API (404) is unsupported.
   // The trip's stop is a stop of the edit under the edit's own id (`0-<n>`): found through the stop each line was opened from (`evidence.item_id`).
   const data = query.data;
   const start = useMemo(() => pick && data?.review ? openingOf(pick, data) : null, [pick, data]);

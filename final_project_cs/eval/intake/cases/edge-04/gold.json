@@ -1,0 +1,46 @@
+{
+ "case_id": "edge-04",
+ "format": "edge",
+ "defect": "c4_markdown",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "## Day 1 (10/20)\n- **오전 9:30** 경복궁 🏯\n- **12:30** 토속촌삼계탕 🍲\n- **15:00** 북촌한옥마을"
+  }
+ ],
+ "lines": [
+  "## Day 1 (10/20)",
+  "- **오전 9:30** 경복궁 🏯",
+  "- **12:30** 토속촌삼계탕 🍲",
+  "- **15:00** 북촌한옥마을"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": "09:30",
+   "title": "경복궁",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "15:00",
+   "title": "북촌한옥마을",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [],
+ "why": "AI 답변 마크다운 — 굵게 기호(**)와 이모지가 제목에 남는다"
+}

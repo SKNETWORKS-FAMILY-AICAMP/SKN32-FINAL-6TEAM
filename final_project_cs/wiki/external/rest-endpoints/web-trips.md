@@ -113,6 +113,24 @@ domain: travel
 - 값: 관리 콘솔 「운영 설정」 의 스위치 `travel.trip_screen.now_label_enabled`(운영자가 바꾼 값이 먼저) → 없거나 못 읽으면 가드레일 `travel.trip_screen.now_label_enabled`(기본 `true`). 참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 `settings_hook.trip_now_label_enabled(tenant)` 하나.
 - 웹: 이 칸이 없는 응답(이 칸을 만들기 전 서버)은 켜짐으로 본다 — 사용자가 정한 기본값이다.
 
+### 여행 화면 위험 점검 칸 — 여행 조회의 `risk_panel` `[2026-10-22 사용자 지시]`
+
+`[2026-10-22 사용자 지시]` 여행 화면 일정 목록 위의 위험 점검 칸(「현재 점검 대상 일정이 없어요」 · 「지금부터 n시간 이내 대상 · n개 점검」 · 「확인 HH:MM」 · 「다시 확인」, 2026-10-19 매니저 `faabcd92` 에서 들어옴)은 3분 점검 · 재난 경고가 실제로 반영되는지 시험 중에 보려고 둔 칸이다. 보일지를 운영자가 정한다 — **기본 켜짐**, 배포 · 시연 때 관리 콘솔에서 끈다.
+
+**여행 조회의 `risk_panel`**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}` — 여행을 돌려주는 응답 모두, 맨 위 칸) — `true` 면 화면이 일정 목록 위에 점검 칸을 보이고, `false` 면 그 칸만 숨긴다.
+- 끄더라도 그대로인 것: 위험 점검 `GET /v1/web/trips/{id}/risks`(3분마다 다시 읽기) · 머리의 종 「위험 n」 표시 · 위험 알림 막대(「위험·대안 보기」) · 알림 센터 「주의」 탭의 점검 결과와 「실내 대안 보기」 · 계획 확인 화면(등록 전)의 점검 칸. 이 값은 표시만 정하고 점검 · 알림 · 판정에는 닿지 않는다.
+- 값: 관리 콘솔 「운영 설정」 의 스위치 `travel.trip_screen.risk_panel_enabled`(운영자가 바꾼 값이 먼저) → 없거나 못 읽으면 가드레일 `travel.trip_screen.risk_panel_enabled`(기본 `true`). 참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 `settings_hook.trip_risk_panel_enabled(tenant)` 하나.
+- 웹: 이 칸이 없는 응답(이 칸을 만들기 전 서버)은 켜짐으로 본다 — 지금까지의 동작 그대로다.
+
+### 식당 카드의 캐치테이블 시험 값 — 여행 조회 항목의 `trial_live` `[2026-10-19 사용자 지시]`
+
+제휴 전제 시험 구현(`scripts/dining/catchtable.py`)이 읽어 적은 웨이팅 · 빈자리를 등록 여행 화면의 식당 카드에 한 줄로 보인다. **화면 표시뿐** — 판정 · 재계획 · 알림은 이 값을 보지 않는다(본 갈래 `v_live_check_fresh` 는 시험 출처를 그대로 뺀다). 계획: [2026-10-16 계획](../../records/plans/2026-10-16_catchtable_trial_live_card.md).
+
+**항목의 `trial_live`**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}` — `kind: "dining"` 항목에만) — `[{"topic": "waiting"|"vacancy", "state": "yes"|"no", "num": 41|null, "detail": "현재 웨이팅 41팀"|null, "asked_at": "…+09:00", "source": "catchtable_trial"}]`, 주제마다 가장 최근 하나(웨이팅 → 빈자리 순).
+- 실리는 조건: `[2026-10-19 사용자 결정]` **곧 갈 식사만** — 식사 시작 1시간 전부터 시작 시각 전까지(`ledger.trial_due`, 사람이 1시간 전 · 30분 전에 한 번씩 읽는다). 그리고 관리 콘솔 스위치 `travel.dining.trial_live_view_enabled`(운영자 값이 먼저 → 가드레일, **기본 `false`**)가 켜졌고, 장소가 원장과 이어져 있고(`dining_place_uid` 또는 그 테넌트의 `dn_core_place_link`), `[2026-10-19 사용자 결정]` **최근 30분 안에 읽은** 값이 있을 때 — 주제마다 가장 최근 읽기가 `outcome='ok'` · `yes`/`no` 여야 한다(가장 최근이 실패면 그 전 값을 꺼내지 않는다). DB 기한(빈자리 · 웨이팅 5분)은 그대로 두고 보여 주기만 30분이다(`ledger.TRIAL_SHOW`) — 읽은 시각을 늘 함께 보인다. 하나라도 아니면 **칸 자체가 없다**.
+- 화면을 열어도 조회하지 않는다 — 사람이 다리로 적은 값만 읽는다(robots.txt). 읽는 곳은 `ledger.trial_live` 하나.
+- 웹: 「웨이팅 41팀 · 예약 가능한 시간 있음 · 3분 전 확인」 + 「제휴 전제 시험」 표시를 카드 머리의 사실 줄에 보인다. 모양이 다른 줄은 버린다(`gateway.trialLive`).
+
 ## 관계
 
 - [REST 안내](index.md) — 계약 지도

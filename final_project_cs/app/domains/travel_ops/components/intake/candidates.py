@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import logging
 import math
+import unicodedata
 from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 
@@ -29,8 +30,8 @@ from .hours import _tenants, facts_for
 from . import lodging_context as stay_context
 from .moves import leg_between, late_text
 from .terms import category_label
-from .places import distance_m, normalize_full
-from .review import (KST, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _PerLeg, _line, _worst, default_engine, public_place)
+from .places import MEAL_WORDS, distance_m, normalize_full
+from .review import (KST, SOURCE_DEFAULT, SOURCE_LABEL, _Budgeted, _dt, _hours_lines, _PerLeg, _line, _worst, default_engine, public_place)
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +40,12 @@ POOL_EXTRA = 2               #: 최종 셋을 고르기 전에 이동 계산기�
 SEARCH_LIMIT = 8
 SEARCH_POOL = 40             #: 검색 결과 중 일정에 맞는지 판정해 순위에 반영하는 수(이름 일치 · 가까운 순으로 고른 앞 40곳)
 RADIUS_M = 3000              #: 같은 종류 후보를 찾는 반경 — `catalog_pool` 이 바꾸기 후보에 쓰는 3km 와 같다
+#: 끼니 식사 후보에서 빼는 종류 말 — 카카오 분류(「음식점 > 카페 > …」 · 「음식점 > 간식 > 제과,베이커리」) · 요식 원장 요리 갈래(「카페디저트」)
+#: ★`[2026-10-18 사용자 지시]` 카페 · 디저트는 끼니 식사 후보가 아니다 — 실측(테스트 서버): 「점심」에 디저트카페 · 「저녁」에 카페가 들어갔다.
+#:   「떡」은 넣지 않는다(떡볶이가 걸린다). 카페 · 디저트를 가는 일정(「카페」 · 「디저트」)이면 거르지 않는다(`is_meal_line`)
+NOT_A_MEAL_WORDS = ("카페", "디저트", "제과", "베이커리", "아이스크림", "간식")
+#: 끼니 시간대(분) — 아침 06:00–10:30 · 점심 11:00–14:30 · 저녁 17:00–21:30. ★우리가 고른 값 — 끼니 단서가 하나도 없는 식사 일정에만 쓴다(`is_meal_line` ④)
+MEAL_HOURS = ((360, 630), (660, 870), (1020, 1290))
 #: 후보 하나를 판정하는 데 이동 계산기를 쓰는 시간 상한(초) — 넘으면 남은 구간은 어림값
 ENGINE_BUDGET_S = 12.0
 
@@ -61,8 +68,11 @@ def neighbours(items: list[dict[str, Any]], item: dict[str, Any]) -> tuple[dict[
 
 
 def area_of(item: dict[str, Any]) -> dict[str, Any] | None:
-    """이름 없는 줄이 가리키는 지역(`{name, kind, latitude, longitude, radius_m}`) — 없으면 None."""
-    return ((item.get("parts") or {}).get("area")) or None
+    """이름 없는 줄이 가리키는 지역(`{name, kind, latitude, longitude, radius_m}`) — 없으면 None.
+
+    `[2026-10-19 사용자 지시]` 이름 없는 줄의 지역이 없으면 「장소 + 식사」 줄의 **기준 장소**(`near_area` — 「광장시장 점심」의 광장시장)를 쓴다.
+    전에는 그런 줄의 대안 중심이 앞뒤 일정의 가운데라, 광장시장 점심의 대안이 북촌 식당이 됐다(오라클 서버 실측)."""
+    return ((item.get("parts") or {}).get("area")) or item.get("near_area") or None
 
 
 def reference(item: dict[str, Any], prev: dict[str, Any] | None, nxt: dict[str, Any] | None) -> tuple[float, float] | None:
@@ -279,6 +289,46 @@ def _team_places(conn, tenant_id: str, item: dict[str, Any], current: dict[str, 
             for rank, alt in enumerate(got["alternatives"])]
 
 
+def is_meal_line(item: dict[str, Any]) -> bool:
+    """끼니(밥) 일정인가 — 카페 · 디저트를 가는 일정이면 아니다. 끼니를 모르면 아니다(모르는 것을 가정하지 않는다).
+    끼니로 보는 것: ①끼니 말(아침 · 점심 · 저녁 · 식사 — 읽은 칸 `parts.meal` 이나 제목) ②찾는 말이 밥집(「식당」 · 「맛집」 — `parts.label`)
+    ③이미 정한 곳이 음식점(카페 아님). ★`[2026-10-18 실측]` 「18:00 성수 근처 저녁」은 규칙이 끼니 말을 떼어 종류(식사)로만 남겨 ①이 비었다."""
+    if item.get("kind") != "dining":
+        return False
+    title = str(item.get("title") or "")
+    parts = item.get("parts") or {}
+    current = item.get("place") or {}
+    label = str(parts.get("label") or "")
+    if any(word in title or word in label for word in NOT_A_MEAL_WORDS) or (current.get("category") and not_a_meal(current)):
+        return False
+    if parts.get("meal") or any(word in MEAL_WORDS for word in title.replace("·", " ").split()):
+        return True
+    if label or current.get("category"):
+        return True
+    # ④단서가 하나도 없으면(장소를 못 정한 줄은 읽은 칸이 없다) 시각만 본다 — 끼니 시간대의 식사 일정이면 끼니
+    #   ☆실측: 「12:30 보라매공원 근처 점심」이 끼니 말을 잃고 자동 추천에 교회 카페가 들어갔다
+    clock = _minutes(item.get("starts_at"))
+    return clock is not None and any(start <= clock <= end for start, end in MEAL_HOURS)
+
+
+def not_a_meal(place: dict[str, Any]) -> bool:
+    """끼니가 아닌 곳(카페 · 디저트 · 제과 …) — 종류 이름(`category`)으로 본다."""
+    category = str(place.get("category") or "")
+    return any(word in category for word in NOT_A_MEAL_WORDS)
+
+
+def _team_rows(conn, alternatives: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """요식 팀 답 → 후보 장소. 종류 이름에 원장 요리 갈래를 붙인다(「음식점 > 한식」) — 끼니 거르기(`not_a_meal`)가 읽는다."""
+    cuisine = _ledger_details(conn, [str(a["place_uid"]) for a in alternatives if a.get("place_uid")])
+    out = []
+    for rank, alt in enumerate(alternatives):
+        kind_name = (cuisine.get(str(alt.get("place_uid"))) or (None, None))[1]
+        category = category_label("39") + (f" > {kind_name}" if kind_name and kind_name != "미상" else "")
+        out.append({**_place(alt["name"], alt["latitude"], alt["longitude"], "places", kind="dining", address=alt.get("address"),
+                             category=category, place_id=alt["place_id"], ref=f"place:{alt['place_id']}"), "team_rank": rank})
+    return out
+
+
 def _dining_uid(conn, current: dict[str, Any] | None) -> str | None:
     """원래 식당의 요식 원장 번호 — 장소 값에 있으면 그것, 없으면 그 공용 장소 행의 속성에서."""
     if not current:
@@ -322,10 +372,33 @@ def _team_dining_places(conn, tenant_id: str, item: dict[str, Any], current: dic
         return None
     if got is None:
         return None
-    return [{**_place(alt["name"], alt["latitude"], alt["longitude"], "places", kind="dining", address=alt.get("address"),
-                      category=category_label("39"), place_id=alt["place_id"], ref=f"place:{alt['place_id']}"),
-             "team_rank": rank}
-            for rank, alt in enumerate(got["alternatives"])]
+    return _team_rows(conn, got["alternatives"])
+
+
+def _team_dining_near(conn, tenant_id: str, item: dict[str, Any], ref: tuple[float, float] | None, nxt: dict[str, Any] | None,
+                      *, radius_m: int = 2000) -> list[dict[str, Any]] | None:
+    """가게 이름 없는 식사(「점심」 · 「ㅇㅇ 근처 점심」)의 식당 후보를 **요식 팀**(`team_hooks.dining_alternatives.near`)에게 받는다. `[2026-10-18 사용자 지시]`
+    ★원래 식당이 없어 `_team_dining_places` 는 늘 None 이었다 — 그래서 자체 고르기의 지도 채우기가 카페를 식사로 넣었다(실측).
+    기준점은 줄에 적은 지역 · 앞뒤 일정(`reference`). `None` = 팀이 없거나 답하지 못함 · 시각이나 기준점을 모름 — 그때만 자체 고르기."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.components.team_hooks import dining_alternatives
+
+    if get_guardrails().get("travel.candidates.team_first") is False:
+        return None
+    start = _dt(item.get("date"), item.get("starts_at"))
+    if ref is None or start is None:
+        return None
+    end = _dt(item.get("date"), item.get("ends_at")) if item.get("ends_at") else None
+    nplace = (nxt or {}).get("place") or {}
+    next_point = (float(nplace["latitude"]), float(nplace["longitude"])) if nplace.get("latitude") is not None and nplace.get("longitude") is not None else None
+    try:
+        got = dining_alternatives.near(conn, tenant_id, ref, start, end, next_point=next_point, meal=is_meal_line(item), radius_m=radius_m)
+    except Exception:                                     # noqa: BLE001 — 팀이 답하지 못한 것으로 보고 자체 길로 간다
+        log.warning("dining near alternatives failed — falling back to the local candidate picker", exc_info=True)
+        return None
+    if got is None:
+        return None
+    return _team_rows(conn, got["alternatives"])
 
 
 def _district(address: Any) -> str | None:
@@ -449,28 +522,106 @@ def _experience_places(conn, tenant_id: str, ref: tuple[float, float], group: st
     return [{**place, "basis": "similar_experience", "experience": group} for place in _tour_places(cands)]
 
 
-def _ledger_places(conn, tenant_id: str, ref: tuple[float, float], *, limit: int = 15,
-                   query: str | None = None, radius_m: int = 2000) -> list[dict[str, Any]]:
-    """요식 원장에서 올린 식당(공용 장소 행) — 반경 안 가까운 순. 영업 여부는 후보 검사에서 본다."""
-    dlat = radius_m / 111_000
-    dlon = radius_m / (111_000 * max(0.2, math.cos(math.radians(ref[0]))))
+def _normalized_sql(value: str, *, address: bool = False) -> str:
+    base = "lower(normalize(COALESCE(" + value + ", ''), NFKC))"
+    if address:
+        base = "translate(" + base + ", '()[]【】', '')"
+    else:
+        base = "regexp_replace(" + base + r", '[\(\[（【].*?[\)\]）】]', '', 'g')"
+    return "regexp_replace(" + base + ", '[[:space:]·_/-]+', '', 'g')"
+
+
+def _address_key(value: str | None) -> str:
+    """주소는 괄호 기호만 뗀다. 괄호 속 법정동도 명시된 지역 근거다."""
+    text = unicodedata.normalize("NFKC", value or "")
+    return normalize_full(text.translate(str.maketrans("", "", "()[]【】")))
+
+
+def _search_name_key(name: str, branch: str | None) -> str:
+    key, suffix = normalize_full(name), normalize_full(branch or "")
+    # 「본점식당」 본문의 본점은 지점 표시가 아니다. 이름 끝의 표시만 중복하지 않는다.
+    return key + suffix if suffix and not key.endswith(suffix) else key
+
+
+def _branch_order_sql(column: str, name: str, branch: str | None) -> tuple[str, list[str]]:
+    """지점이 명시되면 DB 한도 전에 정확한 지점 이름을 우선한다. 다른 행도 남긴다."""
+    if not branch:
+        return "", []
+    key = _search_name_key(name, branch)
+    escaped = key.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    normalized = _normalized_sql(column)
+    return f"CASE WHEN {normalized} = %s THEN 0 WHEN {normalized} LIKE %s THEN 1 ELSE 2 END, ", [key, escaped + "%"]
+
+
+def _search_area_sql(hint: str | None, area: dict[str, Any] | None, address: str) -> tuple[str, list[Any]]:
+    """검색 결과 한도를 적용하기 전에 Python의 지역 판정과 같은 근거로 거른다."""
+    if not hint:
+        return "", []
+    if area:
+        # distance_m과 같은 지구 반지름을 쓴 구면거리 조건. 반경은 기존 AreaIndex 소유다.
+        return ("AND (POWER(SIN(RADIANS(latitude - %s) / 2), 2) + COS(RADIANS(latitude)) * %s * "
+                "POWER(SIN(RADIANS(longitude - %s) / 2), 2)) <= %s ",
+                [area["latitude"], math.cos(math.radians(area["latitude"])), area["longitude"],
+                 math.sin(area["radius_m"] / (2 * 6_371_000)) ** 2])
+    normalized = _normalized_sql(address, address=True)
+    key = normalize_full(hint)
+    escaped = key.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    pattern = "서울%" if key in ("서울", "서울특별시") else "%" + escaped + "%"
+    return f"AND {normalized} LIKE %s ", [pattern]
+
+
+def _ledger_places(conn, tenant_id: str, ref: tuple[float, float] | None, *, limit: int = 15,
+                   query: str | None = None, radius_m: int | None = 2000, area_hint: str | None = None,
+                   area: dict[str, Any] | None = None, branch_hint: str | None = None) -> list[dict[str, Any]]:
+    """요식 원장 후보. 이름검색(`radius_m=None`)은 서울 전역, 주변 대체 후보는 기존 반경이다."""
+    if radius_m is None:
+        from .pipeline import SEOUL_LAT, SEOUL_LON
+
+        bounds = [*SEOUL_LAT, *SEOUL_LON]
+    elif ref:
+        dlat = radius_m / 111_000
+        dlon = radius_m / (111_000 * max(0.2, math.cos(math.radians(ref[0]))))
+        bounds = [ref[0] - dlat, ref[0] + dlat, ref[1] - dlon, ref[1] + dlon]
+    else:
+        return []
     sql = ("SELECT place_id, name, latitude, longitude, attributes->>'address', attributes->>'dining_place_uid' FROM places "
            "WHERE tenant_id = ANY(%s) AND source_name='dining_ledger' AND trip_scope IS NULL AND kind='dining' "
            "AND latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s ")
-    args: list[Any] = [_tenants(tenant_id), ref[0] - dlat, ref[0] + dlat, ref[1] - dlon, ref[1] + dlon]
+    args: list[Any] = [_tenants(tenant_id), *bounds]
+    order = ""
+    order_args = []
     if query:
+        escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         sql += "AND name ILIKE %s "
-        args.append("%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%")
-    sql += "ORDER BY (latitude - %s)^2 + ((longitude - %s) * %s)^2 LIMIT %s"
-    args += [ref[0], ref[1], math.cos(math.radians(ref[0])), limit * 2]
-    try:
-        with conn.transaction(), conn.cursor() as cur:       # 세이브포인트 — DB 오류가 바깥 트랜잭션을 망가뜨리지 않는다
-            cur.execute(sql, args)
-            rows = cur.fetchall()
-    except Exception as exc:                              # noqa: BLE001 — 원장 열이 없는 DB(시험 · 다른 조립)면 원장 없이
-        if type(exc).__name__ not in ("UndefinedColumn", "UndefinedTable"):
+        args.append("%" + escaped + "%")
+        order = "CASE WHEN name ILIKE %s THEN 0 WHEN name ILIKE %s THEN 1 ELSE 2 END, "
+        order_args += [escaped, escaped + "%"]
+    if ref:
+        order += "(latitude - %s)^2 + ((longitude - %s) * %s)^2"
+        order_args += [ref[0], ref[1], math.cos(math.radians(ref[0]))]
+    else:
+        order += "length(name)"
+    branch_order, branch_args = _branch_order_sql("name", query or "", branch_hint)
+    order, order_args = branch_order + order, branch_args + order_args
+    address = "attributes->>'address'"
+    address_sources = [address]
+    if area_hint and not area:
+        address_sources.insert(0, "COALESCE(NULLIF(" + address + ", ''), (SELECT road_address FROM dining.dn_place "
+                               "WHERE place_uid::text = places.attributes->>'dining_place_uid'))")
+    for address_source in address_sources:
+        area_sql, area_args = _search_area_sql(area_hint, area, address_source)
+        try:
+            with conn.transaction(), conn.cursor() as cur:   # 스키마가 없는 DB도 바깥 트랜잭션을 보존한다
+                cur.execute(sql + area_sql + f"ORDER BY {order} LIMIT %s", [*args, *area_args, *order_args, limit * 2])
+                rows = cur.fetchall()
+            break
+        except Exception as exc:                            # noqa: BLE001
+            missing = type(exc).__name__ in ("UndefinedTable", "UndefinedColumn", "InvalidSchemaName", "InsufficientPrivilege")
+            if missing and address_source != address:
+                continue                                    # 원장 주소를 못 읽으면 places에 명시된 주소만 인정한다
+            if type(exc).__name__ in ("UndefinedColumn", "UndefinedTable"):
+                return []
             raise
-        return []
     out = []
     details = _ledger_details(conn, [uid for *_rest, uid in rows if uid])
     for place_id, name, lat, lon, address, uid in rows:
@@ -501,15 +652,19 @@ def _ledger_details(conn, uids: list[str]) -> dict[str, tuple[str | None, str | 
 
 
 def _db_places_by_name(conn, tenant_id: str, query: str, ref: tuple[float, float] | None, now: datetime,
-                       limit: int = 10) -> list[dict[str, Any]]:
+                       limit: int = 10, *, area_hint: str | None = None,
+                       area: dict[str, Any] | None = None, branch_hint: str | None = None) -> list[dict[str, Any]]:
     """검색어가 이름에 든 관광공사 목록 장소(서울)."""
     like = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
     order, args = ("(latitude - %s)^2 + ((longitude - %s) * 0.8)^2", [ref[0], ref[1]]) if ref else ("length(title)", [])
+    branch_order, branch_args = _branch_order_sql("title", query, branch_hint)
+    order, args = branch_order + order, branch_args + args
+    area_sql, area_args = _search_area_sql(area_hint, area, "address")
     with conn.cursor() as cur:
         cur.execute(
             "SELECT content_id, content_type_id, title, address, latitude, longitude FROM place_catalog "
             "WHERE tenant_id = ANY(%s) AND source='tour_api' AND title ILIKE %s AND latitude IS NOT NULL "
-            f"AND address LIKE '서울%%' ORDER BY {order} LIMIT %s", [_tenants(tenant_id), like, *args, limit])
+            f"AND address LIKE '서울%%' {area_sql}ORDER BY {order} LIMIT %s", [_tenants(tenant_id), like, *area_args, *args, limit])
         rows = cur.fetchall()
     from app.domains.travel_ops.components.places.catalog_pool import reuse_hours
     from app.domains.travel_ops.components.planning.planner import Cand
@@ -584,7 +739,7 @@ def assess(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any], pr
         # ★`[2026-10-15 핫픽스]` 운영시간을 못 읽은 활동이 **이른 아침 · 늦은 밤** 자리에 「맞아요」로 올라왔다(「경복궁 08:00」 대신 두산아트센터 · 세운상가 — 관광공사 운영시간을
         #   아직 못 읽은 곳이 맞는 곳으로 센 것). 낮 시간이면 모르는 것을 맞는 것으로 두지만(없는 정보로 후보를 다 버리지 않는다), 문 여는 곳이 드문 시각에는 **확인 못 한 곳은 맞는 곳이 아니다**
         hours_line = _line("hours", "warn", f"{start.strftime('%H:%M')}에는 문을 열었는지 확인하지 못했어요 · {UNVERIFIED_HOURS}")
-    label = SOURCE_LABEL.get(place.get("source") or "", "장소 정보")
+    label = SOURCE_LABEL.get(place.get("source") or "", SOURCE_DEFAULT)
     lines = [_line("place", "ok", f"{label} 정보로 찾았어요")]
     # 앞 · 뒤 일정에 닿는 시간 — 늦으면 줄을 더한다
     late: list[str] = []
@@ -927,11 +1082,19 @@ def gather(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
         if ref is None:
             notes.append("no_reference_point")
         elif item["kind"] == "dining" and not lodging:
-            found += _ledger_places(conn, tenant_id, ref, radius_m=int(area["radius_m"]) if area else 2000)
+            # ★`[2026-10-18 사용자 지시]` 가게 이름 없는 식사도 **요식 팀이 먼저**다 — 팀이 후보를 내면 팀 것만, 못 내면(모름 · 둘레에 없음)
+            #   원장 근처 식당(자체 고르기) → 지도 채우기. 이름 없는 식사에 빈칸을 던지지 않는다. 끼니면 카페 · 디저트는 아래에서 거른다
+            radius = int(area["radius_m"]) if area else 2000
+            team = _team_dining_near(conn, tenant_id, item, ref, nxt, radius_m=radius)
+            if team:
+                found += team
+                notes.append("team_ranked")
+            else:
+                found += _ledger_places(conn, tenant_id, ref, radius_m=radius)
         else:
             found += _catalog_places(conn, tenant_id, ref, parts.get("content_type"), now,
                                      radius_m=float(area["radius_m"]) if area else RADIUS_M)
-        if ref is not None and len(found) < limit + POOL_EXTRA:
+        if ref is not None and len(found) < limit + POOL_EXTRA and "team_ranked" not in notes:
             # 우리 목록이 모자라면 카카오 지도로 채운다 — 「성수 식당」 같은 말 그대로 지역 중심 둘레에서.
             # ★`[2026-10-07]` 숙소 줄(「호텔 조식」)도 「숙소」로 찾는다 — 전에는 숙소 줄에서 이 길을 막아 후보가 늘 0 이었다(사용자 지적 「전에는 카카오로 줬다」).
             #   카카오가 음식점(FD6 · CE7)을 섞어 내도 아래 종류 거르기(숙소 줄은 활동만)가 버린다
@@ -1015,6 +1178,9 @@ def gather(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     before = len(found)
     kinds = {"activity", "dining"} if "meal_inferred" in notes else {"activity" if (lodging or stay) else want}
     found = [p for p in found if p.get("kind") in kinds]
+    if is_meal_line(item) and any(not_a_meal(p) for p in found):
+        found = [p for p in found if not not_a_meal(p)]                # ★끼니 자리에 카페 · 디저트를 권하지 않는다 `[2026-10-18 사용자 지시]`
+        notes.append("not_a_meal_dropped")
     if stay_item:
         found = [{**p, "basis": p.get("basis") or "lodging"} for p in found if _is_lodging_place(p)]     # 숙소 항목의 후보는 숙소만 — 지도의 관광지 · 편의시설은 거른다
     if (stay or stay_item):
@@ -1148,32 +1314,101 @@ def alternatives(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str
 
 
 # ── 장소 검색 ─────────────────────────────────────────────────────
+def _split_search_area(query: str, index: Any) -> tuple[str, str] | None:
+    """전체 상호로 못 찾았을 때만, 사전에 있는 앞/뒤 지명과 상호를 나눈다."""
+    words = query.split()
+    for width in range(len(words) - 1, 0, -1):
+        for area_words, name_words in ((words[:width], words[width:]), (words[-width:], words[:-width])):
+            hint = " ".join(area_words)
+            if normalize_full(hint) in index or hint in ("서울", "서울특별시"):
+                return " ".join(name_words), hint
+    return None
+
+
+def _search_area_match(place: dict[str, Any], hint: str, area: dict[str, Any] | None) -> bool | None:
+    """지역이 알려졌으면 좌표로, 모르는 지명이면 주소의 명시 정보로만 확인한다."""
+    if area:
+        distance = _near(place, area)
+        return distance <= area["radius_m"] if distance is not None else None
+    address = _address_key(place.get("address"))
+    key = normalize_full(hint)
+    if key in ("서울", "서울특별시"):
+        return address.startswith("서울") if address else None
+    return True if key and key in address else None
+
+
 def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any], query: str, kakao: Any = None,
-           now: datetime | None = None, limit: int = SEARCH_LIMIT) -> dict[str, Any]:
-    """검색어로 찾은 장소 — 앞뒤 일정에서 가까운 순. 각 곳에 그 일정의 날짜 · 시각 검사를 붙인다(이동 계산기는 안 쓴다 — 어림)."""
+           now: datetime | None = None, limit: int = SEARCH_LIMIT, name_hint: str | None = None,
+           area_hint: str | None = None, branch_hint: str | None = None) -> dict[str, Any]:
+    """검색어로 찾은 장소. 분리된 상호는 DB 이름검색에, 원문은 외부검색에 쓴다.
+
+    지역은 실제 좌표/주소로 확인한다. 지점 표기가 없는 행도 실존 장소 대조용으로 남기며,
+    지점 확정은 호출자가 한다. 힌트가 없는 웹 검색은 전체 상호 검색이 실패한 때만 지명을 나눈다.
+    """
     now = now or datetime.now(KST)
     q = " ".join(query.split())
+    name_q = " ".join((name_hint or q).split())
+    area_hint = " ".join((area_hint or "").split())
     items = review["items"]
     prev, nxt = neighbours(items, item)
     ref = reference(item, prev, nxt)
     notes: list[str] = []
     area = area_of(item)
+    hint_area = None
+    if area_hint:
+        from .areas import areas_for
+
+        matched_area = areas_for(conn, tenant_id).get(normalize_full(area_hint))
+        hint_area = matched_area.as_dict() if matched_area else None
+        if hint_area:
+            area, ref = hint_area, (hint_area["latitude"], hint_area["longitude"])
     taken = _taken(items, item, include_self=False)
     # ★`[2026-10-04]` 숙소 + 끼니(「호텔 조식」)는 식사 일정이지만 장소는 숙소 — 숙소를 찾는 검색이라 식당 목록은 안 섞는다
     lodging = _is_stay_line(item) or bool((item.get("parts") or {}).get("lodging_meal"))
+    area_kwargs = {"area_hint": area_hint, "area": hint_area} if area_hint else {}
+    if branch_hint:
+        area_kwargs["branch_hint"] = branch_hint
     stay_item = item["kind"] == "lodging"          # ★`[2026-10-15]` 숙소 항목 — 후보는 지도 · 목록의 숙소만(종류는 활동 쪽으로 읽힌다)
-    found = _db_places_by_name(conn, tenant_id, q, ref, now)
-    if ref and not lodging and not stay_item:
-        found += _ledger_places(conn, tenant_id, ref, query=q, radius_m=5000)
+    found = _db_places_by_name(conn, tenant_id, name_q, ref, now, **area_kwargs)
+    if not lodging and not stay_item:
+        found += _ledger_places(conn, tenant_id, ref, query=name_q, radius_m=None, **area_kwargs)
+    if not found and not name_hint and not area_hint and len(q.split()) > 1:
+        from .areas import areas_for
+
+        index = areas_for(conn, tenant_id)
+        split = _split_search_area(q, index)
+        if split:
+            name_q, area_hint = split
+            matched_area = index.get(normalize_full(area_hint))
+            hint_area = matched_area.as_dict() if matched_area else None
+            if hint_area:
+                area, ref = hint_area, (hint_area["latitude"], hint_area["longitude"])
+            area_kwargs = {"area_hint": area_hint, "area": hint_area}
+            if branch_hint:
+                area_kwargs["branch_hint"] = branch_hint
+            found = _db_places_by_name(conn, tenant_id, name_q, ref, now, **area_kwargs)
+            if not lodging and not stay_item:
+                found += _ledger_places(conn, tenant_id, ref, query=name_q, radius_m=None, **area_kwargs)
     found += _kakao_places(kakao, q, ref, "activity" if lodging else place_kind_of(item), notes, size=10)
-    key = normalize_full(q)
+    key = _search_name_key(name_q, branch_hint)
     current = item["place"]
-    if current and key in normalize_full(current["name"]):
+    if current and normalize_full(name_q) in normalize_full(current["name"]):
         # 지금 장소가 검색어에 맞으면 결과에 남긴다 — 임시로 고른 곳을 「맞아요」로 확정하려고 다시 고르는 길이다
         found.insert(0, _place(current["name"], current["latitude"], current["longitude"], current.get("source") or "places",
-                               kind=current.get("kind") or place_kind_of(item), category=current.get("category"), content_id=current.get("content_id"),
+                               kind=current.get("kind") or place_kind_of(item), address=current.get("address"), category=current.get("category"), content_id=current.get("content_id"),
                                content_type_id=current.get("content_type_id"),
                                ref=f"tour:{current['content_id']}" if current.get("content_id") else None))
+    if area_hint:
+        verified = []
+        for place in found:
+            matches = _search_area_match(place, area_hint, hint_area)
+            if matches is True:
+                verified.append(place)
+            else:
+                note = "area_mismatch" if matches is False else "area_unverified"
+                if note not in notes:
+                    notes.append(note)
+        found = verified
     found = _dedupe(found, taken)
     # 직접 이름 검색은 고객이 고르는 곳의 실제 종류를 유지한다. 자동 후보의 동종 조건은 바꾸지 않는다.
     before = len(found)

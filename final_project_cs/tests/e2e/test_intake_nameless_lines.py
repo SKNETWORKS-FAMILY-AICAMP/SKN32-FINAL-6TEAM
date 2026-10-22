@@ -7,7 +7,8 @@
 
 ★지키려는 것
  ①이름 없는 줄은 **가게 이름으로 찾지 않는다**(관광공사 · 카카오에 그 문구를 묻지 않는다) — 장소 상태 `needs_choice`(예약 모름 · 없음) · `needs_name`(예약 있음), 일정 종류는 식당 · 끼니 말이면 식사
- ②**후보 · 검색 결과의 종류는 일정의 종류와 같다** — 다른 종류로 채우지 않는다(맞는 것이 없으면 빈 목록 + `no_same_kind`)
+ ②**자동 후보의 종류는 일정의 종류와 같다** — 다른 종류로 채우지 않는다(맞는 것이 없으면 빈 목록 + `no_same_kind`).
+   ★`[2026-10-18 사용자 확정]` 고객의 **직접 검색**은 활동 · 식사를 함께 보이고 각 곳의 실제 종류를 둔다(`wiki/external/explicit-place-search.md`)
  ③후보의 중심은 **줄에 적힌 지역**이다(성수 식당은 성수에서, 앞뒤 일정의 한가운데가 아니라)
  ④예약했다고 적힌 줄은 후보를 권하지 않고(`booked_needs_name`) 전체 자동 추천이 **바꾸지 않는다**(`kept: booked`) · 검사 줄에 `booking` 행이 있다
  ⑤고객이 고른 곳 문장은 어디서 찾았는지를 쓴다 · 후보 · 검색 · 현재 장소에 종류 이름(`category`)이 있다
@@ -168,22 +169,28 @@ def test_a_booked_nameless_line_gets_no_candidates_only_the_question_for_a_name(
     booked = _item(view, "성수 예약 식당")
     got = _candidates(client, headers, view, booked)
     assert got["candidates"] == [] and "booked_needs_name" in got["notes"]
-    # 이름을 알려 주는 길(검색)은 그대로 열려 있고, 같은 종류만 나온다
+    # 이름을 알려 주는 길(검색)은 그대로 열려 있다. `[2026-10-18 사용자 확정 — wiki/external/explicit-place-search.md]` 직접 검색은 활동 · 식사를 함께 보이고
+    #   각 곳의 실제 종류를 그대로 둔다(자동 후보의 같은 종류 조건은 그대로 — 위 `candidates == []`)
     found = _search(client, headers, view, booked, "성수")
-    names = {r["place"]["name"] for r in found["results"]}
-    assert names & {"성수가든", "성수국수", "성수스시", "성수식당카탈로그"} and "성수서울숲" not in names and "성수소품가게" not in names
-    assert all(r["place"]["kind"] == "dining" for r in found["results"])
+    kinds = {r["place"]["name"]: r["place"]["kind"] for r in found["results"]}
+    assert set(kinds) & {"성수가든", "성수국수", "성수스시", "성수식당카탈로그"}
+    assert set(kinds.values()) <= {"activity", "dining"}, kinds
+    assert all(kinds[name] == "dining" for name in set(kinds) & {"성수가든", "성수국수", "성수스시"}), kinds
+    assert kinds.get("성수소품가게") == "activity", kinds
 
 
-def test_search_never_mixes_another_kind_in_and_says_why_when_nothing_of_the_kind_matches(seongsu):
+def test_direct_search_shows_activities_and_restaurants_together_with_their_real_kind(seongsu):
+    """`[2026-10-18 사용자 확정 — wiki/external/explicit-place-search.md]` 고객이 직접 찾을 때는 활동 · 식사의 종류 차이로 결과를 숨기지 않는다.
+    `[2026-10-22 ST4F-715]` 옛 「검색도 같은 종류만(맞는 것이 없으면 빈 목록 + no_same_kind)」 시험을 새 계약으로 바꿨다."""
     client, headers, _, _, view = _view(seongsu)
     shop = _item(view, "성수동 쇼핑")
     found = _search(client, headers, view, shop, "성수")
-    assert found["results"] and all(r["place"]["kind"] == "activity" for r in found["results"])
-    names = {r["place"]["name"] for r in found["results"]}
-    assert "성수소품가게" in names and "성수가든" not in names and "성수식당카탈로그" not in names
-    empty = _search(client, headers, view, shop, "성수가든")                       # 식당만 맞는 검색어 — 쇼핑 자리에 식당으로 채우지 않는다
-    assert empty["results"] == [] and "no_same_kind" in empty["notes"]
+    kinds = {r["place"]["name"]: r["place"]["kind"] for r in found["results"]}
+    assert kinds.get("성수소품가게") == "activity" and "dining" in kinds.values(), kinds    # 쇼핑 자리에서도 식당이 보이고, 식당은 식당으로 남는다
+    assert set(kinds.values()) <= {"activity", "dining"}, kinds
+    named = _search(client, headers, view, shop, "성수가든")                         # 식당 이름을 직접 찾으면 그 식당이 나온다
+    assert named["results"] and named["results"][0]["place"]["name"] == "성수가든", named
+    assert named["results"][0]["place"]["kind"] == "dining" and "no_same_kind" not in named["notes"]
 
 
 def test_auto_fix_never_changes_a_booked_item_and_fills_the_others_with_the_same_kind(seongsu):

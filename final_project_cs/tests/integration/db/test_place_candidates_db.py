@@ -2,15 +2,17 @@
 """`app/domains/travel_ops/instances/activity/db_search/place_candidates.py` 를 **실 PostgreSQL** 로 돌린다.
 
 두 가지를 본다.
-  1. 시험용 테넌트에 행 몇 개를 직접 넣고 조회 → SQL 이 실제로 맞는지(jsonb `->>` 포함).
-  2. 적재된 실데이터(`demo` 테넌트, `scripts/load_place_catalog_csv.py`)가 있으면
-     창경궁(126511)으로 후보가 나오는지. 적재 전이면 건너뛴다.
+  1. 원장에 시험 행 몇 개를 직접 넣고 조회 → SQL 이 실제로 맞는지.
+  2. 적재된 실데이터(`scripts/activity/load_places.py`)가 있으면 창경궁(126511)으로 후보가 나오는지. 적재 전이면 건너뛴다.
 
+★`[2026-10-16 사용자 결정]` 활동 원장(`activity.ac_place`)만 읽는다 — 원장은 공용이라 테넌트로 나누지 않는다.
+  그래서 시험 행은 **서울 밖(제주 근처) 좌표**에 둔다 — 10km 사각형 안에 서울 실데이터가 섞이지 않게.
 ★DB 에 못 붙으면 **건너뛴다**(실패가 아니다) — `.env` 의 `ACOP_DATABASE_URL` 로 붙는다.
 """
 from __future__ import annotations
 
-import json
+import random
+from contextlib import nullcontext
 from uuid import uuid4
 
 import psycopg
@@ -24,115 +26,120 @@ from app.domains.travel_ops.instances.activity.db_search.place_candidates import
 def _reachable() -> str | None:
     try:
         with psycopg.connect(database_dsn(), connect_timeout=3) as conn, conn.cursor() as cur:
-            # ★`[2026-10-12]` 전에는 `large_class_code` 칸이 없으면 건너뛰었다 — 그 칸은 마이그레이션에 없어 CI 에서는 늘 건너뛰었고,
-            #   조회가 그 칸 때문에 깨지는 것을 가렸다. 대분류는 `raw_json` 에서 읽으므로 표만 있으면 돈다.
-            cur.execute("SELECT to_regclass('place_catalog')")
+            cur.execute("SELECT to_regclass('activity.ac_place')")
             table = cur.fetchone()[0]
     except Exception as exc:  # noqa: BLE001 — 어떤 이유든 못 붙으면 건너뛴다
         return f"DB 에 연결할 수 없다: {type(exc).__name__}"
     if table is None:
-        return "place_catalog(011) 가 없다 — `python -m app.infrastructure.db.migrate` 먼저"
+        return "activity.ac_place(300) 가 없다 — `python -m app.infrastructure.db.migrate` 먼저"
     return None
 
 
 _SKIP = _reachable()
 pytestmark = pytest.mark.skipif(_SKIP is not None, reason=_SKIP or "")
 
-INSERT = ("INSERT INTO place_catalog (tenant_id, source, content_id, content_type_id, "
-          "area_code, title, latitude, longitude, raw_json) "
-          "VALUES (%s,%s,%s,'12','1',%s,%s,%s,%s)")
-
-
-def _raw(cid, title, l1, sgg, closed):
-    return json.dumps({"contentid": cid, "title": title, "lclsSystm1": l1,
-                       "lclsSystm2": l1 + "01", "lclsSystm3": l1 + "010100",
-                       "lDongSignguCd": sgg, "closed_days": closed,
-                       "business_hours": "09:00~18:00"}, ensure_ascii=False)
+INSERT = ("INSERT INTO activity.ac_place (content_id, content_type_id, name_ko, name_key, lat, lng, "
+          "lcls1, lcls2, lcls3, sigungu_code, usetime_text, restdate_text, load_id) "
+          "VALUES (%s,'12',%s,%s,%s,%s,%s,%s,%s,%s,'09:00~18:00',%s,%s)")
 
 
 @pytest.fixture()
-def tenant():
-    tenant = "test_" + uuid4().hex
+def world():
+    """시험 행(제주 근처)을 넣고 이름 → 번호를 돌려준다. 번호 모양이 출처를 정한다(숫자 = 관광공사, OY = 올리브영)."""
+    base = str(random.randint(10**9, 10**10 - 1))
+    tag = uuid4().hex[:6]
     rows = [
-        # cid,      title,        lat,     lon,      l1,   sgg,  closed
-        ("o1",     "원래 장소",   37.5796, 126.9770, "HS", "23", "매주 화요일"),
-        ("same_l1", "같은 대분류", 37.60,   127.05,   "HS", "1",  "연중무휴"),
-        ("same_gu", "같은 자치구", 37.58,   126.98,   "VE", "23", "연중무휴"),
-        ("neither", "둘 다 다름",  37.50,   127.10,   "SH", "1",  "연중무휴"),
-        ("no_xy",   "좌표 없음",   None,    None,     "HS", "5",  None),
-        # 브랜드 출처 — 같은 카탈로그의 다른 source. 후보에도 원래 장소에도 들어야 한다.
-        ("OYtest1", "올영 테스트점", 37.56,  126.98,   "SH", "23", "연중무휴"),
-        ("OYtest2", "올영 다른점",   37.57,  126.99,   "SH", "23", "연중무휴"),
+        # key,        cid,              title,          lat,     lon,      l1,   sgg,  closed
+        ("o1",        f"{base}1",       "원래 장소",     33.4496, 126.5600, "HS", "23", "매주 화요일"),
+        ("same_l1",   f"{base}2",       "같은 대분류",   33.4700, 126.6330, "HS", "1",  "연중무휴"),
+        ("same_gu",   f"{base}3",       "같은 자치구",   33.4500, 126.5630, "VE", "23", "연중무휴"),
+        ("neither",   f"{base}4",       "둘 다 다름",    33.3700, 126.6830, "SH", "1",  "연중무휴"),   # 경도 약 11km — 사각형 밖
+        ("no_xy",     f"{base}5",       "좌표 없음",     None,    None,     "HS", "5",  None),
+        ("festival",  f"{base}6",       "근처 축제",     33.4510, 126.5610, "EV", "23", None),          # 축제 · 행사 — 후보 아님
+        # 브랜드 — 같은 원장의 다른 출처. 후보에도 원래 장소에도 들어야 한다.
+        ("OYtest1",   f"OY{tag}1",      "올영 테스트점", 33.4300, 126.5630, "SH", "23", "연중무휴"),
+        ("OYtest2",   f"OY{tag}2",      "올영 다른점",   33.4400, 126.5730, "SH", "23", "연중무휴"),
     ]
+    ids = {key: cid for key, cid, *_ in rows}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        for cid, title, lat, lon, l1, sgg, closed in rows:
-            source = "oliveyoung" if cid.startswith("OY") else "tour_api"
-            cur.execute(INSERT, (tenant, source, cid, title, lat, lon, _raw(cid, title, l1, sgg, closed)))
+        cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES ('test', %s, %s) "
+                    "RETURNING load_id", ("0" * 64, len(rows)))
+        load_id = cur.fetchone()[0]
+        for _, cid, title, lat, lon, l1, sgg, closed in rows:
+            cur.execute(INSERT, (cid, title, title, lat, lon, l1, l1 + "01", l1 + "010100", sgg, closed, load_id))
     try:
-        yield tenant
+        yield ids
     finally:
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-            cur.execute("DELETE FROM place_catalog WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM activity.ac_place WHERE content_id = ANY(%s)", (list(ids.values()),))
+            cur.execute("DELETE FROM activity.ac_load_meta WHERE load_id=%s", (load_id,))
 
 
-def test_pool_is_within_the_10km_bounding_box(tenant):
-    """★분류와 무관하게 10km 사각형 안만 — `neither`(약 14km)와 좌표 없는 `no_xy` 는 빠진다."""
-    pool = find_place_candidates(get_connection, tenant, "o1")
+def _keys(world, pool):
+    back = {cid: key for key, cid in world.items()}
+    return sorted(back[c["contentid"]] for c in pool["candidates"])
+
+
+def test_pool_is_within_the_10km_bounding_box(world):
+    """★분류와 무관하게 10km 사각형 안만 — `neither`(약 11km)와 좌표 없는 `no_xy`, 축제(EV)는 빠진다."""
+    pool = find_place_candidates(get_connection, "any", world["o1"])
 
     assert pool["origin"]["title"] == "원래 장소"
-    assert pool["origin"]["closed_days"] == "매주 화요일"
-    assert sorted(c["contentid"] for c in pool["candidates"]) == ["OYtest1", "OYtest2", "same_gu", "same_l1"]
-    assert pool["source"].startswith("place_catalog:tour_api")
+    assert pool["origin"]["closed_days"] == "매주 화요일" and pool["origin"]["business_hours"] == "09:00~18:00"
+    assert _keys(world, pool) == ["OYtest1", "OYtest2", "same_gu", "same_l1"]
+    assert pool["source"].startswith("activity.ac_place:tour_api")
     assert pool["confirmed_at"]
 
 
-def test_brand_store_as_origin_finds_brand_candidates(tenant):
-    pool = find_place_candidates(get_connection, tenant, "OYtest1")
+def test_brand_store_as_origin_finds_brand_candidates(world):
+    pool = find_place_candidates(get_connection, "any", world["OYtest1"])
     assert pool["origin"]["title"] == "올영 테스트점"
-    assert "OYtest2" in [c["contentid"] for c in pool["candidates"]]
+    assert world["OYtest2"] in [c["contentid"] for c in pool["candidates"]]
 
 
-def test_null_coordinates_are_not_in_the_pool(tenant):
-    """좌표가 없으면 근처인지 모른다 — 범위 비교에서 빠진다(원본 자리표시 좌표로 되살리지 않는다)."""
-    pool = find_place_candidates(get_connection, tenant, "o1")
-    assert "no_xy" not in [c["contentid"] for c in pool["candidates"]]
+def test_a_festival_can_still_be_the_origin(world):
+    """축제는 후보로 내지 않을 뿐, 고객이 고른 원래 장소로는 읽는다."""
+    pool = find_place_candidates(get_connection, "any", world["festival"])
+    assert pool["origin"]["lclsSystm1"] == "EV" and world["o1"] in [c["contentid"] for c in pool["candidates"]]
 
 
-def test_unknown_origin_and_other_tenant_are_unknown(tenant):
-    assert find_place_candidates(get_connection, tenant, "없는ID") is None
-    assert find_place_candidates(get_connection, "other_" + uuid4().hex, "o1") is None
+def test_null_coordinates_are_not_in_the_pool(world):
+    """좌표가 없으면 근처인지 모른다 — 범위 비교에서 빠진다."""
+    pool = find_place_candidates(get_connection, "any", world["o1"])
+    assert world["no_xy"] not in [c["contentid"] for c in pool["candidates"]]
 
 
-def test_loaded_demo_data_finds_alternatives_for_changgyeonggung():
+def test_unknown_origin_is_unknown_and_the_ledger_is_shared_across_tenants(world):
+    assert find_place_candidates(get_connection, "any", "없는ID") is None
+    other = find_place_candidates(get_connection, "other_" + uuid4().hex, world["o1"])
+    assert _keys(world, other) == _keys(world, find_place_candidates(get_connection, "any", world["o1"]))
+
+
+def test_loaded_ledger_finds_alternatives_for_changgyeonggung():
     """적재된 실데이터 확인. wiki/teams/activity.md 실측: 창경궁(126511)."""
     with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT count(*) FROM place_catalog WHERE tenant_id='demo' AND source='tour_api'")
+        cur.execute("SELECT count(*) FROM activity.ac_place WHERE content_id ~ '^[0-9]+$'")
         loaded = cur.fetchone()[0]
     if not loaded:
-        pytest.skip("demo 테넌트에 적재된 데이터가 없다 — load_place_catalog_csv 먼저")
+        pytest.skip("원장에 적재된 데이터가 없다 — scripts/activity/load_places.py 먼저")
 
     pool = find_place_candidates(get_connection, "demo", "126511")
-    assert pool is not None, "창경궁(126511)이 카탈로그에 없다"
+    assert pool is not None, "창경궁(126511)이 원장에 없다"
     assert pool["origin"]["lclsSystm1"] == "HS"
     assert pool["candidates"], "후보가 0건이다"
     lat0, lat1, lng0, lng1 = bounding_box(float(pool["origin"]["mapy"]), float(pool["origin"]["mapx"]),
                                           RADIUS_MAX_KM)
     assert all(lat0 <= float(c["mapy"]) <= lat1 and lng0 <= float(c["mapx"]) <= lng1
                for c in pool["candidates"])
+    assert all(c["lclsSystm1"] != "EV" for c in pool["candidates"])
 
 
-def test_delisted_places_are_not_candidates(tenant):
+def test_delisted_places_are_not_candidates(world):
     """`[2026-10-12]` 관광공사 목록에서 내려간 곳(끝난 축제 · 폐업)은 대체 후보로 내지 않는다(303)."""
     with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("INSERT INTO activity.ac_load_meta (source_file, file_sha256, row_count) VALUES ('t', %s, 1) "
-                    "RETURNING load_id", ("0" * 64,))
-        load_id = cur.fetchone()[0]
-        cur.execute("INSERT INTO activity.ac_place (content_id, content_type_id, name_ko, name_key, load_id, delisted_at) "
-                    "VALUES ('same_l1', '12', '같은 대분류', 'x', %s, now())", (load_id,))
+        cur.execute("UPDATE activity.ac_place SET delisted_at = now() WHERE content_id=%s", (world["same_l1"],))
         try:
-            from contextlib import nullcontext
-
-            pool = find_place_candidates(lambda: nullcontext(conn), tenant, "o1")      # 같은 연결 — 넣은 행을 되돌릴 수 있게
-            assert "same_l1" not in [c["contentid"] for c in pool["candidates"]]
+            pool = find_place_candidates(lambda: nullcontext(conn), "any", world["o1"])      # 같은 연결 — 되돌릴 수 있게
+            assert world["same_l1"] not in [c["contentid"] for c in pool["candidates"]]
         finally:
             conn.rollback()

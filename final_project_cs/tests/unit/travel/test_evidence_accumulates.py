@@ -25,6 +25,12 @@ from app.domains.travel_ops.instances.dining import DiningTeam
 from .helpers import FakeTools, in_hours, pack, task
 
 
+@pytest.fixture(autouse=True)
+def _activity_rag_on(monkeypatch):
+    """`[2026-10-16]` Activity 의 규정 검색은 운영에서 꺼져 있다(`ActivityTeam._RAG_OFF`). 이 파일은 근거 누적을 보므로 읽는 쪽(ON)으로 고정한다."""
+    monkeypatch.setattr(ActivityTeam, "_RAG_OFF", False)
+
+
 def _sources(result) -> list[str]:
     return [item.source_id for item in result.evidence]
 

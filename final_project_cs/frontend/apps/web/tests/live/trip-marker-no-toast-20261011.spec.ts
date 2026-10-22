@@ -8,7 +8,9 @@ test.beforeEach(async ({ page, request }) => { await mockServer(request).reset()
 const pin = (page: import("@playwright/test").Page, name: string) => page.locator(`.leaflet-marker-icon[title^="${name}"]`);
 
 for (const width of [375, 1280]) {
-  test(`${width}px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다`, async ({ page }) => {
+  test(`${width}px 마커 클릭·해제와 목록의 지도 보기는 안내 토스트를 띄우지 않는다`, async ({ page, request }) => {
+    // `[2026-10-22 ST4F-715]` 위험 확인이 없는 서버(404)면 위험 칸이 「현재 일정은 유지돼요」 status 한 줄을 낸다 — 확인이 되는 서버로 연다
+    await mockServer(request).scenario({ risks: "clear" });
     await page.setViewportSize({ width, height: 812 });
     await page.goto(`/trips/${TRIP_ID}`);
     await expect(tripScreen(page)).toBeVisible();

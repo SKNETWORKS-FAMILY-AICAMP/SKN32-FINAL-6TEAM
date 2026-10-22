@@ -18,6 +18,8 @@ domain: travel
 | 현재 여행 MCP·본인 여행·쓰기 등록 | [MCP 프로토콜](../../tests/e2e/test_mcp_server.py)·[읽기 도구](../../tests/e2e/test_mcp_read_tools.py) |
 | 여행 분류 자료·재생 분모 | [현재 여행 평가 시험](../../tests/unit/eval/test_travel_classification_eval.py) |
 | 여행 RAG 검색·과거 scope 차단 | [검색 통합](../../tests/integration/rag/test_travel_corpus_retrieval.py) |
+| 활동 후보 세 단(같은 종류·비슷한 경험·취향)·호텔 후보·모델 이유 문장 검사·임베딩 순서·분류 채우기 | [세 단·취향](../../tests/e2e/test_intake_experience_tiers.py)·[같은 종류](../../tests/e2e/test_intake_similar_places.py)·[호텔·종류](../../tests/e2e/test_intake_candidate_kinds.py)·[이유 문장](../../tests/e2e/test_candidate_reasons.py)·[임베딩·분류 채우기](../../tests/e2e/test_place_embeddings.py). 모델·임베딩은 mock 서버(고정 답 대역)로 시험하며 실모델 확인은 별도 |
+| 약관 보관 기간·회원 정리·처리 기록 파기 | [보관 기간](../../tests/e2e/test_legal_retention.py)·[삭제·게스트 정리](../../tests/e2e/test_guest_and_trip_delete.py)·[동의 기록](../../tests/e2e/test_consents.py) |
 
 불변식 정의와 함수 연결은 [카탈로그](invariants.md)가 소유합니다. 시험 개수·과거 통과 수를 이 페이지에서 중복 관리하지 않습니다. live·DB·외부 서비스 의존 여부와 실패·건너뜀을 실제 실행 결과에 기록합니다. 사용 종료된 MCP·평가 시험은 legacy로 분리합니다.
 

@@ -298,7 +298,9 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
             # 상태를 바꾸는 사이에 들어온 답(접수 행 잠금으로 순서가 정해진다 — `interpretations.answer`)을 한 번 더 본다
             _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
-        _dining_shadow(connect, tenant_id, intake_id, sources)
+        # ★`[2026-10-19]` 판정은 **지금 판**을 본다 — 먼저 채우기가 새 판을 만들었으면 그 판이다. 전에는 늘 1판을 봐서 채운 판에는 판정이 안 붙었다
+        #   (1판 판정은 합치기 직전 「지난 판」으로 막히고 · 1판에서 장소가 없던 이름 없는 식사는 판정 입력조차 못 됐다)
+        _dining_judge(connect, tenant_id, intake_id, sources, revision=None)
         # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
         #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
         _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat)
@@ -400,24 +402,53 @@ def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tou
         log.warning("intake prefill failed intake=%s", intake_id, exc_info=True)
 
 
-def _dining_shadow(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]]) -> None:
-    """요식 판정 에이전트 **그림자** — 확인 화면으로 넘긴 **뒤에** 규칙 검사와 나란히 판정해 요식 표에만 기록한다. `[2026-10-13 · 설계 §10 단계 5]`
-    ★가드레일 `travel.dining.agent_shadow.enabled` 를 켜야 돈다(기본 꺼짐 — 꽂히지 않으면 아무것도 안 한다). 고객 결과 · 상태는 바꾸지 않고,
-      실패해도 접수에 영향이 없다(경고만 남긴다)."""
+def rejudge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, revision: int) -> None:
+    """고객이 고쳐 생긴 **새 판**의 식사를 다시 판정한다(뒤에서 — 고치기 응답을 기다리게 하지 않는다). `[2026-10-16 설계 대조 P2]`
+    ★그 사이 또 고쳤거나(판이 바뀜) 등록했으면 돌리지 않는다 — 지난 판을 판정하는 데 모델을 부르지 않는다.
+      판정 중에 판이 바뀌면 합치기 직전에 한 번 더 막는다(`judge.run`)."""
     from app.domains.travel_ops.components.team_hooks import dining_ledger
 
-    runner = dining_ledger.agent_shadow_runner()
+    if dining_ledger.agent_judge_runner() is None:
+        return
+    try:
+        with connect() as conn:
+            if review_module.intake_state(conn, tenant_id, intake_id) != ("review", revision):
+                return
+            sources = _sources(conn, tenant_id, intake_id)
+    except Exception:                                  # noqa: BLE001 — 판정 장애가 고치기를 건드리지 않는다
+        log.warning("dining agent rejudge failed intake=%s revision=%s", intake_id, revision, exc_info=True)
+        return
+    _dining_judge(connect, tenant_id, intake_id, sources, revision=revision)
+
+
+def _dining_judge(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, sources: list[dict[str, Any]],
+                  revision: int | None = 1) -> None:
+    """요식 판정 에이전트 — 확인 화면으로 넘긴 **뒤에** 식사를 판정해 그 판의 검사 줄에 합친다(`instances/dining/judge.run`). `[2026-10-13 · 2026-10-16]`
+    ★규칙이 모르던 영업 · 휴무를 에이전트가 도구로 정했으면 그 줄을 바꾸고, 고객 조건 확인은 줄을 더한다. 화면 문장은 코드가 만든다.
+      ★가드레일 `travel.dining.agent_judge.enabled`(기본 켜짐) · 모델이 있어야 돈다.
+      실패해도 접수에 영향이 없다(그 줄은 규칙 검사 그대로 · 경고만 남긴다).
+    `revision=None` 이면 지금 판(확인 화면일 때만 — 그 사이 등록 · 실패로 넘어갔으면 돌리지 않는다)."""
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+    runner = dining_ledger.agent_judge_runner()
     if runner is None:
         return
     try:
         with connect() as conn:
-            payload = review_module.load(conn, tenant_id, intake_id, 1)
+            if revision is None:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s", (tenant_id, intake_id))
+                    row = cur.fetchone()
+                if row is None or row[0] != "review":
+                    return
+                revision = int(row[1])
+            payload = review_module.load(conn, tenant_id, intake_id, revision)
         if not payload:
             return
         notes = "\n".join(s.get("transcript") or "" for s in sources)
-        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=1, review=payload, notes=notes)
-    except Exception:                                  # noqa: BLE001 — 그림자 장애가 접수를 건드리지 않는다
-        log.warning("dining agent shadow failed intake=%s", intake_id, exc_info=True)
+        runner(connect, tenant_id=tenant_id, intake_id=intake_id, revision=revision, review=payload, notes=notes)
+    except Exception:                                  # noqa: BLE001 — 판정 장애가 접수를 건드리지 않는다
+        log.warning("dining agent judge failed intake=%s", intake_id, exc_info=True)
 
 
 def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:
@@ -1504,7 +1535,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 continue
             resolved[index] = resolve(query, our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint=_place_kind_hint(item), aliases=aliases, dining=dining,
-                                      near=_near_hint(index, items, resolved, dated))
+                                      near=_near_hint(index, items, resolved, dated), at=_visit_at(index, rows, dated))
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,
@@ -1766,6 +1797,19 @@ def _cluster_centre(found) -> tuple[float, float] | None:
     # 관련도 1위 후보에서 CLUSTER_M 안에 절반 이상이 모였나 — 「홍대입구역 사거리」 하나가 섞여 서로 가장 먼 거리는 555m 였다
     tight = [point for point in points if spread_m([points[0], point]) <= CLUSTER_M] if points else []
     return centre(tight) if tight and len(tight) * 2 >= len(points) else None
+
+
+def _visit_at(index: int, rows: list[dict[str, Any]], dated) -> datetime | None:
+    """이 항목의 방문 시각(서울) — 날짜(`dated`)와 읽은 시작 시각(값 줄 `items[i].starts_at`)이 다 있을 때만. 하나라도 모르면 None.
+    `[2026-10-19 사용자 지시]` 「광장시장 점심」의 근처 식당을 고를 때 그 시각에 확실히 닫힌 가게를 건너뛰는 데 쓴다(`places.resolve(at=)`)."""
+    day = dated[index].value if index < len(dated) else None
+    start = next((r["value"] for r in reversed(rows) if r.get("field") == f"items[{index}].starts_at" and r.get("value")), None)
+    if not day or not isinstance(start, str):
+        return None
+    try:
+        return datetime.fromisoformat(f"{day}T{start}").replace(tzinfo=KST)
+    except ValueError:
+        return None
 
 
 def _near_hint(index: int, items: list[dict[str, Any]], resolved: dict[int, Any], dated) -> tuple[float, float] | None:

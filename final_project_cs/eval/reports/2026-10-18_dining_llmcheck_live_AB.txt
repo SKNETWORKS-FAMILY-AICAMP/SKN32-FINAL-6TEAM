@@ -1,0 +1,366 @@
+LLM provider: openai | judge: openai:gpt-6-luna
+{
+ "A_halal_required": {
+  "submit": 202,
+  "seconds_to_review": 28.2,
+  "status": "review",
+  "revision": 1,
+  "dining_judge": {
+   "run_id": "8055ec32-8671-4544-9bbd-ab81a28db1f1",
+   "status": "completed",
+   "revision": 1,
+   "error_code": null,
+   "started_at": "2026-10-17T15:20:55.780241+00:00",
+   "deadline_at": "2026-10-17T15:24:55.642563+00:00",
+   "completed_at": "2026-10-17T15:21:11.993742+00:00",
+   "input_fingerprint": "369bbe02176dcd5096347d70762e4eaed4bb088b8fec2679601895d2186e6e9f",
+   "notes_fingerprint": "bb690232f9c151d7bf3848b4739dfb350579468e671554485d976dfc5e1dcabc",
+   "blocks_registration": false
+  },
+  "agent_judged": {
+   "model": "openai:gpt-6-luna",
+   "run_id": "8055ec32-8671-4544-9bbd-ab81a28db1f1",
+   "changed_rows": 2
+  },
+  "ready": false,
+  "items": [
+   [
+    "activity",
+    "남산서울타워",
+    "review"
+   ],
+   [
+    "dining",
+    "할랄부산집",
+    "review"
+   ],
+   [
+    "dining",
+    "명동교자 본점",
+    "review"
+   ]
+  ],
+  "dining": [
+   {
+    "title": "할랄부산집",
+    "status": "review",
+    "rows": [
+     {
+      "row": "place",
+      "result": "warn",
+      "text": "우리 장소 목록 정보로 찾았어요 · 맞는지 확인해 주세요"
+     },
+     {
+      "row": "time",
+      "result": "filled",
+      "text": "끝 시각이 없어 60분으로 두었어요"
+     },
+     {
+      "row": "hours",
+      "result": "ok",
+      "text": "11:30–22:40 안에 머물러요"
+     },
+     {
+      "row": "closed",
+      "result": "ok",
+      "text": "쉬는 요일이 없어요"
+     },
+     {
+      "row": "dietary",
+      "result": "ok",
+      "text": "요청하신 식사 조건(할랄 · 채식)에 맞는 곳이에요",
+      "by": "agent",
+      "requirement": "required",
+      "blocks_registration": false
+     }
+    ]
+   },
+   {
+    "title": "명동교자 본점",
+    "status": "review",
+    "rows": [
+     {
+      "row": "place",
+      "result": "warn",
+      "text": "우리 장소 목록 정보로 「명동교자 분점」을 찾았어요 · 맞는지 확인해 주세요"
+     },
+     {
+      "row": "time",
+      "result": "filled",
+      "text": "끝 시각이 없어 60분으로 두었어요"
+     },
+     {
+      "row": "hours",
+      "result": "ok",
+      "text": "10:30–21:00 안에 머물러요"
+     },
+     {
+      "row": "closed",
+      "result": "ok",
+      "text": "쉬는 요일이 없어요"
+     },
+     {
+      "row": "dietary",
+      "result": "unknown",
+      "text": "요청하신 식사 조건(할랄 · 채식)은 확인하지 못했어요",
+      "by": "agent",
+      "requirement": "required",
+      "blocks_registration": false
+     }
+    ]
+   }
+  ],
+  "judge_records": [
+   [
+    "None",
+    "_run",
+    "None",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "found",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "open_at",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "dietary",
+    "ok",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "closed_day",
+    "unknown",
+    "ok",
+    "False",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "business",
+    "ok",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-2",
+    "found",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-2",
+    "open_at",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-2",
+    "dietary",
+    "unknown",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-2",
+    "closed_day",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-2",
+    "business",
+    "ok",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ]
+  ],
+  "confirm": 422,
+  "confirm_body": {
+   "error": {
+    "code": "itinerary_infeasible",
+    "message": "이 일정은 그대로 수행할 수 없습니다: 버스 405 46분 · 1.3km(12:16 종료)와 할랄부산집(12:00 시작)이 겹친다",
+    "violations": [
+     {
+      "code": "overlap",
+      "items": [
+       2,
+       3
+      ],
+      "reason": "버스 405 46분 · 1.3km(12:16 종료)와 할랄부산집(12:00 시작)이 겹친다",
+      "remedy": "할랄부산집 를 12:16 뒤로 옮기거나 앞 항목을 줄인다"
+     }
+    ]
+   }
+  },
+  "total_seconds": 28.5
+ },
+ "B_plain": {
+  "submit": 202,
+  "seconds_to_review": 10.9,
+  "status": "review",
+  "revision": 1,
+  "dining_judge": {
+   "run_id": "01348c99-5c64-4c0c-8d9e-35eb707a1fd1",
+   "status": "completed",
+   "revision": 1,
+   "error_code": null,
+   "started_at": "2026-10-17T15:21:16.120074+00:00",
+   "deadline_at": "2026-10-17T15:25:15.964509+00:00",
+   "completed_at": "2026-10-17T15:21:23.193529+00:00",
+   "input_fingerprint": "1f0949e8dac40940b96b2ea44fb8d79d7cbd4116d83b75c4d7530179571146dc",
+   "notes_fingerprint": "b151b1c013c4f45cd9e6fd74a46e9351c1ce8fc75dca49aeebfd04f4717d8b45",
+   "blocks_registration": false
+  },
+  "agent_judged": {
+   "model": "openai:gpt-6-luna",
+   "run_id": "01348c99-5c64-4c0c-8d9e-35eb707a1fd1",
+   "changed_rows": 0
+  },
+  "ready": false,
+  "items": [
+   [
+    "activity",
+    "경복궁",
+    "adjusted"
+   ],
+   [
+    "dining",
+    "명동교자 본점",
+    "review"
+   ],
+   [
+    "activity",
+    "남대문시장 구경",
+    "review"
+   ]
+  ],
+  "dining": [
+   {
+    "title": "명동교자 본점",
+    "status": "review",
+    "rows": [
+     {
+      "row": "place",
+      "result": "warn",
+      "text": "우리 장소 목록 정보로 「명동교자 분점」을 찾았어요 · 맞는지 확인해 주세요"
+     },
+     {
+      "row": "time",
+      "result": "filled",
+      "text": "끝 시각이 없어 60분으로 두었어요"
+     },
+     {
+      "row": "hours",
+      "result": "ok",
+      "text": "10:30–21:00 안에 머물러요"
+     },
+     {
+      "row": "closed",
+      "result": "ok",
+      "text": "쉬는 요일이 없어요"
+     }
+    ]
+   }
+  ],
+  "judge_records": [
+   [
+    "None",
+    "_run",
+    "None",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "found",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "open_at",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "closed_day",
+    "ok",
+    "ok",
+    "True",
+    "None",
+    "openai:gpt-6-luna"
+   ],
+   [
+    "0-1",
+    "business",
+    "ok",
+    "None",
+    "None",
+    "None",
+    "openai:gpt-6-luna"
+   ]
+  ],
+  "confirm": 422,
+  "confirm_body": {
+   "error": {
+    "code": "intake_incomplete",
+    "message": "등록 전에 채워야 할 값이 있습니다",
+    "problems": [
+     {
+      "code": "no_place",
+      "field": "items[2].place",
+      "message": "「남대문시장 구경」의 장소를 정하지 못했습니다 — 장소 이름을 고치거나 「장소 없음」으로 두세요",
+      "source_id": "399306e8-8a44-4728-a40f-69b466cfc5e2"
+     }
+    ]
+   }
+  },
+  "total_seconds": 11.1
+ }
+}

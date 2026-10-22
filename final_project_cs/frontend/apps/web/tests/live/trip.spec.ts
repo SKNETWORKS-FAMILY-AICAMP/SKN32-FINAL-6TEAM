@@ -133,15 +133,32 @@ test("서버가 경로선을 주지 않으면 이동 줄은 수단·거리를 �
 });
 
 test("경고와 알림이 없으면 탭은 0 과 「없어요」만 말하고 줄을 지어내지 않으며, 종에는 수가 없다", async ({ page, request }) => {
-  await mockServer(request).scenario({ warnings: "none", notices: "none" });
+  await mockServer(request).scenario({ warnings: "none", notices: "none", risks: "clear" });
   await openTrip(page);
   await expect(page.getByRole("button", { name: "알림 센터 열기", exact: true })).toBeVisible();     // 읽지 않은 알림이 없다
   const notices = await openNotices(page);
   await expect(notices.getByRole("tab", { name: /살펴볼 점/ })).toHaveText("살펴볼 점 0");
   await expect(notices.getByRole("tab", { name: /받은 알림/ })).toHaveText("받은 알림 0");
-  await expect(notices.getByRole("tabpanel")).toHaveText("살펴볼 점이 없어요.");
+  // `[2026-10-22 ST4F-715]` 「살펴볼 점」 탭은 위험 칸 + 경고 목록이다(「살펴볼 점이 없어요.」 문장은 위험 칸으로 바뀌었다)
+  await expect(notices.getByRole("tabpanel")).toContainText("현재 점검 대상 일정이 없어요");
   await expect(notices.getByRole("tabpanel").getByRole("listitem")).toHaveCount(0);
   await expect(notices.getByText("지금 처리할 일은 없어요.")).toBeVisible();
+});
+
+// `[2026-10-22 사용자 지시]` 일정 목록 위 위험 점검 칸은 운영자 스위치(`risk_panel`)를 따른다 — 칸이 없는 응답은 보이고, 끄면 그 칸만 숨는다
+test("운영자가 위험 점검 칸을 끄면 일정 목록 위 칸만 숨고, 알림 센터 「살펴볼 점」 탭의 점검 결과는 그대로다", async ({ page, request }) => {
+  const server = mockServer(request);
+  const schedulePanel = page.locator("#trip-pane-schedule [data-risk-panel]");
+  await server.scenario({ warnings: "none", notices: "none", risks: "clear" });
+  await openTrip(page);
+  await expect(schedulePanel).toContainText("현재 점검 대상 일정이 없어요");                       // 칸이 없는 응답(옛 서버) = 켜짐
+
+  await server.scenario({ warnings: "none", notices: "none", risks: "clear", riskPanel: "off" });
+  await openTrip(page);
+  await expect(page.getByRole("button", { name: "알림 센터 열기", exact: true })).toBeVisible();
+  await expect(schedulePanel).toHaveCount(0);
+  const notices = await openNotices(page);
+  await expect(notices.getByRole("tabpanel")).toContainText("현재 점검 대상 일정이 없어요");
 });
 
 test("서버가 기다리는 선택이 있으면 「선택이 필요해요」가 뜨고, 고르면 그 안의 key 가 서버로 가고 칸이 사라진다", async ({ page, request }) => {
@@ -231,8 +248,9 @@ test("「지금 일정 그대로 두기」는 key 를 null 로 보낸다", async
   const server = mockServer(request);
   await server.scenario({ proposals: "open" });
   await openTrip(page);
-  await openNotices(page);
-  await page.getByRole("button", { name: "지금 일정 그대로 두기" }).click();
+  // `[2026-10-22 ST4F-715]` 채팅에도 같은 선택 단추가 있다 — 알림 센터 안에서 누른다(위 「다른 곳 찾아보기」와 같다)
+  const center = await openNotices(page);
+  await center.getByRole("button", { name: "지금 일정 그대로 두기" }).click();
   await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
   expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: null });
 });
@@ -241,8 +259,8 @@ test("이미 정해진 선택(409)은 「아무것도 바뀌지 않았다」고 
   const server = mockServer(request);
   await server.scenario({ proposals: "open", choose: "conflict" });
   await openTrip(page);
-  await openNotices(page);
-  await page.getByRole("button", { name: /대체 식당 B/ }).click();
+  const center = await openNotices(page);                                                         // 채팅의 같은 단추와 겹치지 않게 센터 안에서
+  await center.getByRole("button", { name: /대체 식당 B/ }).click();
   await expect(page.getByRole("alert").filter({ hasText: "이미 정해졌거나" })).toContainText("아무것도 바뀌지 않았고");
   // 알림 뒤에 화면이 서버를 다시 읽는다
   await expect.poll(async () => (await server.received("GET", "/proposals")).length).toBeGreaterThan(1);
@@ -299,7 +317,8 @@ test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 
 });
 
 test("직접 쓴 질문도 보내고, 옛 서버처럼 answer 없이 escalated 만 오면 화면이 「담당자에게 넘겼어요」를 지어내지 않는다", async ({ page, request }) => {
-  await mockServer(request).scenario({ chat: "escalated_bare" });
+  // `[2026-10-22 ST4F-715]` 채팅은 알림을 시각 순으로 섞는다 — 마지막 글이 답이 되게 알림 없이 연다
+  await mockServer(request).scenario({ chat: "escalated_bare", notices: "none" });
   await openTrip(page);
   await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");
@@ -380,7 +399,8 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   // which the browser logs by itself — that one is expected there (the screen falls back to re-reading every 30 s).
   // The same for the route lines (`routeShapes: "on"`): a server without `route-shapes` answers 404 and the browser logs it — the screen then draws pins only.
   // And for the consent record (`consents: "on"`): an older server without it answers 404 and the browser logs that (the screen then keeps the browser's own copy).
-  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on", retention: "on" });
+  // And for the operator's switches (`features: "on"`, ST4F-613): an older server answers `GET /v1/web/features` with 404 (the Course Keeper then shows as before).
+  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on", retention: "on", features: "on" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
@@ -421,7 +441,8 @@ test("서버가 「이 여행 바뀜」 신호를 보내면 새로고침 없이 
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toHaveCount(0);
   await server.scenario({ proposals: "open" });
   // the stream opens a moment after the screen: ring until it is there
-  await expect.poll(() => server.ring(["proposal"])).toBeGreaterThan(0);
+  // `[2026-10-22 ST4F-715]` 열린 제안은 여행 판 2 의 것이다 — 화면은 판이 다른 제안을 거르므로 일정과 제안이 함께 바뀐 신호를 보낸다
+  await expect.poll(() => server.ring(["itinerary", "proposal"])).toBeGreaterThan(0);
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A");
 });
 
@@ -450,7 +471,7 @@ test("신호가 없는 옛 서버면 다시 붙으려고 조르지 않고 30초 
 // 2026-09-30 (teammate question Q-05): the server answered, only re-reading the plan failed.
 test("채팅: 서버가 답한 뒤 일정 다시 읽기만 실패하면 답은 보이고 「못 보냈다」고 하지 않으며, 잠시 뒤 다시 읽는다", async ({ page, request }) => {
   const server = mockServer(request);
-  await server.scenario({ rereadFails: 1 });
+  await server.scenario({ rereadFails: 1, notices: "none" });                                     // 마지막 글이 답이 되게(채팅은 알림을 섞는다)
   await openTrip(page);
   await openPane(page, "채팅");
   const chat = page.locator("#trip-pane-chat");

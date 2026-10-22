@@ -17,7 +17,7 @@ from . import failure_codes as fc
 from app.domains.travel_ops.components.intake.survey_answers import REPLACEMENT_QUESTION
 from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
 
-from . import alternative_order
+from . import alternative_order, place_aliases, place_identity
 from .alternatives import FALLBACK_DROPS, RADIUS_START_KM, preference_from_survey, rank_alternatives
 from .disaster_impact import ImpactRules, assess
 from .judge.llm import file_instructions
@@ -104,8 +104,8 @@ class ReplacementMixin:
         return survey, info, evidence, (["예약이 속한 여행을 추정으로 찾아 그 여행의 설문을 썼다"] if guessed else [])
 
     def _itinerary_places(self, task: TeamTask, booking: dict[str, Any] | None, seen: set[str],
-                          view: Any, *, reserve: int = 0) -> tuple[set[str], set[str], list[str]]:
-        """이 예약이 속한 여행 일정에 **이미 들어 있는 장소** — `(관광공사 contentid 들, 이름들, 경고)`. `[2026-10-15 피드백]`
+                          view: Any, *, reserve: int = 0) -> tuple[set[str], set[str], list[Any], list[str]]:
+        """이 예약이 속한 여행 일정에 **이미 들어 있는 장소** — `(관광공사 contentid 들, 이름들, 같은 곳 판정용 `Spot` 들, 경고)`. `[2026-10-15 피드백]`
 
         ★전에는 `rank_alternatives(exclude_ids=)` 가 있는데 부르는 쪽이 넘기지 않아 같은 여행의 다른 일정 장소가 대체 후보로 나갔다.
           같은 곳이 다른 contentid 로 있을 수 있어 이름도 함께 본다(`itinerary_changes.unused_places` 와 같은 기준).
@@ -119,9 +119,10 @@ class ReplacementMixin:
             except Exception:  # noqa: BLE001 — 실패 코드는 `_read` 가 남겼다. 경고로 드러낸다
                 view = None
         if not isinstance(view, dict):
-            return set(), set(), ["여행 일정을 읽지 못해 후보가 이미 일정에 있는 곳인지 확인하지 못했다"]
+            return set(), set(), [], ["여행 일정을 읽지 못해 후보가 이미 일정에 있는 곳인지 확인하지 못했다"]
         ids: set[str] = set()
         names: set[str] = set()
+        spots: list[Any] = []
         for item in view.get("items") or []:
             if item.get("kind") == "mobility":
                 continue
@@ -132,7 +133,10 @@ class ReplacementMixin:
             name = str(placed.get("name") or item.get("title") or "").strip()
             if name:
                 names.add(name)
-        return ids, names, []
+            spot = place_identity.spot_of({**placed, "name": name}) if name else None
+            if spot is not None:
+                spots.append(spot)
+        return ids, names, spots, []
 
     @staticmethod
     def _preference(task: TeamTask, survey: dict[str, Any] | None) -> tuple[str | None, list[str], str | None]:
@@ -217,11 +221,14 @@ class ReplacementMixin:
                                                                reserve=1 if disaster_blocked else 0, plan_out=plan)
         preference, more_warnings, source = self._preference(task, survey)
         warnings = [*warnings, *more_warnings]
-        in_plan_ids, in_plan_names, plan_warnings = self._itinerary_places(
+        in_plan_ids, in_plan_names, in_plan_spots, plan_warnings = self._itinerary_places(
             task, booking, seen, plan.get("view"), reserve=1 if disaster_blocked else 0)
         warnings += plan_warnings
         if in_plan_names:
             candidates = [c for c in candidates if str(c.get("title") or "").strip() not in in_plan_names]
+        # ★`[2026-10-19]` 이름이 달라도 같은 곳(「N서울타워」 = 「남산서울타워」)은 규칙 · 확인된 별칭만 뺀다(`place_identity`, LLM 은 쓰지 않는다)
+        candidates = self._drop_same_places(task, candidates, in_plan_spots, warnings,
+                                            aliases=place_aliases.merged(pool.get("aliases")))
         ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference,
                                    exclude_ids=in_plan_ids)
         if ranked["reason"] == "origin_no_coordinates":
@@ -294,6 +301,22 @@ class ReplacementMixin:
                 + "후보는 휴무 요일·운영시간·재난문자만 다시 확인했고 정원은 확인하지 않았습니다."
                 + (f"\n{ask_line}" if ask_line else ""), warnings)
 
+    def _drop_same_places(self, task: TeamTask, candidates: list[dict[str, Any]], spots: list[Any],
+                          warnings: list[str], *, aliases: place_aliases.AliasTable = place_aliases.EMPTY) -> list[dict[str, Any]]:
+        """일정에 이름만 다르게 이미 들어 있는 같은 장소를 대체 후보에서 뺀다 — `place_identity`. `[2026-10-19 사용자 결정]`
+
+        ★규칙이 `same` 이라 한 후보(같은 contentid · 같은 이름 · **확인된 별칭**)만 뺀다. 같을 수도 있는 후보(`ambiguous` — 300m 안 · 이름이 닮음)는
+          빼지 않고 개수만 경고로 남긴다. LLM 에게 묻는 방식은 쓰지 않는다(지웠다) — 자주 나오는 애매한 쌍은 `place_aliases.csv` 에 별칭으로 더한다.
+        """
+        if not spots or not candidates:
+            return candidates
+        kept, removed, maybe = place_identity.split(spots, candidates, aliases)
+        if removed:
+            warnings.append(f"일정에 이미 들어 있는 같은 장소 {removed}곳을 대체 후보에서 뺐다")
+        if maybe:
+            warnings.append(f"일정에 있는 곳과 같은 장소일 수 있는 후보 {maybe}곳을 확인하지 못해 그대로 두었다")
+        return kept
+
     def _order_alternatives(self, task: TeamTask, place: Any, alt: dict[str, Any], candidates: list[dict[str, Any]],
                             warnings: list[str], survey: dict[str, Any] | None = None) -> dict[str, Any] | None:
         """검증된 후보의 보여 줄 순서 — `kind_modes.alternative_order`(rule · shadow · llm). `[2026-10-12 사용자 결정]`
@@ -308,7 +331,9 @@ class ReplacementMixin:
             return None
         # ★`[2026-10-13 사용자 결정 A안]` 화면에 보일 3곳만 넘긴다 — 어떤 3곳이 보이는지는 코드가 정하고 LLM 은 그 순서만 정한다.
         pool = [a for a in alt["alternatives"] if a.get("revalidated")]
-        preference = alternative_order.preference_inputs(survey, task.input_text)
+        # ★`[2026-10-19]` 감시 Case 의 제목(시스템 문구)은 고객 문장이 아니다 — `customer_words` 가 고객이 쓴 말만 고른다
+        preference = alternative_order.preference_inputs(
+            survey, alternative_order.customer_words(task.input_text, task.context.current_state))
         if len(pool) < 2 or preference is None:
             return None
         budget = getattr(self, "judge_budget", None)
@@ -319,7 +344,10 @@ class ReplacementMixin:
             return {"by": "code", "skipped": "budget_unreadable"}
         rows = {str(c.get("contentid")): c for c in candidates}
         classes = {k: str(v.get("lclsSystm3") or v.get("lclsSystm2") or "") for k, v in rows.items()}
-        body = alternative_order.payload(place.get("name") if isinstance(place, dict) else None, pool, preference, classes)
+        # ★`[2026-10-20 사용자 결정]` 분류 이름(class_name)도 싣는다 — 지시문 v3 와 짝(holdout-2: 골라야 하는 사례 적중
+        #   65.0% → 83.3%, 경미 지어냄 29.4% → 7.8%). `[2026-10-21 사용자 결정]` 지시문 v5 로 두 경로 통과 → kind_modes 는 llm.
+        body = alternative_order.payload(place.get("name") if isinstance(place, dict) else None, pool, preference, classes,
+                                         with_class_name=True)
         from app.core.settings import get_guardrails
 
         timeout = float(get_guardrails().get("travel.activity_judge.alternative_order_timeout_seconds"))
@@ -334,7 +362,8 @@ class ReplacementMixin:
 
             def work() -> None:
                 try:
-                    applied = alternative_order.apply(pool, _run(ask()).output)
+                    applied = alternative_order.apply(pool, _run(ask()).output,
+                                                      customer_text=preference.get("customer_text"), classes=classes)
                 except Exception as exc:  # noqa: BLE001 — 섀도는 고객 결과와 상관없다. 보이게만 남긴다
                     _order_log.warning(json.dumps({"event": "alternative_order_shadow_error",
                                                    "case_id": str(task.case_id), "error": type(exc).__name__},
@@ -358,7 +387,9 @@ class ReplacementMixin:
             self._record_failure(task, fc.LLM_ERROR, tool=alternative_order.KIND, error=type(exc).__name__)
             warnings.append("대체 후보 순서 LLM 을 부르지 못해 코드 순서로 보여 줬다")
             return {"by": "code", "failed": fc.LLM_ERROR, "error": type(exc).__name__}
-        applied = alternative_order.apply(pool, getattr(call, "output", None))
+        # ★`[2026-10-20]` 이유 문장 지킴이 — 확인할 수 없는 말 · 「A 아니면 B」 거꾸로 읽기 · 장소 번호는 정해진 문장으로
+        applied = alternative_order.apply(pool, getattr(call, "output", None),
+                                          customer_text=preference.get("customer_text"), classes=classes)
         if applied is None:
             warnings.append("대체 후보 순서 LLM 의 답을 쓸 수 없어 코드 순서로 보여 줬다")
             return {"by": "code", "failed": fc.LLM_SCHEMA_INVALID}

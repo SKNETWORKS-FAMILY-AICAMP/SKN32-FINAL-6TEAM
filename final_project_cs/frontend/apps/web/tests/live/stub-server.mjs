@@ -71,6 +71,12 @@ const DEFAULTS = {
   // `[2026-10-19 ST4F-613]` the operator's switches, read without a session (`GET /v1/web/features`): "off" (an older server: 404 — the Course Keeper shows as before)
   //   | "on" (`{guardian: true}`) | "guardian_off" (`{guardian: false}` — and, as the server does then, the trip view has no `guardian` and `POST …/guardian` answers 409 guardian_disabled)
   features: "off",
+  // `[2026-10-22 ST4F-715]` the trip screen's current-risk check (`GET …/trips/{id}/risks`): "off" (404 — the risk panel says it could not check, with a status line)
+  //   | "clear" (`items: []` — nothing in the check scope, no status line)
+  risks: "off",
+  // `[2026-10-22 사용자 지시]` the operator's switch for the risk panel above the stop list (`risk_panel` of the trip view): "absent" (an older server: no field — shown)
+  //   | "on" | "off" (`risk_panel: false` — only that panel is hidden; the check, the bell and the notice center stay)
+  riskPanel: "absent",
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
@@ -405,6 +411,7 @@ function tripView(id = TRIP_ID) {
     map: { days: [{ date: "2026-10-15", legs: [{ from_item_id: "i-a", to_item_id: "i-b", url: "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit" }] }] },
     density: [],
     warnings: scenario.warnings === "some" ? [{ code: "density_exceeded", date: "2026-10-01", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }] : [],
+    ...(scenario.riskPanel === "absent" ? {} : { risk_panel: scenario.riskPanel === "on" }),
   };
   const withGuardian = scenario.guardian === "absent" || scenario.features === "guardian_off" ? view : { ...view, guardian: guardianState ?? { enabled: scenario.guardian === "on", since: null, via: null } };
   if (scenario.tripItems === "stay") return { ...withGuardian, items: stayItems(), warnings: [], history: view.history.slice(0, 1), map: { days: [] } };
@@ -1330,6 +1337,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 200, { trip_id: id, status: "deleted" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
+  if (path === `/v1/web/trips/${TRIP_ID}/risks` && request.method === "GET" && scenario.risks === "clear") {
+    return json(response, 200, { trip_id: TRIP_ID, version: 1, at: at(9), mode: "cached", items: [] }, origin);
+  }
   if (path === `/v1/web/trips/${TRIP_ID}/events` && request.method === "GET" && scenario.bell === "busy") {
     return json(response, 429, { error: { code: "too_many_streams", message: "열린 연결이 너무 많아요" } }, origin);
   }

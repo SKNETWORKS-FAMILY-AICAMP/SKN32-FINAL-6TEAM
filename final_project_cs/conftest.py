@@ -54,6 +54,14 @@ def _use_worker_database(worker: str) -> None:
             conn.execute("SELECT pg_advisory_unlock(hashtext('acop_pytest_worker_db'))")
     os.environ["ACOP_DATABASE_URL"] = urlunsplit(
         (parts.scheme, parts.netloc, "/" + worker_db, parts.query, parts.fragment))
+    # 같은 명시적 시험 연결도 일꾼 DB를 가리킨다. 별도로 지정한 시험 DB는 바꾸지 않는다.
+    test_url = os.environ.get("TEST_DATABASE_URL")
+    if test_url:
+        test_parts = urlsplit(test_url)
+        identity_fields = ("hostname", "port", "path", "username", "password")
+        if all(getattr(test_parts, key) == getattr(parts, key) for key in identity_fields):
+            os.environ["TEST_DATABASE_URL"] = urlunsplit(
+                (test_parts.scheme, test_parts.netloc, "/" + worker_db, test_parts.query, test_parts.fragment))
 
 
 if _WORKER:

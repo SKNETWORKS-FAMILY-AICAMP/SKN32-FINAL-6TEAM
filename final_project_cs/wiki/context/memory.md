@@ -63,7 +63,7 @@ degraded: true
 
 ## 출처는 이벤트다
 
-`case_events`가 append-only라 **이력을 재생할 수 있다.**
+`case_events`가 append-only라 **이력을 재생할 수 있다.** 단 하나의 예외가 있다 — 약관의 「처리 기록은 여행·게스트 자료가 지워질 때 함께 파기」 `[2026-10-07 사용자 결정]` 때문에, 여행 삭제·게스트 정리·회원 정리가 **그 자료의 Case 와 사건 줄을 지운다**(`trip_delete.purge_cases` 한 곳, 설정 `retention.case_follows_trip`). 이 파기 이후 그 Case 의 이력은 재생할 수 없다.
 
 ```python
 replay_case(conn, tenant_id=..., case_id=...)

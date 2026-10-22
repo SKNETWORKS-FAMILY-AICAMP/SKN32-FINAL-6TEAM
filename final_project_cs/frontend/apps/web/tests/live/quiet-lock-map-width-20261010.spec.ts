@@ -56,7 +56,8 @@ for(const width of [375,1280]) {
   const body=page.locator('[class*=sheetBody]'),all=body.getByRole('button',{name:/^전체 자동 추천/});
   await expect(all).toBeInViewport();await expect(all).toHaveCSS('position','static');await expect(page.getByRole('button',{name:/^전체 자동 추천/})).toHaveCount(1);
   const before=(await all.boundingBox())!.y;await capture(page,`05-top-${width}`);
-  await body.evaluate(el=>{el.scrollTop=250;});
+  // `[2026-10-22 ST4F-715]` 결과 화면 맨 위 위험 칸만큼 단추가 내려와 있다 — 고정 250px 대신 단추 아래 끝이 목록 위로 넘어가게 굴린다
+  await all.evaluate(el=>{const sheet=el.closest('[class*=sheetBody]')!;sheet.scrollTop+=el.getBoundingClientRect().bottom-sheet.getBoundingClientRect().top+40;});
   await expect.poll(async()=>((await all.boundingBox())!.y)).toBeLessThan(before-100);
   expect((await all.boundingBox())!.y+(await all.boundingBox())!.height).toBeLessThan((await body.boundingBox())!.y);
   await capture(page,`06-scrolled-${width}`);

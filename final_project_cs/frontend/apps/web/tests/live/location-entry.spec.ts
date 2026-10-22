@@ -21,9 +21,10 @@ for (const width of [375, 1280]) test(`${width}px: 동의 전에도 왼쪽 내 �
   await expect(tools(page)).toHaveAttribute("data-layout", "row");
   const boxes = await tools(page).getByRole("button").evaluateAll(nodes => nodes.map(node => ({ label: node.getAttribute("aria-label"), box: node.getBoundingClientRect().toJSON() })));
   for (const item of boxes) {
-    expect(item.box.width, `${item.label} 누름 폭`).toBeGreaterThanOrEqual(44);
+    // 변환된 DOM 좌표의 부동소수점 오차만 허용한다(0.0001px). 실제 누름 영역 기준은 유지한다.
+    expect(item.box.width + 0.0001, `${item.label} 누름 폭`).toBeGreaterThanOrEqual(44);
     // 거리·접기 버튼은 44×40px, 내 위치를 포함한 원형 도구는 44×44px를 유지한다.
-    expect(item.box.height, `${item.label} 누름 높이`).toBeGreaterThanOrEqual(item.label === "지도 단추 접기" ? 40 : 44);
+    expect(item.box.height + 0.0001, `${item.label} 누름 높이`).toBeGreaterThanOrEqual(item.label === "지도 단추 접기" ? 40 : 44);
   }
   if (await tools(page).getAttribute("data-layout") === "row") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);
   await tools(page).getByRole("button", { name: "지도 단추 접기" }).focus();
@@ -51,7 +52,8 @@ test("버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으�
   await page.setViewportSize({ width: 375, height: 900 });
   await allowLocation(context, { latitude: 37.5512, longitude: 126.9882 });
   await countLocationAsks(page);
-  await openFinished(page, request);
+  // `[2026-10-22 ST4F-715]` 선택 동의는 서버 기록이 있어야 진행한다(`saveOptionalConsent`) — 동의 기록이 있는 서버로 연다
+  await openFinished(page, request, undefined, { consents: "on" });
   await expand(page);
   await locate(page).click();
   await page.getByRole("dialog", { name: "내 위치로 이동" }).getByRole("button", { name: /에 동의하고 계속/ }).click();

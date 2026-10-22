@@ -1,0 +1,39 @@
+{
+ "eval_run": "20261020T003305Z",
+ "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_watch_v2.jsonl",
+ "inputs_sha256": "b4e8eff1aba1b936f17ce7012f678eed15791053290f29da9126fef91c212603",
+ "dataset_sha256": "0445abb58e0cc5df6e7adcc6ce09d16d5303ff559d29b64c2d53855c65762379",
+ "split": [
+  "holdout"
+ ],
+ "smoke": false,
+ "labeler": "합의",
+ "cases": 21,
+ "repeats": 3,
+ "shuffle": {
+  "cases": 40,
+  "per_case": 2,
+  "seed": 7
+ },
+ "dry_run": false,
+ "model": "gpt-5.4-nano",
+ "reasoning_effort": "low",
+ "web_search": false,
+ "prompt_file": "alternative_order.v2.md",
+ "timeout_s": 8.0,
+ "temperature": null,
+ "seed_model": null,
+ "prompt": "db",
+ "prompt_id": "cc0f028a-3b42-4007-99b4-9de0b35cc470",
+ "prompt_chars": 1072,
+ "m5_review": {
+  "sheet": "reasons_review.csv",
+  "rows": 20,
+  "selection": "자동 표시 0건 + 무작위 20건(seed 7) — 이유 58건 중",
+  "claude_assisted": "Claude 제안을 사용자가 검토 · 그대로 확정(2026-10-20)",
+  "fabricated": [
+   "L-43-W/shuffle-1/r1 「같은 위치의」",
+   "L-50-W/base/r2 「포토 포인트가 많아 보여요」"
+  ]
+ }
+}
