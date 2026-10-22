@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>첫 장 카드 = 여행 등록 단추</title>
+<!--
+  2026-10-22 목업 · 사용자 지시: 소개 첫 장의 「A LITTLE MORE YOU · 서울 · 최대 7일 · 4명까지」 카드를 지금 모양 그대로 두고 여행 등록 단추로 만든다
+  (누르면 셋째 장 「내 일정 시작하기」와 같은 곳 — 계획 담기 화면). 단추라는 것을 느끼게 하는 방법을 비교한다.
+  바탕 그림: role-eval-ui 52873e76 위 작업 사본(로컬 개발 서버 3100)의 첫 장을 402×874 · 2배로 떠서 배지 카드만 지운 것(hero-green.png · hero-dark.png).
+  카드 자리: 왼쪽 27px · 아래 끝 744.7px(배지는 margin-top:auto 라 높아지면 위로 자란다). 글자 · 색은 앱 값(배지 9px/13px · 토큰).
+  「여행 등록하기」는 사용자 말, 「내 일정 시작하기」는 셋째 장 단추 문구. 칸 이름 · 설명 · 장단점 글은 목업용으로 지은 것이다.
+-->
+<style>
+  :root { --page: #eef2ec; --ink: #24392f; --muted: #4a5d52; --line: #d5ded7; --accent: #2e6047; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: "Segoe UI", "Malgun Gothic", sans-serif; }
+  header { padding: 22px 20px 10px; max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.5px; }
+  header p { margin: 0 0 12px; font-size: 13px; line-height: 1.7; color: var(--muted); max-width: 860px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 12px; margin-bottom: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+  .seg button { border: 0; background: none; padding: 7px 12px; font: inherit; color: var(--muted); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .bar label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tabs button { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 7px 12px; font: inherit; font-size: 12px; color: var(--ink); cursor: pointer; }
+  .tabs button[aria-pressed="true"] { border-color: var(--accent); background: #e3eee6; font-weight: 700; }
+  .tabs .tag { font-size: 10px; color: var(--accent); margin-left: 4px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 8px 20px 40px; }
+  .single { display: flex; gap: 26px; align-items: flex-start; flex-wrap: wrap; }
+  .note { flex: 1 1 300px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; font-size: 13px; line-height: 1.75; }
+  .note h2 { font-size: 17px; margin: 0 0 4px; }
+  .note .kind { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: .3px; }
+  .note h3 { font-size: 12px; margin: 14px 0 2px; color: var(--accent); }
+  .note ul { margin: 0; padding-left: 18px; }
+  .note a { color: var(--accent); }
+  .grid { display: none; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 22px 16px; }
+  body[data-view="grid"] .single { display: none; }
+  body[data-view="grid"] .grid { display: grid; }
+  .cell figcaption { font-size: 12px; margin: 6px 2px 0; color: var(--muted); }
+  .cell figcaption b { color: var(--ink); }
+  figure { margin: 0; }
+  .refs { margin-top: 26px; font-size: 12px; line-height: 1.8; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; }
+  .refs h2 { font-size: 14px; color: var(--ink); margin: 0 0 4px; }
+  .refs a { color: var(--accent); }
+
+  /* ── 휴대폰 화면(402×874를 --s 배율로) ───────────────────────────── */
+  .box { width: calc(402px * var(--s, 1)); height: calc(874px * var(--s, 1)); flex: none; border-radius: calc(26px * var(--s, 1)); overflow: hidden; box-shadow: 0 18px 50px rgba(36, 57, 47, .18); }
+  .phone { position: relative; width: 402px; height: 874px; transform: scale(var(--s, 1)); transform-origin: top left; overflow: hidden; font-family: "Segoe UI", "Malgun Gothic", sans-serif; color: var(--t-text); }
+  .phone .shot { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .phone[data-theme="green"] { --t-primary: #2e6047; --t-on: #fff; --t-surface: #fff; --t-text: #24392f; --t-sub: #4a5d52; --t-border: #dce3dd; --t-soft: #e9f2eb; --t-faint: #66746b; --t-shadow: rgba(36, 57, 47, .04); --t-lift: rgba(36, 57, 47, .16); --t-warm: #82693e; }
+  .phone[data-theme="dark"]  { --t-primary: #7cbd96; --t-on: #0d1712; --t-surface: #18251f; --t-text: #e4ece7; --t-sub: #c3d1c8; --t-border: #2e3f36; --t-soft: #1f3a2c; --t-faint: #93a49a; --t-shadow: rgba(228, 236, 231, .04); --t-lift: rgba(0, 0, 0, .45); --t-warm: #e3bd78; }
+  .slot { position: absolute; left: 27px; bottom: 129.3px; right: 27px; display: flex; justify-content: flex-start; }
+
+  /* 앱 배지 그대로(.badge) */
+  .cta { position: relative; display: block; text-align: left; max-width: 100%; background: color-mix(in srgb, var(--t-surface) 94%, transparent); border: 1px solid var(--t-surface); padding: 15px 17px; border-radius: 15px;
+    box-shadow: 0 8px 30px var(--t-shadow); color: var(--t-text); font: inherit; cursor: pointer; animation: bob 4.5s ease-in-out 1.8s infinite; -webkit-tap-highlight-color: transparent; transition: transform .12s ease, box-shadow .2s ease; }
+  .cta small { font-size: 9px; color: var(--t-primary); letter-spacing: 1.5px; display: block; margin-bottom: 7px; }
+  .cta strong { font-size: 13px; font-weight: 600; display: block; white-space: nowrap; }
+  .cta:active, .cta.pressed { transform: scale(.97); animation-play-state: paused; }
+  .cta:focus-visible { outline: 2px solid var(--t-primary); outline-offset: 3px; }
+  @keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+  .plane { width: 16px; height: 16px; display: block; }
+  .label { color: var(--t-primary); font-size: 13px; font-weight: 700; letter-spacing: -.2px; white-space: nowrap; }
+  .cta.lifted { box-shadow: 0 10px 28px var(--t-lift), 0 1px 0 var(--t-border); }
+
+  /* 지금(비교) — 단추 표시 없음 */
+  .v-now { cursor: default; }
+
+  /* A 비행기 길 — 점선 길을 따라 비행기가 날아가 핀에 닿는다(4초에 한 번, 나머지는 쉼) */
+  .v-a .go { display: flex; align-items: center; gap: 12px; margin-top: 11px; padding-top: 10px; border-top: 1px dashed color-mix(in srgb, var(--t-primary) 35%, transparent); }
+  .v-a .route { position: relative; flex: 1; min-width: 64px; height: 16px; }
+  .v-a .route::before { content: ""; position: absolute; left: 0; right: 7px; top: 50%; border-top: 2px dotted color-mix(in srgb, var(--t-primary) 55%, transparent); }
+  .v-a .pin { position: absolute; right: 0; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--t-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--t-primary) 22%, transparent); }
+  .v-a .route .plane { position: absolute; left: 0; top: 0; color: var(--t-primary); rotate: 45deg; animation: glide 4s cubic-bezier(.45, 0, .25, 1) 1.2s infinite; }
+  @keyframes glide { 0% { left: -4px; opacity: 0; } 8% { opacity: 1; } 42% { left: calc(100% - 30px); opacity: 1; } 50%, 100% { left: calc(100% - 26px); opacity: 0; } }
+
+  /* B 이륙 — 「여행 등록하기 ✈」, 비행기가 비행운을 남기며 떠오른다 */
+  .v-b .go { display: flex; align-items: center; gap: 8px; margin-top: 11px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--t-primary) 22%, transparent); }
+  .v-b .sky { position: relative; width: 44px; height: 22px; overflow: visible; }
+  .v-b .sky .plane { position: absolute; left: 2px; bottom: 0; color: var(--t-primary); rotate: 20deg; animation: lift 3.6s ease-in 1.2s infinite; }
+  .v-b .trail { position: absolute; left: 4px; bottom: 6px; height: 2px; width: 0; border-radius: 2px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--t-primary) 55%, transparent)); transform-origin: left; rotate: -28deg; animation: trail 3.6s ease-in 1.2s infinite; }
+  @keyframes lift { 0%, 12% { translate: 0 0; opacity: 1; } 45% { translate: 30px -16px; opacity: 1; } 55% { translate: 38px -22px; opacity: 0; } 56% { translate: 0 6px; opacity: 0; } 70%, 100% { translate: 0 0; opacity: 1; } }
+  @keyframes trail { 0%, 12% { width: 0; opacity: 0; } 45% { width: 32px; opacity: 1; } 62%, 100% { width: 32px; opacity: 0; } }
+
+  /* C 탑승권 — 오른쪽에 떼는 표 조각(점선 · 홈) */
+  .v-c { display: flex; align-items: stretch; padding: 0; overflow: visible;
+    -webkit-mask: radial-gradient(circle 7px at calc(100% - 78px) 0, transparent 98%, #000) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - 78px) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+            mask: radial-gradient(circle 7px at calc(100% - 78px) 0, transparent 98%, #000) top / 100% 51% no-repeat, radial-gradient(circle 7px at calc(100% - 78px) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat; }
+  .v-c .main { padding: 15px 16px 15px 17px; }
+  .v-c .stub { width: 78px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border-left: 2px dashed var(--t-surface); background: var(--t-primary); color: var(--t-on); border-radius: 0 14px 14px 0; transform-origin: left center; transition: transform .25s ease; }
+  .v-c .stub .plane { width: 18px; height: 18px; rotate: 45deg; animation: hover 2.4s ease-in-out infinite; }
+  .v-c .stub span { font-size: 11px; font-weight: 700; line-height: 1.25; text-align: center; }
+  .v-c.pressed .stub { transform: rotate(7deg) translate(4px, 2px); }
+  @keyframes hover { 0%, 100% { translate: 0 0; } 50% { translate: 2px -2px; } }
+
+  /* D 빛 테두리 — 테두리를 따라 도는 빛(border beam) + 아래 「여행 등록하기 →」 */
+  @property --beam { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  .v-d { isolation: isolate; }
+  .v-d::before { content: ""; position: absolute; inset: -1px; border-radius: 15px; padding: 1.5px; z-index: -1;
+    background: conic-gradient(from var(--beam), transparent 0 72%, color-mix(in srgb, var(--t-primary) 30%, transparent) 80%, var(--t-primary) 88%, transparent 92%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: beam 3.2s linear infinite; }
+  @keyframes beam { to { --beam: 360deg; } }
+  .v-d .go { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 10px; }
+  .v-d .arrow { color: var(--t-primary); font-size: 15px; font-weight: 700; animation: nudge 1.8s ease-in-out infinite; }
+  @keyframes nudge { 0%, 100% { translate: 0 0; } 50% { translate: 3px 0; } }
+
+  /* E 반짝 빛 — 카드 위를 비스듬히 지나가는 빛(shimmer), 오른쪽 끝 › */
+  .v-e { overflow: hidden; }
+  .v-e::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--t-primary) 16%, transparent) 48%, color-mix(in srgb, #fff 40%, transparent) 50%, transparent 62%); translate: -110% 0; animation: shine 4s ease-in-out 1.4s infinite; pointer-events: none; }
+  @keyframes shine { 0% { translate: -110% 0; } 40%, 100% { translate: 110% 0; } }
+  .v-e .row { display: flex; align-items: center; gap: 18px; }
+  .v-e .chev { margin-left: auto; color: var(--t-primary); font-size: 20px; line-height: 1; }
+  .v-e .label { display: block; margin-top: 8px; }
+
+  /* F 둥근 단추 + 물결 — 오른쪽 원형 단추에서 물결이 퍼진다 */
+  .v-f .row { display: flex; align-items: center; gap: 16px; }
+  .v-f .btn { position: relative; flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--t-primary); color: var(--t-on); display: grid; place-items: center; }
+  .v-f .btn .plane { width: 18px; height: 18px; rotate: 45deg; }
+  .v-f .btn::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--t-primary); animation: ripple 2.2s ease-out 1.2s infinite; }
+  @keyframes ripple { 0% { scale: 1; opacity: .7; } 70%, 100% { scale: 1.6; opacity: 0; } }
+  .v-f .label { display: block; margin-top: 8px; }
+
+  /* G 아래 단추 띠 — 카드 아래쪽이 채워진 단추(움직임은 화살표만) */
+  .v-g { padding-bottom: 0; overflow: hidden; }
+  .v-g .strip { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 12px -17px 0; padding: 11px 17px; background: var(--t-primary); color: var(--t-on); font-size: 13px; font-weight: 700; }
+  .v-g .strip .plane { width: 15px; height: 15px; rotate: 45deg; animation: nudge 1.8s ease-in-out infinite; }
+
+  /* H 밀어서 출발 — 비행기 손잡이를 오른쪽으로 끌면 출발(눌러도 된다) */
+  .v-h .track { display: block; position: relative; margin-top: 11px; height: 40px; width: 250px; max-width: 100%; border-radius: 20px; background: var(--t-soft); overflow: hidden; touch-action: none; }
+  .v-h .track .hint { position: absolute; inset: 0; display: grid; place-items: center; padding-left: 30px; font-size: 12px; font-weight: 700; color: var(--t-primary);
+    background: linear-gradient(90deg, transparent 0 30%, color-mix(in srgb, var(--t-primary) 30%, transparent) 45%, transparent 60%) no-repeat; background-size: 220% 100%; animation: sweep 2.6s linear infinite; }
+  @keyframes sweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+  .v-h .knob { position: absolute; left: 3px; top: 3px; width: 34px; height: 34px; border-radius: 50%; background: var(--t-primary); color: var(--t-on); display: grid; place-items: center; box-shadow: 0 2px 6px var(--t-lift); }
+  .v-h .knob .plane { rotate: 45deg; }
+  .v-h .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: color-mix(in srgb, var(--t-primary) 22%, transparent); }
+
+  /* 눌렀을 때 공통 — 비행기가 화면 위로 날아가고 다음 화면 안내 */
+  .fly { position: absolute; width: 26px; height: 26px; color: var(--t-primary); pointer-events: none; opacity: 0; z-index: 9; }
+  .toast { position: absolute; left: 50%; top: 96px; translate: -50% -8px; opacity: 0; transition: opacity .25s, translate .25s; background: var(--t-text); color: var(--t-surface); font-size: 12px; padding: 9px 14px; border-radius: 10px; white-space: nowrap; z-index: 10; }
+  .toast.show { opacity: 1; translate: -50% 0; }
+
+  .calm .phone *, .calm .phone *::before, .calm .phone *::after { animation: none !important; }
+  @media (prefers-reduced-motion: reduce) { .phone *, .phone *::before, .phone *::after { animation: none !important; } }
+</style>
+</head>
+<body data-view="single">
+<header>
+  <h1>첫 장 카드 = 여행 등록 단추</h1>
+  <p>소개 첫 장의 「A LITTLE MORE YOU · 서울 · 최대 7일 · 4명까지」 카드를 지금 모양 그대로 두고, 누르면 셋째 장 「내 일정 시작하기」와 같은 곳(계획 담기 화면)으로 가게 만든다. 이 카드가 단추라는 것을 알리는 방법 8가지를 실제 첫 장 위에 얹었다 — 카드를 눌러 보면 눌렀을 때 움직임과 다음 화면 안내가 나온다(목업이라 실제로 넘어가지는 않는다). 바탕은 지금 앱 첫 장을 뜬 그림이다(카드만 지움).</p>
+  <div class="bar">
+    <span>테마 <span class="seg" id="theme"><button type="button" data-v="green" aria-pressed="true">그린</button><button type="button" data-v="dark" aria-pressed="false">다크</button></span></span>
+    <span>단추 글자 <span class="seg" id="word"><button type="button" data-v="여행 등록하기" aria-pressed="true">여행 등록하기</button><button type="button" data-v="내 일정 시작하기" aria-pressed="false">내 일정 시작하기</button></span></span>
+    <span>보기 <span class="seg" id="view"><button type="button" data-v="single" aria-pressed="true">하나씩</button><button type="button" data-v="grid" aria-pressed="false">나란히</button></span></span>
+    <label><input type="checkbox" id="calm"> 움직임 줄이기(기기 설정과 같게)</label>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="안 고르기"></nav>
+</header>
+<main>
+  <section class="single">
+    <div class="box" id="mainBox"></div>
+    <article class="note" id="note"></article>
+  </section>
+  <section class="grid" id="grid"></section>
+  <section class="refs">
+    <h2>조사한 것(2026-10-22)</h2>
+    <ul>
+      <li>여행 서비스 첫 화면 — <a href="https://mindtrip.ai/">Mindtrip</a> · <a href="https://wanderlog.com/">Wanderlog</a> · <a href="https://layla.ai/">Layla</a> · <a href="https://wonderplan.ai/">Wonderplan</a> · <a href="https://www.stippl.io/">Stippl</a> 모두 제목 아래 시작 단추, 아래에서 한 번 더. <a href="https://triple.guide/">트리플</a> 웹은 앱 내려받기가 먼저.</li>
+      <li>첫 화면 시선 — NN/g 2018 시선 추적: 머문 시간 57% 가 첫 화면, 74% 가 처음 두 화면(<a href="https://www.nngroup.com/articles/scrolling-and-attention/">Scrolling and Attention</a>).</li>
+      <li>카드 전체를 누르게 할 때 — 큰 누름 자리(피츠의 법칙), 살짝 띄운 그림자 · 화살표가 「누를 수 있음」 신호(<a href="https://blog.icons8.com/articles/best-practices-for-cards/">Best Practices for Cards</a> · <a href="https://uxdesign.cc/designing-cards-for-beginners-9ed9454d27f6">Designing cards</a>) — NN/g 원문은 확인 못 함.</li>
+      <li>D 빛 테두리 · E 반짝 빛 — Magic UI 의 <a href="https://magicui.design/docs/components/border-beam">Border Beam</a> · <a href="https://v3.magicui.design/docs/components/shimmer-button">Shimmer Button</a> 같은 요즘 단추 효과. 「유행」이라는 수치 근거는 찾지 못했다.</li>
+      <li>H 밀어서 — 실수로 누르기 어렵고 진행이 보이지만, 처음 보면 밀어야 하는지 모르고 마우스로는 번거롭다(<a href="https://vp0.com/blogs/swipe-to-approve-ai-action-swiftui">swipe to approve</a> · <a href="https://feedback.telerik.com/aspnet-core-ui/1519447-slide-to-submit-button">slide to submit 논의</a>) — 결제처럼 무거운 행동에 쓰는 유형.</li>
+    </ul>
+  </section>
+</main>
+<script>
+const PLANE = '<svg class="plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>';
+const HEAD = '<small>A LITTLE MORE YOU</small><strong>서울 · 최대 7일 · 4명까지</strong>';
+let word = "여행 등록하기";
+
+const variants = [
+  { key: "now", tab: "지금", name: "지금(비교)", kind: "지금 앱", desc: "지금 첫 장의 배지 그대로. 단추라는 표시가 없어 누를 수 있는지 알 수 없다.",
+    good: ["화면이 가장 조용하다"], care: ["누를 수 있다는 신호가 없다 — 단추로 바꾸면 무엇이든 표시가 더 필요하다"],
+    html: () => `<div class="cta v-now" role="presentation">${HEAD}</div>` },
+  { key: "a", tab: "A 비행기 길", tag: "사용자 안", name: "A 비행기 길", kind: "사용자 안 · 여행 느낌", desc: "카드 아래에 점선을 긋고 「" + "{w}" + "」 글자 옆 점선 길을 따라 비행기가 날아가 핀에 닿는다. 4초에 한 번 1.6초쯤 움직이고 나머지는 쉰다.",
+    good: ["글자로 무엇을 하는 단추인지 바로 읽힌다", "비행기 · 길 · 핀이 「여행을 시작한다」는 뜻과 맞는다", "움직임이 작아 첫 장 제목을 방해하지 않는다"], care: ["카드가 한 줄 높아진다(약 37px) — 위로 자라므로 아래 안내 · 점과는 안 겹친다"],
+    html: () => `<button type="button" class="cta v-a lifted">${HEAD}<span class="go"><span class="label">${word}</span><span class="route"><i class="pin"></i>${PLANE}</span></span></button>` },
+  { key: "b", tab: "B 이륙", tag: "사용자 안 변형", name: "B 이륙", kind: "사용자 안 변형 · 여행 느낌", desc: "「{w}」 글자 오른쪽 비행기가 비행운을 남기며 떠오르고 다시 제자리로 온다(3.6초에 한 번).",
+    good: ["A 보다 자리를 덜 쓰고 움직임이 또렷하다", "「출발」 느낌이 가장 강하다"], care: ["떠오르는 움직임이 눈에 잘 띄는 만큼 계속 보면 거슬릴 수 있다 — 몇 번 뒤 멈추게 할 수 있다"],
+    html: () => `<button type="button" class="cta v-b lifted">${HEAD}<span class="go"><span class="label">${word}</span><span class="sky"><i class="trail"></i>${PLANE}</span></span></button>` },
+  { key: "c", tab: "C 탑승권", name: "C 탑승권", kind: "여행 앱에서 흔한 모양", desc: "카드를 표처럼 — 오른쪽에 점선 · 홈으로 나뉜 표 조각을 붙이고 그 조각을 단추 색으로 채운다. 누르면 조각이 살짝 떼어진다.",
+    good: ["색이 채워진 조각이 있어 누를 곳이 분명하다", "셋째 장 「계획 담기 ····· → 여행 시작」 표 모양과 이어진다"], care: ["카드 폭이 약 80px 넓어진다", "표 조각 글자는 짧아야 한다(두 줄까지)"],
+    html: () => `<button type="button" class="cta v-c lifted"><span class="main">${HEAD}</span><span class="stub">${PLANE}<span>${word.slice(0, word.lastIndexOf(" "))}<br>${word.slice(word.lastIndexOf(" ") + 1)}</span></span></button>` },
+  { key: "d", tab: "D 빛 테두리", name: "D 빛 테두리", kind: "요즘 단추 효과(border beam)", desc: "카드 테두리를 따라 빛이 돌고, 아래 「{w} →」 화살표가 살짝 움직인다.",
+    good: ["카드 모양을 거의 안 바꾸고 「눌러 볼 것」으로 보이게 한다", "그린 · 다크 모두 주색 빛이라 어울린다"], care: ["빛만으로는 무엇을 하는 단추인지 모른다 — 글자가 같이 있어야 한다", "계속 도는 빛은 오래 보면 산만하다"],
+    html: () => `<button type="button" class="cta v-d lifted">${HEAD}<span class="go"><span class="label">${word}</span><span class="arrow" aria-hidden="true">→</span></span></button>` },
+  { key: "e", tab: "E 반짝 빛", name: "E 반짝 빛", kind: "요즘 단추 효과(shimmer)", desc: "카드 위로 비스듬한 빛이 4초에 한 번 지나가고, 오른쪽 끝에 › 가 붙는다.",
+    good: ["가장 은은하다 — 첫 장 분위기를 지킨다", "› 는 「다음으로 간다」는 익숙한 표시"], care: ["빛이 지나갈 때만 눈에 띄어 단추라는 신호가 약하다"],
+    html: () => `<button type="button" class="cta v-e lifted"><span class="row"><span>${HEAD}</span><span class="chev" aria-hidden="true">›</span></span><span class="label">${word}</span></button>` },
+  { key: "f", tab: "F 둥근 단추", name: "F 둥근 단추 + 물결", kind: "앱에서 흔한 행동 단추", desc: "카드 오른쪽에 비행기가 든 둥근 단추를 두고, 그 둘레로 물결이 퍼진다. 아래에 「{w}」.",
+    good: ["둥근 채움 단추는 누를 곳으로 가장 익숙하다", "물결이 눈길을 단추로 모은다"], care: ["카드 안에 단추가 또 있어, 카드 전체가 눌리는지 단추만 눌리는지 헷갈릴 수 있다(둘 다 같은 곳으로 보낸다)"],
+    html: () => `<button type="button" class="cta v-f lifted"><span class="row"><span>${HEAD}</span><span class="btn">${PLANE}</span></span><span class="label">${word}</span></button>` },
+  { key: "g", tab: "G 아래 단추 띠", name: "G 아래 단추 띠", kind: "가장 분명한 모양", desc: "카드 아래쪽을 단추 색으로 채운 띠 — 「{w}」 와 비행기. 움직임은 비행기 끄덕임뿐.",
+    good: ["움직임 없이도 단추로 읽힌다 — 움직임 줄이기 설정에서도 같다", "셋째 장 「내 일정 시작하기」 단추와 같은 색 · 굵기"], care: ["카드에서 가장 무거워 보인다 — 첫 장의 차분한 느낌이 줄어든다"],
+    html: () => `<button type="button" class="cta v-g lifted">${HEAD}<span class="strip"><span>${word}</span>${PLANE}</span></button>` },
+  { key: "h", tab: "H 밀어서 출발", name: "H 밀어서 출발", kind: "밀어서 확인(slide to confirm)", desc: "비행기 손잡이를 오른쪽 끝까지 끌면 출발한다(카드를 눌러도 간다).",
+    good: ["재미있고 「출발」 느낌이 강하다", "실수로 넘어갈 일이 없다"], care: ["처음 보면 밀어야 하는지 모른다", "마우스 · 키보드로는 번거롭다 — 결제처럼 무거운 행동에 쓰는 유형이라 첫 화면 단추로는 권하지 않는다"],
+    html: () => `<div class="cta v-h lifted" role="button" tabindex="0">${HEAD}<span class="track"><span class="fill"></span><span class="hint">밀어서 ${word}</span><span class="knob">${PLANE}</span></span></div>` },
+];
+
+let theme = "green", current = "a";
+
+function phone(v) {
+  const el = document.createElement("div");
+  el.className = "phone";
+  el.dataset.theme = theme;
+  el.innerHTML = `<img class="shot" src="hero-${theme}.png" alt="소개 첫 장(카드 자리 비움)"><div class="slot">${v.html()}</div><div class="fly">${PLANE}</div><div class="toast">→ 계획 담기 화면으로(목업)</div>`;
+  wire(el, v);
+  return el;
+}
+
+function takeoff(el) {
+  const card = el.querySelector(".cta"), fly = el.querySelector(".fly"), toast = el.querySelector(".toast");
+  card.classList.add("pressed");
+  setTimeout(() => card.classList.remove("pressed"), 220);
+  const calm = document.body.classList.contains("calm") || matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const r = card.getBoundingClientRect(), p = el.getBoundingClientRect(), s = p.width / 402;
+  const x0 = (r.left - p.left) / s + (r.width / s) - 40, y0 = (r.top - p.top) / s + 10;
+  if (!calm) fly.animate([
+    { transform: `translate(${x0}px, ${y0}px) rotate(45deg) scale(.8)`, opacity: 0 },
+    { transform: `translate(${x0 + 30}px, ${y0 - 60}px) rotate(45deg) scale(1.1)`, opacity: 1, offset: .25 },
+    { transform: `translate(${430}px, ${-40}px) rotate(45deg) scale(1.3)`, opacity: 0 },
+  ], { duration: 900, easing: "cubic-bezier(.5, 0, .3, 1)" });
+  setTimeout(() => { toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 1300); }, calm ? 0 : 450);
+}
+
+function wire(el, v) {
+  const card = el.querySelector(".cta");
+  if (v.key === "now") return;
+  if (v.key !== "h") { card.addEventListener("click", () => takeoff(el)); return; }
+  // H — 손잡이를 끌어 끝까지 가면 출발, 덜 가면 되돌아간다. 카드 다른 곳을 누르거나 Enter 도 출발.
+  const track = card.querySelector(".track"), knob = card.querySelector(".knob"), fill = card.querySelector(".fill");
+  let start = null, moved = false;
+  const max = () => track.clientWidth - 40;
+  knob.addEventListener("pointerdown", (e) => { start = e.clientX; moved = false; knob.setPointerCapture(e.pointerId); e.stopPropagation(); });
+  knob.addEventListener("pointermove", (e) => {
+    if (start === null) return;
+    const s = el.getBoundingClientRect().width / 402, dx = Math.max(0, Math.min(max(), (e.clientX - start) / s));
+    moved = moved || dx > 3; knob.style.transform = `translateX(${dx}px)`; fill.style.width = `${dx + 20}px`;
+  });
+  knob.addEventListener("pointerup", (e) => {
+    const s = el.getBoundingClientRect().width / 402, dx = (e.clientX - start) / s; start = null;
+    if (dx >= max() * .85) takeoff(el);
+    knob.style.transition = fill.style.transition = "transform .25s, width .25s";
+    knob.style.transform = ""; fill.style.width = "";
+    setTimeout(() => { knob.style.transition = fill.style.transition = ""; }, 260);
+  });
+  knob.addEventListener("click", (e) => e.stopPropagation());
+  card.addEventListener("click", () => takeoff(el));
+  card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); takeoff(el); } });
+}
+
+function fit(box, max) {
+  const s = Math.min(max, box.parentElement.clientWidth / 402);
+  box.style.setProperty("--s", s); box.firstElementChild?.style.setProperty("--s", s);
+}
+
+function list(items) { return items.map((t) => `<li>${t}</li>`).join(""); }
+
+function render() {
+  const v = variants.find((x) => x.key === current);
+  const box = document.getElementById("mainBox");
+  box.replaceChildren(phone(v));
+  fit(box, 1);
+  document.getElementById("note").innerHTML = `<div class="kind">${v.kind}</div><h2>${v.name}</h2><p>${v.desc.replace("{w}", word)}</p><h3>좋은 점</h3><ul>${list(v.good)}</ul><h3>주의할 점</h3><ul>${list(v.care)}</ul>`;
+  document.getElementById("tabs").innerHTML = variants.map((x) => `<button type="button" data-k="${x.key}" aria-pressed="${x.key === current}">${x.tab}${x.tag ? `<span class="tag">${x.tag}</span>` : ""}</button>`).join("");
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for (const x of variants) {
+    const fig = document.createElement("figure"); fig.className = "cell";
+    const b = document.createElement("div"); b.className = "box"; b.append(phone(x));
+    fig.append(b); fig.insertAdjacentHTML("beforeend", `<figcaption><b>${x.name}</b> — ${x.kind}</figcaption>`);
+    grid.append(fig);
+  }
+  requestAnimationFrame(() => grid.querySelectorAll(".box").forEach((b) => fit(b, .62)));
+}
+
+function seg(id, set) {
+  document.getElementById(id).addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    e.currentTarget.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b)); set(b.dataset.v);
+  });
+}
+seg("theme", (v) => { theme = v; render(); });
+seg("word", (v) => { word = v; render(); });
+seg("view", (v) => { document.body.dataset.view = v; render(); });
+document.getElementById("calm").addEventListener("change", (e) => document.body.classList.toggle("calm", e.target.checked));
+document.getElementById("tabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { current = b.dataset.k; document.body.dataset.view = "single"; document.querySelectorAll("#view button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.v === "single")); render(); } });
+addEventListener("resize", () => { fit(document.getElementById("mainBox"), 1); document.querySelectorAll("#grid .box").forEach((b) => fit(b, .62)); });
+render();
+</script>
+</body>
+</html>

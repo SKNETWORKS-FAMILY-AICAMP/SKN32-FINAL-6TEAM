@@ -26,7 +26,7 @@ describe("the two themes (styles/tokens.css)", () => {
   });
 
   it("leave no colour written into a screen's CSS: every screen follows the chosen theme", () => {
-    // The landscape's veil and light belong to the green pictures and are hidden in the dark theme.
+    // The landscape's veil and light keep their green-picture colours there; the dark theme gives them its own (token) colours.
     // `[2026-10-05]` Google's own sign-in button keeps Google's colours in every theme (its brand rules: the standard-colour "G" on a white button), so it is not themed.
     const decorative = new Set(["styles/tokens.css", "components/layout/scene.module.css", "features/account/google-button.module.css"]);
     const files = readdirSync(src, { recursive: true, encoding: "utf8" }).map((file) => file.replaceAll("\\", "/")).filter((file) => file.endsWith(".css") && !decorative.has(file));
