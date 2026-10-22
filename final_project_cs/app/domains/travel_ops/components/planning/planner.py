@@ -1018,6 +1018,23 @@ def _parts_of(items: list[dict[str, Any]], places: Mapping[str, Cand],
             for item in items]
 
 
+def _trim_to_window(items: list[dict[str, Any]], places: Mapping[str, Cand], day: date, last: time,
+                    ) -> list[dict[str, Any]]:
+    """지금부터 짜는 첫날 — 남은 창(`last` 까지)에 이동을 넣고도 **들어가는 만큼만** 남긴다. `[2026-10-22]`
+
+    ★남은 시간이 짧을 때(밤 11시 43분에 「오늘부터 2일」) 하루 최소 곳 수로 짜면 항목이 마감 뒤로 밀려 `day_overflow` 로 거절됐다.
+      가장 늦은 항목부터 덜어 내 창 안에 끝나게 한다 — 하나도 안 들어가면 그날은 비운다(둘째 날부터 평소대로).
+    """
+    kept = sorted(items, key=lambda it: (it["starts_at"], it["seq"]))
+    limit = _at(day, last)
+    while kept:
+        trial, _, _ = add_moves(copy.deepcopy(kept), places)
+        if max((it["ends_at"] or it["starts_at"]) for it in trial) <= limit:
+            break
+        kept.pop()
+    return kept
+
+
 def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Mapping[str, Cand],
             constraints: Mapping[str, Any], seq_from: int,
             breakfast: Cand | None = None, window: tuple[time, time] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -1140,7 +1157,10 @@ def _swap_closed_meal(item: dict[str, Any], spares: list[Cand], used: set[str], 
 def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: list[Violation],
            *, spares: list[Cand], used: set[str], constraints: Mapping[str, Any],
            party_size: int, ledger: Any = None) -> list[str]:
-    """위반 하나하나에 **정해진 고침**을 건다. 고친 내역을 돌려준다(빈 목록 = 못 고쳤다)."""
+    """위반 하나하나에 **정해진 고침**을 건다. 고친 내역을 돌려준다(빈 목록 = 못 고쳤다).
+
+    ★`[2026-10-22]` 한 위반을 못 고쳐도 **멈추지 않고 다음 위반을 본다** — 앞 위반(바꿀 장소가 없는 쉬는 날)이 뒤 위반(밀면 풀리는 영업 전)까지
+      안 고친 채 거절로 이어지던 구멍을 막았다. 못 고친 위반은 그대로 남아 부르는 쪽의 다시 판정에 걸린다."""
     done: list[str] = []
     by_seq = {item["seq"]: item for item in items}
     for violation in violations:
@@ -1166,7 +1186,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             item = by_seq[seqs[0]]
             swapped = _swap_place(item, spares, used, lambda cand: _covers(cand, item), places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(그날 그 시각에 연다)")
         elif code in ("before_opening", "break_time") and seqs[0] in by_seq:
             item = by_seq[seqs[0]]
@@ -1190,7 +1210,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             #   못 바꿔 초안이 거부됐다(아침 전용 식당이 저녁 칸에 걸린 시험에서 드러남). 그 칸을 덮는 곳도 받는다
             swapped = _swap_place(item, spares, used, lambda cand: _covers(cand, item), places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(닫는 시각을 넘었다)")
         elif code == "dining_closed_at_slot" and ledger is not None and seqs[0] in by_seq:
             # ★`[2026-10-02]` 원장이 그 시각에 닫혔다고 했다 — 시각을 밀면 다른 칸이 깨진다. 그 시각에 여는 곳으로 바꾼다.
@@ -1198,7 +1218,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             item = by_seq[seqs[0]]
             swapped = _swap_closed_meal(item, spares, used, places, ledger)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(그 시각에 연다 — 요식 원장)")
         elif code == "payment_not_accepted" and seqs[0] in by_seq:
             wanted = str(constraints.get("payment"))
@@ -1208,7 +1228,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
                 lambda cand: wanted in [str(v) for v in (cand.attributes.get("payment") or [])]
                 or not cand.attributes.get("payment"), places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(결제 조건)")
         elif code == "over_budget":
             # ★가장 비싼 항목을 **더 싸거나 가격을 모르는** 후보로 바꾼다. 없으면 못 고친다.
@@ -1216,17 +1236,17 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
                              if (places[item["place"]].attributes.get("price_krw"))),
                             key=lambda it: -int(places[it["place"]].attributes["price_krw"]))
             if not priced:
-                return done
+                continue
             item = priced[0]
             ceiling = int(places[item["place"]].attributes["price_krw"])
             swapped = _swap_place(item, spares, used,
                                   lambda cand: int(cand.attributes.get("price_krw") or 0) < ceiling,
                                   places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}: {item['title']} 로 바꿨다(더 싼 곳)")
         else:
-            return done                    # ★모르는 위반은 고친 척하지 않는다
+            continue                       # ★모르는 위반은 고친 척하지 않는다(다른 위반은 계속 본다)
     return done
 
 
@@ -1524,7 +1544,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     used: set[str] = set()
     model_calls, from_model = 0, 0        # ★몇 번 불렀고 **그중 몇 개가 실제로 쓰였나**
     fits: list[dict[str, Any]] = []       # ★하루마다 밀도 목표에 맞춘 결과(설문 16번)
-    want = 0
+    want, first_day_cut = 0, 0            # 지금부터 짠 첫날 창에 안 들어가 덜어 낸 항목 수
     # ★`[2026-10-21 사용자 지시]` 첫날이 오늘이면 첫날만 지금부터 짠다 — 요청 입구에서 정한 지금(`start_at`)을 한 번 읽는다(여기서 시계를 다시 보지 않는다).
     first_window = _first_day_window(request, start_at or datetime.now(KST))
     for index, (day_acts, day_dine) in enumerate(pools):
@@ -1566,6 +1586,16 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
         else:
             day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1, breakfast=breakfast,
                                   day_start=(today_window or day_bounds(request.constraints))[0])
+        if today_window is not None:
+            kept = _trim_to_window(day_items, {c.key: c for c in day_act + day_din + extra}, day, today_window[1])
+            if len(kept) != len(day_items):
+                first_day_cut = len(day_items) - len(kept)
+                keys = {item["place"] for item in kept}
+                day_act = [cand for cand in day_act if cand.key in keys]
+                day_din = [cand for cand in day_din if cand.key in keys]
+                for number, item in enumerate(kept, start=len(items) + 1):
+                    item["seq"] = number
+                day_items = kept
         day_din = extra + day_din
         from_model += sum(1 for cand in day_act if cand.key in picks["activities"])
         from_model += sum(1 for cand in day_din if cand.key in picks["dining"])
@@ -1579,7 +1609,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     # ★★**조용히 짧아지지 않게 센다.** 후보가 모자라면 `_merge` 가 자리를 덜 채우고, 그러면
     #   「3일 일정」이라며 항목이 덜 든 초안이 나간다 — 아무 신호 없이. 위에서 총량을 확인했으니
     #   여기 걸리면 그건 **우리 쪽 결함**이고, 그때도 조용히 넘기지 않는다.
-    if len(items) != want or want < request.days * (floor_per_day + DINING_PER_DAY):
+    if len(items) != want or want + first_day_cut < request.days * (floor_per_day + DINING_PER_DAY):
         raise PlanRefused("plan_short",
                           f"{request.days}일치는 항목 {want}개여야 하는데 {len(items)}개만 짜였다",
                           have=len(items), need=want,
@@ -1623,10 +1653,11 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
     # ★`[2026-10-06]` 이동 팀을 지정 부르지 않는다 — 팀이 조립 때 겊은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`)
     from app.domains.travel_ops.components.team_hooks import legs
-    items, routes, moved = add_moves(items, chosen,
-                                     engine=legs.leg_planner(request.party_size, dict(request.constraints)))
-    fixed += moved
-    violations = _check(items, chosen, request, routes, ledger=ledger)
+    # ★`[2026-10-22]` 이동을 넣으면 일정이 밀려 영업시간 위반이 새로 생길 수 있다 — 거절하기 전에 고쳐 본다(`_settle_moves`)
+    items, routes, violations, extra_rounds = _settle_moves(
+        items, chosen, request, engine=legs.leg_planner(request.party_size, dict(request.constraints)), ledger=ledger,
+        spares=spares, used=used, fixed=fixed, hours_stats=hours_stats, tour_api=tour_api, chat=chat, now=now)
+    rounds += extra_rounds
     if violations:
         raise PlanRefused(
             "plan_infeasible",
@@ -1670,6 +1701,9 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
                     if (lighter_note is not None or area_note is not None) else {}),
                  # ★아침 식사 — 날마다 무엇을 넣었고 영업시간을 아는지(모르면 그날 새벽 확인이 본다)
                  "breakfast": {"wanted": want_breakfast, "days": breakfasts},
+                 # ★`[2026-10-22]` 오늘 시작이면 첫날을 지금부터 짰다 — 남은 창과, 창에 안 들어가 덜어 낸 항목 수(없으면 칸이 없다)
+                 **({"first_day": {"from": first_window[0].strftime("%H:%M"), "until": first_window[1].strftime("%H:%M"),
+                                   "dropped_items": first_day_cut}} if first_window else {}),
                  # ★설문 16번 → 밀도 목표 → 하루 활동 수. 목표가 없으면 기본 수로 짰다고 적는다
                  "density": ({"target_density": target, "days": fits} if target is not None else
                              {"target_density": None,
@@ -1680,6 +1714,46 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
                     "by_source": _count_by(chosen.values(), "origin")},
         checks={"rounds": rounds, "repairs": fixed, "violations": []},
         coverage=_coverage(items, chosen), calls=calls, rag=rag)
+
+
+def _settle_moves(items: list[dict[str, Any]], chosen: dict[str, Cand], request: PlanRequest, *, engine: Any,
+                  ledger: Any, spares: list[Cand], used: set[str], fixed: list[str], hours_stats: dict[str, Any],
+                  tour_api: Any, chat: Any, now: datetime) -> tuple[list[dict[str, Any]], dict[str, Any], list[Violation], int]:
+    """이동 항목을 넣고 판정한다. 걸리면 **이동을 걷어 같은 방법으로 고친 뒤 다시 넣는다**(최대 `MAX_REPAIR_ROUNDS` 회).
+    (항목들, routes, 남은 위반, 고친 횟수).
+
+    ★`[2026-10-22]` 이동을 넣으면 일정이 뒤로 밀려 **영업시간 위반이 새로 생길 수 있다**(밀린 점심이 닫는 시각을 넘는 것 등).
+      전에는 이 판정에서 걸리면 곧바로 거절했다 — 장소를 바꾸면 풀리는 위반도 그랬다(실서버 「광화문국밥 13:08 쉬는 시간」 거절).
+    ★이동 항목 자체가 낸 위반(이동 시간 모자람 등)은 장소를 바꿔 풀 수 없다 — 이동을 걷은 일정에서 위반이 없으면 더 하지 않는다.
+    """
+    rounds = 0
+    while True:
+        items, routes, moved = add_moves(items, chosen, engine=engine)
+        fixed += moved
+        violations = _check(items, chosen, request, routes, ledger=ledger)
+        if not violations or rounds >= MAX_REPAIR_ROUNDS:
+            return items, routes, violations, rounds
+        base = [item for item in items if item.get("kind") != "mobility"]
+        for number, item in enumerate(base, start=1):
+            item["seq"] = number
+        before_moves = _check(base, chosen, request, ledger=ledger)
+        if not before_moves:
+            return items, routes, violations, rounds
+        applied = repair(base, chosen, before_moves, spares=spares, used=used,
+                         constraints=request.constraints, party_size=request.party_size, ledger=ledger)
+        for cand in spares:
+            if cand.key in used:
+                chosen.setdefault(cand.key, cand)
+        if not applied:
+            return items, routes, violations, rounds
+        rounds += 1
+        fixed += [f"이동을 넣은 뒤 {line}" for line in applied]
+        more = enrich_hours([chosen[item["place"]] for item in base if item.get("place")],
+                            source=tour_api, chat=chat, now=now)
+        for key in ("asked", "read", "by_rule", "by_model", "unknown"):
+            hours_stats[key] += more[key]
+        hours_stats["failed"] += more["failed"]
+        items = base                     # 이동 항목을 걷은 일정으로 이동을 다시 넣는다
 
 
 # ── 고객이 정한 일정은 그대로 두고 빈 곳만 채운다 (2026-09-28, 계획 읽기 「일정 짜 줘」) ─────────
