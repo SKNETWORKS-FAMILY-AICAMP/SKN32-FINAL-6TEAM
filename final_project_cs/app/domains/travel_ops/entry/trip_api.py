@@ -582,6 +582,30 @@ def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]
 _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version", "mode")
 
 
+def _notice_changed(payload: Mapping[str, Any]) -> list[dict[str, Any]] | None:
+    """알림 목록(`GET /v1/web/trips/{id}/notices`)의 `changed` — 그 알림이 바꾼 일정 「무엇 → 무엇」 `[{item_id, new_item_id, from, to, at}]`, 없으면 None.
+    ★`[2026-10-23 사용자 지시 — ST4F-723]` 「바뀌기 전」 값은 알림 payload 에만 있는데(변경 이력의 원인에서는 빠진다 — 위 `_CAUSE_FIELDS`) 목록이 내보내지 않았다.
+
+    payload 에 **적힌 값만** 옮긴다 — 한 건짜리 변경은 `changed{from, to, at}`(고른 제안이면 `item_id` · `new_item_id` 도, `pending.choose`),
+    감시 묶음은 `changes[]`(항목마다 바뀌기 전 `item_id` + `changed`). `from` · `to` 가 둘 다 없는 변경(되돌리기 · 진행 · 목적지 이름 · 일정 수정 「완료」)은 싣지 않는다.
+    `at` 은 서울 시각으로 바꿔 낸다(여행 조회의 `starts_at` 과 같은 약속 — 같은 순간) · ISO 시각으로 읽을 수 없으면 적힌 그대로."""
+    rows = [(payload.get("changed"), None)]
+    rows += [(entry.get("changed"), entry.get("item_id")) for entry in payload.get("changes") or [] if isinstance(entry, Mapping)]
+    out = []
+    for changed, item_id in rows:
+        if not isinstance(changed, Mapping) or (changed.get("from") is None and changed.get("to") is None):
+            continue
+        at = changed.get("at")
+        if isinstance(at, str):
+            try:
+                at = _seoul(datetime.fromisoformat(at)).isoformat()
+            except ValueError:
+                pass                                   # 적힌 그대로 둔다(계약 「ISO 시각으로 읽을 수 없는 값은 적힌 그대로」)
+        out.append({"item_id": changed.get("item_id") or item_id, "new_item_id": changed.get("new_item_id"),
+                    "from": changed.get("from"), "to": changed.get("to"), "at": at})
+    return out or None
+
+
 def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     from app.domains.travel_ops.components.places.place_info import place_info
     trip, items = store.latest(conn, trip_id)
@@ -1298,7 +1322,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         except ProposalRefused as refused:
             status = {"not_found": 404, "already_decided": 409, "stale": 409, "expired": 409}.get(refused.code, 422)
             # ★상세는 `detail` 아래에 둔다 — 거절 상세에 `status`·`message` 가 들어 있어 펼치면 인자와 부딪힌다
-            raise _error(status, refused.code, "안을 고르지 못했다 — 아무것도 바뀌지 않았다",
+            # ★`[2026-10-23 사용자 지시 — ST4F-723]` 고객에게 보이는 문장이라 해요체(전에는 「…못했다 — …않았다」). 코드 · 상태는 그대로
+            raise _error(status, refused.code, "안을 고르지 못했어요 — 아무것도 바뀌지 않았어요.",
                          detail={k: (v if isinstance(v, (int, float, str, bool, type(None), list, dict))
                                      else str(v)) for k, v in refused.detail.items()}) from None
 
@@ -2746,6 +2771,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "guardian": payload.get("guardian") if guardian_on else None,
                              # ★`[2026-10-06]` 재난 안전 알림의 안내(공식 안내 · 가까운 대피 장소 · 「일정 다시 시작」) — 안전 알림(`safety_pause` · `safety_release`)에만 있다
                              "safety": payload.get("guidance") if payload.get("reason") in ("safety_pause", "safety_release") else None,
+                             # ★`[2026-10-23 사용자 지시 — ST4F-723]` 바뀐 일정 「무엇 → 무엇」(늘 있고 없으면 null) — 웹 알림 센터 「소식」의 「바뀐 일정」 줄 · 닫힌 제안 ↔ 지금 일정
+                             "changed": _notice_changed(payload),
                              "at": at.isoformat()} for key, payload, status, at in rows]}
 
     # ── 개인 AI 입구(MCP)의 읽기 도구 둘 — 일정 위험 점검 · 이동 판정 `[2026-10-06 사용자 요청]` ──────────────

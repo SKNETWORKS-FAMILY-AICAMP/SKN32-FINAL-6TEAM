@@ -536,6 +536,11 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     except StaleItinerary as exc:
         raise ProposalRefused("stale", {"message": str(exc)}) from None
     notice = dict(plan.notice)
+    # ★`[2026-10-23 사용자 지시 — ST4F-723]` 고른 안은 **새 일정 id** 로 들어간다(`Item.replaced_by`) — 웹이 닫힌 제안과 지금 일정을 잇게
+    #   바뀌기 전 · 뒤 id 를 변경 알림의 `changed` 에 싣는다(알림 목록 `GET …/notices` 의 `changed[].item_id` · `new_item_id`)
+    chosen_item = plan.replacements.get(current.item_id)
+    if isinstance(notice.get("changed"), dict) and chosen_item is not None:
+        notice["changed"] = {**notice["changed"], "item_id": str(current.item_id), "new_item_id": str(chosen_item.item_id)}
     if price_check:
         from app.domains.travel_ops.components.booking.offers.recheck import price_note
         notice["text"] = str(notice.get("text") or "") + price_note(price_check)
