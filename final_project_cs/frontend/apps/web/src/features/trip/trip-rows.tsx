@@ -14,7 +14,7 @@ import pc from "@/features/plan-check/plan-check.module.css";
 import sq from "@/features/plan-check/stop-question.module.css";
 import { kindLook } from "@/features/plan-check/stop-kind";
 import { placeLinks, placeTarget, routeLinks, routeTarget, type MapTarget } from "./map-apps";
-import type { OpenChoice } from "./attention";
+import { proposalText, type OpenChoice } from "./attention";
 import { distanceText, isStay, stayNights, type StayMark, type TripLeg } from "./trip-timeline";
 import type { TripStop } from "./model";
 import styles from "./trip-screen.module.css";
@@ -195,8 +195,11 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
         </div>
       </div>}
       {/* `[2026-10-21 사용자 지시]` 줄 안 「상세 보기」 단추는 뺐다 — 펼친 카드의 「상세 보기」와 겹쳤다. 고르는 곳은 안내 한 줄로 */}
+      {/* `[2026-10-23 사용자 결정 — ST4F-723]` 문장은 상세 보기 선택 칸과 같은 규칙 — 카드 제목인 일정 이름, 상세 보기가 보이는 번호 대안 · 경고를 뺀다(서버 틀과 글자까지 같을 때만).
+           두 줄 자리가 「창덕궁 — … 1) 국가유산진흥원…」에서 끊기던 것 */}
       {ask && <div className={styles.stopAsk} data-stop-ask={stop.id}>
-        <p><b>{t("선택이 필요해요", "Your choice is needed")}</b> · {ask.text ?? t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
+        <p><b>{t("선택이 필요해요", "Your choice is needed")}</b> · {ask.text ? proposalText(ask.text, { stopTitle: stop.title, options: ask.proposal.options })
+          : t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
         <small>{t("상세 보기에서 확인하세요", "Check it in the details")}</small>
       </div>}
       {!past && risk?.itemId === stop.id && risk.status === "problem" && <div className={styles.stopRisk} data-stop-risk={stop.id}>

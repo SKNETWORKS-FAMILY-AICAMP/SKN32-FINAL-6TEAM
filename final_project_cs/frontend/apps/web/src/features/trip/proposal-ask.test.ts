@@ -34,6 +34,14 @@ describe("선택 요청이 열린 일정 카드(ST4F-704 D안)", () => {
     expect(mark).not.toContain("<button");
     expect(row({ open: true }).match(/상세 보기<svg/g)?.length).toBe(1);
   });
+  it("문장은 상세 보기와 같은 규칙 — 카드 제목인 일정 이름과 번호 대안 · 경고를 뺀다 (2026-10-23 사용자 결정)", () => {
+    const options = [{ key: "a", rank: 1, name: "국가유산진흥원 창덕궁상품관", startsAt: null, note: null, warnings: [] },
+      { key: "b", rank: 2, name: "이새 창덕궁점", startsAt: null, note: null, warnings: ["가격을 몰라 추가 비용을 계산할 수 없다"] }];
+    const text = "잠실 스카이타워 전망 관람 — 날씨 예보에 문제가 있어요. 어떻게 할까요? 1) 국가유산진흥원 창덕궁상품관 · 2) 이새 창덕궁점 이새 창덕궁점: 가격을 몰라 추가 비용을 계산할 수 없다 답이 없으면 원래 일정을 그대로 둡니다.";
+    const html = row({ choice: { ...choice, text, proposal: { ...proposal, reason: "forecast_advisory_options", options } } });
+    expect(html).toContain("선택이 필요해요</b> · 날씨 예보에 문제가 있어요. 어떻게 할까요? 답이 없으면 원래 일정을 그대로 둡니다.</p>");
+    expect(html).not.toContain("잠실 스카이타워 전망 관람 — ");
+  });
   it("서버 문장이 없으면 알림 센터 문장을 쓴다", () => {
     expect(row({ choice: { ...choice, text: null } })).toContain("이 일정을 어떻게 할지 골라 주세요.");
   });

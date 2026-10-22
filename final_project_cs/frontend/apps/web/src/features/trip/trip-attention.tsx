@@ -330,7 +330,8 @@ export function TripAttention({ trip, tab, onTab, onDetail, onResumed, focusNoti
     <div className={styles.tabs} role="tablist" aria-label={t("알림 종류", "Kinds of notices")} onKeyDown={tabKeys}>
       {TABS.map(([key, ko, en]) => <button key={key} type="button" role="tab" id={`trip-center-tab-${key}`} aria-selected={tab === key} aria-controls="trip-center-panel" tabIndex={tab === key ? 0 : -1}
         onClick={() => onTab(key)}>{t(ko, en)}{" "}
-        {key === "todo" ? <span className={styles.count} data-hot={tasks > 0 || undefined}>{tasks > 0 ? tasks : worth}</span>
+        {/* `[2026-10-23 사용자 결정]` 「할 일」 숫자는 늘 답할 것의 수 — 없으면 0(옛: 「살펴볼 점」 수를 흐리게, 「할 일 1」인데 「지금 처리할 일은 없어요.」로 읽혔다) */}
+        {key === "todo" ? <span className={styles.count} data-hot={tasks > 0 || undefined}>{tasks}</span>
           : <span className={styles.count}>{key === "feed" ? feed.length : serviceCount}</span>}
         {((key === "feed" && feedUnread) || (key === "service" && serviceUnread)) && <span className={styles.unread} role="img" aria-label={t("읽지 않은 알림", "Unread notices")} />}</button>)}
     </div>
