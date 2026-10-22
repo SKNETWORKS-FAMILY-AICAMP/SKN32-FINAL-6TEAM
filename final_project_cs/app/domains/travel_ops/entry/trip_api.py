@@ -1745,7 +1745,30 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             _count("place_search", tenant, customer, http)
             return {"revision": found["revision"], **candidates.search(
                 conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory),
-                around_self=True, by_relevance=relevance)}
+                around_self=True, by_relevance=relevance, limit=candidates.WEB_SEARCH_LIMIT)}
+
+        return _review_call(intake_id, customer, tenant, revision, use)
+
+    @router.get("/v1/web/trip-intakes/{intake_id}/add-search")
+    def web_intake_add_search(intake_id: UUID, http: Request, q: str = Query(min_length=2, max_length=60),
+                              previous: str | None = Query(default=None, max_length=40), next_id: str | None = Query(default=None, alias="next", max_length=40),
+                              date: str | None = Query(default=None, max_length=10), start: str | None = Query(default=None, max_length=5),
+                              end: str | None = Query(default=None, max_length=5), kind: str | None = Query(default=None, max_length=12),
+                              revision: int | None = Query(default=None, ge=1), who: tuple[str, UUID] = Depends(_web_customer)):
+        """일정 추가 폼의 **장소 검색** `[2026-10-23 사용자 지시 — Codex 1회차 합의]` — `previous` · `next` 는 끼우는 자리 앞 · 뒤 일정 id(검토 화면의 `items[].id`),
+        `date` · `start` · `end` · `kind` 는 새 일정 폼 값. 응답은 `place-search` 와 같은 모양 — `results` 는 앞 → 후보 → 뒤 **동선순**(`order: "route"`,
+        한쪽만 있으면 `distance`) · `relevance` 이름순 · `center.basis = "between"`. 검사 줄은 새 일정 기준. 읽기 전용(`candidates.add_search`)."""
+        from app.domains.travel_ops.components.intake import candidates
+
+        tenant, customer = who
+        if len(" ".join(q.split())) < 2:
+            raise _error(422, "query_too_short", "검색어는 공백을 뺀 두 글자 이상이어야 한다")
+
+        def use(conn, found):
+            _count("place_search", tenant, customer, http)
+            return {"revision": found["revision"], **candidates.add_search(
+                conn, tenant_id=tenant, review=found, query=q, previous_id=previous, next_id=next_id, date=date,
+                starts_at=start, ends_at=end, kind=kind, kakao=_lazy("kakao", kakao_factory))}
 
         return _review_call(intake_id, customer, tenant, revision, use)
 

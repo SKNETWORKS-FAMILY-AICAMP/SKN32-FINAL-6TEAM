@@ -9,7 +9,7 @@ import { answerInterpretations, editIntake, restoreIntake, type IntakeEdit } fro
 import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
-  autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
+  addSearch, autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
   type CandidateList, type CandidatePlace, type CandidateUpdate, type ReviewItem, type ReviewedIntakeView,
 } from "@/lib/live/intake-review";
 import { isLodgingReviewItem, planCandidate, safePhotoUrl } from "./from-review";
@@ -315,15 +315,18 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         return cards;
       },
       candidateNotes: (id) => candidateNotes.current.get(id) ?? [],
-      searchToAdd: async (id, words, signal) => {
-        const item = itemOf(id);
-        const found = await searchPlaces(intakeId, item, plan().revision, words, language, signal, { relevance: false }).catch(staleThenRethrow);
+      // `[2026-10-23 사용자 지시 — Codex 합의]` Its own search: the stops either side of the gap and the new stop's values — least out of the way first, then best name match.
+      searchToAdd: async (gap, words, signal, form) => {
+        const found = await addSearch(intakeId, plan().revision, { q: words, previous: gap.previousId, next: gap.nextId, ...form }, language, signal).catch(staleThenRethrow);
         if (!allUndo.active) throw gone();
-        assertPlaceSearchComplete(found, t);
-        return found.results.map((result) => ({
-          ...planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source }),
-          pickedPlace: pickedPlace(result.place),
-        }));
+        const both = [...found.results, ...(found.relevance ?? [])];
+        assertPlaceSearchComplete({ results: both, notes: found.notes }, t);
+        const id = `add:${gap.previousId ?? ""}:${gap.nextId ?? ""}`;
+        return both.map((result) => {
+          const card = { ...planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source }),
+            pickedPlace: pickedPlace(result.place) };
+          return result.order ? { ...card, id: `${card.id}:${result.order}`, order: result.order } : card;
+        });
       },
       search: async (id, words, signal) => {
         const item = itemOf(id);

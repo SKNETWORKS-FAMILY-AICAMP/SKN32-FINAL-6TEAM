@@ -1594,6 +1594,12 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (q.length < 2) return json(response, 422, { error: { code: "query_too_short", message: "두 글자 이상 적어 주세요" } }, origin);
     return json(response, 200, { revision: board.revision, item: "0-1", query: url.searchParams.get("q"), results: SEARCH_RESULTS.filter((entry) => entry.place.name.includes(url.searchParams.get("q") ?? "") || q.length >= 2), notes: [] }, origin);
   }
+  // `[2026-10-23]` 일정 추가 폼의 전용 검색 — 응답 모양은 place-search 와 같다(동선순 목록 + 이름순 목록 없음 = 옛 한 목록으로 그린다)
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/add-search` && request.method === "GET") {
+    const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");
+    if (q.length < 2) return json(response, 422, { error: { code: "query_too_short", message: "두 글자 이상 적어 주세요" } }, origin);
+    return json(response, 200, { revision: board.revision, item: "__new__", query: url.searchParams.get("q"), results: SEARCH_RESULTS.filter((entry) => entry.place.name.includes(url.searchParams.get("q") ?? "") || q.length >= 2), notes: [] }, origin);
+  }
   if (path === "/v1/web/places/photos" && request.method === "GET") {
     const ref = url.searchParams.get("ref") ?? "";
     if (!ref.startsWith("tour:")) return json(response, 200, { ref, photos: [], source_note: null, reason: "no_photo_source" }, origin);

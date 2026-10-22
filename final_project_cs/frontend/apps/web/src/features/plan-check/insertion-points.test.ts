@@ -32,6 +32,8 @@ describe("seams around a stop marked for deletion", () => {
     expect(points).toHaveLength(6);
     expect(points.slice(1, 4)).toEqual([null, null, null]);               // above a-b, b and b-c (all grey)
     expect(points[4]).toMatchObject({ key: "1:item:c", anchorId: "c", previous: "경복궁", next: "광장시장", start: "11:30", end: "12:30", side: "before-stop" });
+    // `[2026-10-23]` 일정 추가 검색이 쓰는 앞 · 뒤 일정 id — 회색(지울 예정) 일정을 건너뛴다
+    expect(points[4]).toMatchObject({ previousId: "a", nextId: "c" });
     expect(points.filter((point) => point && (point.previous === "올리브영" || point.next === "올리브영"))).toEqual([]);
   });
   it("uses the arrival of the new leg past the grey card (deleted on the server already)", () => {

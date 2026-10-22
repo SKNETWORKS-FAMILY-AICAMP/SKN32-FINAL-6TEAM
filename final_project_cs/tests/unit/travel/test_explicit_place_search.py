@@ -180,3 +180,53 @@ def test_zero_metres_counts_as_the_nearest_stop():
     shown = candidates._present({**here, 'name': '같은 자리 가게'}, {'rows': [], 'fits': True, 'status': 'ok', 'slack': {}, 'estimated': False},
                                 prev, nxt, None)
     assert shown['reference'] == '홍대' and shown['distance_m'] == 0
+
+
+def test_web_search_shows_up_to_fifteen_in_each_list(monkeypatch):
+    """`[2026-10-23 사용자 지시]` 웹 검색은 목록마다 15곳 — 카카오 한 번에 받는 최대와 같다."""
+    item, review, _ = two_stops_around(monkeypatch)
+    rows = [shop(f'국수집 {n}호점', f'k{n}', 37.57 + n / 1000, 126.97) for n in range(15)]
+    source = TwoOrderKakao(rows, rows)
+    found = candidates.search(None, tenant_id='test', review=review, item=item, query='국수집', kakao=source,
+                              around_self=True, by_relevance=True, limit=candidates.WEB_SEARCH_LIMIT)
+    assert candidates.WEB_SEARCH_LIMIT == 15
+    assert len(found['results']) == len(found['relevance']) == 15
+    assert source.calls[0][1]['size'] == 15
+
+
+def add_between(monkeypatch, *, before_kind='activity'):
+    """일정 추가 — 경복궁(앞) · 광장시장(뒤) 사이에 새 일정을 끼운다. 판정 함수가 받은 일정 값을 모은다."""
+    _, review, assessed = setup_search(monkeypatch, 'activity')
+    before = {'id': '0-0', 'title': '앞', 'kind': before_kind, 'date': '2030-01-05', 'starts_at': '10:00', 'ends_at': '12:00', 'parts': {},
+              'place': {'name': '경복궁', 'latitude': 37.5796, 'longitude': 126.9770}}
+    after = {'id': '0-1', 'title': '뒤', 'kind': 'activity', 'date': '2030-01-05', 'starts_at': '15:00', 'ends_at': '16:00', 'parts': {},
+             'place': {'name': '광장시장', 'latitude': 37.5700, 'longitude': 126.9996}}
+    review['items'] = [before, after]
+    return review, assessed
+
+
+def test_add_search_orders_by_the_way_between_the_two_stops(monkeypatch):
+    """`[2026-10-23 사용자 지시 — Codex 합의]` 경복궁 옆(가는 길) 식당이 가운데 북쪽(길에서 벗어남) 식당보다 먼저 — 「동선순」."""
+    review, assessed = add_between(monkeypatch)
+    on_way = shop('국수집 경복궁점', 'x', 37.5790, 126.9780)
+    off_way = shop('국수집 북촌점', 'y', 37.5880, 126.9883)
+    source = TwoOrderKakao([off_way, on_way], [off_way, on_way])
+    found = candidates.add_search(None, tenant_id='test', review=review, query='국수집', previous_id='0-0', next_id='0-1',
+                                  date='2030-01-05', starts_at='12:30', ends_at='13:30', kind='dining', kakao=source)
+    assert [r['place']['name'] for r in found['results']] == ['국수집 경복궁점', '국수집 북촌점']
+    assert {r['order'] for r in found['results']} == {'route'} and found['center'] == {'name': '경복궁 · 광장시장', 'basis': 'between'}
+    lat, lon = source.calls[0][1]['near']                                   # 후보는 두 일정 가운데 둘레에서 모은다
+    assert abs(lat - (37.5796 + 37.5700) / 2) < 1e-9 and abs(lon - (126.9770 + 126.9996) / 2) < 1e-9
+    # 판정은 새 일정 폼 값으로(옆 일정 값이 아니다)
+    assert set(assessed) == {('dining', 'dining', '12:30', '13:30')}
+    assert len(found['results']) <= candidates.WEB_SEARCH_LIMIT and 'relevance' in found
+
+
+def test_add_search_after_a_hotel_keeps_restaurants(monkeypatch):
+    """☆전에는 옆 일정(숙소)의 「바꾸기」 검색을 빌려 숙소만 남겼다 — 새 일정이 식사면 식당이 보여야 한다."""
+    review, _ = add_between(monkeypatch, before_kind='lodging')
+    source = Kakao([shop('국수집 경복궁점', 'x', 37.5790, 126.9780)])
+    found = candidates.add_search(None, tenant_id='test', review=review, query='국수집', previous_id='0-0', next_id=None,
+                                  date='2030-01-05', starts_at='12:30', ends_at='13:30', kind='dining', kakao=source)
+    assert [r['place']['name'] for r in found['results']] == ['국수집 경복궁점'] and 'no_same_kind' not in found['notes']
+    assert found['results'][0]['order'] == 'distance'                         # 한쪽 일정만 있으면 그 장소에서 가까운 순

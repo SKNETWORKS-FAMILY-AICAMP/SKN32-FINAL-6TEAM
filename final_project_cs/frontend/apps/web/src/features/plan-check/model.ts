@@ -152,7 +152,7 @@ export interface PlanCandidate {
   /** How far it is from the stops around it, e.g. 0.6 km from 「경복궁」. */
   distance: { km: number; from: string } | null;
   /** `[2026-10-22]` A search result's list: nearest first (`distance`) or best name match first (`relevance`). */
-  order?: "distance" | "relevance";
+  order?: "distance" | "relevance" | "route";
   coordinates: Coordinates | null;
   info: PlaceInfo | null;
   checks: CheckRow[];

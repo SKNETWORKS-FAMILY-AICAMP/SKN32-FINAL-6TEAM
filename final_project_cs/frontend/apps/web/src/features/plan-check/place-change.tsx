@@ -291,5 +291,5 @@ function SearchResults({ search, onPick, onApplyName, applyWhy, explain }: {
 function OrderTag({ order }: { order: PlanCandidate["order"] }) {
   const t = useT();
   if (!order) return null;
-  return <span className={styles.orderTag} data-order={order}>{order === "distance" ? t("거리순", "Nearest") : t("일치도순", "Name match")}</span>;
+  return <span className={styles.orderTag} data-order={order}>{order === "distance" ? t("거리순", "Nearest") : order === "route" ? t("동선순", "On the way") : t("일치도순", "Name match")}</span>;
 }

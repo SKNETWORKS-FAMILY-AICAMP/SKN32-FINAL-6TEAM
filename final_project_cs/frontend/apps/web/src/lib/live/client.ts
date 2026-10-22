@@ -127,7 +127,7 @@ export function answerWithin(url: string): number {
 /** Calls that are slow ON PURPOSE and not something the customer waits for (the model is warmed up in the background): they are not counted as a slow server. */
 const BACKGROUND_CALL = /\/warmup$/;
 /** `[2026-10-13]` Calls whose screen shows its own loading line — the global slow notice waits longer for them (`SHOWN_STEPS`). */
-const SHOWN_CALL = /\/trip-intakes\/[^/]+\/(candidates|place-search|route-shapes|moves\/[^/]+\/options)$|\/trips\/[^/]+\/route-shapes$/;
+const SHOWN_CALL = /\/trip-intakes\/[^/]+\/(candidates|place-search|add-search|route-shapes|moves\/[^/]+\/options)$|\/trips\/[^/]+\/route-shapes$/;
 
 async function send(url: string, init: RequestInit, language: Language): Promise<Response> {
   const t = translator(language);
