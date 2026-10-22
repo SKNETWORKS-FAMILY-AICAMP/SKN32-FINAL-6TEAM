@@ -204,11 +204,11 @@ test("설정 화면에서 언어를 고르면 카드가 접히고 첫 화면 문
 
   await page.getByRole("button", { name: "다음 화면" }).first().click();
   const guide = page.getByRole("region", { name: "구구루트 이용 방법" });
-  const firstShot = guide.getByRole("group", { name: "1 / 4" }).getByRole("img");
-  await expect(firstShot).toHaveAccessibleName("앱 화면: 나의 여행 취향 알려주기");
+  const firstShot = guide.getByRole("group", { name: "1 / 7" }).getByRole("img");
+  await expect(firstShot).toHaveAccessibleName("앱 화면: 준비한 일정 붙여 넣기");
   await expect.poll(() => firstShot.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
 
-  const track = guide.getByRole("group", { name: "1 / 4" }).locator("..");
+  const track = guide.getByRole("group", { name: "1 / 7" }).locator("..");
   // Measure only after the page has finished snapping to the second screen.
   await expect.poll(() => page.locator("main").evaluate((main) => Math.abs(main.scrollTop - (main.children[1] as HTMLElement).offsetTop))).toBeLessThan(2);
   const dragBy = async (distance: number) => {
@@ -223,18 +223,18 @@ test("설정 화면에서 언어를 고르면 카드가 접히고 첫 화면 문
     return Math.abs(element.scrollLeft - (cards[card].offsetLeft - cards[0].offsetLeft));
   }, index);
   await dragBy(-150);
-  await expect(guide.getByText("2 / 4", { exact: true })).toBeVisible();
+  await expect(guide.getByText("2 / 7", { exact: true })).toBeVisible();
   await expect.poll(() => offsetFromCard(1)).toBeLessThan(2);
   await dragBy(-20);
   await expect.poll(() => offsetFromCard(1)).toBeLessThan(2);
   await dragBy(200);
-  await expect(guide.getByText("1 / 4", { exact: true })).toBeVisible();
+  await expect(guide.getByText("1 / 7", { exact: true })).toBeVisible();
   await expect.poll(() => offsetFromCard(0)).toBeLessThan(2);
 
   const next = guide.getByRole("button", { name: "다음 단계" });
-  for (const step of [2, 3, 4]) {
+  for (const step of [2, 3, 4, 5, 6, 7]) {
     await next.click();
-    await expect(guide.getByText(`${step} / 4`, { exact: true })).toBeVisible();
+    await expect(guide.getByText(`${step} / 7`, { exact: true })).toBeVisible();
   }
   await expect(next).toHaveAttribute("aria-disabled", "true");
   await noHorizontalScroll(page);

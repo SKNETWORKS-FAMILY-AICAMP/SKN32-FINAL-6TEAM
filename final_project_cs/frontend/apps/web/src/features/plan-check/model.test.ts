@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { exampleDone, exampleSnapshots, readAgain } from "./test-views";
-import { askStopId, beginRecheck, cutAtStop, heldAt, nextStep, onlyCard, progress, rebase, stopAt, stopKind, syncDrawn, tally, timeline, withArrivalRows, withAskSlot, type PlanAsk, type PlanCheckView } from "./model";
+import { askStopId, beginRecheck, cutAtStop, heldAt, nextStep, onlyCard, progress, rebase, revealedRows, rowStop, stopAt, stopKind, stopRowOf, syncDrawn, tally, timeline, withArrivalRows, withAskSlot, type CheckRow, type PlanAsk, type PlanCheckView, type PlanItem } from "./model";
+import { stopKindOf } from "./stop-questions";
 
-/** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. */
-function walk(from: PlanCheckView, to: PlanCheckView): PlanCheckView[] {
+/** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. `cutRows`: as `nextStep` (where the check stops at cards). */
+function walk(from: PlanCheckView, to: PlanCheckView, cutRows = false): PlanCheckView[] {
   const out: PlanCheckView[] = [];
   let shown = from;
   for (let guard = 0; guard < 500; guard += 1) {
-    const next = nextStep(shown, to);
+    const next = nextStep(shown, to, cutRows);
     if (!next) return out;
     out.push(next);
     shown = next;
@@ -203,6 +204,77 @@ describe("`[2026-10-20 C안]` the first check stops at a card that needs a look"
     it("keeps the same snapshot when the server says nothing new", () => {
       expect(syncDrawn(atB, exampleDone)).toBe(atB);
     });
+  });
+});
+
+describe("`[2026-10-22 사용자 결정 — 한 줄씩 · 문제 줄에서 멈추기]` a card that stops is drawn down to the row its question is about", () => {
+  const row = (kind: CheckRow["kind"], result: CheckRow["result"], text = "…"): CheckRow => ({ kind, result, text });
+  const card = (fields: Partial<PlanItem>): PlanItem => ({ ...exampleDone.items[1], unfound: undefined, placeState: null, verdict: "review", ...fields });
+  const b = (view: PlanCheckView) => view.items.find((item) => item.id === "b");
+
+  it("finds the row the question is about, in the order the question is told (`stopKindOf`)", () => {
+    const cases: [PlanItem, ReturnType<typeof stopKindOf>, number][] = [
+      [exampleDone.items[1], "other", 0],                                                                          // the first red row (place)
+      [card({ unfound: { question: "못 찾았어요", blocked: false }, checks: [row("time", "filled"), row("place", "bad"), row("hours", "unknown")] }), "unfound", 1],
+      [card({ checks: [row("place", "ok"), row("hours", "unknown"), row("closed", "bad"), row("risk", "ok")] }), "closed", 2],
+      [card({ placeState: "picked_nearest", checks: [row("place", "warn"), row("hours", "ok"), row("closed", "bad")] }), "closed", 2],   // a closed day is asked before a place taken for now
+      [card({ placeState: "picked_nearest", checks: [row("place", "warn"), row("hours", "ok")] }), "nearest", 0],
+      [card({ checks: [row("place", "ok"), row("hours", "bad"), row("closed", "warn")] }), "other", 1],
+      [card({ checks: [row("place", "ok"), row("hours", "unknown"), row("closed", "warn")] }), "other", 2],               // no red row: the first amber
+      [card({ checks: [row("place", "ok"), row("hours", "ok")] }), "other", 1],                                          // nothing to point at: every row
+    ];
+    for (const [item, kind, at] of cases) {
+      expect(stopKindOf(item)).toBe(kind);
+      expect(stopRowOf(item)).toBe(at);
+    }
+    // A late way in (the card itself passed): its 「도착」 row.
+    expect(stopRowOf(card({ verdict: "keep", checks: [row("place", "ok"), row("arrival", "warn"), row("risk", "ok")] }))).toBe(1);
+  });
+
+  it("shows the checks ticked in and the one being checked — never the ones still to come", () => {
+    const waiting = [row("place", "pending", ""), row("hours", "pending", ""), row("closed", "pending", "")];
+    expect(revealedRows(waiting, null)).toEqual(waiting.slice(0, 1));
+    const two = [row("place", "ok"), ...waiting.slice(1)];
+    expect(revealedRows(two, null)).toEqual(two.slice(0, 2));
+    const all = [row("place", "bad", "숙소를 정해야 해요"), row("hours", "unknown", "장소를 정하면 확인해요"), row("closed", "unknown", "장소를 정하면 확인해요")];
+    expect(revealedRows(all, null)).toBe(all);
+    // Stopped at the first row: nothing below it, the words as they are.
+    expect(revealedRows(all, { row: 0, hide: true })).toEqual(all.slice(0, 1));
+    // Checked again after a pick: the rows down to the stop row wait with their words; a row below it comes as a new one.
+    const again = all.map((entry) => ({ ...entry, result: "pending" as const }));
+    expect(revealedRows(again, { row: 1, hide: false })).toEqual(again.slice(0, 2));
+    const past = [row("place", "ok", "직접 고른 곳이에요"), row("hours", "ok", "09:00–18:00 안에 머물러요"), { ...again[2] }];
+    expect(revealedRows(past, { row: 1, hide: false })).toEqual([past[0], past[1], { ...past[2], text: "" }]);
+  });
+
+  it("ticks a stopping card's checks in only down to that row; its verdict brings the rest as the server has them", () => {
+    const cut = walk(received, exampleDone, true);
+    const plain = walk(received, exampleDone);
+    const appear = cut.findIndex((view) => b(view));
+    expect(b(cut[appear])!.checks.map((entry) => entry.result)).toEqual(["pending", "pending", "pending", "pending"]);
+    expect(b(cut[appear + 1])).toMatchObject({ verdict: null, checks: [exampleDone.items[1].checks[0], ...b(cut[appear])!.checks.slice(1)] });
+    expect(b(cut[appear + 2])).toEqual(exampleDone.items[1]);                         // verdict 「확인 필요」 with every row the server sent
+    expect(cut.length).toBe(plain.length - 3);                                        // three rows not ticked in one by one
+    expect(cut.at(-1)).toEqual(exampleDone);
+    // A card that does not stop is ticked in as before.
+    const a = (view: PlanCheckView) => JSON.stringify(view.items.find((item) => item.id === "a"));
+    expect([...new Set(cut.map(a))]).toEqual([...new Set(plain.map(a))]);
+  });
+
+  it("says when the card's rows down to its stop row are in, so the row below it is not drawn in the pause before the verdict", () => {
+    const cut = walk(received, exampleDone, true);
+    const appear = cut.findIndex((view) => b(view));
+    expect(rowStop(cut[appear], exampleDone)).toBeNull();                              // its stop row is still to come
+    expect(rowStop(cut[appear + 1], exampleDone)).toEqual({ id: "b", row: 0 });
+    expect(rowStop(cut[appear + 2], exampleDone, "b")).toEqual({ id: "b", row: 0 });  // stopped there
+    expect(rowStop(beginRecheck(cut[appear + 2], "b"), exampleDone, "b")).toBeNull(); // checked again: it waits
+    expect(cut.slice(0, appear).map((view) => rowStop(view, exampleDone)).filter(Boolean)).toEqual([]);
+    // Held there while the server still checks the rest — the same pause.
+    const streaming: PlanCheckView = { ...exampleDone, stage: "checking", title: null };
+    const drawn = walk(cut.find((view) => view.stage === "checking")!, streaming, true);
+    expect(b(drawn.at(-1)!)!.checks.map((entry) => entry.result)).toEqual(["bad", "pending", "pending", "pending"]);
+    expect(heldAt(drawn.at(-1)!, streaming, true)).toBe("b");
+    expect(rowStop(drawn.at(-1)!, streaming)).toEqual({ id: "b", row: 0 });
   });
 });
 

@@ -312,7 +312,10 @@ export function withAskSlot(view: PlanCheckView, ask: PlanAsk): PlanCheckView {
  */
 export const isInstantRow = (row: CheckRow) => row.result === "bad" || row.result === "unknown";
 
-/** `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card comes with every check waiting, the red and grey ones too: its height is the finished card's, so nothing below it moves while its checks tick in. */
+/**
+ * `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card comes with every check waiting, the red and grey ones too: its height is the finished card's, so nothing below it moves while its checks tick in.
+ * `[2026-10-22 사용자 결정 — 한 줄씩]` The screen now draws only the checks ticked in and the one being checked (`revealedRows`): the card grows a row at a time.
+ */
 const pendingCopy = <T extends { checks: CheckRow[]; verdict: Verdict | null }>(entity: T): T =>
   ({ ...entity, checks: entity.checks.map((row) => ({ ...row, result: "pending" as const, text: "" })), verdict: null });
 
@@ -325,8 +328,10 @@ const pendingCopy = <T extends { checks: CheckRow[]; verdict: Verdict | null }>(
  *   verdict, a step of its own) → done → title. `[2026-10-20 사용자 결정 — 계획 확인 C안]` The leg to a place comes with that place, in one step
  *   (a leg the server sends after its place is drawn comes alone, where it stands).
  *   Anything the screen cannot step toward (something removed, a line changed) jumps straight to `target`.
+ * `cutRows`: ★`[2026-10-22 사용자 결정 — 문제 줄에서 멈추기]` where the check stops at cards (`useReveal` `stops`), a card that stops ticks its checks in only down to the row its question
+ *   is about (`stopRowOf`); its verdict then comes with the rest of its checks as the server has them, which the screen does not draw while it is stopped there (`revealedRows`).
  */
-export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheckView | null {
+export function nextStep(shown: PlanCheckView, target: PlanCheckView, cutRows = false): PlanCheckView | null {
   if (JSON.stringify(shown) === JSON.stringify(target)) return null;
   const jump = () => target;
   if (stageIndex(target.stage) < stageIndex(shown.stage)) return jump();
@@ -355,7 +360,7 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheck
     if (entry.type === "item") {
       const want = target.items.find((item) => item.id === entry.id)!;
       const have = shown.items.find((item) => item.id === entry.id);
-      const step = advance(have, want, "rows");
+      const step = advance(have, want, "rows", cutRows && have && stopsHere(want, shown) ? stopRowOf(want) : undefined);
       if (step === undefined) continue;
       // `[2026-10-20 사용자 결정 — 계획 확인 C안]` A card that needs a look shows that only once the check is final: the screen stops there to ask (`stopAt`), so it waits rather than
       //   draw past a verdict the server may still change.
@@ -385,14 +390,15 @@ export function nextStep(shown: PlanCheckView, target: PlanCheckView): PlanCheck
  * `rows`: a place appears with its checks waiting, then one check at a time, then — once every check is in — its verdict, a step of its own
  * (`[2026-10-20 사용자 결정 — 계획 확인 C안]` the red and grey checks are ticked in like the others; the verdict used to land with the last check).
  * `whole`: it appears finished — a move (its only visible part is its mark: no pretended search is replayed after the server has answered).
+ * `until`: `[2026-10-22 사용자 결정 — 문제 줄에서 멈추기]` the checks are ticked in one at a time only down to this row; the rest come with the verdict, as the server has them.
  */
-function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have: T | undefined, want: T, grain: "rows" | "whole"): T | undefined {
+function advance<T extends { checks: CheckRow[]; verdict: Verdict | null }>(have: T | undefined, want: T, grain: "rows" | "whole", until?: number): T | undefined {
   if (!have) return grain === "whole" ? want : pendingCopy(want);
   if (JSON.stringify(have) === JSON.stringify(want)) return undefined;
   if (have.checks.length !== want.checks.length || have.checks.some((row, at) => row.kind !== want.checks[at].kind)) return want;
   if (grain === "whole") return { ...have, ...want };
   const at = have.checks.findIndex((row, index) => JSON.stringify(row) !== JSON.stringify(want.checks[index]));
-  return at < 0 ? { ...have, ...want } : { ...have, checks: have.checks.map((row, index) => index === at ? want.checks[at] : row) };
+  return at < 0 || (until !== undefined && at > until) ? { ...have, ...want } : { ...have, checks: have.checks.map((row, index) => index === at ? want.checks[at] : row) };
 }
 
 /** Put `item` where it stands in `order` (the server's order), among the items already shown. */
@@ -417,7 +423,7 @@ export const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) =>
  * `[2026-10-21 사용자 지적]` The card the check is held at while the server still checks the rest: its verdict needs a look (or its way in is late) and is drawn only once the
  * check is final (`nextStep`). To the customer the check has stopped there — the screen waits for the server only to ask.
  */
-export function heldAt(shown: PlanCheckView, target: PlanCheckView): string | null {
+export function heldAt(shown: PlanCheckView, target: PlanCheckView, cutRows = false): string | null {
   if (target.stage === "done" || shown.stage !== "checking") return null;
   for (const entry of checkOrder(target)) {
     if (entry.type === "ask") return null;
@@ -426,7 +432,8 @@ export function heldAt(shown: PlanCheckView, target: PlanCheckView): string | nu
       return null;
     }
     const have = shown.items.find((item) => item.id === entry.id);
-    const step = advance(have, target.items.find((item) => item.id === entry.id)!, "rows");
+    const want = target.items.find((item) => item.id === entry.id)!;
+    const step = advance(have, want, "rows", cutRows && have && stopsHere(want, shown) ? stopRowOf(want) : undefined);
     if (step === undefined) continue;
     return have && step.verdict !== null && have.verdict !== step.verdict && stopsHere(step, shown) ? entry.id : null;
   }
@@ -436,6 +443,63 @@ export function heldAt(shown: PlanCheckView, target: PlanCheckView): string | nu
 /** `[2026-10-20 C안]` What the stopped card asks about: its place (or what else needs a look) first, then the way to it. */
 export const stopKind = (view: PlanCheckView, id: string): "place" | "arrival" =>
   view.items.find((item) => item.id === id)?.verdict === "review" ? "place" : "arrival";
+
+/**
+ * ★`[2026-10-22 사용자 결정 — 문제 줄에서 멈추기]` (목업 `mockups/tripilot-plan-check-row-stop.html`) The check row a stopped card's question is about: the check stops there, the
+ * question opens right under it and the rows below are not drawn until the card passes. Its place question (`stopKind` 「place」) is told in the order `stopKindOf`
+ * (`stop-questions.ts`) asks it — a place not found, a closed day, a place taken for now, else the row the question quotes (the first red, else the first amber) —; a late arrival is its
+ * 「도착」 row. The last row when none applies (nothing is hidden then).
+ */
+export function stopRowOf(item: PlanItem): number {
+  const find = (test: (row: CheckRow) => boolean) => item.checks.findIndex(test);
+  const last = item.checks.length - 1;
+  if (item.verdict !== "review") { const arrival = find((row) => row.kind === "arrival"); return arrival < 0 ? last : arrival; }
+  const place = find((row) => row.kind === "place");
+  const closed = find((row) => row.kind === "closed" && row.result === "bad");
+  const bad = find((row) => row.result === "bad");
+  const at = item.unfound && place >= 0 ? place : closed >= 0 ? closed : item.placeState === "picked_nearest" && place >= 0 ? place
+    : bad >= 0 ? bad : find((row) => row.result === "warn");
+  return at < 0 ? last : at;
+}
+
+/**
+ * ★`[2026-10-22 사용자 결정 — 문제 줄에서 멈추기]` The card being drawn in the first check — `id` (the card the check stopped at), else the first one along the days not drawn as the
+ * server has it — when it stops the check and its checks down to its stop row are in: that row. Nothing below it is drawn from then on (`revealedRows`), so no row comes and goes
+ * in the pause before its verdict.
+ */
+export function rowStop(shown: PlanCheckView, target: PlanCheckView, id: string | null = null): { id: string; row: number } | null {
+  let at = id;
+  if (!at) for (const entry of checkOrder(target)) {
+    if (entry.type === "ask") return null;
+    if (entry.type === "move") {
+      if (advance(shown.moves.find((move) => move.id === entry.id), target.moves.find((move) => move.id === entry.id)!, "whole") === undefined) continue;
+      return null;
+    }
+    if (advance(shown.items.find((item) => item.id === entry.id), target.items.find((item) => item.id === entry.id)!, "rows") === undefined) continue;
+    at = entry.id;
+    break;
+  }
+  const have = at ? shown.items.find((item) => item.id === at) : undefined;
+  const want = at ? target.items.find((item) => item.id === at) : undefined;
+  if (!have || !want || !stopsHere(want, shown)) return null;
+  const row = stopRowOf(want);
+  const inAlready = have.checks.length === want.checks.length && want.checks.slice(0, row + 1).every((check, n) => JSON.stringify(check) === JSON.stringify(have.checks[n]));
+  return inAlready ? { id: want.id, row } : null;
+}
+
+/**
+ * ★`[2026-10-22 사용자 결정 — 한 줄씩 · 문제 줄에서 멈추기]` The checks of a card being drawn in the first check, as the screen shows them: the ones ticked in and the one being checked
+ * (「확인하는 중…」) — not the ones still to come. `cut` is the card's stop row (`useReveal`): `hide` — stopped there (or held there while the server still checks): nothing below it;
+ * otherwise (checked again after a pick) the rows down to it stay while they wait again and a row below it comes as a new one (its old words are not shown).
+ * The values are the card's own: only which rows are drawn changes.
+ */
+export function revealedRows(rows: CheckRow[], cut: { row: number; hide: boolean } | null): CheckRow[] {
+  if (cut?.hide) return rows.slice(0, cut.row + 1);
+  const next = rows.findIndex((row) => row.result === "pending");
+  if (next < 0) return rows;
+  const kept = cut?.row ?? -1;
+  return rows.slice(0, Math.max(next, kept) + 1).map((row, at) => at > kept && row.result === "pending" && row.text ? { ...row, text: "" } : row);
+}
 
 /**
  * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` Where the first check stops to ask: the first card along the days whose drawn verdict is 「확인 필요」 or whose way in arrives late, once the

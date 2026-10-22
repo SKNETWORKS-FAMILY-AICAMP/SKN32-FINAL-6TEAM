@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSettings } from "@/lib/settings";
-import { beginRecheck, cutAtStop, nextStep, onlyCard, rebase, stopAt, syncDrawn, type PlanCheckView } from "./model";
+import { beginRecheck, cutAtStop, nextStep, onlyCard, rebase, rowStop, stopAt, stopRowOf, syncDrawn, type PlanCheckView } from "./model";
 
 /**
  * ★`[2026-10-04 사용자 지시 · 코덱스 의견]` 확인 표시는 사용자가 「이건 확인됐구나」를 알아볼 속도로 켜진다 — 한 줄이 켜지고 다음 줄이 켜지기까지 300ms
@@ -29,12 +29,12 @@ export const FOLD_MS = 450;
  */
 export const STAGE_MIN_MS = 900;
 
-/** Up to `count` changes toward `target` (fewer when it is reached first); null when nothing is left to draw. */
-export function stepMany(shown: PlanCheckView, target: PlanCheckView, count: number): PlanCheckView | null {
+/** Up to `count` changes toward `target` (fewer when it is reached first); null when nothing is left to draw. `cutRows`: as `nextStep`. */
+export function stepMany(shown: PlanCheckView, target: PlanCheckView, count: number, cutRows = false): PlanCheckView | null {
   let view: PlanCheckView | null = null;
   for (let at = 0; at < count; at += 1) {
     const from = view ?? shown;
-    const next = nextStep(from, target);
+    const next = nextStep(from, target, cutRows);
     if (!next) break;
     // ★A batch never crosses from one stage of the top bar to the next: the change of stage is the first step of a tick of its own, which waits `STAGE_MIN_MS`.
     if (view && next.stage !== from.stage) break;
@@ -74,7 +74,8 @@ export function pauseBefore(shown: PlanCheckView, next: PlanCheckView): number {
   for (const item of next.items) {
     const was = shown.items.find((other) => other.id === item.id);
     if (!was || JSON.stringify(was) === JSON.stringify(item)) continue;
-    if (JSON.stringify(was.checks) === JSON.stringify(item.checks)) return VERDICT_MS;
+    // `[2026-10-22 문제 줄에서 멈추기]` A verdict may come with the checks below the stop row (`nextStep` `cutRows`): it is still the verdict's pause.
+    if (JSON.stringify(was.checks) === JSON.stringify(item.checks) || (was.verdict === null && item.verdict !== null)) return VERDICT_MS;
     return was.checks.every((row) => row.result === "pending") ? ROWS_LEAD_MS : ROW_MS;
   }
   return ROW_MS;
@@ -96,8 +97,14 @@ export function pauseBefore(shown: PlanCheckView, next: PlanCheckView): number {
  * result screen is where it is changed then (it keeps its tools: 2026-10-20 the read-only result was dropped) — so it does not stop.
  */
 export interface RevealStop { id: string; settling: boolean }
+/**
+ * ★`[2026-10-22 사용자 결정 — 문제 줄에서 멈추기]` How far the checks of the card the check stopped (or is held) at are drawn — `revealedRows` in `model.ts`: `row` is the row its question is
+ * about; `hide`: nothing below it (the question opens right under it). After a pick (`hide` false) the rows down to `row` stay while they wait again and the rows below come one at a time.
+ */
+export interface RevealRowCut { id: string; row: number; hide: boolean }
 export function useReveal(given: PlanCheckView, paused = false, stops = false): {
   view: PlanCheckView; settled: boolean; stop: RevealStop | null;
+  rowCut: RevealRowCut | null;
   recheck: { begin: (id: string) => void; fail: (id: string) => void };
   /** `[2026-10-20 C안]` This page drew the check (it was not finished when the page opened) — the 5-second 「여행 등록」 bar is for such a check only. */
   watched: boolean;
@@ -114,9 +121,12 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
   const [shown, setShown] = useState(target);
   const [wasPaused, setWasPaused] = useState(paused);
   // `[2026-10-20 C안]` A pick sent for the stopped card, and the revision it was sent on: nothing is drawn until the server answers with another one.
-  const [asked, setAsked] = useState<{ id: string; revision: number | undefined } | null>(null);
+  // `[2026-10-22]` `row`: the row it had stopped at (`stopRowOf`) — its checks down to it stay drawn while they are checked again.
+  const [asked, setAsked] = useState<{ id: string; revision: number | undefined; row: number } | null>(null);
   // `[2026-10-21 ST4F-703]` The card picked for while its checks are ticked in again after the server answered (`rebase`), until it is drawn as the server has it.
   const [ticking, setTicking] = useState<string | null>(null);
+  // `[2026-10-22]` The row that card had stopped at, while it is ticked in again.
+  const [tickRow, setTickRow] = useState<number | null>(null);
   // Questions showed the completed reading progress, but not the map's cards. Begin their first appearance at checking.
   const completedHold = wasPaused && !paused && target.stage === "done";
   const firstMap = completedHold && shown.stage !== "done" && !reduced;
@@ -128,11 +138,18 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
   if (immediate && shown !== target) setShown(target);
-  if (asked && target.revision !== asked.revision) { setAsked(null); setTicking(asked.id); setShown(rebase(shown, target, asked.id)); }
+  if (asked && target.revision !== asked.revision) {
+    // `[2026-10-22]` Of the rows down to where it had stopped, those the new plan has again (the same check in the same place, from the top) stay; any other comes as a new one.
+    const was = shown.items.find((item) => item.id === asked.id)?.checks ?? [];
+    const now = target.items.find((item) => item.id === asked.id)?.checks ?? [];
+    let kept = -1;
+    while (kept < asked.row && was[kept + 1] && was[kept + 1].kind === now[kept + 1]?.kind) kept += 1;
+    setAsked(null); setTicking(asked.id); setTickRow(kept); setShown(rebase(shown, target, asked.id));
+  }
   else if (!paused && !immediate && cut !== target && !asked && JSON.stringify(shown) !== JSON.stringify(cut)) setShown(cut);
   const stopId = stopping && !immediate ? stopAt(shown, target) : null;
   const cardOf = (view: PlanCheckView, id: string) => JSON.stringify(view.items.find((item) => item.id === id));
-  if (ticking && cardOf(shown, ticking) === cardOf(target, ticking)) setTicking(null);
+  if (ticking && cardOf(shown, ticking) === cardOf(target, ticking)) { setTicking(null); setTickRow(null); }
   // ★`[2026-10-21 ST4F-703]` Stopped, nothing picked: what is drawn takes the server's values at once (the card being ticked in again steps on). Skipping the animation draws
   //   `cut` instead, which already holds them.
   if (stopId && !asked && !paused && !reduced && !firstMap) {
@@ -151,7 +168,7 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
       return;
     }
     if (stageSince.current?.stage !== shown.stage) stageSince.current = { stage: shown.stage, at: performance.now() };
-    const upcoming = stepMany(shown, target, 1);
+    const upcoming = stepMany(shown, target, 1, stopping);
     if (!upcoming) { peak.current = 0; return; }
     // Stopped at a card: only that card is drawn (its checks ticked in again after a pick); nothing past it.
     if (stopId && !onlyCard(shown, upcoming, stopId)) return;
@@ -163,20 +180,31 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
     if (upcoming.stage !== shown.stage && stageSince.current) wait = Math.max(wait, STAGE_MIN_MS - (performance.now() - stageSince.current.at));
     const timer = setTimeout(() => setShown(upcoming), wait);
     return () => clearTimeout(timer);
-  }, [shown, target, immediate, paused, asked, stopId]);
+  }, [shown, target, immediate, paused, asked, stopId, stopping]);
   // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
   const live = useMemo(() => (shown.serverProgress === target.serverProgress ? shown : { ...shown, serverProgress: target.serverProgress }), [shown, target.serverProgress]);
   const recheck = {
-    begin: (id: string) => { setAsked({ id, revision: target.revision }); setShown((current) => beginRecheck(current, id)); },
+    begin: (id: string) => {
+      const item = shown.items.find((entry) => entry.id === id);
+      setAsked({ id, revision: target.revision, row: item ? stopRowOf(item) : 0 });
+      setShown((current) => beginRecheck(current, id));
+    },
     // The pick was refused: the card is as the server still has it.
     fail: (id: string) => {
       setAsked(null);
       setTicking(null);
+      setTickRow(null);
       const kept = target.items.find((item) => item.id === id);
       setShown((current) => ({ ...current, items: current.items.map((item) => item.id === id && kept ? kept : item) }));
     },
   };
-  if (immediate) return { view: target, settled: true, stop: null, recheck, watched: !openedDone };
+  if (immediate) return { view: target, settled: true, stop: null, rowCut: null, recheck, watched: !openedDone };
   const settling = Boolean(asked) || (ticking !== null && ticking === stopId);
-  return { view: live, settled: !paused && !asked && !stopId && nextStep(shown, target) === null, stop: stopId ? { id: stopId, settling } : null, recheck, watched: !openedDone };
+  // `[2026-10-22]` A card that stops the check, once its rows down to the stop row are in (also before its verdict, and when it is checked again and stops again): nothing below that
+  //   row. Checked again after a pick and not stopping there yet: its rows down to where it had stopped stay while they wait again.
+  const stopItem = stopId ? shown.items.find((item) => item.id === stopId) : undefined;
+  const reached = stopping ? rowStop(shown, target, stopItem?.id ?? null) : null;
+  const rowCut: RevealRowCut | null = reached ? { ...reached, hide: true }
+    : stopItem ? { id: stopItem.id, row: settling ? asked?.row ?? tickRow ?? stopRowOf(stopItem) : stopRowOf(stopItem), hide: !settling } : null;
+  return { view: live, settled: !paused && !asked && !stopId && nextStep(shown, target, stopping) === null, stop: stopId ? { id: stopId, settling } : null, rowCut, recheck, watched: !openedDone };
 }
