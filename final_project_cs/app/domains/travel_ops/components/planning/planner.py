@@ -1140,7 +1140,10 @@ def _swap_closed_meal(item: dict[str, Any], spares: list[Cand], used: set[str], 
 def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: list[Violation],
            *, spares: list[Cand], used: set[str], constraints: Mapping[str, Any],
            party_size: int, ledger: Any = None) -> list[str]:
-    """위반 하나하나에 **정해진 고침**을 건다. 고친 내역을 돌려준다(빈 목록 = 못 고쳤다)."""
+    """위반 하나하나에 **정해진 고침**을 건다. 고친 내역을 돌려준다(빈 목록 = 못 고쳤다).
+
+    ★`[2026-10-22]` 한 위반을 못 고쳐도 **멈추지 않고 다음 위반을 본다** — 앞 위반(바꿀 장소가 없는 쉬는 날)이 뒤 위반(밀면 풀리는 영업 전)까지
+      안 고친 채 거절로 이어지던 구멍을 막았다. 못 고친 위반은 그대로 남아 부르는 쪽의 다시 판정에 걸린다."""
     done: list[str] = []
     by_seq = {item["seq"]: item for item in items}
     for violation in violations:
@@ -1166,7 +1169,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             item = by_seq[seqs[0]]
             swapped = _swap_place(item, spares, used, lambda cand: _covers(cand, item), places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(그날 그 시각에 연다)")
         elif code in ("before_opening", "break_time") and seqs[0] in by_seq:
             item = by_seq[seqs[0]]
@@ -1190,7 +1193,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             #   못 바꿔 초안이 거부됐다(아침 전용 식당이 저녁 칸에 걸린 시험에서 드러남). 그 칸을 덮는 곳도 받는다
             swapped = _swap_place(item, spares, used, lambda cand: _covers(cand, item), places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(닫는 시각을 넘었다)")
         elif code == "dining_closed_at_slot" and ledger is not None and seqs[0] in by_seq:
             # ★`[2026-10-02]` 원장이 그 시각에 닫혔다고 했다 — 시각을 밀면 다른 칸이 깨진다. 그 시각에 여는 곳으로 바꾼다.
@@ -1198,7 +1201,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             item = by_seq[seqs[0]]
             swapped = _swap_closed_meal(item, spares, used, places, ledger)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(그 시각에 연다 — 요식 원장)")
         elif code == "payment_not_accepted" and seqs[0] in by_seq:
             wanted = str(constraints.get("payment"))
@@ -1208,7 +1211,7 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
                 lambda cand: wanted in [str(v) for v in (cand.attributes.get("payment") or [])]
                 or not cand.attributes.get("payment"), places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(결제 조건)")
         elif code == "over_budget":
             # ★가장 비싼 항목을 **더 싸거나 가격을 모르는** 후보로 바꾼다. 없으면 못 고친다.
@@ -1216,17 +1219,17 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
                              if (places[item["place"]].attributes.get("price_krw"))),
                             key=lambda it: -int(places[it["place"]].attributes["price_krw"]))
             if not priced:
-                return done
+                continue
             item = priced[0]
             ceiling = int(places[item["place"]].attributes["price_krw"])
             swapped = _swap_place(item, spares, used,
                                   lambda cand: int(cand.attributes.get("price_krw") or 0) < ceiling,
                                   places)
             if swapped is None:
-                return done
+                continue
             done.append(f"{code}: {item['title']} 로 바꿨다(더 싼 곳)")
         else:
-            return done                    # ★모르는 위반은 고친 척하지 않는다
+            continue                       # ★모르는 위반은 고친 척하지 않는다(다른 위반은 계속 본다)
     return done
 
 
@@ -1623,10 +1626,11 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
     # ★`[2026-10-06]` 이동 팀을 지정 부르지 않는다 — 팀이 조립 때 겊은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`)
     from app.domains.travel_ops.components.team_hooks import legs
-    items, routes, moved = add_moves(items, chosen,
-                                     engine=legs.leg_planner(request.party_size, dict(request.constraints)))
-    fixed += moved
-    violations = _check(items, chosen, request, routes, ledger=ledger)
+    # ★`[2026-10-22]` 이동을 넣으면 일정이 밀려 영업시간 위반이 새로 생길 수 있다 — 거절하기 전에 고쳐 본다(`_settle_moves`)
+    items, routes, violations, extra_rounds = _settle_moves(
+        items, chosen, request, engine=legs.leg_planner(request.party_size, dict(request.constraints)), ledger=ledger,
+        spares=spares, used=used, fixed=fixed, hours_stats=hours_stats, tour_api=tour_api, chat=chat, now=now)
+    rounds += extra_rounds
     if violations:
         raise PlanRefused(
             "plan_infeasible",
@@ -1680,6 +1684,46 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
                     "by_source": _count_by(chosen.values(), "origin")},
         checks={"rounds": rounds, "repairs": fixed, "violations": []},
         coverage=_coverage(items, chosen), calls=calls, rag=rag)
+
+
+def _settle_moves(items: list[dict[str, Any]], chosen: dict[str, Cand], request: PlanRequest, *, engine: Any,
+                  ledger: Any, spares: list[Cand], used: set[str], fixed: list[str], hours_stats: dict[str, Any],
+                  tour_api: Any, chat: Any, now: datetime) -> tuple[list[dict[str, Any]], dict[str, Any], list[Violation], int]:
+    """이동 항목을 넣고 판정한다. 걸리면 **이동을 걷어 같은 방법으로 고친 뒤 다시 넣는다**(최대 `MAX_REPAIR_ROUNDS` 회).
+    (항목들, routes, 남은 위반, 고친 횟수).
+
+    ★`[2026-10-22]` 이동을 넣으면 일정이 뒤로 밀려 **영업시간 위반이 새로 생길 수 있다**(밀린 점심이 닫는 시각을 넘는 것 등).
+      전에는 이 판정에서 걸리면 곧바로 거절했다 — 장소를 바꾸면 풀리는 위반도 그랬다(실서버 「광화문국밥 13:08 쉬는 시간」 거절).
+    ★이동 항목 자체가 낸 위반(이동 시간 모자람 등)은 장소를 바꿔 풀 수 없다 — 이동을 걷은 일정에서 위반이 없으면 더 하지 않는다.
+    """
+    rounds = 0
+    while True:
+        items, routes, moved = add_moves(items, chosen, engine=engine)
+        fixed += moved
+        violations = _check(items, chosen, request, routes, ledger=ledger)
+        if not violations or rounds >= MAX_REPAIR_ROUNDS:
+            return items, routes, violations, rounds
+        base = [item for item in items if item.get("kind") != "mobility"]
+        for number, item in enumerate(base, start=1):
+            item["seq"] = number
+        before_moves = _check(base, chosen, request, ledger=ledger)
+        if not before_moves:
+            return items, routes, violations, rounds
+        applied = repair(base, chosen, before_moves, spares=spares, used=used,
+                         constraints=request.constraints, party_size=request.party_size, ledger=ledger)
+        for cand in spares:
+            if cand.key in used:
+                chosen.setdefault(cand.key, cand)
+        if not applied:
+            return items, routes, violations, rounds
+        rounds += 1
+        fixed += [f"이동을 넣은 뒤 {line}" for line in applied]
+        more = enrich_hours([chosen[item["place"]] for item in base if item.get("place")],
+                            source=tour_api, chat=chat, now=now)
+        for key in ("asked", "read", "by_rule", "by_model", "unknown"):
+            hours_stats[key] += more[key]
+        hours_stats["failed"] += more["failed"]
+        items = base                     # 이동 항목을 걷은 일정으로 이동을 다시 넣는다
 
 
 # ── 고객이 정한 일정은 그대로 두고 빈 곳만 채운다 (2026-09-28, 계획 읽기 「일정 짜 줘」) ─────────
