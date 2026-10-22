@@ -76,6 +76,11 @@ def _planner(trip, supplied=None):
         return None  # The caller records navigation unavailability without rejecting a reported fact.
 
 
+#: `[2026-10-22 ST4F-716 실서버 확인]` 계산기는 도착 목표에서 거꾸로 센다. 목표를 「지금 출발」에 맞추다 몇 분 빠듯해지면(배차 · 여유 반올림) 계산기는 후보 없음(`arrive_late`)을
+#:  돌려준다 — 그때는 목표를 이만큼 늦춰 다시 묻고, 출발이 지금부터 이 안이면 「지금 출발」로 받는다(전에는 바로 실패해 도보 15분 거리도 「확인을 마치지 못했어요」가 됐다)
+DEPART_NOW_STEP = timedelta(minutes=5)
+
+
 def _depart_now(engine, origin, destination, now, deadline):
     """Ask the common calculator again at an arrival goal that starts this leg now."""
     goal = max(deadline, now + timedelta(hours=2))
@@ -85,17 +90,69 @@ def _depart_now(engine, origin, destination, now, deadline):
         except Exception as exc:
             return None, {"code": "engine_failed", "exception_type": type(exc).__name__}
         if got is None:
+            if (why or {}).get("code") == "arrive_late":
+                goal += DEPART_NOW_STEP
+                continue
             return None, why
         delta = now - got["starts_at"]
-        if abs(delta.total_seconds()) < 60:
+        if abs(delta.total_seconds()) < 60 or timedelta(0) <= -delta <= DEPART_NOW_STEP:
             return {**got, "visit_starts_at": goal}, None
         goal += delta
     return None, {"code": "departure_not_now"}
 
 
+#: `[2026-10-22 사용자 결정 — ST4F-716]` 운영시간 위반 — 앞당긴 다음 방문에 **새로** 생기면 시각을 바꾸지 않고 이유를 알린다(겹침 · 이동 부족은 지금처럼 `needs_replan`)
+HOURS_CODES = frozenset({"closed_day", "before_opening", "after_closing", "after_last_entry", "break_time",
+                         "outside_hours", "dining_closed_at_slot"})
+_HOURS_WHY = {"closed_day": "그날 쉬는 날이라", "before_opening": "아직 문을 열지 않아", "break_time": "브레이크 타임에 걸려",
+              "after_closing": "문 닫는 시각과 맞지 않아", "after_last_entry": "입장 마감 시각과 맞지 않아"}
+
+
+def _known(facts) -> bool:
+    return bool(facts.known or facts.activity or facts.open_at_slot is not None)
+
+
+def _judged(item: Item, facts) -> Item:
+    """판정에만 쓰는 사본 — 운영시간 사실(`intake/hours.py` `facts_for`)을 장소에 얹는다. 저장하는 항목은 그대로다."""
+    place = dict(item.place or {})
+    place["attributes"] = {**(place.get("attributes") or {}), **facts.attributes}
+    if facts.activity:
+        place["activity"] = facts.activity
+    if facts.open_at_slot is not None:
+        place["ledger"] = {"open_at_slot": facts.open_at_slot}
+    return replace(item, place=place)
+
+
+def _opening(facts, start: datetime) -> datetime | None:
+    """새 시작이 그날 여는 시각보다 이르면 그 여는 시각 — 요일표(`place_hours.hours_on`)를 모르면 None."""
+    from app.domains.travel_ops.components.places.place_hours import hours_on
+
+    local = start.astimezone(KST)
+    today = hours_on(facts.attributes, local.date())
+    if today is None or today == "closed" or local.time() >= today.opens:
+        return None
+    return datetime.combine(local.date(), today.opens, tzinfo=KST)
+
+
+def hours_reader(connect, tenant_id: str):
+    """`[2026-10-22 ST4F-716]` 수정 모드 「다시 제출」과 같은 운영시간 사실(`facts_for` — DB 만 읽는다). 부를 때마다 짧은 연결을 쓴다(트랜잭션 밖)."""
+    from app.domains.travel_ops.components.intake.hours import facts_for
+
+    def read(item: Item, start: datetime, end: datetime | None):
+        with connect() as conn:
+            return facts_for(conn, tenant_id, item.place, item.kind, start, end)
+    return read
+
+
 def plan(*, trip: dict, items: list[Item], action: str, target: Item | None,
-         now: datetime, engine=None) -> tuple[list[Item], dict]:
-    """Compute one progress change. Customer facts and deferred navigation stay explicit."""
+         now: datetime, engine=None, hours=None) -> tuple[list[Item], dict]:
+    """Compute one progress change. Customer facts and deferred navigation stay explicit.
+
+    `hours(item, start, end)` `[2026-10-22 ST4F-716]` — 운영시간 사실을 읽는 함수(`hours_reader`). 주면 `advance_trip` 이 다음 방문을 앞당기기 전에
+    원래 · 새 시각의 운영시간을 판정에 넣고, 여는 시각 전이면 여는 시각으로 맞춘다. 없으면 저장된 장소 속성만 본다(전과 같다)."""
+    # `[2026-10-22 사용자 결정 — ST4F-716]` 일정 이름 뒤 조사는 받침에 맞춰 고른다(전에는 「을(를)」 · 「(으)로」를 그대로 보였다)
+    from app.domains.travel_ops.components.intake.review import eul, eun, iga, ro
+
     received_now = now.astimezone(KST)
     now = received_now.replace(second=0, microsecond=0)
     rounding_slack = timedelta(minutes=1) if received_now > now else timedelta(0)
@@ -133,7 +190,7 @@ def plan(*, trip: dict, items: list[Item], action: str, target: Item | None,
             "status": "adjusted", "text": "오늘 일정을 종료했어요. 오늘의 남은 출발 안내도 종료했어요.",
             "day": now.date().isoformat(), "state": "completed"}
     if terminal(target) and not (action == "advance_trip" and (target.detail.get("execution") or {}).get("state") == "completed"):
-        return items, {"status": "already_applied", "text": f"{target.title}은(는) 이미 완료했어요."}
+        return items, {"status": "already_applied", "text": f"{eun(target.title)} 이미 완료했어요."}
     if action == "arrive_item" and (target.detail.get("execution") or {}).get("state") == "arrived":
         return items, {"status": "already_applied", "text": f"{target.title}에 이미 도착한 것으로 반영돼 있어요."}
     changed[target.item_id] = target if terminal(target) else _reported(target, "arrived" if action == "arrive_item" else "completed", now)
@@ -173,33 +230,55 @@ def plan(*, trip: dict, items: list[Item], action: str, target: Item | None,
                        "item_id": str(target.item_id), "state": "arrived", **(navigation or {})}
     if action == "complete_item":
         return [changed.get(i.item_id, i) for i in ordered], {
-            "status": "adjusted", "text": f"{target.title}을(를) {now:%H:%M}에 완료한 것으로 반영했어요.",
+            "status": "adjusted", "text": f"{eul(target.title)} {now:%H:%M}에 완료한 것으로 반영했어요.",
             "item_id": str(target.item_id), "state": "completed"}
     following = next((i for i in stops if i.seq > target.seq and not terminal(i)
                       and i.starts_at.astimezone(KST).date() == now.date()), None)
     if following is None:
         return [changed.get(i.item_id, i) for i in ordered], {
-            "status": "adjusted", "text": f"{target.title}을(를) 완료했어요. 오늘 남은 방문 일정은 없어요."}
+            "status": "adjusted", "text": f"{eul(target.title)} 완료했어요. 오늘 남은 방문 일정은 없어요."}
     if any(i.kind == "mobility" and target.seq < i.seq < following.seq
            and (i.detail.get("execution") or {}).get("state") == "departing" for i in ordered):
-        return items, {"status": "already_applied", "text": f"{following.title}(으)로 이미 이동을 시작한 일정이에요."}
+        return items, {"status": "already_applied", "text": f"{ro(following.title)} 이미 이동을 시작한 일정이에요."}
     if following.locked or following.booking_id:
         return [changed.get(i.item_id, i) for i in ordered], {
-            "status": "adjusted", "text": f"{target.title}은(는) 완료했어요. 다음 {following.title}은(는) 고정·예약 시각을 유지했어요.",
+            "status": "adjusted", "text": f"{eun(target.title)} 완료했어요. 다음 {eun(following.title)} 고정·예약 시각을 유지했어요.",
             "navigation": "fixed_time_preserved"}
     a, b = _place(target), _place(following)
     if a is None or b is None:
         return [changed.get(i.item_id, i) for i in ordered], {
-            "status": "adjusted", "text": f"{target.title}은(는) 완료했어요. {following.title}으로 지금 출발할 길을 계산하려면 현재 위치가 필요해요.",
+            "status": "adjusted", "text": f"{eun(target.title)} 완료했어요. {ro(following.title)} 지금 출발할 길을 계산하려면 현재 위치가 필요해요.",
             "navigation": "needs_location"}
     engine = _planner(trip, engine)
     got, why = _depart_now(engine, a, b, now, following.starts_at) if engine else (None, {"code": "engine_unavailable"})
     if got is None:
         return [changed.get(i.item_id, i) for i in ordered], {
-            "status": "adjusted", "text": f"{target.title}은(는) 완료했어요. {following.title}으로 지금 출발할 이동 계산은 확인을 마치지 못했어요.",
+            "status": "adjusted", "text": f"{eun(target.title)} 완료했어요. {ro(following.title)} 지금 출발할 이동 계산은 확인을 마치지 못했어요.",
             "navigation": "unverifiable", "navigation_reason": why}
     duration = (following.ends_at - following.starts_at) if following.ends_at else timedelta(hours=1)
     visit_start = got["visit_starts_at"] + rounding_slack
+    # ★`[2026-10-22 사용자 결정 — ST4F-716]` 앞당기기 전에 「다시 제출」과 같은 운영시간 사실을 원래 · 새 시각으로 읽어 판정에 넣는다.
+    #   새 시작이 여는 시각보다 이르면 여는 시각으로 맞추고, 그래도 원래보다 이르지 않으면 앞당기지 않는다. 못 읽으면 그 판정만 빼고 그렇다고 남긴다
+    judged_before, facts_now, hours_check, opened = following, None, None, None
+    if hours is not None:
+        try:
+            facts_was = hours(following, following.starts_at, following.ends_at)
+            facts_now = hours(following, visit_start, visit_start + duration)
+            opens = _opening(facts_now, visit_start)
+            if opens is not None:
+                if opens >= following.starts_at:
+                    return [changed.get(i.item_id, i) for i in ordered], {
+                        "status": "adjusted", "text": f"{eun(target.title)} 완료했어요. {eun(following.title)} {opens:%H:%M}에 문을 열어 시각은 그대로 두었어요.",
+                        "navigation": "opens_later", "hours_check": "checked"}
+                visit_start = opened = opens
+                facts_now = hours(following, visit_start, visit_start + duration)
+            judged_before = _judged(following, facts_was)
+            hours_check = "checked" if _known(facts_now) else "unknown"
+        except Exception as exc:
+            log.warning("progress hours check failed (%s)", type(exc).__name__)
+            judged_before, facts_now, hours_check, opened = following, None, "unavailable", None
+            visit_start = got["visit_starts_at"] + rounding_slack
+    noted = {"hours_check": hours_check} if hours_check else {}
     changed[following.item_id] = replace(following, starts_at=visit_start, ends_at=visit_start + duration)
     route = Item(uuid4(), target.seq + 1, "mobility", f"{a['name']} → {b['name']}", None,
                  got["starts_at"], got["ends_at"], detail={"route_def": got["route"], "route_basis": "rejudged",
@@ -212,20 +291,71 @@ def plan(*, trip: dict, items: list[Item], action: str, target: Item | None,
     after.sort(key=lambda i: (i.seq, i.kind != "mobility"))
     after = [replace(i, seq=n) for n, i in enumerate(after, 1)]
     from app.domains.travel_ops.components.actions.itinerary_actions import introduced_violations
-    problems = introduced_violations(trip, ordered, after)
+    # 판정에만 운영시간을 얹은 사본으로 본다 — 원래 시각에도 있던 위반은 이 변경의 탓이 아니다(`introduced_violations`)
+    before = [judged_before if i.item_id == following.item_id else i for i in ordered]
+    checked = [_judged(i, facts_now) if facts_now is not None and i.item_id == following.item_id else i for i in after]
+    problems = introduced_violations(trip, before, checked)
     if problems:
-        return [changed.get(i.item_id, i) if i.item_id == target.item_id else i for i in ordered], {
-            "status": "adjusted", "text": f"{target.title}은(는) 완료했어요. 지금 이동하면 뒤 일정과 맞지 않아 이동 시각은 바꾸지 않았어요.",
-            "navigation": "needs_replan", "navigation_reason": [p.reason for p in problems]}
-    return after, {"status": "adjusted", "text": f"{target.title}을(를) {now:%H:%M}에 마쳤고, 지금 {following.title}(으)로 이동해요. 예상 도착은 {got['ends_at']:%H:%M}예요.",
+        kept = [changed.get(i.item_id, i) if i.item_id == target.item_id else i for i in ordered]
+        hours_problems = [p for p in problems if p.code in HOURS_CODES]
+        if hours_problems:
+            why = _HOURS_WHY.get(hours_problems[0].code, "그 시각에 운영하지 않아")
+            return kept, {"status": "adjusted", "text": f"{eun(target.title)} 완료했어요. 지금 가면 {iga(following.title)} {why} 이동 시각은 바꾸지 않았어요.",
+                          "navigation": "hours_conflict", "navigation_reason": [p.reason for p in problems], **noted}
+        return kept, {
+            "status": "adjusted", "text": f"{eun(target.title)} 완료했어요. 지금 이동하면 뒤 일정과 맞지 않아 이동 시각은 바꾸지 않았어요.",
+            "navigation": "needs_replan", "navigation_reason": [p.reason for p in problems], **noted}
+    # 여는 시각으로 맞춘 앞당김은 그렇다고 말한다(목업 `tripilot-trip-now-done.html` 「문 열기 전에 닿을 때」)
+    said = (f"{eul(target.title)} {now:%H:%M}에 마쳤어요. {eun(following.title)} {opened:%H:%M}에 문을 열어 {opened:%H:%M} 시작으로 앞당겼어요."
+            if opened is not None else
+            f"{eul(target.title)} {now:%H:%M}에 마쳤고, 지금 {ro(following.title)} 이동해요. 예상 도착은 {got['ends_at']:%H:%M}예요.")
+    return after, {"status": "adjusted", "text": said,
                    "departure_at": got["starts_at"].isoformat(), "arrival_at": got["ends_at"].isoformat(),
                    "next_start_at": visit_start.isoformat(),
-                   "route": got["route"], "state": "departing"}
+                   "route": got["route"], "state": "departing", **noted}
 
 
-def apply(*, store, connect, trip_id, base_version, decision, now, request_id, message, destination=None):
-    """Version, actual progress and notice are saved by the canonical store transaction."""
+def _record(store, conn, *, trip_id, base_version, key, decision, original, after, outcome, now, message, target):
+    """진행 결과를 새 판 하나 · 알림 하나로 쓴다. 기준 판은 `append_version` 이 다시 확인한다(낡았으면 `StaleItinerary`)."""
+    if outcome.get("navigation") and target is not None:
+        after = [replace(i, detail={**i.detail, "navigation": {"status": outcome["navigation"],
+            "reason": outcome.get("navigation_reason"), "checked_at": now.isoformat()}})
+            if i.item_id == target.item_id else i for i in after]
+    if after == original:
+        return outcome
+    cause = {"category": "customer_request", "type": "progress", "request_id": key,
+             "message": message[:200], "action": decision.action, "reported_at": now.isoformat()}
+    version = store.append_version(conn, trip_id=trip_id, base_version=base_version, items=after,
+                                   reason="customer_report", causes=[cause])
+    store.enqueue_notice(conn, trip_id=trip_id, version=version, payload={
+        "text": outcome["text"], "version": version, "causes": [cause], "changed": {"progress": decision.action},
+        "language": "ko", "replay": False})
+    return {**outcome, "version": version}
+
+
+def apply(*, store, connect, trip_id, base_version, decision, now, request_id, message, destination=None, hours=None):
+    """Version, actual progress and notice are saved by the canonical store transaction.
+
+    ★`[2026-10-22 사용자 결정 — ST4F-716]` 도착(`arrive_item`) 밖의 진행은 이동 계산 · 운영시간 확인을 **트랜잭션 밖에서** 하고, 저장 트랜잭션에서
+    같은 요청 · 기준 판을 다시 본다 — 깊은 경로 탐색(몇 초 × 최대 4번) 동안 트랜잭션을 열어 두지 않는다. 다른 장소 도착은 장소 행을 먼저 써서 한 트랜잭션 그대로다.
+    `hours` 를 안 주면 `hours_reader`(「다시 제출」과 같은 운영시간 사실)를 쓴다."""
     key = "progress:" + request_id
+    if decision.action != "arrive_item":
+        with connect() as conn:
+            already = store.version_for_request(conn, trip_id, key)
+            trip, items = (None, None) if already is not None else store.latest(conn, trip_id)
+        if already is not None:
+            return {"status": "already_applied", "version": already, "text": "같은 진행 요청은 이미 반영했어요."}
+        if trip["version"] != base_version:
+            raise StaleItinerary("progress itinerary changed")
+        after, outcome = plan(trip=trip, items=items, action=decision.action, target=decision.item, now=now,
+                              hours=hours if hours is not None else hours_reader(connect, store.tenant_id))
+        with connect() as conn, conn.transaction():
+            already = store.version_for_request(conn, trip_id, key)
+            if already is not None:
+                return {"status": "already_applied", "version": already, "text": "같은 진행 요청은 이미 반영했어요."}
+            return _record(store, conn, trip_id=trip_id, base_version=base_version, key=key, decision=decision,
+                           original=list(items), after=after, outcome=outcome, now=now, message=message, target=decision.item)
     with connect() as conn, conn.transaction():
         already = store.version_for_request(conn, trip_id, key)
         if already is not None:
@@ -272,17 +402,5 @@ def apply(*, store, connect, trip_id, base_version, decision, now, request_id, m
                 target = replace(target, detail=detail)
             items = [target if i.item_id == previous_id else i for i in items]
         after, outcome = plan(trip=trip, items=items, action=decision.action, target=target, now=now)
-        if outcome.get("navigation") and target is not None:
-            after = [replace(i, detail={**i.detail, "navigation": {"status": outcome["navigation"],
-                "reason": outcome.get("navigation_reason"), "checked_at": now.isoformat()}})
-                if i.item_id == target.item_id else i for i in after]
-        if after == original:
-            return outcome
-        cause = {"category": "customer_request", "type": "progress", "request_id": key,
-                 "message": message[:200], "action": decision.action, "reported_at": now.isoformat()}
-        version = store.append_version(conn, trip_id=trip_id, base_version=base_version, items=after,
-                                       reason="customer_report", causes=[cause])
-        store.enqueue_notice(conn, trip_id=trip_id, version=version, payload={
-            "text": outcome["text"], "version": version, "causes": [cause], "changed": {"progress": decision.action},
-            "language": "ko", "replay": False})
-    return {**outcome, "version": version}
+        return _record(store, conn, trip_id=trip_id, base_version=base_version, key=key, decision=decision,
+                       original=original, after=after, outcome=outcome, now=now, message=message, target=target)
