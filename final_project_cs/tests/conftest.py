@@ -61,3 +61,43 @@ def _isolate_mobility_engine_state():
     reset()
     yield
     reset()
+
+
+# ★DB(PostgreSQL)가 있어야 도는 시험 파일 — develop 빠른 단계는 `-m "not live and not db"` 로 건너뛰고
+#   DB 가 있는 main 전체 관문이 돌린다. `[2026-10-22]` DB 없이 돌려 실제로 연결 시간 초과가 난 파일만 올렸다.
+#   목록에 없는 파일이 DB 를 쓰기 시작하면 빠른 단계가 DB 없이 깨지므로, 그때 여기에 더한다.
+DB_TEST_FILES = (
+    "tests/contract/test_active_prompts_are_the_deployed_set.py",
+    "tests/contract/test_consumer_idempotency_contract.py",
+    "tests/security/test_admin_json_gateway.py",
+    "tests/security/test_pii_redaction_runtime.py",
+    "tests/security/test_query_scope.py",
+    "tests/unit/infrastructure/test_graph_v7_axes.py",
+    "tests/unit/travel/test_cache_only_sources.py",
+    "tests/unit/travel/test_feedback.py",
+    "tests/unit/travel/test_planner_badges.py",
+    "tests/unit/travel/test_seoul_bus_shared_cache_v1.py",
+    "tests/unit/travel/test_shared_source_cache.py",
+    "tests/unit/voc/test_feedback_runtime.py",
+)
+
+
+# ★파일 하나가 몇 초씩 걸리는 시험(자식 프로세스 · 실제 대기 · 저장소 전체 훑기) — 빠른 단계는
+#   `-m "not slow"` 로 건너뛰고 main 전체 관문이 돌린다. `[2026-10-22]` 시험 시간을 재어 파일당 5초 넘는 것만 올렸다.
+SLOW_TEST_FILES = (
+    "tests/unit/travel/mobility/test_review_fixes_runtime.py",  # 자식 파이썬 프로세스를 띄운다
+    "tests/unit/infrastructure/test_llm_failover.py",  # 재시도 대기(sleep)를 실제로 기다린다
+    "tests/contract/test_retired_domain_assets.py",  # 저장소 전체를 훑는다
+    "tests/unit/travel/test_plugin_read_boundaries.py",  # 자식 프로세스를 띄운다
+    "tests/unit/travel/mobility/test_check_scripts.py",  # 검사 스크립트를 자식 프로세스로 돌린다
+    "tests/unit/travel/test_trip_api_plugin_boundaries.py",  # 앱 전체를 가져온다
+)
+
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        path = str(item.fspath).replace("\\", "/")
+        if path.endswith(DB_TEST_FILES):
+            item.add_marker(pytest.mark.db)
+        if path.endswith(SLOW_TEST_FILES):
+            item.add_marker(pytest.mark.slow)
