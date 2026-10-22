@@ -21,10 +21,17 @@ async function zoom(page: Page, name: "확대" | "축소") {
   await group.getByRole("button", { name, exact: true }).click();
 }
 
+/**
+ * `[2026-10-22 ST4F-718]` The page's clock runs from the morning of day 1, so the trip opens on day 1 as these tests expect. By the real clock the trip is over and opens on
+ * 「전체」 with its last day (one stop) behind it: the map zooms close on that one pin and fetches the detailed lines before a test could choose day 1.
+ */
 async function openMap(page: Page) {
   await start(page);
+  await page.clock.install({ time: new Date("2026-10-01T06:00:00+09:00") });
+  await page.clock.resume();
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
+  await expect(dayTab(page, /^1일차/)).toHaveAttribute("aria-selected", "true");
   await expect(map(page).locator(".leaflet-marker-icon").first()).toBeVisible();
 }
 

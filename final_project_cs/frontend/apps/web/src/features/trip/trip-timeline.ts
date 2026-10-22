@@ -113,7 +113,7 @@ export const seoulKey = (at: SeoulNow) => `${at.date}T${String(at.minute).padSta
 export interface EntryTime { state: "past" | "now" | "next"; started: boolean; from: number; to: number }
 
 /** The day's last minute (24:00): a last stop with no end lasts until then. */
-const DAY_END = 1440;
+export const DAY_END = 1440;
 
 /**
  * The time each entry of a day stands for and where now stands against it. A stop runs from its start to its end — with no end, until the way after it leaves, else until the next stop
