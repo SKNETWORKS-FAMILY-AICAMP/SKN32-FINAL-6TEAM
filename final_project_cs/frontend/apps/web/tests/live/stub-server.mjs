@@ -74,8 +74,9 @@ const DEFAULTS = {
   // `[2026-10-22 ST4F-715]` the trip screen's current-risk check (`GET …/trips/{id}/risks`): "off" (404 — the risk panel says it could not check, with a status line)
   //   | "clear" (`items: []` — nothing in the check scope, no status line)
   risks: "off",
-  // `[2026-10-22 사용자 지시]` the operator's switch for the risk panel above the stop list (`risk_panel` of the trip view): "absent" (an older server: no field — shown)
-  //   | "on" | "off" (`risk_panel: false` — only that panel is hidden; the check, the bell and the notice center stay)
+  // `[2026-10-22 사용자 지시]` the operator's switch for the risk panels of the trip screen (`risk_panel` of the trip view) and the plan check (`risk_panel` of
+  //   `GET /v1/web/features`, when `features` is not "off"): "absent" (an older server: no field — shown) | "on" | "off" (`risk_panel: false` — only those panels
+  //   are hidden; the check, the bell and the notice center stay)
   riskPanel: "absent",
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
@@ -1063,7 +1064,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   // ── 기능 스위치 (2026-10-19 ST4F-613) ── (no session needed: asking must not make a user)
   if (path === "/v1/web/features" && request.method === "GET") {
     if (scenario.features === "off") return json(response, 404, { detail: "Not Found" }, origin);
-    return json(response, 200, { guardian: scenario.features !== "guardian_off" }, origin);
+    return json(response, 200, { guardian: scenario.features !== "guardian_off",
+      ...(scenario.riskPanel === "absent" ? {} : { risk_panel: scenario.riskPanel === "on" }) }, origin);
   }
   if (request.method === "GET" && path === "/v1/web/support/notices/board") {
     if (scenario.noticeBoard === "off") return json(response, 404, { detail: "Not Found" }, origin);

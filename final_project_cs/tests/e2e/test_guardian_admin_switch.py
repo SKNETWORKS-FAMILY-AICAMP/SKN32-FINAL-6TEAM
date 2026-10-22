@@ -67,15 +67,15 @@ def test_the_console_lists_the_switch_on_by_default(cookies):
     view = _client().get("/admin/limits", headers=cookies["auth"]("limits:read")).json()
     row = next(r for r in view["limits"] if r["name"] == NAME)
     assert (row["type"], row["value"], row["source"]) == ("bool", True, "default")
-    assert _features(cookies) == {"guardian": True}
+    assert _features(cookies) == {"guardian": True, "risk_panel": False}
 
 
 def test_the_public_read_needs_no_session(cookies):
     """세션이 없는 등록 전 화면이 읽는다 — 키 · 쿠키 없이 열리고 개인 정보가 없다."""
     cookies["client"].cookies.clear()
-    assert _features(cookies) == {"guardian": True}
+    assert _features(cookies) == {"guardian": True, "risk_panel": False}
     _switch(cookies, False)
-    assert _features(cookies) == {"guardian": False}
+    assert _features(cookies) == {"guardian": False, "risk_panel": False}
 
 
 def test_turning_it_off_hides_it_stops_automatic_changes_and_keeps_the_record(cookies):
@@ -86,7 +86,7 @@ def test_turning_it_off_hides_it_stops_automatic_changes_and_keeps_the_record(co
     assert decide(constraints=before, item=_item(), report=DUST).action == "apply"
 
     assert _switch(cookies, False)["value"] is False
-    assert _features(cookies) == {"guardian": False}
+    assert _features(cookies) == {"guardian": False, "risk_panel": False}
     assert "guardian" not in _view(cookies, trip_id)                        # 화면이 아이콘 · 카드를 그리지 않는다
     refused = _post(cookies, trip_id, {"enabled": False, "via": "header"})
     assert refused.status_code == 409, refused.text
@@ -98,7 +98,7 @@ def test_turning_it_off_hides_it_stops_automatic_changes_and_keeps_the_record(co
     assert (decision.action, decision.reason) == ("ask", "ask_first")
 
     assert _switch(cookies, None)["value"] is True                          # 기본값(켜짐)으로 되돌리기
-    assert _features(cookies) == {"guardian": True}
+    assert _features(cookies) == {"guardian": True, "risk_panel": False}
     assert _view(cookies, trip_id)["guardian"]["enabled"] is True           # 저장값대로 돌아온다
     assert decide(constraints=_stored(trip_id), item=_item(), report=DUST).action == "apply"
 
