@@ -1,0 +1,32 @@
+npm warn cleanup Failed to remove some directories [
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\FinalProject\\Dev\\fe-audit-20261023\\final_project_cs\\frontend\\apps\\web\\node_modules',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\FinalProject\Dev\fe-audit-20261023\final_project_cs\frontend\apps\web\node_modules\@babel'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\FinalProject\\Dev\\fe-audit-20261023\\final_project_cs\\frontend\\apps\\web\\node_modules\\@babel'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\FinalProject\\Dev\\fe-audit-20261023\\final_project_cs\\frontend\\apps\\web\\node_modules\\@next',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\FinalProject\Dev\fe-audit-20261023\final_project_cs\frontend\apps\web\node_modules\@next'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\FinalProject\\Dev\\fe-audit-20261023\\final_project_cs\\frontend\\apps\\web\\node_modules\\@next'
+npm warn cleanup     }
+npm warn cleanup   ],
+npm warn cleanup   [
+npm warn cleanup     '\\\\?\\D:\\FinalProject\\Dev\\fe-audit-20261023\\final_project_cs\\frontend\\apps\\web\\node_modules\\@unrs\\resolver-binding-wasm32-wasi',
+npm warn cleanup     [Error: EPERM: operation not permitted, rmdir 'D:\FinalProject\Dev\fe-audit-20261023\final_project_cs\frontend\apps\web\node_modules\@unrs\resolver-binding-wasm32-wasi'] {
+npm warn cleanup       errno: -4048,
+npm warn cleanup       code: 'EPERM',
+npm warn cleanup       syscall: 'rmdir',
+npm warn cleanup       path: 'D:\\FinalProject\\Dev\\fe-audit-20261023\\final_project_cs\\frontend\\apps\\web\\node_modules\\@unrs\\resolver-binding-wasm32-wasi'
+npm warn cleanup     }
+npm warn cleanup   ]
+npm warn cleanup ]
+npm error code ENOTCACHED
+npm error request to https://registry.npmjs.org/zod-validation-error/-/zod-validation-error-4.0.2.tgz failed: cache mode is 'only-if-cached' but no cached response is available.
+npm error A complete log of this run can be found in: C:\Users\u\AppData\Local\Packages\sandbox.{be4900de-af4c-4d77-b26e-716a56e90297}\AC\npm-cache\_logs\2026-10-22T16_20_37_037Z-debug-0.log

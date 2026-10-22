@@ -1,0 +1,213 @@
+{
+  "web": {
+    "source_files": 281,
+    "source_lines": 31490,
+    "unit_files": 123,
+    "browser_files": 141,
+    "largest": [
+      {
+        "file": "src/features/plan-check/plan-check.tsx",
+        "lines": 2108
+      },
+      {
+        "file": "src/features/consent/terms-content.ts",
+        "lines": 1162
+      },
+      {
+        "file": "src/features/trip/trip-screen.tsx",
+        "lines": 871
+      },
+      {
+        "file": "src/features/plan-check/model.ts",
+        "lines": 665
+      },
+      {
+        "file": "src/features/plan-check/use-server-review.ts",
+        "lines": 527
+      },
+      {
+        "file": "src/features/trip-registration/trip-registration.tsx",
+        "lines": 527
+      },
+      {
+        "file": "src/features/plan-check/plan-rows.tsx",
+        "lines": 522
+      },
+      {
+        "file": "src/lib/live/gateway.ts",
+        "lines": 470
+      },
+      {
+        "file": "src/features/plan-check/use-time-edit.ts",
+        "lines": 408
+      },
+      {
+        "file": "src/features/plan-check/time-plan.ts",
+        "lines": 370
+      },
+      {
+        "file": "src/features/trip/trip-rows.tsx",
+        "lines": 370
+      },
+      {
+        "file": "src/features/map/providers/osm.ts",
+        "lines": 367
+      },
+      {
+        "file": "src/lib/live/client.ts",
+        "lines": 349
+      },
+      {
+        "file": "src/features/map/providers/naver.ts",
+        "lines": 347
+      },
+      {
+        "file": "src/features/map/providers/google.ts",
+        "lines": 344
+      }
+    ]
+  },
+  "admin": {
+    "source_files": 25,
+    "source_lines": 2337,
+    "unit_files": 3,
+    "browser_files": 18,
+    "largest": [
+      {
+        "file": "src/features/overview/screens.tsx",
+        "lines": 288
+      },
+      {
+        "file": "src/features/workflows/screens.tsx",
+        "lines": 258
+      },
+      {
+        "file": "src/lib/gateway.ts",
+        "lines": 247
+      },
+      {
+        "file": "src/features/operations/api-limits.tsx",
+        "lines": 176
+      },
+      {
+        "file": "src/features/operations/receipt-panel.tsx",
+        "lines": 176
+      },
+      {
+        "file": "src/components/AdminApp.tsx",
+        "lines": 154
+      },
+      {
+        "file": "src/features/operations/simulation.tsx",
+        "lines": 134
+      },
+      {
+        "file": "src/features/trips/trip-detail.tsx",
+        "lines": 105
+      },
+      {
+        "file": "src/features/overview/user-list.tsx",
+        "lines": 95
+      },
+      {
+        "file": "src/features/operations/monitoring.tsx",
+        "lines": 93
+      },
+      {
+        "file": "src/lib/model.ts",
+        "lines": 90
+      },
+      {
+        "file": "src/features/operations/qa-account.tsx",
+        "lines": 90
+      },
+      {
+        "file": "src/features/operations/simulation-trip-picker.tsx",
+        "lines": 74
+      },
+      {
+        "file": "src/features/operations/source-policy.tsx",
+        "lines": 68
+      },
+      {
+        "file": "src/features/overview/user-conversations.tsx",
+        "lines": 63
+      }
+    ]
+  },
+  "dev-console": {
+    "source_files": 28,
+    "source_lines": 1380,
+    "unit_files": 4,
+    "browser_files": 2,
+    "largest": [
+      {
+        "file": "src/features/team-tests/team-tests-screen.tsx",
+        "lines": 260
+      },
+      {
+        "file": "src/features/cases/cases-workbench.tsx",
+        "lines": 235
+      },
+      {
+        "file": "src/lib/demo/gateway.ts",
+        "lines": 158
+      },
+      {
+        "file": "src/lib/demo/scenarios.ts",
+        "lines": 134
+      },
+      {
+        "file": "src/lib/model.ts",
+        "lines": 106
+      },
+      {
+        "file": "src/components/management-workspace.tsx",
+        "lines": 104
+      },
+      {
+        "file": "src/lib/management.ts",
+        "lines": 70
+      },
+      {
+        "file": "src/features/runs/run-inspector.tsx",
+        "lines": 54
+      },
+      {
+        "file": "src/lib/demo/management.ts",
+        "lines": 44
+      },
+      {
+        "file": "src/components/ui/index.tsx",
+        "lines": 33
+      },
+      {
+        "file": "src/components/layout/console-shell.tsx",
+        "lines": 26
+      },
+      {
+        "file": "src/components/layout/brand.tsx",
+        "lines": 24
+      },
+      {
+        "file": "src/lib/queries.ts",
+        "lines": 20
+      },
+      {
+        "file": "src/features/connections/connections-screen.tsx",
+        "lines": 18
+      },
+      {
+        "file": "src/features/runs/run-page.tsx",
+        "lines": 13
+      }
+    ]
+  },
+  "mobile": {
+    "source_files": 0,
+    "source_lines": 0,
+    "unit_files": 0,
+    "browser_files": 0,
+    "largest": []
+  }
+}

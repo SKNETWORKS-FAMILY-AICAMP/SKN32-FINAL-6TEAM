@@ -1,0 +1,10 @@
+
+> @tripilot/admin@0.1.0 lint
+> eslint .
+
+
+D:\FinalProject\Dev\fe-audit-20261023\final_project_cs\frontend\apps\admin\src\features\overview\screens.tsx
+  4:42  warning  'chatLimitText' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 1 problem (0 errors, 1 warning)
+

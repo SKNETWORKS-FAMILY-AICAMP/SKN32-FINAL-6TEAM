@@ -1,0 +1,106 @@
+{
+  "all_tracked": {
+    "files": 1629,
+    "bytes": 140915894,
+    "largest": [
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/merge-conflicts-2026-10-08-v1/.render-temp/playwright_chromiumdev_profile-Wjwnor/GrShaderCache/data_3",
+        "bytes": 4202496
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/tripilot-plan-flow-compare.html",
+        "bytes": 2814564
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/public/images/tripilot-home-03-journey-night.png",
+        "bytes": 2342369
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/public/images/tripilot-home-02-paper-seoul.png",
+        "bytes": 1885337
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/tripilot-home-02-paper-seoul.png",
+        "bytes": 1885337
+      }
+    ]
+  },
+  "mockups": {
+    "files": 844,
+    "bytes": 123960222,
+    "largest": [
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/merge-conflicts-2026-10-08-v1/.render-temp/playwright_chromiumdev_profile-Wjwnor/GrShaderCache/data_3",
+        "bytes": 4202496
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/tripilot-plan-flow-compare.html",
+        "bytes": 2814564
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/tripilot-home-02-paper-seoul.png",
+        "bytes": 1885337
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/tripilot-home-01-han-river.png",
+        "bytes": 1875331
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/tripilot-trip-card-proposal-mark.html",
+        "bytes": 1810482
+      }
+    ]
+  },
+  "browser_profiles": {
+    "files": 127,
+    "bytes": 6829217,
+    "largest": [
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/merge-conflicts-2026-10-08-v1/.render-temp/playwright_chromiumdev_profile-Wjwnor/GrShaderCache/data_3",
+        "bytes": 4202496
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/merge-conflicts-2026-10-08-v1/.render-temp/playwright_chromiumdev_profile-Wjwnor/ShaderCache/data_1",
+        "bytes": 270336
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/merge-conflicts-2026-10-08-v1/.render-temp/playwright_chromiumdev_profile-Wjwnor/GrShaderCache/data_1",
+        "bytes": 270336
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/merge-conflicts-2026-10-08-v1/.render-temp/playwright_chromiumdev_profile-Wjwnor/Default/Cache/Cache_Data/data_1",
+        "bytes": 270336
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/mockups/merge-conflicts-2026-10-08-v1/.render-temp/playwright_chromiumdev_profile-Wjwnor/ShaderCache/index",
+        "bytes": 262512
+      }
+    ]
+  },
+  "public_assets": {
+    "files": 23,
+    "bytes": 9753327,
+    "largest": [
+      {
+        "file": "final_project_cs/frontend/apps/web/public/images/tripilot-home-03-journey-night.png",
+        "bytes": 2342369
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/public/images/tripilot-home-02-paper-seoul.png",
+        "bytes": 1885337
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/public/images/tripilot-home-01-han-river.png",
+        "bytes": 1875331
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/public/images/tripilot-home-03-journey.png",
+        "bytes": 1527177
+      },
+      {
+        "file": "final_project_cs/frontend/apps/web/public/images/guguroute-guide-ko-4-result.jpg",
+        "bytes": 218796
+      }
+    ]
+  }
+}
