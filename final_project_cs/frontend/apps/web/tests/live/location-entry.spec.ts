@@ -37,6 +37,7 @@ for (const width of [375, 1280]) test(`${width}px: 동의 전에도 오른쪽 �
   await expect(locate(page)).toBeFocused();
   await expect(locate(page).getByRole("tooltip")).toBeVisible();
   const foldBefore = (await tools(page).getByRole("button", { name: "지도 단추 접기" }).boundingBox())!;
+  const locateBefore = (await locate(page).boundingBox())!;
   await galleryShot(page, `mockups/location-entry-2026-10-11-v2/tools-${width}.png`);
   await locate(page).click();
   const dialog = page.getByRole("dialog", { name: "내 위치로 이동" });
@@ -44,12 +45,17 @@ for (const width of [375, 1280]) test(`${width}px: 동의 전에도 오른쪽 �
   expect(await locationAsks(page)).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   await galleryShot(page, `mockups/location-entry-2026-10-11-v2/consent-${width}.png`);
-  await page.waitForTimeout(5_300); // Reading the consent must not fold away its trigger.
+  // `[2026-10-23 ST4F-721 · 722 반영]` 동의 창을 읽는 동안(5초 넘게)에도 그 단추 「내 위치로」는 접히지 않고 제자리에 남는다.
+  //   이제 단추가 접는 묶음 밖이라, 초점이 묶음을 떠난 뒤 5초가 지나면 묶음(＋ · － · 모든 일정 보기)은 접힐 수 있다 — 접기 탭은 이름(접기/펼치기)과 관계없이 같은 자리다.
+  await page.waitForTimeout(5_300);
   await dialog.getByRole("button", { name: "그만두기" }).click();
   await expect(dialog).toHaveCount(0);
   await expect(locate(page)).toBeFocused();
   expect(await locationAsks(page)).toBe(0);
-  const foldAfter = (await tools(page).getByRole("button", { name: "지도 단추 접기" }).boundingBox())!;
+  const locateAfter = (await locate(page).boundingBox())!;
+  expect(locateAfter.x).toBeCloseTo(locateBefore.x, 0);
+  expect(locateAfter.y).toBeCloseTo(locateBefore.y, 0);
+  const foldAfter = (await tools(page).locator("button[aria-expanded]").boundingBox())!;
   expect(foldAfter.x).toBeCloseTo(foldBefore.x, 0);
 });
 

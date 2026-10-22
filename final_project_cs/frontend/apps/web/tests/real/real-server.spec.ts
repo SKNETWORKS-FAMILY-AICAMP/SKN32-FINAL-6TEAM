@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { finishOnboarding, openNotices, openPane, openTitle, start, tripScreen } from "../live/helpers";
+import { checkPlan, finishOnboarding, openNotices, openPane, openTitle, start, tripScreen } from "../live/helpers";
 
 /**
  * A brand-new customer on the REAL server: first visit → survey → plan → read → confirm → trip screen → chat → map.
@@ -30,7 +30,8 @@ async function uploadAndOpenReview(page: Page, text: string) {
   if (!page.url().endsWith("/trips/new")) await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(text);
   await waitForHumanCheck(page);
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  // `[2026-10-23]` 「계획 확인하기」 뒤 항로 지킴이 카드(2026-10-06 · ST4F-613)를 넘긴다 — 모방 서버 시험과 같은 도우미. 이 카드를 몰라 접수로 넘어가지 못했다
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「여행 등록」이 나온다(2026-10-03: 옛 일정 짜기 칸은 없다 — 일정 짜기는 등록 화면의 「계획 짜 주기」).
   // 읽기가 끝날 때까지(등록 단추가 나올 때까지) 기다린다 — 서버가 글·사진을 읽는 시간이다
@@ -150,7 +151,8 @@ test("같은 사용자의 두 번째 여행: 등록 화면의 「계획 짜 주�
   await page.getByLabel("인원", { exact: true }).selectOption("2");
   await page.getByLabel("원하는 여행", { exact: false }).fill("조용하고 걷기 좋은 곳 위주로");
   await waitForHumanCheck(page);
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  // `[2026-10-23]` 「계획 확인하기」 뒤 항로 지킴이 카드(2026-10-06 · ST4F-613)를 넘긴다 — 모방 서버 시험과 같은 도우미. 이 카드를 몰라 접수로 넘어가지 못했다
+  await checkPlan(page);
   await expect(page).toHaveURL(/\/intakes\/starting$/);
   await expect(page.getByRole("heading", { name: "일정을 짜는 중이에요", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/\/trips\/[0-9a-f-]{36}$/, { timeout: 240_000 });

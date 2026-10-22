@@ -38,7 +38,9 @@ test("읽는 동안 서버의 내용 이벤트로 장소 카드와 검사 줄이
   await expect(page.locator("[data-stop-question]")).toBeVisible({ timeout: 40_000 });
   await expect(card(page, "경복궁 관람")).toBeVisible();
   await expect(card(page, "올리브영")).toContainText("확인 필요");
-  await expect(card(page, "올리브영")).toContainText("경복궁 관람과 30분 겹쳐요");                    // 서버가 쓴 문장 그대로
+  // `[2026-10-22 사용자 결정 — 문제 줄에서 멈추기 ② 한 줄씩(PR #71)]` 카드는 첫 문제 줄(장소)에서 멈춰 묻는다 — 서버가 쓴 문장 그대로, 다음 문제 줄(시간)은 아직 보이지 않는다
+  await expect(card(page, "올리브영")).toContainText("이름이 여러 곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요");
+  await expect(card(page, "올리브영")).not.toContainText("경복궁 관람과 30분 겹쳐요");
   await expect(page.locator('li[data-entry-id="0-2"]')).toHaveAttribute("data-reveal-waiting", "true");   // 그 뒤 일정은 아직 확인하지 않는다
   await expect(card(page, "광장시장")).not.toContainText("조정");                                    // 「조정」은 더 말하지 않는다
   expect((await server.received("GET", `${INTAKE}/events`)).length).toBeGreaterThan(0);

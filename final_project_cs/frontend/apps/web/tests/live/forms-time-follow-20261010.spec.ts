@@ -104,7 +104,9 @@ for (const width of [375, 1280]) {
     await expect(page.locator('[data-hide-brand]')).toHaveAttribute('data-open');
     await expect(page.getByText('검색 결과에서 방문할 장소를 골라 주세요.')).toHaveCount(0);
     expect((await api.log()).slice(before).filter(e => e.path.includes('/places'))).toHaveLength(0);
-    for (let i=0; i<4; i++) await page.getByRole('button', { name: '목록 높이 바꾸기' }).press('ArrowUp');
+    // `[2026-10-23 ST4F-721 · 722 반영]` 가로 배치도 「내 위치로」 자리를 남겨 지도 높이 204px 이상이 필요하다 — 1280px 에서 네 칸 올리면
+    //   지도가 182px 라 접기 탭만 남는다. 세 칸(222px)이면 가로 배치다.
+    for (let i=0; i<3; i++) await page.getByRole('button', { name: '목록 높이 바꾸기' }).press('ArrowUp');
     const controls = page.getByRole('group', { name: '지도 단추' }), fold = controls.locator('button[aria-expanded]');
     await expect(controls).toHaveAttribute('data-direction', 'row');
     const geometry = () => fold.evaluate(e => {
