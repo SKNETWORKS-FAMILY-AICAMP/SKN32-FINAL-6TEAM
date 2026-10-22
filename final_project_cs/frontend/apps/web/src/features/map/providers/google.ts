@@ -1,4 +1,4 @@
-import { fitPadding } from "./fit-padding";
+import { fitPadding, visibleLift } from "./fit-padding";
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { linePieces, lineStyle, linesKey, walkStyle } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_LABEL, meKey, staysKey } from "./me";
@@ -21,6 +21,8 @@ interface GoogleMap {
   /** Optional: without it the page draws no scale ruler and no chips for stops out of view. */
   getBounds?(): { toJSON(): { south: number; west: number; north: number; east: number } } | undefined;
   fitBounds(bounds: GoogleBounds, padding: number | { top: number; right: number; bottom: number; left: number }): void;
+  /** Optional: without it a focused pin stands in the middle of the whole map, not of its visible part (`focus`). */
+  panBy?(x: number, y: number): void;
   unbindAll(): void;
 }
 interface GoogleMarker extends HTMLElement { map: GoogleMap | null; zIndex: number; position?: Coordinates | null }
@@ -324,6 +326,14 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
           if (keepZoom) { map.panTo(at); return; }
           map.setCenter(at);
           map.setZoom(Math.max(map.getZoom?.() ?? 15, 15));
+        },
+        // `[2026-10-22 사용자 결정 — ST4F-722 D안]` The pin in the middle of the visible part, at `zoom` (the map keeps its own `maxZoom`). A new size keeps the centre (`resize`).
+        focus(at, zoom) {
+          if (destroyed) return;
+          map.setCenter(at);
+          map.setZoom(zoom);
+          const lift = visibleLift(options.topInset, options.bottomInset);
+          if (lift) map.panBy?.(0, -lift);
         },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;

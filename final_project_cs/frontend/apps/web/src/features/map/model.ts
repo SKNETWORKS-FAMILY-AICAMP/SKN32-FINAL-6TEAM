@@ -103,6 +103,11 @@ export interface MapViewProps {
   meAvailable?: boolean;
   /** Read a position after consent, then move this map's camera. */
   onRequestLocation?: (onLocated: (location: MyLocation) => void) => void;
+  /**
+   * `[2026-10-22 사용자 결정 — ST4F-722 D안]` Take the camera to this pin once each time `key` changes: the middle of the visible part of the map, at `zoom`
+   * (a stop picked in the list, or opened in its detail). A pin pressed on the map is not this — it only moves there (`selectedId`).
+   */
+  focus?: { id: string; zoom: number; key: number };
 }
 
 export interface MapController {
@@ -123,6 +128,11 @@ export interface MapController {
   zoomBy(delta: 1 | -1): void;
   /** `[2026-10-05]` The camera to a place: for 「내 위치」 at least a street-level zoom; with `keepZoom` (a chip for a stop out of view) only the place changes. The customer's own camera from then on. */
   centerOn(at: Coordinates, keepZoom?: boolean): void;
+  /**
+   * `[2026-10-22 ST4F-722]` The camera to a pin: the middle of the visible part of the map (below `topInset`, above `bottomInset`), at `zoom` (no further than the map goes).
+   * The customer's own camera from then on — a new size of the map keeps it there instead of fitting every pin again.
+   */
+  focus(at: Coordinates, zoom: number): void;
   resize(): void;
   destroy(): void;
 }

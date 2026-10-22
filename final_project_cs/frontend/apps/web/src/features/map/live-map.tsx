@@ -16,13 +16,22 @@ export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick, onRequestLocation }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick, onRequestLocation, focus }: MapViewProps & { adapter: MapAdapter; name: string }) {
   const pointer = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const surface = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
   const viewRef = useRef<MapView | null>(null);
-  const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me, stays, onZoom, onInteractionChange });
+  const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me, stays, onZoom, onInteractionChange, focus });
+  // `[2026-10-22 ST4F-722]` A focus the screen asks for goes to the camera once (`key`), after the pins it names are on the map.
+  const focusedKey = useRef<number | undefined>(undefined);
+  const applyFocus = useCallback(() => {
+    const asked = latest.current.focus, map = controller.current;
+    if (!asked || !map || asked.key === focusedKey.current) return;
+    focusedKey.current = asked.key;
+    const point = latest.current.points.find((item) => item.id === asked.id);
+    if (point) map.focus(point.coordinates, asked.zoom);
+  }, []);
   const refreshLayout = useCallback(() => {
     controller.current?.relayout?.();
     const node = surface.current;
@@ -71,9 +80,10 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
 
 
   useLayoutEffect(() => {
-    latest.current = { ...latest.current, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom };
+    latest.current = { ...latest.current, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom, focus };
     controller.current?.update(points, selectedId, lines, selectedLineId);
-  }, [points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom]);
+    applyFocus();
+  }, [points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom, focus, applyFocus]);
 
   // `[2026-10-05 사용자 지시]` 「내 위치」 and the stays go to the map on their own: a new position does not redraw the pins.
   useEffect(() => {
@@ -133,6 +143,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       created.update(latest.current.points, latest.current.selectedId, latest.current.lines, latest.current.selectedLineId);
       created.setMe(latest.current.me);
       created.setStays(latest.current.stays);
+      applyFocus();
       observer = new ResizeObserver(([entry]) => {
         if (!entry) return;
         setSize({ width: Math.round(entry.contentRect.width), height: Math.round(entry.contentRect.height) });
@@ -148,7 +159,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       host.remove();
       if (controller.current === instance) controller.current = null;
     };
-  }, [adapter, attempt]);
+  }, [adapter, attempt, applyFocus]);
 
   const ready = state.status === "ready";
   const canFit = points.length > 1;

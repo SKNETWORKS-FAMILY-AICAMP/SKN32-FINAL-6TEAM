@@ -1,4 +1,4 @@
-import { fitPadding } from "./fit-padding";
+import { fitPadding, visibleLift } from "./fit-padding";
 import type { Coordinates, MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { linePieces, lineStyle, linesKey, walkStyle } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, ME_LABEL, meKey, STAY_BOX, staysKey } from "./me";
@@ -22,8 +22,11 @@ interface NaverMap {
   getZoom?(): number;
   fitBounds(points: NaverLatLng[], margins: { top: number; right: number; bottom: number; left: number; maxZoom: number }): void;
   setSize(size: NaverSize): void;
+  /** Optional: without it a focused pin stands in the middle of the whole map, not of its visible part (`focus`). */
+  panBy?(offset: NaverPoint): void;
   destroy(): void;
 }
+interface NaverPoint { x: number; y: number }
 /** `setPosition` is optional: without it 「내 위치」 is moved by making its marker again. */
 interface NaverMarker { setMap(map: NaverMap | null): void; setZIndex(zIndex: number): void; setPosition?(position: NaverLatLng): void }
 interface NaverPolyline { setMap(map: NaverMap | null): void }
@@ -46,6 +49,8 @@ interface NaverSdk {
   /** Optional: without it 「내 위치」 is the dot alone. */
   Circle?: new (options: NaverCircleOptions) => NaverCircle;
   Size: new (width: number, height: number) => NaverSize;
+  /** Optional, with `NaverMap.panBy`. */
+  Point?: new (x: number, y: number) => NaverPoint;
   Marker: new (options: {
     map: NaverMap; position: NaverLatLng; title: string;
     icon: { content: HTMLElement; size: NaverSize; anchor: { x: number; y: number } };
@@ -328,6 +333,14 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           if (keepZoom) { map.panTo(latLng(at)); return; }
           map.setCenter(latLng(at));
           map.setZoom(Math.max(map.getZoom?.() ?? 15, 15));
+        },
+        // `[2026-10-22 사용자 결정 — ST4F-722 D안]` The pin in the middle of the visible part, at `zoom` (the map keeps its own `maxZoom`). A new size keeps the centre (`resize`).
+        focus(at, zoom) {
+          if (destroyed) return;
+          map.setCenter(latLng(at));
+          map.setZoom(zoom);
+          const lift = visibleLift(options.topInset, options.bottomInset);
+          if (lift && sdk.Point) map.panBy?.(new sdk.Point(0, -lift));
         },
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;

@@ -7,3 +7,8 @@ export function fitPadding(width: number, height: number, topInset = 0, bottomIn
   const vertical = Math.min(margin, Math.max(0, budget - top - bottom) / 2);
   return { top: top * scale + vertical, right: horizontal, bottom: bottom * scale + vertical, left: horizontal };
 }
+
+/** `[2026-10-22 ST4F-722]` How far (px) below the middle of the map the middle of its visible part is — between the bar on top and the sheet below. */
+export function visibleLift(topInset = 0, bottomInset = 0) {
+  return (Math.max(0, topInset) - Math.max(0, bottomInset)) / 2;
+}
