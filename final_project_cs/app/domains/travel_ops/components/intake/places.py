@@ -167,7 +167,14 @@ def narrowings(title: str) -> list[str]:
 
 def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,
             kind_hint: str | None = None, aliases: dict[str, str] | None = None, dining: Any = None,
-            near: tuple[float, float] | None = None, at: Any = None, choose_near: bool = False) -> Resolved:
+            near: tuple[float, float] | None = None, at: Any = None, choose_near: bool = False,
+            conn: Any = None, team_alias: bool = True) -> Resolved:
+    """원문 조각 → 장소 하나. ★`[2026-10-22 사용자 지시 · Codex 1회차 합의]` 이름 찾기 순서(모든 경로가 같다 — 결정 D-CS-021):
+
+        ① 그 고객이 고친 별칭(`aliases`) → ② 대표 장소 정답표 → ③ 우리 장소 표 정확 일치 → ④ **공용 별칭**(활동 팀 별칭 CSV + 306 표,
+        `team_hooks.place_aliases` — 한 곳만 가리킬 때) → ⑤ 자모 오타 → ⑥ 관광공사 · 요식 원장 → ⑦ 카카오(원문 전체일 때만)
+
+    `conn` 을 주면 공용 별칭의 DB 표(306)까지 보고, 없으면 시드 파일만 본다. `team_alias=False` 는 별칭으로 바꾼 이름을 다시 찾을 때(되풀이 막기)."""
     # ★앞에 끼니 말이 있으면 식사다 — 규칙 읽기는 「12:00 점심 토속촌삼계탕」에 식사 표시를 하지 않는다(모델이 읽은 줄만)
     original_title = title
     condition = re.sub(r"\s*(?:파는|먹을|먹는)\s*(?:곳|데|식당).*$", "", title).strip()
@@ -240,6 +247,20 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                                 f"같은 이름이 {seen[key]}곳 — 어느 지점인지 확인해 주세요" if seen.get(key, 0) > 1 else None]))
                             or None)
         tried.append(f"places:{query}")
+        # ★`[2026-10-22]` 공용 별칭 — 정확 일치가 없을 때, 오타 · 관광공사 · 카카오 **전에**(「MMCA 서울」 → 국립현대미술관 서울). 사람이 확인한 별칭이라 확인 필요로 두지 않는다
+        if team_alias:
+            from ..team_hooks import place_aliases as alias_hook
+
+            aliased = alias_hook.target(conn, query)          # 별칭이 아니면 근거(`tried`)에 남기지 않는다 — 걸린 때만 「team_alias:원문→이름」
+            if aliased and aliased.get("title") and normalize(aliased["title"]) != key:
+                found = resolve(aliased["title"], our_places=our_places, tour=tour, kakao=kakao, kind_hint=kind_hint, dining=dining,
+                                near=near, at=at, choose_near=choose_near, conn=conn, team_alias=False)
+                if found.status == "resolved":
+                    found.tried = tried + [f"team_alias:{query}→{aliased['title']}"] + found.tried
+                    found.note = "; ".join(filter(None, [
+                        None if query == title else f"원문 「{title}」에서 「{query}」로 좁혔다",
+                        f"별칭 「{query}」로 「{aliased['title']}」를 찾았다", found.note]))
+                    return found
         # 3 — 자모 오타(우리 장소 이름과)
         best = _typo(key, matching_places)
         if best is not None:

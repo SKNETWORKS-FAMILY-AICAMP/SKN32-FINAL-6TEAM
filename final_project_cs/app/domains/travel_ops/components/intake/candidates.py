@@ -682,6 +682,50 @@ def _db_places_by_name(conn, tenant_id: str, query: str, ref: tuple[float, float
     return out
 
 
+def _alias_places(conn, tenant_id: str, query: str, name_query: str, found: list[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
+    """공용 별칭(활동 팀 별칭 CSV + 306 표)이 가리키는 곳 — 이름 찾기 순서의 「정확 일치 → **별칭** → … → 카카오」. `[2026-10-22 사용자 지시]`
+
+    우리 목록에 검색어와 이름이 정확히 같은 곳이 이미 있으면 부르지 않는다(실제 그 이름인 곳이 먼저다). 원문 · 지명을 뗀 상호 순으로 본다.
+    별칭이 가리키는 곳의 행은 관광공사 목록(`place_catalog`)에서 읽어 다른 결과와 같은 모양으로 싣는다(운영시간 포함). 목록에 없으면 활동 원장 좌표로.
+    결과에 `match: alias` 를 붙인다 — 이름 일치 순서에서 정확 일치와 같은 자리에 선다(`search`)."""
+    from ..team_hooks import place_aliases as alias_hook
+
+    words = [w for w in dict.fromkeys((query, name_query)) if w]
+    if any(normalize_full(p["name"]) == normalize_full(w) for p in found for w in words):
+        return []
+    target = next((t for t in (alias_hook.target(conn, w) for w in words) if t), None)
+    if not target or not target.get("content_id"):
+        return []
+    rows = _db_places_by_content_id(conn, tenant_id, str(target["content_id"]), now) if conn is not None else []
+    if not rows and target.get("latitude") is not None and target.get("longitude") is not None:
+        ctype = str(target.get("content_type_id") or "") or None
+        rows = [_place(target["title"], target["latitude"], target["longitude"], "tour_api",
+                       kind="dining" if ctype == "39" else "activity", content_id=str(target["content_id"]),
+                       content_type_id=ctype, ref=f"tour:{target['content_id']}", category=category_label(ctype) if ctype else None)]
+    return [{**row, "match": "alias", "alias_of": query} for row in rows]
+
+
+def _db_places_by_content_id(conn, tenant_id: str, content_id: str, now: datetime) -> list[dict[str, Any]]:
+    """관광공사 번호 하나 → 관광공사 목록(서울)의 그 장소. `_db_places_by_name` 과 같은 모양 · 같은 운영시간 붙이기."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT content_id, content_type_id, title, address, latitude, longitude FROM place_catalog "
+            "WHERE tenant_id = ANY(%s) AND source='tour_api' AND content_id = %s AND latitude IS NOT NULL "
+            "AND address LIKE '서울%%' LIMIT 1", [_tenants(tenant_id), content_id])
+        rows = cur.fetchall()
+    from app.domains.travel_ops.components.places.catalog_pool import reuse_hours
+    from app.domains.travel_ops.components.planning.planner import Cand
+
+    cands = [Cand(f"tour_{cid}", title, "activity", float(lat), float(lon),
+                  {"source_content_id": str(cid), "source_content_type_id": str(ctype)}, "place_catalog")
+             for cid, ctype, title, _addr, lat, lon in rows]
+    reuse_hours(conn, tenant_id, cands, now)
+    return [_place(title, lat, lon, "tour_api", kind="dining" if str(ctype) == "39" else "activity", address=address,
+                   content_id=str(cid), content_type_id=str(ctype), ref=f"tour:{cid}", category=category_label(ctype),
+                   _hours={k: cand.attributes[k] for k in ("hours_week", "hours_read") if cand.attributes.get(k)} or None)
+            for (cid, ctype, title, address, lat, lon), cand in zip(rows, cands)]
+
+
 #: 같은 곳으로 보는 거리(m) — 이름이 같고 이 안이면 같은 장소다(같은 상호의 **다른 지점**은 이름이 같아도 멀리 있어 남는다)
 SAME_SITE_M = 300
 
@@ -1418,6 +1462,10 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
             if not lodging and not stay_item:
                 found += _ledger_places(conn, tenant_id, ref, query=name_q, radius_m=None, **area_kwargs)
     kakao_kind = "activity" if lodging else place_kind_of(item)
+    # ★`[2026-10-22 사용자 지시 · Codex 1회차 합의]` 이름 찾기 순서 — 우리 목록에 이름이 정확히 같은 곳이 없으면 **공용 별칭**을 카카오보다 먼저 본다.
+    #   ☆「mmca 서울」이 우리 목록의 국립현대미술관 서울(별칭 CSV 에 있다) 대신 카카오 결과로만 나왔다(x600 서버). 별칭 결과가 앞이라 같은 곳의 카카오 결과는 `_dedupe` 가 지운다
+    if not stay_item:
+        found = _alias_places(conn, tenant_id, q, name_q, found, now) + found
     # ★`[2026-10-22 사용자 지시]` 웹 검색은 한 번에 받을 수 있는 최대(15)를 받는다 — 카카오는 호출 수로 세서 비용이 같고, 거른 뒤에도 8곳을 채우기 쉽다
     found += _kakao_places(kakao, q, ref, kakao_kind, notes, size=15 if around_self else 10)
     key = _search_name_key(name_q, branch_hint)
@@ -1459,6 +1507,11 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     if not found and kakao is None:
         notes.append("kakao:unavailable")
     distance = lambda p: _score(p, prev, nxt, ref, bool(area))  # noqa: E731
+    # 별칭으로 찾은 곳(`match: alias`)은 이름이 정확히 같은 곳과 같은 자리다 — 고객이 쓴 말이 그곳을 가리킨다
+    def name_rank(p: dict[str, Any]) -> int:
+        name = normalize_full(p["name"])
+        return 0 if (name == key or p.get("match") == "alias") else 1 if name.startswith(key) else 2
+
     if around_self:
         # 거리 목록은 고른 일정의 장소에서 **가까운 순** 그대로 — 이름 일치는 일치도 목록이 맡는다
         found.sort(key=distance)
@@ -1467,9 +1520,9 @@ def search(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
     else:
         # 이름이 검색어와 정확히 같은 곳 → 검색어로 시작하는 곳 순, 그 안에서 **일정에 맞는 곳**(휴무 · 운영시간 밖이 아닌 곳)이 앞, 같으면 앞뒤 일정에서 가까운 순
         # 평가(DB)할 풀을 고를 때도 출처 순서가 아니라 이름 일치 → 가까운 순으로 먼저 줄 세운다(뒤에 붙은 카카오 결과가 평가도 못 받고 잘리지 않게)
-        found.sort(key=lambda p: (0 if normalize_full(p["name"]) == key else 1 if normalize_full(p["name"]).startswith(key) else 2, distance(p)))
+        found.sort(key=lambda p: (name_rank(p), distance(p)))
         judged = [(p, assess(conn, tenant_id, item, p, prev, nxt, None)) for p in found[:SEARCH_POOL]]
-        judged.sort(key=lambda pa: (0 if normalize_full(pa[0]["name"]) == key else 1 if normalize_full(pa[0]["name"]).startswith(key) else 2, pa[1]["status"] == "bad",
+        judged.sort(key=lambda pa: (name_rank(pa[0]), pa[1]["status"] == "bad",
                                     not pa[1]["fits"], distance(pa[0])))
     tagged = {"order": "distance"} if (around_self or by_relevance) else {}
     out = [{"rank": rank, **tagged, **_present(p, a, prev, nxt, ref, area)} for rank, (p, a) in enumerate(judged[:limit], start=1)]

@@ -1359,7 +1359,7 @@ def _near_anchor(decision: Any, *, message: str, items: list[Any], at: datetime,
     if same is not None:
         return {**same, "attributes": {}, "source": "trip_places"}, at
     # 동네 · 명소 이름 — 장소 찾기(관광공사 · 카카오)로 좌표만 얻는다. ★활동으로 찾는다: 「서촌」이 「서촌닭갈비」가 되지 않게
-    found = resolve(text, our_places=[], tour=place_source, kakao=kakao_source, kind_hint="activity")
+    found = resolve(text, our_places=[], tour=place_source, kakao=kakao_source, kind_hint="activity", conn=conn)
     if found.status == "resolved" and found.latitude is not None:
         return ({"place_id": None, "name": found.name, "kind": "activity", "latitude": found.latitude,
                  "longitude": found.longitude, "attributes": {}, "source": found.method}, at)

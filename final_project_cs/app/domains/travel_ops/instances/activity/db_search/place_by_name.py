@@ -22,6 +22,7 @@
 """
 from __future__ import annotations
 
+import logging
 import re
 import unicodedata
 from typing import Any, Callable
@@ -99,29 +100,113 @@ def _find_fuzzy(connection_factory: Callable[[], Any], query: str, key: str, sou
     return _fuzzy_hit(matched, "typo", f"오타로 보고 「{matched[0]['title']}」로 찾았다(자모 거리 비율 {ratio:.2f})")
 
 
+def _alias_rows(cur: Any, query: str, sources: tuple[str, ...]) -> list[dict[str, Any]] | None:
+    """별칭(시드 파일 + DB 표)이 가리키는 원장 행. 별칭이 아니거나 둘 이상을 가리키면(모호) `None`."""
+    key = place_aliases.key_of(query)
+    if not key:
+        return None
+    ids = set(place_aliases.seed_table().content_ids_for(query))
+    cur.execute(ALIAS_EXISTS_SQL)
+    exists = cur.fetchone()
+    if exists and exists[0]:
+        cur.execute(SQL_ALIAS_IDS, (key,))
+        ids |= {str(r[0]) for r in cur.fetchall()}
+    if len(ids) != 1:
+        return None                               # 별칭이 아니거나, 둘 이상을 가리키면(모호) 쓰지 않는다
+    cur.execute(SQL_BY_ID, (list(sources), next(iter(ids))))
+    return [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
+
+
 def _find_alias(connection_factory: Callable[[], Any], query: str, sources: tuple[str, ...]) -> dict[str, Any] | None:
     """별칭(시드 파일 + DB 표)이 **한 장소**로 정하는 이름이면 그 장소. 별칭이 아니거나 모호하거나 원장에 없으면(폐지) `None`.
 
     ★시드 파일은 배포에 실려 DB 적재와 상관없이 늘 적용된다. DB 표는 추가 별칭이다(표가 아직 없으면 시드만).
     """
-    key = place_aliases.key_of(query)
-    ids = set(place_aliases.seed_table().content_ids_for(query))
-    if not key:
-        return None
     with connection_factory() as conn, conn.cursor() as cur:
-        cur.execute(ALIAS_EXISTS_SQL)
-        exists = cur.fetchone()
-        if exists and exists[0]:
-            cur.execute(SQL_ALIAS_IDS, (key,))
-            ids |= {str(r[0]) for r in cur.fetchall()}
-        if len(ids) != 1:
-            return None                           # 별칭이 아니거나, 둘 이상을 가리키면(모호) 쓰지 않는다
-        cur.execute(SQL_BY_ID, (list(sources), next(iter(ids))))
-        rows = [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
-    if len(rows) != 1:
+        rows = _alias_rows(cur, query, sources)
+    if not rows or len(rows) != 1:
         return None
     return {"status": "found", "via": "place_catalog", **_hit(rows[0]), "match": "alias",
             "note": f"별칭 「{query}」로 「{rows[0]['title']}」를 찾았다"}
+
+
+def alias_target(conn: Any | None, name: str | None, *, sources: tuple[str, ...] = DEFAULT_SOURCES) -> dict[str, Any] | None:
+    """`[2026-10-22 사용자 지시]` 별칭이 **한 장소**로 정하는 이름이면 그 장소 — 코어의 모든 이름 찾기(계획 읽기 · 확인 화면 검색 · 채팅 고치기)가
+    「우리 자료 정확 일치 → **별칭** → … → 카카오」 순서로 이것을 부른다(`components/team_hooks/place_aliases.py`).
+
+    반환 `{"content_id", "title", "content_type_id", "latitude", "longitude", "source"}` · 별칭이 아니거나 모호하거나 폐지면 `None`.
+    `conn` 은 셋 중 하나다:
+      - 열린 연결 — 시드 + DB 표를 보고 원장 행(좌표)까지 싣는다(확인 화면 검색 · 이름 고치기). 세이브포인트 안에서 읽는다 —
+        실패한 읽기가 부르는 쪽 트랜잭션을 막지 않게(`ledger._web_entries` 와 같다).
+      - 연결을 여는 함수 — 계획 읽기처럼 모델을 기다리며 연결을 잡지 않는 길. DB 표는 1분 기억한 사본(`_db_alias_snapshot`)을 쓰고 좌표는 비운다.
+      - `None` · 원장을 못 읽음 — **시드 파일만** 본다(정식 제목만 · 좌표 없음).
+    좌표가 비면 부르는 쪽이 그 정식 제목으로 다시 찾는다."""
+    query = (name or "").strip()
+    if len(_loose(query)) < 2:
+        return None
+    if conn is not None and hasattr(conn, "cursor"):
+        try:
+            with conn.transaction(), conn.cursor() as cur:
+                rows = _alias_rows(cur, query, sources)
+        except Exception as exc:  # noqa: BLE001 — 원장 · 별칭 표를 못 읽으면 시드만 본다(별칭이 없는 것과 다르지 않게)
+            logging.getLogger(__name__).warning("activity alias_target db read failed reason=%s", type(exc).__name__)
+        else:
+            if rows is None or len(rows) != 1:
+                return None
+            r = rows[0]
+            return {"content_id": str(r["content_id"]), "title": r["title"], "content_type_id": str(r["content_type_id"] or ""),
+                    "latitude": r["latitude"], "longitude": r["longitude"], "source": r["source"]}
+        conn = None
+    key = place_aliases.key_of(query)
+    ids = set(place_aliases.seed_table().content_ids_for(query))
+    titles: dict[str, str] = {}
+    if callable(conn):
+        snapshot = _db_alias_snapshot(conn)
+        ids |= set(snapshot.get(key, {}))
+        titles = snapshot.get(key, {})
+    if len(ids) != 1:
+        return None
+    content_id = next(iter(ids))
+    title = place_aliases.seed_title(content_id) or titles.get(content_id)
+    return {"content_id": content_id, "title": title, "content_type_id": None, "latitude": None, "longitude": None,
+            "source": "seed"} if title else None
+
+
+#: DB 별칭 사본을 기억하는 시간(초) — 운영 중에 더한 별칭이 1분 안에 계획 읽기에도 쓰인다. 우리가 고른 값
+SNAPSHOT_TTL_S = 60.0
+_snapshot: tuple[float, dict[str, dict[str, str]]] | None = None
+SQL_ALIAS_SNAPSHOT = ("SELECT a.alias_norm, a.content_id, p.name_ko FROM activity.ac_place_alias a "
+                      "JOIN activity.ac_place p ON p.content_id = a.content_id WHERE p.delisted_at IS NULL")
+
+
+def _db_alias_snapshot(connection_factory: Callable[[], Any]) -> dict[str, dict[str, str]]:
+    """DB 별칭 표 전체(정규화한 별칭 → {contentid: 정식 제목}) — 폐지된 곳은 뺀다. 표가 없거나 못 읽으면 빈 dict(시드만 쓴다)."""
+    import time
+
+    global _snapshot
+    now = time.monotonic()
+    if _snapshot is not None and now - _snapshot[0] < SNAPSHOT_TTL_S:
+        return _snapshot[1]
+    table: dict[str, dict[str, str]] = {}
+    try:
+        with connection_factory() as conn, conn.cursor() as cur:
+            cur.execute(ALIAS_EXISTS_SQL)
+            exists = cur.fetchone()
+            if exists and exists[0]:
+                cur.execute(SQL_ALIAS_SNAPSHOT)
+                for alias_norm, content_id, title in cur.fetchall():
+                    table.setdefault(str(alias_norm), {})[str(content_id)] = str(title)
+    except Exception as exc:  # noqa: BLE001 — 못 읽으면 시드만 쓴다. 다음 부름에 다시 읽게 기억하지 않는다
+        logging.getLogger(__name__).warning("activity alias snapshot read failed reason=%s", type(exc).__name__)
+        return {}
+    _snapshot = (now, table)
+    return table
+
+
+def clear_snapshot() -> None:
+    """시험 · 별칭 표를 고친 직후용."""
+    global _snapshot
+    _snapshot = None
 
 
 def find_place_by_name(connection_factory: Callable[[], Any], tenant_id: str, name: str | None, *,

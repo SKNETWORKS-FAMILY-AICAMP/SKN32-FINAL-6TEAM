@@ -816,7 +816,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
     Outside collection this remains the explicit standalone/unit-test assembly seam.
     Production stores the returned registrations in a per-controller BindingTable.
     """
-    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_alternatives, lodging_ledger, mobility_shapes, similarity, watch_planners
+    from app.domains.travel_ops.components.team_hooks import activity_alternatives, activity_ledger, dining_alternatives, dining_ledger, legs, lodging_alternatives, lodging_ledger, mobility_shapes, place_aliases, similarity, watch_planners
 
     if active_ids is not None:
         pass
@@ -896,6 +896,12 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
 
         activity_alternatives.register(rank=activity_review_alternatives.rank)
 
+        # 활동 — 공용 장소 별칭(시드 CSV + 306 표). `[2026-10-22 사용자 지시]` 계획 읽기 · 확인 화면 검색 · 채팅 고치기가 모두
+        #   「고객 별칭 → 우리 자료 정확 일치 → 이 별칭 → 오타 → 관광공사 · 원장 → 카카오」 순서로 부른다(☆「mmca 서울」이 카카오로만 나왔다)
+        from app.domains.travel_ops.instances.activity.db_search.place_by_name import alias_target as activity_alias_target
+
+        place_aliases.register(target=activity_alias_target)
+
     if "activity" in active_ids:
         from app.domains.travel_ops.instances.activity.team import plan_activity_trigger
         watch_planners.register("activity", plan_activity_trigger)
@@ -956,7 +962,7 @@ def _wire_domain_providers(*, config=None, registry=None, active_ids=None) -> li
         activity_jobs.configure(connection_factory=get_connection, judge_llm=build_activity_judge_llm(),
                                 budget=build_activity_judge_budget(), claim=claim)
 
-    names = {"mobility": ("legs",), "dining": ("dining_ledger", "dining_alternatives"), "activity": ("similarity", "activity_ledger", "activity_alternatives")}
+    names = {"mobility": ("legs",), "dining": ("dining_ledger", "dining_alternatives"), "activity": ("similarity", "activity_ledger", "activity_alternatives", "place_aliases")}
     # 숙소는 감시 없이 원장만 — 감시(`watch:`)는 `names` 의 팀만 센다
     hook_names = {**names, "lodging": ("lodging_ledger", "lodging_alternatives")}
     connected = [name for owner, hooks in hook_names.items() if owner in active_ids for name in hooks]
