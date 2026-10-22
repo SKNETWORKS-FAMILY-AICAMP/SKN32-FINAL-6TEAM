@@ -28,6 +28,8 @@ for (const width of [375,1280]) {
     const date=await form(page).getByLabel('날짜',{exact:true}).inputValue();
     const start=await form(page).getByLabel('시작',{exact:true}).inputValue();
     await page.route('**/v1/web/trip-intakes/**/place-search?*',route=>route.fulfill({json:{revision:1,item:'0-0',query:'종로 쉼터',results:[],notes:[]}}));
+    // `[2026-10-23 매니저 2fd352df]` 일정 추가 폼은 전용 검색(`add-search`)을 부른다 — 그 응답도 빈 목록으로
+    await page.route('**/v1/web/trip-intakes/**/add-search?*',route=>route.fulfill({json:{revision:1,item:'__new__',query:'종로 쉼터',results:[],notes:[]}}));
     // 결과 유무와 관계없이 직접 위치를 지정할 수 있다.
     await page.getByRole('searchbox').fill('종로 쉼터');
     await expect(page.getByRole('status').filter({hasText:'검색 결과가 없어요.'})).toBeVisible();
