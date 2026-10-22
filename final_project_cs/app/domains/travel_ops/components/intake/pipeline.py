@@ -1552,16 +1552,24 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date) -> tuple[lis
     from .span_segments import split_segments
 
     segments: dict[tuple[int, int, int], dict[str, Any]] = {}
-    for line_no, line_items in by_line.items():
-        line = lines[line_no - 1]
-        ordered = sorted(line_items, key=lambda item: item.title.start)
-        bounds = split_segments(line, [(item.title.start, item.title.end) for item in ordered])
-        for item, (start, end) in zip(ordered, bounds):
-            segments[(line_no, item.title.start, item.title.end)] = {
-                "line": line_no, "start": start, "end": end, "text": line[start:end]}
+
+    def build_segments() -> None:
+        # 제목은 아래에서 앞 카드 원문으로 바뀔 수 있다 — 바뀐 뒤의 범위로 처음 부를 때 만든다
+        by_line_now: dict[int, list[Any]] = {}
+        for item in out.items:
+            by_line_now.setdefault(item.title.line, []).append(item)
+        for line_no, line_items in by_line_now.items():
+            line = lines[line_no - 1]
+            ordered = sorted(line_items, key=lambda item: item.title.start)
+            bounds = split_segments(line, [(item.title.start, item.title.end) for item in ordered])
+            for item, (start, end) in zip(ordered, bounds):
+                segments[(line_no, item.title.start, item.title.end)] = {
+                    "line": line_no, "start": start, "end": end, "text": line[start:end]}
 
     def segment(it: Any) -> dict[str, Any]:
         # 다음 장소 앞의 「저녁」·시각은 그 장소 몫이다. 조립과 같은 경계를 저장한다.
+        if not segments:
+            build_segments()
         return segments[(it.title.line, it.title.start, it.title.end)]
 
     # ★`[2026-10-16 D-025 사실 검사]` 같은 줄에 규칙이 읽은 시각 — 에이전트가 항목은 읽고 시각을 비웠거나(실제 접수 R08: 9곳) 시각 근거를 **다른 줄**에서
