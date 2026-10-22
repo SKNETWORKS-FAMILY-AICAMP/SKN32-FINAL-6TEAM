@@ -49,6 +49,8 @@ export interface TripMapProps {
   /** `[2026-10-06 사용자 지시]` A route line was pressed (the id of its `RouteShape.itemId`) and which one the screen shows as picked. */
   onSelectLine?: (lineId: string) => void;
   selectedLineId?: string;
+  /** `[2026-10-22 ST4F-722]` Take the camera to a stop once per `key` (`MapViewProps.focus`). */
+  focus?: MapViewProps["focus"];
 }
 
 export function TripMap(props: TripMapProps) {
@@ -99,7 +101,7 @@ export function TripMap(props: TripMapProps) {
   const selectedMissing = props.selectedId && props.stops.some((stop) => stop.id === props.selectedId) && !points.some((point) => point.id === props.selectedId);
   const shapes = visibleShapes(props.routes?.shapes, props.stops);
   const lines = toMapLines(shapes);
-  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, onSelectLine: props.onSelectLine, selectedLineId: props.selectedLineId, topInset: props.topInset, bottomInset: props.bottomInset, me, stays, onZoom: props.onZoom, onInteractionChange: props.onInteractionChange, meAvailable: agreed,
+  const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect, lines, onSelectLine: props.onSelectLine, selectedLineId: props.selectedLineId, topInset: props.topInset, bottomInset: props.bottomInset, me, stays, onZoom: props.onZoom, onInteractionChange: props.onInteractionChange, meAvailable: agreed, focus: props.focus,
     onRequestLocation: (onLocated: (location: MyLocation) => void) => { setPendingLocate(() => onLocated); if (!agreed) setAskingConsent(true); } };
   const fill = props.variant === "fill";
   return <div className={`${styles.frame} ${fill ? styles.fill : ""}`} style={fill ? { position: "relative", display: "flex", flexDirection: "column", height: "100%", minHeight: 0, flex: 1 } : undefined}>

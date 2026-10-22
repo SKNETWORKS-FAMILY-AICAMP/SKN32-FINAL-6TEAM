@@ -76,6 +76,8 @@ const SHEETS = ["half", "full", "peek"] as const;
 type Sheet = (typeof SHEETS)[number];
 const COMPACT_BELOW = 190;
 const SHEET_MIN = 104;
+/** `[2026-10-22 사용자 결정 — ST4F-722 D안 · 목업 guguroute-map-pin-focus-2026-10-22.html]` The zoom a stop picked in the list or opened in its detail is shown at: 18, the ruler's 10m (about 178 m across a phone) — as close as the maps go now. */
+const FOCUS_ZOOM = 18;
 /** `[2026-10-12]` After the list was last touched (wheel, finger, press) this long, a change of its shape that time brought (a stop going past, a card opening by itself) is shown. */
 const TOUCH_QUIET_MS = 1_200;
 /** Where an entry the screen brings into view stands: just under the floating day chips. */
@@ -179,6 +181,10 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
   const dayAt = days.indexOf(mapDay);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
+  // `[2026-10-22 사용자 결정 — ST4F-722 D안]` A stop pressed in the list (again too) or opened in its detail: the map puts its pin in the middle of what shows, at zoom 18 (the ruler's 10m).
+  //   A pin pressed on the map only moves there (`pick(…, "map")`).
+  const [mapFocus, setMapFocus] = useState<{ id: string; zoom: number; key: number } | null>(null);
+  const focusMap = (id: string) => setMapFocus((current) => ({ id, zoom: FOCUS_ZOOM, key: (current?.key ?? 0) + 1 }));
   // One thing open in the list at a time: a stop's card or a leg. `[2026-10-13 사용자 결정]` Only the customer opens and closes them — nothing opens on entering or as time passes
   // (it used to open what was going on now and follow it).
   const [openId, setOpenId] = useState<string | null>(null);
@@ -472,7 +478,7 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
     setSelectedId(id);
     if (stop.date !== mapDay) showDay(stop.date);
     setOpenId(id);
-    if (from === "list") lowerSheet();
+    if (from === "list") { lowerSheet(); focusMap(id); }
     else if (sheet === "peek") setSheet("half");
     goPane("plan");
     bringUp(id);
@@ -571,6 +577,7 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
     setSelectedLine(null);
     setSelectedId(id);
     setDetailId(id);
+    focusMap(id);
     if (sheet === "peek") setSheet("half");
   }
   /**
@@ -690,7 +697,7 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
         // `[2026-10-13 숙소 B안]` A stay after its check-in day (the 「…에서 출발」 band · the check-out row) — not on the time line's scale; pressing it shows the stay.
         if (entry.type === "stay") return <StayRow key={`${entry.stay.stop.id}:${entry.stay.phase}`} stay={entry.stay} onShow={() => pick(entry.stay.stop.id, "list")} />;
         if (entry.type === "stop") {
-          const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); };
+          const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); focusMap(entry.stop.id); };
           return past && openId !== entry.stop.id
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
@@ -737,7 +744,7 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
       <div ref={box} className={pc.checking} data-sheet={custom !== null ? "custom" : sheet} data-dragging={dragging || undefined} data-compact={compact || undefined} {...quietDays.handlers}
         style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
         <div className={pc.map}>
-          <TripMap stops={mapStops} dayNumber={dayAt + 1} selectedId={detailId ?? selectedId ?? undefined} variant="fill" topInset={64} bottomInset={24} looks={detailLooks}
+          <TripMap stops={mapStops} dayNumber={dayAt + 1} selectedId={detailId ?? selectedId ?? undefined} variant="fill" topInset={64} bottomInset={24} looks={detailLooks} focus={mapFocus ?? undefined}
             routes={detailStop ? undefined : routeDetail.routes} onZoom={routeDetail.onZoom}
             onSelect={(id) => detailStop ? detailTo(id) : pick(id, "map")} onSelectLine={pickLine} selectedLineId={selectedLine ?? undefined} tripId={trip.id} date={mapDay}
             routesError={routeShapes.isError ? t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.") : undefined} />
@@ -752,7 +759,7 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
             onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>
           {/* `[2026-10-07 사용자 결정]` 머리는 날짜 칩 줄 하나: 칩은 옆으로 스크롤되고 오른쪽 버튼은 고정. 「등록 완료」 표시는 두지 않는다.
                `[2026-10-08 사용자 지시 · 2026-10-12 반영 — C]` 「일정 | 채팅」 대신 채팅 버튼 하나: 칩을 누르면 일정 칸, 채팅 버튼은 채팅 칸(채팅 칸에서는 버튼이 눌린 표시, 칩은 선택 표시 없음). */}
-          {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={detailTo}
+          {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={(id) => { detailTo(id); focusMap(id); }}
             onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }}
             choiceOf={choiceOf} past={pastStops(detailStop.date)} chooseBusy={choose.isPending} onChoose={answer} onEdit={editStop} />}
           {/* The list and the chat stay mounted under the detail (their gestures and scroll are kept), only hidden. */}

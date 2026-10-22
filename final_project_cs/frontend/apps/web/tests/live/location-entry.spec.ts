@@ -4,12 +4,13 @@ import { openFinished } from "./plan-check-kit";
 import { allowLocation, changeLocationConsent, countLocationAsks, locationAsks, startWithLocationConsent } from "./location-kit";
 
 const tools = (page: Page) => page.getByRole("group", { name: "지도 단추" });
-const locate = (page: Page) => tools(page).getByRole("button", { name: "내 위치로", exact: true });
+// `[2026-10-22 ST4F-721]` 「내 위치로」는 접는 묶음 밖, 지도 오른쪽 아래에 따로 선다
+const locate = (page: Page) => page.getByRole("region", { name: "여행 지도" }).getByRole("button", { name: "내 위치로", exact: true });
 const dot = (page: Page) => page.getByRole("img", { name: "내 위치", exact: true });
 async function expand(page: Page) { await tools(page).getByRole("button", { name: "지도 단추 펼치기" }).click(); }
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-for (const width of [375, 1280]) test(`${width}px: 동의 전에도 왼쪽 내 위치 버튼·도움말·버튼별 누름 영역을 제공하고 취소 시 위치를 읽지 않는다`, async ({ page, request }) => {
+for (const width of [375, 1280]) test(`${width}px: 동의 전에도 오른쪽 아래 내 위치 버튼·도움말·버튼별 누름 영역을 제공하고 취소 시 위치를 읽지 않는다`, async ({ page, request }) => {
   await page.setViewportSize({ width, height: 900 });
   await countLocationAsks(page);
   await openFinished(page, request);
@@ -26,6 +27,10 @@ for (const width of [375, 1280]) test(`${width}px: 동의 전에도 왼쪽 내 �
     // 거리·접기 버튼은 44×40px, 내 위치를 포함한 원형 도구는 44×44px를 유지한다.
     expect(item.box.height + 0.0001, `${item.label} 누름 높이`).toBeGreaterThanOrEqual(item.label === "지도 단추 접기" ? 40 : 44);
   }
+  const own = (await locate(page).boundingBox())!;
+  expect(own.width + 0.0001, "내 위치로 누름 폭").toBeGreaterThanOrEqual(44);
+  expect(own.height + 0.0001, "내 위치로 누름 높이").toBeGreaterThanOrEqual(44);
+  expect(own.y, "내 위치로는 묶음 아래").toBeGreaterThan(Math.max(...boxes.map((item) => item.box.bottom)));
   if (await tools(page).getAttribute("data-layout") === "row") expect(boxes.at(-1)!.box.x).toBeLessThan(boxes.at(-2)!.box.x);
   await tools(page).getByRole("button", { name: "지도 단추 접기" }).focus();
   for (let tab = 0; tab < 4; tab += 1) await page.keyboard.press("Tab");

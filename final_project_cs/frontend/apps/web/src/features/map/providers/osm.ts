@@ -1,4 +1,4 @@
-import { fitPadding } from "./fit-padding";
+import { fitPadding, visibleLift } from "./fit-padding";
 import type { MapAdapter, MapLine, MapPoint, MyLocation, StayPoint } from "../model";
 import { linePieces, lineStyle, linesKey, walkStyle } from "./lines";
 import { ACCURACY_STYLE, accuracyRadius, createMeDot, createStayDot, ME_BOX, meKey, STAY_BOX, staysKey } from "./me";
@@ -327,6 +327,20 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         else map.setView([at.lat, at.lng], Math.max(map.getZoom(), 15), motion);
       }
 
+      // `[2026-10-22 사용자 결정 — ST4F-722 D안]` A stop picked in the list or opened in its detail: its pin in the middle of the visible part (under the bar, over the sheet), at `zoom`.
+      //   From then on the customer's camera — a new size (the sheet moving) does not fit every pin again.
+      function focus(at: { lat: number; lng: number }, zoom: number) {
+        if (destroyed) return;
+        if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) { map.once("zoomend", () => focus(at, zoom)); return; }
+        userMoved = true;
+        const target = Math.min(map.getMaxZoom(), zoom);
+        const pixel = map.project([at.lat, at.lng], target);
+        const centre = map.unproject([pixel.x, pixel.y - visibleLift(options.topInset, options.bottomInset)], target);
+        programmatic = true;
+        try { if (fitted && !reducedMotion()) map.flyTo(centre, target, FLIGHT); else map.setView(centre, target, { animate: false }); }
+        finally { programmatic = false; }
+      }
+
       try { update(options.points, options.selectedId, options.lines); setMe(options.me ?? null); setStays(options.stays ?? []); }
       catch (error) { clearMarkers(); map.remove(); throw error; }
       sayView();
@@ -347,6 +361,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           else map.flyTo(map.getCenter(), zoom, FLIGHT);
         },
         centerOn,
+        focus,
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           map.invalidateSize();
