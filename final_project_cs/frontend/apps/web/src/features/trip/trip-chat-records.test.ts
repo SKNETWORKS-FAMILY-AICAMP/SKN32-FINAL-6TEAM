@@ -4,7 +4,7 @@ import type { TripMessage } from "./model";
 import { chatRecords, proposalAvailable } from "./trip-chat-records";
 
 const notice = (key: string, at: string): Notice => ({ key, at, type: "safety_alert", kind: null,
-  text: "공식 도로 통제 원문", version: 2, proposalId: null, delivery: "sent", rollback: null, safety: null });
+  text: "공식 도로 통제 원문", version: 2, proposalId: null, delivery: "sent", rollback: null, safety: null, changed: null });
 const message = (id: string, at: string): TripMessage => ({ id, createdAt: at, role: "assistant", text: "상담 답변" });
 const proposal = (over: Partial<Proposal> = {}): Proposal => ({ id: "p1", itemId: "i1", baseVersion: 2,
   reason: "ask_first", status: "open", safety: true, expiresAt: null,

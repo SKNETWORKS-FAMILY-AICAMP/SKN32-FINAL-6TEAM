@@ -581,7 +581,7 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
     def build(chosen: "Candidate", others: list["Candidate"]) -> ItineraryChange:
         notice = change_notice(original=item.place, replacement=chosen.place,
                                start=item.starts_at, causes=causes,
-                               alternates=others, replay=replay)
+                               alternates=others, replay=replay, now=now)
         replacement = item.replaced_by(
             place=chosen.place, title=title_for(item, chosen.place["name"]),
             detail={"auto_adjusted_at": now.isoformat(),
@@ -1061,7 +1061,7 @@ def plan_activity_closed_on_day(*, items: list[Item], places: list[dict[str, Any
         return NoChange("unresolved", {"causes": [cause],
                                        "rejected": {c.name: c.rejected for c in rejected}})
     notice = change_notice(original=item.place, replacement=best.place, start=item.starts_at,
-                           causes=[cause], alternates=alternates, replay=False)
+                           causes=[cause], alternates=alternates, replay=False, now=checked_at)
     notice["text"] = (f"{item.place['name']}이(가) {seoul(item.starts_at):%m월 %d일 %H:%M}에 운영하지 않는 것으로 새벽에 "
                       f"확인했습니다({detail}). 같은 시각 {best.place['name']}(으)로 바꿨습니다.")
     replacement = item.replaced_by(

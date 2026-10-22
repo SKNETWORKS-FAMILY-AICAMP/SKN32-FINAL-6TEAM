@@ -1,6 +1,6 @@
 import type { RouteShape } from "@/lib/live/route-shapes";
 import type { Trip, TripChange } from "./model";
-import { seoulKey, toMinutes, tripDays, type SeoulNow } from "./trip-timeline";
+import { DAY_END, seoulKey, toMinutes, tripDays, type SeoulNow } from "./trip-timeline";
 
 /**
  * `[2026-10-15 사용자 결정 — ST4F-496]` What the ending credits of a trip say — only what the server sent or the screen can see: the trip's name and days, its stops, the changes the
@@ -30,11 +30,62 @@ export function datesText(first: string, last: string): string {
   return `${full(first)} — ${last.slice(0, 4) === first.slice(0, 4) ? `${last.slice(5, 7)}. ${last.slice(8, 10)}` : full(last)}`;
 }
 
-/** The trip is over once its last stop has ended (its end time, or its start when it has none) in Seoul. A trip with no stops never ends. */
+/**
+ * The trip is over once its last stop has ended in Seoul. A trip with no stops never ends.
+ * `[2026-10-22 사용자 결정 — ST4F-718 · D1]` A stop with no end lasts as the list draws it (`entryTimes`): until the next stop of its day starts, else to the end of the day (24:00) —
+ * it used to end at its own start, so a last stop with no end ended the trip the moment it began.
+ */
 export function tripEnded(trip: Pick<Trip, "stops">, now: SeoulNow): boolean {
-  const ends = trip.stops.map((stop) => seoulKey({ date: stop.endDate ?? stop.date, minute: toMinutes(stop.endTime ?? stop.time) ?? 0 }));
+  const ends = trip.stops.map((stop) => {
+    if (stop.endTime) return seoulKey({ date: stop.endDate ?? stop.date, minute: toMinutes(stop.endTime) ?? 0 });
+    const start = toMinutes(stop.time) ?? 0;
+    const next = Math.min(...trip.stops.filter((other) => other.date === stop.date && (toMinutes(other.time) ?? 0) > start).map((other) => toMinutes(other.time) ?? 0));
+    return seoulKey({ date: stop.endDate ?? stop.date, minute: Number.isFinite(next) ? next : DAY_END });
+  });
   if (ends.length === 0) return false;
   return seoulKey(now) >= ends.sort().at(-1)!;
+}
+
+/**
+ * `[2026-10-22 사용자 결정 — ST4F-718]` Where the trip stands: `before` its first day (by date — D2: on day 1 itself it has begun), `after` its last stop ended (`tripEnded`), else `during`.
+ */
+export function tripPhase(trip: Pick<Trip, "stops">, now: SeoulNow): "before" | "during" | "after" {
+  const first = tripDays(trip)[0];
+  if (first && now.date < first) return "before";
+  return tripEnded(trip, now) ? "after" : "during";
+}
+
+/**
+ * `[2026-10-22 사용자 결정 — ST4F-718]` The view the trip opens on, whatever way it is opened. Before it starts and once it is over: 「전체」 (over: the end card at its top), with the first day
+ * (before) or the last day (over) behind it for the map and the chat (D4). While it is on: today's day as before, else the first day.
+ */
+export function openingView(trip: Pick<Trip, "stops">, now: SeoulNow): { all: boolean; day: string } {
+  const days = tripDays(trip);
+  const phase = tripPhase(trip, now);
+  if (phase === "before") return { all: true, day: days[0] ?? "" };
+  if (phase === "after") return { all: true, day: days.at(-1) ?? "" };
+  return { all: false, day: days.includes(now.date) ? now.date : days[0] ?? "" };
+}
+
+/**
+ * `[2026-10-22 사용자 결정 — ST4F-718 · D3]` The trips whose ending credits already started by themselves on this device: they start once, when the last stop ends while the trip is open.
+ * Kept in this browser only — another device (or a cleared browser) plays them once more.
+ */
+const CREDITS_KEY = "tripilot.web.creditsAutoPlayed.v1";
+
+function playedTrips(): string[] {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(CREDITS_KEY) ?? "[]") as unknown;
+    return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : [];
+  } catch { return []; }
+}
+
+/** True the first time for a trip (and remembers it), false after — whether the credits may start by themselves now. */
+export function claimCreditsAutoPlay(tripId: string): boolean {
+  const played = playedTrips();
+  if (played.includes(tripId)) return false;
+  try { window.localStorage.setItem(CREDITS_KEY, JSON.stringify([...played, tripId].slice(-50))); } catch { /* private window: once for this page only */ }
+  return true;
 }
 
 export function creditFacts(trip: Trip, title: string, shapes: readonly RouteShape[], attribution: string | null, dayText: (date: string, index: number) => string): CreditFacts {

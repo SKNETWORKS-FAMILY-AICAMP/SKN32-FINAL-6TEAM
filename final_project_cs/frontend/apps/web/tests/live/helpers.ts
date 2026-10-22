@@ -311,6 +311,15 @@ export async function openTitle(page: Page) {
 export const dayTab = (page: Page, name: RegExp) => page.getByRole("tablist", { name: "일차 고르기" }).getByRole("tab", { name });
 
 /**
+ * `[2026-10-22 ST4F-718]` The trip opens on 「전체」 before it starts and once it is over — the mock trip (2026-10-01 ~ 10-02) is over by the real clock, with its last day behind
+ * 「전체」 for the map and the chat. A test of day 1's map, lines or chat chooses day 1 itself, as the screen used to open.
+ */
+export async function chooseDayOne(page: Page) {
+  await dayTab(page, /^1일차/).click();
+  await expect(dayTab(page, /^1일차/)).toHaveAttribute("aria-selected", "true");
+}
+
+/**
  * Register a trip the way a customer does, against the test mock server: write a plan, 「계획 확인하기」, wait for the plan-check screen's result,
  * 「여행 등록」, and land on the trip screen (the mock's one trip, `TRIP_ID`). Needs the mock's default scenario (a plan whose check passes).
  */
@@ -318,6 +327,7 @@ export const dayTab = (page: Page, name: RegExp) => page.getByRole("tablist", { 
  * `[2026-10-13]` The mock server's trip is on 2026-10-01. Since the 10-12 timeline (「지난 일정」 — a stop whose end has passed by the device clock is one grey line), the trip
  * screen draws every stop of it as past once that day is over: no card, no booking tag, no way row. A test of the trip screen as it looks before the trip starts the page's
  * clock on the day before and lets it run (a stopped clock would also stop gestures that time the pointer).
+ * `[2026-10-22 ST4F-718]` Before the trip the screen opens on 「전체」 (every day, day 1 behind it) — a test of one day's view chooses it (`chooseDayOne`).
  */
 export async function beforeTheTrip(page: Page) {
   await page.clock.install({ time: new Date("2026-09-30T12:00:00+09:00") });

@@ -67,7 +67,7 @@ export function ToastView({ toast, onDone }: { toast: BusToast; onDone: () => vo
       {toast.badge && <span className={styles.badge} data-route={toast.badge === "→" || undefined} aria-hidden="true">{toast.badge}</span>}
       <div className={styles.body}>
         <strong className={styles.title}>{toast.text}{toast.chip && <em data-tone={toast.chip.tone}>{toast.chip.text}</em>}</strong>
-        {toast.sub && <span className={styles.sub}>{toast.sub}</span>}
+        {toast.sub && <span className={styles.sub} data-lines={toast.lines} style={toast.lines ? { WebkitLineClamp: toast.lines, lineClamp: toast.lines } : undefined}>{toast.sub}</span>}
         {toast.note && <span className={styles.note}>{toast.note}</span>}
       </div>
       {toast.action && <button type="button" className={styles.action} onClick={() => { const run = toast.action?.run; onDone(); run?.(); }}>{toast.action.label}</button>}

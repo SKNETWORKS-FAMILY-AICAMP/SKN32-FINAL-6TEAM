@@ -347,11 +347,12 @@ def ledger_warnings(state: dict[str, Any] | None) -> list[str]:
     팀의 `dining_warnings(state)` 이름을 바꿨다 — 우리 `dining_warnings(place, arrival, minutes)`(코어 영업시간으로 말하는
     60분 경고)와 이름이 같았다. 이어진 곳은 이쪽, 안 이어진 곳은 그쪽이 말한다(둘이 같은 말을 두 번 하지 않는다)."""
     warnings = []
+    # ★`[2026-10-23 사용자 지시 — ST4F-723]` 후보 경고는 제안 안(`options[].warnings`) · 알림 문장으로 고객에게 보인다 — 해요체로(전에는 「…있다 · …한다」)
     if state and state.get("linked"):
         if state.get("needs_holiday_check"):
-            warnings.append("명절이나 공휴일이라 영업시간이 다를 수 있다")
+            warnings.append("명절이나 공휴일이라 영업시간이 다를 수 있어요")
         if state.get("needs_check"):
-            warnings.append("영업 종료가 임박해 마지막 주문을 확인해야 한다")
+            warnings.append("영업 종료가 임박해 마지막 주문을 확인해야 해요")
     return warnings
 
 
@@ -404,14 +405,19 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
         if price is None or base_price is None:
             # ★`[2026-09-29]` 가격 모름은 **경고**다(탈락이 아니다) — 실제 장소는 대부분 가격이 없어 자동 대체가 늘 실패했다.
             #   새벽 확인의 대체(`plan_activity_closed_on_day`)와 같은 규칙. 경고가 있으면 순위는 뒤로 간다(`Candidate.rank`)
-            candidate.warnings.append("가격을 몰라 추가 비용을 계산할 수 없다")
+            # ★`[2026-10-23 사용자 지시 — ST4F-723]` 경고는 제안 안 · 알림 문장으로 고객에게 보인다 — 해요체. 앞머리 「가격을 몰라」는 그대로 둔다(빼는 곳들이 그 앞머리로 가린다)
+            candidate.warnings.append("가격을 몰라 추가 비용을 계산할 수 없어요")
         else:
             candidate.extra_cost_krw = max(0, int(price) - int(base_price))
         opened = open_during(place, start, end)
         if opened is False:
             candidate.rejected.append("그 시각 영업하지 않는다")
         elif opened is None:
-            (candidate.warnings if proposal else candidate.rejected).append("그 시각 영업을 확인할 수 없다")
+            # ★`[2026-10-23 사용자 지시 — ST4F-723]` 고객이 보는 경고(제안)만 해요체 — 탈락 사유(진단 기록 · 「살펴본 N곳 중 M곳은 「이유」」)는 다른 사유들과 같은 말투 그대로
+            if proposal:
+                candidate.warnings.append("그 시각 영업을 확인할 수 없어요")
+            else:
+                candidate.rejected.append("그 시각 영업을 확인할 수 없다")
         candidate.reason = reason_line(original, place, candidate.distance_m, brand_nearby=candidate.brand_nearby,
                                        opened=opened)
         out.append(candidate)
@@ -796,6 +802,19 @@ def _part_of_day(moment: datetime) -> str:
     return "오전" if _seoul(moment).hour < 12 else "오후"
 
 
+def _day_word(start: datetime, now: datetime) -> str:
+    """그 일정의 서울 날짜를 알림을 만드는 때(`now`)와 견준다 — 「오늘」 · 「내일」 · 그 밖은 채팅 답과 같은 「10월 25일(일)」(`trip_facts._day_label`).
+    ★`[2026-10-23 사용자 지시 — ST4F-723]` 전에는 늘 「오늘」이라 내일 · 모레 일정을 미리 바꾼 알림도 「오늘 오전 …」이었다."""
+    from app.domains.travel_ops.components.conversation.trip_facts import _day_label
+
+    day, today = _seoul(start).date(), _seoul(now).date()
+    if day == today:
+        return "오늘"
+    if day == today + timedelta(days=1):
+        return "내일"
+    return _day_label(day)
+
+
 def _reason_phrase(causes: list[dict[str, Any]], place: dict[str, Any]) -> str:
     """★원인에서만 문장을 만든다. 원인에 없는 이유를 붙이지 않는다."""
     categories = {cause.get("category") for cause in causes}
@@ -844,8 +863,11 @@ def _notice(text: str, *, causes, changed, alternates, replay, **extra) -> dict[
 
 def change_notice(*, original: dict[str, Any], replacement: dict[str, Any], start: datetime,
                   causes: list[dict[str, Any]], alternates: list[Candidate],
-                  replay: bool) -> dict[str, Any]:
-    """활동 변경 통지."""
+                  replay: bool, now: datetime) -> dict[str, Any]:
+    """활동 변경 통지. `now` — 알림을 만드는 때(문장 앞의 「오늘 · 내일 · 10월 25일(일)」을 정한다, `_day_word`)."""
+    # ★`[2026-10-23 사용자 지시 — ST4F-723]` 조사는 받침에 맞춰(「는 · 으로」 고정이었다) — 진행 「끝났어요」 문장과 같은 도우미(ㄹ 받침은 「로」)
+    from app.domains.travel_ops.components.intake.review import eun, ro
+
     same_building = (original.get("attributes") or {}).get("building") and \
         (original.get("attributes") or {}).get("building") == \
         (replacement.get("attributes") or {}).get("building")
@@ -854,8 +876,8 @@ def change_notice(*, original: dict[str, Any], replacement: dict[str, Any], star
     floor = (replacement.get("attributes") or {}).get("floor")
     where = " ".join(part for part in (
         "같은 건물" if same_building else None, floor, replacement["name"]) if part)
-    text = (f"오늘 {_part_of_day(start)} {subject}는 {_reason_phrase(causes, original)}, "
-            f"{where}으로 변경됩니다.")
+    text = (f"{_day_word(start, now)} {_part_of_day(start)} {eun(subject)} {_reason_phrase(causes, original)}, "
+            f"{ro(where)} 변경됩니다.")
     return _notice(text, causes=causes, alternates=alternates, replay=replay,
                    changed={"from": original["name"], "to": replacement["name"],
                             "at": start.isoformat()})

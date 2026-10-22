@@ -34,6 +34,14 @@ describe("선택 요청이 열린 일정 카드(ST4F-704 D안)", () => {
     expect(mark).not.toContain("<button");
     expect(row({ open: true }).match(/상세 보기<svg/g)?.length).toBe(1);
   });
+  it("문장은 상세 보기와 같은 규칙 — 카드 제목인 일정 이름과 번호 대안 · 경고를 뺀다 (2026-10-23 사용자 결정)", () => {
+    const options = [{ key: "a", rank: 1, name: "국가유산진흥원 창덕궁상품관", startsAt: null, note: null, warnings: [] },
+      { key: "b", rank: 2, name: "이새 창덕궁점", startsAt: null, note: null, warnings: ["가격을 몰라 추가 비용을 계산할 수 없다"] }];
+    const text = "잠실 스카이타워 전망 관람 — 날씨 예보에 문제가 있어요. 어떻게 할까요? 1) 국가유산진흥원 창덕궁상품관 · 2) 이새 창덕궁점 이새 창덕궁점: 가격을 몰라 추가 비용을 계산할 수 없다 답이 없으면 원래 일정을 그대로 둡니다.";
+    const html = row({ choice: { ...choice, text, proposal: { ...proposal, reason: "forecast_advisory_options", options } } });
+    expect(html).toContain("선택이 필요해요</b> · 날씨 예보에 문제가 있어요. 어떻게 할까요? 답이 없으면 원래 일정을 그대로 둡니다.</p>");
+    expect(html).not.toContain("잠실 스카이타워 전망 관람 — ");
+  });
   it("서버 문장이 없으면 알림 센터 문장을 쓴다", () => {
     expect(row({ choice: { ...choice, text: null } })).toContain("이 일정을 어떻게 할지 골라 주세요.");
   });
@@ -67,6 +75,15 @@ describe("상세 보기의 선택 칸", () => {
     expect(html).toContain("송파책박물관");
     expect(html).toContain("그 시각 영업을 확인할 수 없어요");
   });
+  it("문장은 카드가 이미 보이는 조각(일정 이름 · 번호 대안 · 경고)을 뺀다 — 서버 틀과 글자까지 같을 때만 (ST4F-723 A)", () => {
+    const options = [{ key: "a", rank: 1, name: "국가유산진흥원 창덕궁상품관", startsAt: null, note: null, warnings: [] },
+      { key: "b", rank: 2, name: "이새 창덕궁점", startsAt: null, note: null, warnings: ["가격을 몰라 추가 비용을 계산할 수 없다"] }];
+    const text = "잠실 스카이타워 전망 관람 — 날씨 예보에 문제가 있어요. 어떻게 할까요? 1) 국가유산진흥원 창덕궁상품관 · 2) 이새 창덕궁점 이새 창덕궁점: 가격을 몰라 추가 비용을 계산할 수 없다 답이 없으면 원래 일정을 그대로 둡니다.";
+    const html = ask({ text, proposal: { ...proposal, reason: "forecast_advisory_options", options } });
+    expect(html).toContain(">날씨 예보에 문제가 있어요. 어떻게 할까요? 답이 없으면 원래 일정을 그대로 둡니다.</p>");
+    expect(html).toContain("이새 창덕궁점");                                                // 대안 줄은 그대로
+    expect(ask({ text: "다른 문장 — 그대로 둬요." })).toContain(">다른 문장 — 그대로 둬요.</p>");   // 서버 틀이 아니면 손대지 않는다
+  });
   it("답을 기다리는 동안 단추를 잠근다", () => {
     expect(ask({}, true).match(/disabled=""/g)?.length).toBe(3);
   });
@@ -79,11 +96,16 @@ describe("고른 결과 문구", () => {
   it("대안을 받는 중에는 말하지 않고, 끝난 결과는 알림 센터 문구로", () => {
     expect(chooseOutcome("options", t)).toBeNull();
     expect(chooseOutcome("no_alternate", t)).toBe("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.");
-    expect(chooseOutcome("adjusted", t)).toBe("고르신 곳으로 일정을 바꿨어요.");
+    expect(chooseOutcome("chosen", t)).toBe("고르신 곳으로 일정을 바꿨어요.");   // 서버가 고른 안에 주는 이름(pending.py) — 2026-10-22 실서버에서 「처리 결과: chosen」으로 보였다
+    expect(chooseOutcome("adjusted", t)).toBe("처리 결과: adjusted");
     expect(chooseOutcome("kept", t)).toBe("지금 일정을 그대로 두었어요.");
   });
   it("이미 정해졌거나 일정이 바뀌었으면 그렇게, 그 밖에는 서버 말 그대로", () => {
     expect(chooseFailure(new LiveError("already_decided", "decided", undefined, 409), t)).toContain("이미 정해졌거나");
+    expect(chooseFailure(new LiveError("stale_itinerary", "moved", undefined, 409), t)).toContain("이미 정해졌거나");   // 채팅이 따로 세던 코드 — 한 함수로 합침(ST4F-723)
     expect(chooseFailure(new Error("서버 오류"), t)).toBe("서버 오류");
+  });
+  it("끝난 일정의 제안(409 expired)은 서버 내부 문장 대신 닫혔다고", () => {
+    expect(chooseFailure(new LiveError("expired", "안을 고르지 못했다 — 아무것도 바뀌지 않았다", undefined, 409), t)).toBe("답할 수 있는 때가 지나 이 제안은 닫혔어요. 아무것도 바뀌지 않았고, 지금 상태를 다시 불러왔어요.");
   });
 });

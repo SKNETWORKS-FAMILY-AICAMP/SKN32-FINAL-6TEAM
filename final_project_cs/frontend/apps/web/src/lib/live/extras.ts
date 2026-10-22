@@ -24,10 +24,12 @@ export interface Proposal {
   safety: boolean;
   expiresAt: string | null;
   options: ProposalOption[];
+  /** `[2026-10-22 ST4F-723]` A closed proposal's picked option (`chosen_key` — the server lists closed proposals too): the notice center's 「바뀐 일정」 names it. */
+  chosenKey?: string | null;
 }
 
 interface ServerProposal {
-  proposal_id: string; item_id: string; base_version: number; reason: string; status: string; safety?: unknown;
+  proposal_id: string; item_id: string; base_version: number; reason: string; status: string; safety?: unknown; chosen_key?: string | null;
   expires_at?: string | null; options?: { key: string; rank?: number | null; name?: string | null; starts_at?: string | null; note?: string | null; warnings?: unknown[] | null }[];
 }
 
@@ -35,7 +37,7 @@ export async function getProposals(tripId: string, language: Language): Promise<
   const body = await api<{ proposals?: ServerProposal[] }>(`/v1/web/trips/${encodeURIComponent(tripId)}/proposals`, language);
   return (body.proposals ?? []).map((row) => ({
     id: row.proposal_id, itemId: row.item_id, baseVersion: row.base_version, reason: row.reason, status: row.status,
-    safety: Boolean(row.safety), expiresAt: row.expires_at ?? null,
+    safety: Boolean(row.safety), expiresAt: row.expires_at ?? null, chosenKey: row.chosen_key ?? null,
     // ★An option without a name is dropped: there is nothing true to show for it.
     options: (row.options ?? []).filter((option) => option.name).map((option) => ({
       key: option.key, rank: option.rank ?? null, name: option.name as string, startsAt: option.starts_at ?? null,
@@ -125,6 +127,20 @@ export interface Notice {
   rollback: { baseVersion: number; toVersion: number; requestId: string } | null;
   /** `[2026-10-06]` A safety alert's guidance (what to follow, where to go); null on any other notice. */
   safety: SafetyGuidance | null;
+  /**
+   * `[2026-10-23 ST4F-723]` What the notice changed, 「무엇 → 무엇」 (server `changed`, contract `rest-endpoints/web-access.md` 「알림 목록의 `changed`」) — null when it changed no stop by name
+   * (registration, guidance, a choice, a safety alert, an undo, 「끝났어요」 …). One row per stop: a watch batch changes several in one notice.
+   */
+  changed: NoticeChange[] | null;
+}
+
+/** One stop a notice changed: the stop before (`itemId`) and after (`newItemId` — only a picked proposal's notice carries it), the names, when it starts (Seoul). Only what the server wrote. */
+export interface NoticeChange {
+  itemId: string | null;
+  newItemId: string | null;
+  from: string | null;
+  to: string | null;
+  at: string | null;
 }
 
 interface ServerNotice {
@@ -132,6 +148,16 @@ interface ServerNotice {
   proposal_id?: string | null; delivery: string; at: string;
   rollback?: { base_version?: unknown; to_version?: unknown; request_id?: unknown } | null;
   safety?: unknown;
+  changed?: unknown;
+}
+
+const named = (value: unknown) => typeof value === "string" && value ? value : null;
+
+function changedOf(raw: unknown): Notice["changed"] {
+  if (!Array.isArray(raw)) return null;
+  const rows = raw.flatMap((row): NoticeChange[] => row && typeof row === "object"
+    ? [{ itemId: named(row.item_id), newItemId: named(row.new_item_id), from: named(row.from), to: named(row.to), at: named(row.at) }] : []);
+  return rows.some((row) => row.from || row.to) ? rows : null;
 }
 
 function rollbackOf(raw: ServerNotice["rollback"]): Notice["rollback"] {
@@ -147,6 +173,7 @@ export async function getNotices(tripId: string, language: Language): Promise<No
     version: row.version ?? null, proposalId: row.proposal_id ?? null, delivery: row.delivery, at: row.at,
     rollback: rollbackOf(row.rollback),
     safety: guidanceOf(row.safety),
+    changed: changedOf(row.changed),
   }));
 }
 
@@ -179,7 +206,7 @@ export async function setGuardian(tripId: string, enabled: boolean, via: Guardia
  * The server refuses with 409 `already_decided` / `stale` when someone (or a newer version) got there first —
  * those come back as a `LiveError` with the server's code.
  */
-export function chooseProposal(tripId: string, proposalId: string, key: string | null, language: Language): Promise<{ status?: string }> {
+export function chooseProposal(tripId: string, proposalId: string, key: string | null, language: Language): Promise<{ status?: string; version?: number }> {
   return api(`/v1/web/trips/${encodeURIComponent(tripId)}/proposals/${encodeURIComponent(proposalId)}/choose`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }),
   });
@@ -249,8 +276,9 @@ export async function mapLoad(language: Language): Promise<MapLoad> {
 /**
  * Undo an automatic change (`POST /v1/web/trips/{id}/rollback`). The server answers 409 when the trip has already moved
  * to another version — that comes back as a `LiveError`; nothing changed. The same `requestId` sent twice is one undo.
+ * `[2026-10-22 ST4F-723]` The server's own sentence about it is `notice.text` (「… 되돌렸어요.」, `trip_desk` rollback) — there is no `answer`.
  */
-export function undoChange(tripId: string, rollback: NonNullable<Notice["rollback"]>, language: Language): Promise<{ status?: string; answer?: string }> {
+export function undoChange(tripId: string, rollback: NonNullable<Notice["rollback"]>, language: Language): Promise<{ status?: string; answer?: string; version?: number; notice?: { text?: string } }> {
   return api(`/v1/web/trips/${encodeURIComponent(tripId)}/rollback`, language, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ request_id: rollback.requestId, base_version: rollback.baseVersion, to_version: rollback.toVersion }),

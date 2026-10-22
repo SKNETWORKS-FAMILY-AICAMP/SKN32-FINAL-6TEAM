@@ -1,46 +1,74 @@
-/* `[2026-10-07 사용자 결정 — 목업 C안 ① 알림 센터]` The body of the notice center: 「할 일」 cards, then three tabs over one list (mockup `tripilot-registered-c-attention.html` .act · .tabs · .aRow · .tag).
-   Colours are the shared roles of `styles/tokens.css`. */
+/* `[2026-10-07 사용자 결정 — 목업 C안 ① 알림 센터]` The body of the notice center. `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ]` Three tabs at the top (할 일 · 소식 · 공지) over one panel;
+   the cards are the chat's (`trip-chat.module.css` .card · .notice — mockup `guguroute-notice-center-2026-10-22.html` ⓑ). Colours are the shared roles of `styles/tokens.css`. */
 .wrap { display: grid; gap: 10px; }
-.tasks { display: grid; gap: 10px; }
-.secTitle { margin: 0; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+.panel { display: grid; gap: 10px; }
+.secTitle { margin: 6px 0 0; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
 .empty { margin: 2px 0 6px; font-size: 13px; color: var(--color-muted); }
 
-/* A task: a choice the server waits for (warning tone), an automatic change (info tone). */
+/* A task that is not a notice card: waiting for alternatives (info tone), going on after a disaster (safety tone). */
 .act { padding: 12px 14px; border: 1px solid var(--color-warning-border); border-radius: 14px; background: var(--color-warning-soft); }
 .act[data-tone="info"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
 /* `[2026-10-17 ST4F-606]` 재난 뒤 이어가기 한 장짜리 카드 */
 .act[data-tone="safety"] { border-color: var(--color-error-border); background: var(--color-error-soft); }
 .act h4 { margin: 0; font-size: 14px; font-weight: 750; }
 .act p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); overflow-wrap: anywhere; }
-.choice + .choice { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-warning-border); }
-.act .what { font-weight: 700; color: var(--color-text); }
 .options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.optionWarning { display: block; font-size: 10px; font-weight: 400; opacity: 0.85; margin-top: 2px; }
-.act .meta { font-size: 11.5px; color: var(--color-muted); }
-.link { padding: 0; border: 0; background: none; color: var(--color-selected); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .said { margin: 0; font-size: 12.5px; color: var(--color-text-secondary); }
 .error { padding: 11px 14px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 12px; line-height: 1.8; }
 
+/* A choice in 「할 일」: the notice card and the chat's alternatives card under it, one focus target. */
+.pair { display: grid; gap: 6px; outline: none; }
+/* The stop a notice is about, with 「상세 보기」 */
+.stop { display: flex; align-items: center; gap: 7px; margin: 8px 12px 0; padding: 7px 6px 7px 10px; border-radius: 10px; background: var(--color-subtle); font-size: 13px; }
+.stop span { display: grid; min-width: 0; line-height: 1.35; }
+.stop b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stop small { color: var(--color-muted); font-size: 11.5px; }
+.go { flex: none; display: inline-flex; align-items: center; gap: 2px; min-height: 36px; margin-left: auto; padding: 0 4px 0 8px; border: 0; background: none; color: var(--color-primary); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+/* A long safety alert or guide: a few lines until 「더 보기」 */
+.clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
+.more { margin: -6px 12px 8px; padding: 0; border: 0; background: none; color: var(--color-primary); font: inherit; font-size: 12px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+/* Every notice of one proposal, folded */
+.flow { padding: 0 12px; border-top: 1px solid var(--color-divider); }
+.flow summary { display: flex; align-items: center; gap: 6px; min-height: 36px; list-style: none; font-size: 12px; color: var(--color-muted); cursor: pointer; }
+.flow summary::-webkit-details-marker { display: none; }
+.flow[open] summary svg { transform: rotate(180deg); }
+.flow ol { display: grid; gap: 8px; margin: 0; padding: 0 0 10px; list-style: none; }
+.flow li { position: relative; padding-left: 14px; font-size: 12.5px; line-height: 1.6; color: var(--color-text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.flow li::before { content: ""; position: absolute; left: 2px; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--color-border-strong); }
+.flow li b { display: block; color: var(--color-muted); font-size: 11.5px; }
+.more:focus-visible, .go:focus-visible, .flow summary:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
 /* The three tabs stay at the top of the scrolling body. */
-.tabs { position: sticky; z-index: 1; top: -12px; display: flex; gap: 4px; margin: 6px 0 0; padding: 4px; border-radius: 12px; background: var(--color-subtle); box-shadow: 0 -10px 0 4px var(--color-surface); }
-.tabs button { position: relative; flex: 1; min-height: 36px; padding: 0 6px; border: 0; border-radius: 9px; background: none; color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.tabs { position: sticky; z-index: 2; top: -12px; display: flex; gap: 4px; margin: 0; padding: 4px; border-radius: 12px; background: var(--color-subtle); box-shadow: 0 -10px 0 4px var(--color-surface); }
+.tabs button { position: relative; flex: 1; min-height: 38px; padding: 0 6px; border: 0; border-radius: 9px; background: none; color: var(--color-muted); font: inherit; font-size: 13px; font-weight: 750; white-space: nowrap; cursor: pointer; }
 .tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px color-mix(in srgb, var(--color-text) 12%, transparent); }
 .tabs button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 1px; }
+.count { margin-left: 1px; font-variant-numeric: tabular-nums; }
+/* 「할 일」's count while something waits for an answer */
+.count[data-hot] { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--color-warning); color: var(--color-surface); font-size: 11px; }
 .unread { display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--color-error); vertical-align: middle; }
+
+/* 「소식」: date heads that stay while their day scrolls, the cards under them */
+.day { display: grid; gap: 8px; }
+.dayHead { position: sticky; z-index: 1; top: 34px; margin: 4px -16px 0; padding: 5px 18px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); font-size: 12px; font-weight: 750; color: var(--color-muted); }
+.day [data-flash] { animation: flash 1.6s ease-out 1; }
+@keyframes flash { 0%, 30% { box-shadow: 0 0 0 3px var(--color-selected); } 100% { box-shadow: 0 0 0 3px transparent; } }
+@media (prefers-reduced-motion: reduce) { .day [data-flash] { animation: none; box-shadow: 0 0 0 2px var(--color-selected); } }
+/* A version no notice told about: a small line */
+.version { padding: 8px 12px; border: 1px dashed var(--color-border); border-radius: 12px; font-size: 12.5px; color: var(--color-text-secondary); }
+.version p { display: flex; align-items: center; gap: 6px; margin: 0; }
+.version time { margin-left: auto; font-size: 11px; color: var(--color-faint); }
+.version .remedy { display: block; margin-top: 4px; }
 
 /* `[2026-10-17 ST4F-606]` 「공지」 탭 — 운영 앱 공지(배너와 같은 모양) · 끝에 공지사항 게시판으로 */
 .service { padding: 12px 2px 4px; }
 .service > * + * { margin-top: 12px; }
 .toBoard { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 700; color: var(--color-primary); text-decoration: none; }
+/* What the server found at registration (「살펴볼 점」) */
 .list { list-style: none; margin: 0; padding: 0; }
 .list li { padding: 12px 2px; border-top: 1px solid var(--color-divider); font-size: 13.5px; line-height: 1.5; }
 .list li:first-child { border-top: 0; }
 .list p { margin: 4px 0 0; overflow-wrap: anywhere; }
-.list time { margin-left: 6px; font-size: 12px; color: var(--color-muted); }
-.list .remedy { font-size: 12.5px; color: var(--color-muted); }
+.remedy { font-size: 12.5px; color: var(--color-muted); }
 .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-size: 11.5px; font-weight: 750; }
-.tag[data-type="proposal_request"] { background: var(--color-warning-soft); color: var(--color-warning); }
-.tag[data-type="change_notice"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
-.tag[data-type="safety_alert"] { background: var(--color-error-soft); color: var(--color-error); }
-.tag[data-type="version"] { background: var(--color-subtle); color: var(--color-text-secondary); }
 .cut { margin: 10px 0 0; font-size: 11px; color: var(--color-muted); }

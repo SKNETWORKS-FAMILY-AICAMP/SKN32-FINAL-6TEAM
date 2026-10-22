@@ -143,7 +143,8 @@ def _line(outcome: Outcome) -> str:
     if outcome.kind == "unhandled":
         # ★`[2026-10-14]` 다시 시도하지 않는 실패(적용기 거절 · 모름 · 제안 검증 실패 · 시간 초과) — 다시 확인하겠다고 약속하지 않는다. 내부 문구는 싣지 않고 코드만
         code = outcome.reasons[0] if outcome.reasons else outcome.kind
-        return (f"{title} — {why}. 자동으로 처리하지 못해 **일정은 그대로 두었어요.** "
+        # ★`[2026-10-23 사용자 지시 — ST4F-723]` 고객 문장에 마크다운 별표를 넣지 않는다(아래 둘도) — 웹 알림이 `**…**` 를 그대로 보였다
+        return (f"{title} — {why}. 자동으로 처리하지 못해 일정은 그대로 두었어요. "
                 f"확인 시각: {outcome.checked_at}, 오류 코드: {code}.")
     if outcome.kind == "applied":
         change = outcome.change
@@ -160,8 +161,8 @@ def _line(outcome: Outcome) -> str:
     if outcome.kind == "consent":
         return f"{title} — {why}. 바꿀지 따로 여쭤봤어요."
     if outcome.kind == "recheck_failed":
-        return f"{title} — {why}. 바꿀 곳을 찾았지만 일정 전체와 맞지 않아 **일정은 그대로 두었어요.**"
-    return f"{title} — {why}. 대신 갈 수 있는 곳을 찾지 못해 **일정은 그대로 두었어요.**"       # no_alternate
+        return f"{title} — {why}. 바꿀 곳을 찾았지만 일정 전체와 맞지 않아 일정은 그대로 두었어요."
+    return f"{title} — {why}. 대신 갈 수 있는 곳을 찾지 못해 일정은 그대로 두었어요."       # no_alternate
 
 
 #: 고객에게 말할 결과 — 안 바꿨거나 못 푼 것까지(바꾸지 않는 것과 알림을 끄는 것은 별개다)

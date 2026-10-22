@@ -33,7 +33,7 @@ export const guideSteps: readonly GuideStep[] = [
     detail: ["시간과 장소를 고치고 다시 확인한 뒤 여행으로 등록해요.", "Adjust times and places, check again, then register it as your trip."], chip: ["확인 끝나면 바로 등록", "Registered once checked"] },
   { shot: "5-trip", area: [24, 778, 756, 1565], fill: "#ffffff", title: ["내 여행 한눈에 보기", "See your trip at a glance"],
     detail: ["일차별 일정과 지도, 이동을 한 화면에서 봐요.", "Each day’s stops, the map and the travel between them on one screen."], chip: ["일정 · 이동 한눈에", "Stops and travel at a glance"] },
-  { shot: "6-notices", area: [44, 248, 736, 805], fill: "#fbf7ec", title: ["여행 중에도 지켜보기", "Watched during the trip"],
+  { shot: "6-notices", area: [34, 278, 746, 948], fill: "#fbf7ec", title: ["여행 중에도 지켜보기", "Watched during the trip"],
     detail: ["휴무 · 날씨 · 재난이 생기면 알리고 대안을 먼저 물어봐요. 항로 지킴이를 켜면 알아서 고쳐요.", "If a place closes or the weather or a disaster hits, we tell you and ask first. Turn on the Course Keeper to let it fix things."],
     chip: ["문제 생기면 먼저 묻기", "We ask first when it changes"],
     withoutGuardian: ["휴무 · 날씨 · 재난이 생기면 알리고 대안을 먼저 물어봐요.", "If a place closes or the weather or a disaster hits, we tell you and ask first."] },

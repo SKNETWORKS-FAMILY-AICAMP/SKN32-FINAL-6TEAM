@@ -127,10 +127,13 @@ test("모든 로고는 홈 첫 장으로 돌아오고, 여정 화면 헤더에�
   await expect(page.locator("#intro-title")).toBeInViewport();
 
   // `[2026-10-13 사용자 결정]` 계획 담기 머리에는 메뉴 옆에 언어 지구본이 있다(그 뒤 화면은 메뉴만).
-  for (const [path, buttons] of [["/trips/new", ["언어 · 한국어", "메뉴"]], ["/trips", ["메뉴"]]] as const) {
+  // `[2026-10-22 사용자 결정 — ST4F-717]` 계획 담기 머리에는 지구본 옆 「이용 방법」 (?) 링크도 있다(`HelpButton`) — 여행 목록에는 없다.
+  for (const [path, links, buttons] of [["/trips/new", ["구구루트 — 소개 화면으로 돌아가기", "이용 방법"], ["언어 · 한국어", "메뉴"]],
+    ["/trips", ["구구루트 — 소개 화면으로 돌아가기"], ["메뉴"]]] as const) {
     await page.goto(path);
     const banner = page.getByRole("banner");
-    await expect(banner.getByRole("link")).toHaveCount(1);
+    await expect(banner.getByRole("link")).toHaveCount(links.length);
+    for (const name of links) await expect(banner.getByRole("link", { name, exact: true })).toBeVisible();
     await expect(banner.getByRole("button")).toHaveCount(buttons.length);
     for (const name of buttons) await expect(banner.getByRole("button", { name, exact: true })).toBeVisible();
     await banner.getByRole("link", { name: "구구루트 — 소개 화면으로 돌아가기" }).click();

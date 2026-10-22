@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { controlsLayout } from "./map-controls";
+import { controlsLayout, locatePlace } from "./map-controls";
 import { distanceM, edgeChips, formatDistance, metersPerPixel, niceScale, toPixels, type EdgeChip } from "./map-geometry";
 import type { MapPoint, MapView } from "./model";
 
@@ -120,6 +120,22 @@ describe("controlsLayout", () => {
     expect(controlsLayout({ width: 390, height: 90 }, 64, 4)).toBe("tab");
     expect(controlsLayout({ width: 200, height: 260 }, 64, 4)).toBe("tab");                              // not even a row fits across
     expect(controlsLayout({ width: 0, height: 0 }, 64, 4)).toBe("column");                              // not measured yet
+  });
+  // `[2026-10-22 ST4F-721]` 「내 위치로」 stands apart at the bottom right: the group is ＋ − 「모든 일정 보기」 and leaves room above the sheet for it.
+  it("leaves 「내 위치로」 its room above the sheet", () => {
+    expect(controlsLayout({ width: 375, height: 364 }, 64, 3, 24)).toBe("column");                       // 64 + 12 + 44 + 3 × 52 + 12 + 8 + 44 + 24
+    expect(controlsLayout({ width: 375, height: 363 }, 64, 3, 24)).toBe("row");                          // one px short: the column would reach the button
+    expect(controlsLayout({ width: 375, height: 207 }, 64, 3, 24)).toBe("tab");                          // a row needs 64 + 44 + 24 + 8 + 44 + 24
+  });
+});
+
+describe("locatePlace", () => {
+  it("is the bottom right corner while it fits under the fold tab, and beside the tab on a low map", () => {
+    expect(locatePlace({ width: 375, height: 392 }, 64, 24)).toBe("corner");
+    expect(locatePlace({ width: 375, height: 208 }, 64, 24)).toBe("corner");                              // 64 + 12 + 44 + 8 + 44 + 12 + 24
+    expect(locatePlace({ width: 375, height: 207 }, 64, 24)).toBe("beside");
+    expect(locatePlace({ width: 375, height: 84 }, 64, 24)).toBe("beside");                               // the list opened all the way
+    expect(locatePlace({ width: 0, height: 0 }, 64, 24)).toBe("corner");                                  // not measured yet
   });
 });
 
