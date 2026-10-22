@@ -11,6 +11,7 @@ import { useT } from "@/lib/settings";
 import { isGuess, MODE_NAMES, rideLines } from "@/features/map/route-lines";
 import { freeText } from "@/features/plan-check/day-times";
 import pc from "@/features/plan-check/plan-check.module.css";
+import sq from "@/features/plan-check/stop-question.module.css";
 import { kindLook } from "@/features/plan-check/stop-kind";
 import { placeLinks, placeTarget, routeLinks, routeTarget, type MapTarget } from "./map-apps";
 import type { OpenChoice } from "./attention";
@@ -88,6 +89,12 @@ export function trialLiveText(stop: TripStop, t: Translate, now: number = Date.n
   return [...said, minutes < 1 ? t("방금 확인", "checked just now") : t(`${minutes}분 전 확인`, `checked ${minutes} min ago`)].join(" · ");
 }
 
+/** `[2026-10-22 ST4F-716]` What the stop going on now carries (`StopRow` `live`): `asking` — 「끝났어요」 was pressed and the question is open; `busy` — a report is on its way. */
+export interface LiveControls {
+  asking: boolean; next: TripStop | null; fixed: boolean; busy: boolean;
+  onStill: () => void; onDone: () => void; onAdvance: () => void; onKeep: () => void;
+}
+
 /**
  * `[2026-10-07 사용자 결정 — 목업 C안]` One stop of a registered trip, on the plan check's timeline: its time at the left (start, and `[2026-10-12]` always its end small under it; it stays at
  * the top of the list while the opened stop is in view) and its card.
@@ -101,18 +108,24 @@ export function trialLiveText(stop: TripStop, t: Translate, now: number = Date.n
  * `[2026-10-21 사용자 결정 — ST4F-704 D안]` `choice` (a choice the server waits for on this stop): the card is painted as the plan check's 「확인 필요」 and says 「선택이 필요해요 · 서버 문장」
  * above its 「주의」 line, then 「상세 보기에서 확인하세요」 — the choice is made on the stop's detail (the opened card's 「상세 보기」; a button of its own here was the same twice).
  * Not on a stop that is over (as 「주의」).
+ * `[2026-10-22 사용자 결정 — ST4F-716 · 목업 mockups/tripilot-trip-now-done.html]` `live` (the stop going on now — `stop-progress.ts`): the card is green with 「진행 중」 beside the name and,
+ * under its facts, 「아직 진행 중 | 끝났어요」 (still here is pressed to begin with). 「끝났어요」 asks 「다음 일정을 바로 진행할까요?」 in the card — 「바로 진행」 (the server re-times the
+ * way from now and moves the next stop; not offered for a booked or pinned next stop) · 「그대로 유지」 (only the end is recorded). The new times are the server's to say: the
+ * options say what happens, not when.
  */
-export function StopRow({ stop, open, selected, past = false, started = false, onToggle, onDetail, onMapApps, risk, onRisk, choice }: {
+export function StopRow({ stop, open, selected, past = false, started = false, onToggle, onDetail, onMapApps, risk, onRisk, choice, live = null }: {
   stop: TripStop; open: boolean; selected: boolean; past?: boolean; started?: boolean;
   onToggle: () => void; onDetail: () => void; onMapApps: (target: MapTarget) => void;
   risk?: ItemRisk; onRisk?: () => void;
   choice?: OpenChoice;
+  live?: LiveControls | null;
 }) {
   const t = useT();
   const id = `trip-stop-${stop.id}`;
   const timeFocused = open || selected;
   const stay = isStay(stop);
-  const hasTags = stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
+  const now = past ? null : live;
+  const hasTags = !!now || stop.booking === "booked" || stop.pinned || stop.paused || !!stop.badges?.length;
   const kind = kindLook(stop.kind);
   const KindIcon = kind.icon;
   const kindName = stop.kindLabel ?? t(kind.label[0], kind.label[1]);
@@ -125,19 +138,22 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
   const place = stopPlaceNote(stop);
   // `[2026-10-13]` A stay's end is on its check-out day — it is not this day's end, so the line does not read it (`data-end`).
   return <li className={`${pc.entry} ${styles.stopEntry}`} data-type="item" data-entry-id={stop.id} data-time-focused={timeFocused || undefined} data-time-follow={open || undefined} data-selected={selected || undefined} data-paused={stop.paused || undefined}
-    data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-rail-open={open || undefined} data-past-open={past || undefined} data-passed={started || undefined} data-verdict={ask ? "review" : undefined}>
+    data-rail="stay" data-start={stop.time} data-end={(!stay && stop.endTime) || undefined} data-rail-open={open || undefined} data-past-open={past || undefined} data-passed={started || undefined} data-verdict={ask ? "review" : undefined}
+    data-live={now ? "" : undefined}>
     <span className={pc.time}><span className={pc.timeStack}><time data-stop-start>{stop.time}</time><time className={pc.rangeEnd} data-stop-end>{stay
       // `[2026-10-15 ST4F-498]` 「~10/4 11:00」 on one line ran out of the time column (left of the sheet): the day, then the time.
       ? <>~{monthDay(stop.endDate!)}<br /> {stop.endTime || "—"}</>
       : `~${stop.endTime || "—"}`}</time></span></span>
     <span className={pc.rail} aria-hidden="true"><span className={`${pc.dot} ${styles.stopDot}`} data-stay={stay || undefined} /></span>
-    <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-stay={stay || undefined} data-open={open || undefined} aria-labelledby={`${id}-title${stay ? ` ${id}-stay` : ""}`}>
+    <article id={`trip-card-${stop.id}`} className={`${pc.card} ${styles.stopCard}`} data-stay={stay || undefined} data-open={open || undefined} data-live={now ? "" : undefined}
+      aria-labelledby={`${id}-title${stay ? ` ${id}-stay` : ""}`}>
       <div className={`${pc.cardTop} ${styles.stopHead}`}>
         <button type="button" className={`${pc.cardHead} ${styles.stopToggle}`} id={`stop-button-${stop.id}`} aria-expanded={open} aria-controls={`stop-detail-${stop.id}`} onClick={onToggle}>
           <span className={styles.stopName}>
             <span className={styles.stopKind} role="img" aria-label={kindName} title={kindName}><KindIcon size={18} strokeWidth={1.8} aria-hidden="true" /></span>
             <strong id={`${id}-title`} className={pc.cardTitle}>{stop.title}</strong>
             {hasTags && <span className={styles.stopTags}>
+              {now && <span className={`${pc.pill} ${styles.livePill}`} data-live-pill>{t("진행 중", "In progress")}</span>}
               {stop.badges?.map((badge) => <span className={pc.pill} key={badge.code}>{badge.label}</span>)}
               {stop.booking === "booked" && <span className={pc.pill} data-booked>{bookingLabel(stop, t)}</span>}
               {stop.pinned && <span className={pc.pill}>{t("고정한 일정", "Pinned")}</span>}
@@ -160,6 +176,24 @@ export function StopRow({ stop, open, selected, past = false, started = false, o
         {past && <span className={`${pc.pill} ${styles.stopPast}`} data-state="past">{t("지난 일정", "Past")}</span>}
         <button type="button" className={styles.toggleEnd} onClick={onToggle} tabIndex={-1} aria-hidden="true" data-toggle-mark><span className={styles.toggleMark}>{open ? "−" : "+"}</span></button>
       </div>
+      {now && <div className={styles.liveRow} role="group" aria-label={t(`${stop.title} 진행 상태`, `How ${stop.title} is going`)} data-live-row={stop.id}>
+        <button type="button" aria-pressed={!now.asking} disabled={now.busy} onClick={now.onStill}>{t("아직 진행 중", "Still here")}</button>
+        <button type="button" aria-pressed={now.asking} disabled={now.busy} onClick={now.onDone} data-done>{t("끝났어요", "I'm done")}</button>
+      </div>}
+      {now?.asking && now.next && <div className={styles.liveAsk} role="group" aria-label={t("다음 일정", "Next stop")} data-live-ask={stop.id}>
+        <p className={sq.question}>{t("다음 일정을 바로 진행할까요?", "Start the next stop now?")}</p>
+        <div className={sq.options}>
+          <button type="button" className={sq.option} aria-disabled={now.fixed || undefined} disabled={now.busy} onClick={now.fixed ? undefined : now.onAdvance}>
+            <span className={sq.optionTop}>{t("바로 진행", "Start now")}</span>
+            <span className={sq.line}>{now.fixed ? t("예약한 일정이라 시각을 바꾸지 않아요", "A booked stop keeps its time")
+              : t(`${now.next.title} 원래 ${now.next.time} · 지금 출발로 이동 시간을 서버가 다시 계산해 앞당겨요`, `${now.next.title} was ${now.next.time} · the server re-times the way from now`)}</span>
+          </button>
+          <button type="button" className={sq.option} disabled={now.busy} onClick={now.onKeep}>
+            <span className={sq.optionTop}>{t("그대로 유지", "Keep as planned")}</span>
+            <span className={sq.line}>{t(`${now.next.title} ${now.next.time} 시작 그대로 · 끝난 시각만 기록`, `${now.next.title} still starts ${now.next.time} · only the end is recorded`)}</span>
+          </button>
+        </div>
+      </div>}
       {/* `[2026-10-21 사용자 지시]` 줄 안 「상세 보기」 단추는 뺐다 — 펼친 카드의 「상세 보기」와 겹쳤다. 고르는 곳은 안내 한 줄로 */}
       {ask && <div className={styles.stopAsk} data-stop-ask={stop.id}>
         <p><b>{t("선택이 필요해요", "Your choice is needed")}</b> · {ask.text ?? t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>

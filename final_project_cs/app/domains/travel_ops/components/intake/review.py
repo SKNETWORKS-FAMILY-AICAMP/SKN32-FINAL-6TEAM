@@ -66,6 +66,14 @@ def gwa(word: str) -> str:
     return word + ("과" if _jong(word) else "와")
 
 
+def eun(word: str) -> str:
+    return word + ("은" if _jong(word) else "는")
+
+
+def iga(word: str) -> str:
+    return word + ("이" if _jong(word) else "가")
+
+
 def _line(row: str, result: str, text: str) -> dict[str, str]:
     return {"row": row, "result": result, "text": text}
 

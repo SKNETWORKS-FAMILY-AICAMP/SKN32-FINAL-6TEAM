@@ -441,6 +441,15 @@ class RollbackIn(BaseModel):
     message: str | None = None
 
 
+class ProgressIn(BaseModel):
+    """`[2026-10-22 ST4F-716]` 여행 화면 「끝났어요」 — 「바로 진행」(`advance_trip`) · 「그대로 유지」(`complete_item`)."""
+    model_config = ConfigDict(extra="forbid")
+    request_id: str = Field(min_length=1)
+    base_version: int = Field(ge=1)
+    item_id: UUID
+    action: Literal["advance_trip", "complete_item"]
+
+
 def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
     """등록 요청 안의 장소를 판정기가 읽는 모양으로. 저장 전이라 DB 를 보지 않는다."""
     if key is None:
@@ -2170,6 +2179,40 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return _outcome(_desk(store).rollback(
             trip_id=trip_id, base_version=request.base_version, to_version=request.to_version,
             message=request.message, request_id=request.request_id))
+
+    @router.post("/v1/web/trips/{trip_id}/progress")
+    def web_progress(trip_id: UUID, request: ProgressIn, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-22 사용자 결정 — ST4F-716]` 여행 화면 「끝났어요」 — 진행 중인 일정을 지금 끝내고 다음 일정을 지금 출발로 앞당기거나
+        (`advance_trip`, 「바로 진행」) 끝난 시각만 기록한다(`complete_item`, 「그대로 유지」). 채팅 진행 보고와 **같은 저장 경로**
+        (`journey_progress.apply` — 이동 재계산 · 운영시간 확인 · 새 판 · 알림)이고 모델을 안 거친다. 그 사용자 본인의 여행만,
+        대상은 오늘 이미 시작한 방문 일정만(아니면 409 `progress_not_current`). 계약 `wiki/actions/journey-progress.md` 「웹 진행 단추」."""
+        from app.domains.travel_ops.components.conversation.decision_unit import Decision
+        from app.domains.travel_ops.components.conversation.journey_progress import apply as apply_progress
+        from app.domains.travel_ops.components.itinerary.itinerary import StaleItinerary
+
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+            _, items = store.latest(conn, trip_id)
+        target = next((i for i in items if i.item_id == request.item_id and i.kind != "mobility"), None)
+        if target is None:
+            raise _error(404, "progress_target_not_found", "그 일정을 찾지 못했어요 — 새로 불러와 주세요")
+        now = datetime.now(KST)
+        if target.starts_at.astimezone(KST).date() != now.date() or target.starts_at > now:
+            raise _error(409, "progress_not_current", "오늘 이미 시작한 일정만 끝낼 수 있어요")
+        _count("message", tenant, customer, http)
+        decision = Decision(action=request.action, item=target, change=None, fact="", minutes=None, question="")
+        try:
+            return apply_progress(store=store, connect=get_connection, trip_id=trip_id, base_version=request.base_version,
+                                  decision=decision, now=now, request_id=request.request_id,
+                                  message=f"웹 「끝났어요」 · {request.action}")
+        except StaleItinerary:
+            with get_connection() as conn:
+                trip, _ = store.latest(conn, trip_id)
+            raise _error(409, "stale_itinerary", "그 사이 일정이 바뀌었어요 — 새로 불러와 주세요", version=trip["version"]) from None
+        except ValueError:
+            raise _error(404, "progress_target_not_found", "그 일정을 찾지 못했어요 — 새로 불러와 주세요") from None
 
     @router.post("/v1/web/trips/{trip_id}/reopen")
     def web_trip_reopen(trip_id: UUID, request: ReopenIn, who: tuple[str, UUID] = Depends(_web_customer)):

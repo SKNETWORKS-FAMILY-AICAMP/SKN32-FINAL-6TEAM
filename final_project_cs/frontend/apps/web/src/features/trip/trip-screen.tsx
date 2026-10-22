@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bell, ChevronDown, ChevronsRight, OctagonAlert, Pencil } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { OverlayRoot } from "@/components/layout/overlay-root";
@@ -31,13 +31,14 @@ import type { Language, Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, type BusToast } from "@/lib/toast-bus";
 import { browserNotify } from "@/lib/browser-notify";
-import type { Notice, Proposal } from "@/lib/live/extras";
+import { reportProgress, type Notice, type Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
 import { MapAppsSheet, type MapTarget } from "./map-apps";
 import { LegRow, legSummary, PastLegRow, PastStopRow, StayRow, StopRow } from "./trip-rows";
 import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
+import { liveStop, ownNotice, progressToast } from "./stop-progress";
 import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
@@ -452,6 +453,30 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     void queryClient.invalidateQueries({ queryKey: proposalsKey(trip.id, language) });
     void queryClient.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
   };
+  // ── `[2026-10-22 사용자 결정 — ST4F-716]` 「끝났어요」 on the stop going on now: the server ends it now and, for 「바로 진행」, re-times the way and moves the next stop
+  // (`journey_progress` — the hours of the next stop checked first). The list is greyed until it answers (the plan check's 「서버로 전송중입니다.」 veil); what came of it is the
+  // server's sentence in the notice bar, and the trip is read again. ──
+  const [asking, setAsking] = useState<string | null>(null);
+  // `[2026-10-22 사용자 결정 — A]` The versions this device's reports wrote: their change notice is not barred again over the result toast (`ownNotice`). The server writes the
+  // base version + 1, and its notice can come in before the answer — so that version is held from the press, and put right (or dropped) when the answer comes.
+  const ownVersions = useRef(new Set<number>());
+  const progress = useMutation({
+    mutationFn: (report: { stop: TripStop; action: "advance_trip" | "complete_item"; requestId: string; expected: number }) =>
+      reportProgress(trip.id, { requestId: report.requestId, baseVersion: report.expected - 1, itemId: report.stop.id, action: report.action }, language),
+    onSuccess: (result, report) => {
+      if (result.version !== report.expected) ownVersions.current.delete(report.expected);
+      if (result.version !== undefined) ownVersions.current.add(result.version);
+      setAsking(null);
+      showToast(progressToast(result, t));
+    },
+    onError: (error, report) => { ownVersions.current.delete(report.expected); showToast({ text: error.message, stay: true }); },
+    onSettled: refresh,
+  });
+  const finish = (stop: TripStop, action: "advance_trip" | "complete_item") => {
+    const expected = (trip.version ?? 1) + 1;
+    ownVersions.current.add(expected);
+    progress.mutate({ stop, action, requestId: crypto.randomUUID(), expected });
+  };
   const resumed = (brief: Recovery | null) => {
     queryClient.setQueryData(recoveryKey(trip.id, language), brief);
     showToast({ text: t("일정을 다시 시작했어요", "The itinerary is running again"), sub: brief ? t("재난 뒤 이어가기에서 어떻게 이어갈지 골라 주세요.", "Choose how to go on under 「Going on after the disaster」.") : undefined });
@@ -540,6 +565,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
   const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
+    // `[2026-10-22 사용자 결정 — A]` 이 기기에서 누른 「끝났어요」의 변경 알림은 막대로 다시 띄우지 않는다 — 결과 토스트가 이미 맞는 칩으로 말했다(알림 센터 · 다른 기기는 그대로)
+    if (ownNotice(notice, ownVersions.current)) return;
     const needsChoice = notice.type === "safety_alert" || notice.type === "proposal_request";
     // `[2026-10-21 사용자 결정 — 문서 기준]` 「알림 보기」는 받은 알림 탭을 연다(DEVELOPMENT.md 「새 알림 막대」). 선택이 필요한 알림은 넘겨서 그 대안 고르기가 위 「답이 필요해요」에 뜬다.
     const view = () => openCenter("notices", needsChoice ? notice : undefined);
@@ -593,6 +620,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     const times = entryTimes(entries, date, shapeNow);
     const live = times.findIndex((time) => time.state !== "past");
     const pastCount = live < 0 ? entries.length : live;
+    // `[2026-10-22 ST4F-716]` The stop going on now (green · 「아직 진행 중 | 끝났어요」) — not while the trip is paused for a disaster.
+    const going = trip.safety?.paused ? null : liveStop(entries, times);
     return <section key={date} aria-labelledby={`trip-day-${date}`}>
       <h3 id={`trip-day-${date}`} className={pc.day}><button type="button" className={pc.dayButton} aria-pressed={mapDay === date} onClick={() => showDay(date)}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button>
         {date === today && <em className={pc.todayTag}>{t("오늘", "Today")}</em>}</h3>
@@ -606,7 +635,14 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
                 past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps}
-                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} choice={choiceOf(entry.stop.id)} />;
+                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} choice={choiceOf(entry.stop.id)}
+                live={going?.stop.id === entry.stop.id ? {
+                  asking: asking === entry.stop.id, next: going.next, fixed: going.fixed, busy: progress.isPending,
+                  onStill: () => setAsking(null),
+                  // The day's last stop: nothing to start — only the end is recorded.
+                  onDone: () => going.next ? setAsking(entry.stop.id) : finish(entry.stop, "complete_item"),
+                  onAdvance: () => finish(entry.stop, "advance_trip"), onKeep: () => finish(entry.stop, "complete_item"),
+                } : null} />;
         }
         return past
           ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
@@ -728,6 +764,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
         </section>
         {/* `[2026-10-21 사용자 지시 — ST4F-704]` 서버가 대안을 찾는 동안 일정 칸을 회색으로 잠근다(계획 확인 「서버로 전송중입니다.」와 같은 막 · 같은 자리) */}
         {findingOptions && <div className={pc.sendingVeil} data-sending-veil><p role="status">{t("서버로부터 대안을 받고 있습니다.", "Getting alternatives from the server.")}</p></div>}
+        {/* `[2026-10-22 ST4F-716]` 「끝났어요」를 보내는 동안 — 계획 확인과 같은 막 · 같은 문장 */}
+        {progress.isPending && <div className={pc.sendingVeil} data-sending-veil><p role="status">{t("서버로 전송중입니다.", "Sending to the server.")}</p></div>}
       </div>
       {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
       {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}
