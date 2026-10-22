@@ -551,10 +551,28 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
   function openDetail(id: string) {
     const stop = trip.stops.find((entry) => entry.id === id);
     if (!stop) return;
+    detailFromChat.current = null;
     hideToast();
     closeTitle();
     setBarOpen(false);
     goPane("plan");
+    if (stop.date !== mapDay) showDay(stop.date);
+    setSelectedLine(null);
+    setSelectedId(id);
+    setDetailId(id);
+    if (sheet === "peek") setSheet("half");
+  }
+  /**
+   * `[2026-10-22 사용자 결정 — ST4F-719]` 「상세 보기」 on an answer card in the chat: the stop's detail over the sheet, as from the list, but the pane stays the chat — ← (or Esc) comes back to the
+   * conversation where it was (the hidden log loses its scroll, so it is kept here).
+   */
+  const detailFromChat = useRef<number | null>(null);
+  function openDetailFromChat(id: string) {
+    const stop = trip.stops.find((entry) => entry.id === id);
+    if (!stop) return;
+    hideToast();
+    closeTitle();
+    detailFromChat.current = chatLog.current?.scrollTop ?? 0;
     if (stop.date !== mapDay) showDay(stop.date);
     setSelectedLine(null);
     setSelectedId(id);
@@ -583,6 +601,12 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
     const id = detailId;
     setDetailId(null);
     if (!id) return;
+    const chatAt = detailFromChat.current;
+    if (chatAt !== null) {
+      detailFromChat.current = null;
+      requestAnimationFrame(() => { if (chatLog.current) { chatLog.current.scrollTop = chatAt; chatLog.current.focus({ preventScroll: true }); } });
+      return;
+    }
     setSelectedId(id);
     setOpenId(id);
     bringUp(id);
@@ -783,7 +807,8 @@ function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: 
                 </div>
               </div>
               <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="group" aria-label={t("채팅", "Chat")} inert={plan}>
-                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} selected={selected} logRef={chatLog} active={!plan} onPick={onEdit} />
+                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} dayHeading={(date) => `${dayName(days.indexOf(date), t)} ${dayLabel(date, language)}`} now={now}
+                  selected={selected} logRef={chatLog} active={!plan} onPick={onEdit} onDetail={openDetailFromChat} onMapApps={openMapApps} />
               </div>
             </div>
           </div>

@@ -139,6 +139,17 @@ export interface TripMessage {
   awaitingReply?: boolean;
   /** `[2026-10-19 사용자 결정]` The chat could not find the place it was asked for: 「직접 고르기」 opens the edit there (see `TripPick`). */
   pick?: TripPick;
+  /**
+   * `[2026-10-22 ST4F-719]` What the answer card needs, kept in this tab's copy only (the server's record has none of it but `focus`): the send's `status` (the heading badge); `minutes` — the
+   * server waits for 「몇 분」(`required_input_schema`), so the chips offer quick answers; `focusId` — the stop the answer is about (the chip pressed, else the record's `reply.focus`);
+   * `summaryDay` — the day a 「하루 요약」 was asked for; `steps` · `secs` — the stages the server went through and how long it took.
+   */
+  status?: string;
+  minutes?: boolean;
+  focusId?: string;
+  summaryDay?: string;
+  steps?: string[];
+  secs?: number;
 }
 
 /**
@@ -231,8 +242,9 @@ export interface TripGateway {
   /** `itemId` — the stop the customer picked on screen; the server uses it when the sentence does not name one. */
   /** `location`: where the customer is, from the browser, sent only after the server said the answer needs it. */
   /** `onProgress`: what the server is doing while it works on the message. */
+  /** `focusId`: the stop the answer will be about when the screen knows it (`[2026-10-22 ST4F-719]` the 「선택 일정」 · 「다음 일정」 chips) — kept with the answer for its card. */
   sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null,
-    onProgress?: (progress: OpProgress) => void, resume?: TripMessageResume, summaryDay?: string): Promise<Trip>;
+    onProgress?: (progress: OpProgress) => void, resume?: TripMessageResume, summaryDay?: string, focusId?: string | null): Promise<Trip>;
   /**
    * Delete one trip on the server, or reject with why it was not deleted. A server that has no delete call yet
    * rejects with a `LiveError` whose code is `delete_unsupported` (backend request 2026-10-03).

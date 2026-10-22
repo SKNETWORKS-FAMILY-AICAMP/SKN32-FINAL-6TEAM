@@ -61,7 +61,7 @@ export function bookingLabel(stop: TripStop, t: Translate) {
  * `[2026-10-13 사용자 결정 — 목업 A]` The place's hours on the day of the visit (one rule, or two for a split day), in the server's words; with no weekly table at all, the source's own
  * text. Null when the server said nothing for that day.
  */
-function visitHours(stop: TripStop): string | null {
+export function visitHours(stop: TripStop): string | null {
   const info = stop.placeInfo;
   if (!info) return null;
   const sunday0 = new Date(`${stop.date}T12:00:00+09:00`).getUTCDay();
