@@ -59,3 +59,22 @@ def test_alias_found_even_when_only_the_activity_ledger_has_the_row(ledger):
     first = found["results"][0]["place"]
     assert (first["name"], first["source"], first["content_id"]) == ("국립현대미술관 서울", "tour_api", "1934593")
     assert "area_unverified" not in found["notes"] and first["address"].startswith("서울")
+
+
+def test_alias_found_when_the_ledger_has_no_row_but_the_catalog_does(rv):  # noqa: F811
+    """☆`[2026-10-23]` x600 서버의 실제 모양 — 1934593 이 활동 원장에는 없고 관광공사 목록에만 있다. 시드 파일의 정식 제목으로 별칭이 통해야 한다."""
+    _catalog(rv, "1934593", "14", "국립현대미술관 서울", 37.5792, 126.9803, address="서울특별시 종로구 삼청로 30")
+    client, _, _ = _client(kakao=MmcaKakao())
+    found = _search(client, _key(client), "mmca%20서울")
+    first = found["results"][0]["place"]
+    assert (first["name"], first["source"], first["content_id"]) == ("국립현대미술관 서울", "tour_api", "1934593")
+
+
+def test_alias_not_used_when_the_ledger_row_is_delisted(ledger):
+    """폐지된 곳은 별칭으로 되살리지 않는다 — 원장에 행은 있으나 폐지 표시면 카카오 결과만 나온다."""
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE activity.ac_place SET delisted_at = now() WHERE content_id = '1934593'")
+    _catalog(ledger, "1934593", "14", "국립현대미술관 서울", 37.5792, 126.9803, address="서울특별시 종로구 삼청로 30")
+    client, _, _ = _client(kakao=MmcaKakao())
+    found = _search(client, _key(client), "mmca%20서울")
+    assert [r["place"]["source"] for r in found["results"]][:1] == ["kakao"]
