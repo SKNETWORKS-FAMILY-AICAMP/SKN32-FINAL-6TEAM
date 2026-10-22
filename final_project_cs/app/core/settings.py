@@ -655,15 +655,15 @@ def trip_now_label_enabled() -> bool:
 
 
 def trip_risk_panel_enabled() -> bool:
-    """여행 화면 일정 목록 위의 위험 점검 칸을 보이나 — 가드레일 `travel.trip_screen.risk_panel_enabled`. ★기본 켜짐.
+    """여행 화면 일정 목록 위 · 계획 확인 화면의 위험 점검 칸을 보이나 — 가드레일 `travel.trip_screen.risk_panel_enabled`. ★기본 꺼짐.
 
-    `[2026-10-22 사용자 지시]` 3분 점검 · 재난 경고가 반영되는지 시험 중에 보려고 둔 칸이라 켜 두고 배포 · 시연 때 관리 콘솔에서 끈다.
-    가드레일을 못 읽으면 정한 기본(켜짐)으로 둔다 — 끄는 것은 `false` 로 명시한 경우뿐이다.
+    `[2026-10-22 사용자 지시]` 3분 점검 · 재난 경고가 반영되는지 시험 중에 보려고 둔 칸이라 기본은 꺼 두고 시험 때 관리 콘솔에서 켠다.
+    가드레일을 못 읽어도 **꺼짐**이다 — 켜는 것은 `true` 로 명시한 경우뿐이다.
     """
     try:
-        return get_guardrails().get("travel.trip_screen.risk_panel_enabled") is not False
+        return get_guardrails().get("travel.trip_screen.risk_panel_enabled") is True
     except ConfigError:
-        return True
+        return False
 
 
 def guardian_enabled() -> bool:

@@ -150,10 +150,11 @@ TRIP_RISK_PANEL = "travel.trip_screen.risk_panel_enabled"
 
 
 def trip_risk_panel_enabled(tenant_id: str) -> bool:
-    """여행 화면 일정 목록 위에 위험 점검 칸을 보이나. `[2026-10-22 사용자 지시]` 3분 점검 · 재난 경고 확인용 — 배포 · 시연 때 관리 콘솔에서 끈다.
+    """여행 화면 일정 목록 위 · 계획 확인 화면에 위험 점검 칸을 보이나. `[2026-10-22 사용자 지시]` 3분 점검 · 재난 경고 확인용 — 기본 꺼짐, 시험 때 관리 콘솔에서 켠다.
 
-    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.trip_risk_panel_enabled`, 기본 켜짐).
-    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 여행 조회 응답의 `risk_panel`(`trip_api._trip_view`) 하나다 — 점검 자체(`GET …/risks`)는 막지 않는다.
+    운영자가 화면에서 바꾼 값이 먼저, 없거나 못 읽으면 가드레일(`app.core.settings.trip_risk_panel_enabled`, 기본 꺼짐).
+    ★참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 여행 조회 응답의 `risk_panel`(`trip_api._trip_view`)과 공개 읽기 `GET /v1/web/features` 의
+    `risk_panel`(계획 확인 화면) 둘이다 — 점검 자체(`GET …/risks`)는 막지 않는다.
     """
     value = operator_setting(tenant_id, TRIP_RISK_PANEL)
     if isinstance(value, bool):
