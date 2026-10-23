@@ -279,6 +279,7 @@ export function ensureSession(language: Language, humanToken?: string | null): P
   creating ??= (async () => {
     const known = await probeSession(language);
     if (known) return known;
+    const beganWith = snapshot;
     // ★Keep `method` inside the call — a reader of this file (the server contract test) takes a call whose method it cannot read for a GET.
     const response = await send(`${API_BASE}/v1/web/auth/session`, {
       method: "POST", credentials: "include",
@@ -286,6 +287,8 @@ export function ensureSession(language: Language, humanToken?: string | null): P
     }, language);
     const session = sessionOf(await response.json());
     if (!session) throw new LiveError("bad_session", translator(language)("서버가 세션 정보를 주지 않았어요.", "The server did not give the session details."));
+    // `[2026-10-23 F-07]` A sign-in completed while the guest request was waiting: keep the member session.
+    if (snapshot !== beganWith && snapshot.session) return snapshot.session;
     setSnapshot({ probed: true, failed: false, session });
     return session;
   })().finally(() => { creating = null; });
