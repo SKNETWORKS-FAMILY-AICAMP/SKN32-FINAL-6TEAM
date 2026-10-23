@@ -15,7 +15,7 @@ import type { MoveRoute, RouteChoice } from "@/lib/live/move-options";
 /** One check's result (mockup `result`): passed · filled in by the server · warning · must fix · not known yet · not checked yet. */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pending";
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
-export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival" | "risk";
+export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival" | "risk" | "dining_check" | "dietary" | "kids" | "payment" | "business";
 export interface CheckRow { kind: CheckKind; result: CheckResult; text: string; canAcknowledge?: boolean }
 /** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
 export interface Reread { field: "title" | "booking_no"; current: string; other: string }

@@ -129,6 +129,8 @@ SYSTEM = """너는 여행 일정의 식사 항목을 점검하는 요식 담당�
      같은 속성 · 같은 적용 식사의 유효 조건은 request 하나다. 조건 문장과 그 이유 · 강조 문장이 따로 있어도 하나로 합치고,
      quote는 필수/선호가 가장 잘 드러나는 문장 하나를 고른다.
      비건·알레르기처럼 지원하지 않는 속성을 채식·할랄로 바꾸어 성공 판정하지 않는다.
+   customer_clarifications가 있으면 고객이 직접 적용 식사를 선택하거나 조건을 취소한 답이다. 해당 quote·attribute의 answer를 우선 적용한다.
+   answer.excluded=true는 제외하고 검사하지 않는다. 아니면 answer.item_ids에만 적용한다. required는 고객에게 물었던 조건의 값을 유지한다.
    requests의 quote는 범위·부정·필수/선호가 드러나는 원문 문장 그대로다. state는 active(유효), excluded(필요 없음·취소), unclear(모호) 중 하나다.
    quote에는 원문에서 연속된 문장 하나를 그대로 복사한다. 줄임표(… 또는 ...)를 만들어 떨어진 문장을 합치거나 요약하지 않는다.
    처음 요청과 정정이 멀리 떨어져 있으면 최종 뜻을 확정하는 정정·취소 문장만 그대로 인용한다. 처음 요청까지 억지로 합칠 필요는 없다.
@@ -513,7 +515,7 @@ def judge_day(plan: dict[str, Any], *, tools: DiningTools, chat: Any, max_turns:
     #  ☆`[2026-10-16]` 식사가 있는 날 빈 답(`items: []`)이 실패 없이 「검사 0건」으로 끝났다
     missing: list[dict[str, Any]] = []
     if failure is None:
-        answered = {str(i["item_id"]): {c.get("check") for c in i["checks"]} for i in items}
+        answered = {str(i["item_id"]): {c.get("check") for c in i["checks"] if not c.get("failure")} for i in items}
         for item_id, planned in plan_items.items():
             if planned.get("kind") != "dining":
                 continue
@@ -521,10 +523,11 @@ def judge_day(plan: dict[str, Any], *, tools: DiningTools, chat: Any, max_turns:
             why = "missing_item" if item_id not in answered else "missing_check"
             missing += [{"item_id": item_id, "check": c, "failure": why} for c in need if c not in answered.get(item_id, ())]
         dining_ids = [k for k, p in plan_items.items() if p.get("kind") == "dining"]
-        if dining_ids and not any(answered.get(k) for k in dining_ids):
+        if dining_ids and not any(i["checks"] for i in items if str(i["item_id"]) in dining_ids):
             failure = "empty_result"                 # 식사가 있는데 어느 식사에도 체크가 없다(빈 답 · 항목만 있고 checks 가 빈 것)
         missing.extend(request_audit.missing(items))
     stats = {"turns": turns, "tool_calls": len(tools.calls), "refused": len(tools.refused),
+             "cache_hits": len(tools.reused),
              "validation_failures": failures, "missing_checks": len(missing), "unknown_items": unknown_items,
              "customer_requests": len(request_audit.requests), "request_inventory_issues": len(request_audit.issues),
              "seconds": round(clock() - started, 2), **usage}

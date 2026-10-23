@@ -5,7 +5,7 @@
   `attribute_state` …)다 — 그래서 에이전트 결과와 규칙 결과가 다르면 원인은 「무엇을 골랐나 · 원문 해석 · 출처 충돌 판단」뿐이다.
 ★「원장 먼저, 없으면 지도」 순서는 `find_place` **안의 코드**가 지킨다 — LLM에게 순서를 맡기지 않는다.
 ★호출마다 id(`c1` …)를 붙이고 결과를 남긴다(`calls`) — 근거 검증(§6)이 「인용한 값이 그 호출 결과에 그대로 있나」를 본다.
-★상한 — 한 번의 판정에서 `max_calls` 회, 같은 도구 · 같은 인자 반복은 거절한다(코어 `ToolLoopExceeded` 와 같은 규칙).
+★상한 — 한 번의 판정에서 실제 조회 `max_calls` 회. 같은 도구 · 같은 인자의 확인 결과는 원 call_id로 재사용한다.
 ★바깥 API(카카오 · 구글)는 부르는 쪽이 넣는다(`kakao` · `google`, 예산 장치를 가진 어댑터). 없으면 그 도구는 「unknown(설정 없음)」 —
   지어내지 않는다. 카카오 결과는 저장하지 않고, 구글은 place_id 와 판정만 쓴다(약관 — 원문을 돌려주지 않는다).
 ★이 파일은 코어를 import 하지 않는다(팀 경계 — `ledger.py` 와 같다). DB 연결은 `connect()` 가 연다.
@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
@@ -122,6 +123,22 @@ def scope_key(name: Any) -> str:
     return "".join(str(name or "").split()).lower()
 
 
+def _reusable(result: dict[str, Any]) -> bool:
+    """확인된 반환값만 재사용한다. 미확인·오류는 새 조회로 확인할 여지를 남긴다."""
+    if any(result.get(key) for key in ("refused", "error", "failure")):
+        return False
+    if result.get("verdict") == "unknown" or result.get("found") is False:
+        return False
+    if any(key in result and not result[key] for key in ("hits", "places", "attributes")):
+        return False
+    if "verdict" not in result and result.get("reason"):
+        return False
+    attributes = result.get("attributes")
+    if isinstance(attributes, dict) and any(a.get("state") not in ("yes", "limited", "no") for a in attributes.values()):
+        return False
+    return True
+
+
 @dataclass
 class DiningTools:
     """한 번의 판정 동안 쓰는 도구 묶음. `connect()` 는 DB 연결을 여는 컨텍스트 관리자를 돌려준다."""
@@ -136,11 +153,12 @@ class DiningTools:
     off_scope: frozenset[str] = frozenset()
     calls: list[dict[str, Any]] = field(default_factory=list)
     refused: list[dict[str, Any]] = field(default_factory=list)
+    reused: list[dict[str, str]] = field(default_factory=list)
 
     # ── 부르는 문 하나 ──
     def call(self, name: str, args: dict[str, Any] | None = None) -> dict[str, Any]:
         """도구를 부른다. 결과에 `call_id` 를 붙여 돌려준다. 거절이면 `{"refused": 이유}` — 예외를 올리지 않는다(에이전트가 읽고 고친다)."""
-        args = dict(args or {})
+        args = deepcopy(dict(args or {}))
         try:
             if name not in SPECS:
                 raise ToolRefused(f"모르는 도구: {name}")
@@ -150,11 +168,15 @@ class DiningTools:
             if query is not None and scope_key(query) in self.off_scope:
                 # ☆`[2026-10-19 실측]` 활동 장소(경복궁)를 식당처럼 찾고 영업 · 휴무 · 폐업 도구까지 불렀다(gpt-4o-mini 개발용 18/240판)
                 raise ToolRefused(f"「{query}」는 식사가 아닌 일정 항목의 장소다 — 식사 항목의 가게만 찾는다")
+            key = (name, json.dumps(args, sort_keys=True, ensure_ascii=False))
+            previous = next((c for c in reversed(self.calls)
+                             if (c["tool"], json.dumps(c["args"], sort_keys=True, ensure_ascii=False)) == key
+                             and _reusable(c["result"])), None)
+            if previous is not None:
+                self.reused.append({"tool": name, "call_id": previous["id"]})
+                return {"call_id": previous["id"], **deepcopy(previous["result"]), "reused": True}
             if len(self.calls) >= self.max_calls:
                 raise ToolRefused(f"도구 호출 상한({self.max_calls}회)을 넘었다")
-            key = (name, json.dumps(args, sort_keys=True, ensure_ascii=False))
-            if any((c["tool"], json.dumps(c["args"], sort_keys=True, ensure_ascii=False)) == key for c in self.calls):
-                raise ToolRefused("같은 도구를 같은 인자로 다시 불렀다 — 앞의 결과를 쓴다")
             missing = [p for p in SPECS[name].parameters["required"] if args.get(p) in (None, "", [])]
             if missing:
                 raise ToolRefused(f"필수 인자가 없다: {missing}")
@@ -165,7 +187,7 @@ class DiningTools:
                     UUID(str(args["place_uid"]))
                 except ValueError:
                     raise ToolRefused(f"place_uid 형식이 아니다: {args['place_uid']!r} — find_place 결과의 place_uid 를 그대로 옮긴다") from None
-            result = _plain(getattr(self, f"_{name}")(**args))
+            result = _plain(getattr(self, f"_{name}")(**deepcopy(args)))
         except ToolRefused as exc:
             self.refused.append({"tool": name, "args": args, "why": str(exc)})
             return {"refused": str(exc)}
@@ -174,10 +196,10 @@ class DiningTools:
             return {"refused": f"인자 오류: {exc}"}
         call_id = f"c{len(self.calls) + 1}"
         self.calls.append({"id": call_id, "tool": name, "args": args, "result": result})
-        return {"call_id": call_id, **result}
+        return {"call_id": call_id, **deepcopy(result)}
 
     def result_of(self, call_id: str) -> dict[str, Any] | None:
-        return next((c["result"] for c in self.calls if c["id"] == call_id), None)
+        return deepcopy(next((c["result"] for c in self.calls if c["id"] == call_id), None))
 
     # ── 규칙 도구 ──
     def _find_place(self, name: str, lat: float | None = None, lng: float | None = None) -> dict[str, Any]:

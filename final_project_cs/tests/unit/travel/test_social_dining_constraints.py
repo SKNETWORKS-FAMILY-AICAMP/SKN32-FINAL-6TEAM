@@ -1,5 +1,5 @@
 """Confirmed food requirements survive generated intake drafts and registration."""
-from contextlib import nullcontext
+from contextlib import nullcontext, contextmanager
 from copy import deepcopy
 from types import SimpleNamespace
 from uuid import UUID
@@ -43,14 +43,30 @@ def test_generated_request_conditions_extend_existing_intake_constraints(monkeyp
     assert built.body.get("constraints") == CONSTRAINTS
 
 
+@pytest.mark.parametrize("blocked", [False, True])
 @pytest.mark.parametrize("given", [None, {"priority_details": {"food": ["vegan"]}}])
-def test_confirmation_keeps_staged_food_and_merges_later_survey_answers(monkeypatch, given):
+def test_confirmation_keeps_staged_food_and_merges_later_survey_answers(monkeypatch, given, blocked):
+    from fastapi import HTTPException
+    from app.domains.travel_ops.components.intake import registration
     customer = UUID("00000000-0000-0000-0000-000000000044")
     intake = UUID("00000000-0000-0000-0000-000000000055")
     body = {**deepcopy(BODY), "constraints": deepcopy(CONSTRAINTS)}
     body.pop("customer_id")
     built = SimpleNamespace(body=body, problems=[])
-    monkeypatch.setattr(trip_api, "get_connection", lambda: nullcontext(object()))
+    class Conn:
+        active = False
+        @contextmanager
+        def transaction(self):
+            self.active = True
+            try: yield
+            finally: self.active = False
+    conn = Conn()
+    monkeypatch.setattr(trip_api, "get_connection", lambda: nullcontext(conn))
+    def gate(current, *args):
+        assert current is conn and conn.active
+        if blocked: raise registration.RegistrationRefused(409, "intake_dining_check_pending", "확인 중")
+    monkeypatch.setattr(registration, "require_review", gate)
+    monkeypatch.setattr(registration, "confirmed_trip_id", lambda *args: None)
     monkeypatch.setattr(web_guard, "assert_human_check_configured", lambda: None)
     monkeypatch.setattr(web_guard, "count", lambda *args, **kwargs: None)
     monkeypatch.setattr(pipeline, "draft", lambda *args, **kwargs: ("review", None, built))
@@ -70,11 +86,18 @@ def test_confirmation_keeps_staged_food_and_merges_later_survey_answers(monkeypa
                        and getattr(cell.cell_contents, "__name__", "") == "_create_trip")
 
     def capture(tenant, request):
+        assert conn.active
         captured.append(request.model_dump(mode="json"))
         return {"trip_id": "00000000-0000-0000-0000-000000000066", "created": True}
 
     monkeypatch.setattr(create_cell, "cell_contents", capture)
     request = trip_api.IntakeConfirmIn(revision=4, survey=given)
+    if blocked:
+        with pytest.raises(HTTPException) as caught:
+            endpoint(intake_id=intake, request=request, http=Request({"type": "http", "headers": []}),
+                     who=("tenant", customer))
+        assert caught.value.status_code == 409 and not captured
+        return
     endpoint(intake_id=intake, request=request, http=Request({"type": "http", "headers": []}),
              who=("tenant", customer))
     constraints = captured[0]["constraints"]
