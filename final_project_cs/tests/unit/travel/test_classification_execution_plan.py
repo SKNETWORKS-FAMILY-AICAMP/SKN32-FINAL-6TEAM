@@ -192,19 +192,39 @@ async def test_cross_customer_itinerary_response_is_rejected_before_planning():
     assert result.failure_code == "action_target_changed"
 
 
+def _operator_switch(monkeypatch, value):
+    """관리 콘솔의 항로 지킴이 값을 이 시험 안에서만 정한다(`value` None = 운영자가 바꾼 값 없음 → 가드레일 기본, 꺼짐).
+
+    ★`[2026-10-23]` 판정은 운영자 값을 먼저 읽는다(`settings_hook.guardian_enabled`). 가드레일 기본값만 바꾸면, 같은 일꾼에서 앞 시험이
+    남긴 운영자 값(꺼짐)을 읽어 실행 순서에 따라 실패했다(main CI 전체 시험). 끝나면 원래 읽기 함수로 돌아간다."""
+    from app.domains.travel_ops.components import settings_hook
+    monkeypatch.setattr(settings_hook, "_reader", None if value is None else (lambda tenant, name: value if name == settings_hook.GUARDIAN else None))
+
+
+def test_the_guardian_is_off_by_default_even_when_the_customer_chose_replace(monkeypatch):
+    """`[2026-10-23 사용자 결정]` 항로 지킴이는 기본 꺼짐 — 관리 콘솔에서 켜지 않으면 고객이 「바꿔 줘」를 골라도 꺼짐이고 먼저 묻는다."""
+    _operator_switch(monkeypatch, None)
+    enabled = {"survey": {"on_disruption": "replace"}, "survey_answered": ["on_disruption"]}
+    item = _item(1, "activity", "서울 관람", 10, _place("서울 전시관"))
+    assert guardian.is_on(enabled) is False
+    assert pending.decide(constraints=enabled, item=item).action == "ask"
+
+
 @pytest.mark.parametrize("constraints,on", [
     ({}, False), ({"survey": {"on_disruption": "replace"}}, False),
     ({"survey": {"on_disruption": "replace"}, "survey_answered": []}, False),
     ({"survey": {"on_disruption": "ask_first"}, "survey_answered": ["on_disruption"]}, False),
     ({"survey": {"on_disruption": "replace"}, "survey_answered": ["on_disruption"]}, True),
 ])
-def test_guardian_display_and_decision_share_the_explicit_setting(constraints, on):
+def test_guardian_display_and_decision_share_the_explicit_setting(constraints, on, monkeypatch):
+    _operator_switch(monkeypatch, True)   # 관리 콘솔에서 켠 상태에서 고객 설정을 본다(기본은 꺼짐 — 2026-10-23)
     item = _item(1, "activity", "서울 관람", 10, _place("서울 전시관"))
     assert guardian.is_on(constraints) is on
     assert (pending.decide(constraints=constraints, item=item).action == "apply") is on
 
 
-def test_omitted_answer_is_off_and_booking_metadata_does_not_pin_an_item():
+def test_omitted_answer_is_off_and_booking_metadata_does_not_pin_an_item(monkeypatch):
+    _operator_switch(monkeypatch, True)   # 관리 콘솔에서 켠 상태에서 고객 설정을 본다(기본은 꺼짐 — 2026-10-23)
     value = survey.apply_survey({"survey": {"version": survey.SURVEY_VERSION, "pace": "moderate"}}, [date(2026,10,12)])
     assert value["survey"]["on_disruption"] == "ask_first" and not guardian.is_on(value)
     item = _item(1, "activity", "서울 관람", 10, _place("서울 전시관"), booking={"number": "demo"})

@@ -19,6 +19,8 @@ signals=0
 sleep_pid=
 round_status=0
 delivery_pid=
+# 되잡기 작업이 자기 종료 코드를 남기는 파일(아래 run) — 일꾼마다 하나.
+JOB_STATUS="${TMPDIR:-/tmp}/tripilot-worker-job.$$"
 
 request_stop() {
   stopping=1
@@ -60,9 +62,16 @@ run() {
   name="$1"; shift
   # 작업은 비동기로 띄우고 기다린다 — 전경 명령이면 셸이 작업이 끝날 때까지 트랩을 미뤄 배달 반복에 멈춤을 늦게 알린다.
   # 신호는 작업에 넘기지 않는다. 작업은 자연 종료까지 기다린다.
-  python "$@" &
+  # ★`[2026-10-23]` 종료 코드는 작업이 파일에 남긴다 — bash 는 wait 가 신호(멈춤)로 깨지는 바로 그때 끝난 자식의 코드를 잃는다
+  #   (다시 wait 하면 -1 → return 255, 리눅스 bash 5.2 에서 약 8%). dash 는 잃지 않는다(같은 실험 0/3000). 파일이 없으면(작업이 그 전에 끊김) wait 의 코드를 쓴다.
+  rm -f "$JOB_STATUS"
+  { python "$@"; printf '%s\n' "$?" > "$JOB_STATUS"; } &
   wait_child "$!"
   job_status=$?
+  if [ -s "$JOB_STATUS" ]; then
+    job_status=$(cat "$JOB_STATUS")
+  fi
+  rm -f "$JOB_STATUS"
   if [ "$job_status" -ne 0 ]; then
     round_status=$job_status
     log_failure "$name" "$job_status"

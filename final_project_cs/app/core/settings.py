@@ -667,15 +667,15 @@ def trip_risk_panel_enabled() -> bool:
 
 
 def guardian_enabled() -> bool:
-    """항로 지킴이를 쓰나 — 가드레일 `travel.guardian.enabled`. ★기본 켜짐(지금 동작 그대로).
+    """항로 지킴이를 쓰나 — 가드레일 `travel.guardian.enabled`. ★기본 꺼짐(`[2026-10-23 사용자 지시]` 테스트 기능이라 — 앞의 기본은 켜짐이었다).
 
     `[2026-10-19 사용자 결정 — ST4F-613]` 운영자가 관리 콘솔에서 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다.
-    가드레일을 못 읽으면 정한 기본(켜짐)으로 둔다 — 끄는 것은 `false` 로 명시한 경우뿐이다.
+    가드레일을 못 읽으면 정한 기본(꺼짐)으로 둔다 — 켜는 것은 `true` 로 명시한 경우뿐이다.
     """
     try:
-        return get_guardrails().get("travel.guardian.enabled") is not False
+        return get_guardrails().get("travel.guardian.enabled") is True
     except ConfigError:
-        return True
+        return False
 
 
 def dining_trial_live_view_enabled() -> bool:

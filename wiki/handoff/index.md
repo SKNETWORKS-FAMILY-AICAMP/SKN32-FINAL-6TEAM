@@ -9,6 +9,12 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 # 세션 인계 안내 목차
 
+2026-10-23 — [Dining 모호한 조건 질문·답 저장·재검증 3단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-clarifications.md): 원문과 현재 식사 선택지로 질문, 본인 접수·revision·run_id·서명 대조 뒤 선택/취소 저장과 새 검사 연결. 조건 정정은 해당 조건 행만 갱신하고 독립 영업 불가 보존, 늦은 웹 응답의 최신 상태 덮어쓰기 차단. 새 서버 29/29 = 100%, 관련 Python 212/214 = 99.1%(기존 실패 2), 웹 79/79 = 100%, 브라우저 모형 부품 6/6 = 100%, 타입·수정 파일 정적 검사 통과. 선택 구조·계약·인증 304/305 = 99.7%(Composer 미설치 1), 전체 계약 수집·전체 웹 lint·실DB 확인은 환경 한계 별도 기록. 백업 `_backup/2026-10-23_dining-clarifications/`. 세 보완 로컬 3/3 = 100%, 커밋·푸시·배포 안 함.
+
+2026-10-23 — [Dining 실행 내 결과 재사용 2단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-result-reuse.md): 같은 도구·인자의 확인 결과와 원 call_id 재사용, 실제 호출 예산과 분리, unknown·오류·빈 검색 미재사용, 입력·근거 사본 반환, cache_hits 기록. 새 시험 24/24 = 100%, 1단계 포함 35/35 = 100%, 관련 전체 183/192 = 95.3%(기존 실패 2·DB 연결 불가 건너뜀 7), ruff 통과. 백업 `_backup/2026-10-23_dining-result-reuse/`. 커밋·푸시·배포 안 함. 전체 2/3 = 66.7%, 다음은 3번 모호한 조건 질문·답변 연결.
+
+2026-10-23 — [Dining 필수 검사 누락 보완 1단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-required-checks.md): 한 일은 실패 체크 완료 집계 제외·수명주기 누락 재대조·접수의 별도 unknown 안내·웹 타입과 라벨 연결. 새 시험 11/11 = 100%, 관련 Python 143/145 = 98.6%(기존 잠금 시험 실패 2건을 수정 전에도 재현), 웹 57/57 = 100%, ruff 통과. 웹 타입 오류 15건도 수정 전 동일. 로컬 부품 화면만 확인, 커밋·푸시·배포 안 함. 전체 진행 1/3 = 33.3%, 다음은 2번 실행 내 조회 결과 재사용. 수정 전 사본은 `_backup/2026-10-23_dining-required-checks/`.
+
 여러 세션(Codex · Claude)이 같은 작업 폴더에서 일하고, 커밋은 사용자가 시킬 때만 한다. 그래서 **git 이력만 보면 최근 작업이 안 보인다.** 이어받는 세션은 아래 목록의 맨 위 인계부터 읽는다.
 
 ## 세션 정리 메모 (최근 것이 위)
@@ -196,3 +202,5 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 - [테스트 계정 시작·종료 인계](2026-10-18_qa-account-lifecycle.md) — 격리 통합·지원 Node 빌드·관련 시험 완료, 실제 운영 확인은 기능 담당.
 
 - 2026-10-18: 재난문자 지역·내용 v2의 양쪽 매니저·운영 반영·실제 문제 카드 확인 완료. [한 일과 확인 범위](2026-10-18_receipt-message-relevance-live.md).
+
+- 2026-10-23 Dining 커밋·푸시 준비: 원격 `7284c42ad` 위 통합, Python 204/204·웹 79/79 통과. [최신 통합 검증](../../final_project_cs/wiki/records/reports/2026-10-23_dining-publish-validation.md).
