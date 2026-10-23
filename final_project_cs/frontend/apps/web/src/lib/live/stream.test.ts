@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { translator } from "../i18n";
-import { LiveError, resetSessionState } from "./client";
+import { currentSession, LiveError, resetSessionState, SESSION_CHANGED_EVENT, sessionOf, takeSession } from "./client";
 import { answeringSession, CSRF } from "./session-kit";
 import { progressText, streamApi, watchIntake, type IntakeWatchEvent, type OpProgress } from "./stream";
 
@@ -117,6 +117,53 @@ describe("a long request with live progress (POST …/messages · …/plan with 
     await expect(streamApi("/v1/web/trips/t1/messages", "ko", init, undefined, fast)).rejects.toMatchObject({ code: "connection_lost" });
     expect(calls).toHaveLength(3);
   });
+});
+
+describe("session boundaries before a streamed write opens", () => {
+  let calls: { url: string; init: RequestInit }[];
+  let dispatched: string[];
+  const path = "/v1/web/trips/t1/messages";
+  const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: "session-boundary-1", message: "안녕" }) };
+
+  beforeEach(() => {
+    resetSessionState();
+    calls = [];
+    dispatched = [];
+    vi.useFakeTimers();
+    vi.stubGlobal("window", {
+      localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+      dispatchEvent: (seen: Event) => { dispatched.push(seen.type); return true; },
+    });
+  });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); resetSessionState(); });
+
+  it("keeps the replacement session and the original late 401 refusal from a stream started with the previous session (F-06)", async () => {
+    const previous = sessionOf({ kind: "member", csrf_token: "csrf-a" })!;
+    const member = sessionOf({ kind: "member", csrf_token: "csrf-b" })!;
+    takeSession(previous);
+    dispatched.length = 0;
+    let answer!: (response: Response) => void;
+    let started!: () => void;
+    const pending = new Promise<void>((resolve) => { started = resolve; });
+    vi.stubGlobal("fetch", (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      started();
+      return new Promise<Response>((resolve) => { answer = resolve; });
+    });
+    const result = streamApi(path, "ko", init, undefined, fast).catch((caught: unknown) => caught);
+    await pending;
+    takeSession(member);
+    const detail = { code: "unauthenticated", message: "이전 요청의 로그인 상태가 끝났어요.", request: "session-a" };
+    answer(json({ error: detail }, 401));
+
+    expect(await result).toMatchObject({ code: "unauthenticated", message: detail.message, detail, status: 401 });
+    expect(currentSession()).toBe(member);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].init.headers).toMatchObject({ "X-CSRF-Token": "csrf-a" });
+    expect(dispatched).toEqual([SESSION_CHANGED_EVENT]);
+  });
+
 });
 
 describe("following an intake while the server reads it (GET …/trip-intakes/{id}/events)", () => {

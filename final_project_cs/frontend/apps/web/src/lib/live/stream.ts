@@ -1,5 +1,5 @@
 import { translator, type Language, type Translate } from "../i18n";
-import { API_BASE, answerWithin, LiveError, refusal, sessionChecked, sessionInit } from "./client";
+import { API_BASE, answerWithin, ensureSession, LiveError, refusal, sessionChecked, sessionInit, type WebSession } from "./client";
 import { eventStreamParser } from "./events";
 import { beginWait, TASK_STEPS } from "./waiting";
 
@@ -64,10 +64,10 @@ function streamError(body: Body, t: Translate): LiveError {
 
 type Attempt<T> = { kind: "done"; value: T } | { kind: "lost" };
 
-async function attempt<T>(path: string, language: Language, init: RequestInit, timing: StreamTiming,
+async function attempt<T>(path: string, language: Language, init: RequestInit, session: WebSession, timing: StreamTiming,
   report: (next: Partial<OpProgress>) => void, onEvent?: StreamEventHandler): Promise<Attempt<T>> {
   const t = translator(language);
-  const sent = await sessionInit(language, { ...init, headers: { ...(init.headers as Record<string, string> | undefined), Accept: "text/event-stream" } });
+  const sent = await sessionInit(language, { ...init, headers: { ...(init.headers as Record<string, string> | undefined), Accept: "text/event-stream" } }, session);
   const url = `${API_BASE}${path}`;
   const controller = new AbortController();
   // ★Until the answer starts, the usual limit holds — a server without streams answers once, after the whole task.
@@ -90,7 +90,7 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, t
     void response.body?.cancel().catch(() => undefined);
     return { kind: "lost" };
   }
-  if (!response.ok) throw sessionChecked(await refusal(response, language), language);
+  if (!response.ok) throw sessionChecked(await refusal(response, language), language, session);
   if (!(response.headers.get("content-type") ?? "").includes("text/event-stream") || !response.body) {
     return { kind: "done", value: await response.json() as T };
   }
@@ -149,7 +149,7 @@ export async function streamApi<T>(path: string, language: Language, init: Reque
   };
   try {
     for (let tries = 0; ; tries += 1) {
-      const outcome = await attempt<T>(path, language, init, timing, report, onEvent);
+      const outcome = await attempt<T>(path, language, init, await ensureSession(language), timing, report, onEvent);
       if (outcome.kind === "done") return outcome.value;
       if (tries >= timing.reconnectMs.length) {
         const t = translator(language);
