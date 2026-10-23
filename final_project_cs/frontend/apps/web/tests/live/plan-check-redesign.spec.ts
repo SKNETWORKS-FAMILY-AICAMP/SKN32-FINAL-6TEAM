@@ -511,7 +511,9 @@ test("잠근 일정은 시간이 못 움직이는 벽이다: 그 일정에 막�
   await expect(page.getByRole("button", { name: "경복궁 관람 고정 풀기" })).toBeVisible();
   const form = await openTime(page, "올리브영");
   await expect(form.getByText("가능한 시각 10:39 ~ ")).toBeVisible();                                    // 잠근 경복궁(10:30 끝) + 이동 9분 아래로는 못 당긴다
-  await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click({ force: true });
+  // `[2026-10-23]` 잠근 시간은 aria-disabled 라 force 클릭이었는데, force 는 목록을 굴려 단추를 보인 뒤 멈추기를 기다리지 않고 그 좌표를 눌러
+  //   올리브영 시간 칸이 열린 목록이 움직이면 빗나갔다(main CI · 로컬 10회 중 4회). 단추에 바로 누름을 보낸다 — 확인하는 것은 「잠근 시간은 왜 못 바꾸는지 알린다」.
+  await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).dispatchEvent("click");
   await expect(toast(page, "고정한 일정이라 바꿀 수 없어요")).toBeVisible();
 });
 
