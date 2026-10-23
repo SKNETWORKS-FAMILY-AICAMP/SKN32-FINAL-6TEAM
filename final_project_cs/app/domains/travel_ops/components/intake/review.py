@@ -1164,7 +1164,7 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
     payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
     store(conn, tenant_id, intake_id, revision, payload)
-    if not quick:
+    if not quick and any(item.get("kind") == "dining" for item in payload.get("items") or []):
         from . import dining_review
         from app.domains.travel_ops.components.team_hooks import dining_ledger
         from app.core.settings import dining_agent_judge
