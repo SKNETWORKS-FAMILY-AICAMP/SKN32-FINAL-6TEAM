@@ -33,14 +33,14 @@ domain: travel
 
 `[2026-10-19 사용자 지시 · 결정 — ST4F-613]` 운영자가 항로 지킴이를 웹에 보일지 정한다. **끄면 화면에서 숨기는 것만이 아니라 서버의 자동 일정 변경도 멈춘다.** 켠 여행도 끈 동안은 먼저 묻기(`ask_first`)로 처리하고, 켠 기록은 지우지 않아 다시 켜면 원래대로 돌아온다.
 
-- **값**: 관리 콘솔 「운영 설정」 의 스위치 `travel.guardian.enabled`(운영자가 바꾼 값이 먼저) → 없거나 못 읽으면 가드레일 `travel.guardian.enabled`(기본 `true` — 지금 동작 그대로). 참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 `settings_hook.guardian_enabled(tenant)` 하나 — 판정 함수(`survey.on_disruption` · `auto_on_disruption`)는 서비스 테넌트(`settings.tenant_id`)로 읽는다. 바꾸면 재기동 없이 운영 설정 캐시(`web_guard.cache_seconds`)만큼 뒤에 반영된다.
+- **값**: 관리 콘솔 「운영 설정」 의 스위치 `travel.guardian.enabled`(운영자가 바꾼 값이 먼저) → 없거나 못 읽으면 가드레일 `travel.guardian.enabled`(기본 `false` — `[2026-10-23 사용자 지시]` 항로 지킴이는 지금 테스트 기능이라 기본 꺼짐. 앞의 기본은 켜짐이었다). 가드레일도 못 읽으면 꺼짐으로 본다. `true` 로 명시한 경우에만 켜진다. 참/거짓이 아닌 값은 바꾼 값으로 보지 않는다. 읽는 곳은 `settings_hook.guardian_enabled(tenant)` 하나 — 판정 함수(`survey.on_disruption` · `auto_on_disruption`)는 서비스 테넌트(`settings.tenant_id`)로 읽는다. 바꾸면 재기동 없이 운영 설정 캐시(`web_guard.cache_seconds`)만큼 뒤에 반영된다.
 - **끄면 — 판정**: 모든 여행을 꺼진 여행과 같이 판정한다 — 일반 사건은 「다른 안」을 보내며 먼저 묻고(`proposal_request` · 이유 `ask_first`), 날씨만 걸린 활동은 「바꿀까요?」(`needs_consent`), 안전 사건은 안전 알림. `pending.decide` · `needs_consent` · `guardian.is_on` 이 모두 이 두 판정 함수를 읽으므로 감시 · 새벽 확인 · 채팅 신고 · Case 길이 같이 따른다. 재난 정지 · 고정한 일정(`protected`) 규칙은 그대로다.
 - **끄면 — 저장값은 그대로**: `constraints.survey.on_disruption` · `survey_answered` · `trip_guardian_changes` 를 지우거나 바꾸지 않는다. 등록 · 확정 요청의 `survey.on_disruption` 도 지금처럼 받아 저장한다(옛 화면 · 에이전트 호환) — 끈 동안 판정에 쓰지 않을 뿐이다. 다시 켜면 각 여행이 저장된 값대로 돌아간다.
 - **끄면 — 여행 조회**(`GET /v1/web/trips/{id}` · `/v1/trips/{id}` · 등록 응답): `guardian` 칸을 싣지 않는다(이 칸을 만들기 전 서버와 같은 모양) — 웹은 메뉴 서랍 아이콘 · 카드를 그리지 않고, 알림 링크 `?guardian=on` 도 아무것도 열지 않는다.
 - **끄면 — `POST /v1/web/trips/{trip_id}/guardian`**: 인증 검사(401 · 403 `cookie_session_required` · 403 `csrf_failed`) 다음에 **409 `guardian_disabled`** — 아무것도 바꾸지 않고 기록도 더하지 않는다. 본인 여행인지 보기 전에 거절한다.
 - **끄면 — 알림 `payload.guardian`**: 싣지 않는다 — 「항로 지킴이가 바꿨어요」(끈 동안은 자동 변경이 없다)도 「항로 지킴이 켜기」(켤 수 없다)도 없다. 디스코드 · 텔레그램 글의 항로 지킴이 줄도 없다. 알림 목록(`GET /v1/web/trips/{id}/notices`)은 끈 동안 **이미 쌓인 알림**의 `guardian` 도 `null` 로 준다. 끄기 전에 만들어져 바깥함(outbox)에서 배달을 기다리던 디스코드 · 텔레그램 글은 만들어진 문장 그대로 나간다.
 - **공개 읽기 `GET /v1/web/features`**(고객 API 앱, 키 없음 · 개인 정보 없음 · 횟수를 세지 않음) → `{guardian: true|false, risk_panel: true|false}` — 세션이 없을 수 있는 등록 전 화면(계획 담기 · 읽는 중 · 계획 확인)이 읽는다. `guardian` 값은 위 「값」과 같다. `[2026-10-22 사용자 지시]` `risk_panel` 은 아래 「여행 화면 위험 점검 칸」의 스위치다(계획 확인 화면의 점검 칸).
-- **웹**(끄면): 계획 담기의 항로 지킴이 카드를 띄우지 않고 곧장 보낸다 · 접수 · 확정 · 짜기 요청의 설문에 `on_disruption` 을 싣지 않는다 · 등록 전 화면 머리 아이콘을 숨긴다 · 여행 화면은 위 「여행 조회」대로. 공개 읽기를 못 하면(이 경로를 만들기 전 서버의 404 · 연결 실패) **켜짐으로 본다** — 지금 동작 그대로이고, 끈 서버는 보낸 값과 상관없이 먼저 묻는다.
+- **웹**(끄면): 계획 담기의 항로 지킴이 카드를 띄우지 않고 곧장 보낸다 · 접수 · 확정 · 짜기 요청의 설문에 `on_disruption` 을 싣지 않는다 · 등록 전 화면 머리 아이콘을 숨긴다 · 여행 화면은 위 「여행 조회」대로. 공개 읽기를 못 하면(이 경로를 만들기 전 서버의 404 · 연결 실패) **꺼짐으로 본다** (`[2026-10-23 사용자 지시]` 기본 꺼짐과 맞춘다) — 웹은 카드를 띄우지 않고, 서버는 어느 쪽이든 켜진 여행에도 먼저 묻는다.
 
 ### 일정 위험 점검 · 이동 판정 — `GET /v1/web/trips/{trip_id}/risks` · `POST /v1/web/moves/judge` `[2026-10-06 사용자 요청 — MCP 읽기 도구]`
 
