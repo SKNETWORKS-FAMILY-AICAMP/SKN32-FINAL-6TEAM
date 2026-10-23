@@ -125,7 +125,7 @@ export const SCREENS: readonly HelpScreen[] = [
       { label: ["「여행이 끝났어요」", "“The trip is over”"], desc: ["마지막 일정이 끝나면 「전체」 맨 위에 카드가 나오고 「엔딩 크레딧 보기」로 여행을 돌아봐요.", "When the last stop ends, a card at the top of “All” offers “Watch the end credits”."] },
       { label: ["「일정 정지 중」", "“Itinerary paused”"], desc: ["재난으로 일정이 멈추면 목록 위에 뜨는 칩이에요. 누르면 알림 센터의 안전 안내로 가요.", "Shown above the list when a disaster pauses the trip. Press it for the safety notice in the notice center."] },
     ] },
-  { id: "notices", name: ["알림", "Notices"], shot: "6-notices",
+  { id: "notices", name: ["알림", "Notices"], shot: "6-notice-center",
     where: ["여행 화면 머리의 종", "The bell at the top of the trip screen"],
     points: [
       // `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ]` 탭 셋(할 일 · 소식 · 공지) — 그림은 라이브 화면 「할 일」(시험 여행 · 예보 제안, 390×797 @2)
@@ -143,17 +143,20 @@ export const SCREENS: readonly HelpScreen[] = [
       { label: ["「현재 일정 위험 확인」", "“Current itinerary risks”"], needs: "riskPanel", desc: ["「할 일」 아래 「살펴볼 점」의 칸이에요. 가까운 일정의 날씨 · 재난 위험을 확인해 보여 주고, 「다시 확인」 · 「실내 대안 보기」를 누를 수 있어요.", "The panel under “Worth a look” in “To do”: weather and disaster risks for the coming stops, with “Check again” and “See indoor alternatives”."] },
       { label: ["「일정 다시 시작」", "“Resume the itinerary”"], desc: ["재난으로 멈춘 일정은 저절로 풀리지 않아요. 안전한 곳에 있는 것을 확인한 뒤 눌러 주세요.", "A trip paused by a disaster does not resume by itself. Press it once you are somewhere safe."] },
     ] },
-  { id: "chat", name: ["채팅", "Chat"], shot: "7-chat",
+  { id: "chat", name: ["채팅", "Chat"], shot: "7-chat-card",
     where: ["여행 화면 오른쪽 아래 채팅 단추 · 마지막 날에서 옆으로 밀기", "The chat button at the bottom right of the trip screen · swipe past the last day"],
     points: [
-      { at: [527, 483], label: ["내 메시지", "Your message"], desc: ["‘점심 식당 다른 곳으로 바꿔줘’ · ‘30분 늦어요’처럼 말로 묻거나 바꿔 달라고 해요. 600자까지 써요.", "Ask or ask for changes in your own words — ‘change the lunch place’, ‘I’m 30 minutes late’. Up to 600 characters."] },
-      { at: [330, 740], label: ["구구루트의 답", "GuguRoute’s answer"], desc: ["바꾸지 않은 질문이면 답만, 일정을 바꿨으면 바뀐 내용을 알려 줘요.", "A question gets an answer; a change tells you what changed."] },
-      { at: [390, 1065], label: ["선택 단추", "Choice buttons"], desc: ["답에 고를 것이 있으면 단추로 나와요. 맨 아래(최신) 답의 단추만 누를 수 있고, 답하지 않으면 원래 일정을 그대로 둬요.", "Options in an answer come as buttons. Only the latest answer’s buttons work; no answer keeps the plan as it is."] },
-      { at: [330, 1290], label: ["「하루 요약」 · 「선택 일정」 · 「다음 일정」 · 「예약 표시」", "“Day summary” · “Selected stop” · “Next stop” · “Booking notes”"], desc: ["자주 묻는 것을 한 번에 보내요. 「선택 일정」은 일정을 골라 둔 뒤에 눌러요.", "Common questions in one press. “Selected stop” needs a stop chosen first."] },
-      { at: [390, 1380], label: ["채팅 안내 줄", "Chat note"], desc: ["채팅으로 바꾸면 여행계획서에 새 판이 생겨요. 숙소 · 항공 · 예약한 일정은 채팅으로 바꾸지 않으니 「일정 수정」에서 고쳐 주세요.", "Changes made in chat make a new version of your trip plan. Stays, flights and booked stops are not changed by chat — use “Edit itinerary”."],
+      // `[2026-10-23]` 그림은 새 채팅 칸(ST4F-719 — 답 카드 · 머리표 · 상황 칩 · 안내 줄 「자세히」) — 로그인한 시험 여행에서 점심 바꾸기를 물은 화면(390×797 → 780×1594)
+      { at: [172, 418], label: ["내 메시지", "Your message"], desc: ["‘점심 식당 다른 곳으로 바꿔줘’ · ‘30분 늦어요’처럼 말로 묻거나 바꿔 달라고 해요. 600자까지 써요.", "Ask or ask for changes in your own words — ‘change the lunch place’, ‘I’m 30 minutes late’. Up to 600 characters."] },
+      { at: [470, 524], label: ["구구루트의 답 · 머리표", "GuguRoute’s answer · its tag"], desc: ["답은 카드로 와요. 맨 위 머리표가 서버가 한 일을 알려 줘요 — 「답변」 · 「일정을 바꿨어요」 · 「바꾸지 않았어요」 · 「답을 기다려요」 · 「되돌렸어요」 · 「장소를 찾지 못했어요」 · 「위치가 필요해요」. 바꾸지 않은 질문이면 답만, 일정을 바꿨으면 바뀐 내용을 알려 줘요.", "Each answer is a card. The tag at its top says what the server did — “Answer” · “Plan changed” · “Not changed” · “Waiting for you” · “Undone” · “Place not found” · “Location needed”. A question gets an answer; a change tells you what changed."] },
+      { at: [572, 864], label: ["선택 단추", "Choice buttons"], desc: ["답에 고를 것이 있으면 단추로 나와요. 맨 아래(최신) 답의 단추만 누를 수 있고, 답하지 않으면 원래 일정을 그대로 둬요.", "Options in an answer come as buttons. Only the latest answer’s buttons work; no answer keeps the plan as it is."] },
+      { at: [420, 955], label: ["「진행 과정」", "“Steps”"], desc: ["답을 만들며 거친 단계와 걸린 시간이에요. 눌러서 펼쳐 봐요.", "The stages the answer went through and how long it took. Press to open them."] },
+      { at: [330, 1058], label: ["대화 속 알림 카드", "Notice card in the chat"], desc: ["알림 센터의 「선택이 필요해요」 같은 알림도 대화에 함께 나와요. 여기서 바로 고를 수 있어요.", "Notices such as “Your choice is needed” also appear in the conversation, and you can answer them here."] },
+      { at: [300, 1265], label: ["상황 칩 — 「지금 다음 일정」 · 「하루 요약」 · 「예약 표시」", "Situation chips — “Next from now” · “Day summary” · “Booking notes”"], desc: ["지금 상황에 맞는 질문을 한 번에 보내요. 위 줄(예: 「1일차 · 지금 09:44」)이 무엇에 대한 칩인지 알려 줘요. 일정을 골라 두면 「선택 일정」 · 「다음 일정」 · 「가는 길」, 답을 기다리는 제안이 있으면 그 칩(예: 「경복궁 · 예보 주의」)이 맨 앞에 와요. 옆으로 밀어 더 보고, 글을 쓰는 동안은 숨어요.", "Questions that fit the moment, in one press. The line above (e.g. “Day 1 · now 09:44”) says what they are about. With a stop chosen: “Selected stop” · “Next stop” · “Directions”; a proposal waiting for you comes first (e.g. “Gyeongbokgung · Forecast”). Slide for more; they hide while you write."] },
+      { at: [722, 1549], label: ["채팅 안내 줄 · 「자세히」", "Chat note · “More”"], desc: ["숙소 · 항공 · 예약한 일정은 채팅으로 바꾸지 않으니 「일정 수정」에서 고쳐 주세요. 「자세히」를 누르면 전체 안내가 떠요 — 채팅으로 바꾸면 여행계획서에 새 판이 생겨요.", "Stays, flights and booked stops are not changed by chat — use “Edit itinerary”. “More” shows the whole note: a change made in chat makes a new version of your trip plan."],
         rule: ["방금 바뀐 일정이 마음에 들지 않으면 그 답의 「되돌리기」를 눌러요.", "Don’t like a change? Press “Undo” under that answer."] },
-      { at: [420, 1508], label: ["입력 칸 · 보내기", "Input · send"], desc: ["컴퓨터는 Enter로 보내고 Shift+Enter로 줄을 바꿔요. 휴대폰은 ➤ 단추로 보내요.", "On a computer, Enter sends and Shift+Enter starts a new line. On a phone, press ➤."] },
-      { at: [60, 1508], label: ["「일정으로 돌아가기」", "“Back to the itinerary”"], desc: ["채팅을 닫고 일정 목록으로 돌아가요.", "Closes the chat and goes back to the list."] },
+      { at: [640, 1476], label: ["입력 칸 · 보내기", "Input · send"], desc: ["컴퓨터는 Enter로 보내고 Shift+Enter로 줄을 바꿔요. 휴대폰은 ➤ 단추로 보내요.", "On a computer, Enter sends and Shift+Enter starts a new line. On a phone, press ➤."] },
+      { at: [60, 1476], label: ["「일정으로 돌아가기」", "“Back to the itinerary”"], desc: ["채팅을 닫고 일정 목록으로 돌아가요.", "Closes the chat and goes back to the list."] },
     ] },
   { id: "menu", name: ["메뉴", "Menu"], where: ["어느 화면에서나 오른쪽 위 ☰", "☰ at the top right of every screen"],
     board: [

@@ -6,6 +6,9 @@
  * `[2026-10-22 사용자 결정 — 목업 A+E]` Over the dimmed screen, the part of each screen that step is about pops out: the same picture cut to `area`
  * (x0, y0, x1, y1 in the 780×1594 picture, inside the screen's own borders), wider than the screen, with a glow ring and a chip above it.
  * `fill` is the cut's own background, for the card's inner margin. Mockup: `mockups/guguroute-guide-highlight-2026-10-22.html`.
+ * `[2026-10-23 사용자 지시]` 7 is the new chat pane (ST4F-719 — the answer card 「답을 기다려요」 with its choices, the situation chips), captured on the local server from a
+ * signed-in trip (390×797, scaled to 780×1594). 6 keeps the notice center picture of 2026-10-23 00:02 (ST4F-723 — the same screen as today). Both pictures got new file
+ * names, so a browser or the image optimizer (4 hours) does not keep showing the old one under the old name.
  * `withoutGuardian`: `[2026-10-22 사용자 결정 — ST4F-717]` the 「이용 방법」 screen's text while the operator has switched the Course Keeper off (the intro keeps its own).
  */
 type Pair = readonly [ko: string, en: string];
@@ -33,11 +36,11 @@ export const guideSteps: readonly GuideStep[] = [
     detail: ["시간과 장소를 고치고 다시 확인한 뒤 여행으로 등록해요.", "Adjust times and places, check again, then register it as your trip."], chip: ["확인 끝나면 바로 등록", "Registered once checked"] },
   { shot: "5-trip", area: [24, 778, 756, 1565], fill: "#ffffff", title: ["내 여행 한눈에 보기", "See your trip at a glance"],
     detail: ["일차별 일정과 지도, 이동을 한 화면에서 봐요.", "Each day’s stops, the map and the travel between them on one screen."], chip: ["일정 · 이동 한눈에", "Stops and travel at a glance"] },
-  { shot: "6-notices", area: [34, 278, 746, 948], fill: "#fbf7ec", title: ["여행 중에도 지켜보기", "Watched during the trip"],
+  { shot: "6-notice-center", area: [34, 278, 746, 948], fill: "#fbf7ec", title: ["여행 중에도 지켜보기", "Watched during the trip"],
     detail: ["휴무 · 날씨 · 재난이 생기면 알리고 대안을 먼저 물어봐요. 항로 지킴이를 켜면 알아서 고쳐요.", "If a place closes or the weather or a disaster hits, we tell you and ask first. Turn on the Course Keeper to let it fix things."],
     chip: ["문제 생기면 먼저 묻기", "We ask first when it changes"],
     withoutGuardian: ["휴무 · 날씨 · 재난이 생기면 알리고 대안을 먼저 물어봐요.", "If a place closes or the weather or a disaster hits, we tell you and ask first."] },
-  { shot: "7-chat", area: [20, 430, 760, 1185], fill: "#ffffff", title: ["대화하며 다듬기", "Refine as you go"],
+  { shot: "7-chat-card", area: [22, 372, 746, 996], fill: "#ffffff", title: ["대화하며 다듬기", "Refine as you go"],
     detail: ["궁금한 점이나 바꾸고 싶은 일정을 채팅으로 말해 보세요.", "Ask about your plan or tell us what to change in chat."], chip: ["말로 바꾸기", "Change it by chatting"] },
 ];
 
