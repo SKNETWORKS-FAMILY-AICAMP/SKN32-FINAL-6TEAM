@@ -16,7 +16,7 @@ export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown";
 /** `booking` (2026-10-03, server 8b0d4c88): shown only for a booking word or a meal line with no name — 예약 있음 · 예약 없이 간다 · 예약 있다는데 장소 모름 · 예약 여부 모름. */
 export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk";
 export type MoveRow = "route" | "mode" | "arrival";
-export interface CheckLine<Row extends string = string> { row: Row; result: CheckResult; text: string }
+export interface CheckLine<Row extends string = string> { row: Row; result: CheckResult; text: string; can_acknowledge?: boolean }
 
 /** keep · adjusted (a rule filled it, or the customer changed it) · review (needs the customer). */
 export type ItemStatus = "keep" | "adjusted" | "review";

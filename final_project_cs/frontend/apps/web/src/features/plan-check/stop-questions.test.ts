@@ -16,6 +16,24 @@ const candidate = (name: string, fields: Partial<PlanCandidate> = {}): PlanCandi
 });
 
 describe("the question asked at a card the check stopped at", () => {
+  it("offers an honest acknowledgement only for the server-authorized hours caution", () => {
+    const item = stop({ place: "566라멘", placeState: "found", coordinates: { lat: 37.57, lng: 126.98 },
+      checks: [{ kind: "place", result: "ok", text: "고객이 고른 장소" }, { kind: "hours", result: "warn", text: "마지막 주문을 확인해 주세요", canAcknowledge: true }] });
+    const ask = placeQuestion(item, plan(item), [], t, "ko");
+    expect(ask.need).toBe("confirm");
+    expect(ask.options[0]).toMatchObject({ label: "주의를 읽었어요 · 이 장소로 계속", act: { type: "acknowledge-hours" } });
+    expect(ask.options[0].effect).toContain("주문 가능 여부를 확인한 것은 아니에요");
+    const ambiguous: PlanItem = { ...item, rereads: [{ field: "title", current: "566라멘", other: "다른 식당" }] };
+    expect(placeQuestion(ambiguous, plan(ambiguous), [], t, "ko").options.some((option) => option.act.type === "acknowledge-hours")).toBe(false);
+    for (const checks of [
+      item.checks.map((row) => ({ ...row, canAcknowledge: undefined })),
+      [...item.checks, { kind: "closed", result: "bad", text: "휴무" }],
+      [...item.checks, { kind: "time", result: "warn", text: "겹침" }],
+      item.checks.map((row) => row.kind === "place" ? { ...row, result: "warn" } : row),
+    ] as PlanItem["checks"][]) {
+      expect(placeQuestion({ ...item, checks }, plan(item), [], t, "ko").options.some((option) => option.act.type === "acknowledge-hours")).toBe(false);
+    }
+  });
   it("asks the server's own question for a place it could not find, with its candidates and 「장소 없이 두기」", () => {
     const item = stop({ unfound: { question: "「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요", blocked: false } });
     const ask = placeQuestion(item, plan(item), [candidate("을지면옥")], t, "ko");
