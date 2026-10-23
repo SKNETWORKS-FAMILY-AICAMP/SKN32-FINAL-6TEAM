@@ -29,7 +29,7 @@
 | `tests/e2e` | 실행 앱과 오프라인 HTML 브라우저 검증 |
 | `tests/unconfigured` | 별도 빌드에서 미설정 모드 검증 |
 
-스택은 기존 개발자 콘솔과 동일한 Next.js 16.3.5·React 19.3.0·TypeScript 5.9.3 strict·TanStack Query·Zod·lucide-react이며, CSS Modules를 사용한다. HTML 번들은 esbuild 0.28.2를 사용한다. 기존 콘솔의 패키지 잠금 버전을 기준으로 의존성을 해결했으며 기존 화면 코드는 이식하지 않았다.
+스택은 기존 개발자 콘솔과 동일한 Next.js 16.4.2(`[2026-10-23 ST4F-724]` 16.3.5 에서 보안 갱신)·React 19.3.0·TypeScript 5.9.3 strict·TanStack Query·Zod·lucide-react이며, CSS Modules를 사용한다. HTML 번들은 esbuild 0.28.2를 사용한다. 기존 콘솔의 패키지 잠금 버전을 기준으로 의존성을 해결했으며 기존 화면 코드는 이식하지 않았다.
 
 ## 지켜야 할 경계
 

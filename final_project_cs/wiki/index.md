@@ -10,6 +10,8 @@ domain: travel
 
 # cs 프로젝트 구현 wiki
 
+2026-10-23 Next.js 보안 갱신(ST4F-724): 02시 리뷰 뒤 공개된 Next.js 권고(16.0.0~16.4.0)로 web 16.4.0 도 critical 이 되어 web · admin · dev-console 을 16.4.2 로 올렸습니다. 운영 의존성 audit 3/3 앱 0건 · check 12/12 · 단위 1,198/1,198 통과, 개발 서버 보안 경고 사라짐. 배포 전입니다. [작업 기록](records/reports/2026-10-23_Next보안갱신_16.4.2_ST4F-724.md).
+
 2026-10-23 프론트엔드 리뷰: role-eval-ui 기준 격리 브랜치에서 P1 4건·P2 15건을 확인했습니다. 세 앱 check 12/12·단위 1,158/1,158 통과, 제품 수정·운영 반영 전입니다. [전체 보고서](records/reports/2026-10-23_frontend-audit.md).
 
 2026-10-23 프론트엔드 독립 리뷰·Codex 대조(Claude): 리뷰어 6명 독립 검토로 통합 결함 43건(P1 5·P2 38)·P3 약 86건을 정리했고, Codex 19건은 19/19 코드 일치. 새 P1은 git에 추적된 Chromium 프로필(History·Login Data·Cookies 127파일)입니다. 단위 1,158/1,158 재확인, 수정 0/43. [대조 보고서](records/reports/2026-10-23_frontend-audit-claude-crosscheck.md).

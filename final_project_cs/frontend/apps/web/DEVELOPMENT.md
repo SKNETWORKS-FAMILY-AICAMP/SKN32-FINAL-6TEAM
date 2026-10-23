@@ -1021,3 +1021,9 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 `[2026-10-22 사용자 결정 — D안 · 목업 mockups/guguroute-map-pin-focus-2026-10-22.html]` 여행 화면에서 일정을 **목록에서 누르거나(다시 누름 포함) 「상세 보기」로 들어가거나 상세에서 옆 일정으로 넘기면** 그 핀을 지도의 보이는 칸(머리줄 아래 · 시트 위) 가운데에 **줌 18(눈금 10m · 가로 약 178m)** 로 맞춘다. **지도 핀 누름은 옮기기만**(줌 그대로).
 - `MapController.focus(at, zoom)`(세 지도) · `MapViewProps.focus {id, zoom, key}`(`key` 마다 한 번) · `trip-screen.tsx` `FOCUS_ZOOM`. 무료 지도는 초점 뒤 시트 높이가 바뀌어도 모든 핀 맞춤으로 돌아가지 않는다. 움직임 줄이기면 바로 이동. 계획 확인 화면은 그대로.
 - 확인: 단위 581/581 · typecheck · lint 0 · 로컬 실서버 375px(목록 누름 · 다시 누름 · 시트 높이 · 상세 · 상세에서 넘김 · 지도 핀 · 움직임 줄이기 — 핀이 보이는 칸 가운데). 구글 · 네이버 실제 화면 · 브라우저 시험 · 실기기는 안 함. 기록: [작업 기록](../../../wiki/records/reports/2026-10-22_지도_내위치단추_핀초점_ST4F-721-722.md).
+
+## 2026-10-23 — next 16.4.2 보안 갱신(ST4F-724)
+
+**next 16.4.0 → 16.4.2.** 10-22 GitHub 권고 DB 에 Next.js 권고 3건(16.0.0~16.4.0, 16.4.1 에서 고침)이 올라와 개발 서버가 「Security Insight — Next.js 16.4.0 is affected by a known security vulnerability」를 띄웠다. 10-23 09:5x `npm audit --omit=dev`: critical(GHSA-2464-fhr4-w9xw 이미지 최적화 SVG 원격 코드 실행 · GHSA-673q-mjm6-r5xr `use cache` 원격 코드 실행) · high(GHSA-p3m5-59mp-jv5r Server Actions 서비스 거부). 이 웹은 `use cache` · `"use server"` 를 쓰지 않고 잠금 파일의 `sharp` 가 이미 0.35.5(첫째 권고의 우회책)라 직접 노출은 좁았다. `next` · `eslint-config-next` 를 16.4.2 로(정확한 판 고정) 올렸고 잠금 파일에서 바뀐 것은 next 계열(`@next/*` · `eslint-config-next`)뿐이다. 관리자 · 개발 콘솔도 같은 커밋에서 16.3.5 → 16.4.2.
+- 남은 dev 의존성 권고(시험 · 린트 도구, 배포물에 안 실림): `vitest` 5.0.1(→ 5.0.5 에서 고침) · `vite` 의 `launch-editor`(Windows) · `eslint-config-next` → `braces` 사슬(10-08 기록대로 패치판 없음). 이번 범위 밖.
+- 검증(2026-10-23): 세 앱 `npm audit --omit=dev` 0건 · `npm run check` 4단계 × 3앱 12/12 통과(web 단위 1,104/1,104) · `next dev` 를 띄워 터미널 · 화면에 보안 Insight 가 없는 것 확인(3141, API 는 CORS 출처 밖이라 안 붙임). `test:live` · 실서버 화면 · 배포는 안 함. 기록: [작업 기록](../../../wiki/records/reports/2026-10-23_Next보안갱신_16.4.2_ST4F-724.md).
