@@ -1,5 +1,6 @@
 import { translator, type Language, type Translate } from "../i18n";
-import { API_BASE, answerWithin, ensureSession, LiveError, refusal, sessionChecked, sessionInit, type WebSession } from "./client";
+import { API_BASE, answerWithin, ensureSession, LiveError, probeSession, refusal, sessionChecked, sessionInit, type WebSession } from "./client";
+import { refusalSentence } from "./error-text";
 import { eventStreamParser } from "./events";
 import { beginWait, TASK_STEPS } from "./waiting";
 
@@ -90,7 +91,15 @@ async function attempt<T>(path: string, language: Language, init: RequestInit, s
     void response.body?.cancel().catch(() => undefined);
     return { kind: "lost" };
   }
-  if (!response.ok) throw sessionChecked(await refusal(response, language), language, session);
+  if (!response.ok) {
+    const error = await refusal(response, language);
+    // `[2026-10-23 F-18]` Refresh the cookie's session, then stop before any reconnect can resend the body.
+    if (error.code === "csrf_failed") {
+      await probeSession(language, true);
+      throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
+    }
+    throw sessionChecked(error, language, session);
+  }
   if (!(response.headers.get("content-type") ?? "").includes("text/event-stream") || !response.body) {
     return { kind: "done", value: await response.json() as T };
   }

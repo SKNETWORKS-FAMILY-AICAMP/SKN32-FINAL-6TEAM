@@ -164,6 +164,49 @@ describe("session boundaries before a streamed write opens", () => {
     expect(dispatched).toEqual([SESSION_CHANGED_EVENT]);
   });
 
+  it("refreshes the token once after csrf_failed and reports session_changed without resending or reconnecting the stream (F-18)", async () => {
+    takeSession(sessionOf({ kind: "member", csrf_token: "csrf-a" })!);
+    dispatched.length = 0;
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      if (url.endsWith("/v1/web/auth/me")) return json({ kind: "member", csrf_token: "csrf-b" });
+      return json({ error: { code: "csrf_failed", message: "토큰이 바뀌었어요." } }, 403);
+    });
+    const seen: OpProgress[] = [];
+
+    await expect(streamApi(path, "ko", init, (progress) => seen.push(progress), fast)).rejects.toMatchObject({
+      code: "session_changed", message: "로그인 상태가 바뀌어 요청을 보내지 않았어요. 화면을 확인하고 다시 시도해 주세요.",
+    });
+    expect(currentSession()?.csrf).toBe("csrf-b");
+    expect(dispatched).toEqual([SESSION_CHANGED_EVENT]);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(calls).toHaveLength(2);
+    expect(calls.filter((call) => call.url.endsWith("/v1/web/auth/me"))).toHaveLength(1);
+    const writes = calls.filter((call) => call.init.method === "POST");
+    expect(writes).toHaveLength(1);
+    expect(writes[0].init).toMatchObject({ body: init.body, headers: { "X-CSRF-Token": "csrf-a", Accept: "text/event-stream" } });
+    expect(seen.some((progress) => progress.lost)).toBe(false);
+  });
+
+  it("passes on a failed csrf token refresh without resending or reconnecting the stream (F-18)", async () => {
+    takeSession(sessionOf({ kind: "member", csrf_token: "csrf-a" })!);
+    const detail = { code: "internal_error", message: "서버에서 로그인 상태를 확인하지 못했어요.", request: "session-probe" };
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      if (url.endsWith("/v1/web/auth/me")) return json({ error: detail }, 500);
+      return json({ error: { code: "csrf_failed" } }, 403);
+    });
+    const seen: OpProgress[] = [];
+
+    await expect(streamApi(path, "ko", init, (progress) => seen.push(progress), fast)).rejects.toMatchObject({
+      code: "internal_error", message: detail.message, detail, status: 500,
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(calls).toHaveLength(2);
+    expect(calls.filter((call) => call.url.endsWith("/v1/web/auth/me"))).toHaveLength(1);
+    expect(calls.filter((call) => call.init.method === "POST")).toHaveLength(1);
+    expect(seen.some((progress) => progress.lost)).toBe(false);
+  });
 });
 
 describe("following an intake while the server reads it (GET …/trip-intakes/{id}/events)", () => {
