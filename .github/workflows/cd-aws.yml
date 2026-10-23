@@ -1,0 +1,99 @@
+name: CD (AWS)
+
+on:
+  workflow_run:
+    workflows: ["CI (main)"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: aws-production
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       (github.event.workflow_run.event == 'push' ||
+        github.event.workflow_run.event == 'workflow_dispatch'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      ready: ${{ steps.gate.outputs.ready }}
+      sha: ${{ steps.gate.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require current main and every scheduled CI result
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CD_TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: python final_project_cs/deploy/aws_cd.py gate
+
+  deploy:
+    needs: gate
+    if: needs.gate.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.CD_AWS_REGION }}
+      CD_NAMESPACE: ${{ vars.CD_K8S_NAMESPACE }}
+      CD_ECR_REGISTRY: ${{ secrets.CD_ECR_REGISTRY }}
+      CD_PUBLIC_URL: ${{ secrets.CD_PUBLIC_URL }}
+      CD_RDS_INSTANCE: ${{ secrets.CD_RDS_INSTANCE }}
+      CD_WEB_BUILD_ENV: ${{ secrets.CD_WEB_BUILD_ENV }}
+      GH_TOKEN: ${{ github.token }}
+      KUBECONFIG: ${{ runner.temp }}/guguroute-kubeconfig
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.CD_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.CD_AWS_REGION }}
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: v1.34.1
+      - name: Connect to the existing EKS cluster
+        env:
+          CLUSTER: ${{ secrets.CD_EKS_CLUSTER }}
+        run: aws eks update-kubeconfig --name "$CLUSTER" --region "$AWS_REGION"
+      - name: Authenticate image publication
+        run: aws ecr get-login-password | docker login --username AWS --password-stdin "$CD_ECR_REGISTRY"
+      - name: Build and publish the same checked revision
+        run: python final_project_cs/deploy/aws_cd.py publish --sha "${{ needs.gate.outputs.sha }}"
+      - name: Migrate atomically, deploy and verify actual image digests
+        run: python final_project_cs/deploy/aws_cd.py deploy --sha "${{ needs.gate.outputs.sha }}"
+      - name: Preserve the sanitized deployment result
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-deployment-${{ needs.gate.outputs.sha }}
+          path: aws-deploy-result.json
+          retention-days: 30
+          if-no-files-found: error

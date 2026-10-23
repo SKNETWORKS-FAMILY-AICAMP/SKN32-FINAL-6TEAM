@@ -1,0 +1,10 @@
+# Rebuild application code from main while retaining the existing AWS runtime facts.
+ARG SOURCE_IMAGE
+ARG ASSET_IMAGE
+FROM ${ASSET_IMAGE} AS assets
+FROM ${SOURCE_IMAGE}
+ARG GIT_SHA
+LABEL org.opencontainers.image.revision=${GIT_SHA}
+ENV ACOP_DEPLOYMENT_VERSION=${GIT_SHA}
+COPY --from=assets /srv/datasets/ /srv/datasets/
+COPY --from=assets /srv/var/notice_phrasebook.json /srv/var/notice_phrasebook.json
