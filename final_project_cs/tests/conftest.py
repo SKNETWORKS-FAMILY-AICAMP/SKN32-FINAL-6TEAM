@@ -20,6 +20,28 @@ os.environ.setdefault("ACOP_SERPAPI_API_KEY", "")
 import pytest  # noqa: E402
 
 
+#: 항로 지킴이 기본값(꺼짐 — `[2026-10-23 사용자 지시]`) 자체를 재거나 스위치를 직접 켜고 끄는 시험 파일 — 이 파일들은 켜짐으로 고정하지 않는다
+GUARDIAN_DEFAULT_FILES = (
+    "tests/unit/travel/test_guardian_switch.py",
+    "tests/e2e/test_guardian_admin_switch.py",
+    "tests/e2e/test_trip_risk_panel_admin_switch.py",
+    "tests/unit/travel/test_classification_execution_plan.py",
+)
+
+
+@pytest.fixture(autouse=True)
+def _guardian_switch_on_for_feature_tests(request, monkeypatch):
+    """항로 지킴이 기능(자동 일정 변경 · 감시 · 알림)을 재는 시험은 운영 스위치가 **켜진** 상태로 돈다.
+
+    ☆`[2026-10-23 사용자 지시]` 기본값이 켜짐 → 꺼짐으로 바뀌었다. 이 기능을 쓰는 시험은 전부 켜짐을 가정하고 쓰였으므로 공용으로 켠다.
+      기본값 자체를 재는 파일(`GUARDIAN_DEFAULT_FILES`)만 고정하지 않는다."""
+    path = str(request.node.fspath).replace("\\", "/")
+    if path.endswith(GUARDIAN_DEFAULT_FILES):
+        return
+    monkeypatch.setattr("app.core.settings.guardian_enabled", lambda: True)
+    monkeypatch.setattr("app.domains.travel_ops.components.settings_hook.guardian_enabled", lambda tenant_id: True)
+
+
 @pytest.fixture(autouse=True)
 def _wire_domain_teams():
     """시험도 **조립된 상태**로 돈다 — 팀이 자기 계산을 부품의 끼움 자리에 꽂은 상태.

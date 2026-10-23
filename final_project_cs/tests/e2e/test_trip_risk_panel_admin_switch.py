@@ -63,11 +63,11 @@ def test_the_plan_check_screen_reads_it_without_a_session(cookies):
         assert response.status_code == 200, response.text
         return response.json()
 
-    assert features() == {"guardian": True, "risk_panel": False}
+    assert features() == {"guardian": False, "risk_panel": False}
     client = _client()
     read, write = cookies["auth"]("limits:read"), cookies["auth"]("limits:write")
     view = client.get("/admin/limits", headers=read).json()
     on = client.patch("/admin/limits", headers=write, json={
         "expected_revision": view["revision"], "actor": "op-kim", "reason": "시험 — 점검 칸 켜기", "changes": {NAME: True}})
     assert on.status_code == 200, on.text
-    assert features() == {"guardian": True, "risk_panel": True}
+    assert features() == {"guardian": False, "risk_panel": True}
