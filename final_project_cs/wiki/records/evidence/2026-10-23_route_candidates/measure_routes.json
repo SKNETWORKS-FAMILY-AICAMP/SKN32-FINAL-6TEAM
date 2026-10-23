@@ -1,0 +1,2312 @@
+[
+ {
+  "round": 0,
+  "dest": "국립민속박물관",
+  "engine": "base",
+  "sec": 34.418,
+  "n_routes": 6,
+  "first3_bytes": 852,
+  "serialize_ms": 0.036,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 10,
+    "depart": "14:40",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:01A",
+    "mode_label": "버스 01A",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11",
+    "mode_label": "버스 종로11",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:안국",
+    "mode_label": "지하철 3호선",
+    "minutes": 32,
+    "depart": "14:17",
+    "arrive": "14:49",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:종로11",
+    "mode_label": "버스 01A·종로11",
+    "minutes": 32,
+    "depart": "14:08",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:01A",
+    "mode_label": "버스 종로11·01A",
+    "minutes": 34,
+    "depart": "14:06",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "국립민속박물관",
+  "engine": "wide",
+  "sec": 1.637,
+  "n_routes": 8,
+  "first3_bytes": 852,
+  "serialize_ms": 0.056,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 10,
+    "depart": "14:40",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:01A",
+    "mode_label": "버스 01A",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11",
+    "mode_label": "버스 종로11",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:안국",
+    "mode_label": "지하철 3호선",
+    "minutes": 32,
+    "depart": "14:17",
+    "arrive": "14:49",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:종로11",
+    "mode_label": "버스 01A·종로11",
+    "minutes": 32,
+    "depart": "14:08",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:01A",
+    "mode_label": "버스 종로11·01A",
+    "minutes": 34,
+    "depart": "14:06",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>5호선:종로3가>5호선:광화문",
+    "mode_label": "지하철 3호선→5호선",
+    "minutes": 43,
+    "depart": "14:03",
+    "arrive": "14:46",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:5호선:광화문>5호선:종로3가>3호선:종로3가>3호선:안국",
+    "mode_label": "지하철 5호선→3호선",
+    "minutes": 44,
+    "depart": "14:01",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "종각",
+  "engine": "base",
+  "sec": 1.458,
+  "n_routes": 6,
+  "first3_bytes": 951,
+  "serialize_ms": 0.037,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 25,
+    "depart": "14:25",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 22,
+    "depart": "14:23",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:1020",
+    "mode_label": "버스 1020",
+    "minutes": 28,
+    "depart": "14:17",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:606",
+    "mode_label": "버스 606",
+    "minutes": 30,
+    "depart": "14:12",
+    "arrive": "14:42",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 30,
+    "depart": "14:14",
+    "arrive": "14:44",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종로3가>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 32,
+    "depart": "14:05",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "종각",
+  "engine": "wide",
+  "sec": 1.8,
+  "n_routes": 11,
+  "first3_bytes": 1050,
+  "serialize_ms": 0.038,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 25,
+    "depart": "14:25",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 22,
+    "depart": "14:23",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 27,
+    "depart": "14:18",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:1020",
+    "mode_label": "버스 1020",
+    "minutes": 28,
+    "depart": "14:17",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:606",
+    "mode_label": "버스 606",
+    "minutes": 30,
+    "depart": "14:12",
+    "arrive": "14:42",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 30,
+    "depart": "14:14",
+    "arrive": "14:44",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종로3가>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 32,
+    "depart": "14:05",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:을지로입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 33,
+    "depart": "14:17",
+    "arrive": "14:50",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:101",
+    "mode_label": "버스 종로11·101",
+    "minutes": 34,
+    "depart": "14:03",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:150",
+    "mode_label": "버스 종로11·150",
+    "minutes": 34,
+    "depart": "14:03",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:370",
+    "mode_label": "버스 01A·370",
+    "minutes": 35,
+    "depart": "14:03",
+    "arrive": "14:38",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "N서울타워",
+  "engine": "base",
+  "sec": 0.332,
+  "n_routes": 3,
+  "first3_bytes": 1510,
+  "serialize_ms": 0.058,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 52,
+    "depart": "13:56",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:동대입구>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 45,
+    "depart": "13:56",
+    "arrive": "14:41",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:472",
+    "mode_label": "버스 01A·472",
+    "minutes": 54,
+    "depart": "13:42",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "N서울타워",
+  "engine": "wide",
+  "sec": 0.705,
+  "n_routes": 10,
+  "first3_bytes": 1481,
+  "serialize_ms": 0.043,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 52,
+    "depart": "13:56",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:동대입구>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 45,
+    "depart": "13:56",
+    "arrive": "14:41",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>버스:01A",
+    "mode_label": "대중교통",
+    "minutes": 46,
+    "depart": "13:56",
+    "arrive": "14:42",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 48,
+    "depart": "13:48",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:470",
+    "mode_label": "버스 01A·470",
+    "minutes": 54,
+    "depart": "13:41",
+    "arrive": "14:35",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:472",
+    "mode_label": "버스 01A·472",
+    "minutes": 54,
+    "depart": "13:42",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:741",
+    "mode_label": "버스 01A·741",
+    "minutes": 54,
+    "depart": "13:41",
+    "arrive": "14:35",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 57,
+    "depart": "13:51",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:5호선:광화문>5호선:동대문역사문화공원>4호선:동대문역사문화공원>4호선:명동",
+    "mode_label": "지하철 5호선→4호선",
+    "minutes": 59,
+    "depart": "13:48",
+    "arrive": "14:47",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:서울역>4호선:서울역>4호선:명동",
+    "mode_label": "대중교통",
+    "minutes": 70,
+    "depart": "13:37",
+    "arrive": "14:47",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "홍대입구역",
+  "engine": "base",
+  "sec": 1.686,
+  "n_routes": 4,
+  "first3_bytes": 1519,
+  "serialize_ms": 0.043,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 36,
+    "depart": "14:03",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 38,
+    "depart": "14:01",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 43,
+    "depart": "13:56",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>공항철도:서울역>공항철도:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 47,
+    "depart": "13:52",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "홍대입구역",
+  "engine": "wide",
+  "sec": 2.208,
+  "n_routes": 9,
+  "first3_bytes": 1367,
+  "serialize_ms": 0.047,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 36,
+    "depart": "14:03",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 38,
+    "depart": "14:01",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 41,
+    "depart": "13:58",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 43,
+    "depart": "13:56",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>공항철도:서울역>공항철도:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 47,
+    "depart": "13:52",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 48,
+    "depart": "13:51",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종각>1호선:시청>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 49,
+    "depart": "13:50",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:신촌",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 51,
+    "depart": "13:56",
+    "arrive": "14:47",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:신촌",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 59,
+    "depart": "13:48",
+    "arrive": "14:47",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "롯데월드타워",
+  "engine": "base",
+  "sec": 2.407,
+  "n_routes": 3,
+  "first3_bytes": 1640,
+  "serialize_ms": 0.056,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 52,
+    "depart": "13:48",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 58,
+    "depart": "13:48",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:잠실",
+    "mode_label": "대중교통",
+    "minutes": 61,
+    "depart": "13:44",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 0,
+  "dest": "롯데월드타워",
+  "engine": "wide",
+  "sec": 1.629,
+  "n_routes": 5,
+  "first3_bytes": 1593,
+  "serialize_ms": 0.044,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 52,
+    "depart": "13:48",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:안국>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 57,
+    "depart": "13:43",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 58,
+    "depart": "13:48",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:잠실",
+    "mode_label": "대중교통",
+    "minutes": 61,
+    "depart": "13:44",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 63,
+    "depart": "13:43",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "국립민속박물관",
+  "engine": "base",
+  "sec": 0.497,
+  "n_routes": 6,
+  "first3_bytes": 852,
+  "serialize_ms": 0.042,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 10,
+    "depart": "14:40",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:01A",
+    "mode_label": "버스 01A",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11",
+    "mode_label": "버스 종로11",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:안국",
+    "mode_label": "지하철 3호선",
+    "minutes": 32,
+    "depart": "14:17",
+    "arrive": "14:49",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:종로11",
+    "mode_label": "버스 01A·종로11",
+    "minutes": 32,
+    "depart": "14:08",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:01A",
+    "mode_label": "버스 종로11·01A",
+    "minutes": 34,
+    "depart": "14:06",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "국립민속박물관",
+  "engine": "wide",
+  "sec": 0.755,
+  "n_routes": 8,
+  "first3_bytes": 852,
+  "serialize_ms": 0.037,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 10,
+    "depart": "14:40",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:01A",
+    "mode_label": "버스 01A",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11",
+    "mode_label": "버스 종로11",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:안국",
+    "mode_label": "지하철 3호선",
+    "minutes": 32,
+    "depart": "14:17",
+    "arrive": "14:49",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:종로11",
+    "mode_label": "버스 01A·종로11",
+    "minutes": 32,
+    "depart": "14:08",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:01A",
+    "mode_label": "버스 종로11·01A",
+    "minutes": 34,
+    "depart": "14:06",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>5호선:종로3가>5호선:광화문",
+    "mode_label": "지하철 3호선→5호선",
+    "minutes": 43,
+    "depart": "14:03",
+    "arrive": "14:46",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:5호선:광화문>5호선:종로3가>3호선:종로3가>3호선:안국",
+    "mode_label": "지하철 5호선→3호선",
+    "minutes": 44,
+    "depart": "14:01",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "종각",
+  "engine": "base",
+  "sec": 1.19,
+  "n_routes": 6,
+  "first3_bytes": 951,
+  "serialize_ms": 0.039,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 25,
+    "depart": "14:25",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 22,
+    "depart": "14:23",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:1020",
+    "mode_label": "버스 1020",
+    "minutes": 28,
+    "depart": "14:17",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:606",
+    "mode_label": "버스 606",
+    "minutes": 30,
+    "depart": "14:12",
+    "arrive": "14:42",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 30,
+    "depart": "14:14",
+    "arrive": "14:44",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종로3가>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 32,
+    "depart": "14:05",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "종각",
+  "engine": "wide",
+  "sec": 1.392,
+  "n_routes": 11,
+  "first3_bytes": 1050,
+  "serialize_ms": 0.039,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 25,
+    "depart": "14:25",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 22,
+    "depart": "14:23",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 27,
+    "depart": "14:18",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:1020",
+    "mode_label": "버스 1020",
+    "minutes": 28,
+    "depart": "14:17",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:606",
+    "mode_label": "버스 606",
+    "minutes": 30,
+    "depart": "14:12",
+    "arrive": "14:42",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 30,
+    "depart": "14:14",
+    "arrive": "14:44",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종로3가>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 32,
+    "depart": "14:05",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:을지로입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 33,
+    "depart": "14:17",
+    "arrive": "14:50",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:101",
+    "mode_label": "버스 종로11·101",
+    "minutes": 34,
+    "depart": "14:03",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:150",
+    "mode_label": "버스 종로11·150",
+    "minutes": 34,
+    "depart": "14:03",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:370",
+    "mode_label": "버스 01A·370",
+    "minutes": 35,
+    "depart": "14:03",
+    "arrive": "14:38",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "N서울타워",
+  "engine": "base",
+  "sec": 0.233,
+  "n_routes": 3,
+  "first3_bytes": 1510,
+  "serialize_ms": 0.044,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 52,
+    "depart": "13:56",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:동대입구>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 45,
+    "depart": "13:56",
+    "arrive": "14:41",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:472",
+    "mode_label": "버스 01A·472",
+    "minutes": 54,
+    "depart": "13:42",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "N서울타워",
+  "engine": "wide",
+  "sec": 0.619,
+  "n_routes": 10,
+  "first3_bytes": 1481,
+  "serialize_ms": 0.044,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 52,
+    "depart": "13:56",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:동대입구>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 45,
+    "depart": "13:56",
+    "arrive": "14:41",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>버스:01A",
+    "mode_label": "대중교통",
+    "minutes": 46,
+    "depart": "13:56",
+    "arrive": "14:42",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 48,
+    "depart": "13:48",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:470",
+    "mode_label": "버스 01A·470",
+    "minutes": 54,
+    "depart": "13:41",
+    "arrive": "14:35",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:472",
+    "mode_label": "버스 01A·472",
+    "minutes": 54,
+    "depart": "13:42",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:741",
+    "mode_label": "버스 01A·741",
+    "minutes": 54,
+    "depart": "13:41",
+    "arrive": "14:35",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 57,
+    "depart": "13:51",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:5호선:광화문>5호선:동대문역사문화공원>4호선:동대문역사문화공원>4호선:명동",
+    "mode_label": "지하철 5호선→4호선",
+    "minutes": 59,
+    "depart": "13:48",
+    "arrive": "14:47",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:서울역>4호선:서울역>4호선:명동",
+    "mode_label": "대중교통",
+    "minutes": 70,
+    "depart": "13:37",
+    "arrive": "14:47",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "홍대입구역",
+  "engine": "base",
+  "sec": 1.354,
+  "n_routes": 4,
+  "first3_bytes": 1519,
+  "serialize_ms": 0.042,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 36,
+    "depart": "14:03",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 38,
+    "depart": "14:01",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 43,
+    "depart": "13:56",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>공항철도:서울역>공항철도:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 47,
+    "depart": "13:52",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "홍대입구역",
+  "engine": "wide",
+  "sec": 2.021,
+  "n_routes": 9,
+  "first3_bytes": 1367,
+  "serialize_ms": 0.073,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 36,
+    "depart": "14:03",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 38,
+    "depart": "14:01",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 41,
+    "depart": "13:58",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 43,
+    "depart": "13:56",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>공항철도:서울역>공항철도:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 47,
+    "depart": "13:52",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 48,
+    "depart": "13:51",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종각>1호선:시청>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 49,
+    "depart": "13:50",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:신촌",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 51,
+    "depart": "13:56",
+    "arrive": "14:47",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:신촌",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 59,
+    "depart": "13:48",
+    "arrive": "14:47",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "롯데월드타워",
+  "engine": "base",
+  "sec": 0.44,
+  "n_routes": 3,
+  "first3_bytes": 1640,
+  "serialize_ms": 0.063,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 52,
+    "depart": "13:48",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 58,
+    "depart": "13:48",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:잠실",
+    "mode_label": "대중교통",
+    "minutes": 61,
+    "depart": "13:44",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 1,
+  "dest": "롯데월드타워",
+  "engine": "wide",
+  "sec": 1.086,
+  "n_routes": 5,
+  "first3_bytes": 1593,
+  "serialize_ms": 0.045,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 52,
+    "depart": "13:48",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:안국>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 57,
+    "depart": "13:43",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 58,
+    "depart": "13:48",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:잠실",
+    "mode_label": "대중교통",
+    "minutes": 61,
+    "depart": "13:44",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 63,
+    "depart": "13:43",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "국립민속박물관",
+  "engine": "base",
+  "sec": 0.528,
+  "n_routes": 6,
+  "first3_bytes": 852,
+  "serialize_ms": 0.041,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 10,
+    "depart": "14:40",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:01A",
+    "mode_label": "버스 01A",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11",
+    "mode_label": "버스 종로11",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:안국",
+    "mode_label": "지하철 3호선",
+    "minutes": 32,
+    "depart": "14:17",
+    "arrive": "14:49",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:종로11",
+    "mode_label": "버스 01A·종로11",
+    "minutes": 32,
+    "depart": "14:08",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:01A",
+    "mode_label": "버스 종로11·01A",
+    "minutes": 34,
+    "depart": "14:06",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "국립민속박물관",
+  "engine": "wide",
+  "sec": 0.829,
+  "n_routes": 8,
+  "first3_bytes": 852,
+  "serialize_ms": 0.057,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 10,
+    "depart": "14:40",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:01A",
+    "mode_label": "버스 01A",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11",
+    "mode_label": "버스 종로11",
+    "minutes": 29,
+    "depart": "14:16",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:안국",
+    "mode_label": "지하철 3호선",
+    "minutes": 32,
+    "depart": "14:17",
+    "arrive": "14:49",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:종로11",
+    "mode_label": "버스 01A·종로11",
+    "minutes": 32,
+    "depart": "14:08",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:01A",
+    "mode_label": "버스 종로11·01A",
+    "minutes": 34,
+    "depart": "14:06",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>5호선:종로3가>5호선:광화문",
+    "mode_label": "지하철 3호선→5호선",
+    "minutes": 43,
+    "depart": "14:03",
+    "arrive": "14:46",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:5호선:광화문>5호선:종로3가>3호선:종로3가>3호선:안국",
+    "mode_label": "지하철 5호선→3호선",
+    "minutes": 44,
+    "depart": "14:01",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "종각",
+  "engine": "base",
+  "sec": 1.071,
+  "n_routes": 6,
+  "first3_bytes": 951,
+  "serialize_ms": 0.056,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 25,
+    "depart": "14:25",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 22,
+    "depart": "14:23",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:1020",
+    "mode_label": "버스 1020",
+    "minutes": 28,
+    "depart": "14:17",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:606",
+    "mode_label": "버스 606",
+    "minutes": 30,
+    "depart": "14:12",
+    "arrive": "14:42",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 30,
+    "depart": "14:14",
+    "arrive": "14:44",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종로3가>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 32,
+    "depart": "14:05",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "종각",
+  "engine": "wide",
+  "sec": 1.534,
+  "n_routes": 11,
+  "first3_bytes": 1050,
+  "serialize_ms": 0.038,
+  "capped": true,
+  "routes": [
+   {
+    "key": "walk",
+    "mode_label": "도보",
+    "minutes": 25,
+    "depart": "14:25",
+    "arrive": "14:50",
+    "transfers": 0,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 22,
+    "depart": "14:23",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:종로3가>1호선:종로3가>1호선:종각",
+    "mode_label": "지하철 3호선→1호선",
+    "minutes": 27,
+    "depart": "14:18",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:1020",
+    "mode_label": "버스 1020",
+    "minutes": 28,
+    "depart": "14:17",
+    "arrive": "14:45",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:606",
+    "mode_label": "버스 606",
+    "minutes": 30,
+    "depart": "14:12",
+    "arrive": "14:42",
+    "transfers": 0,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 30,
+    "depart": "14:14",
+    "arrive": "14:44",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종로3가>1호선:종각",
+    "mode_label": "대중교통",
+    "minutes": 32,
+    "depart": "14:05",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:을지로입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 33,
+    "depart": "14:17",
+    "arrive": "14:50",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:101",
+    "mode_label": "버스 종로11·101",
+    "minutes": 34,
+    "depart": "14:03",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>버스:150",
+    "mode_label": "버스 종로11·150",
+    "minutes": 34,
+    "depart": "14:03",
+    "arrive": "14:37",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:370",
+    "mode_label": "버스 01A·370",
+    "minutes": 35,
+    "depart": "14:03",
+    "arrive": "14:38",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "N서울타워",
+  "engine": "base",
+  "sec": 0.234,
+  "n_routes": 3,
+  "first3_bytes": 1510,
+  "serialize_ms": 0.061,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 52,
+    "depart": "13:56",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:동대입구>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 45,
+    "depart": "13:56",
+    "arrive": "14:41",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:472",
+    "mode_label": "버스 01A·472",
+    "minutes": 54,
+    "depart": "13:42",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "N서울타워",
+  "engine": "wide",
+  "sec": 0.601,
+  "n_routes": 10,
+  "first3_bytes": 1481,
+  "serialize_ms": 0.045,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 52,
+    "depart": "13:56",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:동대입구>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 45,
+    "depart": "13:56",
+    "arrive": "14:41",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>버스:01A",
+    "mode_label": "대중교통",
+    "minutes": 46,
+    "depart": "13:56",
+    "arrive": "14:42",
+    "transfers": 1,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>버스:01B",
+    "mode_label": "대중교통",
+    "minutes": 48,
+    "depart": "13:48",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:470",
+    "mode_label": "버스 01A·470",
+    "minutes": 54,
+    "depart": "13:41",
+    "arrive": "14:35",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:472",
+    "mode_label": "버스 01A·472",
+    "minutes": 54,
+    "depart": "13:42",
+    "arrive": "14:36",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>버스:741",
+    "mode_label": "버스 01A·741",
+    "minutes": 54,
+    "depart": "13:41",
+    "arrive": "14:35",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:명동",
+    "mode_label": "지하철 3호선→4호선",
+    "minutes": 57,
+    "depart": "13:51",
+    "arrive": "14:48",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:5호선:광화문>5호선:동대문역사문화공원>4호선:동대문역사문화공원>4호선:명동",
+    "mode_label": "지하철 5호선→4호선",
+    "minutes": 59,
+    "depart": "13:48",
+    "arrive": "14:47",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>1호선:시청>1호선:서울역>4호선:서울역>4호선:명동",
+    "mode_label": "대중교통",
+    "minutes": 70,
+    "depart": "13:37",
+    "arrive": "14:47",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "홍대입구역",
+  "engine": "base",
+  "sec": 1.297,
+  "n_routes": 4,
+  "first3_bytes": 1519,
+  "serialize_ms": 0.049,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 36,
+    "depart": "14:03",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 38,
+    "depart": "14:01",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 43,
+    "depart": "13:56",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>공항철도:서울역>공항철도:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 47,
+    "depart": "13:52",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "홍대입구역",
+  "engine": "wide",
+  "sec": 1.967,
+  "n_routes": 9,
+  "first3_bytes": 1367,
+  "serialize_ms": 0.058,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 36,
+    "depart": "14:03",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 38,
+    "depart": "14:01",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:을지로3가>2호선:을지로3가>2호선:홍대입구",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 41,
+    "depart": "13:58",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 43,
+    "depart": "13:56",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>공항철도:서울역>공항철도:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 47,
+    "depart": "13:52",
+    "arrive": "14:39",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:홍대입구",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 48,
+    "depart": "13:51",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:버스:01A>1호선:종각>1호선:시청>2호선:시청>2호선:홍대입구",
+    "mode_label": "대중교통",
+    "minutes": 49,
+    "depart": "13:50",
+    "arrive": "14:39",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:신촌",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 51,
+    "depart": "13:56",
+    "arrive": "14:47",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:신촌",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 59,
+    "depart": "13:48",
+    "arrive": "14:47",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "롯데월드타워",
+  "engine": "base",
+  "sec": 0.45,
+  "n_routes": 3,
+  "first3_bytes": 1640,
+  "serialize_ms": 0.045,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 52,
+    "depart": "13:48",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 58,
+    "depart": "13:48",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:잠실",
+    "mode_label": "대중교통",
+    "minutes": 61,
+    "depart": "13:44",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   }
+  ]
+ },
+ {
+  "round": 2,
+  "dest": "롯데월드타워",
+  "engine": "wide",
+  "sec": 0.948,
+  "n_routes": 5,
+  "first3_bytes": 1593,
+  "serialize_ms": 0.043,
+  "capped": true,
+  "routes": [
+   {
+    "key": "u:3호선:경복궁>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 52,
+    "depart": "13:48",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": false,
+    "planned": true
+   },
+   {
+    "key": "u:3호선:안국>3호선:을지로3가>2호선:을지로3가>2호선:잠실",
+    "mode_label": "지하철 3호선→2호선",
+    "minutes": 57,
+    "depart": "13:43",
+    "arrive": "14:40",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:경복궁>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 58,
+    "depart": "13:48",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": false,
+    "planned": false
+   },
+   {
+    "key": "u:버스:종로11>2호선:시청>2호선:잠실",
+    "mode_label": "대중교통",
+    "minutes": 61,
+    "depart": "13:44",
+    "arrive": "14:45",
+    "transfers": 1,
+    "early": true,
+    "planned": false
+   },
+   {
+    "key": "u:3호선:안국>3호선:충무로>4호선:충무로>4호선:동대문역사문화공원>2호선:동대문역사문화공원>2호선:잠실",
+    "mode_label": "지하철 3호선→4호선→2호선",
+    "minutes": 63,
+    "depart": "13:43",
+    "arrive": "14:46",
+    "transfers": 2,
+    "early": true,
+    "planned": false
+   }
+  ]
+ }
+]

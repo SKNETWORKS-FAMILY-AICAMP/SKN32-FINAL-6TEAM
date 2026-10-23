@@ -127,7 +127,7 @@ export function answerWithin(url: string): number {
 /** Calls that are slow ON PURPOSE and not something the customer waits for (the model is warmed up in the background): they are not counted as a slow server. */
 const BACKGROUND_CALL = /\/warmup$/;
 /** `[2026-10-13]` Calls whose screen shows its own loading line — the global slow notice waits longer for them (`SHOWN_STEPS`). */
-const SHOWN_CALL = /\/trip-intakes\/[^/]+\/(candidates|place-search|route-shapes|moves\/[^/]+\/options)$|\/trips\/[^/]+\/route-shapes$/;
+const SHOWN_CALL = /\/trip-intakes\/[^/]+\/(candidates|place-search|add-search|route-shapes|moves\/[^/]+\/options)$|\/trips\/[^/]+\/route-shapes$/;
 
 async function send(url: string, init: RequestInit, language: Language): Promise<Response> {
   const t = translator(language);
@@ -170,7 +170,7 @@ export async function refusal(response: Response, language: Language): Promise<L
   let message = refusalSentence(code, serverMessage, detail, language);
   // ★A limit says when it opens again (`Retry-After`, or `retry_after_seconds` in the body) — say it, so the
   //   customer is not left guessing whether to press again.
-  if (["usage_limit", "service_daily_cap", "too_many_sessions"].includes(code)) {
+  if (["usage_limit", "service_daily_cap", "too_many_sessions", "hourly_limit"].includes(code)) {
     const seconds = Number((detail as { retry_after_seconds?: unknown } | undefined)?.retry_after_seconds ?? response.headers.get("Retry-After"));
     if (Number.isFinite(seconds) && seconds > 0) message = `${message} ${waitText(seconds, t)}`;
   }

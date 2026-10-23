@@ -74,9 +74,21 @@ def seed_table() -> AliasTable:
     return AliasTable((row.get("alias") or "", row.get("content_id") or "") for row in read_seed())
 
 
+@lru_cache(maxsize=1)
+def _seed_titles() -> dict[str, str]:
+    return {str(row.get("content_id") or "").strip(): str(row.get("canonical_title") or "").strip()
+            for row in read_seed() if row.get("content_id") and row.get("canonical_title")}
+
+
+def seed_title(content_id: str | None) -> str | None:
+    """시드 파일에 적힌 그 장소의 정식 제목 — DB 를 못 읽을 때 별칭이 가리키는 이름을 알려 준다. 없으면 `None`."""
+    return _seed_titles().get(str(content_id or "").strip()) or None
+
+
 def reload_seed() -> None:
     """시드 파일을 다시 읽게 한다 — 시험 · 파일을 고친 직후용."""
     seed_table.cache_clear()
+    _seed_titles.cache_clear()
 
 
 def merged(rows: Iterable[Any] | None) -> AliasTable:

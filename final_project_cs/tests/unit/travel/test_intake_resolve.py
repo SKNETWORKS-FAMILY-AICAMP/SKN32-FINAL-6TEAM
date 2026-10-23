@@ -190,8 +190,14 @@ def test_kakao_is_asked_with_the_whole_text_only():
     assert kakao.asked == ["한강 카약"] and found.status == "unresolved"
 
 
-def test_a_romanized_name_is_accepted_only_when_tour_api_confirms_the_korean_name():
-    """☆실측(2026-09-27): 「Gyeongbokgung」의 카카오 1~5위가 전부 식당 체인 「경복궁 ○○점」이었다."""
+def test_a_romanized_name_is_accepted_only_when_tour_api_confirms_the_korean_name(monkeypatch):
+    """☆실측(2026-09-27): 「Gyeongbokgung」의 카카오 1~5위가 전부 식당 체인 「경복궁 ○○점」이었다.
+
+    ★`[2026-10-22]` 「Gyeongbokgung」은 이제 공용 별칭(활동 팀 CSV)이 카카오보다 먼저 경복궁으로 정한다(`test_place_name_lookup_order.py`).
+      이 시험은 **별칭에 없는** 로마자 이름의 길을 본다 — 별칭 단계를 끄고 잰다."""
+    from app.domains.travel_ops.components.team_hooks import place_aliases as alias_hook
+
+    monkeypatch.setattr(alias_hook, "target", lambda conn, name: None)
     chain = [_hit("경복궁 관훈점", "FD6"), _hit("경복궁 방이점", "FD6")]
     found = resolve("Gyeongbokgung", our_places=[], tour=Tour({"경복궁": "12"}),
                     kakao=Kakao({"Gyeongbokgung": chain}))

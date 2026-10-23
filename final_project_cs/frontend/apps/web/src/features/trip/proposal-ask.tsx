@@ -7,7 +7,8 @@ import { LiveError } from "@/lib/live/client";
 import { chooseProposal } from "@/lib/live/extras";
 import { seoul } from "@/lib/live/gateway";
 import { useSettings, useT } from "@/lib/settings";
-import type { OpenChoice } from "./attention";
+import { proposalText, type OpenChoice } from "./attention";
+import { ownAnswer } from "./own-changes";
 import { noticeWhen } from "./trip-attention";
 import { tripKey } from "./use-trip";
 import { noticesKey, proposalsKey } from "./use-trip-extras";
@@ -20,12 +21,16 @@ import styles from "./trip-screen.module.css";
 export const ASK_FIRST_REASONS = ["indoor_unknown", "forecast_advisory"];
 export const CONSENT_KEY = "change";
 
-/** A choice answered on a stop's detail — the notice center's call (`POST …/proposals/{id}/choose`). The trip, the choices and the notices are read again after it. */
-export function useChooseProposal(tripId: string) {
+/**
+ * A choice answered on a stop's detail — the notice center's call (`POST …/proposals/{id}/choose`). The trip, the choices and the notices are read again after it.
+ * `version`: the trip's version the answer is made on — what the answer brings is this device's own (`own-changes.ts`, ST4F-723 g).
+ */
+export function useChooseProposal(tripId: string, version: number | undefined) {
   const { language } = useSettings();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ proposalId, key }: { proposalId: string; key: string | null }) => chooseProposal(tripId, proposalId, key, language),
+    mutationFn: ({ proposalId, key }: { proposalId: string; key: string | null }) =>
+      ownAnswer(tripId, version, { proposalId, consent: key === CONSENT_KEY }, () => chooseProposal(tripId, proposalId, key, language)),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: tripKey(tripId, language) });
       void queryClient.invalidateQueries({ queryKey: proposalsKey(tripId, language) });
@@ -34,26 +39,39 @@ export function useChooseProposal(tripId: string) {
   });
 }
 
-/** What came of a choice, in the notice center's words — null while it goes on (`options`: the options stand on the card now). */
+/**
+ * What came of a choice, in the notice center's words — null while it goes on (`options`: the options stand on the card now).
+ * `[2026-10-22 ST4F-723 · 실서버 확인]` The server answers a picked option with `chosen` (`pending.py` choose), not `adjusted` — the screen showed 「처리 결과: chosen」. The notice center,
+ * a stop's detail and the chat all say the result with this one function.
+ */
 export function chooseOutcome(status: string | undefined, t: Translate): string | null {
   if (status === "options") return null;
   if (status === "no_alternate") return t("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.", "No other place was found — the plan stays as it is.");
-  if (status === "adjusted") return t("고르신 곳으로 일정을 바꿨어요.", "Your plan now uses the place you picked.");
+  if (status === "chosen") return t("고르신 곳으로 일정을 바꿨어요.", "Your plan now uses the place you picked.");
   if (status === "kept") return t("지금 일정을 그대로 두었어요.", "Your plan stays as it is.");
   return t(`처리 결과: ${status ?? "-"}`, `Result: ${status ?? "-"}`);
 }
 
-/** A refused choice, in the notice center's words: decided already or the trip moved on (nothing changed — the state was read again), else the server's own message. */
+/**
+ * A refused choice, in the notice center's words: decided already or the trip moved on (nothing changed — the state was read again), else the server's own message.
+ * `[2026-10-22 ST4F-723]` The notice center, a stop's detail and the chat say it with this one function. `expired` (409 — the stop it was about is over, `trip_api` choose) showed the
+ * server's internal sentence 「안을 고르지 못했다 — 아무것도 바뀌지 않았다」.
+ */
 export function chooseFailure(error: Error, t: Translate): string {
-  return error instanceof LiveError && (error.code === "already_decided" || error.code === "stale")
-    ? t("이미 정해졌거나 그 사이 일정이 바뀌었어요. 아무것도 바뀌지 않았고, 지금 상태를 다시 불러왔어요.", "It was already decided or the trip changed meanwhile. Nothing was changed; we reloaded the current state.")
-    : error.message;
+  if (!(error instanceof LiveError)) return error.message;
+  if (["already_decided", "stale", "stale_itinerary"].includes(error.code))
+    return t("이미 정해졌거나 그 사이 일정이 바뀌었어요. 아무것도 바뀌지 않았고, 지금 상태를 다시 불러왔어요.", "It was already decided or the trip changed meanwhile. Nothing was changed; we reloaded the current state.");
+  if (error.code === "expired")
+    return t("답할 수 있는 때가 지나 이 제안은 닫혔어요. 아무것도 바뀌지 않았고, 지금 상태를 다시 불러왔어요.", "This proposal has closed — its time to answer has passed. Nothing was changed; we reloaded the current state.");
+  return error.message;
 }
 
 /**
  * `[2026-10-21 사용자 결정 — ST4F-704 · 목업 tripilot-trip-card-proposal-mark.html ②③]` The choice the server waits for, inside the stop's card on its detail — the plan check's question
  * (`stop-question.module.css`): what it is (「선택 요청」), the server's sentence, the options (「예보에 맞게 일정 변경」 · 「다른 곳 찾아보기」 first when the server asks before finding any),
  * 「직접 수정」 (the edit on this stop with 「직접 고치기」 open) and 「지금 일정 그대로 두기」, and until when. Only the server's words and values; where it sent no sentence, the center's line.
+ * `[2026-10-22 사용자 결정 — ST4F-723 상세 보기 선택 칸 A]` The shape stays; the sentence leaves out what the card already shows (the stop's name over it, the numbered options and their
+ * warnings in the rows under it) — the notice center's and the chat's rule (`proposalText`, the server's frame to the letter only).
  */
 export function ProposalAsk({ choice, busy, onChoose, onEdit }: {
   choice: OpenChoice; busy: boolean; onChoose: (key: string | null) => void; onEdit: () => void;
@@ -64,7 +82,7 @@ export function ProposalAsk({ choice, busy, onChoose, onEdit }: {
   const asksFirst = ASK_FIRST_REASONS.includes(proposal.reason) && proposal.options.length === 0;
   return <section className={`${sq.box} ${styles.detailAsk}`} aria-labelledby={titleId} data-proposal-ask={proposal.id}>
     <span className={sq.kind}>{t("선택 요청", "Your choice")}</span>
-    <p id={titleId} className={sq.question}>{text ?? t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
+    <p id={titleId} className={sq.question}>{text ? proposalText(text, { stopTitle: choice.stop?.title, options: proposal.options }) : t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
     {(asksFirst || proposal.options.length > 0) && <div className={sq.options}>
       {asksFirst && <button type="button" className={sq.option} disabled={busy} onClick={() => onChoose(CONSENT_KEY)}>
         <span className={sq.optionTop}>{proposal.reason === "forecast_advisory" ? t("예보에 맞게 일정 변경", "Adjust the plan for the forecast") : t("다른 곳 찾아보기", "Show other places")}</span></button>}

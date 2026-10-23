@@ -1,0 +1,17 @@
+
+> @tripilot/web@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.1 D:/FinalProject/Dev/fe-audit-20261023/final_project_cs/frontend/apps/web
+
+
+ Test Files  123 passed (123)
+      Tests  1064 passed (1064)
+   Start at  01:27:16
+   Duration  61.77s (transform 52%, import 40%, worker 6%, tests 2%)
+
+  Transform  transforming modules took 237.71s · 52% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

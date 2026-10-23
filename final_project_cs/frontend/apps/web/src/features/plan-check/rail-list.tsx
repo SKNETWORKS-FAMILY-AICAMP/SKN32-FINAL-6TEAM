@@ -60,7 +60,11 @@ function evenCards(list: HTMLElement, rows: readonly HTMLElement[]) {
   rows.forEach((row) => {
     const card = row.dataset.rail === "move" ? null : row.querySelector<HTMLElement>(":scope > article");
     if (!card) return;
-    if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open")) { card.style.removeProperty("min-height"); return; }
+    // `[2026-10-22 ST4F-716]` The stop going on now (`data-live`) carries 「아직 진행 중 | 끝났어요」 under its facts: it keeps its own height, else every folded card would grow by that row.
+    if (row.hasAttribute("data-past") || row.hasAttribute("data-rail-open") || row.hasAttribute("data-past-open") || row.hasAttribute("data-live")) {
+      card.style.removeProperty("min-height");
+      return;
+    }
     folded.push({ card, need: contentHeight(card) });
   });
   // A list with no `--rail-card-min` (the plan check) evens its cards to their content.

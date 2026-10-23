@@ -170,10 +170,10 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
 
                 with connect() as conn:
                     ours = pipeline._our_places(conn, tenant, trip_id=trip_id)
-                    found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining)
+                    found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining, conn=conn)
                     if found.status != "resolved" and found.blocked:
                         # ★`[2026-10-19 사용자 결정]` 조회가 막혀서 못 찾은 것은 고객에게 돌려주기 전에 **한 번** 더 찾는다(없는 곳이라서 못 찾은 것은 다시 찾지 않는다)
-                        found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining)
+                        found = resolve(op.place_name or "", our_places=ours, tour=tour, kakao=kakao, dining=dining, conn=conn)
                 if found.status != "resolved":
                     raise EditRefused("place_not_found", _refusal("place_not_found", found.note or "찾지 못함"))
                 op.item_kind = "dining" if found.kind == "dining" else "activity"
@@ -223,7 +223,8 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
 
                     with connect() as conn:
                         named = resolve(op.place_name, our_places=pipeline._our_places(conn, tenant, trip_id=trip_id), tour=tour, kakao=kakao, dining=dining,
-                                        near=op.near or ((item.place["latitude"], item.place["longitude"]) if item.place else None), choose_near=True)
+                                        near=op.near or ((item.place["latitude"], item.place["longitude"]) if item.place else None), choose_near=True,
+                                        conn=conn)
                     new_kind = "dining" if named.kind == "dining" else ("activity" if named.kind else None)
                     if named.status == "resolved" and new_kind and new_kind != item.kind:
                         edits.append({"source_id": source_id, "field": f"{prefix}.kind", "value": new_kind})
@@ -282,6 +283,8 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             status, _, built = pipeline.draft(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
                                               revision=revision)
             reopened = reopen.session(conn, tenant_id=tenant, intake_id=intake_id)
+        # 판정은 접수 잠금을 잡지 않은 상태에서 끝내고, 확정 시 최신 토큰을 다시 확인한다.
+        pipeline.rejudge(connect, tenant, intake_id, revision)
         version, changed, plan = commit(store=store, connect=connect, tenant=tenant, intake_id=intake_id, revision=revision,
                                         reopened=reopened, status=status, built=built, now=now,
                                         cause_extra={"via": "chat", **(cause_extra or {})})

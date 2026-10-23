@@ -1,5 +1,11 @@
 import { expect, it } from "vitest";
-import { fitPadding } from "./fit-padding";
+import { fitPadding, visibleLift } from "./fit-padding";
+
+it("보이는 칸 가운데는 머리줄과 시트 차이의 절반만큼 지도 가운데보다 아래다", () => {
+  expect(visibleLift(64, 24)).toBe(20);
+  expect(visibleLift()).toBe(0);
+  expect(visibleLift(0, 40)).toBe(-20);
+});
 
 it.each([150, 306, 600])("좁은 지도 높이 %s에서도 경로에 절반 이상을 남긴다", (height) => {
   const padding = fitPadding(375, height, 64, 20);

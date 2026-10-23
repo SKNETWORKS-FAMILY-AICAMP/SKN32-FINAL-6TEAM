@@ -197,7 +197,7 @@ def test_a_leg_estimated_after_the_limit_moves_the_next_visit_with_estimate_prov
 
 
 def test_an_engine_error_after_the_limit_change_is_still_refused():
-    # 오류 · 자료 없음은 종전대로 거절한다(시간 한도만 어림으로 간다)
+    # 오류는 종전대로 거절한다(`[2026-10-22]` 자료 없음은 거절하지 않고 어림 + 확인 필요 — tests/unit/intake/test_intake_leg_estimates_v1.py)
     def failed(*args):
         raise TimeoutError("test")
     with pytest.raises(schedule.ScheduleConflict) as raised:

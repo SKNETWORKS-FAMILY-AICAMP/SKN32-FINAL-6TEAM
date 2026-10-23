@@ -176,6 +176,12 @@ const STAGES: Record<string, [string, string]> = {
   writing: ["답을 정리하는 중이에요", "Writing the reply"],
 };
 
+/** `[2026-10-22 ST4F-719]` A stage passed, for the chat answer's 「진행 과정」 list (an unknown stage is shown by its own name). */
+export function stageText(stage: string, t: Translate): string {
+  const [ko, en] = STAGES[stage] ?? [stage, stage];
+  return t(ko, en);
+}
+
 /** One line for the waiting screen: what the server is doing and for how long, or that the line is being restored. */
 export function progressText(progress: OpProgress | null, t: Translate, waiting: [string, string]): string {
   if (progress?.lost) return t("서버와 연결이 끊겼어요 — 다시 연결하는 중이에요…", "Lost the connection to the server — reconnecting…");

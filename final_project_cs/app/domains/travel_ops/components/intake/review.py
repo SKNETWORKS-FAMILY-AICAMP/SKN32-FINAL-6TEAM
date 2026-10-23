@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import time
 from copy import deepcopy
@@ -31,14 +32,19 @@ from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, V
 from app.domains.travel_ops.components.places.place_hours import DayHours, break_span, hours_on
 from .assemble import collect
 from .hours import HoursFacts, closed_weekdays, facts_for, week_known_all, weekday_ko
-from .moves import Leg, late_text, leg_between, same_place
+from .moves import ROUTES_FIRST, Leg, late_text, leg_between, same_place
 from .terms import category_label
 from . import taxi_pricing
 from app.domains.travel_ops.components import settings_hook
 
 KST = ZoneInfo("Asia/Seoul")
+_LOG = logging.getLogger(__name__)
 #: 한 번 계산하는 동안 이동 계산기에 쓰는 시간 상한(초). 넘으면 남은 구간은 어림값으로 낸다(이유가 줄에 적힌다) — 화면이 끝없이 기다리지 않게. ★우리가 고른 값
 ENGINE_BUDGET_S = 25.0
+#: `[2026-10-22]` 「앞 일정이 끝난 뒤 떠나서 닿는 다른 경로」를 찾는 깊은 탐색은 한 번에 1~3.5초(실측 — 2026-10-19 속도 보고서)라, 앞 구간들이 쓰면 25초 한 통이 먼저 바닥나
+#: 뒷날짜가 통째로 어림값이 된다. 남은 구간 하나마다 이 시간이 남아 있을 때만 깊이 찾고, 모자라면 빠른 한 번(`deep=False`)으로 모든 구간을 먼저 채운다.
+#: ★우리가 고른 값 — 깊은 탐색 한 번의 가운데값(1.0초)보다 약간 큰 몫
+DEEP_MIN_SHARE_S = 1.5
 #: ★`[2026-10-16 화면 점검]` 요식 원장(`dining_ledger`)이 없어 기본값 「장소 정보」 뒤에 「정보로」가 붙어 「장소 정보 정보로」가 됐다 —
 #:  원장을 넣고 기본값도 「장소 목록」으로 바꿨다(문장이 늘 「{이름표} 정보로」다)
 SOURCE_LABEL = {"places": "우리 장소 목록", "tour_api": "관광공사", "kakao": "카카오 지도", "customer_pick": "직접 고른 곳",
@@ -64,6 +70,14 @@ def ro(word: str) -> str:
 
 def gwa(word: str) -> str:
     return word + ("과" if _jong(word) else "와")
+
+
+def eun(word: str) -> str:
+    return word + ("은" if _jong(word) else "는")
+
+
+def iga(word: str) -> str:
+    return word + ("이" if _jong(word) else "가")
 
 
 def _line(row: str, result: str, text: str) -> dict[str, Any]:
@@ -421,6 +435,11 @@ class _Budgeted:
     def exhausted(self) -> bool:
         return self._left <= 0 or (self._within is not None and self._within.exhausted)
 
+    @property
+    def left(self) -> float:
+        """이 상한(요청 전체 한도 안이면 둘 중 적은 쪽)에 남은 초 — 깊은 탐색을 해도 되는지 가를 때 본다."""
+        return min(self._left, self._within.left) if self._within is not None else self._left
+
     @staticmethod
     def _key(a: dict[str, Any], b: dict[str, Any], arrive: Any, not_before: Any) -> tuple:
         return (round(a["lat"], 5), round(a["lon"], 5), round(b["lat"], 5), round(b["lon"], 5), arrive, not_before)
@@ -473,7 +492,7 @@ class _PerLeg:
         return self.leg(a, b)(a, b, arrive, not_before)
 
 
-def default_engine(party_size: int | None, modes: list[str] | None = None, *, constraints=None) -> Callable[..., Any] | None:
+def default_engine(party_size: int | None, modes: list[str] | None = None, *, constraints=None, wide: bool = False) -> Callable[..., Any] | None:
     """이동 계산기(시간표 판정). 제품 조립 불가는 전파하고 명시적 standalone의 기존 None 계약은 유지한다.
     ★`[2026-10-06]` 팀이 조립 때 꽂은 자리에서 받는다(D-CS-013 `team_hooks/legs.py`).
     `modes` `[2026-10-07 이동수단 고르기]` 이 수단만으로 후보를 만드는 계산기 — 고객이 구간 수단을 골랐을 때 쓴다."""
@@ -482,6 +501,8 @@ def default_engine(party_size: int | None, modes: list[str] | None = None, *, co
     try:
         from app.domains.travel_ops.components.team_hooks import legs
 
+        if wide:                                          # `[2026-10-23]` 경로 후보 더 보기 · 고른 경로 다시 세기 — 후보 상한을 넓힌 계산기
+            return legs.leg_planner(party_size, constraints or {}, modes=modes, wide=True)
         return legs.leg_planner(party_size, constraints or {}, modes=modes)
     except TeamUnavailable:
         raise
@@ -558,11 +579,14 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
           claims: list[dict[str, Any]], engine: Callable[..., Any] | None = None, use_engine: bool = True,
           previous: dict[str, Any] | None = None, now: datetime | None = None,
           on_event: Callable[[str, dict[str, Any]], None] | None = None,
-          engine_for_mode: Callable[[str], Any] | None = None, estimate_needs_review: bool = False) -> dict[str, Any]:
+          engine_for_mode: Callable[[str], Any] | None = None, estimate_needs_review: bool = False,
+          engine_wide: Callable[[], Any] | None = None) -> dict[str, Any]:
     """한 판의 검사를 계산한다. `previous` = 앞 판의 검사 — 같은 구간(좌표 · 시각이 같음)은 그 값을 재사용한다(`sig`).
 
     `engine_for_mode(수단)` `[2026-10-07 이동수단 고르기]` — 고객이 구간 수단을 골랐을 때 그 수단만으로 계산하는 계산기. 안 주고 기본 계산기를 쓰면 기본 팩토리를 쓴다.
       고른 수단이 닿으면 유지(`mode_choice.state=kept`) · 안 닿으면 추천으로 복귀(`dropped` + 이유)한다.
+    `engine_wide()` `[2026-10-23 경로 후보]` — 고객이 고른 **경로**(`moves[..].route`)가 보통 계산의 후보에 없을 때 넓게 찾는 계산기(안 주면 기본 팩토리).
+      고른 경로가 닿으면 유지(`route_choice.state=kept`) · 없거나 안 닿으면 추천으로 복귀(`dropped` + 이유). 고른 경로가 있는 구간은 고른 수단보다 앞선다.
     `on_event(이름, 몸통)` `[2026-10-03 ui 세션 요청서 2번]` — **계산이 끝나는 대로** 알린다(검사는 끝나 커밋돼야 DB 에 보여서, 이게 없으면 실시간 진행이 끝에서 한꺼번에 낸다):
       `progress{phase: hours, done, total, current}` 운영시간 확인이 한 일정씩 · `item` 과 `check` 일정마다 검사 줄이 정해지는 대로(이동 계산 **전에**) ·
       `move` 와 `progress{phase: moves}` 이동이 한 구간씩. 이 값들은 **상태의 복사본**이라 끝에 DB 에서 읽은 최종 값이 같은 키로 와서 덮는다.
@@ -599,6 +623,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
                 engine_for_mode = lambda mode: default_engine(party, [mode], constraints=pricing_constraints)  # noqa: E731
             else:
                 engine_for_mode = lambda mode: default_engine(party, [mode])  # noqa: E731
+        if engine_wide is None and engine is not None:
+            engine_wide = lambda: default_engine(party, constraints=pricing_constraints, wide=True)  # noqa: E731
     budgeted = _Budgeted(engine, ENGINE_BUDGET_S) if engine is not None else None
     strict = estimate_needs_review and budgeted is not None          # 계산기가 꺼진 시험 · 개발 환경의 어림은 종전대로 둔다
     dates = sorted({r["date"] for r in rows if r["date"]})
@@ -702,6 +728,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     from .lodging_context import annotate
     annotate(items)
     mode_pick = picked_modes(claims)            # {"0-0~0-1": "taxi"} — 고객이 구간마다 고른 수단(없으면 추천)
+    route_pick = picked_routes(claims)          # {"0-0~0-1": "u:2호선:을지로입구"} — 고객이 고른 경로(고른 수단보다 앞선다)
     old_moves = {_reuse_key(m["sig"]): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
     # ★`[2026-10-21 ST4F-705]` 수정 접수는 등록한 수단을 구간마다 고른 수단으로 싣는다(`reopen._trip_modes`) — 고른 수단이 없던 앞 판(등록한 접수)의 같은 구간이
     #   추천으로 그 수단을 탔으면 그 계산을 쓴다. 고른 수단으로 다시 재면 같은 구간을 두 번(추천 · 고른 수단) 잰다(`_apply_pick`)
@@ -757,6 +784,20 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     morning = [pair for pair in morning if not same_place(pair[0][0].get("place"), pair[1][0].get("place"))]       # 같은 곳이면 아침 구간도 없다
     move_total += len(morning)
 
+    estimate_codes: dict[str, int] = {}
+
+    def tally(leg: Leg) -> None:
+        """어림값이 된 구간을 이유 갈래별로 센다 — 끝에 한 줄 로그로 남긴다(운영에서 어림이 얼마나 · 왜 나는지 보이게)."""
+        if leg.basis == "estimate":
+            code = leg.why_code or "unfilled"
+            estimate_codes[code] = estimate_codes.get(code, 0) + 1
+
+    def deep_ok() -> bool:
+        """깊은 탐색을 해도 되나 — 아직 못 채운 구간 하나마다 `DEEP_MIN_SHARE_S` 이상 남아 있을 때만."""
+        if budgeted is None:
+            return True
+        return budgeted.left / max(move_total - len(moves), 1) >= DEEP_MIN_SHARE_S
+
     def add_move(move: dict[str, Any], ia: dict[str, Any], ib: dict[str, Any]) -> None:
         """구간 하나가 정해졌다 — 모으고 곧바로 알린다(이동 계산이 시간의 대부분이라 화면이 이 알림으로 진행을 안다)."""
         moves.append(move)
@@ -774,25 +815,30 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         pa = {"key": ia["id"], "name": a["place"]["name"], "lat": float(a["place"]["latitude"]), "lon": float(a["place"]["longitude"])}
         pb = {"key": ib["id"], "name": b["place"]["name"], "lat": float(b["place"]["latitude"]), "lon": float(b["place"]["longitude"])}
         # ★재사용 키 — 이름과 정확한 좌표까지 넣는다(같은 자리에서 지점 이름만 바뀌어도 앞 판의 경로 문구가 남지 않게)
-        pick = mode_pick.get(f"{ia['id']}~{ib['id']}")
+        rpick = route_pick.get(f"{ia['id']}~{ib['id']}")
+        pick = None if rpick else mode_pick.get(f"{ia['id']}~{ib['id']}")
         core = (f"{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{a_end.isoformat()}>{b_start.isoformat()}"
                 f"#{ia['place_state']}{ib['place_state']}")
-        sig = core + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing)
+        sig = core + (f"#m={pick}" if pick else "") + (f"#r={rpick}" if rpick else "") + taxi_pricing.signature(pricing)
         if _reuse_key(sig) in old_moves:
             # 재사용하는 것은 경로 계산뿐이다 — 어느 일정 · 몇째 날인지는 지금 판의 것으로 채운다(앞에 날짜가 하나 늘어 일차만 바뀐 경우)
             add_move({**old_moves[_reuse_key(sig)], "sig": sig, "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
             continue
-        same = same_unpicked(_reuse_key(core + taxi_pricing.signature(pricing)), pick)
+        same = None if rpick else same_unpicked(_reuse_key(core + taxi_pricing.signature(pricing)), pick)
         if same is not None:
             add_move({**same, "sig": sig, "recommended_mode": same["mode"], "mode_choice": {"mode": pick, "state": "kept"},
                       "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
             continue
-        leg = leg_between(budgeted, pa, pb, a_end, b_start)
-        choice, recommended = None, leg.mode
-        if pick:
+        leg = leg_between(budgeted, pa, pb, a_end, b_start, deep=deep_ok())
+        choice, recommended, rchoice = None, leg.mode, None
+        if rpick:
+            leg, rchoice = _apply_route(rpick, leg, budgeted, engine_wide, pa, pb, a_end, b_start, b["start"])
+        elif pick:
             leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, a_end, b_start, b["start"])
+        tally(leg)
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
-        add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice}, ia, ib)
+        add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice,
+                  "route_choice": rchoice}, ia, ib)
 
     for (a, ia), (b, ib) in morning:
         floor, b_start = _dt(b["date"], STAY_MORNING_FROM), _dt(b["date"], b["start"])
@@ -802,25 +848,29 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             continue
         pa = {"key": ia["id"], "name": a["place"]["name"], "lat": float(a["place"]["latitude"]), "lon": float(a["place"]["longitude"])}
         pb = {"key": ib["id"], "name": b["place"]["name"], "lat": float(b["place"]["latitude"]), "lon": float(b["place"]["longitude"])}
-        pick = mode_pick.get(f"{ia['id']}~{ib['id']}")
+        rpick = route_pick.get(f"{ia['id']}~{ib['id']}")
+        pick = None if rpick else mode_pick.get(f"{ia['id']}~{ib['id']}")
         core = (f"stay:{pa['name']}|{pa['lat']!r},{pa['lon']!r}>{pb['name']}|{pb['lat']!r},{pb['lon']!r}@{floor.isoformat()}>{b_start.isoformat()}"
                 f"#{ia['place_state']}{ib['place_state']}")
-        sig = core + (f"#m={pick}" if pick else "") + taxi_pricing.signature(pricing)
+        sig = core + (f"#m={pick}" if pick else "") + (f"#r={rpick}" if rpick else "") + taxi_pricing.signature(pricing)
         if _reuse_key(sig) in old_moves:
             add_move({**old_moves[_reuse_key(sig)], "sig": sig, "from": ia["id"], "to": ib["id"], "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
             continue
-        same = same_unpicked(_reuse_key(core + taxi_pricing.signature(pricing)), pick)
+        same = None if rpick else same_unpicked(_reuse_key(core + taxi_pricing.signature(pricing)), pick)
         if same is not None:
             add_move({**same, "sig": sig, "recommended_mode": same["mode"], "mode_choice": {"mode": pick, "state": "kept"},
                       "from": ia["id"], "to": ib["id"], "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
             continue
-        leg = leg_between(budgeted, pa, pb, floor, b_start)
-        choice, recommended = None, leg.mode
-        if pick:
+        leg = leg_between(budgeted, pa, pb, floor, b_start, deep=deep_ok())
+        choice, recommended, rchoice = None, leg.mode, None
+        if rpick:
+            leg, rchoice = _apply_route(rpick, leg, budgeted, engine_wide, pa, pb, floor, b_start, b["start"])
+        elif pick:
             leg, choice, recommended = _apply_pick(pick, leg, engine_for_mode, pa, pb, floor, b_start, b["start"])
+        tally(leg)
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
         add_move({**_move(ia, ib, leg, provisional, sig, unverified=strict), "recommended_mode": recommended, "mode_choice": choice,
-                  "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
+                  "route_choice": rchoice, "day": ib["day"], "date": ib["date"], "from_stay": True}, ia, ib)
 
     # 겹침은 보통 앞 구간이 「늦게 닿는다」로 잡혀 이동이 확인 필요를 센다. 이동으로 안 잡히는 겹침(한쪽 장소를 모르거나 같은 곳이라 이동이 없는 것)은
     # 등록 판정이 거절할 일이므로 그 일정을 확인 필요로 센다 — 안 그러면 겹친 일정이 「등록 가능」으로 보인다
@@ -832,6 +882,9 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     needs_moves = sum(1 for m in moves if m["status"] == "review")
     # 지도 모양: 일차별로 목록을 읽는 화면이 묶기 쉽게 항목 순서는 날짜 · 시각 순 그대로 둔다
     engines = {m["basis"] for m in moves if m.get("basis")}
+    if estimate_codes:
+        _LOG.info("검사 이동 어림 %d/%d구간 · 이유 %s · 남은 한도 %.1f초", sum(estimate_codes.values()), len(moves),
+                  dict(sorted(estimate_codes.items())), budgeted.left if budgeted is not None else 0.0)
     return {"revision": revision, "built_at": (now or datetime.now(KST)).isoformat(timespec="seconds"),
             "engine": ("timetable" if engines == {"timetable"} else "estimate" if engines == {"estimate"}
                        else "mixed" if engines else None),
@@ -895,9 +948,32 @@ def picked_modes(claims: list[dict[str, Any]]) -> dict[str, str]:
 
 def customer_mode_pairs(claims: list[dict[str, Any]]) -> set[str]:
     """`[2026-10-14]` 고객이 **이 접수에서** 수단을 고르거나 「추천으로」 되돌린 구간 — 수정 접수의 「완료」가 그 구간만 옛 이동을 갈음한다(`registered_moves.fill_edited_moves`).
-    여행에서 가져온 수단(`method: "trip"`)은 고친 것이 아니다."""
-    return {str(c.get("field"))[len("moves["):-len("].mode")] for c in claims
-            if str(c.get("field") or "").startswith("moves[") and str(c.get("field")).endswith("].mode") and c.get("method") == "customer"}
+    여행에서 가져온 수단(`method: "trip"`)은 고친 것이 아니다. `[2026-10-23]` 경로를 고르거나 되돌린 구간(`moves[..].route`)도 고친 구간이다."""
+    out: set[str] = set()
+    for c in claims:
+        field = str(c.get("field") or "")
+        if c.get("method") != "customer" or not field.startswith("moves["):
+            continue
+        for tail in ("].mode", "].route"):
+            if field.endswith(tail):
+                out.add(field[len("moves["):-len(tail)])
+    return out
+
+
+def picked_routes(claims: list[dict[str, Any]]) -> dict[str, str]:
+    """`[2026-10-23 사용자 지시 — 경로 후보]` 고객이 구간마다 고른 **경로** — 값 줄 `moves[{from}~{to}].route`(값 = 경로 열쇠 `moves.route_key`).
+    칸마다 마지막 값이 이긴다 — 빈 값(「추천으로」 · 수단을 새로 고름)이면 빠진다."""
+    out: dict[str, str] = {}
+    for c in claims:
+        field = str(c.get("field") or "")
+        if not (field.startswith("moves[") and field.endswith("].route") and c.get("method") == "customer"):
+            continue
+        pair = field[len("moves["):-len("].route")]
+        if isinstance(c.get("value"), str) and c["value"]:
+            out[pair] = c["value"]
+        else:
+            out.pop(pair, None)
+    return out
 
 
 def mode_fits(leg: Leg) -> bool:
@@ -930,6 +1006,34 @@ def _apply_pick(pick: str, rec_leg: Leg, engine_for_mode: Callable[[str], Any] |
     if mine is not None and mine.mode == pick and mode_fits(mine):
         return mine, {"mode": pick, "state": "kept"}, recommended
     return rec_leg, {"mode": pick, "state": "dropped", "why": why_not(MOVE_LABEL.get(pick, pick), mine, b_hhmm)}, recommended
+
+
+def _apply_route(key: str, rec_leg: Leg, budgeted: Any, engine_wide: Callable[[], Any] | None, pa: dict[str, Any],
+                 pb: dict[str, Any], a_end: datetime, b_start: datetime, b_hhmm: str):
+    """(최종 구간, route_choice). 고른 경로가 보통 계산의 후보에 있으면 그것을(같은 입력이라 계산기 재사용 칸에서 나온다), 없으면 넓게 찾아 그 경로를 싣는다.
+    그 경로가 없거나 다음 일정 안에 닿지 않으면 추천 구간으로 되돌린다(dropped + 이유) — 고객이 고른 값을 조용히 바꾸지 않고 이유를 남긴다."""
+    from app.core.team_availability import TeamUnavailable
+
+    def tried(engine: Any) -> Leg | None:
+        if engine is None:
+            return None
+        try:
+            return leg_between(engine, pa, pb, a_end, b_start, prefer=key)
+        except TeamUnavailable:
+            raise
+        except Exception:                                 # noqa: BLE001 — 한 경로의 오류가 확인 화면을 막지 않는다
+            return None
+    mine = tried(budgeted) if any(r.get("key") == key for r in rec_leg.routes) else None
+    if mine is None or mine.route_key != key:
+        wide = engine_wide() if engine_wide is not None else None
+        mine = tried(_Budgeted(wide, ENGINE_BUDGET_S) if wide is not None else None)
+    if mine is not None and mine.route_key == key and mode_fits(mine):
+        return mine, {"key": key, "state": "kept"}
+    if mine is None or mine.route_key != key:
+        why = "고른 경로를 이 시각에는 찾지 못해 추천 경로로 돌아왔어요"
+    else:
+        why = why_not("고른 경로", mine, b_hhmm)
+    return rec_leg, {"key": key, "state": "dropped", "why": why}
 
 
 def _waiting_move(a: dict[str, Any], b: dict[str, Any], pick: str | None = None) -> dict[str, Any]:
@@ -966,7 +1070,16 @@ def _move(a: dict[str, Any], b: dict[str, Any], leg: Leg, provisional: list[str]
             "summary": f"{leg.mode_label} {leg.minutes}분 · {leg.km}km" + (" [추정]" if estimate else ""),
             "fare_krw": leg.fare_krw, "sig": sig, "uses": list(leg.uses),
             "departure_context": deepcopy(leg.departure_context), "selected_option_id": leg.selected_option_id,
-            "rows": [route, mode, arrival]}
+            **route_fields(leg), "rows": [route, mode, arrival]}
+
+
+def route_fields(leg: Leg) -> dict[str, Any]:
+    """`[2026-10-23 사용자 지시]` 구간의 경로 후보 — 이 구간이 쓰는 경로(`route_key`)를 맨 앞에 두고 앞의 `ROUTES_FIRST` 개만 싣는다(나머지는 「더 보기」).
+    `routes_total` = 이번 계산이 낸 후보 수, `routes_more` = 더 보기를 부를 만한가(후보가 더 있거나 보통 계산이 상한에 걸렸다). 어림 구간은 빈 목록."""
+    rows = sorted(leg.routes, key=lambda r: r.get("key") != leg.route_key)          # 안정 정렬 — 쓰는 경로만 앞으로
+    return {"route_key": leg.route_key if leg.basis == "timetable" else None,
+            "routes": [dict(r) for r in rows[:ROUTES_FIRST]], "routes_total": len(rows),
+            "routes_more": len(rows) > ROUTES_FIRST or bool(leg.routes_capped)}
 
 
 # ── 저장 · 읽기 ──────────────────────────────────────────────────
@@ -1032,12 +1145,18 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
                 store(conn, tenant_id, intake_id, revision, payload)
             from . import dining_review
             return dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
+    answered_review = load(conn, tenant_id, intake_id, revision) if force else None
     previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
                 else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
     if quick:
         options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
                     previous=previous, **options)
+    from .dining_questions import merge_questions, answers
+    saved_answers = answers(answered_review or previous or {})
+    if saved_answers:
+        payload["dining_questions"] = saved_answers
+        merge_questions(payload, [], "\n".join(source.get("transcript") or "" for source in sources))
     payload = {**payload, "checked": not quick, **({"ready": False} if quick else {})}
     from . import risks
 
@@ -1062,5 +1181,6 @@ def unchecked(payload: dict[str, Any] | None) -> bool:
     return isinstance(payload, dict) and payload.get("checked") is False
 
 
-__all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "place_state", "store", "unchecked"]
+__all__ = ["ENGINE_BUDGET_S", "build", "default_engine", "ensure", "load", "picked_routes", "place_state", "route_fields", "store",
+           "unchecked"]
 

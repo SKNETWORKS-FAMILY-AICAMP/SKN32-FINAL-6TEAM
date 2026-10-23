@@ -363,7 +363,7 @@ class TripDesk:
                 "restored": plan.summary["restored"], "notice": plan.notice}
 
     def find_place(self, name: str, *, kind_hint: str | None = None, near=None, trip_id=None) -> Any | None:
-        """이름 → 장소 **한 곳**(`intake.places.resolve` — 우리 장소 표 → 관광공사 → 요식 원장 → 카카오). 못 찾으면 None.
+        """이름 → 장소 **한 곳**(`intake.places.resolve` — 우리 장소 표 → 공용 별칭 → 오타 → 관광공사 · 요식 원장 → 카카오). 못 찾으면 None.
         ★`[2026-10-15]` 이름 말한 곳으로 바꾸기 전에 본다 — 「다른 식당」처럼 이름이 아닌 설명이면 못 찾으므로 다른 안 보여 주기로 돌린다."""
         from app.domains.travel_ops.components.intake import pipeline
         from app.domains.travel_ops.components.intake.places import resolve
@@ -373,7 +373,7 @@ class TripDesk:
         tour, kakao, dining = self._edit_lookups()
         with self._connect() as conn:
             found = resolve(name.strip(), our_places=pipeline._our_places(conn, self.store.tenant_id, trip_id=trip_id), tour=tour, kakao=kakao,
-                            dining=dining, kind_hint=kind_hint, near=near, choose_near=True)
+                            dining=dining, kind_hint=kind_hint, near=near, choose_near=True, conn=conn)
         return found if found.status == "resolved" else None
 
     def _read_plan(self) -> Callable[[str, Any], Any] | None:

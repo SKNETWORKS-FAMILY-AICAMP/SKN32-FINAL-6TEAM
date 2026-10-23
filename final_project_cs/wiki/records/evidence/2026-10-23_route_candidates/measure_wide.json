@@ -1,0 +1,725 @@
+[
+ {
+  "round": 0,
+  "wide": false,
+  "dest": "국립민속박물관",
+  "sec": 34.14,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 10,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": false,
+  "dest": "종각",
+  "sec": 2.03,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 25,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": false,
+  "dest": "N서울타워",
+  "sec": 0.43,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:명동"
+    ]
+   },
+   {
+    "id": "subway_bus_1",
+    "eta_min": 45,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:동대입구",
+     "버스:01B"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": false,
+  "dest": "홍대입구역",
+  "sec": 1.73,
+  "n_options": 1,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 36,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:홍대입구"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": false,
+  "dest": "롯데월드타워",
+  "sec": 2.18,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:잠실"
+    ]
+   },
+   {
+    "id": "subway_2",
+    "eta_min": 58,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:동대문역사문화공원",
+     "2호선:동대문역사문화공원",
+     "2호선:잠실"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": true,
+  "dest": "국립민속박물관",
+  "sec": 1.34,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 10,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": true,
+  "dest": "종각",
+  "sec": 2.06,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 25,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": true,
+  "dest": "N서울타워",
+  "sec": 0.78,
+  "n_options": 3,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:명동"
+    ]
+   },
+   {
+    "id": "subway_bus_1",
+    "eta_min": 45,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:동대입구",
+     "버스:01B"
+    ]
+   },
+   {
+    "id": "subway_bus_2",
+    "eta_min": 46,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "버스:01A"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": true,
+  "dest": "홍대입구역",
+  "sec": 2.33,
+  "n_options": 1,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 36,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:홍대입구"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 0,
+  "wide": true,
+  "dest": "롯데월드타워",
+  "sec": 1.54,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:잠실"
+    ]
+   },
+   {
+    "id": "subway_2",
+    "eta_min": 58,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:동대문역사문화공원",
+     "2호선:동대문역사문화공원",
+     "2호선:잠실"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": false,
+  "dest": "국립민속박물관",
+  "sec": 0.87,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 10,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": false,
+  "dest": "종각",
+  "sec": 1.39,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 25,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": false,
+  "dest": "N서울타워",
+  "sec": 0.3,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:명동"
+    ]
+   },
+   {
+    "id": "subway_bus_1",
+    "eta_min": 45,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:동대입구",
+     "버스:01B"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": false,
+  "dest": "홍대입구역",
+  "sec": 1.59,
+  "n_options": 1,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 36,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:홍대입구"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": false,
+  "dest": "롯데월드타워",
+  "sec": 0.9,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:잠실"
+    ]
+   },
+   {
+    "id": "subway_2",
+    "eta_min": 58,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:동대문역사문화공원",
+     "2호선:동대문역사문화공원",
+     "2호선:잠실"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": true,
+  "dest": "국립민속박물관",
+  "sec": 1.33,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 10,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": true,
+  "dest": "종각",
+  "sec": 1.71,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 25,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": true,
+  "dest": "N서울타워",
+  "sec": 0.63,
+  "n_options": 3,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:명동"
+    ]
+   },
+   {
+    "id": "subway_bus_1",
+    "eta_min": 45,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:동대입구",
+     "버스:01B"
+    ]
+   },
+   {
+    "id": "subway_bus_2",
+    "eta_min": 46,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "버스:01A"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": true,
+  "dest": "홍대입구역",
+  "sec": 1.94,
+  "n_options": 1,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 36,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:홍대입구"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 1,
+  "wide": true,
+  "dest": "롯데월드타워",
+  "sec": 1.27,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:잠실"
+    ]
+   },
+   {
+    "id": "subway_2",
+    "eta_min": 58,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:동대문역사문화공원",
+     "2호선:동대문역사문화공원",
+     "2호선:잠실"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": false,
+  "dest": "국립민속박물관",
+  "sec": 0.83,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 10,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": false,
+  "dest": "종각",
+  "sec": 1.31,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 25,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": false,
+  "dest": "N서울타워",
+  "sec": 0.27,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:명동"
+    ]
+   },
+   {
+    "id": "subway_bus_1",
+    "eta_min": 45,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:동대입구",
+     "버스:01B"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": false,
+  "dest": "홍대입구역",
+  "sec": 1.39,
+  "n_options": 1,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 36,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:홍대입구"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": false,
+  "dest": "롯데월드타워",
+  "sec": 0.86,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:잠실"
+    ]
+   },
+   {
+    "id": "subway_2",
+    "eta_min": 58,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:동대문역사문화공원",
+     "2호선:동대문역사문화공원",
+     "2호선:잠실"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": true,
+  "dest": "국립민속박물관",
+  "sec": 1.16,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 10,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": true,
+  "dest": "종각",
+  "sec": 1.52,
+  "n_options": 1,
+  "planned": "walk",
+  "options": [
+   {
+    "id": "walk",
+    "eta_min": 25,
+    "uses": []
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": true,
+  "dest": "N서울타워",
+  "sec": 0.68,
+  "n_options": 3,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:명동"
+    ]
+   },
+   {
+    "id": "subway_bus_1",
+    "eta_min": 45,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:동대입구",
+     "버스:01B"
+    ]
+   },
+   {
+    "id": "subway_bus_2",
+    "eta_min": 46,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "버스:01A"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": true,
+  "dest": "홍대입구역",
+  "sec": 2.04,
+  "n_options": 1,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 36,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:홍대입구"
+    ]
+   }
+  ],
+  "why": null
+ },
+ {
+  "round": 2,
+  "wide": true,
+  "dest": "롯데월드타워",
+  "sec": 1.36,
+  "n_options": 2,
+  "planned": "subway_1",
+  "options": [
+   {
+    "id": "subway_1",
+    "eta_min": 52,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:을지로3가",
+     "2호선:을지로3가",
+     "2호선:잠실"
+    ]
+   },
+   {
+    "id": "subway_2",
+    "eta_min": 58,
+    "uses": [
+     "3호선:경복궁",
+     "3호선:충무로",
+     "4호선:충무로",
+     "4호선:동대문역사문화공원",
+     "2호선:동대문역사문화공원",
+     "2호선:잠실"
+    ]
+   }
+  ],
+  "why": null
+ }
+]

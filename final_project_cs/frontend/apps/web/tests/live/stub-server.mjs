@@ -126,6 +126,9 @@ const DEFAULTS = {
   // `[2026-10-07]` the ways to go for one leg of a checked plan (`GET …/moves/{from}~{to}/options?revision=`, `POST …/mode` - built by the mobility session 2026-10-07, `wiki/external/rest-endpoints.md` 「이동수단 고르기」):
   //   "off" (404 not_available - an older server: no box) | "on" | "none" (nothing reaches in time) | "partial" (the bus could not be finished: `fits: null`) | "fail" (500) | "slow" (4 s) | "unknown_mode" (also sends a way the screen does not know)
   moveOptions: "off",
+  // `[2026-10-23]` the route candidates of a leg (`moves[].routes` in the check, `GET …/moves/{from}~{to}/routes` for more): "off" (an older server: no routes) | "on" (three in the check, two more, then none)
+  //   | "cold" (as "on", but the first ask for more answers as a server right after a deploy: nothing, 「it took too long」, `has_more` - the screen asks again by itself)
+  moveRoutes: "off",
   // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
   agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
@@ -329,6 +332,7 @@ function reset() {
   rows = freshRows(scenario.trips);
   deleted = new Set();
   tripFailures = 0;
+  routesAsked = 0;
   turns = [];
   log = [];
   polls = 0;
@@ -597,12 +601,25 @@ function moveWays(b, move) {
   });
 }
 
+/** `[2026-10-23]` Made-up routes for a leg (only the shape is the contract's): three come with the check, two more with 「more」. */
+function routeRow(move, n, lines, minutes, extra = {}) {
+  return { key: `u:${lines.join(">")}`, mode: "transit", mode_label: "대중교통", label: lines.join(" → "), minutes, depart: move.depart ?? "10:00", arrive: move.arrive ?? "10:30",
+    slack_min: 10 - n, fare_krw: 1550, walk_m: 600, transfers: lines.length - 1, lines, planned: n === 0, early: false, ...extra };
+}
+function routesOf(move) {
+  return { routes: [routeRow(move, 0, ["3호선"], move.minutes ?? 20), routeRow(move, 1, ["버스 7016"], 24), routeRow(move, 2, ["버스 01A", "3호선"], 27)],
+    routes_total: 3, routes_more: true, route_key: "u:3호선", route_choice: null };
+}
+const MORE_ROUTES = (move) => [routeRow(move, 3, ["5호선", "3호선"], 31, { early: true }), routeRow(move, 4, ["버스 종로11"], 33)];
+let routesAsked = 0;
+
 function reviewOf(b) {
   const needsItems = b.items.filter((item) => item.status === "review").length;
   const needsMoves = b.moves.filter((move) => move.status === "review").length;
   const needs = { items: needsItems, moves: needsMoves, total: needsItems + needsMoves };
   const ids = new Set(b.items.map((item) => item.id));
-  return { revision: b.revision, built_at: "2026-10-03T09:00:00+09:00", engine: "timetable", items: [...b.items].sort((a, z) => a.date.localeCompare(z.date) || (a.starts_at || "99:99").localeCompare(z.starts_at || "99:99") || a.index - z.index), moves: b.moves.filter((move) => ids.has(move.from) && ids.has(move.to)), needs, ready: needs.total === 0 && !b.unchecked,
+  return { revision: b.revision, built_at: "2026-10-03T09:00:00+09:00", engine: "timetable", items: [...b.items].sort((a, z) => a.date.localeCompare(z.date) || (a.starts_at || "99:99").localeCompare(z.starts_at || "99:99") || a.index - z.index),
+    moves: b.moves.filter((move) => ids.has(move.from) && ids.has(move.to)).map((move) => (scenario.moveRoutes === "off" ? move : { ...move, ...routesOf(move) })), needs, ready: needs.total === 0 && !b.unchecked,
     ...(scenario.saveOnly === "on" ? { checked: !b.unchecked } : {}) };
 }
 
@@ -1375,7 +1392,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       return json(response, 200, { status: "options" }, origin);
     }
     scenario = { ...scenario, proposals: "none" };
-    return json(response, 200, body.key === null ? { status: "kept" } : { status: "adjusted" }, origin);
+    // 서버(pending.py choose)는 고른 안에 「chosen」을 준다 — 2026-10-22 까지 이 모방이 「adjusted」를 줘서 실서버의 「처리 결과: chosen」을 놓쳤다(ST4F-723)
+    return json(response, 200, body.key === null ? { status: "kept" } : { status: "chosen" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/messages` && request.method === "POST") {
     if (broken("messages")) return;
@@ -1430,12 +1448,34 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : scenario.intakeEvents === "held" ? intakeStream().slice(0, -2) : intakeStream();
     chunks.forEach((chunk) => response.write(chunk));
     if (scenario.intakeEvents !== "silent" && scenario.intakeEvents !== "held") response.end();   // "silent" · "held" leave the line open and say nothing more
+    // `[2026-10-23]` "held" is a check the server has not finished: like the server (`op_stream.watch` — `beat` every `travel.op_stream.beat_seconds`, 3) it still
+    // says it is alive while it waits. Without it the screen's 7 s watchdog read a dropped line every 8 s (「서버와 연결이 끊겼어요」 · reconnect), which no held
+    // server does, and a test that ran past it (stop-ask-flow 「확인 중인 곳으로」) failed or passed by when it fell in that cycle. "silent" stays quiet on purpose.
+    if (scenario.intakeEvents === "held") {
+      let elapsed = 1;
+      const beat = setInterval(() => { elapsed += 3; response.write(`event: beat
+data: ${JSON.stringify({ elapsed, stage: "checking", label: "장소·운영시간 확인", stage_elapsed: elapsed - 1, slow: false })}
+
+`); }, 3000);
+      request.on("close", () => clearInterval(beat));
+    }
     return;
   }
   // `[2026-10-07]` The ways to go for one leg, and picking one (see `moveOptions` in the scenario).
   // 복원 화면 시험용 이력. 실제 소유권·고정 일정 검사는 별도 API/DB 시험에서 확인한다.
   if (request.method === "POST" && path.startsWith(`/v1/web/trip-intakes/${INTAKE_ID}/`) && !boardHistory.has(board.revision)) {
     boardHistory.set(board.revision, { board: structuredClone(board), title: tripTitle });
+  }
+  const routesPath = new RegExp(`^/v1/web/trip-intakes/${INTAKE_ID}/moves/([^/]+)~([^/]+)/routes$`).exec(path);
+  if (routesPath && request.method === "GET") {
+    const move = board.moves.find((entry) => entry.from === routesPath[1] && entry.to === routesPath[2]);
+    if (scenario.moveRoutes === "off" || !move) return json(response, 404, { error: { code: "not_available", message: "이 구간은 경로를 고를 수 없다" } }, origin);
+    routesAsked += 1;
+    const offset = Number(url.searchParams.get("offset") ?? 3);
+    const head = { intake_id: INTAKE_ID, revision: board.revision, from: move.from, to: move.to, route_key: "u:3호선" };
+    if (scenario.moveRoutes === "cold" && routesAsked === 1) return json(response, 200, { ...head, routes: [], offset, next_offset: offset, has_more: true, total: null, why: "계산이 오래 걸려 확인하지 못했어요" }, origin);
+    const rest = offset <= 3 ? MORE_ROUTES(move) : [];
+    return json(response, 200, { ...head, routes: rest, offset, next_offset: offset + rest.length, has_more: false, total: 3 + MORE_ROUTES(move).length }, origin);
   }
   const waysPath = new RegExp(`^/v1/web/trip-intakes/${INTAKE_ID}/moves/([^/]+)~([^/]+)/(options|mode)$`).exec(path);
   if (waysPath) {
@@ -1592,6 +1632,12 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");
     if (q.length < 2) return json(response, 422, { error: { code: "query_too_short", message: "두 글자 이상 적어 주세요" } }, origin);
     return json(response, 200, { revision: board.revision, item: "0-1", query: url.searchParams.get("q"), results: SEARCH_RESULTS.filter((entry) => entry.place.name.includes(url.searchParams.get("q") ?? "") || q.length >= 2), notes: [] }, origin);
+  }
+  // `[2026-10-23]` 일정 추가 폼의 전용 검색 — 응답 모양은 place-search 와 같다(동선순 목록 + 이름순 목록 없음 = 옛 한 목록으로 그린다)
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/add-search` && request.method === "GET") {
+    const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");
+    if (q.length < 2) return json(response, 422, { error: { code: "query_too_short", message: "두 글자 이상 적어 주세요" } }, origin);
+    return json(response, 200, { revision: board.revision, item: "__new__", query: url.searchParams.get("q"), results: SEARCH_RESULTS.filter((entry) => entry.place.name.includes(url.searchParams.get("q") ?? "") || q.length >= 2), notes: [] }, origin);
   }
   if (path === "/v1/web/places/photos" && request.method === "GET") {
     const ref = url.searchParams.get("ref") ?? "";

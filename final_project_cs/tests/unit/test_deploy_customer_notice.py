@@ -30,7 +30,7 @@ def test_no_file_means_no_notice(tmp_path):
 def test_each_phase_has_its_own_fixed_words_in_korean_and_english(tmp_path):
     writer.begin(tmp_path, '09bf0dad12', at=T0)
     preparing = notice_at(tmp_path, T0 + timedelta(minutes=1))
-    assert preparing['id'] == f'deploy:09bf0dad12-{int(T0.timestamp())}:preparing'
+    assert preparing['id'] == f'deploy:09bf0dad12-{int(T0.timestamp())}'                          # 배포 한 번에 id 하나 — 단계 이름이 없다
     assert preparing['kind'] == '점검 예고' and preparing['title'] == '곧 새 판으로 바뀌어요'
     assert '14:05에 시작한 준비' in preparing['body'] and '약 2분' in preparing['body']        # 시각은 파일 값 그대로 · 120초 = 2분
     assert '14:05 KST' in preparing['bodyEn'] and 'about 2 min' in preparing['bodyEn']
@@ -38,7 +38,7 @@ def test_each_phase_has_its_own_fixed_words_in_korean_and_english(tmp_path):
     writer.step(tmp_path, 'switch', at=T0 + timedelta(minutes=6))
     switching = notice_at(tmp_path, T0 + timedelta(minutes=6))
     assert switching['title'] == '새 판으로 바꾸는 중이에요' and switching['body'].startswith('14:11부터 약 2분')
-    assert switching['id'] != preparing['id']                                                     # 앞 단계를 닫아도 새 단계는 다시 뜬다
+    assert switching['id'] == preparing['id']                                                     # `[2026-10-23]` 단계가 바뀌어도 같은 건이다
     writer.end(tmp_path, 'done', at=T0 + timedelta(minutes=7, seconds=30))
     done = notice_at(tmp_path, T0 + timedelta(minutes=8))
     assert (done['kind'], done['title'], done['body']) == ('안내', '새 판으로 바뀌었어요', '14:12에 끝났어요. 계속 쓰시면 돼요.')
@@ -103,3 +103,44 @@ def test_public_notices_put_the_deploy_notice_first(tmp_path, monkeypatch):
     notices = client.get('/v1/web/support/notices').json()['notices']
     assert [n['title'] for n in notices] == ['곧 새 판으로 바뀌어요', '운영자 공지']
     assert 'author' not in notices[1]
+
+
+def test_board_record_is_one_entry_per_deploy_and_ends_when_the_deploy_ends(tmp_path):
+    writer.begin(tmp_path, '1' * 10, at=T0)
+    running = deploy_notice.board_record(deploy_notice.load_state(tmp_path / writer.NOTICE))
+    assert (running['kind'], running['title'], running['source'], running['author']) == ('점검 예고', '곧 새 판으로 바뀌어요', 'deploy', 'auto-deploy')
+    assert running['startsAt'] == '2026-10-20T14:05' and running['endsAt'] == '2026-10-20T14:35'           # 마지막 갱신 + 30분 — 프로세스가 죽어도 저절로 종료
+    writer.step(tmp_path, 'switch', at=T0 + timedelta(minutes=6))
+    switching = deploy_notice.board_record(deploy_notice.load_state(tmp_path / writer.NOTICE))
+    assert switching['title'] == '새 판으로 바꾸는 중이에요' and switching['endsAt'] == '2026-10-20T14:41'
+    writer.end(tmp_path, 'done', at=T0 + timedelta(minutes=7, seconds=30))
+    done = deploy_notice.board_record(deploy_notice.load_state(tmp_path / writer.NOTICE))
+    assert (done['title'], done['endsAt'], done['phase']) == ('새 판으로 바뀌었어요', '2026-10-20T14:12', 'done')
+    assert done['startsAt'] == running['startsAt']                                                       # 같은 건 — 시작 시각은 그대로
+
+
+def test_load_state_ignores_the_shown_windows(tmp_path):
+    """띠는 끝난 지 5분 뒤 사라지지만 게시판 기록은 그 뒤에도 「종료」로 맞춰져야 한다."""
+    writer.begin(tmp_path, '2' * 10, at=T0)
+    writer.end(tmp_path, 'done', at=T0)
+    late = T0 + timedelta(hours=3)
+    assert deploy_notice.read_state(tmp_path / writer.NOTICE, late) is None
+    assert deploy_notice.load_state(tmp_path / writer.NOTICE)['phase'] == 'done'
+
+
+def test_public_notices_do_not_repeat_the_board_copy_of_the_deploy(tmp_path, monkeypatch):
+    """게시판 기록(`source=deploy`)은 `/notices` 의 운영자 공지 목록에서 빼고, 띠는 `current_notice` 한 건만 맨 앞에 붙인다."""
+    @contextmanager
+    def connection():
+        yield None
+    now = datetime.now(writer.KST)
+    window = {'startsAt': (now - timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M'), 'endsAt': (now + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')}
+    copy = {'id': 'deploy:x-1', 'kind': '점검 예고', 'title': '곧 새 판으로 바뀌어요', 'body': '본문', 'audience': 'all', 'source': 'deploy', **window}
+    operator = {'id': 'n1', 'kind': '안내', 'title': '운영자 공지', 'body': '본문', 'audience': 'all', 'author': 'ops', **window}
+    monkeypatch.setattr(admin_customer_api, 'get_connection', connection)
+    monkeypatch.setattr(deploy_notice, 'sync_board', lambda conn, tenant, path=None: None)
+    monkeypatch.setattr(admin_customer_api.admin_service, 'records', lambda conn, tenant, kind: [copy, operator])
+    monkeypatch.setattr(admin_customer_api.admin_service, 'record', lambda conn, tenant, kind, key: None)
+    monkeypatch.setattr(deploy_notice, 'current_notice', lambda now, path=None: None)
+    app = FastAPI(); app.include_router(admin_customer_api.build_router())
+    assert [n['id'] for n in TestClient(app).get('/v1/web/support/notices').json()['notices']] == ['n1']

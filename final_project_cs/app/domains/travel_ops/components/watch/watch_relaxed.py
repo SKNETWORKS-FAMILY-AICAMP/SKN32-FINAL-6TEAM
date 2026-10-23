@@ -117,7 +117,8 @@ def relaxed_text(*, item: Item, causes: list[dict[str, Any]], options: list[dict
     problem = "바꿀 곳을 찾았지만 일정 전체와 맞지 않았어요" if recheck_failed else "같은 조건으로는 대신 갈 곳을 찾지 못했어요"
     listed = " · ".join(f"{o['rank']}) " + " ".join(part for part in (o.get("note"), o.get("option_label") or o["name"]) if part)
                         + (f"(도보 {o['walk_min']}분)" if o.get("walk_min") else "") for o in options)
-    return (f"{head}{item.title} — {_cause_text(causes)}. {problem}. 그래서 **일정은 그대로 두었어요.** "
+    # ★`[2026-10-23 사용자 지시 — ST4F-723]` 고객 문장에 마크다운 별표를 넣지 않는다 — 웹 알림이 `**…**` 를 그대로 보였다
+    return (f"{head}{item.title} — {_cause_text(causes)}. {problem}. 그래서 일정은 그대로 두었어요. "
             f"조건을 조금 풀면 이런 곳이 있어요 — {listed}. 고르시면 바꿀게요. 답이 없으면 지금 일정을 그대로 둡니다.")
 
 

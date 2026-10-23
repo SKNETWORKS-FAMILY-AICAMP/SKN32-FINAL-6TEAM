@@ -10,6 +10,8 @@ export interface BusToast {
   text: string;
   /** Lines under the title (line breaks kept): where, when, how. */
   sub?: string;
+  /** `[2026-10-22 ST4F-723 Ⓣ1]` At most this many lines of `sub` (a notice's sentence can be long — the rest is where its button goes). */
+  lines?: number;
   /** What deserves a look, in the warning colour under the lines (the first thing a check found that is not fine). */
   note?: string;
   /** A small mark before the title (a pin's number, 「→」 for a route): what the notice is about. */

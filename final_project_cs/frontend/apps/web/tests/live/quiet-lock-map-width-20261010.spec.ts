@@ -20,6 +20,9 @@ for(const width of [375,1280]) {
   const controls=page.getByRole('group',{name:'지도 단추'}),fold=controls.getByRole('button',{name:'지도 단추 펼치기'});
   const menu=page.getByRole('button',{name:'메뉴',exact:true});
   const menuBox=(await menu.boundingBox())!;
+  // `[2026-10-23 ST4F-721 · 722 반영]` 세로 배치가 「내 위치로」 자리까지 남겨 지도 높이 360px 이상이 필요하다 — 1280px 기본 목록(지도 342px)은
+  //   가로가 된다. 목록을 한 칸 내려(382px) 세로를 본다. 아래 네 칸 올림은 222px(1280) · 272px(375)로 가로다.
+  await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowDown');
   await expect(controls).toHaveAttribute('data-direction','column');
   const column=await fold.evaluate(el=>{const b=el.getBoundingClientRect(),scale=el.querySelector('[role=img]')!.getBoundingClientRect(),arrow=el.querySelector('svg')!.getBoundingClientRect();return{width:b.width,height:b.height,scaleBottom:scale.bottom,arrowTop:arrow.top};});
   expect(column.width).toBe(menuBox.width);expect(column.height).toBe(40);expect(column.scaleBottom).toBeLessThanOrEqual(column.arrowTop);

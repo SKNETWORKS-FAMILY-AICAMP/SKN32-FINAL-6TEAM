@@ -91,7 +91,7 @@ describe("the rest of the server's web API", () => {
   it("reads the notices with the server's own sentence and links a proposal request to its proposal", async () => {
     stub(true);
     replies.push(json({ notices: [{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposal_id: "p1", options: [], delivery: "sent", at: "2026-09-28T12:30:00+09:00" }] }));
-    expect(await getNotices("t1", "ko")).toEqual([{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposalId: "p1", delivery: "sent", at: "2026-09-28T12:30:00+09:00", rollback: null, safety: null }]);
+    expect(await getNotices("t1", "ko")).toEqual([{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposalId: "p1", delivery: "sent", at: "2026-09-28T12:30:00+09:00", rollback: null, safety: null, changed: null }]);
   });
 
   it("reads the undo an automatic change carries and sends it back as the server gave it", async () => {
@@ -109,6 +109,20 @@ describe("the rest of the server's web API", () => {
     const call = calls.at(-1)!;
     expect(call.url).toMatch(/\/v1\/web\/trips\/t1\/rollback$/);
     expect(JSON.parse(String(call.init.body))).toEqual({ request_id: "rollback:v3->v2", base_version: 3, to_version: 2 });
+  });
+
+  it("reads what a notice changed (`changed`, 2026-10-23) — only the server's values, null when it changed no stop by name", async () => {
+    stub(true);
+    replies.push(json({ notices: [
+      { key: "n1", type: "change_notice", text: "x", version: 2, delivery: "sent", at: "2026-10-22T20:53:00+09:00",
+        changed: [{ item_id: "i1", new_item_id: "i2", from: "학고재", to: "이솝 삼청", at: "2026-10-29T10:45:00+09:00" }] },
+      { key: "n2", type: "change_notice", text: "x", version: 3, delivery: "sent", at: "2026-10-22T21:00:00+09:00", changed: [{ item_id: "i3", from: null, to: null, at: null }] },
+      { key: "n3", type: "guidance", text: "x", version: null, delivery: "sent", at: "2026-10-22T21:10:00+09:00", changed: null },
+    ] }));
+    const [picked, empty, guide] = await getNotices("t1", "ko");
+    expect(picked.changed).toEqual([{ itemId: "i1", newItemId: "i2", from: "학고재", to: "이솝 삼청", at: "2026-10-29T10:45:00+09:00" }]);
+    expect(empty.changed).toBeNull();
+    expect(guide.changed).toBeNull();
   });
 
   it("chooses an option by its key, and null keeps the plan", async () => {

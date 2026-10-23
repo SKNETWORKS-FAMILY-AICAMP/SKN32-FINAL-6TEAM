@@ -311,3 +311,22 @@ def test_result_after_deadline_cannot_merge_new_rows(storage):
     assert finished["dining_judge"]["status"] == "failed"
     assert finished["dining_judge"]["error_code"] == "dining_judge_deadline_exceeded"
     assert applied == [] and saved["payload"]["items"][0]["rows"] == [{"row": "hours", "result": "unknown"}]
+
+
+@pytest.mark.parametrize("revision", [2, 3])
+@pytest.mark.parametrize("excluded", [False, True])
+def test_force_revalidation_keeps_the_saved_scope_answer(storage, monkeypatch, revision, excluded):
+    from app.domains.travel_ops.components.intake import risks
+    from app.domains.travel_ops.components.team_hooks import dining_ledger
+    conn, saved = storage
+    saved["state"] = ("review", revision)
+    question = {"id": "q1", "quote": "할랄 필수", "attribute": "halal", "required": True,
+                "choices": [], "answer": {"item_ids": [] if excluded else ["0-1"], "excluded": excluded}}
+    saved["payload"]["dining_questions"] = [question]
+    monkeypatch.setattr(risks, "decorate", lambda conn, **kw: kw["review"])
+    monkeypatch.setattr(dining_ledger, "agent_judge_runner", lambda: None)
+    monkeypatch.setattr(review_module, "build", lambda *a, **kw: {**meal_review(), "revision": revision})
+    payload, error = pipeline._review_of(conn, "tenant", "intake", revision, [{"transcript": "할랄 필수"}], [], force=True)
+    assert error is None
+    assert payload["dining_questions"][0]["answer"] == question["answer"]
+    assert payload["dining_questions"][0]["choices"][0]["item_id"] == "0-1"

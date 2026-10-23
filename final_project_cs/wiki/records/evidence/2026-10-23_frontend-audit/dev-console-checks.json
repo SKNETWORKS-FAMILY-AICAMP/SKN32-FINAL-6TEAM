@@ -1,0 +1,22 @@
+[
+  {
+    "app": "dev-console",
+    "task": "lint",
+    "exit": 0
+  },
+  {
+    "app": "dev-console",
+    "task": "typecheck",
+    "exit": 0
+  },
+  {
+    "app": "dev-console",
+    "task": "test",
+    "exit": 0
+  },
+  {
+    "app": "dev-console",
+    "task": "build",
+    "exit": 0
+  }
+]

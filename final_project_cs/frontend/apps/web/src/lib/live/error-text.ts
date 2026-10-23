@@ -52,6 +52,14 @@ export const REFUSAL_TEXT: Record<string, Text> = {
     return cap ? [`오늘 쓸 수 있는 횟수(${cap}번)를 다 썼어요.`, `You've reached today's limit (${cap}).`] : ["사용 한도에 닿았어요.", "You've reached the usage limit."];
   },
   service_daily_cap: ["오늘 서비스 사용량이 다 찼어요.", "Today's service capacity is full."],
+  // `[2026-10-22 사용자 지시]` 서비스 모드의 한 시간 한도 — 게스트는 로그인하면 한도가 넉넉해진다는 것까지 말한다(`limit`: member_hour · guest_hour)
+  hourly_limit: (detail) => {
+    const cap = number(detail, "cap");
+    const guest = detail?.limit === "guest_hour";
+    const ko = cap ? `한 시간에 쓸 수 있는 횟수(${cap}번)를 다 썼어요.` : "한 시간 사용 한도에 닿았어요.";
+    const en = cap ? `You've reached the hourly limit (${cap}).` : "You've reached the hourly limit.";
+    return guest ? [`${ko} 로그인하면 더 쓸 수 있어요.`, `${en} Sign in for more.`] : [ko, en];
+  },
   guest_trip_limit: (detail) => {
     const cap = number(detail, "cap");
     return cap ? [`로그인하지 않으면 여행을 ${cap}개까지 만들 수 있어요.`, `Without signing in you can keep up to ${cap} ${cap === 1 ? "trip" : "trips"}.`]

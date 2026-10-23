@@ -110,7 +110,7 @@ test("여행 화면 알림 센터 「공지」 탭 — 종에 안 본 공지가 
   await expect(bell(page)).toHaveAccessibleName("알림 센터 열기 · 읽지 않은 알림 5개");   // 여행 알림 2 + 서비스 공지 3
   const center = await openNotices(page);
   await expect(center.locator("[data-service-notices]")).toHaveCount(0);             // 맨 위 칸이 아니라 탭 안
-  await expect(center.getByRole("tab", { name: /받은 알림/ })).toHaveAttribute("aria-selected", "true");   // 새 여행 알림이 먼저
+  await expect(center.getByRole("tab", { name: /^소식/ })).toHaveAttribute("aria-selected", "true");   // 새 여행 알림이 먼저(`[2026-10-22 ST4F-723]` 옛 「받은 알림」)
   const serviceTab = center.getByRole("tab", { name: /^공지 3/ });
   await expect(serviceTab.getByRole("img", { name: "읽지 않은 알림" })).toHaveCount(1);
   await expect(bell(page)).toHaveAccessibleName("알림 센터 열기 · 읽지 않은 알림 3개");   // 여행 알림만 읽음 — 공지는 탭을 봐야
@@ -131,7 +131,7 @@ test("새 여행 알림은 없고 새 공지만 있으면 알림 센터가 「�
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
-  let center = await openNotices(page);                                              // 받은 알림 탭이 보여 주면 여행 알림은 읽음
+  let center = await openNotices(page);                                              // 소식 탭이 보여 주면 여행 알림은 읽음(`[2026-10-22 ST4F-723]` 옛 「받은 알림」)
   await center.getByRole("button", { name: "알림 센터 닫기" }).click();
   await mockServer(request).scenario({ serviceNotice: "one" });
   await page.reload();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RouteShape } from "@/lib/live/route-shapes";
-import { creditFacts, creditNumbers, datesText, distanceText, drawEndPicture, tripEnded } from "./ending-credits";
+import { creditFacts, creditNumbers, datesText, distanceText, drawEndPicture, openingView, tripEnded, tripPhase } from "./ending-credits";
 import type { Trip, TripStop } from "./model";
 
 const t = (ko: string) => ko;
@@ -14,12 +14,16 @@ const trip = (patch: Partial<Trip> = {}): Trip => ({ id: "t1", messages: [], sto
 ], ...patch });
 
 describe("`[2026-10-15 ST4F-496]` when a trip is over", () => {
-  it("is over once its last stop has ended in Seoul — its end time, or its start when it has none", () => {
-    expect(tripEnded(trip(), { date: "2026-10-16", minute: 9 * 60 + 59 })).toBe(false);
-    expect(tripEnded(trip(), { date: "2026-10-16", minute: 10 * 60 })).toBe(true);
+  it("is over once its last stop has ended in Seoul — its end time, or the end of its day when it has none (`[2026-10-22 ST4F-718 D1]`, as the list draws it)", () => {
+    expect(tripEnded(trip(), { date: "2026-10-16", minute: 10 * 60 })).toBe(false);
+    expect(tripEnded(trip(), { date: "2026-10-16", minute: 23 * 60 + 59 })).toBe(false);
     expect(tripEnded(trip(), { date: "2026-10-17", minute: 0 })).toBe(true);
     const withEnd = trip({ stops: [stop("남산", "2026-10-16", "10:00", { endTime: "12:00" })] });
     expect(tripEnded(withEnd, { date: "2026-10-16", minute: 11 * 60 })).toBe(false);
+    expect(tripEnded(withEnd, { date: "2026-10-16", minute: 12 * 60 })).toBe(true);
+    // A stop with no end before another stop of its day lasts until that one starts — it never makes the trip end later.
+    const middle = trip({ stops: [stop("남산", "2026-10-16", "10:00"), stop("명동", "2026-10-16", "12:00", { endTime: "13:00" })] });
+    expect(tripEnded(middle, { date: "2026-10-16", minute: 13 * 60 })).toBe(true);
   });
 
   it("counts a stay as over only on its check-out day, and never a trip with no stops", () => {
@@ -27,6 +31,30 @@ describe("`[2026-10-15 ST4F-496]` when a trip is over", () => {
     expect(tripEnded(stay, { date: "2026-10-16", minute: 12 * 60 })).toBe(false);
     expect(tripEnded(stay, { date: "2026-10-17", minute: 11 * 60 })).toBe(true);
     expect(tripEnded(trip({ stops: [] }), { date: "2030-01-01", minute: 0 })).toBe(false);
+  });
+});
+
+describe("`[2026-10-22 ST4F-718]` the view a trip opens on", () => {
+  it("opens on 「전체」 before day 1 (by date — D2) with day 1 behind it", () => {
+    expect(tripPhase(trip(), { date: "2026-10-14", minute: 23 * 60 })).toBe("before");
+    expect(openingView(trip(), { date: "2026-10-14", minute: 23 * 60 })).toEqual({ all: true, day: "2026-10-15" });
+  });
+
+  it("opens on today's day while the trip is on — day 1 itself before its first stop, and a day with no stops on the first day", () => {
+    expect(tripPhase(trip(), { date: "2026-10-15", minute: 7 * 60 })).toBe("during");
+    expect(openingView(trip(), { date: "2026-10-15", minute: 7 * 60 })).toEqual({ all: false, day: "2026-10-15" });
+    expect(openingView(trip(), { date: "2026-10-16", minute: 23 * 60 })).toEqual({ all: false, day: "2026-10-16" });
+    const gap = trip({ stops: [stop("경복궁", "2026-10-15", "10:00", { endTime: "12:00" }), stop("남산", "2026-10-17", "10:00", { endTime: "12:00" })] });
+    expect(openingView(gap, { date: "2026-10-16", minute: 12 * 60 })).toEqual({ all: false, day: "2026-10-15" });
+  });
+
+  it("opens on 「전체」 once the last stop has ended, with the last day behind it (D4)", () => {
+    expect(tripPhase(trip(), { date: "2026-10-17", minute: 0 })).toBe("after");
+    expect(openingView(trip(), { date: "2026-10-17", minute: 0 })).toEqual({ all: true, day: "2026-10-16" });
+  });
+
+  it("a trip with no stops opens as it always did", () => {
+    expect(openingView(trip({ stops: [] }), { date: "2026-10-16", minute: 0 })).toEqual({ all: false, day: "" });
   });
 });
 
