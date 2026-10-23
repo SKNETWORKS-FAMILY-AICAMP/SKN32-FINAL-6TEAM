@@ -177,14 +177,14 @@ def _at_km(cid, km, **kw):
 def test_search_steps_order_per_preference():
     """이동은 반경이 바깥 고리(가까운 곳에서 분류부터 푼다), 활동은 분류가 바깥 고리(반경부터 넓힌다)."""
     mobility = search_steps("mobility")
-    assert mobility[:5] == [(1.0, ()), (1.0, ("lclsSystm3",)), (1.0, ("lclsSystm3", "lclsSystm2")),
-                            (1.0, ("lclsSystm3", "lclsSystm2", "lclsSystm1", "contenttypeid")),
-                            (2.0, ())]
+    assert mobility[:4] == [(1.0, ()), (1.0, ("lclsSystm3",)), (1.0, ("lclsSystm3", "lclsSystm2")), (2.0, ())]
+    assert len(mobility) == 10 * 3                           # [2026-10-22] 소분류 → 중분류 → 대분류, 그 밖(다른 대분류)은 없다
     activity = search_steps("activity")
     assert activity[:3] == [(1.0, ()), (2.0, ()), (3.0, ())]
     assert activity[3] == (1.0, ("lclsSystm3",)) and activity[6] == (1.0, ("lclsSystm3", "lclsSystm2"))
     assert activity[9] == (4.0, ())                         # 가까운 구간(1~3km)을 다 본 뒤에야 4km 로 넓힌다
-    assert [r for r, d in activity if d == ("lclsSystm3", "lclsSystm2")][-1] == 5.0   # 먼 구간(6~10km)은 중분류를 안 푼다
+    assert all("lclsSystm1" not in d and "contenttypeid" not in d for _, d in activity)   # [2026-10-22] 대분류(+타입)는 끝까지 고정
+    assert len(activity) == 10 * 3
     assert search_steps(None) == [(float(r), ()) for r in range(1, 11)]
     assert mobility[-1][0] == activity[-1][0] == RADIUS_MAX_KM
 
@@ -225,7 +225,7 @@ def test_never_widens_beyond_10km():
 def test_fewer_than_three_returns_what_the_loosest_step_found():
     result = rank_alternatives(ORIGIN, [_at_km("x", 0.3, l3="HS019999")], SATURDAY, preference="activity")
     assert [a["contentid"] for a in result["alternatives"]] == ["x"]
-    assert result["dropped_fields"] == ["lclsSystm3"] and result["radius_km"] == RADIUS_MAX_KM   # 마지막 단계 = 먼 구간(소분류만 풂)
+    assert result["dropped_fields"] == ["lclsSystm3", "lclsSystm2"] and result["radius_km"] == RADIUS_MAX_KM   # 마지막 단계 = 먼 구간, 같은 대분류까지
 
 
 def test_preference_none_widens_radius_but_never_drops_class_fields():
@@ -268,13 +268,11 @@ def test_more_only_fill_skips_brands_already_found_strictly():
 @pytest.mark.parametrize("preference, diff, dropped", [
     ("mobility", dict(l3="X"), ["lclsSystm3"]),
     ("mobility", dict(l3="X", l2="HS02"), ["lclsSystm3", "lclsSystm2"]),
-    ("mobility", dict(l3="X", l2="NA01", l1="NA", ctype="14"),
-     ["lclsSystm3", "lclsSystm2", "lclsSystm1", "contenttypeid"]),
     ("activity", dict(l3="X"), ["lclsSystm3"]),
     ("activity", dict(l3="X", l2="HS02"), ["lclsSystm3", "lclsSystm2"]),
 ])
 def test_fallback_order_per_preference(preference, diff, dropped):
-    """이동: 소분류→중분류→대분류(+타입). 활동: 소분류→중분류. 그 단계에서야 맞는 후보 10곳을 1km 안에 둔다."""
+    """이동·활동 모두 소분류→중분류→(같은) 대분류. 그 단계에서야 맞는 후보 10곳을 1km 안에 둔다."""
     pool = [_at_km(f"x{i}", 0.05 * (i + 1), **diff) for i in range(10)]
     result = rank_alternatives(ORIGIN, pool, SATURDAY, preference=preference)
     assert result["dropped_fields"] == dropped
@@ -283,13 +281,12 @@ def test_fallback_order_per_preference(preference, diff, dropped):
 
 
 def test_mobility_loosens_class_before_widening_radius_activity_the_opposite():
-    near_other = [_at_km(f"near{i}", 0.05 * (i + 1), l1="VE", l2="VE01", l3="VE010100", ctype="14")
-                  for i in range(10)]
+    near_other = [_at_km(f"near{i}", 0.05 * (i + 1), l2="HS02", l3="HS020100") for i in range(10)]   # 같은 대분류, 중분류부터 다름
     far_same = [_at_km(f"far{i}", 2.1 + 0.05 * i) for i in range(10)]
     mobility = rank_alternatives(ORIGIN, near_other + far_same, SATURDAY, preference="mobility")
     activity = rank_alternatives(ORIGIN, near_other + far_same, SATURDAY, preference="activity")
     assert [a["contentid"] for a in mobility["alternatives"]] == ["near0", "near1", "near2"]
-    assert mobility["radius_km"] == 1.0 and "lclsSystm1" in mobility["dropped_fields"]
+    assert mobility["radius_km"] == 1.0 and mobility["dropped_fields"] == ["lclsSystm3", "lclsSystm2"]
     assert [a["contentid"] for a in activity["alternatives"]] == ["far0", "far1", "far2"]
     assert activity["radius_km"] == 3.0 and activity["dropped_fields"] == []
 
@@ -327,14 +324,15 @@ def test_within_one_zone_category_still_comes_before_distance():
     assert [a["contentid"] for a in result["alternatives"]] == ["exact_2_5", "mid_near"]
 
 
-def test_far_zone_does_not_accept_mid_class_only_matches():
-    """먼 구간(6~10km)은 소분류만 푼다 — 중분류까지 푼 후보(대분류만 같음)는 받지 않는다."""
-    result = rank_alternatives(ORIGIN, [_at_km("far_other_mid", 7, l2="HS02", l3="HS020100")], SATURDAY,
-                               preference="activity")
-    assert result["alternatives"] == []
-    near = rank_alternatives(ORIGIN, [_at_km("near_other_mid", 2, l2="HS02", l3="HS020100")], SATURDAY,
-                             preference="activity")
-    assert [a["contentid"] for a in near["alternatives"]] == ["near_other_mid"]       # 가까우면 받는다
+def test_activity_keeps_big_class_fixed_in_every_zone_but_accepts_all_of_it():
+    """`[2026-10-22]` 대분류는 기본 범위 — 어느 구간에서도 같은 대분류는 후보이고(중분류가 달라도), 다른 대분류는 아니다."""
+    for km in (2, 4, 7):
+        same_big = rank_alternatives(ORIGIN, [_at_km("same_big", km, l2="HS02", l3="HS020100")], SATURDAY, preference="activity")
+        assert [a["contentid"] for a in same_big["alternatives"]] == ["same_big"], km
+        other_big = rank_alternatives(ORIGIN, [_at_km("other_big", km, l1="VE", l2="VE01", l3="VE010100", ctype="14")],
+                                      SATURDAY, preference="activity")
+        assert other_big["alternatives"] == [], km
+
 
 
 def test_activity_never_drops_large_class_or_type():
@@ -428,7 +426,7 @@ def test_shows_three_and_keeps_up_to_ten_for_more():
 
 
 def test_activity_scores_category_before_distance_mobility_the_reverse():
-    """둘 다 같은 1km 안 — 활동 중요는 같은 소분류를, 이동 중요는 더 가까운 곳을 앞에 둔다."""
+    """`[2026-10-22]` 활동 중요는 거리 구간 안에서 같은 소분류를 먼저, 이동 중요는 중분류라도 더 가까운 곳을 먼저 둔다."""
     pool = [_at_km("near_other_l3", 0.1, l3="HS019999"), _at_km("same_l3", 0.6),
             _at_km("x", 0.7, l3="HS019998"), _at_km("y", 0.8, l3="HS019997")]
     activity = rank_alternatives(ORIGIN, pool, SATURDAY, preference="activity")

@@ -75,8 +75,12 @@ SPECS: dict[str, ToolSpec] = {s.name: s for s in [
              _obj(["place_uid", "wanted"], place_uid=_UID,
                   wanted={"type": "array", "items": {"type": "string", "enum": sorted(ATTRIBUTES)}})),
     ToolSpec("live_open_check", "rule",
-             "구글로 그 시각 영업을 실시간 확인한다(호출 비용이 든다 — 원장이 unknown 이거나 출처가 어긋날 때만). verdict = open · closed · unknown.",
-             _obj(["place_uid", "start"], place_uid=_UID, start=_AT, end=_AT)),
+             "구글로 그 시각 영업을 실시간 확인한다(호출 비용이 든다 — 원장이 unknown 이거나, 출처가 어긋나거나, 원장 밖 가게일 때만). "
+             "원장 가게는 place_uid, 원장 밖 가게(find_place 의 place_uid 가 null · source 가 license · map)는 "
+             "find_call_id(그 find_place 의 call_id)로 준다. verdict = open · closed · unknown.",
+             _obj(["start"], place_uid=_UID,
+                  find_call_id={"type": "string", "description": "원장 밖 가게를 찾은 find_place 의 call_id"},
+                  start=_AT, end=_AT)),
     ToolSpec("place_detail", "data",
              "가게의 분류 · 음식 결 · 주소와 **영업시간 · 휴무 원문**(규칙으로 옮기기 전 글) · 그날 규칙화된 영업 구간. 규칙 도구가 unknown 일 때 직접 읽는다.",
              _obj(["place_uid"], place_uid=_UID, date={"type": "string", "description": "YYYY-MM-DD(그날 영업 구간을 볼 때)"})),
@@ -207,7 +211,7 @@ class DiningTools:
             return {"found": True, "source": "license", "place_uid": None, "name": license_shop["matched_title"],
                     "address": license_shop["address"], "lat": license_shop["latitude"], "lng": license_shop["longitude"],
                     "category": license_shop.get("category"), "match": "license", "needs_review": True,
-                    "note": "원장에 없고 인허가 기록에만 있다 — 영업시간을 모른다"}
+                    "note": "원장에 없고 인허가 기록에만 있다 — 영업은 live_open_check(find_call_id)로 확인한다"}
         hits = self._map(name, near)
         if hits is None:
             return {"found": False, "source": None, "reason": "원장에 없고 지도 검색을 부를 수 없다(설정 · 예산)"}
@@ -217,7 +221,7 @@ class DiningTools:
         return {"found": True, "source": "map", "place_uid": None, "map_id": top["map_id"], "name": top["name"],
                 "address": top["address"], "lat": top["lat"], "lng": top["lng"], "category": top["category"],
                 "match": "map", "needs_review": True, "others": len(hits) - 1,
-                "note": "원장에 없다 — 지도 결과라 영업시간을 모른다"}
+                "note": "원장에 없다 — 지도 결과라 영업은 live_open_check(find_call_id)로 확인한다"}
 
     def _check_open_at(self, place_uid: str, start: str, end: str | None = None) -> dict[str, Any]:
         at = _kst(start)
@@ -294,16 +298,28 @@ class DiningTools:
                              "source": row[2] if row else None, "verified_at": row[3] if row else None}
         return {"attributes": out}
 
-    def _live_open_check(self, place_uid: str, start: str, end: str | None = None) -> dict[str, Any]:
+    def _live_open_check(self, start: str, end: str | None = None, place_uid: str | None = None,
+                         find_call_id: str | None = None) -> dict[str, Any]:
+        """★`[2026-10-21]` 원장 밖 가게(인허가 · 카카오로 찾은 가게)는 원장 번호가 없다 — 그 `find_place` 결과의 이름 · 좌표로 구글을 찾는다.
+        ☆전에는 원장 번호만 받아 그런 가게는 구글을 부를 길이 없었고 영업 줄이 늘 「확인 필요」였다(사람 정답 평가 33번)."""
+        if (place_uid is None) == (find_call_id is None):
+            raise ToolRefused("place_uid(원장 가게) · find_call_id(원장 밖 가게) 중 하나만 준다")
+        source = "ledger"
+        if find_call_id is not None:
+            spot = self._outside_spot(find_call_id)
+            source = spot[3]
         if self.google is None:
             return {"verdict": "unknown", "reason": "실시간 확인(구글)이 설정되지 않았다"}
         at = _kst(start)
         until = _kst(end) if end else at + timedelta(hours=1)
-        with self.connect() as conn, conn.cursor() as cur:
-            cur.execute("SELECT name_ko, lat, lng FROM dining.dn_place WHERE place_uid = %s::uuid", (place_uid,))
-            row = cur.fetchone()
-        if row is None or row[1] is None:
-            return {"verdict": "unknown", "reason": "원장에 없거나 좌표가 없다"}
+        if find_call_id is not None:
+            row = spot[:3]
+        else:
+            with self.connect() as conn, conn.cursor() as cur:
+                cur.execute("SELECT name_ko, lat, lng FROM dining.dn_place WHERE place_uid = %s::uuid", (place_uid,))
+                row = cur.fetchone()
+            if row is None or row[1] is None:
+                return {"verdict": "unknown", "reason": "원장에 없거나 좌표가 없다"}
         found = self.google.find_place_id(name=row[0], latitude=float(row[1]), longitude=float(row[2]))
         if found is None:
             return {"verdict": "unknown", "reason": "구글을 부르지 못했다(예산 · 오류)"}
@@ -314,7 +330,20 @@ class DiningTools:
         if got is None:
             return {"verdict": "unknown", "reason": "구글 영업 정보를 부르지 못했다", "google_place_id": google_id}
         verdict, why = got
-        return {"verdict": verdict, "reason": why, "google_place_id": google_id, "match_distance_m": round(metres)}
+        return {"verdict": verdict, "reason": why, "google_place_id": google_id, "match_distance_m": round(metres),
+                "place_source": source}
+
+    def _outside_spot(self, find_call_id: str) -> tuple[str, float, float, str]:
+        """원장 밖 가게를 찾은 `find_place` 호출 → (이름, 위도, 경도, 출처). 모델이 이름 · 좌표를 적어 넘기지 않게 기록에서 꺼낸다."""
+        call = next((c for c in self.calls if c["id"] == find_call_id), None)
+        if call is None or call["tool"] != "find_place":
+            raise ToolRefused(f"{find_call_id} 는 find_place 호출이 아니다 — 가게를 찾은 find_place 의 call_id 를 준다")
+        got = call["result"]
+        if not got.get("found") or got.get("source") not in ("license", "map"):
+            raise ToolRefused("원장 밖에서 찾은 가게가 아니다 — 원장 가게는 place_uid 로 확인한다")
+        if got.get("lat") is None or got.get("lng") is None:
+            raise ToolRefused("찾은 가게에 좌표가 없다 — 구글에서 같은 가게인지 가릴 수 없다")
+        return str(got.get("name") or call["args"].get("name")), float(got["lat"]), float(got["lng"]), str(got["source"])
 
     # ── 자료 도구 ──
     def _place_detail(self, place_uid: str, date: str | None = None) -> dict[str, Any]:  # noqa: A002

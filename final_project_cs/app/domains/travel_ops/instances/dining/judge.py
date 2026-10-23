@@ -110,6 +110,25 @@ def plans_from_review(review: dict[str, Any], notes: str) -> list[dict[str, Any]
     return plans
 
 
+def outside_ledger(calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """고객 일정에 나왔는데 원장에 없던 가게 — 원장 추가 후보(사람이 확인한 뒤 넣는다 · 자동 적재하지 않는다). `[2026-10-21]`
+
+    ★인허가(공공 자료)는 이름 · 주소 · 좌표를 남기고, 카카오로 찾은 가게는 **고객이 쓴 이름만** 남긴다(카카오 결과는 저장하지 않는다 —
+      `agent_tools` 머리말). 같은 이름은 한 번만."""
+    out: list[dict[str, Any]] = []
+    for call in calls:
+        if not isinstance(call, dict) or call.get("tool") != "find_place":
+            continue
+        got, query = call.get("result") or {}, str((call.get("args") or {}).get("name") or "")
+        if not got.get("found") or got.get("source") not in ("license", "map") or any(o["query"] == query for o in out):
+            continue
+        row: dict[str, Any] = {"query": query, "source": got["source"]}
+        if got["source"] == "license":
+            row.update({k: got.get(k) for k in ("name", "address", "lat", "lng", "category")})
+        out.append(row)
+    return out
+
+
 def _tools_of(check: dict[str, Any], calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """체크가 인용한 도구 호출 — 화면 줄의 근거 칸(도구 이름 · 호출 id · 경로 · 값)."""
     by_id = {c["id"]: c for c in calls}
@@ -259,13 +278,17 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
                 if remaining <= 0:
                     raise TimeoutError("dining judge deadline exceeded")
                 budget = min(deadline_s, remaining)
-            result = judge_day(plan, tools=tools_factory(connect), chat=chat, deadline_s=budget)
+            tools = tools_factory(connect)
+            result = judge_day(plan, tools=tools, chat=chat, deadline_s=budget)
             if not isinstance(result.items, list) or not isinstance(result.tool_calls, list):
                 raise ValueError("malformed agent result")
             records.append((None, "_run", None, None, None, result.failure,
                             {"date": plan["date"], **result.stats,
                              "customer_requests": result.requests,
-                             "tools": [c["tool"] for c in result.tool_calls if isinstance(c, dict) and "tool" in c]}))
+                             "tools": [c["tool"] for c in result.tool_calls if isinstance(c, dict) and "tool" in c],
+                             # ☆`result.tool_calls` 는 도구 결과를 싣지 않는다 — 결과가 있는 도구 기록에서 센다.
+                             #   후보 기록은 부가 정보라 기록이 없는 도구 묶음이어도 판정을 실패로 만들지 않는다
+                             "outside_ledger": outside_ledger(getattr(tools, "calls", None) or [])}))
             if result.failure:
                 counts["failures"] += 1
                 error_code = error_code or str(result.failure)
@@ -359,4 +382,4 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
     return {"run_id": run_id, **counts}
 
 
-__all__ = ["ADDED", "RULE_ROWS", "ROW_OF", "TEXT", "merge", "plans_from_review", "rule_verdicts", "run"]
+__all__ = ["ADDED", "RULE_ROWS", "ROW_OF", "TEXT", "merge", "outside_ledger", "plans_from_review", "rule_verdicts", "run"]

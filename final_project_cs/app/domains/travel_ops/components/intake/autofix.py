@@ -352,8 +352,12 @@ def _route_restaurants(conn, tenant_id: str, item: dict[str, Any], tried: list[d
     pool: list[dict[str, Any]] = []
     for point in points:
         ref = (float(point["latitude"]), float(point["longitude"]))
-        found = cand_module._ledger_places(conn, tenant_id, ref, radius_m=MEAL_ROUTE_RADIUS_M)
-        found += [p for p in cand_module._kakao_places(kakao, MEAL_QUERY, ref, "dining", []) if p.get("kind") == "dining"]
+        words = cand_module.meal_request.dish_words(item)
+        found = []
+        for query in words or (None,):
+            found += cand_module._ledger_places(conn, tenant_id, ref, radius_m=MEAL_ROUTE_RADIUS_M, query=query)
+        found += [p for p in cand_module._kakao_places(kakao, words[0] if words else MEAL_QUERY, ref, "dining", []) if p.get("kind") == "dining"]
+        found = [p for p in found if cand_module.meal_request.matches(item, p)]
         if cand_module.is_meal_line(item):
             # ★`[2026-10-18 사용자 지시]` 끼니에는 카페 · 디저트를 넣지 않는다 — 실측: 카카오 「음식점」 검색의 카페(CE7)가 점심 자리에 들어갔다
             found = [p for p in found if not cand_module.not_a_meal(p)]
@@ -387,7 +391,7 @@ def _meal_on_route(conn, tenant_id: str, item: dict[str, Any], tried: list[dict[
         fit = _fit_window(conn, tenant_id, item, place, prev, nxt, start, duration, engine)
         if not isinstance(fit, str):
             return (place, fit), f"원래 곳까지 오가면 식사 시간이 모자라 「{near}」 근처 식당으로 바꿨어요"
-    fallback = pool[:1] + ([item["place"]] if item.get("place") else [])
+    fallback = pool[:1] + ([item["place"]] if item.get("place") and cand_module.meal_request.matches(item, item["place"]) else [])
     for place in fallback:
         fit = _fit_window(conn, tenant_id, item, place, prev, None, start, duration, engine)
         if not isinstance(fit, str):

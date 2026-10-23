@@ -1448,6 +1448,17 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : scenario.intakeEvents === "held" ? intakeStream().slice(0, -2) : intakeStream();
     chunks.forEach((chunk) => response.write(chunk));
     if (scenario.intakeEvents !== "silent" && scenario.intakeEvents !== "held") response.end();   // "silent" · "held" leave the line open and say nothing more
+    // `[2026-10-23]` "held" is a check the server has not finished: like the server (`op_stream.watch` — `beat` every `travel.op_stream.beat_seconds`, 3) it still
+    // says it is alive while it waits. Without it the screen's 7 s watchdog read a dropped line every 8 s (「서버와 연결이 끊겼어요」 · reconnect), which no held
+    // server does, and a test that ran past it (stop-ask-flow 「확인 중인 곳으로」) failed or passed by when it fell in that cycle. "silent" stays quiet on purpose.
+    if (scenario.intakeEvents === "held") {
+      let elapsed = 1;
+      const beat = setInterval(() => { elapsed += 3; response.write(`event: beat
+data: ${JSON.stringify({ elapsed, stage: "checking", label: "장소·운영시간 확인", stage_elapsed: elapsed - 1, slow: false })}
+
+`); }, 3000);
+      request.on("close", () => clearInterval(beat));
+    }
     return;
   }
   // `[2026-10-07]` The ways to go for one leg, and picking one (see `moveOptions` in the scenario).
