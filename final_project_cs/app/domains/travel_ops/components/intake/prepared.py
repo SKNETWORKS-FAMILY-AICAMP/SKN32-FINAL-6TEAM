@@ -104,8 +104,14 @@ def _sha(value: Any) -> str:
 def signatures(review: dict[str, Any], item: dict[str, Any]) -> tuple[str, str, str]:
     """(그 일정 · 앞 일정 · 뒤 일정)의 서명. 그 일정은 장소 · 날짜 · 시각 · 종류 · 장소 상태 · 지역, 앞뒤는 장소와 시각(이동 구간을 정하는 값)."""
     prev, nxt = cand.neighbours(review["items"], item)
-    own = _sha([_place_sig(item.get("place")), item.get("date"), item.get("end_date"), item.get("starts_at"), item.get("ends_at"),
-                item.get("kind"), item.get("place_state"), (item.get("parts") or {}).get("area"), item.get("title")])
+    own_values = [_place_sig(item.get("place")), item.get("date"), item.get("end_date"), item.get("starts_at"), item.get("ends_at"),
+                  item.get("kind"), item.get("place_state"), (item.get("parts") or {}).get("area"), item.get("title")]
+    words = cand.meal_request.dish_words(item)
+    if words:
+        # Pre-fix prepared responses may contain unrelated food. Rebuild these
+        # menus once while retaining existing lodging comparison caches.
+        own_values.append(["requested-dish-v1", words])
+    own = _sha(own_values)
 
     def side(x: dict[str, Any] | None) -> str:
         return _sha(None if x is None else [x.get("id"), _place_sig(x.get("place")), x.get("date"), x.get("starts_at"), x.get("ends_at")])

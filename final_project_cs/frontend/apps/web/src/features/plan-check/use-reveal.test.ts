@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { exampleDone, exampleSnapshots, readAgain } from "./test-views";
-import { nextStep, STAGES, type PlanCheckView } from "./model";
+import { nextStep, stopKind, STAGES, type PlanCheckView } from "./model";
 import { FIRST_CARD_MS, FOLD_MS, linesBacklog, pauseBefore, READ_BUDGET_MS, READ_MIN_MS, readPause, REVEAL_MS, ROW_MS, ROWS_LEAD_MS, STAGE_MIN_MS, stepMany, useReveal, VERDICT_MS } from "./use-reveal";
 
 // Exercise the hook's timer/state boundary in Node; the live tests cover React and browser rendering.
@@ -222,6 +222,42 @@ describe("`[2026-10-20 C안]` stopping at a card that needs a look, and going on
     for (let step = 0; step < 200 && !until(result); step += 1) { vi.advanceTimersByTime(100); result = draw(target, false, true); }
     return result;
   }
+
+  it("continues after an explicit hours caution acknowledgement, retains warnings, and asks again after time changes", () => {
+    vi.useFakeTimers();
+    hooks.skip = true;
+    draw(checking, false, true);
+    const item = { ...exampleDone.items[0], verdict: "review" as const, placeState: "found", checks: [
+      { kind: "place" as const, result: "ok" as const, text: "고객 선택" },
+      { kind: "hours" as const, result: "warn" as const, text: "마지막 주문 확인", canAcknowledge: true },
+    ] };
+    const target = { ...exampleDone, items: [item], moves: [] };
+    const before = draw(target, false, true);
+    expect(before.stop?.id).toBe(item.id);
+    before.recheck.acknowledgeHours(item.id);
+    const after = draw(target, false, true);
+    expect(after.stop).toBeNull();
+    expect(after.settled).toBe(true);
+    expect(after.view.items[0]).toEqual(item);
+    const changed = draw({ ...target, items: [{ ...item, startsAt: "11:15" }] }, false, true);
+    expect(changed.recheck.isHoursAcknowledged(changed.view.items[0])).toBe(false);
+  });
+
+  it("keeps a late arrival blocking after hours are acknowledged", () => {
+    vi.useFakeTimers();
+    hooks.skip = true;
+    draw(checking, false, true);
+    const item = { ...exampleDone.items[1], place: "566라멘", coordinates: { lat: 37.57, lng: 126.98 }, placeState: "found", checks: [
+      { kind: "place" as const, result: "ok" as const, text: "고객 선택" },
+      { kind: "hours" as const, result: "warn" as const, text: "마지막 주문 확인", canAcknowledge: true },
+    ] };
+    const target = { ...exampleDone, items: [exampleDone.items[0], item], moves: [exampleDone.moves[0]] };
+    draw(target, false, true).recheck.acknowledgeHours(item.id);
+    const result = draw(target, false, true);
+    expect(result.stop?.id).toBe(item.id);
+    expect(result.settled).toBe(false);
+    expect(stopKind(result.view, item.id, result.recheck.isHoursAcknowledged)).toBe("arrival");
+  });
 
   it("stops at the card that needs a look: nothing past it is drawn, and it is not settled", () => {
     vi.useFakeTimers();

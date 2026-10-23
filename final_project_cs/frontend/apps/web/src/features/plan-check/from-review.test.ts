@@ -29,6 +29,17 @@ function intake(status: IntakeView["status"], stage: string, extra: Partial<Revi
 }
 
 describe("the finished check, from the server's review", () => {
+  it("preserves only an explicit server acknowledgement permission on the hours row", () => {
+    for (const permission of [true, false, undefined]) {
+      const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: true,
+        needs: { items: 1, moves: 0, total: 1 }, items: [item({ status: "review", rows: [
+          { row: "hours", result: "warn", text: "마지막 주문 확인", can_acknowledge: permission },
+        ] })], moves: [] } });
+      const row = reviewResultOf(next, readingOf(next))!.items[0].checks[0];
+      expect(row.canAcknowledge === true).toBe(permission === true);
+      expect(row).toMatchObject({ result: "warn", text: "마지막 주문 확인" });
+    }
+  });
   it("connects breakfast cards to the shared stay without inventing check-in or nights", () => {
     const common = { id: "0-0", members: ["0-0", "0-2"], place: place("공통 숙소") };
     const next = intake("review", "review", { review: { revision: 3, built_at: "", engine: "estimate", ready: true,

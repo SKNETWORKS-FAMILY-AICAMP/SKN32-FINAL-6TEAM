@@ -644,7 +644,7 @@ def _typo_match(base: str, shops: list[dict[str, Any]]) -> tuple[dict[str, Any],
 
 def dish_words(text: str | None) -> list[str]:
     """입력의 메뉴 말 — 긴 것부터. 「통인시장 기름떡볶이」 → [기름떡볶이, 떡볶이] · 「근처 칼국수집」 → [칼국수]."""
-    from app.domains.travel_ops.components.planning.meal_likeness import DISHES
+    from app.domains.travel_ops.components.planning.meal_likeness import DISHES, DISH_SPELLINGS
 
     words = [w for w in re.split(r"\s+", (text or "").strip()) if w and w not in _NEAR_WORDS]
     out: list[str] = []
@@ -652,7 +652,7 @@ def dish_words(text: str | None) -> list[str]:
         clean = _name_key(re.sub(r"(집|가게|식당|맛집)$", "", word))
         for dish in DISHES:
             if dish in clean:
-                for got in (clean, dish):
+                for got in (clean, dish, *DISH_SPELLINGS.get(dish, ())):
                     if got and got not in out:
                         out.append(got)
                 break

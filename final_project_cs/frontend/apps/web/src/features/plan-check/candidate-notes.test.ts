@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { candidateNoteText } from "./place-change";
 
+it("says the requested dish was not verified instead of saying no restaurants exist nearby", () => {
+  expect(candidateNoteText(["no_requested_dish", "no_same_kind"], ko)).toContain("요청하신 메뉴를 확인할 수 있는 식당 후보를 찾지 못했어요");
+});
+
 const ko = (korean: string) => korean;
 
 describe("why a stop has no candidates, in the server's terms", () => {
