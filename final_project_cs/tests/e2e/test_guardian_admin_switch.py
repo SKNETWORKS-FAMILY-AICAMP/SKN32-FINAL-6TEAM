@@ -63,22 +63,24 @@ def _view(env, trip_id) -> dict:
     return response.json()
 
 
-def test_the_console_lists_the_switch_on_by_default(cookies):
+def test_the_console_lists_the_switch_off_by_default(cookies):
+    """`[2026-10-23 사용자 지시]` 항로 지킴이는 테스트 기능이라 기본 꺼짐 — 켜려면 운영자가 스위치를 켠다."""
     view = _client().get("/admin/limits", headers=cookies["auth"]("limits:read")).json()
     row = next(r for r in view["limits"] if r["name"] == NAME)
-    assert (row["type"], row["value"], row["source"]) == ("bool", True, "default")
-    assert _features(cookies) == {"guardian": True, "risk_panel": False}
+    assert (row["type"], row["value"], row["source"]) == ("bool", False, "default")
+    assert _features(cookies) == {"guardian": False, "risk_panel": False}
 
 
 def test_the_public_read_needs_no_session(cookies):
     """세션이 없는 등록 전 화면이 읽는다 — 키 · 쿠키 없이 열리고 개인 정보가 없다."""
     cookies["client"].cookies.clear()
-    assert _features(cookies) == {"guardian": True, "risk_panel": False}
-    _switch(cookies, False)
     assert _features(cookies) == {"guardian": False, "risk_panel": False}
+    _switch(cookies, True)
+    assert _features(cookies) == {"guardian": True, "risk_panel": False}
 
 
 def test_turning_it_off_hides_it_stops_automatic_changes_and_keeps_the_record(cookies):
+    _switch(cookies, True)                                                  # 기본은 꺼짐 — 켠 상태에서 시작한다
     trip_id = _trip(cookies, constraints=NO_SURVEY)
     assert _post(cookies, trip_id, {"enabled": True, "via": "card"}).status_code == 200
     before, rows = _stored(trip_id), _rows(trip_id)
@@ -97,7 +99,7 @@ def test_turning_it_off_hides_it_stops_automatic_changes_and_keeps_the_record(co
     decision = decide(constraints=stored, item=_item(), report=DUST)
     assert (decision.action, decision.reason) == ("ask", "ask_first")
 
-    assert _switch(cookies, None)["value"] is True                          # 기본값(켜짐)으로 되돌리기
+    assert _switch(cookies, True)["value"] is True                          # 다시 켜기
     assert _features(cookies) == {"guardian": True, "risk_panel": False}
     assert _view(cookies, trip_id)["guardian"]["enabled"] is True           # 저장값대로 돌아온다
     assert decide(constraints=_stored(trip_id), item=_item(), report=DUST).action == "apply"
@@ -116,6 +118,7 @@ def _by_key(env, trip_id) -> dict:
 
 
 def test_notices_carry_no_guardian_part_while_it_is_off(cookies):
+    _switch(cookies, True)                                                  # 기본은 꺼짐 — 켠 상태에서 시작한다
     trip_id = _trip(cookies, constraints=NO_SURVEY)                         # 꺼 둔 여행(게스트는 여행 하나 — 한 여행으로 두 갈래를 본다)
     _sent(cookies, trip_id, "message", ASK, key="proposal:before")          # 끄기 전에 쌓인 「켜기」 알림
     assert cookies["client"].get(f"/v1/web/trips/{trip_id}/notices").json()["notices"][-1]["guardian"]["offer"]
@@ -126,7 +129,7 @@ def test_notices_carry_no_guardian_part_while_it_is_off(cookies):
     assert {"proposal:before", "proposal:after"} <= set(notices)
     assert all(n["guardian"] is None for n in notices.values())                           # 이미 쌓인 알림의 몫도 빠진다
 
-    _switch(cookies, None)
+    _switch(cookies, True)
     notices = _by_key(cookies, trip_id)
     assert notices["proposal:before"]["guardian"]["offer"]                                 # 켜면 저장된 몫이 다시 보인다
     assert notices["proposal:after"]["guardian"] is None                                   # 끈 동안 만든 알림에는 처음부터 없다
@@ -134,5 +137,5 @@ def test_notices_carry_no_guardian_part_while_it_is_off(cookies):
 
     _switch(cookies, False)
     assert "guardian" not in _sent(cookies, trip_id, "version", AUTO_CHANGE, version=2)       # 「항로 지킴이가 바꿨어요」 없음
-    _switch(cookies, None)
+    _switch(cookies, True)
     assert _sent(cookies, trip_id, "version", AUTO_CHANGE, version=3)["guardian"] == {"changed": True}   # 켜면 다시 붙는다

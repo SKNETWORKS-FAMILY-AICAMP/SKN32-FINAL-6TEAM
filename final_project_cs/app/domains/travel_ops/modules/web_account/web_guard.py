@@ -201,7 +201,7 @@ def specs() -> dict[str, LimitSpec]:
     #   읽는 곳은 `settings_hook.guardian_enabled` 하나다(판정 · 여행 조회 · 켜기 입구 · 알림 · 공개 읽기)
     out["travel.guardian.enabled"] = LimitSpec(
         "travel.guardian.enabled", "항로 지킴이(끄면 웹에서 숨기고 자동 일정 변경도 멈춤)", "", "bool",
-        guard.get("travel.guardian.enabled") is not False, help=_guardian_help(guard))
+        guard.get("travel.guardian.enabled") is True, help=_guardian_help(guard))
     # ★`[2026-10-19 사용자 지시]` 등록 여행 식당 카드의 캐치테이블 시험 값(웨이팅 · 빈자리) — 제휴 전제 시험이라 기본 꺼짐, 시연 때만 켠다.
     #   읽는 곳은 `settings_hook.dining_trial_live_view_enabled` 하나다(여행 조회 응답의 항목 `trial_live` · 일정 안내의 참고 한 줄). 판정 · 재계획에는 닿지 않는다
     out["travel.dining.trial_live_view_enabled"] = LimitSpec(
@@ -234,7 +234,7 @@ LODGING_MODE_LABELS = (("demo", "숙소 시연 모드"), ("test", "테스트 모
 def _guardian_help(guard: Any) -> str:
     """★`[2026-10-19 사용자 결정 — ST4F-613]` 항로 지킴이 스위치 설명 — 끄기 전에 무엇이 멈추고 무엇이 남는지 보인다(반영 시간은 설정에서 읽는다)."""
     return "\n".join([
-        "하는 일: 켜면(기본) 고객이 항로 지킴이를 켠 여행은 일정이 꼬일 때 서버가 대체안을 적용하고 알립니다. 웹에 계획 담기 카드 · 머리 아이콘 · 여행 화면 아이콘이 보입니다.",
+        "하는 일: 켜면(지금 기본은 꺼짐 — 테스트 기능) 고객이 항로 지킴이를 켠 여행은 일정이 꼬일 때 서버가 대체안을 적용하고 알립니다. 웹에 계획 담기 카드 · 머리 아이콘 · 여행 화면 아이콘이 보입니다.",
         "끄면: 웹에서 항로 지킴이를 모두 숨기고, 켠 여행도 끈 동안은 바꾸기 전에 먼저 묻습니다(자동 일정 변경 멈춤). 재난 정지 · 안전 안내 · 고정한 일정 규칙은 그대로입니다.",
         "켠 기록: 지우지 않습니다. 다시 켜면 각 여행이 고객이 고른 대로 돌아갑니다.",
         f"저장하면 재기동 없이 {int(guard.get('web_guard.cache_seconds'))}초 안에 바뀝니다.",

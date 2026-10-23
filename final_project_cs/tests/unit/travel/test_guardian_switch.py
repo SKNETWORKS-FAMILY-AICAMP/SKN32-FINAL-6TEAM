@@ -60,16 +60,16 @@ def _item():
 
 # ── 관리 콘솔 목록 · 값 ────────────────────────────────────────────────────────────────────────────
 
-def test_switch_is_listed_for_the_admin_console_on_by_default_with_help():
+def test_switch_is_listed_for_the_admin_console_off_by_default_with_help():
     spec = web_guard.specs()[settings_hook.GUARDIAN]
-    assert spec.type == "bool" and spec.default is True
+    assert spec.type == "bool" and spec.default is False
     assert spec.check(False) is None and spec.check("off") == "wrong_type"
     assert "끄면" in spec.help and "켠 기록" in spec.help
 
 
-def test_without_console_value_the_guardrail_decides_and_it_is_on():
-    assert settings_hook.guardian_enabled("t1") is True
-    assert core_settings.guardian_enabled() is True
+def test_without_console_value_the_guardrail_decides_and_it_is_off():
+    assert settings_hook.guardian_enabled("t1") is False
+    assert core_settings.guardian_enabled() is False
 
 
 @pytest.mark.parametrize("stored, expected", [(True, True), (False, False)])
@@ -81,24 +81,24 @@ def test_console_value_wins(stored, expected):
 @pytest.mark.parametrize("stored", ["off", 0, None])
 def test_non_boolean_value_is_not_treated_as_a_change(stored):
     _console(stored)
-    assert settings_hook.guardian_enabled("t1") is True
+    assert settings_hook.guardian_enabled("t1") is False
 
 
-def test_unreadable_table_falls_back_to_the_guardrail_on():
+def test_unreadable_table_falls_back_to_the_guardrail_off():
     def broken(tenant, name):
         raise RuntimeError("db down")
 
     settings_hook.register(broken)
-    assert settings_hook.guardian_enabled("t1") is True
+    assert settings_hook.guardian_enabled("t1") is False
 
 
-def test_unreadable_guardrail_keeps_the_decided_default_on(monkeypatch):
+def test_unreadable_guardrail_keeps_the_decided_default_off(monkeypatch):
     class Broken:
         def get(self, key):
             raise ConfigError(f"guardrails 키 없음: '{key}'")
 
     monkeypatch.setattr(core_settings, "get_guardrails", lambda: Broken())
-    assert core_settings.guardian_enabled() is True
+    assert core_settings.guardian_enabled() is False
 
 
 # ── 판정 — 끄면 켠 여행도 꺼진 여행과 같다 ─────────────────────────────────────────────────────────
@@ -126,12 +126,12 @@ def test_switch_is_read_with_the_service_tenant_only_for_trips_that_chose_replac
     assert seen == [("t1", settings_hook.GUARDIAN)]
 
 
-def test_without_a_registered_reader_the_switch_is_on_and_settings_are_not_needed(monkeypatch):
+def test_without_a_registered_reader_the_switch_is_off_and_settings_are_not_needed(monkeypatch):
     def no_settings():
         raise ConfigError("필수 환경변수가 없다")
 
     monkeypatch.setattr(core_settings, "get_settings", no_settings)
-    assert survey.on_disruption(ON) == "replace"         # 도구 · 시험 — 읽을 운영자 값이 없다
+    assert survey.on_disruption(ON) == "ask_first"       # 도구 · 시험 — 읽을 운영자 값이 없으면 기본(꺼짐)
 
 
 def test_switch_off_makes_decide_ask_first_and_safety_stays_a_safety_alert(service_tenant):

@@ -198,13 +198,15 @@ async def test_cross_customer_itinerary_response_is_rejected_before_planning():
     ({"survey": {"on_disruption": "ask_first"}, "survey_answered": ["on_disruption"]}, False),
     ({"survey": {"on_disruption": "replace"}, "survey_answered": ["on_disruption"]}, True),
 ])
-def test_guardian_display_and_decision_share_the_explicit_setting(constraints, on):
+def test_guardian_display_and_decision_share_the_explicit_setting(constraints, on, monkeypatch):
+    monkeypatch.setattr("app.core.settings.guardian_enabled", lambda: True)   # 운영 스위치가 켜진 상태에서 고객 설정을 본다(기본은 꺼짐 — 2026-10-23)
     item = _item(1, "activity", "서울 관람", 10, _place("서울 전시관"))
     assert guardian.is_on(constraints) is on
     assert (pending.decide(constraints=constraints, item=item).action == "apply") is on
 
 
-def test_omitted_answer_is_off_and_booking_metadata_does_not_pin_an_item():
+def test_omitted_answer_is_off_and_booking_metadata_does_not_pin_an_item(monkeypatch):
+    monkeypatch.setattr("app.core.settings.guardian_enabled", lambda: True)   # 운영 스위치가 켜진 상태에서 고객 설정을 본다(기본은 꺼짐 — 2026-10-23)
     value = survey.apply_survey({"survey": {"version": survey.SURVEY_VERSION, "pace": "moderate"}}, [date(2026,10,12)])
     assert value["survey"]["on_disruption"] == "ask_first" and not guardian.is_on(value)
     item = _item(1, "activity", "서울 관람", 10, _place("서울 전시관"), booking={"number": "demo"})
