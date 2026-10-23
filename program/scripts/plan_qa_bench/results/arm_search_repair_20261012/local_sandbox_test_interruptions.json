@@ -1,0 +1,22 @@
+{
+  "reason": "sandbox local network denied; initial failures retained as incomplete runs",
+  "stopped": [
+    {
+      "pid": 20428,
+      "command": [
+        "-m",
+        "scripts.verify_dod_v11"
+      ]
+    },
+    {
+      "pid": 24160,
+      "command": [
+        "-m",
+        "pytest",
+        "tests/contract",
+        "tests/security",
+        "-q"
+      ]
+    }
+  ]
+}

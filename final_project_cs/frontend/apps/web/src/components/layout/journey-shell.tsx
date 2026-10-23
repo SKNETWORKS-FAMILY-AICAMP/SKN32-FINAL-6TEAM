@@ -1,48 +1,32 @@
 "use client";
 
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { House, Leaf } from "lucide-react";
 import { RegistrationSteps } from "@/components/ui";
-import { DATA_MODE } from "@/lib/data-mode";
-import { routes } from "@/lib/routes";
+import { HelpButton } from "@/components/ui/help-button";
+import { LanguageButton } from "@/components/ui/language-picker";
 import { useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
-import { Scene, type SceneStage } from "./scene";
-import { SettingsMenu } from "./settings-menu";
+import { DeviceFrame } from "./device-frame";
 import styles from "./journey-shell.module.css";
 
-export type JourneyView = "registration" | "checking" | "results" | "trip" | "other";
+/** `checking` is the plan-check screen's frame (`features/intake-review`), the second of the registration steps. `[2026-10-07]` A trip has its own map screen now (`features/trip/trip-screen.tsx`), not this frame. */
+export type JourneyView = "registration" | "checking" | "other";
 
-const stages: Record<JourneyView, SceneStage> = { registration: 0, checking: 1, results: 1, trip: 2, other: 0 };
-const steps: Partial<Record<JourneyView, 0 | 1 | 2>> = { registration: 0, checking: 1, results: 2 };
+const steps: Partial<Record<JourneyView, 0 | 1 | 2>> = { registration: 0, checking: 1 };
 
 /** Frame of the journey screens: brand, settings, step marker and the landscape behind. */
 export function JourneyShell({ view, title, children }: { view: JourneyView; title: readonly [ko: string, en: string]; children: ReactNode }) {
   const t = useT();
-  useDocumentTitle(`${t(...title)} · triPilot`);
+  useDocumentTitle(`${t(...title)} · ${t("구구루트", "GuguRoute")}`);
   const step = steps[view];
-  return <div className={styles.page}>
-    <Scene stage={stages[view]} sizes="100vw" />
+  // 모든 공통 화면은 휴대폰 크기 틀을 사용한다. 등록한 여행은 전용 지도 화면을 사용한다.
+  // `[2026-10-13 사용자 결정]` 계획 담기(등록 첫 단계)까지는 메뉴 옆에 언어 지구본도 둔다(설정 화면에서도 바꾼다). 그 자리의 항로 지킴이 아이콘은 뺀다 — 「계획 확인하기」를 누르면 항로 지킴이 카드가 뜬다.
+  // `[2026-10-22 사용자 결정 — ST4F-717]` 지구본 옆 (?) — 「이용 방법」의 계획 담기 설명을 연다.
+  return <DeviceFrame scroll guardianIcon={view === "checking"} headerExtra={view === "registration" ? <><HelpButton screen="input" /><LanguageButton /></> : null}>
     <a href="#main-content" className={styles.skip}>{t("본문으로 이동", "Skip to content")}</a>
-    <div className={styles.shell} data-view={view}>
-      <header className={styles.topbar}>
-        <Link href={routes.start} className={styles.brand} aria-label={t("triPilot 홈으로", "triPilot home")}><span className={styles.mark} aria-hidden="true">t</span>triPilot</Link>
-        <div className={styles.actions}>
-          <Link href={routes.start} className={styles.homeButton} aria-label={t("홈으로", "Home")}><House size={18} strokeWidth={1.6} aria-hidden="true" /></Link>
-          <SettingsMenu />
-        </div>
-      </header>
-      <main id="main-content" className={styles.main} tabIndex={-1}>
-        {step !== undefined && <RegistrationSteps current={step} />}
-        {children}
-        <footer className={styles.footer}>
-          <span><Leaf size={18} strokeWidth={1.6} aria-hidden="true" />{t("당신의 취향대로, 더 편안하게.", "More you. A little more at ease.")}</span>
-          <p>{DATA_MODE === "demo"
-            ? t("데모 · 검증과 채팅은 시연 응답이며 실제 서비스에 연결되지 않아요.", "Demo · Checks and chat use demo responses, without a live service connection.")
-            : t("실제 여행 API 연결이 필요합니다. 현재 모드에서는 데모 데이터를 사용하지 않습니다.", "A live travel API connection is required. Demo data is not used in this mode.")}</p>
-        </footer>
-      </main>
-    </div>
-  </div>;
+    <main id="main-content" className={styles.phoneMain} tabIndex={-1} data-view={view}>
+      {step !== undefined && <RegistrationSteps current={step} />}
+      {children}
+    </main>
+  </DeviceFrame>;
 }

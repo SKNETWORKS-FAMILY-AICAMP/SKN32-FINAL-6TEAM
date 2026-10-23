@@ -1,0 +1,22 @@
+[
+  {
+    "app": "web",
+    "task": "lint",
+    "exit": 0
+  },
+  {
+    "app": "web",
+    "task": "typecheck",
+    "exit": 0
+  },
+  {
+    "app": "web",
+    "task": "test",
+    "exit": 0
+  },
+  {
+    "app": "web",
+    "task": "build",
+    "exit": 0
+  }
+]

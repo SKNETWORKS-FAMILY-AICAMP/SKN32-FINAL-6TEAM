@@ -1,0 +1,586 @@
+{
+ "bundle": "situation_cards_h3",
+ "subset": null,
+ "reviewer": "합의",
+ "reviewed_on": "2026-10-20",
+ "sheet": "라벨_작성자1_h3.csv + 라벨_작성자2_h3.csv + 라벨_합의_h3.csv",
+ "saw_ai_labels": false,
+ "n": 40,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "consensus": {
+  "changed": {
+   "K-03": {
+    "작성자1": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": []
+    },
+    "작성자2": {
+     "acceptable": [
+      "1"
+     ],
+     "forbidden": []
+    },
+    "합의": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    }
+   },
+   "K-22": {
+    "작성자1": {
+     "acceptable": [],
+     "forbidden": [
+      "1",
+      "3"
+     ]
+    },
+    "작성자2": {
+     "acceptable": [
+      "2"
+     ],
+     "forbidden": []
+    },
+    "합의": {
+     "acceptable": [
+      "2"
+     ],
+     "forbidden": []
+    }
+   },
+   "K-34": {
+    "작성자1": {
+     "acceptable": [
+      "3"
+     ],
+     "forbidden": []
+    },
+    "작성자2": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": []
+    },
+    "합의": {
+     "acceptable": [
+      "3"
+     ],
+     "forbidden": []
+    }
+   },
+   "K-36": {
+    "작성자1": {
+     "acceptable": [],
+     "forbidden": []
+    },
+    "작성자2": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": []
+    },
+    "합의": {
+     "acceptable": [],
+     "forbidden": [],
+     "no_fit": true
+    }
+   },
+   "K-38": {
+    "작성자1": {
+     "acceptable": [
+      "1",
+      "2"
+     ],
+     "forbidden": []
+    },
+    "작성자2": {
+     "acceptable": [
+      "1",
+      "2",
+      "3"
+     ],
+     "forbidden": []
+    },
+    "합의": {
+     "acceptable": [
+      "1",
+      "2"
+     ],
+     "forbidden": []
+    }
+   },
+   "K-41": {
+    "작성자1": {
+     "acceptable": [
+      "1",
+      "3"
+     ],
+     "forbidden": [
+      "2"
+     ]
+    },
+    "작성자2": {
+     "acceptable": [
+      "2"
+     ],
+     "forbidden": [
+      "1",
+      "3"
+     ]
+    },
+    "합의": {
+     "acceptable": [
+      "2"
+     ],
+     "forbidden": [
+      "1",
+      "3"
+     ]
+    }
+   },
+   "K-56": {
+    "작성자1": {
+     "acceptable": [
+      "2",
+      "3"
+     ],
+     "forbidden": []
+    },
+    "작성자2": {
+     "acceptable": [
+      "2",
+      "3"
+     ],
+     "forbidden": [
+      "1"
+     ]
+    },
+    "합의": {
+     "acceptable": [
+      "2",
+      "3"
+     ],
+     "forbidden": []
+    }
+   },
+   "K-61": {
+    "작성자1": {
+     "acceptable": [
+      "1"
+     ],
+     "forbidden": []
+    },
+    "작성자2": {
+     "acceptable": [],
+     "forbidden": []
+    },
+    "합의": {
+     "acceptable": [],
+     "forbidden": [],
+     "no_fit": true
+    }
+   }
+  },
+  "agreement": "정답 33/40 · 위험 37/40 · 다른 행 8/40 (블라인드 — 두 사람 따로 담)",
+  "claude_assisted": "없음 — Claude 제안 없이 두 사람이 따로 달고 다른 8행만 합의"
+ },
+ "labels": {
+  "K-01": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-03": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "합의 — 「가까운 곳」: 셋 다 0.3~0.5km 로 거리 차이가 작아 셋 다 정답(고를 게 없는 사례)",
+   "no_fit": false
+  },
+  "K-05": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-07": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-09": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-11": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-13": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-14": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-16": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-18": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-20": {
+   "acceptable": [],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-22": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "합의 — 두 사람 달랐음",
+   "no_fit": false
+  },
+  "K-24": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-26": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-28": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-30": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-32": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-34": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "합의 — 두 사람 달랐음",
+   "no_fit": false
+  },
+  "K-36": {
+   "acceptable": [],
+   "forbidden": [],
+   "note": "합의 — 두 사람 달랐음",
+   "no_fit": true
+  },
+  "K-38": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [],
+   "note": "합의 — 두 사람 달랐음",
+   "no_fit": false
+  },
+  "K-40": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-41": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "1",
+    "3"
+   ],
+   "note": "합의 — 두 사람 달랐음",
+   "no_fit": false
+  },
+  "K-43": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-45": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-47": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-49": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-51": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-53": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-54": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": "",
+   "no_fit": false
+  },
+  "K-56": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "합의 — 위험은 못 가는 곳·고객이 거부한 유형만. 고객이 시장을 거부하지 않았다(K-22 와 같은 기준) → 위험 비움",
+   "no_fit": false
+  },
+  "K-58": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-61": {
+   "acceptable": [],
+   "forbidden": [],
+   "note": "합의 — 「공원을 걷고」: 후보가 둘레길·계곡·정자로 공원이 없어 맞는 후보 없음",
+   "no_fit": true
+  },
+  "K-65": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "가격 정보 확인 불가; 가격을 알지 못함",
+   "no_fit": false
+  },
+  "K-67": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "후기 정보 확인 불가; 후기를 알지못함",
+   "no_fit": false
+  },
+  "K-69": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "무료 정보 확인 불가; 가격을 알지못함",
+   "no_fit": false
+  },
+  "K-71": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "SNS 정보 확인 불가; 인스타를 알지 못함",
+   "no_fit": false
+  },
+  "K-73": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "인파 정보 확인 불가; 사람 많은지 적은지 파악할 수 없음",
+   "no_fit": false
+  },
+  "K-75": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "휠체어 가능 정보 확인 불가; 휠체어 모름",
+   "no_fit": false
+  },
+  "K-76": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  },
+  "K-78": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "",
+   "no_fit": false
+  }
+ }
+}

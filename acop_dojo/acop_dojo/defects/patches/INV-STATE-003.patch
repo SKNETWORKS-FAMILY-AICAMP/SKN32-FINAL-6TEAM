@@ -1,5 +1,5 @@
---- a/app/domain/case.py
-+++ b/app/domain/case.py
+--- a/app/core/case_lifecycle/case.py
++++ b/app/core/case_lifecycle/case.py
 @@ -39,7 +39,7 @@
      required = REQUIRED_PAYLOAD_KEYS.get(event_type)
      if required is None:

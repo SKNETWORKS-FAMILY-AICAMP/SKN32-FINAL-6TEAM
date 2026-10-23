@@ -1,4 +1,4 @@
-"""Composer v2 어댑터 — 모킹하지 않고 최소 HTTP 서버로 계약을 실측한다."""
+"""Composer v2 어댑터 — 모킹하지 않고 최소 HTTP mock 서버로 계약을 실측한다."""
 from __future__ import annotations
 
 import json
@@ -15,7 +15,7 @@ from console.composer import apply_candidate, read_current, toggle_target, valid
 def composer_server():
     servers = []
     # ★대상이 실제로 받은 요청 본문을 기록한다. 이게 없어서 "적용에 사유가 안 실려
-    #   간다"는 결함을 테스트가 못 잡았다 — 가짜 서버가 본문을 안 보고 200만 냈다
+    #   간다"는 결함을 테스트가 못 잡았다 — mock 서버가 본문을 안 보고 200만 냈다
     #   (2026-08-28 결함 점검). `composer_server.received` 로 꺼내 쓴다.
     received: list[tuple[str, dict | None]] = []
 
@@ -103,7 +103,7 @@ def test_apply_issues_admin_scope(composer_server):
     이관용 관리자 도구이지 운영자 화면의 버튼이 아니다.
 
     ★이 테스트는 클라이언트(`acop_composer_ui`)가 scope 를 바꿨을 때 **같이 안
-      바뀌어 실패한 채로 남아 있었다.** 가짜 서버가 `composer:write` 토큰만
+      바뀌어 실패한 채로 남아 있었다.** mock 서버가 `composer:write` 토큰만
       받아 주고 있었다(2026-09-06 발견).
     """
     url = composer_server({"/composer/apply": (200, {"revision": "new", "applied": True}, "access-composer:admin")})
@@ -115,7 +115,7 @@ def test_apply_puts_the_reason_in_the_request_body(composer_server):
     """★대상의 `ApplyPayload`는 `reason`을 `min_length=1`로 요구한다.
 
     한때 어댑터가 `config`와 `base_revision`만 보내서 화면의 [적용]이 늘 422로
-    거부됐다. 가짜 서버가 본문을 안 보고 200만 내주는 바람에 기존 테스트는 이걸
+    거부됐다. mock 서버가 본문을 안 보고 200만 내주는 바람에 기존 테스트는 이걸
     통과시켰다(2026-08-28 결함 점검). 이제 본문을 실제로 확인한다.
     """
     url = composer_server({"/composer/apply": (200, {"revision": "new", "applied": True},

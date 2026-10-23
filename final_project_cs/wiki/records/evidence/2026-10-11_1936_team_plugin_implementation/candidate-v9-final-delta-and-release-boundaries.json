@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-10-12T00:26:24.002810+09:00",
+  "candidate": "2026-10-12_001736_plugin_v9",
+  "final_source_functions": [
+    {
+      "function": "execute",
+      "matches_latest_source_ast": true
+    },
+    {
+      "function": "retry_initial",
+      "matches_latest_source_ast": true
+    }
+  ],
+  "last_delta": "latest Case.status must still be routing immediately before ROUTED; otherwise StateConflict409 preserves winner",
+  "extra_http_race_tests": 2,
+  "extra_unit_race_tests": 2,
+  "operating_scope": {
+    "sql_schema_changes": 0,
+    "host_settings_overwrites": 0,
+    "proposed_image_restarts": [
+      "api",
+      "worker"
+    ],
+    "performed_image_restarts": 0,
+    "production_http_writes_authorized": false,
+    "production_synthetic_rows_created": 0,
+    "production_cleanup_performed": false,
+    "notice_isolation_precondition_satisfied": false
+  }
+}

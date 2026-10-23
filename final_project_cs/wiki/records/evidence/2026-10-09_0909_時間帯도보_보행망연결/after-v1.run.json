@@ -1,0 +1,19 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/mobility/test_estimate_walk_network_v1.py",
+    "tests/unit/travel/mobility/test_walk_duration_contract_v1.py",
+    "tests/unit/travel/mobility/test_plan_estimate_v1.py",
+    "tests/unit/travel/mobility/test_review_fixes_plan.py",
+    "tests/unit/travel/mobility/test_plan_access_walk.py",
+    "tests/unit/travel/mobility/test_walk_routed_cap.py",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\estimate-walk-after-v1-temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0909_\u6642\u9593\u5e2f\ub3c4\ubcf4_\ubcf4\ud589\ub9dd\uc5f0\uacb0\\after-v1.xml"
+  ],
+  "exit_code": 0
+}

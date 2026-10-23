@@ -18,11 +18,11 @@ from scripts.map_commits_to_phase import IGNORED_PREFIXES, PATH_OWNERS, phase_fo
         ("app/core/registry.py", "P1"),
         ("app/infrastructure/db/repository.py", "P2"),
         ("app/infrastructure/rag/retriever.py", "P3"),
-        ("app/modules/customer_ops/return_refund.py", "P4"),
+        ("app/domains/travel_ops/instances/activity/team.py", "P4"),
         ("app/application/controller.py", "P5"),
         ("app/presentation/api/cases.py", "P6"),
         ("app/presentation/ui/theme.py", "P8"),
-        ("eval/runners/proposed.py", "P9"),
+        ("eval/travel_classification/replay.py", "P9"),
         ("wiki/records/release_checklist.md", "P10"),
         ("app/composition.py", "P10"),
     ],
@@ -36,8 +36,8 @@ def test_known_paths_map_to_their_owning_phase(path, expected_phase):
 # invariant 성격의 검사 — 더 구체적인 경로가 덜 구체적인 것을 이겨야 한다.
 def test_more_specific_prefix_wins_over_the_broader_one():
     """`app/modules/` 전체는 S-TEAM(P4)이지만 그 안 `feedback.py` 하나는 S-VOC(P7)다."""
-    assert phase_for_path("app/modules/customer_ops/return_refund.py")[1] == "P4"
-    assert phase_for_path("app/modules/customer_ops/feedback.py")[1] == "P7"
+    assert phase_for_path("app/domains/travel_ops/instances/activity/team.py")[1] == "P4"
+    assert phase_for_path("app/domains/travel_ops/components/core_hooks/feedback.py")[1] == "P7"
     assert phase_for_path("app/application/controller.py")[1] == "P5"
     assert phase_for_path("app/application/feedback_job.py")[1] == "P7"
 

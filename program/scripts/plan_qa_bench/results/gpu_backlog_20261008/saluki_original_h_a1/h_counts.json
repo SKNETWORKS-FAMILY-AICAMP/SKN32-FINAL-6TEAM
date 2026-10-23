@@ -1,0 +1,212 @@
+{
+  "model": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+  "our_training": false,
+  "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+  "saved": 1316,
+  "expected": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "positive": {
+    "total": 461,
+    "correct": 434,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9161279536504415,
+      0.9594393871641272
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 550,
+    "false_pick": 305,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.6105902383897338,
+      0.6746777787556172
+    ],
+    "false_pick_wilson95": [
+      0.32532222124438287,
+      0.38940976161026625
+    ]
+  },
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 0,
+      "false_pick": 118,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.03152833902249433
+      ],
+      "false_pick_wilson95": [
+        0.9684716609775057,
+        1.0
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 105,
+      "false_pick": 45,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6224201960400859,
+        0.7675917062126834
+      ],
+      "false_pick_wilson95": [
+        0.23240829378731656,
+        0.3775798039599141
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 147,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9428533167296139,
+        0.9931752486770326
+      ],
+      "false_pick_wilson95": [
+        0.006824751322967459,
+        0.05714668327038608
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 110,
+      "false_pick": 40,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6573854995109168,
+        0.7976283864506474
+      ],
+      "false_pick_wilson95": [
+        0.20237161354935268,
+        0.3426145004890831
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 38,
+      "false_pick": 99,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.2092568534120377,
+        0.35763204059140086
+      ],
+      "false_pick_wilson95": [
+        0.6423679594085993,
+        0.7907431465879623
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9684716609775057,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 109,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9502943479206695,
+        0.9983934246956784
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 91,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7227771200548647,
+        0.8677666877376071
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 116,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.917419662440894,
+        0.9869624489016494
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "99b238b1f5454a88092cb820d15d71a467a4c4aa0082cbb07e35888beb139dca",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "saluki_original_h_a1",
+      "suite": "h",
+      "label": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+      "our_training": false,
+      "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+      "model": "/tmp/tripilot-saluki-20261009/smoke_verified_model.gguf",
+      "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+      "model_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+      "expected": 1316,
+      "script": "/tmp/tripilot-saluki-20261009/saluki_eval_20261009.py",
+      "runner_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+      "tag": "saluki_original_h_a1",
+      "port": 8401,
+      "logprobs": "1",
+      "purpose": "Matched frozen developer/regression suite; not holdout or adoption",
+      "dependency": "/tmp/tripilot-saluki-20261009/SMOKE_PASS.json",
+      "ephemeral_ram_model": true,
+      "automatic_retry": false
+    },
+    "started": "2026-10-08T19:32:28.134560+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

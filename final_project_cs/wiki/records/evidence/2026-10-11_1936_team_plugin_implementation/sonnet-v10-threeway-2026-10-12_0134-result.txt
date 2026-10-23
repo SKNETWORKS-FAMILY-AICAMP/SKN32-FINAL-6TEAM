@@ -1,0 +1,65 @@
+**결론: 이번 3way 결합에서 확정된 결함은 찾지 못했습니다.** 다만 지정한 단위시험 중 10개는 환경 때문에 실행되지 못해 검증하지 못했습니다. 아래 내용은 모두 후보 파일만 읽은 결과입니다. 운영 배포 완료나 무결함을 뜻하지 않습니다.
+
+## 직접 실행한 시험
+- 명령은 고정 runner 한 번입니다.
+- 출력 요약은 점 40개(통과), `E` 10개(setup 오류)입니다. 최종 `PYTEST_EXIT=` 줄은 출력이 잘려 직접 보지 못했고, 셸 종료코드는 1이었습니다.
+- 통과 40개는 `test_fact_context.py`와 `test_initial_retry_boundaries.py`에서 나왔습니다. 두 파일의 개수는 출력이 잘려 나누지 못했습니다.
+- 오류 10개는 모두 `test_controller_resume_recovery.py`입니다. `recovery` fixture(67행)에서 `resume_metadata`가 `get_guardrails()`를 부르다 `Settings` 필수 환경변수 8개(`database_url` 등) 부재로 `ConfigError`가 났습니다.
+- 원인은 환경 구성이고 제품 결함 증거가 아닙니다. runner는 `.env`를 주입하지 않고, 저는 환경파일을 읽지 않았으며 재실행도 하지 않았습니다.
+- 따라서 이 파일의 통과 여부는 이번 직접 실행으로는 **미확인**입니다. 후보 담당의 414/414는 전달받은 근거로만 취급합니다.
+
+## 요청하신 항목별 확인
+
+**1. `trip_messages.py` (정적 읽기)**
+- `handle_trip_message`의 순서는 기존 `existing`이 먼저입니다. 그 안에서 SHA 비교, `retry_initial`, `duplicate` 응답 순으로 갑니다. 그다음이 `resume_pending`, 결정 단위입니다.
+- duplicate 응답은 `chat_reply`의 `choices`, `choices_title`, `more`, `answer_web`을 보존합니다(327행).
+- `focus`는 응답에 싣지 않고 `Case.state_json.chat_reply`에만 저장됩니다. 그래서 `chat_log.recent`의 trip JOIN으로 읽는 구조와 일치합니다.
+- `_run_decision`은 `fact_first`, `fact_context.resolve`, `_dispatch_decision(prepare_only)`, `classify_case`(plan 포함), `case_dispatch.execute` 순서입니다.
+- `resolve`는 `answer_fact`와 `ITEM_FACTS`가 아니면 그대로 반환합니다(`fact_context.py:34`). `BUSINESS_ACTIONS`에는 `answer_fact`가 없습니다. 그래서 변경 업무가 fact focus를 승계하거나 plan 대상이 바뀌는 경로는 못 찾았습니다.
+- 정적 추론으로, `focus`의 `version`을 `base`로 갱신하고 `previous_fact`의 버전이 어긋나면 `stale`로 만듭니다. 항목이 현재 일정에 없을 때도 `stale`입니다. 그래서 일정 버전이 바뀐 뒤 옛 focus가 쓰일 길은 보이지 않았습니다.
+- 이전 문맥이 없으면 대상이 비어 이름 조회로 가고, 만료되면 clarify로 다시 선택을 요청합니다. 이는 약속과 일치하며 결함으로 보지 않았습니다.
+- `newbase→v10` diff에는 `fact_context` 관련 변경이 없습니다. 즉 fact 로직은 새 기준 그대로이고, 결합이 바꾼 것은 `resolve` 이후의 plan 작성과 실행 분기뿐입니다.
+- `guardrails.yaml`의 `newbase→v10` diff는 `reliability` 키 2개 추가뿐입니다. `focus_ttl_seconds: 1800`은 `prior→v10`에서만 추가로 보이므로 새 기준에 이미 있습니다.
+
+**2. `case_dispatch.py`와 Controller**
+- implicit 대기 연결은 `_matches_implicit_reply`로 좁혀져 있습니다. 사실 질문 문장은 일치하지 않아 `candidates`가 비고 `None`을 반환하므로, 기존 `waiting_input`의 token/message를 소비하지 않습니다.
+- `Controller._resume`은 담당·capability 관문을 `VALID_INPUT` 전에 거치고, 같은 event 재시도는 `idempotent` 분기로 갑니다.
+- `retry_initial`은 계획의 `base_version`이 현재와 다르면 409입니다. 활성 run이 있어도 409입니다.
+- core에 도메인 의존을 넣은 흔적은 읽은 범위에서 보지 못했습니다.
+
+## 확정 아님: 관찰 두 건 (둘 다 정적 추론, 실행 재현 없음)
+
+**관찰 A (중간 확신): 지연 분류 중 재전송이 409가 될 수 있습니다.**
+- 위치는 `trip_messages.py:316-321`의 `retry_initial`과 `case_dispatch.py:279-286`입니다.
+- 조건은 사실 질문이 `defer`로 분류를 응답 뒤로 미룬 동안, 같은 `request_id`가 다시 오는 경우입니다. 이때 Case가 `classifying`이거나 plan 없는 `routing/running`이면 `StateConflict`(409)가 됩니다.
+- 337-338행 주석은 "분류가 뒤에서 도는 동안 같은 요청이 다시 와도 앞의 답이 나간다"고 합니다. 새 기준(`newbase`)에는 `retry_initial`이 없어 그 약속대로 duplicate 답이 나갔을 것입니다.
+- 계약 문서 123행은 `new/classifying` 상태의 미완료 업무를 409로 정해 두었으므로 계약 위반은 아닙니다. 다만 사용자에게 보이는 동작은 달라집니다.
+- v9에도 같은 구조이고 이번 충돌 해결이 추가한 것은 아닙니다.
+- 시험 공백도 있습니다. `test_chat_context.py:85`의 재접속 시험은 TestClient 특성상 백그라운드 작업이 끝난 뒤에 재전송합니다. 지연 창 안의 재전송은 시험이 없습니다.
+- `CREATED` 직후 상태가 `classifying`이라는 점은 `guardrails`의 `classification_stuck` 주석에서 추론했고, core 전이표는 후보에 없어 미확인입니다.
+
+**관찰 B (낮은 확신): 오래된 입력 대기 업무가 최신 숫자 답을 가져갈 수 있습니다.**
+- 위치는 `case_dispatch.py:331-333`의 `_matches_implicit_reply`입니다.
+- 조건은 `choices`가 있는 오래된 `waiting_input`(clarify) 업무가 있는 상태에서, 더 최근 사실 답의 "혹시 이런 뜻이었나요?" 목록에 "1번"이라고 답하는 경우입니다. 이때 오래된 대기 업무가 먼저 가져갈 수 있습니다.
+- 버튼 문구는 `choices`와 다르면 영향이 없습니다. `test_web_conversation_isolation.py`는 "30분이요"와 사실 질문 조합만 보며 이 조합은 시험하지 않습니다.
+- v9부터 있던 동작이며 이번 결합에서 추가된 것이 아닙니다.
+
+## 읽은 범위와 미확인
+- **읽은 것**:
+  - 계약 `plugin-availability.md`
+  - `trip_messages.py` 전체
+  - `fact_context.py`, `chat_log.py`, `case_dispatch.py` 전체
+  - `case_intake.py`의 `create_case_once` 구간, Controller의 `_resume` 구간
+  - `trip_api.py`의 `_web_message_result`, `_log_turn`
+  - `decision_unit.py`의 `Decision`, `fact_first`, `maybe_meant`
+  - diff: `trip_messages` `newbase→v10`, `v9→v10`, `guardrails` 세 개 중 `v9→v10` 앞부분 655/1043행
+  - 시험: `test_chat_context.py`, `test_web_initial_retry.py`, `test_web_conversation_isolation.py`, 고정 runner
+- **읽지 못한 것**:
+  - `trip_messages.py.prior-v10.diff`
+  - `guardrails.yaml.v9-v10.diff` 뒤쪽(대부분 서식 변경으로 보이지만 값 동일성은 미검증)
+  - `test_web_initial_concurrency.py`, `test_web_conversation_resume.py`, `test_web_resume_commit_recovery.py`
+  - 단위시험 세 파일의 본문
+  - `trip_facts.py`, `decision_unit.py` 나머지, Controller의 `run_case`·`require_team`
+  - 후보에 없는 core 전이표
+- **전달받은 수치로만 취급**: 406개 파일, 361개 해시 일치, 414/414. 직접 확인한 것이 아닙니다.
+- **시험 의미**: HTTP 시험은 읽기만 했고 실행하지 않았습니다. 읽은 세 시험은 합성 데이터와 monkeypatch를 쓰는데, 생산 의미를 약화시키는 fixture는 보지 못했습니다. 다만 위 두 관찰의 조합은 시험에 없습니다.

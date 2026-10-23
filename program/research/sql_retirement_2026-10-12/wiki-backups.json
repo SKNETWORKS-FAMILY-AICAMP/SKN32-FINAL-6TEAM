@@ -1,0 +1,92 @@
+[
+  {
+    "file": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+    "backup": "wiki/decisions/_backup/2026-10-12_retirement-and-approved-wiki/D-023-no-commerce-assets-in-use.md",
+    "sha256": "0722b7953639ceeeab4f3e1885e7aeb5c84f0aead3848b7cf1a3668928b0d74a"
+  },
+  {
+    "file": "final_project_cs/wiki/data/migrations.md",
+    "backup": "final_project_cs/wiki/data/_backup/2026-10-12_retirement-and-approved-wiki/migrations.md",
+    "sha256": "f50b9e8d8e2f9efa2ffec03a7258b376bd056ac773fc9d0fdb7a2b4446cec2ed"
+  },
+  {
+    "file": "final_project_cs/wiki/data/schema/index.md",
+    "backup": "final_project_cs/wiki/data/schema/_backup/2026-10-12_retirement-and-approved-wiki/index.md",
+    "sha256": "0de4427fdb9dbdb6266dad7e0cfa78f30b0c832f9dd73c30d4cb610db69960d1"
+  },
+  {
+    "file": "wiki/product/scope.md",
+    "backup": "wiki/product/_backup/2026-10-12_retirement-and-approved-wiki/scope.md",
+    "sha256": "f775df24631b67007828d2d356ab5d577298447f3ac6ad2bcd4ebbcc72b741d5"
+  },
+  {
+    "file": "wiki/product/positioning.md",
+    "backup": "wiki/product/_backup/2026-10-12_retirement-and-approved-wiki/positioning.md",
+    "sha256": "0657fe1f0d874be0fdef8f3ee18deb10b8ec7957ca698a15db6dedb605f7439f"
+  },
+  {
+    "file": "wiki/architecture/system-context.md",
+    "backup": "wiki/architecture/_backup/2026-10-12_retirement-and-approved-wiki/system-context.md",
+    "sha256": "79e3ee2fbe8672114413db014f9954f94d9fb030eb6822772ae9cd904e6f4101"
+  },
+  {
+    "file": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+    "backup": "wiki/decisions/_backup/2026-10-12_retirement-and-approved-wiki/D-020-trip-survey-and-ask-first.md",
+    "sha256": "3211726ed0e22ec2360f023a5fd4dfb6e3e30647d56c042ea28bae6f2d138d78"
+  },
+  {
+    "file": "final_project_cs/wiki/external/rest-endpoints.md",
+    "backup": "final_project_cs/wiki/external/_backup/2026-10-12_retirement-and-approved-wiki/rest-endpoints.md",
+    "sha256": "3738e60f9829d3c3fcf52325ee988aca3c5bcd654d33a748854f33afa42457c4"
+  },
+  {
+    "file": "final_project_cs/wiki/external/rest-endpoints/web-trips.md",
+    "backup": "final_project_cs/wiki/external/rest-endpoints/_backup/2026-10-12_retirement-and-approved-wiki/web-trips.md",
+    "sha256": "50f32f75cf35439e3ac3b4ee008884569931da9b683c764a95e178a9fd0ff8fb"
+  },
+  {
+    "file": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+    "backup": "final_project_cs/wiki/decisions/_backup/2026-10-12_retirement-and-approved-wiki/D-CS-014-routing-reroute.md",
+    "sha256": "fe6b3715cfafc552d91f73ec237cfa6de943fad89f8d6f5ef95676d36ab8436e"
+  },
+  {
+    "file": "wiki/delivery/dod.md",
+    "backup": "wiki/delivery/_backup/2026-10-12_retirement-and-approved-wiki/dod.md",
+    "sha256": "d2b282123fe902cc7fd5c4289d0d424fce7b66150cb1613312ddb9a11950af26"
+  },
+  {
+    "file": "wiki/architecture/notifications.md",
+    "backup": "wiki/architecture/_backup/2026-10-12_retirement-and-approved-wiki/notifications.md",
+    "sha256": "4000e2e5df3f648d626ee6da660d462de25b27622ca05ee2cc23fe708f2fc6a7"
+  },
+  {
+    "file": "final_project_cs/wiki/teams/team-boundary.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-12_retirement-and-approved-wiki/team-boundary.md",
+    "sha256": "e6deece936251c620b0b14c75a7884b79ea7bf527d0afafdbeeafb5b9a77a106"
+  },
+  {
+    "file": "final_project_cs/wiki/quality/invariants.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-12_retirement-and-approved-wiki/invariants.md",
+    "sha256": "593531b089e76bcc527e2451e82cdf1e6d882f15d0a6596e36baa5d4ac8648b7"
+  },
+  {
+    "file": "final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md",
+    "backup": "final_project_cs/wiki/decisions/_backup/2026-10-12_retirement-and-approved-wiki/D-CS-005-odsay-not-used.md",
+    "sha256": "fd32926dcd60450195d10541bce7ab5d099bfd43d804aa68068b982257c327f8"
+  },
+  {
+    "file": "final_project_cs/wiki/external/api-key-issue-guide.md",
+    "backup": "final_project_cs/wiki/external/_backup/2026-10-12_retirement-and-approved-wiki/api-key-issue-guide.md",
+    "sha256": "ce5d1254a37a9b2c857a90581d8022037de85ba7f764eccea43923174701df25"
+  },
+  {
+    "file": "program/research/wiki_review_2026-10-11/wiki-review-v2.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-12_retirement-and-approved-wiki/wiki-review-v2.html",
+    "sha256": "833f26f85e2d5b5a5d17c54f43f89d7e5a2ba9bb3e72bb22388eb6293373a252"
+  },
+  {
+    "file": "program/research/wiki_review_2026-10-11/findings-v2.json",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-12_retirement-and-approved-wiki/findings-v2.json",
+    "sha256": "0ace816338d06f380c07d55f0a8d1b34eb74ceaeea570fc8cd099495d5ea2a91"
+  }
+]

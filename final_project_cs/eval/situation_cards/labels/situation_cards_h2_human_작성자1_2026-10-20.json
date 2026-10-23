@@ -1,0 +1,340 @@
+{
+ "bundle": "situation_cards_h2",
+ "subset": null,
+ "reviewer": "작성자1",
+ "reviewed_on": "2026-10-20",
+ "sheet": "라벨_작성자1_h2.csv",
+ "saw_ai_labels": true,
+ "n": 39,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "labels": {
+  "H-02": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 단서 없음 — 셋 다 허용(합의 관례)"
+  },
+  "H-04": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 단서 없음"
+  },
+  "H-06": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 단서 없음"
+  },
+  "H-08": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 단서 없음"
+  },
+  "H-10": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 단서 없음"
+  },
+  "H-12": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 단서 없음"
+  },
+  "H-15": {
+   "acceptable": [
+    "1",
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": "[Claude 제안] 「바깥 싫어」 → 실내: 중앙도서관 · 박물관. 절(야외)은 고객이 거부한 유형 → 위험"
+  },
+  "H-17": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 「밖에」 — 묘역 · 생태공원 · 공원 모두 야외"
+  },
+  "H-19": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] ★애매: 「궁」은 후보에 없음 → 「없음」도 가능. 가장 가까운 역사유적지(도봉서원 · 사당)를 허용으로 둠. 절 둘은 종교"
+  },
+  "H-21": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": "[Claude 제안] ★「미술 전시」 — 서점 · 공연장 둘뿐이라 맞는 곳 없음"
+  },
+  "H-23": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 기념선물 — 상설시장(도깨비시장). 공원 · 도서관은 아님"
+  },
+  "H-25": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 야경 — 셋 다 전망대"
+  },
+  "H-27": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] ★유모차 — 셋 다 공원이고 다니기 쉬운지는 후보 정보로 가릴 수 없음 → 셋 다 허용"
+  },
+  "H-29": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "3"
+   ],
+   "note": "[Claude 제안] 아이랑 실내 — 풋볼 팬타지움(박물관). 유아숲체험원은 실내 조건을 정면으로 어김 → 위험. 경기장은 차선"
+  },
+  "H-31": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "2"
+   ],
+   "note": "[Claude 제안] 「비 맞는 거 싫으니 안에서」 — 우석뮤지엄. 이대거리(야외 거리)는 고객이 거부한 조건 → 위험. 벽화터널은 차선"
+  },
+  "H-33": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 고객 문장 단서 없음 · 설문 실내 → 갤러리"
+  },
+  "H-35": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 설문 체험 → 리얼월드"
+  },
+  "H-37": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 설문 자연 → 족두리봉 · 둘레길(감시 판 합의와 같음)"
+  },
+  "H-39": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 설문 역사 → 구 벨기에영사관. 절은 종교"
+  },
+  "H-42": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 고객 「아이 체험활동」(설문 역사보다 앞섬) → 신기한놀이터(체험)"
+  },
+  "H-44": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 고객 「전시관」(설문 쇼핑보다 앞섬) → aT센터(전시시설). 「조용한」은 후보 정보에 없어 판단에 안 씀"
+  },
+  "H-46": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 고객 「구경만」(설문 체험보다 앞섬) → 공연장. 클라이밍 · 체험관은 직접 하는 곳"
+  },
+  "H-48": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 고객 「공연이나 전시」(설문 레저보다 앞섬) → 갤러리"
+  },
+  "H-52": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 고객 「역사 유적」(설문 문화보다 앞섬) → 이상의집"
+  },
+  "H-55": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 역사 — 파리장서비 · 광희문. 공원은 아님"
+  },
+  "H-57": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 역사유적지 — 기념탑 · 윤극영가옥. 절은 종교"
+  },
+  "H-59": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 실내 — 아트홀 · 도서관. 허브체험공원은 실내인지 모름(차선)"
+  },
+  "H-60": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 다른 유적 — 석촌동 고분군. 절 둘은 종교"
+  },
+  "H-62": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": "[Claude 제안] 「에어컨 나오는 실내」 — 도서관 둘. 공원은 고객이 말한 조건을 정면으로 어김 → 위험"
+  },
+  "H-63": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 박물관 · 전시 — 한양대 박물관. 공연장 · 도서관은 아님"
+  },
+  "H-64": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": "[Claude 제안] ★「다른 전시」 — 이름에 「갤러리」인 리홀뮤직갤러리(분류는 기타문화시설). 아니라고 보면 「없음」. 공연장 둘은 아님"
+  },
+  "H-66": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 함정 — 혼잡 정보 없음 → 셋 다 허용"
+  },
+  "H-68": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 함정 — 주차 정보 없음"
+  },
+  "H-70": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 함정 — 대기 정보 없음"
+  },
+  "H-72": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 함정 — 와이파이 정보 없음"
+  },
+  "H-74": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 함정 — 음식 반입 정보 없음"
+  },
+  "H-77": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 범위 이탈 — 순서는 무엇이든 허용(후보 밖 · 일정 변경은 1순위가 될 수 없음)"
+  },
+  "H-79": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 범위 이탈 — 셋 다 허용"
+  },
+  "H-80": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": "[Claude 제안] 범위 이탈 — 셋 다 허용"
+  }
+ }
+}

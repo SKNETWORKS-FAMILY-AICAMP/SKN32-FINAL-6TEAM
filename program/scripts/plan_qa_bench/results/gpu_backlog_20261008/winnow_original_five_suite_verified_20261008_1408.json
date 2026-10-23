@@ -1,0 +1,62 @@
+{
+  "model": "Winnow-E4B publisher release Q8_0",
+  "family": "Jev decision model",
+  "our_training": false,
+  "suite_count": [
+    5,
+    5
+  ],
+  "saved": 9425,
+  "expected": 9425,
+  "failed_or_unparsed": 140,
+  "missing": 0,
+  "repetitions": 1,
+  "final_ranking": false,
+  "suites": [
+    {
+      "suite": "D",
+      "saved": 2735,
+      "expected": 2735,
+      "failed_or_unparsed": 53,
+      "answer": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_d/d_test_d_backlog_winnow_original.jsonl",
+      "verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_d/verification.json",
+      "sha256": "7bfcc0e044d1bf9bc4b17f9152f58b25102175c04d7c6578e46898cb090d3227"
+    },
+    {
+      "suite": "D2",
+      "saved": 1000,
+      "expected": 1000,
+      "failed_or_unparsed": 13,
+      "answer": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_d2/d_test_d2_backlog_winnow_original.jsonl",
+      "verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_d2/verification.json",
+      "sha256": "5e5e37791abd32e9da759bd706269b240c77af402d8858d925ab774b837317f3"
+    },
+    {
+      "suite": "D3",
+      "saved": 360,
+      "expected": 360,
+      "failed_or_unparsed": 13,
+      "answer": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_d3/d_test_d3_backlog_winnow_original.jsonl",
+      "verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_d3/verification.json",
+      "sha256": "f11b69bdc1d630d585b5035c75ba8a00de33d4b5a64a2fe34f6be23150eba910"
+    },
+    {
+      "suite": "H",
+      "saved": 1316,
+      "expected": 1316,
+      "failed_or_unparsed": 19,
+      "answer": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_h/d_test_h_backlog_winnow_original.jsonl",
+      "verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_h/verification.json",
+      "sha256": "9c1c341b95948465084e7f2757f3f274feb30ff62047e3a9d50e241183aa092b"
+    },
+    {
+      "suite": "MX",
+      "saved": 4014,
+      "expected": 4014,
+      "failed_or_unparsed": 42,
+      "answer": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_mx/d_test_mx_backlog_winnow_original.jsonl",
+      "verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_mx/verification.json",
+      "sha256": "977348022cc28ec82953b4f9cabde9ac6a5ae73374e02d93793a3cdb13bfa486"
+    }
+  ]
+}

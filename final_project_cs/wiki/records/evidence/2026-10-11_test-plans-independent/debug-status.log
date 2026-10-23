@@ -1,0 +1,37 @@
+.............................................................F           [100%]
+================================== FAILURES ===================================
+_________________ test_a_resolved_report_says_what_closed_it __________________
+
+    def test_a_resolved_report_says_what_closed_it():
+        """��"�ذ��" �� ���� �ٰŰ� ������ ���� ����� �ٽ� Ȯ���ؾ� �Ѵ�.
+    
+        \ud45c\uae30 \uc904 \ub4a4\uc5d0 \ucd5c\uc18c\ud55c\uc758 \uc124\uba85\uc774 \ubd99\uc5b4 \uc788\ub294\uc9c0 \ubcf8\ub2e4 \u2014 \ub0a0\uc9dc\ub9cc \uc788\uace0 \ubcf8\ubb38\uc774
+        ��� ������ "���ƴٰ� �ϴµ� �������� Ȯ���ߴ���" �� �� �� ����.
+        """
+        thin = []
+        for path in REPORTS:
+            text = path.read_text(encoding="utf-8")
+            match = STATUS_RESOLVED.search(text)
+            if not match:
+                continue
+            # ǥ�� �� �������� �� ���� ���� �������� �ٰ� �����̴�.
+            body = text[match.end():]
+            body = re.split(r"^##\s", body, maxsplit=1, flags=re.MULTILINE)[0]
+            if len(body.strip()) < 40:
+                thin.append(f"{path.name} (�ٰ� {len(body.strip())}��)")
+    
+>       assert not thin, (
+            "�ذ�� ǥ�� �ڿ� �ٰŰ� ���� ����. �������� �ݾҴ��� �� ���̶� ���´�:\n  "
+            + "\n  ".join(thin))
+E       AssertionError: �ذ�� ǥ�� �ڿ� �ٰŰ� ���� ����. �������� �ݾҴ��� �� ���̶� ���´�:
+E           2026-10-11_0710_�׽�Ʈ�ڵ�_�Ϲݱ�����.md (�ٰ� 12��)
+E       assert not ['2026-10-11_0710_�׽�Ʈ�ڵ�_�Ϲݱ�����.md (�ٰ� 12��)']
+
+tests\unit\core\test_debug_report_status.py:75: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_debug_report_status.py::test_a_resolved_report_says_what_closed_it
+1 failed, 61 passed in 5.85s
+Exception ignored in: <function Console.__del__ at 0x0000015008971BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

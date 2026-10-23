@@ -1,0 +1,13 @@
+{
+  "contract": "strict {items: integer[]} JSON; empty list for no selected item",
+  "max_tokens": 64,
+  "temperature": 0,
+  "context": 4096,
+  "threads": 4,
+  "gpu_layers": 99,
+  "seed": 0,
+  "enable_thinking": false,
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "output_schema_enforced": false,
+  "no_automatic_retry": true
+}

@@ -1,0 +1,37 @@
+{
+  "created_at": "2026-10-09T12:59:30.629261+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_125930_공식_이름대응_추가전/subway_identity.py",
+      "sha256": "1330e72fc4da7bfd1973fcd09ccb2d51295880afa73b86f36c56a96fc757b1e4"
+    },
+    {
+      "source": "datasets/mobility/processed/mobility/subway_realtime_stations_20260902_v1.json",
+      "backup": "datasets/mobility/processed/mobility/_backup/2026-10-09_125930_공식_이름대응_추가전/subway_realtime_stations_20260902_v1.json",
+      "sha256": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_125930_공식_이름대응_추가전/mobility.md",
+      "sha256": "2fe86cb861cfd230d37a00356653c78800c973ce7a84934f99fd3f0ac02420c9"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1248_지하철_방면과_인접역ID_대조.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_125930_공식_이름대응_추가전/2026-10-09_1248_지하철_방면과_인접역ID_대조.md",
+      "sha256": "bbefee45f3f56522363b5de46fd0b1b748d1d9dbb3271ea43ea07d1126e04a51"
+    }
+  ],
+  "raw": "datasets/mobility/raw/subway_source_name_alias_20261009_v1",
+  "alias": {
+    "line_id": "1065",
+    "station_id": "1065006501",
+    "alias": "서울역",
+    "source_urls": [
+      "https://www.airportrailroad.com/train/normal/info/030/0",
+      "https://data.seoul.go.kr/dataList/OA-12764/A/1/datasetView.do"
+    ],
+    "checked_at": "2026-10-09T12:59:30.629261+09:00",
+    "basis": "AREX 공식 페이지의 서울역 방면과 서울(일반열차) 표기, 서울시 공식 역ID 추출물의 공항철도 서울 행을 대조."
+  }
+}

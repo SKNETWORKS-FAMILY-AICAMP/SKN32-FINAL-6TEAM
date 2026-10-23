@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="51" time="6.147" timestamp="2026-10-09T02:15:28.947864+09:00" hostname="playdata"><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_generated_context_identifies_walk_and_real_stairs_are_rechecked" time="0.063" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_current_graph_duration_replaces_saved_route_duration" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_seconds_are_rounded_up_and_eta_includes_departure_rounding" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[None]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[vehicle]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_empty_vehicle_or_legacy_context_is_not_inferred_to_be_walk[unknown]" time="0.002" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_inconsistent_walk_context_is_held[check]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_inconsistent_walk_context_is_held[legs]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_explicit_no_path_is_held_and_not_replaced_by_straight_formula" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_missing_router_uses_explicit_existing_model_evidence[None]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_missing_router_uses_explicit_existing_model_evidence[router1]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_operating_margin_is_required_even_when_walk_arrives_before_deadline" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_party_walk_policy_is_checked_again" time="0.003" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_invalid_current_distance_is_never_published[-1]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_invalid_current_distance_is_never_published[nan]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_walk_v1" name="test_invalid_current_distance_is_never_published[inf]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_walk_assembly_v1" name="test_current_walk_eta_reaches_assembled_departure_message" time="0.005" /><testcase classname="tests.unit.travel.test_departure_walk_assembly_v1" name="test_changed_walk_coordinates_are_still_held" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_current_boarding_ride_profile_and_egress_replace_the_saved_total" time="0.008" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_source_failure_revalidates_the_model_with_explicit_status[stale]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_source_failure_revalidates_the_model_with_explicit_status[unavailable]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_source_failure_revalidates_the_model_with_explicit_status[no_boardable_prediction]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[basis-basis_changed]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[coords-place_changed]" time="0.006" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[legs-route_check_missing_or_changed]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[access-access_context_invalid]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_changed_context_does_not_query_an_unrelated_bus[option-option_changed]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[stop_sequence-1]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[route_id-other]" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[arrival_at-2026-10-09T10:03:00+09:00]" time="0.006" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_mismatched_identity_or_clock_cannot_be_used[confirmed_at-2026-10-09T10:01:00+09:00]" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_late_current_bus_does_not_produce_old_departure_guidance" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_future_bus_after_rail_is_not_replaced_with_current_bus_prediction" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_midnight_and_second_rounding_use_current_service_day" time="0.004" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_live_departure_is_request_private_and_not_reused_for_departure_search" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_later_bus_is_recomputed_after_first_ride_and_transfer_not_given_current_eta" time="0.006" /><testcase classname="tests.unit.travel.mobility.test_departure_observer_v1" name="test_client_case_cannot_inject_realtime_departure" time="0.005" /><testcase classname="tests.unit.travel.test_departure_context_storage_v1" name="test_context_copies_exact_selected_rows_and_keeps_model_units" time="0.001" /><testcase classname="tests.unit.travel.test_departure_context_storage_v1" name="test_generated_move_stores_context_in_detail" time="0.001" /><testcase classname="tests.unit.travel.test_departure_context_storage_v1" name="test_old_context_is_removed_when_new_place_cannot_be_rejudged[37.5755-126.9855]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_context_storage_v1" name="test_old_context_is_removed_when_new_place_cannot_be_rejudged[37.59-127.0]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_context_storage_v1" name="test_new_place_rejudgment_replaces_old_context" time="0.001" /><testcase classname="tests.unit.travel.test_departure_context_storage_v1" name="test_actual_mini_engine_preserves_all_listed_options_in_generated_detail" time="0.033"><error message="failed on setup with &quot;OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{5a38abb3-7126-4735-a960-4b38ca46d89f}\AC\Temp\pytest-of-playdata2 after 10 tries&quot;">cls = &lt;class '_pytest.runner.CallInfo'&gt;
+func = &lt;function call_and_report.&lt;locals&gt;.&lt;lambda&gt; at 0x000002005D605300&gt;
+when = 'setup'
+reraise = (&lt;class '_pytest.outcomes.Exit'&gt;, &lt;class 'KeyboardInterrupt'&gt;)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -&gt; CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+    
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+&gt;           result: TResult | None = func()
+                                     ^^^^^^
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:246: in &lt;lambda&gt;
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\logging.py:843: in pytest_runtest_setup
+    yield
+..\..\..\anaconda3\Lib\site-packages\_pytest\capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:164: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+..\..\..\anaconda3\Lib\site-packages\_pytest\runner.py:514: in setup
+    col.setup()
+..\..\..\anaconda3\Lib\site-packages\_pytest\python.py:1674: in setup
+    self._request._fillfixtures()
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:720: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:549: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:640: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1128: in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\pluggy\_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:1196: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\fixtures.py:923: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:264: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:251: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:130: in mktemp
+    basename = self._ensure_relative_to_basetemp(basename)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:111: in _ensure_relative_to_basetemp
+    if (self.getbasetemp() / basename).resolve().parent != self.getbasetemp():
+        ^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\_pytest\tmpdir.py:186: in getbasetemp
+    basetemp = make_numbered_dir_with_cleanup(
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:407: in make_numbered_dir_with_cleanup
+    raise e
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:388: in make_numbered_dir_with_cleanup
+    p = make_numbered_dir(root, prefix, mode)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/playdata2/AppData/Local/Packages/sandbox.{5a38abb3-7126-4735-a960-4b38ca46d89f}/AC/Temp/pytest-of-playdata2')
+prefix = 'pytest-', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -&gt; Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the folder
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+&gt;           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix pytest- in C:\Users\playdata2\AppData\Local\Packages\sandbox.{5a38abb3-7126-4735-a960-4b38ca46d89f}\AC\Temp\pytest-of-playdata2 after 10 tries
+
+..\..\..\anaconda3\Lib\site-packages\_pytest\pathlib.py:240: OSError</error></testcase><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_real_graph_stairs_survive_adapter_and_final_departure_time" time="0.005" /><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_off_network_access_seconds_are_included_without_rounding_loss" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_optimistic_distance_extension_keeps_stairs_and_adds_extra_walking" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_provider_without_internal_timing_keeps_legacy_distance_contract" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_corrupt_internal_seconds_are_rejected[-1]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_corrupt_internal_seconds_are_rejected[nan]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_corrupt_internal_seconds_are_rejected[inf]" time="0.001" /><testcase classname="tests.unit.travel.mobility.test_walk_duration_contract_v1" name="test_zero_distance_internal_timing_stays_zero" time="0.001" /></testsuite></testsuites>

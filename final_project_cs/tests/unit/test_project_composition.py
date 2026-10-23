@@ -8,6 +8,7 @@ import tempfile
 from app.composition import CompositionError, build_graph_store, build_registry
 from app.core.project_config import ProjectConfig, ProjectConfigError, load_project_config
 from app.core.registry import RegistryError
+from app.core.team_availability import TeamUnavailable
 from app.tools.read_tools import ReadToolbox
 
 from tests.registered_teams import EXPECTED_TEAM_IDS
@@ -28,7 +29,7 @@ def _config(*, teams=None, graph_enabled=True, graph_port="sql", broker="outbox"
         "modules": modules,
         "ports": {"team_executor": "local", "message_broker": broker, "graph_store": graph_port},
         "teams": teams or [{"team_id": "activity", "active": True,
-                             "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}],
+                             "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}],
     })
 
 
@@ -38,13 +39,15 @@ def _tools():
 
 def test_declaration_controls_active_routing_and_keeps_inactive_manifest():
     config = _config(teams=[{"team_id": "activity", "active": True,
-                             "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}])
+                             "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}])
     registry = build_registry(config=config, tools=_tools(), llm=object())
 
     assert {manifest.team_id for manifest in registry.manifests()} == {"activity"}
     assert registry.get("activity").manifest.active is True
-    with pytest.raises(RegistryError, match="exactly one active team"):
+    with pytest.raises(RegistryError):
         registry.resolve(case_type="technical")
+    with pytest.raises(TeamUnavailable, match="not_installed"):
+        registry.resolve(case_type="dining")
 
 
 def test_duplicate_team_id_is_rejected():
@@ -83,9 +86,9 @@ def test_composer_ui_is_no_longer_a_registered_module():
 def test_duplicate_capability_is_rejected():
     config = _config(teams=[
         {"team_id": "one", "active": True,
-         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"},
+         "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"},
         {"team_id": "two", "active": True,
-         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"},
+         "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"},
     ])
     with pytest.raises(CompositionError, match="duplicate capability"):
         build_registry(config=config, tools=_tools(), llm=object())
@@ -130,7 +133,7 @@ teams:
     ("implementation_ref", "message"),
     [
         ("app.nonexistent:Missing", "cannot be imported"),
-        ("app.modules.travel_ops:Missing", "not defined"),
+        ("app.domains.travel_ops:Missing", "not defined"),
         ("tests.unit.test_project_composition:IncompleteTeam", "TeamModule"),
         ("not-a-ref", "expected 'package.module:Class'"),
     ],
@@ -138,8 +141,13 @@ teams:
 def test_load_project_config_rejects_invalid_active_implementation(implementation_ref, message):
     with tempfile.TemporaryDirectory(dir=Path.cwd()) as directory:
         path = _write_project_config(directory, implementation_ref)
-        with pytest.raises(ProjectConfigError, match=message):
-            load_project_config(path)
+        if implementation_ref == "not-a-ref":
+            with pytest.raises(ProjectConfigError, match=message):
+                load_project_config(path)
+        else:
+            config = load_project_config(path)
+            with pytest.raises(CompositionError):
+                build_registry(config=config, tools=_tools(), llm=object())
 
 
 def test_load_project_config_does_not_import_inactive_implementation():

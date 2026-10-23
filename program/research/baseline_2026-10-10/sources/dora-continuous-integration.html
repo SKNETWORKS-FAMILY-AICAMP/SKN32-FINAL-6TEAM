@@ -1,0 +1,140 @@
+<!doctype html><meta charset=utf-8><html lang=en><head><script async src="https://www.googletagmanager.com/gtag/js?id=G-HWLXSJLRVQ"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-HWLXSJLRVQ")</script><title>DORA | Capabilities: Continuous integration</title><link rel=stylesheet href=/scss/main.b5ae96e0e39496f7835555d5fe3d223ce6c8aa3961c4ef4dd1bd5692a1673c77.css integrity="sha256-ta6W4OOUlveDVVXV/j0iPObIqjlhxO9N0b1WkqFnPHc="><link rel=stylesheet href=/css/quickcheck-variables.893d3e3acc263f6c37987aaa860c6ed32a88b3a286d6409d4fd06f0c1859cb82.css integrity="sha256-iT0+OswmP2w3mHqqhgxu0yqIs6KG1kCdT9BvDBhZy4I="><meta name=description content="DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance."><meta name=keywords content="DevOps,Lead time,Deploy frequency,Change fail rate,MTTR,Time to restore,metrics,DORA"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link href="https://fonts.googleapis.com/css?family=Google+Material+Icons&amp;lang=en" rel=stylesheet><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><meta name=msapplication-TileColor content="#2d89ef"><meta name=theme-color content="#ffffff"><meta property="og:url" content="https://dora.dev"><meta property="og:type" content="website"><meta property="og:title" content="DORA | Capabilities: Continuous integration"><meta property="og:description" content="DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance."><meta property="og:image" content="/img/misc/dora_social_image.png"><meta name=twitter:card content="summary_large_image"><meta property="twitter:domain" content="dora.dev"><meta property="twitter:url" content="https://dora.dev"><meta name=twitter:title content="DORA | Capabilities: Continuous integration"><meta name=twitter:description content="DORA is a long running research program that seeks to understand the capabilities that drive software delivery and operations performance. DORA helps teams apply those capabilities, leading to better organizational performance."><meta name=twitter:image content="/img/misc/dora_social_image.png"><script>document.addEventListener("DOMContentLoaded",function(){let e=document.querySelectorAll("h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]");e.forEach(e=>{addAnchorLink(e)}),highlightSelectedHeading()});function addAnchorLink(e){let n=e.getAttribute("id"),t=Object.assign(document.createElement("a"),{href:"#"+n,className:"heading-link",innerHTML:'<span class="google-material-icons">link</span> <span class="click-to-copy">click to copy link</span>'});e.append(t),e.addEventListener("mouseover",e=>{t.style.visibility="visible"}),e.addEventListener("mouseout",e=>{t.style.visibility="hidden",t.lastChild.innerHTML="click to copy link"}),t.addEventListener("mouseover",e=>{t.lastChild.style.visibility="visible"}),t.addEventListener("mouseout",e=>{t.lastChild.style.visibility="hidden"}),t.addEventListener("click",e=>{e.preventDefault();let o=location.href.split("#")[0],s=`${o}#${n}`;navigator.clipboard.writeText(s),console.debug(`copied to clipboard: ${s}`),t.lastChild.innerHTML="<em>copied!</em>"})}function highlightSelectedHeading(){let e=location.href.split("#")[1];e&&document.querySelector(`#${e}`).classList.add("heading-highlight")}</script><style>.heading-link{visibility:hidden;text-decoration:none;padding-left:1rem}.heading-link .google-material-icons{color:#666}.heading-link .google-material-icons:hover{color:#1a73e8}.click-to-copy{font-size:.75rem;color:#666;text-decoration:none;visibility:hidden;vertical-align:middle}</style></head><body><header><div class=navContainer><div class=dora-logo-link><a href=/><img src=/img/dora-logo.svg height=48px class=dora-logo alt=DORA></a></div><nav><ul class=menuLinksDesktop><li><a href=/ai/>AI</a></li><li><a href=/research/>Research</a></li><li><a href=/capabilities/ class=active>Capabilities</a></li><li><a href=/guides/>Guides</a></li><li><a href=/insights/>Insights</a></li><li><a href=/quickcheck/>Quick Check</a></li><li id=searchLinkDesktop><a class=google-material-icons id=searchIcon aria-label="Search dora.dev">search</a></li><li><a href=https://dora.community/ target=_blank>Community&nbsp;&nbsp;<span class="google-material-icons open_in_new">open_in_new</span></a></li></ul><div id=searchInputPopover popover><div id=searchInputPopoverFields><form action=/search/ method=get id=searchForm><div class=searchInputContainer><input type=search name=q class=searchQuery placeholder="Search dora.dev for..." required><input type=submit value=search id=searchButton class=searchButton></div></form></div></div><div class=page-overlay></div><label id=hamburgerContainer><input type=checkbox id=mobileMenuController onchange=console.log(this.checked)>
+<span class=google-material-icons aria-label=menu id=hamburgerIcon><span class=menu>menu</span>
+<span class=close>close</span></span></label></nav></div></header><div class=menuLinksMobile><ul><li><a href=/ai/>AI</a></li><li><a href=/research/>Research</a></li><li><a href=/capabilities/ class=active>Capabilities</a></li><li><a href=/guides/>Guides</a></li><li><a href=/insights/>Insights</a></li><li><a href=/quickcheck/>Quick Check</a></li><li id=searchLinkMobile><a href=/search/>Search</a></li><li><a href=https://dora.community/ target=_blank>Community&nbsp;&nbsp;<span class="google-material-icons open_in_new">open_in_new</span></a></li></ul></div><script>document.querySelector("#searchIcon").addEventListener("click",e=>{e.preventDefault(),document.querySelector("#searchInputPopover").showPopover(),document.querySelector("#searchInputPopover .searchQuery").focus()})</script><div class=site-banner><a href=https://cloud.google.com/resources/content/dora-roi-of-ai-assisted-software-development target=_blank>Download the ROI of AI-assisted Software Development report.</a></div><div class="section-header capabilities"><a href=/capabilities/ class=content><span>Capabilities</span></a></div><main><link rel=stylesheet href=/scss/capabilities.f5ad9915a83b06a14cd4936a20882382788bf0b7ebb68247d804723652395a29.css integrity="sha256-9a2ZFag7BqFM1JNqIIgjgniL8LfrtoJH2ARyNlI5Wik="><h1 class=tags>Continuous integration
+<span class=labels><a class=core href=/research/#core-model>core</a></span></h1><section><article><p>Software systems are complex, and an apparently simple, self-contained change
+to a single file can have unintended side effects on the overall system. When a
+large number of developers work on related systems, coordinating code updates is
+a hard problem, and changes from different developers can be incompatible.</p><p>The practice of continuous integration (CI) was created to address these
+problems. CI follows the
+<a href=https://martinfowler.com/articles/originalContinuousIntegration.html target=_blank>principle</a>
+that if something takes a lot of time and energy, you should do it more often,
+forcing you to make it less painful. By creating rapid feedback loops and
+ensuring that developers work in small batches, CI enables teams to produce high
+quality software, to reduce the cost of ongoing software development and
+maintenance, and to increase the productivity of the teams.</p><h2 id=how-to-implement-ci>How to implement CI</h2><p>When your organization practices CI, your developers integrate all their work
+into the
+<a href=/capabilities/trunk-based-development>main version of the code base</a>
+(known as
+<a href=/capabilities/trunk-based-development><em>trunk</em></a>,
+<em>main</em>, or <em>mainline</em>) on a regular basis. The <a href="/research/2015/2015-state-of-devops-report.pdf#page=20" target=_blank>2015 State of DevOps
+Report</a>
+(PDF) shows that teams perform better when developers merge their work into
+trunk at least daily. A set of automated tests is run both before and after the
+merge in order to validate that the changes don&rsquo;t introduce regression bugs. If
+these automated tests fail, the team stops what they are doing to fix the
+problem immediately.</p><p>CI ensures that the software is always in a working state, and that developer
+branches don&rsquo;t diverge significantly from trunk. The benefits of CI are
+significant:
+<a href="/research/2015/2015-state-of-devops-report.pdf#page=16" target=_blank>research</a>
+(PDF) shows that it leads to higher deployment frequency, more stable systems,
+and higher quality software.</p><p>The key elements in successfully implementing continuous integration are:</p><ul><li>Each commit should trigger a build of the software.</li><li>Each commit should trigger a series of automated tests that provide
+feedback in a few minutes.</li></ul><p>To implement these elements, you need the following:</p><ul><li><strong>An automated build process</strong>. The first step in CI is having an
+automated script that creates packages that can be deployed to any
+environment. The packages created by the CI build should be authoritative
+and used by all downstream processes. These builds should be numbered and
+repeatable. You should run your build process successfully at least once a day.</li><li><strong>A suite of
+<a href=/capabilities/test-automation>automated tests</a></strong>.
+If you don&rsquo;t have any, start by writing a handful of unit and
+<a href="/research/2014/2014-state-of-devops-report.pdf#page=14" target=_blank>acceptance tests</a>
+(PDF) that cover the high-value functionality of your system. Make sure that
+the tests are reliable. That way, when they fail, you know there&rsquo;s a real
+problem, and when they pass, you&rsquo;re confident there are no serious problems
+with the system. Then ensure that all new functionality is covered by
+tests. Those tests should run quickly, to give developers feedback as soon
+as possible. Your tests should run successfully at least once a day.
+Ultimately, if you have performance and acceptance tests, the developers
+should get feedback from them daily.</li><li><strong>A CI system that runs the build and automated tests on every
+check-in</strong>. The system should also make the status visible to the team. You
+can have some fun with this—for example, you can use klaxons or traffic
+lights to indicate when the build is broken. Don&rsquo;t use email notifications;
+many people ignore email notifications or create a filter that hides
+notifications. Notifications in a chat system is a better and more popular
+way of achieving this.</li></ul><p>Continuous integration,
+<a href=https://www.martinfowler.com/articles/continuousIntegration.html target=_blank>as defined</a>
+by Kent Beck and the Extreme Programming community where the term originated,
+also includes two further practices, which are also predictive of higher
+software delivery performance:</p><ul><li>The practice of
+<a href=/capabilities/trunk-based-development>trunk-based development</a>
+in which developers work off trunk/mainline in
+<a href=/capabilities/working-in-small-batches>small batches</a>.
+They merge their work into a shared trunk/mainline at least daily, rather
+than working on long-lived feature branches.</li><li>An agreement that when the build breaks, fixing it should
+<a href=/capabilities/continuous-delivery/>take priority over any other work</a>.</li></ul><p>CI requires
+<a href=/capabilities/test-automation>automated unit tests</a>.
+These tests should be comprehensive enough to give you confidence that the
+software works as expected. The tests must also run in a few minutes or less. If
+the automated unit tests take longer to run, developers won&rsquo;t want to run them
+frequently. If the tests are run infrequently, then a test failure can originate
+from many different changes, making it hard to debug. Tests that are run
+infrequently are hard to maintain.</p><p>Creating maintainable suites of automated unit tests is complex. A good way to
+solve this problem is to practice
+<a href=https://wikipedia.org/wiki/Test-driven_development target=_blank>test-driven development</a>
+(TDD), in which developers write automated tests that initially fail, before
+they implement the code that makes the tests pass. TDD has several benefits, one
+of which is that it ensures developers write code that&rsquo;s modular and easy to
+test, which reduces the maintenance cost of the resulting automated test suites.
+Many organizations don&rsquo;t have maintainable suites of automated unit tests and,
+despite that, still don&rsquo;t practice TDD.</p><h3 id=objections-to-ci>Objections to CI</h3><p>As described earlier, CI is sometimes considered a controversial practice. CI
+requires your developers to break up large features and other changes into
+<a href=/capabilities/working-in-small-batches>smaller incremental steps</a>
+that can be integrated frequently into trunk. This is a change for developers
+who aren&rsquo;t used to working in this way. In addition, when teams switch to using
+small steps, it can take longer to get large features completed. However, in
+general, you don&rsquo;t want to optimize for the speed at which developers can
+declare a large feature as completed on a branch. Rather, you want to be able to
+get changes reviewed, integrated, tested, and deployed as fast as possible. This
+process results in software development and delivery that is
+<a href="/research/2016/2016-state-of-devops-report.pdf#page=35" target=_blank>faster and more stable</a>
+(PDF) when the changes are small and self-contained, and the branches they live
+on are short-lived. Working in small batches also ensures that developers get
+regular feedback on the impact of their work on the system as a whole—from other
+developers, testers, and customers, as well as from automated performance and
+security tests. This in turn makes it easier and quicker to detect, triage, and
+fix any problems.</p><p>Despite these objections, helping software development teams implement
+continuous integration should be the number one priority for any organization
+wanting to start the journey to continuous delivery.</p><h2 id=common-pitfalls>Common pitfalls</h2><p>Some common pitfalls that prevent wide adoption of CI include the following:</p><ul><li><strong>Not putting everything into the code repository</strong>. Everything that&rsquo;s
+needed to build and configure the application and the system should be in
+your repository. This might seem outside of the scope of CI, but it&rsquo;s an
+important foundation.</li><li><strong>Not automating the build process</strong>. Manual steps create opportunities
+for mistakes and leave steps undocumented.</li><li><strong>Not triggering quick tests on every change</strong>. Full end-to-end tests
+are necessary, but quick tests (usually unit tests) are also important in
+order to enable fast feedback.</li><li><strong>Not fixing broken builds right away</strong>. A key goal of CI is having a
+stable build from which everyone can develop. If the build can&rsquo;t be fixed
+in a few minutes, the change that caused the build to break should be
+identified and reverted.</li><li><strong>Having tests that take too long to run</strong>. The tests should not take
+more than a few minutes to run, with an upper limit of about 10 minutes
+<a href="/research/2018/dora-report/2018-dora-accelerate-state-of-devops-report.pdf#page=56" target=_blank>according to DORA&rsquo;s research</a>
+(PDF). If your build takes longer than this, you should improve the
+efficiency of your tests, add more compute resources so you can run them in
+parallel, or split out longer-running tests into a separate build using the
+<a href=https://continuousdelivery.com/implementing/patterns/#the-deployment-pipeline target=_blank>deployment pipeline pattern</a>.</li><li><strong>Not merging into trunk often enough</strong>. Many organizations have
+automated tests and builds, but don&rsquo;t enforce a daily merge into trunk.
+This leads to long-lived branches that are much harder to integrate, and to
+long feedback loops for the developers.</li></ul><h2 id=ways-to-measure-ci>Ways to measure CI</h2><p>The CI concepts discussed earlier outline ways to measure the effectiveness of
+CI in your systems and development environment, as shown in the following table.
+Gathering these metrics allows you to optimize your processes and tooling for
+them. This leads to better CI practices and to shorter feedback loops for your
+developers.</p><table><col width=50%><col width=50%><thead><tr><th><strong>Factor to test</strong></th><th><strong>What to measure</strong></th></tr></thead><tbody><tr><td>Code commits trigger a build of the software</td><td>The percentage of code commits that result in a software build without
+manual intervention.</td></tr><tr><td>Code commits trigger a series of automated tests</td><td>The percentage of code commits that result in a suite of automated tests
+being run without manual intervention.</td></tr><tr><td>Automated builds and tests are executed successfully every day</td><td>The percentage of automated builds and the percentage of automated tests
+that are executed successfully every day.</td></tr><tr><td>Current builds are available to testers for exploratory testing</td><td>The availability of builds to testers, or its inverse, namely the
+unavailability of builds to testers.</td></tr><tr><td>Developers get feedback from the acceptance and performance tests every
+day</td><td>The availability of feedback to developers from acceptance and performance
+tests— that is, the percentage of tests that provide feedback that is
+available to developers within a day.</td></tr><tr><td>Broken builds are fixed immediately</td><td>The time it takes between the build breaking and having it fixed, either
+with a check-in that fixes the problem, or by reverting the breaking
+change.</td></tr></tbody></table><h2 id=whats-next>What&rsquo;s next?</h2><ul><li>For links to other articles and resources, see the
+<a href=https://cloud.google.com/devops target=_blank>Google Cloud DevOps page</a>.</li><li>Read more about Google Cloud
+<a href=https://cloud.google.com/solutions/continuous-integration target=_blank>continuous integration solutions</a>.</li><li>Read the
+<a href=https://landing.google.com/sre/books/ target=_blank>SRE Book</a>,
+in particular
+<a href=https://landing.google.com/sre/sre-book/chapters/release-engineering/ target=_blank>Chapter 8 - Release Engineering</a>.</li><li>Read James Shore&rsquo;s article
+<a href=https://www.jamesshore.com/Blog/Continuous-Integration-on-a-Dollar-a-Day.html target=_blank>CI on a dollar a day</a>.</li><li>Watch Google&rsquo;s John Penix describe
+<a href=https://www.infoq.com/presentations/Continuous-Testing-Build-Cloud/ target=_blank>how Google practices CI at scale</a>.</li><li>Explore our DevOps
+<a href=/>research program</a>.</li><li>Take the
+<a href=/quickcheck/>DORA quick check</a>
+to understand where you stand in comparison with the rest of the industry.</li></ul></article></section></main><footer><div class=container><div class=logo><a href=https://cloud.google.com/ target=_blank><img src=/img/cloud-logo-dark.svg></a></div><div class=links><a href=/resources/>Resources</a>
+<a href=/faq/>FAQ</a>
+<a href=/contact/>Contact Us</a></div><div class=search><form action=/search/ method=get><input type=text name=q placeholder="Search this site"></form></div><div class=license>DORA is a program run by Google Cloud. All content on this site is licensed by Google LLC under <a href=https://creativecommons.org/licenses/by/4.0/>CC BY 4.0</a>, unless otherwise specified.</div><div class=socials><a class=google-material-icons href=https://www.linkedin.com/company/doradotdev/ target=_blank aria-label="Follow us on LinkedIn">post_linkedin</a>
+<a class=google-material-icons href=https://www.youtube.com/@dora-dev target=_blank aria-label="Watch DORA videos on YouTube">post_youtube</a>
+<a class=google-material-icons href=https://github.com/dora-team/dora.dev target=_blank aria-label="This site's source code">github</a></div></div></footer></body></html>

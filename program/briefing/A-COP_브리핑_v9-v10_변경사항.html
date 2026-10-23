@@ -1,0 +1,286 @@
+<title>브리핑 v8→v10 차이점</title>
+<style>
+  :root {
+    --paper: #f2f4f8; --surface: #ffffff; --surface-2: #eceff5;
+    --ink: #161a23; --ink-muted: #5b6474; --ink-faint: #8791a1; --border: #dde1ea;
+    --accent: #3d4fc4; --accent-soft: #e4e7fa; --accent-ink: #26308f;
+    --old: #b3283f; --old-soft: #fbe4e7;
+    --new: #16794f; --new-soft: #dff3e8;
+    --shadow: 0 1px 2px rgba(20,24,34,.05), 0 10px 26px -14px rgba(20,24,34,.18);
+  }
+  :root[data-theme="dark"] {
+    --paper: #0e1116; --surface: #171b23; --surface-2: #1d222c;
+    --ink: #e9ebf1; --ink-muted: #9aa2b3; --ink-faint: #6b7485; --border: #2a3040;
+    --accent: #8b9bff; --accent-soft: #212a54; --accent-ink: #cdd5ff;
+    --old: #e8899a; --old-soft: #3a1d24;
+    --new: #7fd6ac; --new-soft: #10301f;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0e1116; --surface: #171b23; --surface-2: #1d222c;
+      --ink: #e9ebf1; --ink-muted: #9aa2b3; --ink-faint: #6b7485; --border: #2a3040;
+      --accent: #8b9bff; --accent-soft: #212a54; --accent-ink: #cdd5ff;
+      --old: #e8899a; --old-soft: #3a1d24;
+      --new: #7fd6ac; --new-soft: #10301f;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+    line-height: 1.6; }
+  .mono, code { font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Consolas, monospace; font-size: .93em; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.hero { margin-bottom: 26px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 12px; }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  h1 { font-size: clamp(24px, 3.6vw, 30px); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 10px; text-wrap: balance; }
+  .lede { color: var(--ink-muted); font-size: 15px; max-width: 66ch; margin: 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 24px 0 8px; }
+  .stat { background: var(--surface); padding: 14px 14px; }
+  .stat .k { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+  .stat .v { font-size: 14.5px; font-weight: 800; }
+
+  .toc { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 28px 0 40px; }
+  .toc a { display: block; text-decoration: none; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 13px; }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .n { color: var(--accent); font-weight: 800; margin-right: 6px; }
+
+  section.change { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 22px; }
+  section.change h2 { font-size: 17px; font-weight: 800; margin: 0 0 4px; }
+  section.change .one-liner { color: var(--ink-muted); font-size: 13.5px; margin: 0 0 16px; }
+
+  .easy-note { background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+    padding: 12px 16px; margin: 14px 0 18px; font-size: 13.5px; color: var(--ink); }
+  .easy-note .lbl { display: block; font-weight: 800; color: var(--accent-ink); margin-bottom: 4px; font-size: 12.5px; }
+  .easy-note .guess { color: var(--ink-faint); font-size: 12px; margin-top: 6px; display: block; }
+
+  .diff-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 16px; }
+  @media (max-width: 640px) { .diff-pair { grid-template-columns: 1fr; } }
+  .diff-col { border-radius: 10px; padding: 12px 14px; font-size: 13px; border: 1px solid var(--border); }
+  .diff-col.old { background: var(--old-soft); }
+  .diff-col.new { background: var(--new-soft); }
+  .diff-col .tag { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+  .diff-col.old .tag { color: var(--old); }
+  .diff-col.new .tag { color: var(--new); }
+  .diff-col ul { margin: 0; padding-left: 18px; }
+  .diff-col li { margin-bottom: 4px; }
+
+  .arrow-note { text-align: center; font-size: 12px; color: var(--ink-faint); margin: -6px 0 14px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 16px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+
+  .minor-list { font-size: 13px; }
+  .minor-list li { margin-bottom: 8px; }
+  .minor-list .old-txt { color: var(--old); text-decoration: line-through; opacity: .8; }
+  .minor-list .new-txt { color: var(--new); font-weight: 600; }
+
+  footer { margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">A-COP 브리핑 · 변경사항</div>
+    <h1>v8 → v10, 뭐가 바뀌었나</h1>
+    <p class="lede">
+      <b>브리핑에는 v9 판이 없다.</b> 계획서는 v8 → v9 → v10 으로 갔지만 브리핑은 v8 에서 멈춰 있었다.
+      그래서 이 문서는 <b>v8 브리핑과 v10 브리핑의 차이</b>를 적는다.
+      자구 수정이 아니라 <b>도메인 자체가 커머스에서 여행으로 갈아끼워졌다.</b>
+    </p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="k">도메인</div><div class="v">커머스 → 여행</div></div>
+    <div class="stat"><div class="k">Team</div><div class="v">6개 전량 교체</div></div>
+    <div class="stat"><div class="k">DoD 항목</div><div class="v">29 → 22</div></div>
+    <div class="stat"><div class="k">아키텍처 그림</div><div class="v">5개 그대로</div></div>
+  </div>
+
+  <div class="toc">
+    <a href="#c1"><span class="n">1</span>도메인 교체</a>
+    <a href="#c2"><span class="n">2</span>Team 전량 교체</a>
+    <a href="#c3"><span class="n">3</span>제품이 하는 일</a>
+    <a href="#c4"><span class="n">4</span>DoD·일정</a>
+    <a href="#c5"><span class="n">5</span>그림은 왜 그대로인가</a>
+  </div>
+
+  <div class="easy-note" style="margin-bottom:8px;">
+    <span class="lbl">전체 요약 — 한 줄로</span>
+    <b>가게를 바꾼 게 아니라 파는 물건을 바꿨습니다.</b> 계산대·영수증·환불 규칙(코어)은 그대로 두고
+    진열대(Team)만 갈아 끼웠습니다. 그게 이 구조가 애초에 주장하던 것이고, 이번 교체가 그 실증입니다.
+    그래서 <b>아키텍처 그림 5개는 하나도 안 버렸습니다</b> — 바뀐 건 그 안의 이름과 어휘입니다.
+  </div>
+
+  <section class="change" id="c1" style="margin-top:24px;border-top:none;padding-top:0;">
+    <h2>1. 도메인 교체 — 커머스 CS → 여행 CS</h2>
+    <p class="one-liner">2026-09-08 팀 결정. 코어 계약·생명주기·동시성·감사·평가 도구는 승계하고, Team 모듈과 도메인 데이터는 전량 신규다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">v8 — 커머스 CS</span>
+        <ul>
+          <li>주문·결제·배송·반품·응답 검토</li>
+          <li>검증 쇼핑몰과 연계</li>
+          <li>고객 문의가 Case 를 만든다</li>
+        </ul>
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v10 — 여행 CS</span>
+        <ul>
+          <li>일정 검증 · 변화 감지 · 선제 조정</li>
+          <li>인바운드 외국인 개인·친구 그룹, 1도시, 영어</li>
+          <li><b>고객 문의뿐 아니라 시스템이 스스로 Case 를 만든다</b> (다음 확인 시점이 오면)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow-note">DB 19표 중 <b>코어 14표는 손대지 않고</b> 도메인 5표만 갈아낀다 — orders·order_items·products·returns·shipments → trips·itinerary_versions·itinerary_items·bookings·watch_schedule</div>
+
+    <div class="easy-note">
+      <span class="lbl">쉽게</span>
+      쇼핑몰 고객센터를 만들다가 여행 도우미로 방향을 틀었습니다. 그런데 <b>다시 만든 게 아닙니다.</b>
+      "고객 요청을 받아서 → 규칙에 맞는지 확인하고 → 위험한 건 사람에게 물어보고 → 기록을 남긴다"는
+      뼈대는 어느 업종이든 같아서, 그 뼈대를 그대로 두고 업종 지식만 바꿔 끼웠습니다.
+    </div>
+  </section>
+
+  <section class="change" id="c2">
+    <h2>2. Team 전량 교체 — 그런데 버린 팀은 하나도 없다</h2>
+    <p class="one-liner">여섯 팀이 전부 바뀌었지만 다섯은 기존 팀의 뼈대를 이어받았다. 반대로 코드를 통째로 물려받는 팀도 없다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">v8 — 커머스 6팀</span>
+        <ul>
+          <li>Return &amp; Refund</li>
+          <li>Fulfillment &amp; Logistics</li>
+          <li>Procurement + Order &amp; Payment</li>
+          <li>Catalog &amp; Verification (A2A Remote)</li>
+          <li>VOC &amp; Store Manager</li>
+          <li>Response Generation &amp; Review</li>
+        </ul>
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v10 — 여행 6팀</span>
+        <ul>
+          <li><b>Activity</b> ← Return &amp; Refund 뼈대<br>취소 판정 → 접수 → 환급 계산 3단 구조가 같다</li>
+          <li><b>Mobility</b> ← Fulfillment 뼈대<br>움직이는 것을 추적하고 예외를 잡는다</li>
+          <li><b>Booking Handoff</b> ← Procurement 뼈대<br>생성·변경·취소·상태 조회 자리가 같다</li>
+          <li><b>Dining</b> — 새로 만듦</li>
+          <li>Lodging / Flight — 등록만</li>
+          <li>Response Review 는 <b>각 Team 내부 규칙</b>으로 흡수</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow-note"><b>MVP 필수는 Activity 와 Booking Handoff 둘</b>이다. 나머지는 일정에 따라 조정된다.</div>
+
+    <div class="easy-note">
+      <span class="lbl">쉽게</span>
+      "반품 처리팀"이 "액티비티 취소팀"이 됐습니다. <b>하는 일의 모양이 똑같기 때문입니다</b> —
+      취소할 수 있는지 보고, 접수하고, 얼마 돌려줄지 계산합니다. 반품 기한이 취소 기한으로,
+      배송비 부담이 우천 위약금으로 바뀌었을 뿐입니다.
+    </div>
+  </section>
+
+  <section class="change" id="c3">
+    <h2>3. 제품이 하는 일 — 「답한다」에서 「지켜본다」로</h2>
+    <p class="one-liner">가장 큰 변화다. v8 은 고객이 물으면 답했고, v10 은 묻지 않아도 먼저 알린다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">v8 — 물으면 답한다</span>
+        <ul>
+          <li>고객 메시지 → Case → 처리 → 응답</li>
+          <li>Case 가 끝나면 끝난다</li>
+        </ul>
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v10 — 안 물어도 지켜본다</span>
+        <ul>
+          <li>일정 등록 → 검증 → <b>감시 시작</b></li>
+          <li>변화 감지 → 재계획 → <b>재검증을 통과해야 통지</b></li>
+          <li>고객이 거부하면 <b>이전 일정 버전으로 되돌린다</b></li>
+          <li><b>Trip 은 여행이 끝날 때까지 산다</b> (Case 는 여럿 생겼다 사라진다)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow-note"><b>계획을 만드는 것은 우리 일이 아니다</b>(v10 §4-A). 외부 에이전트·LLM 이 만든 일정을 받아 검증하고 지켜보는 것이 제품이다.</div>
+
+    <div class="easy-note">
+      <span class="lbl">쉽게</span>
+      전에는 "문의하면 답해주는 상담원"이었다면, 지금은 <b>"예약을 대신 지켜봐 주는 비서"</b>입니다.
+      비가 온다는 예보가 뜨면 고객이 묻기 전에 먼저 찾아내서 "이 액티비티가 취소될 것 같으니
+      이렇게 바꾸면 어떨까요"를 정리해 보냅니다. <b>고객이 싫다고 하면 원래대로 되돌립니다.</b>
+      그 되돌림이 되기 때문에 먼저 나서는 게 위험하지 않습니다.
+    </div>
+  </section>
+
+  <section class="change" id="c4">
+    <h2>4. DoD 29 → 22, 일정은 10주 → 7주</h2>
+    <p class="one-liner">항목이 줄어든 게 아니라 다른 것을 재게 됐다. v9 의 29항목은 쇼핑몰 대상이라 그대로 쓰지 않는다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">v8/v9 — 29항목</span>
+        <ul>
+          <li>주문·배송·반품 처리 정확도</li>
+          <li>10주 · 중간발표 09-15</li>
+        </ul>
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v10 — 22항목</span>
+        <ul>
+          <li>자동 17 · 아키텍처 테스트 3 · 측정 2</li>
+          <li>일정 검증 · 되돌림 · 승인 경계 · 자동 실행 차단</li>
+          <li><b>7주</b> · 최종발표 2026-10-26</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow-note">새로 들어온 판정 넷 — <b>되돌림이 되는가</b> · <b>되돌린 뒤에도 이력이 남는가</b> · <b>실제 공급자에는 자동 실행이 안 걸리는가</b> · <b>자동 실행 분기가 시연 모드에서만 열리는가</b></div>
+  </section>
+
+  <section class="change" id="c5">
+    <h2>5. 그림은 왜 그대로인가</h2>
+    <p class="one-liner">도메인이 바뀌어도 아키텍처는 안 바뀐다는 것이 이 프로젝트의 주장이고, 그림을 그대로 쓰는 것이 그 증거다.</p>
+
+    <div class="diff-pair">
+      <div class="diff-col old">
+        <span class="tag">버렸다면</span>
+        <ul>
+          <li>"도메인 바뀌었으니 다 새로 그린다"</li>
+          <li>→ 그럼 <b>코어를 승계한다는 주장이 거짓</b>이 된다</li>
+        </ul>
+      </div>
+      <div class="diff-col new">
+        <span class="tag">v10 — 5개 다 살렸다</span>
+        <ul>
+          <li>파이프라인 → 에이전틱 확장 이유</li>
+          <li>전체 아키텍처 (Context Broker · Team · Action)</li>
+          <li>폴더 / 모듈형 Basement</li>
+          <li>ERD — v8 시절 그림이라 낡았다고 표시하고 지금 19표 목록을 붙였다</li>
+          <li>로드맵 / 간트</li>
+        </ul>
+      </div>
+    </div>
+    <div class="arrow-note">바뀐 것은 그림 <b>안의 이름과 어휘</b>다 — Team 라벨, 도메인 팩 이름, 시연 포인트.</div>
+
+    <div class="easy-note">
+      <span class="lbl">쉽게</span>
+      건물 도면을 다시 그리지 않았습니다. <b>방 이름표만 바꿔 달았습니다.</b>
+      전기 배선과 배관(코어)이 그대로라서 가능한 일이고, 그게 원래 이 설계가 노린 것입니다.
+      ERD 그림 하나는 두 도메인 전 것이라 낡았는데, <b>지우지 않고 "낡았다"고 표시해 뒀습니다</b> —
+      지우면 그때 무엇이었는지가 사라지기 때문입니다.
+    </div>
+  </section>
+
+</div>

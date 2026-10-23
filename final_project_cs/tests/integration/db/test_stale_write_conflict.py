@@ -14,7 +14,7 @@ import pytest
 
 from app.core.contracts import StateConflict
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import create_case, get_case
 
 from tests.integration.controller.test_controller_integration import db  # noqa: F401
@@ -163,11 +163,11 @@ def _advance_to_running(conn, tenant: str, case_id) -> None:
     with conn.transaction():
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1,
                         event_type=EventType.CLASSIFIED,
-                        payload={"intent": "billing", "issue_code": "invoice",
+                        payload={"intent": "incident_report", "issue_code": "activity_cancel_or_change",
                                  "sentiment": "neutral"}, actor_type="test")
         transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
                         event_type=EventType.ROUTED,
-                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"},
+                        payload={"owner_team_id": "test_activity", "capability": "activity.inspect"},
                         actor_type="test")
     conn.commit()
 

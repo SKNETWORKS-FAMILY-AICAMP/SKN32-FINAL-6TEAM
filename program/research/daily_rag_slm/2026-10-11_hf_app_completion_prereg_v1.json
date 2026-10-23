@@ -1,0 +1,63 @@
+{
+  "created_at_utc": "2026-10-11T05:04:20.257468+00:00",
+  "purpose": "Previously unmeasured HF NF4 full application reply completion and finite stability; no repeated candidate order accuracy",
+  "models": [
+    "Gemma-4-E4B-it publisher Instruct original",
+    "same model plus our FINCH seed20261014 adapter",
+    "same model plus our cosine seed20261014 adapter"
+  ],
+  "our_training": [
+    false,
+    true,
+    true
+  ],
+  "publisher_training": true,
+  "input": "datasets/travel/app_schema_diagnostic_20261011_v1/processed/prompts.json",
+  "input_sha256": "0162d560348efc5b9a0f929c7e9a8198c82da41c71e79d717e95cca1e82ac93c",
+  "unique_conditions": 12,
+  "baseline_calls_per_model": 48,
+  "budgets_abba": [
+    400,
+    800,
+    800,
+    400
+  ],
+  "seed": 20261011,
+  "temperature": 0,
+  "context_limit": 4096,
+  "truncation": false,
+  "forced_grammar": false,
+  "schema_in_prompt": true,
+  "generation_path": "HF NF4 generic greedy generation; exact application messages plus explicit output schema, different from llama.cpp grammar enforcement",
+  "strict_validation": "No empty/duplicate/NaN/codefence repair; EOS stop + all current schema required/type/enum/array items + expected action/target/fact",
+  "stability_gate": "Exactly24 correct at800 across12conditions repeats1,2; no errors. Prior400 failures retained.",
+  "duration_seconds": 21600,
+  "phase_seconds": 3600,
+  "batch_profiles": [
+    1,
+    2,
+    1,
+    2,
+    1,
+    2
+  ],
+  "batch_is_not_concurrent_http": true,
+  "output_budget": 800,
+  "stop": "First runtime error ends remaining inference; preserve all48 planned denominator with not-attempted error. Stability stops on3consecutive incorrect or first runtime error or disk<3GiB.",
+  "minimum_free_bytes": 3221225472,
+  "new_downloads": false,
+  "new_training": false,
+  "automatic_retry": false,
+  "independent_holdout": false,
+  "adoption": false,
+  "latency_scope": "Load separate; per-batch elapsed and batch size, not per-request HTTP or cross-model speed claims",
+  "models_sequential": true,
+  "acceptance": "Diagnostic only, any failure retained; exact Oracle model/app regression and independent holdout required separately",
+  "followup_model": "same Gemma E4B model plus our oos2r adapter",
+  "followup_reason": "New E contrast has low false-pick rate but normal-request loss; test previously unmeasured full reply completion, not repeat selection accuracy or adopt by low false picks.",
+  "total_model_conditions": 5,
+  "total_baseline_planned": 240,
+  "maximum_conditional_hours": 30,
+  "additional_followup_model": "Gemma-4-E4B-it plus our oos3 adapter",
+  "additional_followup_reason": "Compare full reply completion of E normal-request-retaining oos3 against low-false-pick oos2r; previously unmeasured generation contract, no repeated selection accuracy."
+}

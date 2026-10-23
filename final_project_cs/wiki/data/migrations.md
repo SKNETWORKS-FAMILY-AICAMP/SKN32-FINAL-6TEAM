@@ -1,196 +1,64 @@
 ---
 type: guide
-title: 마이그레이션
-description: 마이그레이션 파일과 순서. 재실행이 안전하다. 2026-09-10 기준 작업 트리 13개 · git 9개
+title: SQL 파일과 적용 방식
+description: 자동 생성 목록이 현재 실행 SQL·역사 보존 SQL·보류 SQL의 파일 수와 경로를 소유합니다
 status: draft
-tags: [data]
-owners: [human:미배정]
-domain: commerce
-domain_note: 코드가 아직 커머스다 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain: travel
 ---
 
-# 마이그레이션
+# SQL 파일과 적용 방식
 
-`app/infrastructure/db/migrations/`
+[자동 생성 목록](migration-inventory.generated.md)이 현재 실행 SQL·역사 보존 SQL·보류 SQL의 파일 수와 경로를 소유합니다. 파일 수는 DB 적용 수가 아닙니다.
 
-## 6개 — 지금은 13개다
+## 실행기의 동작
 
-`[실측 2026-09-10]` **마이그레이션은 작업 트리 13개 · git 9개**이고 `pending/` 에 미추적 `011_drop_commerce_domain.sql` 이 하나 있다. 여행 표는 `010_domain_travel.sql`(`places`·`bookings`·`supplier_bookings`)·`011_place_catalog.sql` 에 있다. **아래 표는 커머스 시절 목록이다** — 제목은 6개인데 표는 7행이고, 실제는 그 뒤로 더 늘었다.
+### 2026-10-12 후속 수정 계약 — 로컬 검증, 배포 전
 
-`[실측]`
+현재 후속 수정은 모든 파일을 먼저 PostgreSQL 문법 해석기로 검사합니다. 파일 전체를 감싼 옵션 없는 BEGIN/START TRANSACTION과 COMMIT/END 한 쌍만 실행 문자열에서 공백으로 대체합니다. 문자열·주석·달러 인용 함수 본문과 디스크의 SQL 원문은 유지합니다. 중간 COMMIT·ROLLBACK·SAVEPOINT·트랜잭션 옵션은 변경 전에 거부합니다. 묶음은 연결의 단일 트랜잭션 또는 호출자 트랜잭션 안의 savepoint에서 실행하며 실패하면 해당 묶음 전체를 롤백합니다. 이미 커밋한 과거 변경과 PostgreSQL sequence 번호 소비는 되돌리지 않습니다.
 
-| 파일 | 무엇 | 왜 나중에 |
-|---|---|---|
-| `001_schema.sql` | Core 테이블 14종 | 기반 |
-| `002_domain_commerce.sql` | orders · order_items · shipments · returns | 도메인 |
-| `003_outbox_tenant_scoped_dedupe.sql` | outbox 중복 제거를 tenant 범위로 | 격리 결함 수정 |
-| `004_agent_runs_active_uniqueness.sql` | 동시 실행 방지 | 동시성 결함 수정 |
-| `005_outbox_resolution.sql` | outbox 해소 상태 | 운영 중 필요해짐 |
-| `006_products_catalog.sql` | products | Catalog Team 착수 |
-| **`007_returns_order_item.sql`** | **`returns.order_item_id`** | **환불 금액 추정 결함 수정** |
+배포 후보는 이미지 자체의 실행기·해석기·제외 목록 검사를 통과해야 합니다. Compose로 실행할 때도 같은 검사 결과를 요구하여 오래된 마운트가 새 코드를 덮으면 차단합니다. 실행 중 이미지 ID와 최종 Compose 구성을 보관하고 시간 초과·부분 실패 때 그 ID로 복구합니다. 아래 기존 환경 기록은 이 수정이 배포됐다는 뜻이 아닙니다. [후속 작업 기록](../../../program/research/migration_safety_2026-10-12/README.md)을 따릅니다.
 
-**003·004·007이 결함 수정에서 나왔다.** 처음 설계에 없던 제약이 운영·테스트에서 발견돼 추가됐다.
+[실행 계획](../../app/infrastructure/db/migrations/migration-plan.json)에 적힌 과거 SQL 4개는 원문·이름을 그대로 보존하되 실행에서 제외합니다. [계획 해석기](../../app/infrastructure/db/migration_plan.py)는 누락·중복·경로 이탈을 거부하고, [실행기](../../app/infrastructure/db/migrate.py)는 나머지 SQL을 파일명 정렬로 읽어 실행합니다. 현재 로컬 수정본은 [SQL 문법 해석기](../../app/infrastructure/db/migration_sql.py)로 전체 사전검사 후 단일 트랜잭션에서 실행하며 중첩 호출을 savepoint로 지원합니다. 보류 폴더는 포함하지 않습니다. 이전 배포 실행기의 BEGIN/COMMIT 충돌은 아래 당시 환경 기록과 구분합니다.
 
-### ★ 007 — 환불 금액을 지어내던 것을 막았다
+이 방식은 적용 이력표·체크섬 장부를 쓰는 방식이 아닙니다. 기존 DB의 표를 자동 삭제하지 않습니다. 파일 내용을 검색해서 임의로 SQL을 걸러내지도 않습니다. 공유된 과거 SQL의 바이트는 바꾸지 않습니다.
 
-`[실측]` 2026-09-01. [D-001](../../../wiki/decisions/D-001-payment-ownership.md) 1-A 후속.
+## 재유입 방지와 환경 구분
 
-`returns` 에는 `order_id`·`reason_code`·`quantity` 만 있었다. **"주문 X 에서 3개 반품"은 알지만 어느 품목인지를 몰랐다.**
+이전 실행기는 제거했던 쇼핑몰 5표를 다시 생성할 수 있었습니다. 현재 입력은 해당 생성·변경 SQL을 제외합니다. 빈 임시 DB 시험에서 여행 표 유지·과거 5표 부재를 검사하고, 데이터가 있는 임시 DB의 재실행 시험도 유지합니다. 이 시험을 기존 운영 DB의 정리 완료로 해석하지 않습니다.
 
-그래서 환불 금액을 이렇게 계산하고 있었다.
+[보류 015 제거 SQL](../../app/infrastructure/db/migrations/pending/015_drop_commerce_domain.sql)은 자동 실행 대상이 아닙니다. [D-023](../../../wiki/decisions/D-023-no-commerce-assets-in-use.md)의 2026-10-06 기록은 로컬 개발 DB에 적용한 이력이며 x600 서버의 cs 프로젝트 DB는 당시 변경하지 않았습니다. 2026-10-12에는 사용자 별도 승인으로 기존 DB 두 곳의 5표를 백업·복원 검증 후 삭제하고 x600에 제외 규칙을 반영했습니다. 보류 015 파일은 계속 자동 실행 대상에서 제외합니다.
 
-```python
-amount = total * int(quantity) // item_count   # 주문 총액의 균등 분할
-```
+SQL 적용 전에는 대상 환경·의존 관계·복구 자료·회귀 확인을 정합니다. 자동 목록은 워크스페이스 루트에서 `python program/scripts/build_wiki_catalogs.py`로 갱신하고 `--check`로 확인합니다.
 
-**품목 값이 서로 다르면 이 액수는 근거가 없다.** 할인이 걸려 있어도 마찬가지다.
+## 현재 환경의 실제 상태
 
-#### NULL 을 허용한 게 핵심이다
+아래는 후속 안전장치 수정 전의 환경별 실행 기록입니다. 이번 후속 작업은 업무 DB에 SQL을 실행하지 않았고 x600 서버에 배포하지 않았습니다. 독립 PostgreSQL의 격리 DB 시험 11/11 통과와 [별도 후속 보고서](../records/reports/2026-10-12_migration-transaction-and-deploy-safety.md)를 확인합니다.
 
-**이미 쌓인 반품 행에는 품목 정보가 없다.** 지금 와서 채우면 그건 지어낸 값이다.
+[실측 2026-10-12] 로컬 개발 DB와 x600 서버의 cs 프로젝트 DB에서 과거 표 5개를 삭제한 뒤 정확한 이름의 잔존 표는 0개입니다. 두 환경의 현재 SQL 입력은 과거 4파일을 제외합니다. 원문 SQL은 보존합니다.
 
-> `NULL` 은 **"모른다"**이고, 모르면 다품목 주문에서 **금액을 만들지 않고 사람에게 넘긴다.**
+x600 API·worker는 원래 이미지에 실행기·계획 해석기·제외 목록 3파일을 읽기 전용 영속 마운트합니다. 기본 Compose의 추가 설정 파일로 유지하며 향후 이미지 선택을 고정하지 않습니다. 별도 `-f` 파일 목록으로 배포할 때는 이 추가 설정도 포함해야 합니다. 실행 중 컨테이너에만 복사한 임시 수정이 아닙니다. 자동 배포 재현 자체를 실행한 결과는 아닙니다.
 
-**빈 값을 그럴듯한 값으로 메우지 않는다.** [D-005](../../../wiki/decisions/D-005-write-gate.md)와 같은 원칙이다.
+복원한 격리 DB에서 환경별 2회, x600 실제 DB에서 2회 현재 실행기를 재실행하여 옛 표가 재생성되지 않았습니다. 로컬 업무 DB 추가 재실행은 자동 승인 검토가 거절했으며 읽기 전용 최종 검사와 격리 DB 재실행으로 확인했습니다. 최초 중첩 호출은 기존 SQL의 COMMIT과 충돌했으므로 성공 횟수에 넣지 않습니다.
 
-## 계획서보다 테이블이 5개 많다
+[현재 실제 구조·이미지·근거](../../../program/research/sql_retirement_2026-10-12/index.html)와 [이전 잔존 상태 조회](../../../program/research/sql_review_2026-10-11/index.html)를 구분합니다. 코드의 빈 DB 시험만으로 기존 업무 DB 정리 완료를 주장하지 않습니다.
 
-`[실측]` 2026-09-01 기준.
+## 과거 기록
 
-| | 테이블 |
-|---|---|
-| 계획서 v8 §22 DDL 전문 | **14** |
-| 실제 migrations | **19** |
-
-**차이 5개가 다 도메인 쪽이다.**
-
-```
-orders · order_items · shipments · returns   (002)
-products                                     (006)
-```
-
-**계획서 §22 는 Core 스키마만 적고 있다.** 도메인 커머스 테이블은 검증 쇼핑몰 연계가 결정되면서 나중에 붙었다.
-
-`[미확보]` **§22 를 갱신할지 "Core 만"이라고 명시할지 정해지지 않았다.** 지금은 §22 만 읽은 사람이 테이블 수를 14로 안다.
-
-## 재실행이 안전하다
-
-전부 `CREATE TABLE IF NOT EXISTS` · `CREATE INDEX IF NOT EXISTS`다.
-
-**여러 번 돌려도 같은 결과다.** 개발 중에 반복 실행하게 되므로 중요하다.
-
-## 빠뜨리면 무너지는 제약 셋
-
-`[실측]` handoff 계약이 "★빠뜨리면 시스템이 무너지는 제약 3개"로 따로 표시한 것들.
-
-```sql
-case_events     UNIQUE (case_id, aggregate_version)
-action_requests UNIQUE (tenant_id, idempotency_key)
-outbox          UNIQUE (tenant_id, topic, dedupe_key)
-```
-
-★`[정정 2026-09-07]` `outbox` 는 오래 `UNIQUE (topic, dedupe_key)` 로 적혀 있었다.
-`003_outbox_tenant_scoped_dedupe.sql` 이 `tenant_id` 를 넣은 뒤에도 여러 문서가 옛
-제약을 실었다. 살아 있는 DB 에서 `pg_constraint` 를 읽어 확인한 값이 위의 것이다
-(`outbox_tenant_topic_dedupe_key_key`). 경위는 [outbox.md](../actions/outbox.md).
-
-| 제약 | 없으면 |
-|---|---|
-| `case_events` | 같은 버전 이벤트가 두 번 들어가 상태가 갈린다 |
-| `action_requests` | 같은 요청이 두 번 실행된다 |
-| `outbox` | 같은 메시지가 두 번 발행된다 |
-
-**애플리케이션 로직만으로는 동시성을 못 막는다.** DB 제약이 최종 방어선이다.
-
-→ [../actions/idempotency.md](../actions/idempotency.md)
-
-### `places` 의 유일성이 둘로 갈렸다 `[2026-09-27 · 029]`
-
-`[실측]` `029_trip_scoped_places.sql` 이 `places_tenant_id_name_kind_key` 를 지우고 **부분 유일 색인 둘**로 바꿨다
-(`acop_cs` 의 `pg_indexes` 로 확인).
-
-```sql
-places_shared_name_kind_uq  UNIQUE (tenant_id, name, kind)             WHERE trip_scope IS NULL
-places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE trip_scope IS NOT NULL
-```
-
-- **왜.** 관광공사 콘텐츠랩 「로컬서버 저장 금지」·카카오 운영정책 제5조 — 외부 서비스에서 받은 장소 값을 공용 표에 쌓아
-  다른 고객에게 재사용하지 않는다. 그런데 감시·대체 일정은 항목의 `place_id` 로 `places` 를 읽는다(15개 파일 48곳) —
-  그래서 행은 만들되 **그 여행 전용**(`trip_scope` = 여행 id)으로 둔다.
-- **누가 그렇게 넣나.** `places[].attributes.source` 가 `tour_api`·`kakao`·`google_places` 인 등록(`trip_api.EXTERNAL_PLACE_SOURCES`).
-  일정 생성기의 관광공사 후보와 계획 읽기의 조회 결과가 여기에 든다.
-- **누가 무엇을 보나.** `TripStore.places()` — 인자 없으면 공용만(일정 생성기 후보 · 에이전트 도구), `trip_id` 를 주면
-  공용 + 그 여행 전용, 여러 여행을 도는 감시는 `every_trip=True` 로 읽고 여행마다 `visible_to` 로 거른다.
-- ★`ON CONFLICT` 는 부분 색인의 조건까지 적어야 맞는다 — `ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL`.
-- `[미확보]` 여행이 끝난 뒤 전용 행을 지우는 일은 아직 없다(설계서 §4-5 3번 「여행이 끝나면 지운다」). 그 전 공용 행 5개에
-  관광공사 출처 칸이 남아 있는 것도 그대로다.
-
-### 장소 별칭 `place_aliases` `[2026-09-28 · 030]`
-
-`[실측]` `030_place_aliases.sql` — (테넌트, 정규화한 원문) → 다시 찾을 이름. 계획 읽기 장소 찾기의 2단계(설계서 §4-1).
-★**고객이 쓴 글 → 고객이 고친 글만** 담는다(둘 다 고객 글) — 관광공사·카카오가 준 이름·좌표는 담지 않는다(약관). 별칭은 다시 찾을 이름일
-뿐이고 값은 매번 조회한다. 확인 화면에서 장소 이름을 고치면 쌓이고(`intake.pipeline.remember_alias`), 기본값은 코드의
-`SEED_ALIASES`(남산타워 → N서울타워 등)다 — 고객이 고친 것이 이긴다.
-
-## 인덱스
-
-`[실측]` 조회 격리를 받치는 인덱스.
-
-```sql
-orders_tenant_customer_idx     (tenant_id, customer_id)
-shipments_tenant_customer_idx  (tenant_id, customer_id)
-returns_tenant_customer_idx    (tenant_id, customer_id)
-```
-
-주석이 규칙을 밝힌다.
-
-```sql
--- ★조회는 항상 tenant_id + customer_id 로 좁힌다(설계 원칙 §1).
-```
-
-## extension
-
-```
-vector     임베딩 vector(1536)
-pgcrypto   gen_random_uuid()
-```
-
-**둘 다 없으면 001이 실패한다.**
-
-## 환경 주의
-
-`[실측]` **PostgreSQL이 Windows 서비스가 아니다.** conda env `pgv`에서 뜬 프로세스다. 재부팅 후 안 떠 있을 수 있다.
-
-```
-127.0.0.1:5433
-```
-
-`psql`이 PATH에 없다. → [../operations/local-setup.md](../operations/local-setup.md)
-
-**Docker가 설치돼 있지 않다.** `docker/compose.yml`로 DB를 띄우는 전제는 이 기계에서 성립하지 않는다. 로컬 PG를 쓰고 compose 파일은 재현용으로만 남긴다.
-
-## 임베딩 차원을 바꾸려면
-
-```sql
-knowledge_chunks.embedding vector(1536)   -- text-embedding-3-small
-```
-
-**모델을 바꾸면 DDL과 적재분을 함께 바꿔야 한다.** 차원이 다르면 기존 임베딩을 다 버려야 한다.
-
-## 스키마를 바꾸려면
-
-| 함께 해야 할 것 |
-|---|
-| 영향받는 Team 확인 |
-| 계약(`contracts.py`) 대조 |
-| 회귀 테스트 |
-| handoff 문서 갱신 |
-
-`[실측]` `app/core/contracts.py`는 `wiki/records/handoff/01_계약_Pydantic.md`의 **구현체다. 둘이 어긋나면 결함이다.**
+[수정 전 문서](../records/commerce_2026-10-11/wiki--data--migrations.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
 ## 관계
 
-- [schema.md](schema/index.md) — 테이블 의미
-- [tenancy.md](tenancy.md) — 격리
-- [../operations/local-setup.md](../operations/local-setup.md) — DB 기동
-- [../actions/idempotency.md](../actions/idempotency.md) — UNIQUE 제약의 역할
+- [여행 사양 허브](../../../wiki/index.md) — 현재 정본을 찾는 입구
+
+
+## 이전 절 링크
+
+<a id="sql-파일과-적용-방식"></a>
+<a id="실행기가-실제로-하는-일"></a>
+<a id="환경별-확인-범위"></a>
+<a id="보류-sql과-재실행-주의"></a>
+<a id="실행-대상-전체-목록"></a>
+<a id="관련-문서"></a>
+<a id="이전-문서"></a>
+<a id="관계"></a>
+<a id="확인-범위"></a>

@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-10-09T11:51:00.412739+09:00",
+  "source": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+  "fields_used": [
+    "statnId",
+    "statnTid",
+    "bstatnId",
+    "btrainNo",
+    "btrainSttus",
+    "barvlDt",
+    "recptnDt",
+    "arvlCd"
+  ],
+  "sample_max_rows": 5,
+  "error_336_doc_max_rows": 1000,
+  "inference": "실제 키에서 동일 역·조회명 정상. 공개 sample 내부 오류 원인은 확정하지 않음.",
+  "new_paper_algorithm_applied": false
+}

@@ -1,0 +1,30 @@
+
+[WebServer] (node:6548) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:2648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 16 tests using 1 worker
+
+(node:22748) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/16] tests\live\location-entry-captures.spec.ts:9:119 › 촬영 375px 왼쪽 도구
+[2/16] tests\live\location-entry-captures.spec.ts:9:119 › 촬영 1280px 왼쪽 도구
+[3/16] tests\live\location-entry-captures.spec.ts:9:119 › 촬영 375px 내 위치
+[4/16] tests\live\location-entry.spec.ts:13:34 › 375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다
+[5/16] tests\live\location-entry.spec.ts:13:34 › 1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다
+[6/16] tests\live\location-entry.spec.ts:48:1 › 버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으로 이동하며 동의 철회 뒤에는 지운다
+[7/16] tests\live\location-entry.spec.ts:68:1 › 시간 초과 뒤에도 버튼을 다시 눌러 성공하면 점과 카메라를 복구한다
+[8/16] tests\live\location-entry.spec.ts:92:58 › denied: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다
+[9/16] tests\live\location-entry.spec.ts:92:58 › unsupported: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다
+[10/16] tests\live\location-entry.spec.ts:113:1 › 약관 전문은 동의 창을 대체하고 Esc로 돌아온 뒤 취소하면 초점을 돌려준다
+[11/16] tests\live\location-entry.spec.ts:130:1 › 거절했던 권한을 허용한 뒤 버튼으로 찾으면 이후 위치 이동도 계속 따라간다
+[12/16] tests\live\location-entry.spec.ts:150:1 › 위치 권한을 확인하는 사이 동의를 철회하면 GPS 조회를 시작하지 않는다
+[13/16] tests\live\map-direct-pick-20261011.spec.ts:22:3 › 검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 375px
+[14/16] tests\live\map-direct-pick-20261011.spec.ts:66:3 › 위치 지정 취소·중심 선택과 확장 도구 375px
+[15/16] tests\live\map-direct-pick-20261011.spec.ts:22:3 › 검색에 없는 장소를 지도에서 지정하고 좌표 원값을 저장 1280px
+[16/16] tests\live\map-direct-pick-20261011.spec.ts:66:3 › 위치 지정 취소·중심 선택과 확장 도구 1280px
+  16 passed (1.7m)

@@ -2,7 +2,7 @@
 """여행 시작 설문(`constraints.survey`) — 받는 모양과 **실제로 쓰는 몫**. `[2026-09-24]` D-020
 
 ★판정에 쓰는 것은 둘이다 — 15번 「일정이 꼬이면」(on_disruption)과 16번 「여유」(pace → 밀도 목표).
-  나머지 문항은 받아 두기만 한다. 세부 선택지는 담당 팀이 정해서 알려 준다(2026-09-24 회의).
+  저장된 직접 응답은 분류 실행 계획의 성향 입력으로도 전달한다. 세부 선택지는 담당 팀이 정해서 알려 준다(2026-09-24 회의).
 
 재현:
 
@@ -16,7 +16,7 @@ from datetime import date
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.survey import SURVEY_VERSION, apply_survey, on_disruption
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION, apply_survey, on_disruption
 
 from .test_trip_api import DAY, _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
 
@@ -29,7 +29,11 @@ def _stored_constraints(trip_id: str) -> dict:
 
 def _with(api, request_id: str, **constraints):
     body = _body(api["customer"], request_id=request_id)
-    body["constraints"] = {**copy.deepcopy(body["constraints"]), **constraints}
+    base = copy.deepcopy(body["constraints"])
+    # ★`[2026-09-29]` 시연 시나리오 조건에는 「자동을 직접 고른 고객」 설문이 들어 있다 — 이 파일은 설문을 스스로 정한다
+    base.pop("survey", None)
+    base.pop("survey_answered", None)
+    body["constraints"] = {**base, **constraints}
     body["constraints"].pop("density", None)
     return body
 
@@ -113,11 +117,11 @@ def test_team_defined_details_are_kept_as_given(api):
 
 
 # ── 부품 ──────────────────────────────────────────────────────────
-def test_the_default_reaction_is_the_current_behaviour():
-    """★설문이 없거나 15번을 안 골랐으면 지금까지의 동작(바로 적용하고 알린다)이다."""
-    assert on_disruption({}) == "replace"
-    assert on_disruption(None) == "replace"
-    assert on_disruption(apply_survey({"survey": {"version": SURVEY_VERSION}}, [])) == "replace"
+def test_the_unanswered_default_requires_asking_first():
+    """설문이 없거나 직접 켠 기록이 없으면 먼저 묻는다."""
+    assert on_disruption({}) == "ask_first"
+    assert on_disruption(None) == "ask_first"
+    assert on_disruption(apply_survey({"survey": {"version": SURVEY_VERSION}}, [])) == "ask_first"
     assert on_disruption({"survey": {"on_disruption": "ask_first"}}) == "ask_first"
 
 

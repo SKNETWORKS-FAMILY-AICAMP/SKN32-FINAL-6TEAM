@@ -18,11 +18,17 @@ from __future__ import annotations
 import pytest
 
 from app.core.context import PolicyChunk
-from app.modules.travel_ops.activity import ActivityTeam
-from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
-from app.modules.travel_ops.dining import DiningTeam
+from app.domains.travel_ops.instances.activity import ActivityTeam
+from app.domains.travel_ops.instances.booking_handoff import BookingHandoffTeam
+from app.domains.travel_ops.instances.dining import DiningTeam
 
 from .helpers import FakeTools, in_hours, pack, task
+
+
+@pytest.fixture(autouse=True)
+def _activity_rag_on(monkeypatch):
+    """`[2026-10-16]` Activity 의 규정 검색은 운영에서 꺼져 있다(`ActivityTeam._RAG_OFF`). 이 파일은 근거 누적을 보므로 읽는 쪽(ON)으로 고정한다."""
+    monkeypatch.setattr(ActivityTeam, "_RAG_OFF", False)
 
 
 def _sources(result) -> list[str]:
@@ -114,6 +120,6 @@ async def test_a_missing_value_adds_no_evidence_but_keeps_the_earlier_ones():
         "read.place": None,          # ★장소를 모른다
     })).execute(request)
 
-    assert result.outcome == "completed"
+    # ★`[2026-10-11]` 예약의 장소를 못 읽으면 운영 담당자에게 넘긴다(활동 팀 D4 · 수정본 UC-A3 `1a`) — 넘길 때도 앞의 근거는 남는다
+    assert result.outcome == "escalated" and result.failure_code == "place_unknown"
     assert _sources(result) == ["read.booking", "read.policy"]
-    assert "확인되지 않아" in result.answer

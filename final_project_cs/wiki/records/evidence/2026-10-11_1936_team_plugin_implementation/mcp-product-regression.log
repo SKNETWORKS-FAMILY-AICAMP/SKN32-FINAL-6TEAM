@@ -1,0 +1,10 @@
+..                                                                       [100%]
+============================== warnings summary ===============================
+tests/e2e/test_mcp_server.py::test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404
+tests/e2e/test_mcp_server.py::test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404
+tests/e2e/test_mcp_server.py::test_saved_trip_remains_readable_with_every_team_disabled
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2 passed, 3 warnings in 9.10s

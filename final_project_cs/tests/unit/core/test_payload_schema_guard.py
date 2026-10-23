@@ -13,8 +13,8 @@ from __future__ import annotations
 import pytest
 
 from app.core.contracts import InvalidTransition
-from app.domain.case import validate_payload
-from app.domain.events import REQUIRED_PAYLOAD_KEYS, EventType
+from app.core.case_lifecycle.case import validate_payload
+from app.core.case_lifecycle.events import REQUIRED_PAYLOAD_KEYS, EventType
 
 
 def test_every_event_type_has_a_registered_schema() -> None:

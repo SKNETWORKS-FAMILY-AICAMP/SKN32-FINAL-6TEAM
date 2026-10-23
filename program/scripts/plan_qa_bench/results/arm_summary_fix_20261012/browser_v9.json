@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-12T03:48:44.607Z",
+  "passed": false,
+  "buttons": [
+    "ARM 서빙 시험용 서울 여행",
+    "",
+    "1",
+    "",
+    "200m지도 단추 펼치기",
+    "",
+    "1일차10.18 일",
+    "경복궁 관람예약 정보 없음",
+    "점심 식사예약 정보 없음",
+    "하루 요약",
+    "선택 일정",
+    "다음 일정",
+    "예약 표시",
+    ""
+  ],
+  "summary_day": "2026-10-18",
+  "http_status": 200,
+  "error": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+}

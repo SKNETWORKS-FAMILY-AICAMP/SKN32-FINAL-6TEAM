@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>여행 Team — 무엇을 어디서 읽는가</title>
+<style>
+:root{--bg:#f6f7fa;--surface:#fff;--line:#dfe3ec;--text:#161c28;--dim:#5c667a;
+--code:#eef1f6;--band:#f0f2f7;--core:#2f5d8b;--mod:#8a5a20;
+--keep:#eefbf4;--keepL:#7fcaa6;--chg:#fff8e8;--chgL:#e3c26a;
+--warn:#fdeeee;--warnL:#e08a8a;--new:#eef4ff;--newL:#8ab0e8}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;--dim:#98a2b8;
+--code:#1f2430;--band:#1c212b;--core:#6fa8d6;--mod:#d6a45f;
+--keep:#12291f;--keepL:#2f6b50;--chg:#2b2415;--chgL:#7a6428;
+--warn:#2c1a1a;--warnL:#7d4141;--new:#161f30;--newL:#3c5a8a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font:15.5px/1.72 -apple-system,"Segoe UI",system-ui,"Malgun Gothic",sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:34px 22px 90px}
+h1{font-size:27px;line-height:1.3;margin:0 0 6px;letter-spacing:-.4px}
+.sub{color:var(--dim);margin:0 0 26px;font-size:15px}
+h2{font-size:20px;margin:44px 0 12px;padding-top:16px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:28px 0 8px}
+h4{font-size:15px;margin:20px 0 6px;color:var(--dim)}
+p{margin:11px 0}
+code{background:var(--code);padding:1.5px 6px;border-radius:4px;
+font:13px ui-monospace,"Cascadia Mono",Consolas,monospace}
+pre{background:var(--code);padding:13px 16px;border-radius:8px;overflow-x:auto;
+font:12.4px/1.6 ui-monospace,Consolas,monospace;margin:12px 0}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--band);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.box{border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:13px 17px;margin:16px 0}
+.keep{background:var(--keep);border-left-color:var(--keepL)}
+.chg{background:var(--chg);border-left-color:var(--chgL)}
+.warn{background:var(--warn);border-left-color:var(--warnL)}
+.new{background:var(--new);border-left-color:var(--newL)}
+.lead{font-size:16.5px;font-weight:600;margin:18px 0 6px}
+ul,ol{margin:10px 0;padding-left:22px} li{margin:5px 0}
+.team{border:1px solid var(--line);border-radius:10px;margin:22px 0;overflow:hidden;background:var(--surface)}
+.thead{padding:12px 17px;background:var(--band);border-bottom:1px solid var(--line);
+display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.thead b{font-size:17px}
+.tbody{padding:14px 17px}
+.tag{display:inline-block;font-size:11.5px;padding:1.5px 9px;border-radius:99px;
+border:1px solid var(--line);background:var(--surface);white-space:nowrap}
+.t-mvp{border-color:var(--keepL);background:var(--keep)}
+.t-cut{border-color:var(--chgL);background:var(--chg)}
+.t-reg{border-color:var(--line);color:var(--dim)}
+.t-gap{border-color:var(--warnL);background:var(--warn)}
+.scroll{overflow-x:auto}
+.core{color:var(--core);font-weight:600}
+.mod{color:var(--mod);font-weight:600}
+.foot{margin-top:52px;padding-top:16px;border-top:1px solid var(--line);
+color:var(--dim);font-size:13px}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>여행 Team — 무엇을 어디서 읽는가</h1>
+<p class="sub">2026-09-09 · 팀별 데이터 연결 아키텍처 · 모든 수치는 실행·실호출로 잰 값이다</p>
+
+<div class="box keep">
+<p class="lead">한 줄</p>
+<p>여섯 팀은 <b>계약·가드·흐름이 완성</b>돼 있었고 <b>데이터 원본이 하나도 없었다.</b>
+이번에 원본 6종 중 <b>4종(67%)</b>이 붙었고, 실 DB + 실 외부 API 로
+<b>8건 중 6건(75%)</b>이 고객 답변까지 완주한다.</p>
+</div>
+
+<div class="box warn">
+<p class="lead">막고 있던 것은 외부 API 가 아니었다</p>
+<p><code>read.booking</code>·<code>read.place</code>·<code>read.supplier</code> 셋의 원본은
+<b>우리 DB</b>다. 그런데 여행 테이블이 하나도 없어서(19테이블 중 0개) 모든 Case 가
+<b>첫 도구에서</b> escalate 했다. 외부 키를 기다릴 이유가 없는 자리였다.</p>
+</div>
+
+<h2>1. 층 구조 — Team 은 HTTP 를 모른다</h2>
+
+<pre>Team          read.weather 라는 <b>이름 하나</b>만 안다
+  ↓           (manifest.allowed_tools 에 적힌 것 밖은 못 부른다)
+ReadToolbox   이름 → 함수 표. tenant·customer 범위를 여기서 건다
+  ↓           예산(max_steps)·중복·권한을 여기서 본다
+app/infrastructure/travel/   HTTP 는 <b>여기서만</b> 난다
+  ↓
+Open-Meteo / TourAPI / ODsay / 우리 DB</pre>
+
+<p>공급자를 갈아끼워도 Team 은 안 바뀐다. <b>주입은 조립이 한다</b> —
+<code>ReadToolbox(travel=...)</code> 의 기본값이 <code>None</code> 이라
+<b>안 넣으면 바깥으로 안 나간다.</b> 테스트가 조용히 네트워크를 타는 사고를 구조로 막았다.</p>
+
+<h2>2. 도구 6종의 원본과 상태</h2>
+
+<div class="scroll"><table>
+<tr><th>도구</th><th>원본</th><th>상태</th><th>막는 것</th></tr>
+<tr><td><code>read.booking</code></td><td>우리 DB <code>bookings</code></td><td>★붙음</td><td>—</td></tr>
+<tr><td><code>read.place</code></td><td>우리 DB <code>places</code></td><td>★붙음</td><td>TourAPI 보강은 키 대기</td></tr>
+<tr><td><code>read.supplier</code></td><td>우리 DB <code>supplier_bookings</code></td><td>★붙음 (Mock 공급자)</td><td>실 공급자 계약</td></tr>
+<tr><td><code>read.weather</code></td><td><b>Open-Meteo (실 API)</b></td><td>★붙음</td><td>—</td></tr>
+<tr><td><code>read.route</code></td><td>ODsay</td><td>골격만</td><td><code>ACOP_ODSAY_API_KEY</code></td></tr>
+<tr><td><code>read.transit</code></td><td>ODsay</td><td>골격만</td><td><code>ACOP_ODSAY_API_KEY</code></td></tr>
+</table></div>
+
+<h2>3. 팀별 — 무엇을 읽고 무엇을 판정하나</h2>
+
+<div class="team">
+<div class="thead"><b>Activity</b> <span class="tag t-mvp">MVP</span>
+<span class="tag">capability 3</span> <span class="tag">204줄</span>
+<span class="tag t-mvp">종단 확인됨</span></div>
+<div class="tbody">
+<p>활동 <b>그 자체</b>가 대상이다 — 골프 티타임·수상레저뿐 아니라 경복궁 관람처럼
+시각이 정해진 활동도 포함한다.</p>
+<pre>booking ─→ policy ─→ (capability 분기)
+                      ├ check_cancelable : 기한·위약금율   ← <b>계산</b>
+                      ├ check_feasible   : 인원·정원 → place → weather
+                      └ propose_change   : 제안 (승인 대기)</pre>
+<div class="box new"><p><b>기상은 「날씨가 판정에 들어가는 활동」에만 본다.</b>
+<code>place.weather_sensitive</code> 가 참일 때만 부르고, 모르면 <b>안 본다</b> —
+실내 활동에 기상 판정을 걸면 틀린 이유로 판정이 흔들린다.</p></div>
+<div class="box warn"><p class="lead">★날씨로 「불가」를 만들지 않는다</p>
+<p>강수확률이 얼마부터 취소·순연인지는 <b>운영 규정</b>이 정할 일이다.
+가드레일의 수치(60% / 40km/h)는 <b>판정 기준이 아니라 주의 문구 기준</b>이고,
+측정에서 나온 값이 아니라 <b>우리가 고른 값</b>이다. 그걸로 확정 답을 만들면
+근거 없는 확정이 된다. 그래서 강수확률 90%여도 판정은 「성립」이고,
+답변이 <b>기준 미확인을 스스로 말한다.</b></p></div>
+<p class="lead">실제 답변 (2026-09-09 실행, 실 Open-Meteo)</p>
+<pre>확인한 범위에서는 성립합니다(시작까지 29.9시간).
+예보상 2026-09-11T04:00 기준 강수확률 0%, 풍속 6.3km/h입니다
+(예보이며 현장 확인이 아닙니다).
+
+근거: read.booking · read.policy · read.place · read.weather</pre>
+</div></div>
+
+<div class="team">
+<div class="thead"><b>Booking Handoff</b> <span class="tag t-reg">MVP 다음</span>
+<span class="tag">capability 3</span> <span class="tag">94줄</span>
+<span class="tag t-mvp">종단 확인됨</span></div>
+<div class="tbody">
+<p>이름이 <code>Execution</code> 이 아니라 <b><code>Handoff</code></b> 인 것이 핵심이다.
+기본 동작은 <b>인계</b>다 — 바꿔야 할 것을 정리해서 넘긴다.</p>
+<pre>booking ─→ verify        : <b>공급자 원장과 대조</b> (read.supplier)
+        └→ prepare_*     : 규정 확인 → ActionProposal (WAIT_FOR_APPROVAL)</pre>
+<div class="box new"><p><b><code>supplier_bookings</code> 를 일부러 따로 둔 이유.</b>
+한 테이블에 두면 대조할 상대가 사라져 <code>booking.verify</code> 가 자기 자신과
+비교하는 꼴이 된다. 어긋나는 것이 정상이고, <b>어긋남을 찾는 것이 이 팀의 일</b>이다.</p></div>
+<pre>실행 결과 (BK-GOLF-DRIFT — 우리 confirmed / 공급자 cancelled)
+→ "예약 상태가 공급자 기록과 다릅니다. 사람이 확인해야 합니다."
+  warnings: 우리 기록과 공급자 기록이 어긋난다</pre>
+</div></div>
+
+<div class="team">
+<div class="thead"><b>Dining</b> <span class="tag t-mvp">MVP</span> <span class="tag">capability 2</span>
+<span class="tag">83줄</span> <span class="tag t-mvp">종단 확인됨</span></div>
+<div class="tbody">
+<p>「오늘 여는지」가 아니라 <b>「그 일정 시각에 여는지」</b>를 본다.</p>
+<pre>booking ─→ place ─→ ├ check_open       : open_at_slot (confirmed_at 없으면 「모름」)
+                     └ check_conditions : dietary / dietary_absent / <b>둘 다 아니면 모름</b></pre>
+<div class="box chg"><p class="lead">★여기서 결함 하나가 나왔다</p>
+<p>이 팀은 <code>read.place</code> 를 <b><code>case_id</code></b> 로 부르고 있었다.
+장소 조회의 열쇠는 <code>place_id</code> 이고 그건 예약에 들어 있다 — Case 번호로는
+어느 장소인지 알 수 없다. 실 DB 종단 실행에서 <b>항상 「모름」으로 떨어져</b> 드러났다.
+Activity 는 처음부터 맞게 하고 있었다 — <b>같은 규율이 팀마다 갈렸다.</b></p></div>
+</div></div>
+
+<div class="team">
+<div class="thead"><b>Mobility</b> <span class="tag t-mvp">MVP</span> <span class="tag">capability 3</span>
+<span class="tag">80줄</span> <span class="tag t-gap">종단 미확인 — 키 대기</span></div>
+<div class="tbody">
+<p>여유 시간 ≥ 필요 시간인지 <b>계산</b>한다. LLM 을 안 부른다.</p>
+<pre>route ─→ transit ─→ 여유(gap) vs 필요(duration) 비교 + 막차 확인</pre>
+<div class="box new"><p><b>문의와 사건을 가른다.</b>
+<code>_INCIDENT_MARKERS</code> 6개(<code>놓쳤·못 탔·끊겼·지연됐·결항·운행 중단</code>)만 잡고,
+신호가 없으면 기본 동작(조회)에 맡긴다. 커머스에서 이 훅이 넓어
+"지연 <b>기준</b>이 어떻게 되나요"(문의)까지 사건으로 잡은 적이 있다.</p></div>
+<div class="box warn"><p><b>여섯 중 유일하게 종단 실행을 못 했다.</b>
+<code>read.route</code>·<code>read.transit</code> 둘 다 ODsay 키에 걸려 있다.</p></div>
+</div></div>
+
+<div class="team">
+<div class="thead"><b>Lodging · Flight</b> <span class="tag t-reg">등록만</span>
+<span class="tag">capability 각 1</span> <span class="tag">73줄 (클래스 공유)</span></div>
+<div class="tbody">
+<p>조회만 하고 <b>어떤 변경 제안도 만들지 않는다.</b> <code>max_steps=2</code>.</p>
+<p>★껍데기 Team 은 혼란을 만든다. 커머스의 <code>voc_store_manager</code> 가 계약만 있고
+동작이 없어 "이 팀은 뭘 하나" 를 매번 다시 확인해야 했다. 그래서
+<b>첫 줄에 「등록만·로직 없음」을 적어 뒀다.</b></p>
+<p>Lodging 은 실행으로 확인했다(<code>BK-HOTEL</code> → completed, 제안 0건).
+<b>Flight 는 시드에 없어 확인하지 못했다</b> — 같은 클래스를 쓰므로 같게 돌 것으로
+<b>예상</b>하지만 잰 것이 아니다.</p>
+</div></div>
+
+<h2>4. 공통 기반 <code>_base.py</code> — 규율을 한 곳에</h2>
+
+<p>커머스 6팀은 계약 처리 코드가 <b>315줄 복붙</b>돼 있었고 가드가 팀마다 달랐다:</p>
+<div class="scroll"><table>
+<tr><th>가드</th><th class="n">커머스</th><th class="n">여행</th></tr>
+<tr><td><code>team_id</code> — 남의 일이면 넘긴다</td><td class="n">1/6 = 17%</td><td class="n">6/6 = 100%</td></tr>
+<tr><td><code>capability</code> — 못 하는 일은 시작 안 한다</td><td class="n">4/6 = 67%</td><td class="n">6/6 = 100%</td></tr>
+<tr><td><code>degraded</code> — 근거가 깎였으면 확정 안 한다</td><td class="n">5/6 = 83%</td><td class="n">6/6 = 100%</td></tr>
+</table></div>
+
+<p>여기에 둘이 더 붙는다.</p>
+<ul>
+<li><b><code>_read()</code> 가 <code>budget=max_steps</code> 를 항상 넘긴다.</b>
+각 팀이 넘기게 두면 빠뜨리는 곳이 생긴다 — <code>max_steps</code> 가 선언만 되고
+아무도 안 읽던 커머스와 같은 모양이 된다.</li>
+<li><b><code>_unknown()</code> 이라는 별도 갈래.</b> 도구가 <code>None</code> 을 주면
+"없다"가 아니라 "확인 못 했다"이고, <code>failure_code=unknown_&lt;무엇&gt;</code> 으로
+escalate 한다. NULL 을 「없음」으로 읽으면 결함이 자리만 옮긴다.</li>
+</ul>
+
+<h2>5. 어댑터의 규율 넷</h2>
+
+<ol>
+<li>못 가져오면 <code>None</code> — 기본값·평균값·지난번 값으로 <b>메우지 않는다</b></li>
+<li>성공하면 <code>confirmed_at</code>·<code>source</code> 를 <b>반드시</b> 함께 준다</li>
+<li><b>HTTP 상태만 보고 성공을 판정하지 않는다</b></li>
+<li>왜 못 가져왔는지를 <b>센다</b> — 조용한 스킵을 만들지 않는다</li>
+</ol>
+
+<div class="box warn">
+<p class="lead">★③ 은 지어낸 걱정이 아니다 (2026-09-09 실측)</p>
+<pre>ODsay  키 없이 호출 → <b>HTTP 200</b>
+       {"error":[{"code":"500","message":"[ApiKeyAuthFailed] ..."}]}
+
+data.go.kr 계열 → HTTP 401 SERVICE_KEY_IS_NULL   (정직하게 답한다)</pre>
+<p><code>raise_for_status()</code> 만 믿었다면 <b>인증 실패가 성공으로 지나가</b>
+<code>read.transit</code> 이 빈 값을 돌려주고, Team 은 그걸 「확인했다」로 읽는다.
+<b>공급자마다 다르므로 본문까지 봐야 한다.</b></p>
+</div>
+
+<h2>6. 종단 실행 — 실 DB + 실 Open-Meteo</h2>
+
+<div class="scroll"><table>
+<tr><th>예약</th><th>Team</th><th>결과</th><th>무엇을 보였나</th></tr>
+<tr><td><code>BK-GOLF-OK</code></td><td>activity</td><td>completed</td><td>★실 예보가 답변까지 · 근거 4건</td></tr>
+<tr><td><code>BK-PALACE-OK</code></td><td>activity</td><td>completed</td><td>실내라 기상을 <b>안 부른다</b></td></tr>
+<tr><td><code>BK-PALACE-OVER</code></td><td>activity</td><td>completed</td><td>인원 9 &gt; 정원 4</td></tr>
+<tr><td><code>BK-DINING-OK</code></td><td>dining</td><td>completed</td><td>확인 시각과 함께 영업 여부</td></tr>
+<tr><td><code>BK-HOTEL</code></td><td>lodging</td><td>completed</td><td>잠긴 예약 — 제안 0건</td></tr>
+<tr><td><code>BK-GOLF-DRIFT</code></td><td>booking_handoff</td><td>completed</td><td>★공급자 불일치 감지</td></tr>
+<tr><td><code>BK-NOWHERE</code></td><td>activity</td><td>escalated</td><td>좌표 모름 — <b>의도한 「모름」</b></td></tr>
+<tr><td><code>BK-GOLF-LATE</code></td><td>activity</td><td>escalated</td><td>취소 기한 모름 — <b>코퍼스 미비</b></td></tr>
+</table></div>
+<p><b>completed 6/8 = 75%.</b> 나머지 둘 중 하나는 의도한 동작이고, 하나가 §7 이다.</p>
+
+<div class="box chg">
+<p class="lead">★종단 실행이 잡은 결함 2건 — 단위 테스트가 못 잡았다</p>
+<p><b>① 근거가 덮어써졌다.</b> <code>_evidence()</code> 가 매번 컨텍스트에서 다시
+시작해 두 번째 호출이 첫 번째를 지웠다. 근거 4건이 <b>1건</b>으로 줄어 있었다.
+있던 검사가 전부 도구를 <b>한 개만</b> 쓰는 경로여서 안 잡혔다 — 하나짜리에서는
+덮어써도 결과가 같다.</p>
+<p><b>② Dining 이 장소를 <code>case_id</code> 로 조회.</b> Mock 이 인자를 안 보고
+값을 돌려줬기 때문에 단위 테스트가 초록이었다.</p>
+<p>★근거 소실은 가벼운 결함이 아니다. <b>근거 없는 문장은 답변에 넣지 않는다</b>가
+이 제품의 첫째 규칙인데, 그 근거가 조용히 사라지고 있었다.</p>
+</div>
+
+<h2>7. 남은 것</h2>
+
+<div class="box warn">
+<p class="lead">① RAG 코퍼스가 아직 쇼핑몰 25문서 — 가장 큰 것</p>
+<p><code>BK-GOLF-LATE</code> 가 <code>unknown_취소 기한</code> 으로 떨어지는 이유다.
+<code>read.policy</code> 는 붙어 있고 <b>돈다</b> — 코퍼스에 여행 취소·환급 규정이
+없을 뿐이다. <code>check_cancelable</code> 은 규정 없이는 <b>정의상</b> 판정할 수 없다.
+<b>이것은 API 문제가 아니라 우리가 써야 하는 문서다.</b></p>
+</div>
+
+<p class="lead">② 사람이 해야 하는 일 — 키 발급 3종</p>
+<div class="scroll"><table>
+<tr><th>환경변수</th><th>어디서</th><th>걸리는 시간</th></tr>
+<tr><td><code>ACOP_TOUR_API_KEY</code></td><td>공공데이터포털 「한국관광공사_국문 관광정보 서비스」</td><td>승인 최소 1일</td></tr>
+<tr><td><code>ACOP_ODSAY_API_KEY</code></td><td>lab.odsay.com</td><td>즉시~</td></tr>
+<tr><td><code>ACOP_KMA_API_KEY</code></td><td>공공데이터포털 「기상청_단기예보」 (Open-Meteo 대안)</td><td>승인 최소 1일 · 2년마다 갱신</td></tr>
+</table></div>
+<p>발급 후 <code>.env</code> 에 채우면 어댑터는 그대로 동작한다.
+자리와 절차는 <code>.env.example</code> 에 적어 뒀다.</p>
+
+<p class="lead">③ <span class="tag t-gap">미확보</span></p>
+<ul>
+<li>Flight 는 시드에 없어 실행으로 확인하지 못했다 — Lodging 과 같은 클래스라
+같게 돌 것으로 <b>예상</b>하지만 잰 것이 아니다.</li>
+<li><code>read.place</code> 는 우리 DB 만 본다. TourAPI 를 붙이면 운영시간 원본이
+둘이 된다 — 어느 쪽이 정본인지 정해야 한다.</li>
+<li>Open-Meteo 의 무료 한도는 조사 시점 기준이다. <b>상업 배포 전 재확인.</b></li>
+</ul>
+
+<h2>8. 재현</h2>
+<pre>python -m app.infrastructure.db.migrate    # 22테이블, 재실행 안전
+python -m scripts.seed_travel              # places 5 · bookings 8 · supplier 4 · mismatch 1
+python -m pytest -q -m "not live"          # 780 passed · 0 failed
+python -m pytest -q -m live tests/live/test_open_meteo_live.py</pre>
+
+<div class="foot">
+근거: 코드·DB·실호출 실측(2026-09-09) · 계획서 v10 §4-D·§5 ·
+실행계획 <code>final_project_cs/wiki/records/plans/2026-09-09_여행Team_외부데이터_연동_실행계획.md</code><br>
+출처 — Open-Meteo <a href="https://open-meteo.com/">open-meteo.com</a> ·
+TourAPI <a href="https://www.data.go.kr/data/15101578/openapi.do">data.go.kr/15101578</a> ·
+기상청 단기예보 <a href="https://www.data.go.kr/data/15084084/openapi.do">data.go.kr/15084084</a> ·
+ODsay <a href="https://lab.odsay.com/">lab.odsay.com</a>
+</div>
+
+</div></body>
+</html>

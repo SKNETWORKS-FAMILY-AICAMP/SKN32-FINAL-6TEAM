@@ -1,0 +1,40 @@
+{
+ "items": 4135,
+ "main": 4014,
+ "quarantined_pairs": 31,
+ "challenge": 59,
+ "dropped": {
+  "nolabel": 0,
+  "dispute": 558,
+  "overlap_item": 0
+ },
+ "by": {
+  "code|MX3|mixed": 399,
+  "code|MX3|control": 399,
+  "code|MX5a|mixed": 177,
+  "code|MX5a|control": 177,
+  "code|MX1|mixed": 480,
+  "code|MX1|control": 480,
+  "code|MX2|mixed": 426,
+  "code|MX2|control": 426,
+  "code|MX5b|mixed": 160,
+  "code|MX5b|control": 160,
+  "code|MX6a|mixed": 34,
+  "code|MX6a|control": 34,
+  "code|MX4|mixed": 92,
+  "code|MX4|control": 92,
+  "llm|MX1|mixed": 45,
+  "llm|MX1|control": 45,
+  "llm|MX2|mixed": 48,
+  "llm|MX2|control": 48,
+  "llm|MX3|mixed": 58,
+  "llm|MX3|control": 58,
+  "llm|MX5a|mixed": 59,
+  "llm|MX5a|control": 59,
+  "llm|MX4|mixed": 29,
+  "llm|MX4|control": 29
+ },
+ "itineraries": 59,
+ "seed": 20261018,
+ "human_sample": 158
+}

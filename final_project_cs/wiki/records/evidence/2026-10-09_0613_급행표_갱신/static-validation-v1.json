@@ -1,0 +1,39 @@
+{
+  "created_at": "2026-10-09T06:44:50.622109+09:00",
+  "status": "passed",
+  "features": 21,
+  "feature_rows": 21,
+  "counts": {
+    "조건부 사용": 4,
+    "개선 필요": 9,
+    "추가 검증": 8
+  },
+  "updated_features": [
+    "지하철 경로 산출",
+    "첫차·막차·출발 역산",
+    "실시간 지하철·버스 도착"
+  ],
+  "local_links_checked": 18,
+  "svg_boxes": 6,
+  "backup_matches": 17,
+  "public_files_checked": 48,
+  "private_pattern_hits": [],
+  "benign_at_date_markers": 6,
+  "initial_scan_rejected_only_benign_test_source_dates": true,
+  "browser_render_checked": false,
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0642_급행표_내용갱신과_출발계산_검증.md": "8652bafcb1a6eaf83f53e0fb2e0d9566ce1675e48667a7ce439f844be427f57f",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v22/mobility-readiness.html": "b04c207125e44f127f980b042cd0f829baa22b7439c480a48cdc32eb2507133e",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v22/readiness-catalog.json": "31578cafdf61a0b921f5a2f3b3f47785dd336d6d57a53790fbf126843358f2a3",
+    "final_project_cs/scripts/mobility/build_readiness_visual_v22.py": "ca95e1e2defc3eedf9db56b4e8ec9e11bc17f477beb7e86e96a56ba85f8d0534",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_0613_급행_운행표_변경이_다음계산에_반영되지않음.md": "3b4a8bf7597c95e2543bedbd16132c9d001adc24778988e8d68a6d4af123c0b6",
+    "final_project_cs/wiki/teams/mobility.md": "a91207db99f10a0b9f883810eab2af9299e381774d765308b8376ce3fe7446f2"
+  },
+  "regression": {
+    "total": 557,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 557
+  }
+}

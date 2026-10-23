@@ -1,0 +1,21 @@
+[WebServer] (node:21932) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:23816) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+(node:18984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\live\first-map-reveal-20261011.spec.ts:9:5 › 375px 실제 시간의 첫 지도 표시 › 질문 뒤 일정과 마커가 하나씩 등장하고 읽기 화면은 되돌아오지 않는다 (8.5s)
+  ok 2 tests\live\first-map-reveal-20261011.spec.ts:9:5 › 1280px 실제 시간의 첫 지도 표시 › 질문 뒤 일정과 마커가 하나씩 등장하고 읽기 화면은 되돌아오지 않는다 (8.8s)
+(node:21352) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 3 tests\live\map-moving-visibility-20261011.spec.ts:51:3 › 375px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다 (9.0s)
+  ok 4 tests\live\map-moving-visibility-20261011.spec.ts:71:3 › 375px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다 (5.0s)
+  ok 5 tests\live\map-moving-visibility-20261011.spec.ts:98:3 › 375px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다 (7.2s)
+  ok 6 tests\live\map-moving-visibility-20261011.spec.ts:51:3 › 1280px 확대·축소하는 동안 보이는 마커를 숨기거나 거리 칩에 합치지 않는다 (9.2s)
+  ok 7 tests\live\map-moving-visibility-20261011.spec.ts:71:3 › 1280px 로딩 중 새 일정의 자동 지도 이동에서도 보이는 마커를 거리 칩에 합치지 않는다 (5.2s)
+  ok 8 tests\live\map-moving-visibility-20261011.spec.ts:98:3 › 1280px 지도 밖 묶음을 눌러 가운데로 들어오는 마커는 이동 중에도 거리 칩에서 빠진다 (4.8s)
+
+  8 passed (1.1m)

@@ -1,0 +1,47 @@
+{
+  "A": {
+    "observed_at_utc": "2026-10-09T02:01:33.103153+00:00",
+    "gpu": "4972 MiB, 100 %",
+    "running": {
+      "valen_08b_original_h_a1": {
+        "status": "running",
+        "pid": 361928,
+        "expected": 1316,
+        "saved": 0,
+        "live_saved": 872
+      }
+    },
+    "pending_manifest_count": 2
+  },
+  "B": {
+    "observed_at_utc": "2026-10-09T02:01:30.801702+00:00",
+    "gpu": "12499 MiB, 100 %",
+    "active": [
+      "oos2r_finch_5e5_seed20261013_20261008"
+    ],
+    "training_last_logged_steps": [
+      "480",
+      "654"
+    ]
+  },
+  "ARM": {
+    "observed_at_utc": "2026-10-09T02:01:26.304155+00:00",
+    "active": {
+      "at": "2026-10-09T02:00:40.316595+00:00",
+      "job_id": "e4bt_q4_grouped60_cache_ABBA_2",
+      "engine_pid": 180454,
+      "expected": 60,
+      "saved": 11
+    },
+    "recent_5min": {
+      "window_s": 300.0694354160223,
+      "cpu_pct_two_cores": 89.96579512529232,
+      "host_cpu_busy_pct": 90.16273476774927,
+      "host_steal_pct": 0.16582177232203224,
+      "memory_current_bytes": 9364701184,
+      "above_20_contiguous_seconds": 3175.7004368950147,
+      "five_minute_target_verified": true
+    },
+    "pending": 10
+  }
+}

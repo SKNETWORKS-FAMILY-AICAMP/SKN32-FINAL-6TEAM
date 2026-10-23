@@ -1,0 +1,44 @@
+{
+  "created_at_utc": "2026-10-11T05:16:26.316294+00:00",
+  "files": [
+    {
+      "original": "program/research/daily_rag_slm/gpu_backlog_2026-10-11.json",
+      "backup": "program/research/daily_rag_slm/_backup/2026-10-11_141626_six_hour_report/gpu_backlog_2026-10-11.json",
+      "sha256": "4dc8e399b9909adb64c09ffad8bdd04abdfcd5a16b78e435d5ae63d8f3ab9cbb"
+    },
+    {
+      "original": "program/research/daily_rag_slm/arm_serving_2026-10-11.json",
+      "backup": "program/research/daily_rag_slm/_backup/2026-10-11_141626_six_hour_report/arm_serving_2026-10-11.json",
+      "sha256": "9388faaac6a58a72760a75e3011863532cf1a34a19a829f77b96a26279f78b88"
+    },
+    {
+      "original": "program/research/daily_rag_slm/2026-10-11.json",
+      "backup": "program/research/daily_rag_slm/_backup/2026-10-11_141626_six_hour_report/2026-10-11.json",
+      "sha256": "c8bc71280ce1f60ef702af39591381276dbf56625f3ac2c1619482209da4ba8d"
+    },
+    {
+      "original": "program/research/daily_rag_slm/2026-10-11.md",
+      "backup": "program/research/daily_rag_slm/_backup/2026-10-11_141626_six_hour_report/2026-10-11.md",
+      "sha256": "ac4c820e0e77e277ca2f16de9c5cd2193a3ef3cfce98d2cbb55839180c95b7fb"
+    },
+    {
+      "original": "program/research/daily_rag_slm/index.md",
+      "backup": "program/research/daily_rag_slm/_backup/2026-10-11_141626_six_hour_report/index.md",
+      "sha256": "fb6e261669f338ffd92b646280ab0a30bc86abb1b789abe69b8376d403f686f3"
+    },
+    {
+      "original": "final_project_cs/wiki/operations/gpu-work-queue.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_141626_six_hour_report/gpu-work-queue.md",
+      "sha256": "fb14ecb93eca77a960f02dbc84bc5a5395fe816c827a829e91f39846c0d83972"
+    },
+    {
+      "original": "final_project_cs/wiki/log.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_141626_six_hour_report/log.md",
+      "sha256": "1fc3eb559e3b9c26ae826f216e0ae3831313da8f75c9ce842ffa6766697c613c"
+    }
+  ],
+  "earlier_prereg_backups": [
+    "program/research/daily_rag_slm/_backup/2026-10-11_140744_hf_followup/2026-10-11_hf_app_completion_prereg_v1.json",
+    "program/research/daily_rag_slm/_backup/2026-10-11_141357_hf_oos3_followup/2026-10-11_hf_app_completion_prereg_v1.json"
+  ]
+}

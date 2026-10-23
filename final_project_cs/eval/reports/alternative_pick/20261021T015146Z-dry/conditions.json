@@ -1,0 +1,27 @@
+{
+ "eval_run": "20261021T015146Z-dry",
+ "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_h4.jsonl",
+ "inputs_sha256": "aee63dfabd6918132ffabfc47d7961f8421c108317a7ba9c6a7c4ef12137a58f",
+ "dataset_sha256": "1e676cc16bdbe03b9dc5b21e50dd5d32ef858dfe0672de324bd6562133a6e1ef",
+ "split": [
+  "holdout"
+ ],
+ "smoke": false,
+ "labeler": "합의",
+ "cases": 40,
+ "repeats": 3,
+ "shuffle": {
+  "cases": 40,
+  "per_case": 2,
+  "seed": 7
+ },
+ "dry_run": true,
+ "model": "dry-run",
+ "reasoning_effort": "low",
+ "web_search": false,
+ "prompt_file": null,
+ "payload": "v3(class_name)",
+ "timeout_s": 8.0,
+ "temperature": null,
+ "seed_model": null
+}

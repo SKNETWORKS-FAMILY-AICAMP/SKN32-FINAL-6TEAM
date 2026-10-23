@@ -1,0 +1,13 @@
+{
+  "catalog_features": 21,
+  "counts": {
+    "조건부 사용": 3,
+    "개선 필요": 9,
+    "추가 검증": 9
+  },
+  "visual_local_links": 2,
+  "report_local_links": 20,
+  "missing_links": [],
+  "browser_render_verified": false,
+  "backup_count": 11
+}

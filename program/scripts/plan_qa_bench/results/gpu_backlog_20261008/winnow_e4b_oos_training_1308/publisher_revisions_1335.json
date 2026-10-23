@@ -1,0 +1,30 @@
+{
+  "aabbd52f5dfce0f7d9d22ca9e53e75259d865239": {
+    "sha": "aabbd52f5dfce0f7d9d22ca9e53e75259d865239",
+    "last_modified": "2026-10-05 00:07:20+00:00",
+    "files": {
+      "gguf/Winnow-E4B-BF16.gguf": {
+        "size": 15053096992,
+        "sha256": "53c3e504c061f6a7ce84cb6240d427ac6c630850a2cf93f3c2ee980c8136e7e7"
+      },
+      "gguf/Winnow-E4B-Q8_0.gguf": {
+        "size": 8005437472,
+        "sha256": "840e3f50e5a9c218727f44e121d1b37cc9e2c3b318c8eb422ba6ef2e27b618a2"
+      }
+    }
+  },
+  "1b257e8fa80b270a62338362a8b35e37f7890273": {
+    "sha": "1b257e8fa80b270a62338362a8b35e37f7890273",
+    "last_modified": "2026-09-30 20:27:29+00:00",
+    "files": {
+      "gguf/Winnow-E4B-BF16.gguf": {
+        "size": 15053096992,
+        "sha256": "53c3e504c061f6a7ce84cb6240d427ac6c630850a2cf93f3c2ee980c8136e7e7"
+      },
+      "gguf/Winnow-E4B-Q8_0.gguf": {
+        "size": 8005437472,
+        "sha256": "840e3f50e5a9c218727f44e121d1b37cc9e2c3b318c8eb422ba6ef2e27b618a2"
+      }
+    }
+  }
+}

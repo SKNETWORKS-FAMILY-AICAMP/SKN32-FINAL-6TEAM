@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>여행 요청별 처리 방식과 제한 협업 흐름</title>
+<style>
+:root{--paper:#fbfcfd;--paper2:#f1f4f8;--ink:#161c28;--muted:#6b7488;--rule:#dbe0ea;--accent:#a8720c;--link:#2f5bd8}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif}main{max-width:1280px;margin:auto;padding:40px 24px}h1{font-family:"Instrument Serif","Noto Serif KR",serif;font-size:32px;font-weight:500;margin:0 0 16px}h2{font-size:22px;margin:32px 0 12px}p{max-width:920px;line-height:1.8;color:var(--muted)}.tag{color:var(--accent);font-size:14px}.frame{border:1px solid var(--rule);border-radius:8px;background:var(--paper2);overflow-x:auto}svg{display:block;width:100%;min-width:760px;height:auto}svg text{font-size:17px;text-anchor:middle;font-family:Geist,"Noto Sans KR","Malgun Gothic",sans-serif;fill:var(--ink)}.sub{font-size:14px;fill:var(--muted)}.edge{fill:none;stroke:var(--muted);stroke-width:1.5}.box,.diamond{fill:var(--paper);stroke:var(--ink);stroke-width:1.4}.terminal{fill:var(--paper);stroke:var(--accent);stroke-width:1.7}.label{font-size:14px;paint-order:stroke;stroke:var(--paper2);stroke-width:9px;stroke-linejoin:round}.note{font-size:14px;fill:var(--muted)}footer{font-size:13px;color:var(--muted);margin-top:24px;line-height:1.8}@media(max-width:600px){main{padding:24px 16px}h1{font-size:26px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body><main>
+<div class="tag">triPilot · 2026년 10월 10일 · 적용 제안</div>
+<h1>요청의 성격에 따라 추론 범위를 정합니다</h1>
+<p>중앙은 최종 일정의 권한·판·제약을 지킵니다. 계산, 자유 질문, 근거 검토를 같은 크기의 에이전트 회의로 처리할 필요는 없습니다. 아래는 제안 흐름이며 운영 구현 완료를 나타내지 않습니다.</p>
+<h2>어떤 방식을 선택할까</h2>
+<div class="frame"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="select-title select-desc">
+<title id="select-title">요청별 처리 방식 선택과 중앙 검증</title>
+<desc id="select-desc">시작한 요청을 정해진 계산, 자유 질문, 근거 충돌이나 독립 조사로 나눕니다. 각 방식의 결과를 중앙에서 검증하고 통과하면 적용과 안내로, 통과하지 못하면 기존 일정 유지와 이유 또는 질문 전달로 종료합니다.</desc>
+<defs><marker id="select-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#6b7488"/></marker></defs>
+<g class="edge" marker-end="url(#select-arrow)">
+<path d="M640 88 V120"/>
+<path d="M560 180 H288 Q280 180 280 188 V292"/>
+<path d="M640 240 V292"/>
+<path d="M720 180 H992 Q1000 180 1000 188 V292"/>
+<path d="M280 364 V422 Q280 430 288 430 H600"/>
+<path d="M640 364 V400"/>
+<path d="M1000 364 V422 Q1000 430 992 430 H680"/>
+<path d="M560 460 H448 Q440 460 440 468 V604"/>
+<path d="M720 460 H832 Q840 460 840 468 V604"/>
+</g>
+<rect class="terminal" x="520" y="40" width="240" height="48" rx="24"/><text x="640" y="70">시작 · 여행 요청 접수</text>
+<polygon class="diamond" points="640,120 720,180 640,240 560,180"/><text x="640" y="177">필요한 일의</text><text x="640" y="199">성격은?</text>
+<text class="label" x="400" y="163">정해진 계산</text><text class="label" x="697" y="268">자유 질문</text><text class="label" x="889" y="163">근거 충돌·독립 조사</text>
+<rect class="box" x="140" y="292" width="280" height="72" rx="6"/><text x="280" y="322">코드 조회·후보 조합</text><text class="sub" x="280" y="346">시간 · 이동 · 영업 · 예산</text>
+<rect class="box" x="500" y="292" width="280" height="72" rx="6"/><text x="640" y="322">단일 AI와 읽기 도구</text><text class="sub" x="640" y="346">명시 조건 추출 · 질문 해석</text>
+<rect class="box" x="860" y="292" width="280" height="72" rx="6"/><text x="1000" y="322">범위가 정해진 조사·검토</text><text class="sub" x="1000" y="346">병렬 조사 또는 제한된 왕복</text>
+<polygon class="diamond" points="640,400 720,460 640,520 560,460"/><text x="640" y="454">중앙 최종</text><text x="640" y="478">검증 통과?</text>
+<text class="label" x="494" y="444">통과</text><text class="label" x="785" y="444">미통과</text>
+<rect class="terminal" x="280" y="604" width="320" height="64" rx="32"/><text x="440" y="633">종료 · 중앙 적용과 안내</text><text class="sub" x="440" y="655">현재 자동 교체·승인 정책 준수</text>
+<rect class="terminal" x="680" y="604" width="320" height="64" rx="32"/><text x="840" y="633">종료 · 일정 유지와 이유·질문</text><text class="sub" x="840" y="655">초안의 직접 반영 없음</text>
+<text class="note" x="640" y="564">최종 검증: 권한 · 최신 일정 판 · 보호 항목 · 전체 시간과 비용</text>
+</svg></div>
+<h2>협업 한 회차는 어디서 끝날까</h2>
+<p>예시: 공식 공지가 전체 휴관인지 특정 전시실 제한인지 해석이 엇갈린 경우입니다. 두 담당자가 근거를 검토하며, 일정 수정 작업을 서로 재귀적으로 발행하지 않습니다.</p>
+<div class="frame"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="round-title round-desc">
+<title id="round-title">담당자 두 명의 제한된 협업 회차와 종료 조건</title>
+<desc id="round-desc">예외가 시작되면 일정 판과 공통 예산을 고정합니다. 해석과 검토 한 회차가 통과하면 근거와 초안을 중앙에 반환하고 종료합니다. 미통과하면 예산과 일정 판을 검사하고 둘 다 유효한 경우에만 다음 회차를 시작합니다. 예산 종료 또는 판 변경이면 기존 일정을 유지하고 이유와 질문을 반환하며 종료합니다.</desc>
+<defs><marker id="round-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#6b7488"/></marker></defs>
+<g class="edge" marker-end="url(#round-arrow)">
+<path d="M640 88 V120"/><path d="M640 192 V228"/><path d="M640 300 V332"/>
+<path d="M560 392 H288 Q280 392 280 400 V596"/>
+<path d="M720 392 H792 Q800 392 800 400 V440"/>
+<path d="M880 500 H1092 Q1100 500 1100 492 V272 Q1100 264 1092 264 H900"/>
+<path d="M800 560 V596"/>
+</g>
+<rect class="terminal" x="500" y="40" width="280" height="48" rx="24"/><text x="640" y="70">시작 · 근거 해석 예외</text>
+<rect class="box" x="400" y="120" width="480" height="72" rx="6"/><text x="640" y="149">중앙이 판·담당자·공통 예산 고정</text><text class="sub" x="640" y="174">제안값: 2명 · 검토 최대 2회 · 세션 전체 30초</text>
+<rect class="box" x="380" y="228" width="520" height="72" rx="6"/><text x="640" y="257">한 회차 · 해석 초안 → 검토 질문 → 근거 확인</text><text class="sub" x="640" y="281">읽기만 허용 · 새 담당자 생성과 직접 일정 변경 금지</text>
+<polygon class="diamond" points="640,332 720,392 640,452 560,392"/><text x="640" y="387">근거·초안</text><text x="640" y="410">검토 통과?</text>
+<text class="label" x="425" y="376">통과</text><text class="label" x="773" y="376">미통과</text>
+<polygon class="diamond" points="800,440 880,500 800,560 720,500"/><text x="800" y="496">예산 남고</text><text x="800" y="519">판도 유효?</text>
+<text class="label" x="1004" y="482">둘 다 유효 → 다음 회차</text><text class="label" x="925" y="580">예산 종료 또는 판 변경</text>
+<rect class="terminal" x="100" y="596" width="360" height="72" rx="36"/><text x="280" y="626">종료 · 근거와 초안을 중앙 반환</text><text class="sub" x="280" y="650">그다음 중앙에서 최종 적용 검증</text>
+<rect class="terminal" x="620" y="596" width="360" height="72" rx="36"/><text x="800" y="626">종료 · 일정 유지와 이유·질문</text><text class="sub" x="800" y="650">추가 회차 자동 생성 없음</text>
+</svg></div>
+<footer>정적 흐름도 · acop 프로필 · 문서용 1280×720 두 장 · 기존 경계와 새 시험 제안을 구분합니다. 긴 계산·재난 정지·실제 예약 승인은 별도 기존 경로를 따릅니다.</footer>
+</main></body></html>

@@ -1,0 +1,51 @@
+# triPilot 사이트 한 블록 — 서버의 기존 Caddy 설정에 **붙인다**(그 파일 맨 끝). `__TRIPILOT_HOST__` 를 공개 도메인으로 바꿔서.
+#
+# ★붙이기 전: 그 Caddyfile 을 백업하고, 붙인 뒤 `caddy validate` 로 검사한 다음 `caddy reload`(무중단)로 반영한다. 순서는 `deploy/README.md`.
+# ★도메인의 DNS 가 **먼저** 서버로 와 있어야 한다 — Caddy 가 이 블록을 읽는 순간 인증서(ACME)를 받으러 간다. DNS 가 없으면 실패하고 재시도 간격이 길어진다.
+# ★Cloudflare 프록시(주황 구름) 뒤에 있으면 `tls-alpn-01` 이 안 된다 → `http-01` 만 쓴다(같은 서버의 다른 도메인 블록과 같은 방식).
+#
+# 공개하는 길 — 웹은 모두, API 는 아래 경로만. API 문서(`/docs`) · 점검(`/introspection`)은 닫는다.
+__TRIPILOT_HOST__ {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+	encode zstd gzip
+
+	@closed path /docs /docs/* /redoc /openapi.json /introspection /introspection/*
+	respond @closed 404
+
+	# 고객 API · 여행계획서 링크 · 예약 변경 링크 · 개인 AI 입구(MCP) · 점검
+	# ★원 접속자 주소: Cloudflare 가 `CF-Connecting-IP` 로 준다 — 앱의 일일 한도(주소별)가 프록시 주소 하나로 뭉치지 않게 이것을 넘긴다.
+	@api path /v1/* /plan/* /booking-change/* /mcp /mcp/* /health
+	reverse_proxy @api tripilot-api:8043 {
+		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+		flush_interval -1
+	}
+
+	# 그 밖은 웹앱
+	reverse_proxy tripilot-web:3000
+
+	# ★`[2026-10-20 D-CS-019]` 새 판으로 바꾸는 동안(api · web 이 함께 다시 만들어진다) 뒤쪽에 닿지 못하면 Caddy 가 직접 답한다.
+	#   이미 열린 화면은 마지막 공지로 안내하고, 새로 여는 사람은 아래 짧은 안내를 본 뒤 20초마다 다시 연다. 문장은 고정이다(시각 · 상태를 모른다).
+	#   API 경로는 웹이 읽는 JSON 거절 모양(`{"error": {"code": …}}`)으로 — 웹이 「바꾸는 중」으로 알아본다.
+	#   ★상태 코드 인자(`handle_errors 502 503 504`)는 Caddy 2.8 부터라 오라클 ARM 의 2.6.2 같은 옛 판에서도 읽히게 식(expression)으로 거른다.
+	#   붙이기 전에 그 서버에서 `caddy validate` 로 검사한다(이 PC 에는 Caddy 가 없어 검사하지 못했다 — 2026-10-20).
+	handle_errors {
+		@down expression `{err.status_code} in [502, 503, 504]`
+		handle @down {
+			header Retry-After "30"
+			header Cache-Control "no-store"
+			@api_down path /v1/* /plan/* /booking-change/* /mcp /mcp/* /health
+			handle @api_down {
+				header Content-Type "application/json; charset=utf-8"
+				respond `{"error":{"code":"service_updating","message":"서비스를 새 판으로 바꾸는 중이거나 잠시 연결이 끊겼습니다. 잠시 뒤 다시 시도해 주세요."}}` 503
+			}
+			handle {
+				header Content-Type "text/html; charset=utf-8"
+				respond `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="20"><title>잠시 연결이 끊겼습니다</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,sans-serif;background:#f6f7f9;color:#1d2433}main{max-width:28rem;padding:1.5rem 1rem;text-align:center}h1{font-size:1.25rem}p{line-height:1.6}@media (prefers-color-scheme:dark){body{background:#12161d;color:#e6e9ef}}</style></head><body><main><h1>서비스를 새 판으로 바꾸는 중이에요</h1><p>보통 1~3분 걸려요. 저장된 일정은 그대로예요. 이 화면은 20초마다 저절로 다시 열려요.</p><p lang="en">We are switching the service to a new version. It usually takes 1–3 minutes. Your saved plans are safe. This page reloads every 20 seconds.</p></main></body></html>` 503
+			}
+		}
+	}
+}

@@ -1,0 +1,2157 @@
+{
+ "scope": "읽기 전용 진단 — 제품 코드·자료 변경 없음 · 지도 개발자 API 호출 0회",
+ "observation_file": "datasets/mobility/raw/mobility_walk_web_20261012_v3/kakao-walk-observed-v1.json",
+ "observation_sha256": "fecc4e3e33d8f01a153390b3805b9c82b950167bef55d1aabe5d833b1df4c4ce",
+ "transform": {
+  "method": "요청점 8개 최소제곱 아핀(WCONG→위경도)",
+  "fit_residual_m": [
+   0.09,
+   0.31,
+   0.34,
+   0.38,
+   0.22,
+   0.33,
+   0.2,
+   0.11
+  ],
+  "leave_one_out_error_m": [
+   0.3,
+   0.39,
+   0.43,
+   0.5,
+   0.42,
+   0.4,
+   0.42,
+   0.2
+  ]
+ },
+ "rows": [
+  {
+   "id": "W01",
+   "kakao_shortest_m": 672,
+   "kakao_shortest_time_s": 685,
+   "kakao_guides_sum_m": 667,
+   "kakao_polyline_m": 562.5,
+   "kakao_access_start_m": 69.8,
+   "kakao_access_end_m": 39.5,
+   "definition_check": {
+    "first_guide_len": 122,
+    "first_poly_plus_access_m": 121.9,
+    "last_guide_len": 43,
+    "last_poly_plus_access_m": 43.4,
+    "polyline_plus_access_m": 671.8
+   },
+   "product": {
+    "distance_m": 775.08,
+    "snap_m": [
+     54.2,
+     20.2
+    ],
+    "quality": {
+     "access_max_m": 54.2,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "network_m": 700.68,
+    "ways": [
+     229050,
+     109026,
+     115629,
+     26146,
+     106613,
+     117199,
+     280907,
+     105134,
+     229927,
+     225708,
+     276798,
+     35565,
+     214921,
+     207818,
+     212262,
+     60991,
+     231868,
+     42195,
+     92332,
+     145595,
+     176877
+    ]
+   },
+   "product_minus_kakao_m": 103.08,
+   "product_minus_kakao_pct": 15.34,
+   "kakao_path_vs_graph": {
+    "samples": 107,
+    "no_foot_edge_within_8m": 0,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "122m 이동(세종대로20길)",
+     "kakao_poly_m": 52.1,
+     "kakao_len": 122,
+     "product_m": 62.94,
+     "product_snap_m": [
+      0.1,
+      0.1
+     ],
+     "ratio": 1.21
+    },
+    {
+     "seq": 2,
+     "ment": "경희봄봄 한의원까지 2개의 횡단보도 이용",
+     "kakao_poly_m": 17.7,
+     "kakao_len": 17,
+     "product_m": 18.43,
+     "product_snap_m": [
+      0.1,
+      0.6
+     ],
+     "ratio": 1.04
+    },
+    {
+     "seq": 3,
+     "ment": "경희봄봄 한의원 앞에서 샵힘이나는 커피생활까지 151m 이동(무교로)",
+     "kakao_poly_m": 151.6,
+     "kakao_len": 151,
+     "product_m": 155.31,
+     "product_snap_m": [
+      0.6,
+      2.4
+     ],
+     "ratio": 1.02
+    },
+    {
+     "seq": 4,
+     "ment": "샵힘이나는 커피생활 앞에서 무교동 닭도리탕까지 오른쪽길로 41m 이동",
+     "kakao_poly_m": 41.9,
+     "kakao_len": 41,
+     "product_m": 43.72,
+     "product_snap_m": [
+      2.4,
+      0.0
+     ],
+     "ratio": 1.04
+    },
+    {
+     "seq": 5,
+     "ment": "무교동 닭도리탕 앞에서 일식삼원까지 왼쪽길로 61m 이동(을지로1길)",
+     "kakao_poly_m": 61.4,
+     "kakao_len": 61,
+     "product_m": 61.78,
+     "product_snap_m": [
+      0.0,
+      1.9
+     ],
+     "ratio": 1.01
+    },
+    {
+     "seq": 6,
+     "ment": "일식삼원 앞에서 오른쪽길로 98m 이동",
+     "kakao_poly_m": 98.1,
+     "kakao_len": 98,
+     "product_m": 104.3,
+     "product_snap_m": [
+      1.9,
+      1.0
+     ],
+     "ratio": 1.06
+    },
+    {
+     "seq": 7,
+     "ment": "횡단보도 이용",
+     "kakao_poly_m": 5.2,
+     "kakao_len": 5,
+     "product_m": 6.88,
+     "product_snap_m": [
+      1.0,
+      0.7
+     ],
+     "ratio": 1.32
+    },
+    {
+     "seq": 8,
+     "ment": "4m 이동",
+     "kakao_poly_m": 4.0,
+     "kakao_len": 4,
+     "product_m": 10.24,
+     "product_snap_m": [
+      0.7,
+      2.9
+     ],
+     "ratio": 2.57
+    },
+    {
+     "seq": 9,
+     "ment": "교량 진입",
+     "kakao_poly_m": 24.2,
+     "kakao_len": 24,
+     "product_m": 31.93,
+     "product_snap_m": [
+      2.9,
+      1.3
+     ],
+     "ratio": 1.32
+    },
+    {
+     "seq": 10,
+     "ment": "20m 이동",
+     "kakao_poly_m": 20.0,
+     "kakao_len": 20,
+     "product_m": 22.39,
+     "product_snap_m": [
+      1.3,
+      1.0
+     ],
+     "ratio": 1.12
+    },
+    {
+     "seq": 11,
+     "ment": "이마트24까지 횡단보도 이용",
+     "kakao_poly_m": 11.2,
+     "kakao_len": 11,
+     "product_m": 14.45,
+     "product_snap_m": [
+      1.0,
+      0.7
+     ],
+     "ratio": 1.29
+    },
+    {
+     "seq": 12,
+     "ment": "이마트24 앞에서 55m 이동",
+     "kakao_poly_m": 54.9,
+     "kakao_len": 55,
+     "product_m": 56.77,
+     "product_snap_m": [
+      0.7,
+      1.3
+     ],
+     "ratio": 1.03
+    },
+    {
+     "seq": 13,
+     "ment": "왼쪽길로 15m 이동",
+     "kakao_poly_m": 16.1,
+     "kakao_len": 15,
+     "product_m": 17.76,
+     "product_snap_m": [
+      1.3,
+      0.7
+     ],
+     "ratio": 1.1
+    },
+    {
+     "seq": 14,
+     "ment": "오른쪽길로 43m 이동",
+     "kakao_poly_m": 4.0,
+     "kakao_len": 43,
+     "product_m": 5.25,
+     "product_snap_m": [
+      0.7,
+      2.9
+     ],
+     "ratio": 1.33
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     126.9785105,
+     37.5669798
+    ],
+    [
+     126.9790673,
+     37.5669365
+    ],
+    [
+     126.9790899,
+     37.5669185
+    ],
+    [
+     126.979262,
+     37.5670014
+    ],
+    [
+     126.9792755,
+     37.5674844
+    ],
+    [
+     126.9793207,
+     37.568364
+    ],
+    [
+     126.979796,
+     37.5683604
+    ],
+    [
+     126.979796,
+     37.5686848
+    ],
+    [
+     126.9798232,
+     37.5689119
+    ],
+    [
+     126.9809322,
+     37.5688326
+    ],
+    [
+     126.9809367,
+     37.5688795
+    ],
+    [
+     126.980982,
+     37.5688795
+    ],
+    [
+     126.9810137,
+     37.5690957
+    ],
+    [
+     126.98124,
+     37.5690813
+    ],
+    [
+     126.98124,
+     37.5691822
+    ],
+    [
+     126.9818602,
+     37.569139
+    ],
+    [
+     126.9818013,
+     37.569276
+    ],
+    [
+     126.981833,
+     37.5693012
+    ]
+   ]
+  },
+  {
+   "id": "W02",
+   "kakao_shortest_m": 432,
+   "kakao_shortest_time_s": 426,
+   "kakao_guides_sum_m": 430,
+   "kakao_polyline_m": 394.6,
+   "kakao_access_start_m": 13.0,
+   "kakao_access_end_m": 24.4,
+   "definition_check": {
+    "first_guide_len": 260,
+    "first_poly_plus_access_m": 259.8,
+    "last_guide_len": 39,
+    "last_poly_plus_access_m": 39.6,
+    "polyline_plus_access_m": 432.0
+   },
+   "product": {
+    "distance_m": 478.38,
+    "snap_m": [
+     6.8,
+     24.4
+    ],
+    "quality": {
+     "access_max_m": 24.4,
+     "arterial_pct": 0.0,
+     "optimistic": false
+    },
+    "network_m": 447.18,
+    "ways": [
+     247333,
+     115291,
+     66042,
+     152125,
+     260095,
+     154476,
+     210036,
+     119559,
+     113699,
+     153226
+    ]
+   },
+   "product_minus_kakao_m": 46.38,
+   "product_minus_kakao_pct": 10.74,
+   "kakao_path_vs_graph": {
+    "samples": 76,
+    "no_foot_edge_within_8m": 10,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [
+     {
+      "at_m": 0.0,
+      "lng": 126.976867,
+      "lat": 37.575314,
+      "any": {
+       "dist_m": 9.6,
+       "way": 247333,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 185.5
+      },
+      "main": {
+       "dist_m": 9.6,
+       "way": 247333,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 185.5
+      }
+     },
+     {
+      "at_m": 2.0,
+      "lng": 126.976844,
+      "lat": 37.57531,
+      "any": {
+       "dist_m": 11.6,
+       "way": 247333,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 185.5
+      },
+      "main": {
+       "dist_m": 11.6,
+       "way": 247333,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 185.5
+      }
+     },
+     {
+      "at_m": 7.3,
+      "lng": 126.976785,
+      "lat": 37.575317,
+      "any": {
+       "dist_m": 12.6,
+       "way": 115291,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 60.3
+      },
+      "main": {
+       "dist_m": 12.6,
+       "way": 115291,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 60.3
+      }
+     },
+     {
+      "at_m": 12.5,
+      "lng": 126.976727,
+      "lat": 37.575324,
+      "any": {
+       "dist_m": 11.9,
+       "way": 115291,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 60.3
+      },
+      "main": {
+       "dist_m": 11.9,
+       "way": 115291,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 60.3
+      }
+     },
+     {
+      "at_m": 17.7,
+      "lng": 126.976678,
+      "lat": 37.57535,
+      "any": {
+       "dist_m": 9.1,
+       "way": 115291,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 60.3
+      },
+      "main": {
+       "dist_m": 9.1,
+       "way": 115291,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 60.3
+      }
+     },
+     {
+      "at_m": 64.2,
+      "lng": 126.976239,
+      "lat": 37.575583,
+      "any": {
+       "dist_m": 11.4,
+       "way": 66042,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 32.0
+      },
+      "main": {
+       "dist_m": 11.4,
+       "way": 66042,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 32.0
+      }
+     },
+     {
+      "at_m": 69.4,
+      "lng": 126.976191,
+      "lat": 37.575609,
+      "any": {
+       "dist_m": 14.5,
+       "way": 198109,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 29.5
+      },
+      "main": {
+       "dist_m": 14.5,
+       "way": 198109,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 29.5
+      }
+     },
+     {
+      "at_m": 74.6,
+      "lng": 126.976142,
+      "lat": 37.575635,
+      "any": {
+       "dist_m": 15.1,
+       "way": 152125,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 187.0
+      },
+      "main": {
+       "dist_m": 15.1,
+       "way": 152125,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 187.0
+      }
+     },
+     {
+      "at_m": 79.7,
+      "lng": 126.976093,
+      "lat": 37.575661,
+      "any": {
+       "dist_m": 12.5,
+       "way": 152125,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 187.0
+      },
+      "main": {
+       "dist_m": 12.5,
+       "way": 152125,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 187.0
+      }
+     },
+     {
+      "at_m": 84.9,
+      "lng": 126.976044,
+      "lat": 37.575687,
+      "any": {
+       "dist_m": 9.9,
+       "way": 152125,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 187.0
+      },
+      "main": {
+       "dist_m": 9.9,
+       "way": 152125,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 187.0
+      }
+     }
+    ],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "정부서울청사교차로까지 260m 이동",
+     "kakao_poly_m": 246.8,
+     "kakao_len": 260,
+     "product_m": 299.7,
+     "product_snap_m": [
+      9.6,
+      1.1
+     ],
+     "ratio": 1.21
+    },
+    {
+     "seq": 2,
+     "ment": "정부서울청사교차로에서 횡단보도 이용",
+     "kakao_poly_m": 20.9,
+     "kakao_len": 21,
+     "product_m": 25.99,
+     "product_snap_m": [
+      1.1,
+      1.8
+     ],
+     "ratio": 1.24
+    },
+    {
+     "seq": 3,
+     "ment": "구르미한복까지 43m 이동(효자로)",
+     "kakao_poly_m": 43.7,
+     "kakao_len": 43,
+     "product_m": 48.61,
+     "product_snap_m": [
+      1.8,
+      0.9
+     ],
+     "ratio": 1.11
+    },
+    {
+     "seq": 4,
+     "ment": "구르미한복 앞에서 지지배배한복까지 왼쪽길로 67m 이동(자하문로2길)",
+     "kakao_poly_m": 68.0,
+     "kakao_len": 67,
+     "product_m": 69.33,
+     "product_snap_m": [
+      0.9,
+      0.5
+     ],
+     "ratio": 1.02
+    },
+    {
+     "seq": 5,
+     "ment": "지지배배한복 앞에서 오른쪽길로 39m 이동",
+     "kakao_poly_m": 15.2,
+     "kakao_len": 39,
+     "product_m": 15.72,
+     "product_snap_m": [
+      0.5,
+      0.2
+     ],
+     "ratio": 1.03
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     126.9768669,
+     37.5753136
+    ],
+    [
+     126.9768443,
+     37.57531
+    ],
+    [
+     126.9767266,
+     37.5753244
+    ],
+    [
+     126.9758982,
+     37.5757641
+    ],
+    [
+     126.9757397,
+     37.5758146
+    ],
+    [
+     126.9755089,
+     37.5758506
+    ],
+    [
+     126.9745718,
+     37.5759083
+    ],
+    [
+     126.9744541,
+     37.5759624
+    ],
+    [
+     126.974427,
+     37.5761029
+    ],
+    [
+     126.9741916,
+     37.5760813
+    ],
+    [
+     126.9741237,
+     37.5764706
+    ],
+    [
+     126.9739516,
+     37.576467
+    ],
+    [
+     126.9736574,
+     37.5764958
+    ],
+    [
+     126.9733586,
+     37.5765355
+    ],
+    [
+     126.9733586,
+     37.5766724
+    ]
+   ]
+  },
+  {
+   "id": "W03",
+   "kakao_shortest_m": 516,
+   "kakao_shortest_time_s": 488,
+   "kakao_guides_sum_m": 511,
+   "kakao_polyline_m": 500.5,
+   "kakao_access_start_m": 8.5,
+   "kakao_access_end_m": 6.1,
+   "definition_check": {
+    "first_guide_len": 31,
+    "first_poly_plus_access_m": 30.9,
+    "last_guide_len": 22,
+    "last_poly_plus_access_m": 22.1,
+    "polyline_plus_access_m": 515.1
+   },
+   "product": {
+    "distance_m": 503.53,
+    "snap_m": [
+     8.8,
+     38.9
+    ],
+    "quality": {
+     "access_max_m": 38.9,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "network_m": 455.83,
+    "ways": [
+     171893,
+     212170,
+     222187,
+     58272,
+     233860,
+     139819,
+     250128,
+     276168,
+     140631,
+     209242,
+     192789,
+     68241
+    ]
+   },
+   "product_minus_kakao_m": -12.47,
+   "product_minus_kakao_pct": -2.42,
+   "kakao_path_vs_graph": {
+    "samples": 88,
+    "no_foot_edge_within_8m": 12,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [
+     {
+      "at_m": 82.2,
+      "lng": 126.989365,
+      "lat": 37.573868,
+      "any": {
+       "dist_m": 10.3,
+       "way": 246221,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 16.1
+      },
+      "main": {
+       "dist_m": 10.3,
+       "way": 246221,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 16.1
+      }
+     },
+     {
+      "at_m": 87.3,
+      "lng": 126.98937,
+      "lat": 37.573822,
+      "any": {
+       "dist_m": 9.6,
+       "way": 126054,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 26.9
+      },
+      "main": {
+       "dist_m": 9.6,
+       "way": 126054,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 26.9
+      }
+     },
+     {
+      "at_m": 408.1,
+      "lng": 126.988129,
+      "lat": 37.571817,
+      "any": {
+       "dist_m": 12.9,
+       "way": 245002,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 22.0
+      },
+      "main": {
+       "dist_m": 12.9,
+       "way": 245002,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 22.0
+      }
+     },
+     {
+      "at_m": 413.9,
+      "lng": 126.988071,
+      "lat": 37.571794,
+      "any": {
+       "dist_m": 14.5,
+       "way": 245002,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 22.0
+      },
+      "main": {
+       "dist_m": 14.5,
+       "way": 245002,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 22.0
+      }
+     },
+     {
+      "at_m": 419.7,
+      "lng": 126.988012,
+      "lat": 37.57177,
+      "any": {
+       "dist_m": 12.4,
+       "way": 192789,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 35.8
+      },
+      "main": {
+       "dist_m": 12.4,
+       "way": 192789,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 35.8
+      }
+     },
+     {
+      "at_m": 425.3,
+      "lng": 126.987969,
+      "lat": 37.571733,
+      "any": {
+       "dist_m": 9.0,
+       "way": 192789,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 35.8
+      },
+      "main": {
+       "dist_m": 9.0,
+       "way": 192789,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 35.8
+      }
+     },
+     {
+      "at_m": 465.9,
+      "lng": 126.98796,
+      "lat": 37.571422,
+      "any": {
+       "dist_m": 9.9,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      },
+      "main": {
+       "dist_m": 9.9,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      }
+     },
+     {
+      "at_m": 472.1,
+      "lng": 126.988025,
+      "lat": 37.571401,
+      "any": {
+       "dist_m": 15.6,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      },
+      "main": {
+       "dist_m": 15.6,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      }
+     },
+     {
+      "at_m": 478.3,
+      "lng": 126.988091,
+      "lat": 37.57138,
+      "any": {
+       "dist_m": 21.3,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      },
+      "main": {
+       "dist_m": 21.3,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      }
+     },
+     {
+      "at_m": 484.6,
+      "lng": 126.988157,
+      "lat": 37.57136,
+      "any": {
+       "dist_m": 27.0,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      },
+      "main": {
+       "dist_m": 27.0,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      }
+     },
+     {
+      "at_m": 491.2,
+      "lng": 126.988188,
+      "lat": 37.571414,
+      "any": {
+       "dist_m": 30.1,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      },
+      "main": {
+       "dist_m": 30.1,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      }
+     },
+     {
+      "at_m": 496.9,
+      "lng": 126.988247,
+      "lat": 37.571435,
+      "any": {
+       "dist_m": 35.3,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      },
+      "main": {
+       "dist_m": 35.3,
+       "way": 68241,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 65.8
+      }
+     }
+    ],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "상희헤어샵까지 31m 이동(삼일대로30길)",
+     "kakao_poly_m": 22.4,
+     "kakao_len": 31,
+     "product_m": 23.27,
+     "product_snap_m": [
+      0.6,
+      0.3
+     ],
+     "ratio": 1.04
+    },
+    {
+     "seq": 2,
+     "ment": "상희헤어샵 앞에서 익선스토어까지 왼쪽길로 32m 이동",
+     "kakao_poly_m": 32.9,
+     "kakao_len": 32,
+     "product_m": 34.64,
+     "product_snap_m": [
+      0.3,
+      0.0
+     ],
+     "ratio": 1.05
+    },
+    {
+     "seq": 3,
+     "ment": "익선스토어 앞에서 리얼배틀그라운드 익선동벙커까지 오른쪽길로 145m 이동(돈화문로11나길)",
+     "kakao_poly_m": 146.1,
+     "kakao_len": 145,
+     "product_m": 250.86,
+     "product_snap_m": [
+      0.0,
+      0.0
+     ],
+     "ratio": 1.72
+    },
+    {
+     "seq": 4,
+     "ment": "리얼배틀그라운드 익선동벙커 앞에서 마산아구찜까지 오른쪽길로 94m 이동(수표로28길)",
+     "kakao_poly_m": 93.9,
+     "kakao_len": 94,
+     "product_m": 95.32,
+     "product_snap_m": [
+      0.0,
+      1.2
+     ],
+     "ratio": 1.02
+    },
+    {
+     "seq": 5,
+     "ment": "마산아구찜 앞에서 횡단보도 이용",
+     "kakao_poly_m": 10.8,
+     "kakao_len": 10,
+     "product_m": 13.34,
+     "product_snap_m": [
+      1.2,
+      1.1
+     ],
+     "ratio": 1.23
+    },
+    {
+     "seq": 6,
+     "ment": "JY 엔터티인먼트 앞에서 상록한방 전통찻집까지 15m 이동",
+     "kakao_poly_m": 14.9,
+     "kakao_len": 15,
+     "product_m": 23.39,
+     "product_snap_m": [
+      1.1,
+      0.5
+     ],
+     "ratio": 1.57
+    },
+    {
+     "seq": 7,
+     "ment": "상록한방 전통찻집 앞에서 왼쪽길로 87m 이동(종로17길)",
+     "kakao_poly_m": 87.2,
+     "kakao_len": 87,
+     "product_m": 89.56,
+     "product_snap_m": [
+      0.5,
+      12.9
+     ],
+     "ratio": 1.03
+    },
+    {
+     "seq": 8,
+     "ment": "오른쪽길로 51m 이동",
+     "kakao_poly_m": 51.6,
+     "kakao_len": 51,
+     "product_m": 87.77,
+     "product_snap_m": [
+      12.9,
+      4.2
+     ],
+     "ratio": 1.7
+    },
+    {
+     "seq": 9,
+     "ment": "서울원각사지 십층석탑까지 왼쪽길로 24m 이동",
+     "kakao_poly_m": 24.9,
+     "kakao_len": 24,
+     "product_m": 41.37,
+     "product_snap_m": [
+      4.2,
+      27.0
+     ],
+     "ratio": 1.66
+    },
+    {
+     "seq": 10,
+     "ment": "서울원각사지 십층석탑 앞에서 왼쪽길로 22m 이동",
+     "kakao_poly_m": 15.9,
+     "kakao_len": 22,
+     "product_m": 73.91,
+     "product_snap_m": [
+      27.0,
+      38.9
+     ],
+     "ratio": 4.64
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     126.9897997,
+     37.5742793
+    ],
+    [
+     126.9895462,
+     37.5742685
+    ],
+    [
+     126.9895462,
+     37.5739729
+    ],
+    [
+     126.9893561,
+     37.5739585
+    ],
+    [
+     126.9893787,
+     37.5737314
+    ],
+    [
+     126.9894783,
+     37.5737386
+    ],
+    [
+     126.989501,
+     37.5735656
+    ],
+    [
+     126.9895101,
+     37.5728843
+    ],
+    [
+     126.9893018,
+     37.5728627
+    ],
+    [
+     126.9890212,
+     37.5728663
+    ],
+    [
+     126.9889442,
+     37.5728591
+    ],
+    [
+     126.9888084,
+     37.5728122
+    ],
+    [
+     126.9885595,
+     37.572668
+    ],
+    [
+     126.9885776,
+     37.5726392
+    ],
+    [
+     126.9885776,
+     37.5725419
+    ],
+    [
+     126.9884101,
+     37.5725599
+    ],
+    [
+     126.9881883,
+     37.5721021
+    ],
+    [
+     126.9881204,
+     37.5719363
+    ],
+    [
+     126.9881295,
+     37.5718173
+    ],
+    [
+     126.9880118,
+     37.5717705
+    ],
+    [
+     126.9879258,
+     37.5716948
+    ],
+    [
+     126.987885,
+     37.5715974
+    ],
+    [
+     126.9878941,
+     37.5714424
+    ],
+    [
+     126.9881567,
+     37.5713595
+    ],
+    [
+     126.9881883,
+     37.5714136
+    ],
+    [
+     126.9882472,
+     37.5714352
+    ],
+    [
+     126.9882879,
+     37.5714352
+    ]
+   ]
+  },
+  {
+   "id": "W04",
+   "kakao_shortest_m": 580,
+   "kakao_shortest_time_s": 556,
+   "kakao_guides_sum_m": 578,
+   "kakao_polyline_m": 557.9,
+   "kakao_access_start_m": 1.7,
+   "kakao_access_end_m": 20.0,
+   "definition_check": {
+    "first_guide_len": 50,
+    "first_poly_plus_access_m": 50.3,
+    "last_guide_len": 342,
+    "last_poly_plus_access_m": 342.1,
+    "polyline_plus_access_m": 579.6
+   },
+   "product": {
+    "distance_m": 550.15,
+    "snap_m": [
+     4.7,
+     19.6
+    ],
+    "quality": {
+     "access_max_m": 19.6,
+     "arterial_pct": 0.0,
+     "optimistic": false
+    },
+    "network_m": 525.85,
+    "ways": [
+     150423,
+     138640,
+     125600,
+     53500,
+     209266,
+     254864,
+     93322,
+     98843,
+     225428,
+     162929
+    ]
+   },
+   "product_minus_kakao_m": -29.85,
+   "product_minus_kakao_pct": -5.15,
+   "kakao_path_vs_graph": {
+    "samples": 101,
+    "no_foot_edge_within_8m": 39,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [
+     {
+      "at_m": 32.5,
+      "lng": 127.044574,
+      "lat": 37.543762,
+      "any": {
+       "dist_m": 9.4,
+       "way": 150423,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 104.7
+      },
+      "main": {
+       "dist_m": 9.4,
+       "way": 150423,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 104.7
+      }
+     },
+     {
+      "at_m": 37.8,
+      "lng": 127.044514,
+      "lat": 37.543769,
+      "any": {
+       "dist_m": 14.8,
+       "way": 150423,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 104.7
+      },
+      "main": {
+       "dist_m": 14.8,
+       "way": 150423,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 104.7
+      }
+     },
+     {
+      "at_m": 43.2,
+      "lng": 127.044454,
+      "lat": 37.543775,
+      "any": {
+       "dist_m": 20.2,
+       "way": 150423,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 104.7
+      },
+      "main": {
+       "dist_m": 20.2,
+       "way": 150423,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 104.7
+      }
+     },
+     {
+      "at_m": 48.6,
+      "lng": 127.044393,
+      "lat": 37.543782,
+      "any": {
+       "dist_m": 20.7,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 20.7,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 54.1,
+      "lng": 127.044374,
+      "lat": 37.543734,
+      "any": {
+       "dist_m": 15.2,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 15.2,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 59.7,
+      "lng": 127.044354,
+      "lat": 37.543687,
+      "any": {
+       "dist_m": 9.6,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 9.6,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 81.9,
+      "lng": 127.044275,
+      "lat": 37.543497,
+      "any": {
+       "dist_m": 12.5,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.5,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 87.0,
+      "lng": 127.044221,
+      "lat": 37.543512,
+      "any": {
+       "dist_m": 12.4,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.4,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 92.0,
+      "lng": 127.044167,
+      "lat": 37.543526,
+      "any": {
+       "dist_m": 12.4,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.4,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 97.1,
+      "lng": 127.044113,
+      "lat": 37.543541,
+      "any": {
+       "dist_m": 12.3,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.3,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 102.1,
+      "lng": 127.044058,
+      "lat": 37.543556,
+      "any": {
+       "dist_m": 12.3,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.3,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 107.2,
+      "lng": 127.044004,
+      "lat": 37.543571,
+      "any": {
+       "dist_m": 12.2,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.2,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 112.3,
+      "lng": 127.04395,
+      "lat": 37.543585,
+      "any": {
+       "dist_m": 12.2,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.2,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 117.3,
+      "lng": 127.043895,
+      "lat": 37.5436,
+      "any": {
+       "dist_m": 12.1,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 122.4,
+      "lng": 127.043841,
+      "lat": 37.543615,
+      "any": {
+       "dist_m": 12.1,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 127.4,
+      "lng": 127.043787,
+      "lat": 37.543629,
+      "any": {
+       "dist_m": 12.0,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 132.5,
+      "lng": 127.043732,
+      "lat": 37.543644,
+      "any": {
+       "dist_m": 12.0,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 138640,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 83.5
+      }
+     },
+     {
+      "at_m": 137.6,
+      "lng": 127.043678,
+      "lat": 37.543659,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 142.6,
+      "lng": 127.043624,
+      "lat": 37.543674,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 147.7,
+      "lng": 127.043569,
+      "lat": 37.543688,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 152.7,
+      "lng": 127.043515,
+      "lat": 37.543703,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 157.8,
+      "lng": 127.043461,
+      "lat": 37.543718,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 162.9,
+      "lng": 127.043406,
+      "lat": 37.543732,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 167.9,
+      "lng": 127.043352,
+      "lat": 37.543747,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 173.0,
+      "lng": 127.043298,
+      "lat": 37.543762,
+      "any": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.0,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 178.1,
+      "lng": 127.043243,
+      "lat": 37.543776,
+      "any": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 183.1,
+      "lng": 127.043189,
+      "lat": 37.543791,
+      "any": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 188.2,
+      "lng": 127.043135,
+      "lat": 37.543806,
+      "any": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 193.2,
+      "lng": 127.04308,
+      "lat": 37.543821,
+      "any": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 198.3,
+      "lng": 127.043026,
+      "lat": 37.543835,
+      "any": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 203.4,
+      "lng": 127.042972,
+      "lat": 37.54385,
+      "any": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      },
+      "main": {
+       "dist_m": 12.1,
+       "way": 125600,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 80.7
+      }
+     },
+     {
+      "at_m": 208.4,
+      "lng": 127.042917,
+      "lat": 37.543865,
+      "any": {
+       "dist_m": 8.6,
+       "way": 53500,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 37.5
+      },
+      "main": {
+       "dist_m": 8.6,
+       "way": 53500,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 37.5
+      }
+     },
+     {
+      "at_m": 214.8,
+      "lng": 127.042895,
+      "lat": 37.543811,
+      "any": {
+       "dist_m": 8.5,
+       "way": 53500,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 37.5
+      },
+      "main": {
+       "dist_m": 8.5,
+       "way": 53500,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 37.5
+      }
+     },
+     {
+      "at_m": 235.7,
+      "lng": 127.042673,
+      "lat": 37.543879,
+      "any": {
+       "dist_m": 12.5,
+       "way": 53500,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 37.5
+      },
+      "main": {
+       "dist_m": 12.5,
+       "way": 53500,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 37.5
+      }
+     },
+     {
+      "at_m": 243.8,
+      "lng": 127.042641,
+      "lat": 37.543811,
+      "any": {
+       "dist_m": 11.4,
+       "way": 209266,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.4
+      },
+      "main": {
+       "dist_m": 11.4,
+       "way": 209266,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.4
+      }
+     },
+     {
+      "at_m": 249.6,
+      "lng": 127.04258,
+      "lat": 37.543827,
+      "any": {
+       "dist_m": 11.3,
+       "way": 209266,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.4
+      },
+      "main": {
+       "dist_m": 11.3,
+       "way": 209266,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.4
+      }
+     },
+     {
+      "at_m": 255.3,
+      "lng": 127.042519,
+      "lat": 37.543844,
+      "any": {
+       "dist_m": 11.2,
+       "way": 209266,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.4
+      },
+      "main": {
+       "dist_m": 11.2,
+       "way": 209266,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.4
+      }
+     },
+     {
+      "at_m": 261.0,
+      "lng": 127.042458,
+      "lat": 37.543861,
+      "any": {
+       "dist_m": 8.9,
+       "way": 215482,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 158.3
+      },
+      "main": {
+       "dist_m": 8.9,
+       "way": 215482,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 158.3
+      }
+     },
+     {
+      "at_m": 278.1,
+      "lng": 127.042275,
+      "lat": 37.543912,
+      "any": {
+       "dist_m": 8.2,
+       "way": 215482,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 158.3
+      },
+      "main": {
+       "dist_m": 8.2,
+       "way": 215482,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 158.3
+      }
+     }
+    ],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "서울숲역 4번 출구까지 역사 내 이동",
+     "kakao_poly_m": 48.6,
+     "kakao_len": 50,
+     "product_m": 65.37,
+     "product_snap_m": [
+      6.4,
+      20.7
+     ],
+     "ratio": 1.35
+    },
+    {
+     "seq": 2,
+     "ment": "서울숲역 4번 출구 진출 후 33m 이동",
+     "kakao_poly_m": 33.3,
+     "kakao_len": 33,
+     "product_m": 33.15,
+     "product_snap_m": [
+      20.7,
+      12.5
+     ],
+     "ratio": 0.99
+    },
+    {
+     "seq": 3,
+     "ment": "언더스탠드 에비뉴 앞에서 테라스온커피까지 오른쪽길로 133m 이동",
+     "kakao_poly_m": 132.9,
+     "kakao_len": 133,
+     "product_m": 175.16,
+     "product_snap_m": [
+      12.5,
+      8.5
+     ],
+     "ratio": 1.32
+    },
+    {
+     "seq": 4,
+     "ment": "테라스온커피 앞에서 횡단보도 이용",
+     "kakao_poly_m": 21.0,
+     "kakao_len": 20,
+     "product_m": 22.47,
+     "product_snap_m": [
+      8.5,
+      12.5
+     ],
+     "ratio": 1.07
+    },
+    {
+     "seq": 5,
+     "ment": "342m 이동",
+     "kakao_poly_m": 322.1,
+     "kakao_len": 342,
+     "product_m": 348.83,
+     "product_snap_m": [
+      12.5,
+      0.2
+     ],
+     "ratio": 1.08
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     127.0447191,
+     37.543598
+    ],
+    [
+     127.0447553,
+     37.5437422
+    ],
+    [
+     127.0443932,
+     37.5437818
+    ],
+    [
+     127.0442755,
+     37.5434971
+    ],
+    [
+     127.0429175,
+     37.5438647
+    ],
+    [
+     127.0428948,
+     37.5438106
+    ],
+    [
+     127.042673,
+     37.5438791
+    ],
+    [
+     127.0426413,
+     37.5438106
+    ],
+    [
+     127.0422747,
+     37.5439116
+    ],
+    [
+     127.0422294,
+     37.543807
+    ],
+    [
+     127.0418627,
+     37.5439116
+    ],
+    [
+     127.0412833,
+     37.5440629
+    ],
+    [
+     127.0409257,
+     37.5441675
+    ],
+    [
+     127.0407673,
+     37.5441927
+    ],
+    [
+     127.0405274,
+     37.5441927
+    ],
+    [
+     127.0404051,
+     37.5441711
+    ],
+    [
+     127.0401019,
+     37.5440845
+    ],
+    [
+     127.0398212,
+     37.5441819
+    ],
+    [
+     127.0396311,
+     37.5442756
+    ],
+    [
+     127.0395088,
+     37.5443044
+    ],
+    [
+     127.039364,
+     37.5443224
+    ]
+   ]
+  }
+ ],
+ "graph": {
+  "dir": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\processed\\mobility\\walk_graph_seoul_v1",
+  "source_id": "osm_road_graph@2026-09-18"
+ }
+}

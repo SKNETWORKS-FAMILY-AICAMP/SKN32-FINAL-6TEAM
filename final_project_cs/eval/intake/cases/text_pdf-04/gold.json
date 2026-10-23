@@ -1,0 +1,45 @@
+{
+ "case_id": "text_pdf-04",
+ "format": "text_pdf",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (3명)",
+  "1일차 · 10월 23일",
+  "09:30 창경궁",
+  "12:30 명동교자 점심",
+  "15:00 명동난타극장"
+ ],
+ "items": [
+  {
+   "date": "2026-10-23",
+   "start": "09:30",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-23",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-23",
+   "start": "15:00",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

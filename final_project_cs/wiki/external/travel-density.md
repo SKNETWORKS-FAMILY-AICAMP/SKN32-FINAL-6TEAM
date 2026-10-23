@@ -21,7 +21,7 @@ days 키는 서울 기준 활동 시작 날짜. 시작·종료는 오프셋 필�
 
 분자는 항목 소요 합 + 항목 밖 이동 합 + 추가 완충시간. 중복/겹침은 측정 불가. 빈 날은 완충시간만 계산한다. 서울 날짜별로 계산하며 야간 일정은 시작일 창 안에 완전히 포함되어야 한다.
 
-측정 결과: `date`, `status`(ok/exceeded/unmeasurable), `target_density`, `policy_basis`(research_calibrated/user_preference/undetermined), `occupied_minutes`, `available_minutes`, `actual_density`, `reasons`. 미측정 수치는 null이다. 잘못된 밀도 입력도 거절하지 않고 이유를 가진 `unmeasurable` 경고로 낸다. 경고에는 `code`, `date`, `reason`, `remedy`, `policy_basis`가 있다. 미측정은 안전 또는 여유 판정이 아니다. 이 정보는 API 소비자가 표시하는 관측 정보이며 계획서 화면에는 아직 추가하지 않는다.
+측정 결과: `date`, `status`(ok/exceeded/unmeasurable), `target_density`, `policy_basis`(research_calibrated/user_preference/undetermined), `occupied_minutes`, `available_minutes`, `actual_density`, `reasons`. 미측정 수치는 null이다. 잘못된 밀도 입력도 거절하지 않고 이유를 가진 `unmeasurable` 경고로 낸다. 경고에는 `code`, `date`, `reason`, `remedy`, `policy_basis`가 있다. 미측정은 안전 또는 여유 판정이 아니다. 이 정보는 API 소비자가 표시하는 관측 정보이며 계획서 화면에는 아직 추가하지 않는다. ★`[2026-10-03]` 감시의 **자동 변경**은 같은 측정으로 변경 전후를 비교해 밀도를 나쁘게 만드는 안을 뒤로 민다(`density.density_regressions` · `itinerary_fit` — 기준은 `travel.density.gate`). 등록·조회 응답은 그대로다.
 
 1.1 추가 결과는 `policy_id`, `research_as_of`, `measurement_scope: submitted_schedule`, `buffer_placement: unallocated`, `breakdown`이다. 설정 식별자와 조사 기준일은 guardrails에서 읽는다. `breakdown`은 미측정일 때 null이며, 그 외에는 다음을 담는다.
 

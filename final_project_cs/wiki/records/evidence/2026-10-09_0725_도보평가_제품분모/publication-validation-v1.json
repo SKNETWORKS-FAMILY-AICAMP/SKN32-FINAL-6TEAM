@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-10-09T07:33:22.072238+09:00",
+  "python_version": "3.12.7",
+  "source_hash_matches": 208,
+  "backup_hash_matches": 12,
+  "local_links": 20,
+  "features": 21,
+  "counts": {
+    "조건부 사용": 4,
+    "개선 필요": 9,
+    "추가 검증": 8
+  },
+  "pytest_passed": 38,
+  "pytest_failures": 0,
+  "browser_render_verified": false,
+  "public_files_scanned": 7,
+  "potential_private_pattern_hits": [],
+  "logs": {
+    "walk-evaluation-actual-v1.log": "1d004fe90dcf17fee04c5c812b0362146e468c5d3f45a0c6c27f1d4d48ffea62",
+    "walk-evaluation-actual-v2.log": "595ed2a4ff4cf005717338691645f909b89ff35dcf3ed68fd4eec872c7937c98",
+    "walk-evaluation-before-v1.log": "13a5eb9a0cc344667684e4295e83b9b023db21128c96dfea9a226a4d40a95b94",
+    "walk-evaluation-before-v1.xml": "d413e5e64ec65e9cddd935ec08d79a2da51cee5b67b86884d84039f173a203b8",
+    "walk-evaluation-related-v1.log": "5b84f7a0cc5477d3a754a0a3f564b389ec3d03fb6e865bf317a7014ebd757985",
+    "walk-evaluation-related-v1.xml": "f5d2b23a59256cbcfefc202686dd28491bb3470f8b519cc720614aedbecab1df",
+    "walk-evaluation-related-v2.log": "eafa30f457d3cc7f85058da238fc886f29e406d5f36196fa73551cee26b5f64f",
+    "walk-evaluation-related-v2.xml": "6793ec10889d935c6ba69cb420ce8536c15d46cf3836ab17c2a5a569070dc2fc"
+  },
+  "artifact_hashes": {
+    "final_project_cs/wiki/records/reports/2026-10-09_0731_도보대조_제품분모와_소요보존_검증.md": "ebd01d99b23d28cdaac1456267ddc0ba5001ede08d3a85beb1c9dfa85a355c9d",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v25/mobility-readiness.html": "916642a304df47bc932a6333bc9eefdc905841f2d60205e2acd9926e81f6c358",
+    "final_project_cs/wiki/records/reports/assets/2026-10-09_mobility_readiness_v25/readiness-catalog.json": "87fb389f46d7c1494481b351580da63169a9b8b8cbae2b693a994519444e6f99",
+    "final_project_cs/scripts/mobility/compare_kakao_golden.py": "bea6f328c292311c4ca087c9fdc10991af21652e66a297e5cea8bd36eeb0ac70",
+    "final_project_cs/tests/unit/travel/mobility/test_walk_comparison_scope_v1.py": "b0b8f932d48c28417aefb15e1d2cfa207dde12c9595127a0e1bb546d4237131d",
+    "final_project_cs/wiki/teams/mobility.md": "b524d62c6217ed68000e740c8a55385fed82bd203bc2f2fbbd93ca80485fc22e",
+    "final_project_cs/wiki/records/reports/debugs/2026-10-09_0725_도보대조가_정책밖_원시시간을_제품오차로_집계.md": "105447b3447a0e0924d56f3ef5a02a3f6576fe409851cd72e9a98704d54d019c"
+  }
+}

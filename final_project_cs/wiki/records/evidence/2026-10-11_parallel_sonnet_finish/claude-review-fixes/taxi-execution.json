@@ -1,0 +1,7 @@
+{
+  "exit_code": 0,
+  "elapsed_s": 26.35,
+  "requested_model": "claude-sonnet-5-5",
+  "stream": "taxi",
+  "tools_enabled": false
+}

@@ -7,12 +7,31 @@ validated ContextPack.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Callable
 from uuid import UUID
 
 from app.core.contracts import ContextPack, ToolNotAllowed
 from app.infrastructure.rag.retriever import search_policy
+
+
+#: `[2026-10-16]` 기준점 줄임말 → 역 이름(우리가 고른 짧은 목록)
+_LANDMARK_ALIASES = {"홍대": "홍대입구역", "건대": "건대입구역", "서울대": "서울대입구역", "고터": "고속터미널역"}
+#: `[2026-10-17 GPT 검수 2차]` 서울 밖이지만 서울 여행에서 자주 쓰는 기준점 — 카카오 어댑터는 서울 안만 찾아 「인천공항」이
+#:   「인천공항 주차장 주차대행」(서울시청 근처 업체)으로 잡혔다(☆10-16 새 문장 N7-13 · N8-13 · N9-14 · N10-05 · N11-05).
+#:   좌표는 터미널 대략 위치(공개 지도에서 옮김, **카카오로 다시 확인 안 함**) — 거리 확인(수 km 단위)에만 쓴다
+_FIXED_LANDMARKS = (("인천공항2터미널", "인천국제공항 제2여객터미널", 37.4687, 126.4335),
+                    ("인천국제공항2터미널", "인천국제공항 제2여객터미널", 37.4687, 126.4335),
+                    ("인천공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507),
+                    ("인천국제공항", "인천국제공항 제1여객터미널", 37.4492, 126.4507))
+#: 서울 밖 도시 이름으로 시작하는 검색어 — 카카오(서울 안)의 답은 이름만 같은 서울 가게라 기준점으로 쓰지 않는다
+#: `[2026-10-17 D20]` 구 이름만 말하면 그 구청을 기준점으로 — 「성북구」→「서울한양도성 낙산구간」, 「영등포구」→「한강」, 「서초구」→「헌릉과 인릉」처럼
+#:  관련도 1위 관광지가 잡혀 다른 구 숙소가 나왔다(☆4차 held-out qa_1017_214452, 17건)
+_SEOUL_GU = frozenset("종로구 중구 용산구 성동구 광진구 동대문구 중랑구 성북구 강북구 도봉구 노원구 은평구 서대문구 마포구 양천구 강서구 구로구 "
+                      "금천구 영등포구 동작구 관악구 서초구 강남구 송파구 강동구".split())
+_OUTSIDE_SEOUL = re.compile(r"^(?:인천|부천|일산|고양|성남|분당|판교|수원|용인|안양(?!천)|과천|광명|하남|구리|남양주|의정부|파주|"
+                            r"부산|해운대|대구|대전|울산|제주|서귀포|강릉|속초|춘천|경주|전주|여수|송도|영종)")
 
 
 class ToolBudgetExceeded(RuntimeError):
@@ -32,6 +51,15 @@ class ToolBudgetExceeded(RuntimeError):
 
 class ToolLoopExceeded(RuntimeError):
     """The same named tool and normalized arguments were requested twice."""
+
+
+def _address(value: Any) -> dict[str, str]:
+    """재난문자 `near()` 에 넘길 주소 — 있을 때만 키를 싣는다(주소를 모르는 소스 · 가짜 소스와 호환).
+
+    ★`[2026-10-07]` 주소의 「서울특별시 ○○구」로 문자를 거른다. 좌표 상자는 32% 를 다른 구로 정했다.
+    """
+    text = str(value).strip() if value else ""
+    return {"address": text} if text else {}
 
 
 def _as_datetime(value: Any) -> Any:
@@ -70,7 +98,7 @@ class ReadToolbox:
 
     connection_factory: Callable[[], Any]
     policy_search: Callable[..., list[Any]] = search_policy
-    #: 바깥 데이터 소스 묶음(`app/infrastructure/travel/`). ★기본값이 `None` 이다 —
+    #: 바깥 데이터 소스 묶음(`app/domains/travel_ops/ports/data_sources/`). ★기본값이 `None` 이다 —
     #:  **안 넣으면 여행 도구가 전부 「모름」을 돌려주고 네트워크를 타지 않는다.**
     #:  테스트가 조용히 바깥으로 나가는 사고를 구조로 막는다.
     travel: Any | None = None
@@ -81,6 +109,16 @@ class ReadToolbox:
     route_events: Any | None = None
     #: 고객 문장에서 신고 내용(늦음·휴무·품절·재요청)을 뽑는 함수. 없으면 「모름」.
     report_extractor: Callable[[str], dict[str, Any] | None] | None = None
+    #: 요식 원장(`read.dining_state` · `read.dining_states`)을 쓰나. ★`[2026-09-28 사용자 지시]` 시나리오 모드는
+    #:  대본대로만 도는 데모 모드라 끈다(`CaseEngine`) — 끄면 두 도구가 「원장 없음」(`None`)으로 답하고 계산은 장소 목록으로 간다
+    dining_ledger: bool = True
+    #: 카카오 로컬(키워드 검색). ★장소 **존재 확인**에만 쓰고 응답은 저장하지 않는다 — `[2026-10-05]` 이 브랜치에는 그걸 쓰는 도구(활동 Team 의
+    #:  `read.place_lookup`)가 아직 없고, 조립(`composition`)이 넘겨 두는 자리다. 없으면(`None`) 존재를 못 물은 것이라 「없음」이 아니라 「모름」이다.
+    kakao: Any | None = None
+    #: ★`[2026-09-30]` 구글 장소(`GooglePlaces`) — 식당 가격(`read.place_price`)만 쓴다. 없으면 「모름」.
+    google_places: Any | None = None
+    #: 운영 조립만 주입하는 무료 휴무 관측. 시험·시나리오 기본값은 외부 조회 없음.
+    place_status: Any | None = None
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -101,7 +139,7 @@ class ReadToolbox:
     #
     # ★기록해 둔다 — `wiki/records/handoff/10_도메인_교체_가이드.md` §1 은 이
     #   파일을 교체 지점으로 놓지 않았다. basement 순수성 게이트가 `app/tools/`
-    #   를 대상에서 빼먹었기 때문이다. 실제로 이 파일은 `app/modules/` 와
+    #   를 대상에서 빼먹었기 때문이다. 실제로 이 파일은 `app/domains/` 와
     #   마찬가지로 **도메인을 안다.** 게이트 확장은 별도 작업으로 남아 있다.
     def policy(self, scope: ToolContext, *, query: str, **_: Any) -> list[Any]:
         return self.policy_search(scope.tenant_id, query, scope.knowledge_scope)
@@ -135,9 +173,29 @@ class ReadToolbox:
             # ★수치(취소 기한·위약금율)는 여기서 온다. `read.policy` 는 문장 근거만 댄다
             "read.booking_terms": self.booking_terms,
             "read.disruptions": self.disruptions,
+            # ★`[2026-10-08]` role-activity 판(`read_tools_a.py`)에서 합쳤다 — 보존한 활동 팀 판(`team_a.py`)이 불렀다.
+            #   ★`[2026-10-09]` `team_a.py` 를 `legacy/` 로 옮겼다 — `read.place_candidates` 는 develop 판 팀(대체 장소)이 쓰고,
+            #   나머지(`read.disaster` · `read.disaster_points` · `read.place_lookup` · `read.place_search` …)는 지금 부르는 팀이 없다.
+            "read.disaster": self.disaster,
+            "read.disaster_points": self.disaster_points,
+            "read.place_search": self.place_search,
+            "read.place_lookup": self.place_lookup,
+            "read.place_candidates": self.place_candidates,
+            # ★`[2026-10-09]` 활동 성립 판정의 휴무 · 운영시간 — DB(새벽 작업 `catalog_hours`)만 읽는다.
+            "read.place_hours": self.place_hours,
+            # ★`[2026-10-09]` 활동 성립 판정의 실내외 — 장소의 관광공사 분류(DB 만)로 develop 규칙(`weather_from_class`)을 적용한다.
+            "read.place_class": self.place_class,
             "read.weather_warning": self.weather_warning,
             "read.travel_advisory": self.travel_advisory,
             "read.place":    self.place,
+            # ★요식 원장. `read.place` 와 달리 **시각을 받는다** —
+            #   「그 시각에 여는가」는 시각이 있어야 답할 수 있다.
+            "read.dining_state": self.dining_state,
+            # ★`[2026-10-05]` 대체 후보 여럿의 방문 시간대 판정을 한 번에 — 대체 식당 계산(`state_lookup`)이 쓴다.
+            #   요식 원장이 정본이고 후보 가게는 부르는 쪽이 미리 들여놓는다(`dining.nearby`). 옛 `read.dining_alternatives` 는 걷었다
+            "read.dining_states": self.dining_states,
+            # ★`[2026-09-30]` 식당 가격(구글 1인당 범위 · 가격대) — 대안을 세울 때만. 값은 비교에만 쓰고 버린다(구글 약관)
+            "read.place_price": self.place_price,
             "read.weather":  self.weather,
             "read.route":    self.route,
             "read.transit":  self.transit,
@@ -149,6 +207,34 @@ class ReadToolbox:
             "read.place_catalog": self.place_catalog,
             "read.route_events": self.route_events_for,
             "read.customer_report": self.customer_report,
+            "read.last_survey_answer": self.last_survey_answer,
+            # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP · 검색 전용) — 숙소 팀 · 항공 팀이 쓴다
+            "read.stay_search": self.stay_search,
+            "read.stay_detail": self.stay_detail,
+            "read.flight_search": self.flight_search,
+            # ★`[2026-10-09]` 항공편 비교용 두 번째 소스(Ignav MCP) — 판매처(항공사 · OTA) 예약 링크가 붙는다. 항공 팀이 쓴다
+            "read.flight_offers": self.flight_offers,
+            "read.flight_google": self.flight_google,
+            "read.stay_google": self.stay_google,
+            # ★`[2026-10-10]` booking 모듈 — 여러 판매처를 한 번에 비교(팀 피드백: 에이전트 → booking → 어댑터). 항공 팀 · 숙소 팀이 쓴다
+            "read.booking_search_flights": self.booking_search_flights,
+            "read.booking_search_transit": self.booking_search_transit,   # `[2026-10-14]` 열차 · 버스(TAGO)
+            "read.booking_search_stays": self.booking_search_stays,
+            # ★`[2026-10-13]` 숙소 이름 → 주소 · 좌표(카카오 로컬 → 관광공사). 숙소 팀이 마이리얼트립을 못 쓸 때 「내 숙소」 위치에만 쓴다
+            "read.stay_lookup": self.stay_lookup,
+            # ★`[2026-10-17 D21]` 숙소 이름 여럿 → 위치(카카오 숙박, 한 번에 최대 12곳). 숙소 팀이 걷기 · 근처 조건에서 목록의 위치를 한꺼번에 찾는다
+            #   (도구 호출 예산 `max_steps` 안에서 — 전에는 이름 하나씩 2곳까지라 나머지는 「거리 확인 안 함」이었다)
+            "read.stays_lookup": self.stays_lookup,
+            # ★`[2026-10-15]` 지역 · 장소 이름 → 기준점 하나(이름 · 좌표, 카카오 · 서울 안). 숙소 팀이 「강남역 도보」 「경복궁 근처」의 거리와
+            #   검색 지역이 서울인지 볼 때 쓴다(검수 D · 사용자 결정 「카카오로 기준점 찾기」)
+            "read.landmark": self.landmark,
+            # ★`[2026-10-17 D21]` 좌표 둘레의 지하철역 목록(카카오 · 거리순 최대 15). 숙소 팀이 「지하철역 걸어서 N분」(역 이름 없음)을
+            #   숙소마다 가장 가까운 역에서 잴 때 쓴다 — 한 번 불러 목록을 받고, 숙소별 거리는 팀이 계산한다(도구 호출 예산 `max_steps`)
+            "read.stations_near": self.stations_near,
+            # ★`[2026-10-13]` 구글 호텔 숙소 여럿의 상세(판매처별 가격 · 주소 · 사진)를 동시에 — 숙소 팀이 후보마다 판매처 가격을 붙일 때
+            "read.stay_google_details": self.stay_google_details,
+            # ★`[2026-10-13]` 숙소 · 항공 일정 항목에 앞서 보여 준 후보(숙소 · 항공 원장) — 「또 바꿔 줘」에서 뺀다
+            "read.offers_shown": self.offers_shown,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -156,28 +242,100 @@ class ReadToolbox:
                         "party_size", "capacity", "amount_cents", "locked", "place_id")
     _PLACE_COLUMNS = ("place_id", "name", "kind", "latitude", "longitude",
                       "weather_sensitive", "confirmed_at", "open_at_slot",
-                      "dietary", "dietary_absent")
+                      "dietary", "dietary_absent",
+                      # ★`[2026-10-08]` 관광공사 식별자(013) — 보존한 활동 팀 판의 대체 후보 · CSV 조회가 쓴다. 읽기만 는다.
+                      "source_content_id", "source_content_type_id")
 
     def booking(self, scope: ToolContext, *, booking_id: str | None = None,
                 **_: Any) -> dict[str, Any] | None:
-        """예약 한 건. 없으면 `None`(모름).
+        """예약 한 건. 없으면 `None`(모름). 어떻게 골랐는지를 `matched_by` 에 남긴다.
 
-        ★`booking_id` 를 주면 그 건을, 안 주면 **가장 임박한** 예약을 본다.
-          「가장 최근에 만든 것」이 아니다 — 여행 CS 에서 문제가 되는 것은
-          다가오는 일정이지 방금 만든 예약이 아니다.
+        고르는 순서:
+          1. `booking_id` 를 주면 그 건(`matched_by: "argument"`).
+          2. ★`[2026-10-09]` **이 Case 가 가리키는 예약**(`state_json.subject_ref` 의 `kind: "booking"` — 접수 때 확인기가
+             소유를 확인했다, `core_hooks/subjects.py`)이면 그 건(`"case"`). 팀이 넘기는 `case_id` 인자는 믿지 않고
+             도구 문맥(`scope.case_id`)으로 읽는다. 이은 예약이 없어졌으면 `None` — 다른 예약으로 대신하지 않는다.
+          3. Case 에 이은 예약이 없으면 **가장 임박한** 예약(`"nearest"`) — 추정이다. 전에는 언제나 이 길이라, 예약이
+             여럿인 고객은 문의와 다른 예약으로 판정받을 수 있었다. 「가장 최근에 만든 것」이 아니다 — 여행 CS 에서
+             문제가 되는 것은 다가오는 일정이지 방금 만든 예약이 아니다.
 
         ★tenant·customer 조건을 뺀 조회는 그 자체가 보안 결함이다
           (`CLAUDE.md` §1, `tests/security/`).
+        ★`[2026-10-13]` 이 예약이 속한 여행을 `trip` 에 붙인다(`_booking_trip`) — 팀이 그 여행의 설문을 `read.itinerary` 로 읽는다
+          (활동 → 코어 전달 8번 회신 `wiki/records/reports/2026-10-13_활동_전달8_설문전달_회신.md`).
         """
         select = ("SELECT booking_id, booking_no, kind, status, starts_at, party_size, "
                   "capacity, amount_cents, locked, place_id FROM bookings "
                   "WHERE tenant_id=%s AND customer_id=%s")
+        matched_by = "argument"
+        if booking_id is None:
+            booking_id = self._case_booking_id(scope)
+            matched_by = "case"
         if booking_id is not None:
-            return self._one(select + " AND booking_id=%s",
-                             (scope.tenant_id, scope.customer_id, booking_id),
-                             self._BOOKING_COLUMNS)
-        return self._one(select + " ORDER BY starts_at ASC LIMIT 1",
-                         (scope.tenant_id, scope.customer_id), self._BOOKING_COLUMNS)
+            found = self._one(select + " AND booking_id=%s",
+                              (scope.tenant_id, scope.customer_id, str(booking_id)),
+                              self._BOOKING_COLUMNS)
+        else:
+            matched_by = "nearest"
+            found = self._one(select + " ORDER BY starts_at ASC LIMIT 1",
+                              (scope.tenant_id, scope.customer_id), self._BOOKING_COLUMNS)
+        if found is None:
+            return None
+        trip = self._booking_trip(scope, found)
+        # ★`[2026-10-15]` 활동 → 코어 전달 3번 — 맨 바깥 `trip_id` 한 칸: **그 예약이 든 최신 일정의 여행**, 없으면 `None`.
+        #   확인된 연결(`itinerary_item`)일 때만 채운다 — 기간으로 추정한 여행(`trip_period`)은 `trip` 칸에만 있다(추정을 확정처럼 싣지 않는다).
+        return {**found, "matched_by": matched_by, "trip": trip,
+                "trip_id": trip["trip_id"] if trip.get("matched_by") == "itinerary_item" else None}
+
+    def _booking_trip(self, scope: ToolContext, booking: dict[str, Any]) -> dict[str, Any]:
+        """이 예약이 속한 여행. `{trip_id, matched_by, why_unknown}` — 못 찾으면 `trip_id` 가 `None` 이고 이유를 적는다.
+
+        찾는 순서(전달 8번 회신):
+          1. `"itinerary_item"` — 여행 **최신 일정판**의 항목이 이 예약을 가리킨다(`itinerary_items.booking_id`). 확인된 연결이다.
+          2. `"trip_period"` — 1이 없으면 진행 중인 여행 가운데 예약 날짜(서울 날짜)가 그 여행의 첫 항목 날짜~마지막 항목 날짜 안에
+             드는 것. **추정이다.** 딱 하나일 때만 쓴다.
+        ★둘 이상 걸리면 고르지 않는다(`why_unknown: "ambiguous"`) — 다른 여행의 취향으로 판정하는 것이 「모름」보다 나쁘다.
+        ★여행 · 항목 모두 tenant · customer 로 묶는다. 다른 고객의 여행은 있는지도 말하지 않는다.
+        """
+        linked = self._trip_ids(
+            "SELECT DISTINCT t.trip_id FROM itinerary_items i JOIN trips t ON t.tenant_id=i.tenant_id "
+            "AND t.trip_id=i.trip_id AND i.version=t.latest_version "
+            "WHERE t.tenant_id=%s AND t.customer_id=%s AND i.booking_id=%s LIMIT 2",
+            (scope.tenant_id, scope.customer_id, str(booking["booking_id"])))
+        if len(linked) == 1:
+            return {"trip_id": linked[0], "matched_by": "itinerary_item", "why_unknown": None}
+        if linked:
+            return {"trip_id": None, "matched_by": None, "why_unknown": "ambiguous"}
+        if booking.get("starts_at") is None:
+            return {"trip_id": None, "matched_by": None, "why_unknown": "not_linked"}
+        during = self._trip_ids(
+            "SELECT t.trip_id FROM trips t JOIN itinerary_items i ON i.tenant_id=t.tenant_id "
+            "AND i.trip_id=t.trip_id AND i.version=t.latest_version "
+            "WHERE t.tenant_id=%s AND t.customer_id=%s AND t.status='active' GROUP BY t.trip_id "
+            "HAVING (%s::timestamptz AT TIME ZONE 'Asia/Seoul')::date "
+            "BETWEEN min(i.starts_at AT TIME ZONE 'Asia/Seoul')::date "
+            "AND max(coalesce(i.ends_at, i.starts_at) AT TIME ZONE 'Asia/Seoul')::date LIMIT 2",
+            (scope.tenant_id, scope.customer_id, booking["starts_at"]))
+        if len(during) == 1:
+            return {"trip_id": during[0], "matched_by": "trip_period", "why_unknown": None}
+        return {"trip_id": None, "matched_by": None, "why_unknown": "ambiguous" if during else "not_linked"}
+
+    def _trip_ids(self, sql: str, params: tuple[Any, ...]) -> list[str]:
+        with self.connection_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql, params)
+                return [str(row[0]) for row in cur.fetchall()]
+
+    def _case_booking_id(self, scope: ToolContext) -> str | None:
+        """이 Case 가 가리키는 예약 id(`subject_ref.kind == "booking"`). 없으면 `None`."""
+        with self.connection_factory() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT state_json->'subject_ref'->>'id' FROM customer_cases "
+                            "WHERE tenant_id=%s AND customer_id=%s AND case_id=%s "
+                            "AND state_json->'subject_ref'->>'kind' = 'booking'",
+                            (scope.tenant_id, scope.customer_id, scope.case_id))
+                row = cur.fetchone()
+        return row[0] if row and row[0] else None
 
     #: 취소 조건을 찾는 순서 — 좁은 것부터. v11 결정 15 「값마다 대체 소스를 둔다」를
     #: 데이터로 구현한 것이다(마이그레이션 023).
@@ -244,10 +402,72 @@ class ReadToolbox:
             return None      # ★어느 장소인지 모르면 조회하지 않는다
         row = self._one(
             "SELECT place_id, name, kind, latitude, longitude, weather_sensitive, "
-            "hours_confirmed_at, open_at_slot, dietary, dietary_absent FROM places "
+            "hours_confirmed_at, open_at_slot, dietary, dietary_absent, "
+            "source_content_id, source_content_type_id FROM places "
             "WHERE tenant_id=%s AND place_id=%s",
             (scope.tenant_id, place_id), self._PLACE_COLUMNS)
         return self._fill_coordinates(row)
+
+    def dining_state(self, scope: ToolContext, *, place_id: str | None = None,
+                     at: Any = None, until: Any = None, order_margin_min: int | None = None,
+                     **_: Any) -> dict[str, Any] | None:
+        """그 시각 그 장소의 요식 판정. 없으면 `None`(모름).
+
+        ★`read.place` 와 달리 **시각을 받는다.** `places.open_at_slot` 은 칸
+          하나라 어느 예약이든 같은 값이고, 12시 예약과 22시 예약을 가를 수 없다.
+
+        ★코어 표를 읽지도 쓰지도 않는다. 코어 `place_id` 를 요식 원장 장소로
+          바꾸는 것은 `dining.dn_core_place_link` 이고 그것도 요식 표다.
+
+        ★`open_at_slot` 이 NULL 이면 **모름**이다. 받는 쪽이 「아니다」로 읽으면
+          안 된다 — 그 구분은 Team 이 한다.
+        """
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        dining_ledger.require_state_provider(registered_place=True)
+        if not self.dining_ledger:
+            return None
+        with self.connection_factory() as conn:
+            return dining_ledger.state(conn, scope.tenant_id, place_id, at, until,
+                                       order_margin_min=order_margin_min)
+
+    def dining_states(self, scope: ToolContext, *, slots: list[dict[str, Any]],
+                      order_margin_min: int | None = None, **_: Any) -> dict[str, dict[str, Any] | None] | None:
+        """대체 식당들의 방문 시간대를 한 번에 읽는다. 테넌트는 검증된 scope에서만 받는다.
+
+        ★`[2026-10-05]` 라스트오더 주문 여유(`order_ok`)를 함께 낸다 — 기본은 대체 계산의 탈락 기준(20분, `replan.ORDER_MARGIN_MIN`).
+        ★요식 원장을 쓰지 않는 조립(시나리오 모드 — `dining_ledger=False`)은 `None` — 계산은 장소 목록의 영업시간으로 돌아간다.
+        """
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        dining_ledger.state_lookup(None, scope.tenant_id)
+        if not self.dining_ledger:
+            return None
+        with self.connection_factory() as conn:
+            if order_margin_min is None:
+                return dining_ledger.states(conn, scope.tenant_id, slots)
+            return dining_ledger.states(conn, scope.tenant_id, slots, order_margin_min=order_margin_min)
+
+    def place_price(self, scope: ToolContext, *, place_ids: list[str] | None = None,
+                    **_: Any) -> dict[str, dict[str, int | None] | None] | None:
+        """장소들의 구글 가격 {place_id: {"level", "low", "high"} 또는 None}. 구글이 꺼져 있으면 `None`(모름).
+
+        ★`[2026-09-30 사용자 결정]` 하루 상한 없이 부르고, 월 무료 한도를 넘으면 운영자에게 알린다
+          (`GooglePlaces.price`). ★돌려준 값을 근거·기록에 그대로 싣지 않는다 — 비교 결과만 남긴다.
+        ★`[2026-10-05]` **스위치 뒤에 있다** — 가드레일 `travel.dining.google_price_enabled`(기본 꺼짐)가 꺼져 있으면
+          구글도 DB 도 부르지 않고 `None`(모름)이다. 식당을 가격으로 순위 매기거나 떨어뜨리지 않는다(2026-09-28 결정).
+        """
+        if self.google_places is None or not place_ids:
+            return None
+        # ★`[2026-10-13]` 관리 콘솔에서 켠 값이 먼저다(없으면 가드레일). 여기서 정한 값을 그대로 넘긴다 —
+        #   넘기지 않으면 `prices_for` 가 가드레일만 다시 보고 콘솔에서 켠 것을 꺼진 것으로 읽는다
+        from app.domains.travel_ops.components.settings_hook import google_price_enabled
+
+        if not google_price_enabled(scope.tenant_id):
+            return None
+        from app.domains.travel_ops.ports.data_sources.google_places import prices_for
+
+        return prices_for(self.connection_factory, scope.tenant_id, self.google_places, list(place_ids), enabled=True)
 
     def _fill_coordinates(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
         """좌표가 비었으면 국가유산청에서 채운다. ★**어디서 왔는지 남긴다.**
@@ -320,7 +540,7 @@ class ReadToolbox:
 
     # ── 일정(Trip) ──────────────────────────────────────────────
     def _trip_store(self, scope: ToolContext):
-        from app.modules.travel_ops.itinerary import TripStore
+        from app.domains.travel_ops.components.itinerary.itinerary import TripStore
 
         return TripStore(scope.tenant_id)
 
@@ -329,7 +549,7 @@ class ReadToolbox:
         """그 여행의 **최신 일정 버전**. 이 고객의 여행이 아니면 `None`(있는지도 말하지 않는다)."""
         if not trip_id:
             return None
-        from app.modules.travel_ops.itinerary import item_to_dict
+        from app.domains.travel_ops.components.itinerary.itinerary import item_to_dict
 
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
@@ -349,7 +569,7 @@ class ReadToolbox:
         """옛 일정 버전의 항목(되돌림용). 이 고객의 여행이 아니거나 없는 버전이면 `None`."""
         if not trip_id or version is None:
             return None
-        from app.modules.travel_ops.itinerary import item_to_dict
+        from app.domains.travel_ops.components.itinerary.itinerary import item_to_dict
 
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
@@ -366,11 +586,22 @@ class ReadToolbox:
         return {"trip_id": str(trip_id), "version": wanted,
                 "items": [item_to_dict(item) for item in items]}
 
-    def place_catalog(self, scope: ToolContext, **_: Any) -> list[dict[str, Any]] | None:
-        """이 테넌트의 장소 목록 — 대안 후보를 고르는 재료. ★빈 목록은 「장소가 없다」는 아는 사실이다."""
+    def place_catalog(self, scope: ToolContext, *, trip_id: str | None = None, **_: Any) -> list[dict[str, Any]] | None:
+        """이 테넌트의 장소 목록 — 대안 후보를 고르는 재료. ★빈 목록은 「장소가 없다」는 아는 사실이다.
+
+        ★`[2026-09-29]` `trip_id` 를 주면 그 여행이 볼 수 있는 것(공용 + 그 여행 전용 · 대본 여행이면 시연 장소)이다.
+          남의 여행이면 `None`(다른 도구와 같다)."""
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
-            return store.places(conn)
+            if trip_id is None:
+                return store.places(conn)
+            try:
+                trip, _ = store.latest(conn, UUID(str(trip_id)))
+            except (KeyError, ValueError):
+                return None
+            if str(trip["customer_id"]) != str(scope.customer_id):
+                return None
+            return store.places(conn, UUID(str(trip_id)))
 
     def route_events_for(self, scope: ToolContext, *, targets: list[str] | None = None,
                          **_: Any) -> dict[str, Any] | None:
@@ -386,6 +617,20 @@ class ReadToolbox:
         unsupported = getattr(source, "unsupported", None)
         return {"events": source.affecting(wanted),
                 "unsupported": list(unsupported(wanted)) if callable(unsupported) else []}
+
+    def last_survey_answer(self, scope: ToolContext, *, question_id: str | None = None,
+                           **_: Any) -> dict[str, Any] | None:
+        """이 고객이 여행 설문 문항(`question_id`)에 마지막으로 고른 답 — `survey_answers.last_answer`. 없으면 `None`. `[2026-10-14]`
+
+        ★이 고객 것만 읽는다(tenant · customer). 다시 물을 때 지난 답을 미리 알려 주는 용도다 — 답으로 대신 쓰지 않는다.
+        """
+        if not question_id:
+            return None
+        from app.domains.travel_ops.components.intake import survey_answers
+
+        with self.connection_factory() as conn:
+            return survey_answers.last_answer(conn, tenant_id=scope.tenant_id, customer_id=scope.customer_id,
+                                              question_id=str(question_id))
 
     def customer_report(self, scope: ToolContext, *, text: str | None = None,
                         **_: Any) -> dict[str, Any] | None:
@@ -412,16 +657,221 @@ class ReadToolbox:
           감시 루프도 같은 판정을 쓴다 — 문의 때와 감시 때 기준이 갈리지 않게.
         ★소스 묶음이 주입되지 않았으면 `None` — 바깥으로 나가지 않는다.
         """
+        # ★`[2026-09-29]` 모름(`None`)을 「야외 아님」으로 바꾸지 않는다 — 점검이 모름을 따로 다룬다(`indoor_unknown`)
         place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
-                 "weather_sensitive": bool(weather_sensitive), "district": district}
-        if self.check is not None:
-            return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
-        if self.travel is None:
+                 "weather_sensitive": None if weather_sensitive is None else bool(weather_sensitive),
+                 "district": district}
+        if self.check is None and self.travel is None:
             return None
-        from app.infrastructure.travel.disruptions import DisruptionCheck
+        if place_id:
+            from app.domains.travel_ops.components.watch.simulation import case_place
+            connection = self.connection_factory()
+            if connection is not None:
+                with connection as conn:
+                    place = case_place(conn, tenant=scope.tenant_id, customer_id=scope.customer_id,
+                                       case_id=scope.case_id, place=place)
+        if self.check is not None:
+            report = self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        else:
+            from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+            report = DisruptionCheck(self.travel).check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
+        if self.place_status is not None and place_id and not place.get('_watch_simulation') and report is not None:
+            from datetime import UTC, datetime
+            return self.place_status.merge_case(scope, place=place, start=_as_datetime(starts_at), report=report,
+                                                now=datetime.now(UTC))
+        return report
 
-        return DisruptionCheck(self.travel).check(
-            place=place, starts_at=_as_datetime(starts_at), region=str(region))
+    # ── role-activity 판에서 합친 도구 `[2026-10-08]` — 보존한 활동 팀 판만 부른다 ──────────────────
+    def place_search(self, scope: ToolContext, *, name: str | None = None,
+                     kind: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """이름으로 장소 후보 하나를 찾는다(공급자 카탈로그, **우리 DB 조회가 아니다**).
+
+        ★`place()`와 다르다 — `place()`는 **이미 아는** `place_id`로 우리
+          `places` 테이블을 읽고, 이건 **아직 모르는** 장소를 이름만으로
+          TourAPI에서 찾는다. 「일정 제출」처럼 고객이 새로 말한 장소를
+          다루는 자리에서 쓴다.
+
+        ★애매하면 **`None`(모름)** — 확정하지 않는다. `tour_api.py.find()`가
+          이미 이 규율을 지킨다(제목 정확일치 1건일 때만 확정, 2건 이상이면
+          "경복궁"이 서울 궁궐·울산 음식점으로 갈리는 것처럼 애매함 자체를
+          답으로 준다). 여기서 그 규율을 느슨하게 만들지 않는다.
+
+        ★`kind`(activity/dining/lodging/flight)를 주면 그 종류로만 좁혀
+          받는다 — `watch.py`의 `KIND_TO_CONTENT_TYPES`와 같은 매핑을 쓴다.
+        """
+        if self.travel is None or self.travel.place is None:
+            return None
+        if not name or not name.strip():
+            return None
+        # ★`watch.py`의 `KIND_TO_CONTENT_TYPES`와 같은 매핑이다. Team 내부
+        #   모듈을 이 파일에서 import하지 않으려고(basement가 Team을 모르는
+        #   경계) 작게 복제한다 — 값이 갈라지면 나란히 있는 두 자리가 서로
+        #   드러내 준다.
+        allowed = {"activity": {"12", "14", "28", "38"}, "dining": {"39"},
+                  "lodging": {"32"}, "flight": set()}.get(kind or "")
+        narrow = next(iter(allowed)) if allowed and len(allowed) == 1 else None
+        return self.travel.place.find(
+            name.strip(), content_type_id=narrow, allowed_types=allowed or None)
+
+    def place_lookup(self, scope: ToolContext, *, name: str | None = None,
+                     **_: Any) -> dict[str, Any] | None:
+        """고객이 말한 장소 이름 → 우리 카탈로그, 없으면 카카오로 **존재만** 확인한다.
+
+        반환 `status`: `found` · `ambiguous` · `exists_unregistered` · `not_found` · `unknown`.
+        ★`read.place_search` 와 달리 「없음」과 「못 물어봄」을 가른다(`not_found` ≠ `unknown`).
+        ★카카오 응답(이름·좌표·주소)은 결과에 싣지 않는다 — 결과는 Case 근거로 저장되기 때문이다.
+        이름이 비면 `None`(모름). 본체는 `activity/place_lookup.py`.
+        """
+        if not name or not name.strip():
+            return None
+        from app.domains.travel_ops.instances.activity.place_lookup import lookup_place
+
+        return lookup_place(self.connection_factory, scope.tenant_id, name, self.kakao)
+
+    def place_hours(self, scope: ToolContext, *, place_id: str | None = None, at: Any = None,
+                    **_: Any) -> dict[str, Any] | None:
+        """그 장소의 운영시간 · 휴무 사실 — **DB 에 읽어 둔 값만** 본다(바깥 호출 없음). `[2026-10-09]`
+
+        ★요일별 운영시간은 확인 화면과 같은 함수(`components.intake.hours.facts_for`)로 모은다 — 장소 행 속성 →
+          관광공사 운영시간 표(`catalog_hours`, 새벽 작업) 순. 판정은 받는 쪽(활동 팀)이 `place_hours.fits` 로 한다.
+        ★요일표가 펴지 못하는 휴무(매월 n번째 주 · 공휴일 조건)는 **원문**(`catalog_hours.hours_origin.restdate`)을
+          함께 실어, 받는 쪽이 휴무 규칙(`closure_rules.read_closure`)으로 읽게 한다.
+        반환 `{known, attributes, source, why_unknown, conditions, usetime_text, restdate_text}`. 장소를 모르면 `None`.
+        """
+        if place_id is None:
+            return None      # ★어느 장소인지 모르면 조회하지 않는다
+        from datetime import datetime
+
+        from app.domains.travel_ops.components.intake.hours import _tenants, facts_for
+
+        when = _as_datetime(at)
+        with self.connection_factory() as conn:
+            facts = facts_for(conn, scope.tenant_id, {"place_id": str(place_id)}, "activity",
+                              when if isinstance(when, datetime) else None, None, activity_verdict=False)
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT ch.hours_origin FROM places p JOIN catalog_hours ch "
+                    "ON ch.tenant_id = ANY(%s) AND ch.source = 'tour_api' "
+                    "AND ch.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id') "
+                    "WHERE p.tenant_id = %s AND p.place_id = %s AND ch.hours_origin IS NOT NULL LIMIT 1",
+                    (_tenants(scope.tenant_id), scope.tenant_id, str(place_id)))
+                row = cur.fetchone()
+        origin = dict(row[0]) if row and row[0] else {}
+        return {"known": facts.known, "attributes": facts.attributes, "source": facts.source,
+                "why_unknown": facts.why_unknown, "conditions": list(facts.conditions),
+                "usetime_text": origin.get("usetime"), "restdate_text": origin.get("restdate")}
+
+    def place_class(self, scope: ToolContext, *, place_id: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """그 장소의 관광공사 분류와 그 분류로 정한 실내외 — **DB 에 적재한 목록**(`place_catalog`)만 본다. `[2026-10-09]`
+
+        ★실내외는 develop 규칙(`itinerary.weather_from_class` — 확실한 대 · 중분류만, 모르면 `None`)으로 정한다.
+          일정 짜기가 장소 행을 채울 때(`fill_weather_sensitive`)와 같은 규칙이다. 장소명으로 짐작하지 않는다.
+        반환 `{content_id, lcls1, lcls2, address, weather_sensitive}`. 장소를 모르거나 목록에 없으면 `None`(모름).
+        ★`address` 는 판정 LLM 의 실시간 운영 상태(웹 검색)가 같은 이름의 다른 곳과 가르는 데 쓴다(D-CS-015).
+        """
+        if place_id is None:
+            return None
+        from app.domains.travel_ops.components.intake.hours import _tenants
+        from app.domains.travel_ops.components.itinerary.itinerary import weather_from_class
+
+        found = self._one(
+            "SELECT pc.content_id, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2', pc.address FROM places p "
+            "JOIN place_catalog pc ON pc.tenant_id = ANY(%s) AND pc.source = 'tour_api' "
+            "AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id') "
+            "WHERE p.tenant_id = %s AND p.place_id = %s LIMIT 1",
+            (_tenants(scope.tenant_id), scope.tenant_id, str(place_id)), ("content_id", "lcls1", "lcls2", "address"))
+        if found is None:
+            return None
+        return {**found, "weather_sensitive": weather_from_class(found["lcls1"], found["lcls2"])}
+
+    def place_candidates(self, scope: ToolContext, *, content_id: str | None = None,
+                         **_: Any) -> dict[str, Any] | None:
+        """대체 장소 후보 풀. `place_catalog`(TourAPI 적재분)를 읽는다.
+
+        ★실제 조회는 `app/domains/travel_ops/instances/activity/db_search/place_candidates.py` 가 한다 — 여기는 테넌트
+          범위를 넘겨 부르는 얇은 연결이다. 원래 장소가 카탈로그에 없으면
+          `None`(모름)이고 Team 은 「후보를 조회하지 못했다」로 답한다.
+
+        인자: `content_id` — 문제있음 판정이 난 원래 장소의 TourAPI
+        `contentid`(`read.place` 의 `source_content_id`). 없으면 `None`.
+
+        반환 모양(행은 CSV·TourAPI 컬럼명 그대로 — `alternatives.py` 가 읽는다)::
+
+            {"origin":     {"contentid", "title", "contenttypeid",
+                            "lclsSystm1", "lclsSystm2", "lclsSystm3",
+                            "lDongSignguCd", "brand", "mapx", "mapy",
+                            "closed_days", "business_hours"},
+             "candidates": [<origin 과 같은 모양의 행>, ...],
+             "source": "...", "confirmed_at": "..."}
+
+        ★후보 풀을 유사도 필드로 **미리 좁히지 않는다** — 폴백이 필드를
+          하나씩 풀 수 있어야 한다. 원래 장소 좌표 기준 최대 반경(10km)의
+          바운딩 박스로만 좁힌다(`[2026-10-02]` 시군구 대신 반경).
+        ★원래 장소 행(`origin`)을 모르면 `None` — 유사도를 잴 기준이 없다.
+        """
+        if not content_id:
+            return None      # ★어느 장소인지 모르면 조회하지 않는다
+        from app.domains.travel_ops.instances.activity.db_search.place_candidates import find_place_candidates
+
+        return find_place_candidates(self.connection_factory, scope.tenant_id, content_id)
+
+    def disaster(self, scope: ToolContext, *, latitude: float | None = None,
+                 longitude: float | None = None, at: Any = None, address: str | None = None,
+                 **_: Any) -> dict[str, Any] | None:
+        """그 좌표 인근·그 시각 기준의 재난문자 목록. 모르면 `None`.
+
+        ★`weather()`와 같은 규율이다 — **좌표를 모르면 묻지 않는다.**
+          "어디인지 모르는 곳의 재난"은 없다.
+
+        ★`[구현 2026-09-20]` `DisasterMsgSource`(`disaster_msg.py`)가 생겼고
+          `build_travel_sources()`가 `ACOP_DISASTER_API_KEY`(또는 공통 키)가
+          있으면 조립한다. 키가 없으면 `self.travel.disaster`는 여전히 `None`
+          이고 이 함수는 `None`을 돌려준다 — 모름은 정상 갈래다.
+          ★★실 키로 검증되지 않았다(`disaster_msg.py` 모듈 docstring 참고).
+
+        ★반환 모양: `{"messages": [{"SN":...,
+          "EMRG_STEP_NM":...,"DST_SE_NM":...,"MSG_CN":...}, ...],
+          "confirmed_at":..., "source":...}`. 재난문자 원문(`MSG_CN`)은
+          자연어다 — TourAPI 운영시간과 같은 이유로 Team은 이걸 통으로
+          해석하지 않는다(`activity.py`의 `_disaster_blocks()` 참고).
+        """
+        if self.travel is None or self.travel.disaster is None:
+            return None
+        if latitude is None or longitude is None:
+            return None
+        return self.travel.disaster.near(
+            latitude=float(latitude), longitude=float(longitude),
+            at=_as_datetime(at), **_address(address))
+
+    #: 한 번에 묻는 좌표 수 상한 — 대체 후보(화면 3 + 더보기 10)를 넘지 않는다.
+    DISASTER_POINTS_MAX = 13
+
+    def disaster_points(self, scope: ToolContext, *, points: Any = None, at: Any = None,
+                        **_: Any) -> dict[str, Any] | None:
+        """좌표 여러 곳의 재난문자를 **한 번에** 본다 — 대체 후보 재검증용. `[2026-10-07]`
+
+        `points`: `[[위도, 경도], ...]` 또는 `[[위도, 경도, 주소], ...]` — 주소가 있으면 그 구로 거른다. 반환: `{"points": [<disaster() 와 같은 모양 | None>, ...]}`
+        — 순서는 `points` 와 같다. 좌표를 못 읽은 칸은 `None`(모름)이다.
+        ★지역 판정(좌표 → 자치구 → 그 구로 온 문자)은 `disaster()` 와 **같은** `near()` 가 한다 —
+          Team 이 지역을 따로 해석하지 않게. 소스가 지역 단위로 캐시하므로 좌표가 많아도 외부 호출은 늘지 않는다.
+        ★소스가 없거나 `points` 가 목록이 아니면 `None`(모름).
+        """
+        if self.travel is None or self.travel.disaster is None:
+            return None
+        if not isinstance(points, (list, tuple)):
+            return None
+        when = _as_datetime(at)
+        results: list[dict[str, Any] | None] = []
+        for point in list(points)[:self.DISASTER_POINTS_MAX]:
+            try:
+                latitude, longitude = float(point[0]), float(point[1])
+            except (TypeError, ValueError, IndexError):
+                results.append(None)
+                continue
+            address = point[2] if len(point) > 2 else None
+            results.append(self.travel.disaster.near(latitude=latitude, longitude=longitude, at=when,
+                                                     **_address(address)))
+        return {"points": results}
 
     def weather_warning(self, scope: ToolContext, *, region: str = "서울",
                         **_: Any) -> dict[str, Any] | None:
@@ -447,6 +897,270 @@ class ReadToolbox:
         if not country_iso2:
             return None
         return self.travel.advisory.country(iso2=str(country_iso2))
+
+    # ── 숙소·항공 검색 (마이리얼트립 MCP) ─────────────────────────
+    #   ★인자 이름은 어댑터(`ports/data_sources/myrealtrip.py`)와 같다. 소스가 없으면 `None`(모름) — 바깥으로 나가지 않는다.
+    #   ★날짜·키워드·공항 코드가 비면 **묻지 않는다** — 기본 날짜로 채워 부르지 않는다(되묻기는 팀의 일).
+    def _travel_search(self) -> Any | None:
+        return getattr(self.travel, "travel_search", None) if self.travel else None
+
+    def stay_search(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 목록(이름 · 1박 가격 · 5점 만점 평점). 좌표 · 링크는 `read.stay_detail` 이 준다."""
+        source = self._travel_search()
+        if source is None or not keyword or not check_in or not check_out:
+            return None
+        wanted = ("adults", "children", "domestic", "size", "min_price", "max_price", "min_review_rating")
+        return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_detail(self, scope: ToolContext, *, gid: Any = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 한 곳의 좌표 · 주소 · 예약 페이지 링크 · 그 날짜의 가격."""
+        source = self._travel_search()
+        if source is None or gid is None or not check_in or not check_out:
+            return None
+        try:
+            gid = int(gid)
+        except (TypeError, ValueError):
+            return None
+        return source.stay_detail(gid=gid, check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in ("adults", "children") if options.get(key) is not None})
+
+    def flight_search(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(항공사 · 시각 · 총액 · 검색 페이지 링크). 공항 코드는 3글자."""
+        source = self._travel_search()
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def flight_offers(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(Ignav) — `read.flight_search` 와 같은 인자 · 같은 모양에 판매처(`seller`)와 판매처 링크가 붙는다.
+        키가 없어 소스가 없으면 `None`(모름)."""
+        source = getattr(self.travel, "flight_offers", None) if self.travel else None
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def flight_google(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                      depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 목록(SerpApi 구글 항공권, 한국 설정) — `read.flight_search` 와 같은 인자 · 같은 모양. 링크는 구글 항공권 결과 페이지.
+        키가 없어 소스가 없으면 `None`(모름). `[2026-10-09]`"""
+        source = getattr(self.travel, "flight_google", None) if self.travel else None
+        if source is None or not origin or not destination or not depart_date:
+            return None
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return source.flight_search(origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                                    **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_google(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                    check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 목록(SerpApi 구글 호텔, 한국 설정) — 이름 · 1박 · 전체 · 평점 · 좌표 · 링크. 키가 없어 소스가 없으면 `None`. `[2026-10-10]`"""
+        source = getattr(self.travel, "stay_google", None) if self.travel else None
+        if source is None or not keyword or not check_in or not check_out:
+            return None
+        wanted = ("adults", "children", "size", "max_price")
+        return source.stay_search(keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                                  **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def stay_lookup(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """숙소 이름 → 주소 · 좌표. `[2026-10-13]` 숙소 팀의 「내 숙소」가 마이리얼트립을 못 쓸 때(쉬는 중 · 실패 · 못 찾음).
+
+        ① 카카오 로컬 — 숙박(`AD5`)으로 좁혀 서울 전역을 관련도 순으로(서울 밖은 어댑터가 뺀다). 응답은 저장하지 않는다(카카오 약관).
+        ② 관광공사 — 숙박(32)에서 제목이 정확히 같은 한 곳(애매하면 없음).
+        돌려주는 것: `{"source": "kakao"|"tour_api", "stays": [{name, address, latitude, longitude}]}`.
+        둘 다 부를 수 없었으면 `None`(모름). 카카오가 답했는데 둘 다 못 찾았으면 빈 목록.
+        """
+        if not name or not str(name).strip():
+            return None
+        answered = False
+        if self.kakao is not None:
+            found = self.kakao.search(str(name), size=5, category_group_code="AD5", anywhere=True)
+            if found is not None:
+                answered = True
+                if found:
+                    return {"source": "kakao", "stays": [{key: row.get(key) for key in ("name", "address", "latitude", "longitude")}
+                                                         for row in found]}
+        place = getattr(self.travel, "place", None) if self.travel else None
+        if place is not None and hasattr(place, "find"):
+            hit = place.find(str(name), content_type_id="32")
+            if hit:
+                return {"source": "tour_api", "stays": [{"name": hit.get("matched_title"), "address": hit.get("address"),
+                                                         "latitude": hit.get("latitude"), "longitude": hit.get("longitude")}]}
+        return {"source": None, "stays": []} if answered else None
+
+    #: 한 번에 위치를 찾는 숙소 수 상한(카카오 호출 수 = 이름 수). 우리가 고른 값
+    STAYS_LOOKUP_MAX = 20                     # `[2026-10-18 D22]` 12 → 20: 구를 말하면 구글 숙소 이름도 함께 찾는다
+
+    def stays_lookup(self, scope: ToolContext, *, names: Any = None, **_: Any) -> dict[str, Any] | None:
+        """숙소 이름 여럿 → 이름마다 카카오 로컬 숙박(`AD5`, 서울 전역) 결과. `[2026-10-17 D21]`
+
+        돌려주는 것: `{"source": "kakao", "stays": {이름: [{name, address, latitude, longitude}]}}` — 이름 · 주소 · 좌표만(응답은 저장하지 않는다,
+        카카오 약관). 앞의 `STAYS_LOOKUP_MAX` 곳까지만 부른다. 카카오를 부를 수 없으면 `None`."""
+        if self.kakao is None or not names:
+            return None
+        out: dict[str, list[dict[str, Any]]] = {}
+        answered = False
+        for name in list(dict.fromkeys(str(n).strip() for n in names if str(n or "").strip()))[: self.STAYS_LOOKUP_MAX]:
+            found = self.kakao.search(name, size=5, category_group_code="AD5", anywhere=True)
+            if found is None:
+                continue
+            answered = True
+            out[name] = [{key: row.get(key) for key in ("name", "address", "latitude", "longitude")} for row in found]
+        return {"source": "kakao", "stays": out} if answered else None
+
+    def landmark(self, scope: ToolContext, *, name: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """지역 · 장소 이름 → 기준점 하나(이름 · 위도 · 경도). `[2026-10-15]` 숙소 팀 — 「강남역 걸어서」 「경복궁 근처」 「김포공항 근처」의 기준점,
+        그리고 검색 지역이 서울인지(카카오 어댑터는 서울 주소만 돌려준다).
+
+        카카오 로컬 키워드 검색, 서울 전역을 관련도 순으로(`anywhere`). 이름이 「…역」이면 지하철역(`SW8`)으로 먼저 찾고 없으면 분류 없이.
+        돌려주는 것: `{"source": "kakao", "found": True, "name", "latitude", "longitude"}` — 이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관).
+        서울에서 못 찾았으면 `{"source": "kakao", "found": False}`, 카카오를 부를 수 없었으면 `None`(모름).
+        """
+        word = str(name or "").strip()
+        fixed = next((row for row in _FIXED_LANDMARKS if "".join(word.split()).startswith(row[0])), None)
+        if fixed:
+            return {"source": "fixed", "found": True, "name": fixed[1], "latitude": fixed[2], "longitude": fixed[3]}
+        if not word or self.kakao is None:
+            return None
+        if _OUTSIDE_SEOUL.match(re.sub(r"^서울(?:특별시|시)?\s*", "", word) if word.startswith("서울") else word):
+            return {"source": "kakao", "found": False, "outside_seoul": True}
+        word = re.sub(r"^서울(?:특별시|시)?\s+", "", word) or word      # 「서울 강남」 → 「강남」(카카오는 이미 서울 안만 찾는다)
+        # `[2026-10-17 D17]` 「홍대/신촌」 · 「홍대, 신촌」 — 앞 지역으로(☆N10-23: 통째로 찾아 「홍대선원」이 기준점이 됐다)
+        word = re.split(r"\s*[/,·]\s*|\s+(?:이나|또는|아니면)\s+", word)[0].strip() or word
+        # `[2026-10-16 최종 평가 뒤]` 줄임말 → 역 이름(「홍대」가 「머큐어 앰배서더 서울 홍대」 호텔로 잡혔다)
+        word = _LANDMARK_ALIASES.get("".join(word.split()), word)
+        compact = "".join(word.split())
+        # `[2026-10-16 평가 2차 · GPT 검수]` 관련도 1위만 쓰니 「여의도」→「한강」, 「신촌」→「안산자락길」, 「DDP」→「서울디자인로드」처럼
+        #   다른 곳이 기준점이 됐다. 동네 이름이면 같은 이름 역(「여의도역」)부터, 아니면 이름에 검색어가 든 곳을 고른다.
+        # 「망원동」 · 「성수동」은 「망원역」 · 「성수역」으로(☆10-16 재실행: 「망원동」→「망리단길」, 「연남동」→ 골목 이름)
+        stem = word[:-1] if re.fullmatch(r"[가-힣]{2,5}동", word) else word
+        station_first = bool(re.fullmatch(r"[가-힣]{2,6}", stem)) and not re.search(r"[역구동로길]$", stem)
+        tries = ([(word, {"category_group_code": "SW8"}, None), (word, {}, compact)] if word.endswith("역") else
+                 ([(stem + "역", {"category_group_code": "SW8"}, stem + "역")] if station_first else []) + [(word, {}, compact)])
+        if compact in _SEOUL_GU:
+            tries = [(compact + "청", {"category_group_code": "PO3"}, compact + "청"), *tries]     # PO3 = 공공기관
+        answered = False
+        for query, options, must in tries:
+            found = self.kakao.search(query, size=5, anywhere=True, **options)
+            if found is None:
+                continue
+            answered = True
+            if not options:
+                # 기준점은 숙소가 아니다 — 숙박(AD5) 결과는 다른 결과가 있으면 뺀다(「홍대」 → 호텔, 「북촌 한옥스테이」 → 한옥스테이)
+                found = [row for row in found if row.get("category_group") != "AD5"] or found
+            named = [row for row in found if must and must.lower() in "".join(str(row.get("name") or "").split()).lower()]
+            if options and must and not named:
+                continue                      # 같은 이름 역이 없으면(「성수역」이 아닌 다른 역) 쓰지 않는다
+            top = (named or found or [None])[0]
+            if top:
+                return {"source": "kakao", "found": True, "name": top.get("name"),
+                        "latitude": top.get("latitude"), "longitude": top.get("longitude")}
+        return {"source": "kakao", "found": False} if answered else None
+
+    #: 한 번에 둘레 역을 찾는 점 수 상한(카카오 호출 수 = 점 수). 우리가 고른 값
+    STATION_POINTS_MAX = 6
+
+    def stations_near(self, scope: ToolContext, *, points: Any = None, latitude: Any = None, longitude: Any = None,
+                      radius: Any = None, **_: Any) -> dict[str, Any] | None:
+        """점(들) 둘레 반경(미터, 기본 1500) 안 지하철역 — 점마다 거리순 최대 15곳(카카오 한 쪽 상한)을 모아 중복을 뺀다. `[2026-10-17 D21]`
+
+        `points=[[위도, 경도], …]`(앞의 `STATION_POINTS_MAX` 개) 또는 `latitude` · `longitude` 하나. 카카오 로컬 키워드 검색(「역」, 지하철역 `SW8`).
+        돌려주는 것: `{"source": "kakao", "stations": [{name, latitude, longitude}]}` — 이름 · 좌표만(응답은 저장하지 않는다, 카카오 약관).
+        카카오를 부를 수 없으면 `None`."""
+        raw = points if points else [[latitude, longitude]]
+        spots = []
+        for point in list(raw)[: self.STATION_POINTS_MAX]:
+            try:
+                spots.append((float(point[0]), float(point[1])))
+            except (TypeError, ValueError, IndexError):
+                continue
+        if self.kakao is None or not spots:
+            return None
+        out, seen, answered = [], set(), False
+        for spot in spots:
+            found = self.kakao.search("역", size=15, near=spot, radius=int(radius or 1500), category_group_code="SW8")
+            if found is None:
+                continue
+            answered = True
+            for row in found:
+                key = (row.get("name"), round(float(row.get("latitude") or 0), 5), round(float(row.get("longitude") or 0), 5))
+                if key not in seen:
+                    seen.add(key)
+                    out.append({k: row.get(k) for k in ("name", "latitude", "longitude")})
+        return {"source": "kakao", "stations": out} if answered else None
+
+    def stay_google_details(self, scope: ToolContext, *, tokens: Any = None, keyword: str | None = None,
+                            check_in: str | None = None, check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """구글 호텔 숙소 여럿의 상세(booking 모듈 `google_details`) — 판매처별 1박 가격 · 주소 · 사진. 소스가 없으면 `None`. `[2026-10-13]`"""
+        if not self.travel or not tokens or not keyword or not check_in or not check_out:
+            return None
+        from app.domains.travel_ops.components.booking.offers import google_details
+
+        return google_details(self.travel, tokens=[str(token) for token in tokens], keyword=str(keyword),
+                              check_in=str(check_in), check_out=str(check_out),
+                              adults=options.get("adults"), children=options.get("children"))
+
+    def offers_shown(self, scope: ToolContext, *, trip_id: Any = None, item_key: str | None = None,
+                     **_: Any) -> dict[str, Any] | None:
+        """그 여행 한 항목에 앞서 보여 준 숙소 · 항공 후보(key · 이름, 보여 준 순서). `[2026-10-13]`
+
+        이 고객의 여행이 아니거나 원장이 없으면(숙소 팀 미등록) `None`(모름) — 부르는 쪽은 항목 상세의 `shown` 만 쓴다."""
+        if not trip_id or not item_key:
+            return None
+        from app.domains.travel_ops.components.team_hooks import lodging_ledger
+
+        if not lodging_ledger.is_registered():
+            return None
+        store = self._trip_store(scope)
+        with self.connection_factory() as conn:
+            try:
+                trip, _items = store.latest(conn, UUID(str(trip_id)))
+            except (KeyError, ValueError):
+                return None
+            if str(trip["customer_id"]) != str(scope.customer_id):
+                return None
+            offers = lodging_ledger.shown_offers(conn, scope.tenant_id, trip["trip_id"], str(item_key))
+        return {"item_key": str(item_key), "offers": offers}
+
+    def booking_search_flights(self, scope: ToolContext, *, origin: str | None = None, destination: str | None = None,
+                               depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """항공편 비교(booking 모듈) — 마이리얼트립 · Ignav · 구글 항공권을 불러 같은 편끼리 묶은 결과. 소스가 없으면 `None`. `[2026-10-10]`"""
+        if not self.travel or not origin or not destination or not depart_date:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_flights
+
+        wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
+        return search_flights(self.travel, origin=str(origin), destination=str(destination), depart_date=str(depart_date),
+                              **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def booking_search_transit(self, scope: ToolContext, *, mode: str | None = None, origin: str | None = None,
+                               destination: str | None = None, depart_date: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """열차 · 버스 운행 비교(booking 모듈, TAGO) — 역 · 터미널로 옮겨 그날 운행을 출발 시각순으로. 소스가 없으면 `None`. `[2026-10-14]`"""
+        if not self.travel or mode not in ("train", "bus") or not origin or not destination or not depart_date:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_transit
+
+        wanted = ("adults", "kind")
+        return search_transit(self.travel, mode=str(mode), origin=str(origin), destination=str(destination),
+                              depart_date=str(depart_date), **{key: options[key] for key in wanted if options.get(key) is not None})
+
+    def booking_search_stays(self, scope: ToolContext, *, keyword: str | None = None, check_in: str | None = None,
+                             check_out: str | None = None, **options: Any) -> dict[str, Any] | None:
+        """숙소 비교(booking 모듈) — 마이리얼트립 목록 · 구글 호텔 목록 · 다른 곳 링크. 소스가 없으면 `None`. `[2026-10-10]`"""
+        if not self.travel or not keyword or not check_in or not check_out:
+            return None
+        from app.domains.travel_ops.components.booking.offers import search_stays
+
+        wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating", "google_keyword")
+        return search_stays(self.travel, keyword=str(keyword), check_in=str(check_in), check_out=str(check_out),
+                            **{key: options[key] for key in wanted if options.get(key) is not None})
 
     def route(self, scope: ToolContext, **_: Any) -> None:
         """이동 시간. `[미구현]` — Routes API 를 붙일 자리."""
@@ -507,7 +1221,19 @@ class ReadToolbox:
         return functions[name](ToolContext.from_pack(context), **arguments)
 
 
-ALLOWED_PROMPT_KEYS = frozenset({"response.generate", "response.review_tone"})
+ALLOWED_PROMPT_KEYS = frozenset({
+    "response.generate", "response.review_tone",
+    # ★`[2026-10-08]` 활동 판정 LLM 실험(D-CS-008, role-activity-test) — `prompts/activity_judge/<kind>.v<N>.md`.
+    #   폴더에 프롬프트가 있으면 여기 있어야 한다(`test_prompt_registration`). ★`[2026-10-09]` 등록된 활동 팀(`team.py`)이
+    #   섀도 모드에서 부른다(D-CS-015) — 기본 모드 `rule` 이면 부르지 않는다.
+    "activity_judge.closure", "activity_judge.operating_hours", "activity_judge.weather_sensitive",
+    "activity_judge.disaster_effect", "activity_judge.live_status",
+    # ★`[2026-10-13]` 대체 후보 순서(활동 코어 전달 사항 11번) — 기본 `kind_modes.alternative_order: rule` 이면 부르지 않는다.
+    "activity_judge.alternative_order",
+    # ★`[2026-10-07]` `lodging.interpret` · `[2026-10-08]` `flight.interpret` — 숙소 · 항공 팀이 고객 문장을 구조로 옮길 때 쓰는 프롬프트
+    #   (`prompts/lodging/interpret.v<N>.md` · `prompts/flight/interpret.v<N>.md`)
+    "lodging.interpret", "flight.interpret",
+})
 
 
 def register_prompt_files(

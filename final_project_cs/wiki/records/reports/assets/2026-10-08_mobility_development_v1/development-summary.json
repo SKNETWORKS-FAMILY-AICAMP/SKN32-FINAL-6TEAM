@@ -1,0 +1,241 @@
+{
+  "created_at": "2026-10-08T12:38:16.234184+09:00",
+  "purpose": "開発用の既存100組再利用。独立した改修後検証ではない。",
+  "input_sha256": {
+    "fresh_ours_bus_100_v1.json": "3ff172af5f992d87e5c03fcced01c20f6ae462134d6659e4144bc1cca0aa69aa",
+    "bus_after_v1.json": "5d27a46bb25416dddd7d28213bc91c0ff8ddc4ea11aa7c645134d2e1b11da734",
+    "fresh_ours_transit_100_v1.json": "36bf8d1fcfb819ee3ec9a1b11ad03c7c4a423134a47c615ff5e0e906541534bd",
+    "subway_after_v1.json": "38ce0946198247c4e78c20d009b6a118f0559014ce3465cf777e45f6084c20f6"
+  },
+  "timing_note": "同時に複数の実験・試験を実行。処理時間の前後優劣は判定しない。",
+  "bus_before": {
+    "reference_available": 100,
+    "comparable": 52,
+    "fare_present": 51,
+    "fare_upper": 0,
+    "fare_exact_or_single_estimate": 51,
+    "time_without_wait": {
+      "ours_median": 38.0,
+      "reference_median": 35.0,
+      "absolute": {
+        "n": 52,
+        "median": 4.5,
+        "mean": 5.4423076923076925,
+        "mae": 6.365384615384615,
+        "p10": -1.0,
+        "p90": 13.0,
+        "within": 28,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          2.0,
+          6.5
+        ]
+      },
+      "percent": {
+        "n": 52,
+        "median": 12.310606060606055,
+        "mean": 16.472241060837053,
+        "mae": 19.28891171271354,
+        "p10": -3.7393162393162367,
+        "p90": 38.64795918367347,
+        "within": 21,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          7.3347547974413665,
+          18.575918762088886
+        ]
+      }
+    },
+    "fare_in_web_range": 35,
+    "fare_upper_covers_web_max": 0,
+    "failures": {
+      "no_data": 48
+    }
+  },
+  "bus_after": {
+    "reference_available": 100,
+    "comparable": 95,
+    "fare_present": 94,
+    "fare_upper": 50,
+    "fare_exact_or_single_estimate": 44,
+    "time_without_wait": {
+      "ours_median": 50.0,
+      "reference_median": 43.0,
+      "absolute": {
+        "n": 95,
+        "median": 4.0,
+        "mean": 7.221052631578948,
+        "mae": 8.336842105263157,
+        "p10": -1.5999999999999996,
+        "p90": 19.0,
+        "within": 53,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          3.0,
+          6.0
+        ]
+      },
+      "percent": {
+        "n": 95,
+        "median": 11.111111111111116,
+        "mean": 16.050364422341,
+        "mae": 18.629457542985605,
+        "p10": -3.0063006300630057,
+        "p90": 36.83962264150944,
+        "within": 43,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          6.25,
+          14.583333333333325
+        ]
+      }
+    },
+    "fare_in_web_range": 35,
+    "fare_upper_covers_web_max": 39,
+    "failures": {
+      "no_data": 5
+    }
+  },
+  "rail_before": {
+    "reference_available": 96,
+    "comparable": 95,
+    "fare_present": 71,
+    "fare_upper": 8,
+    "fare_exact_or_single_estimate": 63,
+    "time_without_wait": {
+      "ours_median": 32.0,
+      "reference_median": 34.0,
+      "absolute": {
+        "n": 95,
+        "median": -2.0,
+        "mean": -2.536842105263158,
+        "mae": 4.431578947368421,
+        "p10": -8.6,
+        "p90": 2.0,
+        "within": 64,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          -3.0,
+          -1.0
+        ]
+      },
+      "percent": {
+        "n": 95,
+        "median": -5.882352941176472,
+        "mean": -6.768700636790475,
+        "mae": 15.005384030626187,
+        "p10": -31.034482758620687,
+        "p90": 11.870967741935509,
+        "within": 49,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          -9.523809523809524,
+          -2.857142857142858
+        ]
+      }
+    },
+    "fare_in_web_range": 61,
+    "fare_upper_covers_web_max": 8,
+    "failures": {}
+  },
+  "rail_after": {
+    "reference_available": 96,
+    "comparable": 94,
+    "fare_present": 78,
+    "fare_upper": 10,
+    "fare_exact_or_single_estimate": 68,
+    "time_without_wait": {
+      "ours_median": 32.0,
+      "reference_median": 34.0,
+      "absolute": {
+        "n": 94,
+        "median": -1.0,
+        "mean": -1.6808510638297873,
+        "mae": 3.8297872340425534,
+        "p10": -7.0,
+        "p90": 4.0,
+        "within": 69,
+        "tolerance": 5,
+        "median_bootstrap95": [
+          -2.5,
+          -1.0
+        ]
+      },
+      "percent": {
+        "n": 94,
+        "median": -4.731743666169896,
+        "mean": -5.074378029524487,
+        "mae": 13.749269258325592,
+        "p10": -25.0,
+        "p90": 10.881374722838137,
+        "within": 53,
+        "tolerance": 10,
+        "median_bootstrap95": [
+          -7.692307692307687,
+          -2.3255813953488413
+        ]
+      }
+    },
+    "fare_in_web_range": 68,
+    "fare_upper_covers_web_max": 10,
+    "failures": {
+      "no_data": 4,
+      "no_service": 1
+    }
+  },
+  "bus_change": {
+    "recovered": [
+      "N001",
+      "N003",
+      "N004",
+      "N006",
+      "N007",
+      "N009",
+      "N010",
+      "N011",
+      "N013",
+      "N015",
+      "N017",
+      "N018",
+      "N019",
+      "N020",
+      "N024",
+      "N025",
+      "N027",
+      "N029",
+      "N032",
+      "N033",
+      "N035",
+      "N037",
+      "N038",
+      "N040",
+      "N044",
+      "N045",
+      "N047",
+      "N048",
+      "N050",
+      "N051",
+      "N052",
+      "N055",
+      "N057",
+      "N059",
+      "N065",
+      "N069",
+      "N070",
+      "N072",
+      "N074",
+      "N085",
+      "N087",
+      "N094",
+      "N095"
+    ],
+    "lost": [],
+    "retained": 52
+  },
+  "rail_same_route": {
+    "n": 85,
+    "before_present": 63,
+    "after_present": 70,
+    "new_upper": 7
+  }
+}

@@ -1,0 +1,467 @@
+{
+  "changes": [
+    {
+      "path": "final_project_cs/wiki/context/travel-corpus.md",
+      "backup": "final_project_cs/wiki/context/_backup/2026-10-11_205407_wiki-standard/travel-corpus.md",
+      "before_sha256": "11d85802651c78ad44d11f7ebaa4ab34c6be05dc503c4b61dea624da615b3d4c",
+      "after_sha256": "c97ac5dbfbff0872cabb249e29c2c53f4f51ade3ba1d1d477290b6c94eb54909"
+    },
+    {
+      "path": "final_project_cs/wiki/data/schema/index.md",
+      "backup": "final_project_cs/wiki/data/schema/_backup/2026-10-11_205407_wiki-standard/index.md",
+      "before_sha256": "a3b50992ece465a6a83aecef837f303c8a9dd3d8872bc2102360e4b96be738cb",
+      "after_sha256": "50a1d6ba2cd59f86875185dcbed337f53646774e829904e7927f55382a558826"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-006-cancellation-terms-are-structured.md",
+      "before_sha256": "75a1deec29910bc26c20bd2e92c72fab741ca9ebedfc4a7c0a064b232beea17e",
+      "after_sha256": "72f6e39105ab406c75d02d2c82e03b521c979c14dd527065ea9d37a87c1aeb12"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-007-ui-operator-login.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-007-ui-operator-login.md",
+      "before_sha256": "b843252a72472e321b977af01da8cb770e76d5653178d645da7606b6db412c9e",
+      "after_sha256": "550227f5b912beb9c656a53e8611cd92f208e93c0b90d22ab9f7473b1737d622"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-008-ops-console-separate-app.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-008-ops-console-separate-app.md",
+      "before_sha256": "e045a5a86c0b9fd79cf1ca49fa34917604a32976cc08c85de14ec1190b58671f",
+      "after_sha256": "e013a09292500f31c1e71eaabcc394de75111cc2295ebb4c86b288f2ffd90154"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-009-daytime-closure-detection.md",
+      "before_sha256": "9e5c096046e3dbe8bb6795ee5a33f0061d30bb4591ac9e912e58434faec8b4f3",
+      "after_sha256": "b8619af855d44703948173c4e5d685145b0130138005c783112867b9cb21aff4"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-010-google-calls-in-dawn-batch-only.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-010-google-calls-in-dawn-batch-only.md",
+      "before_sha256": "820f18e5a695f15f67fb5e40c4aceb872df85a38220aa437e28db68d5165d349",
+      "after_sha256": "ed5d96bc5d47c68469ed18a8f69c5431f3167ed3a6596fcd3d415c7aab325c78"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-011-browser-session-cookie.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-011-browser-session-cookie.md",
+      "before_sha256": "711bffd5010089256c5f210b05f8cb066f554dbabfbb64a69059b13ad52566f8",
+      "after_sha256": "770a20a7b8b7c0a9b73e7e197011096cb9f61fb7d33aa6f7e76a92a178928674"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-012-agent-auth-claude-style.md",
+      "before_sha256": "312a92d3c73056e3393ba4b46310dfa1da7bc38b5a3ac4c16a3f8cedc6a952c5",
+      "after_sha256": "cb8e293cba6646fb0e1cae427b6a1af07e5a0bb8a70f8d0b60cf56c4cce89ed8"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-013-domain-folder-layout.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-013-domain-folder-layout.md",
+      "before_sha256": "119969b631362272c35fa1df2a2b0c18c7713d0b48b17f9ca1bc915df646a430",
+      "after_sha256": "77bed7f0a9fa28966612e7f8ead75ea0dcdb56d613259877414a8e0306fe7eb3"
+    },
+    {
+      "path": "final_project_cs/wiki/external/llm-failover.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/llm-failover.md",
+      "before_sha256": "42364d69f80973fb7d1afd1d4a45da2a64b383b60dc11e3c02dea5a52f19db52",
+      "after_sha256": "b01b440d29de4acfad0c911f9b936a7f79c9a51cfb9f0faa26c2ef8542b7331c"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/arm-serving-queue.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_205407_wiki-standard/arm-serving-queue.md",
+      "before_sha256": "f36b33f8ed351ba20995ab9ca37726a3ce95fa3a798309ebf1460002874b2a84",
+      "after_sha256": "2e21bb06bde6778e5e9f6f36ec0d824da4de6ccb96a2e28cb1f9b27aa21813f8"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/call-budget.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_205407_wiki-standard/call-budget.md",
+      "before_sha256": "b6076ce3db61198bf9a4d87be4dd3da83f6b256d451211695b4971138ace40ba",
+      "after_sha256": "ee849757d72eb47326c479e3721757eb7ca8b587f1609d5f64db1ce61ba34da2"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/google-login-setup.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_205407_wiki-standard/google-login-setup.md",
+      "before_sha256": "6aed0abc8134ac17520679e173b7f6443fcd42154fc0e568ebdd211cf3840e81",
+      "after_sha256": "0fb4797751afb9af79e09e0c2082db82c3dd5c0cd71c7eb0e88c1d600916d170"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_205407_wiki-standard/selection-grounded-answer-evaluation.md",
+      "before_sha256": "d5ea17f8d92454a3aa1dec796f7570f1bf07ef690f8a2930e9853911e81d2b17",
+      "after_sha256": "d8fb9428d815614a48d8ea0e6e7b0293a75b441d73b829e012233ecd3db9192a"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-agent-design.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_205407_wiki-standard/dining-agent-design.md",
+      "before_sha256": "517b08e3ad90a7a35d418768e776e9ebfa662b62b00885cbcf00a338c2ff211a",
+      "after_sha256": "69c1b3cb59b6efd4f66c6e8fc34755e567838e30fc14863cb8a8acc8aaca9218"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/dining-mcp-boundary.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_205407_wiki-standard/dining-mcp-boundary.md",
+      "before_sha256": "0125c6ed0e488dfe18296102eff713b833066da559b0ae6044e7fb3c3b76c2d2",
+      "after_sha256": "c933c842f064069dbec3fd8a1b0068372428e76f42c671fa21f1caab9012374e"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/index.md",
+      "backup": "final_project_cs/wiki/teams/team-contract/_backup/2026-10-11_205407_wiki-standard/index.md",
+      "before_sha256": "55fe5f11f57744ba39546b0e4df5a47b667c8545d114117b87d4a7edb11af9a1",
+      "after_sha256": "1d0bcbc5775e18ca0a9c469b6b580a7f51eafe701c89446562c08cd6117aa022"
+    },
+    {
+      "path": "wiki/decisions/D-018-decision15-stop-paths.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-018-decision15-stop-paths.md",
+      "before_sha256": "03edaf60ce71ae7d5ad3d2aad211d4c44f5b8bd02ef8b8037a2cae7b593651ed",
+      "after_sha256": "052b3e15e41e4299e969eed17c1ce75c9c94b460265d6c60e81d5b143eaff13a"
+    },
+    {
+      "path": "wiki/decisions/D-022-study-only-kto-images.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-022-study-only-kto-images.md",
+      "before_sha256": "ace765f72c5508be41fb8e1afb9b406eace43d780eb6722e212d3149bf504676",
+      "after_sha256": "6f3efb67244a49ebc38dbd472d85afcf2e602ce0d0d58f8427c603c8b6ad29f5"
+    },
+    {
+      "path": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-023-no-commerce-assets-in-use.md",
+      "before_sha256": "3b885240d4f738945aae741896698515624607c5ab2c27b6191b1cd0579d41ff",
+      "after_sha256": "974d13c24ee5e875c5681eac71656ba50817b9f5f8a8d3ffbcb0bef95d7a6c4e"
+    },
+    {
+      "path": "wiki/governance/migration-scope/index.md",
+      "backup": "wiki/governance/migration-scope/_backup/2026-10-11_205407_wiki-standard/index.md",
+      "before_sha256": "552601930b07a2f4d6eca4cf2a0216d4581251d96a81a08c96f993cb53c740af",
+      "after_sha256": "4a37837c80514549900f904be86ee0a1b3a819c83da1efbdabb0c54ea056678e"
+    },
+    {
+      "path": "wiki/governance/type-verification/index.md",
+      "backup": "wiki/governance/type-verification/_backup/2026-10-11_205407_wiki-standard/index.md",
+      "before_sha256": "e81c7fbcf37c7509aa0a2fee174ab09e97a918fd633c15e77b96fd8bb4ad9485",
+      "after_sha256": "90557cccae455341b2237ec3ec9bba886cef2865a06f1a168c5d073ff5980f4a"
+    },
+    {
+      "path": "final_project_cs/wiki/decisions/D-CS-014-routing-reroute.md",
+      "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-CS-014-routing-reroute.md",
+      "before_sha256": "a03152e7cb4a4ce2556d435cc21dba67e6e47e14ce28d146dee0295c64204a86",
+      "after_sha256": "fe6b3715cfafc552d91f73ec237cfa6de943fad89f8d6f5ef95676d36ab8436e"
+    },
+    {
+      "path": "final_project_cs/wiki/external/admin-screen-api.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/admin-screen-api.md",
+      "before_sha256": "4a9cdbe4f809ae5da4c29f4e1df8ddc7ec4c115610dd6e7f6587cf79ff4fd1c5",
+      "after_sha256": "f34638f2e790415602060a12805f8c120c5456097718dad4aa7fba5918d24ac3"
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-environment-limits.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/api-environment-limits.md",
+      "before_sha256": "dd4f8fd0d1718fa1ff12bcbf65d8fa000156717acc2365f1219e0031dd750b2e",
+      "after_sha256": "adfd724a3bacd3ff5fa4a5af4609b9e878e2066c1aa93e5d43a2c6e186713f4c"
+    },
+    {
+      "path": "final_project_cs/wiki/external/api-key-issue-guide.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/api-key-issue-guide.md",
+      "before_sha256": "3f42aea91baa31c7cbce6f2507b2e1ab61b1674501578feb91fe3eae720cbddd",
+      "after_sha256": "ce5d1254a37a9b2c857a90581d8022037de85ba7f764eccea43923174701df25"
+    },
+    {
+      "path": "final_project_cs/wiki/external/watch-monitoring.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/watch-monitoring.md",
+      "before_sha256": "2d8c62221c3f4080a03463967e5efebe3f1a65bcabf1fad80b6523b6c3b3f190",
+      "after_sha256": "23448953aaf6d9a2583b6e0dc9573bf570c2ee39facd43c66701b238e8f62b15"
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-auth-transfer.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/web-auth-transfer.md",
+      "before_sha256": "2e12a344a5d3680d64e5eaddf4d36bd37d8d36210b7453aab1186e2af0c1c41e",
+      "after_sha256": "8a661f85ccd8f0f56d4aa13bdd0fbdac503fa92d2913f15a3cc661ba9e917f8e"
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-flow-2026-10-09.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/web-flow-2026-10-09.md",
+      "before_sha256": "8bd998b4103f685a3bcaf65d251600a8ab497bb7d398ea17a096cc3a5f36a844",
+      "after_sha256": "9a38abef8941eff62dedfcbad06953548b3c4c4de47b804cd8b5b75cf8de6609"
+    },
+    {
+      "path": "final_project_cs/wiki/external/web-intake-restore.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/web-intake-restore.md",
+      "before_sha256": "36197c154a0c256862f2c0085d6d163a89c7fdf2896b480383d92d6d048d38b3",
+      "after_sha256": "34b0e4912763067dec0d4bbe00888dd54f57c5894ea54dd7632543794560b181"
+    },
+    {
+      "path": "final_project_cs/wiki/runtime/langgraph-comparison.md",
+      "backup": "final_project_cs/wiki/runtime/_backup/2026-10-11_205407_wiki-standard/langgraph-comparison.md",
+      "before_sha256": "feda1ef68fb57d4101ad22e77444b221e8a2b8ee5492a145456ba5499dd19486",
+      "after_sha256": "c83c8b75ad896afc521be74efa8cbcb3e7c07718a4e6d80fc98c162b8e55bde9"
+    },
+    {
+      "path": "wiki/travel_api_competitor_census_2026-09-11.md",
+      "backup": "wiki/_backup/2026-10-11_205407_wiki-standard/travel_api_competitor_census_2026-09-11.md",
+      "before_sha256": "69000599e4725d18ff88371eba0694e8d472b14bb5c87237c393bef26f6e8abc",
+      "after_sha256": "e2803260442cdee0e9927d5b12c848caece2da3d188e4ad73c490e1e726726c7"
+    },
+    {
+      "path": "acop_dojo/wiki/guide.md",
+      "backup": "acop_dojo/wiki/_backup/2026-10-11_205407_wiki-standard/guide.md",
+      "before_sha256": "ee303d8a5eae6fc8fbb67fb7d4dc49ba0af86965c73f12f28d265b570ed2c777",
+      "after_sha256": "dcb21b6bbedcb14e91c8a4371e226035abb78348fe6e79135e17c942994b7728"
+    },
+    {
+      "path": "final_project_cs/wiki/operations/local-setup.md",
+      "backup": "final_project_cs/wiki/operations/_backup/2026-10-11_205407_wiki-standard/local-setup.md",
+      "before_sha256": "7cf90fa69f4c2e8cf70f8f9e2b8637e1387b242647bc4fd637e5f6b4acf84bd8",
+      "after_sha256": "7c9038e61ec50d58134f93687a85b08e2fcd19fb0d381a8f190568fa6e282faf"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-contract/fields.md",
+      "backup": "final_project_cs/wiki/teams/team-contract/_backup/2026-10-11_205407_wiki-standard/fields.md",
+      "before_sha256": "5391f7e476d91129d786df43ab1dbdd93095d33c19dbebddb9bf46c198b31ac0",
+      "after_sha256": "ee0ce0eaca4305c7b7c6090f786753b281dd0d37621e9faff83b3b1145f63e83"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/team-plugin-lifecycle.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_205407_wiki-standard/team-plugin-lifecycle.md",
+      "before_sha256": "b33ac1add3a606d41ad3bfb315e58dade0d1259f0f1da72516d68708b927d904",
+      "after_sha256": "5196975b87d11dfff1bc5158cf9f7a9459c7670bdc8591830a7e529ee22e0eee"
+    },
+    {
+      "path": "wiki/delivery/roles.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_205407_wiki-standard/roles.md",
+      "before_sha256": "4c0176918becef56337067c52a7b76d230e093a5cfdaa3231cd2e0984e77f471",
+      "after_sha256": "bbdfbae64ceb6a3f1459912b088ac34d9e7705ffb12e48f0e55cabdcda70174a"
+    },
+    {
+      "path": "wiki/evaluation/index.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_205407_wiki-standard/index.md",
+      "before_sha256": "199d786c3b89ab81684023bd683e5e8a3615b6aa0dcf9627b9428fed2f186744",
+      "after_sha256": "4cd7947539cfd53d81adcce95f07d74dc9a2addb3ddcb167432e3e25a1a8d376"
+    },
+    {
+      "path": "wiki/evaluation/finetuning.md",
+      "backup": "wiki/evaluation/_backup/2026-10-11_205407_wiki-standard/finetuning.md",
+      "before_sha256": "18a3e7c6e70449cdb6561b8289b4ba22974b801c64599b7239e67f4c5af0ce68",
+      "after_sha256": "0435066ae3703579102e1b879feb4714085d65af36fbf89a4829cafb6235d3b8"
+    },
+    {
+      "path": "wiki/decisions/D-010-deferral-scoring.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-010-deferral-scoring.md",
+      "before_sha256": "e37e15fe8b737f15fbcf6429a2a1744a57f3a8428204ea29ff1a33d1a98c5982",
+      "after_sha256": "454f2a50651edfa6b1ea12896076b16cf290b7613c2a8594ab7489d01fa39676"
+    },
+    {
+      "path": "wiki/decisions/D-017-watch-cadence-golden-time.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-017-watch-cadence-golden-time.md",
+      "before_sha256": "5b4ec965b2128c80f055c46a358f1d6176649192c87e7025519379edeaa4b757",
+      "after_sha256": "bfa80c495e1d3dd9c89d83d3daa7839464c0e1c8012b79b7f50704fbc39a489e"
+    },
+    {
+      "path": "wiki/decisions/D-019-travel-density.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-019-travel-density.md",
+      "before_sha256": "b23e6b48df52e3c3064ab69ad55c5c9539b9a40c2e086b7bc212b2d800dd89f8",
+      "after_sha256": "5919c2e25b5f50f754a11d6c931c593a647e35338cca7257abc260d3778eb29a"
+    },
+    {
+      "path": "wiki/decisions/D-020-trip-survey-and-ask-first.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-020-trip-survey-and-ask-first.md",
+      "before_sha256": "0c85527cc71e44b24c7d6324cae8b089096947e6996ef42358895fbb428efc7b",
+      "after_sha256": "3211726ed0e22ec2360f023a5fd4dfb6e3e30647d56c042ea28bae6f2d138d78"
+    },
+    {
+      "path": "wiki/decisions/D-021-email-verified-key-recovery.md",
+      "backup": "wiki/decisions/_backup/2026-10-11_205407_wiki-standard/D-021-email-verified-key-recovery.md",
+      "before_sha256": "8b14e0f45c365e4492399c78ed68282f3e376aa7a40bfae256cb9079aa8e14d7",
+      "after_sha256": "96701bf23534fe814e3cec211961d08d19f6ee9d26fd294538003f3fc1896745"
+    },
+    {
+      "path": "wiki/records/reports/2026-10-11_before-index.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "dd8c84c5c5e37ab8a3aaf1ae0d9d3a42d8fd79405e8daffddc7117c9cd6b5337"
+    },
+    {
+      "path": "wiki/records/reports/2026-10-11_before-finetuning.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "1115d66422a3a939206916946bfc6debd13dd5276fd7d9523daec8223977bf30"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_langgraph-comparison.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "2d1e315bc43578f9a0313ca2655e1952ddc3563348b10f8e931de0c16253b484"
+    },
+    {
+      "path": "acop_dojo/wiki/records/reports/2026-10-11_handoff-2026-09-14.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "8071ffd0b521ec2c39ae3c15ca536cd360c206c8315b7f293f2c05cc68ee32b3"
+    },
+    {
+      "path": "acop_dojo/wiki/handoff-2026-09-14.md",
+      "backup": "acop_dojo/wiki/_backup/2026-10-11_205407_wiki-standard/handoff-2026-09-14.md",
+      "before_sha256": "8071ffd0b521ec2c39ae3c15ca536cd360c206c8315b7f293f2c05cc68ee32b3",
+      "after_sha256": "9448fb31aac0aa6d9669faf394f114b3967903c19c270b1f986f7694b7ab355d"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_rag-retrieval.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "727149e5bdf59e851fbd04c26a2ed69d09ad429755049a6487c77701b1055bc6"
+    },
+    {
+      "path": "final_project_cs/wiki/context/rag-retrieval.md",
+      "backup": "final_project_cs/wiki/context/_backup/2026-10-11_205407_wiki-standard/rag-retrieval.md",
+      "before_sha256": "ea1c516e9ca0175946802e03c722b6a62189cb9ed26f155c1f2b8c0c8bf250b3",
+      "after_sha256": "f2a2c4bc0d1e40d579b03dd610afa4544c2cfd802067260ddcb2aba7e67c9653"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_mobility.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "788c7177b93f38500dd2b0d9a431e9e4559ea87639828fbc4a18e29f1b6beb53"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_205407_wiki-standard/mobility.md",
+      "before_sha256": "0c02793057d18b261a511768bc97a8d7399c188a68f4d913b63a8d2f9f1af14a",
+      "after_sha256": "0b4d179b931e087bb4ef78bdea349846739a4c74adf4be0e8a4b31be7b4ac33e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_dining-agent-design.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "05c593cd1bc3432148a3a10bedc205b1451e7c6bd312e96c61b538286a297a5f"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/cases.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "e8619132cb1f0974c4fa88e02c5b2b7dd4e511d0c35bf1af9691e88f19268e84"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/trips.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "e03aeb286a46d52c5382afcf4d15af02b4dd866c3fdf4fe40649bbda36edb97c"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-access.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "5eb8eee1bf44cf031cfaa9e6950294eaf71b6c9dccc0a5c635cafca8bfa16ff5"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-auth.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "10b4d9a4a3122f715528df3a210f43a4b961235bc484303c20f80b3ce3351106"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-intakes.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "c0109f725eb80865e5f811d9a7454eb06d67934499f5b6d07747fdf03198b25a"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/web-trips.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "50f32f75cf35439e3ac3b4ee008884569931da9b683c764a95e178a9fd0ff8fb"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/delegations.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "6e616c3bd769961fd1facc296818a32cb933246f348d0a53855684b9988bd260"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints/index.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "9d60e451ff31d2d0a4142839c5dc1a864aaea8172bbca2f0a776706862bb4b30"
+    },
+    {
+      "path": "final_project_cs/wiki/external/rest-endpoints.md",
+      "backup": "final_project_cs/wiki/external/_backup/2026-10-11_205407_wiki-standard/rest-endpoints.md",
+      "before_sha256": "8a3ae8f4d19a1377ba24644ac1b431747f07784155cd95a9d7d51992946794b9",
+      "after_sha256": "3738e60f9829d3c3fcf52325ee988aca3c5bcd654d33a748854f33afa42457c4"
+    },
+    {
+      "path": "final_project_cs/wiki/records/logs/2026-10-11_log.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "5568dd0fb1b59f917af6e9a4d4ead2f57fac62613eec3a0f2b4b8a0ac0def3af"
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_205407_wiki-standard/log.md",
+      "before_sha256": "8ec3dc2b1c9f5ba5c0fce86ef59e23f44e6a494275daf5381d622abd16ce80db",
+      "after_sha256": "997ac337d376a6fc237b2f2881d45406772ec72bdfd663b6aaf217047497e76e"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_activity.md",
+      "backup": null,
+      "before_sha256": null,
+      "after_sha256": "f6a63c58c4fb2810ecfa6c8767348acd1326acb48f35db914aff0697be9c219c"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/activity.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_205407_wiki-standard/activity.md",
+      "before_sha256": "2885d515007297c06e3ff3d8368c8034574f5bafcb1ace00e24f02e9007bd85e",
+      "after_sha256": "333dfaab69f297887cf629b9485dc3fde9f94eb25b560e834583367a15c12299"
+    },
+    {
+      "path": "wiki/delivery/open-items.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_205407_wiki-standard/open-items.md",
+      "before_sha256": "d147f154c519b4be19e7f3c25c8cca71e78fef12f5908aba7cca2ac76d624ad1",
+      "after_sha256": "83cf4c1a51a8f4044097a2bfcf81fc68057d5a590004c0e5fdf3a9f1565d856b"
+    },
+    {
+      "path": "final_project_cs/wiki/quality/invariants.md",
+      "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_205407_wiki-standard/invariants.md",
+      "before_sha256": "b6710f80c023796027fa7b7a4947153f978ca752ff00df0bff3335833be36060",
+      "after_sha256": "1f8206280b3c4d2f6adcb3e30ee79f2a34a66422a78b460c94612f8f7d77ff57"
+    },
+    {
+      "path": "final_project_cs/wiki/data/migrations.md",
+      "backup": "final_project_cs/wiki/data/_backup/2026-10-11_205407_wiki-standard/migrations.md",
+      "before_sha256": "f7d2cb258aceddb6af5cc726e1a79ec49816609ab45183a2b526aed825cfba05",
+      "after_sha256": "ce6b38274e7d3492f476db26fda2cf284f8f5235888c00e5f9976877bacc01bb"
+    },
+    {
+      "path": "final_project_cs/wiki/data/index.md",
+      "backup": "final_project_cs/wiki/data/_backup/2026-10-11_205407_wiki-standard/index.md",
+      "before_sha256": "54b6a045a9945c80877090b1a4914609d66fbd59fc89a8bf3911408888ee77ce",
+      "after_sha256": "ce5e126dfca7980abd264a7c73309f2f508960bd949f50e77519f511d7590f0c"
+    },
+    {
+      "path": "wiki/delivery/timeline.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_205407_wiki-standard/timeline.md",
+      "before_sha256": "e0ea1160a81d74c1c6359483822a6765cf942fa2c83b5500efb496faf304ae43",
+      "after_sha256": "4ff415d9cb37dfa030e34598e9192d13a491a763f0966cc8c7cef405a9e111c8"
+    },
+    {
+      "path": "datasets/wiki/index.md",
+      "backup": "datasets/wiki/_backup/2026-10-11_205407_wiki-standard/index.md",
+      "before_sha256": "3ce270059113e88e75015a322d321ee8963f52430922cbb13e3922e3534c9752",
+      "after_sha256": "6ca5081a63b428721714be170f39042d6e729b6599776a0005a48249c4188b8c"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/code-layout.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_205407_wiki-standard/code-layout.md",
+      "before_sha256": "d535d9b229d0633d55e41f7927c21c4e5f5c0891f1e8be199829fa1fee678c79",
+      "after_sha256": "bb47430566609dd70aeda706033629270e26b969103da07d601d8f2b1d0b26e3"
+    },
+    {
+      "path": "wiki/governance/front-matter.md",
+      "backup": "wiki/governance/_backup/2026-10-11_205407_wiki-standard/front-matter.md",
+      "before_sha256": "7593bacfacc2e8ebc21bcb25b6c2440f93cf829e15aee313dd07f10aeb2e476d",
+      "after_sha256": "33c627740b8ad39b16651cce82880efee176778668d407be7eb6fc8a4a2b5919"
+    }
+  ],
+  "scope_counts": {
+    "excluded_backup_directories": 43,
+    "excluded_staging_directories": 5,
+    "current_documents": 284,
+    "record_documents": 1120,
+    "generated_documents": 1
+  }
+}

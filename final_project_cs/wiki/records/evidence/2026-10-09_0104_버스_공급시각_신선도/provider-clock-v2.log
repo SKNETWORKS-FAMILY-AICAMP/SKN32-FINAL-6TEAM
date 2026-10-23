@@ -1,0 +1,54 @@
+.........................................FFF............................ [ 91%]
+.......                                                                  [100%]
+================================== FAILURES ===================================
+__________ test_adapter_queries_exact_stop_and_selects_after_access ___________
+
+    def test_adapter_queries_exact_stop_and_selects_after_access():
+        src, _, seen = make_source()
+        got = read(src)
+>       assert got['status'] == 'predicted' and got['bus_order'] == 2
+E       AssertionError: assert ('stale' == 'predicted'
+E         
+E         - predicted
+E         + stale)
+
+tests\unit\travel\test_bus_boardable_source_v1.py:42: AssertionError
+_________ test_second_stop_and_loop_sequence_share_one_route_response _________
+
+    def test_second_stop_and_loop_sequence_share_one_route_response():
+        src, elapsed, seen = make_source()
+        first = read(src)
+        elapsed[0] = 20
+        second = read(src, now=NOW + timedelta(seconds=20), stop='102', seq=6)
+        loop = read(src, now=NOW + timedelta(seconds=20), seq=90)
+        assert len(seen) == 1 and first['confirmed_at'] == second['confirmed_at'] == loop['confirmed_at']
+>       assert second['remaining_seconds'] == 400 and loop['stop_sequence'] == 90
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'remaining_seconds'
+
+tests\unit\travel\test_bus_boardable_source_v1.py:55: KeyError
+_________ test_fresh_http_response_does_not_refresh_old_provider_data _________
+
+    def test_fresh_http_response_does_not_refresh_old_provider_data():
+        src, _, seen = make_source(provider_age=1200)
+        got = read(src)
+        assert len(seen) == 1 and got['status'] == 'stale'
+>       assert got['reason'] == 'provider_refresh_required' and got['provider_age_seconds'] == 1200
+E       AssertionError: assert ('refresh_required' == 'provider_refresh_required'
+E         
+E         - provider_refresh_required
+E         ? ---------
+E         + refresh_required)
+
+tests\unit\travel\test_bus_boardable_source_v1.py:63: AssertionError
+============================== warnings summary ===============================
+tests/architecture/test_travel_ops_cells.py::test_cell_rules_do_not_get_worse
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\provider-clock-v2.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_bus_boardable_source_v1.py::test_adapter_queries_exact_stop_and_selects_after_access
+FAILED tests/unit/travel/test_bus_boardable_source_v1.py::test_second_stop_and_loop_sequence_share_one_route_response
+FAILED tests/unit/travel/test_bus_boardable_source_v1.py::test_fresh_http_response_does_not_refresh_old_provider_data
+3 failed, 76 passed, 1 warning in 8.24s

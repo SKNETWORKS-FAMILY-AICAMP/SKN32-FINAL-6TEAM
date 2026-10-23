@@ -1,0 +1,212 @@
+{
+  "file_hashes_verified": 35,
+  "expected_hashes": 35,
+  "local_links_verified": 49,
+  "expected_local_links": 49,
+  "python_syntax_passed": 5,
+  "expected_python_scripts": 5,
+  "human_reviewed": 0,
+  "model_evaluated": 0,
+  "pilot_schema_passed": 24,
+  "pilot_expected": 24,
+  "final_holdout": false,
+  "saluki_training_started": false,
+  "links": [
+    {
+      "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "target": "../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md"
+    },
+    {
+      "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "target": "../../../program/research/daily_rag_slm/index.md"
+    },
+    {
+      "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "target": "slm-model-evaluation.md"
+    },
+    {
+      "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "target": "../records/reports/2026-10-09_0214_e-testset-maturity-audit.md"
+    },
+    {
+      "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "target": "../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
+    },
+    {
+      "document": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+      "target": "../records/reports/2026-10-09_1158_pilot-independent-review-corrections.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
+      "target": "../../../program/scripts/plan_qa_bench/results/comparison_abcde_20261009_111621/comparison-complete.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
+      "target": "../../../final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
+      "target": "../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
+      "target": "saluki_finetune_plan_2026-10-09.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
+      "target": "../../scripts/plan_qa_bench/results/jev_training_recount_20261009_v1/comparison.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
+      "target": "../../../final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
+      "target": "../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
+      "target": "../../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
+      "target": "../../../../program/research/daily_rag_slm/selection_answer_review_2026-10-09_v2.json"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
+      "target": "2026-10-09_1150_selection-answer-plan-and-training-review.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
+      "target": "../../../../program/scripts/plan_qa_bench/_backup/2026-10-09_1157_pilot-label-review/selection_answer_pilot_20261009.py"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
+      "target": "../../../../program/scripts/plan_qa_bench/_backup/2026-10-09_1159_evidence-status/selection_answer_pilot_20261009.py"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v1.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../quality/selection-grounded-answer-evaluation.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../program/research/daily_rag_slm/selection_answer_review_2026-10-09_v1.json"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v1/REPORT.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/jev_training_recount_20261009_v1/comparison.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../program/research/daily_rag_slm/saluki_finetune_2026-10-09.json"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "2026-10-09_1200_saluki-finetune-preflight.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "2026-10-09_1150_gpu-refill-valen-d2-failure-and-winnow-role.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../quality/_backup/2026-10-09_1155_selection-answer-contract/index.md"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../program/scripts/plan_qa_bench/_backup/2026-10-09_1208_question-extraction/selection_answer_pilot_20261009.py"
+    },
+    {
+      "document": "final_project_cs/wiki/records/reports/2026-10-09_1150_selection-answer-plan-and-training-review.md",
+      "target": "../../../../datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v1/_backup/2026-10-09_1208_manifest/manifest.json"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "raw/episodes.jsonl"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "raw/sources.jsonl"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "processed/model_inputs.jsonl"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "schema.json"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "manifest.json"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "../../../../program/scripts/plan_qa_bench/selection_answer_pilot_20261009.py"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "../../../../program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md"
+    },
+    {
+      "document": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3/REPORT.md",
+      "target": "../../../../final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md"
+    },
+    {
+      "document": "program/scripts/plan_qa_bench/results/jev_training_recount_20261009_v1/comparison.md",
+      "target": "counts.json"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../../final_project_cs/wiki/records/reports/2026-10-09_1116_saluki-all-abcde-comparison.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "saluki_finetune_2026-10-09.json"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/summary.json"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/B_runtime.json"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../scripts/plan_qa_bench/results/saluki_finetune_preflight_20261009_113242/data_audit.json"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../scripts/plan_qa_bench/server/queues/saluki_train_gate_20261009.py"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../../final_project_cs/wiki/quality/slm-model-evaluation.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../../final_project_cs/wiki/operations/gpu-work-queue.md"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "saluki_finetune_2026-10-09.json"
+    },
+    {
+      "document": "program/research/daily_rag_slm/saluki_finetune_plan_2026-10-09.md",
+      "target": "../../../final_project_cs/wiki/records/reports/2026-10-09_1200_saluki-finetune-preflight.md"
+    }
+  ]
+}

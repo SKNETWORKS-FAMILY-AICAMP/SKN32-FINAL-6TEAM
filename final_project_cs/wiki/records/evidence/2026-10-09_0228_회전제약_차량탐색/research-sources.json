@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-10-09T02:53:17.768007+09:00",
+  "cutoff": "2026-10-09 KST",
+  "sources": [
+    {
+      "url": "https://wiki.openstreetmap.org/wiki/Relation:restriction",
+      "read_scope": "tag values and members; vehicle exceptions, conditional restrictions and implicit-rule limits",
+      "adopted": "explicit static no/only restrictions; foot/bike excluded"
+    },
+    {
+      "url": "https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.ATMOS.2020.9",
+      "read_scope": "publisher abstract only",
+      "adopted": "retain incoming road state",
+      "not_adopted": "CCH preprocessing/acceleration and published performance claims"
+    }
+  ],
+  "inaccessible_public_relation": "https://www.openstreetmap.org/relation/4677532",
+  "limitation": "web reader could not open relation; current physical road and latest relation not verified"
+}

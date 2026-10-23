@@ -1,0 +1,372 @@
+[
+  {
+    "source": "final_project_cs/AGENTS.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/AGENTS.md",
+    "source_sha256": "03858a9bab4befad833e4fe4673a8b4a08dcbf1896976bc55ddac8a1a208dabb"
+  },
+  {
+    "source": "final_project_cs/CLAUDE.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/CLAUDE.md",
+    "source_sha256": "daaa81e0db0055588a08b54ff553e555e9d8e4f9aebf5c11bba46bc6c45e458f"
+  },
+  {
+    "source": "final_project_cs/RULE.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/RULE.md",
+    "source_sha256": "986a30f4519889b220985eff20453670a572e3b1584341c9700135797a500c98"
+  },
+  {
+    "source": "wiki/index.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--index.md",
+    "source_sha256": "a6f810e28235707167cf0367eb98c975ee1df010f3b345d12827d63e1ec450c9"
+  },
+  {
+    "source": "wiki/quickstart.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--quickstart.md",
+    "source_sha256": "40ffafa707f0c53266c8e9ac52b8cf16fc88958317fa2959705a3e2b3adcb96f"
+  },
+  {
+    "source": "final_project_cs/wiki/index.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--index.md",
+    "source_sha256": "cc80fb2ebaa1ad17f665684e165bbbf43e157320469dfb15d3c354c347ab06e7"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/index.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--index.md",
+    "source_sha256": "f60064275debf9ba1dc892a96a98bc82dabe24e29f966449ef7cfb274ee90ea0"
+  },
+  {
+    "source": "final_project_cs/wiki/context/corpus-authoring.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--context--corpus-authoring.md",
+    "source_sha256": "a4590606ba1c8df25e22b944663bf51e2ef859d03c1cd3865b7e8aab137243d7"
+  },
+  {
+    "source": "final_project_cs/wiki/external/mcp-tools.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--mcp-tools.md",
+    "source_sha256": "e8192826b1a78a3726b79ba930de2756284cdb6507deee5f8b18ad5d2699c4dd"
+  },
+  {
+    "source": "final_project_cs/wiki/operations/run.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--run.md",
+    "source_sha256": "cdca08aaaff626f3ac8e0db142f54ac2f9ec6fb3eb025e50608d5c36ffc66b56"
+  },
+  {
+    "source": "final_project_cs/wiki/data/migrations.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--data--migrations.md",
+    "source_sha256": "ce6b38274e7d3492f476db26fda2cf284f8f5235888c00e5f9976877bacc01bb"
+  },
+  {
+    "source": "wiki/product/personas.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--product--personas.md",
+    "source_sha256": "6964f818a6fe176763e0e5b4ae7c1e1fe03947b2e1306bd4e1dfb3979d107a9f"
+  },
+  {
+    "source": "wiki/product/problem.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--product--problem.md",
+    "source_sha256": "ccc9ef8e6385d872ed6726352f9e5304f23360455f5d2cacebe0ada4f161ae64"
+  },
+  {
+    "source": "wiki/product/pitch-questions.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--product--pitch-questions.md",
+    "source_sha256": "0e28deb443ef6a54c3e3662971367f595d2f4f9d767611798760121b63f54535"
+  },
+  {
+    "source": "datasets/wiki/catalog.md",
+    "record": "datasets/wiki/records/commerce_2026-10-11/catalog.md",
+    "source_sha256": "81b0a3984694072097675654db023c7a938a587363a6e204f9c399299e90deaa"
+  },
+  {
+    "source": "datasets/wiki/coupang-extension.md",
+    "record": "datasets/wiki/records/commerce_2026-10-11/coupang-extension.md",
+    "source_sha256": "4320fa16cebd2aaabf56b930360c49ecde4276bfbef9c6b75ec06fab23b0c23f"
+  },
+  {
+    "source": "datasets/wiki/distribution.md",
+    "record": "datasets/wiki/records/commerce_2026-10-11/distribution.md",
+    "source_sha256": "ee6d9b510e097c644183e0239d758b807a2ac5433d3c33b792a05f0c3d2315fe"
+  },
+  {
+    "source": "datasets/wiki/scraper-notes.md",
+    "record": "datasets/wiki/records/commerce_2026-10-11/scraper-notes.md",
+    "source_sha256": "fe7fde2f6c4c0a5e87293165b6f42d35f48b0f62f1cb991b4249e77a87cc992b"
+  },
+  {
+    "source": "datasets/wiki/source-selection.md",
+    "record": "datasets/wiki/records/commerce_2026-10-11/source-selection.md",
+    "source_sha256": "dfc6e1c6901e4e165072cc12f273d9db3f040cede496c04a59679fa2e191f7e2"
+  },
+  {
+    "source": "final_project_cs/wiki/quality/blind-spots.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--blind-spots.md",
+    "source_sha256": "1bc7101f6273c832d2bcfc652aeed0ea4068c41ac1d591a6726a085ed158ab24"
+  },
+  {
+    "source": "final_project_cs/wiki/quality/dod-evidence-drift.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--dod-evidence-drift.md",
+    "source_sha256": "b9174286994e97bf19871ceafe0c9a8823869668c1b7d06fb1eb4fb6a221c041"
+  },
+  {
+    "source": "wiki/decisions/D-001-payment-ownership.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--decisions--D-001-payment-ownership.md",
+    "source_sha256": "a4d1429645f9318c93bc7683f3629eed96980ec6cb187a7a8b1311a46e7ef31c"
+  },
+  {
+    "source": "wiki/decisions/D-008-review-spam-out-of-scope.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--decisions--D-008-review-spam-out-of-scope.md",
+    "source_sha256": "6b564380cb7aaf4f37b5b3a7aa0921f066c9dcaf5cd3500ab65a08b2277578de"
+  },
+  {
+    "source": "wiki/decisions/D-014-judge-rebaseline.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--decisions--D-014-judge-rebaseline.md",
+    "source_sha256": "5a6a3c15260798f88020d401085b3bdbb3ae4d8bb17254b78e30c1f7db5adda8"
+  },
+  {
+    "source": "wiki/delivery/scope-verdicts.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--scope-verdicts.md",
+    "source_sha256": "b98b768ab96ac2cc60d527e11fbe63cec70e95c3b50472a507da27e72790fc94"
+  },
+  {
+    "source": "wiki/evaluation/dod28-rerun.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--evaluation--dod28-rerun.md",
+    "source_sha256": "6d6f33932631a12d5afff98436ef454c9208cfdbfb3cc326cf19bbfecb811bed"
+  },
+  {
+    "source": "wiki/governance/migration-scope/coverage-2026-09.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--governance--migration-scope--coverage-2026-09.md",
+    "source_sha256": "9ba3efb9697ff6059a3d860644831146ce717238c6b4640dfc2197a55212437c"
+  },
+  {
+    "source": "wiki/governance/type-verification/round-9.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--governance--type-verification--round-9.md",
+    "source_sha256": "1988f38ddb1208633547602984d6096b421c7daee0836798697df13110bd04db"
+  },
+  {
+    "source": "wiki/research/dispute-cases.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--research--dispute-cases.md",
+    "source_sha256": "8ea4e16605869ec1c265d314e085731ff8468ec7004d902c74adc8d3e293fd40"
+  },
+  {
+    "source": "wiki/research/legal-basis.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--research--legal-basis.md",
+    "source_sha256": "05e6a2b6d878eec5a25bff0b2934d694c013f830a672d01bd63ffe6ba9e631fe"
+  },
+  {
+    "source": "final_project_cs/wiki/quality/invariants.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--invariants.md",
+    "source_sha256": "1f8206280b3c4d2f6adcb3e30ee79f2a34a66422a78b460c94612f8f7d77ff57"
+  },
+  {
+    "source": "final_project_cs/wiki/actions/evidence-check.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--evidence-check.md",
+    "source_sha256": "199edd4351352fab9384cc7904f3eca610486846d17d9f89b813894b688ea977"
+  },
+  {
+    "source": "final_project_cs/wiki/actions/tool-gateway.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--tool-gateway.md",
+    "source_sha256": "0f747b85d34f787306ac480a32dbd6ba1c7c9fe5a09c1f7bc14e931a40ae2435"
+  },
+  {
+    "source": "final_project_cs/wiki/context/travel-corpus.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--context--travel-corpus.md",
+    "source_sha256": "c97ac5dbfbff0872cabb249e29c2c53f4f51ade3ba1d1d477290b6c94eb54909"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/common-utils.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--common-utils.md",
+    "source_sha256": "903185aa1f0cb89fed1e258590e3c3533631f7fce8dce867f704063c4e9fa1de"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/build-order.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--build-order.md",
+    "source_sha256": "3bab8715ff6986d14aca3819c90140c4986212ca413b7ce44176a236e318c4ed"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/team-boundary.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--team-boundary.md",
+    "source_sha256": "2859658ab1756996d466abb30ab76e184c3a790d5281d93dc82f5c12e51c2c41"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/dining.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--teams--dining.md",
+    "source_sha256": "63370e3995516600b83d744036c8205350b297ecc2f027521712bad0b946d939"
+  },
+  {
+    "source": "wiki/product/scope.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--product--scope.md",
+    "source_sha256": "81715676d76774d488567dd0f976bbeae9537eb20a5ce2445e448b340d9865aa"
+  },
+  {
+    "source": "wiki/product/index.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--product--index.md",
+    "source_sha256": "96de689708d49a9afa1ce1c83055144b0e1e5a91f31e72a7ae0bd87540f3e0c5"
+  },
+  {
+    "source": "wiki/product/positioning.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--product--positioning.md",
+    "source_sha256": "c5b0417c356e1821dc86b2c73959e548d6c815530f788eda29c79adbb9abcfb7"
+  },
+  {
+    "source": "wiki/product/glossary.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--product--glossary.md",
+    "source_sha256": "d4e150e9012df819e183a050357b6e1d5b3deb74713815b861dd3a4b8f24ecb6"
+  },
+  {
+    "source": "wiki/business/index.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--business--index.md",
+    "source_sha256": "9f7aa7f36f446f2e36fa3faf99a676092df5144d9f3c89a90cbe1ea9e4429860"
+  },
+  {
+    "source": "final_project_cs/wiki/quality/test-map.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--test-map.md",
+    "source_sha256": "3903ec44601e2b49cc9d239d0a1a6e2088aa7202c2d65a479cc398f11225f610"
+  },
+  {
+    "source": "final_project_cs/wiki/domain-swap.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--domain-swap.md",
+    "source_sha256": "4a14f937af202516ae77df8b596c8dcab124c065b82d42eaa816631278fcfd4b"
+  },
+  {
+    "source": "final_project_cs/wiki/external/index.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--index.md",
+    "source_sha256": "6da960bcaea202c7c5bd998bea96f4ce506a6028060164322866b0bb6265e284"
+  },
+  {
+    "source": "datasets/wiki/generation.md",
+    "record": "datasets/wiki/records/commerce_2026-10-11/generation.md",
+    "source_sha256": "9ec9aa4f733d1b69a748ab515245a1664e9516f661d5818a14c6e9d26b28bd4a"
+  },
+  {
+    "source": "datasets/wiki/report-split.md",
+    "record": "datasets/wiki/records/commerce_2026-10-11/report-split.md",
+    "source_sha256": "669f30929e5158c2362600e04963be005e11108992090d8074e585c020ef7d00"
+  },
+  {
+    "source": "wiki/business/error-cost.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--business--error-cost.md",
+    "source_sha256": "af83ba4a13fd56683958feab47fe52fe08bb35bae2d6e6f81488710916092960"
+  },
+  {
+    "source": "wiki/business/market.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--business--market.md",
+    "source_sha256": "b9b8e92f9e11c975dc079721f0a6f2e3a9769a14a1ac09f07202e1fbfb7b79ac"
+  },
+  {
+    "source": "wiki/business/measure-review-time.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--business--measure-review-time.md",
+    "source_sha256": "a5eaa38c76933836155a50b3bee2cacfad3441c4ffa371d4fde98fd632e7e8e6"
+  },
+  {
+    "source": "wiki/business/pricing.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--business--pricing.md",
+    "source_sha256": "3dba175b1ed5d869bfdebe64aa27c595935857dccfacc3fff01deec00ecc6ade"
+  },
+  {
+    "source": "wiki/business/unit-economics.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--business--unit-economics.md",
+    "source_sha256": "bb4232d2c448f9c501c2fface2b577e94ef143a34204002a0eca543a0c959c6d"
+  },
+  {
+    "source": "wiki/evaluation/judge-second-opinion.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--evaluation--judge-second-opinion.md",
+    "source_sha256": "caf7ec707202d81f6bbb8d3fa330656dfbb528509a36a11a28877ab495f6f98a"
+  },
+  {
+    "source": "final_project_cs/wiki/quality/evidence.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--evidence.md",
+    "source_sha256": "72185037e19c23d1c5c8cdefd7a45b33fca4ce6875bb26c1288018e157033483"
+  },
+  {
+    "source": "README.md",
+    "record": "wiki/records/commerce_2026-10-11/README.md",
+    "source_sha256": "15898ad9fa8d399dc1afb12003e7e3dc1780e279a1eefd88234934d663129fbd"
+  },
+  {
+    "source": "final_project_cs/wiki/external/auth-boundary.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--external--auth-boundary.md",
+    "source_sha256": "97e0db42e3ba40b93a3122e406b02f8e1b5b46085d5b69f42a6af754a1150312"
+  },
+  {
+    "source": "final_project_cs/wiki/quality/eval-harness.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quality--eval-harness.md",
+    "source_sha256": "06bca64fb4c2eb647ff3bfc80a88cdeef35bf023151f5253de7feeaf75690649"
+  },
+  {
+    "source": "final_project_cs/wiki/quickstart.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--quickstart.md",
+    "source_sha256": "39b86759573701d9bf5bc83152004093524320eccefbb07f385744ee1d7bfb60"
+  },
+  {
+    "source": "wiki/architecture/pack-model.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--architecture--pack-model.md",
+    "source_sha256": "d51d44f8bb370d0f2d95f7c853dc1aa1c2ac8f2297a2626c3bb5912067348c31"
+  },
+  {
+    "source": "wiki/evaluation/metrics.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--evaluation--metrics.md",
+    "source_sha256": "228e6018443bd844361bc0cd785641887b809f2e63c5df16253f1c9ecae135e6"
+  },
+  {
+    "source": "wiki/delivery/open-items.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--open-items.md",
+    "source_sha256": "462f5872abba9cc3cbee70f329b97fa6c896544a5ac4e32b97deb687e74f1b65"
+  },
+  {
+    "source": "wiki/delivery/release-gate.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--release-gate.md",
+    "source_sha256": "a957f2dce022f05bf7337b46a71b5446850629979bcf1828b73ce88e4f29ce17"
+  },
+  {
+    "source": "wiki/delivery/todo-user.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--todo-user.md",
+    "source_sha256": "3ad60eca2c897dd8fef7a4964e960d67d7e4a6cb8c4d8e086da72dfb6f678987"
+  },
+  {
+    "source": "wiki/delivery/index.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--index.md",
+    "source_sha256": "b4f81d03f9f59924866b956faea7bb064e94a96ada2f4d3ec76ccdf896d874ce"
+  },
+  {
+    "source": "final_project_cs/wiki/operations/always-on.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--always-on.md",
+    "source_sha256": "7925f1b80d5b812de307135f163166ca3cd55659b087c3cb4f968ad1a750af61"
+  },
+  {
+    "source": "final_project_cs/wiki/operations/index.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--index.md",
+    "source_sha256": "a8aaa3111acf86d464593fa1a668faa01c3916b23455a8c10f4d9872a9a033af"
+  },
+  {
+    "source": "final_project_cs/wiki/operations/troubleshooting.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--operations--troubleshooting.md",
+    "source_sha256": "1ca5de02181b4f5b29870186767cba277fdad3203f32594bf8f2e71e3a43400d"
+  },
+  {
+    "source": "final_project_cs/wiki/actions/approval.md",
+    "record": "final_project_cs/wiki/records/commerce_2026-10-11/wiki--actions--approval.md",
+    "source_sha256": "b4dab1e17f8cb40eb2b3bc52ad59ad7fd138ec80aff4b8ee8c9f394855c59d83"
+  },
+  {
+    "source": "wiki/delivery/milestones/final-2026-10-26.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--final-2026-10-26.md",
+    "source_sha256": "11e8e2d0fc9c92697bbde59566bdca59c5b30cacd7a21e9501c2cd724e82a8d3"
+  },
+  {
+    "source": "wiki/delivery/milestones/index.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--index.md",
+    "source_sha256": "3ce3475a488013af154529a60afaccfc28c966975fd6c3dbeb591cc4df16fb67"
+  },
+  {
+    "source": "wiki/delivery/milestones/midterm-2026-09-15.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--delivery--milestones--midterm-2026-09-15.md",
+    "source_sha256": "2734331fc0354f076b5034f0e67e14599c10b68c21e08e7d9426bacdb90fdced"
+  },
+  {
+    "source": "wiki/research/index.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--research--index.md",
+    "source_sha256": "51ca72f10fbc2dd6bacff9753e9feeb142f6d50444ed01bbb1858ce7df88e582"
+  },
+  {
+    "source": "wiki/business/infrastructure-cost.md",
+    "record": "wiki/records/commerce_2026-10-11/wiki--business--infrastructure-cost.md",
+    "source_sha256": "e6bc75a4d5d59849398a7be34b9667f0201cff23971138c215fa279ddd676d09"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "created_at_utc": "2026-10-10T23:17:47.416879+00:00",
+  "purpose": "Six-hour bounded stability of previously successful application decision JSON; repeated synthetic questions, not independent accuracy",
+  "base_job": "e4bbase_finch_s20261014_d3_appschema_v1",
+  "duration_seconds": 21600,
+  "phase_seconds": 3600,
+  "concurrency_phases": [
+    1,
+    2,
+    1,
+    2,
+    1,
+    2
+  ],
+  "slots": 2,
+  "context_total": 8192,
+  "output_budget": 800,
+  "unique_conditions": 12,
+  "consecutive_failure_limit": 3,
+  "prerequisite": "All 48 predecessor calls parsed and matched fixed action/target/fact; checked from saved raw answers before engine launch",
+  "runner_sha256": "2296604d87b2ba5671a88c7c04257bddaec212e4f04f8d3932cb6b366879cdb7",
+  "model": "Gemma-4-E4B-it Q4_K_M with our FINCH seed20261014 adapter",
+  "our_training": true,
+  "independent_accuracy": false,
+  "adoption": false,
+  "automatic_retry": false,
+  "stopping": "Six-hour measurement window or 3 consecutive failed calls; no automatic retry; in-flight calls may finish after boundary",
+  "limitation": "GPU model decision path, not Oracle ARM full application. Fixed synthetic repeats measure stability, not new accuracy or customer isolation"
+}

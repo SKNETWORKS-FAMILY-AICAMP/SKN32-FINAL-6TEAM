@@ -1,0 +1,41 @@
+--- before/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py
++++ after/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py
+@@ -82,7 +82,7 @@
+ from .verify_time import leg_mode
+ from .bus_identity import route_for_leg, segment_for_leg
+ 
+-ESTIMATE_VERSION = "estimate-v1.1"
++ESTIMATE_VERSION = "estimate-v1.2"
+ PRIM_TIE_BAND = 0.05     # 73 후속 3-9 — 대표 경로 동급 띠(성립 표본 대비 · 내림). 판정이 아니라 추정 표시의 안정화 값
+ SLOTS = {"오전": (6 * 60, 12 * 60), "오후": (12 * 60, 18 * 60), "저녁": (18 * 60, 22 * 60), "밤": (22 * 60, 28 * 60)}
+ SLOT_ALIASES = {"morning": "오전", "afternoon": "오후", "evening": "저녁", "night": "밤"}
+@@ -304,18 +304,26 @@
+                 "window": {"from": fmt_min(lo), "to": fmt_min(hi), "step_min": step}}
+         buf = v.rv("buffer", "by_stage", self.stage)
+ 
+-        # 도보 직행 — 두 장소 직선이 도보 상한 안이면 표본마다 같은 후보(32 와 같은 식)
++        # 직접 도보도 일정 안내와 같은 보행망 거리·계단 시간을 쓴다. 창마다 한 번만 조회한다.
++        # 상한은 기존 직선거리 정책이며, 아래 소요 분위는 실보행 측정 분포가 아니다.
+         walk_eta = None
++        walk_missing = False
+         if A["place"] and B["place"] and "walk" in self.modes:
+             from .geo import meters
+             dm = meters(A["place"]["lat"], A["place"]["lon"], B["place"]["lat"], B["place"]["lon"])
+             if dm <= wlim:
+-                walk_eta = max(1, self.P._walk(dm))
++                walk_basis = {}
++                _distance, minutes, walk_missing = self.P._walk_path(
++                    A["place"], B["place"], dm, evidence=walk_basis)
++                base["walk_basis"] = walk_basis
++                if not walk_missing:
++                    walk_eta = max(1, math.ceil(minutes))
+         same = (A["station"] is not None and
+                 same_station(A["station"], A.get("lines"), B["station"], B.get("lines")))   # 55 GPT #2 — 물리적 역 기준
+         transit = A["station"] is not None and B["station"] is not None and not same
+         if not transit and walk_eta is None:
+-            why = ("두 곳의 가장 가까운 역이 같고 도보 상한 밖이다" if same
++            why = ("현재 보행망에서 직접 도보 경로를 연결하지 못했고 대중교통 후보도 없다" if walk_missing
++                   else "두 곳의 가장 가까운 역이 같고 도보 상한 밖이다" if same
+                    else "도보 상한 안에 지하철역이 없다(" + (A["name"] if A["station"] is None else B["name"]) + ")")
+             return {**base, "verdict": "no_data", "reason": why}
+ 

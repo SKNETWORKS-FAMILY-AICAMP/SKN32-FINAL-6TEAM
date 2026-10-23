@@ -1,0 +1,40 @@
+{
+  "scope": {
+    "current_documents": 2,
+    "generated_documents": 0,
+    "record_documents": 0,
+    "excluded_backup_directories": 0,
+    "excluded_staging_directories": 0
+  },
+  "checked_documents": [
+    "wiki/index.md",
+    "wiki/no-metadata.md"
+  ],
+  "invariant_references": {
+    "definition": "현재 검사 문서 전체의 본문 인용 고유 ID; cs 정의 행 수·실행 통과 수가 아님",
+    "unique_ids": [],
+    "automated_link_rows": 0,
+    "current_test_marker_ids": []
+  },
+  "record_links_checked": false,
+  "record_broken_links": [],
+  "problems": {
+    "상태 필드 형식 위반": [
+      "wiki/index.md  (implementation_status: done)"
+    ],
+    "front matter 없음": [
+      "wiki/no-metadata.md"
+    ]
+  },
+  "warnings": {
+    "상태 필드 확인 필요": []
+  },
+  "total_violations": 2,
+  "unmarked_domain": [
+    "wiki/index.md",
+    "wiki/no-metadata.md"
+  ],
+  "dead_code_references": [],
+  "untracked_code_references": [],
+  "domain_documents": {}
+}

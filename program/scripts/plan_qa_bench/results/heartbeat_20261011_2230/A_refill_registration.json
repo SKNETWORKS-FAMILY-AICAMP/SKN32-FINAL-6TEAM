@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-11T13:36:26.675268+00:00",
+  "registered": 196,
+  "added": [
+    "e4bbase_cosine_s20261014_appschema_v2",
+    "e4bbase_oos2r_appschema_v2",
+    "e4bbase_oos3_appschema_v2"
+  ],
+  "duplicates_removed": 3,
+  "original_preserved": 193,
+  "none_started": true,
+  "worker_pid": 342497,
+  "backup": "/tmp/tripilot-a-backlog-20261008/_backup/2026-10-11_133626_duplicate_registration_correction"
+}

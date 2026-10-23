@@ -1,0 +1,60 @@
+{
+  "date_kst": "2026-10-10",
+  "selected_tests": {
+    "passed": 235,
+    "failed": 2,
+    "error": 1
+  },
+  "selected_total": 238,
+  "duration_seconds": 26.717,
+  "failures": [
+    {
+      "case": "tests.contract.test_team_tool_discipline::test_team_does_not_import_infrastructure_directly[2026-10-09_124839_\\ubc29\\uba74\\ub300\\uc870_\\uc218\\uc815\\uc804/subway_departure.py]",
+      "type": "",
+      "category": "Team의 금지된 직접 import 검사 실패"
+    },
+    {
+      "case": "tests.contract.test_team_tool_discipline::test_team_does_not_import_infrastructure_directly[engine/subway_departure.py]",
+      "type": "",
+      "category": "Team의 금지된 직접 import 검사 실패"
+    },
+    {
+      "case": "tests.security.test_pii_redaction_runtime::test_case_message_is_redacted_in_db_api_and_audit",
+      "type": "",
+      "category": "로컬 개발 DB 접속 오류"
+    }
+  ],
+  "dataset_check": {
+    "exit_code": 0,
+    "golden": 72,
+    "holdout": 24,
+    "label_by": {
+      "claude-draft": 96
+    },
+    "meaning": "형식·라벨 어휘·정확 중복 검사, 정확도 또는 사람 정답 검수 아님"
+  },
+  "broad_suite": {
+    "status": "interrupted",
+    "reason": "실패·DB 연결 오류를 관측한 후 범위를 줄인 검사로 전환. 전체 통과율은 계산하지 않음"
+  },
+  "training_data": {
+    "path": "datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl",
+    "available": true,
+    "rows": 2613,
+    "sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c",
+    "field_names": [
+      "completion",
+      "gold",
+      "idx",
+      "persona",
+      "prompt",
+      "type"
+    ]
+  },
+  "commands": [
+    "python -m scripts.verify_travel_eval_datasets",
+    "python -m pytest tests/contract/test_team_contract.py tests/contract/test_core_isolation.py tests/contract/test_team_tool_discipline.py tests/architecture/test_basement_is_domain_free.py tests/security/test_pii_redaction_runtime.py -q -m \"not live\""
+  ],
+  "product_release": "not_verified",
+  "production_checks": "실서버 확인(서버 응답): 안 했음. 원격 제품·외부 API·실제 모델 정확도는 재측정하지 않음"
+}

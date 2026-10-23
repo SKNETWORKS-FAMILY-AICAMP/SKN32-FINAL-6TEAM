@@ -1,0 +1,174 @@
+{
+  "passed": 28,
+  "total": 28,
+  "results": [
+    {
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "title": "점선 양끝 시각·큰 시작 시각·세로 지도 단추 375px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 375px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 375px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "title": "점선 양끝 시각·큰 시작 시각·세로 지도 단추 1280px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "title": "추가 취소 후 바깥 화면 고정·마지막 카드 전체 표시 1280px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "title": "스크롤·드래그 중 제출 숨김과 유휴 복원 1280px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "timeline-endpoints-20261009.spec.ts",
+      "title": "도착 시각이 없는 구간은 시각을 지어내지 않는다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "상단 검색·선택·뒤로가기와 지도 단추 375px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "상단 검색·선택·뒤로가기와 지도 단추 1280px",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "빈 배경의 오른쪽 스와이프만 추가를 취소하고 일차 전환 모션을 사용한다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "저장 중에는 뒤로가기·스와이프가 요청과 입력을 취소하지 않는다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "add-header-map-20261009.spec.ts",
+      "title": "오른쪽 거리 칩은 단추 아래의 빈 높이에서 화면 끝에 붙고 번호와 거리가 구분된다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "card-footer-exclusive-20261009.spec.ts",
+      "title": "375px: 확인 필요와 되돌리기는 카드 하단 한 자리에서 교대로 표시된다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "card-footer-exclusive-20261009.spec.ts",
+      "title": "1280px: 확인 필요와 되돌리기는 카드 하단 한 자리에서 교대로 표시된다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "시트 머리: 문장 대신 「! 2」 표시 하나 — 눌러서 확인 필요만 모아 보고 다시 눌러 전체로 돌아온다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "시트를 끝까지 내리면 머리·날짜 칩·목록을 모두 접고 손잡이와 플로팅 제출만 남는다(지도의 「확인 필요」는 남는다)",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "카드 옆 표시는 「확인 필요」와 「변경 완료」뿐이다 — 「조정」은 없다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "삭제는 바로 지우지 않는다: 카드가 회색이 되고 휴지통 자리에 되돌리기가 서며, 서버로는 「다시 제출」을 누를 때 간다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "지도에 「모든 일정 보기」 단추가 확대·축소 단추 옆에 있어, 확대하거나 옮긴 지도를 모든 핀이 보이는 처음 위치·배율로 되돌린다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "이동 줄은 앞뒤 일정의 시작 시각 사이에서 출발하는 만큼 위에서 내려와, 시각이 더 가까운 일정 쪽에 붙는다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "일정 카드의 시간 · 원 · 이름은 한 줄에 놓인다(이름만 아래로 처지지 않는다)",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "−5분 · +5분 단추는 시작을 5분씩 옮기고, 범위 끝에서 멈춘다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "plan-check-redesign.spec.ts",
+      "title": "바꾼 시간에는 「되돌리기」가 붙고, 누르면 그 일정만 처음 시간으로 돌아오며, 변경 메뉴에서는 바꾼 시간 모두를 한 번에 되돌린다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "time-free-first.spec.ts",
+      "title": "끌어서 늦추면 여유를 다 쓸 때 한 번 멈춰 알리고(알림은 하나), 더 끌어야 뒤 일정이 밀리며, 끄는 동안 하루 미니맵이 뜬다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "time-free-first.spec.ts",
+      "title": "위로 끌어도 같다: 앞 일정과 붙는 곳에서 한 번 멈추고, 멈춤을 넘어야 앞 일정이 당겨진다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "time-free-first.spec.ts",
+      "title": "−5분 · +5분 단추도 여유 끝에서 한 번 멈춰 알린 뒤 다음 단추부터 민다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "time-free-first.spec.ts",
+      "title": "이동의 「출발」 시각을 눌러 같은 방식으로 고친다: 늦게 나서면 여유가 줄고, 여유를 다 쓰면 멈춘 뒤 다음 일정이 밀린다",
+      "status": "passed",
+      "expected": "passed"
+    },
+    {
+      "file": "time-free-first.spec.ts",
+      "title": "고정한 일정에서 나서는 시각은 못 바꾸고 이유를 말한다",
+      "status": "passed",
+      "expected": "passed"
+    }
+  ]
+}

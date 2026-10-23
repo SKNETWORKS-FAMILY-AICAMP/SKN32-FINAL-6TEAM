@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="0" tests="14" time="18.367" timestamp="2026-10-14T17:25:32.037470+09:00" hostname="DESKTOP-A5H6T7G"><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_explicit_activity_does_not_take_a_restaurant_branch_from_an_earlier_source[our_places]" time="6.402"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'our_places'
+
+    @pytest.mark.parametrize("source", ["our_places", "dining", "tour"])
+    def test_an_explicit_activity_does_not_take_a_restaurant_branch_from_an_earlier_source(source):
+        options = {"our_places": []}
+        if source == "our_places":
+            options[source] = [_place("서촌 광화문점")]
+        else:
+            options[source] = NamedSource({"서촌": _source_place("서촌 광화문점")})
+    
+        found = resolve("서촌", kind_hint="activity", **options)
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:67: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_explicit_activity_does_not_take_a_restaurant_branch_from_an_earlier_source[dining]" time="0.009"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'dining'
+
+    @pytest.mark.parametrize("source", ["our_places", "dining", "tour"])
+    def test_an_explicit_activity_does_not_take_a_restaurant_branch_from_an_earlier_source(source):
+        options = {"our_places": []}
+        if source == "our_places":
+            options[source] = [_place("서촌 광화문점")]
+        else:
+            options[source] = NamedSource({"서촌": _source_place("서촌 광화문점")})
+    
+        found = resolve("서촌", kind_hint="activity", **options)
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:67: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_explicit_activity_does_not_take_a_restaurant_branch_from_an_earlier_source[tour]" time="0.007"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'tour'
+
+    @pytest.mark.parametrize("source", ["our_places", "dining", "tour"])
+    def test_an_explicit_activity_does_not_take_a_restaurant_branch_from_an_earlier_source(source):
+        options = {"our_places": []}
+        if source == "our_places":
+            options[source] = [_place("서촌 광화문점")]
+        else:
+            options[source] = NamedSource({"서촌": _source_place("서촌 광화문점")})
+    
+        found = resolve("서촌", kind_hint="activity", **options)
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:67: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_explicit_activity_keeps_a_shop_whose_full_name_was_written[our_places]" time="0.006" /><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_explicit_activity_keeps_a_shop_whose_full_name_was_written[dining]" time="0.008" /><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_explicit_activity_keeps_a_shop_whose_full_name_was_written[tour]" time="0.006" /><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_explicit_full_shop_name_wins_over_another_branch_in_our_places" time="0.008"><failure message="AssertionError: assert ('resolved', ... 'p-블루보틀 삼청점') == ('resolved', ... 'p-블루보틀 성수점')&#10;  &#10;  At index 1 diff: '블루보틀 삼청점' != '블루보틀 성수점'&#10;  Use -v to get more diff">def test_an_explicit_full_shop_name_wins_over_another_branch_in_our_places():
+        found = resolve("블루보틀 성수점", kind_hint="activity",
+                        our_places=[_place("블루보틀 성수점"), _place("블루보틀 삼청점")])
+    
+&gt;       assert (found.status, found.name, found.place_id) == (
+            "resolved", "블루보틀 성수점", "p-블루보틀 성수점")
+E       AssertionError: assert ('resolved', ... 'p-블루보틀 삼청점') == ('resolved', ... 'p-블루보틀 성수점')
+E         
+E         At index 1 diff: '블루보틀 삼청점' != '블루보틀 성수점'
+E         Use -v to get more diff
+
+tests\unit\travel\test_intake_activity_kind_guard.py:89: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_romanized_activity_does_not_take_a_confirmed_restaurant[tour]" time="0.007"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'tour'
+
+    @pytest.mark.parametrize("source", ["tour", "dining"])
+    def test_a_romanized_activity_does_not_take_a_confirmed_restaurant(source):
+        found = resolve("Seochon", kind_hint="activity", our_places=[],
+                        kakao=Kakao({"Seochon": [_hit("서촌닭갈비")]}),
+                        **{source: NamedSource({"서촌닭갈비": _source_place("서촌닭갈비")})})
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:99: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_romanized_activity_does_not_take_a_confirmed_restaurant[dining]" time="0.007"><failure message="AssertionError: assert ('resolved' == 'unresolved'&#10;  &#10;  - unresolved&#10;  ? --&#10;  + resolved)">source = 'dining'
+
+    @pytest.mark.parametrize("source", ["tour", "dining"])
+    def test_a_romanized_activity_does_not_take_a_confirmed_restaurant(source):
+        found = resolve("Seochon", kind_hint="activity", our_places=[],
+                        kakao=Kakao({"Seochon": [_hit("서촌닭갈비")]}),
+                        **{source: NamedSource({"서촌닭갈비": _source_place("서촌닭갈비")})})
+    
+&gt;       assert found.status == "unresolved" and found.needs_review is True
+E       AssertionError: assert ('resolved' == 'unresolved'
+E         
+E         - unresolved
+E         ? --
+E         + resolved)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:99: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_romanized_activity_still_takes_a_confirmed_sight" time="0.006" /><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_food_search_results_do_not_reclassify_a_confirmed_activity_as_a_meal" time="0.013"><failure message="AssertionError: assert 'dining' != 'dining'&#10; +  where 'dining' = Resolved(status='resolved', method='tour_api', name='서촌', query='서촌', kind='activity', latitude=37.579, longitude=126....촌 골목', 'kakao:서촌 골목', 'places:서촌', 'tour_api:서촌'], blocked=[], candidates=[], chain_deferred=False, item_kind='dining').item_kind">def test_food_search_results_do_not_reclassify_a_confirmed_activity_as_a_meal():
+        found = resolve("서촌 골목", kind_hint="activity", our_places=[],
+                        kakao=Kakao({"서촌 골목": [_hit("서촌닭갈비"), _hit("서촌만두")]}),
+                        tour=NamedSource({"서촌": _source_place("서촌", kind="12")}))
+    
+        assert (found.name, found.kind) == ("서촌", "activity")
+&gt;       assert found.item_kind != "dining"
+E       AssertionError: assert 'dining' != 'dining'
+E        +  where 'dining' = Resolved(status='resolved', method='tour_api', name='서촌', query='서촌', kind='activity', latitude=37.579, longitude=126....촌 골목', 'kakao:서촌 골목', 'places:서촌', 'tour_api:서촌'], blocked=[], candidates=[], chain_deferred=False, item_kind='dining').item_kind
+
+tests\unit\travel\test_intake_activity_kind_guard.py:117: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_an_activity_in_a_rule_read_title_does_not_take_a_known_restaurant_branch" time="0.027"><failure message="AssertionError: assert ({'content_id': None, 'content_type_id': None, 'kind': 'dining', 'latitude': 37.579, ...} is None)">def test_an_activity_in_a_rule_read_title_does_not_take_a_known_restaurant_branch():
+        rows = read_source("2026-10-15\n14:00 서촌 산책", our_places=[_place("서촌 광화문점")],
+                           today=date(2026, 10, 14))
+        place = next(row for row in rows if row["field"] == "items[0].place")
+    
+&gt;       assert place["value"] is None and place["needs_review"] is True
+E       AssertionError: assert ({'content_id': None, 'content_type_id': None, 'kind': 'dining', 'latitude': 37.579, ...} is None)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:125: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_meal_and_a_walk_on_the_same_line_keep_their_own_place_kinds[\uc11c\ucd0c \uac77\ub2e4\uac00 \uc810\uc2ec\uc740 \ud1b5\uc778\uc2dc\uc7a5 \uadfc\ucc98\uc5d0\uc11c \ud574\uacb0\ud558\uace0 \uc2f6\uc5b4\uc694-quotes0]" time="0.007"><failure message="AssertionError: assert ({'content_id': 'c-서촌닭갈비', 'content_type_id': '39', 'kind': 'dining', 'latitude': 37.579, ...} is None)">sentence = '서촌 걷다가 점심은 통인시장 근처에서 해결하고 싶어요', quotes = ['서촌', '통인시장']
+
+    @pytest.mark.parametrize("sentence,quotes", [
+        ("서촌 걷다가 점심은 통인시장 근처에서 해결하고 싶어요", ["서촌", "통인시장"]),
+        ("통인시장에서 점심 먹고 서촌 골목 걷자", ["통인시장", "서촌"]),
+    ])
+    def test_a_meal_and_a_walk_on_the_same_line_keep_their_own_place_kinds(sentence, quotes):
+        dining = NamedSource({"서촌": _source_place("서촌닭갈비"),
+                              "통인시장": _source_place("통인시장밥집")})
+        rows = read_source("2026-10-15\n" + sentence, our_places=[], dining=dining,
+                           chat=Chat(quotes), today=date(2026, 10, 14))
+        indexes = {row["value"]: row["field"].split(".")[0]
+                   for row in rows if row["field"].endswith(".title")}
+        places = {row["field"]: row for row in rows if row["field"].endswith(".place")}
+        walk = places[indexes["서촌"] + ".place"]
+        meal = places[indexes["통인시장"] + ".place"]
+    
+&gt;       assert walk["value"] is None and walk["needs_review"] is True
+E       AssertionError: assert ({'content_id': 'c-서촌닭갈비', 'content_type_id': '39', 'kind': 'dining', 'latitude': 37.579, ...} is None)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:144: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_intake_activity_kind_guard" name="test_a_meal_and_a_walk_on_the_same_line_keep_their_own_place_kinds[\ud1b5\uc778\uc2dc\uc7a5\uc5d0\uc11c \uc810\uc2ec \uba39\uace0 \uc11c\ucd0c \uace8\ubaa9 \uac77\uc790-quotes1]" time="0.008"><failure message="AssertionError: assert ({'content_id': 'c-서촌닭갈비', 'content_type_id': '39', 'kind': 'dining', 'latitude': 37.579, ...} is None)">sentence = '통인시장에서 점심 먹고 서촌 골목 걷자', quotes = ['통인시장', '서촌']
+
+    @pytest.mark.parametrize("sentence,quotes", [
+        ("서촌 걷다가 점심은 통인시장 근처에서 해결하고 싶어요", ["서촌", "통인시장"]),
+        ("통인시장에서 점심 먹고 서촌 골목 걷자", ["통인시장", "서촌"]),
+    ])
+    def test_a_meal_and_a_walk_on_the_same_line_keep_their_own_place_kinds(sentence, quotes):
+        dining = NamedSource({"서촌": _source_place("서촌닭갈비"),
+                              "통인시장": _source_place("통인시장밥집")})
+        rows = read_source("2026-10-15\n" + sentence, our_places=[], dining=dining,
+                           chat=Chat(quotes), today=date(2026, 10, 14))
+        indexes = {row["value"]: row["field"].split(".")[0]
+                   for row in rows if row["field"].endswith(".title")}
+        places = {row["field"]: row for row in rows if row["field"].endswith(".place")}
+        walk = places[indexes["서촌"] + ".place"]
+        meal = places[indexes["통인시장"] + ".place"]
+    
+&gt;       assert walk["value"] is None and walk["needs_review"] is True
+E       AssertionError: assert ({'content_id': 'c-서촌닭갈비', 'content_type_id': '39', 'kind': 'dining', 'latitude': 37.579, ...} is None)
+
+tests\unit\travel\test_intake_activity_kind_guard.py:144: AssertionError</failure></testcase></testsuite></testsuites>

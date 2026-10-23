@@ -1,0 +1,32 @@
+[WebServer] (node:29296) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:29684) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21576) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27128) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:12924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 11 tests using 1 worker
+
+(node:3996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 tests\live\add-header-map-20261009.spec.ts:95:1 › 저장 중에는 뒤로가기·스와이프가 요청과 입력을 취소하지 않는다 (3.4s)
+  ok  2 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류 (2.5s)
+  ok  3 tests\live\uiux-route-audit-20261012.spec.ts:25:5 › 전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류 (2.7s)
+  ok  4 tests\live\uiux-share-location-20261012.spec.ts:14:34 › 공유창 Tab 순환·배경 비활성화·Esc 초점 복귀 (375px) (2.0s)
+  ok  5 tests\live\uiux-share-location-20261012.spec.ts:14:34 › 공유창 Tab 순환·배경 비활성화·Esc 초점 복귀 (1280px) (2.5s)
+  ok  6 tests\live\uiux-share-location-20261012.spec.ts:38:56 › 클립보드 missing에서도 복사 실패를 알리고 공유창을 유지한다 (2.0s)
+  ok  7 tests\live\uiux-share-location-20261012.spec.ts:38:56 › 클립보드 refused에서도 복사 실패를 알리고 공유창을 유지한다 (2.0s)
+  ok  8 tests\live\uiux-share-location-20261012.spec.ts:89:1 › GPS 대기 중 위치 동의를 철회하면 질문과 위치를 전송하지 않는다 (3.5s)
+  ok  9 tests\live\uiux-share-location-20261012.spec.ts:99:1 › GPS 대기 중 철회 후 다시 동의해도 취소된 요청은 보내지 않고 새 클릭은 보낸다 (3.6s)
+  ok 10 tests\live\uiux-share-location-20261012.spec.ts:113:1 › GPS 대기 중 여행 화면을 나가면 늦게 도착한 위치로 질문을 보내지 않는다 (3.9s)
+  ok 11 tests\live\uiux-share-location-20261012.spec.ts:123:1 › 위치 동의가 유지된 요청은 GPS 응답 뒤 질문과 위치를 한 번 전송한다 (3.7s)
+
+  11 passed (1.3m)

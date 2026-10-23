@@ -1,0 +1,23 @@
+{
+  "documents": [
+    {
+      "markdown": "program/plan/triPilot_구현계획서_v12.md",
+      "html": "program/plan/triPilot_구현계획서_v12.html",
+      "markdown_sha256": "9897e469e65554ec16c9a5793a03340d40467413d4e2cf173333562d3d7e195a",
+      "html_sha256": "0ccaff01af59792886ef71f177661a5f8baa4d81c76650076aac71d7b5452b92",
+      "status": "draft_unaccepted"
+    },
+    {
+      "markdown": "program/baseline/triPilot-baseline-2026-10-12.md",
+      "html": "program/baseline/triPilot-baseline-2026-10-12.html",
+      "markdown_sha256": "6d9d6491ae4e6bc34a4197340775af2d67917b62929993854db0b46ac5431996",
+      "html_sha256": "273769c43c41ff6606715701995734d3b7de859239659373755044e6c5356a51",
+      "status": "draft_unaccepted"
+    }
+  ],
+  "figures": [
+    "travel-check-flow.svg",
+    "travel-apply-flow.svg"
+  ],
+  "status": "draft_unaccepted"
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "file": "final_project_cs/wiki/quality/test-map.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_231609_sql_review/test-map.md",
+    "sha256": "81698ca92e10530065b80dbd44f2b75d0a5279b12f10f45186601f8d85c8988e"
+  },
+  {
+    "file": "final_project_cs/wiki/data/schema/index.md",
+    "backup": "final_project_cs/wiki/data/schema/_backup/2026-10-11_231609_sql_review/index.md",
+    "sha256": "c4f11f31eefc580b245387eb4de10b308afcad5d0ed29e08d17e158755fa8bb2"
+  },
+  {
+    "file": "final_project_cs/wiki/data/migrations.md",
+    "backup": "final_project_cs/wiki/data/_backup/2026-10-11_231609_sql_review/migrations.md",
+    "sha256": "d3da505bbe4b930427f486bc365a50cff1fece4ffc2b5c4fa78afeb054f6be19"
+  },
+  {
+    "file": "final_project_cs/wiki/quality/slm-model-evaluation.md",
+    "backup": "final_project_cs/wiki/quality/_backup/2026-10-11_231609_sql_review/slm-model-evaluation.md",
+    "sha256": "a138097546a03f721bccca12c19dd9a45312f67633f0d45a55e04f7e0cf5d785"
+  },
+  {
+    "file": "wiki/delivery/roles.md",
+    "backup": "wiki/delivery/_backup/2026-10-11_231609_sql_review/roles.md",
+    "sha256": "76e77fd5073e21070e108f9a5394c27ea8f04481c8b08bf6667218a98ff905ef"
+  },
+  {
+    "file": "wiki/decisions/D-018-decision15-stop-paths.md",
+    "backup": "wiki/decisions/_backup/2026-10-11_231609_sql_review/D-018-decision15-stop-paths.md",
+    "sha256": "45650ca4bd8eec16806b87d5ca7feb90a038bfdb9bc3f645847623194f4e45f7"
+  },
+  {
+    "file": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md",
+    "backup": "final_project_cs/wiki/decisions/_backup/2026-10-11_231609_sql_review/D-CS-012-agent-auth-claude-style.md",
+    "sha256": "c5536b95ed0e4093e7e996ff684a3aaefc547a96db481e51a9008175194d3838"
+  },
+  {
+    "file": "wiki/governance/front-matter.md",
+    "backup": "wiki/governance/_backup/2026-10-11_231609_sql_review/front-matter.md",
+    "sha256": "33c627740b8ad39b16651cce82880efee176778668d407be7eb6fc8a4a2b5919"
+  },
+  {
+    "file": "program/research/wiki_review_2026-10-11/wiki-review-v2.html",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_232210_sql_review_page/wiki-review-v2.html",
+    "sha256": "d6042137fb5bc23b9e8dda30b929f4d3156158fb44f23965f473c4b62521a3c7"
+  },
+  {
+    "file": "program/research/wiki_review_2026-10-11/findings-v2.json",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_232210_sql_review_page/findings-v2.json",
+    "sha256": "56b335a12199613a6d82679540131c896d2850584b8c7e913c441368a7cb65f9"
+  },
+  {
+    "file": "program/research/wiki_review_2026-10-11/wiki-review-v2.md",
+    "backup": "program/research/wiki_review_2026-10-11/_backup/2026-10-11_232210_sql_review_page/wiki-review-v2.md",
+    "sha256": "86fbdb2ce1e01b8fb7017308ae23a62cad7468b4b3fa64ef6f8384aa33c412d6"
+  },
+  {
+    "file": "wiki/governance/implementation-state.md",
+    "backup": "wiki/governance/_backup/2026-10-11_232437_review_correction/implementation-state.md",
+    "sha256": "d3fb4bcfa142338335a71932f004ccd444548a34e51c5a86c4b2330906809ffe"
+  },
+  {
+    "file": "final_project_cs/tests/unit/ml/test_local_sentiment.py",
+    "backup": "final_project_cs/tests/unit/ml/_backup/2026-10-11_232437_review_correction/test_local_sentiment.py",
+    "sha256": "3b03c14170377c4cb2274766b3aade6eeb969d64fa3f773a6a4bd56f29efbd98"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/wiki-check.log",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_232437_review_correction/wiki-check.log",
+    "sha256": "8fa921e92e65d86f745f908201a72ae7dd177b70d006271ec295c5cf55f02423"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/index.html",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_232747_final_correction/index.html",
+    "sha256": "f2bfddfa71dd8373f2ba947b9d66511f2b9d75591a98a1353d66a879b74cecdc"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/checker-example.png",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_232747_final_correction/checker-example.png",
+    "sha256": "1665a512158f560edeb22d639c01589af408a97fab6e43e21d624715de8649dd"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/validation.json",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_232747_final_correction/validation.json",
+    "sha256": "a9655d6134c9ccfa31abde3fb7744fd089ab12150edab98a0bd04e1ce7c01483"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/schema-page-script.js",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_232747_final_correction/schema-page-script.js",
+    "sha256": "2a716e94f62da4390e460c183cde38c5aa041dff16ae1f51a0c79c2f35ef5c7d"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/review-page-script.js",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_232747_final_correction/review-page-script.js",
+    "sha256": "138b29dc55120a827f2ba03cfc82169cf02fa6e3396303c9a08ebacc243c8246"
+  },
+  {
+    "file": ".tmp/sql_review_final.py",
+    "backup": ".tmp/_backup/2026-10-11_232747_final_correction/sql_review_final.py",
+    "sha256": "fcd70d4094af8bf403a295f929590c8dd7de75ddb859748ab36ff162994ec342"
+  },
+  {
+    "file": "wiki/decisions/D-023-no-commerce-assets-in-use.md",
+    "backup": "wiki/decisions/_backup/2026-10-11_233537_sql_final_report/D-023-no-commerce-assets-in-use.md",
+    "sha256": "974d13c24ee5e875c5681eac71656ba50817b9f5f8a8d3ffbcb0bef95d7a6c4e"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/index.html",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_233537_sql_final_report/index.html",
+    "sha256": "14c0559fc83ca677215002ef8736258235dbca5db0a4df28dd9ad04fa4dc0e6a"
+  },
+  {
+    "file": "program/research/sql_review_2026-10-11/index.html",
+    "backup": "program/research/sql_review_2026-10-11/_backup/2026-10-11_233914_final_wiki_count/index.html",
+    "sha256": "e1ff7f6dbc940770acef9ffabdf021f774541f970d68fdb5acfb7440d922819d"
+  },
+  {
+    "file": "final_project_cs/wiki/records/reports/2026-10-11_sql-structure-and-review-comments.md",
+    "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-11_233914_final_wiki_count/2026-10-11_sql-structure-and-review-comments.md",
+    "sha256": "12623a6227651b23e4a664f1d52c2b0a0d2ac6a7b671a36f72f9898f87cd1cb8"
+  }
+]

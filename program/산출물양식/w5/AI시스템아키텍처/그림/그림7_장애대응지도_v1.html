@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>장애 대응 지도 — 실패 상황 → 막는 장치 → 결과</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--paper:#fbfcfd;--paper-2:#f1f4f8;--ink:#161c28;--muted:#6b7488;--soft:#7a8599;--rule:rgba(22,28,40,.12);
+--accent:#a8720c;--accent-tint:rgba(168,114,12,.10);--link:#2f5bd8;
+--sans:'Geist','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;--serif:'Instrument Serif','Noto Serif KR',serif;--mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.7;font-size:15px;padding:3rem 2rem}
+.frame{max-width:1200px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+h1{font-family:var(--serif);font-size:2rem;font-weight:400;letter-spacing:-.01em;line-height:1.2;margin-bottom:1rem}
+h2{font-family:var(--serif);font-size:1.5rem;font-weight:400;margin:3rem 0 .5rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+p{max-width:860px;margin:0 0 .9rem}
+.lead{font-size:16px}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.86em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+figure{margin:1.25rem 0 0}
+figure svg{width:100%;display:block}
+figcaption{font-size:13px;color:var(--muted);margin-top:.5rem;max-width:860px}
+.fig-wide svg{min-width:900px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:1rem 0;background:#fff}
+th,td{border:1px solid var(--rule);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--paper-2);font-weight:600}
+td:first-child{font-weight:600;white-space:nowrap}
+.cards{display:grid;grid-template-columns:1.2fr 1fr .9fr;gap:16px;margin:1.25rem 0}
+.card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem}
+.card h3{font-size:15px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--ink)}
+.dot.accent{background:var(--accent)}.dot.link{background:var(--link)}.dot.soft{background:var(--soft)}
+.card ul{padding-left:1.1rem;font-size:14px}
+.status{border-left:3px solid var(--accent);background:var(--accent-tint);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;font-size:14px;max-width:none}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--muted)}
+@media (max-width:760px){.cards{grid-template-columns:1fr}body{padding:2rem 1rem}}
+ body{display:flex;justify-content:center}</style></head><body><div class="frame"><p class="eyebrow">guguroute · 시스템 아키텍처 v1</p><h1>장애 대응 지도 — 실패 상황 → 막는 장치 → 결과</h1><figure class="fig-wide"><svg viewBox="0 0 1600 616" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="fail-title fail-desc">
+<title id="fail-title">장애 대응 지도 — 실패 상황 → 막는 장치 → 결과</title>
+<desc id="fail-desc">규정 검색 실패, 판단 오류와 무한 반복, 외부 API 장애, 출력 검수 네 가지 실패마다 막는 장치와 그 결과. 값을 모를 때 지어내지 않고, 일정을 바꾸지 않은 채 알리거나 다시 본다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1600" height="616" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M216 152 L216 216" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M216 336 L216 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M600 152 L600 216" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M600 336 L600 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M984 152 L984 216" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M984 336 L984 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1368 152 L1368 216" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1368 336 L1368 400" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<!-- 상자 -->
+<rect x="40" y="40" width="352" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="40" width="352" height="112" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="216" y="91" class="name">4.1 규정 검색 실패</text>
+<text x="216" y="111" class="sub">비슷한 규정 조각 점수가 낮다</text>
+<rect x="40" y="216" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="216" width="352" height="120" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="216" y="262" class="name">막는 장치</text>
+<text x="216" y="282" class="sub">점수 0.55 미만 조각은 버림</text>
+<text x="216" y="300" class="sub">문턱 넘는 최대 3조각만 답에</text>
+<rect x="40" y="400" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="400" width="352" height="120" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="216" y="446" class="name">결과</text>
+<text x="216" y="466" class="sub">규정을 지어내지 않음</text>
+<text x="216" y="484" class="sub">못 찾았다고 말하고 일정 사실로 답</text>
+<rect x="424" y="40" width="352" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="424" y="40" width="352" height="112" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="600" y="91" class="name">4.2 판단 오류 · 무한 반복</text>
+<text x="600" y="111" class="sub">모델이 보기 밖을 고르거나 도구를 계속 부름</text>
+<rect x="424" y="216" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="424" y="216" width="352" height="120" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="600" y="262" class="name">막는 장치</text>
+<text x="600" y="282" class="sub">보기 밖 값 · 없는 일정 번호 → 실패</text>
+<text x="600" y="300" class="sub">도구 12번 · 같은 질문 반복 금지 · 90초</text>
+<rect x="424" y="400" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="424" y="400" width="352" height="120" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="600" y="446" class="name">결과</text>
+<text x="600" y="466" class="sub">일정은 그대로 · 오류 기록</text>
+<text x="600" y="484" class="sub">케이스 오류는 5분 뒤 다시(3번)</text>
+<rect x="808" y="40" width="352" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="808" y="40" width="352" height="112" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="984" y="91" class="name">4.3 외부 API 장애</text>
+<text x="984" y="111" class="sub">기상 · 교통 소스가 답하지 않는다</text>
+<rect x="808" y="216" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="808" y="216" width="352" height="120" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="984" y="262" class="name">막는 장치</text>
+<text x="984" y="282" class="sub">대체 소스로 바꿈(Open-Meteo → 기상청)</text>
+<text x="984" y="300" class="sub">대체도 안 되면 「확인 불가」</text>
+<rect x="808" y="400" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="808" y="400" width="352" height="120" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="984" y="446" class="name">결과</text>
+<text x="984" y="466" class="sub">일정을 바꾸지 않음</text>
+<text x="984" y="484" class="sub">3분 뒤 회차에서 다시 확인</text>
+<rect x="1192" y="40" width="352" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="1192" y="40" width="352" height="112" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="1368" y="91" class="name">4.4 출력 검수</text>
+<text x="1368" y="111" class="sub">초안 · 알림이 사실과 다르거나 개인정보가 섞임</text>
+<rect x="1192" y="216" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="1192" y="216" width="352" height="120" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="1368" y="262" class="name">막는 장치</text>
+<text x="1368" y="282" class="sub">근거 대조 · 체크리스트 · 밀도</text>
+<text x="1368" y="300" class="sub">번역 숫자 검사 · 개인정보 가림</text>
+<rect x="1192" y="400" width="352" height="120" rx="6" fill="#fbfcfd"/>
+<rect x="1192" y="400" width="352" height="120" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1368" y="446" class="name">결과</text>
+<text x="1368" y="466" class="sub">어긋나면 반영 안 함 · 다음 순위</text>
+<text x="1368" y="484" class="sub">번역 실패면 한국어 원문</text>
+<line x1="32" y1="552" x2="1568" y2="552" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="572" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="560" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="140" y="572" class="leg">실패 상황</text>
+<rect x="224" y="560" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="260" y="572" class="leg">막는 장치</text>
+<rect x="344" y="560" width="28" height="16" rx="3" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="380" y="572" class="leg">결과</text>
+</svg></figure></div></body></html>

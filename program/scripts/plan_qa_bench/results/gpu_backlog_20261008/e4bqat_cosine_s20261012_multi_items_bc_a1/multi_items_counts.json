@@ -1,0 +1,101 @@
+{
+  "model": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+  "saved": 835,
+  "expected": 835,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "metadata_matches": 835,
+  "counts": {
+    "all": {
+      "total": 835,
+      "B": 819,
+      "C": 781,
+      "first_item_diagnostic": 814,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9165733093289595,
+        0.9500982081018442
+      ]
+    },
+    "single": {
+      "total": 583,
+      "B": 572,
+      "C": 544,
+      "first_item_diagnostic": 567,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9098577461555601,
+        0.9506813183727689
+      ]
+    },
+    "compound": {
+      "total": 66,
+      "B": 66,
+      "C": 56,
+      "first_item_diagnostic": 66,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.7430709513021234,
+        0.9155636301732872
+      ]
+    },
+    "no_request": {
+      "total": 186,
+      "B": 181,
+      "C": 181,
+      "first_item_diagnostic": 181,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9386251139873963,
+        0.9884642641353906
+      ]
+    }
+  },
+  "answer_sha256": "e6cd5c038110ad38541609506de289d372b64d4ad78c7c25736b8cf03a866d36",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "execution": {
+    "job": {
+      "id": "e4bqat_cosine_s20261012_multi_items_bc_a1",
+      "label": "Gemma-4-E4B-it QAT Q4_0 with our-travel cosine 5e-5 seed20261012 adapter",
+      "our_training": true,
+      "model": "/workspace/ollama/blobs/sha256-e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+      "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+      "tag": "e4bqat_cosine_s20261012_multi_items_bc_a1",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 835,
+      "model_sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel cosine adapter learned separately",
+      "purpose": "Missing evaluation of completed cosine comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "lora": "/tmp/tripilot_cosine_s20261012_20261009_lora.gguf",
+      "lora_sha256": "35fb224de298e7442c44794c4febd92e4549bc1483d7ff3c9304f361affeaf1b",
+      "suite": "multi_items_bc",
+      "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "output_contract": "strict items array with 64 output tokens; separately scored B and C",
+      "role": "missing multi-item response contract; same existing travel fixture; not prior D/E or independent holdout",
+      "automatic_retry": false
+    },
+    "started": "2026-10-09T01:15:07.842960+00:00",
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "failed_records": [],
+  "repetitions": 1,
+  "independent_holdout": false,
+  "final_ranking": false,
+  "limits": [
+    "Changed output contract; compare only models with this exact contract",
+    "Existing development fixture; not new independent holdout",
+    "No output grammar enforcement; exact JSON and allowed IDs required",
+    "Failure and missing count as wrong; observed false picks separately reported"
+  ]
+}

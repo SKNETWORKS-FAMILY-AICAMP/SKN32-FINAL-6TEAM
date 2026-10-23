@@ -1,0 +1,90 @@
+{
+  "created_at": "2026-10-09T13:06:49.921544+09:00",
+  "result": {
+    "source": "seoul_subway_arrival",
+    "line_id": "1065",
+    "station_id": "1065006502",
+    "target_station_id": "1065006503",
+    "confirmed_at": "2026-10-09T03:55:19.328584+00:00",
+    "observation_age_seconds": 0.0,
+    "ready_at": "2026-10-09T12:58:00+09:00",
+    "excluded": [
+      {
+        "train_number": "A2113",
+        "reason": "provider_refresh_required"
+      },
+      {
+        "train_number": "A1021",
+        "reason": "service_path_mismatch"
+      },
+      {
+        "train_number": "5056",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "5072",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "6104",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "5562",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "5058",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "6106",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "A2112",
+        "reason": "service_path_mismatch"
+      },
+      {
+        "train_number": "5061",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "A1022",
+        "reason": "service_path_mismatch"
+      },
+      {
+        "train_number": "5071",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "6103",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "A2110",
+        "reason": "service_path_mismatch"
+      },
+      {
+        "train_number": "5577",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "5063",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "6105",
+        "reason": "boarding_identity_mismatch"
+      },
+      {
+        "train_number": "A1024",
+        "reason": "service_path_mismatch"
+      }
+    ],
+    "status": "no_boardable_prediction",
+    "reason": "no_vehicle_after_ready"
+  },
+  "actual_new_http_requests": 0,
+  "note": "최종 공식 이름 대응으로 직전 실제 응답을 저장 재생. 새 신선 응답·실탑승 검증 아님."
+}

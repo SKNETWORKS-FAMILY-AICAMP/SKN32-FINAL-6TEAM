@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.intake.rules import read_plan
+from app.domains.travel_ops.components.intake.rules import read_plan
 
 
 def _items(text):
@@ -67,3 +67,137 @@ def test_lines_that_rules_cannot_read_are_left_not_refused():
 def test_party_size_is_not_read_from_times_or_place_names(text, party):
     read = read_plan(text)
     assert read.party_size == party
+
+
+# ── 2026-09-28 평가셋에서 찾은 셋 ───────────────────────────────────
+def test_a_short_line_between_timed_stops_is_an_untimed_item():
+    r = read_plan(chr(10).join(["DAY 1 2026-10-27", "09:30 여의도한강공원", "광장시장 빈대떡", "15:00 경복궁 관람"]))
+    assert [(i.start, i.title.text) for i in r.items] == [("09:30", "여의도한강공원"), ("15:00", "경복궁 관람"),
+                                                         (None, "광장시장 빈대떡")]
+    assert r.items[2].date == "2026-10-27" and r.unread_lines == []
+
+
+def test_a_sentence_between_stops_is_left_for_the_model():
+    r = read_plan(chr(10).join(["09:00 경복궁", "점심은 토속촌에서 먹을래", "15:00 인사동"]))
+    assert [i.title.text for i in r.items] == ["경복궁", "인사동"] and r.unread_lines == [2]
+
+
+def test_a_table_row_with_an_empty_time_cell_is_an_item_not_a_heading():
+    text = chr(10).join(["일차 | 날짜 | 시각 | 일정 | 메모", "1일차 | 2026-10-10 | 09:30 | 국립중앙박물관 관람",
+                         "1일차 | 2026-10-10 | 광장시장 빈대떡", "1일차 | 2026-10-10 | 15:00 | 국립민속박물관"])
+    r = read_plan(text)
+    assert [(i.start, i.title.text, i.date) for i in r.items] == [
+        ("09:30", "국립중앙박물관 관람", "2026-10-10"), (None, "광장시장 빈대떡", "2026-10-10"),
+        ("15:00", "국립민속박물관", "2026-10-10")]
+
+
+def test_a_date_written_on_each_timed_line_is_that_items_date():
+    """★`[2026-09-28]` 「2026-10-05 09:00 경복궁 관람」 — 전에는 날짜를 머리줄(시각 없는 줄)에서만 받아 버렸다(ui 세션 실서버 시험)."""
+    r = read_plan("2026-10-05 09:00 경복궁 관람\n12:00 토속촌 삼계탕\n10월 6일 10:00 북촌한옥마을 산책")
+    assert [(i.date, i.start, i.title.text) for i in r.items] == [
+        ("2026-10-05", "09:00", "경복궁 관람"), ("2026-10-05", "12:00", "토속촌 삼계탕"),
+        ("--10-06", "10:00", "북촌한옥마을 산책")]
+    assert [c.value for c in r.claims if c.field.endswith(".date")] == ["2026-10-05", "--10-06"]
+
+
+@pytest.mark.parametrize("text, title", [
+    ("2026-10-05\n09:00 경복궁", "내 여행"),
+    ("10월 5일 (월)\n09:00 경복궁", "내 여행"),
+    ("2026-10-05 09:00 경복궁", "내 여행"),
+    ("10월 5일 서울 가족여행\n09:00 경복궁", "10월 5일 서울 가족여행"),       # 날짜 뒤에 제목이 있으면 제목이다
+    ("서울 가족여행\n1일차 · 2026-10-05\n09:00 경복궁", "서울 가족여행"),
+])
+def test_a_line_that_is_only_a_date_is_not_the_trip_title(text, title):
+    """★`[2026-09-28]` 날짜 머리줄로 시작하는 글의 제목이 그 날짜가 됐다(ui 세션 실서버 시험)."""
+    from app.domains.travel_ops.components.intake.assemble import _title
+
+    assert _title({}, [{"transcript": text}]) == title
+
+
+# ── 2026-10-13 끼니 말이 어디에 있든 — 붙여 씀 · 가운뎃점 · 앞머리 ─────────────
+def _meal_kind(read, index):
+    return [c.value for c in read.claims if c.field == f"items[{index}].kind"]
+
+
+@pytest.mark.parametrize("text, title", [
+    ("12:00 광장시장 점심식사", "광장시장"),          # ☆붙여 쓴 「점심식사」를 이름에 남겼다(테스트 서버)
+    ("12:00 광장시장·점심", "광장시장"),              # ☆가운뎃점으로 붙인 끼니 말
+    ("12:00 점심 · 광장시장", "광장시장"),            # ☆앞머리 끼니 말 — 「점심」만 이름으로 남겼다
+    ("12:00 광장시장에서 점심식사", "광장시장"),
+    ("12:00 광장시장에서 점심", "광장시장"),          # 이름은 전에도 맞았지만 식사 단서를 잃었다
+    ("12:00 점심 식사 광장시장", "광장시장"),
+    ("12:30 토속촌삼계탕 점심", "토속촌삼계탕"),
+])
+def test_a_meal_word_anywhere_around_the_name_is_cut_and_marks_a_meal(text, title):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == [title]
+    assert _meal_kind(read, 0) == ["dining"]
+    item = read.items[0]
+    assert text[item.title.start:item.title.end] == item.title.text      # ★잘라 낼 뿐 바꾸지 않는다
+
+
+@pytest.mark.parametrize("text, title, kind", [
+    ("10:00 아침고요수목원", "아침고요수목원", []),        # 이름 안의 끼니 글자는 끼니 말이 아니다
+    ("12:00 북경중식", "북경중식", []),
+    ("19:00 저녁노을카페", "저녁노을카페", []),
+    ("12:00 점심", "점심", ["dining"]),                   # 끼니 말뿐이면 떼지 않는다(이름이 비면 안 된다) — 식사 단서는 남긴다
+])
+def test_meal_letters_inside_a_name_are_not_cut(text, title, kind):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == [title]
+    assert _meal_kind(read, 0) == kind
+
+
+def test_an_untimed_line_between_stops_also_drops_a_joined_meal_word():
+    r = read_plan(chr(10).join(["09:30 경복궁", "광장시장 점심식사", "15:00 인사동"]))
+    assert [i.title.text for i in r.items] == ["경복궁", "인사동", "광장시장"]
+    assert _meal_kind(r, 2) == ["dining"]
+
+
+# ── 2026-10-16 edge 평가(eval/intake/edge.py) C1 · C2 ─────────────────────────
+@pytest.mark.parametrize("text, title", [
+    ("10:00 도산공원 산책", "도산공원 산책"),                   # ☆C1 — 이름 첫 글자 「도」를 조사로 떼던 결함(산공원)
+    ("12:30 은평한옥마을", "은평한옥마을"),                      # ☆「은」(평한옥마을) — 배포 판 「은평구 → 평구」와 같은 뿌리
+    ("15:00 도봉산 등산", "도봉산 등산"),
+    ("10:00 에버랜드", "에버랜드"),                              # ☆「에」
+    ("10:00 는개카페", "는개카페"),                              # ☆「는」
+    ("9시 반에 도산공원", "도산공원"),                           # 시각 뒤 조사 「에」는 그대로 뗀다
+    ("10시에 은평한옥마을", "은평한옥마을"),
+])
+def test_a_name_starting_with_a_particle_letter_keeps_its_first_letter(text, title):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == [title]
+    item = read.items[0]
+    assert text[item.title.start:item.title.end] == item.title.text
+
+
+@pytest.mark.parametrize("text", [
+    "1일차 · 10월 20일: 경복궁 → 북촌한옥마을 → 인사동",       # ☆C2 — 머리줄과 화살표가 한 줄이면 항목이 통째로 사라졌다
+    "첫째 날: 경복궁 → 북촌한옥마을 → 인사동",
+    "10월 20일 경복궁 → 북촌한옥마을 → 인사동",
+    "DAY 1 | 경복궁 -> 북촌한옥마을 -> 인사동",
+])
+def test_arrows_on_the_day_heading_line_become_ordered_items(text):
+    read = read_plan(text)
+    assert [i.title.text for i in read.items] == ["경복궁", "북촌한옥마을", "인사동"]
+    assert all(i.order_only and i.start is None for i in read.items)
+    for item in read.items:                                     # ★잘라 낼 뿐 바꾸지 않는다
+        assert text[item.title.start:item.title.end] == item.title.text
+
+
+def test_arrows_on_the_heading_line_keep_its_day_and_date():
+    read = read_plan("1일차 · 10월 20일: 경복궁 → 인사동")
+    assert {(i.day, i.date) for i in read.items} == {(1, "--10-20")}
+
+
+def test_a_heading_line_without_arrows_still_makes_no_item():
+    assert read_plan("1일차 · 10월 20일").items == []
+    assert read_plan("DAY 1 2026-10-20").items == []
+
+
+def test_an_end_time_said_after_a_comma_becomes_an_ends_at_value_with_its_source():
+    """★x600 실서버 확인(2026-10-15): 「08:00 경복궁 · 한복 체험, 12:00 종료」 — 끝 시각이 항목에만 달리고 값 줄이 없어 확인 화면에서 사라졌다."""
+    r = read_plan(chr(10).join(["1일차 · 2026-10-22", "08:00 경복궁 · 한복 체험, 12:00 종료", "12:30 광장시장 · 점심"]))
+    ends = [c for c in r.claims if c.field.endswith(".ends_at")]
+    assert [(c.field, c.value) for c in ends] == [("items[0].ends_at", "12:00")], ends
+    assert ends[0].span.text == "12:00" and [i.start for i in r.items] == ["08:00", "12:30"]

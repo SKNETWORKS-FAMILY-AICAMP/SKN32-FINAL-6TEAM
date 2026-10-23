@@ -1,0 +1,755 @@
+{
+ "sets": {
+  "ord2": {
+   "today": "2026-10-09",
+   "items": [
+    {
+     "id": 1,
+     "date": "2026-10-10",
+     "start": "10:30",
+     "kind": "mobility",
+     "title": "공항철도 타고 서울역 도착",
+     "place": "서울역"
+    },
+    {
+     "id": 2,
+     "date": "2026-10-10",
+     "start": "12:00",
+     "kind": "dining",
+     "title": "우래옥에서 점심",
+     "place": "우래옥"
+    },
+    {
+     "id": 3,
+     "date": "2026-10-10",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "덕수궁 둘러보기",
+     "place": "덕수궁"
+    },
+    {
+     "id": 4,
+     "date": "2026-10-10",
+     "start": "16:00",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "L7 명동"
+    },
+    {
+     "id": 5,
+     "date": "2026-10-10",
+     "start": "18:00",
+     "kind": "activity",
+     "title": "정동극장 공연",
+     "place": "국립정동극장"
+    },
+    {
+     "id": 6,
+     "date": "2026-10-10",
+     "start": "20:00",
+     "kind": "dining",
+     "title": "닭한마리 저녁",
+     "place": "진옥화할매원조닭한마리"
+    },
+    {
+     "id": 7,
+     "date": "2026-10-11",
+     "start": "09:00",
+     "kind": "activity",
+     "title": "창덕궁 후원 관람",
+     "place": "창덕궁"
+    },
+    {
+     "id": 8,
+     "date": "2026-10-11",
+     "start": "11:00",
+     "kind": "activity",
+     "title": "북촌 골목 산책",
+     "place": "북촌한옥마을"
+    },
+    {
+     "id": 9,
+     "date": "2026-10-11",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "삼청동 수제비 점심",
+     "place": "삼청동수제비"
+    },
+    {
+     "id": 10,
+     "date": "2026-10-11",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "공예 전시 보기",
+     "place": "서울공예박물관"
+    },
+    {
+     "id": 11,
+     "date": "2026-10-11",
+     "start": "15:30",
+     "kind": "dining",
+     "title": "카페에서 쉬기",
+     "place": "어니언 안국"
+    },
+    {
+     "id": 12,
+     "date": "2026-10-11",
+     "start": "16:30",
+     "kind": "activity",
+     "title": "청계천 따라 걷기",
+     "place": "청계천"
+    },
+    {
+     "id": 13,
+     "date": "2026-10-11",
+     "start": "18:30",
+     "kind": "dining",
+     "title": "광장시장 빈대떡 저녁",
+     "place": "광장시장"
+    },
+    {
+     "id": 14,
+     "date": "2026-10-12",
+     "start": "09:30",
+     "kind": "activity",
+     "title": "경복궁 관람",
+     "place": "경복궁"
+    },
+    {
+     "id": 15,
+     "date": "2026-10-12",
+     "start": "11:30",
+     "kind": "activity",
+     "title": "국립민속박물관 관람",
+     "place": "국립민속박물관"
+    },
+    {
+     "id": 16,
+     "date": "2026-10-12",
+     "start": "13:00",
+     "kind": "dining",
+     "title": "삼계탕 점심",
+     "place": "토속촌삼계탕"
+    },
+    {
+     "id": 17,
+     "date": "2026-10-12",
+     "start": "14:30",
+     "kind": "activity",
+     "title": "통인시장 구경",
+     "place": "통인시장"
+    },
+    {
+     "id": 18,
+     "date": "2026-10-12",
+     "start": "16:00",
+     "kind": "dining",
+     "title": "서촌 카페",
+     "place": "블루보틀 삼청"
+    },
+    {
+     "id": 19,
+     "date": "2026-10-12",
+     "start": "17:30",
+     "kind": "activity",
+     "title": "광화문광장 산책",
+     "place": "광화문광장"
+    },
+    {
+     "id": 20,
+     "date": "2026-10-12",
+     "start": "19:00",
+     "kind": "dining",
+     "title": "곰탕 저녁",
+     "place": "하동관"
+    },
+    {
+     "id": 21,
+     "date": "2026-10-13",
+     "start": "09:00",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "L7 명동"
+    },
+    {
+     "id": 22,
+     "date": "2026-10-13",
+     "start": "09:40",
+     "kind": "mobility",
+     "title": "지하철로 이태원 이동",
+     "place": "이태원역"
+    },
+    {
+     "id": 23,
+     "date": "2026-10-13",
+     "start": "10:30",
+     "kind": "activity",
+     "title": "리움미술관 관람",
+     "place": "리움미술관"
+    },
+    {
+     "id": 24,
+     "date": "2026-10-13",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "이태원 브런치 점심",
+     "place": "에그슬럿 이태원"
+    },
+    {
+     "id": 25,
+     "date": "2026-10-13",
+     "start": "14:30",
+     "kind": "activity",
+     "title": "전쟁기념관 관람",
+     "place": "전쟁기념관"
+    },
+    {
+     "id": 26,
+     "date": "2026-10-13",
+     "start": "17:00",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "스테이 서촌"
+    },
+    {
+     "id": 27,
+     "date": "2026-10-13",
+     "start": "19:00",
+     "kind": "dining",
+     "title": "설렁탕 저녁",
+     "place": "이문설농탕"
+    },
+    {
+     "id": 28,
+     "date": "2026-10-14",
+     "start": "08:30",
+     "kind": "dining",
+     "title": "광장시장 마약김밥 아침",
+     "place": "광장시장"
+    },
+    {
+     "id": 29,
+     "date": "2026-10-14",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "국립중앙박물관 관람",
+     "place": "국립중앙박물관"
+    },
+    {
+     "id": 30,
+     "date": "2026-10-14",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "명동교자 칼국수 점심",
+     "place": "명동교자"
+    },
+    {
+     "id": 31,
+     "date": "2026-10-14",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "남대문시장 구경",
+     "place": "남대문시장"
+    },
+    {
+     "id": 32,
+     "date": "2026-10-14",
+     "start": "16:00",
+     "kind": "activity",
+     "title": "서울로7017 산책",
+     "place": "서울로7017"
+    },
+    {
+     "id": 33,
+     "date": "2026-10-14",
+     "start": "18:30",
+     "kind": "activity",
+     "title": "한강 피크닉",
+     "place": "여의도 한강공원"
+    },
+    {
+     "id": 34,
+     "date": "2026-10-14",
+     "start": "20:00",
+     "kind": "dining",
+     "title": "한강에서 치맥 저녁",
+     "place": "여의도 한강공원"
+    },
+    {
+     "id": 35,
+     "date": "2026-10-15",
+     "start": "09:30",
+     "kind": "mobility",
+     "title": "지하철로 성수동 이동",
+     "place": "성수역"
+    },
+    {
+     "id": 36,
+     "date": "2026-10-15",
+     "start": "10:30",
+     "kind": "activity",
+     "title": "성수동 카페거리 산책",
+     "place": "성수동 카페거리"
+    },
+    {
+     "id": 37,
+     "date": "2026-10-15",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "브런치 점심",
+     "place": "어니언 성수"
+    },
+    {
+     "id": 38,
+     "date": "2026-10-15",
+     "start": "14:30",
+     "kind": "activity",
+     "title": "서울숲 산책",
+     "place": "서울숲"
+    },
+    {
+     "id": 39,
+     "date": "2026-10-15",
+     "start": "16:30",
+     "kind": "activity",
+     "title": "한강 자전거 타기",
+     "place": "뚝섬 한강공원"
+    },
+    {
+     "id": 40,
+     "date": "2026-10-15",
+     "start": "18:00",
+     "kind": "mobility",
+     "title": "지하철로 홍대 이동",
+     "place": "홍대입구역"
+    },
+    {
+     "id": 41,
+     "date": "2026-10-15",
+     "start": "19:30",
+     "kind": "dining",
+     "title": "연남동 저녁",
+     "place": "연남동"
+    },
+    {
+     "id": 42,
+     "date": "2026-10-15",
+     "start": "21:00",
+     "kind": "activity",
+     "title": "홍대 버스킹 구경",
+     "place": "홍대 걷고싶은거리"
+    },
+    {
+     "id": 43,
+     "date": "2026-10-16",
+     "start": "09:00",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "스테이 서촌"
+    },
+    {
+     "id": 44,
+     "date": "2026-10-16",
+     "start": "10:00",
+     "kind": "activity",
+     "title": "종묘 관람",
+     "place": "종묘"
+    },
+    {
+     "id": 45,
+     "date": "2026-10-16",
+     "start": "11:30",
+     "kind": "activity",
+     "title": "인사동 쌈지길 기념품 쇼핑",
+     "place": "인사동 쌈지길"
+    },
+    {
+     "id": 46,
+     "date": "2026-10-16",
+     "start": "13:00",
+     "kind": "dining",
+     "title": "사찰음식 점심",
+     "place": "발우공양"
+    },
+    {
+     "id": 47,
+     "date": "2026-10-16",
+     "start": "14:30",
+     "kind": "activity",
+     "title": "교보문고 광화문점 책 구경",
+     "place": "교보문고 광화문점"
+    },
+    {
+     "id": 48,
+     "date": "2026-10-16",
+     "start": "16:00",
+     "kind": "dining",
+     "title": "태극당에서 간식",
+     "place": "태극당"
+    },
+    {
+     "id": 49,
+     "date": "2026-10-16",
+     "start": "17:30",
+     "kind": "activity",
+     "title": "청계천 야경 산책",
+     "place": "청계천"
+    },
+    {
+     "id": 50,
+     "date": "2026-10-16",
+     "start": "19:00",
+     "kind": "dining",
+     "title": "우래옥 마지막 저녁",
+     "place": "우래옥"
+    },
+    {
+     "id": 51,
+     "date": "2026-10-16",
+     "start": "21:00",
+     "kind": "mobility",
+     "title": "공항철도 타고 인천공항 이동",
+     "place": "서울역"
+    }
+   ],
+   "qs": [
+    {
+     "q": "월요일 첫 일정",
+     "gold": 14,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "수요일 마지막 일정",
+     "gold": 34,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "화요일 두번째 일정",
+     "gold": 22,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "금요일 세번째",
+     "gold": 45,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "토요일 마지막 식사",
+     "gold": 6,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일요일 첫 식사",
+     "gold": 9,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "목요일 마지막 활동",
+     "gold": 42,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "셋째 날 두번째 활동",
+     "gold": 15,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "넷째 날 마지막 식사",
+     "gold": 27,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "다섯째 날 첫 식사",
+     "gold": 28,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여섯째 날 두번째 이동",
+     "gold": 40,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "둘째 날 카페",
+     "gold": 11,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "덕수궁 바로 다음",
+     "gold": 4,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "정동극장 바로 전 일정",
+     "gold": 4,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "리움 끝나고 바로 뭐 먹어?",
+     "gold": 24,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "이태원 브런치 다음 일정",
+     "gold": 25,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "북촌 산책 다음",
+     "gold": 9,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울공예박물관 가기 전 일정",
+     "gold": 9,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "종묘 다음 순서",
+     "gold": 45,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "교보문고 바로 앞 일정",
+     "gold": 46,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "우래옥 마지막 저녁 뒤에 뭐 있어?",
+     "gold": 51,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "닭한마리 다음날 첫 일정",
+     "gold": 7,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "연남동 저녁 다음 일정",
+     "gold": 42,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "한강 치맥 전에 뭐 해?",
+     "gold": 33,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 날 첫 일정",
+     "gold": 43,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "마지막 날 마지막 일정",
+     "gold": 51,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 첫 일정",
+     "gold": 1,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여행 첫 식사",
+     "gold": 2,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여행 마지막 식사",
+     "gold": 50,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫 체크아웃 바로 다음",
+     "gold": 22,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "둘째 날 점심 다음 일정",
+     "gold": 10,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "셋째 날 점심 전 일정",
+     "gold": 15,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여섯째 날 브런치 다음 일정",
+     "gold": 38,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "일곱째 날 점심 바로 뒤",
+     "gold": 47,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "다섯째 날 남대문시장 다음",
+     "gold": 32,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "나흘째 마지막 일정",
+     "gold": 27,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "이틀째 세번째",
+     "gold": 9,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "사흘째 마지막 식사",
+     "gold": 20,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "닷새째 두번째 활동",
+     "gold": 31,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "엿새째 마지막 식사",
+     "gold": 41,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "이레째 두번째 식사",
+     "gold": 48,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "둘째날 저녁 바로 전",
+     "gold": 12,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "셋째 날 서촌 카페 다음 일정",
+     "gold": 19,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 점심 바로 전",
+     "gold": 1,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "여덟째 날 첫 일정",
+     "gold": null,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "첫날 일곱번째 일정",
+     "gold": null,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "공항철도 인천공항 이동 다음 일정",
+     "gold": null,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    },
+    {
+     "q": "서울역 도착 바로 전 일정",
+     "gold": null,
+     "type": "ordinal_relative",
+     "split": "held",
+     "history": []
+    }
+   ]
+  }
+ }
+}

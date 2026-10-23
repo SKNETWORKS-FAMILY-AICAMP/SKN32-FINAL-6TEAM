@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.infrastructure.db.session import get_connection
 from app.presentation import security
 from app.presentation.api.app import create_app
@@ -27,13 +28,14 @@ def pii_case(monkeypatch):
                 "tenant": tenant,
                 "customer": customer,
                 "original": original,
-                "client": TestClient(create_app(classifier=lambda _: {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"})),
+                "client": TestClient(create_app(classifier=lambda _: {"intent": "incident_report", "issue_code": "activity_cancel_or_change", "sentiment": "negative"})),
             }
         finally:
             with conn.transaction():
                 with conn.cursor() as cur:
                     cur.execute("DELETE FROM action_approvals WHERE action_id IN (SELECT action_id FROM action_requests WHERE tenant_id=%s)", (tenant,))
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+                    allow_case_events_purge(cur)
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customers WHERE tenant_id=%s", (tenant,))

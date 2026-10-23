@@ -37,11 +37,11 @@ def test_defaults_to_openai_team_llm(monkeypatch):
 
 def test_local_ft_provider_selects_local_ft_team_llm(monkeypatch):
     monkeypatch.setattr("app.composition.get_settings", lambda: _settings(
-        llm_provider="local_ft", local_ft_base_url="http://x600:8100"))
+        llm_provider="local_ft", local_ft_base_url="http://ft-model.test:8100"))
     controller = build_controller()
     llm = controller.registry.get(LLM_WIRED_TEAM_ID).module.llm
     assert isinstance(llm, LocalFTTeamLLM)
-    assert llm.base_url == "http://x600:8100"
+    assert llm.base_url == "http://ft-model.test:8100"
 
 
 def test_local_ft_provider_without_base_url_fails_closed(monkeypatch):

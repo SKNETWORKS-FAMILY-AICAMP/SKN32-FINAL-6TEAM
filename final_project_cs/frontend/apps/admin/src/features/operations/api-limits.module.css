@@ -1,0 +1,24 @@
+.section{min-width:0}.section strong,.section h2{font-weight:600}.section button,.section input{min-height:44px}.section p{max-width:75ch}
+.heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.heading h2{margin:0;line-height:1.25}.heading button{flex-shrink:0}
+.search{display:flex;flex-direction:column;gap:8px;max-width:440px;margin-block:20px}.search input{width:100%;min-width:0;box-sizing:border-box}
+.table{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:8px;margin-block:16px;background:var(--surface)}
+.table table{width:100%;min-width:850px;border-collapse:collapse;font-size:14px}.table th,.table td{text-align:left;vertical-align:top;padding:16px;border-bottom:1px solid var(--line)}.table:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.table small{display:block;color:var(--muted);margin-top:4px;font-size:12px}.table code{display:block;font-size:12px;overflow-wrap:anywhere;margin-top:8px;max-width:230px}.table td>div+div{margin-top:12px}
+.caption{text-align:left;padding:12px;color:var(--muted);font-size:13px}
+.sourceLimit{min-width:310px}.sourceLimit details{margin-top:8px}.sourceLimit summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:700px){.heading{flex-direction:column}.table th,.table td{padding:12px}.search{max-width:none}}
+@media(max-width:700px){
+  .watchTable table{min-width:0;display:block}.watchTable thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  .watchTable tbody,.watchTable tr,.watchTable td{display:block;width:100%}.watchTable tr{padding:16px;border-bottom:1px solid var(--line)}
+  .watchTable td{padding:0;border:0;margin-bottom:12px}.watchTable td:first-child{font-size:16px}.watchTable td:last-child{margin-bottom:0}
+  .watchTable td:nth-child(2)::before{content:'사용하는 정보';display:block;font-size:12px;color:var(--muted)}
+  .watchTable td:nth-child(3)::before{content:'판단 내용';display:block;font-size:12px;color:var(--muted)}
+  .watchTable td:nth-child(4)::before{content:'API별 ENV 한도';display:block;font-size:12px;color:var(--muted);margin-bottom:8px}
+  .watchTable .sourceLimit{min-width:0}.watchTable code{max-width:100%}
+}
+.adjust{margin-top:8px}
+.capEditor{display:flex;flex-direction:column;gap:8px;margin-top:8px;min-width:220px}.capEditor label{display:flex;flex-direction:column;gap:4px;font-size:13px}.capEditor input{width:100%;box-sizing:border-box}
+.capButtons{display:flex;flex-wrap:wrap;gap:8px}
+.unlimited{margin-bottom:20px}.onBadge{border-color:#e1b6b8;background:#fff2f1;color:var(--danger)}
+.confirm{border:1px solid #ead6af;background:#fff8ea;border-radius:8px;padding:16px;margin-block:12px;display:flex;flex-direction:column;gap:12px;max-width:640px}.confirm h3{margin:0}.confirm ul{margin:0;padding-left:20px}.confirm li+li{margin-top:6px}
+.over{color:var(--warning);font-size:13px}

@@ -1,0 +1,249 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_pref_v1.jsonl",
+ "dataset_sha": "eca4db68ea6996c2",
+ "label": "rule-pref_v1",
+ "seeds": 3,
+ "mobility": false,
+ "env": {
+  "run_at": "2026-10-13T16:44:00+09:00",
+  "git_commit": "687561a0",
+  "git_branch": "role-dining",
+  "git_dirty": true
+ },
+ "summary": {
+  "accuracy": {
+   "num": 3,
+   "den": 12,
+   "rate": 0.25
+  },
+  "acceptable": {
+   "num": 4,
+   "den": 12,
+   "rate": 0.333
+  },
+  "violations": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 12,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 3,
+   "ok": 1,
+   "correct_no_change": 0,
+   "wrong_violation": 0,
+   "wrong": 8,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "preference": {
+    "num": 3,
+    "den": 12,
+    "rate": 0.25
+   }
+  },
+  "added_walk_min_mean": 0.0,
+  "skipped": []
+ },
+ "results": [
+  {
+   "id": "DP-001",
+   "group": "preference",
+   "why": "고기를 빼 달라 — 가장 비슷한 고깃집 대신 비빔밥집",
+   "picked": "A",
+   "picked_name": "연탄불고기",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-002",
+   "group": "preference",
+   "why": "날것을 못 먹는다 — 비슷한 횟집 대신 국물 · 면",
+   "picked": "A",
+   "picked_name": "포구횟집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-003",
+   "group": "preference",
+   "why": "국물을 원한다 — 가까운 한상차림 대신 국밥집",
+   "picked": "A",
+   "picked_name": "엄마밥상",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-004",
+   "group": "preference",
+   "why": "면을 원한다 — 비슷한 국물집 대신 칼국수",
+   "picked": "A",
+   "picked_name": "명가설렁탕",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-005",
+   "group": "preference",
+   "why": "간단히 브런치 — 한상차림 대신 브런치",
+   "picked": "A",
+   "picked_name": "고향집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-006",
+   "group": "preference",
+   "why": "비슷한 곳을 원한다 — 규칙 1등 그대로",
+   "picked": "A",
+   "picked_name": "고려삼계탕",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DP-007",
+   "group": "preference",
+   "why": "아무거나 — 바꿀 이유가 없다",
+   "picked": "A",
+   "picked_name": "시장국수",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DP-008",
+   "group": "preference",
+   "why": "일식을 원한다 — 한식 국물집 대신 초밥",
+   "picked": "A",
+   "picked_name": "하동관",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-009",
+   "group": "preference",
+   "why": "중식은 싫다 — 비슷한 중식 대신 다른 종류",
+   "picked": "A",
+   "picked_name": "북경반점",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-010",
+   "group": "preference",
+   "why": "커피 한 잔이면 된다 — 카페",
+   "picked": "A",
+   "picked_name": "밥집",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "wrong"
+  },
+  {
+   "id": "DP-011",
+   "group": "preference",
+   "why": "든든하게 — 브런치 대신 고깃집",
+   "picked": "A",
+   "picked_name": "모닝브런치",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "ok"
+  },
+  {
+   "id": "DP-012",
+   "group": "preference",
+   "why": "원하는 종류가 후보에 없다 — 규칙 1등 그대로",
+   "picked": "A",
+   "picked_name": "잔치국수",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  }
+ ]
+}

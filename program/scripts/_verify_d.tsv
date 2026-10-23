@@ -1,0 +1,26 @@
+# 표본 D 검증 — 휴리스틱 자동 판정(유지) 이 맞는지 사람이 확인
+# 형식: 번호 / 휴리스틱type / 사람type / 일치 / 판정 / 근거
+번호	휴리스틱	사람	일치	판정	근거
+1	evidence	evidence	O	이관	재현 명령+출력+판정 근거. 전형적 evidence
+2	evidence	evidence	O	이관	동. 근거 3종 구조
+3	evidence	evidence	O	이관	동. "대조는 위조할 수 없는 쪽으로" 원칙 포함
+4	evidence	evidence	△	분할	재현+판정은 evidence 인데 "v5 원문과의 차이" 재해석이 decision
+5	evidence	evidence	O	제외	"판정 없음" 명시된 수집 원문. _raw/ 는 통째로 제외 대상
+6	dataset	dataset	O	이관	출처·추출 방법·건수·검증. 순수 dataset
+7	dataset	report	X	제외	영문 작업 로그. dataset 이 아니다. 18줄
+8	dataset	dataset	△	분할	출처·파일 목록(dataset) + "가장 중요한 발견"(report)
+9	research	policy	X	이관	문서 병합 지침. 조사가 아니라 따라야 할 규칙
+10	research	decision	X	이관	"프롬프트를 방어선으로 삼지 않는다" 결정. D-005 의 원형
+11	guide	guide	O	이관	정규화 스크립트 사용법. 개인정보 처리 절 포함
+12	guide	report	X	제외	"일회성" 임시 스크립트 기록. 남겨둔 이유만 있음
+13	contract	contract	O	이관	가드레일 수치 단일 출처. 매우 중요
+14	decision	decision	O	이관	"지금 하지 않는 이유"+도입 트리거. vision 규칙 적용됨
+15	plan	plan	O	이관	실행계획+완료 기준
+
+# 집계 — △(type 은 맞지만 분할 필요) 를 어떻게 세느냐로 두 값이 나온다
+# type 완전일치   9/15 = 60.0%   (O 만)      ← round-6.md 가 쓰는 값. 엄격
+# type 부분일치  11/15 = 73.3%   (O + △)     ← 참고값
+# 판정 유효      10/15 = 66.7%   (제외 3건·분할 2건을 휴리스틱이 "유지"로 봄)
+#
+# 엄격한 쪽을 정본으로 쓴다. △ 는 "그대로 옮기면 안 되는" 문서이므로
+# 자동 판정의 성공으로 셀 수 없다.

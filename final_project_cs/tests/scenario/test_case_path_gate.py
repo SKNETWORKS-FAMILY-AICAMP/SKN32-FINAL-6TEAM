@@ -17,10 +17,10 @@ from uuid import uuid4
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.itinerary_actions import ItineraryApply, change_arguments
-from app.modules.travel_ops.itinerary_changes import ItineraryChange
-from app.modules.travel_ops.survey import SURVEY_VERSION
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.actions.itinerary_actions import ItineraryApply, change_arguments
+from app.domains.travel_ops.components.itinerary.itinerary_changes import ItineraryChange
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
 
 from .test_case_version_day import _seed
 

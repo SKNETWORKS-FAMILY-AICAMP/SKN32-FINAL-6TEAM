@@ -20,7 +20,8 @@ from app.presentation.api.app import create_app
 
 _host = composer_host()
 
+# ★`[2026-09-29]` 재기동 없는 반영(`/admin/reload`)도 이 관리용 빌드에만 연다(`management=True`) — 고객 릴리즈에는 없다
 app = create_app(composer_write_router=create_composer_router(_host),
-                 composer_auth_router=create_auth_router(_host))
+                 composer_auth_router=create_auth_router(_host), management=True)
 
 __all__ = ["app"]

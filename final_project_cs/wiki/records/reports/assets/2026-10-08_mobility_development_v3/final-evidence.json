@@ -1,0 +1,172 @@
+{
+  "created_at": "2026-10-08T13:22:06.264297+09:00",
+  "report_file": "2026-10-08_1322_이동_근본로직_개선과_사용범위_종합.md",
+  "scope": "로컬 이동 계산기·웹 예상값 대조. 제품 전체·배포·실제 운행·결제 합격 판정 아님",
+  "tests": {
+    "related_passed": 69,
+    "related_deselected": 4,
+    "default_gate_passed": 430,
+    "default_gate_deselected": 220,
+    "live": false,
+    "environment": "Windows 비동기 로컬 소켓 준비 대기 후 제한 밖 환경에서 기본 회귀 재실행"
+  },
+  "code_sha256": {
+    "app/domains/travel_ops/instances/mobility/engine/plan.py": "32ba2e4ee6c1c2570592afc44b1ed470317895addad24d26eda0fea51eeb1de7",
+    "app/domains/travel_ops/instances/mobility/engine/options.py": "c054df3be7564a9d34dd8cc6a6c61a6dbda8051593a950218681abef1203c18f",
+    "app/domains/travel_ops/instances/mobility/engine/candidates.py": "20946f7648ccc10099dffdd60548d7ab88c7a85572b421d5170fbe4edca27d35",
+    "app/domains/travel_ops/instances/mobility/engine/runtime.py": "74d6179676e29c746da6e997cc2dfb548b35572bb7023145347e78f58bea1a21",
+    "app/domains/travel_ops/instances/mobility/engine/line_order.py": "faae427a88bcbd5b91ff2b38d22912840e7088a79f29aa1a6816f469ddafaceb",
+    "tests/unit/travel/mobility/test_bus_only_planner_candidates.py": "b1e0397cab0211321d4e8b2110e79372c147f7dfa9686b19c768b383e09dc81c",
+    "tests/unit/travel/mobility/test_subway_fare_upper.py": "4308658efe8a2b29a4a532c070f0ef28d34872fbecc5910d5dd8c1d9af12e34d",
+    "tests/unit/travel/mobility/test_partial_loop_topology.py": "0c18524c1a6c7b13aa49597800774fbadd34eb10dc5ceefaa734faa9c76d598e",
+    "tests/unit/travel/mobility/test_mixed_v1.py": "ae62b3fe05128788ad24179784f9ab2e5af3be3dac2df673d085d4ce0c819ca4",
+    "tests/unit/travel/mobility/test_plan_v1.py": "eb6a1f3c9a29e734ac0ba632255113e3b16bf7f42d4f235f9b4754cf07223f55",
+    "scripts/mobility/summarise_development_web.py": "dcdbc0185e553cfb38e76278d940ec1201454ff709ac60cb11a319a67a6bf846",
+    "scripts/mobility/build_readiness_visual.py": "1d0838345daef80a845ef73c92be4b0a15d7582ce141d54257414b0068f81a53",
+    "scripts/mobility/run_naver_web_diagnostic.py": "126d685833dd0198e7e8c90617635b2b18f15255087548c13caeda5ebdc8c0e6"
+  },
+  "web_input_sha256": {
+    "naver-N007-1227.json": "3c4895855e4c80b7da1a45d8e31e98fb85373ee38100e809e694863201acf3c8",
+    "naver-R02.json": "c844419e8f100c8ff037a3468eb8ef146b4c9cc500dd4e38747110438cf8f158",
+    "naver-R03-car.json": "c55f36b3dbcf6f0ecafdbbdd0eae71a76280a4b6cc47f0951651aed657481466",
+    "naver-R03.json": "d2824f4a6f811ee97350004e4c419038c3f56723f24fa32b74dca466c201946a",
+    "naver-R04.json": "0a7d41fe44b24220adbb9fde6a727f0d02942eab9259dab033bce53ee95f4872",
+    "naver-R05.json": "7de740b3cfbacef9f206138f1594f240d3e755b2a8871bef00341a9f8480c121",
+    "naver-R06.json": "402ef76be18053666dc2f6cb853dcc19cb97dea1d9b1bd153c8d71abf21b86f2",
+    "naver-R07.json": "8d3d4a11f925cb0347b31ddf3b0c6ce9e809c0f93656360719345428cdd840ee",
+    "naver-R08.json": "1f9155507190948656441a91168e88af6bf382c10c7d3cf04ebd73aaa8a372b7"
+  },
+  "new_diagnostic_rows": [
+    {
+      "id": "R02",
+      "a": "용산역 1호선",
+      "b": "공덕역 5호선",
+      "read_at": "2026-10-08T03:32:11.203Z",
+      "web_min": 11,
+      "web_fare": 1550,
+      "our_min": 8,
+      "our_wait": 0,
+      "our_fare": null,
+      "our_label": "경의중앙선 용산→공덕"
+    },
+    {
+      "id": "R01",
+      "a": "신림역 2호선",
+      "b": "안국역 3호선",
+      "read_at": "2026-10-08T03:27:06.807Z",
+      "web_min": 42,
+      "web_fare": 1650,
+      "our_min": 50,
+      "our_wait": 5,
+      "our_fare": 1750,
+      "our_label": "2호선 신림→교대 → 3호선 교대→안국 · 요금은 거리 범위 상단 예상액"
+    },
+    {
+      "id": "R03",
+      "a": "당산역 2호선",
+      "b": "혜화역 4호선",
+      "read_at": "2026-10-08T03:34:27.139Z",
+      "web_min": 32,
+      "web_fare": 1650,
+      "our_min": 34,
+      "our_wait": 1,
+      "our_fare": 1650,
+      "our_label": "2호선 당산→동대문역사문화공원 → 4호선 동대문역사문화공원→혜화 · 요금은 선로 길이 추정"
+    },
+    {
+      "id": "R05",
+      "a": "마포역 5호선",
+      "b": "영등포역 1호선",
+      "read_at": "2026-10-08T03:43:10.946Z",
+      "web_min": 14,
+      "web_fare": 1500,
+      "our_min": 19,
+      "our_wait": 2,
+      "our_fare": 1550,
+      "our_label": "5호선 마포→신길 → 1호선 신길→영등포 · 요금은 선로 길이 추정"
+    },
+    {
+      "id": "R04",
+      "a": "신사역 3호선",
+      "b": "잠실새내역 2호선",
+      "read_at": "2026-10-08T03:40:07.642Z",
+      "web_min": 20,
+      "web_fare": 1550,
+      "our_min": 23,
+      "our_wait": 0,
+      "our_fare": null,
+      "our_label": "신분당선 신사→강남 → 2호선 강남→잠실새내"
+    },
+    {
+      "id": "R07",
+      "a": "서울역 1호선",
+      "b": "청량리역 1호선",
+      "read_at": "2026-10-08T03:49:52.608Z",
+      "web_min": 18,
+      "web_fare": 1550,
+      "our_min": 23,
+      "our_wait": 0,
+      "our_fare": 1550,
+      "our_label": "1호선 서울역→청량리"
+    },
+    {
+      "id": "R06",
+      "a": "연신내역 3호선",
+      "b": "합정역 6호선",
+      "read_at": "2026-10-08T03:47:34.695Z",
+      "web_min": 18,
+      "web_fare": 1550,
+      "our_min": 19,
+      "our_wait": 0,
+      "our_fare": 1550,
+      "our_label": "6호선 연신내→합정"
+    },
+    {
+      "id": "R08",
+      "a": "가산디지털단지역 1호선",
+      "b": "월드컵경기장역 6호선",
+      "read_at": "2026-10-08T03:51:50.295Z",
+      "web_min": 29,
+      "web_fare": 1650,
+      "our_min": 37,
+      "our_wait": 6,
+      "our_fare": null,
+      "our_label": "1호선 가산디지털단지→신도림 → 2호선 신도림→합정 → 6호선 합정→월드컵경기장"
+    }
+  ],
+  "development_inputs": {
+    "fresh_ours_bus_100_v1.json": "3ff172af5f992d87e5c03fcced01c20f6ae462134d6659e4144bc1cca0aa69aa",
+    "bus_after_v1.json": "5d27a46bb25416dddd7d28213bc91c0ff8ddc4ea11aa7c645134d2e1b11da734",
+    "fresh_ours_transit_100_v1.json": "36bf8d1fcfb819ee3ec9a1b11ad03c7c4a423134a47c615ff5e0e906541534bd",
+    "subway_after_v3.json": "e22b238c927314c87fedf5abaa4f95a6a855ea089f7c191525ff519664431746"
+  },
+  "independent_postfix_validation": false,
+  "actual_rides": 0,
+  "actual_receipts": 0,
+  "deployment_response_checked": false,
+  "mock_ui_checked": false,
+  "frozen_rules_sha256": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+  "developer_directions_api_calls_in_new_research": 0,
+  "presentation_validation": {
+    "filters": "21→4→9→8→21 개 표시",
+    "details": "대중교통 행 펼침 확인",
+    "mobile_requested_width": 375,
+    "mobile_measured_width": 360,
+    "mobile_scroll_width": 360,
+    "chart_images_loaded": 3,
+    "pdf_rendered_pages": 3,
+    "relative_links_checked": 26,
+    "missing_links": 0,
+    "screenshots": [
+      "desktop-preview.png",
+      "mobile-preview.png"
+    ],
+    "caption_correction": "R06 최종 대기0분이므로 19분. 그림 값과 문서/대체 텍스트 일치 확인"
+  },
+  "replay_validation": {
+    "rows_matching": 8,
+    "rows_total": 8,
+    "aggregate_matching": true,
+    "source_sha256": "10eef0cb19e214227272b50bc75c9b7c7f0d1962fcc6ad8929199be40c244bbc"
+  }
+}

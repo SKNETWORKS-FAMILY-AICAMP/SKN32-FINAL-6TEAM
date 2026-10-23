@@ -1,0 +1,50 @@
+[
+  {
+    "file": "app/domains/travel_ops/components/watch/departure_revalidation.py",
+    "sha256": "f023b1e9974994851693da8e12d146bd82887bcb8b8fd51619b1d8a7fae2863f"
+  },
+  {
+    "file": "app/domains/travel_ops/components/watch/trip_reminders.py",
+    "sha256": "e948bda8f45550b10ce4087aee090b52f8ad45a47b68d4db5c50fcacb863c444"
+  },
+  {
+    "file": "app/domains/travel_ops/components/watch/trip_watch_cases.py",
+    "sha256": "9113baf14d7ad3d0dc033e713ecdd557388ac280c261eb8bc81ebd4a817ef044"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/wiring.py",
+    "sha256": "d0ed6dca374ad2e2d0c4fbc242a77e822fbaca4138976f468ba13ded763c0d67"
+  },
+  {
+    "file": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+    "sha256": "5eb3e55e212955c40f6e1d73cfdcc502268a2e5ff9394d22d83ba126fba7dcc9"
+  },
+  {
+    "file": "tests/unit/travel/test_departure_watch_v1.py",
+    "sha256": "f9db26e154c4ba2d74cbc054f468614f28e2f1256ac8fcbd539aff709c57a229"
+  },
+  {
+    "file": "tests/scenario/test_departure_observer_reminders_v1.py",
+    "sha256": "1a68631e4ce4321c3b0f272dc8566284646c5a0a7f15fe76f9c6254d8fabada2"
+  },
+  {
+    "file": "tests/scenario/test_departure_assembly_db_v1.py",
+    "sha256": "47bbbd27b49c121f87cad8afad1246edb6d9144e33c96009cfff1f4c2d89099d"
+  },
+  {
+    "file": "tests/scenario/test_departure_walk_db_v1.py",
+    "sha256": "dbf5e95af5c932cf0b86fdac47cae050f151b6e4b4c3273a8db1e7e349d7a65c"
+  },
+  {
+    "file": "tests/unit/travel/test_departure_party_v1.py",
+    "sha256": "14c5b1e34ab860cbdfcecb18f53b47e3e142ddf839380c1a0782f72ded18d99d"
+  },
+  {
+    "file": "tests/scenario/test_departure_party_db_v1.py",
+    "sha256": "137ebf768f1120027d74eaef466ada4a2464623e3553ac3a3d60202e782400a1"
+  },
+  {
+    "file": "scripts/mobility/build_readiness_visual_v19.py",
+    "sha256": "c2f919e47e8ff3b5469fe783152c5f684c946dcf62f748fdc3388b2d36fa627a"
+  }
+]

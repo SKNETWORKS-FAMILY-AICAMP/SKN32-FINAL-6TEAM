@@ -1,0 +1,4122 @@
+<!doctype html>
+
+<html lang="ko" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+<title>A-COP: AI 연동형 모듈형 에이전틱 고객운영 플랫폼 브리핑 v8</title>
+    <style>
+      :root {
+        --bg: #f7f8fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --line: #d1d5db;
+        --accent: #0f766e;
+        --accent2: #1d4ed8;
+        --accent3: #7c3aed;
+        --soft: #ecfeff;
+        --soft2: #eef2ff;
+        --soft3: #f5f3ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, "Noto Sans KR", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.65;
+      }
+      header {
+        background: linear-gradient(135deg, #0f766e, #1d4ed8);
+        color: white;
+        padding: 40px 32px 32px;
+      }
+      header h1 {
+        margin: 0 0 10px;
+        font-size: 34px;
+      }
+      header p {
+        margin: 6px 0;
+        opacity: 0.96;
+      }
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .section {
+        background: var(--card);
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 24px;
+        margin: 0 0 20px;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+      }
+      h2 {
+        margin: 0 0 14px;
+        font-size: 24px;
+        color: #111827;
+      }
+      h3 {
+        margin: 18px 0 10px;
+        font-size: 18px;
+        color: #111827;
+      }
+      .lead {
+        font-size: 16px;
+        color: var(--muted);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .card {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 16px;
+        background: white;
+      }
+      .pill {
+        display: inline-block;
+        background: #e0f2fe;
+        color: #075985;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        margin: 0 6px 6px 0;
+      }
+      ul {
+        margin: 8px 0 0 18px;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #d1d5db;
+        padding: 10px 12px;
+        vertical-align: top;
+      }
+      th {
+        background: #f3f4f6;
+        text-align: left;
+      }
+      .diagram svg text {
+        text-rendering: geometricPrecision;
+      }
+      .diagram {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 12px;
+        background: linear-gradient(180deg, #ffffff, #fbfbfd);
+        overflow-x: auto;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        padding: 14px;
+        border-radius: 12px;
+        white-space: pre-wrap;
+      }
+      .kpi {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .kpi .box {
+        border: 1px solid #dbeafe;
+        background: #f8fbff;
+        border-radius: 16px;
+        padding: 14px;
+      }
+      .kpi .n {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--accent2);
+      }
+      .small {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .diagram-label {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: #0f172a;
+      }
+      .diagram-caption {
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+      }
+      .footer {
+        font-size: 13px;
+        color: var(--muted);
+        text-align: center;
+        margin: 28px 0 60px;
+      }
+      @media (max-width: 900px) {
+        .grid,
+        .grid-3,
+        .kpi {
+          grid-template-columns: 1fr;
+        }
+        header h1 {
+          font-size: 28px;
+        }
+      }
+
+      .diagram svg text {
+        stroke: none !important;
+        text-shadow: none !important;
+        paint-order: normal !important;
+      }
+
+      /* ---- Why Agentic / CSS-only diagrams ---- */
+      .acop-callout {
+        margin: 16px 0;
+        padding: 18px 20px;
+        border: 2px solid #2563eb;
+        border-radius: 16px;
+        background: #eff6ff;
+        color: #0f172a;
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .acop-compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        margin-top: 18px;
+      }
+      .acop-compare-card {
+        border: 1px solid #dbe2ea;
+        border-radius: 16px;
+        padding: 18px;
+        background: #fff;
+      }
+      .acop-compare-card.old {
+        border-top: 5px solid #94a3b8;
+      }
+      .acop-compare-card.new {
+        border-top: 5px solid #2563eb;
+        background: #f8fbff;
+      }
+      .acop-compare-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 12px;
+      }
+      .acop-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        max-width: 620px;
+        margin: 10px auto;
+      }
+      .acop-node {
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 11px 14px;
+        background: #fff;
+        text-align: center;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .acop-node.blue {
+        background: #eef2ff;
+        border-color: #a5b4fc;
+      }
+      .acop-node.green {
+        background: #ecfdf5;
+        border-color: #86efac;
+      }
+      .acop-node.orange {
+        background: #fff7ed;
+        border-color: #fdba74;
+      }
+      .acop-node.purple {
+        background: #f5f3ff;
+        border-color: #c4b5fd;
+      }
+      .acop-arrow {
+        text-align: center;
+        font-size: 24px;
+        line-height: 1.1;
+        color: #475569;
+        font-weight: 800;
+        padding: 3px 0;
+      }
+      .acop-team-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .acop-team {
+        border: 1px solid #a5b4fc;
+        border-radius: 12px;
+        padding: 12px 8px;
+        background: #f5f3ff;
+        text-align: center;
+        font-weight: 800;
+        color: #312e81;
+      }
+      .acop-team small {
+        display: block;
+        margin-top: 3px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+      }
+      .acop-reasons {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .acop-reason {
+        border: 1px solid #dbe2ea;
+        border-radius: 16px;
+        padding: 16px;
+        background: #fff;
+      }
+      .acop-reason .num {
+        display: inline-flex;
+        width: 30px;
+        height: 30px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #1d4ed8;
+        color: white;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      .acop-reason h3 {
+        margin: 4px 0 8px;
+      }
+      .acop-map {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 12px;
+        align-items: center;
+        margin-top: 14px;
+      }
+      .acop-map-box {
+        border: 1px solid #dbe2ea;
+        border-radius: 14px;
+        padding: 14px;
+        background: #f8fafc;
+      }
+      .acop-map-arrow {
+        font-size: 28px;
+        font-weight: 800;
+        color: #2563eb;
+      }
+      .acop-arch {
+        max-width: 760px;
+        margin: 16px auto 4px;
+      }
+      .acop-source-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .acop-source {
+        border: 1px solid #a7f3d0;
+        background: #f0fdf4;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        font-weight: 700;
+      }
+      .acop-note {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-left: 4px solid #0f766e;
+        background: #f0fdfa;
+        color: #334155;
+        border-radius: 8px;
+      }
+      .acop-level {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: #e0e7ff;
+        color: #3730a3;
+        font-weight: 800;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .acop-graph-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 16px;
+      }
+      @media (max-width: 900px) {
+        .acop-compare,
+        .acop-reasons,
+        .acop-graph-grid {
+          grid-template-columns: 1fr;
+        }
+        .acop-team-grid,
+        .acop-source-grid {
+          grid-template-columns: 1fr;
+        }
+        .acop-map {
+          grid-template-columns: 1fr;
+        }
+        .acop-map-arrow {
+          transform: rotate(90deg);
+          text-align: center;
+        }
+      }
+
+      .gv-wrap {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #fff;
+        padding: 14px;
+        overflow-x: auto;
+      }
+      .gv-svg {
+        width: 100%;
+        height: auto;
+        min-width: 760px;
+        display: block;
+      }
+      .component-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+      .component-card {
+        border: 1px solid #dbe2ea;
+        border-radius: 14px;
+        padding: 15px;
+        background: #fff;
+      }
+      .component-card h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+      }
+      .component-card .role {
+        font-weight: 800;
+        color: #1d4ed8;
+        margin-bottom: 6px;
+      }
+      .component-card .io {
+        margin-top: 8px;
+        padding: 9px 10px;
+        background: #f8fafc;
+        border-radius: 9px;
+        font-size: 13px;
+        color: #475569;
+      }
+      .slot-title {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #6d28d9, #4f46e5);
+        color: white;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        box-shadow: 0 5px 14px rgba(79, 70, 229, 0.22);
+      }
+      .folder-tree {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 14px;
+        padding: 18px;
+        white-space: pre-wrap;
+        overflow-x: auto;
+        line-height: 1.72;
+      }
+      .why-box {
+        padding: 14px 16px;
+        border-left: 4px solid #2563eb;
+        background: #eff6ff;
+        border-radius: 10px;
+        margin-top: 14px;
+      }
+      .ownership-table td:first-child {
+        width: 22%;
+        font-weight: 800;
+        background: #f8fafc;
+      }
+      .role-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .role-card {
+        border: 1px solid #dbe2ea;
+        border-radius: 16px;
+        padding: 16px;
+        background: #fff;
+      }
+      .role-card h3 {
+        margin: 0 0 10px;
+      }
+      .role-card.runtime {
+        border-top: 5px solid #7c3aed;
+      }
+      .role-card.integration {
+        border-top: 5px solid #0f766e;
+      }
+      .role-card.agent {
+        border-top: 5px solid #2563eb;
+      }
+      .role-card.ui {
+        border-top: 5px solid #f59e0b;
+      }
+      .boundary-note {
+        font-size: 13px;
+        color: #475569;
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 9px 11px;
+        margin-top: 10px;
+      }
+      @media (max-width: 900px) {
+        .component-grid,
+        .role-grid {
+          grid-template-columns: 1fr;
+        }
+        .gv-svg {
+          min-width: 680px;
+        }
+      }
+
+      /* ===== Expandable component cards ===== */
+      details.component-detail {
+        border: 1px solid #dbe2ea;
+        border-radius: 16px;
+        background: #fff;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease,
+          transform 0.2s ease;
+      }
+      details.component-detail:hover {
+        border-color: #93c5fd;
+        box-shadow: 0 8px 22px rgba(37, 99, 235, 0.1);
+        transform: translateY(-1px);
+      }
+      details.component-detail[open] {
+        border-color: #60a5fa;
+        box-shadow: 0 10px 28px rgba(37, 99, 235, 0.13);
+      }
+      details.component-detail summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 18px;
+        user-select: none;
+      }
+      details.component-detail summary::-webkit-details-marker {
+        display: none;
+      }
+      .cd-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .cd-title {
+        font-size: 18px;
+        font-weight: 900;
+        color: #0f172a;
+      }
+      .cd-toggle {
+        flex: 0 0 auto;
+        border-radius: 999px;
+        padding: 5px 9px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      details.component-detail[open] .cd-toggle::after {
+        content: "접기";
+      }
+      details.component-detail:not([open]) .cd-toggle::after {
+        content: "자세히";
+      }
+      .cd-role {
+        display: inline-block;
+        margin-top: 9px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 13px;
+        font-weight: 800;
+      }
+      .cd-summary {
+        margin: 10px 0 0;
+        color: #334155;
+        line-height: 1.62;
+      }
+      .cd-body {
+        border-top: 1px solid #e2e8f0;
+        padding: 18px;
+        background: #f8fafc;
+      }
+      .cd-body h4 {
+        margin: 14px 0 8px;
+        color: #0f172a;
+        font-size: 15px;
+      }
+      .cd-body h4:first-child {
+        margin-top: 0;
+      }
+      .cd-body ul {
+        margin: 8px 0 12px 20px;
+      }
+      .cd-terms {
+        display: grid;
+        gap: 0;
+        margin: 0 0 12px;
+      }
+      .cd-term {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px dashed #dbe2ea;
+      }
+      .cd-term:last-child {
+        border-bottom: 0;
+      }
+      .cd-term strong {
+        color: #334155;
+      }
+      .cd-term span {
+        color: #475569;
+        line-height: 1.58;
+      }
+      .cd-io {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #eef2ff;
+        color: #312e81;
+        font-weight: 700;
+        line-height: 1.55;
+      }
+      @media (max-width: 800px) {
+        .cd-term {
+          grid-template-columns: 1fr;
+          gap: 3px;
+        }
+      }
+
+      /* ===== A2A / Graph extension ===== */
+      .interop-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .interop-card {
+        border: 1px solid #cbd5e1;
+        border-radius: 13px;
+        padding: 12px 10px;
+        background: #fff;
+        text-align: center;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .interop-card small {
+        display: block;
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 650;
+      }
+      .protocol-badge {
+        display: inline-block;
+        margin-top: 7px;
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 900;
+      }
+      .protocol-rest {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .protocol-mcp {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .protocol-a2a {
+        background: #f3e8ff;
+        color: #6b21a8;
+      }
+
+      .context-source-grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 9px;
+      }
+      .context-source-card {
+        border: 1px solid #86efac;
+        background: #f0fdf4;
+        border-radius: 11px;
+        padding: 10px 8px;
+        text-align: center;
+        color: #14532d;
+        font-weight: 800;
+      }
+      .context-source-card small {
+        display: block;
+        margin-top: 3px;
+        color: #4b5563;
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .detail-architecture {
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+      .da-box {
+        border: 1px solid #cbd5e1;
+        border-radius: 15px;
+        background: #fff;
+        padding: 14px;
+        text-align: center;
+        color: #0f172a;
+      }
+      .da-box strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 16px;
+      }
+      .da-blue {
+        background: #eff6ff;
+        border-color: #93c5fd;
+      }
+      .da-green {
+        background: #f0fdf4;
+        border-color: #86efac;
+      }
+      .da-violet {
+        background: #f5f3ff;
+        border-color: #c4b5fd;
+      }
+      .da-orange {
+        background: #fff7ed;
+        border-color: #fdba74;
+      }
+      .da-arrow {
+        text-align: center;
+        font-size: 25px;
+        font-weight: 900;
+        line-height: 1.1;
+        color: #475569;
+        padding: 4px 0;
+      }
+      .da-coord-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) 72px minmax(0, 1.2fr) 72px minmax(0, 1.2fr);
+        align-items: center;
+        gap: 8px;
+      }
+      .da-side-arrow {
+        text-align: center;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 900;
+      }
+      .da-side-arrow .arr {
+        display: block;
+        font-size: 25px;
+        line-height: 1;
+        margin-bottom: 2px;
+      }
+      .da-context-stack {
+        display: grid;
+        gap: 8px;
+      }
+      .da-context-sources {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+      .da-context-source {
+        padding: 8px 5px;
+        border: 1px solid #bbf7d0;
+        border-radius: 9px;
+        background: #fff;
+        color: #166534;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+      }
+      .dispatch-panel {
+        border: 2px solid #7c3aed;
+        border-radius: 17px;
+        background: #faf5ff;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.1);
+      }
+      .dispatch-title {
+        padding: 11px 14px;
+        background: #6d28d9;
+        color: white;
+        font-weight: 900;
+        font-size: 17px;
+        text-align: center;
+      }
+      .dispatch-body {
+        padding: 14px;
+      }
+      .dispatch-branches {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .dispatch-branch {
+        border: 1px solid #d8b4fe;
+        border-radius: 14px;
+        background: white;
+        padding: 13px;
+      }
+      .dispatch-branch h4 {
+        margin: 0 0 8px;
+        color: #4c1d95;
+        font-size: 15px;
+      }
+      .mini-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        align-items: stretch;
+      }
+      .mini-node {
+        padding: 8px 9px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        background: #f8fafc;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 800;
+        color: #334155;
+      }
+      .mini-arrow {
+        text-align: center;
+        color: #64748b;
+        font-weight: 900;
+      }
+      .da-result-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 12px;
+        align-items: center;
+      }
+      .role-chip {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 900;
+        margin-top: 6px;
+      }
+      .role-core1 {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+      .role-core2 {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      p.explain-small {
+        color: chocolate;
+        line-height: 1.3;
+        text-align: center;
+      }
+
+      .protocol-compare td:first-child {
+        font-weight: 900;
+        white-space: nowrap;
+      }
+      .graph-flow {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+        gap: 8px;
+        align-items: center;
+        margin: 15px 0;
+      }
+      .graph-flow .module-arrow {
+        transform: none;
+      }
+      .graph-model-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .graph-entity {
+        border: 1px solid #c4b5fd;
+        background: #faf5ff;
+        color: #5b21b6;
+        border-radius: 12px;
+        padding: 11px 7px;
+        text-align: center;
+        font-weight: 900;
+      }
+      .graph-edge-list {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .graph-edge {
+        border-left: 4px solid #7c3aed;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: #334155;
+        font-size: 13px;
+      }
+      .phase-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .phase-card {
+        border: 1px solid #dbe2ea;
+        border-radius: 14px;
+        padding: 14px;
+        background: #fff;
+      }
+      .phase-card h4 {
+        margin: 0 0 7px;
+        color: #0f172a;
+      }
+      .phase-required {
+        border-top: 5px solid #2563eb;
+      }
+      .phase-poc {
+        border-top: 5px solid #7c3aed;
+      }
+      .phase-stretch {
+        border-top: 5px solid #0f766e;
+      }
+
+      @media (max-width: 900px) {
+        .interop-grid,
+        .context-source-grid-4,
+        .graph-model-grid,
+        .phase-grid {
+          grid-template-columns: 1fr;
+        }
+        .da-coord-row {
+          grid-template-columns: 1fr;
+        }
+        .da-side-arrow .arr {
+          transform: rotate(90deg);
+        }
+        .dispatch-branches {
+          grid-template-columns: 1fr;
+        }
+        .graph-flow {
+          grid-template-columns: 1fr;
+        }
+        .graph-flow .module-arrow {
+          transform: rotate(90deg);
+        }
+        .graph-edge-list {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===== Module selection diagram ===== */
+      .module-diagram {
+        padding: 18px;
+        border: 1px solid #dbe2ea;
+        border-radius: 18px;
+        background: #f8fafc;
+      }
+      .module-top-flow {
+        display: grid;
+        grid-template-columns: 1fr 46px 1.2fr 46px 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+      .module-box {
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        background: #ffffff;
+        padding: 14px;
+        text-align: center;
+        color: #334155;
+        line-height: 1.5;
+      }
+      .module-box strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #0f172a;
+        font-size: 16px;
+      }
+      .module-box.registry {
+        background: #f0fdf4;
+        border-color: #86efac;
+      }
+      .module-arrow {
+        text-align: center;
+        font-size: 26px;
+        font-weight: 900;
+        color: #475569;
+      }
+      .module-contract {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-left: 4px solid #f59e0b;
+        border-radius: 9px;
+        background: #fff7ed;
+        color: #7c2d12;
+        line-height: 1.6;
+      }
+      @media (max-width: 900px) {
+        .module-top-flow {
+          grid-template-columns: 1fr;
+        }
+        .module-arrow {
+          transform: rotate(90deg);
+        }
+      }
+          /* ===== v8 change overlays (appended; original styles unchanged) ===== */
+      :root { --v8-added-bg: #ecfdf5; --v8-added-border: #86efac; --v8-added-ink: #166534; --v8-edited-bg: #fffbeb; --v8-edited-border: #fbbf24; --v8-edited-ink: #92400e; }
+      .v8-overlay { position: relative; margin: 10px 0; padding: 10px 12px 8px 14px; border-left: 4px solid; border-radius: 8px; font-size: .92em; }
+      .v8-overlay.v8-added { background: var(--v8-added-bg); border-color: var(--v8-added-border); color: var(--v8-added-ink); }
+      .v8-overlay.v8-edited { background: var(--v8-edited-bg); border-color: var(--v8-edited-border); color: var(--v8-edited-ink); }
+      .v8-badge { display: inline-block; margin: 0 0 5px; padding: 2px 7px; border-radius: 999px; font-size: .75em; font-weight: 800; line-height: 1.4; }
+      .v8-added .v8-badge { background: #bbf7d0; color: var(--v8-added-ink); }
+      .v8-edited .v8-badge { background: #fde68a; color: var(--v8-edited-ink); }
+      .v8-overlay details { margin-top: 5px; font-size: .9em; }
+      .v8-overlay summary { cursor: pointer; font-weight: 700; }
+      .v8-overlay blockquote { margin: 5px 0; padding-left: 10px; border-left: 2px solid currentColor; }</style>
+  </head>
+  <body>
+    <header>
+<div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />문서 제목과 요약의 팀 이름이 브리핑 v8 및 새 CS Pack 구성으로 일괄 교체되었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: 브리핑 v7, Billing/Technical/VOC<br />→ v8: 브리핑 v8, VOC &amp; Store Manager/Response Generation &amp; Review</blockquote>본문 전체에서 오래된 팀 이름이 남지 않도록 정리한 자구 수정입니다.</details></div><p><strong>브리핑 v8</strong></p>
+      <h1>A-COP: AI 연동형 모듈형 에이전틱 고객운영 플랫폼</h1>
+      <p>
+        <strong>부트캠프 주제 대응:</strong> 다중 에이전트 서빙 기반 고객 피드백 분석 및 맞춤형 응대
+        자동화 시스템
+      </p>
+      <p>고객 피드백 분석 + 전문 Agent Team 협업 + 외부 소비자 AI 연동 + 모듈형 Agentic Basement</p>
+    </header>
+    <section class="section">
+      <div class="acop-callout" style="font-size: 1.15em">
+        <strong
+          >멀티에이전트를 <b>동작하게</b> 만드는 건 어렵지 않습니다. <b>믿을 수 있게</b> 만드는 게
+          어렵습니다.</strong
+        >
+      </div>
+      <p class="lead">
+        <strike
+          >A-COP은
+          <strong
+            >하나의 A-COP Runtime 위에 CS Pack과 Commerce Ops Pack을 교체·확장하는 B2B Agentic
+            Operations Platform</strong
+          >이다.</strike
+        ><br />
+        A-COP은 공통 실행 환경(Runtime) 위에서 고객센터용 모듈(CS Pack)과 커머스 운영용
+        모듈(Commerce Ops Pack)을 자유롭게 갈아끼우거나 확장할 수 있는, 기업 간 거래(B2B) 형태의
+        <strong>Agentic(에이전틱)</strong> 업무 운영 플랫폼이다. 여기서 <strong>Agentic</strong>은
+        &ldquo;AI가 알아서 다 한다&rdquo;는 뜻이 아니라, AI가 스스로 판단하고 다음에 할 일을 정하되
+        돈이 오가거나 되돌리기 어려운 일은 사람 승인을 거친다는 뜻이다<br /><br />
+        <strike
+          >소비자는 자기 Agent 하나로 상품·주문·배송·CS를 이용하고, 운영자는
+          Case·Action·승인·근거·평가를 한 화면에서 감독한다.</strike
+        ><br />
+        소비자는 여러 쇼핑몰이나 고객센터 앱을 따로 쓸 필요 없이, 자기가 평소에 쓰는 개인용 AI
+        에이전트(예: ChatGPT, Claude 등) 하나만 실행합니다.<br />
+        그 에이전트 하나에게 말만 하면, A-COP 플랫폼과 연결되어 상품을 추천받고, 주문을 넣고, 배송을
+        조회하며, 교환·반품 같은 고객센터(CS) 업무까지 일사천리로 해결할 수 있습니다.<br /><br />
+
+        <strike
+          >10주에는 자동화 CS와 제한된 Commerce 검증 사이트를 구현하며, 전면 사이트 생성·판매와
+          재고·발주·배송·정산 자동화는 vision으로 둔다.<br />모든 도메인 Team은 Registry로 교체되고,
+          Core는 승인·idempotency·감사·평가를 공통으로 보장한다.</strike
+        ><br />
+        <strong>10주 차 구현 범위 (MVP - 최소 기능 제품): </strong><br />
+        자동화 CS: 고객 상담 업무를 승인 경계 안에서 AI가 처리하도록 자동화 기능을 구현합니다.<br />
+        제한된 Commerce 검증 사이트: 상품 주문, 결제 등 커머스 업무의 전체 기능을 구현하기보다는,
+        핵심적인 일부 기능만 연동하여 시스템이 제대로 작동하는지 테스트하는 시범 사이트를
+        구축합니다.<br /><br />
+        <strong>향후 비전 (Future Vision): </strong><br />
+        당장 10주 차에 전부 완료하는 것은 아니지만, 최종적으로는 쇼핑몰 전체 웹사이트를 생성·운영하고,
+        재고 관리, 발주, 배송, 정산까지 이어지는 커머스 업무로 확장하는 것을 목표로 삼습니다. 이것은
+        10주 구현 범위가 아니라 향후 vision입니다.<br />
+        <br />
+        <br />
+      </p>
+    </section>
+    <section class="section">
+      <h2>제품 구조: 하나의 Runtime, 두 도메인 팩</h2>
+      <div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />Team 구조가 v7의 Billing/Technical/VOC 중심에서 CS Pack 확정축 2팀 + Commerce Ops 연계축 4팀으로 재편되었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: Billing Team / Technical Team / VOC Team + Catalog &amp; Verification Remote<br />→ v8: VOC &amp; Store Manager, Response Generation &amp; Review(확정축) + Procurement + Order &amp; Payment, Fulfillment &amp; Logistics, Return &amp; Refund, Catalog &amp; Verification A2A Remote(연계축)</blockquote>CS는 무조건 10주에 만드는 확정축으로 고정하고, 쇼핑몰 실무는 검증 쇼핑몰과 일정에 맞춰 붙이는 조건부 계획으로 분리했습니다.</details></div><div class="diagram"><div class="mono" style="text-align:center;">A-COP Runtime (Core)
+Case · Controller · Registry · Port 3종 · 승인 경계 · 감사 · 평가
+                         │
+            ┌────────────┴────────────┐
+        CS Pack                 Commerce Ops Pack
+   VOC &amp; Store Manager       Procurement + Order &amp; Payment
+   Response Generation &amp; Review  Fulfillment &amp; Logistics
+       (CS Pack 확정축)          Return &amp; Refund · Catalog &amp; Verification
+                                  (Commerce Ops 연계축)</div></div>
+      <p class="small"><strong>도메인 지식이 필요하면 팩, 도메인과 무관하면 Core.</strong></p>
+      <div class="acop-note">
+        💬 쉬운 설명: 도메인 팩은 하나의 공통 엔진 위에 업무 묶음을 갈아끼우는 구조입니다. 이번 버전에서는
+        고객 문의를 맡는 VOC &amp; Store Manager와 답변을 만들고 검토하는 Response Generation &amp; Review를
+        CS Pack의 확정축으로 삼습니다. 발주·주문·결제, 물류, 반품·환불, 상품 검증은 Commerce Ops 연계축으로
+        나누어 검증 쇼핑몰과 일정에 맞춰 조정합니다. 공통 기능은 Runtime에 두고 업무별 기능만 팩에 담습니다.
+      </div>
+    </section>
+    <section class="section">
+      <h2>양면 구조: 소비자와 운영자</h2>
+      <div class="mono">소비자: 자기 Agent 하나 ── Commerce MCP + CS MCP ── 상품·장바구니·주문·배송·문의
+                                      │
+                                      ▼
+운영자: human-on-the-loop ── 저위험 업무 자동 처리 / 이상 신호 감독
+                         └─ 고위험 Action만 human-in-the-loop 승인</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>용어</th>
+              <th>사람의 개입 방식</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>human-in-the-loop</strong></td>
+              <td>실행 전 사람이 매 건 판단·승인해야 진행한다.</td>
+            </tr>
+            <tr>
+              <td><strong>human-on-the-loop</strong></td>
+              <td>
+                저위험 업무는 자동 처리하고, 운영자는 감독하다가 고위험 Action·이상 신호에 개입한다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="acop-note">
+        💬 쉬운 설명: 이용자는 자기 AI 비서 하나로 쇼핑과 고객센터 문의를 다 처리합니다. 회사
+        담당자는 매 건 결재하지 않고 평소에는 시스템이 처리하게 두었다가 이상할 때만 봅니다
+        (human-on-the-loop). 매 건 승인하는 human-in-the-loop와 다릅니다.
+      </div>
+    </section>
+    <section class="section">
+      <h2>운영자 감독 화면 지표</h2>
+      <p class="lead">성공만 세지 않고 <strong>막힌 것도 센다.</strong></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>영역</th>
+              <th>보여야 하는 지표·신호</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>운영량</td>
+              <td>유효 Case, 유형별 Case, open/running/waiting/escalated/failed, 미처리 연령</td>
+            </tr>
+            <tr>
+              <td>정직한 자동화</td>
+              <td>자동 완료 Case / 전체 유효 Case, 인계율, 재처리율, 분모·기간·평가 CI</td>
+            </tr>
+            <tr>
+              <td><strong>안전</strong></td>
+              <td>
+                <strong
+                  >approval 대기, unknown, mismatch 차단, 중복 실행 차단, degraded Context</strong
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>품질</td>
+              <td>근거 포함률, 정책 충돌, 사람 수정률, 회귀 실패, VOC 급증</td>
+            </tr>
+            <tr>
+              <td>건강 신호</td>
+              <td>기준선 대비 오류율·지연·인계율·금액/재고 mismatch·외부 Adapter timeout 변화</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">
+        <strong>이상은 수치의 절대값이 아니라 기준선 대비 변화로 정의한다.</strong>
+      </p>
+      <div class="acop-note">
+        💬 쉬운 설명: 운영자가 보는 화면에는 "일이 잘 처리된 건수"만 보여주지 않고, "막혀서 못
+        넘어간 건수"도 함께 보여줍니다. AI가 스스로 끝낸 비율, 사람에게 넘긴 비율, 실수해서 다시
+        처리한 비율, 승인 대기 중인 건, 이상하게 중복 실행되거나 금액이 안 맞는 경우까지 한눈에
+        확인할 수 있게 합니다. 여기서 "이상 신호"란 어떤 숫자가 원래 절대적으로 크거나 작아서가
+        아니라, 평소(기준선)보다 갑자기 달라졌을 때를 의미합니다.
+      </div>
+    </section>
+    <section class="section">
+      <h2>검증 쇼핑몰: 사이트 제품의 1호 사례 후보</h2>
+      <p class="lead">
+        상품·옵션·가격·재고, Mock/Sandbox catalog·order·delivery, 주문·배송·문의 Case, 제한된 MCP
+        표면과 운영자 감독 화면을 하나의 Runtime에서 연결한다.
+      </p>
+      <p>
+        <strong>주장 가능 범위:</strong> Commerce Ops Pack이 없는 동안 주장 가능한 범위는 “CS와
+        제한된 Commerce 표면을 하나의 Runtime에서 검증한 사이트 제품 1호 사례”다. 재고
+        보충·발주·정산·상용 결제·일반 고객 매출까지 자동화했다고 주장하지 않는다.
+      </p>
+      <div class="acop-note">
+        💬 쉬운 설명: 실제로 작동하는 진짜 쇼핑몰(가짜 데이터로 테스트하는 검증용 사이트)을 하나
+        만들어서, "이 구조가 실제로 돌아간다"는 걸 증명하는 첫 사례로 삼습니다. 다만 지금은 재고
+        채우기, 실제 결제, 정산 같은 운영 업무 전체를 자동화한 게 아니라, 고객 문의 처리와 일부 쇼핑
+        기능만 검증했다는 점을 분명히 밝힙니다.
+      </div>
+    </section>
+    <section class="section">
+      <h2>10주와 vision의 경계</h2>
+      <p class="lead"><strong>구현한 것과 vision을 섞어 말하지 않는다.</strong></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>10주에 구현</th>
+              <th>vision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A-COP Runtime · CS Pack · 제한 검증 쇼핑몰</td>
+              <td>Commerce Ops Pack (VISION-08) · 사이트 생성·판매 (VISION-09)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="acop-note">
+        💬 쉬운 설명: "지금 부트캠프 10주 동안 실제로 만드는 것"과 "앞으로의 목표(비전)"을 절대
+        섞어서 말하지 않겠다는 원칙입니다. 지금 만드는 건 핵심 뼈대(Runtime)와 고객센터 기능(CS
+        Pack), 제한된 검증용 쇼핑몰이고, 쇼핑몰 운영 자동화나 사이트 자동 생성·판매는 앞으로의
+        목표일 뿐 이번에 완성하는 것이 아닙니다.
+      </div>
+    </section>
+    <div class="container">
+      <section class="section">
+        <h2>시장에 비어 있는 자리</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>시장 현황</th>
+                <th>A-COP</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Intercom Fin은 단일 에이전트 — 멀티에이전트·A2A 없음</td>
+                <td>Team·Controller·A2A가 기준선</td>
+              </tr>
+              <tr>
+                <td>자체 호스팅 없음 → 규제 산업 hard blocker</td>
+                <td>PostgreSQL 기반 자체 배포</td>
+              </tr>
+              <tr>
+                <td>데모 90% vs 실제 55~70%</td>
+                <td>분모·CI를 함께 공개</td>
+              </tr>
+              <tr>
+                <td>Sierra·Decagon 품질관리 기능 미공개</td>
+                <td>평가 하네스</td>
+              </tr>
+              <tr>
+                <td>Gartner: 2027년까지 agentic AI 40% 폐기, 원인은 운영화 실패</td>
+                <td>DoD·evidence·감사</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">출처: <code>program/research/_시장격차_2026-08-16.md</code> (2026-08-16 확인).</p>
+        <div class="acop-note">
+          💬 쉬운 설명: 지금 시장의 다른 서비스(예: Intercom Fin, Sierra, Decagon 등)는 AI 하나가
+          혼자 응대하는 방식이고, 여러 AI가 서로 협업(멀티에이전트)하지는 못합니다. 또 직접 서버를
+          설치해서 운영하는 방식(자체 호스팅)을 지원하지 않아서 보안이 중요한 업종은 아예 못 씁니다.
+          데모에서는 자동화가 잘 되는 것처럼 보여도 실제로는 성공률이 낮고, 품질을 어떻게
+          관리하는지도 공개하지 않습니다. A-COP은 이 빈틈을 메우는 것을 목표로, 여러 AI 팀의 협업,
+          자체 서버 운영, 성공률을 근거와 함께 투명하게 공개하는 것, 꼼꼼한 품질 검증 체계를
+          강점으로 내세웁니다.
+        </div>
+        <h3>
+          “멀티에이전트 고객운영의 통제·검증층”으로는 참신하다. “LLM으로 고객 문의를 자동응답한다”로
+          말하면 참신하지 않다.
+        </h3>
+      </section>
+      <section class="section">
+        <h2>1. 한눈에 보는 핵심 그림</h2>
+        <p class="lead">
+          이 프로젝트는 단순 챗봇이 아니라, 고객 피드백을 기반으로 실제 업무 단위의 전문 AI Agent
+          Team이 협업하여 문제를 해결하는 <strong>Agentic Customer Operations Platform</strong>이다.
+        </p>
+        <div class="grid-3">
+          <div class="card">
+            <h3>핵심 아이디어</h3>
+            <ul>
+              <li>고객 피드백을 단순 답변용 입력이 아니라 <strong>Customer Case</strong>로 관리</li>
+              <li>
+                <strong>업무 책임 단위 Agent Team Module</strong> 구성. Team 종류와 개수는 요구사항
+                분석 후 정한다.
+              </li>
+              <li>RAG, Memory, Shared State를 통해 Agent 협업</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>차별점</h3>
+            <ul>
+              <li>고정 파이프라인이 아니라 <strong>동적 분기·재처리·승인</strong></li>
+              <li>
+                외부 사용자의 <strong>개인 AI(ChatGPT/Claude/Gemini)</strong>가 우리 서비스
+                API/MCP로 접속 가능
+              </li>
+              <li>도메인 확장이 가능한 <strong>모듈형 Basement</strong> 구조</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>시연 포인트</h3>
+            <ul>
+              <li>구독 해지 후 추가 결제</li>
+              <li>권한 동기화 오류</li>
+              <li>반복 VOC 탐지 및 리포트</li>
+            </ul>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 이 프로젝트는 그냥 질문에 답하는 챗봇이 아닙니다. 고객이 남긴 문의를
+          "처리해야 할 사건(Case)"으로 등록해서 끝까지 관리하고, 마치 회사에 여러 부서(팀)가 있듯 각
+          업무를 맡은 전담 AI 팀들이 서로 정보를 공유하며 협업해 해결합니다. 고정된 순서대로만
+          흘러가지 않고 상황에 따라 다른 경로로 넘어가거나 다시 처리할 수 있고, 사용자가 평소 쓰는
+          ChatGPT나 Claude 같은 개인 AI에서도 우리 서비스를 이용할 수 있게 연결합니다. 데모에서는
+          "구독 해지 후 잘못 결제된 경우", "권한이 꼬여서 오류가 난 경우", "같은 불만이 반복되는 걸
+          AI가 알아채고 리포트하는 경우" 같은 걸 보여줄 계획입니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>2. 기존 Pipeline을 Agentic Customer Operations로 확장하는 이유</h2>
+        <p class="lead">먼저 기존 구조가 해결하지 못하는 문제를 확인한다.</p>
+        <div class="acop-callout">
+          Agent 수를 늘리자는 제안이 아니다. 고정된 처리 단계를 Agent라고 부르는 대신, 실제 고객
+          업무에서 서로 다른 책임·지식·도구를 가진 업무 단위를 모듈형 Agent Team으로 구성하고, 상위
+          Agentic System이 이들의 협업과 상태를 관리하도록 만들자는 제안이다.
+        </div>
+        <div class="acop-compare">
+          <div class="acop-compare-card old">
+            <div class="acop-compare-title">기존 구조: 단계 중심 Pipeline</div>
+            <div class="acop-flow">
+              <div class="acop-node">고객</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node">감성·의도·이슈 분석</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node">검색 / RAG</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node">답변 생성</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node">검수</div>
+            </div>
+            <p class="small">
+              분석·검색·생성·검수를 각각 Agent라고 부르면 구조는 여전히 A → B → C → D로 고정되어
+              있어 “왜 굳이 Multi-Agent인가?”라는 질문이 남는다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 지금 방식은 공장의 컨베이어 벨트와 비슷합니다. 순서가 정해져
+              있어서(분석→검색→답변 생성→검수) 각 단계에 "AI"라는 이름을 붙여도 결국 한 줄로
+              흘러가는 작업일 뿐입니다. 이러면 굳이 여러 AI(Multi-Agent)를 쓸 이유가 약해집니다.
+            </div>
+          </div>
+          <div class="acop-compare-card new">
+            <div class="acop-compare-title">제안 구조: 업무 책임 중심 Agentic System</div>
+            <div class="acop-flow">
+              <div class="acop-node blue">고객 문제</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node blue">Customer Case</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node purple">Agentic Controller</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-team-grid">
+                <div class="acop-team">Agent Team A<small>업무 책임 A</small></div>
+                <div class="acop-team">Agent Team B<small>업무 책임 B</small></div>
+                <div class="acop-team">Agent Team C<small>업무 책임 C</small></div>
+              </div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node orange">Shared State</div>
+              <div class="acop-arrow">↓</div>
+              <div class="acop-node green">해결 / 재계획 / 승인 / 다른 Team 위임</div>
+            </div>
+            <p class="small">
+              Team A/B/C는 고정 이름이 아니다. 실제 업무 분석 결과에 따라 필요한 Team Module을
+              만들고 Registry에 등록한다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 새 방식은 회사 조직도와 비슷합니다. 고객 문제가 접수되면(Customer Case)
+              Controller가 필요한 팀을 정하고, Agent Team은 판단과 처리 방법을 제안합니다. 실제 실행은
+              Controller가 승인 경로를 거쳐 진행합니다. Team끼리는 서로 부르지 않고 모두 Controller를
+              거칩니다. 새 업무 팀은 프로그램을 뜯어고치지 않고 Registry에 명단만 등록하면 됩니다.
+              CS Pack과 Commerce Ops Pack처럼 기능 묶음도 갈아끼울 수 있습니다.
+            </div>
+          </div>
+        </div>
+        <div class="acop-note" style="margin-top: 18px">
+          <strong>앞의 구조 변경에서 이어지는 개선점</strong><br />
+          위 비교에서 핵심적으로 바뀐 것은
+          <strong
+            >① 처리 단계를 Agent라고 부르는 구조에서 실제 업무 책임 단위 Team으로 전환하고,</strong
+          >
+          <strong>② 한 번의 답변 생성 대신 Customer Case의 상태를 끝까지 관리하며,</strong>
+          <strong>③ 기존 분석·RAG·응대 기능을 이 Case 처리 흐름 안에 그대로 포함한 것</strong>이다.
+          이 변화로 다음 세 가지 개선점이 생긴다.
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 정리하면 ① "처리 단계"에 억지로 AI라는 이름을 붙이던 걸 "실제 업무를
+          책임지는 팀" 단위로 바꾸고, ② 답변 한 번 하고 끝내는 게 아니라 고객 문제가 해결될 때까지
+          상태를 계속 관리하며, ③ 원래 있던 분석·검색·응대 기능은 없애지 않고 이 새로운 흐름 안에
+          그대로 담았다는 뜻입니다.
+        </div>
+        <div class="acop-reasons">
+          <div class="acop-reason">
+            <div class="num">1</div>
+            <h3>Multi-Agent의 이유가 생긴다</h3>
+            <p>
+              <strong>업무 책임 단위로 Team을 분리했기 때문에</strong>, 검색 Agent·생성 Agent처럼
+              처리 단계를 억지로 Agent화하는 문제가 줄어든다. 각 Team이 서로 다른
+              <strong>업무 목표·권한·Tool·Knowledge</strong>를 가지므로 Agent 간 협업이 실제 업무
+              분업과 연결된다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 팀마다 하는 일, 쓸 수 있는 권한, 사용하는 도구와 지식이 서로 다르기
+              때문에, 여러 AI가 협업하는 게 실제로 필요해집니다. 마치 회사에서 서로 다른 부서가 각자
+              전문성을 갖고 협업하는 것과 같습니다.
+            </div>
+          </div>
+          <div class="acop-reason">
+            <div class="num">2</div>
+            <h3>LangGraph의 이유가 생긴다</h3>
+            <p>
+              <strong>답변 한 번이 아니라 Customer Case의 상태를 계속 관리하기 때문에</strong>, Team
+              재배정, 추가 정보 대기, Human Approval, 실패 후 재처리, 상태 복원 같은
+              <strong>분기·순환·중단·재개</strong>가 실제 요구사항이 된다. 이때 상위 Workflow를
+              Graph로 관리할 이유가 생긴다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 문의 하나를 처리할 때 "다른 팀에 다시 배정", "추가 정보 기다리기", "사람
+              승인 받기", "실패하면 다시 시도" 같은 다양한 갈래길이 생깁니다. 이런 복잡한 흐름을
+              관리하려면 순서도(그래프) 형태로 전체 작업 흐름을 짜는 도구인 LangGraph가
+              필요해집니다.
+            </div>
+          </div>
+          <div class="acop-reason">
+            <div class="num">3</div>
+            <h3>기존 과제를 버리지 않는다</h3>
+            <p>
+              <strong
+                >기존 기능을 제거한 것이 아니라 더 큰 Case 처리 구조 안에 배치했기 때문에</strong
+              >, 고객 피드백, 감성·의도·이슈 분석, RAG, Multi-Agent, 맞춤형 응대 요구는 그대로
+              유지된다. 단순 답변 Pipeline을 <strong>Customer Case 해결 시스템</strong>으로 확장하는
+              방식이다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 원래 하려던 것(고객 피드백 분석, 검색, 여러 AI 협업, 맞춤 응대)을 없애지
+              않고, 그것들을 "고객 문제를 끝까지 해결하는 더 큰 시스템" 안에 자연스럽게 포함시켰다는
+              의미입니다.
+            </div>
+          </div>
+        </div>
+        <h3>기존 부트캠프 요구사항과의 연결</h3>
+        <div class="acop-map">
+          <div class="acop-map-box">
+            <strong>기존 요구</strong><br />
+            고객 피드백 수집 · 감성/의도/이슈 분석 · RAG · Multi-Agent · 맞춤형 응대
+          </div>
+          <div class="acop-map-arrow">→</div>
+          <div class="acop-map-box">
+            <strong>확장된 구현</strong><br />
+            Customer Case · 업무별 Agent Team · Shared State · 동적 재계획 · Human Approval · 외부
+            AI 연동
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 원래 부트캠프에서 요구했던 항목들(고객 피드백 수집, 감정·의도 분석, 검색,
+          여러 AI 협업, 맞춤 응대)을 전부 그대로 담으면서, 여기에 Case 관리, 업무별 전담 팀, 공유
+          정보, 상황에 따른 계획 재조정, 사람 승인, 외부 AI 연동 같은 기능을 더 붙여서 확장했다는
+          뜻입니다.
+        </div>
+        <div class="acop-note">
+          <strong>팀 설명용 한 문장:</strong>
+          기존 과제를 없애는 것이 아니라, “고객에게 답변 하나 생성”에서 “하나의 고객 문제를 여러
+          전문 AI 팀이 협업하여 해결”하는 구조로 한 단계 확장한다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>3. 전체 아키텍처</h2>
+        <p class="lead">
+          Personal AI의 Tool 접근은 MCP/REST로, 독립 Agent System 간 업무 위임은 A2A로 분리한다.
+          Context Broker는 Vector RAG뿐 아니라 Graph 관계 탐색을 사용해 판단 근거를 확장한다.
+        </p>
+        <h3>3-1. Level 1 전체 흐름</h3>
+        <div class="diagram">
+          <div class="acop-arch">
+            <div class="acop-node blue">사용자 / 외부 Agent</div>
+            <div class="acop-arrow">↓</div>
+            <div class="interop-grid">
+              <div class="interop-card">
+                Web UI<small>일반 사용자 접점</small
+                ><span class="protocol-badge protocol-rest">REST / OpenAPI</span>
+              </div>
+              <div class="interop-card">
+                Personal AI<small>ChatGPT · Claude · 기타 AI</small
+                ><span class="protocol-badge protocol-mcp">MCP / REST</span>
+              </div>
+              <div class="interop-card">
+                Remote Agent System<small>파트너·독립 Agent 조직</small
+                ><span class="protocol-badge protocol-a2a">A2A</span>
+              </div>
+              <div class="interop-card">
+                Operator UI<small>Case · Trace · Approval</small
+                ><span class="protocol-badge protocol-rest">REST / Web</span>
+              </div>
+            </div>
+            <div class="acop-arrow">↓</div>
+            <div class="acop-node blue">Agent Gateway · 인증 / 권한 / Scope / Agent Identity</div>
+            <div class="acop-arrow">↓</div>
+            <div class="acop-node purple">Customer Case Layer</div>
+            <div class="acop-arrow">↓</div>
+            <div class="context-source-grid-4">
+              <div class="context-source-card">Vector RAG<small>의미가 비슷한 문서</small></div>
+              <div class="context-source-card">
+                관계 조회 (GraphStorePort)<small>연결된 Entity / 관계</small>
+              </div>
+              <div class="context-source-card">DB State<small>현재 사용자·업무 상태</small></div>
+              <div class="context-source-card">Memory<small>과거 Case·경험</small></div>
+            </div>
+            <div class="acop-arrow">↓</div>
+            <div class="acop-node green">
+              Context Broker · Vector + Graph + DB + Memory Context Pack
+            </div>
+            <div class="acop-arrow">↓</div>
+            <div class="acop-node purple">
+              Agentic Controller · Team Routing / Replan / WAIT / RESUME
+            </div>
+            <div class="acop-arrow">↓</div>
+            <div class="team-slot-panel">
+              <div class="slot-head">
+                EXECUTION TARGETS — Registry가 Local 또는 A2A 실행 대상을 선택
+              </div>
+              <div style="padding: 14px">
+                <div class="acop-team-grid">
+                  <div class="acop-team">VOC &amp; Store Manager<small>Message Broker → Team Slot</small></div>
+                  <div class="acop-team">Response Generation &amp; Review<small>내부 Module / Subgraph</small></div>
+                  <div class="acop-team">Procurement + Order &amp; Payment<small>검증 쇼핑몰 연계</small></div>
+                </div>
+                <p class="small" style="margin: 10px 0 0">
+                  VOC &amp; Store Manager와 Response Generation &amp; Review는 CS Pack의 확정축으로 10주에 착수한다.
+                  Procurement + Order &amp; Payment, Fulfillment &amp; Logistics, Return &amp; Refund, Catalog &amp; Verification은
+                  Commerce Ops 연계축이며, 범위와 일정에 따라 조정한다.
+                </p>
+              </div>
+            </div>
+            <div class="acop-arrow">↓</div>
+            <div class="acop-node orange">Shared State · Local/A2A Task 상태와 TeamResult 통합</div>
+            <div class="acop-arrow">↓</div>
+            <div class="acop-node blue">Tool / Action Layer · 승인·idempotency·실행</div>
+            <div class="acop-arrow">↓</div>
+            <div class="acop-node green">결과 / 응답 / 후속 작업</div>
+          </div>
+        </div>
+        <p class="small">
+          이 그림에서 읽을 것: 네 원천은 Context Broker가 선택 조회하고, Team은 Context Pack을 받아
+          판단한다.
+        </p>
+        <div class="acop-note">
+          💬 쉬운 설명: 사용자(웹사이트, 개인 AI, 파트너사 AI, 운영자)가 요청을 보내면, 먼저 "출입
+          관리소(Agent Gateway)"에서 신분과 권한을 확인합니다. 그다음 이 요청은 "고객 문제
+          접수처(Customer Case Layer)"에 등록되고, "정보 정리 담당(Context Broker)"이 관련 문서·과거
+          기록·현재 상태·연관 정보를 모아서 필요한 팀에게 전달합니다. "관제탑(Agentic Controller)"이
+          어느 팀에게 맡길지 정하면, 담당 Team(예: VOC &amp; Store Manager 또는 Response Generation &amp; Review)이 일을 처리하고 결과를 "공유
+          게시판(Shared State)"에 올립니다. 마지막으로 "실행 담당(Tool/Action Layer)"이 승인과 중복
+          방지 절차를 거쳐 실제로 조치(환불, 계정 변경 등)를 실행합니다.
+        </div>
+        <h3>3-2. 상세 아키텍처</h3>
+        <div class="diagram">
+          <div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />실행 대상 Team 목록도 새 확정축·연계축 기준으로 갱신되었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: Billing Team / Technical Team / VOC Team / Catalog &amp; Verification<br />→ v8: VOC &amp; Store Manager / Response Generation &amp; Review / Procurement + Order &amp; Payment / Fulfillment &amp; Logistics / Return &amp; Refund / Catalog &amp; Verification</blockquote>팀 이름만 바뀐 것이 아니라 CS 확정축과 Commerce Ops 연계축의 책임 경계가 명시되었습니다.</details></div><div class="detail-architecture">
+            <div class="interop-grid">
+              <div class="interop-card">
+                Web UI<span class="protocol-badge protocol-rest">REST</span>
+              </div>
+              <div class="interop-card">
+                Personal AI<span class="protocol-badge protocol-mcp">MCP</span>
+              </div>
+              <div class="interop-card">
+                Partner Agent<span class="protocol-badge protocol-a2a">A2A Ingress</span>
+              </div>
+              <div class="interop-card">
+                Operator UI<span class="protocol-badge protocol-rest">REST</span>
+              </div>
+            </div>
+            <div class="da-arrow">↓</div>
+            <div class="da-box da-blue">
+              <strong>Agent Gateway</strong>
+              OAuth · User/Client/Agent Identity · Scope · Risk · Protocol Validation<br />
+              <span class="role-chip role-core2">Core 2 · Access &amp; Action</span>
+              <p class="explain-small">
+                <small
+                  >맨 앞의 "출입 관리소"입니다. 웹사이트·개인 AI·파트너사·운영자 중 누가 요청했는지
+                  확인하고, 이 요청이 허용된 범위(Scope) 안인지, 위험하지는 않은지 미리
+                  검사합니다.</small
+                >
+              </p>
+            </div>
+            <div class="da-arrow">↓</div>
+            <div class="da-box da-violet">
+              <strong>Customer Case Layer</strong>
+              모든 REST/MCP/A2A 요청을 동일한 Case lifecycle과 Event 형식으로 정규화<br />
+              <span class="role-chip role-core1">Core 1 · Case Runtime</span>
+              <p class="explain-small">
+                <small
+                  >어떤 경로(웹·개인 AI·외부 AI)로 들어왔든, 이 요청을 업무 단위인 "Case"로
+                  접수합니다. Case는 대화 한 번이 아니라 며칠 살아 있다가 승인 지점에서 멈추고,
+                  승인되면 그 지점부터 다시 진행되는 기록입니다.</small
+                >
+              </p>
+            </div>
+            <div class="da-arrow">↓</div>
+            <div class="da-coord-row">
+              <div class="da-context-stack">
+                <div class="da-box da-green">
+                  <strong>Context Broker</strong>
+                  현재 Task에 필요한 정보 선택 · 조합 · 압축
+                  <p class="explain-small">
+                    <small
+                      >판단에 필요한 정보를 모으는 담당자입니다. 관련 문서(Vector RAG), 연결된 다른 항목(관계 조회), 현재
+                      데이터 상태(DB State), 과거 기록(Memory) 중 지금 필요한 것만 골라 정리해서 다음 단계로
+                      넘깁니다.</small
+                    >
+                  </p>
+                </div>
+                <div class="da-context-sources">
+                  <div class="da-context-source">Vector RAG</div>
+                  <div class="da-context-source">관계 조회 (GraphStorePort)</div>
+                  <div class="da-context-source">DB State</div>
+                  <div class="da-context-source">Memory</div>
+                </div>
+              </div>
+              <div class="da-side-arrow"><span class="arr">→</span>Context Pack</div>
+              <div class="da-box da-violet">
+                <strong>Agentic Controller</strong>
+                Capability 판단 · Routing · Ownership · Replan · WAIT/RESUME<br />
+                Local/A2A 실행 방식과 Case-level 경합 정책 결정
+                <br /><span class="role-chip role-core1">Core 1</span>
+                <p class="explain-small">
+                  <small
+                    >관제탑입니다. 필요한 Capability와 담당을 정하지만 Team을 직접 실행시키지는
+                    않습니다. Team은 "이렇게 하자"는 제안을 내고, Controller가 승인 경로를 거쳐 실제
+                    실행을 결정합니다.</small
+                  >
+                </p>
+              </div>
+              <div class="da-side-arrow"><span class="arr">→</span>Resolve</div>
+              <div class="da-box da-green">
+                <strong>Agent Team Registry</strong>
+                Capability · execution_type · version · endpoint · Agent Card · auth<br />
+                LOCAL Module 또는 A2A Remote Agent 반환
+                <p class="explain-small">
+                  <small
+                    >"어떤 팀이 이 능력을 갖고 있는지" 적어둔 명단입니다. 관제탑이 물어보면 내부
+                    팀(LOCAL)인지 외부 AI 팀(A2A)인지 알려줍니다.</small
+                  >
+                </p>
+              </div>
+            </div>
+            <div class="da-arrow">↓</div>
+            <div class="dispatch-panel">
+              <div class="dispatch-title">
+                EXECUTION DISPATCH — Registry 결과에 따라 실행 경로 분기
+              </div>
+              <div class="dispatch-body">
+                <div class="dispatch-branches">
+                  <div class="dispatch-branch">
+                    <h4>LOCAL 실행 경로</h4>
+                    <div class="mini-flow">
+                      <div class="mini-node">Controller가 TeamTask 생성</div>
+                      <div class="mini-arrow">↓</div>
+                      <div class="mini-node">Message Broker / Queue / Retry</div>
+                      <div class="mini-arrow">↓</div>
+                      <div class="mini-node">Local Agent Team Slot<br />Team A / B / C Module</div>
+                      <div class="mini-arrow">↓</div>
+                      <div class="mini-node">TeamResult (ActionProposal 포함)</div>
+                    </div>
+                    <p class="small">Message Broker는 우리 Runtime 내부 Worker 전달용이다.</p>
+                  </div>
+                  <div class="dispatch-branch">
+                    <h4>REMOTE A2A 실행 경로</h4>
+                    <div class="mini-flow">
+                      <div class="mini-node">Controller가 Remote TeamTask 생성</div>
+                      <div class="mini-arrow">↓</div>
+                      <div class="mini-node">
+                        A2A Interop Adapter<br />Task / Auth / Endpoint 변환
+                      </div>
+                      <div class="mini-arrow">↓</div>
+                      <div class="mini-node">Remote Agent System<br />Agent Card Capability</div>
+                      <div class="mini-arrow">↓</div>
+                      <div class="mini-node">
+                        A2A Task State / Artifact / Result → ActionProposal
+                      </div>
+                    </div>
+                    <p class="small">A2A는 독립 Agent System 간 업무 위임용이다.</p>
+                  </div>
+                </div>
+                <p class="explain-small"><small>
+                  여기서 실행 경로가 둘로 갈라집니다. 내부·외부 Team 모두 판단과 실행 방법을 제안하고,
+                  실제 Action은 Controller의 승인 경로를 거칩니다. 내부는 Message Broker, 외부는 A2A로
+                  결과(Artifact 포함)를 받아 같은 TeamResult로 정리합니다. Team끼리 직접 부르지는 않습니다.
+                </small></p>
+              </div>
+            </div>
+            <div class="da-arrow">
+              ↓
+              <span style="font-size: 14px; font-weight: 600; letter-spacing: 0"
+                >Local/Remote 결과를 TeamResult로 정규화</span
+              >
+            </div>
+            <div class="da-result-row">
+              <div class="da-box da-orange">
+                <strong>Shared State / State Repository</strong>Case 상태 · Local/A2A Task 상태 ·
+                Evidence · Version · Conflict
+              </div>
+              <div class="module-arrow">↺</div>
+              <div class="da-box da-violet">
+                <strong>Agentic Controller</strong>결과 평가 → END / Retry / Replan / 다른
+                Local·Remote Team 선택
+              </div>
+            </div>
+            <p class="explain-small"><small>
+              처리 결과를 Shared State에 올려두고, Controller가 "끝났는지, 다시 해야 하는지, 다른
+              Team에 넘겨야 하는지"를 판단합니다. Audit과 Trace를 남겨 왜 이렇게 처리됐는지 나중에
+              처음부터 되감아 볼 수 있습니다.
+            </small></p>
+            <div class="da-arrow">
+              ↓
+              <span style="font-size: 14px; font-weight: 600; letter-spacing: 0"
+                >Controller → Tool / Action Layer</span
+              >
+            </div>
+            <div class="da-box da-blue">
+              <strong>Tool / Action Layer</strong>ActionProposal 수신 · Permission · Human Approval
+              · Idempotency · Audit · 외부 Business API<br /><span class="role-chip role-core2"
+                >Core 2 · Access &amp; Action</span>
+                <p class="explain-small"><small>Controller가 승인 경로를 통과시킨 ActionProposal만 실제 조치(환불, 계정 변경 등)로 실행합니다. 권한·중복 실행을 확인하고 Audit을 남깁니다.</small></p>
+            </div>
+          </div>
+        </div>
+        <p class="small">
+          이 그림에서 읽을 것: Controller가 Team을 호출하고, TeamResult의 ActionProposal을 실행
+          계층에 위임한다.
+        </p>
+
+        <div class="why-box">
+          <strong>프로토콜 경계:</strong>
+              MCP는 Personal AI가 우리 Tool/Resource를 사용하는 경로,
+              A2A는 독립 Agent System끼리 Task를 위임하는 경로,
+              Message Broker는 우리 Runtime 내부의 Local Team Worker에게 Task/Event를 전달하는 경로다.
+        </div>
+<div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />도메인 팩의 설명이 “나중에 할 수도 있는 vision”에서 조건부로 정해진 연계축 계획으로 명확해졌습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: 지금 10주에 만드는 건 CS Pack, Commerce Ops Pack은 나중 계획(vision)<br />→ v8: CS Pack은 확정축, Commerce Ops는 검증 쇼핑몰과 일정에 맞춰 조정하는 연계축</blockquote>“나중에 할 수도”가 아니라, 검증 쇼핑몰이 정해지는 조건에 맞춰 이미 계획된 축입니다.</details></div><div class="acop-note"><strong>VOC &amp; Store Manager 경계:</strong> Case events·분류 결과·Action 결과를 받아 리포트·알림·위임 제안을 만들지만, 다른 Team을 직접 호출하지 않는다. Controller가 Task로 변환한다.</div>
+
+        <h3>3-3. 컴포넌트 사전</h3>
+        <p class="small">
+          각 카드는 클릭하면 기능·용어·입출력 설명이 펼쳐지고, 다시 클릭하면 접힌다.
+        </p>
+        <div class="component-grid">
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Agent Gateway</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">외부 요청의 인증·인가 경계</span>
+              <p class="cd-summary">
+                Web·Personal AI·원격 Agent System의 REST/MCP/A2A 요청을 내부 Case로 넘기기 전에
+                신원·권한·요청 대상을 검증한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>Access Token의 유효성·만료·대상을 검증한다.</li>
+                <li>사용자와 외부 AI Client를 식별한다.</li>
+                <li>요청 기능이 허용 Scope 안인지 검사한다.</li>
+                <li>고위험 요청은 추가 승인 정책으로 넘긴다.</li>
+                <li>
+                  A2A 요청의 원격 Agent 식별자, 대상 Agent, 요청 Capability와 인증 정보를 검증한다.
+                </li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Trust Boundary</strong
+                  ><span>외부 요청을 그대로 신뢰하지 않고 내부로 들어오기 전에 검증하는 경계.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>OAuth</strong
+                  ><span
+                    >비밀번호를 외부 AI에 주지 않고 제한된 접근 권한을 위임하는 표준 방식.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Access Token</strong
+                  ><span
+                    >인증된 Client가 허용된 API를 호출할 수 있음을 나타내는 짧은 수명의 인증
+                    정보.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Scope</strong><span>Token이 사용할 수 있는 기능 범위.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>A2A</strong
+                  ><span
+                    >독립적으로 실행되는 Agent System끼리 Capability와 Task를 주고받기 위한
+                    Agent-to-Agent 상호운용 방식.</span
+                  >
+                </div>
+              </div>
+              <div class="cd-io">
+                입력: REST / MCP / A2A 요청 + Token → 출력: 인증·인가된 내부 요청 Context
+              </div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Customer Case Layer</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">메시지를 지속 가능한 업무 Case로 변환</span>
+              <p class="cd-summary">
+                한 번의 문의를 단순 문자열이 아니라 상태·이력·승인·재개 지점을 가진 업무 단위로
+                관리한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>case_id를 발급하고 문의 원문과 상태를 보관한다.</li>
+                <li>현재 담당 Capability/Team과 남은 작업을 기록한다.</li>
+                <li>WAIT 상태에서 사용자 응답이나 승인을 기다렸다 재개한다.</li>
+                <li>상태 변경을 Event로 남겨 추적 가능하게 한다.</li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Case</strong
+                  ><span>하나의 고객 문제를 접수부터 해결까지 추적하는 업무 단위.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Lifecycle</strong
+                  ><span>Case가 생성·실행·대기·종료 상태를 거치는 전체 흐름.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Event</strong
+                  ><span>Case에서 일어난 상태 변화나 중요한 행위를 기록한 사실 데이터.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Checkpoint</strong
+                  ><span>실행을 멈춘 뒤 같은 상태에서 재개할 수 있게 저장한 지점.</span>
+                </div>
+              </div>
+              <div class="cd-io">입력: 승인된 고객 요청 → 출력: case_id + lifecycle state</div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Context Broker</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">판단에 필요한 Context Pack 구성</span>
+              <p class="cd-summary">
+                Vector RAG, Graph 관계 탐색, DB 현재 상태, Case History, Memory에서 필요한 정보만
+                골라 Controller/Team에 공급한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>현재 작업에 필요한 정보 종류를 결정한다.</li>
+                <li>RAG·DB·Memory 결과를 표준 Context Pack으로 조합한다.</li>
+                <li>중복/불필요한 정보를 줄여 Context 크기를 관리한다.</li>
+                <li>Team별 Knowledge Scope를 적용한다.</li>
+                <li>
+                  Vector Search가 찾은 관련 Entity를 Graph Store에서 1~2 hop 확장해 연결된
+                  Case·Issue·Policy·Action을 보강할 수 있다.
+                </li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Context</strong
+                  ><span>Agent가 현재 판단할 때 함께 받는 업무 상태·지식·이력 정보.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Context Pack</strong
+                  ><span>여러 원천의 정보를 현재 작업에 맞춰 정리한 표준 입력 묶음.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>RAG</strong
+                  ><span>생성 전에 외부 지식에서 관련 근거를 검색해 입력에 추가하는 구조.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Normalization</strong
+                  ><span>서로 다른 형식의 정보를 일관된 구조로 맞추는 과정.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>GraphRAG</strong
+                  ><span
+                    >벡터 유사도 검색 결과에 지식 그래프의 관계 탐색을 결합해 연결된 근거와 맥락을
+                    확장하는 검색 구조.</span
+                  >
+                </div>
+              </div>
+              <div class="cd-io">핵심 질문: “이 Agent가 지금 무엇을 알아야 하는가?”</div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Message Broker</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">Coordination의 비동기 Task / Event 전달</span>
+              <p class="cd-summary">
+                우리 Runtime 내부의 Local Team Worker에 Task/Event를 전달한다. 원격 Agent System과의
+                협업은 A2A Adapter가 담당한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>Controller가 발행한 Task를 Queue에 넣는다.</li>
+                <li>Team Worker가 Task를 소비해 실행하게 한다.</li>
+                <li>실패 작업의 Retry를 처리한다.</li>
+                <li>완료/오류 Event를 여러 구독자에게 전달할 수 있다.</li>
+                <li>
+                  Message Broker는 내부 Queue/Worker 통신용이며 외부 Agent 간 상호운용 프로토콜
+                  역할을 하지 않는다.
+                </li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Asynchronous</strong
+                  ><span>요청자가 작업 종료까지 계속 기다리지 않는 실행 방식.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Queue</strong><span>처리할 작업을 보관하는 대기열.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Retry</strong
+                  ><span>일시적 실패 작업을 정해진 정책에 따라 다시 실행하는 것.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Pub/Sub</strong
+                  ><span>Event를 발행하면 여러 구독자가 받아 처리하는 전달 방식.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Worker</strong
+                  ><span>Queue에서 Task를 가져와 실제 작업을 수행하는 실행 프로세스.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Internal Runtime</strong
+                  ><span
+                    >같은 서비스 또는 같은 운영 경계 안에서 Controller와 Worker가 작업을 전달하는
+                    실행 환경.</span
+                  >
+                </div>
+              </div>
+              <div class="cd-io">
+                소유 경계: Case Runtime &amp; Coordination. Controller가 정책을 결정하고 Broker
+                Adapter가 Task/Event를 전달한다.
+              </div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Agentic Controller</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">Case의 상위 의사결정·라우팅</span>
+              <p class="cd-summary">
+                현재 Case 상태를 보고 어떤 Team을 호출할지, 대기할지, 재계획할지, 종료할지 결정한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>필요 Capability를 판별한다.</li>
+                <li>Registry에서 적합한 Team Module을 찾는다.</li>
+                <li>TeamResult를 평가해 완료/재처리/위임을 결정한다.</li>
+                <li>
+                  같은 Case에 여러 Team이 동시에 접근할 수 있는지, owner가 누구인지, 충돌 시
+                  Retry/replan/Cancel 중 무엇을 할지 결정한다.
+                </li>
+                <li>추가 입력이나 승인이 필요하면 WAIT 상태로 전환한다.</li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Capability</strong><span>Team이 수행할 수 있다고 선언한 업무 능력.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Routing</strong
+                  ><span>업무를 어느 Team/실행 경로로 보낼지 선택하는 과정.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Replan</strong
+                  ><span>현재 계획으로 해결되지 않을 때 다음 처리 경로를 다시 구성하는 것.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>WAIT / RESUME</strong
+                  ><span>외부 입력을 기다리며 실행을 멈추고 이후 저장 상태에서 재개하는 방식.</span>
+                </div>
+              </div>
+              <div class="cd-io">
+                입력: Case State + Context + TeamResult → 출력: 다음 Team / WAIT / APPROVAL / END
+              </div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title" style="color: #6d28d9">Agent Team Slot</span
+                ><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role" style="background: #f5f3ff; color: #6d28d9"
+                >교체 가능한 Team Module 실행 경계</span
+              >
+              <p class="cd-summary">
+                LOCAL 실행 대상으로 선택된 Team Module이 표준 입력을 받고 TeamResult를 반환하는
+                자리다. REMOTE 실행 대상은 A2A Adapter를 통해 같은 논리 Contract로 호출한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>선택된 Team에 TeamTask/CaseContext를 전달한다.</li>
+                <li>Single-Agent, Multi-Agent, LangGraph, Rule/ML 혼합을 모두 허용한다.</li>
+                <li>결과는 표준 TeamResult 형태로 반환하게 한다.</li>
+                <li>Team 추가/교체가 Core 수정으로 이어지지 않게 한다.</li>
+                <li>
+                  Registry가 execution_type=LOCAL을 반환한 경우 Message Broker를 통해 이 Slot의
+                  Worker가 실행된다.
+                </li>
+                <li>
+                  execution_type=A2A이면 Remote Team Adapter가 TeamTask를 A2A Task로 변환한다.
+                </li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Module</strong
+                  ><span
+                    >외부 인터페이스를 지키면서 내부 구현을 독립적으로 교체할 수 있는 기능
+                    단위.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Team Contract</strong
+                  ><span>Core와 Team 사이의 입력·출력·권한·Capability 규칙.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>TeamTask</strong><span>Controller가 Team에 전달하는 표준 업무 요청.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>TeamResult</strong
+                  ><span>Team이 반환하는 상태·결과·근거·요청 Action 등의 표준 응답.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Subgraph</strong><span>Team 내부의 독립 상태 그래프.</span>
+                </div>
+              </div>
+              <div class="cd-io">입력: TeamTask / CaseContext → 출력: TeamResult</div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Shared State</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">현재 Case의 공식 단일 상태</span>
+              <p class="cd-summary">
+                여러 Team이 같은 Case를 이어 처리할 수 있도록 근거·결정·남은 작업·상태를 하나의
+                기준으로 저장한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>status, owner, open_tasks, evidence, decisions를 보관한다.</li>
+                <li>Team이 바뀌어도 이전 결과를 이어받게 한다.</li>
+                <li>
+                  version과 Optimistic Concurrency/CAS를 사용해 오래된 상태가 최신 상태를 덮어쓰지
+                  못하게 한다.
+                </li>
+                <li>Checkpoint와 결합해 중단/재개 상태를 복원한다.</li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Single Source of Truth</strong
+                  ><span>같은 Case의 현재 상태를 하나의 공식 데이터로 판단하는 원칙.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Evidence</strong
+                  ><span>결정을 내릴 때 사용한 문서·DB 사실·Tool 결과.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Open Task</strong><span>아직 해결되지 않은 남은 작업.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Version</strong
+                  ><span>상태 변경본 번호로 동시 수정 충돌을 판단하는 값.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Optimistic Concurrency</strong
+                  ><span
+                    >동시에 수정되는 경우가 드물다고 보고 평소에는 Lock을 잡지 않되, 저장 시 읽었던
+                    Version과 현재 Version이 같은지 확인해 충돌을 감지하는 방식.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>CAS</strong
+                  ><span
+                    >Compare-And-Set. “내가 읽은 값/Version이 아직 그대로일 때만 변경한다”는 원자적
+                    갱신 방식.</span
+                  >
+                </div>
+              </div>
+              <div class="cd-io">
+                Shared State = 현재 Case의 공식 상태 / Memory = 과거 경험·장기 보존 정보
+              </div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Tool / Action Layer</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">실제 외부 시스템을 변경하는 통제 계층</span>
+              <p class="cd-summary">
+                Agent가 DB나 결제 시스템을 직접 수정하지 않고, 권한과 안전 규칙이 적용된 업무 API로
+                작업하게 한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>조회·계정 변경·환불 요청·알림 같은 Tool을 제공한다.</li>
+                <li>호출 주체의 Scope를 검사한다.</li>
+                <li>
+                  같은 환불/변경 요청이 여러 번 도착해도 실제 Side Effect가 한 번만 발생하도록
+                  Idempotency를 적용한다.
+                </li>
+                <li>고위험 작업은 Human Approval 후 실행하고 Audit Log를 남긴다.</li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Business Capability API</strong
+                  ><span
+                    >DB 자체가 아니라 “구독 조회”, “환불 요청”처럼 실제 업무 기능 단위로 제공하는
+                    API.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Side Effect</strong
+                  ><span>DB 변경·환불·알림처럼 외부 상태를 실제로 바꾸는 작업.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Idempotency</strong
+                  ><span
+                    >같은 요청이 여러 번 들어와도 실제 작업은 한 번만 발생하도록 보장하는
+                    성질.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Audit</strong
+                  ><span>누가 언제 무엇을 실행했는지 추적할 수 있게 기록하는 것.</span>
+                </div>
+              </div>
+              <div class="cd-io">Agent는 원시 DB 수정 권한 대신 통제된 Tool을 호출</div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">Agent Team Registry</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">Capability → Team Module 탐색</span>
+              <p class="cd-summary">
+                등록된 Local Team과 Remote A2A Agent의 Capability, 실행 유형, 버전, Endpoint와
+                Scope를 관리하고 Controller가 적합한 실행 대상을 찾게 한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>어떤 Team이 어떤 Capability를 제공하는지 등록한다.</li>
+                <li>동일 Capability의 여러 버전 중 활성 버전을 선택한다.</li>
+                <li>Team별 Tool Scope와 Knowledge Scope를 관리한다.</li>
+                <li>새 Team을 추가/교체해도 Controller가 특정 클래스 이름에 의존하지 않게 한다.</li>
+                <li>
+                  execution_type이 LOCAL이면 내부 Team Module을, A2A이면 Remote Agent Endpoint를
+                  반환한다.
+                </li>
+                <li>Remote Agent의 Agent Card URL, A2A Endpoint와 인증 방식을 관리한다.</li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Registry</strong
+                  ><span
+                    >사용 가능한 Module과 기능 정보를 등록해 두고 필요할 때 찾는 목록/서비스.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Capability Mapping</strong
+                  ><span>필요 업무 능력을 그 능력을 수행하는 Team Module에 연결하는 규칙.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Version</strong
+                  ><span>같은 업무 Team의 여러 구현 세대를 구분하는 식별자.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Knowledge Scope</strong
+                  ><span>해당 Team이 검색·사용할 수 있는 지식 범위.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Tool Scope</strong><span>해당 Team이 호출할 수 있는 Tool 범위.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Execution Type</strong
+                  ><span
+                    >선택된 Capability를 내부 Module에서 실행할지, A2A를 통해 원격 Agent System에
+                    위임할지 나타내는 값.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Agent Card</strong
+                  ><span
+                    >원격 Agent가 제공하는 Capability, Endpoint, 인증 요구사항 등의 공개
+                    메타데이터.</span
+                  >
+                </div>
+              </div>
+              <div class="cd-io">입력: 필요한 Capability → 출력: 현재 사용할 Team Module 정보</div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">A2A Interop Adapter</span><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">독립 Agent System 간 Task 위임</span>
+              <p class="cd-summary">
+                Controller가 선택한 Remote Agent에게 표준 A2A Task를 전송하고 상태·결과·Artifact를
+                Customer Case와 연결한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>Registry가 반환한 Remote Agent Endpoint와 인증 방식을 사용한다.</li>
+                <li>TeamTask/CaseContext를 A2A Task 요청으로 변환한다.</li>
+                <li>
+                  원격 Task의 submitted/running/completed/failed 상태를 Case Event에 반영한다.
+                </li>
+                <li>Remote Agent가 반환한 결과와 Artifact를 TeamResult 형태로 정규화한다.</li>
+                <li>
+                  Timeout·중복 Task·원격 실패 시 Retry/Replan 정책에 필요한 정보를 Controller에
+                  반환한다.
+                </li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>A2A</strong
+                  ><span
+                    >한 Agent System이 다른 독립 Agent System에 업무를 위임하고 결과를 받기 위한
+                    상호운용 방식.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Remote Agent</strong
+                  ><span
+                    >우리 프로세스 안에서 직접 실행되지 않고 네트워크를 통해 호출되는 외부 또는 독립
+                    배포 Agent System.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Agent Card</strong
+                  ><span
+                    >Agent가 제공하는 Capability, Endpoint, 인증 방식 등을 설명하는
+                    메타데이터.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Artifact</strong
+                  ><span
+                    >원격 Agent가 Task 결과로 반환하는 문서·구조화 데이터·파일·분석 결과 등의
+                    산출물.</span
+                  >
+                </div>
+              </div>
+              <div class="cd-io">
+                입력: TeamTask + Remote Agent metadata → 출력: A2A Task 상태 + 정규화된 TeamResult
+              </div>
+            </div>
+          </details>
+          <details class="component-detail">
+            <summary>
+              <div class="cd-title-row">
+                <span class="cd-title">GraphStorePort (MVP: SQL Adapter)</span
+                ><span class="cd-toggle"></span>
+              </div>
+              <span class="cd-role">관계 기반 Context 확장</span>
+              <p class="cd-summary">
+                Case·Issue·Policy·Product·Agent Team·Action 사이의 연결을 Graph로 표현하고, Vector
+                Search가 찾은 대상 주변 관계를 탐색해 Context를 보강한다.
+              </p>
+            </summary>
+            <div class="cd-body">
+              <h4>정확한 역할과 기능</h4>
+              <ul>
+                <li>관계형 DB의 핵심 데이터를 Node/Edge 형태의 Graph Projection으로 동기화한다.</li>
+                <li>Vector Search 결과 Entity에서 1~2 hop 관계를 탐색한다.</li>
+                <li>반복 VOC, 동일 Issue-Product-Version 패턴, 유사 Case 처리 이력을 찾는다.</li>
+                <li>Agent Team과 Capability·Tool·Knowledge 관계 탐색을 확장할 수 있다.</li>
+                <li>Customer Case 상태와 결제/Action Transaction의 원본 DB를 대체하지 않는다.</li>
+              </ul>
+              <h4>용어 해설</h4>
+              <div class="cd-terms">
+                <div class="cd-term">
+                  <strong>Graph Database</strong
+                  ><span
+                    >데이터를 표의 행보다 Node와 Edge 관계 중심으로 저장·탐색하는
+                    데이터베이스.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Node</strong
+                  ><span
+                    >Customer, Case, Issue, Policy처럼 하나의 개체를 나타내는 그래프 요소.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Edge</strong
+                  ><span
+                    >REPORTED, HAS_ISSUE, GOVERNED_BY처럼 두 Node 사이의 관계를 나타내는 연결.</span
+                  >
+                </div>
+                <div class="cd-term">
+                  <strong>Hop</strong
+                  ><span>그래프 관계선을 몇 단계 따라 이동했는지를 나타내는 거리.</span>
+                </div>
+                <div class="cd-term">
+                  <strong>Projection</strong
+                  ><span
+                    >관계형 원본 데이터를 그래프 탐색용 Node/Edge 구조로 변환해 만든 파생
+                    데이터.</span
+                  >
+                </div>
+              </div>
+              <div class="cd-io">
+                원칙: PostgreSQL/Shared State = 거래·상태의 Source of Truth / GraphStorePort = 관계
+                조회 Adapter
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+      <section class="section">
+        <p class="small">
+          컴포넌트 사전의 핵심 6개는 Gateway, Case Layer, Context Broker, Controller, Agent Team,
+          Shared State다. Registry·Broker·Tool/Action·Graph adapter는 계획서에서 상세히 다룬다.
+        </p>
+        <h2>3-4. Agent/Team 경합과 동시성 처리 책임 <span class="small">계획서 8-C</span></h2>
+        <p class="lead">
+          <strike>경합 처리를 “Coordination 정책 담당”과 “Backend CAS 구현 담당”으로 사람을 다시 쪼개지
+          않는다.
+          <strong
+            >같은 Customer Case의 실행·상태 경합은 Core 1이 정책부터 DB 무결성까지 end-to-end로
+            담당</strong
+          >한다. 반면 실제 환불·계정변경 같은 외부 Action의 중복 실행은 Core 2가 담당한다.</strike><br/>
+          원래 흔한 방식이라면 "정책을 정하는 사람"과 "실제로 DB가 안 깨지게 구현하는 사람"을 서로 다른 담당자로 나눌 법한데, 여기서는 그렇게 쪼개지 않겠다는 뜻입니다. 대신 "같은 고객 문제(Case) 하나를 여러 팀이 동시에 처리하려고 할 때 생기는 충돌"은 Core 1 담당자가 규칙을 정하는 것부터 실제 데이터베이스가 꼬이지 않게 만드는 것까지 처음부터 끝까지 혼자 책임집니다.
+          반면 "실제로 환불을 하거나 계정을 바꾸는 것 같은, 진짜 바깥 시스템에 영향을 주는 조치가 실수로 두 번 실행되는 문제"는 Core 1이 아니라 Core 2 담당자가 책임집니다.
+        </p>
+        <p class="small">
+          코드의 책임 경계와 사람의 담당 경계를 똑같이 만들 필요는 없다. 코드에서는 Coordination과
+          State/Tool Layer를 분리하되, 사람은 Core 1이 Case Runtime을 end-to-end로 담당한다.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>경합/중복 문제</th>
+                <th>처리 방식</th>
+                <th>담당 영역</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>두 Team이 같은 Case를 동시에 처리</td>
+                <td>Ownership, 병렬 허용 여부, 실행 순서, Retry/replan/Cancel 정책</td>
+                <td><strong>Core 1 · Case Runtime &amp; Coordination</strong></td>
+              </tr>
+              <tr>
+                <td>같은 Shared State를 동시에 UPDATE</td>
+                <td>version, Optimistic Concurrency, CAS, Transaction으로 충돌 감지·차단</td>
+                <td><strong>Core 1 · Case Runtime &amp; Coordination</strong></td>
+              </tr>
+              <tr>
+                <td>State Conflict 발생 후 다음 행동</td>
+                <td>최신 State 재조회 → 결과 유효성 판단 → Retry 또는 Replan</td>
+                <td><strong>Core 1 · Case Runtime &amp; Coordination</strong></td>
+              </tr>
+              <tr>
+                <td>같은 환불/계정 변경 Action이 중복 호출</td>
+                <td>Idempotency Key, Permission, Approval, Audit로 Side Effect 1회 보장</td>
+                <td><strong>Core 2 · Access &amp; Action Platform</strong></td>
+              </tr>
+              <tr>
+                <td>한 Agent Team 내부 Agent끼리 경합</td>
+                <td>Team 내부 Subgraph/State/merge/retry 정책으로 해결</td>
+                <td><strong>각 Agent Team Module</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="why-box">
+          <strong>중요:</strong>
+          코드 컴포넌트는 Controller, State Repository, Message Broker, Tool Gateway처럼 분리한다.
+          하지만 사람 역할은 이 컴포넌트 이름대로 잘게 쪼개지 않고,
+          <strong>하나의 기능 흐름을 끝까지 책임하는 수직 영역</strong>으로 묶는다.
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 여러 팀이 동시에 같은 고객 문제를 건드리면 꼬일 수 있습니다. 이 표는 "누가
+          그 꼬임을 정리할 책임을 지는지"를 정한 겁니다. 같은 Case를 여러 팀이 동시에 건드리는
+          문제나 같은 데이터를 동시에 수정하는 문제는 Core 1(사건 처리 담당) 팀이 처음부터 끝까지
+          책임지고, 실제 환불·계정변경 같은 바깥 시스템에 영향을 주는 조치가 중복 실행되지 않게 막는
+          건 Core 2(접근·실행 담당) 팀이 책임집니다. 코드상 기능은 잘게 나뉘어 있어도, 사람(팀원)은
+          하나의 업무 흐름을 처음부터 끝까지 맡아서, "내 담당이 아니다"라며 책임을 떠넘기는 일이
+          없게 합니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>4. 핵심 Workflow</h2>
+        <div class="acop-note">
+          <strong>왜 4-1을 단순화해서 표현하나?</strong><br/>
+          <strike> Level 1/2는 “Case가 어느 Team으로 가고 다시
+          돌아오는지”를 보여주는 상위 Graph이고, 실제 Team 내부에는 각자 별도의 LangGraph/Subgraph가
+          존재할 수 있다. 상위 Graph와 내부 Graph를 한 그림에 모두 펼치면 흐름이 오히려 읽히지 않기
+          때문에 계층을 나눈다.</strike><br/>
+          "Level 1(3-1. Level 1 전체 흐름)"과 "Level 2(4-2. Customer Case Orchestration)"는 "고객 문제(Case)가 어느 팀에 배정되고, 처리된 뒤 다시 어떻게 돌아오는지"만 보여주는 큰 흐름도입니다. 팀 내부에서 실제로 무슨 일이 일어나는지는 자세히 안 보여줍니다.
+          반면 각 팀 내부에는 자기들만의 세부 작업 순서도(LangGraph/Subgraph)가 따로 있을 수 있습니다. 팀마다 내부 구조가 다를 수 있다는 뜻입니다.
+          만약 이 "큰 흐름"과 "팀 내부 세부 흐름"을 하나의 그림에 다 때려 넣으면, 정보가 너무 많아져서 오히려 무슨 일이 일어나는지 알아보기 어려워집니다. 그래서 일부러 그림을 두 층으로 나눠서, 큰 흐름은 큰 흐름대로 팀 내부는 팀 내부대로 따로 보여주는 겁니다.
+        </div>
+        <h3>4-1. Graph 계층 구조</h3>
+        <p class="small">
+          이 그림에서 읽을 것: Top-Level Case Graph가 Team별 내부 Subgraph를 호출한다.
+        </p>
+        <div class="acop-flow">
+          <div class="acop-node purple">
+            Top-Level Case Graph<br /><small>Routing · WAIT/RESUME · Approval · Replan · End</small>
+          </div>
+          <div class="acop-arrow">↓</div>
+          <div class="acop-team-grid">
+            <div class="acop-team">
+              Team A Subgraph<small>자체 Graph / Agents / RAG / Tools</small>
+            </div>
+            <div class="acop-team">Team B Subgraph<small>완전히 다른 내부 구성 가능</small></div>
+            <div class="acop-team">Team C Runtime<small>Graph 없이 Rule/ML 조합도 가능</small></div>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 전체 흐름은 두 층으로 나뉩니다. 위층(Top-Level Case Graph)은 "이 문제가 어느
+          팀으로 가고, 다시 우리한테 언제 돌아오는지"만 큰 그림으로 관리합니다. 각 팀
+          내부(아래층)에서 실제로 어떻게 일하는지는 팀마다 완전히 다를 수 있습니다. 어떤 팀은
+          자체적으로 복잡한 순서도(Subgraph)를 쓰고, 어떤 팀은 그래프 없이 단순한 규칙이나
+          머신러닝만으로 처리할 수도 있습니다. 위층이 아래층 내부 구현 방식까지 신경 쓸 필요는
+          없다는 뜻입니다.
+        </div>
+        <div class="acop-graph-grid" style="margin-top: 16px">
+          <div class="card">
+            <span class="acop-level">Level 2 · Top-Level Graph</span>
+            <h3>4-2. Customer Case Orchestration</h3>
+            <div class="mono">Customer Case
+      ↓
+Agentic Controller
+      ↓
+Capability / Shared State 판단
+      ↓
+Agent Team 선택
+      ↓
+선택된 Team Subgraph 실행
+      ↓
+TeamResult + Shared State 갱신
+      ↓
+해결 여부 평가
+ ├─ 해결됨 → 응답 / Case 종료
+ ├─ 추가 정보 필요 → WAIT → 사용자 응답 → RESUME
+ ├─ 고위험 Action → Human Approval → 승인 후 재개
+  └─ 미해결 / 다른 Capability 필요 → Replan → 다른 Team 선택</div>
+            <p class="small">
+              이 그림에서 읽을 것: Case는 Team을 거치며 TeamResult와 Shared State로 다시 합쳐진다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 고객 문제가 접수되면 관제탑(Controller)이 "이건 어떤 능력이 필요한
+              일이지?"를 판단해서 알맞은 팀을 고릅니다. 그 팀이 일을 처리한 결과를 받아서 "다
+              해결됐는지" 평가하는데, 해결됐으면 답변하고 끝내고, 정보가 더 필요하면 사용자에게
+              물어보고 기다렸다가(WAIT) 답이 오면 이어서 처리하고(RESUME), 위험한 조치(예: 환불)가
+              필요하면 사람 승인을 받은 뒤 진행하고, 아직 안 풀렸으면 다른 팀에게 다시
+              맡깁니다(Replan).
+            </div>
+          </div>
+          <div class="card">
+            <span class="acop-level">Level 3 · Team Subgraph</span>
+            <h3>4-3. Agent Team 내부 예시</h3>
+            <div class="mono">START
+  ↓
+현재 Context 충분?
+  ├─ NO → Controller가 Context Broker에 추가 조회 요청 ─┐
+ └─ YES                                            │
+      ↓                                             │
+   업무 계획 수립 ←─────────────────────────────────┘
+      ↓
+    ActionProposal 생성
+       ↓
+    Controller가 Tool / Action Layer에 위임
+       ↓
+    ActionResult 수신·결과 검증
+   ├─ PASS → TeamResult
+    └─ FAIL → Replan / Retry → 업무 계획 수립</div>
+            <p class="small">
+              이 그림에서 읽을 것: Team은 읽기 원천과 Tool을 직접 호출하지 않고 ActionProposal을
+              반환한다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 각 팀이 실제로 일하는 순서입니다. 먼저 정보가 충분한지 확인하고,
+              부족하면 더 요청합니다. 정보가 갖춰지면 "이렇게 처리하겠다"는 계획(ActionProposal)만
+              세우고, 실제 실행(환불 등)은 팀이 직접 하지 않고 별도의 실행 담당(Tool/Action
+              Layer)에게 넘깁니다. 이는 팀이 마음대로 시스템을 건드리지 못하게 하는 안전장치입니다.
+              결과가 잘 됐으면 끝내고, 실패했으면 다시 계획을 세웁니다.
+            </div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top: 16px">
+          <div class="card">
+            <h3>4-4. 개인 AI 연동 흐름</h3>
+            <div class="mono">사용자
+↓
+Personal AI
+↓
+OAuth 로그인 / Consent / Scope 승인
+↓
+Agent API / MCP
+↓
+Customer Case 생성·조회·작업 요청
+↓
+내부 Agentic System 처리
+↓
+결과 반환</div>
+            <p class="small">
+              이 그림에서 읽을 것: Personal AI는 사용자 권한으로 Case 요청을 전달한다.
+            </p>
+            <div class="acop-note">
+              💬 쉬운 설명: 사용자가 평소 쓰는 ChatGPT나 Claude 같은 개인 AI에게 부탁하면, 그 AI가
+              먼저 "이 사용자를 대신해서 접근해도 되는지" 로그인·동의 절차를 거칩니다. 허락이
+              떨어지면 우리 서비스에 정해진 방식(MCP)으로 접속해서 문의를 등록하고 처리를 요청하며,
+              결과를 다시 그 개인 AI를 통해 사용자에게 돌려줍니다.
+            </div>
+          </div>
+          <div class="card">
+            <h3>4-5. Message Broker는 Coordination 축에 위치</h3>
+            <div class="mono">Agentic Controller
+      │
+      │ Team / Task / Retry 정책 결정
+      ▼
+Message Broker / Message Bus
+      │
+      │ Queue · Delivery · Retry · Event
+      ▼
+Agent Team Worker / Slot
+      │
+      └─ result/event → Broker → Controller</div>
+            <p>
+              <strong>Controller가 결정하고 Broker가 전달한다.</strong> Broker 자체는 어떤 Team이
+              적합한지 판단하지 않는다.
+            </p>
+            <p class="small">이 그림에서 읽을 것: Message Broker는 Coordination의 전달 계층이다.</p>
+            <p class="small">
+              <strong>논리적 소유:</strong> Case Runtime &amp; Coordination<br />
+              <strong>실제 구현:</strong> MessageBus Port + in-process / Redis / Redis Streams /
+              RabbitMQ Adapter
+            </p>
+            <div class="boundary-note">
+              Context Broker = “무엇을 알아야 하는가?” / Message Broker = “결정된 Task/Event를
+              어떻게 전달하는가?”
+            </div>
+            <div class="acop-note">
+              💬 쉬운 설명: 관제탑(Controller)이 "이 일은 A팀에게 맡기자"라고 결정하면, 우체국 같은
+              역할을 하는 Message Broker가 그 지시를 실제로 A팀에게 전달합니다. Message Broker는
+              스스로 어느 팀이 적합한지 판단하지 않고, 오직 정해진 대로 전달·재시도만 담당합니다.
+              참고로 "무엇을 알아야 하는지"를 챙기는 Context Broker와는 역할이 다릅니다.
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 16px">
+          <h3>4-6. Local Team과 Remote A2A Team 실행</h3>
+          <p class="small">
+            LangGraph 체크포인터는 <strong>AsyncPostgresSaver</strong>를 사용하고,
+            <code>thread_id</code>는 <code>case_id</code>에 매핑한다.
+          </p>
+          <div class="mono">Agentic Controller
+      ↓
+Agent Team Registry
+      ↓
+execution_type?
+ ├─ LOCAL
+ │    ↓
+ │ Message Broker → Local Team Slot
+ │    ↓
+ │ TeamResult
+ │
+ └─ A2A
+      ↓
+   A2A Adapter → Remote Agent
+      ↓
+   A2A Task State / Artifact
+      ↓
+   TeamResult로 정규화
+
+TeamResult
+      ↓
+Shared State 갱신
+      ↓
+END / Retry / Replan</div>
+          <p class="small">
+            이 그림에서 읽을 것: Local과 Remote는 같은 TeamResult Contract로 Case에 돌아온다.
+          </p>
+          <div class="acop-note">
+            💬 쉬운 설명: 관제탑이 등록부(Registry)에 "이 일을 처리할 팀"을 물어보면, 그 일을 우리
+            내부 팀이 처리할지(LOCAL) 아니면 외부의 독립된 AI 조직에 맡길지(A2A)가 결정됩니다. 내부
+            팀이면 우체국(Message Broker)을 거쳐 바로 처리되고, 외부에 맡기면 A2A라는 표준 방식으로
+            일을 넘기고 결과를 받아옵니다. 둘 중 어느 경로로 처리됐든 결과는 같은
+            형식(TeamResult)으로 정리되어 다시 하나의 Case 안으로 합쳐집니다.
+          </div>
+        </div>
+      </section>
+      <section class="section">
+        <h2>5. 폴더 구조</h2>
+        <p class="lead">
+          폴더는 외부 인터페이스, Case Runtime, Access/Action, 인프라, Team Module로 나눈다. 세부
+          경로와 파일명은 구현계획서에서 관리한다.
+        </p>
+        <div class="folder-tree">project/
+├─ app/
+│  ├─ presentation/                              # 외부 요청/응답 경계
+│  │  ├─ api/                                   # [Core2] REST/OpenAPI endpoint
+│  │  ├─ mcp/                                   # [Core2] Personal AI용 MCP endpoint
+│  │  ├─ a2a/                                   # [Core2] Remote Agent A2A ingress / Agent Card
+│  │  ├─ web/                                   # [UX] 사용자/운영자 UI 연결
+│  │  └─ schemas/                               # REST/MCP/A2A Request·Response DTO
+│  │
+│  ├─ core/
+│  │  ├─ case_runtime/                          # [Core1] Customer Case 실행 전체
+│  │  │  ├─ case/                               # Lifecycle, Event, owner, status
+│  │  │  ├─ orchestration/                      # Controller, Top-Level LangGraph, routing/replan
+│  │  │  ├─ state/                              # Shared State, checkpoint, version
+│  │  │  ├─ concurrency/                        # CAS, Optimistic Concurrency, conflict
+│  │  │  ├─ registry/                           # Local/A2A Team Registry, Capability resolution
+│  │  │  ├─ messaging/                          # Local MessageBus Port, Task/Event
+│  │  │  ├─ remote_team/                        # RemoteTeamPort, A2A Task lifecycle mapping
+│  │  │  ├─ context/
+│  │  │  │  ├─ broker/                          # Context Broker orchestration
+│  │  │  │  ├─ vector_retrieval/                # Vector RAG Port
+│  │  │  │  ├─ graph_retrieval/                 # GraphStorePort (MVP: SQL Adapter)
+│  │  │  │  └─ memory/                          # Memory Port
+│  │  │  └─ contracts/                          # TeamTask, TeamResult, CaseContext, RemoteTask
+│  │  │
+│  │  ├─ access_action/                         # [Core2] 외부 진입과 실제 Action 실행
+│  │  │  ├─ gateway/                            # Agent Gateway / Trust Boundary
+│  │  │  ├─ auth/                               # OAuth, Token, Scope, Agent Identity
+│  │  │  ├─ interop/
+│  │  │  │  ├─ mcp/                             # MCP transport/auth
+│  │  │  │  └─ a2a/                             # A2A HTTP/Auth/Agent Card Adapter
+│  │  │  ├─ tools/                              # Tool / Action Gateway
+│  │  │  ├─ approval/                           # 고위험 Action 승인
+│  │  │  ├─ idempotency/                        # 중복 Side Effect 방지
+│  │  │  └─ audit/                              # Action / 외부 Agent 호출 추적
+│  │  │
+│  │  └─ shared/
+│  │     ├─ errors/                              # Conflict, RemoteAgentError 등 공통 오류
+│  │     └─ observability/                       # Local/A2A trace/log/metric 형식
+│  │
+│  ├─ infrastructure/
+│  │  ├─ db/                                    # PostgreSQL Source of Truth
+│  │  ├─ vectorstore/                           # pgvector / Vector Search Adapter
+│  │  ├─ graphstore/                            # Graph DB / SQL-PGQ / graph extension Adapter
+│  │  ├─ graph_projection/                      # RDB Event → Node/Edge Projection 동기화
+│  │  ├─ messaging/                             # in-process/Redis/Redis Streams/RabbitMQ
+│  │  ├─ a2a/                                   # A2A Client/Server transport 구현
+│  │  ├─ auth/                                  # OAuth/Token 검증 Adapter
+│  │  ├─ integrations/                          # 결제·계정·알림 외부 Business API
+│  │  └─ llm/                                   # LLM Provider Adapter
+│  │
+│  └─ modules/
+│     └─ customer_ops/
+│        ├─ team_modules/
+│        │  ├─ local_team_a/                    # 내부 Local Team Module
+│        │  ├─ local_team_b/
+│        │  └─ remote_team_demo/                # A2A로 독립 배포 가능한 PoC Team
+│        └─ feedback/                           # 감성·의도·이슈 분석 Capability
+│
+├─ tests/
+│  ├─ case_runtime/                             # State/Concurrency/Local-A2A routing
+│  ├─ access_action/                            # OAuth/MCP/A2A/Auth/Idempotency
+│  ├─ graph_retrieval/                          # Vector-only vs Vector+Graph 평가
+│  ├─ team_modules/                             # Team별 Agent/RAG/Memory 평가
+│  └─ e2e/                                      # Personal AI / Remote Agent / Local Team 시나리오
+└─ docs/                                        # ADR, Agent Card, Team Contract, Graph Model</div>
+        <div class="acop-note">
+          💬 쉬운 설명: 실제 코드를 어떻게 폴더로 나눌지 보여주는 설계도입니다. 크게 "외부에서
+          들어오는 요청을 받는 부분", "고객 문제(Case)를 실제로 처리하는 핵심 부분(Core 1)", "권한
+          확인·실제 조치 실행 부분(Core 2)", "DB·메시지 큐 같은 인프라 연결 부분", "각 업무팀
+          모듈"로 나뉩니다. 개발자가 아니라면 세부 폴더명까지 볼 필요는 없고, "역할별로 코드를
+          깔끔하게 나눠서 관리한다" 정도로 이해하시면 됩니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>6. 모듈형 Basement 구조</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>Core Runtime</h3>
+            <span class="pill">Case / Shared State</span>
+            <span class="pill">Controller / LangGraph</span>
+            <span class="pill">Team Registry</span>
+            <span class="pill">Message Bus</span>
+            <span class="pill">Concurrency</span>
+            <p class="small">Local/A2A Team을 동일 Case lifecycle 안에서 조정한다.</p>
+          </div>
+          <div class="card">
+            <h3>Agent Interoperability</h3>
+            <span class="pill">REST / OpenAPI</span>
+            <span class="pill">MCP</span>
+            <span class="pill">A2A</span>
+            <span class="pill">OAuth / Scope</span>
+            <span class="pill">Agent Card</span>
+            <p class="small">Personal AI의 Tool 접근과 독립 Agent System의 Task 협업을 분리한다.</p>
+          </div>
+          <div class="card">
+            <h3>Context &amp; Knowledge</h3>
+            <span class="pill">Vector RAG</span>
+            <span class="pill">GraphStorePort (MVP: SQL Adapter)</span>
+            <span class="pill">GraphRAG</span>
+            <span class="pill">DB State</span>
+            <span class="pill">Memory</span>
+            <p class="small">
+              Vector는 유사성을, Graph는 연결 관계를 탐색해 Context Pack을 만든다.
+            </p>
+          </div>
+          <div class="card">
+            <div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />Agent Team Modules pill 목록도 새 2+4 구조로 바뀌었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: Billing / Technical / VOC / Catalog &amp; Verification<br />→ v8: VOC &amp; Store Manager / Response Generation &amp; Review + Commerce Ops 연계축 4팀</blockquote>CS 확정축과 쇼핑몰 연계축을 본문 목록에서 바로 구분할 수 있게 되었습니다.</details></div><h3>Agent Team Modules</h3>
+            <span class="pill">VOC &amp; Store Manager</span>
+            <div class="v8-overlay v8-added"><span class="v8-badge">🆕 v8 추가</span><br />Response Generation &amp; Review가 새 정식 Team으로 승격되어 Agent Team Modules에 추가되었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: Billing Team / Technical Team / VOC Team 중심<br />→ v8: Response Generation &amp; Review가 CS Pack 확정축의 별도 Team으로 추가</blockquote>DoD 29번 검증 항목과 연결되는 변경입니다.</details></div><span class="pill">Response Generation &amp; Review</span>
+            <span class="pill">Procurement + Order &amp; Payment</span>
+            <span class="pill">Catalog &amp; Verification Remote Team</span>
+            <span class="pill">Own Subgraph</span>
+            <span class="pill">Own RAG/Memory Policy</span>
+            <span class="pill">Own Tools</span>
+            <p class="small">
+              동일 Team Contract 아래 내부 구성과 배포 방식은 독립적으로 설계한다.
+            </p>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: A-COP은 레고 블록처럼 4가지 큰 덩어리로 이루어져 있습니다. ① 어떤 업종에나
+          똑같이 필요한 공통 뼈대(Core Runtime), ② 다른 AI들과 연결하는 통로(Agent
+          Interoperability), ③ 판단에 필요한 정보를 모아주는 부분(Context & Knowledge), ④ 실제
+          업무를 처리하는 전문 팀들(Agent Team Modules)입니다. 이 중 팀 모듈은 "정해진
+          규칙(Contract)"만 지키면 내부를 어떻게 만들든 자유롭기 때문에, 새로운 업무가 생기면 팀만
+          새로 추가하면 됩니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>7. 주요 데이터 구조</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>7-1. Customer Case Schema</h3>
+            <div class="mono">{
+  "case_id": "CASE-1204",
+  "status": "investigating",
+  "owner_team_id": "team_module_a",
+  "version": 7,
+  "approval_state": "pending"
+}</div>
+            <p class="small">
+              owner_team_id는 현재 Case의 소유 Team이다. 실행에 선택된 Team은 agent_runs.team_id로
+              구분한다.
+            </p>
+          </div>
+          <div class="card">
+            <h3>7-2. Agent Team Registry Schema</h3>
+            <div class="mono">{
+  "team_id": "team_module_a",
+  "capabilities": [
+    "subscription_issue",
+    "refund_review"
+  ],
+  "execution_type": "LOCAL | A2A",
+  "version": "1.2.0",
+  "entrypoint": "modules.customer_ops.team_a:run",
+  "agent_card_url": "https://remote.example/.well-known/agent-card.json",
+  "a2a_endpoint": "https://remote.example/a2a",
+  "auth_scheme": "oauth2",
+  "allowed_tools": [
+    "subscription.read",
+    "refund.request"
+  ],
+  "knowledge_scope": [
+    "subscription_policy"
+  ],
+  "status": "active"
+}</div>
+          </div>
+          <div class="card">
+            <h3>7-3. 연동·Graph 데이터</h3>
+            <p>
+              A2A Task는 <code>case_id</code>, 원격 Team, 상태, 결과 참조, idempotency key로
+              연결한다. Graph는 Customer·Case·Issue·Product·Policy·Team·Action 관계를 파생 데이터로
+              관리한다.
+            </p>
+            <p class="small">필드 전문과 예시는 구현계획서를 참조한다.</p>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 이 부분은 시스템이 내부적으로 저장하는 데이터의 실제 형태(예시)입니다. 7-1은
+          "고객 문제 하나(Case)"를 어떤 정보로 저장하는지(문제 번호, 상태, 담당 팀, 승인 상태 등),
+          7-2는 "어떤 팀이 어떤 일을 할 수 있는지"를 등록해두는 명단 형식, 7-3은 외부 AI와 주고받은
+          작업 기록과, 고객·문제·상품·정책·팀·조치 사이의 연결 관계를 저장하는 방식입니다. 개발자가
+          실제 구현할 때 참고하는 자료라서, 일반 독자는 "이런 정보들을 체계적으로 저장해둔다" 정도만
+          알면 충분합니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>8. ERD(개념 수준)</h2>
+        <p class="lead">
+          Customer Case의 직접 자식 관계는 위·아래로 단순화하고,
+          <strong>agent_team_registry</strong>와 <strong>knowledge_documents</strong>는 요청대로
+          <strong>agent_runs의 좌측 아래</strong>에 배치했다.
+        </p>
+        <div class="diagram" style="overflow-x: auto">
+          <svg
+            aria-label="A-COP ERD"
+            style="display: block; width: 100%; height: auto; min-width: 1120px"
+            viewbox="0 0 1400 760"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <style>
+                text {
+                  font-family: Arial, "Noto Sans KR", sans-serif;
+                  stroke: none;
+                }
+                .eb {
+                  fill: #fff;
+                  stroke: #cbd5e1;
+                  stroke-width: 1.5;
+                }
+                .ehb {
+                  fill: #eff6ff;
+                }
+                .ehv {
+                  fill: #f5f3ff;
+                }
+                .ehg {
+                  fill: #f0fdf4;
+                }
+                .et {
+                  font-size: 14px;
+                  font-weight: 800;
+                  fill: #0f172a;
+                }
+                .ef {
+                  font-size: 12px;
+                  font-weight: 600;
+                  fill: #334155;
+                }
+                .er {
+                  fill: none;
+                  stroke: #64748b;
+                  stroke-width: 2;
+                  marker-end: url(#ea);
+                }
+                .esoft {
+                  fill: none;
+                  stroke: #7c3aed;
+                  stroke-width: 2;
+                  stroke-dasharray: 7 5;
+                  marker-end: url(#ep);
+                }
+              </style>
+              <marker
+                id="ea"
+                markerheight="6"
+                markerwidth="6"
+                orient="auto"
+                refx="9"
+                refy="5"
+                viewbox="0 0 10 10"
+              >
+                <path d="M0 0 L10 5 L0 10 Z" fill="#64748b"></path>
+              </marker>
+              <marker
+                id="ep"
+                markerheight="6"
+                markerwidth="6"
+                orient="auto"
+                refx="9"
+                refy="5"
+                viewbox="0 0 10 10"
+              >
+                <path d="M0 0 L10 5 L0 10 Z" fill="#7c3aed"></path>
+              </marker>
+            </defs>
+            <!-- top row -->
+            <g transform="translate(25,30)">
+              <rect class="eb" height="138" rx="12" width="220"></rect>
+              <rect class="ehb" height="32" rx="12" width="220"></rect>
+              <rect class="ehb" height="12" width="220" y="20"></rect>
+              <text class="et" text-anchor="middle" x="110" y="22">external_ai_clients</text>
+              <text class="ef" x="12" y="57">PK connection_id</text>
+              <text class="ef" x="12" y="80">FK user_id</text>
+              <text class="ef" x="12" y="103">provider / client_id</text>
+              <text class="ef" x="12" y="126">scopes / status</text>
+            </g>
+            <g transform="translate(290,30)">
+              <rect class="eb" height="116" rx="12" width="190"></rect>
+              <rect class="ehb" height="32" rx="12" width="190"></rect>
+              <rect class="ehb" height="12" width="190" y="20"></rect>
+              <text class="et" text-anchor="middle" x="95" y="22">users</text>
+              <text class="ef" x="12" y="57">PK user_id</text>
+              <text class="ef" x="12" y="80">email</text>
+              <text class="ef" x="12" y="103">name</text>
+            </g>
+            <g transform="translate(540,30)">
+              <rect class="eb" height="150" rx="12" width="250"></rect>
+              <rect class="ehv" height="32" rx="12" width="250"></rect>
+              <rect class="ehv" height="12" width="250" y="20"></rect>
+              <text class="et" text-anchor="middle" x="125" y="22">customer_cases</text>
+              <text class="ef" x="12" y="57">PK case_id</text>
+              <text class="ef" x="12" y="80">FK user_id</text>
+              <text class="ef" x="12" y="103">capability / status</text>
+              <text class="ef" x="12" y="126">owner / version</text>
+              <text class="ef" x="12" y="146">approval_state</text>
+            </g>
+            <g transform="translate(850,30)">
+              <rect class="eb" height="138" rx="12" width="230"></rect>
+              <rect class="ehv" height="32" rx="12" width="230"></rect>
+              <rect class="ehv" height="12" width="230" y="20"></rect>
+              <text class="et" text-anchor="middle" x="115" y="22">case_events</text>
+              <text class="ef" x="12" y="57">PK event_id</text>
+              <text class="ef" x="12" y="80">FK case_id</text>
+              <text class="ef" x="12" y="103">event_type / payload</text>
+              <text class="ef" x="12" y="126">created_at</text>
+            </g>
+            <path class="er" d="M245 90 H290"></path>
+            <path class="er" d="M480 88 H540"></path>
+            <path class="er" d="M790 96 H850"></path>
+            <!-- case child row -->
+            <g transform="translate(330,285)">
+              <rect class="eb" height="150" rx="12" width="230"></rect>
+              <rect class="ehg" height="32" rx="12" width="230"></rect>
+              <rect class="ehg" height="12" width="230" y="20"></rect>
+              <text class="et" text-anchor="middle" x="115" y="22">memory_items</text>
+              <text class="ef" x="12" y="57">PK memory_id</text>
+              <text class="ef" x="12" y="80">FK case_id (nullable)</text>
+              <text class="ef" x="12" y="103">memory_type</text>
+              <text class="ef" x="12" y="126">content / tags</text>
+            </g>
+            <g transform="translate(650,285)">
+              <rect class="eb" height="172" rx="12" width="240"></rect>
+              <rect class="ehg" height="32" rx="12" width="240"></rect>
+              <rect class="ehg" height="12" width="240" y="20"></rect>
+              <text class="et" text-anchor="middle" x="120" y="22">agent_runs</text>
+              <text class="ef" x="12" y="57">PK run_id</text>
+              <text class="ef" x="12" y="80">FK case_id</text>
+              <text class="ef" x="12" y="103">team_id (registry ref)</text>
+              <text class="ef" x="12" y="126">agent_id / status</text>
+              <text class="ef" x="12" y="149">result_summary</text>
+              <text class="ef" x="12" y="169">started_at / ended_at</text>
+            </g>
+            <g transform="translate(980,285)">
+              <rect class="eb" height="172" rx="12" width="240"></rect>
+              <rect class="ehg" height="32" rx="12" width="240"></rect>
+              <rect class="ehg" height="12" width="240" y="20"></rect>
+              <text class="et" text-anchor="middle" x="120" y="22">action_requests</text>
+              <text class="ef" x="12" y="57">PK action_id</text>
+              <text class="ef" x="12" y="80">FK case_id</text>
+              <text class="ef" x="12" y="103">action_type / status</text>
+              <text class="ef" x="12" y="126">approval_required</text>
+              <text class="ef" x="12" y="149">requested_by</text>
+            </g>
+            <g transform="translate(980,500)">
+              <rect class="eb" height="120" rx="12" width="240"></rect>
+              <rect class="ehb" height="32" rx="12" width="240"></rect>
+              <rect class="ehb" height="12" rx="12" width="240" y="20"></rect>
+              <text class="et" text-anchor="middle" x="120" y="22">action_approvals</text>
+              <text class="ef" x="12" y="57">PK approval_id</text>
+              <text class="ef" x="12" y="80">FK action_id</text>
+              <text class="ef" x="12" y="103">status / approver</text>
+            </g>
+            <path class="er" d="M1100 457 V500"></path>
+            <!-- clean case branches -->
+            <path class="er" d="M620 180 V230 H445 V285"></path>
+            <path class="er" d="M665 180 V285"></path>
+            <path class="er" d="M725 180 V230 H1100 V285"></path>
+            <!-- requested lower-left placement relative to agent_runs -->
+            <g transform="translate(160,535)">
+              <rect class="eb" height="150" rx="12" width="250"></rect>
+              <rect class="ehv" height="32" rx="12" width="250"></rect>
+              <rect class="ehv" height="12" width="250" y="20"></rect>
+              <text class="et" text-anchor="middle" x="125" y="22">agent_team_registry</text>
+              <text class="ef" x="12" y="57">PK team_id</text>
+              <text class="ef" x="12" y="80">capabilities / version</text>
+              <text class="ef" x="12" y="103">tool_scope</text>
+              <text class="ef" x="12" y="126">knowledge_scope / active</text>
+            </g>
+            <g transform="translate(440,535)">
+              <rect class="eb" height="150" rx="12" width="250"></rect>
+              <rect class="ehv" height="32" rx="12" width="250"></rect>
+              <rect class="ehv" height="12" width="250" y="20"></rect>
+              <text class="et" text-anchor="middle" x="125" y="22">knowledge_documents</text>
+              <text class="ef" x="12" y="57">PK doc_id</text>
+              <text class="ef" x="12" y="80">domain / namespace</text>
+              <text class="ef" x="12" y="103">doc_type</text>
+              <text class="ef" x="12" y="126">embedding_ref</text>
+            </g>
+            <!-- soft references kept below agent_runs, no crossing with case branches -->
+            <path class="esoft" d="M285 535 V480 H620 V365 H650"></path>
+            <text class="ef" fill="#7c3aed" x="430" y="468">team_id reference</text>
+            <path class="esoft" d="M565 535 V495 H790 V457"></path>
+            <text class="ef" fill="#7c3aed" x="675" y="486">retrieval evidence</text>
+            <text class="ef" x="760" y="650">실선: FK / 소유</text>
+            <text class="ef" fill="#7c3aed" x="760" y="672">보라 점선: 실행 시 참조</text>
+            <text class="ef" fill="#64748b" x="980" y="650">회색 파선: 근거(evidence) 참조</text>
+          </svg>
+        </div>
+        <div class="why-box">
+          <strong>배치 이유:</strong> <strike>agent_team_registry와 knowledge_documents는 Customer Case의
+          직접 자식이 아니라 실행 중 참조된다. customer_cases.owner_team_id는 현재 Case의 소유 Team,
+          agent_runs.team_id는 그 실행에 선택된 Team이다.</strike><br/>
+          agent_team_registry(팀 명단)와 knowledge_documents(지식 문서)는 Customer Case에 매달려 있는 하위 데이터가 아니라, Case를 처리하는 도중에 필요할 때마다 "참고용으로 찾아보는" 별도의 자료라는 뜻입니다. 마치 회사 조직도나 매뉴얼처럼, 특정 사건 하나에 속한 게 아니라 여러 사건에서 공통으로 참고하는 자료입니다.<br/>
+          customer_cases.owner_team_id는 "지금 이 고객 문제를 누가 담당하고 있는지"를 나타내고, agent_runs.team_id는 "실제로 이번 처리 한 번을 어느 팀이 수행했는지"를 나타냅니다. 예를 들어 담당은 A팀이지만, 특정 처리 한 번은 상황에 따라 다른 팀이 대신 실행했을 수도 있어서 이 둘을 따로 구분해서 기록한다는 뜻입니다.
+        </div>
+        <p class="small">
+          이 그림에서 읽을 것: Case 실행, Action 요청·승인, 근거 문서의 관계를 구분한다.
+        </p>
+        <div class="acop-note">
+          💬 쉬운 설명: 이건 데이터베이스 설계도(ERD)입니다. "고객 문제 하나(Case)"를 중심으로 "누가
+          만들었는지(사용자)", "어떤 일이 있었는지(이벤트)", "어떤 팀이 처리했는지(agent_runs)",
+          "무슨 조치가 필요했는지(actions)", "어떤 근거 문서를 참고했는지"가 서로 연결되어 있다는 걸
+          보여줍니다. 개발자를 위한 상세 설계도라서, 일반 독자는 "고객 문제 하나를 중심으로 관련
+          정보들이 체계적으로 연결·기록된다"는 것만 이해하시면 됩니다.
+        </div>
+        <h3>8-1. A2A / Graph 확장 데이터</h3>
+        <div class="grid">
+          <div class="card">
+            <h3>A2A Registry 확장</h3>
+            <ul>
+              <li><code>agent_team_registry.execution_type</code>: LOCAL / A2A</li>
+              <li><code>agent_card_url</code>: Remote Agent Capability 메타데이터 위치</li>
+              <li><code>a2a_endpoint</code>: 원격 Task 요청 Endpoint</li>
+              <li><code>auth_scheme</code>: OAuth2 등 호출 인증 방식</li>
+              <li><code>remote_task_id</code>: Customer Case와 원격 Task 연결</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>GraphStorePort (MVP: SQL Adapter)</h3>
+            <div class="mono">PostgreSQL Source of Truth
+        ↓ Event / Projection Job
+GraphStorePort / SqlGraphAdapter
+├ Node: Case / Issue / Policy / Team / Action
+└ Edge: HAS_ISSUE / HANDLED_BY / USED_EVIDENCE ...
+
+관계 조회
+        ↓ relation search
+Context Broker / GraphRAG</div>
+            <p class="small">
+              CAS·Transaction·Action 상태는 PostgreSQL에서 보장하고, GraphStorePort는 관계 조회에
+              사용한다.
+            </p>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 외부 AI에게 업무를 맡길 때 필요한 정보(어디로 연결할지, 어떤 인증을 쓸지)와,
+          "이 문제가 다른 어떤 문제·정책·팀과 연결되어 있는지"를 그래프(관계망) 형태로 관리하는
+          부분입니다. 돈이나 주문처럼 정확해야 하는 데이터는 기존 방식(PostgreSQL)으로 확실하게
+          관리하고, "무엇과 무엇이 연결되어 있는지" 찾는 용도로만 그래프 구조를 보조적으로
+          사용합니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>9. 외부 AI 연동</h2>
+        <p class="lead">
+          <strong>MCP는 도구를 빌려주는 것이고, A2A는 일을 통째로 맡기는 것이다.</strong> MCP tool
+          호출은 짧고 stateless에 가깝지만 A2A Task는 장기 실행과 자체 생명주기를 가진다.
+        </p>
+        <div class="card">
+          <h3>MCP 쓰기 경계: 세 단계</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>단계</th>
+                <th>정책</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>read</strong></td>
+                <td>조회·근거 수집</td>
+              </tr>
+              <tr>
+                <td><strong>reversible operational write</strong></td>
+                <td>
+                  돈·주문 상태를 바꾸지 않는 작업만 scope·idempotency·audit·rate limit 조건으로 허용
+                </td>
+              </tr>
+              <tr>
+                <td><strong>financial·order-state side effect</strong></td>
+                <td>결제·환불·주문변경은 REST + 승인</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>MCP 표면은 둘이다</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>표면</th>
+                  <th>무엇</th>
+                  <th>tool namespace</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CS MCP</td>
+                  <td>내 Case 조회·문의 접수</td>
+                  <td><code>cs.*</code></td>
+                </tr>
+                <tr>
+                  <td>Commerce MCP</td>
+                  <td>상품·장바구니·주문·배송조회</td>
+                  <td><code>commerce.*</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Commerce Tool에 적용하는 MCP 3단계 예시</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>단계</th>
+                  <th>예시</th>
+                  <th>실행 경계</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>read</td>
+                  <td><code>search_products</code>, <code>track_order</code></td>
+                  <td>조회·근거 수집</td>
+                </tr>
+                <tr>
+                  <td>reversible operational write</td>
+                  <td><code>add_to_cart</code>, <code>update_cart</code></td>
+                  <td>scope·idempotency·audit·재검증 조건부 허용</td>
+                </tr>
+                <tr>
+                  <td>financial·order-state side effect</td>
+                  <td><code>create_order</code></td>
+                  <td>
+                    <strong>MCP 직접 실행 금지</strong>: <code>ActionProposal</code> → 승인 → Core 2
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small">
+            UCP: 커머스 에이전트 표준에 정합하게 설계하되 MVP에서 구현하지 않는다.
+          </p>
+          <p class="small">AP2: 결제 위임·서명된 Payment Mandate는 MVP에서 구현하지 않는다.</p>
+          <div class="acop-note">
+            💬 쉬운 설명: MCP는 기본 읽기 전용입니다. 되돌릴 수 있는 작업만 조건부로 쓰기를 허용하고,
+            결제·환불·주문변경은 MCP가 직접 실행하지 못합니다. Team이나 AI는 ActionProposal만 내고,
+            Controller와 사람 승인 경로가 실제 실행을 결정합니다.
+          </div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h3>9-1. Personal AI → 우리 서비스</h3>
+            <p>
+              사용자의 ChatGPT·Claude 같은 개인 AI가 사용자의 권한 범위 안에서 우리 Tool/Resource를
+              사용한다.
+            </p>
+            <div class="mono">사용자
+↓ OAuth Consent
+Personal AI
+↓ MCP / REST
+Agent Gateway
+↓
+Customer Case / Tool</div>
+            <p class="small">주 목적: 사용자 대신 조회·문의·작업 요청.</p>
+            <div class="acop-note">
+              💬 쉬운 설명: 사용자가 자기 개인 AI(ChatGPT 등)에게 로그인 동의를 해주면, 그 AI가
+              사용자를 대신해서 딱 허락받은 범위 안에서 우리 서비스의 기능을 사용할 수 있습니다.
+              조회하거나 문의를 넣는 등 "사용자 대신 심부름"을 시키는 용도입니다.
+            </div>
+          </div>
+          <div class="card">
+            <h3>9-2. Agent System ↔ Agent System</h3>
+            <p>
+              우리 Controller가 독립 배포된 외부 Agent System에 하나의 업무 Task를 위임하고 결과를
+              받는다.
+            </p>
+            <div class="mono">Agentic Controller
+↓ Registry resolve
+A2A Interop Adapter
+↓ A2A Task
+Remote Agent System
+↓ Result / Artifact
+TeamResult</div>
+            <p class="small">주 목적: 다른 회사·다른 Runtime·독립 Agent Team과 상호운용.</p>
+            <div class="acop-note">
+              💬 쉬운 설명: 이번엔 반대로, 우리 시스템이 아예 독립적으로 운영되는 다른 회사·조직의
+              AI 시스템에게 업무 하나를 통째로 맡기고 결과를 받아오는 경우입니다. 예를 들어
+              우리 쇼핑몰에 "이 신발이 정품인지 확인해달라"는 문의가 들어왔을 때, 이 진위 여부 판단은 우리 회사가 직접 하지 않고,
+              정품 인증을 전문으로 하는 다른 회사의 AI 시스템에게 "정품인지 검증해줘"라고 업무 하나를 통째로 맡기는 상황입니다.
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />위임 예시의 주체명이 새 CS 확정축 Team 기준으로 바뀌었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: Billing Team이 외부 Fraud Review Agent에 판단을 위임한다.<br />→ v8: VOC &amp; Store Manager 또는 Response Generation &amp; Review가 담당 Team으로 일을 처리한다.</blockquote>CS Pack의 정식 Team 구성을 반영한 자구 수정입니다.</details></div><h3>이 프로젝트에서 A2A를 쓰는 세 경로</h3>
+          <ul>
+            <li>우리가 클라이언트: VOC &amp; Store Manager가 외부 Fraud Review Agent에 판단을 위임한다.</li>
+            <li>우리가 서버: 외부 오케스트레이터가 SaaS 고객 문의를 우리 Agent에 맡긴다.</li>
+            <li>
+              Team 분리 배포: 같은 Registry·TeamResult를 유지하고 실행 경로만 LOCAL에서 A2A로
+              바꾼다.
+            </li>
+          </ul>
+          <div class="acop-note">
+            💬 쉬운 설명: A2A(외부 AI와의 협업)를 쓰는 상황은 세 가지입니다. 우리가 남에게 일을
+            맡기는 경우(예: 정품 검증을 외부 전문 AI에게), 남이 우리에게 일을 맡기는 경우(예: 다른
+            회사가 자기 고객 문의를 우리 AI에게 처리시킴), 그리고 원래 우리 팀이었던 걸 나중에
+            독립된 별도 시스템으로 분리 운영하는 경우입니다.
+          </div>
+        </div>
+        <h3>9-3. MCP / A2A / Message Broker 비교</h3>
+        <div class="table-wrap">
+          <table class="protocol-compare">
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>연결 대상</th>
+                <th>주요 역할</th>
+                <th>우리 구조의 위치</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MCP</td>
+                <td>Personal AI → 우리 서비스 Tool/Resource</td>
+                <td>Tool 호출·Resource 접근</td>
+                <td>Agent Gateway / Access &amp; Action</td>
+              </tr>
+              <tr>
+                <td>A2A</td>
+                <td>독립 Agent System ↔ Agent System</td>
+                <td>Capability 발견·Task 위임·결과/Artifact 교환</td>
+                <td>Registry + A2A Adapter + Case Runtime</td>
+              </tr>
+              <tr>
+                <td>Message Broker</td>
+                <td>우리 Runtime 내부 Controller ↔ Local Worker</td>
+                <td>Queue·Retry·Event·비동기 전달</td>
+                <td>Case Runtime &amp; Coordination</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="why-box">
+          <strong>보안 원칙:</strong>
+          사람을 대신하는 Personal AI는 사용자 OAuth/Scope를 사용하고, Remote A2A Agent는 별도의
+          Agent Identity와 Service-to-Service 인증을 사용한다. 두 신뢰 모델을 같은 Token 규칙으로
+          뭉뚱그리지 않는다.
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 세 가지를 헷갈리지 않게 정리하면, MCP는 "개인 AI가 우리 기능을 빌려 쓰는
+          통로", A2A는 "독립된 AI 조직끼리 업무를 통째로 위임하는 통로", Message Broker는 "우리
+          내부에서 관제탑이 우리 팀에게 지시를 전달하는 사내 통로"입니다. 그리고 사용자를 대신하는
+          개인 AI와 외부의 독립 AI 조직은 신원 확인 방식이 다르기 때문에, 같은 출입증 규칙을 섞어
+          쓰지 않고 따로 관리합니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>할루시네이션 방어</h2>
+        <p class="lead">
+          프롬프트를 방어선으로 삼지 않는다. LLM이 제안한 것이 실제 근거에 있는지 코드로 대조하고,
+          없으면 버린다.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>LLM이 제안한 것</th>
+                <th>무엇과 대조하나</th>
+                <th>불일치 시</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>대상 식별자</td>
+                <td>Case·주문·SKU의 실제 ID</td>
+                <td>제안 폐기·인계</td>
+              </tr>
+              <tr>
+                <td><strong>금액</strong></td>
+                <td>원장·quote·정책의 금액</td>
+                <td>실행 거부·승인</td>
+              </tr>
+              <tr>
+                <td>정책 근거</td>
+                <td>버전이 고정된 정책·evidence</td>
+                <td>unknown·추가 확인</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>착한 모델을 고르는 게 아니라 검사에 걸리는 모델을 만든다.</strong></p>
+        <div class="acop-note">
+           💬 쉬운 설명: AI는 없는 주문번호나 틀린 금액을 지어낼 수 있습니다. 이런 할루시네이션을
+           프롬프트로 "지어내지 마"라고 타이르는 게 아니라, 실행 직전에 코드가 실제 주문·결제 데이터와
+           하나씩 대조합니다. AI가 5만원 환불이라고 했는데 실제 결제액이 3만원이면 그 제안은 버려집니다.
+           프롬프트를 무시하는 AI라도 이 검사는 통과하지 못합니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>A2A Remote Team 실물</h2>
+        <p class="lead">
+          <strong>Catalog &amp; Verification Team</strong>을 고른 이유는 SKU·Variant·가격·규제
+          증거를 검증하며, 정보가 부족하면 input-required를 자연스럽게 만들고 구매 side effect 없이
+          Artifact를 반환하기 때문이다.
+        </p>
+        <div class="acop-callout">
+          Controller가 Catalog 검증 Task를 보낸다 → Remote Team이 “Variant와 인증 증거가
+          필요합니다”로 <strong>input-required</strong> → 운영자가 자료를 보충한다 → 같은 Task가
+          재개되어 verification report와 evidence manifest Artifact를 반환한다.
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: A2A(외부 AI 협업)가 실제로 어떻게 쓰이는지 보여주는 구체적인 예시입니다.
+          "상품·옵션·가격 정보가 맞는지 검증하는 팀"을 외부의 독립 AI 팀에게 맡깁니다. 이 팀은
+          실제로 뭔가를 구매하거나 바꾸는 위험한 행동은 하지 않고, 정보가 부족하면 "이 자료가 더
+          필요합니다"라고 되묻고, 자료가 채워지면 검증 보고서만 작성해서 돌려주기 때문에 안전하게
+          외부에 맡기기 좋은 업무로 선택했습니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>9-A. Agent Team 모듈화 <span class="small">계획서 8-B</span></h2>
+        <p class="lead">
+          Controller는 “필요한 Capability”만 요청하고, Registry가 LOCAL Module 또는 A2A Remote
+          Agent를 반환한다. 상위 Case Runtime은 두 실행 결과를 모두 TeamResult로 정규화해 처리한다.
+        </p>
+        <div class="module-diagram">
+          <div class="grid-3">
+            <div class="module-box">
+              <strong>MessageBusPort</strong>InMemory · Redis · RabbitMQ
+              <p class="explain-small"><small>MessageBusPort: "메시지(작업 지시)를 전달하는 통로"를 표준화한 규격(Port)<br/>
+              InMemory: 같은 프로그램 안에서만 메시지를 주고받는 방식, 별도 서버 없이 가장 간단하지만 프로그램이 꺼지면 메시지도 사라짐. 개발 초기나 소규모 테스트에 적합<br/>
+              Redis: 빠른 속도로 메시지를 주고받을 수 있는 인메모리 기반 저장소로, 여러 서버 사이에서도 메시지를 전달할 수 있게 해줌<br/>
+              RabbitMQ: 메시지 전달을 전문으로 하는 정식 메시지 큐 시스템으로, 메시지가 확실히 전달되도록 순서 보장·재시도·대량 처리에 강함. 규모가 크고 안정성이 중요할 때 씀</small></p>
+            </div>
+            <div class="module-box registry">
+              <strong>GraphStorePort</strong>SQL · AGE · Neo4j
+              <p class="explain-small"><small>GraphStorePort: "정보들 사이의 연결 관계를 조회하는 통로"를 표준화한 고정 규격입니다. Port는 못 끄고, 실제 구현인 SqlGraphAdapter는 교체할 수 있습니다.<br/>
+              SQL: 지금 MVP에서 쓰는 방식으로, 기존에 쓰던 일반 데이터베이스(PostgreSQL)의 JOIN 기능만으로 관계를 조회<br/>
+              AGE: PostgreSQL에 붙여 쓰는 그래프 확장 기능으로, 기존 데이터베이스는 그대로 두면서 관계 탐색 기능만 그래프 방식으로 강화할 수 있음<br/>
+              Neo4j: 처음부터 관계 탐색을 전문으로 만들어진 별도의 그래프 전용 데이터베이스로, 연결 관계가 훨씬 복잡하고 깊어질 때 강점이 있음
+              </small></p>
+            </div>
+            <div class="module-box">
+              <strong>TeamExecutorPort</strong>LOCAL · A2A
+              <p class="explain-small"><small>TeamExecutorPort: Team의 판단 결과를 Controller가 실행 경로로 넘기는 통로를 표준화한 규격<br/>
+              LOCAL: 우리 시스템 안의 내부 Team이 판단과 Action 제안을 반환하는 방식. 실제 Action은 승인 경로를 거침<br/>
+              A2A: 우리 시스템 밖에 있는, 완전히 독립적으로 운영되는 다른 회사·조직의 AI 시스템에게 일을 통째로 맡기는 방식. 표준화된 절차(A2A 프로토콜)를 거쳐 일을 넘기고 결과를 받아옴
+              </small></p>
+            </div>
+          </div>
+          <p class="small">
+            세 Port가 같은 계약·Adapter 원칙을 공유한다. 이것이 모듈형 Basement의 구조적 증거다.
+          </p>
+          <div class="acop-note">
+            💬 쉬운 설명: 콘센트와 플러그를 생각하면 쉽습니다. 메시지 전달, 그래프 데이터 조회, 팀
+            실행이라는 세 가지 기능 모두 "표준 연결 규격(Port)"만 지키면 실제 구현(어떤 제품·기술을
+            쓰는지)은 자유롭게 바꿀 수 있습니다. 이게 바로 "레고 블록처럼 갈아 끼울 수 있는
+            구조(모듈형)"라는 걸 실제로 보여주는 증거입니다.
+          </div>
+        </div>
+        <div class="module-diagram">
+          <div class="module-top-flow">
+            <div class="module-box"><strong>Agentic Controller</strong>필요 Capability 요청</div>
+            <div class="module-arrow">→</div>
+            <div class="module-box registry">
+              <strong>Agent Team Registry</strong>execution_type · version · endpoint · scope 확인
+            </div>
+            <div class="module-arrow">→</div>
+            <div class="module-box"><strong>Execution Target</strong>LOCAL 또는 A2A 선택</div>
+          </div>
+          <div class="dispatch-branches" style="margin-top: 16px">
+            <div class="dispatch-branch">
+              <h4>LOCAL Module</h4>
+              <div class="mini-flow">
+                <div class="mini-node">Message Broker</div>
+                <div class="mini-arrow">↓</div>
+                <div class="mini-node">Agent Team Slot</div>
+                <div class="mini-arrow">↓</div>
+                <div class="mini-node">TeamResult</div>
+              </div>
+            </div>
+            <div class="dispatch-branch">
+              <h4>REMOTE A2A Agent</h4>
+              <div class="mini-flow">
+                <div class="mini-node">A2A Adapter</div>
+                <div class="mini-arrow">↓</div>
+                <div class="mini-node">Remote Agent Endpoint</div>
+                <div class="mini-arrow">↓</div>
+                <div class="mini-node">A2A Result → TeamResult</div>
+              </div>
+            </div>
+          </div>
+          <div class="module-contract">
+            <strong>공통 Contract:</strong>
+            LOCAL Team과 A2A Agent 모두 Capability, Input Context, 상태, 결과, 근거, 요청 Action을
+            동일한 TeamTask / TeamResult 모델로 연결한다.
+          </div>
+          <div class="acop-note">
+            💬 쉬운 설명: Controller는 필요한 Capability를 요청하고, Registry가 등록된 Team 중 LOCAL
+            또는 A2A 대상을 알려줍니다. 새 업무 팀은 프로그램을 뜯어고치지 않고 명단에 등록만 하면
+            됩니다. 어느 쪽이든 TeamTask/TeamResult 형식은 같습니다.
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Registry 필드</th>
+                <th>LOCAL</th>
+                <th>A2A</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>execution_type</td>
+                <td>LOCAL</td>
+                <td>A2A</td>
+              </tr>
+              <tr>
+                <td>entrypoint</td>
+                <td>Python Module / Worker Queue</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>agent_card_url</td>
+                <td>선택</td>
+                <td>필수 또는 권장</td>
+              </tr>
+              <tr>
+                <td>endpoint</td>
+                <td>내부 Worker Topic</td>
+                <td>Remote A2A Endpoint</td>
+              </tr>
+              <tr>
+                <td>auth_scheme</td>
+                <td>내부 Service Identity</td>
+                <td>Remote Service Authentication</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">
+          이 그림에서 읽을 것: Registry가 실행 대상을 바꿔도 TeamTask/TeamResult 경계는 유지된다.
+        </p>
+        <div class="acop-note">
+          💬 쉬운 설명: 같은 등록부(Registry)에 등록된 정보라도, LOCAL이냐 A2A냐에 따라 채워지는
+          값이 조금 다릅니다. 내부 팀이면 우리 시스템 안의 코드 위치를 적고, 외부 AI 팀이면 그 팀의
+          공개 정보(Agent Card)와 접속 주소, 인증 방식을 적어둔다는 표입니다.
+        </div>
+        <div class="why-box">
+          <strong>판별 기준:</strong> ChatGPT가 우리 Tool을 호출하면 MCP, 외부 Agent가 환불 업무를
+          맡기거나 우리가 Fraud Agent에 판단을 맡기면 A2A다. 런팟에 추론만 시키거나 내부 워커에 배치
+          작업만 시키는 것은 A2A가 아니다.
+        </div>
+        <div class="table-wrap" style="margin-top: 16px">
+          <table>
+            <thead>
+              <tr>
+                <th>상황</th>
+                <th>원격 쪽의 역할</th>
+                <th>분류</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ChatGPT가 우리 Tool 호출</td>
+                <td>도구 사용</td>
+                <td><strong>MCP</strong></td>
+              </tr>
+              <tr>
+                <td>외부 Agent가 환불 업무 위임</td>
+                <td>업무 판단·처리</td>
+                <td><strong>A2A</strong></td>
+              </tr>
+              <tr>
+                <td>우리가 Fraud Agent에 판단 위임</td>
+                <td>자율 판단·추가 입력 요구</td>
+                <td><strong>A2A</strong></td>
+              </tr>
+              <tr>
+                <td>런팟 추론·내부 배치 워커</td>
+                <td>지시대로 실행</td>
+                <td><strong>A2A 아님</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">
+          REST API로 데이터를 주고받는 것 자체는 A2A가 아니다. A2A는 전송 계층이 아니라 상대의
+          자율성에 대한 규약이며, Agent Card·장기 Task 상태·Artifact 교환을 포함한다.
+        </p>
+        <div class="acop-note">
+          💬 쉬운 설명: "A2A"라는 이름표가 붙는 기준을 정리한 표입니다. 핵심은 상대방이 "스스로
+          판단하는 능력이 있는지"입니다. 그냥 시킨 대로만 계산하거나 작업을 수행하는 서버(예: 단순
+          추론 서버, 내부 배치 작업)는 A2A가 아니고, 상대방이 자기 판단으로 결과를 만들거나 추가
+          정보를 요구할 수 있는 독립된 AI일 때만 A2A라고 부릅니다. 단순히 REST API로 데이터를
+          주고받는다고 해서 다 A2A는 아니라는 뜻입니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>9-B. Graph DB / GraphRAG 활용 계획 <span class="small">계획서 9-D</span></h2>
+        <p class="lead">
+          GraphRAG는 문서에서 LLM이 관계를 추출하는 방식과, 이미 정형화된 관계를 질의하는 방식을
+          구분한다. 전자는 채택하지 않고 후자를 채택한다. MVP는 PostgreSQL JOIN·재귀 CTE 기반
+          <code>SqlGraphAdapter</code>로 시작한다. 시나리오 A/B/C의 관계 깊이는 1~2이고 반복 VOC
+          급증은 집계 질의다. “그거 그냥 JOIN 아니냐”에 대해서는 현재 규모에서는 맞다고 인정한다.
+          전용 Graph Store는 빼지 않되, MVP에 도입하지 않는다.
+        </p>
+        <div class="why-box">
+          <strong>Graph가 실제로 유리해지는 지점:</strong> Remote Agent 위임 토폴로지는 관계가
+          외부로 뻗고 깊이가 가변이며 PostgreSQL FK에 없다.
+          <code>Case → Evidence → Document → Policy → Decision → Action</code> 설명 경로도 고정
+          깊이가 아니다. 현재는 Team 2개와 Remote PoC 1개, 위임 깊이 2이므로 그래프 저장소가
+          필요하지 않다.
+        </div>
+        <p>
+          판단이 뒤집히는 조건은 Remote A2A Agent 2개 이상, 정책 계층 상속 도입, SQL 경로의 근거
+          포함률 미달이다.
+        </p>
+        <div class="acop-note">
+          💬 쉬운 설명: "그래프 데이터베이스"라는 전문 기술을 화려하게 쓰고 싶은 유혹이 있지만, 지금
+          규모에서는 그냥 기존 데이터베이스(PostgreSQL)의 JOIN 기능만으로도 충분하다고 솔직하게
+          인정하는 부분입니다. "관계를 몇 단계까지 찾아야 하는지"가 지금은 1~2단계로 단순해서, 굳이
+          전용 그래프 기술을 도입할 필요가 없습니다. 다만 나중에 외부 AI 협업이 늘어나거나 정책이
+          복잡해지면 그래프 기술이 필요해질 수 있어서, 그 갈아탈 통로(GraphStorePort)만 미리 만들어
+          둡니다.
+        </div>
+        <div class="graph-flow">
+          <div class="module-box registry"><strong>GraphStorePort</strong></div>
+          <div class="module-arrow">→</div>
+          <div class="module-box">
+            <strong>MVP: SqlGraphAdapter</strong><br />PostgreSQL JOIN / 재귀 CTE
+          </div>
+          <div class="module-arrow">→</div>
+          <div class="module-box">
+            <strong>Phase 2</strong><br />AgeGraphAdapter · Neo4jGraphAdapter
+          </div>
+        </div>
+        <p class="small">
+          Apache AGE는 PostgreSQL 확장이므로 별도 Projection 동기화 없이 같은 저장소에서 비교할 수
+          있다. 외부 리서치 인용.
+        </p>
+        <h3>9-B-1. Graph로 표현할 관계</h3>
+        <div class="graph-model-grid">
+          <div class="graph-entity">Customer</div>
+          <div class="graph-entity">Case</div>
+          <div class="graph-entity">Issue</div>
+          <div class="graph-entity">Product / Service</div>
+          <div class="graph-entity">Policy</div>
+          <div class="graph-entity">Agent Team</div>
+          <div class="graph-entity">Action</div>
+          <div class="graph-entity">Knowledge Document</div>
+        </div>
+        <div class="graph-edge-list">
+          <div class="graph-edge">Customer ─ REPORTED → Case</div>
+          <div class="graph-edge">Case ─ HAS_ISSUE → Issue</div>
+          <div class="graph-edge">Issue ─ AFFECTS → Product</div>
+          <div class="graph-edge">Product ─ GOVERNED_BY → Policy</div>
+          <div class="graph-edge">Case ─ HANDLED_BY → Agent Team</div>
+          <div class="graph-edge">Case ─ TRIGGERED → Action</div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 시스템 안의 여러 정보(고객, 문제, 이슈, 상품, 정책, 담당 팀, 조치, 참고
+          문서)가 서로 어떻게 연결되는지 보여줍니다. 예를 들어 "고객이 문제를 신고했다", "문제가
+          특정 이슈와 관련 있다", "그 이슈가 특정 상품에 영향을 준다"처럼, 정보들 사이의 연결고리를
+          지도처럼 관리해서 나중에 "이거랑 관련된 게 또 뭐가 있지?"를 빠르게 찾을 수 있게 합니다.
+        </div>
+        <h3>9-B-2. Context Broker의 GraphRAG 흐름</h3>
+        <div class="graph-flow">
+          <div class="module-box"><strong>질문 / Case</strong>현재 업무 Context</div>
+          <div class="module-arrow">→</div>
+          <div class="module-box"><strong>Vector Search</strong>유사 문서·Entity 후보</div>
+          <div class="module-arrow">→</div>
+          <div class="module-box registry"><strong>Graph Expansion</strong>1~2 hop 관계 탐색</div>
+          <div class="module-arrow">→</div>
+          <div class="module-box"><strong>Context Pack</strong>문서 + 관계 경로 + 근거</div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: AI가 판단할 때 정보를 모으는 순서입니다. 먼저 지금 문제와 "의미가 비슷한"
+          문서를 찾고(Vector Search), 그다음 그 문서·항목과 "실제로 연결된" 다른 항목들을 한두 단계
+          더 넓혀서 찾습니다(Graph Expansion). 이렇게 하면 단순히 비슷한 내용뿐 아니라 실제로 관련
+          있는 정보까지 함께 챙겨서 AI에게 전달할 수 있습니다.
+        </div>
+        <h3>9-B-3. 실제 사용처</h3>
+        <div class="grid">
+          <div class="card">
+            <h3>반복 VOC 탐지</h3>
+            <p>여러 Case가 같은 Issue·Product Version·Release와 연결되는지 탐색한다.</p>
+          </div>
+          <div class="card">
+            <h3>과거 Case 근거 확장</h3>
+            <p>현재 Case와 동일한 Policy·Action·Team 처리 경로를 가진 과거 Case를 찾는다.</p>
+          </div>
+          <div class="card">
+            <h3>Agent Capability Graph</h3>
+            <p>Team → PROVIDES → Capability → REQUIRES → Tool/Knowledge 관계를 탐색할 수 있다.</p>
+          </div>
+          <div class="card">
+            <h3>Graph 기반 설명 가능성</h3>
+            <p>Agent가 어떤 관계 경로를 따라 근거를 선택했는지 Trace에 표시할 수 있다.</p>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 이 연결 관계 정보를 실제로 어디에 쓰는지 예시입니다. "같은 불만이 반복되는
+          걸 자동으로 찾아내기", "비슷한 문제를 과거에 어떻게 처리했는지 찾아서 참고하기", "어떤
+          팀이 어떤 능력·도구를 갖고 있는지 한눈에 보기", "AI가 왜 그런 결론을 냈는지 근거 경로를
+          사람이 확인할 수 있게 보여주기" 등에 활용할 수 있습니다.
+        </div>
+        <h3>9-B-4. 기술 적용 수준</h3>
+        <div class="phase-grid">
+          <div class="phase-card phase-required">
+            <h4>MVP 필수</h4>
+            <p>PostgreSQL + pgvector 기반 Vector RAG와 GraphStorePort·SqlGraphAdapter.</p>
+          </div>
+          <div class="phase-card phase-poc">
+            <h4>PoC 권장</h4>
+            <p>8~9주차에 AGE 또는 Neo4j Adapter를 같은 질의로 비교한다.</p>
+          </div>
+          <div class="phase-card phase-stretch">
+            <h4>확장</h4>
+            <p>근거 포함률·p95 지연·구현·운영 인·일·Projection lag로 판단 기준표를 낸다.</p>
+          </div>
+        </div>
+        <div class="why-box">
+          <strong>기술 선택 원칙:</strong>
+          Core는 <code>GraphStorePort</code>에만 의존한다. 8~9주차 비교 실험의 항목은 근거 포함률,
+          p95 지연, 구현·운영 인·일, Projection lag다.
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 지금 당장 반드시 필요한 건 기존 데이터베이스 기반의 간단한 관계 조회
+          기능이고, 8~9주차쯤 여유가 되면 전용 그래프 기술(AGE, Neo4j)을 같은 조건에서 비교
+          실험해보고, 그 결과를 근거로 나중에 확장할지 결정하겠다는 단계적 계획입니다. 화려한 기술을
+          먼저 넣고 보는 게 아니라, 필요성이 증명되면 그때 도입하는 방식입니다.
+        </div>
+      </section>
+      <p class="small">
+        이 그림에서 읽을 것: MVP는 SQL Adapter로 시작하고, 비교 실험이 필요성을 결정한다.
+      </p>
+      <section class="section">
+        <h2>10. 구현 로드맵</h2>
+        <div class="phase-grid">
+          <div class="phase-card phase-required">
+            <h4>Phase 1 · 필수 기반</h4>
+            <ul>
+              <li>Case Runtime / Shared State / LangGraph</li>
+              <li>Local Agent Team Contract / Registry</li>
+              <li>REST / MCP / OAuth</li>
+              <li>PostgreSQL + pgvector RAG</li>
+            </ul>
+          </div>
+          <div class="phase-card phase-poc">
+            <h4>Phase 2 · A2A PoC</h4>
+            <ul>
+              <li>Registry execution_type=LOCAL/A2A</li>
+              <li>A2A Adapter / Agent Card / Remote Task</li>
+              <li>독립 배포 Team 1개</li>
+              <li>Local vs Remote Trace</li>
+            </ul>
+          </div>
+          <div class="phase-card phase-stretch">
+            <h4>Phase 3 · GraphRAG PoC</h4>
+            <ul>
+              <li>Graph Projection Pipeline</li>
+              <li>Vector + Graph 1~2 hop 검색</li>
+              <li>반복 VOC 또는 유사 Case 시나리오 1개</li>
+              <li>Vector-only 대비 평가</li>
+            </ul>
+          </div>
+        </div>
+        <div class="v8-overlay v8-added"><span class="v8-badge">🆕 v8 추가</span><br />DoD 29번: Response Generation &amp; Review 검증 항목이 새로 추가되었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: DoD 28개<br />→ v8: DoD 29개 — Response Generation &amp; Review 검증</blockquote>새 정식 Team 승격과 연결된 검증 항목입니다.</details></div><div class="acop-note">
+          💬 쉬운 설명: 일정은 선행 구간부터 1W~9W까지 실제 WBS 순서로 잡았습니다. 선행(8/17~8/27)에
+          초안을 만들고, 1W(8/28~9/3)에 공식 양식을 고정합니다. 2W에는 데이터와 저장소를 정리하고,
+          3W(9/11~9/17)에는 전처리·평가와 9/15 중간발표를 진행합니다. 4W에는 새 기능을 멈추고 보완하며,
+          5W~7W에 Graph·A2A·화면과 테스트를 정리하고, 8W(10/21~10/24)에 발표물을 동결합니다. 9W는
+          보완 구간이고 최종발표는 10/26입니다. 선행 대조 기준도 DoD 29개로 갱신했습니다.
+        </div>
+        <div class="grid" style="margin-top: 16px">
+          <div class="card">
+            <div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />일정(WBS)이 상대 주차에서 실제 캘린더 날짜와 발표 고정일 기준으로 전면 교체되었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: 1~2주차 / 3~4주차 / 5~6주차 / 7주차 / 8~9주차<br />→ v8: 선행(8/17~8/27) / 1W~2W(8/28~9/10) / 3W(9/11~9/17, 9/15 중간발표) / 4W~6W(9/18~10/14) / 7W~8W(10/15~10/24) / 9W(10/26 최종발표)</blockquote>실제 날짜로 바뀌어 다른 일정과 맞추기 쉽고, 중간·최종발표 고정일이 처음 명시되었습니다.</details></div><h3>주차별 권장 일정</h3>
+            <ul>
+              <li><strong>선행(8/17~8/27)</strong>: WBS·기획·요구사항 초안, DoD 1~29 대조</li>
+              <li><strong>1W~2W(8/28~9/10)</strong>: 공식 양식 동결, seed·knowledge 적재, DB 설계</li>
+              <li><strong>3W(9/11~9/17)</strong>: PII masking·RAG 적재·평가, 9/15 중간발표</li>
+              <li><strong>4W~6W(9/18~10/14)</strong>: 보완, Graph/A2A 경계와 테스트 정리</li>
+              <li><strong>7W~8W(10/15~10/24)</strong>: 웹 앱·구성도·서비스 테스트, 발표물 동결</li>
+              <li>
+                <strong>9W</strong>: 최종 산출물 보완과 잔여 리소스 정리, 10/26 최종발표
+              </li>
+              <li><strong>9~10주차</strong>: 평가, 통합, 발표, 예비 기간</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />시간 부족 시 버리는 순서가 확장축을 보수적으로 뒤로 미루는 방식으로 갱신되었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: ① Graph 비교실험 ② A2A Remote PoC ③ MCP tool 축소 / Team 2개+평가harness 유지<br />→ v8: ① Graph 외부 Adapter 비교 ② A2A Remote 확장 시나리오 ③ MCP tool 추가와 Commerce Ops 확장 ④ 화면 장식과 추가 Team / CS Pack 확정축+운영 UI+평가 harness 유지</blockquote>“만든 걸 줄인다”에서 “확장축은 여유 있을 때만 손댄다”는 더 보수적인 방어로 바뀌었습니다.</details></div><h3>범위 조정 기준</h3>
+            <ul>
+              <li>Local Case 처리와 Team Contract를 먼저 안정화한다.</li>
+              <li>A2A는 Remote Team 1개를 목표로 한다.</li>
+              <li>Graph PoC가 일정에 부담이면 Port/Schema와 평가 데이터만 남긴다.</li>
+            </ul>
+            <p class="small">
+              버리는 순서: ① Graph 외부 Adapter 비교 ② A2A Remote 확장 시나리오 ③ MCP tool 추가와
+              Commerce Ops 확장 ④ 화면 장식과 추가 Team. CS Pack 확정축, 운영 UI, 평가 harness는 지킨다.
+            </p>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 대략적인 주차별 계획과, 시간이 부족해질 때 "무엇부터 포기할지"를 미리 정해둔
+          것입니다. 가장 먼저 포기하는 건 그래프 비교 실험이고, 그다음은 외부 AI 협업(A2A) 시범,
+          그다음은 개인 AI 연동 기능 일부입니다. 반대로 끝까지 절대 포기하지 않는 건 최소 2개 팀의
+          실제 협업과, "자동화가 얼마나 잘 되는지 정직하게 측정하는 평가 체계"입니다.
+        </div>
+        <h3>10주 우선순위 3개</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>우선순위</th>
+                <th>이번에 제품화할 것</th>
+                <th>뺄 것</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>감사 가능성 제품화: /ui/trace·events·evidence·approval</td>
+                <td>새 대시보드 장식·추가 Graph 시각화</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>정직한 자동화율·평가 하네스: golden/holdout·통계</td>
+                <td>근거 없는 자동화율 홍보·모델 비교 확장</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>사람 인계 + 자체 배포 검증</td>
+                <td>추가 Remote Team·불필요한 채널 연동</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 무엇을 실제로 완성해서 보여줄지, 무엇은 과감히 빼고 넘어갈지를 정리한
+          표입니다. 가장 중요한 건 "AI가 왜 그렇게 판단했는지 사람이 추적하고 확인할 수 있게 만드는
+          것", "자동화율을 과장하지 않고 정직하게 측정하는 것", "AI가 못 하는 건 사람에게 넘기고
+          우리 서버에 직접 설치해 운영할 수 있게 검증하는 것"입니다. 반대로 화려해 보이지만 핵심이
+          아닌 것(추가 대시보드 장식, 근거 없는 자동화율 홍보, 불필요한 외부 연동)은 과감히 뺍니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>11. 6명 팀 역할 분담</h2>
+        <p class="lead">
+          Core를 “Coordination 로직 담당”과 “Backend 구현 담당”으로 쪼개지 않는다. 같은 기능
+          흐름에서 정책과 실제 무결성 구현이 서로 붙어 있기 때문에,
+          <strong>Core 1은 Case Runtime을, Core 2는 Access/Action을 각각 end-to-end로 담당</strong
+          >한다.
+        </p>
+        <p class="small">
+          Agent Team은 Tool을 직접 호출하지 않는다. 읽기는 Context Broker가 미리 제공하고, 쓰기는
+          ActionProposal로 반환한다. 따라서 Team 개발자 3명은 Core 2 인터페이스를 보지 않아도 된다.
+          두 Core의 접점은 ExecuteAction / ActionResult 한 쌍이다.
+        </p>
+        <h3>11-1. Core Platform</h3>
+        <div class="role-grid">
+          <div class="role-card runtime">
+            <h3>Core 1 · Case Runtime &amp; Coordination</h3>
+            <ul>
+              <li>Customer Case lifecycle / Case Event / owner</li>
+              <li>Shared State / checkpoint / version</li>
+              <li>State Repository / Transaction</li>
+              <li><strong>CAS / Optimistic Concurrency / Conflict 감지</strong></li>
+              <li>Agentic Controller / Top-Level LangGraph</li>
+              <li>Team routing / parallel 여부 / ownership / retry / replan / cancel</li>
+              <li>WAIT / RESUME / Case-level approval state</li>
+              <li>Agent Team Registry / Team Contract</li>
+              <li><strong>Message Broker / MessageBus Port + Adapter</strong></li>
+              <li>Local/A2A 실행 분기, RemoteTeamPort, A2A Task → Case State 매핑</li>
+              <li>Graph Context Port / GraphRAG orchestration</li>
+              <li>Context Broker 공통 orchestration Port</li>
+            </ul>
+            <div class="boundary-note">
+              <strong>한 사람이 끝까지 보는 흐름:</strong>
+              “Team 간 경합 발생 → State CAS로 충돌 감지 → CONFLICT 반환 → Controller가 최신 State
+              기준 Retry/Replan”
+            </div>
+            <div class="acop-note">
+              💬 쉬운 설명: Core 1 담당자는 "고객 문제 하나가 접수돼서 해결될 때까지의 전체 여정"을
+              처음부터 끝까지 책임집니다. 어느 팀에게 맡길지 정하고, 여러 팀이 동시에 건드릴 때
+              충돌을 막고, 결과를 저장하고 상태를 관리하는 등 사건(Case) 처리의 두뇌 역할입니다.
+            </div>
+          </div>
+          <div class="role-card integration">
+            <h3>Core 2 · Access &amp; Action Platform</h3>
+            <ul>
+              <li>Agent Gateway / Trust Boundary</li>
+              <li>OAuth / Access Token / Scope / External AI Client</li>
+              <li>REST/OpenAPI / MCP endpoint</li>
+              <li>A2A ingress / outbound HTTP·Auth Adapter / Agent Card endpoint</li>
+              <li>Tool / Action Gateway</li>
+              <li>Business Capability API</li>
+              <li>고위험 Action 권한/승인 검증</li>
+              <li><strong>Idempotency — 동일 Side Effect 중복 실행 방지</strong></li>
+              <li>Audit Log</li>
+              <li>결제/계정/알림 등 외부 시스템 Integration</li>
+            </ul>
+            <div class="boundary-note">
+              <strong>한 사람이 끝까지 보는 흐름:</strong>
+              “외부 AI 인증 → Scope 검증 → Action 요청 → 승인/Idempotency 확인 → 외부 시스템에 실제
+              1회 실행 → Audit”
+            </div>
+            <div class="acop-note">
+              💬 쉬운 설명: Core 2 담당자는 "출입 관리와 실제 조치 실행"을 책임집니다. 외부 AI나
+              사용자가 누구인지 확인하고, 위험한 조치는 승인을 받게 하고, 같은 조치가 실수로 중복
+              실행되지 않게 막고, 실제로 결제·환불 같은 외부 시스템 연동을 처리한 뒤 누가 무엇을
+              했는지 기록을 남기는 역할입니다.
+            </div>
+          </div>
+        </div>
+        <h3>11-2. Agent Team Module 개발</h3>
+        <div class="role-card agent">
+          <p>
+            요구사항 분석 후 확정된 Agent Team Module에 3명을 유동 배치한다. Team 이름과 개수는
+            사전에 고정하지 않는다.
+          </p>
+          <ul>
+            <li>Team 내부 Agent / Subgraph 구조</li>
+            <li>Team 내부 Agent 간 병렬 실행·merge·retry 정책</li>
+            <li>업무별 Prompt / Tool 사용 전략</li>
+            <li>Team 전용 Knowledge Scope / Retrieval / Rerank</li>
+            <li>Team 전용 Episodic Memory 정책</li>
+            <li>Team 단위 테스트 / 실패 / 재처리 시나리오</li>
+            <li>PoC 대상 Team 1개는 독립 프로세스로 배포하고 A2A Remote Team으로 연결 가능</li>
+          </ul>
+          <div class="boundary-note">
+            예: Team 3개면 각 1명, Team 2개면 2명+1명. 내부 경합은 해당 Team이 책임하고, Team 간
+            경합은 Core 1이 책임한다.
+          </div>
+          <div class="acop-note">
+            💬 쉬운 설명: 3명의 팀원이 "실제 업무 처리 팀(예: 요금 문의 팀, 기술 지원 팀)"을 하나씩
+            맡아 개발합니다. 각자 자기 팀 안에서 어떤 AI를 어떻게 조합할지, 어떤 지식을 참고하게
+            할지, 실패하면 어떻게 재시도할지 자유롭게 설계할 수 있습니다. 그중 한 팀은 일부러
+            독립적으로 떼어내서 외부 AI 협업(A2A) 연습용으로도 씁니다.
+          </div>
+        </div>
+        <h3>11-3. UX / Observability / Evaluation</h3>
+        <div class="role-card ui">
+          <ul>
+            <li>사용자 / 운영자 Web UI</li>
+            <li>Case 상태 / Agent Trace / Shared State 시각화</li>
+            <li>Local vs A2A Remote Task 상태와 Graph 근거 경로 시각화</li>
+            <li>Human Approval 화면</li>
+            <li>Baseline vs Agentic Evaluation Harness</li>
+            <li>Case 해결률 / 재처리 / latency / cost / Tool 호출 지표</li>
+            <li>통합 데모 / 평가 리포트</li>
+          </ul>
+          <div class="boundary-note">
+            Core나 Agent Team의 내부 로직을 다시 구현하지 않고, 시스템을 보이게 만들고 품질을
+            측정하는 역할로 고정한다.
+          </div>
+          <div class="acop-note">
+            💬 쉬운 설명: 이 담당자는 "눈에 보이게 만들고, 잘하고 있는지 측정하는" 역할입니다.
+            사용자·운영자가 쓰는 화면을 만들고, AI가 어떤 판단을 내렸는지 추적할 수 있게 시각화하고,
+            사람 승인 화면을 만들고, "실제로 자동화가 얼마나 잘 되고 있는지"를 객관적으로 측정하는
+            평가 도구를 만듭니다. 핵심 로직 자체를 새로 만들지는 않고, 이미 만들어진 시스템을
+            보여주고 검증하는 데 집중합니다.
+          </div>
+        </div>
+        <h3>11-4. 책임 경계</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>질문 / 구현 항목</th>
+                <th>담당</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>두 Team이 같은 Case를 동시에 실행해도 되는가?</td>
+                <td><strong>Core 1</strong></td>
+              </tr>
+              <tr>
+                <td>Case owner / routing / retry / replan은?</td>
+                <td><strong>Core 1</strong></td>
+              </tr>
+              <tr>
+                <td>Shared State version / CAS / Optimistic Concurrency / Transaction은?</td>
+                <td><strong>Core 1</strong></td>
+              </tr>
+              <tr>
+                <td>Message Broker로 Task/Event를 어떻게 전달할까?</td>
+                <td><strong>Core 1</strong></td>
+              </tr>
+              <tr>
+                <td>외부 AI가 누구이며 어떤 Scope로 들어오는가?</td>
+                <td><strong>Core 2</strong></td>
+              </tr>
+              <tr>
+                <td>같은 환불/계정 변경 Action이 두 번 실행되지 않게 하는가?</td>
+                <td><strong>Core 2</strong> — Idempotency</td>
+              </tr>
+              <tr>
+                <td>선택된 Team 내부에서 문제를 어떻게 해결하는가?</td>
+                <td><strong>Agent Team 개발자 3명</strong></td>
+              </tr>
+              <tr>
+                <td>한 Team 내부 Agent 간 경합은?</td>
+                <td><strong>해당 Agent Team</strong></td>
+              </tr>
+              <tr>
+                <td>사용자/운영자 화면과 전체 품질 평가는?</td>
+                <td><strong>UX / Evaluation 1명</strong></td>
+              </tr>
+              <tr>
+                <td>Remote A2A Task를 Case State와 어떻게 연결하는가?</td>
+                <td><strong>Core 1</strong></td>
+              </tr>
+              <tr>
+                <td>A2A HTTP/Auth/Agent Card Endpoint를 어떻게 제공하는가?</td>
+                <td><strong>Core 2</strong></td>
+              </tr>
+              <tr>
+                <td>GraphRAG 관계 탐색과 Context Pack 통합은?</td>
+                <td><strong>Core 1</strong></td>
+              </tr>
+              <tr>
+                <td>Remote Team 자체 Agent/Subgraph는?</td>
+                <td><strong>해당 Agent Team</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: "이런 질문이 생기면 누구에게 물어봐야 하는지"를 미리 표로 정리해둔 것입니다.
+          예를 들어 "고객 문제 처리 순서나 충돌"에 관한 질문은 Core 1에게, "외부 AI 신원 확인이나
+          중복 실행 방지"에 관한 질문은 Core 2에게, "특정 팀 내부에서 어떻게 문제를 푸는지"는 그 팀
+          개발자에게, "화면이나 품질 평가"는 UX/평가 담당자에게 물어보면 된다는 안내판입니다.
+        </div>
+        <h3>11-5. DB도 “백엔드 담당 1명”에게 몰지 않는다</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>데이터 영역</th>
+                <th>주 소유자</th>
+                <th>예시</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Case Runtime 데이터</td>
+                <td><strong>Core 1</strong></td>
+                <td>
+                  customer_cases, case_events, shared_state, agent_runs, team_registry 관련
+                  Repository
+                </td>
+              </tr>
+              <tr>
+                <td>Access / Action 데이터</td>
+                <td><strong>Core 2</strong></td>
+                <td>
+                  external_ai_clients, oauth_connections, action_requests, approvals, audit_logs
+                </td>
+              </tr>
+              <tr>
+                <td>공통 DB 기반</td>
+                <td><strong>공통 합의</strong></td>
+                <td>SQLAlchemy Base, connection, Alembic convention, 공통 timestamp/error 규칙</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="why-box">
+          <strong>결론:</strong>
+          아키텍처 컴포넌트는 분리한다. 하지만 사람 역할까지 Controller / Repository / Broker /
+          DB처럼 잘게 나누지 않는다.
+          <strong
+            >Core 1은 “Case를 안전하게 끝까지 실행”하고, Core 2는 “외부 요청과 실제 Action을
+            안전하게 끝까지 실행”</strong
+          >한다.
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 데이터베이스도 "백엔드 담당자 한 명이 전부 관리"하지 않고, 각자 맡은 업무
+          영역(Case 관련 데이터는 Core 1, 접근·조치 관련 데이터는 Core 2)에 맞춰 나눠서 관리합니다.
+          정리하면, 코드 구성 요소는 잘게 나누더라도 사람은 "고객 문제를 안전하게 처리하는 것"과
+          "외부 요청·실제 조치를 안전하게 처리하는 것" 두 큰 흐름으로 나눠서 각자 끝까지 책임지는
+          구조입니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>심사 Q&amp;A</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>“Sierra나 Decagon이 이미 하는 거 아닌가요?”</h3>
+            <p>
+              고객응대 자체가 아니라, 멀티에이전트 고객운영의 통제·검증층이 주장이다.
+              Team·Controller·A2A, 승인 경계, 재생 가능한 evidence와 평가 하네스를 한 실행 구조로
+              검증한다.
+            </p>
+          </div>
+          <div class="card">
+            <h3>“그래서 자동화율이 몇 %인데요?”</h3>
+            <p>
+              분모·표본·CI를 함께 제시한다. 알파 전에는 <strong>“측정 중”</strong>이라고 답한다.
+            </p>
+          </div>
+          <div class="card">
+            <h3>“기존 헬프데스크에 붙이면 되잖아요?”</h3>
+            <p>
+              대체가 아니라 그 위의 <strong>실행·검증층</strong>이다. 기존 Case 접점 위에서
+              승인·상태·evidence·감사를 통합한다.
+            </p>
+          </div>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 심사에서 나올 법한 날카로운 질문에 미리 답을 준비한 부분입니다. "이미 있는
+          서비스 아니냐"는 질문에는 "우리는 응대 자체가 아니라, 여러 AI 팀이 협업하는 걸 안전하게
+          통제·검증하는 층을 만드는 것"이라고 답합니다. "자동화율이 몇 %냐"는 질문에는 근거 데이터
+          없이 숫자만 내세우지 않고, "몇 건 중 몇 건인지, 신뢰구간이 얼마인지"까지 함께 밝히거나,
+          아직 측정 전이면 솔직히 "측정 중"이라고 답합니다. "기존 헬프데스크에 붙이면 되지 않냐"는
+          질문에는 "기존 걸 대체하는 게 아니라 그 위에서 승인·감사·근거를 관리해주는 추가
+          계층"이라고 답합니다.
+        </div>
+      </section>
+      <section class="section">
+        <h2>12. 엑셀 입력용 요약</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>번호</th>
+                <th>팀 이름</th>
+                <th>팀원</th>
+                <th>프로젝트 주제</th>
+                <th>프로젝트 주제 설명</th>
+                <th>활용 기술 스택</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>6</td>
+                <td>A-COP Lab (예시)</td>
+                <td>[팀원명 입력]</td>
+                <td>다중 에이전트 서빙 기반 고객 피드백 분석 및 맞춤형 응대 자동화 시스템</td>
+                <td>
+                  기업이 자사 고객 응대와 운영 업무를 Agentic AI로 감독하게 하는 B2B 플랫폼. 하나의
+                  Runtime이 상태 있는 Case, 업무별 Team, 승인·idempotency·감사·평가를 공통 제공하고,
+                  <div class="v8-overlay v8-edited"><span class="v8-badge">✏️ v8 수정</span><br />요약표의 CS Pack 구성 표기가 새 확정축 Team 이름으로 바뀌었습니다.<details><summary>무엇이 바뀌었나</summary><blockquote>v7: CS Pack(Billing/Technical/VOC)<br />→ v8: CS Pack(VOC &amp; Store Manager/Response Generation &amp; Review)</blockquote>요약 한 줄에서도 v8의 확정축 구성을 일관되게 확인할 수 있습니다.</details></div>CS Pack(VOC &amp; Store Manager/Response Generation &amp; Review)과 Commerce Ops Pack(재고·가격·발주·배송·정산)을
+                  Registry로 교체·확장한다. 소비자는 기존 자기 Agent로 Commerce MCP와 CS MCP를 통해
+                  상품·주문·배송·문의까지 이용하며, 운영자는 human-on-the-loop로 이상 신호와 고위험
+                  Action만 확인한다. 10주에는 CS와 제한된 검증 쇼핑몰을 구현하고, 사이트 생성·판매와
+                  전면 Commerce Ops 자동화는 vision이다. 자체 호스팅 가능 범위와 미검증 항목은 별도
+                  표시한다.
+                </td>
+                <td>
+                  <strong>MVP 필수</strong>: Python, FastAPI, React, PostgreSQL, pgvector,
+                  LangGraph, RAG, MCP, A2A<br /><strong>Phase 2</strong>: OAuth2, Redis/RabbitMQ,
+                  AgeGraphAdapter·Neo4jGraphAdapter, Docker
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="acop-note">
+          💬 쉬운 설명: 이 표는 부트캠프 제출용 엑셀 양식에 그대로 옮겨 붙일 수 있도록 프로젝트
+          전체를 한 문단으로 압축 요약한 것입니다. "누구를 위한 서비스인지, 무엇을 하는지, 10주 동안
+          실제로 무엇을 만드는지, 어떤 기술을 쓰는지"가 한 번에 정리되어 있습니다.
+        </div>
+      </section>
+      <div class="small">
+        <strong>참고 출처</strong> (외부 리서치 인용, 확인일 2026-08-12): Google A2A 공식 문서·Linux
+        Foundation 발표 자료(스펙 1.0 및 참여 조직 수), AAIF 출범 자료(2025-12), GraphRAG 비용·효과
+        관련 외부 리서치. 본 프로젝트 측정치가 아니다.
+      </div>
+      <div class="footer">생성일: 2026-08-12 · 브리핑용 HTML 파일</div>
+    </div>
+  </body>
+</html>

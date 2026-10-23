@@ -1,0 +1,38 @@
+{
+  "hashes_matched": 317,
+  "hashes_checked": 317,
+  "backups_matched": 13,
+  "backups_checked": 13,
+  "checks": {
+    "visual-js": {
+      "exit_code": 0,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "--check",
+        "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_1357_지하철_수집실패_완료오인_수정\\visual-script-v1.js"
+      ]
+    },
+    "visual-self-check": {
+      "exit_code": 1,
+      "command": [
+        "C:\\Users\\playdata2\\anaconda3\\python.exe",
+        "C:/Users/playdata2/.agents/skills/diagram-design/scripts/self_check.py",
+        "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\assets\\2026-10-09_mobility_readiness_v48\\mobility-readiness.html"
+      ]
+    },
+    "debug-status": {
+      "exit_code": 1,
+      "command": [
+        "C:\\Users\\playdata2\\anaconda3\\python.exe",
+        "-m",
+        "pytest",
+        "tests/unit/core/test_debug_report_status.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\collector_debug_status"
+      ]
+    }
+  },
+  "browser_rendered": false
+}

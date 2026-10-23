@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """여행 Case 의 **규정 질문** — 일정을 바꾸지 않고 규정 근거로 답한다. `[2026-09-25]`
 
-★인계(triPilot : RAG 세션, 2026-09-25 실측): 여행을 가리키는 Case 는 전부 `*.itinerary`(규정 면제)로 갔고,
+★인계(guguroute : RAG 세션, 2026-09-25 실측): 여행을 가리키는 Case 는 전부 `*.itinerary`(규정 면제)로 갔고,
   고객 문장은 여섯 종류로만 읽혀
     「비 오면 오후 한강 카약 취소돼요? 위약금 있어요?」 → other  → 사람
     「저녁 식당에 아이 데려가도 되나요」                 → other  → 사람
@@ -22,8 +22,8 @@ import pytest
 
 from app.core.context import PolicyChunk
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import CaseEngine, cleanup_tenant
-from app.modules.travel_ops.trip_intake import validate
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine, cleanup_tenant
+from app.domains.travel_ops.components.conversation.trip_intake import validate
 
 from .test_case_version_day import Clock, _at, _latest, _seed, _sources
 
@@ -33,7 +33,7 @@ PALACE = "내일 경복궁 휴관 아니에요?"
 DELAY = "점심 식당 70분 늦을 것 같아요"
 SWAP = "다른 식당으로 바꿔줘"
 
-#: 실측한 모델 출력(triPilot : RAG, 2026-09-25) — 앞의 둘은 other, 경복궁은 closed 로 둔갑했다
+#: 실측한 모델 출력(guguroute : RAG, 2026-09-25) — 앞의 둘은 other, 경복궁은 closed 로 둔갑했다
 MODEL = {KAYAK: {"type": "other"}, CHILD: {"type": "other"}, PALACE: {"type": "closed"},
          DELAY: {"type": "delay", "minutes": 70}, SWAP: {"type": "change"}}
 
@@ -92,15 +92,32 @@ def _reading(world, case_id) -> dict:
     (CHILD, "dining", "t_doc_12#c2", "저녁"),                  # 「저녁 식당」 → 저녁 식사 항목
     (PALACE, "activity", "t_doc_08#c1", "경복궁"),             # ★closed 로 둔갑하던 문장
 ])
-def test_a_rules_question_is_answered_from_the_rules_and_the_plan_stays(world, text, team, source, item):
+def test_a_rules_question_is_answered_from_the_rules_and_the_plan_stays(world, text, team, source, item, monkeypatch):
+    # ★`[2026-10-16]` Activity 의 규정 검색은 운영에서 꺼져 있다(`_RAG_OFF`). 이 시험은 규정 질문이 **켜진** 경로로 답하는지 본다 — 꺼진 동작은 아래 시험.
+    from app.domains.travel_ops.instances.activity import ActivityTeam
+
+    monkeypatch.setattr(ActivityTeam, "_RAG_OFF", False)
     view = _ask(world, text, f"q-{source}")
     assert _reading(world, view["case_id"]) == {"type": "question"}          # ★질문으로 읽혔다
     assert view["case_status"] == "resolved" and view["owner_team_id"] == team, view
-    assert source in view["answer"] and "규정에서 찾은 내용" in view["answer"], view["answer"]
+    # ★`[2026-09-29 사용자 지시]` 근거 id 는 고객 문장에 싣지 않는다 — 그 절의 **고객용 문장**이 실렸는지로 본다
+    from app.domains.travel_ops.instances._shared.itinerary_team import customer_lines
+
+    assert customer_lines()[source] in view["answer"] and "규정에서 찾은 내용" in view["answer"], view["answer"]
+    assert "t_doc_" not in view["answer"]
     assert "일정은 바꾸지 않았어요" in view["answer"]
     if item:
         assert view["answer"].split(" — ")[0].find(item) >= 0, view["answer"]
     assert view["applied_actions"] == [] and _latest(world)[0]["version"] == 1   # ★일정을 안 바꿨다
+
+
+def test_an_activity_rules_question_has_no_answer_while_the_rules_search_is_off(world):
+    """`[2026-10-16]` 규정 검색을 끈 Activity(`_RAG_OFF` 기본 True)는 규정 질문에 답을 만들지 않고 넘긴다 — 지어내지 않는다.
+    일정은 그대로다. (CI 에서 확인된 동작: `case_status == escalated`, `answer is None`)"""
+    view = _ask(world, KAYAK, "q-rag-off")
+
+    assert view["case_status"] == "escalated" and view["answer"] is None, view
+    assert view["applied_actions"] == [] and _latest(world)[0]["version"] == 1
 
 
 def test_the_two_reports_stay_what_they_were(world):

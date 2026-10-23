@@ -1,0 +1,1589 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>계획 확인 시나리오 목업 · Claude 2026-10-02</title>
+<style>
+:root{
+  --bg:#f2f2ef;--paper:#fff;--ink:#1c1c1e;--ink2:#48484d;--ink3:#86868c;--ink4:#b9b9bd;
+  --line:#dadad6;--line2:#ebebe7;--fill:#f6f6f4;--fill2:#ececea;
+  --ok:#4f7a63;--okbg:#e8f1ec;--adj:#3f6a8a;--adjbg:#e6eff6;
+  --warn:#a35a00;--warnbg:#fff0d4;--warnln:#e9c27a;--bad:#c03a1a;--badbg:#fde5de;
+  --sel:#2457d6;--selbg:#e1e9ff;
+  --font:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--font);-webkit-font-smoothing:antialiased}
+code{font-size:.9em;background:var(--fill2);padding:1px 5px;border-radius:4px}
+
+/* ---------- 검토 막대 (제품 화면 밖) ---------- */
+.rbar{position:sticky;top:0;z-index:50;background:rgba(242,242,239,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.rbar-in{max-width:1180px;margin:0 auto;padding:9px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.rbar-t{font-weight:800;font-size:14px}
+.rbar-t small{font-weight:500;color:var(--ink3);margin-left:6px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.tb{font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:5px 10px;cursor:pointer;color:var(--ink);white-space:nowrap}
+.tb:hover{border-color:var(--ink3)}
+.tb.pri{background:var(--ink);border-color:var(--ink);color:#fff}
+.tsep{width:1px;height:20px;background:var(--line);margin:0 2px}
+.tlab{font-size:12px;color:var(--ink3);font-weight:700}
+
+/* ---------- 배치 ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:26px 16px 64px;display:grid;grid-template-columns:372px minmax(0,1fr);gap:40px;align-items:start}
+.phone-col{position:sticky;top:70px}
+@media (max-width:920px){.wrap{grid-template-columns:minmax(0,1fr)}.phone-col{position:static;max-width:372px;width:100%;justify-self:center}}
+.fit{position:relative;width:100%;max-width:360px;margin:0 auto;overflow:hidden}
+
+/* ---------- 설명 ---------- */
+.notes .kicker{margin:0;color:var(--ink3);font-size:13px;font-weight:700}
+.notes h1{font-size:30px;line-height:1.25;letter-spacing:-.03em;margin:8px 0 10px}
+.notes .lede{font-size:16px;color:var(--ink2);margin:0}
+.notes h2{font-size:18px;margin:28px 0 10px;letter-spacing:-.01em}
+.chg{margin:0;padding:0;list-style:none;counter-reset:c}
+.chg li{counter-increment:c;display:grid;grid-template-columns:28px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2);font-size:14.5px;color:var(--ink2)}
+.chg li::before{content:counter(c);width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12.5px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.chg b{color:var(--ink)}
+.notes ul{margin:0;padding-left:18px}
+.notes ul li{margin:4px 0;font-size:14px;color:var(--ink2)}
+.tag{display:inline-block;font-size:11.5px;font-weight:800;color:var(--warn);background:var(--warnbg);border-radius:6px;padding:1px 6px;margin-right:6px}
+@media (max-width:600px){.notes h1{font-size:25px}}
+
+/* ---------- 휴대폰 화면 ---------- */
+.screen{position:absolute;left:0;top:0;transform-origin:0 0;width:360px;height:740px;border-radius:34px;border:6px solid #26262a;background:var(--paper);overflow:hidden;font-size:15px;line-height:1.45;color:var(--ink);-webkit-user-select:none;user-select:none;--sheet-h:440px}
+.screen[data-sheet="peek"]{--sheet-h:150px}
+.screen[data-sheet="full"]{--sheet-h:640px}
+.screen *{box-sizing:border-box}
+.screen button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+.screen h2,.screen h3,.screen h4,.screen p{margin:0}
+.screen.instant,.screen.instant *{transition:none!important}
+.sbar{position:absolute;top:0;left:0;right:0;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:700;background:var(--paper);z-index:6}
+.sig{display:flex;align-items:flex-end;gap:2px}
+.sig i{width:3px;background:var(--ink);border-radius:1px}.sig i:nth-child(1){height:5px}.sig i:nth-child(2){height:7px}.sig i:nth-child(3){height:9px}
+.sig b{width:20px;height:10px;border:1.5px solid var(--ink);border-radius:3px;margin-left:5px;position:relative}
+.sig b::after{content:"";position:absolute;left:1px;top:1px;bottom:1px;width:60%;background:var(--ink);border-radius:1px}
+.stage{position:absolute;top:28px;left:0;right:0;bottom:0;overflow:hidden;background:var(--paper)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.5)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes flash{from{background:var(--selbg)}to{background:transparent}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(134,134,140,.45)}100%{box-shadow:0 0 0 9px rgba(134,134,140,0)}}
+@keyframes ripple{0%{box-shadow:0 0 0 0 rgba(79,122,99,.55)}100%{box-shadow:0 0 0 28px rgba(79,122,99,0)}}
+
+/* 상단 — ①②는 제목·설명·진행 바, ③부터는 지도 위의 얇은 막대(뒤로 + 진행 바)만 남긴다 */
+.ph{position:absolute;left:0;right:0;top:0;z-index:5;background:var(--paper);padding:8px 16px 12px;transition:opacity .35s,transform .35s}
+.screen.map-on .ph{opacity:0;transform:translateY(-12px);pointer-events:none}
+.ph-row{display:flex;align-items:center;gap:8px;min-height:32px}
+.back{font-size:24px;color:var(--ink2);line-height:1;width:16px;flex:none}
+.ph-title{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.ph-desc{color:var(--ink3);font-size:13.5px;margin-top:4px}
+.fbar{position:absolute;left:10px;right:10px;top:8px;z-index:5;display:flex;align-items:center;gap:2px;padding:5px 10px 5px 6px;background:var(--paper);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.14);opacity:0;transform:translateY(-10px);pointer-events:none;transition:opacity .4s ease .15s,transform .4s ease .15s}
+.screen.map-on .fbar{opacity:1;transform:none;pointer-events:auto}
+.fbar .back{font-size:22px;width:20px;text-align:center}
+.fbar .pb{flex:1;margin:0;transition:opacity .35s}
+/* 정리 완료 뒤 — 진행 바 자리에 여행 제목(D화면과 같음) */
+.fb-title{position:absolute;left:34px;right:14px;top:50%;transform:translateY(calc(-50% + 6px));font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s}
+.screen.titled .fbar .pb{opacity:0;pointer-events:none}
+.screen.titled .fb-title{opacity:1;transform:translateY(-50%)}
+
+/* 일직선 진행 바 */
+.pb{position:relative;height:40px;margin:14px 8px 0}
+.pb-track{position:absolute;left:10px;right:10px;top:10px;height:0}
+.pb-line,.pb-fill{position:absolute;left:0;top:-1.5px;height:3px;border-radius:2px}
+.pb-line{right:0;background:var(--line)}
+.pb-fill{width:0;background:var(--ok);transition:width .6s cubic-bezier(.3,.7,.4,1)}
+.pb-head{position:absolute;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(79,122,99,.22);opacity:0;transition:left .6s cubic-bezier(.3,.7,.4,1),opacity .3s;z-index:2}
+.pb-head.on{opacity:1}
+.pb-node{position:absolute;top:0;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--paper);border:2px solid var(--ink4);display:grid;place-items:center;z-index:1;transition:width .25s,height .25s,margin .25s,background .25s,border-color .25s}
+.pb-node.cur{width:20px;height:20px;margin:-10px 0 0 -10px;border:2.5px solid var(--ink3);animation:pulse 1.4s ease-out infinite}
+.pb-node.done{width:18px;height:18px;margin:-9px 0 0 -9px;border:0;background:var(--ok);animation:none}
+.pb-node.done.fx{animation:pop .35s ease-out}
+.pb-node.done::after{content:"✓";color:#fff;font-size:10.5px;font-weight:800;line-height:1}
+.pb-lab{position:absolute;top:15px;font-size:11.5px;font-weight:700;color:var(--ink4);white-space:nowrap;transform:translateX(-50%);transition:color .3s}
+.pb-lab[data-n="1"]{transform:translateX(-10px)}
+.pb-lab[data-n="4"]{transform:translateX(calc(-100% + 10px))}
+.pb-lab.cur{color:var(--ink)}
+.pb-lab.done{color:var(--ok)}
+/* 얇은 막대 안의 작은 진행 바 */
+.pb.sm{height:32px}
+.pb.sm .pb-track{top:9px}
+.pb.sm .pb-head{width:8px;height:8px;margin:-4px 0 0 -4px;box-shadow:0 0 0 3px rgba(79,122,99,.22)}
+.pb.sm .pb-node{width:10px;height:10px;margin:-5px 0 0 -5px}
+.pb.sm .pb-node.cur{width:16px;height:16px;margin:-8px 0 0 -8px;border-width:2px}
+.pb.sm .pb-node.done{width:14px;height:14px;margin:-7px 0 0 -7px}
+.pb.sm .pb-node.done::after{font-size:8.5px}
+.pb.sm .pb-lab{top:12px;font-size:10.5px}
+.sp-ic{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--ink3);animation:spin .8s linear infinite;flex:none}
+.ok-ic{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--ok);color:#fff;font-size:10px;font-weight:800;flex:none;font-style:normal}
+
+/* ①② 올린 원문이 읽히는 화면 */
+.read{position:absolute;left:0;right:0;bottom:0;padding:4px 16px 16px;background:var(--paper);transition:opacity .35s,transform .35s}
+.screen.map-on .read{opacity:0;transform:translateY(-12px);pointer-events:none}
+.read-lab{font-size:12.5px;font-weight:800;color:var(--ink3);margin:10px 2px 8px}
+.doc{border:1px solid var(--line);border-radius:14px;padding:2px 14px;background:var(--fill)}
+.ln{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:start}
+.ln:last-child{border-bottom:0}
+.ln .li{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:2px;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff}
+.ln .lt{font-size:14.5px;color:var(--ink4);transition:color .25s}
+.ln .tg{display:none;margin-top:3px;font-size:12px;font-weight:700;color:var(--ok)}
+.ln.cur .li{border-color:var(--ink3);border-top-color:transparent;animation:spin .8s linear infinite}
+.ln.cur .lt{color:var(--ink2)}
+.ln.rd .li{border:0;background:var(--ok)}
+.ln.rd .li::after{content:"✓"}
+.ln.rd .lt{color:var(--ink)}
+.ln.rd .tg{display:block}
+.ln.rd.fx .li{animation:pop .3s ease-out}
+.ln.rd.fx .tg{animation:rise .3s ease-out}
+.read-sum{margin:12px 2px 0;font-size:13.5px;color:var(--ink2)}
+
+/* ③④ 지도 */
+.map{position:absolute;inset:0;background:#e9ebe6;opacity:0;transition:opacity .6s ease}
+.screen.map-on .map{opacity:1}
+.map>svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.ml{position:absolute;left:0;right:0;top:58px;bottom:var(--sheet-h);transition:bottom .3s}
+.screen[data-day="1"] .ml.d2,.screen[data-day="2"] .ml.d1{display:none}
+.route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transition:opacity .4s}
+.route polyline{fill:none;stroke:#7b7b80;stroke-width:2;stroke-dasharray:5 5;vector-effect:non-scaling-stroke;transition:opacity .4s,stroke .2s}
+.route polyline:not(.in){opacity:0}
+.route polyline.on{stroke:var(--sel);stroke-width:3.5;stroke-dasharray:none}
+.pin{position:absolute;width:30px;height:30px;margin:-36px 0 0 -15px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--paper)!important;border:2px solid var(--ink)!important;display:grid!important;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .4s cubic-bezier(.3,1.5,.5,1),opacity .3s;z-index:2}
+.pin i{transform:rotate(45deg);font-style:normal;font-weight:800;font-size:13px}
+.pin:not(.in){opacity:0;transform:rotate(-45deg) translate(12px,-12px) scale(.4)}
+.pin.on{background:var(--sel)!important;border-color:var(--sel)!important;color:#fff;transform:rotate(-45deg) scale(1.2);z-index:3}
+.rip{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;pointer-events:none}
+.rip.in.fx{animation:ripple 1s ease-out 1}
+.nopin{position:absolute;transform:translate(-50%,-50%);font-size:11.5px!important;font-weight:800;background:var(--warnbg)!important;color:var(--warn)!important;border:1.5px dashed #d29a3b!important;border-radius:999px;padding:3px 9px!important;white-space:nowrap;z-index:2;transition:opacity .3s}
+.nopin:not(.in){opacity:0}
+.nopin.on{border-color:var(--sel)!important;border-style:solid!important;box-shadow:0 0 0 3px var(--selbg)}
+.map-note{position:absolute;left:10px;bottom:calc(var(--sheet-h) + 8px);font-size:11px;color:var(--ink3);background:rgba(255,255,255,.85);padding:1px 6px;border-radius:4px;transition:bottom .3s}
+
+/* ③④ 아래에서 올리는 시트 */
+.sheet{position:absolute;left:0;right:0;bottom:0;height:var(--sheet-h);background:var(--paper);border-radius:20px 20px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.14);display:flex;flex-direction:column;z-index:4;transform:translateY(105%);transition:transform .55s cubic-bezier(.2,.8,.2,1),height .3s ease}
+.screen.map-on .sheet{transform:none}
+.handle{height:24px;width:100%;display:grid!important;place-items:center;flex:none}
+.handle i{width:42px;height:5px;border-radius:3px;background:#cfcfcb}
+.sh-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 16px 8px;flex:none;border-bottom:1px solid var(--line2)}
+.sh-title{font-weight:800;font-size:15px}
+.sh-count{font-size:12.5px;font-weight:700;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.sheet-body{flex:1;min-height:0;overflow-y:auto;padding:2px 14px 18px;scrollbar-width:thin}
+
+/* 시트 안 스트림 — S1과 같은 카드·검사 행 */
+.dh{margin:12px 0 2px;font-size:13px;color:var(--ink3);font-weight:800}
+.dh small{font-weight:500;margin-left:4px}
+.screen.fin .dh{cursor:pointer}
+.tl-r{display:grid;grid-template-columns:40px 18px minmax(0,1fr);column-gap:6px}
+.tl-time{font-size:13px;font-weight:800;color:var(--ink2);padding-top:15px;text-align:right;font-variant-numeric:tabular-nums}
+.tl-rail{position:relative}
+.tl-rail::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--line)}
+.dh+.tl-r .tl-rail::before{top:22px}
+.tl-r.lastday .tl-rail::before{bottom:auto;height:22px}
+.dh+.tl-r.lastday .tl-rail::before{display:none}
+.tl-dot{position:absolute;left:3px;top:17px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:2px solid var(--ink4);transition:border-color .3s,background .3s}
+.tl-dot.ok{border-color:var(--ok);background:var(--okbg)}
+.tl-dot.warn{border-color:var(--warn);background:var(--warnbg)}
+.tl-c{padding:4px 0}
+.si:not(.in){display:none}
+.si.in.fx{animation:rise .35s ease-out}
+.cd{border:1.5px solid var(--line);border-radius:12px;background:var(--paper);transition:border-color .35s,background .35s,box-shadow .2s}
+.cd.run{border-color:var(--ink4)}
+.cd.okd{border-color:var(--ok)}
+.cd.wrn{border-color:var(--warnln);background:#fffaf0}
+.screen.fin .cd{border-color:var(--line);background:var(--paper)}
+.screen.fin .cd.st-review{border-color:var(--warnln);background:#fffaf0}
+.screen.fin .cd.on{border-color:var(--sel);box-shadow:0 0 0 3px var(--selbg)}
+.cd-h{display:flex!important;align-items:center;gap:10px;padding:12px!important;width:100%;min-height:48px}
+.screen:not(.fin) .cd-h{cursor:default}
+.cd-n{flex:1;min-width:0;font-weight:750;font-size:16px;letter-spacing:-.01em}
+.chev{color:var(--ink3);font-size:15px;transition:transform .3s;line-height:1;flex:none}
+.cd.open .chev{transform:rotate(180deg)}
+.screen:not(.fin) .chev{display:none}
+.cd-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s ease}
+.cd.open .cd-b{grid-template-rows:1fr}
+.cd-bi{overflow:hidden;min-height:0}
+.cd-in{padding:0 12px 10px}
+.spin{display:inline-flex;align-items:center}
+.spin:not(.in) .mk{display:none}
+.spin.in .sp-ic{display:none}
+.mk{flex:none;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:800;line-height:1;font-style:normal}
+.mk.ok{color:var(--ok);background:var(--okbg)}
+.mk.adj{color:var(--adj);background:var(--adjbg)}
+.mk.warn{color:var(--warn);background:var(--warnbg)}
+.mk.bad{color:#fff;background:var(--bad)}
+.mk.none{color:var(--ink3);background:var(--fill2)}
+.cks{border-top:1px solid var(--line2);padding-top:4px}
+.ck{display:grid;grid-template-columns:20px 52px minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;font-size:13px}
+.ck b{font-weight:700;color:var(--ink2);font-size:12.5px}
+.ck .t{color:var(--ink2)}
+.ck.bad .t{color:var(--bad);font-weight:650}
+.ck.warn .t{color:var(--warn)}
+.ck.none .t{color:var(--ink3)}
+.ck:not(.in) .mk,.ck:not(.in) .res{display:none}
+.ck.in .pi,.ck.in .wait{display:none}
+.ck.in.fx{animation:flash .7s}
+.pi{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--ink3);animation:spin .8s linear infinite;margin:1px}
+.wait{color:var(--ink4)!important}
+
+/* 장소 사이 이동 — 카드가 아니라 카드 사이 빈 공간의 한 줄. 누르면 넓어지며 체크리스트 */
+.mv-r .tl-rail::before{background:repeating-linear-gradient(to bottom,var(--ink4) 0 3px,transparent 3px 7px)}
+.mv-c{padding:1px 0}
+/* 이동 출발 시각 — 장소 시각보다 작고 옅게, 경로를 찾은 뒤에 나타난다 */
+.mv-dep{padding-top:7px!important;line-height:1.15;display:flex;flex-direction:column;align-items:flex-end;opacity:0;transition:opacity .3s}
+.mv-dep b{font-size:12px;font-weight:800;color:var(--ink3)}
+.mv-dep small{font-size:10px;font-weight:700;color:var(--ink4);margin-top:1px}
+.mv-r.done .mv-dep{opacity:1}
+.mv-r.st-review .mv-dep b{color:var(--warn)}
+.mv-dot{position:absolute;left:5px;top:12px;width:8px;height:8px;border-radius:50%;background:var(--paper);border:2px solid var(--ink4);opacity:0;transition:opacity .3s}
+.mv-r.done .mv-dot{opacity:1}
+.mv-r.st-review .mv-dot{border-color:var(--warn)}
+.mv{border:1.5px solid transparent;border-radius:10px;transition:background .3s,border-color .3s,box-shadow .2s}
+.screen .mv-h{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:4px 10px;font-size:13px;color:var(--ink2)}
+.screen:not(.fin) .mv-h{cursor:default}
+.mv-mode{flex:none;font-size:11px;font-weight:800;color:var(--ink2);background:var(--fill2);border-radius:6px;padding:1px 6px}
+.mv-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:650}
+.mv .mk{width:18px;height:18px;font-size:10px}
+.mv:not(.in) .mv-mode,.mv:not(.in) .mv-t .res{display:none}
+.mv.in .mv-t .wait{display:none}
+.mv.in.st-review .mv-t{color:var(--warn)}
+.screen.fin .mv:hover{background:var(--fill)}
+.mv.open{background:var(--fill);border-color:var(--line)}
+.mv.open .cd-b{grid-template-rows:1fr}
+.mv.open .chev{transform:rotate(180deg)}
+.screen.fin .mv.on{border-color:var(--sel);box-shadow:0 0 0 3px var(--selbg)}
+.screen.fin .mv.on:not(.open){background:var(--paper)}
+.mv-in{padding:0 10px 8px}
+.mv .ck{font-size:12.5px}
+
+/* ---------- 개정 4: 카드 조작 · 잠금 · 수정 화면 ---------- */
+.pin{transition:transform .4s cubic-bezier(.3,1.5,.5,1),opacity .3s,left .5s ease,top .5s ease}
+.svg-i{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fbar button.back{color:var(--ink2);height:32px}
+/* 카드 머리 — 정리 뒤: 잠금 · 이름 · 상태 글자 · 수정 · 삭제 */
+.cd-top{display:flex;align-items:center}
+.cd-top .cd-h{flex:1;min-width:0;width:auto}
+.cd-top>.ic,.cd-top>.pill,.cd-top>.pill-wait{display:none}
+.screen.fin .cd-top{padding:0 4px;gap:2px}
+.screen.fin .cd-top>.ic{display:inline-grid}
+.screen.fin .cd-top>.pill,.screen.fin .cd-top>.pill-wait{display:inline-flex}
+.screen.fin .cd-h{padding:12px 4px!important;gap:6px}
+.screen.fin .cd-h .spin,.cd-h .chev{display:none}
+.screen.fin .cd-n{font-size:15.5px;line-height:1.3;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ic{width:28px;height:28px;border-radius:8px;place-items:center;color:var(--ink3);flex:none;transition:background .15s,color .15s}
+.ic:hover{background:var(--fill2);color:var(--ink)}
+.ic[aria-disabled="true"]{opacity:.28;cursor:not-allowed}
+.ic[aria-disabled="true"]:hover{background:none;color:var(--ink3)}
+.ic.lock[aria-pressed="true"]{background:var(--ink);color:#fff;opacity:1}
+.pill{flex:none;align-items:center;font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 8px;border:1px solid var(--line);color:var(--ink2);background:var(--paper);white-space:nowrap;margin:0 2px}
+.pill.adjusted{color:var(--adj);border-color:#bcd0df;background:var(--adjbg)}
+.pill.review{color:var(--warn);border-color:var(--warnln);background:var(--warnbg)}
+.pill-wait{flex:none;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--ink3);margin:0 4px}
+.screen.fin .cd.locked{background:#f2f4f3;border-color:#c5cec8}
+.cd-acts{display:flex;gap:8px;margin-top:10px}
+.screen:not(.fin) .cd-acts,.screen:not(.fin) .cd-note{display:none}
+.btn2{flex:1;height:38px;padding:0 12px!important;border-radius:10px;border:1px solid var(--line)!important;background:var(--paper)!important;font-size:13.5px!important;font-weight:750!important;display:inline-flex!important;align-items:center;justify-content:center;gap:6px;white-space:nowrap;text-align:center!important}
+.btn2.pri{background:var(--ink)!important;border-color:var(--ink)!important;color:#fff!important}
+.btn2[aria-disabled="true"]{opacity:.32;cursor:not-allowed}
+.btn2 .svg-i{width:15px;height:15px}
+.cd-note{font-size:12px;color:var(--ink3);margin-top:8px}
+.cd-note b{color:var(--ink2)}
+/* 위 막대 — 수정 화면에서는 장소 검색창 */
+.fb-search{position:absolute;left:32px;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;height:32px;padding:0 6px 0 9px;border-radius:10px;background:var(--fill);border:1px solid var(--line2);opacity:0;pointer-events:none;transition:opacity .3s}
+.screen.editing .fb-search{opacity:1;pointer-events:auto}
+.screen.editing .fb-title{opacity:0!important}
+.fb-search .svg-i{width:16px;height:16px;color:var(--ink3)}
+.fb-search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);outline:none;-webkit-user-select:text;user-select:text}
+.fb-search input::placeholder{color:var(--ink4)}
+.sclear{width:22px;height:22px;border-radius:50%;background:var(--fill2)!important;color:var(--ink3);font-size:11px;display:none!important;place-items:center}
+.screen.searching .sclear{display:grid!important}
+/* 수정 화면 지도 — 저장된 일정은 회색으로 고정, 지금 장소와 대체 후보만 누를 수 있다 */
+.ml.ed{display:none}
+.screen.editing .ml.ed{display:block}
+.screen.editing .ml.d1,.screen.editing .ml.d2{display:none!important}
+.pin.gray{background:#f1f1ef!important;border-color:#c2c2c6!important;color:#a0a0a6;box-shadow:none;pointer-events:none}
+.pin.curp{background:var(--ink)!important;border-color:var(--ink)!important;color:#fff}
+.pin.cand{border-color:var(--ok)!important;color:var(--ok)}
+.pin.cand.on,.pin.curp.on{background:var(--sel)!important;border-color:var(--sel)!important;color:#fff;transform:rotate(-45deg) scale(1.2);z-index:3}
+/* 수정 화면 시트 — 옆으로 넘기는 카드, 아래에 등록 사진 */
+.edit-view{display:none;flex:1;min-height:0;flex-direction:column}
+.screen.editing .edit-view{display:flex}
+.screen.editing .sh-head,.screen.editing .sheet-body{display:none}
+.ev-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 16px 8px;border-bottom:1px solid var(--line2);flex:none}
+.ev-head b{font-size:15px;font-weight:800;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-pos{flex:none;font-size:12px;font-weight:700;color:var(--ink3)}
+.ev-body{flex:1;min-height:0;overflow-y:auto;padding:12px 0 24px;scrollbar-width:thin}
+.screen.searching .ev-body{display:none}
+.ecar{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 24px 8px;scrollbar-width:none;position:relative}
+.ecar::-webkit-scrollbar{display:none}
+.ec{flex:0 0 288px;scroll-snap-align:center;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--paper);transition:border-color .2s,box-shadow .2s}
+.ec.cur{background:var(--fill)}
+.ec.on{border-color:var(--ink3);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.ec-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.ec-chip{font-size:11.5px;font-weight:800;color:var(--ink2);background:var(--fill2);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.ec-chip.cand{color:var(--ok);background:var(--okbg)}
+.ec-chip.search{color:var(--sel);background:var(--selbg)}
+.ec-dist{font-size:12px;font-weight:700;color:var(--ink3);white-space:nowrap}
+.ec-name{font-size:18px;font-weight:800;letter-spacing:-.02em;margin:8px 0 2px!important;line-height:1.3}
+.ec-sub{font-size:12.5px;color:var(--ink3);line-height:1.4}
+.ec .cks{margin-top:8px}
+.ec .btn2{width:100%;margin-top:10px}
+.ec-next{font-size:12px;color:var(--ink3);margin-top:8px!important;text-align:right}
+.edots{display:flex;justify-content:center;gap:6px;margin:4px 0 0}
+.edots i{width:6px;height:6px;border-radius:3px;background:var(--line);transition:width .2s,background .2s}
+.edots i.on{width:16px;background:var(--ink)}
+.ev-hint{display:block!important;width:calc(100% - 32px);margin:10px 16px 12px!important;padding:8px!important;border-radius:10px;background:var(--fill)!important;font-size:12px;font-weight:700;color:var(--ink3);text-align:center!important}
+.photos{padding:0 16px}
+.photos h4{display:flex;align-items:baseline;gap:6px;font-size:13.5px;font-weight:800;margin:4px 0 8px}
+.photos h4 small{font-size:12px;color:var(--ink3);font-weight:600}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ph-t{position:relative;margin:0;border-radius:10px;overflow:hidden;aspect-ratio:4/3;background:var(--fill2)}
+.ph-t svg{position:absolute;inset:0;width:100%;height:100%}
+.ph-t svg text{font-family:var(--font)}
+.ph-t figcaption{position:absolute;left:6px;bottom:6px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.45);border-radius:5px;padding:1px 6px}
+.pnote{font-size:11.5px;color:var(--ink3);margin-top:8px!important}
+.pempty{font-size:13px;color:var(--ink3);background:var(--fill);border-radius:10px;padding:14px;text-align:center}
+.sres{display:none;flex:1;min-height:0;overflow-y:auto;padding:6px 12px 20px}
+.screen.searching .sres{display:block}
+.sr-head{display:flex;align-items:baseline;gap:6px;font-size:13px;font-weight:800;color:var(--ink2);margin:4px 4px 6px!important}
+.sr-head small{font-weight:600;color:var(--ink3)}
+.sr{display:grid!important;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:10px 6px!important;border-bottom:1px solid var(--line2)!important;border-radius:8px}
+.sr:hover{background:var(--fill)!important}
+.sr-i{width:22px;height:22px;border-radius:50%;background:var(--fill2);font-size:11.5px;font-weight:800;color:var(--ink2);display:grid;place-items:center}
+.sr-b{display:flex;flex-direction:column;min-width:0}
+.sr-b b{font-size:14.5px;font-weight:750}
+.sr-b small{font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-d{font-size:12px;font-weight:700;color:var(--ink2)}
+/* 알림 */
+.toast{position:absolute;left:12px;right:12px;bottom:min(calc(var(--sheet-h) + 10px),600px);z-index:9;display:flex;align-items:center;gap:10px;background:#26262a;color:#fff;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transform:translateY(6px);pointer-events:none;transition:opacity .25s,transform .25s,bottom .3s}
+.toast.show{opacity:1;transform:none;pointer-events:auto}
+.toast .tt{flex:1;min-width:0}
+.toast .tt small{display:block;color:#b9b9bd;font-size:11.5px;margin-top:1px}
+.toast .tu{color:#9fd3b4;font-weight:800;font-size:13px;white-space:nowrap}
+/* 화면 밖: 서버로 보낼 값(예시) */
+.reqlog{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.reqlog li{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:2px}
+.reqlog li b{font-size:13px}
+.reqlog li code{justify-self:start;font-size:11.5px}
+.reqlog li span{font-size:12.5px;color:var(--ink2);word-break:break-all}
+.reqlog li.empty{color:var(--ink3);font-size:13px}
+
+/* ---------- 개정 5: 결과 화면 맨 아래 — 전체 자동 추천 · 다음 동작(재검증/여행 등록) ---------- */
+.sh-foot{display:none;flex:none;gap:8px;padding:10px 14px 14px;border-top:1px solid var(--line2);background:var(--paper)}
+.screen.fin:not(.editing) .sh-foot{display:flex;animation:rise .35s ease-out}
+.sh-foot .btn2{height:46px;font-size:14px!important}
+.sh-foot .cnt{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--warnbg);color:var(--warn);font-size:11.5px;font-weight:800}
+.sh-foot .btn2.ok{background:var(--ok)!important;border-color:var(--ok)!important;color:#fff!important;opacity:1}
+.sh-foot .btn2.pri .sp-ic{border-color:rgba(255,255,255,.35);border-top-color:#fff}
+
+/* ---------- 개정 6: 삭제 확인 알림창 — 휴대폰 화면 가운데 ---------- */
+.alert{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:rgba(28,28,30,.45);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s,visibility 0s linear .18s}
+.alert.show{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .18s}
+.al-box{width:100%;max-width:288px;background:var(--paper);border-radius:16px;padding:22px 18px 16px;text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.28);transform:scale(.94);transition:transform .18s}
+.alert.show .al-box{transform:none}
+.al-t{font-size:16.5px;font-weight:800;letter-spacing:-.02em;line-height:1.4;word-break:keep-all;text-wrap:balance}
+.al-d{margin-top:8px!important;font-size:13px;color:var(--ink3);line-height:1.5;word-break:keep-all;text-wrap:balance}
+.al-d b{display:block;color:var(--ink2);font-weight:700}
+.al-d .nw{white-space:nowrap}
+.al-btns{display:flex;gap:8px;margin-top:18px}
+.al-btns .btn2{height:44px;font-size:14.5px!important}
+.btn2.del{background:var(--bad)!important;border-color:var(--bad)!important;color:#fff!important}
+
+/* ---------- 개정 7: 시나리오 재생 ---------- */
+.tb:disabled{opacity:.4;cursor:default}
+.tb:disabled:hover{border-color:var(--line)}
+.tb[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.phone-col{scroll-margin-top:96px}
+#scnH{scroll-margin-top:84px}
+#scnSel{max-width:220px}
+/* 좁은 화면 — 조절 막대가 여러 줄이 되므로 고정하지 않는다(휴대폰 화면을 가리지 않게) */
+@media (max-width:920px){.rbar{position:static}.phone-col,#scnH{scroll-margin-top:8px}}
+/* 휴대폰 아래 — 지금 단계 */
+.stepcap{max-width:360px;margin:10px auto 0;padding:8px 12px 9px;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+.sc-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0;font-size:12px;font-weight:700;color:var(--ink3)}
+.sc-t{margin:2px 0 0;font-size:14.5px;font-weight:800;line-height:1.35}
+.sc-s{margin:2px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.solo .sc-s{display:block}
+/* 넓은 화면 — 휴대폰 열이 따라 내려오므로 단계 안내 높이를 고정해 화면 크기 맞춤(fit)이 흔들리지 않게 한다 */
+@media (min-width:921px){body:not(.solo) .stepcap{height:98px;overflow:hidden}body:not(.solo) .sc-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.who{display:inline-block;font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px;white-space:nowrap;flex:none}
+.who.server{color:var(--adj);background:var(--adjbg)}
+.who.user{color:var(--sel);background:var(--selbg)}
+/* 사용자 단계 — 누르는 자리 */
+.tapdot{position:absolute;z-index:30;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(36,87,214,.22);border:2px solid rgba(36,87,214,.8);pointer-events:none;opacity:0}
+.tapdot.go{animation:tap .5s ease-out forwards}
+.tapdot.swipe{opacity:1;transition:left .45s ease-in-out}
+@keyframes tap{0%{opacity:0;transform:scale(1.5)}40%{opacity:1;transform:scale(.82)}100%{opacity:0;transform:scale(1)}}
+/* 시나리오 · 단계 목록 */
+.basis{font-size:13px;color:var(--ink3);margin:10px 0 0}
+.scn-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.scn-tab{font:inherit;font-size:13px;font-weight:700;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 11px;cursor:pointer;color:var(--ink2)}
+.scn-tab:hover{border-color:var(--ink3)}
+.scn-tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.scn-head h3{font-size:17px;margin:16px 0 4px}
+.scn-head p{margin:0;font-size:14px;color:var(--ink2)}
+.steps{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.st{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;transition:border-color .2s,box-shadow .2s}
+.st.on{border-color:var(--sel);box-shadow:0 0 0 3px var(--selbg)}
+.st-h{display:flex;align-items:center;gap:8px;width:100%;font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.st-h b{font-size:14.5px;line-height:1.35}
+.st-n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--fill2);font-size:12px;font-weight:800;display:grid;place-items:center}
+.st.on .st-n{background:var(--sel);color:#fff}
+.st.done .st-n{background:var(--okbg);color:var(--ok)}
+.st-s{margin:6px 0 0 30px;font-size:13.5px;color:var(--ink2)}
+.dts{margin:6px 0 0 30px;display:grid;gap:6px}
+.dt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;align-items:start;font-size:13px;color:var(--ink2)}
+.dt pre{grid-column:2;margin:0}
+.dtg{display:inline-block;font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px;white-space:nowrap;margin-top:1px}
+.dtg.now{color:var(--ok);background:var(--okbg)}
+.dtg.agree{color:var(--warn);background:var(--warnbg)}
+.dtg.idea{color:var(--adj);background:var(--adjbg)}
+.dtg.ui{color:var(--ink3);background:var(--fill2)}
+.dt pre,.evs{font:11.5px/1.55 ui-monospace,Consolas,monospace;background:var(--fill);border:1px solid var(--line2);border-radius:8px;padding:6px 8px;white-space:pre-wrap;word-break:break-all;color:var(--ink)}
+.evs{margin:0;background:var(--paper);border-color:var(--line);padding:10px 12px}
+.evh{font-size:13.5px;color:var(--ink2);margin:14px 0 6px}
+/* 백엔드에 필요한 것 */
+.tbl{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:12px}
+.need{width:100%;border-collapse:collapse;font-size:13px}
+.need th,.need td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line2)}
+.need tr:last-child td{border-bottom:0}
+.need th{font-size:12px;color:var(--ink3);font-weight:800;background:var(--fill);white-space:nowrap}
+.need td:first-child{font-weight:700;color:var(--ink);min-width:120px}
+.need td:last-child{white-space:nowrap}
+.gs{font:inherit;font-size:12px;font-weight:800;border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:0 6px;margin:0 2px 2px 0;cursor:pointer;color:var(--ink2)}
+.gs:hover{border-color:var(--ink3)}
+/* 설계 노트 — 접어 둠 */
+.design{margin-top:32px;border-top:1px solid var(--line)}
+.design summary{cursor:pointer;font-weight:800;font-size:16px;padding:14px 0 6px}
+/* 화면만 보기 */
+body.solo .notes{display:none}
+body.solo .wrap{grid-template-columns:minmax(0,1fr)}
+body.solo .phone-col{position:static;justify-self:center;width:100%;max-width:372px}
+</style>
+</head>
+<body>
+
+<header class="rbar">
+  <div class="rbar-in">
+    <span class="rbar-t">대표 목업 · 계획 확인 시나리오<small>모바일 · 실제 API 미연결</small></span>
+    <div class="tools" role="toolbar" aria-label="시나리오 재생">
+      <label class="tlab" for="scnSel">시나리오</label>
+      <select class="tb" id="scnSel"></select>
+      <span class="tsep"></span>
+      <button class="tb" id="btnFirst" title="이 시나리오 처음부터" aria-label="이 시나리오 처음부터">⏮</button>
+      <button class="tb" id="btnPrev">◀ 이전</button>
+      <button class="tb pri" id="btnPlay">▶ 재생</button>
+      <button class="tb" id="btnNext">다음 ▶</button>
+      <span class="tsep"></span>
+      <label class="tlab" for="speed">속도</label>
+      <select class="tb" id="speed"><option value="0.5">0.5배</option><option value="1" selected>1배</option><option value="2">2배</option></select>
+      <span class="tsep"></span>
+      <button class="tb" id="btnSolo" aria-pressed="false">화면만 보기</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="phone-col">
+    <div class="fit" id="fit"><div class="screen" id="phone" data-day="1" data-sheet="half"></div></div>
+    <div class="stepcap" id="stepcap" aria-live="polite"></div>
+  </div>
+
+  <section class="notes">
+    <p class="kicker">2026-10-02 · Claude Code · 대표 목업 1 · 개정 7 · 2026-10-03 팀 저장소로 옮김 · 계획 확인 화면 구현 기준</p>
+    <h1>계획 확인 — 시나리오 목업</h1>
+    <p class="lede">화면은 개정 6과 같다. 시나리오 7개를 단계별로 재생하면서, 단계마다 화면이 어떻게 바뀌고 서버와 무엇을 주고받아야 하는지 적었다. 백엔드 작업의 기준 화면으로 쓴다.</p>
+    <p class="basis">「지금 계약」은 팀 명세 <code>final_project_cs/wiki/external/rest-endpoints.md</code>의 「계획 읽기」(2026-09-27)와 서버 코드 <code>app/domains/travel_ops/components/intake/</code>를 2026-10-02에 읽고 적었다. 「협의 필요」와 「제안」은 작성자 제안이고 아직 합의하지 않았다. 장소·시각·거리는 예시 값이다.</p>
+
+    <h2 id="scnH">시나리오 <small style="font-size:13px;color:var(--ink3);font-weight:600">— 단계를 누르면 그 단계부터 재생</small></h2>
+    <div class="scn-tabs" id="scnTabs" role="tablist" aria-label="시나리오"></div>
+    <div class="scn-head"><h3 id="scnTitle"></h3><p id="scnSum"></p></div>
+    <ol class="steps" id="steps"></ol>
+
+    <h2>애니메이션 재생 방식 — 제안</h2>
+    <ol class="chg">
+      <li><span><b>이 목업 — 단계 단위 재생</b> — 시나리오를 단계로 나누고 단계마다 누가(서버·사용자) 무엇을 하는지 적었다. 「재생」은 단계를 이어서 보이고, 「이전」·「다음」은 한 단계씩, 목록의 단계를 누르면 그 직전 상태를 움직임 없이 만든 뒤 그 단계만 움직인다. 사용자 단계는 누르는 자리(파란 원)를 보인 뒤 실제 버튼을 눌러 같은 코드가 돈다 — 직접 눌러 볼 때와 결과가 같다. 재생 중에 결과 화면을 직접 누르면 재생이 멈춘다.</span></li>
+      <li><span><b>실제 앱 — 서버는 순서, 화면은 속도</b> — 서버는 진행 결과를 이벤트로 순서대로 보내기만 한다. 화면은 받은 이벤트를 차례 줄에 쌓고 최소 표시 시간(예: 검사 한 줄 0.3초)을 두고 하나씩 그린다. 한꺼번에 와도 차례로 보이고, 늦게 오면 그때 그린다. 백엔드는 시간 간격을 맞출 필요 없이 이벤트의 순서와 내용만 맞추면 된다.</span></li>
+      <li><span><b>새로고침·다시 연결 — 지금 상태부터</b> — 지금까지의 결과를 한 번에 받아(접수 조회 <code>GET</code>) 움직임 없이 그리고, 그 뒤에 오는 이벤트부터 움직인다. 목업에서 단계를 눌러 바로 가는 것과 같은 방식이다.</span></li>
+      <li><span><b>SSE 합의 전 — GET 재조회로</b> — 재조회 결과를 앞 결과와 비교해 새로 읽힌 줄·새 카드·새 검사만 같은 차례 줄에 넣으면 같은 화면이 된다. 지금 계약으로 할 수 있고, 조회 간격만큼 늦게 보인다.</span></li>
+      <li><span><b>움직임 줄이기 설정</b> — 움직임 없이 결과만 바로 그린다. 이 목업도 그 설정이면 재생하지 않고 시나리오 1의 마지막 화면으로 시작한다.</span></li>
+    </ol>
+    <p class="evh">진행 이벤트 예시 <span class="dtg idea">제안</span> — 이벤트 이름과 칸은 작성자 제안이다.</p>
+    <pre class="evs">event: stage   {"stage":"checking","label":"장소·운영시간 확인"}
+event: line    {"source_id":"s1","no":3,"read":true,"found":{"index":1,"day":1,"starts_at":"11:00","title":"올리브영"}}
+event: item    {"index":1,"day":1,"starts_at":"11:00","ends_at":"12:00","title":"올리브영","place":null}
+event: check   {"index":1,"row":"place","result":"bad","text":"지점이 여러 곳이라 정하지 못했어요"}
+event: move    {"from":0,"to":1,"mode":"walk","minutes":12,"km":0.8,"depart":"11:30","result":"warn","text":"11:42 도착 · 일정보다 42분 늦어요"}
+event: done    {"stage":"review","revision":1,"needs":{"items":1,"moves":1}}</pre>
+    <p class="evh">result — <code>ok</code> ✓ 통과 · <code>filled</code> ✎ 채움 · <code>warn</code> ! 주의 · <code>bad</code> ✕ 고쳐야 함 · <code>unknown</code> – 아직 모름. row — 장소 <code>place</code> · 시간 <code>time</code> · 운영시간 <code>hours</code> · 휴무일 <code>closed</code>(이동은 경로 <code>route</code> · 수단 <code>mode</code> · 도착 <code>arrival</code>).</p>
+
+    <h2>백엔드에 필요한 것 — 한눈에 <small style="font-size:13px;color:var(--ink3);font-weight:600">— 숫자를 누르면 그 시나리오</small></h2>
+    <div class="tbl"><table class="need">
+      <thead><tr><th>화면에 필요한 것</th><th>지금</th><th>시나리오</th></tr></thead>
+      <tbody>
+        <tr><td>접수 · 진행 단계 · 읽은 줄</td><td><span class="dtg now">지금 계약</span> 접수 <code>POST /v1/web/trip-intakes</code>, 조회 <code>GET …/{intake_id}</code>의 <code>stage</code> · <code>lines[].read</code> · <code>items[]</code></td><td><button type="button" class="gs" data-goscn="0">1</button></td></tr>
+        <tr><td>지도 핀 좌표</td><td><span class="dtg now">지금 계약</span> <code>items[].fields.place.value</code>의 <code>latitude</code> · <code>longitude</code>(찾은 장소만)</td><td><button type="button" class="gs" data-goscn="0">1</button><button type="button" class="gs" data-goscn="1">2</button></td></tr>
+        <tr><td>「장소·운영시간 확인」 단계</td><td><span class="dtg agree">협의 필요</span> 지금 단계 값은 <code>received</code> · <code>transcribing</code> · <code>reading</code> · <code>review</code></td><td><button type="button" class="gs" data-goscn="0">1</button></td></tr>
+        <tr><td>장소별 검사 결과(장소 · 시간 · 운영시간 · 휴무일 + 한 줄 문구)</td><td><span class="dtg agree">협의 필요</span> 지금 <code>check</code>는 등록을 막는 문제(<code>no_place</code> 등)만 준다. 운영시간 · 휴무 · 겹침은 등록 때 판정한다</td><td><button type="button" class="gs" data-goscn="0">1</button><button type="button" class="gs" data-goscn="1">2</button><button type="button" class="gs" data-goscn="2">3</button></td></tr>
+        <tr><td>장소 사이 이동(수단 · 소요 · 출발 · 도착 여유)</td><td><span class="dtg agree">협의 필요</span> 지금 응답에 없다</td><td><button type="button" class="gs" data-goscn="0">1</button><button type="button" class="gs" data-goscn="1">2</button><button type="button" class="gs" data-goscn="2">3</button><button type="button" class="gs" data-goscn="5">6</button></td></tr>
+        <tr><td>진행 이벤트(SSE)</td><td><span class="dtg agree">협의 필요</span> 경로 · 이벤트 형식 미정. 합의 전에는 <code>GET</code> 재조회로 같은 화면을 만들 수 있다</td><td><button type="button" class="gs" data-goscn="0">1</button></td></tr>
+        <tr><td>이름이 모호한 장소(예: 올리브영)</td><td><span class="dtg agree">협의 필요</span> 지금 서버는 종류가 맞는 후보 중 앞뒤 일정에 가장 가까운 곳을 바로 고르고 확인 필요(<code>needs_review</code>)로 둔다. 후보 이름은 근거의 <code>chosen_from</code>에만 남는다. 이 화면은 「지점 미정」으로 두고 사용자가 고르게 했다</td><td><button type="button" class="gs" data-goscn="2">3</button><button type="button" class="gs" data-goscn="3">4</button></td></tr>
+        <tr><td>대체 후보(1~3순위 · 거리 · 후보별 판정)</td><td><span class="dtg agree">협의 필요</span> 지금 응답에 없다</td><td><button type="button" class="gs" data-goscn="2">3</button><button type="button" class="gs" data-goscn="3">4</button></td></tr>
+        <tr><td>장소 검색 · 장소 사진</td><td><span class="dtg agree">협의 필요</span> 지금 응답에 없다</td><td><button type="button" class="gs" data-goscn="3">4</button></td></tr>
+        <tr><td>장소 · 시각 바꾸기, 삭제</td><td><span class="dtg now">지금 계약</span> <code>POST …/edits</code> <code>{revision, edits:[{source_id, field, value}]}</code> — <code>items[n].place</code>(<code>{"name":…}</code>, 서버가 다시 찾음) · <code>starts_at</code> · <code>ends_at</code> · <code>removed</code>. 새 판을 준다. 못 찾으면 422 <code>place_not_found</code>, 낡은 판은 409 <code>stale_revision</code></td><td><button type="button" class="gs" data-goscn="2">3</button><button type="button" class="gs" data-goscn="3">4</button><button type="button" class="gs" data-goscn="5">6</button><button type="button" class="gs" data-goscn="6">7</button></td></tr>
+        <tr><td>잠금(반드시 포함)</td><td><span class="dtg agree">협의 필요</span> 수정 칸에 없다. 참고로 여행에는 예약 보호 <code>protected_reason: booked</code>가 있다</td><td><button type="button" class="gs" data-goscn="4">5</button></td></tr>
+        <tr><td>검증을 끝낸 대체 일정을 한 번에</td><td><span class="dtg agree">협의 필요</span> 적용은 수정 계약으로 보낼 수 있다</td><td><button type="button" class="gs" data-goscn="6">7</button></td></tr>
+        <tr><td>재검증(저장 없이 판정만)</td><td><span class="dtg agree">협의 필요</span> 지금 판정은 등록 때만 한다</td><td><button type="button" class="gs" data-goscn="6">7</button></td></tr>
+        <tr><td>여행 등록</td><td><span class="dtg now">지금 계약</span> <code>POST …/confirm</code> <code>{revision}</code> — 다시 조립 · 판정한 뒤 등록, 막히면 422 <code>intake_incomplete</code></td><td><button type="button" class="gs" data-goscn="6">7</button></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2>서버로 보낼 값 <small style="font-size:13px;color:var(--ink3);font-weight:600">— 재생하거나 직접 누를 때마다 쌓이는 예시, 실제로 보내지 않음</small></h2>
+    <ol class="reqlog" id="reqlog"><li class="empty">아직 없음 — 시나리오 3~7을 재생하거나 결과 화면에서 잠금·자동 추천·바꾸기·삭제를 눌러 보세요</li></ol>
+
+    <details class="design">
+      <summary>설계 노트 — 바뀐 점 · 작성자 가정 · 변경 기록</summary>
+
+      <h2>S1에서 바뀐 점</h2>
+      <ol class="chg">
+        <li><span><b>일직선 진행 바</b> — 단계 칩 4개 대신 한 줄 위의 점 4개. 한 단계가 끝날 때마다 초록 머리가 다음 점으로 이동해 체크한다. 단계 안에서도 읽은 줄·확인한 곳 수만큼 바가 조금씩 나아간다.</span></li>
+        <li><span><b>D화면으로 전환</b> — 「장소·운영시간 확인」이 시작되면 원문 카드가 사라지고 지도가 나타난다. 위쪽은 뒤로 가기와 진행 바만 남긴 얇은 막대로 줄어 지도 위에 떠 있고, 화면의 중심은 아래 시트다.</span></li>
+        <li><span><b>시트 안에서 스트림</b> — 아래 시트에서 S1처럼 장소 카드가 하나씩 생기고 검사 행이 ✓·✕로 채워진다. 장소가 확인되면 지도에 핀이 떨어지고, 지점을 못 정한 곳은 「위치 미정」으로 뜬다.</span></li>
+        <li><span><b>끝나면 접기</b> — 모두 확인되면 열려 있던 카드가 접혀 D화면처럼 닫힌 카드(시각·이름·상태)만 남는다. 이후 카드·핀을 누르면 서로 표시된다.</span></li>
+        <li><span><b>장소 사이 이동</b> — 같은 날 앞뒤 장소 사이 빈 공간에 카드가 아닌 한 줄로 최적 경로(수단·시간·구간)가 뜬다. 레일은 점선으로 바뀌어 이동 구간임을 보이고, 시각 칸에는 출발 시각(작은 점 + 「출발」)이 들어간다. 확인 단계에서 장소처럼 「찾는 중 → ✓·!」로 체크되고, 끝난 뒤 누르면 그 줄이 넓어지며 경로·수단·도착 체크리스트가 펼쳐지고 지도의 해당 구간이 파랗게 표시된다.</span></li>
+        <li><span><b>끝나면 여행 제목</b> — 카드가 모두 접히면 위 막대의 진행 바가 사라지고 D화면처럼 여행 제목(「10월 서울 여행」)이 자리를 잡는다. 「다시 올리기」는 뒤로 가기로 갈 수 있어 넣지 않았다.</span></li>
+      </ol>
+
+      <h2>개정 4 — 결과 카드 조작과 수정 화면 <small style="font-size:13px;color:var(--ink3);font-weight:600">— 시나리오 2~6</small></h2>
+      <ol class="chg">
+        <li><span><b>닫힌 카드</b> — 왼쪽은 잠금, 오른쪽은 상태 글자(유지·조정·확인 필요 — 와이어프레임 H와 같은 모양)와 수정·삭제 아이콘. 확인 필요 일정의 잠금은 꺼져 있다.</span></li>
+        <li><span><b>잠금</b> — 켜면 그 일정은 수정·자동 추천·삭제가 막히고, 서버에 「반드시 포함」을 알린다. 설명 아래 「서버로 보낼 값」에 예시로 쌓인다.</span></li>
+        <li><span><b>펼친 카드</b> — 맨 아래 왼쪽 「자동 추천」은 대체 후보 1순위로 바로 바꾸고 다시 확인한다. 오른쪽 「수정」은 수정 화면을 연다.</span></li>
+        <li><span><b>수정 화면</b> — 지도와 시트는 그대로 두고 내용만 바뀐다. 위 막대는 장소 검색창이 되고, 지도에는 저장된 일정 핀이 회색으로 고정되며 지금 장소와 대체 후보 핀(A·B·C)만 누를 수 있다.</span></li>
+        <li><span><b>옆으로 넘기는 카드</b> — 지금 일정(체크리스트) → 대체 후보 A → B → C. 넘기면 지도의 핀이 함께 표시되고, 시트를 위로 올리면 그 장소에 등록된 사진이 아래에 보인다.</span></li>
+        <li><span><b>검색</b> — 검색창에 쓰면 시트가 검색 결과 목록으로 바뀐다. 고른 곳은 카드로 들어가 「이 장소로 바꾸기」를 누를 수 있다.</span></li>
+      </ol>
+
+      <h2>개정 5 — 결과 화면 맨 아래 버튼 <small style="font-size:13px;color:var(--ink3);font-weight:600">— 시나리오 7</small></h2>
+      <ol class="chg">
+        <li><span><b>전체 자동 추천(왼쪽)</b> — 사용자가 확인해서 바꿔야 하는 항목을 서버가 검증한 대체 일정으로 한 번에 바꾼다. 확인 필요 장소는 후보 1순위부터 운영시간·휴무·앞뒤 이동을 맞춰 보고 맞는 첫 곳으로, 늦게 닿는 구간은 시각을 앞뒤 이동에 맞춰 줄인다. 고정한 일정은 건드리지 않는다. 버튼의 숫자는 고칠 항목 수다.</span></li>
+        <li><span><b>다음 동작(오른쪽)</b> — 확인할 항목이 남아 있으면 「재검증」이 무조건 꺼져 있다. 고친 것이 있으면 「재검증」, 고칠 것이 없고 그대로 진행할 수 있으면 「여행 등록」이다. 꺼진 버튼을 누르면 이유를 알려 준다.</span></li>
+        <li><span><b>재검증 → 여행 등록</b> — 재검증은 일정을 차례로 다시 확인하고, 통과하면 버튼이 「여행 등록」으로 바뀐다. 등록하면 「등록 완료」가 되고 이 화면의 조작은 닫힌다.</span></li>
+      </ol>
+
+      <h2>작성자 가정 <small style="font-size:13px;color:var(--ink3);font-weight:600">— 지시가 없어 정한 것, 바꿀 수 있음</small></h2>
+      <ul>
+        <li>①② 단계에 보일 내용은 올린 원문의 줄이 읽히는 모습으로 채웠다. 라이브 접수 조회의 「읽은 줄」(<code>lines[].read</code>)에 대응한다.</li>
+        <li>시트 카드 테두리는 확인 중 회색 → 끝나면 초록, 문제가 있으면 노랑으로 했다(스케치의 초록·회색). 모두 접힌 뒤에는 D처럼 기본 테두리로 돌리고 확인 필요만 노랑으로 남겼다.</li>
+        <li>S1의 「결과 보기」 버튼은 스트림이 결과 화면으로 바로 이어져 뺐다.</li>
+        <li>스케치에 맞춰 모바일만 만들었다. PC는 같은 흐름을 D안 PC(지도 위에 떠 있는 패널)로 옮길 수 있다.</li>
+        <li>장소·주소·원문·운영시간은 예시 값이고 지도는 위치 개념도다.</li>
+        <li>이동 경로·소요시간·체크 항목(경로·수단·도착)은 예시 값이다. 지점이 미정인 올리브영은 가장 가까운 지점 기준으로 임시 경로를 내고 「!」로 표시했다. 다른 날로 넘어가는 이동(숙소 등)은 넣지 않았다.</li>
+        <li>이동 줄은 끝난 뒤에만 펼칠 수 있게 했다(장소 카드와 같은 규칙).</li>
+        <li>출발 시각은 앞 장소가 끝나는 시각으로 잡았다(경복궁 1시간 반 관람 → 11:30, 광장시장 도착 여유를 둔 12:00). 올리브영이 11:00인데 11:30 출발이라 순서가 어긋나 보이는 것 자체가 문제를 드러내도록 노랑으로 뒀다.</li>
+        <li>(개정 4) 자동 추천 1순위는 2차본 규칙대로 같은 종류 중 같은 날 앞뒤 일정에서 가까운 순이다. 앞뒤에 장소가 없으면 지금 장소를 기준으로 한다.</li>
+        <li>(개정 4) 장소를 바꾸면 상태를 「조정」으로 두고 바뀐 카드와 앞뒤 이동 줄만 다시 확인한다(S6과 같은 방식). 다시 낸 이동 줄은 거리로 계산한 예시다(1.2km 이하 도보, 그 밖은 지하철).</li>
+        <li>(개정 4) 잠금은 유지·조정 일정에만 켤 수 있고, 확인 필요 일정은 먼저 고쳐야 한다. 이동 줄에는 잠금·수정·삭제를 넣지 않았다(지시 범위가 장소 카드).</li>
+        <li>(개정 4·6) 삭제는 휴대폰 화면 가운데 알림창으로 한 번 더 묻는다(제목 「… 일정을 삭제하시겠습니까?」, 아래에 일차·시각, 버튼 취소·삭제). 처음 초점은 「취소」에 두고, 바깥을 누르거나 Esc를 눌러도 취소로 본다. 바꾸기·삭제 뒤에는 「되돌리기」를 준다.</li>
+        <li>(개정 4) 수정 화면 지도는 후보가 화면 밖에 있을 때만 모두 보이게 넓힌다(핀이 부드럽게 옮겨 간다). 넓히지 않아도 되면 회색 핀은 제자리에 있다.</li>
+        <li>(개정 4) 사진은 예시 그림이고, 검색은 목업 안의 장소 표(2차본 예시 장소 18곳)에서 찾는다.</li>
+        <li>(개정 4) 닫힌 카드의 펼침 표시(⌄)는 자리가 모자라 뺐다. 이름을 누르면 펼쳐진다.</li>
+        <li>(개정 5) 「사용자가 확인해야 하는 항목」은 머리 요약과 같은 기준이다. 확인 필요 장소와 확인 필요 이동 구간을 함께 센다.</li>
+        <li>(개정 5) 전체 자동 추천은 시각까지 맞춘다(예: 올리브영 → 광화문점 11:45–12:15, 앞뒤 이동에 맞춰 30분). 카드 하나의 「자동 추천」은 개정 4 지시대로 장소만 바꾼다.</li>
+        <li>(개정 5) 잠금은 수정으로 치지 않아 재검증이 필요 없다. 장소 바꾸기·삭제·전체 자동 추천은 수정으로 친다. 되돌리기로 이전 상태로 돌아가면 수정 여부도 함께 돌아간다.</li>
+        <li>(개정 5) 재검증은 모든 일정을 차례로 다시 확인하는 모습으로 보였다. 여행 등록 뒤에는 이 화면의 조작을 막는다(실제로는 여행 화면으로 넘어감).</li>
+        <li>(개정 7) 시나리오를 고르면 첫 단계부터 바로 재생한다. 「⏸ 멈춤」은 지금 단계를 끝까지 보인 뒤 멈춘다.</li>
+        <li>(개정 7) 단계로 바로 가면 앞 단계를 움직임 없이 다시 만든 뒤 그 단계만 움직인다. 그래서 앞 단계에서 뜬 알림이 잠시 남아 있을 수 있다.</li>
+        <li>(개정 7) 재생 중 결과 화면을 직접 누르면 재생이 멈춘다. 그 뒤 「다음」은 다음 단계의 시작 상태를 다시 만든다.</li>
+        <li>(개정 7) 「서버로 보낼 값」은 수정 계약 모양으로 쌓는다. <code>source_id</code> <code>s1</code>은 예시 원본 id이고, 보낼 때마다 <code>revision</code>이 하나씩 는다고 가정했다.</li>
+      </ul>
+
+      <h2>변경 기록</h2>
+      <ul>
+        <li><b>2026-10-02 개정 7</b> — 시나리오 목업으로 바꿨다. 화면은 개정 6과 같고, 시나리오 7개(계획 확인 진행 · 결과 보기 · 자동 추천 · 수정 화면 · 잠금 · 삭제 · 전체 자동 추천 → 재검증 → 여행 등록)를 단계 단위로 재생한다(재생 · 이전 · 다음 · 단계로 바로 가기 · 누르는 자리 표시 · 화면만 보기). 단계마다 서버와 주고받을 값을 「지금 계약 · 협의 필요 · 제안 · 화면만」으로 나눠 적고, 애니메이션 재생 방식 제안과 「백엔드에 필요한 것」 표를 더했다. 「서버로 보낼 값」을 수정 계약 모양(<code>{revision, edits:[{source_id, field, value}]}</code>)으로 맞췄다. 위 막대의 단계 버튼, 「단계별 화면」, 「API 메모」, 「해 볼 것」은 시나리오와 표로 옮겼다.</li>
+        <li><b>2026-10-02 개정 6</b> — 삭제 확인을 카드 안의 확인 줄(「이 일정을 뺄까요?」 취소·빼기)에서 휴대폰 화면 가운데 알림창으로 바꿨다. 「○○ 일정을 삭제하시겠습니까?」와 일차·시각을 보이고 취소·삭제로 정한다. 휴지통 이름·삭제 뒤 알림·막힘 안내·「서버로 보낼 값」의 이름도 「삭제」로 맞췄다.</li>
+        <li><b>2026-10-02 개정 5</b> — 결과 화면 맨 아래에 왼쪽 「전체 자동 추천」, 오른쪽 다음 동작 버튼을 넣었다. 확인할 항목이 있으면 재검증이 꺼지고, 고쳤으면 「재검증」, 고칠 것이 없으면 「여행 등록」이다. 재검증 → 여행 등록 → 등록 완료 흐름과 「다시 확인 중」 상태를 여러 카드에 함께 쓰도록 바꿨다.</li>
+        <li><b>2026-10-02 개정 4</b> — 모바일에서 만든 개정 3을 기준으로 이어 작업했다. 닫힌 카드에 잠금·상태 글자·수정·삭제를, 펼친 카드에 자동 추천·수정 버튼을 넣었다. 같은 화면 안의 수정 화면(검색창, 회색 고정 핀과 대체 후보 핀, 옆으로 넘기는 후보 카드, 시트를 올리면 보이는 사진)을 만들었다. 바꾸기·빼기·되돌리기와 「서버로 보낼 값」 예시 기록을 더했다.</li>
+        <li><b>2026-10-02 개정 3</b> — 이동 줄의 시각 칸에 출발 시각을 넣었다(장소 시각보다 작고 옅게, 레일에 작은 점). 경로를 찾은 뒤 나타나고, 늦는 구간은 노랑으로 보인다.</li>
+        <li><b>2026-10-02 개정 2</b> — 카드가 접힌 뒤 위 막대를 진행 바 대신 여행 제목으로 바꿨다(D화면 참고, 「다시 올리기」 제외). 장소 사이 빈 공간에 이동 최적 경로 줄을 넣고, 누르면 넓어지며 이동 체크리스트가 보이게 했다. 진행 바·시트 머리 개수에 이동 구간을 포함했다.</li>
+        <li><b>2026-10-02 개정 1</b> — 진행 바 아래의 상태 문구 줄(「정리 완료 · 4곳 중 1곳만…」 등)을 없앴다. ③부터 위에 떠 있는 부분을 한 줄(뒤로 + 진행 바)로 줄였다(높이 약 120px → 42px). 줄인 만큼 시트 기본 높이를 390px → 440px로 키웠다.</li>
+      </ul>
+    </details>
+  </section>
+</div>
+
+<script>
+"use strict";
+/* ---------- 데이터 (2차본 예시 그대로 · 와이어프레임 모음과 같음) ---------- */
+const I={
+  a:{k:"a",day:1,no:1,s:"10:00",name:"경복궁",st:"keep",x:30,y:26,
+     rows:[["장소","ok","관광공사 정보로 찾았어요"],["운영시간","ok","09:00–18:00 안에 머물러요"],["휴무일","ok","화요일 휴무 · 방문은 목요일"]]},
+  b:{k:"b",day:1,no:2,s:"11:00",name:"올리브영",st:"review",x:null,y:null,
+     rows:[["장소","bad","지점이 여러 곳이라 정하지 못했어요"],["시간","warn","경복궁 관람과 30분 겹쳐요 · 등록 때 막힐 수 있어요"],["운영시간","none","지점을 고르면 확인해요"],["휴무일","none","지점을 고르면 확인해요"]]},
+  c:{k:"c",day:1,no:3,s:"12:30",name:"광장시장",st:"adjusted",x:80,y:58,
+     rows:[["장소","ok","가게 이름이 없어 광장시장으로 잡았어요"],["시간","adj","끝 시각이 없어 식사 1시간으로 채웠어요"],["운영시간","ok","09:00–23:00 안에 머물러요"],["휴무일","none","점포마다 달라요"]]},
+  d:{k:"d",day:2,no:1,s:"15:00",name:"N서울타워",st:"keep",x:57,y:62,
+     rows:[["장소","ok","「남산타워」를 N서울타워로 찾았어요"],["운영시간","ok","10:00–23:00 안에 머물러요"],["휴무일","ok","연중무휴"]]}
+};
+/* 장소 사이 이동 (예시 값) — 같은 날 앞뒤 장소 사이에만 생긴다. 키는 「앞-뒤」 장소 (개정 4) */
+const M={
+  "a-b":{k:"a-b",day:1,dep:"11:30",mode:"도보",st:"review",sum:"12분 · 0.8km",
+      rows:[["경로","warn","올리브영 지점이 미정이라 가장 가까운 광화문점 기준이에요"],["수단","ok","도보 12분 · 0.8km · 이 구간은 걷는 게 가장 빨라요"],["도착","warn","관람이 11:30에 끝나면 11:42 도착 · 일정보다 42분 늦어요"]]},
+  "b-c":{k:"b-c",day:1,dep:"12:00",mode:"지하철",st:"keep",sum:"18분 · 1호선 2정거장",
+      rows:[["경로","ok","종각역 → 종로5가역 · 1호선 2정거장"],["수단","ok","지하철 18분(걷기 7분 포함) · 택시보다 시간이 일정해요"],["도착","ok","12:00에 나서면 12:18 도착 · 12분 여유"]]}
+};
+const TRIP_TITLE="10월 서울 여행";
+const LINES=[
+  {t:"10월 1일 서울 여행",tag:"날짜 · 10.01(목)"},
+  {t:"10시 경복궁 관람 1시간 반",tag:"1일차 10:00 · 경복궁",item:true},
+  {t:"11시 올리브영",tag:"1일차 11:00 · 올리브영",item:true},
+  {t:"12시 반 광장시장 빈대떡",tag:"1일차 12:30 · 광장시장",item:true},
+  {t:"둘째 날 3시 남산타워",tag:"2일차 15:00 · 남산타워",item:true}
+];
+const STEPS=["받았어요","일정 읽기","장소·운영시간","정리 완료"];
+const ST={keep:"ok",adjusted:"adj",review:"warn"};
+const MK={ok:"✓",adj:"✎",warn:"!",bad:"✕",none:"–"};
+const MKL={ok:"통과",adj:"채움",warn:"주의",bad:"고쳐야 함",none:"아직 모름"};
+const mk=m=>`<i class="mk ${m}" title="${MKL[m]}" aria-label="${MKL[m]}">${MK[m]}</i>`;
+const MAPBG=`<svg class="bg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="300" fill="#e9ebe6"/><path d="M40 30Q90 0 150 25Q170 60 120 80Q60 85 40 30Z" fill="#dde5d6"/><path d="M190 175Q240 155 282 188Q292 230 240 246Q190 240 190 175Z" fill="#dde5d6"/><path d="M-20 262C70 236 150 284 240 258S370 228 430 246L430 320L-20 320Z" fill="#d6e1e8"/><g stroke="#fff" fill="none" stroke-linecap="round"><path d="M0 112H400M0 176H400M108 0V300M262 0V300M30 0L170 300M340 0L304 300" stroke-width="7"/><path d="M0 60H400M0 222H400M60 0V240M180 0V250M320 0V230M210 0L150 300" stroke-width="3"/></g></svg>`;
+
+/* ---------- 시간표 (ms) — 수정 버전에서 바꾸기 쉽게 한곳에 모음 ---------- */
+const T={recv:600,line0:1000,lineGap:500,readDone:3300,toMap:3800,dh1:4200,dh2:7350,day2:7450,
+         item:{a:4300,b:5100,c:5900,d:7450},mv:{"a-b":5500,"b-c":6300},mvDur:700,rowGap:350,checkDone:8900,wrap:9150,wrapDone:9750,fold:9900,foldGap:90,back:10250,title:10500,end:10900};
+
+/* ---------- 화면 틀 ---------- */
+const SPIN=`<i class="sp-ic"></i>`,OK=`<i class="ok-ic">✓</i>`;
+function mapHTML(){
+  const pin=it=>`<button class="pin" data-k="${it.k}" style="left:${it.x}%;top:${it.y}%" aria-label="${it.no}번 ${it.name}"><i>${it.no}</i></button><span class="rip" data-r="${it.k}" style="left:${it.x}%;top:${it.y}%"></span>`;
+  /* 올리브영 「위치 미정」 표지가 경복궁–광장시장 선 위(55,42)에 있어 두 구간으로 나눠 그린다 */
+  return `<div class="map">${MAPBG}<div class="ml d1"><svg class="route" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline data-seg="a-b" points="${I.a.x},${I.a.y} 55,42"/><polyline data-seg="b-c" points="55,42 ${I.c.x},${I.c.y}"/></svg>${pin(I.a)}${pin(I.c)}<button class="nopin" data-k="b" style="left:55%;top:42%">② 올리브영 · 위치 미정</button></div><div class="ml d2">${pin(I.d)}</div><div class="ml ed"></div><span class="map-note">위치 개념도 · 실제 지도 아님</span></div>`;
+}
+function itemRow(it,last){
+  const rows=it.rows.map(([k,m,t],j)=>`<div class="ck ${m}" data-row="${j}"><span class="pi"></span>${mk(m)}<b>${k}</b><span class="t wait">확인하는 중…</span><span class="t res">${t}</span></div>`).join("");
+  return `<div class="tl-r si${last?" lastday":""}" data-item="${it.k}"><div class="tl-time">${it.s}</div><div class="tl-rail"><span class="tl-dot"></span></div><div class="tl-c"><div class="cd open run st-${it.st}" data-k="${it.k}">${cardTop(it,{name:it.name,stream:true})}<div class="cd-b"><div class="cd-bi"><div class="cd-in"><div class="cks">${rows}</div>${cardActs(it,{})}</div></div></div></div></div></div>`;
+}
+function moveRow(m){
+  const rows=m.rows.map(([k,s,t],j)=>`<div class="ck ${s}" data-row="${j}"><span class="pi"></span>${mk(s)}<b>${k}</b><span class="t wait">확인하는 중…</span><span class="t res">${t}</span></div>`).join("");
+  return `<div class="tl-r mv-r si st-${m.st}" data-mv="${m.k}"><div class="tl-time mv-dep"><b>${m.dep}</b><small>출발</small></div><div class="tl-rail"><span class="mv-dot"></span></div><div class="mv-c"><div class="mv st-${m.st}" data-k="${m.k}"><button type="button" class="mv-h" aria-label="이동 ${m.mode} ${m.sum}"><span class="mv-mode">${m.mode}</span><span class="mv-t"><span class="wait">이동 경로 찾는 중…</span><span class="res">${m.sum}</span></span><span class="spin"><i class="sp-ic"></i>${mk(ST[m.st])}</span><span class="chev">⌄</span></button><div class="cd-b"><div class="cd-bi"><div class="mv-in"><div class="cks">${rows}</div></div></div></div></div></div></div>`;
+}
+const pbar=cls=>`<div class="pb${cls?" "+cls:""}"><div class="pb-track"><i class="pb-line"></i><i class="pb-fill"></i><i class="pb-head"></i>${STEPS.map((s,i)=>`<span class="pb-node" data-n="${i+1}" style="left:${i*100/3}%"></span><span class="pb-lab" data-n="${i+1}" style="left:${i*100/3}%">${s}</span>`).join("")}</div></div>`;
+function SCREEN(){
+  const lines=LINES.map((L,i)=>`<div class="ln" data-i="${i}"><span class="li"></span><span><span class="lt">${L.t}</span><span class="tg">→ ${L.tag}</span></span></div>`).join("");
+  return `<div class="sbar"><b>9:41</b><span class="sig"><i></i><i></i><i></i><b></b></span></div>
+  <div class="stage">
+    ${mapHTML()}
+    <div class="read"><p class="read-lab">올린 계획</p><div class="doc">${lines}</div><p class="read-sum">찾은 일정 <b>0</b>개</p></div>
+    <div class="ph">
+      <div class="ph-row"><span class="back">‹</span><b class="ph-title">계획을 확인하고 있어요</b></div>
+      <p class="ph-desc">사진 한 장은 1분쯤 걸려요. 다른 화면을 봐도 되고, 끝나면 알림으로 알려 드릴게요.</p>
+      ${pbar()}
+    </div>
+    <div class="fbar"><button type="button" class="back" data-act="back" aria-label="뒤로">‹</button>${pbar("sm")}<b class="fb-title">${TRIP_TITLE}</b><div class="fb-search">${ICON.search}<input type="text" placeholder="장소 이름으로 찾기" aria-label="장소 검색" autocomplete="off"><button type="button" class="sclear" data-act="sclear" aria-label="검색어 지우기">✕</button></div></div>
+    <div class="sheet">
+      <button class="handle" data-act="sheet" aria-label="목록 높이 바꾸기"><i></i></button>
+      <div class="sh-head"><b class="sh-title">장소·운영시간 확인</b><span class="sh-count"></span></div>
+      <div class="sheet-body"><div class="tl"><h4 class="dh si" data-hd="1" data-day-hd="1">1일차<small>10.01 목</small></h4>${itemRow(I.a)}${moveRow(M["a-b"])}${itemRow(I.b)}${moveRow(M["b-c"])}${itemRow(I.c,true)}<h4 class="dh si" data-hd="2" data-day-hd="2">2일차<small>10.02 금</small></h4>${itemRow(I.d,true)}</div></div>
+      <div class="edit-view"></div>
+      <div class="sh-foot"></div>
+    </div>
+    <div class="toast" role="status" aria-live="polite"><span class="tt"></span><button type="button" class="tu" data-act="undo">되돌리기</button></div>
+  </div>
+  <div class="alert"><div class="al-box" role="alertdialog" aria-modal="true" aria-labelledby="alT" aria-describedby="alD"><p class="al-t" id="alT"></p><p class="al-d" id="alD"></p><div class="al-btns"><button type="button" class="btn2" data-act="delno">취소</button><button type="button" class="btn2 del" data-act="delyes">삭제</button></div></div></div>`;
+}
+
+/* ---------- 상태 바꾸는 작은 함수 ---------- */
+const SC=document.getElementById("phone");
+const $=s=>SC.querySelector(s),$$=s=>[...SC.querySelectorAll(s)];
+let INSTANT=false;
+const fx=el=>{if(!INSTANT)el.classList.add("fx");};
+function node(n,st){$$(`.pb-node[data-n="${n}"],.pb-lab[data-n="${n}"]`).forEach(el=>{el.classList.remove("cur","done");if(st)el.classList.add(st);if(st==="done")fx(el);});}
+function setP(p){$$(".pb-fill").forEach(el=>{el.style.width=p+"%";});$$(".pb-head").forEach(el=>{el.style.left=p+"%";});}
+const head=on=>$$(".pb-head").forEach(el=>el.classList.toggle("on",on));
+function line(i,st){const el=$(`.ln[data-i="${i}"]`);el.classList.remove("cur","rd");el.classList.add(st);if(st==="rd")fx(el);}
+function show(sel){const el=$(sel);el.classList.add("in");fx(el);}
+function rowIn(k,j){const el=$(`[data-item="${k}"] .ck[data-row="${j}"]`);el.classList.add("in");fx(el);}
+function placeIn(k){
+  if(I[k].x==null){$(".nopin").classList.add("in");return;}
+  $(`.pin[data-k="${k}"]`).classList.add("in");
+  const r=$(`.rip[data-r="${k}"]`);r.classList.add("in");fx(r);
+}
+function moveDone(k){
+  const m=$(`.mv[data-k="${k}"]`);m.classList.add("in");$(`[data-mv="${k}"]`).classList.add("done");
+  $(`[data-mv="${k}"] .spin`).classList.add("in");
+  $$(`[data-mv="${k}"] .ck`).forEach(el=>el.classList.add("in"));
+  const s=$(`.route [data-seg="${k}"]`);if(s)s.classList.add("in");
+  fx(m);
+}
+function itemDone(k){
+  const it=I[k],c=$(`.cd[data-k="${k}"]`);
+  c.classList.remove("run");c.classList.add(it.st==="review"?"wrn":"okd");
+  $(`[data-item="${k}"] .spin`).classList.add("in");
+  $(`[data-item="${k}"] .tl-dot`).classList.add(it.st==="review"?"warn":"ok");
+}
+const sheetCount=(n,m)=>{$(".sh-count").innerHTML=`${n<4||m<2?SPIN:OK}<span>장소 ${n}/4 · 이동 ${m}/2</span>`;};
+function scrollSheet(top){const b=$(".sheet-body");b.scrollTo({top:top?0:b.scrollHeight,behavior:INSTANT?"auto":"smooth"});}
+
+/* ---------- 시간표 → 사건 목록 ---------- */
+const E=[];const at=(t,f)=>E.push({t,f});
+at(0,()=>{node(1,"cur");});
+at(T.recv,()=>{node(1,"done");node(2,"cur");head(true);line(0,"cur");});
+LINES.forEach((L,i)=>{
+  const found=LINES.slice(0,i+1).filter(x=>x.item).length;
+  at(T.line0+i*T.lineGap,()=>{
+    line(i,"rd");if(i+1<LINES.length)line(i+1,"cur");
+    setP(33.333*(i+1)/LINES.length);
+    $(".read-sum b").textContent=found;
+  });
+});
+at(T.readDone,()=>{node(2,"done");});
+at(T.toMap,()=>{node(3,"cur");SC.classList.add("map-on");sheetCount(0,0);});
+at(T.dh1,()=>show(`[data-hd="1"]`));
+at(T.dh2,()=>{show(`[data-hd="2"]`);scrollSheet();});
+at(T.day2,()=>{SC.dataset.day="2";});
+["a","b","c","d"].forEach(k=>{
+  const t0=T.item[k];
+  at(t0,()=>{show(`[data-item="${k}"]`);scrollSheet();});
+  I[k].rows.forEach((r,j)=>at(t0+T.rowGap*(j+1),()=>{rowIn(k,j);if(j===0)placeIn(k);}));
+});
+["a-b","b-c"].forEach(k=>at(T.mv[k],()=>{show(`[data-mv="${k}"]`);scrollSheet();}));
+/* 장소 4곳 + 이동 2구간이 끝날 때마다 진행 바가 조금씩 나아간다 */
+const DONE=[...["a","b","c","d"].map(k=>({k,mv:false,t:T.item[k]+T.rowGap*I[k].rows.length+200})),
+            ...["a-b","b-c"].map(k=>({k,mv:true,t:T.mv[k]+T.mvDur}))].sort((p,q)=>p.t-q.t);
+DONE.forEach(({k,mv,t},i)=>{
+  const np=DONE.slice(0,i+1).filter(x=>!x.mv).length,nm=i+1-np;
+  at(t,()=>{if(mv)moveDone(k);else itemDone(k);setP(33.333+33.333*(i+1)/DONE.length);sheetCount(np,nm);});
+});
+at(T.checkDone,()=>{node(3,"done");});
+at(T.wrap,()=>{node(4,"cur");setP(100);});
+at(T.wrapDone,()=>{node(4,"done");head(false);});
+at(T.fold,()=>{SC.classList.add("fin");$(".sh-title").textContent="계획 확인";$(".sh-count").innerHTML=`${mk("warn")}<span>장소 1곳 · 이동 1구간 확인 필요</span>`;});
+["a","b","c","d"].forEach((k,i)=>at(T.fold+i*T.foldGap,()=>$(`.cd[data-k="${k}"]`).classList.remove("open")));
+at(T.back,()=>{SC.dataset.day="1";scrollSheet(true);});
+at(T.title,()=>{SC.classList.add("titled");});
+E.sort((p,q)=>p.t-q.t);
+const END=T.end;
+
+/* ---------- 스트림 시간표 재생 — 시나리오 1이 구간마다 쓴다 ---------- */
+let pos=0,playing=false,speed=1,timers=[],stopRes=null,instT=0;
+function clear(){timers.forEach(clearTimeout);timers=[];playing=false;if(stopRes){const r=stopRes;stopRes=null;r();}}
+function render(){
+  clearUi();EDIT=null;UNDO=null;ALERT=null;initModel();
+  SC.className="screen";SC.dataset.day="1";SC.dataset.sheet="half";delete SC.dataset.sel;
+  SC.innerHTML=SCREEN();
+  $(".read").style.top=$(".ph").offsetHeight+"px";
+  bindUI();renderFoot();
+  E.forEach(e=>{e.done=false;});
+}
+function fire(e){if(e.done)return;e.done=true;e.f();}
+function seek(t){
+  clear();render();
+  INSTANT=true;SC.classList.add("instant");
+  E.forEach(e=>{if(e.t<=t)fire(e);});
+  void SC.offsetHeight;INSTANT=false;pos=t;
+  instT=setTimeout(()=>SC.classList.remove("instant"),40);
+}
+/* 지금 자리(pos)에서 to까지 움직여 재생한다. 끝나거나 멈추면 풀린다 */
+function playTo(to){
+  clear();playing=true;const base=pos;
+  E.forEach(e=>{if(!e.done&&e.t<=to)timers.push(setTimeout(()=>fire(e),Math.max(0,(e.t-base)/speed)));});
+  return new Promise(res=>{stopRes=res;timers.push(setTimeout(()=>{playing=false;pos=to;stopRes=null;res();},Math.max(0,(to-base)/speed)+40));});
+}
+
+/* ---------- 끝난 뒤: 카드·핀 연동 (D와 같은 동작) ---------- */
+let SCALE=1;
+function mark(k){
+  $$("[data-k]").forEach(el=>el.classList.toggle("on",el.dataset.k===k));
+  $$("[data-seg]").forEach(el=>el.classList.toggle("on",el.dataset.seg===k));
+  const it=S.items[k]||S.items[k.split("-")[0]];if(it)SC.dataset.day=it.day;SC.dataset.sel=k;
+}
+function remark(){const k=SC.dataset.sel;if(!k)return;if($(`.sheet-body [data-k="${k}"]`))mark(k);else delete SC.dataset.sel;}
+function reveal(el){
+  const box=$(".sheet-body"),er=el.getBoundingClientRect(),br=box.getBoundingClientRect();
+  const top=(er.top-br.top)/SCALE,bottom=(er.bottom-br.top)/SCALE,h=box.clientHeight;
+  let d=0;if(top<6)d=top-6;else if(bottom>h-6)d=Math.min(top-6,bottom-h+6);
+  if(d)box.scrollTo({top:box.scrollTop+d,behavior:INSTANT?"auto":"smooth"});
+}
+const WHY={lock:"확인이 필요한 일정은 먼저 고쳐야 고정할 수 있어요",edit:"고정한 일정이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요",auto:"고정한 일정이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요",del:"고정한 일정은 삭제할 수 없어요 · 잠금을 먼저 풀어 주세요"};
+const ACT={
+  sheet:()=>{const o=["peek","half","full"];SC.dataset.sheet=o[(o.indexOf(SC.dataset.sheet)+1)%3];},
+  sheetfull:()=>{SC.dataset.sheet="full";},
+  lock:a=>toggleLock(a.dataset.key),
+  edit:a=>enterEdit(a.dataset.key),
+  auto:a=>applyPlace(a.dataset.key,cands(a.dataset.key)[0].key,"auto"),
+  del:a=>askDel(a.dataset.key),
+  delno:()=>closeAlert(true),
+  delyes:()=>{const k=ALERT;closeAlert(false);if(k)doDel(k);},
+  back:()=>{if(EDIT)exitEdit();},
+  ci:a=>goCard(+a.dataset.ci),
+  apply:a=>{const e=EDIT.list[+a.dataset.i];applyPlace(EDIT.k,e.key,e.kind==="search"?"search":"pick");},
+  pick:a=>pick(a.dataset.p),
+  sclear:()=>{const i=$(".fb-search input");i.value="";onSearch("");i.focus();},
+  undo:()=>undo(),
+  autoall:()=>autoAll(),
+  next:a=>a.dataset.mode==="register"?register():revalidate()
+};
+SC.addEventListener("click",e=>{
+  if(ALERT&&!e.target.closest(".al-box")){closeAlert(true);return;}
+  const a=e.target.closest("[data-act]");
+  if(a){
+    if(a.getAttribute("aria-disabled")==="true"){toast(reason(a));return;}
+    if(ACT[a.dataset.act])ACT[a.dataset.act](a,e);
+    return;
+  }
+  if(!SC.classList.contains("fin")||EDIT)return;
+  const dh=e.target.closest("[data-day-hd]");if(dh){SC.dataset.day=dh.dataset.dayHd;return;}
+  const mv=e.target.closest(".mv");
+  if(mv){
+    mark(mv.dataset.k);
+    if(SC.dataset.sheet==="peek")SC.dataset.sheet="half";
+    if(mv.classList.toggle("open"))later(()=>reveal(mv),420);
+    return;
+  }
+  const t=e.target.closest("[data-k]");if(!t)return;
+  const k=t.dataset.k,card=t.closest(".cd"),hd=e.target.closest(".cd-h");
+  mark(k);
+  if(card&&hd&&hd.closest(".cd")===card){card.classList.toggle("open");return;}
+  const c=$(`.cd[data-k="${k}"]`);if(!c)return;
+  if(SC.dataset.sheet==="peek")SC.dataset.sheet="half";
+  c.classList.add("open");reveal(c);later(()=>reveal(c),450);
+});
+
+/* ---------- 개정 4: 결과 카드 조작 · 잠금 · 수정 화면 ---------- */
+/* 장소 표 — 2차본 목업의 예시 장소 그대로(주소·운영시간·좌표는 예시 값) */
+const P={
+  gyeongbokgung:{group:"palace",name:"경복궁",cat:"관광지 · 고궁",addr:"서울 종로구 사직로 161",h:["09:00","18:00"],ht:"09:00–18:00",off:"화요일 휴무",src:"관광공사",lat:37.5796,lon:126.9770},
+  changdeokgung:{group:"palace",name:"창덕궁",cat:"관광지 · 고궁",addr:"서울 종로구 율곡로 99",h:["09:00","18:00"],ht:"09:00–18:00",off:"월요일 휴무",src:"관광공사",lat:37.5794,lon:126.9910},
+  changgyeonggung:{group:"palace",name:"창경궁",cat:"관광지 · 고궁",addr:"서울 종로구 창경궁로 185",h:["09:00","21:00"],ht:"09:00–21:00",off:"월요일 휴무",src:"관광공사",lat:37.5788,lon:126.9950},
+  deoksugung:{group:"palace",name:"덕수궁",cat:"관광지 · 고궁",addr:"서울 중구 세종대로 99",h:["09:00","21:00"],ht:"09:00–21:00",off:"월요일 휴무",src:"관광공사",lat:37.5658,lon:126.9751},
+  gyeonghuigung:{group:"palace",name:"경희궁",cat:"관광지 · 고궁",addr:"서울 종로구 새문안로 45",h:["09:00","18:00"],ht:"09:00–18:00",off:"월요일 휴무",src:"관광공사",lat:37.5714,lon:126.9681},
+  gwangjang:{group:"market",name:"광장시장",cat:"전통시장 · 먹거리",addr:"서울 종로구 창경궁로 88",h:["09:00","23:00"],ht:"09:00–23:00",off:"점포마다 다름",src:"관광공사",lat:37.5700,lon:126.9996},
+  tongin:{group:"market",name:"통인시장",cat:"전통시장 · 먹거리",addr:"서울 종로구 자하문로15길 18",h:["07:00","21:00"],ht:"07:00–21:00",off:"점포마다 다름",src:"관광공사",lat:37.5809,lon:126.9696},
+  namdaemun:{group:"market",name:"남대문시장",cat:"전통시장 · 먹거리",addr:"서울 중구 남대문시장4길 21",h:["00:00","23:00"],ht:"00:00–23:00",off:"점포마다 다름",src:"관광공사",lat:37.5591,lon:126.9776},
+  mangwon:{group:"market",name:"망원시장",cat:"전통시장 · 먹거리",addr:"서울 마포구 포은로8길 14",h:["10:00","21:00"],ht:"10:00–21:00",off:"점포마다 다름",src:"관광공사",lat:37.5560,lon:126.9060},
+  oyMyeongdong:{group:"beauty",name:"올리브영 명동 플래그십",cat:"화장품 · 뷰티 편집숍",addr:"서울 중구 명동길 53",h:["10:00","22:30"],ht:"10:00–22:30",off:"연중무휴",src:"카카오",lat:37.5637,lon:126.9851},
+  oyJonggak:{group:"beauty",name:"올리브영 종각역점",cat:"화장품 · 뷰티 편집숍",addr:"서울 종로구 종로 51",h:["08:00","23:00"],ht:"08:00–23:00",off:"연중무휴",src:"카카오",lat:37.5702,lon:126.9838},
+  oyInsadong:{group:"beauty",name:"올리브영 인사동점",cat:"화장품 · 뷰티 편집숍",addr:"서울 종로구 인사동길 49",h:["10:00","22:00"],ht:"10:00–22:00",off:"연중무휴",src:"카카오",lat:37.5741,lon:126.9857},
+  oyGwanghwamun:{group:"beauty",name:"올리브영 광화문점",cat:"화장품 · 뷰티 편집숍",addr:"서울 종로구 종로1길 50",h:["08:00","22:00"],ht:"08:00–22:00 · 주말 10:00부터",off:null,src:"카카오",lat:37.5717,lon:126.9791},
+  oyGangnam:{group:"beauty",name:"올리브영 강남타운",cat:"화장품 · 뷰티 편집숍",addr:"서울 강남구 강남대로 429",h:["10:00","22:30"],ht:"10:00–22:30",off:"연중무휴",src:"카카오",lat:37.5010,lon:127.0265},
+  nSeoulTower:{group:"view",name:"N서울타워",cat:"관광지 · 전망대",addr:"서울 용산구 남산공원길 105",h:["10:00","23:00"],ht:"10:00–23:00",off:"연중무휴",src:"관광공사",lat:37.5512,lon:126.9882},
+  naksan:{group:"view",name:"낙산공원",cat:"관광지 · 공원",addr:"서울 종로구 낙산길 41",h:null,ht:"24시간",off:null,src:"관광공사",lat:37.5806,lon:127.0075},
+  palgakjeong:{group:"view",name:"북악스카이웨이 팔각정",cat:"관광지 · 전망대",addr:"서울 종로구 북악산로 267",h:["10:00","22:00"],ht:"10:00–22:00",off:"연중무휴",src:"관광공사",lat:37.6016,lon:126.9812},
+  seoulSky:{group:"view",name:"롯데월드타워 서울스카이",cat:"관광지 · 전망대",addr:"서울 송파구 올림픽로 300",h:["10:30","22:00"],ht:"10:30–22:00",off:"연중무휴",src:"관광공사",lat:37.5126,lon:127.1025}
+};
+const GROUP={a:"palace",b:"beauty",c:"market",d:"view"};
+const IDX={a:0,b:1,c:2,d:3};
+const ITEM0={a:{place:"gyeongbokgung",e:"11:30"},b:{place:null,e:"12:00"},c:{place:"gwangjang",e:"13:30"},d:{place:"nSeoulTower",e:"16:30"}};
+const STL={keep:"유지",adjusted:"조정",review:"확인 필요"};
+const DOW={1:"목",2:"금"};
+const CIRC=["","①","②","③","④","⑤","⑥"];
+const CAPS={palace:["정문","전각","회랑","정원","관람로","입구 안내"],market:["입구","먹거리 골목","점포","좌판","골목 풍경","안내도"],beauty:["매장 외관","진열대","기초 화장품","색조 코너","계산대","입구"],view:["전망","야경","입구","산책로","전망대 안","주변 풍경"]};
+const ICON={
+  unlock:`<svg class="svg-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 6.6-1.6"/></svg>`,
+  lock:`<svg class="svg-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3"/></svg>`,
+  edit:`<svg class="svg-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>`,
+  trash:`<svg class="svg-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5"/><path d="M10 11v5.5M14 11v5.5"/></svg>`,
+  spark:`<svg class="svg-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3.5l1.7 4.3 4.3 1.7-4.3 1.7L11 15.5l-1.7-4.3L5 9.5l4.3-1.7z"/><path d="M18 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>`,
+  search:`<svg class="svg-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>`
+};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const KLAT=111.32,KLON=88.22;
+const km=(p,q)=>Math.hypot((p.lat-q.lat)*KLAT,(p.lon-q.lon)*KLON);
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m;};
+const hhmm=n=>`${String(Math.floor(n/60)).padStart(2,"0")}:${String(n%60).padStart(2,"0")}`;
+const jong=w=>{const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c<=11171?c%28:0;};
+const eul=w=>w+(jong(w)?"을":"를");
+const ro=w=>w+(jong(w)&&jong(w)!==8?"으로":"로");
+const gwa=w=>w+(jong(w)?"과":"와");
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nrm=s=>s.replace(/\s+/g,"").toLowerCase();
+const letter=i=>"ABCDEFGH"[i-1];
+let S=null,EDIT=null,UNDO=null,ALERT=null,toastT=0;
+/* 화면 안 타이머 — 시나리오가 앞 단계를 다시 만들 때(TF=0) 기다림 없이 돌고, 다 끝났는지 알 수 있게 모은다 */
+let TF=1;const UIT=new Set();
+function later(fn,ms){const id=setTimeout(()=>{UIT.delete(id);fn();},ms*TF);UIT.add(id);return id;}
+const settled=()=>new Promise(r=>{const chk=()=>UIT.size?setTimeout(chk,TF?60:0):r();chk();});
+function clearUi(){UIT.forEach(clearTimeout);UIT.clear();clearTimeout(toastT);}
+function initModel(){
+  S={items:{},order:{1:["a","b","c"],2:["d"]},removed:new Set(),locked:new Set(),busySet:new Set(),busyAll:false,checkKey:null,dirty:false,registered:false,rev:1,moves:{"a-b":clone(M["a-b"]),"b-c":clone(M["b-c"])}};
+  ["a","b","c","d"].forEach(k=>{S.items[k]={...clone(I[k]),...ITEM0[k]};});
+}
+const dayKeys=d=>S.order[d].filter(k=>!S.removed.has(k));
+const nameOf=k=>{const it=S.items[k];return it.place?P[it.place].name:it.name;};
+
+/* 지도 자리 — 개정 3의 경복궁(30,26)·광장시장(80,58)·N서울타워(57,62)에 맞춘 비율(%/도). 화면 밖이면 모두 보이게 넓힌다 */
+const CAL={1:{x:30,y:26,lon:126.9770,lat:37.5796},2:{x:57,y:62,lon:126.9882,lat:37.5512}};
+const KX=50/0.0226,KY=32/0.0096;
+const projCal=(d,p)=>({x:CAL[d].x+(p.lon-CAL[d].lon)*KX,y:CAL[d].y+(CAL[d].lat-p.lat)*KY});
+function fitPos(d,pts){
+  const raw=pts.map(p=>({id:p.id,...projCal(d,p)}));
+  if(!raw.length)return{};
+  if(raw.every(r=>r.x>=6&&r.x<=94&&r.y>=8&&r.y<=92))return Object.fromEntries(raw.map(r=>[r.id,{x:r.x,y:r.y}]));
+  const xs=raw.map(r=>r.x),ys=raw.map(r=>r.y),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const z=Math.min(1,84/Math.max(1,x1-x0),80/Math.max(1,y1-y0)),cx=(x0+x1)/2,cy=(y0+y1)/2;
+  return Object.fromEntries(raw.map(r=>[r.id,{x:50+(r.x-cx)*z,y:50+(r.y-cy)*z}]));
+}
+function dayPos(d){
+  const ks=dayKeys(d),pos=fitPos(d,ks.filter(k=>S.items[k].place).map(k=>({...P[S.items[k].place],id:k})));
+  ks.forEach((k,i)=>{
+    if(pos[k])return;
+    const pv=ks.slice(0,i).reverse().find(x=>pos[x]),nx=ks.slice(i+1).find(x=>pos[x]);
+    pos[k]=pv&&nx?{x:(pos[pv].x+pos[nx].x)/2,y:(pos[pv].y+pos[nx].y)/2}:pv?{x:Math.min(90,pos[pv].x+14),y:Math.min(88,pos[pv].y+12)}:nx?{x:Math.max(10,pos[nx].x-14),y:Math.max(12,pos[nx].y-12)}:{x:50,y:50};
+  });
+  return pos;
+}
+function renderMap(drop){
+  const drops=new Set([].concat(drop||[]));
+  [1,2].forEach(d=>{
+    const ks=dayKeys(d),pos=dayPos(d);
+    const segs=ks.slice(1).map((k,i)=>`<polyline data-seg="${ks[i]}-${k}" class="in" points="${pos[ks[i]].x},${pos[ks[i]].y} ${pos[k].x},${pos[k].y}"/>`).join("");
+    const pins=ks.map((k,i)=>S.items[k].place
+      ?`<button class="pin${drops.has(k)?"":" in"}" data-k="${k}" style="left:${pos[k].x}%;top:${pos[k].y}%" aria-label="${i+1}번 ${esc(nameOf(k))}"><i>${i+1}</i></button><span class="rip" data-r="${k}" style="left:${pos[k].x}%;top:${pos[k].y}%"></span>`
+      :`<button class="nopin in" data-k="${k}" style="left:${pos[k].x}%;top:${pos[k].y}%">${CIRC[i+1]} ${esc(nameOf(k))} · 위치 미정</button>`).join("");
+    $(`.ml.d${d}`).innerHTML=`<svg class="route" viewBox="0 0 100 100" preserveAspectRatio="none">${segs}</svg>${pins}`;
+  });
+  if(drops.size)later(()=>drops.forEach(k=>{const p=$(`.ml .pin[data-k="${k}"]`),r=$(`.ml .rip[data-r="${k}"]`);if(p)p.classList.add("in");if(r)r.classList.add("in","fx");}),60);
+  remark();
+}
+
+/* 결과 목록 — 정리 뒤에는 이 상태(S)로 다시 그린다. 처음 모습은 재생 끝 화면과 같다 */
+const rowsH=(rows,wait)=>rows.map(([k,m,t],j)=>`<div class="ck ${m}${wait?"":" in"}" data-row="${j}"><span class="pi"></span>${mk(m)}<b>${k}</b><span class="t wait">확인하는 중…</span><span class="t res">${t}</span></div>`).join("");
+function cardTop(it,o){
+  const rv=it.st==="review",dis=!!(o.busy||o.locked);
+  const lt=rv?"확인이 필요한 일정은 고정할 수 없어요":o.locked?"고정 풀기":"꼭 넣을 일정으로 고정";
+  return `<div class="cd-top"><button type="button" class="ic lock" data-act="lock" data-key="${it.k}" aria-pressed="${!!o.locked}" aria-disabled="${!!(o.busy||rv)}" aria-label="${lt}" title="${lt}">${o.locked?ICON.lock:ICON.unlock}</button><button type="button" class="cd-h"><span class="cd-n">${esc(o.name)}</span><span class="spin${o.stream||o.wait?"":" in"}"><i class="sp-ic"></i>${mk(ST[it.st])}</span><span class="chev">⌄</span></button>${o.wait?`<span class="pill-wait"><i class="sp-ic"></i>${o.waitLabel||"확인 중"}</span>`:`<span class="pill ${it.st}">${STL[it.st]}</span>`}<button type="button" class="ic" data-act="edit" data-key="${it.k}" aria-disabled="${dis}" aria-label="수정" title="수정">${ICON.edit}</button><button type="button" class="ic" data-act="del" data-key="${it.k}" aria-disabled="${dis}" aria-label="일정 삭제" title="일정 삭제">${ICON.trash}</button></div>`;
+}
+function cardActs(it,o){
+  const dis=!!(o.busy||o.locked),c=cands(it.k)[0],cn=c?P[c.key].name:"";
+  const note=o.locked?"고정한 일정이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요":cn?`자동 추천은 1순위 <b>${cn}</b>${ro(cn).slice(cn.length)} 바로 바꿔요`:"";
+  return `<div class="cd-acts"><button type="button" class="btn2" data-act="auto" data-key="${it.k}" aria-disabled="${dis}">${ICON.spark}자동 추천</button><button type="button" class="btn2 pri" data-act="edit" data-key="${it.k}" aria-disabled="${dis}">${ICON.edit}수정</button></div><p class="cd-note">${note}</p>`;
+}
+function itemRowF(it,last,o){
+  const busy=S.busySet.has(it.k),chk=S.checkKey===it.k,frozen=busy||S.busyAll||S.registered,locked=S.locked.has(it.k),open=busy||o.open.has(it.k);
+  return `<div class="tl-r si in${last?" lastday":""}" data-item="${it.k}"><div class="tl-time">${it.s}</div><div class="tl-rail"><span class="tl-dot${busy?"":it.st==="review"?" warn":" ok"}"></span></div><div class="tl-c"><div class="cd st-${it.st}${open?" open":""}${locked?" locked":""}" data-k="${it.k}">${cardTop(it,{name:nameOf(it.k),locked,busy:frozen,wait:busy||chk,waitLabel:chk?"재검증":"확인 중"})}<div class="cd-b"><div class="cd-bi"><div class="cd-in"><div class="cks">${rowsH(it.rows,busy)}</div>${cardActs(it,{locked,busy:frozen})}</div></div></div></div></div></div>`;
+}
+function moveRowF(m,o){
+  const wait=o.mwait.has(m.k),open=!wait&&o.open.has(m.k);
+  return `<div class="tl-r mv-r si in${wait?"":" done"} st-${m.st}" data-mv="${m.k}"><div class="tl-time mv-dep"><b>${m.dep}</b><small>출발</small></div><div class="tl-rail"><span class="mv-dot"></span></div><div class="mv-c"><div class="mv${wait?"":" in"} st-${m.st}${open?" open":""}" data-k="${m.k}"><button type="button" class="mv-h" aria-label="이동 ${m.mode} ${m.sum}"><span class="mv-mode">${m.mode}</span><span class="mv-t"><span class="wait">이동 경로 다시 찾는 중…</span><span class="res">${m.sum}</span></span><span class="spin${wait?"":" in"}"><i class="sp-ic"></i>${mk(ST[m.st])}</span><span class="chev">⌄</span></button><div class="cd-b"><div class="cd-bi"><div class="mv-in"><div class="cks">${rowsH(m.rows,wait)}</div></div></div></div></div></div></div>`;
+}
+/* 두 장소 사이 이동 — 거리로 낸 예시 계산(1.2km 이하 도보 70m/분, 그 밖은 지하철 8분 + 2.6분/km) */
+function travel(pa,pb){const dist=km(pa,pb),walk=dist<=1.2;return{dist,walk,min:walk?Math.max(3,Math.round(dist*1000/70)):Math.round(8+dist*2.6),mode:walk?"도보":"지하철"};}
+function calcMove(p,n){
+  const A=S.items[p],B=S.items[n],key=`${p}-${n}`,dep=A.e;
+  if(!A.place||!B.place)return{k:key,day:A.day,dep,mode:"이동",st:"review",sum:"장소가 정해지면 경로를 찾아요",rows:[["경로","none","한쪽 장소가 정해지지 않았어요"],["수단","none","장소를 정하면 찾아요"],["도착","none","장소를 정하면 확인해요"]]};
+  const pa=P[A.place],pb=P[B.place],{dist,walk,min,mode}=travel(pa,pb);
+  const arr=toMin(dep)+min,slack=toMin(B.s)-arr,ok=slack>=0;
+  return{k:key,day:A.day,dep,mode,st:ok?"keep":"review",sum:`${walk?"":"약 "}${min}분 · ${dist.toFixed(1)}km`,
+    rows:[["경로","ok",`${pa.name} → ${pb.name}`],["수단","ok",`${mode} ${min}분 · 거리로 낸 예시 계산`],["도착",ok?"ok":"warn",ok?`${dep}에 나서면 ${hhmm(arr)} 도착 · ${slack}분 여유`:`${dep}에 나서면 ${hhmm(arr)} 도착 · 일정보다 ${-slack}분 늦어요`]]};
+}
+function moveOf(p,n){const k=`${p}-${n}`;if(!S.moves[k])S.moves[k]=calcMove(p,n);return S.moves[k];}
+function moveKeys(){const out=[];[1,2].forEach(d=>{const ks=dayKeys(d);ks.slice(1).forEach((k,i)=>out.push([ks[i],k]));});return out;}
+function listHTML(o){
+  let h="";
+  [1,2].forEach(d=>{
+    const ks=dayKeys(d);if(!ks.length)return;
+    h+=`<h4 class="dh si in" data-hd="${d}" data-day-hd="${d}">${d}일차<small>10.0${d} ${DOW[d]}</small></h4>`;
+    ks.forEach((k,i)=>{h+=itemRowF(S.items[k],i===ks.length-1,o);if(i<ks.length-1)h+=moveRowF(moveOf(k,ks[i+1]),o);});
+  });
+  return `<div class="tl">${h||`<p class="pempty" style="margin:16px 0">남은 일정이 없어요</p>`}</div>`;
+}
+function rebuildList(o={}){
+  const body=$(".sheet-body"),top=body.scrollTop,open=new Set($$(".sheet-body .cd.open,.sheet-body .mv.open").map(e=>e.dataset.k));
+  (o.open||[]).forEach(k=>open.add(k));
+  body.innerHTML=listHTML({open,mwait:o.mwait||new Set()});
+  body.scrollTop=top;updateHead();remark();
+}
+/* 사용자가 확인해야 하는 항목 = 확인 필요 장소 + 확인 필요 이동 구간(머리 요약과 같은 기준) */
+function needs(){
+  const ri=["a","b","c","d"].filter(k=>!S.removed.has(k)&&S.items[k].st==="review").length;
+  const rm=moveKeys().filter(([p,n])=>moveOf(p,n).st==="review").length;
+  return{ri,rm,n:ri+rm};
+}
+function updateHead(){
+  const{ri,rm}=needs(),t=$(".sh-title"),c=$(".sh-count");
+  if(S.registered){t.textContent="등록 완료";c.innerHTML=`${OK}<span>여행을 등록했어요</span>`;}
+  else if(S.busyAll){const ks=[1,2].flatMap(d=>dayKeys(d));t.textContent="계획 확인";c.innerHTML=`${SPIN}<span>재검증 중 · ${ks.indexOf(S.checkKey)+1}/${ks.length}</span>`;}
+  else{t.textContent="계획 확인";c.innerHTML=ri||rm?`${mk("warn")}<span>${[ri?`장소 ${ri}곳`:"",rm?`이동 ${rm}구간`:""].filter(Boolean).join(" · ")} 확인 필요</span>`:S.dirty?`${mk("adj")}<span>고친 곳이 있어요 · 재검증해 주세요</span>`:`${mk("ok")}<span>고칠 곳이 없어요</span>`;}
+  renderFoot();
+}
+/* 맨 아래 버튼 — 왼쪽 전체 자동 추천, 오른쪽 다음 동작(확인할 항목이 있으면 재검증 꺼짐 → 고쳤으면 재검증 → 고칠 것 없으면 여행 등록) */
+function renderFoot(){
+  const f=$(".sh-foot");if(!f)return;
+  const{n}=needs(),frozen=!!(S.busySet.size||S.busyAll||S.registered);
+  const left=`<button type="button" class="btn2" data-act="autoall" aria-disabled="${frozen||n===0}">${ICON.spark}전체 자동 추천${n&&!frozen?`<span class="cnt">${n}</span>`:""}</button>`;
+  let right;
+  if(S.registered)right=`<button type="button" class="btn2 ok" data-act="next" aria-disabled="true">✓ 등록 완료</button>`;
+  else if(S.busyAll)right=`<button type="button" class="btn2 pri" data-act="next" aria-disabled="true"><i class="sp-ic"></i>재검증 중…</button>`;
+  else if(n>0||S.dirty)right=`<button type="button" class="btn2 pri" data-act="next" data-mode="recheck" aria-disabled="${n>0||frozen}">재검증</button>`;
+  else right=`<button type="button" class="btn2 pri" data-act="next" data-mode="register" aria-disabled="${frozen}">여행 등록</button>`;
+  f.innerHTML=left+right;
+}
+/* 꺼진 버튼을 눌렀을 때 이유 */
+function reason(a){
+  const act=a.dataset.act;
+  if(S.registered)return"이미 등록한 여행이에요 · 처음부터 다시 보려면 위 막대의 「처음부터」를 눌러 주세요";
+  if(S.busyAll)return"재검증하는 중이에요 · 잠시만요";
+  if(S.busySet.size)return"바뀐 일정을 다시 확인하는 중이에요 · 잠시만요";
+  if(act==="next")return`확인이 필요한 항목 ${needs().n}건이 남아 있어요 · 전체 자동 추천이나 수정으로 먼저 고쳐 주세요`;
+  if(act==="autoall")return"고칠 곳이 없어요";
+  return WHY[act]||"지금은 쓸 수 없어요";
+}
+
+/* 장소별 체크 — 운영시간·휴무는 방문 시각·요일로 본다 */
+function hoursRow(p,it){
+  if(!p.h)return["운영시간","ok",`${p.ht} 열려 있어요`];
+  const ok=toMin(it.s)>=toMin(p.h[0])&&toMin(it.e)<=toMin(p.h[1]);
+  return["운영시간",ok?"ok":"warn",ok?`${p.h[0]}–${p.h[1]} 안에 머물러요`:`영업 시간(${p.h[0]}–${p.h[1]}) 밖이에요`];
+}
+function offRow(p,it){
+  const w=DOW[it.day];
+  if(!p.off)return["휴무일","none","휴무 정보가 없어요"];
+  if(p.off==="연중무휴")return["휴무일","ok","연중무휴"];
+  if(p.off==="점포마다 다름")return["휴무일","none","점포마다 달라요"];
+  const shut=p.off.startsWith(w);
+  return["휴무일",shut?"bad":"ok",shut?`${p.off} · 방문일이 휴무예요`:`${p.off} · 방문은 ${w}요일`];
+}
+function overlapRow(k){
+  const it=S.items[k],ks=dayKeys(it.day),pv=ks[ks.indexOf(k)-1];if(!pv)return null;
+  const ov=toMin(S.items[pv].e)-toMin(it.s);
+  return ov>0?["시간","warn",`${gwa(nameOf(pv))} ${ov}분 겹쳐요 · 등록 때 막힐 수 있어요`]:null;
+}
+function placeRows(k,key,first){
+  const p=P[key],it=S.items[k],ov=overlapRow(k),adj=I[k].rows.filter(r=>r[0]==="시간"&&r[1]==="adj");
+  return[["장소","ok",first],...(ov?[ov]:[]),...adj,hoursRow(p,it),offRow(p,it)];
+}
+function refreshTimeRows(d){
+  dayKeys(d).forEach(k=>{const it=S.items[k],ov=overlapRow(k);it.rows=it.rows.filter(r=>!(r[0]==="시간"&&r[1]==="warn"));if(ov)it.rows.splice(1,0,ov);});
+}
+/* 대체 후보 — 2차본 규칙: 같은 종류 중 같은 날 앞뒤 일정에서 가까운 3곳(앞뒤에 장소가 없으면 지금 장소 기준) */
+function refsOf(k){
+  const it=S.items[k],ks=dayKeys(it.day),i=ks.indexOf(k);
+  const nb=[ks[i-1],ks[i+1]].filter(x=>x&&S.items[x].place).map(x=>({...P[S.items[x].place],name:nameOf(x)}));
+  return nb.length?nb:it.place?[{...P[it.place],name:"지금 장소"}]:[];
+}
+function nearest(p,refs){let b={d:0,ref:""};refs.forEach((r,i)=>{const d=km(p,r);if(i===0||d<b.d)b={d,ref:r.name};});return b;}
+function cands(k){
+  const it=S.items[k],refs=refsOf(k);
+  return Object.entries(P).filter(([key,p])=>p.group===GROUP[k]&&key!==it.place).map(([key,p])=>({key,...nearest(p,refs)})).sort((x,y)=>x.d-y.d).slice(0,3);
+}
+
+/* 바꾸기 · 잠금 · 빼기 · 되돌리기 */
+const snapshot=()=>({items:clone(S.items),removed:[...S.removed],locked:[...S.locked],moves:clone(S.moves),dirty:S.dirty});
+function undo(){
+  if(!UNDO||S.registered)return;const u=UNDO;UNDO=null;clearUi();S.busySet=new Set();S.busyAll=false;S.checkKey=null;
+  S.items=u.items;S.removed=new Set(u.removed);S.locked=new Set(u.locked);S.moves=u.moves;S.dirty=u.dirty;
+  if(EDIT)exitEdit();rebuildList();renderMap();
+  toast("되돌렸어요","바꾸기 전 값으로 다시 보냈어요 (예시)");
+  logReq("되돌리기","POST /v1/web/trip-intakes/{id}/edits","직전 변경 전 값으로 다시 보냄 (예시)");
+}
+function toggleLock(k){
+  const on=!S.locked.has(k);if(on)S.locked.add(k);else S.locked.delete(k);
+  rebuildList();
+  toast(on?`${eul(nameOf(k))} 꼭 넣을 일정으로 고정했어요`:`${nameOf(k)} 고정을 풀었어요`,on?"다시 짜거나 바꿔도 빠지지 않게 서버에 알렸어요 (예시)":"이제 바꾸거나 삭제할 수 있어요");
+  logReq(on?"잠금":"잠금 풀기","POST /v1/web/trip-intakes/{id}/edits",editsBody([[k,"locked",on]])+" — 「반드시 포함」. locked 칸은 아직 계약에 없음 → 협의 필요");
+}
+const neighborMoves=k=>{const ks=dayKeys(S.items[k].day),i=ks.indexOf(k);return[i>0?`${ks[i-1]}-${k}`:null,i<ks.length-1?`${k}-${ks[i+1]}`:null].filter(Boolean);};
+const dropMoves=k=>Object.keys(S.moves).forEach(m=>{if(m.split("-").includes(k))delete S.moves[m];});
+/* 바뀐 일정만 다시 확인 — 검사 행이 차례로 채워진 뒤 상태 글자와 앞뒤 이동 줄이 정해진다 */
+function recheck(keys,mw){
+  S.busySet=new Set(keys);
+  rebuildList({open:keys,mwait:mw});
+  let t=0;
+  keys.forEach(k=>$$(`[data-item="${k}"] .ck`).forEach(el=>{t+=280;later(()=>el.classList.add("in","fx"),t);}));
+  t+=320;
+  later(()=>{S.busySet=new Set();rebuildList({open:keys,mwait:mw});},t);
+  later(()=>rebuildList({open:keys}),t+650);
+}
+function applyPlace(k,key,how){
+  if(!key||S.locked.has(k)||S.busySet.size||S.busyAll||S.registered)return;
+  const it=S.items[k],old=nameOf(k),p=P[key];
+  UNDO=snapshot();clearUi();
+  it.place=key;
+  it.rows=placeRows(k,key,`${how==="auto"?"대체 후보 1순위":how==="search"?"검색으로 고른 곳":"대체 후보에서 고른 곳"} · ${p.src} 정보로 찾았어요`);
+  it.st=it.rows.some(r=>r[1]==="bad")?"review":"adjusted";
+  dropMoves(k);refreshTimeRows(it.day);S.dirty=true;
+  if(EDIT)exitEdit();
+  SC.dataset.day=it.day;
+  recheck([k],new Set(neighborMoves(k)));renderMap(k);mark(k);
+  const c=$(`.cd[data-k="${k}"]`);if(c)later(()=>reveal(c),60);
+  toast(`${eul(old)} ${ro(p.name)} 바꿨어요`,how==="auto"?"대체 후보 1순위 · 바뀐 장소와 앞뒤 이동을 다시 확인해요":"바뀐 장소와 앞뒤 이동을 다시 확인해요",true);
+  logReq(how==="auto"?"자동 추천":"장소 바꾸기","POST /v1/web/trip-intakes/{id}/edits",editsBody([[k,"place",{name:p.name}]])+" — 지금 계약(W-04)으로 보낼 수 있음");
+}
+/* 전체 자동 추천 — 확인이 필요한 항목을 서버가 검증한 대체 일정으로 한 번에 바꾼다.
+   목업은 같은 규칙을 화면에서 계산: 후보 1순위부터 운영시간·휴무·앞뒤 이동을 맞춰 보고 맞는 첫 곳, 늦게 닿는 구간은 시각을 줄여 맞춘다(최소 30분) */
+function fitWindow(k,key){
+  const it=S.items[k],ks=dayKeys(it.day),i=ks.indexOf(k),pv=ks[i-1],nx=ks[i+1],p=P[key];
+  let s=toMin(it.s);const dur=toMin(it.e)-s;
+  if(pv&&S.items[pv].place){const arr=toMin(S.items[pv].e)+travel(P[S.items[pv].place],p).min;if(arr>s)s=Math.ceil(arr/5)*5;}
+  let e=s+dur;
+  if(nx&&S.items[nx].place){const latest=toMin(S.items[nx].s)-travel(p,P[S.items[nx].place]).min;if(e>latest)e=Math.floor(latest/5)*5;}
+  if(e-s<30)return null;
+  if(p.h&&(s<toMin(p.h[0])||e>toMin(p.h[1])))return null;
+  if(p.off&&p.off.startsWith(DOW[it.day]))return null;
+  return{s:hhmm(s),e:hhmm(e),changed:hhmm(s)!==it.s||hhmm(e)!==it.e};
+}
+function validRows(k,key,placeChanged,w){
+  const p=P[key],it=S.items[k],keep=it.rows.find(r=>r[0]==="장소");
+  const rows=[placeChanged?["장소","ok",`서버가 검증한 대체 후보 · ${p.src} 정보로 찾았어요`]:keep];
+  if(w.changed)rows.push(["시간","adj",`앞뒤 이동에 맞춰 ${w.s}–${w.e}(${toMin(w.e)-toMin(w.s)}분)으로 맞췄어요`]);
+  else rows.push(...it.rows.filter(r=>r[0]==="시간"&&r[1]==="adj"));
+  return[...rows,hoursRow(p,it),offRow(p,it)];
+}
+function autoAll(){
+  if(S.busySet.size||S.busyAll||S.registered)return;
+  const before=needs();if(!before.n)return;
+  UNDO=snapshot();clearUi();if(EDIT)exitEdit();
+  const done=[],kept=[];
+  [1,2].forEach(d=>{
+    dayKeys(d).forEach((k,i,ks)=>{
+      const it=S.items[k],pv=ks[i-1],placeBad=it.st==="review",late=!!pv&&moveOf(pv,k).st==="review";
+      if(!placeBad&&!late)return;
+      if(S.locked.has(k)){kept.push(k);return;}
+      for(const key of placeBad?cands(k).map(c=>c.key):[it.place]){
+        const w=fitWindow(k,key);if(!w)continue;
+        const old=nameOf(k);
+        it.place=key;it.s=w.s;it.e=w.e;
+        it.rows=validRows(k,key,placeBad,w);
+        it.st=it.rows.some(r=>r[1]==="bad")?"review":"adjusted";
+        dropMoves(k);done.push({k,old});return;
+      }
+      kept.push(k);
+    });
+    refreshTimeRows(d);
+  });
+  if(!done.length){UNDO=null;toast("바꿀 수 있는 대체 일정이 없어요",kept.length?"고정한 일정이거나 시간이 맞는 후보가 없어요":"");return;}
+  S.dirty=true;
+  const keys=done.map(x=>x.k),mw=new Set();keys.forEach(k=>neighborMoves(k).forEach(m=>mw.add(m)));
+  SC.dataset.day=S.items[keys[0]].day;
+  recheck(keys,mw);renderMap(keys);
+  const fixed=before.n-needs().n;
+  toast(`확인이 필요한 ${fixed}건을 검증된 대체 일정으로 바꿨어요`,done.map(x=>`${x.old} → ${nameOf(x.k)} ${S.items[x.k].s}–${S.items[x.k].e}`).join(" · ")+(kept.length?` · ${kept.length}곳은 그대로`:""),true);
+  logReq("전체 자동 추천","(검증된 대체 일정 받기 — API 미정)",`확인 필요 ${before.n}건 대상 · 운영시간·휴무·앞뒤 이동까지 검증한 후보를 주는 API 필요 → 협의`);
+  logReq("전체 자동 추천 적용","POST /v1/web/trip-intakes/{id}/edits",editsBody(done.flatMap(({k})=>[[k,"place",{name:nameOf(k)}],[k,"starts_at",S.items[k].s],[k,"ends_at",S.items[k].e]]))+" — 지금 계약(W-04)으로 보낼 수 있음");
+}
+/* 재검증 — 일정을 차례로 다시 확인하고, 통과하면 오른쪽 버튼이 「여행 등록」으로 바뀐다 */
+function revalidate(){
+  if(needs().n||!S.dirty||S.busySet.size||S.busyAll||S.registered)return;
+  clearUi();hideToast();if(EDIT)exitEdit();
+  const ks=[1,2].flatMap(d=>dayKeys(d)),gap=420;
+  S.busyAll=true;S.checkKey=ks[0];rebuildList();
+  ks.forEach((k,i)=>{if(i)later(()=>{S.checkKey=k;rebuildList();},i*gap);});
+  later(()=>{
+    S.checkKey=null;S.busyAll=false;S.dirty=false;rebuildList();
+    toast("재검증을 통과했어요","이대로 진행할 수 있어요 · 오른쪽 버튼이 「여행 등록」으로 바뀌었어요");
+  },ks.length*gap+250);
+  logReq("재검증","(등록 판정 미리 보기 — API 미정)","지금 계약은 수정 응답의 check(ready·problems)만 줌. 운영시간·겹침·이동은 등록(confirm) 때 판정 → 저장 없이 판정만 돌리는 API 협의 필요");
+}
+function register(){
+  if(needs().n||S.dirty||S.busySet.size||S.busyAll||S.registered)return;
+  clearUi();if(EDIT)exitEdit();
+  S.registered=true;rebuildList();
+  toast("여행을 등록했어요","여행이 끝날 때까지 지켜볼게요 · 목업은 여기까지예요");
+  logReq("여행 등록","POST /v1/web/trip-intakes/{id}/confirm",`{"revision":${S.rev}} — 지금 계약(W-05)으로 보낼 수 있음 · 서버가 다시 조립·판정한 뒤 등록`);
+}
+/* 삭제 확인 — 휴대폰 화면 가운데 알림창. 처음 초점은 「취소」, 바깥을 누르거나 Esc를 눌러도 취소 */
+function askDel(k){
+  if(S.busySet.size||S.busyAll||S.registered)return;
+  const it=S.items[k],al=$(".alert");
+  hideToast();ALERT=k;
+  al.querySelector(".al-t").textContent=`${nameOf(k)} 일정을 삭제하시겠습니까?`;
+  al.querySelector(".al-d").innerHTML=`<b>${it.day}일차 ${it.s}–${it.e}</b>삭제한 뒤 잠시 <span class="nw">「되돌리기」로</span> 되돌릴 수 있습니다.`;
+  al.classList.add("show");
+  al.querySelector('[data-act="delno"]').focus({preventScroll:true});
+}
+function closeAlert(back){
+  const k=ALERT;ALERT=null;$(".alert").classList.remove("show");
+  const b=back&&$(`.cd[data-k="${k}"] [data-act="del"]`);if(b)b.focus({preventScroll:true});
+}
+document.addEventListener("keydown",e=>{
+  if(!ALERT)return;
+  if(e.key==="Escape"){e.preventDefault();closeAlert(true);}
+  else if(e.key==="Tab"){e.preventDefault();const b=[...$(".alert").querySelectorAll("button")],i=b.indexOf(document.activeElement);b[(i+(e.shiftKey?b.length-1:1))%b.length].focus();}
+});
+function doDel(k){
+  if(S.busySet.size||S.busyAll||S.registered)return;
+  const name=nameOf(k),d=S.items[k].day;
+  UNDO=snapshot();clearUi();
+  S.removed.add(k);S.locked.delete(k);dropMoves(k);refreshTimeRows(d);S.dirty=true;
+  if(SC.dataset.sel===k)delete SC.dataset.sel;
+  const ks=dayKeys(d),mw=new Set();
+  for(let i=1;i<ks.length;i++){const key=`${ks[i-1]}-${ks[i]}`;if(!S.moves[key])mw.add(key);}
+  rebuildList({mwait:mw});renderMap();
+  if(mw.size)later(()=>rebuildList(),700);
+  toast(`${name} 일정을 삭제했어요`,mw.size?"앞뒤 이동을 다시 계산했어요":"",true);
+  logReq("삭제","POST /v1/web/trip-intakes/{id}/edits",editsBody([[k,"removed",true]])+" — 지금 계약(W-04)으로 보낼 수 있음");
+}
+function toast(msg,sub,undoable){
+  const t=$(".toast");if(!t)return;
+  t.querySelector(".tt").innerHTML=`${esc(msg)}${sub?`<small>${esc(sub)}</small>`:""}`;
+  t.querySelector(".tu").hidden=!undoable;
+  t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),(undoable?4500:2800)/speed);
+}
+function hideToast(){const t=$(".toast");if(t)t.classList.remove("show");}
+const LOGEL=document.getElementById("reqlog");
+function logReq(kind,path,body){
+  if(!LOGEL)return;const e=LOGEL.querySelector(".empty");if(e)e.remove();
+  const li=document.createElement("li");li.innerHTML=`<b>${esc(kind)}</b><code>${esc(path)}</code><span>${esc(body)}</span>`;
+  LOGEL.prepend(li);while(LOGEL.children.length>8)LOGEL.lastElementChild.remove();
+}
+/* 수정 계약 모양 {revision, edits:[{source_id, field, value}]} — source_id s1은 예시 원본 id. 보낼 때마다 판이 하나 는다 */
+function editsBody(list){const b=JSON.stringify({revision:S.rev,edits:list.map(([k,f,v])=>({source_id:"s1",field:`items[${IDX[k]}].${f}`,value:v}))});S.rev++;return b;}
+
+/* 수정 화면 — 같은 지도·시트 안에서 내용만 바뀐다 */
+function enterEdit(k){
+  if(S.busySet.size||S.busyAll||S.registered)return;hideToast();
+  const it=S.items[k];
+  EDIT={k,day:it.day,idx:0,list:[{kind:"cur",key:it.place}].concat(cands(k).map((c,i)=>({kind:"cand",key:c.key,rank:i+1,d:c.d,ref:c.ref})))};
+  SC.dataset.day=it.day;SC.classList.add("editing");SC.classList.remove("searching");
+  if(SC.dataset.sheet==="peek")SC.dataset.sheet="half";
+  const inp=$(".fb-search input");inp.value="";inp.placeholder=`${nameOf(k)} 대신 찾을 장소`;
+  renderEdit();renderEditMap(true);
+}
+function exitEdit(){SC.classList.remove("editing","searching");EDIT=null;$(".edit-view").innerHTML="";$(".ml.ed").innerHTML="";remark();}
+function renderEdit(){
+  const ev=$(".edit-view"),k=EDIT.k;
+  ev.innerHTML=`<div class="ev-head"><b>${esc(nameOf(k))} 바꾸기</b><span class="ev-pos"></span></div><div class="ev-body"><div class="ecar">${EDIT.list.map(ecard).join("")}</div><div class="edots">${EDIT.list.map(()=>"<i></i>").join("")}</div><button type="button" class="ev-hint" data-act="sheetfull"></button><section class="photos"></section></div><div class="sres"></div>`;
+  const car=ev.querySelector(".ecar");
+  car.addEventListener("scroll",()=>{clearTimeout(car._t);car._t=setTimeout(()=>{if(!EDIT||!car.isConnected)return;const mid=car.scrollLeft+car.clientWidth/2;let best=0,bd=1e9;[...car.children].forEach((c,i)=>{const d=Math.abs(c.offsetLeft+c.offsetWidth/2-mid);if(d<bd){bd=d;best=i;}});if(best!==EDIT.idx)setIdx(best);},80);},{passive:true});
+  setIdx(Math.min(EDIT.idx,EDIT.list.length-1));
+}
+function ecard(e,i){
+  const k=EDIT.k,it=S.items[k],p=e.key?P[e.key]:null;
+  if(e.kind==="cur")return `<div class="ec cur" data-i="0"><div class="ec-top"><span class="ec-chip">지금 일정</span><span class="pill ${it.st}">${STL[it.st]}</span></div><h3 class="ec-name">${esc(nameOf(k))}</h3><p class="ec-sub">${it.day}일차 ${it.s}–${it.e} · ${p?p.cat:"지점 미정"}</p>${p?`<p class="ec-sub">${p.addr}</p>`:""}<div class="cks">${rowsH(it.rows,false)}</div><p class="ec-next">옆으로 넘기면 다른 후보 ${EDIT.list.length-1}곳 →</p></div>`;
+  const chip=e.kind==="search"?`<span class="ec-chip search">검색으로 고른 곳 ${letter(i)}</span>`:`<span class="ec-chip cand">대체 후보 ${letter(i)} · ${e.rank}순위</span>`;
+  return `<div class="ec" data-i="${i}"><div class="ec-top">${chip}<span class="ec-dist">${e.ref?`${esc(e.ref)}에서 ${e.d.toFixed(1)}km`:""}</span></div><h3 class="ec-name">${p.name}</h3><p class="ec-sub">${p.cat} · ${p.addr}</p><div class="cks">${rowsH(placeRows(k,e.key,`${p.src} 정보로 찾았어요`),false)}</div><button type="button" class="btn2 pri" data-act="apply" data-i="${i}">이 장소로 바꾸기</button></div>`;
+}
+function setIdx(i){
+  if(!EDIT)return;EDIT.idx=i;const ev=$(".edit-view"),e=EDIT.list[i];
+  ev.querySelectorAll(".edots i").forEach((d,j)=>d.classList.toggle("on",j===i));
+  ev.querySelectorAll(".ec").forEach((c,j)=>c.classList.toggle("on",j===i));
+  ev.querySelector(".ev-pos").textContent=`${e.kind==="cur"?"지금 일정":e.kind==="search"?"검색으로 고른 곳":`대체 후보 ${letter(i)}`} · ${i+1}/${EDIT.list.length}`;
+  renderPhotos(i);
+  $$(".ml.ed .pin[data-ci]").forEach(el=>el.classList.toggle("on",+el.dataset.ci===i));
+}
+function goCard(i){
+  const car=$(".ecar"),c=car&&car.children[i];if(!c)return;
+  car.scrollTo({left:c.offsetLeft-(car.clientWidth-c.offsetWidth)/2,behavior:INSTANT?"auto":"smooth"});setIdx(i);
+}
+function renderPhotos(i){
+  const box=$(".edit-view .photos"),hint=$(".edit-view .ev-hint"),e=EDIT.list[i];
+  if(!e.key){box.innerHTML=`<h4>등록된 사진</h4><p class="pempty">지점이 정해지지 않아 사진이 없어요 · 옆으로 넘겨 후보 매장의 사진을 보세요</p>`;hint.textContent="시트를 위로 올리면 사진 안내 ↑";return;}
+  const p=P[e.key],caps=CAPS[p.group];
+  box.innerHTML=`<h4>등록된 사진 · ${p.name}<small>${caps.length}장</small></h4><div class="pgrid">${caps.map((c,j)=>`<figure class="ph-t">${photoSVG(p.group,j,e.key)}<figcaption>${c}</figcaption></figure>`).join("")}</div><p class="pnote">장소 정보(관광공사·카카오)에 등록된 사진이 들어갈 자리예요 · 지금은 예시 그림</p>`;
+  hint.textContent=`시트를 위로 올리면 ${p.name} 사진 ${caps.length}장 ↑`;
+}
+/* 사진 자리 — 실제 사진 대신 종류별 예시 그림 */
+function photoSVG(g,j,seed){
+  const v=(j+seed.length)%3,sky=["#dfe8ef","#efe6da","#e4e7ef"][v],gr=["#d8d0c2","#d3ccbe","#cfd4c7"][v];
+  const tf=`translate(${-(j%3)*8} ${(j%2)*6}) scale(${(1+(j%3)*0.08).toFixed(2)})`;
+  let a="";
+  if(g==="palace")a=`<rect y="80" width="170" height="44" fill="${gr}"/><path d="M26 52H134L150 63H10Z" fill="#5d6068"/><path d="M40 39H120L134 52H26Z" fill="#70737b"/><rect x="38" y="63" width="84" height="19" fill="#ece4d6"/>${[44,60,76,92,108].map(x=>`<rect x="${x}" y="63" width="5" height="19" fill="#a7483e"/>`).join("")}<rect x="30" y="82" width="100" height="6" fill="#bdb3a3"/>`;
+  else if(g==="market")a=`<rect y="86" width="170" height="40" fill="${gr}"/>${[0,1,2,3].map(i=>`<g transform="translate(${6+i*38} 42)"><path d="M0 0H34L31 12H3Z" fill="${i%2?"#c99a5b":"#b9673f"}"/><rect x="2" y="12" width="30" height="34" fill="#efe4d0"/><rect x="5" y="30" width="24" height="10" fill="#d9c09a"/></g>`).join("")}${[28,68,108,148].map(x=>`<circle cx="${x}" cy="32" r="5" fill="#d8573f"/>`).join("")}`;
+  else if(g==="beauty")a=`<rect width="170" height="130" fill="#f2ece9"/>${[0,1,2].map(r=>`<rect x="12" y="${26+r*28}" width="136" height="4" fill="#cfc4bd"/>${[0,1,2,3,4,5,6,7].map(c=>`<rect x="${18+c*16}" y="${12+r*28}" width="8" height="14" rx="2" fill="${["#e8a0a8","#a8c6e0","#f0d08c","#b9d6b0"][(c+r+v)%4]}"/>`).join("")}`).join("")}<rect x="12" y="100" width="136" height="14" rx="3" fill="#7fa98e"/>`;
+  else a=`<rect y="90" width="170" height="40" fill="${gr}"/>${[[4,60,22],[28,68,18],[48,54,26],[92,64,20],[114,58,24],[138,66,20]].map(([x,y,w])=>`<rect x="${x}" y="${y}" width="${w}" height="${92-y}" fill="#a6b0ba"/>`).join("")}<rect x="78" y="22" width="4" height="44" fill="#7d858f"/><rect x="72" y="40" width="16" height="8" rx="2" fill="#8a929c"/><circle cx="${[36,124,100][v]}" cy="22" r="8" fill="#f3d9a0"/>`;
+  return `<svg viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="160" height="120" fill="${sky}"/><g transform="${tf}">${a}</g><text x="152" y="14" text-anchor="end" font-size="9" fill="rgba(0,0,0,.35)">예시</text></svg>`;
+}
+/* 수정 화면 지도 — 저장된 일정은 회색 고정, 지금 장소(검정)와 대체 후보(A·B·C)만 누를 수 있다 */
+function renderEditMap(first){
+  const d=EDIT.day,k=EDIT.k,ks=dayKeys(d),norm=dayPos(d),pts=[];
+  ks.forEach(x=>{if(x!==k&&S.items[x].place)pts.push({...P[S.items[x].place],id:"s-"+x});});
+  EDIT.list.forEach((e,i)=>{if(e.key)pts.push({...P[e.key],id:"c-"+i});});
+  const pos=fitPos(d,pts),from=norm[k]||{x:50,y:50},h=[];
+  ks.forEach((x,n)=>{if(x===k||!S.items[x].place)return;const p=pos["s-"+x],s=first?norm[x]:p;h.push(`<span class="pin gray in" data-final="${p.x},${p.y}" style="left:${s.x}%;top:${s.y}%" aria-hidden="true"><i>${n+1}</i></span>`);});
+  EDIT.list.forEach((e,i)=>{if(!e.key)return;const p=pos["c-"+i],s=first?from:p;h.push(`<button type="button" class="pin in ${i===0?"curp":"cand"}" data-act="ci" data-ci="${i}" data-final="${p.x},${p.y}" style="left:${s.x}%;top:${s.y}%" aria-label="${i===0?"지금 장소":`후보 ${letter(i)} ${P[e.key].name}`}"><i>${i===0?ks.indexOf(k)+1:letter(i)}</i></button>`);});
+  const L=$(".ml.ed");L.innerHTML=h.join("");
+  if(first)later(()=>L.querySelectorAll("[data-final]").forEach(el=>{const[x,y]=el.dataset.final.split(",");el.style.left=x+"%";el.style.top=y+"%";}),50);
+  L.querySelectorAll(".pin[data-ci]").forEach(el=>el.classList.toggle("on",+el.dataset.ci===EDIT.idx));
+}
+/* 검색 — 시트가 검색 결과로 바뀐다. 고른 곳은 카드로 들어간다 */
+function bindUI(){
+  const inp=$(".fb-search input");if(!inp)return;
+  inp.addEventListener("input",()=>onSearch(inp.value));
+  inp.addEventListener("keydown",e=>{if(e.key==="Escape"){inp.value="";onSearch("");}});
+}
+function onSearch(q){
+  if(!EDIT)return;const n=nrm(q);
+  if(!n){SC.classList.remove("searching");return;}
+  SC.classList.add("searching");
+  const refs=refsOf(EDIT.k),qq=esc(q.trim());
+  const res=Object.entries(P).filter(([,p])=>nrm(p.name).includes(n)||nrm(p.cat).includes(n)).map(([key,p])=>({key,p,...nearest(p,refs)})).sort((x,y)=>x.d-y.d).slice(0,8);
+  $(".edit-view .sres").innerHTML=`<p class="sr-head">‘${qq}’ 검색 결과 ${res.length}곳<small>${refs.length?"가까운 순":""}</small></p>`+(res.length?res.map((r,i)=>`<button type="button" class="sr" data-act="pick" data-p="${r.key}"><span class="sr-i">${i+1}</span><span class="sr-b"><b>${r.p.name}</b><small>${r.p.cat} · ${r.p.addr}</small></span><span class="sr-d">${refs.length?`${r.d.toFixed(1)}km`:""}</span></button>`).join(""):`<p class="pempty">‘${qq}’에 맞는 장소가 없어요 · 이름을 다시 확인해 주세요</p>`);
+}
+function pick(key){
+  if(!EDIT)return;
+  let i=EDIT.list.findIndex(e=>e.key===key);
+  if(i<0){const nb=nearest(P[key],refsOf(EDIT.k));EDIT.list.splice(1,0,{kind:"search",key,d:nb.d,ref:nb.ref});i=1;}
+  $(".fb-search input").value="";SC.classList.remove("searching");
+  renderEdit();renderEditMap(false);
+  later(()=>goCard(i),30);
+  logReq("장소 검색","(검색 API 미정)",`‘${P[key].name}’ 고름 — 지금은 목업 안의 장소 표에서 찾음`);
+}
+
+/* ---------- 개정 7: 시나리오 — 단계 단위 재생 ---------- */
+/* 단계: who(server·user) · t(제목) · s(화면이 어떻게 바뀌나) · d(서버와 주고받을 값 [꼬리표, 글, 예시])
+   재생 방법: from·to = 스트림 시간표 구간 / do = 사용자 동작 ["tap", 선택자] · ["type", 선택자, 글자] · ["swipe", 카드 번호] · ["scroll", 선택자, 위치] · ["wait", ms] */
+const EDITS="POST /v1/web/trip-intakes/{intake_id}/edits";
+const SCN=[
+{name:"계획 확인 진행",stream:true,dwell:0,
+ sum:"계획을 올린 직후. 서버가 읽고 확인한 결과가 차례로 채워진다. 단계마다 서버가 보내야 하는 진행 결과를 적었다.",
+ steps:[
+  {who:"server",from:0,to:600,t:"접수 — 「받았어요」",
+   s:"진행 바의 첫 점이 체크되고, 아래에 올린 계획 원문이 보인다.",
+   d:[["now",`접수 <code>POST /v1/web/trip-intakes</code> → 202 <code>{intake_id, status:"reading"}</code>. 진행은 접수 조회 <code>GET</code>의 <code>stage</code>로 본다(<code>received</code> → <code>transcribing</code> → <code>reading</code> → <code>review</code>).`],
+      ["idea","진행 이벤트",`event: stage  {"stage":"received","label":"받았어요"}`]]},
+  {who:"server",from:600,to:3300,t:"일정 읽기 — 원문 줄이 하나씩 읽힘",
+   s:"원문 줄이 차례로 ✓로 바뀌고 줄마다 찾은 일정(일차·시각·이름)이 붙는다. 찾은 일정 수와 진행 바가 함께 늘어난다.",
+   d:[["now",`<code>GET</code> 재조회의 <code>sources[].lines[{no, text, read}]</code>와 <code>items[]</code>로 지금도 그릴 수 있다. 늘어난 만큼만 그린다.`],
+      ["idea","진행 이벤트",`event: line  {"source_id":"s1","no":2,"read":true,"found":{"index":0,"day":1,"starts_at":"10:00","title":"경복궁"}}`]]},
+  {who:"server",from:3300,to:4250,t:"장소·운영시간 확인 시작 — 지도로 전환",
+   s:"셋째 점으로 넘어가며 원문 카드가 사라지고 지도와 아래 시트가 나타난다. 위쪽은 뒤로 가기와 진행 바만 남은 얇은 막대가 된다.",
+   d:[["agree",`지금 <code>stage</code>에는 이 단계가 없다. 장소 찾기는 <code>reading</code> 안에서 하고, 운영시간·휴무·겹침·이동은 등록(<code>confirm</code>) 때 판정한다. 이 단계를 알릴 값이 필요하다.`],
+      ["idea","진행 이벤트",`event: stage  {"stage":"checking","label":"장소·운영시간 확인"}`]]},
+  {who:"server",from:4250,to:7340,t:"1일차 — 장소 카드와 이동 줄이 채워짐",
+   s:"카드가 하나씩 생기고 검사 줄(장소·시간·운영시간·휴무일)이 ✓·!·✕로 채워진다. 장소가 정해지면 지도에 핀이 떨어지고, 지점을 못 정한 올리브영은 「위치 미정」으로 뜬다. 앞뒤 장소 사이에는 이동 줄이 생겨 경로를 찾는다.",
+   d:[["now",`핀 좌표는 <code>items[].fields.place.value</code>의 <code>latitude</code>·<code>longitude</code>에 있다(찾은 장소만).`],
+      ["agree","장소별 검사 결과(줄마다 결과 + 한 줄 문구)와 장소 사이 이동(수단·소요·출발·도착 여유)은 지금 응답에 없다."],
+      ["idea","진행 이벤트",`event: item   {"index":1,"day":1,"starts_at":"11:00","ends_at":"12:00","title":"올리브영","place":null}
+event: check  {"index":1,"row":"place","result":"bad","text":"지점이 여러 곳이라 정하지 못했어요"}
+event: move   {"from":0,"to":1,"mode":"walk","minutes":12,"km":0.8,"depart":"11:30","result":"warn","text":"11:42 도착 · 일정보다 42분 늦어요"}`]]},
+  {who:"server",from:7340,to:8710,t:"2일차 — 지도도 2일차로",
+   s:"광장시장 확인이 끝나고 2일차 일정이 시작되면 지도가 2일차로 넘어가 N서울타워를 확인한다.",
+   d:[["ui",`지도를 몇 일차로 보일지는 화면이 정한다(<code>items[].day</code>).`]]},
+  {who:"server",from:8710,to:END,t:"정리 완료 — 카드가 접히고 여행 제목",
+   s:"마지막 점이 체크되면 카드가 모두 접히고 위 막대가 여행 제목으로 바뀐다. 시트 머리에 「장소 1곳 · 이동 1구간 확인 필요」, 맨 아래에 「전체 자동 추천 2」와 꺼진 「재검증」이 보인다.",
+   d:[["now",`<code>stage</code> <code>review</code>(「확인해 주세요」)·<code>revision</code>·<code>check{ready, problems, title}</code>로 끝을 안다. 여행 제목은 <code>check.title</code>.`],
+      ["agree","「확인 필요」 개수(장소·이동)를 서버가 줄지 화면이 셀지 정해야 한다."],
+      ["idea","진행 이벤트",`event: done  {"stage":"review","revision":1,"needs":{"items":1,"moves":1}}`]]}
+ ]},
+{name:"결과 보기",
+ sum:"정리가 끝난 결과 화면에서 카드·이동 줄·지도를 눌러 본다. 서버를 부르지 않고 시나리오 1에서 받은 값만 보여 준다.",
+ steps:[
+  {who:"user",do:[["tap",'.cd[data-k="b"] .cd-h']],t:"올리브영 카드 누르기",
+   s:"카드가 펼쳐져 검사 줄이 보인다(✕ 지점 미정 · ! 경복궁과 30분 겹침 · – 운영시간·휴무는 지점을 고르면 확인). 지도의 「위치 미정」 표지가 함께 선택되고, 맨 아래에 「자동 추천」·「수정」이 있다.",
+   d:[["ui","받아 둔 검사 결과를 펼쳐 보일 뿐 서버를 부르지 않는다."]]},
+  {who:"user",do:[["tap",'.mv[data-k="a-b"] .mv-h']],t:"경복궁 → 올리브영 이동 줄 누르기",
+   s:"줄이 넓어지며 경로·수단·도착 체크가 펼쳐지고 지도의 해당 구간이 파랗게 표시된다.",
+   d:[["agree","이동 결과(경로·수단·도착 여유) — 시나리오 1의 4단계와 같은 값이 필요하다."]]},
+  {who:"user",do:[["tap",'.ml.d1 .pin[data-k="c"]']],t:"지도의 ③ 핀(광장시장) 누르기",
+   s:"광장시장 카드로 옮겨 가 펼쳐진다. 핀과 카드는 서로를 표시한다.",
+   d:[["ui","핀과 카드의 연결은 화면 안에서만 한다."]]},
+  {who:"user",do:[["tap",'.dh[data-day-hd="2"]']],t:"「2일차」 머리 누르기",
+   s:"지도가 2일차(N서울타워)로 바뀐다.",
+   d:[["ui","화면 안에서만 바뀐다."]]}
+ ]},
+{name:"자동 추천",
+ sum:"확인이 필요한 올리브영을 대체 후보 1순위로 바로 바꾼다. 장소만 바뀌고 시각은 그대로다.",
+ steps:[
+  {who:"user",do:[["tap",'.cd[data-k="b"] .cd-h']],t:"올리브영 카드 펼치기",
+   s:"맨 아래에 「자동 추천」·「수정」 버튼과 「자동 추천은 1순위 올리브영 광화문점으로 바로 바꿔요」 안내가 보인다.",
+   d:[["now",`지금 서버는 이름이 모호하면 읽을 때 종류가 맞는 후보 중 앞뒤 일정에 가장 가까운 곳을 바로 고르고 확인 필요(<code>needs_review</code>)로 둔다. 후보 이름은 근거의 <code>chosen_from</code>에만 남는다.`],
+      ["agree","이 화면은 「지점 미정」으로 두고 사용자가 고르게 했다. 어느 쪽으로 할지, 대체 후보 1순위(이름·기준 장소와 거리)를 줄지 정해야 한다."]]},
+  {who:"user",do:[["tap",'.cd[data-k="b"] [data-act="auto"]']],t:"「자동 추천」 누르기",
+   s:"올리브영 광화문점으로 바뀌고 카드가 「확인 중」 → 검사 줄이 다시 채워진 뒤 「조정」이 된다. 지도에 ② 핀이 떨어지고 앞뒤 이동 줄을 다시 찾는다. 아래에 「되돌리기」 알림이 뜬다.",
+   d:[["now",`<code>${EDITS}</code> — 서버가 이름으로 장소를 다시 찾아 새 판을 준다. 못 찾으면 422 <code>place_not_found</code>, 판이 낡았으면 409 <code>stale_revision</code>.`,`{"revision":1,"edits":[{"source_id":"s1","field":"items[1].place","value":{"name":"올리브영 광화문점"}}]}`],
+      ["agree","바꾼 장소의 운영시간·휴무와 앞뒤 이동 판정을 수정 응답에서 받아야 카드를 다시 채울 수 있다(지금은 등록 때 판정)."]]},
+  {who:"user",do:[["tap",'.mv[data-k="a-b"] .mv-h']],t:"경복궁 → 올리브영 이동 줄 열기",
+   s:"장소만 바뀌고 시각(11:00)은 그대로라 「11:43 도착 · 일정보다 43분 늦어요」가 남는다. 시트 머리는 「이동 1구간 확인 필요」, 「재검증」은 계속 꺼져 있다 — 시나리오 7의 전체 자동 추천이 시각까지 맞춘다.",
+   d:[["ui","남은 확인 필요 개수로 맨 아래 버튼 상태를 정한다."]]}
+ ]},
+{name:"수정 화면",
+ sum:"올리브영의 지점을 직접 고른다. 같은 지도·시트 안에서 내용만 바뀐다.",
+ steps:[
+  {who:"user",do:[["tap",'.cd[data-k="b"] .cd-top [data-act="edit"]']],t:"올리브영 연필 누르기",
+   s:"위 막대가 장소 검색창이 되고, 지도에서 저장된 일정 핀은 회색으로 고정된다. 대체 후보 A·B·C 핀만 누를 수 있고, 시트에는 지금 일정 카드(체크리스트)가 보인다.",
+   d:[["agree","대체 후보 목록 — 종류가 같은 곳을 같은 날 앞뒤 일정에서 가까운 순으로 3곳(이름·주소·좌표·기준 장소와 거리)."]]},
+  {who:"user",do:[["swipe",1]],t:"옆으로 넘기기 → 후보 A",
+   s:"후보 A 올리브영 광화문점 카드(운영시간·휴무 체크와 「이 장소로 바꾸기」)로 넘어가고 지도의 A 핀이 표시된다.",
+   d:[["agree","후보마다 방문 시각 기준 운영시간·휴무 판정이 필요하다."]]},
+  {who:"user",do:[["tap",".edit-view .ev-hint"],["wait",350],["scroll",".edit-view .ev-body",320]],t:"시트 올려 사진 보기",
+   s:"시트가 높아지고 카드 아래에 그 장소에 등록된 사진이 보인다(지금은 예시 그림).",
+   d:[["agree","장소 사진 목록(관광공사·카카오에 등록된 사진 주소)."]]},
+  {who:"user",do:[["type",".fb-search input","올리브영"]],t:"검색창에 「올리브영」 쓰기",
+   s:"시트가 검색 결과 목록으로 바뀐다(기준 장소에서 가까운 순, 거리 표시).",
+   d:[["agree","장소 검색 — 이름·종류로 찾고 기준 장소에서 가까운 순. 지금은 수정 때 보낸 이름으로 서버가 다시 찾을 뿐 목록을 주지 않는다."]]},
+  {who:"user",do:[["tap",'.sr[data-p="oyMyeongdong"]']],t:"「올리브영 명동 플래그십」 고르기",
+   s:"고른 곳이 「검색으로 고른 곳 A」 카드로 들어가고 지도에 핀이 생긴다.",
+   d:[["agree","고른 곳도 운영시간·휴무 판정이 필요하다(2단계와 같은 값)."]]},
+  {who:"user",do:[["tap",'.ec.on [data-act="apply"]']],t:"「이 장소로 바꾸기」",
+   s:"수정 화면이 닫히고 올리브영 명동 플래그십으로 바뀐다. 다시 확인 뒤 「조정」 — 경복궁과 30분 겹침(!)이 남고, 경복궁 → 명동 이동은 늦는다.",
+   d:[["now",`<code>${EDITS}</code> — 시나리오 3의 2단계와 같다.`,`{"revision":1,"edits":[{"source_id":"s1","field":"items[1].place","value":{"name":"올리브영 명동 플래그십"}}]}`]]}
+ ]},
+{name:"잠금",
+ sum:"확인된 일정을 「꼭 넣을 일정」으로 고정한다. 고정한 일정은 바꾸기·자동 추천·삭제가 막히고, 서버도 다시 짤 때 빼지 않아야 한다.",
+ steps:[
+  {who:"user",do:[["tap",'.cd[data-k="a"] [data-act="lock"]']],t:"경복궁 잠금 누르기",
+   s:"자물쇠가 잠기고 카드 바탕이 회색이 된다. 연필·휴지통이 흐려지고 「경복궁을 꼭 넣을 일정으로 고정했어요」 알림이 뜬다.",
+   d:[["agree",`잠금(반드시 포함) 칸이 수정 계약에 없다. 참고로 여행에는 예약 보호 <code>protected_reason: booked</code>가 있다.`],
+      ["idea","보낼 값",`{"revision":1,"edits":[{"source_id":"s1","field":"items[0].locked","value":true}]}`]]},
+  {who:"user",do:[["tap",'.cd[data-k="a"] .cd-top [data-act="edit"]']],t:"잠긴 경복궁의 연필 누르기",
+   s:"수정 화면이 열리지 않고 「고정한 일정이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요」가 뜬다.",
+   d:[["agree","서버도 잠긴 항목을 바꾸거나 빼는 요청을 거절할지 정해야 한다."]]},
+  {who:"user",do:[["tap",'.cd[data-k="b"] [data-act="lock"]']],t:"올리브영 잠금 누르기(꺼져 있음)",
+   s:"확인이 필요한 일정은 고정할 수 없다 — 「확인이 필요한 일정은 먼저 고쳐야 고정할 수 있어요」.",
+   d:[["ui","잠글 수 있는지는 카드 상태(확인 필요)로 화면이 정한다."]]}
+ ]},
+{name:"삭제",
+ sum:"일정을 뺀다. 화면 가운데 알림창에서 한 번 더 묻고, 지운 뒤에는 잠시 되돌릴 수 있다.",
+ steps:[
+  {who:"user",do:[["tap",'.cd[data-k="b"] [data-act="del"]']],t:"올리브영 휴지통 누르기",
+   s:"알림창 「올리브영 일정을 삭제하시겠습니까?」 — 1일차 11:00–12:00, 버튼 「취소」·「삭제」. 처음 초점은 「취소」.",
+   d:[["ui","묻는 동안은 서버를 부르지 않는다."]]},
+  {who:"user",do:[["tap",'.al-btns [data-act="delno"]']],t:"「취소」",
+   s:"알림창만 닫히고 일정은 그대로다. 바깥을 누르거나 Esc를 눌러도 같다.",
+   d:[["ui","화면 안에서만 닫힌다."]]},
+  {who:"user",do:[["tap",'.cd[data-k="b"] [data-act="del"]'],["tap",'.al-btns [data-act="delyes"]']],t:"다시 휴지통 → 「삭제」",
+   s:"올리브영이 빠지고 경복궁 → 광장시장 이동을 새로 찾는다. 「올리브영 일정을 삭제했어요 · 앞뒤 이동을 다시 계산했어요」와 「되돌리기」가 뜨고, 확인 필요가 없어져 「재검증」이 켜진다.",
+   d:[["now",`<code>${EDITS}</code> — <code>removed</code> 칸.`,`{"revision":1,"edits":[{"source_id":"s1","field":"items[1].removed","value":true}]}`],
+      ["agree","새로 이어진 이동(경복궁 → 광장시장)의 판정을 수정 응답에서 받아야 한다."]]},
+  {who:"user",do:[["tap",".toast .tu"]],t:"「되돌리기」",
+   s:"올리브영이 제자리로 돌아오고 이동 줄과 확인 필요 표시도 되돌아온다.",
+   d:[["now",`앞 값으로 다시 수정해 판이 하나 는다. <code>removed</code>를 <code>false</code>로 되돌리는 처리는 서버에서 확인이 필요하다.`,`{"revision":2,"edits":[{"source_id":"s1","field":"items[1].removed","value":false}]}`]]}
+ ]},
+{name:"전체 자동 추천 → 재검증 → 여행 등록",
+ sum:"확인 필요 항목을 한 번에 고치고, 다시 판정한 뒤 등록한다.",
+ steps:[
+  {who:"user",do:[["tap",'.sh-foot [data-act="next"]']],t:"꺼진 「재검증」 누르기",
+   s:"확인이 필요한 항목이 남아 있으면 「재검증」은 늘 꺼져 있다. 누르면 「확인이 필요한 항목 2건이 남아 있어요 · 전체 자동 추천이나 수정으로 먼저 고쳐 주세요」.",
+   d:[["ui","남은 개수(장소 1 + 이동 1)로 화면이 정한다."]]},
+  {who:"user",do:[["tap",'.sh-foot [data-act="autoall"]']],t:"「전체 자동 추천」",
+   s:"올리브영이 광화문점 11:45–12:15로 바뀐다(앞뒤 이동에 맞춰 시각까지 조정). 다시 확인 뒤 이동 2구간이 모두 통과하고 「재검증」이 켜진다.",
+   d:[["agree","운영시간·휴무·앞뒤 이동까지 검증을 끝낸 대체 일정(장소 + 시각)을 한 번에 주는 API가 필요하다."],
+      ["now",`적용은 지금 수정 계약으로 보낼 수 있다(시각은 <code>HH:MM</code>).`,`{"revision":1,"edits":[{"source_id":"s1","field":"items[1].place","value":{"name":"올리브영 광화문점"}},{"source_id":"s1","field":"items[1].starts_at","value":"11:45"},{"source_id":"s1","field":"items[1].ends_at","value":"12:15"}]}`]]},
+  {who:"user",do:[["tap",'.sh-foot [data-act="next"]']],t:"「재검증」",
+   s:"일정을 차례로 다시 확인한다(카드마다 「재검증」 표시). 모두 통과하면 버튼이 「여행 등록」으로 바뀐다.",
+   d:[["agree",`저장하지 않고 판정만 돌리는 API가 필요하다. 지금 판정(운영시간·겹침·이동)은 등록(<code>confirm</code>) 때만 한다.`]]},
+  {who:"user",do:[["tap",'.sh-foot [data-act="next"]']],t:"「여행 등록」",
+   s:"「등록 완료」가 되고 이 화면의 조작이 닫힌다(실제로는 여행 화면으로 넘어간다).",
+   d:[["now",`<code>POST /v1/web/trip-intakes/{intake_id}/confirm</code> — 서버가 다시 조립·판정한 뒤 등록하고 <code>{status:"confirmed", trip:{trip_id}}</code>를 준다. 막히면 422 <code>intake_incomplete</code>(문제 목록).`,`{"revision":2}`]]}
+ ]}
+];
+
+/* 재생 상태 — SI 시나리오 · STI 단계(-1 = 시작 전) · AUTO 이어서 재생 · BUSY 단계 재생 중 · CLEAN 화면이 그 단계 끝 그대로 · RUN 재생 차례(바뀌면 하던 재생을 그만둔다) */
+let SI=0,STI=-1,AUTO=false,BUSY=false,CLEAN=true,RUN=0;
+const WHO={server:"서버",user:"사용자"},TAGL={now:"지금 계약",agree:"협의 필요",idea:"제안",ui:"화면만"};
+const byId=id=>document.getElementById(id);
+const btnPlay=byId("btnPlay"),btnPrev=byId("btnPrev"),btnNext=byId("btnNext"),scnSel=byId("scnSel"),stepsEl=byId("steps"),capEl=byId("stepcap");
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function normal(){TF=1/speed;INSTANT=false;clearTimeout(instT);SC.classList.remove("instant");$$(".tapdot").forEach(d=>d.remove());}
+/* 시트 안에 있으면 보이게 굴린다 */
+async function into(el){
+  const box=el.closest(".sheet-body,.ev-body,.sres");if(!box)return;
+  const er=el.getBoundingClientRect(),br=box.getBoundingClientRect(),top=(er.top-br.top)/SCALE,bottom=(er.bottom-br.top)/SCALE,h=box.clientHeight;
+  let d=0;if(top<8)d=top-8;else if(bottom>h-8)d=Math.min(top-8,bottom-h+8);
+  if(!d)return;
+  box.scrollTo({top:box.scrollTop+d,behavior:INSTANT?"auto":"smooth"});
+  if(!INSTANT)await wait(380/speed);
+}
+/* 누르는 자리 — 휴대폰 화면 안 좌표(배율을 풀고 테두리 6px을 뺀다) */
+function dot(el){
+  const r=el.getBoundingClientRect(),s=SC.getBoundingClientRect(),d=document.createElement("i");
+  d.className="tapdot";d.style.left=((r.left+r.width/2-s.left)/SCALE-6)+"px";d.style.top=((r.top+r.height/2-s.top)/SCALE-6)+"px";
+  SC.appendChild(d);return d;
+}
+/* 동작 하나. 움직임 없이 다시 만들 때(anim=false)는 표시와 기다림을 건너뛴다 */
+async function doAct([k,x,y],anim,tok){
+  if(k==="wait"){if(anim)await wait(x/speed);return;}
+  if(k==="swipe"){
+    const car=$(".ecar");if(!car)return;
+    if(anim){const d=dot(car),L=parseFloat(d.style.left);d.style.left=(L+80)+"px";d.classList.add("swipe");void d.offsetWidth;d.style.left=(L-80)+"px";await wait(480/speed);d.remove();if(tok!==RUN)return;}
+    goCard(x);if(anim)await wait(420/speed);return;
+  }
+  const el=$(x);if(!el)return;
+  if(k==="scroll"){el.scrollTo({top:y,behavior:anim?"smooth":"auto"});if(anim)await wait(500/speed);return;}
+  await into(el);if(tok!==RUN)return;
+  if(anim){const d=dot(el);d.classList.add("go");await wait(360/speed);setTimeout(()=>d.remove(),300);if(tok!==RUN)return;}
+  if(k==="tap")el.click();
+  else if(k==="type"){el.value="";for(const ch of y){el.value+=ch;el.dispatchEvent(new Event("input"));if(anim){await wait(140/speed);if(tok!==RUN)return;}}}
+}
+async function runStep(st,anim,tok){
+  if(st.do){for(const a of st.do){await doAct(a,anim,tok);if(tok!==RUN)return;}await settled();return;}
+  if(anim)await playTo(st.to);else seek(st.to);
+}
+/* 단계로 바로 가기 — 시나리오의 처음 상태에서 앞 단계를 움직임 없이 다시 만든 뒤 그 단계만 움직인다 */
+async function goStep(i){
+  const tok=++RUN,sc=SCN[SI];
+  BUSY=true;STI=i;CLEAN=false;normal();paint();
+  if(sc.stream)seek(sc.steps[i].from);
+  else{
+    seek(END);clearTimeout(instT);TF=0;INSTANT=true;SC.classList.add("instant");
+    for(let j=0;j<i;j++){await runStep(sc.steps[j],false,tok);if(tok!==RUN)return;}
+    void SC.offsetHeight;normal();
+    await wait(300/speed);if(tok!==RUN)return;
+  }
+  await runStep(sc.steps[i],true,tok);if(tok!==RUN)return;
+  finish(tok);
+}
+/* 다음 단계 — 화면이 앞 단계 끝 그대로면 이어서, 아니면 다시 만든다 */
+async function stepNext(){
+  const sc=SCN[SI],i=STI+1;if(i>=sc.steps.length)return;
+  if(BUSY||!CLEAN)return goStep(i);
+  const tok=++RUN;BUSY=true;STI=i;paint();
+  await runStep(sc.steps[i],true,tok);if(tok!==RUN)return;
+  finish(tok);
+}
+async function finish(tok){
+  BUSY=false;CLEAN=true;
+  if(STI>=SCN[SI].steps.length-1)AUTO=false;
+  paint();
+  if(!AUTO)return;
+  await wait((SCN[SI].dwell??1200)/speed);
+  if(tok===RUN&&AUTO&&!BUSY)stepNext();
+}
+function paint(){
+  const sc=SCN[SI],n=sc.steps.length,st=sc.steps[STI];
+  btnPlay.textContent=AUTO?"⏸ 멈춤":STI>=n-1&&!BUSY?"↺ 다시 재생":"▶ 재생";
+  btnPrev.disabled=STI<=0;btnNext.disabled=STI>=n-1;
+  scnSel.value=String(SI);
+  byId("scnTabs").querySelectorAll("[data-scn]").forEach(b=>b.setAttribute("aria-selected",String(+b.dataset.scn===SI)));
+  stepsEl.querySelectorAll(".st").forEach((li,j)=>{li.classList.toggle("on",j===STI);li.classList.toggle("done",j<STI);});
+  capEl.innerHTML=st
+    ?`<p class="sc-top"><span>시나리오 ${SI+1} · ${sc.name} · ${STI+1}/${n}</span><span class="who ${st.who}">${WHO[st.who]}</span></p><p class="sc-t">${st.t}</p><p class="sc-s">${st.s}</p>`
+    :`<p class="sc-top"><span>시나리오 ${SI+1} · ${sc.name}</span></p><p class="sc-t">${sc.sum}</p>`;
+}
+function renderScn(){
+  const sc=SCN[SI];
+  byId("scnTitle").textContent=`시나리오 ${SI+1} · ${sc.name}`;byId("scnSum").textContent=sc.sum;
+  stepsEl.innerHTML=sc.steps.map((st,j)=>`<li class="st"><button type="button" class="st-h" data-step="${j}"><span class="st-n">${j+1}</span><span class="who ${st.who}">${WHO[st.who]}</span><b>${st.t}</b></button><p class="st-s">${st.s}</p><div class="dts">${st.d.map(([g,txt,code])=>`<div class="dt"><span class="dtg ${g}">${TAGL[g]}</span><span>${txt}</span>${code?`<pre>${esc(code)}</pre>`:""}</div>`).join("")}</div></li>`).join("");
+  paint();
+}
+function pickScn(n){SI=n;STI=-1;AUTO=true;renderScn();goStep(0);}
+scnSel.innerHTML=SCN.map((s,i)=>`<option value="${i}">${i+1} · ${s.name}</option>`).join("");
+byId("scnTabs").innerHTML=SCN.map((s,i)=>`<button type="button" class="scn-tab" role="tab" data-scn="${i}">${i+1} · ${s.name}</button>`).join("");
+btnPlay.addEventListener("click",()=>{
+  if(AUTO){AUTO=false;paint();return;}
+  AUTO=true;paint();if(BUSY)return;
+  if(STI<0||STI>=SCN[SI].steps.length-1)goStep(0);else stepNext();
+});
+btnNext.addEventListener("click",()=>{AUTO=false;stepNext();paint();});
+btnPrev.addEventListener("click",()=>{AUTO=false;goStep(Math.max(0,STI-1));});
+byId("btnFirst").addEventListener("click",()=>{AUTO=false;goStep(0);});
+scnSel.addEventListener("change",()=>pickScn(+scnSel.value));
+byId("scnTabs").addEventListener("click",e=>{const b=e.target.closest("[data-scn]");if(b)pickScn(+b.dataset.scn);});
+stepsEl.addEventListener("click",e=>{
+  const b=e.target.closest("[data-step]");if(!b)return;
+  AUTO=false;goStep(+b.dataset.step);
+  if(matchMedia("(max-width:920px)").matches)document.querySelector(".phone-col").scrollIntoView({behavior:"smooth",block:"start"});
+});
+document.querySelector(".need").addEventListener("click",e=>{const b=e.target.closest("[data-goscn]");if(!b)return;pickScn(+b.dataset.goscn);byId("scnH").scrollIntoView({behavior:"smooth",block:"start"});});
+byId("speed").addEventListener("change",e=>{speed=+e.target.value;if(!INSTANT)TF=1/speed;});
+byId("btnSolo").addEventListener("click",e=>{const b=e.currentTarget,on=document.body.classList.toggle("solo");b.setAttribute("aria-pressed",String(on));b.textContent=on?"설명 보기":"화면만 보기";fit();});
+/* 재생 중 결과 화면을 직접 누르면 재생을 멈춘다. 그 뒤 「다음」은 다음 단계의 시작 상태를 다시 만든다 */
+SC.addEventListener("click",e=>{
+  if(!e.isTrusted||!SC.classList.contains("fin"))return;
+  if(BUSY||AUTO){RUN++;BUSY=false;AUTO=false;normal();}
+  CLEAN=false;paint();
+},true);
+
+/* ---------- 화면 크기 맞춤 — 좁으면 폭에 맞춘다. 넓은 화면은 휴대폰 열이 따라 내려오므로 아래 단계 안내(높이 고정)까지 한 화면에 들게 높이에도 맞춘다 ---------- */
+const box=document.getElementById("fit");
+function fit(){
+  const tall=innerWidth>920&&!document.body.classList.contains("solo")?(innerHeight-196)/740:1;
+  SCALE=Math.min(1,box.parentElement.clientWidth/360,Math.max(.6,tall));
+  SC.style.transform=`scale(${SCALE})`;box.style.width=Math.round(360*SCALE)+"px";box.style.height=Math.round(740*SCALE)+"px";
+}
+new ResizeObserver(fit).observe(box.parentElement);addEventListener("resize",fit);fit();
+
+/* ---------- 시작 — 시나리오 1을 바로 재생(움직임 줄이기 설정이면 마지막 화면) ---------- */
+renderScn();
+if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){seek(END);STI=SCN[0].steps.length-1;paint();}
+else{seek(0);paint();setTimeout(()=>{if(STI<0){AUTO=true;goStep(0);}},500);}
+</script>
+</body>
+</html>

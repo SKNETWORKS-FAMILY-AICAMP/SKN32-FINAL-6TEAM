@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공지 배너 줄이기 비교</title>
+<!--
+  2026-10-17 · ST4F-607 · 상태: 검토 후 보류 — 넣지 않음(2026-10-17 사용자 결정, 기록으로 남김) · 실제 API 미연결.
+  맨 위 서비스 공지 배너를 「처음엔 카드 → 시간이 지나면 작게 줄어듦 → 누르면 카드(접기 · 끄기)」로 바꾸는 안. 줄어든 모양을 다섯 가지로 그린다.
+  색 · 글꼴 · 카드 모양은 2026-10-17 로컬 웹과 support.module.css 의 실제 값이다. 공지는 모두 예시다.
+-->
+<style>
+  :root {
+    --color-background: #f3f5f3; --color-surface: #fff; --color-subtle: #f6f7f5; --color-divider: #e8ede9; --color-border: #dce3dd; --color-border-strong: #c3cdc6;
+    --color-text: #24392f; --color-text-secondary: #4a5d52; --color-muted: #56645b; --color-primary: #2e6047; --color-on-primary: #fff; --color-soft: #e9f2eb;
+    --color-error: #965640; --color-error-soft: #fdf3ed; --color-warning: #82693e; --color-warning-soft: #faf6ec;
+    --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e7ebe7; color: var(--color-text); font-family: var(--font-sans); font-size: 13px; line-height: 1.6; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .doc { max-width: 1260px; margin: 0 auto; padding: 24px 16px 48px; }
+  .doc > h1 { margin: 0 0 4px; font-size: 22px; }
+  .doc > p { margin: 0 0 12px; color: var(--color-text-secondary); }
+  .doc h2 { margin: 22px 0 8px; font-size: 17px; }
+  table.refs { width: 100%; border-collapse: collapse; background: var(--color-surface); border: 1px solid var(--color-border); }
+  .refs th, .refs td { padding: 7px 10px; text-align: left; vertical-align: top; border-top: 1px solid var(--color-border); }
+  .refs th { background: var(--color-soft); border-top: 0; font-weight: 650; white-space: nowrap; }
+  .refs a { color: var(--color-primary); }
+  .refs .no { color: var(--color-muted); }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 0; }
+  .flow span { padding: 4px 10px; border-radius: 999px; background: var(--color-surface); border: 1px solid var(--color-border); font-weight: 650; }
+  .phones { display: grid; grid-template-columns: repeat(auto-fill, minmax(375px, 375px)); gap: 28px 24px; justify-content: center; margin-top: 18px; }
+  .option > h3 { margin: 0 0 2px; font-size: 15.5px; }
+  .option > p { margin: 0 0 4px; min-height: 62px; color: var(--color-text-secondary); font-size: 12.5px; }
+  .option > p.basis { min-height: 0; margin-bottom: 8px; font-size: 12px; color: var(--color-muted); }
+  .phone { position: relative; height: 640px; overflow: hidden; border: 1px solid var(--color-border); border-radius: 28px; background: var(--color-background); box-shadow: 0 8px 24px rgb(36 57 47 / .12); }
+  .ctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .ctrl button { min-height: 32px; padding: 0 10px; border: 1px solid var(--color-border-strong); border-radius: 8px; background: var(--color-surface); font-size: 12px; font-weight: 650; }
+  .ctrl output { font-size: 12px; color: var(--color-muted); }
+  .note { margin-top: 24px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+  .note h2 { margin: 0 0 6px; }
+  .note ul { margin: 0; padding-left: 18px; }
+
+  /* ── 배경 화면(내 여행) ── */
+  .appHeader { height: 76px; padding: 0 25px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; color: var(--color-primary); }
+  .mark { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--color-primary); color: #fff; font-size: 19px; }
+  .menu { width: 44px; height: 44px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); display: grid; place-items: center; }
+  .menu i, .menu i::before, .menu i::after { display: block; width: 16px; height: 2px; border-radius: 2px; background: var(--color-text); position: relative; content: ""; }
+  .menu i::before { position: absolute; top: -5px; } .menu i::after { position: absolute; top: 5px; }
+  main { padding: 12px 16px; display: grid; gap: 12px; }
+  main h1 { margin: 0; font-size: 26px; }
+  .trip { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+  .trip b { display: block; font-size: 15px; }
+  .trip small { color: var(--color-muted); }
+
+  /* ── 카드(지금 배너와 같은 모양: support.module.css .banner) ── */
+  [data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
+  [data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+  [data-tone="info"] { --tone: var(--color-primary); --tone-soft: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+  .card { position: absolute; z-index: 5; top: 12px; left: 16px; right: 16px; max-height: 60%; overflow: auto; padding: 12px 16px 10px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); box-shadow: 0 4px 16px rgb(36 57 47 / .14); transform-origin: top center; transition: transform .25s ease, opacity .25s ease; }
+  .card.leaving { transform: scale(.6) translateY(-30px); opacity: 0; }
+  .item { border-left: 4px solid var(--tone); padding-left: 10px; }
+  .item + .item { margin-top: 10px; }
+  .item h2 { margin: 2px 0 0; font-size: 14px; }
+  .item p { margin: 0; color: var(--color-text-secondary); }
+  .kind { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--tone-soft); color: var(--tone); font-size: 11.5px; font-weight: 700; }
+  .actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .actions a { margin-right: auto; color: var(--color-primary); font-weight: 650; text-decoration: none; }
+  .actions button { min-height: 40px; padding: 0 14px; border: 1px solid var(--color-border-strong); border-radius: 10px; background: var(--color-surface); font-weight: 700; }
+  .actions button.off { border-color: var(--color-text); background: var(--color-text); color: #fff; }
+  .actions button:disabled { opacity: .45; cursor: not-allowed; }
+  .hold { margin: 6px 0 0; font-size: 11.5px; color: var(--color-muted); }
+  .timer { height: 3px; margin: 8px -16px -10px; background: var(--color-divider); }
+  .timer i { display: block; height: 100%; background: var(--color-primary); transform-origin: left; }
+
+  /* ── 줄어든 모양 ── */
+  .mini { position: absolute; z-index: 4; border: 1px solid var(--color-border); background: var(--color-surface); box-shadow: 0 2px 10px rgb(36 57 47 / .12); display: flex; align-items: center; gap: 8px; text-align: left; animation: pop .25s ease; }
+  @keyframes pop { from { scale: .8; opacity: 0; } to { scale: 1; opacity: 1; } }
+  .mini .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+  .mini .more { flex: none; font-size: 12px; font-weight: 700; color: var(--color-muted); }
+  .mini .chev { flex: none; color: var(--color-muted); }
+  /* A · E(장애): 머리 아래 자리를 차지해 본문을 아래로 민다(화면 제목을 가리지 않게) */
+  .strip { position: relative; width: calc(100% - 32px); margin: 0 16px; height: 42px; padding: 0 12px; border-radius: 12px; border-left: 4px solid var(--tone); }
+  .pill { top: 18px; left: 50%; transform: translateX(-50%); height: 40px; padding: 0 14px; border-radius: 999px; color: var(--tone); font-weight: 800; }
+  .chip { top: 18px; right: 74px; max-width: 150px; height: 40px; padding: 0 12px; border-radius: 999px; background: var(--tone-soft); border-color: transparent; color: var(--tone); }
+  .chip .t { color: var(--tone); }
+  .edge { top: 210px; right: 0; width: 46px; padding: 10px 0; border-radius: 12px 0 0 12px; border-right: 0; flex-direction: column; gap: 2px; color: var(--tone); font-weight: 800; }
+  .icon { flex: none; width: 18px; height: 18px; }
+  .gone { position: absolute; left: 16px; right: 16px; bottom: 16px; padding: 10px 12px; border-radius: 12px; background: var(--color-text); color: #fff; font-size: 12.5px; animation: pop .25s ease; }
+  /* ── 다른 화면에 적용(실제 화면 캡처 위) ── */
+  .pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 0; }
+  .pick button { min-height: 36px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); font-weight: 700; }
+  .pick button[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+  .pick .sep { width: 1px; height: 24px; background: var(--color-border-strong); margin: 0 6px; }
+  .sPhone { position: relative; height: 700px; overflow: hidden; border: 1px solid var(--color-border); border-radius: 28px; background: #fff; box-shadow: 0 8px 24px rgb(36 57 47 / .12); }
+  .bg { background-size: 375px auto; background-repeat: no-repeat; }
+  .sPhone .mini.strip.over { position: absolute; margin: 0; width: auto; }
+  .rule { margin: 6px 0 0; font-size: 12px; color: var(--color-text-secondary); }
+  .rule b { color: var(--color-text); }
+  .flag { position: absolute; z-index: 6; left: 12px; right: 12px; bottom: 12px; padding: 8px 10px; border-radius: 10px; background: rgb(36 57 47 / .88); color: #fff; font-size: 12px; }
+  @media (prefers-reduced-motion: reduce) { .card, .mini, .gone { transition: none; animation: none; } .card.leaving { transform: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>공지 배너 — 카드 → 작게 줄어듦 · 접기 · 끄기 (줄어든 모양 5가지)</h1>
+  <p><b>2026-10-17 사용자 결정: 넣지 않음(검토 후 보류 — 기록).</b> 공지를 다시 찾을 길이 이미 있고 화면마다 예외 규칙이 일곱 가지 필요해서다. 대신 지금 배너의 「공지 닫기」를 새 공지가 올 때까지 기억하게 고친다. ST4F-607 · 사용자 안: 새 공지는 맨 위에 카드로 뜨고, 시간이 지나면 작게 줄어 공지가 있다는 것만 보인다. 줄어든 것을 누르면 다시 카드가 되고, 카드에는 「접기」(작은 모양으로 돌아가 그대로 유지)와 「끄기」(새 공지가 올 때까지 그 공지는 안 보임)가 있다. 휴대폰 아래 단추로 「처음부터」 · 「새 공지 오기」를 눌러 볼 수 있다. 공지는 예시다.</p>
+  <div class="flow"><span>새 공지 → 카드</span>→<span>8초 뒤(손을 대면 멈춤) → 작은 모양</span>→<span>누르면 카드</span>→<span>접기 → 작은 모양 유지</span>·<span>끄기 → 새 공지가 올 때까지 안 보임</span></div>
+
+  <h2>참고한 사례 (2026-10-17 공개 문서로 확인 — 앱을 직접 열어 보지는 않았다)</h2>
+  <table class="refs">
+    <thead><tr><th>사례</th><th>작아진 모습 · 계기</th><th>다시 펼치기 · 닫기</th><th>쓴 안</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://developer.apple.com/design/human-interface-guidelines/live-activities">Apple Live Activities</a></td><td>compact(카메라 양옆 짧은 정보) · minimal(아이콘) — 같은 정보를 줄인 판</td><td>길게 누르면 펼침 · 끝나면 사라짐</td><td>A · C</td></tr>
+      <tr><td><a href="https://developer.android.com/develop/ui/compose/notifications">Android 알림</a></td><td>위로 잠깐 뜬 뒤 상태 표시줄 아이콘으로</td><td>끌어내려 서랍 · 지울 때까지 남음</td><td>B</td></tr>
+      <tr><td><a href="https://developer.android.com/develop/ui/views/notifications/live-update">Android 16 Live Updates</a></td><td>상태 표시줄 칩(아이콘 + 짧은 글, 폭이 모자라면 아이콘만)</td><td>사용자가 닫은 것은 다시 올리지 않는다</td><td>C</td></tr>
+      <tr><td><a href="https://developer.android.com/develop/ui/views/notifications/bubbles">Android Bubbles</a></td><td>떠 있는 아이콘 + 새것 배지</td><td>누르면 펼침 · 확인하면 배지 지움</td><td>B · D</td></tr>
+      <tr><td><a href="https://about.instagram.com/blog/announcements/new-posts-button-to-improve-instagram-feed">Instagram 「New Posts」 단추</a></td><td>새 글이 오면 피드 위 작은 단추</td><td>누르면 그리로, 안 누르면 제자리</td><td>B</td></tr>
+      <tr><td><a href="https://api.flutter.dev/flutter/material/MaterialBanner-class.html">Material banner</a> · <a href="https://github.com/material-components/material-components-android/blob/master/docs/components/Snackbar.md">snackbar</a></td><td>banner는 위에 남고 사용자가 닫음 · snackbar는 시간이 지나면 사라짐(짧게 4초 · 길게 10초)</td><td>—</td><td>A · 시간</td></tr>
+      <tr><td><a href="https://atlassian.design/components/flag/usage">Atlassian flag</a> · <a href="https://carbondesignsystem.com/components/notification/usage/">IBM Carbon</a></td><td>flag 8초 뒤 자동 닫힘 · Carbon 토스트는 설정하면 5초</td><td>치명적 경고 · 오류는 자동으로 닫지 말 것</td><td>시간 · E</td></tr>
+      <tr><td><a href="https://ant.design/components/notification">Ant Design notification</a></td><td>기본 4.5초, 마우스를 올리면 시간이 멈춤 · 넷 이상은 겹쳐 쌓임</td><td>시간 0이면 자동으로 안 닫힘</td><td>멈춤</td></tr>
+      <tr><td><a href="https://primer.style/accessibility/toasts/">GitHub Primer</a></td><td>토스트는 접근성 문제로 쓰지 말라 함</td><td>닫은 선택을 저장해 다시 보이지 않음</td><td>끄기</td></tr>
+      <tr><td><a href="https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-header/">Material for MkDocs 공지</a></td><td>—</td><td>닫으면 공지 내용이 바뀔 때까지 다시 안 보임</td><td>끄기</td></tr>
+      <tr><td><a href="https://shopify.dev/docs/api/app-home/polaris-web-components/feedback-and-status-indicators/banner">Shopify Polaris banner</a></td><td>—</td><td>닫은 상태는 앱이 직접 저장해야 함</td><td>끄기</td></tr>
+      <tr><td><a href="https://nngroup.com/articles/indicators-validations-notifications">NN/g 표시 · 검증 · 알림</a></td><td>배지 · 아이콘 같은 표시는 확인할 때까지 남음</td><td>놓치면 곤란한 정보는 계속 보이는 표시</td><td>B · E</td></tr>
+      <tr><td class="no">X · Slack 새 글 알약, 지도 앱 알림 칩, 토스 · 카카오T · 배민 · 쿠팡</td><td class="no" colspan="3">공개 원본 자료를 찾지 못해 표에 넣지 않았다(동작을 지어내지 않음)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>시간 · 접근성</h2>
+  <table class="refs">
+    <tbody>
+      <tr><td><a href="https://www.w3.org/WAI/WCAG22/Understanding/timing-adjustable.html">WCAG 2.2.1 시간 조절</a></td><td>저절로 사라지는 메시지는 시간 제한으로 본다 — 다른 경로로 같은 정보를 얻을 수 있으면 예외. 작은 모양이 늘 남고 누르면 같은 카드가 열리면 그것이 「다른 경로」(작성자 해석). 알림 센터 「공지」 탭 · 공지사항 게시판도 같은 공지를 보여 준다.</td></tr>
+      <tr><td><a href="https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html">WCAG 4.1.3 상태 메시지</a></td><td>새 공지는 초점을 옮기지 않고 `role="status"` 로 알린다. `alert` 는 장애처럼 급한 것에만.</td></tr>
+      <tr><td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion">prefers-reduced-motion</a></td><td>「동작 줄이기」면 줄어드는 움직임 없이 바로 바꾼다(이 목업도 그렇게 한다).</td></tr>
+      <tr><td>줄어드는 시간</td><td>8초(Atlassian flag) — 카드에 마우스 · 손가락 · 키보드 초점이 있으면 멈춘다(Ant Design). 짧게 읽는 사람을 위해 Material 「길게」(10초)도 후보.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="phones">
+    <section class="option"><h3>A · 한 줄 띠 (사용자 안)</h3><p>머리 바로 아래 한 줄 — 종류 색 줄 + 가장 급한 공지 제목(말줄임) + 「외 2」. 내용이 바로 보이지만 화면을 한 줄 차지한다.</p><p class="basis">근거: Apple compact(같은 정보를 줄인 판), Material banner(위에 남음)</p><div class="phone" id="pA"></div><div class="ctrl" data-for="pA"></div></section>
+    <section class="option"><h3>B · 아이콘 + 숫자 알약</h3><p>머리 가운데 작은 알약 — 확성기 아이콘과 공지 수. 장애가 있으면 빨간색. 자리를 가장 적게 쓰지만 내용은 안 보인다.</p><p class="basis">근거: Android 상태 표시줄 아이콘, Bubbles 배지, Instagram 「New Posts」, NN/g 표시</p><div class="phone" id="pB"></div><div class="ctrl" data-for="pB"></div></section>
+    <section class="option"><h3>C · 종류 태그 칩</h3><p>머리 가운데 종류 색 칩 — 「장애 · 채팅 답변이 늦…」처럼 종류와 제목 앞부분, 「+2」. 폭이 모자라면 아이콘만.</p><p class="basis">근거: Android 16 Live Updates 칩, Apple minimal</p><div class="phone" id="pC"></div><div class="ctrl" data-for="pC"></div></section>
+    <section class="option"><h3>D · 오른쪽 가장자리 탭</h3><p>화면 오른쪽 가장자리에 붙은 작은 탭 — 아이콘과 수. 머리와 본문을 가리지 않는다. 같은 모양의 직접 사례는 찾지 못했다.</p><p class="basis">근거: Android Bubbles(떠 있는 아이콘)에 가까움</p><div class="phone" id="pD"></div><div class="ctrl" data-for="pD"></div></section>
+    <section class="option"><h3>E · 종류별로 다르게</h3><p>「기능 차질·장애」가 있으면 A의 한 줄 띠로 줄이고 끄기를 막는다(장애가 풀리면 사라짐). 안내 · 점검 예고만 있으면 C의 칩으로 줄이고 끌 수 있다.</p><p class="basis">근거: Atlassian · Carbon(치명적인 것은 자동으로 닫지 않음), NN/g</p><div class="phone" id="pE"></div><div class="ctrl" data-for="pE"></div></section>
+  </div>
+
+  <h2>다른 화면에 적용 — 실제 화면 위에 (2026-10-17 시험용 가짜 서버로 찍은 화면 · 예시 자료)</h2>
+  <p style="margin:0;color:var(--color-text-secondary)">배너는 앱 전체 틀(`layout.tsx`)에 있어 모든 화면에 뜬다. 머리 구성 · 지도 · 입력칸 · 덮는 창이 서로 다른 화면 여덟 곳을 골라 같은 안을 얹었다. 아래에서 안(A~E)을 고르면 여덟 화면이 함께 바뀐다. 지도 자리의 분홍색은 시험용 지도 타일이다(실제 지도 아님).</p>
+  <div class="pick" id="screenPick"><button data-v="A">A · 한 줄 띠</button><button data-v="B">B · 아이콘 + 숫자</button><button data-v="C">C · 종류 칩</button><button data-v="D">D · 가장자리 탭</button><button data-v="E" aria-pressed="true">E · 종류별</button><span class="sep"></span><button data-g="reset">처음부터(카드)</button><button data-g="skip">8초 건너뛰기</button><button data-g="new">새 공지 오기</button><button data-g="calm">장애 풀림(장애 공지 끝)</button></div>
+  <div class="phones" id="screenPhones"></div>
+
+  <div class="note">
+    <h2>정할 것 · 작성자 제안</h2>
+    <ul>
+      <li>줄어든 모양: A~E 중 하나. 작성자 제안은 <b>E</b>(장애는 내용이 보이는 한 줄 띠 · 끄기 막음, 나머지는 칩) — 장애는 놓치면 곤란하고, 안내 · 점검 예고는 자리를 덜 차지하는 게 낫다. 단순하게 가려면 A.</li>
+      <li>줄어드는 시간: 8초(제안) 또는 10초. 카드에 손을 대거나 초점이 있는 동안은 멈춘다.</li>
+      <li>「끄기」 기억: 이 브라우저에 공지 id 로 기억하고, 새 id 가 오면 카드부터 다시 띄운다(운영 앱이 같은 공지를 고쳐도 id 가 같으면 다시 안 뜬다 — 다시 띄우려면 새로 올려야 함). 「접기」도 같은 기억 — 새로고침해도 작은 모양 그대로.</li>
+      <li>알림 센터 「공지」 탭 · 공지사항 게시판은 지금처럼 그대로 — 끈 공지도 거기서는 보인다.</li>
+      <li>화면별 규칙(아래 「다른 화면에 적용」): 입력 중(계획 담기 · 채팅)에는 카드 대신 바로 작은 모양, 지도 화면은 한 줄 띠를 지도 위에 얹고(밀지 않음) 계획 확인 안내 아래로, 알림 센터가 열린 동안은 작은 모양을 숨기고, 공지사항 화면은 카드 없이 작은 모양만(제안).</li>
+      <li>새로 지은 문구: 「접기」 · 「끄기」(사용자 지시), 「외 n」, 「장애가 풀리면 저절로 사라져요」, 끈 뒤 안내 문장. 「문의하기」는 지금 배너 문구 그대로.</li>
+    </ul>
+  </div>
+</div>
+<script>
+const BASE = [
+  { id: "n1", kind: "안내", tone: "info", title: "여행 중 문의는 문의함으로", body: "운영자가 확인한 뒤 답해요." },
+  { id: "n2", kind: "기능 차질·장애", tone: "error", title: "채팅 답변이 늦어요", body: "모델 서버가 느려 채팅 답이 1분 넘게 걸릴 수 있어요." },
+  { id: "n3", kind: "점검 예고", tone: "warning", title: "오늘 밤 23시 서버 점검", body: "23:00부터 10분 동안 점검해요." },
+];
+const NEW = { id: "n4", kind: "점검 예고", tone: "warning", title: "내일 새벽 2시 점검", body: "02:00부터 20분 동안 점검해요." };
+const RANK = { error: 0, warning: 1, info: 2 };
+const AUTO_MS = 8000;
+const SHORT = { "기능 차질·장애": "장애", "점검 예고": "점검", "안내": "안내" };
+const MEGAPHONE = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`;
+const background = `<header class="appHeader"><span class="brand"><span class="mark">t</span>guguroute</span><span class="menu" aria-hidden="true"><i></i></span></header>
+  <main><h1>내 여행</h1><div class="trip"><b>서울 3박 4일</b><small>10.14 ~ 10.17 · 4일차 진행 중</small></div><div class="trip"><b>부산 당일치기</b><small>11.02 · 시작 전</small></div><div class="trip"><b>제주 2박 3일</b><small>9.20 ~ 9.22 · 끝남</small></div></main>`;
+
+function make(id, variant) {
+  const root = document.getElementById(id);
+  const ctrl = document.querySelector(`.ctrl[data-for="${id}"]`);
+  const s = { notices: [...BASE], dismissed: new Set(), phase: "card", auto: true, left: AUTO_MS, paused: false, last: performance.now(), gone: false };
+  const visible = () => s.notices.filter((n) => !s.dismissed.has(n.id)).sort((a, b) => RANK[a.tone] - RANK[b.tone]);
+  const hasDown = () => visible().some((n) => n.tone === "error");
+  const miniKind = () => variant === "E" ? (hasDown() ? "strip" : "chip") : { A: "strip", B: "pill", C: "chip", D: "edge" }[variant];
+  const offLocked = () => variant === "E" && hasDown();
+
+  function cardHtml() {
+    const list = visible();
+    return `<div class="card" role="status" aria-label="서비스 공지" data-card>${list.map((n) => `<div class="item" data-tone="${n.tone}"><span class="kind">${n.kind}</span><h2>${n.title}</h2><p>${n.body}</p></div>`).join("")}
+      <div class="actions"><a href="#">문의하기</a><button type="button" data-act="fold">접기</button><button type="button" class="off" data-act="off"${offLocked() ? " disabled" : ""}>끄기</button></div>
+      ${offLocked() ? `<p class="hold">장애가 풀리면 저절로 사라져요 — 그때까지는 끌 수 없고 접을 수만 있어요.</p>` : ""}
+      ${s.auto ? `<div class="timer"><i style="transform:scaleX(${Math.max(0, s.left / AUTO_MS)})"></i></div>` : ""}</div>`;
+  }
+  function miniHtml() {
+    const list = visible();
+    const top = list[0];
+    const more = list.length > 1 ? `외 ${list.length - 1}` : "";
+    const kind = miniKind();
+    if (kind === "strip") return `<button class="mini strip" data-tone="${top.tone}" data-act="open" aria-label="서비스 공지 ${list.length}개 · 펼치기"><span class="kind">${SHORT[top.kind]}</span><span class="t">${top.title}</span><span class="more">${more}</span><span class="chev">⌄</span></button>`;
+    if (kind === "pill") return `<button class="mini pill" data-tone="${top.tone}" data-act="open" aria-label="서비스 공지 ${list.length}개 · 펼치기">${MEGAPHONE}<span>${list.length}</span></button>`;
+    if (kind === "chip") return `<button class="mini chip" data-tone="${top.tone}" data-act="open" aria-label="서비스 공지 ${list.length}개 · 펼치기">${MEGAPHONE}<span class="t">${SHORT[top.kind]} · ${top.title}</span><span class="more" style="color:inherit">${list.length > 1 ? `+${list.length - 1}` : ""}</span></button>`;
+    return `<button class="mini edge" data-tone="${top.tone}" data-act="open" aria-label="서비스 공지 ${list.length}개 · 펼치기">${MEGAPHONE}<span>${list.length}</span></button>`;
+  }
+  function draw() {
+    const list = visible();
+    let overlay = "";
+    if (list.length && s.phase === "card") overlay = cardHtml();
+    else if (list.length && s.phase === "mini") overlay = miniHtml();
+    if (s.gone && !list.length) overlay += `<div class="gone" role="status">공지를 껐어요. 새 공지가 오면 다시 떠요. 끈 공지는 메뉴 › 공지사항에서 볼 수 있어요.</div>`;
+    // A · E(장애)의 한 줄 띠는 머리와 본문 사이에 끼워 넣는다 — 덮지 않고 민다
+    root.innerHTML = overlay.includes('mini strip') ? background.replace("</header>", "</header>" + overlay) : background + overlay;
+    const state = !list.length ? "꺼짐 — 새 공지를 기다림" : s.phase === "card" ? (s.auto ? `카드 · ${Math.ceil(s.left / 1000)}초 뒤 줄어듦${s.paused ? "(멈춤)" : ""}` : "카드 · 사용자가 펼침") : "작은 모양(접힘 유지)";
+    ctrl.querySelector("output").textContent = state;
+  }
+  function collapse() {
+    if (s.collapsing) return;                                   // the timer and 「접기」 must not run it twice
+    s.collapsing = true;
+    const card = root.querySelector("[data-card]");
+    const done = () => { s.phase = "mini"; s.auto = false; s.collapsing = false; draw(); };
+    if (card && !matchMedia("(prefers-reduced-motion: reduce)").matches) { card.classList.add("leaving"); setTimeout(done, 240); } else done();
+  }
+  root.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-act]");
+    if (!target) return;
+    event.preventDefault();
+    const act = target.dataset.act;
+    if (act === "open") { s.phase = "card"; s.auto = false; s.gone = false; draw(); }
+    if (act === "fold") collapse();
+    if (act === "off") { visible().forEach((n) => s.dismissed.add(n.id)); s.gone = true; s.auto = false; draw(); }
+  });
+  root.addEventListener("pointerover", (event) => { if (event.target.closest("[data-card]")) s.paused = true; });
+  root.addEventListener("pointerout", (event) => { if (event.target.closest("[data-card]") && !event.relatedTarget?.closest?.("[data-card]")) s.paused = false; });
+  root.addEventListener("focusin", (event) => { if (event.target.closest("[data-card]")) s.paused = true; });
+  root.addEventListener("focusout", () => { s.paused = false; });
+  ctrl.innerHTML = `<button type="button" data-c="reset">처음부터</button><button type="button" data-c="new">새 공지 오기</button><button type="button" data-c="skip">8초 건너뛰기</button><output></output>`;
+  ctrl.addEventListener("click", (event) => {
+    const c = event.target.closest("[data-c]")?.dataset.c;
+    if (c === "reset") { s.notices = [...BASE]; s.dismissed = new Set(); s.phase = "card"; s.auto = true; s.left = AUTO_MS; s.gone = false; draw(); }
+    if (c === "new") { if (!s.notices.some((n) => n.id === NEW.id)) s.notices.push(NEW); s.phase = "card"; s.auto = true; s.left = AUTO_MS; s.gone = false; draw(); }
+    if (c === "skip" && s.phase === "card" && s.auto) { s.left = 0; }
+  });
+  function tick(now) {
+    const dt = now - s.last; s.last = now;
+    if (s.phase === "card" && s.auto && visible().length) {
+      if (!s.paused) s.left -= dt;
+      if (s.left <= 0) collapse();
+      else { const bar = root.querySelector(".timer i"); if (bar) bar.style.transform = `scaleX(${s.left / AUTO_MS})`; const out = ctrl.querySelector("output"); out.textContent = `카드 · ${Math.ceil(s.left / 1000)}초 뒤 줄어듦${s.paused ? "(멈춤)" : ""}`; }
+    }
+    requestAnimationFrame(tick);
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+make("pA", "A"); make("pB", "B"); make("pC", "C"); make("pD", "D"); make("pE", "E");
+
+// ── 다른 화면에 적용 ──
+// 화면마다: 머리 아래 높이(header), 지도 화면인지(map — 한 줄 띠가 밀지 않고 지도 위에 얹힘), 각 모양의 자리, 화면 규칙.
+const SCREENS = [
+  { key: "intro", name: "첫 소개", header: 76, pill: 191, chip: [123, 120], edge: 250, rule: "머리 아래 한 줄 띠는 본문을 민다. 칩은 지구본 왼쪽." },
+  { key: "trips", name: "내 여행", header: 76, pill: 187, chip: [74, 150], edge: 250, rule: "가장 단순한 화면 — 기준." },
+  { key: "new", name: "계획 담기(입력 중)", header: 76, pill: 191, chip: [123, 120], edge: 250, typing: true, rule: "<b>입력칸에 쓰는 동안은 카드를 띄우지 않고 바로 작은 모양</b> — 계획 글을 가리지 않게. 다 쓰고 나면 그대로 작은 모양." },
+  { key: "intake", name: "계획 확인", header: 76, map: true, strip: [170, 12], pill: 207, chip: [110, 115], edge: 130, rule: "<b>한 줄 띠는 「계획 확인 화면이에요」 안내 아래로</b>(지금 서버 대기 안내를 배너만큼 내리는 것과 같은 방식). 지도를 밀지 않는다." },
+  { key: "trip", name: "여행 화면", header: 76, map: true, strip: [70, 64], pill: 223, chip: [108, 92], edge: 130, rule: "한 줄 띠는 지도 위, 축척 단추 왼쪽까지. <b>칩은 종 왼쪽이라 좁아 아이콘 + 종류 이름만</b>(Android 16 칩 규칙 — 폭이 모자라면 줄임)." },
+  { key: "chat", name: "여행 화면 · 채팅 칸", header: 76, map: true, strip: [70, 64], pill: 223, chip: [108, 92], edge: 130, typing: true, rule: "<b>채팅을 쓰는 동안 새 공지가 오면 카드 대신 바로 작은 모양</b> — 키보드와 입력 막대를 가리지 않게." },
+  { key: "center", name: "알림 센터", header: 70, hideMini: true, rule: "<b>알림 센터가 열린 동안 작은 모양은 숨긴다</b> — 같은 공지가 「공지」 탭에 있다. 새 공지가 오면 카드만 잠깐 뜨고 줄면 사라진다." },
+  { key: "notices", name: "공지사항", header: 76, pill: 187, chip: [74, 150], edge: 250, noCard: true, rule: "<b>게시판에 같은 공지가 있어 카드는 띄우지 않고 작은 모양만</b>(제안 — 10-17 「배너 그대로」 결정을 줄이기 방식에 맞춘 것)." },
+];
+let screenVariant = "E";
+const screenStates = [];
+function screenPhone(cfg) {
+  const wrap = document.createElement("section");
+  wrap.className = "option";
+  wrap.innerHTML = `<h3>${cfg.name}</h3><div class="sPhone"></div><p class="rule">${cfg.rule}</p>`;
+  document.getElementById("screenPhones").append(wrap);
+  const root = wrap.querySelector(".sPhone");
+  const file = `tripilot-notice-banner-screen-${cfg.key}.jpg`;
+  const s = { notices: [...BASE], dismissed: new Set(), phase: "card", auto: true, left: AUTO_MS, collapsing: false };
+  const visible = () => s.notices.filter((n) => !s.dismissed.has(n.id)).sort((a, b) => RANK[a.tone] - RANK[b.tone]);
+  const hasDown = () => visible().some((n) => n.tone === "error");
+  const kindOfMini = () => screenVariant === "E" ? (hasDown() ? "strip" : "chip") : { A: "strip", B: "pill", C: "chip", D: "edge" }[screenVariant];
+  const offLocked = () => screenVariant === "E" && hasDown();
+  const start = () => { s.phase = cfg.noCard || cfg.typing ? "mini" : "card"; s.auto = s.phase === "card"; s.left = AUTO_MS; };
+  function card() {
+    const list = visible();
+    return `<div class="card" role="status" data-card>${list.map((n) => `<div class="item" data-tone="${n.tone}"><span class="kind">${n.kind}</span><h2>${n.title}</h2><p>${n.body}</p></div>`).join("")}
+      <div class="actions"><a href="#">문의하기</a><button type="button" data-act="fold">접기</button><button type="button" class="off" data-act="off"${offLocked() ? " disabled" : ""}>끄기</button></div>
+      ${offLocked() ? `<p class="hold">장애가 풀리면 저절로 사라져요 — 그때까지는 끌 수 없고 접을 수만 있어요.</p>` : ""}
+      ${s.auto ? `<div class="timer"><i style="transform:scaleX(${Math.max(0, s.left / AUTO_MS)})"></i></div>` : ""}</div>`;
+  }
+  function mini() {
+    const list = visible(), top = list[0], kind = kindOfMini(), label = `서비스 공지 ${list.length}개 · 펼치기`;
+    if (kind === "strip") {
+      const over = cfg.map ? ` over" style="top:${cfg.strip[0]}px;left:12px;right:${cfg.strip[1]}px` : "";
+      return `<button class="mini strip${over}" data-tone="${top.tone}" data-act="open" aria-label="${label}"><span class="kind">${SHORT[top.kind]}</span><span class="t">${top.title}</span><span class="more">${list.length > 1 ? `외 ${list.length - 1}` : ""}</span><span class="chev">⌄</span></button>`;
+    }
+    if (kind === "pill") return `<button class="mini pill" style="left:${cfg.pill}px" data-tone="${top.tone}" data-act="open" aria-label="${label}">${MEGAPHONE}<span>${list.length}</span></button>`;
+    if (kind === "chip") {
+      // 자리가 좁으면(130px 밑) 종류 이름만, 아주 좁으면(100px 밑) 「+n」도 뺀다 — Android 16 칩처럼 폭이 모자라면 줄인다
+      const narrow = cfg.chip[1] < 130, tiny = cfg.chip[1] < 100;
+      return `<button class="mini chip" style="right:${cfg.chip[0]}px;max-width:${cfg.chip[1]}px" data-tone="${top.tone}" data-act="open" aria-label="${label}">${MEGAPHONE}<span class="t">${narrow ? SHORT[top.kind] : `${SHORT[top.kind]} · ${top.title}`}</span>${!tiny && list.length > 1 ? `<span class="more" style="color:inherit">+${list.length - 1}</span>` : ""}</button>`;
+    }
+    return `<button class="mini edge" style="top:${cfg.edge}px" data-tone="${top.tone}" data-act="open" aria-label="${label}">${MEGAPHONE}<span>${list.length}</span></button>`;
+  }
+  function draw() {
+    const list = visible();
+    const showMini = list.length && s.phase === "mini" && !cfg.hideMini;
+    const pushStrip = showMini && kindOfMini() === "strip" && !cfg.map;
+    let html = pushStrip
+      ? `<div class="bg" style="height:${cfg.header}px;background-image:url(${file})"></div>${mini()}<div class="bg" style="height:700px;background-image:url(${file});background-position:0 -${cfg.header}px"></div>`
+      : `<div class="bg" style="height:700px;background-image:url(${file})"></div>`;
+    if (list.length && s.phase === "card") html += card();
+    else if (showMini && !pushStrip) html += mini();
+    if (!list.length) html += `<div class="flag">공지를 껐어요 · 새 공지가 오면 다시 떠요</div>`;
+    else if (cfg.hideMini && s.phase === "mini") html += `<div class="flag">작은 모양은 숨김 — 「공지」 탭에 같은 공지</div>`;
+    root.innerHTML = html;
+  }
+  function collapse() {
+    if (s.collapsing) return;
+    s.collapsing = true;
+    const node = root.querySelector("[data-card]");
+    const done = () => { s.phase = "mini"; s.auto = false; s.collapsing = false; draw(); };
+    if (node && !matchMedia("(prefers-reduced-motion: reduce)").matches) { node.classList.add("leaving"); setTimeout(done, 240); } else done();
+  }
+  root.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-act]");
+    if (!target) return;
+    event.preventDefault();
+    if (target.dataset.act === "open") { s.phase = "card"; s.auto = false; draw(); }
+    if (target.dataset.act === "fold") collapse();
+    if (target.dataset.act === "off") { visible().forEach((n) => s.dismissed.add(n.id)); draw(); }
+  });
+  const api = {
+    draw, s, cfg, collapse,
+    reset() { s.notices = [...BASE]; s.dismissed = new Set(); start(); draw(); },
+    arrive() { if (!s.notices.some((n) => n.id === NEW.id)) s.notices.push(NEW); if (cfg.noCard || cfg.typing) { s.phase = "mini"; s.auto = false; } else { s.phase = "card"; s.auto = true; s.left = AUTO_MS; } draw(); },
+    calm() { s.notices = s.notices.filter((n) => n.tone !== "error"); draw(); },
+    skip() { if (s.phase === "card" && s.auto) s.left = 0; },
+  };
+  start();
+  draw();
+  return api;
+}
+SCREENS.forEach((cfg) => screenStates.push(screenPhone(cfg)));
+document.getElementById("screenPick").addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  if (button.dataset.v) {
+    screenVariant = button.dataset.v;
+    document.querySelectorAll("#screenPick [data-v]").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+    screenStates.forEach((p) => p.draw());
+  }
+  if (button.dataset.g) screenStates.forEach((p) => p[button.dataset.g]());
+});
+let screenLast = performance.now();
+(function screenTick(now) {
+  const dt = now - screenLast; screenLast = now;
+  for (const p of screenStates) {
+    if (p.s.phase !== "card" || !p.s.auto) continue;
+    p.s.left -= dt;
+    if (p.s.left <= 0) p.collapse();
+    else { const bar = document.querySelectorAll(".sPhone")[screenStates.indexOf(p)].querySelector(".timer i"); if (bar) bar.style.transform = `scaleX(${p.s.left / AUTO_MS})`; }
+  }
+  requestAnimationFrame(screenTick);
+})(screenLast);
+</script>
+</body>
+</html>

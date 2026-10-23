@@ -1,0 +1,669 @@
+<title>SKNETWORKS FINAL 프로젝트 Top 10 / Top 5</title>
+<style>
+  :root {
+    --bg: #eef1f6;
+    --surface: #ffffff;
+    --surface-2: #f7f8fb;
+    --text: #12151c;
+    --text-muted: #5b6474;
+    --text-faint: #8791a1;
+    --border: #dde1ea;
+    --accent: #b8721e;
+    --accent-ink: #7a4c11;
+    --accent-soft: #f6e6cd;
+    --accent2: #2f6b67;
+    --accent2-soft: #dcefec;
+    --shadow: 0 1px 2px rgba(20,24,34,.04), 0 8px 24px -12px rgba(20,24,34,.12);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1219;
+    --surface: #161b25;
+    --surface-2: #1c2230;
+    --text: #e8eaef;
+    --text-muted: #9aa2b1;
+    --text-faint: #6c7484;
+    --border: #2a3142;
+    --accent: #e3a84c;
+    --accent-ink: #ffd8a0;
+    --accent-soft: #3a2c14;
+    --accent2: #6cc2bd;
+    --accent2-soft: #163330;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.5);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1219;
+      --surface: #161b25;
+      --surface-2: #1c2230;
+      --text: #e8eaef;
+      --text-muted: #9aa2b1;
+      --text-faint: #6c7484;
+      --border: #2a3142;
+      --accent: #e3a84c;
+      --accent-ink: #ffd8a0;
+      --accent-soft: #3a2c14;
+      --accent2: #6cc2bd;
+      --accent2-soft: #163330;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.5);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Pretendard Variable", Pretendard, "Apple SD Gothic Neo",
+      "Malgun Gothic", "Segoe UI", sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: ui-monospace, "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+  }
+  a { color: inherit; }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  header.hero {
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent2);
+    display: inline-block;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 34px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .lede {
+    color: var(--text-muted);
+    font-size: 15.5px;
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 28px 0 8px;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 16px 18px;
+  }
+  .stat .n {
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .stat .l {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  details.method {
+    margin: 20px 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 4px 18px;
+  }
+  details.method summary {
+    cursor: pointer;
+    padding: 12px 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    list-style: none;
+  }
+  details.method summary::-webkit-details-marker { display: none; }
+  details.method summary::before {
+    content: "▸ ";
+    color: var(--accent2);
+  }
+  details.method[open] summary::before { content: "▾ "; }
+  details.method .body {
+    padding: 0 0 16px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+  details.method .body ol {
+    margin: 8px 0 0;
+    padding-left: 20px;
+  }
+  details.method .body li { margin-bottom: 6px; }
+  details.method .body .missing {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+
+  section.board { margin-top: 44px; }
+  .board-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .board-head h2 {
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .board-head .sub {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .topic-quote {
+    font-size: 13px;
+    color: var(--accent2);
+    background: var(--accent2-soft);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 14px 0 22px;
+    font-weight: 600;
+  }
+  .topic-quote span { font-weight: 400; opacity: .85; }
+
+  ol.rank { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+  .card {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 16px;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .rank-n {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+    padding-top: 2px;
+  }
+  .card:nth-child(1) .rank-n, .card:nth-child(2) .rank-n, .card:nth-child(3) .rank-n {
+    color: var(--accent);
+  }
+  .card-body h3 {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0 0 3px;
+    letter-spacing: -0.005em;
+  }
+  .card-body h3 a { text-decoration: none; }
+  .card-body h3 a:hover { text-decoration: underline; }
+  .repo-id {
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  .desc {
+    font-size: 13.8px;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+  .reason {
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface-2);
+    border-left: 3px solid var(--accent2);
+    padding: 8px 12px;
+    border-radius: 0 8px 8px 0;
+    margin: 0 0 10px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .score-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    min-width: 96px;
+  }
+  .score-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  .score-pill .v {
+    font-size: 18px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-ink);
+  }
+  .score-pill .k {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-faint);
+  }
+  .gh-link {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .gh-link:hover { text-decoration: underline; }
+
+  .topic-board .rank-n { color: var(--accent2); }
+  .topic-board .card:nth-child(1) .rank-n { color: var(--accent2); }
+  .topic-board .score-pill .v { color: var(--accent2); }
+
+  .duplicate-note {
+    font-size: 11px;
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+
+  @media (max-width: 560px) {
+    .card { grid-template-columns: 28px 1fr; }
+    .score-col { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">SKNETWORKS-FAMILY-AICAMP · FINAL Projects</div>
+    <h1>141개 파이널 프로젝트 중 진짜 잘 만든 프로젝트는?</h1>
+    <p class="lede">
+      SKN01~31기 전체 FINAL 저장소를 지표로 스크리닝하고, 상위 후보군을 Claude와 OpenAI Codex가
+      각각 독립적으로 읽고 교차검증해 뽑은 결과입니다.
+    </p>
+
+    <div class="stats-strip">
+      <div class="stat"><div class="n">792</div><div class="l">조직 전체 저장소</div></div>
+      <div class="stat"><div class="n">141</div><div class="l">"FINAL" 저장소 (SKN01–31)</div></div>
+      <div class="stat"><div class="n">47</div><div class="l">1차 스크리닝 후보</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">교차검증 (Claude + Codex)</div></div>
+    </div>
+
+    <details class="method">
+      <summary>선정 방법 자세히 보기</summary>
+      <div class="body">
+        <ol>
+          <li>GitHub API로 조직의 공개 저장소 792개를 전수 조회 후, 이름에 "final"이 포함된 141개를 추출 (SKN01~SKN31 기수).</li>
+          <li>135개 저장소의 README를 raw.githubusercontent.com에서 직접 수집 (6개는 README 없음/접근 불가로 제외).</li>
+          <li>stars·forks·저장소 크기·README 분량·토픽 태그·문서화 지표(아키텍처/ERD/시연/배포 언급 등)를 조합해 141개 전체에 품질 점수를 매기고, "고객 피드백·멀티에이전트·응대 자동화" 키워드로 전체를 스캔해 주제 관련도도 별도로 계산.</li>
+          <li>품질 상위 35개 + 주제 관련도 상위 22개를 합쳐 중복 제거한 47개 후보로 압축.</li>
+          <li>47개 후보의 메타데이터 + README 발췌를 <strong>Claude</strong>와 <strong>OpenAI Codex CLI(GPT)</strong>에 동일하게 제공해 각자 독립적으로 Top 10 / 주제 유사 Top 5를 산출, 두 결과를 대조해 최종안을 확정.</li>
+        </ol>
+        <div class="missing">README를 가져오지 못해 이번 스크리닝에서 제외된 저장소: SKN03-FINAL-5Team, SKN11-FINAL-5Team, SKN19-FINAL-4Team, SKN30-FINAL-6Team, SKN31-FINAL-3Team, SKN31-FINAL-1Team</div>
+      </div>
+    </details>
+  </header>
+
+  <section class="board">
+    <div class="board-head">
+      <h2>🏆 전체 Top 10 — 완성도 · 기술 난이도 · 문서화</h2>
+      <span class="sub">전 기수 141개 중 종합 1위</span>
+    </div>
+
+    <ol class="rank">
+
+      <li class="card">
+        <div class="rank-n">1</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN27-FINAL-1Team" target="_blank" rel="noopener">밥벌이 (bobbeori)</a></h3>
+          <div class="repo-id mono">SKN27-FINAL-1Team · 27기</div>
+          <p class="desc">영수증 OCR로 냉장고 재료를 자동 등록하고, 보유 재료 기반 레시피 추천과 재고 알림까지 이어주는 AI 식재료 관리 서비스. 실서비스(bobbeori.com) 운영 중.</p>
+          <p class="reason">멀티에이전트(LangGraph) + Neo4j + PostgreSQL + AWS ECS/CloudFront CI/CD까지 완주한, 후보군 중 가장 완성도 높은 실배포 프로젝트.</p>
+          <div class="chips">
+            <span class="chip">React · FastAPI</span>
+            <span class="chip">LangGraph Multi-Agent</span>
+            <span class="chip">Neo4j · PostgreSQL</span>
+            <span class="chip">AWS ECS/CloudFront/S3</span>
+            <span class="chip">CI/CD</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">59.9</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">9.5</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN27-FINAL-1Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">2</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-6Team" target="_blank" rel="noopener">GameOps Support Platform</a></h3>
+          <div class="repo-id mono">SKN25-FINAL-6Team · 25기</div>
+          <p class="desc">게임 유저 문의를 분류·분석하고 맞춤형 응대를 자동화하는 AI 기반 CS 운영 플랫폼. 데모 영상 포함.</p>
+          <p class="reason">우리 팀 주제("다중 에이전트 기반 고객 피드백 분석·맞춤형 응대 자동화")와 거의 동일한 문제를 다루면서 완성도도 높은 유일한 프로젝트.</p>
+          <div class="chips">
+            <span class="chip">FastAPI · LangGraph</span>
+            <span class="chip">PostgreSQL · Redis</span>
+            <span class="chip">CS 자동응대</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">40.8</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">9.4</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-6Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">3</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN18-FINAL-2TEAM" target="_blank" rel="noopener">HelixOps</a></h3>
+          <div class="repo-id mono">SKN18-FINAL-2TEAM · 18기</div>
+          <p class="desc">바이오/제약 R&D 전주기(문헌탐색→후보물질 발굴→실험설계→결과해석)를 지원하는 Bio/Med Agentic Platform. 자체 sLLM 파인튜닝.</p>
+          <p class="reason">직접 sLLM을 학습시켜 Hybrid RAG·GraphDB와 통합한, 후보군 중 기술 난이도가 가장 높은 도메인 특화 플랫폼.</p>
+          <div class="chips">
+            <span class="chip">자체 sLLM 파인튜닝</span>
+            <span class="chip">Hybrid RAG</span>
+            <span class="chip">GraphDB</span>
+            <span class="chip">Multi-Agent</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">43.1</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">9.2</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN18-FINAL-2TEAM" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">4</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-3Team" target="_blank" rel="noopener">꽃보다 특허</a></h3>
+          <div class="repo-id mono">SKN25-FINAL-3Team · 25기</div>
+          <p class="desc">청구항(Claim)·심사관(Examiner)·선행기술조사(Prior Art)·도면(Drawing)·명세서(Specification) 역할별 에이전트가 상태를 공유하며 특허 문서 작성을 지원.</p>
+          <p class="reason">"역할이 나뉜 여러 에이전트가 협업"이라는 멀티에이전트 오케스트레이션 설계가 후보군 중 가장 명확하고 구조적.</p>
+          <div class="chips">
+            <span class="chip">React · Django</span>
+            <span class="chip">FastAPI · LangGraph</span>
+            <span class="chip">5-Agent 워크플로우</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">42.5</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">9.1</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-3Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">5</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN21-FINAL-2Team" target="_blank" rel="noopener">Triver (트리버)</a></h3>
+          <div class="repo-id mono">SKN21-FINAL-2Team · 21기</div>
+          <p class="desc">LLM 기반 초개인화 K-Culture 여행 추천 에이전트. triver-s.com에서 실서비스 운영 중.</p>
+          <p class="reason">데이터 아키텍처·시스템 아키텍처·WBS·트러블슈팅·회고까지 문서화 완성도가 매우 높고 실배포 서비스로 검증됨.</p>
+          <div class="chips">
+            <span class="chip">LLM Agent</span>
+            <span class="chip">실배포(triver-s.com)</span>
+            <span class="chip">데이터 아키텍처 문서화</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">44.5</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">9.0</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN21-FINAL-2Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">6</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN20-FINAL-6TEAM" target="_blank" rel="noopener">Bizi</a></h3>
+          <div class="repo-id mono">SKN20-FINAL-6TEAM · 20기</div>
+          <p class="desc">창업·세무·노무·법률 4개 도메인, 21만 건 이상의 법령·가이드 문서를 기반으로 한 RAG 통합 경영 컨설팅 챗봇.</p>
+          <p class="reason">데이터 규모(21만 건)와 AWS 배포·보안 구성, ERD까지 실무형 RAG 파이프라인을 가장 촘촘히 문서화.</p>
+          <div class="chips">
+            <span class="chip">RAG · LangGraph</span>
+            <span class="chip">21만건 문서</span>
+            <span class="chip">AWS 배포</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">41.3</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">8.9</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN20-FINAL-6TEAM" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">7</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN27-FINAL-4Team" target="_blank" rel="noopener">빈틈사이 (Binteumsai)</a></h3>
+          <div class="repo-id mono">SKN27-FINAL-4Team · 27기</div>
+          <p class="desc">다중 에이전트 기반 감정 분석을 활용한 AI 소통형 웰니스 챗봇 및 마음 리포트 서비스.</p>
+          <p class="reason">감정 분류 모델링 성능까지 별도 섹션으로 공개하는 등, 모델 결과를 수치로 검증한 몇 안 되는 프로젝트.</p>
+          <div class="chips">
+            <span class="chip">Multi-Agent</span>
+            <span class="chip">감정 분류 모델링</span>
+            <span class="chip">웰니스 리포트</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">42.8</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">8.8</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN27-FINAL-4Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">8</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN14-FINAL-1Team" target="_blank" rel="noopener">CodeNova</a></h3>
+          <div class="repo-id mono">SKN14-FINAL-1Team · 14기</div>
+          <p class="desc">API 문서 검색에 특화된 사내 개발자 지원 AI 시스템. code-nova.dev에서 게스트 계정으로 직접 체험 가능.</p>
+          <p class="reason">"게스트 계정을 파서 직접 눌러볼 수 있게" 만든 유일한 후보 — 심사자가 즉시 검증 가능한 실배포 완성도.</p>
+          <div class="chips">
+            <span class="chip">문서 검색 AI</span>
+            <span class="chip">실배포 + 게스트 계정</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">45.2</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">8.7</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN14-FINAL-1Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">9</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN12-FINAL-3TEAM" target="_blank" rel="noopener">딸깍 (TtalKkak)</a></h3>
+          <div class="repo-id mono">SKN12-FINAL-3TEAM · 12기</div>
+          <p class="desc">회의 내용을 분석해 스마트하게 업무를 배정하는 AI 시스템. Slack·Jira·Notion과 실시간 연동.</p>
+          <p class="reason">외부 협업 툴 3종과의 실연동까지 구현한, 실무 워크플로우에 바로 꽂을 수 있는 실용성이 강점.</p>
+          <div class="chips">
+            <span class="chip">TypeScript</span>
+            <span class="chip">Slack/Jira/Notion 연동</span>
+            <span class="chip">회의 분석</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">41.9</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">8.6</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN12-FINAL-3TEAM" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">10</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN19-FINAL-5Team" target="_blank" rel="noopener">똑소리 (DDOKSORI)</a></h3>
+          <div class="repo-id mono">SKN19-FINAL-5Team · 19기</div>
+          <p class="desc">법령·분쟁조정사례·상담사례를 기반으로 소비자 분쟁 문의에 답하는 RAG + Multi-Agent 챗봇.</p>
+          <p class="reason">"왜 멀티에이전트가 필요한가"를 별도 섹션으로 설명하고 CI/CD·Quickstart·문서 허브까지 갖춘 엔지니어링 완성도.</p>
+          <div class="chips">
+            <span class="chip">RAG · Multi-Agent</span>
+            <span class="chip">CI/CD</span>
+            <span class="chip">Documentation Hub</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">36.3</span><span class="k">지표점수</span></div>
+          <div class="score-pill"><span class="v">8.5</span><span class="k">Codex</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN19-FINAL-5Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <section class="board topic-board">
+    <div class="board-head">
+      <h2>🎯 우리 팀 주제 유사 Top 5</h2>
+      <span class="sub">Codex + Claude 유사도 평가</span>
+    </div>
+    <div class="topic-quote">
+      우리 팀 주제: <strong>"다중 에이전트 서빙 기반 고객 피드백 분석 및 맞춤형 응대 자동화 시스템"</strong>
+      <span> — 이 주제와 도메인·구조가 가까운 순서로 정렬</span>
+    </div>
+
+    <ol class="rank">
+
+      <li class="card">
+        <div class="rank-n">1</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-6Team" target="_blank" rel="noopener">GameOps Support Platform</a> <span class="duplicate-note">(전체 2위와 동일)</span></h3>
+          <div class="repo-id mono">SKN25-FINAL-6Team · 25기</div>
+          <p class="reason">게임 유저 문의를 분석·분류하고 맞춤형 응대를 자동화하는 AI CS 플랫폼 — 우리 주제와 사실상 동일한 문제 정의.</p>
+          <div class="chips">
+            <span class="chip">고객 문의 분석</span>
+            <span class="chip">맞춤형 응대 자동화</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">10.0</span><span class="k">유사도</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-6Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">2</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN29-FINAL-4TEAM" target="_blank" rel="noopener">워터브릿지 (WaterBridge)</a></h3>
+          <div class="repo-id mono">SKN29-FINAL-4TEAM · 29기</div>
+          <p class="reason">정수기 구독 고객의 문의→AI 안내→상담→방문 A/S→해결 확인을 하나의 이력으로 연결하는 AI 고객케어 플랫폼. 고객 문의 처리 자동화 구조가 직접적으로 유사.</p>
+          <div class="chips">
+            <span class="chip">고객 문의 이력 관리</span>
+            <span class="chip">CS 자동화</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">9.4</span><span class="k">유사도</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN29-FINAL-4TEAM" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">3</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN27-FINAL-4Team" target="_blank" rel="noopener">빈틈사이 (Binteumsai)</a> <span class="duplicate-note">(전체 7위와 동일)</span></h3>
+          <div class="repo-id mono">SKN27-FINAL-4Team · 27기</div>
+          <p class="reason">다중 에이전트가 사용자 감정을 분석해 개인화된 소통과 리포트를 생성 — 피드백 감성분석·맞춤 응답이라는 구조가 유사.</p>
+          <div class="chips">
+            <span class="chip">감정 분석</span>
+            <span class="chip">개인화 응답 생성</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">8.5</span><span class="k">유사도</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN27-FINAL-4Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">4</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN19-FINAL-5Team" target="_blank" rel="noopener">똑소리 (DDOKSORI)</a> <span class="duplicate-note">(전체 10위와 동일)</span></h3>
+          <div class="repo-id mono">SKN19-FINAL-5Team · 19기</div>
+          <p class="reason">복잡한 소비자 문의를 분류·검색·분석해 근거 기반 답변을 자동 생성 — 문의 분석 → 자동 응대 파이프라인 구조가 유사.</p>
+          <div class="chips">
+            <span class="chip">문의 분류/분석</span>
+            <span class="chip">근거 기반 자동 응답</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">8.2</span><span class="k">유사도</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN19-FINAL-5Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+      <li class="card">
+        <div class="rank-n">5</div>
+        <div class="card-body">
+          <h3><a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-1Team" target="_blank" rel="noopener">MediPaw</a></h3>
+          <div class="repo-id mono">SKN25-FINAL-1Team · 25기</div>
+          <p class="reason">보호자 상담을 AI 문진으로 분석해 병원 업무 흐름과 연결하는 다중 에이전트 진료 워크플로우 자동화 시스템. 도메인은 다르지만 "상담 분석 → 후속 응대 자동화" 구조는 동일.</p>
+          <div class="chips">
+            <span class="chip">Multi-Agent</span>
+            <span class="chip">상담 분석 → 워크플로우 자동화</span>
+          </div>
+        </div>
+        <div class="score-col">
+          <div class="score-pill"><span class="v">7.8</span><span class="k">유사도</span></div>
+          <a class="gh-link" href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN25-FINAL-1Team" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <footer>
+    지표점수는 stars·forks·저장소 크기·README 분량·문서화 지표를 조합한 자체 스코어(참고용)이며, Codex 점수는 OpenAI Codex CLI(GPT)가 동일 자료를 읽고 매긴 10점 만점 평가입니다.
+    두 평가 모두 141개 저장소 중 47개 후보 안에서만 산출되었으므로, 후보에 들지 못한 저장소 중에도 더 나은 프로젝트가 있을 수 있습니다.
+  </footer>
+
+</div>

@@ -69,7 +69,7 @@ GraphStorePort            app/core/graph_retrieval/port.py     Protocol
 - 성능. 재귀 CTE가 큰 그래프에서 어떻게 되는지 모른다
 - GraphRAG로서의 검색 품질(v7 §9-D)은 이 항목 밖이다 → [../../../wiki/research/graphrag.md](../../../wiki/research/graphrag.md)
 
-`[실측]` 테스트 fixture 라벨은 옛 식별자다 — `post_cancel_charge`(옛 이슈 코드), `order_shipping`(퇴역 Team — `[실측 2026-09-10]` **작업 트리에서는 `team:activity` 로 바뀌었고 git 에는 아직 `order_shipping`** 이다. `post_cancel_charge` 는 둘 다 그대로다). 어댑터가 도메인 무관이라 판정은 유효하지만, evidence 출력의 `team:billing_subscription`과도 다르다. → [../quality/dod-evidence-drift.md](../quality/dod-evidence-drift.md)
+`[2026-10-11 개정]` 현재 시험은 `incident_report`·`activity_cancel_or_change`·`activity` 합성 여행 자료를 사용합니다. 과거 구독·청구 이슈와 배송 Team 자료는 현재 판정에서 제외했습니다. 시험의 정책 scope를 intent와 맞춘 것은 위 문자열 연결의 동작 검사입니다. 실제 `travel_` 정책 scope와의 의미적 연결 품질이나 실제 담당 Team 추천을 검증한 것은 아닙니다.
 
 ## 관계
 

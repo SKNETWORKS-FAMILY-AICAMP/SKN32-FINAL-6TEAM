@@ -1,0 +1,60 @@
+........................................................................ [ 26%]
+........................................................................ [ 52%]
+........................................................................ [ 79%]
+.......................F................................                 [100%]
+================================== FAILURES ===================================
+_ test_sweeper_entry_passes_assembled_observer_to_actual_reminder_constructor _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024647B9DDC0>
+
+    def test_sweeper_entry_passes_assembled_observer_to_actual_reminder_constructor(monkeypatch):
+        from scripts import run_sweepers
+        from app.domains.travel_ops.ports.data_sources import base
+        from app.domains.travel_ops.components.watch import trip_reminders
+        settings, sources, observer = SimpleNamespace(), SimpleNamespace(route_events=NoEvents()), object()
+        monkeypatch.setattr(run_sweepers, 'get_settings', lambda: settings)
+        monkeypatch.setattr(base, 'build_travel_sources', lambda arg: sources)
+        monkeypatch.setattr(composition, 'build_mobility_departure_observer', lambda a, b: observer)
+        class Reminders:
+            def __init__(self, **kwargs):
+                assert kwargs['departure_observer'] is observer and kwargs['route_events'] is sources.route_events
+            def tick(self):
+                return SimpleNamespace(trips=0, sent=[], already=0, held=[], fatal=[], no_route=0)
+        monkeypatch.setattr(trip_reminders, 'TripReminders', Reminders)
+>       assert run_sweepers._run_trip_reminders('fixture')['fatal'] == 0
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_departure_assembly_v1.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+tenant_id = 'fixture'
+
+    def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+    
+        from app.domains.travel_ops.ports.data_sources.base import build_travel_sources
+        from app.domains.travel_ops.components.itinerary.itinerary import TripStore
+        from app.domains.travel_ops.entry.trip_api import plan_url
+        from app.domains.travel_ops.components.watch.trip_reminders import TripReminders
+    
+        from app.composition import build_mobility_departure_observer
+        settings = get_settings()
+        sources = build_travel_sources(settings)
+        reminders = TripReminders(store=TripStore(tenant_id), connection_factory=get_connection,
+                                  clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
+                                  route_events=sources.route_events,
+                                  departure_observer=build_mobility_departure_observer(settings, sources),
+                                  link=lambda trip_id: plan_url(tenant_id, trip_id))
+        outcome = reminders.tick()
+        return {"trips": outcome.trips, "sent": len(outcome.sent), "already": outcome.already,
+                "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route,
+>               "stale": len(outcome.stale)}
+                             ^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'stale'
+
+scripts\run_sweepers.py:260: AttributeError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\departure-atomic-regression-v1-part3.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_departure_assembly_v1.py::test_sweeper_entry_passes_assembled_observer_to_actual_reminder_constructor
+1 failed, 271 passed, 11 deselected in 115.84s (0:01:55)

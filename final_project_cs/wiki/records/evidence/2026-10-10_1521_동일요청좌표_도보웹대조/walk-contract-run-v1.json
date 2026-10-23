@@ -1,0 +1,17 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "tests/unit/travel/mobility/test_walk_comparison_scope_v1.py",
+    "tests/unit/travel/mobility/test_walk_comparison_values_v1.py",
+    "tests/unit/travel/mobility/test_walk_duration_contract_v1.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-10_1521_동일요청좌표_도보웹대조\\walk-contract-v1.xml",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\walk_web_pytest_v1"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-10-10T15:24:21.006999+09:00"
+}

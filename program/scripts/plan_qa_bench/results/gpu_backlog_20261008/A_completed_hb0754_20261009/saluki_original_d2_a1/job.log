@@ -1,0 +1,11 @@
+saluki_original_d2_a1 100 / 1000
+saluki_original_d2_a1 200 / 1000
+saluki_original_d2_a1 300 / 1000
+saluki_original_d2_a1 400 / 1000
+saluki_original_d2_a1 500 / 1000
+saluki_original_d2_a1 600 / 1000
+saluki_original_d2_a1 700 / 1000
+saluki_original_d2_a1 800 / 1000
+saluki_original_d2_a1 900 / 1000
+saluki_original_d2_a1 1000 / 1000
+{"saved": 1000, "expected": 1000, "parsed": 1000, "errors": 0, "correct": 932, "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb", "memory_after_requests": {"limit": 30999998464, "used": 28249956352, "headroom": 2750042112}, "max_prompt_tokens": 2015, "smoke": false}

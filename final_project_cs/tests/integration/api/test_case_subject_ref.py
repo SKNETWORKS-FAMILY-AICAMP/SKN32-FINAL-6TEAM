@@ -15,9 +15,9 @@ from fastapi.testclient import TestClient
 import app.core.settings as settings_module
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.subjects import resolve_subject
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.core_hooks.subjects import resolve_subject
 from app.presentation import security
 from app.presentation.api.app import create_app
 from app.presentation.api.cases import build_router

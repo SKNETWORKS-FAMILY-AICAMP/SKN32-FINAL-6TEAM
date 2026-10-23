@@ -1,0 +1,724 @@
+{
+ "bundle": "situation_cards",
+ "subset": null,
+ "reviewer": "작성자1",
+ "reviewed_on": "2026-10-19",
+ "sheet": "라벨_작성자1.csv",
+ "saw_ai_labels": false,
+ "n": 80,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "labels": {
+  "L-39": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-04": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-45": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "1",
+    "3"
+   ],
+   "note": ""
+  },
+  "L-20": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-74": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-51": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": ""
+  },
+  "L-15": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-62": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-73": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-27": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-49": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-03": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-65": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-06": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-32": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-01": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-24": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "L-09": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-41": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "1",
+    "3"
+   ],
+   "note": ""
+  },
+  "L-33": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-35": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-66": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-21": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-64": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-56": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-22": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-43": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-16": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "1",
+    "3"
+   ],
+   "note": ""
+  },
+  "L-68": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-38": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "1",
+    "3"
+   ],
+   "note": ""
+  },
+  "L-77": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-75": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-10": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-72": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-78": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-71": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-47": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-44": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-34": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-13": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-63": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-29": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": ""
+  },
+  "L-36": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-60": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-42": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "1",
+    "3"
+   ],
+   "note": ""
+  },
+  "L-61": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-25": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-17": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-19": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": ""
+  },
+  "L-67": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-14": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-40": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-30": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-31": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-46": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-02": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-53": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-12": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-54": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [
+    "1"
+   ],
+   "note": ""
+  },
+  "L-50": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-70": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-23": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-28": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-37": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-59": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-11": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-48": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [
+    "1",
+    "2"
+   ],
+   "note": ""
+  },
+  "L-79": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-80": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-58": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-07": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-05": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-55": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-69": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-26": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-76": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-08": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-52": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-18": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "L-57": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  }
+ }
+}

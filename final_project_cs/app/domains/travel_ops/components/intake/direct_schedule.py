@@ -1,0 +1,269 @@
+"""직접 고른 장소의 이동 간격을 맞춘다. 숙박업체 판정 없이 좌표로 이동한다.
+
+원문 판은 바꾸지 않고 시각 편집 목록만 돌려준다. 머무는 시간과 같은 날의
+순서를 보존하며 잠금·예약 일정은 기준점으로 쓴다. 실패하면 호출자가 저장하지 않는다.
+"""
+from __future__ import annotations
+
+import logging
+from datetime import timedelta
+from typing import Any
+
+from .moves import leg_between
+
+log = logging.getLogger(__name__)
+
+
+class ScheduleConflict(ValueError):
+    def __init__(self, message: str, *, code: str = "schedule_conflict") -> None:
+        super().__init__(message)
+        self.code = code
+
+
+def key(row: dict[str, Any]) -> tuple[str, int]:
+    return str(row["source_id"]), row["index"]
+
+
+def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[str, int]],
+        party_size: int | None = None, engine: Any = None, use_engine: bool = True,
+        mode_picks: dict[str, str] | None = None, fixed_times: set[tuple[str, int]] | None = None,
+        forward_only: bool = False) -> list[dict[str, Any]]:
+    """날짜별 시각순 rows를 앞뒤로 맞추고 시각 claim만 반환한다.
+
+    계산기가 꺼진 경우 기존 이동 계약대로 어림 근거를 남긴다. 켜진 계산기의 **오류**는 한 번 더 부르고 그래도 오류면 거절한다(자동 배치 성공으로 바꾸지 않는다).
+    ★`[2026-10-22 사용자 지시]` 계산기가 **답을 못 낸**(자료 없음 · 후보 없음) 구간은 거절하지 않는다 — 몇 번을 제출해도 같아 고객이 그 장소를 못 넣게 되기 때문이다.
+      시간 한도와 같이 어림으로 맞추고 같은 판의 검사가 「확인 필요」로 센다. 운영시간의 확인된 제약도 지킨다.
+
+    ★`[2026-10-20 사용자 결정]` 요청 한 번의 이동 계산 시간 한도는 **이동 구간 하나마다** `ENGINE_BUDGET_S`(20초 — 같은 두 곳 사이를 도착 시각만 바꿔
+      다시 묻는 것도 그 구간 몫) · 요청 전체 `REQUEST_ENGINE_S` 다(앞 판은 여행 날짜마다 20초). 한도에 닿아 못 구한 구간은 **거절하지 않고** 직선 어림으로 맞춘다 — 그 시각의 근거는 `estimate`(메모 「어림 이동시간」)이고,
+      같은 판의 검사(`review.build(estimate_needs_review=True)`)가 시간표로 다시 판정해 못 구한 구간은 「확인 필요」로 센다.
+      로컬 재현: 덕수궁 → 종묘 바꾸기가 23.4초 뒤 `schedule_check_failed` 로 거절됐다(2026-10-20).
+    """
+    from . import review
+    from .autofix import ENGINE_BUDGET_S, REQUEST_ENGINE_S, earliest_start, latest_end
+    from .hours import facts_for
+    from ..itinerary.itinerary_checks import Part, check_itinerary
+
+    defaulted = engine is None and use_engine
+    if defaulted:
+        engine = review.default_engine(party_size)
+    whole = review._Budgeted(engine, REQUEST_ENGINE_S) if engine is not None else None     # 요청 전체
+    per_leg = review._PerLeg(engine, ENGINE_BUDGET_S, within=whole) if engine is not None else None   # 이동 구간 하나마다
+    by_mode: dict[str, Any] = {}
+    days = {r["date"] for r in rows if key(r) in touched and r["date"]}
+    out: list[dict[str, Any]] = []
+
+    def point(row):
+        p = row["place"]
+        # ★`[2026-10-20 「대안 적용 13.9초」]` 장소 키는 검사(`review.build`)의 일정 id(`원본 위치-번호`)와 같게 둔다 — 이동 계산기의 요청 사이 재사용 칸은
+        #   키까지 열쇠에 넣어서, 전에는 같은 구간 · 같은 도착 목표를 시각 맞추기와 검사가 따로 셌다(로컬 실측: 바꾼 일정 앞뒤 2구간을 두 번, 약 4.5초)
+        return {"key": f"{row.get('order', (0,))[0]}-{row['index']}", "name": p["name"],
+                "lat": float(p["latitude"]), "lon": float(p["longitude"])}
+
+    fell_back: set[str] = set()                    # 고른 수단이 안 닿아 추천 계산기로 돌아온 구간
+
+    def pair_of(a, b):
+        def item_id(r):
+            return f"{r.get('order', (0,))[0]}-{r['index']}"
+        return f"{item_id(a)}~{item_id(b)}"
+
+    def engine_for(a, b):
+        mode = (mode_picks or {}).get(pair_of(a, b)) if defaulted else None
+        if not mode or pair_of(a, b) in fell_back:
+            return per_leg
+        if mode not in by_mode:
+            eng = review.default_engine(party_size, [mode])
+            if eng is None:
+                raise ScheduleConflict("고른 이동수단을 계산하지 못해 변경을 저장하지 않았어요.", code="schedule_check_failed")
+            by_mode[mode] = review._PerLeg(eng, ENGINE_BUDGET_S, within=whole)
+        return by_mode[mode]
+
+    def leg(a, b):
+        if not a.get("place") or not b.get("place"):
+            return None
+        eng = engine_for(a, b)
+        budget = per_leg
+        got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
+        if eng is not budget and budget is not None and got.basis == "estimate":
+            # ★`[2026-10-15 x600 실서버 확인]` 다시 연 여행에 저장된 구간 수단(도보)이 **바뀐 장소 사이에서는 닿지 않으면** 고른 수단 안의 후보가 없다며 저장을 막았다
+            #   (「토속촌 대신 덕수궁」). 확인 화면과 같이 안 닿으면 **추천 수단으로 돌아가** 계산한다(`review` 의 `mode_choice.dropped`)
+            fell_back.add(pair_of(a, b))
+            eng = budget
+            got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
+        # 상한은 다음 새 계산을 막는다. 이미 얻은 시간표 결과는 유효하다.
+        if eng is not None and got.basis == "estimate" and eng.exhausted_for(point(a), point(b)):
+            # ★`[2026-10-20 사용자 결정]` 시간 한도에 닿은 것만으로는 거절하지 않는다 — 어림으로 맞추고(근거 estimate) 검사가 시간표로 다시 본다
+            log.info("schedule leg estimated after the time limit: %s -> %s", a["place"].get("name"), b["place"].get("name"))
+            return got
+        if eng is not None and got.basis == "estimate" and got.why_code == "engine_error":
+            # ★`[2026-10-22]` 계산기 **오류**는 일시적일 수 있다 — 한 번 더 부른다(오류는 기억하지 않으므로 다시 계산한다). 그래도 오류면 거절한다.
+            #   「잠시 뒤 다시 시도」는 이때만 맞는 말이다(앞 판은 자료 없음에도 같은 말을 붙여, 몇 번을 제출해도 같은 이유로 막혔다)
+            got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
+            if got.basis != "estimate":
+                return got
+        if eng is not None and got.basis == "estimate" and got.why_code == "engine_error":
+            why = (got.why or "").strip() or "계산기 오류"
+            log.warning("schedule leg engine error: %s -> %s (%s)", a["place"].get("name"), b["place"].get("name"), why)
+            raise ScheduleConflict(f"이동 계산기에서 오류가 나 변경을 저장하지 않았어요({a['place'].get('name')} → {b['place'].get('name')}: {why}). "
+                                   "같은 내용으로 다시 제출해 주세요.", code="schedule_check_failed")
+        if eng is not None and got.basis == "estimate":
+            # ★`[2026-10-22 사용자 지시]` 계산기가 **답을 못 낸**(자료 없음 · 도보 상한 안에 역이 없음 · 성립하는 후보 없음) 구간은 몇 번을 제출해도 같다 —
+            #   거절하면 고객이 그 장소를 못 넣는다. 시간 한도 때와 같이 직선 어림으로 맞추고(근거 `estimate`) 같은 판의 검사(`review.build(estimate_needs_review=True)`)가
+            #   「확인 필요」로 세고 이유를 줄에 적는다(등록은 그 확인 뒤). 이유 코드는 로그에 남긴다.
+            log.info("schedule leg estimated, calculator gave no answer: %s -> %s (%s · %s)", a["place"].get("name"), b["place"].get("name"),
+                     got.why_code, (got.why or "").strip())
+        return got
+
+    def protected(row):
+        return key(row) in (fixed_times or set()) or row.get("locked") or row.get("booked") is True or bool(row.get("booking_no"))
+
+    def hours_fit(row, start, end):
+        facts = facts_for(conn, tenant_id, row["place"], row["kind"], start, end)
+        violations = check_itinerary([Part(seq=1, kind=row["kind"], title=row["title"] or "일정",
+                                            starts_at=start, ends_at=end,
+                                            place={"name": (row["place"] or {}).get("name", ""),
+                                                   "attributes": dict(facts.attributes)})])
+        return not violations and facts.open_at_slot is not False and facts.order_ok is not False
+
+    def derived_stay_end(row):
+        from .line_parts import lookup_title, parse
+
+        claims = row.get("claims") or {}
+        parts = ((claims.get("place") or {}).get("evidence") or {}).get("lodging_parts") or {}
+        hotel_meal = parts.get("lodging_meal") is True or parse(lookup_title(row.get("title")), kind_hint=row.get("kind")).lodging_meal
+        end = claims.get("ends_at") or {}
+        evidence = end.get("evidence") or {}
+        inferred = (not end and ((row.get("provenance") or {}).get("ends_at") or {}).get("rule") == "intake.default_duration")
+        return (row.get("kind") == "dining" and hotel_meal
+                and (inferred or evidence.get("via") == "autofix" or evidence.get("derived_stay_end") is True))
+
+    for day in sorted(days):
+        chain = []
+        for r in rows:
+            if r["date"] != day:
+                continue
+            start, end = review._dt(day, r["start"]), review._dt(day, r["end"])
+            if start is None or end is None:
+                if key(r) in touched:
+                    raise ScheduleConflict("날짜와 시작·끝 시각을 먼저 알려 주세요.")
+                # 빈 시각이 있는 다른 일정은 검증 화면에 남긴다. 이 항목을 넘어
+                # 앞뒤 일정이 붙은 것처럼 계산하지 않는다.
+                chain.append({**r, "start_at": start, "end_at": end})
+                continue
+            chain.append({**r, "start_at": start, "end_at": end, "duration": end - start})
+        active = set(touched)
+        basis: dict[tuple[str, int], str] = {}
+        shortened_meals = set()
+
+        def shift(row, start, why_basis):
+            end = start + row["duration"]
+            if start.date().isoformat() != day or end.date().isoformat() != day or end <= start:
+                raise ScheduleConflict("이동시간을 넣으면 하루를 넘어요. 시각이나 일정을 조정해 주세요.")
+            row["start_at"], row["end_at"] = start, end
+            active.add(key(row))
+            basis[key(row)] = why_basis
+
+        def backwards(index, end, why_basis):
+            row = chain[index]
+            if protected(row):
+                raise ScheduleConflict("잠금·예약 일정 사이에 이동시간이 부족해요. 변경을 저장하지 않았어요.")
+            shift(row, end - row["duration"], why_basis)
+            for j in range(index - 1, -1, -1):
+                a, b = chain[j], chain[j + 1]
+                if a["end_at"] is None or b["start_at"] is None:
+                    raise ScheduleConflict("앞 일정의 시각이 없어 이동을 맞출 수 없어요.")
+                route = leg(a, b)
+                if route is None:
+                    if a["end_at"] > b["start_at"]:
+                        raise ScheduleConflict("앞 일정의 장소가 없어 겹친 시각을 맞출 수 없어요.")
+                    break
+                if route.ok:
+                    break
+                if protected(a):
+                    raise ScheduleConflict("잠금·예약 일정 사이에 이동시간이 부족해요. 변경을 저장하지 않았어요.")
+                latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"], known=route)
+                if latest is None:
+                    raise ScheduleConflict("앞 일정에서 이동 가능한 시각을 찾지 못했어요.")
+                shift(a, latest - a["duration"], route.basis)
+
+        for i in range(1, len(chain)):
+            a, b = chain[i - 1], chain[i]
+            if key(a) not in active and key(b) not in active:
+                continue
+            if a["end_at"] is None or b["start_at"] is None:
+                raise ScheduleConflict("앞뒤 일정의 시작·끝 시각을 먼저 알려 주세요.")
+            route = leg(a, b)
+            if route is None:
+                if a["end_at"] > b["start_at"]:
+                    raise ScheduleConflict("앞뒤 일정의 장소가 없어 겹친 시각을 맞출 수 없어요.")
+                continue
+            if route.ok:
+                continue
+            # 우리가 채운 조식 끝만 줄여 다음 방문 시각을 지킨다. 고객이 쓴 끝·예약·잠금은 줄이지 않는다.
+            if (key(a) in touched and not protected(a) and derived_stay_end(a)
+                    and route.basis == "timetable" and route.latest_depart is not None):
+                from .autofix import MIN_STAY_MIN, _floor5
+                finish = _floor5(route.latest_depart)
+                if (finish >= a["start_at"] + timedelta(minutes=MIN_STAY_MIN)
+                        and finish < a["end_at"] and hours_fit(a, a["start_at"], finish)):
+                    a["end_at"], a["duration"] = finish, finish - a["start_at"]
+                    basis[key(a)] = route.basis
+                    shortened_meals.add(key(a))
+                    continue
+            if protected(b):
+                if forward_only:
+                    raise ScheduleConflict("지정한 시각과 뒤쪽 고정·예약 일정을 함께 지킬 수 없어 저장하지 않았어요.")
+                latest = latest_end(engine_for(a, b), a["place"], b["place"], b["start_at"], known=route)
+                if latest is None:
+                    raise ScheduleConflict("예약 일정에 도착 가능한 시각을 찾지 못했어요.")
+                backwards(i - 1, latest, route.basis)
+            else:
+                earliest = earliest_start(engine_for(a, b), a["place"], b["place"], a["end_at"], known=route)
+                if earliest is None:
+                    raise ScheduleConflict("다음 일정에 도착 가능한 시각을 찾지 못했어요.")
+                earliest = max(b["start_at"], earliest)
+                if (earliest + b["duration"]).date().isoformat() != day:
+                    if forward_only:
+                        raise ScheduleConflict("뒤 일정을 미루면 하루를 넘어서 저장하지 않았어요.")
+                    # 뒤쪽 여유가 모자라면 날짜를 넘기지 말고 앞의 여유를 쓴다.
+                    backwards(i, b["start_at"].replace(hour=23, minute=59), route.basis)
+                elif not hours_fit(b, earliest, earliest + b["duration"]) and hours_fit(b, b["start_at"], b["end_at"]):
+                    if forward_only:
+                        raise ScheduleConflict("뒤 일정을 미루면 운영시간에 맞지 않아 저장하지 않았어요.")
+                    # 닫는 시각·브레이크타임 때문에 뒤로 밀 수 없으면, 현재 방문
+                    # 시각을 지키고 앞의 변경 가능한 일정에서 여유를 확보한다.
+                    backwards(i, b["end_at"], route.basis)
+                else:
+                    shift(b, earliest, route.basis)
+
+        # 뒤 일정 시작을 미루면 collect가 앞 일정의 추정 끝을 다시 늘릴 수 있다.
+        # 이미 이동 계산에 사용한 끝 시각도 편집으로 고정하여 체류 시간을 유지한다.
+        fixed_ends = set()
+        for a, b in zip(chain, chain[1:]):
+            if (a["end_at"] is not None and b["start_at"] is not None
+                    and b["start_at"] != review._dt(day, b["start"])
+                    and key(a) not in basis
+                    and ((a.get("provenance") or {}).get("ends_at") or {}).get("rule") == "intake.default_duration"):
+                fixed_ends.add(key(a))
+
+        # 앞당기면서 생긴 앞 구간도 최종 시각으로 검증한다.
+        for a, b in zip(chain, chain[1:]):
+            if key(a) not in active and key(b) not in active:
+                continue
+            route = leg(a, b) if a["end_at"] is not None and b["start_at"] is not None else None
+            if route is not None and not route.ok:
+                raise ScheduleConflict("앞뒤 이동시간을 함께 맞추지 못해 변경을 저장하지 않았어요.")
+        for r in chain:
+            if key(r) not in basis and key(r) not in fixed_ends:
+                continue
+            if not hours_fit(r, r["start_at"], r["end_at"]):
+                raise ScheduleConflict("이동에 맞춰 시각을 옮기면 운영시간에 맞지 않아요. 다른 시각이나 장소를 골라 주세요.")
+            for field, moment in (("starts_at", r["start_at"]), ("ends_at", r["end_at"])):
+                value = moment.strftime("%H:%M")
+                freeze_end = field == "ends_at" and key(r) in fixed_ends
+                if value == r["start" if field == "starts_at" else "end"] and not freeze_end:
+                    continue
+                out.append({"source_id": str(r["source_id"]), "field": f"items[{r['index']}].{field}",
+                            "value": value, "basis": basis.get(key(r), "inferred_duration_preserved"),
+                            **({"derived_stay_end": True} if field == "ends_at" and key(r) in shortened_meals else {})})
+    return out

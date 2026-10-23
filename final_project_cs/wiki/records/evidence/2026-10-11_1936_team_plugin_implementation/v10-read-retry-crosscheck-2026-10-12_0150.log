@@ -1,0 +1,38 @@
+{
+  "A_fact_crash_retry": {
+    "reproduced": true,
+    "actual_functions": [
+      "_run_decision",
+      "classify_case",
+      "apply_event",
+      "retry_initial"
+    ],
+    "committed_status": "CaseStatus.ROUTING",
+    "events": [
+      "classified"
+    ],
+    "conversation_dispatch_present": false,
+    "same_request_retries": 3,
+    "conflict_messages": [
+      "미완료 요청의 저장된 실행 계획이 없어 자동 재시도할 수 없습니다",
+      "미완료 요청의 저장된 실행 계획이 없어 자동 재시도할 수 없습니다",
+      "미완료 요청의 저장된 실행 계획이 없어 자동 재시도할 수 없습니다"
+    ],
+    "db_io": false,
+    "http": false,
+    "limitation": "commit durability is a memory seam, not a DB process-kill test"
+  },
+  "B_numeric_reply_selection": {
+    "reproduced_old_wait_selection": true,
+    "actual_functions": [
+      "_matches_implicit_reply",
+      "resume_pending"
+    ],
+    "message": "1번",
+    "selected_old_case": "d07c3372-e191-45c5-8a3a-27b1c9bb285f",
+    "resume_calls": 1,
+    "db_io": false,
+    "http": false,
+    "limitation": "most recent fact choices are not consulted by resume_pending; schema permits numeric reply"
+  }
+}

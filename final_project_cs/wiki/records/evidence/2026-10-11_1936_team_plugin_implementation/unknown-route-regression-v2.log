@@ -1,0 +1,70 @@
+........................................................................ [ 72%]
+...........F...............                                              [100%]
+================================== FAILURES ===================================
+____ test_declaration_controls_active_routing_and_keeps_inactive_manifest _____
+
+    def test_declaration_controls_active_routing_and_keeps_inactive_manifest():
+        config = _config(teams=[{"team_id": "activity", "active": True,
+                                 "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}])
+        registry = build_registry(config=config, tools=_tools(), llm=object())
+    
+        assert {manifest.team_id for manifest in registry.manifests()} == {"activity"}
+        assert registry.get("activity").manifest.active is True
+        with pytest.raises(TeamUnavailable, match="not_installed"):
+>           registry.resolve(case_type="technical")
+
+tests\unit\test_project_composition.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.core.registry.TeamRegistry object at 0x000001C41E585910>
+
+    def resolve(self, *, case_type: str, intent: str | None = None) -> RegisteredTeam:
+        """Resolve a case to exactly one active, compatible registered Team.
+    
+        ``case_type`` is matched against the manifest's accepted case types.
+        When an intent is supplied, an exact capability or a capability in
+        that intent namespace (for example ``demo`` -> ``demo.investigate``)
+        is preferred.  The registry owns this vocabulary; callers do not need
+        to know any Team IDs or capabilities.
+        """
+        # ��case_type/intent �� �̹� ������ ���̴�(classifier �� INTENTS ���̸�
+        #   ���´�, feedback.py). ���⼭ �ٽ� .lower() �ϸ� "�� ���� �� �ϴ´�"��
+        #   \uc2e0\ud638\ub97c \uc900\ub2e4 \u2014 \uac80\uc99d\ub41c \uac12\uc744 \ub610 \ubc29\uc5b4\ud558\uc9c0 \uc54a\ub294\ub2e4.
+        case_type = case_type or ""
+        intent = intent or None
+        if case_type in self._unavailable:
+            self.require_runnable(case_type)
+        matches = [
+            entry for entry in self._teams.values()
+            if entry.manifest.active and entry.manifest.team_id not in self._unavailable
+            and case_type in entry.normalized_case_types
+        ]
+        if intent:
+            intent_matches = [
+                entry for entry in matches
+                if any(capability.lower() == intent or capability.lower().startswith(intent + ".")
+                       for capability in entry.manifest.capabilities)
+            ]
+            if intent_matches:
+                matches = intent_matches
+        if len(matches) != 1:
+            if not matches:
+                unavailable = [entry.manifest.team_id for entry in self._teams.values()
+                               if case_type in entry.normalized_case_types
+                               and (not entry.manifest.active or entry.manifest.team_id in self._unavailable)]
+                unavailable.extend(team_id for team_id, values in self._declared_capabilities.items()
+                                   if team_id in self._unavailable and team_id not in unavailable
+                                   and any(value == case_type or value.startswith(case_type + ".") for value in values))
+                if len(unavailable) == 1:
+                    self.require_runnable(unavailable[0])
+                known = [team_id for team_id, values in self._known_case_types.items()
+                         if case_type in values]
+                if not unavailable and len(known) == 1:
+                    self.require_runnable(known[0])
+>           raise RegistryError(f"case must resolve to exactly one active team: {case_type}")
+E           app.core.registry.RegistryError: case must resolve to exactly one active team: technical
+
+app\core\registry.py:177: RegistryError
+=========================== short test summary info ===========================
+FAILED tests/unit/test_project_composition.py::test_declaration_controls_active_routing_and_keeps_inactive_manifest
+1 failed, 98 passed in 15.93s

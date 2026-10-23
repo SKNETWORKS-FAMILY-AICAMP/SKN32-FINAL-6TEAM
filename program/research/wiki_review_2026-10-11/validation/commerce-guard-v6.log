@@ -1,0 +1,3 @@
+C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:352: SyntaxWarning: invalid escape sequence '\d'
+  """기본 로그 자리 `<PROCESSED>/mobility/logs`. ☆`[73 후속 · 3-5]` 자료 폴더가 정해지지 않았거나(unset · 자리표시 /data)
+retired domain guard: 0 violation(s)

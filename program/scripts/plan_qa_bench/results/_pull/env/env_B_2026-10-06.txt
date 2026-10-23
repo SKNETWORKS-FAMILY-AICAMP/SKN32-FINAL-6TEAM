@@ -1,0 +1,105 @@
+# 환경 수집 — B — 2026-10-06T01:41:54Z
+## GPU
+NVIDIA RTX A4000, 595.91.07, 16376 MiB
+CUDA Version: 13.2
+## CPU·메모리
+128
+ AMD EPYC 7702 64-Core Processor
+Mem:             503          44         278          15         199         459
+## OS
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+## 파이썬 환경별 라이브러리
+- /root/venv_imajev/bin/python: 3.12.3
+    torch 2.14.1+cu130
+    transformers 5.18.0
+    peft 0.21.2
+    bitsandbytes 0.50.2
+    accelerate 1.15.0
+    sentence_transformers 6.1.0
+    huggingface_hub 1.33.0
+    gguf ?
+    safetensors 0.8.0
+    numpy 2.5.3
+    scikit-learn 1.9.1
+- /usr/bin/python3: 3.12.3
+    torch 2.8.0+cu128
+    gguf ?
+    numpy 2.1.2
+- /root/venv/bin/python: 3.12.3
+    torch 2.14.1+cpu
+    transformers 5.18.0
+    huggingface_hub 1.33.0
+    gguf ?
+    safetensors 0.8.0
+    numpy 2.5.3
+## 추론 엔진
+ollama ollama version is 0.35.1
+/root/llama.cpp/build/bin/llama-server: version: 0.5.0-dev (build 1, commit bed0a85)
+## ollama 모델 (이름 · 아이디=내용 해시 앞 12자 · 크기 · 수정 시각)
+NAME    ID    SIZE    MODIFIED 
+## 허깅페이스 캐시(수정판 해시 · 받은 시각)
+BAAI/bge-m3 5617a9f61b028005a4858fdac845db406aefb181 2026-10-05 22:45
+BAAI/bge-m3 9a0624b896d81da7492a910ffa53731274b6cf3d 2026-10-05 22:45
+Copycats/koelectra-base-v3-generalized-sentiment-analysis 370f325ce11aabd837b89bfb3ffdc26fde354689 2026-10-05 22:51
+FacebookAI/xlm-roberta-base e73636d4f797dec63c3081bb6ed5c7b0bb3f2089 2026-10-05 23:16
+HopitAI/hopper 4b605f25eb903c2cf4d121040ffb097240b3bc37 2026-10-04 00:31
+HopitAI/hopper 4bbab19872ae7a12a2b3aa875c4b3988ce78c051 2026-10-04 02:35
+Qwen/Qwen3-Embedding-0.6B 97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3 2026-10-05 22:45
+Qwen/Qwen3.5-4B 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a 2026-10-05 20:48
+beomi/KcELECTRA-base-v2022 568fe985a10c013c8f605e3c80a199413bbe9d00 2026-10-05 23:11
+beomi/KcELECTRA-base-v2022 87285578b4686b6d190abd40e947a2a416add6de 2026-10-05 23:11
+clapAI/modernBERT-base-multilingual-sentiment baa7f26fee4eca5aec35538caa5fdda7b86d83c6 2026-10-05 22:52
+daekeun-ml/koelectra-small-v3-nsmc d1c0233fc013ae8bd879d7b61f2bec69aa3af4c9 2026-10-05 22:51
+intfloat/multilingual-e5-base d128750597153bb5987e10b1c3493a34e5a4502a 2026-10-05 23:16
+intfloat/multilingual-e5-large-instruct 274baa43b0e13e37fafa6428dbc7938e62e5c439 2026-10-05 22:46
+intfloat/multilingual-e5-small 614241f622f53c4eeff9890bdc4f31cfecc418b3 2026-10-05 23:08
+jhu-clsp/mmBERT-base c5955035435e2bf121cde7f3c8863ef52ff35d82 2026-10-05 23:15
+jhu-clsp/mmBERT-base ca5b84ba39fb0531402e727a3d9a50626d9f522c 2026-10-05 23:16
+jhu-clsp/mmBERT-small 461475a70b192efcbb760df5541d3825b07c4d5b 2026-10-05 23:06
+jhu-clsp/mmBERT-small abc32620dd4f6ab06f5fbe905dc25f310618e09f 2026-10-05 23:06
+klue/roberta-base 02f94ba5e3fcb7e2a58a390b8639b0fac974a8da 2026-10-05 23:13
+klue/roberta-large 28d911204e9022eda172571ca8cc61eaffd942f7 2026-10-05 23:17
+klue/roberta-small b6b4c36d827e0293ae2fcf04d527072f10a23064 2026-10-05 23:03
+monologg/koelectra-base-v3-discriminator 0e9ddb58c86bc358996b048032348a59f505dc98 2026-10-05 23:10
+monologg/koelectra-base-v3-discriminator 68b30cd259f34a4b5aa8786392612ba2a2617fcc 2026-10-05 23:09
+monologg/koelectra-small-v3-discriminator 7488f8db0f208beff4a1f3f9bb3ed04650a89ed7 2026-10-05 23:03
+monologg/koelectra-small-v3-discriminator 910a9b1513665782b52d2621de3871c003fcff2b 2026-10-05 23:03
+nlp04/korean_sentiment_analysis_kcelectra 9d56ec3329a84e2a2dbab466eaab3b52b9cf9087 2026-10-05 22:52
+nlp04/korean_sentiment_analysis_kcelectra bee5fad79910c12f0aa6db15e5d394be517cea5b 2026-10-05 22:52
+nlpai-lab/KURE-v1 8b418a58414668e75532ed045c22d9ca018ae2b2 2026-10-05 22:46
+skt/A.X-Encoder-base 9708f9c404ace91efd25c06fac2d73413616f4ef 2026-10-05 23:15
+tabularisai/multilingual-sentiment-analysis eea032081f8d247b4303ef3565e7cec1b6f201c9 2026-10-05 22:52
+## 폴더로 받은 모델(수정판 해시 · 받은 시각 · 크기)
+/root/hf_models/Qwen3.5-4B 수정판=851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a 시각=1791233416.1369662 크기=8911MB
+/root/hf_models/gemma-4-E2B-it 수정판=3e22461f65e89153144f8adb70e3b8c2cc9845a7 시각=1791225393.9418387 크기=9803MB
+/root/hf_models/gemma-4-E4B-it 수정판=ee0ef6023621cff504d758262d4e04895a5af4a2 시각=1791200991.5116622 크기=15283MB
+/root/hf_models/kanana-2-3b-instruct 수정판=6a5d7889964c4c590299d16e309eabab1f73f8a9 시각=1791238702.7215242 크기=6703MB
+/root/hf_models/winnow-e4b-hf 수정판=기록 없음 시각=2026-10-05 22:26 크기=0MB
+## GGUF 파일(경로 · 크기 · 수정 시각)
+/root/llama.cpp/models/ggml-vocab-aquila.gguf 4825676 2026-10-03 00:25:43.190680384 +0
+/root/llama.cpp/models/ggml-vocab-baichuan.gguf 1340998 2026-10-03 00:25:43.195680500 +0
+/root/llama.cpp/models/ggml-vocab-bert-bge.gguf 627549 2026-10-03 00:25:43.197680546 +00
+/root/llama.cpp/models/ggml-vocab-command-r.gguf 10874545 2026-10-03 00:25:43.251681798 +
+/root/llama.cpp/models/ggml-vocab-deepseek-coder.gguf 1156067 2026-10-03 00:25:43.258681960 +0
+/root/llama.cpp/models/ggml-vocab-deepseek-llm.gguf 3970167 2026-10-03 00:25:43.277682400 +0
+/root/llama.cpp/models/ggml-vocab-falcon.gguf 2287728 2026-10-03 00:25:43.287682633 +0
+/root/llama.cpp/models/ggml-vocab-gemma-4.gguf 15776467 2026-10-03 00:25:43.360684325 +
+/root/llama.cpp/models/ggml-vocab-gpt-2.gguf 1766807 2026-10-03 00:25:43.369684533 +0
+/root/llama.cpp/models/ggml-vocab-gpt-neox.gguf 1771431 2026-10-03 00:25:43.376684696 +0
+/root/llama.cpp/models/ggml-vocab-llama-bpe.gguf 7818140 2026-10-03 00:25:43.407685414 +0
+/root/llama.cpp/models/ggml-vocab-llama-spm.gguf 723869 2026-10-03 00:25:43.410685483 +00
+/root/llama.cpp/models/ggml-vocab-mpt.gguf 1771393 2026-10-03 00:25:43.417685646 +0
+/root/llama.cpp/models/ggml-vocab-nomic-bert-moe.gguf 6821877 2026-10-03 00:25:43.444686272 +0
+/root/llama.cpp/models/ggml-vocab-phi-3.gguf 726019 2026-10-03 00:25:43.447686341 +00
+/root/llama.cpp/models/ggml-vocab-qwen2.gguf 5928681 2026-10-03 00:25:43.468686828 +0
+/root/llama.cpp/models/ggml-vocab-qwen35.gguf 5928682 2026-10-03 00:25:43.490687338 +0
+/root/llama.cpp/models/ggml-vocab-refact.gguf 1720710 2026-10-03 00:25:43.497687500 +0
+/root/llama.cpp/models/ggml-vocab-starcoder.gguf 1719346 2026-10-03 00:25:43.503687639 +0
+/root/e4bt-Q8_0.gguf 8005437472 2026-10-05 21:16:39.714020085
+## LoRA 어댑터(기반 모델 · r · alpha · 수정 시각)
+/root/adapters/e2b /root/hf_models/gemma-4-E2B-it r=16 alpha=32 2026-10-05 23:17
+/root/adapters/e4b_r16_e2 /root/hf_models/gemma-4-E4B-it r=16 alpha=32 2026-10-05 14:30
+/root/adapters/smoke /root/hf_models/gemma-4-E4B-it r=16 alpha=32 2026-10-05 12:01
+/root/adapters/smoke_e2b /root/hf_models/gemma-4-E2B-it r=16 alpha=32 2026-10-05 21:38
+/root/adapters/smoke_kanana2_3b /root/hf_models/kanana-2-3b-instruct r=16 alpha=32 2026-10-06 00:48
+## 끝

@@ -1,0 +1,139 @@
+{
+  "retrieved_date_kst": "2026-10-10",
+  "sources": [
+    {
+      "id": "S01",
+      "file": "sources/swebok-v4.pdf",
+      "url": "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf",
+      "title": "IEEE Computer Society SWEBOK",
+      "scope": "공개 PDF 전문",
+      "resolved_url": "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf",
+      "content_type": "application/pdf",
+      "status": "downloaded",
+      "bytes": 6015672,
+      "sha256": "0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511",
+      "pdf_pages": 411
+    },
+    {
+      "id": "S02",
+      "file": "sources/sei-1991-cm-models.pdf",
+      "url": "https://www.sei.cmu.edu/documents/1022/1991_005_001_645586.pdf",
+      "title": "SEI Configuration Management Models in Commercial Environments",
+      "scope": "공개 PDF 전문",
+      "resolved_url": "https://www.sei.cmu.edu/documents/1022/1991_005_001_645586.pdf",
+      "content_type": "application/pdf",
+      "status": "downloaded",
+      "bytes": 321114,
+      "sha256": "8f2e5d5de99a610c94a5498a80ffd9c9a431fbc6260652112aa5c3bb9ffe96d0",
+      "pdf_pages": 59
+    },
+    {
+      "id": "S03",
+      "file": "sources/usaf-history-2002.pdf",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-D301-PURL-LPS48767/pdf/GOVPUB-D301-PURL-LPS48767.pdf",
+      "title": "US Air Force Culture of Innovation 1945–1965",
+      "scope": "공개 PDF 전문",
+      "download_origin": "이 대화에서 앞서 같은 공식 URL로 받은 완전한 PDF 복사",
+      "status": "downloaded",
+      "bytes": 34414226,
+      "sha256": "655d58c2c3fbcc659be3a2e95a3067d39b6870ada7e574ed0fb49104dd38a2a7",
+      "pdf_pages": 302
+    },
+    {
+      "id": "S04",
+      "file": "sources/scm-patterns-publisher.html",
+      "url": "https://www.informit.com/store/software-configuration-management-patterns-effective-9780201741179",
+      "title": "SCM Patterns publisher page",
+      "scope": "공개 소개·목차·서문 페이지. 유료 책 전문 아님",
+      "resolved_url": "https://www.informit.com/store/software-configuration-management-patterns-effective-9780201741179",
+      "content_type": "text/html; charset=utf-8",
+      "status": "downloaded",
+      "bytes": 139486,
+      "sha256": "29b76a1addb09a03b4ecb9229d3ab0d68b17e30816f8b88ba36af80a084bf4bf"
+    },
+    {
+      "id": "S05",
+      "file": "sources/github-flow.html",
+      "url": "https://docs.github.com/en/get-started/using-github/github-flow",
+      "title": "GitHub flow",
+      "scope": "공개 웹 본문",
+      "resolved_url": "https://docs.github.com/en/get-started/using-github/github-flow",
+      "content_type": "text/html; charset=utf-8",
+      "status": "downloaded",
+      "bytes": 199180,
+      "sha256": "95e175f4835407e3f4915e785ec5c42567a1aa49c22743ae513a62e20bf22bb0"
+    },
+    {
+      "id": "S06",
+      "file": "sources/dora-version-control.html",
+      "url": "https://dora.dev/capabilities/version-control/",
+      "title": "DORA Version control",
+      "scope": "공개 웹 본문",
+      "resolved_url": "https://dora.dev/capabilities/version-control/",
+      "content_type": "text/html; charset=utf-8",
+      "status": "downloaded",
+      "bytes": 23387,
+      "sha256": "90ee04c8e4a9afdd14241e5d8b4cd962bffbc24157a2a7877276b3839b4ee947"
+    },
+    {
+      "id": "S07",
+      "file": "sources/dora-continuous-integration.html",
+      "url": "https://dora.dev/capabilities/continuous-integration/",
+      "title": "DORA Continuous integration",
+      "scope": "공개 웹 본문",
+      "resolved_url": "https://dora.dev/capabilities/continuous-integration/",
+      "content_type": "text/html; charset=utf-8",
+      "status": "downloaded",
+      "bytes": 20576,
+      "sha256": "59dfdbb7780ba64e91f2186a7ac57bc5a7414a821f338559e653ff93946c1822"
+    },
+    {
+      "id": "S08",
+      "file": "sources/google-rules-of-ml.html",
+      "url": "https://developers.google.com/machine-learning/guides/rules-of-ml",
+      "title": "Google Rules of Machine Learning",
+      "scope": "공개 웹 본문",
+      "resolved_url": "https://developers.google.com/machine-learning/guides/rules-of-ml",
+      "content_type": "text/html; charset=utf-8",
+      "status": "downloaded",
+      "bytes": 152618,
+      "sha256": "94b0b0f8d9bf3a0a89ffc1f0dea40dd48ced8771d533122a98ea61d80ad2919e"
+    },
+    {
+      "id": "S09",
+      "file": "sources/git-tagging.html",
+      "url": "https://git-scm.com/book/en/v2/Git-Basics-Tagging",
+      "title": "Pro Git Tagging",
+      "scope": "공개 웹 본문",
+      "resolved_url": "https://git-scm.com/book/en/v2/Git-Basics-Tagging",
+      "content_type": "text/html; charset=utf-8",
+      "status": "downloaded",
+      "bytes": 133263,
+      "sha256": "ed9c9cfe95f385543be25e8ddcfe1ee0a285525438f2074f938c741d3b082139"
+    },
+    {
+      "id": "S10",
+      "file": "sources/nasa-technical-management.html",
+      "url": "https://www.nasa.gov/reference/6-0-crosscutting-technical-management/",
+      "title": "NASA Crosscutting Technical Management",
+      "scope": "공개 웹 본문",
+      "resolved_url": "https://www.nasa.gov/reference/6-0-crosscutting-technical-management/",
+      "content_type": "text/html; charset=UTF-8",
+      "status": "downloaded",
+      "bytes": 490842,
+      "sha256": "a8cb8cd575d559532e68c63db92edbcf2fd4e9261903c1315c5df22399e34b38"
+    },
+    {
+      "id": "S11",
+      "file": "sources/fowler-continuous-integration.html",
+      "url": "https://martinfowler.com/articles/continuousIntegration.html",
+      "title": "Martin Fowler Continuous Integration",
+      "scope": "추가 참고 공개 웹 본문",
+      "resolved_url": "https://martinfowler.com/articles/continuousIntegration.html",
+      "content_type": "text/html",
+      "status": "downloaded",
+      "bytes": 138101,
+      "sha256": "3ad2de243def62892458a058b4e8b0a9b98a76b3507bdf0ecc835da551e9787d"
+    }
+  ]
+}

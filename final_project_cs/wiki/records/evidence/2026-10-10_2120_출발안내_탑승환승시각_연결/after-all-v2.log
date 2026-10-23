@@ -1,0 +1,10 @@
+........................................................................ [ 39%]
+........................................................................ [ 78%]
+.......................................                                  [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-10_2120_출발안내_탑승환승시각_연결\after-all-v2.xml -
+183 passed in 5.01s
+
+Exception ignored in: <function Console.__del__ at 0x0000024A6545D260>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,230 @@
+{
+  "model": "Valen-0.8B original native choice head",
+  "our_training": false,
+  "publisher_training": "Developer decision SFT",
+  "expected": 1316,
+  "saved": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "full": {
+    "total": 1316,
+    "correct": 255,
+    "false_pick": 855,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.17331814679173857,
+      0.2160024457586896
+    ],
+    "false_pick_wilson95": [
+      0.6235192539873172,
+      0.675001448909868
+    ]
+  },
+  "positive": {
+    "total": 461,
+    "correct": 255,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.5075081707558508,
+      0.597904113519122
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 0,
+    "false_pick": 855,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0,
+      0.0044728381254078835
+    ],
+    "false_pick_wilson95": [
+      0.9955271618745922,
+      1.0
+    ]
+  },
+  "single_expected": 1316,
+  "compound_diagnostic_only": 0,
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 0,
+      "false_pick": 118,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.03152833902249433
+      ],
+      "false_pick_wilson95": [
+        0.9684716609775057,
+        1.0
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 0,
+      "false_pick": 150,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ],
+      "false_pick_wilson95": [
+        0.9750297556319235,
+        1.0
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 0,
+      "false_pick": 150,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ],
+      "false_pick_wilson95": [
+        0.9750297556319235,
+        1.0
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 0,
+      "false_pick": 150,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ],
+      "false_pick_wilson95": [
+        0.9750297556319235,
+        1.0
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 0,
+      "false_pick": 150,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ],
+      "false_pick_wilson95": [
+        0.9750297556319235,
+        1.0
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 0,
+      "false_pick": 137,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        1.734723475976807e-18,
+        0.027275057024116055
+      ],
+      "false_pick_wilson95": [
+        0.9727249429758839,
+        0.9999999999999999
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 87,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6513031361566628,
+        0.8083105334597807
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 71,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5525341042264347,
+        0.7285585691413721
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 15,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.08212224799065314,
+        0.2075134614763735
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 82,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5955213183551313,
+        0.7597716539580108
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "prompt_sha256": "1034acc0068ff8acc90c7e5755e92f0d83f16aab42f3bfc55f4a013a9d378cc1",
+  "answer_sha256": "183c26aa7a8d67853a1f620f2360a10d19e4fb3f9d9560f3a54d312d0bb7a89b",
+  "probability_kind": "Native choice head normalized candidate probability; not next token, verbal certainty or JSON output",
+  "original_content_contract_checked": true,
+  "execution": {
+    "job": {
+      "id": "valen_08b_original_h_a1",
+      "tag": "valen_08b_original_h_a1",
+      "suite": "h",
+      "label": "Valen-0.8B native decision head publisher original",
+      "our_training": false,
+      "publisher_training": "Developer full decision SFT on Qwen3.5-0.8B",
+      "model": "/tmp/tripilot-valen-20261009/smoke_verified_model.safetensors",
+      "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+      "model_revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+      "prompts": "/tmp/tripilot-valen-20261009/prompts/h.json",
+      "prompt_sha256": "1034acc0068ff8acc90c7e5755e92f0d83f16aab42f3bfc55f4a013a9d378cc1",
+      "expected": 1316,
+      "script": "/tmp/tripilot-valen-20261009/valen_native_eval_20261009_v2.py",
+      "runner_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+      "port": 8401,
+      "logprobs": "0",
+      "output_contract": "Native choice-head distribution; parsed validates API, content holds native response",
+      "dependency": "/tmp/tripilot-valen-20261009/SMOKE_PASS.json",
+      "automatic_retry": false,
+      "purpose": "Frozen original travel regression; not holdout or adoption",
+      "smoke_gate_attempt": "a2"
+    },
+    "started": "2026-10-09T01:55:43.020503+00:00",
+    "prompt_sha256": "1034acc0068ff8acc90c7e5755e92f0d83f16aab42f3bfc55f4a013a9d378cc1",
+    "script_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

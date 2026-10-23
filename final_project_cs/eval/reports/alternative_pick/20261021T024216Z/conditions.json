@@ -1,0 +1,30 @@
+{
+ "eval_run": "20261021T024216Z",
+ "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_dev_stress_anim.jsonl",
+ "inputs_sha256": "9c847fdc16fe022f9db3a2ec2652b00b2bdd29150c640969c48e49bedaf39957",
+ "dataset_sha256": "1381845af1dfd2e380bbc9508a7f1fc1777fe1bf9a799101a18000d094f6ae37",
+ "split": [
+  "dev"
+ ],
+ "smoke": false,
+ "labeler": "rule:strict_attrs(stress)",
+ "cases": 9,
+ "repeats": 3,
+ "shuffle": {
+  "cases": 40,
+  "per_case": 2,
+  "seed": 7
+ },
+ "dry_run": false,
+ "model": "gpt-5.4-nano",
+ "reasoning_effort": "low",
+ "web_search": false,
+ "prompt_file": null,
+ "payload": "v3(class_name)",
+ "timeout_s": 8.0,
+ "temperature": null,
+ "seed_model": null,
+ "prompt": "db",
+ "prompt_id": "a6f54f80-f7e5-47ac-b5f3-19ecfc09f523",
+ "prompt_chars": 1664
+}

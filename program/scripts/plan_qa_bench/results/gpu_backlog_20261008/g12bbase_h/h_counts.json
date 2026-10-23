@@ -1,0 +1,202 @@
+{
+  "model": "Gemma-4-12B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Instruct release",
+  "saved": 1316,
+  "expected": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "positive": {
+    "total": 461,
+    "correct": 453,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.966134620696279,
+      0.9911810222090848
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 481,
+    "false_pick": 374,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.5291152914772466,
+      0.5954711486637845
+    ],
+    "false_pick_wilson95": [
+      0.40452885133621574,
+      0.47088470852275355
+    ]
+  },
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 0,
+      "false_pick": 118,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.03152833902249433
+      ],
+      "false_pick_wilson95": [
+        0.9684716609775057,
+        1.0
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 93,
+      "false_pick": 57,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5402444138161206,
+        0.6937627275355409
+      ],
+      "false_pick_wilson95": [
+        0.3062372724644591,
+        0.45975558618387935
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 147,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9428533167296139,
+        0.9931752486770326
+      ],
+      "false_pick_wilson95": [
+        0.006824751322967459,
+        0.05714668327038608
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 76,
+      "false_pick": 74,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.42749716668807597,
+        0.5855032300536832
+      ],
+      "false_pick_wilson95": [
+        0.41449676994631696,
+        0.5725028333119242
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 131,
+      "false_pick": 19,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8106335124178631,
+        0.9173887051206396
+      ],
+      "false_pick_wilson95": [
+        0.08261129487936036,
+        0.18936648758213687
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 34,
+      "false_pick": 103,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.18337592153203014,
+        0.32671151594726916
+      ],
+      "false_pick_wilson95": [
+        0.6732884840527308,
+        0.8166240784679698
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9684716609775057,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 110,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9662560647018358,
+        0.9999999999999999
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 107,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8889787873352814,
+        0.9754404095783368
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.941264037027841,
+        0.9954174354340789
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "89d099fb7d219298306fbe3da1e98d8218f4b9cac94e7d38cbd7163a8fc1dd62",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "g12bbase_h",
+      "label": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "h_backlog_g12bbase",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1316
+    },
+    "started": "2026-10-08T02:04:11.698017+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

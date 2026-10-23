@@ -1,0 +1,111 @@
+{
+  "code_commit": "0b33deb816d56ca2507e741673cb5931b43a8eea",
+  "source_tree": "05b2671ce1197eba7286389ee9a2798db46ce3c6",
+  "at_utc": "2026-10-12T07:28:17.273541+00:00",
+  "services": {
+    "tripilot-api": {
+      "image": "sha256:9360e69d7cbd11fc91680e7ea61f6f69ed191eb9a3770388e74eca9ad2eb2afa",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0
+    },
+    "tripilot-worker": {
+      "image": "sha256:9360e69d7cbd11fc91680e7ea61f6f69ed191eb9a3770388e74eca9ad2eb2afa",
+      "state": "running",
+      "health": null,
+      "restarts": 0
+    },
+    "tripilot-web": {
+      "image": "sha256:392d95d5d304122675b14ab98d425b654cc04ed37bfdb87f76b036fdba117551",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0
+    },
+    "tripilot-db": {
+      "image": "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0
+    }
+  },
+  "worker_rounds": {
+    "sweeper_rounds": 4,
+    "outbox_rounds": 4,
+    "reported_error_count": 0,
+    "restarts": 0
+  },
+  "public_screen": {
+    "status": 200,
+    "title": "triPilot · 당신다운 여행의 시작",
+    "page_errors": [],
+    "failed_requests": []
+  },
+  "public_css": [
+    {
+      "path": "/_next/static/chunks/0d00bzs-3g2xc.css",
+      "status": 200,
+      "matches_running_image": true,
+      "sha256": "255e7728c8a2b2919a628be95970c1309392fa6210be11fb12bbed4fba3ccfd8",
+      "rules": [
+        ".plan-check-module__MjxneW__undoTime,.plan-check-module__MjxneW__resetTimes{border:1px solid var(--color-adjusted-border);background:var(--color-surface);min-height:28px;color:var(--color-adjusted);font:inherit;white-space:nowrap;cursor:pointer;border-radius:999px;flex:none;align-items:center;gap:4px;padding:0 9px;font-size:11.5px;font-weight:750;display:inline-flex}",
+        ".plan-check-module__MjxneW__undoTime[aria-disabled=true]{opacity:.4;cursor:not-allowed}",
+        ".plan-check-module__MjxneW__cardFootTools .plan-check-module__MjxneW__undoTime{min-height:0;font-size:12px;font-weight:600;line-height:inherit;padding:2px 8px;position:relative}",
+        ".plan-check-module__MjxneW__cardFootTools .plan-check-module__MjxneW__undoTime:after{content:\"\";height:44px;position:absolute;inset:50% 0 auto;transform:translateY(-50%)}",
+        ".plan-check-module__MjxneW__undoTime:focus-visible,.plan-check-module__MjxneW__resetTimes:focus-visible{outline:2px solid var(--color-selected);outline-offset:2px}"
+      ]
+    }
+  ],
+  "db_container_unchanged": true,
+  "existing_settings_preserved": true,
+  "recovery_images_preserved": true,
+  "customer_schedule_write_test": false,
+  "external_notification_test": false,
+  "public_health": {
+    "initial_single_probe": 502,
+    "chrome": [
+      {
+        "path": "/health",
+        "status": 200,
+        "body": "{\"status\":\"ok\"}",
+        "headers": {
+          "server": "cloudflare",
+          "cf-cache-status": "DYNAMIC",
+          "content-type": "application/json"
+        }
+      },
+      {
+        "path": "/health?check=1791790486678",
+        "status": 200,
+        "body": "{\"status\":\"ok\"}",
+        "headers": {
+          "server": "cloudflare",
+          "cf-cache-status": "DYNAMIC",
+          "content-type": "application/json"
+        }
+      }
+    ],
+    "followup": [
+      {
+        "attempt": 1,
+        "status": 200,
+        "body": {
+          "status": "ok"
+        }
+      },
+      {
+        "attempt": 2,
+        "status": 200,
+        "body": {
+          "status": "ok"
+        }
+      },
+      {
+        "attempt": 3,
+        "status": 200,
+        "body": {
+          "status": "ok"
+        }
+      }
+    ]
+  }
+}

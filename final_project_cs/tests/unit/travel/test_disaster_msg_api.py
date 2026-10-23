@@ -11,8 +11,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from app.infrastructure.travel.cache import ResponseCache
-from app.infrastructure.travel.disaster_msg import DisasterMsgApi
+from app.domains.travel_ops.ports.data_sources.cache import ResponseCache
+from app.domains.travel_ops.ports.data_sources.disaster_msg import DisasterMsgApi
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -115,3 +115,10 @@ def test_this_source_keeps_its_cache_longer_than_the_default():
         source.active(region="서울", at=_now(), district="종로구")
         first_calls = first_calls or len(calls)
     assert len(calls) == first_calls
+
+
+def test_a_body_wrapped_in_items_is_read_like_a_plain_list():
+    """`[2026-10-13 실측]` 본문이 `{"items": [...]}` 로 오기도 한다(전국 받기 28쪽) — 「모름」으로 버리지 않는다."""
+    source, _ = _source({"items": [_row(30)]})
+    got = source.active(region="서울", at=datetime.now(KST), district="종로구")
+    assert got is not None and len(got["for_region"]) == 1

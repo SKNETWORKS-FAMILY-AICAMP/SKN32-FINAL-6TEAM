@@ -1,0 +1,200 @@
+{
+  "updated_at": "2026-10-11T22:40:55+09:00",
+  "scope": "댓글 선택·wiki·검토 문서 반영",
+  "comments": [
+    {
+      "comment": 1,
+      "item": "W04",
+      "decision": "B",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "B안 선택 반영 완료 · 개인 AI OAuth 구현·연결 검증 남음",
+      "target": "final_project_cs/wiki/decisions/D-CS-012-agent-auth-claude-style.md"
+    },
+    {
+      "comment": 2,
+      "item": "W06",
+      "decision": "A",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "A안 선택 반영 완료 · 자동 복구·고객 안내 인수 검증 남음",
+      "target": "wiki/decisions/D-018-decision15-stop-paths.md"
+    },
+    {
+      "comment": 3,
+      "item": "W07",
+      "decision": "A",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "용어 수정 반영 완료 · 자료 최신성 실측 남음",
+      "target": "wiki/decisions/D-017-watch-cadence-golden-time.md"
+    },
+    {
+      "comment": 4,
+      "item": "W08",
+      "decision": "C",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "책임 정정 반영 완료 · 현재 코드와 요구의 차이 확인",
+      "target": "wiki/decisions/D-017-watch-cadence-golden-time.md"
+    },
+    {
+      "comment": 5,
+      "item": "W08",
+      "decision": "C",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "책임 정정 반영 완료 · 현재 코드와 요구의 차이 확인",
+      "target": "wiki/decisions/D-017-watch-cadence-golden-time.md"
+    },
+    {
+      "comment": 6,
+      "item": "W08",
+      "decision": "C",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "책임 정정 반영 완료 · 현재 코드와 요구의 차이 확인",
+      "target": "wiki/decisions/D-017-watch-cadence-golden-time.md"
+    },
+    {
+      "comment": 7,
+      "item": "W08",
+      "decision": "C",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "책임 정정 반영 완료 · 현재 코드와 요구의 차이 확인",
+      "target": "wiki/decisions/D-017-watch-cadence-golden-time.md"
+    },
+    {
+      "comment": 8,
+      "item": "W09",
+      "decision": "A",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "A안·운영자 웹 앱 설정 요구 반영 완료 · 구현 남음",
+      "target": "final_project_cs/wiki/decisions/D-CS-009-daytime-closure-detection.md"
+    },
+    {
+      "comment": 9,
+      "item": "W11",
+      "decision": "v11 보존 / v12 후속 작성",
+      "instruction_recorded": true,
+      "document_updated": true,
+      "implementation_complete": false,
+      "status": "v11 수정 제외 반영 완료 · 전체 정리 후 v12 신규 작성 대기",
+      "target": "wiki/delivery/release-gate.md"
+    }
+  ],
+  "confirmed": {
+    "W04": "B",
+    "W06": "A",
+    "W07": "A",
+    "W08": "C",
+    "W09": "A"
+  },
+  "documentary_changes": {
+    "completed": 6,
+    "total": 6
+  },
+  "comments_recorded": {
+    "completed": 9,
+    "total": 9
+  },
+  "previously_verified_document_completion": [
+    "W01",
+    "W10",
+    "W13",
+    "W14",
+    "W15",
+    "W16",
+    "W17",
+    "W18",
+    "W19",
+    "W21",
+    "W22",
+    "W23",
+    "W25"
+  ],
+  "code_and_artifact_evidence": [
+    {
+      "path": "final_project_cs/app/composition.py",
+      "sha256": "c443eaf2d379cd1ccc02e28f37639fb4d1abaeb483fb8b5114e1943303679995",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/application/classification.py",
+      "sha256": "2b7cf9e671d92e95be257bf1a92848f67503cfa3167dc4beb8e656c7908c5696",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/core_hooks/feedback.py",
+      "sha256": "9afa6191e7b184f7799b74115eacbf3f5e5cb8df44d9d4800d343f05a79ec5c4",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/application/controller.py",
+      "sha256": "c1ad476afb283bf75da5c07468b724bd7ccbdb18079fe2a939996aca6f514116",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/core/registry.py",
+      "sha256": "b538ae5aae7a1b459caaa6468ef31f1ab6f651db497884b5e35ebf1feb1ad5db",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py",
+      "sha256": "70d9107fa9cf8f29aa18a1509ef9a009b4ead9777ded949136da357c70e186e1",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_batch.py",
+      "sha256": "8fd65aa82ed3e25d1bb73c3a9854d6a72ccd3d20f0d4eef5e2c8be2eff18831f",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/_shared/itinerary_team.py",
+      "sha256": "baf66b6d64beb80c873982ce1f3ee87ac838c914461bef1e7d9e5da4cb3d1cfd",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/components/core_hooks/reroute.py",
+      "sha256": "3ef4b4d5b7d2bb93862c64afb27ad76ed4cad25062ecf4b85b8acccc7f9e934e",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "program/산출물양식/w5/아키텍처_한눈에/v11/그림1_멀티에이전트_플로우_v11.svg",
+      "sha256": "47d582778b7207dec21301744810c3916f2aec048803447b0b857b1a50a76cd0",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "program/산출물양식/w5/아키텍처_한눈에/v9/triPilot_Multi-Agent구조도_v9.md",
+      "sha256": "ca6bc8833cb346005e148628d6a83a63898ad709129ec04f0e80930e114a6ef3",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "path": "final_project_cs/frontend/apps/admin/src/features/operations/connected.tsx",
+      "sha256": "36be768267dcddfef2b2dbe4bcf8ab6a71f8fe1f1b6062590fe460cce5750273",
+      "observed_at": "2026-10-11T22:40:55+09:00"
+    }
+  ],
+  "implementation_changes_in_this_task": false,
+  "remote_deployment_checked": false,
+  "sources": [
+    {
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
+      "verified_at": "2026-10-11T22:40:55+09:00"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/patterns/bulkhead",
+      "verified_at": "2026-10-11T22:40:55+09:00"
+    }
+  ]
+}

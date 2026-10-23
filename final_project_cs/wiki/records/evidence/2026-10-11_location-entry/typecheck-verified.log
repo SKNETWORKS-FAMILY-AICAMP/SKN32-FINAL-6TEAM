@@ -1,0 +1,39 @@
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/auth/done/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/intakes/[intakeId]/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/intakes/starting/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/mypage/edit/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/mypage/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/start/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/support/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/trips/[tripId]/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/trips/[tripId]/results/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/trips/[tripId]/verification/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/trips/new/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'
+error TS6053: File 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/.next-live/types/app/trips/page.ts' not found.
+  The file is in the program because:
+    Matched by include pattern '.next-live/types/**/*.ts' in 'C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tsconfig.json'

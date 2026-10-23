@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1600 840" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ctr-title ctr-desc">
+<title id="ctr-title">guguroute 컨테이너도 — 무엇이 따로 뜨고 무엇으로 이어지나</title>
+<desc id="ctr-desc">고객의 웹 브라우저와 개인 AI 는 HTTPS 프록시를 거쳐 웹 · API 에 닿는다. API 안에 오케스트레이터 · 에이전트 · 이동 판정기 · MCP 서버가 있고, 백그라운드 워커가 1분마다 모니터링 · 되잡기 · 알림 보내기를 돌린다. 둘 다 같은 PostgreSQL 을 쓴다.</desc>
+<defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap');</style><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1600" height="840" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M320 100 L352 100 A8 8 0 0 1 360 108 L360 152 A8 8 0 0 0 368 160 L400 160" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M320 260 L352 260 A8 8 0 0 0 360 252 L360 240 A8 8 0 0 1 368 232 L400 232" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M640 128 L672 128 A8 8 0 0 0 680 120 L680 96 A8 8 0 0 1 688 88 L720 88" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M640 264 L720 264" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M880 136 L880 200" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M880 376 L880 440" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M640 496 L720 496" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 232 L1072 232 A8 8 0 0 0 1080 224 L1080 104 A8 8 0 0 1 1088 96 L1120 96" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 280 L1120 280" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M560 576 L560 720 A8 8 0 0 0 568 728 L1576 728 A8 8 0 0 0 1584 720 L1584 128 A8 8 0 0 0 1576 120 L1560 120" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M600 576 L600 624 A8 8 0 0 0 608 632 L1120 632" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="340" y="76" width="36" height="12" rx="2" fill="#fbfcfd"/><text x="358" y="85" class="lab-mono" fill="#6b7488">HTTPS</text>
+<rect x="888" y="168" width="164" height="16" rx="2" fill="#fbfcfd"/><text x="970" y="180" class="lab" fill="#6b7488">JSON · 실시간 진행(SSE)</text>
+<rect x="888" y="408" width="24" height="12" rx="2" fill="#fbfcfd"/><text x="900" y="417" class="lab-mono" fill="#6b7488">SQL</text>
+<rect x="668" y="472" width="24" height="12" rx="2" fill="#fbfcfd"/><text x="680" y="481" class="lab-mono" fill="#6b7488">SQL</text>
+<rect x="1064" y="256" width="28" height="12" rx="2" fill="#fbfcfd"/><text x="1078" y="265" class="lab-mono" fill="#6b7488">HTTP</text>
+<rect x="1112" y="704" width="172" height="16" rx="2" fill="#fbfcfd"/><text x="1198" y="716" class="lab" fill="#6b7488">3분마다 외부 정보 6종 조회</text>
+<rect x="840" y="608" width="76" height="16" rx="2" fill="#fbfcfd"/><text x="878" y="620" class="lab" fill="#6b7488">HTTPS 웹훅</text>
+<!-- 상자 -->
+<rect x="40" y="56" width="280" height="88" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="56" width="280" height="88" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="180" y="95" class="name">고객 웹 브라우저</text>
+<text x="180" y="115" class="sub">휴대폰 · PC</text>
+<rect x="40" y="216" width="280" height="88" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="216" width="280" height="88" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="180" y="255" class="name">고객의 개인 AI</text>
+<text x="180" y="275" class="sub">MCP 클라이언트 · HTTPS</text>
+<rect x="400" y="104" width="240" height="184" rx="6" fill="#fbfcfd"/>
+<rect x="400" y="104" width="240" height="184" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="520" y="182" class="name">HTTPS 프록시</text>
+<text x="520" y="202" class="sub">Caddy</text>
+<text x="520" y="220" class="sub">주소 하나로 웹 · API 나눔</text>
+<rect x="720" y="40" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="720" y="40" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="880" y="74" class="name">tripilot-web</text>
+<text x="880" y="94" class="sub">Next.js 16 · React 19</text>
+<text x="880" y="112" class="sub">확인 화면 · 계획서 · 채팅</text>
+<rect x="720" y="200" width="320" height="176" rx="6" fill="#fbfcfd"/>
+<rect x="720" y="200" width="320" height="176" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="880" y="265" class="name focal-name">tripilot-api (FastAPI)</text>
+<text x="880" y="285" class="sub">웹 · 여행 API · MCP 서버(/mcp/)</text>
+<text x="880" y="303" class="sub">오케스트레이터 · 에이전트 2</text>
+<text x="880" y="321" class="sub">이동 판정기 · 결정 모델 호출</text>
+<rect x="400" y="440" width="240" height="136" rx="6" fill="#fbfcfd"/>
+<rect x="400" y="440" width="240" height="136" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="520" y="485" class="name">tripilot-worker</text>
+<text x="520" y="505" class="sub">1분마다 돎</text>
+<text x="520" y="523" class="sub">모니터링(3분 문) · 되잡기</text>
+<text x="520" y="541" class="sub">아웃박스 워커(알림)</text>
+<rect x="720" y="440" width="320" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="720" y="440" width="320" height="112" rx="6" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="880" y="482" class="name">tripilot-db</text>
+<text x="880" y="502" class="sub">PostgreSQL 17 + pgvector</text>
+<text x="880" y="520" class="sub">케이스 · 일정 버전 · 규정 조각</text>
+<rect x="1120" y="40" width="440" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="1120" y="40" width="440" height="112" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1340" y="82" class="name">외부 API</text>
+<text x="1340" y="102" class="sub">외부 정보 6종 · 장소(관광공사 · 카카오)</text>
+<text x="1340" y="120" class="sub">지하철 · 버스 시간표 · 길찾기 서버</text>
+<rect x="1120" y="216" width="440" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="1120" y="216" width="440" height="96" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1340" y="250" class="name">언어 모델 서버</text>
+<text x="1340" y="270" class="sub">Ollama gemma4:12b · 임베딩</text>
+<text x="1340" y="288" class="sub">주소는 설정 · 없으면 OpenAI</text>
+<rect x="1120" y="584" width="440" height="88" rx="6" fill="#fbfcfd"/>
+<rect x="1120" y="584" width="440" height="88" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1340" y="623" class="name">디스코드</text>
+<text x="1340" y="643" class="sub">웹훅 하나 · 알림 + 계획서 링크</text>
+<line x1="32" y1="776" x2="1568" y2="776" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="796" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="784" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="140" y="796" class="leg">사람 · 사람의 AI</text>
+<rect x="272" y="784" width="28" height="16" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="308" y="796" class="leg">에이전트가 사는 곳</text>
+<rect x="448" y="784" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="484" y="796" class="leg">우리 컨테이너</text>
+<rect x="592" y="784" width="28" height="16" rx="3" fill="rgba(22,28,40,0.05)" stroke="#6b7488" stroke-width="1"/>
+<text x="628" y="796" class="leg">저장소</text>
+<rect x="692" y="784" width="28" height="16" rx="3" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="728" y="796" class="leg">바깥 시스템</text>
+</svg>

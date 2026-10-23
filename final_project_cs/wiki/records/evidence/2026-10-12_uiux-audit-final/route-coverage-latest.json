@@ -1,0 +1,748 @@
+{
+  "entries": [
+    {
+      "status": "passed",
+      "screenshot": "routes/intro-375.png",
+      "screen": "intro",
+      "startTime": "2026-10-11T18:32:01.57Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 78842,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--153e0-o-·-375px-화면-표시·가로-넘침·실행-오류\\intro-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "EA0966158D4A95ED08F8D78923798B517D1C772D31F49C2B186924A399974821",
+      "testTitle": "전체 경로 · intro · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1139,
+      "observation": {
+        "route": "/",
+        "landed": "http://127.0.0.1:3187/",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/terms-preferences-375.png",
+      "screen": "terms-preferences",
+      "startTime": "2026-10-11T18:32:02.734Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 110997,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--f562c-s-·-375px-화면-표시·가로-넘침·실행-오류\\terms-preferences-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "29053DF7D4384E0223F2356EE4E1076B68E4A18A130A1D988CA81EAD03621CD0",
+      "testTitle": "전체 경로 · terms-preferences · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1281,
+      "observation": {
+        "route": "/start",
+        "landed": "http://127.0.0.1:3187/start",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/registration-375.png",
+      "screen": "registration",
+      "startTime": "2026-10-11T18:32:04.03Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 35859,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--93e14-n-·-375px-화면-표시·가로-넘침·실행-오류\\registration-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "EA89FA892BB71A8A3EE00D424BFC7F99A6ACC9E62C0EC84A7DFD901611FD2B8D",
+      "testTitle": "전체 경로 · registration · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1186,
+      "observation": {
+        "route": "/trips/new",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/trips-375.png",
+      "screen": "trips",
+      "startTime": "2026-10-11T18:32:05.23Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 19535,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--f0aaf-s-·-375px-화면-표시·가로-넘침·실행-오류\\trips-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "C5C76890D8C1C4CBF204A3F6B0FC81329370AF3EC214682B85C640015DFFA0D8",
+      "testTitle": "전체 경로 · trips · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 979,
+      "observation": {
+        "route": "/trips",
+        "landed": "http://127.0.0.1:3187/trips",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/registered-trip-375.png",
+      "screen": "registered-trip",
+      "startTime": "2026-10-11T18:32:06.223Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 320187,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--16368-p-·-375px-화면-표시·가로-넘침·실행-오류\\registered-trip-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "36ACCA4E49B43699AEEA69C6A197ED4B75C044F00FC149C719613E6B3C86DB0A",
+      "testTitle": "전체 경로 · registered-trip · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1927,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/verification-redirect-375.png",
+      "screen": "verification-redirect",
+      "startTime": "2026-10-11T18:32:08.168Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 320090,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--d9802-t-·-375px-화면-표시·가로-넘침·실행-오류\\verification-redirect-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "E5B501ECE84CAB1BC35F22F827B74A0B13EB542CD1823E0759F52742DF988C5A",
+      "testTitle": "전체 경로 · verification-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1660,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/verification",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/results-redirect-375.png",
+      "screen": "results-redirect",
+      "startTime": "2026-10-11T18:32:09.847Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 321021,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--b2dab-t-·-375px-화면-표시·가로-넘침·실행-오류\\results-redirect-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "7D485AB0B14DCCC80993EB7CF176F17E984F9824460B3A39B00827B3A5CAC4A9",
+      "testTitle": "전체 경로 · results-redirect · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1480,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/results",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/intake-375.png",
+      "screen": "intake",
+      "startTime": "2026-10-11T18:32:11.347Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 283780,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--f4aa1-e-·-375px-화면-표시·가로-넘침·실행-오류\\intake-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "FB669748CAEE0C5CC39D30DE9EC470BA65CA9343F099996268123D5E5A750CB3",
+      "testTitle": "전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1818,
+      "observation": {
+        "route": "/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "landed": "http://127.0.0.1:3187/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/starting-revisit-375.png",
+      "screen": "starting-revisit",
+      "startTime": "2026-10-11T18:32:13.189Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 35859,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--c2b47-t-·-375px-화면-표시·가로-넘침·실행-오류\\starting-revisit-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "EA89FA892BB71A8A3EE00D424BFC7F99A6ACC9E62C0EC84A7DFD901611FD2B8D",
+      "testTitle": "전체 경로 · starting-revisit · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1394,
+      "observation": {
+        "route": "/intakes/starting",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/account-375.png",
+      "screen": "account",
+      "startTime": "2026-10-11T18:32:14.601Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 32104,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--e25da-t-·-375px-화면-표시·가로-넘침·실행-오류\\account-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "79B3949C82036640B0A6039FB408AC4FFF03643271943A5D5DC63CF14EE898AF",
+      "testTitle": "전체 경로 · account · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1112,
+      "observation": {
+        "route": "/mypage",
+        "landed": "http://127.0.0.1:3187/mypage",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/profile-375.png",
+      "screen": "profile",
+      "startTime": "2026-10-11T18:32:15.727Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 34163,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--37cfd-e-·-375px-화면-표시·가로-넘침·실행-오류\\profile-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "5904F0B992C3501697AC24F095A012F30EF976F8D0C9966EA63D5A4503507A1E",
+      "testTitle": "전체 경로 · profile · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1005,
+      "observation": {
+        "route": "/mypage/edit",
+        "landed": "http://127.0.0.1:3187/mypage/edit",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/support-375.png",
+      "screen": "support",
+      "startTime": "2026-10-11T18:32:16.746Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 23974,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--ebd94-t-·-375px-화면-표시·가로-넘침·실행-오류\\support-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "7A80169EA7B43CD0F209D5DAA062943D1829EF435879DACA34F111049FA7140D",
+      "testTitle": "전체 경로 · support · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 999,
+      "observation": {
+        "route": "/support",
+        "landed": "http://127.0.0.1:3187/support",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/social-cancelled-375.png",
+      "screen": "social-cancelled",
+      "startTime": "2026-10-11T18:32:17.759Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 16195,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--d4fe8-d-·-375px-화면-표시·가로-넘침·실행-오류\\social-cancelled-375.png",
+      "width": 375,
+      "screenshotWidth": 375,
+      "screenshotSha256": "4A22E435F381819459AA3088625AA79B0A0C565E03048EDCB97400020770D50B",
+      "testTitle": "전체 경로 · social-cancelled · 375px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 974,
+      "observation": {
+        "route": "/auth/done?error=cancelled",
+        "landed": "http://127.0.0.1:3187/auth/done",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/intro-1280.png",
+      "screen": "intro",
+      "startTime": "2026-10-11T18:32:18.749Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 104581,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--7ed21--·-1280px-화면-표시·가로-넘침·실행-오류\\intro-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "14D86D2E2AF8E44BA60DCCC0946536CBAFDC125E37B2FDC5C8F112AA547D1B4F",
+      "testTitle": "전체 경로 · intro · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1156,
+      "observation": {
+        "route": "/",
+        "landed": "http://127.0.0.1:3187/",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/terms-preferences-1280.png",
+      "screen": "terms-preferences",
+      "startTime": "2026-10-11T18:32:19.919Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 137139,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--2b1d2--·-1280px-화면-표시·가로-넘침·실행-오류\\terms-preferences-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "B6608596C6BA64955E2678026973CBC8B1C59AB1F6146768227DF059BA3D8A34",
+      "testTitle": "전체 경로 · terms-preferences · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1260,
+      "observation": {
+        "route": "/start",
+        "landed": "http://127.0.0.1:3187/start",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/registration-1280.png",
+      "screen": "registration",
+      "startTime": "2026-10-11T18:32:21.197Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 49570,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--0bff6--·-1280px-화면-표시·가로-넘침·실행-오류\\registration-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "B29A461EE971F45745D9F68F2A4A421383C4671AF211D202EA7DD5A3F0C89672",
+      "testTitle": "전체 경로 · registration · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1354,
+      "observation": {
+        "route": "/trips/new",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/trips-1280.png",
+      "screen": "trips",
+      "startTime": "2026-10-11T18:32:22.567Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 33425,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--93007--·-1280px-화면-표시·가로-넘침·실행-오류\\trips-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "3875F0BA2ED773463729517F1B9BF755625E16B89AA659929FB4B93BD195A8FD",
+      "testTitle": "전체 경로 · trips · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1068,
+      "observation": {
+        "route": "/trips",
+        "landed": "http://127.0.0.1:3187/trips",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/registered-trip-1280.png",
+      "screen": "registered-trip",
+      "startTime": "2026-10-11T18:32:23.662Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 339624,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--2c972--·-1280px-화면-표시·가로-넘침·실행-오류\\registered-trip-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "2C6DE1E5678ECDD9A4F7298DFBE1378FB6D66212020C492045FC30E3CC679DF8",
+      "testTitle": "전체 경로 · registered-trip · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1654,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/verification-redirect-1280.png",
+      "screen": "verification-redirect",
+      "startTime": "2026-10-11T18:32:25.33Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 339627,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--ec347--·-1280px-화면-표시·가로-넘침·실행-오류\\verification-redirect-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "326225CE47FD1E5D1F64967D1DCE0773A5077963E071EB0C2F067E8EAF590408",
+      "testTitle": "전체 경로 · verification-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1648,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/verification",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/results-redirect-1280.png",
+      "screen": "results-redirect",
+      "startTime": "2026-10-11T18:32:27.003Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 339620,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--c9058--·-1280px-화면-표시·가로-넘침·실행-오류\\results-redirect-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "1D162B632F7A34553FB759CBBA29DB32EB75CE18CF2EFA59315F23592E51A87A",
+      "testTitle": "전체 경로 · results-redirect · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1534,
+      "observation": {
+        "route": "/trips/11111111-2222-3333-4444-555555555555/results",
+        "landed": "http://127.0.0.1:3187/trips/11111111-2222-3333-4444-555555555555",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/intake-1280.png",
+      "screen": "intake",
+      "startTime": "2026-10-11T18:32:28.551Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 294495,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--3a59a--·-1280px-화면-표시·가로-넘침·실행-오류\\intake-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "E8D7ED5D01253C8D3E7167A09592A8055468C7C5BF4EA6EBF912C3561FB93303",
+      "testTitle": "전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1557,
+      "observation": {
+        "route": "/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "landed": "http://127.0.0.1:3187/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": false,
+          "foundFrameScroll": false
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/starting-revisit-1280.png",
+      "screen": "starting-revisit",
+      "startTime": "2026-10-11T18:32:30.123Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 49570,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--a273c--·-1280px-화면-표시·가로-넘침·실행-오류\\starting-revisit-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "B29A461EE971F45745D9F68F2A4A421383C4671AF211D202EA7DD5A3F0C89672",
+      "testTitle": "전체 경로 · starting-revisit · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1491,
+      "observation": {
+        "route": "/intakes/starting",
+        "landed": "http://127.0.0.1:3187/trips/new",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/account-1280.png",
+      "screen": "account",
+      "startTime": "2026-10-11T18:32:31.633Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 47861,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--b651c--·-1280px-화면-표시·가로-넘침·실행-오류\\account-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "5F59FA71DCF3032C7807E8F490528AEC75D91591C16B5D663ED1706E70E21F5F",
+      "testTitle": "전체 경로 · account · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1287,
+      "observation": {
+        "route": "/mypage",
+        "landed": "http://127.0.0.1:3187/mypage",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/profile-1280.png",
+      "screen": "profile",
+      "startTime": "2026-10-11T18:32:32.936Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 49376,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--a244c--·-1280px-화면-표시·가로-넘침·실행-오류\\profile-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "91CEFB4743C2622A642B43E02B48174C65CB016AC13AC8AEA34B8F9534A0B4D7",
+      "testTitle": "전체 경로 · profile · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1158,
+      "observation": {
+        "route": "/mypage/edit",
+        "landed": "http://127.0.0.1:3187/mypage/edit",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/support-1280.png",
+      "screen": "support",
+      "startTime": "2026-10-11T18:32:34.109Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 38507,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--19225--·-1280px-화면-표시·가로-넘침·실행-오류\\support-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "0F3C74CB365FD3D2BB3996CC85D0F79D55EF31B4DC65E90DDF99C256D6A113C3",
+      "testTitle": "전체 경로 · support · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1197,
+      "observation": {
+        "route": "/support",
+        "landed": "http://127.0.0.1:3187/support",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    },
+    {
+      "status": "passed",
+      "screenshot": "routes/social-cancelled-1280.png",
+      "screen": "social-cancelled",
+      "startTime": "2026-10-11T18:32:35.322Z",
+      "screenshotHeight": 900,
+      "screenshotVisuallyReviewed": true,
+      "screenshotBytes": 29200,
+      "screenshotOriginal": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-evidence\\uiux-route-audit-20261012--818e1--·-1280px-화면-표시·가로-넘침·실행-오류\\social-cancelled-1280.png",
+      "width": 1280,
+      "screenshotWidth": 1280,
+      "screenshotSha256": "CEE4C7AC1F3D146371A36A1DB2AA3D1C45F45437990E61C3B6E7B8892454BAE6",
+      "testTitle": "전체 경로 · social-cancelled · 1280px: 화면 표시·가로 넘침·실행 오류",
+      "reviewer": "root agent: all 26 images viewed; delegated confirmation 2026-10-12",
+      "durationMs": 1619,
+      "observation": {
+        "route": "/auth/done?error=cancelled",
+        "landed": "http://127.0.0.1:3187/auth/done",
+        "dimensions": {
+          "document": 0,
+          "main": 0,
+          "scroll": 0,
+          "expectsFrameScroll": true,
+          "foundFrameScroll": true
+        },
+        "errors": []
+      }
+    }
+  ],
+  "counts": {
+    "zeroByteScreenshots": 0,
+    "passed": 26,
+    "screenshotsCopied": 26,
+    "planned": 26,
+    "screenshotsVisuallyReviewed": 26
+  },
+  "source": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-resume-20261012-v1\\residual-results.json",
+  "limits": [
+    "Mock API responses; not actual cs project API verification.",
+    "Latest residual build includes support cache guard; loading-all-folded request is a subsequent change still pending.",
+    "Ordinary route rendering does not prove every state, action, provider, device or language."
+  ],
+  "sourceSha256": "05ACFB0196EEDA6F225124A5CCCB103994CCD00083AB16CA56FC12830AE3C669",
+  "sourceCopy": "residual-results.json",
+  "scope": "Latest residual Chrome build: 13 entry routes at 375px and 1280px, ordinary scenes; not every product state"
+}

@@ -1,0 +1,20 @@
+ISOLATED_LINUX_BEGIN {"python": "3.12.15", "platform": "linux", "verified_files": 435, "selected_tests": ["tests/integration/controller/test_generic_dependency_retry.py::test_generic_http_dependency_unavailable_retries_saved_reply_and_applies_once"], "database": "ephemeral-synthetic-only", "inherited_environment_cleared": true}
+SYNTHETIC_DATABASE_READY {"baseline_migrations": 85, "database": "synthetic", "user": "synthetic", "operating_data_copied": false}
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-8.4.2, pluggy-1.6.0 -- /usr/local/bin/python
+rootdir: /tmp/candidate-check
+configfile: pytest.ini
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collecting ... collected 1 item
+
+tests/integration/controller/test_generic_dependency_retry.py::test_generic_http_dependency_unavailable_retries_saved_reply_and_applies_once PASSED [100%]
+
+=============================== warnings summary ===============================
+../../usr/local/lib/python3.12/site-packages/starlette/testclient.py:51
+  /usr/local/lib/python3.12/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= 1 passed, 1 warning in 1.35s =========================
+ISOLATED_LINUX_END {"exit_code": 0, "seconds": 1.632}
+ISOLATED_DB_ORCHESTRATION {"operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "image_pull": false, "images": ["sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294", "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"], "network_internal": true, "database_tmpfs_destinations": ["/tmp", "/var/lib/postgresql/data"], "database_mounts": [], "pytest_process_exit_code": 0, "remaining_temporary_containers": [], "remaining_temporary_network": false, "cleanup_errors": []}

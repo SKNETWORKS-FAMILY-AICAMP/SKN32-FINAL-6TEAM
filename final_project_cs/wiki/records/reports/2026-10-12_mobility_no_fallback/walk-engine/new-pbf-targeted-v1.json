@@ -1,0 +1,6539 @@
+{
+  "new_pbf": "datasets\\mobility\\raw\\osm_20261012_v1\\south-korea-261011.osm.pbf",
+  "new_md5": "df6f9430a975f927c08f4afddade7f97",
+  "old_way_count": 261,
+  "new_matched_way_count": 261,
+  "changed_ways": [
+    {
+      "id": 1556516941,
+      "old": {
+        "tags": {
+          "highway": "footway"
+        },
+        "nodes": [
+          14156966019,
+          14156966021
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          14156966019,
+          14156966021
+        ]
+      }
+    },
+    {
+      "id": 1556516943,
+      "old": {
+        "tags": {
+          "crossing": "uncontrolled",
+          "crossing:markings": "yes",
+          "footway": "crossing",
+          "highway": "footway"
+        },
+        "nodes": [
+          14156966021,
+          5172891767,
+          13732389936
+        ]
+      },
+      "new": {
+        "tags": {
+          "crossing": "uncontrolled",
+          "crossing:markings": "yes",
+          "footway": "crossing",
+          "highway": "footway",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          14156966021,
+          5172891767,
+          13732389936
+        ]
+      }
+    },
+    {
+      "id": 1556516945,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "lit": "no",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          7173834047,
+          7173834084,
+          7173834062,
+          7173834065
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "lit": "no",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          7173834047,
+          7173834084,
+          7173834062,
+          12234253834,
+          7173834065
+        ]
+      }
+    },
+    {
+      "id": 711239214,
+      "old": {
+        "tags": {
+          "highway": "service",
+          "noname": "yes"
+        },
+        "nodes": [
+          6687090859,
+          10877889719,
+          7173824501,
+          6687090860,
+          6687090861,
+          7173824500,
+          10877889720,
+          7173836988,
+          10877889721,
+          6687090862
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "service",
+          "noname": "yes",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          6687090859,
+          10877889719,
+          7173824501,
+          6687090860,
+          6687090861,
+          7173824500,
+          10877889720,
+          7173836988,
+          10877889721,
+          6687090862
+        ]
+      }
+    },
+    {
+      "id": 1556516940,
+      "old": {
+        "tags": {
+          "highway": "footway"
+        },
+        "nodes": [
+          14156966018,
+          14156966019,
+          14156966020
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          14156966018,
+          14156966019,
+          14156966020
+        ]
+      }
+    },
+    {
+      "id": 1556516942,
+      "old": {
+        "tags": {
+          "crossing": "uncontrolled",
+          "crossing:markings": "yes",
+          "footway": "crossing",
+          "highway": "footway"
+        },
+        "nodes": [
+          14156966020,
+          14156966022,
+          5172891770,
+          14156966023
+        ]
+      },
+      "new": {
+        "tags": {
+          "crossing": "uncontrolled",
+          "crossing:markings": "yes",
+          "footway": "crossing",
+          "highway": "footway",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          14156966020,
+          14156966022,
+          5172891770,
+          14156966023
+        ]
+      }
+    },
+    {
+      "id": 607927398,
+      "old": {
+        "tags": {
+          "highway": "footway",
+          "layer": "-2",
+          "tunnel": "yes"
+        },
+        "nodes": [
+          5760370667,
+          4449755788,
+          4424489403
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "footway",
+          "layer": "-2",
+          "surface": "asphalt",
+          "tunnel": "yes"
+        },
+        "nodes": [
+          5760370667,
+          4449755788,
+          4424489403
+        ]
+      }
+    },
+    {
+      "id": 233651324,
+      "old": {
+        "tags": {
+          "highway": "residential",
+          "name": "다동길",
+          "name:en": "Dadong-gil",
+          "name:ko": "다동길"
+        },
+        "nodes": [
+          2420018313,
+          2420018314,
+          2420018312,
+          2420018315,
+          4960120585,
+          9249769184,
+          2420018319,
+          11233115502
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "residential",
+          "name": "다동길",
+          "name:en": "Dadong-gil",
+          "name:ko": "다동길",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          2420018313,
+          2420018314,
+          2420018312,
+          2420018315,
+          4960120585,
+          9249769184,
+          2420018319,
+          11233115502
+        ]
+      }
+    },
+    {
+      "id": 1532307039,
+      "old": {
+        "tags": {
+          "cycleway": "shared_lane",
+          "highway": "secondary",
+          "name": "우정국로",
+          "name:en": "Ujeongguk-ro",
+          "name:ja": "郵征局路(ウジョングクロ)",
+          "name:ko": "우정국로",
+          "name:ko-Latn": "Ujeonggungno",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          436718742,
+          11198026214,
+          13965175682
+        ]
+      },
+      "new": {
+        "tags": {
+          "cycleway": "shared_lane",
+          "highway": "secondary",
+          "lane_markings": "yes",
+          "name": "우정국로",
+          "name:en": "Ujeongguk-ro",
+          "name:ja": "郵征局路(ウジョングクロ)",
+          "name:ko": "우정국로",
+          "name:ko-Latn": "Ujeonggungno",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          436718742,
+          11198026214,
+          13965175682
+        ]
+      }
+    },
+    {
+      "id": 1208755360,
+      "old": {
+        "tags": {
+          "crossing": "marked",
+          "crossing:markings": "zebra",
+          "footway": "crossing",
+          "highway": "footway"
+        },
+        "nodes": [
+          3806620342,
+          4636374654,
+          4449755785
+        ]
+      },
+      "new": {
+        "tags": {
+          "crossing": "marked",
+          "crossing:markings": "zebra",
+          "footway": "crossing",
+          "highway": "footway",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          3806620342,
+          4636374654,
+          4449755785
+        ]
+      }
+    },
+    {
+      "id": 184083117,
+      "old": {
+        "tags": {
+          "cycleway:left": "no",
+          "cycleway:right": "lane",
+          "highway": "primary_link",
+          "lanes": "1",
+          "maxspeed": "30",
+          "oneway": "yes",
+          "review": "no",
+          "source": "Bing",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          1945254874,
+          5920996806,
+          1945254856,
+          1945254850,
+          5973693845,
+          1945254832,
+          1945254831
+        ]
+      },
+      "new": {
+        "tags": {
+          "cycleway:left": "no",
+          "cycleway:right": "lane",
+          "highway": "secondary_link",
+          "lanes": "1",
+          "maxspeed": "30",
+          "oneway": "yes",
+          "review": "no",
+          "source": "Bing",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          1945254874,
+          5920996806,
+          1945254856,
+          1945254850,
+          5973693845,
+          1945254832,
+          14256724771,
+          1945254831
+        ]
+      }
+    },
+    {
+      "id": 184083122,
+      "old": {
+        "tags": {
+          "highway": "primary_link",
+          "lanes": "1",
+          "maxspeed": "30",
+          "oneway": "yes",
+          "review": "no",
+          "source": "Bing",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          1945254946,
+          10911227494,
+          13387981763,
+          1945254966,
+          5852580184,
+          13387981762,
+          1945254936
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "secondary_link",
+          "lanes": "1",
+          "maxspeed": "30",
+          "oneway": "yes",
+          "review": "no",
+          "source": "Bing",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          1945254946,
+          10911227494,
+          13387981763,
+          1945254966,
+          5852580184,
+          13387981762,
+          1945254936
+        ]
+      }
+    },
+    {
+      "id": 184083175,
+      "old": {
+        "tags": {
+          "highway": "primary_link",
+          "lanes": "1",
+          "oneway": "yes"
+        },
+        "nodes": [
+          13732389911,
+          5172891774,
+          1945254603
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "primary_link",
+          "lanes": "1",
+          "oneway": "yes",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          13732389911,
+          5172891774,
+          1945254603
+        ]
+      }
+    },
+    {
+      "id": 1208523525,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015010,
+          11198015011
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015010,
+          11198015011
+        ]
+      }
+    },
+    {
+      "id": 1208523526,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015011,
+          10911257068
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015011,
+          10911257068
+        ]
+      }
+    },
+    {
+      "id": 1208523528,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015013,
+          11198015014
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015013,
+          11198015014
+        ]
+      }
+    },
+    {
+      "id": 1208523529,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015014,
+          10911257061
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015014,
+          10911257061
+        ]
+      }
+    },
+    {
+      "id": 1208523530,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015014,
+          11198015015
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015014,
+          11198015015
+        ]
+      }
+    },
+    {
+      "id": 1208523532,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015020,
+          11198015021
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015020,
+          11198015021
+        ]
+      }
+    },
+    {
+      "id": 1208523533,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015022,
+          11198015021
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015022,
+          11198015021
+        ]
+      }
+    },
+    {
+      "id": 1208523534,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015021,
+          11198015017
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015021,
+          11198015017
+        ]
+      }
+    },
+    {
+      "id": 1208523535,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015023,
+          11198015024
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015023,
+          11198015024
+        ]
+      }
+    },
+    {
+      "id": 1208523536,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015024,
+          11198015016
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015024,
+          11198015016
+        ]
+      }
+    },
+    {
+      "id": 1208523537,
+      "old": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway"
+        },
+        "nodes": [
+          11198015024,
+          11198015025
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "sidewalk",
+          "highway": "footway",
+          "surface": "paving_stones"
+        },
+        "nodes": [
+          11198015024,
+          11198015025
+        ]
+      }
+    },
+    {
+      "id": 360147781,
+      "old": {
+        "tags": {
+          "footway": "crossing",
+          "highway": "footway",
+          "source": "survey"
+        },
+        "nodes": [
+          10911253304,
+          3647496994,
+          10911262814
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "crossing",
+          "highway": "footway",
+          "source": "survey",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          10911253304,
+          3647496994,
+          10911262814
+        ]
+      }
+    },
+    {
+      "id": 768396100,
+      "old": {
+        "tags": {
+          "highway": "service",
+          "noname": "yes",
+          "service": "parking_aisle"
+        },
+        "nodes": [
+          7173824500,
+          7173824501
+        ]
+      },
+      "new": {
+        "tags": {
+          "highway": "service",
+          "noname": "yes",
+          "service": "parking_aisle",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          7173824500,
+          7173824501
+        ]
+      }
+    },
+    {
+      "id": 469260694,
+      "old": {
+        "tags": {
+          "highway": "secondary",
+          "horse": "no",
+          "lanes": "2",
+          "name": "무교로",
+          "name:en": "Mugyo-ro",
+          "name:ja": "武橋路",
+          "name:ko": "무교로",
+          "name:ko-Kana": "ムギョロ",
+          "oneway": "yes",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          436842118,
+          4636374652,
+          4636374653,
+          4636374654,
+          4636374655,
+          2420018304,
+          436877003,
+          3612320599,
+          2420018313,
+          3612320202,
+          9249769393,
+          4960162826,
+          11233115484,
+          3806620354
+        ]
+      },
+      "new": {
+        "tags": {
+          "cycleway:right": "no",
+          "highway": "secondary",
+          "horse": "no",
+          "lanes": "2",
+          "name": "무교로",
+          "name:en": "Mugyo-ro",
+          "name:ja": "武橋路",
+          "name:ko": "무교로",
+          "name:ko-Kana": "ムギョロ",
+          "oneway": "yes",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          436842118,
+          4636374652,
+          4636374653,
+          4636374654,
+          4636374655,
+          2420018304,
+          436877003,
+          3612320599,
+          2420018313,
+          3612320202,
+          9249769393,
+          4960162826,
+          11233115484,
+          3806620354
+        ]
+      }
+    },
+    {
+      "id": 1212442541,
+      "old": {
+        "tags": {
+          "footway": "crossing",
+          "highway": "footway"
+        },
+        "nodes": [
+          11233115520,
+          13732389928,
+          11233115540,
+          11233115521
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "crossing",
+          "highway": "footway",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          11233115520,
+          13732389928,
+          11233115540,
+          11233115521
+        ]
+      }
+    },
+    {
+      "id": 1212442543,
+      "old": {
+        "tags": {
+          "footway": "crossing",
+          "highway": "footway"
+        },
+        "nodes": [
+          11233115523,
+          11233115525,
+          11233115524,
+          11233115508
+        ]
+      },
+      "new": {
+        "tags": {
+          "footway": "crossing",
+          "highway": "footway",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          11233115523,
+          11233115525,
+          11233115524,
+          11233115508
+        ]
+      }
+    },
+    {
+      "id": 1556516939,
+      "old": {
+        "tags": {
+          "crossing": "uncontrolled",
+          "crossing:markings": "yes",
+          "footway": "crossing",
+          "highway": "footway"
+        },
+        "nodes": [
+          14156966017,
+          5172891775,
+          14156966018
+        ]
+      },
+      "new": {
+        "tags": {
+          "crossing": "uncontrolled",
+          "crossing:markings": "yes",
+          "footway": "crossing",
+          "highway": "footway",
+          "surface": "asphalt"
+        },
+        "nodes": [
+          14156966017,
+          5172891775,
+          14156966018
+        ]
+      }
+    }
+  ],
+  "changed_node_coordinates": [],
+  "same_name_ways": {
+    "37395774": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "lane",
+        "highway": "primary",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "ref": "50"
+      },
+      "nodes": [
+        1874057868,
+        5706242556,
+        436761370,
+        1936511639
+      ]
+    },
+    "37395775": {
+      "tags": {
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436761387,
+        10716511576,
+        3832952922,
+        11874068756,
+        3832952916,
+        8482821092,
+        436761386,
+        2140403755,
+        3252777630,
+        11879119238,
+        3832952880,
+        436761384,
+        3832952877,
+        5480219560,
+        436761383,
+        8482821100,
+        5480219559,
+        8482821102,
+        8482821101,
+        796035692,
+        8113837636,
+        796035374
+      ]
+    },
+    "73541403": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "horse": "no",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        5863541500,
+        11233115459,
+        5706326038,
+        4960162823,
+        3063260473,
+        7505703291,
+        3806620354,
+        7505703292,
+        2420018339,
+        3063260470,
+        2420018333,
+        4960120586,
+        11233115505,
+        11233115525,
+        871729389,
+        11233115541,
+        11233115506,
+        11233115507
+      ]
+    },
+    "180190215": {
+      "tags": {
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        796035374,
+        8113837635,
+        436875633,
+        436875635,
+        5226829463,
+        5226829464
+      ]
+    },
+    "183272436": {
+      "tags": {
+        "bridge": "yes",
+        "bridge:name": "정릉천교",
+        "bridge:name:ko": "정릉천교",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "layer": "1",
+        "maxheight:signed": "no",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436761372,
+        13152003154,
+        1936511629,
+        13049399720
+      ]
+    },
+    "183521246": {
+      "tags": {
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        13345282176,
+        8482825422,
+        8436615272,
+        436875640,
+        8482825428,
+        8482825427,
+        436875641,
+        8482825432,
+        8482825431,
+        436875642,
+        436875643,
+        5172891763,
+        436875644,
+        8482825441,
+        436875645
+      ]
+    },
+    "218771978": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "lit": "yes",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "name:zh-Hans": "清溪川路",
+        "name:zh-Hant": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        871729456,
+        7195666627,
+        436875652,
+        2135148767,
+        10716511579,
+        8482825463,
+        2463601954,
+        2135148742,
+        5197273794,
+        8488920045,
+        10296354658,
+        436875654
+      ]
+    },
+    "218923174": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "name:zh-Hans": "清溪川路路",
+        "name:zh-Hant": "清溪川路路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        414685903,
+        8482825458,
+        13204036884,
+        2376668139,
+        2376668137,
+        7196445546,
+        2463610787,
+        3830591282,
+        3218324835,
+        8488625792
+      ]
+    },
+    "218924602": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        4203161539,
+        3063260456,
+        4203227039,
+        1815458102,
+        12197706527,
+        7166355112,
+        871804259,
+        6632070612,
+        5913832738,
+        6632070611,
+        1691642790,
+        6632070607,
+        4203244003,
+        1815457878,
+        13133112761,
+        871729555
+      ]
+    },
+    "233651275": {
+      "tags": {
+        "highway": "residential",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로"
+      },
+      "nodes": [
+        2420018317,
+        2420018306
+      ]
+    },
+    "233651279": {
+      "tags": {
+        "highway": "service",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로"
+      },
+      "nodes": [
+        2420018337,
+        3647027093,
+        2420018323
+      ]
+    },
+    "233651317": {
+      "tags": {
+        "highway": "residential",
+        "name": "을지로1길",
+        "name:en": "Eulji-ro 1-gil",
+        "name:ja": "乙支路 1キル",
+        "name:ko": "을지로1길"
+      },
+      "nodes": [
+        2420018302,
+        9249769119,
+        2420018310,
+        2420018314,
+        9249769394,
+        9249769392,
+        11233115485,
+        2420018339
+      ]
+    },
+    "348659730": {
+      "tags": {
+        "cycleway:both": "no",
+        "highway": "unclassified",
+        "lane_markings": "no",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        10293422729,
+        3547207501
+      ]
+    },
+    "350127794": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "horse": "no",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436875670,
+        436875671,
+        11233115449,
+        11233115446,
+        2463586334,
+        4960162829,
+        2420018350,
+        9761887337,
+        436875672,
+        3806620359,
+        3558848089,
+        4636388803,
+        7214123623,
+        2463586332,
+        2697100727
+      ]
+    },
+    "355655439": {
+      "tags": {
+        "highway": "tertiary",
+        "name": "무교로",
+        "name:en": "Mugyo-ro",
+        "name:ko": "무교로",
+        "source": "survey"
+      },
+      "nodes": [
+        3612320598,
+        3612321695,
+        11233115477,
+        3612320599
+      ]
+    },
+    "360102128": {
+      "tags": {
+        "highway": "service",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로"
+      },
+      "nodes": [
+        2420018329,
+        3647027193,
+        2420018322
+      ]
+    },
+    "377289801": {
+      "tags": {
+        "highway": "secondary",
+        "horse": "no",
+        "name": "무교로",
+        "name:en": "Mugyo-ro",
+        "name:ko": "무교로",
+        "oneway": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        3806620354,
+        11233115438,
+        5863541495
+      ]
+    },
+    "377289802": {
+      "tags": {
+        "highway": "secondary",
+        "horse": "no",
+        "lanes": "2",
+        "name": "무교로",
+        "name:en": "Mugyo-ro",
+        "name:ja": "武橋路",
+        "name:ko": "무교로",
+        "name:ko-Latn": "Mugyo-ro",
+        "oneway": "yes",
+        "sidewalk": "both",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        3806620358,
+        436875672,
+        436842127,
+        5973693842,
+        436718740,
+        12234253854,
+        12234253873,
+        8380350240
+      ]
+    },
+    "417857527": {
+      "tags": {
+        "highway": "service",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로",
+        "service": "alley",
+        "source": "survey"
+      },
+      "nodes": [
+        2420018343,
+        4183318092
+      ]
+    },
+    "420062466": {
+      "tags": {
+        "highway": "residential",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로"
+      },
+      "nodes": [
+        1936511569,
+        8364319552,
+        3832952871
+      ]
+    },
+    "420391195": {
+      "tags": {
+        "highway": "residential",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로"
+      },
+      "nodes": [
+        4203244003,
+        4203244004
+      ]
+    },
+    "469260694": {
+      "tags": {
+        "cycleway:right": "no",
+        "highway": "secondary",
+        "horse": "no",
+        "lanes": "2",
+        "name": "무교로",
+        "name:en": "Mugyo-ro",
+        "name:ja": "武橋路",
+        "name:ko": "무교로",
+        "name:ko-Kana": "ムギョロ",
+        "oneway": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436842118,
+        4636374652,
+        4636374653,
+        4636374654,
+        4636374655,
+        2420018304,
+        436877003,
+        3612320599,
+        2420018313,
+        3612320202,
+        9249769393,
+        4960162826,
+        11233115484,
+        3806620354
+      ]
+    },
+    "519068810": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "horse": "yes",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        2376668320,
+        8508488216,
+        1936511596,
+        1936511603,
+        6856237229,
+        1936511607,
+        6856237230,
+        1936511612,
+        1936511606,
+        8453822787,
+        13202101913,
+        3440181596,
+        13345282177
+      ]
+    },
+    "519068811": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        1936511562,
+        8113837633,
+        1936511560,
+        11237475623,
+        1936511561,
+        1936511564,
+        1936511567,
+        1936511569,
+        13898056566,
+        13957274876,
+        3832952889,
+        1936511592,
+        1936511604,
+        3832952907,
+        1936511617,
+        1936511623,
+        3832677300,
+        1936511624
+      ]
+    },
+    "519447651": {
+      "tags": {
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        1936511639,
+        436761371,
+        1936511633,
+        436761372
+      ]
+    },
+    "656122999": {
+      "tags": {
+        "highway": "unclassified",
+        "lit": "yes",
+        "name": "청계천로",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        2135148748,
+        6146661419
+      ]
+    },
+    "732213456": {
+      "tags": {
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436875645,
+        8482825445,
+        436875646,
+        6856237231,
+        8482825455,
+        436875647,
+        5502673613,
+        8482825454,
+        414685903
+      ]
+    },
+    "732213457": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "horse": "yes",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "-1",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        2376668320,
+        8508488214,
+        1936511589,
+        3830591321,
+        2376672691,
+        1936511581,
+        1936511565,
+        1636410225
+      ]
+    },
+    "732213459": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        10080348171,
+        3849757313,
+        9761887333,
+        13204036887,
+        1636410225
+      ]
+    },
+    "732213463": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436844961,
+        436875658,
+        7184472006,
+        8299072618,
+        7184472005,
+        7184472002,
+        7184472001,
+        871804276,
+        1691642802,
+        13335738007,
+        436875660,
+        13335486279,
+        1815457940,
+        11863221102,
+        5863541505,
+        1906188345
+      ]
+    },
+    "815640318": {
+      "tags": {
+        "highway": "primary",
+        "maxheight": "4.2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        7617611592,
+        7617611591,
+        7617611590,
+        7617611589,
+        7617611587,
+        7617611588
+      ]
+    },
+    "815640320": {
+      "tags": {
+        "highway": "primary",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        7617611588,
+        7617611586,
+        7617611585,
+        11197054442,
+        10716511575,
+        7617559884,
+        4639568133
+      ]
+    },
+    "815640321": {
+      "tags": {
+        "highway": "primary",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        4639568133,
+        7617559883,
+        436875617,
+        8496619023,
+        5120772318,
+        1874057868
+      ]
+    },
+    "899856674": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "horse": "yes",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        414685910,
+        3440181597,
+        8357562269
+      ]
+    },
+    "899856676": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "horse": "yes",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        8357562269,
+        8357562275,
+        1936511591,
+        8442360806,
+        2135148783,
+        1936511587,
+        5823146571,
+        1936511578,
+        5823146569,
+        1936511563,
+        8113837634,
+        1936511562
+      ]
+    },
+    "908608295": {
+      "tags": {
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        1939143650,
+        5226829462,
+        8482821107,
+        2135148773,
+        8482821111,
+        4173042496,
+        8482825417,
+        8482825418,
+        8482821116,
+        10716511577
+      ]
+    },
+    "908646367": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "maxspeed": "30",
+        "maxspeed:type": "sign",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "smoothness": "good",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        13998649081,
+        11232930754,
+        11173361247,
+        2420018317,
+        871729552,
+        2135158096,
+        3063260453,
+        2374692783,
+        4203161539
+      ]
+    },
+    "908694578": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436852113,
+        3063306852,
+        2420018321,
+        2135158093,
+        2323165542,
+        2463587952,
+        3063260467,
+        2420018327,
+        2420018330,
+        11233049708,
+        436875670
+      ]
+    },
+    "1002205328": {
+      "tags": {
+        "highway": "residential",
+        "name": "을지로1길",
+        "name:en": "Eulji-ro 1-gil",
+        "name:ja": "乙支路1ギル",
+        "name:ko": "을지로1길",
+        "name:ko-Kana": "ウルチロ1ギル"
+      },
+      "nodes": [
+        2420018302,
+        9249769491,
+        9249769492,
+        9249769493,
+        9249769494,
+        9249769495,
+        9249769496
+      ]
+    },
+    "1004718837": {
+      "tags": {
+        "highway": "living_street",
+        "layer": "-1",
+        "motor_vehicle": "no",
+        "name": "청계천로",
+        "tunnel": "yes"
+      },
+      "nodes": [
+        9269970832,
+        9269970833
+      ]
+    },
+    "1125640020": {
+      "tags": {
+        "highway": "unclassified",
+        "lit": "yes",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        2135148748,
+        10293422725
+      ]
+    },
+    "1125640021": {
+      "tags": {
+        "highway": "unclassified",
+        "layer": "-1",
+        "lit": "yes",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로",
+        "tunnel": "yes"
+      },
+      "nodes": [
+        10293422725,
+        10293422726
+      ]
+    },
+    "1125640022": {
+      "tags": {
+        "cycleway:both": "no",
+        "highway": "unclassified",
+        "lane_markings": "no",
+        "lit": "yes",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        10293422726,
+        10293422728
+      ]
+    },
+    "1125640023": {
+      "tags": {
+        "highway": "unclassified",
+        "layer": "-1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ko": "청계천로",
+        "tunnel": "yes"
+      },
+      "nodes": [
+        10293422728,
+        10293422729
+      ]
+    },
+    "1151983344": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "name:zh-Hans": "清溪川路",
+        "name:zh-Hant": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436883307,
+        7195666591
+      ]
+    },
+    "1151983345": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        7195666628,
+        2934469638
+      ]
+    },
+    "1199229106": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "name:zh-Hans": "清溪川路",
+        "name:zh-Hant": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        7195666591,
+        10080353476,
+        871729456
+      ]
+    },
+    "1199229107": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "name:zh-Hans": "清溪川路路",
+        "name:zh-Hant": "清溪川路路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        8488625792,
+        2376668245,
+        7174750353,
+        436883307
+      ]
+    },
+    "1199229108": {
+      "tags": {
+        "bicycle": "designated",
+        "highway": "primary",
+        "horse": "no",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        414685899,
+        5863541499,
+        1936511553,
+        5863541500
+      ]
+    },
+    "1199229109": {
+      "tags": {
+        "bicycle": "designated",
+        "highway": "primary",
+        "horse": "no",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        2697100727,
+        13012013146,
+        11233115462,
+        436877046
+      ]
+    },
+    "1212424782": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "lit": "yes",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "smoothness": "good",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        871729539,
+        10296354655,
+        6856237233,
+        9040757788
+      ]
+    },
+    "1212424783": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        871729555,
+        10296582846,
+        1326151556,
+        9269970833,
+        871793721,
+        871793711,
+        4202872186
+      ]
+    },
+    "1212424785": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "maxspeed": "30",
+        "maxspeed:type": "sign",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        436875654,
+        5702191574,
+        10296354653,
+        436875655,
+        10284584798,
+        2135148769,
+        871793709,
+        10284647610,
+        436875656,
+        10716511580,
+        10293330549,
+        10291960149,
+        436875657,
+        8482825464,
+        436844961
+      ]
+    },
+    "1212424791": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        1906188345,
+        4183318092,
+        2420018324,
+        3063260462,
+        2420018323,
+        2420018322,
+        2135158095,
+        11173361250,
+        2252763455,
+        2252763451,
+        436875664,
+        13132533951,
+        13132533956,
+        436852113
+      ]
+    },
+    "1305791485": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        2934469638,
+        7174750350,
+        7220972732,
+        3849757312,
+        796044654,
+        2463610786
+      ]
+    },
+    "1305791487": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        2463610786,
+        10080348171
+      ]
+    },
+    "1420100029": {
+      "tags": {
+        "bridge:name": "정릉천교",
+        "bridge:name:ko": "정릉천교",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "maxheight:signed": "no",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        13049399720,
+        436761387
+      ]
+    },
+    "1455210369": {
+      "tags": {
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        10716511577,
+        13345282176
+      ]
+    },
+    "1455210371": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "horse": "yes",
+        "lanes": "1",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "ref": "50",
+        "review": "no",
+        "source": "Bing",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        13345282177,
+        414685910
+      ]
+    },
+    "1455526426": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        4202872186,
+        10296356309,
+        10296354651,
+        871729539
+      ]
+    },
+    "1455526427": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "lit": "yes",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "smoothness": "good",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        9040757788,
+        6856237232,
+        2135148771,
+        2135148748,
+        7214123618,
+        7195666628
+      ]
+    },
+    "1536659790": {
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:left": "track",
+        "highway": "primary",
+        "lanes": "2",
+        "name": "청계천로",
+        "name:en": "Cheonggyecheon-ro",
+        "name:ja": "清渓川路",
+        "name:ko": "청계천로",
+        "name:ko-Latn": "Cheonggyecheon-ro",
+        "name:zh": "清溪川路",
+        "oneway": "yes",
+        "oneway:bicycle": "yes",
+        "smoothness": "good",
+        "surface": "asphalt"
+      },
+      "nodes": [
+        11233115507,
+        2463587951,
+        2420018320,
+        2135158092,
+        11170069517,
+        871729376,
+        13998649081
+      ]
+    }
+  },
+  "new_node_coordinates": {
+    "357965416": [
+      126.9770185,
+      37.5654578
+    ],
+    "414683338": [
+      126.9770645,
+      37.5701365
+    ],
+    "414685871": [
+      126.9875102,
+      37.5662155
+    ],
+    "414685899": [
+      126.9772199,
+      37.5688837
+    ],
+    "436718740": [
+      126.979338,
+      37.5701409
+    ],
+    "436718742": [
+      126.9829662,
+      37.5702748
+    ],
+    "436830309": [
+      126.9817097,
+      37.562786
+    ],
+    "436830313": [
+      126.9825783,
+      37.5659733
+    ],
+    "436830314": [
+      126.9826207,
+      37.5665062
+    ],
+    "436842118": [
+      126.9789782,
+      37.5660099
+    ],
+    "436842127": [
+      126.9793182,
+      37.5697342
+    ],
+    "436849185": [
+      126.9820426,
+      37.5636815
+    ],
+    "436851872": [
+      126.9801829,
+      37.5723455
+    ],
+    "436852113": [
+      126.987555,
+      37.568307
+    ],
+    "436872017": [
+      126.9792495,
+      37.5721523
+    ],
+    "436875670": [
+      126.9827849,
+      37.5690741
+    ],
+    "436875671": [
+      126.9818907,
+      37.5691277
+    ],
+    "436875672": [
+      126.9793025,
+      37.569295
+    ],
+    "436877003": [
+      126.9791977,
+      37.5669982
+    ],
+    "436877019": [
+      126.97613,
+      37.56905
+    ],
+    "436877020": [
+      126.9770347,
+      37.5690517
+    ],
+    "436877046": [
+      126.9772141,
+      37.5696124
+    ],
+    "871729367": [
+      126.9878801,
+      37.5681807
+    ],
+    "871729389": [
+      126.9827654,
+      37.5687357
+    ],
+    "871729400": [
+      126.9823964,
+      37.5688077
+    ],
+    "871729403": [
+      126.9831005,
+      37.568759
+    ],
+    "871729408": [
+      126.9866406,
+      37.5680789
+    ],
+    "871729412": [
+      126.9879301,
+      37.5680476
+    ],
+    "871729413": [
+      126.9889061,
+      37.5680405
+    ],
+    "871729414": [
+      126.990217,
+      37.5681124
+    ],
+    "871729415": [
+      126.9926041,
+      37.568291
+    ],
+    "871729419": [
+      126.9949893,
+      37.568471
+    ],
+    "871729476": [
+      126.9925626,
+      37.568373
+    ],
+    "871729479": [
+      126.9902027,
+      37.5682417
+    ],
+    "871729481": [
+      126.988778,
+      37.568177
+    ],
+    "871729486": [
+      126.9867416,
+      37.5682459
+    ],
+    "871729489": [
+      126.9830519,
+      37.5689174
+    ],
+    "871729490": [
+      126.982466,
+      37.5689856
+    ],
+    "921242736": [
+      126.9787088,
+      37.5692396
+    ],
+    "921242742": [
+      126.9790274,
+      37.569078
+    ],
+    "921242777": [
+      126.9795039,
+      37.5691905
+    ],
+    "921242855": [
+      126.9795508,
+      37.5690512
+    ],
+    "1553878333": [
+      126.9823785,
+      37.5699147
+    ],
+    "1553878346": [
+      126.9772272,
+      37.5702804
+    ],
+    "1555198917": [
+      126.9825908,
+      37.569798
+    ],
+    "1691642800": [
+      126.9949579,
+      37.5685469
+    ],
+    "1936511529": [
+      126.9765408,
+      37.567138
+    ],
+    "1936511544": [
+      126.9757627,
+      37.5676145
+    ],
+    "1936511546": [
+      126.9755387,
+      37.5681885
+    ],
+    "1936511549": [
+      126.9757689,
+      37.568605
+    ],
+    "1936511551": [
+      126.9770423,
+      37.5684059
+    ],
+    "1936511553": [
+      126.9772693,
+      37.5689886
+    ],
+    "1936511585": [
+      126.9755109,
+      37.5701106
+    ],
+    "1945254547": [
+      126.9785327,
+      37.5651195
+    ],
+    "1945254561": [
+      126.9825338,
+      37.5656587
+    ],
+    "1945254595": [
+      126.9789049,
+      37.5658899
+    ],
+    "1945254596": [
+      126.9821972,
+      37.5659729
+    ],
+    "1945254603": [
+      126.9834049,
+      37.5659976
+    ],
+    "1945254621": [
+      126.9821125,
+      37.5660756
+    ],
+    "1945254624": [
+      126.9825868,
+      37.5660851
+    ],
+    "1945254635": [
+      126.9835363,
+      37.5660899
+    ],
+    "1945254831": [
+      126.9828751,
+      37.5696619
+    ],
+    "1945254832": [
+      126.9827963,
+      37.5698336
+    ],
+    "1945254850": [
+      126.9827105,
+      37.5699834
+    ],
+    "1945254856": [
+      126.9826266,
+      37.5700478
+    ],
+    "1945254874": [
+      126.9822352,
+      37.5701297
+    ],
+    "1945254879": [
+      126.982955,
+      37.5701487
+    ],
+    "1945254893": [
+      126.9833226,
+      37.5701584
+    ],
+    "1945254919": [
+      126.9876379,
+      37.570288
+    ],
+    "1945254921": [
+      126.9770763,
+      37.5702803
+    ],
+    "1945254934": [
+      126.9824051,
+      37.5702907
+    ],
+    "1945254936": [
+      126.9830117,
+      37.5706959
+    ],
+    "1945254942": [
+      126.9844161,
+      37.5702778
+    ],
+    "1945254946": [
+      126.9834576,
+      37.5702733
+    ],
+    "1945254966": [
+      126.9832212,
+      37.5704069
+    ],
+    "1945254979": [
+      126.9826747,
+      37.5703557
+    ],
+    "1949238424": [
+      126.9844468,
+      37.5695645
+    ],
+    "1949238426": [
+      126.9828538,
+      37.5695301
+    ],
+    "1949238427": [
+      126.9857526,
+      37.569559
+    ],
+    "2064459568": [
+      126.979247,
+      37.5724587
+    ],
+    "2086880554": [
+      126.9772834,
+      37.5704118
+    ],
+    "2087933388": [
+      126.9822697,
+      37.5644962
+    ],
+    "2087933403": [
+      126.9824056,
+      37.5649986
+    ],
+    "2087933466": [
+      126.9819016,
+      37.5632168
+    ],
+    "2135158093": [
+      126.9866038,
+      37.5683736
+    ],
+    "2309502787": [
+      126.9784993,
+      37.5725994
+    ],
+    "2309513944": [
+      126.9810009,
+      37.5703014
+    ],
+    "2309513946": [
+      126.9809987,
+      37.570395
+    ],
+    "2309513948": [
+      126.9810018,
+      37.5706533
+    ],
+    "2309513952": [
+      126.9809955,
+      37.5708057
+    ],
+    "2309513954": [
+      126.9809339,
+      37.5709804
+    ],
+    "2309513956": [
+      126.980519,
+      37.5717548
+    ],
+    "2323165542": [
+      126.9857346,
+      37.5685332
+    ],
+    "2376675570": [
+      126.9826318,
+      37.5667275
+    ],
+    "2420018288": [
+      126.9815472,
+      37.5660707
+    ],
+    "2420018289": [
+      126.9844806,
+      37.566107
+    ],
+    "2420018290": [
+      126.9858049,
+      37.566147
+    ],
+    "2420018296": [
+      126.9844819,
+      37.5668048
+    ],
+    "2420018298": [
+      126.980833,
+      37.5668244
+    ],
+    "2420018299": [
+      126.9829126,
+      37.5668833
+    ],
+    "2420018300": [
+      126.98265,
+      37.5669124
+    ],
+    "2420018302": [
+      126.9797857,
+      37.5668776
+    ],
+    "2420018304": [
+      126.9791959,
+      37.5668992
+    ],
+    "2420018305": [
+      126.9836185,
+      37.5672195
+    ],
+    "2420018307": [
+      126.9815034,
+      37.5672196
+    ],
+    "2420018308": [
+      126.9805828,
+      37.5673118
+    ],
+    "2420018309": [
+      126.9838923,
+      37.5674023
+    ],
+    "2420018310": [
+      126.9797951,
+      37.5675642
+    ],
+    "2420018311": [
+      126.9845239,
+      37.5676425
+    ],
+    "2420018312": [
+      126.9806489,
+      37.5676971
+    ],
+    "2420018313": [
+      126.9792495,
+      37.5678811
+    ],
+    "2420018314": [
+      126.9798119,
+      37.5678831
+    ],
+    "2420018315": [
+      126.9813331,
+      37.5678901
+    ],
+    "2420018316": [
+      126.9827679,
+      37.5687625
+    ],
+    "2420018319": [
+      126.9821981,
+      37.5680142
+    ],
+    "2420018321": [
+      126.986862,
+      37.5683419
+    ],
+    "2420018327": [
+      126.9844223,
+      37.5687888
+    ],
+    "2420018330": [
+      126.9839898,
+      37.5688559
+    ],
+    "2420018333": [
+      126.9811092,
+      37.5688383
+    ],
+    "2420018339": [
+      126.9798128,
+      37.5689321
+    ],
+    "2420018350": [
+      126.9799029,
+      37.5692619
+    ],
+    "2420018374": [
+      126.98398,
+      37.5695556
+    ],
+    "2420018399": [
+      126.9799401,
+      37.5701333
+    ],
+    "2420018401": [
+      126.9822589,
+      37.5702938
+    ],
+    "2420018403": [
+      126.984078,
+      37.570268
+    ],
+    "2420018405": [
+      126.9856692,
+      37.570281
+    ],
+    "2420018408": [
+      126.9764814,
+      37.5703087
+    ],
+    "2420018411": [
+      126.9763428,
+      37.5704413
+    ],
+    "2420018414": [
+      126.9821444,
+      37.5704
+    ],
+    "2420018417": [
+      126.9785891,
+      37.5703733
+    ],
+    "2420018429": [
+      126.9761275,
+      37.5706267
+    ],
+    "2420018445": [
+      126.975926,
+      37.5708175
+    ],
+    "2420018454": [
+      126.9818387,
+      37.5709151
+    ],
+    "2420018457": [
+      126.9757643,
+      37.5710366
+    ],
+    "2420018478": [
+      126.9756163,
+      37.5712555
+    ],
+    "2420018479": [
+      126.9818434,
+      37.5712459
+    ],
+    "2420018494": [
+      126.9755005,
+      37.5714101
+    ],
+    "2420018496": [
+      126.9806698,
+      37.5714973
+    ],
+    "2420018515": [
+      126.975375,
+      37.5716164
+    ],
+    "2420018517": [
+      126.9818528,
+      37.5716033
+    ],
+    "2420018523": [
+      126.9805531,
+      37.5716959
+    ],
+    "2429209311": [
+      126.9772526,
+      37.5704671
+    ],
+    "2463586332": [
+      126.9775933,
+      37.5693821
+    ],
+    "2463586333": [
+      126.9812141,
+      37.5682893
+    ],
+    "2463586334": [
+      126.9808082,
+      37.569195
+    ],
+    "2463587952": [
+      126.9846286,
+      37.568757
+    ],
+    "2597444284": [
+      126.9768999,
+      37.5701337
+    ],
+    "2697100721": [
+      126.9773917,
+      37.5692463
+    ],
+    "2697100722": [
+      126.9774122,
+      37.5691613
+    ],
+    "2697100723": [
+      126.9774145,
+      37.5693328
+    ],
+    "2697100724": [
+      126.9774337,
+      37.5691305
+    ],
+    "2697100725": [
+      126.9773975,
+      37.5692076
+    ],
+    "2697100726": [
+      126.9774021,
+      37.5693022
+    ],
+    "2697100727": [
+      126.9774714,
+      37.5693903
+    ],
+    "2697100729": [
+      126.9772128,
+      37.57014
+    ],
+    "2697100730": [
+      126.9793115,
+      37.5713506
+    ],
+    "3063260452": [
+      126.9884704,
+      37.5680419
+    ],
+    "3063260454": [
+      126.9884733,
+      37.5681685
+    ],
+    "3063260455": [
+      126.9909639,
+      37.5681683
+    ],
+    "3063260457": [
+      126.9909138,
+      37.5682513
+    ],
+    "3063260458": [
+      126.9909572,
+      37.5682545
+    ],
+    "3063260459": [
+      126.9852038,
+      37.5683901
+    ],
+    "3063260460": [
+      126.9927785,
+      37.5683042
+    ],
+    "3063260461": [
+      126.9930839,
+      37.5683272
+    ],
+    "3063260463": [
+      126.9852327,
+      37.5685094
+    ],
+    "3063260464": [
+      126.9930733,
+      37.5684101
+    ],
+    "3063260465": [
+      126.9845361,
+      37.5686523
+    ],
+    "3063260466": [
+      126.9834158,
+      37.5687319
+    ],
+    "3063260467": [
+      126.9845561,
+      37.568767
+    ],
+    "3063260468": [
+      126.9834488,
+      37.5688676
+    ],
+    "3063260469": [
+      126.9818286,
+      37.5688422
+    ],
+    "3063260470": [
+      126.980059,
+      37.5689172
+    ],
+    "3063260471": [
+      126.9818627,
+      37.5690659
+    ],
+    "3063260472": [
+      126.9801681,
+      37.5689967
+    ],
+    "3063260473": [
+      126.9778862,
+      37.5690716
+    ],
+    "3063260474": [
+      126.9800883,
+      37.5689826
+    ],
+    "3063260475": [
+      126.9813546,
+      37.5690978
+    ],
+    "3063260476": [
+      126.9778934,
+      37.5691283
+    ],
+    "3063260477": [
+      126.9801928,
+      37.5691431
+    ],
+    "3063260478": [
+      126.9813597,
+      37.5691098
+    ],
+    "3063306851": [
+      126.9871918,
+      37.5681953
+    ],
+    "3063306852": [
+      126.9873401,
+      37.5683088
+    ],
+    "3112252730": [
+      126.9873637,
+      37.5702854
+    ],
+    "3404904655": [
+      126.9774322,
+      37.5661121
+    ],
+    "3404904656": [
+      126.9773672,
+      37.5668639
+    ],
+    "3404904657": [
+      126.9768675,
+      37.5659896
+    ],
+    "3404904658": [
+      126.9768633,
+      37.5657675
+    ],
+    "3404904659": [
+      126.9776959,
+      37.5648345
+    ],
+    "3404991263": [
+      126.9824446,
+      37.5703676
+    ],
+    "3460599379": [
+      126.9773682,
+      37.5645647
+    ],
+    "3460599383": [
+      126.9773835,
+      37.5653758
+    ],
+    "3460599391": [
+      126.9785251,
+      37.5660141
+    ],
+    "3460606096": [
+      126.9785258,
+      37.5664702
+    ],
+    "3546145549": [
+      126.9814945,
+      37.5624151
+    ],
+    "3558848089": [
+      126.9784655,
+      37.5693267
+    ],
+    "3612320202": [
+      126.9792536,
+      37.5681216
+    ],
+    "3612320203": [
+      126.9783089,
+      37.5681649
+    ],
+    "3612320395": [
+      126.9780248,
+      37.5681889
+    ],
+    "3612320598": [
+      126.9782609,
+      37.5675595
+    ],
+    "3612320599": [
+      126.9792257,
+      37.5675337
+    ],
+    "3612321695": [
+      126.9785439,
+      37.5675422
+    ],
+    "3614168278": [
+      126.9850996,
+      37.5695607
+    ],
+    "3647229700": [
+      126.9828572,
+      37.5708144
+    ],
+    "3647303893": [
+      126.9823037,
+      37.5703639
+    ],
+    "3647496994": [
+      126.9828055,
+      37.5691989
+    ],
+    "3647497294": [
+      126.982533,
+      37.5699074
+    ],
+    "3647511593": [
+      126.9824936,
+      37.5692347
+    ],
+    "3647511595": [
+      126.9824337,
+      37.5692861
+    ],
+    "3647511693": [
+      126.9824863,
+      37.5698528
+    ],
+    "3692726667": [
+      126.978556,
+      37.565165
+    ],
+    "3721236658": [
+      126.9784429,
+      37.5722919
+    ],
+    "3721236660": [
+      126.9785675,
+      37.5708364
+    ],
+    "3734704358": [
+      126.9830965,
+      37.5687248
+    ],
+    "3806615943": [
+      126.9778217,
+      37.566675
+    ],
+    "3806620338": [
+      126.9785213,
+      37.5663475
+    ],
+    "3806620339": [
+      126.9784699,
+      37.5663621
+    ],
+    "3806620340": [
+      126.9776458,
+      37.5664159
+    ],
+    "3806620341": [
+      126.9782765,
+      37.5664294
+    ],
+    "3806620342": [
+      126.9790108,
+      37.5662531
+    ],
+    "3806620343": [
+      126.9776381,
+      37.5666033
+    ],
+    "3806620353": [
+      126.9791491,
+      37.569054
+    ],
+    "3806620354": [
+      126.9792816,
+      37.5689741
+    ],
+    "3806620355": [
+      126.9786932,
+      37.5690829
+    ],
+    "3806620357": [
+      126.9791678,
+      37.5692228
+    ],
+    "3806620358": [
+      126.9793031,
+      37.5692519
+    ],
+    "3806620359": [
+      126.9791699,
+      37.5692947
+    ],
+    "3817309333": [
+      126.9775185,
+      37.566009
+    ],
+    "3817309334": [
+      126.9781,
+      37.5659835
+    ],
+    "3817309335": [
+      126.978273,
+      37.5658602
+    ],
+    "3817309336": [
+      126.9784098,
+      37.5657241
+    ],
+    "3817309337": [
+      126.9784768,
+      37.5654562
+    ],
+    "3817309338": [
+      126.9784285,
+      37.5653063
+    ],
+    "3817309339": [
+      126.9783253,
+      37.5651469
+    ],
+    "3817309340": [
+      126.9781912,
+      37.5650661
+    ],
+    "3817309341": [
+      126.9780316,
+      37.5650427
+    ],
+    "3817309342": [
+      126.9778371,
+      37.5650725
+    ],
+    "3817309343": [
+      126.9776762,
+      37.5651926
+    ],
+    "3817309344": [
+      126.9775783,
+      37.5653691
+    ],
+    "3817309345": [
+      126.9775112,
+      37.5655051
+    ],
+    "3817309346": [
+      126.9774817,
+      37.565655
+    ],
+    "3817309347": [
+      126.9774965,
+      37.5659006
+    ],
+    "3817309348": [
+      126.9774348,
+      37.5654488
+    ],
+    "3817309351": [
+      126.9785287,
+      37.5658224
+    ],
+    "3817309352": [
+      126.9787517,
+      37.5660064
+    ],
+    "3817309353": [
+      126.9789422,
+      37.5661722
+    ],
+    "3817309354": [
+      126.9790414,
+      37.5662891
+    ],
+    "3817309355": [
+      126.9783365,
+      37.565797
+    ],
+    "3818627571": [
+      126.9774062,
+      37.5700234
+    ],
+    "3818627572": [
+      126.9772097,
+      37.5698179
+    ],
+    "3818627576": [
+      126.9770279,
+      37.5696339
+    ],
+    "3818627581": [
+      126.9773512,
+      37.5700505
+    ],
+    "3818627584": [
+      126.9769005,
+      37.5700455
+    ],
+    "3825649159": [
+      126.9776087,
+      37.5666036
+    ],
+    "3825649160": [
+      126.9776066,
+      37.5666815
+    ],
+    "3825649161": [
+      126.97727,
+      37.5668598
+    ],
+    "3825649162": [
+      126.9776017,
+      37.566868
+    ],
+    "3825649163": [
+      126.9776012,
+      37.567002
+    ],
+    "3825649164": [
+      126.9768422,
+      37.5670405
+    ],
+    "3825649165": [
+      126.9772684,
+      37.5670342
+    ],
+    "3825649166": [
+      126.9772711,
+      37.5670879
+    ],
+    "3825649167": [
+      126.9772699,
+      37.5671751
+    ],
+    "3825649170": [
+      126.9772684,
+      37.5672448
+    ],
+    "3825649171": [
+      126.9768265,
+      37.5672905
+    ],
+    "3825649172": [
+      126.9771013,
+      37.567349
+    ],
+    "3849221416": [
+      126.9779487,
+      37.5660258
+    ],
+    "4242945767": [
+      126.9827769,
+      37.5690066
+    ],
+    "4311362735": [
+      126.9756615,
+      37.5666055
+    ],
+    "4311362736": [
+      126.9754505,
+      37.5666261
+    ],
+    "4424489347": [
+      126.9793633,
+      37.566076
+    ],
+    "4424489403": [
+      126.9792243,
+      37.5661749
+    ],
+    "4449755784": [
+      126.9768666,
+      37.5658734
+    ],
+    "4449755785": [
+      126.9792229,
+      37.5662453
+    ],
+    "4449755787": [
+      126.9790805,
+      37.5657553
+    ],
+    "4449755788": [
+      126.979219,
+      37.5660753
+    ],
+    "4449755889": [
+      126.9773042,
+      37.5661913
+    ],
+    "4449755891": [
+      126.9771916,
+      37.5650805
+    ],
+    "4449755892": [
+      126.9771692,
+      37.5658687
+    ],
+    "4627633618": [
+      126.9819183,
+      37.5707391
+    ],
+    "4636374652": [
+      126.9790329,
+      37.5661066
+    ],
+    "4636374653": [
+      126.9790961,
+      37.5661748
+    ],
+    "4636374654": [
+      126.9791423,
+      37.5662463
+    ],
+    "4636374655": [
+      126.9791478,
+      37.5663641
+    ],
+    "4636388802": [
+      126.9784327,
+      37.5701407
+    ],
+    "4636388803": [
+      126.9784105,
+      37.5693319
+    ],
+    "4736420956": [
+      126.9831301,
+      37.5700279
+    ],
+    "4806788868": [
+      126.9772307,
+      37.5678993
+    ],
+    "4959357834": [
+      126.985712,
+      37.5682918
+    ],
+    "4959357835": [
+      126.9875124,
+      37.5681873
+    ],
+    "4959357836": [
+      126.9902361,
+      37.5681138
+    ],
+    "4959357837": [
+      126.9924956,
+      37.5682831
+    ],
+    "4959364165": [
+      126.983289,
+      37.5688921
+    ],
+    "4959364166": [
+      126.983338,
+      37.5688839
+    ],
+    "4959364167": [
+      126.9874304,
+      37.5681882
+    ],
+    "4959364168": [
+      126.9874349,
+      37.5681879
+    ],
+    "4959364169": [
+      126.9874403,
+      37.5681876
+    ],
+    "4959364170": [
+      126.9874446,
+      37.5681874
+    ],
+    "4959364171": [
+      126.9874484,
+      37.5681876
+    ],
+    "4959364172": [
+      126.9874726,
+      37.5681881
+    ],
+    "4959364173": [
+      126.9874788,
+      37.5681877
+    ],
+    "4959364174": [
+      126.9874832,
+      37.5681873
+    ],
+    "4959364175": [
+      126.9874899,
+      37.5681876
+    ],
+    "4959364176": [
+      126.9874953,
+      37.5681874
+    ],
+    "4959364177": [
+      126.9885132,
+      37.5681696
+    ],
+    "4959372156": [
+      126.984882,
+      37.5684427
+    ],
+    "4959372157": [
+      126.9866949,
+      37.5680762
+    ],
+    "4959372159": [
+      126.9947126,
+      37.5684501
+    ],
+    "4959372164": [
+      126.9900385,
+      37.5682487
+    ],
+    "4959372165": [
+      126.9828807,
+      37.568927
+    ],
+    "4959372167": [
+      126.9896719,
+      37.5681964
+    ],
+    "4959372176": [
+      126.9849439,
+      37.5684313
+    ],
+    "4959372178": [
+      126.9921158,
+      37.56834
+    ],
+    "4959372179": [
+      126.9933116,
+      37.5684274
+    ],
+    "4959372180": [
+      126.9933889,
+      37.568433
+    ],
+    "4959372181": [
+      126.9945445,
+      37.5685169
+    ],
+    "4959376924": [
+      126.9885253,
+      37.56817
+    ],
+    "4959376925": [
+      126.9885427,
+      37.5681704
+    ],
+    "4959376926": [
+      126.988557,
+      37.5681708
+    ],
+    "4959376927": [
+      126.9885717,
+      37.5681712
+    ],
+    "4959376928": [
+      126.9886306,
+      37.5681729
+    ],
+    "4959376929": [
+      126.9886437,
+      37.5681733
+    ],
+    "4959376930": [
+      126.98866,
+      37.5681737
+    ],
+    "4959376931": [
+      126.9886782,
+      37.5681742
+    ],
+    "4959376932": [
+      126.9886956,
+      37.5681747
+    ],
+    "4959376933": [
+      126.9893884,
+      37.5681859
+    ],
+    "4959381814": [
+      126.9894167,
+      37.5681863
+    ],
+    "4959381815": [
+      126.9894551,
+      37.5681869
+    ],
+    "4959381816": [
+      126.9894938,
+      37.5681875
+    ],
+    "4959381817": [
+      126.9895318,
+      37.568188
+    ],
+    "4959381818": [
+      126.9895938,
+      37.5681889
+    ],
+    "4959394693": [
+      126.989551,
+      37.5680647
+    ],
+    "4959394694": [
+      126.9895693,
+      37.5680661
+    ],
+    "4959394695": [
+      126.9891981,
+      37.5680576
+    ],
+    "4959395029": [
+      126.9941957,
+      37.5684111
+    ],
+    "4959395030": [
+      126.9942176,
+      37.5684128
+    ],
+    "4959395031": [
+      126.9942387,
+      37.5684143
+    ],
+    "4959395032": [
+      126.9941741,
+      37.5684095
+    ],
+    "4959395033": [
+      126.9941508,
+      37.5684077
+    ],
+    "4959395034": [
+      126.9923937,
+      37.5683605
+    ],
+    "4959395035": [
+      126.9923915,
+      37.5683604
+    ],
+    "4959395036": [
+      126.9923866,
+      37.56836
+    ],
+    "4959395037": [
+      126.9923775,
+      37.5683593
+    ],
+    "4959395038": [
+      126.9923706,
+      37.5683588
+    ],
+    "4959395039": [
+      126.9923657,
+      37.5683585
+    ],
+    "4959395040": [
+      126.9923997,
+      37.5683608
+    ],
+    "4959395041": [
+      126.9924038,
+      37.5683611
+    ],
+    "4959395042": [
+      126.9924076,
+      37.5683614
+    ],
+    "4959395043": [
+      126.9924106,
+      37.5683615
+    ],
+    "4959395044": [
+      126.9924149,
+      37.5683617
+    ],
+    "4959395045": [
+      126.9924202,
+      37.568362
+    ],
+    "4959395046": [
+      126.9924245,
+      37.5683625
+    ],
+    "4959395048": [
+      126.9923872,
+      37.5682749
+    ],
+    "4959395050": [
+      126.9923947,
+      37.5682755
+    ],
+    "4959395051": [
+      126.9924278,
+      37.568277
+    ],
+    "4959395053": [
+      126.9924353,
+      37.5682782
+    ],
+    "4959395054": [
+      126.9924428,
+      37.5682793
+    ],
+    "4959395055": [
+      126.9924398,
+      37.5682788
+    ],
+    "4960030814": [
+      126.9876196,
+      37.5681867
+    ],
+    "4960030815": [
+      126.9902748,
+      37.5682401
+    ],
+    "4960030816": [
+      126.9923837,
+      37.5682747
+    ],
+    "4960030817": [
+      126.9923913,
+      37.5682753
+    ],
+    "4960030818": [
+      126.9924313,
+      37.5682776
+    ],
+    "4960120585": [
+      126.9820259,
+      37.5679833
+    ],
+    "4960120586": [
+      126.9820499,
+      37.5687887
+    ],
+    "4960162823": [
+      126.9775968,
+      37.5690917
+    ],
+    "4960162824": [
+      126.9778771,
+      37.5687568
+    ],
+    "4960162825": [
+      126.9780053,
+      37.5686768
+    ],
+    "4960162826": [
+      126.9792631,
+      37.5686313
+    ],
+    "4960162829": [
+      126.9806982,
+      37.5692016
+    ],
+    "4960162830": [
+      126.9806932,
+      37.5695546
+    ],
+    "4960162831": [
+      126.9799166,
+      37.5695641
+    ],
+    "4960162834": [
+      126.979545,
+      37.5702605
+    ],
+    "4960162835": [
+      126.9795423,
+      37.5700544
+    ],
+    "4960162847": [
+      126.9775889,
+      37.5693493
+    ],
+    "4960162848": [
+      126.9775809,
+      37.5691167
+    ],
+    "4960162849": [
+      126.9775686,
+      37.5690663
+    ],
+    "4960162851": [
+      126.9791386,
+      37.5689633
+    ],
+    "4960162852": [
+      126.9794117,
+      37.5690176
+    ],
+    "5015675993": [
+      126.9784798,
+      37.571615
+    ],
+    "5172891766": [
+      126.9825964,
+      37.5662216
+    ],
+    "5172891767": [
+      126.9825682,
+      37.5658812
+    ],
+    "5172891768": [
+      126.9827481,
+      37.5659749
+    ],
+    "5172891769": [
+      126.9829285,
+      37.5660832
+    ],
+    "5172891770": [
+      126.9824275,
+      37.5660833
+    ],
+    "5172891772": [
+      126.9823777,
+      37.5662631
+    ],
+    "5172891773": [
+      126.9830754,
+      37.5663832
+    ],
+    "5172891774": [
+      126.982858,
+      37.5656441
+    ],
+    "5172891775": [
+      126.982321,
+      37.5658514
+    ],
+    "5194567161": [
+      126.9772484,
+      37.5704115
+    ],
+    "5194567167": [
+      126.977114,
+      37.5668688
+    ],
+    "5318244926": [
+      126.9768422,
+      37.5668455
+    ],
+    "5318244927": [
+      126.9774579,
+      37.5660061
+    ],
+    "5318244928": [
+      126.9771477,
+      37.566193
+    ],
+    "5359230961": [
+      126.9804699,
+      37.5718518
+    ],
+    "5359231190": [
+      126.9808353,
+      37.5712251
+    ],
+    "5359231204": [
+      126.9793361,
+      37.5704153
+    ],
+    "5633956117": [
+      126.9758739,
+      37.5666068
+    ],
+    "5633956118": [
+      126.9762636,
+      37.5666061
+    ],
+    "5706326038": [
+      126.9775775,
+      37.5690905
+    ],
+    "5706326039": [
+      126.9775954,
+      37.5694264
+    ],
+    "5706326040": [
+      126.9773517,
+      37.5698493
+    ],
+    "5706326041": [
+      126.977462,
+      37.5700022
+    ],
+    "5706326042": [
+      126.9774364,
+      37.5700474
+    ],
+    "5706326044": [
+      126.9773441,
+      37.5687781
+    ],
+    "5706326045": [
+      126.9773469,
+      37.5680402
+    ],
+    "5706326059": [
+      126.9769017,
+      37.5704123
+    ],
+    "5706326060": [
+      126.9763864,
+      37.5704043
+    ],
+    "5706326061": [
+      126.9764608,
+      37.5704306
+    ],
+    "5760370665": [
+      126.9780683,
+      37.5657441
+    ],
+    "5760370666": [
+      126.9785509,
+      37.5659092
+    ],
+    "5760370667": [
+      126.979211,
+      37.565933
+    ],
+    "5760370668": [
+      126.9789595,
+      37.5659239
+    ],
+    "5842932916": [
+      126.979317,
+      37.5712015
+    ],
+    "5851251263": [
+      126.9772379,
+      37.5672486
+    ],
+    "5851251264": [
+      126.9772406,
+      37.5670025
+    ],
+    "5851251265": [
+      126.9772302,
+      37.5665962
+    ],
+    "5851251266": [
+      126.9771167,
+      37.5666372
+    ],
+    "5851251267": [
+      126.9771089,
+      37.5671416
+    ],
+    "5851251268": [
+      126.9772314,
+      37.568014
+    ],
+    "5851251271": [
+      126.9772274,
+      37.5654029
+    ],
+    "5851251272": [
+      126.9772209,
+      37.5651027
+    ],
+    "5851251273": [
+      126.977226,
+      37.5652415
+    ],
+    "5851251274": [
+      126.9771018,
+      37.5652409
+    ],
+    "5851251276": [
+      126.9772128,
+      37.564928
+    ],
+    "5851251277": [
+      126.977084,
+      37.5649238
+    ],
+    "5852580184": [
+      126.9831179,
+      37.570531
+    ],
+    "5863541488": [
+      126.9770858,
+      37.5699041
+    ],
+    "5863541489": [
+      126.9770558,
+      37.5698491
+    ],
+    "5863541495": [
+      126.9792872,
+      37.569033
+    ],
+    "5863541499": [
+      126.9772483,
+      37.5689674
+    ],
+    "5863541500": [
+      126.9774622,
+      37.5691023
+    ],
+    "5920996806": [
+      126.9824693,
+      37.5700707
+    ],
+    "5920996811": [
+      126.9776248,
+      37.5700544
+    ],
+    "5920996812": [
+      126.9832641,
+      37.5701045
+    ],
+    "5973693841": [
+      126.9784302,
+      37.5700544
+    ],
+    "5973693842": [
+      126.9793366,
+      37.5700577
+    ],
+    "5973693844": [
+      126.9799394,
+      37.5700551
+    ],
+    "5973693845": [
+      126.9827594,
+      37.5699188
+    ],
+    "5973693846": [
+      126.9830355,
+      37.5699081
+    ],
+    "6107335405": [
+      126.9781642,
+      37.5670067
+    ],
+    "6146661376": [
+      126.9810441,
+      37.5691276
+    ],
+    "6146661377": [
+      126.9811128,
+      37.5688807
+    ],
+    "6146661378": [
+      126.9818311,
+      37.5688599
+    ],
+    "6146661379": [
+      126.9818527,
+      37.5689963
+    ],
+    "6687090851": [
+      126.979724,
+      37.5654858
+    ],
+    "6687090852": [
+      126.9797238,
+      37.5659672
+    ],
+    "6687090859": [
+      126.9805229,
+      37.5659687
+    ],
+    "6687090860": [
+      126.9805262,
+      37.5655221
+    ],
+    "6687090861": [
+      126.9815625,
+      37.5655128
+    ],
+    "6687090862": [
+      126.9815531,
+      37.5659655
+    ],
+    "6687090883": [
+      126.9822141,
+      37.5643019
+    ],
+    "6687146123": [
+      126.9816067,
+      37.562608
+    ],
+    "6687209861": [
+      126.9815053,
+      37.5624337
+    ],
+    "6687209869": [
+      126.9818415,
+      37.5630819
+    ],
+    "6687209873": [
+      126.9818141,
+      37.5630204
+    ],
+    "7068927982": [
+      126.9795438,
+      37.570186
+    ],
+    "7068953034": [
+      126.9795444,
+      37.5701365
+    ],
+    "7068953102": [
+      126.9847021,
+      37.5702747
+    ],
+    "7068953106": [
+      126.9837578,
+      37.5702703
+    ],
+    "7095488766": [
+      126.9767524,
+      37.5748818
+    ],
+    "7095488767": [
+      126.9769016,
+      37.5747666
+    ],
+    "7095488768": [
+      126.9768997,
+      37.573887
+    ],
+    "7095488769": [
+      126.9770118,
+      37.5729403
+    ],
+    "7095488770": [
+      126.9770504,
+      37.5720332
+    ],
+    "7095488771": [
+      126.9770689,
+      37.5714349
+    ],
+    "7095488772": [
+      126.9770627,
+      37.5711394
+    ],
+    "7095488777": [
+      126.9767455,
+      37.5711053
+    ],
+    "7095488778": [
+      126.976695,
+      37.5720229
+    ],
+    "7095488780": [
+      126.9766862,
+      37.5735558
+    ],
+    "7095488781": [
+      126.976672,
+      37.5741998
+    ],
+    "7095488782": [
+      126.9765874,
+      37.5746277
+    ],
+    "7095488783": [
+      126.9770509,
+      37.5720162
+    ],
+    "7170100664": [
+      126.9777527,
+      37.5680823
+    ],
+    "7173795445": [
+      126.9786557,
+      37.5663216
+    ],
+    "7173795468": [
+      126.9778258,
+      37.5664198
+    ],
+    "7173795469": [
+      126.9776016,
+      37.5669055
+    ],
+    "7173795472": [
+      126.9772883,
+      37.5668606
+    ],
+    "7173795476": [
+      126.9776014,
+      37.5669469
+    ],
+    "7173795482": [
+      126.9773957,
+      37.5669071
+    ],
+    "7173824500": [
+      126.9815609,
+      37.5656933
+    ],
+    "7173824501": [
+      126.9805272,
+      37.5657074
+    ],
+    "7173834047": [
+      126.9796227,
+      37.5658609
+    ],
+    "7173834062": [
+      126.9798099,
+      37.5658901
+    ],
+    "7173834065": [
+      126.9804451,
+      37.5658883
+    ],
+    "7173834077": [
+      126.9823141,
+      37.5656997
+    ],
+    "7173834078": [
+      126.9823894,
+      37.5656253
+    ],
+    "7173834084": [
+      126.9797228,
+      37.5658923
+    ],
+    "7173836987": [
+      126.9806425,
+      37.565888
+    ],
+    "7173836988": [
+      126.9815537,
+      37.5658864
+    ],
+    "7173836989": [
+      126.981899,
+      37.5658852
+    ],
+    "7173836990": [
+      126.9820873,
+      37.5658675
+    ],
+    "7173836992": [
+      126.9821583,
+      37.5658272
+    ],
+    "7173836993": [
+      126.9822236,
+      37.5657799
+    ],
+    "7173836994": [
+      126.9823908,
+      37.5655566
+    ],
+    "7173836995": [
+      126.9823585,
+      37.5654124
+    ],
+    "7173863690": [
+      126.9773106,
+      37.5670439
+    ],
+    "7173863699": [
+      126.9777522,
+      37.5681282
+    ],
+    "7173863700": [
+      126.9777591,
+      37.5679229
+    ],
+    "7173863701": [
+      126.9773587,
+      37.5679134
+    ],
+    "7173863702": [
+      126.9773774,
+      37.5674317
+    ],
+    "7173863703": [
+      126.977521,
+      37.5674349
+    ],
+    "7173863704": [
+      126.9775143,
+      37.5676265
+    ],
+    "7173863705": [
+      126.9773708,
+      37.5676234
+    ],
+    "7173863706": [
+      126.9776535,
+      37.5679204
+    ],
+    "7173863707": [
+      126.9776634,
+      37.5677761
+    ],
+    "7173863708": [
+      126.9773652,
+      37.5677632
+    ],
+    "7174189633": [
+      126.9769176,
+      37.5658714
+    ],
+    "7174221719": [
+      126.9758956,
+      37.5675316
+    ],
+    "7174750361": [
+      127.0085046,
+      37.5660578
+    ],
+    "7176684827": [
+      126.9754963,
+      37.5666173
+    ],
+    "7195710058": [
+      127.0074439,
+      37.5660548
+    ],
+    "7195710059": [
+      127.0071153,
+      37.5661197
+    ],
+    "7195710060": [
+      127.0066567,
+      37.5661983
+    ],
+    "7195710061": [
+      127.0053504,
+      37.5664109
+    ],
+    "7195710062": [
+      127.0043151,
+      37.5666065
+    ],
+    "7195710063": [
+      127.0038001,
+      37.5666873
+    ],
+    "7195710064": [
+      127.0028882,
+      37.566851
+    ],
+    "7195710065": [
+      127.0026736,
+      37.5668553
+    ],
+    "7195710066": [
+      127.0021323,
+      37.5668515
+    ],
+    "7195710067": [
+      127.0004125,
+      37.5667384
+    ],
+    "7195710068": [
+      126.9990982,
+      37.566681
+    ],
+    "7195710069": [
+      126.9980173,
+      37.5666384
+    ],
+    "7195710070": [
+      126.9961317,
+      37.5665406
+    ],
+    "7195710071": [
+      126.9943856,
+      37.566445
+    ],
+    "7195710072": [
+      126.9933905,
+      37.5663961
+    ],
+    "7195710073": [
+      126.9922907,
+      37.5663408
+    ],
+    "7195710074": [
+      126.9908343,
+      37.5662685
+    ],
+    "7195710075": [
+      126.9888468,
+      37.5661813
+    ],
+    "7195710076": [
+      126.9876505,
+      37.5661388
+    ],
+    "7195710077": [
+      126.9861512,
+      37.5660942
+    ],
+    "7195710078": [
+      126.9848959,
+      37.5660495
+    ],
+    "7195710079": [
+      126.9834804,
+      37.5660313
+    ],
+    "7195710080": [
+      126.9824771,
+      37.5659471
+    ],
+    "7195710081": [
+      126.9815819,
+      37.5659546
+    ],
+    "7195710082": [
+      126.9804136,
+      37.5659546
+    ],
+    "7195710083": [
+      126.9790912,
+      37.5659518
+    ],
+    "7195710084": [
+      126.9788941,
+      37.5659464
+    ],
+    "7195722885": [
+      126.9788029,
+      37.5659953
+    ],
+    "7195722886": [
+      126.9787519,
+      37.5660581
+    ],
+    "7195722887": [
+      126.9787093,
+      37.5661702
+    ],
+    "7195722888": [
+      126.9788371,
+      37.5659725
+    ],
+    "7195722889": [
+      126.9788019,
+      37.5659341
+    ],
+    "7195722890": [
+      126.9786044,
+      37.565922
+    ],
+    "7195722891": [
+      126.9784716,
+      37.5659156
+    ],
+    "7195722892": [
+      126.9782195,
+      37.5658625
+    ],
+    "7195722893": [
+      126.9781269,
+      37.5658253
+    ],
+    "7195722894": [
+      126.9779459,
+      37.5657434
+    ],
+    "7195722895": [
+      126.9778091,
+      37.5656573
+    ],
+    "7195722896": [
+      126.9777099,
+      37.5655765
+    ],
+    "7195722897": [
+      126.9776133,
+      37.5654883
+    ],
+    "7195722898": [
+      126.9774738,
+      37.5653352
+    ],
+    "7195722899": [
+      126.9773424,
+      37.5651683
+    ],
+    "7195722900": [
+      126.9771573,
+      37.5648919
+    ],
+    "7195722901": [
+      126.9767391,
+      37.5640818
+    ],
+    "7195722902": [
+      126.9766372,
+      37.5639818
+    ],
+    "7195722910": [
+      126.9765621,
+      37.5639353
+    ],
+    "7204588711": [
+      127.0084529,
+      37.5659621
+    ],
+    "7204588712": [
+      127.0083844,
+      37.5659385
+    ],
+    "7204588713": [
+      127.0082133,
+      37.5659818
+    ],
+    "7204588714": [
+      127.0083519,
+      37.5659412
+    ],
+    "7204588715": [
+      127.0084217,
+      37.5659427
+    ],
+    "7204588718": [
+      127.0081411,
+      37.5660004
+    ],
+    "7204588719": [
+      127.0079775,
+      37.5660312
+    ],
+    "7204588720": [
+      127.0076847,
+      37.5660591
+    ],
+    "7204588721": [
+      127.0074985,
+      37.5660474
+    ],
+    "7204588722": [
+      127.0076489,
+      37.5660569
+    ],
+    "7204588723": [
+      127.0077414,
+      37.5660592
+    ],
+    "7204588724": [
+      127.007939,
+      37.5660396
+    ],
+    "7214123623": [
+      126.9778822,
+      37.5693634
+    ],
+    "7505703291": [
+      126.9791406,
+      37.568985
+    ],
+    "7505703292": [
+      126.9794041,
+      37.5689617
+    ],
+    "7746303713": [
+      126.9817155,
+      37.5694825
+    ],
+    "7746303714": [
+      126.9811102,
+      37.5695186
+    ],
+    "8380350230": [
+      126.9775546,
+      37.5701446
+    ],
+    "8380350240": [
+      126.9793377,
+      37.570263
+    ],
+    "8380350243": [
+      126.9785909,
+      37.5702717
+    ],
+    "8410454835": [
+      126.9770009,
+      37.5659191
+    ],
+    "8552238245": [
+      126.9821482,
+      37.5640624
+    ],
+    "8552238246": [
+      126.9820748,
+      37.5637978
+    ],
+    "8552238248": [
+      126.98201,
+      37.5635624
+    ],
+    "8552238249": [
+      126.9818541,
+      37.5631102
+    ],
+    "8552238250": [
+      126.9819903,
+      37.5635033
+    ],
+    "8573233710": [
+      126.977088,
+      37.5704134
+    ],
+    "8631778115": [
+      126.9767513,
+      37.570279
+    ],
+    "9021656240": [
+      126.9759395,
+      37.5675045
+    ],
+    "9066256711": [
+      126.9954133,
+      37.5665038
+    ],
+    "9249768943": [
+      126.9808492,
+      37.5700525
+    ],
+    "9249768944": [
+      126.9806526,
+      37.5700524
+    ],
+    "9249768946": [
+      126.9808059,
+      37.5692705
+    ],
+    "9249768947": [
+      126.9807931,
+      37.5694889
+    ],
+    "9249768948": [
+      126.9808141,
+      37.5695204
+    ],
+    "9249768949": [
+      126.9808456,
+      37.5696629
+    ],
+    "9249768950": [
+      126.9808468,
+      37.569835
+    ],
+    "9249768951": [
+      126.9808141,
+      37.5700525
+    ],
+    "9249768954": [
+      126.9806358,
+      37.5700524
+    ],
+    "9249769119": [
+      126.9797921,
+      37.5673446
+    ],
+    "9249769120": [
+      126.9799729,
+      37.5673418
+    ],
+    "9249769121": [
+      126.9804788,
+      37.5673231
+    ],
+    "9249769170": [
+      126.9815025,
+      37.567173
+    ],
+    "9249769171": [
+      126.9807781,
+      37.5672154
+    ],
+    "9249769172": [
+      126.9806615,
+      37.5672857
+    ],
+    "9249769173": [
+      126.9805777,
+      37.5672912
+    ],
+    "9249769174": [
+      126.9814137,
+      37.5673958
+    ],
+    "9249769179": [
+      126.9817542,
+      37.5674661
+    ],
+    "9249769180": [
+      126.9818884,
+      37.5674903
+    ],
+    "9249769181": [
+      126.9820351,
+      37.5674945
+    ],
+    "9249769182": [
+      126.9826797,
+      37.5675031
+    ],
+    "9249769183": [
+      126.9823885,
+      37.5675052
+    ],
+    "9249769184": [
+      126.9820502,
+      37.5679877
+    ],
+    "9249769185": [
+      126.9820307,
+      37.5671681
+    ],
+    "9249769186": [
+      126.9820724,
+      37.5674938
+    ],
+    "9249769322": [
+      126.9815189,
+      37.5667239
+    ],
+    "9249769323": [
+      126.9815651,
+      37.5667216
+    ],
+    "9249769353": [
+      126.9807386,
+      37.5672392
+    ],
+    "9249769354": [
+      126.9807144,
+      37.5668304
+    ],
+    "9249769392": [
+      126.9798081,
+      37.5683099
+    ],
+    "9249769393": [
+      126.9792579,
+      37.5683165
+    ],
+    "9249769394": [
+      126.9798092,
+      37.5681897
+    ],
+    "9249769395": [
+      126.9799488,
+      37.5681644
+    ],
+    "9249769396": [
+      126.9802885,
+      37.5681252
+    ],
+    "9249769397": [
+      126.9803807,
+      37.5683279
+    ],
+    "9249769398": [
+      126.9808939,
+      37.5682915
+    ],
+    "9249769491": [
+      126.9797747,
+      37.5665343
+    ],
+    "9249769492": [
+      126.9797377,
+      37.5664671
+    ],
+    "9249769493": [
+      126.9796638,
+      37.5664134
+    ],
+    "9249769494": [
+      126.9796129,
+      37.5663731
+    ],
+    "9249769495": [
+      126.9796129,
+      37.5663255
+    ],
+    "9249769496": [
+      126.9796175,
+      37.5660575
+    ],
+    "9249769511": [
+      126.980623,
+      37.5660583
+    ],
+    "9249769512": [
+      126.9806176,
+      37.5664405
+    ],
+    "9249769513": [
+      126.980175,
+      37.5664469
+    ],
+    "9249769515": [
+      126.9806182,
+      37.5663763
+    ],
+    "9249769517": [
+      126.9820365,
+      37.5683271
+    ],
+    "9249769637": [
+      126.9834682,
+      37.5671391
+    ],
+    "9249769640": [
+      126.9837571,
+      37.5673104
+    ],
+    "9284853533": [
+      126.9771548,
+      37.5699158
+    ],
+    "9284853536": [
+      126.9765627,
+      37.5702783
+    ],
+    "9334741516": [
+      126.9758708,
+      37.5708924
+    ],
+    "9357952930": [
+      127.0002996,
+      37.5667335
+    ],
+    "9366843270": [
+      127.0018878,
+      37.5668393
+    ],
+    "9366843287": [
+      126.9984714,
+      37.5666544
+    ],
+    "9366843289": [
+      126.9979367,
+      37.5666342
+    ],
+    "9680103619": [
+      126.9769011,
+      37.5702796
+    ],
+    "9761887336": [
+      126.9794302,
+      37.5692181
+    ],
+    "9761887337": [
+      126.9794388,
+      37.5692859
+    ],
+    "9768620473": [
+      126.9801836,
+      37.5690719
+    ],
+    "9934757027": [
+      126.982644,
+      37.5668049
+    ],
+    "9937120907": [
+      126.9768631,
+      37.5704134
+    ],
+    "9937135033": [
+      126.975918,
+      37.5700513
+    ],
+    "9937135036": [
+      126.9769427,
+      37.5704199
+    ],
+    "9937135037": [
+      126.9773543,
+      37.570338
+    ],
+    "9937135038": [
+      126.9773233,
+      37.5704109
+    ],
+    "9937135040": [
+      126.9755991,
+      37.5702744
+    ],
+    "9937135041": [
+      126.9771736,
+      37.5714132
+    ],
+    "9937135042": [
+      126.9773098,
+      37.5714389
+    ],
+    "9937135045": [
+      126.977121,
+      37.5699201
+    ],
+    "9937135046": [
+      126.9769037,
+      37.5698968
+    ],
+    "9937135047": [
+      126.9769471,
+      37.5698278
+    ],
+    "9937135048": [
+      126.9765141,
+      37.5700158
+    ],
+    "9937135049": [
+      126.9767242,
+      37.5699978
+    ],
+    "9937135050": [
+      126.9829231,
+      37.5699071
+    ],
+    "9938355993": [
+      126.9768048,
+      37.5706127
+    ],
+    "9938355995": [
+      126.9766865,
+      37.5716109
+    ],
+    "10210149039": [
+      126.9774109,
+      37.5725939
+    ],
+    "10232270038": [
+      126.9826291,
+      37.5666308
+    ],
+    "10296582523": [
+      126.9773061,
+      37.5703815
+    ],
+    "10296582524": [
+      126.9773347,
+      37.5703595
+    ],
+    "10296582542": [
+      126.9773537,
+      37.57041
+    ],
+    "10296582593": [
+      126.9781457,
+      37.5703648
+    ],
+    "10296582596": [
+      126.9776924,
+      37.5703677
+    ],
+    "10296582868": [
+      126.9981329,
+      37.5666429
+    ],
+    "10296582890": [
+      126.9977219,
+      37.5666231
+    ],
+    "10316910610": [
+      127.0023989,
+      37.5668582
+    ],
+    "10877889719": [
+      126.9805266,
+      37.5658889
+    ],
+    "10877889720": [
+      126.9815528,
+      37.5658691
+    ],
+    "10877889721": [
+      126.9815537,
+      37.5659208
+    ],
+    "10911227493": [
+      126.9828246,
+      37.5704561
+    ],
+    "10911227494": [
+      126.9833756,
+      37.5703252
+    ],
+    "10911253304": [
+      126.9826696,
+      37.5692138
+    ],
+    "10911257061": [
+      126.982789,
+      37.5701012
+    ],
+    "10911257064": [
+      126.9827905,
+      37.5701472
+    ],
+    "10911257068": [
+      126.982807,
+      37.5703488
+    ],
+    "10911262814": [
+      126.9829515,
+      37.5691823
+    ],
+    "11050691924": [
+      126.9776022,
+      37.5702774
+    ],
+    "11061522074": [
+      126.9821889,
+      37.5703983
+    ],
+    "11130559195": [
+      126.9787181,
+      37.5703798
+    ],
+    "11173810847": [
+      126.9852739,
+      37.5702784
+    ],
+    "11173810849": [
+      126.9803737,
+      37.5702647
+    ],
+    "11197929742": [
+      126.977058,
+      37.5700472
+    ],
+    "11197929743": [
+      126.9772083,
+      37.5700491
+    ],
+    "11197929744": [
+      126.9773539,
+      37.570142
+    ],
+    "11197929745": [
+      126.977358,
+      37.5702804
+    ],
+    "11197929746": [
+      126.9772537,
+      37.570486
+    ],
+    "11197929747": [
+      126.9770945,
+      37.5704888
+    ],
+    "11197929748": [
+      126.9768386,
+      37.5702793
+    ],
+    "11197929749": [
+      126.9768397,
+      37.5701327
+    ],
+    "11197929750": [
+      126.9770543,
+      37.5699971
+    ],
+    "11197929751": [
+      126.9772087,
+      37.5699946
+    ],
+    "11197929752": [
+      126.977303,
+      37.5701404
+    ],
+    "11197929753": [
+      126.9773074,
+      37.5702803
+    ],
+    "11198015007": [
+      126.9829626,
+      37.5702074
+    ],
+    "11198015008": [
+      126.9827992,
+      37.5702411
+    ],
+    "11198015009": [
+      126.9827991,
+      37.5702796
+    ],
+    "11198015010": [
+      126.9828747,
+      37.5704062
+    ],
+    "11198015011": [
+      126.982813,
+      37.5703915
+    ],
+    "11198015012": [
+      126.9827887,
+      37.570413
+    ],
+    "11198015013": [
+      126.9827353,
+      37.5699979
+    ],
+    "11198015014": [
+      126.9827842,
+      37.5700586
+    ],
+    "11198015015": [
+      126.9828589,
+      37.5700625
+    ],
+    "11198015016": [
+      126.9831779,
+      37.5703417
+    ],
+    "11198015017": [
+      126.9831005,
+      37.5701233
+    ],
+    "11198015018": [
+      126.9831108,
+      37.5701531
+    ],
+    "11198015019": [
+      126.9831513,
+      37.5702711
+    ],
+    "11198015020": [
+      126.9830672,
+      37.5700609
+    ],
+    "11198015021": [
+      126.9830926,
+      37.5700837
+    ],
+    "11198015022": [
+      126.9831668,
+      37.5700875
+    ],
+    "11198015023": [
+      126.9831703,
+      37.5704345
+    ],
+    "11198015024": [
+      126.9831706,
+      37.570394
+    ],
+    "11198015025": [
+      126.9830983,
+      37.5704026
+    ],
+    "11198015026": [
+      126.9831022,
+      37.5702711
+    ],
+    "11198015027": [
+      126.9830728,
+      37.570153
+    ],
+    "11198015028": [
+      126.982838,
+      37.5702787
+    ],
+    "11198015029": [
+      126.9828303,
+      37.5701481
+    ],
+    "11198026213": [
+      126.982946,
+      37.5700618
+    ],
+    "11198026214": [
+      126.9829761,
+      37.5704046
+    ],
+    "11199667168": [
+      126.9770827,
+      37.5703536
+    ],
+    "11199667174": [
+      126.9785236,
+      37.5661414
+    ],
+    "11199667175": [
+      126.9788468,
+      37.5660892
+    ],
+    "11199667176": [
+      126.978415,
+      37.5663811
+    ],
+    "11199667177": [
+      126.9785628,
+      37.5663395
+    ],
+    "11199667178": [
+      126.9789067,
+      37.5662732
+    ],
+    "11199667179": [
+      126.9789821,
+      37.5662586
+    ],
+    "11202869269": [
+      126.9768404,
+      37.5691188
+    ],
+    "11202869270": [
+      126.9768421,
+      37.569025
+    ],
+    "11202869271": [
+      126.9768408,
+      37.5690566
+    ],
+    "11203083984": [
+      126.9873401,
+      37.5662092
+    ],
+    "11203083991": [
+      126.9872322,
+      37.5662052
+    ],
+    "11233049703": [
+      126.9833772,
+      37.56953
+    ],
+    "11233049704": [
+      126.9833737,
+      37.5693805
+    ],
+    "11233049705": [
+      126.9834169,
+      37.569354
+    ],
+    "11233049706": [
+      126.9833363,
+      37.5691435
+    ],
+    "11233049707": [
+      126.9831806,
+      37.5691562
+    ],
+    "11233049708": [
+      126.9831339,
+      37.5690144
+    ],
+    "11233114423": [
+      126.9780027,
+      37.5691284
+    ],
+    "11233114424": [
+      126.9786427,
+      37.5692437
+    ],
+    "11233114425": [
+      126.9784056,
+      37.5692612
+    ],
+    "11233114426": [
+      126.9786636,
+      37.5690834
+    ],
+    "11233114427": [
+      126.9791451,
+      37.5690278
+    ],
+    "11233114428": [
+      126.9794169,
+      37.5690511
+    ],
+    "11233114429": [
+      126.9794332,
+      37.5690618
+    ],
+    "11233114431": [
+      126.9794016,
+      37.568929
+    ],
+    "11233114432": [
+      126.9800517,
+      37.5689855
+    ],
+    "11233114433": [
+      126.980054,
+      37.5690055
+    ],
+    "11233114434": [
+      126.9800485,
+      37.5689685
+    ],
+    "11233114435": [
+      126.9795291,
+      37.5690091
+    ],
+    "11233114436": [
+      126.978773,
+      37.5690368
+    ],
+    "11233115437": [
+      126.977886,
+      37.5690959
+    ],
+    "11233115438": [
+      126.9792862,
+      37.5690224
+    ],
+    "11233115439": [
+      126.9800924,
+      37.5690026
+    ],
+    "11233115441": [
+      126.9804925,
+      37.5689238
+    ],
+    "11233115443": [
+      126.9810156,
+      37.5692043
+    ],
+    "11233115444": [
+      126.9813238,
+      37.5688693
+    ],
+    "11233115445": [
+      126.9820541,
+      37.56881
+    ],
+    "11233115446": [
+      126.9810187,
+      37.5691802
+    ],
+    "11233115447": [
+      126.980805,
+      37.5692222
+    ],
+    "11233115449": [
+      126.9813463,
+      37.5691628
+    ],
+    "11233115450": [
+      126.9813241,
+      37.5691119
+    ],
+    "11233115451": [
+      126.98136,
+      37.5691242
+    ],
+    "11233115452": [
+      126.9813231,
+      37.5691006
+    ],
+    "11233115453": [
+      126.9810434,
+      37.5691476
+    ],
+    "11233115454": [
+      126.9800819,
+      37.5692164
+    ],
+    "11233115455": [
+      126.979435,
+      37.5692556
+    ],
+    "11233115456": [
+      126.9791688,
+      37.5692561
+    ],
+    "11233115457": [
+      126.9784086,
+      37.5693048
+    ],
+    "11233115459": [
+      126.9775044,
+      37.5690977
+    ],
+    "11233115460": [
+      126.977448,
+      37.5691164
+    ],
+    "11233115461": [
+      126.9774414,
+      37.5693688
+    ],
+    "11233115462": [
+      126.977333,
+      37.5694678
+    ],
+    "11233115463": [
+      126.9791915,
+      37.56894
+    ],
+    "11233115464": [
+      126.9775519,
+      37.5690449
+    ],
+    "11233115472": [
+      126.9779099,
+      37.5687079
+    ],
+    "11233115473": [
+      126.9778848,
+      37.5690235
+    ],
+    "11233115474": [
+      126.9792191,
+      37.5689007
+    ],
+    "11233115475": [
+      126.9791475,
+      37.5670642
+    ],
+    "11233115476": [
+      126.9791016,
+      37.5670539
+    ],
+    "11233115477": [
+      126.9791658,
+      37.5675344
+    ],
+    "11233115478": [
+      126.9791895,
+      37.5681223
+    ],
+    "11233115479": [
+      126.9792087,
+      37.5686332
+    ],
+    "11233115480": [
+      126.9792102,
+      37.5689268
+    ],
+    "11233115481": [
+      126.9791377,
+      37.5689434
+    ],
+    "11233115482": [
+      126.9792179,
+      37.5688684
+    ],
+    "11233115483": [
+      126.9793345,
+      37.5688623
+    ],
+    "11233115484": [
+      126.9792757,
+      37.5688656
+    ],
+    "11233115485": [
+      126.9798126,
+      37.5688956
+    ],
+    "11233115486": [
+      126.9794661,
+      37.5689218
+    ],
+    "11233115487": [
+      126.979384,
+      37.5689041
+    ],
+    "11233115488": [
+      126.9793296,
+      37.5688343
+    ],
+    "11233115489": [
+      126.979316,
+      37.5686404
+    ],
+    "11233115490": [
+      126.9793533,
+      37.5688862
+    ],
+    "11233115491": [
+      126.9794245,
+      37.5689164
+    ],
+    "11233115492": [
+      126.9793991,
+      37.5689087
+    ],
+    "11233115501": [
+      126.9829284,
+      37.5687933
+    ],
+    "11233115502": [
+      126.9826964,
+      37.568011
+    ],
+    "11233115503": [
+      126.983176,
+      37.5687506
+    ],
+    "11233115504": [
+      126.9831797,
+      37.5687616
+    ],
+    "11233115505": [
+      126.9824328,
+      37.5687628
+    ],
+    "11233115506": [
+      126.98382,
+      37.5685534
+    ],
+    "11233115507": [
+      126.9848818,
+      37.5683578
+    ],
+    "11233115508": [
+      126.9825333,
+      37.5687786
+    ],
+    "11233115509": [
+      126.9829888,
+      37.568739
+    ],
+    "11233115510": [
+      126.9834602,
+      37.5686695
+    ],
+    "11233115511": [
+      126.984508,
+      37.5684596
+    ],
+    "11233115512": [
+      126.9854379,
+      37.5682907
+    ],
+    "11233115514": [
+      126.985614,
+      37.5682585
+    ],
+    "11233115515": [
+      126.9856364,
+      37.568254
+    ],
+    "11233115516": [
+      126.9865964,
+      37.5680612
+    ],
+    "11233115517": [
+      126.9868032,
+      37.5680431
+    ],
+    "11233115518": [
+      126.9873989,
+      37.5680278
+    ],
+    "11233115519": [
+      126.9866998,
+      37.5680521
+    ],
+    "11233115520": [
+      126.9829346,
+      37.5686012
+    ],
+    "11233115521": [
+      126.9825556,
+      37.5686115
+    ],
+    "11233115522": [
+      126.9829717,
+      37.5686251
+    ],
+    "11233115523": [
+      126.9825226,
+      37.5687196
+    ],
+    "11233115524": [
+      126.9825278,
+      37.5687657
+    ],
+    "11233115525": [
+      126.9825267,
+      37.5687553
+    ],
+    "11233115526": [
+      126.9824677,
+      37.5687241
+    ],
+    "11233115527": [
+      126.9825489,
+      37.5686988
+    ],
+    "11233115528": [
+      126.9825587,
+      37.5686767
+    ],
+    "11233115529": [
+      126.9825562,
+      37.5686254
+    ],
+    "11233115530": [
+      126.9825431,
+      37.5683175
+    ],
+    "11233115531": [
+      126.981309,
+      37.5687884
+    ],
+    "11233115532": [
+      126.9811017,
+      37.5688031
+    ],
+    "11233115533": [
+      126.9820487,
+      37.5687474
+    ],
+    "11233115534": [
+      126.983651,
+      37.5685349
+    ],
+    "11233115535": [
+      126.9830422,
+      37.5686414
+    ],
+    "11233115536": [
+      126.9829922,
+      37.5686336
+    ],
+    "11233115537": [
+      126.9829488,
+      37.5686154
+    ],
+    "11233115538": [
+      126.9829192,
+      37.568557
+    ],
+    "11233115539": [
+      126.9828576,
+      37.5676099
+    ],
+    "11233115540": [
+      126.9827046,
+      37.5686034
+    ],
+    "11233115541": [
+      126.9829825,
+      37.568697
+    ],
+    "11233115542": [
+      126.9819129,
+      37.5690827
+    ],
+    "11233115543": [
+      126.982588,
+      37.5690312
+    ],
+    "11233115544": [
+      126.9825626,
+      37.5688032
+    ],
+    "11233115545": [
+      126.9825861,
+      37.5690204
+    ],
+    "11233115546": [
+      126.9825574,
+      37.5687934
+    ],
+    "11263758409": [
+      126.9809942,
+      37.5688871
+    ],
+    "11263758410": [
+      126.9810292,
+      37.5688852
+    ],
+    "11277508938": [
+      126.9769001,
+      37.5701066
+    ],
+    "11277508939": [
+      126.9769485,
+      37.570046
+    ],
+    "11277508940": [
+      126.9768538,
+      37.5699945
+    ],
+    "11277508941": [
+      126.9768032,
+      37.5699312
+    ],
+    "11277508942": [
+      126.9768338,
+      37.5699522
+    ],
+    "11277508943": [
+      126.9768234,
+      37.5699565
+    ],
+    "11346791387": [
+      126.9772157,
+      37.5694057
+    ],
+    "11414286281": [
+      126.9767497,
+      37.5698633
+    ],
+    "11414286282": [
+      126.9772393,
+      37.5668803
+    ],
+    "11414286284": [
+      126.9773745,
+      37.5672305
+    ],
+    "11414286288": [
+      126.9769532,
+      37.5668302
+    ],
+    "11414286290": [
+      126.9767498,
+      37.5692356
+    ],
+    "11414286292": [
+      126.9768176,
+      37.5689588
+    ],
+    "11414286295": [
+      126.9768426,
+      37.5691429
+    ],
+    "11414286297": [
+      126.9773713,
+      37.5670008
+    ],
+    "11414286298": [
+      126.9769505,
+      37.5668694
+    ],
+    "11414286304": [
+      126.9769191,
+      37.5673341
+    ],
+    "11414286308": [
+      126.9773721,
+      37.5670349
+    ],
+    "11414286315": [
+      126.9773952,
+      37.5668644
+    ],
+    "11414286325": [
+      126.9773441,
+      37.56794
+    ],
+    "11414286326": [
+      126.9769204,
+      37.5667253
+    ],
+    "11414286328": [
+      126.9773923,
+      37.566606
+    ],
+    "11414286330": [
+      126.9769338,
+      37.5671358
+    ],
+    "11414286331": [
+      126.9766701,
+      37.5638903
+    ],
+    "11414286332": [
+      126.9769246,
+      37.5666376
+    ],
+    "11822700906": [
+      126.9871593,
+      37.5661242
+    ],
+    "11844574356": [
+      126.9768466,
+      37.5673091
+    ],
+    "11873913050": [
+      126.9816295,
+      37.5696295
+    ],
+    "11873913051": [
+      126.9815957,
+      37.5696554
+    ],
+    "11873913052": [
+      126.981521,
+      37.5696582
+    ],
+    "11873913053": [
+      126.9811007,
+      37.5696628
+    ],
+    "11873913054": [
+      126.9795464,
+      37.5704077
+    ],
+    "11873913055": [
+      126.9792174,
+      37.5703919
+    ],
+    "11987106025": [
+      126.976581,
+      37.5742364
+    ],
+    "11987106026": [
+      126.9766008,
+      37.5747725
+    ],
+    "11987106027": [
+      126.9768992,
+      37.5741322
+    ],
+    "12234253830": [
+      126.9769966,
+      37.5660429
+    ],
+    "12234253831": [
+      126.9769936,
+      37.566127
+    ],
+    "12234253832": [
+      126.9769896,
+      37.5662412
+    ],
+    "12234253834": [
+      126.979984,
+      37.5658896
+    ],
+    "12234253853": [
+      126.979544,
+      37.5702006
+    ],
+    "12234253854": [
+      126.9793379,
+      37.5702006
+    ],
+    "12234253856": [
+      126.9772182,
+      37.5702001
+    ],
+    "12234253864": [
+      126.9769144,
+      37.5702145
+    ],
+    "12234253865": [
+      126.9770695,
+      37.5701969
+    ],
+    "12234253866": [
+      126.9773564,
+      37.5702061
+    ],
+    "12234253867": [
+      126.9827964,
+      37.5702033
+    ],
+    "12234253869": [
+      126.9831295,
+      37.570205
+    ],
+    "12234253873": [
+      126.9793378,
+      37.5702371
+    ],
+    "12234253875": [
+      126.9769008,
+      37.570242
+    ],
+    "12234253884": [
+      126.9770732,
+      37.5702423
+    ],
+    "12234253885": [
+      126.9772219,
+      37.5702421
+    ],
+    "12234253886": [
+      126.9795446,
+      37.5702378
+    ],
+    "12234253893": [
+      126.979544,
+      37.5701674
+    ],
+    "12234253895": [
+      126.981206,
+      37.5701313
+    ],
+    "12234253899": [
+      126.9827987,
+      37.570234
+    ],
+    "12234274101": [
+      126.983141,
+      37.5702375
+    ],
+    "12334338734": [
+      126.9781532,
+      37.5685983
+    ],
+    "12334338735": [
+      126.9779638,
+      37.568622
+    ],
+    "12334338736": [
+      126.9780513,
+      37.5686081
+    ],
+    "13012013146": [
+      126.9774032,
+      37.5694154
+    ],
+    "13012013147": [
+      126.9771815,
+      37.5698973
+    ],
+    "13012013149": [
+      126.9774318,
+      37.5703089
+    ],
+    "13012013150": [
+      126.9768514,
+      37.5685407
+    ],
+    "13012013151": [
+      126.9773717,
+      37.5669505
+    ],
+    "13012013152": [
+      126.9769253,
+      37.5666062
+    ],
+    "13012013153": [
+      126.9769218,
+      37.5666846
+    ],
+    "13056479042": [
+      126.975823,
+      37.5709571
+    ],
+    "13110838826": [
+      126.9768565,
+      37.5704393
+    ],
+    "13110838827": [
+      126.9769761,
+      37.5704609
+    ],
+    "13110838828": [
+      126.9770662,
+      37.5698809
+    ],
+    "13110838829": [
+      126.9771968,
+      37.5698677
+    ],
+    "13201892268": [
+      126.9792794,
+      37.5717662
+    ],
+    "13201892270": [
+      126.9784826,
+      37.5716989
+    ],
+    "13201892271": [
+      126.9792961,
+      37.5715493
+    ],
+    "13201892272": [
+      126.978547,
+      37.5715452
+    ],
+    "13227969639": [
+      126.9789743,
+      37.5702672
+    ],
+    "13387981759": [
+      126.982774,
+      37.5704145
+    ],
+    "13387981760": [
+      126.9828645,
+      37.5705012
+    ],
+    "13387981761": [
+      126.9828967,
+      37.5705857
+    ],
+    "13387981762": [
+      126.9830985,
+      37.5705899
+    ],
+    "13387981763": [
+      126.9832782,
+      37.5703656
+    ],
+    "13721232732": [
+      126.9773847,
+      37.5647298
+    ],
+    "13721232733": [
+      126.9774438,
+      37.5649257
+    ],
+    "13721232734": [
+      126.9773981,
+      37.5650816
+    ],
+    "13721232735": [
+      126.9773606,
+      37.5652932
+    ],
+    "13721232736": [
+      126.9773204,
+      37.5667889
+    ],
+    "13721232737": [
+      126.977315,
+      37.5669143
+    ],
+    "13721232738": [
+      126.9772949,
+      37.5675128
+    ],
+    "13721232739": [
+      126.9772712,
+      37.5679316
+    ],
+    "13721232740": [
+      126.9772958,
+      37.5680286
+    ],
+    "13721232741": [
+      126.9773441,
+      37.5659048
+    ],
+    "13721232742": [
+      126.9773351,
+      37.5662404
+    ],
+    "13721232743": [
+      126.9773253,
+      37.5666067
+    ],
+    "13721232744": [
+      126.9773159,
+      37.5668934
+    ],
+    "13721232745": [
+      126.9773141,
+      37.5669401
+    ],
+    "13721232746": [
+      126.9773121,
+      37.5670016
+    ],
+    "13721232747": [
+      126.9773037,
+      37.5672493
+    ],
+    "13721232748": [
+      126.9773768,
+      37.5646502
+    ],
+    "13721232749": [
+      126.9768423,
+      37.5686536
+    ],
+    "13721232750": [
+      126.9769348,
+      37.5671192
+    ],
+    "13721232751": [
+      126.9769782,
+      37.5665654
+    ],
+    "13721232752": [
+      126.9770036,
+      37.5658425
+    ],
+    "13721232753": [
+      126.9770251,
+      37.5652876
+    ],
+    "13721232754": [
+      126.9770157,
+      37.5650261
+    ],
+    "13721232755": [
+      126.9769524,
+      37.5648674
+    ],
+    "13721232756": [
+      126.976899,
+      37.56462
+    ],
+    "13721232757": [
+      126.9767958,
+      37.5643415
+    ],
+    "13721232758": [
+      126.9767314,
+      37.564283
+    ],
+    "13721232759": [
+      126.9768092,
+      37.564148
+    ],
+    "13721232760": [
+      126.9767418,
+      37.5639851
+    ],
+    "13721232761": [
+      126.9767478,
+      37.5642545
+    ],
+    "13721232762": [
+      126.9769942,
+      37.5649723
+    ],
+    "13721232774": [
+      126.977536,
+      37.5694572
+    ],
+    "13721232775": [
+      126.9775021,
+      37.5696149
+    ],
+    "13721232776": [
+      126.9773179,
+      37.5704762
+    ],
+    "13721232777": [
+      126.9773506,
+      37.5709565
+    ],
+    "13721232778": [
+      126.9773833,
+      37.5714145
+    ],
+    "13721232779": [
+      126.97743,
+      37.5716194
+    ],
+    "13721232780": [
+      126.9774183,
+      37.5720419
+    ],
+    "13721232783": [
+      126.977381,
+      37.5668641
+    ],
+    "13721232787": [
+      126.9772883,
+      37.5668887
+    ],
+    "13732389908": [
+      126.9827615,
+      37.5667899
+    ],
+    "13732389909": [
+      126.9830636,
+      37.5669284
+    ],
+    "13732389910": [
+      126.9827736,
+      37.5668871
+    ],
+    "13732389911": [
+      126.982684,
+      37.5655515
+    ],
+    "13732389919": [
+      126.9828022,
+      37.5686218
+    ],
+    "13732389920": [
+      126.9827069,
+      37.5686277
+    ],
+    "13732389921": [
+      126.982752,
+      37.5666332
+    ],
+    "13732389922": [
+      126.9826596,
+      37.5654495
+    ],
+    "13732389928": [
+      126.9828025,
+      37.5686048
+    ],
+    "13732389929": [
+      126.9827978,
+      37.5685272
+    ],
+    "13732389930": [
+      126.982806,
+      37.5679808
+    ],
+    "13732389931": [
+      126.9827906,
+      37.5675005
+    ],
+    "13732389932": [
+      126.9827563,
+      37.5667246
+    ],
+    "13732389933": [
+      126.9827596,
+      37.5662241
+    ],
+    "13732389934": [
+      126.9827576,
+      37.5686771
+    ],
+    "13732389935": [
+      126.9827593,
+      37.5660866
+    ],
+    "13732389936": [
+      126.9827353,
+      37.5658785
+    ],
+    "13816400112": [
+      126.9769016,
+      37.5703973
+    ],
+    "13906515390": [
+      126.9823312,
+      37.5704159
+    ],
+    "13906515391": [
+      126.9824508,
+      37.5704363
+    ],
+    "13906515392": [
+      126.9826368,
+      37.570493
+    ],
+    "13906515393": [
+      126.982739,
+      37.5705707
+    ],
+    "13906515394": [
+      126.9828275,
+      37.5707027
+    ],
+    "13931631846": [
+      126.9844417,
+      37.5676614
+    ],
+    "13931631847": [
+      126.9843937,
+      37.5676547
+    ],
+    "13931631848": [
+      126.9843129,
+      37.5676295
+    ],
+    "13931631849": [
+      126.9841855,
+      37.5675716
+    ],
+    "13931631850": [
+      126.9844859,
+      37.5676582
+    ],
+    "13965175682": [
+      126.9830043,
+      37.5706352
+    ],
+    "13971398420": [
+      126.9770659,
+      37.5715303
+    ],
+    "13971398421": [
+      126.9773944,
+      37.5715312
+    ],
+    "14113883373": [
+      126.9768971,
+      37.5733915
+    ],
+    "14113883374": [
+      126.9769196,
+      37.5732026
+    ],
+    "14113950393": [
+      126.9776124,
+      37.5683538
+    ],
+    "14113950394": [
+      126.9776084,
+      37.568097
+    ],
+    "14113950395": [
+      126.9776275,
+      37.5681507
+    ],
+    "14113950396": [
+      126.9776672,
+      37.568216
+    ],
+    "14113950397": [
+      126.9776987,
+      37.568241
+    ],
+    "14113953735": [
+      126.9784489,
+      37.5725021
+    ],
+    "14113953736": [
+      126.9784424,
+      37.5723979
+    ],
+    "14113953737": [
+      126.9784654,
+      37.5725518
+    ],
+    "14113953738": [
+      126.9784552,
+      37.5725275
+    ],
+    "14113953835": [
+      126.9773944,
+      37.5703792
+    ],
+    "14113953836": [
+      126.9773287,
+      37.5704431
+    ],
+    "14142437792": [
+      126.9800453,
+      37.5724419
+    ],
+    "14142437799": [
+      126.9801175,
+      37.5724007
+    ],
+    "14156813906": [
+      126.9791901,
+      37.5659693
+    ],
+    "14156813907": [
+      126.9791315,
+      37.5660557
+    ],
+    "14156813908": [
+      126.9790456,
+      37.5660426
+    ],
+    "14156966017": [
+      126.9822891,
+      37.5658289
+    ],
+    "14156966018": [
+      126.9823511,
+      37.5658703
+    ],
+    "14156966019": [
+      126.9824169,
+      37.5658889
+    ],
+    "14156966020": [
+      126.9824176,
+      37.5659274
+    ],
+    "14156966021": [
+      126.9824803,
+      37.565887
+    ],
+    "14156966022": [
+      126.9824196,
+      37.5659729
+    ],
+    "14156966023": [
+      126.9824285,
+      37.5661469
+    ],
+    "14156966030": [
+      126.9823952,
+      37.5656006
+    ],
+    "14156966031": [
+      126.982221,
+      37.5649236
+    ],
+    "14156966035": [
+      126.9814765,
+      37.565886
+    ],
+    "14156966036": [
+      126.9816282,
+      37.5658849
+    ],
+    "14214319769": [
+      126.9864528,
+      37.5661764
+    ],
+    "14214368175": [
+      126.9843612,
+      37.5668038
+    ],
+    "14256724771": [
+      126.9828384,
+      37.5697419
+    ]
+  },
+  "elapsed_seconds": 6.875,
+  "api_calls": 0,
+  "scope": "기존 주변 way와 같은 도로명의 표적 대조입니다. 새 무명 도로 전체를 조사한 결과가 아닙니다."
+}

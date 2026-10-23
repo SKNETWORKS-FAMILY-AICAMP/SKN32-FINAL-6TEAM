@@ -1,0 +1,30 @@
+FFFF                                                                     [100%]
+================================== FAILURES ===================================
+______ test_without_ask_first_a_report_still_changes_the_plan_right_away ______
+tests\e2e\test_desk_gate.py:43: in test_without_ask_first_a_report_still_changes_the_plan_right_away
+    assert closed["status"] == "adjusted" and closed["to"] == "���￪ �ѽĴ�(�ó�����)"
+           ^^^^^^^^^^^^^^^^
+E   KeyError: 'status'
+____________ test_ask_first_turns_a_closed_report_into_a_question _____________
+tests\e2e\test_desk_gate.py:50: in test_ask_first_turns_a_closed_report_into_a_question
+    assert asked["status"] == "asked" and asked["reason"] == "ask_first" and asked["already"] is False
+           ^^^^^^^^^^^^^^^
+E   KeyError: 'status'
+__________ test_a_pinned_item_is_asked_about_even_without_ask_first ___________
+tests\e2e\test_desk_gate.py:77: in test_a_pinned_item_is_asked_about_even_without_ask_first
+    assert asked["status"] == "asked" and asked["reason"] == "protected"
+           ^^^^^^^^^^^^^^^
+E   KeyError: 'status'
+______ test_a_customer_sentence_that_ends_in_a_question_closes_the_case _______
+tests\e2e\test_desk_gate.py:87: in test_a_customer_sentence_that_ends_in_a_question_closes_the_case
+    assert said["status"] == "asked" and said["case_status"] == "resolved", said
+           ^^^^^^^^^^^^^^
+E   KeyError: 'status'
+------------------------------ Captured log call ------------------------------
+WARNING  app.application.controller:controller.py:471 team execution unavailable after start
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_desk_gate.py::test_without_ask_first_a_report_still_changes_the_plan_right_away
+FAILED tests/e2e/test_desk_gate.py::test_ask_first_turns_a_closed_report_into_a_question
+FAILED tests/e2e/test_desk_gate.py::test_a_pinned_item_is_asked_about_even_without_ask_first
+FAILED tests/e2e/test_desk_gate.py::test_a_customer_sentence_that_ends_in_a_question_closes_the_case
+4 failed in 6.78s

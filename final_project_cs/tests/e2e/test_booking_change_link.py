@@ -28,10 +28,10 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.booking_actions import BookingChange
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.plan_link import plan_token
-from app.modules.travel_ops.trip_api import build_trip_router, change_token
+from app.domains.travel_ops.components.actions.booking_actions import BookingChange
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.itinerary.plan_link import plan_token
+from app.domains.travel_ops.entry.trip_api import build_trip_router, change_token
 from app.presentation import security
 from app.presentation.api.app import create_app
 
@@ -137,7 +137,8 @@ def test_the_link_shows_the_item_the_alternatives_and_the_difference(world):
     text = page.text
 
     assert "바뀔 항목" in text and "BK-AIR-1" in text and "본래" in text
-    assert "2026-10-03" in text                       # 현재 시각
+    # ★`[2026-10-03 ui 검증 세션 지적]` 화면은 **서울 시계**로 찍는다 — `START` 는 UTC 2026-10-03 15:00 = 서울 10-04 00:00. 전에는 이 시험이 UTC 날짜(10-03)를 못 박고 있었다(9시간 어긋난 시각)
+    assert "2026-10-04 00:00" in text and "2026-10-03 15:00" not in text           # 현재 시각
     assert "seoul-air" in text and "SUP-AIR-1" in text
     assert "스카이데크 전망" in text                    # 이 예약에 걸린 일정 항목
 

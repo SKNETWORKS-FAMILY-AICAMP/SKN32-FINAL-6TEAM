@@ -21,7 +21,7 @@ Python · FastAPI · PostgreSQL · pgvector
 REST/OpenAPI · MCP · A2A · React
 ```
 
-★`[실측 2026-09-10 정정]` **이 줄에서 LangGraph 를 뺐다.** `requirements.txt` 에 `langgraph==1.2.8` 이 있지만 **코드 어디서도 import 하지 않는다**(cs·sample·composer 0곳, 동적 import 도 0곳). 흐름은 Controller 와 Case 상태기계가 맡는다. **의존성 줄을 지울지는 코드 세션 몫이다.** 부트캠프 양식 「AI 시스템 아키텍처」 2.3 절 제목에 LangGraph 가 박혀 있지만, 쓰지 않는 것을 쓴다고 적지 않는다.
+★`[실측 2026-09-10 정정]` **이 줄에서 LangGraph 를 뺐다.** `requirements.txt` 에 `langgraph==1.2.8` 이 있지만 **코드 어디서도 import 하지 않는다**(cs·sample·composer 0곳, 동적 import 도 0곳). 흐름은 Controller 와 Case 상태기계가 맡는다. **의존성 줄을 지울지는 코드 세션 몫이다.** `[2026-10-03 사용자 결정]` **cs 의 `requirements.txt` 에서 뺐다**(계획서 v9 에는 「Top-Level LangGraph 가 Coordination 계층」이 있었지만 v10 · v11 에는 없고, 코드에는 한 번도 안 들어왔다 — 뺀 이유를 기록으로 찾지 못해 사용자가 이 줄을 지우기로 정했다). 부트캠프 양식 「AI 시스템 아키텍처」 2.3 절 제목에 LangGraph 가 박혀 있지만, 쓰지 않는 것을 쓴다고 적지 않는다.
 
 | 항목 | 선택 |
 |---|---|

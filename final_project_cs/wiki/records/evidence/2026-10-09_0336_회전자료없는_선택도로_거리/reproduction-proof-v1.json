@@ -1,0 +1,114 @@
+{
+  "created_at": "2026-10-09T03:53:23.008498+09:00",
+  "calls": 6,
+  "matched": 6,
+  "independent_holdout": false,
+  "api_calls": 0,
+  "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-09_0353_재현방법\\2026-10-09_0347_도로위_좌표이동후_다른도로_재선택.md.bak",
+  "evidence_manifest": [
+    {
+      "file": "2026-10-09_0352_재실행.md",
+      "sha256": "9ccd2d65324d6011f5081b3003cb6a513fb87a3e446ab7a9b349bc3fe08f514f"
+    },
+    {
+      "file": "before-backup.json",
+      "sha256": "9d94a03659e7ae58dd3038a3a4a11edd84edb8b8d32a3429c375863bd7dce7e5"
+    },
+    {
+      "file": "car-legacy-regression-v1-commands.json",
+      "sha256": "c04adea758951b368e9068a7641ca5e4515b5ea7d235725735d2a57f64e40e30"
+    },
+    {
+      "file": "car-legacy-regression-v1-part1.log",
+      "sha256": "b0539b9424fa50a31fb8ca36e26e6d247d18b375fc036b7f0fa29d02cdcc65d6"
+    },
+    {
+      "file": "car-legacy-regression-v1-part1.xml",
+      "sha256": "230072d4511747e824499075a204aa374e06145f577f501b83273e28f0d3137f"
+    },
+    {
+      "file": "car-legacy-regression-v1-part2.log",
+      "sha256": "d60de0861bdcc33a7a9de2c813febcda5a542eb673677e4095a02c7a337d2b8e"
+    },
+    {
+      "file": "car-legacy-regression-v1-part2.xml",
+      "sha256": "ecebf3c59cee58ea2db033ded9dfa8500a9a0024d7db395d094d62310eaf74f4"
+    },
+    {
+      "file": "car-legacy-regression-v1-part3.log",
+      "sha256": "82b6e32aa98f7c60c1c2b0e2dc2644871451ca542c73548e1e71de24efb61f85"
+    },
+    {
+      "file": "car-legacy-regression-v1-part3.xml",
+      "sha256": "6c9de5007969283d327faabcc7095d5d578ef1cebb516bd0a27ac7000403d667"
+    },
+    {
+      "file": "car-legacy-regression-v1-part4.log",
+      "sha256": "6c2e3edadbddf36790b2ed10d1762cbf0f5ce33cbdbc11feb777b7ae2ec0dd3f"
+    },
+    {
+      "file": "car-legacy-regression-v1-part4.xml",
+      "sha256": "b3dc383f81785f01334c4a3251793773fb974992e466227ed98a286fcc7d1536"
+    },
+    {
+      "file": "car-legacy-snap-before-v1.log",
+      "sha256": "74e9978adb2cad6b1c67a19756b967a7407b22066a6c613e8d7825d70a516808"
+    },
+    {
+      "file": "car-legacy-snap-before-v1.xml",
+      "sha256": "7c31fb28a520c5160e11555a3d41d3f155750096e97f9d0c6a27cf1a4c3cdae8"
+    },
+    {
+      "file": "car-legacy-snap-target-v1.log",
+      "sha256": "3556615639a7d12f0b00c4b0ccb27e6fa86048992a95b75d2eba443b08e4da2c"
+    },
+    {
+      "file": "car-legacy-snap-target-v1.xml",
+      "sha256": "0e6ccd8bd581a1a75afad9a24f6be42769b5af721dd717015b4126fc7ca97a1b"
+    },
+    {
+      "file": "legacy-snap-real-probe-v1.json",
+      "sha256": "41339059a147ad05b9fd763395497fc70401cd653d004e280eb484694454d067"
+    },
+    {
+      "file": "legacy-snap-real-probe-v1.log",
+      "sha256": "2daf9db79f55851c14bdb8b527faeeaeaf736bc896465d0672ab84a0d96a81e2"
+    },
+    {
+      "file": "probe_legacy_snap_real_v1.py",
+      "sha256": "2c88795cc58504d83ad078267f68d255a5b3c3d0d906c9c80892e85d620d62bd"
+    },
+    {
+      "file": "publication-backups-v1.json",
+      "sha256": "92af8638f3bef6796eeea237342d7f76c520b5af81643adf721787fcfd328cfb"
+    },
+    {
+      "file": "publication-validation-v1.json",
+      "sha256": "e05391926c858830ca3310dfd1bbd41b3028ede8e6a5e8afe6feaae22d53f0ed"
+    },
+    {
+      "file": "published-output-v1.json",
+      "sha256": "0232b5037b0ea418f0cb41d842318deeba23315fdf5b29eecd7ee945a4f5be9c"
+    },
+    {
+      "file": "reproduce-road-selection-v1.py",
+      "sha256": "78faffa14fd28400365b12c38a8dc3bb1ebd99b7cf13a3380a0cb64ddee88f9a"
+    },
+    {
+      "file": "road-selection-reproduced-v1.json",
+      "sha256": "c1ff82ad53dcce8657c99a19dbd5e9b7dbcb0141e9b9c7d434d44fbf73d62a42"
+    },
+    {
+      "file": "run_car_legacy_regression_v1.py",
+      "sha256": "0897fad533daaf71e945519036f625081c51d041ad4dfa88dcaa9cd4bf8ab3f3"
+    },
+    {
+      "file": "verification-proof-v1.json",
+      "sha256": "f3de25725aee8c51fbb740d503f64558ca04fa0555f208186f8a3b1487d5fa33"
+    },
+    {
+      "file": "web-attempt-v1.json",
+      "sha256": "93c523f37b182ab1920861d0b8e73dc40b10ee65b1a8db7e77327a0eaea6df1e"
+    }
+  ]
+}

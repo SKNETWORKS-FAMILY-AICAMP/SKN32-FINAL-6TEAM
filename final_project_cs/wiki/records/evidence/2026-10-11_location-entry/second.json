@@ -1,0 +1,465 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.location.config.ts",
+      "tests/live/location-entry.spec.ts",
+      "--workers=1",
+      "--trace=off",
+      "--reporter=line,json",
+      "--output=location-results-v2"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\playwright.location.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/location-results-v2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/location-controls-20261011/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "location-entry.spec.ts",
+      "file": "location-entry.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "375px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 22793,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <button type=\"button\" aria-label=\"내 위치로\" class=\"map_round__PeRih\" aria-describedby=\"_r_n_\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"inactive\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <button type=\"button\" aria-label=\"내 위치로\" class=\"map_round__PeRih\" aria-describedby=\"_r_n_\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"inactive\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:37:30",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                      "column": 30,
+                      "line": 37
+                    },
+                    "snippet": "  35 |   await dialog.getByRole(\"button\", { name: \"그만두기\" }).click();\n  36 |   await expect(dialog).toHaveCount(0);\n> 37 |   await expect(locate(page)).toBeFocused();\n     |                              ^\n  38 |   expect(await locationAsks(page)).toBe(0);\n  39 |   const foldAfter = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  40 |   expect(foldAfter.x).toBeCloseTo(foldBefore.x, 0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                        "column": 30,
+                        "line": 37
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <button type=\"button\" aria-label=\"내 위치로\" class=\"map_round__PeRih\" aria-describedby=\"_r_n_\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"inactive\"\u001b[22m\n\n\n  35 |   await dialog.getByRole(\"button\", { name: \"그만두기\" }).click();\n  36 |   await expect(dialog).toHaveCount(0);\n> 37 |   await expect(locate(page)).toBeFocused();\n     |                              ^\n  38 |   expect(await locationAsks(page)).toBe(0);\n  39 |   const foldAfter = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  40 |   expect(foldAfter.x).toBeCloseTo(foldBefore.x, 0);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:37:30"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:41:54.841Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v2\\location-entry-375px-동의-전에-95b59-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v2\\location-entry-375px-동의-전에-95b59-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                    "column": 30,
+                    "line": 37
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-417062ffd04295ed0f25",
+          "file": "location-entry.spec.ts",
+          "line": 13,
+          "column": 34
+        },
+        {
+          "title": "1280px: 동의 전에도 왼쪽 내 위치 버튼·도움말·44px 누름 영역을 제공하고 취소 시 위치를 읽지 않는다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 21294,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <button type=\"button\" aria-label=\"내 위치로\" class=\"map_round__PeRih\" aria-describedby=\"_r_n_\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"inactive\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <button type=\"button\" aria-label=\"내 위치로\" class=\"map_round__PeRih\" aria-describedby=\"_r_n_\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"inactive\"\u001b[22m\n\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:37:30",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                      "column": 30,
+                      "line": 37
+                    },
+                    "snippet": "  35 |   await dialog.getByRole(\"button\", { name: \"그만두기\" }).click();\n  36 |   await expect(dialog).toHaveCount(0);\n> 37 |   await expect(locate(page)).toBeFocused();\n     |                              ^\n  38 |   expect(await locationAsks(page)).toBe(0);\n  39 |   const foldAfter = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  40 |   expect(foldAfter.x).toBeCloseTo(foldBefore.x, 0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                        "column": 30,
+                        "line": 37
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  12000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeFocused\" getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true }) with timeout 12000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('group', { name: '지도 단추' }).getByRole('button', { name: '내 위치로', exact: true })\u001b[22m\n\u001b[2m    27 × locator resolved to <button type=\"button\" aria-label=\"내 위치로\" class=\"map_round__PeRih\" aria-describedby=\"_r_n_\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"inactive\"\u001b[22m\n\n\n  35 |   await dialog.getByRole(\"button\", { name: \"그만두기\" }).click();\n  36 |   await expect(dialog).toHaveCount(0);\n> 37 |   await expect(locate(page)).toBeFocused();\n     |                              ^\n  38 |   expect(await locationAsks(page)).toBe(0);\n  39 |   const foldAfter = (await tools(page).getByRole(\"button\", { name: \"지도 단추 접기\" }).boundingBox())!;\n  40 |   expect(foldAfter.x).toBeCloseTo(foldBefore.x, 0);\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:37:30"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:42:20.108Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v2\\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v2\\location-entry-1280px-동의-전-5f1d5-누름-영역을-제공하고-취소-시-위치를-읽지-않는다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                    "column": 30,
+                    "line": 37
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-6906293f434971e6391f",
+          "file": "location-entry.spec.ts",
+          "line": 13,
+          "column": 34
+        },
+        {
+          "title": "버튼에서 동의하면 위치 점을 그리고 카메라를 그곳으로 이동하며 동의 철회 뒤에는 지운다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5241,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:42:43.504Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-5531396c0a8821cdcb67",
+          "file": "location-entry.spec.ts",
+          "line": 43,
+          "column": 1
+        },
+        {
+          "title": "시간 초과 뒤에도 버튼을 다시 눌러 성공하면 점과 카메라를 복구한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5324,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:42:49.246Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-e67b2a50a56203bec83c",
+          "file": "location-entry.spec.ts",
+          "line": 63,
+          "column": 1
+        },
+        {
+          "title": "denied: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3268,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:42:54.592Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-adb86e2ce5f7c7c99919",
+          "file": "location-entry.spec.ts",
+          "line": 87,
+          "column": 58
+        },
+        {
+          "title": "unsupported: 실패 후에도 내 위치 버튼과 오류 토스트 하나를 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3155,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:42:57.884Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-14942cb91f52801fbc79",
+          "file": "location-entry.spec.ts",
+          "line": 87,
+          "column": 58
+        },
+        {
+          "title": "약관 전문은 동의 창을 대체하고 Esc로 돌아온 뒤 취소하면 초점을 돌려준다",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4929,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:119:153",
+                    "location": {
+                      "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                      "column": 153,
+                      "line": 119
+                    },
+                    "snippet": "  117 |   const prompt = page.getByRole(\"dialog\", { name: \"내 위치로 이동\" });\n  118 |   await expect(prompt).toBeVisible();\n> 119 |   for (let tab = 0; tab < 6; tab += 1) { await page.keyboard.press(\"Tab\"); expect(await prompt.evaluate(node => node.contains(document.activeElement))).toBe(true); }\n      |                                                                                                                                                         ^\n  120 |   await page.keyboard.press(\"Escape\");\n  121 |   await expect(prompt).toHaveCount(0);\n  122 |   await expect(locate(page)).toBeFocused();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                        "column": 153,
+                        "line": 119
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  117 |   const prompt = page.getByRole(\"dialog\", { name: \"내 위치로 이동\" });\n  118 |   await expect(prompt).toBeVisible();\n> 119 |   for (let tab = 0; tab < 6; tab += 1) { await page.keyboard.press(\"Tab\"); expect(await prompt.evaluate(node => node.contains(document.activeElement))).toBe(true); }\n      |                                                                                                                                                         ^\n  120 |   await page.keyboard.press(\"Escape\");\n  121 |   await expect(prompt).toHaveCount(0);\n  122 |   await expect(locate(page)).toBeFocused();\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts:119:153"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:43:01.058Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v2\\location-entry-약관-전문은-동의-창을-대체하고-Esc로-돌아온-뒤-취소하면-초점을-돌려준다\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\location-results-v2\\location-entry-약관-전문은-동의-창을-대체하고-Esc로-돌아온-뒤-취소하면-초점을-돌려준다\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\location-controls-20261011\\tests\\live\\location-entry.spec.ts",
+                    "column": 153,
+                    "line": 119
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-069c8e6bf18fc9e2c785",
+          "file": "location-entry.spec.ts",
+          "line": 108,
+          "column": 1
+        },
+        {
+          "title": "거절했던 권한을 허용한 뒤 버튼으로 찾으면 이후 위치 이동도 계속 따라간다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6922,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T12:43:07.407Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bc194d2661472d969bba-838c1b6c518abb49d621",
+          "file": "location-entry.spec.ts",
+          "line": 125,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T12:41:01.932Z",
+    "duration": 133814.766,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

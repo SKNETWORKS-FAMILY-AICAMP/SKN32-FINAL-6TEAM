@@ -1,0 +1,48 @@
+{
+  "A_unique_ids": 196,
+  "A_original_preserved": 193,
+  "A_worker_preserved": true,
+  "B_unique_conditions": 4,
+  "B_single_worker_alive": true,
+  "raw_verified_files": 49,
+  "http_checks_passed": 33,
+  "http_checks_total": 33,
+  "links": [
+    {
+      "link": "2026-10-11_1400_six-hour-gpu-arm-report.md",
+      "exists": true
+    },
+    {
+      "link": "2026-10-11_oracle_answer_repair.md",
+      "exists": true
+    },
+    {
+      "link": "2026-10-11_oracle_answer_repair.md",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261011_2230/",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/research/daily_rag_slm/six_hour_report_2026-10-11_2240.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/scripts/plan_qa_bench/results/heartbeat_20261011_2230/",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/research/daily_rag_slm/2026-10-11_app_completion_missing_prereg_v2.json",
+      "exists": true
+    },
+    {
+      "link": "../../../../program/research/daily_rag_slm/six_hour_report_2026-10-11_2240_backups.json",
+      "exists": true
+    },
+    {
+      "link": "2026-10-11_oracle_answer_repair.md",
+      "exists": true
+    }
+  ]
+}

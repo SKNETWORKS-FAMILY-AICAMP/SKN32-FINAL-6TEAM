@@ -1,5 +1,4 @@
 from app.core.settings import get_guardrails
-from app.presentation.api.mcp import mcp
 
 
 # invariant: INV-CS-SEC-007
@@ -24,17 +23,13 @@ def test_scopes_are_guardrail_owned():
       위임은 **서 있는 권한**이라 거둘 때까지 그 고객의 모든 자동 실행이 한계 안에서
       열린다. `composer:admin`·`ops:reload` 를 나눈 것과 같은 기준(영향 범위)이다.
 
+    ★2026-09-28: `limits:read`·`limits:write` 추가(웹 제한값 보기·바꾸기 — 관리 콘솔 설정 탭).
+      바꾸기는 그 순간 모든 고객의 한도를 바꾸므로 보기와 나눈다.
+
     ★이름에서 개수를 뺐다 — scope 가 늘 때마다 함수 이름이 낡는다."""
     assert set(get_guardrails().get("security.scopes")) == {
-        "case:read", "case:write", "order:read", "return:read", "action:approve", "mcp:read",
+        "case:read", "case:write", "action:approve", "mcp:read",
         "composer:read", "composer:validate", "composer:write", "composer:admin",
         "ops:introspect", "ops:reload", "trip:read", "trip:write",
-        "delegation:read", "delegation:write",
+        "delegation:read", "delegation:write", "limits:read", "limits:write",
     }
-
-
-# invariant: INV-CS-SEC-008
-def test_mcp_has_exactly_three_read_scoped_tools():
-    tools = mcp._tool_manager._tools
-    assert set(tools) == {"get_my_cases", "get_case_detail", "open_support_case"}
-    assert all(tool.meta["required_scope"] == "mcp:read" for tool in tools.values())

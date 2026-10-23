@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="8" skipped="0" tests="12" time="11.380" timestamp="2026-10-12T03:51:25.071371+09:00" hostname="playdata"><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_snapshot_pins_running_image_even_if_tag_points_elsewhere" time="3.578"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:83: in test_snapshot_pins_running_image_even_if_tag_points_elsewhere
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_config_drift_stops_before_snapshot_or_mutation" time="0.020" /><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_missing_safety_in_native_image_or_override_blocks_before_up[old_image]" time="0.011"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:102: in test_missing_safety_in_native_image_or_override_blocks_before_up
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_missing_safety_in_native_image_or_override_blocks_before_up[old_override]" time="0.008"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:102: in test_missing_safety_in_native_image_or_override_blocks_before_up
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_partial_failure_timeout_and_bad_health_restore_all_exact_images[partial]" time="0.007"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:112: in test_partial_failure_timeout_and_bad_health_restore_all_exact_images
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_partial_failure_timeout_and_bad_health_restore_all_exact_images[timeout]" time="0.009"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:112: in test_partial_failure_timeout_and_bad_health_restore_all_exact_images
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_partial_failure_timeout_and_bad_health_restore_all_exact_images[health]" time="0.014"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:112: in test_partial_failure_timeout_and_bad_health_restore_all_exact_images
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_recovery_failure_is_never_reported_as_success" time="0.017"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:121: in test_recovery_failure_is_never_reported_as_success
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_success_pins_candidates_and_keeps_automatic_overrides" time="0.010"><failure message="TypeError: Path.open() got an unexpected keyword argument 'opener'">tests\unit\core\test_migration_safe_deploy.py:128: in test_success_pins_candidates_and_keeps_automatic_overrides
+    guard.snapshot(docker, guard.compose(), tmp_path)
+deploy\migration_safe_deploy.py:81: in snapshot
+    private_json(directory / "recovery.compose.json", config)
+deploy\migration_safe_deploy.py:46: in private_json
+    with path.open("x", encoding="utf-8", opener=lambda p, f: os.open(p, f, 0o600)) as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: Path.open() got an unexpected keyword argument 'opener'</failure></testcase><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_incomplete_recovery_material_blocks_before_up" time="0.011" /><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_migration_timeout_stops_named_job_and_does_not_retry" time="0.005" /><testcase classname="tests.unit.core.test_migration_safe_deploy" name="test_docker_timeout_and_error_do_not_echo_sensitive_output" time="0.004" /></testsuite></testsuites>

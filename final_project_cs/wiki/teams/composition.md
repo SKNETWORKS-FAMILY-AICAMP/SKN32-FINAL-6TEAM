@@ -1,194 +1,93 @@
 ---
 type: contract
 title: 구성 단위와 조립 선언
-description: 컴포넌트·모듈·Port·인스턴스를 어떻게 가르고, 조립 선언에 무엇을 적고 무엇이 실패인가
+description: 필수 컴포넌트·선택 모듈·교체 Port·Team 인스턴스의 로딩과 요청별 조립 판
 status: draft
-tags: [architecture, contract]
 domain: neutral
-domain_note: 조립 기제는 도메인 무관이다. 예시로 커머스·여행 Team 이름이 나온다
 ---
 
 # 구성 단위와 조립 선언
 
-`[실측]` 2026-09-10 에 [index.md](index.md) 에서 떼어냈다. **Team 목록과 조립 기제가 한 문서에 있어 300줄을 넘었고, 둘은 낡는 이유가 다르다** — 목록은 도메인이 바뀌면 낡고 조립 기제는 계약이 바뀌면 낡는다.
+2026-10-11 로컬 구현 기준입니다. 비활성 Team은 불러오지 않고 그 업무를 실행하지 않습니다. 필수 코어와 독립 조회는 유지합니다. 운영 반영·전체 회귀 완료 상태는 [수명 관리](team-plugin-lifecycle.md)에서 확인합니다.
 
-`[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
+## 구성 단위
 
-## 구성 단위 구분
-
-`[실측]`
-
-| 단위 | 정의 | 구성기 동작 |
+| 단위 | 의미 | 실제 경계 |
 |---|---|---|
-| 컴포넌트 | 제거하면 시스템이 성립하지 않는 구성물 | 선택 불가, 항상 포함 |
-| 모듈 | 꺼도 나머지 시스템이 동작하는 단위 | 선택 가능 |
-| Port | 구현을 교체하는 지점 | 구현체 선택 |
-| 인스턴스 | 같은 계약을 만족하며 여러 개 둘 수 있는 항목 | 개수 추가·제거 |
+| 컴포넌트 | 제품 성립에 필요한 고정 부품 | Core 상태기계·계약·Registry·Controller·DB·Outbox |
+| 모듈 | 제거해도 독립 기능이 유지되는 기능 | web_account·mcp·live_progress 등, 기능별 게이트 |
+| Port | 동일 계약의 구현 교체 | TeamExecutorPort Local/A2A, MessageBrokerPort, GraphStorePort |
+| 인스턴스 | 동일 TeamModule 계약으로 추가·제거하는 담당 | manifest + execute, 조립이 주입 |
 
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:7-18`
+인라인 분류와 공통 업무 상태 처리는 필수 컴포넌트입니다. voc 모듈을 껐다는 이유로 분류를 제거하지 않습니다. Team은 제안하고 Core가 부작용을 적용합니다.
 
-## 필수 컴포넌트
+## 선언 필드와 호환성
 
-`[실측]`
+[실제 선언](../../config/project.yaml)은 modules·ports·teams를 가집니다. Team 필드는 다음과 같습니다.
 
-| 컴포넌트 | 위치 | 필수 의존 |
+| 필드 | 형식·기본값 | 의미 |
 |---|---|---|
-| Case lifecycle · `transition_case()` | `app/core/transition.py`, `app/domain/{case,events}.py` | 상태 변경의 단일 진입점; API의 Case 생성·분류가 이벤트에 의존 |
-| 계약 모델 | `app/core/contracts.py` | Controller·Team·평가가 `TeamTask`·`TeamResult`·`TeamManifest`·`TeamModule`·`ContextPack`·`Evidence` 사용 |
-| Team Registry | `app/core/registry.py` | capability 해석의 유일한 경로 |
-| Context Broker | `app/core/context.py` | 12,000 토큰 예산·절삭·`degraded` 신호 |
-| DB repository / session | `app/infrastructure/db/` | Source of Truth |
-| Outbox 원자성 | `app/infrastructure/messaging/outbox.py` | projection·event·발행을 한 transaction으로 처리 |
-| Case service | `app/application/case_service.py` | run/resume, active run 중복 방지, `agent_runs` 기록 |
-| Controller | `app/application/controller.py` | 필수 컴포넌트를 연결하는 실행 루프 |
-| 설정·가드레일 | `app/core/settings.py`, `config/guardrails.yaml` | 수치의 단일 출처 |
+| team_id | 비어 있지 않은 문자열 | 고유 담당 id |
+| active | bool, 필수 | false면 import·생성·실행하지 않음 |
+| implementation_ref | module:Class, 필수 | 활성 구현의 조립 위치 |
+| required | bool, 기본 true | 활성 구현 적재 실패 시 후보 전체 거절 여부 |
+| capabilities | 중복 없는 목록 또는 None | 명시하면 실제 manifest와 일치해야 함 |
+| hooks | 중복 없는 목록 또는 None | 계산 제공 경계 선언 |
 
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:22-35`
-
-## 토글 가능한 모듈
-
-`[실측]`
-
-| 설정 이름 | 모듈 | 위치 | 끄면 제거되는 기능·표면 |
-|---|---|---|---|
-| `graph_store` | GraphStore | `app/core/graph_retrieval/port.py`, `app/infrastructure/graphstore/sql_adapter.py` | `neighbors`·`path`·`subgraph` 질의와 관리자 화면 Graph 섹션 |
-| `a2a_executor` | A2A Executor | `app/core/remote_team/a2a_executor.py`, `app/presentation/a2a/` | 원격 Agent 위임·Agent Card·`/a2a/*` |
-| `mcp` | MCP | `app/presentation/api/mcp.py` | 개인 AI read-only tool 3종과 MCP scope |
-| `vector_rag` | Vector RAG | `app/infrastructure/rag/retriever.py` | 정책 검색·knowledge 적재; `ContextPack.degraded`로 전환 |
-| `ops_ui` | 운영 UI | `app/presentation/ui/` | Case·Trace·Approval·VOC 화면과 `/ui/*` |
-| `voc` | VOC 판단층·화면 | VOC Team, VOC 화면 | VOC Team 판단층과 VOC 화면 |
-
-모듈을 끄면 그것을 호출하는 경로도 함께 제거한다. 호출 경로가 남으면 조용히 넘어가지 않고 명시적으로 실패한다.
-
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:38-55`, `wiki/records/handoff/08_모듈_컴포넌트_목록.md:112-128`
-
-## `voc` 경계
-
-`[실측]` `voc: false`가 끄는 것은 판단층과 화면뿐이다.
-
-| 기능 | 소유 | `voc` 게이트 |
-|---|---|---|
-| 인라인 분류 `build_classifier` | 코어 1 | 없음 |
-| 일일 집계 배치 `app/application/feedback_job.py` | 코어 1 | 없음 |
-| VOC Team 판단층 | 모델 | 있음 |
-| VOC 화면 | — | 있음 |
-
-인라인 분류는 다음 두 부분으로 분리한다.
-
-| 책임 | 위치 | 소유 |
-|---|---|---|
-| 호출 시점·실패 처리·상태 전이 | `app/application/classification.py` | 코어 1 |
-| 라벨 어휘·프롬프트·provider 호출 | `app/modules/travel_ops/feedback.py`(작업 트리. git 에는 아직 `customer_ops/feedback.py`) | 모델 |
-
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:112-152`
-
-## 모듈 게이트 강제점
-
-`[실측]`
-
-| 모듈 | 강제점 |
-|---|---|
-| `mcp` | 비활성화 시 `_mcp_principal()`이 거부 |
-| `voc` | 판단층과 화면이 거부되거나 등록되지 않음 |
-| `graph_store` | 관리자 화면도 어댑터를 직접 생성하지 않고 조립 경계를 통과 |
-
-선언된 모듈에 실제 검사 지점이 있는지는 `tests/contract/test_module_toggles.py`가 검사한다.
-
-`[실측]` [MODULE-TOGGLES 검증 로그](../records/evidence/MODULE-TOGGLES_실효화_검증.md)(2026-08-30)가 선언을 **실제로 바꿔 가며** 확인했다 — `python -m scripts.verify_module_toggles`. `graph_store: false`면 관리자 화면 Ports 표의 `GraphStorePort` 줄이 **`모듈 꺼짐 (graph_store)`**로 뜬다. 빈칸으로 두지 않는다 — **빈칸은 "껐다"와 "고장났다"를 구별해 주지 못한다.** `mcp: false`면 tool 호출이 `ProjectConfigError`다.
-
-**같은 로그의 `voc: false` → 기동 거부는 그때는 "통과"였고 이틀 뒤 결함으로 재판정됐다.** → [../quality/dod-evidence-drift.md](../quality/dod-evidence-drift.md)
-
-`[실측]` 그 작업 전(2026-08-30)엔 **여섯 모듈 중 셋만 실제로 코드를 갈랐다** — `mcp`·`voc`는 `require_module` 호출처가 0건, `graph_store`는 게이트가 있어도 관리자 화면이 `SqlGraphAdapter`를 직접 만들어 우회했다. 위 표는 그걸 고친 뒤의 상태다. 설계 판단의 경위는 [../../../wiki/governance/drift-case-voc.md](../../../wiki/governance/drift-case-voc.md).
-
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:57-68`
-
-## 교체 가능한 Port
-
-`[실측]`
-
-| Port | 정의 | 현재 구현 | 대안 |
-|---|---|---|---|
-| `TeamExecutorPort` | `app/core/remote_team/executor.py` | `LocalTeamExecutor` | `A2ATeamExecutor` |
-| `MessageBrokerPort` | `app/core/contracts.py` | `OutboxBrokerAdapter` | `RedisStreamsAdapter` — Phase 2, 미구현 |
-| `GraphStorePort` | `app/core/graph_retrieval/port.py` | `SqlGraphAdapter` — JOIN·재귀 CTE | AGE·Neo4j — Phase 2 |
-| 정책 검색 함수 | `build_controller(policy_search_fn=...)` | `search_policy` — pgvector | 주입으로 교체 |
-| LLM | `app/infrastructure/llm/openai.py` | `OpenAITeamLLM` | provider 교체 |
-| 분류기 | `build_classifier()` | `feedback.classify` | 주입으로 교체 |
-
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:156-165`
-
-## 가변 인스턴스 계약
-
-`[실측]`
-
-| 종류 | 원본 실측 인스턴스 | 추가 조건 |
-|---|---|---|
-| Agent Team | `OrderShippingTeam`, `ReturnExchangeTeam` | `TeamModule` Protocol 구현 + Registry 등록 |
-
-Agent Team만 개수가 2개에서 3개·4개 등으로 변할 수 있다. Team은 `manifest`와 `execute()`를 만족해야 하며 Core는 `_capability()`의 Registry 조회로 Team을 찾는다.
-
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:169-177`
-
-## 구성 선언 필드
-
-`[실측]`
+구현 참조 문법·선언 id/capability 중복은 정적으로 검사합니다. 정적 검증 단계에서는 구현을 import하지 않습니다. 기존 required 미지정 선언은 필수 Team 의미를 유지합니다. inactive에서는 required가 true여도 구현을 적재하지 않습니다.
 
 ```yaml
-modules:
-  vector_rag:    { enabled: true }
-  graph_store:   { enabled: true }
-  a2a_executor:  { enabled: false }
-  mcp:           { enabled: true }
-  voc:           { enabled: true }
-  ops_ui:        { enabled: true }
-ports:
-  team_executor: local
-  message_broker: outbox
-  graph_store: sql
 teams:
-  - { team_id: order_shipping,  active: true,  implementation_ref: "app.modules.customer_ops:OrderShippingTeam" }
-  - { team_id: return_exchange, active: true,  implementation_ref: "app.modules.customer_ops:ReturnExchangeTeam" }
+  - team_id: mobility
+    active: false
+    required: true
+    implementation_ref: app.domains.travel_ops.instances.mobility:MobilityTeam
+    capabilities: [mobility.itinerary]
 ```
 
-| Port 설정 | 허용 선택지 |
+위 예시는 패키지가 설치되지 않아도 비활성 구현을 불러오지 않습니다. 실제 모듈·Port 조합은 [선언 모델](../../app/core/project_config.py)과 [조립 코드](../../app/composition.py)가 검증합니다. 미구현 Port 선택을 자동 대체하지 않습니다.
+
+## 적재 실패와 후보 게시
+
+| 조건 | 현재 정책 |
 |---|---|
-| `team_executor` | `local \| a2a` |
-| `message_broker` | `outbox \| redis_streams` — `redis_streams`는 Phase 2 |
-| `graph_store` | `sql \| age \| neo4j` — `neo4j`는 Phase 2 |
+| inactive Team | 구현 import·생성 0회, disabled 메타데이터 |
+| 명시적 선택 Team의 import·생성·provider 실패 | 해당 팀 load_failed, 수집 중 일부 계산은 폐기 |
+| 필수 Team·필수 코어 실패 | 후보 실패, 기존 판 유지 또는 최초 기동 실패 |
+| manifest 계약·선언 capability 불일치·중복 | 선택 여부와 관계없이 후보 실패 |
+| 활성 필수 엔진 데이터 불가 | engine_unavailable, 추정 성공 금지 |
+| 후보 완성 | Controller·Registry·Executor·계산 표·revision 함께 게시 |
 
-`app/composition.py`는 `load_project_config()`와 `importlib`로 `teams[].implementation_ref`를 동적으로 읽는다.
+선택 적재 실패와 활성 엔진 장애를 같은 예외로 숨기지 않습니다. 비활성 Team의 이름과 알려진 담당 관계는 구현 import 없는 메타데이터로 보존할 수 있습니다.
 
-`[실측]` **이 파일이 생긴 이유가 있다.** 2026-08-12 [DoD-04](../records/evidence/DoD-04_checkpoint_projection_분리.md) 첫 측정에서 `agent_runs`가 비어 있었다 — `create_app()`이 Controller·Registry·Executor를 조립하지 않아 REST 요청이 Controller를 타지 않았다. 조립 지점을 한 곳에 모으려고 만든 게 `composition.py`이고, 그 조립기가 뒤에 인자 개수만 보고 배선하는 결함을 한 번 더 냈다. → [../quality/blind-spots.md](../quality/blind-spots.md)
+## 요청·백그라운드 회차의 같은 조립 판
 
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:181-210`
+[BindingTable](../../app/core/service_bindings.py)은 복사한 읽기 전용 계산 표를 가집니다. 후보 조립의 register는 후보 수집 표에만 들어갑니다. 완료된 Controller가 해당 표와 revision을 보유합니다.
 
-## 구성 검증 실패 조건
+[RuntimeComposition](../../app/application/runtime.py)은 완성된 새 판을 짧은 잠금에서 게시하고 reload 작업을 직렬화합니다. 요청은 pure ASGI middleware에서 판 하나를 고정해 SSE 종료와 동기 threadpool까지 유지합니다. 백그라운드는 한 회차에 고정합니다. 운영용으로 조립한 Controller를 직접 주입해도 그 Controller의 실제 revision을 사용합니다.
 
-`[실측]`
+이전 요청은 이전 판으로 종료하고 새 요청만 새 판을 사용합니다. 전체 clear/register 후 Controller만 교체하지 않습니다. 별도 강제 drain·가변 disable API는 추가하지 않았습니다. 이동 엔진 데이터·경유 설정 변경은 재기동 대상이며 활성/비활성 Team 교체와 구분합니다.
 
-| 실패 조건 | 판정 |
-|---|---|
-| `enabled: true`인데 구현이 없음 | 빌드 실패 |
-| `active: true`인데 `implementation_ref`를 import할 수 없음 | 빌드 실패 |
-| `team_id` 중복 | 빌드 실패 |
-| 같은 capability를 두 Team이 주장 | 빌드 실패 |
-| 비활성화한 모듈을 호출하는 경로가 남음 | 빌드 실패 |
-| 미구현 port 선택 — `redis_streams`·`age`·`neo4j` | **조립 실패** (`tests/unit/test_project_composition.py`) |
-| `team_executor: a2a`인데 `a2a_executor` 모듈이 꺼져 있음 | **선택 불가** — 순서가 강제된다 |
+## 계산과 선택 기능의 끼움 자리
 
-`[실측]` 아래 두 줄은 [DoD-20](../records/evidence/DoD-20_Port교체_Controller불변.md)이 확인한 것이다. `local → a2a` 교체는 `project.yaml` 선언으로 되고 Controller 코드 변경은 0이다 — 다만 **"불변"은 코드가 안 바뀐다는 뜻이지 성능·타임아웃 특성이 같다는 뜻이 아니고**, 교체 후 실제 원격 실행까지 돌린 건 아니다(선언이 바뀌고 조립이 통과하는 것까지). 그 다음 단계는 [../external/a2a-protocol.md](../external/a2a-protocol.md)의 Controller 종단 미확보 항목이다.
+| 자리 | 제공자 | 부재 정책 |
+|---|---|---|
+| team_hooks.legs 필수 이동 함수 | Mobility | 해당 의존 요청 503, 어림값 우회 금지 |
+| team_hooks.dining_ledger state/states/catalog_state | Dining | 영업 판정 503. 등록 전도 같은 관문 |
+| dining_ledger 근처 목록 보강·이름 찾기 | Dining | 독립 조회의 보강만 생략·이유 기록 |
+| team_hooks.similarity | Activity | 독립 정렬의 선택 신호 생략·이유 기록 |
+| team_hooks.place_aliases 공용 장소 별칭 `[2026-10-22]` | Activity | 이름 찾기의 별칭 단계만 건너뜀(우리 자료 → 오타 → 관광공사 · 원장 → 카카오는 그대로). 계획 읽기 · 확인 화면 검색 · 이름 고치기 · 채팅 고치기가 모두 부른다 — [D-CS-021](../decisions/D-CS-021-place-name-lookup-order.md) |
+| team_hooks.watch_planners | 해당 Team | 해당 종류 감시 미실행 기록 |
+| settings_hook·progress_hook·trip_scope | 선택 모듈 | 기능별 기존 독립 기본값 유지 |
+| ports/data_sources/simulation_hook | 시나리오 어댑터 | 자료 소스 계층이 감시 구현을 직접 import하지 않음 |
 
-미구현 Team은 `active: false`로 둔다. Registry에는 이름이 남지만 라우팅 대상에서는 제외된다.
+Team callback은 조립 때 실제 함수를 고정합니다. 호출 때 다른 판의 모듈 함수를 다시 읽어 섞지 않습니다. 전역 register/clear는 명시적 standalone_services 경계에 한정하며 제품 요청의 무조건 fallback이 아닙니다. wire_optional_features는 후보 조립 밖에서 앱·작업 프로세스의 선택 기능을 연결합니다.
 
-근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:213-221`
+## 실패 관찰과 검증
 
-## 만드는 순서 · 공통 뼈대
+JSON/SSE/MCP의 필수 Team 불가는 team_unavailable이며 HTTP는 503입니다. 사전에 확인 가능한 불가는 업무 입력·토큰을 소비하기 전에 거절합니다. 원격 실행 후 장애의 감사 기록·재시도는 [가용성 계약](team-contract/plugin-availability.md)에 따릅니다.
 
-만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/modules/travel_ops/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다.
+회차 조립 실패는 Team 의존 작업에만 영향을 주며 독립 정리·분류·기존 주기 안전 점검을 계속합니다. [인수 조건 매핑](../records/evidence/2026-10-11_1936_team_plugin_implementation/acceptance-mapping.json)에서 실제 시험을 확인합니다. [D-CS-013](../decisions/D-CS-013-domain-folder-layout.md)은 폴더와 의존 방향의 정본입니다.
 
-## 관계
-
-- [index.md](index.md) — Team 목록과 경계
-- [build-order.md](build-order.md) — 만드는 순서
-- [common-utils.md](common-utils.md) — 공통 뼈대
-- [../../../wiki/decisions/D-015-implementation-catalog.md](../../../wiki/decisions/D-015-implementation-catalog.md) — **구현 카탈로그를 손으로 유지하지 않는다**
+- [Registry](team-registry.md), [Team 계약](team-contract/index.md), [수명 관리](team-plugin-lifecycle.md)
+- [Core 중립성 검사](../../tests/architecture/), [조립 판 시험](../../tests/unit/test_plugin_composition_runtime.py)

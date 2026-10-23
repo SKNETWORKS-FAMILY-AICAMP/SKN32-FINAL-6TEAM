@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="73" time="115.131" timestamp="2026-10-12T04:14:58.620328+09:00" hostname="playdata"><testcase classname="tests.security.test_personal_ai_oauth" name="test_metadata_is_discoverable_and_dcr_disabled" time="0.069" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change0]" time="0.018" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change1]" time="0.039" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change2]" time="0.025" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change3]" time="0.032" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change4]" time="0.048" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change5]" time="0.042" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change6]" time="0.018" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change7]" time="0.042" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change8]" time="0.040" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change9]" time="0.037" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_bad_authorization_is_never_issued_a_consent_request[change10]" time="0.045" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_login_and_guest_are_given_actual_login_screen" time="0.149" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_consent_is_escaped_and_requires_display_then_same_session_csrf" time="0.523" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_cancel_round_trips_state_without_issuing_code" time="0.410" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change0]" time="0.210" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change1]" time="0.177" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change2]" time="0.266" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change3]" time="0.167" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change4]" time="0.140" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_token_binding_rejects_then_correct_exchange_still_succeeds[change5]" time="0.143" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_code_is_single_use_and_storage_never_contains_raw_credentials" time="0.104" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_code_expiry" time="0.106"><failure message="dataclasses.FrozenInstanceError: cannot assign to field '__traceback__'">tests\security\test_personal_ai_oauth.py:40: in transaction
+    yield self
+app\domains\travel_ops\modules\web_account\personal_ai_oauth.py:165: in exchange_authorization_code
+    raise TokenError("invalid_grant")
+E   mcp.server.auth.provider.TokenError: invalid_grant
+
+During handling of the above exception, another exception occurred:
+tests\security\test_personal_ai_oauth.py:215: in test_code_expiry
+    assert exchange(env, raw).status_code == 400
+           ^^^^^^^^^^^^^^^^^^
+tests\security\test_personal_ai_oauth.py:125: in exchange
+    return env.client.post("/oauth/token", data=form)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:552: in post
+    return super().post(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1144: in post
+    return self.request(
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:451: in request
+    return super().request(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:914: in send
+    response = self._send_handling_auth(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\httpx\_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:354: in handle_request
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:338: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\_base.py:401: in __get_result
+    raise self._exception
+..\..\..\anaconda3\Lib\site-packages\anyio\from_thread.py:263: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\applications.py:113: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+..\..\..\anaconda3\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:78: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+..\..\..\anaconda3\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\anaconda3\Lib\site-packages\starlette\routing.py:75: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:302: in app
+    raw_response = await run_endpoint_function(
+..\..\..\anaconda3\Lib\site-packages\fastapi\routing.py:213: in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\modules\web_account\personal_ai_api.py:107: in token
+    return await TokenHandler(p, ClientAuthenticator(p)).handle(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\site-packages\mcp\server\auth\handlers\token.py:189: in handle
+    tokens = await self.provider.exchange_authorization_code(client_info, auth_code)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\modules\web_account\personal_ai_oauth.py:49: in call
+    return await asyncio.to_thread(fn, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\threads.py:25: in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\concurrent\futures\thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\modules\web_account\personal_ai_oauth.py:161: in exchange_authorization_code
+    with self.store.transaction() as db:
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\contextlib.py:191: in __exit__
+    exc.__traceback__ = traceback
+    ^^^^^^^^^^^^^^^^^
+&lt;string&gt;:4: in __setattr__
+    ???
+E   dataclasses.FrozenInstanceError: cannot assign to field '__traceback__'</failure></testcase><testcase classname="tests.security.test_personal_ai_oauth" name="test_pending_expiry" time="0.030" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_access_expiry_refresh_rotation_and_replay_revoke_family" time="0.090" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_refresh_cannot_expand_scope_or_resource_or_change_client" time="0.090" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_refresh_idle_or_absolute_expiry[2592001]" time="0.066" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_refresh_idle_or_absolute_expiry[7776001]" time="0.059" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_disconnect_and_last_social_unlink_disable_tokens" time="0.057" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_revoke_only_own_client_and_browser_only_own_connection" time="0.065"><failure message="AssertionError: assert 400 == 200&#10; +  where 400 = &lt;Response [400 Bad Request]&gt;.status_code&#10; +    where &lt;Response [400 Bad Request]&gt; = post('/oauth/revoke', data={'client_id': 'other-ai', 'token': 'acop_o_5KTbrkgfk9-hYF3iM_lVvIrZRlL0ft_zUxfkgy4xgQg'})&#10; +      where post = &lt;starlette.testclient.TestClient object at 0x0000023FFF00F860&gt;.post&#10; +        where &lt;starlette.testclient.TestClient object at 0x0000023FFF00F860&gt; = namespace(p=&lt;app.domains.travel_ops.modules.web_account.personal_ai_oauth.Provider object at 0x0000023FFF6E1D30&gt;, stor...lications.FastAPI object at 0x0000023FFF6E0410&gt;, client=&lt;starlette.testclient.TestClient object at 0x0000023FFF00F860&gt;).client">tests\security\test_personal_ai_oauth.py:261: in test_revoke_only_own_client_and_browser_only_own_connection
+    assert env.client.post("/oauth/revoke", data={"client_id": "other-ai", "token": first["access_token"]}).status_code == 200
+E   AssertionError: assert 400 == 200
+E    +  where 400 = &lt;Response [400 Bad Request]&gt;.status_code
+E    +    where &lt;Response [400 Bad Request]&gt; = post('/oauth/revoke', data={'client_id': 'other-ai', 'token': 'acop_o_5KTbrkgfk9-hYF3iM_lVvIrZRlL0ft_zUxfkgy4xgQg'})
+E    +      where post = &lt;starlette.testclient.TestClient object at 0x0000023FFF00F860&gt;.post
+E    +        where &lt;starlette.testclient.TestClient object at 0x0000023FFF00F860&gt; = namespace(p=&lt;app.domains.travel_ops.modules.web_account.personal_ai_oauth.Provider object at 0x0000023FFF6E1D30&gt;, stor...lications.FastAPI object at 0x0000023FFF6E0410&gt;, client=&lt;starlette.testclient.TestClient object at 0x0000023FFF00F860&gt;).client</failure></testcase><testcase classname="tests.security.test_personal_ai_oauth" name="test_sdk_revoke_refresh_disables_access" time="0.067"><failure message="AssertionError: assert 400 == 200&#10; +  where 400 = &lt;Response [400 Bad Request]&gt;.status_code&#10; +    where &lt;Response [400 Bad Request]&gt; = post('/oauth/revoke', data={'client_id': 'travel-ai', 'token': 'acop_r_P_C5qtgPjpFO3kzAk7MvbMa5NCgcYmLFefTh95erwgU'})&#10; +      where post = &lt;starlette.testclient.TestClient object at 0x0000023FFF046FF0&gt;.post&#10; +        where &lt;starlette.testclient.TestClient object at 0x0000023FFF046FF0&gt; = namespace(p=&lt;app.domains.travel_ops.modules.web_account.personal_ai_oauth.Provider object at 0x0000023FFF00F200&gt;, stor...lications.FastAPI object at 0x0000023FFF00D460&gt;, client=&lt;starlette.testclient.TestClient object at 0x0000023FFF046FF0&gt;).client">tests\security\test_personal_ai_oauth.py:275: in test_sdk_revoke_refresh_disables_access
+    assert env.client.post("/oauth/revoke", data={"client_id": "travel-ai", "token": first["refresh_token"]}).status_code == 200
+E   AssertionError: assert 400 == 200
+E    +  where 400 = &lt;Response [400 Bad Request]&gt;.status_code
+E    +    where &lt;Response [400 Bad Request]&gt; = post('/oauth/revoke', data={'client_id': 'travel-ai', 'token': 'acop_r_P_C5qtgPjpFO3kzAk7MvbMa5NCgcYmLFefTh95erwgU'})
+E    +      where post = &lt;starlette.testclient.TestClient object at 0x0000023FFF046FF0&gt;.post
+E    +        where &lt;starlette.testclient.TestClient object at 0x0000023FFF046FF0&gt; = namespace(p=&lt;app.domains.travel_ops.modules.web_account.personal_ai_oauth.Provider object at 0x0000023FFF00F200&gt;, stor...lications.FastAPI object at 0x0000023FFF00D460&gt;, client=&lt;starlette.testclient.TestClient object at 0x0000023FFF046FF0&gt;).client</failure></testcase><testcase classname="tests.security.test_personal_ai_oauth" name="test_duplicate_parameters_and_cookie_on_token_endpoint_rejected" time="0.076" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_direct_rest_tokens_shared_link_and_context_reset" time="0.071" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[POST-/v1/web/trips-403]" time="0.013" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[GET-/v1/web/profile-403]" time="0.011" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[GET-/v1/web/agent-connections-403]" time="0.011" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[POST-/v1/web/moves/judge-200]" time="0.013" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_internal_read_scope_uses_existing_account_and_write_guards[GET-/v1/web/trips-200]" time="0.010" /><testcase classname="tests.security.test_personal_ai_oauth" name="test_concurrent_code_exchange_has_only_one_winner" time="0.071" /><testcase classname="tests.e2e.test_personal_ai_oauth_db" name="test_postgres_mcp_lists_only_owned_trips_and_denies_foreign_trip" time="2.133" /><testcase classname="tests.e2e.test_personal_ai_oauth_db" name="test_mcp_scope_enforced_even_when_write_tools_registered" time="1.461"><failure message="assert ('403' in &quot;Error executing tool tripilot_rollback: 1 validation error for rollbackArguments\nto_version\n  Field required [type=...2444e3', 'version': 1}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing&quot;)&#10; +  where &quot;Error executing tool tripilot_rollback: 1 validation error for rollbackArguments\nto_version\n  Field required [type=...2444e3', 'version': 1}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing&quot; = _error_text(CallToolResult(meta=None, content=[TextContent(type='text', text=&quot;Error executing tool tripilot_rollback: 1 validation...visit https://errors.pydantic.dev/2.13/v/missing&quot;, annotations=None, meta=None)], structuredContent=None, isError=True))">tests\e2e\test_personal_ai_oauth_db.py:78: in test_mcp_scope_enforced_even_when_write_tools_registered
+    assert "403" in _error_text(result) and "agent_scope" in _error_text(result)
+E   assert ('403' in "Error executing tool tripilot_rollback: 1 validation error for rollbackArguments\nto_version\n  Field required [type=...2444e3', 'version': 1}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing")
+E    +  where "Error executing tool tripilot_rollback: 1 validation error for rollbackArguments\nto_version\n  Field required [type=...2444e3', 'version': 1}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/missing" = _error_text(CallToolResult(meta=None, content=[TextContent(type='text', text="Error executing tool tripilot_rollback: 1 validation...visit https://errors.pydantic.dev/2.13/v/missing", annotations=None, meta=None)], structuredContent=None, isError=True))</failure></testcase><testcase classname="tests.e2e.test_personal_ai_oauth_db" name="test_mcp_write_switch_keeps_write_tools_unregistered" time="1.323" /><testcase classname="tests.e2e.test_personal_ai_oauth_db" name="test_postgres_store_tenant_isolation_revocation_and_hashes" time="1.296" /><testcase classname="tests.e2e.test_personal_ai_oauth_db" name="test_postgres_concurrent_exchange_exactly_once" time="1.023" /><testcase classname="tests.e2e.test_personal_ai_oauth_db" name="test_agent_key_can_initialize_mcp_after_gate_fix" time="0.823" /><testcase classname="tests.e2e.test_mcp_server" name="test_the_key_comes_from_bearer_first_then_the_user_key_header" time="0.003" /><testcase classname="tests.e2e.test_mcp_server" name="test_the_outline_reads_like_a_plan_and_trimming_drops_the_map_pins" time="0.002" /><testcase classname="tests.e2e.test_mcp_server" name="test_a_missing_key_is_a_clear_tool_error_that_never_prints_a_key" time="0.002" /><testcase classname="tests.e2e.test_mcp_server" name="test_without_a_key_or_with_a_wrong_key_the_connection_is_401_and_a_disabled_module_is_404" time="0.851" /><testcase classname="tests.e2e.test_mcp_server" name="test_the_mcp_surface_is_mounted_on_the_customer_app" time="0.348" /><testcase classname="tests.e2e.test_mcp_server" name="test_by_default_only_read_tools_exist_and_all_say_they_are_read_only" time="0.744" /><testcase classname="tests.e2e.test_mcp_server" name="test_my_trips_are_listed_with_kind_labels_and_someone_elses_trip_does_not_exist" time="2.760" /><testcase classname="tests.e2e.test_mcp_server" name="test_the_itinerary_schema_tool_hides_customer_id_and_notices_and_proposals_read" time="1.511" /><testcase classname="tests.e2e.test_mcp_server" name="test_with_the_write_switch_on_the_write_tools_appear_with_honest_annotations" time="0.750" /><testcase classname="tests.e2e.test_mcp_server" name="test_asking_over_mcp_gives_the_same_answer_as_the_web_and_a_repeat_is_not_processed_twice" time="6.884" /><testcase classname="tests.e2e.test_mcp_server" name="test_reporting_a_delay_over_mcp_matches_the_web_twin_and_a_stranger_cannot_report" time="3.726" /><testcase classname="tests.e2e.test_mcp_server" name="test_swap_and_rollback_use_the_current_version_and_a_stranger_gets_404" time="7.390" /><testcase classname="tests.e2e.test_mcp_server" name="test_saved_trip_remains_readable_with_every_team_disabled" time="4.226" /><testcase classname="tests.e2e.test_mcp_server" name="test_submitting_a_bad_itinerary_returns_the_problems_and_a_good_one_is_registered_for_me_only" time="3.238" /><testcase classname="tests.e2e.test_mcp_server" name="test_no_error_or_result_ever_contains_the_user_key" time="4.558" /><testcase classname="tests.e2e.test_mcp_server" name="test_the_stdio_proxy_refuses_to_start_without_a_user_key" time="0.004" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_a_member_makes_a_key_shown_once_and_stored_only_as_a_hash" time="4.322" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_a_guest_cannot_make_a_key_and_is_asked_to_log_in" time="3.397" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_making_a_key_needs_the_csrf_token_and_a_cookie_session" time="2.485" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_input_limits_and_active_key_cap" time="10.067" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_an_agent_key_opens_only_the_owners_trips_by_bearer_or_header" time="3.657" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_a_read_key_cannot_write_and_a_write_key_can" time="4.611" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_no_agent_key_opens_account_management" time="3.215" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_a_key_and_a_cookie_together_are_refused_and_a_server_scope_key_does_not_open_web_paths" time="2.894" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_expired_revoked_and_unknown_keys_are_the_same_401" time="6.798" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_revoking_someone_elses_or_a_missing_key_is_the_same_404" time="5.448" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_unlinking_the_last_social_account_revokes_every_agent_key" time="5.370" /><testcase classname="tests.e2e.test_web_agent_keys" name="test_the_resolver_only_knows_agent_keys_and_stays_none_for_other_prefixes" time="2.891" /></testsuite></testsuites>

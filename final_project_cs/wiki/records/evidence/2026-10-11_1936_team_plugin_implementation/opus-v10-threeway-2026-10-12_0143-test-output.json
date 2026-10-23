@@ -1,0 +1,14 @@
+[
+  {
+    "tool_use_id": "toolu_01WmZeVH4La6m7fE5KmVdD9x",
+    "type": "tool_result",
+    "content": "CANDIDATE=legacy/deployment_candidates/2026-10-12_012943_plugin_v10\r\nFIXED_PYTEST_COMMAND=C:\\Users\\playdata2\\anaconda3\\python.exe -m pytest tests/unit/travel/test_fact_context.py tests/unit/travel/test_initial_retry_boundaries.py tests/unit/core/test_controller_resume_recovery.py -q --tb=short -p no:cacheprovider -o faulthandler_timeout=60\r\n..................................................                       [100%]\r\n50 passed in 4.63s\r\nPYTEST_EXIT=0",
+    "is_error": false
+  },
+  {
+    "tool_use_id": "toolu_01S4femhqJnjiy5KYxt4tGPp",
+    "type": "tool_result",
+    "content": "Dockerfile.overlay\nFINAL-VERIFICATION.json\n_backup\napp\ncandidate-manifest.json\ncandidate-v4-reference.json\nconfig\ndeploy\ninspect_local_schema.py\nmerge-evidence\npytest.ini\nrelease-manifest.json\nrelease-overlay\nrequirements.txt\nruntime-overlay-v7.diff\nruntime-overlay-v8.diff\nruntime-overlay-v9.diff\nruntime-overlay.diff\nscripts\ntest-source-manifest-v7.json\ntest-source-manifest-v8.json\ntest-source-manifest-v9.json\ntests\nvalidate_candidate.py",
+    "is_error": false
+  }
+]

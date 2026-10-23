@@ -1,0 +1,22 @@
+[
+  {
+    "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_subway.py",
+    "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_0936_지하철_식별정보_보존/seoul_subway.py",
+    "sha256": "ff3e8d5d84b3ac1fa9cf6de905808654bc892ed943a0d67417d5e73d35cf8cd8"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0936_지하철_식별정보_보존/mobility.md",
+    "sha256": "a2f39ba2217ea00c398f284208b1de285fb098a5ce882265e815c8153a26a430"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0940_지하철식별_검증결과/mobility.md",
+    "sha256": "098d92e9457a7788f8c60f1ee7bc9ada49b0f5538b2145709113795dd868a25c"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0936_지하철도착_식별정보누락과_숫자변환오류.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0940_지하철입력_부분해결/2026-10-09_0936_지하철도착_식별정보누락과_숫자변환오류.md",
+    "sha256": "e9addb9baf3134047a27a23cb8542985514f4c1353df0d7d9092b97d9bc36a65"
+  }
+]

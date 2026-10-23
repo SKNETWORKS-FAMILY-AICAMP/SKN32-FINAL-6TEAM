@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 #: 경로 접두어 → (스트림, Phase). **더 긴 접두어가 이긴다** — `app/modules/`
 #: 전체는 S-TEAM(P4)이지만 그 안의 `feedback.py` 하나는 S-VOC(P7)다.
 #: 출처: `wiki/records/handoff/05_분업_규칙.md` 소유 표 + 실행계획서 §P0~P10 절 제목.
+# 과거 P0~P10 이력 분류용이다. 현재 개발 책임은 wiki/teams/code-layout.md를 따른다.
 PATH_OWNERS: tuple[tuple[str, str, str], ...] = (
     # 가장 구체적인 것부터 적을 필요는 없다 — 아래에서 길이순으로 정렬한다.
     ("app/core/", "Claude-Core", "P1"),
@@ -44,6 +45,12 @@ PATH_OWNERS: tuple[tuple[str, str, str], ...] = (
     ("app/infrastructure/db/", "S-DB", "P2"),
     ("scripts/seed.py", "S-DB", "P2"),
     ("app/modules/", "S-TEAM", "P4"),
+    ("app/domains/travel_ops/components/core_hooks/feedback.py", "S-VOC", "P7"),
+    ("app/domains/travel_ops/modules/mcp/", "S-API", "P6"),
+    ("app/domains/travel_ops/modules/web_account/", "S-API", "P6"),
+    ("app/domains/travel_ops/entry/", "S-API", "P6"),
+    ("frontend/", "S-UI", "P8"),
+    ("app/domains/", "S-TEAM", "P4"),     # 2026-10-06 D-CS-013 — 옛 app/modules/ 의 새 이름. 옛 커밋은 위 줄로 센다
     ("app/tools/", "S-TEAM", "P4"),
     ("app/modules/customer_ops/feedback.py", "S-VOC", "P7"),
     ("app/application/feedback_job.py", "S-VOC", "P7"),
@@ -65,6 +72,11 @@ PATH_OWNERS: tuple[tuple[str, str, str], ...] = (
     # ★조립 지점과 루트 문서. 05 번 문서 소유 표에 `app/composition.py` 가 없다 —
     #   그 표가 쓰인 뒤에 생긴 파일이다. 조립은 P10(통합)의 일이므로 여기 둔다.
     ("app/composition.py", "Claude-Core", "P10"),
+    # 실행 엔진 연결·대체 모델 조립·환경 템플릿은 과거 P10 통합 구성으로 분류한다.
+    # 현재 팀 소유나 해당 모델의 채택·출시 판정을 뜻하지 않는다.
+    ("app/infrastructure/llm_failover.py", "Claude-Core", "P10"),
+    ("app/infrastructure/ollama_chat.py", "Claude-Core", "P10"),
+    (".env.example", "Claude-Core", "P10"),
     ("app/introspection/", "Claude-Core", "P10"),
     ("CLAUDE.md", "Claude-Core", "P10"),
     ("RULE.md", "Claude-Core", "P10"),

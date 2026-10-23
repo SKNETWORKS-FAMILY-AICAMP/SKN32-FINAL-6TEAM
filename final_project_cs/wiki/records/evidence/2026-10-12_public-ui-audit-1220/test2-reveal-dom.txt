@@ -1,0 +1,120 @@
+- alert: 여행 계획 등록 · triPilot
+- banner:
+  - link "triPilot — 소개 화면으로 돌아가기":
+    - /url: /
+    - generic: t
+    - text: triPilot
+  - heading "계획 이름 · 서울 1일 여행 · 4명" [level=1]:
+    - button "계획 이름 · 서울 1일 여행 · 4명":
+      - generic: 서울 1일 여행 · 4명
+  - button "항로 지킴이 끄기":
+    - generic: 지금 켜져 있어요
+  - button "메뉴":
+- region "여행 지도":
+  - generic "OpenStreetMap 지도":
+    - button "1":
+      - generic "1. 경복궁 관람 · 2026-10-19 09:00":
+        - generic: "1"
+    - button "2":
+      - generic "2. 국립중앙박물관 관람 · 2026-10-19 10:30":
+        - generic: "2"
+    - button "3":
+      - generic "3. 광장시장 · 2026-10-19 12:30":
+        - generic: "3"
+    - link "Leaflet":
+      - /url: https://leafletjs.com
+      - text: Leaflet
+    - text: "| ©"
+    - link "OpenStreetMap":
+      - /url: https://www.openstreetmap.org/copyright
+    - text: contributors ·
+    - link "지도 오류 신고":
+      - /url: https://www.openstreetmap.org/fixthemap
+  - group "지도 단추":
+    - button "지도 단추 펼치기":
+      - img "거리 눈금 5km": 5km
+- group "일정 확인과 변경":
+  - paragraph: 이동 확인 · 경복궁 관람 → 국립중앙박물관 관람
+  - button "확인 필요 1곳":
+    - generic: "!"
+    - generic: "1"
+- region "계획 확인":
+  - button "목록 높이 바꾸기"
+  - heading "계획 확인" [level=2]
+  - tablist "일차 고르기":
+    - tab "전체"
+    - tab "1일차 10.19 월 확인 필요 1곳" [selected]:
+      - text: 1일차
+      - generic: 10.19 월
+      - img "확인 필요 1곳": "1"
+  - paragraph
+  - button "전체 자동 추천 1" [disabled]:
+    - text: 전체 자동 추천
+    - generic: "1"
+  - region "1일차 10.19 월":
+    - heading "1일차 10.19 월" [level=3]:
+      - button "1일차 10.19 월" [pressed]:
+        - text: 1일차
+        - generic: 10.19 월
+    - list:
+      - button "경복궁 관람 전에 일정 추가":
+      - button "경복궁 관람 시간 고치기 · 지금 09:00":
+        - time: 09:00
+        - time: ~11:00
+      - article "경복궁 관람":
+        - img "활동":
+        - heading "경복궁 관람" [level=4]:
+          - button "경복궁 관람":
+            - generic: 경복궁 관람
+        - button "경복궁 관람 자동 추천":
+        - button "경복궁 관람 수정":
+        - button "경복궁 관람 삭제":
+      - button "경복궁 관람 다음 이동 전에 일정 추가":
+      - button "경복궁 관람에서 나서는 시각 고치기 · 지금 11:00 · 도착 11:34":
+        - time: 11:00
+        - time: ~11:34
+      - button "지하철 3호선→4호선 34분 · 6.1km 64분 늦어요 확인 필요":
+        - generic: 지하철 3호선→4호선 34분 · 6.1km
+        - generic: 64분 늦어요
+        - img "확인 필요": "!"
+      - button "국립중앙박물관 관람 전에 일정 추가":
+      - button "국립중앙박물관 관람 시간 고치기 · 지금 10:30":
+        - time: 10:30
+        - time: ~12:00
+      - article "국립중앙박물관 관람":
+        - img "활동":
+        - heading "국립중앙박물관 관람" [level=4]:
+          - button "국립중앙박물관 관람":
+            - generic: 국립중앙박물관 관람
+        - button "국립중앙박물관 관람 자동 추천":
+        - button "국립중앙박물관 관람 수정":
+        - button "국립중앙박물관 관람 삭제":
+        - generic: "!"
+        - generic: 시간
+        - generic: 주의
+      - button "국립중앙박물관 관람 다음 이동 전에 일정 추가":
+      - button "국립중앙박물관 관람에서 나서는 시각 고치기 · 지금 12:00 · 도착 12:29":
+        - time: 12:00
+        - time: ~12:29
+      - button "지하철 4호선→1호선 29분 · 5.7km":
+        - generic: 지하철 4호선→1호선 29분 · 5.7km
+      - button "광장시장 전에 일정 추가":
+      - button "광장시장 시간 고치기 · 지금 12:30":
+        - time: 12:30
+        - time: ~13:30
+      - article "광장시장":
+        - img "식사":
+        - heading "광장시장" [level=4]:
+          - button "광장시장":
+            - generic: 광장시장
+        - button "광장시장 자동 추천":
+        - button "광장시장 수정":
+        - button "광장시장 삭제":
+      - button "광장시장 다음에 일정 추가":
+  - generic "출처와 경로 안내 펼치기":
+    - generic: ⓒ한국관광공사 · © OpenStreetMap
+  - button "권장 수정안이 없어서 더 보여 드릴 게 없어요" [disabled]:
+    - generic: 권장 수정안이 없어서 더 보여 드릴 게 없어요
+- contentinfo:
+  - button "다시 제출" [disabled]:
+- status: 확인을 마쳤어요. 이동 1구간 확인 필요.

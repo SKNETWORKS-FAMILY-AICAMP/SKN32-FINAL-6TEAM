@@ -29,7 +29,11 @@ SSH_LOGIN = re.compile(r"\b[a-z_][a-z0-9_-]*@\d{1,3}(?:\.\d{1,3}){3}\b")
 PRIVATE_KEY = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")
 
 #: ★예외는 **이유와 함께** 적는다. 공인 IP 가 문서에 꼭 필요하면 여기에 넣는다 — 목록이 늘면 신호다.
-ALLOWED_IPS: dict[str, str] = {}
+ALLOWED_IPS: dict[str, str] = {
+    # `[2026-10-16]` example.com 의 공개 주소 — SNS 링크 SSRF 시험(`tests/unit/travel/test_social_links.py`)이 「공인 주소로 풀리는 정상 호스트」로 쓴다.
+    #   문서용 대역(203.0.113.0/24 등)은 서버의 공인 주소 검사가 막으므로 대신 쓸 수 없다. 우리 인프라 주소가 아니다.
+    "93.184.216.34": "example.com 공개 주소 — SNS 링크 SSRF 시험",
+}
 
 
 def _is_public(text: str) -> bool:

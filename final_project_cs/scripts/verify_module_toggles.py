@@ -67,10 +67,10 @@ print('관리자 화면 GraphStorePort 줄 ->', routes._graph_port_name('demo'))
 
 PROBE_MCP = """
 import sys; sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-from app.presentation.api import cases
+from app.core.project_config import load_project_config
 try:
-    cases._mcp_cases('11111111-1111-1111-1111-111111111111', 10)
-    print('tool 호출 -> 통과 (DB 조회까지 감)')
+    load_project_config().require_module('mcp', 'travel MCP surface')
+    print('여행 MCP 모듈 -> 활성')
 except Exception as exc:
     print('tool 호출 ->', type(exc).__name__, '|', exc)
 """

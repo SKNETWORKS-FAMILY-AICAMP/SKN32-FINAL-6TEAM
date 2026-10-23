@@ -1,0 +1,45 @@
+{
+ "case_id": "paste-03",
+ "format": "paste",
+ "defect": "typo",
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "서울 1일 여행 (1명)\n1일차 2026-10-11\n09:30 국립중앙박물곤 관람\n12:30 광장시장 빈대떡\n15:00 경복궁 관람"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (1명)",
+  "1일차 2026-10-11",
+  "09:30 국립중앙박물곤 관람",
+  "12:30 광장시장 빈대떡",
+  "15:00 경복궁 관람"
+ ],
+ "items": [
+  {
+   "date": "2026-10-11",
+   "start": "09:30",
+   "title": "국립중앙박물곤 관람",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-11",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-11",
+   "start": "15:00",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

@@ -1,0 +1,93 @@
+{
+  "model": "Gemma-4-12B-it Q4_K_M",
+  "our_training": false,
+  "publisher_training": "Instruct release",
+  "suite": "D2",
+  "saved": 1000,
+  "expected": 1000,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "single_choice_expected": 1000,
+  "compound_diagnostic_total": 0,
+  "positive": {
+    "total": 0,
+    "correct": 0,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0,
+      1.0
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      1.0
+    ]
+  },
+  "negative": {
+    "total": 1000,
+    "correct": 774,
+    "false_pick": 226,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.7470576210232625,
+      0.7988453153266535
+    ],
+    "false_pick_wilson95": [
+      0.2011546846733466,
+      0.25294237897673766
+    ]
+  },
+  "subtypes": {
+    "chitchat_holdout_aihub": {
+      "total": 700,
+      "correct": 525,
+      "false_pick": 175,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.716616668533155,
+        0.7806544080903146
+      ],
+      "false_pick_wilson95": [
+        0.21934559190968547,
+        0.283383331466845
+      ]
+    },
+    "chitchat_holdout_kocul": {
+      "total": 300,
+      "correct": 249,
+      "false_pick": 51,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7833857374317239,
+        0.8682699015600757
+      ],
+      "false_pick_wilson95": [
+        0.13173009843992434,
+        0.21661426256827604
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "5711570428675c4b3ecf89c22d8efa7ea4abaaa861f68dd40c4291298d8329d0",
+  "gold_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+  "execution": {
+    "job": {
+      "id": "g12bbase_d2",
+      "label": "Gemma-4-12B-it Q4_K_M",
+      "our_training": false,
+      "model": "/workspace/ollama/blobs/sha256-1278394b693672ac2799eadc9a83fd98259a6a88a40acfb1dcaa6c6fc895a606",
+      "prompts": "/workspace/heavy/all_prompts_d2.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "d2_backlog_g12bbase",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1000
+    },
+    "started": "2026-10-08T03:39:48.982848+00:00",
+    "prompt_sha256": "252ba43c0089031031876a02e0e9a66fe3589f4d3ccb56022d09bfb74c8657b7",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

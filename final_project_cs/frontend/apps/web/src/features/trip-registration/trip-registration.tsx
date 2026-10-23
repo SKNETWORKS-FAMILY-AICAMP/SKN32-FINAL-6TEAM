@@ -1,144 +1,527 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
-import { mapConfiguration } from "@/features/map/config";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { ArrowLeft, ArrowRight, CircleAlert, FileText, Paperclip, Plane, X } from "lucide-react";
+import { Button, ButtonLink, Eyebrow, PageHeading, Panel } from "@/components/ui";
+import { useGuardianShown } from "@/features/guardian/availability";
+import { decideGuardian, paceOf, readCriteria, setPace, useCriteria, withCriteria } from "@/features/guardian/criteria-store";
+import { GuardianCard } from "@/features/guardian/guardian-card";
+import { ReadingCriteria } from "@/features/guardian/reading-criteria";
+import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
+import { SLOW_AFTER_MS } from "@/features/intake-review/intake-starting";
+import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
-import type { DemoScenario } from "@/features/trip/model";
-import { tripKey } from "@/features/trip/use-trip";
-import { DATA_MODE, SAMPLE_PLANS, tripGateway } from "@/lib/gateway";
+import { toSurvey } from "@/features/onboarding/payload";
+import { LiveError, probeSession, startSession } from "@/lib/live/client";
 import { submitIntake } from "@/lib/live/intake";
+import { beginIntake, clearIntakeFailure, intakeFailure, loginRequiredBy, rememberIntakeArrival, type PlanRequest } from "@/lib/live/intake-start";
+import { previousPath } from "@/lib/nav-history";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { examplePlan } from "./example-plan";
+import { TestPlans } from "./test-plans";
+import { textToSend } from "./test-plan-input";
+import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
+import { PlanAskFields } from "./plan-ask-fields";
+import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
 import styles from "./trip-registration.module.css";
 
 const draftKey = "tripilot.web.registration-draft.v1";
 
+function readDraft(): string {
+  try { return sessionStorage.getItem(draftKey) ?? ""; }
+  catch { return ""; }
+}
+
+/** `[2026-10-16 ST4F-601 F8]` The plan became a trip: the next 「새 여행 등록」 starts empty instead of showing the text just sent. */
+export function clearRegistrationDraft(): void {
+  try { sessionStorage.removeItem(draftKey); } catch { /* a private window: nothing was kept */ }
+}
+
 function Preferences() {
   const t = useT();
   const [{ complete, answers }] = useOnboarding();
-  if (!complete) return null;
-  const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
-  const people = answers.adults + answers.children + answers.infants;
+  // ★Without finished answers the registration goes without a survey — say so instead of registering without them in
+  //   silence (found 2026-09-28: registered trips had no survey after a reload). `[2026-10-01]` Answers are now kept in
+  //   this browser, so this shows only when the questions were never finished.
+  if (!complete) return <><div className={styles.preferences}>
+    <Eyebrow>{t("여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
+    <p>{t("여행 취향 설문을 하지 않아 이번 여행은 설문 답 없이 등록돼요. 「하루 일정의 여유」와 항로 지킴이 선택은 그대로 함께 보내요. 설문은 메뉴의 「여행 취향 설문」에서 할 수 있어요.", "You haven’t taken the travel preferences survey, so this trip goes without its answers. How full a day is and your Course Keeper choice still go with it. The survey is under “Travel preferences survey” in the menu.")}</p>
+    <p><ButtonLink href={routes.start}>{t("여행 취향 설문 하기", "Take the survey")}</ButtonLink></p>
+  </div><hr /></>;
   return <><div className={styles.preferences}>
-    <Eyebrow>{t("함께 고른 여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
-    <div className={styles.tags}>{answers.themes.map((value) => <span key={value} className={styles.pill}>{labels[value]}</span>)}<span className={styles.pill}>{people}{t("명과 함께", " travelers")}</span></div>
-    <p>{t("홈에서 고른 취향을 이 여행과 함께 이어가요.", "The preferences you chose stay with this journey.")}</p>
+    <Eyebrow>{t("여행 취향 설문", "TRAVEL PREFERENCES SURVEY")}</Eyebrow>
+    <div className={styles.tags}>{answers.party && <span className={styles.pill}>{partyLabel(answers, t)}</span>}</div>
+    <p>{t("설문 답을 이 여행에 함께 보내요.", "Your survey answers go with this trip.")}</p>
   </div><hr /></>;
 }
 
-export function TripRegistration() {
+/** One of the three ways to give a plan: a bordered panel that is marked while it is the one that will be sent. */
+function Pane({ id, title, active, onActivate, children }: { id: RegistrationPane; title: string; active: boolean; onActivate: () => void; children: ReactNode }) {
+  const t = useT();
+  // Pressing it, writing in it, choosing in it, or moving the keyboard focus into it makes it the chosen one.
+  return <Panel className={styles.pane} data-pane={id} data-active={active || undefined} aria-current={active ? "true" : undefined} aria-labelledby={`pane-${id}-title`}
+    onClick={onActivate} onFocus={onActivate}>
+    <div className={styles.paneHead}>
+      <h2 id={`pane-${id}-title`} className={styles.paneTitle}>{title}</h2>
+      {active && <span className={styles.paneBadge}>{t("보낼 칸", "Will be sent")}</span>}
+    </div>
+    {children}
+  </Panel>;
+}
+
+/**
+ * `[2026-10-20 사용자 결정 — ST4F-615]` 「보내는 중」 while this screen waits for the server's first word: a plane gliding along a dashed line (still when animations are
+ * skipped in the settings or reduced by the device). After a few seconds it says the server is slow (the same words as the old sending screen).
+ */
+function SendingNote({ slow }: { slow: boolean }) {
+  const t = useT();
+  const { skipAnimation } = useSettings();
+  return <div className={styles.sending} role="status" aria-live="polite" data-still={skipAnimation || undefined}>
+    <span className={styles.sendingTrack} aria-hidden="true"><Plane className={styles.sendingPlane} size={18} strokeWidth={1.8} /></span>
+    <span>{slow ? t("서버가 답하는 데 시간이 걸리고 있어요 · 조금만 기다려 주세요…", "The server is taking a while to answer · one moment…") : t("계획을 서버로 보내는 중이에요…", "Sending your plan to the server…")}</span>
+  </div>;
+}
+
+// Today in Seoul is known only in the browser: the server render (and the first paint) has none, so no date check is shown before it.
+const never = () => () => undefined;
+
+export function TripRegistration({ onSending }: { onSending?: () => void } = {}) {
   const t = useT();
   const { language } = useSettings();
-  const from = useSearchParams().get("from");
+  const [onboarding] = useOnboarding();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const [source, setSource] = useState<{ origin: string | null; value: string }>();
-  const [scenario, setScenario] = useState<DemoScenario>("success");
+  useEffect(() => { router.prefetch(routes.intakeStarting); }, [router]);
+  const [returned] = useState(intakeFailure);
+  const [source, setSource] = useState<string | undefined>(() => returned?.text);
   const [validation, setValidation] = useState("");
+  // 시험 계획을 고르면 입력칸에 그 원문이 채워진다. 원문을 고치지 않고 보내면 서버가 시험 계획으로 기록하도록 코드로 보낸다.
+  const [testPlan, setTestPlan] = useState<{ code: string; text: string } | null>(null);
+  // Raised on every press that is turned back, so the notice is brought into view again even when it says the same words.
+  const [nudge, setNudge] = useState(0);
   const [draftWarning, setDraftWarning] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-  const live = DATA_MODE === "live";
-  const draft = useQuery({
-    queryKey: ["registration-draft", from],
-    queryFn: async () => {
-      if (from) return (await tripGateway.getTrip(from, language)).source;
-      try { return sessionStorage.getItem(draftKey) ?? ""; }
-      catch { return ""; }
+  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계]` 「읽는 기준」 (a day's fullness, 「적당히」 from the start) and the Course Keeper card that opens when 「계획 확인하기」 is pressed, before the plan is read.
+  const criteria = useCriteria();
+  const [card, setCard] = useState(false);
+  // ★`[2026-10-19 사용자 결정 — ST4F-613]` The operator's switch for the Course Keeper (`GET /v1/web/features`). Not said yet: as before (the card asks).
+  const guardianShown = useGuardianShown() !== false;
+  // ★`[2026-10-20 사용자 결정 — ST4F-615]` 「직접 입력」 is sent from THIS screen, and the screen waits for the server's first word — whether the quick screen at its door
+  //   (an empty text, or one with no travel clue) turned the plan back — before it moves on. Meanwhile the box is locked and 「보내는 중」 is shown.
+  const [screening, setScreening] = useState(false);
+  const [screeningSlow, setScreeningSlow] = useState(false);
+  // The intake the server took for the text now in the box: pressing again after the Course Keeper card was closed does not send it twice.
+  const taken = useRef<{ text: string; intakeId: string } | null>(null);
+  // A refusal on this screen that only an account gets past (a guest's trip limit): 「계정으로 계속하기」 under the sentence.
+  const [needLogin, setNeedLogin] = useState(false);
+  // Raised when the plan was turned back: the box takes the focus once it is unlocked again.
+  const [refocus, setRefocus] = useState(0);
+  useEffect(() => {
+    if (!screening) return;
+    const timer = setTimeout(() => setScreeningSlow(true), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [screening]);
+  useEffect(() => { if (refocus > 0) document.getElementById("plan-source")?.focus(); }, [refocus]);
+  // The sending in flight from this screen: leaving the screen stops waiting for it — a late answer must not pull the customer anywhere.
+  const sendingFrom = useRef<AbortController | null>(null);
+  useEffect(() => () => sendingFrom.current?.abort(), []);
+  // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown, the attached files and the planning
+  //   conditions are given back, and the panel it came from is the chosen one again.
+  const [files, setFiles] = useState<File[]>(() => returned?.files ?? []);
+  const [restored, setRestored] = useState(() => returned?.message ?? "");
+  const [ask, setAsk] = useState<PlanAsk>(() => returned?.plan ? { start: returned.plan.start_date, days: returned.plan.days, party: returned.plan.party_size, wish: returned.plan.wish } : emptyAsk);
+  // ★`[2026-10-03 사용자 결정]` The panel touched last is the one that is sent — and only that one .
+  const [active, setActive] = useState<RegistrationPane>(() => returned ? paneOfSending(returned) : "text");
+  useEffect(() => {
+    let live = true;
+    void takeLoginDraft().then((saved) => {
+      if (!live || !saved) return;
+      setSource(saved.text); setFiles(saved.files); setAsk(saved.ask); setActive(saved.active);
+      void clearLoginDraft().catch(() => setDraftWarning(t("복구한 입력의 임시 사본을 지우지 못했어요. 이 브라우저에 보관되어 있어요.", "Could not remove the restored draft's temporary copy. It remains in this browser.")));
+    }).catch(() => { if (live) setDraftWarning(t("로그인 전에 보관한 입력을 불러오지 못했어요. 기존 글 임시 저장은 유지돼요.", "Could not restore the draft kept before sign-in. Your text draft is still available.")); });
+    return () => { live = false; };
+  }, [t]);
+  const today = useSyncExternalStore(never, seoulToday, () => "");
+  useEffect(() => { clearIntakeFailure(); }, []);
+  // ★`[2026-10-06 사용자 지적]` A press turned back for an empty plan showed its notice far below the panels where nobody looks: it now stands under the input and is brought into view.
+  useEffect(() => {
+    if (nudge > 0) document.getElementById("plan-error")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [nudge]);
+  // ★Human check (Turnstile) — only when a site key is set. A token is good for one send.
+  const checking = Boolean(TURNSTILE_SITE_KEY);
+  const [humanToken, setHumanToken] = useState<string | null>(null);
+  const [humanReset, setHumanReset] = useState(0);
+  // Waiting for the next token (a new customer needs two: one to start the session, one for the plan).
+  const nextToken = useRef<((token: string) => void) | null>(null);
+  function takeToken(token: string | null) {
+    setHumanToken(token);
+    if (token) { setValidation(""); nextToken.current?.(token); nextToken.current = null; }
+  }
+  /** Spend the current token and wait for a fresh one — a token is checked once only. */
+  function freshToken(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const timer = window.setTimeout(() => { nextToken.current = null; reject(new LiveError("human_check_timeout", t("사람 확인이 끝나지 않았어요. 다시 눌러 주세요.", "The human check did not finish. Please press again."))); }, 60_000);
+      nextToken.current = (token) => { window.clearTimeout(timer); resolve(token); };
+      setHumanToken(null);
+      setHumanReset((count) => count + 1);
+    });
+  }
+  // The text box keeps what was typed while the customer moves around the app (this tab's session storage).
+  // Browser-only restoration uses an empty server snapshot, then reads synchronously after hydration.
+  // It never waits for an API response or replaces the input form with a loading screen.
+  const draft = useSyncExternalStore(never, readDraft, () => "");
+  const value = source ?? draft;
+  async function continueWithAccount() {
+    try {
+      await keepLoginDraft({ text: value, files, ask, active });
+      router.push(`${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.newTrip)}`);
+    } catch {
+      setDraftWarning(t("로그인 전에 입력을 보관하지 못했어요. 파일을 다시 선택하지 않도록 이 화면에서 다시 시도해 주세요.", "Could not keep your input before sign-in. Try again here to avoid selecting your files again."));
+    }
+  }
+  // ★글·파일·짜 달라는 조건을 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
+  //   `[2026-10-03 사용자 지시]` 누르면 곧바로 진행 화면으로 넘어간다: 보내기는 여기서 시작하고(`beginIntake`) 서버의 답은 그 화면이
+  //   기다린다. 사람 확인 뒤의 새 고객만 여기서 기다린다 — 세션 시작에 쓴 확인이 한 번 소비되고, 계획은 새 확인으로 간다(두 확인 모두 이 화면에 있다).
+  //   ★`[2026-10-20 사용자 결정 — ST4F-615]` 파일 · 계획 짜 주기만 그렇다. 「직접 입력」은 이 화면에서 접수 응답(빠른 거름)을 기다린 뒤 넘어간다(`sendText`).
+  //   `[2026-10-04]` 이미 세션이 있으면(쿠키 · 옛 키 이전) 확인을 쓰지 않고 그대로 보낸다.
+  //   ★`[2026-10-03 사용자 결정]` 마지막에 고른 칸만 보낸다: 직접 입력이면 글만, 파일이면 파일만, 계획 짜 주기면 그 조건만(고른 칸이 비어 있으면 단추가 꺼져 있다).
+  const [sent, setSent] = useState(false);
+  function send(token: string | null) {
+    setSent(true);
+    const base = { language, humanToken: token };
+    if (active === "plan") {
+      // The short text rides as the intake's text (the server reads it as the preferences); the survey only when it was finished.
+      const survey = withCriteria(onboarding.complete ? toSurvey(onboarding.answers) : undefined, readCriteria());      // what the plan screen decided is laid over the preference survey
+      const plan: PlanRequest = { start_date: ask.start, days: ask.days, party_size: ask.party, wish: ask.wish, ...(survey && { survey }) };
+      beginIntake({ ...base, text: ask.wish.trim(), files: [], plan });
+    } else beginIntake({ ...base, text: "", files });       // 「직접 입력」 does not come here: it is sent by `sendText`
+    onSending?.();
+    router.push(routes.intakeStarting);
+  }
+  const signUp = useMutation({
+    mutationFn: async () => {
+      if (await probeSession(language)) return humanToken;       // someone is already here: the check is still unspent, send with it
+      await startSession(language, humanToken);                  // the server checks (and spends) the token when it starts the guest session
+      return freshToken();
     },
-    retry: false,
-    staleTime: Infinity,
+    onSuccess: send,
+    // The token was spent on this attempt; ask for a fresh one before the next.
+    onError: () => setHumanReset((count) => count + 1),
   });
-  const value = source?.origin === from ? source.value : draft.data ?? "";
-  const create = useMutation({
-    mutationFn: () => tripGateway.createTrip({ source: value, scenario }, language),
-    onSuccess: (trip) => {
-      queryClient.setQueryData(tripKey(trip.id, language), trip);
-      router.push(routes.verification(trip.id));
-    },
-  });
-  // ★실제 연결 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
-  const intake = useMutation({
-    mutationFn: () => submitIntake(value, files, language),
-    onSuccess: (result) => router.push(routes.intake(result.intake_id)),
-  });
-  const pending = create.isPending || intake.isPending;
+  const pending = signUp.isPending || sent || screening;
+  // The chosen panel has nothing to send yet: pressing 「계획 확인하기」 says why under the panels and moves the focus there (the button is NOT switched off).
+  const reason = paneReason(active, { text: value, files: files.length, ask }, today);
+
+  /** The panel the customer touched becomes the chosen one; anything said about the last sending goes with it. */
+  function choose(pane: RegistrationPane) {
+    if (pending) return;                                         // the sending has begun with this panel (review 2026-10-03: a click while the session was starting changed what was sent)
+    if (pane !== active) setActive(pane);
+  }
+  function changeAsk(next: PlanAsk) {
+    setAsk(next);
+    setActive("plan");
+    setValidation("");
+    signUp.reset();
+    setRestored("");
+  }
 
   function updateSource(next: string) {
-    setSource({ origin: from, value: next });
-    queryClient.setQueryData(["registration-draft", from], next);
-    if (from) queryClient.setQueryData(["registration-draft", null], next);
+    setActive("text");
+    setSource(next);
     setValidation("");
-    create.reset();
-    intake.reset();
+    signUp.reset();
+    setRestored("");
     try { sessionStorage.setItem(draftKey, next); setDraftWarning(""); }
     catch { setDraftWarning(t("임시 저장을 사용할 수 없어요. 이 화면을 닫으면 입력 내용이 사라질 수 있어요.", "Drafts cannot be saved here. Closing this page may lose your input.")); }
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (pending) return;
-    if (!value.trim() && !(live && files.length)) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
-    setValidation("");
-    if (live) intake.mutate(); else create.mutate();
+  function chooseTestPlan(code: string, text: string) {
+    setTestPlan({ code, text });
+    updateSource(text);
   }
 
-  if (draft.isPending || draft.error) return <QueryState loading={draft.isPending} error={draft.error} retry={() => void draft.refetch()} />;
-  const error = validation || create.error?.message || intake.error?.message;
-  const demo = DATA_MODE === "demo";
+  /** The empty panel's own input takes the focus, so the way on is where the words are. */
+  function focusChosen() {
+    const target = active === "text" ? document.getElementById("plan-source")
+      : active === "files" ? document.getElementById("plan-files")
+        : document.querySelector<HTMLElement>('[data-pane="plan"] input, [data-pane="plan"] select, [data-pane="plan"] button');
+    target?.focus();
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending || card) return;
+    // ★`[2026-10-03 사용자 결정]` The chosen panel must have something in it. ★`[2026-10-06 사용자 지시]` The button is not switched off for it any more: pressing it with nothing in the panel says why under the panels
+    //   (`role="alert"`, gone as soon as the customer starts writing) and puts the focus there. Pressing Enter in a field is the same.
+    if (reason) {
+      setValidation(active === "text" ? t("여행 계획을 적거나 파일을 올려 주세요.", "Write your plan or upload a file.") : t(...reason));
+      setNudge((count) => count + 1);
+      focusChosen();
+      return;
+    }
+    if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
+    setValidation("");
+    setRestored("");
+    setNeedLogin(false);
+    // ★`[2026-10-20 사용자 결정 — ST4F-615]` 「직접 입력」 goes to the server from here first; the Course Keeper card and the progress screen come once the server took it.
+    if (active === "text") { void sendText(); return; }
+    // ★`[2026-10-19 사용자 결정 — ST4F-613]` The operator switched the Course Keeper off: no card, the plan goes at once (and without `on_disruption` — `withCriteria`).
+    if (!guardianShown) { proceed(null); return; }
+    // ★`[2026-10-06 사용자 지시 — 한 번 켜면 켜진 상태가 기본]` A Course Keeper choice already made (turned on once before, or answered in this tab) is not asked again; otherwise the card asks BEFORE the plan is read.
+    const made = readCriteria();
+    // ★`[2026-10-07 사용자 지시 — 켠 선택은 기억하고 끈 선택은 다시 물어본다]` Only a choice to turn it ON is kept and not asked again; a choice to leave it OFF is asked again with the next plan (the card is where it can be turned on).
+    if (made.decided && made.guardian === "on") { proceed("on"); return; }
+    setCard(true);
+  }
+
+  /** 「켜고 진행」 / 「건너뛰기 — 끄고 진행」: the choice is kept (and sent with the plan, `ask_first` said out loud when off), then the plan is sent as before.
+   *  `null`: the Course Keeper is switched off by the operator — nothing is chosen, the plan is sent. */
+  function proceed(guardian: "on" | "off" | null) {
+    if (guardian) decideGuardian(guardian);
+    setCard(false);
+    // 「직접 입력」: the server already has it (it passed the quick screen) — straight on to that intake's progress screen.
+    if (active === "text" && taken.current) { goToIntake(taken.current); return; }
+    if (checking) signUp.mutate();
+    else send(humanToken);
+  }
+
+  /**
+   * `[2026-10-20 사용자 결정 — ST4F-615]` 「직접 입력」: send from this screen and wait for the server's answer, the box locked and 「보내는 중」 shown.
+   * Turned back by the quick screen (`screened`): stay, say so and put the focus in the box. Taken: on (`afterTaken`). A refusal stays here with its sentence.
+   */
+  async function sendText() {
+    const text = textToSend(value, testPlan);
+    if (taken.current?.text === text) { afterTaken(); return; }    // the same text was taken already (the card was closed): no second intake
+    taken.current = null;
+    setScreening(true);
+    setScreeningSlow(false);
+    const controller = new AbortController();
+    sendingFrom.current = controller;
+    try {
+      const answer = await submitIntake(text, [], language, await sessionToken(), controller.signal);
+      if (controller.signal.aborted) return;
+      if (answer.screened) {
+        renewHumanCheck();
+        setScreening(false);
+        setValidation(t("일정을 찾지 못했어요. 날짜·시간·장소를 확인해 다시 입력하거나 파일을 올려 주세요.", "No stops were found. Check the dates, times and places, then edit your plan or upload a file."));
+        setNudge((count) => count + 1);
+        setRefocus((count) => count + 1);
+        return;
+      }
+      taken.current = { text, intakeId: answer.intake_id };
+      afterTaken();
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      renewHumanCheck();
+      setScreening(false);
+      setNeedLogin(loginRequiredBy(error));
+      setValidation(error instanceof Error ? error.message : String(error));
+      setNudge((count) => count + 1);
+    }
+  }
+
+  /** The token the plan goes with. With the human check on, a customer without a session spends one on starting it and the plan takes a fresh one — as `signUp` does. */
+  async function sessionToken(): Promise<string | null> {
+    if (!checking) return humanToken;
+    try {
+      if (await probeSession(language)) return humanToken;
+      await startSession(language, humanToken);
+      return await freshToken();
+    } catch (error) { setHumanReset((count) => count + 1); throw error; }
+  }
+
+  /** A token is checked once: after a sending that did not move on, the next press needs a fresh one. */
+  function renewHumanCheck() {
+    if (!checking) return;
+    setHumanToken(null);
+    setHumanReset((count) => count + 1);
+  }
+
+  /** The server took the plan: the Course Keeper card when it is shown and not decided yet, then that intake's progress screen. */
+  function afterTaken() {
+    if (!guardianShown) { proceed(null); return; }
+    const made = readCriteria();
+    if (made.decided && made.guardian === "on") { proceed("on"); return; }
+    setScreening(false);                                          // the sending is over: the card asks (the box stays behind it)
+    setCard(true);
+  }
+
+  /** On to the progress screen of the intake the server took — the plan check follows the reading from there, as after the old sending screen. */
+  function goToIntake({ text, intakeId }: { text: string; intakeId: string }) {
+    setSent(true);
+    rememberIntakeArrival(intakeId, text);
+    router.push(routes.intake(intakeId));
+  }
+
+  const error = validation || signUp.error?.message || restored;
+  // One notice, under the panel that is chosen (the input the customer is looking at) - never at the foot of the page.
+  const errorNode = error ? <div id="plan-error" className={styles.error} role="alert"><CircleAlert size={18} strokeWidth={1.8} aria-hidden="true" /><span>{error}
+    {((returned?.loginRequired && restored) || needLogin) && <><br /><Button onClick={() => void continueWithAccount()}>{t("계정으로 계속하기", "Continue with an account")}</Button></>}
+  </span></div> : null;
+
+  // The text box, the file picker and the planning conditions each sit in their own panel (`Pane`).
+  const textBox = <>
+    <div className={styles.labelRow}>
+      <label htmlFor="plan-source">{t("나의 여행 계획", "Your travel plan")}</label>
+      <Button variant="quiet" className={styles.sample} onClick={() => updateSource(examplePlan(language))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
+    </div>
+    <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
+      placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
+    <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
+    {active === "text" && screening && <SendingNote slow={screeningSlow} />}
+    {active === "text" && errorNode}
+    <TestPlans value={value} onChoose={chooseTestPlan} disabled={pending} />
+  </>;
+  // 2026-09-30: file picker designed by Codex astra — the native input stays (hidden) for keyboard and screen readers.
+  const filePicker = (
+    <div className={`${styles.files} ${styles.filePanel}`}>
+      <div className={styles.filePicker}>
+        <input
+          className={styles.fileInput}
+          id="plan-files"
+          type="file"
+          multiple
+          accept="image/*,.pdf,.docx,.xlsx,.txt"
+          disabled={pending}
+          aria-describedby="plan-files-help plan-files-status"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              if (!event.repeat) event.currentTarget.click();
+            }
+          }}
+          onChange={(event) => {
+            const selected = Array.from(event.currentTarget.files ?? []);
+            if (selected.length === 0) return;
+
+            setFiles(selected.slice(0, 5));
+            setActive("files");
+            setValidation("");
+            signUp.reset();
+            setRestored("");
+
+            // 같은 파일도 다시 선택할 수 있도록 초기화합니다.
+            // 제출할 파일은 기존 files state에 보관됩니다.
+            event.currentTarget.value = "";
+          }}
+        />
+        <label className={styles.fileTrigger} htmlFor="plan-files">
+          <Paperclip size={18} aria-hidden="true" />
+          <span>
+            {pending
+              ? t("처리 중…", "Processing…")
+              : t("파일 선택", "Choose files")}
+          </span>
+        </label>
+      </div>
+
+      <p id="plan-files-help" className={styles.fileHelp}>
+        {t(
+          "사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)",
+          "You can also upload a photo, PDF, Word or Excel plan (up to 5 files, 10MB each)",
+        )}
+      </p>
+
+      <p
+        id="plan-files-status"
+        className={styles.fileStatus}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {t(`${files.length} / 5개 선택됨`, `${files.length} / 5 files selected`)}
+      </p>
+
+      {files.length > 0 && (
+        <ul
+          className={`${styles.fileList}${pending ? ` ${styles.fileListBusy}` : ""}`}
+          aria-label={t("선택한 파일", "Selected files")}
+        >
+          {files.map((file, index) => (
+            <li
+              className={styles.fileChip}
+              key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
+            >
+              <FileText
+                className={styles.fileIcon}
+                size={18}
+                aria-hidden="true"
+              />
+
+              <div className={styles.fileDetails}>
+                <span className={styles.fileName}>{file.name}</span>
+                <span className={styles.fileSize}>
+                  {file.size < 1024
+                    ? `${file.size} B`
+                    : file.size < 1024 * 1024
+                      ? `${Math.ceil(file.size / 1024)} KB`
+                      : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                </span>
+              </div>
+
+              <button
+                className={styles.fileRemove}
+                type="button"
+                disabled={pending}
+                aria-label={t(`${file.name} 빼기`, `Remove ${file.name}`)}
+                onClick={() => {
+                  setFiles((current) =>
+                    current.filter((_, fileIndex) => fileIndex !== index),
+                  );
+                  setValidation("");
+                  signUp.reset();
+                  setRestored("");
+                }}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {active === "files" && errorNode}
+    </div>
+  );
 
   return <>
-    <PageHeading eyebrow="A PLAN THAT FEELS LIKE YOU" title={t("이제, 여행을 담아볼까요?", "Let’s put your trip together.")}
-      description={t("준비한 계획을 그대로 붙여 넣어 주세요.\n하나씩 살펴보고, 편안한 여행으로 이어갈게요.", "Paste the plan you have prepared.\nWe’ll walk through it, one step at a time.")} />
+    <PageHeading eyebrow="A PLAN THAT FEELS LIKE YOU" title={t("여행 계획 담기", "Add your travel plan")}
+      description={t("준비한 일정을 붙여 넣거나 직접 입력해 주세요.\n장소 · 운영시간 · 이동을 확인해 드려요.", "Paste or type in your plan.\nWe check places, opening hours and travel between them.")} />
     <form onSubmit={submit} noValidate>
       <div className={styles.layout}>
-        <Panel className={styles.editor}>
-          <div className={styles.labelRow}>
-            <label htmlFor="plan-source">{t("나의 여행 계획", "Your travel plan")}</label>
-            {demo && <Button variant="quiet" className={styles.sample} onClick={() => updateSource(SAMPLE_PLANS[language])} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>}
+        <div className={styles.editor}>
+          <div className={styles.panes}>
+            <Pane id="text" title={t("직접 입력", "Type it in")} active={active === "text"} onActivate={() => choose("text")}>{textBox}</Pane>
+            <Pane id="files" title={t("파일 선택", "Choose files")} active={active === "files"} onActivate={() => choose("files")}>{filePicker}</Pane>
+            <Pane id="plan" title={t("계획 짜 주기 (테스트)", "Plan it for me (test)")} active={active === "plan"} onActivate={() => choose("plan")}>
+              <PlanAskFields ask={ask} today={today} disabled={pending} onChange={changeAsk} />
+              {active === "plan" && errorNode}
+            </Pane>
           </div>
-          <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
-            placeholder={t("1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "DAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
-          <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
-          {live && <div className={styles.files}>
-            <label htmlFor="plan-files">{t("사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)", "You can also upload a photo, PDF, Word or Excel plan (up to 5 files, 10MB each)")}</label>
-            <input id="plan-files" type="file" multiple accept="image/*,.pdf,.docx,.xlsx,.txt" disabled={pending}
-              onChange={(event) => { setFiles(Array.from(event.target.files ?? []).slice(0, 5)); setValidation(""); intake.reset(); }} />
-            {files.length > 0 && <p>{files.map((file) => file.name).join(" · ")}</p>}
-          </div>}
-          {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
+          <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />
+          {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
-        </Panel>
+        </div>
         <aside className={styles.tips}>
           <Panel>
             <Preferences />
-            <h2>{t("작은 준비, 더 편한 여행", "A little preparation goes a long way")}</h2>
+            <h2>{t("이렇게 적으면 잘 읽어요", "Tips for writing your plan")}</h2>
             <ol className={styles.tipList}>
               <li>{t("일차 제목에 날짜를 적어요.", "Start each day with a date.")}</li>
               <li>{t("시작 시간과 장소를 한 줄씩 적어요.", "Write each start time and place on a new line.")}</li>
               <li>{t("예약한 일정은 ‘예약 있음’으로 표시해요.", "Mark reserved plans with “reserved”.")}</li>
             </ol>
           </Panel>
-          {demo && <details className={styles.demoOptions}>
-            <summary>{t("데모 체험 옵션", "Preview options")}</summary>
-            <label htmlFor="demo-scenario">{t("검증 결과 시나리오", "Verification scenario")}</label>
-            <select id="demo-scenario" value={scenario} disabled={pending} onChange={(event) => setScenario(event.target.value as DemoScenario)}>
-              <option value="success">{t("검증 완료", "Completed")}</option>
-              <option value="needs-review">{t("확인이 필요한 항목", "Items needing review")}</option>
-              <option value="failed">{t("검증 중단 후 재시도", "Failure and retry")}</option>
-            </select>
-            <p>{t("준비된 응답으로 화면 흐름을 체험해요.", "Explore the flow with prepared responses.")}{mapConfiguration.provider !== "demo" && ` ${t("일정 끝에 [좌표: 위도, 경도]를 적으면 지도에 핀으로 표시해요.", "Add [좌표: latitude, longitude] to a stop to pin it on the map.")}`}</p>
-          </details>}
         </aside>
       </div>
       <div className={styles.actions}>
-        <ButtonLink href={routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("홈으로", "Home")}</ButtonLink>
+        {/* ★`[2026-10-16 ST4F-601 F16]` Back to the screen it was opened from (it always went to the intro, also from My trips); the intro when there is none. */}
+        <Button onClick={() => { if (previousPath() !== null) router.back(); else router.push(routes.home); }}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</Button>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
-        <Button variant="primary" type="submit" disabled={pending}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
+        {/* `[2026-10-06 사용자 지적]` Empty: it LOOKS switched off (grey) but still answers a press - it says what to do. It is not `disabled`, which would say nothing. */}
+        <Button variant="primary" type="submit" disabled={pending && !screening} className={reason ? styles.blocked : ""} aria-disabled={reason || screening ? true : undefined} aria-busy={screening || undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>
     </form>
+    {card && <GuardianCard kind="start" onPrimary={() => proceed("on")} onSecondary={() => proceed("off")} onClose={() => setCard(false)} />}
   </>;
 }

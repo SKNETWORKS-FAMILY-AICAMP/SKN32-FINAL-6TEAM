@@ -1,0 +1,14 @@
+## 유형별 직접 짚기 정답 수 (heavy 판정 + mix4 + mix5 = 유형당 24문제)
+유형                          g:26b      g:12b hint_g:e4b      g:e4bz:gemma_e2b  z:trida4b      g:e2b     ft:q2b
+context_pronoun                24         24         21         21         21         18         20         15
+duplicate_place                24         23         22         22         21         19         19         17
+confusable_name                24         24         24         24         24         24         24         24
+compound_intent                15         17         12         16         16         20         15         16
+negation                       23         21         21         18         12         14         12         11
+typo_slang                     24         24         23         23         23         23         24         24
+out_of_scope                   21         19         23         21         22         19         20         21
+nameless_description           23         23         22         22         19         18         19         16
+ordinal_relative               21         19         12         10         14          7         10          2
+change_request                 24         23         23         20         24         17         20         24
+absent_but_plausible           24         21         21         21         21         22         19         21
+합계(264)                       247        238        224        218        217        201        202        191

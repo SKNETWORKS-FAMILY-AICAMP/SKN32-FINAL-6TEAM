@@ -1,0 +1,41 @@
+{
+  "requested_model": "claude-sonnet-5-5",
+  "canonical_models": {
+    "claude-sonnet-5-5": "claude-sonnet-5-5"
+  },
+  "is_error": false,
+  "subtype": "success",
+  "claude_exit": 0,
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 12,
+      "outputTokens": 7783,
+      "cacheReadInputTokens": 211493,
+      "cacheCreationInputTokens": 63062,
+      "webSearchRequests": 0,
+      "costUSD": 0.3724006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3169,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "actual_read_paths": [
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\teams\\team-contract\\plugin-availability.md",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\entry\\trip_api.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\entry\\trip_api.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\team_hooks\\dining_ledger.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\scripts\\run_sweepers.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\test_plugin_worker_availability.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\scenario\\test_watch_batch.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\tests\\unit\\travel\\test_trip_api_plugin_boundaries.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\entry\\trip_api.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\entry\\trip_api.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\scripts\\run_sweepers.py",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\composition.py"
+  ],
+  "tests_executed": false
+}

@@ -132,39 +132,52 @@ IMPLEMENTATIONS: tuple[Implementation, ...] = (
     # ── 여행 (v10 §5) — 2026-09-09 등록분 ──────────────────────────────
     Implementation(
         id="team.activity",
-        ref="app.modules.travel_ops.activity:ActivityTeam",
+        ref="app.domains.travel_ops.instances.activity:ActivityTeam",
         display_name="Activity Team",
         description="활동 예약의 취소 가능 여부·실행 가능 여부. 변경은 제안까지다.",
     ),
     Implementation(
         id="team.booking_handoff",
-        ref="app.modules.travel_ops.booking_handoff:BookingHandoffTeam",
+        ref="app.domains.travel_ops.instances.booking_handoff:BookingHandoffTeam",
         display_name="Booking Handoff Team",
         description="공급자 원장과 대조하고 변경·취소를 승인 대기로 넘긴다.",
     ),
     Implementation(
         id="team.mobility",
-        ref="app.modules.travel_ops.mobility:MobilityTeam",
+        ref="app.domains.travel_ops.instances.mobility:MobilityTeam",
         display_name="Mobility Team",
         description="구간 이동이 일정 안에 들어가는지 계산한다.",
     ),
     Implementation(
         id="team.dining",
-        ref="app.modules.travel_ops.dining:DiningTeam",
+        ref="app.domains.travel_ops.instances.dining:DiningTeam",
         display_name="Dining Team",
         description="그 일정 시각에 여는지와 동행 조건을 확인한다.",
     ),
     Implementation(
         id="team.lodging",
-        ref="app.modules.travel_ops.locked_bookings:LodgingTeam",
+        ref="app.domains.travel_ops.instances.locked:LodgingTeam",
         display_name="Lodging Team (등록만)",
         description="잠긴 예약으로만 취급한다. 조정 제안을 만들지 않는다.",
     ),
     Implementation(
         id="team.flight",
-        ref="app.modules.travel_ops.locked_bookings:FlightTeam",
+        ref="app.domains.travel_ops.instances.locked:FlightTeam",
         display_name="Flight Team (등록만)",
         description="잠긴 예약으로만 취급한다. 조정 제안을 만들지 않는다.",
+    ),
+    # `[2026-10-07~08]` 숙소 · 항공 본체 — `config/project.yaml` 이 이쪽을 쓴다
+    Implementation(
+        id="team.lodging_search",
+        ref="app.domains.travel_ops.instances.lodging:LodgingTeam",
+        display_name="Lodging Team",
+        description="숙소를 찾아 주고(마이리얼트립 · 구글 호텔), 일정 숙소 항목을 새 후보로 바꾼다. 예약은 링크로.",
+    ),
+    Implementation(
+        id="team.flight_search",
+        ref="app.domains.travel_ops.instances.booking:BookingTeam",   # `[2026-10-14]` 규칙 기반 예약 모듈(옛 instances.flight:FlightTeam)
+        display_name="Booking Module (항공)",
+        description="항공편을 찾아 주고(마이리얼트립 · Ignav · 구글 항공권, 문장 해석은 규칙), 일정 항공편 항목을 새 편으로 바꾼다. 예약은 링크로. 기차 · 버스로 넓힐 예약 모듈.",
     ),
 )
 

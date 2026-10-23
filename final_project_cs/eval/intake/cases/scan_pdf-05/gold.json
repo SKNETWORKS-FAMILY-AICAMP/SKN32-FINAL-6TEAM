@@ -1,0 +1,45 @@
+{
+ "case_id": "scan_pdf-05",
+ "format": "scan_pdf",
+ "defect": null,
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "scan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (1명)",
+  "DAY 1 2026-10-15",
+  "09:30 여의도한강공원",
+  "12:30 망원시장 칼국수",
+  "15:00 익선동 한옥거리"
+ ],
+ "items": [
+  {
+   "date": "2026-10-15",
+   "start": "09:30",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-15",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-15",
+   "start": "15:00",
+   "title": "익선동 한옥거리",
+   "place": "익선동",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

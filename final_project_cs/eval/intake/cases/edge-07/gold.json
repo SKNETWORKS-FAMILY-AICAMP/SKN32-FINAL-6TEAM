@@ -1,0 +1,57 @@
+{
+ "case_id": "edge-07",
+ "format": "edge",
+ "defect": "c7_english_date",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "Seoul trip (2 people)\nDay 1 Oct 20\n9:30 Gyeongbokgung Palace\n12:30 Tosokchon Samgyetang\n15:00 Bukchon Hanok Village\nDay 2 Oct 21\n10:00 National Museum of Korea"
+  }
+ ],
+ "lines": [
+  "Seoul trip (2 people)",
+  "Day 1 Oct 20",
+  "9:30 Gyeongbokgung Palace",
+  "12:30 Tosokchon Samgyetang",
+  "15:00 Bukchon Hanok Village",
+  "Day 2 Oct 21",
+  "10:00 National Museum of Korea"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": "09:30",
+   "title": "Gyeongbokgung Palace",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "12:30",
+   "title": "Tosokchon Samgyetang",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "15:00",
+   "title": "Bukchon Hanok Village",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-21",
+   "start": "10:00",
+   "title": "National Museum of Korea",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [],
+ "why": "영어 월 이름 날짜(Oct 20) — 일차만 읽고 날짜를 버리며 줄은 「읽음」이라 모델에게도 안 간다"
+}

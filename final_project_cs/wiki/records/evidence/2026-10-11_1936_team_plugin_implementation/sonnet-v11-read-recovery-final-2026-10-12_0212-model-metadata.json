@@ -1,0 +1,85 @@
+{
+  "requested_model": "claude-sonnet-5-5",
+  "exit_code": 0,
+  "is_error": false,
+  "canonical_models": {
+    "claude-sonnet-5-5": "claude-sonnet-5-5"
+  },
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 20,
+      "outputTokens": 26952,
+      "cacheReadInputTokens": 602764,
+      "cacheCreationInputTokens": 109175,
+      "webSearchRequests": 0,
+      "costUSD": 0.8268127999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 19245,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "permission_denials": [],
+  "direct_Read_calls": [
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/components/conversation/fact_read_retry.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/components/conversation/case_dispatch.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/review-notes/read-recovery-contract.md"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/components/conversation/trip_messages.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/components/conversation/decision_unit.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/components/conversation/trip_messages.py",
+      "offset": 811,
+      "limit": 160
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/components/conversation/fact_context.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/components/conversation/chat_log.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/application/classification.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/domains/travel_ops/entry/trip_api.py",
+      "offset": 2000,
+      "limit": 60
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/tests/unit/travel/test_implicit_reply_recency.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/tests/unit/travel/test_fact_read_recovery.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/tests/e2e/test_fact_read_recovery_web.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/tests/e2e/test_reply_recency_web.py"
+    },
+    {
+      "file_path": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/legacy/deployment_candidates/2026-10-12_015017_plugin_v11/app/core/case_lifecycle/events.py",
+      "offset": 48,
+      "limit": 30
+    }
+  ],
+  "tools": {
+    "Read": 15,
+    "Bash": 1,
+    "Glob": 1,
+    "Grep": 5
+  },
+  "num_turns": 23
+}

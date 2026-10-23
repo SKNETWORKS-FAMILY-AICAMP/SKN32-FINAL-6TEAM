@@ -1,0 +1,37 @@
+[
+  {
+    "original": "final_project_cs\\scripts\\mobility\\build_car_turn_policy_v1.py",
+    "backup": "final_project_cs\\scripts\\mobility\\_backup\\2026-10-11_1515_単一方向ユータン\\build_car_turn_policy_v1.py",
+    "sha256": "bd56a3841a90f8a73c6414b86feab1c992ba76462e012fd1e65ee0234378d190"
+  },
+  {
+    "original": "final_project_cs\\wiki\\teams\\mobility.md",
+    "backup": "final_project_cs\\wiki\\teams\\_backup\\2026-10-11_1515_単一方向ユータン\\mobility.md",
+    "sha256": "4d526068120155f4128240ecceec744fc9ac28ac81ea2aaa257b86daf7f99184"
+  },
+  {
+    "original": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\turn_restrictions_v1.json",
+    "backup": "datasets\\mobility\\processed\\mobility\\road_graph_v2\\_backup\\2026-10-11_1515_単一方向ユータン\\turn_restrictions_v1.json",
+    "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+  },
+  {
+    "original": "datasets\\mobility\\REPORT.md",
+    "backup": "datasets\\mobility\\_backup\\2026-10-11_1515_単一方向ユータン\\REPORT.md",
+    "sha256": "1152cd000d297a56b660a6692bc8afbd6e8753ccee7933a97b06afecb7fb470d"
+  },
+  {
+    "original": "final_project_cs\\wiki\\teams\\mobility.md",
+    "backup": "final_project_cs\\wiki\\teams\\_backup\\2026-10-11_1525_유턴검증완료\\mobility.md",
+    "sha256": "801be0a9ef4acb34996383634505ba2484600646336d1807a9c491535078a7a5"
+  },
+  {
+    "original": "final_project_cs\\wiki\\records\\reports\\debugs\\2026-10-11_1515_단일방향_유턴금지_일괄제외.md",
+    "backup": "final_project_cs\\wiki\\records\\reports\\debugs\\_backup\\2026-10-11_1525_유턴검증완료\\2026-10-11_1515_단일방향_유턴금지_일괄제외.md",
+    "sha256": "7d6b8a511db1c53c406c3170ebe010b71d4c6b20bfd5bf32de27b7b26b12dbe2"
+  },
+  {
+    "original": "datasets\\mobility\\REPORT.md",
+    "backup": "datasets\\mobility\\_backup\\2026-10-11_1525_유턴검증완료\\REPORT.md",
+    "sha256": "1152cd000d297a56b660a6692bc8afbd6e8753ccee7933a97b06afecb7fb470d"
+  }
+]

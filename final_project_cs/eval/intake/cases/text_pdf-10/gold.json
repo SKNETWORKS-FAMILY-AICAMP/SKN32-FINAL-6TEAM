@@ -1,0 +1,45 @@
+{
+ "case_id": "text_pdf-10",
+ "format": "text_pdf",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (3명)",
+  "1일차 · 10월 17일",
+  "09:30 서울숲 산책",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 익선동 한옥거리"
+ ],
+ "items": [
+  {
+   "date": "2026-10-17",
+   "start": "09:30",
+   "title": "서울숲 산책",
+   "place": "서울숲",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-17",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-17",
+   "start": "15:00",
+   "title": "익선동 한옥거리",
+   "place": "익선동",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

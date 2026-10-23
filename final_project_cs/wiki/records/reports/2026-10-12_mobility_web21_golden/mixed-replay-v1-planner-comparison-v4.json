@@ -1,0 +1,1684 @@
+{
+  "observed_at": "2026-10-12T02:46:48.773Z",
+  "deadline": "2026-10-12T13:16:00+09:00",
+  "deadline_basis": "observed_minute_plus_90_replay_not_web_train",
+  "walk_limit_m": 1200,
+  "origin_stations": [
+    [
+      "강남",
+      61.265556013938706,
+      null
+    ],
+    [
+      "신논현",
+      606.8980610813347,
+      null
+    ],
+    [
+      "역삼",
+      727.8184753257069,
+      null
+    ]
+  ],
+  "destination_stations": [
+    [
+      "명동",
+      1078.744105844607,
+      null
+    ]
+  ],
+  "generated": [
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "신사"
+        },
+        {
+          "line": "03호선",
+          "from": "신사",
+          "to": "동대입구"
+        },
+        {
+          "mode": "bus",
+          "route": "01A",
+          "from": "동대입구역.장충동",
+          "to": "남산서울타워",
+          "route_id": "100100001",
+          "from_sequence": 6,
+          "to_sequence": 9,
+          "from_stop_id": "101000117",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 40.0,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "논현"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "신사역",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 39,
+          "to_sequence": 50,
+          "from_stop_id": "121000016",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 42.2,
+      "transfers": 1,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "신사"
+        },
+        {
+          "line": "03호선",
+          "from": "신사",
+          "to": "동대입구"
+        },
+        {
+          "mode": "bus",
+          "route": "01B",
+          "from": "동대입구역.장충동",
+          "to": "남산서울타워",
+          "route_id": "106000004",
+          "from_sequence": 3,
+          "to_sequence": 5,
+          "from_stop_id": "101000117",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 42.9,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "신사"
+        },
+        {
+          "line": "03호선",
+          "from": "신사",
+          "to": "충무로"
+        },
+        {
+          "mode": "bus",
+          "route": "01A",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "100100001",
+          "from_sequence": 3,
+          "to_sequence": 9,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 45.6,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "신사"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "신사역",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 39,
+          "to_sequence": 50,
+          "from_stop_id": "121000016",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 46.9,
+      "transfers": 1,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "신사"
+        },
+        {
+          "line": "03호선",
+          "from": "신사",
+          "to": "충무로"
+        },
+        {
+          "mode": "bus",
+          "route": "01B",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "106000004",
+          "from_sequence": 2,
+          "to_sequence": 5,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 48.2,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "양재"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "뱅뱅사거리",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 34,
+          "to_sequence": 50,
+          "from_stop_id": "121000006",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 56.7,
+      "transfers": 1,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "신사"
+        },
+        {
+          "line": "03호선",
+          "from": "신사",
+          "to": "을지로3가"
+        },
+        {
+          "mode": "bus",
+          "route": "01A",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "100100001",
+          "from_sequence": 3,
+          "to_sequence": 9,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 57.2,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "신사"
+        },
+        {
+          "line": "03호선",
+          "from": "신사",
+          "to": "을지로3가"
+        },
+        {
+          "mode": "bus",
+          "route": "01B",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "106000004",
+          "from_sequence": 2,
+          "to_sequence": 5,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 59.8,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "서초"
+        },
+        {
+          "mode": "bus",
+          "route": "405",
+          "from": "서초역.서울중앙지법등기국",
+          "to": "후암약수터",
+          "route_id": "100100597",
+          "from_sequence": 16,
+          "to_sequence": 38,
+          "from_stop_id": "121000059",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 66.7,
+      "transfers": 1,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "양재"
+        },
+        {
+          "mode": "bus",
+          "route": "405",
+          "from": "양재역",
+          "to": "후암약수터",
+          "route_id": "100100597",
+          "from_sequence": 8,
+          "to_sequence": 38,
+          "from_stop_id": "121000214",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 80.2,
+      "transfers": 1,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "신분당선",
+          "from": "강남",
+          "to": "양재시민의숲"
+        },
+        {
+          "mode": "bus",
+          "route": "405",
+          "from": "양재2동주민센터.양재꽃시장",
+          "to": "후암약수터",
+          "route_id": "100100597",
+          "from_sequence": 5,
+          "to_sequence": 38,
+          "from_stop_id": "121000217",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 89.5,
+      "transfers": 1,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "C",
+      "legs": [
+        {
+          "mode": "bus",
+          "route": "새벽A741",
+          "from": "지하철2호선강남역",
+          "to": "논현역",
+          "route_id": "100000028",
+          "from_sequence": 20,
+          "to_sequence": 21,
+          "from_stop_id": "121000012",
+          "to_stop_id": "121000014"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "논현역",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 38,
+          "to_sequence": 50,
+          "from_stop_id": "121000014",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 47.1,
+      "transfers": 1,
+      "walk_in_m": 339.0324651644399,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "C",
+      "legs": [
+        {
+          "mode": "bus",
+          "route": "420",
+          "from": "지하철2호선강남역",
+          "to": "국립극장.반얀트리호텔",
+          "route_id": "100100068",
+          "from_sequence": 18,
+          "to_sequence": 25,
+          "from_stop_id": "121000012",
+          "to_stop_id": "101000105"
+        },
+        {
+          "mode": "bus",
+          "route": "01A",
+          "from": "국립극장.반얀트리호텔",
+          "to": "남산서울타워",
+          "route_id": "100100001",
+          "from_sequence": 7,
+          "to_sequence": 9,
+          "from_stop_id": "101000106",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 48.3,
+      "transfers": 1,
+      "walk_in_m": 339.0324651644399,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "C",
+      "legs": [
+        {
+          "mode": "bus",
+          "route": "360",
+          "from": "강남역12번출구",
+          "to": "지하철2호선강남역",
+          "route_id": "100100057",
+          "from_sequence": 22,
+          "to_sequence": 23,
+          "from_stop_id": "122000181",
+          "to_stop_id": "121000012"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "지하철2호선강남역",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 37,
+          "to_sequence": 50,
+          "from_stop_id": "121000012",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 49.7,
+      "transfers": 1,
+      "walk_in_m": 200.41353257890128,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "C",
+      "legs": [
+        {
+          "mode": "bus",
+          "route": "140",
+          "from": "지하철2호선강남역",
+          "to": "한남대교전망카페",
+          "route_id": "100100019",
+          "from_sequence": 52,
+          "to_sequence": 55,
+          "from_stop_id": "121000012",
+          "to_stop_id": "122000408"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "한남대교전망카페",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 40,
+          "to_sequence": 50,
+          "from_stop_id": "122000408",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 50.6,
+      "transfers": 1,
+      "walk_in_m": 339.0324651644399,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "C",
+      "legs": [
+        {
+          "mode": "bus",
+          "route": "9404",
+          "from": "지하철2호선강남역",
+          "to": "신사역",
+          "route_id": "100100391",
+          "from_sequence": 27,
+          "to_sequence": 29,
+          "from_stop_id": "121000012",
+          "to_stop_id": "121000016"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "신사역",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 39,
+          "to_sequence": 50,
+          "from_stop_id": "121000016",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 50.6,
+      "transfers": 1,
+      "walk_in_m": 339.0324651644399,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "C",
+      "legs": [
+        {
+          "mode": "bus",
+          "route": "420",
+          "from": "지하철2호선강남역",
+          "to": "국립극장.반얀트리호텔",
+          "route_id": "100100068",
+          "from_sequence": 18,
+          "to_sequence": 25,
+          "from_stop_id": "121000012",
+          "to_stop_id": "101000105"
+        },
+        {
+          "mode": "bus",
+          "route": "01B",
+          "from": "국립극장.반얀트리호텔",
+          "to": "남산서울타워",
+          "route_id": "106000004",
+          "from_sequence": 4,
+          "to_sequence": 5,
+          "from_stop_id": "101000106",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 51.0,
+      "transfers": 1,
+      "walk_in_m": 339.0324651644399,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "동대입구"
+        },
+        {
+          "mode": "bus",
+          "route": "01A",
+          "from": "동대입구역.장충동",
+          "to": "남산서울타워",
+          "route_id": "100100001",
+          "from_sequence": 6,
+          "to_sequence": 9,
+          "from_stop_id": "101000117",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 44.2,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "동대입구"
+        },
+        {
+          "mode": "bus",
+          "route": "01B",
+          "from": "동대입구역.장충동",
+          "to": "남산서울타워",
+          "route_id": "106000004",
+          "from_sequence": 3,
+          "to_sequence": 5,
+          "from_stop_id": "101000117",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 47.1,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "충무로"
+        },
+        {
+          "mode": "bus",
+          "route": "01A",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "100100001",
+          "from_sequence": 3,
+          "to_sequence": 9,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 49.8,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "신사"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "신사역",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 39,
+          "to_sequence": 50,
+          "from_stop_id": "121000016",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 55.4,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "충무로"
+        },
+        {
+          "mode": "bus",
+          "route": "01B",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "106000004",
+          "from_sequence": 2,
+          "to_sequence": 5,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 52.4,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "양재"
+        },
+        {
+          "mode": "bus",
+          "route": "402",
+          "from": "뱅뱅사거리",
+          "to": "후암약수터",
+          "route_id": "100100063",
+          "from_sequence": 34,
+          "to_sequence": 50,
+          "from_stop_id": "121000006",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 65.7,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "을지로3가"
+        },
+        {
+          "mode": "bus",
+          "route": "01A",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "100100001",
+          "from_sequence": 3,
+          "to_sequence": 9,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 61.4,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "을지로3가"
+        },
+        {
+          "mode": "bus",
+          "route": "01B",
+          "from": "충무로역2번출구",
+          "to": "남산서울타워",
+          "route_id": "106000004",
+          "from_sequence": 2,
+          "to_sequence": 5,
+          "from_stop_id": "101000054",
+          "to_stop_id": "102000226"
+        }
+      ],
+      "est_min": 64.0,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 265.2939688373859
+    },
+    {
+      "shape": "B",
+      "legs": [
+        {
+          "line": "02호선",
+          "from": "강남",
+          "to": "교대"
+        },
+        {
+          "line": "03호선",
+          "from": "교대",
+          "to": "양재"
+        },
+        {
+          "mode": "bus",
+          "route": "405",
+          "from": "양재역",
+          "to": "후암약수터",
+          "route_id": "100100597",
+          "from_sequence": 8,
+          "to_sequence": 38,
+          "from_stop_id": "121000214",
+          "to_stop_id": "102000075"
+        }
+      ],
+      "est_min": 89.2,
+      "transfers": 2,
+      "walk_in_m": 61.265556013938706,
+      "walk_out_m": 441.96709252364064
+    }
+  ],
+  "rows": [
+    {
+      "id": "M01",
+      "expected_signature": [
+        [
+          "subway",
+          "2호선",
+          "강남",
+          "교대"
+        ],
+        [
+          "subway",
+          "3호선",
+          "교대",
+          "동대입구"
+        ],
+        [
+          "bus",
+          "01A",
+          "동대입구역.장충동",
+          "남산서울타워"
+        ]
+      ],
+      "generator_match_count": 1,
+      "generator_matches": [
+        {
+          "shape": "B",
+          "legs": [
+            {
+              "line": "02호선",
+              "from": "강남",
+              "to": "교대"
+            },
+            {
+              "line": "03호선",
+              "from": "교대",
+              "to": "동대입구"
+            },
+            {
+              "mode": "bus",
+              "route": "01A",
+              "from": "동대입구역.장충동",
+              "to": "남산서울타워",
+              "route_id": "100100001",
+              "from_sequence": 6,
+              "to_sequence": 9,
+              "from_stop_id": "101000117",
+              "to_stop_id": "102000226"
+            }
+          ],
+          "est_min": 44.2,
+          "transfers": 2,
+          "walk_in_m": 61.265556013938706,
+          "walk_out_m": 265.2939688373859
+        }
+      ],
+      "product_provided": true,
+      "product_option": {
+        "id": "subway_bus_2",
+        "label": "2호선 강남→교대 → 3호선 교대→동대입구 → 버스 01A 동대입구역.장충동→남산서울타워 — 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+        "eta_min": 44,
+        "walk_m": 627,
+        "fare_krw": 1650,
+        "uses": [
+          "2호선:강남",
+          "2호선:교대",
+          "3호선:교대",
+          "3호선:동대입구",
+          "버스:01A"
+        ]
+      },
+      "saved_context_matches": [
+        [
+          "subway_bus_2",
+          {
+            "option_id": "subway_bus_2",
+            "eta_min": 44,
+            "start_min": 736,
+            "path_kind": "vehicle",
+            "legs": [
+              {
+                "line": "02호선",
+                "from": "강남",
+                "to": "교대"
+              },
+              {
+                "line": "03호선",
+                "from": "교대",
+                "to": "동대입구"
+              },
+              {
+                "mode": "bus",
+                "route": "01A",
+                "from": "동대입구역.장충동",
+                "to": "남산서울타워",
+                "route_id": "100100001",
+                "from_sequence": 6,
+                "to_sequence": 9,
+                "from_stop_id": "101000117",
+                "to_stop_id": "102000226"
+              }
+            ],
+            "station_paths": [
+              [
+                "강남",
+                "교대"
+              ],
+              [
+                "교대",
+                "고속터미널",
+                "잠원",
+                "신사",
+                "압구정",
+                "옥수",
+                "금호",
+                "약수",
+                "동대입구"
+              ],
+              null
+            ],
+            "station_services": [
+              null,
+              null,
+              null
+            ],
+            "day_type": "weekday",
+            "subway_identity": {
+              "status": "matched",
+              "line_id": "1002",
+              "station_id": "1002000222",
+              "target_station_id": "1002000223",
+              "query_station": "강남",
+              "target_station": "교대",
+              "line": "2호선"
+            },
+            "check": {
+              "date": "2026-10-12",
+              "legs": [
+                {
+                  "line": "02호선",
+                  "from": "강남",
+                  "to": "교대"
+                },
+                {
+                  "line": "03호선",
+                  "from": "교대",
+                  "to": "동대입구"
+                },
+                {
+                  "mode": "bus",
+                  "route": "01A",
+                  "from": "동대입구역.장충동",
+                  "to": "남산서울타워",
+                  "route_id": "100100001",
+                  "from_sequence": 6,
+                  "to_sequence": 9,
+                  "from_stop_id": "101000117",
+                  "to_stop_id": "102000226"
+                }
+              ],
+              "off": 0,
+              "walk_place_in": 2,
+              "walk_place_out": 6,
+              "walk_stop_in": 0,
+              "walk_stop_out": 0,
+              "by_station": 790,
+              "fast": true
+            },
+            "leg_results": [
+              {
+                "idx": 0,
+                "verdict": "feasible",
+                "depart_min": 738,
+                "arrive_min": 740,
+                "wait_min": 0,
+                "ride_min": 1.5,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "확정"
+              },
+              {
+                "idx": 1,
+                "verdict": "feasible",
+                "depart_min": null,
+                "arrive_min": null,
+                "wait_min": 0,
+                "ride_min": null,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "확정"
+              },
+              {
+                "idx": 1,
+                "verdict": "feasible",
+                "depart_min": 742,
+                "arrive_min": 758,
+                "wait_min": 1,
+                "ride_min": 16.0,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "추정"
+              },
+              {
+                "idx": 2,
+                "verdict": "feasible",
+                "depart_min": null,
+                "arrive_min": null,
+                "wait_min": 0,
+                "ride_min": null,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "확정"
+              },
+              {
+                "idx": 2,
+                "verdict": "feasible",
+                "depart_min": 765,
+                "arrive_min": 774,
+                "wait_min": 5,
+                "ride_min": 8.2,
+                "walk_min": null,
+                "ride_src": "profile",
+                "ride_grade": "추정"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "M02",
+      "expected_signature": [
+        [
+          "subway",
+          "신분당선",
+          "강남",
+          "신사"
+        ],
+        [
+          "subway",
+          "3호선",
+          "신사",
+          "동대입구"
+        ],
+        [
+          "bus",
+          "01A",
+          "동대입구역.장충동",
+          "남산서울타워"
+        ]
+      ],
+      "generator_match_count": 1,
+      "generator_matches": [
+        {
+          "shape": "B",
+          "legs": [
+            {
+              "line": "신분당선",
+              "from": "강남",
+              "to": "신사"
+            },
+            {
+              "line": "03호선",
+              "from": "신사",
+              "to": "동대입구"
+            },
+            {
+              "mode": "bus",
+              "route": "01A",
+              "from": "동대입구역.장충동",
+              "to": "남산서울타워",
+              "route_id": "100100001",
+              "from_sequence": 6,
+              "to_sequence": 9,
+              "from_stop_id": "101000117",
+              "to_stop_id": "102000226"
+            }
+          ],
+          "est_min": 40.0,
+          "transfers": 2,
+          "walk_in_m": 61.265556013938706,
+          "walk_out_m": 265.2939688373859
+        }
+      ],
+      "product_provided": true,
+      "product_option": {
+        "id": "subway_bus_1",
+        "label": "신분당선 강남→신사 → 3호선 신사→동대입구 → 버스 01A 동대입구역.장충동→남산서울타워 — 소요 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+        "eta_min": 43,
+        "walk_m": 629,
+        "fare_krw": 2350,
+        "uses": [
+          "신분당선:강남",
+          "신분당선:신사",
+          "3호선:신사",
+          "3호선:동대입구",
+          "버스:01A"
+        ]
+      },
+      "saved_context_matches": [
+        [
+          "subway_bus_1",
+          {
+            "option_id": "subway_bus_1",
+            "eta_min": 43,
+            "start_min": 738,
+            "path_kind": "vehicle",
+            "legs": [
+              {
+                "line": "신분당선",
+                "from": "강남",
+                "to": "신사"
+              },
+              {
+                "line": "03호선",
+                "from": "신사",
+                "to": "동대입구"
+              },
+              {
+                "mode": "bus",
+                "route": "01A",
+                "from": "동대입구역.장충동",
+                "to": "남산서울타워",
+                "route_id": "100100001",
+                "from_sequence": 6,
+                "to_sequence": 9,
+                "from_stop_id": "101000117",
+                "to_stop_id": "102000226"
+              }
+            ],
+            "station_paths": [
+              [
+                "강남",
+                "신논현",
+                "논현",
+                "신사"
+              ],
+              [
+                "신사",
+                "압구정",
+                "옥수",
+                "금호",
+                "약수",
+                "동대입구"
+              ],
+              null
+            ],
+            "station_services": [
+              null,
+              null,
+              null
+            ],
+            "day_type": "weekday",
+            "subway_identity": {
+              "status": "matched",
+              "line_id": "1077",
+              "station_id": "1077000687",
+              "target_station_id": "1077000684",
+              "query_station": "강남",
+              "target_station": "신사",
+              "line": "신분당선"
+            },
+            "check": {
+              "date": "2026-10-12",
+              "legs": [
+                {
+                  "line": "신분당선",
+                  "from": "강남",
+                  "to": "신사"
+                },
+                {
+                  "line": "03호선",
+                  "from": "신사",
+                  "to": "동대입구"
+                },
+                {
+                  "mode": "bus",
+                  "route": "01A",
+                  "from": "동대입구역.장충동",
+                  "to": "남산서울타워",
+                  "route_id": "100100001",
+                  "from_sequence": 6,
+                  "to_sequence": 9,
+                  "from_stop_id": "101000117",
+                  "to_stop_id": "102000226"
+                }
+              ],
+              "off": 0,
+              "walk_place_in": 2,
+              "walk_place_out": 6,
+              "walk_stop_in": 0,
+              "walk_stop_out": 0,
+              "by_station": 790,
+              "fast": true
+            },
+            "leg_results": [
+              {
+                "idx": 0,
+                "verdict": "feasible",
+                "depart_min": 740,
+                "arrive_min": 745,
+                "wait_min": 0,
+                "ride_min": 4.5,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "추정"
+              },
+              {
+                "idx": 1,
+                "verdict": "feasible",
+                "depart_min": null,
+                "arrive_min": null,
+                "wait_min": 0,
+                "ride_min": null,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "확정"
+              },
+              {
+                "idx": 1,
+                "verdict": "feasible",
+                "depart_min": 749,
+                "arrive_min": 759,
+                "wait_min": 2,
+                "ride_min": 9.5,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "추정"
+              },
+              {
+                "idx": 2,
+                "verdict": "feasible",
+                "depart_min": null,
+                "arrive_min": null,
+                "wait_min": 0,
+                "ride_min": null,
+                "walk_min": null,
+                "ride_src": null,
+                "ride_grade": "확정"
+              },
+              {
+                "idx": 2,
+                "verdict": "feasible",
+                "depart_min": 766,
+                "arrive_min": 775,
+                "wait_min": 5,
+                "ride_min": 8.2,
+                "walk_min": null,
+                "ride_src": "profile",
+                "ride_grade": "추정"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "M03",
+      "expected_signature": [
+        [
+          "bus",
+          "420",
+          "지하철2호선강남역",
+          "국립극장.반얀트리호텔"
+        ],
+        [
+          "bus",
+          "01A",
+          "국립극장.반얀트리호텔",
+          "남산서울타워"
+        ]
+      ],
+      "generator_match_count": 1,
+      "generator_matches": [
+        {
+          "shape": "C",
+          "legs": [
+            {
+              "mode": "bus",
+              "route": "420",
+              "from": "지하철2호선강남역",
+              "to": "국립극장.반얀트리호텔",
+              "route_id": "100100068",
+              "from_sequence": 18,
+              "to_sequence": 25,
+              "from_stop_id": "121000012",
+              "to_stop_id": "101000105"
+            },
+            {
+              "mode": "bus",
+              "route": "01A",
+              "from": "국립극장.반얀트리호텔",
+              "to": "남산서울타워",
+              "route_id": "100100001",
+              "from_sequence": 7,
+              "to_sequence": 9,
+              "from_stop_id": "101000106",
+              "to_stop_id": "102000226"
+            }
+          ],
+          "est_min": 48.3,
+          "transfers": 1,
+          "walk_in_m": 339.0324651644399,
+          "walk_out_m": 265.2939688373859
+        }
+      ],
+      "product_provided": false,
+      "product_option": null,
+      "saved_context_matches": []
+    }
+  ],
+  "result": [
+    {
+      "from": "강남기준점",
+      "to": "남산타워기준점",
+      "planned": "bus_402",
+      "options": [
+        {
+          "id": "bus_402",
+          "label": "버스 402 지하철2호선강남역→후암약수터 — 환승 없음",
+          "eta_min": 49,
+          "walk_m": 1093,
+          "fare_krw": 1500,
+          "uses": [
+            "버스:402"
+          ]
+        },
+        {
+          "id": "subway_bus_1",
+          "label": "신분당선 강남→신사 → 3호선 신사→동대입구 → 버스 01A 동대입구역.장충동→남산서울타워 — 소요 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+          "eta_min": 43,
+          "walk_m": 629,
+          "fare_krw": 2350,
+          "uses": [
+            "신분당선:강남",
+            "신분당선:신사",
+            "3호선:신사",
+            "3호선:동대입구",
+            "버스:01A"
+          ]
+        },
+        {
+          "id": "subway_bus_2",
+          "label": "2호선 강남→교대 → 3호선 교대→동대입구 → 버스 01A 동대입구역.장충동→남산서울타워 — 도보 거리 가장 짧음 · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액 · 거리 모델·조조 미적용",
+          "eta_min": 44,
+          "walk_m": 627,
+          "fare_krw": 1650,
+          "uses": [
+            "2호선:강남",
+            "2호선:교대",
+            "3호선:교대",
+            "3호선:동대입구",
+            "버스:01A"
+          ]
+        }
+      ]
+    },
+    729,
+    778,
+    "2026-10-12",
+    [
+      {
+        "label": "그 밖 혼합 후보 30개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 1개",
+        "code": "mix_skipped",
+        "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+      },
+      {
+        "label": "그 밖 혼합 후보 110개",
+        "code": "mix_cap",
+        "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+      },
+      {
+        "label": "신분당선 강남→신사 → 3호선 신사→충무로 → 4호선 충무로→명동",
+        "code": "earlier_departure",
+        "reason": "이동 출발 12:09 출발은 재판정에서 불성립 · 12:02 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 2회 · 소요 60분"
+      },
+      {
+        "label": "2호선 강남→사당 → 4호선 사당→명동",
+        "code": "earlier_departure",
+        "reason": "이동 출발 12:09 출발은 재판정에서 불성립 · 12:01 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 63분"
+      },
+      {
+        "label": "버스 420 지하철2호선강남역→국립극장.반얀트리호텔 → 버스 01A 국립극장.반얀트리호텔→남산서울타워",
+        "code": "earlier_departure",
+        "reason": "이동 출발 12:09 출발은 재판정에서 불성립 · 12:03 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 51분"
+      }
+    ]
+  ],
+  "failure": null,
+  "trace": [
+    {
+      "case": "PUBLIC-MIXED-OD",
+      "date": "2026-10-12",
+      "arrive_by_min": 796,
+      "planned": "bus_402",
+      "options": [
+        {
+          "id": "bus_402",
+          "start_min": 729,
+          "eta_min": 49,
+          "margin_min": 18,
+          "slack_min": 0,
+          "transfers": 0,
+          "check": {
+            "date": "2026-10-12",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "402",
+                "from": "지하철2호선강남역",
+                "to": "후암약수터",
+                "route_id": "100100063",
+                "from_sequence": 37,
+                "to_sequence": 50,
+                "from_stop_id": "121000012",
+                "to_stop_id": "102000075"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 8,
+            "walk_place_out": 10,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 786
+          },
+          "wait_min": 5
+        },
+        {
+          "id": "subway_bus_1",
+          "start_min": 738,
+          "eta_min": 43,
+          "margin_min": 14,
+          "slack_min": 1,
+          "transfers": 2,
+          "check": {
+            "date": "2026-10-12",
+            "legs": [
+              {
+                "line": "신분당선",
+                "from": "강남",
+                "to": "신사"
+              },
+              {
+                "line": "03호선",
+                "from": "신사",
+                "to": "동대입구"
+              },
+              {
+                "mode": "bus",
+                "route": "01A",
+                "from": "동대입구역.장충동",
+                "to": "남산서울타워",
+                "route_id": "100100001",
+                "from_sequence": 6,
+                "to_sequence": 9,
+                "from_stop_id": "101000117",
+                "to_stop_id": "102000226"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 2,
+            "walk_place_out": 6,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 790,
+            "fast": true
+          },
+          "wait_min": 7
+        },
+        {
+          "id": "subway_bus_2",
+          "start_min": 736,
+          "eta_min": 44,
+          "margin_min": 14,
+          "slack_min": 2,
+          "transfers": 2,
+          "check": {
+            "date": "2026-10-12",
+            "legs": [
+              {
+                "line": "02호선",
+                "from": "강남",
+                "to": "교대"
+              },
+              {
+                "line": "03호선",
+                "from": "교대",
+                "to": "동대입구"
+              },
+              {
+                "mode": "bus",
+                "route": "01A",
+                "from": "동대입구역.장충동",
+                "to": "남산서울타워",
+                "route_id": "100100001",
+                "from_sequence": 6,
+                "to_sequence": 9,
+                "from_stop_id": "101000117",
+                "to_stop_id": "102000226"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 2,
+            "walk_place_out": 6,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 790,
+            "fast": true
+          },
+          "wait_min": 6
+        }
+      ],
+      "left_out": [
+        {
+          "label": "그 밖 혼합 후보 30개",
+          "code": "mix_skipped",
+          "reason": "추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±60분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"
+        },
+        {
+          "label": "그 밖 혼합 후보 1개",
+          "code": "mix_skipped",
+          "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"
+        },
+        {
+          "label": "그 밖 혼합 후보 110개",
+          "code": "mix_cap",
+          "reason": "혼합 상한 3개(싣는 것) · 판정 3개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"
+        },
+        {
+          "label": "신분당선 강남→신사 → 3호선 신사→충무로 → 4호선 충무로→명동",
+          "code": "earlier_departure",
+          "reason": "이동 출발 12:09 출발은 재판정에서 불성립 · 12:02 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 2회 · 소요 60분"
+        },
+        {
+          "label": "2호선 강남→사당 → 4호선 사당→명동",
+          "code": "earlier_departure",
+          "reason": "이동 출발 12:09 출발은 재판정에서 불성립 · 12:01 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 63분"
+        },
+        {
+          "label": "버스 420 지하철2호선강남역→국립극장.반얀트리호텔 → 버스 01A 국립극장.반얀트리호텔→남산서울타워",
+          "code": "earlier_departure",
+          "reason": "이동 출발 12:09 출발은 재판정에서 불성립 · 12:03 출발은 성립 확인(역산 · 그 사이 마지막 성립 시각은 안 찾음 · 후보별 출발 시각 칸 없음) · 환승 1회 · 소요 51분"
+        }
+      ],
+      "left_checks": [
+        {
+          "code": "mix_skipped",
+          "check": null
+        },
+        {
+          "code": "mix_skipped",
+          "check": null
+        },
+        {
+          "code": "mix_cap",
+          "check": null
+        },
+        {
+          "code": "earlier_departure",
+          "check": {
+            "date": "2026-10-12",
+            "legs": [
+              {
+                "line": "신분당선",
+                "from": "강남",
+                "to": "신사"
+              },
+              {
+                "line": "03호선",
+                "from": "신사",
+                "to": "충무로"
+              },
+              {
+                "line": "04호선",
+                "from": "충무로",
+                "to": "명동"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 2,
+            "walk_place_out": 25,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 771
+          }
+        },
+        {
+          "code": "earlier_departure",
+          "check": {
+            "date": "2026-10-12",
+            "legs": [
+              {
+                "line": "02호선",
+                "from": "강남",
+                "to": "사당"
+              },
+              {
+                "line": "04호선",
+                "from": "사당",
+                "to": "명동"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 2,
+            "walk_place_out": 25,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 771
+          }
+        },
+        {
+          "code": "earlier_departure",
+          "check": {
+            "date": "2026-10-12",
+            "legs": [
+              {
+                "mode": "bus",
+                "route": "420",
+                "from": "지하철2호선강남역",
+                "to": "국립극장.반얀트리호텔",
+                "route_id": "100100068",
+                "from_sequence": 18,
+                "to_sequence": 25,
+                "from_stop_id": "121000012",
+                "to_stop_id": "101000105"
+              },
+              {
+                "mode": "bus",
+                "route": "01A",
+                "from": "국립극장.반얀트리호텔",
+                "to": "남산서울타워",
+                "route_id": "100100001",
+                "from_sequence": 7,
+                "to_sequence": 9,
+                "from_stop_id": "101000106",
+                "to_stop_id": "102000226"
+              }
+            ],
+            "off": 0,
+            "walk_place_in": 8,
+            "walk_place_out": 6,
+            "walk_stop_in": 0,
+            "walk_stop_out": 0,
+            "by_station": 790,
+            "fast": true
+          }
+        }
+      ],
+      "start_min": 729
+    }
+  ],
+  "hashes": {
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\plan.py": "07c93ec7b3d248b882cd81437148e106de77371ebd440d6987500aac90b6beb1",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\candidates.py": "275dfc3e54f36950c2adeb710f2a182c03d4a48805448253863644c3c9049869",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\options.py": "c6c365e9acf2beda523685842c8d8b174265b0d1a4e4a974925bef68ce892c7a",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\verify_time.py": "1a7e43c8a9963118c43e68fd5702e54b8fa695de3f1763a6cee013bc3ca4b356",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\runtime.py": "38cd5785d0c99146a8849bdf2eb7a9b9e445bb6f52ce1bb8d0e8e866b8ca4cfd",
+    "final_project_cs\\app\\domains\\travel_ops\\instances\\mobility\\engine\\departure_context.py": "83118680a84b77fdeda068ec926bc0854c367ff22fbf5d0836558717c9dde086"
+  },
+  "limited_api_calls": 0,
+  "private_access": 0
+}

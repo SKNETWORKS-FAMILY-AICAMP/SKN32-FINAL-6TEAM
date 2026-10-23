@@ -1,6 +1,6 @@
 --- a/app/presentation/security.py
 +++ b/app/presentation/security.py
-@@ -34,7 +34,7 @@
+@@ -36,7 +36,7 @@
  
  
  def authenticate(authorization: str | None) -> Principal:

@@ -1,0 +1,271 @@
+{
+  "replay_clock": "2026-10-09T12:55:19.253761+09:00",
+  "original_fetched_at": "2026-10-09T12:55:19.344356+09:00",
+  "scope": "보유 서울 도로/시간표와 이전 공개 응답의 고정 구간 개발 재생. 계획기가 고른 새 경로·현재 실시간 조회·실탑승 검증 아님.",
+  "input_context": {
+    "schema_version": 1,
+    "timing_unit": "model_minutes",
+    "from_place": {
+      "lat": 37.544005,
+      "lon": 126.951058
+    },
+    "to_place": {
+      "lat": 37.576562,
+      "lon": 126.98547
+    },
+    "basis": {
+      "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "rules_version": "v0.9.2",
+      "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+      "subway_station_version": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+    },
+    "party": {},
+    "first_visit": false,
+    "options": {
+      "p": {
+        "option_id": "p",
+        "legs": [
+          {
+            "mode": "subway",
+            "line": "05호선",
+            "from": "공덕",
+            "to": "종로3가"
+          },
+          {
+            "mode": "subway",
+            "line": "03호선",
+            "from": "종로3가",
+            "to": "안국"
+          }
+        ],
+        "subway_identity": {
+          "status": "matched",
+          "line_id": "1005",
+          "station_id": "1005000529",
+          "target_station_id": "1005000534",
+          "query_station": "공덕",
+          "target_station": "종로3가",
+          "line": "5호선"
+        },
+        "check": {
+          "legs": [
+            {
+              "mode": "subway",
+              "line": "05호선",
+              "from": "공덕",
+              "to": "종로3가"
+            },
+            {
+              "mode": "subway",
+              "line": "03호선",
+              "from": "종로3가",
+              "to": "안국"
+            }
+          ],
+          "walk_place_in": 1,
+          "walk_stop_in": 1,
+          "walk_stop_out": 1,
+          "walk_place_out": 1
+        }
+      }
+    }
+  },
+  "observation": {
+    "option_id": "p",
+    "observations": [
+      {
+        "source": "seoul_subway_arrival",
+        "line_id": "1005",
+        "station_id": "1005000529",
+        "target_station_id": "1005000534",
+        "confirmed_at": "2026-10-09T12:55:19.344356+09:00",
+        "observation_age_seconds": -0.090595,
+        "ready_at": "2026-10-09T12:58:00+09:00",
+        "status": "unavailable",
+        "reason": "confirmation_in_future",
+        "evaluated_at": "2026-10-09T12:55:19.253761+09:00"
+      }
+    ],
+    "timing_unit": "model_minutes",
+    "party_check": "current_trip_not_supplied",
+    "basis": {
+      "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "rules_version": "v0.9.2",
+      "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+      "subway_station_version": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+    },
+    "checked_at": "2026-10-09T12:55:19.253761+09:00",
+    "verdict": "feasible",
+    "reason": "예정 13:23 +@10분(최악 13:23 + 버퍼 10분) · 여유 20분",
+    "leg_results": [
+      {
+        "idx": 0,
+        "verdict": "feasible",
+        "depart_min": 784,
+        "arrive_min": 794,
+        "wait_min": 6,
+        "ride_min": 9.3,
+        "ride_src": null
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": null,
+        "arrive_min": null,
+        "wait_min": 0,
+        "ride_min": null,
+        "ride_src": null
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": 801,
+        "arrive_min": 803,
+        "wait_min": 5,
+        "ride_min": 2.0,
+        "ride_src": null
+      }
+    ],
+    "boarding_steps": [
+      {
+        "idx": 0,
+        "mode": "subway",
+        "service": "05호선",
+        "from": "공덕",
+        "to": "종로3가",
+        "board_at": "2026-10-09T13:04:00+09:00",
+        "alight_at": "2026-10-09T13:14:00+09:00",
+        "boarding_basis": "timetable_model",
+        "ride_basis": "model"
+      },
+      {
+        "idx": 1,
+        "mode": "subway",
+        "service": "03호선",
+        "from": "종로3가",
+        "to": "안국",
+        "board_at": "2026-10-09T13:21:00+09:00",
+        "alight_at": "2026-10-09T13:23:00+09:00",
+        "boarding_basis": "timetable_model",
+        "ride_basis": "model"
+      }
+    ],
+    "status": "model_revalidated",
+    "departure_at": "2026-10-09T12:56:00+09:00",
+    "arrival_at": "2026-10-09T13:25:00+09:00",
+    "worst_arrival_at": "2026-10-09T13:25:00+09:00",
+    "eta_min": 30
+  },
+  "model_control": {
+    "option_id": "p",
+    "observations": [
+      {
+        "status": "unavailable",
+        "reason": "offline_failure_control"
+      }
+    ],
+    "timing_unit": "model_minutes",
+    "party_check": "current_trip_not_supplied",
+    "basis": {
+      "timetable_built_at": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+      "rules_version": "v0.9.2",
+      "express_version": "4fb129ded0bc509922768be6ae8fe15ca9d96eef14e16efe88ecff8e6207d423",
+      "subway_station_version": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+    },
+    "checked_at": "2026-10-09T12:55:19.253761+09:00",
+    "verdict": "feasible",
+    "reason": "예정 13:23 +@10분(최악 13:23 + 버퍼 10분) · 여유 20분",
+    "leg_results": [
+      {
+        "idx": 0,
+        "verdict": "feasible",
+        "depart_min": 784,
+        "arrive_min": 794,
+        "wait_min": 6,
+        "ride_min": 9.3,
+        "ride_src": null
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": null,
+        "arrive_min": null,
+        "wait_min": 0,
+        "ride_min": null,
+        "ride_src": null
+      },
+      {
+        "idx": 1,
+        "verdict": "feasible",
+        "depart_min": 801,
+        "arrive_min": 803,
+        "wait_min": 5,
+        "ride_min": 2.0,
+        "ride_src": null
+      }
+    ],
+    "boarding_steps": [
+      {
+        "idx": 0,
+        "mode": "subway",
+        "service": "05호선",
+        "from": "공덕",
+        "to": "종로3가",
+        "board_at": "2026-10-09T13:04:00+09:00",
+        "alight_at": "2026-10-09T13:14:00+09:00",
+        "boarding_basis": "timetable_model",
+        "ride_basis": "model"
+      },
+      {
+        "idx": 1,
+        "mode": "subway",
+        "service": "03호선",
+        "from": "종로3가",
+        "to": "안국",
+        "board_at": "2026-10-09T13:21:00+09:00",
+        "alight_at": "2026-10-09T13:23:00+09:00",
+        "boarding_basis": "timetable_model",
+        "ride_basis": "model"
+      }
+    ],
+    "status": "model_revalidated",
+    "departure_at": "2026-10-09T12:56:00+09:00",
+    "arrival_at": "2026-10-09T13:25:00+09:00",
+    "worst_arrival_at": "2026-10-09T13:25:00+09:00",
+    "eta_min": 30
+  },
+  "notice_status": "ok",
+  "notice": {
+    "text": "12:56 출발 — 공덕 → 안국 (12:56–13:25).\n다음 일정: 13:55 안국 방문.\n가는 방법: 05호선 → 03호선 · 현재 시각 기준 예상 · 약 30분 (경로 확인 12:55)\n구간별 승차 안내 (하차·환승 시각은 예상):\n05호선: 13:04 공덕 승차 → 13:14 종로3가 하차 (시간표·이동 모델 예상)\n03호선: 13:21 종로3가 환승 → 13:23 안국 하차 (시간표·이동 모델 예상)",
+    "template": "{leave} 출발 — {title} ({leave}–{ends}).\n다음 일정: {next_at} {next_title}.\n가는 방법: {how} · 약 {eta_min}분 (경로 확인 {checked})\n구간별 승차 안내 (하차·환승 시각은 예상):\n{boarding_0_service}: {boarding_0_board} {boarding_0_from} 승차 → {boarding_0_alight} {boarding_0_to} 하차 (시간표·이동 모델 예상)\n{boarding_1_service}: {boarding_1_board} {boarding_1_from} 환승 → {boarding_1_alight} {boarding_1_to} 하차 (시간표·이동 모델 예상)",
+    "values": {
+      "leave": "12:56",
+      "title": "공덕 → 안국",
+      "ends": "13:25",
+      "next_at": "13:55",
+      "next_title": "안국 방문",
+      "how": "05호선 → 03호선 · 현재 시각 기준 예상",
+      "eta_min": 30,
+      "checked": "12:55",
+      "boarding_0_service": "05호선",
+      "boarding_0_board": "13:04",
+      "boarding_0_alight": "13:14",
+      "boarding_0_from": "공덕",
+      "boarding_0_to": "종로3가",
+      "boarding_1_service": "03호선",
+      "boarding_1_board": "13:21",
+      "boarding_1_alight": "13:23",
+      "boarding_1_from": "종로3가",
+      "boarding_1_to": "안국"
+    }
+  },
+  "queried_stations": [
+    "공덕"
+  ],
+  "blocked_connections": 0,
+  "limited_api_calls": 0,
+  "source_hashes": {
+    "datasets/mobility/raw/2026-10-09_1248_지하철_방면과_인접역ID_대조/response-1-v1.json": "5b129dd1180ceca7123e2bee821503467b313d8cfb878ce99746f28b3a84075e",
+    "datasets/mobility/raw/2026-10-09_1248_지하철_방면과_인접역ID_대조/acquisition-v1.json": "e13f37b74f942a669e63fd06faa76769b78e032220ca0ceaf7fc04cf21db8cbb"
+  }
+}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.travel_ops.trip_intake import extract, validate
+from app.domains.travel_ops.components.conversation.trip_intake import extract, validate
 
 DELAY = "팝업스토어 줄이 길어서 점심에 70분 늦을 것 같아요"
 CLOSED = "저녁 먹으려던 식당이 오늘 임시휴무래요"
@@ -21,13 +21,18 @@ def test_the_three_scenario_sentences_pass_with_the_values_they_contain():
 
 @pytest.mark.parametrize("raw", [
     {"type": "delay", "minutes": 90},            # ★문장에는 70 — 모델이 숫자를 만들어 냈다
-    {"type": "delay", "minutes": None},
+    {"type": "delay", "minutes": True},
     {"type": "delay", "minutes": 0},
     {"type": "unknown"},
     "not a dict",
 ])
-def test_made_up_or_missing_delay_values_are_refused(raw):
+def test_made_up_or_invalid_delay_values_are_refused(raw):
     assert validate(raw, DELAY) is None
+
+
+def test_missing_delay_is_preserved_for_the_team_to_ask_back():
+    assert validate({"type": "delay", "minutes": None}, "식당에 늦어요") == {
+        "type": "delay", "minutes": None}
 
 
 def test_a_product_that_is_not_in_the_sentence_is_dropped_and_none_left_is_refused():
@@ -45,14 +50,15 @@ def test_extract_uses_the_chat_and_validates():
 
 
 def test_rollback_needs_a_version_number_that_is_in_the_sentence():
-    from app.modules.travel_ops.trip_intake import validate
+    from app.domains.travel_ops.components.conversation.trip_intake import validate
     assert validate({"type": "rollback", "to_version": 6}, "6번 일정으로 되돌려 주세요") == {"type": "rollback", "to_version": 6}
-    assert validate({"type": "rollback", "to_version": 4}, "6번 일정으로 되돌려 주세요") is None   # 지어낸 번호
-    assert validate({"type": "rollback", "to_version": None}, "예전 일정으로 되돌려 주세요") is None
+    # ★`[2026-09-29]` 지어낸 번호는 버리고 번호 없는 되돌리기로 — 번호는 서버가 그 항목의 최근 변경에서 정한다
+    assert validate({"type": "rollback", "to_version": 4}, "6번 일정으로 되돌려 주세요") == {"type": "rollback", "to_version": None}
+    assert validate({"type": "rollback", "to_version": None}, "예전 일정으로 되돌려 주세요") == {"type": "rollback", "to_version": None}
 
 
 def test_the_interpreter_picks_the_team_from_the_report_not_the_classifier():
-    from app.modules.travel_ops.subjects import make_subject_interpreter
+    from app.domains.travel_ops.components.core_hooks.subjects import make_subject_interpreter
     reports = {"늦": {"type": "delay", "minutes": 70}, "품절": {"type": "stock_out", "products": ["라면"]},
                "바꿔": {"type": "change"}, "궁금": {"type": "other"}}
     calls = []

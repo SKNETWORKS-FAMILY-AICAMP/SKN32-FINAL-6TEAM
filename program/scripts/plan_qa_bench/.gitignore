@@ -1,0 +1,3 @@
+# 큰 생성 자료(재생성 가능: gen_train.py · gen_pointer_sft.py) — 커밋하지 않는다
+fixtures/train_pairs*.json
+fixtures/pointer_sft*.json

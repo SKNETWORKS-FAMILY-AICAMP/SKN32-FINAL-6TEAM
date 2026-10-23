@@ -1,0 +1,1080 @@
+<title>A-COP 근거 지도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  --paper:#fbfcfe; --surface:#f1f4f8; --raise:#ffffff;
+  --ink:#14181f; --dim:#5c6675; --faint:#8b95a5; --line:#dce1e9;
+  --mark:#2d4b8e; --star:#9a6a12;
+  --g1:#0e6b5c; --g2:#9a6a12; --gx:#a8382c; --gn:#6b7280;
+  --g1-bg:#e3f2ee; --g2-bg:#faf0dc; --gx-bg:#fbe9e6; --gn-bg:#eef0f3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#12151a; --surface:#1a1f27; --raise:#1e242d;
+    --ink:#e8ecf2; --dim:#9aa4b2; --faint:#6f7a8a; --line:#2a313c;
+    --mark:#88a6e6; --star:#dcaa4c;
+    --g1:#5cc7b0; --g2:#dcaa4c; --gx:#e8897c; --gn:#9aa4b2;
+    --g1-bg:#123029; --g2-bg:#33280f; --gx-bg:#3a1f1c; --gn-bg:#242a33;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#12151a; --surface:#1a1f27; --raise:#1e242d;
+  --ink:#e8ecf2; --dim:#9aa4b2; --faint:#6f7a8a; --line:#2a313c;
+  --mark:#88a6e6; --star:#dcaa4c;
+  --g1:#5cc7b0; --g2:#dcaa4c; --gx:#e8897c; --gn:#9aa4b2;
+  --g1-bg:#123029; --g2-bg:#33280f; --gx-bg:#3a1f1c; --gn-bg:#242a33;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink);
+  font-family:"IBM Plex Sans KR", system-ui, sans-serif; font-size:15px; line-height:1.72;
+  -webkit-font-smoothing:antialiased; }
+.wrap { max-width:1120px; margin:0 auto; padding:56px 28px 96px; }
+.masthead { border-bottom:2px solid var(--ink); padding-bottom:26px; margin-bottom:36px; }
+.eyebrow { font-family:"IBM Plex Mono", monospace; font-size:11.5px; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--mark); margin:0 0 12px; }
+h1 { font-family:"Noto Serif KR", serif; font-weight:700; font-size:clamp(30px,5vw,46px);
+  line-height:1.2; margin:0 0 14px; letter-spacing:-.015em; text-wrap:balance; }
+.lede { margin:0; max-width:66ch; color:var(--dim); font-size:16px; }
+.lede strong { color:var(--ink); font-weight:600; }
+.stats { display:flex; flex-wrap:wrap; gap:34px; margin:30px 0 14px; }
+.stat b { display:block; font-family:"Noto Serif KR", serif; font-size:32px; line-height:1.1;
+  font-weight:700; font-variant-numeric:tabular-nums; }
+.stat span { font-size:12.5px; color:var(--faint); }
+.stat--new b { color:var(--mark); }
+.stat--gap b { color:var(--g2); }
+.bar { display:flex; height:9px; border-radius:5px; overflow:hidden; gap:2px; margin:6px 0 12px; }
+.seg { display:block; }
+.seg--g1 { background:var(--g1); } .seg--g2 { background:var(--g2); }
+.seg--gx { background:var(--gx); } .seg--gn { background:var(--gn); }
+.legend { display:flex; flex-wrap:wrap; gap:16px; font-size:12.5px; color:var(--dim);
+  margin:0; padding:0; list-style:none; }
+.legend li { display:flex; align-items:center; gap:7px; }
+.dot { width:9px; height:9px; border-radius:2px; flex:none; }
+.dot--g1 { background:var(--g1); } .dot--g2 { background:var(--g2); }
+.dot--gx { background:var(--gx); } .dot--gn { background:var(--gn); }
+.note { margin:30px 0 0; padding:16px 20px; background:var(--surface);
+  border-left:3px solid var(--mark); border-radius:0 6px 6px 0; font-size:14px;
+  color:var(--dim); max-width:76ch; }
+.note strong { color:var(--ink); font-weight:600; }
+.qsec { margin-top:56px; }
+.qsec > h2 { font-family:"Noto Serif KR", serif; font-size:23px; font-weight:700;
+  margin:0 0 8px; letter-spacing:-.01em; }
+.qsec > p { margin:0 0 22px; color:var(--dim); font-size:14px; max-width:72ch; }
+.qgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:14px; }
+.qa { background:var(--surface); border-radius:9px; padding:17px 19px 15px;
+  display:flex; flex-direction:column; gap:9px; }
+.qa-head { display:flex; align-items:baseline; gap:11px; }
+.qnum { font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:600;
+  color:var(--paper); background:var(--ink); min-width:22px; height:22px; border-radius:5px;
+  display:inline-flex; align-items:center; justify-content:center; flex:none; padding:0 5px; }
+.qa h3 { margin:0; font-size:15px; font-weight:600; line-height:1.5; }
+.qa-ans { margin:0; font-size:13.5px; line-height:1.68; color:var(--dim); }
+.chips { display:flex; flex-wrap:wrap; gap:5px; }
+.chip { font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:600;
+  padding:2px 7px; border-radius:4px; background:var(--raise); border:1px solid var(--line);
+  color:var(--mark); text-decoration:none; }
+.chip:hover, .chip:focus-visible { border-color:var(--mark); }
+.group { margin-top:56px; }
+.group-head { margin-bottom:20px; }
+.group-head h2 { font-family:"Noto Serif KR", serif; font-size:21px; font-weight:700;
+  margin:0 0 6px; display:flex; align-items:baseline; gap:13px; letter-spacing:-.01em; }
+.letter { font-family:"IBM Plex Mono", monospace; font-size:13px; font-weight:600;
+  color:var(--paper); background:var(--mark); width:26px; height:26px; border-radius:5px;
+  flex:none; display:inline-flex; align-items:center; justify-content:center;
+  transform:translateY(-2px); }
+.blurb { margin:0; color:var(--dim); font-size:14px; max-width:70ch; }
+.count { margin:8px 0 0; font-size:12.5px; color:var(--faint); font-variant-numeric:tabular-nums; }
+.count strong { color:var(--ink); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+.src { background:var(--raise); border:1px solid var(--line); border-radius:9px;
+  padding:16px 18px 14px; display:flex; flex-direction:column; gap:9px; }
+.src--unused { background:transparent; border-style:dashed; }
+.src--star { border-left:3px solid var(--star); }
+.src-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.code { font-family:"IBM Plex Mono", monospace; font-weight:600; font-size:13.5px;
+  color:var(--mark); text-decoration:none; letter-spacing:.02em; }
+.code:hover, .code:focus-visible { text-decoration:underline; }
+.pill { font-size:11px; font-weight:500; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+.pill--g1 { color:var(--g1); background:var(--g1-bg); }
+.pill--g2 { color:var(--g2); background:var(--g2-bg); }
+.pill--gx { color:var(--gx); background:var(--gx-bg); }
+.pill--gn { color:var(--gn); background:var(--gn-bg); }
+.fact { margin:0; font-size:14px; line-height:1.62; }
+.org { margin:0; font-size:12.5px; color:var(--faint); }
+.org a { color:var(--faint); }
+.org a:hover, .org a:focus-visible { color:var(--mark); }
+.claim { margin-top:2px; padding-top:11px; border-top:1px solid var(--line); }
+.claim-sec { display:inline-block; font-family:"IBM Plex Mono", monospace; font-size:10.5px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--faint); margin-bottom:5px; }
+.claim p { margin:0; font-size:13px; line-height:1.62; color:var(--dim); }
+.claim--none p { color:var(--faint); font-style:italic; }
+a:focus-visible, .code:focus-visible, .chip:focus-visible { outline:2px solid var(--mark);
+  outline-offset:3px; border-radius:3px; }
+footer { margin-top:64px; padding-top:22px; border-top:1px solid var(--line);
+  font-size:12.5px; color:var(--faint); }
+footer code { font-family:"IBM Plex Mono", monospace; font-size:12px; }
+@media (max-width:560px) { .wrap { padding:36px 18px 64px; }
+  .grid, .qgrid { grid-template-columns:1fr; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">프로젝트 기획서 · 근거출처</p>
+    <h1>A-COP 근거 지도</h1>
+    <p class="lede">기획서의 주장이 무엇에 기대고 있는지, 그 근거가 얼마나 단단한지를 한 장에 편다.
+      제출표 41건 중 본문이 인용한 것은 26건이고,
+      <strong>2026-09-01에 세그먼트 검증용 38건을 보강했다.</strong> 쓰지 않은 것도 숨기지 않고 함께 둔다.</p>
+    <div class="stats">
+      <div class="stat"><b>41</b><span>제출표 근거</span></div>
+      <div class="stat"><b>26</b><span>본문에서 인용</span></div>
+      <div class="stat stat--gap"><b>12</b><span>미인용 · 보강 후보</span></div>
+      <div class="stat stat--new"><b>+38</b><span>세그먼트 검증 보강</span></div>
+    </div>
+    <div class="bar"><span class="seg seg--g1" style="flex:13"></span><span class="seg seg--g2" style="flex:61"></span><span class="seg seg--gx" style="flex:2"></span><span class="seg seg--gn" style="flex:3"></span></div>
+    <ul class="legend">
+      <li><span class="dot dot--g1"></span>1차 · 원 발행처 13건</li>
+      <li><span class="dot dot--g2"></span>2차 · 재인용 61건</li>
+      <li><span class="dot dot--gx"></span>원출처 미확인 2건</li>
+      <li><span class="dot dot--gn"></span>등급 미기재 3건</li>
+    </ul>
+    <p class="note"><strong>등급을 밝히는 이유는 2차 인용을 1차 근거처럼 쓰지 않기 위해서다.</strong>
+      국내 AICC 시장 수치(C3)는 원출처를 확인하지 못했고, 에이전트 도입 실패율 847건 조사(J6)는
+      표본 선정 기준이 공개돼 있지 않다. 둘 다 핵심 근거로 쓰지 않는다. 경쟁 제품 항목(G군)은
+      공개 자료 기준이라 “기능이 없다”가 아니라 “공개 자료로는 확인되지 않는다”로 읽어야 한다.</p>
+  </header>
+
+  <section class="qsec">
+    <h2>세그먼트 검증 12문</h2>
+    <p>제출표 41건은 “시장이 크다”와 “격차가 있다”까지만 받친다. 누구에게 무엇을 어떻게 파는가는
+      받치지 못했다. 아래 12개가 그 빈자리이고, 각 답 밑의 근거번호를 누르면 원문으로 간다.</p>
+    <div class="qgrid">
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">1</span><h3>왜 도입만 하고 에이전틱까지 못 갔나</h3></div>
+      <p class="qa-ans">레거시 연동이 최대 장애다(46%). 레거시 API가 사람 입력을 전제로 만들어져 자율 호출과 안 맞고, 안전망 없이 붙이면 감사 불가능한 변경이 난다. 그리고 실패 최다 원인은 모델이 아니라 낡은 지식베이스다.</p>
+      <div class="chips"><a class="chip" href="https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/" target="_blank" rel="noopener">J3</a> <a class="chip" href="https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/" target="_blank" rel="noopener">J4</a> <a class="chip" href="https://www.generative.inc/agentic-ai-in-2026-how-ai-went-from-chatting-to-doing" target="_blank" rel="noopener">J5</a> <a class="chip" href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">K6</a> <a class="chip" href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">K7</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">2</span><h3>운영화 성공은 어떻게</h3></div>
+      <p class="qa-ans">네 가지다. 인계 시 맥락을 통째로 넘긴다. 정책·에스컬레이션 규칙·확신도 임계값을 배포 전에 검증하고 프로덕션에서 계속 관측한다. 전면 자동화가 아니라 하이브리드로 간다. 지식베이스를 상시 운영 기능으로 둔다.</p>
+      <div class="chips"><a class="chip" href="https://fin.ai/learn/ai-customer-service-best-practices" target="_blank" rel="noopener">L8</a> <a class="chip" href="https://onereach.ai/blog/best-practices-for-ai-agent-implementations/" target="_blank" rel="noopener">L9</a> <a class="chip" href="https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396" target="_blank" rel="noopener">K3</a> <a class="chip" href="https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap" target="_blank" rel="noopener">M5</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">3</span><h3>운영화 실패란 · 실패 기업</h3></div>
+      <p class="qa-ans">Gartner가 든 원인은 비용 상승·거버넌스·불명확한 ROI다. 실제 사례는 Klarna(품질 붕괴 후 선회), Air Canada(정책 오답으로 패소), Chevrolet(프롬프트 인젝션).</p>
+      <div class="chips"><a class="chip" href="https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027" target="_blank" rel="noopener">J1</a> <a class="chip" href="https://www.rcrwireless.com/20250627/business/agentic-ai-gartner" target="_blank" rel="noopener">J2</a> <a class="chip" href="https://getperspective.ai/blog/klarna-ai-customer-service-replacing-700-agents-conversational-ai-case-study" target="_blank" rel="noopener">K1</a> <a class="chip" href="https://www.forbes.com/sites/quickerbettertech/2025/05/18/business-tech-news-klarna-reverses-on-ai-says-customers-like-talking-to-people/" target="_blank" rel="noopener">K2</a> <a class="chip" href="https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed" target="_blank" rel="noopener">K4</a> <a class="chip" href="https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed" target="_blank" rel="noopener">K5</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">4</span><h3>실패 기업들이 뭘 했길래</h3></div>
+      <p class="qa-ans">Klarna는 비용 절감을 목표로 삼아 700명분을 걷어냈고 품질이 무너졌다. Air Canada는 정책 근거 대조 없이 답변을 자동 생성했다. 공통은 지식베이스 관리 부재와 인계 시 맥락 소실이다.</p>
+      <div class="chips"><a class="chip" href="https://getperspective.ai/blog/klarna-ai-customer-service-replacing-700-agents-conversational-ai-case-study" target="_blank" rel="noopener">K1</a> <a class="chip" href="https://www.forbes.com/sites/quickerbettertech/2025/05/18/business-tech-news-klarna-reverses-on-ai-says-customers-like-talking-to-people/" target="_blank" rel="noopener">K2</a> <a class="chip" href="https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396" target="_blank" rel="noopener">K3</a> <a class="chip" href="https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed" target="_blank" rel="noopener">K4</a> <a class="chip" href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">K6</a> <a class="chip" href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">K7</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">5</span><h3>성공 업체는 누구</h3></div>
+      <p class="qa-ans">Sierra(Airtable 80%, Chime 70%+), Decagon(Substack 90%+, Curology 5%→80%), Intercom Fin(ARR 1억 달러 돌파).</p>
+      <div class="chips"><a class="chip" href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">L1</a> <a class="chip" href="https://decagon.ai/case-studies" target="_blank" rel="noopener">L2</a> <a class="chip" href="https://www.comparethecloud.net/news/intercom-builds-fin-beyond-customer-service-ai-agent-launches-into-sales-crosses-100m-arr" target="_blank" rel="noopener">L7</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">6</span><h3>성공 요인</h3></div>
+      <p class="qa-ans">공개 수치는 정의가 제각각이라 그대로 못 믿는다. 실제 공통점은 인계 품질과 배포 전 검증·상시 관측이다.</p>
+      <div class="chips"><a class="chip" href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">L3</a> <a class="chip" href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">L4</a> <a class="chip" href="https://fin.ai/learn/ai-customer-service-best-practices" target="_blank" rel="noopener">L8</a> <a class="chip" href="https://onereach.ai/blog/best-practices-for-ai-agent-implementations/" target="_blank" rel="noopener">L9</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">7</span><h3>누구에게 팔 것인가 / 방향성</h3></div>
+      <p class="qa-ans">전 범위 CS 플랫폼은 틀린 방향이다. 버티컬이 리텐션 3~5배이고 해자는 도메인 데이터·워크플로에 있다. 대상은 10인 미만이 아니라 &#x27;어색한 중간&#x27;이다.</p>
+      <div class="chips"><a class="chip" href="https://www.business.com/articles/ai-usage-smb-workplace-study/" target="_blank" rel="noopener">M2</a> <a class="chip" href="https://myaskai.com/blog/best-ai-customer-service-smb-2026" target="_blank" rel="noopener">M3</a> <a class="chip" href="https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap" target="_blank" rel="noopener">M4</a> <a class="chip" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N2</a> <a class="chip" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N3</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">8</span><h3>수요가 가장 큰 고객층</h3></div>
+      <p class="qa-ans">10인 미만은 도입률 20%, 50~249인은 60%+. 그 사이가 비어 있다. 국내에서는 취·교·반·배가 CS의 절반 이상이고, 네이버가 문의 대응률을 판매자 등급에 반영하기 시작해 강제 수요가 생긴다.</p>
+      <div class="chips"><a class="chip" href="https://www.upwork.com/resources/state-of-ai-in-smbs" target="_blank" rel="noopener">M1</a> <a class="chip" href="https://www.business.com/articles/ai-usage-smb-workplace-study/" target="_blank" rel="noopener">M2</a> <a class="chip" href="https://myaskai.com/blog/best-ai-customer-service-smb-2026" target="_blank" rel="noopener">M3</a> <a class="chip" href="https://channel.io/kr/blog/articles/how-to-automate-cs-ef6db536" target="_blank" rel="noopener">O1</a> <a class="chip" href="https://www.etnews.com/20251201000211" target="_blank" rel="noopener">O2</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">9</span><h3>검증 자료 확보법</h3></div>
+      <p class="qa-ans">큐레이션 &gt; 프로덕션 트래픽 &gt; 합성 순이다. 우리는 트래픽이 없으므로 소비자24 322건을 gold로 두고, 합성분은 silver로 표시해 사람 검토로 승격한다. 검증 쇼핑몰은 데이터원이 아니라 계약 검증용으로 쓴다.</p>
+      <div class="chips"><a class="chip" href="https://langfuse.com/resources/engineering/golden-dataset-evaluation" target="_blank" rel="noopener">P1</a> <a class="chip" href="https://langfuse.com/resources/engineering/golden-dataset-evaluation" target="_blank" rel="noopener">P2</a> <a class="chip" href="https://www.evidentlyai.com/llm-guide/llm-test-dataset-synthetic-data" target="_blank" rel="noopener">P3</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">10</span><h3>Fin은 왜 단일 에이전트인가</h3></div>
+      <p class="qa-ans">의도적 설계다. 부서별로 쪼개진 스택을 하나로 잇고 맥락을 넘기지 않는 것이 목적이다. 대화 연속성에는 그게 맞다. 다만 승인 대기·외부 콜백처럼 며칠 걸리는 프로세스 오케스트레이션은 다른 문제다.</p>
+      <div class="chips"><a class="chip" href="https://www.cxtoday.com/customer-engagement-platforms/intercom-fin-ai-agent-sales-expansion/" target="_blank" rel="noopener">L5</a> <a class="chip" href="https://inkeep.com/blog/inkeep-vs-intercom-fin-ai" target="_blank" rel="noopener">L6</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">11</span><h3>국내 셀러 대상 의의</h3></div>
+      <p class="qa-ans">국내에 채널톡·헥토데이터가 이미 있고 리터놀은 반품 물류를 한다. 비어 있는 자리는 반품·환불의 정책 판정이다. 굿서비스 정규 전환이 응답 압력을 만든다.</p>
+      <div class="chips"><a class="chip" href="https://channel.io/kr/blog/articles/how-to-automate-cs-ef6db536" target="_blank" rel="noopener">O1</a> <a class="chip" href="https://www.etnews.com/20251201000211" target="_blank" rel="noopener">O2</a> <a class="chip" href="https://platum.kr/archives/235767" target="_blank" rel="noopener">O3</a> <a class="chip" href="https://megaeconomy.co.kr/news/newsview.php?ncode=1065575427608537" target="_blank" rel="noopener">O4</a> <a class="chip" href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">L4</a></div>
+    </article>
+    <article class="qa">
+      <div class="qa-head"><span class="qnum">12</span><h3>새 주제를 잡는다면</h3></div>
+      <p class="qa-ans">해자 세 조건은 독점 데이터·워크플로 깊이·대형 플랫폼이 신경 안 쓰는 좁은 문제다. 우리가 이미 가진 것은 법령 앵커 28개와 판정 매트릭스 17행과 소비자24 322건이다. 그 셋이 겹치는 자리가 반품·환불 분쟁 판정이다.</p>
+      <div class="chips"><a class="chip" href="https://www.8seneca.com/en/blog/technology/vertical-ai-agents-enterprise-2026" target="_blank" rel="noopener">N1</a> <a class="chip" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N2</a> <a class="chip" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N3</a> <a class="chip" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N4</a> <a class="chip" href="https://channel.io/kr/blog/articles/how-to-automate-cs-ef6db536" target="_blank" rel="noopener">O1</a> <a class="chip" href="https://platum.kr/archives/235767" target="_blank" rel="noopener">O3</a></div>
+    </article>
+    </div>
+  </section>
+
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">A</span>봇·자동화 트래픽</h2>
+      <p class="blurb">웹 트래픽의 절반이 이미 사람이 아니라는 것</p>
+      <p class="count">4건 중 <strong>1건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.imperva.com/resources/resource-library/reports/2026-bad-bot-report/" target="_blank" rel="noopener">A1</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">자동화 트래픽이 전체 웹 트래픽의 53% (인간 47%). 전년 51%에서 상승</p>
+        <p class="org">Imperva(Thales) Bad Bot Report 2026, 13차 연례, 2026-04 발표 · <a href="https://www.imperva.com/resources/resource-library/reports/2026-bad-bot-report/" target="_blank" rel="noopener">imperva.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>자동화 트래픽이 전체 웹 트래픽의 53퍼센트로 사람 47퍼센트를 넘었다 [A1, 1차, Imperva Bad Bot Report 2026].</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.imperva.com/blog/bad-bot-report-2026-bots-agentic-age/" target="_blank" rel="noopener">A2</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">위 보고서 해설 — &quot;Bots in the Agentic Age&quot;</p>
+        <p class="org">Imperva 블로그 · <a href="https://www.imperva.com/blog/bad-bot-report-2026-bots-agentic-age/" target="_blank" rel="noopener">imperva.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.imperva.com/blog/bad-bot-report-2026-bots-agentic-age/" target="_blank" rel="noopener">A3</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">나쁜 봇만으로 전체 트래픽의 40% (전년 대비 +3%p)</p>
+        <p class="org">동 보고서 · <a href="https://www.imperva.com/blog/bad-bot-report-2026-bots-agentic-age/" target="_blank" rel="noopener">imperva.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.imperva.com/blog/bad-bot-report-2026-bots-agentic-age/" target="_blank" rel="noopener">A4</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">AI 기반 공격 탐지·차단 12.5배 증가 (일 200만 → 2,500만 건)</p>
+        <p class="org">동 보고서 · <a href="https://www.imperva.com/blog/bad-bot-report-2026-bots-agentic-age/" target="_blank" rel="noopener">imperva.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">B</span>AI 경유 커머스 유입</h2>
+      <p class="blurb">고객이 자기 에이전트로 들어오기 시작했다는 것</p>
+      <p class="count">7건 중 <strong>3건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://commercetools.com/blog/agentic-commerce-stats-enterprise-guide" target="_blank" rel="noopener">B1</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">미국 리테일 사이트 AI 유입 방문 +4,700% YoY (2025)</p>
+        <p class="org">Adobe Analytics · <a href="https://commercetools.com/blog/agentic-commerce-stats-enterprise-guide" target="_blank" rel="noopener">commercetools.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>미국 리테일 사이트의 AI 유입 방문이 전년 대비 4,700퍼센트 늘었다 [B1, 2차 인용, Adobe Analytics].</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://commercetools.com/blog/agentic-commerce-stats-enterprise-guide" target="_blank" rel="noopener">B2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Prime Day GenAI 유입 트래픽 +3,300% YoY</p>
+        <p class="org">Adobe Analytics · <a href="https://commercetools.com/blog/agentic-commerce-stats-enterprise-guide" target="_blank" rel="noopener">commercetools.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.digitalapplied.com/blog/agentic-commerce-statistics-2026-data" target="_blank" rel="noopener">B3</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Black Friday 2025 AI 유입 리테일 트래픽 +805% YoY</p>
+        <p class="org">Adobe Analytics · <a href="https://www.digitalapplied.com/blog/agentic-commerce-statistics-2026-data" target="_blank" rel="noopener">digitalapplied.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.metarouter.io/post/agentic-commerce-trends-statistics" target="_blank" rel="noopener">B4</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Shopify 가맹점 AI 유입 트래픽 약 8배 YoY (Q1 2026)</p>
+        <p class="org">Shopify · <a href="https://www.metarouter.io/post/agentic-commerce-trends-statistics" target="_blank" rel="noopener">metarouter.io</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.metarouter.io/post/agentic-commerce-trends-statistics" target="_blank" rel="noopener">B5</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Shopify AI 유입 주문 약 13배 YoY (Q1 2026)</p>
+        <p class="org">Shopify · <a href="https://www.metarouter.io/post/agentic-commerce-trends-statistics" target="_blank" rel="noopener">metarouter.io</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Shopify의 AI 유입 주문이 약 13배가 됐다 [B5, 2차 인용]. AI 유입 쇼퍼의 전환율은 사람보다 42퍼센트 높다 [B6, 2차 인용].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://commercetools.com/blog/agentic-commerce-stats-enterprise-guide" target="_blank" rel="noopener">B6</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">AI 유입 쇼퍼 전환율이 인간 대비 42% 높음 (Q1 2026)</p>
+        <p class="org">Adobe · <a href="https://commercetools.com/blog/agentic-commerce-stats-enterprise-guide" target="_blank" rel="noopener">commercetools.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Shopify의 AI 유입 주문이 약 13배가 됐다 [B5, 2차 인용]. AI 유입 쇼퍼의 전환율은 사람보다 42퍼센트 높다 [B6, 2차 인용].</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.digitalapplied.com/blog/agentic-commerce-statistics-2026-data" target="_blank" rel="noopener">B7</a>
+          <span class="pill pill--g2">2차 인용·추정</span>
+        </div>
+        <p class="fact">agentic commerce 시장 2030년 3~5조 달러 전망</p>
+        <p class="org">컨설팅펌 종합 · <a href="https://www.digitalapplied.com/blog/agentic-commerce-statistics-2026-data" target="_blank" rel="noopener">digitalapplied.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">C</span>시장 규모</h2>
+      <p class="blurb">AI 고객서비스 시장이 얼마나 되는가</p>
+      <p class="count">3건 중 <strong>2건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.marketsandmarkets.com/PressReleases/ai-for-customer-service.asp" target="_blank" rel="noopener">C1</a>
+          <span class="pill pill--g1">1차(보도자료)</span>
+        </div>
+        <p class="fact">글로벌 AI 고객서비스 시장 2030년 478.2억 달러, CAGR 25.8%</p>
+        <p class="org">MarketsandMarkets · <a href="https://www.marketsandmarkets.com/PressReleases/ai-for-customer-service.asp" target="_blank" rel="noopener">marketsandmarkets.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>글로벌 AI 고객서비스 시장은 2030년 478.2억 달러, 연평균 성장률 25.8퍼센트로 전망된다 [C1, 1차 보도자료, MarketsandMarkets].</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.lorikeetcx.ai/articles/ai-customer-service-statistics" target="_blank" rel="noopener">C2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">동 시장 2026년 151.2억 달러</p>
+        <p class="org">MarketsandMarkets 추정 · <a href="https://www.lorikeetcx.ai/articles/ai-customer-service-statistics" target="_blank" rel="noopener">lorikeetcx.ai</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://claw-ops.com/blog/korea-aicc-market" target="_blank" rel="noopener">C3</a>
+          <span class="pill pill--gx">2차·원출처 미확인</span>
+        </div>
+        <p class="fact">국내 AICC 2020년 4,214만 달러(약 542억 원) → 2030년 3억 5,008만 달러(약 4,546억 원), CAGR 23.7%</p>
+        <p class="org">국내 시장 분석 · <a href="https://claw-ops.com/blog/korea-aicc-market" target="_blank" rel="noopener">claw-ops.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>국내 AICC 수치는 원출처가 확인되지 않은 업계 추정이다 [C3, 2차, 원출처 미확인]. 핵심 근거로 단정하지 않는다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">D</span>도입과 작동의 격차</h2>
+      <p class="blurb">도입은 했는데 왜 안 굴러가는가</p>
+      <p class="count">3건 중 <strong>3건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.lorikeetcx.ai/articles/ai-customer-service-statistics" target="_blank" rel="noopener">D1</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">콜센터 88%가 AI 사용, 그중 25%만 완전 통합</p>
+        <p class="org">업계 통계 종합 · <a href="https://www.lorikeetcx.ai/articles/ai-customer-service-statistics" target="_blank" rel="noopener">lorikeetcx.ai</a></p>
+        <div class="claim"><span class="claim-sec">문제 정의</span><p>콜센터의 88퍼센트가 AI를 쓰지만 완전히 통합한 곳은 25퍼센트뿐이다 [D1]. Gartner는 2027년까지 agentic AI 프로젝트의 40퍼센트 이상이 폐기될 것으로 전망했고, 원인을 모델 실패가 아니라 운영화 실패로 봤다 [D2]. 벤더 데모의 자동화율은 90퍼센트를 넘지만 실제 프로덕션은 55에서 70퍼센트다 [D3].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.kai-waehner.de/blog/2026/04/06/enterprise-agentic-ai-landscape-2026-trust-flexibility-and-vendor-lock-in/" target="_blank" rel="noopener">D2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">2027년까지 agentic AI 프로젝트 40% 이상 폐기 전망. 원인은 모델 실패가 아니라 운영화 실패</p>
+        <p class="org">Gartner · <a href="https://www.kai-waehner.de/blog/2026/04/06/enterprise-agentic-ai-landscape-2026-trust-flexibility-and-vendor-lock-in/" target="_blank" rel="noopener">kai-waehner.de</a></p>
+        <div class="claim"><span class="claim-sec">문제 정의</span><p>콜센터의 88퍼센트가 AI를 쓰지만 완전히 통합한 곳은 25퍼센트뿐이다 [D1]. Gartner는 2027년까지 agentic AI 프로젝트의 40퍼센트 이상이 폐기될 것으로 전망했고, 원인을 모델 실패가 아니라 운영화 실패로 봤다 [D2]. 벤더 데모의 자동화율은 90퍼센트를 넘지만 실제 프로덕션은 55에서 70퍼센트다 [D3].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://builts.ai/blog/ai-customer-service-trends-2026/" target="_blank" rel="noopener">D3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">벤더 데모 자동화율 90%+ vs 실제 프로덕션 55~70%</p>
+        <p class="org">수천 건 구현 데이터 · <a href="https://builts.ai/blog/ai-customer-service-trends-2026/" target="_blank" rel="noopener">builts.ai</a></p>
+        <div class="claim"><span class="claim-sec">문제 정의</span><p>콜센터의 88퍼센트가 AI를 쓰지만 완전히 통합한 곳은 25퍼센트뿐이다 [D1]. Gartner는 2027년까지 agentic AI 프로젝트의 40퍼센트 이상이 폐기될 것으로 전망했고, 원인을 모델 실패가 아니라 운영화 실패로 봤다 [D2]. 벤더 데모의 자동화율은 90퍼센트를 넘지만 실제 프로덕션은 55에서 70퍼센트다 [D3].</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">E</span>처리 비용과 가격 구조</h2>
+      <p class="blurb">사람과 AI의 건당 비용, 과금 방식의 함정</p>
+      <p class="count">5건 중 <strong>5건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.mavenagi.com/blog/cost-per-ticket-statistics-customer-support" target="_blank" rel="noopener">E1</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">사람이 처리하는 Tier 1 티켓 1건 15~25 달러</p>
+        <p class="org">지원 비용 통계 · <a href="https://www.mavenagi.com/blog/cost-per-ticket-statistics-customer-support" target="_blank" rel="noopener">mavenagi.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>사람이 처리하는 1차 응대 티켓은 건당 15에서 25달러, AI 해결은 건당 0.49에서 2.00달러다 [E1, E2, 2차].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.dragapp.com/blog/state-of-ai-support-pricing/" target="_blank" rel="noopener">E2</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">AI 해결 티켓 1건 0.49~2.00 달러</p>
+        <p class="org">AI 지원 가격 조사 · <a href="https://www.dragapp.com/blog/state-of-ai-support-pricing/" target="_blank" rel="noopener">dragapp.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>사람이 처리하는 1차 응대 티켓은 건당 15에서 25달러, AI 해결은 건당 0.49에서 2.00달러다 [E1, E2, 2차].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.dragapp.com/blog/state-of-ai-support-pricing/" target="_blank" rel="noopener">E3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Intercom Fin 0.99 달러/해결이 시장 기준가</p>
+        <p class="org">동 · <a href="https://www.dragapp.com/blog/state-of-ai-support-pricing/" target="_blank" rel="noopener">dragapp.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Intercom Fin의 해결당 0.99달러가 시장 기준가로 인용된다 [E3, 2차]. 평균 해결률은 67퍼센트다 [E4, 2차 인용].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.dragapp.com/blog/state-of-ai-support-pricing/" target="_blank" rel="noopener">E4</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Fin 평균 해결률 67% (고객사 7,000곳 이상)</p>
+        <p class="org">Intercom 공개 수치 · <a href="https://www.dragapp.com/blog/state-of-ai-support-pricing/" target="_blank" rel="noopener">dragapp.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Intercom Fin의 해결당 0.99달러가 시장 기준가로 인용된다 [E3, 2차]. 평균 해결률은 67퍼센트다 [E4, 2차 인용].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026" target="_blank" rel="noopener">E5</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">해결당 과금이 잘될수록 비싸져 이탈 사유 1위</p>
+        <p class="org">Fin 리뷰 · <a href="https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026" target="_blank" rel="noopener">myaskai.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>해결당 과금은 잘될수록 비싸져 이탈 사유 1위로 지목된다 [E5, 2차]. 자동화가 성공할수록 청구액이 늘기 때문에 도입처는 성과와 비용 증가를 함께 겪는다. 파는 쪽도 제품이 잘 작동할수록 고객이 떠나는 구조를 안고 간다. 자체 호스팅과 좌석 기반 과금은 이 어긋난 유인을 피하는 대안이 된다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">F</span>규제와 자체 호스팅 수요</h2>
+      <p class="blurb">왜 데이터를 안에 두라는 요구가 생기는가</p>
+      <p class="count">4건 중 <strong>4건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://thoughtminds.ai/blog/sovereign-ai-and-on-premise-llms" target="_blank" rel="noopener">F1</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">2030년까지 유럽·중동 기업 75% 이상이 워크로드를 자국 내로 이전 (현재 5% 미만)</p>
+        <p class="org">Gartner, &quot;Predicts 2026: AI Sovereignty&quot; (2025-10) · <a href="https://thoughtminds.ai/blog/sovereign-ai-and-on-premise-llms" target="_blank" rel="noopener">thoughtminds.ai</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>2030년까지 유럽과 중동 기업의 75퍼센트 이상이 워크로드를 자국 내로 옮길 것으로 전망된다 [F1, 2차 인용, Gartner]. 현재는 5퍼센트 미만이다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://thoughtminds.ai/blog/sovereign-ai-and-on-premise-llms" target="_blank" rel="noopener">F2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">sovereign AI가 이사회 안건. 24개국 3,235명 조사</p>
+        <p class="org">Deloitte, &quot;State of AI in the Enterprise 2026&quot; (2025-09) · <a href="https://thoughtminds.ai/blog/sovereign-ai-and-on-premise-llms" target="_blank" rel="noopener">thoughtminds.ai</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>sovereign AI가 이사회 안건이 됐다 [F2, 2차 인용, Deloitte, 24개국 3,235명 조사]. 86퍼센트가 AI 인프라 예산이 3년 안에 3배 이상 늘 것으로 응답했다 [F3, 2차 인용].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://thoughtminds.ai/blog/sovereign-ai-and-on-premise-llms" target="_blank" rel="noopener">F3</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">86%가 AI 인프라 예산이 3년 내 3배 이상 증가할 것으로 응답</p>
+        <p class="org">Deloitte AI Infrastructure Survey (2025-12) · <a href="https://thoughtminds.ai/blog/sovereign-ai-and-on-premise-llms" target="_blank" rel="noopener">thoughtminds.ai</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>sovereign AI가 이사회 안건이 됐다 [F2, 2차 인용, Deloitte, 24개국 3,235명 조사]. 86퍼센트가 AI 인프라 예산이 3년 안에 3배 이상 늘 것으로 응답했다 [F3, 2차 인용].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.gooddata.ai/blog/data-sovereignty-and-ai-analytics-keep-your-llm-on-premise/" target="_blank" rel="noopener">F4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">관련 규제: GDPR, HIPAA, DORA, NIS2, EU AI Act</p>
+        <p class="org">종합 · <a href="https://www.gooddata.ai/blog/data-sovereignty-and-ai-analytics-keep-your-llm-on-premise/" target="_blank" rel="noopener">gooddata.ai</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>관련 규제는 GDPR, HIPAA, DORA, NIS2, EU AI Act다 [F4]. 이름은 다르지만 공통으로 묻는 것은 같다. 데이터를 어디서 처리했는지, 누가 접근했는지, 어떤 판단이 왜 내려졌는지를 나중에 보여줄 수 있는가다. 모델을 외부 API로 부르면 처리 위치와 접근 기록이 벤더 쪽에 남아 도입 기업이 스스로 증명하기 어렵다. 자체 호스팅과 감사 로그를 나중에 붙이는 기능이 아니라 처음부터 설계에 넣은 이유가 이것이다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">G</span>경쟁 제품의 구조적 공백</h2>
+      <p class="blurb">1군 제품이 공개 자료로 증명하지 못하는 것</p>
+      <p class="count">7건 중 <strong>5건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://inkeep.com/blog/inkeep-vs-intercom-fin-ai" target="_blank" rel="noopener">G1</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Intercom Fin은 단일 에이전트. multi-agent 지원·agent-to-agent 통신·전문 에이전트 라우팅의 증거 없음</p>
+        <p class="org">Inkeep 비교 · <a href="https://inkeep.com/blog/inkeep-vs-intercom-fin-ai" target="_blank" rel="noopener">inkeep.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Intercom Fin은 단일 에이전트이며 multi-agent 지원, agent-to-agent 통신, 전문 에이전트 라우팅의 증거가 공개돼 있지 않다 [G1, 2차]. 이는 그 기능이 없다는 뜻이 아니라 공개 자료만으로는 확인되지 않는다는 뜻이다. 여러 Team이 각자 권한을 갖고 협업하는 구조를 요구하는 도입처라면, 확인할 방법이 없다는 것 자체가 검토 단계에서 걸림돌이 된다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026" target="_blank" rel="noopener">G2</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Fin은 자체 호스팅·온프레미스·air-gapped 불가 → 규제 산업에 hard blocker</p>
+        <p class="org">Fin 리뷰 · <a href="https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026" target="_blank" rel="noopener">myaskai.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Fin은 자체 호스팅, 온프레미스, 망분리(air-gapped, 외부망과 물리적으로 끊는 방식)가 불가해 규제 산업에서 도입 장벽이 된다 [G2, 2차]. 데이터를 내부에 두어야 하는 조건이 걸리면 기능이 아무리 맞아도 검토가 그 앞에서 멈춘다. 자체 호스팅을 목표로 설계한 이유가 여기 있다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.notch.cx/learn/deep-dive-comparison-for-enterprise-ai-customer-support" target="_blank" rel="noopener">G3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Sierra·Decagon 모두 end-to-end 품질관리 기능을 공개하지 않음 (2026-06 기준)</p>
+        <p class="org">Notch 비교 · <a href="https://www.notch.cx/learn/deep-dive-comparison-for-enterprise-ai-customer-support" target="_blank" rel="noopener">notch.cx</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Sierra와 Decagon은 공개 비교 자료에서 end-to-end 품질관리 기능이 확인되지 않는다 [G3, 2차].</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.mavenagi.com/blog/decagon-alternatives" target="_blank" rel="noopener">G4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Decagon의 AOP와 Sierra의 policy는 대화 종결(conversation-closure)에 최적화됐고 프로세스 오케스트레이션용이 아님</p>
+        <p class="org">MavenAGI 분석 · <a href="https://www.mavenagi.com/blog/decagon-alternatives" target="_blank" rel="noopener">mavenagi.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>Decagon의 AOP와 Sierra의 policy는 대화 종결에 최적화된 것으로 분석되며 프로세스 오케스트레이션용이 아니다 [G4, 2차]. 두 가지는 다른 일이다. 대화 종결은 한 번의 대화를 매끄럽게 끝내는 것이고, 프로세스 오케스트레이션은 승인 대기나 외부 콜백처럼 며칠 걸리는 건을 상태로 들고 있다가 이어서 처리하는 것이다. 앞의 것을 잘한다고 뒤의 것이 되지는 않는다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.eesel.ai/blog/decagon-vs-sierra" target="_blank" rel="noopener">G5</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Decagon은 Zendesk·Salesforce·Kustomer 지원, Freshdesk·HubSpot 미지원</p>
+        <p class="org">Decagon 비교 · <a href="https://www.eesel.ai/blog/decagon-vs-sierra" target="_blank" rel="noopener">eesel.ai</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.getmacha.com/blog/decagon-ai-complete-guide" target="_blank" rel="noopener">G6</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Decagon도 AOP 작성 전 선행 엔지니어링 필요 (API 연결·통합·guardrail 구성)</p>
+        <p class="org">Decagon 가이드 · <a href="https://www.getmacha.com/blog/decagon-ai-complete-guide" target="_blank" rel="noopener">getmacha.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://builts.ai/blog/ai-customer-service-trends-2026/" target="_blank" rel="noopener">G7</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">컴플레인은 2026년에도 자율 처리 불가. 감정·서비스 회복 판단·정책 예외에서 기술적으로 맞아도 톤이 틀림</p>
+        <p class="org">업계 분석 · <a href="https://builts.ai/blog/ai-customer-service-trends-2026/" target="_blank" rel="noopener">builts.ai</a></p>
+        <div class="claim"><span class="claim-sec">문제 정의</span><p>컴플레인은 자동화 대상이 아니라 사람에게 넘기는 경계를 두어야 하는 구간이다. 2026년에도 자율 처리가 어렵고, 감정 대응과 서비스 회복 판단, 정책 예외에서는 기술적으로 맞는 답이어도 톤이 어긋난다 [G7]. 답이 맞았는지만으로 응대가 끝나지 않는 영역이라, 자동화율을 이 구간까지 밀면 처리 비용에서 아끼는 것보다 잘못된 응대로 잃는 것이 커진다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">H</span>에이전트 상호운용 표준</h2>
+      <p class="blurb">A2A·AP2·UCP·MCP — 우리가 붙을 규약</p>
+      <p class="count">5건 중 <strong>3건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://www.linuxfoundation.org/press/a2a-protocol-surpasses-150-organizations-lands-in-major-cloud-platforms-and-sees-enterprise-production-use-in-first-year" target="_blank" rel="noopener">H1</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">A2A 스펙 1.0, Linux Foundation 이관, 150개 이상 조직, Azure AI Foundry·AWS Bedrock AgentCore·Vertex AI 통합</p>
+        <p class="org">Linux Foundation 보도자료 (2026-04) · <a href="https://www.linuxfoundation.org/press/a2a-protocol-surpasses-150-organizations-lands-in-major-cloud-platforms-and-sees-enterprise-production-use-in-first-year" target="_blank" rel="noopener">linuxfoundation.org</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>A2A 스펙 1.0이 Linux Foundation으로 이관됐고 150개 이상 조직이 참여한다 [H1, 1차]. AP2는 에이전트 구매를 서명된 Mandate 세 가지로 표현한다 [H2, 1차]. UCP는 Google이 Shopify, Etsy, Wayfair, Target, Walmart와 공동 개발했다 [H3, 1차]. A2A는 에이전트끼리 작업을 주고받는 규약이고, UCP와 AP2는 에이전트 커머스와 결제 위임의 표준이다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://cloud.google.com/blog/products/ai-machine-learning/announcing-agents-to-payments-ap2-protocol" target="_blank" rel="noopener">H2</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">AP2 — 에이전트 구매를 서명된 Mandate 3종(Intent/Cart/Payment)으로 표현, W3C Verifiable Credentials</p>
+        <p class="org">Google Cloud 발표 · <a href="https://cloud.google.com/blog/products/ai-machine-learning/announcing-agents-to-payments-ap2-protocol" target="_blank" rel="noopener">cloud.google.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>A2A 스펙 1.0이 Linux Foundation으로 이관됐고 150개 이상 조직이 참여한다 [H1, 1차]. AP2는 에이전트 구매를 서명된 Mandate 세 가지로 표현한다 [H2, 1차]. UCP는 Google이 Shopify, Etsy, Wayfair, Target, Walmart와 공동 개발했다 [H3, 1차]. A2A는 에이전트끼리 작업을 주고받는 규약이고, UCP와 AP2는 에이전트 커머스와 결제 위임의 표준이다.</p></div>
+      </article>
+      <article class="src">
+        <div class="src-head">
+          <a class="code" href="https://developers.googleblog.com/under-the-hood-universal-commerce-protocol-ucp/" target="_blank" rel="noopener">H3</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">UCP — Google, 2026-01 NRF 발표. Shopify·Etsy·Wayfair·Target·Walmart 공동 개발. A2A·MCP로 통합 가능</p>
+        <p class="org">Google Developers Blog · <a href="https://developers.googleblog.com/under-the-hood-universal-commerce-protocol-ucp/" target="_blank" rel="noopener">developers.googleblog.com</a></p>
+        <div class="claim"><span class="claim-sec">시장조사 및 BM 분석</span><p>A2A 스펙 1.0이 Linux Foundation으로 이관됐고 150개 이상 조직이 참여한다 [H1, 1차]. AP2는 에이전트 구매를 서명된 Mandate 세 가지로 표현한다 [H2, 1차]. UCP는 Google이 Shopify, Etsy, Wayfair, Target, Walmart와 공동 개발했다 [H3, 1차]. A2A는 에이전트끼리 작업을 주고받는 규약이고, UCP와 AP2는 에이전트 커머스와 결제 위임의 표준이다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://shopify.engineering/ucp" target="_blank" rel="noopener">H4</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">UCP 구축 배경</p>
+        <p class="org">Shopify Engineering · <a href="https://shopify.engineering/ucp" target="_blank" rel="noopener">shopify.engineering</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://platform.claude.com/docs/en/docs/mcp" target="_blank" rel="noopener">H5</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">MCP Server가 노출하는 것은 Tool(실행 기능)과 Resource(읽을 데이터)</p>
+        <p class="org">MCP 공식 문서 · <a href="https://platform.claude.com/docs/en/docs/mcp" target="_blank" rel="noopener">platform.claude.com</a></p>
+        <div class="claim claim--none"><p>확보했으나 본문에서 아직 쓰지 않았다. 보강할 때 먼저 볼 후보다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">I</span>기획서 작성 방법론</h2>
+      <p class="blurb">문서를 어떻게 쓸지에 대한 참고. 본문 인용 대상이 아니다</p>
+      <p class="count">3건 중 <strong>0건</strong> 인용</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.poweredbysearch.com/blog/how-to-design-b2b-saas-product-pages-with-examples/" target="_blank" rel="noopener">I1</a>
+          <span class="pill pill--gn">등급 미기재</span>
+        </div>
+        <p class="fact">디자인 순서가 아니라 평가자가 질문하는 순서대로 배치한다 (&quot;salesperson approach&quot;)</p>
+        <p class="org">Powered by Search · <a href="https://www.poweredbysearch.com/blog/how-to-design-b2b-saas-product-pages-with-examples/" target="_blank" rel="noopener">poweredbysearch.com</a></p>
+        <div class="claim claim--none"><p>문서를 쓰는 참고 자료라 본문에 인용하지 않는다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.kalungi.com/blog/how-to-write-your-product-marketing-one-pager-template" target="_blank" rel="noopener">I2</a>
+          <span class="pill pill--gn">등급 미기재</span>
+        </div>
+        <p class="fact">문제·해결·차별점·타깃 고객·가치 제안을 한 장에 담고 스캔 가능해야 한다</p>
+        <p class="org">Kalungi · <a href="https://www.kalungi.com/blog/how-to-write-your-product-marketing-one-pager-template" target="_blank" rel="noopener">kalungi.com</a></p>
+        <div class="claim claim--none"><p>문서를 쓰는 참고 자료라 본문에 인용하지 않는다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.saashero.net/content/b2b-saas-marketing-collateral-templates/" target="_blank" rel="noopener">I3</a>
+          <span class="pill pill--gn">등급 미기재</span>
+        </div>
+        <p class="fact">매출·리스크로 말하는 SaaS 지표를 함께 넣는다</p>
+        <p class="org">SaaS Hero · <a href="https://www.saashero.net/content/b2b-saas-marketing-collateral-templates/" target="_blank" rel="noopener">saashero.net</a></p>
+        <div class="claim claim--none"><p>문서를 쓰는 참고 자료라 본문에 인용하지 않는다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">J</span>운영화 실패의 정체</h2>
+      <p class="blurb">Gartner 40%가 실제로 무엇을 뜻하는가 — 질문 1·2·3</p>
+      <p class="count"><strong>6건</strong> · 2026-09-01 보강</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027" target="_blank" rel="noopener">J1</a>
+          <span class="pill pill--g1">1차</span>
+        </div>
+        <p class="fact">Gartner — 2027년 말까지 agentic AI 프로젝트 40% 이상이 취소된다. 원인으로 비용 상승·거버넌스 난제·불명확한 ROI를 든다</p>
+        <p class="org">Gartner 보도자료 2025-06-25 · <a href="https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027" target="_blank" rel="noopener">gartner.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.rcrwireless.com/20250627/business/agentic-ai-gartner" target="_blank" rel="noopener">J2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">실패 원인은 기술이 아니라 운영이다 — 모호한 목표, 부풀린 기대, 약한 위험 관리, 확장성 부족. &#x27;agent washing&#x27;(챗봇을 에이전트로 잘못 라벨링)이 문제를 가린다</p>
+        <p class="org">Gartner 해설 (RCR Wireless) · <a href="https://www.rcrwireless.com/20250627/business/agentic-ai-gartner" target="_blank" rel="noopener">rcrwireless.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/" target="_blank" rel="noopener">J3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">2026년 기업의 51%가 에이전트를 프로덕션에 올렸으나, 46%가 &#x27;레거시 시스템 연동&#x27;을 ROI 최대 장애로 꼽는다</p>
+        <p class="org">Syntes 엔터프라이즈 아키텍처 가이드 · <a href="https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/" target="_blank" rel="noopener">syntes.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/" target="_blank" rel="noopener">J4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">레거시 API는 예측 가능한 사람 입력을 전제로 만들어져 자율 에이전트의 호출 양상과 맞지 않는다. 안전망 없이 분산된 사일로에 LLM을 붙이면 할루시네이션이나 감사 불가능한 시스템 변경이 난다</p>
+        <p class="org">동 · <a href="https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/" target="_blank" rel="noopener">syntes.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.generative.inc/agentic-ai-in-2026-how-ai-went-from-chatting-to-doing" target="_blank" rel="noopener">J5</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">챗봇과 에이전트의 차이는 계산기와 회계사의 차이다. 하나는 지시에 응답하고 다른 하나는 프로세스를 관리한다</p>
+        <p class="org">Generative Inc. · <a href="https://www.generative.inc/agentic-ai-in-2026-how-ai-went-from-chatting-to-doing" target="_blank" rel="noopener">generative.inc</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://medium.com/@snehal_singh/i-analyzed-847-ai-agent-deployments-in-2026-76-failed-heres-why-0b69d962ec8b" target="_blank" rel="noopener">J6</a>
+          <span class="pill pill--gx">2차·표본 불명</span>
+        </div>
+        <p class="fact">추적한 847건의 에이전트 도입 중 76%가 첫 90일 안에 치명적 실패를 겪었다. 표본 출처와 선정 기준이 공개되지 않아 자료 신뢰도는 낮다</p>
+        <p class="org">개인 분석 게시물 · <a href="https://medium.com/@snehal_singh/i-analyzed-847-ai-agent-deployments-in-2026-76-failed-heres-why-0b69d962ec8b" target="_blank" rel="noopener">medium.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">K</span>실패한 기업들</h2>
+      <p class="blurb">무엇을 시도했다가 어디서 무너졌는가 — 질문 3·4</p>
+      <p class="count"><strong>7건</strong> · 2026-09-01 보강</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://getperspective.ai/blog/klarna-ai-customer-service-replacing-700-agents-conversational-ai-case-study" target="_blank" rel="noopener">K1</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Klarna — 2024-02 AI 에이전트가 첫 달에 230만 건을 처리하고 상담원 700명분 일을 했다고 발표. 해결 시간 11분 → 2분 미만</p>
+        <p class="org">Klarna·OpenAI 발표 · <a href="https://getperspective.ai/blog/klarna-ai-customer-service-replacing-700-agents-conversational-ai-case-study" target="_blank" rel="noopener">getperspective.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.forbes.com/sites/quickerbettertech/2025/05/18/business-tech-news-klarna-reverses-on-ai-says-customers-like-talking-to-people/" target="_blank" rel="noopener">K2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Klarna — 2025년 상담원 재고용으로 선회. CEO: &#x27;효율과 비용에 너무 집중했고 그 결과는 낮은 품질이었다. 지속 가능하지 않다&#x27;</p>
+        <p class="org">Forbes / Entrepreneur · <a href="https://www.forbes.com/sites/quickerbettertech/2025/05/18/business-tech-news-klarna-reverses-on-ai-says-customers-like-talking-to-people/" target="_blank" rel="noopener">forbes.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396" target="_blank" rel="noopener">K3</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Klarna는 전면 철회가 아니라 하이브리드로 갔다. AI가 여전히 문의의 약 3분의 2를 처리하고, 판단이 필요한 복잡·민감 건에 사람을 되돌렸다</p>
+        <p class="org">Entrepreneur · <a href="https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396" target="_blank" rel="noopener">entrepreneur.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed" target="_blank" rel="noopener">K4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Air Canada — 챗봇이 사별 할인을 사후 소급 신청할 수 있다고 안내했으나 실제 정책이 아니었다. 승객이 소송해 법원이 항공사 책임을 인정</p>
+        <p class="org">Cloudeagle 사례 모음 · <a href="https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed" target="_blank" rel="noopener">cloudeagle.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed" target="_blank" rel="noopener">K5</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Chevrolet 대리점 — 프롬프트 인젝션으로 챗봇이 신차 Tahoe를 1달러에 팔겠다고 동의</p>
+        <p class="org">동 · <a href="https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed" target="_blank" rel="noopener">cloudeagle.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">K6</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">실패 최다 원인은 모델이 아니라 지식베이스다. 문서가 낡거나 불일치하면 AI가 그 결함을 규모만 키워 드러낸다. 지식 관리는 출시 단계 작업이 아니라 상시 운영 기능이어야 한다</p>
+        <p class="org">Atlan · <a href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">atlan.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">K7</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">많은 도입이 인계(handoff)에서 무너진다. 티켓 기반 시스템 위에 얹은 AI가 사람에게 넘길 때 맥락이 사라진다</p>
+        <p class="org">동 · <a href="https://atlan.com/know/ai-agents-for-customer-support/" target="_blank" rel="noopener">atlan.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">L</span>성공한 기업과 그 수치</h2>
+      <p class="blurb">숫자가 서로 비교 가능한가 — 질문 5·6·10·11</p>
+      <p class="count"><strong>9건</strong> · 2026-09-01 보강</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">L1</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Sierra — Airtable 80%, Chime 70%+ 해결률 사례 공개</p>
+        <p class="org">Sierra 사례집 (Drag 비교글 인용) · <a href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">dragapp.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://decagon.ai/case-studies" target="_blank" rel="noopener">L2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Decagon — Substack 90%+, Curology 5%→80% 티켓 해결률 사례 공개. 고객사에 Away·Hertz·Noom·Chime·Valon</p>
+        <p class="org">Decagon 사례집 · <a href="https://decagon.ai/case-studies" target="_blank" rel="noopener">decagon.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">L3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">두 회사가 모두 &#x27;80%&#x27;를 광고하지만 뜻이 다르다. Decagon은 사람 개입 없이 처리한 비율(deflection)이고, Sierra의 &#x27;해결(resolved)&#x27; 정의는 공개돼 있지 않다</p>
+        <p class="org">Drag 비교 분석 · <a href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">dragapp.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">L4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">사례집 수치는 상단값으로 봐야 한다. 카테고리 전반의 프로덕션 실적은 40~70% 구간에 몰린다</p>
+        <p class="org">동 · <a href="https://www.dragapp.com/blog/decagon-vs-sierra/" target="_blank" rel="noopener">dragapp.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.cxtoday.com/customer-engagement-platforms/intercom-fin-ai-agent-sales-expansion/" target="_blank" rel="noopener">L5</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Intercom Fin — 단일 에이전트는 능력 부족이 아니라 의도적 설계다. 부서별로 쪼개진 CX 스택을 하나로 잇는 층을 지향하며, 맥락을 넘기지 않고 하나의 에이전트가 대화 이력을 이어 간다</p>
+        <p class="org">CX Today · <a href="https://www.cxtoday.com/customer-engagement-platforms/intercom-fin-ai-agent-sales-expansion/" target="_blank" rel="noopener">cxtoday.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://inkeep.com/blog/inkeep-vs-intercom-fin-ai" target="_blank" rel="noopener">L6</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">Fin은 역할(role)을 문맥에 따라 전환하는 단일 에이전트다. 멀티에이전트 오케스트레이션·에이전트 간 통신·전문가 라우팅·위임 패턴은 현재 아키텍처에 없다</p>
+        <p class="org">Inkeep 비교 · <a href="https://inkeep.com/blog/inkeep-vs-intercom-fin-ai" target="_blank" rel="noopener">inkeep.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.comparethecloud.net/news/intercom-builds-fin-beyond-customer-service-ai-agent-launches-into-sales-crosses-100m-arr" target="_blank" rel="noopener">L7</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Fin이 CS를 넘어 세일즈로 확장하며 ARR 1억 달러를 넘겼다</p>
+        <p class="org">Compare the Cloud · <a href="https://www.comparethecloud.net/news/intercom-builds-fin-beyond-customer-service-ai-agent-launches-into-sales-crosses-100m-arr" target="_blank" rel="noopener">comparethecloud.net</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://fin.ai/learn/ai-customer-service-best-practices" target="_blank" rel="noopener">L8</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">성공 사례의 공통 실무 — AI가 인계할 때 사람에게 대화 이력·추정 의도·수집한 데이터·시도한 조치를 함께 넘긴다. 고객에게 다시 설명시키지 않는다</p>
+        <p class="org">Fin.ai 실무 가이드 · <a href="https://fin.ai/learn/ai-customer-service-best-practices" target="_blank" rel="noopener">fin.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://onereach.ai/blog/best-practices-for-ai-agent-implementations/" target="_blank" rel="noopener">L9</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">정책·에스컬레이션 규칙·확신도 임계값을 배포 전에 학습·시험·검증하고 프로덕션에서 계속 관측한다. 성숙한 거버넌스를 갖춘 조직이 더 빨리 배포하고 사고가 적다</p>
+        <p class="org">OneReach / Sigmoid · <a href="https://onereach.ai/blog/best-practices-for-ai-agent-implementations/" target="_blank" rel="noopener">onereach.ai</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">M</span>수요가 실제로 어디 있는가</h2>
+      <p class="blurb">누가 필요한데 못 쓰고 있는가 — 질문 7·8</p>
+      <p class="count"><strong>5건</strong> · 2026-09-01 보강</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.upwork.com/resources/state-of-ai-in-smbs" target="_blank" rel="noopener">M1</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">SMB의 62%가 고객서비스에 AI를 일부라도 도입했다</p>
+        <p class="org">Upwork / Business.com SMB 조사 · <a href="https://www.upwork.com/resources/state-of-ai-in-smbs" target="_blank" rel="noopener">upwork.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://www.business.com/articles/ai-usage-smb-workplace-study/" target="_blank" rel="noopener">M2</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">도입률이 규모로 갈린다. 10인 미만 기업은 약 5분의 1만 AI를 쓰는 반면 50~249인 중견 SMB는 60%를 넘는다</p>
+        <p class="org">Business.com 2026 SMB AI Outlook · <a href="https://www.business.com/articles/ai-usage-smb-workplace-study/" target="_blank" rel="noopener">business.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://myaskai.com/blog/best-ai-customer-service-smb-2026" target="_blank" rel="noopener">M3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">&#x27;어색한 중간(awkward middle)&#x27; — 50~200인 회사는 창업자가 티켓을 다 답하는 단계는 지났지만 CX 부서를 둘 단계는 아니다</p>
+        <p class="org">MyAskAI · <a href="https://myaskai.com/blog/best-ai-customer-service-smb-2026" target="_blank" rel="noopener">myaskai.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap" target="_blank" rel="noopener">M4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">엔터프라이즈 도입은 멀티에이전트·맞춤 연동·수개월 구축을 전제한다. 직원 12명에 IT 부서가 없는 사업자에게 필요한 것은 6개월 컨설팅이 아니라 로그인하면 바로 되는 것이다</p>
+        <p class="org">Baytech Consulting · <a href="https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap" target="_blank" rel="noopener">baytechconsulting.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap" target="_blank" rel="noopener">M5</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">agentic AI를 CS 워크플로에 넣은 곳에서 기본 티켓 30~50% deflection, CSAT 5~10점 개선이 관찰된다</p>
+        <p class="org">동 · <a href="https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap" target="_blank" rel="noopener">baytechconsulting.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">N</span>버티컬 전략</h2>
+      <p class="blurb">좁히는 것이 왜 유리한가 — 질문 7·12</p>
+      <p class="count"><strong>4건</strong> · 2026-09-01 보강</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.8seneca.com/en/blog/technology/vertical-ai-agents-enterprise-2026" target="_blank" rel="noopener">N1</a>
+          <span class="pill pill--g2">2차 인용</span>
+        </div>
+        <p class="fact">Gartner — 2026년까지 기업의 80%가 버티컬 AI 에이전트를 도입할 것으로 본다</p>
+        <p class="org">8seneca 인용 · <a href="https://www.8seneca.com/en/blog/technology/vertical-ai-agents-enterprise-2026" target="_blank" rel="noopener">8seneca.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N2</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">산업 특화 에이전트가 수평형 대비 프리미엄 가격을 받고 경쟁이 덜하며 리텐션이 3~5배 높다</p>
+        <p class="org">Presta · <a href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">wearepresta.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">AI에서 해자는 모델이 아니라 그 위에 얹는 독점 데이터·워크플로 깊이·도메인 지식이다. 방어 가능한 틈새의 세 조건은 데이터·워크플로 해자, 결과에 돈을 내는 구매자, 대형 플랫폼이 신경 쓰기엔 너무 좁은 문제다</p>
+        <p class="org">동 · <a href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">wearepresta.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">N4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">구매자가 정액 구독보다 성과 기반 과금을 선호한다. 접근권이 아니라 결과에 돈을 낸다</p>
+        <p class="org">동 · <a href="https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/" target="_blank" rel="noopener">wearepresta.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">O</span>국내 시장</h2>
+      <p class="blurb">한국 셀러와 이미 있는 플레이어 — 질문 8·11</p>
+      <p class="count"><strong>4건</strong> · 2026-09-01 보강</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://channel.io/kr/blog/articles/how-to-automate-cs-ef6db536" target="_blank" rel="noopener">O1</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">이커머스 CS에서 취소·교환·반품·배송 문의가 전체의 절반 이상을 차지하는 경우가 많다</p>
+        <p class="org">채널톡 · <a href="https://channel.io/kr/blog/articles/how-to-automate-cs-ef6db536" target="_blank" rel="noopener">channel.io</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.etnews.com/20251201000211" target="_blank" rel="noopener">O2</a>
+          <span class="pill pill--g1">1차 보도</span>
+        </div>
+        <p class="fact">네이버 스마트스토어가 &#x27;굿서비스 점수&#x27;를 2026-01-01부터 정규 전환한다. 배송 시간·발송 처리 속도·고객 문의 대응률·리뷰를 정량화해 매월 2일 산정하고 판매자 등급에 반영한다</p>
+        <p class="org">전자신문 2025-12-01 · <a href="https://www.etnews.com/20251201000211" target="_blank" rel="noopener">etnews.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://platum.kr/archives/235767" target="_blank" rel="noopener">O3</a>
+          <span class="pill pill--g1">1차 보도</span>
+        </div>
+        <p class="fact">리터놀 — 이커머스 반품 솔루션으로 10억 원 시드 유치. 사람 경험에 의존하던 반품 검품을 표준화·데이터화해 반품 폐기율을 25%에서 6.4%로 낮췄다. 다만 물류·검품 영역이며 CS 판정은 아니다</p>
+        <p class="org">플래텀 / 벤처스퀘어 · <a href="https://platum.kr/archives/235767" target="_blank" rel="noopener">platum.kr</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://megaeconomy.co.kr/news/newsview.php?ncode=1065575427608537" target="_blank" rel="noopener">O4</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">헥토데이터 &#x27;셀픽&#x27; — 상품·주문·배송 통합관리와 풀필먼트 자동화에 CS 관리 기능을 함께 제공한다</p>
+        <p class="org">메가경제 · <a href="https://megaeconomy.co.kr/news/newsview.php?ncode=1065575427608537" target="_blank" rel="noopener">megaeconomy.co.kr</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+    </div>
+  </section>
+  <section class="group">
+    <header class="group-head">
+      <h2><span class="letter">P</span>검증 자료 확보 방법</h2>
+      <p class="blurb">트래픽 없이 골든셋을 어떻게 만드는가 — 질문 9</p>
+      <p class="count"><strong>3건</strong> · 2026-09-01 보강</p>
+    </header>
+    <div class="grid">
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://langfuse.com/resources/engineering/golden-dataset-evaluation" target="_blank" rel="noopener">P1</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">골든셋 자료원의 우선순위 — 사람이 검토한 큐레이션 데이터가 먼저, 다음이 프로덕션 트래픽 표본, 합성 데이터는 앞의 둘이 부족할 때다</p>
+        <p class="org">Langfuse · <a href="https://langfuse.com/resources/engineering/golden-dataset-evaluation" target="_blank" rel="noopener">langfuse.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused src--star">
+        <div class="src-head">
+          <a class="code" href="https://langfuse.com/resources/engineering/golden-dataset-evaluation" target="_blank" rel="noopener">P2</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">합성으로 시작하되 &#x27;silver&#x27;로 표시하고, 도메인 전문가 검토·평가자 일치도 확인·편향 점검을 거쳐 &#x27;gold&#x27;로 승격한다</p>
+        <p class="org">동 · <a href="https://langfuse.com/resources/engineering/golden-dataset-evaluation" target="_blank" rel="noopener">langfuse.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+      <article class="src src--unused">
+        <div class="src-head">
+          <a class="code" href="https://www.evidentlyai.com/llm-guide/llm-test-dataset-synthetic-data" target="_blank" rel="noopener">P3</a>
+          <span class="pill pill--g2">2차</span>
+        </div>
+        <p class="fact">합성 데이터는 콜드 스타트에 특히 유효하다. 프로덕션이 아직 겪지 않은 커버리지 공백을 어려운 입력의 패러프레이즈, 신규 기능의 엣지 케이스, 적대적 표현으로 메운다</p>
+        <p class="org">Evidently AI · <a href="https://www.evidentlyai.com/llm-guide/llm-test-dataset-synthetic-data" target="_blank" rel="noopener">evidentlyai.com</a></p>
+        <div class="claim claim--none"><p>2026-09-01 보강분. 기획서 본문에는 아직 반영하지 않았다.</p></div>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    근거번호와 기관 링크를 누르면 원문이 열린다. 제출표 41건은
+    <code>team_branch/output/A-COPilot_제출표.xlsx</code>, 본문 인용 위치는
+    <code>program/산출물양식/[기획] 프로젝트 기획서_A-COPilot.docx</code>,
+    보강 38건은 <code>program/briefing/_근거지도_보강.json</code>에서 읽었다.
+    손으로 옮기지 않고 세 파일에서 직접 읽어 만든다 —
+    <code>python program/scripts/build_evidence_map.py</code>
+  </footer>
+</div>

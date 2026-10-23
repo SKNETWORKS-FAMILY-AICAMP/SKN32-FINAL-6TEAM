@@ -171,7 +171,7 @@ eval 러너 재작성으로 해소돼, golden.jsonl 72건(216행) 실 LLM 실행
 
 ## ★2026-08-30 갱신 — 파인튜닝 1차·2차·비교평가 완료. 결과는 부정적
 
-x600 GPU 서버(Windows, RTX급 12GB VRAM)에서 `Qwen/Qwen2.5-3B-Instruct` 를
+모델 서버 GPU 서버(Windows, RTX급 12GB VRAM)에서 `Qwen/Qwen2.5-3B-Instruct` 를
 base로 QLoRA 없이 순수 bf16 + LoRA(r=16)로 SFT 파인튜닝했다.
 (7B가 아니라 3B를 쓴 이유·bf16을 쓴 이유는 아래 "환경 결함" 참고.)
 
@@ -240,7 +240,7 @@ golden 만지지 않는 것과 별개로, holdout 은 이번이 **이 프로젝�
 ### 환경 결함 — Windows 페이징파일 버그로 QLoRA(4-bit) 포기
 
 당초 계획은 4-bit QLoRA(`device_map="auto"` + `BitsAndBytesConfig`)였다.
-이 조합이 x600에서 `OSError: The paging file is too small (1455)` 를
+이 조합이 모델 서버에서 `OSError: The paging file is too small (1455)` 를
 **여유 RAM·페이징파일 크기와 무관하게** 반복적으로 일으켰다 — WSL2가 점유한
 RAM을 `wsl --shutdown`으로 비워도, 페이징파일을 수동으로 늘려도(재부팅 포함)
 재현됐다. 우회는 `device_map="auto"`와 4-bit 양자화를 모두 버리고
@@ -266,7 +266,7 @@ RAM을 `wsl --shutdown`으로 비워도, 페이징파일을 수동으로 늘려�
 
 golden/holdout에서 나온 "Proposed+FT가 RAG 없이 단독 호출돼 0%"라는 결과를
 근거로 실제 RAG 통합 경로까지 구현·실행했다. `LocalFTTeamLLM` +
-x600 상주 추론 서버 + Team↔감사로그 배선은 **전부 동작 확인**했다(코드
+모델 서버 상주 추론 서버 + Team↔감사로그 배선은 **전부 동작 확인**했다(코드
 레벨 회귀 테스트 10건 통과, end-to-end 호출도 성공). 그 과정에서
 production 자체 결함(`response.generate` 프롬프트가 DB에 등록된 적이
 없어 이 팀이 켜지는 순간 크래시하는 문제)도 별도로 발견·수정했다.

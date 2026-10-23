@@ -1,0 +1,77 @@
+[
+  {
+    "path": "src/features/plan-check/plan-check.tsx",
+    "sha256": "FD9FBB25E85F9BF401C73D869684ED1BEB5ADBDA3929B0F3CE2570340ED4EB38",
+    "matches": true
+  },
+  {
+    "path": "src/features/plan-check/use-day-marker.ts",
+    "sha256": "B89FF4B7F7BC9E864A9F798EF8FC293FE5DEBC97C661E9985C3457855BA43E38",
+    "matches": true
+  },
+  {
+    "path": "src/features/plan-check/use-time-inset.ts",
+    "sha256": "57341D3072E44A0195E18E40F5885F5F8BE7F88C1A6A310F5F4324E08982196B",
+    "matches": true
+  },
+  {
+    "path": "src/features/plan-check/list-zoom.ts",
+    "sha256": "BBCD839BFE194180E54AE424A6FE24C8BDD9FF71B0E7ABEE5FB8736EA4EC305D",
+    "matches": true
+  },
+  {
+    "path": "src/features/plan-check/use-page-scroll-reset.ts",
+    "sha256": "00DD8B1ACE3A57B8E0D69C0D7D216B813ED1C4F54AA7EFC909647880638E85D7",
+    "matches": true
+  },
+  {
+    "path": "src/features/trip/trip-screen.tsx",
+    "sha256": "2CA8B8D7B5DF4704992EA88FCC5CBFB2510FFA2A8806972E489C02F510BD6D25",
+    "matches": true
+  },
+  {
+    "path": "src/features/trip/trip-screen.module.css",
+    "sha256": "960DACF4605AD7C236665B305845AA25D3B14EA779DED4987764A40A97D7F754",
+    "matches": true
+  },
+  {
+    "path": "src/features/trip/trip-rows.tsx",
+    "sha256": "A75E00A30B59537DC398F00542F18D59210C983B588932940D02E7444F1872F3",
+    "matches": true
+  },
+  {
+    "path": "src/features/trip/trip-detail.tsx",
+    "sha256": "83B8237D1432D45E0096B68AF35858081157C9D5EA20EAB567C976C80ED407FA",
+    "matches": true
+  },
+  {
+    "path": "src/features/trip/trip-chat.tsx",
+    "sha256": "58C74AC8595FC7F177BBF7EC73A01D603DA38A37C691B294AED6AE7BA00C476F",
+    "matches": true
+  },
+  {
+    "path": "src/features/trip/use-chat-follow.ts",
+    "sha256": "AAD714D67D76557FCCCD9D238AFEF05C1B739D3BF4D4F505B4FBD2B7F0948C5A",
+    "matches": true
+  },
+  {
+    "path": "tests/live/shared-trip-ui-20261011.spec.ts",
+    "sha256": "9443C849AB3EEE16B52ED22FB13010CDE5DCD0E85129192EAB1A6FEFE0A87945",
+    "matches": true
+  },
+  {
+    "path": "tests/live/registered-trip-parity-20261011.spec.ts",
+    "sha256": "D7F77AAD38A591478EFE02EF3684E294E73AF72D1AD03AEF70877B874F5C411B",
+    "matches": true
+  },
+  {
+    "path": "tests/live/route-lines.spec.ts",
+    "sha256": "95BD1510594EEB332AA7C1E13F6E63BD92CD309B19B88726E45CB549BBE2A82F",
+    "matches": true
+  },
+  {
+    "path": "tests/live/trip-layout.spec.ts",
+    "sha256": "17B9116A1897DF2A76FC6EB3F5783B094CD84DB3ADA18936A37E1D5E25F34B7A",
+    "matches": true
+  }
+]

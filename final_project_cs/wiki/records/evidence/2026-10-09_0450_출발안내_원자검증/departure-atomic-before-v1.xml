@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="5" time="2.755" timestamp="2026-10-09T04:51:17.152886+09:00"><testcase classname="tests.scenario.test_departure_atomic_db_v1" name="test_reminder_discards_payload_when_version_changes_after_calculation[False]" time="0.519"><failure message="AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c', 'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716'}], already=0, held=[], fatal=[], no_route=0, unchecked=[])&#10;assert not [{'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716', 'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c'}]&#10; +  where [{'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716', 'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c'}] = ReminderTickResult(trips=1, sent=[{'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c', 'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716'}], already=0, held=[], fatal=[], no_route=0, unchecked=[]).sent">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x0000016D20667530&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x0000016D1221EA80&gt;, 'tenant': 'remind_35983f8cb4', 'trip_id': UUID('8a2a831d-22ed-444d-b2ac-edc363efed8c')}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000016D20580260&gt;
+replace_move = False
+
+    @pytest.mark.parametrize('replace_move', [False, True])
+    def test_reminder_discards_payload_when_version_changes_after_calculation(world, monkeypatch, replace_move):
+        world['clock'].now = _at('10:50')
+        reminders = _reminders(world, route_events=_NoEvents())
+        original = reminders._payload
+    
+        def calculate_then_change(*args, **kwargs):
+            payload = original(*args, **kwargs)
+            with get_connection() as conn, conn.transaction():
+                trip, items = world['store'].latest(conn, world['trip_id'])
+                if replace_move:
+                    items = [i.replaced_by(place=None, title=i.title+' · 변경') if i.seq == 3 else i for i in items]
+                world['store'].append_version(conn, trip_id=world['trip_id'], base_version=trip['version'],
+                    items=items, reason='controlled interleaving', causes=[])
+            return payload
+    
+        monkeypatch.setattr(reminders, '_payload', calculate_then_change)
+        result = reminders.tick()
+&gt;       assert not result.sent, result
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c', 'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716'}], already=0, held=[], fatal=[], no_route=0, unchecked=[])
+E       assert not [{'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716', 'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c'}]
+E        +  where [{'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716', 'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c'}] = ReminderTickResult(trips=1, sent=[{'trip_id': '8a2a831d-22ed-444d-b2ac-edc363efed8c', 'key': 'departure:6153be91-37bb-4210-8e11-14bf47062716'}], already=0, held=[], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\scenario\test_departure_atomic_db_v1.py:46: AssertionError</failure></testcase><testcase classname="tests.scenario.test_departure_atomic_db_v1" name="test_reminder_discards_payload_when_version_changes_after_calculation[True]" time="0.295"><failure message="AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f', 'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07'}], already=0, held=[], fatal=[], no_route=0, unchecked=[])&#10;assert not [{'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07', 'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f'}]&#10; +  where [{'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07', 'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f'}] = ReminderTickResult(trips=1, sent=[{'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f', 'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07'}], already=0, held=[], fatal=[], no_route=0, unchecked=[]).sent">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x0000016D20664980&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x0000016D121D60C0&gt;, 'tenant': 'remind_608bb253b1', 'trip_id': UUID('93291b6c-af59-4744-9b34-6b8a6b331a3f')}
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000016D20612840&gt;
+replace_move = True
+
+    @pytest.mark.parametrize('replace_move', [False, True])
+    def test_reminder_discards_payload_when_version_changes_after_calculation(world, monkeypatch, replace_move):
+        world['clock'].now = _at('10:50')
+        reminders = _reminders(world, route_events=_NoEvents())
+        original = reminders._payload
+    
+        def calculate_then_change(*args, **kwargs):
+            payload = original(*args, **kwargs)
+            with get_connection() as conn, conn.transaction():
+                trip, items = world['store'].latest(conn, world['trip_id'])
+                if replace_move:
+                    items = [i.replaced_by(place=None, title=i.title+' · 변경') if i.seq == 3 else i for i in items]
+                world['store'].append_version(conn, trip_id=world['trip_id'], base_version=trip['version'],
+                    items=items, reason='controlled interleaving', causes=[])
+            return payload
+    
+        monkeypatch.setattr(reminders, '_payload', calculate_then_change)
+        result = reminders.tick()
+&gt;       assert not result.sent, result
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f', 'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07'}], already=0, held=[], fatal=[], no_route=0, unchecked=[])
+E       assert not [{'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07', 'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f'}]
+E        +  where [{'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07', 'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f'}] = ReminderTickResult(trips=1, sent=[{'trip_id': '93291b6c-af59-4744-9b34-6b8a6b331a3f', 'key': 'departure:15369994-e65e-4ccd-99ca-6edc47fa9e07'}], already=0, held=[], fatal=[], no_route=0, unchecked=[]).sent
+
+tests\scenario\test_departure_atomic_db_v1.py:46: AssertionError</failure></testcase><testcase classname="tests.scenario.test_departure_atomic_db_v1" name="test_departure_published_after_proposal_blocks_replan_at_apply[False]" time="0.284"><failure message="Failed: DID NOT RAISE &lt;class 'app.core.actions.ActionConflict'&gt;">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x0000016D1226A0F0&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x0000016D206AF320&gt;, 'tenant': 'remind_ba5b660467', 'trip_id': UUID('e5808ef3-6e00-48e5-83e0-0a34bb7b9631')}
+batch = False
+
+    @pytest.mark.parametrize('batch', [False, True])
+    def test_departure_published_after_proposal_blocks_replan_at_apply(world, batch):
+        trip, _, move, arguments = _proposal(world, batch)
+        with get_connection() as conn, conn.transaction():
+            world['store'].enqueue_message(conn, trip_id=world['trip_id'], key=f'departure:{move.item_id}',
+                payload={'version': trip['version'], 'text': '발행된 출발 안내'})
+&gt;       with pytest.raises(ActionConflict, match='departure already announced'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'app.core.actions.ActionConflict'&gt;
+
+tests\scenario\test_departure_atomic_db_v1.py:61: Failed</failure></testcase><testcase classname="tests.scenario.test_departure_atomic_db_v1" name="test_departure_published_after_proposal_blocks_replan_at_apply[True]" time="0.260"><failure message="Failed: DID NOT RAISE &lt;class 'app.core.actions.ActionConflict'&gt;">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x0000016D205658B0&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x0000016D206D32C0&gt;, 'tenant': 'remind_dea8dc5316', 'trip_id': UUID('eb0540ad-c262-4af4-a86f-b8dced0879ff')}
+batch = True
+
+    @pytest.mark.parametrize('batch', [False, True])
+    def test_departure_published_after_proposal_blocks_replan_at_apply(world, batch):
+        trip, _, move, arguments = _proposal(world, batch)
+        with get_connection() as conn, conn.transaction():
+            world['store'].enqueue_message(conn, trip_id=world['trip_id'], key=f'departure:{move.item_id}',
+                payload={'version': trip['version'], 'text': '발행된 출발 안내'})
+&gt;       with pytest.raises(ActionConflict, match='departure already announced'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE &lt;class 'app.core.actions.ActionConflict'&gt;
+
+tests\scenario\test_departure_atomic_db_v1.py:61: Failed</failure></testcase><testcase classname="tests.scenario.test_departure_atomic_db_v1" name="test_departure_for_missing_current_item_is_not_inserted" time="0.240"><failure message="Failed: DID NOT RAISE &lt;class 'RuntimeError'&gt;">world = {'clock': &lt;tests.scenario.test_case_version_day.Clock object at 0x0000016D206D37A0&gt;, 'store': &lt;app.domains.travel_ops.... object at 0x0000016D206D3530&gt;, 'tenant': 'remind_474f454949', 'trip_id': UUID('9fa980f5-eb46-4f27-a854-489ec3c57966')}
+
+    def test_departure_for_missing_current_item_is_not_inserted(world):
+        with get_connection() as conn, conn.transaction():
+&gt;           with pytest.raises(RuntimeError, match='departure item is no longer current'):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE &lt;class 'RuntimeError'&gt;
+
+tests\scenario\test_departure_atomic_db_v1.py:73: Failed</failure></testcase></testsuite></testsuites>

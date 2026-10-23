@@ -1,52 +1,104 @@
 .pages { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scroll-behavior: smooth; scrollbar-width: none; overscroll-behavior: contain; }
 .pages::-webkit-scrollbar { display: none; }
-.page { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; display: flex; flex-direction: column; padding: 105px 27px 74px; background: linear-gradient(180deg, var(--color-paper) 22%, #f7f9f3c9 50%, #f7f9f342), var(--intro-bg) center bottom / auto 100% no-repeat; background-size: 100% 100%, auto 100%; transition: background-size 2.6s cubic-bezier(.2, .8, .2, 1); }
+.page { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; display: flex; flex-direction: column; padding: 105px 27px 74px; background: linear-gradient(180deg, var(--color-paper) 22%, color-mix(in srgb, var(--color-paper) 79%, transparent) 50%, color-mix(in srgb, var(--color-paper) 26%, transparent)), var(--intro-bg) center bottom / auto 100% no-repeat; background-size: 100% 100%, auto 100%; transition: background-size 2.6s cubic-bezier(.2, .8, .2, 1); }
 .page:not(.in) { background-size: 100% 100%, auto 112%; }
 .eyebrow { font-size: 10px; letter-spacing: 2.2px; font-weight: 700; color: var(--color-primary); margin: 0 0 15px; }
 .eyebrow::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--color-primary); border-radius: 50%; margin: 0 7px 2px 0; }
 .title { font-size: 33px; line-height: 1.4; letter-spacing: -1.7px; font-weight: 700; }
 .how .title { font-size: 30px; }
+/* `[2026-10-22 사용자 지시]` 이용 방법 장 — 위 여백을 줄이고 아래로 가는 화살표는 오른쪽 맨 아래(점 줄)로 빼서, 남는 높이를 카드(휴대폰 화면 전체)에 준다. */
+.how { padding-top: 84px; padding-bottom: 54px; }
+.how .eyebrow { margin-bottom: 10px; }
+.how .controls { position: absolute; z-index: 6; right: 14px; bottom: 6px; }
 :global(html[lang="en"]) .title { font-size: 30px; line-height: 1.3; letter-spacing: -1px; }
-.description { font-size: 13px; color: #61766a; line-height: 1.9; margin: 16px 0 0; }
+.description { font-size: 13px; color: var(--color-muted); line-height: 1.9; margin: 16px 0 0; }
 .heroCopy { z-index: 1; }
-.badge { margin-top: auto; margin-bottom: 10px; align-self: flex-start; max-width: 100%; background: #fffffff0; border: 1px solid #fff; padding: 15px 17px; border-radius: 15px; box-shadow: 0 8px 30px #24392f0b; }
+/* The first page never cuts its content: when the trip card makes it taller than the screen, the page scrolls. */
+.hero { overflow-y: auto; }
+/*
+ * `[2026-10-22 사용자 지시]` 첫 장 「아래로 넘겨 보세요」는 아래(점 줄 바로 위)로 붙인다 — 배지 자리는 그대로 두고, 줄인 아래 여백만큼 안내 위를 띄운다
+ * (배지 아래 끝 = 아래 여백 + 안내 줄 + 위 띄움 + 6px, 전과 같은 124px). 오른쪽 맨 아래에는 마지막 장으로 바로 가는 아이콘 단추(이용 방법 장의 ↓ 와 같은 자리).
+ */
+.hero { padding-bottom: 44px; }
+.hero .controls { margin-top: 30px; }
+.toEnd { position: absolute; z-index: 6; right: 14px; bottom: 6px; display: grid; place-items: center; width: 44px; height: 44px; color: var(--color-primary); }
+.trips { z-index: 1; margin: 16px 0 10px; }
+.badge { margin-top: auto; margin-bottom: 6px; align-self: flex-start; max-width: 100%; background: color-mix(in srgb, var(--color-surface) 94%, transparent); border: 1px solid var(--color-surface); padding: 15px 17px; border-radius: 15px; box-shadow: 0 8px 30px color-mix(in srgb, var(--color-text) 4%, transparent); }
 .badge small { font-size: 9px; color: var(--color-primary); letter-spacing: 1.5px; display: block; margin-bottom: 7px; }
 .badge strong { font-size: 13px; font-weight: 600; }
-.steps { display: grid; gap: 12px; margin-top: 28px; }
-.step { display: flex; gap: 15px; padding: 18px 16px; border: 1px solid var(--color-border); border-radius: 17px; background: #ffffffb8; }
+/*
+ * `[2026-10-22 사용자 결정]` 카드 = 여행 등록 단추(목업 intro-badge-cta A 「비행기 길」). 아래 줄: 「여행 등록하기」 + 점선 길을 따라 비행기가 핀까지 날아간다 —
+ * 4초에 한 번 1.6초쯤 움직이고 나머지는 쉰다. 이 장이 보일 때만 움직이고, 움직임 줄이기에서는 비행기가 길 처음에 멈춰 있다(아래 reduced-motion 규칙).
+ */
+.badge { text-align: left; color: var(--color-text); }
+.badge:active { scale: .97; }
+.badgeGo { display: flex; align-items: center; gap: 12px; margin-top: 11px; padding-top: 10px; border-top: 1px dashed color-mix(in srgb, var(--color-primary) 35%, transparent); }
+.badgeLabel { color: var(--color-primary); font-size: 13px; font-weight: 700; letter-spacing: -.2px; white-space: nowrap; }
+.badgeRoute { position: relative; flex: 1; min-width: 64px; height: 16px; }
+.badgeRoute::before { content: ""; position: absolute; left: 0; right: 7px; top: 50%; border-top: 2px dotted color-mix(in srgb, var(--color-primary) 55%, transparent); }
+.badgePin { position: absolute; right: 0; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent); }
+.badgePlane { position: absolute; left: 0; top: 0; color: var(--color-primary); rotate: 45deg; }
+.page.in .badgePlane { animation: glide 4s cubic-bezier(.45, 0, .25, 1) 2.2s infinite; }
+@keyframes glide { 0% { left: -4px; opacity: 0; } 8% { opacity: 1; } 42% { left: calc(100% - 30px); opacity: 1; } 50%, 100% { left: calc(100% - 26px); opacity: 0; } }
+/* The card around the shared language picker (`components/ui/language-picker`). */
+.guide { flex: 1; min-height: 250px; display: flex; flex-direction: column; margin-top: 16px; }
+/* Slides bleed to the frame edges so the next card peeks in from the right. */
+.slides { flex: 1; min-height: 0; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 27px; margin: 0 -27px; padding: 2px 27px 8px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
+.slides::-webkit-scrollbar { display: none; }
+.dragging { scroll-snap-type: none; cursor: grabbing; }
+.slide { flex: 0 0 82%; scroll-snap-align: start; display: flex; flex-direction: column; padding: 15px 14px 0; border: 1px solid var(--color-border); border-radius: 17px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); box-shadow: 0 8px 26px color-mix(in srgb, var(--color-text) 5%, transparent); overflow: hidden; }
+.slideHead { display: flex; gap: 12px; }
+.slideHead h3 { font-size: 14px; margin: 1px 0 5px; letter-spacing: -.3px; word-break: keep-all; }
+.slideHead p { font-size: 11px; line-height: 1.7; color: var(--color-muted); word-break: keep-all; }
+/* `[2026-10-22 사용자 지시]` The whole phone screen, never cropped: as tall as the card allows, narrower when the card is short. */
+.shot { flex: 1; min-height: 0; position: relative; margin: 13px 0 14px; }
+/* `[2026-10-22 사용자 결정 — 목업 A+E]` The screen as tall as the slide allows; everything on it is placed in fractions of it (`liftStyle`). */
+.frame { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); aspect-ratio: 780 / 1594; max-width: 100%; }
+.frame::after { content: ""; position: absolute; inset: 0; border-radius: 5.5% / 2.7%; background: color-mix(in srgb, var(--color-scrim) 22%, transparent); pointer-events: none; }
+.screen { display: block; width: 100%; height: 100%; border: 1px solid var(--color-border); border-radius: 5.5% / 2.7%; background: var(--color-surface); }
+/* The cut: 1.1 × the screen's width plus a 10px margin in its own background, a white and green glow ring, centred on the part it shows. */
+.lift { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: calc(var(--lift) * 100% + 20px); padding: 10px; border-radius: 14px; background: var(--fill);
+  top: clamp(-6px, calc((var(--cut-mid) - var(--cut-h) / 2) * 100% - 10px), calc((1 - var(--cut-h)) * 100% - 14px));
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px color-mix(in srgb, var(--color-primary) 65%, transparent), 0 0 20px 6px color-mix(in srgb, var(--color-primary) 35%, transparent), 0 18px 40px var(--color-shadow-soft); }
+.cut { position: relative; overflow: hidden; aspect-ratio: var(--cut-ratio); }
+.cut img { position: absolute; max-width: none; width: calc(var(--cut-zoom) * 100%); height: auto; left: calc(var(--cut-x) * -100%); top: calc(var(--cut-y) * -100%); }
+/* The chip above the cut, its line from the chip's middle down to the cut's top edge. */
+.pin { position: absolute; bottom: 100%; right: 14px; display: flex; flex-direction: column; align-items: center; }
+.chip { background: var(--color-primary); color: var(--color-on-primary); font-size: 11px; font-weight: 700; line-height: 1; padding: 7px 11px; border-radius: 99px; white-space: nowrap; box-shadow: 0 6px 16px var(--color-shadow-soft); }
+.wire { position: relative; width: 2px; height: 15px; background: var(--color-primary); }
+.wire::after { content: ""; position: absolute; left: -3px; bottom: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 2px var(--color-surface); }
+.guideNav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.guideNav button { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: color-mix(in srgb, var(--color-surface) 79%, transparent); color: var(--color-primary); font-size: 16px; }
+.guideNav button[aria-disabled="true"] { opacity: .35; cursor: default; }
+.guideNav p { font-size: 11px; color: var(--color-text-secondary); text-align: center; }
+.guideNav strong { color: var(--color-primary); margin-right: 7px; font-variant-numeric: tabular-nums; }
 .stepNo { width: 31px; height: 31px; flex-shrink: 0; border-radius: 10px; background: var(--color-soft); display: grid; place-items: center; color: var(--color-primary); font-size: 11px; font-weight: 700; }
-.step h3 { font-size: 14px; margin: 1px 0 7px; letter-spacing: -.3px; }
-.step p { font-size: 11px; line-height: 1.8; color: var(--color-muted); }
-.howNote { font-size: 10px; color: #7c897f; text-align: center; margin: 19px 0; }
-.ticket { margin: 30px 0 25px; background: #ffffffde; border: 1px solid white; border-radius: 19px; padding: 23px; box-shadow: 0 12px 40px #24392f09; }
+.ticket { margin: 30px 0 25px; background: color-mix(in srgb, var(--color-surface) 87%, transparent); border: 1px solid var(--color-surface); border-radius: 19px; padding: 23px; box-shadow: 0 12px 40px color-mix(in srgb, var(--color-text) 4%, transparent); }
 .ticketLabel { font-size: 9px; letter-spacing: 2px; color: var(--color-muted); }
-.route { display: flex; align-items: center; justify-content: space-between; padding: 21px 0; border-bottom: 1px dashed #cbd8cd; }
+.route { display: flex; align-items: center; justify-content: space-between; padding: 21px 0; border-bottom: 1px dashed var(--color-border-strong); }
 .route strong { font-size: 21px; letter-spacing: -1px; transition: opacity .7s ease .75s, transform .8s cubic-bezier(.2, .8, .2, 1) .75s; }
 :global(html[lang="en"]) .route strong { font-size: 20px; letter-spacing: -.6px; }
-.routeLine { display: inline-block; color: #78957f; font-size: 18px; }
+.routeLine { display: inline-block; color: var(--color-muted); font-size: 18px; }
 .ticketBottom { display: flex; justify-content: space-between; font-size: 10px; color: var(--color-muted); padding-top: 17px; }
 .actionArea { margin-top: auto; }
-.primary { width: 100%; border-radius: 13px; color: var(--color-on-primary); min-height: 54px; padding: 14px 19px; font-size: 14px; font-weight: 650; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 22px #2e604719; background: linear-gradient(110deg, transparent 42%, #ffffff33 50%, transparent 58%) var(--color-primary); background-size: 260% 100%; background-position: 130% 0; }
-.actionNote { font-size: 10px; text-align: center; color: #4b6654; line-height: 1.7; margin: 12px 0 0; }
+.primary { width: 100%; border-radius: 13px; color: var(--color-on-primary); min-height: 54px; padding: 14px 19px; font-size: 14px; font-weight: 650; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 10%, transparent); background: linear-gradient(110deg, transparent 42%, color-mix(in srgb, var(--color-surface) 20%, transparent) 50%, transparent 58%) var(--color-primary); background-size: 260% 100%; background-position: 130% 0; }
+.actionNote { font-size: 10px; text-align: center; color: var(--color-text-secondary); line-height: 1.7; margin: 12px 0 0; }
 .controls { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
-.how .controls { margin-top: auto; }
-.hero .controls { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+.hero .controls { flex-direction: row; align-items: center; justify-content: center; gap: 8px; }
 .scrollCue { display: flex; align-items: center; gap: 4px; }
-.scrollHint { font-size: 11px; line-height: 1.6; color: #375b46; }
-.down { display: grid; place-items: center; width: 44px; height: 44px; color: #375b46; font-size: 24px; }
-.skip { min-height: 44px; padding: 10px 0 10px 14px; font-size: 11px; color: #526858; }
-.hero .skip { padding-left: 0; flex-shrink: 0; }
+.scrollHint { font-size: 11px; line-height: 1.6; color: var(--color-primary); }
+.down { display: grid; place-items: center; width: 44px; height: 44px; color: var(--color-primary); font-size: 24px; }
 .pagination { position: absolute; z-index: 5; bottom: 18px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 7px; }
 .dot { padding: 10px 3px; }
-.dot::after { content: ""; display: block; width: 5px; height: 5px; background: #a8b9ab; border-radius: 10px; transition: width .25s, background .25s; }
+.dot::after { content: ""; display: block; width: 5px; height: 5px; background: var(--color-faint); border-radius: 10px; transition: width .25s, background .25s; }
 .dot[aria-current="step"]::after { width: 22px; background: var(--color-primary); }
-.progress { position: absolute; top: 0; left: 0; z-index: 7; height: 3px; width: 100%; pointer-events: none; background: linear-gradient(90deg, #9cc7a6, var(--color-primary)); transform-origin: left; transform: scaleX(var(--fx-p, 0)); transition: transform .25s linear; }
+.progress { position: absolute; top: 0; left: 0; z-index: 7; height: 3px; width: 100%; pointer-events: none; background: linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 45%, var(--color-surface)), var(--color-primary)); transform-origin: left; transform: scaleX(var(--fx-p, 0)); transition: transform .25s linear; }
 
 /* Scroll-snap motion layer. */
 .page [data-fx] { opacity: 0; transition: opacity .8s ease, transform .9s cubic-bezier(.2, .8, .2, 1); transition-delay: var(--d, 0s); }
 .page [data-fx="up"] { transform: translateY(28px); }
 .page [data-fx="scale"] { transform: translateY(18px) scale(.9); }
-.page [data-fx="flip"] { transform: perspective(700px) rotateX(-38deg) translateY(22px); transform-origin: top center; }
+.page [data-fx="left"] { transform: translateX(-40px); }
 .page.in [data-fx] { opacity: 1; transform: none; }
 .word { display: inline-block; white-space: nowrap; }
 .unit { display: inline-block; opacity: 0; transform: translateY(.55em) rotate(7deg); transition: opacity .6s ease, transform .75s cubic-bezier(.2, .9, .2, 1); transition-delay: var(--d, 0s); }
@@ -57,31 +109,33 @@
 .page:not(.in) .route strong:first-child { opacity: 0; transform: translateX(-18px); }
 .page:not(.in) .route strong:last-child { opacity: 0; transform: translateX(18px); }
 .page.in .primary { animation: shine 3.4s ease 1.4s infinite, glow 2.4s ease-out 1.6s infinite; }
-.step { transition: transform .2s ease, box-shadow .2s ease; }
-.step:active { transform: scale(.98); }
 @keyframes bob { 50% { transform: translateY(-6px); } }
 @keyframes nudge { 50% { transform: translateY(5px); } }
 @keyframes route { 50% { transform: translateX(6px); } }
 @keyframes shine { 0% { background-position: 130% 0; } 55%, 100% { background-position: -30% 0; } }
-@keyframes glow { 0% { box-shadow: 0 8px 22px #2e604719, 0 0 0 0 #2e604755; } 100% { box-shadow: 0 8px 22px #2e604719, 0 0 0 12px #2e604700; } }
+@keyframes glow { 0% { box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 10%, transparent), 0 0 0 0 color-mix(in srgb, var(--color-primary) 33%, transparent); } 100% { box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 10%, transparent), 0 0 0 12px transparent; } }
 
-@media (max-width: 360px) { .hero .scrollHint { max-width: 135px; } }
+@media (max-width: 360px) { .hero .scrollHint { max-width: 135px; } .swipeHint { display: none; } }
+/* Short screens keep the capture readable; the step title stays. */
+@media (max-height: 700px) { .slideHead p { display: none; } }
 @media (max-height: 740px) {
   .page { padding-top: 88px; padding-bottom: 58px; }
+  .how { padding-top: 74px; padding-bottom: 50px; }
   .title { font-size: 29px; }
   .how .title { font-size: 27px; }
   :global(html[lang="en"]) .title { font-size: 27px; }
-  .steps { margin-top: 16px; gap: 8px; }
-  .step { padding: 11px 12px; }
+  .guide { margin-top: 14px; }
   .description { margin-top: 11px; }
   .ticket { margin: 20px 0; padding: 18px; }
-  .howNote { margin: 10px 0; }
   .badge { padding: 12px 15px; }
+  .badgeGo { margin-top: 9px; padding-top: 8px; }
   .controls { gap: 0; }
   .down { height: 36px; }
+  .hero { padding-bottom: 40px; }
+  .hero .controls { margin-top: 18px; }
 }
 @media (max-height: 660px) { .page { overflow-y: auto; } }
-@media (max-height: 580px) { .steps { gap: 6px; } .step { padding: 9px; } .description { font-size: 11px; } .ticket { margin: 12px 0; } .route { padding: 12px 0; } .badge { margin-top: 22px; } }
+@media (max-height: 580px) { .description { font-size: 11px; } .ticket { margin: 12px 0; } .route { padding: 12px 0; } .badge { margin-top: 22px; } }
 @media (prefers-reduced-motion: reduce) {
   .pages { scroll-behavior: auto; }
   .dot::after { transition: none; }
@@ -89,3 +143,6 @@
   .page, .page * { animation: none !important; }
   .page { transition: none !important; background-size: 100% 100%, auto 100% !important; }
 }
+/* The white theme has no landscape behind the intro pages. */
+/* `[2026-10-17 사용자 결정]` 다크에서는 같은 그림의 밤판(후보 2 「서울 불빛」 — 강가 불빛 · 등불색 길) — 덮개(위쪽 바탕색)는 그대로. */
+:global(:root[data-theme="dark"]) .page { --intro-bg: var(--intro-bg-night); }

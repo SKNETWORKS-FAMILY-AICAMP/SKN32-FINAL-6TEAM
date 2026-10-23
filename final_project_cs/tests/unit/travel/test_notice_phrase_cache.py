@@ -18,8 +18,8 @@ import pytest
 
 from app.infrastructure.notify.discord import DiscordWebhook, phrase_of, render
 from app.infrastructure.notify.phrase import Phrase, PhraseCache, PhraseSlotsLost, fill
-from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.trip_reminders import day_phrase, departure_phrase, notice_fields
+from app.domains.travel_ops.components.itinerary.itinerary import Item
+from app.domains.travel_ops.components.watch.trip_reminders import day_phrase, departure_phrase, notice_fields
 
 KST = ZoneInfo("Asia/Seoul")
 

@@ -1,0 +1,132 @@
+{
+ "note": "71번 방(2026-09-29) — 팀원 게이트 회귀 목록(21건). 공식: 「이동 모듈의 주요 기능마다 케이스 하나 — 이게 깨지면 그 기능이 죽은 것」(본인 결정). 케이스 본문은 이 파일에 없다 — <file> 의 그 <id> 를 그대로 읽는다(중복 정의 금지). 코어 경로에 지금 도달하지 않는 기능(동행 상한·택시·따릉이·채운 시간표 판)은 넣지 않았다 — 「우리 전체」층(-m mobility_full)이 잠근다.",
+ "built_at": "2026-09-29 (GPT 대조 ⑥ 반영 · R-LAST-01→R-LAST-03 · NIGHT-12 추가)",
+ "gate": [
+  {
+   "feature": "지하철 구간 성립 + 도착 시각",
+   "file": "real_legs_v1.json",
+   "id": "R-BASE-01",
+   "broken": "판정기 본체(verify_leg) — 평일 낮 한 구간도 못 낸다"
+  },
+  {
+   "feature": "막차 이후 불가 + 늦어도 출발",
+   "file": "real_legs_v1.json",
+   "id": "R-LAST-03",
+   "broken": "막차 판정(after_last) — 막차 1분 뒤 출발을 성립으로 낸다 · last_feasible_depart 역산"
+  },
+  {
+   "feature": "첫차 이전 불가",
+   "file": "real_legs_v1.json",
+   "id": "R-FIRST-01",
+   "broken": "첫차 판정(before_first)"
+  },
+  {
+   "feature": "24시 넘김 — 24:30 출발이 막차 안(합성 시간표)",
+   "file": "synthetic_legs_v1.json",
+   "id": "LAST-01",
+   "broken": "timeutil 분 단위 시각 처리 — 24 를 넘는 표기가 하루를 넘겨 버린다"
+  },
+  {
+   "feature": "심야 N버스 첫차 자정 정규화(N26 00:30 성립)",
+   "file": "night_legs_v1.json",
+   "id": "NIGHT-01",
+   "broken": "45 자정 정규화 — 첫차 00:00·막차 03:25 로 읽혀 00:30 이 막차 뒤가 된다"
+  },
+  {
+   "feature": "심야 N버스 운행일(service_days)",
+   "file": "night_legs_v1.json",
+   "id": "NIGHT-03",
+   "broken": "45 service_days — 근거 없는 요일에 성립을 낸다"
+  },
+  {
+   "feature": "운행일 경계 04:00 — 경계 뒤는 전날 운행분으로 판정하지 않는다",
+   "file": "night_legs_v1.json",
+   "id": "NIGHT-12",
+   "broken": "to_service_min 운행일 경계 — 04:00 뒤 시각을 전날 막차(28:10) 안으로 보고 성립을 낸다"
+  },
+  {
+   "feature": "지하철 환승(환승 도보 포함)",
+   "file": "real_legs_v1.json",
+   "id": "R-TRANS-01",
+   "broken": "환승표(transfer_walk)·순환선 한 바퀴 판정 — 도착이 10:55 로 튄다"
+  },
+  {
+   "feature": "순환선 시발역·행선지",
+   "file": "real_legs_v1.json",
+   "id": "R-LOOP-01",
+   "broken": "종착 필터가 시발역(성수행 592편)을 통째로 버린다"
+  },
+  {
+   "feature": "종착 열차 제외",
+   "file": "real_legs_v1.json",
+   "id": "R-TERM-01",
+   "broken": "여의도행 24:47 을 막차로 잡는다"
+  },
+  {
+   "feature": "요일형(토·일·공휴일)",
+   "file": "real_legs_v1.json",
+   "id": "R-HOL-01",
+   "broken": "holidays·day_type_of — 개천절(토)이 평일/토요일로 읽힌다"
+  },
+  {
+   "feature": "버스 구간 성립 · 승차 소요(프로파일)",
+   "file": "bus_profile_legs_v1.json",
+   "id": "BP-01",
+   "broken": "41 버스 프로파일 진입 시각대 누적·p90"
+  },
+  {
+   "feature": "버스 막차 불가 → 지하철 수단교체",
+   "file": "bus_legs_v1.json",
+   "id": "BUS-03",
+   "broken": "버스 막차 판정 또는 버스→지하철 수단교체 축"
+  },
+  {
+   "feature": "지하철↔버스 혼합 환승 도보",
+   "file": "mixed_legs_v1.json",
+   "id": "MIX-01",
+   "broken": "정류장↔출구 도보(_stop_station_walk)가 0분으로 돌아갔다(9/16 결함)"
+  },
+  {
+   "feature": "이슈 반영 — 무정차는 지나간다",
+   "file": "issue_legs_v1.json",
+   "id": "ISSUE-02",
+   "broken": "rules.disruption 모델 — 통과역 무정차를 불가로 낸다"
+  },
+  {
+   "feature": "이슈 반영 — 양쪽 간선 중단은 불가",
+   "file": "issue_legs_v1.json",
+   "id": "ISSUE-03",
+   "broken": "rules.disruption 모델 — 끊긴 구간을 지나간다"
+  },
+  {
+   "feature": "불가일 때 대안 열거 + 재판정",
+   "file": "alt_legs_v1.json",
+   "id": "ALT-01",
+   "broken": "alternatives() — 접근·이탈 도보를 빼먹거나 같은 판정기로 재통과시키지 않는다"
+  },
+  {
+   "feature": "최악값 판정(best 성립·worst 불가)",
+   "file": "judgment_legs_v1.json",
+   "id": "J-WORST-02",
+   "broken": "39 이중 계산 — 판정이 worst 가 아니라 best 로 나간다"
+  },
+  {
+   "feature": "도착 목표 대비 여유(@·slack)",
+   "file": "judgment_legs_v1.json",
+   "id": "J-SLACK-01",
+   "broken": "margin_min·slack_min 계약"
+  },
+  {
+   "feature": "모르면 근거없음(지어내지 않음)",
+   "file": "judgment_legs_v1.json",
+   "id": "J-NODATA-01",
+   "broken": "no_data 정직 — 없는 역·노선에 값을 낸다"
+  },
+  {
+   "feature": "다목적 후보 생성(최단·최소환승)",
+   "file": "multi_legs_v1.json",
+   "id": "MULTI-01",
+   "broken": "candidates.py 후보 생성기 — 기준을 못 가른다"
+  }
+ ]
+}

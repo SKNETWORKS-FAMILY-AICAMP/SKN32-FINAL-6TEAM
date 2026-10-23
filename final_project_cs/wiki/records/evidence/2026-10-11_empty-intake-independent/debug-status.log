@@ -1,0 +1,35 @@
+..........................................................F..            [100%]
+================================== FAILURES ===================================
+_ test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_0643_\ube48\uc77c\uc815_\uc9c8\ubb38\ud654\uba74\uc794\ub958] _
+
+path = WindowsPath('WORKSPACE/.tmp/full-release-20261008/release/final_project_cs/wiki/records/reports/debugs/2026-10-11_0643_������_����ȭ���ܷ�.md')
+
+    @pytest.mark.parametrize("path", REPORTS, ids=lambda p: p.stem[:40])
+    def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
+        text = path.read_text(encoding="utf-8")
+        resolved = bool(STATUS_RESOLVED.search(text))
+        still_open = bool(STATUS_OPEN.search(text))
+    
+        assert resolved or still_open, (
+            f"{path.name} �� ���� ǥ�Ⱑ ����.\n"
+            "  ���� ù �� ������ `## �ذ�� (YYYY-MM-DD)` �Ǵ� `## ���ذ�` �� �д�.\n"
+            "  \u2605\uc61b `- \uc0c1\ud0dc:` \uc904\uc740 \uc9c0\uc6b0\uc9c0 \uc54a\ub294\ub2e4 \u2014 \ubc1c\uacac \uc2dc\uc810\uc758 \uae30\ub85d\uc774\ub2e4. \uc704\uc5d0 \uc5b9\uae30\ub9cc \ud55c\ub2e4.\\n"
+            "  �ٰ�: wiki/records/reports/2026-09-03_���Ը���Ʈ_���¸�_����_��_����.md")
+    
+>       assert not (resolved and still_open), (
+            f"{path.name} �� '�ذ��' �� '���ذ�' �� �� �� �ִ�. ���� ���� �ϳ��� �����.\n"
+            "  \ubd80\ubd84 \ud574\uacb0\uc774\uba74 `## \ud574\uacb0\ub428 (\ub0a0\uc9dc, \ubd80\ubd84) \u2014 \ubb34\uc5c7\uc774 \ub2eb\ud614\ub294\uc9c0` \ub85c \uc801\uace0,\\n"
+            "  ���� �ִ� �κ��� �� �Ʒ� ������ �и��� �����.")
+E       AssertionError: 2026-10-11_0643_������_����ȭ���ܷ�.md �� '�ذ��' �� '���ذ�' �� �� �� �ִ�. ���� ���� �ϳ��� �����.
+E           \ubd80\ubd84 \ud574\uacb0\uc774\uba74 `## \ud574\uacb0\ub428 (\ub0a0\uc9dc, \ubd80\ubd84) \u2014 \ubb34\uc5c7\uc774 \ub2eb\ud614\ub294\uc9c0` \ub85c \uc801\uace0,
+E           ���� �ִ� �κ��� �� �Ʒ� ������ �и��� �����.
+E       assert not (True and True)
+
+tests\unit\core\test_debug_report_status.py:51: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_debug_report_status.py::test_every_debug_report_declares_whether_it_is_open_or_closed[2026-10-11_0643_\ube48\uc77c\uc815_\uc9c8\ubb38\ud654\uba74\uc794\ub958]
+1 failed, 60 passed in 5.68s
+Exception ignored in: <function Console.__del__ at 0x00000200D33A1BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

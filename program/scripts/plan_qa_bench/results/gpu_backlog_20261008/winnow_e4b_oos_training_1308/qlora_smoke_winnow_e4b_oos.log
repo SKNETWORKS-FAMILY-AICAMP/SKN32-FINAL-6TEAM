@@ -1,0 +1,7 @@
+학습 문제 16/16 · 평균 길이 1999 토큰 · 정답 토큰 평균 6.8
+Loading weights:   0%|          | 0/2076 [00:00<?, ?it/s]Loading weights:   7%|▋         | 138/2076 [00:00<00:01, 1379.56it/s]Loading weights:  21%|██▏       | 442/2076 [00:00<00:00, 2343.29it/s]Loading weights:  34%|███▍      | 711/2076 [00:00<00:00, 2494.54it/s]Loading weights:  46%|████▋     | 961/2076 [00:02<00:03, 314.60it/s] Loading weights:  54%|█████▍    | 1118/2076 [00:02<00:02, 335.14it/s]Loading weights:  59%|█████▉    | 1233/2076 [00:02<00:02, 353.72it/s]Loading weights:  64%|██████▍   | 1324/2076 [00:03<00:02, 360.05it/s]Loading weights:  67%|██████▋   | 1398/2076 [00:03<00:01, 369.79it/s]Loading weights:  78%|███████▊  | 1621/2076 [00:03<00:00, 586.29it/s]Loading weights:  98%|█████████▊| 2037/2076 [00:03<00:00, 1096.00it/s]Loading weights: 100%|██████████| 2076/2076 [00:03<00:00, 605.09it/s] 
+모델 올림 Gemma4ForConditionalGeneration · GPU 메모리 8.7GB
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+trainable params: 34,881,536 || all params: 7,975,982,368 || trainable%: 0.4373
+ep 1 step 4/4 loss 0.1828 lr 2.00e-05 0.9분 · 남은 약 0분 · 최대 GPU 10.6GB
+저장 /root/adapters/smoke_winnow_e4b_oos 총 0.9분

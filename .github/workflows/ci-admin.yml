@@ -1,0 +1,69 @@
+# ★`[2026-10-13 사용자 결정]` GitHub 검사는 develop · main 에서만 돈다 — role-manager 는 검사하지 않는다(ci-main.yml 과 같다).
+# ★`[2026-10-19 사용자 결정 — 「풀 테스트는 main 만」]` develop 에서는 check(린트 · 타입 · 단위 · 데모 빌드)와 시연 HTML 대조만 돈다.
+#   브라우저 시험(e2e · unconfigured)은 main 에 push · main 으로 오는 PR · 손으로 돌릴 때만 돈다(env FULL).
+name: CI (admin)
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - "final_project_cs/frontend/apps/admin/**"
+      - ".github/workflows/ci-admin.yml"
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "final_project_cs/frontend/apps/admin/**"
+      - ".github/workflows/ci-admin.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-admin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  admin:
+    name: admin (check · html · e2e · unconfigured)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_ADMIN_DATA_MODE: demo
+      PLAYWRIGHT_CHANNEL: chromium
+      TZ: Asia/Seoul
+      # 브라우저 시험까지 볼 때 — main push · main 으로 오는 PR · 손으로 돌릴 때. develop 은 'false'
+      FULL: ${{ github.ref == 'refs/heads/main' || github.base_ref == 'main' || github.event_name == 'workflow_dispatch' }}
+    defaults:
+      run:
+        working-directory: final_project_cs/frontend/apps/admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: final_project_cs/frontend/apps/admin/package-lock.json
+      - run: npm ci
+      - name: lint/type/unit/demo build
+        run: npm run check
+      - name: Regenerate standalone HTML and check committed output
+        run: |
+          npm run export:html
+          git diff --exit-code --stat -- mockups/admin-scenario.html
+      - if: env.FULL == 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Demo app and offline HTML scenarios
+        if: env.FULL == 'true'
+        run: npm run test:e2e
+      - name: Reject unconfigured data mode
+        if: env.FULL == 'true'
+        run: npm run test:unconfigured
+      - name: Upload browser failure evidence
+        if: failure() && env.FULL == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-browser-failure-${{ github.run_attempt }}
+          path: final_project_cs/frontend/apps/admin/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

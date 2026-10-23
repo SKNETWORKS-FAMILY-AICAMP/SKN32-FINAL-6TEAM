@@ -1,0 +1,9 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\baseline_plan_transfer_20261011_v2.py",
+    "--child"
+  ],
+  "exit_code": 1,
+  "condition": "mixed_fare_estimate returns None in this isolated Python process"
+}

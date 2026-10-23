@@ -1,0 +1,60 @@
+.page { display: grid; gap: 20px; padding-bottom: 24px; }
+.section { display: grid; gap: 12px; }
+.section h2 { font-size: 17px; }
+.field { display: grid; gap: 6px; font-weight: 600; }
+.field input, .field textarea { width: 100%; border: 1px solid var(--color-border-strong); border-radius: 8px; padding: 10px 12px; background: var(--color-surface); font-weight: 400; }
+.field textarea { min-height: 144px; resize: vertical; }
+.muted { color: var(--color-muted); }
+.error { color: var(--color-error); }
+.success { color: var(--color-primary); }
+.row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+/* `[2026-10-12]` 왼쪽 「여행에서 다시 요청」 · 오른쪽 「문의 작성」을 한 줄에: 좁으면 왼쪽 단추의 글자가 줄바꿈되고 오른쪽은 그대로다. */
+.actions { display: flex; align-items: stretch; justify-content: space-between; gap: 8px; }
+.actions > :first-child { flex: 0 1 auto; min-width: 0; }
+.actions > :last-child { flex: none; }
+.iconButton { width: 46px; padding: 0; flex: none; }
+/* `[2026-10-22 ST4F-717]` 문의함 위 한 줄 — 이용 방법의 자주 묻는 질문으로 */
+.helpLine { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px 0 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-soft); color: var(--color-primary); font-weight: 650; text-decoration: none; }
+.helpLine:hover { border-color: var(--color-primary); }
+/* `[2026-10-12 사용자 지시]` 「내 문의」: 높이를 고정한 흰 칸 — 한 줄 44px × 5(`INQUIRIES_PER_PAGE`) + 구분선 4 + 위아래 여백 8 + 테두리 2 = 234px.
+   비어 있으면 안내가 칸 가운데, 있으면 다섯 줄. 내용은 상세 창(`.detail`)에서 본다 — 칸은 늘지 않는다. */
+.box { height: 234px; padding: 4px 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); display: flex; flex-direction: column; overflow: hidden; }
+.box > p { margin: auto 0; text-align: center; }
+.list { padding: 0; margin: 0; list-style: none; }
+.list > li + li { border-top: 1px solid var(--color-border); }
+.inquiry { width: 100%; height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 2px; color: var(--color-text); font-weight: 600; text-decoration: none; }
+.inquiryTitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inquiryDate { flex: none; min-width: 36px; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; color: var(--color-muted); }
+/* `[2026-10-12 사용자 지시]` 문의 중 · 답변 완료 (`StatusTag`) — 목록 줄에서는 날짜 왼쪽, 문의 내역에서는 시각 앞. */
+.status { flex: none; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11px; font-weight: 650; line-height: 1.6; color: var(--color-muted); background: var(--color-surface); }
+.status[data-answered], .status[data-posted] { border-color: transparent; color: var(--color-primary); background: var(--color-soft); }
+/* `[2026-10-17 ST4F-604]` 공지사항의 게시 중(「답변 완료」 모양) · 종료(「문의 중」 모양) — 제목 앞이라 폭을 맞춰 제목 시작선을 가지런히 */
+.status[data-notice-status] { min-width: 52px; text-align: center; }
+/* 문의 내역(`InquiryPage`): 위에 문의 카드, 답변이 있으면 그 아래 「답변」 칸. */
+.card { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.card h2, .answer h2 { font-size: 17px; line-height: 1.5; overflow-wrap: anywhere; }
+.cardMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; color: var(--color-muted); }
+.answer { display: grid; gap: 12px; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border)); border-radius: 16px; background: var(--color-soft); }
+.answerItem { display: grid; gap: 4px; }
+.answerItem + .answerItem { padding-top: 12px; border-top: 1px solid var(--color-border); }
+.answerItem time { font-size: 12px; color: var(--color-muted); }
+.pager { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.pager button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-primary); font-weight: 650; }
+.pager button[aria-current="page"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.pager button:disabled { opacity: .4; }
+.body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.banner { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 130; width: min(420px, calc(100% - 32px)); max-height: 35svh; overflow: auto; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); border-radius: 12px; padding: 12px 16px; box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.banner h2 { font-size: 14px; }
+.banner p { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* `[2026-10-17 ST4F-603]` 공지 종류 — 왼쪽 색 줄과 딱지(장애 빨강 · 점검 예고 노랑 · 안내 기본색) */
+.noticeItem { border-left: 4px solid var(--tone); padding-left: 10px; }
+.noticeItem + .noticeItem { margin-top: 10px; }
+.noticeItem[data-tone="error"], .tone[data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
+.noticeItem[data-tone="warning"], .tone[data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+.noticeItem[data-tone="info"], .tone[data-tone="info"] { --tone: var(--color-primary); --tone-soft: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+/* `[2026-10-17 사용자 결정 — ST4F-604]` 공지사항 게시판 — 문의함 칸(`.box`)을 한 쪽 10줄 높이로 고정: 테두리 2 + 위아래 여백 8 + 10줄 × 44 + 구분선 9 */
+.noticeBox { height: 459px; }
+.cardMeta .noticeKind { margin-bottom: 0; }
+.noticeKind { display: inline-block; margin-bottom: 4px; padding: 2px 8px; border-radius: 999px; background: var(--tone-soft); color: var(--tone); font-size: 12px; font-weight: 650; }
+.bannerActions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+.bannerActions button { min-height: 44px; padding: 8px; }

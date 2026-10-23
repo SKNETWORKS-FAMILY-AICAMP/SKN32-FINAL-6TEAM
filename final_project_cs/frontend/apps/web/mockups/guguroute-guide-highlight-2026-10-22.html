@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이용 방법 강조 목업</title>
+<style>
+  :root {
+    --color-text: #24392f; --color-muted: #56645b; --color-border: #dce3dd; --color-surface: #ffffff; --color-paper: #f7f9f3;
+    --color-primary: #2e6047; --color-soft: #e9f2eb; --color-text-secondary: #4a5d52; --color-faint: #c9d3cc;
+    --font: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e6ebe7; color: var(--color-text); font-family: var(--font); font-size: 13px; line-height: 1.6; }
+  .top { max-width: 1240px; margin: 0 auto; padding: 28px 20px 8px; }
+  .top h1 { font-size: 20px; margin: 0 0 6px; letter-spacing: -.4px; }
+  .top p { margin: 0 0 4px; color: var(--color-muted); }
+  .status { display: inline-block; font-size: 11px; color: var(--color-primary); background: var(--color-soft); border-radius: 99px; padding: 2px 10px; margin-bottom: 10px; }
+  .modes { display: inline-flex; gap: 6px; margin: 14px 0 4px; padding: 4px; border-radius: 12px; background: var(--color-surface); border: 1px solid var(--color-border); }
+  .modes button { border: 0; background: transparent; padding: 8px 14px; border-radius: 9px; font: inherit; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; }
+  .modes button[aria-pressed="true"] { background: var(--color-primary); color: #fff; }
+  .row { max-width: 1240px; margin: 0 auto; padding: 8px 20px 0; }
+  .row h2 { font-size: 14px; margin: 18px 0 8px; color: var(--color-text-secondary); }
+  .row[hidden] { display: none; }
+  .phones { display: flex; gap: 22px; overflow-x: auto; padding: 4px 4px 24px; }
+
+  /* 소개 화면 둘째 장(intro.module.css)과 같은 틀 — 390×844 */
+  .phone { flex: 0 0 auto; width: 390px; height: 844px; border-radius: 36px; overflow: hidden; position: relative; box-shadow: 0 18px 50px rgba(36, 57, 47, .18); border: 1px solid var(--color-border);
+    background: linear-gradient(180deg, var(--color-paper) 22%, color-mix(in srgb, var(--color-paper) 79%, transparent) 50%, color-mix(in srgb, var(--color-paper) 26%, transparent)), url("../public/images/tripilot-home-03-journey.png") center bottom / auto 100% no-repeat, var(--color-paper); }
+  .appbar { position: absolute; top: 0; left: 0; right: 0; height: 74px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px 0 24px; }
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 19px; font-weight: 800; letter-spacing: -.5px; }
+  .logo { width: 30px; height: 30px; border-radius: 8px; background: var(--color-primary); display: grid; place-items: center; color: #fff; font-size: 15px; }
+  .tools { display: flex; gap: 8px; }
+  .tools span { width: 40px; height: 40px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); display: grid; place-items: center; color: var(--color-primary); font-size: 16px; }
+  .progress { position: absolute; top: 0; left: 0; height: 3px; width: 50%; background: var(--color-primary); }
+  .page { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 84px 27px 54px; }
+  .eyebrow { font-size: 10px; letter-spacing: 2.2px; font-weight: 700; color: var(--color-primary); margin: 0 0 10px; }
+  .eyebrow::before { content: ""; display: inline-block; width: 5px; height: 5px; background: var(--color-primary); border-radius: 50%; margin: 0 7px 2px 0; }
+  .title { font-size: 30px; line-height: 1.4; letter-spacing: -1.7px; font-weight: 700; margin: 0; }
+  .guide { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 16px; }
+  .slides { flex: 1; min-height: 0; display: flex; gap: 12px; margin: 0 -27px; padding: 2px 27px 8px; overflow: hidden; }
+  .slide { flex: 0 0 82%; display: flex; flex-direction: column; padding: 15px 14px 0; border: 1px solid var(--color-border); border-radius: 17px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); box-shadow: 0 8px 26px rgba(36, 57, 47, .05); overflow: visible; position: relative; }
+  .slide.peek { opacity: .9; }
+  .head { display: flex; gap: 12px; }
+  .no { width: 31px; height: 31px; flex-shrink: 0; border-radius: 10px; background: var(--color-soft); display: grid; place-items: center; color: var(--color-primary); font-size: 11px; font-weight: 700; }
+  .head h3 { font-size: 14px; margin: 1px 0 5px; letter-spacing: -.3px; }
+  .head p { font-size: 11px; line-height: 1.7; color: var(--color-muted); margin: 0; word-break: keep-all; }
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+  .nav span { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: color-mix(in srgb, var(--color-surface) 79%, transparent); color: var(--color-primary); font-size: 16px; }
+  .nav p { margin: 0; font-size: 11px; color: var(--color-text-secondary); }
+  .nav strong { color: var(--color-primary); margin-right: 7px; }
+  .dots { position: absolute; bottom: 18px; left: 0; right: 0; display: flex; justify-content: center; gap: 7px; }
+  .dots i { width: 5px; height: 5px; border-radius: 9px; background: var(--color-faint); }
+  .dots i.on { width: 22px; background: var(--color-primary); }
+  .down { position: absolute; right: 26px; bottom: 14px; color: var(--color-primary); font-size: 22px; }
+
+  /* 그림 칸 — 휴대폰 화면 전체 + 강조 카드 */
+  .shot { flex: 1; min-height: 0; position: relative; margin: 13px 0 14px; }
+  .screen { position: absolute; left: 50%; top: 0; transform: translateX(-50%); border-radius: 5.5% / 2.7%; border: 1px solid var(--color-border); overflow: hidden; background: var(--color-surface); }
+  .screen img { display: block; width: 100%; height: 100%; }
+  .screen::after { content: ""; position: absolute; inset: 0; background: transparent; transition: background .25s; }
+  /* A — `[2026-10-22 사용자 피드백]` 너무 진했다 → 그림자처럼 옅은 그늘 10% 고정(그라데이션 아님) + 강조 카드 그림자를 넓게 */
+  .dim .screen::after { background: rgba(14, 28, 20, .10); }
+  .crop { background-repeat: no-repeat; }
+  .callout { position: absolute; border-radius: 14px; background-color: var(--color-surface); box-shadow: 0 14px 34px rgba(14, 28, 20, .28), 0 2px 6px rgba(14, 28, 20, .12); outline: 1px solid rgba(255, 255, 255, .9); }
+  .dim .callout { box-shadow: 0 22px 48px rgba(14, 28, 20, .30), 0 4px 12px rgba(14, 28, 20, .12); }
+  /* A+E — `[2026-10-22 사용자 피드백]` A 의 크게 띄운 강조 카드(그늘 10%)에 E 의 흰색 + 초록 빛 테두리, 설명 칩은 강조 카드 위 */
+  .ae .screen::after { background: rgba(14, 28, 20, .10); }
+  .ae .callout { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(46, 96, 71, .65), 0 0 20px 6px rgba(46, 96, 71, .35), 0 18px 40px rgba(14, 28, 20, .22); }
+  /* E — 제자리 강조: 그 자리만 밝게 뚫고(주변 그늘) 빛 테두리, 설명 칩을 선으로 잇는다 */
+  /* `[2026-10-22 사용자 피드백]` 주변 그늘은 A 와 같게(10% 고정) — 그늘 층(.shade)에 강조 자리만 둥글게 뚫고, 빛 테두리는 .hole 이 두른다 */
+  .shade { position: absolute; inset: 0; pointer-events: none; background: rgba(14, 28, 20, .10); -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+  .hole { position: absolute; border-radius: 10px; pointer-events: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(46, 96, 71, .65), 0 0 20px 6px rgba(46, 96, 71, .35); }
+  /* `[2026-10-22 사용자 피드백]` 선은 칩(말풍선) 가운데 아래에서 — 칩과 선을 한 묶음으로 세로로 쌓는다 */
+  .pin { position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+  .chip { background: var(--color-primary); color: #fff; font-size: 11px; font-weight: 700; line-height: 1; padding: 7px 11px; border-radius: 99px; white-space: nowrap; box-shadow: 0 6px 16px rgba(36, 57, 47, .28); }
+  .wire { position: relative; width: 2px; background: var(--color-primary); }
+  .wire::after { content: ""; position: absolute; left: -3px; bottom: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 2px #fff; }
+
+  .notes { max-width: 1240px; margin: 4px auto 40px; padding: 0 20px; }
+  .notes table { border-collapse: collapse; width: 100%; background: var(--color-surface); border-radius: 12px; overflow: hidden; }
+  .notes th, .notes td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); font-size: 12px; vertical-align: top; }
+  .notes th { background: var(--color-soft); color: var(--color-text-secondary); }
+  @media (max-width: 480px) { .phone { transform: scale(.86); transform-origin: top left; margin-right: -55px; margin-bottom: -118px; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="status">2026-10-22 · 검토 중 · 소개 둘째 장 「이용 방법」</span>
+  <h1>이용 방법 카드 — 화면 강조 목업</h1>
+  <p>휴대폰 화면 전체는 그대로 두고, 그 단계에서 봐야 할 부분만 흰 카드로 크게 띄웠다(앱 장터 소개 그림 방식). 강조 카드는 모두 같은 폭(휴대폰 화면보다 넓게)이다. 그림은 지금 앱에 들어간 캡처(<code>public/images/guguroute-guide-ko-*.jpg</code>)를 그대로 쓴다.</p>
+  <p><b>A 그림자처럼 깔기</b> — 휴대폰 화면에 옅은 그늘(10%), 강조 카드를 크게 띄운다. <b>E 제자리 강조 + 설명 칩</b> — 확대하지 않고 그 자리만 밝게(그늘 10%) · 빛 테두리 · 짧은 칩을 선으로 잇는 「annotated-feature」 유형. <b>A+E</b> — A 의 크게 띄운 강조 카드에 E 의 빛 테두리를 두르고 설명 칩을 강조 카드 위에. 칩 문구는 목업 제안이다. (B 그대로 두기 · C 기울인 화면 · D 유리 카드는 2026-10-22 검토 뒤 뺐다.)</p>
+  <p>조사(2026-10-22): 확대 강조 · 한 장에 하나만 · 200px 미리보기에서도 읽히게(<a href="https://stora.sh/blog/2026-04-04-app-store-screenshots-that-convert-2026-guide">stora</a> · <a href="https://appscreenshotstudio.com/blog/app-store-screenshot-layout-patterns-2026">appscreenshotstudio</a>), 기울인 기기 · 칩 + 연결선(appscreenshotstudio), 유리 떠 있는 카드(<a href="https://pixso.net/articles/7-ui-ux-design-trends/">pixso</a>).</p>
+  <div class="modes" role="group" aria-label="보는 방식"></div>
+</div>
+<div id="rows"></div>
+<div class="notes">
+  <h2 style="font-size:14px;color:var(--color-text-secondary)">강조 영역 (780×1594 그림 기준 좌표 — 앱에 넣을 때 그대로 쓴다)</h2>
+  <table id="regions"><thead><tr><th>카드</th><th>강조하는 부분</th><th>영역 x0–x1, y0–y1</th></tr></thead><tbody></tbody></table>
+</div>
+<script>
+// 카드 문구는 앱(`src/features/intro/intro.tsx` ko)과 같다. 영역은 그림(780×1594) 좌표.
+// `[2026-10-22 사용자 피드백]` 1 입력창 끝까지 · 2 질문 · 보기 · 인원만 · 5 일정 한눈에(날짜 칩부터) — 영역은 원래 화면의 테두리선(카드 외곽선 · 시트 끝 · 화면 모서리) 안쪽으로 잡는다(픽셀로 잰 값).
+// `[2026-10-22 사용자 피드백]` 강조 카드는 모두 같은 폭(휴대폰 화면보다 넓게) — 배율은 카드마다 폭에 맞춰 정한다(4 · 5 · 7번처럼).
+// `[2026-10-22 사용자 피드백]` 옆 여백 — 강조 카드 안쪽에 여백(PAD)을 두고, 여백은 오려 낸 부분의 바탕색(bg)으로 채운다(겹친 틀처럼 보이지 않게).
+// `[2026-10-22 사용자 피드백]` 강조 카드와 흰 슬라이드 카드 가장자리 사이 양옆 여백(그림 칸 안 약 18px) — 강조 내용이 휴대폰 화면보다 커 보이게 휴대폰 화면도 조금 줄였다.
+const IMG_W = 780, IMG_H = 1594, SCREEN_H = 440, CALLOUT_W = 256, PAD_X = 10, PAD_Y = 10;
+const cards = [
+  { name: "1-input", title: "준비한 일정 붙여 넣기", detail: "여행 일정을 예시와 같이 입력하거나 자유롭게 입력해 주세요.", what: "「직접 입력 · 나의 여행 계획」 칸 — 입력창 끝까지", r: [44, 560, 726, 1345], bg: "#ffffff" },
+  { name: "2-reading", title: "읽는 동안 취향 알려 주기", detail: "계획을 읽는 동안 함께 가는 사람과 여행 취향을 물어봐요.", what: "「누구와 함께 떠나나요?」 질문 · 보기 · 인원(넘김 표시 · 「답변 저장」 제외)", r: [45, 745, 725, 1250], bg: "#ffffff" },
+  { name: "3-check", title: "하나씩 함께 확인하기", detail: "장소 · 운영시간 · 이동을 일정마다 확인하고, 고칠 곳이 있으면 멈춰서 물어봐요.", what: "국립중앙박물관 확인 카드(장소 · 시간 · 운영시간 · 휴무일 · 날씨 · 도착)", r: [188, 527, 731, 1060], bg: "#ffffff" },
+  { name: "4-result", title: "고치고 여행 등록하기", detail: "시간과 장소를 고치고 다시 확인한 뒤 여행으로 등록해요.", what: "「모두 확인했어요 · 5초 뒤에 여행을 등록해요 · 여행 등록」 막대", r: [10, 1180, 770, 1560], bg: "#ffffff" },
+  { name: "5-trip", title: "내 여행 한눈에 보기", detail: "일차별 일정과 지도, 이동을 한 화면에서 봐요.", what: "일정 한눈에 — 날짜 칩 · 1일차 · 타임라인(호텔 조식 · 이동 · 경복궁)", r: [24, 778, 756, 1565], bg: "#ffffff" },
+  { name: "6-notices", title: "여행 중에도 지켜보기", detail: "휴무 · 날씨 · 재난이 생기면 알리고 대안을 먼저 물어봐요. 항로 지킴이를 켜면 알아서 고쳐요.", what: "「선택이 필요해요 · 경복궁」 카드(예보 주의 · 고르기 단추)", r: [44, 248, 736, 805], bg: "#fbf7ec" },
+  { name: "7-chat", title: "대화하며 다듬기", detail: "궁금한 점이나 바꾸고 싶은 일정을 채팅으로 말해 보세요.", what: "질문 말풍선 · 구구루트 답 · 고르기 칩", r: [20, 430, 760, 1185], bg: "#ffffff" },
+];
+const src = (name) => `../public/images/guguroute-guide-ko-${name}.jpg`;
+// E · A+E 설명 칩 문구 — 목업 제안(앱에 아직 없는 글)
+const chips = ["자유롭게 입력", "읽는 동안 취향 질문", "일정마다 확인", "확인 끝나면 바로 등록", "일정 · 이동 한눈에", "문제 생기면 먼저 묻기", "말로 바꾸기"];
+const MODES = [["dim", "A 그림자처럼 깔기"], ["note", "E 제자리 강조 + 설명 칩"], ["ae", "A+E 크게 띄운 카드 + 빛 테두리 + 설명 칩"]];
+const SHOT_W = 390 * .82 - 28 - 2;            // 그림 칸 폭(슬라이드 82% − 안쪽 여백 − 테두리)
+
+function phone(card, index, mode) {
+  const s = SCREEN_H / IMG_H, w = Math.round(IMG_W * s);
+  const [x0, y0, x1, y1] = card.r;
+  const k = Math.min((CALLOUT_W - 2 * PAD_X) / (x1 - x0), (SCREEN_H + 12 - 2 * PAD_Y) / (y1 - y0)), iw = (x1 - x0) * k, ih = (y1 - y0) * k;
+  const cw = iw + 2 * PAD_X, ch = ih + 2 * PAD_Y;
+  const top = Math.max(-6, Math.min(SCREEN_H - ch + 6, ((y0 + y1) / 2) * s - ch / 2));
+  const next = cards[index + 1];
+  return `<div class="phone">
+    <div class="progress"></div>
+    <div class="appbar"><div class="brand"><span class="logo">⌁</span>구구루트</div><div class="tools"><span>◎</span><span>☰</span></div></div>
+    <div class="page">
+      <p class="eyebrow">이용 방법</p>
+      <h2 class="title">이렇게 사용할 수 있어요</h2>
+      <div class="guide">
+        <div class="slides">
+          <div class="slide">
+            <div class="head"><span class="no">0${index + 1}</span><div><h3>${card.title}</h3><p>${card.detail}</p></div></div>
+            <div class="shot">
+              <div class="screen" style="width:${w}px;height:${SCREEN_H}px"><img src="${src(card.name)}" alt="">${mode === "note" ? `<div class="shade" style="-webkit-mask-image:${holeMask(w, x0 * s, y0 * s, (x1 - x0) * s, (y1 - y0) * s)};mask-image:${holeMask(w, x0 * s, y0 * s, (x1 - x0) * s, (y1 - y0) * s)}"></div><div class="hole" style="left:${x0 * s}px;top:${y0 * s}px;width:${(x1 - x0) * s}px;height:${(y1 - y0) * s}px"></div>` : ""}</div>
+              ${mode === "note" ? note(card, index, s, w) : `${mode === "ae" ? chipAt(index, SHOT_W / 2 + cw / 2, top) : ""}<div class="callout" style="width:${cw}px;height:${ch}px;left:calc(50% - ${cw / 2}px);top:${top}px;padding:${PAD_Y}px ${PAD_X}px;background-color:${card.bg}"><div class="crop" style="width:${iw}px;height:${ih}px;background-image:url('${src(card.name)}');background-size:${IMG_W * k}px ${IMG_H * k}px;background-position:${-x0 * k}px ${-y0 * k}px"></div></div>`}
+            </div>
+          </div>
+          ${next ? `<div class="slide peek"><div class="head"><span class="no">0${index + 2}</span><div><h3>${next.title}</h3><p>${next.detail}</p></div></div></div>` : ""}
+        </div>
+        <div class="nav"><span>←</span><p><strong>${index + 1} / 7</strong>옆으로 넘겨 단계별로 확인하세요</p><span>→</span></div>
+      </div>
+    </div>
+    <div class="dots"><i></i><i class="on"></i><i></i></div><div class="down">↓</div>
+  </div>`;
+}
+// E 그늘 층의 마스크 — 화면 전체(불투명)에서 강조 자리(둥근 사각형)만 투명하게(evenodd)
+function holeMask(w, x, y, ww, hh, r = 10) {
+  const H = SCREEN_H, d = `M0 0H${w}V${H}H0Z M${x + r} ${y}H${x + ww - r}A${r} ${r} 0 0 1 ${x + ww} ${y + r}V${y + hh - r}A${r} ${r} 0 0 1 ${x + ww - r} ${y + hh}H${x + r}A${r} ${r} 0 0 1 ${x} ${y + hh - r}V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${H}" viewBox="0 0 ${w} ${H}"><path fill="#000" fill-rule="evenodd" d="${d}"/></svg>`;
+  return `url(&quot;data:image/svg+xml,${encodeURIComponent(svg)}&quot;)`;
+}
+// 칩은 강조한 곳 위(오른쪽 끝 맞춤), 선은 칩 가운데 아래에서 강조한 곳 윗변까지 — E 는 제자리 강조 자리, A+E 는 크게 띄운 강조 카드
+const CHIP_H = 25;                               // 칩 높이(글자 11px + 위아래 7px)
+function chipAt(index, anchorRight, anchorTop) {
+  const chipTop = Math.max(0, anchorTop - 40);
+  return `<span class="pin" style="right:${Math.max(2, SHOT_W - anchorRight + 6)}px;top:${chipTop}px"><span class="chip">${chips[index]}</span><span class="wire" style="height:${Math.max(6, anchorTop - chipTop - CHIP_H)}px"></span></span>`;
+}
+function note(card, index, s, w) {
+  const [, y0, x1] = card.r;
+  return chipAt(index, (SHOT_W - w) / 2 + x1 * s, y0 * s);
+}
+document.querySelector(".modes").innerHTML = MODES.map(([id, title]) => `<button type="button" data-mode="${id}" aria-pressed="false">${title.split(" ").slice(0, 2).join(" ")}</button>`).join("") + `<button type="button" data-mode="all" aria-pressed="true">모두 나란히</button>`;
+document.getElementById("rows").innerHTML = MODES.map(([id, title]) => `<section class="row ${id}" id="row-${id}"><h2>${title}</h2><div class="phones">${cards.map((c, i) => phone(c, i, id)).join("")}</div></section>`).join("");
+document.querySelector("#regions tbody").innerHTML = cards.map((c, i) => `<tr><td>${i + 1} ${c.title}</td><td>${c.what}</td><td>${c.r[0]}–${c.r[2]}, ${c.r[1]}–${c.r[3]}</td></tr>`).join("");
+function show(mode) {
+  for (const [id] of MODES) document.getElementById(`row-${id}`).hidden = mode !== "all" && mode !== id;
+  for (const b of document.querySelectorAll(".modes button")) b.setAttribute("aria-pressed", String(b.dataset.mode === mode));
+}
+for (const b of document.querySelectorAll(".modes button")) b.addEventListener("click", () => show(b.dataset.mode));
+</script>
+</body>
+</html>

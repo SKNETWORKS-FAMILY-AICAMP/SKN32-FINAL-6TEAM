@@ -3,7 +3,7 @@ import ast
 
 
 _FORBIDDEN_PREFIXES = (
-    "app.modules",
+    "app.domains",
     "app.presentation",
     "app.infrastructure",
     "app.application",

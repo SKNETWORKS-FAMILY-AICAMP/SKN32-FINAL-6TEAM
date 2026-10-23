@@ -1,0 +1,266 @@
+gen gpt-6.1-sol 남은 59 / 59
+gen 1 / 59 42 초 ok
+gen 2 / 59 42 초 ok
+gen 3 / 59 45 초 ok
+gen 4 / 59 78 초 ok
+gen 5 / 59 82 초 ok
+gen 6 / 59 87 초 ok
+gen 7 / 59 124 초 ok
+gen 8 / 59 125 초 ok
+gen 9 / 59 129 초 ok
+gen 10 / 59 167 초 ok
+gen 11 / 59 167 초 ok
+gen 12 / 59 169 초 ok
+gen 13 / 59 205 초 ok
+gen 14 / 59 209 초 ok
+gen 15 / 59 214 초 ok
+gen 16 / 59 246 초 ok
+gen 17 / 59 254 초 ok
+gen 18 / 59 254 초 ok
+gen 19 / 59 286 초 ok
+gen 20 / 59 297 초 ok
+gen 21 / 59 298 초 ok
+gen 22 / 59 328 초 ok
+gen 23 / 59 338 초 ok
+gen 24 / 59 340 초 ok
+gen 25 / 59 371 초 ok
+gen 26 / 59 380 초 ok
+gen 27 / 59 380 초 ok
+gen 28 / 59 413 초 ok
+gen 29 / 59 413 초 ok
+gen 30 / 59 427 초 ok
+gen 31 / 59 455 초 ok
+gen 32 / 59 455 초 ok
+gen 33 / 59 473 초 ok
+gen 34 / 59 498 초 ok
+gen 35 / 59 498 초 ok
+gen 36 / 59 514 초 ok
+gen 37 / 59 531 초 ok
+gen 38 / 59 531 초 ok
+gen 39 / 59 555 초 ok
+gen 40 / 59 571 초 ok
+gen 41 / 59 577 초 ok
+gen 42 / 59 596 초 ok
+gen 43 / 59 616 초 ok
+gen 44 / 59 624 초 ok
+gen 45 / 59 638 초 ok
+gen 46 / 59 661 초 ok
+gen 47 / 59 666 초 ok
+gen 48 / 59 678 초 ok
+gen 49 / 59 3683 초 ok
+gen 50 / 59 3691 초 ok
+gen 51 / 59 3691 초 ok
+gen 52 / 59 3722 초 ok
+gen 53 / 59 3726 초 ok
+gen 54 / 59 3736 초 ok
+gen 55 / 59 3765 초 ok
+gen 56 / 59 3769 초 ok
+gen 57 / 59 3780 초 ok
+gen 58 / 59 3812 초 ok
+gen 59 / 59 3812 초 ok
+label gpt-6-luna 남은 59 / 59
+label 1 / 59 9 초 ok
+label 2 / 59 9 초 ok
+label 3 / 59 12 초 ok
+label 4 / 59 18 초 ok
+label 5 / 59 19 초 ok
+label 6 / 59 23 초 ok
+label 7 / 59 29 초 ok
+label 8 / 59 30 초 ok
+label 9 / 59 36 초 ok
+label 10 / 59 36 초 ok
+label 11 / 59 42 초 ok
+label 12 / 59 45 초 ok
+label 13 / 59 50 초 ok
+label 14 / 59 50 초 ok
+label 15 / 59 56 초 ok
+label 16 / 59 56 초 ok
+label 17 / 59 57 초 ok
+label 18 / 59 68 초 ok
+label 19 / 59 68 초 ok
+label 20 / 59 68 초 ok
+label 21 / 59 80 초 ok
+label 22 / 59 81 초 ok
+label 23 / 59 88 초 ok
+label 24 / 59 88 초 ok
+label 25 / 59 88 초 ok
+label 26 / 59 99 초 ok
+label 27 / 59 99 초 ok
+label 28 / 59 99 초 ok
+label 29 / 59 102 초 ok
+label 30 / 59 107 초 ok
+label 31 / 59 110 초 ok
+label 32 / 59 113 초 ok
+label 33 / 59 118 초 ok
+label 34 / 59 118 초 ok
+label 35 / 59 125 초 ok
+label 36 / 59 125 초 ok
+label 37 / 59 130 초 ok
+label 38 / 59 133 초 ok
+label 39 / 59 133 초 ok
+label 40 / 59 141 초 ok
+label 41 / 59 141 초 ok
+label 42 / 59 141 초 ok
+label 43 / 59 150 초 ok
+label 44 / 59 151 초 ok
+label 45 / 59 152 초 ok
+label 46 / 59 157 초 ok
+label 47 / 59 158 초 ok
+label 48 / 59 165 초 ok
+label 49 / 59 165 초 ok
+label 50 / 59 169 초 ok
+label 51 / 59 171 초 ok
+label 52 / 59 177 초 ok
+label 53 / 59 180 초 ok
+label 54 / 59 180 초 ok
+label 55 / 59 191 초 ok
+label 56 / 59 203 초 ok
+label 57 / 59 203 초 ok
+label 58 / 59 203 초 ok
+label 59 / 59 203 초 ok
+nat gpt-6.1-sol 남은 59 / 59
+nat 1 / 59 27 초 ok
+nat 2 / 59 27 초 ok
+nat 3 / 59 27 초 ok
+nat 4 / 59 46 초 ok
+nat 5 / 59 51 초 ok
+nat 6 / 59 51 초 ok
+nat 7 / 59 70 초 ok
+nat 8 / 59 70 초 ok
+nat 9 / 59 72 초 ok
+nat 10 / 59 93 초 ok
+nat 11 / 59 93 초 ok
+nat 12 / 59 99 초 ok
+nat 13 / 59 120 초 ok
+nat 14 / 59 120 초 ok
+nat 15 / 59 123 초 ok
+nat 16 / 59 139 초 ok
+nat 17 / 59 142 초 ok
+nat 18 / 59 143 초 ok
+nat 19 / 59 161 초 ok
+nat 20 / 59 161 초 ok
+nat 21 / 59 166 초 ok
+nat 22 / 59 181 초 ok
+nat 23 / 59 185 초 ok
+nat 24 / 59 190 초 ok
+nat 25 / 59 203 초 ok
+nat 26 / 59 208 초 ok
+nat 27 / 59 210 초 ok
+nat 28 / 59 223 초 ok
+nat 29 / 59 233 초 ok
+nat 30 / 59 233 초 ok
+nat 31 / 59 243 초 ok
+nat 32 / 59 253 초 ok
+nat 33 / 59 255 초 ok
+nat 34 / 59 264 초 ok
+nat 35 / 59 280 초 ok
+nat 36 / 59 281 초 ok
+nat 37 / 59 284 초 ok
+nat 38 / 59 298 초 ok
+nat 39 / 59 305 초 ok
+nat 40 / 59 308 초 ok
+nat 41 / 59 318 초 ok
+nat 42 / 59 328 초 ok
+nat 43 / 59 334 초 ok
+nat 44 / 59 342 초 ok
+nat 45 / 59 349 초 ok
+nat 46 / 59 353 초 ok
+nat 47 / 59 364 초 ok
+nat 48 / 59 369 초 ok
+nat 49 / 59 379 초 ok
+nat 50 / 59 392 초 ok
+nat 51 / 59 394 초 ok
+nat 52 / 59 399 초 ok
+nat 53 / 59 415 초 ok
+nat 54 / 59 417 초 ok
+nat 55 / 59 420 초 ok
+nat 56 / 59 439 초 ok
+nat 57 / 59 440 초 ok
+nat 58 / 59 444 초 ok
+nat 59 / 59 460 초 ok
+natlabel gpt-6-luna 남은 59 / 59
+natlabel 1 / 59 5 초 ok
+natlabel 2 / 59 6 초 ok
+natlabel 3 / 59 8 초 ok
+natlabel 4 / 59 11 초 ok
+natlabel 5 / 59 13 초 ok
+natlabel 6 / 59 15 초 ok
+natlabel 7 / 59 19 초 ok
+natlabel 8 / 59 19 초 ok
+natlabel 9 / 59 23 초 ok
+natlabel 10 / 59 24 초 ok
+natlabel 11 / 59 25 초 ok
+natlabel 12 / 59 27 초 ok
+natlabel 13 / 59 31 초 ok
+natlabel 14 / 59 31 초 ok
+natlabel 15 / 59 33 초 ok
+natlabel 16 / 59 36 초 ok
+natlabel 17 / 59 37 초 ok
+natlabel 18 / 59 38 초 ok
+natlabel 19 / 59 41 초 ok
+natlabel 20 / 59 43 초 ok
+natlabel 21 / 59 44 초 ok
+natlabel 22 / 59 46 초 ok
+natlabel 23 / 59 48 초 ok
+natlabel 24 / 59 50 초 ok
+natlabel 25 / 59 52 초 ok
+natlabel 26 / 59 54 초 ok
+natlabel 27 / 59 58 초 ok
+natlabel 28 / 59 60 초 ok
+natlabel 29 / 59 60 초 ok
+natlabel 30 / 59 66 초 ok
+natlabel 31 / 59 66 초 ok
+natlabel 32 / 59 67 초 ok
+natlabel 33 / 59 72 초 ok
+natlabel 34 / 59 72 초 ok
+natlabel 35 / 59 72 초 ok
+natlabel 36 / 59 77 초 ok
+natlabel 37 / 59 78 초 ok
+natlabel 38 / 59 79 초 ok
+natlabel 39 / 59 84 초 ok
+natlabel 40 / 59 84 초 ok
+natlabel 41 / 59 88 초 ok
+natlabel 42 / 59 91 초 ok
+natlabel 43 / 59 91 초 ok
+natlabel 44 / 59 92 초 ok
+natlabel 45 / 59 97 초 ok
+natlabel 46 / 59 97 초 ok
+natlabel 47 / 59 98 초 ok
+natlabel 48 / 59 102 초 ok
+natlabel 49 / 59 104 초 ok
+natlabel 50 / 59 104 초 ok
+natlabel 51 / 59 108 초 ok
+natlabel 52 / 59 111 초 ok
+natlabel 53 / 59 111 초 ok
+natlabel 54 / 59 116 초 ok
+natlabel 55 / 59 116 초 ok
+natlabel 56 / 59 118 초 ok
+natlabel 57 / 59 124 초 ok
+natlabel 58 / 59 124 초 ok
+natlabel 59 / 59 124 초 ok
+잡담 조각 2340 {'D(AI Hub·KoCulture)': 1194, 'Claude 합성': 240, 'D2(AI Hub·KoCulture)': 906}
+항목 4135 / 시험 입력(혼합+대조, 격리 제외) 4014 / 격리 쌍 31 / 도전 59 / 버린 것 {'nolabel': 0, 'dispute': 558, 'overlap_item': 0}
+   ('code', 'MX1', 'control') 480
+   ('code', 'MX1', 'mixed') 480
+   ('code', 'MX2', 'control') 426
+   ('code', 'MX2', 'mixed') 426
+   ('code', 'MX3', 'control') 399
+   ('code', 'MX3', 'mixed') 399
+   ('code', 'MX4', 'control') 92
+   ('code', 'MX4', 'mixed') 92
+   ('code', 'MX5a', 'control') 177
+   ('code', 'MX5a', 'mixed') 177
+   ('code', 'MX5b', 'control') 160
+   ('code', 'MX5b', 'mixed') 160
+   ('code', 'MX6a', 'control') 34
+   ('code', 'MX6a', 'mixed') 34
+   ('llm', 'MX1', 'control') 45
+   ('llm', 'MX1', 'mixed') 45
+   ('llm', 'MX2', 'control') 48
+   ('llm', 'MX2', 'mixed') 48
+   ('llm', 'MX3', 'control') 58
+   ('llm', 'MX3', 'mixed') 58
+   ('llm', 'MX4', 'control') 29
+   ('llm', 'MX4', 'mixed') 29
+   ('llm', 'MX5a', 'control') 59
+   ('llm', 'MX5a', 'mixed') 59

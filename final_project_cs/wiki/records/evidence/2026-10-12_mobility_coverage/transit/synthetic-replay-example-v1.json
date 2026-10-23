@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "claim": "입출력 시연용 개발 재생 기록입니다. 실제 이용 관측이 아닙니다. 60초는 이 개발 시연의 명시적 입력값이며 제품 전체 허용오차가 아닙니다.",
+  "rows": [
+    {
+      "id": "synthetic-seoul-transfer-001",
+      "tolerance_seconds": 60,
+      "prediction": {
+        "as_of": "2026-10-12T10:00:00+09:00",
+        "event_at": "2026-10-12T10:15:00+09:00",
+        "event_kind": "transfer",
+        "journey_id": "synthetic-seoul-trip",
+        "leg_index": 1,
+        "line_id": "1005",
+        "direction": "up",
+        "station_id": "synthetic-yeongdeungpo-gu-office",
+        "service": "local"
+      },
+      "reference": {
+        "kind": "development_replay",
+        "event_at": "2026-10-12T10:15:30+09:00",
+        "event_kind": "transfer",
+        "journey_id": "synthetic-seoul-trip",
+        "leg_index": 1,
+        "line_id": "1005",
+        "direction": "up",
+        "station_id": "synthetic-yeongdeungpo-gu-office",
+        "service": "local",
+        "evidence_ref": "synthetic-replay-example-v1.json"
+      }
+    }
+  ]
+}

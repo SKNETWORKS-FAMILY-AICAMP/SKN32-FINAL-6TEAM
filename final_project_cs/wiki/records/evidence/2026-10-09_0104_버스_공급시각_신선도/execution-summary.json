@@ -1,0 +1,23 @@
+[
+  {
+    "version": 1,
+    "tests": 58,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "version": 2,
+    "tests": 79,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0
+  },
+  {
+    "version": 3,
+    "tests": 79,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+]

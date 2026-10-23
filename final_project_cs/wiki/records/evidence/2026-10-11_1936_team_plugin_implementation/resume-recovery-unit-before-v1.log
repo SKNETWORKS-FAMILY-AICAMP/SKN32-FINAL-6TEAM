@@ -1,0 +1,258 @@
+F..FFF                                                                   [100%]
+================================== FAILURES ===================================
+_ test_same_event_retries_interrupted_resuming_without_consuming_input_twice __
+
+recovery = namespace(controller=<app.application.controller.Controller object at 0x00000222DBDAE480>, conn=<tests.unit.core.test_...d_input'>], token='travel-unit-resume-token', transition=<function recovery.<locals>.transition at 0x00000222DBE04A40>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000222DBDD31A0>
+
+    def test_same_event_retries_interrupted_resuming_without_consuming_input_twice(recovery, monkeypatch):
+        starts = []
+        applied = []
+    
+        async def run_case(**kwargs):
+            starts.append(recovery.case["status"])
+            if len(starts) == 1:
+                raise ConnectionError("injected stop before run start")
+            recovery.transition(recovery.conn, expected_version=recovery.case["version"],
+                event_type=EventType.RESUMED, payload={"resume_node": "validate_input"})
+            applied.append(recovery.case["state_json"]["customer_input"])
+            recovery.transition(recovery.conn, expected_version=recovery.case["version"],
+                event_type=EventType.COMPLETED, payload={"answer_ref": "travel-unit-answer"})
+            return {"status": "resolved"}
+    
+        monkeypatch.setattr(recovery.controller, "run_case", run_case)
+        with pytest.raises(ConnectionError):
+            reply(recovery)
+        assert recovery.case["status"] == CaseStatus.RESUMING
+        assert recovery.conn.commits == 1
+>       assert reply(recovery)["status"] == "resolved"
+E       AssertionError: assert <CaseStatus.R...G: 'resuming'> == 'resolved'
+E         
+E         - resolved
+E         + resuming
+
+tests\unit\core\test_controller_resume_recovery.py:119: AssertionError
+___________ test_resuming_retry_keeps_team_gate_and_original_input ____________
+
+recovery = namespace(controller=<app.application.controller.Controller object at 0x00000222DBE1DB50>, conn=<tests.unit.core.test_...d_input'>], token='travel-unit-resume-token', transition=<function recovery.<locals>.transition at 0x00000222DBF0CF40>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000222DBE1D7C0>
+
+    def test_resuming_retry_keeps_team_gate_and_original_input(recovery, monkeypatch):
+        async def interrupted(**kwargs):
+            raise ConnectionError("injected stop")
+    
+        monkeypatch.setattr(recovery.controller, "run_case", interrupted)
+        with pytest.raises(ConnectionError):
+            reply(recovery)
+        before = deepcopy(recovery.case)
+        registry = TeamRegistry()
+        registry.declare_unavailable("dining", "disabled")
+        recovery.controller.registry = registry
+>       with pytest.raises(TeamUnavailable, match="disabled"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'app.core.team_availability.TeamUnavailable'>
+
+tests\unit\core\test_controller_resume_recovery.py:154: Failed
+_____________ test_resuming_retry_race_returns_in_progress_state ______________
+
+recovery = namespace(controller=<app.application.controller.Controller object at 0x00000222DBE1D340>, conn=<tests.unit.core.test_...d_input'>], token='travel-unit-resume-token', transition=<function recovery.<locals>.transition at 0x00000222DBF0CFE0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000222DBE1E0C0>
+
+    def test_resuming_retry_race_returns_in_progress_state(recovery, monkeypatch):
+        async def first_interrupted(**kwargs):
+            raise ConnectionError("injected stop")
+    
+        monkeypatch.setattr(recovery.controller, "run_case", first_interrupted)
+        with pytest.raises(ConnectionError):
+            reply(recovery)
+        calls = []
+    
+        async def active_race(**kwargs):
+            calls.append(True)
+            raise ActiveRunError("another retry started")
+    
+        monkeypatch.setattr(recovery.controller, "run_case", active_race)
+        result = reply(recovery)
+>       assert calls == [True]
+E       assert [] == [True]
+E         
+E         Right contains one more item: True
+E         Use -v to get more diff
+
+tests\unit\core\test_controller_resume_recovery.py:174: AssertionError
+_____ test_expired_resume_preserves_typed_cause_and_does_not_apply_input ______
+
+self = <app.application.controller.Controller object at 0x00000222DBE1EBD0>
+
+    async def _resume(self, *, tenant_id: str, case_id: UUID, token: str | None,
+                      actor_id: str, event_id: str | None, message: str | None,
+                      expected_version: int | None, customer_id: UUID | None = None,
+                      resume_route: ResumeRoute | None = None,
+                      resume_prepare: ResumePrepare | None = None) -> dict[str, Any]:
+        if message is not None and not message.strip():
+            raise ValueError("customer input must not be blank")
+        safe_message = masked(message.strip()) if message is not None else None
+        message_hash = self.case_service.token_hash(message.strip()) if message is not None else None
+        with self.connection_factory() as conn:
+            # ���� ������ ��ū ������ �Һ�� �� ��� �ȿ��� ó���Ѵ�.
+            # �б� �� ������ ��õ��ϸ� �ٸ� �亯�� ����� ��ū�� �ٽ� �Һ��� �� �ִ�.
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM customer_cases WHERE tenant_id=%s AND case_id=%s FOR UPDATE",
+                            (tenant_id, case_id))
+            case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
+            if case is None:
+                raise ControllerError("case not found")
+            if token is None and (customer_id is None or str(case["customer_id"]) != str(customer_id)):
+                raise ControllerError("customer does not own case")
+            try:
+>               validation = (self.case_service.validate_resume(case, token, event_id=event_id,
+                                                                 message_hash=message_hash) if token is not None
+                              else self.case_service.validate_customer_input(case, event_id=event_id,
+                                                                              message_hash=message_hash))
+
+app\application\controller.py:826: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\application\case_service.py:90: in validate_resume
+    return self._validate_resume_hash(case, self.token_hash(token), event_id=event_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.application.case_service.CaseService object at 0x00000222DBE1EA50>
+case = {'case_id': UUID('8ae0389e-8f5d-4437-a51a-cf5f69e9d8a9'), 'customer_id': UUID('c1106e96-2b25-47b3-8f39-4ff5c47b5106'), 'intent': 'incident_report', 'issue_code': 'dining_delay', ...}
+token_hash = '3e3ad447d9c8b0fedc8dc459746a5c0f66bf6b5f9149a5ee31a2f85f464a339e'
+
+    def _validate_resume_hash(self, case: dict[str, Any], token_hash: str, *,
+                              event_id: str | None, message_hash: str | None) -> str | None:
+        state = case.get("state_json") or {}
+        for request in state.get("resume_requests", []):
+            if event_id and request["request_id"] == event_id:
+                if request["token_hash"] != token_hash:
+                    raise ResumeTokenError("invalid resume token")
+                if request.get("message_hash") != message_hash:
+                    raise ResumeRequestConflict("resume request id reused with different message")
+                return "idempotent"
+        # ���� �ǿ��� ���� �ݹ顤���� �簳 ��ϵ� ��� �д´�.
+        if event_id and state.get("last_resume_event_id") == event_id:
+            if state.get("resume_token_hash") == token_hash and message_hash is None:
+                return "idempotent"
+            raise ResumeRequestConflict("resume request id reused with different message")
+        if state.get("resume_token_used"):
+            raise ResumeTokenError("resume token has already been used")
+        if state.get("resume_token_hash") != token_hash:
+            raise ResumeTokenError("invalid resume token")
+        expires = datetime.fromisoformat(state["resume_token_expires_at"])
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=UTC)
+        if datetime.now(UTC) >= expires:
+>           raise ResumeTokenExpired("resume token expired")
+E           app.application.case_service.ResumeTokenExpired: resume token expired
+
+app\application\case_service.py:134: ResumeTokenExpired
+
+The above exception was the direct cause of the following exception:
+
+recovery = namespace(controller=<app.application.controller.Controller object at 0x00000222DBE1EBD0>, conn=<tests.unit.core.test_...expired'>], token='travel-unit-resume-token', transition=<function recovery.<locals>.transition at 0x00000222DBF0D9E0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000222DBE1E930>
+
+    def test_expired_resume_preserves_typed_cause_and_does_not_apply_input(recovery, monkeypatch):
+        recovery.case["state_json"]["resume_token_expires_at"] = "2020-01-01T00:00:00+00:00"
+    
+        async def forbidden(**kwargs):
+            pytest.fail("expired explicit token must not run")
+    
+        monkeypatch.setattr(recovery.controller, "run_case", forbidden)
+        with pytest.raises(ResumeTokenExpired) as caught:
+>           reply(recovery)
+
+tests\unit\core\test_controller_resume_recovery.py:187: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\core\test_controller_resume_recovery.py:96: in reply
+    return asyncio.run(recovery.controller.resume(**options))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\asyncio\base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+app\core\service_bindings.py:111: in call
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\application\controller.py:788: in resume
+    return await self._resume(tenant_id=tenant_id, case_id=case_id, token=token,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.application.controller.Controller object at 0x00000222DBE1EBD0>
+
+    async def _resume(self, *, tenant_id: str, case_id: UUID, token: str | None,
+                      actor_id: str, event_id: str | None, message: str | None,
+                      expected_version: int | None, customer_id: UUID | None = None,
+                      resume_route: ResumeRoute | None = None,
+                      resume_prepare: ResumePrepare | None = None) -> dict[str, Any]:
+        if message is not None and not message.strip():
+            raise ValueError("customer input must not be blank")
+        safe_message = masked(message.strip()) if message is not None else None
+        message_hash = self.case_service.token_hash(message.strip()) if message is not None else None
+        with self.connection_factory() as conn:
+            # ���� ������ ��ū ������ �Һ�� �� ��� �ȿ��� ó���Ѵ�.
+            # �б� �� ������ ��õ��ϸ� �ٸ� �亯�� ����� ��ū�� �ٽ� �Һ��� �� �ִ�.
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM customer_cases WHERE tenant_id=%s AND case_id=%s FOR UPDATE",
+                            (tenant_id, case_id))
+            case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
+            if case is None:
+                raise ControllerError("case not found")
+            if token is None and (customer_id is None or str(case["customer_id"]) != str(customer_id)):
+                raise ControllerError("customer does not own case")
+            try:
+                validation = (self.case_service.validate_resume(case, token, event_id=event_id,
+                                                                 message_hash=message_hash) if token is not None
+                              else self.case_service.validate_customer_input(case, event_id=event_id,
+                                                                              message_hash=message_hash))
+                if validation == "idempotent":
+                    # �Է��� �̹� �ݿ������� ���� ������ ������ ������ �ٽ� ������ �� �ִ�.
+                    # �� ����� ���� Ǯ�� ���� ������ ª�� Ʈ������� ���� �ʴ´�.
+                    if case["status"] == CaseStatus.RUNNING:
+                        with conn.cursor() as cur:
+                            cur.execute("SELECT 1 FROM agent_runs WHERE tenant_id=%s AND case_id=%s "
+                                        "AND status IN ('active','running','resuming') LIMIT 1",
+                                        (tenant_id, case_id))
+                            active = cur.fetchone() is not None
+                        if not active:
+                            self.require_team(case.get("owner_team_id"), case_id=case_id)
+                            conn.rollback()
+                            try:
+                                return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+                            except ActiveRunError:
+                                # ���� ��õ��� ���� ���۵� ��� �Ϸ��� ���� �ʰ� ���� ���¸� �����ش�.
+                                latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id) or case
+                                return {"case_id": str(case_id), "status": latest["status"],
+                                        "version": latest["version"], "idempotent": True}
+                    return {"case_id": str(case_id), "status": case["status"],
+                            "version": case["version"], "idempotent": True}
+            except ResumeRequestConflict as exc:
+                raise StateConflict(str(exc)) from exc
+            except ResumeTokenExpired as exc:
+                self.require_team(case.get("owner_team_id"), case_id=case_id)
+                try:
+                    with conn.transaction():
+                        transition_case(conn, tenant_id=tenant_id, case_id=case_id,
+                                        expected_version=case["version"], event_type=EventType.WAIT_EXPIRED,
+                                        payload={"wait_reason": self._wait_reason(case)},
+                                        actor_type="controller", actor_id=actor_id)
+                    conn.commit()
+                except InvalidTransition:
+                    logger.warning("stale resume token ignored for terminal/non-waiting case",
+                                   extra={"tenant_id": tenant_id, "case_id": str(case_id)})
+>               raise ControllerError(str(exc)) from exc
+E               app.application.controller.ControllerError: resume token expired
+
+app\application\controller.py:865: ControllerError
+=========================== short test summary info ===========================
+FAILED tests/unit/core/test_controller_resume_recovery.py::test_same_event_retries_interrupted_resuming_without_consuming_input_twice
+FAILED tests/unit/core/test_controller_resume_recovery.py::test_resuming_retry_keeps_team_gate_and_original_input
+FAILED tests/unit/core/test_controller_resume_recovery.py::test_resuming_retry_race_returns_in_progress_state
+FAILED tests/unit/core/test_controller_resume_recovery.py::test_expired_resume_preserves_typed_cause_and_does_not_apply_input
+4 failed, 2 passed in 11.07s

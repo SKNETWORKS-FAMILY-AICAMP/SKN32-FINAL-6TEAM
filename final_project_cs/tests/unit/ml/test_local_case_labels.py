@@ -10,7 +10,7 @@ import pytest
 
 from app.infrastructure.ml import case_labels
 from app.infrastructure.ml.case_labels import LocalCaseLabels, LocalLabelsUnsure
-from app.modules.travel_ops import feedback
+from app.domains.travel_ops.components.core_hooks import feedback
 
 
 class _FakeModel:

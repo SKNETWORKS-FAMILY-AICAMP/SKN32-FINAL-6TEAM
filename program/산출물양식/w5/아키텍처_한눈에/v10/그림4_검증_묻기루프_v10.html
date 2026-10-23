@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>검증 · 묻기 루프 — 고객이 고르면 다시 검증한다</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--paper:#fbfcfd;--paper-2:#f1f4f8;--ink:#161c28;--muted:#6b7488;--soft:#7a8599;--rule:rgba(22,28,40,.12);
+--accent:#a8720c;--accent-tint:rgba(168,114,12,.10);--link:#2f5bd8;
+--sans:'Geist','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;--serif:'Instrument Serif','Noto Serif KR',serif;--mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.7;font-size:15px;padding:3rem 2rem}
+.frame{max-width:1200px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+h1{font-family:var(--serif);font-size:2rem;font-weight:400;letter-spacing:-.01em;line-height:1.2;margin-bottom:1rem}
+h2{font-family:var(--serif);font-size:1.5rem;font-weight:400;margin:3rem 0 .5rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+p{max-width:860px;margin:0 0 .9rem}
+.lead{font-size:16px}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.86em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+figure{margin:1.25rem 0 0}
+figure svg{width:100%;display:block}
+figcaption{font-size:13px;color:var(--muted);margin-top:.5rem;max-width:860px}
+.fig-wide svg{min-width:900px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:1rem 0;background:#fff}
+th,td{border:1px solid var(--rule);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--paper-2);font-weight:600}
+td:first-child{font-weight:600;white-space:nowrap}
+.cards{display:grid;grid-template-columns:1.2fr 1fr .9fr;gap:16px;margin:1.25rem 0}
+.card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem}
+.card h3{font-size:15px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--ink)}
+.dot.accent{background:var(--accent)}.dot.link{background:var(--link)}.dot.soft{background:var(--soft)}
+.card ul{padding-left:1.1rem;font-size:14px}
+.status{border-left:3px solid var(--accent);background:var(--accent-tint);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;font-size:14px;max-width:none}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--muted)}
+@media (max-width:760px){.cards{grid-template-columns:1fr}body{padding:2rem 1rem}}
+ body{display:flex;justify-content:center}</style></head><body><div class="frame"><p class="eyebrow">guguroute · 시스템 아키텍처 v10</p><h1>검증 · 묻기 루프 — 고객이 고르면 다시 검증한다</h1><figure class="fig-wide"><svg viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-verify-title tp-verify-desc">
+<title id="tp-verify-title">검증 · 묻기 루프 — 고객이 고르면 다시 검증한다</title>
+<desc id="tp-verify-desc">변경 제안이 오면 고객 소유 · Case 버전 · 여행 기준 버전 · 항목 · 장소를 검증한다. 통과하지 못하면 거부하고, 보호 일정처럼 물어볼 일정이면 고객에게 묻고 응답을 받아 다시 검증한다. 물어볼 일이 아니면 새 일정 버전을 저장하고 알림과 링크를 보낸다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1000" height="800" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M520 96 L520 128" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 208 L520 240" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M620 288 L760 288" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 336 L520 384" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M420 432 L320 432" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M180 480 L180 528" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M40 560 L32 560 A8 8 0 0 1 24 552 L24 176 A8 8 0 0 1 32 168 L360 168" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<path d="M520 480 L520 528" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M520 600 L520 640" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="664" y="264" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="686" y="276" class="lab" fill="#6b7488">아니오</text>
+<rect x="528" y="352" width="20" height="16" rx="2" fill="#fbfcfd"/><text x="538" y="364" class="lab" fill="#6b7488">예</text>
+<rect x="360" y="408" width="20" height="16" rx="2" fill="#fbfcfd"/><text x="370" y="420" class="lab" fill="#6b7488">예</text>
+<rect x="168" y="144" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="200" y="156" class="lab" fill="#a8720c">다시 검증</text>
+<rect x="528" y="496" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="550" y="508" class="lab" fill="#6b7488">아니오</text>
+<!-- 상자 -->
+<rect x="400" y="40" width="240" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="400" y="40" width="240" height="56" rx="28" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="520" y="63" class="name">변경 제안 도착</text>
+<text x="520" y="81" class="sub">에이전트 · 채팅 · 새벽 점검</text>
+<rect x="360" y="128" width="320" height="80" rx="6" fill="#fbfcfd"/>
+<rect x="360" y="128" width="320" height="80" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="520" y="154" class="name">검증</text>
+<text x="520" y="174" class="sub">고객 소유 · Case 버전 · 여행 기준 버전</text>
+<text x="520" y="192" class="sub">항목 · 장소가 그대로인가</text>
+<polygon points="520,240 620,288 520,336 420,288" fill="#fbfcfd"/>
+<polygon points="520,240 620,288 520,336 420,288" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="520" y="292" class="name">검증 통과?</text>
+<rect x="760" y="260" width="200" height="56" rx="28" fill="#fbfcfd"/>
+<rect x="760" y="260" width="200" height="56" rx="28" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="860" y="283" class="name">거부</text>
+<text x="860" y="301" class="sub">일정 그대로 · 이유 기록</text>
+<polygon points="520,384 620,432 520,480 420,432" fill="#fbfcfd"/>
+<polygon points="520,384 620,432 520,480 420,432" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="520" y="436" class="name">물어볼 일정?</text>
+<rect x="40" y="384" width="280" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="384" width="280" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="180" y="409" class="name">고객에게 묻기</text>
+<text x="180" y="429" class="sub">보호 일정 · 「먼저 물어봐」</text>
+<text x="180" y="447" class="sub">날씨만 걸리고 실내 모름 → 바꿀까요?</text>
+<text x="180" y="465" class="sub">안전 경보면 안전 알림</text>
+<rect x="40" y="528" width="280" height="64" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="528" width="280" height="64" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="180" y="555" class="name">고객 응답</text>
+<text x="180" y="575" class="sub">다른 안 고르기 · 그대로 두기</text>
+<rect x="360" y="528" width="320" height="72" rx="6" fill="#fbfcfd"/>
+<rect x="360" y="528" width="320" height="72" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="520" y="559" class="name focal-name">새 일정 버전 저장</text>
+<text x="520" y="579" class="sub">이전 판 보존 · 앞뒤 이동 재계산</text>
+<rect x="380" y="640" width="280" height="64" rx="32" fill="#fbfcfd"/>
+<rect x="380" y="640" width="280" height="64" rx="32" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="520" y="667" class="name">알림 + 계획서 링크</text>
+<text x="520" y="685" class="sub">Discord · 첫 발송 포함 최대 3회</text>
+<line x1="32" y1="744" x2="968" y2="744" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="764" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="752" width="28" height="16" rx="8" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="140" y="764" class="leg">시작 · 끝</text>
+<rect x="228" y="752" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="264" y="764" class="leg">단계</text>
+<rect x="316" y="752" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="352" y="764" class="leg">고객</text>
+<polygon points="418,752 432,760 418,768 404,760" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="440" y="764" class="leg">판단</text>
+<line x1="492" y1="760" x2="520" y2="760" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="528" y="764" class="leg">갈래</text>
+<line x1="580" y1="760" x2="608" y2="760" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="616" y="764" class="leg">묻기 루프</text>
+</svg></figure></div></body></html>

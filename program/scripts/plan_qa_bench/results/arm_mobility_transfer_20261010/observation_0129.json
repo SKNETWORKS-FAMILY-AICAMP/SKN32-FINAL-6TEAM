@@ -1,0 +1,324 @@
+{
+  "observed_at": "2026-10-09T16:29:41.481402+00:00",
+  "receipt": {
+    "observed_at": "2026-10-09T16:22:33.330380+00:00",
+    "verified_files": 67,
+    "total_files": 67,
+    "verified_bytes": 203806783,
+    "archive_sha256": "677983e140d5bb574a4213e95b4151c8fb99051d1d605d8591212ba8e21f16be",
+    "backup_relative": "mobility/_backup/20261009T162232Z_before_approved_transfer",
+    "approval": "human_explicit_transfer_67_files_203806783_bytes_to_existing_oracle_arm"
+  },
+  "deployment": {
+    "current": "210b020067a1e42f2622262adeb60d1f3d371668",
+    "previous": null,
+    "deployed_at": 1791563189.528856,
+    "image_ids": [
+      "sha256:f93e08678d55289b49dcfaa009fc98a4b2ffe5546552d9da9a42ee4b9ca3720a",
+      "sha256:9c946f4e621aae96c0ae26874b49f56c733abaaddcbe0bdbe2b1024faceeef9f"
+    ],
+    "image_architectures": [
+      "arm64",
+      "arm64"
+    ],
+    "branch": "develop",
+    "scope": "isolated_internal_serving_test"
+  },
+  "containers": [
+    {
+      "service": "api",
+      "running": true,
+      "restarts": 0,
+      "health": "healthy",
+      "oom_killed": false
+    },
+    {
+      "service": "worker",
+      "running": true,
+      "restarts": 0,
+      "health": "not_configured",
+      "oom_killed": false
+    },
+    {
+      "service": "web",
+      "running": true,
+      "restarts": 0,
+      "health": "healthy",
+      "oom_killed": false
+    },
+    {
+      "service": "db",
+      "running": true,
+      "restarts": 0,
+      "health": "healthy",
+      "oom_killed": false
+    },
+    {
+      "service": "model-adapter",
+      "running": true,
+      "restarts": 0,
+      "health": "not_configured",
+      "oom_killed": false
+    }
+  ],
+  "health_http": {
+    "api": 200,
+    "web": 200
+  },
+  "units": {
+    "tripilot-arm-serving.service": "active",
+    "tripilot-arm-work-queue.service": "active",
+    "tripilot-arm-refill.timer": "active",
+    "tripilot-arm-cd.timer": "active"
+  },
+  "queue": {
+    "total_jobs": 45,
+    "counts": {
+      "running": 1,
+      "pending": 44
+    },
+    "blocked_on": null,
+    "estimated_pending_seconds": 21600.0,
+    "jobs": [
+      {
+        "id": "w82942-00000001",
+        "window": 82942,
+        "profile": "context_cache",
+        "status": "running",
+        "planned_checks": 11,
+        "sha": "210b020067a1e42f2622262adeb60d1f3d371668",
+        "started": 1791563239.4873004,
+        "saved_checks": 7,
+        "checks": [
+          {
+            "name": "api_health",
+            "status": 200,
+            "seconds": 0.0028087010141462088,
+            "passed": true,
+            "result": {
+              "status": "ok"
+            },
+            "attempted": true
+          },
+          {
+            "name": "without_user_key",
+            "status": 401,
+            "seconds": 0.01690784702077508,
+            "passed": true,
+            "result": {
+              "error": {
+                "code": "unauthenticated",
+                "message": "사용자 키가 없거나 맞지 않는다"
+              }
+            },
+            "attempted": true
+          },
+          {
+            "name": "session_owner",
+            "status": 201,
+            "seconds": 0.046278988011181355,
+            "passed": true,
+            "result": {
+              "customer_id": "d09a27c5-693f-440e-9c76-73f3ad3587cc",
+              "human_check": "skipped",
+              "notice": "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다."
+            },
+            "attempted": true
+          },
+          {
+            "name": "session_other",
+            "status": 201,
+            "seconds": 0.04166839300887659,
+            "passed": true,
+            "result": {
+              "customer_id": "06f483ce-3acf-4410-89de-984410d5ecb5",
+              "human_check": "skipped",
+              "notice": "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다."
+            },
+            "attempted": true
+          },
+          {
+            "name": "create_synthetic_trip",
+            "status": 201,
+            "seconds": 0.1236832489958033,
+            "passed": true,
+            "result": {
+              "trip_id": "2995b6c8-9cfd-40d9-bf5f-16f1ba51640c",
+              "customer_id": "d09a27c5-693f-440e-9c76-73f3ad3587cc",
+              "title": "ARM 서빙 시험용 서울 여행",
+              "locale": "ko",
+              "party_size": 1,
+              "version": 1,
+              "guardian": {
+                "enabled": false,
+                "since": null,
+                "via": null
+              },
+              "safety": {
+                "paused": false
+              },
+              "items": [
+                {
+                  "item_id": "d28c860c-d57a-49fe-9166-34005f5b3637",
+                  "seq": 1,
+                  "kind": "activity",
+                  "kind_label": "활동",
+                  "meal": null,
+                  "title": "경복궁 관람",
+                  "place": null,
+                  "starts_at": "2026-10-17T10:00:00+09:00",
+                  "ends_at": "2026-10-17T11:00:00+09:00",
+                  "changed": false,
+                  "price_compare": null,
+                  "other_options": [],
+                  "customer_pinned": false,
+                  "badges": [],
+                  "lat": null,
+                  "lon": null,
+                  "booked": false,
+                  "place_info": null,
+                  "map_url": null,
+                  "paused": false
+                },
+                {
+                  "item_id": "34f391c3-bcce-4221-97e7-edf5448ffb9b",
+                  "seq": 2,
+                  "kind": "dining",
+                  "kind_label": "식사",
+                  "meal": "점심",
+                  "title": "점심 식사",
+                  "place": null,
+                  "starts_at": "2026-10-17T12:00:00+09:00",
+                  "ends_at": "2026-10-17T13:00:00+09:00",
+                  "changed": false,
+                  "price_compare": null,
+                  "other_options": [],
+                  "customer_pinned": false,
+                  "badges": [],
+                  "lat": null,
+                  "lon": null,
+                  "booked": false,
+                  "place_info": null,
+                  "map_url": null,
+                  "paused": false
+                }
+              ],
+              "map": {
+                "days": [],
+                "note": "구글 지도 링크는 API 키 없이 고객 지도 앱으로 연다 — 한국은 두 곳 사이 대중교통만 경로가 나온다"
+              },
+              "history": [
+                {
+                  "version": 1,
+                  "reason": "created",
+                  "causes": [],
+                  "at": "2026-10-09T16:27:19.714709+00:00"
+                }
+              ],
+              "density": [],
+              "warnings": [],
+              "created": true
+            },
+            "attempted": true
+          },
+          {
+            "name": "own_trip",
+            "status": 200,
+            "seconds": 0.04463049495825544,
+            "passed": true,
+            "result": {
+              "trip_id": "2995b6c8-9cfd-40d9-bf5f-16f1ba51640c",
+              "customer_id": "d09a27c5-693f-440e-9c76-73f3ad3587cc",
+              "title": "ARM 서빙 시험용 서울 여행",
+              "locale": "ko",
+              "party_size": 1,
+              "version": 1,
+              "guardian": {
+                "enabled": false,
+                "since": null,
+                "via": null
+              },
+              "safety": {
+                "paused": false
+              },
+              "items": [
+                {
+                  "item_id": "d28c860c-d57a-49fe-9166-34005f5b3637",
+                  "seq": 1,
+                  "kind": "activity",
+                  "kind_label": "활동",
+                  "meal": null,
+                  "title": "경복궁 관람",
+                  "place": null,
+                  "starts_at": "2026-10-17T10:00:00+09:00",
+                  "ends_at": "2026-10-17T11:00:00+09:00",
+                  "changed": false,
+                  "price_compare": null,
+                  "other_options": [],
+                  "customer_pinned": false,
+                  "badges": [],
+                  "lat": null,
+                  "lon": null,
+                  "booked": false,
+                  "place_info": null,
+                  "map_url": null,
+                  "paused": false
+                },
+                {
+                  "item_id": "34f391c3-bcce-4221-97e7-edf5448ffb9b",
+                  "seq": 2,
+                  "kind": "dining",
+                  "kind_label": "식사",
+                  "meal": "점심",
+                  "title": "점심 식사",
+                  "place": null,
+                  "starts_at": "2026-10-17T12:00:00+09:00",
+                  "ends_at": "2026-10-17T13:00:00+09:00",
+                  "changed": false,
+                  "price_compare": null,
+                  "other_options": [],
+                  "customer_pinned": false,
+                  "badges": [],
+                  "lat": null,
+                  "lon": null,
+                  "booked": false,
+                  "place_info": null,
+                  "map_url": null,
+                  "paused": false
+                }
+              ],
+              "map": {
+                "days": [],
+                "note": "구글 지도 링크는 API 키 없이 고객 지도 앱으로 연다 — 한국은 두 곳 사이 대중교통만 경로가 나온다"
+              },
+              "history": [
+                {
+                  "version": 1,
+                  "reason": "created",
+                  "causes": [],
+                  "at": "2026-10-09T16:27:19.714709+00:00"
+                }
+              ],
+              "density": [],
+              "warnings": []
+            },
+            "attempted": true
+          },
+          {
+            "name": "other_user_denied",
+            "status": 404,
+            "seconds": 0.039616657013539225,
+            "passed": true,
+            "result": {
+              "error": {
+                "code": "not_found",
+                "message": "resource not found"
+              }
+            },
+            "attempted": true
+          }
+        ]
+      }
+    ]
+  }
+}

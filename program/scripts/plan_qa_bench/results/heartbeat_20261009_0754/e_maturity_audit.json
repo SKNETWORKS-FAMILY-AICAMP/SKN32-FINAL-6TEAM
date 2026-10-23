@@ -1,0 +1,82 @@
+{
+  "recorded_at_kst": "2026-10-09T07:56:23.279530+09:00",
+  "scope": "Corpus structure and stored human-review cells; no model execution or human gold review",
+  "files": [
+    {
+      "path": "datasets/core/pointing/legacy_runs/mx_testset/mx_all.json",
+      "bytes": 20202454,
+      "sha256": "5dc94cb80274b21c7364cb69c28ba0fd506b28253a20500c08fa77ec630ed38b"
+    },
+    {
+      "path": "datasets/core/pointing/legacy_runs/mx_testset/mx_main_prompts.json",
+      "bytes": 19616189,
+      "sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087"
+    },
+    {
+      "path": "datasets/core/pointing/legacy_runs/mx_testset/mx_disputes.json",
+      "bytes": 92616,
+      "sha256": "6295e29bce4a6f0e23556692cd69eb54f45ce2bff797260371437bff3804f76e"
+    },
+    {
+      "path": "datasets/core/pointing/legacy_runs/mx_testset/mx_human_check_sample.csv",
+      "bytes": 33860,
+      "sha256": "d07396c826cd587c05364fbff3526f6f6fd7e6daecf39464f6f49873d1767743"
+    }
+  ],
+  "counts": {
+    "all_rows": 4135,
+    "main_rows": 4014,
+    "main_exactly_matches_unquarantined_pairs": true,
+    "pairs": 2007,
+    "valid_same_gold_mixed_control_pairs": 2007,
+    "mixed": 2007,
+    "control": 2007,
+    "mixed_positive": 1033,
+    "mixed_null": 974,
+    "mixed_sources": {
+      "code": 1768,
+      "llm": 239
+    },
+    "mixed_categories": {
+      "MX3": 457,
+      "MX5a": 236,
+      "MX1": 525,
+      "MX2": 474,
+      "MX5b": 160,
+      "MX6a": 34,
+      "MX4": 121
+    },
+    "itinerary_header_ids": 59,
+    "quarantined_pairs": 31,
+    "challenge_rows_excluded_from_main": 59,
+    "disagreements_excluded_before_main_construction": 558,
+    "disagreement_categories": {
+      "MX4": 410,
+      "MX1": 64,
+      "MX2": 56,
+      "MX3": 3,
+      "MX6a": 25
+    },
+    "human_sample_rows": 158,
+    "human_judgements_filled": 0,
+    "human_sample_all_rows_match_header_width": true
+  },
+  "interpretation": {
+    "more_advanced_for": "Mixed free-form single itinerary-item recognition and paired noise-effect diagnosis",
+    "not_established": [
+      "Human-validated final gold set",
+      "Production readiness",
+      "Overall travel intent or RAG answer correctness"
+    ],
+    "limitations": [
+      "Most mixed sentences are code concatenations; model-authored natural blends are not real customer messages",
+      "Agreement-filtered labels can remove difficult cases; model-family label agreement is not human adjudication",
+      "Two actual requested items are challenges outside the single-item score",
+      "Header IDs are clustered contexts, not independent customer trips or independent accuracy samples",
+      "Builder near-overlap filtering covers specified H train/test files, not every historical training source",
+      "Repeatedly inspected development/regression scores do not replace a fresh fixed held-out set"
+    ]
+  },
+  "source_builder": "program/scripts/plan_qa_bench/build_mx_set.py",
+  "source_design": "program/research/시험세트_MX_설계_2026-10-07.md"
+}

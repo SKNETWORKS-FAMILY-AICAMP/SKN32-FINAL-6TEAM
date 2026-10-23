@@ -1,0 +1,21 @@
+{
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/travel/mobility",
+    "tests/unit/travel/test_subway_notice.py",
+    "tests/unit/travel/test_subway_notice_station_lists_v1.py",
+    "tests/contract",
+    "tests/security",
+    "-q",
+    "--maxfail=5",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\final-gate-v4\\temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\final-gate-v4\\result.xml"
+  ],
+  "exit_code": 1,
+  "elapsed_s": 1032.88,
+  "network_connections": "blocked by autouse socket guard",
+  "scope": "default mobility gate + notice + contract + security; mobility_full deselected"
+}

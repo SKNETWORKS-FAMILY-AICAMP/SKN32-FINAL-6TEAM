@@ -1,0 +1,31 @@
+--- final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-11_0421_혼합환승_제품운임_연결/plan.py
++++ final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py
+@@ -1684,14 +1684,20 @@
+                     # ☆#21 — 공표 역간거리가 없는 구간(9호선·코레일 등)은 OSM 선로 길이 추정으로 낸 값이다. 확정처럼 보이지 않게 밝힌다
+                     o["label"] = o["label"] + " · 요금은 선로 길이 추정"
+             elif o["_legs"] and o.get("_lr") is not None:
+-                # ☆#20 — 버스가 섞인 환승은 합성 요금 근거가 없다 → 확정 규칙(탈것별 요금의 합 상한)으로 상한을 싣고 밝힌다
+-                rail_only = set(O.modes_of(o['_legs'])) == {'subway'}
+-                up = (O.subway_fare_upper(self.v, o['_legs'], o['_lr']) if rail_only
+-                      else O.fare_upper_of(self.v, o["_legs"], o["_lr"]))
+-                if up is not None:
+-                    o["fare_krw"] = int(up)
+-                    o["label"] += (" · 요금은 거리 범위 상단 예상액" if rail_only
+-                                   else " · 요금은 환승 할인 전 예상액 상단 · 조조 할인 미적용")
++                # 선택 정류장 거리와 환승 조건이 갖춰진 경우 할인 예상액을 먼저 안내한다.
++                mixed_estimate = O.mixed_fare_estimate(self.v, o['_legs'], o['_lr'])
++                if mixed_estimate is not None:
++                    o['fare_krw'] = int(mixed_estimate)
++                    o['label'] += (' · 성인 1인 1카드·승하차 태그 시 환승 할인 예상액'
++                                   ' · 거리 모델·조조 미적용')
++                else:
++                    rail_only = set(O.modes_of(o['_legs'])) == {'subway'}
++                    up = (O.subway_fare_upper(self.v, o['_legs'], o['_lr']) if rail_only
++                          else O.fare_upper_of(self.v, o["_legs"], o["_lr"]))
++                    if up is not None:
++                        o["fare_krw"] = int(up)
++                        o["label"] += (" · 요금은 거리 범위 상단 예상액" if rail_only
++                                       else " · 요금은 환승 할인 전 예상액 상단 · 조조 할인 미적용")
+             if self.display and o["_legs"]:
+                 tc = O.transfer_cars(self.v, self._tc, o["_legs"], o.get("_lr"), o.get("_day_type"))
+                 if tc:

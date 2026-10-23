@@ -1,0 +1,29 @@
+{
+  "pairs": 12,
+  "options": 16,
+  "connected_before": 0,
+  "connected_after": 16,
+  "examples": [
+    {
+      "label": "경희궁 → 반포한강공원",
+      "before": 3050,
+      "after": 1550
+    },
+    {
+      "label": "이화여대 → 국립현대미술관 서울",
+      "before": 2750,
+      "after": 1550
+    },
+    {
+      "label": "상봉역 → 선유도공원",
+      "before": 3250,
+      "after": 1750
+    },
+    {
+      "label": "청담역 → 반포한강공원",
+      "before": 4550,
+      "after": 3000
+    }
+  ],
+  "meaning": "연결된 후보 수, 정확도나 전체21개 기능 완료율이 아님"
+}

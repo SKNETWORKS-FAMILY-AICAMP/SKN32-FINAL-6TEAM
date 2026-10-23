@@ -1,130 +1,51 @@
 ---
 type: guide
-title: Research
-description: 외부 조사와 비교 분석. 여행 판올림으로 조사의 절반이 다시 필요해졌다
+title: 여행 프로젝트 조사 자료
+description: 조사는 확인한 근거를, 결정은 채택한 정책을 기록합니다
 status: draft
 domain: travel
 ---
 
-# Research
+# 여행 프로젝트 조사 자료
 
-**알아본 것**을 두는 곳이다. **정한 것**은 [../decisions/index.md](../decisions/index.md)에 있다.
+조사는 확인한 근거를, [결정](../decisions/index.md)은 채택한 정책을 기록합니다. 조사 문서를 고쳤다는 이유로 제품 결정이 자동 변경되는 것은 아닙니다.
 
-결정 문서가 여기 문서를 `sources`로 참조한다. 조사가 결정의 재료다.
+## 현재 참고할 자료
 
-## 왜 나누는가
+- [모델 평가 기준](../../final_project_cs/wiki/quality/slm-model-evaluation.md)·[날짜별 연구 기록](../../program/research/daily_rag_slm/index.md) — 모델·학습 여부·실측 조건 구분
+- [상시 운영 근거 조사](../../program/research/wiki_review_2026-10-11/w18-evidence-v6.md) — Docker·Google SRE 공식 원문과 적용 판단
+- [데이터 입구](../../datasets/README.md) — 현재 여행 자료와 사용 종료 자료 구분
+- [현재 제품 범위](../product/scope.md)·[사업 검토 입구](../business/index.md) — 여행 상품과 가정의 정본
 
-둘을 섞으면 두 가지가 나빠진다.
+과거 전자상거래 규정·쇼핑몰 분쟁·주문 수집 조사는 당시 기록이며 현재 여행 판단·평가·시연에 사용하지 않습니다. 도메인 무관 기술이라도 당시 가격·제품 버전·측정치는 현재 사실로 재사용하지 않고 실제 적용 범위와 확인일을 붙입니다.
 
-1. **결정을 찾으려는 사람이 조사 자료를 헤맨다**
-2. **조사를 업데이트할 때 결정까지 흔들린 것처럼 보인다**
+## 관계
 
-조사는 계속 쌓이고 결정은 드물게 바뀐다. 변경 주기가 다르면 다른 문서다. → [../governance/structure-guide.md](../governance/structure-guide.md)
+- [GraphRAG 조사](graphrag.md) — 기술 조사
+- [별도 참고 구현](../../final_project_sample/wiki/index.md) — 여행 제품의 자료·완료 증거와 구분
 
-## ★ [2026-09-08] 조사의 절반이 다시 필요해졌다
+## 과거 기록
 
-도메인이 커머스에서 여행으로 바뀌면서 **조사가 두 부류로 갈렸다.**
+[수정 전 문서](../records/commerce_2026-10-11/wiki--research--index.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
-| 부류 | 무엇 | 어떻게 하나 |
-|---|---|---|
-| **기술 조사** | GraphRAG · A2A · 번역 모델 | **그대로 유효하다.** 도메인과 무관하다 |
-| **도메인 조사** | 전자상거래법 · 분쟁조정 사례 · 고객지원 데이터셋 | **여행에는 안 쓰인다.** 기록으로 남기고 여행 쪽을 새로 조사해야 한다 |
+## 관계
 
-★**지우지 않는다.** 조사는 그때 무엇을 알아봤는지의 기록이고, 도메인이 되돌아가면 다시 쓴다.
+- [여행 사양 허브](../index.md) — 현재 정본을 찾는 입구
 
-## 목록
 
-| 문서 | 주제 | 도메인 | 결정으로 이어졌나 |
-|---|---|---|---|
-| [graphrag.md](graphrag.md) | GraphRAG와 Graph Store 비교 | 무관 | → [D-002](../decisions/D-002-graph-store-gate.md) |
-| [a2a-adoption.md](a2a-adoption.md) | A2A 채택 현황과 개인 AI 경로 | 무관 | 부분 |
-| [mt-benchmark.md](mt-benchmark.md) | 번역 모델 비교 | 무관 | `[미확보]` |
-| [mt-methodology.md](mt-methodology.md) | 번역 비교가 성립하는 조건 5가지 | 무관 | — |
-| [legal-basis.md](legal-basis.md) | 전자상거래법 · 개인정보보호법 조문 | **쇼핑몰** | 개인정보 부분만 유효 |
-| [dispute-cases.md](dispute-cases.md) | 분쟁조정 4건 | **쇼핑몰** | 여행에 안 쓰인다 |
-| [place-api-quota-and-terms.md](place-api-quota-and-terms.md) | 장소 API 쿼터와 「받은 것을 쌓아도 되는가」 | **여행** | 감시 루프가 구글을 못 쓰는 이유 |
-| [price-data-sources.md](price-data-sources.md) | 식당·액티비티 가격을 불러 본 채움률과 상용·공공 후보 | **여행** | → [product/traveler-profile.md](../product/traveler-profile.md) |
-| [dietary-data-sources.md](dietary-data-sources.md) | 채식·할랄·알러지 데이터를 다섯 소스에서 불러 본 채움률 | **여행** | → [product/traveler-profile.md](../product/traveler-profile.md) |
-| [accessibility-data-sources.md](accessibility-data-sources.md) | 무장애·유모차·지하철 승강기 데이터 | **여행** | → 동 |
+## 2026-10-12 목차에 더한 문서
 
-### ★ [2026-09-09 정정] 번역 조사는 제품 경로에서 빠진다
+- [../travel_api_competitor_census_2026-09-11.md](../travel_api_competitor_census_2026-09-11.md) — 여행 일정·관리 API/MCP 경쟁업체 조사(2026-09-11 공개 자료)
 
-**어제 이 자리에 "번역 조사 둘이 갑자기 중요해졌다"고 적었다. 틀렸다.**
+## 이전 절 링크
 
-`[결정 2026-09-10 — 세 번 바뀌었다]` (v11 §0-4 결정 2 → 11 → 14) — 에이전트 경로는 에이전트가 옮기고, **링크·알림은 보낼 때 고객 언어로 생성한다.** 번역 조사가 제품 경로로 돌아왔다. → [D-016](../decisions/D-016-scope-narrowing-reasons.md)
-
-| | |
-|---|---|
-| **번역 품질 비교** | **우리 지표가 아니다.** 우리 층에서 번역이 일어나지 않는다 |
-| **한국어 통지 문구 작성 품질** | **우리 몫이다.** 번역이 아니라 작성이다 (Composer 소재를 여행 어휘로 교체, v11 §5-A) |
-
-★**조사를 지우지 않는다.** "다국어는 우리 일이 아니다"라는 판단의 근거로 남고, 접점 방식이 바뀌면 다시 쓴다.
-
-## ★ 여행에서 다시 조사해야 하는 것
-
-`[미확보]` **아래 중 wiki 에 들어온 것이 하나도 없다.**
-
-| 무엇 | 왜 필요한가 | 지금 |
-|---|---|---|
-| **여행업 법령** | 관광진흥법·국외여행 표준약관이 전자상거래법 자리를 대신한다. 취소·환급 규정의 법적 바닥 | `[미확보]` |
-| **액티비티 취소·위약금 규정 표본** | Activity Team 의 판정 규칙이 여기서 나온다. **골프장 우천 위약금이 가장 문서화가 잘 돼 있다** | `[미확보]` 표본 수 미정 |
-| **운영 변경 정보 출처** | "오늘 그 업체가 쉰다"를 아는 경로. 없으면 감시가 성립하지 않는다 | `[미확보]` **도시가 서울로 정해졌다**(2026-09-10) — 표본 조사를 시작할 수 있다 |
-| **인바운드 여행자 행태** | 페르소나와 페인포인트의 실측 근거 | `[미확보]` v11 §1 — 사업 검토서의 근거는 **한국인 해외여행 고객**의 것이라 유추로만 쓴다 |
-| 공개 여행 데이터 | TourAPI(한국관광공사)·기상청. 인바운드라 국내 공개 데이터가 곧 대상 데이터다 | `[실측 2026-09-10 작업 트리]` **어댑터 둘이 있다** — `app/infrastructure/travel/tour_api.py`·`open_meteo.py`. **`[실측 git]` 둘 다 미추적.** `[정정]` 「키 칸만 생겼다」로 적혀 있었다 |
-
-★**주제 선정 조사는 이미 있는데 wiki 에 안 들어왔다** — `program/research/_최종주제_후보비교_v4_2026-09-08.md`(385줄, §4 가 팀 결정 후보, §5 가 미확보 목록, §6 이 출처). **이관 대상이다.**
-
-## 조사 문서에 반드시 있어야 할 것
-
-| 항목 | 왜 |
-|---|---|
-| 조사 시점 | 외부 정보는 낡는다 |
-| 출처 링크 | 재확인 가능해야 한다 |
-| **1차 출처 확인 여부** | 인용의 인용인지 밝힌다 |
-| 우리 환경 측정치가 아니라는 명시 | 외부 벤치마크를 우리 결과로 오해하면 안 된다 |
-
-**마지막 줄이 중요하다.** 외부 리서치 수치를 우리 측정치처럼 쓰면 심사에서 무너진다.
-
-```markdown
-[외부] Vector RAG 대비 3~5배 비용.
-이 수치는 외부 리서치 인용이며 우리 환경 측정치가 아니다.
-```
-
-## 인접 영역
-
-- [../decisions/index.md](../decisions/index.md) — 조사가 결정이 되는 곳
-- [../business/market.md](../business/market.md) — 시장 조사는 business에 있다
-- [../governance/evidence-grades.md](../governance/evidence-grades.md) — `[외부]` 표기 규칙
-## [2026-09-02 추가] 외부 근거 3건
-
-`[실측]` `program/research/` 에서 이관. **URL 116개가 전부 원본에 있던 것이다** — 지어낸 링크가 없다.
-
-| 문서 | 무엇 |
-|---|---|
-| [legal-basis.md](legal-basis.md) | **전자상거래법 제17조 · 개인정보보호법 제2·15·17조 원문.** 국가법령정보센터 Open API 로 조회 |
-| [dispute-cases.md](dispute-cases.md) | **분쟁조정 4건.** 그 조문이 실제 분쟁에 어떻게 적용됐나 |
-| [mt-methodology.md](mt-methodology.md) | 번역 모델 비교가 성립하는 조건 5가지 |
-
-**앞의 둘이 짝이다.** 조문만으로는 Team 로직을 못 짜고, 적용례가 있어야 한다.
-
-★**여행에서도 그 짝이 필요한데 둘 다 없다.** 관광진흥법·표준약관(조문)과 여행 분쟁조정 사례(적용례). 위 「다시 조사해야 하는 것」 첫 줄이다.
-
-`[실측]` **개인정보보호법 제2·15·17조는 그대로 유효하다.** 도메인과 무관한 조문이다.
-
-## [2026-09-03] 공개 고객지원 데이터셋 — 쇼핑몰 판
-
-★**아래는 쇼핑몰 CS 데이터다.** intent 이름이 `cancel_order`·`get_refund` 라 여행에는 안 겹친다. **여행 CS 공개 데이터는 안 찾아봤다** `[미확보]`.
-
-`[외부]` `_법령사실_2026-08-15.md` §4. **실재를 확인한 것만 적는다.**
-
-| 데이터셋 | 규모·특징 |
-|---|---|
-| Kaggle "Customer Service Conversations" | **1,002,235행.** 주문조회·환불요청·주문취소·상품불만 |
-| **Bitext customer-support-llm** | **27 intent / 11 카테고리.** `cancel_order`·`get_refund`·`track_refund` 가 우리 시나리오와 직접 겹친다 |
-| strova-ai/customer_support_conversations | 100% 합성. 멀티턴 |
-| rjac/e-commerce-customer-support-qa · NebulaByte | HuggingFace |
-
-`[미확보]` **대부분 영어다.** 한국어 적용은 번역·재작성이 필요하고 **라이선스를 각각 확인해야 한다.**
-
-**두 번째가 가장 가깝다** — intent 이름이 우리 것과 겹친다. → [../../datasets/wiki/source-selection.md](../../datasets/wiki/source-selection.md)
-
+<a id="research"></a>
+<a id="왜-나누는가"></a>
+<a id="-2026-09-08-조사의-절반이-다시-필요해졌다"></a>
+<a id="목록"></a>
+<a id="-2026-09-09-정정-번역-조사는-제품-경로에서-빠진다"></a>
+<a id="-여행에서-다시-조사해야-하는-것"></a>
+<a id="조사-문서에-반드시-있어야-할-것"></a>
+<a id="인접-영역"></a>
+<a id="2026-09-02-추가-외부-근거-3건"></a>
+<a id="2026-09-03-공개-고객지원-데이터셋--쇼핑몰-판"></a>

@@ -1,0 +1,103 @@
+{
+  "runtime_commit": "439487e5f8ae5e6c2981388f101740f5a686d040",
+  "at_utc": "2026-10-12T07:46:09.992180+00:00",
+  "services": {
+    "tripilot-api": {
+      "image": "sha256:8db4f67b52c078934f015e63135b87ae164556ed9925aeb7e98cb3b6bc4a2163",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0,
+      "started_at": "2026-10-12T07:40:38.275999928Z"
+    },
+    "tripilot-worker": {
+      "image": "sha256:8db4f67b52c078934f015e63135b87ae164556ed9925aeb7e98cb3b6bc4a2163",
+      "state": "running",
+      "health": null,
+      "restarts": 0,
+      "started_at": "2026-10-12T07:40:48.980847004Z"
+    },
+    "tripilot-web": {
+      "image": "sha256:feb633514bc74f38fa53c6703d057b8e92f0075ea5421c9c1ae230ab7d8883f5",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0,
+      "started_at": "2026-10-12T07:40:38.278429597Z"
+    },
+    "tripilot-db": {
+      "image": "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f",
+      "state": "running",
+      "health": "healthy",
+      "restarts": 0,
+      "started_at": "2026-10-12T07:33:37.486516122Z"
+    }
+  },
+  "public_css": [
+    {
+      "path": "/_next/static/chunks/0d00bzs-3g2xc.css",
+      "status": 200,
+      "matches_running_image": true,
+      "sha256": "255e7728c8a2b2919a628be95970c1309392fa6210be11fb12bbed4fba3ccfd8",
+      "rules": [
+        ".plan-check-module__MjxneW__undoTime,.plan-check-module__MjxneW__resetTimes{border:1px solid var(--color-adjusted-border);background:var(--color-surface);min-height:28px;color:var(--color-adjusted);font:inherit;white-space:nowrap;cursor:pointer;border-radius:999px;flex:none;align-items:center;gap:4px;padding:0 9px;font-size:11.5px;font-weight:750;display:inline-flex}",
+        ".plan-check-module__MjxneW__undoTime[aria-disabled=true]{opacity:.4;cursor:not-allowed}",
+        ".plan-check-module__MjxneW__cardFootTools .plan-check-module__MjxneW__undoTime{min-height:0;font-size:12px;font-weight:600;line-height:inherit;padding:2px 8px;position:relative}",
+        ".plan-check-module__MjxneW__cardFootTools .plan-check-module__MjxneW__undoTime:after{content:\"\";height:44px;position:absolute;inset:50% 0 auto;transform:translateY(-50%)}",
+        ".plan-check-module__MjxneW__undoTime:focus-visible,.plan-check-module__MjxneW__resetTimes:focus-visible{outline:2px solid var(--color-selected);outline-offset:2px}"
+      ]
+    }
+  ],
+  "worker_log_check": {
+    "traceback_count": 0,
+    "nonzero_job_count": 0,
+    "bytes": 6192
+  },
+  "worker_rounds": {
+    "sweeper": 7,
+    "outbox": 7,
+    "reported_error_count": 0
+  },
+  "auto_state": "inactive",
+  "runtime_fingerprint": "435f170e78a6467abd4f3371",
+  "db_container_unchanged": true,
+  "public_screen": {
+    "status": 200,
+    "title": "triPilot · 당신다운 여행의 시작",
+    "page_errors": [],
+    "failed_requests": []
+  },
+  "public_health": [
+    {
+      "status": 200,
+      "body": "{\"status\":\"ok\"}"
+    },
+    {
+      "status": 200,
+      "body": "{\"status\":\"ok\"}"
+    }
+  ],
+  "browser_networkidle_probe": "networkidle 45초 대기 시간 초과. 후속 확인은 DOM 표시·제목·여행 목록 로딩 완료 조건으로 성공.",
+  "customer_schedule_write_test": false,
+  "external_notification_test": false,
+  "remote_refs_at_runtime_commit": [
+    {
+      "remote": "origin",
+      "ref": "refs/heads/develop",
+      "sha": "439487e5f8ae5e6c2981388f101740f5a686d040"
+    },
+    {
+      "remote": "origin",
+      "ref": "refs/heads/role-manager",
+      "sha": "439487e5f8ae5e6c2981388f101740f5a686d040"
+    },
+    {
+      "remote": "team",
+      "ref": "refs/heads/develop",
+      "sha": "439487e5f8ae5e6c2981388f101740f5a686d040"
+    },
+    {
+      "remote": "team",
+      "ref": "refs/heads/role-manager",
+      "sha": "439487e5f8ae5e6c2981388f101740f5a686d040"
+    }
+  ]
+}

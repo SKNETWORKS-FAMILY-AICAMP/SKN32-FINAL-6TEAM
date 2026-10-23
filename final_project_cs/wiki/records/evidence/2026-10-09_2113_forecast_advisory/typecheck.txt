@@ -1,0 +1,22 @@
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(10,60): error TS2307: Cannot find module './attention' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(11,28): error TS2307: Cannot find module './linked-text' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(12,27): error TS2307: Cannot find module './model' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(13,49): error TS2307: Cannot find module './notice-reads' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(14,25): error TS2307: Cannot find module './use-trip' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(15,94): error TS2307: Cannot find module './use-trip-extras' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(16,29): error TS2307: Cannot find module './trip-safety' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(17,31): error TS2307: Cannot find module './trip-recovery' or its corresponding type declarations.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(65,42): error TS7006: Parameter 'notice' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(66,47): error TS7006: Parameter 'notice' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(118,25): error TS7031: Binding element 'proposal' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(118,35): error TS7031: Binding element 'stop' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(118,41): error TS7031: Binding element 'text' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(125,36): error TS7006: Parameter 'option' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(168,54): error TS7006: Parameter 'warning' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(168,63): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(174,49): error TS7006: Parameter 'notice' implicitly has an 'any' type.
+src/features/trip/_backup/2026-10-09_2113_forecast_advisory/trip-attention.tsx(188,30): error TS7006: Parameter 'cause' implicitly has an 'any' type.
+tests/live/_backup/2026-10-09_2113_forecast_advisory/trip.spec.ts(2,105): error TS2307: Cannot find module './helpers' or its corresponding type declarations.
+tests/live/_backup/2026-10-09_2113_forecast_advisory/trip.spec.ts(223,66): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+tests/live/_backup/2026-10-09_2113_forecast_advisory/trip.spec.ts(229,65): error TS7006: Parameter 'entry' implicitly has an 'any' type.
+tests/live/_backup/2026-10-09_2113_forecast_advisory/trip.spec.ts(416,65): error TS7006: Parameter 'entry' implicitly has an 'any' type.

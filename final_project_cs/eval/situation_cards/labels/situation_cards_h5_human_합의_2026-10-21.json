@@ -1,0 +1,393 @@
+{
+ "bundle": "situation_cards_h5",
+ "subset": null,
+ "reviewer": "합의",
+ "reviewed_on": "2026-10-21",
+ "sheet": "라벨_작성자1_h5.csv + 라벨_작성자2_h5.csv + 라벨_합의_h5.csv",
+ "saw_ai_labels": false,
+ "n": 38,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "consensus": {
+  "changed": {
+   "N-14": {
+    "작성자1": {
+     "acceptable": [
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "작성자2": {
+     "acceptable": [
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    },
+    "합의": {
+     "acceptable": [
+      "2",
+      "3"
+     ],
+     "forbidden": [],
+     "no_fit": false
+    }
+   }
+  },
+  "agreement": "정답 37/38 · 위험 38/38 · 다른 행 1/38 (블라인드 — 두 사람 따로 담)",
+  "claude_assisted": "없음 — 다른 1행만 합의(Claude 는 「분류로 판단」 기준을 참고로 보여 줌)"
+ },
+ "labels": {
+  "N-01": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-03": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-05": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-07": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-09": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-11": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-13": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-14": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": "합의 — 실내외는 분류로 본다(바깥 지식 안 씀) · 박물관 · 미술관 둘 다 실내"
+  },
+  "N-16": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-18": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-20": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-22": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-24": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-26": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-28": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-30": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": "미술관 직접 언급이 있어서 정답 범위가 좁음"
+  },
+  "N-32": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-34": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-36": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-38": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-40": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-41": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-43": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-45": {
+   "acceptable": [],
+   "forbidden": [],
+   "no_fit": true,
+   "note": "안 걷는 곳은 공연시설인데 후보에없음"
+  },
+  "N-49": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-51": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-55": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-56": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-58": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-61": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-65": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-67": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-69": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-71": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-73": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-75": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-76": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  },
+  "N-78": {
+   "acceptable": [
+    "1",
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "no_fit": false,
+   "note": ""
+  }
+ }
+}

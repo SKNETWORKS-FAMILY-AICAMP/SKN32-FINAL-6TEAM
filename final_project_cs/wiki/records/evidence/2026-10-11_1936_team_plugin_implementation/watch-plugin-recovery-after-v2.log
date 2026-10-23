@@ -1,0 +1,119 @@
+FF.F......................................                               [100%]
+================================== FAILURES ===================================
+_ test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback[False] _
+tests\e2e\test_watch_plugin_recovery.py:134: in test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+    assert cur.fetchone()[0] == baseline_actions
+E   assert 4 == 0
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+_ test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback[True] _
+tests\e2e\test_watch_plugin_recovery.py:134: in test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback
+    assert cur.fetchone()[0] == baseline_actions
+E   assert 1 == 0
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=disabled composition_revision=watch-off
+WARNING  app.application.controller:controller.py:475 team execution unavailable after start
+WARNING  app.domains.travel_ops.components.watch.trip_watch_cases:trip_watch_cases.py:196 watch_case_team_unavailable team_id=mobility reason=disabled composition_revision=watch-off
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=activity reason=disabled composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=dining reason=not_installed composition_revision=watch-on
+WARNING  app.domains.travel_ops.components.watch.trip_watch_batch:trip_watch_batch.py:111 watch_kind_unavailable kind=mobility reason=not_installed composition_revision=watch-on
+_______ test_controller_timeout_is_escalated_and_not_a_running_recovery _______
+tests\e2e\test_watch_plugin_recovery.py:195: in test_controller_timeout_is_escalated_and_not_a_running_recovery
+    opened = open_case(conn, repository=repository, tenant_id=api["tenant"], customer_id=api["customer"],
+E   TypeError: open_case() missing 2 required keyword-only arguments: 'actor_type' and 'actor_id'
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_watch_plugin_recovery.py::test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback[False]
+FAILED tests/e2e/test_watch_plugin_recovery.py::test_reactivated_dependency_runs_the_same_watch_cases_without_reopening_or_success_fallback[True]
+FAILED tests/e2e/test_watch_plugin_recovery.py::test_controller_timeout_is_escalated_and_not_a_running_recovery
+3 failed, 39 passed in 119.40s (0:01:59)

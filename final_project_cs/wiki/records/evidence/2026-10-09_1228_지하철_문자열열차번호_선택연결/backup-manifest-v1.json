@@ -1,0 +1,45 @@
+{
+  "created_at": "2026-10-09T12:41:18.189565+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/subway_boarding.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_122852_열차번호_정정전/subway_boarding.py",
+      "sha256": "945f9b8fee71e6f32379552ad8e0f245b3ba97950584071b64914519d8a5dd34"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_departure.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_122852_열차번호_정정전/subway_departure.py",
+      "sha256": "ba1194b08612ffa58bb0551398921819b27b10bf3072505d33b5959b7bf6b1a5"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_122852_열차번호_정정전/mobility.md",
+      "sha256": "d567d424f99b10fa42142e301fd30b71a9828a35936fa008733e4fb506c8271a"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_subway_train_identity_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_122950_신규시험_설명정정전/test_subway_train_identity_v1.py",
+      "sha256": "125cf5ed906b44d77e41983eb1a61113d25312434b2875e87c3872c8c88670a7"
+    },
+    {
+      "source": ".tmp/mobility_complete_20261008/collect_subway_train_identity_v1.py",
+      "backup": ".tmp/mobility_complete_20261008/_backup/2026-10-09_123326_수집재시도_이름분리전/collect_subway_train_identity_v1.py",
+      "sha256": "7e8cdbc9be148ec5e37b2305b6575e9b6532a2642f39b1a6429126a5df9fa1e5"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_124118_문자열차번호_결과기록전/mobility.md",
+      "sha256": "c21fe6716405f90dfc2d963c718d7c8e2789717de6d3b1e394fd9276c261b0e3"
+    },
+    {
+      "source": "datasets/mobility/REPORT.md",
+      "backup": "datasets/mobility/_backup/2026-10-09_124118_문자열차번호_결과기록전/REPORT.md",
+      "sha256": "8824b0af6d3e1071d60db42d448552d6c3140d063a37dfb34b2ece6da4d06ea9"
+    },
+    {
+      "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1228_지하철_문자열열차번호_선택연결.md",
+      "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_124118_문자열차번호_결과기록전/2026-10-09_1228_지하철_문자열열차번호_선택연결.md",
+      "sha256": "5fa5b2c7cc99dc8305f476bae054c006042d53bb8d1ab8d5b8a475de984862c5"
+    }
+  ]
+}

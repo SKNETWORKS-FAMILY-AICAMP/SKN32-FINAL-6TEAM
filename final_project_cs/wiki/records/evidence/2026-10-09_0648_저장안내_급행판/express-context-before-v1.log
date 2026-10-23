@@ -1,0 +1,49 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_______________ test_capture_records_an_express_content_version _______________
+
+    def test_capture_records_an_express_content_version():
+        runtime, context = scene()
+        runtime.express_sources = inputs()
+        saved = captured(runtime, context)
+        version = saved['basis'].get('express_version')
+>       assert isinstance(version, str) and len(version) == 64
+E       assert (False)
+E        +  where False = isinstance(None, str)
+
+tests\unit\travel\mobility\test_departure_express_basis_v1.py:33: AssertionError
+______ test_changed_express_version_holds_before_external_arrival_query _______
+
+    def test_changed_express_version_holds_before_external_arrival_query():
+        runtime, context = scene()
+        runtime.express_sources = inputs()
+        saved = captured(runtime, context)
+        runtime.express_sources = inputs('b')
+>       got = call(runtime, saved, bus_arrival=lambda *a, **kw: pytest.fail('낡은 안내에서는 조회하지 않음'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_departure_express_basis_v1.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_departure_observer_v1.py:39: in call
+    return observe(runtime, context, 'p', now=NOW, deadline=NOW + timedelta(hours=1),
+app\domains\travel_ops\instances\mobility\engine\departure_observer.py:137: in observe
+    observation = bus_arrival(first['route_id'], stop_id=first['from_stop_id'],
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = ('100',)
+kw = {'now': datetime.datetime(2026, 10, 9, 10, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), 'ready_at'...026, 10, 9, 10, 6, tzinfo=datetime.timezone(datetime.timedelta(seconds=32400))), 'stop_id': '1005', 'stop_sequence': 5}
+
+>   got = call(runtime, saved, bus_arrival=lambda *a, **kw: pytest.fail('낡은 안내에서는 조회하지 않음'))
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: 낡은 안내에서는 조회하지 않음
+
+tests\unit\travel\mobility\test_departure_express_basis_v1.py:42: Failed
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\express-context-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_departure_express_basis_v1.py::test_capture_records_an_express_content_version
+FAILED tests/unit/travel/mobility/test_departure_express_basis_v1.py::test_changed_express_version_holds_before_external_arrival_query
+2 failed, 5 deselected in 6.14s
+Exception ignored in: <function Console.__del__ at 0x000002187EA81BC0>
+Traceback (most recent call last):
+  File "<python-runtime>\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <title>PostgreSQL: Documentation: 18: Chapter 52. System Catalogs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="Content-Type" content="text/xhtml; charset=utf-8" />
+   
+  <meta name="theme-color" content="#336791"/>
+  <meta name="copyright" content="The PostgreSQL Global Development Group" />
+  <meta property="og:url" content="https://www.postgresql.org/docs/18/catalogs.html" />
+  <meta property="og:type" content="article" />
+
+  <meta property="article:published_time" content="2026-08-13T12:52:54.741344" />
+  <meta property="og:image" content="https://www.postgresql.org/media/img/about/press/elephant.png" />
+  <meta property="og:title" content="Chapter 52. System Catalogs" />
+  <meta property="og:description" content="Chapter&amp;nbsp;52.&amp;nbsp;System Catalogs Table of Contents 52.1. Overview 52.2. pg_aggregate 52.3. pg_am 52.4. pg_amop 52.5. pg_amproc 52.6. pg_attrdef 52.7. pg_attribute 52.8. …" />
+  <meta property="og:site_name" content="PostgreSQL Documentation" />
+  <link href="/media/css/fontawesome.css?8eb38fb2" rel="stylesheet">
+  <link rel="stylesheet" href="/media/css/bootstrap-4.4.1.min.css">
+  <link rel="shortcut icon" href="/favicon.ico" />
+  
+  <link rel="stylesheet" type="text/css" href="/dyncss/base.css?8eb38fb2">
+
+  <script src="/media/js/theme.js?8eb38fb2"></script>
+
+  
+
+
+  <link rel="canonical" href="https://www.postgresql.org/docs/current/catalogs.html" />
+
+
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row justify-content-md-center">
+        <div class="col">
+          <!-- Header -->
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand p-0" href="/">
+              <img class="logo" src="/media/img/about/press/elephant.png" alt="PostgreSQL Elephant Logo">
+            </a>
+            <input type="checkbox" id="navbar-toggler" aria-controls="pgNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <label for="navbar-toggler" id="navbar-toggler-label" class="navbar-toggler" tabindex="0"><span class="navbar-toggler-icon"></span></label>
+            <div class="navbar-collapse" id="pgNavbar">
+              <ul class="navbar-nav mr-auto">
+                <li class="nav-item p-2"><a href="/" title="Home">Home</a></li>
+                <li class="nav-item p-2"><a href="/about/" title="About">About</a></li>
+                <li class="nav-item p-2"><a href="/download/" title="Download">Download</a></li>
+                <li class="nav-item p-2"><a href="/docs/" title="Documentation">Documentation</a></li>
+                <li class="nav-item p-2"><a href="/community/" title="Community">Community</a></li>
+                <li class="nav-item p-2"><a href="/developer/" title="Developers">Developers</a></li>
+                <li class="nav-item p-2"><a href="/support/" title="Support">Support</a></li>
+                <li class="nav-item p-2"><a href="/about/donate/" title="Donate">Donate</a></li>
+                <li class="nav-item p-2"><a href="/account/" title="Your account">Your account</a></li>
+              </ul>
+              <form role="search" method="get" action="/search/">
+                <div class="input-group">
+                  <input id="q" name="q" type="text" size="20" maxlength="255" accesskey="s"  class="form-control" placeholder="Search for...">
+                  <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit"><i class="fas fa-search"></i></button>
+                  </span>
+                </div><!-- /input-group -->
+              </form>
+              <form id="form-theme" class="form-inline d-none">
+                <button id="btn-theme" class="btn btn-default ml-1" type="button"></button>
+              </form>
+            </div>
+          </nav>
+        </div>
+      </div>
+      <div class="row justify-content-center pg-shout-box">
+        <div class="col text-white text-center">September 24, 2026: <a href="/about/news/postgresql-19-beta-4-released-3386/">PostgreSQL 19 Beta 4 Released!</a>
+
+</div>
+      </div>
+    </div>
+    
+    <div class="container-fluid margin">
+      <div class="row">
+        <div id="pgContentWrap" class="col-11">
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <div class="row">
+                <div class="col">
+                  <div>
+                    <a href="/docs/" title="Documentation">Documentation</a> &rarr; <a href="/docs/18/index.html">PostgreSQL 18</a>
+                  </div>
+                </div>
+              </div>
+              
+                <div class="row">
+                  <div class="col">
+                    Supported Versions:
+                      
+                        
+                        
+                          <a href="/docs/current/catalogs.html" title="PostgreSQL 18 - Chapter 52. System Catalogs" class="docs-version-selected">Current</a>
+                          (<a href="/docs/18/catalogs.html" title="PostgreSQL 18 - Chapter 52. System Catalogs" class="docs-version-selected">18</a>)
+                        
+                      
+                         / 
+                        
+                          <a href="/docs/17/catalogs.html" title="PostgreSQL 17 - Chapter 52. System Catalogs" >17</a>
+                        
+                      
+                         / 
+                        
+                          <a href="/docs/16/catalogs.html" title="PostgreSQL 16 - Chapter 52. System Catalogs" >16</a>
+                        
+                      
+                         / 
+                        
+                          <a href="/docs/15/catalogs.html" title="PostgreSQL 15 - Chapter 52. System Catalogs" >15</a>
+                        
+                      
+                         / 
+                        
+                          <a href="/docs/14/catalogs.html" title="PostgreSQL 14 - Chapter 52. System Catalogs" >14</a>
+                        
+                      
+                  </div>
+                </div>
+              
+              
+                <div class="row">
+                  <div class="col">
+                    Development Versions:
+                    
+                      
+                      <a href="/docs/19/catalogs.html" title="PostgreSQL 19 - Chapter 52. System Catalogs"  rel="nofollow">19</a>
+                    
+                       / 
+                      <a href="/docs/devel/catalogs.html" title="PostgreSQL devel - Chapter 52. System Catalogs"  rel="nofollow">devel</a>
+                    
+                  </div>
+                </div>
+              
+              
+                <div class="row">
+                  <div class="col-12">
+                    Unsupported versions:
+                    
+                      
+                      <a href="/docs/13/catalogs.html" title="PostgreSQL 13 - Chapter 52. System Catalogs"  rel="nofollow">13</a>
+                    
+                       / 
+                      <a href="/docs/12/catalogs.html" title="PostgreSQL 12 - Chapter 52. System Catalogs"  rel="nofollow">12</a>
+                    
+                       / 
+                      <a href="/docs/11/catalogs.html" title="PostgreSQL 11 - Chapter 52. System Catalogs"  rel="nofollow">11</a>
+                    
+                       / 
+                      <a href="/docs/10/catalogs.html" title="PostgreSQL 10 - Chapter 52. System Catalogs"  rel="nofollow">10</a>
+                    
+                       / 
+                      <a href="/docs/9.6/catalogs.html" title="PostgreSQL 9.6 - Chapter 52. System Catalogs"  rel="nofollow">9.6</a>
+                    
+                       / 
+                      <a href="/docs/9.5/catalogs.html" title="PostgreSQL 9.5 - Chapter 52. System Catalogs"  rel="nofollow">9.5</a>
+                    
+                       / 
+                      <a href="/docs/9.4/catalogs.html" title="PostgreSQL 9.4 - Chapter 52. System Catalogs"  rel="nofollow">9.4</a>
+                    
+                       / 
+                      <a href="/docs/9.3/catalogs.html" title="PostgreSQL 9.3 - Chapter 52. System Catalogs"  rel="nofollow">9.3</a>
+                    
+                       / 
+                      <a href="/docs/9.2/catalogs.html" title="PostgreSQL 9.2 - Chapter 52. System Catalogs"  rel="nofollow">9.2</a>
+                    
+                       / 
+                      <a href="/docs/9.1/catalogs.html" title="PostgreSQL 9.1 - Chapter 52. System Catalogs"  rel="nofollow">9.1</a>
+                    
+                       / 
+                      <a href="/docs/9.0/catalogs.html" title="PostgreSQL 9.0 - Chapter 52. System Catalogs"  rel="nofollow">9.0</a>
+                    
+                       / 
+                      <a href="/docs/8.4/catalogs.html" title="PostgreSQL 8.4 - Chapter 52. System Catalogs"  rel="nofollow">8.4</a>
+                    
+                       / 
+                      <a href="/docs/8.3/catalogs.html" title="PostgreSQL 8.3 - Chapter 52. System Catalogs"  rel="nofollow">8.3</a>
+                    
+                       / 
+                      <a href="/docs/8.2/catalogs.html" title="PostgreSQL 8.2 - Chapter 52. System Catalogs"  rel="nofollow">8.2</a>
+                    
+                       / 
+                      <a href="/docs/8.1/catalogs.html" title="PostgreSQL 8.1 - Chapter 52. System Catalogs"  rel="nofollow">8.1</a>
+                    
+                       / 
+                      <a href="/docs/8.0/catalogs.html" title="PostgreSQL 8.0 - Chapter 52. System Catalogs"  rel="nofollow">8.0</a>
+                    
+                       / 
+                      <a href="/docs/7.4/catalogs.html" title="PostgreSQL 7.4 - Chapter 52. System Catalogs"  rel="nofollow">7.4</a>
+                    
+                       / 
+                      <a href="/docs/7.3/catalogs.html" title="PostgreSQL 7.3 - Chapter 52. System Catalogs"  rel="nofollow">7.3</a>
+                    
+                       / 
+                      <a href="/docs/7.2/catalogs.html" title="PostgreSQL 7.2 - Chapter 52. System Catalogs"  rel="nofollow">7.2</a>
+                    
+                       / 
+                      <a href="/docs/7.1/catalogs.html" title="PostgreSQL 7.1 - Chapter 52. System Catalogs"  rel="nofollow">7.1</a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+            <div class="col-md-6 col-lg-5 offset-lg-1">
+              <form id="docSearchForm" role="search" method="get" action="/search/">
+                <input type="hidden" name="u" value="/docs/18/" />
+                <div class="input-group">
+                  <input type="text" id="q" name="q" class="form-control" placeholder="Search the documentation for..."/>
+                  <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit"><i class="fas fa-search"></i></button>
+                  </span>
+                </div><!-- /input-group -->
+              </form>
+            </div>
+          </div>
+
+          <div id="docContent">
+            <div class="navheader">
+  <table width="100%" summary="Navigation header">
+    <tr>
+      <th colspan="5" align="center">Chapter&nbsp;52.&nbsp;System Catalogs</th>
+    </tr>
+    <tr>
+      <td width="10%" align="left"><a accesskey="p" href="executor.html" title="51.6.&nbsp;Executor">Prev</a>&nbsp;</td>
+      <td width="10%" align="left"><a accesskey="u" href="internals.html" title="Part&nbsp;VII.&nbsp;Internals">Up</a></td>
+      <th width="60%" align="center">Part&nbsp;VII.&nbsp;Internals</th>
+      <td width="10%" align="right"><a accesskey="h" href="index.html" title="PostgreSQL 18.6 Documentation">Home</a></td>
+      <td width="10%" align="right">&nbsp;<a accesskey="n" href="catalogs-overview.html" title="52.1.&nbsp;Overview">Next</a></td>
+    </tr>
+  </table>
+  <hr />
+</div>
+<div class="chapter" id="CATALOGS">
+  <div class="titlepage">
+    <div>
+      <div>
+        <h2 class="title">Chapter&nbsp;52.&nbsp;System Catalogs</h2>
+      </div>
+    </div>
+  </div>
+  <div class="toc">
+    <p><strong>Table of Contents</strong></p>
+    <dl class="toc">
+      <dt><span class="sect1"><a href="catalogs-overview.html">52.1. Overview</a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-aggregate.html">52.2. <code class="structname">pg_aggregate</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-am.html">52.3. <code class="structname">pg_am</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-amop.html">52.4. <code class="structname">pg_amop</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-amproc.html">52.5. <code class="structname">pg_amproc</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-attrdef.html">52.6. <code class="structname">pg_attrdef</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-attribute.html">52.7. <code class="structname">pg_attribute</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-authid.html">52.8. <code class="structname">pg_authid</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-auth-members.html">52.9. <code class="structname">pg_auth_members</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-cast.html">52.10. <code class="structname">pg_cast</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-class.html">52.11. <code class="structname">pg_class</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-collation.html">52.12. <code class="structname">pg_collation</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-constraint.html">52.13. <code class="structname">pg_constraint</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-conversion.html">52.14. <code class="structname">pg_conversion</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-database.html">52.15. <code class="structname">pg_database</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-db-role-setting.html">52.16. <code class="structname">pg_db_role_setting</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-default-acl.html">52.17. <code class="structname">pg_default_acl</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-depend.html">52.18. <code class="structname">pg_depend</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-description.html">52.19. <code class="structname">pg_description</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-enum.html">52.20. <code class="structname">pg_enum</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-event-trigger.html">52.21. <code class="structname">pg_event_trigger</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-extension.html">52.22. <code class="structname">pg_extension</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-foreign-data-wrapper.html">52.23. <code class="structname">pg_foreign_data_wrapper</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-foreign-server.html">52.24. <code class="structname">pg_foreign_server</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-foreign-table.html">52.25. <code class="structname">pg_foreign_table</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-index.html">52.26. <code class="structname">pg_index</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-inherits.html">52.27. <code class="structname">pg_inherits</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-init-privs.html">52.28. <code class="structname">pg_init_privs</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-language.html">52.29. <code class="structname">pg_language</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-largeobject.html">52.30. <code class="structname">pg_largeobject</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-largeobject-metadata.html">52.31. <code class="structname">pg_largeobject_metadata</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-namespace.html">52.32. <code class="structname">pg_namespace</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-opclass.html">52.33. <code class="structname">pg_opclass</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-operator.html">52.34. <code class="structname">pg_operator</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-opfamily.html">52.35. <code class="structname">pg_opfamily</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-parameter-acl.html">52.36. <code class="structname">pg_parameter_acl</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-partitioned-table.html">52.37. <code class="structname">pg_partitioned_table</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-policy.html">52.38. <code class="structname">pg_policy</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-proc.html">52.39. <code class="structname">pg_proc</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-publication.html">52.40. <code class="structname">pg_publication</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-publication-namespace.html">52.41. <code class="structname">pg_publication_namespace</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-publication-rel.html">52.42. <code class="structname">pg_publication_rel</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-range.html">52.43. <code class="structname">pg_range</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-replication-origin.html">52.44. <code class="structname">pg_replication_origin</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-rewrite.html">52.45. <code class="structname">pg_rewrite</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-seclabel.html">52.46. <code class="structname">pg_seclabel</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-sequence.html">52.47. <code class="structname">pg_sequence</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-shdepend.html">52.48. <code class="structname">pg_shdepend</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-shdescription.html">52.49. <code class="structname">pg_shdescription</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-shseclabel.html">52.50. <code class="structname">pg_shseclabel</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-statistic.html">52.51. <code class="structname">pg_statistic</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-statistic-ext.html">52.52. <code class="structname">pg_statistic_ext</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-statistic-ext-data.html">52.53. <code class="structname">pg_statistic_ext_data</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-subscription.html">52.54. <code class="structname">pg_subscription</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-subscription-rel.html">52.55. <code class="structname">pg_subscription_rel</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-tablespace.html">52.56. <code class="structname">pg_tablespace</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-transform.html">52.57. <code class="structname">pg_transform</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-trigger.html">52.58. <code class="structname">pg_trigger</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-ts-config.html">52.59. <code class="structname">pg_ts_config</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-ts-config-map.html">52.60. <code class="structname">pg_ts_config_map</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-ts-dict.html">52.61. <code class="structname">pg_ts_dict</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-ts-parser.html">52.62. <code class="structname">pg_ts_parser</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-ts-template.html">52.63. <code class="structname">pg_ts_template</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-type.html">52.64. <code class="structname">pg_type</code></a></span></dt>
+      <dt><span class="sect1"><a href="catalog-pg-user-mapping.html">52.65. <code class="structname">pg_user_mapping</code></a></span></dt>
+    </dl>
+  </div>
+  <p>The system catalogs are the place where a relational database management system stores schema metadata, such as information about tables and columns, and internal bookkeeping information. <span class="productname">PostgreSQL</span>'s system catalogs are regular tables. You can drop and recreate the tables, add columns, insert and update values, and severely mess up your system that way. Normally, one should not change the system catalogs by hand, there are normally SQL commands to do that. (For example, <code class="command">CREATE DATABASE</code> inserts a row into the <code class="structname">pg_database</code> catalog — and actually creates the database on disk.) There are some exceptions for particularly esoteric operations, but many of those have been made available as SQL commands over time, and so the need for direct manipulation of the system catalogs is ever decreasing.</p>
+</div>
+<div class="navfooter">
+  <hr />
+  <table width="100%" summary="Navigation footer">
+    <tr>
+      <td width="40%" align="left"><a accesskey="p" href="executor.html" title="51.6.&nbsp;Executor">Prev</a>&nbsp;</td>
+      <td width="20%" align="center"><a accesskey="u" href="internals.html" title="Part&nbsp;VII.&nbsp;Internals">Up</a></td>
+      <td width="40%" align="right">&nbsp;<a accesskey="n" href="catalogs-overview.html" title="52.1.&nbsp;Overview">Next</a></td>
+    </tr>
+    <tr>
+      <td width="40%" align="left" valign="top">51.6.&nbsp;Executor&nbsp;</td>
+      <td width="20%" align="center"><a accesskey="h" href="index.html" title="PostgreSQL 18.6 Documentation">Home</a></td>
+      <td width="40%" align="right" valign="top">&nbsp;52.1.&nbsp;Overview</td>
+    </tr>
+  </table>
+</div>
+
+          </div>
+          
+            <div id="docComments">
+              <h2>Submit correction</h2>
+              <p>
+              If you see anything in the documentation that is not correct, does not match
+              your experience with the particular feature or requires further clarification,
+              please use
+              <a href="/account/comments/new/18/catalogs.html/" rel="nofollow">this form</a>
+              to report a documentation issue.
+              </p>
+            </div>
+          
+        </div> <!-- pgContentWrap -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="footer">
+      <!-- Copyright -->
+      <div class="container">
+        <a href="/about/policies/">Policies</a> |
+        <a href="/about/policies/coc/">Code of Conduct</a> |
+        <a href="/about/">About PostgreSQL</a> |
+        <a href="/about/contact/">Contact</a><br/>
+        <p>Copyright &copy; 1996-2026 The PostgreSQL Global Development Group</p>
+      </div>
+    </footer>
+    <script src="/media/js/main.js?8eb38fb2"></script>
+
+  </body>
+</html>

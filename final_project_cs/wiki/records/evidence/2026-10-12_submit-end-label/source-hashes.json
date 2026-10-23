@@ -1,0 +1,22 @@
+[
+  {
+    "Path": "src/features/plan-check/plan-check.tsx",
+    "SnapshotMatch": true,
+    "Sha256": "E9401CB3BA4431F98A90502E13424388CA0D36ACD8E4DACAB07E3803899F9DE1"
+  },
+  {
+    "Path": "src/features/plan-check/result-parts.tsx",
+    "SnapshotMatch": true,
+    "Sha256": "796629B2BA36743AD547846BBAAF2134E82F7630D158C0D3323C9FBCA930958F"
+  },
+  {
+    "Path": "src/features/plan-check/plan-check.module.css",
+    "SnapshotMatch": true,
+    "Sha256": "9A13A8F43F1A71FC41C2C41003A41DB9F25BB081F9F11F12B32EF5FA85B9505F"
+  },
+  {
+    "Path": "tests/live/submit-end-registration-20261012.spec.ts",
+    "SnapshotMatch": true,
+    "Sha256": "EBEA5EE0B01DAD5DB7B445FE7711913F34BBD1FC250BC147C42DFEBC8F04FE12"
+  }
+]

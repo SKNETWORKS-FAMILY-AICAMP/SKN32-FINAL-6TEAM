@@ -1,11 +1,14 @@
+import type { TripSurvey } from "@/features/onboarding/payload";
 import type { Language } from "../i18n";
 import { api } from "./client";
+import type { ReviewedIntakeView } from "./intake-review";
+import { streamApi, type OpProgress } from "./stream";
 
 /** One value the server read, with how it was read and the evidence behind it (server `intake_claims`). */
 export interface IntakeField {
   value: unknown;
-  /** rule · llm_span (the model pointed at a span of the original) · lookup (place search) · customer */
-  method: "rule" | "llm_span" | "lookup" | "customer";
+  /** rule · llm_span (the model pointed at a span of the original) · lookup (place search) · customer · trip (`[2026-10-13]` taken from the registered trip an edit reopened) */
+  method: "rule" | "llm_span" | "lookup" | "customer" | "trip" | "llm_agent";
   evidence: { line?: number; text?: string; source?: string; how?: string; blocked?: string[] } & Record<string, unknown>;
   needs_review: boolean;
   note: string | null;
@@ -31,52 +34,276 @@ export interface IntakeSource {
   items: IntakeItem[];
   trip: Record<string, { value: unknown }>;
   reading: { asked_lines?: number; accepted?: number; rejected?: { quote?: string; why: string }[]; error?: string } | null;
+  /**
+   * `[2026-10-16 D-025]` What the reading agent understood that is not a stop: moves, conditions (「비 오면 실내」), how the traveller likes to travel,
+   * and the guard's view — each with the exact words it came from. Null (or absent, an older server) when the agent was not used.
+   */
+  understanding?: IntakeUnderstanding | null;
+}
+
+export interface IntakeUnderstanding {
+  moves: { mode: string; scope: string; from: string | null; to: string | null; quote: string }[];
+  conditions: { code: string; quote: string }[];
+  preferences: { code: string; quote: string }[];
+  pieces?: { kind: string; quote: string }[];
+  gaps?: { kind: string; quote: string }[];
+  missing?: string[];
+  guard?: { travel: boolean; instruction_change: boolean; out_of_scope: boolean; quote: string | null } | null;
+}
+
+/**
+ * `[2026-10-16 D-025]` What the server filled in first, like a secretary would: `filled[].item` is the check's stop id, with who proposed it and why;
+ * `questions` are what only the traveller knows (asked, never refused). The page shows these words as they are.
+ */
+export interface IntakePrefill {
+  filled: { item: string | null; title: string | null; owner: string; owner_label: string; reason: string; gap: string; new: boolean }[];
+  questions: IntakePrefillQuestion[];
+  kept: { kind: string; item: string | null; owner: string; reason: string }[];
+}
+
+/**
+ * One question of `prefill.questions`. `[2026-10-19 사용자 결정 — 못 찾은 장소]` `kind: "place_not_found"` is a stop whose place was not found: `item` is the check's stop id (its card carries
+ * the question), `source_id` · `index` the keys of its candidates, `blocked` = the place lookup was blocked and searched once more. The other kinds carry only the words.
+ */
+export interface IntakePrefillQuestion {
+  kind: string;
+  question: string;
+  quote: string | null;
+  item?: string | null;
+  source_id?: string | null;
+  index?: number | null;
+  mode?: string;
+  actions?: string[];
+  blocked?: boolean;
+}
+
+/**
+ * `[2026-10-16 D-025 후속]` One preference or condition handed to the owner that reads it (이동 판정 · 일정 짜기 · 식당 고르기 · 활동 대안):
+ * `status` `filled` = we fill it from the plan's words (「우리가 채움」), `customer` = the traveller already answered it, so their answer wins.
+ * `text` is the server's words for the value; the page shows it as it is.
+ */
+export interface IntakeHandoff {
+  key: string;
+  label: string;
+  owner: string;
+  value: unknown;
+  text: string;
+  codes: string[];
+  quotes: string[];
+  status: "filled" | "customer";
 }
 
 export interface IntakeView {
   intake_id: string;
+  test_scenario?: { code: string; name: string; description: string; mode: "prepared_text"; catalog_version: string } | null;
   status: "reading" | "review" | "confirmed" | "fatal";
+  /** received · transcribing · reading · checking (places and hours) · review · … — shown through `stage_label`. */
   stage: string;
   stage_label: string;
   revision: number;
   fatal: { code: string; detail: string } | null;
   trip_id: string | null;
   sources: IntakeSource[];
-  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis } | null;
+  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis;
+    /** `[2026-10-16 D-025 후속]` What the reading agent read as a preference or condition and will hand to an owner (absent on an older server). */
+    handoff?: IntakeHandoff[] } | null;
   needs_review: { field: string; note: string | null }[];
+  /**
+   * `[2026-10-06]` Questions to ask while the server reads (`wiki/external/rest-endpoints.md` 「설문 질문」). The page DRAWS what is here and nothing else: a `kind` it does not know is skipped,
+   * and no wording or option meaning is built into the page (an older server sends none). `answer` = the option id already saved, `null` when there is none.
+   */
+  questions?: IntakeQuestion[];
+  /** The question set these come from; a change in meaning of an option raises it. Kept for the record - the page does not branch on it. */
+  questions_version?: string;
+  /**
+   * `[2026-10-19]` 1 = the first list (asked at once), 2 = the list after the reading's first result, with the questions the plan did not answer added at the END
+   * (a question already shown is never removed or moved). Absent on an older server.
+   */
+  questions_phase?: 1 | 2 | null;
+  /**
+   * `[2026-10-13]` An edit of a registered trip (`reopenTrip`): the trip and the version it reopened, and the trip's stops left out of the intake — they stay as they are when the edit is done.
+   * Null (or absent, an older server) on an intake read from a plan.
+   * `[2026-10-15 ST4F-490]` `frozen` says why each is left out (`reason` null on an edit opened before the server said so; absent on an older server). Stays, flights and vendor bookings
+   * are no longer left out: they come into the edit locked.
+   */
+  reopen?: { trip_id: string; version: number; frozen_item_ids: string[]; frozen?: { item_id: string; reason: FrozenReason | null }[] } | null;
+  /** `[2026-10-16 D-025]` See `IntakePrefill`. Null (or absent) when nothing was filled first. */
+  prefill?: IntakePrefill | null;
+  /**
+   * `[2026-10-20 서버 · 2026-10-21 사용자 결정 — 계획 확인 P6]` Lines the reading AI read as something other than a stop (a free time, a recommendation asked for …) where the rule read a stop:
+   * that stop is taken out for now (the AI's reading, option 1) and the customer is asked (`wiki/external/rest-endpoints/web-intakes.md` 「해석 확인 질문」). Absent on an older server.
+   */
+  interpretations?: IntakeInterpretation[];
 }
+
+/** One option of an interpretation question — the server's words. `reading` (the AI's reading, first, recommended) · `item` (the rule's stop put back) · `item_search` (put back, its place searched by the written name). */
+export interface IntakeInterpretationOption {
+  id: string;
+  label: string;
+  recommended: boolean;
+  reason: string | null;
+  effect: string | null;
+  /** `pick_myself`: picked, the stop is put in and the change screen's place search opens on `query`. */
+  action: string | null;
+  query: string | null;
+}
+
+/** One question of `interpretations[]`: `item` is the check's id of the stop on that line (`source_id` · `index` its keys), `answer` the option already picked (null when none), `applied` what the plan holds now. */
+export interface IntakeInterpretation {
+  id: string;
+  kind: string;
+  question: string;
+  quote: string | null;
+  line: number | null;
+  item: string;
+  source_id: string;
+  index: number;
+  options: IntakeInterpretationOption[];
+  answer: string | null;
+  applied: string | null;
+  actions?: string[];
+}
+
+/** `[2026-10-15 ST4F-490]` Why a stop of the trip is left out of an edit: over · runs past midnight · its place has no position · a kind the edit does not take. */
+export type FrozenReason = "past" | "overnight" | "no_place" | "kind";
+
+/**
+ * One question of `questions[]` (`web-intakes.md` 「설문 질문」). `[2026-10-20 ST4F-665]` Three kinds are drawn: `single` (pick one, `party` also takes its own words), `priority` (areas in order,
+ * each with its details in order — `options` are the areas, `groups` their details) and `pair` (one pick per part — `parts`). A group or part with `read` was told by the plan and is not asked.
+ * The fields are read as data and checked again before drawing (`features/survey-questions/model.ts`).
+ */
+export interface IntakeQuestion {
+  id: string;
+  kind: string;
+  title?: string;
+  why?: string;
+  options?: { id: string; label: string }[];
+  /** `single`: the option id held · `priority`: `{areas, details}` · `pair`: `{part: option}`. */
+  answer?: string | IntakePriorityAnswer | Record<string, string> | null;
+  allow_custom?: boolean;
+  custom_max_length?: number;
+  /** The label of the button that opens the own-words field (`party`: 「기타」). */
+  custom_label?: string | null;
+  custom_answer?: string | null;
+  groups?: IntakeQuestionPart[];
+  parts?: IntakeQuestionPart[];
+}
+
+/** A group of a `priority` question (an area's details) or a part of a `pair` question. */
+export interface IntakeQuestionPart {
+  id: string;
+  label: string;
+  options: { id: string; label: string }[];
+  /** What the plan told for this part (`text` in the customer's words, `quotes` from the plan); null when it is asked. */
+  read: { key: string; value: unknown; text: string; quotes: string[] } | null;
+}
+
+/** The answer of a `priority` question: areas in order, and the details of the areas picked, each in order. */
+export interface IntakePriorityAnswer { areas: string[]; details: Record<string, string[]> }
+
+/**
+ * What `POST …/survey` takes for one key: an option id; `{custom}` (own words); `{areas, details}` (priority); `{part: option}` (pair); `null` (clear).
+ * `party_size` (`"1"`–`"4"`) is not a question but rides the same call with the companions.
+ */
+export type IntakeSurveyAnswer = string | { custom: string } | IntakePriorityAnswer | Record<string, string> | null;
 
 /** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
 export interface IntakePlanBasis { requested: boolean; start_date: string | null; days: number | null; party_size: number | null; preferences: string }
-export interface IntakePlanInput { start_date: string; days: number; party_size: number }
+/** `survey` rides along only when the customer finished the onboarding questions (server `TripSurvey`, optional). */
+export interface IntakePlanInput { start_date: string; days: number; party_size: number; keep_read_items: boolean; survey?: TripSurvey }
 
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
-export async function submitIntake(text: string, files: File[], language: Language): Promise<{ intake_id: string }> {
+/**
+ * `[2026-10-20 사용자 결정 — ST4F-615]` What the door said: `screened` is the quick screen's word (an empty text or one with no travel clue) — such an intake
+ * is not read (`status: review`). `null` (or absent, an older server): taken, the reading has begun.
+ */
+export interface IntakeTaken { intake_id: string; status?: string; screened?: { code: string; rule?: string } | null }
+
+/** `humanToken` — the Turnstile token when the human check is on; the server checks it with Cloudflare. */
+export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<IntakeTaken> {
   const form = new FormData();
   form.append("text", text);
   for (const file of files) form.append("files", file, file.name);
-  return api("/v1/web/trip-intakes", language, { method: "POST", body: form });
+  if (humanToken) form.append("turnstile_token", humanToken);
+  return api("/v1/web/trip-intakes", language, { method: "POST", body: form, ...(signal && { signal }) });
 }
 
-export function getIntake(intakeId: string, language: Language): Promise<IntakeView> {
+/** The read values plus — once the plan is on the check screen — the server's check of every place and leg (`review`). */
+export function getIntake(intakeId: string, language: Language): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}`, language);
 }
 
-export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language): Promise<IntakeView> {
+/**
+ * `[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `check: false` saves the new revision without the heavy check (no move
+ * measuring, no re-placing of the stops around a new place): the answer's `review.checked` is false until `revalidateIntake` checks it.
+ */
+export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language, options: { check?: boolean } = {}): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/edits`, language, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, edits }),
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(options.check === false ? { revision, edits, check: false } : { revision, edits }),
   });
 }
 
-export function planIntake(intakeId: string, revision: number, input: IntakePlanInput, language: Language): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
-  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
+/**
+ * `[2026-10-21 P6]` Answer interpretation questions (`{question id: option id}`). The AI's reading (already what the plan holds) is only saved; another option puts the stop back in a new
+ * revision, checked with it. While the server still reads, an answer is saved and put in before the check is said to be done (`interpretation.pending`).
+ */
+export function answerInterpretations(intakeId: string, revision: number, answers: Record<string, string>, language: Language): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/interpretations`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, answers }),
+  });
+}
+
+/** Restore a completed historical revision atomically; protected stops or a stale revision reject the whole request. */
+export function restoreIntake(intakeId: string, revision: number, restoreRevision: number, language: Language, item?: { source_id: string; index: number }): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/restore`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, restore_revision: restoreRevision, ...(item && { item }) }),
+  });
+}
+
+/**
+ * 「Plan it for me」 — streamed (`stream.ts`): the server says when it plans, checks and registers. A lost line sends the
+ * same revision again; the server derives the request from it (`intake:{id}:plan:r{revision}`) and returns the trip it
+ * already registered instead of planning twice.
+ */
+export function planIntake(intakeId: string, revision: number, input: IntakePlanInput, language: Language,
+  onProgress?: (progress: OpProgress) => void): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
+  return streamApi(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...input }),
+  }, onProgress);
+}
+
+/**
+ * `[2026-10-06]` Save the answers to the questions asked while the server reads: `{question id: answer}`, one question at a time as the customer answers. The server keeps the LAST value of a
+ * question (answering again corrects it) and refuses a whole request with `422 invalid_answers` when one id, option or shape is unknown. A registered intake answers `409 intake_confirmed`.
+ * `[2026-10-20 ST4F-665]` The answer takes the question's shape (`IntakeSurveyAnswer`), and the start survey's answers ride the same call before the first read of the intake.
+ */
+export function submitSurveyAnswers(intakeId: string, answers: Record<string, IntakeSurveyAnswer>, language: Language): Promise<{ ok: true; answered: string[]; questions_version: string }> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/survey`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answers }),
   });
 }
 
-export function confirmIntake(intakeId: string, revision: number, language: Language): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
+/**
+ * `[2026-10-13 사용자 결정]` 「일정 수정」: the registered trip as a plan-check intake (`POST /v1/web/trips/{id}/reopen`, `wiki/external/rest-endpoints.md` 「등록한 여행 고치기」). Its changes go
+ * through the intake's own calls; `confirmIntake` on it writes the trip's next version. `version` is the trip version on screen — another one is refused (409 `stale_itinerary`).
+ * The same trip and version opened again answer the same intake, with what was changed in it.
+ */
+export function reopenTrip(tripId: string, version: number, language: Language): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trips/${encodeURIComponent(tripId)}/reopen`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version }),
+  });
+}
+
+/** `[2026-10-13 사용자 지시]` 「취소」 of an edit (`reopenTrip`): the intake is closed — nothing is written to the trip, and the next 「일정 수정」 starts afresh. */
+export function cancelTripEdit(intakeId: string, language: Language): Promise<{ intake_id: string; status: "closed" }> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/cancel`, language, { method: "POST" });
+}
+
+/** On an edit of a registered trip (`reopen`) it answers the trip's `version` after it and whether a new one was written (`changed: false` = nothing was different). */
+export function confirmIntake(intakeId: string, revision: number, language: Language, survey?: TripSurvey): Promise<{ status: "confirmed"; trip: { trip_id: string }; version?: number; changed?: boolean }> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/confirm`, language, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision }),
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...(survey && { survey }) }),
   });
 }

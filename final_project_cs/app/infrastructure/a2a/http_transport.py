@@ -40,7 +40,8 @@ class A2AHttpTransport:
     async def submit(self, endpoint: str, task: TeamTask) -> dict[str, Any]:
         response = await self.client.post(
             endpoint or "/a2a/tasks", headers=self._headers,
-            json={"task_id": str(task.task_id), "capability": task.capability,
+            json={"task_id": str(task.task_id), "run_id": str(task.run_id),
+                  "team_id": task.team_id, "capability": task.capability,
                   "input_text": task.input_text,
                   # ★원격에 Context 전문을 넘기지 않는다. 필요한 것만 준다.
                   "case_ref": str(task.case_id)})

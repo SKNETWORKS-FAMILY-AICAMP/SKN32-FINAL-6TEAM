@@ -1,0 +1,29 @@
+{
+  "at_kst": "2026-10-12T05:57:05.987988+09:00",
+  "exit": 4,
+  "args": [
+    "-m",
+    "not live",
+    "-m",
+    "not live",
+    "tests/unit/core/test_classification_step.py",
+    "tests/unit/core/test_classification_sweeper.py",
+    "tests/integration/controller/test_controller_integration.py",
+    "tests/unit/core/test_controller_resume_recovery.py",
+    "tests/unit/test_operations_diagnostics.py",
+    "tests/unit/travel/test_plugin_worker_availability.py",
+    "tests/e2e/test_trip_messages.py",
+    "tests/architecture",
+    "-q",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "no:langsmith",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_055646_591399_isolated_integration\\tmp",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_055646_591399_isolated_integration\\junit.xml"
+  ],
+  "network_blocks": [],
+  "source_changed": [],
+  "scope": "new task-owned PostgreSQL; current safe SQL runner; external and business DB blocked"
+}

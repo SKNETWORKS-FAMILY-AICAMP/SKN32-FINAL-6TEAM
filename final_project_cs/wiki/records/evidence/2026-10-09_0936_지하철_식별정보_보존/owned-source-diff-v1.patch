@@ -1,0 +1,77 @@
+--- before/app/domains/travel_ops/ports/data_sources/seoul_subway.py
++++ after/app/domains/travel_ops/ports/data_sources/seoul_subway.py
+@@ -44,6 +44,29 @@
+     return name[:-1] if name.endswith("역") else name
+ 
+ 
++def _identity(value: Any) -> str | None:
++    """식별 문자열의 선행 0을 보존하고 잘못된 객체로 ID를 만들지 않는다."""
++    if isinstance(value, str):
++        return value if value.strip() else None
++    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
++        return str(value)
++    return None
++
++
++def _eta(value: Any) -> tuple[int | None, str]:
++    """0초·누락·잘못된 입력을 구별한다. isdigit은 제곱 숫자도 허용하므로 충분하지 않다."""
++    if value is None:
++        return None, "missing"
++    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
++        return value, "valid"
++    if isinstance(value, str) and value.isascii() and value.isdigit():
++        try:
++            return int(value), "valid"
++        except ValueError:  # Python의 정수 문자열 길이 제한도 명시된 잘못된 입력이다.
++            pass
++    return None, "invalid"
++
++
+ class SeoulSubwayArrival(TravelSource):
+     name = "seoul_subway_arrival"
+ 
+@@ -88,17 +111,18 @@
+         rows = payload.get("realtimeArrivalList")
+         if rows is None:                              # INFO-200 — 빈 결과
+             rows = []
++        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
++            self._miss("malformed_arrivals")
++            return None
+         trains = []
+         checked = self._now()
+         if checked.tzinfo is None:
+             checked = checked.replace(tzinfo=KST)
+         for row in rows:
+-            if not isinstance(row, dict):
+-                continue
+             line_name = SUBWAY_ID.get(str(row.get("subwayId") or ""), str(row.get("subwayId") or ""))
+             if line and line_name != line:
+                 continue
+-            seconds = row.get("barvlDt")
++            seconds, eta_status = _eta(row.get("barvlDt"))
+             received = row.get("recptnDt")
+             age = None
+             try:
+@@ -111,11 +135,20 @@
+             trains.append({
+                 "line": line_name, "direction": row.get("updnLine"), "route_label": row.get("trainLineNm"),
+                 "message": row.get("arvlMsg2"), "position": row.get("arvlMsg3"), "arrival_code": row.get("arvlCd"),
+-                "eta_seconds": int(seconds) if seconds is not None and str(seconds).isdigit() else None,
++                "eta_seconds": seconds, "eta_status": eta_status,
++                "line_id": _identity(row.get("subwayId")),
++                "station_id": _identity(row.get("statnId")),
++                "previous_station_id": _identity(row.get("statnFid")),
++                "next_station_id": _identity(row.get("statnTid")),
++                "terminal_station_id": _identity(row.get("bstatnId")),
++                "terminal_station": _identity(row.get("bstatnNm")),
++                "train_number": _identity(row.get("btrainNo")),
++                "arrival_order": _identity(row.get("ordkey")),
+                 "received_at": received, "received_age_seconds": age,
+                 "source_clock_ahead": age < 0 if age is not None else None,
+                 "train_status": row.get("btrainSttus")})
+-        return self.stamp({"station": name, "line": line, "trains": trains, "kind": "subway_arrival"},
++        return self.stamp({"station": name, "line": line, "trains": trains, "kind": "subway_arrival",
++                           "schema_version": "1.1"},
+                           source=self.name)
+ 
+ 

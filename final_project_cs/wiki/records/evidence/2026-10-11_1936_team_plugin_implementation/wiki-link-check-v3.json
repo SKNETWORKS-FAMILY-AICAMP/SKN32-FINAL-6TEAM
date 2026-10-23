@@ -1,0 +1,24 @@
+{
+  "created_at": "2026-10-11T22:53:14.278568+09:00",
+  "documents": 16,
+  "checked": 218,
+  "broken": [],
+  "document_sha256": {
+    "wiki/index.md": "dbac252659b17f3703fc008588162539ce9c8cf209260e706f15368131b6c06b",
+    "wiki/log.md": "255ea2a42b90175172c2bf26bceceb1da879b6a575ced77d11efdd857cc4ed6f",
+    "wiki/teams/index.md": "24a032d61fce1e660e2b8b38a52491de5e237b26b149cd5a277fa48fca0d2dc2",
+    "wiki/teams/team-plugin-lifecycle.md": "a9cd70adecfc6cfddfab228d3de2de1bb300a229c8966fab5fc2d12cc8664e1d",
+    "wiki/teams/team-registry.md": "db57f65c1add2f680ae142d40c1b871fcba47ca86fc007a66c6e9c01a07d42b5",
+    "wiki/teams/composition.md": "7c7da8617a96b3677fcad664b447c86cdc936a852eb13a0f0b9c7fe060abb1ba",
+    "wiki/teams/team-contract/plugin-availability.md": "434119974af008d3418bb26fd28fe3ce27fbbad137f17f13fcbd2cbf5f499bb3",
+    "wiki/records/reports/2026-10-11_2229_plugin_regression_followup.md": "a9ec40936b77cfa192661fed2a656509b134f7234f02af7690efc19cb968e72e",
+    "wiki/records/reports/2026-10-11_2231_plugin_minimal_candidate_v5.md": "d915f16935058501bc3f2827447970ceaf2673e8a9e5008e13113697accc9b80",
+    "wiki/records/reports/2026-10-11_2233_team_plugin_final_delta.md": "58bd3d5cdb745a1aa24910c98d1be441ee9c9bf9a9b476aa414dc2f50ea8647a",
+    "wiki/records/reports/2026-10-11_2239_message_api_contract.md": "58f52b4a888862da1fc410b0a1c6786e82b06f2508acea267f10d3252fe9563d",
+    "wiki/records/reports/2026-10-11_2242_worker_state_and_e2e_fixture_audit.md": "49226b29d0292e3433d3d1f159c1463dc473bbed488798a309ba3b9cf30f6c01",
+    "wiki/records/reports/2026-10-11_2245_plugin_linux_functional_verification.md": "885aca78b3905ccb3075c266c474cd16360d47b596d161b54f866c5c98777aa2",
+    "wiki/records/reports/2026-10-11_2250_frontend_resume_contract.md": "c00de8893e04f783ae762f0577a611132cd927907751a0a2826b4268cfc9a7e5",
+    "wiki/external/rest-endpoints/web-access.md": "561cab6f78e036488d0dec55b11bbdc3f3979ceb728a999d3d7abba806cf2a61",
+    "wiki/external/rest-endpoints/web-intakes.md": "f1f1f0b4e8a21f302c133565951cef3cd89c0432e7cdbe70136d2d2ed0ef2ac1"
+  }
+}

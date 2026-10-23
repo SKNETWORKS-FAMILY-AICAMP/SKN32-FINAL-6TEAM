@@ -1,0 +1,398 @@
+[
+  {
+    "sha256": "9FD48D3428C3F696D26A418CB5378D7AE3B6E689B19C3E3EE61CC76B7F747675",
+    "copy": "completion-results.json",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-results.json",
+    "bytes": 154441
+  },
+  {
+    "sha256": "2EC697BBFA14BA9C11FCBA8E0ABE95DFF85DC9DB6C1DBE86018113937728FAFC",
+    "copy": "completion-run.log",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-run.log",
+    "bytes": 9657
+  },
+  {
+    "sha256": "B450565F12F40C0C2B04F35A7567F026C93087C561E359078266D7AF2D3BEF23",
+    "copy": "completion-inventory.log",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-inventory.log",
+    "bytes": 7508
+  },
+  {
+    "sha256": "2005A37A59ABF278E754085216DA1E051DAA299D312417A654012A1C748050EE",
+    "copy": "completion-arguments.json",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-arguments.json",
+    "bytes": 423
+  },
+  {
+    "sha256": "E67C3D16FC817A0072CF68CD40DDB35491F629FAC3D6BA9532476E2ED3114618",
+    "copy": "build-completion-status.json",
+    "source": ".tmp/uiux-resume-20261012-v1/build-completion-status.json",
+    "bytes": 72
+  },
+  {
+    "sha256": "21471589E8B4020257D69B8FCC6591E1035131A7AA74059C316240D1955FCC44",
+    "copy": "build-completion.log",
+    "source": ".tmp/uiux-resume-20261012-v1/build-completion.log",
+    "bytes": 1053
+  },
+  {
+    "sha256": "07371D95573FB7128061131BFB24FC891E6B88D76F5B495C703FFC7D9EE267F1",
+    "copy": "static-completion-v2-status.json",
+    "source": ".tmp/uiux-resume-20261012-v1/static-completion-v2-status.json",
+    "bytes": 41
+  },
+  {
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "copy": "type-completion-v2.log",
+    "source": ".tmp/uiux-resume-20261012-v1/type-completion-v2.log",
+    "bytes": 0
+  },
+  {
+    "sha256": "D1C9A0E7CF10AC73B35B541D55D2F25627B17B5B61079249974B52BDC21192D5",
+    "copy": "unit-completion-v2.log",
+    "source": ".tmp/uiux-resume-20261012-v1/unit-completion-v2.log",
+    "bytes": 122
+  },
+  {
+    "sha256": "C83DD4423D102A2133440012CD1DC780116338898B50782885DFE652469E9549",
+    "copy": "unit-completion-v2.json",
+    "source": ".tmp/uiux-resume-20261012-v1/unit-completion-v2.json",
+    "bytes": 291587
+  },
+  {
+    "sha256": "3D416DE0C6FD9022AF88C9CF5735C4C6F0D09DBA92E969A23701D973E65E9C3D",
+    "copy": "lint-completion-status.json",
+    "source": ".tmp/uiux-resume-20261012-v1/lint-completion-status.json",
+    "bytes": 63
+  },
+  {
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "copy": "lint-completion.log",
+    "source": ".tmp/uiux-resume-20261012-v1/lint-completion.log",
+    "bytes": 0
+  },
+  {
+    "sha256": "188B3F7616098B8973A7E321BBFDC1CD89832371CFC444048D2D5CCF9BEBD6ED",
+    "copy": "resolution-ledger-completion.json",
+    "source": ".tmp/uiux-resume-20261012-v1/resolution-ledger-completion.json",
+    "bytes": 1056314
+  },
+  {
+    "sha256": "50C2BDADD2833FFE0A29B6BFD4035BB6A5AD4A5EBBD1CEBD80C7BEB0175E87B1",
+    "copy": "static-completion-v3-status.json",
+    "source": ".tmp/uiux-resume-20261012-v1/static-completion-v3-status.json",
+    "bytes": 94
+  },
+  {
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "copy": "type-completion-v3.log",
+    "source": ".tmp/uiux-resume-20261012-v1/type-completion-v3.log",
+    "bytes": 0
+  },
+  {
+    "sha256": "9895D6BEEB14BC42E90DFB6F1AAEAF96B898212D6DD0B42624F13B2E45C25608",
+    "copy": "unit-completion-v3.log",
+    "source": ".tmp/uiux-resume-20261012-v1/unit-completion-v3.log",
+    "bytes": 122
+  },
+  {
+    "sha256": "160071342BE5E851AA8C82D95319CBFF9C1BC9000422F64908D9FE5562C525D8",
+    "copy": "unit-completion-v3.json",
+    "source": ".tmp/uiux-resume-20261012-v1/unit-completion-v3.json",
+    "bytes": 109320
+  },
+  {
+    "sha256": "600B236271D703C2216C4F69BA43583CC082C2D5B9E9160F94DDBEE9338E0E5A",
+    "copy": "static-snapshot-final-status.json",
+    "source": ".tmp/uiux-resume-20261012-v1/static-snapshot-final-status.json",
+    "bytes": 154
+  },
+  {
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "copy": "type-snapshot-final.log",
+    "source": ".tmp/uiux-resume-20261012-v1/type-snapshot-final.log",
+    "bytes": 0
+  },
+  {
+    "sha256": "3AAD444CD621CCBF207AD2139D0EB197D829B31EF57D5778EE0BA0E6C8C1CAD1",
+    "copy": "unit-snapshot-final.json",
+    "source": ".tmp/uiux-resume-20261012-v1/unit-snapshot-final.json",
+    "bytes": 289378
+  },
+  {
+    "sha256": "B7AFDEAE685FD478F181B1CA2302FEFA5EC196B9A67CD07A812DE80C7C5B64AC",
+    "copy": "unit-snapshot-final.log",
+    "source": ".tmp/uiux-resume-20261012-v1/unit-snapshot-final.log",
+    "bytes": 123
+  },
+  {
+    "sha256": "4E335FCA917BDC1C530C0ABB047D118025D2181A7DD1146A91531684F4C92038",
+    "copy": "support-final-results.json",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-results.json",
+    "bytes": 10119
+  },
+  {
+    "sha256": "3E03AEED4DEDD36DE0C6D0F5D72FB07295DF73953298B855C0DACE6A40761E08",
+    "copy": "support-final-run.log",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-run.log",
+    "bytes": 1469
+  },
+  {
+    "sha256": "91F2ED2A19343FACD4AE2A084C697DAE1A586CA37550E4D9EE9377C6B30CE717",
+    "copy": "support-final-inventory.log",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-inventory.log",
+    "bytes": 772
+  },
+  {
+    "sha256": "81A49A685AE4E6ABEB9B334194FB717EAA0644FB7FB0C628571EE5D86BCD7FBC",
+    "copy": "support-final-arguments.json",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-arguments.json",
+    "bytes": 288
+  },
+  {
+    "sha256": "6F59C38DAD64752EB665720F500057A6A16B026AAA5A2F7FB58B37ACBFFB003F",
+    "copy": "build-support-final-status.json",
+    "source": ".tmp/uiux-resume-20261012-v1/build-support-final-status.json",
+    "bytes": 72
+  },
+  {
+    "sha256": "1A8CA3A3A661F388AFC631321A974EA9C14D1B08FFF011092EDE42E5B2A9AF2D",
+    "copy": "build-support-final.log",
+    "source": ".tmp/uiux-resume-20261012-v1/build-support-final.log",
+    "bytes": 1053
+  },
+  {
+    "sha256": "B312F7E5D84A552A80B608FCD88316AE7C131A98A8506675AB23FB24DCE3FD4E",
+    "copy": "support-final-v2-results.json",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-results.json",
+    "bytes": 11193
+  },
+  {
+    "sha256": "C63782D54422EF0F30F031B8C2B5AE12C66509DA783BA70357D969A3F60E31A1",
+    "copy": "support-final-v2-run.log",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-run.log",
+    "bytes": 1613
+  },
+  {
+    "sha256": "8B150BF03672171EA199E9FEEE119F6DEDED6C0372766079EBF32738AA358BA2",
+    "copy": "support-final-v2-inventory.log",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-inventory.log",
+    "bytes": 894
+  },
+  {
+    "sha256": "3CA3FF1A4792D7AAA18C5DFC68CB6399A8D5DB2064718DBB1D60FE8FF10DFD99",
+    "copy": "support-final-v2-arguments.json",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-arguments.json",
+    "bytes": 284
+  },
+  {
+    "sha256": "077AE993D1BD3CE38DA11BF96D9A5870320A362D4B7AE305E4C62BA3ED579858",
+    "copy": "lint-support-final-status.json",
+    "source": ".tmp/uiux-resume-20261012-v1/lint-support-final-status.json",
+    "bytes": 59
+  },
+  {
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "copy": "lint-support-final.log",
+    "source": ".tmp/uiux-resume-20261012-v1/lint-support-final.log",
+    "bytes": 0
+  },
+  {
+    "sha256": "B29A461EE971F45745D9F68F2A4A421383C4671AF211D202EA7DD5A3F0C89672",
+    "copy": "routes-completion/registration-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--0bff6--·-1280px-화면-표시·가로-넘침·실행-오류/registration-1280.png",
+    "bytes": 49570
+  },
+  {
+    "sha256": "8F26FFD0E1CB9C6DE4AFA942D511AF10A9F67F632D39171EE81A069A8967252F",
+    "copy": "routes-completion/intro-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--153e0-o-·-375px-화면-표시·가로-넘침·실행-오류/intro-375.png",
+    "bytes": 78936
+  },
+  {
+    "sha256": "C5D10F22A548CC4E95FB08BB212CA170E2CB6CEC05692A41945C3D50704842B3",
+    "copy": "routes-completion/registered-trip-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--16368-p-·-375px-화면-표시·가로-넘침·실행-오류/registered-trip-375.png",
+    "bytes": 320251
+  },
+  {
+    "sha256": "0F3C74CB365FD3D2BB3996CC85D0F79D55EF31B4DC65E90DDF99C256D6A113C3",
+    "copy": "routes-completion/support-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--19225--·-1280px-화면-표시·가로-넘침·실행-오류/support-1280.png",
+    "bytes": 38507
+  },
+  {
+    "sha256": "013B1EA749748F75B87D8DC4D8B36B294BA3DBBF9BF391E9775344E8C2A5BDD5",
+    "copy": "routes-completion/terms-preferences-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--2b1d2--·-1280px-화면-표시·가로-넘침·실행-오류/terms-preferences-1280.png",
+    "bytes": 138280
+  },
+  {
+    "sha256": "C15B0D309E60729648E594EF58858BD9520A0D070E28D43A1F9F5095E219D6BB",
+    "copy": "routes-completion/registered-trip-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--2c972--·-1280px-화면-표시·가로-넘침·실행-오류/registered-trip-1280.png",
+    "bytes": 339601
+  },
+  {
+    "sha256": "5904F0B992C3501697AC24F095A012F30EF976F8D0C9966EA63D5A4503507A1E",
+    "copy": "routes-completion/profile-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--37cfd-e-·-375px-화면-표시·가로-넘침·실행-오류/profile-375.png",
+    "bytes": 34163
+  },
+  {
+    "sha256": "CB755AF3C6B558DDED2A5128E4903D8A7872547CAC3DA14E3FF05D149942492F",
+    "copy": "routes-completion/intake-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--3a59a--·-1280px-화면-표시·가로-넘침·실행-오류/intake-1280.png",
+    "bytes": 294696
+  },
+  {
+    "sha256": "14D86D2E2AF8E44BA60DCCC0946536CBAFDC125E37B2FDC5C8F112AA547D1B4F",
+    "copy": "routes-completion/intro-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--7ed21--·-1280px-화면-표시·가로-넘침·실행-오류/intro-1280.png",
+    "bytes": 104581
+  },
+  {
+    "sha256": "CEE4C7AC1F3D146371A36A1DB2AA3D1C45F45437990E61C3B6E7B8892454BAE6",
+    "copy": "routes-completion/social-cancelled-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--818e1--·-1280px-화면-표시·가로-넘침·실행-오류/social-cancelled-1280.png",
+    "bytes": 29200
+  },
+  {
+    "sha256": "3875F0BA2ED773463729517F1B9BF755625E16B89AA659929FB4B93BD195A8FD",
+    "copy": "routes-completion/trips-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--93007--·-1280px-화면-표시·가로-넘침·실행-오류/trips-1280.png",
+    "bytes": 33425
+  },
+  {
+    "sha256": "EA89FA892BB71A8A3EE00D424BFC7F99A6ACC9E62C0EC84A7DFD901611FD2B8D",
+    "copy": "routes-completion/registration-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--93e14-n-·-375px-화면-표시·가로-넘침·실행-오류/registration-375.png",
+    "bytes": 35859
+  },
+  {
+    "sha256": "91CEFB4743C2622A642B43E02B48174C65CB016AC13AC8AEA34B8F9534A0B4D7",
+    "copy": "routes-completion/profile-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--a244c--·-1280px-화면-표시·가로-넘침·실행-오류/profile-1280.png",
+    "bytes": 49376
+  },
+  {
+    "sha256": "B29A461EE971F45745D9F68F2A4A421383C4671AF211D202EA7DD5A3F0C89672",
+    "copy": "routes-completion/starting-revisit-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--a273c--·-1280px-화면-표시·가로-넘침·실행-오류/starting-revisit-1280.png",
+    "bytes": 49570
+  },
+  {
+    "sha256": "12695EFCD005B83110766B1FF3AF007B3500F559588EC8D89AA34881DE501048",
+    "copy": "routes-completion/results-redirect-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--b2dab-t-·-375px-화면-표시·가로-넘침·실행-오류/results-redirect-375.png",
+    "bytes": 320272
+  },
+  {
+    "sha256": "5F59FA71DCF3032C7807E8F490528AEC75D91591C16B5D663ED1706E70E21F5F",
+    "copy": "routes-completion/account-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--b651c--·-1280px-화면-표시·가로-넘침·실행-오류/account-1280.png",
+    "bytes": 47861
+  },
+  {
+    "sha256": "EA89FA892BB71A8A3EE00D424BFC7F99A6ACC9E62C0EC84A7DFD901611FD2B8D",
+    "copy": "routes-completion/starting-revisit-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--c2b47-t-·-375px-화면-표시·가로-넘침·실행-오류/starting-revisit-375.png",
+    "bytes": 35859
+  },
+  {
+    "sha256": "8BD6FFB01C75EEFE94B9EE3A73D423B83ABEF34C2CF2E59ACA0D7C7DDE082B87",
+    "copy": "routes-completion/results-redirect-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--c9058--·-1280px-화면-표시·가로-넘침·실행-오류/results-redirect-1280.png",
+    "bytes": 339714
+  },
+  {
+    "sha256": "4A22E435F381819459AA3088625AA79B0A0C565E03048EDCB97400020770D50B",
+    "copy": "routes-completion/social-cancelled-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--d4fe8-d-·-375px-화면-표시·가로-넘침·실행-오류/social-cancelled-375.png",
+    "bytes": 16195
+  },
+  {
+    "sha256": "12CB448789E812822B33CC005010B7E1C72CA5694EC50639089DFDD4F724B018",
+    "copy": "routes-completion/verification-redirect-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--d9802-t-·-375px-화면-표시·가로-넘침·실행-오류/verification-redirect-375.png",
+    "bytes": 320252
+  },
+  {
+    "sha256": "79B3949C82036640B0A6039FB408AC4FFF03643271943A5D5DC63CF14EE898AF",
+    "copy": "routes-completion/account-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--e25da-t-·-375px-화면-표시·가로-넘침·실행-오류/account-375.png",
+    "bytes": 32104
+  },
+  {
+    "sha256": "7A80169EA7B43CD0F209D5DAA062943D1829EF435879DACA34F111049FA7140D",
+    "copy": "routes-completion/support-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--ebd94-t-·-375px-화면-표시·가로-넘침·실행-오류/support-375.png",
+    "bytes": 23974
+  },
+  {
+    "sha256": "FF4B5F0AEB7E4BC1F604AD9AEB85B639B2F980513DAA2AF136457E0740FBD0AA",
+    "copy": "routes-completion/verification-redirect-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--ec347--·-1280px-화면-표시·가로-넘침·실행-오류/verification-redirect-1280.png",
+    "bytes": 339662
+  },
+  {
+    "sha256": "C5C76890D8C1C4CBF204A3F6B0FC81329370AF3EC214682B85C640015DFFA0D8",
+    "copy": "routes-completion/trips-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--f0aaf-s-·-375px-화면-표시·가로-넘침·실행-오류/trips-375.png",
+    "bytes": 19535
+  },
+  {
+    "sha256": "9060F533BECAF54AB2503F85FBB905B712B3DAD0B1D1CE8D6DED77C3B4BA9D1A",
+    "copy": "routes-completion/intake-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--f4aa1-e-·-375px-화면-표시·가로-넘침·실행-오류/intake-375.png",
+    "bytes": 283111
+  },
+  {
+    "sha256": "6E36FC7042C9097F9DB1D25D50576C82CEDF45BF604E4A63330AC3A738926BE1",
+    "copy": "routes-completion/terms-preferences-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/completion-evidence/uiux-route-audit-20261012--f562c-s-·-375px-화면-표시·가로-넘침·실행-오류/terms-preferences-375.png",
+    "bytes": 110741
+  },
+  {
+    "sha256": "8B05E5857B14C487A45053B5A427E6315D8936C715A135845428AB7DA7C2DBAC",
+    "copy": "support-followup/support-previous-reply.png",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-evidence/support-문제-신고-재전송은-같은-요청-번호를-사용하고-기록-완료를-안내한다/support-previous-reply.png",
+    "bytes": 34877
+  },
+  {
+    "sha256": "3B3FC33A44C808AD17AEB5D5583509E38CA9CCAF6389EAB47AF8EC0D2A519F08",
+    "copy": "support-followup/support-1280.png",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-evidence/uiux-route-audit-20261012--19225--·-1280px-화면-표시·가로-넘침·실행-오류/support-1280.png",
+    "bytes": 41584
+  },
+  {
+    "sha256": "F881EDAAC16EE31F9068BAC0D1C0319F25303B4B96C9298F1A20D5C51171E576",
+    "copy": "support-followup/support-375.png",
+    "source": ".tmp/uiux-resume-20261012-v1/support-final-v2-evidence/uiux-route-audit-20261012--ebd94-t-·-375px-화면-표시·가로-넘침·실행-오류/support-375.png",
+    "bytes": 26814
+  },
+  {
+    "sha256": "EDA7A964B52297C25AE5F063EE87E0ACCB208B498B4AE454F4AB133092988ACC",
+    "copy": "source-match-completion.json",
+    "source": "derived from copied completion evidence and current source SHA256",
+    "bytes": 100229
+  },
+  {
+    "sha256": "F4F58443314D540836DC8951C250F7AE15F1FB06857370DBBA9AEC8A575F55F7",
+    "copy": "route-coverage-completion.json",
+    "source": "derived from copied completion evidence and current source SHA256",
+    "bytes": 32462
+  },
+  {
+    "sha256": "6ED946258EA551058E3273F838BB411FA4249F6E96FE401A104AFE9128710CE3",
+    "copy": "unit-scope-completion.json",
+    "source": "derived from copied completion evidence and current source SHA256",
+    "bytes": 999
+  },
+  {
+    "sha256": "5C5B657A6AC78B7A2E753640E13146FFB2A67A9FFFBA10E61774433F0A346DAF",
+    "copy": "support-followup-index.json",
+    "source": "derived from copied completion evidence and current source SHA256",
+    "bytes": 1850
+  }
+]

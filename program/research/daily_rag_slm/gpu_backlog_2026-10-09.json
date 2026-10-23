@@ -1,0 +1,1875 @@
+{
+  "recorded_at_utc": "2026-10-09T11:09:18.722626+00:00",
+  "date_kst": "2026-10-09",
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_200918_gpu-seed2-results-cosine-refill-local-feeder.md",
+  "task_complete": true,
+  "ongoing_research_complete": false,
+  "A": {
+    "observed_at_utc": "2026-10-09T11:07:05.932228+00:00",
+    "snapshot": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/cosine_QAT_D3_completed/A_completed/snapshot.json",
+    "gpu_snapshot": "82 %, 3480 MiB, 16380 MiB",
+    "worker_pid": 342497,
+    "worker_restarted": false,
+    "manifest_jobs": 113,
+    "manifest_questions": 195461,
+    "completed_jobs": 103,
+    "failed_jobs": 2,
+    "running_jobs": [
+      "e4bbase_cosine_s20261013_d"
+    ],
+    "running_answers_saved": null,
+    "running_answers_count_not_polled_in_final_snapshot": true,
+    "ready_jobs": 7,
+    "ready_ids": [
+      {
+        "id": "e4bqat_cosine_s20261013_d",
+        "checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bbase_cosine_s20261013_d2",
+        "checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bqat_cosine_s20261013_d2",
+        "checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bbase_cosine_s20261013_h",
+        "checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bqat_cosine_s20261013_h",
+        "checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bbase_cosine_s20261013_mx",
+        "checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      },
+      {
+        "id": "e4bqat_cosine_s20261013_mx",
+        "checks": {
+          "model": true,
+          "prompts": true,
+          "script": true,
+          "lora": true
+        }
+      }
+    ],
+    "input_blocked_jobs": 0,
+    "blocked_ids": [],
+    "filesystem_available_bytes": 4101066752,
+    "refill_audit": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/A_seed13_registration.json",
+    "new_jobs": 10,
+    "new_questions": 18850,
+    "worker_lock_held_on_registration": true,
+    "pre_refill_idle_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb1953_20261009.json",
+    "conditional_future_feeder_adapters": 2,
+    "conditional_future_evaluation_jobs": 20,
+    "conditional_future_jobs_not_counted_ready": true
+  },
+  "B": {
+    "observed_at_utc": "2026-10-09T11:05:37.579055+00:00",
+    "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_hb2008final_20261009.json",
+    "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_hb2008final_20261009.json",
+    "gpu_snapshot": "12623 MiB, 94 %",
+    "active_training": [
+      "oos2r_cosine_5e5_seed20261014_20261009"
+    ],
+    "training_steps_saved": 270,
+    "training_steps_expected": 654,
+    "active_log": "/root/daily_rag_seed3_20261009/train_cosine.log",
+    "prepared_training_jobs": 1,
+    "ready_sequences": [
+      {
+        "queue": "B58",
+        "seed": 20261014,
+        "remaining_jobs": 1,
+        "order": [
+          "finch"
+        ],
+        "pid": 2798582
+      }
+    ],
+    "filesystem_available_bytes": 6096052224,
+    "space_observed_at_utc": "2026-10-09T11:05:44.010042+00:00",
+    "preparation_target_met": false,
+    "target_prepared_jobs": 3,
+    "unnecessary_extra_seed_added": false,
+    "B57_ALLDONE": true,
+    "B58_process_alive_in_latest_snapshot": true,
+    "conditional_candidate_groups": 4
+  },
+  "archived_completed": {
+    "A_answer_sets": 7,
+    "A_answers_saved": 9190,
+    "A_answers_expected": 9190,
+    "A_failed_or_unparsed": 0,
+    "A_missing": 0,
+    "A_remote_local_hashes": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_completed_hashes_20261009_0125.json",
+    "A_counts": {
+      "e4bqat_oos2_d2": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos2_d2/choice_counts.json",
+      "e4bqat_oos3_d": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos3_d/choice_counts.json",
+      "e4bqat_oos3_d2": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos3_d2/choice_counts.json",
+      "e4bqat_oos2r_d": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos2r_d/choice_counts.json",
+      "e4bqat_oos2r_d2": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos2r_d2/choice_counts.json",
+      "e4bbase_cosine_s20261012_d3": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_cosine_s20261012_d3/choice_counts.json",
+      "e4bqat_cosine_s20261012_d3": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_cosine_s20261012_d3/choice_counts.json"
+    },
+    "adapters": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/adapters_archived_20261009_0115.json",
+    "HF_GGUF_pairs": 2,
+    "basic": {
+      "spark_s1_4b_oos": {
+        "saved": 835,
+        "errors": 0,
+        "files": 5
+      },
+      "oos2r_cosine_5e5_20261008": {
+        "saved": 835,
+        "errors": 0,
+        "files": 5
+      }
+    },
+    "basic_and_logs_directory": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_completed_20261009_0121",
+    "basic_files": 10,
+    "failure_and_execution_logs": 8
+  },
+  "failures": [
+    {
+      "candidate": "Jevify-E4B",
+      "stage": "weight download ReadTimeout; smoke missing model.safetensors",
+      "B54_workflow_marker": "ALLDONE is not success of each candidate",
+      "trained_adapter_completed": false,
+      "retried": false,
+      "logs_preserved": true
+    }
+  ],
+  "conditional_work": [
+    {
+      "candidate": "ConwayResearch/Underdog-Saluki-27B-1.0 first2613 correction baseline",
+      "ready": false,
+      "reason": "Exact same-weight trainable representation and installed CUDA backward unverified; existing 16GiB GPU peak unmeasured; dense equivalent plus 3GiB reserve exceeds available storage",
+      "evidence": "program/research/daily_rag_slm/saluki_finetune_2026-10-09.json"
+    },
+    {
+      "candidate": "Spark-S1-4B-v6 our travel adapter additional evaluation",
+      "ready": false,
+      "reason": "Matching base GGUF absent on A; no corresponding full training base in B existing hf_models inventory; new full weights and safe reserve not established"
+    },
+    {
+      "candidate": "StandardThinking/StandardOne-3B and StandardOne-8B",
+      "ready": false,
+      "reason": "Whole weights plus 3GiB reserve do not fit observed A/B storage; installed choice-score runtime GPU compatibility not verified"
+    },
+    {
+      "candidate": "Jevify-gemma4-e4b",
+      "ready": false,
+      "reason": "Previous weight ReadTimeout and missing full model preserved; no repaired cause or complete trained model, no automatic retry"
+    }
+  ],
+  "observer_fix": {
+    "source": "program/scripts/plan_qa_bench/server/queues/check_backlog_20261008.py",
+    "finch_backup": "program/scripts/plan_qa_bench/server/queues/_backup/2026-10-09_0120_finch_process_observer/check_backlog_20261008.py",
+    "B58_backup_folder": "program/scripts/plan_qa_bench/_backup/2026-10-09_0133_B58_observation",
+    "finch_actual_process_detected": true,
+    "B58_actual_process_detected": true,
+    "B58_prepared_captured": true
+  },
+  "scope": {
+    "our_travel_adapters": true,
+    "developer_regression_only": true,
+    "independent_holdout_validated": false,
+    "final_model_ranking": false,
+    "speed_comparison": false,
+    "product_adoption": false,
+    "new_gpu_rental": false,
+    "new_model_download": true,
+    "model_deleted_by_this_task": false,
+    "snapshot_is_not_continuous_utilization_proof": true,
+    "new_model_download_definition": "Valen original pinned weights downloaded earlier on 2026-10-09; no weights downloaded during this refill",
+    "new_model_download_this_refill": false
+  },
+  "earlier_observation_before_D3_recovery": {
+    "A": {
+      "observed_at_utc": "2026-10-08T16:19:05.959037+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_gpu_20261009_after_refill.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_gpu_20261009_after_refill.json",
+      "gpu_snapshot": "3482 MiB, 91 %",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 57,
+      "manifest_questions": 109005,
+      "completed_jobs": 47,
+      "running_jobs": [
+        "e4bbase_cosine_s20261012_d3"
+      ],
+      "running_answers_saved": 93,
+      "running_answers_expected": 360,
+      "ready_jobs": 9,
+      "input_blocked_jobs": 0,
+      "filesystem_available_bytes": 8675635200,
+      "new_jobs": 10,
+      "new_questions": 18850,
+      "refill_audit": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/cosine_refill_20261009_0123.json",
+      "remote_backup": "/tmp/tripilot-a-backlog-20261008/_backup/2026-10-08_161758_cosine_additional/manifest.json"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-08T16:25:32.567932+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_gpu_20261009_final.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_gpu_20261009_final.json",
+      "gpu_snapshot": "12417 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_20261008"
+      ],
+      "active_training_stage": "initial loss pass 2613/2613 completed; optimizer training ongoing, step count not yet logged in snapshot",
+      "active_log": "/root/daily_rag_20261008/train_finch.log",
+      "prepared_training_jobs": 4,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "jobs": 2,
+          "order": [
+            "finch",
+            "cosine"
+          ],
+          "dependency": "B56 ALLDONE",
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 22522556416,
+      "B58_preflight": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B58_prepared_20261009_0125.json",
+      "B58_wait_log_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B58_and_basic_20261009_0120.json"
+    }
+  },
+  "followup_D3_recovery": {
+    "recorded_at_utc": "2026-10-08T16:35:05.689132+00:00",
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_013505_cosine-d3-completion.md",
+    "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_parent_20261009_0130.json",
+    "archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/cosine_D3_completed_20261009_0132",
+    "counts": {
+      "e4bbase_cosine_s20261012_d3": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_cosine_s20261012_d3/choice_counts.json",
+      "e4bqat_cosine_s20261012_d3": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_cosine_s20261012_d3/choice_counts.json"
+    },
+    "QAT_matched_original": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_cosine_s20261012_d3/matched_original.json",
+    "saved": 720,
+    "expected": 720,
+    "failed_or_unparsed": 0,
+    "missing": 0,
+    "remote_local_sha_match": [
+      2,
+      2
+    ],
+    "state_backup": "program/research/daily_rag_slm/_backup/2026-10-09_013505_gpu_final_observation/gpu_backlog_2026-10-09.json",
+    "corrected_suite": "Both completed jobs are D3, Q4_K_M and QAT Q4_0; H not started in snapshot",
+    "new_gpu_jobs_started_by_recovery": false,
+    "product_adoption": false,
+    "final_ranking": false
+  },
+  "before_saluki_actual_running_observation": {
+    "A": {
+      "observed_at_utc": "2026-10-08T17:28:23.330361+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_saluki_registered_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_saluki_registered_20261009.json",
+      "gpu_snapshot": "8142 MiB, 100 %",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 63,
+      "manifest_questions": 118442,
+      "completed_jobs": 42,
+      "running_jobs": [
+        "saluki_original_d3_a1"
+      ],
+      "running_answers_saved": 50,
+      "running_answers_expected": 360,
+      "ready_jobs": 5,
+      "input_blocked_jobs": 0,
+      "filesystem_available_bytes": 8675635200,
+      "new_jobs": 6,
+      "new_questions": 9437,
+      "refill_audit": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/queue_registered_A_20261009.json",
+      "remote_backup": "/tmp/tripilot-a-backlog-20261008/_backup/2026-10-08_172443_saluki_registration/manifest.json",
+      "ready_ids": [
+        {
+          "id": "saluki_original_mx_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "saluki_original_h_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "saluki_original_d_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "saluki_original_d2_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "e4bqat_cosine_s20261012_mx",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        }
+      ],
+      "readiness_evidence": "Smoke success marker and verified model symlink exist; existing worker started original D3"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-08T17:28:23.110938+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_saluki_registered_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_saluki_registered_20261009.json",
+      "gpu_snapshot": "12899 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_20261008"
+      ],
+      "active_training_stage": "optimizer update 140/654 in FINCH log",
+      "active_log": "/root/daily_rag_20261008/train_finch.log",
+      "prepared_training_jobs": 4,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "jobs": 2,
+          "order": [
+            "finch",
+            "cosine"
+          ],
+          "dependency": "B56 ALLDONE",
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 22522556416,
+      "B58_preflight": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B58_prepared_20261009_0125.json",
+      "B58_wait_log_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B58_and_basic_20261009_0120.json",
+      "training_steps_saved": 140,
+      "training_steps_expected": 654,
+      "B58_process_alive_in_latest_snapshot": true
+    },
+    "conditional_work": [
+      {
+        "candidate": "ConwayResearch/Underdog-Saluki-27B-1.0",
+        "state": "download and engine architecture smoke pending; not counted ready",
+        "plan": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/evaluation_plan.json",
+        "downloaded_this_task": false
+      },
+      {
+        "candidate": "Spark-S1-4B our travel adapter",
+        "state": "archived; A additional evaluation requires matching base GGUF and verified runner; not counted ready"
+      }
+    ]
+  },
+  "saluki_actual_evaluation": {
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+    "model_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+    "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "model_bytes": 7898369152,
+    "our_training": false,
+    "publisher_original": true,
+    "A_model_storage": "Existing /dev/shm RAM; volatile",
+    "local_durable_model_archive": false,
+    "local_space_available_bytes": 4993708032,
+    "B_disk_preservation_capture": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/saluki_preservation_resume_hb0754_20261009/resume_verification.json",
+    "B_disk_preservation_complete": true,
+    "B_disk_preservation_saved_bytes": 7898369152,
+    "registered_jobs": 6,
+    "smoke_saved": 12,
+    "smoke_expected": 12,
+    "smoke_parsed": 12,
+    "smoke_correct": 9,
+    "full_saved_partial_snapshot": 9425,
+    "full_expected": 9425,
+    "full_completed_suites": 5,
+    "full_expected_suites": 5,
+    "snapshot_at_utc": "2026-10-08T23:06:45.219102+00:00",
+    "evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_completed_hb0754_20261009/archive_verification.json",
+    "state_backup": "program/research/daily_rag_slm/_backup/2026-10-09_023533_saluki_actual_running/gpu_backlog_2026-10-09.json",
+    "cosine_recovery_pending": {},
+    "full_sequence": [
+      "D3",
+      "E/MX",
+      "H",
+      "D",
+      "D2"
+    ],
+    "speed_comparison": false,
+    "final_ranking": false,
+    "product_adoption": false,
+    "full_saved": 9425,
+    "failed_or_unparsed": 0,
+    "missing": 0,
+    "B_disk_preservation_status": "complete_verified_tail_resume",
+    "B_storage_is_off_machine_archive": false,
+    "E_gates": {
+      "passed": 3,
+      "total": 4,
+      "mixed_request_correct": 997,
+      "mixed_request_expected": 1033,
+      "mixed_no_request_false_pick": 157,
+      "mixed_no_request_expected": 974,
+      "request_loss_pp": 1.0648596321393997,
+      "false_pick_increase_pp": 0.2053388090349076
+    }
+  },
+  "before_hb0754_observation": {
+    "A": {
+      "observed_at_utc": "2026-10-08T17:28:23.330361+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_saluki_registered_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_saluki_registered_20261009.json",
+      "gpu_snapshot": "8142 MiB, 100 %",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 63,
+      "manifest_questions": 118442,
+      "completed_jobs": 57,
+      "running_jobs": [
+        "saluki_original_d3_a1"
+      ],
+      "running_answers_saved": 50,
+      "running_answers_expected": 360,
+      "ready_jobs": 5,
+      "input_blocked_jobs": 0,
+      "filesystem_available_bytes": 8675635200,
+      "new_jobs": 6,
+      "new_questions": 9437,
+      "refill_audit": "program/scripts/plan_qa_bench/results/saluki_preflight_20261009/queue_registered_A_20261009.json",
+      "remote_backup": "/tmp/tripilot-a-backlog-20261008/_backup/2026-10-08_172443_saluki_registration/manifest.json",
+      "ready_ids": [
+        {
+          "id": "saluki_original_mx_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "saluki_original_h_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "saluki_original_d_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "saluki_original_d2_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "e4bqat_cosine_s20261012_mx",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        }
+      ],
+      "readiness_evidence": "Smoke success marker and verified model symlink exist; existing worker started original D3",
+      "completed_without_errors": 42,
+      "completed_with_errors": 15,
+      "completed_count_definition": "Both completed and completed_with_errors; output failures remain in denominators",
+      "completed_status_fix_backup": "program/research/daily_rag_slm/_backup/2026-10-09_0239_before_completed_with_errors_fix/gpu_backlog_2026-10-09.json"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-08T17:28:23.110938+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_saluki_registered_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_saluki_registered_20261009.json",
+      "gpu_snapshot": "12899 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_20261008"
+      ],
+      "active_training_stage": "optimizer update 140/654 in FINCH log",
+      "active_log": "/root/daily_rag_20261008/train_finch.log",
+      "prepared_training_jobs": 4,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "jobs": 2,
+          "order": [
+            "finch",
+            "cosine"
+          ],
+          "dependency": "B56 ALLDONE",
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 22522556416,
+      "B58_preflight": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B58_prepared_20261009_0125.json",
+      "B58_wait_log_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B58_and_basic_20261009_0120.json",
+      "training_steps_saved": 140,
+      "training_steps_expected": 654,
+      "B58_process_alive_in_latest_snapshot": true
+    }
+  },
+  "state_backup": "program/research/daily_rag_slm/_backup/2026-10-09_080922_gpu_hb_completion_and_refill/gpu_backlog_2026-10-09.json",
+  "followup_hb0754_archive": {
+    "A_completed_sets": 13,
+    "A_saved": 27555,
+    "A_expected": 27555,
+    "A_SHA_match": [
+      72,
+      72
+    ],
+    "A_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_completed_hb0754_20261009/archive_verification.json",
+    "A_metadata_verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_completed_hb0754_20261009/completion_verification_hb0754.json",
+    "A_failures": 0,
+    "A_missing": 0,
+    "FINCH_D3_sets": 2,
+    "FINCH_D3_saved": 720,
+    "FINCH_D3_expected": 720,
+    "FINCH_D3_SHA_match": [
+      8,
+      8
+    ],
+    "FINCH_D3_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_finch_D3_completed_hb0810_20261009/archive_verification.json",
+    "FINCH_adapter_files_SHA_match": [
+      17,
+      17
+    ],
+    "FINCH_adapter_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_finch_completed_hb0754_20261009/archive_verification.json",
+    "FINCH_basic_saved": 835,
+    "FINCH_basic_expected": 835,
+    "FINCH_basic_errors": 0,
+    "report_link_verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/report_verification_hb0810_20261009.json"
+  },
+  "state_evidence_link_backup": "program/research/daily_rag_slm/_backup/2026-10-09_081058_gpu_completed_evidence_link/gpu_backlog_2026-10-09.json",
+  "before_daily0957_observation": {
+    "A": {
+      "observed_at_utc": "2026-10-08T23:06:45.219102+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb0810_final_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_hb0810_final_20261009.json",
+      "gpu_snapshot": "3480 MiB, 83 %",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 73,
+      "manifest_questions": 137292,
+      "completed_jobs": 65,
+      "completed_without_errors": 50,
+      "completed_with_errors": 15,
+      "completed_count_definition": "Includes completed_with_errors; output failures remain in denominators",
+      "running_jobs": [
+        "e4bbase_finch_s20261012_d"
+      ],
+      "running_answers_saved": 153,
+      "running_answers_expected": 2735,
+      "ready_jobs": 7,
+      "ready_ids": [
+        {
+          "id": "e4bqat_finch_s20261012_d",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bbase_finch_s20261012_d2",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_finch_s20261012_d2",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bbase_finch_s20261012_h",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_finch_s20261012_h",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bbase_finch_s20261012_mx",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_finch_s20261012_mx",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        }
+      ],
+      "input_blocked_jobs": 0,
+      "filesystem_available_bytes": 7871959040,
+      "new_jobs": 10,
+      "new_questions": 18850,
+      "refill_audit": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/finch_refill_hb0754_20261009.json",
+      "remote_backup": "/tmp/tripilot-a-backlog-20261008/_backup/2026-10-08_230117_finch_additional/manifest.json",
+      "manifest_sha256": "0e80d81b311e4b34340b10f464b5f7ad0e448f410df09321b37ae3c5631bc140"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-09T00:58:43.968403+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_daily0957_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_daily0957_20261009.json",
+      "gpu_snapshot": "12499 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_seed20261013_20261008"
+      ],
+      "training_steps_saved": 350,
+      "training_steps_expected": 654,
+      "active_log": "/root/daily_rag_repeat_20261008/train_finch.log",
+      "prepared_training_jobs": 3,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "remaining_jobs": 1,
+          "order": [
+            "cosine"
+          ],
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "remaining_jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 6515249152,
+      "space_observed_at_utc": "2026-10-09T00:58:42.946905+00:00",
+      "B58_process_alive_in_latest_snapshot": true
+    }
+  },
+  "daily0957_backup": "program/research/daily_rag_slm/_backup/2026-10-09_100929_daily_finch_completion_multi_role/gpu_backlog_2026-10-09.json",
+  "daily0957_archive": {
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_1010_finch-completion-and-multi-item-role.md",
+    "FINCH_new_sets": 8,
+    "FINCH_saved": 18130,
+    "FINCH_expected": 18130,
+    "FINCH_failed_or_unparsed": 0,
+    "FINCH_missing": 0,
+    "remote_local_SHA_match": [
+      32,
+      32
+    ],
+    "archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_finch_completed_daily0957_20261009/archive_verification.json",
+    "metadata_verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_finch_completed_daily0957_20261009/metadata_verification.json",
+    "same_seed_matched_comparison": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/finch_cosine_matched_daily0957_20261009.json",
+    "all_FINCH_base_quantization_suites_completed": [
+      10,
+      10
+    ],
+    "all_FINCH_answers": [
+      18850,
+      18850
+    ],
+    "new_training_complete_since_0806": false,
+    "product_adoption": false,
+    "final_ranking": false
+  },
+  "multi_items_role": {
+    "registered_jobs": 12,
+    "registered_questions": 10020,
+    "saved_in_partial_snapshot": 151,
+    "expected": 10020,
+    "completed_jobs": 8,
+    "contract": "Strict JSON items list; 64 output tokens, no grammar forcing",
+    "counts_per_job": {
+      "single": 583,
+      "no_request": 186,
+      "compound": 66
+    },
+    "source_question_matches": [
+      835,
+      835
+    ],
+    "parser_tests": [
+      8,
+      8
+    ],
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "same_as_previous_D_E_contract": false,
+    "independent_holdout": false,
+    "query_and_itinerary_changed": false,
+    "source_order_matched_by_query_not_index": true,
+    "originals": 2,
+    "our_finetuned": 4,
+    "corpus": "datasets/travel/multi_items_eval_20261009/contract.json",
+    "registration": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/multi_items_registration_daily0957_20261009.json",
+    "resume_report_tool": "program/scripts/plan_qa_bench/backlog_multi_items_report.py",
+    "completion": {
+      "saved": 5010,
+      "expected": 5010,
+      "settings_complete": 6,
+      "settings_expected": 6,
+      "archive_SHA_verified": 30,
+      "archive_SHA_expected": 30,
+      "first_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_multi_items_completed_20261009_1024",
+      "finch_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_multi_items_finch_completed_20261009_1029",
+      "note": "Same known B/C fixtures and new multiple-item output role; not old D/E repeat or independent holdout"
+    },
+    "refill_1100": {
+      "registration": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/missing_multi_role_registration_20261009_1108.json",
+      "new_jobs": 3,
+      "new_questions": 2505,
+      "saved_at_refill": 0,
+      "expected": 2505,
+      "old_comparisons_repeated": false,
+      "independent_holdout": false
+    },
+    "refill_1130": {
+      "new_jobs": 3,
+      "new_questions": 2505,
+      "audit": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/qat_multi_role_registration_20261009_1140.json",
+      "old_comparisons_repeated": false,
+      "independent_holdout": false,
+      "additional_completed": {
+        "g12bbase_multi_items_bc_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/g12bbase_multi_items_bc_a1/multi_items_counts.json",
+        "winnow_original_multi_items_bc_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_original_multi_items_bc_a1/multi_items_counts.json"
+      }
+    }
+  },
+  "before_valen_actual_observation": {
+    "A": {
+      "observed_at_utc": "2026-10-09T01:04:43.731434+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_daily_multi_started_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_daily_multi_started_20261009.json",
+      "gpu_snapshot": "3382 MiB, 93 %",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 79,
+      "manifest_questions": 142302,
+      "completed_jobs": 73,
+      "completed_without_errors": 58,
+      "completed_with_errors": 15,
+      "running_jobs": [
+        "e4bbase_multi_items_bc_a1"
+      ],
+      "running_answers_saved": 151,
+      "running_answers_expected": 835,
+      "ready_jobs": 5,
+      "ready_ids": [
+        {
+          "id": "e4bqat_original_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "e4bbase_cosine_s20261012_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_cosine_s20261012_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bbase_finch_s20261012_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_finch_s20261012_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        }
+      ],
+      "input_blocked_jobs": 0,
+      "filesystem_available_bytes": 7848914944,
+      "new_jobs": 6,
+      "new_questions": 5010,
+      "refill_audit": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/multi_items_registration_daily0957_20261009.json",
+      "remote_backup": "/tmp/tripilot-a-backlog-20261008/_backup/2026-10-09_010353_multi_items_role/manifest.json",
+      "manifest_sha256": "7f33b9aecc6e6600618fc2b9f65ba7d9552c6d3dd66060322418946c1c52db96",
+      "new_role": "Strict multi-item JSON response; not rerun of old single-item D/E",
+      "completed_count_definition": "Includes completed_with_errors; failed or missing remain in denominators"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-09T01:23:24.649466+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_valen_final_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_daily0957_20261009.json",
+      "gpu_snapshot": "12499 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_seed20261013_20261008"
+      ],
+      "training_steps_saved": 400,
+      "training_steps_expected": 654,
+      "active_log": "/root/daily_rag_repeat_20261008/train_finch.log",
+      "prepared_training_jobs": 3,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "remaining_jobs": 1,
+          "order": [
+            "cosine"
+          ],
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "remaining_jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 6515249152,
+      "space_observed_at_utc": "2026-10-09T00:58:42.946905+00:00",
+      "B58_process_alive_in_latest_snapshot": true
+    }
+  },
+  "valen_original_execution": {
+    "repo_id": "Valen-Team/Valen-0.8B",
+    "revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+    "weight_SHA256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+    "files_downloaded": 17,
+    "official_code_SHA_verified": 9,
+    "our_training": false,
+    "publisher_training": "Developer full decision SFT",
+    "cpu_context_checked": 9425,
+    "cpu_context_expected": 9425,
+    "cpu_max_tokens": 3934,
+    "cpu_max_choices": 47,
+    "smoke_attempt1": {
+      "status": "failed_before_model_load",
+      "saved": 0,
+      "expected": 12,
+      "missing": 12,
+      "error": "Executable symlink resolved paths hid different sys.prefix"
+    },
+    "smoke_attempt2": {
+      "expected": 12,
+      "saved": 12,
+      "parsed": 12,
+      "errors": 0,
+      "missing": 0,
+      "correct": 4,
+      "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+      "smoke": true,
+      "max_gpu_allocated": 4726889984,
+      "memory": {
+        "used": 26555408384,
+        "limit": 30999998464,
+        "headroom": 4444590080
+      }
+    },
+    "active_main_saved": {},
+    "main_expected": 9425,
+    "probability_kind": "Native choice-head probability, not next-token/verbal confidence",
+    "runtime": "FP32 checkpoint, BF16 backbone autocast, FP32 head; rtenv Transformer5.17.0; local_files_only",
+    "archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_actual_smoke_runtime_20261009_1031",
+    "archive_SHA_verified": 18,
+    "registration": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_registration_attempt2_20261009.json",
+    "runner": "program/scripts/plan_qa_bench/server/queues/valen_native_eval_20261009_v2.py",
+    "ranking_final": false,
+    "completed_main_suites": 5,
+    "completed_main_saved": 9425,
+    "completed_main_expected": 9425,
+    "active_main_saved_is_launch_snapshot": true,
+    "main_complete": true,
+    "completion_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_valen_D3_E_completed_20261009_1110",
+    "H_completion_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_valen_H_completed_20261009_1113",
+    "completion_SHA_verified": 22,
+    "completion_SHA_expected": 22,
+    "metrics": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_D3_E_H_metrics_20261009_1115.json",
+    "latest_counts": {
+      "valen_08b_original_d3_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_d3_a1/native_counts.json",
+      "valen_08b_original_mx_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_mx_a1/native_counts.json",
+      "valen_08b_original_h_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_h_a1/native_counts.json",
+      "valen_08b_original_d_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_d_a1/native_counts.json",
+      "valen_08b_original_d2_a2": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_d2_a2/native_counts.json"
+    },
+    "D2_first_attempt_failed": true,
+    "D2_first_attempt_missing": 1000,
+    "D2_failed_preload_counts": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_d2_a1/failed_preload_counts.json",
+    "D2_replacement_attempt": "valen_08b_original_d2_a2",
+    "D2_replacement_registration": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_D2_attempt2_registered_20261009_1140.json",
+    "D2_guard_tests": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_D2_memory_guard_v3_tests_20261009_1140.json",
+    "D2_replacement_is_pending": false,
+    "first_failure_not_repeated_without_fix": true,
+    "D2_replacement_success": true,
+    "main_calls_failed_or_unparsed": 0,
+    "D2_path_performance": {
+      "false_pick": [
+        999,
+        1000
+      ],
+      "correct": [
+        1,
+        1000
+      ],
+      "mapping_audit": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/Valen_D2_mapping_audit.json",
+      "root_cause_isolated": false,
+      "general_model_capability_claim": false
+    }
+  },
+  "valen_report": "final_project_cs/wiki/records/reports/2026-10-09_1032_valen-native-start-and-multi-item-completion.md",
+  "valen_status_backup": "program/research/daily_rag_slm/_backup/2026-10-09_103208_valen_actual_and_multi_completion",
+  "before_1100_missing_role_refill": {
+    "A": {
+      "observed_at_utc": "2026-10-09T01:29:41.256128+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_valen_actual_20261009_1031.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_valen_actual_20261009_1031.json",
+      "gpu_snapshot": "4876 MiB, 87 %",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 86,
+      "manifest_questions": 151751,
+      "completed_jobs": 80,
+      "failed_jobs": 1,
+      "running_jobs": [
+        "valen_08b_original_d3_a1"
+      ],
+      "running_answers_saved": {
+        "valen_08b_original_d3_a1": 132
+      },
+      "ready_jobs": 4,
+      "ready_ids": [
+        {
+          "id": "valen_08b_original_mx_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "valen_08b_original_h_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "valen_08b_original_d_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "valen_08b_original_d2_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        }
+      ],
+      "input_blocked_jobs": 0,
+      "blocked_ids": [],
+      "filesystem_available_bytes": 4311199744,
+      "space_observed_at_utc": "2026-10-09T01:29:45.388669+00:00",
+      "prepared_main_gate": "SMOKE_PASS satisfied; pending original comparisons now ready"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-09T01:23:24.649466+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_valen_final_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_daily0957_20261009.json",
+      "gpu_snapshot": "12499 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_seed20261013_20261008"
+      ],
+      "training_steps_saved": 400,
+      "training_steps_expected": 654,
+      "active_log": "/root/daily_rag_repeat_20261008/train_finch.log",
+      "prepared_training_jobs": 3,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "remaining_jobs": 1,
+          "order": [
+            "cosine"
+          ],
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "remaining_jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 6515249152,
+      "space_observed_at_utc": "2026-10-09T00:58:42.946905+00:00",
+      "B58_process_alive_in_latest_snapshot": true
+    },
+    "conditional_work": [
+      {
+        "candidate": "Spark-S1-4B our travel adapter",
+        "state": "matching base GGUF missing on A; not ready"
+      },
+      {
+        "candidate": "StandardThinking/StandardOne-3B and StandardOne-8B",
+        "state": "full weights plus 3GiB reserve do not fit current A/B disk; 8192-token choice-score runner GPU smoke pending; not ready"
+      },
+      {
+        "candidate": "Valen-Team/Valen-0.8B",
+        "state": "parent owns fixed release and contract review; existing A runtime read-only preflight verified; weights not downloaded; execution compatibility not smoke verified; not ready",
+        "runtime_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_A_runtime_version_verify_20261009.json",
+        "space_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_A_readonly_preflight_daily0957_20261009.json"
+      }
+    ],
+    "multi_items_role": {
+      "registered_jobs": 6,
+      "registered_questions": 5010,
+      "saved_in_partial_snapshot": 151,
+      "expected": 5010,
+      "completed_jobs": 0,
+      "contract": "Strict JSON items list; 64 output tokens, no grammar forcing",
+      "counts_per_job": {
+        "single": 583,
+        "no_request": 186,
+        "compound": 66
+      },
+      "source_question_matches": [
+        835,
+        835
+      ],
+      "parser_tests": [
+        8,
+        8
+      ],
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "same_as_previous_D_E_contract": false,
+      "independent_holdout": false,
+      "query_and_itinerary_changed": false,
+      "source_order_matched_by_query_not_index": true,
+      "originals": 2,
+      "our_finetuned": 4,
+      "corpus": "datasets/travel/multi_items_eval_20261009/contract.json",
+      "registration": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/multi_items_registration_daily0957_20261009.json",
+      "resume_report_tool": "program/scripts/plan_qa_bench/backlog_multi_items_report.py",
+      "completion": {
+        "saved": 5010,
+        "expected": 5010,
+        "settings_complete": 6,
+        "settings_expected": 6,
+        "archive_SHA_verified": 30,
+        "archive_SHA_expected": 30,
+        "first_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_multi_items_completed_20261009_1024",
+        "finch_archive": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_multi_items_finch_completed_20261009_1029",
+        "note": "Same known B/C fixtures and new multiple-item output role; not old D/E repeat or independent holdout"
+      }
+    }
+  },
+  "refill_1100_report": "final_project_cs/wiki/records/reports/2026-10-09_1115_gpu-missing-multi-role-refill-and-valen-results.md",
+  "refill_1100_state_backup": "program/research/daily_rag_slm/_backup/2026-10-09_111453_gpu_refill_and_valen_completion",
+  "before_1130_followup": {
+    "A": {
+      "observed_at_utc": "2026-10-09T02:11:36.533805+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_valen_H_completed_20261009_1113/snapshot.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_valen_H_completed_20261009_1113/snapshot.json",
+      "gpu_snapshot": "100 %, 5200 MiB, 16380 MiB",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 89,
+      "manifest_questions": 154256,
+      "completed_jobs": 83,
+      "failed_jobs": 1,
+      "running_jobs": [
+        "valen_08b_original_d_a1"
+      ],
+      "running_answers_saved": {
+        "valen_08b_original_d_a1": 0
+      },
+      "ready_jobs": 4,
+      "ready_ids": [
+        {
+          "id": "valen_08b_original_d2_a1",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "g12bbase_multi_items_bc_a1",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "winnow_original_multi_items_bc_a1",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        },
+        {
+          "id": "winnow_oos_multi_items_bc_a1",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        }
+      ],
+      "input_blocked_jobs": 0,
+      "blocked_ids": [],
+      "filesystem_available_bytes": 4276944896,
+      "space_observed_at_utc": "2026-10-09T02:11:36.533805+00:00",
+      "prepared_main_gate": "SMOKE_PASS satisfied; pending original comparisons now ready",
+      "running_saved_count_is_worker_launch_snapshot": true,
+      "manifest_sha256": "a4974c4ebf4640b8b1ef1006f7d373bba9b6810325cdbde74eadf4724cbde94a",
+      "current_role_refill_audit": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/missing_multi_role_registration_20261009_1108.json"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-09T02:01:30.801702+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/utilization_check_20261009_1100/B_snapshot.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_daily0957_20261009.json",
+      "gpu_snapshot": "12499 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_seed20261013_20261008"
+      ],
+      "training_steps_saved": 480,
+      "training_steps_expected": 654,
+      "active_log": "/root/daily_rag_repeat_20261008/train_finch.log",
+      "prepared_training_jobs": 3,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "remaining_jobs": 1,
+          "order": [
+            "cosine"
+          ],
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "remaining_jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 6515249152,
+      "space_observed_at_utc": "2026-10-09T00:58:42.946905+00:00",
+      "B58_process_alive_in_latest_snapshot": true,
+      "space_observation_not_refreshed": true
+    }
+  },
+  "refill_1130_report": "final_project_cs/wiki/records/reports/2026-10-09_1150_gpu-refill-valen-d2-failure-and-winnow-role.md",
+  "refill_1130_backup": "program/research/daily_rag_slm/_backup/2026-10-09_114440_gpu_refill_valen_D2_failure",
+  "previous_before_hb1355": {
+    "A": {
+      "observed_at_utc": "2026-10-09T02:40:03.186597+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_refill1140_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_refill1140_20261009.json",
+      "gpu_snapshot": "5220 MiB, 83 %",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 93,
+      "manifest_questions": 157761,
+      "completed_jobs": 86,
+      "failed_jobs": 2,
+      "running_jobs": [
+        "winnow_oos_multi_items_bc_a1"
+      ],
+      "running_answers_saved": {
+        "winnow_oos_multi_items_bc_a1": 397
+      },
+      "ready_jobs": 4,
+      "ready_ids": [
+        {
+          "id": "e4bqat_oos1_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_oos3_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_oos2r_multi_items_bc_a1",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "valen_08b_original_d2_a2",
+          "input_checks": {
+            "model": true,
+            "prompts": true,
+            "script": true
+          }
+        }
+      ],
+      "input_blocked_jobs": 0,
+      "blocked_ids": [],
+      "filesystem_available_bytes": 4269309952,
+      "space_observed_at_utc": "2026-10-09T02:40:07.237414+00:00",
+      "prepared_main_gate": "SMOKE_PASS satisfied; pending original comparisons now ready",
+      "running_saved_count_is_worker_launch_snapshot": false,
+      "manifest_sha256": "a93b1a09d7a920c577808dcfec275f057f003d66f86296f5843379f42fb8095b",
+      "current_role_refill_audit": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/missing_multi_role_registration_20261009_1108.json"
+    },
+    "B": {
+      "observed_at_utc": "2026-10-09T02:34:01.468037+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_hb1135_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_daily0957_20261009.json",
+      "gpu_snapshot": "12499 MiB, 100 %",
+      "active_training": [
+        "oos2r_finch_5e5_seed20261013_20261008"
+      ],
+      "training_steps_saved": 550,
+      "training_steps_expected": 654,
+      "active_log": "/root/daily_rag_repeat_20261008/train_finch.log",
+      "prepared_training_jobs": 3,
+      "ready_sequences": [
+        {
+          "queue": "B57",
+          "seed": 20261013,
+          "remaining_jobs": 1,
+          "order": [
+            "cosine"
+          ],
+          "pid": 2793572
+        },
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "remaining_jobs": 2,
+          "order": [
+            "cosine",
+            "finch"
+          ],
+          "dependency": "B57 ALLDONE",
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 6515249152,
+      "space_observed_at_utc": "2026-10-09T00:58:42.946905+00:00",
+      "B58_process_alive_in_latest_snapshot": true,
+      "space_observation_not_refreshed": true
+    },
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_1010_finch-completion-and-multi-item-role.md"
+  },
+  "current": {
+    "observed_at_utc": "2026-10-09T11:09:18.721536+00:00",
+    "A": {
+      "observed_at_utc": "2026-10-09T11:07:05.932228+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/cosine_QAT_D3_completed/A_completed/snapshot.json",
+      "gpu_snapshot": "82 %, 3480 MiB, 16380 MiB",
+      "worker_pid": 342497,
+      "worker_restarted": false,
+      "manifest_jobs": 113,
+      "manifest_questions": 195461,
+      "completed_jobs": 103,
+      "failed_jobs": 2,
+      "running_jobs": [
+        "e4bbase_cosine_s20261013_d"
+      ],
+      "running_answers_saved": null,
+      "running_answers_count_not_polled_in_final_snapshot": true,
+      "ready_jobs": 7,
+      "ready_ids": [
+        {
+          "id": "e4bqat_cosine_s20261013_d",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bbase_cosine_s20261013_d2",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_cosine_s20261013_d2",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bbase_cosine_s20261013_h",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_cosine_s20261013_h",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bbase_cosine_s20261013_mx",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        },
+        {
+          "id": "e4bqat_cosine_s20261013_mx",
+          "checks": {
+            "model": true,
+            "prompts": true,
+            "script": true,
+            "lora": true
+          }
+        }
+      ],
+      "input_blocked_jobs": 0,
+      "blocked_ids": [],
+      "filesystem_available_bytes": 4101066752,
+      "refill_audit": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/A_seed13_registration.json",
+      "new_jobs": 10,
+      "new_questions": 18850,
+      "worker_lock_held_on_registration": true,
+      "pre_refill_idle_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb1953_20261009.json",
+      "conditional_future_feeder_adapters": 2,
+      "conditional_future_evaluation_jobs": 20,
+      "conditional_future_jobs_not_counted_ready": true
+    },
+    "B": {
+      "observed_at_utc": "2026-10-09T11:05:37.579055+00:00",
+      "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_hb2008final_20261009.json",
+      "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_hb2008final_20261009.json",
+      "gpu_snapshot": "12623 MiB, 94 %",
+      "active_training": [
+        "oos2r_cosine_5e5_seed20261014_20261009"
+      ],
+      "training_steps_saved": 270,
+      "training_steps_expected": 654,
+      "active_log": "/root/daily_rag_seed3_20261009/train_cosine.log",
+      "prepared_training_jobs": 1,
+      "ready_sequences": [
+        {
+          "queue": "B58",
+          "seed": 20261014,
+          "remaining_jobs": 1,
+          "order": [
+            "finch"
+          ],
+          "pid": 2798582
+        }
+      ],
+      "filesystem_available_bytes": 6096052224,
+      "space_observed_at_utc": "2026-10-09T11:05:44.010042+00:00",
+      "preparation_target_met": false,
+      "target_prepared_jobs": 3,
+      "unnecessary_extra_seed_added": false,
+      "B57_ALLDONE": true,
+      "B58_process_alive_in_latest_snapshot": true,
+      "conditional_candidate_groups": 4
+    },
+    "conditional_work": [
+      {
+        "candidate": "ConwayResearch/Underdog-Saluki-27B-1.0 first2613 correction baseline",
+        "ready": false,
+        "reason": "Exact same-weight trainable representation and installed CUDA backward unverified; existing 16GiB GPU peak unmeasured; dense equivalent plus 3GiB reserve exceeds available storage",
+        "evidence": "program/research/daily_rag_slm/saluki_finetune_2026-10-09.json"
+      },
+      {
+        "candidate": "Spark-S1-4B-v6 our travel adapter additional evaluation",
+        "ready": false,
+        "reason": "Matching base GGUF absent on A; no corresponding full training base in B existing hf_models inventory; new full weights and safe reserve not established"
+      },
+      {
+        "candidate": "StandardThinking/StandardOne-3B and StandardOne-8B",
+        "ready": false,
+        "reason": "Whole weights plus 3GiB reserve do not fit observed A/B storage; installed choice-score runtime GPU compatibility not verified"
+      },
+      {
+        "candidate": "Jevify-gemma4-e4b",
+        "ready": false,
+        "reason": "Previous weight ReadTimeout and missing full model preserved; no repaired cause or complete trained model, no automatic retry"
+      }
+    ],
+    "local_adapter_feeder": {
+      "pid": 24556,
+      "source": "program/scripts/plan_qa_bench/server/queues/completed_adapter_feeder.py",
+      "process_proof": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/feeder/process_proof.json",
+      "state": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/feeder/state.json",
+      "logs": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/feeder",
+      "poll_seconds": 600,
+      "scope": "Only previously approved B58 cosine/finch seed20261014; archives existing completed adapter and registers ten missing standard roles on same A worker",
+      "allowed_adapters": 2,
+      "future_registration_integrated_path_measured": false,
+      "completed_recipe_read_only_smoke_SHA": [
+        36,
+        36
+      ],
+      "compiled_registration_variants": [
+        2,
+        2
+      ],
+      "original_prompt_runner_contracts": [
+        10,
+        10
+      ],
+      "duplicate_process_rejected": true,
+      "new_gpu_worker": false,
+      "new_training": false,
+      "PC_must_remain_running": true,
+      "restart_autostart_configured": false,
+      "failures_require_manual_review": true,
+      "private_config": "datasets/travel/gpu_feeder_private_20261009/private_config.json",
+      "running_command_uses_previous_config_path": true,
+      "config_loaded_in_memory": true,
+      "restart_uses_new_private_config": true
+    },
+    "snapshot_is_not_continuous_utilization_proof": true
+  },
+  "heartbeat_1355_completion": {
+    "answers_saved": 4340,
+    "answers_expected": 4340,
+    "failed_or_unparsed": 7,
+    "missing": 0,
+    "A_remote_local_SHA": [
+      28,
+      28
+    ],
+    "B_remote_local_SHA": [
+      18,
+      18
+    ],
+    "archive": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355",
+    "new_multi_role_counts": {
+      "winnow_oos_multi_items_bc_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_oos_multi_items_bc_a1/multi_items_counts.json",
+      "e4bqat_oos1_multi_items_bc_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos1_multi_items_bc_a1/multi_items_counts.json",
+      "e4bqat_oos3_multi_items_bc_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos3_multi_items_bc_a1/multi_items_counts.json",
+      "e4bqat_oos2r_multi_items_bc_a1": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_oos2r_multi_items_bc_a1/multi_items_counts.json"
+    },
+    "valen_d2_counts": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_d2_a2/native_counts.json",
+    "valen_mapping_audit": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/Valen_D2_mapping_audit.json",
+    "finch_seed13_basic": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/FINCH_seed13_basic_counts.json",
+    "adapter_directory": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261013_20261009",
+    "adapter_sha256": "efbfc01207517ace92b4bde9b880b006ee5b4fc84c488e3844d809367ec60429",
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_140358_gpu-finch-seed2-completion-valen-final-refill.md"
+  },
+  "previous_before_hb1953": {
+    "current": {
+      "observed_at_utc": "2026-10-09T05:03:58.580934+00:00",
+      "A": {
+        "observed_at_utc": "2026-10-09T05:02:29.201849+00:00",
+        "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb1405_20261009.json",
+        "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_hb1405_20261009.json",
+        "gpu_snapshot": "3482 MiB, 98 %",
+        "worker_pid": 342497,
+        "worker_restarted": false,
+        "manifest_jobs": 103,
+        "manifest_questions": 176611,
+        "completed_jobs": 91,
+        "failed_jobs": 2,
+        "running_jobs": [
+          "e4bbase_finch_s20261013_d3"
+        ],
+        "running_answers_saved": {
+          "e4bbase_finch_s20261013_d3": 209
+        },
+        "ready_jobs": 9,
+        "ready_ids": [
+          {
+            "id": "e4bqat_finch_s20261013_d3",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bbase_finch_s20261013_d",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bqat_finch_s20261013_d",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bbase_finch_s20261013_d2",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bqat_finch_s20261013_d2",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bbase_finch_s20261013_h",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bqat_finch_s20261013_h",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bbase_finch_s20261013_mx",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          },
+          {
+            "id": "e4bqat_finch_s20261013_mx",
+            "input_checks": {
+              "model": true,
+              "prompts": true,
+              "script": true,
+              "lora": true
+            }
+          }
+        ],
+        "input_blocked_jobs": 0,
+        "blocked_ids": [],
+        "filesystem_available_bytes": 4191072256,
+        "space_observed_at_utc": "2026-10-09T05:02:33.363799+00:00",
+        "refill_audit": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/A_seed13_registration.json",
+        "new_jobs": 10,
+        "new_questions": 18850,
+        "pre_refill_idle_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb1355_20261009.json",
+        "worker_lock_held_on_registration": true
+      },
+      "B": {
+        "observed_at_utc": "2026-10-09T05:02:29.639026+00:00",
+        "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_hb1405_20261009.json",
+        "conditions": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_hb1405_20261009.json",
+        "gpu_snapshot": "12781 MiB, 100 %",
+        "active_training": [
+          "oos2r_cosine_5e5_seed20261013_20261008"
+        ],
+        "training_steps_saved": 180,
+        "training_steps_expected": 654,
+        "active_log": "/root/daily_rag_repeat_20261008/train_cosine.log",
+        "prepared_training_jobs": 2,
+        "ready_sequences": [
+          {
+            "queue": "B58",
+            "seed": 20261014,
+            "remaining_jobs": 2,
+            "order": [
+              "cosine",
+              "finch"
+            ],
+            "dependency": "B57 ALLDONE",
+            "pid": 2798582
+          }
+        ],
+        "filesystem_available_bytes": 6305652736,
+        "space_observed_at_utc": "2026-10-09T05:02:33.781805+00:00",
+        "B57_process_alive_in_latest_snapshot": true,
+        "B58_process_alive_in_latest_snapshot": true,
+        "preparation_target_met": false,
+        "target_prepared_jobs": 3,
+        "unnecessary_extra_seed_added": false,
+        "existing_candidate_inventory": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1355/B_existing_candidates.json"
+      },
+      "conditional_work": [
+        {
+          "candidate": "ConwayResearch/Underdog-Saluki-27B-1.0 first2613 correction baseline",
+          "ready": false,
+          "reason": "Exact same-weight trainable representation and installed CUDA backward unverified; existing 16GiB GPU peak unmeasured; dense equivalent plus 3GiB reserve exceeds available storage",
+          "evidence": "program/research/daily_rag_slm/saluki_finetune_2026-10-09.json"
+        },
+        {
+          "candidate": "Spark-S1-4B-v6 our travel adapter additional evaluation",
+          "ready": false,
+          "reason": "Matching base GGUF absent on A; no corresponding full training base in B existing hf_models inventory; new full weights and safe reserve not established"
+        },
+        {
+          "candidate": "StandardThinking/StandardOne-3B and StandardOne-8B",
+          "ready": false,
+          "reason": "Whole weights plus 3GiB reserve do not fit observed A/B storage; installed choice-score runtime GPU compatibility not verified"
+        },
+        {
+          "candidate": "Jevify-gemma4-e4b",
+          "ready": false,
+          "reason": "Previous weight ReadTimeout and missing full model preserved; no repaired cause or complete trained model, no automatic retry"
+        }
+      ],
+      "snapshot_is_not_continuous_utilization_proof": true
+    },
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_140358_gpu-finch-seed2-completion-valen-final-refill.md"
+  },
+  "local_adapter_feeder": {
+    "pid": 24556,
+    "source": "program/scripts/plan_qa_bench/server/queues/completed_adapter_feeder.py",
+    "process_proof": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/feeder/process_proof.json",
+    "state": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/feeder/state.json",
+    "logs": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/feeder",
+    "poll_seconds": 600,
+    "scope": "Only previously approved B58 cosine/finch seed20261014; archives existing completed adapter and registers ten missing standard roles on same A worker",
+    "allowed_adapters": 2,
+    "future_registration_integrated_path_measured": false,
+    "completed_recipe_read_only_smoke_SHA": [
+      36,
+      36
+    ],
+    "compiled_registration_variants": [
+      2,
+      2
+    ],
+    "original_prompt_runner_contracts": [
+      10,
+      10
+    ],
+    "duplicate_process_rejected": true,
+    "new_gpu_worker": false,
+    "new_training": false,
+    "PC_must_remain_running": true,
+    "restart_autostart_configured": false,
+    "failures_require_manual_review": true,
+    "private_config": "datasets/travel/gpu_feeder_private_20261009/private_config.json",
+    "running_command_uses_previous_config_path": true,
+    "config_loaded_in_memory": true,
+    "restart_uses_new_private_config": true
+  },
+  "heartbeat_1953_completion": {
+    "sets": [
+      12,
+      12
+    ],
+    "answers": [
+      19570,
+      19570
+    ],
+    "failed_or_unparsed": 0,
+    "missing": 0,
+    "A_remote_local_SHA": [
+      54,
+      54
+    ],
+    "B_remote_local_SHA": [
+      18,
+      18
+    ],
+    "counts": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/completion_counts.json",
+    "cosine_basic": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/cosine_seed13_basic_counts.json",
+    "cosine_basic_answers": [
+      835,
+      835
+    ],
+    "adapter_directory": "datasets/core/pointing/trainset/train_oos/oos2r_cosine_5e5_seed20261013_20261009",
+    "adapter_sha256": "9832e316c7df17aa41649ab0847f98c36f4281cc403bce180e1665413641517f",
+    "dataset_verification": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/dataset_verification.json",
+    "report": "final_project_cs/wiki/records/reports/2026-10-09_200918_gpu-seed2-results-cosine-refill-local-feeder.md",
+    "source_identity_verification": "program/scripts/plan_qa_bench/results/gpu_management_20261009_1953/source_identity_verification.json"
+  }
+}

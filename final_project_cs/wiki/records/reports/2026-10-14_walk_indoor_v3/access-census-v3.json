@@ -1,0 +1,451 @@
+{
+ "counts": {
+  "routed": 221,
+  "optimistic_routed_longer": 60,
+  "optimistic_used_detour": 15,
+  "capped": 18
+ },
+ "total_calls": 314,
+ "samples": {
+  "routed": [
+   {
+    "from": [
+     37.5636,
+     126.9826
+    ],
+    "to": [
+     37.5654717,
+     126.9823518
+    ],
+    "straight_m": 210,
+    "routed_m": 361.5,
+    "q": {
+     "access_max_m": 5.3,
+     "arterial_pct": 71.3,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5636,
+     126.9826
+    ],
+    "to": [
+     37.5656188,
+     126.982964
+    ],
+    "straight_m": 227,
+    "routed_m": 292.3,
+    "q": {
+     "access_max_m": 8.1,
+     "arterial_pct": 85.8,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5636,
+     126.9826
+    ],
+    "to": [
+     37.5657611,
+     126.9831794
+    ],
+    "straight_m": 246,
+    "routed_m": 316.8,
+    "q": {
+     "access_max_m": 7.8,
+     "arterial_pct": 87.0,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5636,
+     126.9826
+    ],
+    "to": [
+     37.565895,
+     126.9820068
+    ],
+    "straight_m": 261,
+    "routed_m": 344.7,
+    "q": {
+     "access_max_m": 5.3,
+     "arterial_pct": 74.9,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5636,
+     126.9826
+    ],
+    "to": [
+     37.5662726,
+     126.9821369
+    ],
+    "straight_m": 300,
+    "routed_m": 397.9,
+    "q": {
+     "access_max_m": 14.9,
+     "arterial_pct": 78.5,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5636,
+     126.9826
+    ],
+    "to": [
+     37.5608718,
+     126.9847213
+    ],
+    "straight_m": 357,
+    "routed_m": 510.6,
+    "q": {
+     "access_max_m": 8.1,
+     "arterial_pct": 23.5,
+     "optimistic": false
+    },
+    "err": null
+   }
+  ],
+  "optimistic_routed_longer": [
+   {
+    "from": [
+     37.5559,
+     126.9707
+    ],
+    "to": [
+     37.5564412,
+     126.9716427
+    ],
+    "straight_m": 103,
+    "routed_m": 205.0,
+    "q": {
+     "access_max_m": 90.9,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5559,
+     126.9707
+    ],
+    "to": [
+     37.5562533,
+     126.972089
+    ],
+    "straight_m": 129,
+    "routed_m": 468.4,
+    "q": {
+     "access_max_m": 84.6,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5559,
+     126.9707
+    ],
+    "to": [
+     37.555049,
+     126.9717005
+    ],
+    "straight_m": 130,
+    "routed_m": 255.4,
+    "q": {
+     "access_max_m": 84.6,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5559,
+     126.9707
+    ],
+    "to": [
+     37.5545364,
+     126.9717037
+    ],
+    "straight_m": 176,
+    "routed_m": 292.5,
+    "q": {
+     "access_max_m": 84.6,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5559,
+     126.9707
+    ],
+    "to": [
+     37.5543653,
+     126.9718629
+    ],
+    "straight_m": 199,
+    "routed_m": 349.1,
+    "q": {
+     "access_max_m": 84.6,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5559,
+     126.9707
+    ],
+    "to": [
+     37.5544913,
+     126.9699116
+    ],
+    "straight_m": 172,
+    "routed_m": 512.8,
+    "q": {
+     "access_max_m": 90.9,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   }
+  ],
+  "optimistic_used_detour": [
+   {
+    "from": [
+     37.5559,
+     126.9707
+    ],
+    "to": [
+     37.5602504,
+     126.9655286
+    ],
+    "straight_m": 665,
+    "routed_m": 793.7,
+    "q": {
+     "access_max_m": 90.9,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5111,
+     127.098
+    ],
+    "to": [
+     37.5026425,
+     127.0972064
+    ],
+    "straight_m": 944,
+    "routed_m": 985.5,
+    "q": {
+     "access_max_m": 109.2,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5111,
+     127.098
+    ],
+    "to": [
+     37.5054045,
+     127.1066508
+    ],
+    "straight_m": 993,
+    "routed_m": 1250.9,
+    "q": {
+     "access_max_m": 109.2,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5547,
+     126.9707
+    ],
+    "to": [
+     37.5549468,
+     126.9727697
+    ],
+    "straight_m": 185,
+    "routed_m": 245.3,
+    "q": {
+     "access_max_m": 39.6,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5547,
+     126.9707
+    ],
+    "to": [
+     37.5535727,
+     126.9724576
+    ],
+    "straight_m": 200,
+    "routed_m": 256.1,
+    "q": {
+     "access_max_m": 98.9,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5547,
+     126.9707
+    ],
+    "to": [
+     37.5602504,
+     126.9655286
+    ],
+    "straight_m": 768,
+    "routed_m": 1052.2,
+    "q": {
+     "access_max_m": 54.2,
+     "arterial_pct": 0.0,
+     "optimistic": true
+    },
+    "err": null
+   }
+  ],
+  "capped": [
+   {
+    "from": [
+     37.5512,
+     126.9882
+    ],
+    "to": [
+     37.548395263,
+     126.9841668777
+    ],
+    "straight_m": 473,
+    "routed_m": 1624.4,
+    "q": {
+     "access_max_m": 12.4,
+     "arterial_pct": 15.2,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5512,
+     126.9882
+    ],
+    "to": [
+     37.54869,
+     126.98432
+    ],
+    "straight_m": 442,
+    "routed_m": 1419.2,
+    "q": {
+     "access_max_m": 12.4,
+     "arterial_pct": 32.4,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.4979,
+     127.0276
+    ],
+    "to": [
+     37.4979952,
+     127.0268964
+    ],
+    "straight_m": 63,
+    "routed_m": 179.6,
+    "q": {
+     "access_max_m": 1.5,
+     "arterial_pct": 36.9,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.4979,
+     127.0276
+    ],
+    "to": [
+     37.4977839964,
+     127.0266040758
+    ],
+    "straight_m": 89,
+    "routed_m": 221.7,
+    "q": {
+     "access_max_m": 6.3,
+     "arterial_pct": 30.7,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5665,
+     127.0092
+    ],
+    "to": [
+     37.565747,
+     127.0091836
+    ],
+    "straight_m": 84,
+    "routed_m": 205.8,
+    "q": {
+     "access_max_m": 12.8,
+     "arterial_pct": 0.0,
+     "optimistic": false
+    },
+    "err": null
+   },
+   {
+    "from": [
+     37.5665,
+     127.0092
+    ],
+    "to": [
+     37.5653853,
+     127.0104183
+    ],
+    "straight_m": 164,
+    "routed_m": 341.5,
+    "q": {
+     "access_max_m": 12.8,
+     "arterial_pct": 0.0,
+     "optimistic": false
+    },
+    "err": null
+   }
+  ]
+ }
+}

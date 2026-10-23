@@ -11,11 +11,22 @@
 """
 from __future__ import annotations
 
-from app.modules.travel_ops.survey import SURVEY_VERSION
+import pytest
+
+from app.domains.travel_ops.components.planning.survey import SURVEY_VERSION
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 from .test_trip_api import SCENARIO, _body, _detail, _report, _say, api  # noqa: F401
 
 ASK_FIRST = {"survey": {"version": SURVEY_VERSION, "on_disruption": "ask_first"}}
+
+
+@pytest.fixture(autouse=True)
+def gate_calculation(api):
+    """묻기·자동 변경 정책 시험의 이동 구간을 명시적으로 제공한다."""
+    calls = publish_fixed_mobility(api["client"].app, source="desk_gate_test")
+    yield
+    assert calls, "신고 판정 전에 시험 계산기를 실제로 사용해야 합니다"
 
 
 def _create(api, *, pin_seq=None, **constraints):

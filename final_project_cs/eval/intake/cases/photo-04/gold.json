@@ -1,0 +1,45 @@
+{
+ "case_id": "photo-04",
+ "format": "photo",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.jpg"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (3명)",
+  "1일차 · 10월 28일",
+  "09:30 명동난타극장",
+  "12:30 망원시장 칼국수",
+  "15:00 인사동 구경 · 예약번호 KY-64228"
+ ],
+ "items": [
+  {
+   "date": "2026-10-28",
+   "start": "09:30",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-28",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-28",
+   "start": "15:00",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": "KY-64228"
+  }
+ ]
+}

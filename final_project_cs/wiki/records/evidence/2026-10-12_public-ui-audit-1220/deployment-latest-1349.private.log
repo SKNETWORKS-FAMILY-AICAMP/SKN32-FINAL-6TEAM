@@ -1,0 +1,70 @@
+#11 [frontend 5/6] COPY frontend/apps/admin ./
+#11 CACHED
+
+#12 [frontend 6/6] RUN npm run build && npm prune --omit=dev
+#12 CACHED
+
+#13 [stage-1 1/4] FROM docker.io/library/tripilot-api:afeb62460b@sha256:f28986486dfad1da7897a19609553dce091eed5d8a5948c910617b7e3a74781d
+#13 resolve docker.io/library/tripilot-api:afeb62460b@sha256:f28986486dfad1da7897a19609553dce091eed5d8a5948c910617b7e3a74781d 0.1s done
+#13 DONE 0.4s
+
+#14 [stage-1 2/4] COPY --from=frontend /usr/local/bin/node /usr/local/bin/node
+#14 DONE 1.3s
+
+#15 [stage-1 3/4] COPY --from=frontend /admin /srv/admin
+2026-10-12 12:18:23 시작 45ab1efa8e (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:18:25 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 12:23:33 시작 45ab1efa8e (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:23:33 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 12:29:03 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:29:04 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 12:34:25 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:34:26 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 12:39:33 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:39:33 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 12:44:58 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:44:59 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 12:50:14 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:50:15 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 12:55:18 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 12:55:19 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:00:23 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:00:23 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:05:33 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:05:33 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:10:35 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:10:35 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:15:52 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:15:52 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:21:02 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:21:02 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:26:24 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:26:25 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:31:33 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:31:33 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:36:57 시작 c46327eb7d (role-manager)
+Deployment safety check failed: DeployError: tripilot-api: Compose configuration drift; reconcile before deployment
+2026-10-12 13:36:57 ★실행 중 구성 저장·일치 확인 실패 — 변경 전 중단
+2026-10-12 13:42:13 시작 82d744f7e3 (role-manager)
+Deployment safety snapshot: passed
+Deployment safety check failed: DeployError: Docker command failed (exit 1)
+2026-10-12 13:43:30 ★이미지 자체·Compose SQL 안전 계약 불일치 — DB 적용 전 중단
+2026-10-12 13:48:33 시작 4796ef2fda (role-manager)
+Deployment safety snapshot: passed
+Deployment safety check failed: DeployError: Docker command failed (exit 1)
+2026-10-12 13:48:38 ★이미지 자체·Compose SQL 안전 계약 불일치 — DB 적용 전 중단

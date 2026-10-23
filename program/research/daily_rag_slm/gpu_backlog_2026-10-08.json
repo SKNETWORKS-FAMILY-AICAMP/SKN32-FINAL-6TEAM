@@ -1,0 +1,695 @@
+{
+  "recorded_at": "2026-10-08T17:40:41.293959",
+  "registration_is_not_completion": true,
+  "gpu_A": {
+    "queue_root": "/tmp/tripilot-a-backlog-20261008",
+    "worker_pid": 342497,
+    "jobs_registered": 47,
+    "planned_answers": 90155,
+    "answers_saved_at_snapshot": {
+      "frog_h/d_test_h_backlog_frog.jsonl": 1316,
+      "frog_mx/d_test_mx_backlog_frog.jsonl": 4014,
+      "e4bbase_h/d_test_h_backlog_e4bbase.jsonl": 1316,
+      "e4bbase_mx/d_test_mx_backlog_e4bbase.jsonl": 4014,
+      "e4bbase_d/d_test_d_backlog_e4bbase.jsonl": 2735,
+      "e4bbase_d2/d_test_d2_backlog_e4bbase.jsonl": 1000,
+      "e4bbase_d3/d_test_d3_backlog_e4bbase.jsonl": 360,
+      "g12bbase_h/d_test_h_backlog_g12bbase.jsonl": 1316,
+      "g12bbase_mx/d_test_mx_backlog_g12bbase.jsonl": 4014,
+      "g12bbase_d/d_test_d_backlog_g12bbase.jsonl": 2735,
+      "g12bbase_d2/d_test_d2_backlog_g12bbase.jsonl": 1000,
+      "g12bbase_d3/d_test_d3_backlog_g12bbase.jsonl": 360,
+      "winnow_original_h/d_test_h_backlog_winnow_original.jsonl": 1316,
+      "winnow_original_mx/d_test_mx_backlog_winnow_original.jsonl": 4014,
+      "winnow_original_d/d_test_d_backlog_winnow_original.jsonl": 2735,
+      "winnow_original_d2/d_test_d2_backlog_winnow_original.jsonl": 1000,
+      "winnow_original_d3/d_test_d3_backlog_winnow_original.jsonl": 360,
+      "winnow_oos_d3/d_test_d3_backlog_winnow_oos.jsonl": 360,
+      "winnow_oos_d/d_test_d_backlog_winnow_oos.jsonl": 2735,
+      "winnow_oos_d2/d_test_d2_backlog_winnow_oos.jsonl": 1000,
+      "winnow_oos_h/d_test_h_backlog_winnow_oos.jsonl": 1316,
+      "winnow_oos_mx/d_test_mx_backlog_winnow_oos.jsonl": 4014,
+      "e4bqat_original_d2/d_test_d2_backlog_e4bqat_original.jsonl": 1000,
+      "e4bqat_original_h/d_test_h_backlog_e4bqat_original.jsonl": 1316,
+      "e4bqat_original_mx/d_test_mx_backlog_e4bqat_original.jsonl": 4014,
+      "e4bqat_original_d3/d_test_d3_backlog_e4bqat_original.jsonl": 360,
+      "e4bqat_oos1_h/d_test_h_backlog_e4bqat_oos1.jsonl": 1316,
+      "e4bqat_oos1_mx/d_test_mx_backlog_e4bqat_oos1.jsonl": 4014,
+      "e4bqat_oos2_h/d_test_h_backlog_e4bqat_oos2.jsonl": 1316,
+      "e4bqat_oos2_mx/d_test_mx_backlog_e4bqat_oos2.jsonl": 4014,
+      "e4bqat_oos3_h/d_test_h_backlog_e4bqat_oos3.jsonl": 1316,
+      "e4bqat_oos3_mx/d_test_mx_backlog_e4bqat_oos3.jsonl": 4014,
+      "e4bqat_oos2r_h/d_test_h_backlog_e4bqat_oos2r.jsonl": 1316,
+      "e4bqat_oos2r_mx/d_test_mx_backlog_e4bqat_oos2r.jsonl": 4014,
+      "e4bqat_original_d/d_test_d_backlog_e4bqat_original.jsonl": 2735,
+      "e4bqat_oos1_d3/d_test_d3_backlog_e4bqat_oos1.jsonl": 360,
+      "e4bqat_oos2_d3/d_test_d3_backlog_e4bqat_oos2.jsonl": 360,
+      "e4bqat_oos3_d3/d_test_d3_backlog_e4bqat_oos3.jsonl": 360,
+      "e4bqat_oos2r_d3/d_test_d3_backlog_e4bqat_oos2r.jsonl": 360,
+      "e4bqat_oos1_d/d_test_d_backlog_e4bqat_oos1.jsonl": 2735,
+      "e4bqat_oos1_d2/d_test_d2_backlog_e4bqat_oos1.jsonl": 1000,
+      "e4bqat_oos2_d/d_test_d_backlog_e4bqat_oos2.jsonl": 2735,
+      "e4bqat_oos2_d2/d_test_d2_backlog_e4bqat_oos2.jsonl": 250
+    },
+    "state": {
+      "jobs": {
+        "frog_h": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "frog_mx": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bbase_h": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 1
+        },
+        "e4bbase_mx": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 1
+        },
+        "e4bbase_d": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "failed_or_unparsed": 13
+        },
+        "e4bbase_d2": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bbase_d3": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 2
+        },
+        "g12bbase_h": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "g12bbase_mx": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "g12bbase_d": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "failed_or_unparsed": 2
+        },
+        "g12bbase_d2": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "g12bbase_d3": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "winnow_original_h": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 19
+        },
+        "winnow_original_mx": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 42
+        },
+        "winnow_original_d": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "failed_or_unparsed": 53
+        },
+        "winnow_original_d2": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "failed_or_unparsed": 13
+        },
+        "winnow_original_d3": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 13
+        },
+        "winnow_oos_d3": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "winnow_oos_d": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "winnow_oos_d2": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "winnow_oos_h": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "winnow_oos_mx": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_original_d2": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "failed_or_unparsed": 1
+        },
+        "e4bqat_original_h": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 1
+        },
+        "e4bqat_original_mx": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 4
+        },
+        "e4bqat_original_d3": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 1
+        },
+        "e4bqat_oos1_h": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos1_mx": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2_h": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2_mx": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos3_h": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos3_mx": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2r_h": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1316,
+          "expected": 1316,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2r_mx": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 4014,
+          "expected": 4014,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_original_d": {
+          "status": "completed_with_errors",
+          "exit_code": 0,
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "failed_or_unparsed": 17
+        },
+        "e4bqat_oos1_d3": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2_d3": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos3_d3": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2r_d3": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 360,
+          "expected": 360,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos1_d": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos1_d2": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 1000,
+          "expected": 1000,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2_d": {
+          "status": "completed",
+          "exit_code": 0,
+          "saved": 2735,
+          "expected": 2735,
+          "complete": true,
+          "failed_or_unparsed": 0
+        },
+        "e4bqat_oos2_d2": {
+          "status": "running",
+          "pid": 349045,
+          "expected": 1000,
+          "saved": 0
+        }
+      }
+    },
+    "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_hb1737.json",
+    "instant_gpu_memory_and_utilization": "3158 MiB, 70 %",
+    "jobs_completed": 42,
+    "jobs_running": 1,
+    "jobs_ready_waiting": 4,
+    "observed_at": "2026-10-08T10:20:00+09:00",
+    "completed_frog_h_archived": true,
+    "observed_at_utc": "2026-10-08T08:38:08.562694+00:00",
+    "completed_frog_mx_archived": true,
+    "jobs_completed_with_errors": 15,
+    "completed_e4bbase_h_archived": true,
+    "conditions_snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_hb1737.json",
+    "root_available_bytes": 8753930240,
+    "completed_e4bbase_mx_archived": true,
+    "completed_e4bbase_choice_archived": true,
+    "completed_g12bbase_h_archived": true,
+    "completed_g12bbase_mx_archived": true,
+    "completed_g12bbase_d_archived": true,
+    "completed_g12bbase_d2_archived": true,
+    "completed_g12bbase_d3_archived": true,
+    "completed_winnow_original_h_archived": true,
+    "winnow_oos_additional_eval_registered": 5,
+    "manifest_addition_record": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/manifest_winnow_oos_appended_1338.json",
+    "completed_winnow_original_mx_archived": true,
+    "completed_winnow_original_d_archived": true,
+    "completed_winnow_original_d2_archived": true,
+    "completed_winnow_original_d3_archived": true,
+    "completed_winnow_oos_d3_archived": true,
+    "refill_evidence": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/qat_regression_refill_hb1703.json",
+    "completed_winnow_oos_d_archived": true,
+    "completed_winnow_oos_d2_archived": true,
+    "completed_winnow_oos_h_archived": true,
+    "completed_winnow_oos_mx_archived": true,
+    "completed_e4bqat_original_d2_archived": true,
+    "completed_e4bqat_original_h_archived": true,
+    "completed_e4bqat_original_d3_archived": true,
+    "completed_e4bqat_original_mx_archived": true,
+    "completed_e4bqat_oos1_h_archived": true,
+    "completed_e4bqat_oos1_mx_archived": true,
+    "completed_e4bqat_oos2_h_archived": true,
+    "completed_e4bqat_oos2_mx_archived": true,
+    "completed_e4bqat_oos3_h_archived": true,
+    "completed_e4bqat_oos3_mx_archived": true,
+    "completed_e4bqat_oos2r_h_archived": true,
+    "completed_e4bqat_oos2r_mx_archived": true,
+    "completed_e4bqat_original_d_archived": true,
+    "completed_e4bqat_oos1_d3_archived": true,
+    "completed_e4bqat_oos2_d3_archived": true,
+    "completed_e4bqat_oos3_d3_archived": true,
+    "completed_e4bqat_oos2r_d3_archived": true,
+    "completed_e4bqat_oos1_d_archived": true,
+    "completed_e4bqat_oos1_d2_archived": true,
+    "completed_e4bqat_oos2_d_archived": true
+  },
+  "gpu_B": {
+    "full_training_variants_registered": 7,
+    "current": "spark_s1_4b_oos full training",
+    "current_our_training": true,
+    "train_choice": "train_oos.jsonl",
+    "queue_order": [
+      "winnow_e4b_oos",
+      "spark_s1_4b_oos",
+      "jevify_e4b_oos",
+      "oos2r_cosine_5e5_20261008",
+      "oos2r_finch_5e5_20261008",
+      "oos2r_finch_5e5_seed20261013_20261008",
+      "oos2r_cosine_5e5_seed20261013_20261008"
+    ],
+    "existing_queues": [
+      "B54",
+      "B56_daily_20261008",
+      "B57_repeat_20261008"
+    ],
+    "snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_snapshot_hb1737.json",
+    "instant_gpu_memory_and_utilization": "6089 MiB, 100 %",
+    "current_full_training_verified": true,
+    "observed_at": "2026-10-08T10:23:00+09:00",
+    "conditions_snapshot": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_conditions_hb1737.json",
+    "jobs_running": 1,
+    "queued_full_training_jobs": 5,
+    "ready_with_existing_automatic_preparation": null,
+    "ready_without_model_download": 4,
+    "queued_jobs_requiring_model_download": 1,
+    "download_space_observed_GB_rounded_up": 14,
+    "readiness_note": "Four waiting full-training recipes have existing model/data/source inputs; one candidate requires a model download and actual space check. Current Spark training remains active. B57 starts only after B56 ALLDONE.",
+    "next_executable": "B54 jevify download after current Spark training/conversion/evaluation and space recheck; B56 follows B54 terminal marker.",
+    "b56_status": "SMOKE_DONE; waiting for ALLDONE_B54; no completed cosine/finch full training",
+    "observed_at_utc": "2026-10-08T08:38:06.648444+00:00",
+    "root_available_bytes": 14483599360,
+    "current_phase": "full_training",
+    "completed_full_training_variants": 1,
+    "completed_winnow_e4b_oos_training_archived": true,
+    "winnow_training_completion": {
+      "variant": "winnow_e4b_oos",
+      "model": "Winnow-E4B (Jev family)",
+      "our_training": true,
+      "full_training_complete": true,
+      "conversion_complete": true,
+      "training_recipe": {
+        "seed": 20261012,
+        "rank": 16,
+        "epochs": 2,
+        "lr": 0.0002,
+        "accum": 8,
+        "training_minutes": 193.9,
+        "max_gpu_gb_log": 10.6
+      },
+      "hf_local": "datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_hf_adapter_2026-10-08_1308",
+      "gguf_local": "datasets/core/pointing/trainset/train_oos/winnow_e4b_oos_lora_f16_2026-10-08_1308.gguf",
+      "hashes_verified": true,
+      "basic_evaluation": {
+        "saved_archived": 835,
+        "expected": 835,
+        "files_archived": 5,
+        "files_expected": 5,
+        "errors": 0,
+        "complete": true,
+        "scores": {
+          "model": "Winnow-E4B our-travel oos adapter",
+          "our_training": true,
+          "B": [
+            826,
+            835
+          ],
+          "C": [
+            760,
+            835
+          ],
+          "single_correct": [
+            760,
+            769
+          ],
+          "compound_B": [
+            66,
+            66
+          ],
+          "compound_C": [
+            0,
+            66
+          ],
+          "missing": 0,
+          "errors": 0,
+          "repetitions": 1,
+          "final_ranking": false,
+          "sets": [
+            {
+              "set": "mix10",
+              "saved": 160,
+              "errors": 0,
+              "sha256": "17938be4036e556b11558b581024febd5f536b6a8182335521d30379e431924b"
+            },
+            {
+              "set": "mix11",
+              "saved": 163,
+              "errors": 0,
+              "sha256": "625de932d09897be682b2f8fa88061d4bf98b91a0fdb5937de47928126bffd3b"
+            },
+            {
+              "set": "mix12",
+              "saved": 176,
+              "errors": 0,
+              "sha256": "6ac3e18b6e777dc9bf6e638ee01838362f72af15605d50b8a2db2005b21ef1e2"
+            },
+            {
+              "set": "mix8",
+              "saved": 171,
+              "errors": 0,
+              "sha256": "0f531b44afb08eacc29b73d9840ea5e7ec5efc19ca2ca505a454c0bbc5740f93"
+            },
+            {
+              "set": "mix9",
+              "saved": 165,
+              "errors": 0,
+              "sha256": "18f7e8a6fe92beafb0c9a38f71622462d76457a6a632404ea7972e6ac796d554"
+            }
+          ]
+        }
+      },
+      "additional_eval_queued": true,
+      "resume": "Collect GPU A winnow_oos_d3/d/d2/h/mx outputs; inspect first engine evaluation for adapter loading and errors; preserve fixed heldout before adoption.",
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_131541_winnow_training_completion.md",
+      "additional_eval_registered": 5,
+      "engine_smoke_complete": true,
+      "latest_report": "final_project_cs/wiki/records/reports/2026-10-08_133908_winnow_eval_queue.md",
+      "engine_smoke_evidence": {
+        "suite": "D3",
+        "saved": 360,
+        "expected": 360,
+        "failed_or_unparsed": 0,
+        "verification": "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/winnow_oos_d3/verification.json",
+        "adapter_argument": "started.json records adapter; running engine command inspected with --lora",
+        "report": "final_project_cs/wiki/records/reports/2026-10-08_141018_winnow_d3_training_comparison.md"
+      },
+      "additional_evaluation_completion": {
+        "completed_suites": 5,
+        "expected_suites": 5,
+        "saved": 9425,
+        "expected": 9425,
+        "failed_or_unparsed": 0,
+        "independent_holdout_complete": false,
+        "product_adoption": false,
+        "report": "final_project_cs/wiki/records/reports/2026-10-08_150608_qat_refill_five_suite.md"
+      }
+    },
+    "current_variant": "spark_s1_4b_oos",
+    "download_space_deferred_until_current_temporary_base_cleanup": true,
+    "active_training_variant": "spark_s1_4b_oos",
+    "active_training_log_observer_verified": true,
+    "repeat_queue": {
+      "pid_observed": 2793572,
+      "status": "waiting_for_B56_without_GPU_allocation",
+      "prepared_jobs": 2,
+      "completed_jobs": 0,
+      "seed": 20261013,
+      "reference_seed": 20261012,
+      "mode_order": [
+        "finch",
+        "cosine"
+      ],
+      "source_preflight": {
+        "our_training": true,
+        "model": "Gemma-4-E4B-it existing base",
+        "dependency": "existing B56 ALLDONE marker; wait without GPU allocation",
+        "seed": 20261013,
+        "reference_seed": 20261012,
+        "mode_order": [
+          "finch",
+          "cosine"
+        ],
+        "reference_mode_order": [
+          "cosine",
+          "finch"
+        ],
+        "epochs": 2,
+        "rank": 16,
+        "accum": 8,
+        "max_lr": 5e-05,
+        "finch_base_rate": 2e-05,
+        "finch_alpha": 0.9,
+        "purpose": "Estimate seed variation of learning-rate comparison; not a product promotion",
+        "frozen_inputs": {
+          "/root/daily_rag_repeat_20261008/qlora_train_finch.py": "c43cc981465b6a4f8e55eca5dba3c1dbaa7f7815b2c952cd71ce799052e5c874",
+          "/root/daily_rag_repeat_20261008/finch_schedule.py": "cbfd5f58c08f202826f37aea9c6ffada859c707ad19ad20197cb4a8c611d213b",
+          "/root/work/train_oos2.jsonl": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c"
+        },
+        "preflight": {
+          "frozen_hashes": [
+            3,
+            3
+          ],
+          "shell_syntax": [
+            1,
+            1
+          ],
+          "existing_smoke_marker": true,
+          "available_bytes": 14483628032
+        },
+        "prepared_full_training_jobs": 2,
+        "training_completed": 0,
+        "new_model_download": false,
+        "weight_hash_reverified_this_preflight": false,
+        "holdout_validation_complete": false,
+        "product_adoption": false
+      },
+      "report": "final_project_cs/wiki/records/reports/2026-10-08_142120_B57_repeat_queue.md",
+      "no_new_base_download": true,
+      "idempotent_launch_verified": true
+    }
+  },
+  "automatic_refill": {
+    "automation_id": "rag-strata",
+    "interval_minutes": 10,
+    "ready_jobs_per_machine_refill_threshold": 3,
+    "research_automation_id": "rag",
+    "research_daily_time": "10:00 Asia/Seoul",
+    "continuous_until_user_changes_instruction": true,
+    "collect_completed_results_before_leaving_temporary_storage": true,
+    "no_duplicate_or_interrupt_running_jobs": true,
+    "no_new_payment_rental_or_existing_model_deletion": true
+  },
+  "queue_checks": {
+    "passed": 4,
+    "total": 4
+  },
+  "latest_update_backup": "program\\research\\daily_rag_slm\\_backup\\2026-10-08_1007_frog_and_standardone_preflight",
+  "latest_routine_observation": {
+    "new_completed_jobs": 2,
+    "new_failed_jobs": 0,
+    "new_failed_or_unparsed_answers": 0,
+    "queue_refill": false,
+    "worker_restart": false,
+    "reason": "oos1 D2 and oos2 D archived and independently reviewed; 4 A ready jobs and 4 B existing-base recipe jobs remain.",
+    "recorded_at": "2026-10-08T17:40:41.293959",
+    "report": "final_project_cs/wiki/records/reports/2026-10-08_174529_qat_completion_parallel_review.md"
+  }
+}

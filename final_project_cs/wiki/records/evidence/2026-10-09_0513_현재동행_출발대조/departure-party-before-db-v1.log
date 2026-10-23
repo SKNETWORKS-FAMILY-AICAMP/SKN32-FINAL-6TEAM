@@ -1,0 +1,91 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+__ test_current_party_change_is_held_then_replanned_and_announced_once[size] __
+
+world = {'clock': <tests.scenario.test_case_version_day.Clock object at 0x000001DEB666EED0>, 'store': <app.domains.travel_ops.... object at 0x000001DEB637CF80>, 'tenant': 'remind_37a9e98f88', 'trip_id': UUID('bc365003-411c-4f67-bb5c-3f94825a0c41')}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DEC4BC3F20>
+changed = 'size'
+
+    @pytest.mark.parametrize('changed', ['size', 'fatigue'])
+    def test_current_party_change_is_held_then_replanned_and_announced_once(world, monkeypatch, changed):
+        runtime, context, _ = scene()
+        runtime._v.bike_router = SimpleNamespace(available=lambda: True, route=lambda *a: {'distance_m': 300}, last_error=None)
+        wiring._STATE.update(mode='enabled',kw={})
+        monkeypatch.setattr(wiring.engine_runtime,'get_verifier',lambda **kw: runtime)
+        world['clock'].now = _at('19:20')
+        constraints = {'first_visit': False, 'survey': {'preferred_mobility': ['도보']}}
+        if changed == 'fatigue':
+            constraints['mobility_ease'] = 'needs_rest'
+        size = 2 if changed == 'size' else 1
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            trip, items = world['store'].latest(conn,world['trip_id'])
+            before, move, after = [next(i for i in items if i.seq == seq) for seq in (9,10,11)]
+            after.starts_at = _at('19:50')
+            for key,item in [('from_place',before),('to_place',after)]:
+                context[key] = {'lat':float(item.place['latitude']),'lon':float(item.place['longitude'])}
+            context['party'] = {'size':1}
+            move.detail = {**move.detail,'departure_context':deepcopy(context),'route_def':{
+                'from':before.title,'to':after.title,'planned':'walk',
+                'options':[{'id':'walk','label':'도보 이동','eta_min':999,'uses':[]}]}}
+            world['store'].append_version(conn,trip_id=world['trip_id'],base_version=trip['version'],
+                items=items,reason='stored party fixture',causes=[])
+            # 격리 시험 여행의 메타데이터만 변경한다. 운영 설정 API를 검증한 것이 아니다.
+            cur.execute('UPDATE trips SET party_size=%s,constraints=%s::jsonb WHERE tenant_id=%s AND trip_id=%s',
+                (size,json.dumps(constraints),world['tenant'],world['trip_id']))
+        observer = composition.build_mobility_departure_observer(SimpleNamespace(mobility_data_dir='fixture'),
+            SimpleNamespace(bus_arrival=None),guardrails=POLICY)
+        got = _reminders(world,departure_observer=observer).tick()
+>       assert len(got.held) == 1 and not got.sent and not got.fatal,got
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': 'bc365003-411c-4f67-bb5c-3f94825a0c41', 'key': 'departure:dac46b55-48c8-46f9-8672-7bd0e45f4308'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])
+E       assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[{'trip_id': 'bc365003-411c-4f67-bb5c-3f94825a0c41', 'key': 'departure:dac46b55-48c8-46f9-8672-7bd0e45f4308'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).held
+
+tests\scenario\test_departure_party_db_v1.py:47: AssertionError
+_ test_current_party_change_is_held_then_replanned_and_announced_once[fatigue] _
+
+world = {'clock': <tests.scenario.test_case_version_day.Clock object at 0x000001DEB62403B0>, 'store': <app.domains.travel_ops.... object at 0x000001DEC4C15F40>, 'tenant': 'remind_2a5e40d14a', 'trip_id': UUID('9d6e92f4-31b5-4918-a741-b930d3e44046')}
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001DEC4C16330>
+changed = 'fatigue'
+
+    @pytest.mark.parametrize('changed', ['size', 'fatigue'])
+    def test_current_party_change_is_held_then_replanned_and_announced_once(world, monkeypatch, changed):
+        runtime, context, _ = scene()
+        runtime._v.bike_router = SimpleNamespace(available=lambda: True, route=lambda *a: {'distance_m': 300}, last_error=None)
+        wiring._STATE.update(mode='enabled',kw={})
+        monkeypatch.setattr(wiring.engine_runtime,'get_verifier',lambda **kw: runtime)
+        world['clock'].now = _at('19:20')
+        constraints = {'first_visit': False, 'survey': {'preferred_mobility': ['도보']}}
+        if changed == 'fatigue':
+            constraints['mobility_ease'] = 'needs_rest'
+        size = 2 if changed == 'size' else 1
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            trip, items = world['store'].latest(conn,world['trip_id'])
+            before, move, after = [next(i for i in items if i.seq == seq) for seq in (9,10,11)]
+            after.starts_at = _at('19:50')
+            for key,item in [('from_place',before),('to_place',after)]:
+                context[key] = {'lat':float(item.place['latitude']),'lon':float(item.place['longitude'])}
+            context['party'] = {'size':1}
+            move.detail = {**move.detail,'departure_context':deepcopy(context),'route_def':{
+                'from':before.title,'to':after.title,'planned':'walk',
+                'options':[{'id':'walk','label':'도보 이동','eta_min':999,'uses':[]}]}}
+            world['store'].append_version(conn,trip_id=world['trip_id'],base_version=trip['version'],
+                items=items,reason='stored party fixture',causes=[])
+            # 격리 시험 여행의 메타데이터만 변경한다. 운영 설정 API를 검증한 것이 아니다.
+            cur.execute('UPDATE trips SET party_size=%s,constraints=%s::jsonb WHERE tenant_id=%s AND trip_id=%s',
+                (size,json.dumps(constraints),world['tenant'],world['trip_id']))
+        observer = composition.build_mobility_departure_observer(SimpleNamespace(mobility_data_dir='fixture'),
+            SimpleNamespace(bus_arrival=None),guardrails=POLICY)
+        got = _reminders(world,departure_observer=observer).tick()
+>       assert len(got.held) == 1 and not got.sent and not got.fatal,got
+E       AssertionError: ReminderTickResult(trips=1, sent=[{'trip_id': '9d6e92f4-31b5-4918-a741-b930d3e44046', 'key': 'departure:4dab80a0-09f9-4cfc-b915-b5aafb0b63ef'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[])
+E       assert (0 == 1)
+E        +  where 0 = len([])
+E        +    where [] = ReminderTickResult(trips=1, sent=[{'trip_id': '9d6e92f4-31b5-4918-a741-b930d3e44046', 'key': 'departure:4dab80a0-09f9-4cfc-b915-b5aafb0b63ef'}], already=0, stale=[], held=[], fatal=[], no_route=0, unchecked=[]).held
+
+tests\scenario\test_departure_party_db_v1.py:47: AssertionError
+- generated xml file: <workspace>\.tmp\mobility_complete_20261008\departure-party-before-db-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[size]
+FAILED tests/scenario/test_departure_party_db_v1.py::test_current_party_change_is_held_then_replanned_and_announced_once[fatigue]
+2 failed in 1.98s

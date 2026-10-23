@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from app.core.settings import get_settings
-from app.infrastructure.travel.kma import KST, KmaWeather
+from app.domains.travel_ops.ports.data_sources.kma import KST, KmaWeather
 
 pytestmark = pytest.mark.live
 

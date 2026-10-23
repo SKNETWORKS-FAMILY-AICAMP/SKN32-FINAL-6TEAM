@@ -1,0 +1,193 @@
+<title>A-COPilot 로고 아이콘 10안</title>
+<style>
+  :root {
+    --paper: #f2f4f8; --surface: #ffffff; --surface-2: #eceff5;
+    --ink: #161a23; --ink-muted: #5b6474; --ink-faint: #8791a1; --border: #dde1ea;
+    --accent: #3d4fc4; --accent-2: #17806a;
+    --shadow: 0 1px 2px rgba(20,24,34,.05), 0 10px 26px -14px rgba(20,24,34,.18);
+  }
+  :root[data-theme="dark"] {
+    --paper: #0e1116; --surface: #171b23; --surface-2: #1d222c;
+    --ink: #e9ebf1; --ink-muted: #9aa2b3; --ink-faint: #6b7485; --border: #2a3040;
+    --accent: #8b9bff; --accent-2: #5fd6b8;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0e1116; --surface: #171b23; --surface-2: #1d222c;
+      --ink: #e9ebf1; --ink-muted: #9aa2b3; --ink-faint: #6b7485; --border: #2a3040;
+      --accent: #8b9bff; --accent-2: #5fd6b8;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header { margin-bottom: 30px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 12px; }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  h1 { font-size: clamp(24px, 3.6vw, 30px); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 10px; }
+  .lede { color: var(--ink-muted); font-size: 15px; max-width: 68ch; margin: 0; line-height: 1.6; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; margin-top: 32px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
+  .swatch { width: 88px; height: 88px; border-radius: 20px; background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center; }
+  .swatch svg { width: 52px; height: 52px; }
+  .card .no { font-size: 11px; color: var(--ink-faint); font-weight: 700; letter-spacing: .04em; }
+  .card h3 { font-size: 14px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+  .card p { font-size: 12.5px; color: var(--ink-muted); margin: 0; line-height: 1.5; }
+
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">A-COPilot · 아이콘 로고 10안</div>
+    <h1>워드마크 없이, 아이콘만</h1>
+    <p class="lede">전부 같은 획 두께의 라인 아이콘으로 통일했다. 팀 이름(A-COPilot)의
+    "A"와 "코파일럿(부기장)", 그리고 프로젝트의 핵심 개념 — Case 상태 전이, 멀티에이전트 오케스트레이션,
+    사람 승인, 고객 피드백 신호 — 을 각각 다른 시각 은유로 풀었다.</p>
+  </header>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 50 L32 12 L50 50"/>
+          <path d="M22 50 L32 30 L42 50" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">01</div>
+      <h3>이중 A</h3>
+      <p>화살표 두 개가 겹쳐 "A"를 이룬다 — 팀 두 층(코어 엔진·에이전트 팀)이 하나의 정점으로 모인다.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="32" cy="32" r="9" fill="var(--accent)" stroke="none"/>
+          <ellipse cx="32" cy="32" rx="24" ry="11" transform="rotate(-24 32 32)"/>
+          <circle cx="52.5" cy="24" r="3.4" fill="var(--accent-2)" stroke="none"/>
+        </svg>
+      </div>
+      <div class="no">02</div>
+      <h3>궤도 에이전트</h3>
+      <p>중심 Case를 도는 위성 하나 — 여러 에이전트 팀이 하나의 Case 주위를 도는 오케스트레이션.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 10 L50 19 V33 C50 45 42 52 32 56 C22 52 14 45 14 33 V19 Z"/>
+          <path d="M23 32 L29 39 L42 25" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">03</div>
+      <h3>승인 방패</h3>
+      <p>방패 안 체크마크 — Human Approval이 실행의 마지막 문이라는 원칙을 그대로 마크로.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 22 C14 17 18 14 23 14 H41 C46 14 50 17 50 22 V32 C50 37 46 40 41 40 H29 L19 49 V40 H23 C18 40 14 37 14 32 Z"/>
+          <path d="M40 46 L52 46 M46 40 L52 46 L46 52" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">04</div>
+      <h3>피드백 → 조치</h3>
+      <p>말풍선에서 뻗어나가는 화살표 — 고객의 말이 실제 조치로 이어진다는 프로젝트의 핵심 서사.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 8 L46 16 V32 L32 40 L18 32 V16 Z"/>
+          <path d="M32 24 L44 17 M32 24 L32 40 M32 24 L20 17" stroke="var(--accent-2)" stroke-width="2.4"/>
+        </svg>
+      </div>
+      <div class="no">05</div>
+      <h3>헥사 레지스트리</h3>
+      <p>육각형 하나에 세 갈래 — Team Registry에 등록되는 인스턴스들이 한 계약 아래 모인다.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 32 H24" stroke-dasharray="1 7"/>
+          <circle cx="12" cy="32" r="3.2" fill="var(--ink-faint)" stroke="none"/>
+          <circle cx="28" cy="32" r="3.2" fill="var(--ink-faint)" stroke="none"/>
+          <path d="M32 32 H40" stroke-dasharray="1 7"/>
+          <circle cx="48" cy="32" r="8" fill="none"/>
+          <path d="M44 32 L47 35 L53 28" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">06</div>
+      <h3>케이스 경로</h3>
+      <p>점선으로 이어지는 점들이 마지막에 체크 원으로 닫힌다 — Case lifecycle이 종결까지 가는 여정.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 12 L20 44 L32 36 L44 44 Z"/>
+          <path d="M27 30 Q32 22 37 30" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">07</div>
+      <h3>윙 A</h3>
+      <p>날개 두 장이 A 모양을 이룬다 — "코파일럿"의 비행 은유를 가장 직접적으로 담은 모노그램.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="32" cy="32" r="3.2" fill="var(--accent)" stroke="none"/>
+          <circle cx="32" cy="32" r="12"/>
+          <path d="M32 32 m-20 0 a20 20 0 0 1 8 -16" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">08</div>
+      <h3>신호 펄스</h3>
+      <p>중심에서 퍼지는 파동 — VOC 급증 탐지, 반복 이슈를 먼저 감지해 알리는 역할.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="20" cy="32" r="7"/>
+          <circle cx="44" cy="32" r="7" stroke="var(--accent-2)"/>
+          <path d="M27 27 Q32 20 38 26" />
+          <path d="M37 37 Q32 44 26 38" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">09</div>
+      <h3>핸드오프 루프</h3>
+      <p>두 원을 잇는 두 개의 곡선 화살표 — Team 사이의 위임과 인계, Commerce Handoff의 순환.</p>
+    </div>
+
+    <div class="card">
+      <div class="swatch">
+        <svg viewBox="0 0 64 64" fill="none" stroke="var(--accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 10 V54 M32 10 L20 22 M32 10 L44 22" />
+          <rect x="17" y="46" width="30" height="8" rx="4" stroke="var(--accent-2)"/>
+        </svg>
+      </div>
+      <div class="no">10</div>
+      <h3>단일 진입점</h3>
+      <p>위로 뻗는 화살표 하나가 아래 막대 위에 선다 — <code>transition_case()</code>, 상태로 가는 유일한 문.</p>
+    </div>
+
+  </div>
+
+  <footer>
+    전부 <code>viewBox 0 0 64 64</code>, 동일 획 두께(3.2)로 통일해 어떤 조합을 골라도 나란히 써도 어색하지 않다.
+    accent 두 컬러(주/보조)만 써서 실제 브랜드 컬러로 교체하기 쉽다. 워드마크(A-COPilot 텍스트)는 별도로 필요하면 말씀해주세요.
+  </footer>
+</div>

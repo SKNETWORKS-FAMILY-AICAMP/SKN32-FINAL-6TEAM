@@ -1,118 +1,66 @@
 ---
 type: guide
-title: 테스트 지도
-description: 어떤 검사가 어디 있는가. 폴더 최상위만 보면 있는 테스트도 못 찾는다
+title: 현재 여행 시험 지도
+description: 불변식·계약과 그것을 지키는 시험의 연결 지도
 status: draft
-tags: [testing]
-owners: [human:미배정]
-domain: neutral
+domain: travel
 ---
 
-# 테스트 지도
+# 현재 여행 시험 지도
 
-**이 문서가 필요한 이유가 있다.**
-
-`[실측]` 불변식 카탈로그 초판에서 "Runtime 불변식은 테스트로 강제되지 않는다"고 적었는데 **틀렸다.** 테스트는 `tests/integration/db/`, `tests/unit/core/`, `tests/contract/`에 흩어져 있었다. `tests/integration/` 최상위에 `__init__.py`만 있는 걸 보고 비어 있다고 판단한 실수였다.
-
-**지도가 없으면 있는 것도 못 찾는다.**
-
-## 전체 구조
-
-`[실측]` 2026-09-01 기준 70개 파일
-
-```text
-tests/
-├─ architecture/   2   계층 경계
-├─ contract/       7   계약·상태표·격리·idempotency
-├─ security/       4   인증·스코프·PII
-├─ unit/          28   core/ 하위에 상태 기계와 예산
-├─ integration/   22   a2a api controller db graph llm messaging rag
-├─ e2e/            4   Composer·introspection·UI
-└─ live/           3   실 LLM 호출
-```
-
-**`integration/`과 `unit/`은 하위 폴더가 있다.** 최상위만 보면 안 된다.
-
-## 무엇을 어디서 검사하는가
-
-| 검사 대상 | 위치 | 대표 파일 |
-|---|---|---|
-| Core 도메인 격리 | `architecture/` | `test_basement_is_domain_free.py` |
-| 다른 도메인 서빙 가능성 | `architecture/` | `test_engine_serves_another_domain.py` |
-| Case 상태 기계 | `contract/` | `test_case_state_table.py` |
-| 상태 축약(reducer) | `unit/core/` | `test_case_reducer.py` |
-| **동시 쓰기 충돌 (CAS)** | `integration/db/` | `test_stale_write_conflict.py` |
-| 실행 유일성 | `integration/controller/` | `test_active_run_uniqueness.py` |
-| Context 예산 | `unit/core/` | `test_context_budget.py` |
-| idempotency | `contract/` | `test_consumer_idempotency_contract.py` |
-| Team 계약 | `contract/` | `test_team_contract.py` |
-| Core가 modules를 import 안 함 | `contract/` | `test_core_isolation.py` |
-| 인증·스코프 | `security/` | `test_auth_and_scope_guards.py` |
-| PII 마스킹 | `security/` | `test_pii_redaction_runtime.py` |
-| tenant·customer 격리 | `security/` | `test_query_scope.py` |
-| MCP 도구 수 고정 | `security/` | `test_scope_contract.py` |
-| outbox 해소 | `integration/api/` | `test_outbox_resolution.py` |
-| outbox tenant 격리 | `integration/messaging/` | `test_outbox_tenant_guard.py` |
-| 제공자 timeout | `integration/controller/` | `test_provider_timeout_unknown.py` |
-| 실행 직전 재확인 | `integration/api/` | `test_recheck_before_execution.py` |
-| 제안 차단 | `integration/controller/` | `test_proposal_guard_blocks.py` |
-| A2A 왕복 | `integration/a2a/` | **`test_travel_remote_round_trip.py`** (테스트 7건) `[정정 2026-09-10]` 옛 `test_remote_round_trip.py` 는 **작업 트리에서 삭제됐고 git 에는 남아 있다** — 커머스 원격의 것이었다 |
-| SQL Graph Adapter | `integration/graph/` | `test_sql_graph_adapter.py` |
-| RAG | `integration/rag/` | `test_rag_integration.py` |
-| LLM 호출 감사 | `integration/llm/` | `test_llm_call_audit_wiring.py` |
-| Composer 쓰기채널 | `e2e/` | `test_composer_write_channel.py` |
-
-## 불변식과의 연결
-
-`[실측 2026-09-10]` 불변식 **52개 중 49개**가 위 테스트에 연결돼 있다.
-
-연결 상태는 [invariants.md](invariants.md)에 있고, **검사기가 실제로 파일과 함수 존재를 확인한다.**
-
-```bash
-python program/scripts/check_wiki.py
-```
-
-이 명령이 검사하는 것.
-
-```text
-1. 불변식이 가리키는 테스트 파일이 실재하는가
-2. 그 파일에 해당 test 함수가 실재하는가
-3. 코드의 invariant 표식이 카탈로그에 있는가
-4. 링크·front matter·문서 크기
-```
-
-## 코드 쪽 역방향 표식 — 완료
-
-`[실측]` **2026-09-01 완료. 그때 48개, 2026-09-10 기준 49개.**
-
-넣은 모양.
-
-```python
-# invariant: INV-CS-RT-009
-def test_two_writers_that_read_the_same_version_produce_exactly_one_conflict():
-    ...
-```
-
-**왜 필요한가.** 테스트를 지우거나 이름을 바꿀 때, 그게 어떤 불변식을 깨는지 **그 자리에서 보인다.** 문서를 열지 않아도 된다.
-
-`[실측]` 대조 결과.
-
-```
-코드에만 있는 ID  0개
-문서에만 있는 ID  3개  ← INV-CS-TEAM-003·004·005 (판정이 review 라 테스트 없음)
-```
-
-**양방향이 잠겼다.**
-
-## 테스트가 없는 곳
-
-| 대상 | 상태 |
+| 검증할 내용 | 실제 시험 경로 |
 |---|---|
-| Team 경계 3개 (`INV-CS-TEAM-003~005`) | `review`. import 검사로 자동화 가능해 보임 |
-| 그 외 | [blind-spots.md](blind-spots.md) |
+| Core 의존 경계·현재 정책 주입 | [구조 시험](../../tests/architecture/) |
+| 입력·출력·도구·비활성 계약 | [계약 시험](../../tests/contract/) |
+| 인증·scope·고객 격리·마스킹 | [보안 시험](../../tests/security/) |
+| SQL 입력·신규 DB·재실행 | [입력 계획 시험](../../tests/unit/core/test_current_migration_plan.py)·[DB 통합](../../tests/integration/db/test_migrations_rerun.py) |
+| 과거 결함 보고서의 현재 확인 상태 | [상태 검사](../../tests/unit/core/test_debug_report_status.py)·[현황 주석 규칙](debug-report-status.md). 제품 해결 판정과 구분 |
+| 현재 여행 MCP·본인 여행·쓰기 등록 | [MCP 프로토콜](../../tests/e2e/test_mcp_server.py)·[읽기 도구](../../tests/e2e/test_mcp_read_tools.py) |
+| 여행 분류 자료·재생 분모 | [현재 여행 평가 시험](../../tests/unit/eval/test_travel_classification_eval.py) |
+| 여행 RAG 검색·과거 scope 차단 | [검색 통합](../../tests/integration/rag/test_travel_corpus_retrieval.py) |
+| 활동 후보 세 단(같은 종류·비슷한 경험·취향)·호텔 후보·모델 이유 문장 검사·임베딩 순서·분류 채우기 | [세 단·취향](../../tests/e2e/test_intake_experience_tiers.py)·[같은 종류](../../tests/e2e/test_intake_similar_places.py)·[호텔·종류](../../tests/e2e/test_intake_candidate_kinds.py)·[이유 문장](../../tests/e2e/test_candidate_reasons.py)·[임베딩·분류 채우기](../../tests/e2e/test_place_embeddings.py). 모델·임베딩은 mock 서버(고정 답 대역)로 시험하며 실모델 확인은 별도 |
+| 약관 보관 기간·회원 정리·처리 기록 파기 | [보관 기간](../../tests/e2e/test_legal_retention.py)·[삭제·게스트 정리](../../tests/e2e/test_guest_and_trip_delete.py)·[동의 기록](../../tests/e2e/test_consents.py) |
+
+불변식 정의와 함수 연결은 [카탈로그](invariants.md)가 소유합니다. 시험 개수·과거 통과 수를 이 페이지에서 중복 관리하지 않습니다. live·DB·외부 서비스 의존 여부와 실패·건너뜀을 실제 실행 결과에 기록합니다. 사용 종료된 MCP·평가 시험은 legacy로 분리합니다.
+
+## 공통·여행 시험을 따로 실행하기
+
+[사용자 결정 2026-10-11] W13 C안을 반영했습니다. 공통 계약을 여행 사례로 검사하는 A와 시험 묶음을 분리하는 C는 함께 할 수 있습니다. 둘을 대안으로 제시한 설명을 정정합니다.
+
+분류의 정본은 [시험 파일 목록](../../tests/test-suites.json)입니다. `common`은 공통 엔진·상태·계약·DB 접근·모델 처리 기반, `travel`은 여행 업무·고객 웹·API·모델 평가·제품 통합을 검사합니다. 기존 공유 설정은 유지합니다. 새 파일이 미분류이거나 양쪽에 중복되면 [분리 실행기](../../scripts/run_test_suite.py)가 중단합니다. 다른 묶음의 시험 파일은 import 전에 수집에서 제외합니다.
+
+cs 프로젝트 폴더에서 실행합니다. `--collect-only`는 수집만 합니다. 기존 기본 조건인 `not live`를 유지하며, 실제 LLM 호출 시험은 별도 명시 실행입니다.
+
+```powershell
+python scripts/run_test_suite.py --suite common -q
+python scripts/run_test_suite.py --suite travel -q
+```
+
+분리 실행 지원과 전체 시험 통과는 다릅니다. [실제 수집·실행 결과](../../../program/research/sql_review_2026-10-11/index.html#W13)를 확인합니다. 공통 묶음이 별도 제품처럼 여행 패키지 없이 설치된다는 뜻은 아닙니다. 새 시험의 검사 목적이 바뀌면 목록의 분류도 검토합니다.
+
+## 과거 기록
+
+[수정 전 문서](../records/commerce_2026-10-11/wiki--quality--test-map.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
 ## 관계
 
-- [invariants.md](invariants.md) — 불변식 카탈로그
-- [blind-spots.md](blind-spots.md) — 검사가 없는 지점
-- [../../../acop_dojo/wiki/index.md](../../../acop_dojo/wiki/index.md) — 사각지대를 실행으로 찾는 프로그램
+- [여행 사양 허브](../../../wiki/index.md) — 현재 정본을 찾는 입구
+
+
+## 이전 절 링크
+
+<a id="테스트-지도"></a>
+<a id="전체-구조"></a>
+<a id="무엇을-어디서-검사하는가"></a>
+<a id="불변식과의-연결"></a>
+<a id="코드-쪽-역방향-표식--완료"></a>
+<a id="invariant-inv-cs-rt-009"></a>
+<a id="테스트가-없는-곳"></a>
+<a id="관계"></a>
+
+
+## 전체 DoD 실행 근거 보존 — 2026-10-18
+
+`python -m scripts.verify_dod_v11 --evidence-dir var/<새 실행 이름>`은 전체 DoD를 원래 순서대로 한 번 실행하며 수집·pytest 원문, JUnit, 선택한 시험 ID, 하위 명령 종료 코드와 최종 항목별 판정을 보존합니다. 지정 폴더가 이미 있으면 덮어쓰지 않고 거절합니다. 실패·준비/정리 ERROR의 전체 traceback도 표 뒤에 출력합니다. 하위 pytest가 비정상 종료하면 일부 PASSED가 보이더라도 전체 명령은 실패합니다. 재실행·실패 제외·판정 완화는 하지 않습니다. 원문 로그는 접속 오류의 비공개 정보가 포함될 수 있으므로 git 밖 실행 폴더에서 보관하며, 공유 문서에는 검수한 요약만 싣습니다.
+
+2026-10-18 로컬 직접 연결 QA DB에서 전체 **26/26**, 선택 시험 **203/203**, 실패·ERROR·건너뜀 0을 단일 실행으로 확인했습니다. 과거 원문 소실·새 연결 장애·DB 버전 차이·배포 미확인은 [날짜별 원인·검증 기록](../records/reports/2026-10-18_dod-local-errors-root-cause.md)에 구분해 남겼습니다.

@@ -1,0 +1,6 @@
+{
+  "adapter": "datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261013_20261009/oos2r_finch_5e5_seed20261013_20261008_lora_f16.gguf",
+  "remote": "/tmp/tripilot-trained-adapters-20261008/finch_s20261013_lora_f16.gguf",
+  "sha256": "efbfc01207517ace92b4bde9b880b006ee5b4fc84c488e3844d809367ec60429",
+  "bytes": 69798944
+}

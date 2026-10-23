@@ -1,0 +1,29 @@
+{
+ "unrelated_conversation": {
+  "planned": 1300,
+  "completed": 1246,
+  "failed": 54,
+  "unfinished": 0,
+  "pinned": 14,
+  "attempted_change_with_target": 4,
+  "recognized_policy": 43,
+  "correct_policy_source": 0,
+  "unresolved": 54,
+  "denominator": 1300
+ },
+ "answerable_policy": {
+  "planned": 148,
+  "completed": 133,
+  "failed": 15,
+  "unfinished": 0,
+  "pinned": 20,
+  "attempted_change_with_target": 2,
+  "recognized_policy": 105,
+  "correct_policy_source": 0,
+  "unresolved": 15,
+  "denominator": 148
+ }
+}
+{
+ "length(원답 없음)": 69
+}

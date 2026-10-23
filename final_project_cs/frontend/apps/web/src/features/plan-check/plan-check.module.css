@@ -1,0 +1,941 @@
+/*
+ * Plan check — mockup `mockups/tripilot-plan-check-streaming.html` (scenarios 1–7). Colours are the shared roles of
+ * `styles/tokens.css` (never a colour here), so both themes follow. Sits below the device header, as the start screen does.
+ */
+.screen { position: absolute; inset: 76px 0 0; display: flex; flex-direction: column; overflow: hidden; background: var(--color-surface); color: var(--color-text); }
+
+.screen[data-floating] { inset: 0; }
+.back { display: inline-grid; place-items: center; width: 36px; height: 36px; flex: none; border: 0; border-radius: 10px; background: none; color: var(--color-text-secondary); cursor: pointer; }
+.back:hover { background: var(--color-subtle); }
+.back:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* One straight line with four points: done points are filled, the current one is outlined. */
+/* `[2026-10-04 사용자]` The line runs from the middle of the first point to the middle of the last, and the points stand OVER it (a positioned track used to be painted over the points, so the line showed inside the circles). */
+.progress { position: relative; margin: 14px 4px 0; }
+.track { position: absolute; z-index: 0; top: 7.5px; left: 12.5%; right: 12.5%; height: 3px; border-radius: 2px; background: var(--color-border); }
+.fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-success); transition: width .9s cubic-bezier(.3, .7, .4, 1); }
+.steps { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.steps li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
+.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); transition: background-color .4s var(--ease-soft), border-color .4s var(--ease-soft); }
+@media (prefers-reduced-motion: reduce) { .node { transition: none; } }
+.steps li[data-state="current"] { color: var(--color-text); }
+.steps li[data-state="current"] .node { border-color: var(--color-muted); }
+.steps li[data-state="done"] { color: var(--color-success); }
+.steps li[data-state="done"] .node { border-color: var(--color-success); background: var(--color-success); }
+.steps li[data-state="done"] .node::after { content: "✓"; color: var(--color-on-primary); font-size: 10px; font-weight: 800; line-height: 1; }
+.stepLabel { white-space: nowrap; }
+
+/* ①② The plan being read (2026-10-07: the per-line list is gone — the bar and the count are what is left) */
+.reading { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 20px; }
+.head { padding-bottom: 12px; }
+.headRow { display: flex; align-items: center; gap: 6px; min-height: 40px; }
+.title { margin: 0; font-size: 20px; font-weight: 750; }
+.desc { margin: 4px 0 0; font-size: 13.5px; color: var(--color-muted); }
+.found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
+
+/* ③④ The map fills the screen under a floating bar; the sheet slides over it (mockup .map · .fbar · .sheet). */
+.checking { --sheet-h: min(440px, 60%); --soft: cubic-bezier(.22, .8, .3, 1); position: relative; flex: 1; min-height: 0; overflow: clip; }
+.checking[data-sheet="peek"] { --sheet-h: 44px; }
+.checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
+/* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
+.map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom 380ms var(--soft); }
+.bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
+.bar .progress { flex: 1; min-width: 0; }
+.barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* `[2026-10-22 ST4F-721]` 오른쪽 64px(12 + 44 + 8)는 지도 오른쪽 아래 「내 위치로」 자리라 비워 둔다 — 경로 오류 같은 긴 안내 줄이 단추를 덮지 않게 */
+.mapChips { position: absolute; left: 10px; right: 64px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 6px; pointer-events: none; transition: bottom 380ms var(--soft); }
+.picked { width: fit-content; max-width: 100%; margin: 0; padding: 3px 10px; border: 1.5px solid var(--color-text); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-size: 11.5px; font-weight: 750; overflow-wrap: anywhere; }
+.picked b { font-weight: 800; }
+.mapNeeds { pointer-events: auto; display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 11px 0 6px; border: 1.5px solid var(--color-warning-border); border-radius: 999px; background: var(--color-warning-surface); color: var(--color-warning); font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 14%, transparent); }
+.mapNeeds[aria-pressed="true"] { border-color: var(--color-warning); background: var(--color-warning); color: var(--color-surface); }
+.mapNeeds[aria-pressed="true"] .mark { background: var(--color-surface); color: var(--color-warning); }
+.mapNeeds:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.statusTools { position: relative; display: flex; width: fit-content; align-items: center; gap: 0; min-width: 0; max-width: 100%; padding: 0 4px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); }
+.statusTools .mapNeeds, .statusTools .changeCount { flex: none; min-width: 44px; min-height: 44px; padding: 0 8px; border: 0; border-radius: 10px; background: transparent; box-shadow: none; font-weight: 600; }
+.statusTools .mapNeeds[aria-pressed="true"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.statusTools .changeCount[aria-expanded="true"] { background: var(--color-adjusted-soft); }
+.statusTools .picked, .statusTools .unlocated { flex: 1; min-width: 0; margin: 8px 0; padding: 0 8px; border: 0; border-radius: 0; background: transparent; font-size: 12px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.statusTools b { font-weight: 600; }
+.statusTools > :not(:first-child) { border-left: 1px solid var(--color-divider); }
+.changeTools { pointer-events: auto; }
+.changeCount { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 10px; border: 1.5px solid var(--color-adjusted-border); border-radius: 999px; background: var(--color-surface); color: var(--color-adjusted); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.changeCount[aria-expanded="true"] { background: var(--color-adjusted-soft); }
+.changeCount:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.changePanel { position: absolute; z-index: 6; left: 0; bottom: calc(100% + 8px); box-sizing: border-box; width: max-content; max-width: min(270px, 100%); display: grid; gap: 8px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); box-shadow: 0 4px 20px color-mix(in srgb, var(--color-text) 16%, transparent); }
+.changePanel p { margin: 0; color: var(--color-text-secondary); font-size: 12px; }
+.changePanel button { min-width: 0; min-height: 44px; overflow-wrap: anywhere; white-space: normal; font: inherit; font-size: 14px; cursor: pointer; }
+.changePanel button:not(.resetTimes) { border: 0; background: transparent; color: var(--color-text); text-align: left; }
+.unlocated { width: fit-content; max-width: 100%; margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); animation: rise .45s var(--soft); }
+/* ★`[2026-10-06 사용자 지적 — 일정 창 확대·축소가 부드럽지 않다]` The height changes at once (the content never re-flows while it moves) and the sheet SLIDES there on the compositor (a transform, `plan-check.tsx` `useLayoutEffect`). When it gets shorter its bottom edge rises for a moment: this fills what is under it. */
+.sheet::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 100vh; background: var(--color-surface); pointer-events: none; }
+/* `[2026-10-21 사용자 지시]` 「다시 제출」 · 「여행 등록」을 보내는 동안 일정 칸(시트)을 회색으로 덮는다 — 시트는 `inert` 라 눌리지 않고, 둥근 단추(.footer, z 7)는 위에 남아 돈다. */
+.sendingVeil { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; height: var(--sheet-h); display: grid; place-items: center; border-radius: 20px 20px 0 0;
+  background: color-mix(in srgb, var(--color-subtle-strong) 78%, transparent); backdrop-filter: grayscale(1); }
+.sendingVeil p { margin: 0; padding: 10px 18px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-size: 14px; font-weight: 750;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-text) 12%, transparent); }
+/* `[2026-10-04 사용자]` 손잡이는 머리의 윗가장자리에 얹혀 있다(따로 한 줄을 차지하지 않는다) — 제목 줄과 합쳐 공간을 아낀다. */
+.sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 22px 16px 6px; border-bottom: 1px solid var(--color-divider); }
+.sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
+.count { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: right; }
+.headBadges { display: inline-flex; gap: 6px; }
+.sheetBody { --stop-time-lead: 17.5px; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 2px 14px calc(18px + max(var(--follow-room, 0px), var(--focus-room, 0px))); touch-action: pan-y pinch-zoom; }
+.day { margin: 12px 0 2px; font-size: 13px; font-weight: 750; color: var(--color-muted); }
+.day small { margin-left: 4px; font-size: inherit; font-weight: 500; }
+
+/* The day's timeline: time · rail · card (a place) or a thin line (the move to the next place) */
+.timeline { position: relative; list-style: none; margin: 0; padding: 0; }
+.insertPoint { position: relative; height: 0; margin: 0 0 0 78px; z-index: 3; }
+.insertPoint[data-insert-point$=":end"] { margin-top: 24px; margin-bottom: 24px; }
+.insertPoint[data-insert-start] { height: 48px; }
+.insertPoint[data-insert-start]::after, .insertPoint[data-insert-start] > .insertButton { top: 24px; }
+/* `[2026-10-15 사용자 지적 — ST4F-494]` 일정 사이의 ＋ 는 자기 칸(28px)을 갖는다 — 높이 0 으로 다음 줄 머리에 걸쳐 있으면 ① 시간 비례에서 이동 줄이 경계에 붙거나
+   이동 상자를 펼쳤을 때 ＋ 와 선이 그 머리 위에 겹쳤다. 카드 · 줄이 늘면 이 칸도 그만큼 아래로 밀린다. */
+.insertPoint:not([data-insert-start]):not([data-insert-open]):not([data-insert-point$=":end"]) { height: 28px; }
+.insertPoint:not([data-insert-start]):not([data-insert-open]):not([data-insert-point$=":end"])::after,
+.insertPoint:not([data-insert-start]):not([data-insert-open]):not([data-insert-point$=":end"]) > .insertButton { top: 14px; }
+.insertPoint::after { --insert-line-cycle: 3s; content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--color-border-strong); z-index: -2; opacity: 0; pointer-events: none; }
+.insertPoint[data-insert-near]::after, .insertPoint:focus-within::after { opacity: .6; animation: insertLineBreathe var(--insert-line-cycle) ease-in-out infinite; }
+.insertPoint:hover::after, .insertPoint:focus-within::after { animation-play-state: paused; }
+/* `[2026-10-10 사용자]` A quiet repeating line marks the chosen insertion seam; no layout or button movement. */
+@keyframes insertLineBreathe { 0%, 100% { opacity: .35; } 50% { opacity: .85; } }
+.insertButton { position: absolute; top: 0; left: calc(50% - 22px); display: grid; place-items: center; width: 44px; height: 44px; padding: 8px; border: 0; border-radius: 50%; background: transparent; color: var(--color-primary); cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(-50%); transition: opacity .16s ease-out; }
+.insertButton::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-surface); z-index: -1; }
+.insertPoint[data-insert-near] .insertButton, .insertPoint:focus-within .insertButton { opacity: 1; pointer-events: auto; }
+.insertButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.insertButton:hover .iconTip, .insertButton:focus-visible .iconTip { opacity: 1; visibility: visible; }
+.insertPoint[data-insert-open] { height: auto; padding: 20px 0 16px; margin-left: 0; }
+.insertPoint[data-insert-open] > .insertButton { display: none; }
+.insertForm { min-width: 0; scroll-margin-top: 76px; }
+.insertHint { margin: 0 0 8px; color: var(--color-muted); font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .insertButton { transition: none; } .insertPoint::after { animation: none !important; } }
+/* `[2026-10-05 사용자 지시 · 일정 상자 안 B]` A fixed time column (44px) and equal gaps (8px) so every row starts in the same place: the time on the same line as its dot, the card the same distance from the line. */
+.entry { display: grid; grid-template-columns: 44px 18px minmax(0, 1fr); column-gap: 8px; animation: riseSoft .6s cubic-bezier(.2, .8, .2, 1); }
+/* The time is a button once the plan is checked: a button centres its text in the whole row and let the time drift under its dot - it is held to the top, and its line (18px) is centred on the dot.
+   ★`[2026-10-07 사용자 지적 — 제목만 살짝 아래로 처져 있다]` The time, the dot and the card's name stand on ONE line: the centre of the name's first line (4 margin + 1.5 border + 12 padding + 10 half a line = 27.5px), not 23px as before. */
+.time { align-self: start; margin: 0; padding: 18.5px 0 0; border: 0; background: none; font-family: inherit; line-height: 18px; text-align: right; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+button.time { cursor: pointer; }
+.entry[data-type="move"] .time { display: flex; flex-direction: column; align-items: flex-end; padding-top: 8.9px; line-height: 1.15; }   /* the two-line time (13px of glyphs on each side) is centred on the leg's 44px row */
+.entry[data-type="move"] .time b { font-size: 11.5px; font-weight: 500; color: var(--color-faint); }
+.entry[data-type="move"] .time small { font-size: 10px; font-weight: 500; color: var(--color-faint); }
+.entry[data-type="move"] { min-height: 48px; }
+.moveClock { position: relative; align-self: stretch; font-variant-numeric: tabular-nums; }
+.entry[data-type="move"] .moveClock .time { position: absolute; top: calc(var(--dep, 23px) - 8px); right: 0; display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-end; width: 44px; min-height: 44px; padding: 0; font-size: 12px; line-height: 16px; font-weight: 400; color: var(--color-muted); }
+.timeStack { position: relative; display: block; white-space: nowrap; }
+.rangeEnd { position: absolute; top: calc(100% + 2px); right: 0; font-size: 12px; line-height: 16px; font-weight: 400; color: var(--color-muted); letter-spacing: normal; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity 150ms ease-in, transform 150ms ease-in; }
+.entry[data-time-focused] .rangeEnd { opacity: 1; transform: translateY(0); transition-duration: 200ms; transition-timing-function: ease-out; }
+.entry[data-time-focused] .timeStack > time:first-child { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  .rangeEnd, .entry[data-time-focused] .rangeEnd { transition: none; transform: none; }
+}
+.rail { position: relative; }
+.dot { position: absolute; left: 3px; top: 21.5px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.entry[data-type="move"] .dot { left: 5px; top: calc(var(--dep, 23px) - 4px); width: 8px; height: 8px; }
+.entry[data-verdict="keep"] .dot, .entry[data-verdict="adjusted"] .dot { border-color: var(--color-success); background: var(--color-success-soft); }
+.entry[data-verdict="review"] .dot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.entry[data-type="move"] .departureMark { z-index: 3; left: -1px; top: calc(var(--dep, 23px) - 10px); display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 0; background: var(--color-surface); color: var(--color-muted); }
+.entry[data-type="move"][data-verdict="review"] .departureMark { color: var(--color-warning); }
+
+.card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
+/* `[2026-10-20 사용자 결정 — 계획 확인 C안]` A stop the check has not reached yet: dashed and grey (flow mockup `tripilot-plan-flow-register.html`). */
+.entry[data-reveal-waiting] > .card { border-style: dashed; border-color: var(--color-border); background: var(--color-subtle); }
+.entry[data-reveal-waiting] .cardTitle { color: var(--color-faint); font-weight: 600; }
+/* `[2026-10-20 사용자 결정 — 계획 확인 C안]` Stopped at a card: everything else in the list (cards, legs, the rail) is dimmed and cannot be pressed; a banner over the list says
+   what to do (「다시 확인하는 중」 keeps its height, so the card does not move). */
+.page[data-stopped] .timeline > li:not([data-stop-focus]) { opacity: .38; pointer-events: none; transition: opacity .25s; }
+/* `[2026-10-21 사용자 결정 — P6 해석 확인 질문]` 카드 없는 질문 자리: 그 줄의 시각에 점선 테두리 칸 하나(목업 tripilot-plan-check-interpretation.html) — 안에는 질문 칸만. */
+.card[data-ask] { border-style: dashed; border-color: var(--color-border-strong); background: var(--color-surface); box-shadow: none; }
+.stopBanner { position: sticky; top: 0; z-index: 6; display: flex; gap: 9px; align-items: flex-start; box-sizing: border-box; margin: 0 0 8px; padding: 9px 12px;
+  border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-soft); font-size: 12.5px; line-height: 1.5; }
+.stopMark { display: inline-grid; place-items: center; flex: none; width: 19px; height: 19px; border-radius: 50%; background: var(--color-warning); color: var(--color-on-primary); font-size: 11px; font-weight: 800; }
+.stopBanner b { display: block; color: var(--color-warning); }
+.stopBanner small { display: block; font-size: 11.5px; color: var(--color-text-secondary); }
+.stopBanner[data-tone="recheck"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+.stopBanner[data-tone="recheck"] .stopMark { background: var(--color-adjusted); }
+.stopBanner[data-tone="recheck"] b { color: var(--color-adjusted); }
+.entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
+.entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
+.screen[data-stage="done"] .entry:where([data-type="item"]) .card { border-color: transparent; }
+/* `[2026-10-15 사용자 결정 — ST4F-532 · 목업 「제안」]` 접힌 카드의 회색 테두리는 끈다(10-13 「테두리 있음」을 바꿈) — 대신 목록 가운데의 상자 하나(카드 또는 이동 칸)에만
+   같은 회색 테두리를 두른다(`use-center-focus.ts` 가 `data-focus` 를 단다, ＋ 와 같은 가운데 기준 · 0.16초). 「확인 필요」 · 「조정됨」 · 고른 · 펼친 카드의 테두리는 상태 표시라 그대로다. */
+.screen[data-stage="done"] .entry[data-verdict="review"] .card { border-color: var(--color-warning-border); }
+.screen[data-stage="done"] .entry[data-verdict="adjusted"] .card { border-color: var(--color-adjusted-border); }
+.screen[data-stage="done"] .entry[data-type="item"]:is([data-selected], :focus-within) .card { border-color: var(--color-selected); }
+.screen[data-stage="done"] .entry:where([data-type="item"]:not([data-verdict="review"]):not([data-verdict="adjusted"]):not([data-selected]):not(:focus-within)) .card:where(:not([data-open]))[data-focus] { border-color: var(--color-border-strong); }
+.screen[data-stage="done"] .move[data-rail-box][data-focus]:not([data-open]) { border-color: var(--color-border-strong); }
+.screen[data-stage="done"] .card, .screen[data-stage="done"] .move[data-rail-box] { transition: border-color .16s ease-out, background-color .2s; }
+@media (prefers-reduced-motion: reduce) { .screen[data-stage="done"] .card, .screen[data-stage="done"] .move[data-rail-box] { transition: none; } }
+.cardHead { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px; }
+.cardTitle { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
+.spinner { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+.pill { flex: none; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; color: var(--color-text-secondary); white-space: nowrap; }
+.stayWord { color: var(--color-primary); font-weight: 750; }   /* `[2026-10-15 ST4F-498]` 「체크인」 · 「체크아웃」 in a stay's small line (both screens) */
+.pill[data-state="changed"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.pill[data-state="review"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.pill[data-state="removed"] { border-color: var(--color-border-strong); background: var(--color-subtle-strong); color: var(--color-muted); }
+
+.checks { list-style: none; margin: 0; padding: 4px 12px 10px; border-top: 1px solid var(--color-divider); }
+.check { display: grid; grid-template-columns: 20px 56px minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; animation: riseSoft .45s cubic-bezier(.2, .8, .2, 1); }
+.checkKind { font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.checkText { color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.check[data-result="pending"] .checkText { color: var(--color-faint); }
+.check[data-result="bad"] .checkText { color: var(--color-error); font-weight: 650; }
+.check[data-result="warn"] .checkText { color: var(--color-warning); }
+.check[data-result="unknown"] .checkText { color: var(--color-muted); }
+
+.mark { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 800; font-style: normal; line-height: 1; }
+.check[data-result="pending"] .mark { width: 18px; height: 18px; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+.check[data-result="ok"] .mark, .mark[data-result="ok"] { background: var(--color-success-soft); color: var(--color-success); }
+.check[data-result="filled"] .mark, .mark[data-result="filled"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.check[data-result="warn"] .mark, .mark[data-result="warn"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.check[data-result="bad"] .mark { background: var(--color-error); color: var(--color-on-primary); }
+.check[data-result="unknown"] .mark { background: var(--color-subtle-strong); color: var(--color-muted); }
+
+.move { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 4px 10px; font-size: 12.5px; color: var(--color-muted); }
+.modeIcon { display: inline-grid; place-items: center; flex: none; color: var(--color-faint); }
+.moveText { flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry[data-type="move"][data-verdict="review"] .moveText { color: var(--color-warning); }
+.entry[data-dim] { opacity: .45; }
+.waiting { color: var(--color-faint); }
+
+/* ⑤ The result: the list's height (handle), days to put on the map, cards and moves that open, the selected place */
+.handle { position: absolute; z-index: 4; top: 0; left: 0; right: 0; display: grid; place-items: center; height: 22px; border: 0; border-radius: 20px 20px 0 0; background: var(--color-surface); cursor: grab; touch-action: pinch-zoom; }
+.handle:active { cursor: grabbing; }
+.sheetHead { touch-action: pinch-zoom; }
+/* While the list is being dragged it follows the finger at once (no easing). */
+.checking[data-dragging] .sheet, .checking[data-dragging] .map, .checking[data-dragging] .mapChips { transition: none; }
+.checking[data-dragging] { user-select: none; }
+.handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
+.handle:focus-visible, .dayButton:focus-visible, .cardHead:focus-visible, .moveHead:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.dayButton { display: inline-flex; align-items: baseline; min-height: 32px; padding: 0 6px; margin-left: -6px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer; }
+.dayButton[aria-pressed="true"] { color: var(--color-text); }
+.cardHeading { margin: 0; font-size: inherit; font-weight: inherit; }
+button.cardHead { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.entry[data-selected] .card { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft); }
+.noChecks { margin: 0; padding: 8px 12px 12px; border-top: 1px solid var(--color-divider); font-size: 12.5px; color: var(--color-muted); }
+.moveHead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+button.moveHead { cursor: pointer; }
+.move:has(.moveHead) { display: block; padding: 4px 10px; border: 1.5px solid transparent; border-radius: 10px; }
+.move[data-open] { border-color: var(--color-border); background: var(--color-subtle); }
+.move .checks { padding: 0 0 6px; }
+.footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: none; padding: 10px 14px 14px; border-top: 1px solid var(--color-divider); background: var(--color-surface); }
+.footer > div, .footer > p { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: var(--color-text-secondary); }
+.footer p, .footer ul { margin: 0; }
+.footer ul { padding-left: 18px; }
+.footer > [role="alert"] { color: var(--color-error); }
+/* The two bottom buttons (mockup .sh-foot): 「전체 자동 추천」 and the next step. */
+.footButton { display: inline-flex; flex: 1 1 0; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 750; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.footButton[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+/* `[2026-10-20 사용자 결정 — 계획 확인 C안 · 5초 자동 등록]` The reading screen's done bar (`DoneFooter`) over the bottom of the result while it counts to 「여행 등록」. */
+.registerBar { position: absolute; z-index: 60; left: 0; right: 0; bottom: 0; box-shadow: 0 -8px 24px color-mix(in srgb, var(--color-text) 8%, transparent); }
+.footButton[data-done] { border-color: var(--color-success); background: var(--color-success); color: var(--color-on-primary); }
+.footButton[aria-disabled="true"] { opacity: .35; cursor: not-allowed; }
+.footButton[data-primary] .spinner { border-color: color-mix(in srgb, var(--color-on-primary) 35%, transparent); border-top-color: var(--color-on-primary); }
+.footButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* 제목 옆에서 자동 추천·수정·삭제를 한 줄로 쓰고, 긴 제목은 두 줄까지만 표시한다. */
+.cardTop { display: flex; flex-wrap: nowrap; justify-content: flex-end; align-items: center; gap: 2px; padding: 0 4px; }
+/* `[2026-10-07 사용자 지시]` The state, edit and delete stand on the name's line (they dropped to a second line once the name asked for 9em); the name gives way (it may take two lines) before the tools wrap. */
+.cardTop .cardHeading { flex: 1 1 auto; min-width: 0; }
+.cardTools { display: inline-flex; flex: none; align-items: center; gap: 0; margin-left: auto; }
+.cardTop .cardHead { padding: 12px 4px; }
+.cardTop .cardTitle { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 15.5px; line-height: 1.3; word-break: keep-all; }
+.icon { position: relative; display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--color-muted); cursor: pointer; }
+.itemKind, .lockIcon { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; color: var(--color-muted); }
+.cardTools .icon { width: 44px; height: 44px; }
+.icon:hover:not([aria-disabled="true"]) { background: var(--color-subtle-strong); color: var(--color-text); }
+.icon[aria-disabled="true"] { opacity: .28; --o: .28; cursor: not-allowed; }
+/* ★`[2026-10-07 사용자 지시 — 수정 · 삭제는 가리키거나 고를 때만]` The edit and delete of a card show while the card is pointed at, holds the focus, is open or is picked
+   (on a phone: open or picked - a tap on the card opens it). The state 「확인 필요」 and 「삭제 되돌리기」 always show. The lock is rendered only when details are open; otherwise a stop-kind icon takes its place. */
+@media (hover: hover) {
+  .cardTools .icon:not([data-restore]) { opacity: calc(var(--o, 1) * var(--tools, 0)); transition: opacity .15s var(--ease-soft, ease); }
+}
+@media (hover: none) {
+  .cardTools .icon:not([data-restore]) { visibility: hidden; }
+  .card[data-open] .cardTools .icon, .entry[data-selected] .cardTools .icon, .card:focus-within .cardTools .icon, .entry[data-tools] .cardTools .icon { visibility: visible; }
+}
+.card:hover, .card:focus-within, .card[data-open], .entry[data-selected] .card { --tools: 1; }
+.lockIcon[aria-pressed="true"] { color: var(--color-text); opacity: 1; }
+.lockIcon[aria-pressed="true"] > svg rect { fill: currentColor; fill-opacity: .2; }
+.lockIcon:hover:not([aria-disabled="true"]) { background: none; color: var(--color-text); }
+.entry[data-selected] .card[data-locked] { box-shadow: none; }
+/* `[2026-10-07 사용자 지시]` The whole card opens and closes the checks (the buttons in it keep doing what they say). */
+.card[data-pickable] { cursor: pointer; }
+.card[data-pickable] [data-details] { cursor: auto; }
+/* `[2026-10-07 사용자 지시 — 총 두 줄]` The card's second line, under the name: 「바뀜 · 이전 …」 · its 「되돌리기」 · on a shut card 「✕ 장소」 chips. The state, edit and delete stay on the name's line. */
+.cardTitleLine { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.cardName .cardTitleLine .cardTitle { flex: 0 1 auto; }
+.changedMark { display: inline-flex; flex: none; color: var(--color-adjusted); }
+.cardFoot { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-end; gap: 4px 8px; padding: 0 12px 8px; }
+.cardFootNote { flex: 1 1 96px; min-width: 0; }
+.cardFoot:has(.needsInline) { gap: 8px 12px; padding-bottom: 12px; }
+.cardFoot:has(.needsInline) .cardFootNote { flex: 0 1 auto; }
+.cardFoot:has(.needsInline) .cardFootTools { margin-left: 0; }
+.cardFootNote .cardWritten { display: block; margin: 0; font-size: 12px; font-weight: 600; }
+.cardFootTools { display: flex; flex: none; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.cardFootTools .pill { font-size: 12px; font-weight: 600; }
+/* `[2026-10-13 카드 높이 통일]` 그날 가장 긴 카드 높이로 늘린 접힌 카드(rail-list.tsx 가 data-even 을 단다)는 하단 칸(확인 필요 · 되돌리기)을 카드 바닥에 붙인다 — 늘어난 빈칸은 내용과 하단 칸 사이에 든다. */
+.card[data-even] { display: flex; flex-direction: column; }
+.card[data-even] > .cardFoot { margin-top: auto; }
+.needsInline { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
+/* What of the stop is still the customer's to deal with, under the name of a shut card: 「✕ 장소」 · 「! 시간」. */
+.needs { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: -4px 0 0; padding: 0 12px 10px 46px; }
+.need { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+.need[data-result="bad"] { color: var(--color-error); }
+.need[data-result="warn"] { color: var(--color-warning); }
+.need .mark { width: 16px; height: 16px; font-size: 10px; }
+.need .mark[data-result="bad"] { background: var(--color-error); color: var(--color-on-primary); }
+.pillWait { display: inline-flex; flex: none; align-items: center; gap: 5px; margin: 0 4px; font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.cardNote { margin: 0; padding: 0 12px 12px; font-size: 12px; color: var(--color-muted); }
+.status { display: inline-flex; align-items: center; gap: 6px; }
+.empty { margin: 16px 0; padding: 14px; border-radius: 10px; background: var(--color-subtle); font-size: 13px; color: var(--color-muted); text-align: center; }
+.icon:focus-visible, .action:focus-visible, .previous button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.lockIcon:focus-visible { outline: none; }
+.lockIcon:focus-visible > svg { color: var(--color-primary); stroke-width: 2.6; }
+.cardActions { display: flex; gap: 8px; padding: 0 12px 12px; }
+/* `[2026-10-07]` A photo's line read two ways: the two values side by side, equal weight (the server cannot tell which is right). Warning tone, like the check row above it. */
+.reread { margin: 0 12px 10px; padding: 10px; border-radius: 10px; background: var(--color-warning-soft); }
+.rereadHint { margin: 0 0 8px; font-size: 12.5px; font-weight: 700; color: var(--color-warning); }
+.rereadOptions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rereadOption { display: grid; gap: 2px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.rereadOption small { font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.rereadOption span { font-size: 14px; font-weight: 750; overflow-wrap: anywhere; }
+.rereadOption:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.action { display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.action[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.action[aria-disabled="true"] { opacity: .32; cursor: not-allowed; }
+.soon { margin-left: 4px; font-size: 10.5px; font-weight: 650; color: var(--color-muted); }
+.badge { display: inline-grid; place-items: center; min-width: 19px; height: 19px; margin-left: 6px; padding: 0 5px; border-radius: 10px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 800; }
+
+/* ⑤ The change screen (mockup 개정 4): the bar becomes a search, the sheet shows cards to swipe, photos, results. */
+.searchField { display: flex; flex: 1; min-width: 0; align-items: center; gap: 6px; height: 36px; padding: 0 6px 0 9px; border: 1px solid var(--color-divider); border-radius: 10px; background: var(--color-subtle); color: var(--color-muted); }
+.searchField input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 14px; outline: none; }
+.searchField input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.searchField:focus-within { outline: 2px solid var(--color-selected); outline-offset: 1px; }
+.clear { display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--color-subtle-strong); color: var(--color-muted); cursor: pointer; }
+.change { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.changeHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 22px 16px 8px; border-bottom: 1px solid var(--color-divider); }
+.changeTitle { min-width: 0; margin: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.changeTitle:focus { outline: none; }
+.changePos { flex: none; font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.changeBody { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 0 24px; }
+.carousel { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 24px 8px; scrollbar-width: none; }
+.carousel::-webkit-scrollbar { display: none; }
+.changeCard { flex: 0 0 min(288px, calc(100% - 24px)); min-width: 0; scroll-snap-align: center; padding: 12px 14px; border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-surface); transition: border-color .2s, box-shadow .2s; }
+.changeCard[data-current] { background: var(--color-subtle); }
+.changeCard[data-active] { border-color: var(--color-muted); box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 8%, transparent); }
+.changeCard .checks { margin-top: 8px; padding: 4px 0 0; }
+.changeCard .action { width: 100%; margin-top: 10px; }
+.changeTop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
+.chip { padding: 2px 7px; border-radius: 6px; background: var(--color-subtle-strong); color: var(--color-text-secondary); font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.chip[data-source="candidate"] { background: var(--color-success-soft); color: var(--color-success); }
+.chip[data-source="search"] { background: var(--color-selected-soft); color: var(--color-selected); }
+.stepTag { padding: 2px 7px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 11px; font-weight: 750; white-space: nowrap; }
+.stepTag[data-basis="similar_experience"] { border-color: var(--color-adjusted-border); color: var(--color-adjusted); }
+.stepTag[data-basis="meal_inferred"] { border-color: var(--color-warning-border); color: var(--color-warning); }
+.changeReason { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+/* `[2026-10-13]` 긴 기준 장소 이름(「광장시장나주댁 육회랑전이랑에서 1.0km」)이 줄바꿈 없이 카드를 화면 밖(439px)까지 밀었다 — 카드는 폭을 지키고 윗줄 · 거리 문구는 줄을 바꾼다 */
+.distance { min-width: 0; font-size: 12px; font-weight: 700; color: var(--color-muted); overflow-wrap: anywhere; }
+.nameRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; margin: 8px 0 2px; }
+.nameRow .changeName { margin: 0; }
+.resultBody .nameRow { margin: 0; }
+/* Where the place was found, small beside its name (our list · tourism service · map search). */
+.sourceTag { flex: none; padding: 1px 6px; border-radius: 6px; background: var(--color-subtle-strong); color: var(--color-muted); font-size: 10.5px; font-weight: 750; white-space: nowrap; }
+.sourceTag[data-origin="kakao"] { background: var(--color-selected-soft); color: var(--color-selected); }
+.sourceTag[data-origin="tour_api"] { background: var(--color-success-soft); color: var(--color-success); }
+.changeName { margin: 8px 0 2px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.3; overflow-wrap: anywhere; }
+.changeSub { margin: 0; font-size: 12.5px; color: var(--color-muted); line-height: 1.4; }
+.changeNext { margin: 8px 0 0; font-size: 12px; color: var(--color-muted); text-align: right; }
+.dots { display: flex; justify-content: center; gap: 2px; margin: 4px 0 0; }
+.dots button { display: grid; place-items: center; width: 28px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
+.dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--color-border); transition: width .2s, background .2s; }
+.dots button[aria-pressed="true"] span { width: 16px; background: var(--color-text); }
+.dots button:focus-visible, .hint:focus-visible, .result:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.hint { display: block; width: calc(100% - 32px); margin: 10px 16px 12px; padding: 8px; border: 0; border-radius: 10px; background: var(--color-subtle); color: var(--color-muted); font: inherit; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; }
+.photos { padding: 0 16px; }
+.photos h4 { display: flex; align-items: baseline; gap: 6px; margin: 4px 0 8px; font-size: 13.5px; font-weight: 800; }
+.photos h4 small { font-size: 12px; font-weight: 600; color: var(--color-muted); }
+.photos .empty { margin: 0; }
+.photoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.photo { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 10px; background: var(--color-subtle-strong); }
+.photo img { width: 100%; height: 100%; object-fit: cover; }
+.photo figcaption { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--color-inverse) 60%, transparent); color: var(--color-on-inverse); font-size: 11px; font-weight: 700; }
+.results { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 12px 20px; }
+.results > .action { width: 100%; }
+.resultsHead { display: flex; align-items: baseline; gap: 6px; margin: 4px 4px 6px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+.resultsHead small { font-weight: 600; color: var(--color-muted); }
+/* `[2026-10-22]` Two search lists (nearest · best name match): a small heading over each, and a tag beside the source tag on each row. */
+.resultsGroup { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 12px 4px 2px; font-size: 12.5px; font-weight: 800; color: var(--color-text); }
+.resultsGroup small { font-weight: 600; color: var(--color-muted); }
+.orderTag { flex: none; padding: 0 5px; border: 1px solid var(--color-border); border-radius: 6px; color: var(--color-text-secondary); font-size: 10.5px; font-weight: 750; white-space: nowrap; }
+.resultList { list-style: none; margin: 0; padding: 0; }
+.result { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; padding: 10px 6px; border: 0; border-bottom: 1px solid var(--color-divider); border-radius: 8px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.result:hover { background: var(--color-subtle); }
+.resultNo { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--color-subtle-strong); font-size: 11.5px; font-weight: 800; color: var(--color-text-secondary); }
+.resultBody { display: flex; flex-direction: column; min-width: 0; }
+.resultBody b { font-size: 14.5px; font-weight: 750; }
+.resultBody small { font-size: 12px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultKm { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+.details { margin: 16px 16px 0; border-top: 1px solid var(--color-divider); }
+.details summary { padding: 12px 2px; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; }
+.details summary:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* ⑤ The stop's own details, under the change screen */
+.editor { display: grid; gap: 10px; padding: 12px 2px 16px; }
+.editorTitle { margin: 0; font-size: 15px; font-weight: 750; }
+.field { display: grid; gap: 4px; min-width: 0; font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.field input, .field select { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 500; }
+.field input[aria-invalid="true"] { border-color: var(--color-error); }
+.field input:disabled { background: var(--color-subtle); color: var(--color-faint); }
+.fieldRow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.fieldRow > :first-child { grid-column: 1 / -1; }
+.toggle { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 13px; color: var(--color-text-secondary); }
+.editorNote { margin: 0; font-size: 12px; color: var(--color-muted); }
+.editorError { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-error); }
+.editorButtons { display: flex; gap: 8px; }
+.editorButtons > * { flex: 1; justify-content: center; }
+
+
+/* The trip-wide details the server asks for */
+/* `[2026-10-16 D-025]` 먼저 채운 것 · 이해한 말 · 묻는 것 — 막지 않는 안내라 경고색이 아니라 조정색 테두리만 */
+.prefill { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--color-border); border-left: 3px solid var(--color-adjusted); border-radius: 12px; background: var(--color-surface); display: grid; gap: 6px; }
+.prefillHead { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--color-text); }
+.prefillLine { margin: 0; font-size: 12.5px; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.prefillLine b { color: var(--color-text); margin-right: 4px; }
+/* `[2026-10-16 D-025 후속]` 담당에 넘기는 성향 · 조건 — 한 줄에 하나, 끝에 「우리가 채움」 / 「고객님 답 그대로」 */
+.prefillHandoff { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 12.5px; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.prefillHandoff b { color: var(--color-text); margin-right: 4px; }
+.prefillWho { margin-left: 6px; font-size: 11.5px; color: var(--color-text-secondary); }
+.prefillAsk { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--color-text); display: grid; gap: 2px; }
+.tripIssues { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-surface); }
+.tripIssuesTitle { margin: 0 0 6px; font-size: 13px; font-weight: 750; color: var(--color-warning); }
+.tripIssues ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tripIssues p { margin: 0; font-size: 13px; color: var(--color-text-secondary); }
+.tripAnswer { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 6px; }
+.tripAnswer .field { flex: 1 1 140px; }
+
+/* ★`[2026-10-06 사용자 지시]` 이 화면의 알림도 모든 화면과 같은 한 막대다 — `components/toast-view.tsx`. 여기서 따로 그리지 않는다. */
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* `[2026-10-06 사용자 지적 — 딱딱 끊겨 눈이 피곤하다]` 새로 그려지는 카드와 검사 줄은 조금 더 길고 부드럽게(감속) 들어온다. */
+@keyframes riseSoft { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* `[2026-10-03 사용자]` The place search in the header, where the brand stands: small beside the menu, wide while it has focus. */
+.headSearch { display: flex; flex: 1; min-width: 0; align-items: center; gap: 2px; height: 44px; }
+.headSearch .searchField { height: 38px; }
+.headSearch .back { background: color-mix(in srgb, var(--color-surface) 92%, transparent); box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 16%, transparent); }
+.headSearch[data-open] { position: absolute; z-index: 6; top: 14px; left: 12px; right: 12px; height: 48px; padding: 4px 8px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
+
+/* A card whose place was picked keeps the words written in the plan as a small line; a stop 「전체 자동 추천」 changed says what it had been. */
+.cardName { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.cardName .cardTitle { flex: none; }
+.cardWritten { margin-top: 2px; font-size: 11.5px; font-weight: 600; color: var(--color-muted); line-height: 1.35; }
+.cardWritten[data-changed] { color: var(--color-adjusted); font-weight: 750; }
+
+/* The second page of the list: the plan with the recommended fixes applied (opened by pushing past the end of the list). */
+/* [2026-10-05] The plan as it was and the proposed plan are two pages. The page in view follows the finger while the pull fills (it gives way up at the end of the list, down at the top
+   of the proposed plan) and springs back if it is let go early; past the threshold the next page comes in from below (forward) or from above (back). */
+.page[data-pull] { transform: translateY(calc(var(--pull, 0) * var(--pull-dir, -1) * 26px)); transition: transform .12s linear; }
+.page[data-pull="start"] { --pull-dir: 1; }
+.page[data-turn="forward"] { animation: turnForward .42s var(--ease-soft); }
+.page[data-turn="back"] { animation: turnBack .42s var(--ease-soft); }
+@keyframes turnForward { from { opacity: 0; transform: translateY(64px); } to { opacity: 1; transform: none; } }
+@keyframes turnBack { from { opacity: 0; transform: translateY(-64px); } to { opacity: 1; transform: none; } }
+/* The dots under the list say which of the two pages is in view (and turn to it when pressed), like the dots of the first screens. */
+.pager { display: flex; justify-content: center; gap: 2px; flex: none; padding: 0 0 2px; }
+.pagerDot { padding: 10px 4px; background: none; border: 0; cursor: pointer; }
+.pagerDot > span { display: block; width: 6px; height: 6px; border-radius: 10px; background: var(--color-faint); transition: width .25s, background .25s; }
+.pagerDot[aria-current="step"] > span { width: 22px; background: var(--color-primary); }
+.pagerDot:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 8px; }
+@media (prefers-reduced-motion: reduce) { .timeEditor { animation: none; } .page[data-turn], .page[data-shake] { animation: none; } .page[data-pull] { transition: none; } .pagerDot > span { transition: none; } }
+.pullHint:focus-visible, .pullEmpty:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* At the end of the list: a hint that fills as the customer keeps pushing, and opens the next page when it is full. */
+/* 목록 끝이 아래 추천 영역으로 이어지는 안내. 별도 상자보다 같은 바닥으로 읽힌다. */
+.sheetBody[data-next-preview] { padding-bottom: max(var(--follow-room, 0px), var(--focus-room, 0px)); }
+.pullHint { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; width: calc(100% + 28px); min-height: 168px; margin: 16px -14px 0; padding: 24px 24px 16px; border: 0; border-radius: 28px 28px 0 0; background: var(--color-subtle); color: var(--color-text); font: inherit; cursor: pointer; overflow: hidden; }
+.pullHint::before, .pullHint::after { content: ""; position: absolute; z-index: -1; pointer-events: none; width: 150%; height: 96px; left: -25%; bottom: -40px; border-radius: 50%; background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface)); }
+.pullHint::after { left: 10%; bottom: -60px; background: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface)); }
+.pullCopy { display: block; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.pullDirection { display: inline-flex; align-items: center; justify-content: center; gap: 16px; color: var(--color-primary); font-size: 14px; font-weight: 400; line-height: 1.5; }
+.pullDirection svg { flex: none; transform: translateY(calc(var(--pull, 0) * 8px)); transition: transform 150ms ease-out; }
+.pullSteps { display: flex; align-items: center; gap: 8px; height: 8px; }
+.pullSteps i { width: 6px; height: 6px; border-radius: 8px; background: var(--color-muted); }
+.pullSteps i:first-child { width: 28px; background: var(--color-primary); }
+.pullEmpty { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin: 12px 0 0; padding: 12px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.pullEmpty[aria-disabled="true"] { opacity: .6; cursor: not-allowed; }
+.pullHintTop { composes: pullEmpty; margin: 6px 0 14px; }
+.sheet:has(.sheetBody[data-next-preview]) .footer { border-top-color: transparent; background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface)); }
+.sheet:has(.sheetBody[data-next-preview]) .pager { background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface)); }
+/* `[2026-10-05 사용자 선택]` Nothing to recommend and the customer pushes on: the list stays where it is and shakes a little (sideways, not up - it is not going anywhere). */
+.page[data-shake] { animation: shakeInPlace .46s cubic-bezier(.36, .07, .19, .97); }
+@keyframes shakeInPlace { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
+.pullHint[data-edge] { color: var(--color-primary); }
+.pullBar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: transparent; }
+.pullBar > span { display: block; height: 100%; background: var(--color-primary); transform-origin: left; transform: scaleX(var(--pull, 0)); transition: transform 150ms ease-out; }
+
+/* While the check is drawn the list follows its newest row; scrolled away by hand, this brings the customer back to it. */
+/* `[2026-10-21 사용자 지적]` Floats over the list at the sheet's bottom (the sheet is its box), whatever the list's scroll. */
+.followPill { position: absolute; left: 50%; bottom: 14px; z-index: 5; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 7px 14px; white-space: nowrap; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 750; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 16%, transparent); cursor: pointer; }
+.followPill:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* `[2026-10-03 사용자]` Beside the brand in the header: the trip's title, or how far the check has got. */
+/* `[2026-10-04]` 상단바 없이 지도 위에 뜨는 칩 — 흰색 92 %, 둥근 모서리 16px. */
+.headInfo { display: flex; flex: 1; min-width: 0; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 16px; background: color-mix(in srgb, var(--color-surface) 92%, transparent); box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 16%, transparent); }
+.headTitle { display: flex; align-items: center; gap: 4px; margin: 0; min-width: 0; flex: 0 1 auto; font-size: 16px; font-weight: 750; letter-spacing: -.3px; }
+/* `[2026-10-05 사용자 지시 · 내 여행 칩 안 A]` The name's chip is as long as its text (up to 11.5em, then cut with 「…」), at the left; pressed, it grows to the right - to the whole line when the name needs it. */
+.headInfo[data-title] { flex: 0 1 auto; max-width: 11.5em; transition: max-width .28s cubic-bezier(.3, .7, .4, 1); }
+.headInfo[data-title]:has(.headTitle[data-armed]), .headInfo[data-title]:has(.titleForm) { max-width: 100%; flex: 1 1 auto; }
+@media (prefers-reduced-motion: reduce) { .headInfo[data-title] { transition: none; } }
+.headProgress { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
+.headStep { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: 12.5px; font-weight: 750; color: var(--color-text); white-space: nowrap; }
+.headStep b { font-size: 12px; font-weight: 750; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.kindNote { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); }
+.kindNote[data-mismatch] { color: var(--color-warning); font-weight: 650; }
+.dayStrip { display: flex; gap: 8px; padding: 8px 14px 6px; overflow-x: auto; scrollbar-width: none; }
+/* `[2026-10-06 사용자 지시]` 「전체 · 1일차 · 2일차」 줄은 「계획 확인」 줄과 한 줄이다: 일차 칩이 앞에서 옆으로 밀리고(폭이 모자라면 스크롤), 확인 필요·바뀜 표시는 오른쪽에 붙어 있다. 제목 글자는 화면 읽기용으로만 남는다. */
+.sheetHead .dayStrip { flex: 1 1 0; min-width: 0; padding: 0; touch-action: pan-x pinch-zoom; }
+.sheetHead .dayMarker { top: 0; }
+.sheetHead .count { flex: none; }
+.dayStrip::-webkit-scrollbar { display: none; }
+.dayChip { position: relative; z-index: 1; display: inline-flex; flex: none; align-items: baseline; gap: 5px; min-height: 34px; padding: 0 13px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: transparent; color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; white-space: nowrap; align-items: center; }
+.dayChip small { font-size: 11px; font-weight: 550; }
+/* `[2026-10-05 사용자 요청]` The dark marker under the chips is ONE element that slides from chip to chip (and with the finger while the list is dragged); the chip it covers is the one that is lit. */
+.dayStrip { position: relative; }
+.dayMarker { position: absolute; z-index: 0; left: 0; top: 8px; height: 34px; width: 0; border-radius: 999px; background: var(--color-text); pointer-events: none; transition: transform 200ms ease-out; }
+.dayStrip[data-dragging] .dayMarker { transition: none; }
+.dayChip[data-lit] { border-color: transparent; color: var(--color-on-primary); }
+.dayChip { transition: color .2s var(--ease-soft), border-color .2s var(--ease-soft); }
+.dayChip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.dayBadge { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--color-warning); color: var(--color-on-primary); font-size: 10.5px; font-weight: 800; line-height: 1; }
+.page[data-slide="next"] { animation: slideNext var(--motion-soft) var(--ease-soft); }
+.page[data-slide="prev"] { animation: slidePrev var(--motion-soft) var(--ease-soft); }
+@keyframes slideNext { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
+@keyframes slidePrev { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: none; } }
+.filterNote { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--color-soft); font-size: 12px; font-weight: 650; color: var(--color-muted); }
+.filterNote button { flex: none; min-height: 30px; padding: 0 10px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.entry[data-attention] { animation: attention 2.4s var(--ease-soft) 1; border-radius: 12px; }
+@keyframes attention { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-warning) 55%, transparent); } 35% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-warning) 35%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.titleButton { display: flex; align-items: center; min-width: 0; flex: 0 1 auto; padding: 6px 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
+.titleButton span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.headTitle[data-armed] .titleButton span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow-wrap: anywhere; }
+.headInfo:has(.titleEdit) { padding-right: 10px; }   /* `[2026-10-06 사용자 지시]` 이름 수정 버튼이 펼쳐졌을 때 칩 오른쪽 끝에 붙지 않게 여백을 둔다 */
+.titleEdit { display: grid; place-items: center; flex: none; width: 34px; height: 34px; margin-left: 6px; border: 0; border-radius: 10px; background: var(--color-subtle-strong); color: var(--color-text); cursor: pointer; animation: rise .2s ease-out; }
+.titleEdit:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.titleButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.titleForm { display: flex; flex: 1; min-width: 0; }
+.titleInput { width: 100%; min-width: 0; padding: 4px 8px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 15px; font-weight: 750; }
+.progressAt { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; }
+.headAt { font-size: 11.5px; font-weight: 600; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.headTrack { display: block; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
+.headTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+
+/* 한국관광공사 출처 표시 — 확인 목록의 맨 아래 */
+.credit { --credit-enter: 200ms; --credit-exit: 150ms; margin: 8px 0 4px; font-size: 12px; line-height: 1.6; color: var(--color-muted); transition: opacity var(--credit-enter) var(--ease-soft); }
+.credit[data-muted] { opacity: 0; pointer-events: none; transition-duration: var(--credit-exit); transition-timing-function: var(--ease-leave); }
+.credit summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; list-style: none; cursor: pointer; }
+.credit summary::-webkit-details-marker { display: none; }
+.credit summary span { min-width: 0; }
+.credit summary svg { flex: none; transition: transform var(--credit-enter) var(--ease-soft); }
+.credit[open] summary svg { transform: rotate(180deg); }
+.credit summary:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 8px; }
+.creditDetails { padding: 8px 12px; border: 1px solid var(--color-border-strong); border-radius: 8px; background: var(--color-surface); }
+.creditDetails p { margin: 0; }
+.creditDetails p + p { margin-top: 4px; }
+.creditDetails [data-route-note] { display: block; }
+.credit a { color: inherit; text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) { .credit, .credit[data-muted], .credit summary svg { transition: none; } .page[data-slide] { animation: none; } }
+/* `[2026-10-04]` 게스트 제한에 걸리면 등록 줄 위 오류에 붙는 「계정 연결」 안내. */
+.loginHint { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--color-muted); }
+.loginHint a { color: var(--color-primary); font-weight: 750; text-decoration: underline; }
+
+/* `[2026-10-04 사용자 · 코덱스 의견]` 확인 표시가 켜지는 순간이 보이게 — 통과(✓)·채움(✎)·주의(!)가 200ms 동안 작게 튀어 오른다(빨강·회색은 그대로 나온다). */
+.screen[data-stage="checking"] .check:is([data-result="ok"], [data-result="filled"], [data-result="warn"]) .mark { animation: markPop .32s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes markPop {
+  from { transform: scale(.8); box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 40%, transparent); }
+  60% { transform: scale(1.08); }
+  to { transform: scale(1); box-shadow: 0 0 0 6px transparent; }
+}
+/* 확인이 재생되는 동안은 시트를 더 올려 두어 켜지는 표시가 보이게 한다(지도는 핀이 대략 어디쯤인지 알아볼 만큼만 남는다). */
+.screen[data-stage="checking"] .checking[data-sheet="half"] { --sheet-h: min(620px, 76%); }
+
+/* ★`[2026-10-04 사용자 지시]` 머리의 개수: 「! 3」(확인 필요) · 「✎ 2」(바뀜) · 「✓」(고칠 곳 없음). 누르면 그것만 모아 본다. */
+.headBadge { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 10px 0 5px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text-secondary); font: inherit; font-size: 12.5px; font-weight: 750; font-variant-numeric: tabular-nums; }
+button.headBadge { cursor: pointer; }
+.headBadge[data-kind="needs"] { border-color: var(--color-warning-border); background: var(--color-warning-surface); color: var(--color-warning); }
+.headBadge[data-kind="changed"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.headBadge[data-kind="ok"] { border-color: transparent; background: var(--color-success-soft); color: var(--color-success); padding: 0 6px 0 5px; }
+.headBadge[data-kind="wait"] { color: var(--color-muted); }
+.headBadge[aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: -1px; }
+.headBadge:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* The short sheet hides its contents; at the minimum only the handle remains. */
+.checking[data-compact] .sheet { padding-top: 22px; justify-content: flex-end; }
+.checking[data-compact] :is(.sheetHead, .dayStrip, .sheetBody, .pager) { display: none; }
+.checking[data-collapsed] .sheet { padding-top: 0; }
+.checking[data-collapsed] .handle { height: 44px; }
+.checking[data-empty-map-in-list] .map [data-empty-map-notice] { display: none; }
+.emptyMapNotice { margin: 0; padding: 6px 8px; border-radius: 6px; background: var(--color-surface); color: var(--color-muted); font-size: 12px; line-height: 18px; }
+.emptyMapNotice span { display: block; font-size: 11px; }
+/* ★`[2026-10-07 사용자 지시 — 날짜 줄은 지금 모양 그대로, 경계 없이 목록 위에 투명하게 떠서]` The day chips and the head buttons float over the top of the list (no line, no band of their own); the list scrolls under them. */
+.sheetHead[data-float] { position: absolute; z-index: 3; top: 0; left: 0; right: 0; padding: 32px 12px 6px; border-bottom: 0; background: transparent; pointer-events: none; }
+.sheetHead[data-float] > * { pointer-events: auto; }
+/* Keep the stationary tabs below the opaque handle; reserve scrollport room for shadows and focus rings. */
+.sheetHead[data-float] .dayStrip { padding: 12px 8px; margin: -12px -6px; --day-enter: 200ms; --day-exit: 150ms; opacity: 1; transform: translateY(0); transition: opacity var(--day-enter) ease-out, transform var(--day-enter) ease-out; }
+.sheetHead[data-float] .dayMarker { top: 12px; }
+.sheetHead[data-float] .dayChip::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 3px 6px color-mix(in srgb, var(--color-text) 24%, transparent); opacity: .2; pointer-events: none; }
+.sheetHead[data-float] .dayStrip:not([data-quiet]) .dayChip::after { --day-shadow-cycle: 4s; animation: dayShadow var(--day-shadow-cycle) ease-in-out infinite; }
+.sheetHead[data-float] .dayStrip:is(:hover, :focus-within, [data-dragging]) .dayChip::after { animation-play-state: paused; }
+/* `[2026-10-11 사용자]` Suggest elevation with shadow opacity only; never move the date tabs into the handle. */
+@keyframes dayShadow { 0%, 100% { opacity: .2; } 50% { opacity: .65; } }
+.sheetHead[data-float] .dayStrip[data-quiet] { opacity: 0; transform: translateY(-4px); pointer-events: none; transition-duration: var(--day-exit); transition-timing-function: ease-in; }
+.sheetHead[data-float] .dayStrip[data-at-top]:not([data-quiet]) { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .sheetHead[data-float] .dayStrip { transform: none; transition: none; }
+  .sheetHead[data-float] .dayStrip .dayChip::after { animation: none !important; opacity: .35; }
+}
+.sheetHead[data-float] .dayChip:not([data-lit]) { background: var(--color-surface); }
+.sheetHead[data-float] .dayChip { box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.sheetHead[data-float] :is(.resetTimes, .headBadge) { box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 12%, transparent); }
+/* Hide scrolling content throughout the handle, then fade in over the next 32px. */
+.screen[data-stage="done"] .sheetBody {
+  -webkit-mask-image: linear-gradient(to bottom, transparent var(--handle-clearance, 4px), var(--color-text) calc(var(--handle-clearance, 4px) + 32px));
+  mask-image: linear-gradient(to bottom, transparent var(--handle-clearance, 4px), var(--color-text) calc(var(--handle-clearance, 4px) + 32px));
+}
+.sheetBody[data-under-float] {
+  --handle-clearance: 22px;
+  padding-top: 88px; scroll-padding-top: 88px;
+}
+
+/* A stop that was changed: blue, the way 「확인 필요」 is amber. A stop marked for deletion: grey, 「되돌리기」 where the bin was. */
+.screen[data-stage] .entry[data-changed] .card { border-color: var(--color-adjusted-border); background: color-mix(in srgb, var(--color-adjusted-soft) 60%, var(--color-surface)); }
+.screen[data-stage] .entry[data-changed] .dot { border-color: var(--color-adjusted); background: var(--color-adjusted-soft); }
+.screen[data-stage] .entry[data-removed] .card { border-color: var(--color-border); background: var(--color-subtle); }
+.entry[data-removed] .cardTitle { color: var(--color-muted); text-decoration: line-through; }
+.entry[data-removed] .time { opacity: .5; }
+.icon[data-restore] { background: var(--color-text); color: var(--color-surface); }
+.icon[data-restore]:hover { background: var(--color-text); color: var(--color-surface); }
+
+/* The seam between the plan as it is and the proposed plan under it: the line runs on through it. */
+.dayHint { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 8px 0 2px; font-size: 12px; font-weight: 650; color: var(--color-muted); }
+
+/* ★`[2026-10-04 사용자 지시]` 카드 왼쪽의 시간을 누르면 그 자리에서 시작·끝 시각을 고친다. */
+button.time { display: block; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); text-align: right; cursor: pointer; }
+button.time:hover, button.time[data-editing] { color: var(--color-text); text-decoration: underline dotted; text-underline-offset: 3px; }
+button.time[aria-disabled="true"] { cursor: default; text-decoration: none; }
+button.time:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 6px; }
+.timeEditor { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 12px 12px; padding-top: 10px; border-top: 1px solid var(--color-divider); }
+.timeButtons { display: flex; grid-column: 1 / -1; gap: 8px; }
+.timeButtons > * { flex: 1; justify-content: center; }
+.timeEditor .editorError { grid-column: 1 / -1; }
+
+/* ★`[2026-10-04 사용자 지시]` 시간 고치기 — 시간을 누르면 카드 안에 열리는 편집기. `[2026-10-21 ST4F-702 A 휠]` 시작 · 끝 칸 + 오전/오후 · 시 · 분 휠 · ⌨ 직접 입력 · 앞뒤 일정 함께 밀기. */
+.timeEditor { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0 12px 12px; padding-top: 10px; border-top: 1px solid var(--color-divider); }
+/* `[2026-10-05 사용자 지시]` While a time is dragged: what moves and by how much, the notice at the end of the free time, and the whole day as a strip (outline = where it was, filled = where it would be). */
+.dragOverlay { position: absolute; left: 12px; right: 12px; top: 64px; z-index: 16; display: grid; gap: 5px; padding: 10px 12px 9px; border: 1px solid var(--color-border-strong); border-radius: 14px; background: color-mix(in srgb, var(--color-surface) 95%, transparent); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text) 20%, transparent); pointer-events: none; }
+.dragHead { display: flex; align-items: baseline; gap: 8px; margin: 0; font-size: 13px; }
+.dragHead strong { min-width: 0; overflow: hidden; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.dragHead span { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+.dragHeld { margin: 0; padding: 4px 8px; border-radius: 8px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 12px; font-weight: 650; }
+.miniTrack { position: relative; height: 30px; overflow: hidden; border-radius: 8px; background: var(--color-subtle); }
+.miniBlock, .miniGhost { position: absolute; top: 6px; bottom: 6px; border-radius: 4px; }
+.miniBlock { background: var(--color-border-strong); }
+.miniBlock[data-moved] { background: var(--color-warning); }
+.miniBlock[data-active] { background: var(--color-primary); }
+.miniBlock[data-fixed] { opacity: .55; }
+.miniGhost { border: 1px dashed var(--color-muted); }
+.miniAxis { display: flex; justify-content: space-between; margin: 0; font-size: 11px; font-variant-numeric: tabular-nums; color: var(--color-muted); }
+.dragSum { margin: 0; font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
+/* ⌨: the two big fields on a line of their own (the clock icon of the browser hidden - the numbers are the thing). */
+.timeFields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.timeEditor[data-kind="depart"] .timeFields { grid-template-columns: 1fr; }
+/* `[2026-10-14 실서버 확인]` 19px · 10px 여백이면 휴대폰 폭(칸 약 109px)에서 「오후 12:30」이 「오후 12:3」으로 잘렸다 — 16px · 8px 로 줄인다 */
+.timeEditor input[type="time"] { width: 100%; min-width: 0; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; padding-inline: 8px; }
+.timeEditor input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+.timeEditor { animation: timePop .3s cubic-bezier(.2, .9, .3, 1.2); transform-origin: 30px 0; }
+@keyframes timePop { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+/* `[2026-10-21 ST4F-702 A 휠]` 시작 · 끝(출발) 칸 — 누른 칸을 휠이 돌린다 — 과 ⌨. */
+.timeBoxes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px; gap: 6px; }
+.timeEditor[data-kind="depart"] .timeBoxes { grid-template-columns: minmax(0, 1fr) 40px; }
+.timeBox { display: grid; justify-items: start; min-width: 0; min-height: 50px; padding: 5px 10px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
+.timeBox small { font-size: 11.5px; font-weight: 700; line-height: 1.4; color: var(--color-muted); }
+.timeBox b { font-size: 17px; font-weight: 800; line-height: 1.25; letter-spacing: -.2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.timeBox[aria-pressed="true"] { border-color: var(--color-selected); background: var(--color-selected-soft); box-shadow: inset 0 0 0 1px var(--color-selected); }
+.timeBox[aria-pressed="true"] b { color: var(--color-primary); }
+.timeKeys { display: grid; place-items: center; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-muted); cursor: pointer; }
+.timeKeys[aria-pressed="true"] { border-color: var(--color-selected); background: var(--color-selected-soft); color: var(--color-primary); }
+.timeBox:focus-visible, .timeKeys:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* 휠 — 가운데 띠 + 위아래로 흐려짐. 다섯 줄(34px)이 보이고 가운데 줄이 값이다. */
+.wheel { position: relative; display: flex; justify-content: center; align-items: stretch; height: 170px; user-select: none; -webkit-user-select: none; }
+.wheel::before { content: ""; position: absolute; left: 4px; right: 4px; top: 68px; height: 34px; border-radius: 10px; background: var(--color-subtle-strong); pointer-events: none; }
+.wheelCol { position: relative; z-index: 1; width: 60px; height: 170px; overflow-x: hidden; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; outline: none; cursor: grab; touch-action: pan-y;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, var(--color-text) 34%, var(--color-text) 66%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, var(--color-text) 34%, var(--color-text) 66%, transparent 100%); }
+.wheelCol::-webkit-scrollbar { display: none; }
+.wheelCol[data-dragging] { scroll-snap-type: none; cursor: grabbing; }
+.wheelCol[data-part="half"] { width: 72px; }
+.wheelCol > i { display: block; height: 34px; scroll-snap-align: center; font-style: normal; font-size: 21px; line-height: 34px; text-align: center; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.wheelCol[data-part="half"] > i { font-size: 18px; }
+.wheelCol > i[data-on] { color: var(--color-text); font-weight: 750; }
+.wheelCol > i[data-off] { color: var(--color-border-strong); }
+.wheelCol:focus-visible { box-shadow: inset 0 0 0 2px var(--color-selected); border-radius: 10px; }
+.wheelPad { display: block; height: 68px; }
+.wheelColon { position: relative; z-index: 1; align-self: center; margin: 0 -3px 2px; font-size: 20px; font-weight: 750; }
+.timeLine { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; font-size: 12px; color: var(--color-text-secondary); }
+.timeStay { font-weight: 750; font-variant-numeric: tabular-nums; color: var(--color-text); }
+.timeBounce { margin: 0; padding: 6px 10px; border-radius: 9px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 12px; font-weight: 650; line-height: 1.5; }
+.timeFoot { display: flex; align-items: center; gap: 8px; }
+.timeFoot .timePush { flex: 1; min-width: 0; line-height: 1.35; }
+.timeIcons { display: flex; flex: none; justify-content: flex-end; gap: 8px; }
+.timeIcon { display: grid; place-items: center; width: 44px; height: 40px; padding: 0; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+.timeIcon[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.timeIcon[data-undo] { margin-right: auto; border-color: var(--color-adjusted-border); color: var(--color-adjusted); }
+.timeIcon:disabled { opacity: .4; cursor: not-allowed; }
+.timeIcon:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* The time and its dot are taken and dragged (up = earlier, down = later). ★`[2026-10-21 ST4F-702 꾹 눌러 잡기]` A finger scrolls the list from them (`pan-y`) until it has held one for
+   `HOLD_MS` (`use-time-edit.ts`); the phone's long-press menu and text selection stay off them. */
+button.time[data-grab], .dot[data-grab] { touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: ns-resize; }
+.dot[data-grab]::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; }
+.dot[data-grab]:hover { border-color: var(--color-primary); }
+/* Holding: the dot swells and a ring fills round it (it shows only after a quarter of the hold - a tap does not flash it). Taken: the dot pops, the card lifts, a bubble says the new time. */
+.entry[data-time-press] .dot { z-index: 6; }
+.entry[data-time-press="pressing"] .dot { transform: scale(1.3); transition: transform .35s ease-out; }
+.holdRing { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; overflow: visible; pointer-events: none; transform: rotate(-90deg); }
+.holdRing circle { fill: none; stroke: var(--color-primary); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 81.7; stroke-dashoffset: 81.7; animation: holdRing var(--hold-ms, 450ms) linear forwards; }
+@keyframes holdRing { 0%, 24% { stroke-dashoffset: 81.7; opacity: 0; } 25% { opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 1; } }
+.entry[data-type="item"][data-time-press="held"] .dot { border-color: var(--color-primary); background: var(--color-primary); box-shadow: 0 0 0 4px var(--color-selected-soft), 0 4px 10px color-mix(in srgb, var(--color-text) 30%, transparent); animation: holdPop .34s cubic-bezier(.3, 1.6, .5, 1) forwards; }
+.entry[data-type="move"][data-time-press="held"] .departureMark { color: var(--color-primary); }
+@keyframes holdPop { 0% { transform: scale(1.3); } 55% { transform: scale(2); } 100% { transform: scale(1.6); } }
+.entry[data-time-press="held"] .card { border-color: var(--color-primary); box-shadow: 0 10px 24px color-mix(in srgb, var(--color-text) 18%, transparent); transform: translateY(-1px); transition: box-shadow .2s, transform .2s; }
+.entry[data-time-press="held"] button.time { color: var(--color-primary); font-weight: 750; }
+.holdBubble { position: absolute; left: 50%; bottom: calc(100% + 10px); display: grid; justify-items: center; padding: 4px 10px 3px; border-radius: 10px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 15px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 6px 14px color-mix(in srgb, var(--color-text) 20%, transparent); pointer-events: none; transform: translateX(-50%); }
+.entry[data-type="item"][data-time-press="held"] .holdBubble { transform: translateX(-50%) scale(.625); transform-origin: 50% 100%; }   /* the dot is scaled 1.6: the bubble keeps its own size */
+.holdBubble small { font-size: 10.5px; font-weight: 650; opacity: .8; }
+.holdBubble::after { content: ""; position: absolute; left: 50%; bottom: -4px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 2px; background: inherit; transform: rotate(45deg); }
+@media (prefers-reduced-motion: reduce) { .holdRing circle, .entry[data-time-press="held"] .dot { animation-duration: 1ms; } }
+
+.timeRange { margin-left: auto; font-size: 11.5px; font-weight: 650; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.timePush { display: flex; align-items: center; gap: 8px; grid-column: 1 / -1; font-size: 12.5px; color: var(--color-text-secondary); }
+.timeNote { grid-column: 1 / -1; margin: 0; padding: 7px 10px; border-radius: 9px; background: var(--color-adjusted-soft); color: var(--color-adjusted); font-size: 12px; font-weight: 650; line-height: 1.5; }
+button.time[data-adjusted] { color: var(--color-adjusted); }
+/* 바꾼 시간의 「되돌리기」(수정·삭제 앞, 「확인 필요」가 나오는 자리) · 머리의 「시간 초기화」 */
+.undoTime, .resetTimes { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 28px; padding: 0 9px; border: 1px solid var(--color-adjusted-border); border-radius: 999px; background: var(--color-surface); color: var(--color-adjusted); font: inherit; font-size: 11.5px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.undoTime[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+.cardFootTools .undoTime { position: relative; min-height: 0; padding: 2px 8px; font-size: 12px; font-weight: 600; line-height: inherit; }
+/* 보이는 크기는 상태 표시와 같게 하고 손가락으로 누르는 영역은 44px로 유지한다. */
+.cardFootTools .undoTime::after { content: ""; position: absolute; inset: 50% 0 auto; height: 44px; transform: translateY(-50%); }
+.undoTime:focus-visible, .resetTimes:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.resetTimes { margin: 0; }
+/* 이동 줄 — 글자 줄(45px 상자)의 가운데가 출발 자리(--dep, 줄 그리기가 정한다)에 온다. 15분 넘게 비면 여유를 한 번 연하게 적는다(늦으면 주황으로). */
+.moveCol { display: flex; flex-direction: column; min-width: 0; margin-top: calc(var(--dep, 23px) - 22.5px); }
+.moveFree { flex: none; font-size: 11.5px; font-weight: 600; color: var(--color-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.moveFree[data-late] { color: var(--color-warning); font-weight: 750; }
+
+/* ★`[2026-10-05 사용자 요청 — 날짜 전환]` 목록이 손가락을 따라 옆으로 움직이고, 옆 날이 함께 밀려 들어온다. 기준선(`data-armed`)을 넘으면 놓았을 때 날이 바뀐다고 알리고, 첫날·마지막 날에서는 고무줄처럼 조금만 밀린다. */
+.dayTrack { position: relative; will-change: transform; }
+.dayZoom { transform-origin: 50% 0; }
+.peek { position: absolute; left: 0; right: 0; opacity: .8; pointer-events: none; transition: opacity .15s ease; }
+.peek[data-side="1"] { transform: translateX(100%); }
+.peek[data-side="-1"] { transform: translateX(-100%); }
+.dayTrack[data-armed] .peek { opacity: 1; }
+.peekBadge { position: absolute; top: 3px; z-index: 1; padding: 3px 10px; border-radius: 999px; background: var(--color-text); color: var(--color-on-primary); font-size: 11.5px; font-weight: 750; white-space: nowrap; opacity: 0; transition: opacity .15s ease; }
+.peek[data-side="1"] .peekBadge { left: 112px; }
+.peek[data-side="-1"] .peekBadge { right: 112px; }
+.dayTrack[data-armed] .peekBadge { opacity: 1; }
+.edgeNote { position: absolute; width: 84px; margin: 0; padding: 0 8px; text-align: center; font-size: 12px; font-weight: 750; color: var(--color-muted); pointer-events: none; }
+.edgeNote[data-side="1"] { left: 100%; }
+.edgeNote[data-side="-1"] { right: 100%; }
+/* 두 손가락으로 오므리거나 벌려 전체 일정 개요와 하루 보기를 오간다 */
+.dayZoom[data-swap="overview"] { animation: swapOverview .34s cubic-bezier(.2, .8, .2, 1); }
+.dayZoom[data-swap="day"] { animation: swapDay .34s cubic-bezier(.2, .8, .2, 1); }
+@keyframes swapOverview { from { opacity: 0; transform: scale(1.12); } to { opacity: 1; transform: none; } }
+@keyframes swapDay { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dayMarker, .peek, .peekBadge { transition: none; } .dayZoom[data-swap] { animation: none; } }
+
+/* `[2026-10-05 사용자 지시]` 지도 아래 안내 줄의 태그: 선 색 한 토막 + 수단 이름. 지도 위에 뜨는 작은 흰 알약이고 눌림은 지도로 통과시킨다. */
+.routeTags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.routeTags li { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 9px 2px 7px; border: 1px solid var(--color-border); border-radius: 999px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); color: var(--color-text); font-size: 11.5px; font-weight: 700; line-height: 1.2; box-shadow: 0 2px 8px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.routeTags li[data-guess] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+.sample { display: inline-block; width: 18px; height: 4px; border-radius: 2px; }
+.sampleDashed { display: inline-block; width: 18px; height: 0; border-top: 3px dashed currentColor; opacity: .75; }
+
+/* `[2026-10-07 사용자 지시 — 이동수단 고르기]` 펼친 이동 칸 맨 위의 「이동 수단」 박스와 아래로 펼쳐지는 목록(떠 있는 창이 아니다). 안 닿는 줄도 제자리에 회색으로 둔다. 색은 제품 토큰만. */
+.modeBox { display: grid; gap: 6px; margin: 4px 0 8px; }
+.modeButton { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.modeButton[aria-disabled="true"] { color: var(--color-text-secondary); background: var(--color-subtle); }
+.modeButton:focus-visible, .modeOption:focus-visible, .modeRetry:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.modeButton > svg { margin-left: auto; flex: none; color: var(--color-text-secondary); transition: transform 240ms var(--ease-soft); }
+.modeButton > svg[data-open] { transform: rotate(180deg); }
+.modeLabel { flex: none; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+.modeNow { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-weight: 750; }
+.modeNow em, .modeTags em { padding: 1px 7px; border-radius: 999px; background: var(--color-selected-soft); color: var(--color-selected); font-size: 11px; font-style: normal; font-weight: 750; white-space: nowrap; }
+.modeList { display: grid; gap: 6px; animation: riseSoft .34s var(--ease-soft); }
+.modeWait { min-height: 44px; padding: 12px; border: 1.5px dashed var(--color-border); border-radius: 12px; font-size: 12.5px; color: var(--color-text-secondary); }
+.modeNote { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--color-text-secondary); }
+.modeRetry { min-height: 32px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.modeOption { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; width: 100%; min-height: 48px; padding: 10px 12px; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.modeOption[aria-selected="true"] { border-color: var(--color-selected); background: var(--color-selected-soft); }
+.modeOption[aria-disabled="true"][data-fits="no"], .modeOption[aria-disabled="true"][data-fits="unknown"] { color: var(--color-text-secondary); background: var(--color-subtle); cursor: help; }
+.modeOption[data-busy] { opacity: .6; }
+.modeDot { display: grid; place-items: center; width: 18px; height: 18px; margin-top: 1px; border: 1.8px solid var(--color-border-strong); border-radius: 50%; color: var(--color-on-primary); }
+.modeOption[aria-selected="true"] .modeDot { border-color: var(--color-selected); background: var(--color-selected); }
+.modeOptionBody { display: grid; gap: 3px; min-width: 0; }
+.modeOptionTop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.modeOptionTop strong { font-weight: 750; }
+.modeSlack { font-weight: 700; color: var(--color-success); }
+.modeSlack[data-late] { color: var(--color-warning); }
+.modeTags { display: flex; flex-wrap: wrap; gap: 4px; }
+.modeTags em[data-tone="guess"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.modeTags em[data-tone="no"] { background: var(--color-subtle-strong); color: var(--color-text-secondary); }
+.modeWhy { font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
+.modeNone { display: grid; justify-items: start; gap: 6px; padding: 10px 12px; border-radius: 12px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 12.5px; line-height: 1.6; }
+.modeNone p { margin: 0; }
+/* `[2026-10-23]` 경로 후보 — 이동 수단 목록 아래, 끝까지 내리면 더 불러온다 */
+.routeHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 6px 0 0; font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+.routeHead span { font-weight: 500; font-size: 11.5px; color: var(--color-faint); }
+@media (prefers-reduced-motion: reduce) { .modeList { animation: none; } .modeButton > svg { transition: none; } }
+.addStop { margin: 8px 0 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.addStop summary { min-height: 44px; display: flex; align-items: center; padding: 12px 16px; color: var(--color-primary); cursor: pointer; }
+.addStop form { display: grid; gap: 12px; padding: 0 16px 16px; }
+.addStop label { display: grid; gap: 8px; color: var(--color-text); font-size: 14px; }
+.addStop input, .addStop select { min-width: 0; width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: inherit; font: inherit; }
+.addStopTimes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.addStop button { min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--color-border); background: var(--color-primary); color: var(--color-on-primary); font: inherit; cursor: pointer; }
+.addStop p { margin: 0; color: var(--color-muted); font-size: 12px; }
+
+/* 상태 막대는 선택 일정부터 읽고, 오른쪽에서 확인·변경·복원을 이어간다. */
+.statusTools .undoAll { position: relative; display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 0 12px 12px 0; background: transparent; color: var(--color-adjusted); cursor: pointer; pointer-events: auto; }
+.statusTools .undoAll:hover { background: var(--color-adjusted-soft); }
+.statusTools .undoAll:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.iconTip { position: absolute; z-index: 12; right: 0; bottom: calc(100% + 8px); width: max-content; max-width: 208px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text); font-size: 12px; font-weight: 400; line-height: 1.4; text-align: left; white-space: normal; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 150ms ease-out; }
+.icon:hover .iconTip, .icon:focus-visible .iconTip, .undoAll:hover .iconTip, .undoAll:focus-visible .iconTip, .changeCount:hover + .iconTip, .changeCount:focus-visible + .iconTip { opacity: 1; visibility: visible; }
+@media (prefers-reduced-motion: reduce) { .pullDirection svg, .pullBar > span, .iconTip { transition: none; } .pullDirection svg { transform: none; } }
+
+/* 2026-10-09: 지도 정보는 각각의 작은 칩으로 분리한다. */
+.mapChips { transition: bottom 380ms var(--soft), opacity 200ms ease-out, transform 200ms ease-out; }
+.mapChips[data-muted] { opacity: 0; transform: translateY(4px); pointer-events: none; }
+.statusTools { gap: 4px; padding: 0; border: 0; border-radius: 0; background: none; }
+.statusTools > :not(:first-child) { border-left: 0; }
+.statusTools .picked, .statusTools .unlocated { margin: 0; padding: 5px 9px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); font-size: 11px; line-height: 18px; }
+.statusTools .mapNeeds, .statusTools .changeCount { min-height: 32px; height: 32px; min-width: 44px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); font-size: 11px; }
+.statusTools .undoAll { width: 32px; height: 32px; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); }
+.cardTop { gap: 0; padding: 0 2px; }
+.cardTools .icon { width: 36px; height: 44px; }
+.entry[data-type="item"] > .time { position: relative; top: 0; z-index: 1; font-size: 16px; line-height: 20px; font-weight: 400; padding: var(--stop-time-lead) 0 6.5px; }
+/* The measured inset excludes the scroll padding and button lead, so visible text stays with its title. */
+.entry[data-type="item"][data-time-follow] > .time { position: sticky; top: var(--time-stick-inset, 0px); }
+.sheetHead[data-done]:not([data-float]) { padding: 18px 12px 0; min-height: 18px; border: 0; }
+.autoAllTop { position: static; flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; margin: 0 0 8px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12px; cursor: pointer; }
+/* `[2026-10-15 사용자 결정 — ST4F-494]` 첫 날짜 제목 줄: 왼쪽 「n일차 날짜」 · 오른쪽 끝 「전체 자동 추천」(· 「전체 잠금 해제」) — 목록 위 따로 있던 한 줄(`.topActions`)을 옮겼다. */
+.dayRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 12px 0 2px; }
+.dayRow > .day { margin: 0; }
+.dayTools { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 4px 8px; }
+.dayTools .autoAllTop { margin: 0; }
+.unlockAllTop { position: static; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.unlockAllTop:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; border-radius: 8px; }
+.footer.footer { position: absolute; z-index: 7; right: 18px; bottom: 22px; width: 58px; height: 58px; padding: 0; gap: 0; flex-wrap: nowrap; border: 1px solid transparent; border-radius: 29px; background: var(--color-primary); }
+.footer.footer { opacity: 1; transform: translateY(0); transition: opacity 200ms ease-out, transform 200ms ease-out; }
+.footer.footer[data-quiet] { opacity: 0; transform: translateY(4px); pointer-events: none; transition-duration: 150ms; transition-timing-function: ease-in; }
+@media (prefers-reduced-motion: reduce) { .footer.footer, .footer.footer[data-quiet] { transform: none; transition: none; } }
+.footer .footButton { flex: none; display: grid; width: 56px; height: 56px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--color-on-primary); }
+.footer .footButton[aria-disabled="true"] { opacity: .65; }
+.footer > [role="alert"] { position: absolute; right: 0; bottom: calc(100% + 12px); width: min(320px, calc(100vw - 40px)); padding: 12px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-surface); box-shadow: 0 4px 16px var(--color-shadow-soft); }
+.footButton:hover .iconTip, .footButton:focus-visible .iconTip { opacity: 1; visibility: visible; }
+/* 목록 끝에서는 원형 버튼의 이름도 기다림이나 호버 없이 보여 준다. */
+.footer.footer[data-at-end]:not([data-quiet]) { transition: none; }
+.footer[data-at-end]:not([data-quiet]) .iconTip { opacity: 1; visibility: visible; transition: none; }
+.screen[data-stage="done"] .sheetBody { padding-bottom: max(var(--follow-room, 0px), var(--focus-room, 0px)); }
+.screen[data-stage="done"] :is(.pullHint, .pullEmpty) { margin-bottom: 0; padding-inline-end: 76px; }
+.credit { margin: 0; font-size: 10px; font-weight: 400; }
+.credit summary { gap: 4px; }
+.pullHint { flex-direction: row; gap: 6px; width: 100%; min-height: 52px; margin: 4px 0; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); font-size: 12px; font-weight: 400; line-height: 1.5; }
+.pullHint::before, .pullHint::after { display: none; }
+.pullDirection { gap: 8px; font-size: 12px; }
+.pullDirection svg { width: 16px; height: 16px; }
+@media (prefers-reduced-motion: reduce) { .mapChips { transition: none; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) { .mapChips[data-muted] { transform: none; } }
+
+/* Match the visible time box to its line box so the range gap is exact. */
+.timeStack > time:first-child { display: block; }
+.screen[data-stage="done"] .sheetBody[data-next-preview] { padding-bottom: 0; }
+
+/* ── `[2026-10-12 사용자 결정 — 목업 2026-10-12_타임라인_지금시각_목업.html]` 일정 줄 ──
+   A — 모든 일정이 시작 아래에 「~끝」을 늘 보인다(10-10 의 「고른 일정만」을 바꿈). 이동 줄은 시각 아래 「출발」, 펼치면 그 아래 「~도착」.
+   왼쪽 줄은 줄마다 그리지 않고 하루 단위 한 겹에 그린다(rail-list.tsx): 실선 = 머무는 시간 · 점선 = 이동 시간만 · 가는 선 = 기다림 · 여유 · 늘어난 자리, 실선 끝 ⊖.
+   `[2026-10-13 사용자 결정 — ② 일정한 간격]` 시간 비례가 아니다 — 실선은 카드 끝까지, 이동 줄은 고정 길이(time-rail.ts `RAIL_GAP`). ④(1분 = 0.8px · 긴 빈 시간 접기 ≈)를 바꿨다. */
+/* 마지막 일정의 끝 ⊖ 가 목록 아래 경계에 걸린다 — 아래 문구(출처 등)와 닿지 않게 목록 아래에 자리를 둔다(2026-10-13 사용자 지적). */
+.timeline[data-rail-list] { padding-bottom: 18px; }
+.timeline[data-rail-list] > .entry { position: relative; }
+.timeline[data-rail-list] > .entry > .card { align-self: start; }
+.entry[data-type="item"] .rangeEnd { opacity: 1; transform: none; }
+.departWord { display: block; font-size: 11px; line-height: 13px; font-weight: 500; color: var(--color-faint); text-align: right; }
+.dot { z-index: 1; }
+.railLines, .railCaps { position: absolute; left: 52px; top: 0; width: 18px; height: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+.railLines { z-index: 0; }
+.railCaps { z-index: 4; }
+.railSeg { position: absolute; display: block; left: 8.25px; width: 1.5px; background: var(--color-rail-free); }
+.railSeg[data-kind="stay"] { left: 7.5px; width: 3px; border-radius: 2px; background: var(--color-rail-stay); }
+.railSeg[data-kind="stay"][data-fade] { background: linear-gradient(var(--color-rail-stay) 0 35%, transparent); }
+.railSeg[data-kind="travel"] { left: 8px; width: 2px; background: repeating-linear-gradient(to bottom, var(--color-faint) 0 3px, transparent 3px 7px); }
+.railSeg[data-past] { background: var(--color-past-line); }
+/* 끝 표시 ⊖ — 가운데 가로줄이 있는 고리(같은 색 작은 점은 줄에 묻히고 「−」 출발 표식에 가렸다 — 2026-10-12 사용자 지적). 출발 표식보다 위 한 겹. */
+.railCap { position: absolute; display: block; left: 3px; width: 12px; height: 12px; margin-top: -6px; border: 2px solid var(--color-rail-cap); border-radius: 50%; background: var(--color-surface); }
+.railCap::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: var(--color-rail-cap); }
+.railCap[data-past] { border-color: var(--color-past-dot); }
+.railCap[data-past]::after { background: var(--color-past-dot); }
+
+/* B — 지금 표시(등록한 여행만): 숨 쉬는 점 + 그날 첫 점부터 채워지는 줄, 지나온 원은 채운다(`[2026-10-13 사용자 결정]` 「지금 HH:MM」 꼬리표는 없앴다 — 점만 흐른다). 자리는 transform 으로만 옮긴다(목록을 다시 재지 않는다). */
+.nowMark { position: absolute; z-index: 4; left: 0; right: 0; top: 0; height: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; transition: transform .45s cubic-bezier(.3, .7, .3, 1); will-change: transform; }
+.nowDot { position: absolute; left: 54px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--color-now); box-shadow: 0 0 0 2.5px var(--color-surface); animation: nowPulse 1.8s ease-out infinite; }
+@keyframes nowPulse { 0% { box-shadow: 0 0 0 2.5px var(--color-surface), 0 0 0 2.5px color-mix(in srgb, var(--color-now) 45%, transparent); } 100% { box-shadow: 0 0 0 2.5px var(--color-surface), 0 0 0 11px transparent; } }
+.nowFill { position: absolute; z-index: 2; left: 59px; width: 4px; margin: 0; padding: 0; list-style: none; border-radius: 2px; background: var(--color-now); pointer-events: none; transition: height .45s cubic-bezier(.3, .7, .3, 1); }
+/* `[2026-10-15 사용자 결정 — ST4F-494]` 「지금 HH:MM」 꼬리표 — 10-13 에 뺐던 것을 되살렸다(여행 화면, 운영자 스위치가 켜졌을 때만). */
+.nowLabel { position: absolute; top: -11px; right: calc(100% - 52px); display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--color-now); color: var(--color-on-primary); font-size: 10.5px; font-weight: 800; line-height: 1; letter-spacing: -.2px; white-space: nowrap; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--color-surface), 0 3px 8px color-mix(in srgb, var(--color-now) 35%, transparent); }
+@media (prefers-reduced-motion: reduce) { .nowMark, .nowFill { transition: none; } .nowDot { animation: none; } }
+.entry[data-passed] .rail .dot { z-index: 3; border-color: var(--color-now); background: var(--color-now); }
+
+/* B — 지난 일정(끝이 지남): 회색 칸 얇은 한 줄(이름 · 「~끝」 · ＋), 누르면 같은 카드 · 같은 내용을 회색으로 펼친다. 지난 이동 줄은 8px 틈. 시간 비례가 아니다(바짝 붙임). */
+.entry[data-past] { min-height: 0; }
+.entry[data-past] > .time { position: static; padding: 5px 0 0; font-size: 11px; font-weight: 650; line-height: 16px; color: var(--color-past-ink); }
+.entry[data-past] .dot { top: 9px; left: 5px; width: 8px; height: 8px; border: 1.5px solid var(--color-past-dot); background: var(--color-past-dot); }
+.entry[data-past][data-passed] .rail .dot { border-color: var(--color-now); background: var(--color-now); }
+.pastLine { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 26px; margin: 1px 0; padding: 0 2px 0 10px; border: 0; border-radius: 8px; background: var(--color-past-bg); color: var(--color-past-ink); font: inherit; font-size: 12.5px; font-weight: 650; text-align: left; cursor: pointer; }
+.pastLine:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.pastLine span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pastLine small { flex: none; font-size: 11px; font-weight: 600; color: var(--color-past-sub); font-variant-numeric: tabular-nums; }
+.pastLine b { flex: none; width: 24px; font-size: 15px; font-weight: 500; text-align: center; color: var(--color-past-sub); }
+.pastGap { height: 8px; }
+.entry[data-past-open] > .time { color: var(--color-past-ink); }
+.entry[data-past-open] .rangeEnd { color: var(--color-past-sub); }
+.entry[data-past-open] .card, .screen[data-stage="done"] .entry[data-past-open] .card[data-open] { border-color: transparent; background: var(--color-past-bg); }
+.entry[data-past-open] .cardTitle { color: var(--color-past-ink); }
+.pill[data-state="past"] { border-color: transparent; background: var(--color-past-pill); color: var(--color-past-ink); }
+
+/* B5 — 「오늘」: 오늘 일차 칩 끝의 점 · 목록 일차 제목 옆 꼬리표(여행 날짜 안일 때만, 등록한 여행). */
+.todayDot { width: 6px; height: 6px; margin-left: 1px; border-radius: 50%; background: var(--color-now); }
+.todayTag { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--color-now-soft); color: var(--color-now); font-size: 11px; font-style: normal; font-weight: 750; }
+
+/* `[2026-10-13 사용자 지시]` A day the customer wakes up in a stay: 「○○에서 출발」 at the top of the day, in the stay's soft green (the trip screen's band). */
+.stayBand { margin: 2px 0 6px; list-style: none; }
+/* `[2026-10-15 사용자 결정 — ST4F-498]` A button, like the trip screen's band (it shows the stay); still while the plan is being checked. */
+.stayBandButton { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border: 1px dashed var(--color-success); border-radius: 10px; background: var(--color-paper); color: var(--color-primary); font: inherit; font-size: 12.5px; font-weight: 600; text-align: left; }
+.stayBandButton:enabled { cursor: pointer; }
+.stayBandButton { min-height: 44px; }
+.stayBandButton > svg { flex: none; }
+.stayBandButton > span { min-width: 0; overflow-wrap: anywhere; }
+.stayBandButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.stayBandButton small { flex: none; margin-left: auto; font-size: 12px; font-weight: 500; color: var(--color-muted); white-space: nowrap; }   /* `[2026-10-15 ST4F-498]` 「2박째」 is not broken by a long name */
+
+/* Route progress belongs beside the map checks and survives a failed request. */
+.mapChips > [data-route-loading], .mapChips > [data-route-load-error] { margin: 0; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font-size: 14px; line-height: 1.5; pointer-events: auto; }
+.mapChips > [data-route-load-error] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mapChips > [data-route-load-error] button { min-height: 44px; padding: 8px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-primary); font: inherit; cursor: pointer; }
+.mapChips > [data-route-load-error] button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* `[2026-10-19 사용자 지시]` 후보 카드의 앞 · 뒤 이동 줄 — 계산 중이면 돌아가는 표시와 어림 분, 끝나면 수단 · 분 · 여유. 이유 자리의 「정리하고 있어요…」는 흐리게 */
+.legLines { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary); }
+.legLines li { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.legLines li[data-pending] { color: var(--color-muted); }
+.legLines .spinner { width: 12px; height: 12px; border-width: 2px; }
+.changeReason[data-pending] { color: var(--color-muted); opacity: .75; }
+@media (prefers-reduced-motion: reduce) { .legLines .spinner { animation: none; } }

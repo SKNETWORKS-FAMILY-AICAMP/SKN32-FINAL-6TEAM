@@ -1,0 +1,235 @@
+# -*- coding: utf-8 -*-
+"""booking · offers — 항공편 비교. 여러 판매처 어댑터를 부르고, 같은 편끼리 묶고, 다른 곳 검색 링크를 붙인다. `[2026-10-10]`
+
+팀 피드백(2026-10-10): 에이전트 → booking 모듈 → 항공 · 숙소(차후 철도 · 활동 · 식당) 어댑터 → 결과. 위치 · 경로는 이동 모듈이 맡는다.
+이 모듈은 전에 항공 팀(`instances/flight/team.py`) 안에 있던 「어느 소스를 부르고 어떻게 합치나」를 옮긴 것이다 — 동작은 그대로다.
+
+- 어댑터(`ports/data_sources/`): 마이리얼트립 MCP(`travel_search`) · Ignav MCP(`flight_offers`) · SerpApi 구글 항공권(`flight_google`).
+  없는 소스는 건너뛰고 「조회 실패」와 같게 센다(키가 없는 환경).
+- 호출 규칙:
+  - 왕복은 Ignav 를 부르지 않는다(사용자 결정 2026-10-10) — ☆13:41 · 13:45 playdata ICN→NRT 왕복: Ignav 가 41.9~42.3초(전체의 90% 넘게)
+    걸렸고, 준 링크가 둘 다 가는 편만 예약하는 주소였다(`TripType=OneWay`). 묶음도 가는 편 · 오는 편 항공사가 달랐다.
+  - 마이리얼트립이 429 뒤 쉬는 중이면 어댑터가 `cooldown_seconds` 표시만 준다 — 결과가 아니니 `resting` 으로 센다.
+  - 소스는 **동시에** 부른다(`[2026-10-11]`) — 전체 시간이 세 소스의 합이 아니라 가장 느린 소스(대개 Ignav)만큼이 되게.
+    ☆2026-10-11 16:57 playdata 인천→나리타 편도 2명: 전체 26.0초 = Ignav 18.7 · 마이리얼트립 1.5 · 구글 2.0 을 차례로 부른 합에 가까웠다.
+    결과 · 상태 · 묶는 순서는 전과 같다(마이리얼트립 → Ignav → 구글).
+  - `[2026-10-12]` **소스마다 기다리는 시간에 상한**(`SOURCE_WAIT_SECONDS`)을 둔다 — 가장 느린 소스 하나가 답 전체를 붙잡지 않게.
+    상한 안에 답하지 않은 소스는 `timeout` 으로 세고 받은 소스로만 묶는다(늦게 온 답은 버린다 — 스레드는 끝까지 돌지만 기다리지 않는다).
+    소스마다 걸린 시간은 `elapsed`(초)로 함께 돌려준다 — 상한 값을 다시 정할 때 쓴다.
+  - 구글 항공권 왕복은 편 목록 대신 왕복 최저가 참고(`round_trip_lowest`)와 결과 페이지만 온다 — `reference` 로 센다.
+- 결제 · 예약은 하지 않는다. 판매처 링크만 준다. 가격은 조회 시점 참고값이다(어느 소스도 정확성을 보장하지 않는다).
+"""
+from __future__ import annotations
+
+from concurrent.futures import ThreadPoolExecutor, wait
+from datetime import UTC, date, datetime
+import logging
+import time
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+#: `[2026-10-12]` 소스 하나를 기다리는 최대 시간(초). 우리가 고른 값(사용자와 정함 — 「소스별 제한 두기」).
+#: 근거(playdata): Ignav 편도 10개 15.9~25.2초(10-09) · 18.7초(10-11 16:57), 마이리얼트립 국내선 9.49초(10-07) · 국내선 왕복 약 15초(10-08),
+#: 구글 2.0초(10-11). 20초면 마이리얼트립 · 구글은 다 들어오고 Ignav 의 긴 꼬리만 잘린다. 팀 상한(`reliability.team_timeout_seconds` 90)보다 작다.
+#: ★마이리얼트립 어댑터 자체 상한(`myrealtrip.TIMEOUT_SECONDS` 30)보다 짧다 — 국내선 왕복이 20초를 넘으면 여기서 먼저 잘린다(확인 안 함 — 재어 보고 정한다)
+SOURCE_WAIT_SECONDS = 20.0
+
+#: 소스 이름 → 답에 적는 이름(판매처가 따로 없는 소스)
+SOURCE_LABEL = {"myrealtrip": "마이리얼트립", "google": "구글 항공권"}
+#: 소스 이름 → `TravelSources` 의 칸
+SLOTS = {"myrealtrip": "travel_search", "ignav": "flight_offers", "google": "flight_google"}
+
+#: 공항 → 도시 코드(IATA 도시 코드). 트립닷컴 검색창은 도시(`dcity`) + 공항(`dairport`)을 따로 받아야 채워진다 —
+#: ☆2026-10-10 사용자 확인: `dcity=icn&acity=nrt` 는 결과만 맞고 검색창이 비었고, `dcity=sel&acity=tyo&dairport=icn&aairport=nrt` 는 다 채워졌다.
+#: 표에 없는 공항은 공항 코드를 도시 코드로 쓴다(공항 하나뿐인 도시는 대개 같다). ICN · NRT 말고는 확인 안 함
+CITY = {"ICN": "SEL", "GMP": "SEL", "NRT": "TYO", "HND": "TYO", "KIX": "OSA", "ITM": "OSA", "UKB": "OSA",
+        "CTS": "SPK", "TSA": "TPE", "TPE": "TPE", "PEK": "BJS", "PKX": "BJS", "PVG": "SHA", "SHA": "SHA",
+        "DMK": "BKK", "BKK": "BKK", "JFK": "NYC", "LGA": "NYC", "EWR": "NYC", "CDG": "PAR", "ORY": "PAR",
+        "LHR": "LON", "LGW": "LON", "FCO": "ROM", "SGN": "SGN", "HAN": "HAN"}
+
+
+def _key(flight: dict[str, Any]) -> tuple[Any, ...] | None:
+    """같은 편인지 가르는 열쇠 — 항공사 코드 + **다리마다** 출발 공항 · 도착 공항 · 출발 날짜 · 시각. 하나라도 없으면 묶지 않는다.
+
+    `[2026-10-15 검수 · GPT 검토 #1]` 전에는 첫 다리 출발 · 마지막 다리 도착 · 다리 수만 봐서, 가는 편이 같고 **오는 편이 다른** 왕복 두 상품이
+    한 후보로 묶였다(표시 일정은 한 상품, 최저가 · 링크는 다른 상품). 편명은 소스마다 있거나 없어 열쇠에 넣지 않는다(묶일 때 빌려 온다)."""
+    legs = flight.get("legs") or []
+    if not legs:
+        return None
+    parts = tuple((leg.get("origin"), leg.get("destination"), leg.get("departDate"), leg.get("departTime")) for leg in legs)
+    airline = str(flight.get("airline_code") or "").upper()
+    if not airline or not all(all(part) for part in parts):
+        return None
+    return (airline, parts)
+
+
+def _offer(flight: dict[str, Any], source: str) -> dict[str, Any]:
+    if source in SOURCE_LABEL:
+        label = SOURCE_LABEL[source]
+    else:
+        kind = {"seller_airline": "항공사 공식", "seller_ota": "여행사"}.get(str(flight.get("link_kind") or ""), "판매처")
+        label = f"{flight.get('seller') or '판매처'}({kind})"
+    return {"source": source, "label": label, "price_total": flight.get("price_total"),
+            "currency": flight.get("currency") or "", "seats": flight.get("seats"),
+            "link": flight.get("link") or "", "link_kind": flight.get("link_kind") or ""}
+
+
+def merge(by_source: list[tuple[str, list[dict[str, Any]]]]) -> list[dict[str, Any]]:
+    """소스들의 편을 같은 편끼리 묶는다. 가격은 바꾸지 않고 판매처별로 나란히 둔다.
+
+    ★순서: 편마다 가장 낮은 가격(원화만 비교) → 가격 모름은 뒤. 소스가 준 값만 쓴다.
+    ★편명은 마이리얼트립 국제선에 없어서(2026-10-07 응답) 다른 소스의 편명을 빌려 적는다 — 같은 편으로 묶였을 때만.
+    """
+    options: list[dict[str, Any]] = []
+    index: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for source, flights in by_source:
+        for flight in flights:
+            if not isinstance(flight, dict) or not flight.get("legs"):
+                continue
+            key = _key(flight)
+            option = index.get(key) if key is not None else None
+            if option is None:
+                option = {"airline": flight.get("airline") or flight.get("airline_code") or "",
+                          "legs": [dict(leg) for leg in flight["legs"]], "offers": [],
+                          "minutes": flight.get("duration_minutes")}
+                options.append(option)
+                if key is not None:
+                    index[key] = option
+            else:
+                for mine, theirs in zip(option["legs"], flight["legs"]):
+                    if not mine.get("flightNumber") and theirs.get("flightNumber"):
+                        mine["flightNumber"] = theirs["flightNumber"]
+                if option["minutes"] is None:
+                    option["minutes"] = flight.get("duration_minutes")
+            # ★같은 소스 · 같은 판매처 · 같은 가격이면 한 줄 — ☆2026-10-10 13:41 왕복에서 Ignav 가 에어부산 340,015원을
+            #   gclid 만 다른 링크로 두 번 줬다(링크로만 거르면 두 줄이 된다)
+            new = _offer(flight, source)
+            if not any(offer["source"] == source and (offer["link"] == new["link"]
+                       or (offer["label"], offer["price_total"]) == (new["label"], new["price_total"]))
+                       for offer in option["offers"]):
+                option["offers"].append(new)
+    for option in options:
+        won = [offer["price_total"] for offer in option["offers"]
+               if isinstance(offer["price_total"], (int, float)) and offer["currency"] in ("", "KRW")]
+        option["best"] = min(won) if won else None
+        option["offers"].sort(key=lambda offer: (not isinstance(offer["price_total"], (int, float)), offer["price_total"] or 0))
+    options.sort(key=lambda option: (option["best"] is None, option["best"] or 0))
+    return options
+
+
+def elsewhere(*, origin: str, destination: str, depart_date: date, return_date: date | None, domestic: bool | None,
+              cabin: str | None, adults: int | None, children: int | None, infants: int | None) -> list[dict[str, str]]:
+    """같은 조건의 **검색 결과 페이지** 주소 — 한국 사용자가 익숙한 곳. 가격은 받지 않는다(그 사이트 화면을 긁지 않는다). `[2026-10-09]`
+
+    ★주소 형식은 각 사이트 화면의 주소를 보고 만든 것이다. 2026-10-09~10 사용자가 ICN→NRT 10-20 편도 · 10-20~23 왕복 1명으로 열어 봤다 —
+      셋 다 조건이 채워진 결과 화면(트립닷컴은 도시 + 공항 코드로 바꾼 뒤). 국내선 · 다른 공항은 확인 안 함.
+    """
+    go, back = depart_date, return_date
+    adults, children, infants = adults or 1, children or 0, infants or 0
+    o, d = origin, destination
+    naver_path = f"{o}-{d}-{go:%Y%m%d}" + (f"/{d}-{o}-{back:%Y%m%d}" if back else "")
+    naver = (f"https://flight.naver.com/flights/{'domestic' if domestic else 'international'}/{naver_path}"
+             f"?adult={adults}&child={children}&infant={infants}&fareType={'YC' if domestic else 'Y'}")
+    seat = {"BUSINESS": "business", "FIRST": "first"}.get(cabin or "", "economy")
+    sky = (f"https://www.skyscanner.co.kr/transport/flights/{o.lower()}/{d.lower()}/{go:%y%m%d}/"
+           + (f"{back:%y%m%d}/" if back else "") + f"?adultsv2={adults}&cabinclass={seat}&rtn={1 if back else 0}")
+    trip = (f"https://kr.trip.com/flights/showfarefirst?dcity={CITY.get(o, o).lower()}&acity={CITY.get(d, d).lower()}"
+            f"&dairport={o.lower()}&aairport={d.lower()}&ddate={go.isoformat()}"
+            + (f"&rdate={back.isoformat()}&flighttype=rt" if back else "&flighttype=ow")
+            + f"&class={'c' if seat == 'business' else 'f' if seat == 'first' else 'y'}&quantity={adults}"
+            "&searchboxarg=t&locale=ko-KR&curr=KRW")
+    # `[2026-10-10 17시대 playdata 내장 브라우저 확인]` NOL 인터파크 투어 · 카약을 더한다(앞의 셋은 순서 그대로).
+    #   NOL — `travel.interpark.com/air/search/...` 가 `tour.yanolja.com` 으로 넘어가 같은 주소를 쓴다. ICN→NRT 11-06~09 왕복 2명 일반석,
+    #   GMP→CJU 11-06 편도 성인 2 · 어린이 1(「3명」), ICN→NRT 편도 1명 `BUSINESS` 모두 조건이 채워진 결과 화면. `FIRST` 는 확인 안 함.
+    #   카약 — `/flights/ICN-NRT/2026-11-06/2026-11-09/2adults` 왕복 결과 1951개, `/2026-11-06/business/1adults` 편도 비즈니스, GMP→CJU 편도 모두
+    #   채워짐. 어린이 · 유아는 나이로 받아(`children-11` 꼴) 수만으로는 못 넣는다 → 그 화면에서 넣으라고 적는다. `first` 는 확인 안 함.
+    nol_path = f"a:{o}-a:{d}-{go:%Y%m%d}" + (f"/a:{d}-a:{o}-{back:%Y%m%d}" if back else "")
+    nol = (f"https://tour.yanolja.com/air/search/{nol_path}?cabin={seat.upper()}"
+           f"&infant={infants}&child={children}&adult={adults}")
+    kayak = (f"https://www.kayak.co.kr/flights/{o}-{d}/{go.isoformat()}" + (f"/{back.isoformat()}" if back else "")
+             + (f"/{seat}" if seat != "economy" else "") + f"/{adults}adults?sort=bestflight_a")
+    kid_note = {"note": "어린이 · 유아 인원은 그 화면에서 넣어 주세요"} if children or infants else {}
+    return [{"name": "네이버 항공권", "url": naver}, {"name": "스카이스캐너", "url": sky}, {"name": "트립닷컴", "url": trip},
+            {"name": "NOL 인터파크 투어", "url": nol}, {"name": "카약", "url": kayak, **kid_note}]
+
+
+def _status(got: dict[str, Any] | None, *, absent: bool) -> dict[str, Any]:
+    if absent or got is None:
+        return {"status": "failed"}
+    if got.get("cooldown_seconds"):
+        return {"status": "resting", "cooldown_seconds": got["cooldown_seconds"]}
+    flights = got.get("flights") or []
+    if not flights and got.get("note"):
+        return {"status": "reference", "note": got["note"], "round_trip_lowest": got.get("round_trip_lowest"),
+                "page": got.get("page") or ""}
+    return {"status": "ok", "count": len(flights)}
+
+
+def search_flights(travel: Any, *, origin: str, destination: str, depart_date: str, return_date: str | None = None,
+                   domestic: bool | None = None, direct_only: bool | None = None, cabin: str | None = None,
+                   max_results: int = 100, adults: int | None = None, children: int | None = None,
+                   infants: int | None = None) -> dict[str, Any]:
+    """항공편 비교 한 번. 소스를 동시에 부르고 결과를 마이리얼트립 → Ignav → 구글 항공권 순으로 묶어 돌려준다.
+
+    돌려주는 것: `options`(같은 편끼리 묶은 편, 편마다 판매처별 `offers` · `best`), `sources`(소스별 `status` — ok · failed · resting ·
+    skipped · reference · timeout), `elapsed`(부른 소스마다 걸린 초 — 상한을 넘긴 소스는 아직 안 끝났으면 None), `elsewhere`(다른 곳 검색 링크), `confirmed_at`. 소스가 하나도 결과를 못 주면 `options` 가 비고 상태로 알 수 있다.
+    """
+    query = {"origin": origin, "destination": destination, "depart_date": depart_date, "return_date": return_date,
+             "domestic": domestic, "direct_only": direct_only, "cabin": cabin, "max_results": max_results,
+             "adults": adults, "children": children, "infants": infants}
+    arguments = {key: value for key, value in query.items() if value is not None}
+    raw: dict[str, dict[str, Any] | None] = {}
+    sources: dict[str, dict[str, Any]] = {}
+    adapters = {name: getattr(travel, slot, None) if travel is not None else None for name, slot in SLOTS.items()}
+    calls = {name: adapter for name, adapter in adapters.items()
+             if adapter is not None and not (name == "ignav" and return_date)}
+    elapsed: dict[str, float] = {}
+
+    def timed(name: str, adapter: Any) -> Any:
+        begun = time.perf_counter()
+        try:
+            return adapter.flight_search(**arguments)
+        finally:
+            elapsed[name] = round(time.perf_counter() - begun, 1)
+
+    pool = ThreadPoolExecutor(max_workers=max(len(calls), 1), thread_name_prefix="booking-flights")
+    futures = {name: pool.submit(timed, name, adapter) for name, adapter in calls.items()}
+    done, _ = wait(list(futures.values()), timeout=SOURCE_WAIT_SECONDS)
+    pool.shutdown(wait=False, cancel_futures=True)   # 늦은 소스는 기다리지 않는다
+    # `[2026-10-15 검수 · GPT 검토 #14]` 한 소스의 예외가 다른 소스 결과까지 버리지 않게 — 그 소스만 「조회 실패」(예외 종류만 남긴다, 본문은 안 남김)
+    got_by_name: dict[str, Any] = {}
+    broken: dict[str, str] = {}
+    for name, future in futures.items():
+        if future not in done:
+            continue
+        error = future.exception()
+        if error is not None:
+            broken[name] = type(error).__name__
+            logger.warning("booking flight source raised source=%s error=%s", name, broken[name])
+            continue
+        got_by_name[name] = future.result()
+    late = {name for name, future in futures.items() if future not in done}
+    for name in SLOTS:
+        if name == "ignav" and return_date:
+            sources[name] = {"status": "skipped", "reason": "round_trip"}
+            raw[name] = None
+            continue
+        if name in late:
+            sources[name] = {"status": "timeout", "seconds": SOURCE_WAIT_SECONDS}
+            raw[name] = None
+            continue
+        got = got_by_name.get(name)
+        sources[name] = _status(got, absent=adapters[name] is None)
+        if name in broken:
+            sources[name] = {"status": "failed", "error": broken[name]}
+        raw[name] = got if sources[name]["status"] == "ok" else None
+    options = merge([(name, (raw[name] or {}).get("flights") or []) for name in SLOTS])
+    links = elsewhere(origin=origin, destination=destination, depart_date=date.fromisoformat(depart_date),
+                      return_date=date.fromisoformat(return_date) if return_date else None, domestic=domestic,
+                      cabin=cabin, adults=adults, children=children, infants=infants)
+    return {"query": query, "options": options, "sources": sources, "elsewhere": links,
+            "elapsed": {name: elapsed.get(name) for name in calls}, "confirmed_at": datetime.now(UTC).isoformat(), "source": "booking"}
+
+
+__all__ = ["CITY", "SLOTS", "SOURCE_WAIT_SECONDS", "SOURCE_LABEL", "elsewhere", "merge", "search_flights"]

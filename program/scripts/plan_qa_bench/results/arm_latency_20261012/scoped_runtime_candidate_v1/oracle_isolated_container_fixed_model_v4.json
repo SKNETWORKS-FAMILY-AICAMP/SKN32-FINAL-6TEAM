@@ -1,0 +1,64 @@
+{
+  "observed_at_utc": "2026-10-11T15:32:09.646666+00:00",
+  "checks": {
+    "answered": true,
+    "scope": true,
+    "source": true,
+    "no_change": true
+  },
+  "passed": 4,
+  "planned": 4,
+  "answer": "전체 여행 날짜 오후 일정 1개를 확인했어요.\n· 10월 18일(일) 12:00~13:00 점심 식사(식사) — 장소가 연결되지 않아 대체 검토 전에 장소 확인이 필요해요.\n아직 바꾸지는 않았어요. 실제 변경 전에는 후보의 시간·이동 조건도 확인해요.",
+  "decision": {
+    "raw": {
+      "action": "answer_fact",
+      "fact": "changeability",
+      "target_item": "none",
+      "target_change": "none",
+      "minutes": 0,
+      "choices": [],
+      "query": {
+        "day": "all",
+        "period": "afternoon",
+        "kind": "all"
+      }
+    },
+    "action": "answer_fact",
+    "item": null,
+    "item_id": null,
+    "change": null,
+    "fact": "changeability",
+    "minutes": null,
+    "choices": [],
+    "seconds": 0.0,
+    "query": {
+      "day": "all",
+      "period": "afternoon",
+      "kind": "all"
+    }
+  },
+  "basis": {
+    "kind": "changeability",
+    "query": {
+      "day": "all",
+      "period": "afternoon",
+      "kind": "all"
+    },
+    "writer": "template",
+    "source": "latest_itinerary",
+    "item_ids": [
+      "a16f0ee8-d684-4e3d-b38a-a1a850e26fe2"
+    ],
+    "checks": [
+      {
+        "item_id": "a16f0ee8-d684-4e3d-b38a-a1a850e26fe2",
+        "state": "missing_place",
+        "protected_by": null
+      }
+    ],
+    "version": 1
+  },
+  "scope": "Oracle runtime API + actual DB, isolated process, fixed model response; no running app source changed",
+  "real_model": false,
+  "deployed": false
+}

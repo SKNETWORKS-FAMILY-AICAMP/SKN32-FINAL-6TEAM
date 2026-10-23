@@ -1,4 +1,7 @@
 ---
+
+> **2026-10-11 현재 학습 기준:** 보스는 `engine-travel-policy-v2`이며 합성 철도 패스·여행 체험 예약 자료만 사용합니다. 과거 쇼핑몰 보스 설명·실측치는 아래의 당시 기록입니다. 현재 보스 통과로 합산하지 않습니다. 이전 보스 성과는 `archived`로 분리합니다. 중지한 결함·트랙·시나리오는 이력 조회만 가능하며 현재 실행 목록에 넣지 않습니다.
+
 type: guide
 title: 도장 사용법
 description: 학습 트랙 5개와 명령. 정답은 pytest와 실측 트레이스가 판정한다
@@ -6,6 +9,7 @@ status: draft
 tags: [testing, documentation]
 owners: [human:미배정]
 domain: neutral
+domain_note: 학습 도구 사용법이며 중지한 쇼핑몰 트랙을 현행 트랙과 구분해 설명한다
 ---
 
 # 도장 사용법
@@ -114,7 +118,7 @@ domain: neutral
 
 `[결정 2026-09-14]` 도장은 베이스먼트(도메인을 모르는 코어)만 다룬다. 커머스는 지우지 않고 중지했다. 결함 10은 `catalog.json` 의 `parked`, 시나리오 8은 `scenarios.py` 의 `PARKED_SCENARIO_IDS`, 트랙 3은 `tracks.py` 의 `PARKED_TRACK_IDS`, 원장 규칙 5는 `status: parked`에 남아 있다.
 
-`[결정 2026-09-21]` 여행 Team 트랙(`team-travel`)을 열었다. 시나리오 하나(`travel-team-keeps-every-evidence-v1`, DB 없이 도는 회귀 테스트)로 좁게 시작한다. 중지했던 결함 중 조각이 여행 코드에 남은 넷(INV-CLASSIFY-001 · INV-VOC-001 · INV-VOC-002 · INV-COMMERCE-005)도 `app/modules/travel_ops/` 경로로 옮겼다. 규칙은 도메인이 바뀌어도 같다. 남은 중지는 6건이다. 여행 Team 코드는 자주 바뀌므로 `patches`(4초)로 자주 본다.
+`[결정 2026-09-21]` 여행 Team 트랙(`team-travel`)을 열었다. 시나리오 하나(`travel-team-keeps-every-evidence-v1`, DB 없이 도는 회귀 테스트)로 좁게 시작한다. 중지했던 결함 중 조각이 여행 코드에 남은 넷(INV-CLASSIFY-001 · INV-VOC-001 · INV-VOC-002 · INV-COMMERCE-005)도 `app/domains/travel_ops/` 경로로 옮겼다. 규칙은 도메인이 바뀌어도 같다. 남은 중지는 6건이다. 여행 Team 코드는 자주 바뀌므로 `patches`(4초)로 자주 본다.
 
 `[실측]` 이 표가 "7개"라면서 `front`를 빼고 6개만 적고 있었다(2026-09-06 정정). 트랙마다 자기 시나리오·결함·지도가 붙는다. `--track core2`처럼 지정한다.
 

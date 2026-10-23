@@ -1,0 +1,1 @@
+{"schema_version": 1, "applied_relations": 1, "rules": [{"relation_id": 1, "incoming": 0, "outgoing": 4, "value": "no_left_turn"}], "graph_sha256": {"nodes.jsonl.gz": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3", "edges.jsonl.gz": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692"}}

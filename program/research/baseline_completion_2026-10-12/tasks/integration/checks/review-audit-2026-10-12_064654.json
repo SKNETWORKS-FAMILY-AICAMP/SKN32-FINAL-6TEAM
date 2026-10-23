@@ -1,0 +1,373 @@
+{
+  "passed": true,
+  "documents": [
+    {
+      "path": "program/plan/triPilot_구현계획서_v12.md",
+      "markdown_sha256": "9897e469e65554ec16c9a5793a03340d40467413d4e2cf173333562d3d7e195a",
+      "hash_in_html": true,
+      "local_links": [
+        {
+          "target": "../../wiki/index.md",
+          "exists": true
+        },
+        {
+          "target": "A-COP_구현계획서_v11.md",
+          "exists": true
+        },
+        {
+          "target": "../baseline/triPilot-baseline-2026-10-12.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/product/scope.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/external/mcp-tools.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/external/personal-ai-oauth.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/teams/team-boundary.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/teams/classification-execution-plan.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/teams/composition.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/orchestration/report.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/travel-check-flow.svg",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/travel-apply-flow.svg",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/decisions/D-018-decision15-stop-paths.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/decisions/D-017-watch-cadence-golden-time.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/operations/unattended-operations.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/architecture/notifications.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/auth/report.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0552_privacy-regression-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0603_initial-diagnostics-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0520_diagnostic-delete-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/data/index.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/data/schema/index.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/data/migration-inventory.generated.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/decisions/D-023-no-commerce-assets-in-use.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/quality/slm-model-evaluation.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/quality/model-version-reports.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0454_arm-search-model-repair.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/quality/invariant-summary.generated.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/delivery/release-gate.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/operations/current-state.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0644_whole-suite-integration-review.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/integration-table.md",
+          "exists": true
+        }
+      ],
+      "missing_links": [],
+      "forbidden_terms": [],
+      "sensitive_patterns": [],
+      "unexpected_hanja": [],
+      "paragraphs_checked": 28,
+      "absent_paragraphs": [],
+      "explicit_unaccepted": true
+    },
+    {
+      "path": "program/baseline/triPilot-baseline-2026-10-12.md",
+      "markdown_sha256": "7277a0b3bbd40edb610db2b8cd4192b7b5f828451d96ff6d8c38a3d1cb9be347",
+      "hash_in_html": true,
+      "local_links": [
+        {
+          "target": "../../wiki/index.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/index.md",
+          "exists": true
+        },
+        {
+          "target": "../plan/triPilot_구현계획서_v12.md",
+          "exists": true
+        },
+        {
+          "target": "../plan/A-COP_구현계획서_v11.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/current-review-manifest-2026-10-12_064532.json",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/integration-table.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/integration-table.json",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/product/scope.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/external/rest-endpoints.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/auth/report.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/external/personal-ai-oauth.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/external/mcp-tools.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/teams/classification-execution-plan.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/orchestration/report.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/teams/team-boundary.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/decisions/D-020-trip-survey-and-ask-first.md",
+          "exists": true
+        },
+        {
+          "target": "../../wiki/decisions/D-018-decision15-stop-paths.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0520_diagnostic-delete-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/operations/unattended-operations.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0546_place-status-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/operations/unattended-operations.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0603_initial-diagnostics-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0552_privacy-regression-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/data/migration-inventory.generated.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/data/schema/index.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/quality/eval-harness.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/quality/model-version-reports.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0454_arm-search-model-repair.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_055926_851705_isolated_integration/junit.xml",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_055733_173846_isolated_integration/junit.xml",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_054657_390668_isolated_integration/junit.xml",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/verification/current-results.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_060205_589376_isolated_integration/",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_0645_wiki.json",
+          "exists": true
+        },
+        {
+          "target": "../scripts/build_wiki_catalogs.py",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/checks/suite-review-2026-10-12_064405.json",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0626_review-support-db-integration.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/verification/runs/2026-10-12_followup_060032/followup-summary.json",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_0644_whole-suite-integration-review.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/verification/report.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/quality/invariant-summary.generated.md",
+          "exists": true
+        },
+        {
+          "target": "../research/baseline_completion_2026-10-12/tasks/integration/checks/final-gate-2026-10-12_064132/summary.json",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_실서비스_채팅_45질문_최종검증.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_서울28건_도로구간과방향_추가대조.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/records/reports/2026-10-12_taxi_pretrip_web/REPORT.md",
+          "exists": true
+        },
+        {
+          "target": "../../final_project_cs/wiki/operations/current-state.md",
+          "exists": true
+        }
+      ],
+      "missing_links": [],
+      "forbidden_terms": [],
+      "sensitive_patterns": [],
+      "unexpected_hanja": [],
+      "paragraphs_checked": 20,
+      "absent_paragraphs": [],
+      "explicit_unaccepted": true
+    }
+  ],
+  "figures": [
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/travel-apply-flow.svg",
+      "valid_xml": true,
+      "ovals": 4,
+      "diamonds": 2,
+      "title": "변경 제안 이후의 적용 판단",
+      "descriptions": true
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/integration/travel-check-flow.svg",
+      "valid_xml": true,
+      "ovals": 3,
+      "diamonds": 1,
+      "title": "작업 한 건의 자료 확인",
+      "descriptions": true
+    }
+  ],
+  "v11_sha256": "f4ad43d9154d723d13c816d42a8bf54b78491d3f706d76a08dade79795e9dca9",
+  "scope": "이 검토본 두 문서 정적 검사. 전체 저장소 보안·제품 인수 아님"
+}

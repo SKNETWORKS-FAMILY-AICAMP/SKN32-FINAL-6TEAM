@@ -1,0 +1,11 @@
+--- before/tests/unit/travel/test_subway_identity_v1.py
++++ after/tests/unit/travel/test_subway_identity_v1.py
+@@ -66,7 +66,7 @@
+ def test_malformed_list_is_not_reported_as_no_trains(rows):
+     src = source(rows)
+     assert src.arrivals('강남') is None
+-    assert src.misses['malformed_arrivals'] == 1
++    assert src.misses['body_error'] == 1  # 보관 전 실패로 세고 잘못된 목록을 재사용하지 않는다.
+ 
+ 
+ def test_schema_and_other_line_identity_survive_filter():

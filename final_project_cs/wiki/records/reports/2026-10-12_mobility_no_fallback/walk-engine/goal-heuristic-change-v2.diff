@@ -1,0 +1,32 @@
+--- graph_router.py.before
++++ graph_router.py.after
+@@ -407,7 +407,7 @@
+         self.calls += 1
+         deg, to, pe, w = self._adjacency(profile)
+         Ss, Ts = self._snap_many(profile, s[0], s[1]), self._snap_many(profile, e[0], e[1])
+-        S, T = Ss[0], Ts[0]                                  # 가장 가까운 붙임 — 응답의 snap_m 과 휴리스틱 목표
++        S, T = Ss[0], Ts[0]                                  # 가장 가까운 붙임 — 응답의 초기 snap_m
+         def selection_evidence(selected_start, selected_end):
+             ranks = [Ss.index(selected_start), Ts.index(selected_end)]
+             return {'candidate_counts': [len(Ss), len(Ts)],
+@@ -479,14 +479,17 @@
+                 if c is not None and (direct is None or c < direct):
+                     direct, direct_pair = c, (a, b)
+ 
+-        tx, ty = T.pt
+         # 비용 단위 대비 직선거리의 하한 — A* 가 틀린 답을 내지 않으려면 실제 비용보다 작아야 한다.
+-        #   car 는 초(최고 100 km/h = 27.8 m/s) · bike 는 거리×계수(최소 0.9) · foot 은 거리. 목표 점이 여럿(SNAP_TIE_M 안)이라 그만큼 뺀다
++        #   car 는 초(_maxspeed 상한 100 km/h < 28 m/s) · bike 는 거리×계수(최소 0.9) · foot 은 거리.
++        #   SNAP_TIE_M 은 요청 좌표에서 떨어진 거리의 차이이며, 후보끼리 떨어진 거리의 상한이 아니다.
++        #   실제 도착 후보의 그래프 끝점과 남은 간선 비용을 모두 비교한다.
++        #   끝점 1m 이내의 비용을 0으로 취급하는 위 규칙도 goals에 이미 반영돼 있다.
++        target_nodes = tuple(((self.nlon[n], self.nlat[n]), value[0]) for n, value in goals.items())
+         hscale = {"car": 1.0 / 28.0, "bike": 0.9}.get(profile, 1.0)
+         if self.force_dijkstra:                              # 시험용 - 휴리스틱을 끈 순수 다익스트라(A* 가 같은 답을 내는지 대조)
+             h = lambda n: 0.0                                # noqa: E731
+         else:
+-            h = lambda n: max(hav((self.nlon[n], self.nlat[n]), (tx, ty)) - (SNAP_TIE_M if profile == "car" else 0.0), 0.0) * hscale  # noqa: E731
++            h = lambda n: min(hav((self.nlon[n], self.nlat[n]), point) * hscale + remaining for point, remaining in target_nodes)  # noqa: E731
+ 
+         dist, parent, heap = {}, {}, []
+         for n, (c0, _side, _sn) in starts.items():

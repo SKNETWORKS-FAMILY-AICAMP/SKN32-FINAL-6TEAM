@@ -1,0 +1,38 @@
+{
+  "before": {
+    "team": {
+      "develop": "c46327eb7dbee2bebd0adde9613557a83b819ef4",
+      "main": "abde7c3eaad3b46ef3b0fd000e15be8f3d1aebf2",
+      "role-manager": "c46327eb7dbee2bebd0adde9613557a83b819ef4"
+    },
+    "personal": {
+      "develop": "2897c72cdb3a415c82b8671600d6f8319e8df4b7",
+      "main": "b0485d05fe18879e526e282d3b2769d3311f06bd",
+      "role-manager": "2897c72cdb3a415c82b8671600d6f8319e8df4b7"
+    }
+  },
+  "heads": {
+    "team": "82d744f7e3f821540dda6bedbac0084d0e33b128",
+    "personal": "117fd394e8780fe64690f39f36ccbe32f203a2e9"
+  },
+  "targets": {
+    "team/role-manager": {
+      "hash": "82d744f7e3f821540dda6bedbac0084d0e33b128",
+      "verified": true
+    },
+    "personal/role-manager": {
+      "hash": "117fd394e8780fe64690f39f36ccbe32f203a2e9",
+      "verified": true
+    },
+    "team/develop": {
+      "hash": "82d744f7e3f821540dda6bedbac0084d0e33b128",
+      "verified": true
+    },
+    "personal/develop": {
+      "hash": "117fd394e8780fe64690f39f36ccbe32f203a2e9",
+      "verified": true
+    }
+  },
+  "main_unchanged": true,
+  "at_utc": "2026-10-12T04:40:03.094142+00:00"
+}

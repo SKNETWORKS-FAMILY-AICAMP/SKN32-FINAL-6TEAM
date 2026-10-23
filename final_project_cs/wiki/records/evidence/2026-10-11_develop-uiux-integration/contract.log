@@ -1,0 +1,11 @@
+........................................................................ [ 26%]
+........................................................................ [ 53%]
+........................................................................ [ 80%]
+...................................................                      [100%]
+============================== warnings summary ===============================
+<unknown>:352
+tests/contract/test_team_tool_discipline.py::test_team_does_not_import_infrastructure_directly[devtools/judgment_log.py]
+  <unknown>:352: SyntaxWarning: invalid escape sequence '\d'
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+267 passed, 2 warnings in 14.18s

@@ -1,0 +1,22 @@
+{
+  "repo_id": "StandardThinking/StandardOne-3B",
+  "revision_sha": "70023495760b0cefecda7395377377f4d85a64fb",
+  "weights_bytes": 7698241064,
+  "last_modified": "2026-10-04T14:41:19.000Z",
+  "safetensors": {
+    "parameters": {
+      "BF16": 3849090048
+    },
+    "total": 3849090048
+  },
+  "fetched_files": [
+    "LICENSE",
+    "NOTICE",
+    "config.json",
+    "release-manifest.json",
+    "MERGE_REPORT.json",
+    "QUICKSTART.md",
+    "README.md"
+  ],
+  "license_sha256": "1495e1e757ef4d0925a2350563cf5754bb23c51701a8ec4fb3c5cdcbedae6747"
+}

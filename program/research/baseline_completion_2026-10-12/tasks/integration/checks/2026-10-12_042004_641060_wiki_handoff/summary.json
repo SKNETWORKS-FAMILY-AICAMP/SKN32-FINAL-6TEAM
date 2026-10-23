@@ -1,0 +1,122 @@
+{
+  "reviewed_at_kst": "2026-10-12T04:20:04.641060+09:00",
+  "scope": "위키 도구·규격 인계 검토. 제품 기능·배포 인수 판정 아님",
+  "handoff_hashes": {
+    "matched": 17,
+    "total": 17,
+    "changed_since_handoff": []
+  },
+  "changed_during_review": [],
+  "selection_and_decision_preserved": true,
+  "original_junit": [
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/governance-tests-final.xml",
+      "sha256": "9613a14845598a16817800e1c2b6b56b677d25c620aeeeac3538e822b32b6770",
+      "total": 12,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "program/research/baseline_completion_2026-10-12/tasks/wiki/cs-tests.xml",
+      "sha256": "d3186e24d962d37b333bf5e6e3c045d0647ee9d6469dd3805da3f23f768ec638",
+      "total": 12,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "C:\\Users\\playdata2\\anaconda3\\python.exe",
+        "-B",
+        "-m",
+        "pytest",
+        "program/scripts/tests/test_wiki_governance.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_042004_641060_wiki_handoff\\pytest-temp",
+        "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_042004_641060_wiki_handoff\\governance.xml",
+        "--tb=short"
+      ],
+      "cwd": "workspace root",
+      "started_at_kst": "2026-10-12T04:20:04.698118+09:00",
+      "finished_at_kst": "2026-10-12T04:20:39.581549+09:00",
+      "returncode": 0,
+      "log": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/governance.log"
+    },
+    {
+      "command": [
+        "C:\\Users\\playdata2\\anaconda3\\python.exe",
+        "-B",
+        "program/scripts/check_wiki.py",
+        "--include-records",
+        "--json-output",
+        "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_042004_641060_wiki_handoff\\wiki.json"
+      ],
+      "cwd": "workspace root",
+      "started_at_kst": "2026-10-12T04:20:39.581549+09:00",
+      "finished_at_kst": "2026-10-12T04:21:15.822792+09:00",
+      "returncode": 1,
+      "log": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/wiki.log"
+    },
+    {
+      "command": [
+        "C:\\Users\\playdata2\\anaconda3\\python.exe",
+        "-B",
+        "program/scripts/build_wiki_catalogs.py",
+        "--check"
+      ],
+      "cwd": "workspace root",
+      "started_at_kst": "2026-10-12T04:21:15.822792+09:00",
+      "finished_at_kst": "2026-10-12T04:21:18.436250+09:00",
+      "returncode": 0,
+      "log": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/catalog.log"
+    }
+  ],
+  "independent_governance_junit": {
+    "path": "program/research/baseline_completion_2026-10-12/tasks/integration/checks/2026-10-12_042004_641060_wiki_handoff/governance.xml",
+    "sha256": "14667669d09d44262e499a82e26f759ee12ddfd9691c78e8bbdd561730213be0",
+    "total": 12,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "current_wiki": {
+    "scope": {
+      "current_documents": 302,
+      "generated_documents": 4,
+      "record_documents": 1323,
+      "excluded_backup_directories": 59,
+      "excluded_staging_directories": 6
+    },
+    "total_violations": 4,
+    "problems": {
+      "상태 필드 형식 위반": [
+        "final_project_cs/wiki/operations/unattended-operations.md  (implementation_status: in-progress)",
+        "final_project_cs/wiki/teams/classification-execution-plan.md  (implementation_status: in_progress)"
+      ],
+      "front matter 없음": [
+        "final_project_cs/wiki/external/taxi-pricing-web-v1.md"
+      ],
+      "깨진 링크 (대상 파일 없음)": [
+        "final_project_cs/wiki/teams/classification-execution-plan.md -> ../../../program/research/baseline_completion_2026-10-12/tasks/orchestration/report.md"
+      ]
+    }
+  },
+  "state_inventory": {
+    "total": 93,
+    "missing_any": 90
+  },
+  "acceptance": {
+    "W16": "검토 범위의 문서·경로·구조 근거 확인; 인명 추가 배정 없음",
+    "W20": "도구 구현 확인; 기능별 90개 상태 적용은 담당 근거 수령 뒤 검토",
+    "W22": "범위 구분·회귀 확인; 전체 wiki 위반은 미해결",
+    "W23": "정의 행 집계·중복 거부·생성물 일치 확인; 등록 수는 통과 수 아님",
+    "W25": "현재 규칙/보존 기록 분리 확인; 기능 계약 전체 의미 검토는 미완료"
+  },
+  "deployment": "not_deployed",
+  "product_acceptance": "pending"
+}

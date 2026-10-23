@@ -1,0 +1,36 @@
+--- before/final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py
++++ after/final_project_cs/app/domains/travel_ops/instances/mobility/engine/subway_identity.py
+@@ -74,6 +74,24 @@
+         self._primary_conflicts = {key: [row['station_id'] for row in rows]
+                                    for key, rows in primary_candidates.items()
+                                    if len(rows) != 1 or key in keys}
++        aliases = payload.get('source_aliases', [])
++        if not isinstance(aliases, list):
++            raise ValueError('공식 이름 대응 자료의 목록이 잘못됐다')
++        by_id = {row['station_id']: row for row in keys.values()}
++        self._by_source_alias = {}
++        for alias in aliases:
++            if not isinstance(alias, dict) or not _text(alias.get('alias')):
++                raise ValueError('공식 이름 대응 자료의 별명이 잘못됐다')
++            row = by_id.get(alias.get('station_id')) if isinstance(alias.get('station_id'), str) else None
++            sources = alias.get('source_urls')
++            if (row is None or row['line_id'] != alias.get('line_id')
++                    or not isinstance(sources, list) or not sources
++                    or any(not isinstance(url, str) or not url.startswith('https://') for url in sources)):
++                raise ValueError('공식 이름 대응 자료의 역ID·노선·출처가 잘못됐다')
++            key = (canonical_line(row['line']), alias['alias'])
++            if key in keys or key in primary_candidates or key in self._by_source_alias:
++                raise ValueError('공식 이름 대응 자료의 별명이 충돌하거나 중복됐다')
++            self._by_source_alias[key] = row
+         self.content_sha256 = content_sha256
+         self.station_count = len(keys)
+         self.line_count = len(lines)
+@@ -82,7 +100,7 @@
+         if not isinstance(line, str) or not isinstance(station, str):
+             return None
+         key = (canonical_line(line), station)
+-        return deepcopy(self._by_key.get(key) or self._by_primary_name.get(key))
++        return deepcopy(self._by_key.get(key) or self._by_primary_name.get(key) or self._by_source_alias.get(key))
+ 
+     def bind(self, leg):
+         if not isinstance(leg, dict) or leg.get('mode', 'subway') != 'subway':

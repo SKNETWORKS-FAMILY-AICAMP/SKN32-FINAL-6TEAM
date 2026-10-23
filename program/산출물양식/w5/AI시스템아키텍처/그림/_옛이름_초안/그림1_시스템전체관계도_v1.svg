@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1600 704" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ctx-title ctx-desc">
+<title id="ctx-title">guguroute 시스템 전체 관계도 — 누가 쓰고 무엇과 연결되나</title>
+<desc id="ctx-desc">고객은 웹으로, 고객의 개인 AI 는 MCP 로 guguroute 에 붙는다. guguroute 은 외부 정보 6종 · 장소 정보 · 언어 모델을 읽어 일정을 검증하고 지키며, 바뀐 것은 디스코드로 알린다.</desc>
+<defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;display=swap');</style><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1600" height="704" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M360 172 L452 172 A8 8 0 0 1 460 180 L460 240 A8 8 0 0 0 468 248 L560 248" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M360 444 L452 444 A8 8 0 0 0 460 436 L460 392 A8 8 0 0 1 468 384 L560 384" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 232 L1132 232 A8 8 0 0 0 1140 224 L1140 104 A8 8 0 0 1 1148 96 L1240 96" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 268 L1240 268" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 392 L1240 392" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1040 420 L1132 420 A8 8 0 0 1 1140 428 L1140 528 A8 8 0 0 0 1148 536 L1240 536" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<!-- 이름표 -->
+<rect x="420" y="148" width="80" height="16" rx="2" fill="#fbfcfd"/><text x="460" y="160" class="lab" fill="#6b7488">웹 · 휴대폰</text>
+<rect x="396" y="452" width="24" height="12" rx="2" fill="#fbfcfd"/><text x="408" y="461" class="lab-mono" fill="#6b7488">MCP</text>
+<rect x="1096" y="72" width="84" height="16" rx="2" fill="#fbfcfd"/><text x="1138" y="84" class="lab" fill="#6b7488">3분마다 조회</text>
+<rect x="1100" y="244" width="80" height="16" rx="2" fill="#fbfcfd"/><text x="1140" y="256" class="lab" fill="#6b7488">장소 · 경로</text>
+<rect x="1076" y="368" width="124" height="16" rx="2" fill="#fbfcfd"/><text x="1138" y="380" class="lab" fill="#6b7488">보기 고르기 · 번역</text>
+<rect x="1156" y="544" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1188" y="556" class="lab" fill="#6b7488">알림 보냄</text>
+<!-- 상자 -->
+<rect x="40" y="120" width="320" height="104" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="120" width="320" height="104" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="200" y="156" class="name">고객 (여행자)</text>
+<text x="56" y="176" class="io-k">입력</text>
+<text x="88" y="176" class="io">계획 올리기 · 채팅 · 고르기</text>
+<text x="56" y="196" class="io-k">출력</text>
+<text x="88" y="196" class="io">확인 화면 · 계획서 링크</text>
+<rect x="40" y="392" width="320" height="104" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="392" width="320" height="104" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="200" y="428" class="name">고객의 개인 AI</text>
+<text x="56" y="448" class="io-k">입력</text>
+<text x="88" y="448" class="io">MCP 도구 14 호출(본인 여행만)</text>
+<text x="56" y="468" class="io-k">출력</text>
+<text x="88" y="468" class="io">일정 · 위험 점검 · 이동 판정</text>
+<rect x="560" y="192" width="480" height="248" rx="6" fill="#fbfcfd"/>
+<rect x="560" y="192" width="480" height="248" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="800" y="228" class="name focal-name">guguroute — cs 프로젝트 서버</text>
+<text x="576" y="248" class="io-k">입구</text>
+<text x="608" y="248" class="io">웹 · API(FastAPI) · MCP</text>
+<text x="576" y="268" class="io-k">두뇌</text>
+<text x="608" y="268" class="io">오케스트레이터(코드) · 에이전트 2</text>
+<text x="576" y="288" class="io-k">도구</text>
+<text x="608" y="288" class="io">읽기 도구 · 이동 판정기(공용)</text>
+<text x="576" y="308" class="io-k">감시</text>
+<text x="608" y="308" class="io">일정 위험 모니터링(3분 주기)</text>
+<text x="576" y="328" class="io-k">저장</text>
+<text x="608" y="328" class="io">PostgreSQL + pgvector(케이스 · 일정 · 규정)</text>
+<text x="576" y="348" class="io-k">알림</text>
+<text x="608" y="348" class="io">아웃박스 워커(1분 간격 3번)</text>
+<rect x="1240" y="40" width="320" height="112" rx="6" fill="#fbfcfd"/>
+<rect x="1240" y="40" width="320" height="112" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1400" y="76" class="name">외부 정보 6종</text>
+<text x="1256" y="96" class="io-k"></text>
+<text x="1274" y="96" class="io">Open-Meteo → 기상청 · 기상 특보</text>
+<text x="1256" y="116" class="io-k"></text>
+<text x="1274" y="116" class="io">재난문자 · ITS + UTIC 교통</text>
+<text x="1256" y="136" class="io-k"></text>
+<text x="1274" y="136" class="io">에어코리아 대기질 · 기상청 지진</text>
+<rect x="1240" y="200" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="1240" y="200" width="320" height="96" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1400" y="236" class="name">장소 · 이동 정보</text>
+<text x="1256" y="256" class="io-k"></text>
+<text x="1274" y="256" class="io">관광공사 TourAPI · 카카오 로컬</text>
+<text x="1256" y="276" class="io-k"></text>
+<text x="1274" y="276" class="io">지하철 · 버스 시간표 · 길찾기</text>
+<rect x="1240" y="344" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="1240" y="344" width="320" height="96" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1400" y="380" class="name">언어 모델 (로컬)</text>
+<text x="1256" y="400" class="io-k"></text>
+<text x="1274" y="400" class="io">gemma4:12b(Ollama) · 없으면 OpenAI</text>
+<text x="1256" y="420" class="io-k"></text>
+<text x="1274" y="420" class="io">임베딩(bge-m3 등 · 설정)</text>
+<rect x="1240" y="488" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="1240" y="488" width="320" height="96" rx="6" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="1400" y="524" class="name">디스코드</text>
+<text x="1256" y="544" class="io-k"></text>
+<text x="1274" y="544" class="io">알림 · 계획서 링크 받기</text>
+<text x="1256" y="564" class="io-k"></text>
+<text x="1274" y="564" class="io">웹훅 하나</text>
+<line x1="32" y1="640" x2="1568" y2="640" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="660" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="648" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="140" y="660" class="leg">사람 · 사람의 AI</text>
+<rect x="272" y="648" width="28" height="16" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="308" y="660" class="leg">우리 시스템</text>
+<rect x="404" y="648" width="28" height="16" rx="3" fill="rgba(22,28,40,0.03)" stroke="rgba(22,28,40,0.30)" stroke-width="1"/>
+<text x="440" y="660" class="leg">바깥 시스템</text>
+</svg>

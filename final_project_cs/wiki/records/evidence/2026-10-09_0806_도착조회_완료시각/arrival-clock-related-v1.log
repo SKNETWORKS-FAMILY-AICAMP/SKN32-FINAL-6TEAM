@@ -1,0 +1,147 @@
+........................................................................ [ 73%]
+.FE........................                                              [100%]
+=================================== ERRORS ====================================
+_ ERROR at teardown of test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call _
+
+    @pytest.fixture
+    def unique_key():
+        # 다른 시험·실제 공개 응답을 지우지 않고 이 시험이 만든 해시 한 줄만 정리한다.
+        service_key = 'TEST_ONLY_' + uuid4().hex
+        key = ('seoul_bus_arrival', BASE, tuple(sorted({
+            'serviceKey': service_key, 'busRouteId': '100100118', 'resultType': 'json'
+        }.items())))
+        yield service_key, DbResponseCache._hash(key)
+>       with get_connection() as conn, conn.transaction():
+             ^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\anaconda3\Lib\contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+app\infrastructure\db\session.py:21: in get_connection
+    with psycopg.connect(database_dsn()) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'psycopg.Connection'>
+conninfo = 'user=postgres dbname=acop_cs host=127.0.0.1 port=5433 hostaddr=127.0.0.1'
+autocommit = False, prepare_threshold = 5, context = None, row_factory = None
+cursor_factory = None, kwargs = {}
+params = {'dbname': 'acop_cs', 'host': '127.0.0.1', 'port': '5433', 'user': 'postgres'}
+timeout = 130
+
+    @classmethod
+    def connect(
+        cls,
+        conninfo: str = "",
+        *,
+        autocommit: bool = False,
+        prepare_threshold: int | None = 5,
+        context: AdaptContext | None = None,
+        row_factory: RowFactory[Row] | None = None,
+        cursor_factory: type[Cursor[Row]] | None = None,
+        **kwargs: ConnParam,
+    ) -> Self:
+        """
+        Connect to a database server and return a new `Connection` instance.
+        """
+    
+        params = cls._get_connection_params(conninfo, **kwargs)
+        timeout = timeout_from_conninfo(params)
+        rv = None
+        attempts = conninfo_attempts(params)
+        conn_errors: list[tuple[e.Error, str]] = []
+        for attempt in attempts:
+            tdescr = (attempt.get("host"), attempt.get("port"), attempt.get("hostaddr"))
+            descr = "host: %r, port: %r, hostaddr: %r" % tdescr
+            logger.debug("connection attempt: %s", descr)
+            try:
+                conninfo = make_conninfo("", **attempt)
+                gen = cls._connect_gen(conninfo, timeout=timeout)
+                rv = waiting.wait_conn(gen, interval=_WAIT_INTERVAL)
+            except e.Error as ex:
+                logger.debug("connection failed: %s: %s", descr, str(ex))
+                conn_errors.append((ex, descr))
+            except e._NO_TRACEBACK as ex:
+                raise ex.with_traceback(None)
+            else:
+                logger.debug("connection succeeded: %s", descr)
+                break
+    
+        if not rv:
+            last_ex = conn_errors[-1][0]
+            if len(conn_errors) == 1:
+>               raise last_ex.with_traceback(None)
+E               psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+E               	Is the server running on that host and accepting TCP/IP connections?
+
+..\..\..\anaconda3\Lib\site-packages\psycopg\connection.py:122: OperationalError
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+	Is the s
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+	Is the s
+================================== FAILURES ===================================
+_ test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call _
+
+unique_key = ('TEST_ONLY_6f2263eb99c1406e82b25a2c99188f93', '9fa1b3bf95112c477428ba262d0c499a0505bed65359ac2b436232f57f51f450')
+
+    def test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call(unique_key):
+        key, key_hash = unique_key
+        observed = datetime.now(KST).replace(microsecond=0) - timedelta(seconds=8)
+        calls = []
+    
+        def transport(url, params):
+            calls.append(1)
+            return httpx.Response(200, json={'msgHeader': {'headerCd': '0'}, 'msgBody': {'itemList': [
+                {'busRouteId': '100100118', 'stId': '111000181', 'staOrd': str(seq),
+                 'rtNm': '753', 'stNm': '여행 출발 정류장', 'dir': direction,
+                 'mkTm': observed.isoformat(sep=' '), 'arrmsg1': message, 'arrmsg2': '출발대기'}
+                for seq, direction, message in [(5, '서울역', '4분38초후[2번째 전]'), (90, '종점', '2분후[1번째 전]')]
+            ]}})
+    
+        first_cache = DbResponseCache(300, get_connection)
+        second_cache = DbResponseCache(300, get_connection)
+        first = SeoulBusArrival(service_key=key, transport=transport, cache=first_cache)
+    
+        def forbidden_call(url, params):
+            pytest.fail('둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다')
+    
+        second = SeoulBusArrival(service_key=key, transport=forbidden_call, cache=second_cache)
+        a = first.arrivals('100100118', stop_id='111000181', stop_sequence=5)
+>       b = second.arrivals('100100118', stop_id='111000181', stop_sequence=90)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\ports\data_sources\seoul_bus.py:96: in arrivals
+    payload = self._fetch_json(BASE, {'serviceKey': self._key, 'busRouteId': str(route_id), 'resultType': 'json'})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\ports\data_sources\base.py:152: in _fetch_json
+    response = self._get(url, params)
+               ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+url = 'http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll'
+params = {'busRouteId': '100100118', 'resultType': 'json', 'serviceKey': 'TEST_ONLY_6f2263eb99c1406e82b25a2c99188f93'}
+
+    def forbidden_call(url, params):
+>       pytest.fail('둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다')
+E       Failed: 둘째 버스 어댑터가 공유 DB 응답 대신 제공처를 다시 호출했습니다
+
+tests\unit\travel\test_seoul_bus_shared_cache_v1.py:44: Failed
+------------------------------ Captured log call ------------------------------
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+	Is the s
+WARNING  app.domains.travel_ops.ports.data_sources.cache:cache.py:114 source response cache: DB 층을 60초 건너뛴다(메모리 캐시로 계속) — OperationalError: connection failed: connection to server at "127.0.0.1", port 5433 failed: Permission denied (0x0000271D/10013)
+	Is the s
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_complete_20261008\arrival-clock-related-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_seoul_bus_shared_cache_v1.py::test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call
+ERROR tests/unit/travel/test_seoul_bus_shared_cache_v1.py::test_distinct_bus_adapters_share_real_db_without_repeating_the_provider_call
+1 failed, 97 passed, 1 error in 6.33s
+Exception ignored in: <function Console.__del__ at 0x0000024773391DA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

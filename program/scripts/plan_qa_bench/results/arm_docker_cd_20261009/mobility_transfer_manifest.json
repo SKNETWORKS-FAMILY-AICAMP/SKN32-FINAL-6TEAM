@@ -1,0 +1,342 @@
+{
+  "files": [
+    {
+      "file": ".gitkeep",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "2026-10-09_1125_공식병기역명_종착경로복구_audit/station-crosswalk-v1.json",
+      "bytes": 28110,
+      "sha256": "63019569e11cecd78b671515809a868dd638d54e7703f99fa7e76e8f56c48673"
+    },
+    {
+      "file": "mobility/_backup/2026-10-08_거리입력명세/MANIFEST_git_v1.json",
+      "bytes": 21178,
+      "sha256": "d5bffebf210c8747e8e986d59e6931821c00df42ac1235ef8220ae40562ae88f"
+    },
+    {
+      "file": "mobility/_backup/2026-10-09_125930_공식_이름대응_추가전/subway_realtime_stations_20260902_v1.json",
+      "bytes": 137439,
+      "sha256": "c3c2c13114f7d174f4ef1989fba2c9dc968f57919368587864171b2a26f2a244"
+    },
+    {
+      "file": "mobility/_backup/2026-10-09_1345_공표승차_명세누락검사/MANIFEST_git_v1.json",
+      "bytes": 22162,
+      "sha256": "cbd438b9f9151ef1def72c530064db27fca0e014ea45259da677e5b9f3fc31fb"
+    },
+    {
+      "file": "mobility/_backup/2026-10-09_1412_디지털미디어시티_공표승차_대조/MANIFEST_git_v1.json",
+      "bytes": 22679,
+      "sha256": "cdc4519e3b5aa9061523b3ac790201bedb0cdc120dfdf9d1bbc510f26b5f2618"
+    },
+    {
+      "file": "mobility/_backup/2026-10-09_1412_디지털미디어시티_공표승차_대조/published_boarding_timetable_v1.json",
+      "bytes": 11243,
+      "sha256": "102616cdd14c5cead2f2bfd618bf5b70b1c0e445a6eb6a473b38f6bec41991e0"
+    },
+    {
+      "file": "mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/MANIFEST_git_v1.json",
+      "bytes": 22926,
+      "sha256": "70c947c4689678d112f5a3c9cb847629ec6bd1f50e715bb18e8cc1f3dc66c763"
+    },
+    {
+      "file": "mobility/_backup/2026-10-09_1426_김포공항_공표승차_대조/published_boarding_timetable_v1.json",
+      "bytes": 22368,
+      "sha256": "8718a8398afc4298475e63644b5ff317acaf3ef50e540a012c3319d9e10c166f"
+    },
+    {
+      "file": "mobility/bike_stations_v1.jsonl",
+      "bytes": 819655,
+      "sha256": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7"
+    },
+    {
+      "file": "mobility/bike_stations_v1_report.md",
+      "bytes": 646,
+      "sha256": "04c15da7c475e04fde9f1b4fd16e41ce63b372002197cfeaff5c430af84fbdd2"
+    },
+    {
+      "file": "mobility/bus_route_v1.jsonl",
+      "bytes": 481262,
+      "sha256": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014"
+    },
+    {
+      "file": "mobility/bus_route_v1_report.md",
+      "bytes": 2439,
+      "sha256": "70d4c899e7980800887efbb63706508c579bb969aa1c676ee9a98b907962e246"
+    },
+    {
+      "file": "mobility/bus_seg_profile_v1.jsonl.gz",
+      "bytes": 9632707,
+      "sha256": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074"
+    },
+    {
+      "file": "mobility/bus_seg_profile_v1_report.md",
+      "bytes": 1614,
+      "sha256": "a9d39f27f93f91939fa2c11a66a842c06c364d67c4df3c6ba2966243ab10d7d5"
+    },
+    {
+      "file": "mobility/bus_stops_v1.jsonl",
+      "bytes": 16353165,
+      "sha256": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0"
+    },
+    {
+      "file": "mobility/congestion_line9_v1.jsonl",
+      "bytes": 2237233,
+      "sha256": "27f836cea82ddf3b8554b5900b44de79a2f729e6e53f9576a565dd2b1327b57b"
+    },
+    {
+      "file": "mobility/congestion_line9_v1_report.md",
+      "bytes": 3733,
+      "sha256": "bee2c8a3cd1cdbadd69d7370788a6218c8d9fa7d9dc4c8114f7a8e47f321403d"
+    },
+    {
+      "file": "mobility/congestion_v1.jsonl",
+      "bytes": 33747283,
+      "sha256": "e1e92ebb954b2900482b9f5a2ccdf91df386059577ff006ddb421972f9add07b"
+    },
+    {
+      "file": "mobility/congestion_v1_report.md",
+      "bytes": 2022,
+      "sha256": "abff7673d2b37d01422366971c38558c9f85441312d89f8205f30a51a90ef0fa"
+    },
+    {
+      "file": "mobility/graph/daytype_calendar_v1.csv",
+      "bytes": 8181,
+      "sha256": "527da3e44064bfe156fc3ea96f711bf67f85f3e5d9212567def1b423fbbcd5e1"
+    },
+    {
+      "file": "mobility/graph/osm_way_geom_v1.csv",
+      "bytes": 1737047,
+      "sha256": "2da3fb6afee27eb7ebc0f7595a84a5b969fe2bebd618c460c7928cef03759b4f"
+    },
+    {
+      "file": "mobility/graph/osm_way_seg_topis_link_v1.csv",
+      "bytes": 1985451,
+      "sha256": "8c97f28c93f31dbbdfbb1899e9873cfc40957166332483134b6c551141127437"
+    },
+    {
+      "file": "mobility/graph/README.md",
+      "bytes": 5581,
+      "sha256": "2594940e9c783eabd03f73ede81eb01e5d0d88580777e59bc5a21318f7b6e202"
+    },
+    {
+      "file": "mobility/graph/topis_class_factor_v1.json",
+      "bytes": 8106,
+      "sha256": "6e3ad6265b8616d370d8cdfede7e87643124fd14d027a657e57ded4b433614b7"
+    },
+    {
+      "file": "mobility/graph/topis_link_profile_v1.jsonl.gz",
+      "bytes": 5237865,
+      "sha256": "99d29b178761bddc6b942a8a23570d3619f87b109a284f54fd5cbc13043078fb"
+    },
+    {
+      "file": "mobility/line_station_order_v1.json",
+      "bytes": 800665,
+      "sha256": "693c616fa1a538d564b84c12cae1f8c744140da87f91574cfbb795394448d3e8"
+    },
+    {
+      "file": "mobility/line_station_order_v1_report.md",
+      "bytes": 4525,
+      "sha256": "1f21be4772caade29df1566697870037263096908bdbba18128653f273a92045"
+    },
+    {
+      "file": "mobility/MANIFEST_git_v1.json",
+      "bytes": 23003,
+      "sha256": "3fa2f58ee5cb58deba795a33bff57cb2bd1ea30545b3db33ca51ea2347494be7"
+    },
+    {
+      "file": "mobility/published_boarding_timetable_v1.json",
+      "bytes": 33409,
+      "sha256": "7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8"
+    },
+    {
+      "file": "mobility/rail_distance_overlay_probe_v1.json",
+      "bytes": 134527,
+      "sha256": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82"
+    },
+    {
+      "file": "mobility/rail_distance_overlay_replay_v1.json",
+      "bytes": 134527,
+      "sha256": "362ea1ad78f0062fc57c723110d99f41033e614a4dea95d695ad29b0f422a778"
+    },
+    {
+      "file": "mobility/rail_distance_overlay_v1.json",
+      "bytes": 134527,
+      "sha256": "78cbe18455c12bf1d25c795427559c1b86049997cca2c1b26498739caff44c82"
+    },
+    {
+      "file": "mobility/rail_edge_track_probe_v2.jsonl.gz",
+      "bytes": 15518,
+      "sha256": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096"
+    },
+    {
+      "file": "mobility/rail_edge_track_v1.jsonl.gz",
+      "bytes": 14425,
+      "sha256": "3ca595e6aec45dd68b6f257afff59d42c96e0221bc809cb63691f236482bd0d5"
+    },
+    {
+      "file": "mobility/rail_edge_track_v2.jsonl.gz",
+      "bytes": 15518,
+      "sha256": "dd2d0eda1aaa956ba5d09d5410539ee863f8c4b023773b7c66a31caf3eb9e096"
+    },
+    {
+      "file": "mobility/road_graph_v1/build_report.json",
+      "bytes": 1148,
+      "sha256": "87e9c6a1dd3806785a649059accbf70ef12bfb1a59d8f2132bbcd3a751cfb8f7"
+    },
+    {
+      "file": "mobility/road_graph_v1/check_report.json",
+      "bytes": 8552,
+      "sha256": "377e876a7693a245a9f98da9fb938ba531968e888ad2a2684fc5388951d75a7b"
+    },
+    {
+      "file": "mobility/road_graph_v1/edges.jsonl.gz",
+      "bytes": 12627875,
+      "sha256": "6ddf0769c5439581c1680199c66aca86fe390e736a318d8923647587cac80595"
+    },
+    {
+      "file": "mobility/road_graph_v1/MANIFEST.json",
+      "bytes": 731,
+      "sha256": "4315aff4aaac694a1114e812df40199cb536fca76ca155af5f4e8963e67d853e"
+    },
+    {
+      "file": "mobility/road_graph_v1/nodes.jsonl.gz",
+      "bytes": 3237685,
+      "sha256": "7fce945290289bece731e3666884cf5ea30f2d308efa42918fb17d9bf443f054"
+    },
+    {
+      "file": "mobility/road_graph_v1/README.md",
+      "bytes": 6148,
+      "sha256": "6079ff304283a67c8834f70fc9f317efacaa18603e11a9aee62e007977b7bffa"
+    },
+    {
+      "file": "mobility/road_graph_v1/region_v1.geojson",
+      "bytes": 90756,
+      "sha256": "bb9f46e02ad7868f8cdb5bcd25462595b7829db72c24cea80881a46c14605141"
+    },
+    {
+      "file": "mobility/road_graph_v2/build_report.json",
+      "bytes": 1258,
+      "sha256": "5f63b0009a7e9a958f162b4f756e4f60538772115e95c6f86eb7ed421e4b4399"
+    },
+    {
+      "file": "mobility/road_graph_v2/edges.jsonl.gz",
+      "bytes": 19286155,
+      "sha256": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb"
+    },
+    {
+      "file": "mobility/road_graph_v2/MANIFEST.json",
+      "bytes": 796,
+      "sha256": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd"
+    },
+    {
+      "file": "mobility/road_graph_v2/nodes.jsonl.gz",
+      "bytes": 4783555,
+      "sha256": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38"
+    },
+    {
+      "file": "mobility/road_graph_v2/region_v1.geojson",
+      "bytes": 90730,
+      "sha256": "827a39de6d1cf23a8b910dc3edeca73534e3e8b8490228fdaf53abb3efc5c9b8"
+    },
+    {
+      "file": "mobility/road_graph_v2/turn_restrictions_v1.json",
+      "bytes": 211626,
+      "sha256": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c"
+    },
+    {
+      "file": "mobility/station_coords.json",
+      "bytes": 540865,
+      "sha256": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d"
+    },
+    {
+      "file": "mobility/station_coords_report.md",
+      "bytes": 3226,
+      "sha256": "d2ba0b691d5bfead1fcb70334885535a6713da562bb51004d577ae6c1a681fbf"
+    },
+    {
+      "file": "mobility/station_exits_v1.json",
+      "bytes": 824121,
+      "sha256": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669"
+    },
+    {
+      "file": "mobility/subway_realtime_stations_20260902_v1.json",
+      "bytes": 137967,
+      "sha256": "12ddcf1b102fcaea22236aad3fa3c5219c4fb12c2abefd279d49eb3acdbd7f5a"
+    },
+    {
+      "file": "mobility/timetable_v1.jsonl",
+      "bytes": 78747595,
+      "sha256": "63a5b503dfe0d129e4a69993a9003669f3bf35ba8c833a55aa790d63db6478d0"
+    },
+    {
+      "file": "mobility/timetable_v1.jsonl.gz",
+      "bytes": 1880048,
+      "sha256": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6"
+    },
+    {
+      "file": "mobility/timetable_v1_coverage.md",
+      "bytes": 3511,
+      "sha256": "84a0a25509b6fa06f22e677ff5602eaf8312a18fa084e7b4cc3ed6e3e8a45562"
+    },
+    {
+      "file": "mobility/timetable_v1_destfill_report.md",
+      "bytes": 5094,
+      "sha256": "5c0f4a25077f1d3bd7b5e4dbde8a3f6704fe56673cd114c0d5a7fc0cbc9e6552"
+    },
+    {
+      "file": "mobility/timetable_v1_meta.json",
+      "bytes": 9507,
+      "sha256": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836"
+    },
+    {
+      "file": "mobility/transfer_car_v1.json",
+      "bytes": 1012504,
+      "sha256": "aa8231deed22b4c3c70676d052e0d58e5f1cb598fbde37220ddd14941524f726"
+    },
+    {
+      "file": "mobility/transfer_car_v1_report.md",
+      "bytes": 7470,
+      "sha256": "d4acf51cd1b8ca24b4c133d9408abcd0e39a3790edde665f7a44a8f0d294df46"
+    },
+    {
+      "file": "mobility/transfer_walk_v1.json",
+      "bytes": 59351,
+      "sha256": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43"
+    },
+    {
+      "file": "mobility/transfer_walk_v1_report.md",
+      "bytes": 2133,
+      "sha256": "26bc013f51ec9b93397d7f5316c2fbbd4b15e4003a1cb18ea42f8457f5db4be7"
+    },
+    {
+      "file": "mobility/turn_restrictions_20261008_v1/manifest.json",
+      "bytes": 3248,
+      "sha256": "0858afef733265069e682d050b548c008c1bd3a3926b106912e4df073f54a751"
+    },
+    {
+      "file": "mobility/turn_restrictions_20261008_v1/quality-audit.json",
+      "bytes": 3560,
+      "sha256": "305eff520b9c83c38bc1711b621dc751f90c86f0f874b4a1ca479a765dcdbc11"
+    },
+    {
+      "file": "mobility/turn_restrictions_20261008_v1/README.md",
+      "bytes": 1791,
+      "sha256": "a3e25c48c88f576bd250a81631be355f2e56406ed07214b67a9d50451dbb5af3"
+    },
+    {
+      "file": "mobility/turn_restrictions_20261008_v1/restrictions-graph-audit.jsonl",
+      "bytes": 4563616,
+      "sha256": "2994852516808938010b549340e63a9d4e4926dc48dc5f286a3e120581f1c181"
+    },
+    {
+      "file": "mobility/turn_restrictions_20261008_v1/static-motorcar-candidates.jsonl",
+      "bytes": 1791422,
+      "sha256": "f07339d0d3e21df6bc7c1340ae185e750499abc472a5b31f7671f1430c9f91f2"
+    }
+  ],
+  "total_bytes": 203806783,
+  "count": 67,
+  "purpose": "approved_existing_oracle_arm_application_serving"
+}

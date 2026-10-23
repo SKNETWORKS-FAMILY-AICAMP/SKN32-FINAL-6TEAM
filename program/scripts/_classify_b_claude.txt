@@ -1,0 +1,40 @@
+# 표본 B 분류 — Claude (봉인 2026-09-01, codex 실행 전)
+# 형식: 번호  type  확실/애매  (근거)
+
+ 1  report     확실  인수인계 시점의 완료·잔여 상태 기록
+ 2  plan       애매  페인포인트·비용·페르소나 설계 + v8 병합 위치. concept/plan 혼재
+ 3  policy     애매  문서 표준 규약이나 1281줄에 결정·구조·절차가 다 있다. 쪼개야 함
+ 4  decision   애매  v3 계약 확정 + 책임 재배정. decision/plan 혼재
+ 5  decision   확실  확장 추천 채택 여부와 등록 형태를 정한다
+ 6  reference  확실  외부 WBS 원문 전사. → type 없음! research 로 감
+ 7  research   확실  외부 교수법·게임 설계 조사
+ 8  report     확실  특정 시점 정합성 점검 결과 8건
+ 9  dataset    애매  분쟁조정 사례 원문 수집. dataset/research 경계
+10  policy     애매  방어를 층으로 겹친다는 원칙 + 설계. policy/decision 혼재
+11  plan       애매  결론(재학습 필요) + 설계 + 리스크. decision/plan 혼재, 578줄
+12  plan       확실  Phase 계획·스트림 소유·의존 순서
+13  evidence   확실  재현 명령 + 출력 + 판정 근거
+14  evidence   확실  동
+15  evidence   확실  동
+16  contract   확실  basement 버전 참조 규약
+17  contract   애매  모듈화 구조 계약이나 "신설해야 할 것"이 있어 plan 섞임
+18  guide      확실  handoff 폴더가 무엇인지 안내
+19  report     확실  관리자 화면 구현 결과
+20  report     확실  PII 이름 정규식 격차 측정 결과
+21  report     확실  DoD 재측정 수집 결과
+22  report     확실  비전 문서 비용 재산정 결과
+23  plan       애매  도입 검토 후보 + 폐기 항목. plan/decision 혼재
+24  reference  애매  견적 산정 기준. policy 인가 concept 인가 → type 없음
+25  dataset    애매  벤치마크 결과가 본문. dataset/report 혼재 (codex 패턴 동일)
+26  dataset    확실  추출 방법·건수·검증
+27  dataset    애매  출처·방법 + "가장 중요한 발견". dataset/report 혼재
+28  guide      확실  scripts 폴더 규칙과 등록 목록
+29  guide      애매  폴더 규칙 + "VOC 전처리 현황 실측". guide/report 혼재
+
+확실 17건 / 애매 12건 = 41.4%
+
+# 분류하며 느낀 것 (codex 결과 보기 전 기록)
+# - 6번과 24번에 맞는 type 이 없다. 외부 원문 전사와 산정 기준.
+#   reference 같은 게 필요할 수 있다.
+# - dataset/report 혼재가 25·27·29 에서 또 나왔다. A 표본과 같은 패턴.
+# - decision/plan 혼재가 2·4·11·23 에서 나왔다. 역시 같은 패턴.

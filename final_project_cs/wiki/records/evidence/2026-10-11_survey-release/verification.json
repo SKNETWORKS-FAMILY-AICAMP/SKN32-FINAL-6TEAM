@@ -1,0 +1,35 @@
+{
+  "baseTeamCommit": "25abe243e863fe6cdcb6c1b09bdf7a097f10efb4",
+  "browser": "Chrome",
+  "viewports": [
+    375,
+    1280
+  ],
+  "beforeReproduced": {
+    "count": 2,
+    "total": 2
+  },
+  "uniqueBrowserCases": {
+    "passed": 28,
+    "total": 28,
+    "definition": "18 existing passed in after.json + 10 new passed in capture.json; repeat cases excluded"
+  },
+  "unit": {
+    "passed": 14,
+    "total": 14
+  },
+  "staticChecks": {
+    "tsc": 0,
+    "eslint": 0
+  },
+  "freshProductionBuild": true,
+  "buildId": "xVEAQyvapdNLQLf-sJgfT",
+  "publicCsResponseVerified": false,
+  "productionDeploymentVerified": false,
+  "productHashes": {
+    "frontend/apps/web/src/features/plan-check/use-reveal.ts": "3b8595cd4a80745cdf94fca54d3d5d258e44cc27588da810a3b5b6defc208392",
+    "frontend/apps/web/src/features/plan-check/use-reveal.test.ts": "09503db515f58a75712d5b8579d34992fff6627c765059dec5d8609e5a8c6ae1",
+    "frontend/apps/web/src/features/survey-questions/use-question-flow.ts": "66c168fcf294bbf4b93c698a0a8101a6b0614c6dce22f0343a8537b09a542939",
+    "frontend/apps/web/src/features/survey-questions/reading-footer.tsx": "e55a44edeae47926e87261cf5c97b57a19185afff074c39e55b3939ae2429938"
+  }
+}

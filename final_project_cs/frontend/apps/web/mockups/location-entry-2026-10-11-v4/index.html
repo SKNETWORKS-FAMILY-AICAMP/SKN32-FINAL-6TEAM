@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>내 위치 버튼 복구</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#edf2ef;color:#203a31;font:16px/1.7 system-ui,sans-serif}main{max-width:1040px;margin:auto;padding:28px 20px 64px}h1{font-size:28px;margin:0 0 12px}h2{font-size:21px;margin:0 0 8px}p{margin:8px 0 20px}section{margin-top:24px;padding:24px;background:white;border:1px solid #d5dfd9;border-radius:24px}figure{margin:20px 0 0}img{display:block;max-width:100%;height:auto;border-radius:20px;border:1px solid #d5dfd9}figure.phone img{width:375px}figcaption{font-size:13px;margin-top:10px;color:#56665f}.compare{display:flex;gap:24px;flex-wrap:wrap}.compare figure{flex:1;min-width:min(100%,300px)}a{color:#2e6049}small{display:block;font-size:13px;color:#56665f}
+</style><main>
+<h1>지도 도구 왼쪽에 내 위치</h1>
+<p>내 위치 → 전체 보기 → 축소 → 확대 → 거리·접기. 위치 동의가 없어도 진입 버튼을 보여 주고, 누르면 기존 위치 이용 동의로 이어집니다.</p>
+<small>실제 Chrome에서 구현 화면을 촬영했습니다. 지도 배경은 저장된 OpenStreetMap 타일이며 위치값은 시험용입니다. 현재 브라우저의 실제 위치나 공개 서비스 반영을 확인한 화면은 아닙니다.</small>
+<section><h2>가로 도구의 맨 왼쪽</h2><p>거리·화살표 버튼은 기존 오른쪽 자리에 둡니다. 모든 도구의 누름 영역은 44px입니다.</p><div class="compare">
+<figure class="phone"><a href="tools-375.png"><img src="tools-375.png" alt="375px 화면의 가로 도구 왼쪽 내 위치 버튼"></a><figcaption>375px · 원본 이미지 열기</figcaption></figure>
+<figure><a href="tools-1280.png"><img src="tools-1280.png" alt="1280px 화면의 내 위치 도구"></a><figcaption>1280px · 원본 이미지 열기</figcaption></figure></div></section>
+<section><h2>누른 자리에서 위치 이용 동의</h2><p>동의 전에는 위치를 읽거나 전송하지 않습니다. 전문 보기·취소·Esc를 지원하며, 취소하면 버튼으로 초점이 돌아갑니다.</p><div class="compare">
+<figure class="phone"><a href="consent-375.png"><img src="consent-375.png" alt="375px 위치 동의 안내"></a><figcaption>375px · 위치 동의 안내</figcaption></figure>
+<figure><a href="consent-1280.png"><img src="consent-1280.png" alt="1280px 위치 동의 안내"></a><figcaption>1280px · 위치 동의 안내</figcaption></figure></div></section>
+<section><h2>내 위치 표시와 이동</h2><p>허용된 위치를 파란 점과 정확도 원으로 표시합니다. 버튼을 누르면 그곳으로 이동하며, 이후 위치가 바뀌어도 지도를 강제로 따라 움직이지 않습니다. 권한 거절·시간 초과는 기존 알림 토스트로 안내하고 다시 시도할 수 있습니다.</p>
+<figure class="phone"><a href="located-375.png"><img src="located-375.png" alt="시험용 현재 위치를 표시하고 그곳으로 이동한 지도"></a><figcaption>375px · 경복궁의 시험용 좌표로 이동</figcaption></figure></section>
+</main></html>

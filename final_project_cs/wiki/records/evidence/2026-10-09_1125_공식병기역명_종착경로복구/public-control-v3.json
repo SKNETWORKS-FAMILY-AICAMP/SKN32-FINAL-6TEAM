@@ -1,0 +1,43 @@
+{
+  "created_at": "2026-10-09T11:33:11.078126+09:00",
+  "source": "서울특별시 OA-12764 공개 sample",
+  "license": "공공누리 제1유형, 출처: 서울특별시",
+  "requests": [
+    {
+      "station": "서울",
+      "started_at": "2026-10-09T11:33:10.940953+09:00",
+      "finished_at": "2026-10-09T11:33:11.020247+09:00",
+      "url": "http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/5/%EC%84%9C%EC%9A%B8",
+      "http_status": 200,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1125_공식병기역명_종착경로복구_public_control_v3/response-1-v1.json",
+      "raw_sha256": "b3cdcf1ea9cd41b801d62350d8360f2dda4ae3436a3507f49817739045cde25a",
+      "response_code": "INFO-000",
+      "provider_total": 22,
+      "normalized_rows": 5,
+      "normalized_replay": true,
+      "misses": {},
+      "claim": "한 시각의 최대5행 공개 부분응답. 전체 서비스 제공/실제 도착 오차/탑승/독립 웹 경로 성능 아님."
+    },
+    {
+      "station": "양평",
+      "started_at": "2026-10-09T11:33:11.037748+09:00",
+      "finished_at": "2026-10-09T11:33:11.068619+09:00",
+      "url": "http://swopenapi.seoul.go.kr/api/subway/sample/json/realtimeStationArrival/0/5/%EC%96%91%ED%8F%89",
+      "http_status": 200,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1125_공식병기역명_종착경로복구_public_control_v3/response-2-v1.json",
+      "raw_sha256": "547e4bb6bcb74975a547318a13d7461efb3279e353da79a3b1a942cb84637737",
+      "response_code": "ERROR-336",
+      "provider_total": 0,
+      "normalized_rows": null,
+      "normalized_replay": true,
+      "misses": {
+        "body_error": 1
+      },
+      "claim": "한 시각의 최대5행 공개 부분응답. 전체 서비스 제공/실제 도착 오차/탑승/독립 웹 경로 성능 아님."
+    }
+  ],
+  "public_requests_attempted": 2,
+  "map_developer_api_calls": 0,
+  "actual_boarding_payment": 0,
+  "raw_dir": "datasets/mobility/raw/2026-10-09_1125_공식병기역명_종착경로복구_public_control_v3"
+}

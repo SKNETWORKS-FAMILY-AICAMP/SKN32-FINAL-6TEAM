@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "checked_date_kst": "2026-10-09",
+  "scope": "Bounded primary-source search for selection, retrieval and grounded-answer evaluation; not all literature through cutoff",
+  "research_complete": true,
+  "review_complete": true,
+  "implementation": "Draft canonical contract and 24 synthetic development examples, validator and saved-answer recount implemented",
+  "model_measurement_complete": false,
+  "product_applied": false,
+  "contract": "final_project_cs/wiki/quality/selection-grounded-answer-evaluation.md",
+  "plan": "program/research/daily_rag_slm/selection_answer_plan_2026-10-09_v2.md",
+  "dataset": "datasets/core/answer_selection/selection_answer_bench/2026-10-09_pilot_v3",
+  "proposed_development_rows": 480,
+  "proposed_holdout_rows": 720,
+  "pilot_rows_written": 24,
+  "pilot_schema_passed": 24,
+  "pilot_human_reviewed": 0,
+  "pilot_model_evaluated": 0,
+  "pilot_is_final_holdout": false,
+  "sources": [
+    {
+      "id": "RAGStress",
+      "published_date": "2026-10-03",
+      "version": "v1",
+      "url": "https://arxiv.org/html/2610.04691v1",
+      "official_code": "https://github.com/Salliberg/CorruptRAG-Code",
+      "checked": "method, conditions, limitations, release caveat",
+      "application": "Frozen stale/numeric/contradiction probes with explicit source priority",
+      "measured_project_effect": null
+    },
+    {
+      "id": "Agentic RAG Evaluation",
+      "published_date": "2026-10-04",
+      "version": "v1",
+      "url": "https://arxiv.org/html/2610.05034v1",
+      "fixed_code_commit_verified": false,
+      "checked": "method, token/fee boundaries, failures, repeated-observation dependence",
+      "application": "Independent episode breadth before finalist repeats",
+      "measured_project_effect": null
+    },
+    {
+      "id": "Synthetic and Authentic Query Distributions",
+      "published_date": "2026-09-13",
+      "version": "v1",
+      "url": "https://arxiv.org/html/2609.14579v1",
+      "checked": "322 authentic queries from89 respondents; actual evaluation subset165",
+      "application": "Separate newly human-written Korean realism panel",
+      "measured_project_effect": null
+    },
+    {
+      "id": "Incremental Pooled LLM Evaluation",
+      "published_date": "2026-09-02",
+      "version": "v1",
+      "url": "https://arxiv.org/html/2609.02745v1",
+      "fixed_code_commit_verified": false,
+      "checked": "pooled graded judgments, reuse, judge and tight-ranking limitations",
+      "application": "Versioned query/document-hash judgments in development",
+      "measured_project_effect": null
+    },
+    {
+      "id": "RAGChecker",
+      "published_date": "2024-08-15",
+      "revision_date": "2024-08-17",
+      "version": "v2",
+      "url": "https://arxiv.org/abs/2408.08067",
+      "official_code": "https://github.com/amazon-science/RAGChecker",
+      "checked": "abstract and official implementation",
+      "application": "Atomic supported facts and component diagnostics",
+      "measured_project_effect": null
+    },
+    {
+      "id": "MEMERAG",
+      "published_date": "2025-07",
+      "version": "ACL2025",
+      "url": "https://aclanthology.org/2025.acl-long.1101.pdf",
+      "checked": "human annotation, languages, time-sensitive exclusions, limitations",
+      "application": "Two blinded Korean reviewers and adjudication; keep temporal travel tasks",
+      "measured_project_effect": null
+    },
+    {
+      "id": "AbstentionBench",
+      "published_date": "2025-06-10",
+      "version": "v1",
+      "url": "https://arxiv.org/html/2506.09038v1",
+      "checked": "unanswerability types, English/judge limits",
+      "application": "Separate no-item, no-request and unavailable evidence states",
+      "measured_project_effect": null
+    },
+    {
+      "id": "TREC RAG",
+      "version": "2026 task overview",
+      "url": "https://trec-rag.github.io/",
+      "official_code": "https://github.com/castorini/RAGDoll",
+      "checked": "retrieval and end-to-end task separation; official repository overview",
+      "application": "Required answer facts and citations, not wholesale dataset import",
+      "measured_project_effect": null
+    }
+  ],
+  "resume": [
+    "Review 24 pilot gold annotations with two people; do not count AI checks as human review",
+    "Implement retrieval/answer execution and deterministic numeric/citation checks",
+    "Split new development480 and holdout720 by itinerary/template/source families before drafting",
+    "Near-duplicate review and human-written realism panel",
+    "Freeze rubric/source hashes before final model outputs; use existing queues only",
+    "Implement backup/unavailable evidence cases; current pilot does not implement full contract"
+  ],
+  "saluki": {
+    "state": "program/research/daily_rag_slm/saluki_finetune_2026-10-09.json",
+    "user_training_authorized": true,
+    "training_started": false
+  },
+  "jev_comparison": "program/scripts/plan_qa_bench/results/jev_training_recount_20261009_v1/counts.json",
+  "pilot_nominal_family_ids": 3,
+  "pilot_unique_itinerary_contents": 1,
+  "pilot_independence_verified": false,
+  "evidence_status_counts": {
+    "sufficient": 15,
+    "not_required": 9
+  },
+  "independent_agent_review": true,
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_1158_pilot-independent-review-corrections.md",
+  "limitations_corrected": [
+    "Initial v1 ID contained gold scope; no model calls occurred",
+    "Three nominal IDs were one itinerary; no independence claim",
+    "Gold evidence_status and full citation IDs now present"
+  ]
+}

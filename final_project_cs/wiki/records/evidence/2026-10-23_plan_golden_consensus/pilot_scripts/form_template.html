@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>계획서 글 블라인드 라벨 양식 (12건 예비)</title>
+<style>
+:root{--bg:#fff;--fg:#1d1d1b;--mut:#666;--line:#d8d6ce;--acc:#185FA5;--accbg:#E6F1FB;--ok:#3B6D11;--okbg:#EAF3DE;--warn:#854F0B;--warnbg:#FAEEDA;--bad:#A32D2D;--badbg:#FCEBEB;--card:#F7F6F2}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1c1a;--fg:#ecebe5;--mut:#a3a29a;--line:#3d3d39;--acc:#85B7EB;--accbg:#0C447C;--ok:#97C459;--okbg:#27500A;--warn:#EF9F27;--warnbg:#412402;--bad:#F09595;--badbg:#501313;--card:#262624}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,"Malgun Gothic",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px}
+header h1{font-size:17px;margin:0 0 6px;font-weight:600}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+button{cursor:pointer}button:hover{border-color:var(--acc)}
+button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tab{padding:3px 10px;border-radius:14px}
+.tab.cur{background:var(--accbg);border-color:var(--acc);font-weight:600}
+.tab.done{background:var(--okbg);border-color:var(--ok)}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;padding:16px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.panel{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card)}
+.text{white-space:pre-wrap;word-break:break-word;max-height:78vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0;align-items:center}
+.lab{color:var(--mut);font-size:13px}
+.day{border:1px dashed var(--line);border-radius:8px;padding:8px;margin:10px 0}
+.item{border-top:1px solid var(--line);padding:6px 0;margin:4px 0}
+.item .r{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;align-items:center}
+.item .r input,.item .r select{min-width:0;padding:4px 6px}
+.w-n{width:24px;flex:none;text-align:center}.w-t{width:92px;flex:none}.w-b{width:140px;flex:none}.w-k{width:112px;flex:none}
+.item .grow{flex:1 1 0}
+.hint{font-size:12.5px;color:var(--mut)}
+.msg{padding:8px 10px;border-radius:8px;margin:8px 0;font-size:13.5px}
+.msg.bad{background:var(--badbg);color:var(--bad)}.msg.ok{background:var(--okbg);color:var(--ok)}.msg.warn{background:var(--warnbg);color:var(--warn)}
+.timer{font-variant-numeric:tabular-nums;font-weight:600}
+textarea{width:100%;min-height:64px}
+.small{font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="ttl">계획서 글 블라인드 라벨 (12건 예비)</h1>
+  <div class="bar">
+    <label class="small">검수자 <input id="reviewer" size="10" placeholder="이름"></label>
+    <span class="small" id="modeLbl"></span>
+    <span class="small">완료 <b id="prog">0/12</b></span>
+    <button id="btnExport" class="pri">JSON 내보내기</button>
+    <button id="btnImport">JSON 불러오기</button>
+    <input type="file" id="fileIn" accept=".json" style="display:none">
+  </div>
+  <div class="msg warn small" style="margin:8px 0 0">AI 초안 · 다른 검수자의 라벨 · <b>_층화키_라벨후열기.json</b> 은 라벨을 끝내기 전에 보지 않습니다(블라인드). 시각 · 장소를 추측해서 채우지 않습니다(모르면 비움).</div>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main>
+  <section class="panel">
+    <div class="row"><b id="pTitle"></b></div>
+    <div class="row small lab"><span id="pMeta"></span></div>
+    <div class="text" id="pText"></div>
+  </section>
+  <section class="panel" id="formPanel"></section>
+</main>
+<script id="DATA" type="application/json">__DATA__</script>
+<script>
+const POSTS = JSON.parse(document.getElementById('DATA').textContent);
+const RELABEL_IDS = __RELABEL__;
+const MODE = location.hash === '#relabel' ? 'relabel' : 'blind';
+const KEY = 'plan_label_pilot12_' + MODE;
+const ids = MODE === 'relabel' ? RELABEL_IDS : POSTS.map(p => p.pilot_id);
+const byId = Object.fromEntries(POSTS.map(p => [p.pilot_id, p]));
+const BASIS = ['explicit','slot:breakfast','slot:morning','slot:lunch','slot:afternoon','slot:dinner','slot:evening','slot:night','none'];
+const KINDS = ['', '식사','활동','숙소','이동','기타'];
+let S = {labels:{}, reviewer:''};
+let cur = ids[0], paused = false;
+try { const raw = localStorage.getItem(KEY); if (raw) S = JSON.parse(raw); } catch(e) {}
+function lab(id){ if(!S.labels[id]) S.labels[id]={doc_type:'',trip_days:null,city_scope:'',days:[{day:1,date:null,items:[]}],notes:'',ambiguities:'',elapsed_sec:0,started_at:null,saved_at:null,done:false,ai_draft_seen:false}; return S.labels[id]; }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function fmt(s){ const m=Math.floor(s/60), r=s%60; return m+'분 '+String(r).padStart(2,'0')+'초'; }
+function renderTabs(){
+  const t=document.getElementById('tabs'); t.innerHTML='';
+  ids.forEach(id=>{ const b=document.createElement('button'); b.className='tab'+(id===cur?' cur':'')+(lab(id).done?' done':''); b.textContent=id+(lab(id).done?' ✓':''); b.onclick=()=>{cur=id;renderAll();}; t.appendChild(b);});
+  document.getElementById('prog').textContent=ids.filter(i=>lab(i).done).length+'/'+ids.length;
+}
+function renderPost(){
+  const p=byId[cur]; document.getElementById('pTitle').textContent=cur+' · '+(p.title||'(제목 없음)');
+  document.getElementById('pMeta').textContent='글자 수 '+p.text.length+'자 · 원문 그대로(8,000자까지 잘렸을 수 있음)';
+  document.getElementById('pText').textContent=p.text;
+}
+function el(tag,attrs,kids){const e=document.createElement(tag);for(const k in (attrs||{})){if(k==='class')e.className=attrs[k];else if(k==='text')e.textContent=attrs[k];else if(k.startsWith('on'))e[k]=attrs[k];else e.setAttribute(k,attrs[k]);}(kids||[]).forEach(c=>e.appendChild(c));return e;}
+function sel(opts,val,on){const s=el('select');opts.forEach(o=>{const v=Array.isArray(o)?o[0]:o,t=Array.isArray(o)?o[1]:o;const op=el('option',{value:v,text:t||'(선택)'});if(v===val)op.selected=true;s.appendChild(op);});s.onchange=()=>on(s.value);return s;}
+function renderForm(){
+  const L=lab(cur), P=document.getElementById('formPanel'); P.innerHTML='';
+  const done=L.done;
+  P.appendChild(el('div',{class:'row'},[
+    el('span',{class:'lab',text:'이 글 소요 시간'}), el('span',{class:'timer',id:'tm',text:fmt(L.elapsed_sec)}),
+    (()=>{const b=el('button',{text:paused?'▶ 다시 시작':'⏸ 일시정지'});b.onclick=()=>{paused=!paused;renderForm();};return b;})(),
+    el('span',{class:'hint',text:'탭이 보일 때만 시간이 올라갑니다. 글을 읽는 시간도 포함됩니다.'})]));
+  P.appendChild(el('div',{class:'row'},[
+    el('span',{class:'lab',text:'글 종류'}), sel([['','(선택)'],['plan','plan 가기 전 계획·검토 요청'],['review','review 다녀온 후기(순서 드러남)'],['mixed','mixed 계획+후기'],['not_itinerary','not_itinerary 일정 없음']],L.doc_type,v=>{L.doc_type=v;save();}),
+    el('span',{class:'lab',text:'여행 일수'}), (()=>{const i=el('input',{type:'number',min:'1',style:'width:70px',placeholder:'모름'});i.value=L.trip_days??'';i.oninput=()=>{L.trip_days=i.value===''?null:parseInt(i.value,10);save();};return i;})(),
+    el('span',{class:'lab',text:'범위'}), sel([['','(선택)'],['seoul','seoul 서울만'],['seoul+other','seoul+other 서울+다른 지역'],['other','other 서울 아님']],L.city_scope,v=>{L.city_scope=v;save();})]));
+  L.days.forEach((d,di)=>{
+    const box=el('div',{class:'day'});
+    box.appendChild(el('div',{class:'row'},[
+      el('b',{text:d.day+'일차'}), el('span',{class:'lab',text:'원문 날짜(있으면)'}),
+      (()=>{const i=el('input',{style:'width:110px',placeholder:'예: 10/3'});i.value=d.date||'';i.oninput=()=>{d.date=i.value||null;save();};return i;})(),
+      (()=>{const b=el('button',{text:'이 일차 삭제'});b.onclick=()=>{if(L.days.length>1&&confirm('이 일차를 삭제할까요?')){L.days.splice(di,1);L.days.forEach((x,k)=>x.day=k+1);save();renderForm();}};return b;})()]));
+    d.items.forEach((it,ii)=>{
+      const g=el('div',{class:'item'});
+      const mk=(key,ph,cls)=>{const i=el('input',{placeholder:ph,class:cls||''});i.value=it[key]||'';i.oninput=()=>{it[key]=i.value||null;if(key==='time_start'&&i.value&&(!it.time_basis||it.time_basis==='none')){it.time_basis='explicit';const bs=g.querySelector('select.bsel');if(bs)bs.value='explicit';}save();};return i;};
+      const bsel=sel(BASIS,it.time_basis||'none',v=>{it.time_basis=v;save();});bsel.classList.add('w-b','bsel');
+      const ksel=sel(KINDS.map(k=>[k,k||'종류(선택)']),it.kind||'',v=>{it.kind=v||null;save();});ksel.classList.add('w-k');
+      const num=el('span',{class:'lab w-n',text:String(ii+1)});
+      g.appendChild(el('div',{class:'r'},[num,mk('time_start','시작 HH:MM','w-t'),mk('time_end','끝 HH:MM','w-t'),bsel,ksel]));
+      g.appendChild(el('div',{class:'r'},[mk('place','장소(원문 표기 그대로)','grow'),mk('activity','하는 일','grow')]));
+      const ei=el('input',{placeholder:'근거: 원문에서 이 항목을 찾은 문구(짧게 인용)',class:'grow'});ei.value=it.evidence||'';ei.oninput=()=>{it.evidence=ei.value;save();};
+      g.appendChild(el('div',{class:'r'},[ei]));
+      const up=el('button',{text:'↑'});up.onclick=()=>{if(ii>0){[d.items[ii-1],d.items[ii]]=[d.items[ii],d.items[ii-1]];save();renderForm();}};
+      const dn=el('button',{text:'↓'});dn.onclick=()=>{if(ii<d.items.length-1){[d.items[ii+1],d.items[ii]]=[d.items[ii],d.items[ii+1]];save();renderForm();}};
+      const del=el('button',{text:'항목 삭제'});del.onclick=()=>{d.items.splice(ii,1);save();renderForm();};
+      g.appendChild(el('div',{class:'r'},[up,dn,del]));
+      box.appendChild(g);
+    });
+    const addI=el('button',{text:'+ 항목 추가'});addI.onclick=()=>{d.items.push({time_start:null,time_end:null,place:'',activity:null,time_basis:'none',kind:null,evidence:''});save();renderForm();};
+    box.appendChild(addI);P.appendChild(box);
+  });
+  const addD=el('button',{text:'+ 일차 추가'});addD.onclick=()=>{L.days.push({day:L.days.length+1,date:null,items:[]});save();renderForm();};
+  P.appendChild(addD);
+  P.appendChild(el('div',{class:'hint',style:'margin-top:8px',text:'시각은 24시간 HH:MM(오후 3시 → 15:00). 원문에 없으면 비움 + 기준 none. 「점심」만 있으면 slot:lunch. 후보(또는/갈까 말까)는 하는 일 칸에 「후보」. 공항·체크인·이동도 항목. 글 끝 질문은 적지 않음.'}));
+  P.appendChild(el('div',{class:'lab',style:'margin-top:10px',text:'메모(선택): 글 전체에 대한 한 줄'}));
+  const nt=el('textarea');nt.value=L.notes||'';nt.oninput=()=>{L.notes=nt.value;save();};P.appendChild(nt);
+  P.appendChild(el('div',{class:'lab',style:'margin-top:10px',text:'지침이 모호했던 곳(어디 · 무엇이 애매했나 · 어떻게 정했나). 없으면 비움'}));
+  const am=el('textarea');am.value=L.ambiguities||'';am.oninput=()=>{L.ambiguities=am.value;save();};P.appendChild(am);
+  const att=el('label',{class:'small',style:'display:block;margin-top:8px'});
+  const cb=el('input',{type:'checkbox'});cb.checked=!L.ai_draft_seen;cb.onchange=()=>{L.ai_draft_seen=!cb.checked;save();};
+  att.appendChild(cb);att.appendChild(document.createTextNode(' 이 글의 AI 초안 · 다른 검수자 라벨을 보지 않고 작성했습니다'));P.appendChild(att);
+  const out=el('div',{id:'msgs'});P.appendChild(out);
+  const btn=el('button',{class:'pri',text:done?'완료 취소(다시 수정)':'이 글 완료 표시',style:'margin-top:10px'});
+  btn.onclick=()=>{ if(done){L.done=false;save();renderAll();return;} const errs=validate(L); const m=document.getElementById('msgs'); m.innerHTML=''; if(errs.length){errs.forEach(e=>m.appendChild(el('div',{class:'msg bad',text:e})));return;} L.done=true;L.saved_at=new Date().toISOString();save();renderAll(); };
+  P.appendChild(btn);
+  if(done) P.appendChild(el('div',{class:'msg ok',text:'완료 표시됨. 시간은 멈췄습니다.'}));
+  if(MODE==='relabel') P.insertBefore(el('div',{class:'msg warn',text:'재라벨(24시간 뒤) 모드입니다. 처음 라벨을 열어 보지 말고 원문만 보고 새로 작성하세요.'}),P.firstChild);
+}
+function validate(L){
+  const e=[]; const re=/^([01]\d|2[0-3]):[0-5]\d$/;
+  if(!L.doc_type) e.push('글 종류를 고르세요.');
+  if(!L.city_scope) e.push('범위(서울/서울+다른 지역/서울 아님)를 고르세요.');
+  let n=0;
+  L.days.forEach(d=>d.items.forEach((it,i)=>{ n++; const w=d.day+'일차 '+(i+1)+'번: ';
+    if(!it.place||!it.place.trim()) e.push(w+'장소가 비어 있습니다.');
+    if(!it.evidence||!it.evidence.trim()) e.push(w+'근거(원문 문구)가 비어 있습니다.');
+    if(it.time_start&&!re.test(it.time_start)) e.push(w+'시작 시각은 HH:MM 형식(예 15:00)입니다.');
+    if(it.time_end&&!re.test(it.time_end)) e.push(w+'끝 시각은 HH:MM 형식입니다.');
+    if(it.time_basis==='explicit'&&!it.time_start) e.push(w+'기준이 explicit 인데 시작 시각이 없습니다.');
+    if(it.time_start&&it.time_basis!=='explicit') e.push(w+'시각이 있으면 기준은 explicit 입니다.');
+  }));
+  if(L.doc_type&&L.doc_type!=='not_itinerary'&&n===0) e.push('일정 글인데 항목이 하나도 없습니다. 일정이 없는 글이면 not_itinerary 를 고르세요.');
+  if(L.ai_draft_seen) e.push('AI 초안을 본 라벨은 블라인드로 저장할 수 없습니다(체크 해제 상태).');
+  return e;
+}
+function renderAll(){ renderTabs(); renderPost(); renderForm(); }
+setInterval(()=>{ const L=lab(cur); if(!L.done&&!paused&&document.visibilityState==='visible'){ if(!L.started_at)L.started_at=new Date().toISOString(); L.elapsed_sec++; const t=document.getElementById('tm'); if(t)t.textContent=fmt(L.elapsed_sec); if(L.elapsed_sec%5===0)save(); } },1000);
+document.getElementById('reviewer').value=S.reviewer||'';
+document.getElementById('reviewer').oninput=e=>{S.reviewer=e.target.value;save();};
+document.getElementById('modeLbl').textContent=MODE==='relabel'?'모드: 24시간 뒤 재라벨 3건':'모드: 블라인드 12건';
+document.getElementById('btnExport').onclick=()=>{
+  const labels=ids.map(id=>{const L=lab(id);const p=byId[id];return {pilot_id:id,plan_id:p.plan_id,doc_type:L.doc_type||null,trip_days:L.trip_days,city_scope:L.city_scope||null,days:L.days.map(d=>({day:d.day,date:d.date,items:d.items.map((it,i)=>({order:i+1,time_start:it.time_start||null,time_end:it.time_end||null,place:it.place,activity:it.activity||null,time_basis:it.time_basis||'none',kind:it.kind||null,evidence:it.evidence||''}))})),notes:L.notes||'',ambiguities:L.ambiguities||'',meta:{labeler:S.reviewer||'',labeler_type:'human',mode:MODE,ai_draft_seen:!!L.ai_draft_seen,elapsed_sec:L.elapsed_sec,started_at:L.started_at,saved_at:L.saved_at,done:!!L.done}};});
+  const blob=new Blob([JSON.stringify({schema_version:'pilot12_v1',exported_at:new Date().toISOString(),mode:MODE,labels},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='human_'+MODE+'_label_'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'')+'.json';a.click();
+};
+document.getElementById('btnImport').onclick=()=>document.getElementById('fileIn').click();
+document.getElementById('fileIn').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);d.labels.forEach(x=>{if(!ids.includes(x.pilot_id))return;const L=lab(x.pilot_id);L.doc_type=x.doc_type||'';L.trip_days=x.trip_days;L.city_scope=x.city_scope||'';L.days=x.days.map(dd=>({day:dd.day,date:dd.date,items:dd.items.map(it=>({time_start:it.time_start,time_end:it.time_end,place:it.place,activity:it.activity,time_basis:it.time_basis,kind:it.kind,evidence:it.evidence}))}));L.notes=x.notes||'';L.ambiguities=x.ambiguities||'';L.elapsed_sec=x.meta?.elapsed_sec||0;L.started_at=x.meta?.started_at||null;L.saved_at=x.meta?.saved_at||null;L.done=!!x.meta?.done;L.ai_draft_seen=!!x.meta?.ai_draft_seen;});S.reviewer=d.labels[0]?.meta?.labeler||S.reviewer;save();document.getElementById('reviewer').value=S.reviewer||'';renderAll();alert('불러왔습니다.');}catch(e){alert('불러오기 실패: '+e.message);}};r.readAsText(f);};
+window.addEventListener('hashchange',()=>location.reload());
+renderAll();
+</script>
+</body>
+</html>

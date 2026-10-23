@@ -1,0 +1,6 @@
+{
+  "expected_runtime_sha256": "a52478c59702d893d878abda1bea75c81d97dabf38ae62a3c2041af4fc05c68b",
+  "new_sha256": "2e7d48884edf5c57c965f1f77958e054f848f9ea184468ea237f560cf66e918e",
+  "backup": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\app\\domains\\travel_ops\\components\\intake\\_backup\\2026-10-12_044421_exact_search_name",
+  "change": "exact name before prefix name; retain within-tier fits/distance ranking"
+}

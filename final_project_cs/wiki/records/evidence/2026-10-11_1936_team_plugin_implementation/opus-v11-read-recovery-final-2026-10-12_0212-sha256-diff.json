@@ -1,0 +1,10 @@
+{
+  "legacy/deployment_candidates/2026-10-12_015017_plugin_v11/review-notes/read-recovery-contract.md": {
+    "start": "01d3ccac7c8a656f1b6be153c22a693ddc2d597fd97335cd033f9ecfa8c3e09c",
+    "end": "c05e3ae74c98dffdae15c0a5dedea936a30aaef3c6420a2e413305c4a2e4765c"
+  },
+  "legacy/deployment_candidates/2026-10-12_015017_plugin_v11/tests/e2e/test_fact_read_recovery_web.py": {
+    "start": "c82afffa63071d588b7e41c6694f61a1bd6ba1c5bcc5fcd43bddfb4ee995f34c",
+    "end": "e21e6adf8c4abc944b58c7252a17180dcd2d68dab4e8d03d9b2fa9e9e0c06343"
+  }
+}

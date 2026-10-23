@@ -1,0 +1,101 @@
+{
+  "model": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+  "our_training": true,
+  "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+  "saved": 835,
+  "expected": 835,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "metadata_matches": 835,
+  "counts": {
+    "all": {
+      "total": 835,
+      "B": 823,
+      "C": 794,
+      "first_item_diagnostic": 816,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9340656758300493,
+        0.9636009715226265
+      ]
+    },
+    "single": {
+      "total": 583,
+      "B": 574,
+      "C": 559,
+      "first_item_diagnostic": 570,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9394776495398233,
+        0.9721825475347429
+      ]
+    },
+    "compound": {
+      "total": 66,
+      "B": 66,
+      "C": 52,
+      "first_item_diagnostic": 63,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.6748692879502294,
+        0.8692201489207618
+      ]
+    },
+    "no_request": {
+      "total": 186,
+      "B": 183,
+      "C": 183,
+      "first_item_diagnostic": 183,
+      "false_pick": 3,
+      "failed_or_missing": 0,
+      "C_wilson95": [
+        0.9536598205090964,
+        0.9944997707528448
+      ]
+    }
+  },
+  "answer_sha256": "56e1d1682a66421d44ae876bc5b236e75d66ba641fd695b94626473969d52ba4",
+  "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+  "execution": {
+    "job": {
+      "id": "e4bbase_finch_s20261012_multi_items_bc_a1",
+      "label": "Gemma-4-E4B-it Q4_K_M with our-travel finch 5e-5 seed20261012 adapter",
+      "our_training": true,
+      "model": "/workspace/ollama/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "prompts": "/tmp/tripilot-multi-items-20261009/prompts.json",
+      "script": "/tmp/tripilot-multi-items-20261009/multi_items_eval_20261009.py",
+      "tag": "e4bbase_finch_s20261012_multi_items_bc_a1",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 835,
+      "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+      "model_sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/finch_s20261012_lora_f16.gguf",
+      "lora_sha256": "d96f5ce87bf3df7a0a7f7701389743642d47f02c79f5d7e389a6ae0e8fb062cd",
+      "publisher_training": "Google Instruct release; QAT only when QAT base is used; our travel finch adapter learned separately",
+      "purpose": "Missing evaluation of completed FINCH learning-rate comparator; fixed developer/regression sets, separate base quantizations; not independent holdout or adoption",
+      "suite": "multi_items_bc",
+      "runner_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+      "output_contract": "strict items array with 64 output tokens; separately scored B and C",
+      "role": "missing multi-item response contract; same existing travel fixture; not prior D/E or independent holdout",
+      "automatic_retry": false
+    },
+    "started": "2026-10-09T01:19:14.645311+00:00",
+    "prompt_sha256": "fba753dced58883f2ec87e859f9b86739f3a7056fcbf00b0dc9f1e4d2fc98369",
+    "script_sha256": "55f7a706bd23ccceca7b17c8ab751cf70b10d2fbd90e6be1197cf6a9e9808578",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "failed_records": [],
+  "repetitions": 1,
+  "independent_holdout": false,
+  "final_ranking": false,
+  "limits": [
+    "Changed output contract; compare only models with this exact contract",
+    "Existing development fixture; not new independent holdout",
+    "No output grammar enforcement; exact JSON and allowed IDs required",
+    "Failure and missing count as wrong; observed false picks separately reported"
+  ]
+}

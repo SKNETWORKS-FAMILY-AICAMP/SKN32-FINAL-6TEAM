@@ -1,7 +1,7 @@
 ---
 type: concept
 title: 승인 경계
-description: 무엇이 사람 승인 대상인가. 승인은 버그가 아니라 제품의 일부다
+description: 업체 거래의 고객 승인과 여행 일정 자동 적용 조건을 구분한다
 status: draft
 tags: [security, architecture]
 owners: [human:미배정]
@@ -17,13 +17,11 @@ domain_note: 승인 경계 규칙은 도메인 무관이다. 「승인 없이 �
 
 `app/core/`
 
-## 승인은 실패가 아니다
+## 고객 승인과 자동 적용을 구분합니다
 
-`[실측 2026-09-10]` 골든셋 기대 라벨 중 **`wait_for_approval` 이 15/72 = 20.8%** 다(`eval/datasets/golden.jsonl` 의 `expected_next_action`). ★**이건 정답 라벨의 분포이지 실제로 사람에게 넘어간 비율이 아니다** — 운영에서 잰 인계율은 `[미확보]`. 그리고 **그 72건은 쇼핑몰 시나리오**다 — 여행 골든셋은 0건이라 여행에서 몇 %가 승인으로 가는지는 아직 모른다. `[정정]` 이 줄은 분모 없이 「21%가 사람에게 간다」로 적혀 있었다.
+여행 일정 자동 변경과 업체 예약·결제·환급의 고객 승인은 다른 경계입니다. 고객이 필요한 정보를 직접 입력하는 경우에도 가능한 추천안을 먼저 제공합니다. 고객 문제를 대신 고치는 상주 상담원·운영 관리자에게 인계하는 제품 구조를 만들지 않습니다. 다만 고객이 문의·건의를 남기는 경로(문의함)는 두고, 운영자는 그 문의에 답변은 하되 고객 일정은 대신 고치지 않습니다([D-024](../../../wiki/decisions/D-024-inquiry-reply-path.md)). 개발자·QA의 결함 사후 분석은 고객 승인을 대체하지 않습니다.
 
-이걸 "자동화 실패율"로 읽으면 안 된다. **승인 경계가 일부러 보내는 것**이다.
-
-[중앙 허브 포지셔닝](../../../wiki/product/positioning.md)의 human-on-the-loop이 여기서 구현된다. 고위험 Action만 사람이 승인하고 나머지는 자동 처리한다.
+과거 쇼핑몰 골든셋의 `wait_for_approval` 분포는 현재 여행 승인율·인계율 근거로 쓰지 않습니다. 현재 실사용 승인율은 실제 여행 요청·환경·확인 시각을 붙여 따로 측정해야 합니다.
 
 ## 무엇이 승인 대상인가
 
@@ -70,7 +68,7 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 
 - 적용기는 `auto_apply=False` 로 선언한다 — 승인 없이 오면 위 절의 규칙이 `action_requires_approval` 로 막는다.
 - 승인 직전 재검증은 승인 API 가 이미 한다(아래 「승인 전 재검증」). 적용기는 적용 순간 대상을 **한 번 더** 잠가 확인한다.
-- 여행: `booking.cancel` 은 **시연용 Mock 공급자**(`supplier_bookings`)와 우리 예약을 함께 `cancelled` 로, `booking.change` 는 바꿀 내용이 인자에 없어 **지어내지 않고 인계**한다(예약 `change_requested` + 바깥함 `booking.handoff`). `app/modules/travel_ops/booking_actions.py`.
+- 여행: `booking.cancel` 은 **시연용 Mock 공급자**(`supplier_bookings`)와 우리 예약을 함께 `cancelled` 로, `booking.change` 는 바꿀 내용이 인자에 없어 **지어내지 않고 인계**한다(예약 `change_requested` + 바깥함 `booking.handoff`). `app/domains/travel_ops/components/actions/booking_actions.py`.
 - `[2026-09-22]` 그 인계 메시지에 **변경 링크**(`change_url`)가 실린다 — 고객이 바뀔 항목·대안·차액을 보고 **업체 쪽에서 직접** 진행한다(v11 §4-C · DoD-16·17). ★**링크를 만들고 여는 경로에는 승인이 없다** — 아무것도 쓰지 않기 때문이다. 승인이 필요한 것은 우리 예약을 `change_requested` 로 옮기는 기록 쪽이다. → [../teams/booking-handoff.md](../teams/booking-handoff.md#변경-링크-2026-09-22--이-절도-명세였다가-사실이-됐다)
 - `[2026-09-22]` ★**승인이 나도 실제 공급자 원장은 안 바꾼다.** `booking.cancel` 은 `supplier_bookings.tier == 'simulated'` 일 때만 원장을 건드리고, 그 밖(기본값 `real`)이면 `ActionRejected` → 전부 되돌리고 `action_rejected` 로 사람에게 간다. **승인은 "이 변경을 해도 된다" 이지 "실제 업체에 직접 질러도 된다" 가 아니다**(v11 §4-C · DoD-14·15). → [../teams/booking-handoff.md](../teams/booking-handoff.md#2026-09-22-게이트가-생겼다--이-절이-명세였다가-사실이-됐다)
 - `[2026-09-22]` ★**문이 하나 더 있다 — 위임 범위.** 등급 게이트를 지나도 **금액·대상 종류·횟수·되돌림 조건**을 벗어나면 원장을 건드리지 않고 `action_rejected` 로 사람에게 간다(v11 §12 DoD-18·19). 등급이 「누구의 원장인가」라면 위임은 「얼마까지 맡겼나」다. 판정은 **적용 순간에** 하므로 승인과 적용 사이에 위임이 철회되면 그 건은 열리지 않는다. → [../teams/booking-handoff.md](../teams/booking-handoff.md#위임-범위--1번에서만-쓴다)
@@ -81,7 +79,7 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 ### 위임을 누가 주고 거두나 `[2026-09-22]`
 
 `[실측]` **운영자다.** 자리는 REST `/v1/delegations/*` 와 운영 화면 `/ui/delegations` 다
-(구현 [`app/modules/travel_ops/delegation_api.py`](../../app/modules/travel_ops/delegation_api.py) ·
+(구현 [`app/domains/travel_ops/entry/delegation_api.py`](../../app/domains/travel_ops/entry/delegation_api.py) ·
 화면 `app/presentation/ui/routes.py`). **전에는 자리가 없었다** — 판정(`delegation.py`)과
 `delegations` 표(019)는 있는데 주고 거두는 경로가 없어 사람이 손으로 SQL 을 쳐야 했다.
 「위임은 언제든 철회할 수 있다」가 그동안 말뿐이었다는 뜻이다.
@@ -224,3 +222,10 @@ seed 스크립트가 화면 표시·버튼 활성화용으로 `arguments_json.ev
 - [evidence-check.md](evidence-check.md) — 승인 직전 재검증
 - [../runtime/case-lifecycle.md](../runtime/case-lifecycle.md) — `waiting_approval` 상태
 - [../../../wiki/product/personas.md](../../../wiki/product/personas.md) — 승인하는 사람
+
+개정 전 승인 설명·수치: [보존 기록](../records/commerce_2026-10-11/wiki--actions--approval.md).
+
+
+### 철회는 저장 즉시 효력이 있다 — 2026-10-18 보정
+
+`delegations.revoked_at`은 철회 사실의 기록 시각이며 예약 철회 시각이 아니다. 값이 저장된 위임은 적용 시점에 즉시 차단한다. 앱 시계가 DB 시계보다 느리더라도 이미 철회된 위임을 살아 있다고 판단하지 않는다. 화면의 `revoked` 상태와 실행 판정은 같은 기준을 사용한다. 기존 고객 승인·공급자 등급·다시 위임하기·감사 기록 경계는 유지한다.

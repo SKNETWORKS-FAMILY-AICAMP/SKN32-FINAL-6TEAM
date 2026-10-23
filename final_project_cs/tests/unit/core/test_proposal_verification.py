@@ -9,7 +9,7 @@
 
 ★엔진(`app/core/verification.py`)은 **한 줄도 안 바뀌었다.** 커머스 →  여행
   교체로 바뀐 것은 이 파일이 주입하는 **선언**뿐이다
-  (`app/modules/travel_ops/verification_policy.py`). 코어가 도메인을 모른다는
+  (`app/domains/travel_ops/components/core_hooks/verification_policy.py`). 코어가 도메인을 모른다는
   주장을 실제로 시험하는 자리다 — 커머스판은 같은 엔진에 `orders`·`shipments`
   를 주입했었다.
 """
@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from app.core.verification import Facts, verify_proposal
-from app.modules.travel_ops.verification_policy import TRAVEL_OPS_POLICY
+from app.domains.travel_ops.components.core_hooks.verification_policy import TRAVEL_OPS_POLICY
 
 BOOKING = "11111111-1111-4111-8111-111111111111"
 OTHER_BOOKING = "22222222-2222-4222-8222-222222222222"
@@ -135,15 +135,11 @@ def test_non_finite_refund_amount_is_rejected_without_crashing(amount):
     assert "refund_amount" in fields(problems)
 
 
-def test_commerce_vocabulary_is_not_silently_accepted():
-    """★옛 커머스 어휘(`order_id`)는 여기서 '선언되지 않은 필드' 로 거부된다.
-
-    엔진이 커머스 어휘를 알고 있었다면 이게 조용히 통과했을 것이다. 도메인을
-    갈아끼웠는데 옛 어휘가 그대로 도는지 보는 검사이기도 하다.
-    """
+def test_undeclared_travel_identifier_is_rejected():
+    """여행 식별자라도 현재 정책에 선언되지 않은 permit_id는 거부한다."""
     problems = verify(
-        arguments={"order_id": "ord-1"}, rationale_evidence_ids=["ev-1"], facts=facts())
-    assert "order_id" in fields(problems)
+        arguments={"permit_id": "permit-1"}, rationale_evidence_ids=["ev-1"], facts=facts())
+    assert "permit_id" in fields(problems)
     assert any("선언되지 않은" in p.reason for p in problems)
 
 

@@ -3,9 +3,10 @@ from uuid import uuid4
 
 import pytest
 
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.core.contracts import CaseStatus, StateConflict
 from app.core.transition import OutboxMessage, transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db.repository import create_case, list_cases
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
@@ -30,6 +31,7 @@ def db():
                     cur.execute("DELETE FROM llm_calls WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
                     cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+                    allow_case_events_purge(cur)
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
@@ -63,7 +65,7 @@ def test_transition_round_trip_and_versions(db):
         cur.execute("INSERT INTO customers (tenant_id,external_id) VALUES (%s,%s) RETURNING customer_id", (tenant, uuid4().hex)); customer = cur.fetchone()[0]
     case_id = create_case(db, tenant_id=tenant, customer_id=customer, subject="integration")
     with db.transaction(): transition_case(db, tenant_id=tenant, case_id=case_id, expected_version=0, event_type=EventType.CREATED, payload={"channel":"test","message":"hello"}, actor_type="test")
-    with db.transaction(): transition_case(db, tenant_id=tenant, case_id=case_id, expected_version=1, event_type=EventType.CLASSIFIED, payload={"intent":"billing","issue_code":"invoice","sentiment":"neutral"}, actor_type="test")
+    with db.transaction(): transition_case(db, tenant_id=tenant, case_id=case_id, expected_version=1, event_type=EventType.CLASSIFIED, payload={"intent":"incident_report","issue_code":"activity_cancel_or_change","sentiment":"neutral"}, actor_type="test")
     with db.cursor() as cur:
         cur.execute("SELECT version,status FROM customer_cases WHERE tenant_id=%s AND case_id=%s", (tenant,case_id)); assert cur.fetchone() == (2, CaseStatus.ROUTING)
         cur.execute("SELECT max(aggregate_version) FROM case_events WHERE tenant_id=%s AND case_id=%s", (tenant,case_id)); assert cur.fetchone()[0] == 2

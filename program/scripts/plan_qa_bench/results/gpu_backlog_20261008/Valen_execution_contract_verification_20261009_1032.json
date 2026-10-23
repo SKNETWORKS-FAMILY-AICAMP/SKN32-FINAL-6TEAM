@@ -1,0 +1,54 @@
+{
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_1032_valen-native-start-and-multi-item-completion.md",
+  "report_sha256": "61f4593f232751a8065edea959dd80184b0803f7ba06c4cb0b24f0063effd78e",
+  "local_links_verified": 14,
+  "local_links_expected": 14,
+  "links": [
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_multi_items_bc_a1/multi_items_counts.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_original_multi_items_bc_a1/multi_items_counts.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_cosine_s20261012_multi_items_bc_a1/multi_items_counts.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_cosine_s20261012_multi_items_bc_a1/multi_items_counts.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bbase_finch_s20261012_multi_items_bc_a1/multi_items_counts.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/e4bqat_finch_s20261012_multi_items_bc_a1/multi_items_counts.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_actual_smoke_runtime_20261009_1031/verification.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/valen_08b_original_smoke12_a2/native_counts.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_actual_smoke_runtime_20261009_1031/all_input_context_preflight.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_snapshot_valen_actual_20261009_1031.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_conditions_valen_actual_20261009_1031.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/Valen_registration_attempt2_20261009.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_multi_items_completed_20261009_1024/verification.json",
+    "program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_multi_items_finch_completed_20261009_1029/verification.json"
+  ],
+  "native_output_contract_passed": [
+    12,
+    12
+  ],
+  "all_context_actual_rows": [
+    9425,
+    9425
+  ],
+  "max_tokens": 3934,
+  "max_choices": 47,
+  "CPU_validator_checks": [
+    5,
+    5
+  ],
+  "CPU_aggregate_contract_checks": [
+    3,
+    3
+  ],
+  "GPU_prefix_correction_CPU_check": [
+    1,
+    1
+  ],
+  "first_failed_attempt_preserved": true,
+  "multi_item_archived_answers": [
+    5010,
+    5010
+  ],
+  "multi_item_archived_file_SHAs": [
+    30,
+    30
+  ],
+  "main_completion": false
+}

@@ -1,0 +1,17 @@
+...................                                                      [100%]
+============================== warnings summary ===============================
+tests/contract/test_retired_domain_assets.py::test_current_runtime_and_business_fixtures_do_not_use_retired_assets
+  C:\Users\playdata2\Documents\final_workspace\final_project_cs\app\domains\travel_ops\instances\mobility\devtools\judgment_log.py:352: SyntaxWarning: invalid escape sequence '\d'
+    """기본 로그 자리 `<PROCESSED>/mobility/logs`. ☆`[73 후속 · 3-5]` 자료 폴더가 정해지지 않았거나(unset · 자리표시 /data)
+
+tests/e2e/test_mcp_read_tools.py::test_both_tools_are_read_only_and_exist_even_with_the_write_switch_off
+tests/e2e/test_mcp_read_tools.py::test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error
+tests/e2e/test_mcp_read_tools.py::test_the_risk_tool_over_mcp_matches_the_web_and_a_stranger_gets_a_tool_error
+tests/e2e/test_mcp_read_tools.py::test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key
+tests/e2e/test_mcp_read_tools.py::test_the_move_tool_over_mcp_reports_the_grade_and_never_leaks_the_key
+  C:\Users\playdata2\anaconda3\Lib\contextlib.py:105: DeprecationWarning: Use `streamable_http_client` instead.
+    self.gen = func(*args, **kwds)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\commerce-final-target-v8.xml -
+19 passed, 6 warnings in 32.83s

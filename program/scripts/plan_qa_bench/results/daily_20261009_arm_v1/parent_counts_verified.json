@@ -1,0 +1,7 @@
+{
+  "metadata_match": 360,
+  "expected": 360,
+  "actual_correct": 315,
+  "failures": 0,
+  "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea"
+}

@@ -1,0 +1,86 @@
+{
+ "bundle": "situation_cards_watch_h2",
+ "subset": null,
+ "reviewer": "작성자1",
+ "reviewed_on": "2026-10-20",
+ "sheet": "라벨_감시_작성자1_h2.csv",
+ "saw_ai_labels": false,
+ "n": 9,
+ "fields": {
+  "acceptable": {
+   "column": "1순위로 나와도 정답(번호, ; 로 구분)",
+   "kind": "set"
+  },
+  "forbidden": {
+   "column": "1순위로 나오면 위험(번호, 없으면 비움)",
+   "kind": "set"
+  }
+ },
+ "labels": {
+  "H-33-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-35-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-37-W": {
+   "acceptable": [
+    "2",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-39-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-42-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-44-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-46-W": {
+   "acceptable": [
+    "1",
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-48-W": {
+   "acceptable": [
+    "3"
+   ],
+   "forbidden": [],
+   "note": ""
+  },
+  "H-52-W": {
+   "acceptable": [
+    "2"
+   ],
+   "forbidden": [],
+   "note": ""
+  }
+ }
+}

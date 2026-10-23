@@ -1,0 +1,826 @@
+{
+ "eval": "place_lookup",
+ "dataset": "place_lookup_v1.jsonl",
+ "dataset_sha": "d21d19af0f2094b8",
+ "label": "v2-chain",
+ "env": {
+  "run_at": "2026-10-07T06:48:09+00:00",
+  "today": "2026-10-07",
+  "layout": "develop",
+  "kakao": "live",
+  "llm": "off",
+  "git_commit": "a0834f7",
+  "git_branch": "role-dining",
+  "git_dirty": true,
+  "db": "dining_rebuild",
+  "ledger_open_places": 1767,
+  "places": 6,
+  "aliases": 5
+ },
+ "summary": {
+  "accuracy": {
+   "num": 30,
+   "den": 34,
+   "rate": 0.882
+  },
+  "wrong_confirmed": {
+   "num": 1,
+   "den": 34,
+   "rate": 0.029
+  },
+  "wrong_review": {
+   "num": 3,
+   "den": 34,
+   "rate": 0.088
+  },
+  "not_found": {
+   "num": 0,
+   "den": 34,
+   "rate": 0.0
+  },
+  "blocked": {
+   "num": 0,
+   "den": 34,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct_confirmed": 8,
+   "correct_review": 20,
+   "correct_abstain": 2,
+   "wrong_review": 3,
+   "wrong_confirmed": 1,
+   "not_found": 0,
+   "blocked": 0
+  },
+  "by_group": {
+   "misc": {
+    "num": 9,
+    "den": 12,
+    "rate": 0.75
+   },
+   "name": {
+    "num": 9,
+    "den": 10,
+    "rate": 0.9
+   },
+   "near": {
+    "num": 12,
+    "den": 12,
+    "rate": 1.0
+   }
+  }
+ },
+ "results": [
+  {
+   "id": "PL-001",
+   "group": "name",
+   "input": "12:30 토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-002",
+   "group": "name",
+   "input": "12:30 토속촌 삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-003",
+   "group": "name",
+   "input": "12:30 토속촌",
+   "place": "토속촌삼계탕",
+   "source": "kakao",
+   "method": "kakao_nearest",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "이름이 특정하지 않아 종류가 맞는 3곳 중 앞뒤 일정 좌표가 없어 카카오 첫 후보 「토속촌삼계탕」을 골랐다 — 이 여행에만 싣는다. 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5777,
+    126.9715
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-004",
+   "group": "name",
+   "input": "12:30 토손촌삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "오타로 보고 「토속촌삼계탕」로 찾았어요(자모 거리 비율 0.06)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-005",
+   "group": "name",
+   "input": "12:30 점심 토속촌에서 삼계탕",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "오타로 보고 「토속촌삼계탕」로 찾았어요(자모 거리 비율 0.20)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-006",
+   "group": "name",
+   "input": "12:30 스타벅스",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "「스타벅스」는 지점이 여럿인데 기준이 될 앞뒤 일정이 없다 — 어느 지점인지 물어 주세요 (다른 지점: 스타벅스 더북한산점, 스타벅스 경동1960점, 스타벅스 장충라운지R점)",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PL-007",
+   "group": "name",
+   "input": "12:30 스타벅스 광화문점",
+   "place": "스타벅스 광화문점",
+   "source": "kakao",
+   "method": "kakao",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": "카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5712,
+    126.9763
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-008",
+   "group": "name",
+   "input": "12:30 을지로 노가리골목 만선호프",
+   "place": "을지로 노가리골목",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "원문 「을지로 노가리골목 만선호프」에서 「을지로 노가리골목」로 좁혔다",
+   "blocked": [],
+   "checks": {
+    "accept": false,
+    "kind": true
+   },
+   "at": [
+    37.5663,
+    126.9927
+   ],
+   "label": "wrong_review",
+   "why_wrong": "accept"
+  },
+  {
+   "id": "PL-009",
+   "group": "name",
+   "input": "12:30 광장시장 빈대떡",
+   "place": "순희네빈대떡",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 0.11,
+   "note": "「광장시장」 안의 가게로 보고 찾았다 · 「빈대떡」 가게 중 가까운 「순희네빈대떡」(106m) — 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5707,
+    127.0007
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-010",
+   "group": "name",
+   "input": "12:30 Tosokchon Samgyetang",
+   "place": "토속촌삼계탕",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "카카오로 「토속촌삼계탕」를 찾아 요식 원장에서 확인했다",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5776,
+    126.9716
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-011",
+   "group": "near",
+   "input": "12:30 스타벅스",
+   "place": "스타벅스 적선점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.47,
+   "note": "「스타벅스」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「스타벅스 적선점」(평균 242m) — 다르면 고쳐 주세요 (다른 지점: 스타벅스 이마빌딩점, 스타벅스 정부서울청사R점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5753,
+    126.9741
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-012",
+   "group": "near",
+   "input": "12:30 스타벅스",
+   "place": "스타벅스 갤러리아팰리스점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.35,
+   "note": "「스타벅스」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「스타벅스 갤러리아팰리스점」(평균 333m) — 다르면 고쳐 주세요 (다른 지점: 스타벅스 잠실역점, 스타벅스 잠실대교남단R점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5116,
+    127.0941
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-013",
+   "group": "near",
+   "input": "12:30 교촌치킨",
+   "place": "교촌치킨 홍대점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.55,
+   "note": "「교촌치킨」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「교촌치킨 홍대점」(평균 470m) — 다르면 고쳐 주세요 (다른 지점: 교촌치킨 연남점, 교촌치킨 연희점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5536,
+    126.9201
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-014",
+   "group": "near",
+   "input": "12:30 맥도날드",
+   "place": "맥도날드 이태원점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 1.39,
+   "note": "「맥도날드」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「맥도날드 이태원점」(평균 1,711m) — 다르면 고쳐 주세요 (다른 지점: 맥도날드 중앙대점, 맥도날드 노량진점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.534,
+    126.9897
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-015",
+   "group": "near",
+   "input": "12:30 김밥천국",
+   "place": "김밥천국 서울숲점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 1.35,
+   "note": "「김밥천국」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「김밥천국 서울숲점」(평균 1,100m) — 다르면 고쳐 주세요 (다른 지점: 김밥천국 압구정역점, 김밥천국 건대역점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5495,
+    127.0513
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-016",
+   "group": "near",
+   "input": "12:30 이삭토스트",
+   "place": "이삭토스트 선릉역점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 1.26,
+   "note": "「이삭토스트」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「이삭토스트 선릉역점」(평균 1,260m) — 다르면 고쳐 주세요 (다른 지점: 이삭토스트 강남구청점, 이삭토스트 대치점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.503,
+    127.0501
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-017",
+   "group": "near",
+   "input": "12:30 명동교자",
+   "place": "명동교자 분점",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 0.17,
+   "note": "지점이 2곳 — 「명동교자 분점」을 골랐어요. 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5626,
+    126.9856
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-018",
+   "group": "near",
+   "input": "12:30 우래옥",
+   "place": "우래옥",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5682,
+    126.9987
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-019",
+   "group": "near",
+   "input": "12:30 을밀대",
+   "place": "을밀대 본점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "「을밀대」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「을밀대 본점」(평균 4,059m) — 다르면 고쳐 주세요 (다른 지점: 을밀대 무교점, 을밀대 강남점)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5475,
+    126.9455
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-020",
+   "group": "near",
+   "input": "12:30 진미평양냉면",
+   "place": "진미평양냉면",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5162,
+    127.0361
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-021",
+   "group": "near",
+   "input": "12:30 삼청동수제비",
+   "place": "삼청동수제비",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5846,
+    126.9819
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-022",
+   "group": "near",
+   "input": "12:30 목멱산방",
+   "place": "목멱산방 남산타워점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": null,
+   "note": "「목멱산방」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「목멱산방 남산타워점」(평균 519m) — 다르면 고쳐 주세요 (다른 지점: 목멱산방)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5554,
+    126.9853
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-023",
+   "group": "misc",
+   "input": "12:30 근처 국밥집",
+   "place": "광화문국밥",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 1.1,
+   "note": "「국밥」 가게 중 가까운 「광화문국밥」(792m) — 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.569,
+    126.9754
+   ],
+   "label": "wrong_review",
+   "why_wrong": "near"
+  },
+  {
+   "id": "PL-024",
+   "group": "misc",
+   "input": "12:30 점심 한식",
+   "place": "한식문화공간 이음",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "activity",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "no_pick": false
+   },
+   "at": [
+    37.5784,
+    126.9859
+   ],
+   "label": "wrong_confirmed",
+   "why_wrong": "no_pick"
+  },
+  {
+   "id": "PL-025",
+   "group": "misc",
+   "input": "12:30 스타벅스",
+   "place": "스타벅스 적선점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.8,
+   "note": "「스타벅스」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「스타벅스 적선점」(평균 242m) — 다르면 고쳐 주세요 (다른 지점: 스타벅스 이마빌딩점, 스타벅스 정부서울청사R점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5753,
+    126.9741
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-026",
+   "group": "misc",
+   "input": "12:30 교촌치킨",
+   "place": "교촌치킨 홍대점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.55,
+   "note": "「교촌치킨」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「교촌치킨 홍대점」(평균 384m) — 다르면 고쳐 주세요 (다른 지점: 교촌치킨 연남점, 교촌치킨 연희점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5536,
+    126.9201
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-027",
+   "group": "misc",
+   "input": "12:30 명동교쟈",
+   "place": "명동교자 본점",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 0.26,
+   "note": "오타로 보고 「명동교자 본점」로 찾았어요(자모 거리 비율 0.10)",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5612,
+    126.9861
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-028",
+   "group": "misc",
+   "input": "12:30 Starbucks",
+   "place": "스타벅스 코엑스아셈타워점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.18,
+   "note": "「스타벅스」 지점 중 앞뒤 일정 1곳에서 가장 가까운 「스타벅스 코엑스아셈타워점」(평균 162m) — 다르면 고쳐 주세요 (다른 지점: 스타벅스 코엑스몰점, 스타벅스 스타필드코엑스몰R점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.5131,
+    127.0598
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-029",
+   "group": "misc",
+   "input": "12:30 Gwangjang Market",
+   "place": "광장시장",
+   "source": "tour_api",
+   "method": "tour_api",
+   "kind": "activity",
+   "review": true,
+   "km": null,
+   "note": "카카오로 「광장시장」를 찾아 관광공사에서 확인했다",
+   "blocked": [],
+   "checks": {
+    "accept": true
+   },
+   "at": [
+    37.5702,
+    126.9997
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-030",
+   "group": "misc",
+   "input": "12:30 해운대암소갈비집",
+   "place": null,
+   "source": null,
+   "method": null,
+   "kind": null,
+   "review": true,
+   "km": null,
+   "note": "장소를 정하지 못했다 — 고객이 고친다",
+   "blocked": [],
+   "checks": {},
+   "label": "correct_abstain"
+  },
+  {
+   "id": "PL-031",
+   "group": "misc",
+   "input": "12:30 스타벅스 강남역점",
+   "place": "스타벅스 강남역신분당역사점",
+   "source": "kakao",
+   "method": "kakao_branch",
+   "kind": "dining",
+   "review": true,
+   "km": 0.12,
+   "note": "「스타벅스」 지점 중 입력의 지점명 위치에서 가장 가까운 「스타벅스 강남역신분당역사점」(평균 120m) — 다르면 고쳐 주세요 (다른 지점: 스타벅스 강남역우송빌딩점, 스타벅스 강남역5번출구호정빌딩점)",
+   "blocked": [],
+   "checks": {
+    "brand": true,
+    "near": true,
+    "kind": true
+   },
+   "at": [
+    37.497,
+    127.0281
+   ],
+   "label": "correct_review"
+  },
+  {
+   "id": "PL-032",
+   "group": "misc",
+   "input": "18:00 정식당 (예약 있음)",
+   "place": "정식당",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5256,
+    127.0413
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-033",
+   "group": "misc",
+   "input": "18:00 밍글스",
+   "place": "밍글스",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": false,
+   "km": null,
+   "note": null,
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "kind": true
+   },
+   "at": [
+    37.5254,
+    127.0442
+   ],
+   "label": "correct_confirmed"
+  },
+  {
+   "id": "PL-034",
+   "group": "misc",
+   "input": "12:30 성수동 소문난 감자탕",
+   "place": "소문난성수감자탕 별관",
+   "source": "dining_ledger",
+   "method": "dining_ledger",
+   "kind": "dining",
+   "review": true,
+   "km": 1.53,
+   "note": "「성수동」 안의 가게로 보고 찾았다 · 「감자탕」 가게 중 가까운 「소문난성수감자탕 별관」(175m) — 다르면 고쳐 주세요",
+   "blocked": [],
+   "checks": {
+    "accept": true,
+    "near": false,
+    "kind": true
+   },
+   "at": [
+    37.5431,
+    127.0546
+   ],
+   "label": "wrong_review",
+   "why_wrong": "near"
+  }
+ ]
+}

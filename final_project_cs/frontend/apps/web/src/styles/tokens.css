@@ -1,8 +1,16 @@
-/* Palette of the 2026-09-23 journey mockup. The mockup defines a light scheme only. */
-:root {
+/*
+ * Two themes on the same roles: green — the 2026-09-23 journey mockup (2026-10-03, user-confirmed values) — and dark
+ * (`data-theme="dark"` on <html>, 2026-10-17 — it took the white theme's place). The device's light/dark setting picks one unless the
+ * menu's theme card chooses (`lib/settings.ts` · `lib/theme.ts`). Fonts, sizes and weights are the same in both. A screen's CSS uses roles, never a colour.
+ * An element with its own `data-theme` (the menu's theme samples) shows that theme inside it.
+ */
+:root, [data-theme="green"] {
+  /* `[2026-10-06 사용자 지적 — 애니메이션을 전체적으로 부드럽게]` 움직임의 곡선과 시간은 이 셋만 쓴다: 부드럽게 감속(들어옴 · 미끄러짐) · 부드럽게 가속(나감) · 시간. */
+  --ease-soft: cubic-bezier(.22, .8, .3, 1); --ease-leave: cubic-bezier(.4, 0, .8, .4); --motion-soft: 340ms;
   color-scheme: light;
   --color-text: #24392f;
-  --color-muted: #6d7c73;
+  /* `[2026-10-07 사용자 결정 — 흐린 글자 한 단계 진하게]` 흐린 글자(--color-faint)는 흰 바탕 · 연한 바탕에서 읽기 기준 4.5:1 이상, 보조 글자(--color-muted)는 그보다 한 단계 진하게(5.5:1 이상). 이전: muted #6d7c73(4.4:1) · faint #a5b1a9(2.2:1) / 화이트 muted #86868c(3.6:1) · faint #b9b9bd(2.0:1) */
+  --color-muted: #56645b;
   --color-border: #dce3dd;
   --color-surface: #ffffff;
   --color-background: #f3f5f3;
@@ -18,5 +26,157 @@
   --color-error: #965640;
   --color-error-soft: #fdf3ed;
   --color-error-border: #ecd2c7;
+  /* Roles added 2026-10-03 for the plan-check screen (user-approved list); the dark theme below redefines them too. */
+  --color-text-secondary: #4a5d52;
+  --color-faint: #66746b;
+  --color-divider: #e8ede9;
+  --color-subtle-strong: #e4e9e5;
+  --color-border-strong: #c3cdc6;
+  --color-success: #3d7a56;
+  --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a;
+  --color-adjusted-soft: #e6eff6;
+  --color-adjusted-border: #bcd0df;
+  --color-selected: #2e6047;
+  --color-selected-soft: #dcebe1;
+  --color-warning-surface: #fdfaf3;
+  --color-inverse: #24392f;
+  --color-on-inverse: #ffffff;
+  --color-scrim: rgba(36, 57, 47, 0.45);
+  /* `[2026-10-12 사용자 결정 — 일정 줄]` 지금 표시(주황 — 일정 점의 초록과 겹치지 않게) · 줄(머무는 실선 · 끝 ⊖ · 가는 선) · 지난 일정(회색 칸). 목업 2026-10-12_타임라인_지금시각_목업.html 의 값. */
+  --color-now: #c8552a;
+  --color-now-soft: #fbe9e1;
+  --color-rail-stay: #9cc0a8;
+  --color-rail-cap: #5f9673;
+  --color-rail-free: #d3dbd5;
+  --color-past-ink: #56645b;
+  --color-past-sub: #66746b;
+  --color-past-bg: #eceeeb;
+  --color-past-line: #c3cdc6;
+  --color-past-dot: #b2bdb5;
+  --color-past-pill: #dfe3df;
   --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  /* 승인된 브랜드·시험 분류·지도 스택 색은 두 테마에서 동일하게 유지합니다. */
+  --color-shadow-soft: #0002;
+  --color-shadow-strong: #0005;
+  --color-dialog-backdrop: rgb(0 0 0 / 28%);
+  --color-social-surface: #ffffff;
+  --color-kakao-text: #191919;
+  --color-kakao-border: #d8dfdb;
+  --color-kakao: #fee500;
+  --color-naver: #03a94d;
+  --color-discord: #5865f2;
+  --color-test-default-ink: #47565d;
+  --color-test-default-soft: #edf1f3;
+  --color-test-default-border: #cbd4d9;
+  --color-test-normal-ink: #235d42;
+  --color-test-normal-soft: #e8f3ec;
+  --color-test-normal-border: #c4ddce;
+  --color-test-time-ink: #795111;
+  --color-test-time-soft: #fff3d7;
+  --color-test-time-border: #ead7a9;
+  --color-test-hours-ink: #943f33;
+  --color-test-hours-soft: #fcece7;
+  --color-test-hours-border: #e9c8be;
+  --color-test-place-ink: #69498c;
+  --color-test-place-soft: #f1ebf8;
+  --color-test-place-border: #d8c9e8;
+  --color-test-mobility-ink: #285f89;
+  --color-test-mobility-soft: #e8f1fa;
+  --color-test-mobility-border: #bed4e7;
+  --color-test-input-ink: #226765;
+  --color-test-input-soft: #e6f3f1;
+  --color-test-input-border: #bcdcd7;
+  /* `[2026-10-15 ST4F-496]` 엔딩 크레딧의 머리글 · 쿠키 글자(어두운 `--color-inverse` 위의 금빛 — 목업 2026-10-08 C안) */
+  --color-credits-accent: #c9b98f;
+  /* `[2026-10-20 사용자 결정]` 엔딩 크레딧 막의 바탕 · 글자 — 흔한 엔딩 크레딧처럼 검정 바탕(목업 2026-10-08 C안 값). 테마와 상관없이 같다. */
+  --color-credits-bg: #0e1612;
+  --color-credits-ink: #efe9da;
+}
+
+/*
+ * `[2026-10-17 사용자 결정 · ST4F-610]` 다크 — 화이트 테마 자리를 바꿨다. 지금 초록을 어둡게 맞춘 「다크 A」(바탕 #0f1a15 · 카드 #18251f · 본문 #e4ece7 ·
+ * 주색 #7cbd96 · 단추 글자 #0d1712). 글자 · 바탕 12쌍 대비 최소 5.98(WCAG 4.5 이상). 기기 설정(prefers-color-scheme)을 따르거나 메뉴의 테마 카드에서 고른다(`lib/theme.ts`).
+ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-text: #e4ece7;
+  --color-muted: #a7b7ad;
+  --color-border: #2e3f36;
+  --color-surface: #18251f;
+  --color-background: #0f1a15;
+  --color-paper: #121e18;
+  --color-primary: #7cbd96;
+  --color-primary-hover: #8fcaa6;
+  --color-on-primary: #0d1712;
+  --color-soft: #1f3a2c;
+  --color-subtle: #1c2a23;
+  --color-warning: #e3bd78;
+  --color-warning-soft: #2e2615;
+  --color-warning-border: #5a4a26;
+  --color-error: #f2a28c;
+  --color-error-soft: #351e18;
+  --color-error-border: #6a3a2e;
+  --color-text-secondary: #c3d1c8;
+  --color-faint: #93a49a;
+  --color-divider: #25342c;
+  --color-subtle-strong: #23332b;
+  --color-border-strong: #43574c;
+  --color-success: #7cc39a;
+  --color-success-soft: #1d3527;
+  --color-adjusted: #93bbde;
+  --color-adjusted-soft: #182a38;
+  --color-adjusted-border: #2f4a61;
+  --color-selected: #7cbd96;
+  --color-selected-soft: #244534;
+  --color-warning-surface: #262012;
+  --color-inverse: #e4ece7;
+  --color-on-inverse: #13201a;
+  --color-scrim: rgba(0, 0, 0, 0.6);
+  --color-now: #f08a5d;
+  --color-now-soft: #3a2218;
+  --color-rail-stay: #3f6f55;
+  --color-rail-cap: #7cbd96;
+  --color-rail-free: #2c3b33;
+  --color-past-ink: #a7b7ad;
+  --color-past-sub: #93a49a;
+  --color-past-bg: #1b2621;
+  --color-past-line: #43574c;
+  --color-past-dot: #4f6357;
+  --color-past-pill: #25322b;
+  --color-shadow-soft: #0006;
+  --color-shadow-strong: #000a;
+  --color-dialog-backdrop: rgb(0 0 0 / 55%);
+  /* 승인된 브랜드 색(구글 · 카카오 · 네이버 · 디스코드)과 지도 스택 색은 두 테마에서 같은 값입니다. */
+  --color-social-surface: #ffffff;
+  --color-kakao-text: #191919;
+  --color-kakao-border: #d8dfdb;
+  --color-kakao: #fee500;
+  --color-naver: #03a94d;
+  --color-discord: #5865f2;
+  --color-test-default-ink: #b8c4ca;
+  --color-test-default-soft: #1e262a;
+  --color-test-default-border: #3a474e;
+  --color-test-normal-ink: #8fd0ab;
+  --color-test-normal-soft: #183326;
+  --color-test-normal-border: #2f5a43;
+  --color-test-time-ink: #e3bf73;
+  --color-test-time-soft: #33280f;
+  --color-test-time-border: #5c4a20;
+  --color-test-hours-ink: #f0a593;
+  --color-test-hours-soft: #3a1f19;
+  --color-test-hours-border: #6b3b30;
+  --color-test-place-ink: #c7a9ea;
+  --color-test-place-soft: #2a2138;
+  --color-test-place-border: #4d3d66;
+  --color-test-mobility-ink: #93bfe6;
+  --color-test-mobility-soft: #172a3b;
+  --color-test-mobility-border: #2e4c66;
+  --color-test-input-ink: #85d0c9;
+  --color-test-input-soft: #15302d;
+  --color-test-input-border: #2b5652;
+  --color-credits-accent: #7a6326;
+  /* `[2026-10-20 사용자 결정]` 엔딩 크레딧 막의 바탕 · 글자 — 흔한 엔딩 크레딧처럼 검정 바탕(목업 2026-10-08 C안 값). 테마와 상관없이 같다. */
+  --color-credits-bg: #0e1612;
+  --color-credits-ink: #efe9da;
 }

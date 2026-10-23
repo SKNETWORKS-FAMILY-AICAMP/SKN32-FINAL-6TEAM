@@ -1,0 +1,24 @@
+{
+  "sandbox": {
+    "command": "Python standard socket.socketpair only; faulthandler timeout 8 seconds",
+    "exit_code": 1,
+    "elapsed_s": 8.58,
+    "stack": [
+      "socket.py:295 accept",
+      "socket.py:627 _fallback_socketpair"
+    ],
+    "outcome": "internal IPC did not complete"
+  },
+  "outside_sandbox": {
+    "command": "same standard socketpair reproduction",
+    "exit_code": 0,
+    "elapsed_s": 0.34,
+    "outcome": "connected"
+  },
+  "interrupted_runs": [
+    "wiring-offline-v1",
+    "offline-guard-policy-v1"
+  ],
+  "reusable_guard": "offline_guard_socketpair_v1.py",
+  "external_api_calls": 0
+}

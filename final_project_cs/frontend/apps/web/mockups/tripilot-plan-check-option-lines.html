@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>질문 칸 이유 · 고르면</title>
+<style>
+/* 2026-10-21 계획 확인 C안 — 질문 칸 선택지의 「이유:」 · 「고르면:」을 경우마다 꼭 필요한 것만 남기는 안(검토용 목업). 앱 질문 칸(stop-question.module.css)의 모양을 따랐다. */
+:root {
+  --bg: #f4f6f3; --surface: #fff; --subtle: #f1f3ef; --text: #1d2420; --text2: #44504a; --muted: #6b766f; --border: #d9dfda; --border-strong: #b9c3bc;
+  --primary: #2e6047; --warn: #8a5a12; --warn-soft: #fbf4e6; --warn-border: #e7cf9f; --adjusted: #2f5d8a; --adjusted-border: #b8cde3;
+  --error: #a3402c; --new: #b4307a; --new-soft: #fbe9f3; --ok: #2e6047; --late: #a3402c;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121614; --surface: #1b211e; --subtle: #232a26; --text: #e8ece9; --text2: #c3cbc6; --muted: #98a39c; --border: #36403b; --border-strong: #4a564f;
+  --primary: #7cc4a0; --warn: #e8b766; --warn-soft: #2c2416; --warn-border: #5d4a26; --adjusted: #9cc2ea; --adjusted-border: #3b5674;
+  --error: #f0947f; --new: #f19ac8; --new-soft: #3a1f2e; --ok: #7cc4a0; --late: #f0947f; } }
+:root[data-theme="dark"] {
+  --bg: #121614; --surface: #1b211e; --subtle: #232a26; --text: #e8ece9; --text2: #c3cbc6; --muted: #98a39c; --border: #36403b; --border-strong: #4a564f;
+  --primary: #7cc4a0; --warn: #e8b766; --warn-soft: #2c2416; --warn-border: #5d4a26; --adjusted: #9cc2ea; --adjusted-border: #3b5674;
+  --error: #f0947f; --new: #f19ac8; --new-soft: #3a1f2e; --ok: #7cc4a0; --late: #f0947f; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
+main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { margin: 0 0 4px; font-size: 21px; letter-spacing: -.3px; }
+.lead { margin: 0 0 14px; color: var(--text2); }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 18px; font-size: 13px; color: var(--muted); }
+.bar label { display: inline-flex; gap: 6px; align-items: center; padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); cursor: pointer; }
+h2 { margin: 28px 0 6px; font-size: 17px; }
+.why { margin: 0 0 10px; color: var(--text2); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-size: 13px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { background: var(--subtle); font-weight: 750; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.scroll { overflow-x: auto; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .pair { grid-template-columns: 1fr; } }
+.col h3 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 750; }
+.col[data-side="new"] h3 { color: var(--primary); }
+/* 앱 질문 칸 */
+.box { padding: 10px; border-radius: 12px; background: var(--warn-soft); }
+.kind { display: inline-block; margin-bottom: 6px; padding: 0 7px; border: 1px solid var(--warn-border); border-radius: 6px; background: var(--surface); font-size: 11px; font-weight: 800; color: var(--warn); }
+.question { margin: 0 0 9px; font-size: 13.5px; font-weight: 700; line-height: 1.5; }
+.options { display: grid; gap: 7px; }
+.option { display: grid; gap: 2px; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); }
+.option[data-off] { border-style: dashed; background: var(--subtle); }
+.top { font-size: 13.5px; font-weight: 700; }
+.tag { display: inline-block; margin-left: 6px; padding: 0 7px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text2); font-size: 11px; font-weight: 750; vertical-align: 1px; white-space: nowrap; }
+.tag[data-basis="similar"] { border-color: var(--adjusted-border); color: var(--adjusted); }
+.tag[data-basis="meal"] { border-color: var(--warn-border); color: var(--warn); }
+.rec { display: inline-block; margin-left: 6px; padding: 0 7px; border: 1px solid currentColor; border-radius: 999px; color: var(--primary); font-size: 11px; font-weight: 700; vertical-align: 1px; }
+.line { font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+.line[data-leg] { color: var(--text2); }
+.line[data-fact] { color: var(--text2); }
+.line b { font-weight: 750; }
+.late { color: var(--late); font-weight: 700; }
+.buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 9px; }
+.button { min-height: 40px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: 13px; font-weight: 700; }
+/* 표시 */
+.cut { text-decoration: line-through; text-decoration-color: var(--error); opacity: .55; }
+.new { background: var(--new-soft); box-shadow: inset 0 -2px 0 var(--new); border-radius: 3px; }
+.new::after { content: "새 문구"; margin-left: 4px; padding: 0 4px; border-radius: 4px; background: var(--new); color: var(--surface); font-size: 9.5px; font-weight: 800; vertical-align: 1px; }
+body[data-marks="off"] .new { background: none; box-shadow: none; }
+body[data-marks="off"] .new::after { display: none; }
+body[data-cuts="off"] .cut { display: none; }
+.src { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+.src code, td code { font-size: 11.5px; padding: 0 3px; border-radius: 4px; background: var(--subtle); }
+.note { margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn-border); background: var(--surface); border-radius: 0 8px 8px 0; font-size: 12.5px; color: var(--text2); }
+</style>
+</head>
+<body>
+<main>
+<h1>질문 칸 — 「이유:」 · 「고르면:」은 필요한 것만</h1>
+<p class="lead">2026-10-21 · 검토용 목업 → 같은 날 사용자 결정 「제안대로」로 앱에 반영. 계획 확인 C안의 질문 칸 선택지에서 줄이 늘어나는 것을 줄이고, 경우마다 고르는 데 필요한 줄만 남기는 안이다. 왼쪽은 지금 앱이 그리는 것(코드 기준), 오른쪽은 제안이다.</p>
+<div class="bar">
+  <label><input type="checkbox" checked data-toggle="marks"> 「새 문구」 표시</label>
+  <label><input type="checkbox" checked data-toggle="cuts"> 지금 판에서 빠지는 줄(취소선) 보기</label>
+  <label><input type="checkbox" data-toggle="theme"> 어두운 화면</label>
+</div>
+
+<h2>규칙 (제안)</h2>
+<p class="why">조사: 서버 후보의 이유 문장(<code>reason</code>)은 <b>고른 기준 · 기준 장소에서 거리 · 그 시각 영업 · 다음 일정까지 여유</b>를 한 문장으로 쓴 것이다(<code>reasons.py</code> <code>facts_for</code> — 모델이 다듬거나 틀 문장). 그런데 같은 값이 이미 따로 온다 — 고른 기준은 <code>basis</code>(꼬리표), 거리는 <code>distance_m</code>, 영업은 <code>rows</code>, 여유 · 늦음은 <code>legs</code>(길 줄). 지금 앱은 이유 문장에 거리 · 운영시간 줄을 또 붙여 같은 말이 두세 번 나온다. 「고르면:」은 장소를 바꾸는 선택지마다 「바뀐 장소와 앞뒤 이동을 다시 확인해요」로 같다.</p>
+<div class="scroll"><table>
+  <thead><tr><th>줄</th><th>언제 보이나</th><th>값 출처</th></tr></thead>
+  <tbody>
+    <tr><td>꼬리표</td><td>서버가 고른 단계를 줄 때 늘(같은 종류 · 비슷한 경험 · 식사 시간 식당 · 숙소 · 숙소 안 식사 · 취향 추천) — 바꾸기 화면과 같은 말</td><td><code>basis</code></td></tr>
+    <tr><td>사실 한 줄<br>(앞말 없음)</td><td><b>이 질문이 가르는 사실 하나만</b>: 여러 곳 중 고르기 = 거리 · 쉬는 날 = 그날 영업 · 못 찾음 / 그 밖 = 거리, 영업은 모를 때만 「운영시간을 몰라요」 · 택시 = 시간 · 여유 · 요금</td><td><code>distance_m</code> · <code>rows</code> · 수단 목록</td></tr>
+    <tr><td>「이유:」</td><td><b>묻는 것과 다른 종류를 권할 때만</b> — 비슷한 경험 · 식사 시간 식당 · 숙소 안 식사 · 취향 추천. 고른 기준을 앱의 정해진 문장으로(모델 문장은 쓰지 않음)</td><td><code>basis</code> (+ 비슷한 경험의 갈래 <code>experience</code>)</td></tr>
+    <tr><td>길 줄</td><td>늘 — 앞에서 오는 길 · 뒤로 가는 길(늦으면 빨강)</td><td><code>legs</code></td></tr>
+    <tr><td>「고르면:」</td><td><b>결과가 선택지 이름에서 안 보일 때만</b> — 장소 없이 두기 · 일정 종류가 바뀜(활동 → 식사) · 늦추기(뒤 일정에 닿는 영향) · 해석 질문(서버 문장)</td><td>정해진 문장 · 늦추기는 <code>autofix {item_id, dry_run}</code> 의 <code>view</code></td></tr>
+    <tr><td>모델 이유 문장</td><td>질문 칸에서는 쓰지 않는다. 바꾸기 화면의 후보 카드는 그대로 둔다</td><td><code>reason</code></td></tr>
+  </tbody>
+</table></div>
+
+<!-- 1 -->
+<h2>① 이름이 여러 곳이라 임시로 고름 (올리브영)</h2>
+<p class="why">가르는 것은 <b>어느 지점이 동선에 맞나</b> — 거리와 길 줄이면 된다. 「그대로」 · 「바꾸기」는 이름이 결과를 말한다.</p>
+<div class="pair">
+  <div class="col"><h3>지금</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「올리브영」은 맞는 곳이 3곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요. 어디로 갈까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「올리브영 인사동점」 그대로</span>
+        <span class="line">이유: 앞뒤 일정에서 평균 381m</span>
+        <span class="line">고르면: 「올리브영 인사동점」으로 확정하고 다시 확인해요</span></div>
+      <div class="option"><span class="top">「올리브영 광화문점」으로 바꾸기</span>
+        <span class="line">이유: 경복궁에서 450m 떨어진 같은 이름의 지점이에요 · 경복궁에서 0.5km · 카카오 지도 정보에는 운영시간이 없어요</span>
+        <span class="line" data-leg>경복궁에서 오는 길 · 도보 7분 · 8분 여유</span>
+        <span class="line" data-leg>광장시장까지 가는 길 · 지하철 1호선 16분 · 14분 여유</span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+  <div class="col" data-side="new"><h3>제안</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「올리브영」은 맞는 곳이 3곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요. 어디로 갈까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「올리브영 인사동점」 그대로</span>
+        <span class="line" data-fact>앞뒤 일정에서 평균 381m</span>
+        <span class="line cut">고르면: 「올리브영 인사동점」으로 확정하고 다시 확인해요</span></div>
+      <div class="option"><span class="top">「올리브영 광화문점」으로 바꾸기</span>
+        <span class="line" data-fact>경복궁에서 0.5km · 운영시간을 몰라요</span>
+        <span class="line cut">이유: 경복궁에서 450m 떨어진 같은 이름의 지점이에요 · …</span>
+        <span class="line" data-leg>경복궁에서 오는 길 · 도보 7분 · 8분 여유</span>
+        <span class="line" data-leg>광장시장까지 가는 길 · 지하철 1호선 16분 · 14분 여유</span>
+        <span class="line cut">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+</div>
+
+<!-- 2 -->
+<h2>② 그날 쉬는 곳 (창덕궁 · 월요일)</h2>
+<p class="why">가르는 것은 <b>그날 열려 있나</b> — 영업 줄이 앞에 온다. 같은 종류가 가까이에 없어 다른 종류를 권하면 그 이유 한 줄만 붙인다.</p>
+<div class="pair">
+  <div class="col"><h3>지금</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「창덕궁 관람」은 10.26(월) 쉬는 날이에요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「경복궁」으로 바꾸기<span class="tag">같은 종류</span></span>
+        <span class="line">이유: 창덕궁과 같은 분류의 궁궐로, 창덕궁에서 1.2km 거리이며 09:00–18:00에 운영해요 · 창덕궁에서 1.2km · 09:00–18:00 안에 머물러요</span>
+        <span class="line" data-leg>숙소에서 오는 길 · 지하철 3호선 14분 · 16분 여유</span>
+        <span class="line" data-leg>광장시장까지 가는 길 · 버스 18분 · 12분 여유</span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+      <div class="option"><span class="top">「국립민속박물관」으로 바꾸기<span class="tag" data-basis="similar">비슷한 경험</span></span>
+        <span class="line">이유: 같은 종류는 가까이에 없어 실내 전시를 하는 곳 중 가까운 곳이에요 · 창덕궁에서 1.4km · 09:00–18:00 안에 머물러요</span>
+        <span class="line" data-leg>숙소에서 오는 길 · 버스 20분 · 10분 여유</span>
+        <span class="line" data-leg>광장시장까지 가는 길 · 버스 22분 · 8분 여유</span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+  <div class="col" data-side="new"><h3>제안</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「창덕궁 관람」은 10.26(월) 쉬는 날이에요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「경복궁」으로 바꾸기<span class="tag">같은 종류</span></span>
+        <span class="line" data-fact>09:00–18:00 안에 머물러요 · 창덕궁에서 1.2km</span>
+        <span class="line cut">이유: 창덕궁과 같은 분류의 궁궐로, … · 창덕궁에서 1.2km · 09:00–18:00 안에 머물러요</span>
+        <span class="line" data-leg>숙소에서 오는 길 · 지하철 3호선 14분 · 16분 여유</span>
+        <span class="line" data-leg>광장시장까지 가는 길 · 버스 18분 · 12분 여유</span></div>
+      <div class="option"><span class="top">「국립민속박물관」으로 바꾸기<span class="tag" data-basis="similar">비슷한 경험</span></span>
+        <span class="line" data-fact>09:00–18:00 안에 머물러요 · 창덕궁에서 1.4km</span>
+        <span class="line">이유: <span class="new">같은 종류는 가까이에 없어 실내 전시를 하는 곳이에요</span></span>
+        <span class="line" data-leg>숙소에서 오는 길 · 버스 20분 · 10분 여유</span>
+        <span class="line" data-leg>광장시장까지 가는 길 · 버스 22분 · 8분 여유</span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+</div>
+
+<!-- 3 -->
+<h2>③ 이름 없는 숙소 줄 (호텔 조식)</h2>
+<p class="why">서버가 같은 호텔을 <b>묵을 곳</b>과 <b>그 안에서 식사</b>로 두 번 준다(<code>lodging</code> · <code>lodging_meal</code>). 둘을 가르는 것은 꼬리표와 이름이다. 식사 쪽은 「숙소 안 식당이 있는지는 모른다」는 단서가 꼭 필요해 「이유:」로 남기고, 고르면 일정 종류가 식사로 바뀌므로 「고르면:」을 단다.</p>
+<div class="pair">
+  <div class="col"><h3>지금 (배포 서버 · 모델 문장)</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「호텔 조식」은 확인이 필요해요 — 숙소를 정해야 해요 — 숙소의 이름이 적혀 있지 않아요 · 후보에서 골라 주세요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「호텔 더 디자이너스 종로점」으로 바꾸기<span class="tag">숙소</span></span>
+        <span class="line">이유: 이곳은 숙소 후보지로, 여행 전체 방문지로부터 평균 직선거리로 1754m 떨어져 있습니다. · 여행 전체 방문지(평균 직선거리)에서 1.8km · 관광공사 운영시간을 아직 읽지 못했어요</span>
+        <span class="line" data-leg>경복궁까지 가는 길 · 지하철 3호선 15분 · <span class="late">15분 늦어요</span></span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+      <div class="option"><span class="top">「호텔 더 디자이너스 종로점」으로 바꾸기<span class="tag">숙소 안 식사</span></span>
+        <span class="line">이유: 호텔 더 디자이너스 종로점은 여행 전체 방문지에서 평균 직선거리로 1754m 떨어져 있습니다. · 여행 전체 방문지(평균 직선거리)에서 1.8km · 관광공사 운영시간을 아직 읽지 못했어요</span>
+        <span class="line" data-leg>경복궁까지 가는 길 · 지하철 3호선 15분 · <span class="late">15분 늦어요</span></span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+    </div>
+  </div></div>
+  <div class="col" data-side="new"><h3>제안</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「호텔 조식」은 확인이 필요해요 — 숙소를 정해야 해요 — 숙소의 이름이 적혀 있지 않아요 · 후보에서 골라 주세요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「호텔 더 디자이너스 종로점」으로 바꾸기<span class="tag">숙소</span></span>
+        <span class="line" data-fact>여행 전체 방문지에서 평균 1.8km</span>
+        <span class="line cut">이유: 이곳은 숙소 후보지로, … · 1.8km · 관광공사 운영시간을 아직 읽지 못했어요</span>
+        <span class="line" data-leg>경복궁까지 가는 길 · 지하철 3호선 15분 · <span class="late">15분 늦어요</span></span></div>
+      <div class="option"><span class="top"><span class="new">「호텔 더 디자이너스 종로점」에서 식사하기</span><span class="tag">숙소 안 식사</span></span>
+        <span class="line" data-fact>여행 전체 방문지에서 평균 1.8km</span>
+        <span class="line">이유: <span class="new">이 숙소 안에서 식사하는 경우예요 · 숙소 안 식당이 있는지는 확인하지 못했어요</span></span>
+        <span class="line" data-leg>경복궁까지 가는 길 · 지하철 3호선 15분 · <span class="late">15분 늦어요</span></span>
+        <span class="line">고르면: <span class="new">식사 일정으로 넣고 앞뒤 이동을 다시 확인해요</span></span></div>
+    </div>
+  </div></div>
+</div>
+<p class="note">숙소는 운영시간이 판단에 쓰이지 않아 「운영시간을 몰라요」도 뺐다(작성자 판단). 질문 문장이 긴 것(서버 빨강 줄을 그대로 붙임)은 이번 범위 밖 — 따로 정할 일.</p>
+
+<!-- 4 -->
+<h2>④ 끼니 시간의 시장 — 식당도 권함 (광장시장 12:30)</h2>
+<p class="why">시장 줄인데 점심 시간이고 따로 식사 일정이 없어 식당도 섞인다(<code>meal_inferred</code>). 왜 식당이 나왔는지와, 고르면 일정이 식사로 바뀐다는 것이 필요하다.</p>
+<div class="pair">
+  <div class="col"><h3>지금</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「광장시장」은 확인이 필요해요 — 운영시간을 알 수 없어요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「통인시장」으로 바꾸기<span class="tag">같은 종류</span></span>
+        <span class="line">이유: 광장시장과 같은 시장이고 광장시장에서 900m, 11:00–21:00 안에 머물러요 · 광장시장에서 0.9km · 11:00–21:00 안에 머물러요</span>
+        <span class="line" data-leg>국립중앙박물관까지 가는 길 · 지하철 4호선 25분 · 5분 여유</span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+      <div class="option"><span class="top">「광장시장 순희네 빈대떡」으로 바꾸기<span class="tag" data-basis="meal">식사 시간 식당</span></span>
+        <span class="line">이유: 점심 시간의 시장 일정이라 시장 안 식당도 함께 보여 드려요 · 광장시장에서 0.1km · 10:00–22:00 안에 머물러요</span>
+        <span class="line" data-leg>국립중앙박물관까지 가는 길 · 지하철 4호선 24분 · 6분 여유</span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+  <div class="col" data-side="new"><h3>제안</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「광장시장」은 확인이 필요해요 — 운영시간을 알 수 없어요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">「통인시장」으로 바꾸기<span class="tag">같은 종류</span></span>
+        <span class="line" data-fact>광장시장에서 0.9km · 11:00–21:00 안에 머물러요</span>
+        <span class="line" data-leg>국립중앙박물관까지 가는 길 · 지하철 4호선 25분 · 5분 여유</span></div>
+      <div class="option"><span class="top">「광장시장 순희네 빈대떡」으로 바꾸기<span class="tag" data-basis="meal">식사 시간 식당</span></span>
+        <span class="line" data-fact>광장시장에서 0.1km · 10:00–22:00 안에 머물러요</span>
+        <span class="line">이유: <span class="new">점심 시간이고 그 시간에 식사 일정이 따로 없어 식당도 보여 드려요</span></span>
+        <span class="line" data-leg>국립중앙박물관까지 가는 길 · 지하철 4호선 24분 · 6분 여유</span>
+        <span class="line">고르면: <span class="new">식사 일정으로 넣고 앞뒤 이동을 다시 확인해요</span></span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+</div>
+
+<!-- 5 -->
+<h2>⑤ 장소를 못 찾음 (을지로 그 집)</h2>
+<p class="why">질문은 서버 문장 그대로. 후보는 거리 · 영업만, 「장소 없이 두기」는 결과(이동을 확인하지 않음)가 이름에서 안 보이므로 「고르면:」을 남긴다.</p>
+<div class="pair">
+  <div class="col"><h3>지금</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요</p>
+    <div class="options">
+      <div class="option"><span class="top">「을지면옥」으로 정하기<span class="tag">같은 종류</span></span>
+        <span class="line">이유: 같은 중분류(관광공사 분류)의 곳이에요 · 경복궁에서 0.6km · 10:00–17:00 안에 머물러요</span>
+        <span class="line" data-leg>경복궁에서 오는 길 · 도보 9분 · 21분 여유</span>
+        <span class="line">고르면: 바뀐 장소와 앞뒤 이동을 다시 확인해요</span></div>
+      <div class="option"><span class="top">장소 없이 두기</span>
+        <span class="line">고르면: 앞뒤 이동은 장소가 정해지면 확인해요</span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+  <div class="col" data-side="new"><h3>제안</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「을지로 그 집」을 지도에서 찾지 못했어요 — 후보에서 고르거나 직접 골라 주세요</p>
+    <div class="options">
+      <div class="option"><span class="top">「을지면옥」으로 정하기<span class="tag">같은 종류</span></span>
+        <span class="line" data-fact>경복궁에서 0.6km · 10:00–17:00 안에 머물러요</span>
+        <span class="line" data-leg>경복궁에서 오는 길 · 도보 9분 · 21분 여유</span></div>
+      <div class="option"><span class="top">장소 없이 두기</span>
+        <span class="line">고르면: 앞뒤 이동은 장소가 정해지면 확인해요</span></div>
+    </div>
+    <div class="buttons"><span class="button">직접 수정</span><span class="button">삭제</span></div>
+  </div></div>
+</div>
+<p class="note">등록 전 결과 화면에서는 이 카드에 원래의 「장소를 못 찾았어요」 상자가 그대로 나온다(2026-10-19 결정). 이 질문 칸은 첫 검사가 멈췄을 때의 모습이다.</p>
+
+<!-- 6 -->
+<h2>⑥ 오는 길이 늦음 (경복궁 관람 → 올리브영 · 39분 늦음)</h2>
+<p class="why">「늦추기」는 고르면 <b>뒤 일정에 무슨 일이 생기나</b>가 꼭 필요하다 — 서버는 그 일정만 옮기고 다른 일정은 기준으로만 쓴다(<code>autofix {item_id}</code>). 미리 보기(<code>dry_run</code>)가 바뀐 뒤의 계획 전체(<code>view</code>)를 주므로 뒤 일정이 겹치는지 · 늦는지를 서버 값으로 말할 수 있다. 택시는 시간 · 여유 · 요금 한 줄이면 된다.</p>
+<div class="pair">
+  <div class="col"><h3>지금</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「경복궁 관람 → 올리브영」 이동이 일정보다 39분 늦어요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">택시로 바꾸기</span>
+        <span class="line">이유: 택시 12분 · 8분 여유 · 9,800원부터</span>
+        <span class="line">고르면: 이 구간만 다시 계산해요</span></div>
+      <div class="option"><span class="top">「올리브영」 11:40 시작으로 늦추기</span>
+        <span class="line">고르면: 시작 시각을 바꾸고 뒤 일정과 이동을 다시 확인해요</span></div>
+    </div>
+    <div class="buttons" style="grid-template-columns:1fr"><span class="button">직접 수정</span></div>
+  </div></div>
+  <div class="col" data-side="new"><h3>제안 — 뒤 일정과 겹칠 때</h3><div class="box">
+    <span class="kind">확인 필요</span>
+    <p class="question">「경복궁 관람 → 올리브영」 이동이 일정보다 39분 늦어요. 어떻게 할까요?</p>
+    <div class="options">
+      <div class="option"><span class="top">택시로 바꾸기</span>
+        <span class="line" data-fact>택시 12분 · 8분 여유 · 9,800원부터</span>
+        <span class="line cut">고르면: 이 구간만 다시 계산해요</span></div>
+      <div class="option"><span class="top">「올리브영」 11:40 시작으로 늦추기</span>
+        <span class="line">고르면: <span class="new">11:40–12:40 · 다음 「광장시장」(12:30)과 10분 겹쳐요 — 그 일정을 이어서 물어요</span></span></div>
+    </div>
+    <div class="buttons" style="grid-template-columns:1fr"><span class="button">직접 수정</span></div>
+  </div>
+  <h3 style="margin-top:12px">제안 — 뒤 일정이 그대로 맞을 때</h3><div class="box">
+    <div class="options">
+      <div class="option"><span class="top">「올리브영」 11:40 시작으로 늦추기</span>
+        <span class="line">고르면: <span class="new">11:40–12:20 · 뒤 일정은 그대로 맞아요</span></span></div>
+    </div>
+  </div>
+  <h3 style="margin-top:12px">택시도 늦을 때 (지금과 같음)</h3><div class="box">
+    <div class="options">
+      <div class="option" data-off><span class="top">택시로 바꾸기</span>
+        <span class="line" data-fact>택시 28분 · <span class="late">일정보다 6분 늦어요</span> · 15,400원부터</span></div>
+    </div>
+    <p class="src">누르면 서버 이유(「다음 일정 시작 안에 닿지 않아요」)를 말한다.</p>
+  </div></div>
+</div>
+
+<!-- 7 -->
+<h2>⑦ 해석 확인 질문 (「이렇게 이해했어요 · 맞나요?」) — 바꾸지 않음</h2>
+<p class="why">질문 · 선택지 · 이유 · 고르면을 모두 서버가 그 상황에 맞게 쓴다(<code>interpretations[]</code> — 이유는 1안만). 줄 수가 이미 필요한 만큼이라 그대로 둔다.</p>
+<div class="pair">
+  <div class="col"><h3>지금 = 제안</h3><div class="box">
+    <span class="kind">읽은 뜻</span>
+    <p class="question">「11:00 광장시장 정도」를 빈 시간으로 읽었어요. 맞나요?</p>
+    <div class="options">
+      <div class="option"><span class="top">빈 시간으로 두기<span class="rec">추천</span></span>
+        <span class="line">이유: 「정도」는 '쯤'이라는 말이고, 가게 이름이 적혀 있지 않아요</span>
+        <span class="line">고르면: 운영시간과 이동은 확인하지 않아요</span></div>
+      <div class="option"><span class="top">「광장시장」 일정으로 넣기</span>
+        <span class="line">고르면: 11:00 일정으로 넣고 영업시간 · 이동을 확인해요</span></div>
+    </div>
+    <div class="buttons" style="grid-template-columns:1fr"><span class="button">직접 선택</span></div>
+  </div></div>
+  <div class="col"><h3>메모</h3>
+    <p class="note">예시 문장은 서버 틀(<code>interpretations.py</code> <code>options_of</code>)을 따른 것. 앱은 받은 그대로 그린다.</p>
+  </div>
+</div>
+
+<h2>앱에 넣은 자리 (2026-10-21 「제안대로」 결정 뒤 반영)</h2>
+<div class="scroll"><table>
+  <thead><tr><th>할 일</th><th>자리</th></tr></thead>
+  <tbody>
+    <tr><td>후보 선택지: 모델 이유 문장 대신 사실 한 줄(질문 종류마다 앞에 올 사실) + 다른 종류일 때만 「이유:」(꼬리표 문장)</td><td><code>stop-questions.ts</code> <code>placeQuestion</code> · <code>candidateReason</code></td></tr>
+    <tr><td>「고르면:」을 장소 바꾸기 · 그대로 · 택시에서 빼고, 종류가 바뀌는 후보(식사 시간 식당 · 숙소 안 식사)에만 「식사 일정으로 넣고 …」</td><td><code>stop-questions.ts</code></td></tr>
+    <tr><td>숙소 안 식사 선택지 이름 「「X」에서 식사하기」</td><td><code>stop-questions.ts</code></td></tr>
+    <tr><td>늦추기의 「고르면:」을 미리 보기 결과로 — 뒤 일정과 겹침 · 늦음 · 그대로</td><td><code>use-server-review.ts</code> <code>laterStart</code>(지금은 시작 · 끝만 꺼냄) · <code>arrivalQuestion</code></td></tr>
+    <tr><td>서버 협의: 모델 이유 문장이 질문 칸에서 안 쓰이면 「숙소 안 식사」 누락 문제는 바꾸기 화면만 남는다</td><td><code>wiki/external/web-screen-api.md</code></td></tr>
+  </tbody>
+</table></div>
+<p class="src">값 · 문장 출처: 지금 칸은 가지 <code>role-eval-ui</code> <code>d0bd01f7</code> 의 <code>stop-questions.ts</code> · <code>stop-question.tsx</code> 가 그리는 모양(예시 값). ③ 「지금」의 이유 문장은 배포 서버 화면 사진(2026-10-21 12:02)에서 옮겼다. 「새 문구」 표시가 붙은 것은 앱에 없는 문장이다.</p>
+</main>
+<script>
+document.querySelectorAll("[data-toggle]").forEach((box) => box.addEventListener("change", () => {
+  const kind = box.dataset.toggle;
+  if (kind === "theme") document.documentElement.dataset.theme = box.checked ? "dark" : "light";
+  else document.body.dataset[kind] = box.checked ? "on" : "off";
+}));
+</script>
+</body>
+</html>

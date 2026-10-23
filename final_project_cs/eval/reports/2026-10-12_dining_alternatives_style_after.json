@@ -1,0 +1,121 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_style_v1.jsonl",
+ "dataset_sha": "8d0c11794aa5d8b9",
+ "label": "style-after",
+ "seeds": 5,
+ "mobility": false,
+ "env": {
+  "run_at": "2026-10-12T10:25:31+09:00",
+  "git_commit": "2caa12ca",
+  "git_branch": "role-dining",
+  "git_dirty": true
+ },
+ "summary": {
+  "accuracy": {
+   "num": 4,
+   "den": 4,
+   "rate": 1.0
+  },
+  "acceptable": {
+   "num": 4,
+   "den": 4,
+   "rate": 1.0
+  },
+  "violations": {
+   "num": 0,
+   "den": 4,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 4,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 4,
+   "ok": 0,
+   "correct_no_change": 0,
+   "wrong_violation": 0,
+   "wrong": 0,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "style": {
+    "num": 4,
+    "den": 4,
+    "rate": 1.0
+   }
+  },
+  "added_walk_min_mean": -1.2,
+  "skipped": []
+ },
+ "results": [
+  {
+   "id": "DS-001",
+   "group": "style",
+   "why": "이름에 메뉴 말이 없는 고깃집 — 가까운 한상차림 한식보다 조금 먼 고깃집",
+   "picked": "B",
+   "picked_name": "불향",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DS-002",
+   "group": "style",
+   "why": "해산물집 — 가까운 고깃집 · 카페보다 해산물집",
+   "picked": "B",
+   "picked_name": "포구",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DS-003",
+   "group": "style",
+   "why": "원래 식당의 결을 모르면 큰 분류로 — 가까운 일식보다 한식",
+   "picked": "B",
+   "picked_name": "마당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  },
+  {
+   "id": "DS-004",
+   "group": "style",
+   "why": "같은 결이어도 다음 일정 반대쪽 멀리면 동선이 먼저 — 가까운 한식",
+   "picked": "A",
+   "picked_name": "마당",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": -5,
+    "violation": false
+   },
+   "label": "correct"
+  }
+ ]
+}

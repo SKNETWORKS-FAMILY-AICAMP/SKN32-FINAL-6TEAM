@@ -55,13 +55,13 @@ from app.application.controller import Controller
 from app.core.context import PolicyChunk
 from app.core.registry import TeamRegistry
 from app.core.transition import transition_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops import delegation
-from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
-from app.modules.travel_ops.case_engine import cleanup_tenant
-from app.modules.travel_ops.verification_policy import FACT_QUERIES, TRAVEL_OPS_POLICY
+from app.domains.travel_ops.components.booking import delegation
+from app.domains.travel_ops.instances.booking_handoff import BookingHandoffTeam
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
+from app.domains.travel_ops.components.core_hooks.verification_policy import FACT_QUERIES, TRAVEL_OPS_POLICY
 from app.tools.read_tools import ReadToolbox
 
 #: ★한계값은 **설정에서 읽는다** — 숫자를 여기 박지 않는다(RULE.md §3.1).

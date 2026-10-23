@@ -1,0 +1,20 @@
+{
+  "created_at": "2026-10-09T12:52:34.385278+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_125234_방면근거_콜백전달전/departure_observer.py",
+      "sha256": "eeff33af03cf9a8eb850363ecf2ed901b2e1ff2b4efa00c1a3a79b2fdecccf74"
+    },
+    {
+      "source": "final_project_cs/tests/unit/travel/test_subway_direction_v1.py",
+      "backup": "final_project_cs/tests/unit/travel/_backup/2026-10-09_125234_방면근거_콜백전달전/test_subway_direction_v1.py",
+      "sha256": "503359139b720938917f99b629103c23f2489e08e352b6c7c9d2632fef92cce2"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_125234_방면근거_콜백전달전/mobility.md",
+      "sha256": "921c2161d080b5ab8ace275d3fa16c5aa5e482ef9f1f68dbaa70185c7f9cdd8b"
+    }
+  ]
+}

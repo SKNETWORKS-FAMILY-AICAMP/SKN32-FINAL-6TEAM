@@ -1,0 +1,30 @@
+{
+ "built_on": "2026-10-20",
+ "cases": 38,
+ "by_stratum": {
+  "A": 7,
+  "B": 14,
+  "C": 6,
+  "D": 3,
+  "E": 6,
+  "F": 2
+ },
+ "split": [
+  "dev"
+ ],
+ "source": "cards_llm_bound_v0.jsonl",
+ "sha256": "255c2ea2c2d503a65d6474168003420f9973a21a16f965bd92218824dea76de4",
+ "inputs_sha256": "8391e0dd658e453b37bc10d8423cf727476200ef43966f974c93c61c174d85b2",
+ "labeler": "rule:strict_attrs(dev) — 사람 검토 전",
+ "texts": "template",
+ "smoke": false,
+ "dev": {
+  "seed": 2020,
+  "sample": 4000,
+  "missing_cards": [
+   "L-53",
+   "L-54"
+  ],
+  "disjoint_from": "holdout 80 의 원래 장소 · 후보 contentid"
+ }
+}

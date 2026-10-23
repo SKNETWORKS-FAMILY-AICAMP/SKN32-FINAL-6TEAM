@@ -1,0 +1,46 @@
+{
+  "recorded_at_utc": "2026-10-10T11:07:32.436718+00:00",
+  "purpose": "Complete display-position robustness coverage of all four prior travel adapters and matched HF NF4 original/cosine/FINCH; existing reverse inputs and thresholds unchanged",
+  "A_models": [
+    "oos1",
+    "oos2",
+    "oos3",
+    "oos2r"
+  ],
+  "A_conditions": 8,
+  "A_rows": 17496,
+  "B_models": [
+    "original",
+    "cosine_s20261014",
+    "finch_s20261014"
+  ],
+  "B_conditions": 6,
+  "B_rows": 13122,
+  "B_connectivity_smoke_rows": 12,
+  "diagnostic_limits": {
+    "normal_loss_pp": 2,
+    "false_pick_increase_pp": 1,
+    "pick_agreement": 0.99
+  },
+  "inputs": [
+    {
+      "suite": "d3",
+      "rows": 360,
+      "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "prompt_sha256": "7348e3a71f2e8e28ecf8d56b00d32270a41396107ac01a00afc22e4471f041c7",
+      "output": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\travel\\candidate_order_20261010_v3\\processed\\d3.json"
+    },
+    {
+      "suite": "mx",
+      "rows": 4014,
+      "source_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "prompt_sha256": "b86093846c88a7dbe985ffabcef7275e007f9cf8b66bd43242f9ab61a8bfd65f",
+      "output": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\travel\\candidate_order_20261010_v3\\processed\\mx.json"
+    }
+  ],
+  "same_items_not_independent": true,
+  "no_training_or_prompt_tuning": true,
+  "adoption": false,
+  "selection": "All four older adapters, all three preexisting matched HF conditions; no subset picked for best observed score",
+  "statistical_plan": "paired exact plus itinerary-cluster bootstrap seed7 repeats2000; retain all failures/missing and report fixed original baseline"
+}

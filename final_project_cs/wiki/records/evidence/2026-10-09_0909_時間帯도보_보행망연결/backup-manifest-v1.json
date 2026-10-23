@@ -1,0 +1,32 @@
+[
+  {
+    "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py",
+    "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0909_시간대도보_보행망연결/plan_estimate.py",
+    "sha256": "d8693b7278c8ff957d3a575f058f97dd2a8a826f3daf796f27e53e992d9efa79"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0909_시간대도보_보행망연결/mobility.md",
+    "sha256": "2d369ebe882b9257544491f153ec3034862f4f070a169cffc8f80a92dcfe1bc6"
+  },
+  {
+    "source": "final_project_cs/tests/unit/travel/mobility/test_estimate_walk_network_v1.py",
+    "backup": "final_project_cs/tests/unit/travel/mobility/_backup/2026-10-09_0910_시험호출수정/test_estimate_walk_network_v1.py",
+    "sha256": "14c66ff18df5e5ea9ffecba721ef983c2804bc33ecd867a0e349123c2d1c6101"
+  },
+  {
+    "source": ".tmp/mobility_complete_20261008/run_estimate_walk_network_v1.py",
+    "backup": ".tmp/mobility_complete_20261008/_backup/2026-10-09_0910_시험호출수정/run_estimate_walk_network_v1.py",
+    "sha256": "22eba7a429a0000ddd2cb063604fe23f566deb21aa81c74ffb1b564053bf4710"
+  },
+  {
+    "source": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0913_시간대도보_검증결과/mobility.md",
+    "sha256": "2935d2e842b436e5aac57f1cc4f729e68f1e29ec5cfa3a009a875b67f06f43a8"
+  },
+  {
+    "source": "final_project_cs/wiki/records/reports/debugs/2026-10-09_0909_시간대도보_보행망시간_미연결.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_0913_시간대도보_결함종료/2026-10-09_0909_시간대도보_보행망시간_미연결.md",
+    "sha256": "d839cc52ed1599b3071edd91c8ed77c67df47c4c0a21ef32573df3b54ab12994"
+  }
+]

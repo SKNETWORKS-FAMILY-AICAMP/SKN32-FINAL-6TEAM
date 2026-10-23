@@ -1,0 +1,6 @@
+{
+  "status": "failed_before_data_read",
+  "reason": "The audit used PROCESSED before CLI environment initialization.",
+  "recovery": "v2 uses cli_processed(); no path configuration or data changed.",
+  "original_failed_script_preserved": "audit_bus_distance_v1.py"
+}

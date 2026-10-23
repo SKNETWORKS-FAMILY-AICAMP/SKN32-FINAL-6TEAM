@@ -1,0 +1,11 @@
+{
+  "source_test_data_hashes": {
+    "total": 500,
+    "matched": 500
+  },
+  "artifact_hashes": {
+    "total": 45,
+    "matched": 45
+  },
+  "mismatches": []
+}

@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 import httpx
 import pytest
 
-from app.infrastructure.travel.base import TravelSource
-from app.infrastructure.travel.open_meteo import MAX_FORECAST_DAYS, OpenMeteoWeather
+from app.domains.travel_ops.ports.data_sources.base import TravelSource
+from app.domains.travel_ops.ports.data_sources.open_meteo import MAX_FORECAST_DAYS, OpenMeteoWeather
 
 
 def _response(status: int, payload=None, text: str | None = None) -> httpx.Response:

@@ -20,13 +20,25 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _safe_output(text: str) -> str:
+    """오류 근거는 유지하되 연결 문자열·인자에 포함된 자격정보는 가린다."""
+    text = re.sub(r"(?i)([a-z][a-z0-9+.-]*://[^\s:/@]+:)[^\s@]+(@)",
+                  r"\1[REDACTED]\2", text)
+    return re.sub(r"(?i)(\b(?:password|api_key|secret|token)['\"]?\s*[:=]\s*)"
+                  r"(?:'[^']*'|\"[^\"]*\"|[^\s,}\]]+)",
+                  r"\1[REDACTED]", text)
 
 
 @dataclass(frozen=True)
@@ -140,7 +152,7 @@ ITEMS: tuple[Item, ...] = (
         T + "e2e/test_booking_change_link.py::test_a_wrong_token_never_says_whether_the_booking_exists",
     ), mvp=False,
          note="`[2026-09-22]` 변경 링크가 생겼다 — `GET /booking-change/{booking_id}?t=…` "
-              "(`app/modules/travel_ops/change_link.py`, 예약별 HMAC 토큰·로그인 없음·토큰이 틀리면 "
+              "(`app/domains/travel_ops/components/booking/change_link.py`, 예약별 HMAC 토큰·로그인 없음·토큰이 틀리면 "
               "404). **아무것도 쓰지 않으므로 승인도 scope 도 없다.** `booking.change` 적용기는 "
               "공급자 원장을 어느 등급에서도 건드리지 않고 그 링크를 인계 메시지(`booking.handoff`)에 "
               "싣는다 — 등급 `real` 로 두고 원장이 한 글자도 안 바뀌는 것을 실측한다"),
@@ -172,6 +184,8 @@ ITEMS: tuple[Item, ...] = (
     Item(19, "(시연) 위임을 철회하면 진행 중인 자동 실행이 멈춘다", "자동", (
         T + "integration/controller/test_delegation_scope.py::"
             "test_revoking_after_the_approval_stops_the_execution",
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_revocation_stops_execution_despite_application_clock_skew",
         T + "integration/controller/test_delegation_scope.py::test_after_a_revocation_no_new_execution_opens",
         T + "integration/controller/test_delegation_scope.py::"
             "test_one_out_of_scope_proposal_rolls_the_whole_batch_back",
@@ -234,34 +248,51 @@ ITEMS: tuple[Item, ...] = (
 )
 
 
-def _run(node_ids: list[str]) -> tuple[dict[str, str], str]:
+def _run(node_ids: list[str], evidence_dir: Path | None = None) -> tuple[dict[str, str], str, int]:
     """node id → PASSED/FAILED/… . 없는 시험은 결과에 안 나타난다(호출부가 「시험 없음」으로 센다)."""
     if not node_ids:
-        return {}, ""
+        return {}, "", 0
+    # Windows 자식 pytest도 UTF-8로 내보내야 한글 오류 원문이 깨지지 않는다.
+    child_env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     # ★이름이 하나라도 틀리면 pytest 는 **아무것도 안 돌리고** 끝난다 — 그러면 전 항목이 「시험 없음」
     #   으로 보여 진짜 상태를 가린다. 먼저 모아 보고, 있는 것만 돌린다(없는 것은 없는 대로 보고한다).
     collect = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q",
                               "-p", "no:cacheprovider", *node_ids],
-                             cwd=ROOT, text=True, encoding="utf-8", errors="replace",
+                             cwd=ROOT, env=child_env, text=True, encoding="utf-8", errors="replace",
                              capture_output=True)
+    if evidence_dir is not None:
+        (evidence_dir / "collection.stdout.log").write_text(_safe_output(collect.stdout or ""), encoding="utf-8")
+        (evidence_dir / "collection.stderr.log").write_text(_safe_output(collect.stderr or ""), encoding="utf-8")
     found = {line.strip().replace("\\", "/") for line in (collect.stdout or "").splitlines()
              if "::" in line}
     # ★매개변수가 붙은 시험은 `…::test_x[param]` 으로 모인다 — 적어 둔 이름은 그 **앞부분**이다.
     runnable = [node for node in node_ids
                 if node in found or any(f.startswith(node + "[") for f in found)]
     if not runnable:
-        return {}, (collect.stdout or "") + (collect.stderr or "")
-    completed = subprocess.run([sys.executable, "-m", "pytest", "-v", "-p", "no:cacheprovider",
-                                "--no-header", "-rN", *runnable],
-                               cwd=ROOT, text=True, encoding="utf-8", errors="replace",
+        return {}, (collect.stdout or "") + (collect.stderr or ""), collect.returncode or 1
+    command = [sys.executable, "-m", "pytest", "-v", "-p", "no:cacheprovider",
+               "--no-header", "--tb=long", "-rN", *runnable]
+    if evidence_dir is not None:
+        command += ["--junitxml=" + str(evidence_dir / "pytest.xml")]
+    completed = subprocess.run(command,
+                               cwd=ROOT, env=child_env, text=True, encoding="utf-8", errors="replace",
                                capture_output=True)
     output = (completed.stdout or "") + (completed.stderr or "")
+    if evidence_dir is not None:
+        (evidence_dir / "pytest.stdout.log").write_text(_safe_output(completed.stdout or ""), encoding="utf-8")
+        (evidence_dir / "pytest.stderr.log").write_text(_safe_output(completed.stderr or ""), encoding="utf-8")
+        (evidence_dir / "execution.json").write_text(json.dumps({
+            "requested_nodes": node_ids, "runnable_nodes": runnable,
+            "collection_exit_code": collect.returncode, "pytest_exit_code": completed.returncode,
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
     results: dict[str, str] = {}
     for line in output.splitlines():
         match = re.match(r"(\S+::\S+?)\s+(PASSED|FAILED|ERROR|SKIPPED|XFAIL|XPASS)", line)
         if match:
             results[match.group(1).replace("\\", "/")] = match.group(2)
-    return results, output
+    if collect.returncode:
+        output = (collect.stdout or "") + (collect.stderr or "") + output
+    return results, output, completed.returncode or collect.returncode
 
 
 def _state_of(results: dict[str, str], check: str) -> str | None:
@@ -284,12 +315,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mvp", action="store_true", help="MVP 판정 18항목만 센다(결정 16)")
     parser.add_argument("--list", action="store_true", help="무엇을 무엇으로 재는지만 본다")
+    parser.add_argument("--evidence-dir", type=Path, help="원문 로그·JUnit·판정을 새 폴더에 보존한다")
     args = parser.parse_args()
 
     items = [item for item in ITEMS if item.mvp] if args.mvp else list(ITEMS)
     scope = "MVP 18항목" if args.mvp else "전체 26항목"
     print("=" * 78)
-    print(f"triPilot DoD 검증 — 기준선 v11 §12 · {scope} (판정: 자동 20 · 아키텍처 4 · 측정 2)")
+    print(f"guguroute DoD 검증 — 기준선 v11 §12 · {scope} (판정: 자동 20 · 아키텍처 4 · 측정 2)")
     print("=" * 78)
 
     if args.list:
@@ -302,11 +334,19 @@ def main() -> int:
                 print(f"      ☆{item.note}")
         return 0
 
+    evidence_dir = args.evidence_dir.resolve() if args.evidence_dir is not None else None
+    if evidence_dir is not None:
+        try:
+            evidence_dir.mkdir(parents=True, exist_ok=False)
+        except OSError as exc:
+            parser.error(f"실행 근거 폴더를 새로 만들 수 없습니다: {exc}")
     node_ids = sorted({check for item in items for check in item.checks})
-    results, output = _run(node_ids)
+    started_at = datetime.now(UTC).isoformat()
+    results, output, run_status = _run(node_ids, evidence_dir)
 
     print(f"{' #':>3}  {'항목':<52} {'판정':<6} {'근거':<7} 결과")
     passed = failed = unmeasured = broken = 0
+    item_results = []
     for item in items:
         if not item.checks:
             state, unmeasured = "미측정", unmeasured + 1
@@ -321,6 +361,7 @@ def main() -> int:
             else:
                 state, failed = "미통과", failed + 1
         mark = "" if item.mvp else "*"
+        item_results.append({"number": item.number, "state": state, "evidence": evidence})
         print(f"{item.number:>2}{mark} {item.title[:52]:<52} {item.kind:<6} {evidence:<7} {state}")
 
     total = len(items)
@@ -334,7 +375,14 @@ def main() -> int:
         mvp_pass = sum(bool(item.checks) and all(_state_of(results, c) == "PASSED" for c in item.checks)
                        for item in mvp_items)
         print(f"참고 — MVP 판정(14~21 제외) {mvp_pass}/{len(mvp_items)} = {mvp_pass / len(mvp_items):.0%}")
-    if broken or failed:
+    if evidence_dir is not None:
+        (evidence_dir / "summary.json").write_text(json.dumps({
+            "started_at": started_at, "finished_at": datetime.now(UTC).isoformat(),
+            "passed": passed, "total": total, "failed": failed, "unmeasured": unmeasured,
+            "missing_tests": broken, "subprocess_exit_code": run_status,
+            "test_results": results, "items": item_results,
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+    if broken or failed or run_status:
         print("-" * 78)
         for item in items:
             for check in item.checks:
@@ -343,9 +391,10 @@ def main() -> int:
                     print(f"★{item.number}: 시험이 없다 — {check}")
                 elif state != "PASSED":
                     print(f"★{item.number}: {state} — {check}")
-        if broken and "error" in output.lower():
-            print(output[-2000:])
-    return 1 if (failed or broken) else 0
+        if run_status:
+            print(f"하위 시험 명령 종료 코드: {run_status}")
+        print(_safe_output(output))
+    return 1 if (failed or broken or run_status) else 0
 
 
 if __name__ == "__main__":

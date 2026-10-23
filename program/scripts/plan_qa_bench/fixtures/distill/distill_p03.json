@@ -1,0 +1,2030 @@
+{
+ "sets": {
+  "distill_p03": {
+   "today": "2027-06-03",
+   "items": [
+    {
+     "id": 1,
+     "date": "2027-06-08",
+     "start": "13:30",
+     "kind": "mobility",
+     "title": "공항리무진버스로 홍대 이동",
+     "place": "동교동"
+    },
+    {
+     "id": 2,
+     "date": "2027-06-08",
+     "start": "15:00",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "L7 홍대 바이 롯데"
+    },
+    {
+     "id": 3,
+     "date": "2027-06-08",
+     "start": "15:40",
+     "kind": "dining",
+     "title": "하카타분코에서 늦은 점심",
+     "place": "하카타분코"
+    },
+    {
+     "id": 4,
+     "date": "2027-06-08",
+     "start": "17:00",
+     "kind": "activity",
+     "title": "카카오프렌즈 홍대 플래그십스토어 구경",
+     "place": "카카오프렌즈 홍대 플래그십스토어"
+    },
+    {
+     "id": 5,
+     "date": "2027-06-08",
+     "start": "18:30",
+     "kind": "activity",
+     "title": "홍대 레드로드 버스킹 구경",
+     "place": "홍대 레드로드"
+    },
+    {
+     "id": 6,
+     "date": "2027-06-08",
+     "start": "19:30",
+     "kind": "dining",
+     "title": "제순식당에서 저녁",
+     "place": "제순식당"
+    },
+    {
+     "id": 7,
+     "date": "2027-06-08",
+     "start": "22:00",
+     "kind": "activity",
+     "title": "클럽FF 라이브 공연 보기",
+     "place": "클럽FF"
+    },
+    {
+     "id": 8,
+     "date": "2027-06-09",
+     "start": "10:00",
+     "kind": "mobility",
+     "title": "택시로 성수동 이동",
+     "place": "성수동"
+    },
+    {
+     "id": 9,
+     "date": "2027-06-09",
+     "start": "10:40",
+     "kind": "dining",
+     "title": "누데이크 성수에서 디저트 브런치",
+     "place": "누데이크 성수"
+    },
+    {
+     "id": 10,
+     "date": "2027-06-09",
+     "start": "12:00",
+     "kind": "activity",
+     "title": "광야@서울 굿즈 쇼핑",
+     "place": "광야@서울"
+    },
+    {
+     "id": 11,
+     "date": "2027-06-09",
+     "start": "13:30",
+     "kind": "activity",
+     "title": "에스팩토리 케이팝 팝업스토어 방문",
+     "place": "에스팩토리"
+    },
+    {
+     "id": 12,
+     "date": "2027-06-09",
+     "start": "15:00",
+     "kind": "dining",
+     "title": "오제제에서 늦은 점심",
+     "place": "오제제 성수점"
+    },
+    {
+     "id": 13,
+     "date": "2027-06-09",
+     "start": "16:30",
+     "kind": "activity",
+     "title": "탬버린즈 성수 플래그십 구경",
+     "place": "탬버린즈 성수"
+    },
+    {
+     "id": 14,
+     "date": "2027-06-09",
+     "start": "19:00",
+     "kind": "dining",
+     "title": "다로베 성수에서 저녁",
+     "place": "다로베 성수"
+    },
+    {
+     "id": 15,
+     "date": "2027-06-09",
+     "start": "21:00",
+     "kind": "mobility",
+     "title": "지하철로 상수역 이동",
+     "place": "상수역"
+    },
+    {
+     "id": 16,
+     "date": "2027-06-10",
+     "start": "10:00",
+     "kind": "mobility",
+     "title": "지하철로 압구정로데오역 이동",
+     "place": "압구정로데오역"
+    },
+    {
+     "id": 17,
+     "date": "2027-06-10",
+     "start": "10:50",
+     "kind": "activity",
+     "title": "케이스타로드 강남돌 사진 찍기",
+     "place": "케이스타로드"
+    },
+    {
+     "id": 18,
+     "date": "2027-06-10",
+     "start": "12:00",
+     "kind": "dining",
+     "title": "도산분식에서 점심",
+     "place": "도산분식"
+    },
+    {
+     "id": 19,
+     "date": "2027-06-10",
+     "start": "13:30",
+     "kind": "activity",
+     "title": "탬버린즈 신사 플래그십 구경",
+     "place": "탬버린즈 신사"
+    },
+    {
+     "id": 20,
+     "date": "2027-06-10",
+     "start": "15:30",
+     "kind": "activity",
+     "title": "하이브 사옥 앞 사진 찍기",
+     "place": "하이브 용산 사옥"
+    },
+    {
+     "id": 21,
+     "date": "2027-06-10",
+     "start": "18:30",
+     "kind": "dining",
+     "title": "쌤쌤쌤에서 저녁",
+     "place": "쌤쌤쌤"
+    },
+    {
+     "id": 22,
+     "date": "2027-06-10",
+     "start": "22:00",
+     "kind": "dining",
+     "title": "삼거리포차에서 야식",
+     "place": "삼거리포차"
+    },
+    {
+     "id": 23,
+     "date": "2027-06-11",
+     "start": "10:30",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "L7 홍대 바이 롯데"
+    },
+    {
+     "id": 24,
+     "date": "2027-06-11",
+     "start": "11:30",
+     "kind": "dining",
+     "title": "향미에서 점심",
+     "place": "향미"
+    },
+    {
+     "id": 25,
+     "date": "2027-06-11",
+     "start": "13:00",
+     "kind": "activity",
+     "title": "YG 사옥 앞 구경",
+     "place": "YG엔터테인먼트 사옥"
+    },
+    {
+     "id": 26,
+     "date": "2027-06-11",
+     "start": "14:30",
+     "kind": "mobility",
+     "title": "택시로 삼성동 이동",
+     "place": "삼성동"
+    },
+    {
+     "id": 27,
+     "date": "2027-06-11",
+     "start": "15:30",
+     "kind": "lodging",
+     "title": "호텔 체크인",
+     "place": "L7 강남 바이 롯데"
+    },
+    {
+     "id": 28,
+     "date": "2027-06-11",
+     "start": "19:00",
+     "kind": "dining",
+     "title": "영동시장 먹자골목에서 저녁",
+     "place": "영동시장"
+    },
+    {
+     "id": 29,
+     "date": "2027-06-11",
+     "start": "23:00",
+     "kind": "activity",
+     "title": "클럽 옥타곤에서 불금",
+     "place": "클럽 옥타곤"
+    },
+    {
+     "id": 30,
+     "date": "2027-06-12",
+     "start": "11:00",
+     "kind": "dining",
+     "title": "아우어베이커리에서 브런치",
+     "place": "아우어베이커리 도산점"
+    },
+    {
+     "id": 31,
+     "date": "2027-06-12",
+     "start": "12:30",
+     "kind": "mobility",
+     "title": "지하철로 강동구청역 이동",
+     "place": "강동구청역"
+    },
+    {
+     "id": 32,
+     "date": "2027-06-12",
+     "start": "13:00",
+     "kind": "activity",
+     "title": "JYP 사옥 앞 사진 찍기",
+     "place": "JYP엔터테인먼트 사옥"
+    },
+    {
+     "id": 33,
+     "date": "2027-06-12",
+     "start": "17:00",
+     "kind": "activity",
+     "title": "케이팝 콘서트 관람",
+     "place": "KSPO DOME"
+    },
+    {
+     "id": 34,
+     "date": "2027-06-12",
+     "start": "21:00",
+     "kind": "dining",
+     "title": "양꼬치거리에서 늦은 저녁",
+     "place": "자양동 양꼬치거리"
+    },
+    {
+     "id": 35,
+     "date": "2027-06-12",
+     "start": "23:30",
+     "kind": "activity",
+     "title": "클럽FF 주말 공연 보기",
+     "place": "클럽FF"
+    },
+    {
+     "id": 36,
+     "date": "2027-06-13",
+     "start": "10:30",
+     "kind": "mobility",
+     "title": "택시로 성수동 이동",
+     "place": "성수동"
+    },
+    {
+     "id": 37,
+     "date": "2027-06-13",
+     "start": "11:00",
+     "kind": "dining",
+     "title": "누데이크 성수에서 브런치",
+     "place": "누데이크 성수"
+    },
+    {
+     "id": 38,
+     "date": "2027-06-13",
+     "start": "12:30",
+     "kind": "activity",
+     "title": "에스팩토리 팝업스토어 재방문",
+     "place": "에스팩토리"
+    },
+    {
+     "id": 39,
+     "date": "2027-06-13",
+     "start": "14:00",
+     "kind": "activity",
+     "title": "디올 성수 구경",
+     "place": "디올 성수"
+    },
+    {
+     "id": 40,
+     "date": "2027-06-13",
+     "start": "16:00",
+     "kind": "mobility",
+     "title": "지하철로 을지로입구역 이동",
+     "place": "을지로입구역"
+    },
+    {
+     "id": 41,
+     "date": "2027-06-13",
+     "start": "16:40",
+     "kind": "activity",
+     "title": "위드뮤 명동점에서 앨범 쇼핑",
+     "place": "위드뮤 명동점"
+    },
+    {
+     "id": 42,
+     "date": "2027-06-13",
+     "start": "18:00",
+     "kind": "dining",
+     "title": "명동 노점거리에서 길거리 음식",
+     "place": "명동 노점거리"
+    },
+    {
+     "id": 43,
+     "date": "2027-06-13",
+     "start": "22:30",
+     "kind": "dining",
+     "title": "종로3가 포장마차거리에서 야식",
+     "place": "종로3가 포장마차거리"
+    },
+    {
+     "id": 44,
+     "date": "2027-06-14",
+     "start": "09:00",
+     "kind": "dining",
+     "title": "이삭토스트에서 아침",
+     "place": "이삭토스트 선릉점"
+    },
+    {
+     "id": 45,
+     "date": "2027-06-14",
+     "start": "10:30",
+     "kind": "lodging",
+     "title": "호텔 체크아웃",
+     "place": "L7 강남 바이 롯데"
+    },
+    {
+     "id": 46,
+     "date": "2027-06-14",
+     "start": "11:00",
+     "kind": "activity",
+     "title": "올리브영 강남타운에서 화장품 쇼핑",
+     "place": "올리브영 강남타운"
+    },
+    {
+     "id": 47,
+     "date": "2027-06-14",
+     "start": "12:30",
+     "kind": "dining",
+     "title": "봉밀가에서 점심",
+     "place": "봉밀가"
+    },
+    {
+     "id": 48,
+     "date": "2027-06-14",
+     "start": "14:00",
+     "kind": "mobility",
+     "title": "도심공항터미널에서 공항버스 타기",
+     "place": "삼성동 도심공항터미널"
+    }
+   ],
+   "qs": [
+    {
+     "q": "가운데 거 몇 시까지 해?",
+     "gold": 12,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 오후 일정 뭐 있어?"
+      },
+      {
+       "role": "service",
+       "text": "수요일 오후에는 13:30 에스팩토리 케이팝 팝업스토어 방문, 15:00 오제제에서 늦은 점심, 16:30 탬버린즈 성수 플래그십 구경이 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "거기 비 오면 웨이팅 길어?",
+     "gold": 28,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 저녁 뭐 먹어?"
+      },
+      {
+       "role": "service",
+       "text": "금요일 19:00에 영동시장 먹자골목에서 저녁 드시는 일정입니다."
+      }
+     ]
+    },
+    {
+     "q": "그거 입장 몇 시부터 돼?",
+     "gold": 33,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 콘서트 몇 시야?"
+      },
+      {
+       "role": "service",
+       "text": "토요일 17:00 KSPO DOME에서 케이팝 콘서트 관람이 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "그 집 예약 필요해?",
+     "gold": 14,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "둘째 날 저녁에 뭐 먹어?"
+      },
+      {
+       "role": "service",
+       "text": "둘째 날(수요일) 19:00 다로베 성수에서 저녁 드십니다."
+      }
+     ]
+    },
+    {
+     "q": "뒤에 거 몇 시까지 영업해?",
+     "gold": 22,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "목요일 밤 일정 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "목요일 18:30 쌤쌤쌤에서 저녁, 22:00 삼거리포차에서 야식이 있어요."
+      }
+     ]
+    },
+    {
+     "q": "거기 호텔에서 걸어갈 수 있어?",
+     "gold": 44,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "마지막 날 아침 어디서 먹어?"
+      },
+      {
+       "role": "service",
+       "text": "월요일 09:00 이삭토스트 선릉점에서 아침 드시는 일정입니다."
+      }
+     ]
+    },
+    {
+     "q": "첫 번째 거 몇 시에 문 닫아?",
+     "gold": 41,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 명동 쪽 일정 뭐야?"
+      },
+      {
+       "role": "service",
+       "text": "일요일 16:40 위드뮤 명동점에서 앨범 쇼핑, 18:00 명동 노점거리에서 길거리 음식이 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "그거 입장료 얼마야?",
+     "gold": 7,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "화요일에 클럽 가는 거 맞지?"
+      },
+      {
+       "role": "service",
+       "text": "네, 화요일 22:00 클럽FF 라이브 공연 보기 일정이 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "거기 짐 먼저 맡길 수 있나요?",
+     "gold": 27,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 체크인하는 호텔 어디야?"
+      },
+      {
+       "role": "service",
+       "text": "금요일 15:30 L7 강남 바이 롯데에 체크인하십니다."
+      }
+     ]
+    },
+    {
+     "q": "마지막 거 줄 서야 돼?",
+     "gold": 9,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "수요일 오전에 뭐 해?"
+      },
+      {
+       "role": "service",
+       "text": "수요일 오전에는 10:00 택시로 성수동 이동, 10:40 누데이크 성수에서 디저트 브런치가 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "그 빵집 소금빵 유명해?",
+     "gold": 30,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 점심 전에 뭐 있어?"
+      },
+      {
+       "role": "service",
+       "text": "토요일 11:00 아우어베이커리 도산점에서 브런치가 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "두번째 거 근처에 카페 있어?",
+     "gold": 25,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "엔터 회사 사옥 가는 일정 다 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "목요일 15:30 하이브 용산 사옥, 금요일 13:00 YG엔터테인먼트 사옥, 토요일 13:00 JYP엔터테인먼트 사옥 방문이 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "거기서 택스리펀 돼?",
+     "gold": 46,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "월요일 일정 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "월요일은 09:00 이삭토스트 아침, 10:30 호텔 체크아웃, 11:00 올리브영 강남타운 쇼핑, 12:30 봉밀가 점심, 14:00 공항버스 탑승입니다."
+      },
+      {
+       "role": "customer",
+       "text": "쇼핑은 어디서 해?"
+      },
+      {
+       "role": "service",
+       "text": "11:00 올리브영 강남타운에서 화장품 쇼핑하십니다."
+      }
+     ]
+    },
+    {
+     "q": "그 식당 4명 자리 있어?",
+     "gold": 6,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "화요일 저녁 어디야"
+      },
+      {
+       "role": "service",
+       "text": "화요일 19:30 제순식당에서 저녁 드십니다."
+      }
+     ]
+    },
+    {
+     "q": "거기까지 지하철 막차 있어?",
+     "gold": 43,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 밤 야식 있어?"
+      },
+      {
+       "role": "service",
+       "text": "네, 일요일 22:30 종로3가 포장마차거리에서 야식 일정이 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "뒤에 거 비 와도 할 수 있어?",
+     "gold": 17,
+     "gold_set": null,
+     "type": "context_pronoun",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "목요일 오전 일정 두 개만 알려줘"
+      },
+      {
+       "role": "service",
+       "text": "목요일 10:00 지하철로 압구정로데오역 이동, 10:50 케이스타로드 강남돌 사진 찍기입니다."
+      }
+     ]
+    },
+    {
+     "q": "L7 홍대 체크아웃 몇 시까지야?",
+     "gold": 23,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "L7 홍대 첫날 체크인 몇 시?",
+     "gold": 2,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "L7 강남 체크인은 금요일이지?",
+     "gold": 27,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "L7 강남 마지막 날 체크아웃 늦출 수 있어?",
+     "gold": 45,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "수요일 누데이크 몇 시야",
+     "gold": 9,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일요일 누데이크 브런치 4명 맞지?",
+     "gold": 37,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "에스팩토리 처음 가는 날 무슨 팝업이야?",
+     "gold": 11,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "에스팩토리 재방문하는 건 언제야",
+     "gold": 38,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "화요일 클럽FF 공연 몇 시 시작?",
+     "gold": 7,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "토요일 클럽FF 드레스코드 있어?",
+     "gold": 35,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "성수동 가는 택시 일요일 거 몇 시야",
+     "gold": 36,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "수요일 성수동 택시 10시 맞아?",
+     "gold": 8,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "클럽FF 두번째 가는 날 몇 시에 들어가?",
+     "gold": 35,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "누데이크 두 번째 방문 몇 시예요?",
+     "gold": 37,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "둘째 날 에스팩토리 팝업 사전예약 해야 돼?",
+     "gold": 11,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "L7 홍대에서 나가는 날 짐 맡겨도 돼?",
+     "gold": 23,
+     "gold_set": null,
+     "type": "duplicate_place",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "탬버린즈 신사 몇 시 오픈?",
+     "gold": 19,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "탬버린즈 성수점 가는 날 언제야",
+     "gold": 13,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "클럽 옥타곤 입장할 때 신분증 검사해?",
+     "gold": 29,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "JYP 사옥 가는 거 몇 시?",
+     "gold": 32,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "YG 사옥 앞 사진 몇 시야",
+     "gold": 25,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하이브 사옥 언제 가?",
+     "gold": 20,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "영동시장 저녁 몇 시예요?",
+     "gold": 28,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "명동 노점거리 몇 시에 가?",
+     "gold": 42,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "삼거리포차 야식 몇 시?",
+     "gold": 22,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "종로3가 포장마차거리 가는 날?",
+     "gold": 43,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "오제제 성수점 메뉴 뭐 있어?",
+     "gold": 12,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "홍대 레드로드 버스킹 몇 시부터?",
+     "gold": 5,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "L7 강남 체크인 시간 몇 시야?",
+     "gold": 27,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "클럽 빵 공연은 몇 시야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "올리브영 명동타운 들르는 거 몇 시였지?",
+     "gold": null,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "누데이크 하우스 도산 예약했어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "confusable_name",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "제순식당 취소하고 하카타분코 시간 알려줘",
+     "gold": 6,
+     "gold_set": [
+      6,
+      3
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "광야 쇼핑 30분 늦추고 수요일 에스팩토리 팝업도 같이 밀어줘",
+     "gold": 10,
+     "gold_set": [
+      10,
+      11
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "다로베 예약해주고 오제제도 예약 가능해?",
+     "gold": 14,
+     "gold_set": [
+      14,
+      12
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "도산분식 몇 시인지랑 쌤쌤쌤 위치 알려줘",
+     "gold": 18,
+     "gold_set": [
+      18,
+      21
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하이브 사옥 빼고 탬버린즈 신사 시간 늘려줘",
+     "gold": 20,
+     "gold_set": [
+      20,
+      19
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "향미 메뉴 알려주고 YG 사옥까지 거리도",
+     "gold": 24,
+     "gold_set": [
+      24,
+      25
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "영동시장 저녁 취소하고 클럽 옥타곤 몇 시 입장인지 알려줘",
+     "gold": 28,
+     "gold_set": [
+      28,
+      29
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "콘서트 끝나는 시간이랑 양꼬치거리 가는 법 알려줘",
+     "gold": 33,
+     "gold_set": [
+      33,
+      34
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "JYP 사옥 일정 빼고 아우어베이커리 브런치 한 시간 늦춰줘",
+     "gold": 32,
+     "gold_set": [
+      32,
+      30
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "디올 성수 예약하고 위드뮤 명동점 영업시간도 알려줘",
+     "gold": 39,
+     "gold_set": [
+      39,
+      41
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "명동 노점거리 몇 시까지 하는지랑 종로3가 포차거리 가는 길",
+     "gold": 42,
+     "gold_set": [
+      42,
+      43
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "봉밀가 점심 빼고 올리브영 강남타운 쇼핑 길게 해줘",
+     "gold": 47,
+     "gold_set": [
+      47,
+      46
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "이삭토스트 아침 취소하고 L7 강남 체크아웃 시간 확인해줘",
+     "gold": 44,
+     "gold_set": [
+      44,
+      45
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "카카오프렌즈 홍대 몇 시까지 하는지랑 레드로드 버스킹 시간 알려줘",
+     "gold": 4,
+     "gold_set": [
+      4,
+      5
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "삼거리포차 예약해주고 케이스타로드 가는 법도",
+     "gold": 22,
+     "gold_set": [
+      22,
+      17
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "출국하는 날 공항버스 몇 시인지랑 L7 홍대 체크인 시간도 알려줘",
+     "gold": 48,
+     "gold_set": [
+      48,
+      2
+     ],
+     "type": "compound_intent",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "제순식당 말고 하카타분코 몇 시야?",
+     "gold": 3,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "클럽 옥타곤 말고 화요일 클럽FF 정보 줘",
+     "gold": 7,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "탬버린즈 성수 말고 신사 쪽 몇 시?",
+     "gold": 19,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하이브 말고 JYP 사옥 가는 날 알려줘",
+     "gold": 32,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "체크인 말고 L7 홍대 체크아웃 시간",
+     "gold": 23,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "수요일 누데이크 말고 그 다음 일정 몇 시야?",
+     "gold": 10,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "점심 말고 목요일 저녁 장소 알려줘",
+     "gold": 21,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "명동 노점거리 말고 일요일 야식 장소",
+     "gold": 43,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "오제제 아니고 다로베 몇 시야",
+     "gold": 14,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "콘서트 말고 토요일 밤 클럽 일정",
+     "gold": 35,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "YG 아니고 하이브 사옥 몇 시에 가?",
+     "gold": 20,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "영동시장 말고 금요일 점심 어디야",
+     "gold": 24,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "올리브영 말고 마지막 날 점심 뭐야",
+     "gold": 47,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "도산분식 아니고 목요일 야식 집 어디야",
+     "gold": 22,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "디올 말고 일요일 에스팩토리 몇 시?",
+     "gold": 38,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "L7 강남 체크인 말고 화요일 호텔 체크인 시간",
+     "gold": 2,
+     "gold_set": null,
+     "type": "negation",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "화욜 클럽ff 몇시임",
+     "gold": 7,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "누데이크 수욜꺼 몇시얌",
+     "gold": 9,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하이브사옥 언제감ㅋㅋ",
+     "gold": 20,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "케스타로드 몇시",
+     "gold": 17,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "양꼬치 몇시에 먹음?",
+     "gold": 34,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "콘서트 몇시ㅠㅠ 늦을듯",
+     "gold": 33,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "봉밀가 냉면 몇시얌",
+     "gold": 47,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "올영 강남타운 몇시에가",
+     "gold": 46,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "쌤쌤쌤 예약됨??",
+     "gold": 21,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "위드뮤 몇시 ㅇㅇ?",
+     "gold": 41,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "광야 굿즈샵 몇시 오픈임",
+     "gold": 10,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "다로베 피자 ㄱㄱ 몇시",
+     "gold": 14,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "체크인 강남 l7 몇시",
+     "gold": 27,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "옥타곤 불금 몇시부터임",
+     "gold": 29,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "첫날 공항리무진 몇시꺼임",
+     "gold": 1,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "향미 점심 몇시엿지",
+     "gold": 24,
+     "gold_set": null,
+     "type": "typo_slang",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "고마워요!",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "ㅋㅋㅋㅋㅋ",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "너 누가 만들었어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "비트코인 지금 얼마야",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "파이썬으로 리스트 정렬 어떻게 해?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "안녕하세요~",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "오늘 기분 좀 별로다",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "환율 1달러에 몇 원이야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "BTS 멤버 이름 알려줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "영어로 대답해줄 수 있어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "다음 주 서울 장마 시작해?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "엄마한테 보낼 생일 메시지 써줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "수고하셨어요 ㅎㅎ",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "너 AI야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "ㅇㅋ 고마워~",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "토요일 콘서트 몇 시야?"
+      },
+      {
+       "role": "service",
+       "text": "토요일 17:00 KSPO DOME에서 케이팝 콘서트 관람입니다."
+      }
+     ]
+    },
+    {
+     "q": "존댓말이랑 반말 차이가 뭐야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "out_of_scope",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "SM 공식 스토어 몇 시에 가?",
+     "gold": 10,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "돈코츠 라멘 먹는 데 몇 시?",
+     "gold": 3,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "화덕피자 먹는 날 언제야?",
+     "gold": 14,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "파스타 먹는 데 어디였지?",
+     "gold": 21,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "평양냉면 먹는 곳 몇 시야?",
+     "gold": 47,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "아이돌 무대 직관하는 날 몇 시 시작이야?",
+     "gold": 33,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "라이언 인형 파는 데 몇 시에 가?",
+     "gold": 4,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "길거리 공연 보는 거 몇 시야?",
+     "gold": 5,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "아이돌 곰 조형물 있는 거리 언제 가?",
+     "gold": 17,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "BTS 소속사 건물 앞에 언제 가?",
+     "gold": 20,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "블랙핑크 소속사 가는 날 언제야",
+     "gold": 25,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "명품 브랜드 컨셉스토어 구경 언제야?",
+     "gold": 39,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "K뷰티 드럭스토어 큰 매장 몇 시에 가?",
+     "gold": 46,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "강남 EDM 파티 몇 시 입장?",
+     "gold": 29,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "숙소 옮길 때 타는 차 몇 시야?",
+     "gold": 26,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "출국하러 가는 거 몇 시에 출발?",
+     "gold": 48,
+     "gold_set": null,
+     "type": "nameless_description",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "화요일 첫 식사 뭐야?",
+     "gold": 3,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "여행 마지막 일정 몇 시야?",
+     "gold": 48,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "이틀째 세번째 일정 뭐야?",
+     "gold": 10,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "마지막 날 첫 일정 알려줘",
+     "gold": 44,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "여행 마지막 식사 어디야?",
+     "gold": 47,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하이브 사옥 바로 다음 일정은?",
+     "gold": 21,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "콘서트 끝나고 뭐 해?",
+     "gold": 34,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "금요일 두 번째 일정",
+     "gold": 24,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "토요일 마지막 일정 몇 시야",
+     "gold": 35,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일요일 첫 식사 어디?",
+     "gold": 37,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "셋째 날 마지막 일정 뭐예요?",
+     "gold": 22,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "광야 쇼핑 바로 전 일정은?",
+     "gold": 9,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "첫째 날 두 번째 일정",
+     "gold": 2,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "목요일 점심 다음에 뭐 해?",
+     "gold": 19,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "YG 사옥 끝나고 바로 뭐 있어?",
+     "gold": 26,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "수요일 마지막 식사 몇 시야?",
+     "gold": 14,
+     "gold_set": null,
+     "type": "ordinal_relative",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "제순식당 30분 미뤄줘",
+     "gold": 6,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "광야 쇼핑 빼주세요",
+     "gold": 10,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "다로베 저녁 한 시간 당겨줘",
+     "gold": 14,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "도산분식 점심 취소할게요",
+     "gold": 18,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "삼거리포차 야식 11시로 바꿔줘",
+     "gold": 22,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "YG 사옥 일정 빼줘",
+     "gold": 25,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "클럽 옥타곤 자정으로 미뤄주세요",
+     "gold": 29,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "토요일 클럽FF 취소해줘",
+     "gold": 35,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "아우어베이커리 브런치 30분 늦춰줘",
+     "gold": 30,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "디올 성수 구경 한 시간 당겨줘",
+     "gold": 39,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "봉밀가 점심 12시로 당겨줘",
+     "gold": 47,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "일정 좀 30분씩 미뤄줘",
+     "gold": null,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "그거 취소할게요",
+     "gold": null,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "하나 빼주세요",
+     "gold": null,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "거기 한 시간 늦춰줘",
+     "gold": 24,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "금요일 점심 어디야?"
+      },
+      {
+       "role": "service",
+       "text": "금요일 11:30 향미에서 점심 드십니다."
+      }
+     ]
+    },
+    {
+     "q": "그거 빼줘",
+     "gold": 38,
+     "gold_set": null,
+     "type": "change_request",
+     "split": "train",
+     "history": [
+      {
+       "role": "customer",
+       "text": "일요일 팝업 일정 있어?"
+      },
+      {
+       "role": "service",
+       "text": "일요일 12:30 에스팩토리 팝업스토어 재방문 일정이 있습니다."
+      }
+     ]
+    },
+    {
+     "q": "경복궁 가는 날 언제야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "남산타워 몇 시에 올라가?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "롯데월드 일정 있지?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "광장시장 빈대떡 먹는 거 몇 시야",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "동대문 쇼핑 언제 가?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "더현대 서울 팝업 가는 날이 언제였지?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "코엑스 별마당 도서관 몇 시에 가?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "북촌한옥마을 가는 거 오전이지?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "한강 치맥 언제 해?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "서울스카이 전망대 예약했어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "인사동 쌈지길 몇 시?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "이태원 클럽 가는 날 언제야",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "청계천 산책 몇 시야?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "망원시장 먹방 일정 있어?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "익선동 한옥거리 언제 가?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    },
+    {
+     "q": "에버랜드 가는 날 버스 몇 시?",
+     "gold": null,
+     "gold_set": null,
+     "type": "absent_but_plausible",
+     "split": "train",
+     "history": []
+    }
+   ]
+  }
+ }
+}

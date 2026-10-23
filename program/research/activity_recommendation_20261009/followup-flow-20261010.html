@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activity 추천 연구 — 재검토와 검증 순서</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --color-paper:#fbfcfd; --color-ink:#161c28; --color-muted:#6b7488; --color-accent:#a8720c; --font-sans:'Geist','Noto Sans KR','Malgun Gothic',sans-serif; --font-serif:'Instrument Serif','Noto Serif KR',serif; --font-mono:'Geist Mono',monospace; }
+    body { font-family:var(--font-sans); background:var(--color-paper); color:var(--color-ink); min-height:100vh; padding:32px 24px; }
+    .frame { max-width:1000px; margin:auto; }
+    .eyebrow { font-family:var(--font-mono); font-size:12px; color:var(--color-muted); letter-spacing:.1em; margin-bottom:10px; }
+    h1 { font-family:var(--font-serif); font-size:32px; font-weight:400; line-height:1.4; margin-bottom:10px; }
+    .note { color:var(--color-muted); font-size:15px; line-height:1.7; margin-bottom:18px; }
+    .canvas { overflow-x:auto; }
+    svg { width:100%; min-width:760px; display:block; }
+    svg text { font-family:var(--font-sans); font-size:17px; fill:var(--color-ink); text-anchor:middle; }
+    .small { font-size:14px; fill:var(--color-muted); }
+    .node { fill:#f1f4f8; stroke:#dbe0ea; stroke-width:1.5; }
+    .end { fill:var(--color-paper); stroke:#6b7488; stroke-width:1.5; }
+    .decision { fill:rgba(168,114,12,.10); stroke:#a8720c; stroke-width:1.5; }
+    .edge { fill:none; stroke:#6b7488; stroke-width:1.6; marker-end:url(#arrow); }
+    .label { fill:#fbfcfd; }
+  </style>
+</head>
+<body><main class="frame">
+  <p class="eyebrow">guguroute · ACTIVITY RESEARCH · 2026-10-10</p>
+  <h1>자동 검증 다음에 사람 검수와 새 비교를 진행합니다</h1>
+  <p class="note">현재 완료 범위는 비용 없는 개발 검증입니다. 이후 모델 비교는 사람 정답·새 실행 예산·비용 잠금이 준비된 뒤 진행하며, 연구 종료와 운영 채택을 구분합니다.</p>
+  <div class="canvas">
+  <svg viewBox="0 0 960 1020" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="followup-title followup-desc">
+    <title id="followup-title">Activity 추천 연구 재검토와 후속 검증 흐름</title>
+    <desc id="followup-desc">시작 후 비용 없는 검증을 실행합니다. 실패하면 수정 대기로 종료합니다. 통과해도 사람 검수와 실행 조건이 준비되지 않으면 대기로 종료합니다. 준비되면 새로운 모델 비교와 별도 채택 검토를 거쳐 연구를 종료합니다.</desc>
+    <defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b7488"/></marker></defs>
+    <rect width="960" height="1020" fill="#fbfcfd"/>
+    <path class="edge" d="M320 80 V122"/>
+    <path class="edge" d="M320 204 V246"/>
+    <path class="edge" d="M320 386 V466"/>
+    <path class="edge" d="M480 316 H648 Q656 316 656 324 V360"/>
+    <path class="edge" d="M320 626 V696"/>
+    <path class="edge" d="M510 546 H648 Q656 546 656 554 V590"/>
+    <path class="edge" d="M320 778 V826"/>
+    <path class="edge" d="M320 908 V946"/>
+    <ellipse class="end" cx="320" cy="54" rx="115" ry="26"/>
+    <text x="320" y="60">재검토 시작</text>
+    <rect class="node" x="130" y="122" width="380" height="82" rx="6"/>
+    <text x="320" y="153">기록 재계산·개발 경계 시험</text>
+    <text class="small" x="320" y="181">추가 API 호출 없이 실행</text>
+    <polygon class="decision" points="320,246 480,316 320,386 160,316"/>
+    <text x="320" y="312">자동 검증을</text><text x="320" y="337">모두 통과했나요?</text>
+    <rect class="label" x="275" y="406" width="90" height="28"/>
+    <text class="small" x="320" y="425">통과</text>
+    <rect class="label" x="536" y="280" width="98" height="28"/>
+    <text class="small" x="585" y="300">실패</text>
+    <ellipse class="end" cx="656" cy="388" rx="137" ry="28"/>
+    <text x="656" y="394">수정 대기로 종료</text>
+    <polygon class="node" points="320,466 510,546 320,626 130,546"/>
+    <text x="320" y="525">사람 검수·새 예산·</text><text x="320" y="550">비용 잠금이</text><text x="320" y="575">준비됐나요?</text>
+    <rect class="label" x="275" y="648" width="90" height="28"/>
+    <text class="small" x="320" y="667">준비됨</text>
+    <rect class="label" x="536" y="510" width="98" height="28"/>
+    <text class="small" x="585" y="530">미준비</text>
+    <ellipse class="end" cx="656" cy="618" rx="137" ry="28"/>
+    <text x="656" y="624">검수·실행 준비 대기로 종료</text>
+    <rect class="node" x="130" y="696" width="380" height="82" rx="6"/>
+    <text x="320" y="727">미사용 문제로 모델 비교</text><text class="small" x="320" y="755">품질·비용·지연·실패 측정</text>
+    <rect class="node" x="130" y="826" width="380" height="82" rx="6"/>
+    <text x="320" y="857">사전 기준으로 채택 여부 별도 판단</text><text class="small" x="320" y="885">보류·미채택도 결과로 기록</text>
+    <ellipse class="end" cx="320" cy="972" rx="150" ry="26"/>
+    <text x="320" y="978">연구 결과 정리 종료</text>
+  </svg>
+  </div>
+  <p class="note">대기로 종료한 뒤 부족한 조건이 갖춰지면 새 연구 회차를 시작합니다. 운영 반영은 이 그림의 대상 범위 밖입니다.</p>
+</main></body></html>

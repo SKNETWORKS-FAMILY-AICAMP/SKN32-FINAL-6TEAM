@@ -365,3 +365,5 @@ def test_a_404_says_the_target_does_not_support_reload_yet(monkeypatch):
 
     assert outcome.status == "그 경로가 없음"
     assert "계약 1.0" in outcome.detail
+    # 2026-09-29 D-CS-008 — 고객용 빌드에는 반영 경로가 없다는 것도 말한다(「계약 1.0」만으로는 틀린 안내)
+    assert "설정 관리용 빌드" in outcome.detail

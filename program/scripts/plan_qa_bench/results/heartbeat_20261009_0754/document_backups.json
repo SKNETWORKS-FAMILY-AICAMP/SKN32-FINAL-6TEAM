@@ -1,0 +1,14 @@
+{
+  "changed_artifact_backups": [
+    "program/research/daily_rag_slm/_backup/2026-10-09_080935_six_hour_verified_results/2026-10-09.json",
+    "program/research/daily_rag_slm/_backup/2026-10-09_080935_six_hour_verified_results/model_release_watchlist.json",
+    "program/research/daily_rag_slm/_backup/2026-10-09_080935_six_hour_verified_results/2026-10-09.md",
+    "program/research/daily_rag_slm/_backup/2026-10-09_080935_six_hour_verified_results/index.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-09_080935_six_hour_verified_results/arm-serving-queue.md",
+    "final_project_cs/wiki/operations/_backup/2026-10-09_080935_six_hour_verified_results/gpu-work-queue.md",
+    "final_project_cs/wiki/quality/_backup/2026-10-09_080935_six_hour_verified_results/slm-model-evaluation.md",
+    "final_project_cs/wiki/_backup/2026-10-09_080935_six_hour_verified_results/log.md"
+  ],
+  "report": "final_project_cs/wiki/records/reports/2026-10-09_0800_six-hour-gpu-arm-report.md",
+  "created_at_kst": "2026-10-09T08:09:35.801710+09:00"
+}

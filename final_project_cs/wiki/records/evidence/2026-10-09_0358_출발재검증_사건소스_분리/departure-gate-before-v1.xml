@@ -1,0 +1,71 @@
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="7" time="4.077" timestamp="2026-10-09T03:58:50.537264+09:00"><testcase classname="tests.unit.travel.test_departure_source_gate_v1" name="test_walk_revalidation_does_not_require_unrelated_event_source[None]" time="0.056"><failure message="AssertionError: assert ('no_route' == 'ok'&#10;  &#10;  - ok&#10;  + no_route)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001B4CC1F1E80&gt;
+events = None
+
+    @pytest.mark.parametrize('events', [None, UnavailableEvents()])
+    def test_walk_revalidation_does_not_require_unrelated_event_source(monkeypatch, events):
+        move, items, source, observer, planned = walking(monkeypatch)
+        status, phrase = build_departure(move, items, route_events=events, routes=None,
+                                        now=NOW, departure_observer=observer)
+&gt;       assert status == 'ok' and f"약 {planned['eta_min']}분" in phrase.render()
+E       AssertionError: assert ('no_route' == 'ok'
+E         
+E         - ok
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:40: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_departure_source_gate_v1" name="test_walk_revalidation_does_not_require_unrelated_event_source[events1]" time="0.005"><failure message="Failed: 확인할 대상이 없는 도보는 사건 소스를 조회하지 않아야 합니다">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001B4CC1F2270&gt;
+events = &lt;tests.unit.travel.test_departure_source_gate_v1.UnavailableEvents object at 0x000001B4CC02FEC0&gt;
+
+    @pytest.mark.parametrize('events', [None, UnavailableEvents()])
+    def test_walk_revalidation_does_not_require_unrelated_event_source(monkeypatch, events):
+        move, items, source, observer, planned = walking(monkeypatch)
+&gt;       status, phrase = build_departure(move, items, route_events=events, routes=None,
+                                        now=NOW, departure_observer=observer)
+
+tests\unit\travel\test_departure_source_gate_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\domains\travel_ops\components\watch\trip_reminders.py:342: in build_departure
+    events = route_events.affecting(route_targets(route))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;tests.unit.travel.test_departure_source_gate_v1.UnavailableEvents object at 0x000001B4CC02FEC0&gt;
+targets = []
+
+    def affecting(self, targets):
+&gt;       pytest.fail('확인할 대상이 없는 도보는 사건 소스를 조회하지 않아야 합니다')
+E       Failed: 확인할 대상이 없는 도보는 사건 소스를 조회하지 않아야 합니다
+
+tests\unit\travel\test_departure_source_gate_v1.py:17: Failed</failure></testcase><testcase classname="tests.unit.travel.test_departure_source_gate_v1" name="test_disconnected_walk_is_held_even_without_incident_source" time="0.005"><failure message="AssertionError: assert ('no_route' == 'held'&#10;  &#10;  - held&#10;  + no_route)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000001B4CC1F2960&gt;
+
+    def test_disconnected_walk_is_held_even_without_incident_source(monkeypatch):
+        move, items, _, observer, _ = walking(monkeypatch, no_path=True)
+        status, phrase = build_departure(move, items, route_events=None, routes=None,
+                                        now=NOW, departure_observer=observer)
+&gt;       assert status == 'held' and phrase is None
+E       AssertionError: assert ('no_route' == 'held'
+E         
+E         - held
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:49: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_departure_source_gate_v1" name="test_registered_observer_never_sends_old_bus_guidance_without_event_source" time="0.001"><failure message="AssertionError: assert ('no_route' == 'fatal'&#10;  &#10;  - fatal&#10;  + no_route)">def test_registered_observer_never_sends_old_bus_guidance_without_event_source():
+        move, items = bus_notice()
+        status, phrase = build_departure(move, items, route_events=None, routes=None, now=t('10:00'),
+            departure_observer=lambda *a, **kw: pytest.fail('노선 사건 소스 누락을 먼저 거절해야 합니다'))
+&gt;       assert status == 'fatal' and phrase is None
+E       AssertionError: assert ('no_route' == 'fatal'
+E         
+E         - fatal
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:56: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_departure_source_gate_v1" name="test_registered_observer_holds_missing_route_definition" time="0.001"><failure message="AssertionError: assert ('no_route' == 'held'&#10;  &#10;  - held&#10;  + no_route)">def test_registered_observer_holds_missing_route_definition():
+        move, items = bus_notice()
+        move.detail.pop('route_def')
+        status, phrase = build_departure(move, items, route_events=None, routes=None, now=t('10:00'),
+            departure_observer=lambda *a, **kw: pytest.fail('검증할 경로 정의가 없습니다'))
+&gt;       assert status == 'held' and phrase is None
+E       AssertionError: assert ('no_route' == 'held'
+E         
+E         - held
+E         + no_route)
+
+tests\unit\travel\test_departure_source_gate_v1.py:64: AssertionError</failure></testcase><testcase classname="tests.unit.travel.test_departure_source_gate_v1" name="test_no_observer_keeps_legacy_no_route_contract[False]" time="0.001" /><testcase classname="tests.unit.travel.test_departure_source_gate_v1" name="test_no_observer_keeps_legacy_no_route_contract[True]" time="0.001" /></testsuite></testsuites>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="4.721" timestamp="2026-10-09T06:27:50.183350+09:00"><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_same_metadata_content_change_reloads_cached_runs" time="0.105"><failure message="assert 600 == 605">source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-content-before-v1/test_same_metadata_content_cha0/express.json.gz')
+
+    def test_same_metadata_content_change_reloads_cached_runs(source):
+        replace = same_metadata_tables(source)
+        first = EX.load_line('01호선')
+        assert first['weekday'][0][1] == 600
+        replace()
+&gt;       assert EX.load_line('01호선')['weekday'][0][1] == 605
+E       assert 600 == 605
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:170: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_express_source_reload_v1" name="test_same_metadata_content_change_rebuilds_runtime" time="0.163"><failure message="assert &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000022639C63D40&gt; is not &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000022639C63D40&gt;">tmp_path = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-content-before-v1/test_same_metadata_content_cha1')
+source = WindowsPath('<workspace>/.tmp/mobility_complete_20261008/express-content-before-v1/test_same_metadata_content_cha1/express.json.gz')
+
+    def test_same_metadata_content_change_rebuilds_runtime(tmp_path, source):
+        _write_mini_data(tmp_path)
+        replace = same_metadata_tables(source)
+        first = RT.get_verifier(quiet=True, data_dir=tmp_path, gh_url='', seoul_key='')
+        assert first._v.tt.departures('01호선', 'A', 'weekday')[0].min == 600
+        replace()
+        second = RT.get_verifier()
+&gt;       assert second is not first
+E       assert &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000022639C63D40&gt; is not &lt;app.domains.travel_ops.instances.mobility.engine.runtime.Runtime object at 0x0000022639C63D40&gt;
+
+tests\unit\travel\mobility\test_express_source_reload_v1.py:181: AssertionError</failure></testcase></testsuite></testsuites>

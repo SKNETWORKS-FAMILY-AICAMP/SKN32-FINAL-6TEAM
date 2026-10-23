@@ -1,0 +1,42 @@
+{
+  "e4bqat_oos1_mx": {
+    "control_request": {
+      "total": 1033,
+      "trained_only_correct": 26,
+      "original_only_correct": 16,
+      "exact_p": 0.16414940178310644
+    },
+    "control_no_request": {
+      "total": 974,
+      "trained_only_correct": 274,
+      "original_only_correct": 5,
+      "exact_p": 2.8496363845397666e-74
+    },
+    "mixed_request": {
+      "total": 1033,
+      "trained_only_correct": 18,
+      "original_only_correct": 131,
+      "exact_p": 2.2754371745663552e-22
+    },
+    "mixed_no_request": {
+      "total": 974,
+      "trained_only_correct": 191,
+      "original_only_correct": 12,
+      "exact_p": 1.2175133841218984e-42
+    }
+  },
+  "e4bqat_oos2_h": {
+    "positive": {
+      "total": 461,
+      "trained_only_correct": 20,
+      "original_only_correct": 11,
+      "exact_p": 0.14961278438568115
+    },
+    "negative": {
+      "total": 855,
+      "trained_only_correct": 330,
+      "original_only_correct": 26,
+      "exact_p": 3.129924202136107e-68
+    }
+  }
+}

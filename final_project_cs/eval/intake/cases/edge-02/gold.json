@@ -1,0 +1,44 @@
+{
+ "case_id": "edge-02",
+ "format": "edge",
+ "defect": "c2_heading_arrow",
+ "party": null,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "서울 1일 여행 (2명)\n1일차 · 10월 20일: 경복궁 → 북촌한옥마을 → 인사동"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (2명)",
+  "1일차 · 10월 20일: 경복궁 → 북촌한옥마을 → 인사동"
+ ],
+ "items": [
+  {
+   "date": "2026-10-20",
+   "start": null,
+   "title": "경복궁",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": null,
+   "title": "북촌한옥마을",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": null,
+   "title": "인사동",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ],
+ "expect_problems": [],
+ "why": "머리줄과 화살표 나열이 한 줄 — 항목이 통째로 사라지고 줄은 「읽음」이 된다"
+}

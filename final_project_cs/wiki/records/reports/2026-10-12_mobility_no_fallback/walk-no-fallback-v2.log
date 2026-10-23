@@ -1,0 +1,7 @@
+.................................................                        [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_web_improve_20261012_v1\walk-no-fallback-v2.xml -
+49 passed in 4.06s
+Exception ignored in: <function Console.__del__ at 0x000001E522B1D9E0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

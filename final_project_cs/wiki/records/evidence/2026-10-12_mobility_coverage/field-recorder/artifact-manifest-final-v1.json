@@ -1,0 +1,142 @@
+{
+  "source_sha256": "4d2f15d6ef008e3539f1ee027028752927bcce0527fb65739bf86dd2d1e58010",
+  "artifacts": [
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/browser-export-v1.json",
+      "sha256": "8c8c290e6e43a384fb97ed6248cf41a85204ee86e74c190a3ffb4b43390118bf",
+      "bytes": 5055
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/browser-export-v2.json",
+      "sha256": "ee1869bcb19b396397e9bdf4c9558d87acea8211f12cff5f3cdb459bb273437a",
+      "bytes": 5055
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/browser-export-v3.json",
+      "sha256": "f3cac00003cfe12b709e34c137d689363b48fd957c1481e75547771cdd63c779",
+      "bytes": 5055
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/browser-startup-error-v1.json",
+      "sha256": "bde942099c6e3d3f93093847e13d2f0c934cb1104c9fa5da6f9e452bd1fc0e26",
+      "bytes": 5011
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/browser-tests-after-v2.json",
+      "sha256": "83908e8f643578c441cb9915c5135c500de2b6c42535f01b5495c9e023d5bd33",
+      "bytes": 1721
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/browser-tests-after-v3.json",
+      "sha256": "fc8c7e55273381d67adc8fae41e031d4685134670ec639a2e66c0807afbdef3c",
+      "bytes": 2133
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/browser-tests-v1.json",
+      "sha256": "79f327f9003c605a5fa37df0f1703d3cb9326d75cc7d0438bd48ee8999ea5a75",
+      "bytes": 1595
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/core-tests-after-v2.json",
+      "sha256": "ac741e0dc9d02168bcb69da53d1a7e74c2aa165910966f951c42ecf761a1b7c6",
+      "bytes": 2570
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/core-tests-before-v2.json",
+      "sha256": "b92c1fe2117b6f89f1b00a511e0052273ae464e7a73c3f3faa2139cfa61714e6",
+      "bytes": 3554
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/core-tests-v1.json",
+      "sha256": "a008497385b41ad7448f58e9051f76f1dbf064a95b94c19cd3f7200fb13f4466",
+      "bytes": 2449
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/final-validation-summary-v1.json",
+      "sha256": "bdc096d44c45869598a924a407365c1e030d3ec37191a4f1ec71fd3749ceb290",
+      "bytes": 1824
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/recorder-desktop-1280-v1.png",
+      "sha256": "22332cf3f416459fd41587b4a1c0471dc7051ba65439228e7aef5aa0312e7d6f",
+      "bytes": 114992
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/recorder-desktop-1280-v2.png",
+      "sha256": "e58e89534280ecf96076416fa2f1f62a61445488931be9c4e252d90efc3fd45d",
+      "bytes": 114097
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/recorder-desktop-1280-v3.png",
+      "sha256": "58a578c49fdfdb7e5633c75c108ef305904c0baaefc77bb6064fcb3502b4d5fc",
+      "bytes": 114142
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/recorder-mobile-375-v1.png",
+      "sha256": "50e95764faeaedb053fabe31fadd76d8b19850aa87b8f8de74050759ef826aaf",
+      "bytes": 80689
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/recorder-mobile-375-v2.png",
+      "sha256": "7aa8b56533963e4f47d136d616621e41b134229193de6b785ebb1b079c2de258",
+      "bytes": 78356
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/recorder-mobile-375-v3.png",
+      "sha256": "7aa8b56533963e4f47d136d616621e41b134229193de6b785ebb1b079c2de258",
+      "bytes": 78356
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/test_recorder_browser_after_v2.cjs",
+      "sha256": "0ff609f46dc178e3e9db75ff3166c0ac09ee9dc7cb38e33aabbea13d2e119b88",
+      "bytes": 8759
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/test_recorder_browser_after_v3.cjs",
+      "sha256": "db789bf8cdf3a1dda2729e98aab087ab49d899fcb82c59d88e0b94e67da0100a",
+      "bytes": 9269
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/test_recorder_browser_v1.cjs",
+      "sha256": "3ed6de0376fc5db3616bd1ede4e9cf2565165c2a2e758e2d0bdc14fb56ea0fee",
+      "bytes": 8215
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/test_recorder_core_after_v2.cjs",
+      "sha256": "a563e8fb11d03d89613983d4c5b2705388775ddfc81a151bf853a11d4cb682c9",
+      "bytes": 6776
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/test_recorder_core_v1.cjs",
+      "sha256": "8c3750aac4a8ba0d45a5edcfcb09ee01f7b2d9a3b44b9cfc5d5994d2a3c4cf8c",
+      "bytes": 6457
+    },
+    {
+      "path": ".tmp/mobility_coverage_20261012/field-recorder/test_recorder_core_v2.cjs",
+      "sha256": "9aefe546dc915618cbf07ca1ab41ab008a9b9c5ae6f08cee9503dc8e34da399f",
+      "bytes": 6777
+    },
+    {
+      "path": "final_project_cs/scripts/mobility/assets/field_recorder_v1.html",
+      "sha256": "4d2f15d6ef008e3539f1ee027028752927bcce0527fb65739bf86dd2d1e58010",
+      "bytes": 23863
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-12_21개_오프라인기록기_동작검증.md",
+      "sha256": "cc3592968b7c1a1aa9f5c3c9d8fe54588d02657acb512b893951e4ce4eb151a6",
+      "bytes": 5347
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "node .tmp/mobility_coverage_20261012/field-recorder/test_recorder_core_after_v2.cjs",
+      "exit": 0,
+      "result": "22/22"
+    },
+    {
+      "cmd": "node .tmp/mobility_coverage_20261012/field-recorder/test_recorder_browser_after_v3.cjs",
+      "exit": 0,
+      "result": "13/13; file:// actual HTML hash matched; 0 external requests"
+    }
+  ]
+}

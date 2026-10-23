@@ -1,0 +1,64 @@
+{
+ "built_on": "2026-10-20",
+ "cases": 11,
+ "by_stratum": {
+  "B": 4,
+  "C": 7
+ },
+ "split": [
+  "holdout"
+ ],
+ "source": "cards_llm_bound_v0.jsonl",
+ "sha256": "9056b823fce89b4f3dc99c7247c1138aac747d2a495235b9d57968e8f1069525",
+ "inputs_sha256": "8aa519abbf8d0f387ec5a904a637129c4d17e89d59a6c31d52706935b73adbef",
+ "path": "watch",
+ "set": "h3",
+ "from": {
+  "bound": "cards_llm_bound_h3.jsonl",
+  "sha256": "9bb30940464c6f5229a454fb8a62e524d4d7cf0ac6a88547c9c83de7bb811de9"
+ },
+ "labeler": "합의",
+ "labels_file": "situation_cards_watch_h3_human_합의_2026-10-20.json",
+ "texts": "없음(감시 경로 — customer_text=None)",
+ "smoke": false,
+ "watch": {
+  "variants": 11,
+  "human": 11,
+  "not_called": 29,
+  "duplicate": 0,
+  "skipped": {
+   "not_called": [
+    "K-01",
+    "K-03",
+    "K-05",
+    "K-07",
+    "K-09",
+    "K-11",
+    "K-13",
+    "K-14",
+    "K-16",
+    "K-18",
+    "K-20",
+    "K-22",
+    "K-24",
+    "K-26",
+    "K-28",
+    "K-30",
+    "K-32",
+    "K-54",
+    "K-56",
+    "K-58",
+    "K-61",
+    "K-65",
+    "K-67",
+    "K-69",
+    "K-71",
+    "K-73",
+    "K-75",
+    "K-76",
+    "K-78"
+   ],
+   "duplicate": []
+  }
+ }
+}

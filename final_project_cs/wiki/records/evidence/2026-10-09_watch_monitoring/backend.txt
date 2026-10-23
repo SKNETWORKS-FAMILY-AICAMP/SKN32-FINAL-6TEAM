@@ -1,0 +1,22 @@
+.........F..............                                                 [100%]
+================================== FAILURES ===================================
+___________ test_auth_and_revoked_scope_and_customer_app_separation ___________
+
+world = namespace(conn=<psycopg.Connection [INTRANS] (host=127.0.0.1 port=5433 user=postgres database=acop_cs) at 0x2212cd0f50...3, 25, 0, 128996, tzinfo=datetime.timezone.utc), client=<starlette.testclient.TestClient object at 0x000002213C7CA210>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002213C3F94C0>
+
+    def test_auth_and_revoked_scope_and_customer_app_separation(world,monkeypatch):
+        w=world
+        w.client.cookies.clear()
+        assert w.client.get('/admin/api/watch-runs').status_code==401
+        op=auth.Operator('watch-operator',frozenset({'ops:introspect'}))
+        w.client.cookies.set(auth.COOKIE,auth.issue(op))
+        monkeypatch.setattr(auth,'operators',lambda:{op.id:('',frozenset())})
+        assert w.client.get('/admin/api/watch-runs').status_code==403
+>       from app.main import app
+E       ModuleNotFoundError: No module named 'app.main'
+
+tests\integration\test_watch_monitoring.py:135: ModuleNotFoundError
+=========================== short test summary info ===========================
+FAILED tests/integration/test_watch_monitoring.py::test_auth_and_revoked_scope_and_customer_app_separation
+1 failed, 23 passed in 5.11s

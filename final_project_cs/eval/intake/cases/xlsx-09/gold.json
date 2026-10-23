@@ -1,0 +1,44 @@
+{
+ "case_id": "xlsx-09",
+ "format": "xlsx",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.xlsx"
+  }
+ ],
+ "lines": [
+  "일차 | 날짜 | 시각 | 일정 | 메모",
+  "1일차 | 2026-10-17 | 09:30 | 경복궁 관람 | ",
+  "1일차 | 2026-10-17 | 12:30 | 명동교자 | ",
+  "1일차 | 2026-10-17 | 15:00 | 창경궁 | "
+ ],
+ "items": [
+  {
+   "date": "2026-10-17",
+   "start": "09:30",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-17",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-17",
+   "start": "15:00",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+{
+  "recorded_at": "2026-10-09T03:47:39.473730+09:00",
+  "intended_start": [
+    126.81668092135571,
+    37.56107982631504
+  ],
+  "intended_end": [
+    126.81649055992263,
+    37.561935578472514
+  ],
+  "provider": "naver",
+  "actions": [
+    "existing tab home click",
+    "existing tab exact coordinate search navigation",
+    "fresh tab same coordinate search navigation"
+  ],
+  "outcome": "UI transition not confirmed; no route observation",
+  "newly_observed_routes": 0,
+  "api_direct_calls": 0,
+  "kakao_new_query_attempted": false,
+  "google_new_query_attempted": false
+}

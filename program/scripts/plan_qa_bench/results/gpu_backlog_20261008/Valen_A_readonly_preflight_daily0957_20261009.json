@@ -1,0 +1,54 @@
+{
+  "pythons": [
+    {
+      "python": "/usr/bin/python3",
+      "status": 0,
+      "packages": {
+        "torch": "2.8.0+cu128",
+        "transformers": null,
+        "accelerate": null,
+        "safetensors": null,
+        "huggingface-hub": null,
+        "tokenizers": null,
+        "einops": null
+      },
+      "error": ""
+    },
+    {
+      "python": "/workspace/jevenv/bin/python",
+      "status": 0,
+      "packages": {
+        "torch": "2.8.0+cu128",
+        "transformers": "5.18.0",
+        "accelerate": null,
+        "safetensors": "0.8.0",
+        "huggingface-hub": null,
+        "tokenizers": "0.23.2",
+        "einops": null
+      },
+      "error": ""
+    },
+    {
+      "python": "/workspace/rtenv/bin/python",
+      "status": 0,
+      "packages": {
+        "torch": "2.8.0+cu128",
+        "transformers": "5.17.0",
+        "accelerate": "1.15.0",
+        "safetensors": "0.8.0",
+        "huggingface-hub": null,
+        "tokenizers": "0.23.2",
+        "einops": "0.8.2"
+      },
+      "error": ""
+    }
+  ],
+  "available_bytes": 7848443904,
+  "remaining_after_only_f32_weight": 4431158052,
+  "required_minimum": 3221225472,
+  "cgroup_memory_current": null,
+  "cgroup_memory_max": null,
+  "gpu": "3382 MiB, 16380 MiB, 78 %",
+  "torch_no_gpu_allocated_by_probe": true,
+  "observed_at_utc": "2026-10-09T01:06:15.230566+00:00"
+}

@@ -1,0 +1,61 @@
+{
+  "started_at_kst": "2026-10-12T05:05:53.415808+09:00",
+  "finished_at_kst": "2026-10-12T05:06:07.574653+09:00",
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-B",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\run_diagnostic_callback_checks.py"
+  ],
+  "pytest_args": [
+    "-m",
+    "not live",
+    "tests/unit/test_operations_diagnostics.py",
+    "tests/unit/core/test_controller_resume_recovery.py",
+    "tests/unit/travel/test_classification_execution_plan.py",
+    "tests/architecture/test_basement_is_domain_free.py",
+    "tests/architecture/test_basement_layers.py",
+    "tests/unit/travel/test_plugin_worker_availability.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_050552_917634_diagnostic_callback\\tmp",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_050552_917634_diagnostic_callback\\junit.xml",
+    "-o",
+    "faulthandler_timeout=30",
+    "--tb=short"
+  ],
+  "returncode": 0,
+  "source_before": {
+    "final_project_cs/app/application/controller.py": "2dba06c014f0c99f630e075f6c40cfcf7b1a7bfe380558189d5a5a39c9e13f24",
+    "final_project_cs/app/application/operations_diagnostics.py": "5de7055070868cecc86fda67daa9ff43bb284ae974549695242883f61ac53ce7",
+    "final_project_cs/app/composition.py": "dc79aba2de02f97241c8101c9d8d94cf72cd7ed3a0253881900f428354858f64",
+    "final_project_cs/scripts/run_sweepers.py": "4b1a14f3a112af0551f5c9ee9757d84144800983fa75f83140201e0c8fc1efae",
+    "final_project_cs/app/domains/travel_ops/components/watch/batch_executor.py": "0d7b78ebf5af1e86f48a15027508eca3238ae4c957f0b8c55dc8c99255c2763e",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_batch.py": "dd4936ecc26b38ce62c5d877a3abdf9dca0925e0122f9b2d7b77c1d95f150101",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py": "bb660d980cc75316f0e55e89283f2685c13b77c78e75476759d37b78397bed6c",
+    "final_project_cs/tests/unit/test_operations_diagnostics.py": "df982ee0ec56ed99a2de3863c81082fd4f1bf064499032e0341a7de6fd8d2345",
+    "final_project_cs/tests/unit/core/test_controller_resume_recovery.py": "900d0e03ab35fdb6ec52d7707a10d364bf0d2252fc3ed861a897dd03cedf2ec1",
+    "final_project_cs/tests/unit/travel/test_classification_execution_plan.py": "6fe0e0b39243b1b095e2137269f5d2253cf5cc7369c19da715e61e3c99dffb16",
+    "final_project_cs/tests/unit/travel/test_plugin_worker_availability.py": "719a97618964f04f668a386e8dc2341898cb0089e754ebb322427b0cbbf16d25",
+    "final_project_cs/tests/architecture/test_basement_is_domain_free.py": "84fcd1fabe478ada70fc1dc248de803e16ca995938e94e9b077abeb9732c5f16",
+    "final_project_cs/tests/architecture/test_basement_layers.py": "9ff005d362d4c03bb6fa17b57e048938860bbf213001f39734df6c916c0b99ff"
+  },
+  "source_after": {
+    "final_project_cs/app/application/controller.py": "2dba06c014f0c99f630e075f6c40cfcf7b1a7bfe380558189d5a5a39c9e13f24",
+    "final_project_cs/app/application/operations_diagnostics.py": "5de7055070868cecc86fda67daa9ff43bb284ae974549695242883f61ac53ce7",
+    "final_project_cs/app/composition.py": "dc79aba2de02f97241c8101c9d8d94cf72cd7ed3a0253881900f428354858f64",
+    "final_project_cs/scripts/run_sweepers.py": "4b1a14f3a112af0551f5c9ee9757d84144800983fa75f83140201e0c8fc1efae",
+    "final_project_cs/app/domains/travel_ops/components/watch/batch_executor.py": "0d7b78ebf5af1e86f48a15027508eca3238ae4c957f0b8c55dc8c99255c2763e",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_batch.py": "dd4936ecc26b38ce62c5d877a3abdf9dca0925e0122f9b2d7b77c1d95f150101",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py": "bb660d980cc75316f0e55e89283f2685c13b77c78e75476759d37b78397bed6c",
+    "final_project_cs/tests/unit/test_operations_diagnostics.py": "df982ee0ec56ed99a2de3863c81082fd4f1bf064499032e0341a7de6fd8d2345",
+    "final_project_cs/tests/unit/core/test_controller_resume_recovery.py": "900d0e03ab35fdb6ec52d7707a10d364bf0d2252fc3ed861a897dd03cedf2ec1",
+    "final_project_cs/tests/unit/travel/test_classification_execution_plan.py": "6fe0e0b39243b1b095e2137269f5d2253cf5cc7369c19da715e61e3c99dffb16",
+    "final_project_cs/tests/unit/travel/test_plugin_worker_availability.py": "719a97618964f04f668a386e8dc2341898cb0089e754ebb322427b0cbbf16d25",
+    "final_project_cs/tests/architecture/test_basement_is_domain_free.py": "84fcd1fabe478ada70fc1dc248de803e16ca995938e94e9b077abeb9732c5f16",
+    "final_project_cs/tests/architecture/test_basement_layers.py": "9ff005d362d4c03bb6fa17b57e048938860bbf213001f39734df6c916c0b99ff"
+  },
+  "changed_during_run": [],
+  "blocked_connections": [],
+  "scope": "DB denied; only self-bound loopback ports allowed; temporary SQLite and transaction doubles; no HTTP or model; no PostgreSQL"
+}

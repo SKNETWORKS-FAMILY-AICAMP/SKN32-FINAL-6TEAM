@@ -1,4 +1,7 @@
-"""상시로 돌아야 하는 것들의 **단일 목록**.
+"""로컬 Windows 개발 환경의 서비스·예약 작업 **단일 목록**.
+
+공개 Docker 배포 worker의 반복 실행은 deploy/worker.sh가 소유한다.
+이 목록의 등록·heartbeat 경로가 공개 배포에도 적용된다고 가정하지 않는다.
 
 ★한 곳에만 적는다. 등록(`install_services`)·실행(`tick`)·점검(`healthcheck`)이
   같은 표를 읽어야 「걸어 둔 것」과 「보는 것」이 어긋나지 않는다. 지금까지는
@@ -24,7 +27,7 @@ HEARTBEAT_DIR = OPS_DIR / "heartbeat"
 LOG_DIR = OPS_DIR / "logs"
 
 #: PostgreSQL 을 Windows 서비스로 등록할 때 쓸 이름.
-#: ★저장소 이름이 아니라 **클러스터** 이름을 넣는다 — 이 클러스터는 triPilot 만의 것이
+#: ★저장소 이름이 아니라 **클러스터** 이름을 넣는다 — 이 클러스터는 guguroute 만의 것이
 #:   아니다. 같은 데이터 디렉터리에 옆 프로젝트 DB 가 함께 있다
 #:   (`wiki/operations/local-setup.md` §「알아야 할 것」).
 PG_SERVICE_NAME = "pgv-postgresql-5433"
@@ -63,21 +66,25 @@ JOBS: dict[str, Job] = {
         kind="service",
         task_name=PG_SERVICE_NAME,
         max_silence_seconds=None,
-        why="나머지 전부가 이것 위에 선다. 지금은 셸이 띄운 자식이라 그 셸이 사라지면 "
-            "종료 기록도 없이 함께 꺼진다(wiki/records/manuals/운영_로컬DB_기동과_비정상종료.md §4-①).",
+        why="로컬 개발 작업이 사용하는 DB다. 실제 Windows 서비스 등록·재부팅 복구 상태는 확인해야 한다. "
+            "수동 기동의 과거 장애는 wiki/records/manuals/운영_로컬DB_기동과_비정상종료.md에 보존한다.",
         dead_signal="5433 이 안 열린다. 점검의 `db` 줄이 FAIL 이 된다. "
-                    "★죽는 순간은 지금 아무 데도 안 남는다 — 서비스로 올려야 정상 종료 경로가 생긴다.",
+                    "종료 기록·자동 복구는 실제 기동 방식과 등록 설정을 별도로 확인한다.",
     ),
     "sweepers": Job(
         name="sweepers",
-        title="되잡기 작업 (멈춘 Case · 여행 감시 · 일정 안내)",
+        title="되잡기 작업 (멈춘 Case · 여행 감시 · 일정 안내) — 1분마다 돌고, 감시만 3분 주기(작업 안의 문)",
         kind="tick",
         argv=["-m", "scripts.run_sweepers", "--once"],
         every_minutes=1,
-        task_name="triPilot cs sweepers",
+        task_name="guguroute cs sweepers",
         max_silence_seconds=600,
         why="접수·분류·실행을 나눈 대가다. 안 돌면 `classifying`·`routing` 에 남은 Case 가 "
-            "영원히 그대로 있고, 일정 안내(v11 §6-B)가 때를 놓친다.",
+            "영원히 그대로 있고, 일정 안내(v11 §6-B)가 때를 놓친다. "
+            # ★`[2026-10-03 사용자 결정]` 주기(1분)는 그대로다 — 일정 출발 안내와 되잡기가 늦어지지 않게. 여행 **감시**만 팀 결정(D-017)대로 3분이고,
+            #   그것은 이 작업 안에서 지킨다(`scripts/run_sweepers.py` 의 `_watch_if_due` · `app/application/job_gate.py` · 표 `job_gates`).
+            #   그래서 `max_silence_seconds` 도 그대로 600 초다 — 이 값은 작업이 **돌았는지**를 재고(1분 주기의 10회), 감시가 돌았는지는 `watch_cadence` 줄이 따로 잰다.
+            "여행 감시만 3분 주기(`reliability.watch_interval_seconds`)로 작업 안에서 지킨다.",
         dead_signal="`customer_cases` 에 임계값(분류 300초·실행 600초)을 넘긴 Case 가 쌓인다. "
                     "점검의 `stuck_cases` 줄이 센다.",
     ),
@@ -87,7 +94,7 @@ JOBS: dict[str, Job] = {
         kind="tick",
         argv=["-m", "scripts.run_outbox_worker", "--once", "--drain"],
         every_minutes=1,
-        task_name="triPilot cs outbox",
+        task_name="guguroute cs outbox",
         max_silence_seconds=600,
         why="통지는 바깥함(`outbox`)에 쌓이기만 한다. 일꾼이 안 돌면 고객에게 아무것도 안 나간다 — "
             "그런데 시스템 어디에도 오류가 안 뜬다.",
@@ -99,7 +106,7 @@ JOBS: dict[str, Job] = {
         kind="tick",
         argv=["-m", "scripts.run_daily_feedback"],  # --date 는 tick 이 그날 날짜로 채운다
         daily_at="09:10",  # guardrails `feedback_analytics.batch_time_utc: 00:10` = KST 09:10
-        task_name="triPilot cs daily-feedback",
+        task_name="guguroute cs daily-feedback",
         max_silence_seconds=60 * 60 * 30,  # 하루 + 여유 6시간
         why="`config/guardrails.yaml` 의 `feedback_analytics.batch_time_utc: 00:10` 이 정한 배치다. "
             "안 돌면 급증을 아무도 못 본다.",
@@ -113,7 +120,7 @@ JOBS: dict[str, Job] = {
         # ★포트는 공개 주소(`ACOP_PUBLIC_BASE_URL`)와 **같아야** 한다. 8043 으로 띄웠더니
         #   통지에 실린 계획서 링크가 죽은 주소를 가리켰다(2026-09-22).
         argv=["-m", "uvicorn", "app.presentation.api.app:app", "--port", "8042"],
-        task_name="triPilot cs app",
+        task_name="guguroute cs app",
         max_silence_seconds=None,
         why="접점이 둘인데(에이전트 API · 여행계획서 링크) 둘 다 이 프로세스다. "
             "★**상태의 정본이 링크**라서(v11 §9-C) 앱이 꺼지면 고객이 맞는 것을 볼 데가 없다.",

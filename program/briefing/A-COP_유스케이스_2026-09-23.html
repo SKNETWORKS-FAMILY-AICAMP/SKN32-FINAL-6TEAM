@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>A-COP 유스케이스</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:light;
+    --paper:#fbfcfd;
+    --paper-2:#f1f4f8;
+    --card:#ffffff;
+    --ink:#161c28;
+    --muted:#606b7e;
+    --soft:#727d90;
+    --rule:rgba(22,28,40,.12);
+    --rule-solid:#dbe0ea;
+    --accent:#a8720c;
+    --accent-tint:rgba(168,114,12,.08);
+    --accent-rule:rgba(168,114,12,.38);
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      color-scheme:dark;
+      --paper:#15181d;
+      --paper-2:#20252d;
+      --card:#1a1f26;
+      --ink:#e9edf3;
+      --muted:#b0bac9;
+      --soft:#9aa6b9;
+      --rule:rgba(233,237,243,.14);
+      --rule-solid:#39424f;
+      --accent:#e4b45c;
+      --accent-tint:rgba(228,180,92,.09);
+      --accent-rule:rgba(228,180,92,.42);
+    }
+  }
+  *{box-sizing:border-box}
+  html{margin:0;scroll-padding-top:20px}
+  body{
+    margin:0;
+    width:100%;
+    min-width:0;
+    padding:48px 24px 64px;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Geist','Noto Sans KR',sans-serif;
+    font-size:14px;
+    line-height:1.8;
+    overflow-wrap:anywhere;
+  }
+  .wrap{width:100%;max-width:1240px;min-width:0;margin:0 auto}
+  main,section,header,footer,figure,nav{min-width:0;max-width:100%}
+  a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+  a:hover{text-decoration:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+  ::selection{background:var(--accent-tint);color:var(--ink)}
+  p{margin:0 0 16px}
+  strong{font-weight:600}
+  .eyebrow{
+    margin:0 0 12px;
+    color:var(--soft);
+    font-family:'Geist Mono','Noto Sans KR',monospace;
+    font-size:11px;
+    letter-spacing:.1em;
+    line-height:1.9;
+  }
+  h1{margin:0 0 14px;font-size:34px;font-weight:500;line-height:1.35;letter-spacing:-.04em}
+  .sub{max-width:920px;margin:0;color:var(--muted);font-size:14px;line-height:1.9}
+  .sub .conclusion{color:var(--ink)}
+  .toc{margin:28px 0 0;padding:18px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .toc-label{margin:0 0 10px;color:var(--soft);font-size:11px;font-family:'Geist Mono','Noto Sans KR',monospace}
+  .toc ol{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 20px;margin:0;padding:0;list-style:none}
+  .toc a{display:flex;gap:9px;align-items:baseline;color:var(--ink);font-size:12px;text-decoration:none}
+  .toc a:hover{color:var(--accent)}
+  .toc .n{flex:none;color:var(--soft);font-size:10px}
+  .n,.id{font-family:'Geist Mono',monospace}
+  section{margin-top:44px}
+  section+section{padding-top:28px;border-top:1px solid var(--rule)}
+  h2{display:flex;align-items:baseline;gap:12px;margin:0 0 18px;font-size:18px;font-weight:500;line-height:1.6}
+  h2 .n{flex:none;font-size:12px;color:var(--soft)}
+  h3{margin:28px 0 12px;font-size:15px;font-weight:500;line-height:1.7}
+  h3 .letter{margin-right:8px;color:var(--accent);font-family:'Geist Mono',monospace;font-size:12px}
+  .small,.note{font-size:12px;color:var(--muted)}
+  code{
+    padding:1px 4px;
+    border-radius:4px;
+    background:var(--paper-2);
+    color:inherit;
+    font-family:'Geist Mono','Noto Sans KR',monospace;
+    font-size:11.5px;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:normal;
+  }
+  .tbl{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    margin:12px 0 22px;
+    border-top:1px solid var(--rule-solid);
+  }
+  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;line-height:1.85}
+  th,td{padding:12px 14px;border-bottom:1px solid var(--rule-solid);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+  thead th{background:var(--paper-2);font-size:12px;font-weight:500}
+  tbody th{font-weight:500}
+  .meta{min-width:0}
+  .meta col:first-child{width:19%}
+  .meta tbody th{background:var(--paper-2)}
+  .actors{min-width:760px}
+  .actors col:nth-child(1){width:16%}
+  .actors col:nth-child(2){width:43%}
+  .actors col:nth-child(3){width:41%}
+  .comparison{min-width:850px}
+  .comparison col:nth-child(1){width:25%}
+  .comparison col:nth-child(2){width:53%}
+  .comparison col:nth-child(3){width:22%}
+  .uc{min-width:1080px}
+  .uc col:nth-child(1){width:7%}
+  .uc col:nth-child(2){width:20%}
+  .uc col:nth-child(3){width:13%}
+  .uc col:nth-child(4){width:25%}
+  .uc col:nth-child(5){width:10%}
+  .uc col:nth-child(6){width:25%}
+  .dev{min-width:1000px}
+  .dev col:nth-child(1){width:7%}
+  .dev col:nth-child(2){width:23%}
+  .dev col:nth-child(3){width:21%}
+  .dev col:nth-child(4){width:37%}
+  .dev col:nth-child(5){width:12%}
+  .drift{min-width:900px}
+  .drift col:nth-child(1){width:28%}
+  .drift col:nth-child(2){width:29%}
+  .drift col:nth-child(3){width:43%}
+  .id{font-size:11px;white-space:nowrap;color:var(--muted)}
+  .st{
+    display:inline-block;
+    padding:1px 7px;
+    border:1px solid var(--rule-solid);
+    border-radius:5px;
+    background:var(--card);
+    font-size:11px;
+    font-weight:400;
+    line-height:1.7;
+    white-space:nowrap;
+  }
+  .st-ok{color:var(--ink)}
+  .st-part{color:var(--accent);border-color:var(--accent-rule);background:var(--accent-tint)}
+  .st-none{color:var(--muted);background:var(--paper-2)}
+  .st-unk{color:var(--muted);border-style:dashed}
+  .status-note{display:block;margin-top:7px;color:var(--muted);font-size:11px;line-height:1.75}
+  .legend{margin-top:20px;padding:16px 18px;background:var(--card);border:1px solid var(--rule);border-radius:6px}
+  .legend-title{margin:0 0 10px;font-size:12px;font-weight:500}
+  .legend ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;padding:0;margin:0;list-style:none}
+  .legend li{display:flex;align-items:baseline;gap:10px;font-size:12px;color:var(--muted)}
+  .legend .st{flex:none}
+  .callout{padding:22px 24px;background:var(--accent-tint);border:1px solid var(--accent-rule);border-left:3px solid var(--accent);border-radius:0 6px 6px 0}
+  .callout p{margin:0}
+  .callout .lead{margin-bottom:8px;font-size:17px;font-weight:500;line-height:1.7}
+  figure{margin:0}
+  .diagram{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    border:1px solid var(--rule-solid);
+    border-radius:6px;
+    background:var(--card);
+  }
+  .diagram svg{display:block;width:100%;min-width:1120px;height:auto;color:var(--ink)}
+  .diagram .group-frame{fill:var(--paper-2);stroke:var(--rule-solid)}
+  .diagram .node{fill:var(--card);stroke:var(--rule-solid)}
+  .diagram .core-node{fill:var(--accent-tint);stroke:var(--accent-rule)}
+  .diagram .future-node{fill:var(--card);stroke:var(--rule-solid);stroke-dasharray:5 4}
+  .diagram .edge{fill:none;stroke:var(--muted);stroke-width:1.15;stroke-linejoin:round}
+  .diagram .arrow{fill:var(--muted)}
+  .diagram .icon{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+  .diagram text{fill:currentColor;font-family:'Geist','Noto Sans KR',sans-serif;font-size:15px}
+  .diagram .svg-label{fill:var(--soft);font-family:'Geist Mono','Noto Sans KR',monospace;font-size:11px;letter-spacing:.08em}
+  .diagram .svg-note{fill:var(--muted);font-size:12px}
+  .diagram .svg-letter{fill:var(--accent);font-family:'Geist Mono',monospace;font-size:13px}
+  figcaption{margin-top:12px;color:var(--muted);font-size:12px}
+  .gaps{margin:0;padding-left:25px}
+  .gaps li{padding:14px 0 16px 8px;border-bottom:1px solid var(--rule)}
+  .gaps li:first-child{padding-top:0}
+  .gaps li::marker{font-family:'Geist Mono',monospace;font-size:12px;color:var(--accent)}
+  .gaps p{margin:6px 0 0}
+  footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--rule-solid);color:var(--muted);font-size:12px;line-height:2}
+  footer p{margin:0 0 12px}
+  .tally{color:var(--ink)}
+  @media(max-width:700px){
+    body{padding:28px 16px 40px}
+    h1{font-size:28px}
+    h2{font-size:17px;gap:10px}
+    section{margin-top:32px}
+    section+section{padding-top:24px}
+    .toc ol{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+    .legend ul{grid-template-columns:minmax(0,1fr)}
+    .legend{padding:14px}
+    .callout{padding:18px 16px}
+    .callout .lead{font-size:16px}
+    .meta col:first-child{width:27%}
+    .meta th,.meta td{padding:10px 9px;font-size:12px}
+    .eyebrow{font-size:10px;letter-spacing:.05em}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="eyebrow">A-COP · V11 TRAVEL · 유스케이스 · 2026-09-23</p>
+  <h1>A-COP 유스케이스</h1>
+  <p class="sub">여행자·개인 에이전트 쪽 16개와 개발·운영팀 쪽 16개.<br><span class="conclusion">여행 도메인에는 사람(운영자)이 판단하는 정상 흐름이 없다 — 사람이 끼는 곳은 버그 대응뿐이다.</span></p>
+  <nav class="toc" aria-label="목차">
+    <p class="toc-label">목차</p>
+    <ol>
+      <li><a href="#s00"><span class="n">00</span><span>문서 정보</span></a></li>
+      <li><a href="#s01"><span class="n">01</span><span>한눈에</span></a></li>
+      <li><a href="#s02"><span class="n">02</span><span>행위자</span></a></li>
+      <li><a href="#s03"><span class="n">03</span><span>운영자는 없다</span></a></li>
+      <li><a href="#s04"><span class="n">04</span><span>여행자·개인 에이전트</span></a></li>
+      <li><a href="#s05"><span class="n">05</span><span>개발·운영팀</span></a></li>
+      <li><a href="#s06"><span class="n">06</span><span>코드의 공백</span></a></li>
+      <li><a href="#s07"><span class="n">07</span><span>문서 어긋남</span></a></li>
+    </ol>
+  </nav>
+</header>
+
+<main>
+<section id="s00" aria-labelledby="h00">
+  <h2 id="h00"><span class="n">00</span>문서 정보</h2>
+  <div class="tbl" role="region" aria-label="문서 정보 표" tabindex="0">
+    <table class="meta">
+      <colgroup><col><col></colgroup>
+      <thead><tr><th scope="col">항목</th><th scope="col">값</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">기준선</th><td><code>program/plan/A-COP_구현계획서_v11.md</code> (§1 · §3 · §4-C · §6 · §9-C)</td></tr>
+        <tr><th scope="row">코드 대조</th><td>2026-09-23, <code>final_project_cs/</code>의 <code>@router</code>(라우트 선언 표식)·스크립트를 찾아 확인했다.</td></tr>
+        <tr><th scope="row">「있음」의 뜻</th><td>경로·스크립트가 코드에 <strong>있다</strong>는 뜻이다. 기능이 잘 도는지는 이 문서가 재지 않았다.</td></tr>
+        <tr><th scope="row">대체하는 것</th><td><code>program/plan/diagram/acop_usecase_v2.svg</code> — 커머스 시절 그림이라 낡았다. wiki <code>architecture/diagrams.md</code>가 이미 「낡음」으로 표시했다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="legend" aria-label="상태 배지 범례">
+    <p class="legend-title">상태 배지 범례</p>
+    <ul>
+      <li><span class="st st-ok">있음</span><span>코드에서 경로·스크립트의 존재를 확인했다.</span></li>
+      <li><span class="st st-part">일부</span><span>일부만 있으며, 남은 범위는 메모에 적었다.</span></li>
+      <li><span class="st st-none">없음/미구현</span><span>해당 구현이 없다.</span></li>
+      <li><span class="st st-unk">확인 안 함</span><span>이 문서에서 코드 대조를 하지 않았다. 점선으로 구분한다.</span></li>
+    </ul>
+  </aside>
+</section>
+
+<section id="s01" aria-labelledby="h01">
+  <h2 id="h01"><span class="n">01</span>한눈에</h2>
+  <figure>
+    <div class="diagram" role="region" aria-label="유스케이스 관계도. 좁은 화면에서는 그림 안에서 가로로 스크롤한다." tabindex="0">
+      <svg viewBox="0 0 1240 980" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="diagram-title diagram-desc">
+        <title id="diagram-title">A-COP 행위자와 유스케이스 묶음</title>
+        <desc id="diagram-desc">왼쪽은 여행자·개인 에이전트·개발·운영팀이고 오른쪽은 시스템 행위자다. 여행자는 C에, 개인 에이전트는 A·C·D에 연결된다. 시계와 외부 데이터 소스는 B로 들어오고 B는 알림 채널로 연결된다. 업체와 D는 양방향으로 연결된다. 아래의 개발·운영팀은 E·F·G·H에 연결된다.</desc>
+        <defs>
+          <marker id="arrow-end" viewBox="0 0 8 8" markerWidth="7" markerHeight="7" refX="7" refY="4" orient="auto">
+            <path class="arrow" d="M0 0 L8 4 L0 8 Z"/>
+          </marker>
+          <marker id="arrow-start" viewBox="0 0 8 8" markerWidth="7" markerHeight="7" refX="1" refY="4" orient="auto">
+            <path class="arrow" d="M8 0 L0 4 L8 8 Z"/>
+          </marker>
+        </defs>
+
+        <text class="svg-label" x="30" y="32">사람·에이전트</text>
+        <text class="svg-label" x="396" y="32">유스케이스 묶음</text>
+        <text class="svg-label" x="950" y="32">시스템 행위자</text>
+
+        <rect class="group-frame" x="370" y="56" width="460" height="528" rx="8"/>
+        <text class="svg-label" x="394" y="84">여행자·개인 에이전트 쪽</text>
+
+        <rect class="node" x="414" y="106" width="370" height="74" rx="6"/>
+        <text class="svg-letter" x="436" y="136">A</text>
+        <text x="464" y="136">여행 전</text>
+        <text class="svg-note" x="464" y="160">일정 만들기</text>
+
+        <rect class="core-node" x="414" y="226" width="370" height="74" rx="6"/>
+        <text class="svg-letter" x="436" y="256">B</text>
+        <text x="464" y="256">시스템이 먼저</text>
+        <text class="svg-note" x="464" y="280">변화 감지 · 자동 적용 · 통지</text>
+
+        <rect class="node" x="414" y="346" width="370" height="74" rx="6"/>
+        <text class="svg-letter" x="436" y="376">C</text>
+        <text x="464" y="376">여행자가 먼저</text>
+        <text class="svg-note" x="464" y="400">조회 · 신고 · 대안 요청 · 되돌리기</text>
+
+        <rect class="future-node" x="414" y="466" width="370" height="74" rx="6"/>
+        <text class="svg-letter" x="436" y="496">D</text>
+        <text x="464" y="496">업체 예약</text>
+        <text class="svg-note" x="464" y="520">MVP(최소 기능 제품) 다음</text>
+
+        <rect class="node" x="30" y="110" width="212" height="68" rx="6"/>
+        <g class="icon">
+          <rect x="49" y="129" width="26" height="23" rx="4"/>
+          <path d="M62 122 V129 M55 138 H57 M67 138 H69 M56 146 H68 M54 156 V160 M70 156 V160"/>
+        </g>
+        <text x="92" y="149">개인 에이전트</text>
+
+        <rect class="node" x="30" y="346" width="212" height="68" rx="6"/>
+        <g class="icon">
+          <circle cx="62" cy="364" r="6"/>
+          <path d="M62 370 V387 M49 378 H75 M62 387 L53 400 M62 387 L71 400"/>
+        </g>
+        <text x="92" y="385">여행자</text>
+
+        <path class="edge" d="M242 144 H414" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M310 144 V502 H414" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M310 398 H414" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M242 376 H302 Q310 364 318 376 H414" marker-end="url(#arrow-end)"/>
+
+        <rect class="node" x="950" y="192" width="260" height="68" rx="6"/>
+        <g class="icon">
+          <circle cx="975" cy="216" r="10"/>
+          <path d="M975 209 V216 L981 220"/>
+        </g>
+        <text x="995" y="220">시계</text>
+        <text class="svg-note" x="970" y="244">스케줄러 · 3분 감시 주기</text>
+
+        <rect class="node" x="950" y="284" width="260" height="60" rx="6"/>
+        <text x="970" y="310">외부 데이터 소스</text>
+        <text class="svg-note" x="970" y="331">기상 · 대기 · 관광 · 교통 · 재난 등</text>
+
+        <rect class="node" x="950" y="376" width="260" height="60" rx="6"/>
+        <text x="970" y="402">알림 채널</text>
+        <text class="svg-note" x="970" y="423">디스코드</text>
+
+        <rect class="node" x="950" y="468" width="260" height="68" rx="6"/>
+        <text x="970" y="496">업체</text>
+        <text class="svg-note" x="970" y="520">지금은 Mock(모의 업체)</text>
+
+        <path class="edge" d="M950 226 H882 V240 H784" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M950 314 H904 V264 H784" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M784 288 H854 V406 H950" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M784 502 H950" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)"/>
+
+        <rect class="group-frame" x="370" y="618" width="460" height="338" rx="8"/>
+        <text class="svg-label" x="394" y="646">개발·운영팀 쪽</text>
+
+        <rect class="core-node" x="414" y="666" width="370" height="52" rx="6"/>
+        <text class="svg-letter" x="436" y="698">E</text>
+        <text x="464" y="698">치명 결함 대응</text>
+
+        <rect class="node" x="414" y="738" width="370" height="52" rx="6"/>
+        <text class="svg-letter" x="436" y="770">F</text>
+        <text x="464" y="770">상시 실행 관리</text>
+
+        <rect class="node" x="414" y="810" width="370" height="52" rx="6"/>
+        <text class="svg-letter" x="436" y="842">G</text>
+        <text x="464" y="842">검증</text>
+
+        <rect class="node" x="414" y="882" width="370" height="52" rx="6"/>
+        <text class="svg-letter" x="436" y="914">H</text>
+        <text x="464" y="914">데이터·배포</text>
+
+        <rect class="node" x="30" y="730" width="212" height="68" rx="6"/>
+        <g class="icon">
+          <circle cx="62" cy="748" r="6"/>
+          <path d="M62 754 V771 M49 762 H75 M62 771 L53 784 M62 771 L71 784"/>
+        </g>
+        <text x="92" y="769">개발·운영팀</text>
+
+        <path class="edge" d="M242 764 H310"/>
+        <path class="edge" d="M310 764 V692 H414" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M310 764 H414" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M310 764 V908 H414" marker-end="url(#arrow-end)"/>
+        <path class="edge" d="M310 836 H414" marker-end="url(#arrow-end)"/>
+      </svg>
+    </div>
+    <figcaption>운영자는 없다 — <a href="#s03">03장</a></figcaption>
+  </figure>
+</section>
+
+<section id="s02" aria-labelledby="h02">
+  <h2 id="h02"><span class="n">02</span>행위자</h2>
+  <div class="tbl" role="region" aria-label="행위자 표" tabindex="0">
+    <table class="actors">
+      <colgroup><col><col><col></colgroup>
+      <thead><tr><th scope="col">행위자</th><th scope="col">누구</th><th scope="col">무엇으로 들어오나</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">여행자</th><td>처음 한국에 자유여행 온 외국인 개인·친구다. 최대 4인, 서울이다.</td><td>여행계획서 링크(로그인 없음) · 디스코드 알림</td></tr>
+        <tr><th scope="row">개인 에이전트</th><td>여행자가 쓰는 외부 AI 비서다.</td><td>REST API(외부 요청 인터페이스) <code>/v1/trips/*</code> · A2A(에이전트 간 통신) <code>/a2a/tasks</code></td></tr>
+        <tr><th scope="row">개발·운영팀</th><td>우리 팀이다. <strong>유일한 사람 행위자</strong>다.</td><td>운영 스크립트 · 추적 화면</td></tr>
+        <tr><th scope="row">시계</th><td>정해진 시각과 주기다.</td><td><code>run_sweepers</code>(되잡기 작업 실행기), 감시 3분 주기</td></tr>
+        <tr><th scope="row">외부 데이터 소스</th><td>기상청 · 에어코리아 · TourAPI · ITS/UTIC · 재난문자 등이다.</td><td>감시 루프가 조회한다.</td></tr>
+        <tr><th scope="row">알림 채널</th><td>디스코드 웹훅이다.</td><td>바깥함(<code>outbox</code>, 보낼 메시지를 쌓아 두는 표) 일꾼이 발송한다.</td></tr>
+        <tr><th scope="row">업체</th><td>식당·체험 등 예약처다. 지금은 Mock이다.</td><td>변경 링크 · 시뮬레이션 자동 실행</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s03" aria-labelledby="h03">
+  <h2 id="h03"><span class="n">03</span>운영자는 없다</h2>
+  <aside class="callout">
+    <p class="lead">여행에서는 운영자가 판단해야 하는 상황이 정상 흐름에 없다.</p>
+    <p>커머스 시절 CS 구조(상담원이 승인·인계받음)를 옮겨 오면 생기는 착시다. 이미 내린 결정으로 보면 전부 다른 주인에게 가거나 버그가 된다.</p>
+  </aside>
+  <div class="tbl" role="region" aria-label="커머스식 해석과 여행의 실제 책임 비교" tabindex="0">
+    <table class="comparison">
+      <colgroup><col><col><col></colgroup>
+      <thead><tr><th scope="col">커머스식으로 보면</th><th scope="col">여행에서 실제로는</th><th scope="col">근거</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">운영자가 업체 건 승인</th><td>승인하는 사람은 <strong>여행자</strong>다. 업체 건은 변경 링크로 여행자에게 간다. Booking Handoff(업체 예약 인계)는 MVP 밖이다.</td><td>v11 §4-C · 결정 16</td></tr>
+        <tr><th scope="row">운영자가 사건·추적을 봄</th><td>판단용이 아니라 버그 원인 찾기용이다.</td><td>—</td></tr>
+        <tr><th scope="row">운영자가 위임을 주고 거둠</th><td><strong>여행자</strong>가 주고 거둔다.</td><td>위임은 고객의 권한이다.</td></tr>
+        <tr><th scope="row"><code>unknown</code>(알림 발송 결과 모름) → 사람 확인</th><td>확인할 필요 없다. 「통지가 닿았나」는 사양 밖이고 상태의 정본은 계획서 링크다.</td><td>v11 §6-A 접점·통지 모델</td></tr>
+        <tr><th scope="row"><code>escalated</code>(사람에게 넘어온 사건) 처리</th><td><strong>버그다.</strong> 값을 모르면 대체 소스, 그래도 안 되면 서버를 끈다. 불확실해도 하나를 고른다.</td><td>결정 15</td></tr>
+        <tr><th scope="row">재요청했는데 남은 대안이 없음</th><td>사람 몫이 아니다. 여행자에게 「다른 안 없음」으로 답한다. <code>409 no_alternate</code>(남은 대안 없음) 응답이다.</td><td>코드에 있다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s04" aria-labelledby="h04">
+  <h2 id="h04"><span class="n">04</span>여행자·개인 에이전트 쪽 유스케이스</h2>
+
+  <h3 id="group-a"><span class="letter">A.</span>여행 전 — 일정 만들기</h3>
+  <div class="tbl" role="region" aria-labelledby="group-a" tabindex="0">
+    <table class="uc">
+      <colgroup><col><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">주 행위자</th><th scope="col">경로</th><th scope="col">상태</th><th scope="col">메모</th></tr></thead>
+      <tbody>
+        <tr id="U-01">
+          <th scope="row" class="id">U-01</th>
+          <td>요청으로 일정 초안 만들기</td>
+          <td>에이전트</td>
+          <td><code>POST /v1/trips/plan</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>2026-09-22. 이동 항목·경로 소요는 아직 없다. v11 §4-A(「계획 생성은 우리 일이 아니다」)를 뒤집었다 — <a href="#s07">07장</a>.</td>
+        </tr>
+        <tr id="U-02">
+          <th scope="row" class="id">U-02</th>
+          <td>일정 등록·성립 판정<br><span class="small">안 되면 이유와 완화 조건</span></td>
+          <td>에이전트</td>
+          <td><code>POST /v1/trips</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>불성립이면 <code>422</code>와 위반·완화 조건을 반환한다. 아무것도 저장하지 않는다.</td>
+        </tr>
+        <tr id="U-03">
+          <th scope="row" class="id">U-03</th>
+          <td>등록 즉시 계획서 링크 통지<br><span class="small">알림 ①</span></td>
+          <td>시스템 → 여행자</td>
+          <td>바깥함 → 디스코드</td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>링크가 처음 나가는 자리다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="group-b"><span class="letter">B.</span>여행 중 — 시스템이 먼저 <span class="small">(제품의 핵심)</span></h3>
+  <div class="tbl" role="region" aria-labelledby="group-b" tabindex="0">
+    <table class="uc">
+      <colgroup><col><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">주 행위자</th><th scope="col">경로</th><th scope="col">상태</th><th scope="col">메모</th></tr></thead>
+      <tbody>
+        <tr id="U-04">
+          <th scope="row" class="id">U-04</th>
+          <td>변화 감지 → <code>Case</code>(사건) 열기</td>
+          <td>시계 · 데이터 소스</td>
+          <td><code>run_sweepers --only trip_cases</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>주기는 3분이다.</td>
+        </tr>
+        <tr id="U-05">
+          <th scope="row" class="id">U-05</th>
+          <td>여러 곳이 깨지면 묶어서 최선의 안 하나 적용</td>
+          <td>시스템<br><span class="small">Team(담당 판단 모듈) → 코어</span></td>
+          <td>Case → Team 판정 → 코어 적용</td>
+          <td><span class="st st-part">일부</span></td>
+          <td>자동 적용은 있다. 조합 탐색 구현은 확인하지 않았다.</td>
+        </tr>
+        <tr id="U-06">
+          <th scope="row" class="id">U-06</th>
+          <td>변경 통지<br><span class="small">알림 ①</span></td>
+          <td>시스템 → 여행자</td>
+          <td>디스코드</td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>—</td>
+        </tr>
+        <tr id="U-07">
+          <th scope="row" class="id">U-07</th>
+          <td>하루 시작 안내(②) · 출발 시각 안내(③ 어디로·언제·어떻게)</td>
+          <td>시계 → 여행자</td>
+          <td><code>run_sweepers --only trip_reminders</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>③은 이동 시간에서 역산한다.</td>
+        </tr>
+        <tr id="U-08">
+          <th scope="row" class="id">U-08</th>
+          <td>값을 못 구하면 대체 소스, 그래도 안 되면 서버 중단</td>
+          <td>시스템</td>
+          <td>결정 15</td>
+          <td><span class="st st-part">일부</span></td>
+          <td>기상은 대체 사슬이 있다. <strong>서버 중단은 미구현</strong>이다 — <a href="#s06">06장</a>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="group-c"><span class="letter">C.</span>여행 중 — 여행자가 먼저 말함</h3>
+  <div class="tbl" role="region" aria-labelledby="group-c" tabindex="0">
+    <table class="uc">
+      <colgroup><col><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">주 행위자</th><th scope="col">경로</th><th scope="col">상태</th><th scope="col">메모</th></tr></thead>
+      <tbody>
+        <tr id="U-09">
+          <th scope="row" class="id">U-09</th>
+          <td>계획서 링크로 최신 일정·바뀐 이유 보기</td>
+          <td>여행자</td>
+          <td><code>GET /plan/{trip_id}?t=…</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>고객 언어 생성(결정 14)은 미구현이다. 지금은 한국어 원문이다.</td>
+        </tr>
+        <tr id="U-10">
+          <th scope="row" class="id">U-10</th>
+          <td>사건 신고<br><span class="small">지연·휴무·품절</span></td>
+          <td>여행자·에이전트</td>
+          <td><code>POST /v1/trips/{id}/reports</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>—</td>
+        </tr>
+        <tr id="U-11">
+          <th scope="row" class="id">U-11</th>
+          <td>자유 문장으로 말하기 → 분류 → 담당 Team</td>
+          <td>여행자·에이전트</td>
+          <td><code>POST /v1/trips/{id}/messages</code> · <code>POST /v1/cases</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>—</td>
+        </tr>
+        <tr id="U-12">
+          <th scope="row" class="id">U-12</th>
+          <td>다른 안으로 바꾸기</td>
+          <td>여행자·에이전트</td>
+          <td><code>POST /v1/trips/{id}/items/{item_id}/alternate</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>남은 안이 없으면 <code>409 no_alternate</code>로 답한다.</td>
+        </tr>
+        <tr id="U-13">
+          <th scope="row" class="id">U-13</th>
+          <td>되돌리기<br><span class="small">옛 버전을 새 버전으로</span></td>
+          <td>여행자·에이전트</td>
+          <td><code>POST /v1/trips/{id}/rollback</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>되살린 항목은 감시가 다시 자동으로 바꾸지 않는다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="group-d"><span class="letter">D.</span>업체 예약이 걸릴 때 — MVP 다음 단계 <span class="small">(결정 16)</span></h3>
+  <div class="tbl" role="region" aria-labelledby="group-d" tabindex="0">
+    <table class="uc">
+      <colgroup><col><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">주 행위자</th><th scope="col">경로</th><th scope="col">상태</th><th scope="col">메모</th></tr></thead>
+      <tbody>
+        <tr id="U-14">
+          <th scope="row" class="id">U-14</th>
+          <td>업체 변경 링크 받기<br><span class="small">바뀔 항목·대안·차액</span></td>
+          <td>여행자</td>
+          <td><code>GET /booking-change/{booking_id}?t=…</code></td>
+          <td><span class="st st-ok">있음</span></td>
+          <td>2026-09-22. 차액을 모르면 지어내지 않고 「확인되지 않음」으로 표시한다.</td>
+        </tr>
+        <tr id="U-15">
+          <th scope="row" class="id">U-15</th>
+          <td>위임 범위 안이면 자동 실행<br><span class="small">Mock 업체만</span></td>
+          <td>시스템</td>
+          <td>공급자 등급 게이트 <code>tier=='simulated'</code>(모의 업체 등급 조건) + 위임 범위</td>
+          <td><span class="st st-unk">확인 안 함</span></td>
+          <td>앞선 조사(09-10)는 게이트 0건이었고 wiki는 09-22에 생겼다고 적었다. 이 문서에서는 코드 대조를 하지 않았다.</td>
+        </tr>
+        <tr id="U-16">
+          <th scope="row" class="id">U-16</th>
+          <td>위임 주고 거두기</td>
+          <td>여행자·에이전트</td>
+          <td><code>POST /v1/delegations/{customer_id}/grant</code> · <code>/revoke</code></td>
+          <td><span class="st st-part">일부</span></td>
+          <td>API는 있다. 권한 키는 <code>delegation:write</code>(위임 쓰기 권한)다. <strong>여행자가 직접 쓰는 창구는 없다</strong> — <a href="#s06">06장</a>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s05" aria-labelledby="h05">
+  <h2 id="h05"><span class="n">05</span>개발·운영팀 쪽 유스케이스</h2>
+  <p>제품 약속(결정 15)에 직접 걸린 것은 <strong>E</strong>뿐이고 F·G·H는 그것을 받친다.</p>
+
+  <h3 id="group-e"><span class="letter">E.</span>치명 결함 대응 <span class="small">(결정 15)</span></h3>
+  <div class="tbl" role="region" aria-labelledby="group-e" tabindex="0">
+    <table class="dev">
+      <colgroup><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">언제/무엇</th><th scope="col">도구</th><th scope="col">상태</th></tr></thead>
+      <tbody>
+        <tr id="D-01">
+          <th scope="row" class="id">D-01</th>
+          <td>치명 결함 통보 받기</td>
+          <td><code>fatal</code>(치명 결함): 대체 소스까지 값을 못 준다.</td>
+          <td>감시 작업이 <code>fatal</code>을 세고 1회 실행 모드면 <code>exit 1</code>(실패 종료)로 끝낸다. → <code>scripts/ops/guard.py</code>(반복 실행 보호기)가 연속 실패 때 <strong>한 번만</strong> 알린다.</td>
+          <td><span class="st st-part">일부</span><span class="status-note">서버를 끄는 것은 미구현이다.</span></td>
+        </tr>
+        <tr id="D-02">
+          <th scope="row" class="id">D-02</th>
+          <td>원인 찾기</td>
+          <td>D-01 직후다.</td>
+          <td>추적 화면 <code>/ui/cases/{id}/trace</code> · 작업 로그 <code>var/ops/logs/</code></td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-03">
+          <th scope="row" class="id">D-03</th>
+          <td>사람에게 넘어간 사건을 버그 목록으로 보고 고치기</td>
+          <td><code>escalated</code> 발생 시다.</td>
+          <td>넘긴 사유 코드가 곧 버그 분류다.<br><code>action_handler_missing</code>(적용기 없음) · <code>action_proposal_verification_failed</code>(근거 대조 실패) · <code>degraded_context_blocks_action</code>(자료 못 가져옴)</td>
+          <td><span class="st st-part">일부</span><span class="status-note">목록 화면이 세기만 한다.</span></td>
+        </tr>
+        <tr id="D-04">
+          <th scope="row" class="id">D-04</th>
+          <td>대체 소스 추가·교체</td>
+          <td>한 소스가 자주 죽을 때다.</td>
+          <td>소스 사슬 코드다. 예를 들어 <code>weather_chain.py</code>(기상 대체 소스 사슬)는 Open-Meteo → 기상청 순이다.</td>
+          <td><span class="st st-part">일부</span><span class="status-note">기상 외는 확인하지 않았다.</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="group-f"><span class="letter">F.</span>상시 실행 관리</h3>
+  <div class="tbl" role="region" aria-labelledby="group-f" tabindex="0">
+    <table class="dev">
+      <colgroup><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">언제/무엇</th><th scope="col">도구</th><th scope="col">상태</th></tr></thead>
+      <tbody>
+        <tr id="D-05">
+          <th scope="row" class="id">D-05</th>
+          <td>상시 작업 등록·해제</td>
+          <td>DB · 감시 · 알림 배달 · 일일 집계 · 앱</td>
+          <td><code>python -m scripts.ops.install_services --apply / --remove</code>(상시 작업 등록·해제 명령)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-06">
+          <th scope="row" class="id">D-06</th>
+          <td>다 살아 있나 한 번에 보기</td>
+          <td>OK / 경고 / 실패 / 못확인</td>
+          <td><code>python -m scripts.ops.healthcheck</code>(상태 점검 명령)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-07">
+          <th scope="row" class="id">D-07</th>
+          <td>겹침·로그 적체·조용한 실패 막기</td>
+          <td>앞 회차가 살아 있으면 건너뛴다. 건너뜀을 성공으로 적지 않는다.</td>
+          <td><code>scripts/ops/guard.py</code></td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-08">
+          <th scope="row" class="id">D-08</th>
+          <td>설정 다시 읽기 · 지금 조립 상태 보기</td>
+          <td>새 조립이 다 성공해야 교체한다.</td>
+          <td><code>POST /admin/reload</code>(설정 다시 읽기) · <code>GET /introspection</code>(조립 상태 조회)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-09">
+          <th scope="row" class="id">D-09</th>
+          <td>환경·API 키 점검</td>
+          <td>있는 값은 건드리지 않는다.</td>
+          <td><code>check_env</code>(환경 점검) · <code>sync_apikeys</code>(API 키 동기화, 있는 값은 안 건드림)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="group-g"><span class="letter">G.</span>검증</h3>
+  <div class="tbl" role="region" aria-labelledby="group-g" tabindex="0">
+    <table class="dev">
+      <colgroup><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">언제/무엇</th><th scope="col">도구</th><th scope="col">상태</th></tr></thead>
+      <tbody>
+        <tr id="D-10">
+          <th scope="row" class="id">D-10</th>
+          <td>대표 시나리오 하루 재생</td>
+          <td><code>--send</code>(실제 발송 옵션)면 실제 디스코드로 보낸다.</td>
+          <td><code>python -m scripts.replay_scenario</code>(시나리오 재생 명령) · 시나리오 화면 <code>/scenario</code> · <code>/tripilot</code></td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-11">
+          <th scope="row" class="id">D-11</th>
+          <td>완료 기준 세기</td>
+          <td>MVP 18항목이다.</td>
+          <td><code>python -m scripts.verify_dod_v11 --mvp</code>(v11 MVP 완료 기준 검증 명령)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-12">
+          <th scope="row" class="id">D-12</th>
+          <td>릴리스 전 관문</td>
+          <td>릴리스 전이다.</td>
+          <td><code>check_release_gate</code>(릴리스 관문 점검)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-13">
+          <th scope="row" class="id">D-13</th>
+          <td>운영 수치 재기</td>
+          <td>언어별 문구 재사용률 · 위임 범위</td>
+          <td><code>measure_notice_phrases</code>(언어별 문구 재사용률 측정) · <code>measure_delegation_scope</code>(위임 범위 측정)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="group-h"><span class="letter">H.</span>데이터·배포</h3>
+  <div class="tbl" role="region" aria-labelledby="group-h" tabindex="0">
+    <table class="dev">
+      <colgroup><col><col><col><col><col></colgroup>
+      <thead><tr><th scope="col">#</th><th scope="col">유스케이스</th><th scope="col">언제/무엇</th><th scope="col">도구</th><th scope="col">상태</th></tr></thead>
+      <tbody>
+        <tr id="D-14">
+          <th scope="row" class="id">D-14</th>
+          <td>데모 여행 데이터 넣기</td>
+          <td>다시 돌려도 안전하다.</td>
+          <td><code>seed_travel</code>(여행 데모 데이터 적재)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-15">
+          <th scope="row" class="id">D-15</th>
+          <td>RAG(검색 증강 생성) 규정 문서 적재·품질 점검</td>
+          <td>규정 문서</td>
+          <td><code>ingest_corpus_local</code>(로컬 문서 적재) · <code>embed_chunks_local</code>(로컬 문서 조각 임베딩) · <code>check_corpus</code>(문서 모음 점검) · <code>check_chunk_quality</code>(문서 조각 품질 점검)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+        <tr id="D-16">
+          <th scope="row" class="id">D-16</th>
+          <td>공개 저장소 배포</td>
+          <td>내부 문서를 걷어낸다.</td>
+          <td><code>publish_public --dry-run</code>(공개 배포 사전 실행)</td>
+          <td><span class="st st-ok">있음</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="s06" aria-labelledby="h06">
+  <h2 id="h06"><span class="n">06</span>공백 — 코드 세션에 넘길 것</h2>
+  <ol class="gaps">
+    <li>
+      <strong>「서버를 끈다」가 없다.</strong>
+      <p><code>weather_chain.py</code> 설명문이 「서버를 끄는 판단은 감시 쪽 몫이고 아직 만들어지지 않았다(2026-09-14)」라고 적는다. 지금은 <code>fatal</code>을 세고 알리기만 한다.</p>
+      <p class="note">확인 범위: <code>app/</code>에서 <code>fatal|shutdown|os._exit|sys.exit</code> 검색 — 끄는 코드를 찾지 못했다. 다른 이름의 구현이나 <code>scripts/</code> 쪽은 놓칠 수 있다.</p>
+    </li>
+    <li>
+      <strong><code>/health</code>(상태 확인 경로)는 늘 <code>{"status":"ok"}</code>다.</strong>
+      <p><code>fatal</code>이 쌓여도 정상이라고 답한다. 끄는 대신 「고장」이라고 답하게 할지는 정한 적이 없다.</p>
+    </li>
+    <li>
+      <strong>운영자용 화면이 남아 있다.</strong>
+      <p>승인 <code>/ui/approvals</code> · 위임 <code>/ui/delegations</code> · 알림 확인 <code>/ui/ops/outbox</code>다. 여행에는 주인이 없다. 개발자에게는 추적 화면만 필요하다.</p>
+    </li>
+    <li>
+      <strong>여행자가 위임을 주고 거두는 창구가 없다.</strong>
+      <p>API는 권한 키로만 열린다.</p>
+    </li>
+    <li>
+      <strong>일일 피드백 집계(VOC 급증 탐지)는 커머스 시절 작업으로 보인다.</strong>
+      <p>여행에서 무엇을 세는지는 확인하지 않았다.</p>
+    </li>
+  </ol>
+</section>
+
+<section id="s07" aria-labelledby="h07">
+  <h2 id="h07"><span class="n">07</span>문서 어긋남 — 문서 세션이 고칠 것</h2>
+  <div class="tbl" role="region" aria-label="문서와 실제의 차이" tabindex="0">
+    <table class="drift">
+      <colgroup><col><col><col></colgroup>
+      <thead><tr><th scope="col">어디</th><th scope="col">지금 문서</th><th scope="col">실제</th></tr></thead>
+      <tbody>
+        <tr>
+          <th scope="row">v11 §4-A · 루트 <code>CLAUDE.md</code> 사실표</th>
+          <td>계획 생성은 우리 일이 아니다.</td>
+          <td>2026-09-22 생성기를 만들었다(<code>POST /v1/trips/plan</code>). 계획서는 고쳐지지 않았다.</td>
+        </tr>
+        <tr>
+          <th scope="row">v11 §9-A</th>
+          <td>감시 기본 2분</td>
+          <td>3분이다. D-017 · wiki <code>research/place-api-quota-and-terms.md</code>에 따른다.</td>
+        </tr>
+        <tr>
+          <th scope="row">v11 §3 목표 5 · §9-A 「사람 인계」</th>
+          <td>자동 처리 한계면 사람에게 넘긴다.</td>
+          <td><a href="#s03">03장</a> — 사람 인계는 버그다.</td>
+        </tr>
+        <tr>
+          <th scope="row">v11 §9-C</th>
+          <td>운영자 화면 넷이다. 승인·추적을 「시연의 값어치」로 본다.</td>
+          <td><a href="#s03">03장</a> — 운영자는 없다.</td>
+        </tr>
+        <tr>
+          <th scope="row">v11 §11-A · 사실표 가격 줄</th>
+          <td>운영 상한 「사람 1건·15분」</td>
+          <td>사람이 들어오는 길이 버그뿐이면 뜻이 「버그 대응 비용」으로 바뀐다. 남길지 뺄지 미정이다.</td>
+        </tr>
+        <tr>
+          <th scope="row"><code>program/plan/diagram/acop_usecase_v2.svg</code></th>
+          <td>커머스 유스케이스 그림이다.</td>
+          <td>이 문서가 대신한다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>근거: v11 · <code>final_project_cs/wiki/external/rest-endpoints.md</code> · <code>final_project_cs/wiki/actions/approval.md</code> · <code>final_project_cs/app/presentation/ui/routes.py</code> · <code>final_project_cs/scripts/ops/</code></p>
+  <p class="tally">집계: 여행자 쪽 16 (있음 12 · 일부 3 · 확인 안 함 1) · 개발 쪽 16 (있음 13 · 일부 3)</p>
+</footer>
+</div>
+</body>
+</html>

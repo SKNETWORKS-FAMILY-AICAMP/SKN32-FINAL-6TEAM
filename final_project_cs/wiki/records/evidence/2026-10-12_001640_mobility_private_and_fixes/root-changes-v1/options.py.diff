@@ -1,0 +1,19 @@
+--- backup/options.py
++++ current/options.py
+@@ -569,11 +569,13 @@
+     상단을 쓰며 조조는 적용하지 않는다. 식별값/거리/시각/환승 조건이 부족하면
+     None으로 반환하여 제품이 개별 요금 합으로 안내하도록 한다.
+     """
++    modes = modes_of(legs)
++    # 자전거·도보 전용 후보는 대중교통 운임 규칙을 읽을 필요가 없습니다.
++    if 'bus' not in modes or len(legs) < 2 or set(modes) - {'bus', 'subway'}:
++        return None
+     F = _fare(v)
+     T = F.get('transfer', {})
+-    if (T.get('bus_distance', {}).get('value') != 'selected_contiguous_sections'
+-            or 'bus' not in modes_of(legs) or len(legs) < 2
+-            or set(modes_of(legs)) - {'bus', 'subway'}):
++    if T.get('bus_distance', {}).get('value') != 'selected_contiguous_sections':
+         return None
+     rides = ride_results(legs, legs_result)
+     if not rides:

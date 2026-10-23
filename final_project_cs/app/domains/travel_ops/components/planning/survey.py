@@ -1,0 +1,203 @@
+# -*- coding: utf-8 -*-
+"""여행 시작 설문 — 받는 모양과, 지금 판정에 **실제로 쓰는 것**. `[2026-09-24]` D-020
+
+★★받는 것과 쓰는 것을 나눈다. 설문 문항 가운데 **지금 판정에 쓰는 것은 둘뿐**이다.
+
+    on_disruption  15번 「갑자기 일정이 꼬이면」 — replace(비슷한 곳으로) / ask_first(먼저 물어봐)
+    pace           16번 「여유」 — relaxed / moderate / packed → 밀도 목표(`travel.survey.pace_to_density_level`)
+
+  나머지(테마 · 여행자 구성 · 선호 이동수단 · 내국인 여부 · 우선순위 · 실내/실외 · 세부 테마)는
+  **받아 두기만 한다.** 세부 선택지(예: 음식 → 맛·친절·청결, 활동 → 익스트림·힐링·DIY·쇼핑)와
+  세부 테마는 **각 담당 팀이 정해서 알려 주기로 했다**(2026-09-24 회의). 그래서 그 값들은 코드에
+  목록으로 박지 않고 문자열로 받는다. 팀이 목록을 주면 그때 좁힌다.
+  ★받아 둔 값을 「반영했다」고 말하지 않는다 — 판정에 연결되기 전까지는 기록일 뿐이다.
+
+★판(`version`)을 박는다. 문항이 바뀌어도 옛 여행의 답을 해석할 수 있어야 한다.
+"""
+from __future__ import annotations
+
+from datetime import date, datetime, time
+from typing import Any, Iterable, Literal, Mapping
+from zoneinfo import ZoneInfo
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.core.settings import get_guardrails
+
+KST = ZoneInfo("Asia/Seoul")
+SURVEY_VERSION = "2026-09-24.v1"
+
+Area = Literal["food", "activity", "mobility"]
+
+#: `[2026-10-19 사용자 지시]` 활동 우선순위 세부(`priority_details.activity`) — 관광 분류 일곱 코드와 화면 글(앞이 화면 순서).
+#:  시작 설문 · 로딩 중 질문(`intake/survey_answers.py`)이 같은 코드를 보낸다. ★`TripSurvey` 는 좁히지 않는다 — 전에 받은 여행에는
+#:  옛 세부(extreme · healing · diy · shopping)가 남아 있다. 받기만 하던 값이라 판정이 코드를 읽는 곳은 없다(대체 순서 모델에는 글로 넘긴다)
+ACTIVITY_DETAILS: dict[str, str] = {"EV": "축제/공연/행사", "EX": "체험관광", "HS": "역사관광", "LS": "레저스포츠",
+                                    "NA": "자연관광", "SH": "쇼핑", "VE": "문화관광"}
+
+
+class TripSurvey(BaseModel):
+    """설문 한 벌. `extra="forbid"` — 모르는 문항은 조용히 흘리지 않고 거절한다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version: Literal["2026-09-24.v1"]
+    # ── 판정에 쓰는 것 ─────────────────────────────────────────
+    #: 직접 켠 기록이 없으면 먼저 묻는다. 옛 저장본의 기본 replace도 동의로 보지 않는다.
+    on_disruption: Literal["replace", "ask_first"] = "ask_first"
+    #: 16번. 없으면 밀도 목표를 설문에서 채우지 않는다
+    pace: Literal["relaxed", "moderate", "packed"] | None = None
+    # ── 받아 두기만 하는 것 (팀이 세부를 정하면 판정에 연결한다) ──────
+    theme: str | None = None
+    party: str | None = None                                   # 여행자 구성
+    preferred_mobility: list[str] = Field(default_factory=list)
+    domestic: bool | None = None                               # 내국인 여부
+    priority: list[Area] = Field(default_factory=list)         # 우선순위1 — 앞이 더 중요하다
+    priority_details: dict[Area, list[str]] = Field(default_factory=dict)   # 우선순위2 — 팀이 정할 값
+    indoor_outdoor: dict[Literal["dining", "activity"],
+                         Literal["indoor", "outdoor", "any"]] = Field(default_factory=dict)
+    theme_details: list[str] = Field(default_factory=list)     # 세부 테마 — 팀이 정할 값
+    custom_answers: dict[str, str] = Field(default_factory=dict)  # 직접 쓴 선호 원문 — 알아듣지 못한 말도 보존한다
+    #: `[2026-10-20 사용자 결정 — B안 · ST4F-581]` 여행자 구성 카드의 인원(혼자 1 · 연인 2 · 친구 · 가족 2~4 · 기타 1~4).
+    #: 웹 접수 등록에서 여행 인원이 비었을 때만 여행 인원이 된다(`trip_api.web_intake_confirm` — 계획 확인에서 고친 값 · 계획서에서 읽은 값이 먼저다)
+    party_size: int | None = None
+
+    @field_validator("party_size")
+    @classmethod
+    def _party_in_product(cls, value: int | None) -> int | None:
+        # 계획기가 이 모듈을 불러오므로 상한은 여기서만 불러온다(순환을 피한다). 상품 범위 밖 인원은 계약 오류로 받지 않는다
+        from app.domains.travel_ops.components.planning.planner import MAX_PARTY
+
+        if value is not None and not 1 <= value <= MAX_PARTY:
+            raise ValueError(f"인원은 1~{MAX_PARTY}명이어야 한다")
+        return value
+
+
+def _is_clock(text: Any) -> bool:
+    return isinstance(text, str) and len(text) == 5 and text[2] == ":" and text[:2].isdigit() and text[3:].isdigit()         and int(text[:2]) < 24 and int(text[3:]) < 60
+
+
+def _clock(text: str) -> time:
+    hour, minute = str(text).split(":")
+    return time(int(hour), int(minute))
+
+
+def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> dict[str, Any]:
+    """설문을 확인하고, **판정에 쓰는 몫**을 `constraints` 에 채운다. 새 dict 를 돌려준다.
+
+    ★밀도(16번) — 사용자가 `density` 를 직접 줬으면 **그것이 이긴다.** 설문은 빈 곳만 채운다.
+      - `density` 가 있는데 목표(level·target_density)가 없으면 → 목표만 채운다
+      - `density` 가 아예 없으면 → 목표 + **기본 하루 활동 시간**(`travel.day_window`, 회의에서 정한
+        08:00~22:00)으로 여행 날짜마다 창을 만든다. ★D-019 는 「분모는 사용자가 명시한 시간」이라고
+        했다 — 이 기본값은 추측이 아니라 **팀이 정한 기본값**이고, 무엇을 채웠는지 `derived` 에 남긴다.
+    ★잘못된 설문은 `pydantic.ValidationError` 로 올린다 — 부르는 쪽이 422 로 바꾼다.
+    """
+    out = dict(constraints)
+    if "survey" not in out:
+        return out
+    raw = dict(out["survey"] or {})
+    survey = TripSurvey.model_validate(raw)
+    out["survey"] = survey.model_dump(mode="json")
+    # ★`[2026-09-29]` **직접 답한 문항**을 따로 남긴다 — 옛 저장본은 기본값까지 채워져 있었으므로,
+    #   「비슷한 곳으로 바꿔줘」를 고른 것과 문항을 건너뛴 것이 구별되지 않았다. 자동 변경은 직접 고른 경우에만 한다
+    #   (`auto_on_disruption` · 사용자 지시 2026-09-29 · 코덱스 합의). 이미 있는 값은 덮지 않는다(합친다)
+    # ★`[2026-10-16 D-025 후속]` 계획 읽기가 채운 자리(`survey_read_keys` — `intake/reading_prefs.apply`)는 「직접 답한 문항」이 아니다
+    read_keys = set(out.get("survey_read_keys") or [])
+    answered = {key for key, value in raw.items() if key != "version" and value is not None and key not in read_keys}
+    out["survey_answered"] = sorted(answered | set(out.get("survey_answered") or []))
+    if survey.pace is None:
+        return out
+
+    guard = get_guardrails()
+    level = guard.get("travel.survey.pace_to_density_level")[survey.pace]
+    derived: dict[str, Any] = dict(out.get("derived") or {})
+    density = out.get("density")
+    if isinstance(density, dict):
+        if density.get("level") is None and density.get("target_density") is None:
+            out["density"] = {**density, "level": level}
+            derived["density"] = f"목표를 설문 16번({survey.pace})에서 채웠다 → {level}"
+    elif density is None:
+        start = _clock(guard.get("travel.day_window.default_start"))
+        end = _clock(guard.get("travel.day_window.default_end"))
+        # ★`[2026-10-16 D-025 후속]` 고객 계획에서 읽은 하루 시작 · 끝(`day_hours`)이 있으면 그 창으로 — 서로 어긋나면 기본값
+        hours = out.get("day_hours") if isinstance(out.get("day_hours"), Mapping) else {}
+        own_start = _clock(hours["start"]) if _is_clock(hours.get("start")) else start
+        own_end = _clock(hours["end"]) if _is_clock(hours.get("end")) else end
+        if own_start < own_end:
+            start, end = own_start, own_end
+        buffer = float(guard.get("travel.day_window.default_buffer_minutes"))
+        days = sorted(set(item_days))
+        if days:
+            out["density"] = {"level": level, "days": {
+                day.isoformat(): {"starts_at": datetime.combine(day, start, tzinfo=KST).isoformat(),
+                                  "ends_at": datetime.combine(day, end, tzinfo=KST).isoformat(),
+                                  "buffer_minutes": buffer}
+                for day in days}}
+            derived["density"] = (f"설문 16번({survey.pace}) → {level}, 하루 활동 시간은 "
+                                  + (f"계획에서 읽은 {start:%H:%M}~{end:%H:%M}" if hours else
+                                     f"팀 기본값 {start:%H:%M}~{end:%H:%M} (사용자가 시간을 주지 않았다)"))
+    if derived:
+        out["derived"] = derived
+    return out
+
+
+def guardian_switch_on() -> bool:
+    """★`[2026-10-19 사용자 결정 — ST4F-613]` 운영자가 항로 지킴이를 켜 두었나(관리 콘솔 `travel.guardian.enabled`, 기본 켜짐).
+
+    끄면 모든 여행을 꺼진 여행과 같이 판정한다 — 아래 두 판정 함수가 이것을 본다. 저장값(`constraints.survey.on_disruption` ·
+    `survey_answered`)은 바꾸지 않으므로 다시 켜면 각 여행이 원래대로 돌아간다. 판정 함수는 여행의 테넌트를 받지 않아
+    **서비스 테넌트**(`settings.tenant_id`)의 운영 설정을 읽는다. 계약 `rest-endpoints/web-trips.md` 「항로 지킴이 운영 스위치」.
+    운영 설정 읽기가 꽂혀 있지 않으면(도구 · 단위 시험) 읽을 운영자 값이 없으므로 설정을 찾지 않고 가드레일 기본값이다(`settings_hook` 과 같은 결과)."""
+    from app.domains.travel_ops.components import settings_hook
+
+    if not settings_hook.is_registered():
+        from app.core.settings import guardian_enabled as guardrail_default
+
+        return guardrail_default()
+    from app.core.settings import get_settings
+
+    return settings_hook.guardian_enabled(get_settings().tenant_id)
+
+
+def on_disruption(constraints: Mapping[str, Any] | None) -> str:
+    """현재 고객 설정. 명시적 응답이 없는 옛 기본값도 먼저 확인으로 읽는다(D-020).
+
+    ★`[2026-10-19 ST4F-613]` 운영자가 항로 지킴이를 끈 동안은 저장값과 상관없이 먼저 확인(`ask_first`)이다 — 저장값이
+    「바꿔 줘」일 때만 스위치를 읽는다."""
+    survey = (constraints or {}).get("survey") or {}
+    answered = set((constraints or {}).get("survey_answered") or [])
+    if "on_disruption" not in answered or survey.get("on_disruption") != "replace":
+        return "ask_first"
+    return "replace" if guardian_switch_on() else "ask_first"
+
+
+def auto_on_disruption(constraints: Mapping[str, Any] | None) -> bool:
+    """★`[2026-09-29]` 고객이 설문에서 **직접** 「비슷한 곳으로 바꿔줘」를 골랐나. 그때만 대체안을 자동으로 적용한다.
+
+    설문이 없거나, 그 문항을 건너뛰었거나(저장본에 기본값 replace 만 있다), 답한 기록이 없는 옛 저장본이면 False —
+    **제안으로** 보낸다(먼저 「바꿀까요?」). 옛 저장본의 replace 는 직접 고른 것인지 증명할 수 없다(코덱스 합의)."""
+    answered = set((constraints or {}).get("survey_answered") or [])
+    return "on_disruption" in answered and on_disruption(constraints) == "replace"
+
+
+#: 설문 음식 세부 코드 → 가게 표시 코드(요식 원장의 `ledger.BADGE_CODES`). 거르지 않고 앞에 세우는 취향이다. `[2026-10-07]`
+#: ★일정 생성기(필수 부품)의 것이라 여기 둔다 — 부품은 요식 팀 속(`instances.dining`)을 부르지 않는다.
+SURVEY_LIKES = {
+    "michelin": "michelin",
+    "nopo": "nopo",
+}
+
+
+def likes_from_survey(constraints: Mapping[str, Any] | None) -> tuple[str, ...]:
+    """설문의 음식 세부에서 취향(가게 표시)만 골라 정해진 순서로 돌려준다. 없으면 빈 튜플."""
+    survey = (constraints or {}).get("survey") or {}
+    if not isinstance(survey, Mapping):
+        return ()
+    details = survey.get("priority_details") or {}
+    food = details.get("food") if isinstance(details, Mapping) else None
+    codes = {SURVEY_LIKES[c] for c in (food or []) if c in SURVEY_LIKES}
+    return tuple(code for code in SURVEY_LIKES.values() if code in codes)
+
+
+__all__ = ["ACTIVITY_DETAILS", "SURVEY_LIKES", "SURVEY_VERSION", "TripSurvey", "apply_survey", "auto_on_disruption",
+           "guardian_switch_on", "likes_from_survey", "on_disruption"]

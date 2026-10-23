@@ -1,0 +1,108 @@
+{
+  "created_at": "2026-10-09T09:25:48.866146+09:00",
+  "native_unique_pairs": 1,
+  "default": [
+    {
+      "variant": "before",
+      "planned": {
+        "id": "walk",
+        "label": "도보",
+        "eta_min": 8,
+        "walk_m": 471,
+        "fare_krw": 0,
+        "uses": []
+      },
+      "options": [
+        {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 8,
+          "walk_m": 471,
+          "fare_krw": 0,
+          "uses": []
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "planned": {
+        "id": "walk",
+        "label": "도보",
+        "eta_min": 8,
+        "walk_m": 471,
+        "fare_krw": 0,
+        "uses": []
+      },
+      "options": [
+        {
+          "id": "walk",
+          "label": "도보",
+          "eta_min": 8,
+          "walk_m": 471,
+          "fare_krw": 0,
+          "uses": []
+        }
+      ]
+    }
+  ],
+  "earliest": [
+    {
+      "variant": "before",
+      "available": false,
+      "result": null,
+      "why": {
+        "code": "no_data",
+        "searched": {
+          "checked": [],
+          "calls": 0,
+          "causes": [],
+          "stop": "no_targets"
+        },
+        "reason": "앞 항목이 끝난 뒤(09:00) 떠날 후보(도보·역·버스)가 없다"
+      }
+    },
+    {
+      "variant": "after",
+      "available": true,
+      "result": [
+        {
+          "from": "잠실역 8번출구 앞",
+          "to": "잠실 롯데월드몰",
+          "planned": "subway_1",
+          "options": [
+            {
+              "id": "subway_1",
+              "label": "2호선 잠실→잠실나루",
+              "eta_min": 23,
+              "walk_m": 1213,
+              "fare_krw": 1550,
+              "uses": [
+                "2호선:잠실",
+                "2호선:잠실나루"
+              ]
+            }
+          ]
+        },
+        540,
+        563,
+        "2026-10-09",
+        [
+          {
+            "label": "8호선 잠실→석촌 → 9호선 석촌→송파나루",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 09:00에 끝나고, 이동 출발 09:00 출발은 재판정에서 불성립 · 08:41 출발은 성립 확인(역산) · 환승 1회 · 소요 35분"
+          },
+          {
+            "label": "2호선 잠실나루→잠실",
+            "code": "before_prev_end",
+            "reason": "앞 일정이 09:00에 끝나고, 이동 출발 09:00 출발은 재판정에서 불성립 · 08:53 출발은 성립 확인(역산) · 환승 0회 · 소요 25분"
+          }
+        ],
+        573
+      ],
+      "why": null
+    }
+  ],
+  "network_attempts": 0,
+  "scope": "Same existing G04 model replay; no new web or actual trip measurement."
+}

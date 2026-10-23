@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 import hashlib
-import importlib
 import json
 from pathlib import Path
 import re
@@ -27,12 +26,15 @@ DEFAULT_PROJECT_CONFIG = REPO_ROOT / "config" / "project.yaml"
 #:  옛 목록이 필요하면 그날 이전 커밋을 본다.
 KNOWN_IMPLEMENTATION_REFS = frozenset({
     # 여행 (v10 §5) — 현재 등록분
-    "app.modules.travel_ops.activity:ActivityTeam",
-    "app.modules.travel_ops.booking_handoff:BookingHandoffTeam",
-    "app.modules.travel_ops.mobility:MobilityTeam",
-    "app.modules.travel_ops.dining:DiningTeam",
-    "app.modules.travel_ops.locked_bookings:LodgingTeam",
-    "app.modules.travel_ops.locked_bookings:FlightTeam",
+    "app.domains.travel_ops.instances.activity:ActivityTeam",
+    "app.domains.travel_ops.instances.booking_handoff:BookingHandoffTeam",
+    "app.domains.travel_ops.instances.mobility:MobilityTeam",
+    "app.domains.travel_ops.instances.dining:DiningTeam",
+    "app.domains.travel_ops.instances.locked:LodgingTeam",
+    "app.domains.travel_ops.instances.locked:FlightTeam",
+    # `[2026-10-07~08]` 숙소 · 항공 본체 — `config/project.yaml` 이 이쪽을 쓴다(옛 locked 두 줄은 되돌릴 때를 위해 남긴다)
+    "app.domains.travel_ops.instances.lodging:LodgingTeam",
+    "app.domains.travel_ops.instances.booking:BookingTeam",   # `[2026-10-14]` 항공 → 예약 모듈(옛 instances.flight:FlightTeam)
 })
 
 
@@ -57,6 +59,17 @@ class TeamConfig(BaseModel):
     team_id: str = Field(min_length=1)
     active: bool
     implementation_ref: str = Field(min_length=1)
+    required: bool = True
+    capabilities: list[str] | None = Field(default=None, min_length=1)
+    hooks: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_declared_names(self) -> "TeamConfig":
+        for field in ("capabilities", "hooks"):
+            values = getattr(self, field)
+            if values is not None and (any(not value.strip() for value in values) or len(set(values)) != len(values)):
+                raise ValueError(f"team {self.team_id}: empty or duplicate {field}")
+        return self
 
 
 class ResponseReviewConfig(BaseModel):
@@ -77,7 +90,7 @@ class ProjectConfig(BaseModel):
     ports: PortConfig
     teams: list[TeamConfig] = Field(min_length=1)
     response_review: ResponseReviewConfig = ResponseReviewConfig(
-        enabled=False, owner_team_id="response_generation_review"
+        enabled=False, owner_team_id="travel_response_review"
     )
 
     @model_validator(mode="after")
@@ -86,6 +99,12 @@ class ProjectConfig(BaseModel):
         duplicates = sorted({team_id for team_id in ids if ids.count(team_id) > 1})
         if duplicates:
             raise ValueError(f"duplicate team_id in project declaration: {', '.join(duplicates)}")
+        providers: dict[str, str] = {}
+        for team in self.teams:
+            for capability in team.capabilities or []:
+                if capability in providers:
+                    raise ValueError(f"duplicate capability in project declaration: {capability}")
+                providers[capability] = team.team_id
         return self
 
     @model_validator(mode="after")
@@ -171,50 +190,16 @@ def _load(path: Path) -> ProjectConfig:
 
 
 def _validate_active_team_implementations(config: ProjectConfig) -> None:
-    """Resolve active team declarations while keeping imports out of the Core graph.
+    """Validate declaration syntax only; the composition loader owns imports.
 
-    This uses a string-driven import rather than a static dependency on any team
-    package.  Inactive declarations intentionally remain placeholders and are
-    not inspected beyond the schema's non-empty string check.
+    Inactive legacy placeholders are retained without implementation inspection.
+    Availability cannot be decided by importing an optional plugin here.
     """
     for team in config.teams:
-        if not team.active:
-            continue
-
-        ref = team.implementation_ref
-        if not _IMPLEMENTATION_REF_PATTERN.fullmatch(ref):
+        if team.active and not _IMPLEMENTATION_REF_PATTERN.fullmatch(team.implementation_ref):
             raise ProjectConfigError(
-                f"team '{team.team_id}' implementation_ref '{ref}' is invalid: "
+                f"team '{team.team_id}' implementation_ref '{team.implementation_ref}' is invalid: "
                 "expected 'package.module:Class'"
-            )
-
-        module_name, class_name = ref.split(":", maxsplit=1)
-        try:
-            module = importlib.import_module(module_name)
-        except Exception as exc:
-            raise ProjectConfigError(
-                f"team '{team.team_id}' implementation_ref '{ref}' cannot be imported: {exc}"
-            ) from exc
-
-        try:
-            implementation = getattr(module, class_name)
-        except AttributeError as exc:
-            raise ProjectConfigError(
-                f"team '{team.team_id}' implementation_ref '{ref}' is invalid: "
-                f"class '{class_name}' is not defined in module '{module_name}'"
-            ) from exc
-
-        if not isinstance(implementation, type):
-            raise ProjectConfigError(
-                f"team '{team.team_id}' implementation_ref '{ref}' is invalid: "
-                "target is not a class"
-            )
-
-        missing = [name for name in ("manifest", "execute") if not hasattr(implementation, name)]
-        if missing:
-            raise ProjectConfigError(
-                f"team '{team.team_id}' implementation_ref '{ref}' does not satisfy "
-                f"TeamModule: missing {', '.join(missing)}"
             )
 
 

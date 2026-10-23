@@ -1,0 +1,107 @@
+# v11 후보 독립 읽기 전용 검토 결과
+
+**결론:** 이번 범위(A: 위치와 무관한 `answer_fact` 중단 복구, B: 숫자 답의 최신 안내 확인)에서 **새로 확정된 결함은 찾지 못했습니다.** 아래 정적 우려 몇 가지는 실행으로 확인하지 않았습니다. 격리 Linux 전체 회귀는 아직 돌고 있으므로 통과했다고 말하지 않습니다.
+
+## 1. 직접 실행한 증거 (단 하나)
+
+- **명령:** `"C:/Users/playdata2/anaconda3/python.exe" wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v11-read-recovery-final-unit.py`를 수정 없이 실행했습니다.
+- **대상 시험 파일 5개:** `test_fact_read_recovery.py`, `test_fact_context.py`, `test_initial_retry_boundaries.py`, `core/test_controller_resume_recovery.py`, `test_implicit_reply_recency.py`
+- **결과(원문):** `91 passed in 5.81s` / `PYTEST_EXIT=0`
+  - 모은 시험 91, 통과 91, 실패 0
+- DB·네트워크·HTTP 시험은 실행하지 않았습니다. e2e 두 파일은 읽기만 했습니다.
+
+## 2. 확정 결함
+
+없습니다. 단, 이 범위 안의 코드 감사 기준입니다. 모델 정확도, 이동 정확도, 운영 DB나 실서비스 동작은 판단하지 않았습니다.
+
+## 3. 실행하지 않은 정적 우려
+
+**S1. 읽기 잠금을 쥔 채 `place_info`가 연결 전체를 rollback할 수 있습니다**
+- **위치:** `trip_messages.py:799-800`이 `_place_extras(conn, …)`를 부르고, 그 안의 `place_info.py:95-98`과 `_catalog_row`(`place_info.py:149-153`)가 `conn.rollback()`을 합니다.
+- **전제:**
+  - 안전 읽기 경로(`safe_read`)이고 사실 종류가 `detail`이며 대상 일정에 장소(`item.place`)가 있음
+  - DB에 `dining` 스키마나 원장 표가 없거나(`InvalidSchemaName`, `UndefinedTable`), 문자 값 변환 오류(`InvalidTextRepresentation`)가 남
+- **일어나는 일:**
+  - 같은 트랜잭션의 NOWAIT 잠금이 풀립니다.
+  - 아직 커밋되지 않은 CLASSIFIED·ROUTED가 함께 사라집니다.
+  - 그 뒤 COMPLETED가 classifying 또는 routing 상태에서 시도되는데, 전이표(`events.py:51-65`)에 그 조합이 없어 InvalidTransition이 납니다. 결과는 500 응답으로 추정합니다.
+- **영향 범위:** 읽기라 부작용이 중복되지는 않습니다. v10 이전 경로도 같은 조건에서 커밋 안 된 ROUTED를 잃으므로 이번에 새로 생긴 가용성 문제는 아닙니다. 다만 v11의 「완료까지 같은 잠금 유지」 계약은 이 경로에서 보장되지 않습니다.
+- **확인 상태:** 단위 시험은 `place=None`이라 이 경로를 지나지 않습니다. e2e 시험의 「알려줘」 문장이 이 경로를 타는지는 시험 DB 스키마에 달려 있어 확인하지 못했습니다.
+
+**S2. 잠금 안에서 외부 조회가 일어납니다**
+- `trip_messages.py:795`의 `fact_reply`가 `look_up_place`를 부르고, 이것이 관광공사 조회(`trip_facts.py:249, 262, 267`)를 합니다. 이 동안 Case 행 잠금과 열린 트랜잭션이 유지됩니다.
+- 요구 범위인 LLM이나 `Team.execute`는 잠금 안에서 부르지 않습니다. 그래서 위반은 아니고 잠금이 오래 걸리는 문제입니다. 동시 재시도는 NOWAIT라 기다리지 않고 409를 받습니다.
+
+**S3. B의 여러 대기 업무 처리 (설계와는 맞음, 시험 없음)**
+- 숫자 답에서 대기 업무가 둘 이상이고 최신 안내가 그중 하나의 Case이면, 409가 아니라 그 Case를 재개합니다.
+- 최신 안내가 사실 답 Case이면, 409가 아니라 새 메시지로 처리합니다(`case_dispatch.py:125-138`).
+- 409는 최신 안내가 없거나 `case_id`가 없을 때(옛 대화)만 유지되고, 이것만 시험돼 있습니다.
+- 맨 숫자 「30」(분 입력 요청)도 숫자 확인을 거칩니다. 「30분이요」는 영향이 없습니다.
+
+**S4. restore의 대상 일정 대조가 약합니다**
+- clarify 기록의 대상 일정 대조가 제목 비교뿐입니다(`fact_read_retry.py:102-104`).
+- 저장된 읽기 기록(snapshot)의 `item_id`가 None이면 기록(record)의 첫 후보 일정과 대조하지 않습니다.
+- 서버가 쓴 값이라 DB가 변조되지 않는 한 문제가 없습니다.
+
+**S5. 재전송 때 앞 문맥이 만료될 수 있습니다**
+- 재전송 때 앞 대화 문맥의 만료(TTL)를 현재 시각으로 잽니다(`trip_messages.py:722`).
+- 그래서 「거기 알려줘」 같은 질문은 원래 답과 다르게 되묻기로 끝날 수 있습니다. 덜 위험한 쪽이고, 주석에 적힌 의도와 같습니다.
+
+**S6. 에이전트 API 경로는 확인하지 못했습니다**
+- B의 수정은 대화 기록에 최신 안내가 있어야 작동합니다. 웹 경로는 `trip_api.py:1979`의 `_log_turn`이 기록합니다.
+- 에이전트 API 경로가 대화를 기록하는지는 확인하지 않았습니다.
+
+## 4. 직접 읽고 확인한 요구사항
+
+**A — 위치와 무관한 사실 읽기 중단 복구**
+- **잠금 오류 매핑:** `LockNotAvailable`만 rollback 후 409로 바뀌고, 그 밖의 오류는 원래대로 올라갑니다(`fact_read_retry.py:58-70`).
+- **우회 차단:** 다음이 있으면 409로 막습니다(`fact_read_retry.py:73-80`).
+  - `conversation_dispatch`, `subject_ref`, `resume_requests`, `customer_input_history`
+  - 실행 중인 agent run
+- **잠금 안 처리:** 잠금 안에서 LLM이나 Team을 부르지 않습니다. 분류는 정해진 규칙(`labels`)으로만 합니다.
+  - `resolve`는 행동(action)을 바꾸지 않으므로 업무 처리로 넘어갈 길이 없습니다.
+  - 안전 읽기 경로에서는 대화 기록 대신 저장된 문맥(focus)만 씁니다.
+- **저장 내용:** 원래 시각, 선택한 일정, 일정 버전, 문맥만 저장하고 좌표는 저장하지 않습니다.
+- **복구 거절:** 위치가 필요한 사실, 다른 여행, 바뀐 일정 버전은 복구하지 않고 409로 거절합니다.
+- **fact_first 일치:** 저장된 기록의 행동이 `fact_first`와 같습니다. 모든 후보가 사실 질문인 clarify는 읽기로 복구하고, 업무가 섞인 clarify는 snapshot이 None이라 기존 업무 경로로 갑니다.
+- **옛 off/defer 저장 답:** `fact_read_retry.py:46-55`의 조건이 요구와 일치하고, 새로 계산하지 않습니다. snapshot이 없는 옛 기록은 409입니다.
+- **중복과 완료:** 완료된 Case는 기존 중복 경로를 그대로 탑니다.
+
+**B — 숫자 답의 최신 안내 확인**
+- 숫자 답은 최신 안내의 Case와 맞아야만 재개합니다.
+- 명시적 `case_id`·토큰과 같은 답변 재전송은 이 확인을 건너뜁니다.
+- 안내가 없거나 `case_id`가 없는 옛 대화는 예전처럼 동작합니다.
+- 후보 이름으로 고른 답과 「30분이요」는 이 확인에 걸리지 않습니다.
+
+## 5. 직접 읽은 파일 (모두 후보 폴더 안)
+
+- **지정 목록:**
+  - `fact_read_retry.py` (전체)
+  - `trip_messages.py`: `handle_trip_message`, `_open_message_case`, `_run_decision`, `_finish_fact_case`, `_place_extras`
+  - `case_dispatch.py` (전체)
+  - `decision_unit.py`: `Decision`, `record`, `fact_first`, `maybe_meant`, `labels`
+  - `fact_context.py` (전체), `chat_log.py` (전체), `classification.py` (전체)
+  - `events.py`: 전이표 / `case.py`: 초기 상태 grep
+  - `test_fact_read_recovery.py`, `test_implicit_reply_recency.py`, `test_fact_read_recovery_web.py` (전체)
+  - `test_reply_recency_web.py`: 시험 이름 3개만 확인
+  - `review-notes/read-recovery-contract.md`
+- **목록 밖이지만 읽은 파일 (읽기만, 후보 안):**
+  - `trip_api.py:1960-2060`, `trip_facts.py:203-342`, `place_info.py:1-160`
+  - `db/session.py`: grep만
+- **읽지 않은 것:** 공유 문서 `plugin-availability.md`
+
+## 6. 확인하지 못한 조건
+
+- 격리 Linux 전체 회귀 결과 (진행 중)
+- e2e HTTP 시험 10개와 `test_reply_recency_web.py`의 실제 DB 실행
+- psycopg3의 savepoint 동작과 실제 잠금 유지 여부 (DB 실행으로 확인 안 함)
+- 시험 DB와 운영 DB에 `dining` 스키마가 있는지 (S1의 전제)
+- `transition_case` 내부 구현
+- 에이전트 API 경로의 대화 기록 여부
+
+## 7. 실행 정보
+
+- **모델:** Opus 5.5 (`claude-opus-5-5`)
+- **Bash 실행:** 지정한 러너 1회뿐, 거부된 권한 없음
+- **범위:** 소스·시험 수정, `.env`·자격증명·고객 데이터 열람, DB·네트워크 접근 모두 없음
+- **범위 이탈:** 위 「목록 밖」 파일을 읽은 것 외에는 없음

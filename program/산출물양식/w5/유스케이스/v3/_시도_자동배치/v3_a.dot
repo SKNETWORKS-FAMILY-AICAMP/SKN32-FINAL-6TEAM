@@ -1,0 +1,37 @@
+digraph UC {
+  graph [rankdir=LR, splines=ortho, nodesep=0.42, ranksep=0.95, pad=0.15, bgcolor="transparent", fontname="Malgun Gothic", forcelabels=true];
+  node [fontname="Malgun Gothic", fontsize=14];
+  edge [color="#606b7e", penwidth=1.15, arrowsize=0.7, fontname="NanumGothicCoding", fontsize=9];
+  { rank=min; traveler [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_person.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">여행자</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">국적 무관 자유여행자</FONT></TD></TR></TABLE>>]; companion [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_person.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">동행자</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">링크로 계획서만 본다</FONT></TD></TR></TABLE>>]; aiapp [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_bot.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">개인 AI 비서 앱</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">우리 API로 연결</FONT></TD></TR></TABLE>>]; }
+  subgraph cluster_g { label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="12" COLOR="#727d90">A · 여행 준비 — 계획을 받아 일정으로 읽는다</FONT>>; labeljust=l; style="rounded,filled"; fillcolor="#f1f4f8"; color="#dbe0ea"; penwidth=1; margin=16;
+    u01 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-01  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">여행 시작하기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">언어 · 설문 6문항</FONT><BR ALIGN="LEFT"/>>];
+    u03 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-03  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">읽힌 일정 확인 · 고치기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">고치기 · 빼기 → 등록</FONT><BR ALIGN="LEFT"/>>];
+    u02 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-02  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">계획 올리기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">글 · 사진 · 파일 5개 · 10MB</FONT><BR ALIGN="LEFT"/>>];
+    u05 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-05  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">여행계획서 보기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">로그인 없는 링크 · 늘 최신</FONT><BR ALIGN="LEFT"/>>];
+    s [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">여행 등록 · 계획서 링크</FONT><BR ALIGN="LEFT"/>>];
+    r [shape=box, style="rounded,filled", fillcolor="#f8f3ea", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">계획 읽기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">매니저(코어)의 처리 단계 · 값 · 방법 · 근거</FONT><BR ALIGN="LEFT"/>>];
+    u04 [shape=box, style="rounded,filled,dashed", fillcolor="#ffffff", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="NanumGothicCoding" POINT-SIZE="11" COLOR="#a8720c">UC-04  </FONT><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">일정 짜 달라고 하기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">계획이 비었거나 「일정 짜 줘」</FONT><BR ALIGN="LEFT"/>>];
+    r3 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">장소 하나로 정하기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">표 → 별칭 → 오타 → 카카오 · 관광공사</FONT><BR ALIGN="LEFT"/>>];
+    r1 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">정해진 모양 읽기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">코드: 시각 · 일차 · 예약번호</FONT><BR ALIGN="LEFT"/>>];
+    r2 [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">원문 위치 가리키기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">AI: 남은 줄만 · 원문에 없으면 버림</FONT><BR ALIGN="LEFT"/>>];
+    r0 [shape=box, style="rounded,filled,dashed", fillcolor="#ffffff", color="#d6b680", penwidth=1, margin="0.14,0.07", label=<<FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">사진 받아쓰기</FONT><BR ALIGN="LEFT"/><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">한 줄씩 · 두 번 대조</FONT><BR ALIGN="LEFT"/>>];
+  }
+  { rank=max; place [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_db.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">장소 정보</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">우리 표 · 카카오 · 관광공사 · Places</FONT></TD></TR></TABLE>>]; ai [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#dbe0ea", penwidth=1, margin="0.10,0.06", label=<<TABLE BORDER="0" CELLPADDING="1" CELLSPACING="4"><TR><TD ROWSPAN="2"><IMG SRC="ic_spark.png"/></TD><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="14" COLOR="#161c28">AI 모델</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT FACE="Malgun Gothic" POINT-SIZE="11" COLOR="#606b7e">시험 중 — 로컬 · API 비교</FONT></TD></TR></TABLE>>]; }
+  traveler -> companion [dir=back, arrowtail=empty, arrowsize=1.1, constraint=false];
+  traveler -> u01 [arrowhead=none];
+  traveler -> u03 [arrowhead=none];
+  traveler -> u02 [arrowhead=none];
+  aiapp -> u02 [arrowhead=none];
+  aiapp -> u05 [arrowhead=none];
+  companion -> u05 [arrowhead=none];
+  u03 -> s [style=dashed, arrowhead=vee];
+  u02 -> r [style=dashed, arrowhead=vee];
+  u02 -> u04 [style=dashed, dir=back, arrowtail=vee, color="#d6b680"];
+  r -> r3 [style=dashed, arrowhead=vee];
+  r -> r1 [style=dashed, arrowhead=vee];
+  r -> r2 [style=dashed, arrowhead=vee];
+  r -> r0 [style=dashed, dir=back, arrowtail=vee, color="#d6b680"];
+  r3 -> place [arrowhead=none];
+  r2 -> ai [arrowhead=none];
+  r0 -> ai [arrowhead=none];
+}

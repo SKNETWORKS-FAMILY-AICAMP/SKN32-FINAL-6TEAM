@@ -1,0 +1,4 @@
+FAIL C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\reports\assets\2026-10-09_mobility_readiness_v48\mobility-readiness.html
+  - script 1 must carry only the canonical data-diagram-controls attribute
+  - expected exactly one data-motion-root; found 0
+

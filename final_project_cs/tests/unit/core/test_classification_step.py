@@ -13,7 +13,7 @@ import pytest
 
 from app.application import classification
 from app.application.classification import FAILURE_CODE, REQUIRED_LABELS, classify_case
-from app.domain.events import EventType
+from app.core.case_lifecycle.events import EventType
 
 
 class FakeConn:
@@ -88,6 +88,18 @@ def test_a_raising_classifier_is_recorded_not_propagated(recorded):
     assert call["payload"] == {"failure_code": FAILURE_CODE}
 
 
+def test_the_failure_reason_is_logged_without_the_customer_text(recorded, caplog):
+    """★`[2026-09-29]` 처리된 실패라 서버 로그에 이유가 없어, 실서버의 분류 실패가 모델 시간 초과인지 메모리·DB 문제인지
+    가릴 수 없었다(ui 세션 로그 확인). 이유(예외 종류·짧은 설명)만 남기고 고객 원문은 싣지 않는다."""
+    def explode(text):
+        raise TimeoutError("provider timeout")
+
+    with caplog.at_level("WARNING", logger="app.application.classification"):
+        _run(recorded, explode)
+    assert "classification failed" in caplog.text and "TimeoutError" in caplog.text and "provider timeout" in caplog.text
+    assert "환불 문의" not in caplog.text
+
+
 def test_no_classifier_is_also_a_failure(recorded):
     event, call, _ = _run(recorded, None)
 
@@ -109,3 +121,31 @@ def test_the_step_lives_in_core_one_not_in_the_route():
     import app.presentation.api.cases as cases
 
     assert not hasattr(cases, "_classify"), "라우트에 절차 복사본이 남아 있다"
+
+
+@pytest.mark.parametrize("classifier", [None, lambda text: {}, lambda text: (_ for _ in ()).throw(TimeoutError("private-provider-body"))])
+def test_failure_diagnostic_contains_only_owned_ids_and_fixed_code(recorded, classifier):
+    seen = []
+    customer, case = uuid4(), uuid4()
+    event = classify_case(FakeConn(), tenant_id="test_travel", case_id=case,
+                          customer_id=customer, text="private customer text", classifier=classifier,
+                          actor_id="test", diagnostic_recorder=lambda value: seen.append(value) or {"status": "stored"})
+    assert event is EventType.CLASSIFICATION_FAILED
+    assert seen == [{"tenant_id": "test_travel", "case_id": case, "customer_id": customer,
+                     "code": "classification_failed"}]
+
+
+def test_diagnostic_failure_cannot_change_classification_result(recorded, caplog):
+    def unavailable(value):
+        raise RuntimeError("private-disk-path")
+    event = classify_case(FakeConn(), tenant_id="test_travel", case_id=uuid4(), text="private text",
+                          classifier=None, actor_id="test", diagnostic_recorder=unavailable)
+    assert event is EventType.CLASSIFICATION_FAILED
+    assert "status=collection_degraded" in caplog.text and "private-disk-path" not in caplog.text
+
+
+def test_success_is_not_collected_as_a_failure(recorded):
+    event = classify_case(FakeConn(), tenant_id="test_travel", case_id=uuid4(), text="서울 일정",
+                          classifier=lambda text: {"intent": "confirm_request", "issue_code": "activity_check", "sentiment": "neutral"},
+                          actor_id="test", diagnostic_recorder=lambda value: pytest.fail("successful classification counted"))
+    assert event is EventType.CLASSIFIED

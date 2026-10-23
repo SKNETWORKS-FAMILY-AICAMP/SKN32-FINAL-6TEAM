@@ -1,0 +1,290 @@
+[
+ {
+  "from": "청계천 광통교",
+  "to": "건대입구",
+  "straight_m": 8502,
+  "ours_min": 41,
+  "google_min": 26,
+  "verdict": "feasible",
+  "ours_route": "01호선 종각→시청 → 02호선 시청→건대입구"
+ },
+ {
+  "from": "여의도 한강공원",
+  "to": "고속터미널 센트럴시티",
+  "straight_m": 6891,
+  "ours_min": 35,
+  "google_min": 22,
+  "verdict": "feasible",
+  "ours_route": "05호선 여의나루→여의도 → 09호선 여의도→고속터미널"
+ },
+ {
+  "from": "여의도 한강공원",
+  "to": "남산서울타워",
+  "straight_m": 5519,
+  "ours_min": 62,
+  "google_min": 54,
+  "verdict": "feasible",
+  "ours_route": "05호선 여의나루→동대문역사문화공원 → 04호선 동대문역사문화공원→명동"
+ },
+ {
+  "from": "북촌한옥마을",
+  "to": "명동성당",
+  "straight_m": 2178,
+  "ours_min": 38,
+  "google_min": 26,
+  "verdict": "feasible",
+  "ours_route": "03호선 안국→충무로 → 04호선 충무로→명동"
+ },
+ {
+  "from": "여의도 한강공원",
+  "to": "롯데월드타워",
+  "straight_m": 15087,
+  "ours_min": 57,
+  "google_min": 52,
+  "verdict": "feasible",
+  "ours_route": "05호선 여의나루→을지로4가 → 02호선 을지로4가→잠실"
+ },
+ {
+  "from": "잠실 석촌호수",
+  "to": "동대문디자인플라자",
+  "straight_m": 10218,
+  "ours_min": 37,
+  "google_min": 32,
+  "verdict": "feasible",
+  "ours_route": "02호선 잠실→동대문역사문화공원"
+ },
+ {
+  "from": "고속터미널 센트럴시티",
+  "to": "동대문디자인플라자",
+  "straight_m": 6939,
+  "ours_min": 34,
+  "google_min": 28,
+  "verdict": "feasible",
+  "ours_route": "03호선 고속터미널→충무로 → 04호선 충무로→동대문역사문화공원"
+ },
+ {
+  "from": "서울역",
+  "to": "망원시장",
+  "straight_m": 5705,
+  "ours_min": 38,
+  "google_min": 31,
+  "verdict": "feasible",
+  "ours_route": "공항철도 서울역→공덕 → 06호선 공덕→망원"
+ },
+ {
+  "from": "동대문디자인플라자",
+  "to": "고속터미널 센트럴시티",
+  "straight_m": 6939,
+  "ours_min": 33,
+  "google_min": 24,
+  "verdict": "feasible",
+  "ours_route": "04호선 동대문역사문화공원→충무로 → 03호선 충무로→고속터미널"
+ },
+ {
+  "from": "DMC",
+  "to": "인사동",
+  "straight_m": 8431,
+  "ours_min": 75,
+  "google_min": 44,
+  "verdict": "feasible",
+  "ours_route": "경의선 수색→옥수 → 03호선 옥수→안국"
+ },
+ {
+  "from": "잠실 석촌호수",
+  "to": "남산서울타워",
+  "straight_m": 10880,
+  "ours_min": 67,
+  "google_min": 69,
+  "verdict": "feasible",
+  "ours_route": "02호선 잠실→동대문역사문화공원 → 04호선 동대문역사문화공원→명동"
+ },
+ {
+  "from": "경복궁",
+  "to": "남산서울타워",
+  "straight_m": 3309,
+  "ours_min": 52,
+  "google_min": 37,
+  "verdict": "feasible",
+  "ours_route": "03호선 경복궁→충무로 → 04호선 충무로→명동"
+ },
+ {
+  "from": "고속터미널 센트럴시티",
+  "to": "이태원역",
+  "straight_m": 3414,
+  "ours_min": 29,
+  "google_min": 22,
+  "verdict": "feasible",
+  "ours_route": "03호선 고속터미널→약수 → 06호선 약수→이태원"
+ },
+ {
+  "from": "성수 서울숲",
+  "to": "북촌한옥마을",
+  "straight_m": 6365,
+  "ours_min": 69,
+  "google_min": 58,
+  "verdict": "feasible",
+  "ours_route": "수인분당선 서울숲→왕십리 → 02호선 왕십리→을지로3가 → 03호선 을지로3가→안국"
+ },
+ {
+  "from": "홍대 걷고싶은거리",
+  "to": "경복궁",
+  "straight_m": 5372,
+  "ours_min": 41,
+  "google_min": 29,
+  "verdict": "feasible",
+  "ours_route": "02호선 홍대입구→을지로3가 → 03호선 을지로3가→경복궁"
+ },
+ {
+  "from": "고속터미널 센트럴시티",
+  "to": "서울역",
+  "straight_m": 6305,
+  "ours_min": 33,
+  "google_min": 28,
+  "verdict": "feasible",
+  "ours_route": "03호선 고속터미널→충무로 → 04호선 충무로→서울역"
+ },
+ {
+  "from": "DMC",
+  "to": "고속터미널 센트럴시티",
+  "straight_m": 12919,
+  "ours_min": 71,
+  "google_min": 64,
+  "verdict": "feasible",
+  "ours_route": "경의선 수색→이촌 → 04호선 이촌→동작 → 09호선 동작→고속터미널"
+ },
+ {
+  "from": "인사동",
+  "to": "홍대 걷고싶은거리",
+  "straight_m": 5812,
+  "ours_min": 32,
+  "google_min": 33,
+  "verdict": "feasible",
+  "ours_route": "03호선 안국→을지로3가 → 02호선 을지로3가→홍대입구"
+ },
+ {
+  "from": "서울역",
+  "to": "북촌한옥마을",
+  "straight_m": 3301,
+  "ours_min": 40,
+  "google_min": 30,
+  "verdict": "feasible",
+  "ours_route": "04호선 서울역→충무로 → 03호선 충무로→안국"
+ },
+ {
+  "from": "성수 서울숲",
+  "to": "청계천 광통교",
+  "straight_m": 5759,
+  "ours_min": null,
+  "google_min": 44,
+  "verdict": "infeasible",
+  "ours_route": null
+ },
+ {
+  "from": "롯데월드타워",
+  "to": "인사동",
+  "straight_m": 12369,
+  "ours_min": 50,
+  "google_min": 44,
+  "verdict": "feasible",
+  "ours_route": "02호선 잠실→을지로3가 → 03호선 을지로3가→안국"
+ },
+ {
+  "from": "여의도 한강공원",
+  "to": "국립중앙박물관",
+  "straight_m": 4235,
+  "ours_min": 46,
+  "google_min": 35,
+  "verdict": "feasible",
+  "ours_route": "05호선 여의나루→공덕 → 경의선 공덕→이촌"
+ },
+ {
+  "from": "창덕궁",
+  "to": "서울역",
+  "straight_m": 3278,
+  "ours_min": 33,
+  "google_min": 25,
+  "verdict": "feasible",
+  "ours_route": "03호선 안국→충무로 → 04호선 충무로→서울역"
+ },
+ {
+  "from": "덕수궁",
+  "to": "이태원역",
+  "straight_m": 3882,
+  "ours_min": 32,
+  "google_min": 27,
+  "verdict": "feasible",
+  "ours_route": "01호선 시청→서울역 → 04호선 서울역→삼각지 → 06호선 삼각지→이태원"
+ },
+ {
+  "from": "고속터미널 센트럴시티",
+  "to": "남산서울타워",
+  "straight_m": 5355,
+  "ours_min": 52,
+  "google_min": 36,
+  "verdict": "feasible",
+  "ours_route": "03호선 고속터미널→충무로 → 04호선 충무로→명동"
+ },
+ {
+  "from": "북촌한옥마을",
+  "to": "남산서울타워",
+  "straight_m": 3516,
+  "ours_min": 57,
+  "google_min": 40,
+  "verdict": "feasible",
+  "ours_route": "03호선 안국→충무로 → 04호선 충무로→명동"
+ },
+ {
+  "from": "압구정 로데오",
+  "to": "고속터미널 센트럴시티",
+  "straight_m": 3898,
+  "ours_min": 24,
+  "google_min": 25,
+  "verdict": "feasible",
+  "ours_route": "수인분당선 압구정로데오→강남구청 → 07호선 강남구청→고속터미널"
+ },
+ {
+  "from": "이태원역",
+  "to": "코엑스",
+  "straight_m": 6232,
+  "ours_min": 54,
+  "google_min": 42,
+  "verdict": "feasible",
+  "ours_route": "06호선 이태원→약수 → 03호선 약수→고속터미널 → 09호선 고속터미널→봉은사"
+ },
+ {
+  "from": "성수 서울숲",
+  "to": "DMC",
+  "straight_m": 13486,
+  "ours_min": 87,
+  "google_min": 70,
+  "verdict": "feasible",
+  "ours_route": "수인분당선 서울숲→왕십리 → 경의선 왕십리→수색"
+ },
+ {
+  "from": "성수 서울숲",
+  "to": "압구정 로데오",
+  "straight_m": 1929,
+  "ours_min": 22,
+  "google_min": 20,
+  "verdict": "feasible",
+  "ours_route": "수인분당선 서울숲→압구정로데오"
+ },
+ {
+  "from": "잠실 석촌호수",
+  "to": "고속터미널 센트럴시티",
+  "straight_m": 8406,
+  "ours_min": 37,
+  "google_min": 40,
+  "verdict": "feasible",
+  "ours_route": "02호선 잠실→교대 → 03호선 교대→고속터미널"
+ },
+ {
+  "from": "여의도 한강공원",
+  "to": "압구정 로데오",
+  "straight_m": 9384,
+  "ours_min": 47,
+  "google_min": 41,
+  "verdict": "feasible",
+  "ours_route": "05호선 여의나루→왕십리 → 수인분당선 왕십리→압구정로데오"
+ }
+]

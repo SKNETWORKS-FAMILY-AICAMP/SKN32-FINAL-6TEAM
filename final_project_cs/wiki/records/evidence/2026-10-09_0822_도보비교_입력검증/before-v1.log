@@ -1,0 +1,618 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFF                                              [100%]
+================================== FAILURES ===================================
+_____ test_invalid_public_duration_is_an_error_not_an_offered_walk[True] ______
+
+value = True
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_public_duration_is_an_error_not_an_offered_walk(value):
+        result = {'route': {'options': [{'id': 'walk', 'walk_m': 300, 'eta_min': value}]}}
+        got = comparison._product_walk(result, None)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:21: AssertionError
+______ test_invalid_public_duration_is_an_error_not_an_offered_walk[nan] ______
+
+value = nan
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_public_duration_is_an_error_not_an_offered_walk(value):
+        result = {'route': {'options': [{'id': 'walk', 'walk_m': 300, 'eta_min': value}]}}
+        got = comparison._product_walk(result, None)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:21: AssertionError
+______ test_invalid_public_duration_is_an_error_not_an_offered_walk[inf] ______
+
+value = inf
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_public_duration_is_an_error_not_an_offered_walk(value):
+        result = {'route': {'options': [{'id': 'walk', 'walk_m': 300, 'eta_min': value}]}}
+        got = comparison._product_walk(result, None)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:21: AssertionError
+______ test_invalid_public_duration_is_an_error_not_an_offered_walk[-1] _______
+
+value = -1
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_public_duration_is_an_error_not_an_offered_walk(value):
+        result = {'route': {'options': [{'id': 'walk', 'walk_m': 300, 'eta_min': value}]}}
+        got = comparison._product_walk(result, None)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:21: AssertionError
+_______ test_invalid_public_duration_is_an_error_not_an_offered_walk[0] _______
+
+value = 0
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_public_duration_is_an_error_not_an_offered_walk(value):
+        result = {'route': {'options': [{'id': 'walk', 'walk_m': 300, 'eta_min': value}]}}
+        got = comparison._product_walk(result, None)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:21: AssertionError
+_______ test_invalid_public_duration_is_an_error_not_an_offered_walk[5] _______
+
+value = '5'
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_public_duration_is_an_error_not_an_offered_walk(value):
+        result = {'route': {'options': [{'id': 'walk', 'walk_m': 300, 'eta_min': value}]}}
+        got = comparison._product_walk(result, None)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:21: AssertionError
+_____ test_invalid_public_duration_is_an_error_not_an_offered_walk[None] ______
+
+value = None
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_public_duration_is_an_error_not_an_offered_walk(value):
+        result = {'route': {'options': [{'id': 'walk', 'walk_m': 300, 'eta_min': value}]}}
+        got = comparison._product_walk(result, None)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:21: AssertionError
+_ test_invalid_product_values_do_not_enter_coverage_or_error_statistics[True] _
+
+value = True
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_product_values_do_not_enter_coverage_or_error_statistics(value):
+        item = row()
+        item['ours_walk_product']['m'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_product_offered'] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:29: AssertionError
+_ test_invalid_product_values_do_not_enter_coverage_or_error_statistics[nan] __
+
+value = nan
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_product_values_do_not_enter_coverage_or_error_statistics(value):
+        item = row()
+        item['ours_walk_product']['m'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_product_offered'] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:29: AssertionError
+_ test_invalid_product_values_do_not_enter_coverage_or_error_statistics[inf] __
+
+value = inf
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_product_values_do_not_enter_coverage_or_error_statistics(value):
+        item = row()
+        item['ours_walk_product']['m'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_product_offered'] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:29: AssertionError
+__ test_invalid_product_values_do_not_enter_coverage_or_error_statistics[-1] __
+
+value = -1
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_product_values_do_not_enter_coverage_or_error_statistics(value):
+        item = row()
+        item['ours_walk_product']['m'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_product_offered'] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:29: AssertionError
+__ test_invalid_product_values_do_not_enter_coverage_or_error_statistics[0] ___
+
+value = 0
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_product_values_do_not_enter_coverage_or_error_statistics(value):
+        item = row()
+        item['ours_walk_product']['m'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_product_offered'] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:29: AssertionError
+__ test_invalid_product_values_do_not_enter_coverage_or_error_statistics[5] ___
+
+value = '5'
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_product_values_do_not_enter_coverage_or_error_statistics(value):
+        item = row()
+        item['ours_walk_product']['m'] = value
+>       got = comparison.summarise([item])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:28: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'kakao': {'walk': {'shortest': {'km': 0.3, 'min': 5}}}, 'ours_walk_product': {'m': '5', 'min': 5}}]
+
+    def summarise(rows: list[dict]) -> dict:
+        out: dict = {}
+        tb, tr, tm = [], [], []
+        by_bucket: dict[str, list[float]] = {}
+        for r in rows:
+            kt = (r.get("kakao") or {}).get("transit") or {}
+            ot = r.get("ours_transit") or {}
+            if "best" in kt and "eta" in ot:
+                d = ot["eta"] - kt["best"]["min"]
+                tb.append(d)
+                tr.append(ot["eta"] - kt["rec"]["min"])
+                tm.append(ot["min_option_eta"] - kt["best"]["min"])
+                by_bucket.setdefault(r["bucket"], []).append(d)
+        out["transit_vs_kakao_best"] = _stats(tb)
+        out["transit_vs_kakao_recommended"] = _stats(tr)
+        out["transit_our_fastest_option_vs_kakao_best"] = _stats(tm)
+        out["transit_vs_kakao_best_by_bucket"] = {k: _stats(v) for k, v in by_bucket.items()}
+        for name in ("best", "rec"):
+            for field in ("eta", "eta_without_wait"):
+                differences, percentages, our_values, reference_values = [], [], [], []
+                for row in rows:
+                    reference = ((row.get("kakao") or {}).get("transit") or {}).get(name, {}).get("min")
+                    ours = (row.get("ours_transit") or {}).get(field)
+                    if reference is not None and reference > 0 and ours is not None:
+                        differences.append(ours - reference)
+                        percentages.append((ours - reference) / reference * 100)
+                        our_values.append(ours)
+                        reference_values.append(reference)
+                out[f"transit_{field}_vs_{name}"] = {
+                    "minutes": _stats(differences), "percent": _stats(percentages, tol=10),
+                    "percent_denominator": "각 경로의 카카오 소요 분", "wait_known": len(differences),
+                    "ours_median_min": statistics.median(our_values) if our_values else None,
+                    "kakao_median_min": statistics.median(reference_values) if reference_values else None,
+                }
+        taxi_t, taxi_f, taxi_km = [], [], []
+        for r in rows:
+            kc = (r.get("kakao") or {}).get("car") or {}
+            ox = r.get("ours_taxi") or {}
+            if kc.get("source") in {"kakao_map_web", "legacy_api_user_reused"} and "duration_s" in kc and "eta" in ox:
+                taxi_t.append(ox["eta"] - kc["duration_s"] / 60)
+                if ox.get("fare") is not None and kc.get("taxi_fare_krw"):
+                    taxi_f.append((ox["fare"] - kc["taxi_fare_krw"]) / kc["taxi_fare_krw"] * 100)
+                if ox.get("km") is not None:
+                    taxi_km.append((ox["km"] - kc["distance_m"] / 1000) / (kc["distance_m"] / 1000) * 100)
+        out["taxi_minutes_vs_kakao_car"] = _stats(taxi_t)
+        out["taxi_fare_percent_vs_kakao_taxi_fare"] = _stats(taxi_f, tol=10) if taxi_f else {"n": 0}
+        out["taxi_fare_under_reference"] = {"n": len(taxi_f), "count": sum(x < 0 for x in taxi_f),
+                                           "rate": sum(x < 0 for x in taxi_f) / len(taxi_f) if taxi_f else None}
+        out["taxi_distance_percent_vs_kakao"] = _stats(taxi_km, tol=10) if taxi_km else {"n": 0}
+        walk_m, walk_min, raw_m, raw_min = [], [], [], []
+        walk_reference_rows = 0
+        for r in rows:
+            kw = (r.get("kakao") or {}).get("walk") or {}
+            reference = kw.get("shortest") or {}
+            if reference.get("km", 0) <= 0 or reference.get("min") is None:
+                continue
+            walk_reference_rows += 1
+            kmeters = reference["km"] * 1000
+            for key, distances, minutes in (("ours_walk_product", walk_m, walk_min),
+                                           ("ours_walk_diagnostic", raw_m, raw_min)):
+                ours = r.get(key) or (r.get("ours_walk") if key == "ours_walk_diagnostic" else None) or {}
+                if ours.get("m") is not None and ours.get("min") is not None:
+>                   distances.append((ours["m"] - kmeters) / kmeters * 100)
+                                      ^^^^^^^^^^^^^^^^^^^
+E                   TypeError: unsupported operand type(s) for -: 'str' and 'float'
+
+scripts\mobility\compare_kakao_golden.py:205: TypeError
+_ test_invalid_product_values_do_not_enter_coverage_or_error_statistics[None] _
+
+value = None
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_product_values_do_not_enter_coverage_or_error_statistics(value):
+        item = row()
+        item['ours_walk_product']['m'] = value
+        got = comparison.summarise([item])
+        assert got['coverage']['walk_product_offered'] == 0
+>       assert got['coverage']['walk_product_invalid'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_product_invalid'
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:30: KeyError
+________ test_invalid_reference_duration_is_counted_and_excluded[True] ________
+
+value = True
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_reference_duration_is_counted_and_excluded(value):
+        item = row()
+        item['kakao']['walk']['shortest']['min'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_reference_invalid'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_reference_invalid'
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:39: KeyError
+________ test_invalid_reference_duration_is_counted_and_excluded[nan] _________
+
+value = nan
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_reference_duration_is_counted_and_excluded(value):
+        item = row()
+        item['kakao']['walk']['shortest']['min'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_reference_invalid'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_reference_invalid'
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:39: KeyError
+________ test_invalid_reference_duration_is_counted_and_excluded[inf] _________
+
+value = inf
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_reference_duration_is_counted_and_excluded(value):
+        item = row()
+        item['kakao']['walk']['shortest']['min'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_reference_invalid'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_reference_invalid'
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:39: KeyError
+_________ test_invalid_reference_duration_is_counted_and_excluded[-1] _________
+
+value = -1
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_reference_duration_is_counted_and_excluded(value):
+        item = row()
+        item['kakao']['walk']['shortest']['min'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_reference_invalid'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_reference_invalid'
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:39: KeyError
+_________ test_invalid_reference_duration_is_counted_and_excluded[0] __________
+
+value = 0
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_reference_duration_is_counted_and_excluded(value):
+        item = row()
+        item['kakao']['walk']['shortest']['min'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_reference_invalid'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_reference_invalid'
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:39: KeyError
+_________ test_invalid_reference_duration_is_counted_and_excluded[5] __________
+
+value = '5'
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_reference_duration_is_counted_and_excluded(value):
+        item = row()
+        item['kakao']['walk']['shortest']['min'] = value
+>       got = comparison.summarise([item])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'kakao': {'walk': {'shortest': {'km': 0.3, 'min': '5'}}}, 'ours_walk_product': {'m': 300, 'min': 5}}]
+
+    def summarise(rows: list[dict]) -> dict:
+        out: dict = {}
+        tb, tr, tm = [], [], []
+        by_bucket: dict[str, list[float]] = {}
+        for r in rows:
+            kt = (r.get("kakao") or {}).get("transit") or {}
+            ot = r.get("ours_transit") or {}
+            if "best" in kt and "eta" in ot:
+                d = ot["eta"] - kt["best"]["min"]
+                tb.append(d)
+                tr.append(ot["eta"] - kt["rec"]["min"])
+                tm.append(ot["min_option_eta"] - kt["best"]["min"])
+                by_bucket.setdefault(r["bucket"], []).append(d)
+        out["transit_vs_kakao_best"] = _stats(tb)
+        out["transit_vs_kakao_recommended"] = _stats(tr)
+        out["transit_our_fastest_option_vs_kakao_best"] = _stats(tm)
+        out["transit_vs_kakao_best_by_bucket"] = {k: _stats(v) for k, v in by_bucket.items()}
+        for name in ("best", "rec"):
+            for field in ("eta", "eta_without_wait"):
+                differences, percentages, our_values, reference_values = [], [], [], []
+                for row in rows:
+                    reference = ((row.get("kakao") or {}).get("transit") or {}).get(name, {}).get("min")
+                    ours = (row.get("ours_transit") or {}).get(field)
+                    if reference is not None and reference > 0 and ours is not None:
+                        differences.append(ours - reference)
+                        percentages.append((ours - reference) / reference * 100)
+                        our_values.append(ours)
+                        reference_values.append(reference)
+                out[f"transit_{field}_vs_{name}"] = {
+                    "minutes": _stats(differences), "percent": _stats(percentages, tol=10),
+                    "percent_denominator": "각 경로의 카카오 소요 분", "wait_known": len(differences),
+                    "ours_median_min": statistics.median(our_values) if our_values else None,
+                    "kakao_median_min": statistics.median(reference_values) if reference_values else None,
+                }
+        taxi_t, taxi_f, taxi_km = [], [], []
+        for r in rows:
+            kc = (r.get("kakao") or {}).get("car") or {}
+            ox = r.get("ours_taxi") or {}
+            if kc.get("source") in {"kakao_map_web", "legacy_api_user_reused"} and "duration_s" in kc and "eta" in ox:
+                taxi_t.append(ox["eta"] - kc["duration_s"] / 60)
+                if ox.get("fare") is not None and kc.get("taxi_fare_krw"):
+                    taxi_f.append((ox["fare"] - kc["taxi_fare_krw"]) / kc["taxi_fare_krw"] * 100)
+                if ox.get("km") is not None:
+                    taxi_km.append((ox["km"] - kc["distance_m"] / 1000) / (kc["distance_m"] / 1000) * 100)
+        out["taxi_minutes_vs_kakao_car"] = _stats(taxi_t)
+        out["taxi_fare_percent_vs_kakao_taxi_fare"] = _stats(taxi_f, tol=10) if taxi_f else {"n": 0}
+        out["taxi_fare_under_reference"] = {"n": len(taxi_f), "count": sum(x < 0 for x in taxi_f),
+                                           "rate": sum(x < 0 for x in taxi_f) / len(taxi_f) if taxi_f else None}
+        out["taxi_distance_percent_vs_kakao"] = _stats(taxi_km, tol=10) if taxi_km else {"n": 0}
+        walk_m, walk_min, raw_m, raw_min = [], [], [], []
+        walk_reference_rows = 0
+        for r in rows:
+            kw = (r.get("kakao") or {}).get("walk") or {}
+            reference = kw.get("shortest") or {}
+            if reference.get("km", 0) <= 0 or reference.get("min") is None:
+                continue
+            walk_reference_rows += 1
+            kmeters = reference["km"] * 1000
+            for key, distances, minutes in (("ours_walk_product", walk_m, walk_min),
+                                           ("ours_walk_diagnostic", raw_m, raw_min)):
+                ours = r.get(key) or (r.get("ours_walk") if key == "ours_walk_diagnostic" else None) or {}
+                if ours.get("m") is not None and ours.get("min") is not None:
+                    distances.append((ours["m"] - kmeters) / kmeters * 100)
+>                   minutes.append(ours["min"] - reference["min"])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                   TypeError: unsupported operand type(s) for -: 'int' and 'str'
+
+scripts\mobility\compare_kakao_golden.py:206: TypeError
+________ test_invalid_reference_duration_is_counted_and_excluded[None] ________
+
+value = None
+
+    @pytest.mark.parametrize('value', BAD)
+    def test_invalid_reference_duration_is_counted_and_excluded(value):
+        item = row()
+        item['kakao']['walk']['shortest']['min'] = value
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_reference_invalid'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'walk_reference_invalid'
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:39: KeyError
+_______ test_diagnostic_invalid_duration_returns_a_visible_error[True] ________
+
+value = True
+
+    @pytest.mark.parametrize('value', [True, float('nan'), float('inf'), -1])
+    def test_diagnostic_invalid_duration_returns_a_visible_error(value):
+        planner = SimpleNamespace(_walk_path=lambda *a, **kw: (300, value, False))
+        got = comparison._walk_diagnostic(planner, {}, {}, 280)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:49: AssertionError
+________ test_diagnostic_invalid_duration_returns_a_visible_error[nan] ________
+
+value = nan
+
+    @pytest.mark.parametrize('value', [True, float('nan'), float('inf'), -1])
+    def test_diagnostic_invalid_duration_returns_a_visible_error(value):
+        planner = SimpleNamespace(_walk_path=lambda *a, **kw: (300, value, False))
+        got = comparison._walk_diagnostic(planner, {}, {}, 280)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:49: AssertionError
+________ test_diagnostic_invalid_duration_returns_a_visible_error[inf] ________
+
+value = inf
+
+    @pytest.mark.parametrize('value', [True, float('nan'), float('inf'), -1])
+    def test_diagnostic_invalid_duration_returns_a_visible_error(value):
+        planner = SimpleNamespace(_walk_path=lambda *a, **kw: (300, value, False))
+        got = comparison._walk_diagnostic(planner, {}, {}, 280)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:49: AssertionError
+________ test_diagnostic_invalid_duration_returns_a_visible_error[-1] _________
+
+value = -1
+
+    @pytest.mark.parametrize('value', [True, float('nan'), float('inf'), -1])
+    def test_diagnostic_invalid_duration_returns_a_visible_error(value):
+        planner = SimpleNamespace(_walk_path=lambda *a, **kw: (300, value, False))
+        got = comparison._walk_diagnostic(planner, {}, {}, 280)
+>       assert got['status'] == 'error' and got['reason'] == 'invalid_walk_values'
+E       AssertionError: assert ('available' == 'error'
+E         
+E         - error
+E         + available)
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:49: AssertionError
+_____ test_error_status_with_numeric_payload_is_not_counted_as_available ______
+
+    def test_error_status_with_numeric_payload_is_not_counted_as_available():
+        item = row()
+        item['ours_walk_product']['status'] = 'error'
+        got = comparison.summarise([item])
+>       assert got['coverage']['walk_product_offered'] == 0
+E       assert 1 == 0
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:56: AssertionError
+__ test_one_good_row_survives_invalid_product_and_reference_without_mutation __
+
+    def test_one_good_row_survives_invalid_product_and_reference_without_mutation():
+        from copy import deepcopy
+        good, bad_product, bad_reference = row(), row(), row()
+        bad_product['ours_walk_product']['min'] = -1
+        bad_reference['kakao']['walk']['shortest']['km'] = '0.3'
+        inputs = [good, bad_product, bad_reference]
+        old = deepcopy(inputs)
+>       got = comparison.summarise(inputs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\mobility\test_walk_comparison_values_v1.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+rows = [{'kakao': {'walk': {'shortest': {'km': 0.3, 'min': 5}}}, 'ours_walk_product': {'m': 300, 'min': 5}}, {'kakao': {'walk...00, 'min': -1}}, {'kakao': {'walk': {'shortest': {'km': '0.3', 'min': 5}}}, 'ours_walk_product': {'m': 300, 'min': 5}}]
+
+    def summarise(rows: list[dict]) -> dict:
+        out: dict = {}
+        tb, tr, tm = [], [], []
+        by_bucket: dict[str, list[float]] = {}
+        for r in rows:
+            kt = (r.get("kakao") or {}).get("transit") or {}
+            ot = r.get("ours_transit") or {}
+            if "best" in kt and "eta" in ot:
+                d = ot["eta"] - kt["best"]["min"]
+                tb.append(d)
+                tr.append(ot["eta"] - kt["rec"]["min"])
+                tm.append(ot["min_option_eta"] - kt["best"]["min"])
+                by_bucket.setdefault(r["bucket"], []).append(d)
+        out["transit_vs_kakao_best"] = _stats(tb)
+        out["transit_vs_kakao_recommended"] = _stats(tr)
+        out["transit_our_fastest_option_vs_kakao_best"] = _stats(tm)
+        out["transit_vs_kakao_best_by_bucket"] = {k: _stats(v) for k, v in by_bucket.items()}
+        for name in ("best", "rec"):
+            for field in ("eta", "eta_without_wait"):
+                differences, percentages, our_values, reference_values = [], [], [], []
+                for row in rows:
+                    reference = ((row.get("kakao") or {}).get("transit") or {}).get(name, {}).get("min")
+                    ours = (row.get("ours_transit") or {}).get(field)
+                    if reference is not None and reference > 0 and ours is not None:
+                        differences.append(ours - reference)
+                        percentages.append((ours - reference) / reference * 100)
+                        our_values.append(ours)
+                        reference_values.append(reference)
+                out[f"transit_{field}_vs_{name}"] = {
+                    "minutes": _stats(differences), "percent": _stats(percentages, tol=10),
+                    "percent_denominator": "각 경로의 카카오 소요 분", "wait_known": len(differences),
+                    "ours_median_min": statistics.median(our_values) if our_values else None,
+                    "kakao_median_min": statistics.median(reference_values) if reference_values else None,
+                }
+        taxi_t, taxi_f, taxi_km = [], [], []
+        for r in rows:
+            kc = (r.get("kakao") or {}).get("car") or {}
+            ox = r.get("ours_taxi") or {}
+            if kc.get("source") in {"kakao_map_web", "legacy_api_user_reused"} and "duration_s" in kc and "eta" in ox:
+                taxi_t.append(ox["eta"] - kc["duration_s"] / 60)
+                if ox.get("fare") is not None and kc.get("taxi_fare_krw"):
+                    taxi_f.append((ox["fare"] - kc["taxi_fare_krw"]) / kc["taxi_fare_krw"] * 100)
+                if ox.get("km") is not None:
+                    taxi_km.append((ox["km"] - kc["distance_m"] / 1000) / (kc["distance_m"] / 1000) * 100)
+        out["taxi_minutes_vs_kakao_car"] = _stats(taxi_t)
+        out["taxi_fare_percent_vs_kakao_taxi_fare"] = _stats(taxi_f, tol=10) if taxi_f else {"n": 0}
+        out["taxi_fare_under_reference"] = {"n": len(taxi_f), "count": sum(x < 0 for x in taxi_f),
+                                           "rate": sum(x < 0 for x in taxi_f) / len(taxi_f) if taxi_f else None}
+        out["taxi_distance_percent_vs_kakao"] = _stats(taxi_km, tol=10) if taxi_km else {"n": 0}
+        walk_m, walk_min, raw_m, raw_min = [], [], [], []
+        walk_reference_rows = 0
+        for r in rows:
+            kw = (r.get("kakao") or {}).get("walk") or {}
+            reference = kw.get("shortest") or {}
+>           if reference.get("km", 0) <= 0 or reference.get("min") is None:
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: '<=' not supported between instances of 'str' and 'int'
+
+scripts\mobility\compare_kakao_golden.py:197: TypeError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_0822_도보비교_입력검증\before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_public_duration_is_an_error_not_an_offered_walk[True]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_public_duration_is_an_error_not_an_offered_walk[nan]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_public_duration_is_an_error_not_an_offered_walk[inf]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_public_duration_is_an_error_not_an_offered_walk[-1]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_public_duration_is_an_error_not_an_offered_walk[0]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_public_duration_is_an_error_not_an_offered_walk[5]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_public_duration_is_an_error_not_an_offered_walk[None]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_product_values_do_not_enter_coverage_or_error_statistics[True]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_product_values_do_not_enter_coverage_or_error_statistics[nan]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_product_values_do_not_enter_coverage_or_error_statistics[inf]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_product_values_do_not_enter_coverage_or_error_statistics[-1]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_product_values_do_not_enter_coverage_or_error_statistics[0]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_product_values_do_not_enter_coverage_or_error_statistics[5]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_product_values_do_not_enter_coverage_or_error_statistics[None]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_reference_duration_is_counted_and_excluded[True]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_reference_duration_is_counted_and_excluded[nan]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_reference_duration_is_counted_and_excluded[inf]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_reference_duration_is_counted_and_excluded[-1]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_reference_duration_is_counted_and_excluded[0]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_reference_duration_is_counted_and_excluded[5]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_invalid_reference_duration_is_counted_and_excluded[None]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_diagnostic_invalid_duration_returns_a_visible_error[True]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_diagnostic_invalid_duration_returns_a_visible_error[nan]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_diagnostic_invalid_duration_returns_a_visible_error[inf]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_diagnostic_invalid_duration_returns_a_visible_error[-1]
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_error_status_with_numeric_payload_is_not_counted_as_available
+FAILED tests/unit/travel/mobility/test_walk_comparison_values_v1.py::test_one_good_row_survives_invalid_product_and_reference_without_mutation
+27 failed in 5.64s
+Exception ignored in: <function Console.__del__ at 0x000001B54B1E5BC0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 256, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

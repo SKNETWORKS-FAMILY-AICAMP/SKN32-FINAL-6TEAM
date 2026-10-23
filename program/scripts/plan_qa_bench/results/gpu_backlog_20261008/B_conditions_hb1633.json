@@ -1,0 +1,78 @@
+{
+  "root_space": {
+    "path": "/root",
+    "available_bytes": 14483599360,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "temp_space": {
+    "path": "/tmp",
+    "available_bytes": 14483599360,
+    "filesystem_free_is_not_account_quota": true
+  },
+  "existing_base_config": true,
+  "existing_train": true,
+  "b56_markers": {
+    "SMOKE_DONE": true,
+    "cosine_DONE": false,
+    "finch_DONE": false,
+    "ALLDONE": false
+  },
+  "b57_markers": {
+    "prepared.json": true,
+    "finch_DONE": false,
+    "cosine_DONE": false,
+    "ALLDONE": false
+  },
+  "b57_prepared": {
+    "our_training": true,
+    "model": "Gemma-4-E4B-it existing base",
+    "dependency": "existing B56 ALLDONE marker; wait without GPU allocation",
+    "seed": 20261013,
+    "reference_seed": 20261012,
+    "mode_order": [
+      "finch",
+      "cosine"
+    ],
+    "reference_mode_order": [
+      "cosine",
+      "finch"
+    ],
+    "epochs": 2,
+    "rank": 16,
+    "accum": 8,
+    "max_lr": 5e-05,
+    "finch_base_rate": 2e-05,
+    "finch_alpha": 0.9,
+    "purpose": "Estimate seed variation of learning-rate comparison; not a product promotion",
+    "frozen_inputs": {
+      "/root/daily_rag_repeat_20261008/qlora_train_finch.py": "c43cc981465b6a4f8e55eca5dba3c1dbaa7f7815b2c952cd71ce799052e5c874",
+      "/root/daily_rag_repeat_20261008/finch_schedule.py": "cbfd5f58c08f202826f37aea9c6ffada859c707ad19ad20197cb4a8c611d213b",
+      "/root/work/train_oos2.jsonl": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c"
+    },
+    "preflight": {
+      "frozen_hashes": [
+        3,
+        3
+      ],
+      "shell_syntax": [
+        1,
+        1
+      ],
+      "existing_smoke_marker": true,
+      "available_bytes": 14483628032
+    },
+    "prepared_full_training_jobs": 2,
+    "training_completed": 0,
+    "new_model_download": false,
+    "weight_hash_reverified_this_preflight": false,
+    "holdout_validation_complete": false,
+    "product_adoption": false
+  },
+  "b57_pid": 2793572,
+  "download_paths_present": {
+    "spark_s1_4b": true,
+    "jevify_e4b": false
+  },
+  "rounded_available_GB": "14G",
+  "observed_at_utc": "2026-10-08T07:33:04.615485+00:00"
+}

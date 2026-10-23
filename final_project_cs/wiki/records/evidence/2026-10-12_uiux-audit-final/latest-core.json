@@ -1,0 +1,492 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.audit.config.ts",
+      "tests/live/uiux-route-audit-20261012.spec.ts",
+      "tests/live/uiux-share-location-20261012.spec.ts",
+      "tests/live/add-header-map-20261009.spec.ts",
+      "-g",
+      "전체 경로 · intake ·|공유창 Tab|클립보드|GPS 대기|위치 동의가 유지|저장 중에는",
+      "--reporter=list,json",
+      "--output=latest-core-evidence"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\uiux-visual-20261012-v1\\playwright.audit.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/latest-core-evidence",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/.tmp/uiux-visual-20261012-v1/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "add-header-map-20261009.spec.ts",
+      "file": "add-header-map-20261009.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "저장 중에는 뒤로가기·스와이프가 요청과 입력을 취소하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3402,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:24:49.231Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "15b049a72f5a27536d90-da3742510a75f8ad5b0b",
+          "file": "add-header-map-20261009.spec.ts",
+          "line": 95,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "uiux-route-audit-20261012.spec.ts",
+      "file": "uiux-route-audit-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "전체 경로 · intake · 375px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2484,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:24:53.036Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ni9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MH0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-6a53b90029670da0f8a7",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "전체 경로 · intake · 1280px: 화면 표시·가로 넘침·실행 오류",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2680,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:24:55.535Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "route-observation",
+                      "contentType": "application/json",
+                      "body": "eyJyb3V0ZSI6Ii9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImxhbmRlZCI6Imh0dHA6Ly8xMjcuMC4wLjE6MzE4Ni9pbnRha2VzL2FhYWFhYWFhLWJiYmItY2NjYy1kZGRkLWVlZWVlZWVlZWVlZSIsImRpbWVuc2lvbnMiOnsiZG9jdW1lbnQiOjAsIm1haW4iOjAsInNjcm9sbCI6MH0sImVycm9ycyI6W119"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e03b4517cf81fd904b1-743648a5961510207bb5",
+          "file": "uiux-route-audit-20261012.spec.ts",
+          "line": 25,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "uiux-share-location-20261012.spec.ts",
+      "file": "uiux-share-location-20261012.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "공유창 Tab 순환·배경 비활성화·Esc 초점 복귀 (375px)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2047,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:24:58.271Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-992dfc5545bdd4352447",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 14,
+          "column": 34
+        },
+        {
+          "title": "공유창 Tab 순환·배경 비활성화·Esc 초점 복귀 (1280px)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2509,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:25:00.334Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-2a2aab2ad49348a27877",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 14,
+          "column": 34
+        },
+        {
+          "title": "클립보드 missing에서도 복사 실패를 알리고 공유창을 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2027,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:25:02.863Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-eea1ad451d72ab7f797c",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 38,
+          "column": 56
+        },
+        {
+          "title": "클립보드 refused에서도 복사 실패를 알리고 공유창을 유지한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1979,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:25:04.906Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-3d106a484723a8bc079a",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 38,
+          "column": 56
+        },
+        {
+          "title": "GPS 대기 중 위치 동의를 철회하면 질문과 위치를 전송하지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3531,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:25:06.902Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-8a0e0884f21ae37ff75c",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 89,
+          "column": 1
+        },
+        {
+          "title": "GPS 대기 중 철회 후 다시 동의해도 취소된 요청은 보내지 않고 새 클릭은 보낸다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3620,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:25:10.451Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-d36eff44c2efa0ab1d86",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 99,
+          "column": 1
+        },
+        {
+          "title": "GPS 대기 중 여행 화면을 나가면 늦게 도착한 위치로 질문을 보내지 않는다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3884,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:25:14.089Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-6b65ac5e91e9a64dcd98",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 113,
+          "column": 1
+        },
+        {
+          "title": "위치 동의가 유지된 요청은 GPS 응답 뒤 질문과 위치를 한 번 전송한다",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 45000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3679,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-11T16:25:17.989Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "1209f46c18cc0f7471e5-2c8ea4a7749d59cbfe2a",
+          "file": "uiux-share-location-20261012.spec.ts",
+          "line": 123,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T16:24:07.497Z",
+    "duration": 75476.76800000001,
+    "expected": 11,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

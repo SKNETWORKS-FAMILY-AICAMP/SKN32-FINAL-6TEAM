@@ -4,6 +4,7 @@ program/personal/
 
 # 백업/아카이브 — 과거 버전 보존용, 현재 산출물 아님
 program/research/_backup/
+final_project_cs/_backup/
 program/plan/.archive/
 program/briefing/archive/
 # ★`legacy/` 는 2026-08-31 에 뺐다. 각 프로젝트 저장소는 자기 legacy 를 추적하는데
@@ -155,7 +156,7 @@ final_project_sample/
 # 학습용 추적 영상. 5MB 넘고 스크립트로 다시 만든다
 program/onboarding/trace/*.mp4
 program/onboarding/trace/.trace_build_*/
-# 시연 녹화 영상(triPilot 시나리오 실구동 등). 한 편에 수십 MB 라 저장소에 올리지 않는다 (2026-09-15)
+# 시연 녹화 영상(guguroute 시나리오 실구동 등). 한 편에 수십 MB 라 저장소에 올리지 않는다 (2026-09-15)
 program/briefing/video/
 
 # diagram-design 스킬의 프로필 마커. 값은 개인 설치(~/.diagram-design/profiles/)를
@@ -180,4 +181,38 @@ program/산출물양식/_backup/
 # 올라간 일이 있었다. 부모 폴더를 막으면 위 "datasets/ 전역 규칙" 의 되살리기(!)
 # 규칙은 더 이상 적용되지 않는다. ★루트에 고정한다 — final_project_cs/eval/datasets
 # (골든셋) 는 걸리지 않아야 한다.
+# 2026-10-11 W19 정정: 팀별 자료의 스크립트·README도 포함해 전체 제외한다.
+# 이미 추적 중인 파일에는 ignore가 소급 적용되지 않는다. 기존 인덱스는 별도 검토 대상이다.
 /datasets/
+
+# mobility local
+.metrics/
+Claude outputs/
+*.bak_*
+demo*.html
+selfcheck*.json
+fold_sample.json
+# 39 (2026-09-24) 자기점검 보고서는 미추적 — 기본 출력은 .metrics/ (50 결함 2)
+selfcheck_report.md
+# 39 (2026-09-24) 방 작업폴더·스크립트는 git 밖(27번 규칙 22)
+_39/
+_50/
+50_*.ps1
+# 40 (2026-09-24) 방 작업폴더는 git 밖 · 판정 로그는 DATA_DIR logs\ (한 기기)
+_40/
+# 파이참 작업 공간. 사람마다 다르다.
+.idea/
+
+docs/mobility/*.docx
+docs/mobility/*.png
+
+# 실험 사본 — 비교 측정용으로 저장소를 통째로 복사한 자리.
+# ★git 에 올리지 않는다. 릴리스 대상(final_project_cs)과 섞이면 되돌리기 어렵다.
+#   결과·결론은 wiki 문서로만 남긴다(사본 자체는 버려도 되는 것).
+/_experiments/
+
+# 2026-10-07 시험 세트 원문(AI Hub · KoCulture 문장 포함) — 저장소에 올리지 않는다(재배포 제한). MX 세트 · 검토자 입력
+/program/datasets/
+
+# 개인 실제 택시 이용 기록: 문서·스크립트에도 주소가 있어 전체 제외
+/datasets/mobility/user_taxi_golden_20261011_v1/

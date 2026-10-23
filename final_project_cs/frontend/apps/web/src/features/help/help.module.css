@@ -1,0 +1,117 @@
+/* `[2026-10-22 사용자 결정 — ST4F-717]` 「이용 방법」 — 목업 `mockups/guguroute-help-center-2026-10-22.html` 의 값. 탭은 알림 센터 탭, 칩은 여행 화면 「전체」 칩, 칸은 문의함 칸 모양. */
+.page { display: grid; gap: 16px; padding-bottom: 24px; }
+.head { display: grid; gap: 6px; }
+.head h1 { font-size: 22px; line-height: 1.4; letter-spacing: -.8px; }
+.head p, .muted { color: var(--color-muted); }
+
+.search { display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 6px 0 14px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); color: var(--color-muted); }
+.search:focus-within { border-color: var(--color-primary); }
+.search input { flex: 1; min-width: 0; height: 44px; border: 0; outline: 0; background: transparent; color: var(--color-text); }
+.search input::placeholder { color: var(--color-faint); }
+.search input::-webkit-search-cancel-button { display: none; }
+.clear { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; color: var(--color-muted); }
+.clear:hover { background: var(--color-soft); color: var(--color-primary); }
+
+/* 알림 센터 탭(trip-attention.module.css .tabs) 모양 — 위에 붙어 따라온다 */
+.tabs { position: sticky; z-index: 2; top: -12px; display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--color-subtle); box-shadow: 0 -12px 0 4px var(--color-paper); }
+.tabs button { flex: 1; min-height: 36px; padding: 0 6px; border-radius: 9px; color: var(--color-muted); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+.tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px color-mix(in srgb, var(--color-text) 12%, transparent); }
+.tabs button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 1px; }
+.panel { display: grid; gap: 14px; }
+.panel [id] { scroll-margin-top: 56px; }
+.sectionTitle { padding-top: 6px; font-size: 17px; letter-spacing: -.4px; }
+
+/* 여행 화면 일차 칩(「전체」) 모양 · 옆으로 넘김(PC 는 마우스로 끌기) */
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; user-select: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; min-height: 36px; padding: 0 14px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font-size: 12.5px; font-weight: 650; white-space: nowrap; }
+.chip[aria-pressed="true"], .chip[aria-selected="true"] { border-color: var(--color-text); background: var(--color-text); color: var(--color-paper); }
+.chip small { margin-left: 4px; font-weight: 500; opacity: .75; }
+
+.link { display: inline-flex; align-items: center; gap: 2px; justify-self: start; min-height: 32px; color: var(--color-primary); font-size: 12px; font-weight: 700; }
+.link:hover { text-decoration: underline; }
+
+/* 처음 쓰기 — 범위 카드는 소개 첫 장 카드(A LITTLE MORE YOU) 말투 */
+.scope { display: grid; gap: 4px; padding: 14px 16px; border-radius: 16px; background: var(--color-primary); color: var(--color-on-primary); }
+.scope small { font-size: 9px; font-weight: 750; letter-spacing: 1.6px; opacity: .8; }
+.scope strong { font-size: 17px; letter-spacing: -.4px; }
+.scope p { font-size: 12px; opacity: .9; }
+.steps { display: grid; margin: 0; padding: 0; list-style: none; }
+.step { display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 12px 0; }
+.step + .step { border-top: 1px dashed var(--color-border); }
+.thumb { display: block; width: 84px; height: 108px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface); background-repeat: no-repeat; box-shadow: 0 6px 18px color-mix(in srgb, var(--color-text) 10%, transparent); }
+.stepBody { display: grid; align-content: start; gap: 3px; min-width: 0; }
+.stepNo { color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .6px; }
+.stepBody h3 { font-size: 14.5px; letter-spacing: -.3px; }
+.stepBody p { color: var(--color-text-secondary); font-size: 12.5px; }
+.stepChip { justify-self: start; margin-top: 2px; padding: 1px 9px; border-radius: 999px; background: var(--color-soft); color: var(--color-primary); font-size: 11px; font-weight: 700; }
+.compare { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.compare > div { display: grid; align-content: start; gap: 6px; padding: 14px; }
+.compare > div + div { border-left: 1px solid var(--color-border); background: var(--color-soft); }
+.compare h3 { font-size: 13.5px; }
+.compare ul { display: grid; gap: 4px; margin: 0; padding-left: 16px; color: var(--color-text-secondary); font-size: 12px; }
+.tag { justify-self: start; padding: 1px 10px; border-radius: 999px; background: var(--color-soft); color: var(--color-primary); font-size: 11px; font-weight: 650; line-height: 1.8; }
+.guestTag { background: var(--color-warning-soft); color: var(--color-warning); }
+
+/* 화면별 기능 */
+.card { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.screenHead { display: grid; gap: 4px; }
+.screenHead h3 { font-size: 16px; letter-spacing: -.3px; }
+.where { display: flex; gap: 6px; color: var(--color-muted); font-size: 12px; }
+.where b { flex: none; color: var(--color-primary); }
+.shotWrap { display: flex; justify-content: center; padding: 6px 0; }
+.shot { position: relative; width: 236px; overflow: hidden; border: 1px solid var(--color-border-strong); border-radius: 22px; background: var(--color-surface); box-shadow: 0 14px 40px color-mix(in srgb, var(--color-text) 14%, transparent); }
+.shot img { display: block; width: 100%; height: auto; user-select: none; }
+.spot, .boardSpot { display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--color-surface); border-radius: 50%; background: var(--color-now); color: var(--color-on-primary); font-size: 12px; font-weight: 800; box-shadow: 0 2px 6px color-mix(in srgb, var(--color-text) 30%, transparent); }
+.spot { position: absolute; transform: translate(-50%, -50%); transition: transform .2s var(--ease-soft); }
+.spot:hover, .spot[aria-pressed="true"] { transform: translate(-50%, -50%) scale(1.25); }
+.boardSpot { flex: none; width: 22px; height: 22px; font-size: 11px; }
+.spot[aria-pressed="true"]::after, .boardSpot[aria-pressed="true"]::after { content: ""; position: absolute; inset: -7px; border: 2px solid var(--color-now); border-radius: 50%; animation: ping 1.2s ease-out infinite; }
+.boardSpot { position: relative; }
+@keyframes ping { from { opacity: 1; transform: scale(.7); } to { opacity: 0; transform: scale(1.3); } }
+.board { display: grid; width: 270px; overflow: hidden; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); font-size: 11px; }
+.board > * + * { border-top: 1px solid var(--color-border); }
+.boardRow { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 12px; }
+.boardRow > span { flex: 1; min-width: 0; display: grid; }
+.boardRow strong { font-size: 12px; }
+.boardRow small { color: var(--color-muted); font-size: 10px; }
+.points { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.point { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); cursor: pointer; transition: border-color .2s, background .2s; }
+.point[aria-current] { border-color: var(--color-now); background: var(--color-now-soft); }
+.number { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--color-now); color: var(--color-on-primary); font-size: 11px; font-weight: 800; }
+.point strong { display: block; font-size: 13px; }
+.point p { color: var(--color-text-secondary); font-size: 12px; }
+.point .rule { margin-top: 4px; padding: 6px 8px; border-radius: 8px; background: var(--color-subtle); color: var(--color-muted); font-size: 11.5px; }
+.related { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: var(--color-subtle); }
+.related h4 { color: var(--color-muted); font-size: 12px; }
+.related > button { min-height: 30px; color: var(--color-primary); font-size: 12.5px; font-weight: 650; text-align: left; }
+.more { display: grid; gap: 6px; margin: 0; padding-left: 16px; color: var(--color-text-secondary); font-size: 12px; }
+.more strong { color: var(--color-text); }
+
+/* 자주 묻는 질문 — 펼침 줄 */
+.faq { display: grid; gap: 6px; }
+.faq details { border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.faq details[open] { border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border)); }
+.faq summary { display: flex; align-items: flex-start; gap: 8px; min-height: 48px; padding: 12px 14px; font-size: 13px; font-weight: 650; list-style: none; cursor: pointer; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::before { content: "Q"; flex: none; color: var(--color-primary); font-weight: 800; }
+.faq summary::after { content: ""; flex: none; width: 8px; height: 8px; margin: 6px 2px 0 auto; border-right: 2px solid var(--color-muted); border-bottom: 2px solid var(--color-muted); transform: rotate(45deg); transition: transform .2s; }
+.faq details[open] summary::after { margin-top: 9px; transform: rotate(-135deg); }
+.answer { display: grid; gap: 8px; padding: 0 14px 14px 30px; color: var(--color-text-secondary); font-size: 12.5px; }
+.answerLinks { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.topic { justify-self: start; padding: 0 8px; border-radius: 999px; background: var(--color-subtle); color: var(--color-muted); font-size: 10.5px; font-weight: 650; }
+
+/* 찾은 내용 */
+.results { display: grid; gap: 6px; }
+.result { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); text-align: left; }
+.result:hover { border-color: var(--color-primary); }
+.result small { color: var(--color-primary); font-size: 10.5px; font-weight: 750; }
+.result strong { font-size: 13px; }
+.result span { display: -webkit-box; overflow: hidden; color: var(--color-muted); font-size: 12px; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* 맨 아래 — 문의함 「답변」 칸 모양 */
+.ask { display: grid; gap: 10px; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border)); border-radius: 16px; background: var(--color-soft); }
+.ask h2 { font-size: 15px; }
+.ask p { color: var(--color-text-secondary); font-size: 12.5px; }
+.askActions { display: flex; gap: 8px; }
+.askActions > * { flex: 1; }

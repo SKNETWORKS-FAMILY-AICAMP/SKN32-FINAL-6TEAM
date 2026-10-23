@@ -1,0 +1,530 @@
+{
+  "created_at": "2026-10-09T11:43:28.223148+09:00",
+  "tag": "2026-10-09_1143_지하철_실제키_승차조회",
+  "source": "서울특별시 실시간 지하철 도착정보 OA-12764",
+  "license": "공공누리 제1유형·출처 서울특별시",
+  "official_docs": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+  "key_in_provenance": false,
+  "requests": [
+    {
+      "leg": {
+        "mode": "subway",
+        "line": "05호선",
+        "from": "양평",
+        "to": "영등포구청"
+      },
+      "query_station": "양평",
+      "binding": {
+        "status": "matched",
+        "line_id": "1005",
+        "station_id": "1005000522",
+        "target_station_id": "1005000523",
+        "query_station": "양평",
+        "target_station": "영등포구청",
+        "line": "5호선"
+      },
+      "services_count": 43,
+      "started_at": "2026-10-09T11:43:27.983009+09:00",
+      "finished_at": "2026-10-09T11:43:28.142055+09:00",
+      "real_key_configured": true,
+      "page_start": 0,
+      "page_end": 20,
+      "normalized_replay": false,
+      "misses": {},
+      "normalized_rows": 7,
+      "captured_http_responses": 1,
+      "http_status": 200,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1143_지하철_실제키_승차조회/response-1-v1.json",
+      "raw_sha256": "4738ac25b5b9b6051a46361f8fa894910d0f4197a8468fc4c18a1bbf9504d1a8",
+      "response_sha256": "4738ac25b5b9b6051a46361f8fa894910d0f4197a8468fc4c18a1bbf9504d1a8",
+      "response_key_redacted": false,
+      "response_code": "INFO-000",
+      "provider_total": 7,
+      "controlled_access_selections": [
+        {
+          "controlled_access_minutes": 0,
+          "selection": {
+            "source": "seoul_subway_arrival",
+            "line_id": "1005",
+            "station_id": "1005000522",
+            "target_station_id": "1005000523",
+            "confirmed_at": "2026-10-09T02:43:28.142055+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T11:43:28.142055+09:00",
+            "excluded": [
+              {
+                "train_number": "5548",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5062",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5060",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5041",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5043",
+                "reason": "boarding_identity_mismatch"
+              }
+            ],
+            "status": "predicted",
+            "train_number": "5567",
+            "next_station_id": "1005000523",
+            "terminal_station_id": "1005080555",
+            "train_status": "일반",
+            "path_station_ids": [
+              "1005000522",
+              "1005000523",
+              "1005000524",
+              "1005000525",
+              "1005000526",
+              "1005000527",
+              "1005000528",
+              "1005000529",
+              "1005000530",
+              "1005000531",
+              "1005000532",
+              "1005000533",
+              "1005000534",
+              "1005000535",
+              "1005000536",
+              "1005000537",
+              "1005000538",
+              "1005000539",
+              "1005000540",
+              "1005000541",
+              "1005000542",
+              "1005000543",
+              "1005000544",
+              "1005000545",
+              "1005000546",
+              "1005000547",
+              "1005000548",
+              "1005080549",
+              "1005080550",
+              "1005080551",
+              "1005080552",
+              "1005080553",
+              "1005080554",
+              "1005080555"
+            ],
+            "arrival_at": "2026-10-09T11:46:52+09:00",
+            "remaining_seconds": 203.857945,
+            "wait_after_access_seconds": 203.857945,
+            "provider_received_at": "2026-10-09 11:42:52",
+            "provider_received_at_normalized": "2026-10-09T11:42:52+09:00",
+            "provider_age_seconds": 36.142055,
+            "eta_basis": "provider_generation_time",
+            "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님"
+          }
+        },
+        {
+          "controlled_access_minutes": 2,
+          "selection": {
+            "source": "seoul_subway_arrival",
+            "line_id": "1005",
+            "station_id": "1005000522",
+            "target_station_id": "1005000523",
+            "confirmed_at": "2026-10-09T02:43:28.142055+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T11:45:28.142055+09:00",
+            "excluded": [
+              {
+                "train_number": "5548",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5062",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5060",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5041",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5043",
+                "reason": "boarding_identity_mismatch"
+              }
+            ],
+            "status": "predicted",
+            "train_number": "5567",
+            "next_station_id": "1005000523",
+            "terminal_station_id": "1005080555",
+            "train_status": "일반",
+            "path_station_ids": [
+              "1005000522",
+              "1005000523",
+              "1005000524",
+              "1005000525",
+              "1005000526",
+              "1005000527",
+              "1005000528",
+              "1005000529",
+              "1005000530",
+              "1005000531",
+              "1005000532",
+              "1005000533",
+              "1005000534",
+              "1005000535",
+              "1005000536",
+              "1005000537",
+              "1005000538",
+              "1005000539",
+              "1005000540",
+              "1005000541",
+              "1005000542",
+              "1005000543",
+              "1005000544",
+              "1005000545",
+              "1005000546",
+              "1005000547",
+              "1005000548",
+              "1005080549",
+              "1005080550",
+              "1005080551",
+              "1005080552",
+              "1005080553",
+              "1005080554",
+              "1005080555"
+            ],
+            "arrival_at": "2026-10-09T11:46:52+09:00",
+            "remaining_seconds": 203.857945,
+            "wait_after_access_seconds": 83.857945,
+            "provider_received_at": "2026-10-09 11:42:52",
+            "provider_received_at_normalized": "2026-10-09T11:42:52+09:00",
+            "provider_age_seconds": 36.142055,
+            "eta_basis": "provider_generation_time",
+            "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님"
+          }
+        },
+        {
+          "controlled_access_minutes": 6,
+          "selection": {
+            "source": "seoul_subway_arrival",
+            "line_id": "1005",
+            "station_id": "1005000522",
+            "target_station_id": "1005000523",
+            "confirmed_at": "2026-10-09T02:43:28.142055+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T11:49:28.142055+09:00",
+            "excluded": [
+              {
+                "train_number": "5548",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5062",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5060",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5567",
+                "reason": "arrives_before_ready"
+              },
+              {
+                "train_number": "5041",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5043",
+                "reason": "boarding_identity_mismatch"
+              }
+            ],
+            "status": "predicted",
+            "train_number": "5063",
+            "next_station_id": "1005000523",
+            "terminal_station_id": "1005000558",
+            "train_status": "일반",
+            "path_station_ids": [
+              "1005000522",
+              "1005000523",
+              "1005000524",
+              "1005000525",
+              "1005000526",
+              "1005000527",
+              "1005000528",
+              "1005000529",
+              "1005000530",
+              "1005000531",
+              "1005000532",
+              "1005000533",
+              "1005000534",
+              "1005000535",
+              "1005000536",
+              "1005000537",
+              "1005000538",
+              "1005000539",
+              "1005000540",
+              "1005000541",
+              "1005000542",
+              "1005000543",
+              "1005000544",
+              "1005000545",
+              "1005000546",
+              "1005000547",
+              "1005000548",
+              "1005000549",
+              "1005000550",
+              "1005000551",
+              "1005000552",
+              "1005000553",
+              "1005000554",
+              "1005000555",
+              "1005000556",
+              "1005000557",
+              "1005000558"
+            ],
+            "arrival_at": "2026-10-09T11:53:52+09:00",
+            "remaining_seconds": 623.857945,
+            "wait_after_access_seconds": 263.857945,
+            "provider_received_at": "2026-10-09 11:42:52",
+            "provider_received_at_normalized": "2026-10-09T11:42:52+09:00",
+            "provider_age_seconds": 36.142055,
+            "eta_basis": "provider_generation_time",
+            "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님"
+          }
+        }
+      ]
+    },
+    {
+      "leg": {
+        "mode": "subway",
+        "line": "05호선",
+        "from": "군자",
+        "to": "아차산"
+      },
+      "query_station": "군자(능동)",
+      "binding": {
+        "status": "matched",
+        "line_id": "1005",
+        "station_id": "1005000544",
+        "target_station_id": "1005000545",
+        "query_station": "군자(능동)",
+        "target_station": "아차산(어린이대공원후문)",
+        "line": "5호선"
+      },
+      "services_count": 21,
+      "started_at": "2026-10-09T11:43:28.157994+09:00",
+      "finished_at": "2026-10-09T11:43:28.190280+09:00",
+      "real_key_configured": true,
+      "page_start": 0,
+      "page_end": 20,
+      "normalized_replay": false,
+      "misses": {},
+      "normalized_rows": 8,
+      "captured_http_responses": 1,
+      "http_status": 200,
+      "raw_path": "datasets/mobility/raw/2026-10-09_1143_지하철_실제키_승차조회/response-2-v1.json",
+      "raw_sha256": "b7fb64f28dd6b15881d8e6ebc3d4ccfe73713cc3a52423d9fcccaa3d07d53283",
+      "response_sha256": "b7fb64f28dd6b15881d8e6ebc3d4ccfe73713cc3a52423d9fcccaa3d07d53283",
+      "response_key_redacted": false,
+      "response_code": "INFO-000",
+      "provider_total": 8,
+      "controlled_access_selections": [
+        {
+          "controlled_access_minutes": 0,
+          "selection": {
+            "source": "seoul_subway_arrival",
+            "line_id": "1005",
+            "station_id": "1005000544",
+            "target_station_id": "1005000545",
+            "confirmed_at": "2026-10-09T02:43:28.190280+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T11:43:28.190280+09:00",
+            "excluded": [
+              {
+                "train_number": "5066",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "7106",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "7108",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5556",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "7115",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "7117",
+                "reason": "boarding_identity_mismatch"
+              }
+            ],
+            "status": "predicted",
+            "train_number": "5055",
+            "next_station_id": "1005000545",
+            "terminal_station_id": "1005000558",
+            "train_status": "일반",
+            "path_station_ids": [
+              "1005000544",
+              "1005000545",
+              "1005000546",
+              "1005000547",
+              "1005000548",
+              "1005000549",
+              "1005000550",
+              "1005000551",
+              "1005000552",
+              "1005000553",
+              "1005000554",
+              "1005000555",
+              "1005000556",
+              "1005000557",
+              "1005000558"
+            ],
+            "arrival_at": "2026-10-09T11:43:52+09:00",
+            "remaining_seconds": 23.80972,
+            "wait_after_access_seconds": 23.80972,
+            "provider_received_at": "2026-10-09 11:42:52",
+            "provider_received_at_normalized": "2026-10-09T11:42:52+09:00",
+            "provider_age_seconds": 36.19028,
+            "eta_basis": "provider_generation_time",
+            "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님"
+          }
+        },
+        {
+          "controlled_access_minutes": 2,
+          "selection": {
+            "source": "seoul_subway_arrival",
+            "line_id": "1005",
+            "station_id": "1005000544",
+            "target_station_id": "1005000545",
+            "confirmed_at": "2026-10-09T02:43:28.190280+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T11:45:28.190280+09:00",
+            "excluded": [
+              {
+                "train_number": "5066",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "7106",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "7108",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5556",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5055",
+                "reason": "arrives_before_ready"
+              },
+              {
+                "train_number": "7115",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "7117",
+                "reason": "boarding_identity_mismatch"
+              }
+            ],
+            "status": "predicted",
+            "train_number": "5561",
+            "next_station_id": "1005000545",
+            "terminal_station_id": "1005080555",
+            "train_status": "일반",
+            "path_station_ids": [
+              "1005000544",
+              "1005000545",
+              "1005000546",
+              "1005000547",
+              "1005000548",
+              "1005080549",
+              "1005080550",
+              "1005080551",
+              "1005080552",
+              "1005080553",
+              "1005080554",
+              "1005080555"
+            ],
+            "arrival_at": "2026-10-09T11:48:52+09:00",
+            "remaining_seconds": 323.80972,
+            "wait_after_access_seconds": 203.80972,
+            "provider_received_at": "2026-10-09 11:42:52",
+            "provider_received_at_normalized": "2026-10-09T11:42:52+09:00",
+            "provider_age_seconds": 36.19028,
+            "eta_basis": "provider_generation_time",
+            "claim": "접근 이후 일반열차 도착 예측; 실제 탑승 관측 아님"
+          }
+        },
+        {
+          "controlled_access_minutes": 6,
+          "selection": {
+            "source": "seoul_subway_arrival",
+            "line_id": "1005",
+            "station_id": "1005000544",
+            "target_station_id": "1005000545",
+            "confirmed_at": "2026-10-09T02:43:28.190280+00:00",
+            "observation_age_seconds": 0.0,
+            "ready_at": "2026-10-09T11:49:28.190280+09:00",
+            "excluded": [
+              {
+                "train_number": "5066",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "7106",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "7108",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5556",
+                "reason": "service_path_mismatch"
+              },
+              {
+                "train_number": "5055",
+                "reason": "arrives_before_ready"
+              },
+              {
+                "train_number": "7115",
+                "reason": "boarding_identity_mismatch"
+              },
+              {
+                "train_number": "5561",
+                "reason": "arrives_before_ready"
+              },
+              {
+                "train_number": "7117",
+                "reason": "boarding_identity_mismatch"
+              }
+            ],
+            "status": "no_boardable_prediction",
+            "reason": "no_vehicle_after_ready"
+          }
+        }
+      ]
+    }
+  ],
+  "actual_http_attempts": 2,
+  "map_developer_api_calls": 0,
+  "actual_boarding_payment_samples": 0,
+  "new_independent_web_route_pairs": 0,
+  "claim": "실제 인증키를 사용하는 제품 도착 소스의 실제 HTTP 조회. 접근0/2/6분은 통제 입력이고 실제 ETA 정확도·탑승 검증은 아님."
+}

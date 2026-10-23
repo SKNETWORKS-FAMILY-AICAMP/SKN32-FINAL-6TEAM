@@ -1,0 +1,17 @@
+[Unit]
+Description=guguroute ARM dataset sync from Google Drive
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+EnvironmentFile=/etc/tripilot-arm-dataset-sync.env
+ExecStart=/bin/sh /usr/local/lib/tripilot/dataset_sync.sh
+TimeoutStartSec=6h
+Nice=10
+IOSchedulingClass=idle
+MemoryMax=512M
+UMask=0022
+StandardOutput=journal
+StandardError=journal

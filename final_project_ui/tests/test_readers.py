@@ -29,9 +29,9 @@ ports:
   message_broker: outbox
   graph_store: sql
 teams:
-- team_id: billing_subscription
+- team_id: activity
   active: true
-  implementation_ref: app.modules.customer_ops:BillingSubscriptionTeam
+  implementation_ref: app.modules.customer_ops:ActivitySubscriptionTeam
 """
 
 
@@ -48,7 +48,7 @@ def test_declaration_is_read_as_plain_data(project):
     assert result.ok
     assert result.value["modules"] == {"vector_rag": True, "a2a_executor": False}
     assert result.value["ports"]["team_executor"] == "local"
-    assert result.value["teams"][0]["team_id"] == "billing_subscription"
+    assert result.value["teams"][0]["team_id"] == "activity"
 
 
 def test_a_broken_declaration_is_reported_not_swallowed(project):

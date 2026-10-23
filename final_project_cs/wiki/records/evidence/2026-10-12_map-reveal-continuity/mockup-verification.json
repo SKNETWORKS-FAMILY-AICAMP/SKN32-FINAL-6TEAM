@@ -1,0 +1,16 @@
+[
+  {
+    "width": 375,
+    "overflow": false,
+    "duration": 8.2,
+    "paused": true,
+    "errors": []
+  },
+  {
+    "width": 1280,
+    "overflow": false,
+    "duration": 8.2,
+    "paused": false,
+    "errors": []
+  }
+]

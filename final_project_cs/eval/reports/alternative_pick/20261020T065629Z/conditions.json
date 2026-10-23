@@ -1,0 +1,36 @@
+{
+ "eval_run": "20261020T065629Z",
+ "cases_file": "C:\\Users\\82109\\Downloads\\SKN32-FINAL-6TEAM\\role-activity\\final_project_cs\\eval\\alternative_pick\\cases_watch_h2.jsonl",
+ "inputs_sha256": "c767c3f4099ce5fde5e859722e93963318ec7ea269b054d6265002da7ac0d3e9",
+ "dataset_sha256": "c69c0a269d97c727a52d07b273dcbeb09e5f1d0209e842cc3d5cc079dc490573",
+ "split": [
+  "holdout"
+ ],
+ "smoke": false,
+ "labeler": "합의",
+ "cases": 9,
+ "repeats": 3,
+ "shuffle": {
+  "cases": 40,
+  "per_case": 2,
+  "seed": 7
+ },
+ "dry_run": false,
+ "model": "gpt-5.4-nano",
+ "reasoning_effort": "low",
+ "web_search": false,
+ "prompt_file": null,
+ "payload": "v2",
+ "timeout_s": 8.0,
+ "temperature": null,
+ "seed_model": null,
+ "prompt": "db",
+ "prompt_id": "cc0f028a-3b42-4007-99b4-9de0b35cc470",
+ "prompt_chars": 1072,
+ "m5_review": {
+  "sheet": "reasons_review_all.csv",
+  "scope": "이유 전수",
+  "role": "v2 감시(비교용)",
+  "claude_assisted": "Claude 제안 — 비교용이라 사람 검수 안 함"
+ }
+}

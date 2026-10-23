@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>guguroute 이동 관측 기록기</title>
+<style>
+:root{color-scheme:light;--paper:#f5f7fa;--ink:#183b56;--accent:#0b5c68;--line:#c7d3df;--warning:#8c3c1e;--vp-narrow:375px;--vp-medium:768px;--vp-wide:1280px}
+*{box-sizing:border-box}html,body{width:100%;margin:0}body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--paper);color:var(--ink);line-height:1.65;font-size:16px}main{max-width:680px;margin:auto;padding:24px 20px 100px}h1{font-size:28px;line-height:1.3;margin:8px 0 12px}h2,legend{font-size:20px;font-weight:700}p{margin:8px 0 16px}.lead{color:#39546c}.notice{padding:12px 16px;border-left:4px solid var(--warning);background:#fff5e9;font-size:14px}fieldset{border:0;border-top:2px solid var(--line);margin:28px 0 0;padding:16px 0 0;min-width:0}legend{padding:0 12px 0 0}label{display:block;font-weight:700;margin-top:16px}input,select,button{font:inherit;min-height:44px;border:1px solid #8195a8;border-radius:4px}input,select{display:block;width:100%;background:white;color:var(--ink);padding:8px 10px;min-width:0}input:read-only,select:disabled{background:#e9eff4;color:#30495e}button{padding:9px 14px;background:#fff;color:var(--ink);cursor:pointer;font-weight:700;white-space:normal}button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #946600;outline-offset:3px}.row{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.help{display:block;font-size:14px;color:#39546c;margin:4px 0 0}.error{font-size:14px;color:#9c2018;margin:4px 0 0}.error:empty{display:none}[aria-invalid=true]{border:2px solid #9c2018}.check{display:flex;align-items:center;gap:10px;font-weight:400}.check input{width:22px;height:22px;min-height:22px;flex:none}.check{min-height:44px}.status{margin:20px 0;padding:12px 16px;border:1px solid var(--line);background:white;overflow-wrap:anywhere}.clock{font-size:24px;font-variant-numeric:tabular-nums;font-weight:700;margin-top:12px}.record{padding:12px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}.record strong{display:block}details{margin-top:20px}summary{cursor:pointer;min-height:44px;display:flex;align-items:center}pre{background:#e9eff4;padding:12px;overflow:auto;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.exportbar{position:sticky;bottom:0;background:var(--paper);padding:12px 0;border-top:1px solid var(--line);margin-top:24px;display:flex;gap:10px;flex-wrap:wrap}.tag{font-size:14px;padding:3px 8px;background:#dceaf0;border-radius:3px;display:inline-block}noscript{display:block;padding:20px;color:#9c2018}
+[hidden]{display:none!important}
+@media(max-width:767.98px){main{padding:18px 16px 60px}.row{grid-template-columns:1fr}h1{font-size:25px}.actions button{flex:1 1 130px}.exportbar button{flex:1 1 140px}}
+</style>
+</head>
+<body>
+<main>
+<header><span class="tag">오프라인 관측 도구</span><h1>이동할 때, 바로 기록하세요</h1><p class="lead">예상값을 고정하고 시작·종료를 누르세요. 현장 기록과 공식 자료 대조를 구분해 JSON 파일로 가져갈 수 있습니다.</p></header>
+<p class="notice"><strong>자동 저장하지 않습니다.</strong> 탭을 닫거나 새로고침하면 기록이 사라집니다. 마치기 전에 JSON을 내보내세요. 주소·이름·결제수단·사진은 입력하지 마세요.</p>
+<form id="predictionForm" novalidate autocomplete="off">
+<fieldset><legend>1. 예상값 고정</legend>
+<label for="feature">확인할 기능</label><select id="feature"></select>
+<label for="segment">익명 구간 키 <span class="help">필수 · 예: S001. 실제 주소나 이름 대신 임의의 키를 쓰세요.</span></label><input id="segment" required maxlength="64" pattern="[A-Za-z0-9_-]+" value="S001" aria-describedby="segment-error"><p class="error" id="segment-error"></p>
+<div class="row"><div><label for="route">노선 식별자 (선택)</label><input id="route" maxlength="64" pattern="[A-Za-z0-9_-]*" aria-describedby="route-error"><p class="error" id="route-error"></p></div><div><label for="station">역·정류장 식별자 (선택)</label><input id="station" maxlength="64" pattern="[A-Za-z0-9_-]*" aria-describedby="station-error"><p class="error" id="station-error"></p></div></div>
+<p class="help">공식 노선·역 코드 또는 익명 키만 입력하세요. 자유 메모·주소 입력란은 제공하지 않습니다.</p>
+<label for="expected" id="expected-label">예상값</label><input id="expected" type="number" min="0" step="any" inputmode="decimal" aria-describedby="expected-help expected-error"><p class="help" id="expected-help">값을 모르면 비워 두세요. 빈값을 0으로 바꾸지 않습니다.</p><p class="error" id="expected-error"></p>
+<label for="tolerance" id="tolerance-label">사전에 정한 허용 오차</label><input id="tolerance" type="number" min="0" step="any" inputmode="decimal" aria-describedby="tolerance-help tolerance-error"><p class="help" id="tolerance-help">비워 두면 수치 차이만 기록합니다. 관측 후에 유리한 기준으로 바꾸지 마세요.</p><p class="error" id="tolerance-error"></p>
+<div class="actions"><button class="primary" type="submit">예상값 고정</button><button id="revise" type="button">새 예상판으로 기록</button></div>
+<p class="help">고정 후 값을 바꾸려면 새 예상판을 만드세요. 이전 예상판과 관측 기록은 그대로 남습니다.</p>
+</fieldset></form>
+<fieldset><legend>2. 관측 시작·종료</legend>
+<label for="reference">대조 근거 종류</label><select id="reference"><option value="field">현장 관측</option><option value="payment">실제 결제</option><option value="official_web">공식 웹</option><option value="published_table">공표 표</option><option value="development_replay">개발 재생</option></select>
+<p class="help">공식 웹·개발 재생을 실제 이용 기록으로 세지 않습니다.</p>
+<label for="actual" id="actual-label">측정값</label><input id="actual" type="number" min="0" step="any" inputmode="decimal" aria-describedby="actual-help actual-error"><p class="help" id="actual-help">종료 전에 입력하세요. 누락은 미기록이며 통과로 판정하지 않습니다.</p><p class="error" id="actual-error"></p>
+<label class="check" id="auto-label" hidden><input id="auto" type="checkbox">시작·종료 사이 시간을 측정값으로 사용</label>
+<div class="clock" id="clock" aria-label="측정 경과 시간">00:00</div>
+<div class="actions"><button class="primary" id="start" type="button">관측 시작</button><button id="stop" type="button">종료하고 기록</button></div>
+</fieldset>
+<div class="status" id="status" role="status" aria-live="polite">예상값을 고정하면 관측을 시작할 수 있습니다.</div>
+<fieldset><legend>3. 파일로 가져가기</legend>
+<label for="upload">예상값 JSON 불러오기 (선택)</label><input id="upload" type="file" accept=".json,application/json"><p class="help">예상값 파일만 읽습니다. 사진·주소·카드 정보나 임의의 추가 항목이 있는 파일은 받지 않습니다.</p>
+<details><summary>불러오기 형식 보기</summary><pre>{"schema":"mobility-prediction-v1","feature_id":1,"segment_key":"S001","route_id":"R01","station_id":"ST01","expected_value":12000,"tolerance":2000}</pre><p class="help">기능 번호는 위 목록의 1~21입니다. 예상값과 허용 오차는 숫자 또는 null입니다. 단위는 기능별로 고정됩니다. 불러온 뒤 ‘예상값 고정’을 눌러야 합니다.</p></details>
+<div class="exportbar"><button class="primary" id="export" type="button">기록 JSON 내보내기</button><button id="new" type="button">다른 기능 새 기록</button></div>
+<p id="coverage" class="help">기록한 기능 0/21 · 기능 완료율이 아닙니다.</p><div id="records" aria-label="현재 탭의 관측 기록"><p>아직 관측 기록이 없습니다.</p></div>
+</fieldset>
+<footer><p class="help">이 도구는 이동 기능의 완료를 자동 인증하지 않습니다. 기록의 시각·단위·출처와 예상판을 보존합니다. 휴대폰에서 파일을 여는 방식과 배포는 별도 확인이 필요합니다.</p></footer>
+<noscript>기록하려면 브라우저의 JavaScript를 켜 주세요. 외부 통신은 사용하지 않습니다.</noscript>
+</main>
+<script>
+(() => {
+'use strict';
+const FEATURES = [
+ [1,'택시 예상 요금','미터 요금','KRW'],[2,'택시 예산 여유','옵션료·통행료를 포함한 총액','KRW','upper'],
+ [3,'자동차 소요 시간','이동 시간','min'],[4,'자동차 경로 거리','경로 거리','m'],
+ [5,'대중교통 전체 소요 시간','전체 이동 시간','min'],[6,'지하철 경로 산출','동일 경로로 확인한 구간 수','count'],
+ [7,'버스 직행·환승 경로','동일 경로로 확인한 구간 수','count'],[8,'지하철 요금','부과 요금','KRW'],
+ [9,'버스·지하철 환승 요금','전체 부과 요금','KRW'],[10,'장소 사이 도보 거리','보행 거리','m'],
+ [11,'도보·역 접근 시간','접근 시간','min'],[12,'자전거 경로','동일 경로로 확인한 구간 수','count'],
+ [13,'자전거 소요 시간','이용 시간','min'],[14,'첫차·막차·출발 시각','자정 이후 운행일 기준 출발 분','service_min'],
+ [15,'환승·역 출구·승차 칸','일치한 안내 항목 수','count'],[16,'실시간 도착정보','도착까지 대기 시간','min'],
+ [17,'혼잡 안내','자료 또는 계측으로 확인한 혼잡도','percent'],[18,'무정차·도로 사고 감시','사건부터 탐지까지 시간','s'],
+ [19,'따릉이 대여·반납·재고','확인한 자전거 재고','count'],[20,'사건 후 일정 자동 조정','재계산 완료까지 시간','s'],
+ [21,'지도 경로 표시','동일 형상으로 확인한 경유점 수','count']
+].map(([id,name,metric,unit,comparison='absolute']) => Object.freeze({id,name,metric,unit,comparison}));
+const KINDS = Object.freeze(['field','payment','official_web','published_table','development_replay']);
+const number = (v,label) => {
+ if(v === null) return null;
+ if(typeof v !== 'number' || !Number.isFinite(v) || v < 0) throw Error(label+'에 0 이상의 유한한 숫자를 입력하세요.');
+ return v;
+};
+const key = (v,required=false) => {
+ if(typeof v !== 'string' || v.length>64 || !/^[A-Za-z0-9_-]*$/.test(v) || (required && !v)) throw Error('구간·노선·역에는 영문, 숫자, 밑줄, 하이픈으로 만든 식별자를 입력하세요.');
+ return v;
+};
+const stamp = (v) => { if(typeof v !== 'string' || !Number.isFinite(Date.parse(v))) throw Error('시각 형식을 확인하세요.'); return v; };
+const clone = x => JSON.parse(JSON.stringify(x));
+function comparison(expected,actual,tolerance,mode) {
+ if(actual===null) return {status:'missing_observation',delta:null};
+ if(expected===null) return {status:'missing_prediction',delta:null};
+ const delta=actual-expected;
+ if(mode==='upper') return {status:actual<=expected?'within_budget':'over_budget',delta};
+ if(tolerance===null) return {status:'tolerance_unset',delta};
+ return {status:Math.abs(delta)<=tolerance?'within_tolerance':'outside_tolerance',delta};
+}
+function draft(input,previous=null) {
+ const f=FEATURES.find(x=>x.id===input.feature_id);
+ if(!f) throw Error('기능을 1~21 중에서 선택하세요.');
+ return {session_id:crypto.randomUUID(),feature_id:f.id,segment_key:key(input.segment_key,true),
+  route_id:key(input.route_id===undefined?'':input.route_id),station_id:key(input.station_id===undefined?'':input.station_id),
+  prediction_revision:previous?previous.prediction_revision+1:1,previous_session_id:previous?previous.session_id:null,
+  revision_reason:previous?'사용자가 새 예상판을 명시적으로 생성함':null,
+  expected:{value:number(input.expected_value,'예상값'),tolerance:number(input.tolerance,'허용 오차'),unit:f.unit,comparison:f.comparison},
+  prediction_frozen_at:null,observations:[],active:null};
+}
+function freeze(session,at) {
+ if(session.prediction_frozen_at) throw Error('이미 고정한 예상판입니다. 새 예상판을 만들어 주세요.');
+ session.prediction_frozen_at=stamp(at);
+ Object.freeze(session.expected);
+ return session;
+}
+function start(session,kind,at) {
+ if(!session.prediction_frozen_at) throw Error('관측 전에 예상값을 고정해 주세요.');
+ if(session.active) throw Error('이미 관측 중입니다. 종료하고 기록해 주세요.');
+ if(!KINDS.includes(kind)) throw Error('근거 종류를 선택하세요.');
+ stamp(at);
+ if(Date.parse(at)<Date.parse(session.prediction_frozen_at)) throw Error('고정 시각 이전에 관측을 시작할 수 없습니다.');
+ session.active={started_at:at,reference_kind:kind};
+ return session;
+}
+function stop(session,value,auto,at) {
+ if(!session.active) throw Error('먼저 관측 시작을 눌러 주세요.');
+ stamp(at);
+ const elapsed=(Date.parse(at)-Date.parse(session.active.started_at))/1000;
+ if(elapsed<0) throw Error('종료 시각이 시작보다 빠릅니다. 기기 시각을 확인하세요.');
+ if(auto && (session.expected.unit!=='min' && session.expected.unit!=='s' || session.active.reference_kind!=='field')) throw Error('시간 자동 측정은 현장 관측의 시간 항목에서만 사용하세요.');
+ const measured=number(auto?(session.expected.unit==='min'?elapsed/60:elapsed):value,'측정값');
+ const observation={observation_id:crypto.randomUUID(),...session.active,ended_at:at,recorded_at:at,elapsed_s:elapsed,
+  value:measured,unit:session.expected.unit,measurement_method:auto?'start_stop_timer':'manual_numeric',
+  comparison:comparison(session.expected.value,measured,session.expected.tolerance,session.expected.comparison),
+  counts_as_real_use:session.active.reference_kind==='field'||session.active.reference_kind==='payment'};
+ session.observations.push(observation);session.active=null;
+ return observation;
+}
+function parsePrediction(text) {
+ if(typeof text!=='string' || text.length>65536) throw Error('예상값 JSON은 64KB 이하만 읽을 수 있습니다.');
+ const x=JSON.parse(text), allowed=['schema','feature_id','segment_key','route_id','station_id','expected_value','tolerance'];
+ if(!x || Array.isArray(x) || typeof x!=='object' || x.schema!=='mobility-prediction-v1' || Object.keys(x).some(k=>!allowed.includes(k))) throw Error('허용한 예상값 형식만 불러오세요. 주소·사진·추가 항목은 받지 않습니다.');
+ if(!Object.hasOwn(x,'expected_value')||!Object.hasOwn(x,'tolerance')) throw Error('예상값과 허용 오차는 숫자 또는 null로 명시하세요.');
+ const validated=draft(x); return {feature_id:validated.feature_id,segment_key:validated.segment_key,route_id:validated.route_id,
+  station_id:validated.station_id,expected_value:validated.expected.value,tolerance:validated.expected.tolerance};
+}
+function exportData(sessions,at) {
+ stamp(at);
+ return {schema:'mobility-field-recorder-v1',exported_at:at,automatic_persistent_storage:false,
+  notes:['관측·자료 대조 기록이며 기능 완료 인증이 아님','field/payment와 official_web/published_table/development_replay를 구분','예상판은 관측 전에 고정; 누락은 null'],
+  features:FEATURES,sessions:clone(sessions)};
+}
+globalThis.RecorderCore=Object.freeze({FEATURES,KINDS,number,key,comparison,draft,freeze,start,stop,parsePrediction,exportData});
+if(typeof document==='undefined') return;
+const $=id=>document.getElementById(id), units={KRW:'원',min:'분',m:'m',count:'개',service_min:'운행일 분',percent:'%',s:'초'};
+const kindNames={field:'현장 관측',payment:'실제 결제',official_web:'공식 웹',published_table:'공표 표',development_replay:'개발 재생'};
+const statusNames={missing_observation:'측정값 없음',missing_prediction:'예상값 없음',tolerance_unset:'허용 오차 미설정',within_tolerance:'사전 오차 범위 안',outside_tolerance:'사전 오차 범위 밖',within_budget:'예산 안',over_budget:'예산 초과'};
+let sessions=[],current=null,previous=null,dirty=false;
+FEATURES.forEach(f=>{const o=document.createElement('option');o.value=f.id;o.textContent=f.id+'. '+f.name;$('feature').append(o)});
+const now=()=>new Date().toISOString();
+const numInput=id=>{const e=$(id);if(e.validity.badInput) throw Error('숫자 형식을 확인하세요.');return e.value===''?null:number(Number(e.value),id==='actual'?'측정값':'예상값·허용 오차');};
+const values=()=>({feature_id:Number($('feature').value),segment_key:$('segment').value,route_id:$('route').value,station_id:$('station').value,expected_value:numInput('expected'),tolerance:numInput('tolerance')});
+function status(text){$('status').textContent=text;}
+function protect(locked){['feature','segment','route','station','expected','tolerance'].forEach(id=>{const e=$(id);if(e.tagName==='SELECT')e.disabled=locked;else e.readOnly=locked;});}
+function labels(){const f=FEATURES.find(x=>x.id===Number($('feature').value));$('expected-label').textContent=(f.comparison==='upper'?'사전 예산 상한':f.metric+' 예상값')+' ('+units[f.unit]+')';$('actual-label').textContent=f.metric+' 측정값 ('+units[f.unit]+')';$('tolerance-label').textContent='사전에 정한 허용 오차 ('+units[f.unit]+')';$('tolerance').hidden=f.comparison==='upper';$('tolerance-label').hidden=f.comparison==='upper';$('tolerance-help').hidden=f.comparison==='upper';$('auto-label').hidden=!['min','s'].includes(f.unit);$('auto').checked=false;}
+function viewRecords(){const host=$('records');host.replaceChildren();let count=0;const used=new Set();sessions.forEach(s=>s.observations.forEach(o=>{count++;used.add(s.feature_id);const d=document.createElement('div');d.className='record';const title=document.createElement('strong');title.textContent=FEATURES.find(f=>f.id===s.feature_id).name+' · '+s.segment_key+' · 예상판 '+s.prediction_revision;const p=document.createElement('span');p.textContent=kindNames[o.reference_kind]+' | '+(o.value===null?'미기록':Number(o.value.toFixed(3))+' '+units[o.unit])+' | '+statusNames[o.comparison.status];d.append(title,p);host.append(d)}));if(!count){const p=document.createElement('p');p.textContent='아직 관측 기록이 없습니다.';host.append(p)}$('coverage').textContent='기록한 기능 '+used.size+'/21 · 관측 '+count+'건 · 기능 완료율이 아닙니다.';}
+function safe(fn){try{fn()}catch(e){status(e.message)}}
+function clearErrors(){document.querySelectorAll('[aria-invalid]').forEach(e=>e.removeAttribute('aria-invalid'));document.querySelectorAll('.error').forEach(e=>e.textContent='');}
+function validateField(e){try{if(['segment','route','station'].includes(e.id)) key(e.value,e.id==='segment');else numInput(e.id);return true;}catch(err){e.setAttribute('aria-invalid','true');$(e.id+'-error').textContent=err.message;return false;}}
+['segment','route','station','expected','tolerance','actual'].forEach(id=>{const e=$(id);e.addEventListener('blur',()=>validateField(e));['focus','input'].forEach(event=>e.addEventListener(event,()=>{e.removeAttribute('aria-invalid');$(id+'-error').textContent='';}));});
+$('predictionForm').addEventListener('submit',event=>{event.preventDefault();safe(()=>{const bad=['segment','route','station','expected','tolerance'].map($).filter(e=>!validateField(e));if(bad.length){bad[0].focus();throw Error('표시된 입력값을 확인해 주세요.')}if(current&&current.prediction_frozen_at)throw Error('이미 예상값을 고정했습니다. 변경하려면 새 예상판을 만드세요.');current=freeze(draft(values(),previous),now());sessions.push(current);previous=null;protect(true);dirty=true;status('예상판 '+current.prediction_revision+' 고정: '+current.prediction_frozen_at+' · 근거 종류를 고르고 관측을 시작하세요.');});});
+$('feature').addEventListener('change',labels);
+$('revise').addEventListener('click',()=>safe(()=>{if(current&&current.active)throw Error('진행 중인 관측을 먼저 종료해 주세요.');previous=current;current=null;protect(false);clearErrors();status('새 예상판을 입력하세요. 이전 예상판·관측은 보존됩니다. 관측 전에 다시 고정하세요.');$('expected').focus();}));
+$('new').addEventListener('click',()=>safe(()=>{if(current&&current.active)throw Error('진행 중인 관측을 먼저 종료해 주세요.');current=null;previous=null;protect(false);$('expected').value='';$('tolerance').value='';$('actual').value='';$('clock').textContent='00:00';clearErrors();labels();status('다른 기능을 선택하고 예상값을 고정하세요. 앞선 기록은 이 탭에 남아 있습니다.');$('feature').focus();}));
+$('start').addEventListener('click',()=>safe(()=>{if(!current)throw Error('먼저 예상값을 고정해 주세요.');start(current,$('reference').value,now());$('reference').disabled=true;dirty=true;status('관측 중: '+current.active.started_at+' · 종료 전에 측정값을 입력하세요.');}));
+$('stop').addEventListener('click',()=>safe(()=>{if(!current)throw Error('먼저 예상값을 고정해 주세요.');if(!validateField($('actual'))){$('actual').focus();throw Error('측정값을 확인해 주세요.');}const o=stop(current,numInput('actual'),$('auto').checked,now());$('reference').disabled=false;$('actual').value='';dirty=true;viewRecords();status('기록 시각: '+o.recorded_at+' · '+statusNames[o.comparison.status]+' · JSON으로 내보내세요.');}));
+$('upload').addEventListener('change',async()=>{try{const file=$('upload').files[0];if(!file)return;if(current&&current.active)throw Error('진행 중인 관측을 먼저 종료해 주세요.');if(!file.name.toLowerCase().endsWith('.json')||file.size>65536)throw Error('64KB 이하의 .json 예상값 파일을 선택하세요.');const x=parsePrediction(await file.text());previous=current;current=null;protect(false);$('feature').value=x.feature_id;$('segment').value=x.segment_key;$('route').value=x.route_id;$('station').value=x.station_id;$('expected').value=x.expected_value===null?'':x.expected_value;$('tolerance').value=x.tolerance===null?'':x.tolerance;labels();clearErrors();status('예상값을 불러왔습니다. 관측 전에 예상값 고정을 눌러 주세요.');}catch(e){status(e.message)}finally{$('upload').value='';}});
+$('export').addEventListener('click',()=>safe(()=>{if(!sessions.length)throw Error('예상값을 먼저 고정하거나 관측을 기록해 주세요.');const at=now();const blob=new Blob([JSON.stringify(exportData(sessions,at),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='mobility-observations-'+at.replace(/[:.]/g,'-')+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);dirty=Boolean(current&&current.active);status('JSON 파일 내려받기를 요청했습니다. 파일이 저장됐는지 확인한 뒤 탭을 닫으세요.');}));
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+setInterval(()=>{if(current&&current.active){const s=Math.max(0,Math.floor((Date.now()-Date.parse(current.active.started_at))/1000));$('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}},250);
+labels();
+})();
+</script>
+</body>
+</html>

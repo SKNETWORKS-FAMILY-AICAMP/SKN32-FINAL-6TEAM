@@ -1,0 +1,79 @@
+{
+ "case_id": "mixed-09",
+ "format": "mixed",
+ "defect": null,
+ "party": 2,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "안녕하세요 2명이서 서울 가요\n1일차 2026-10-29\n09:30 창덕궁 후원\n12:30 진옥화할매원조닭한마리 점심\n15:00 남산골한옥마을"
+  },
+  {
+   "kind": "file",
+   "name": "rest.jpg"
+  }
+ ],
+ "lines": [
+  "안녕하세요 2명이서 서울 가요",
+  "1일차 2026-10-29",
+  "09:30 창덕궁 후원",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 남산골한옥마을",
+  "서울 2일 여행 (2명)",
+  "",
+  "2일차 2026-10-30",
+  "09:30 북촌한옥마을 산책",
+  "12:30 망원시장 칼국수",
+  "15:00 명동난타극장"
+ ],
+ "items": [
+  {
+   "date": "2026-10-29",
+   "start": "09:30",
+   "title": "창덕궁 후원",
+   "place": "창덕궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-29",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-29",
+   "start": "15:00",
+   "title": "남산골한옥마을",
+   "place": "남산골한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-30",
+   "start": "09:30",
+   "title": "북촌한옥마을 산책",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-30",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-30",
+   "start": "15:00",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

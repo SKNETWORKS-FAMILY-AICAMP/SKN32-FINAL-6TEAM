@@ -1,0 +1,19 @@
+{
+  "mode": "after",
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/travel/test_subway_notice_station_lists_v1.py",
+    "tests/unit/travel/test_subway_notice.py",
+    "tests/unit/travel/test_utic_route_events.py",
+    "tests/unit/travel/test_its_route_events_alternate.py",
+    "tests/unit/travel/test_its_traffic.py",
+    "tests/unit/travel/test_disruption_check.py",
+    "-q",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\subway_notice\\after.xml"
+  ],
+  "exit_code": 0,
+  "elapsed_s": 67.63037848472595,
+  "external_connection_attempts": 0,
+  "api_calls": 0
+}

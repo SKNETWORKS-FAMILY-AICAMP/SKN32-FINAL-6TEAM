@@ -18,6 +18,13 @@ domain: neutral
 
 **Agent Gateway가 유일한 진입점이다.** 여기를 통과한 것만 내부로 간다.
 
+## 고객 웹의 인증 경계
+
+`[실측]` 고객 웹 `/v1/web/*`는 아래 서버용 Bearer/scope 키를 쓰지 않는다. 브라우저는 서버가 내려주는 HttpOnly 쿠키 세션(쓰기 요청은 `X-CSRF-Token` 까지), 에이전트 · 옛 호출자는 사용자 키 `X-User-Key`(`acop_u_…` · 에이전트 키 `acop_a_…`)로 고객을 식별한다. 세션 · 키 발급은 인증 없이 열려 있고(사람 확인 + 주소당 한도) 나머지 웹 경로는 `_web_customer`(`web_cookie.authenticate`)가 확인한다. 여행 · 접수 조회는 그 고객의 자료로 제한한다(남의 것은 404). 계약은 [웹 API 명세](rest-endpoints.md)의 「브라우저 세션 쿠키」 · 「에이전트 키」 절을 따른다.
+
+브라우저에 서버용 scope 키를 넣지 않는다. CORS 의 허용 출처 · 메서드 · 헤더와 키 거절 처리는 [앱 조립](../../app/presentation/api/app.py) · [웹 라우터](../../app/domains/travel_ops/entry/trip_api.py)를 함께 확인한다. 아래 Bearer/scope 설명을 고객 웹의 인증 방식으로 복사하지 않는다.
+`[2026-10-05]` 이 절은 팀 저장소 develop 의 「고객 웹의 인증 경계」를 읽고, 쿠키 세션 이전 판이던 `X-User-Key` 만의 서술을 우리 쿠키 세션 판으로 고쳐 가져왔다.
+
 ## 세 겹
 
 ```text
@@ -48,7 +55,7 @@ domain: neutral
 |---|---|---|
 | `INV-CS-SEC-002` | scope 없는 principal은 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_with_no_scopes` |
 | `INV-CS-SEC-003` | 다른 scope를 가진 principal도 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_holding_another_scope` |
-| `INV-CS-SEC-007` | scope 12개는 guardrail이 소유한다(09-06 `composer:admin`·`ops:reload` 추가 전 10개) | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
+| `INV-CS-SEC-007` | 현재 scope 목록은 공통 guardrail이 소유한다 | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
 
 **003이 중요하다.** "scope가 있기만 하면 통과"가 아니라 **"맞는 scope여야 통과"**다.
 
@@ -56,16 +63,9 @@ domain: neutral
 
 ### 주요 scope
 
-`[실측]` v8 §24가 정한 **네 축**.
+범용 Case API의 `case:read`·`case:write`·`action:approve`와 개발자용 `ops:introspect`·`ops:reload`는 [공통 guardrail](../../config/guardrails.yaml)이 소유합니다. 수를 별도 하드코딩하지 않습니다. 과거 `order:read`·`return:read`는 현재 설정에서 제외했습니다.
 
-| scope | 무엇 |
-|---|---|
-| `case:read` | 조회 |
-| `case:write` | 생성·수정 |
-| **`action:approve`** | **승인** |
-| `mcp:read` | MCP 도구 3종 |
-
-`+ ops:introspect` · `ops:reload` 등 총 **12개**. guardrail이 소유한다. ★`[실측]` 그중 **`order:read`·`return:read` 둘은 커머스 scope 가 남은 것**이다 — 코드 담당 몫.
+**여행 MCP 인증은 별도입니다.** [현재 MCP](mcp-tools.md)는 웹 사용자 키로 고객·본인 여행을 확정합니다. 옛 Case MCP 3종의 `mcp:read` 설명을 현재 여행 도구에 적용하지 않습니다.
 
 **읽기와 쓰기와 승인을 나눈 게 핵심이다.** 하나로 묶으면 조회 권한만 주고 싶어도 승인까지 열린다.
 
@@ -76,7 +76,7 @@ tenant · client · scope 와 함께 저장
 원문을 로그에 남기지 않는다
 ```
 
-**환불·구독 변경·권한 변경**은 `action:approve` scope와 **evidence를 확인하고 before/after hash를 audit**한다.
+**여행 예약·환급처럼 승인이 필요한 변경**은 `action:approve` scope와 **evidence를 확인하고 before/after hash를 audit**한다.
 
 ## ③ 격리
 
@@ -186,7 +186,7 @@ API 는 scope 키로, **운영 화면은 운영자 로그인으로** 들어온�
 | 세션 | 서명 쿠키(HMAC · 8시간 · HttpOnly · SameSite=Strict). 권한을 줄이면 **다음 요청부터** 반영 |
 | 쓰기 | 승인·바깥함 해소 `action:approve` · 위임 `delegation:write`. 없으면 403, 아무것도 안 바뀐다 |
 | 기록 | 승인자·처리자·위임 행위자 = **로그인한 운영자 id** |
-| 막지 않는 것 | `/scenario/*`(시연 — `/ui` 밖) · CSRF 토큰(SameSite 에 기댐) · 잠금은 프로세스 안 |
+| 막지 않는 것 | 잠금은 프로세스 안 (`[2026-10-05 정정]` CSRF 는 2026-09-29 부터 있다 — 운영 화면의 모든 POST 폼에 `csrf` 숨은 칸(HMAC), 틀리면 403 `csrf_failed`, `ui/routes.py` · `ui/auth.py`) · (`/scenario/*` 시연 입구는 `[2026-09-30]` 운영 앱에서 뗐다 — D-CS-008) |
 
 결정 [D-CS-007](../decisions/D-CS-007-ui-operator-login.md) · 실측 [2026-09-23_운영화면_로그인.md](../records/evidence/2026-09-23_운영화면_로그인.md)
 
@@ -240,6 +240,10 @@ security:
 
 `[실측]` **테스트 함수 이름도 `six` → `ten` 으로 바뀌었다.** DoD-14 evidence 가 아직 `six` 로 적고 있다. → [../quality/blind-spots.md](../quality/blind-spots.md)
 
+## 적용 대상 구분
+
+아래 개발자용 진단·설정 화면의 로그인은 고객 상담원 배치를 뜻하지 않습니다. 현재 제품은 상주 상담원이 고객 문제를 수동 수정하는 구조를 채택하지 않습니다. 고객 승인과 개발자 진단 권한은 구분합니다.
+
 ## 관계
 
 - [rest-api.md](rest-api.md) — 쓰기 경로
@@ -247,3 +251,5 @@ security:
 - [a2a-protocol.md](a2a-protocol.md) — 위임 경로
 - [../data/tenancy.md](../data/tenancy.md) — 저장 계층 격리
 - [../actions/approval.md](../actions/approval.md) — `action:approve`
+
+개정 전 인증 설명: [보존 기록](../records/commerce_2026-10-11/wiki--external--auth-boundary.md).

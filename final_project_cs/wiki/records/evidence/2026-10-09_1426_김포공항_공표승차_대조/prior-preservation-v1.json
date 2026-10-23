@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-09T21:13:13.848123+09:00",
+  "matched_before_publication": 310,
+  "total_before_publication": 310,
+  "previous_matches": 304,
+  "previous_total": 310,
+  "previous_changes": [
+    "final_project_cs/app/domains/travel_ops/components/watch/notice_routing.py",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py",
+    "final_project_cs/config/guardrails.yaml",
+    "datasets/mobility/processed/mobility/published_boarding_timetable_v1.json",
+    "datasets/mobility/processed/mobility/MANIFEST_git_v1.json",
+    "final_project_cs/wiki/teams/mobility.md"
+  ],
+  "product_mutations_in_resume": 0,
+  "limited_api_calls": 0
+}

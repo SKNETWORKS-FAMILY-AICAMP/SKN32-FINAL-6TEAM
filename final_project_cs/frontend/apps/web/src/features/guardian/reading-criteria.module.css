@@ -1,0 +1,13 @@
+/* `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 · 목업 v9 §3-1]` 계획 담기 화면의 「읽는 기준」 패널. 글자 12/14/16, 굵기 400/500/600, 간격 4·8 격자, 누르는 곳 44px(칩 48px). */
+.settings { margin-top: 16px; }                                   /* 위 입력 칸과 맞닿지 않게(칸 사이 간격과 같은 한 칸) */
+.settings h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.25; }
+.lead { margin: 4px 0 0; font-size: 14px; line-height: 1.6; color: var(--color-muted); }
+.group { margin-top: 16px; }
+.group h3 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.25; }
+.help { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--color-muted); }
+.chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.chip { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 48px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: inherit; font: inherit; font-size: 14px; font-weight: 500; line-height: 1.4; white-space: nowrap; cursor: pointer; }
+.chip:hover { border-color: var(--color-border-strong); background: var(--color-subtle); }
+.chip[aria-checked="true"] { border-color: var(--color-selected); background: var(--color-selected-soft); color: var(--color-selected); font-weight: 600; }
+.chip:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.hint { margin: 12px 0 0; font-size: 14px; line-height: 1.6; color: var(--color-text-secondary); }

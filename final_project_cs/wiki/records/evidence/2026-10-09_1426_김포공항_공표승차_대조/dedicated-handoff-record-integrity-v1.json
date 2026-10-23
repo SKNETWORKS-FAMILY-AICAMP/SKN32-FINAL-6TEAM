@@ -1,0 +1,84 @@
+{
+  "created_at": "2026-10-09T15:06:43.443413+09:00",
+  "scope": "전용 예약 대화의 인계 준비 기록만. 김포공항 기능 검증의 최종 명세가 아님.",
+  "files": {
+    "final_project_cs/wiki/records/reports/2026-10-09_1505_이동모듈_전용예약대화_인계준비.md": "e458f0888a8e0c094d1e5cc2aae72116f897edee2d683d3dc43bab12d1d0a227",
+    "final_project_cs/wiki/log.md": "de7889977941362ebb63ea4bde66b15325052d615ba5980c11d5c9927f473a4c",
+    "final_project_cs/wiki/records/evidence/2026-10-09_1426_김포공항_공표승차_대조/dedicated-handoff-inspection-v1.json": "e866b7b763aed05ab57eadf6d0d72740f19e9ac4890b4f59ff0327103c7c571e",
+    ".tmp/mobility_complete_20261008/finalize_dedicated_handoff_20261009_v1.py": "aa85b642f670a2e56f797acdc58af98653bfe29c173185dc823986e0c68d8ca7",
+    ".tmp/mobility_complete_20261008/inspect_dedicated_handoff_20261009_v1.py": "b226bc826456e9be325eb9922f62987e1616322123d17162dd732a776f99633e"
+  },
+  "backups": [
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-09_1505_이동모듈_전용예약대화_인계준비.md",
+      "backup": "final_project_cs/wiki/records/reports/_backup/2026-10-09_1506_전용예약대화_인계준비/2026-10-09_1505_이동모듈_전용예약대화_인계준비.md",
+      "sha256": "141ac16f4b45d0add40f743a4eef900b6ad9051b11831ef564d4251b6ec2c5dc"
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-09_1506_전용예약대화_인계준비/log.md",
+      "sha256": "a33bc497846058004eead637fba0f736bfd639f97040667dcfea38070ed9b9d5"
+    }
+  ],
+  "local_report_links": [
+    {
+      "target": "../evidence/2026-10-09_1426_김포공항_공표승차_대조/dedicated-handoff-inspection-v1.json",
+      "exists": true
+    },
+    {
+      "target": "../evidence/2026-10-09_1426_김포공항_공표승차_대조/backup-manifest-v1.json",
+      "exists": true
+    },
+    {
+      "target": "../../teams/mobility.md",
+      "exists": true
+    },
+    {
+      "target": "../../../../.tmp/mobility_complete_20261008/gimpo-published-state-v1.json",
+      "exists": true
+    },
+    {
+      "target": "../../../../.tmp/mobility_complete_20261008/verify_gimpo_boarding_v1.py",
+      "exists": true
+    },
+    {
+      "target": "2026-10-09_1415_디지털미디어시티_공식승차시간_확대검증.md",
+      "exists": true
+    },
+    {
+      "target": "debugs/2026-10-09_1426_김포공항_공표승차_대조.md",
+      "exists": true
+    },
+    {
+      "target": "../../../../.tmp/mobility_complete_20261008/apply_replay_gimpo_boarding_v2.py",
+      "exists": true
+    },
+    {
+      "target": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/reports/_backup/2026-10-09_1506_전용예약대화_인계준비/2026-10-09_1505_이동모듈_전용예약대화_인계준비.md",
+      "exists": true
+    },
+    {
+      "target": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/_backup/2026-10-09_1506_전용예약대화_인계준비/log.md",
+      "exists": true
+    },
+    {
+      "target": "C:/Users/playdata2/Documents/final_workspace/.tmp/mobility_complete_20261008/_backup/2026-10-09_1508_인계점검/inspect_dedicated_handoff_20261009_v1.py",
+      "exists": true
+    }
+  ],
+  "readiness_catalog_count": 21,
+  "readiness_catalog_status_counts": {
+    "조건부 사용": 3,
+    "개선 필요": 9,
+    "추가 검증": 9
+  },
+  "before_audit_totals": {
+    "stored": 784,
+    "official": 680,
+    "unsupported": 104,
+    "missing": 0,
+    "duplicate": 0
+  },
+  "full_feature_completion": false,
+  "gimpo_validation_completed": false
+}

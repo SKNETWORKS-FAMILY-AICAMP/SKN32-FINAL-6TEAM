@@ -1,0 +1,26 @@
+{
+  "state": {
+    "status": "downloading",
+    "timestamp_utc": "2026-10-08T17:15:47Z",
+    "revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+    "expected_bytes": 7898369152,
+    "expected_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "model_path": "/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf",
+    "ephemeral_ram_storage": true,
+    "GPU_used": false,
+    "memory": {
+      "cgroup_limit": 30999998464,
+      "cgroup_used": 18112655360,
+      "cgroup_headroom": 12887343104,
+      "host_available": 228759494656
+    },
+    "bytes_saved": 1581252608,
+    "elapsed_seconds": 30.1
+  },
+  "log": "\": 14466957312, \"host_available\": 230442115072}, \"bytes_saved\": 0, \"initial_ram_filesystem_free\": 15000002560}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:27Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 17069584384, \"cgroup_headroom\": 13930414080, \"host_available\": 229811367936}, \"bytes_saved\": 528482304, \"elapsed_seconds\": 10.02}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:37Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 17620770816, \"cgroup_headroom\": 13379227648, \"host_available\": 229234425856}, \"bytes_saved\": 1056964608, \"elapsed_seconds\": 20.1}\n{\"status\": \"downloading\", \"timestamp_utc\": \"2026-10-08T17:15:47Z\", \"revision\": \"1336c0b5d74dfe6ad7f793577092f5effd9f97c6\", \"expected_bytes\": 7898369152, \"expected_sha256\": \"4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb\", \"model_path\": \"/dev/shm/tripilot-saluki-20261009/Underdog-Saluki-27B-1.0-IQ2-mix.gguf\", \"ephemeral_ram_storage\": true, \"GPU_used\": false, \"memory\": {\"cgroup_limit\": 30999998464, \"cgroup_used\": 18112655360, \"cgroup_headroom\": 12887343104, \"host_available\": 228759494656}, \"bytes_saved\": 1581252608, \"elapsed_seconds\": 30.1}\n",
+  "GPU": "3462 MiB, 73 %",
+  "api_docs": [
+    "\n### POST `/tokenize`: Tokenize a given text\n\n*Options:*\n\n`content`: (Required) The text to tokenize.\n\n`add_special`: (Optional) Boolean indicating if special tokens, i.e. `BOS`, should be inserted.  Default: `false`\n\n`parse_special`: (Optional) Boolean indicating if special tokens should be tokenized. When `false` special tokens are treated as plaintext.  Default: `true`\n\n`with_pieces`: (Optional) Boolean indicating whether to return token pieces along with IDs.  Default: `false`\n\n**Response:**\n\nReturns a JSON object with a `tokens` field containing the tokenization result. The `tokens` array contains either just token IDs or objects with `id` and `piece` fields, depending on the `with_pieces` parameter. The piece field is a string if the piece is valid unicode or a list of bytes otherwise.\n\n\nIf `with_pieces` is `false`:\n```json\n{\n  \"tokens\": [123, 456, 789]\n}\n```\n\nIf `with_pieces` is `true`:\n```json\n{\n  \"tokens\": [\n    {\"id\": 123, \"piece\": \"Hello\"},\n    {\"id\": 456, \"piece\": \" world\"},",
+    "\n### POST `/apply-template`: Apply chat template to a conversation\n\nUses the server's prompt template formatting functionality to convert chat messages to a single string expected by a chat model as input, but does not perform inference. Instead, the prompt string is returned in the `prompt` field of the JSON response. The prompt can then be modified as desired (for example, to insert \"Sure!\" at the beginning of the model's response) before sending to `/completion` to generate the chat response.\n\n*Options:*\n\n`messages`: (Required) Chat turns in the same format as `/v1/chat/completions`.\n\n**Response format**\n\nReturns a JSON object with a field `prompt` containing a string of the input messages formatted according to the model's chat template format.\n\n### POST `/embedding`: Generate embedding of a given text\n\n> [!IMPORTANT]\n>\n> This endpoint is **not** OAI-compatible. For OAI-compatible client, use `/v1/embeddings` instead.\n\nThe same as [the embedding example](../embedding) does.\n\nThis endpoint also supports multimodal embeddings. See the documentation for the `/completions` endpoint for details on how to send a multimodal prompt.\n\n*Options:*\n\n`content`: Set the text to process.\n\n`embd_normalize`: Normalization for pooled embeddings. Can be one of the following values:\n```\n  -1: No normalization\n   0: Max absolute"
+  ]
+}

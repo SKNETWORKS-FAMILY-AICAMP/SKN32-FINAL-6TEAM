@@ -1,0 +1,18 @@
+{
+  "artifact": "wiki/records/reports/assets/2026-10-11_team_plugin/plugin-flow.html",
+  "html_parse": "passed",
+  "svg_xml_parse": "passed",
+  "accessible_title": true,
+  "local_links": [
+    {
+      "href": "../../../evidence/2026-10-11_1936_team_plugin_implementation/acceptance-mapping.json",
+      "exists": true
+    },
+    {
+      "href": "../../../../teams/team-plugin-lifecycle.md",
+      "exists": true
+    }
+  ],
+  "details_count": 4,
+  "screen_render_verified": false
+}

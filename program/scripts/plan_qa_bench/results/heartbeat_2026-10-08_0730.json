@@ -1,0 +1,40 @@
+{
+  "checked_at_kst": "2026-10-08T07:30:32+09:00",
+  "source": "rag-strata heartbeat and live SSH reads",
+  "gpu_b": {
+    "oos2r": {
+      "last_logged_step": 560,
+      "total_steps": 654,
+      "training_process_running": true,
+      "gpu_utilization_percent": 100,
+      "last_logged_loss": 0.0045,
+      "last_logged_elapsed_minutes": 255.1,
+      "log_estimated_remaining_minutes": 43,
+      "estimate_is_not_measurement": true,
+      "completed_adapter_found_in_checked_output_locations": false
+    },
+    "following_candidate_queue": "waiting for B55"
+  },
+  "gpu_a": {
+    "oos3_evaluation_marker": "ALLDONE_OOS3_TMP",
+    "oos3_evaluation_process_running": false,
+    "root_disk_available_gib_rounded": 8.4,
+    "strata_process_running": false,
+    "strata_previous_blocker": "workspace disk quota exceeded",
+    "strata_restarted": false
+  },
+  "mai": {
+    "local_log_marker": "ALLDONE_MAI_REQUESTED_PHASES",
+    "verify_saved": 204,
+    "verify_expected": 204,
+    "direct_saved": 360,
+    "direct_expected": 360,
+    "rerun": false
+  },
+  "actions": {
+    "new_jobs_started": 0,
+    "existing_jobs_interrupted": 0,
+    "existing_artifacts_overwritten": 0,
+    "new_rental_or_payment": false
+  }
+}

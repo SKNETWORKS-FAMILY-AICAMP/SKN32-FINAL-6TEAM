@@ -1,0 +1,28 @@
+{
+  "job": {
+    "id": "saluki_original_d3_a1",
+    "suite": "d3",
+    "label": "Underdog-Saluki-27B-1.0 IQ2-mix publisher original",
+    "our_training": false,
+    "publisher_training": "Qwen3.8 developer-trained release and publisher GSQ/RCO quantization; no triPilot fine-tuning",
+    "model": "/tmp/tripilot-saluki-20261009/smoke_verified_model.gguf",
+    "model_sha256": "4a673518b11b1c4445f9b9a9d3c40356f5ba39f6a6260dcb25f3fbfd475d9efb",
+    "model_revision": "1336c0b5d74dfe6ad7f793577092f5effd9f97c6",
+    "prompts": "/workspace/heavy/all_prompts_d3.json",
+    "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+    "expected": 360,
+    "script": "/tmp/tripilot-saluki-20261009/saluki_eval_20261009.py",
+    "runner_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+    "tag": "saluki_original_d3_a1",
+    "port": 8401,
+    "logprobs": "0",
+    "purpose": "Matched frozen developer/regression suite; not holdout or adoption",
+    "dependency": "/tmp/tripilot-saluki-20261009/SMOKE_PASS.json",
+    "ephemeral_ram_model": true,
+    "automatic_retry": false
+  },
+  "started": "2026-10-08T17:26:17.604041+00:00",
+  "prompt_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+  "script_sha256": "89eacd03b7a5b1175cea963940f9c16c983443110072f16dff85b8de5fb00444",
+  "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+}

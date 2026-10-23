@@ -6,8 +6,9 @@ from dataclasses import dataclass
 
 from fastapi import Header, HTTPException
 
-# ★다시 내보내는 import 다 — 이 모듈을 거쳐 가져다 쓰는 곳이 있다.
-#   여기서 직접 쓰지 않아 안 쓰는 import 로 보이지만 지우면 그쪽이 깨진다.
+# ★다시 내보내는 import 다 — 다른 프로젝트(콘솔 · 합성기)가 이 모듈을 거쳐 가져다 쓸 수 있어 남겼다.
+#   `[2026-10-07]` 이 저장소 안에서는 **쓰지 않는다** — 응용 · 인프라 · 도메인이 표현 층 파일을 거쳐 코어 함수를 얻던 것을
+#   `app.core.redaction` 직접 import 로 바꿨고, `tests/architecture/test_basement_layers.py` 가 다시 거치지 못하게 막는다.
 from app.core.redaction import mask_json, masked  # noqa: F401
 
 from app.core.settings import get_guardrails, get_settings

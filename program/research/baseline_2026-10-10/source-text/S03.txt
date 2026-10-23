@@ -1,0 +1,177 @@
+US Air Force Culture of Innovation 1945–1965
+https://www.govinfo.gov/content/pkg/GOVPUB-D301-PURL-LPS48767/pdf/GOVPUB-D301-PURL-LPS48767.pdf
+
+=== PDF page 113 ===
+propellant loading procedures needed for the current stable of liquid-propelled
+ICBMs. Although liquid-propelled rockets had higher performance, it took from
+several hours to several days to prepare them for launch. Solids, on the other hand,
+could be launched within seconds because, once loaded with propellant and
+placed in their launch configuration, the missiles were ready to go with the push
+of a button. For a nuclear deterrent that had obvious advantages. Hall started the
+program but he was too abrasive and unpredictable to manage it over the long
+run. Instead, Terhune recruited Col. Samuel C. Phillips to manage Minuteman.†
+Building the Weapon of the Future
+99
+Shown inspecting the communications panel in an Air Force Minuteman
+launch control car are, from left to right, Col. Samuel Phillips, director of
+the Minuteman program office; Maj. Gen. O. J. Ritland, commander of
+ARDC’s Ballistic Missile Division; and Lt. Gen. Bernard A. Schriever, ARDC
+commander.
+†The evidence points to origination of the idea of tying financial controls to change con-
+trol on the Minuteman project, but does not definitively pinpoint it to Boeing or the Air
+Force. What is clear is that Phillips quickly saw the importance of the idea and promoted
+it vigorously.
+
+=== PDF page 114 ===
+Phillips turned out to be an excellent manager, and he was equipped with all
+of the tools developed by Schriever’ s team, Ramo-Wooldridge, and system inte-
+grator Boeing. Boeing brought with them their ideas for configuration control,
+which Phillips quickly expanded to become an all-purpose managerial tool. En-
+gineers needed change control to be able to communicate engineering changes to
+their counterparts on other subsystems, and work out any ripple effects. For ex-
+ample, if a power engineer had to change his subsystem’ s voltage from 5 volts to
+7 volts, then all components and subsystems that use power had to change as
+well. T ypically the project’ s chief engineer coordinated changes, ensured com-
+munication with all relevant subsystem engineers, and gave final approval or re-
+jection of changes.
+Sometime between 1958 and 1960, managers—probably those at Boeing or
+possibly Minuteman project manager Samuel Phillips—realized that configura-
+tion control was precisely the tool necessary for managers to gain financial as
+well as technical control over the project.
+87 The idea was simple. All a project
+manager had to do was compel engineers to give cost and schedule estimates
+along with the technical change. If the engineer did not give the information, the
+The USAF and the Culture of Innovation
+100
+One of the pads at the Air Force Missile Test Center from which three-stage,
+solid-fuel-propelled Minuteman ICBMs were launched in the missile’s de-
+velopment program.
+
+=== PDF page 216 ===
+Each program director has 15 to 25 minutes to cover his
+a r e a ....The key to rapid comprehension of sticky manage-
+ment problems is standardization of presentation. Each direc-
+tor of a major program is required to adhere to a set formula
+so the commander and the staff will know exactly what to ex-
+pect sequentially and how to interpret what each program or
+system director is reporting on. In his presentation, the direc-
+tor first covers his status on directed action items which result-
+ed from the last meetings. Next he covers his problem areas in
+their broadest sense. The details of these problems come later.
+Then, in turn, he reviews his (1) Government financial charts,
+(2) Contractor financial charts, (3) Contractor manpower sta-
+tus, (4) Contract change negotiations, (5) Letter contract sta-
+tus, (6) His manpower, both military and technical staff of the
+Aerospace Corporation, (7) What he is doing to meet certain
+procurement management objectives. The program director
+may conclude his presentation with a summary chart if he
+chooses—all others are standard.
+62
+Similarly, Schriever established procedures throughout his organization to
+standardize communications up and down the line. He went to great lengths to
+ensure that rapid communication moved in well-defined ways. By mid-1961
+Schriever’ s organization molded status reporting into a highly sophisticated sys-
+tem known as Rainbow Reporting because it presented each element of the sys-
+tem on differently colored pages in a small, brightly packaged booklet that spec-
+ified the formats and procedures for status reports and presentations. Over the
+next few years, the procedures evolved to include full program, yearly, and
+monthly milestone schedules, government and contractor financial data, contrac-
+tor manpower data, reliability data, procurement data, engineering qualification
+data, and the so-called special PRESTO Procedures for problems that needed
+immediate attention. For each item, the procedures gave sample forms along
+with specifications of the information to be included, and defined when and to
+whom the information was to be reported. They also specified acceptable for-
+mats and technologies to be used for presentations to ensure commonality, en-
+abling the top-level managers to judge the programs on common bases.
+63
+Configuration management was another missile innovation ordered into oth-
+er AFSC commands to tighten project control. By late 1961 the ideas of config-
+uration management spread from missiles to the Hanscom complex, with the
+formation of “configuration control groups” on L systems, such as the NORAD
+Combat Operations Center (COC) (COC-425L) project and space object track-
+ing (SP ADATS–496L). By 1962 AFSC promoted configuration management
+across all of its divisions through issuance of its configuration management reg-
+ulations, AFSCM (Air Force Systems Command Manual) 375-1. In August 1962,
+The USAF and the Culture of Innovation
+202
+
+=== PDF page 217 ===
+for example, the NORAD COC project issued its configuration management in-
+structions, which were similar to the general instructions for configuration man-
+agement with the exception of software. MITRE and ESD had to create “equiva-
+lents” in software for the hardware baselines and end-item specifications and
+product deliveries. That requirement was not controversial within MITRE or
+ESD because they essentially had been using configuration management in all
+but name since the SAGE software crisis in 1955–57.
+64
+With the establishment of AFSC and its 375-series regulations, systems man-
+agement came to have a very specific meaning within the Air Force. It was the
+application of Inglewood-based, 375-series procedures, including configuration
+management, to large-scale programs managed by AFSC. These regulations de-
+fined the roles of the project manager, the communication and control proce-
+dures, key documents, and the reliability procedures for the acquisition (devel-
+opment) phase of the system. By April 1961 Schriever’ s authority and influence
+reached its apex as he presided over all major development programs in the Air
+Force using standardized methods of his own making. His methods shortly would
+become models for technology management throughout the DOD and beyond.
+Unfortunately, Schriever soon found that in the hands of Robert McNamara his
+methods would be modified and diffused in ways that he believed distorted their
+original intent.
+65
+McNamara, Phased Planning, and Central Control
+The technical problems of missiles and contractual relationships between
+the Air Force and industry reinforced the adoption of conservative management
+and engineering practices, and the growth in power of the federal executive
+branch drove a similar centralizing trend at the highest levels of the government.
+From the creation of the OSD in 1947 until the height of McNamara’ s tenure in
+the mid-1960s, the OSD grew in power as it pulled critical decisions up the hier-
+archy and subordinated service interests and rivalries.
+The National Security Act of 1947 established the position of secretary of
+defense, the National Security Council, the Central Intelligence Agency, the Air
+Force, and the Research and Development Board. The secretary of defense’ s au-
+thority was quite limited, particularly because the services could present their
+budget requests directly to Congress and administer their services independently
+of each other and the secretary of defense without fear of being overruled. Simi-
+larly, the Research and Development Board could only coordinate activities,
+without authority to enforce decisions.
+66
+Continued bickering among the services made it obvious to those outside
+the military and even to some inside that the secretary of defense needed more
+authority. In August 1949 President Harry S Truman signed amendments that
+strengthened the hand of the secretary of defense. They removed the service
+Standardizing the Systems Approach
+203
+
+=== PDF page 255 ===
+Glossary of Terms
+Concurrency. In general, parallel processes or approaches. The word was coined
+by Bernard Schriever to describe his particular parallel approach to ballistic
+missile development.
+Configuration Control. An organizational process to identify and control the
+hardware and software components and their interconnections within a de-
+sign. By the mid-1960s it sometimes also included control over specifica-
+tions. Under this process, changes to the design or components are not al-
+lowed unless they are approved by a configuration control board.
+Configuration Management. An organizational process that expands configu-
+ration control by requiring all change requests to include cost and schedule
+estimates. Frequently, it also expands configuration control by having “pa-
+per traceability” of all materials and components from their manufacturing
+through operational use. This process was documented first in the AFSCM
+375-1 regulations of the USAF in 1962.
+Operations Research.A set of mathematical methods to analyze current human–
+machine operations in their organizational and operational environments.
+This research typically includes game theory, probability, and statistics.
+Project Management. The set of management methods that organize tasks by
+end product. Usually the project is temporary and has an established com-
+pletion date.
+Systems Analysis. Operations research that is applied to future human–machine
+systems.
+Systems Engineering. The set of methods used by engineers to coordinate com-
+plex technical development projects. T ypically these methods include change
+control, analysis and documentation of specifications, and control of inter-
+faces between technologies and organizations.
+Systems Management. The set of organizational methods developed originally
+to create large-scale technologies in the aerospace and computing industries.
+It combines the methods of project management, systems engineering, sys-
+tems analysis, and configuration management into a coherent management
+241

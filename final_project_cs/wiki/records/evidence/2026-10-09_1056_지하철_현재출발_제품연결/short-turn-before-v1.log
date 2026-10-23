@@ -1,0 +1,55 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_ test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record[False] _
+
+crowded = False
+
+    @pytest.mark.parametrize('crowded', [False, True])
+    def test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record(crowded):
+        rt, context = scene()
+        if crowded:
+            rt._v._congestion_hit = lambda *a: (110, '매우혼잡', {'source_id': 'controlled/crowd', 'fetched_at': NOW.isoformat()}, 'board_wait_extra_headway')
+        def short_turn(station, **kw):
+            # 시간표에는 영등포시장행만 있지만 현재 응답은 목적지 영등포구청에서 종착한다.
+            kw['allowed_services'] = [s for s in kw['allowed_services'] if s['path_station_ids'][-1] == kw['target_station_id']]
+            return source(station, **kw)
+        got = call(rt, context, subway_arrival=short_turn)
+>       assert got['status'] == 'realtime', got
+E       AssertionError: {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'checked_at': '2026-10-09T10:00:0... 도착 예측; 실제 탑승 관측 아님', 'confirmed_at': '2026-10-09T10:00:00+09:00', 'eta_basis': 'provider_generation_time', ...}], ...}
+E       assert 'fatal' == 'realtime'
+E         
+E         - realtime
+E         + fatal
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:275: AssertionError
+_ test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record[True] _
+
+crowded = True
+
+    @pytest.mark.parametrize('crowded', [False, True])
+    def test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record(crowded):
+        rt, context = scene()
+        if crowded:
+            rt._v._congestion_hit = lambda *a: (110, '매우혼잡', {'source_id': 'controlled/crowd', 'fetched_at': NOW.isoformat()}, 'board_wait_extra_headway')
+        def short_turn(station, **kw):
+            # 시간표에는 영등포시장행만 있지만 현재 응답은 목적지 영등포구청에서 종착한다.
+            kw['allowed_services'] = [s for s in kw['allowed_services'] if s['path_station_ids'][-1] == kw['target_station_id']]
+            return source(station, **kw)
+        got = call(rt, context, subway_arrival=short_turn)
+>       assert got['status'] == 'realtime', got
+E       AssertionError: {'basis': {'rules_version': 'v0.9.2', 'timetable_built_at': 'controlled/timetable'}, 'checked_at': '2026-10-09T10:00:0... 도착 예측; 실제 탑승 관측 아님', 'confirmed_at': '2026-10-09T10:00:00+09:00', 'eta_basis': 'provider_generation_time', ...}], ...}
+E       assert 'fatal' == 'realtime'
+E         
+E         - realtime
+E         + fatal
+
+tests\unit\travel\mobility\test_subway_departure_v1.py:275: AssertionError
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1056_지하철_현재출발_제품연결\short-turn-before-v1.xml -
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record[False]
+FAILED tests/unit/travel/mobility/test_subway_departure_v1.py::test_live_short_turn_uses_matching_ridden_segment_without_static_terminal_record[True]
+2 failed, 31 deselected in 5.32s
+Exception ignored in: <function Console.__del__ at 0x0000015F8F2C5D00>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

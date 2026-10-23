@@ -1,0 +1,86 @@
+[
+  {
+    "path": "app/composition.py",
+    "changed_functions": [
+      "build_registry",
+      "build_team_executor",
+      "build_controller",
+      "wire_domain_teams",
+      "build_domain_routers"
+    ],
+    "added_functions": [
+      "_configure_mobility",
+      "_configure_mobility_once",
+      "_wire_domain_providers"
+    ],
+    "removed_functions": []
+  },
+  {
+    "path": "scripts/run_sweepers.py",
+    "changed_functions": [
+      "_run_once",
+      "_run_trip_dawn",
+      "_run_trip_reminders",
+      "_watch_if_due",
+      "_run_trip_watch_cases",
+      "_run_trip_watch",
+      "_report_errors",
+      "main"
+    ],
+    "added_functions": [
+      "_wire_features",
+      "_in_round",
+      "_team_job",
+      "_run_bound_once",
+      "_run_jobs",
+      "_round_result",
+      "call",
+      "run",
+      "work",
+      "classify",
+      "route"
+    ],
+    "removed_functions": []
+  },
+  {
+    "path": "app/domains/travel_ops/components/planning/replan.py",
+    "changed_functions": [
+      "_eta"
+    ],
+    "added_functions": [],
+    "removed_functions": []
+  },
+  {
+    "path": "app/domains/travel_ops/components/intake/moves.py",
+    "changed_functions": [
+      "leg_between"
+    ],
+    "added_functions": [],
+    "removed_functions": []
+  },
+  {
+    "path": "app/domains/travel_ops/components/intake/move_options.py",
+    "changed_functions": [
+      "options"
+    ],
+    "added_functions": [],
+    "removed_functions": []
+  },
+  {
+    "path": "app/domains/travel_ops/components/itinerary/itinerary_checks.py",
+    "changed_functions": [
+      "with_ledger"
+    ],
+    "added_functions": [],
+    "removed_functions": []
+  },
+  {
+    "path": "app/domains/travel_ops/components/actions/itinerary_actions.py",
+    "changed_functions": [
+      "_ask_instead",
+      "_ask_consent"
+    ],
+    "added_functions": [],
+    "removed_functions": []
+  }
+]

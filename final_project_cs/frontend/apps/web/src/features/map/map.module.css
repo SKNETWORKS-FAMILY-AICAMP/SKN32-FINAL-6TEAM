@@ -1,10 +1,19 @@
 .frame { display: flex; flex-direction: column; flex: 1; min-height: 285px; overflow: hidden; background: var(--color-background); }
 .live { position: relative; flex: 1; min-height: 240px; isolation: isolate; }
-.canvas { width: 100%; height: 100%; position: absolute; inset: 0; color-scheme: light; color: #24392f; }
+.canvas { width: 100%; height: 100%; position: absolute; inset: 0; color-scheme: light; color: var(--color-text); }
+/* ★`[2026-10-07 사용자 지적 — 멀어지면 마커(가장자리 칩)가 사라진다 · 지도 단추도 안 보인다]` Leaflet gives its panes z-index 200-800 and the pane that holds the tiles is 400: with no stacking context of its own, they stood ABOVE the chips
+   and buttons (z-index 4) of `.live`, so with real tiles on the map the chips and the buttons were painted under them (the tests have no tiles - they never showed it). The map keeps its panes to itself. */
+.canvas { isolation: isolate; z-index: 0; }
+.live[data-picking] .canvas { cursor: crosshair; }
+.coordinatePin { position: absolute; z-index: 3; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--color-on-primary); background: var(--color-primary); color: var(--color-on-primary); box-shadow: 0 1px 8px var(--color-shadow-strong); display: grid; place-items: center; font-size: 24px; pointer-events: none; }
+.pickCenter { position: absolute; left: 12px; bottom: 32px; z-index: 4; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+.pickCenter:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.routeLabels { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.routeLabel { position: absolute; transform: translate(-50%, -50%); max-width: 136px; padding: 4px 8px; border: 1px solid currentColor; border-radius: 6px; background: var(--color-surface); font-size: 12px; line-height: 18px; font-weight: 600; white-space: nowrap; pointer-events: none; }
 .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px; background: var(--color-surface); font-size: 13px; z-index: 2; }
 .overlay p { margin: 0; line-height: 1.7; overflow-wrap: anywhere; }
 .overlay[role="alert"] { color: var(--color-error); }
-.emptyNotice { position: absolute; top: 12px; left: 12px; right: 12px; margin: 0; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-muted); font-size: 12px; text-align: center; pointer-events: none; }
+.emptyNotice { position: absolute; z-index: 2; top: 12px; left: 12px; right: 64px; margin: 0; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-muted); font-size: 12px; line-height: 18px; text-align: center; pointer-events: none; }
 .caption { flex-shrink: 0; margin: 0; padding: 9px 14px; border-top: 1px solid var(--color-border); font-size: 11px; color: var(--color-muted); line-height: 1.7; }
 .caption span { display: block; }
 .notice { color: var(--color-warning); }
@@ -14,3 +23,94 @@
   .frame { min-height: 390px; }
   .live { min-height: 290px; }
 }
+/* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
+@container page (max-width: 850px) {
+  .frame { min-height: 390px; }
+  .live { min-height: 290px; }
+}
+/* Fills a box another screen sizes (plan check: under the floating bar, behind the sheet) — no caption, no minimum. */
+.frame.fill { position: relative; height: 100%; min-height: 0; }
+.frame.fill .live { min-height: 0; }
+/* `[2026-10-05]` A map with no caption (plan check) says why 「내 위치」 is not shown in one line over its top-left, under the floating bar; it takes no press. */
+.meNoticeFloat {
+  position: absolute; left: 12px; right: 64px; z-index: 4; margin: 0; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px;
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent); color: var(--color-warning); font-size: 11px; line-height: 1.6; pointer-events: none;
+}
+
+/*
+ * `[2026-10-05 사용자 선택]` 지도의 단추(＋ · 거리 눈금 · － · 모든 일정 보기 · 내 위치)는 세 지도(무료·구글·네이버) 모두 이 화면이 같은 모양으로 그린다. 옛 Leaflet 확대·축소 묶음과 따로 두던 「모든 일정 보기」는 없앴다.
+ * `[2026-10-03 사용자 지시]` 평소에는 지도를 가리지 않는다 — 지도 위에 포인터가 있거나(`:hover`) 막 눌렀을 때(`data-awake`, 몇 초) 또는 키보드 초점이 그 안에 있을 때만 보인다. 접은 탭은 흐리게 늘 남아 다시 펼칠 수 있다.
+ * 높이가 넉넉하면 세로로, 목록 창을 크게 열어 지도가 낮으면 같은 단추가 가로 한 줄로 펼쳐진다(`data-layout`).
+ */
+.controls { position: absolute; right: var(--map-chrome-inset, 12px); z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.controls[data-layout="row"] { flex-direction: row-reverse; }
+/* `[2026-10-22 사용자 지시 — ST4F-721]` 「내 위치로」는 접는 묶음 밖에서 지도 오른쪽 아래(시트 위)에 늘 보인다. 지도가 낮으면 접기 탭 왼쪽에 선다(`locatePlace`). */
+.locate { position: absolute; right: var(--map-chrome-inset, 12px); z-index: 5; display: flex; }
+.live:hover .controls, .live:focus-within .controls, .live[data-awake] .controls { opacity: 1; pointer-events: auto; }
+.controls[data-folded] { opacity: .7; pointer-events: auto; }
+.round, .fold {
+  display: grid; place-items: center; padding: 0; cursor: pointer; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 20%, transparent);
+}
+.round { width: 44px; height: 44px; border-radius: 50%; }
+.round:hover, .fold:hover { background: var(--color-soft); }
+.round[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.fold { width: 28px; height: 28px; border-radius: 50%; }
+.round:focus-visible, .fold:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* The scale ruler between ＋ and －: a bar as long as the distance written under it. */
+.scale { display: grid; justify-items: center; align-content: center; gap: 2px; min-width: 40px; padding: 4px 3px; border-radius: 12px; background: color-mix(in srgb, var(--color-surface) 90%, transparent); color: var(--color-text-secondary); font-size: 10.5px; font-weight: 750; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.scaleBar { display: block; height: 5px; border: 2px solid var(--color-text-secondary); border-top: 0; }
+.controls[data-layout="row"] .scale { min-width: 52px; }
+/* A stop out of view: a chip at the edge of the map pointing at it, with how far it is (stops close together share one). */
+.edgeChip {
+  position: absolute; z-index: 4; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 4px; max-width: 150px; min-height: 34px; padding: 5px 7px; cursor: pointer;
+  /* `[2026-10-21 사용자 결정 — 목업 tripilot-map-edge-chip-dark.html]` 테두리는 눌린 핀과 같은 초록(--color-selected) — 다크에서 흰 테두리였다 */
+  border: 1.5px solid var(--color-selected); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: 800 12px/1 system-ui, sans-serif; white-space: nowrap;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 22%, transparent);
+}
+.edgeChip small { font-size: 10.5px; font-weight: 700; color: var(--color-muted); }
+.edgeChip:hover { background: var(--color-soft); }
+.edgeChip:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .controls { transition: none; } }
+/* A global .01ms duration still starts a CSS transition on SDK coordinates for one frame.
+   Geographic positions must jump atomically with edge-chip visibility in reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .canvas :global(.leaflet-container), .canvas :global(.leaflet-container *) { transition: none !important; animation: none !important; }
+}
+/* `[2026-10-17 ST4F-610]` 다크: 밝은 무료 지도(OSM 타일 층)만 어둡게 뒤집는다 — 핀 · 경로선 · 내 위치는 다른 층이라 색이 그대로다.
+   구글 · 네이버 지도는 그리는 방식이 달라 아직 밝은 그대로다. */
+:global(:root[data-theme="dark"]) .canvas :global(.leaflet-tile-pane) { filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.9) saturate(.5); }
+:global(:root[data-theme="dark"]) .canvas :global(.leaflet-container) { background: var(--color-background); }
+
+/* 조작 중에는 지도 도구가 잠시 물러나고 멈춘 뒤 돌아온다. */
+.live .controls { opacity: 1; pointer-events: auto; transform: translateY(0); transition: opacity 200ms ease-out, transform 200ms ease-out; }
+.live[data-moving] .controls { opacity: 0; transform: translateY(-4px); pointer-events: none; transition-duration: 150ms; }
+.controls[data-folded] { flex-direction: column; gap: 4px; }
+.fold { width: 44px; min-width: 44px; max-width: 44px; height: 40px; display: block; padding: 0; border-radius: 999px; background: color-mix(in srgb, var(--color-surface) 92%, transparent); }
+.scaleValue { position: absolute; left: 0; right: 0; top: 7px; text-align: center; font-size: 10px; line-height: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.foldArrow { position: absolute; left: 50%; top: 28px; width: 14px; height: 14px; display: grid; place-items: center; transform: translate(-50%, -50%) rotate(180deg); transition: transform 200ms ease-out; }
+.fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%); }
+.controls[data-direction="column"] .foldArrow { transform: translate(-50%, -50%) rotate(90deg); }
+.controls[data-direction="column"] .fold[aria-expanded="true"] .foldArrow { transform: translate(-50%, -50%) rotate(270deg); }
+@media (prefers-reduced-motion: reduce) { .foldArrow { transition: none; } }
+/* `[2026-10-21 사용자 결정 — B안]` 번호는 칩의 다른 글자와 같은 색 · 바탕 없음 — 다크에서 검정 바탕(#202020) 위 검정 글자(--color-on-primary #0d1712, 대비 1.1 : 1)라 안 읽혔다 */
+.edgeNumbers { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: transparent; color: var(--color-text); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.edgeChip small { margin-left: 3px; padding-left: 7px; border-left: 1px solid var(--color-border-strong); font-size: 11px; font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .live .controls { transition: none; transform: none; } }
+
+.round, .fold { position: relative; }
+.toolTip { position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); padding: 6px 9px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text); font-size: 11px; line-height: 1.5; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 150ms ease-out; }
+.round:hover .toolTip, .round:focus-visible .toolTip, .fold:hover .toolTip, .fold:focus-visible .toolTip { opacity: 1; visibility: visible; }
+.controls[data-layout="row"] .toolTip { right: 0; top: calc(100% + 8px); transform: none; }
+@media (prefers-reduced-motion: reduce) { .toolTip { transition: none; } }
+
+@media (prefers-reduced-motion: reduce) { .live[data-moving] .controls { transform: none; } }
+
+/* Read toward the offscreen destination on either half of the map. */
+.edgeChip[data-side="left"] { flex-direction: row-reverse; }
+.edgeChip[data-side="left"] small { margin-left: 0; padding-left: 0; border-left: 0; margin-right: 3px; padding-right: 7px; border-right: 1px solid var(--color-border-strong); }
+/* 공개 중 작은 지도에서도 개별 번호와 방향은 남기고, 거리는 단추 안내에 보존한다. */
+.edgeChip[data-crowded] { box-sizing: border-box; width: 44px; min-width: 44px; min-height: 36px; padding: 3px; gap: 2px; justify-content: center; }
+.edgeChip[data-crowded] > svg { flex: none; width: 10px; height: 10px; }
+.edgeChip[data-crowded] .edgeNumbers { min-width: 20px; padding: 0; }
+.edgeChip[data-crowded] small { display: none; }

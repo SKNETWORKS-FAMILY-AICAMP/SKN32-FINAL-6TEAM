@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-09T13:50:23.704112+09:00",
+  "matching_hashes": 308,
+  "total_hashes": 308,
+  "matching_backups": 12,
+  "total_backups": 12,
+  "tests": 467,
+  "new_tests": 26,
+  "controlled_replays": 16,
+  "published_matched_minutes": 682,
+  "excluded_boarding_rows": 104,
+  "other_timetable_groups_unchanged": 1746,
+  "browser_rendered": false,
+  "full_feature_completion": false
+}

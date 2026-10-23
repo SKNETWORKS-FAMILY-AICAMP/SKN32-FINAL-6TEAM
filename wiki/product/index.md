@@ -1,60 +1,36 @@
 ---
 type: guide
-title: Product
-description: 무엇을 만들고 누구를 위한 것인가. 제품 정의·페인포인트·페르소나·범위·용어
+title: 여행 제품 안내
+description: 현재 제품의 목적·범위·이용 주체 문서 목차
 status: draft
 domain: travel
 ---
 
-# Product
+# 여행 제품 안내
 
-"이게 왜 필요한가"에 답해야 할 때 여기부터 본다.
+현재 제품 목적·범위·이용 주체를 찾는 입구입니다. 확정 결정·계약과 실제 구현 상태를 구분하며 과거 상용 CS 자료를 현재 근거로 사용하지 않습니다.
 
-★**[2026-09-08] 도메인이 여행으로 바뀌었다.** `[실측 2026-09-10]` 이 영역의 **scope·positioning·problem·personas 넷은 여행으로 다시 썼다.** `pitch-questions`·`glossary`는 **아직 쇼핑몰 CS 기준**이다 — 제품 정의는 계획서 v11 §0-1·§1·§2를 먼저 본다. 낡은 문서를 지우지 않는 이유는 그 시점 판단의 근거라서다.
+- [문제와 검증 범위](problem.md) — 해결하려는 여행 문제
+- [이용 주체](personas.md) — 여행 고객·개인 AI·자동 처리·개발자·QA
+- [제품 범위](scope.md) — 에이전트 팀과 후속 변경 확인 방법
+- [포지셔닝](positioning.md) — 검증·지속 관리의 가치
+- [용어](glossary.md)·[여행자 프로필](traveler-profile.md) — 정확한 이름·입력 조건
+- [검토 질문](pitch-questions.md)·[평가 안내](../evaluation/index.md) — 주장과 증거
 
-## 읽기 순서
+## 과거 기록
 
-1. [positioning.md](positioning.md) — 무엇을 팔고 무엇을 팔지 않는가
-2. [problem.md](problem.md) — 누가 무엇 때문에 괴로운가
-3. [personas.md](personas.md) — 그 사람들이 누구인가
-4. [scope.md](scope.md) — **여행 MVP 7주에 무엇까지 하는가** (이 영역에서 유일하게 여행으로 갱신된 문서)
-5. [traveler-profile.md](traveler-profile.md) — **여행자에게 무엇을 물어보는가.** 항목마다 데이터가 실제로 오는지 불러서 확인한 기록
-6. [glossary.md](glossary.md) — 용어
+[수정 전 문서](../records/commerce_2026-10-11/wiki--product--index.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
-## 각 문서
+## 관계
 
-| 문서 | 답하는 질문 |
-|---|---|
-| [positioning.md](positioning.md) | 시장의 기존 제품과 무엇이 다른가 |
-| [problem.md](problem.md) | 지금 사람들이 어떻게 버티고 있는가 |
-| [personas.md](personas.md) | 누가 쓰고 **누가 돈을 내는가** |
-| [scope.md](scope.md) | 무엇을 안 하는가 |
-| [traveler-profile.md](traveler-profile.md) | 여행자 프로필로 무엇을 받고 무엇을 안 받는가. 왜 알러지·유모차를 안 받는가 |
-| [glossary.md](glossary.md) | Case·Team·Capability·Action이 각각 무엇인가 |
+- [여행 사양 허브](../index.md) — 현재 정본을 찾는 입구
 
-## 한 문장
 
-> 멀티에이전트를 **동작하게** 만드는 건 어렵지 않다. **믿을 수 있게** 만드는 게 어렵다.
+## 이전 절 링크
 
-이 문장은 도메인이 바뀌어도 그대로다. 우리가 파는 것은 새 모델도 새 RAG도 아니고 **검증·감시층**이다. 여행에서는 그것이 "외부가 만든 일정이 현실에서 성립하는지 확인하고, 여행이 끝날 때까지 변화를 먼저 잡는 것"이 된다(v11 §0-1).
-
-## 이 영역이 정하는 것
-
-여기서 정한 것이 다른 영역을 구속한다.
-
-| 여기서 정하면 | 저기가 따라온다 |
-|---|---|
-| 자동화율을 앞세우지 않는다 | [../business/pricing.md](../business/pricing.md) 가격 논거가 오류 비용이 된다 |
-| human-on-the-loop | [../../../final_project_cs/wiki/actions/index.md](../../final_project_cs/wiki/actions/index.md) 승인 경계 |
-| 도메인 팩 교체 가능 | [../architecture/pack-model.md](../architecture/pack-model.md) |
-| 페르소나 3인 | [../evaluation/golden-set.md](../evaluation/golden-set.md) 골든셋 구성 — `[실측]` 지금 골든셋 72건은 쇼핑몰이라 교체 대상 |
-
-## 인접 영역
-
-- [../business/index.md](../business/index.md) — 이 제품이 얼마짜리인가
-- [../architecture/index.md](../architecture/index.md) — 어떻게 나눠 만드는가
-- [../decisions/index.md](../decisions/index.md) — 제품 결정의 이유
-- [pitch-questions.md](pitch-questions.md) — 심사에서 물어볼 다섯 가지와 답
-
-- [vision-backlog.md](vision-backlog.md) — **지금은 안 하는 것들.** 항목마다 관측 가능한 도입 트리거가 붙어 있다
-
+<a id="product"></a>
+<a id="읽기-순서"></a>
+<a id="각-문서"></a>
+<a id="한-문장"></a>
+<a id="이-영역이-정하는-것"></a>
+<a id="인접-영역"></a>

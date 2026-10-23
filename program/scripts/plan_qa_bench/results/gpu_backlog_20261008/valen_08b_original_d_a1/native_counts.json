@@ -1,0 +1,286 @@
+{
+  "model": "Valen-0.8B original native choice head",
+  "our_training": false,
+  "publisher_training": "Developer decision SFT",
+  "expected": 2735,
+  "saved": 2735,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "full": {
+    "total": 2735,
+    "correct": 564,
+    "false_pick": 1776,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.1914699400272919,
+      0.22178561924412676
+    ],
+    "false_pick_wilson95": [
+      0.6312788706869784,
+      0.6670224411208941
+    ]
+  },
+  "positive": {
+    "total": 883,
+    "correct": 531,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.568692701595927,
+      0.6331472081417514
+    ],
+    "false_pick_wilson95": [
+      0.0,
+      0.004331618444859839
+    ]
+  },
+  "negative": {
+    "total": 1786,
+    "correct": 10,
+    "false_pick": 1776,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.0030441697380158826,
+      0.010276260796877967
+    ],
+    "false_pick_wilson95": [
+      0.9897237392031221,
+      0.9969558302619842
+    ]
+  },
+  "single_expected": 2669,
+  "compound_diagnostic_only": 66,
+  "subtypes": {
+    "absent_but_plausible": {
+      "total": 78,
+      "correct": 0,
+      "false_pick": 78,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.04693780971219429
+      ],
+      "false_pick_wilson95": [
+        0.9530621902878059,
+        1.0
+      ]
+    },
+    "change_request": {
+      "total": 79,
+      "correct": 34,
+      "false_pick": 15,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.3269382343461824,
+        0.5402780103144904
+      ],
+      "false_pick_wilson95": [
+        0.11858230779759438,
+        0.2899264184181298
+      ]
+    },
+    "chitchat": {
+      "total": 1300,
+      "correct": 0,
+      "false_pick": 1300,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.002946262212101055
+      ],
+      "false_pick_wilson95": [
+        0.9970537377878989,
+        0.9999999999999999
+      ]
+    },
+    "compound_intent": {
+      "total": 66,
+      "correct": 23,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.2447587406192953,
+        0.4688783978696565
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05500255701354129
+      ]
+    },
+    "confusable_name": {
+      "total": 77,
+      "correct": 61,
+      "false_pick": 13,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6887958540760097,
+        0.8678492220576328
+      ],
+      "false_pick_wilson95": [
+        0.10140668708276009,
+        0.2677288932991118
+      ]
+    },
+    "context_pronoun": {
+      "total": 71,
+      "correct": 50,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5898146180172532,
+        0.7976711479868337
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05132795219689034
+      ]
+    },
+    "duplicate_place": {
+      "total": 79,
+      "correct": 55,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.5876533928859551,
+        0.7865553721612399
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04637121165392266
+      ]
+    },
+    "nameless_description": {
+      "total": 75,
+      "correct": 25,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.23708220863575521,
+        0.4458257388585134
+      ],
+      "false_pick_wilson95": [
+        3.469446951953614e-18,
+        0.04872384248280587
+      ]
+    },
+    "negation": {
+      "total": 72,
+      "correct": 11,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.08750708729475694,
+        0.25322289367500544
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.05065117259645781
+      ]
+    },
+    "ordinal_relative": {
+      "total": 80,
+      "correct": 21,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.1785740148850936,
+        0.36818959664428175
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.0458181295355271
+      ]
+    },
+    "out_of_scope": {
+      "total": 80,
+      "correct": 0,
+      "false_pick": 80,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.0,
+        0.0458181295355271
+      ],
+      "false_pick_wilson95": [
+        0.9541818704644728,
+        0.9999999999999999
+      ]
+    },
+    "tourist_synth_in": {
+      "total": 300,
+      "correct": 210,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6458824752950584,
+        0.749060336215123
+      ],
+      "false_pick_wilson95": [
+        8.673617379884035e-19,
+        0.012642971224546034
+      ]
+    },
+    "tourist_synth_out": {
+      "total": 300,
+      "correct": 10,
+      "false_pick": 290,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.01820494733885481,
+        0.06026182580405482
+      ],
+      "false_pick_wilson95": [
+        0.9397381741959452,
+        0.9817950526611452
+      ]
+    },
+    "typo_slang": {
+      "total": 78,
+      "correct": 64,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7209764606558008,
+        0.8899608408107412
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.04693780971219429
+      ]
+    }
+  },
+  "prompt_sha256": "c9e6e83d81fd55f0e2ae42dfcc535f5bbc285f928b61f77dcf5bee118ff6aee2",
+  "answer_sha256": "4f94ddb159b82fd3d988c01fa630cd8e2723961b9b94db8f19e936a07b5dec65",
+  "probability_kind": "Native choice head normalized candidate probability; not next token, verbal certainty or JSON output",
+  "original_content_contract_checked": true,
+  "execution": {
+    "job": {
+      "id": "valen_08b_original_d_a1",
+      "tag": "valen_08b_original_d_a1",
+      "suite": "d",
+      "label": "Valen-0.8B native decision head publisher original",
+      "our_training": false,
+      "publisher_training": "Developer full decision SFT on Qwen3.5-0.8B",
+      "model": "/tmp/tripilot-valen-20261009/smoke_verified_model.safetensors",
+      "model_sha256": "465714dd28702c4232d9233c2a2157d366967c541b2a27d9dadccc816304fd48",
+      "model_revision": "3bf3e6d6318385884bf85e38dea1ca59afdf93f1",
+      "prompts": "/tmp/tripilot-valen-20261009/prompts/d.json",
+      "prompt_sha256": "c9e6e83d81fd55f0e2ae42dfcc535f5bbc285f928b61f77dcf5bee118ff6aee2",
+      "expected": 2735,
+      "script": "/tmp/tripilot-valen-20261009/valen_native_eval_20261009_v2.py",
+      "runner_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+      "port": 8401,
+      "logprobs": "0",
+      "output_contract": "Native choice-head distribution; parsed validates API, content holds native response",
+      "dependency": "/tmp/tripilot-valen-20261009/SMOKE_PASS.json",
+      "automatic_retry": false,
+      "purpose": "Frozen original travel regression; not holdout or adoption",
+      "smoke_gate_attempt": "a2"
+    },
+    "started": "2026-10-09T02:04:30.781680+00:00",
+    "prompt_sha256": "c9e6e83d81fd55f0e2ae42dfcc535f5bbc285f928b61f77dcf5bee118ff6aee2",
+    "script_sha256": "86e3aee0a18900fa32f46cdaaefdea2f26462b70ea5a83a6a292406a481b8541",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

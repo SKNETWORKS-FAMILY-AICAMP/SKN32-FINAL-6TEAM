@@ -1,0 +1,45 @@
+
+#0 building with "default" instance using docker driver
+
+#1 [internal] load remote build context
+#1 CACHED
+
+#2 copy /context /
+#2 WARN: InvalidDefaultArgInFrom: Default value for ARG ${BASE_IMAGE} results in empty or invalid base image name (line 2)
+#2 CACHED
+
+#3 [internal] load metadata for docker.io/library/tripilot-api:d4895eefda
+#3 DONE 0.0s
+
+#4 [1/4] FROM docker.io/library/tripilot-api:d4895eefda@sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294
+#4 resolve docker.io/library/tripilot-api:d4895eefda@sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294 0.0s done
+#4 DONE 0.0s
+
+#4 [1/4] FROM docker.io/library/tripilot-api:d4895eefda@sha256:1f1c6850f3570dc8694629e2a4cab7c36c7e86097a5e1b8b54a736a25a7ea294
+#4 CACHED
+
+#5 [2/4] COPY release-overlay/ /srv/
+#5 DONE 0.1s
+
+#6 [3/4] COPY public-assets/tokenizer/9b5ad71b2ce5302211f9c61530b329a4922fc6a4 /opt/tripilot/tokenizer-cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4
+#6 DONE 0.1s
+
+#7 [4/4] RUN python -B -c "import hashlib,pathlib,os; p=pathlib.Path('/opt/tripilot/tokenizer-cache/9b5ad71b2ce5302211f9c61530b329a4922fc6a4'); assert hashlib.sha256(p.read_bytes()).hexdigest()=='223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7'; os.chmod(p,0o444); os.chmod(p.parent,0o555); import tiktoken; assert len(tiktoken.get_encoding('cl100k_base').encode('Seoul travel'))>0"
+#7 DONE 0.5s
+
+#8 exporting to image
+#8 exporting layers
+#8 exporting layers 0.2s done
+#8 exporting manifest sha256:e58494336dd77ad9e392d6e726ddd7222ef98e9d046a2985990b1667a3696e58 0.0s done
+#8 exporting config sha256:2a14964b6423a7e3d9a239fa9b43b6fa2d63386dade91d531b140799875c4c18 0.0s done
+#8 exporting attestation manifest sha256:2d9d513ffe6e6c216730524d9f8d471e1d2af20f66326929ac23259b071d4573 0.0s done
+#8 exporting manifest list sha256:9f14e94f2f0acfee4a20a8dde2fac6d9d2f154be69cccf7f9b98b6368e574bed 0.0s done
+#8 naming to docker.io/library/tripilot-plugin-validated:20261012-001923-v9
+#8 naming to docker.io/library/tripilot-plugin-validated:20261012-001923-v9 done
+#8 unpacking to docker.io/library/tripilot-plugin-validated:20261012-001923-v9 0.1s done
+#8 DONE 0.5s
+
+ 1 warning found (use docker --debug to expand):
+ - InvalidDefaultArgInFrom: Default value for ARG ${BASE_IMAGE} results in empty or invalid base image name (line 2)
+
+ISOLATED_IMAGE_BUILD {"operating_service_modified": false, "operating_database_connected": false, "operating_volumes_connected": false, "operating_environment_forwarded": false, "package_install": false, "image_pull": false, "build_network": "none", "image_id": "sha256:9f14e94f2f0acfee4a20a8dde2fac6d9d2f154be69cccf7f9b98b6368e574bed", "inherited_config_matches": {"Entrypoint": true, "Cmd": true, "WorkingDir": true, "User": true, "Volumes": true}, "inherited_environment_matches": true, "runtime_hash_verification": {"verified_runtime_files": 51, "packages": {"fastapi": "0.116.1", "pydantic": "2.13.4", "psycopg": "3.3.4", "httpx": "0.28.1", "PyYAML": "6.0.2", "uvicorn": "0.35.0", "starlette": "0.47.3", "pytest": "8.4.2"}}, "offline_tokenizer_smoke": {"public_asset_sha256": "223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7", "token_counts": [8, 4, 3], "network_attempts": 0, "read_only_cache": true, "cache_file_bytes": 1681126, "package_install": false, "model_calls": 0}, "public_assets": 1, "success": true}

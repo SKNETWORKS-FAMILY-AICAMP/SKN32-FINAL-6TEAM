@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/scenario/test_trip_reminders.py::test_windows_follow_the_first_item_and_each_move",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest_late_legacy",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_0317_\ubbf8\ubc1c\ud589\ucd9c\ubc1c_\uc9c0\uc5f0\ubcf5\uad6c\\legacy-window-v1.xml"
+  ],
+  "returncode": 0
+}

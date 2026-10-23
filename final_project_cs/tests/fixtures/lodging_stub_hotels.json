@@ -1,0 +1,51 @@
+{
+ "about": "웹 채팅 숙소 바꾸기 e2e 시험(tests/e2e/test_chat_lodging_web.py)의 mock 숙소 자료 — 시험용으로 지은 이름이다. 좌표는 서울 명동 부근 값(소수 셋째 자리까지), 1박 가격은 2026-10-15 웹 검색 결과에 보인 값을 원으로 바꾼 대략값이다. 실제 업체 이름 · 카카오 결과는 저장소에 두지 않는다(카카오 결과를 쌓지 말라는 약관 메모 — ports/data_sources/kakao_local.py). 그 실호출 근거는 git 밖 datasets/core/chat_probe/2026-10-15_chat_edit_lodging/ 에 있다.",
+ "hotels": [
+  {
+   "name": "시험 숙소 A",
+   "address": "서울 중구 (시험 주소)",
+   "latitude": 37.564,
+   "longitude": 126.986,
+   "price_per_night_krw": null,
+   "test_gid": 990001,
+   "role": "original"
+  },
+  {
+   "name": "시험 숙소 B",
+   "address": "서울 중구 (시험 주소)",
+   "latitude": 37.567,
+   "longitude": 126.988,
+   "price_per_night_krw": 121000,
+   "test_gid": 990002,
+   "role": "candidate"
+  },
+  {
+   "name": "시험 숙소 C",
+   "address": "서울 중구 (시험 주소)",
+   "latitude": 37.564,
+   "longitude": 126.983,
+   "price_per_night_krw": 139000,
+   "test_gid": 990003,
+   "role": "candidate"
+  },
+  {
+   "name": "시험 숙소 D",
+   "address": "서울 중구 (시험 주소)",
+   "latitude": 37.561,
+   "longitude": 126.987,
+   "price_per_night_krw": 223000,
+   "test_gid": 990004,
+   "role": "candidate"
+  },
+  {
+   "name": "시험 숙소 E",
+   "address": "서울 중구 (시험 주소)",
+   "latitude": 37.56,
+   "longitude": 126.985,
+   "price_per_night_krw": null,
+   "test_gid": 990005,
+   "role": "no_price"
+  }
+ ],
+ "fetched_at": "2026-10-15T00:34:01+09:00"
+}

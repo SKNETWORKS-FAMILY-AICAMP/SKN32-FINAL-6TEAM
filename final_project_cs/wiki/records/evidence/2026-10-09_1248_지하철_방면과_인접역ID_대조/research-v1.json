@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-09T13:06:51.963247+09:00",
+  "cutoff": "2026-10-09",
+  "sources": [
+    {
+      "url": "https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-12764&srvType=A",
+      "finding": "trainLineNm은 도착지/다음역 방면이며 역ID·종착ID·열차종류는 별도 필드. 실제 원문의 방면과 F/Tid 불일치를 분리 확인."
+    },
+    {
+      "url": "https://www.airportrailroad.com/train/normal/info/030/0",
+      "finding": "공항철도 공식 홍대입구 페이지는 같은 종착을 서울역 방면과 서울(일반열차)로 표기. 정확 이름1쌍을 공식 서울ID에 대응."
+    }
+  ],
+  "method": "관측 식별 계약·공식 이름 대응 수정. 예측 알고리즘이나 논문 계수 보정은 적용하지 않음."
+}

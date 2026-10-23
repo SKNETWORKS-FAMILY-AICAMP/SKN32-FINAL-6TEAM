@@ -1,0 +1,147 @@
+{
+  "created_at": "2026-10-09T03:14:37.106156+09:00",
+  "start": [
+    126.81659695671017,
+    37.56103677313472
+  ],
+  "end": [
+    126.81649055992263,
+    37.561935578472514
+  ],
+  "repeats": [
+    {
+      "distance_m": 98.29,
+      "model_seconds": 9.175,
+      "snap_m": [
+        8.8,
+        0.0
+      ],
+      "quality": {
+        "access_max_m": 8.8,
+        "arterial_pct": 0.0,
+        "optimistic": false
+      },
+      "turns": {
+        "status": "partial_static_motorcar",
+        "applied_relations": 2487,
+        "source_relations": 6258,
+        "excluded_candidate_relations": 6,
+        "complete_road_rules": false,
+        "arc_codes": [
+          187112,
+          187174
+        ],
+        "search_cost_seconds": 9.175276625678396,
+        "snap_selection": {
+          "candidate_counts": [
+            2,
+            2
+          ],
+          "selected_candidate_ranks": [
+            1,
+            0
+          ],
+          "used_non_nearest": [
+            true,
+            false
+          ],
+          "nearest_snap_m": [
+            0.0,
+            0.0
+          ],
+          "physical_access_verified": false
+        }
+      }
+    },
+    {
+      "distance_m": 98.29,
+      "model_seconds": 9.175,
+      "snap_m": [
+        8.8,
+        0.0
+      ],
+      "quality": {
+        "access_max_m": 8.8,
+        "arterial_pct": 0.0,
+        "optimistic": false
+      },
+      "turns": {
+        "status": "partial_static_motorcar",
+        "applied_relations": 2487,
+        "source_relations": 6258,
+        "excluded_candidate_relations": 6,
+        "complete_road_rules": false,
+        "arc_codes": [
+          187112,
+          187174
+        ],
+        "search_cost_seconds": 9.175276625678396,
+        "snap_selection": {
+          "candidate_counts": [
+            2,
+            2
+          ],
+          "selected_candidate_ranks": [
+            1,
+            0
+          ],
+          "used_non_nearest": [
+            true,
+            false
+          ],
+          "nearest_snap_m": [
+            0.0,
+            0.0
+          ],
+          "physical_access_verified": false
+        }
+      }
+    },
+    {
+      "distance_m": 98.29,
+      "model_seconds": 9.175,
+      "snap_m": [
+        8.8,
+        0.0
+      ],
+      "quality": {
+        "access_max_m": 8.8,
+        "arterial_pct": 0.0,
+        "optimistic": false
+      },
+      "turns": {
+        "status": "partial_static_motorcar",
+        "applied_relations": 2487,
+        "source_relations": 6258,
+        "excluded_candidate_relations": 6,
+        "complete_road_rules": false,
+        "arc_codes": [
+          187112,
+          187174
+        ],
+        "search_cost_seconds": 9.175276625678396,
+        "snap_selection": {
+          "candidate_counts": [
+            2,
+            2
+          ],
+          "selected_candidate_ranks": [
+            1,
+            0
+          ],
+          "used_non_nearest": [
+            true,
+            false
+          ],
+          "nearest_snap_m": [
+            0.0,
+            0.0
+          ],
+          "physical_access_verified": false
+        }
+      }
+    }
+  ],
+  "api_calls": 0,
+  "scope": "수정 후 실제 그래프 단독 적재; 동일 개발 좌표쌍 3회; 웹 도로·시각 정렬 안 됨"
+}

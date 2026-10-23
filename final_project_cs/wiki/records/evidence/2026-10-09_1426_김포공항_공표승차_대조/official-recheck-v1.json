@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-10-09T21:09:47.029553+09:00",
+  "source_url": "https://www.airportrailroad.com/train/normal/info/050",
+  "fresh_fact_sha256": "1ac098d3ab00577d1afb720a733522f08df538cd20f06d810246c26a83a446e3",
+  "tables_matched": 4,
+  "tables_total": 4,
+  "minutes_matched": 680,
+  "minutes_total": 680,
+  "original_facts_match": true,
+  "published_data_match": true,
+  "web_method": "공식 URL 직접 열기는 실패했고 검색 참조로 같은 공식 페이지를 열어 4개 표 전체 숫자를 재확인함.",
+  "limited_api_calls": 0,
+  "quota_usage": "공유 누적 사용량을 확인하지 않았으므로 제한 있는 API를 호출하지 않음."
+}

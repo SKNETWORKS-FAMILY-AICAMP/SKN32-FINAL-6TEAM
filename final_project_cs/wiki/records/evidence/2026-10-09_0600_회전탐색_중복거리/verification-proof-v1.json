@@ -1,0 +1,262 @@
+{
+  "created_at": "2026-10-09T06:09:01.792928+09:00",
+  "report": "2026-10-09_0609_차량_회전탐색_거리재사용_대조검증.md",
+  "benchmark": {
+    "runtime_construction_seconds": 18.320433500004583,
+    "cold_baseline_plan_seconds": 20.77283929999976,
+    "warmup_optimized_seconds": 1.9028327999985777,
+    "rows": [
+      {
+        "pair": 1,
+        "variant": "baseline",
+        "seconds": 2.5814136999979382,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 1,
+        "variant": "optimized",
+        "seconds": 1.9526897000032477,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 2,
+        "variant": "baseline",
+        "seconds": 2.5884583000006387,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 2,
+        "variant": "optimized",
+        "seconds": 2.0630738000036217,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 3,
+        "variant": "baseline",
+        "seconds": 3.19354549999116,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 3,
+        "variant": "optimized",
+        "seconds": 1.9184617999999318,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 4,
+        "variant": "baseline",
+        "seconds": 2.683264000006602,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 4,
+        "variant": "optimized",
+        "seconds": 1.848322999998345,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 5,
+        "variant": "baseline",
+        "seconds": 2.6759931999986293,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 5,
+        "variant": "optimized",
+        "seconds": 1.9777291000063997,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 6,
+        "variant": "baseline",
+        "seconds": 4.677646399999503,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      },
+      {
+        "pair": 6,
+        "variant": "optimized",
+        "seconds": 3.3461899000103585,
+        "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450"
+      }
+    ],
+    "pairs": 6,
+    "baseline": {
+      "mean": 3.066720183332412,
+      "median": 2.6796286000026157,
+      "min": 2.5814136999979382,
+      "max": 4.677646399999503,
+      "stdev": 0.8215997770619686
+    },
+    "optimized": {
+      "mean": 2.1844112166703176,
+      "median": 1.9652094000048237,
+      "min": 1.848322999998345,
+      "max": 3.3461899000103585,
+      "stdev": 0.5735066203619442
+    },
+    "reduction_percent": 28.77044248958328,
+    "paired_bootstrap_95_percent_ci": [
+      24.171879435852162,
+      33.873165378318326
+    ],
+    "bootstrap_resamples": 20000,
+    "seed": 20261009,
+    "output_matches": 12,
+    "output_total": 12,
+    "output_sha256": "c00f080719903ce593f0612a94a4e0866382ec19e99499134d99907cbe147450",
+    "optimized_warm_profile": [
+      {
+        "file": "car_turn_search.py",
+        "line": 13,
+        "name": "pieces",
+        "calls": 5,
+        "own_seconds": 1.6498111000000002,
+        "cumulative_seconds": 6.8807203
+      },
+      {
+        "file": "car_turn_search.py",
+        "line": 17,
+        "name": "endpoints",
+        "calls": 96,
+        "own_seconds": 0.0002597,
+        "cumulative_seconds": 0.00037880000000000005
+      },
+      {
+        "file": "car.py",
+        "line": 50,
+        "name": "hav",
+        "calls": 629205,
+        "own_seconds": 1.9399121000000001,
+        "cumulative_seconds": 3.1028925000000003
+      },
+      {
+        "file": "car_turn_search.py",
+        "line": 63,
+        "name": "<genexpr>",
+        "calls": 680543,
+        "own_seconds": 0.3330035,
+        "cumulative_seconds": 3.1449373
+      },
+      {
+        "file": "car_turn_search.py",
+        "line": 57,
+        "name": "heuristic",
+        "calls": 251061,
+        "own_seconds": 0.2807219,
+        "cumulative_seconds": 3.7329481
+      }
+    ],
+    "caveat": "고정 개발 입력·같은 프로세스의 준비된 자료. 실제 HTTP·독립 웹·탑승 결제 측정 아님",
+    "excluded_wallclock_fields": [
+      "basis.decided_at",
+      "items[].detail.departure_context.captured_at"
+    ],
+    "start_hash_count": 76,
+    "end_hash_matches": 76
+  },
+  "tests": {
+    "passed": 64,
+    "total": 64,
+    "parts": [
+      {
+        "name": "turn-cache-tests-v2",
+        "passed": 52,
+        "total": 52,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "turn-cache-taxi-tests-v1",
+        "passed": 12,
+        "total": 12,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "benchmark_source_data_hashes": {
+    "datasets/mobility/processed/mobility/road_graph_v2/edges.jsonl.gz": "91244cde062e444355bcb8e16c31653c313ca83cf9ad911703636ed8d9a022bb",
+    "datasets/mobility/processed/mobility/road_graph_v2/MANIFEST.json": "81b6f7f7664826b1e08d21fae2ca64b749821cb8a8961ea0642b190e53ad4dfd",
+    "datasets/mobility/processed/mobility/road_graph_v2/nodes.jsonl.gz": "f7f5b8ae55496b570806909158b1e5af46c519409444ebfbbf34879fa24e1b38",
+    "datasets/mobility/processed/mobility/road_graph_v2/turn_restrictions_v1.json": "0ec662912b8a8373fcea8a3d71096ef7ea950093df87780a85c7c7e54e56a10c",
+    "final_project_cs/app/domains/travel_ops/components/actions/itinerary_actions.py": "05db2ac83722aeca63aa134c7c30b51aa844dd21b89697c567968fc16e5167d9",
+    "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary.py": "634d14cb37f8714c08b3a768438421160ad5c15a3bd59b0892a6cb0c0f76b2a3",
+    "final_project_cs/app/domains/travel_ops/components/itinerary/itinerary_changes.py": "e8ebb982a96cdb2e72fc98b050cf9318159d2e00587f5d6ca83a3076680db51a",
+    "final_project_cs/app/domains/travel_ops/components/watch/departure_revalidation.py": "f023b1e9974994851693da8e12d146bd82887bcb8b8fd51619b1d8a7fae2863f",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_reminders.py": "2ce55016b35d05ca61d24c4fa31639caf177f017a6be5feb33554b30390772e4",
+    "final_project_cs/app/domains/travel_ops/components/watch/trip_watch_cases.py": "9113baf14d7ad3d0dc033e713ecdd557388ac280c261eb8bc81ebd4a817ef044",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/__init__.py": "267fe36a5319a62ef3902a5664ef661cedfef9a69bcaaaca629c6587c825efc5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0600_회전탐색_중복거리/car_turn_search.py": "99cff4d7f59ee9625b5f03fef9555a8c61726373a795e3b892a4e2529940889e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/adapter.py": "9b2b39c0c765c43a30527af38db718d642994615a50e51a716433b871fae6253",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bike.py": "ee97a0ffb7ef68ff74b19f8510363b77792909d7a7f18e0117848ce62d14d871",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus.py": "750a89399a5dfdcc84d9e8fb6468684932a4e3e68f3c22018329440ef49c28c4",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_identity.py": "c5ec2c9044609d768068dc91399289a36f28ebae34b94c8b3ab563e088d13fb9",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/bus_profile.py": "18a4298ed54f0e64c1e6d3fb78bf47e2af1a70fe5a95f7ecdcba57ad34853d87",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/candidates.py": "0f6bf95adc64af9c797d81be7b4480b0d8b9eef5059d367458140c7dc44d2496",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car.py": "c95f6088f56771fa94b61a60e0d1b1f90a8a64213b73d74247cb2dfd0ff0bf66",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_fixtures.py": "bfcdce00518e8aec0a5dc63cf36cd7b8a236395de358c60461bf62d76b375af0",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/car_turn_search.py": "5603573421001a92adc8c2e8244b01db49b93696c117222646035485c785e5f5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/congestion.py": "9a059d6d93f905b995919538784f8313a206d5379e37f373989490fb18fbd314",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/connectors.py": "7ec5eeb90eb13edfa05a7e03ade78292c33881ad2d5107960a9a42ca947b986e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/datacheck.py": "2729d4b4a5c2408cd863e444eaea5f2906032812f99960b17d0061d7230e78c6",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_context.py": "0fbf038e9b7fe584ee14318da16fb972c3e461a55b16447fc40a63271e5e5ba2",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py": "5eb3e55e212955c40f6e1d73cfdcc502268a2e5ff9394d22d83ba126fba7dcc9",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/errors.py": "bd7aa589e9417f6b2ea6cb9f6754c961f9c0f1b61a87d91303b746bc9fbe8a1a",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/exits.py": "cc2068c85b2b40cae263e2f59fa6c06978aa36e3e746ad617f9714b3963bb7b1",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/express.py": "6dbdbede71753f4a28fa8c766228092e6093a501ba76cbe436b06e65b90ec378",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/fold.py": "98938b3397328eb4a3c994d45846e9071a9f97aa3f9e4b1a92536d8a076c4156",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/geo.py": "df940f8a21efd4487839e0a5cee5deacb56041027d30199d6f11d57df84dff51",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/guardrails.py": "9c153447273208890906ea9e36b03ca6849298f62c9e666c9fabd689cbfddad8",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/line_order.py": "3c3819e9f0cddb542863fe2a32bc56d7514cd25b54f952650add9ca9b27e6abf",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/options.py": "6496ae2bb44b31f7601c37427678bdfe35e0d96da07189081dd7c761256c880e",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/paths.py": "c9256063c22fd9d9bbd54b7f5497f6d1a3f8fe3161afbd96e5df12498d282bdc",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py": "03411bb15f564384edb83a24948cca7ff8027a59556f1722c0c9fa2d5628feb9",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py": "d8693b7278c8ff957d3a575f058f97dd2a8a826f3daf796f27e53e992d9efa79",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/holidays_2026_2027.json": "b2539a7e6835bd6dd2ac3fef654d1c7f063305bbcdb9a17a7b2d4254ee67d8f4",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/metro_connectors_v1.json": "c47703c3cc1e62a311a2338550522470311b735ad1fb08413d49157bf47aec80",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.history.json": "7cb705a56d05fd7d59fa897d4796439411ffd4c726efa203d5408b89fd644279",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/rules_v0.3.json": "3bd0059c04e2b5591a27a3f10ef233995301d0937ad3ea1feb5db1434d5f6443",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/rules/special_rail_fares_v1.json": "5f487d3df34979ae54455f5dcc7f522e7eb1554e0800924d9b476a268480093d",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/runtime.py": "fcb88e9c62732bab6c408429fd811c02a92c278e55ecc83893d286cca78e9120",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/special_rail.py": "61a8580f62b22d874db74768f251b9a8406fc2fce811dfd40072be7e30710ea0",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/timeutil.py": "f41e35926e55b393bfb084d762b4e5718c99855fdada148d38b0ba6b7aaba36f",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/transfer_walk.py": "60d0e945a8650cebd08dcf48d17c1fb9231b26679dab968e03bdfe74d76c90a2",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/turn_restrictions.py": "5ed6abddfc65ef809ebff6d584ffc3dcd3aa49e5b29eb227b5f822626ede20e5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time.py": "814d646df4262f000ed993a328ca73a368bfa79c0382e6987c208dde0ece09be",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/engine/verify_time_cli.py": "bc996c0360ac6a0733e3d52d4f3cd1d57881d41a71777ccbe6ddd1381fa3a3b5",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/team.py": "bb4f52559af260f80cc18eb0c5f146f799a761286da220f72d892848435d686c",
+    "final_project_cs/app/domains/travel_ops/instances/mobility/wiring.py": "d0ed6dca374ad2e2d0c4fbc242a77e822fbaca4138976f468ba13ded763c0d67",
+    "final_project_cs/scripts/mobility/build_readiness_visual_v17.py": "00660f48ea73e845d67c32c7dbce259506a06d49e5078b8a29dc210985412c52",
+    "final_project_cs/scripts/mobility/build_readiness_visual_v18.py": "1ef94ed54585b88eec239167adb108695b14809784ddff6ff77c4547eb0ececd",
+    "final_project_cs/scripts/mobility/build_readiness_visual_v19.py": "3b201907031e4192fec7555aec4b15df789a638bac28e149d57fe102390eb90e",
+    "final_project_cs/scripts/mobility/build_readiness_visual_v20.py": "03b41a0afd6e66e16fa772d9786246e118f6e3c62ebafbeb4dcdacca84f0da65",
+    "final_project_cs/scripts/run_sweepers.py": "40bf018c8e66eb2539a1f113f85d83ed4168f825de8814116953b4b0cf0ba592",
+    "final_project_cs/tests/scenario/test_departure_assembly_db_v1.py": "47bbbd27b49c121f87cad8afad1246edb6d9144e33c96009cfff1f4c2d89099d",
+    "final_project_cs/tests/scenario/test_departure_atomic_choice_db_v1.py": "cde6addb720be0a12fddd8450a688dddd9f7a69bc7a5e257b1794877598de0f1",
+    "final_project_cs/tests/scenario/test_departure_atomic_db_v1.py": "63ce43c0aeb8893b4cf38ff9f8de8bbac538272119415753cecbdd29593ec817",
+    "final_project_cs/tests/scenario/test_departure_input_lock_db_v1.py": "f8e3445d4dfc7b61d715a0169f3f9d66263a2a398aafc0737d2791071c197e28",
+    "final_project_cs/tests/scenario/test_departure_input_race_db_v1.py": "eb66c26424c887739234b2b0450f995a19b6589264a1ca356500576b163ca646",
+    "final_project_cs/tests/scenario/test_departure_input_types_db_v1.py": "5927265be16d990a40b63c3f6055db0fbc2230d3b6971c8270053ebca40c1f22",
+    "final_project_cs/tests/scenario/test_departure_observer_reminders_v1.py": "1a68631e4ce4321c3b0f272dc8566284646c5a0a7f15fe76f9c6254d8fabada2",
+    "final_project_cs/tests/scenario/test_departure_party_db_v1.py": "137ebf768f1120027d74eaef466ada4a2464623e3553ac3a3d60202e782400a1",
+    "final_project_cs/tests/scenario/test_departure_walk_db_v1.py": "dbf5e95af5c932cf0b86fdac47cae050f151b6e4b4c3273a8db1e7e349d7a65c",
+    "final_project_cs/tests/scenario/test_departure_watch_db_v1.py": "c959813ee2861e2e9e7a24b280aa987432e13d01f6fe1ec6838e4c75b4206dc8",
+    "final_project_cs/tests/unit/travel/mobility/test_car_turn_restrictions_v1.py": "1c79505b9c5ab63f4092e6c71878b2b376b0294cde1722e4284a0d92274468b3",
+    "final_project_cs/tests/unit/travel/mobility/test_graph_router.py": "bc784b0d49d5adf4f3dd3d4a4762532e51d7c290243c997d1a510e8370817da2",
+    "final_project_cs/tests/unit/travel/mobility/test_plan_v1.py": "9bd0dd4f1dc5500c7b1a60ca400260b052750cc98fb1582bfaabd1fdf6b11369",
+    "final_project_cs/tests/unit/travel/mobility/test_taxi_fallback.py": "36d73a7d5f289f390a2ade53028ce90c5d58fbab7618d097f055c326f009706f",
+    "final_project_cs/tests/unit/travel/test_departure_assembly_v1.py": "5ab54fa53d8d065758c3c5b0aa70fcec3700c7b18bef47de17e2c805edf462e0",
+    "final_project_cs/tests/unit/travel/test_departure_party_v1.py": "14c5b1e34ab860cbdfcecb18f53b47e3e142ddf839380c1a0782f72ded18d99d",
+    "final_project_cs/tests/unit/travel/test_departure_replan_v1.py": "fcbf3a0bf991d4af5e7ae5549ef203e644319aff69b89a34ad619f7c123e3c95",
+    "final_project_cs/tests/unit/travel/test_departure_watch_assembly_v1.py": "4c00806e57858e6c42a6086ea047ac58ef741aac6e2f57e91e93e2736a129a23",
+    "final_project_cs/tests/unit/travel/test_departure_watch_v1.py": "f9db26e154c4ba2d74cbc054f468614f28e2f1256ac8fcbd539aff709c57a229"
+  },
+  "current_hash_matches": 76,
+  "independent_synthetic_route_pairs": 480,
+  "new_web_route_observations": 0,
+  "actual_trip_payment_measurements": 0,
+  "actual_cs_response_measured": false,
+  "html_browser_render_checked": false,
+  "generator_sha256": "ed6bb27ae7c0436d50afd921d3b8c143360f2e439518a85c06005862952ebf79"
+}

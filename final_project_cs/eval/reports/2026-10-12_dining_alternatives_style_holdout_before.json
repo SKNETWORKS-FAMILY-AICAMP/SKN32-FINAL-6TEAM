@@ -1,0 +1,121 @@
+{
+ "eval": "dining_alternatives",
+ "dataset": "dining_alternatives_style_holdout_v1.jsonl",
+ "dataset_sha": "6ff74995d2fa0ffc",
+ "label": "style-before",
+ "seeds": 5,
+ "mobility": false,
+ "env": {
+  "run_at": "2026-10-12T10:20:35+09:00",
+  "git_commit": "2caa12ca",
+  "git_branch": "role-dining",
+  "git_dirty": false
+ },
+ "summary": {
+  "accuracy": {
+   "num": 1,
+   "den": 4,
+   "rate": 0.25
+  },
+  "acceptable": {
+   "num": 4,
+   "den": 4,
+   "rate": 1.0
+  },
+  "violations": {
+   "num": 0,
+   "den": 4,
+   "rate": 0.0
+  },
+  "violations_any_seed": {
+   "num": 0,
+   "den": 4,
+   "rate": 0.0
+  },
+  "labels": {
+   "correct": 1,
+   "ok": 3,
+   "correct_no_change": 0,
+   "wrong_violation": 0,
+   "wrong": 0,
+   "missed": 0,
+   "wrong_change": 0,
+   "unstable": 0
+  },
+  "by_group": {
+   "style": {
+    "num": 1,
+    "den": 4,
+    "rate": 0.25
+   }
+  },
+  "added_walk_min_mean": 0.0,
+  "skipped": []
+ },
+ "results": [
+  {
+   "id": "DSH-001",
+   "group": "style",
+   "why": "냉면집(이름에 메뉴 말 없음) — 국물 · 카페보다 면",
+   "picked": "A",
+   "picked_name": "골목",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "ok"
+  },
+  {
+   "id": "DSH-002",
+   "group": "style",
+   "why": "초밥집 — 같은 일식 돈가스집보다 초밥집",
+   "picked": "A",
+   "picked_name": "오사카정",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "ok"
+  },
+  {
+   "id": "DSH-003",
+   "group": "style",
+   "why": "고깃집 — 가까운 한상차림 · 해산물보다 고깃집",
+   "picked": "A",
+   "picked_name": "소반",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "ok"
+  },
+  {
+   "id": "DSH-004",
+   "group": "style",
+   "why": "후보들의 결을 모르면 큰 분류로 — 가까운 중식보다 한식",
+   "picked": "A",
+   "picked_name": "마루",
+   "status": "changed",
+   "route": {
+    "late_arrival_min": 0,
+    "late_next_min": 0,
+    "planned_late_next_min": 0,
+    "added_walk_min": 0,
+    "violation": false
+   },
+   "label": "correct"
+  }
+ ]
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>guguroute 전체 구조 — 들어오는 세 길과 하나의 반영</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet"><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--paper:#fbfcfd;--paper-2:#f1f4f8;--ink:#161c28;--muted:#6b7488;--soft:#7a8599;--rule:rgba(22,28,40,.12);
+--accent:#a8720c;--accent-tint:rgba(168,114,12,.10);--link:#2f5bd8;
+--sans:'Geist','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;--serif:'Instrument Serif','Noto Serif KR',serif;--mono:'Geist Mono',ui-monospace,monospace}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.7;font-size:15px;padding:3rem 2rem}
+.frame{max-width:1200px;margin:0 auto}
+.eyebrow{font-family:var(--mono);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+h1{font-family:var(--serif);font-size:2rem;font-weight:400;letter-spacing:-.01em;line-height:1.2;margin-bottom:1rem}
+h2{font-family:var(--serif);font-size:1.5rem;font-weight:400;margin:3rem 0 .5rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+p{max-width:860px;margin:0 0 .9rem}
+.lead{font-size:16px}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.86em;background:var(--paper-2);padding:.1em .35em;border-radius:4px}
+figure{margin:1.25rem 0 0}
+figure svg{width:100%;display:block}
+figcaption{font-size:13px;color:var(--muted);margin-top:.5rem;max-width:860px}
+.fig-wide svg{min-width:900px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:1rem 0;background:#fff}
+th,td{border:1px solid var(--rule);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:var(--paper-2);font-weight:600}
+td:first-child{font-weight:600;white-space:nowrap}
+.cards{display:grid;grid-template-columns:1.2fr 1fr .9fr;gap:16px;margin:1.25rem 0}
+.card{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:1.25rem}
+.card h3{font-size:15px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--ink)}
+.dot.accent{background:var(--accent)}.dot.link{background:var(--link)}.dot.soft{background:var(--soft)}
+.card ul{padding-left:1.1rem;font-size:14px}
+.status{border-left:3px solid var(--accent);background:var(--accent-tint);padding:.9rem 1.1rem;border-radius:0 6px 6px 0;font-size:14px;max-width:none}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--muted)}
+@media (max-width:760px){.cards{grid-template-columns:1fr}body{padding:2rem 1rem}}
+ body{display:flex;justify-content:center}</style></head><body><div class="frame"><p class="eyebrow">guguroute · 시스템 아키텍처 v11</p><h1>guguroute 전체 구조 — 들어오는 세 길과 하나의 반영</h1><figure class="fig-wide"><svg viewBox="0 0 1200 1100" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="tp-arch-title tp-arch-desc">
+<title id="tp-arch-title">guguroute 전체 구조 — 들어오는 세 길과 하나의 반영</title>
+<desc id="tp-arch-desc">여행자가 모바일 웹앱으로 계획을 올리거나 채팅하면 API 서버가 받는다. 계획은 등록 판정을 거쳐 감시 대상이 되고, 낮 감시가 연 Case 는 오케스트레이터가 요식 또는 액티비티 에이전트에 맡긴다. 채팅과 새벽 점검은 에이전트를 거치지 않는다. 세 길 모두 같은 검증 · 반영을 거쳐 알림과 계획서 링크로 여행자에게 돌아가고, 감시는 다음 1분 주기에 다시 돈다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6b7488"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a8720c"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/></marker><marker id="arrow-soft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8599"/></marker><style>.name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#161c28;text-anchor:middle}.focal-name{fill:#a8720c}.sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#6b7488;text-anchor:middle}.io{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:400;fill:#161c28}.io-k{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;font-weight:600;fill:#7a8599}.tag{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;font-weight:500;letter-spacing:0.08em;text-anchor:middle}.lab{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:500;text-anchor:middle}.lab-mono{font-family:'Geist Mono', ui-monospace, monospace;font-size:8px;letter-spacing:0.14em;text-anchor:middle}.tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28;text-anchor:middle}.zone{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;font-weight:600;fill:#6b7488}.leg{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.hub-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#fbfcfd;text-anchor:middle}.hub-sub{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:rgba(251,252,253,0.78);text-anchor:middle}.layer-name{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:16px;font-weight:600;fill:#161c28}.layer-note{font-family:'Geist', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;font-size:12px;fill:#6b7488}.layer-tech{font-family:'Geist Mono', ui-monospace, monospace;font-size:12px;fill:#161c28}</style></defs>
+<rect width="1200" height="1100" fill="#fbfcfd"/>
+<!-- 화살표 먼저 -->
+<path d="M600 136 L600 176" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M560 272 L560 292 A8 8 0 0 1 552 300 L208 300 A8 8 0 0 0 200 308 L200 328" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M640 272 L640 328" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M760 376 L840 376" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1000 424 L1000 472" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1000 568 L1000 616" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1000 712 L1000 800 A8 8 0 0 1 992 808 L760 808" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M840 404 L808 404 A8 8 0 0 0 800 412 L800 720 A8 8 0 0 1 792 728 L648 728 A8 8 0 0 0 640 736 L640 760" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M200 424 L200 800 A8 8 0 0 0 208 808 L440 808" fill="none" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<path d="M600 856 L600 904" fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M440 952 L28 952 A8 8 0 0 1 20 944 L20 96 A8 8 0 0 1 28 88 L440 88" fill="none" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<path d="M760 952 L1176 952 A8 8 0 0 0 1184 944 L1184 384 A8 8 0 0 0 1176 376 L1160 376" fill="none" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<!-- 이름표 -->
+<rect x="608" y="148" width="52" height="16" rx="2" fill="#fbfcfd"/><text x="634" y="160" class="lab" fill="#6b7488">앱 요청</text>
+<rect x="284" y="276" width="32" height="16" rx="2" fill="#fbfcfd"/><text x="300" y="288" class="lab" fill="#6b7488">채팅</text>
+<rect x="648" y="292" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="680" y="304" class="lab" fill="#6b7488">계획 원문</text>
+<rect x="776" y="352" width="44" height="16" rx="2" fill="#fbfcfd"/><text x="798" y="364" class="lab" fill="#6b7488">등록됨</text>
+<rect x="1008" y="440" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="1040" y="452" class="lab" fill="#6b7488">Case 1건</text>
+<rect x="1008" y="584" width="104" height="16" rx="2" fill="#fbfcfd"/><text x="1060" y="596" class="lab" fill="#6b7488">할 일 · 허용 툴</text>
+<rect x="848" y="784" width="64" height="16" rx="2" fill="#fbfcfd"/><text x="880" y="796" class="lab" fill="#6b7488">변경 제안</text>
+<rect x="624" y="552" width="164" height="16" rx="2" fill="#fbfcfd"/><text x="706" y="564" class="lab" fill="#6b7488">새벽 03~08시 · 직접 계산</text>
+<rect x="248" y="784" width="140" height="16" rx="2" fill="#fbfcfd"/><text x="318" y="796" class="lab" fill="#6b7488">같은 계산 · 같은 반영</text>
+<rect x="608" y="872" width="100" height="16" rx="2" fill="#fbfcfd"/><text x="658" y="884" class="lab" fill="#6b7488">새 버전 · 묻기</text>
+<rect x="236" y="928" width="124" height="16" rx="2" fill="#fbfcfd"/><text x="298" y="940" class="lab" fill="#2f5bd8">알림 + 계획서 링크</text>
+<rect x="996" y="928" width="168" height="16" rx="2" fill="#fbfcfd"/><text x="1080" y="940" class="lab" fill="#a8720c">다음 1분 주기 · 다시 감시</text>
+<!-- 상자 -->
+<rect x="440" y="40" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="440" y="40" width="320" height="96" rx="6" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<rect x="448" y="48" width="28" height="12" rx="2" fill="none" stroke="#7a8599" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="462" y="57" class="tag" fill="#7a8599">WEB</text>
+<text x="600" y="76" class="name">여행자 · 모바일 웹앱</text>
+<text x="456" y="96" class="io-k">I</text>
+<text x="474" y="96" class="io">판정 통과 일정 · 알림 · 계획서 링크</text>
+<text x="456" y="116" class="io-k">O</text>
+<text x="474" y="116" class="io">계획 원문 · 채팅 · 다른 안 고르기</text>
+<rect x="440" y="176" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="440" y="176" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="448" y="184" width="32" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="464" y="193" class="tag" fill="#161c28">REST</text>
+<text x="600" y="212" class="name">API 서버 (FastAPI)</text>
+<text x="456" y="232" class="io-k">I</text>
+<text x="474" y="232" class="io">HTTP 요청 + 브라우저 키</text>
+<text x="456" y="252" class="io-k">O</text>
+<text x="474" y="252" class="io">JSON 응답 · 진행 신호(SSE)</text>
+<rect x="40" y="328" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="40" y="328" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="48" y="336" width="32" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="64" y="345" class="tag" fill="#161c28">CHAT</text>
+<text x="200" y="364" class="name">채팅 창구 (TripDesk)</text>
+<text x="56" y="384" class="io-k">I</text>
+<text x="74" y="384" class="io">바꿔 줘 · 늦어요 · 다른 안 · 되돌리기</text>
+<text x="56" y="404" class="io-k">O</text>
+<text x="74" y="404" class="io">변경 · 제안 · 답변</text>
+<rect x="440" y="328" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="440" y="328" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="448" y="336" width="40" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="468" y="345" class="tag" fill="#161c28">INTAKE</text>
+<text x="600" y="364" class="name">계획 읽기 · 등록 판정</text>
+<text x="456" y="384" class="io-k">I</text>
+<text x="474" y="384" class="io">계획 원문 (글 · 사진 · 파일)</text>
+<text x="456" y="404" class="io-k">O</text>
+<text x="474" y="404" class="io">등록 + 링크 / 거절 + 고칠 방법</text>
+<rect x="840" y="328" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="840" y="328" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="848" y="336" width="28" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="862" y="345" class="tag" fill="#161c28">JOB</text>
+<text x="1000" y="364" class="name">감시 작업 (낮 1분 · 새벽)</text>
+<text x="856" y="384" class="io-k">I</text>
+<text x="874" y="384" class="io">앞 90분 항목 · 외부 6범주</text>
+<text x="856" y="404" class="io-k">O</text>
+<text x="874" y="404" class="io">깨진 항목 → Case 1건</text>
+<rect x="840" y="472" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="840" y="472" width="320" height="96" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<rect x="848" y="480" width="60" height="12" rx="2" fill="none" stroke="#a8720c" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="878" y="489" class="tag" fill="#a8720c">SUPERVISOR</text>
+<text x="1000" y="508" class="name focal-name">오케스트레이터</text>
+<text x="856" y="528" class="io-k">I</text>
+<text x="874" y="528" class="io">Case (문제 코드 · 원인)</text>
+<text x="856" y="548" class="io-k">O</text>
+<text x="874" y="548" class="io">담당 1개 · 허용 툴 · 90초</text>
+<rect x="840" y="616" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="840" y="616" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="848" y="624" width="36" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="866" y="633" class="tag" fill="#161c28">AGENT</text>
+<text x="1000" y="652" class="name">에이전트 — 요식 · 액티비티</text>
+<text x="856" y="672" class="io-k">I</text>
+<text x="874" y="672" class="io">할 일 · 컨텍스트 · 툴 결과</text>
+<text x="856" y="692" class="io-k">O</text>
+<text x="874" y="692" class="io">변경 제안 / 그대로 / 못 함</text>
+<rect x="440" y="760" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="440" y="760" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="448" y="768" width="40" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="468" y="777" class="tag" fill="#161c28">VERIFY</text>
+<text x="600" y="796" class="name">검증 · 반영</text>
+<text x="456" y="816" class="io-k">I</text>
+<text x="474" y="816" class="io">변경 제안 (세 길 모두)</text>
+<text x="456" y="836" class="io-k">O</text>
+<text x="474" y="836" class="io">새 일정 버전 / 묻기 / 거부</text>
+<rect x="440" y="904" width="320" height="96" rx="6" fill="#fbfcfd"/>
+<rect x="440" y="904" width="320" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<rect x="448" y="912" width="40" height="12" rx="2" fill="none" stroke="#161c28" stroke-opacity="0.45" stroke-width="0.8"/>
+<text x="468" y="921" class="tag" fill="#161c28">OUTBOX</text>
+<text x="600" y="940" class="name">알림 워커 → Discord</text>
+<text x="456" y="960" class="io-k">I</text>
+<text x="474" y="960" class="io">등록 · 변경 · 묻기 · 정기 안내</text>
+<text x="456" y="980" class="io-k">O</text>
+<text x="474" y="980" class="io">Discord 알림 + 최신 계획서 링크</text>
+<line x1="32" y1="1036" x2="1168" y2="1036" stroke="rgba(22,28,40,0.12)" stroke-width="0.8"/>
+<text x="32" y="1056" class="lab-mono" fill="#6b7488" text-anchor="start">LEGEND</text>
+<rect x="104" y="1044" width="28" height="16" rx="3" fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+<text x="140" y="1056" class="leg">사람 · 화면</text>
+<rect x="240" y="1044" width="28" height="16" rx="3" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+<text x="276" y="1056" class="leg">서버 처리</text>
+<rect x="360" y="1044" width="28" height="16" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+<text x="396" y="1056" class="leg">배정</text>
+<line x1="448" y1="1052" x2="476" y2="1052" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+<text x="484" y="1056" class="leg">처리 흐름</text>
+<line x1="568" y1="1052" x2="596" y2="1052" stroke="#6b7488" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+<text x="604" y="1056" class="leg">에이전트 안 거침</text>
+<line x1="732" y1="1052" x2="760" y2="1052" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+<text x="768" y="1056" class="leg">여행자에게 감</text>
+<line x1="876" y1="1052" x2="904" y2="1052" stroke="#a8720c" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+<text x="912" y="1056" class="leg">되돌아가는 루프</text>
+</svg></figure></div></body></html>

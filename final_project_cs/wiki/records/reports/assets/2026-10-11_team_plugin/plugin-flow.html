@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>triPilot · 담당 팀 실행 경계</title>
+<style>
+:root{--paper:#fbfcfd;--ink:#161c28;--muted:#6b7488;--accent:#a8720c;--tint:rgba(168,114,12,.10);--rule:#dbe0ea;--link:#2f5bd8}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Geist,"Noto Sans KR",system-ui,sans-serif}main{max-width:1050px;margin:auto;padding:36px 20px}h1{font-weight:600;letter-spacing:-.03em}p{line-height:1.7;max-width:800px}.scope{border-left:3px solid var(--accent);padding:12px 18px;background:var(--tint)}.drawing{overflow:auto;border:1px solid var(--rule);margin:28px 0}svg{display:block;min-width:700px;width:100%;height:auto}svg text{fill:var(--ink);text-anchor:middle;font-size:18px}svg .sub{font-size:14px;fill:var(--muted)}svg .edge{fill:none;stroke:var(--muted);stroke-width:1.6;marker-end:url(#arrow)}svg .node{fill:var(--paper);stroke:var(--ink);stroke-width:1.4}svg .gate{fill:var(--tint);stroke:var(--accent);stroke-width:1.8}a{color:var(--link)}details{border-top:1px solid var(--rule);padding:16px 0}summary{cursor:pointer;font-weight:600}li{line-height:1.8}
+</style>
+<main><p>triPilot · 로컬 구현의 업무 처리 흐름</p><h1>담당이 없으면 그 업무를 실행하지 않습니다.</h1>
+<p class="scope">새 판을 게시해도 이미 시작한 요청은 이전 판으로 끝납니다. 이 그림은 코드의 실행 계약을 설명합니다. 운영 배포 완료나 모든 기능의 무결함을 나타내지 않습니다.</p>
+<div class="drawing"><svg viewBox="0 0 1000 1080" role="img" aria-labelledby="title desc"><title id="title">담당 확인·실행 실패·사용자 답변 대기 흐름</title><desc id="desc">요청이 시작되면 조립 판을 고정합니다. 담당과 입구의 사전 검사에서 거절하면 입력과 토큰을 소비하지 않고 503으로 종료합니다. 실행 도중 필수 계산이 실패하면 접수 입력과 실패 기록을 보존합니다. 성공했지만 답변이 더 필요하면 대기를 저장하고, 최종 응답이면 Core가 유효한 제안을 한 번 반영합니다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="#6b7488"/></marker></defs>
+<ellipse class="node" cx="500" cy="55" rx="100" ry="27"/><text x="500" y="62">요청 시작</text>
+<path class="edge" d="M500 82V120"/><rect class="node" x="300" y="120" width="400" height="76" rx="6"/><text x="500" y="151">Controller · 등록표 · 계산 표 고정</text><text class="sub" x="500" y="176">같은 revision을 요청 종료까지 사용</text>
+<path class="edge" d="M500 196V230"/><path class="gate" d="M500 230L665 300L500 370L335 300Z"/><text x="500" y="296">담당 · 기능과 입구의</text><text x="500" y="323">사전 검사를 통과했나요?</text>
+<path class="edge" d="M335 300H170V420"/><text class="sub" x="246" y="284">아니요</text><rect class="node" x="30" y="420" width="280" height="82" rx="6"/><text x="170" y="451">업무 입력 · 토큰 보존</text><text class="sub" x="170" y="478">이용 불가 원인 · HTTP 503</text>
+<path class="edge" d="M500 370V420"/><text class="sub" x="521" y="399">예</text><rect class="node" x="350" y="420" width="300" height="82" rx="6"/><text x="500" y="450">입력 반영 후 Team · 계산 실행</text><text class="sub" x="500" y="478">Team 제안과 Core 적용을 구분</text>
+<path class="edge" d="M500 502V540"/><path class="node" d="M500 540L640 595L500 650L360 595Z"/><text x="500" y="589">계약에 맞게</text><text x="500" y="614">실행됐나요?</text>
+<path class="edge" d="M640 595H820V690"/><text class="sub" x="724" y="581">아니요</text><rect class="node" x="700" y="690" width="240" height="86" rx="6"/><text x="820" y="717">접수 입력 · 실패 기록 보존</text><text class="sub" x="820" y="742">필수 계산 불가: 503</text><text class="sub" x="820" y="763">그 밖의 오류: 유형별 응답</text>
+<path class="edge" d="M500 650V710"/><text class="sub" x="521" y="686">예</text><path class="node" d="M500 710L640 765L500 820L360 765Z"/><text x="500" y="759">사용자 답변이</text><text x="500" y="784">더 필요한가요?</text>
+<path class="edge" d="M500 820V860"/><text class="sub" x="530" y="848">아니요</text><rect class="node" x="350" y="860" width="300" height="66" rx="6"/><text x="500" y="887">Core가 유효한 제안과</text><text x="500" y="912">최종 상태를 한 번 반영</text>
+<path class="edge" d="M640 765H670V825H820V860"/><text class="sub" x="690" y="816">예</text><rect class="node" x="700" y="860" width="240" height="66" rx="6"/><text x="820" y="885">질문 · 토큰 저장</text><text class="sub" x="820" y="911">waiting_input · 업무 대기</text>
+<path class="edge" d="M170 502V1000H400"/><path class="edge" d="M940 733H970V1000H600"/><path class="edge" d="M500 926V973"/><path class="edge" d="M820 926V1000H600"/><ellipse class="node" cx="500" cy="1000" rx="100" ry="27"/><text x="500" y="1007">요청 종료</text>
+</svg></div>
+<details open><summary>어디까지 같은 판인가요?</summary><p>Controller, Registry, Executor, 필수 계산 함수 연결과 revision을 함께 고정합니다. HTTP 응답 전체, SSE 종료, 동기 threadpool, 백그라운드 한 회차까지 유지합니다. 외부 기계의 상태와 DB 값의 변화까지 고정하는 것은 아닙니다.</p></details>
+<details open><summary>“30분이요”라는 답변은 어떻게 이어지나요?</summary><p>대기는 업무 완료가 아닙니다. 업무를 지정한 답변과 저장된 질문에 명확히 맞는 짧은 답변을 같은 Case에 연결합니다. “식당 주소 알려줘” 같은 새 문의는 별도로 처리하며 이전 대기를 소비하지 않습니다. 담당 확인 후 재개하고, 담당 부재의 사전 거절이면 답변과 토큰을 소비하지 않습니다. 사전 검사는 담당·기능과 입구가 명시한 계산 범위입니다. 범용 Case 재개 API가 실행 전에 모든 동적 교차 팀 계산을 확인하는 것은 아닙니다.</p></details>
+<details><summary>모든 요청에 담당 팀이 필요한가요?</summary><p>기존 계획서 조회·공통 읽기 같은 독립 경로는 유지합니다. 새 경로 계산·식당 영업시간 판정처럼 팀의 필수 계산을 사용하는 요청은 해당 팀이 없으면 거절합니다. 선택 유사도 정렬을 생략하는 것과 담당 업무를 대신 실행하는 것은 다릅니다.</p></details>
+<details><summary>실행 도중 다른 필수 계산이나 원격 호출이 실패하면요?</summary><p>사전 확인한 담당 부재와 구분합니다. 실행 도중 다른 팀의 필수 계산이 필요해져 거절되거나 원격 장애가 발생하면, 이미 접수한 답변과 실행·실패 기록을 보존합니다. 이 경우 토큰 미소비를 보장하지 않습니다. 원격 handle을 받기 전 제출이 끊기면 안전한 취소 대상을 확인할 수 없으므로 취소를 보장하지 않습니다.</p></details>
+<p><a href="../../../evidence/2026-10-11_1936_team_plugin_implementation/acceptance-mapping-v2.json">24개 인수 조건의 최종 시험 근거</a> · <a href="../../../../teams/team-plugin-lifecycle.md">현재 계약과 검증 상태</a></p></main></html>

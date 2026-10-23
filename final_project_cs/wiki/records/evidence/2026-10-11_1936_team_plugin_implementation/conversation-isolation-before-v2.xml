@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="7" time="96.635" timestamp="2026-10-11T23:27:49.486990+09:00" hostname="playdata"><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_pending_delay_does_not_capture_a_new_fact_question" time="6.886"><failure message="AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': '087b1c9f-6805-4fbf-990d-75b4843110fb', 'case_status': 'waiting_input', ...}&#10;assert ('087b1c9f-6805-4fbf-990d-75b4843110fb' != '087b1c9f-6805-4fbf-990d-75b4843110fb')">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x000001D90AD29DF0&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x000001D91C3D0470&gt;, 'key': 'acop_u_-sC0wUJ34pzaWqfKKSslYTJu9dKZmnRRr7XUBlGYiJA', ...}
+
+    def test_pending_delay_does_not_capture_a_new_fact_question(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-wait")
+        before = _saved(first["case_id"])
+        fact = _say(decided, "성수 점심 식당 알려줘", "isolation-fact")
+&gt;       assert fact["case_id"] != first["case_id"] and fact["status"] == "answered", fact
+E       AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': '087b1c9f-6805-4fbf-990d-75b4843110fb', 'case_status': 'waiting_input', ...}
+E       assert ('087b1c9f-6805-4fbf-990d-75b4843110fb' != '087b1c9f-6805-4fbf-990d-75b4843110fb')
+
+tests\e2e\test_web_conversation_isolation.py:39: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_pending_delay_does_not_capture_a_new_change_request" time="8.491"><failure message="AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': 'b31eb715-761e-406a-96f1-5754bdf85c25', 'case_status': 'waiting_input', ...}&#10;assert ('b31eb715-761e-406a-96f1-5754bdf85c25' != 'b31eb715-761e-406a-96f1-5754bdf85c25')">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x000001D91CEC7440&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x000001D91CD23FE0&gt;, 'key': 'acop_u_wHVYlS-kt8EONa2990SzcOjyKVKZaNvadXfCtLdzDHg', ...}
+
+    def test_pending_delay_does_not_capture_a_new_change_request(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-change-wait")
+        before = _saved(first["case_id"])
+        changed = _say(decided, "점심 다른 데로 바꿔", "isolation-change")
+&gt;       assert changed["case_id"] != first["case_id"] and changed["status"] == "adjusted", changed
+E       AssertionError: {'answer': '몇 분쯤 늦으세요? 예를 들어 ‘30분이요’라고 알려 주세요.', 'basis_sources': [], 'case_id': 'b31eb715-761e-406a-96f1-5754bdf85c25', 'case_status': 'waiting_input', ...}
+E       assert ('b31eb715-761e-406a-96f1-5754bdf85c25' != 'b31eb715-761e-406a-96f1-5754bdf85c25')
+
+tests\e2e\test_web_conversation_isolation.py:51: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_disabled_pending_owner_allows_independent_fact_but_preserves_reply" time="5.884"><failure message="AssertionError: {&quot;error&quot;:{&quot;code&quot;:&quot;team_unavailable&quot;,&quot;message&quot;:&quot;요청한 업무의 담당 기능을 사용할 수 없습니다&quot;,&quot;team_id&quot;:&quot;dining&quot;,&quot;reason&quot;:&quot;disabled&quot;,&quot;retryable&quot;:false}}&#10;assert (503 == 200)&#10; +  where 503 = &lt;Response [503 Service Unavailable]&gt;.status_code">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x000001D91D788EC0&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x000001D91CC05A30&gt;, 'key': 'acop_u_4gHY0swD9nQ3wvUAbwHcsKRDzp1gCfouzBz2f8z8UOQ', ...}
+
+    def test_disabled_pending_owner_allows_independent_fact_but_preserves_reply(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-disabled-wait")
+        before = _saved(first["case_id"])
+        enable = _disable(decided, "dining")
+        fact = _post(decided, "성수 점심 식당 알려줘", "isolation-disabled-fact")
+&gt;       assert fact.status_code == 200 and fact.json()["case_id"] != first["case_id"], fact.text
+E       AssertionError: {"error":{"code":"team_unavailable","message":"요청한 업무의 담당 기능을 사용할 수 없습니다","team_id":"dining","reason":"disabled","retryable":false}}
+E       assert (503 == 200)
+E        +  where 503 = &lt;Response [503 Service Unavailable]&gt;.status_code
+
+tests\e2e\test_web_conversation_isolation.py:61: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_expired_implicit_reply_becomes_a_new_message_without_discarding_it" time="6.514"><failure message="AssertionError: {&quot;error&quot;:{&quot;code&quot;:&quot;invalid_resume_token&quot;,&quot;message&quot;:&quot;resume token expired&quot;}}&#10;assert (401 == 200)&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x000001D91CDD9400&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x000001D91FADD2E0&gt;, 'key': 'acop_u_nVSyiX9k5IXC2qbmD_oFN5z51AtZlriAYuvR4nwbCLQ', ...}
+
+    def test_expired_implicit_reply_becomes_a_new_message_without_discarding_it(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-expired-wait")
+        _expire(first["case_id"])
+        reply = _post(decided, "30분이요", "isolation-expired-reply")
+&gt;       assert reply.status_code == 200 and reply.json()["case_id"] != first["case_id"], reply.text
+E       AssertionError: {"error":{"code":"invalid_resume_token","message":"resume token expired"}}
+E       assert (401 == 200)
+E        +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code
+
+tests\e2e\test_web_conversation_isolation.py:73: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_expired_explicit_reply_retains_the_existing_token_error" time="8.525" /><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply" time="25.371"><failure message="AssertionError: assert '1755f1de-9df7-43a8-9c3e-0664207135c0' != '1755f1de-9df7-43a8-9c3e-0664207135c0'">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x000001D91CE1CA70&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x000001D91CD70710&gt;, 'key': 'acop_u_EiqM6FxdWH6UgGyolVvDdO62f6RRGoNdVM8ujxBGAEY', ...}
+
+    def test_two_pending_cases_allow_facts_and_reject_an_ambiguous_numeric_reply(decided):
+        _delay(decided)
+        first = _say(decided, "식당에 늦어요", "isolation-multi-first")
+        second = _say(decided, "식당에 늦어요", "isolation-multi-second")
+&gt;       assert second["case_id"] != first["case_id"]
+E       AssertionError: assert '1755f1de-9df7-43a8-9c3e-0664207135c0' != '1755f1de-9df7-43a8-9c3e-0664207135c0'
+
+tests\e2e\test_web_conversation_isolation.py:92: AssertionError</failure></testcase><testcase classname="tests.e2e.test_web_conversation_isolation" name="test_initial_disabled_request_retries_same_case_and_applies_once" time="16.180"><failure message="TypeError: 'NoneType' object is not subscriptable">decided = {'calculation_calls': [], 'client': &lt;starlette.testclient.TestClient object at 0x000001D91C9329C0&gt;, 'decider': &lt;tests....sion_unit_web._Decider object at 0x000001D91C89CE30&gt;, 'key': 'acop_u_CySExhWszjEswarbzMRSp1EAzEydo47zp49VCpRb7tI', ...}
+
+    def test_initial_disabled_request_retries_same_case_and_applies_once(decided):
+        enable = _disable(decided, "dining")
+        first = _post(decided, "점심 다른 데로 바꿔", "isolation-initial-retry")
+        assert first.status_code == 503, first.text
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT case_id FROM customer_cases WHERE state_json-&gt;'trip_message'-&gt;&gt;'request_id'=%s",
+                        ("isolation-initial-retry",))
+&gt;           case_id = str(cur.fetchone()[0])
+                          ^^^^^^^^^^^^^^^^^
+E           TypeError: 'NoneType' object is not subscriptable
+
+tests\e2e\test_web_conversation_isolation.py:106: TypeError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,1331 @@
+Reading additional input from stdin...
+OpenAI Codex v0.159.2
+--------
+workdir: C:\Users\playdata2\Documents\final_workspace
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: medium
+reasoning summaries: none
+session id: 01a11117-61ab-7a50-a05c-4a641ff3e87c
+--------
+user
+program/산출물양식/w5/스탠드업_2026-10-06/_재료/코덱스_요청.md 를 읽고 그대로 수행하라. 최종 답은 파이썬 스크립트 본문만.
+codex
+요청 파일을 읽고 지정된 작업과 출력 형식을 확인하겠습니다.
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Content -LiteralPath 'program/산출물양식/w5/스탠드업_2026-10-06/_재료/코덱스_요청.md' -Raw" in C:\Users\playdata2\Documents\final_workspace
+ succeeded in 1141ms:
+C:\Users\playdata2\Documents\WindowsPowerShell\profile.ps1 : �� ������ �ٸ� ��� ��忡�� ���ǵǾ����Ƿ� ��Ʈ �ҽ��� ��
+ �����ϴ�. �ش� �������� �������� �ʰ� �� ������ ȣ���Ϸ��� '.' �����ڸ� �����Ͻʽÿ�.
+��ġ ��:1 ����:1
++ . 'C:\Users\playdata2\Documents\WindowsPowerShell\profile.ps1'
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [profile.ps1], NotSupportedException
+    + FullyQualifiedErrorId : DotSourceNotSupported,profile.ps1
+ 
+C:\Users\playdata2\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 : �� ������ �ٸ� ��� ��忡�� ���ǵǾ�
+���Ƿ� ��Ʈ �ҽ��� �� �����ϴ�. �ش� �������� �������� �ʰ� �� ������ ȣ���Ϸ��� '.' �����ڸ� �����Ͻʽÿ�.
+��ġ ��:1 ����:1
++ . 'C:\Users\playdata2\Documents\WindowsPowerShell\Microsoft.PowerShel ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [Microsoft.PowerShell_profile.ps1], NotSupportedException
+    + FullyQualifiedErrorId : DotSourceNotSupported,Microsoft.PowerShell_profile.ps1
+ 
+# ?�청: 5주차 ?�탠?�업 발표 pptx (코덱???? ??python-pptx ?�크립트 ?�나�?최종 ?�으�?
+?�는 발표 ?�료 ?�작?�다. ?�일?� 직접 만들지 말고, **python-pptx �?발표 ?�일??만드???�이???�크립트 ?�체**�?최종 ?�으�??�다(코드 블록 ?�이 ?�크립트 본문�?. ?�크립트???�행?�면 ?�래 경로???�?�해???�다:
+`C:/Users/playdata2/Documents/final_workspace/program/?�출물양??w5/?�탠?�업_2026-10-06/[발표] triPilot_진행경과_2026-10-06_Codex.pptx`
+
+## ?�료(반드???�기)
+- `program/?�출물양??w5/?�탠?�업_2026-10-06/_?�료/주간_?�실.md` ???�인???�자�??�다. ?�기 ?�는 ?�자???��? ?�는?? �????�발??규칙?�을 모두 지?�다.
+- ?�식 참고(같�? ?�??지??주간 발표): `program/?�출물양??[발표] A-COP_진행경과_2026-09-11.pptx` (16:9, 12???�팎)
+
+## 만들 �?- 16:9(13.333 x 7.5 ?�치), 9~11?? ?�국?? 맑�? 고딕. ?�니메이???�음.
+- ???�목?� 결론 문장. ?�목�??�어 ?�으�???주의 ?�야기�? ?�다.
+- ?�마????그림 · ?�자 카드 · ?�면 캡처가 주인�??�면 ?�반 ?�상). 본문 글?� ????40?�어 ?�팎. 글머리?�만 ?�어?��? ?�을 만들지 ?�는??
+- ?�자 카드 바로 ?�래 ?��? 글??9pt ?�팎)�??�어?�게 ?�온 ?�치?��???분자/분모 · ?�짜 · 조건).
+- ??그림(?�는 ?�일, ?��? 경로�??�기):
+  - `C:/Users/playdata2/Documents/final_workspace/program/?�출물양??w5/멀?�에?�전???�스?�보고서/그림/모델�?769_비교.png`
+  - `.../w5/멀?�에?�전???�스?�보고서/그림/?�줄?�결_?�험.png`
+  - `.../w5/멀?�에?�전???�스?�보고서/그림/?�인?�닝_?�후.png`
+  - `.../w5/벡터DB_GraphDB_결과??그림/?�책검???�현??png`
+  - ?�면 캡처: `.../w5/?�면?�계??assets/capture_2026-10-06/card_390.png`, `.../w5/?�면?�계??assets/capture_docs/09_trip_home_390.png`, `.../w5/?�면?�계??assets/capture_docs/04_trips_new_390.png` (모두 mock ?�버 ?�면?�라�?캡션???�기)
+  - 그림 ?�일?� 비율???��????�는???�이 기�??�로 맞추�??�치�?줄이�? PIL �??�기 ?�어 계산).
+- 구성 ?�안: ?��?(5주차 · 9/29~10/6 · 커밋) ????�??�약 ?????�면 ???�버 기능 ??모델(가르치????모델 ?�음) ??모델 조합(??�??�험) ??분류 · 규정 검?????�출�????��? 문제 ???�음 �?
+- 마�?막에 발표 ?��??�마??2~3문장)??�??�의 ?�트(notes_slide)???�는??
+
+?�크립트???��? ?�이브러�?+ python-pptx + PIL �??�다. ?��? ?�속 ?�음.
+
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command "Get-Content -LiteralPath 'program/산출물양식/w5/스탠드업_2026-10-06/_재료/코덱스_요청.md' -Raw -Encoding UTF8; Get-Content -LiteralPath 'program/산출물양식/w5/스탠드업_2026-10-06/_재료/주간_사실.md' -Raw -Encoding UTF8; Get-Content -LiteralPath 'C:/Users/playdata2/.codex/plugins/cache/openai-primary-runtime/presentations/26.915.20218/skills/presentations/SKILL.md' -Raw -Encoding UTF8" in C:\Users\playdata2\Documents\final_workspace
+ succeeded in 356ms:
+# ��û: 5���� ���ĵ�� ��ǥ pptx (�ڵ��� ��) ? python-pptx ��ũ��Ʈ �ϳ��� ���� ������
+
+�ʴ� ��ǥ �ڷ� �����ڴ�. ������ ���� ������ ����, **python-pptx �� ��ǥ ������ ����� ���̽� ��ũ��Ʈ ��ü**�� ���� ������ ����(�ڵ� ���� ���� ��ũ��Ʈ ������). ��ũ��Ʈ�� �����ϸ� �Ʒ� ��ο� �����ؾ� �Ѵ�:
+`C:/Users/playdata2/Documents/final_workspace/program/���⹰���/w5/���ĵ��_2026-10-06/[��ǥ] triPilot_������_2026-10-06_Codex.pptx`
+
+## ���(�ݵ�� �б�)
+- `program/���⹰���/w5/���ĵ��_2026-10-06/_���/�ְ�_���.md` ? Ȯ�ε� ���ڸ� �ִ�. ���� ���� ���ڴ� ���� �ʴ´�. �� �� ����ǥ ��Ģ���� ��� ��Ų��.
+- ���� ����(���� ���� ���� �ְ� ��ǥ): `program/���⹰���/[��ǥ] A-COP_������_2026-09-11.pptx` (16:9, 12�� ����)
+
+## ���� ��
+- 16:9(13.333 x 7.5 ��ġ), 9~11��, �ѱ���, ���� ����. �ִϸ��̼� ����.
+- �� ������ ��� ����. ���� �̾� ������ �� ���� �̾߱Ⱑ �ȴ�.
+- �帶�� ū �׸� �� ���� ī�� �� ȭ�� ĸó�� ���ΰ�(ȭ�� ���� �̻�). ���� ���� �� �� 40�ܾ� ����. �۸Ӹ�ǥ�� �þ���� ���� ������ �ʴ´�.
+- ���� ī�� �ٷ� �Ʒ� ���� �۾�(9pt ����)�� ����� ���� ��ġ������(����/�и� �� ��¥ �� ����).
+- �� �׸�(�ִ� ����, ���� ��η� �ֱ�):
+  - `C:/Users/playdata2/Documents/final_workspace/program/���⹰���/w5/��Ƽ������Ʈ_�׽�Ʈ������/�׸�/�𵨺�_769_��.png`
+  - `.../w5/��Ƽ������Ʈ_�׽�Ʈ������/�׸�/���ٿ���_����.png`
+  - `.../w5/��Ƽ������Ʈ_�׽�Ʈ������/�׸�/����Ʃ��_����.png`
+  - `.../w5/����DB_GraphDB_�����/�׸�/��å�˻�_������.png`
+  - ȭ�� ĸó: `.../w5/ȭ�鼳�輭/assets/capture_2026-10-06/card_390.png`, `.../w5/ȭ�鼳�輭/assets/capture_docs/09_trip_home_390.png`, `.../w5/ȭ�鼳�輭/assets/capture_docs/04_trips_new_390.png` (��� mock ���� ȭ���̶�� ĸ�ǿ� ����)
+  - �׸� ������ ������ ������ �ִ´�(���� �������� ���߰� ��ġ�� ���̱�, PIL �� ũ�� �о� ���).
+- ���� ����: ǥ��(5���� �� 9/29~10/6 �� Ŀ��) �� �� �� ��� �� �� ȭ�� �� ���� ��� �� ��(����ġ�� ū �� ����) �� �� ����(�� �� ����) �� �з� �� ���� �˻� �� ���⹰ �� ���� ���� �� ���� ��.
+- �������� ��ǥ �뺻(�帶�� 2~3����)�� �� ���� ��Ʈ(notes_slide)�� �ִ´�.
+
+��ũ��Ʈ�� ǥ�� ���̺귯�� + python-pptx + PIL �� ����. �ܺ� ���� ����.
+
+# 5����(2026-09-29 ~ 10-06) ���ĵ�� ��� ? Ȯ�ε� ��Ǹ�
+
+��ǥ ��Ģ: �� ���� = ��� ���� �� ���� �ٷ� �Ʒ� ���� �۾��� ����� ���� ��ġ������ �� ���� ������(�ִϸ��̼� ����) �� ������ ���� ��(���� ��) �� ���� ��� ���� �ʱ� �� ��Jev������� ���� �ʱ�(��Jev �迭 �� �� �̸�(�н� ����)��, ���� API �� ��Jev API(����)��) �� ���������� ���� �ʱ�(x600 ���� �� cs ������Ʈ ���� �� GPU ���� �� mock ����) �� �ο� ����(4��) ���� �ʱ� �� ����� �����������ڡ� �� ���� ���� ������� �ѱ��� �ʴ´�(����� ���� ����Ʈ��) �� LangGraph ���ٰ� ���� �ʱ� �� ��ǥ(?)��������ǥ ���� �ʱ�.
+
+## 0. �� �� �Ը�
+- Ŀ��: �۾� �귣ġ(role-manager) 402�� �� ��� �귣ġ �հ� 531��(���� Ŀ�� ����, 2026-09-29 ~ 10-06, `git log`)
+- ��¥��(��� �귣ġ): 9/29 4 �� 9/30 91 �� 10/1 85 �� 10/2 18 �� 10/3 112 �� 10/4 74 �� 10/5 76 �� 10/6 71
+- ����(Ŀ�� ���� �Ӹ�): ���� ���� 149 �� �� ��� 51 �� �� �� ���� 23 �� ��ȹ ���� 19 �� ���� ��� 12 �� ��Ƽ��Ƽ 12 �� �̵� 11
+
+## 1. �� ȭ�� ? ������ ��ȹ�� �ø��� ���� ������ ���� ȭ�� 12���� cs ������Ʈ ������ �ٿ���
+- ȭ�� 12��(�Ұ� �� ��� ���� �� ���� ���� ���� �� ��ȹ �ø��� + �д� ���� �� �׷� ��Ŵ�� ī�� �� �ø��� �� �� ��ȹ �д� �� + ���� �� ��ȹ Ȯ�� �� ����(���� �� ���� �� ä��) �� �� ���� �� ���������� �� �Ҽ� �α��� �Ϸ�) ? ȭ�鼳�輭 5����
+- �̹� �� �� Ŀ��: ��ȹ Ȯ�� ȭ�� ����(��¥ Ĩ �� �ð� ���� �� ���� ��μ� �� ��ü �ڵ� ��õ �̸� ����) �� ��� ����(�ʼ� 2 �� ���� 3) �� ��Ű �α��ΰ� �Խ�Ʈ ���� �� ������Ʈ Ű(ȸ���� �� 90�� ����) �� �Ҽ� �α���(���� ����) �� �����ڵ�� ���᡹ �� �ڷ��׷� ���� �� �׷� ��Ŵ�� ī�� �� �ε� �� ���� �� �糭 ���� ���� �� ���� ȭ�� ����(�Ǽ��� ���Ḹ)
+- ����: ȭ���� mock ���� ����(ȭ�� ����)���� Ȯ��. �Ǽ��� Ȯ��(���� ����)�� ��ȹ Ȯ�� ȭ���� �б� �� ��� �� ���� �� ��ϸ� 2026-10-03 �� ��. �� �� �ٲ� ȭ���� �Ǽ��� Ȯ�� �� ��
+- ĸó: w5/ȭ�鼳�輭/assets/ (��� mock ���� ȭ��)
+
+## 2. ���� ��� ? ���� AI �Ա� �� �ǽð� ���� �� �˸� ä���� �����
+- MCP ���� ����(���� AI �� ���� ���ุ): �б� 5 �� ���� 7(����� �⺻ ����), ���� 15/15 (2026-10-02)
+- �� �ǽð� ����(SSE): ä�� �� ���� ¥�� �� ���� �б�, ���� 21/21 (2026-10-02)
+- �� ����(�޴� ���� ������ ��ϵ� �� ������� �� ���� �ٽ� ����): mock ���� ���� 10/10 (2026-10-06)
+- ���� ���� �� ���ڵ� ���� �� �ڷ��׷� ����: cs ������Ʈ ���� �ڵ忡 ����(��� ���� ����), x600 ���� �ݿ� �� ���� ���� Ȯ�� �� ��
+- �ڵ� ����(cs ������Ʈ ��ü, ���� �� ���� 238�� ����): 4,245/4,251 = 99.9% (2026-10-06 18:09) ? ���� �� ���� 6�� �� 5���� ���� ȯ�� ������ �𸣴� Ű �̸� ����
+- ��� ������Ʈ ����(���� ����ȯ): 517/517 (���� develop 2f3594a, 2026-10-06)
+
+## 3. �� ? ���� ���� �츮 �����ͷ� ����ġ�� ū ���� ���� �Ѿ���
+- ����: ���� �� �ϳ� �� �� ������ ���� �׸� ��ȣ �ϳ� �Ǵ� ��������. ���� 769����(mix8~12, ����û �ѡ� 66���� ����), ������ ��� ���� �� �ռ�(Codex �� Claude)
+- Gemma 4 E4B(��ȿ �� 4B)�� QLoRA �� ����ħ: 688 �� 750/769(97.5%) �� �õ常 �ٲ� �ٽ� 760/769(98.8%). ����ġ�� �� ��� ���ʸ� ���� 69 : 7, p=6.4e-14
+- ���� ������� ����ģ Winnow-E4B(Jev �迭 ��, �õ� 1��): 655 �� 756/769. ����ģ E4B(750 �� 760)�� ���� �� �� �� �� ���� ������ �õ� 3�� �̻� �ʿ�
+- ��(���� 769����, �н� ����): Gemma 26B-A4B 732 �� Qwen3.8 27B 749 �� OpenJev 26B 743 �� decider-chat 31B 748
+- ���(���� �� �ƴ� ? CLI ���� �� ������ ����): Claude Opus 5.5 764 �� Astra 766 �� Sol 760 �� Luna 741
+- Jev API(����) ���� ¤��: mix8+mix9 309�������� 298 �� ����ģ E4B 302 (p=0.42, ���� �� ��)
+- CPU ������(�ھ� 4�� �� GGUF Q8 �� 7.5GB): ���� ���� �ļ� ���� ��� 4.55�� �� �� ���� ù ���� ��� 67.5��, 748/769
+- �׸�: w5/��Ƽ������Ʈ_�׽�Ʈ������/�׸�/�𵨺�_769_��.png �� ����Ʃ��_����.png
+
+## 4. �� ���� ? �ܰ踦 ���� �������� ���������� �ʾҴ�(�� �ٷ� ���� ����)
+- ��Ģ �� ML �Ǻ��� �� �н� ���� Winnow-E4B(Jev �迭) �� ����ģ E4B �� �������� ���� ȣ��(GPU ���� C, 2026-10-06)
+- 769����: ����ģ E4B �ϳ� 748 �� ��Ģ + ML �Ÿ� 745(���� �� ��, ����ģ E4B ȣ�� 19% ����) �� �н� ���� Winnow-E4B �� ���� �� ������ ������ 697(���� ���� ��, ���� ��� �� 472) ? �н� ������ �޶� ������ �� �ƴ�
+- ���� ������� ����ģ �� �𵨷� § ����(�ΰ� �� ������ �� �����): 747~752, �ܵ��� ���� �� ��
+- ������ ������ ���� ���� �帧 2,735����: ��Ģ �� ML �մ��� �̵�(���� 90.8% �� 91.9%, 37 : 8, p=1.5e-5) �� ������ ���� �׸��� ¤�� ���� 4.5% �� 3.2%
+- �׸�: w5/��Ƽ������Ʈ_�׽�Ʈ������/�׸�/���ٿ���_����.png �� ����ģ_Jev�迭_������.png
+
+## 5. �з� �� ���� �˻�(RAG)
+- ���� �� �з�(CX 400, Codex �ۼ� �� Claude ���� ��): �н��� �з� ���ڴ�(e5-base) �ǵ� 97.5% �� ���� 93.8% �� ��޵� 88.4% �� ��� 93.2%. �н� ���� E4B ���μ��� ��޵� 60.9% �� �н� �� 88.4%
+- ���� �˻�(��ǰ �ڵ� �״��, ���� ���� B 48����, 2026-10-06): ���� ������ ���� 3�� �� 30/48 = 62.5%(��� ��ǥ 0.90 �̴�). ���� ���� ������ �������� �ٲٸ� ������ ���� ���� 21/48 �� 31/48, ��� ������ �ƴ� ���� ��ȭ�� ������ ���̴� ���� 22.3% �� 36.7%
+- ���� �ο� ��Ȯ�� 334/334(���� ���� ������ ���� �ʴ� ����)
+- �׸�: w5/����DB_GraphDB_�����/�׸�/��å�˻�_������.png
+
+## 6. ���⹰ ? 5���� 4�� + 6���� 1���� �������
+- ����DB �� GraphDB ���� �����(23��) �� ��Ƽ ������Ʈ �׽�Ʈ ��ȹ �� ��� ������(50��) �� �䱸���� ���Ǽ� ������Ʈ(85�� �䱸, ���� �� 24 �� �Ϻ� 58 �� ���� ��� 3) �� ȭ�鼳�輭(25��) �� 6���� ���� �׽�Ʈ ��ȹ �� ��� ������(10��)
+- ��� �ڵ����� ���� ����, ���� �ݿ�
+
+## 7. ���� ���� ����(�����ϰ�)
+- ��� �� 0��(��Ʈ 35�ุ �غ�) �� ���� ������ ��� ���� �� �ռ�
+- ���� �˻� ���� 3�� 0.625(��ǥ 0.90 �̴�)
+- ���� �׸� ¤�� �� �� 85/2,735 = 3.1%(���� ��Ȯ��)
+- ���� �������� ������ ��� ���� 1/172
+- �˸� ���� �ݾ� ���� ���� 1�� ���(�Ϻ��� �� �� ��)
+- ��ȹ �б� �� ���� 12/350 = 3.4%
+- �ٲ� ȭ�� ��κ� �Ǽ��� Ȯ�� �� �� �� ����ģ ���� ��ǰ�� ���� ���� �� ��
+
+## 8. ���� ��(6����) �� �� ? �̹� ������ �͸�
+- �ٲ� ȭ�� �Ǽ��� Ȯ��(���� ����)
+- ����ģ �� ��ǰ ���� ���� �� �õ� 3�� �̻����� �� ���� Ȯ��
+- ���� ���� ������ �з��� �ڿ��� �ٽ� ��� � �ݿ� ����
+- ��� �� ����(�� ��Ʈ 35��)
+- �ٸ� Jev �迭 �ĺ� 3��(Plumb-4B �� spark-s1-4b-v6 �� jevify-gemma4-e4b)�� ���� ������� ������ ��(GPU ���� B ��⿭)
+
+---
+name: Presentations
+description: Read, create or edit PowerPoint or Google Slides decks. Use for presentation, slide deck, PowerPoint, PPT, PPTX, or Google Slides requests.
+---
+
+# Presentations
+
+Read the guidance relevant to each part of the request; a user may ask you to explain, edit and create in the same task. If they only ask questions about a deck, inspect it without making changes. Before editing an existing deck or following a template, read [template following](references/template_following.md). When creating or changing slide layouts, read [visual design guidance](style_guidelines.md). For Google Slides, read [Google Slides routing](routing/google_slides.md) first.
+
+## Clarification questions
+
+When making a new presentations, or majorly rewriting one, read [clarification questions](references/clarification-questions.md) before continuing on.
+
+## Artifact Template Selection
+
+When creating new presentations without a template, reference, or visual direction, or when the user asks to browse or upload templates, read [template selection](references/template-elicitation.md) before choosing a design or starting creation.
+
+## Writing Quality Instructions
+
+Oftentimes, when an AI model makes slides, the writing is poor-quality and/or AI slop. You must instead write  in a clear, direct, and professional way for all content you write on the slide, following the instructions below.
+
+The examples below show wording to avoid, why it is slop/bad writing, and how you would want to write that instead. They are non-exhaustive; apply the same judgment to writing quality more generally.
+
+### Taxonomy
+
+#### 1. Awkward/unnatural wording
+
+Wording that seems unfit for the text and should be rephrased to seem more human.
+
+| Don't write | Why it is slop/bad writing | You should instead write like this |
+| --- | --- | --- |
+| Word: ��Shopping has become more deliberate and **value-led**.�� | ��Value-led�� is an awkward and vague phrase that does not carry much substance. It comes off as an empty abstraction. | ��Shopping has become more deliberate and focused on **value**�� |
+| Word: ��Contributions **waned** over the period.�� | ��Waned�� is unnecessary. It is more direct and intuitive to simply say ��decreased��. | ��Contributions **decreased** over the period�� |
+| Word: ��A **closer** 2021 **step-up** from a small **base**�� | The word ��closer�� followed by ��step-up�� makes it unclear what the increase is ��closer�� to. The comparison sounds unnatural and can be made more explicit by replacing it with ��increased��. Baseline is a more natural phrasing of ��base��. | ��A **larger increase** in 2021 from a **low baseline**�� |
+| Phrase: ��A **five-question pulse** uses simple 0-10 scores and one **verbatim follow-up** to reveal what matters most.�� | The ��five-question pulse�� and ��verbatim follow-up�� are unnatural phrasings that are difficult to parse. | ��The **five-question survey** uses a 0-10 scale and one **open-ended question**.�� |
+| Phrase: ��Sony calculates Adjusted OIBDA as operating income plus depreciation and amortization expense, **less profit and loss amounts** that Sony **deems non-recurring**.�� | This phrasing is clunky and hard to read because it stacks multiple awkward phrases together. The phrase ��deems non-recurring�� is also awkward given that you could simply use non-recurring as an adjective (Sony��s involvement implied earlier in the sentence).<br><br>The phrase ��less profit and loss amounts�� is also an awkward way to communicate the financial impact. | ��Sony calculates Adjusted OIBDA as operating income plus depreciation and amortization expenses,  **less non-recurring profits and losses**�� |
+| Phrase: ��Evidence from the early COVID-19 through the inflationary aftermath shows consumers are **thinking harder before they buy.**�� | ��Thinking harder before they buy�� is a very strange phrasing that should be rephrased to be more aligned with the text. | ��Since COVID-19, consumers have become more **deliberate about purchases**�� |
+| Label: ��Immediate demand shock�� | The word ��immediate�� unnecessarily repeats the suddenness of ��shock,�� which makes the statement feel awkward and redundant. | ��Sharp decline in demand�� |
+| Label: ��VERBATIM FOLLOW-UP�� | What is ��verbatim follow-up��? That is an awkward/unnatural phrase that makes the underlying meaning unclear. | ��OPEN-ENDED QUESTION�� |
+| Label: ��POST-COVID CONSUMER�� | This is supposed to mean consumers after COVID-19, but it's expressed awkwardly as an adjective. | ��Consumers after COVID-19�� |
+
+#### 2. Excessive/flowery wording
+
+Wording that is excessively elaborate, sophisticated-sounding, or slogan-like.
+
+| Don't write | Why it is slop/bad writing | You should instead write like this |
+| --- | --- | --- |
+| Word: ��Introduced Snapdragon 8 Elite, pairing the custom Oryon CPU with stronger AI performance for **next-generation** flagship smartphones.�� | ��Next-generation�� is excessive and flowery because ��flagship�� already conveys that smartphones are advanced. | Omit the word entirely. |
+| Phrase: ��A **five-question pulse** uses simple 0-10 scores and one **verbatim follow-up** to reveal what matters most.�� | The ��five-question pulse�� and ��verbatim follow-up�� are also unnecessarily wordy, and can be simplified to a less sophisticated-sounding phrase. | ��The **five-question survey** uses a 0-10 scale and one **open-ended follow-up.**�� |
+| Phrase: ��Translate priorities into **coordinated execution**.�� | This phrase is flowery because it sounds action-oriented and polished but conveys little meaning. The words ��coordinated execution�� are overly abstract and excessive. | ��Translate priorities into **a clear execution plan**�� |
+| Phrase: ��A **structurally lower** commute base.�� | ��Structurally lower��  is inflated and overly elaborate, which obscures the intended meaning of the sentence. | ��A **permanent** drop in commuting�� |
+| Phrase: ��The organization seeks to **holistically cultivate a multifaceted ecosystem of synergistic capabilities** that meaningfully facilitates the **realization of enhanced outcomes**.�� | ��Holistically cultivate a multifaceted ecosystem of synergistic capabilities�� and ��realization of enhanced outcomes�� are excessively verbose and elaborate. It can be streamlined to convey the phrase��s underlying message in a less sophisticated-sounding way. | ��The organization seeks to build a **cohesive set of capabilities** that will **improve its outcomes**�� |
+| Phrase: ��Reduced overhead through **scalable spans and layers**�� | ��Scalable spans and layers�� is jargon-filled and adds little meaning. From the phrase, it is also unclear what ��scalable�� is referring to. | ��Reduced overhead through **streamlined** **management structures**�� |
+| Label: ��Catalyzing Transformative Excellence�� | ��Catalyzing transformative excellence�� inflates a simple concept and makes the label sound overly sophisticated. | ��Performance Improvement�� |
+
+#### 3. Vague/empty wording
+
+Wording that is unclear, abstract, or general in a way that does not convey any real substance.
+
+| Don't write | Why it is slop/bad writing | You should instead write like this |
+| --- | --- | --- |
+| Word: ��FY24 revenue $2.68B (+26%), with **broad-based** usage across products.�� | ��Broad-based�� is vague because it does not identify which products saw the increase in usage. It should be replaced with a more specific metric of growth to reflect the increase in usage. | ��FY24 revenue $2.68B (+26%), with usage **increasing** across products.�� |
+| Phrase: ��Execution depends on teams that deliver reliably, **sustain the core** and continuously improve operations�� | ��Sustain the core�� is vague phrasing that makes little sense. The jargon-heavy language needs to be replaced with a more specific representation of what the intended message is, clarifying that it is the core business. | ��Execution depends on teams that deliver reliably, **sustain the core business**, and continuously improve operations.�� |
+| Phrase: ��**Progressive promotion** improves trust and usability�� | ��Progressive promotion�� is vague and ambiguous, with no discernible meaning.  To make the phrase less abstract and slogan-like, it needs to mention exactly what is improving ��trust and usability��. | ��**Customer rewards** programs improve trust and usability�� |
+| Phrase: ��**More consistent coverage** and **stronger transparency**�� | ��More consistent�� and ��stronger transparency�� are vague and abstract phrases.<br><br>Given the slide��s focus on operational improvements, the phrase should specify the concrete outcome, like more consistent staffing coverage and clearer scheduling visibility. | ��**Improved staffing coverage and scheduling visibility**�� |
+| Phrase: ��**Price and availability** lead **transportation adoption**�� | Both ��price and availability�� and ��transportation adoption�� are clear, but taken together convey no meaning. A specific causal relationship should be added to relay the two. | ��Price and availability are **the main drivers of** transport adoption�� |
+| Label: ��Strategic Value Drivers�� | ��Strategic Value Drivers�� is too abstract to identify what the section actually conveys. Given the slide��s focus on revenue metrics, it should be more tailored to that. | ��Revenue Metrics�� |
+
+#### 4. Unnecessary wording
+
+Wording that is wholly unnecessary and would be best to remove.
+
+| Don't write | Why it is slop/bad writing | You should instead write like this |
+| --- | --- | --- |
+| Word: ��**Practical** consumer needs consistently outweigh broader supporting factors across Germany, the US, and China.�� | ��Practical�� is unnecessary because ��consumer needs�� already suggests that they are concrete needs. Removing the word helps clarify the sentence��s intended meaning. | ��Consumer needs consistently outweigh broader supporting factors across Germany, the US, and China�� |
+| Word: ��Operating earnings after **defined** non-GAAP adjustments�� | ��Defined�� does not clarify anything. It makes the sentence more formal and obscures its initial meaning. | ��Operating earnings after the non-GAAP adjustments�� |
+| Phrase: ��A five-question pulse uses simple 0-10 scores and one verbatim follow-up to **reveal what matters most.**�� | The ��reveal what matters most�� is empty phrasing that does not affect the phrase��s meaning when removed. | ��The five-question survey uses a 0-10 scale and one open-ended follow-up.�� |
+| Label: ��A NEW ERA�� | Has no clear connection to the slide��s discussion of employee survey results and does not communicate a specific point. | Omit the phrase entirely. |
+| Label: ��MOMENTUM AHEAD�� | Arbitrary positive-sounding phrase that is not supported by or relevant to the refinancing information on the slide. | Omit the phrase entirely. |
+| Label: ��UNLOCKING POTENTIAL�� | Generic promotional language that adds nothing to a slide showing transit recovery trends. | Omit the phrase entirely. |
+
+#### 5. Illogical wording
+
+Wording that is not coherent or logical and does not make sense.
+
+| Don't write | Why it is slop/bad writing | You should instead write like this |
+| --- | --- | --- |
+| Word: ��Test, **learn**, and scale the most promising ideas with disciplined investment�� | While ��testing�� and ��scaling�� promising ideas is coherent, ��learning�� promising ideas makes no sense. The context implies that this may instead be ��development�� of these ideas. | ��**Develop**, test, and scale the most promising ideas with disciplined investment�� |
+| Phrase: ��Transit & **ground passenger** jobs�� | ��Transit & ground passenger jobs�� is incomprehensible, especially because ��ground passenger jobs�� makes no logical sense. Fixing the linkage makes this coherent again. | ��Transit and passenger transportation jobs�� |
+| Phrase: ��**Incubate adjacent offerings** and business models that can **expand the core.**�� | The dense phrasing of ��incubate adjacent offerings�� carries no meaning. The phrase ��expand the core�� also not coherent because it doesn��t specify what the ��core�� is referring to. | ��Develop **related products and business models** that expand the core business.�� |
+| Phrase: ��**New mobility concepts** and changing behavior in cities.�� | ��New mobility concepts�� is incoherent and does not make sense in the context of this sentence. The underlying message revolves around new transportation options, not novel ��mobility concepts��. | ��New transportation options and changing travel behavior in cities.�� |
+| Phrase: ��79% Transit use **back to pre-pandemic**�� | The phrasing is not parseable. It could mean that transit use has returned to 79% of its pre-pandemic level, or that 79% represents the pre-pandemic transit-use rate. To make the relationship logical, it should state what the current level is and how it compares with the previous pre-pandemic levels. | ��Transit use is at 79%, matching pre-pandemic levels��<br><br>or<br><br>��Transit use has recovered to 79% of its pre-pandemic level.�� |
+| Label: ��Revenue Growth Decline Expansion�� | ��Revenue growth decline expansion�� is illogical because it combines contradictory ideas without explaining how they relate. ��Growth�� and ��decline�� point in different directions. | ��Revenue Decline�� |
+
+|  | Words | Phrases | Labels |
+| --- | --- | --- | --- |
+| Awkward/unnatural wording | ? | ? | ? |
+| Excessive/flowery wording | ? | ? | ? |
+| Vague/empty wording | ? | ? | ? |
+| Unnecessary wording | ? | ? | ? |
+| Illogical wording | ? | ? | ? |
+
+### AI-isms
+
+Avoid the following patterns of AI-generated wording in slide copy.
+
+#### 1. Punctuation
+
+| Don't write | Why it is slop/bad writing |
+| --- | --- |
+| Em dash: ��Jobs fell 38% from February to April 2020, then climbed back gradually?ending 2024 still just below the pre-shock level.�� | Em dashes are always slop. |
+| Semicolon: ��Travel demand and employment fell within weeks; persistent behavior shifts are shaping the path back.�� | Semicolons are always slop. |
+| Dot notation: ��Faster growth ? Better efficiency ? Stronger outcomes�� | ASCII dots are always slop. |
+| Vertical bar: ��Strategy \| Execution \| Impact�� | Vertical bars are always slop. |
+| Arrows: ��Crisis-led and repetitive �� one trusted plan �� flexible, coordinated support �� confident step-down with a route back�� | Arrows are always slop. |
+
+#### 2. ��It��s not X, it��s Y�� / ��Do Y, not X��
+
+| Don't write | Why it is slop/bad writing |
+| --- | --- |
+| ��Humidity **is an** exposure trajectory, **not** a setpoint�� | ��Is / is not�� sentence structures are always slop. |
+| ��This **isn��t just** a calendar - **it��s** a gateway to a more intentional life.�� | ��Is / is not�� sentence structures are always slop. |
+| ��Data access **is not** a background detail. **It��s** the heart of the user experience.�� | ��Is / is not�� sentence structures are always slop. |
+
+#### 3. Passive Voice
+
+| Don't write | Why it is slop/bad writing |
+| --- | --- |
+| ��The proposal was approved by the team�� | Passive voice is always slop. Write instead: ��The team approved the proposal.�� |
+| ��The launch was delayed�� | Passive voice is always slop. Write instead: ��The team delayed the launch.�� |
+
+#### 4. Imperative Title
+
+| Don't write | Why it is slop/bad writing |
+| --- | --- |
+| Slide title: ��Define the integration perimeter before designing the workplan�� | Imperative slide titles are always slop. |
+| Slide title: ��Screen the energy credit, not the headline retail tariff�� | Imperative slide titles are always slop. |
+
+#### 5. Slogan-like Phrasing
+
+| Don't write | Why it is slop/bad writing |
+| --- | --- |
+| Phrase: ��Usage-based models turn customer activity into a direct revenue expansion path�� | Slogan-like wording, particularly the use of ��direct revenue expansion path�� |
+| Phrase: ��Provided scale, speed and certainty by anchoring the club refinancing.�� | Formulaic statement with the ��scale, speed and certainty��.  The statement is also unclear about how anchoring the club refinancing leads to scale, speed, and certainty. This is slogan-like with the buzzwords used in the formulaic statement. |
+
+#### 6. Formulaic three-part lists
+
+Avoid using three-part lists of actions, situations, or examples as a default sentence pattern. Repeated "X, Y, and Z" constructions make slide copy sound formulaic. State the main point directly. If each item matters, explain how the ideas relate or present them separately. Do not add filler to complete a trio or lose useful detail merely to avoid one.
+
+| Don't write | Why it is slop/bad writing |
+| --- | --- |
+| ��Partners can act **before a crisis, during daily strain and when care becomes difficult**.�� | Packages overlapping situations into a three-part rhythm without clearly explaining when or how partners can help. |
+| ��Residents help **choose priorities, design services and judge whether access improves**.�� | Bundles distinct responsibilities into a predictable three-action sequence instead of explaining how residents influence the services they receive. |
+| ��Example proposal: connect a housing area with **food, care and the library**.�� | Compresses different services and destinations into a tidy trio, leaving the proposed connection unclear. |
+| ��Outreach staff **listen, map existing services and document gaps**.�� | Lists three actions without explaining how listening and service mapping help staff identify gaps. |
+
+#### 7. Unnecessary hyphenated compounds
+
+Avoid hyphenated compounds that make ordinary ideas sound awkward or unnecessarily technical. Prefer a plain phrase when it expresses the same meaning more naturally. Use natural wording instead of simply deleting hyphens. Preserve exact official names and necessary distinctions.
+
+| Don't write | Why it is slop/bad writing |
+| --- | --- |
+| ��Use overnight shelters or **violence-against-women** shelters.�� | Packs a description of the people served into a long modifier. Write instead: ��Use overnight shelters or shelters for women experiencing violence.�� |
+| ��People in the **Point-in-Time** Count�� | Repeats a technical name where a simple reference may suffice. After identifying the count, write instead: ��People in the count��. Preserve the official name where needed. |
+| ��**Time-limited** accommodation�� | A plain phrase can explain the duration more naturally. Write instead: ��Accommodation for a limited period��. |
+| ��**Owner-occupied** housing�� | For a general audience, a plain phrase can explain who lives in the home. Write instead: ��Homes where the owners live��. |
+| ��A **one-night** snapshot misses hidden homelessness.�� | The duration reads naturally as a separate phrase. Write instead: ��A count on a single night misses hidden homelessness.�� |
+
+## Important instructions
+
+- Visual assets: DO NOT use Python to draw any images; DO NOT use programmatic vector shapes for visuals; DO NOT use programmatic drawings of any sort. Use image search or imagegen instead! By default, DO NOT reuse the same image more than once (unless it's a background). Not only do you need to prepare visuals for the main concept, you also need to get decorative visuals. Before sourcing or generating visuals, be mindful of the desired aspect ratio, placement, and cropping options on the slide. For example, if you intend to place text to the left of the image containing a person, you should ask imagegen to put the person on the right side of the image.
+- Default styling: use one composition instead of a collection of UI panels. UI-like styling typically includes card grids, pills, badges, button-like text boxes, tab or navigation patterns, repeated modular panels, dense dashboard-style layouts, and other component-library aesthetics that imply interactivity. Use stylized text boxes less, favoring a flat structure on the canvas.
+- Font size: When a template is provided, match its font sizes. Avoid overly small text. When no template or style guidance is given, a good rule of thumb is at least 42pt for deck titles, 32pt for slide titles, and 17pt for body text. If you see overflow/overlap, try cutting content before shrinking text further to improve text layout.
+- Title slide: Keep the title slide minimal and simple. Avoid cramming in too much information.
+
+### Scope clarification for editable evidence
+
+The prohibition on programmatic drawings applies to illustrative and decorative visual assets. Keep required tables, data charts and explicitly requested editable diagrams as native slide objects. Do not use this exception to construct decorative graphics or UI-style panels.
+
+## Requirements
+
+**Follow the requested design.** Use the user's template, reference, branding and layout instructions before any defaults in this skill. Follow a supplied deck��s design when the user asks you to match or use it as a template. If the user supplies a deck only as a source of text, data or images, do not assume they want you to copy its design. Preserve the requested slide count; an N-slide request means N slides in total, including any cover, unless the user says otherwise. Do not add a cover to a one-slide deliverable by default.
+
+**Write for the audience.** Keep commentary about creating or checking the deck out of slides, speaker notes and requested explanations. Keep validation records private unless requested.
+
+**Keep facts accurate.** Base factual claims on supplied materials or sources gathered for the task. Do not invent facts, numbers or citations. Clearly identify assumptions and hypotheses. Keep caveats that affect the conclusion, and point out disagreements between sources when they affect the answer. When summarizing or calculating, preserve the units, comparison being made and meaning.
+
+**Keep content editable and complete.** Keep required tables, charts and diagrams editable. Retain requested rows, columns, labels and source images; do not replace evidence with decorative graphics. Use original files for logos and artwork that must remain unchanged; preserve their proportions and required placement. Cite external facts and images in the relevant slide's speaker notes. Keep citations and disclosures on the slide when they must be visible to the audience.
+
+## Titles
+
+**Name the subject directly.** For process, overview, definition, and setup slides, prefer a concise noun phrase that identifies the actual subject. Make plain topic titles the default for these slides. A clear topic label can be more useful than a full sentence, question, or takeaway. Choose the form that best describes what the slide actually shows. Avoid turning setup or background slides into claims, slogans, or announcements about the presentation.
+
+For each title, consider whether a short noun phrase, an explanatory title, or a supported factual takeaway would serve the reader best. A noun phrase is an option to use - we don't always need to use noun phrases over sentences. Keep a good existing title when it already does the job.
+
+Name the actual subject or distinction in plain language. Remove presenter narration such as "Start simple" and replace vague announcements such as "Two different questions" with the subjects being discussed. Do not force a title to sound like an insight. A setup slide can simply identify the information or assumptions it establishes.
+
+Reconsider the title's framing before polishing its wording. Avoid generic narrative frames such as "From X to Y," "Two questions about...," or "Start with..." when a direct subject label is clearer. Replacing words within the same frame may leave the underlying problem intact.
+
+| Don't write | You should instead write like this | Why it fits the slide |
+| --- | --- | --- |
+| "Start simple: a withdrawal reflex" | "The withdrawal reflex" | Names the mechanism explained by the diagram and removes the presenter's instruction. |
+| "Two different questions about one behavior" | "Mechanism and evolution of behavior" | Names the two explanations that the slide compares. |
+| "Same paycheck. Different purchasing power." or "The same take-home pay buys different amounts" | "Income and household assumptions" | Names the income and household setup used for the comparison. This slide establishes the baseline; it does not yet show a purchasing-power comparison. |
+| "From first signal to verified recovery" or "From detection to post-incident review" | "Major incident response process" | Names the process being explained. The numbered steps already communicate the progression. |
+
+Use a takeaway title when the slide establishes a specific finding. Use a range or progression when that progression itself is the subject. Do not force either form onto a slide that simply explains a topic.
+
+Apply the writing quality instructions above and the punctuation rules below to whichever form you choose.
+
+**Periods in titles and headings:** Remove trailing periods from short slide titles and section headings. Keep a terminal period only when the title or heading is a longer, complete sentence. A short complete sentence does not need a trailing period. Do not lengthen or otherwise rewrite a good title just to retain a period. Use normal punctuation in body text and preserve periods within abbreviations and numbers.
+
+## Create or edit the deck
+
+1. Read `references/implementation.md` and the [API quick start](artifact_tool_docs/API_QUICK_START.md) before coding. Use JavaScript ES modules with `@oai/artifact-tool`; do not use `python-pptx` or the obsolete Python API.
+2. Follow the user��s requested order; otherwise, choose an order that covers the request without repetition. Give each slide a clear purpose. A factual summary, comparison or explanation is enough when the evidence does not support a recommendation.
+3. Read additional guidance only when needed: [cover design](references/cover_art_direction.md) for a new cover; [editable tables and charts](references/native_evidence.md); [bullet formatting](references/native_bullets.md) for new lists; [finance](domain_guidance/finance.md) for financial presentations. Use the [API reference map](artifact_tool_docs/api/API_DOCS.md#reference-map) for other objects.
+4. Export a draft PPTX in the private build directory, then follow [validation and delivery](references/finalization.md). Inspect the rendered slides and fix problems. Do not change the user's design just to satisfy an automated style suggestion.
+
+## Review and handoff
+
+Check content coverage, slide count, factual accuracy, template match, text fit and editability. Read titles and body text together: remove unsupported conclusions, repeated points, filler subtitles and comments about creating the deck. Inspect the slides to decide whether style warnings need a fix. Passing automated checks does not prove the writing or design is good.
+
+## Final response
+
+Return the deck and any explanation the user requested. Do not add a recap of your edits or successful validation checks unless asked. Mention problems or limitations that affect use of the deck. Do not rate your own work or list every instruction you followed. Do not deliver temporary files unless requested. For read-only questions, answer directly and cite the source you inspected.
+
+### Final response citations
+
+If the app supports it, link the final deck once with `:codex-file-citation{path="/abs/path/deck.pptx" purpose="output"}`. Otherwise use the app's normal file link. Say you checked the deck in PowerPoint only if you opened and inspected it there.
+
+### Final response suggested followups
+
+- After successfully creating, editing, or analyzing an artifact, finish your final response with 3 useful next actions tailored to the artifact and the user's goal. Completing the requested work is not a reason to skip these actions: they help the user continue from the result. Do not perform the actions unless the user chooses one.
+- Each action must be a distinct, concrete request the user could send next. Do not repeat completed work or invent filler. Omit the list if the user declines suggestions, the requested work fails, or no genuinely useful next action remains.
+- Present each action as an unescaped Markdown list item using this exact syntax: `- :codex-followup[Short action]{prompt="Complete request for that action"}`.
+
+
+codex
+발표 자료 스킬을 적용해 참고 발표의 형식과 원본 수치를 확인하겠습니다. 요청대로 파일을 직접 만들지 않고, 실행하면 PPTX를 저장하는 python-pptx 스크립트만 작성합니다.
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command "python -c \"import json,pathlib; p=pathlib.Path('program/산출물양식/w5/스탠드업_2026-10-06/_재료'); print(json.dumps({f.name:f.read_text(encoding='utf-8-sig') for f in p.glob('*.md')},ensure_ascii=True))\"" in C:\Users\playdata2\Documents\final_workspace
+ succeeded in 390ms:
+{"\uc8fc\uac04_\uc0ac\uc2e4.md": "# 5\uc8fc\ucc28(2026-09-29 ~ 10-06) \uc2a4\ud0e0\ub4dc\uc5c5 \uc7ac\ub8cc \u2014 \ud655\uc778\ub41c \uc0ac\uc2e4\ub9cc\n\n\ubc1c\ud45c \uaddc\uce59: \uc7a5 \uc81c\ubaa9 = \uacb0\ub860 \ubb38\uc7a5 \u00b7 \uc22b\uc790 \ubc14\ub85c \uc544\ub798 \uc791\uc740 \uae00\uc528\ub85c \u300c\uc5b4\ub5bb\uac8c \ub098\uc628 \uc218\uce58\uc778\uc9c0\u300d \u00b7 \uc815\uc801 \ud398\uc774\uc9c0(\uc560\ub2c8\uba54\uc774\uc158 \uc5c6\uc74c) \u00b7 \uc815\ud558\uc9c0 \uc54a\uc740 \uac83(\uac00\uaca9 \ub4f1) \u00b7 \uc5c6\ub294 \uae30\ub2a5 \ub123\uc9c0 \uc54a\uae30 \u00b7 \u300cJev\u300d\ub77c\uace0\ub9cc \uc4f0\uc9c0 \uc54a\uae30(\u300cJev \uacc4\uc5f4 \ubaa8\ub378 \uc911 \uc774\ub984(\ud559\uc2b5 \uc5ec\ubd80)\u300d, \uc720\ub8cc API \ub294 \u300cJev API(\uc720\ub8cc)\u300d) \u00b7 \u300c\uc11c\ubc84\u300d\ub9cc \uc4f0\uc9c0 \uc54a\uae30(x600 \uc11c\ubc84 \u00b7 cs \ud504\ub85c\uc81d\ud2b8 \uc11c\ubc84 \u00b7 GPU \uc11c\ubc84 \u00b7 mock \uc11c\ubc84) \u00b7 \uc778\uc6d0 \uc81c\ud55c(4\uc778) \uc4f0\uc9c0 \uc54a\uae30 \u00b7 \ub300\uc0c1\uc740 \u300c\uc790\uc720\uc5ec\ud589\uc790\u300d \u00b7 \uace0\uac1d \uac74\uc744 \uc0ac\ub78c\uc5d0\uac8c \ub118\uae30\uc9c0 \uc54a\ub294\ub2e4(\uc0ac\ub78c\uc740 \uc624\ub958 \ub9ac\ud3ec\ud2b8\ub9cc) \u00b7 LangGraph \uc4f4\ub2e4\uace0 \uc801\uc9c0 \uc54a\uae30 \u00b7 \uc904\ud45c(\u2014)\u00b7\ub9d0\uc904\uc784\ud45c \uc4f0\uc9c0 \uc54a\uae30.\n\n## 0. \ud55c \uc8fc \uaddc\ubaa8\n- \ucee4\ubc0b: \uc791\uc5c5 \ube0c\ub79c\uce58(role-manager) 402\uac74 \u00b7 \ubaa8\ub4e0 \ube0c\ub79c\uce58 \ud569\uacc4 531\uac74(\ud300\uc6d0 \ucee4\ubc0b \ud3ec\ud568, 2026-09-29 ~ 10-06, `git log`)\n- \ub0a0\uc9dc\ubcc4(\ubaa8\ub4e0 \ube0c\ub79c\uce58): 9/29 4 \u00b7 9/30 91 \u00b7 10/1 85 \u00b7 10/2 18 \u00b7 10/3 112 \u00b7 10/4 74 \u00b7 10/5 76 \u00b7 10/6 71\n- \uc601\uc5ed(\ucee4\ubc0b \uc81c\ubaa9 \uba38\ub9ac): \uc5f0\uad6c \ubb38\uc11c 149 \u00b7 \uc6f9 \uae30\ub2a5 51 \u00b7 \ubaa8\ub378 \ube44\uad50 \ub3c4\uad6c 23 \u00b7 \uacc4\ud68d \ubb38\uc11c 19 \u00b7 \uc5ec\ud589 \uae30\ub2a5 12 \u00b7 \uc561\ud2f0\ube44\ud2f0 12 \u00b7 \uc774\ub3d9 11\n\n## 1. \uc6f9 \ud654\uba74 \u2014 \uace0\uac1d\uc774 \uacc4\ud68d\uc744 \uc62c\ub9ac\uace0 \uc5ec\ud589 \ub05d\uae4c\uc9c0 \uc4f0\ub294 \ud654\uba74 12\uac1c\ub97c cs \ud504\ub85c\uc81d\ud2b8 \uc11c\ubc84\uc5d0 \ubd99\uc600\ub2e4\n- \ud654\uba74 12\uac1c(\uc18c\uac1c \u00b7 \uc57d\uad00 \ub3d9\uc758 \u00b7 \uc5ec\ud589 \ucde8\ud5a5 \uc124\ubb38 \u00b7 \uacc4\ud68d \uc62c\ub9ac\uae30 + \uc77d\ub294 \uae30\uc900 \u00b7 \ud56d\ub85c \uc9c0\ud0b4\uc774 \uce74\ub4dc \u00b7 \uc62c\ub9ac\ub294 \uc911 \u00b7 \uacc4\ud68d \uc77d\ub294 \uc911 + \uc9c8\ubb38 \u00b7 \uacc4\ud68d \ud655\uc778 \u00b7 \uc5ec\ud589(\uc77c\uc815 \u00b7 \uc9c0\ub3c4 \u00b7 \ucc44\ud305) \u00b7 \ub0b4 \uc5ec\ud589 \u00b7 \ub9c8\uc774\ud398\uc774\uc9c0 \u00b7 \uc18c\uc15c \ub85c\uadf8\uc778 \uc644\ub8cc) \u2014 \ud654\uba74\uc124\uacc4\uc11c 5\uc8fc\ucc28\n- \uc774\ubc88 \uc8fc \uc6f9 \ucee4\ubc0b: \uacc4\ud68d \ud655\uc778 \ud654\uba74 \uac1c\ud3b8(\ub0a0\uc9dc \uce69 \u00b7 \uc2dc\uac04 \ub04c\uae30 \u00b7 \uc9c0\ub3c4 \uacbd\ub85c\uc120 \u00b7 \uc804\uccb4 \uc790\ub3d9 \ucd94\ucc9c \ubbf8\ub9ac \ubcf4\uae30) \u00b7 \uc57d\uad00 \ub3d9\uc758(\ud544\uc218 2 \u00b7 \uc120\ud0dd 3) \u00b7 \ucfe0\ud0a4 \ub85c\uadf8\uc778\uacfc \uac8c\uc2a4\ud2b8 \uc81c\ud55c \u00b7 \uc5d0\uc774\uc804\ud2b8 \ud0a4(\ud68c\uc6d0\ub9cc \u00b7 90\uc77c \ub9cc\ub8cc) \u00b7 \uc18c\uc15c \ub85c\uadf8\uc778(\uad6c\uae00 \uba3c\uc800) \u00b7 \u300c\ub514\uc2a4\ucf54\ub4dc\ub85c \uc5f0\uacb0\u300d \u00b7 \ud154\ub808\uadf8\ub7a8 \uc5f0\uacb0 \u00b7 \ud56d\ub85c \uc9c0\ud0b4\uc774 \uce74\ub4dc \u00b7 \ub85c\ub529 \uc911 \uc9c8\ubb38 \u00b7 \uc7ac\ub09c \uc77c\uc815 \uc815\uc9c0 \u00b7 \ub370\ubaa8 \ud654\uba74 \uc81c\uac70(\uc2e4\uc11c\ubc84 \uc5f0\uacb0\ub9cc)\n- \uc2dc\ud5d8: \ud654\uba74\uc740 mock \uc11c\ubc84 \uc2dc\ud5d8(\ud654\uba74 \ubc18\uc751)\uc73c\ub85c \ud655\uc778. \uc2e4\uc11c\ubc84 \ud655\uc778(\uc11c\ubc84 \uc751\ub2f5)\uc740 \uacc4\ud68d \ud655\uc778 \ud654\uba74\uc758 \uc77d\uae30 \u00b7 \uacb0\uacfc \u00b7 \uc218\uc815 \u00b7 \ub4f1\ub85d\ub9cc 2026-10-03 \uc5d0 \ud568. \uadf8 \ub4a4 \ubc14\ub010 \ud654\uba74\uc740 \uc2e4\uc11c\ubc84 \ud655\uc778 \uc548 \ud568\n- \ucea1\ucc98: w5/\ud654\uba74\uc124\uacc4\uc11c/assets/ (\ubaa8\ub450 mock \uc11c\ubc84 \ud654\uba74)\n\n## 2. \uc11c\ubc84 \uae30\ub2a5 \u2014 \uac1c\uc778 AI \uc785\uad6c \u00b7 \uc2e4\uc2dc\uac04 \uc9c4\ud589 \u00b7 \uc54c\ub9bc \ucc44\ub110\uc774 \uc0dd\uacbc\ub2e4\n- MCP \uc5ec\ud589 \ub3c4\uad6c(\uac1c\uc778 AI \uac00 \ubcf8\uc778 \uc5ec\ud589\ub9cc): \uc77d\uae30 5 \u00b7 \uc4f0\uae30 7(\uc4f0\uae30\ub294 \uae30\ubcf8 \uaebc\uc9d0), \uc2dc\ud5d8 15/15 (2026-10-02)\n- \uc6f9 \uc2e4\uc2dc\uac04 \uc9c4\ud589(SSE): \ucc44\ud305 \u00b7 \uc77c\uc815 \uc9dc\uae30 \u00b7 \uc811\uc218 \uc77d\uae30, \uc2dc\ud5d8 21/21 (2026-10-02)\n- \ud300 \uc7ac\ubc30\ubd84(\ubc1b\ub294 \ud300\uc774 \uc5c6\uc73c\uba74 \ub4f1\ub85d\ub41c \ud300 \ubaa9\ub85d\uc73c\ub85c \ud55c \ubc88\ub9cc \ub2e4\uc2dc \uace0\ub984): mock \uc11c\ubc84 \uc2dc\ud5d8 10/10 (2026-10-06)\n- \uc5ec\ud589 \uc0ad\uc81c \u00b7 \ub514\uc2a4\ucf54\ub4dc \uc5f0\uacb0 \u00b7 \ud154\ub808\uadf8\ub7a8 \uc5f0\uacb0: cs \ud504\ub85c\uc81d\ud2b8 \uc11c\ubc84 \ucf54\ub4dc\uc5d0 \uad6c\ud604(\uacc4\uc57d \ubb38\uc11c \uae30\uc900), x600 \uc11c\ubc84 \ubc18\uc601 \u00b7 \uc2e4\uc81c \uc5f0\uacb0 \ud655\uc778 \uc548 \ud568\n- \uc790\ub3d9 \uc2dc\ud5d8(cs \ud504\ub85c\uc81d\ud2b8 \uc804\uccb4, \uc2e4\uc81c \ubaa8\ub378 \uc2dc\ud5d8 238\uac1c \uc81c\uc678): 4,245/4,251 = 99.9% (2026-10-06 18:09) \u2014 \uc2e4\ud328 \u00b7 \uc624\ub958 6\uac74 \uc911 5\uac74\uc740 \ub85c\uceec \ud658\uacbd \ud30c\uc77c\uc758 \ubaa8\ub974\ub294 \ud0a4 \uc774\ub984 \ub54c\ubb38\n- \uc694\uc2dd \uc5d0\uc774\uc804\ud2b8 \uc2dc\ud5d8(\ud300\uc6d0 \uc815\uc138\ud658): 517/517 (\uc870\uc9c1 develop 2f3594a, 2026-10-06)\n\n## 3. \ubaa8\ub378 \u2014 \uc791\uc740 \ubaa8\ub378\uc744 \uc6b0\ub9ac \ub370\uc774\ud130\ub85c \uac00\ub974\uce58\ub2c8 \ud070 \ub85c\uceec \ubaa8\ub378\uc744 \ub118\uc5c8\ub2e4\n- \uacfc\uc81c: \uace0\uac1d \ub9d0 \ud558\ub098 \u2192 \uadf8 \uc5ec\ud589\uc758 \uc77c\uc815 \ud56d\ubaa9 \ubc88\ud638 \ud558\ub098 \ub610\ub294 \u300c\uc5c6\uc74c\u300d. \uc2dc\ud5d8 769\ubb38\uc81c(mix8~12, \u300c\uc694\uccad \ub458\u300d 66\ubb38\uc81c \uc81c\uc678), \ubb38\uc81c\ub294 \ubaa8\ub450 \ubaa8\ub378\uc774 \uc4f4 \ud569\uc131(Codex \u00b7 Claude)\n- Gemma 4 E4B(\uc720\ud6a8 \uc57d 4B)\ub97c QLoRA \ub85c \uac00\ub974\uce68: 688 \u2192 750/769(97.5%) \u00b7 \uc2dc\ub4dc\ub9cc \ubc14\uafd4 \ub2e4\uc2dc 760/769(98.8%). \uac00\ub974\uce58\uae30 \uc804 \ub300\ube44 \uc774\ucabd\ub9cc \ub9de\uc74c 69 : 7, p=6.4e-14\n- \uac19\uc740 \ubc29\ubc95\uc73c\ub85c \uac00\ub974\uce5c Winnow-E4B(Jev \uacc4\uc5f4 \ubaa8\ub378, \uc2dc\ub4dc 1\uac1c): 655 \u2192 756/769. \uac00\ub974\uce5c E4B(750 \u00b7 760)\uc640 \uad6c\ubd84 \uc548 \ub428 \u2192 \ubaa8\ub378 \uc0ac\uc774 \uc21c\uc704\ub294 \uc2dc\ub4dc 3\uac1c \uc774\uc0c1 \ud544\uc694\n- \ube44\uad50(\uac19\uc740 769\ubb38\uc81c, \ud559\uc2b5 \uc5c6\uc74c): Gemma 26B-A4B 732 \u00b7 Qwen3.8 27B 749 \u00b7 OpenJev 26B 743 \u00b7 decider-chat 31B 748\n- \uc0c1\uc6a9(\uacf5\uc815 \ube44\uad50 \uc544\ub2d8 \u2014 CLI \uc2e4\ud589 \u00b7 \ucd9c\uc81c\uc790 \ud3b8\ud5a5): Claude Opus 5.5 764 \u00b7 Astra 766 \u00b7 Sol 760 \u00b7 Luna 741\n- Jev API(\uc720\ub8cc) \uc9c1\uc811 \uc9da\uae30: mix8+mix9 309\ubb38\uc81c\uc5d0\uc11c 298 \ub300 \uac00\ub974\uce5c E4B 302 (p=0.42, \uad6c\ubd84 \uc548 \ub428)\n- CPU \ub9cc\uc73c\ub85c(\ucf54\uc5b4 4\uac1c \u00b7 GGUF Q8 \uc57d 7.5GB): \uac19\uc740 \uc77c\uc815 \ud6c4\uc18d \uc9c8\ubb38 \ud3c9\uade0 4.55\ucd08 \u00b7 \uc0c8 \uc77c\uc815 \uccab \uc9c8\ubb38 \ud3c9\uade0 67.5\ucd08, 748/769\n- \uadf8\ub9bc: w5/\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c/\uadf8\ub9bc/\ubaa8\ub378\ubcc4_769_\ube44\uad50.png \u00b7 \ud30c\uc778\ud29c\ub2dd_\uc804\ud6c4.png\n\n## 4. \ubaa8\ub378 \uc870\ud569 \u2014 \ub2e8\uacc4\ub97c \ub9ce\uc774 \uc774\uc744\uc218\ub85d \uc88b\uc544\uc9c0\uc9c0\ub294 \uc54a\uc558\ub2e4(\ud55c \uc904\ub85c \uc774\uc740 \uc2dc\ud5d8)\n- \uaddc\uce59 \u2192 ML \ud310\ubcc4\uae30 \u2192 \ud559\uc2b5 \uc5c6\ub294 Winnow-E4B(Jev \uacc4\uc5f4) \u2192 \uac00\ub974\uce5c E4B \ub97c \ubb38\uc81c\ub9c8\ub2e4 \uc2e4\uc81c \ud638\ucd9c(GPU \uc11c\ubc84 C, 2026-10-06)\n- 769\ubb38\uc81c: \uac00\ub974\uce5c E4B \ud558\ub098 748 \u00b7 \uaddc\uce59 + ML \uac70\ub984 745(\uad6c\ubd84 \uc548 \ub428, \uac00\ub974\uce5c E4B \ud638\ucd9c 19% \uac10\uc18c) \u00b7 \ud559\uc2b5 \uc5c6\ub294 Winnow-E4B \ub97c \ubcf4\ub0bc \uacf3 \ud310\uc815\uc5d0 \ub123\uc73c\uba74 697(\uc0ac\ud6c4 \uac1c\uc120 \ud310, \uc0ac\uc804 \ub4f1\ub85d \ud310 472) \u2014 \ud559\uc2b5 \uc870\uac74\uc774 \ub2ec\ub77c \uacf5\uc815\ud55c \ube44\uad50 \uc544\ub2d8\n- \uac19\uc740 \ubc29\ubc95\uc73c\ub85c \uac00\ub974\uce5c \ub450 \ubaa8\ub378\ub85c \uc9e0 \uad6c\uc870(\uc778\uacc4 \u00b7 \uc720\ud615\ubcc4 \u00b7 \ub77c\uc6b0\ud130): 747~752, \ub2e8\ub3c5\uacfc \uad6c\ubd84 \uc548 \ub428\n- \uc77c\uc815\uacfc \ubb34\uad00\ud55c \ub9d0\uc774 \uc11e\uc778 \ud750\ub984 2,735\ubb38\uc81c: \uaddc\uce59 \u2192 ML \uc55e\ub2e8\uc774 \uc774\ub4dd(\uc815\ub2f5 90.8% \u2192 91.9%, 37 : 8, p=1.5e-5) \u00b7 \ubb34\uad00\ud55c \ub9d0\uc5d0 \ud56d\ubaa9\uc744 \uc9da\ub294 \ube44\uc728 4.5% \u2192 3.2%\n- \uadf8\ub9bc: w5/\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c/\uadf8\ub9bc/\ud55c\uc904\uc5f0\uacb0_\uc2dc\ud5d8.png \u00b7 \uac00\ub974\uce5c_Jev\uacc4\uc5f4_\uad6c\uc131\ube44\uad50.png\n\n## 5. \ubd84\ub958 \u00b7 \uaddc\uc815 \uac80\uc0c9(RAG)\n- \uace0\uac1d \ub9d0 \ubd84\ub958(CX 400, Codex \uc791\uc131 \u00b7 Claude \uad50\ucc28 \ub77c\ubca8): \ud559\uc2b5\ud55c \ubd84\ub958 \uc778\ucf54\ub354(e5-base) \uc758\ub3c4 97.5% \u00b7 \uac10\uc815 93.8% \u00b7 \uae34\uae09\ub3c4 88.4% \u00b7 \ub300\uc0c1 93.2%. \ud559\uc2b5 \uc5c6\ub294 E4B \uc81c\ub85c\uc0f7\uc740 \uae34\uae09\ub3c4 60.9% \u2192 \ud559\uc2b5 \ud6c4 88.4%\n- \uaddc\uc815 \uac80\uc0c9(\uc81c\ud488 \ucf54\ub4dc \uadf8\ub300\ub85c, \ub3c5\ub9bd \uc9c8\ubb38 B 48\ubb38\uc81c, 2026-10-06): \uc815\ub2f5 \uaddc\uc815\uc774 \uc0c1\uc704 3\uac1c \uc548 30/48 = 62.5%(\uc591\uc2dd \ubaa9\ud45c 0.90 \ubbf8\ub2ec). \uc0c9\uc778 \uae00\uc744 \uace0\uac1d\uc6a9 \ubb38\uc7a5\uc73c\ub85c \ubc14\uafb8\uba74 \uc815\ub2f5\uc744 \ubcf4\uc778 \ube44\uc728 21/48 \u2192 31/48, \ub300\uc2e0 \uaddc\uc815\uc774 \uc544\ub2cc \uc5ec\ud589 \ub300\ud654\uc5d0 \uaddc\uc815\uc744 \ubd99\uc774\ub294 \ube44\uc728 22.3% \u2192 36.7%\n- \uaddc\uc815 \uc778\uc6a9 \uc815\ud655\ub3c4 334/334(\ubaa8\ub378\uc774 \uaddc\uc815 \ubb38\uc7a5\uc744 \uc4f0\uc9c0 \uc54a\ub294 \uad6c\uc870)\n- \uadf8\ub9bc: w5/\ubca1\ud130DB_GraphDB_\uacb0\uacfc\uc11c/\uadf8\ub9bc/\uc815\ucc45\uac80\uc0c9_\uc7ac\ud604\uc728.png\n\n## 6. \uc0b0\ucd9c\ubb3c \u2014 5\uc8fc\ucc28 4\uc885 + 6\uc8fc\ucc28 1\uc885\uc744 \ub9cc\ub4e4\uc5c8\ub2e4\n- \ubca1\ud130DB \u00b7 GraphDB \uad6c\ucd95 \uacb0\uacfc\uc11c(23\ucabd) \u00b7 \uba40\ud2f0 \uc5d0\uc774\uc804\ud2b8 \ud14c\uc2a4\ud2b8 \uacc4\ud68d \ubc0f \uacb0\uacfc \ubcf4\uace0\uc11c(50\ucabd) \u00b7 \uc694\uad6c\uc0ac\ud56d \uc815\uc758\uc11c \uc5c5\ub370\uc774\ud2b8(85\uac1c \uc694\uad6c, \uad6c\ud604 \ub05d 24 \u00b7 \uc77c\ubd80 58 \u00b7 \uacb0\uc815 \ub300\uae30 3) \u00b7 \ud654\uba74\uc124\uacc4\uc11c(25\ucabd) \u00b7 6\uc8fc\ucc28 \uc11c\ube44\uc2a4 \ud14c\uc2a4\ud2b8 \uacc4\ud68d \ubc0f \uacb0\uacfc \ubcf4\uace0\uc11c(10\ucabd)\n- \ubaa8\ub450 \ucf54\ub371\uc2a4\uc640 \uad50\ucc28 \uac80\uc99d, \uc9c0\uc801 \ubc18\uc601\n\n## 7. \uc544\uc9c1 \ub0a8\uc740 \ubb38\uc81c(\uc815\uc9c1\ud558\uac8c)\n- \uc0ac\ub78c \ud3c9\uac00 0\uac74(\uc2dc\ud2b8 35\ud589\ub9cc \uc900\ube44) \u00b7 \uc2dc\ud5d8 \ubb38\uc81c\ub294 \ubaa8\ub450 \ubaa8\ub378\uc774 \uc4f4 \ud569\uc131\n- \uaddc\uc815 \uac80\uc0c9 \uc0c1\uc704 3\uac1c 0.625(\ubaa9\ud45c 0.90 \ubbf8\ub2ec)\n- \uc77c\uc815 \ud56d\ubaa9 \uc9da\uae30 \ube48 \ub2f5 85/2,735 = 3.1%(\uc6d0\uc778 \ubbf8\ud655\uc778)\n- \uacb0\uc815 \ub2e8\uc704\uc5d0\uc11c \uc5c9\ub6b1\ud55c \ub300\uc0c1 \ubcc0\uacbd 1/172\n- \uc54c\ub9bc \ubc88\uc5ed \uae08\uc561 \ub2e8\uc704 \ubcc0\uc870 1\uac74 \ud1b5\uacfc(\uc77c\ubcf8\uc5b4 \uc6d0 \u2192 \uc5d4)\n- \uacc4\ud68d \uc77d\uae30 \uac12 \ubcc0\uc870 12/350 = 3.4%\n- \ubc14\ub010 \ud654\uba74 \ub300\ubd80\ubd84 \uc2e4\uc11c\ubc84 \ud655\uc778 \uc548 \ud568 \u00b7 \uac00\ub974\uce5c \ubaa8\ub378\uc740 \uc81c\ud488\uc5d0 \uc544\uc9c1 \uc5f0\uacb0 \uc548 \ud568\n\n## 8. \ub2e4\uc74c \uc8fc(6\uc8fc\ucc28) \ud560 \uc77c \u2014 \uc774\ubbf8 \uc815\ud574\uc9c4 \uac83\ub9cc\n- \ubc14\ub010 \ud654\uba74 \uc2e4\uc11c\ubc84 \ud655\uc778(\uc11c\ubc84 \uc751\ub2f5)\n- \uac00\ub974\uce5c \ubaa8\ub378 \uc81c\ud488 \uc5f0\uacb0 \uac80\ud1a0 \u00b7 \uc2dc\ub4dc 3\uac1c \uc774\uc0c1\uc73c\ub85c \ubaa8\ub378 \uc21c\uc704 \ud655\uc778\n- \uaddc\uc815 \uc0c9\uc778 \uac1c\uc120\uc744 \ubd84\ub958\uae30 \ub4a4\uc5d0\uc11c \ub2e4\uc2dc \uc7ac\uace0 \uc6b4\uc601 \ubc18\uc601 \uacb0\uc815\n- \uc0ac\ub78c \ud3c9\uac00 \uc9c4\ud589(\ud3c9\uac00 \uc2dc\ud2b8 35\ud589)\n- \ub2e4\ub978 Jev \uacc4\uc5f4 \ud6c4\ubcf4 3\uc885(Plumb-4B \u00b7 spark-s1-4b-v6 \u00b7 jevify-gemma4-e4b)\uc744 \uac19\uc740 \ubc29\ubc95\uc73c\ub85c \uac00\ub974\uccd0 \ube44\uad50(GPU \uc11c\ubc84 B \ub300\uae30\uc5f4)\n", "\ucf54\ub371\uc2a4_\uc694\uccad.md": "# \uc694\uccad: 5\uc8fc\ucc28 \uc2a4\ud0e0\ub4dc\uc5c5 \ubc1c\ud45c pptx (\ucf54\ub371\uc2a4 \ud310) \u2014 python-pptx \uc2a4\ud06c\ub9bd\ud2b8 \ud558\ub098\ub97c \ucd5c\uc885 \ub2f5\uc73c\ub85c\n\n\ub108\ub294 \ubc1c\ud45c \uc790\ub8cc \uc81c\uc791\uc790\ub2e4. \ud30c\uc77c\uc740 \uc9c1\uc811 \ub9cc\ub4e4\uc9c0 \ub9d0\uace0, **python-pptx \ub85c \ubc1c\ud45c \ud30c\uc77c\uc744 \ub9cc\ub4dc\ub294 \ud30c\uc774\uc36c \uc2a4\ud06c\ub9bd\ud2b8 \uc804\uccb4**\ub97c \ucd5c\uc885 \ub2f5\uc73c\ub85c \ub0b8\ub2e4(\ucf54\ub4dc \ube14\ub85d \uc5c6\uc774 \uc2a4\ud06c\ub9bd\ud2b8 \ubcf8\ubb38\ub9cc). \uc2a4\ud06c\ub9bd\ud2b8\ub294 \uc2e4\ud589\ud558\uba74 \uc544\ub798 \uacbd\ub85c\uc5d0 \uc800\uc7a5\ud574\uc57c \ud55c\ub2e4:\n`C:/Users/playdata2/Documents/final_workspace/program/\uc0b0\ucd9c\ubb3c\uc591\uc2dd/w5/\uc2a4\ud0e0\ub4dc\uc5c5_2026-10-06/[\ubc1c\ud45c] triPilot_\uc9c4\ud589\uacbd\uacfc_2026-10-06_Codex.pptx`\n\n## \uc7ac\ub8cc(\ubc18\ub4dc\uc2dc \uc77d\uae30)\n- `program/\uc0b0\ucd9c\ubb3c\uc591\uc2dd/w5/\uc2a4\ud0e0\ub4dc\uc5c5_2026-10-06/_\uc7ac\ub8cc/\uc8fc\uac04_\uc0ac\uc2e4.md` \u2014 \ud655\uc778\ub41c \uc22b\uc790\ub9cc \uc788\ub2e4. \uc5ec\uae30 \uc5c6\ub294 \uc22b\uc790\ub294 \uc4f0\uc9c0 \uc54a\ub294\ub2e4. \ub9e8 \uc704 \u300c\ubc1c\ud45c \uaddc\uce59\u300d\uc744 \ubaa8\ub450 \uc9c0\ud0a8\ub2e4.\n- \ud615\uc2dd \ucc38\uace0(\uac19\uc740 \ud300\uc758 \uc9c0\ub09c \uc8fc\uac04 \ubc1c\ud45c): `program/\uc0b0\ucd9c\ubb3c\uc591\uc2dd/[\ubc1c\ud45c] A-COP_\uc9c4\ud589\uacbd\uacfc_2026-09-11.pptx` (16:9, 12\uc7a5 \uc548\ud30e)\n\n## \ub9cc\ub4e4 \uac83\n- 16:9(13.333 x 7.5 \uc778\uce58), 9~11\uc7a5, \ud55c\uad6d\uc5b4, \ub9d1\uc740 \uace0\ub515. \uc560\ub2c8\uba54\uc774\uc158 \uc5c6\uc74c.\n- \uc7a5 \uc81c\ubaa9\uc740 \uacb0\ub860 \ubb38\uc7a5. \uc81c\ubaa9\ub9cc \uc774\uc5b4 \uc77d\uc73c\uba74 \ud55c \uc8fc\uc758 \uc774\uc57c\uae30\uac00 \ub41c\ub2e4.\n- \uc7a5\ub9c8\ub2e4 \ud070 \uadf8\ub9bc \u00b7 \uc22b\uc790 \uce74\ub4dc \u00b7 \ud654\uba74 \ucea1\ucc98\uac00 \uc8fc\uc778\uacf5(\ud654\uba74 \uc808\ubc18 \uc774\uc0c1). \ubcf8\ubb38 \uae00\uc740 \ud55c \uc7a5 40\ub2e8\uc5b4 \uc548\ud30e. \uae00\uba38\ub9ac\ud45c\ub9cc \ub298\uc5b4\ub193\uc740 \uc7a5\uc744 \ub9cc\ub4e4\uc9c0 \uc54a\ub294\ub2e4.\n- \uc22b\uc790 \uce74\ub4dc \ubc14\ub85c \uc544\ub798 \uc791\uc740 \uae00\uc528(9pt \uc548\ud30e)\ub85c \u300c\uc5b4\ub5bb\uac8c \ub098\uc628 \uc218\uce58\uc778\uc9c0\u300d(\ubd84\uc790/\ubd84\ubaa8 \u00b7 \ub0a0\uc9dc \u00b7 \uc870\uac74).\n- \uc4f8 \uadf8\ub9bc(\uc788\ub294 \ud30c\uc77c, \uc808\ub300 \uacbd\ub85c\ub85c \ub123\uae30):\n  - `C:/Users/playdata2/Documents/final_workspace/program/\uc0b0\ucd9c\ubb3c\uc591\uc2dd/w5/\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c/\uadf8\ub9bc/\ubaa8\ub378\ubcc4_769_\ube44\uad50.png`\n  - `.../w5/\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c/\uadf8\ub9bc/\ud55c\uc904\uc5f0\uacb0_\uc2dc\ud5d8.png`\n  - `.../w5/\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c/\uadf8\ub9bc/\ud30c\uc778\ud29c\ub2dd_\uc804\ud6c4.png`\n  - `.../w5/\ubca1\ud130DB_GraphDB_\uacb0\uacfc\uc11c/\uadf8\ub9bc/\uc815\ucc45\uac80\uc0c9_\uc7ac\ud604\uc728.png`\n  - \ud654\uba74 \ucea1\ucc98: `.../w5/\ud654\uba74\uc124\uacc4\uc11c/assets/capture_2026-10-06/card_390.png`, `.../w5/\ud654\uba74\uc124\uacc4\uc11c/assets/capture_docs/09_trip_home_390.png`, `.../w5/\ud654\uba74\uc124\uacc4\uc11c/assets/capture_docs/04_trips_new_390.png` (\ubaa8\ub450 mock \uc11c\ubc84 \ud654\uba74\uc774\ub77c\uace0 \ucea1\uc158\uc5d0 \uc801\uae30)\n  - \uadf8\ub9bc \ud30c\uc77c\uc740 \ube44\uc728\uc744 \uc720\uc9c0\ud574 \ub123\ub294\ub2e4(\ub192\uc774 \uae30\uc900\uc73c\ub85c \ub9de\ucd94\uace0 \ub118\uce58\uba74 \uc904\uc774\uae30, PIL \ub85c \ud06c\uae30 \uc77d\uc5b4 \uacc4\uc0b0).\n- \uad6c\uc131 \uc81c\uc548: \ud45c\uc9c0(5\uc8fc\ucc28 \u00b7 9/29~10/6 \u00b7 \ucee4\ubc0b) \u2192 \ud55c \uc8fc \uc694\uc57d \u2192 \uc6f9 \ud654\uba74 \u2192 \uc11c\ubc84 \uae30\ub2a5 \u2192 \ubaa8\ub378(\uac00\ub974\uce58\ub2c8 \ud070 \ubaa8\ub378 \ub118\uc74c) \u2192 \ubaa8\ub378 \uc870\ud569(\ud55c \uc904 \uc2dc\ud5d8) \u2192 \ubd84\ub958 \u00b7 \uaddc\uc815 \uac80\uc0c9 \u2192 \uc0b0\ucd9c\ubb3c \u2192 \ub0a8\uc740 \ubb38\uc81c \u2192 \ub2e4\uc74c \uc8fc.\n- \ub9c8\uc9c0\ub9c9\uc5d0 \ubc1c\ud45c \ub300\ubcf8(\uc7a5\ub9c8\ub2e4 2~3\ubb38\uc7a5)\uc744 \uac01 \uc7a5\uc758 \ub178\ud2b8(notes_slide)\uc5d0 \ub123\ub294\ub2e4.\n\n\uc2a4\ud06c\ub9bd\ud2b8\ub294 \ud45c\uc900 \ub77c\uc774\ube0c\ub7ec\ub9ac + python-pptx + PIL \ub9cc \uc4f4\ub2e4. \uc678\ubd80 \uc811\uc18d \uc5c6\uc74c.\n"}
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command "python -c \"import pathlib,json; from pptx import Presentation; from PIL import Image; b=pathlib.Path('program/산출물양식'); p=Presentation(str(b/'[발표] A-COP_진행경과_2026-09-11.pptx')); d={'size':[p.slide_width/914400,p.slide_height/914400],'slides':[{'text':[s.text for s in sl.shapes if s.has_text_frame],'fonts':[(r.font.name,r.font.size.pt if r.font.size else None) for s in sl.shapes if s.has_text_frame for pa in s.text_frame.paragraphs for r in pa.runs]} for sl in p.slides],'images':{str(f.resolve()):Image.open(f).size for f in (b/'w5').rglob('*.png') if f.name in ['모델별_769_비교.png','한줄연결_시험.png','파인튜닝_전후.png','정책검색_재현율.png','card_390.png','09_trip_home_390.png','04_trips_new_390.png']}}; print(json.dumps(d,ensure_ascii=True))\"" in C:\Users\playdata2\Documents\final_workspace
+ succeeded in 1669ms:
+{"size": [13.333333333333334, 7.5], "slides": [{"text": ["triPilot (\ud300\uba85: A-COPilot)", "\uc5ec\ud589 \uc804\uccb4\ub97c \ub05d\uae4c\uc9c0 \uad00\ub9ac\ud558\ub294 Headless Agentic CS \ud50c\ub7ab\ud3fc\n\"\uacc4\ud68d \uc791\uc131\uc774 \uc544\ub2cc \ud604\uc2e4 \uc131\ub9bd \uac80\uc99d, \ub3cc\ubc1c \uc0c1\ud669 \uc120\uc81c \uac10\uc9c0 \ubc0f \uc801\uc2dc \ucd9c\ubc1c \uc5ed\uc0b0 \uc548\ub0b4\"", " \ud300 6\uc778 \uacf5\uc2dd \uc5ed\ud560 \ubd84\ub2f4 (R&R) \u203b 6\uc778 \uc804\uc6d0 \ub370\uc774\ud130 \uc804\ucc98\ub9ac \uacf5\ud1b5 \ucc38\uc5ec \uccb4\uacc4", "", "\ucd5c\uc5f0\uc6b0: Core \ub7f0\ud0c0\uc784 (\ud2b8\ub79c\uc7ad\uc158\u00b7CAS\u00b7Outbox)", "\uc11c\uc720\ud604: Mobility Team (\ub300\uc911\uad50\ud1b5\u00b7\uc6b0\ud68c\ub85c\u00b7\ucd9c\ubc1c\uc5ed\uc0b0)", "\uc815\uc138\ud658: Dining Team (\uc601\uc5c5\u00b7\ube0c\ub808\uc774\ud06c\ud0c0\uc784\u00b7\ud734\ubb34)", "\ucd5c\uc0c1\uc6b1: UI & \uac80\uc99d (\ub3d9\uc801\uacc4\ud68d\uc11c\u00b7DoD / \uc694\uc2dd \uc9c0\uc6d0)", "\uae40\uc9c0\ud61c \u00b7 \uc1a1\ucc44\uc601: Activity Team (\uad00\ub78c\u00b7\uccb4\ud5d8\u00b7\uc1fc\ud551)", "\uc544\ud0a4\ud14d\ucc98 & \ucf54\uc5b4 \uc804\ucc98\ub9ac: \ud30c\uc774\ud504\ub77c\uc778 \ucd1d\uad04 \ubc0f \uc804\ucc98\ub9ac \uc8fc\ub3c4"], "fonts": [["Pretendard ExtraBold", 37.5], ["Pretendard SemiBold", 37.5], ["Pretendard Medium", 15.0], ["Pretendard", 15.0], [null, null], ["Pretendard Medium", 15.0], ["Pretendard", 12.0], ["Pretendard", 12.0], ["Pretendard SemiBold", 12.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0]]}, {"text": ["\uc544\uc774\ub514\uc5b4 \ud68c\uc758 \ubc0f \ud53c\ubc97 \ub85c\uadf8 (09/05 ~ 09/10): \uc5ec\ud589 CS \ud655\uc815 \uc5ec\uc815", "", "\ucee4\uba38\uc2a4 CS\uc758 \ud55c\uacc4 \uc778\uc2dd", "- \uc2a4\ub9c8\ud2b8\uc2a4\ud1a0\uc5b4 \uc8fc\ubb38/\ubc18\ud488/\uad50\ud658 CS \ucd08\uae30 \uae30\ud68d\n - \ud55c\uacc4 \ubd09\ucc29: \ub370\uc774\ud130\uac00 \uc815\uc801\uc774\uace0 '\ub2e8\uc21c \ubb38\uc758 \uc218\ub3d9 \uc751\ub300'\uc5d0 \uac07\ud798\n - \uc2e4\uc2dc\uac04 \uc13c\uc11c/\ud154\ub808\uba54\ud2b8\ub9ac \ubd80\uc7ac\ub85c \uc120\uc81c\uc801 \uc790\uc728 \uc870\uce58(Zero-Contact)\ub97c \ubcf4\uc5ec\uc8fc\uae30 \uc5b4\ub824\uc6c0", "\uc778\ubc14\uc6b4\ub4dc '\uc5ec\ud589 CS' \uc804\uaca9 \ud53c\ubc97", "- \ud300 \uc804\uc6d0 \ud569\uc758\ub85c \uc5ec\ud589 \uc9c0\uc18d\uad00\ub9ac CS \ud50c\ub7ab\ud3fc \ud655\uc815\n - \ubc1c\uc0c1\uc758 \uc804\ud658: \"\uacc4\ud68d\uc740 AI\uac00 \uc9dc\uc8fc\uc9c0\ub9cc, \ud604\uc7a5\uc5d0\uc11c \uc9c0\ud0a4\ub294 \uac83\uc774 \uace0\ud1b5\uc774\ub2e4\"\n - Core \ubb34\uc218\uc815 \ubcf4\uc874: \ucee4\uba38\uc2a4 Basement 12\uac1c \uc601\uc5ed 100% \uc720\uc9c0, Team\ub9cc \uc5ec\ud589 \uac1d\uccb4\ub85c \uad50\uccb4 \uacb0\uc815", "\ub77c\uc6b0\ud305 \uc2e4\ud328 \uc2e4\uce21 & 2\ucd95 \ubd84\ub9ac", "- \uc2e4\uce21 \uacb0\uacfc: 5\uac1c \ub77c\ubca8\ub9cc\uc73c\ub85c\ub294 Team \ub3c4\ub2ec \ubd88\uac00 \ud655\uc778 (ROUTING_FAILED \ubc1c\uc0dd)\n - \ub77c\uc6b0\ud305 2\ucd95 \uc815\ub9bd: case_type(\uac1d\uccb4) + intent(\uc694\uccad \uc885\ub958)\n - \uba71\ub4f1 \ud0a4 \uacb0\ud568 \uc218\uc815: business_subject\uc5d0 \ub300\uc0c1 \uac1d\uccb4 ID \ubc14\uc778\ub529", "16\ub300 \ud575\uc2ec \uacb0\uc815 \ucd5c\uc885 \ub3d9\uacb0", "- \uc11c\uc6b8 1\ub3c4\uc2dc \uae30\uc900 \uc0c1\ud488 \ubc0f \ud300\ub2f9 49,000\uc6d0 \uc190\uc775 \ud655\uc815\n - \ud55c\uad6d\uc5b4 \uc6d0\ubcf8 + \uc54c\ub9bc \uc9c1\uc811 \ubc88\uc5ed (\ub300\ub9cc \uace0\uac1d \ubc88\uccb4 \uc9c0\uc6d0)\n - 84\ucd08~2\ubd84 \uc8fc\uae30 \uac10\uc2dc \ub8e8\ud504 & \ucd9c\ubc1c \uc2dc\uac01 \uc5ed\uc0b0 \uc54c\ub9bc\n - \ud655\uc815 \uc2dc\ub098\ub9ac\uc624(\ub300\ub9cc\uc778 2\uba85 6\ub300 \uc0ac\uac74) \uae30\uc900\uc120 \uace0\uc815"], "fonts": [["Pretendard", 21.0], ["Pretendard", 10.12], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 10.12], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 10.12], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 10.12], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.62], [null, null], ["Pretendard", 8.62]]}, {"text": ["\ubb38\uc81c \uc815\uc758: \uc77c\uc815 \uc0dd\uc131 \uc571\uc740 \ub9ce\uc9c0\ub9cc, \ud604\uc7a5 \uc2e4\ud589 CS\ub294 \uc5c6\uc2b5\ub2c8\ub2e4", "", "\uc5ec\ud589\uc790\uc758 \ud604\uc2e4 Pain", "\"\uc5ec\ud589 \uacc4\ud68d\uc740 \ucc57\ubd07\uc73c\ub85c 5\ubd84 \ub9cc\uc5d0 \uc9dc\uc9c0\ub9cc, \ud604\uc7a5\uc5d0\uc11c \uc9c0\ud558\ucca0\uc774 \uba48\ucd94\uac70\ub098 \uc2dd\ub2f9\uc774 \ub2eb\ud788\uba74 \ubaa8\ub4e0 \uc77c\uc815\uc774 \uc5f0\uc1c4\uc801\uc73c\ub85c \ubb34\ub108\uc9d1\ub2c8\ub2e4. \uae38\uac70\ub9ac\uc5d0\uc11c \uac80\uc0c9\ud558\ub290\ub77c \uc5ec\ud589\uc744 \ub9dd\uce69\ub2c8\ub2e4.\"", "triPilot\uc758 \ud575\uc2ec \uc815\uc758", "\uacc4\ud68d\uc744 \uc0c8\ub85c \ub9cc\ub4dc\ub294 \uc571\uc774 \uc544\ub2d9\ub2c8\ub2e4. \uac1c\uc778 AI\uac00 \uc804\ub2ec\ud55c \uc77c\uc815\uc758 \ud604\uc2e4 \uc131\ub9bd\uc744 \ucf54\ub4dc\ub85c \uac80\uc99d\ud558\uace0, \uc5ec\ud589 \uc885\ub8cc\uae4c\uc9c0 \ubcc0\ud654\ub97c \uba3c\uc800 \uac10\uc9c0\ud574 \uc870\uc815\ud558\ub294 Agentic CS \ud50c\ub7ab\ud3fc\uc785\ub2c8\ub2e4.", "3\ub300 \ud575\uc2ec \uac00\uce58:"], "fonts": [["Pretendard", 21.0], ["Pretendard", 10.5], ["Pretendard", 9.0], ["Pretendard", 10.5], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 8.62]]}, {"text": ["\uc2dc\uc2a4\ud15c \uc544\ud0a4\ud14d\ucc98: Headless 2-Track & Core-Team \ubb34\uc218\uc815 \uaca9\ub9ac", "", " External Access Layer (\uc0ac\uc6a9\uc790 \ubc0f \uc678\ubd80 \uc811\uc810 \uacc4\uce35 - No Dedicated App) REST API \u00b7 MCP Server \u00b7 Dynamic Web \u00b7 Webhooks", " Domain Team Modules (MVP 3\ub300 \uac1d\uccb4 \ubaa8\ub4c8 - Side-Effect \uc5c6\uc774 ActionProposal\ub9cc \ubc18\ud658)", " Core 1: Case Runtime & Coordination (\ub3c4\uba54\uc778 \ubb34\uad00 \uaca9\ub9ac) \ucd5c\uc5f0\uc6b0 \ub2f4\ub2f9", "", " Core 2: Access & Action Platform \ud2b8\ub79c\uc7ad\uc158/Outbox", "", "\uac1c\uc778 AI (Claude / ChatGPT)", "MCP \ub3c4\uad6c \ud638\ucd9c (\uc77c\uc815 \ub4f1\ub85d / \uc9c0\uc5f0 \uc2e0\uace0 / \ub300\uc548 \uc9c8\uc758)", "\ub3d9\uc801 \uc5ec\ud589\uacc4\ud68d\uc11c \uc6f9 (/t/{token})", "Source of Truth: \ub85c\uadf8\uc778 \uc5c6\ub294 \uc815\ubcf8 \uc77c\uc815 \uc870\ud68c & \ub418\ub3cc\ub9bc", "\uc2e4\uc2dc\uac04 \uc54c\ub9bc \ucc44\ub110 (Webhook)", "\uc120\uc81c \ubcc0\uacbd \ud1b5\uc9c0 \ubc0f \uc801\uc2dc \ucd9c\ubc1c(\uc5ed\uc0b0) \ud478\uc2dc \ubc1c\uc1a1", "Activity Team (\uae40\uc9c0\ud61c\u00b7\uc1a1\ucc44\uc601)", "\uc790\uc5f0\u00b7\uc778\ubb38\u00b7\uc1fc\ud551 \uc131\ub9bd \uac80\uc99d \ubc0f \uae30\uc0c1 \uac10\uc2dc", "Dining Team (\uc815\uc138\ud658 / \uc9c0\uc6d0:\ucd5c\uc0c1\uc6b1)", "\uc601\uc5c5\uc2dc\uac04\u00b7\ube0c\ub808\uc774\ud06c\ud0c0\uc784\u00b7\uc678\uad6d\uc778 \uacb0\uc81c \uac80\uc99d", "Mobility Team (\uc11c\uc720\ud604)", "\ud1b5\uc81c\u00b7\uc6b0\ud68c\ub85c\u00b7Routes API \uc5ed\uc0b0 \ucd9c\ubc1c \uc548\ub0b4", "Booking Handoff (MVP \ub2e4\uc74c)", "\ud611\uc57d\uc0ac \uc608\uc57d \uc5f0\ub3d9 Mock / A2A Remote \uac80\uc99d"], "fonts": [["Pretendard", 21.0], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 9.37], ["Pretendard", 8.62], ["Pretendard", 7.87], ["Pretendard", 8.62], ["Pretendard", 7.87], ["Pretendard", 8.62], ["Pretendard", 7.87], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5]]}, {"text": ["\ud300 \uc544\ud0a4\ud14d\ucc98: \uac1d\uccb4\ubcc4 \ubaa8\ub4c8\ud654 \ubc0f 6\uc778 \uc18c\uc720\uad8c \ubd84\ub2f4 \uccb4\uacc4", "", "6\uc778 \ud300\uc6d0\ubcc4 \uc804\ub2f4 \uc18c\uc720\uad8c (Ownership)", "\"\uac1d\uccb4 \uc885\ub958\ubcc4 \ubd84\ud560 \uc6d0\uce59\"", "\ub3c4\uc2dc\ub098 \uc5b8\uc5b4\uac00 \ub298\uc5b4\ub09c\ub2e4\uace0 Team\uc744 \ub298\ub9ac\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \uc5ec\ud589\uc744 \uad6c\uc131\ud558\ub294 \uac1d\uccb4(\ud65c\ub3d9, \uc2dd\uc0ac, \uc774\ub3d9)\ubcc4\ub85c Team\uc744 \ub098\ub204\uc5b4, \uc9c0\uc5ed \ud655\uc7a5\uc740 \uc21c\uc218 \ub370\uc774\ud130 \ucd94\uac00\ub85c \ud761\uc218\ud569\ub2c8\ub2e4.", "Team\uc758 3\ub300 \ub3c5\ub9bd \uad6c\uc131\uc694\uc18c", "\ud310\uc815(\ucf54\ub4dc)\uacfc \uc0dd\uc131(LLM)\uc758 \uc644\uc804 \ubd84\ub9ac:", "LLM\uc774 \uc0dd\uc131\ud55c \ub300\uc548\uc740 \ubc18\ub4dc\uc2dc \ucf54\uc5b4 \uc81c\uc57d \uac80\uc99d(\uc2dc\uac04 \ucda9\ub3cc\u00b7\uc608\uc0b0\u00b7\uc774\ub3d9 \uc5ec\uc720)\uc744 \ub2e4\uc2dc \ud1b5\uacfc\ud574\uc57c\ub9cc \uace0\uac1d\uc5d0\uac8c \ud1b5\uc9c0\ub429\ub2c8\ub2e4.", "\u2022", "\uac80\uc99d \uaddc\uce59 (Code): \uac1d\uccb4\uac00 \ud604\uc2e4\uc5d0\uc11c \uc131\ub9bd\ud558\ub294 \uc5c4\uaca9\ud55c \ucf54\ub4dc \uc870\uac74", "\u2022", "\uac10\uc2dc \uc18c\uc2a4 (Watch List): \uc0c1\ud0dc \ubcc0\ud654\ub97c \uac10\uc9c0\ud560 \uc18c\uc2a4 \ubaa9\ub85d \uc120\uc5b8", "\u2022", "\uc7ac\uacc4\ud68d \ud6c4\ubcf4 \uc0dd\uc131 (LLM): \ubb38\uc81c \ubc1c\uc0dd \uc2dc \ub3c4\uba54\uc778 \ud2b9\ud654 \ub300\uc548 \uc0dd\uc131"], "fonts": [["Pretendard", 21.0], ["Pretendard", 10.12], ["Pretendard", 10.12], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 10.12], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75]]}, {"text": ["\ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc544\ud0a4\ud14d\ucc98: 19\uac1c \ud14c\uc774\ube14 \uc911 14\uac1c \ubcf4\uc874 \u00b7 5\uac1c \uad50\uccb4", "", "\uc5ec\ud589 \ub3c4\uba54\uc778 5\ub300 \uc2e0\uaddc \uc5d4\ud2f0\ud2f0 \uad6c\uc870", "PostgreSQL \ud14c\uc774\ube14 \uc804\ud658 \uc6d0\uce59", "\uae30\uc874 \ucee4\uba38\uc2a4 19\uac1c \ud14c\uc774\ube14 \uc911 \ucf54\uc5b4 14\uac1c \ud14c\uc774\ube14\uc740 100% \ubb34\uc218\uc815 \ubcf4\uc874\ud558\uace0, \ub3c4\uba54\uc778 \ud14c\uc774\ube14 5\uac1c\ub9cc \uc5ec\ud589 \uc5d4\ud2f0\ud2f0\ub85c \uc815\ubc00 \uad50\uccb4\ud588\uc2b5\ub2c8\ub2e4.", "Trip vs Case \uc0dd\uba85\uc8fc\uae30 \ubd84\ub9ac \uc124\uacc4", "- Trip (\uc601\uc18d \uc9d1\ud569\uccb4): \uc5ec\ud589 \ub4f1\ub85d\ubd80\ud130 \uadc0\uac00\uae4c\uc9c0 \ucd5c\uc2e0 \uc0c1\ud0dc \uc720\uc9c0 (\uc218\uba85: 1\uc77c~\uc218 \uc77c)\n - Case (\ub2e8\uae30 \uc0ac\uac74): \ubb38\uc81c \uac10\uc9c0 \uc2dc \uc0dd\uc131 \u2192 \ud574\uacb0 \ud6c4 \ub2eb\ud798 (\uc218\uba85: \uc218 \ubd84~\uc218 \uc2dc\uac04)\n - itinerary_versions: Append-only \uc2a4\ub0c5\uc0f7\uc73c\ub85c 100% \uc548\uc804\ud55c \ub418\ub3cc\ub9bc(Rollback) \ubcf4\uc7a5", "[\ubcf4\uc874] Core 14\uac1c \ud14c\uc774\ube14", "customer_cases, case_events, agent_runs, team_tasks, action_requests, action_approvals, outbox, llm_calls, prompts, customers, tenants \ub4f1", "[\uad50\uccb4] Domain 5\uac1c \ud14c\uc774\ube14", "orders, items, products, returns, shipments\n \u2193\ntrips, itinerary_items, itinerary_versions, watch_targets, watch_logs"], "fonts": [["Pretendard", 21.0], ["Pretendard", 10.12], ["Pretendard", 10.12], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 9.75], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5], [null, null], ["Pretendard", 7.5], [null, null], ["Pretendard", 7.5]]}, {"text": ["\ud655\uc815 \uc2dc\ub098\ub9ac\uc624: \ub300\ub9cc\uc778 \uad00\uad11\uac1d 2\uba85\uc758 \uc11c\uc6b8 1\uc77c \ud22c\uc5b4", "", " \ud398\ub974\uc18c\ub098: K-\ucf58\ud150\uce20 \ud32c \ub300\ub9cc\uc778 \uc5ec\uc131 2\uba85 (\uce5c\uad6c) | \uad00\uc2ec\uc0ac: \ud5a5\uc218\u00b7\ud654\uc7a5\ud488 \uc1fc\ud551 & \uc2dd\ub8cc\ud488 \ub9c8\ud2b8 \uc1fc\ud551 "], "fonts": [["Pretendard", 21.0], ["Pretendard", 12.0], ["Pretendard", 12.0], ["Pretendard", 12.0], ["Pretendard", 12.0], ["Pretendard", 12.0]]}, {"text": ["\uc2dc\uc5f0 \ubaa9\uc5c5 1: \uc2dc\uc2a4\ud15c \uc120\uc81c \uac10\uc9c0 & \uae34\uae09 \uc6b0\ud68c \uc548\ub0b4", "", "[WatchSweeper]", "[MobilityTeam:\uc11c\uc720\ud604]", "[CoreConstraintCheck:\ucd5c\uc5f0\uc6b0]", "[OutboxPublisher]", "triPilot \uae30\uc0c1 \uc120\uc81c \uc548\ub0b4", "[\uc7a0\uc2e4 \uc2a4\uce74\uc774\ud0c0\uc6cc] \ubbf8\uc138\uba3c\uc9c0 \uacbd\ubcf4 \ubc0f \ube44 \uc608\ubcf4\ub85c \uc57c\uc678 \ub370\ud06c \uc6b4\uc601\uc774 \uc911\ub2e8\ub418\uc5c8\uc2b5\ub2c8\ub2e4.\n \uc2e4\ub0b4 \uc804\ub9dd\uc874 \uad00\ub78c(10:40 \uc870\uae30 \uc885\ub8cc \uad8c\uc7a5)\uc73c\ub85c \uc870\uc815\ub418\uc5c8\uc2b5\ub2c8\ub2e4. (v1.1 \ubc18\uc601)", "triPilot \uae34\uae09 \uc6b0\ud68c \uc548\ub0b4", "[\uc131\uc218\uc5ed \uc9c4\uc785 \ubd88\uac00 - \ud654\uc7ac \ubb34\uc815\ucc28]\n \uc9c0\uae08 \uc7a0\uc2e4\uc5ed\uc5d0\uc11c 2\ud638\uc120 \ud0d1\uc2b9 \uc2dc \uc131\uc218\uc5ed\uc5d0\uc11c \ub0b4\ub9b4 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.\n\ucd94\ucc9c \uc6b0\ud68c: \uac74\ub300\uc785\uad6c\uc5ed \ud558\ucc28 \u2192 1\ubc88 \ucd9c\uad6c \ubc84\uc2a4(\uad11\uc9c405) \ud658\uc2b9 (\uc18c\uc694 24\ubd84)", "\ucd5c\uc2e0 \uc77c\uc815 \uc790\ub3d9 \uac31\uc2e0 \uc644\ub8cc", "10:00", "11:00", "11:20", "\uc7a0\uc2e4 \uc11c\uc6b8\uc2a4\uce74\uc774", "10:40 \ud1f4\uc7a5 \uc644\ub8cc (\uc548\uc804 \ub9c8\uc9c4 \ud655\ubcf4)", "\uc131\uc218\uc5ed \ubb34\uc815\ucc28 \ud1b5\uacfc \u2192 \uc6b0\ud68c\ub85c", "[\uc120\ud0dd\ub428] \uac74\ub300\uc785\uad6c\uc5ed \ud558\ucc28 + \ubc84\uc2a4 5\ubd84", "\uc131\uc218\ub3d9 \ubcf5\ud569\ubb38\ud654\uacf5\uac04 & \uc1fc\ub8f8", "\ud5a5\uc218\u00b7\ud654\uc7a5\ud488 \ud22c\uc5b4 \uc815\uc0c1 \uc9c4\ud589"], "fonts": [["Pretendard", 21.0], ["JetBrains Mono", 7.87], ["JetBrains Mono", 7.87], ["JetBrains Mono", 7.87], ["JetBrains Mono", 7.87], ["Pretendard", 8.62], ["Pretendard", 8.25], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], ["Pretendard", 8.62], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5]]}, {"text": ["\uc2dc\uc5f0 \ubaa9\uc5c5 2: \uc0ac\uc6a9\uc790 \uc9c0\uc5f0 \uc2e0\uace0 & \uc801\uc2dc \ucd9c\ubc1c \uc5ed\uc0b0 \uc548\ub0b4", "", "Dining Team (\uc815\uc138\ud658) \uc81c\uc57d \uac80\uc99d:", "\ub3c4\ubcf4 6\ubd84 \ub0b4 \ub178\ube0c\ub808\uc774\ud06c \ub300\uc548 2\uacf3:", "\uc131\uc218 \ud4e8\uc804 \ud55c\uc2dd A", "\uc131\uc218 \uc218\uc81c\ubc84\uac70 B", "\uad11\ud654\ubb38 \ub3c4\ub85c \ud1b5\uc81c \ubc1c\uc0dd", "\uc138\uc885\ub300\ub85c \ud589\uc0ac\ub85c \ubc84\uc2a4 \uad6c\uac04 \ud1b5\uc81c (\ud0dd\uc2dc \uc608\uce21 \ubd88\uac00)\n\ub300\uccb4 \uacbd\ub85c: 3\ud638\uc120 \uacbd\ubcf5\uad81\uc5ed \u2192 \uc885\ub85c3\uac00(1\ud638\uc120) \u2192 \uc11c\uc6b8\uc5ed", "\uc9c0\uae08 \ucd9c\ubc1c\ud558\uc138\uc694! (\uc5ed\uc0b0 \uc54c\ub9bc)", "18:00 \uc800\ub141 \uc2dd\uc0ac\ub97c \uc704\ud574 17:18\ubd84\uae4c\uc9c0 \uacbd\ubcf5\uad81\uc5ed 5\ubc88 \ucd9c\uad6c\ub85c \uc774\ub3d9\ud558\uc138\uc694.\n - \uc9c0\ud558\ucca0 \uc18c\uc694 \uc2dc\uac04: 22\ubd84\n - \ub3c4\ubcf4 \uc6b0\ud68c\ub85c: 4\ubd84 \uc548\uc804 \ub9c8\uc9c4 \ud655\ubcf4", "14:15", "15:30", "17:18", "18:00", "[\uad50\uccb4] \uc131\uc218 \ud4e8\uc804 \ud55c\uc2dd A", "\uc5ec\uc720 \uc788\ub294 \uc2dd\uc0ac \uc644\ub8cc (15:00 \ucd9c\ubc1c)", "\uacbd\ubcf5\uad81 \ud55c\ubcf5 \ub300\uc5ec \ubc0f \uad00\ub78c", "\ubb34\ub8cc \uad00\ub78c \ud61c\ud0dd \uc801\uc6a9 / 17:00 \uc885\ub8cc", "\uc9c0\ud558\ucca0 3\ud638\uc120 \uacbd\ubcf5\uad81\uc5ed \ucd9c\ubc1c", "\ub3c4\ub85c \ud1b5\uc81c \uc6b0\ud68c \uc9c0\ud558\ucca0 \uacbd\ub85c \ud0d1\uc2b9", "\uc11c\uc6b8\uc5ed \uc778\uadfc \uc800\ub141 \uc2dd\uc0ac", "\uc608\uc815 \uc2dc\uac01 \uc815\uc2dc \ub3c4\ucc29 \uc644\ub8cc"], "fonts": [["Pretendard", 21.0], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.62], ["Pretendard", 8.25], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], [null, null], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5], ["Pretendard", 8.25], ["Pretendard", 7.5]]}, {"text": ["\uc2dc\uc5f0 \ubaa9\uc5c5 3: \ub2f9\uc77c \ud734\ubb34 \ub300\ucc98 & \ub9c8\ud2b8 \ud488\uc808 \ub3d9\uc120 \ucd94\ucc9c", "", "\uc5ec\ud589 \uc885\ub8cc: \ubaa8\ub4e0 \ubc31\uadf8\ub77c\uc6b4\ub4dc \uac10\uc2dc \ub8e8\ud504 \uc548\uc804 \uc885\ub8cc\ub428", "Dining Team \uc989\uc2dc \ud0d0\uc0c9:", "\ub300\uccb4 \uc2dd\ub2f9 C", "\uadc0\uac00 \ub3d9\uc120 \ub0b4 \ub300\uccb4 \ub9e4\uc7a5 \ubd84\uc11d:", "\uba85\ub3d9 \ub300\ud615 \ub9c8\ucf13 \uc9c0\uc810", "\ud83c\udf89 \uc624\ub298 \uc11c\uc6b8 \uc5ec\ud589 \uc548\uc804 \uc644\uacb0", "\u2022", "\ucd1d \ucc98\ub9ac \uc0ac\uac74: 6\uac74 (\uc2dc\uc2a4\ud15c \uac10\uc9c0 3\uac74, \uc2e0\uace0 3\uac74)", "\u2022", "\uc77c\uc815 \uc131\uacf5\ub960: 100% (\uc704\uc57d\uae08/\uc77c\uc815 \ucda9\ub3cc 0\uac74)", "\u2022", "\uc808\uc57d\ub41c \uae38\uac70\ub9ac \uac80\uc0c9 \uc2dc\uac04: \uc57d 1\uc2dc\uac04 45\ubd84", "\u2022", "\ucd5c\uc885 \uac1c\uc815 \ubc84\uc804: Version 1.6"], "fonts": [["Pretendard", 21.0], ["Pretendard", 7.87], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 8.62], ["Pretendard", 12.0], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75], ["Pretendard", 9.75]]}, {"text": ["\ube44\uc988\ub2c8\uc2a4 \ubaa8\ub378: \ud300\ub2f9 49,000\uc6d0 \uc774\uc6a9\uad8c & \ub2e8\ub2e8\ud55c \uc720\ub2db \uc774\ucf54\ub178\ubbf9\uc2a4", "", "\ud300\ub2f9 \uc5ec\ud589 \uc774\uc6a9\uad8c (7\uc77c\u00b7\uc11c\uc6b8 1\ub3c4\uc2dc \uae30\uc900)", "\uad11\uace0\ub098 \uc81c\ud734 \uc218\uc218\ub8cc \uc5c6\uc774\ub3c4 \ud310\ub9e4 1\uac74\ub2f9 \uc989\uc2dc 54%\uc758 \uacf5\ud5cc\uc774\uc775\uc774 \ubc1c\uc0dd\ud558\ub294 \uad6c\uc870\ub97c \uc124\uacc4\ud588\uc2b5\ub2c8\ub2e4.", "\uc2dc\uc7a5 \uaddc\ubaa8 \ubc0f \uc190\uc775\ubd84\uae30\uc810 (BEP)", "\"\ubb34\ub8cc \uad11\uace0 \ubaa8\ub378\uc744 \uc9c0\uc591\ud558\ub294 \uc774\uc720\"", "\uc6b0\ub9ac\uac00 \ud30c\ub294 \uac00\uce58\ub294 \ud310\uc815\uc758 \uac1d\uad00\uc801 \uc2e0\ub8b0\uc131\uc785\ub2c8\ub2e4. \ub300\uc548 \uc2dd\ub2f9/\uc7a5\uc18c\uc5d0 \uad11\uace0\ube44\uac00 \uac1c\uc785\ub418\uba74 \uac80\uc99d \uacb0\uacfc\uac00 \ud6fc\uc190\ub418\ubbc0\ub85c, \uc720\ub8cc \uc774\uc6a9\uad8c \ubaa8\ub378\uc744 \uace0\uc218\ud558\uc5ec \uc2e0\ub8b0\ub97c \ubcf4\uc7a5\ud569\ub2c8\ub2e4.", "3.9\uc5b5\ud68c", "\uad6d\ub0b4 \uc5f0\uac04 \uc5ec\ud589 \ud65c\ub3d9 \ud69f\uc218", "5,650\ud300", "\uc5f0\uac04 BEP \ub2ec\uc131 \uae30\uc900 (\uc6d4 470\ud300)"], "fonts": [["Pretendard", 21.0], ["Pretendard", 11.62], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 9.0], ["Pretendard", 11.62], ["Pretendard", 9.0], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Pretendard", 8.25], ["Space Grotesk", 22.5], ["Pretendard", 8.25], ["Space Grotesk", 22.5], ["Pretendard", 8.25]]}, {"text": ["\ud504\ub85c\uc81d\ud2b8 \ub85c\ub4dc\ub9f5 \ubc0f \uacb0\ub860: \ub05d\uae4c\uc9c0 \ubbff\uace0 \ub9e1\uae30\ub294 \uc5ec\ud589 \ube44\uc11c", "", "\"\ub354 \ub611\ub611\ud55c \ucc57\ubd07\uc774 \uc544\ub2cc, \ub05d\uae4c\uc9c0 \ubbff\uace0 \ub9e1\uae38 \uc218 \uc788\ub294 \uc5ec\ud589 \uc624\ucf00\uc2a4\ud2b8\ub808\uc774\ud130\"", "SK\ub124\ud2b8\uc6cd\uc2a4 Family AI \ucea0\ud504 32\uae30 6\ud300 A-COPilot | github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM", "\uac10\uc0ac\ud569\ub2c8\ub2e4. \uc9c8\uc758\uc751\ub2f5\uc744 \uc9c4\ud589\ud558\uaca0\uc2b5\ub2c8\ub2e4 (Q&A)", "\ub3c4\uba54\uc778 \ud53c\ubc97 & \ub3d9\uacb0", "- \uc5ec\ud589 CS \ud53c\ubc97 \uc758\uacb0\n - 2\ucd95 \ub77c\uc6b0\ud305 \uba85\uc138 \ud655\uc815\n - 6\ub300 \uc0ac\uac74 \uc2dc\ub098\ub9ac\uc624 \ub9e4\ud551\n - DB 14\ubcf4\uc874 5\uad50\uccb4 \uc2a4\ud0a4\ub9c8", "E2E \ubaa9\uc5c5 \uac80\uc99d", "- 6\ub300 \uc0ac\uac74 E2E \uc2dc\uc5f0 \uc644\uc131\n - Headless API/MCP \ubaa9\uc5c5\n - \ub3d9\uc801 \uc5ec\ud589\uacc4\ud68d\uc11c \uc6f9 \ubdf0\n - \uc911\uac04 \ubc1c\ud45c \ud3c9\uac00 \uc644\ub8cc", "3\ub300 Team \uc2e4\uad6c\ud604", "- Activity/Dining/Mobility \uc644\uc131\n - \uac10\uc2dc sweeper \ub8e8\ud504 (84s)\n - Routes API \uc2e4\uc2dc\uac04 \uc5f0\ub3d9\n - \ubc88\uccb4/\uc601\ubb38 \ud15c\ud50c\ub9bf \uac80\uc99d", "DoD \ud3c9\uac00 & \ubc30\ud3ec", "- 60+30\uac74 \uace8\ub4e0\uc14b \ud1b5\uacc4 \uac80\uc815\n - McNemar & Bootstrap \uac80\uc99d\n - \uba71\ub4f1\uc131 100% \uac80\uc99d (DoD 18\uc885)\n - \ucd5c\uc885 \uc2dc\uc5f0 \ubc0f \ud328\ud0a4\uc9d5"], "fonts": [["Pretendard", 21.0], ["Pretendard ExtraBold", 14.25], ["Pretendard ExtraBold", 14.25], ["Pretendard ExtraBold", 14.25], ["Pretendard", 9.0], ["Pretendard", 9.75], ["Pretendard", 9.37], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], ["Pretendard", 9.37], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], ["Pretendard", 9.37], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], ["Pretendard", 9.37], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87], [null, null], ["Pretendard", 7.87]]}], "images": {"C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c\\\uadf8\ub9bc\\\ubaa8\ub378\ubcc4_769_\ube44\uad50.png": [1440, 1080], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c\\\uadf8\ub9bc\\\ud30c\uc778\ud29c\ub2dd_\uc804\ud6c4.png": [1440, 600], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c\\\uadf8\ub9bc\\\ud55c\uc904\uc5f0\uacb0_\uc2dc\ud5d8.png": [1440, 720], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ubca1\ud130DB_GraphDB_\uacb0\uacfc\uc11c\\\uadf8\ub9bc\\\uc815\ucc45\uac80\uc0c9_\uc7ac\ud604\uc728.png": [1440, 620], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ud654\uba74\uc124\uacc4\uc11c\\assets\\capture_2026-10-06\\card_390.png": [390, 812], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ud654\uba74\uc124\uacc4\uc11c\\assets\\capture_docs\\04_trips_new_390.png": [390, 844], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ud654\uba74\uc124\uacc4\uc11c\\assets\\capture_docs\\09_trip_home_390.png": [390, 844]}}
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command "python -c \"import pathlib,json; from pptx import Presentation; from PIL import Image; b=pathlib.Path('program/산출물양식'); p=Presentation(str(b/'[발표] A-COP_진행경과_2026-09-11.pptx')); d={'size':[p.slide_width/914400,p.slide_height/914400],'slides':[{'text':[s.text for s in sl.shapes if s.has_text_frame][:4],'fonts':list(set((r.font.name,r.font.size.pt if r.font.size else None) for s in sl.shapes if s.has_text_frame for pa in s.text_frame.paragraphs for r in pa.runs))[:10]} for sl in p.slides],'images':{str(f.resolve()):Image.open(f).size for f in (b/'w5').rglob('*.png') if f.name in ['모델별_769_비교.png','한줄연결_시험.png','파인튜닝_전후.png','정책검색_재현율.png','card_390.png','09_trip_home_390.png','04_trips_new_390.png']}}; print(json.dumps(d,ensure_ascii=True))\"" in C:\Users\playdata2\Documents\final_workspace
+ succeeded in 992ms:
+{"size": [13.333333333333334, 7.5], "slides": [{"text": ["triPilot (\ud300\uba85: A-COPilot)", "\uc5ec\ud589 \uc804\uccb4\ub97c \ub05d\uae4c\uc9c0 \uad00\ub9ac\ud558\ub294 Headless Agentic CS \ud50c\ub7ab\ud3fc\n\"\uacc4\ud68d \uc791\uc131\uc774 \uc544\ub2cc \ud604\uc2e4 \uc131\ub9bd \uac80\uc99d, \ub3cc\ubc1c \uc0c1\ud669 \uc120\uc81c \uac10\uc9c0 \ubc0f \uc801\uc2dc \ucd9c\ubc1c \uc5ed\uc0b0 \uc548\ub0b4\"", " \ud300 6\uc778 \uacf5\uc2dd \uc5ed\ud560 \ubd84\ub2f4 (R&R) \u203b 6\uc778 \uc804\uc6d0 \ub370\uc774\ud130 \uc804\ucc98\ub9ac \uacf5\ud1b5 \ucc38\uc5ec \uccb4\uacc4", ""], "fonts": [["Pretendard ExtraBold", 37.5], [null, null], ["Pretendard SemiBold", 37.5], ["Pretendard", 9.0], ["Pretendard", 15.0], ["Pretendard Medium", 15.0], ["Pretendard", 12.0], ["Pretendard SemiBold", 12.0]]}, {"text": ["\uc544\uc774\ub514\uc5b4 \ud68c\uc758 \ubc0f \ud53c\ubc97 \ub85c\uadf8 (09/05 ~ 09/10): \uc5ec\ud589 CS \ud655\uc815 \uc5ec\uc815", "", "\ucee4\uba38\uc2a4 CS\uc758 \ud55c\uacc4 \uc778\uc2dd", "- \uc2a4\ub9c8\ud2b8\uc2a4\ud1a0\uc5b4 \uc8fc\ubb38/\ubc18\ud488/\uad50\ud658 CS \ucd08\uae30 \uae30\ud68d\n - \ud55c\uacc4 \ubd09\ucc29: \ub370\uc774\ud130\uac00 \uc815\uc801\uc774\uace0 '\ub2e8\uc21c \ubb38\uc758 \uc218\ub3d9 \uc751\ub300'\uc5d0 \uac07\ud798\n - \uc2e4\uc2dc\uac04 \uc13c\uc11c/\ud154\ub808\uba54\ud2b8\ub9ac \ubd80\uc7ac\ub85c \uc120\uc81c\uc801 \uc790\uc728 \uc870\uce58(Zero-Contact)\ub97c \ubcf4\uc5ec\uc8fc\uae30 \uc5b4\ub824\uc6c0"], "fonts": [["Pretendard", 8.62], ["Pretendard", 10.12], [null, null], ["Pretendard", 21.0]]}, {"text": ["\ubb38\uc81c \uc815\uc758: \uc77c\uc815 \uc0dd\uc131 \uc571\uc740 \ub9ce\uc9c0\ub9cc, \ud604\uc7a5 \uc2e4\ud589 CS\ub294 \uc5c6\uc2b5\ub2c8\ub2e4", "", "\uc5ec\ud589\uc790\uc758 \ud604\uc2e4 Pain", "\"\uc5ec\ud589 \uacc4\ud68d\uc740 \ucc57\ubd07\uc73c\ub85c 5\ubd84 \ub9cc\uc5d0 \uc9dc\uc9c0\ub9cc, \ud604\uc7a5\uc5d0\uc11c \uc9c0\ud558\ucca0\uc774 \uba48\ucd94\uac70\ub098 \uc2dd\ub2f9\uc774 \ub2eb\ud788\uba74 \ubaa8\ub4e0 \uc77c\uc815\uc774 \uc5f0\uc1c4\uc801\uc73c\ub85c \ubb34\ub108\uc9d1\ub2c8\ub2e4. \uae38\uac70\ub9ac\uc5d0\uc11c \uac80\uc0c9\ud558\ub290\ub77c \uc5ec\ud589\uc744 \ub9dd\uce69\ub2c8\ub2e4.\""], "fonts": [["Pretendard", 8.62], ["Pretendard", 9.0], ["Pretendard", 21.0], ["Pretendard", 10.5]]}, {"text": ["\uc2dc\uc2a4\ud15c \uc544\ud0a4\ud14d\ucc98: Headless 2-Track & Core-Team \ubb34\uc218\uc815 \uaca9\ub9ac", "", " External Access Layer (\uc0ac\uc6a9\uc790 \ubc0f \uc678\ubd80 \uc811\uc810 \uacc4\uce35 - No Dedicated App) REST API \u00b7 MCP Server \u00b7 Dynamic Web \u00b7 Webhooks", " Domain Team Modules (MVP 3\ub300 \uac1d\uccb4 \ubaa8\ub4c8 - Side-Effect \uc5c6\uc774 ActionProposal\ub9cc \ubc18\ud658)"], "fonts": [["Pretendard", 7.5], ["Pretendard", 9.37], ["Pretendard", 8.62], ["Pretendard", 7.87], ["Pretendard", 8.25], ["Pretendard", 21.0]]}, {"text": ["\ud300 \uc544\ud0a4\ud14d\ucc98: \uac1d\uccb4\ubcc4 \ubaa8\ub4c8\ud654 \ubc0f 6\uc778 \uc18c\uc720\uad8c \ubd84\ub2f4 \uccb4\uacc4", "", "6\uc778 \ud300\uc6d0\ubcc4 \uc804\ub2f4 \uc18c\uc720\uad8c (Ownership)", "\"\uac1d\uccb4 \uc885\ub958\ubcc4 \ubd84\ud560 \uc6d0\uce59\""], "fonts": [["Pretendard", 8.62], ["Pretendard", 9.75], ["Pretendard", 8.25], ["Pretendard", 21.0], ["Pretendard", 10.12]]}, {"text": ["\ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc544\ud0a4\ud14d\ucc98: 19\uac1c \ud14c\uc774\ube14 \uc911 14\uac1c \ubcf4\uc874 \u00b7 5\uac1c \uad50\uccb4", "", "\uc5ec\ud589 \ub3c4\uba54\uc778 5\ub300 \uc2e0\uaddc \uc5d4\ud2f0\ud2f0 \uad6c\uc870", "PostgreSQL \ud14c\uc774\ube14 \uc804\ud658 \uc6d0\uce59"], "fonts": [["Pretendard", 7.5], [null, null], ["Pretendard", 8.62], ["Pretendard", 9.75], ["Pretendard", 8.25], ["Pretendard", 21.0], ["Pretendard", 10.12]]}, {"text": ["\ud655\uc815 \uc2dc\ub098\ub9ac\uc624: \ub300\ub9cc\uc778 \uad00\uad11\uac1d 2\uba85\uc758 \uc11c\uc6b8 1\uc77c \ud22c\uc5b4", "", " \ud398\ub974\uc18c\ub098: K-\ucf58\ud150\uce20 \ud32c \ub300\ub9cc\uc778 \uc5ec\uc131 2\uba85 (\uce5c\uad6c) | \uad00\uc2ec\uc0ac: \ud5a5\uc218\u00b7\ud654\uc7a5\ud488 \uc1fc\ud551 & \uc2dd\ub8cc\ud488 \ub9c8\ud2b8 \uc1fc\ud551 "], "fonts": [["Pretendard", 12.0], ["Pretendard", 21.0]]}, {"text": ["\uc2dc\uc5f0 \ubaa9\uc5c5 1: \uc2dc\uc2a4\ud15c \uc120\uc81c \uac10\uc9c0 & \uae34\uae09 \uc6b0\ud68c \uc548\ub0b4", "", "[WatchSweeper]", "[MobilityTeam:\uc11c\uc720\ud604]"], "fonts": [["Pretendard", 7.5], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.25], ["Pretendard", 21.0], ["JetBrains Mono", 7.87]]}, {"text": ["\uc2dc\uc5f0 \ubaa9\uc5c5 2: \uc0ac\uc6a9\uc790 \uc9c0\uc5f0 \uc2e0\uace0 & \uc801\uc2dc \ucd9c\ubc1c \uc5ed\uc0b0 \uc548\ub0b4", "", "Dining Team (\uc815\uc138\ud658) \uc81c\uc57d \uac80\uc99d:", "\ub3c4\ubcf4 6\ubd84 \ub0b4 \ub178\ube0c\ub808\uc774\ud06c \ub300\uc548 2\uacf3:"], "fonts": [["Pretendard", 7.5], [null, null], ["Pretendard", 8.62], ["Pretendard", 8.25], ["Pretendard", 21.0]]}, {"text": ["\uc2dc\uc5f0 \ubaa9\uc5c5 3: \ub2f9\uc77c \ud734\ubb34 \ub300\ucc98 & \ub9c8\ud2b8 \ud488\uc808 \ub3d9\uc120 \ucd94\ucc9c", "", "\uc5ec\ud589 \uc885\ub8cc: \ubaa8\ub4e0 \ubc31\uadf8\ub77c\uc6b4\ub4dc \uac10\uc2dc \ub8e8\ud504 \uc548\uc804 \uc885\ub8cc\ub428", "Dining Team \uc989\uc2dc \ud0d0\uc0c9:"], "fonts": [["Pretendard", 8.62], ["Pretendard", 9.75], ["Pretendard", 7.87], ["Pretendard", 12.0], ["Pretendard", 21.0]]}, {"text": ["\ube44\uc988\ub2c8\uc2a4 \ubaa8\ub378: \ud300\ub2f9 49,000\uc6d0 \uc774\uc6a9\uad8c & \ub2e8\ub2e8\ud55c \uc720\ub2db \uc774\ucf54\ub178\ubbf9\uc2a4", "", "\ud300\ub2f9 \uc5ec\ud589 \uc774\uc6a9\uad8c (7\uc77c\u00b7\uc11c\uc6b8 1\ub3c4\uc2dc \uae30\uc900)", "\uad11\uace0\ub098 \uc81c\ud734 \uc218\uc218\ub8cc \uc5c6\uc774\ub3c4 \ud310\ub9e4 1\uac74\ub2f9 \uc989\uc2dc 54%\uc758 \uacf5\ud5cc\uc774\uc775\uc774 \ubc1c\uc0dd\ud558\ub294 \uad6c\uc870\ub97c \uc124\uacc4\ud588\uc2b5\ub2c8\ub2e4."], "fonts": [["Space Grotesk", 22.5], ["Pretendard", 9.0], ["Pretendard", 11.62], ["Pretendard", 8.25], ["Pretendard", 21.0]]}, {"text": ["\ud504\ub85c\uc81d\ud2b8 \ub85c\ub4dc\ub9f5 \ubc0f \uacb0\ub860: \ub05d\uae4c\uc9c0 \ubbff\uace0 \ub9e1\uae30\ub294 \uc5ec\ud589 \ube44\uc11c", "", "\"\ub354 \ub611\ub611\ud55c \ucc57\ubd07\uc774 \uc544\ub2cc, \ub05d\uae4c\uc9c0 \ubbff\uace0 \ub9e1\uae38 \uc218 \uc788\ub294 \uc5ec\ud589 \uc624\ucf00\uc2a4\ud2b8\ub808\uc774\ud130\"", "SK\ub124\ud2b8\uc6cd\uc2a4 Family AI \ucea0\ud504 32\uae30 6\ud300 A-COPilot | github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM"], "fonts": [["Pretendard", 9.37], [null, null], ["Pretendard ExtraBold", 14.25], ["Pretendard", 9.75], ["Pretendard", 9.0], ["Pretendard", 7.87], ["Pretendard", 21.0]]}], "images": {"C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c\\\uadf8\ub9bc\\\ubaa8\ub378\ubcc4_769_\ube44\uad50.png": [1440, 1080], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c\\\uadf8\ub9bc\\\ud30c\uc778\ud29c\ub2dd_\uc804\ud6c4.png": [1440, 600], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\uba40\ud2f0\uc5d0\uc774\uc804\ud2b8_\ud14c\uc2a4\ud2b8\ubcf4\uace0\uc11c\\\uadf8\ub9bc\\\ud55c\uc904\uc5f0\uacb0_\uc2dc\ud5d8.png": [1440, 720], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ubca1\ud130DB_GraphDB_\uacb0\uacfc\uc11c\\\uadf8\ub9bc\\\uc815\ucc45\uac80\uc0c9_\uc7ac\ud604\uc728.png": [1440, 620], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ud654\uba74\uc124\uacc4\uc11c\\assets\\capture_2026-10-06\\card_390.png": [390, 812], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ud654\uba74\uc124\uacc4\uc11c\\assets\\capture_docs\\04_trips_new_390.png": [390, 844], "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\\uc0b0\ucd9c\ubb3c\uc591\uc2dd\\w5\\\ud654\uba74\uc124\uacc4\uc11c\\assets\\capture_docs\\09_trip_home_390.png": [390, 844]}}
+
+exec
+"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -Command "python -c \"import pathlib,json; p=pathlib.Path('C:/Users/playdata2/.codex/plugins/cache/openai-primary-runtime/presentations/26.915.20218/skills/presentations'); print(json.dumps({f.name:f.read_text(encoding='utf-8-sig') for f in [p/'references/template_following.md',p/'style_guidelines.md',p/'references/clarification-questions.md']},ensure_ascii=True))\"" in C:\Users\playdata2\Documents\final_workspace
+ succeeded in 326ms:
+{"template_following.md": "# Follow the user's template or design\n\nRead this when editing an existing deck or matching a supplied design.\n\n## Determine how to use the supplied deck\n\nDetermine whether the user wants to edit the deck, match its design, use it for inspiration or take content from it. Follow its design when asked to match it or use it as a template. If the user supplies a deck only as a source of text, data or images, do not assume they want you to copy its design.\n\n## Inspect before changing\n\nRender the source slides relevant to the task. Check slide dimensions, layouts, title and body positions, fonts, colors, logos, image crops and repeated elements such as footers. When adapting a whole deck, inspect every source slide before choosing layouts. Use the actual reference; do not rely on memory or assume a 16:9 slide size.\n\nFor PPTX, read the API references for [imported decks](../artifact_tool_docs/api/references/cookbook/imported-deck.md), [masters](../artifact_tool_docs/api/references/master.spec.md), [layouts](../artifact_tool_docs/api/references/layout.spec.md) and [inspection](../artifact_tool_docs/api/references/inspect.md). Use `presentation.inspect({kind:\"layout\"})`, `presentation.masters.items` and placeholder summaries to see which elements and styles come from shared masters and layouts.\n\n## Reuse the structure\n\nWork on a copy. Import and reuse or duplicate source slides, fill existing placeholders, and edit existing elements in place. Keep dimensions, masters, layouts, theme, fonts, spacing, image styles and repeated elements unless the task calls for changes. Edit individual slides when possible. Change a shared master or layout only when the change should apply to all slides that use it.\n\nFit new content into the existing layout instead of covering it with a new design. Remove unused placeholders, but keep required template elements. If the slide count is fixed, fit the content without adding slides. A PDF or image reference may need to be rebuilt as editable objects. Match its appearance and explain any differences that affect the result; do not claim its underlying structure is identical.\n\n## Verify the match\n\nAfter export, compare changed slides with the originals side by side. Include every slide that uses a master or layout you changed. Check appearance and editability. A successful import or render does not prove the template was preserved. If the tool loses required elements or styles, investigate and try to restore them. Ask about an alternative only if the loss prevents the requested result.\n", "style_guidelines.md": "# Visual design\n\nUse this guidance when creating or changing slide layouts. Follow the user\u2019s template and design instructions first.\n\n## Design for the content\n\nKeep the template's fonts, colors, spacing, images and repeated elements. When the user has not specified a design, choose consistent styles and layouts that suit the content. Use bullets, rows of text, diagrams, tables or columns as needed; no single layout is required.\n\nUse editable tables for data arranged in rows and columns, and charts to show relationships in data. Align related items, place labels near what they describe and keep connecting lines clear of text. Use emphasis to draw attention to important information. Follow the default-styling rules in [SKILL.md's Important instructions](SKILL.md#important-instructions). Only use UI-like elements when the user explicitly requests them or when matching a supplied template requires them; otherwise use a flat slide composition rather than repeated UI panels.\n\nMake text readable at the size the audience will see it. Use one font familywith sizes and weights that distinguish headings from body text. Use available fonts that contain all required characters. Match reference fonts where specified instead of replacing them with defaults. Check line wrapping, padding inside text boxes and the space bold text needs. Before shrinking crowded text, try clearer wording or a better arrangement without dropping required evidence.\n\nUse images that accurately represent the subject. By default, do not reuse the same image more than once, except for backgrounds. Preserve repetition explicitly required by the user or a supplied template. Crop decorative images to fit the layout, but do not crop away evidence or distort logos. Do not present generated illustrations as photos of real events or images of real objects.\n\nUse diagrams when they help explain or reinforce the narrative of the slide. If using arrows, orient shapes such that you can avoid diagonal or curved connections.\n\nUse the fewest distinct text groups the content needs. It is unacceptable to clutter slides with unnecessary kickers, section labels, and footer fragments. e.g. instead of a textbox that says \"The supplement requires separate authority\", \"FY2027 inflation sensitivity: 2% gives $3578m, 4% gives $364.2,\" on one line, then \"02 FY2027 Planning Estimate\" and \"Reporting through 2025\" in opposite corners of the footer, just have ONE footnote saying \"2% inflation rate assumption in FY2027 drives up operating cost to $357.8M and 4% inflation rate yields $364.2M. Note reporting is through 2025 and actual budget approval requires separate approval from leadership.\" Kill any extraneous elements that are obvious from the deck context\n\n## Visual review\nReview the slide order and the balance of dense and simple slides. Then inspect each slide at a consistent readable size. Check that required content is present, the main point is easy to find, text is readable, and images, labels and other objects fit without unintended overlap. For template work, compare source and output side by side. Keep the original style when the user asked to preserve it.\n", "clarification-questions.md": "# Clarification questions\n\nCheck user attachments and references first and reuse answers already given. Review every category below. Ask exactly one question for each unanswered category. A reasonable default or an inferred preference does not count as an answer.\n\nWithin each category, ask about the missing detail that matters most. Do not combine categories into one question or limit the round to only the highest-priority categories.\n\n## What to ask\n\n| Detail | Ask for |\n| --- | --- |\n| Purpose | What should the audience remember or agree to? |\n| Audience | Who is the presentation for, such as customers evaluating a product or colleagues familiar with the project? |\n| Delivery and timing | How will the deck be used, such as a 10-minute live presentation or a self-paced read? If live delivery is already established, ask only for the duration in minutes, including discussion. |\n| Tone | How should it sound, such as an energetic pitch, candid update, or practical explanation? |\n| Target coverage | Which topics must fit into the main presentation? A subject alone does not answer this category. |\n| Key moment | Which finding, demo, comparison, or ask should get the most attention? |\n| Visual preference | Ask only if no template was provided. Which visuals would best explain the content, such as charts, diagrams, screenshots, or photography? |\n| Data sources | When evidence is needed, which data or sources should support the story, such as a results spreadsheet, customer research, or published references? |\n| Additional coverage | What else must be included, such as a specific example, anticipated question, speaker notes, or closing next step? |\n\n## How to ask\n\nUse `request_user_input_async` to ask questions. Submit all questions together in one `request_user_input_async` call.\n\nFor structured questions, give the two best options for the task. For each option, include a short rationale/elaboration for the choice in the option's text. Add `Use your judgment` as the third option. Make either the 1st or 2nd option recommended\n\nFor open-ended question, include examples in the question text to help the user answer, such as \"Is there anything else this should cover, such as a specific example or concern?\" If the tool is unavailable, ask in a message.\n\nIf the user doesn't provide a template, you may find a template while the user answers. Otherwise, wait at least 90 seconds for a reply. If none arrives, make a reasonable assumption or use a placeholder and disclose it. Never invent data or citations to fill a missing source. Do not stop the turn.\n"}
+
+codex
+원본 그림 일부에 주간 사실에 없는 수치가 있고, 규정 검색 그림은 이전 시험 결과입니다. 해당 부분은 발표 화면에서 제외하고, 확인된 수치와 시험 조건을 표시하겠습니다. 총 11장으로 구성하고 각 장에 발표 대본을 넣습니다.
+
+codex
+from pathlib import Path
+from io import BytesIO
+import os
+import tempfile
+
+from PIL import Image
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.oxml.xmlchemy import OxmlElement
+
+
+ROOT = Path("C:/Users/playdata2/Documents/final_workspace")
+BASE = ROOT / "program/산출물양식/w5"
+OUTPUT = BASE / "스탠드업_2026-10-06/[발표] triPilot_진행경과_2026-10-06_Codex.pptx"
+FACTS = BASE / "스탠드업_2026-10-06/_재료/주간_사실.md"
+
+ASSETS = {
+    "compare": BASE / "멀티에이전트_테스트보고서/그림/모델별_769_비교.png",
+    "tuning": BASE / "멀티에이전트_테스트보고서/그림/파인튜닝_전후.png",
+    "chain": BASE / "멀티에이전트_테스트보고서/그림/한줄연결_시험.png",
+    "policy": BASE / "벡터DB_GraphDB_결과서/그림/정책검색_재현율.png",
+    "card": BASE / "화면설계서/assets/capture_2026-10-06/card_390.png",
+    "home": BASE / "화면설계서/assets/capture_docs/09_trip_home_390.png",
+    "new": BASE / "화면설계서/assets/capture_docs/04_trips_new_390.png",
+}
+
+FONT = "맑은 고딕"
+NAVY = "152C40"
+GREEN = "2C614E"
+BLUE = "286BA0"
+AMBER = "A56A20"
+RED = "AB403A"
+INK = "203345"
+MUTED = "586B79"
+LIGHT = "F0F4F6"
+WHITE = "FFFFFF"
+
+prs = Presentation()
+prs.slide_width = Inches(13.333)
+prs.slide_height = Inches(7.5)
+prs.core_properties.title = "triPilot 5주차 진행경과"
+prs.core_properties.subject = "2026-09-29 ~ 2026-10-06 스탠드업"
+prs.core_properties.author = "triPilot"
+prs.core_properties.language = "ko-KR"
+
+SCRIPT_NOTES = []
+
+
+def color(value):
+    return RGBColor.from_string(value)
+
+
+def rect(slide, x, y, w, h, fill, border=None):
+    shape = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h)
+    )
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = color(fill)
+    if border:
+        shape.line.color.rgb = color(border)
+    else:
+        shape.line.fill.background()
+    return shape
+
+
+def text(slide, value, x, y, w, h, size=18, bold=False,
+         fill=INK, align=PP_ALIGN.LEFT, valign=MSO_ANCHOR.TOP):
+    shape = slide.shapes.add_textbox(
+        Inches(x), Inches(y), Inches(w), Inches(h)
+    )
+    frame = shape.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    frame.margin_left = Inches(0.02)
+    frame.margin_right = Inches(0.02)
+    frame.margin_top = Inches(0.02)
+    frame.margin_bottom = Inches(0.02)
+    frame.vertical_anchor = valign
+    for index, line in enumerate(value.split("\n")):
+        p = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
+        p.alignment = align
+        p.space_before = Pt(0)
+        p.space_after = Pt(5)
+        p.line_spacing = 1.12
+        pPr = p._p.get_or_add_pPr()
+        for tag in ("a:buChar", "a:buAutoNum", "a:buBlip", "a:buNone"):
+            for element in list(pPr.findall(tag, pPr.nsmap)):
+                pPr.remove(element)
+        pPr.append(OxmlElement("a:buNone"))
+        run = p.add_run()
+        run.text = line
+        run.font.name = FONT
+        run.font.size = Pt(size)
+        run.font.bold = bold
+        run.font.color.rgb = color(fill)
+        rPr = run._r.get_or_add_rPr()
+        rPr.set("lang", "ko-KR")
+        for tag in ("a:latin", "a:ea", "a:cs"):
+            element = rPr.find(tag, rPr.nsmap)
+            if element is None:
+                element = OxmlElement(tag)
+                rPr.append(element)
+            element.set("typeface", FONT)
+    return shape
+
+
+def slide(title, notes, dark=False):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    s.background.fill.solid()
+    s.background.fill.fore_color.rgb = color(NAVY if dark else WHITE)
+    text(s, title, 0.55, 0.38, 12.15, 0.85, 28, True,
+         WHITE if dark else NAVY)
+    text(s, "triPilot  ·  5주차  ·  2026-10-06",
+         0.58, 7.11, 10.6, 0.22, 9, fill="CBD7DE" if dark else MUTED)
+    text(s, str(len(prs.slides)), 12.1, 7.07, 0.65, 0.3, 10,
+         fill="CBD7DE" if dark else MUTED, align=PP_ALIGN.RIGHT)
+    SCRIPT_NOTES.append((s, notes))
+    return s
+
+
+def metric(s, value, label, source, x, y, w, h,
+           accent=GREEN, dark=False, value_size=45):
+    rect(s, x, y, w, h, "203E52" if dark else LIGHT)
+    text(s, label, x + 0.2, y + 0.18, w - 0.4, 0.6,
+         18, True, WHITE if dark else INK)
+    text(s, value, x + 0.2, y + 0.85, w - 0.4, 0.95,
+         value_size, True, WHITE if dark else accent)
+    text(s, source, x + 0.2, y + 1.83, w - 0.4, h - 1.94,
+         9, fill="D4E1E8" if dark else MUTED)
+
+
+def picture(s, path, x, y, w, h, region=None):
+    """높이에 먼저 맞춘 뒤 너비가 넘치면 축소한다. 원본 픽셀 비율을 유지한다."""
+    absolute_path = Path(path).resolve()
+    with Image.open(absolute_path) as im:
+        iw, ih = im.size
+    if region is None:
+        left, top, right, bottom = 0, 0, iw, ih
+    else:
+        left, top, right, bottom = region
+        if not (0 <= left < right <= iw and 0 <= top < bottom <= ih):
+            raise ValueError(f"잘못된 그림 표시 영역: {absolute_path}")
+    rw, rh = right - left, bottom - top
+    scale = min(h / rh, w / rw)
+    dw, dh = rw * scale, rh * scale
+    px, py = x + (w - dw) / 2, y + (h - dh) / 2
+    pic = s.shapes.add_picture(
+        str(absolute_path), Inches(px), Inches(py),
+        width=Inches(dw), height=Inches(dh)
+    )
+    if region:
+        pic.crop_left = left / iw
+        pic.crop_top = top / ih
+        pic.crop_right = (iw - right) / iw
+        pic.crop_bottom = (ih - bottom) / ih
+    return pic
+
+
+def source(s, value, x=0.6, y=6.65, w=12.1):
+    text(s, value, x, y, w, 0.39, 9, fill=MUTED)
+
+
+def model_band(s, region, y):
+    picture(s, ASSETS["compare"], 0.65, y, 11.95, 0.52, region)
+
+
+def build():
+    s = slide(
+        "화면과 검증을 늘렸고, 제품 연결은 다음 주에 확인한다",
+        "5주차에는 자유여행자의 계획 접수부터 여행 중 이용까지 화면과 기능을 확장했습니다. "
+        "작은 모델 학습과 규정 검색도 검증했지만, 바뀐 화면의 실제 응답과 가르친 모델의 제품 연결은 남아 있습니다.",
+        dark=True
+    )
+    text(s, "triPilot", 0.6, 1.55, 11.8, 0.9, 54, True, WHITE)
+    text(s, "5주차 진행경과\n2026-09-29 ~ 2026-10-06",
+         0.65, 2.62, 11.8, 0.9, 23, fill="D8E5ED")
+    metric(s, "402건", "작업 브랜치 커밋",
+           "role-manager · git log\n2026-09-29 ~ 10-06",
+           0.65, 3.78, 5.87, 2.7, dark=True)
+    metric(s, "531건", "모든 브랜치 커밋",
+           "팀원 커밋 포함 · git log\n2026-09-29 ~ 10-06",
+           6.77, 3.78, 5.87, 2.7, dark=True)
+
+    s = slide(
+        "화면 구현과 자동 시험은 늘었고, 사람 평가는 아직 없다",
+        "웹 화면을 cs 프로젝트 서버에 붙였고 cs 프로젝트 전체 자동 시험은 4,245개가 통과했습니다. "
+        "모델 시험 문제는 모두 합성이며 사람 평가는 아직 없으므로, 높은 시험 성적을 실제 사용 성능으로 단정하지 않겠습니다."
+    )
+    metric(s, "12개", "웹 화면 구현",
+           "화면설계서 5주차 · 2026-10-06 기준\ncs 프로젝트 서버 연결 · 캡처는 mock 서버",
+           0.65, 1.55, 3.85, 4.8)
+    metric(s, "99.9%", "cs 프로젝트 자동 시험",
+           "4,245 / 4,251 · 2026-10-06 18:09\n실제 모델 시험 238개 제외",
+           4.74, 1.55, 3.85, 4.8, accent=BLUE)
+    metric(s, "0건", "사람 평가",
+           "2026-10-06 기준 · 평가 시트 35행 준비\n모델 시험 문제는 전부 합성",
+           8.83, 1.55, 3.85, 4.8, accent=AMBER)
+    source(s, "구현, 자동 시험, 사람 평가는 서로 다른 확인 범위다.")
+
+    s = slide(
+        "자유여행자의 계획 접수부터 여행 중 이용까지 화면을 붙였다",
+        "계획 올리기, 항로 지킴이 카드, 여행 화면을 포함해 화면 12개를 cs 프로젝트 서버에 붙였습니다. "
+        "여기 보이는 캡처는 모두 mock 서버 화면이며, 실제 응답은 10월 3일 계획 확인 화면의 읽기·결과·수정·등록만 확인했습니다. "
+        "그 뒤 바뀐 화면은 실제 응답을 다시 확인해야 합니다."
+    )
+    for key, x, label in (
+        ("new", 0.7, "계획 올리기"),
+        ("card", 4.92, "항로 지킴이 카드"),
+        ("home", 9.14, "여행 중 이용"),
+    ):
+        rect(s, x, 1.45, 3.48, 4.98, LIGHT)
+        picture(s, ASSETS[key], x + 0.12, 1.5, 3.24, 4.65)
+        text(s, label + " · mock 서버 화면",
+             x, 6.2, 3.48, 0.35, 11, align=PP_ALIGN.CENTER)
+    source(s, "실제 응답 확인: 계획 확인의 읽기·결과·수정·등록만 · 2026-10-03. 이후 변경 화면은 미확인.")
+
+    s = slide(
+        "개인 AI 입구와 실시간 진행을 구현했고, 실제 연결 확인은 남았다",
+        "개인 AI용 MCP 여행 도구와 웹 실시간 진행 시험은 각각 모두 통과했습니다. "
+        "팀 재배분은 mock 서버에서 확인했고, 여행 삭제와 디스코드·텔레그램 연결은 cs 프로젝트 서버 코드에 구현했습니다. "
+        "이 기능들의 x600 서버 반영과 실제 연결은 아직 확인하지 않았습니다."
+    )
+    metric(s, "15 / 15", "MCP 여행 도구",
+           "통과 / 시험 · 2026-10-02\n읽기 5 · 쓰기 7 · 쓰기는 기본 꺼짐",
+           0.65, 1.52, 3.85, 4.85, value_size=38)
+    metric(s, "21 / 21", "웹 실시간 진행",
+           "통과 / 시험 · 2026-10-02\nSSE · 채팅·일정 짜기·접수 읽기",
+           4.74, 1.52, 3.85, 4.85, accent=BLUE, value_size=38)
+    metric(s, "10 / 10", "팀 재배분",
+           "통과 / mock 서버 시험 · 2026-10-06\n받는 팀이 없으면 등록 팀에서 한 번 재선택",
+           8.83, 1.52, 3.85, 4.85, accent=AMBER, value_size=38)
+    source(s, "여행 삭제·디스코드·텔레그램: cs 프로젝트 서버 코드 구현. x600 서버 반영·실제 연결 미확인.")
+
+    s = slide(
+        "Gemma 4 E4B를 가르치니 같은 시험의 정답이 늘었다",
+        "Gemma 4 E4B를 QLoRA로 가르치자 같은 769문제에서 정답이 688개에서 750개로 늘었습니다. "
+        "시드만 바꾼 재시험에서는 760개를 맞혔지만, 문제는 모두 모델이 만든 합성입니다. "
+        "아래 그림은 주간 사실에 있는 전체 시험 묶음만 발췌했습니다."
+    )
+    picture(s, ASSETS["tuning"], 0.65, 1.45, 7.5, 4.9,
+            region=(0, 0, 500, 600))
+    metric(s, "750 / 769", "QLoRA 학습 후",
+           "정답 / 합성 시험 · 97.5%\nmix8~12 · 요청 둘 66문제 제외\n학습 전 688 / 769",
+           8.35, 1.52, 4.3, 2.62, value_size=34)
+    metric(s, "760 / 769", "시드를 바꾼 재시험",
+           "정답 / 같은 합성 시험 · 98.8%\n학습 전 대비 이쪽만 정답 69 : 7\np=6.4e-14 · 제품 연결 전",
+           8.35, 4.32, 4.3, 2.22, value_size=34)
+    source(s, "원본 파인튜닝_전후.png의 주 지표 부분 발췌. 비교는 같은 769문제이며 사람 평가가 아니다.")
+
+    s = slide(
+        "가르친 작은 모델이 큰 로컬 모델을 넘었지만, 모델 순위는 미정이다",
+        "가르친 E4B는 같은 769문제에서 학습 없는 큰 로컬 모델들보다 높은 정답 수를 보였습니다. "
+        "같은 방법으로 가르친 Winnow-E4B는 Jev 계열 모델이며 756개를 맞혔지만, E4B와 순위를 구분하려면 시드 3개 이상이 필요합니다. "
+        "상용 CLI 결과는 출제자 편향 때문에 이 비교에서 제외했습니다."
+    )
+    text(s, "같은 합성 시험에서의 정답 수", 0.65, 1.43, 12, 0.45, 20, True)
+    bands = [
+        (0, 278, 1440, 328),
+        (0, 321, 1440, 371),
+        (0, 364, 1440, 414),
+        (0, 493, 1440, 543),
+        (0, 622, 1440, 672),
+    ]
+    for index, region in enumerate(bands):
+        model_band(s, region, 2.0 + index * 0.65)
+    metric(s, "756 / 769", "가르친 Winnow-E4B · Jev 계열 모델",
+           "정답 / 같은 시험 · 시드 1개\nE4B와 구분 안 됨 · 순위 확인은 시드 3개 이상",
+           0.65, 5.37, 12.0, 1.23, value_size=27)
+    # 짧은 가로 카드에서는 숫자와 근거를 각각 독립 배치한다.
+    for shape in list(s.shapes)[-4:]:
+        element = shape._element
+        element.getparent().remove(element)
+    rect(s, 0.65, 5.4, 12.0, 1.05, LIGHT)
+    text(s, "756 / 769", 0.85, 5.56, 3.15, 0.5, 29, True, GREEN)
+    text(s, "정답 / 같은 합성 시험 · 가르친 Winnow-E4B(Jev 계열 모델) · 시드 1개",
+         4.1, 5.55, 8.15, 0.35, 13)
+    text(s, "E4B와 구분 안 됨 · 모델 사이 순위는 시드 3개 이상 필요",
+         4.1, 5.98, 8.15, 0.25, 9, fill=MUTED)
+    source(s, "모델별_769_비교.png에서 확인된 로컬 비교 행만 발췌. 큰 로컬 모델은 학습 없음.")
+
+    s = slide(
+        "규칙과 ML은 호출을 줄였지만, 단계를 늘려도 정답은 늘지 않았다",
+        "GPU 서버 C에서 문제마다 실제 호출한 시험에서는 가르친 E4B 하나가 748개를 맞혔습니다. "
+        "규칙과 ML로 거르면 745개로 구분되지 않았고 E4B 호출은 19% 줄었습니다. "
+        "학습 없는 Winnow-E4B를 판정에 넣은 구성은 학습 조건이 달라 공정한 모델 비교가 아닙니다."
+    )
+    picture(s, ASSETS["chain"], 0.65, 1.6, 12.0, 2.7,
+            region=(0, 0, 1180, 258))
+    metric(s, "19% 감소", "가르친 E4B 호출",
+           "규칙 + ML 거름 대 E4B 단독\n정답 745 / 769 대 748 / 769\nGPU 서버 C · 2026-10-06 · 구분 안 됨",
+           0.65, 4.4, 5.86, 2.15, value_size=34)
+    metric(s, "697 / 769", "학습 없는 Winnow-E4B 포함",
+           "정답 / 합성 시험 · 사후 개선 판\nJev 계열 모델 · 학습 조건 달라 공정 비교 아님\n사전 등록 판은 472 / 769",
+           6.78, 4.4, 5.86, 2.15, accent=AMBER, value_size=34)
+    source(s, "한줄연결_시험.png의 확인된 기준 구성만 발췌. 일정과 무관한 말이 섞인 흐름에서는 앞단이 이득.")
+
+    s = slide(
+        "분류는 개선됐지만, 규정 검색은 목표에 못 미쳤다",
+        "학습한 e5-base 분류 인코더의 긴급도는 CX 400에서 88.4%였습니다. "
+        "제품 코드 그대로의 규정 검색은 10월 6일 독립 질문 48문제에서 정답 규정을 상위 3개 안에 30번 넣어 목표에 미달했습니다. "
+        "고객용 색인은 정답 노출을 늘렸지만 불필요한 규정 노출도 늘려 운영 반영을 결정하지 않았습니다."
+    )
+    metric(s, "88.4%", "학습한 분류 인코더의 긴급도",
+           "CX 400 · Codex 작성 · Claude 교차 라벨\n학습 없는 E4B 60.9% 대 학습 후 88.4%",
+           0.65, 1.5, 5.86, 2.64)
+    metric(s, "30 / 48", "정답 규정이 상위 3개 안",
+           "62.5% · 제품 코드 그대로 · 독립 질문 B\n2026-10-06 · 양식 목표 0.90 미달",
+           6.78, 1.5, 5.86, 2.64, accent=AMBER)
+    rect(s, 0.65, 4.35, 12.0, 2.15, LIGHT)
+    text(s, "고객용 색인은 정답 노출과 불필요한 노출을 함께 늘렸다",
+         0.87, 4.55, 11.55, 0.5, 21, True)
+    text(s, "정답 노출 21/48 → 31/48", 0.9, 5.23, 5.5, 0.5, 25, True, GREEN)
+    text(s, "불필요한 노출 22.3% → 36.7%",
+         6.45, 5.23, 5.9, 0.5, 24, True, RED)
+    text(s, "독립 질문 B · 2026-10-06 · 운영 반영 결정 전",
+         0.9, 5.86, 5.25, 0.28, 9, fill=MUTED)
+    text(s, "규정이 아닌 여행 대화에 규정을 붙인 비율",
+         6.45, 5.86, 5.85, 0.28, 9, fill=MUTED)
+    # 원본 그림은 이전 시험이므로 수치 영역을 쓰지 않고 색인 범례만 인용한다.
+    picture(s, ASSETS["policy"], 0.86, 6.25, 4.1, 0.38,
+            region=(454, 427, 737, 520))
+    source(s, "원본 정책검색_재현율.png는 이전 시험의 색인 범례만 발췌. 발표 수치는 2026-10-06 주간 사실 기준.")
+
+    s = slide(
+        "5주차 산출물과 6주차 시험 문서를 만들고 지적을 반영했다",
+        "5주차 산출물 4종과 6주차 서비스 테스트 문서 1종을 만들었습니다. "
+        "요구사항 85개 중 구현 끝은 24개이고 일부 구현은 58개, 결정 대기는 3개입니다. "
+        "산출물은 모두 코덱스와 교차 검증하고 지적을 반영했습니다."
+    )
+    rows = [
+        ("벡터DB·GraphDB 구축 결과서", "23쪽"),
+        ("멀티 에이전트 테스트 계획 및 결과 보고서", "50쪽"),
+        ("요구사항 정의서 업데이트", "85개 요구"),
+        ("화면설계서", "25쪽"),
+        ("6주차 서비스 테스트 계획 및 결과 보고서", "10쪽"),
+    ]
+    for index, (label, value) in enumerate(rows):
+        y = 1.48 + index * 0.88
+        rect(s, 0.65, y, 8.1, 0.73, LIGHT)
+        text(s, label, 0.9, y + 0.16, 6.15, 0.44, 19, True)
+        text(s, value, 7.07, y + 0.12, 1.42, 0.47, 22, True,
+             GREEN, align=PP_ALIGN.RIGHT)
+    metric(s, "24 / 85", "요구사항 구현 끝",
+           "2026-10-06 업데이트 기준\n일부 구현 58 · 결정 대기 3\n구현 상태이며 시험 통과율이 아님",
+           9.0, 1.48, 3.65, 4.99, value_size=35)
+    source(s, "산출물 분량·요구사항 상태: 주간_사실.md의 산출물 기록. 모두 교차 검증 후 지적 반영.")
+
+    s = slide(
+        "합성 시험의 성과와 별개로, 데이터 변조와 실제 응답 확인이 남았다",
+        "사람 평가가 없고 가르친 모델도 제품에 아직 연결하지 않았습니다. "
+        "계획 읽기 값 변조와 일정 항목의 빈 답은 원인을 더 확인해야 하며, 엉뚱한 대상 변경과 일본어 알림의 금액 단위 변조도 발견했습니다. "
+        "바뀐 화면 대부분은 실제 응답을 확인하지 않았습니다."
+    )
+    metric(s, "0건", "사람 평가",
+           "2026-10-06 기준 · 시트 35행만 준비\n합성 시험 결과의 실제 사용 검증 전",
+           0.65, 1.48, 3.85, 3.37, accent=AMBER)
+    metric(s, "12 / 350", "계획 읽기 값 변조",
+           "변조 / 시험 · 3.4%\n2026-10-06 주간 사실 기준",
+           4.74, 1.48, 3.85, 3.37, accent=RED, value_size=36)
+    metric(s, "85 / 2,735", "일정 항목 짚기 빈 답",
+           "빈 답 / 흐름 시험 · 3.1%\n2026-10-06 기준 · 원인 미확인",
+           8.83, 1.48, 3.85, 3.37, accent=RED, value_size=32)
+    rect(s, 0.65, 5.06, 12.0, 1.43, LIGHT)
+    text(s, "엉뚱한 대상 변경 1/172",
+         0.9, 5.29, 5.3, 0.48, 24, True, RED)
+    text(s, "금액 단위 변조 1건 통과",
+         6.45, 5.29, 5.9, 0.48, 24, True, RED)
+    text(s, "발생 / 결정 단위 · 주간 사실 기준",
+         0.9, 5.94, 5.3, 0.26, 9, fill=MUTED)
+    text(s, "일본어 알림 번역 · 원을 엔으로 변경 · 주간 사실 기준",
+         6.45, 5.94, 5.9, 0.26, 9, fill=MUTED)
+    source(s, "규정 검색 목표 미달도 미해결. 변경 화면 대부분 실제 응답 미확인 · 가르친 모델 제품 연결 전.")
+
+    s = slide(
+        "다음 주에는 실제 응답과 사람 평가를 확인하고 제품 반영을 결정한다",
+        "다음 주에는 바뀐 화면의 실제 응답을 확인하고 준비한 시트로 사람 평가를 진행합니다. "
+        "가르친 모델의 제품 연결을 검토하고 시드 3개 이상으로 순위를 확인하며, 규정 색인 개선도 분류기 뒤에서 다시 측정합니다. "
+        "GPU 서버 B 대기열에 있는 다른 Jev 계열 후보도 같은 방법으로 가르쳐 비교합니다.",
+        dark=True
+    )
+    metric(s, "35행", "사람 평가 진행",
+           "이미 준비한 평가 시트 행 수\n6주차 예정 · 완료한 평가 수가 아님",
+           0.65, 1.55, 5.86, 3.02, dark=True)
+    metric(s, "시드 3개 이상", "모델 순위 재확인",
+           "가르친 모델 제품 연결 검토와 함께 진행\n6주차 예정 · 현재 순위 확정 전",
+           6.78, 1.55, 5.86, 3.02, dark=True, value_size=31)
+    text(s, "바뀐 화면의 실제 응답 확인\n규정 색인 개선을 분류기 뒤에서 다시 측정",
+         0.85, 4.87, 11.65, 0.96, 24, True, WHITE)
+    text(s, "Jev 계열 후보: Plumb-4B · spark-s1-4b-v6 · jevify-gemma4-e4b\n"
+            "같은 방법으로 가르쳐 비교 예정 · GPU 서버 B 대기열",
+         0.85, 6.03, 11.65, 0.66, 15, fill="D4E1E8")
+
+
+def finalize():
+    if len(prs.slides) != 11:
+        raise RuntimeError("슬라이드는 11장이어야 합니다.")
+    for s, notes in SCRIPT_NOTES:
+        s.notes_slide.notes_text_frame.text = notes
+        for element in list(s._element):
+            if element.tag.rsplit("}", 1)[-1] in ("timing", "transition"):
+                s._element.remove(element)
+
+    for s in prs.slides:
+        for shape in s.shapes:
+            if shape.left < 0 or shape.top < 0:
+                raise RuntimeError("슬라이드 밖에 배치한 요소가 있습니다.")
+            if shape.left + shape.width > prs.slide_width + Inches(0.01):
+                raise RuntimeError("슬라이드 너비를 넘은 요소가 있습니다.")
+            if shape.top + shape.height > prs.slide_height + Inches(0.01):
+                raise RuntimeError("슬라이드 높이를 넘은 요소가 있습니다.")
+            if shape.has_text_frame:
+                if "—" in shape.text or "…" in shape.text or "..." in shape.text:
+                    raise RuntimeError("금지된 줄표 또는 말줄임표가 있습니다.")
+
+    buffer = BytesIO()
+    prs.save(buffer)
+    buffer.seek(0)
+    check = Presentation(buffer)
+    if len(check.slides) != 11:
+        raise RuntimeError("저장 후 슬라이드 수 검증 실패")
+    if any(not s.notes_slide.notes_text_frame.text.strip() for s in check.slides):
+        raise RuntimeError("발표 대본이 없는 슬라이드가 있습니다.")
+
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=str(OUTPUT.parent), prefix=".triPilot_", suffix=".pptx", delete=False
+        ) as temporary:
+            temporary.write(buffer.getvalue())
+            temporary_path = Path(temporary.name)
+        os.replace(str(temporary_path), str(OUTPUT))
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()
+    print(str(OUTPUT))
+
+
+def main():
+    required = [FACTS, *ASSETS.values()]
+    missing = [str(p) for p in required if not p.is_file()]
+    if missing:
+        raise FileNotFoundError("필수 자료를 찾을 수 없습니다:\n" + "\n".join(missing))
+    FACTS.read_text(encoding="utf-8-sig")
+    build()
+    finalize()
+
+
+if __name__ == "__main__":
+    main()
+
+tokens used
+53,789
+from pathlib import Path
+from io import BytesIO
+import os
+import tempfile
+
+from PIL import Image
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.oxml.xmlchemy import OxmlElement
+
+
+ROOT = Path("C:/Users/playdata2/Documents/final_workspace")
+BASE = ROOT / "program/산출물양식/w5"
+OUTPUT = BASE / "스탠드업_2026-10-06/[발표] triPilot_진행경과_2026-10-06_Codex.pptx"
+FACTS = BASE / "스탠드업_2026-10-06/_재료/주간_사실.md"
+
+ASSETS = {
+    "compare": BASE / "멀티에이전트_테스트보고서/그림/모델별_769_비교.png",
+    "tuning": BASE / "멀티에이전트_테스트보고서/그림/파인튜닝_전후.png",
+    "chain": BASE / "멀티에이전트_테스트보고서/그림/한줄연결_시험.png",
+    "policy": BASE / "벡터DB_GraphDB_결과서/그림/정책검색_재현율.png",
+    "card": BASE / "화면설계서/assets/capture_2026-10-06/card_390.png",
+    "home": BASE / "화면설계서/assets/capture_docs/09_trip_home_390.png",
+    "new": BASE / "화면설계서/assets/capture_docs/04_trips_new_390.png",
+}
+
+FONT = "맑은 고딕"
+NAVY = "152C40"
+GREEN = "2C614E"
+BLUE = "286BA0"
+AMBER = "A56A20"
+RED = "AB403A"
+INK = "203345"
+MUTED = "586B79"
+LIGHT = "F0F4F6"
+WHITE = "FFFFFF"
+
+prs = Presentation()
+prs.slide_width = Inches(13.333)
+prs.slide_height = Inches(7.5)
+prs.core_properties.title = "triPilot 5주차 진행경과"
+prs.core_properties.subject = "2026-09-29 ~ 2026-10-06 스탠드업"
+prs.core_properties.author = "triPilot"
+prs.core_properties.language = "ko-KR"
+
+SCRIPT_NOTES = []
+
+
+def color(value):
+    return RGBColor.from_string(value)
+
+
+def rect(slide, x, y, w, h, fill, border=None):
+    shape = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h)
+    )
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = color(fill)
+    if border:
+        shape.line.color.rgb = color(border)
+    else:
+        shape.line.fill.background()
+    return shape
+
+
+def text(slide, value, x, y, w, h, size=18, bold=False,
+         fill=INK, align=PP_ALIGN.LEFT, valign=MSO_ANCHOR.TOP):
+    shape = slide.shapes.add_textbox(
+        Inches(x), Inches(y), Inches(w), Inches(h)
+    )
+    frame = shape.text_frame
+    frame.clear()
+    frame.word_wrap = True
+    frame.margin_left = Inches(0.02)
+    frame.margin_right = Inches(0.02)
+    frame.margin_top = Inches(0.02)
+    frame.margin_bottom = Inches(0.02)
+    frame.vertical_anchor = valign
+    for index, line in enumerate(value.split("\n")):
+        p = frame.paragraphs[0] if index == 0 else frame.add_paragraph()
+        p.alignment = align
+        p.space_before = Pt(0)
+        p.space_after = Pt(5)
+        p.line_spacing = 1.12
+        pPr = p._p.get_or_add_pPr()
+        for tag in ("a:buChar", "a:buAutoNum", "a:buBlip", "a:buNone"):
+            for element in list(pPr.findall(tag, pPr.nsmap)):
+                pPr.remove(element)
+        pPr.append(OxmlElement("a:buNone"))
+        run = p.add_run()
+        run.text = line
+        run.font.name = FONT
+        run.font.size = Pt(size)
+        run.font.bold = bold
+        run.font.color.rgb = color(fill)
+        rPr = run._r.get_or_add_rPr()
+        rPr.set("lang", "ko-KR")
+        for tag in ("a:latin", "a:ea", "a:cs"):
+            element = rPr.find(tag, rPr.nsmap)
+            if element is None:
+                element = OxmlElement(tag)
+                rPr.append(element)
+            element.set("typeface", FONT)
+    return shape
+
+
+def slide(title, notes, dark=False):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    s.background.fill.solid()
+    s.background.fill.fore_color.rgb = color(NAVY if dark else WHITE)
+    text(s, title, 0.55, 0.38, 12.15, 0.85, 28, True,
+         WHITE if dark else NAVY)
+    text(s, "triPilot  ·  5주차  ·  2026-10-06",
+         0.58, 7.11, 10.6, 0.22, 9, fill="CBD7DE" if dark else MUTED)
+    text(s, str(len(prs.slides)), 12.1, 7.07, 0.65, 0.3, 10,
+         fill="CBD7DE" if dark else MUTED, align=PP_ALIGN.RIGHT)
+    SCRIPT_NOTES.append((s, notes))
+    return s
+
+
+def metric(s, value, label, source, x, y, w, h,
+           accent=GREEN, dark=False, value_size=45):
+    rect(s, x, y, w, h, "203E52" if dark else LIGHT)
+    text(s, label, x + 0.2, y + 0.18, w - 0.4, 0.6,
+         18, True, WHITE if dark else INK)
+    text(s, value, x + 0.2, y + 0.85, w - 0.4, 0.95,
+         value_size, True, WHITE if dark else accent)
+    text(s, source, x + 0.2, y + 1.83, w - 0.4, h - 1.94,
+         9, fill="D4E1E8" if dark else MUTED)
+
+
+def picture(s, path, x, y, w, h, region=None):
+    """높이에 먼저 맞춘 뒤 너비가 넘치면 축소한다. 원본 픽셀 비율을 유지한다."""
+    absolute_path = Path(path).resolve()
+    with Image.open(absolute_path) as im:
+        iw, ih = im.size
+    if region is None:
+        left, top, right, bottom = 0, 0, iw, ih
+    else:
+        left, top, right, bottom = region
+        if not (0 <= left < right <= iw and 0 <= top < bottom <= ih):
+            raise ValueError(f"잘못된 그림 표시 영역: {absolute_path}")
+    rw, rh = right - left, bottom - top
+    scale = min(h / rh, w / rw)
+    dw, dh = rw * scale, rh * scale
+    px, py = x + (w - dw) / 2, y + (h - dh) / 2
+    pic = s.shapes.add_picture(
+        str(absolute_path), Inches(px), Inches(py),
+        width=Inches(dw), height=Inches(dh)
+    )
+    if region:
+        pic.crop_left = left / iw
+        pic.crop_top = top / ih
+        pic.crop_right = (iw - right) / iw
+        pic.crop_bottom = (ih - bottom) / ih
+    return pic
+
+
+def source(s, value, x=0.6, y=6.65, w=12.1):
+    text(s, value, x, y, w, 0.39, 9, fill=MUTED)
+
+
+def model_band(s, region, y):
+    picture(s, ASSETS["compare"], 0.65, y, 11.95, 0.52, region)
+
+
+def build():
+    s = slide(
+        "화면과 검증을 늘렸고, 제품 연결은 다음 주에 확인한다",
+        "5주차에는 자유여행자의 계획 접수부터 여행 중 이용까지 화면과 기능을 확장했습니다. "
+        "작은 모델 학습과 규정 검색도 검증했지만, 바뀐 화면의 실제 응답과 가르친 모델의 제품 연결은 남아 있습니다.",
+        dark=True
+    )
+    text(s, "triPilot", 0.6, 1.55, 11.8, 0.9, 54, True, WHITE)
+    text(s, "5주차 진행경과\n2026-09-29 ~ 2026-10-06",
+         0.65, 2.62, 11.8, 0.9, 23, fill="D8E5ED")
+    metric(s, "402건", "작업 브랜치 커밋",
+           "role-manager · git log\n2026-09-29 ~ 10-06",
+           0.65, 3.78, 5.87, 2.7, dark=True)
+    metric(s, "531건", "모든 브랜치 커밋",
+           "팀원 커밋 포함 · git log\n2026-09-29 ~ 10-06",
+           6.77, 3.78, 5.87, 2.7, dark=True)
+
+    s = slide(
+        "화면 구현과 자동 시험은 늘었고, 사람 평가는 아직 없다",
+        "웹 화면을 cs 프로젝트 서버에 붙였고 cs 프로젝트 전체 자동 시험은 4,245개가 통과했습니다. "
+        "모델 시험 문제는 모두 합성이며 사람 평가는 아직 없으므로, 높은 시험 성적을 실제 사용 성능으로 단정하지 않겠습니다."
+    )
+    metric(s, "12개", "웹 화면 구현",
+           "화면설계서 5주차 · 2026-10-06 기준\ncs 프로젝트 서버 연결 · 캡처는 mock 서버",
+           0.65, 1.55, 3.85, 4.8)
+    metric(s, "99.9%", "cs 프로젝트 자동 시험",
+           "4,245 / 4,251 · 2026-10-06 18:09\n실제 모델 시험 238개 제외",
+           4.74, 1.55, 3.85, 4.8, accent=BLUE)
+    metric(s, "0건", "사람 평가",
+           "2026-10-06 기준 · 평가 시트 35행 준비\n모델 시험 문제는 전부 합성",
+           8.83, 1.55, 3.85, 4.8, accent=AMBER)
+    source(s, "구현, 자동 시험, 사람 평가는 서로 다른 확인 범위다.")
+
+    s = slide(
+        "자유여행자의 계획 접수부터 여행 중 이용까지 화면을 붙였다",
+        "계획 올리기, 항로 지킴이 카드, 여행 화면을 포함해 화면 12개를 cs 프로젝트 서버에 붙였습니다. "
+        "여기 보이는 캡처는 모두 mock 서버 화면이며, 실제 응답은 10월 3일 계획 확인 화면의 읽기·결과·수정·등록만 확인했습니다. "
+        "그 뒤 바뀐 화면은 실제 응답을 다시 확인해야 합니다."
+    )
+    for key, x, label in (
+        ("new", 0.7, "계획 올리기"),
+        ("card", 4.92, "항로 지킴이 카드"),
+        ("home", 9.14, "여행 중 이용"),
+    ):
+        rect(s, x, 1.45, 3.48, 4.98, LIGHT)
+        picture(s, ASSETS[key], x + 0.12, 1.5, 3.24, 4.65)
+        text(s, label + " · mock 서버 화면",
+             x, 6.2, 3.48, 0.35, 11, align=PP_ALIGN.CENTER)
+    source(s, "실제 응답 확인: 계획 확인의 읽기·결과·수정·등록만 · 2026-10-03. 이후 변경 화면은 미확인.")
+
+    s = slide(
+        "개인 AI 입구와 실시간 진행을 구현했고, 실제 연결 확인은 남았다",
+        "개인 AI용 MCP 여행 도구와 웹 실시간 진행 시험은 각각 모두 통과했습니다. "
+        "팀 재배분은 mock 서버에서 확인했고, 여행 삭제와 디스코드·텔레그램 연결은 cs 프로젝트 서버 코드에 구현했습니다. "
+        "이 기능들의 x600 서버 반영과 실제 연결은 아직 확인하지 않았습니다."
+    )
+    metric(s, "15 / 15", "MCP 여행 도구",
+           "통과 / 시험 · 2026-10-02\n읽기 5 · 쓰기 7 · 쓰기는 기본 꺼짐",
+           0.65, 1.52, 3.85, 4.85, value_size=38)
+    metric(s, "21 / 21", "웹 실시간 진행",
+           "통과 / 시험 · 2026-10-02\nSSE · 채팅·일정 짜기·접수 읽기",
+           4.74, 1.52, 3.85, 4.85, accent=BLUE, value_size=38)
+    metric(s, "10 / 10", "팀 재배분",
+           "통과 / mock 서버 시험 · 2026-10-06\n받는 팀이 없으면 등록 팀에서 한 번 재선택",
+           8.83, 1.52, 3.85, 4.85, accent=AMBER, value_size=38)
+    source(s, "여행 삭제·디스코드·텔레그램: cs 프로젝트 서버 코드 구현. x600 서버 반영·실제 연결 미확인.")
+
+    s = slide(
+        "Gemma 4 E4B를 가르치니 같은 시험의 정답이 늘었다",
+        "Gemma 4 E4B를 QLoRA로 가르치자 같은 769문제에서 정답이 688개에서 750개로 늘었습니다. "
+        "시드만 바꾼 재시험에서는 760개를 맞혔지만, 문제는 모두 모델이 만든 합성입니다. "
+        "아래 그림은 주간 사실에 있는 전체 시험 묶음만 발췌했습니다."
+    )
+    picture(s, ASSETS["tuning"], 0.65, 1.45, 7.5, 4.9,
+            region=(0, 0, 500, 600))
+    metric(s, "750 / 769", "QLoRA 학습 후",
+           "정답 / 합성 시험 · 97.5%\nmix8~12 · 요청 둘 66문제 제외\n학습 전 688 / 769",
+           8.35, 1.52, 4.3, 2.62, value_size=34)
+    metric(s, "760 / 769", "시드를 바꾼 재시험",
+           "정답 / 같은 합성 시험 · 98.8%\n학습 전 대비 이쪽만 정답 69 : 7\np=6.4e-14 · 제품 연결 전",
+           8.35, 4.32, 4.3, 2.22, value_size=34)
+    source(s, "원본 파인튜닝_전후.png의 주 지표 부분 발췌. 비교는 같은 769문제이며 사람 평가가 아니다.")
+
+    s = slide(
+        "가르친 작은 모델이 큰 로컬 모델을 넘었지만, 모델 순위는 미정이다",
+        "가르친 E4B는 같은 769문제에서 학습 없는 큰 로컬 모델들보다 높은 정답 수를 보였습니다. "
+        "같은 방법으로 가르친 Winnow-E4B는 Jev 계열 모델이며 756개를 맞혔지만, E4B와 순위를 구분하려면 시드 3개 이상이 필요합니다. "
+        "상용 CLI 결과는 출제자 편향 때문에 이 비교에서 제외했습니다."
+    )
+    text(s, "같은 합성 시험에서의 정답 수", 0.65, 1.43, 12, 0.45, 20, True)
+    bands = [
+        (0, 278, 1440, 328),
+        (0, 321, 1440, 371),
+        (0, 364, 1440, 414),
+        (0, 493, 1440, 543),
+        (0, 622, 1440, 672),
+    ]
+    for index, region in enumerate(bands):
+        model_band(s, region, 2.0 + index * 0.65)
+    metric(s, "756 / 769", "가르친 Winnow-E4B · Jev 계열 모델",
+           "정답 / 같은 시험 · 시드 1개\nE4B와 구분 안 됨 · 순위 확인은 시드 3개 이상",
+           0.65, 5.37, 12.0, 1.23, value_size=27)
+    # 짧은 가로 카드에서는 숫자와 근거를 각각 독립 배치한다.
+    for shape in list(s.shapes)[-4:]:
+        element = shape._element
+        element.getparent().remove(element)
+    rect(s, 0.65, 5.4, 12.0, 1.05, LIGHT)
+    text(s, "756 / 769", 0.85, 5.56, 3.15, 0.5, 29, True, GREEN)
+    text(s, "정답 / 같은 합성 시험 · 가르친 Winnow-E4B(Jev 계열 모델) · 시드 1개",
+         4.1, 5.55, 8.15, 0.35, 13)
+    text(s, "E4B와 구분 안 됨 · 모델 사이 순위는 시드 3개 이상 필요",
+         4.1, 5.98, 8.15, 0.25, 9, fill=MUTED)
+    source(s, "모델별_769_비교.png에서 확인된 로컬 비교 행만 발췌. 큰 로컬 모델은 학습 없음.")
+
+    s = slide(
+        "규칙과 ML은 호출을 줄였지만, 단계를 늘려도 정답은 늘지 않았다",
+        "GPU 서버 C에서 문제마다 실제 호출한 시험에서는 가르친 E4B 하나가 748개를 맞혔습니다. "
+        "규칙과 ML로 거르면 745개로 구분되지 않았고 E4B 호출은 19% 줄었습니다. "
+        "학습 없는 Winnow-E4B를 판정에 넣은 구성은 학습 조건이 달라 공정한 모델 비교가 아닙니다."
+    )
+    picture(s, ASSETS["chain"], 0.65, 1.6, 12.0, 2.7,
+            region=(0, 0, 1180, 258))
+    metric(s, "19% 감소", "가르친 E4B 호출",
+           "규칙 + ML 거름 대 E4B 단독\n정답 745 / 769 대 748 / 769\nGPU 서버 C · 2026-10-06 · 구분 안 됨",
+           0.65, 4.4, 5.86, 2.15, value_size=34)
+    metric(s, "697 / 769", "학습 없는 Winnow-E4B 포함",
+           "정답 / 합성 시험 · 사후 개선 판\nJev 계열 모델 · 학습 조건 달라 공정 비교 아님\n사전 등록 판은 472 / 769",
+           6.78, 4.4, 5.86, 2.15, accent=AMBER, value_size=34)
+    source(s, "한줄연결_시험.png의 확인된 기준 구성만 발췌. 일정과 무관한 말이 섞인 흐름에서는 앞단이 이득.")
+
+    s = slide(
+        "분류는 개선됐지만, 규정 검색은 목표에 못 미쳤다",
+        "학습한 e5-base 분류 인코더의 긴급도는 CX 400에서 88.4%였습니다. "
+        "제품 코드 그대로의 규정 검색은 10월 6일 독립 질문 48문제에서 정답 규정을 상위 3개 안에 30번 넣어 목표에 미달했습니다. "
+        "고객용 색인은 정답 노출을 늘렸지만 불필요한 규정 노출도 늘려 운영 반영을 결정하지 않았습니다."
+    )
+    metric(s, "88.4%", "학습한 분류 인코더의 긴급도",
+           "CX 400 · Codex 작성 · Claude 교차 라벨\n학습 없는 E4B 60.9% 대 학습 후 88.4%",
+           0.65, 1.5, 5.86, 2.64)
+    metric(s, "30 / 48", "정답 규정이 상위 3개 안",
+           "62.5% · 제품 코드 그대로 · 독립 질문 B\n2026-10-06 · 양식 목표 0.90 미달",
+           6.78, 1.5, 5.86, 2.64, accent=AMBER)
+    rect(s, 0.65, 4.35, 12.0, 2.15, LIGHT)
+    text(s, "고객용 색인은 정답 노출과 불필요한 노출을 함께 늘렸다",
+         0.87, 4.55, 11.55, 0.5, 21, True)
+    text(s, "정답 노출 21/48 → 31/48", 0.9, 5.23, 5.5, 0.5, 25, True, GREEN)
+    text(s, "불필요한 노출 22.3% → 36.7%",
+         6.45, 5.23, 5.9, 0.5, 24, True, RED)
+    text(s, "독립 질문 B · 2026-10-06 · 운영 반영 결정 전",
+         0.9, 5.86, 5.25, 0.28, 9, fill=MUTED)
+    text(s, "규정이 아닌 여행 대화에 규정을 붙인 비율",
+         6.45, 5.86, 5.85, 0.28, 9, fill=MUTED)
+    # 원본 그림은 이전 시험이므로 수치 영역을 쓰지 않고 색인 범례만 인용한다.
+    picture(s, ASSETS["policy"], 0.86, 6.25, 4.1, 0.38,
+            region=(454, 427, 737, 520))
+    source(s, "원본 정책검색_재현율.png는 이전 시험의 색인 범례만 발췌. 발표 수치는 2026-10-06 주간 사실 기준.")
+
+    s = slide(
+        "5주차 산출물과 6주차 시험 문서를 만들고 지적을 반영했다",
+        "5주차 산출물 4종과 6주차 서비스 테스트 문서 1종을 만들었습니다. "
+        "요구사항 85개 중 구현 끝은 24개이고 일부 구현은 58개, 결정 대기는 3개입니다. "
+        "산출물은 모두 코덱스와 교차 검증하고 지적을 반영했습니다."
+    )
+    rows = [
+        ("벡터DB·GraphDB 구축 결과서", "23쪽"),
+        ("멀티 에이전트 테스트 계획 및 결과 보고서", "50쪽"),
+        ("요구사항 정의서 업데이트", "85개 요구"),
+        ("화면설계서", "25쪽"),
+        ("6주차 서비스 테스트 계획 및 결과 보고서", "10쪽"),
+    ]
+    for index, (label, value) in enumerate(rows):
+        y = 1.48 + index * 0.88
+        rect(s, 0.65, y, 8.1, 0.73, LIGHT)
+        text(s, label, 0.9, y + 0.16, 6.15, 0.44, 19, True)
+        text(s, value, 7.07, y + 0.12, 1.42, 0.47, 22, True,
+             GREEN, align=PP_ALIGN.RIGHT)
+    metric(s, "24 / 85", "요구사항 구현 끝",
+           "2026-10-06 업데이트 기준\n일부 구현 58 · 결정 대기 3\n구현 상태이며 시험 통과율이 아님",
+           9.0, 1.48, 3.65, 4.99, value_size=35)
+    source(s, "산출물 분량·요구사항 상태: 주간_사실.md의 산출물 기록. 모두 교차 검증 후 지적 반영.")
+
+    s = slide(
+        "합성 시험의 성과와 별개로, 데이터 변조와 실제 응답 확인이 남았다",
+        "사람 평가가 없고 가르친 모델도 제품에 아직 연결하지 않았습니다. "
+        "계획 읽기 값 변조와 일정 항목의 빈 답은 원인을 더 확인해야 하며, 엉뚱한 대상 변경과 일본어 알림의 금액 단위 변조도 발견했습니다. "
+        "바뀐 화면 대부분은 실제 응답을 확인하지 않았습니다."
+    )
+    metric(s, "0건", "사람 평가",
+           "2026-10-06 기준 · 시트 35행만 준비\n합성 시험 결과의 실제 사용 검증 전",
+           0.65, 1.48, 3.85, 3.37, accent=AMBER)
+    metric(s, "12 / 350", "계획 읽기 값 변조",
+           "변조 / 시험 · 3.4%\n2026-10-06 주간 사실 기준",
+           4.74, 1.48, 3.85, 3.37, accent=RED, value_size=36)
+    metric(s, "85 / 2,735", "일정 항목 짚기 빈 답",
+           "빈 답 / 흐름 시험 · 3.1%\n2026-10-06 기준 · 원인 미확인",
+           8.83, 1.48, 3.85, 3.37, accent=RED, value_size=32)
+    rect(s, 0.65, 5.06, 12.0, 1.43, LIGHT)
+    text(s, "엉뚱한 대상 변경 1/172",
+         0.9, 5.29, 5.3, 0.48, 24, True, RED)
+    text(s, "금액 단위 변조 1건 통과",
+         6.45, 5.29, 5.9, 0.48, 24, True, RED)
+    text(s, "발생 / 결정 단위 · 주간 사실 기준",
+         0.9, 5.94, 5.3, 0.26, 9, fill=MUTED)
+    text(s, "일본어 알림 번역 · 원을 엔으로 변경 · 주간 사실 기준",
+         6.45, 5.94, 5.9, 0.26, 9, fill=MUTED)
+    source(s, "규정 검색 목표 미달도 미해결. 변경 화면 대부분 실제 응답 미확인 · 가르친 모델 제품 연결 전.")
+
+    s = slide(
+        "다음 주에는 실제 응답과 사람 평가를 확인하고 제품 반영을 결정한다",
+        "다음 주에는 바뀐 화면의 실제 응답을 확인하고 준비한 시트로 사람 평가를 진행합니다. "
+        "가르친 모델의 제품 연결을 검토하고 시드 3개 이상으로 순위를 확인하며, 규정 색인 개선도 분류기 뒤에서 다시 측정합니다. "
+        "GPU 서버 B 대기열에 있는 다른 Jev 계열 후보도 같은 방법으로 가르쳐 비교합니다.",
+        dark=True
+    )
+    metric(s, "35행", "사람 평가 진행",
+           "이미 준비한 평가 시트 행 수\n6주차 예정 · 완료한 평가 수가 아님",
+           0.65, 1.55, 5.86, 3.02, dark=True)
+    metric(s, "시드 3개 이상", "모델 순위 재확인",
+           "가르친 모델 제품 연결 검토와 함께 진행\n6주차 예정 · 현재 순위 확정 전",
+           6.78, 1.55, 5.86, 3.02, dark=True, value_size=31)
+    text(s, "바뀐 화면의 실제 응답 확인\n규정 색인 개선을 분류기 뒤에서 다시 측정",
+         0.85, 4.87, 11.65, 0.96, 24, True, WHITE)
+    text(s, "Jev 계열 후보: Plumb-4B · spark-s1-4b-v6 · jevify-gemma4-e4b\n"
+            "같은 방법으로 가르쳐 비교 예정 · GPU 서버 B 대기열",
+         0.85, 6.03, 11.65, 0.66, 15, fill="D4E1E8")
+
+
+def finalize():
+    if len(prs.slides) != 11:
+        raise RuntimeError("슬라이드는 11장이어야 합니다.")
+    for s, notes in SCRIPT_NOTES:
+        s.notes_slide.notes_text_frame.text = notes
+        for element in list(s._element):
+            if element.tag.rsplit("}", 1)[-1] in ("timing", "transition"):
+                s._element.remove(element)
+
+    for s in prs.slides:
+        for shape in s.shapes:
+            if shape.left < 0 or shape.top < 0:
+                raise RuntimeError("슬라이드 밖에 배치한 요소가 있습니다.")
+            if shape.left + shape.width > prs.slide_width + Inches(0.01):
+                raise RuntimeError("슬라이드 너비를 넘은 요소가 있습니다.")
+            if shape.top + shape.height > prs.slide_height + Inches(0.01):
+                raise RuntimeError("슬라이드 높이를 넘은 요소가 있습니다.")
+            if shape.has_text_frame:
+                if "—" in shape.text or "…" in shape.text or "..." in shape.text:
+                    raise RuntimeError("금지된 줄표 또는 말줄임표가 있습니다.")
+
+    buffer = BytesIO()
+    prs.save(buffer)
+    buffer.seek(0)
+    check = Presentation(buffer)
+    if len(check.slides) != 11:
+        raise RuntimeError("저장 후 슬라이드 수 검증 실패")
+    if any(not s.notes_slide.notes_text_frame.text.strip() for s in check.slides):
+        raise RuntimeError("발표 대본이 없는 슬라이드가 있습니다.")
+
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=str(OUTPUT.parent), prefix=".triPilot_", suffix=".pptx", delete=False
+        ) as temporary:
+            temporary.write(buffer.getvalue())
+            temporary_path = Path(temporary.name)
+        os.replace(str(temporary_path), str(OUTPUT))
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()
+    print(str(OUTPUT))
+
+
+def main():
+    required = [FACTS, *ASSETS.values()]
+    missing = [str(p) for p in required if not p.is_file()]
+    if missing:
+        raise FileNotFoundError("필수 자료를 찾을 수 없습니다:\n" + "\n".join(missing))
+    FACTS.read_text(encoding="utf-8-sig")
+    build()
+    finalize()
+
+
+if __name__ == "__main__":
+    main()
+

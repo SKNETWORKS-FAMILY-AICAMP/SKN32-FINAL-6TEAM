@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알림 센터 구성 비교</title>
+<!--
+  2026-10-17 · ST4F-605 · 상태: 검토용 목업(미결정) · 실제 API 미연결.
+  여행 화면의 종 → 알림 센터 안을 어떻게 짤지, 다른 서비스와 알림 연구 · 흐름을 참고해 여덟 가지로 그려 지금 화면과 나란히 둔다.
+  색 · 글꼴 · 칸 모양은 2026-10-17 로컬 웹(127.0.0.1:3100)과 trip-attention.module.css 의 실제 값이다. 공지 · 일정 · 알림은 모두 예시다.
+-->
+<style>
+  :root {
+    --color-background: #f3f5f3; --color-surface: #fff; --color-subtle: #f6f7f5; --color-divider: #e8ede9; --color-border: #dce3dd; --color-border-strong: #c3cdc6;
+    --color-text: #24392f; --color-text-secondary: #4a5d52; --color-muted: #56645b; --color-primary: #2e6047; --color-on-primary: #fff; --color-soft: #e9f2eb;
+    --color-success: #3d7a56; --color-success-soft: #e3f0e7; --color-adjusted: #3f6a8a; --color-adjusted-soft: #e6eff6; --color-adjusted-border: #bcd0df;
+    --color-error: #965640; --color-error-soft: #fdf3ed; --color-error-border: #ecd2c7; --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1;
+    --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e7ebe7; color: var(--color-text); font-family: var(--font-sans); font-size: 13px; line-height: 1.6; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .doc { max-width: 1260px; margin: 0 auto; padding: 24px 16px 48px; }
+  .doc > h1 { margin: 0 0 4px; font-size: 22px; }
+  .doc > p { margin: 0 0 12px; color: var(--color-text-secondary); }
+  .doc h2 { margin: 22px 0 8px; font-size: 17px; }
+  table.refs { width: 100%; border-collapse: collapse; background: var(--color-surface); border: 1px solid var(--color-border); }
+  .refs th, .refs td { padding: 7px 10px; text-align: left; vertical-align: top; border-top: 1px solid var(--color-border); }
+  .refs th { background: var(--color-soft); border-top: 0; font-weight: 650; white-space: nowrap; }
+  .refs a { color: var(--color-primary); }
+  .refs td:last-child { white-space: nowrap; font-weight: 650; color: var(--color-primary); }
+  .phones { display: grid; grid-template-columns: repeat(auto-fill, minmax(375px, 375px)); gap: 28px 24px; justify-content: center; margin-top: 18px; }
+  .option > h3 { margin: 0 0 2px; font-size: 15.5px; }
+  .option > p { margin: 0 0 4px; min-height: 64px; color: var(--color-text-secondary); font-size: 12.5px; }
+  .option > p.basis { min-height: 0; margin-bottom: 8px; font-size: 12px; color: var(--color-muted); }
+  .phone { height: 760px; overflow: auto; border: 1px solid var(--color-border); border-radius: 28px; background: var(--color-surface); box-shadow: 0 8px 24px rgb(36 57 47 / .12); }
+  .note { margin-top: 24px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+  .note h2 { margin: 0 0 6px; }
+  .note ul { margin: 0; padding-left: 18px; }
+
+  /* ── 알림 센터(실제 trip-attention.module.css 값) ── */
+  .cHead { position: sticky; top: 0; z-index: 3; height: 56px; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 1px solid var(--color-divider); background: var(--color-surface); }
+  .cHead .back { font-size: 20px; color: var(--color-text-secondary); }
+  .cHead b { font-size: 19px; }
+  .cHead .right { margin-left: auto; font-size: 12px; font-weight: 650; color: var(--color-primary); }
+  .cBody { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 12px 16px 28px; }
+  .sec { margin: 4px 0 0; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); }
+  .svc { border-left: 4px solid var(--tone); padding-left: 10px; }
+  .svc + .svc { margin-top: 8px; }
+  .svc h3 { margin: 2px 0 0; font-size: 17px; }
+  .svc p { margin: 0; color: var(--color-text-secondary); }
+  [data-tone="error"] { --tone: var(--color-error); --tone-soft: var(--color-error-soft); }
+  [data-tone="warning"] { --tone: var(--color-warning); --tone-soft: var(--color-warning-soft); }
+  [data-tone="info"] { --tone: var(--color-primary); --tone-soft: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+  .kind { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--tone-soft); color: var(--tone); font-size: 11.5px; font-weight: 700; }
+  .act { padding: 12px 14px; border: 1px solid var(--color-warning-border); border-radius: 14px; background: var(--color-warning-soft); }
+  .act[data-kind="undo"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); }
+  .act[data-kind="safety"] { border-color: var(--color-error-border); background: var(--color-error-soft); }
+  .act h4 { margin: 0; font-size: 14px; font-weight: 750; }
+  .act p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); }
+  .act .what { font-weight: 700; color: var(--color-text); }
+  .act .meta { font-size: 11.5px; color: var(--color-muted); }
+  .act .meta u { color: var(--color-primary); text-decoration: none; font-weight: 650; }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .btn { min-height: 36px; padding: 0 12px; border: 1px solid var(--color-border-strong); border-radius: 10px; background: var(--color-surface); font-size: 12.5px; font-weight: 650; }
+  .btn.primary { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+  .btn.small { min-height: 30px; padding: 0 10px; font-size: 12px; }
+  .rec { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; }
+  .rec .head { display: flex; gap: 10px; align-items: flex-start; }
+  .rec .head b { display: block; font-size: 17px; }
+  .rec .head small { color: var(--color-muted); }
+  .rec .box { padding: 12px 14px; border-radius: 12px; }
+  .rec .box.green { background: color-mix(in srgb, var(--color-primary) 14%, white); }
+  .rec .box.gray { background: var(--color-subtle); }
+  .rec .box ul { margin: 4px 0 0; padding-left: 18px; }
+  .tabs { position: sticky; top: 56px; z-index: 2; display: flex; gap: 4px; margin-top: 6px; padding: 4px; border-radius: 12px; background: var(--color-subtle); box-shadow: 0 -8px 0 4px var(--color-surface); }
+  .tabs button { position: relative; flex: 1; min-height: 36px; padding: 0 4px; border: 0; border-radius: 9px; background: none; color: var(--color-muted); font-size: 12.5px; font-weight: 750; white-space: nowrap; }
+  .tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text); box-shadow: 0 1px 4px rgb(36 57 47 / .12); }
+  .dot { display: inline-block; width: 7px; height: 7px; margin-left: 5px; border-radius: 50%; background: var(--color-error); vertical-align: middle; }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { padding: 11px 2px; border-top: 1px solid var(--color-divider); font-size: 13.5px; line-height: 1.5; }
+  .list li:first-child { border-top: 0; }
+  .list p { margin: 4px 0 0; }
+  .list time { margin-left: 6px; font-size: 12px; color: var(--color-muted); }
+  .list .remedy { font-size: 12.5px; color: var(--color-muted); }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--color-success-soft); color: var(--color-success); font-size: 11.5px; font-weight: 750; }
+  .tag[data-type="proposal_request"], .tag[data-type="warning"] { background: var(--color-warning-soft); color: var(--color-warning); }
+  .tag[data-type="change_notice"], .tag[data-type="history"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+  .tag[data-type="safety_alert"] { background: var(--color-error-soft); color: var(--color-error); }
+  .tag[data-type="service"] { background: var(--color-subtle); color: var(--color-text-secondary); }
+  .empty { margin: 4px 0; color: var(--color-muted); }
+
+  /* ── 새 안에서 쓰는 조각 ── */
+  .row { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 2px; border-top: 1px solid var(--color-divider); font-size: 13.5px; }
+  .row:first-child { border-top: 0; }
+  .row .one { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .row time { flex: none; font-size: 12px; color: var(--color-muted); }
+  .row .chev { flex: none; color: var(--color-muted); }
+  .panel { padding: 4px 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); }
+  .acc { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; padding: 0 2px; border: 0; background: none; text-align: left; }
+  .acc .name { font-size: 14px; font-weight: 750; }
+  .acc .sub { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--color-muted); }
+  .acc .chev { color: var(--color-muted); transition: transform .15s; }
+  .acc[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .accBody { padding: 0 0 12px; display: grid; gap: 8px; }
+  .panel > .acc + .acc, .panel > .accBody + .acc { border-top: 1px solid var(--color-divider); }
+  .sumBar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .sumBar button { padding: 10px 6px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-subtle); text-align: center; }
+  .sumBar b { display: block; font-size: 20px; line-height: 1.2; }
+  .sumBar span { font-size: 11.5px; color: var(--color-muted); font-weight: 650; }
+  .sumBar button[data-hot] b { color: var(--color-error); }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; position: sticky; top: 56px; z-index: 2; background: var(--color-surface); padding-top: 6px; }
+  .chips button { flex: none; min-height: 32px; padding: 0 11px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+  .chips button[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+  .day { margin: 8px 0 0; font-size: 12px; font-weight: 750; color: var(--color-muted); }
+  .feed { display: grid; }
+  .feedRow { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 8px; align-items: center; padding: 10px 2px; border-top: 1px solid var(--color-divider); }
+  .feedRow:first-child { border-top: 0; }
+  .feedRow .txt { grid-column: 1 / -1; font-size: 13.5px; line-height: 1.45; }
+  .feedRow time { font-size: 12px; color: var(--color-muted); }
+  .feedRow .need { font-size: 11px; font-weight: 750; color: var(--color-error); }
+  .feedRow .opts { grid-column: 1 / -1; margin-top: 4px; }
+  .stopGroup { border: 1px solid var(--color-border); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; }
+  .stopGroup > header { display: flex; align-items: center; gap: 8px; }
+  .stopGroup > header b { font-size: 14px; }
+  .stopGroup > header time { font-size: 12px; font-weight: 700; color: var(--color-primary); }
+  .stopGroup > header u { margin-left: auto; font-size: 12px; font-weight: 650; color: var(--color-primary); text-decoration: none; }
+  .mini { font-size: 13px; line-height: 1.5; color: var(--color-text-secondary); }
+  .mini .tag { margin-right: 4px; }
+  .status { padding: 14px; border-radius: 16px; background: var(--color-primary); color: #fff; display: grid; gap: 6px; }
+  .status small { opacity: .8; font-weight: 650; }
+  .status .next { font-size: 17px; font-weight: 750; }
+  .status .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .status .meta span { padding: 2px 8px; border-radius: 999px; background: rgb(255 255 255 / .16); font-size: 11.5px; font-weight: 650; }
+  .strip { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 12.5px; font-weight: 700; border: 0; width: 100%; text-align: left; }
+  .tier { border-radius: 14px; border: 1px solid var(--color-border); overflow: hidden; }
+  .tier > header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; font-weight: 800; }
+  .tier[data-level="now"] > header { background: var(--color-error-soft); color: var(--color-error); }
+  .tier[data-level="check"] > header { background: var(--color-warning-soft); color: var(--color-warning); }
+  .tier[data-level="fyi"] > header { background: var(--color-subtle); color: var(--color-text-secondary); }
+  .tier > .in { padding: 4px 12px 10px; }
+  .digest { border: 1px solid var(--color-border); border-radius: 14px; }
+  .digest > button { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; width: 100%; padding: 12px 14px; border: 0; background: none; text-align: left; }
+  .digest > button b { font-size: 14px; }
+  .digest > button small { grid-column: 1 / 2; color: var(--color-muted); }
+  .digest > button .chev { grid-row: 1 / 3; grid-column: 2; align-self: center; color: var(--color-muted); }
+  .digest .in { padding: 0 14px 10px; }
+  .pill { display: inline-block; margin: 0 4px 0 0; padding: 1px 7px; border-radius: 999px; background: var(--color-subtle); font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>여행 화면 알림 센터 — 다른 서비스 · 알림 연구 참고 · 구성안 8가지</h1>
+  <p>2026-10-17 · ST4F-605 · 검토용(미결정). 맨 앞은 지금 화면, 그 뒤 여덟 가지가 새 구성이다. 휴대폰 화면 안의 탭 · 칩 · 접힌 칸은 눌러 볼 수 있고, 선택 · 되돌리기 단추는 모양만 있다. 예시 상황: 여행 4일차(10.17) 12:10 — 서비스 공지 3 · 할 일 3(재난 뒤 이어가기 · 선택 요청 · 자동 변경) · 살펴볼 점 1 · 받은 알림 6(새 2) · 변경 이력 3.</p>
+
+  <h2>참고한 서비스 · 디자인 지침 (2026-10-17 웹 자료로 확인 — 앱을 직접 열어 보지는 않았다)</h2>
+  <table class="refs">
+    <thead><tr><th>출처</th><th>알림을 어떻게 다루나</th><th>쓴 안</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://maily.so/tipster/posts/2be61c46">국내 앱 알림 화면 4유형(메일리 정리)</a></td><td>① 서비스 소식을 함께(토스 · 카카오뱅크) ② 목록에서 바로 행동(인스타그램 · 배민 — 행동하면 사라지고 지난 것은 따로) ③ 성격별 탭(에이블리 3탭 · 쿠팡 6탭, 안 읽은 탭에 표시) ④ 알림 화면 안 설정(마이리얼트립 · 블라인드)</td><td>B · C · D</td></tr>
+      <tr><td><a href="https://www.smashingmagazine.com/2025/07/design-guidelines-better-notifications-ux/">Smashing Magazine — 알림 UX 지침(2025-07)</a></td><td>주의 단계 셋(높음 · 중간 · 낮음)에 맞춰 무게를 달리, 답이 필요한 것과 알리기만 하는 것을 가름, 묶어 보내는 요약, 미루기 · 끄기</td><td>B · G · H</td></tr>
+      <tr><td><a href="https://www.saasui.design/blog/saas-notification-center-ux-patterns">알림 센터 패턴(saasui)</a> · <a href="https://www.courier.com/guides/how-to-build-a-notification-center/chapter-3-best-practices-for-notification-centers">Courier 지침</a></td><td>「읽는 곳이 아니라 훑는 곳」, 같은 일은 한 줄로 묶기, 종 숫자는 「내가 필요한 일」만, 목록에서 바로 답하기, 「전체 / 나와 관련된 것」 거르기</td><td>A · B · C</td></tr>
+      <tr><td><a href="https://nngroup.com/articles/indicators-validations-notifications">NN/g — 표시 · 검증 · 알림</a></td><td>답이 필요한 알림(행동 필요)과 알리기만 하는 알림(수동)을 나눠 다르게 보인다</td><td>B</td></tr>
+      <tr><td><a href="https://docs.github.com/en/enterprise-server@3.8/account-and-profile/managing-subscriptions-and-notifications-on-github/viewing-and-triaging-notifications/managing-notifications-from-your-inbox">GitHub 받은 편지함</a></td><td>한 목록 + 걸러 보기(내가 맡은 것 · 언급된 것), 끝낸 것(Done)은 목록에서 빠짐</td><td>C</td></tr>
+      <tr><td><a href="https://support.apple.com/en-za/guide/iphone/iph1fbe7d2b9/ios">iOS 알림 요약 · 우선 알림</a></td><td>요약해서 훑게, 우선 알림은 묶음 맨 위, 급한 것만 바로 울림</td><td>A · G · H</td></tr>
+      <tr><td><a href="https://developer.android.com/training/notify-user/channels">안드로이드 알림 중요도</a></td><td>긴급(소리 + 위로 뜸) · 높음(소리) · 중간(조용) · 낮음(상태 막대에도 없음)</td><td>G</td></tr>
+      <tr><td><a href="https://help.tripit.com/en/support/solutions/articles/103000063296-flight-alerts">TripIt 여행 경보</a></td><td>출발 3일 전부터 단계별(일정 변경 → 24시간 전 체크인 → 당일 게이트 · 연결), 앱 안 경보함에 남김</td><td>E · H</td></tr>
+      <tr><td><a href="https://thepointsguy.com/news/united-airlines-app-live-flight-status">United 앱 Live Activities</a> · <a href="https://ipadpilotnews.com/?p=23258">FlightRadar24</a></td><td>잠금 화면 · 다이내믹 아일랜드에 게이트 · 탑승 남은 시간 · 정시 여부 — 앱을 열지 않고 지금 상태를 본다</td><td>F</td></tr>
+    </tbody>
+  </table>
+
+  <h2>참고한 연구</h2>
+  <table class="refs">
+    <thead><tr><th>연구</th><th>찾은 것</th><th>쓴 안</th></tr></thead>
+    <tbody>
+      <tr><td><a href="https://ic.unicamp.br/~oliveira/doc/MHCI2014_An-in-situ-study-of-mobile-phone-notifications.pdf">Pielot · Church · de Oliveira, MobileHCI 2014</a></td><td>15명 1주 기록 — 하루 평균 63.5개, 무음이어도 몇 분 안에 본다. 알림이 많을수록 부정적 감정이 커진다(연결감도 커진다)</td><td>A · C(줄이고 묶기)</td></tr>
+      <tr><td><a href="https://www.interruptions.net/literature/Pielot-MobileHCI18.pdf">Pielot · Vradi · Park, MobileHCI 2018</a></td><td>278명 · 794,525개 — 하루 중앙값 56개, 메신저 밖의 알림은 주의를 거의 끌지 못한다</td><td>B · G(정보성은 뒤로)</td></tr>
+      <tr><td><a href="https://scholars.duke.edu/publication/1402953">Fitz 외, Computers in Human Behavior 2019</a></td><td>237명 무작위 실험 — 하루 세 번 묶어 받으면 더 집중 · 생산적 · 덜 스트레스, 매시간 묶음은 차이 적음, 아예 끄면 불안 · 놓칠까 걱정</td><td>H</td></tr>
+      <tr><td><a href="https://www.interruptions.net/literature/Mark-CHI08.pdf">Mark · Gudith · Klocke, CHI 2008</a></td><td>방해받은 일은 더 빨리 끝내지만 스트레스 · 좌절 · 시간 압박이 커진다</td><td>G · H(급하지 않은 것은 조용히)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>결정안 — B의 「답이 필요해요」 + 지금 탭 그대로 + 「공지」 탭 (2026-10-17 사용자 결정)</h2>
+  <div class="phones" style="justify-content:start">
+    <section class="option"><h3>결정안</h3><p>위에 「답이 필요해요」(선택 · 재난 뒤 이어가기 · 되돌리기 — 재난 뒤 이어가기는 한 줄 카드, 「이어갈 방법 고르기」로 펼침). 아래 탭은 지금 그대로(살펴볼 점 · 받은 알림 · 변경 이력)에 「공지」를 더해 넷 — 서비스 공지는 공지 탭으로 옮긴다.</p><p class="basis">공지 탭: 게시 중인 공지(종류 딱지 · 장애 먼저) · 점검 중이면 점검, 끝에 「지난 공지까지 보기 › 공지사항」. 안 본 공지가 있으면 탭에 점.</p><div class="phone" id="pPick"></div></section>
+    <section class="option"><h3>결정안 · 공지 탭</h3><p>같은 화면에서 「공지」 탭을 고른 모습.</p><p class="basis">재난 뒤 이어가기를 펼친 모습은 왼쪽 화면에서 「이어갈 방법 고르기」를 누르면 본다.</p><div class="phone" id="pPick2"></div></section>
+  </div>
+
+  <h2>비교한 안</h2>
+  <div class="phones">
+    <section class="option"><h3>지금 화면 (기준)</h3><p>서비스 공지(크게) → 할 일(재난 뒤 이어가기 전체 · 선택 요청 · 자동 변경) → 살펴볼 점 · 받은 알림 · 변경 이력 탭. 할 일과 탭이 화면 아래로 많이 밀린다.</p><p class="basis">2026-10-17 앱 그대로(`trip-attention.tsx`)</p><div class="phone" id="p0"></div></section>
+    <section class="option"><h3>A · 요약 숫자 + 접는 칸</h3><p>맨 위 숫자 셋(할 일 · 새 알림 · 공지)을 누르면 그 칸이 열린다. 칸은 다섯(공지 · 할 일 · 살펴볼 점 · 받은 알림 · 변경 이력)이고 할 일만 펼쳐 둔다. 공지는 한 줄 요약.</p><p class="basis">근거: iOS 알림 요약, 「훑는 곳」(Courier), 하루 56~64개 연구</p><div class="phone" id="pA"></div></section>
+    <section class="option"><h3>B · 답이 필요한 것 먼저</h3><p>「답이 필요해요」(선택 · 재난 뒤 이어가기 · 되돌리기)를 카드로 맨 위, 나머지는 「알아 두기」 한 목록(공지 · 알림 · 변경 · 살펴볼 점)에 한 줄씩. 답하면 위에서 빠진다.</p><p class="basis">근거: NN/g 행동 필요 / 수동, 배민 · 인스타그램, 메신저 밖 알림은 잘 안 봄(2018)</p><div class="phone" id="pB"></div></section>
+    <section class="option"><h3>C · 한 줄 피드 + 걸러 보기</h3><p>모든 것을 날짜별 한 목록에 한 줄씩 두고, 위 칩으로 걸러 본다(전체 · 할 일 · 알림 · 변경 · 살펴볼 점 · 공지). 답이 필요한 줄에는 바로 단추.</p><p class="basis">근거: GitHub 받은 편지함, 「전체 / 나와 관련」 거르기(saasui), 국내 2유형</p><div class="phone" id="pC"></div></section>
+    <section class="option"><h3>D · 탭 넷 + 탭마다 새 표시</h3><p>지금 탭 셋에 할 일과 공지를 탭으로 넣어 넷(할 일 · 알림 · 변경 · 공지). 살펴볼 점은 할 일 탭 아래. 새것이 있는 탭에 빨간 점, 처음엔 할 일 탭.</p><p class="basis">근거: 에이블리 · 쿠팡 탭(국내 3유형), 안드로이드 · 머티리얼 탭</p><div class="phone" id="pD"></div></section>
+    <section class="option"><h3>E · 날짜 · 일정별로 묶기</h3><p>알림 · 선택 · 변경을 그 일정 아래에 묶는다(12:30 점심 · 15:00 북촌). 여행 전체에 걸린 것(재난 · 공지)은 위 「여행 전체」, 계획 문제(살펴볼 점)는 「계획 확인」.</p><p class="basis">근거: TripIt 단계별 경보, 10-06 아이디어 ③(일정에 붙이기)</p><div class="phone" id="pE"></div></section>
+    <section class="option"><h3>F · 지금 상태 카드 + 최근 소식</h3><p>맨 위 진한 카드에 지금 여행 상태(몇 일차 · 다음 일정 · 정지 여부 · 항로 지킴이). 그 아래 할 일, 최근 소식 다섯 줄과 「모두 보기」. 공지는 빨간 한 줄.</p><p class="basis">근거: Live Activities(United · FlightRadar24) — 열자마자 지금 상태</p><div class="phone" id="pF"></div></section>
+    <section class="option"><h3>G · 중요도 세 단계</h3><p>출처와 상관없이 중요도로 나눈다 — 「지금 바로」(안전 · 장애) · 「확인해 주세요」(선택 · 되돌리기 · 살펴볼 점) · 「참고」(안내 · 변경 이력 · 안내 공지, 접힘).</p><p class="basis">근거: Smashing 주의 단계, 안드로이드 중요도, iOS 우선 알림, 방해 비용(2008)</p><div class="phone" id="pG"></div></section>
+    <section class="option"><h3>H · 급한 것만 바로, 나머지는 하루 세 번 요약</h3><p>급한 것(안전 · 선택 요청 · 장애)은 맨 위에 바로, 나머지는 아침 · 낮 · 저녁 요약 카드로 묶는다(누르면 펼침). 브라우저 알림도 같은 때에 한 번씩.</p><p class="basis">근거: Fitz 외 2019(하루 3회 묶음), iOS 알림 요약, TripIt 단계</p><div class="phone" id="pH"></div></section>
+  </div>
+
+  <div class="note">
+    <h2>정할 것 · 작성자 제안</h2>
+    <ul>
+      <li><b>2026-10-17 사용자 결정</b>: B의 「답이 필요해요」를 위에, 아래는 지금 탭 셋을 그대로 두고 「공지」 탭을 더해 서비스 공지를 그 탭으로 옮긴다(맨 위 「결정안」). 아래 항목은 결정 전 비교 기록이다.</li>
+      <li>여덟 안 중 하나 또는 조합. 작성자 제안은 <b>B(답이 필요한 것 먼저)를 바탕으로 A의 접는 공지 한 줄</b> — 할 일이 맨 위에 오고, 나머지는 한 목록이라 훑기 쉽다. 일정 화면과 겹치지 않게 E처럼 「일정에서 보기」를 줄마다 단다.</li>
+      <li>공통 제안: 서비스 공지는 위 배너와 같은 내용이라 알림 센터에서는 한 줄로 접는다(지금은 공지 셋이 할 일을 화면 밖으로 민다). 재난 뒤 이어가기처럼 긴 카드는 요약 한 줄 + 「열기」.</li>
+      <li>서버 · 자료 협의가 필요한 안: E(살펴볼 점에 일정 항목 id가 없다 — 10-06 목업 때도 같은 문제), H(브라우저 알림을 묶어 보내려면 보내는 때를 정해야 한다). 나머지는 지금 오는 자료로 화면만 바꾸면 된다.</li>
+      <li>새로 지은 문구(앱에 아직 없음): 「답이 필요해요」 · 「알아 두기」 · 「걸러 보기」 칩 이름 · 「지금 바로」 · 「확인해 주세요」 · 「참고」 · 「여행 전체」 · 「계획 확인」 · 「최근 소식」 · 「모두 보기」 · 요약 카드 이름. 「할 일」 · 「선택이 필요해요」 · 「자동으로 바꾼 일정」 · 「재난 뒤 이어가기」 · 탭 이름 · 알림 종류(안내 · 선택 요청 · 안전 알림 · 변경 알림)는 앱 문구 그대로.</li>
+    </ul>
+  </div>
+</div>
+<script>
+// ── 예시 자료(여행 4일차 10.17 12:10) ──
+const SVC = [
+  { kind: "기능 차질·장애", tone: "error", title: "채팅 답변이 늦어요", body: "모델 서버가 느려 채팅 답이 1분 넘게 걸릴 수 있어요." },
+  { kind: "점검 예고", tone: "warning", title: "오늘 밤 23시 서버 점검", body: "23:00부터 10분 동안 점검해요." },
+  { kind: "안내", tone: "info", title: "여행 중 문의는 문의함으로", body: "운영자가 확인한 뒤 답해요." },
+];
+const WARN = [{ date: "2026-10-14", reason: "항목 5/6: 이동시간 누락 또는 간격 부족", remedy: "누락되거나 잘못된 시간·이동 정보를 보완하세요" }];
+const NOTICES = [
+  { type: "change_notice", at: "10.17 09:12", day: "10.17", text: "점심을 광장시장 박가네로 바꿨어요 — 순희네가 오늘 쉬어요.", unread: true, stop: "lunch" },
+  { type: "proposal_request", at: "10.17 08:40", day: "10.17", text: "15:00 북촌 한옥마을에 비 예보가 있어요. 고를 것이 있어요.", unread: true, stop: "bukchon" },
+  { type: "guidance", at: "10.17 08:00", day: "10.17", text: "4일차가 시작됐어요. 첫 일정은 09:30 경복궁이에요." },
+  { type: "guidance", at: "10.16 08:00", day: "10.16", text: "3일차가 시작됐어요. 첫 일정은 10:00 남산서울타워예요." },
+  { type: "guidance", at: "10.14 18:10", day: "10.14", text: "일정을 다시 시작했어요. 재난 뒤 이어가기에서 어떻게 이어갈지 골라 주세요." },
+  { type: "safety_alert", at: "10.14 15:24", day: "10.14", text: "규모 5 지진 — 일정을 잠시 멈췄어요." },
+];
+const HISTORY = [
+  { at: "10.17 09:12", day: "10.17", text: "점심 장소를 바꿨어요(자동) — 순희네 → 박가네" },
+  { at: "10.14 18:10", day: "10.14", text: "일정을 다시 시작했어요" },
+  { at: "10.14 15:24", day: "10.14", text: "지진으로 일정을 멈췄어요" },
+];
+const LABEL = { guidance: "안내", proposal_request: "선택 요청", safety_alert: "안전 알림", change_notice: "변경 알림" };
+const CHEV = "⌄";
+
+// ── 조각 ──
+const head = (right = "") => `<div class="cHead"><span class="back">←</span><b>알림</b>${right ? `<span class="right">${right}</span>` : ""}</div>`;
+const tag = (type, text) => `<span class="tag" data-type="${type}">${text ?? LABEL[type]}</span>`;
+const svcFull = () => SVC.map((n) => `<div class="svc" data-tone="${n.tone}"><span class="kind">${n.kind}</span><h3>${n.title}</h3><p>${n.body}</p></div>`).join("");
+const svcLine = (n) => `<div class="row" data-tone="${n.tone}"><span class="kind">${n.kind}</span><span class="one">${n.title}</span></div>`;
+const noticeLi = (n) => `<li>${tag(n.type)}<time>${n.at}</time>${n.unread ? '<span class="dot" title="새 알림"></span>' : ""}<p>${n.text}</p></li>`;
+const warnLi = (w) => `<li><span class="tag">${w.date}</span><p>${w.reason}</p><p class="remedy">${w.remedy}</p></li>`;
+const histLi = (h) => `<li><span class="tag" data-type="history">변경</span><time>${h.at}</time><p>${h.text}</p></li>`;
+const recoveryFull = () => `<div class="rec"><div class="head"><span style="font-size:20px;color:var(--color-primary)">♡</span><div><b>재난 뒤 이어가기</b><small>규모 5 지진 · 2026-10-14 15:24</small></div></div>
+  <p style="margin:0;color:var(--color-text-secondary)">어떻게 이어갈지는 직접 정해 주세요. 우리가 대신 정하지 않고, 아는 것과 모르는 것을 그대로 보여 드려요.</p>
+  <div class="box green"><b>알려진 것</b><ul><li>기상청 지진정보: 대상 일정 지역</li><li>사건 시각: 2026-10-14 15:24</li></ul></div>
+  <div class="box gray"><b>우리가 모르는 것</b><ul><li>지금 계신 곳 · 숙소 · 귀가 경로의 상태는 우리가 알 수 없어요</li><li>공식 해제가 나왔는지는 재난문자 조회 기준이에요(놓칠 수 있어요)</li><li>피해 범위(어느 구인지)를 공식 문자에서 알 수 없어요</li></ul></div>
+  <div class="box gray"><b>어떻게 이어갈까요?</b><div class="opts"><button class="btn small">오늘은 가볍게 · 추천</button><button class="btn small">(예시) 그대로 이어가기</button><button class="btn small">(예시) 남은 일정 다시 보기</button></div><div class="opts"><button class="btn primary small">이대로 정하기</button></div></div></div>`;
+const recoveryCard = (toggle = "") => `<div class="act" data-kind="safety"><h4>재난 뒤 이어가기</h4><p>규모 5 지진 · 10.14 15:24 — 어떻게 이어갈지 골라 주세요.</p><div class="opts"><button class="btn primary small"${toggle ? ` data-toggle="${toggle}"` : ""}>이어갈 방법 고르기</button></div></div>`;
+const choiceCard = (compact = false) => `<div class="act"><h4>선택이 필요해요</h4><p class="what">15:00 · 북촌 한옥마을</p>${compact ? "" : "<p>오후에 비 예보가 있어요. 예보에 맞춰 실내 장소로 바꿀 수 있어요.</p>"}<div class="opts"><button class="btn primary small">예보에 맞게 일정 변경</button><button class="btn small">지금 일정 그대로 두기</button></div><p class="meta">10.17 14:00 까지 · <u>일정에서 보기</u></p></div>`;
+const undoCard = () => `<div class="act" data-kind="undo"><h4>자동으로 바꾼 일정</h4><p>점심을 광장시장 박가네로 바꿨어요 — 순희네가 오늘 쉬어요.</p><div class="opts"><button class="btn small">되돌리기</button></div></div>`;
+const tabs = (s, list) => `<div class="tabs" role="tablist">${list.map(([key, name, count, dot]) => `<button role="tab" data-set="tab=${key}" aria-selected="${s.tab === key}">${name} ${count}${dot ? '<span class="dot"></span>' : ""}</button>`).join("")}</div>`;
+const acc = (s, key, name, sub) => `<button class="acc" data-toggle="${key}" aria-expanded="${Boolean(s.open[key])}"><span class="name">${name}</span><span class="sub">${sub}</span><span class="chev">${CHEV}</span></button>`;
+const unreadCount = NOTICES.filter((n) => n.unread).length;
+
+function mount(id, render, initial = {}) {
+  const root = document.getElementById(id);
+  const state = { ...initial, open: { ...(initial.open ?? {}) } };
+  const draw = () => { const top = root.scrollTop; root.innerHTML = render(state); root.scrollTop = top; };
+  root.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-set],[data-toggle]");
+    if (!target) return;
+    if (target.dataset.set) { const [key, value] = target.dataset.set.split("="); state[key] = value; }
+    if (target.dataset.toggle) state.open[target.dataset.toggle] = !state.open[target.dataset.toggle];
+    draw();
+  });
+  draw();
+}
+
+// 결정안 — 답이 필요해요 + 지금 탭 셋 + 공지 탭
+const pick = (s) => head() + `<div class="cBody"><p class="sec">답이 필요해요 3</p>${choiceCard()}${s.open.rec ? recoveryFull() : recoveryCard("rec")}${undoCard()}
+  ${tabs(s, [["warnings", "살펴볼 점", 1], ["notices", "받은 알림", 6, true], ["history", "변경 이력", 3], ["svc", "공지", 3, true]])}
+  ${s.tab === "svc" ? `<div style="display:grid;gap:10px;padding-top:6px">${svcFull()}</div><p class="mini" style="margin:6px 0 0"><b style="color:var(--color-primary)">지난 공지까지 보기 › 공지사항</b></p>`
+    : `<ul class="list">${s.tab === "warnings" ? WARN.map(warnLi).join("") : s.tab === "notices" ? NOTICES.map(noticeLi).join("") : HISTORY.map(histLi).join("")}</ul>`}</div>`;
+mount("pPick", pick, { tab: "notices" });
+mount("pPick2", pick, { tab: "svc" });
+
+// 지금 화면 — trip-attention.tsx 그대로의 순서
+mount("p0", (s) => head() + `<div class="cBody"><p class="sec">서비스 공지 3</p>${svcFull()}<p class="sec">할 일 3</p>${recoveryFull()}${choiceCard()}${undoCard()}
+  ${tabs(s, [["warnings", "살펴볼 점", 1], ["notices", "받은 알림", 6, true], ["history", "변경 이력", 3]])}
+  <ul class="list">${s.tab === "warnings" ? WARN.map(warnLi).join("") : s.tab === "notices" ? NOTICES.map(noticeLi).join("") : HISTORY.map(histLi).join("")}</ul></div>`, { tab: "notices" });
+
+// A — 요약 숫자 + 접는 칸
+mount("pA", (s) => head() + `<div class="cBody">
+  <div class="sumBar"><button data-toggle="todo" data-hot>${"<b>3</b>"}<span>할 일</span></button><button data-toggle="notices"><b>${unreadCount}</b><span>새 알림</span></button><button data-toggle="svc"><b>3</b><span>공지 · 장애 1</span></button></div>
+  <div class="panel">
+    ${acc(s, "svc", "서비스 공지 3", `장애 · ${SVC[0].title}`)}${s.open.svc ? `<div class="accBody">${SVC.map(svcLine).join("")}</div>` : ""}
+    ${acc(s, "todo", "할 일 3", "재난 뒤 이어가기 · 선택 1 · 되돌리기 1")}${s.open.todo ? `<div class="accBody">${recoveryCard()}${choiceCard(true)}${undoCard()}</div>` : ""}
+    ${acc(s, "warn", "살펴볼 점 1", WARN[0].reason)}${s.open.warn ? `<div class="accBody"><ul class="list">${WARN.map(warnLi).join("")}</ul></div>` : ""}
+    ${acc(s, "notices", `받은 알림 6 <span class="dot"></span>`, `새 ${unreadCount} · ${NOTICES[0].text}`)}${s.open.notices ? `<div class="accBody"><ul class="list">${NOTICES.map(noticeLi).join("")}</ul></div>` : ""}
+    ${acc(s, "hist", "변경 이력 3", HISTORY[0].text)}${s.open.hist ? `<div class="accBody"><ul class="list">${HISTORY.map(histLi).join("")}</ul></div>` : ""}
+  </div></div>`, { open: { todo: true } });
+
+// B — 답이 필요한 것 먼저, 나머지는 한 목록
+const knowRows = () => [
+  ...SVC.map((n) => ({ at: "공지", html: `<span class="kind" data-tone="${n.tone}">${n.kind}</span><span class="one">${n.title}</span>` })),
+  ...NOTICES.filter((n) => n.type !== "proposal_request").map((n) => ({ at: n.at, html: `${tag(n.type)}<span class="one">${n.text}</span>${n.unread ? '<span class="dot"></span>' : ""}` })),
+  { at: WARN[0].date.slice(5).replace("-", "."), html: `${tag("warning", "살펴볼 점")}<span class="one">${WARN[0].reason}</span>` },
+];
+mount("pB", (s) => head() + `<div class="cBody"><p class="sec">답이 필요해요 3</p>${choiceCard()}${recoveryCard()}${undoCard()}
+  <p class="sec">알아 두기</p><div class="panel">${knowRows().slice(0, s.open.more ? 99 : 6).map((r) => `<div class="row">${r.html}<time>${r.at}</time></div>`).join("")}
+  <button class="acc" data-toggle="more" aria-expanded="${Boolean(s.open.more)}"><span class="sub" style="text-align:center;color:var(--color-primary);font-weight:700">${s.open.more ? "접기" : "더 보기 · 변경 이력 포함"}</span></button></div></div>`);
+
+// C — 한 줄 피드 + 걸러 보기
+const FEED = [
+  { kind: "todo", day: "10.17", at: "08:40", html: `${tag("proposal_request")}<span class="need">답 필요</span><time>08:40</time><div class="txt"><b>15:00 · 북촌 한옥마을</b> 비 예보 — 실내 장소로 바꿀까요?</div><div class="opts"><button class="btn primary small">예보에 맞게 일정 변경</button><button class="btn small">그대로 두기</button></div>` },
+  { kind: "todo", day: "10.17", at: "09:12", html: `${tag("change_notice", "자동 변경")}<span class="need">되돌릴 수 있음</span><time>09:12</time><div class="txt">점심을 광장시장 박가네로 바꿨어요 — 순희네가 오늘 쉬어요.</div><div class="opts"><button class="btn small">되돌리기</button></div>` },
+  ...SVC.map((n) => ({ kind: "svc", day: "10.17", at: "", html: `<span class="kind" data-tone="${n.tone}">${n.kind}</span><span></span><time>공지</time><div class="txt">${n.title}</div>` })),
+  ...NOTICES.filter((n) => n.type !== "proposal_request" && n.type !== "change_notice").map((n) => ({ kind: "notices", day: n.day, at: n.at.slice(6), html: `${tag(n.type)}<span></span><time>${n.at.slice(6)}</time><div class="txt">${n.text}</div>` })),
+  ...HISTORY.map((h) => ({ kind: "history", day: h.day, at: h.at.slice(6), html: `${tag("history", "변경")}<span></span><time>${h.at.slice(6)}</time><div class="txt">${h.text}</div>` })),
+  { kind: "todo", day: "10.14", at: "18:10", html: `${tag("safety_alert", "재난 뒤 이어가기")}<span class="need">답 필요</span><time>18:10</time><div class="txt">규모 5 지진 뒤 어떻게 이어갈지 골라 주세요.</div><div class="opts"><button class="btn primary small">이어갈 방법 고르기</button></div>` },
+  { kind: "warnings", day: "계획 확인", at: "", html: `${tag("warning", "살펴볼 점")}<span></span><time>10.14 일정</time><div class="txt">${WARN[0].reason}</div>` },
+];
+const FILTERS = [["all", "전체"], ["todo", "할 일"], ["notices", "알림"], ["history", "변경"], ["warnings", "살펴볼 점"], ["svc", "공지"]];
+mount("pC", (s) => {
+  const rows = FEED.filter((r) => s.filter === "all" || r.kind === s.filter);
+  const days = [...new Set(rows.map((r) => r.day))];
+  return head("알림 설정") + `<div class="cBody"><div class="chips">${FILTERS.map(([key, name]) => `<button data-set="filter=${key}" aria-pressed="${s.filter === key}">${name} ${key === "all" ? FEED.length : FEED.filter((r) => r.kind === key).length}</button>`).join("")}</div>
+    ${days.map((day) => `<p class="day">${day === "10.17" ? "오늘 10.17" : day}</p><div class="feed">${rows.filter((r) => r.day === day).map((r) => `<div class="feedRow">${r.html}</div>`).join("")}</div>`).join("")}</div>`;
+}, { filter: "all" });
+
+// D — 탭 넷 + 탭마다 새 표시
+mount("pD", (s) => head() + `<div class="cBody">${tabs(s, [["todo", "할 일", 3, true], ["notices", "알림", 6, true], ["history", "변경", 3], ["svc", "공지", 3, true]])}
+  ${s.tab === "todo" ? `${choiceCard()}${recoveryCard()}${undoCard()}<p class="sec">계획에서 살펴볼 점 1</p><ul class="list">${WARN.map(warnLi).join("")}</ul>`
+    : s.tab === "notices" ? `<ul class="list">${NOTICES.map(noticeLi).join("")}</ul>`
+    : s.tab === "history" ? `<ul class="list">${HISTORY.map(histLi).join("")}</ul>` : svcFull()}</div>`, { tab: "todo" });
+
+// E — 날짜 · 일정별로 묶기
+mount("pE", (s) => head() + `<div class="cBody">
+  <p class="sec">여행 전체</p>
+  <div class="panel">${svcLine(SVC[0])}<div class="row"><span class="kind" data-tone="warning">점검 예고 · 안내</span><span class="one">공지 2개 더</span><span class="chev">›</span></div></div>
+  ${recoveryCard()}
+  <p class="sec">오늘 · 4일차 10.17</p>
+  <div class="stopGroup"><header><time>12:30</time><b>점심 · 광장시장 박가네</b><u>일정에서 보기</u></header><div class="mini">${tag("change_notice")}09:12 순희네가 오늘 쉬어 박가네로 바꿨어요.</div><div class="opts" style="margin:0"><button class="btn small">되돌리기</button></div></div>
+  <div class="stopGroup"><header><time>15:00</time><b>북촌 한옥마을</b><u>일정에서 보기</u></header><div class="mini">${tag("proposal_request")}08:40 오후에 비 예보가 있어요.</div><div class="opts" style="margin:0"><button class="btn primary small">예보에 맞게 일정 변경</button><button class="btn small">지금 일정 그대로 두기</button></div></div>
+  <div class="panel"><div class="row">${tag("guidance")}<span class="one">4일차 시작 · 첫 일정 09:30 경복궁</span><time>08:00</time></div></div>
+  ${acc(s, "past", "지난 날 · 3일차 10.16 · 1일차 10.14", "알림 3 · 변경 2")}${s.open.past ? `<div class="panel"><ul class="list">${NOTICES.slice(3).map(noticeLi).join("")}${HISTORY.slice(1).map(histLi).join("")}</ul></div>` : ""}
+  <p class="sec">계획 확인 · 살펴볼 점 1</p>
+  <div class="stopGroup"><header><time>1일차</time><b>항목 5/6</b><u>일정에서 보기</u></header><div class="mini">이동시간 누락 또는 간격 부족 — 누락되거나 잘못된 시간·이동 정보를 보완하세요</div></div>
+  </div>`);
+
+// F — 지금 상태 카드 + 최근 소식
+mount("pF", (s) => head() + `<div class="cBody">
+  <div class="status"><small>4일차 · 지금 12:10</small><div class="next">다음 일정 12:30 점심 · 광장시장 박가네</div><div class="meta"><span>일정 진행 중 · 정지 없음</span><span>항로 지킴이 켜짐</span><span>오늘 남은 일정 3</span></div></div>
+  <button class="strip" data-toggle="svc"><span>●</span><span style="flex:1">서비스 공지 3 · 장애 — ${SVC[0].title}</span><span>${s.open.svc ? "접기" : "보기"}</span></button>
+  ${s.open.svc ? `<div class="panel">${SVC.map(svcLine).join("")}</div>` : ""}
+  <p class="sec">할 일 3</p>${choiceCard(true)}${undoCard()}${recoveryCard()}
+  <p class="sec">최근 소식</p><div class="panel">${(s.open.all ? NOTICES : NOTICES.slice(0, 4)).map((n) => `<div class="row">${tag(n.type)}<span class="one">${n.text}</span><time>${n.at.slice(6)}</time></div>`).join("")}
+  <button class="acc" data-toggle="all" aria-expanded="${Boolean(s.open.all)}"><span class="sub" style="text-align:center;color:var(--color-primary);font-weight:700">${s.open.all ? "접기" : "모두 보기 · 받은 알림 6 · 변경 이력 3 · 살펴볼 점 1"}</span></button></div></div>`);
+
+// G — 중요도 세 단계
+mount("pG", (s) => head() + `<div class="cBody">
+  <div class="tier" data-level="now"><header>● 지금 바로 2</header><div class="in">
+    <div class="row">${tag("safety_alert", "재난 뒤 이어가기")}<span class="one">어떻게 이어갈지 골라 주세요</span><span class="chev">›</span></div>
+    ${svcLine(SVC[0])}</div></div>
+  <div class="tier" data-level="check"><header>● 확인해 주세요 3</header><div class="in" style="display:grid;gap:8px;padding-top:10px">${choiceCard(true)}${undoCard()}
+    <div class="row">${tag("warning", "살펴볼 점")}<span class="one">${WARN[0].reason}</span></div></div></div>
+  <div class="tier" data-level="fyi"><header style="cursor:pointer" data-toggle="fyi">● 참고 7 <span style="margin-left:auto;font-weight:700">${s.open.fyi ? "접기" : "펼치기"}</span></header>${s.open.fyi ? `<div class="in">
+    ${SVC.slice(1).map(svcLine).join("")}${NOTICES.filter((n) => n.type === "guidance").map((n) => `<div class="row">${tag(n.type)}<span class="one">${n.text}</span><time>${n.at.slice(6)}</time></div>`).join("")}
+    ${HISTORY.slice(0, 1).map((h) => `<div class="row">${tag("history", "변경")}<span class="one">${h.text}</span><time>${h.at.slice(6)}</time></div>`).join("")}</div>` : `<div class="in mini">안내 4 · 공지 2 · 변경 이력 1 — 급하지 않은 것은 접어 둡니다.</div>`}</div>
+  </div>`);
+
+// H — 급한 것만 바로, 나머지는 하루 세 번 요약
+const DIGESTS = [
+  ["noon", "오늘 낮 요약 · 12:00", "바뀐 일정 1 · 알림 1 · 공지 2", `<div class="row">${tag("change_notice")}<span class="one">점심을 박가네로 바꿨어요(되돌리기 가능)</span><time>09:12</time></div><div class="row"><span class="kind" data-tone="warning">점검 예고</span><span class="one">${SVC[1].title}</span></div><div class="row"><span class="kind" data-tone="info">안내</span><span class="one">${SVC[2].title}</span></div>`],
+  ["morning", "오늘 아침 요약 · 08:00", "4일차 시작 · 첫 일정 09:30 경복궁", `<div class="row">${tag("guidance")}<span class="one">${NOTICES[2].text}</span><time>08:00</time></div>`],
+  ["prev", "지난 요약 · 10.16 저녁 ~ 10.14", "알림 3 · 변경 이력 2 · 살펴볼 점 1", `<ul class="list">${NOTICES.slice(3).map(noticeLi).join("")}${HISTORY.slice(1).map(histLi).join("")}${WARN.map(warnLi).join("")}</ul>`],
+];
+mount("pH", (s) => head() + `<div class="cBody">
+  <p class="sec">바로 알려 드리는 것 3 · 안전 · 선택 · 장애</p>${choiceCard(true)}${recoveryCard()}${svcLine(SVC[0])}
+  <p class="sec">요약 · 다음 요약 18:00</p>
+  ${DIGESTS.map(([key, title, sub, body]) => `<div class="digest"><button data-toggle="${key}" aria-expanded="${Boolean(s.open[key])}"><b>${title}</b><span class="chev">${s.open[key] ? "접기" : CHEV}</span><small>${sub}</small></button>${s.open[key] ? `<div class="in">${body}</div>` : ""}</div>`).join("")}
+  <p class="mini">급하지 않은 알림은 아침 8시 · 낮 12시 · 저녁 6시에 묶어 브라우저 알림 한 번으로 보내요.</p></div>`, { open: { noon: true } });
+</script>
+</body>
+</html>

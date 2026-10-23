@@ -1,0 +1,21 @@
+{
+  "scope": "TourAPI 목록·소개, 비건 근거; 전체 원장 재구축 아님",
+  "inputs": {
+    "datasets/dining/processed/tourapi_음식점_소개정보.json": "9d4ea899b5044fb705f053275ca95d1b442e2a8218c70a40d03731b8eaeceadf",
+    "datasets/dining/processed/tourapi_서울_음식점_목록.json": "dd615768b22d03f639ee83e149d6e60131937ff83a5fd19aa9cd62d26ed45f0b",
+    "datasets/dining/processed/vegan/비건식당_2026-09-23.csv": "59615a801f2e97b03f4d54554427e75f8841831bf9fbfbc9fd1ba7c1836d06f0",
+    "datasets/dining/processed/vegan/비건식당_근거_2026-09-23.csv": "0fa374516a05b5a78d2593da2e2676cc69ef4e9886ff74d85f4ac287bfd1e140",
+    "datasets/dining/processed/vegan/비건식당_영업시간_검수.csv": "a0d4a82f05588458c30dcfa6dcdc33b6b2e0149811e754426d54afe33456813c"
+  },
+  "counts": {
+    "places": 1665,
+    "hours": 10879,
+    "attributes": 70
+  },
+  "raw_unchanged": true,
+  "generated": {
+    "load_200.sql": "2d7eb94e507e5bb2b1ee5b13ea3e87645f056c1dcc26ca2c114366902c4766e0",
+    "parsed_hours.json": "9e6e630ee6b6a0f8ecb472099a9845be421bb9e35fdef33d3f6621e67d6fb0d7",
+    "vegan.sql": "799a4746e2f90f53acd19d8dec70d82c047d15bcc2c4fba1b3342279be521824"
+  }
+}

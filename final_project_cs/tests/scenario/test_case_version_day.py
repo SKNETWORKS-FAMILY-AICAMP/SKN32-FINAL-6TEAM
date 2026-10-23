@@ -10,7 +10,8 @@
   그리고 B 에만 있어야 하는 것: 버전마다 Case 가 붙어 있다(`itinerary_versions.case_id`),
   적용 기록(`action_requests` succeeded), 담당 Team.
 
-★LLM 만 흉내 낸다(분류기 · 신고 추출). 감시 · Controller · Team · 적용 · 통지는 실제 코드다.
+★분류·신고 추출은 대역, 이동은 양쪽 모두 동일한 대본 경로 재생이다.
+감시 · Controller · Team · 적용 · 통지는 실제 코드다. 이동 정확도는 재지 않는다.
 """
 from __future__ import annotations
 
@@ -25,18 +26,20 @@ import pytest
 from app.core.subjects import SubjectNotFound
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
                                               ReplayWarning, ReplayWeather)
-from app.modules.travel_ops.case_engine import CaseEngine, cleanup_tenant
-from app.modules.travel_ops.itinerary import Item, TripStore
-from app.modules.travel_ops.subjects import resolve_subject
-from app.modules.travel_ops.trip_desk import TripDesk
-from app.modules.travel_ops.trip_watch import TripWatcher
+from app.domains.travel_ops.scenarios.case_engine import CaseEngine, cleanup_tenant
+from app.domains.travel_ops.scenarios.replay_services import replay_leg_services
+from app.domains.travel_ops.components.itinerary.itinerary import Item, TripStore
+from app.domains.travel_ops.components.core_hooks.subjects import resolve_subject
+from app.domains.travel_ops.components.conversation.trip_desk import TripDesk
+from app.domains.travel_ops.components.watch.trip_watch import TripWatcher
+from tests.unit.travel.execution_plan_fixture import fixture_plan
 
 KST = ZoneInfo("Asia/Seoul")
-SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "modules" / "travel_ops"
+SCENARIO = json.loads((Path(__file__).resolve().parents[2] / "app" / "domains" / "travel_ops"
                        / "scenarios" / "seoul_day_taiwan_friends.json").read_text(encoding="utf-8"))
 DAY = SCENARIO["trip"]["date"]
 REPORTS = {report["type"]: report for report in SCENARIO["customer_reports"]}
@@ -115,15 +118,17 @@ def _sources(clock):
 
 
 @pytest.fixture()
-def trip_world():
+def trip_world(case_world):
+    from app.core.service_bindings import bind_services
     tenant = "tripver_" + uuid4().hex[:10]
     store, customer, trip_id = _seed(tenant)
     clock = Clock(_at("08:00"))
     check, route_events = _sources(clock)
-    yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
-           "watcher": TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
-                                  route_events=route_events),
-           "desk": TripDesk(store=store, connection_factory=get_connection)}
+    with bind_services(case_world["engine"].controller.service_bindings):
+        yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
+               "watcher": TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
+                                      route_events=route_events),
+               "desk": TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)}
     cleanup_tenant(tenant)
 
 
@@ -134,9 +139,14 @@ def case_world():
     clock = Clock(_at("08:00"))
     check, route_events = _sources(clock)
     engine = CaseEngine(tenant_id=tenant, check=check, route_events=route_events, classifier=_classifier,
-                        report_extractor=_extractor, clock=clock)
-    yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
-           "engine": engine}
+                        report_extractor=_extractor, clock=clock,
+                        execution_planner=fixture_plan,
+                        service_overrides=replay_leg_services(SCENARIO))
+    from app.core.service_bindings import bind_services
+
+    with bind_services(engine.controller.service_bindings):
+        yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
+               "engine": engine}
     cleanup_tenant(tenant)
 
 
@@ -345,7 +355,7 @@ def test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_
     check, route_events = _sources(world["clock"])
     world["engine"] = CaseEngine(tenant_id=world["tenant"], check=check, route_events=route_events,
                                  classifier=_gemma_like_classifier, report_extractor=_extractor,
-                                 clock=world["clock"])
+                                 clock=world["clock"], service_overrides=replay_leg_services(SCENARIO))
     outcomes = _run_case_day(world)
     for key, team in (("p3", "dining"), ("p7", "dining"), ("a8", "activity")):
         view = outcomes[key]
@@ -370,7 +380,8 @@ def test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classifi
     world = dict(case_world)
     check, route_events = _sources(world["clock"])
     world["engine"] = CaseEngine(tenant_id=world["tenant"], check=check, route_events=route_events,
-                                 classifier=_classifier, report_extractor=broken, clock=world["clock"])
+                                 classifier=_classifier, report_extractor=broken, clock=world["clock"],
+                                 service_overrides=replay_leg_services(SCENARIO))
     view = _say(world, "closed")
     assert view["owner_team_id"] == "dining", view          # 분류 접두(dining_hours)로 갔다
     assert view["case_status"] != "resolved", view           # 추출이 죽었는데 확답하지 않는다
@@ -388,7 +399,7 @@ def test_every_notice_carries_the_plan_link_whichever_path_made_it(case_world):
     시나리오용 여행 버전은 `TripStore.enqueue_notice` 가 붙여 주는데, Case 버전은 코어가 바깥함에
     **직접** 써서 그 자리를 지나지 않았다. 통지를 만드는 길이 여럿이라 **길마다** 본다.
     """
-    from app.modules.travel_ops.plan_link import plan_url
+    from app.domains.travel_ops.components.itinerary.plan_link import plan_url
 
     _run_case_day(case_world)
     link = plan_url(case_world["tenant"], case_world["trip_id"])

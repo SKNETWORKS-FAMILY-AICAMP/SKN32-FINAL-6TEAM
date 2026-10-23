@@ -1,25 +1,99 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Button } from "@/components/ui";
-import type { MapAdapter, MapController, MapViewProps } from "./model";
+import { controlsLayout, EdgeChips, LocateControl, locatePlace, MapControls } from "./map-controls";
+import type { MapAdapter, MapController, MapView, MapViewProps, StayPoint } from "./model";
 import styles from "./map.module.css";
+import { routeLabels } from "./route-labels";
+import { MODE_NAMES } from "./route-lines";
+import { LINE_TONE_VARIABLE } from "./providers/lines";
+import { edgeChips, fromPixels, toPixels } from "./map-geometry";
 
+const NO_STAYS: StayPoint[] = [];
 export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick, onRequestLocation, focus }: MapViewProps & { adapter: MapAdapter; name: string }) {
+  const pointer = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const surface = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
-  const latest = useRef({ points, selectedId, onSelect });
+  const viewRef = useRef<MapView | null>(null);
+  const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me, stays, onZoom, onInteractionChange, focus });
+  // `[2026-10-22 ST4F-722]` A focus the screen asks for goes to the camera once (`key`), after the pins it names are on the map.
+  const focusedKey = useRef<number | undefined>(undefined);
+  const applyFocus = useCallback(() => {
+    const asked = latest.current.focus, map = controller.current;
+    if (!asked || !map || asked.key === focusedKey.current) return;
+    focusedKey.current = asked.key;
+    const point = latest.current.points.find((item) => item.id === asked.id);
+    if (point) map.focus(point.coordinates, asked.zoom);
+  }, []);
+  const refreshLayout = useCallback(() => {
+    controller.current?.relayout?.();
+    const node = surface.current;
+    if (!node) return;
+    const occupied = [...node.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls], [data-map-locate]")]
+      .filter((item) => getComputedStyle(item).visibility !== "hidden").map((item) => item.getBoundingClientRect());
+    const frame = node.getBoundingClientRect();
+    const currentView = viewRef.current;
+    if (!currentView || !frame.width || !frame.height) return;
+    const scaleX = currentView.width / frame.width, scaleY = currentView.height / frame.height;
+    const labelNodes = [...node.querySelectorAll<HTMLElement>("[data-route-label]")];
+    const sizes = Object.fromEntries(labelNodes.map((label) => {
+      const box = label.getBoundingClientRect();
+      return [label.dataset.routeLabel!, { width: box.width * scaleX, height: box.height * scaleY }];
+    }));
+    const obstacles = occupied.map((box) => ({ left: (box.left-frame.left)*scaleX, right: (box.right-frame.left)*scaleX,
+      top: (box.top-frame.top)*scaleY, bottom: (box.bottom-frame.top)*scaleY }));
+    const positions = routeLabels(currentView, latest.current.lines ?? [], latest.current.points,
+      latest.current.topInset, latest.current.bottomInset, obstacles, sizes);
+    labelNodes.forEach((label) => {
+      const spot = positions.find((position) => position.id === label.dataset.routeLabel);
+      if (!spot) { label.style.visibility = "hidden"; return; }
+      label.style.left = `${spot.x}px`;
+      label.style.top = `${spot.y}px`;
+      const box = label.getBoundingClientRect();
+      const blocked = occupied.some((other) => Math.min(box.right,other.right)>Math.max(box.left,other.left)-4 && Math.min(box.bottom,other.bottom)>Math.max(box.top,other.top)-4);
+      label.style.visibility = blocked ? "hidden" : "";
+      if (!blocked) occupied.push(box);
+    });
+  }, []);
   const [attempt, setAttempt] = useState(0);
+  // `[2026-10-03 사용자 지시]` The map's buttons show while the pointer is over the map, or for a few seconds after it is touched (a phone has no hover).
+  const [awake, setAwake] = useState(false);
+  const asleep = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const wake = () => { setAwake(true); clearTimeout(asleep.current); asleep.current = setTimeout(() => setAwake(false), 3_500); };
+  useEffect(() => () => clearTimeout(asleep.current), []);
   const [state, setState] = useState<{ status: "loading" | "ready" | "error"; message?: string }>({ status: "loading" });
+  // `[2026-10-05 사용자 선택]` What the map shows (for the scale ruler and the chips of stops out of view), how big the map is, and whether the customer folded its buttons.
+  const [view, setView] = useState<MapView | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [folded, setFolded] = useState(true);
+  const [moving, setMoving] = useState(false);
+  const settled = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => { latest.current.onInteractionChange = onInteractionChange; }, [onInteractionChange]);
+  useEffect(() => () => clearTimeout(settled.current), []);
 
+
+  useLayoutEffect(() => {
+    latest.current = { ...latest.current, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom, focus };
+    controller.current?.update(points, selectedId, lines, selectedLineId);
+    applyFocus();
+  }, [points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom, focus, applyFocus]);
+
+  // `[2026-10-05 사용자 지시]` 「내 위치」 and the stays go to the map on their own: a new position does not redraw the pins.
   useEffect(() => {
-    latest.current = { points, selectedId, onSelect };
-    controller.current?.update(points, selectedId);
-  }, [points, selectedId, onSelect]);
+    latest.current = { ...latest.current, me };
+    controller.current?.setMe(me);
+  }, [me]);
+  useEffect(() => {
+    latest.current = { ...latest.current, stays };
+    controller.current?.setStays(stays);
+  }, [stays]);
 
   useEffect(() => {
     const element = container.current;
@@ -33,6 +107,8 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapView
     let observer: ResizeObserver | undefined;
     let instance: MapController | undefined;
     let failed = false;
+    let pendingView: MapView | null = null;
+    let viewScheduled = false;
     const fail = (error: Error) => {
       failed = true;
       if (!cancelled) setState({ status: "error", message: error.message });
@@ -40,14 +116,38 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapView
     void adapter.create(host, {
       ...latest.current,
       onSelect: (id) => latest.current.onSelect(id),
+      onSelectLine: (id) => latest.current.onSelectLine?.(id),
+      onZoom: (zoom) => latest.current.onZoom?.(zoom),          // [2026-10-05] the screen above asks for the detailed route lines once this says the map is zoomed in
+      onView: (next) => {
+        viewRef.current = next;
+        pendingView = next;
+        if (viewScheduled) return;
+        viewScheduled = true;
+        // SDK moves can originate inside our layout effect. Leave that commit first,
+        // then switch chips and pins before paint, including instant reduced-motion jumps.
+        queueMicrotask(() => {
+          viewScheduled = false;
+          if (!cancelled && pendingView) flushSync(() => setView(pendingView));
+        });
+      },
+      onInteractionChange: (active) => {
+        clearTimeout(settled.current);
+        if (active) { setMoving(true); latest.current.onInteractionChange?.(true); }
+        else settled.current = setTimeout(() => { if (!cancelled) { setMoving(false); latest.current.onInteractionChange?.(false); } }, 180);
+      },
       onError: fail,
     }).then((created) => {
       if (cancelled) { created.destroy(); return; }
       instance = created;
       controller.current = created;
-      created.update(latest.current.points, latest.current.selectedId);
+      created.update(latest.current.points, latest.current.selectedId, latest.current.lines, latest.current.selectedLineId);
+      created.setMe(latest.current.me);
+      created.setStays(latest.current.stays);
+      applyFocus();
       observer = new ResizeObserver(([entry]) => {
-        if (entry && entry.contentRect.width > 0 && entry.contentRect.height > 0) created.resize();
+        if (!entry) return;
+        setSize({ width: Math.round(entry.contentRect.width), height: Math.round(entry.contentRect.height) });
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) created.resize();
       });
       observer.observe(element);
       if (!failed) setState({ status: "ready" });
@@ -59,12 +159,72 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapView
       host.remove();
       if (controller.current === instance) controller.current = null;
     };
-  }, [adapter, attempt]);
+  }, [adapter, attempt, applyFocus]);
 
-  return <div className={styles.live} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"}>
-    <div className={styles.canvas} ref={container} aria-label={`${name} 지도`} />
+  const ready = state.status === "ready";
+  const canFit = points.length > 1;
+  const meButton = meAvailable ? (me ? "ready" : "waiting") : "off";
+  const count = 2 + (canFit ? 1 : 0);
+  const layout = controlsLayout(size, topInset ?? 0, count, bottomInset ?? 0);
+  const locate = locatePlace(size, topInset ?? 0, bottomInset ?? 0);
+  const [controlArea, setControlArea] = useState<{ left: number; top: number; right: number; bottom: number }[]>([]);
+  useLayoutEffect(() => {
+    const node = surface.current, controls = node?.querySelector<HTMLElement>("[data-map-controls]");
+    if (!node || !controls) return;
+    // The fold tab and 「내 위치로」 (ST4F-721): the chips keep clear of both.
+    const obstacles = () => [...node.querySelectorAll<HTMLElement>("[data-map-obstacle]")];
+    const measure = () => {
+      const root = node.getBoundingClientRect();
+      const next = obstacles().map((item) => item.getBoundingClientRect()).map((box) => ({ left: box.left-root.left, top: box.top-root.top, right: box.right-root.left, bottom: box.bottom-root.top }));
+      setControlArea((old) => JSON.stringify(old) === JSON.stringify(next) ? old : next);
+    };
+    measure();
+    const observer = new ResizeObserver(measure); observer.observe(controls); obstacles().forEach((item) => observer.observe(item));
+    return () => observer.disconnect();
+  }, [ready, folded, layout, locate, size.width, size.height, topInset, bottomInset]);
+  // 칩과 마커가 같은 결과를 쓴다. layout effect로 브라우저가 그리기 전에
+  // 표시를 교대하므로 지도 이동 중에도 같은 일정이 두 번 나타나지 않는다.
+  const chips = useMemo(() => ready && view ? edgeChips(view, points, {
+    top: topInset ?? 0, bottom: bottomInset ?? 0, obstacles: controlArea,
+  }) : [], [ready, view, points, topInset, bottomInset, controlArea]);
+  useLayoutEffect(() => { controller.current?.setHiddenPoints(chips.flatMap((chip) => chip.ids)); refreshLayout(); }, [chips, folded, refreshLayout]);
+  const preview = view && coordinatePick?.value ? toPixels(view, coordinatePick.value) : null;
+  return <div ref={surface} className={styles.live} style={{ position: "relative", flex: 1 }} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-moving={moving || undefined} data-awake={awake || undefined} data-picking={!!coordinatePick || undefined} onPointerDown={wake}
+    onPointerDownCapture={event => { pointer.current = { x: event.clientX, y: event.clientY, moved: false }; }}
+    onPointerMoveCapture={event => { const start = pointer.current; if (start && Math.hypot(event.clientX-start.x, event.clientY-start.y)>8) start.moved = true; }}
+    onClickCapture={event => {
+      if (!coordinatePick || !view || !ready || (event.target as Element).closest('[data-map-controls], [data-map-locate], [data-map-pick-center], [data-edge-chip], .leaflet-control')) return;
+      event.stopPropagation(); event.preventDefault();
+      if (!pointer.current || pointer.current.moved) return;
+      const rect = container.current!.getBoundingClientRect(), x = event.clientX-rect.left, y = event.clientY-rect.top;
+      if (x>=0 && x<=rect.width && y>=(topInset??0) && y<=rect.height-(bottomInset??0)) coordinatePick.onPick(fromPixels(view, { x, y }));
+    }}>
+    <div className={styles.canvas} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", isolation: "isolate", zIndex: 0 }} ref={container} aria-label={`${name} 지도`} />
+    {ready && <div className={styles.routeLabels} aria-hidden="true">
+      {routeLabels(view, lines ?? [], points, topInset, bottomInset).map((label) => <span key={label.id} data-route-label={label.id} data-mode={label.mode}
+        className={styles.routeLabel} style={{ left: label.x, top: label.y, color: `var(${LINE_TONE_VARIABLE[label.mode ?? "unknown"]})` }}>
+        {MODE_NAMES[label.mode ?? "unknown"]}{label.dashed ? " · 직선 연결" : ""}
+      </span>)}
+    </div>}
     {state.status === "loading" && <div className={styles.overlay} role="status">지도를 불러오고 있어요…</div>}
     {state.status === "error" && <div className={styles.overlay} role="alert"><strong>지도를 불러오지 못했어요</strong><p>{state.message}</p><Button variant="secondary" onClick={() => { setState({ status: "loading" }); setAttempt((value) => value + 1); }}>지도 다시 불러오기</Button></div>}
-    {state.status === "ready" && points.length === 0 && <p className={styles.emptyNotice}>표시할 장소 좌표가 없어요.</p>}
+    {ready && points.length > 0 && <EdgeChips chips={chips} width={view?.width ?? 0} moving={moving} onLayout={refreshLayout}
+      onGo={(ids) => {
+        const target = points.find((point) => point.id === ids[0]);
+        if (!target) return;
+        onSelect(target.id);
+        controller.current?.centerOn(target.coordinates, true);
+      }} />}
+    {ready && <MapControls view={view} topInset={topInset ?? 0} layout={layout} folded={folded} onFold={(next) => { setFolded(next); }} canFit={canFit}
+      onZoom={(delta) => controller.current?.zoomBy(delta)} onFit={() => controller.current?.fit()} />}
+    {ready && <LocateControl place={locate} topInset={topInset ?? 0} bottomInset={bottomInset ?? 0} me={meButton} onLocate={() => {
+      if (me) controller.current?.centerOn(me.coordinates);
+      else onRequestLocation?.((location) => controller.current?.centerOn(location.coordinates));
+    }} />}
+    {ready && coordinatePick && view && <>
+      {preview && <span className={styles.coordinatePin} data-coordinate-pin aria-hidden="true" style={{ left: preview.x, top: preview.y }}>＋</span>}
+      <button type="button" className={styles.pickCenter} data-map-pick-center onClick={() => coordinatePick.onPick(fromPixels(view, { x: view.width/2, y: (view.height+(topInset??0)-(bottomInset??0))/2 }))}>지도 중심 선택</button>
+    </>}
+    {ready && points.length === 0 && !coordinatePick && <p className={styles.emptyNotice} role="status" data-empty-map-notice style={{ top: (topInset ?? 0) + 12 }}>표시할 장소 좌표가 없어요.</p>}
   </div>;
 }

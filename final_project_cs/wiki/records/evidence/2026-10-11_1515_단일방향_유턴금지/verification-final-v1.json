@@ -1,0 +1,12 @@
+{
+  "source_test_data_hashes": {
+    "total": 504,
+    "matched": 504,
+    "changed": {}
+  },
+  "artifact_hashes": {
+    "total": 31,
+    "matched": 31,
+    "changed": {}
+  }
+}

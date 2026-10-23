@@ -1,0 +1,24 @@
+{
+  "tag": "2026-10-09_0806_도착조회_완료시각",
+  "created_at": "2026-10-09T08:06:50.362674+09:00",
+  "backups": [
+    {
+      "source": "final_project_cs/app/domains/travel_ops/ports/data_sources/seoul_bus.py",
+      "backup": "final_project_cs/app/domains/travel_ops/ports/data_sources/_backup/2026-10-09_0806_도착조회_완료시각/seoul_bus.py",
+      "sha256": "1e6d2365efbc1729dc4b213f4f143330f0e2065c0f4c3492664c9a28c2c22a90"
+    },
+    {
+      "source": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "backup": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/_backup/2026-10-09_0806_도착조회_완료시각/departure_observer.py",
+      "sha256": "8ab2d3b7011dbdae78ba35832c77a0f2495ddf1a1eb8ce954315fbeaf4904101"
+    },
+    {
+      "source": "final_project_cs/wiki/teams/mobility.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_0806_도착조회_완료시각/mobility.md",
+      "sha256": "7a812f46c3d22431007f7761cfb6926e67cc48e4f45f1cf6f2615a842f853981"
+    }
+  ],
+  "debug": "wiki/records/reports/debugs/2026-10-09_0806_도착조회_완료시각_정상_신규응답을_미래시각으로_거절.md",
+  "prior_source_hashes": 210,
+  "prior_artifacts": 6
+}

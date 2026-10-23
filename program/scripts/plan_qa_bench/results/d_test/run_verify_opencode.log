@@ -1,0 +1,22 @@
+oc_space-bunny-free opencode/space-bunny-free 남은 204 / 204
+oc_space-bunny-free 25 / 204 74 초 · 오류 0
+oc_space-bunny-free 50 / 204 129 초 · 오류 0
+oc_space-bunny-free 75 / 204 188 초 · 오류 0
+oc_space-bunny-free 100 / 204 248 초 · 오류 0
+oc_space-bunny-free 125 / 204 309 초 · 오류 0
+oc_space-bunny-free 150 / 204 371 초 · 오류 0
+oc_space-bunny-free 175 / 204 419 초 · 오류 0
+oc_space-bunny-free 200 / 204 471 초 · 오류 0
+끝 oc_space-bunny-free 484 초 · 오류 0
+oc_longcat-2.5-preview-free opencode/longcat-2.5-preview-free 남은 204 / 204
+oc_longcat-2.5-preview-free 25 / 204 129 초 · 오류 0
+oc_longcat-2.5-preview-free 50 / 204 225 초 · 오류 0
+oc_longcat-2.5-preview-free 75 / 204 408 초 · 오류 1
+oc_longcat-2.5-preview-free 100 / 204 559 초 · 오류 3
+oc_longcat-2.5-preview-free 125 / 204 591 초 · 오류 3
+oc_longcat-2.5-preview-free 150 / 204 700 초 · 오류 5
+oc_longcat-2.5-preview-free 175 / 204 818 초 · 오류 5
+oc_longcat-2.5-preview-free 200 / 204 896 초 · 오류 15
+끝 oc_longcat-2.5-preview-free 897 초 · 오류 19
+      0 [main] bash 3280 dofork: child -1 - forked process 1292 died unexpectedly, retry 0, exit code 0xC000026B, errno 11
+/usr/bin/bash: fork: retry: Resource temporarily unavailable

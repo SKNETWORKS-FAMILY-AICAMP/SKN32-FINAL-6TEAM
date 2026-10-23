@@ -1,0 +1,71 @@
+{
+  "base": "d4895eefdaf39db6efd02b24bbda2edd231dbeb3",
+  "files": [
+    {
+      "path": "src/features/map/map-controls.tsx",
+      "working_sha256": "220db6c7fae97181fcc56cb32c245bf05dcc9a3fba83e19660ebe55f68e898df",
+      "tested_sha256": "220db6c7fae97181fcc56cb32c245bf05dcc9a3fba83e19660ebe55f68e898df"
+    },
+    {
+      "path": "src/features/map/live-map.tsx",
+      "working_sha256": "f4b4d80c6516be9a510d0f956ddc1671cab5f842ba1300af3b71f6a6a34fb678",
+      "tested_sha256": "f4b4d80c6516be9a510d0f956ddc1671cab5f842ba1300af3b71f6a6a34fb678"
+    },
+    {
+      "path": "src/features/map/model.ts",
+      "working_sha256": "19a582e22a2913bce69facf309b5a03ffc99a9a994db0180bbc93920822886ce",
+      "tested_sha256": "19a582e22a2913bce69facf309b5a03ffc99a9a994db0180bbc93920822886ce"
+    },
+    {
+      "path": "src/features/map/trip-map.tsx",
+      "working_sha256": "cacdc8de44eada2b3d1811249b5d5550641e7fbef4d22ab31bbbf90650335848",
+      "tested_sha256": "cacdc8de44eada2b3d1811249b5d5550641e7fbef4d22ab31bbbf90650335848"
+    },
+    {
+      "path": "src/features/map/use-my-location.ts",
+      "working_sha256": "c3d3beba2719040fc32557c371e6c2cadc64e97ba3e83b229d929304a8a78145",
+      "tested_sha256": "c3d3beba2719040fc32557c371e6c2cadc64e97ba3e83b229d929304a8a78145"
+    },
+    {
+      "path": "src/features/map/map.module.css",
+      "working_sha256": "b131abcbc9eefc8ee7bda48ae19660647ba74f68437998fcd4699ea65759c38b",
+      "tested_sha256": "43bba17044ff9e8acfc4917a520c5bfef1d03a627d9a4561bb92f6af74f43f30"
+    },
+    {
+      "path": "src/features/consent/optional-consent-prompt.tsx",
+      "working_sha256": "ab4f7c431a43f073363375539959c2afd66da0b41b6659cf4e3763b6f2689bb3",
+      "tested_sha256": "ab4f7c431a43f073363375539959c2afd66da0b41b6659cf4e3763b6f2689bb3"
+    },
+    {
+      "path": "src/features/map/location-consent.tsx",
+      "working_sha256": "6c3307367ba931ea6b46fbd1eced0caef6745da3040ea2fbef019021e2f91b39",
+      "tested_sha256": "6c3307367ba931ea6b46fbd1eced0caef6745da3040ea2fbef019021e2f91b39"
+    },
+    {
+      "path": "src/features/map/location-consent.module.css",
+      "working_sha256": "87e9967ceb504df9136de4bbd9e8d52064b5a7b67dbe54978f72e98f2df6af89",
+      "tested_sha256": "87e9967ceb504df9136de4bbd9e8d52064b5a7b67dbe54978f72e98f2df6af89"
+    },
+    {
+      "path": "tests/live/map-controls.spec.ts",
+      "working_sha256": "33aef3d14c6b83aa89a7716d72d1169de0918c7276dae8fea077b2249ad5b040",
+      "tested_sha256": "33aef3d14c6b83aa89a7716d72d1169de0918c7276dae8fea077b2249ad5b040"
+    },
+    {
+      "path": "tests/live/my-location.spec.ts",
+      "working_sha256": "8b4cc49ae0dc367682d3703fe9536740ac722e10c138f7d74bc62d6fcaa8d373",
+      "tested_sha256": "8b4cc49ae0dc367682d3703fe9536740ac722e10c138f7d74bc62d6fcaa8d373"
+    },
+    {
+      "path": "tests/live/location-entry.spec.ts",
+      "working_sha256": "3eaa27117978ccf6bdac2649cbaaf2c4b32eb70cce8dd352ab00e5e2571b98f3",
+      "tested_sha256": "3eaa27117978ccf6bdac2649cbaaf2c4b32eb70cce8dd352ab00e5e2571b98f3"
+    },
+    {
+      "path": "tests/live/location-entry-captures.spec.ts",
+      "working_sha256": "b6841a9ec1a93f615fc5d79951f6eb8ee49a134a09f8e024ec0c23a40d1d81b4",
+      "tested_sha256": "b6841a9ec1a93f615fc5d79951f6eb8ee49a134a09f8e024ec0c23a40d1d81b4"
+    }
+  ],
+  "css": "팀 매니저 기준 CSS에 이번 크기 변경만 적용했다. 작업 루트의 기존 변경을 되돌리지 않는다."
+}

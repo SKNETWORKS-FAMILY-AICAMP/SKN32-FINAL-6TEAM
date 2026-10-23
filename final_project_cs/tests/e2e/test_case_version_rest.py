@@ -3,7 +3,8 @@
 
 ★`[2026-09-17]` 하루 대조 시험(`tests/scenario/test_case_version_day.py`)은 조립기(`case_engine`)로
   Case 를 연다. 이 시험은 **HTTP 접수 · 대상 확인기 주입 · 떼어낸 실행**까지 제품 경로 그대로 지난다.
-  바꿔 끼우는 것은 바깥 소스(재생)와 LLM(분류 · 신고 추출)뿐이다 — Controller 는 운영 조립 함수로 만든다.
+  바깥 소스(재생)·LLM(분류 · 신고 추출)·고정 이동 계산을 시험용으로 제공한다.
+  Controller 는 운영 조립 함수로 만들며 계산기 부재를 성공으로 우회하지 않는다.
 """
 from __future__ import annotations
 
@@ -16,12 +17,14 @@ import app.composition as composition
 import app.core.settings as settings_module
 from app.core.project_config import load_project_config
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.case_engine import cleanup_tenant
+from app.domains.travel_ops.scenarios.case_engine import cleanup_tenant
 from app.presentation import security
 from app.presentation.api.app import create_app
 from app.tools.read_tools import ReadToolbox
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 from tests.scenario.test_case_version_day import (REPORTS, Clock, _at, _classifier, _extractor, _seed,
                                                   _sources)
+from tests.helpers.plugin_bindings import publish_fixed_mobility
 
 
 @pytest.fixture()
@@ -40,10 +43,11 @@ def rest(monkeypatch):
     controller = composition.build_controller(
         registry=composition.build_registry(tools=tools, llm=None, config=config), llm=None, config=config)
     client = TestClient(create_app(controller=controller, classifier=_classifier, domain_routers=[]))
+    calculation_calls = publish_fixed_mobility(client.app, source="case_rest_test")
     def auth(scope):
         return {"Authorization": "Bearer " + security._development_key(scope, original.secret_key)}
     yield {"client": client, "auth": auth, "customer": customer, "trip_id": trip_id, "store": store,
-           "tenant": tenant}
+           "tenant": tenant, "calculation_calls": calculation_calls}
     cleanup_tenant(tenant)
 
 
@@ -73,6 +77,8 @@ def test_a_delay_sentence_changes_the_trip_through_the_rest_path(rest):
             cur.execute("SELECT count(*) FROM outbox WHERE tenant_id=%s AND topic='trip.notice'", (rest["tenant"],))
             notices = cur.fetchone()[0]
     assert trip["version"] == 2 and str(version_case) == case_id and notices == 1
+    assert rest["calculation_calls"]
+    assert all((end - start).total_seconds() == 300 for _, _, start, end in rest["calculation_calls"])
 
 
 def test_a_stock_question_is_answered_without_changing_the_trip(rest):

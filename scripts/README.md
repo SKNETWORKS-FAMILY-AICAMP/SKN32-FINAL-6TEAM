@@ -25,7 +25,7 @@ scripts/<주제>/
 ## 이력
 
 `mt_bench_pt_en/`(포르투갈어→영어 번역 소형 LLM 벤치마크, 14종)를 여기 두었으나,
-같은 작업을 실제로 실행하고 결과까지 낸 최신 버전(15종, x600 GPU에서 실행,
+같은 작업을 실제로 실행하고 결과까지 낸 최신 버전(15종, 모델 서버 GPU에서 실행,
 PT→EN 완료 + PT→KO 진행)이 다른 세션에 의해 `datasets/mt/olist_reviews_mt_bench/`에
 이미 만들어져 있었다. 2026-08-20에 중복을 정리해 이 폴더의 내용을
 `datasets/mt/olist_reviews_mt_bench/legacy/`로 옮기고 여기는 비웠다.

@@ -1,0 +1,134 @@
+{
+  "date_kst": "2026-10-10",
+  "baseline_id": "triPilot-BL-2026-10-10-v2",
+  "selected_tests": {
+    "passed": 317,
+    "failed": 2,
+    "error": 0,
+    "skipped": 0
+  },
+  "selected_total": 319,
+  "base_backend": {
+    "counts": {
+      "passed": 236,
+      "failed": 2,
+      "error": 0,
+      "skipped": 0
+    },
+    "total": 238,
+    "duration_seconds": 15.536,
+    "problems": [
+      {
+        "case": "tests.contract.test_team_tool_discipline::test_team_does_not_import_infrastructure_directly[2026-10-09_124839_\\ubc29\\uba74\\ub300\\uc870_\\uc218\\uc815\\uc804/subway_departure.py]",
+        "category": "Team의 직접 의존 검사 실패"
+      },
+      {
+        "case": "tests.contract.test_team_tool_discipline::test_team_does_not_import_infrastructure_directly[engine/subway_departure.py]",
+        "category": "Team의 직접 의존 검사 실패"
+      }
+    ]
+  },
+  "changed_backend": {
+    "counts": {
+      "passed": 81,
+      "failed": 0,
+      "error": 0,
+      "skipped": 0
+    },
+    "total": 81,
+    "duration_seconds": 2.682,
+    "problems": []
+  },
+  "frontend": {
+    "passed": 52,
+    "failed": 0,
+    "total": 52,
+    "success": true,
+    "files": [
+      {
+        "path": "final_project_cs/frontend/apps/web/src/features/consent/consent-sync.test.ts",
+        "status": "passed",
+        "tests": 15
+      },
+      {
+        "path": "final_project_cs/frontend/apps/web/src/features/consent/terms-content.test.ts",
+        "status": "passed",
+        "tests": 9
+      },
+      {
+        "path": "final_project_cs/frontend/apps/web/src/features/consent/terms-text.test.ts",
+        "status": "passed",
+        "tests": 3
+      },
+      {
+        "path": "final_project_cs/frontend/apps/web/src/features/map/edge-chips.test.ts",
+        "status": "passed",
+        "tests": 4
+      },
+      {
+        "path": "final_project_cs/frontend/apps/web/src/features/plan-check/use-server-review-undo.test.ts",
+        "status": "passed",
+        "tests": 9
+      },
+      {
+        "path": "final_project_cs/frontend/apps/web/src/features/map/providers/pin.test.ts",
+        "status": "passed",
+        "tests": 12
+      }
+    ]
+  },
+  "training_data": {
+    "path": "datasets/core/pointing/trainset/train_oos2/train_oos2.jsonl",
+    "rows": 2613,
+    "sha256": "07e6f7156883f9adb91812b2306b6dd813f60b189ae1da2610ae8c20d2d55a3c"
+  },
+  "dataset_check": {
+    "exit_code": 0,
+    "golden": 72,
+    "holdout": 24,
+    "label_by": {
+      "claude-draft": 96
+    },
+    "meaning": "형식·라벨 검사. 사람 정답 검수·모델 정확도·독립성 검증 아님"
+  },
+  "prior_result": {
+    "file": "checks/project-checks.json",
+    "meaning": "v1의 235/238·실패2·DB오류1. 이번 판의 실행으로 합산하지 않음"
+  },
+  "runner_retries": [
+    {
+      "scope": "새 백엔드 단위 시험",
+      "initial": "76통과·임시 폴더 생성 오류5",
+      "correction": "쓰기 허용된 새 basetemp 경로를 지정해 81/81 재실행 통과"
+    },
+    {
+      "scope": "웹 단위 시험",
+      "initial": "28통과·2개 파일 임시 SSR 파일 읽기 오류",
+      "correction": "단일 threads 작업자로 6파일 전체 재실행, 52/52 통과"
+    }
+  ],
+  "excluded": [
+    "v1의 개인정보 DB 시험은 쇼핑몰 분류 fixture를 사용해 현행 여행 평가에서 제외. 이번 DB/API 개인정보 검증은 미실행",
+    "전체 MVP 18항목·운영 DB·외부 API·GPU 학습·실제 제품 화면은 이번 작업에서 재검증하지 않음"
+  ],
+  "commands": [
+    {
+      "cwd": "final_project_cs",
+      "command": "python -m scripts.verify_travel_eval_datasets"
+    },
+    {
+      "cwd": "final_project_cs",
+      "command": "python -m pytest tests/contract/test_team_contract.py tests/contract/test_core_isolation.py tests/contract/test_team_tool_discipline.py tests/architecture/test_basement_is_domain_free.py -q -m \"not live\""
+    },
+    {
+      "cwd": "final_project_cs",
+      "command": "python -m pytest tests/unit/test_service_improvement.py tests/unit/travel/mobility/test_turn_policy_content_reload_v1.py -q --basetemp=<새로 만든 쓰기 가능한 시험 폴더>"
+    },
+    {
+      "cwd": "final_project_cs/frontend/apps/web",
+      "command": "node node_modules/vitest/vitest.mjs run src/features/consent/consent-sync.test.ts src/features/consent/terms-content.test.ts src/features/consent/terms-text.test.ts src/features/map/edge-chips.test.ts src/features/map/providers/pin.test.ts src/features/plan-check/use-server-review-undo.test.ts --pool=threads --maxWorkers=1 --fileParallelism=false"
+    }
+  ],
+  "product_release": "not_verified",
+  "production_checks": "실서버 확인(서버 응답): 안 했음. x600 서버의 cs 프로젝트 서버·외부 API·GPU 모델 미확인"
+}

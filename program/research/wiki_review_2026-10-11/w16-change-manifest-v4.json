@@ -1,0 +1,36 @@
+{
+  "stamp": "2026-10-11_211738_w16-responsibility",
+  "report": "final_project_cs/wiki/records/reports/2026-10-11_2117_W16-responsibility-review.md",
+  "changes": [
+    {
+      "path": "wiki/delivery/roles.md",
+      "backup": "wiki/delivery/_backup/2026-10-11_211738_w16-responsibility/roles.md",
+      "before_sha256": "bbdfbae64ceb6a3f1459912b088ac34d9e7705ffb12e48f0e55cabdcda70174a",
+      "sha256": "76e77fd5073e21070e108f9a5394c27ea8f04481c8b08bf6667218a98ff905ef"
+    },
+    {
+      "path": "final_project_cs/wiki/teams/code-layout.md",
+      "backup": "final_project_cs/wiki/teams/_backup/2026-10-11_211738_w16-responsibility/code-layout.md",
+      "before_sha256": "bb47430566609dd70aeda706033629270e26b969103da07d601d8f2b1d0b26e3",
+      "sha256": "4195e6f146425c4519bc59104dc8210acd6c1dc8fe2037e71552881f3fad0efa"
+    },
+    {
+      "path": "program/research/wiki_review_2026-10-11/w16-evidence-v4.json",
+      "backup": null,
+      "before_sha256": null,
+      "sha256": "dff21a7460abb1e6b83a2299e781fba4c66d5a3c28f47243d34084897375a892"
+    },
+    {
+      "path": "final_project_cs/wiki/records/reports/2026-10-11_2117_W16-responsibility-review.md",
+      "backup": null,
+      "before_sha256": null,
+      "sha256": "6a0f3475e844ef1cc8dcd267bd124c5ed616583284947d1a091a6a4ab0a3a151"
+    },
+    {
+      "path": "final_project_cs/wiki/log.md",
+      "backup": "final_project_cs/wiki/_backup/2026-10-11_211738_w16-responsibility/log.md",
+      "before_sha256": "997ac337d376a6fc237b2f2881d45406772ec72bdfd663b6aaf217047497e76e",
+      "sha256": "f3bec755db0214e14d5f70dcdc45953d25b070950531be37a462af1c7db4322b"
+    }
+  ]
+}

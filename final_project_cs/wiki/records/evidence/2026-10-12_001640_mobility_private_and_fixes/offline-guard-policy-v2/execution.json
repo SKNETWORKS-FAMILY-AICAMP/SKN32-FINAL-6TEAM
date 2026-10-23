@@ -1,0 +1,13 @@
+{
+  "args": [
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\test_offline_guard_socketpair_v1.py",
+    "-q",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\offline-guard-policy-v2\\temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_finish_20261011\\offline-guard-policy-v2\\result.xml"
+  ],
+  "exit_code": 0,
+  "elapsed_s": 2.22,
+  "scope": "validation-harness policy tests; not product-gate denominator"
+}

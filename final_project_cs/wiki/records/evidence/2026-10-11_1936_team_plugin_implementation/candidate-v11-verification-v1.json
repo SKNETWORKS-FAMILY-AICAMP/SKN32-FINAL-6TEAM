@@ -1,0 +1,105 @@
+{
+  "candidate": "legacy/deployment_candidates/2026-10-12_015017_plugin_v11",
+  "candidate_manifest_sha256": "9ae31e99e93884b027eea248612f8a60059ed608171efd1dfcd3aa62f97fd94c",
+  "runtime_files_verified": 52,
+  "runtime_hash_mismatches": 0,
+  "full_linux": {
+    "log": "candidate-v11-full-linux-v2.log",
+    "sha256": "61054ab0e01bf7877cbe0122152a303d7b53feb25d750f2b8a0608ef54f57533",
+    "counts": {
+      "PASSED": 468
+    },
+    "failed": [],
+    "ISOLATED_LINUX_END": {
+      "exit_code": 0,
+      "seconds": 54.01
+    },
+    "ISOLATED_DB_ORCHESTRATION": {
+      "operating_database_connected": false,
+      "operating_volumes_connected": false,
+      "operating_environment_forwarded": false,
+      "image_pull": false,
+      "images": [
+        "sha256:a7c6414e5d7ab15fe26ca7d358b754cff73de6c31d31484e2155b3e9d52989b1",
+        "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+      ],
+      "network_internal": true,
+      "database_tmpfs_destinations": [
+        "/tmp",
+        "/var/lib/postgresql/data"
+      ],
+      "database_mounts": [],
+      "pytest_process_exit_code": 0,
+      "remaining_temporary_containers": [],
+      "remaining_temporary_network": false,
+      "cleanup_errors": []
+    }
+  },
+  "required_linux": {
+    "log": "candidate-v11-required-linux-v1.log",
+    "sha256": "a1b7d4125f9c240309545dc412a1c9863aa9416cb872c09edb2fdea8b41cde2c",
+    "counts": {
+      "PASSED": 447,
+      "FAILED": 3
+    },
+    "failed": [
+      {
+        "node": "tests/contract/test_api_key_file.py::test_every_template_name_is_declared_in_settings[ACOP_SEOUL_BUS_API_KEY]",
+        "status": "FAILED"
+      },
+      {
+        "node": "tests/contract/test_retired_domain_assets.py::test_current_runtime_and_business_fixtures_do_not_use_retired_assets",
+        "status": "FAILED"
+      },
+      {
+        "node": "tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned",
+        "status": "FAILED"
+      }
+    ],
+    "ISOLATED_LINUX_END": {
+      "exit_code": 1,
+      "seconds": 9.475
+    },
+    "ISOLATED_DB_ORCHESTRATION": {
+      "operating_database_connected": false,
+      "operating_volumes_connected": false,
+      "operating_environment_forwarded": false,
+      "image_pull": false,
+      "images": [
+        "sha256:8e49ec862b1ff798fe96c8a54af61bdcddcd888ef57070e50dab9c18d3ce2892",
+        "sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f"
+      ],
+      "network_internal": true,
+      "database_tmpfs_destinations": [
+        "/tmp",
+        "/var/lib/postgresql/data"
+      ],
+      "database_mounts": [],
+      "pytest_process_exit_code": 1,
+      "remaining_temporary_containers": [],
+      "remaining_temporary_network": false,
+      "cleanup_errors": []
+    }
+  },
+  "required_synthetic_git": {
+    "passed": 3,
+    "total": 3,
+    "log": "candidate-v11-synthetic-git-security-v1.log",
+    "platform": "Windows, same public-input synthetic Git index, no DB"
+  },
+  "required_combined": {
+    "passed": 450,
+    "total": 453,
+    "baseline_mismatches": 3
+  },
+  "DoD_original": {
+    "executed": true,
+    "log": "candidate-v10-dod-linux-v2.log",
+    "passed": 0,
+    "total": 26,
+    "collection_blocked": true,
+    "missing_module": "app.domains.travel_ops.scenarios.synthetic_services",
+    "original_frozen_v10_runtime_only": true
+  },
+  "operating_switch_executed": false
+}

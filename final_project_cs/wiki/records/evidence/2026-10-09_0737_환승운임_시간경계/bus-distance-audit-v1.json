@@ -1,0 +1,24 @@
+{
+  "rows": 41820,
+  "routes": 717,
+  "adjacent_pairs": 41103,
+  "sequence_gaps": [],
+  "invalid_numeric_lengths": [],
+  "zero_nonfirst": 0,
+  "ratio_above_10_diagnostic_count": 55,
+  "ratio_above_10_by_type": {
+    "공항": 3,
+    "마을": 20,
+    "간선": 7,
+    "지선": 21,
+    "광역": 2,
+    "심야": 2
+  },
+  "threshold_scope": "ratio10 only diagnostic filter, not a product rejection or validation threshold",
+  "distance_fare_validated": false,
+  "reason": "numeric consistency is not proof of official fare distance",
+  "source_hashes": {
+    "datasets/mobility/processed/mobility/bus_route_v1.jsonl": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+    "datasets/mobility/processed/mobility/bus_stops_v1.jsonl": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0"
+  }
+}

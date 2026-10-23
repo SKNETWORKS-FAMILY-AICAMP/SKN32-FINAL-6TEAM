@@ -1,24 +1,24 @@
 from __future__ import annotations
 
 from uuid import uuid4
-from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
+from tests.ops_app import ops_client
+from tests.ui_login import csrf, login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 
 import pytest
-from fastapi.testclient import TestClient
 from psycopg.types.json import Json
 
 import app.core.settings as settings_module
+from tests.helpers.case_events_purge import allow_case_events_purge
 from app.infrastructure.db.session import get_connection
 from app.presentation import security
 from app.presentation.api.app import create_app
-from app.presentation.ui import mount_ui
 import app.presentation.ui.routes as ui
 from app.core.contracts import TeamManifest
 from app.core.registry import TeamRegistry
 
 
-ui_app = create_app()
-mount_ui(ui_app)
+# ★`[2026-09-29]` 운영 화면은 운영 앱이다(`app/ops_entrypoint.py`). 고객 API 앱은 운영 앱이 HTTP 로 부르는 상대다
+customer_app = create_app()
 
 
 @pytest.fixture()
@@ -39,7 +39,7 @@ def ui_fixture(monkeypatch):
         cur.execute("INSERT INTO customers (customer_id,tenant_id,external_id) VALUES (%s,%s,%s)", (customer, tenant, "masked-customer"))
         cur.execute("""INSERT INTO customer_cases (case_id,tenant_id,customer_id,status,subject,state_json,intent,issue_code,sentiment,owner_team_id,version)
                        VALUES (%s,%s,%s,'waiting_approval',%s,%s,%s,%s,%s,%s,1)""",
-                    (case_id, tenant, customer, "seed UI case", '{"answer":"masked answer"}', "billing", "post_cancel_charge", "negative", "Billing"))
+                    (case_id, tenant, customer, "seed UI case", '{"answer":"masked answer"}', "incident_report", "activity_cancel_or_change", "negative", "activity"))
         cur.execute("""INSERT INTO case_events (tenant_id,case_id,aggregate_version,event_type,payload_json,actor_type,actor_id)
                        VALUES (%s,%s,1,'approval_required',%s,'system','masked-actor')""", (tenant, case_id, '{"action_id":"seed"}'))
         for action_id, evidence in ((evidence_action, [{"source_type": "policy", "source_id": "doc#1", "claim": "policy claim"}]), (empty_action, [])):
@@ -48,13 +48,14 @@ def ui_fixture(monkeypatch):
                         (action_id, tenant, case_id, Json({"amount": 100, "risk_level": "high", "evidence": evidence}), "idem-" + str(action_id)))
 
     try:
-        client = TestClient(ui_app)
+        client = ops_client(monkeypatch, customer_app=customer_app)
         login(client, monkeypatch)
         yield {"client": client, "tenant": tenant, "case_id": case_id, "evidence_action": evidence_action, "empty_action": empty_action}
     finally:
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM action_approvals WHERE action_id IN (SELECT action_id FROM action_requests WHERE tenant_id=%s)", (tenant,))
             cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+            allow_case_events_purge(cur)
             cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
             cur.execute("DELETE FROM feedback_analytics_reports WHERE tenant_id=%s", (tenant,))
             cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
@@ -65,7 +66,7 @@ def ui_fixture(monkeypatch):
 def test_cases_detail_and_trace_render_seed_data(ui_fixture):
     client = ui_fixture["client"]
     case_id = ui_fixture["case_id"]
-    assert "post_cancel_charge" in client.get("/ui/cases").text
+    assert "activity_cancel_or_change" in client.get("/ui/cases").text
     detail = client.get(f"/ui/cases/{case_id}").text
     assert "masked answer" in detail and "policy" not in detail
     trace = client.get(f"/ui/cases/{case_id}/trace").text
@@ -111,7 +112,8 @@ def test_degraded_case_detail_has_visible_warning(ui_fixture):
 
 
 def test_approval_uses_rest_endpoint(ui_fixture):
-    response = ui_fixture["client"].post(f"/ui/approvals/{ui_fixture['case_id']}/{ui_fixture['evidence_action']}", data={"decision": "rejected"}, follow_redirects=False)
+    client = ui_fixture["client"]
+    response = ui_fixture["client"].post(f"/ui/approvals/{ui_fixture['case_id']}/{ui_fixture['evidence_action']}", data={"decision": "rejected", "csrf": csrf(client)}, follow_redirects=False)
     assert response.status_code == 303
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT decision FROM action_approvals WHERE action_id=%s", (ui_fixture["evidence_action"],))

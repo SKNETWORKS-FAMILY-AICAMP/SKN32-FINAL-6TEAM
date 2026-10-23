@@ -1,0 +1,404 @@
+{
+  "tile_sha256_verified": {
+    "N37E126.hgt.gz": "50823f56c5b9574cd61d52ea1122a1377b922eb4ea568aff6da93b4e57dc59c8",
+    "N37E127.hgt.gz": "ef253d549196ce2239cb8c8c85f912b7f660855dc2cdf969dd174d2689b44a11"
+  },
+  "source_capture_date_confirmed": false,
+  "vertical_datum": "EGM96 geoid",
+  "horizontal_crs": "WGS84 EPSG:4326",
+  "same_reversed_graph_geometry": true,
+  "configured_flat_mps": 1.04,
+  "all_models_not_implemented": true,
+  "map_geometry_identity_not_confirmed": true,
+  "grid_lat_spacing_m_at_W01": 30.887479622936475,
+  "grid_lon_spacing_m_at_W01": 24.479718088364386,
+  "border127": {
+    "rows": 3601,
+    "exact_equal_n": 3601,
+    "max_abs_difference_m": 0
+  },
+  "routes": {
+    "forward": {
+      "reported_distance_m": 3488.1,
+      "geometry_m": 3471.100472433964,
+      "stairs_m": 442.29605597124686,
+      "stair_pieces": 21,
+      "snap_m": [
+        1.9,
+        15.1
+      ],
+      "quality": {
+        "access_max_m": 15.1,
+        "arterial_pct": 58.6,
+        "optimistic": false
+      },
+      "raw_router_time_min": 45.359316666666665
+    },
+    "reverse": {
+      "reported_distance_m": 3488.1,
+      "geometry_m": 3471.1004724339637,
+      "stairs_m": 442.296055971247,
+      "stair_pieces": 21,
+      "snap_m": [
+        15.1,
+        1.9
+      ],
+      "quality": {
+        "access_max_m": 15.1,
+        "arterial_pct": 58.6,
+        "optimistic": false
+      },
+      "raw_router_time_min": 45.359316666666665
+    }
+  },
+  "stairs_intervals_forward_m": [
+    [
+      75.14740310974939,
+      82.49102892597234
+    ],
+    [
+      2809.2916619899024,
+      2826.3492938658765
+    ],
+    [
+      2826.3492938658765,
+      2843.392790131885
+    ],
+    [
+      2843.392790131885,
+      2851.0552970499725
+    ],
+    [
+      2851.0552970499725,
+      2868.7471104185965
+    ],
+    [
+      2868.7471104185965,
+      2876.1822238729287
+    ],
+    [
+      2876.1822238729287,
+      2881.5925209895777
+    ],
+    [
+      2897.7420250577584,
+      2900.473973685977
+    ],
+    [
+      2900.473973685977,
+      2910.9361595748287
+    ],
+    [
+      2910.9361595748287,
+      2918.0613653301234
+    ],
+    [
+      2918.0613653301234,
+      2926.237032929714
+    ],
+    [
+      2926.237032929714,
+      2930.8653501027215
+    ],
+    [
+      2930.8653501027215,
+      2937.855856908197
+    ],
+    [
+      2937.855856908197,
+      2946.797665537611
+    ],
+    [
+      2946.797665537611,
+      2958.4734656203746
+    ],
+    [
+      2958.4734656203746,
+      2965.499728132594
+    ],
+    [
+      2965.499728132594,
+      2970.8517732797495
+    ],
+    [
+      2970.8517732797495,
+      2974.100175676631
+    ],
+    [
+      2974.100175676631,
+      2984.3845208878306
+    ],
+    [
+      2984.3845208878306,
+      2989.7976801391032
+    ],
+    [
+      2989.7976801391032,
+      2996.552718123711
+    ],
+    [
+      2996.552718123711,
+      2998.5631272361334
+    ],
+    [
+      2998.5631272361334,
+      3002.1246829480315
+    ],
+    [
+      3002.1246829480315,
+      3010.3236038260125
+    ],
+    [
+      3010.3236038260125,
+      3014.5846093816217
+    ],
+    [
+      3014.5846093816217,
+      3020.7235926962003
+    ],
+    [
+      3020.7235926962003,
+      3026.9436092484366
+    ],
+    [
+      3026.9436092484366,
+      3033.227102505016
+    ],
+    [
+      3033.227102505016,
+      3050.963266763689
+    ],
+    [
+      3050.963266763689,
+      3066.0025554213635
+    ],
+    [
+      3079.2414378194285,
+      3086.908017470062
+    ],
+    [
+      3086.908017470062,
+      3093.9728953513895
+    ],
+    [
+      3093.9728953513895,
+      3100.754447851542
+    ],
+    [
+      3100.754447851542,
+      3106.1910371680365
+    ],
+    [
+      3106.1910371680365,
+      3110.6249686309284
+    ],
+    [
+      3110.6249686309284,
+      3118.0966283332236
+    ],
+    [
+      3118.0966283332236,
+      3121.6401579367493
+    ],
+    [
+      3121.6401579367493,
+      3122.582698370348
+    ],
+    [
+      3220.8069630213795,
+      3235.0895222764093
+    ],
+    [
+      3235.0895222764093,
+      3251.333178843532
+    ],
+    [
+      3251.333178843532,
+      3268.4109817037324
+    ],
+    [
+      3268.4109817037324,
+      3286.059079370477
+    ],
+    [
+      3286.059079370477,
+      3295.747123063154
+    ],
+    [
+      3295.747123063154,
+      3299.7807532632096
+    ],
+    [
+      3299.7807532632096,
+      3312.811537041715
+    ],
+    [
+      3312.811537041715,
+      3319.9712173140438
+    ],
+    [
+      3319.9712173140438,
+      3332.9513349932304
+    ],
+    [
+      3332.9513349932304,
+      3342.264121335058
+    ],
+    [
+      3342.264121335058,
+      3345.8994180608584
+    ],
+    [
+      3367.2917789519724,
+      3371.3155528242132
+    ],
+    [
+      3382.578552413377,
+      3386.2152543636166
+    ],
+    [
+      3386.2152543636166,
+      3388.4336904577044
+    ],
+    [
+      3403.4333977109372,
+      3411.5847694645317
+    ],
+    [
+      3431.466946087328,
+      3439.3939876185104
+    ]
+  ],
+  "limitations": [
+    "DEM cell elevation is not surveyed walking surface height.",
+    "15/30/60m intervals are sensitivity diagnostics, not calibrated settings.",
+    "Uniform-profile stair ascent/descent is overlap-apportioned, not exact stair surveying.",
+    "Flat access uses reported distance minus geometry; omitted access geometry is not verified.",
+    "Two directions of one OD are not two independent validation samples.",
+    "No crossing waits, surface condition, indoor/bridge/tunnel filtering, or route re-optimization."
+  ],
+  "profiles": {
+    "forward": {
+      "native_vertices": {
+        "samples": 190,
+        "start_elevation_m": 38.40520503881009,
+        "end_elevation_m": 259.86239999994996,
+        "ascent_m": 359.4766072812428,
+        "descent_m": 138.01941232010296,
+        "stairs_ascent_apportioned_m": 124.62068352011607,
+        "stairs_descent_apportioned_m": 9.78945536039641,
+        "max_abs_slope": 0.9059303699638761,
+        "slope_abs_length_weighted_mean": 0.1433251568349151,
+        "segment_under_1m_n": 1,
+        "published_tobler_min_with_flat_access": 76.52120792638854,
+        "flat_normalized_tobler_min_with_flat_access": 102.94273274286408
+      },
+      "15m": {
+        "samples": 233,
+        "start_elevation_m": 38.40520503881009,
+        "end_elevation_m": 259.86239999994996,
+        "ascent_m": 391.53155714986883,
+        "descent_m": 170.07436218872894,
+        "stairs_ascent_apportioned_m": 121.75314615079559,
+        "stairs_descent_apportioned_m": 8.556620188755398,
+        "max_abs_slope": 0.8406878151006159,
+        "slope_abs_length_weighted_mean": 0.16179477482678428,
+        "segment_under_1m_n": 0,
+        "published_tobler_min_with_flat_access": 83.83426106895853,
+        "flat_normalized_tobler_min_with_flat_access": 112.78086383867925
+      },
+      "30m": {
+        "samples": 117,
+        "start_elevation_m": 38.40520503881009,
+        "end_elevation_m": 259.86239999994996,
+        "ascent_m": 382.7316474204313,
+        "descent_m": 161.27445245929135,
+        "stairs_ascent_apportioned_m": 121.21025727209935,
+        "stairs_descent_apportioned_m": 9.209848725302296,
+        "max_abs_slope": 0.7860789135146954,
+        "slope_abs_length_weighted_mean": 0.15672438876373435,
+        "segment_under_1m_n": 0,
+        "published_tobler_min_with_flat_access": 79.2342340052238,
+        "flat_normalized_tobler_min_with_flat_access": 106.5925224694798
+      },
+      "60m": {
+        "samples": 59,
+        "start_elevation_m": 38.40520503881009,
+        "end_elevation_m": 259.86239999994996,
+        "ascent_m": 348.99980609124583,
+        "descent_m": 127.54261113010593,
+        "stairs_ascent_apportioned_m": 109.29569625658387,
+        "stairs_descent_apportioned_m": 5.394836496968945,
+        "max_abs_slope": 0.5603027001339209,
+        "slope_abs_length_weighted_mean": 0.1372885691456797,
+        "segment_under_1m_n": 0,
+        "published_tobler_min_with_flat_access": 70.34351591889974,
+        "flat_normalized_tobler_min_with_flat_access": 94.6319844610751
+      }
+    },
+    "reverse": {
+      "native_vertices": {
+        "samples": 190,
+        "start_elevation_m": 259.86239999994996,
+        "end_elevation_m": 38.40520503881009,
+        "ascent_m": 138.01941232010296,
+        "descent_m": 359.4766072812428,
+        "stairs_ascent_apportioned_m": 9.78945536039618,
+        "stairs_descent_apportioned_m": 124.62068352011624,
+        "max_abs_slope": 0.9059303699638761,
+        "slope_abs_length_weighted_mean": 0.1433251568349151,
+        "segment_under_1m_n": 1,
+        "published_tobler_min_with_flat_access": 66.15037622829304,
+        "flat_normalized_tobler_min_with_flat_access": 88.99102203744403
+      },
+      "15m": {
+        "samples": 233,
+        "start_elevation_m": 259.86239999994996,
+        "end_elevation_m": 38.40520503881009,
+        "ascent_m": 170.07436218872894,
+        "descent_m": 391.53155714986883,
+        "stairs_ascent_apportioned_m": 8.556620188755192,
+        "stairs_descent_apportioned_m": 121.75314615079557,
+        "max_abs_slope": 0.8406878151006159,
+        "slope_abs_length_weighted_mean": 0.16179477482678425,
+        "segment_under_1m_n": 0,
+        "published_tobler_min_with_flat_access": 73.18966674132092,
+        "flat_normalized_tobler_min_with_flat_access": 98.4608647335904
+      },
+      "30m": {
+        "samples": 117,
+        "start_elevation_m": 259.86239999994996,
+        "end_elevation_m": 38.40520503881009,
+        "ascent_m": 161.27445245929135,
+        "descent_m": 382.7316474204312,
+        "stairs_ascent_apportioned_m": 9.209848725302114,
+        "stairs_descent_apportioned_m": 121.21025727209933,
+        "max_abs_slope": 0.7860789135146954,
+        "slope_abs_length_weighted_mean": 0.15672438876373435,
+        "segment_under_1m_n": 0,
+        "published_tobler_min_with_flat_access": 69.53215288237463,
+        "flat_normalized_tobler_min_with_flat_access": 93.54047100369753
+      },
+      "60m": {
+        "samples": 59,
+        "start_elevation_m": 259.86239999994996,
+        "end_elevation_m": 38.40520503881009,
+        "ascent_m": 127.54261113010594,
+        "descent_m": 348.9998060912458,
+        "stairs_ascent_apportioned_m": 5.394836496968944,
+        "stairs_descent_apportioned_m": 109.2956962565838,
+        "max_abs_slope": 0.5603027001339209,
+        "slope_abs_length_weighted_mean": 0.1372885691456797,
+        "segment_under_1m_n": 0,
+        "published_tobler_min_with_flat_access": 61.05768752439026,
+        "flat_normalized_tobler_min_with_flat_access": 82.13991100045168
+      }
+    }
+  },
+  "source_docs": [
+    "https://github.com/tilezen/joerd/blob/master/docs/use-service.md",
+    "https://github.com/tilezen/joerd/blob/master/docs/formats.md",
+    "https://github.com/tilezen/joerd/blob/master/docs/data-sources.md"
+  ],
+  "acquired_at": "2026-10-08T17:48:54.067056+09:00"
+}

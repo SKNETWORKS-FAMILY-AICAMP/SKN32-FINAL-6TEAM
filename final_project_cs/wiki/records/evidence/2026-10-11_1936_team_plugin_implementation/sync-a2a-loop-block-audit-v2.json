@@ -1,0 +1,21 @@
+{
+  "scope": "isolated sync adapter calls; no network or business writes",
+  "observations": [
+    {
+      "name": "resolver",
+      "requested_timeout_seconds": 0.03,
+      "sync_sleep_seconds": 0.15,
+      "elapsed_seconds": 0.15700000000651926,
+      "ticker_delay_seconds": 0.17199999999138527,
+      "outcome": "returned_after_deadline"
+    },
+    {
+      "name": "submit",
+      "requested_timeout_seconds": 0.03,
+      "sync_sleep_seconds": 0.15,
+      "elapsed_seconds": 0.15700000000651926,
+      "ticker_delay_seconds": 0.1720000000204891,
+      "outcome": "returned_after_deadline"
+    }
+  ]
+}

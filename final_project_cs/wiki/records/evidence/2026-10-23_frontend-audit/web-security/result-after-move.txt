@@ -1,0 +1,8 @@
+2026-10-23 02:27:34 KST — 위치 이동 뒤 재실행 (Claude)
+cwd: D:/FinalProject/Dev/fe-audit-20261023
+command: node final_project_cs/frontend/apps/web/node_modules/vitest/vitest.mjs run --config final_project_cs/wiki/records/evidence/2026-10-23_frontend-audit/web-security/vitest.config.ts
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Duration  590ms (transform 38%, import 36%, tests 25%, worker 1%)
+exit code: 0
+해석: 결함이 존재한다는 assertion 3/3 충족(원래 result.txt와 같음). 안전성 통과가 아님.

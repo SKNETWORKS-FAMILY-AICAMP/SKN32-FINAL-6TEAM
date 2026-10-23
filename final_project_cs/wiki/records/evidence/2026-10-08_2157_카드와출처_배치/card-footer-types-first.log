@@ -1,0 +1,1 @@
+tests/live/card-status-footer.spec.ts(60,10): error TS2531: Object is possibly 'null'.

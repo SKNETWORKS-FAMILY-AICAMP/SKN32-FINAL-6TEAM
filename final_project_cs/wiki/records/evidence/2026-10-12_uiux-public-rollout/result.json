@@ -1,0 +1,31 @@
+{
+  "source_sha": "4796ef2fdaf8ec18d84a17de1508ac1e8b462f9d",
+  "candidate_native_runtime_match": true,
+  "git_sql_hash_match": true,
+  "sql_files": 89,
+  "pg17_tests": {
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pg17_cleanup_confirmed": true,
+  "pg17_test_source_sha256": "0c693d98dc3e186ff7d5155f37262a65e5e564095f383d05d6ababbfc2a3d7fb",
+  "backup_restored": true,
+  "restored_candidate_sql_exit": 0,
+  "critical_tables_checked": 8,
+  "critical_row_counts_preserved": true,
+  "retired_exact_table_names_remaining": 0,
+  "restore_cleanup_confirmed": true,
+  "production_migration": "passed",
+  "rollout": "passed",
+  "promoted_strict_snapshot": "passed",
+  "elapsed_seconds": 128.36,
+  "db_recreated": false,
+  "limitations": [
+    "Critical table row counts are not complete row-value equality.",
+    "Health and restart observation are not a complete customer workflow.",
+    "Two earlier PG17 attempts skipped all11 due to missing synthetic-only settings; preserved privately, not counted as passes.",
+    "No customer rows or private backup/config contents are published."
+  ]
+}

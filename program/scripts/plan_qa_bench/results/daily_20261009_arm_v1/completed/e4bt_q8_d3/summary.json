@@ -1,0 +1,15 @@
+{
+  "expected": 360,
+  "saved": 360,
+  "correct": 315,
+  "normal_correct": 106,
+  "normal_total": 120,
+  "null_correct": 209,
+  "null_total": 240,
+  "false_positive": 31,
+  "errors_or_unparsed": 0,
+  "latency_p50_s": 110.71452203500667,
+  "latency_p95_s": 124.32256508199498,
+  "latency_max_s": 130.77805902500404,
+  "repeated_soak_not_independent_accuracy": true
+}

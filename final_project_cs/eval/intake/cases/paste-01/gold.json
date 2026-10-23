@@ -1,0 +1,45 @@
+{
+ "case_id": "paste-01",
+ "format": "paste",
+ "defect": "relative_date",
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "서울 1일 여행 (3명)\n1일차 · 내일\n09:30 창경궁\n12:30 명동교자 점심\n15:00 전쟁기념관"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (3명)",
+  "1일차 · 내일",
+  "09:30 창경궁",
+  "12:30 명동교자 점심",
+  "15:00 전쟁기념관"
+ ],
+ "items": [
+  {
+   "date": "2026-10-02",
+   "start": "09:30",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "15:00",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

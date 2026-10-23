@@ -1,0 +1,952 @@
+{
+  "created_at": "2026-10-09T21:10:09.459120+09:00",
+  "summary": [
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dir": "U",
+      "matched": 183,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "weekday",
+      "dir": "D",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dir": "U",
+      "matched": 159,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "홍대입구",
+      "day_type": "holiday",
+      "dir": "D",
+      "matched": 158,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "weekday",
+      "dir": "U",
+      "matched": 183,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "weekday",
+      "dir": "D",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "holiday",
+      "dir": "U",
+      "matched": 159,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "디지털미디어시티",
+      "day_type": "holiday",
+      "dir": "D",
+      "matched": 158,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "weekday",
+      "dir": "U",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "weekday",
+      "dir": "D",
+      "matched": 182,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "holiday",
+      "dir": "U",
+      "matched": 158,
+      "excluded": 26
+    },
+    {
+      "line": "공항철도",
+      "station_nm": "김포공항",
+      "day_type": "holiday",
+      "dir": "D",
+      "matched": 158,
+      "excluded": 26
+    }
+  ],
+  "same_group_count": 1746,
+  "changed_groups": [
+    [
+      "공항철도",
+      "김포공항",
+      "holiday"
+    ],
+    [
+      "공항철도",
+      "김포공항",
+      "weekday"
+    ]
+  ],
+  "replays": [
+    {
+      "variant": "A",
+      "day_type": "weekday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:19 서울역행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 799,
+        "arrive_min": 802,
+        "wait_min": 1,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 208
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:19 출발 서울역행 (그 방향 208편 중, 13:19~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "weekday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:24 서울역행 승차 (대기 6분)",
+        "grade": "확정",
+        "depart_min": 804,
+        "arrive_min": 807,
+        "wait_min": 6,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 182
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:24 출발 서울역행 (그 방향 182편 중, 13:24~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "weekday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:24 서울역행 승차 (대기 6분)",
+        "grade": "확정",
+        "depart_min": 804,
+        "arrive_min": 807,
+        "wait_min": 6,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 182
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:24 출발 서울역행 (그 방향 182편 중, 13:24~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "A",
+      "day_type": "weekday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:19 서울역행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 799,
+        "arrive_min": 802,
+        "wait_min": 1,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 208
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:19 출발 서울역행 (그 방향 208편 중, 13:19~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "A",
+      "day_type": "weekday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:06 인천공항2터미널행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 786,
+        "arrive_min": 793,
+        "wait_min": 1,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 208
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:06 출발 인천공항2터미널행 (그 방향 208편 중, 13:06~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "weekday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:09 인천공항2터미널행 승차 (대기 4분)",
+        "grade": "확정",
+        "depart_min": 789,
+        "arrive_min": 796,
+        "wait_min": 4,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 182
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:09 출발 인천공항2터미널행 (그 방향 182편 중, 13:09~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "weekday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:09 인천공항2터미널행 승차 (대기 4분)",
+        "grade": "확정",
+        "depart_min": 789,
+        "arrive_min": 796,
+        "wait_min": 4,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 182
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:09 출발 인천공항2터미널행 (그 방향 182편 중, 13:09~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "A",
+      "day_type": "weekday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:06 인천공항2터미널행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 786,
+        "arrive_min": 793,
+        "wait_min": 1,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 208
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 weekday: 13:06 출발 인천공항2터미널행 (그 방향 208편 중, 13:06~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "A",
+      "day_type": "holiday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:19 서울역행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 799,
+        "arrive_min": 802,
+        "wait_min": 1,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 184
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:19 출발 서울역행 (그 방향 184편 중, 13:19~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "holiday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:24 서울역행 승차 (대기 6분)",
+        "grade": "확정",
+        "depart_min": 804,
+        "arrive_min": 807,
+        "wait_min": 6,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 158
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:24 출발 서울역행 (그 방향 158편 중, 13:24~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "holiday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:24 서울역행 승차 (대기 6분)",
+        "grade": "확정",
+        "depart_min": 804,
+        "arrive_min": 807,
+        "wait_min": 6,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 158
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:24 출발 서울역행 (그 방향 158편 중, 13:24~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "A",
+      "day_type": "holiday",
+      "direction": "U",
+      "ready_minute": 798,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→마곡나루",
+        "verdict": "feasible",
+        "reason": "13:19 서울역행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 799,
+        "arrive_min": 802,
+        "wait_min": 1,
+        "ride_min": 3.0,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 184
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:19 출발 서울역행 (그 방향 184편 중, 13:19~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "서울역행 열차는 김포공항 에서 1정거장 뒤 마곡나루 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "A",
+      "day_type": "holiday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:06 인천공항2터미널행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 786,
+        "arrive_min": 793,
+        "wait_min": 1,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 184
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:06 출발 인천공항2터미널행 (그 방향 184편 중, 13:06~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "holiday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:10 인천공항2터미널행 승차 (대기 5분)",
+        "grade": "확정",
+        "depart_min": 790,
+        "arrive_min": 797,
+        "wait_min": 5,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 158
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:10 출발 인천공항2터미널행 (그 방향 158편 중, 13:10~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "B",
+      "day_type": "holiday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:10 인천공항2터미널행 승차 (대기 5분)",
+        "grade": "확정",
+        "depart_min": 790,
+        "arrive_min": 797,
+        "wait_min": 5,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 158
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:10 출발 인천공항2터미널행 (그 방향 158편 중, 13:10~ 안에서 도착이 가장 이른 편) (승차 시각 공표 대조: https://www.airportrailroad.com/train/normal/info/050; 조회 2026-10-09T05:26:03+00:00)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    },
+    {
+      "variant": "A",
+      "day_type": "holiday",
+      "direction": "D",
+      "ready_minute": 785,
+      "result": {
+        "idx": 0,
+        "label": "공항철도 김포공항→계양",
+        "verdict": "feasible",
+        "reason": "13:06 인천공항2터미널행 승차 (대기 1분)",
+        "grade": "확정",
+        "depart_min": 786,
+        "arrive_min": 793,
+        "wait_min": 1,
+        "ride_min": 6.5,
+        "ride_grade": "추정",
+        "relief": null,
+        "dropped": {
+          "단축운행": 184
+        },
+        "warnings": [],
+        "evidence": [
+          {
+            "source_type": "db",
+            "source_id": "timetable_v1@2026-10-01",
+            "grade": "확정",
+            "observed_at": "2026-10-01",
+            "claim": "공항철도 김포공항 holiday: 13:06 출발 인천공항2터미널행 (그 방향 184편 중, 13:06~ 안에서 도착이 가장 이른 편)"
+          },
+          {
+            "source_type": "db",
+            "source_id": "line_station_order_v1",
+            "grade": "확정",
+            "observed_at": "2026-10-01T10:49:35+09:00",
+            "claim": "인천공항2터미널행 열차는 김포공항 에서 1정거장 뒤 계양 을 지난다"
+          },
+          {
+            "source_type": "policy",
+            "source_id": "mobility_rules@v0.9.2",
+            "grade": "확정",
+            "observed_at": "2026-09-29",
+            "claim": "last_train.행선지_확인"
+          }
+        ],
+        "car": null,
+        "walk_min": null,
+        "code": null,
+        "worst": false,
+        "ride_src": null
+      }
+    }
+  ],
+  "datacheck": {
+    "ok": true,
+    "missing": [],
+    "mismatched": [],
+    "manifest": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\processed\\mobility\\MANIFEST_git_v1.json",
+    "data_dir": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\processed",
+    "data_dir_source": "settings"
+  },
+  "base_files": {
+    "timetable_v1.jsonl.gz": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+    "timetable_v1.jsonl": "63a5b503dfe0d129e4a69993a9003669f3bf35ba8c833a55aa790d63db6478d0",
+    "timetable_v1_meta.json": "6cc106e94be7b76ce921c884818617f8bb4473a3419d9ce64c33acb9d5045836"
+  },
+  "old_input_basis": "built:2026-10-01T10:38:34+09:00|boarding:8718a8398afc4298475e63644b5ff317acaf3ef50e540a012c3319d9e10c166f",
+  "new_input_basis": "built:2026-10-01T10:38:34+09:00|boarding:7ce5ed25c9bb83aa2eb8b8d1ca0da519dafdd8a3a54d0cac52ac7408ea751cf8",
+  "old_eight_groups_preserved": true,
+  "network_attempts": [],
+  "baseline_hashes_preserved": 310,
+  "backup_source_note": "A는 published_boarding 경로만 검증된 8그룹 백업으로 지정. 경로 지정은 기본 manifest 검사 우회하므로 백업 manifest의 SHA256·bytes를 별도 확인함. B는 현재 기본 자료와 전체 hash 검사.",
+  "limits": "통제 시각 재생이며 독립 경로·실제 ETA·탑승·결제 검증 아님. 계양 목적지는 계산기 내부 검사이며 서울 상품 지원 확대 근거 아님."
+}

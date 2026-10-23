@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/srv/app/core/settings.py", line 457, in get
+    raise ConfigError(
+app.core.settings.ConfigError: guardrails 키 없음: 'travel.op_stream.message_timeout_seconds' (travel.op_stream.message_timeout_seconds 에서 끊김, 출처=/srv/var/ops/arm-guardrails.yaml)
+Traceback (most recent call last):
+  File "<stdin>", line 7, in <module>
+  File "/usr/lib/python3.14/subprocess.py", line 473, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['docker', 'exec', 'tripilot-arm-api-1', 'python', '-c', "from app.core.settings import get_guardrails;import json;print(json.dumps({'num_predict':get_guardrails().get('travel.decision_unit.num_predict'),'message_timeout':get_guardrails().get('travel.op_stream.message_timeout_seconds')}))"]' returned non-zero exit status 1.

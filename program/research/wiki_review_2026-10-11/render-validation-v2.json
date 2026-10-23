@@ -1,0 +1,78 @@
+{
+  "checked_at": "2026-10-11T10:23:19.012Z",
+  "checks": [
+    {
+      "name": "화면 폭 1280",
+      "passed": true,
+      "detail": {
+        "width": 1280,
+        "documentWidth": 1280,
+        "cards": 25,
+        "options": 75,
+        "selected": 25
+      }
+    },
+    {
+      "name": "화면 폭 375",
+      "passed": true,
+      "detail": {
+        "width": 375,
+        "documentWidth": 375,
+        "cards": 25,
+        "options": 75,
+        "selected": 25
+      }
+    },
+    {
+      "name": "추천안 25개 기본 선택",
+      "passed": true
+    },
+    {
+      "name": "선택 저장",
+      "passed": true
+    },
+    {
+      "name": "선택 결과 생성",
+      "passed": true,
+      "detail": "B"
+    },
+    {
+      "name": "추천안 초기화",
+      "passed": true
+    },
+    {
+      "name": "로컬 근거·대상 링크",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "흐름도 접근성",
+      "passed": true
+    },
+    {
+      "name": "정확한 호출·계산 담당 설명",
+      "passed": true
+    },
+    {
+      "name": "공동 처리와 모니터링 구분",
+      "passed": true
+    },
+    {
+      "name": "인쇄 시 상세 노출",
+      "passed": true
+    },
+    {
+      "name": "줄임 동작 설정",
+      "passed": true
+    },
+    {
+      "name": "브라우저 실행 오류",
+      "passed": true,
+      "detail": []
+    }
+  ],
+  "passed": true,
+  "passed_count": 13,
+  "total": 13,
+  "scratch": "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\wiki-review-v2-2026-10-11"
+}

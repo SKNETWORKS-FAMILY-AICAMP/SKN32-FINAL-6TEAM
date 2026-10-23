@@ -1,0 +1,8 @@
+{
+  "file": "datasets/mobility/processed/mobility/published_boarding_timetable_v1.json",
+  "sha256": "102616cdd14c5cead2f2bfd618bf5b70b1c0e445a6eb6a473b38f6bec41991e0",
+  "groups": 4,
+  "minutes": 682,
+  "base_sha256": "5fca31aff9670842e102526629e18f4bbcdd8360519583a49dbe6d49665ed2e6",
+  "base_unchanged": true
+}

@@ -1,0 +1,223 @@
+{
+  "origins": 124,
+  "fixed": 24,
+  "pool": 6334,
+  "at": "2026-11-21T14:00:00+09:00",
+  "by_preference": {
+    "None": {
+      "n": 124,
+      "same_top3": 124,
+      "changed_top1": 0,
+      "top1_small_class_match": {
+        "old": 1.0,
+        "new": 1.0
+      },
+      "mean_top3_km": {
+        "old": 3.058,
+        "new": 3.058
+      },
+      "share_over_5km": {
+        "old": 0.197,
+        "new": 0.197
+      },
+      "large_class_match": {
+        "old": 1.0,
+        "new": 1.0
+      },
+      "flagged_far_small_over_near_mid": {
+        "old": 12,
+        "new": 12
+      },
+      "examples": []
+    },
+    "activity": {
+      "n": 124,
+      "same_top3": 67,
+      "changed_top1": 26,
+      "top1_small_class_match": {
+        "old": 0.951,
+        "new": 0.748
+      },
+      "mean_top3_km": {
+        "old": 2.707,
+        "new": 1.549
+      },
+      "share_over_5km": {
+        "old": 0.171,
+        "new": 0.005
+      },
+      "large_class_match": {
+        "old": 1.0,
+        "new": 1.0
+      },
+      "flagged_far_small_over_near_mid": {
+        "old": 10,
+        "new": 0
+      },
+      "examples": [
+        {
+          "origin": "[종로둘레길 3코스] 낙산 코스",
+          "old": {
+            "title": "성북동고택북촌산책길",
+            "km": 3.25,
+            "level": 0
+          },
+          "new": {
+            "title": "창신동골목길",
+            "km": 0.76,
+            "level": 1
+          }
+        },
+        {
+          "origin": "롯데월드타워 서울스카이",
+          "old": {
+            "title": "한강플플",
+            "km": 3.8,
+            "level": 0
+          },
+          "new": {
+            "title": "올림픽대교",
+            "km": 2.23,
+            "level": 1
+          }
+        },
+        {
+          "origin": "서울식물원",
+          "old": {
+            "title": "문래동꽃밭정원",
+            "km": 7.96,
+            "level": 0
+          },
+          "new": {
+            "title": "성주우물터 은행나무",
+            "km": 0.61,
+            "level": 2
+          }
+        },
+        {
+          "origin": "서울어린이대공원",
+          "old": {
+            "title": "용마랜드",
+            "km": 5.67,
+            "level": 0
+          },
+          "new": {
+            "title": "고하송진우선생동상",
+            "km": 0.0,
+            "level": 2
+          }
+        },
+        {
+          "origin": "코엑스 아쿠아리움",
+          "old": {
+            "title": "롯데월드 아쿠아리움",
+            "km": 3.97,
+            "level": 0
+          },
+          "new": {
+            "title": "마루공원",
+            "km": 2.56,
+            "level": 1
+          }
+        },
+        {
+          "origin": "북촌전통공예체험관",
+          "old": {
+            "title": "아티스푼(ARTEASPOON)",
+            "km": 4.02,
+            "level": 0
+          },
+          "new": {
+            "title": "북촌전통발효공방 빚담",
+            "km": 0.05,
+            "level": 2
+          }
+        },
+        {
+          "origin": "서울기록원",
+          "old": {
+            "title": "수애뇨339",
+            "km": 3.99,
+            "level": 0
+          },
+          "new": {
+            "title": "본화랑",
+            "km": 2.43,
+            "level": 1
+          }
+        },
+        {
+          "origin": "불암산나비정원",
+          "old": {
+            "title": "북서울꿈의숲",
+            "km": 5.09,
+            "level": 0
+          },
+          "new": {
+            "title": "삿갓봉근린공원",
+            "km": 0.47,
+            "level": 1
+          }
+        },
+        {
+          "origin": "서울시립 백남준을 기억하는 집",
+          "old": {
+            "title": "손기정기념관",
+            "km": 4.73,
+            "level": 0
+          },
+          "new": {
+            "title": "한양도성박물관",
+            "km": 0.46,
+            "level": 1
+          }
+        },
+        {
+          "origin": "금천구립독산도서관",
+          "old": {
+            "title": "구로미래도서관",
+            "km": 4.63,
+            "level": 0
+          },
+          "new": {
+            "title": "넷마블게임박물관",
+            "km": 1.77,
+            "level": 2
+          }
+        }
+      ]
+    },
+    "mobility": {
+      "n": 124,
+      "same_top3": 124,
+      "changed_top1": 0,
+      "top1_small_class_match": {
+        "old": 0.097,
+        "new": 0.097
+      },
+      "mean_top3_km": {
+        "old": 0.342,
+        "new": 0.342
+      },
+      "share_over_5km": {
+        "old": 0.0,
+        "new": 0.0
+      },
+      "large_class_match": {
+        "old": 0.417,
+        "new": 0.417
+      },
+      "flagged_far_small_over_near_mid": {
+        "old": 0,
+        "new": 0
+      },
+      "examples": []
+    }
+  },
+  "checks": {
+    "C1": true,
+    "C2": true,
+    "C3": true,
+    "C4": true
+  }
+}

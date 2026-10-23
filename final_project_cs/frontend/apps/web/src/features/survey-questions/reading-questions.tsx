@@ -1,0 +1,25 @@
+"use client";
+
+import { Check } from "lucide-react";
+import { useT } from "@/lib/settings";
+import { PagerStatus, QuestionPager } from "./question-pager";
+import type { QuestionFlow } from "./use-question-flow";
+import styles from "./survey-questions.module.css";
+
+/**
+ * `[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계 · 목업 v9 `loadingBody`]` What stands under the reading screen's heading while questions are asked: the line that says why (while the server reads) or that the
+ * plan has been read (once it has and the screen is held for the questions), the question card, and what happens next. The whole is shown only while `flow.shown`.
+ */
+export function ReadingQuestions({ flow }: { flow: QuestionFlow }) {
+  const t = useT();
+  const reading = flow.phase === "read";
+  return <>
+    {reading
+      // `[2026-10-20 ST4F-665]` The questions are the start survey's cards now: only the companions take one's own words, so the line no longer offers it for every question.
+      ? <p className={styles.notice}>{t("기다리는 동안 여행 취향을 하나씩 여쭤볼게요.", "While you wait, a few questions about how you like to travel.")}</p>
+      : <p className={styles.successLine}><Check size={16} strokeWidth={1.8} aria-hidden="true" />{t("계획을 다 읽었어요", "We have read your plan")}</p>}
+    {flow.stopAuto && !reading && <p className={styles.notice}>{t("이제 자동으로 넘어가지 않아요.", "It will not go on by itself now.")}</p>}
+    <QuestionPager flow={flow} />
+    <PagerStatus flow={flow} />
+  </>;
+}

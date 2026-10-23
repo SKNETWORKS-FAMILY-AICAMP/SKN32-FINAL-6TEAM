@@ -1,0 +1,89 @@
+{
+  "recorded_at": "2026-10-11T15:58:38.240677+00:00",
+  "scope": "공개 시청·청계천 기준점. 개인 영수증장소·사용자 현재위치 사용 안 함",
+  "ui": {
+    "iab_create_result": "Browser is not available: iab",
+    "list_browsers": [],
+    "get_state": {
+      "apps": [],
+      "browsers": []
+    },
+    "chrome_new_session_create_result": "Browser is not available: chrome",
+    "created_tabs": 0,
+    "existing_tabs_changed": 0,
+    "actual_map_ui_pages_observed": 0,
+    "recovery": "IAB 실패 뒤 브라우저 목록·전체 상태를 확인하고 독립 Chrome 세션 생성을 한 차례 시도했으나 실패",
+    "limits": "이 결과는 현재 CUA 연결 범위이며 PC에 브라우저 프로그램이 설치되지 않았다는 결론이 아님"
+  },
+  "public_web_fetch": {
+    "recorded_immediately_after_at_utc": "2026-10-11T15:56:19Z",
+    "method": "web.open 정적 공개 페이지 열람. 실제 브라우저 렌더링·추천 경로 선택 아님",
+    "providers": [
+      {
+        "name": "Kakao Maps",
+        "url": "https://map.kakao.com/link/by/walk/출발,37.5665,126.9780/도착,37.56948,126.98222",
+        "result": "URL is not accessible via this tool.",
+        "walking_route_obtained": false
+      },
+      {
+        "name": "Naver Maps",
+        "url": "https://map.naver.com/p/",
+        "result": "Failed to fetch: (robots.txt) Fetch denied by robots.txt (OAI-SearchBot)",
+        "walking_route_obtained": false,
+        "limits": "진입 페이지 접근만 시도. 출발·도착 좌표를 입력한 경로 요청 아님"
+      },
+      {
+        "name": "Google Maps",
+        "url": "https://www.google.com/maps/dir/?api=1&origin=37.5665,126.9780&destination=37.56948,126.98222&travelmode=walking",
+        "result": "URL is not accessible via this tool.",
+        "walking_route_obtained": false,
+        "limits": "api=1은 공개 Maps URL 매개변수. 인증 키·지도 개발자 API 호출 아님"
+      }
+    ]
+  },
+  "public_requested_points": {
+    "origin": {
+      "key": "walk10-origin",
+      "name": "시청쪽 기준점",
+      "lat": 37.5665,
+      "lon": 126.978
+    },
+    "destination": {
+      "key": "walk10-dest",
+      "name": "청계천쪽 기준점",
+      "lat": 37.56948,
+      "lon": 126.98222
+    }
+  },
+  "alignment": {
+    "selected_origin_entrance": false,
+    "selected_destination_entrance": false,
+    "recommended_walking_route": false,
+    "current_route_minutes_or_distance": false,
+    "same_geometry": false,
+    "under_1200m_selected_walk_verified": false
+  },
+  "successful_new_samples": 0,
+  "target_successful_samples": 2,
+  "static_provider_access_attempts": 3,
+  "static_provider_routes_obtained": 0,
+  "previous_record_disposition": "2026-10-10 값은 이전 관측으로 보존. 당시 요청 좌표만 일치했고 출입점·형상·선택 경로 정렬은 미확인. 새 성공 표본으로 합산하지 않음",
+  "previous_record_sha256": {
+    "datasets/mobility/raw/2026-10-10_1521_동일요청좌표_도보웹대조/REPORT.md": "2b8daad8df663a14fc8ee3ea4c018fe843394c20a7cc82f755fe82751e64b079",
+    "datasets/mobility/raw/2026-10-10_1521_동일요청좌표_도보웹대조/web-facts-v1.json": "d235353e24c9b770637e34e87f530efbf2909f20964ef4c701bfb5288519439f",
+    "final_project_cs/wiki/records/evidence/2026-10-10_1521_동일요청좌표_도보웹대조/product-replay-v1.json": "0fef743ac6f81a9905f3a00c109e9c7ab1c4d1d94bc82416d9b8d1661c08c58c",
+    "final_project_cs/scripts/mobility/run_fresh_web_experiment.py": "ad3ee135970ce39360117d7fd134a0f544447bb161a57fc00429f3b813e82d87",
+    "final_project_cs/scripts/mobility/run_naver_web_diagnostic.py": "126d685833dd0198e7e8c90617635b2b18f15255087548c13caeda5ebdc8c0e6",
+    "final_project_cs/scripts/mobility/summarise_multi_provider_web.py": "6fcdef853aa9d0c4f40111428812ac950ac96dd0f6b5a05c724c0e886b6dae5c"
+  },
+  "product_replay_current_code": "미실행: 현재 웹 추천·출입점·형상을 확보하지 못해 동일 조건 비교를 만들 수 없음",
+  "limited_developer_api_calls": 0,
+  "private_web_api_calls": 0,
+  "quota_usage_before": "미조회·미확인",
+  "quota_usage_after": "미조회·미확인",
+  "remaining": "미조회·미확인",
+  "reset_at": "미조회·미확인",
+  "production_code_edits": 0,
+  "authentication_or_security_changes": 0,
+  "reason_for_stopping": "공급자3곳 공개 접근 범위를 확인했으나 CUA 브라우저 연결이 없어 실제 UI 조작 불가. 비공개 API·보호 설정 변경으로 우회하지 않음"
+}

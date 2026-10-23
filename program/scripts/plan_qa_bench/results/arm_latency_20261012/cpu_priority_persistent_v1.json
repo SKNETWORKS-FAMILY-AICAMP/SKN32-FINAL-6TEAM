@@ -1,0 +1,36 @@
+{
+  "utc": "2026-10-11T15:11:58.108265+00:00",
+  "before": {
+    "tripilot-arm-serving.service": {
+      "ActiveState": "active",
+      "MainPID": "171515",
+      "CPUWeight": "20",
+      "CPUQuotaPerSecUSec": "1.800000s"
+    },
+    "tripilot-arm-app-model.service": {
+      "ActiveState": "active",
+      "MainPID": "1353353",
+      "CPUWeight": "200",
+      "CPUQuotaPerSecUSec": "1.200000s"
+    }
+  },
+  "after": {
+    "tripilot-arm-serving.service": {
+      "ActiveState": "active",
+      "MainPID": "171515",
+      "CPUWeight": "20",
+      "CPUQuotaPerSecUSec": "1.800000s"
+    },
+    "tripilot-arm-app-model.service": {
+      "ActiveState": "active",
+      "MainPID": "1353353",
+      "CPUWeight": "200",
+      "CPUQuotaPerSecUSec": "1.200000s"
+    }
+  },
+  "config_path": "/etc/systemd/system/tripilot-arm-serving.service.d/60-tripilot-app-priority.conf",
+  "remote_backup": "/home/ubuntu/bench/continuous-travel-20261008/_backup/2026-10-12_151157_persistent_cpu_priority",
+  "runtime_and_persistent_weight": 20,
+  "jobs_interrupted": false,
+  "reboot_tested": false
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>triPilot 최종 통합·문서 확정 절차</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:32px;background:#fbfcfd;color:#161c28;font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif}main{max-width:1280px;margin:auto}h1{font-family:'Instrument Serif','Noto Serif KR',serif;font-size:28px;font-weight:400}p{line-height:1.7;max-width:76ch}svg{width:100%;height:auto;display:block}svg text{font-family:'Geist','Noto Sans KR','Malgun Gothic',sans-serif;fill:#161c28;text-anchor:middle;font-size:16px}svg .label{font-size:12px;font-weight:500}.frame{overflow:auto}small{display:block;line-height:1.7;color:#6b7488}a{color:#2f5bd8}@media(max-width:700px){body{padding:16px}.frame svg{min-width:960px}}@media print{body{padding:0}.frame{overflow:visible}.frame svg{min-width:0}}
+</style>
+</head>
+<body><main>
+<h1>필수 근거를 확인한 뒤 문서를 확정합니다</h1>
+<p>준비 중인 검토 절차입니다. 담당 상태가 완료로 바뀌어도 실제 변경 파일·시험 로그·최종 해시를 확인합니다. 근거가 부족하면 필요한 보완을 기록하고 이번 회차를 끝냅니다.</p>
+<div class="frame">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="finalization-flow-title finalization-flow-desc">
+<title id="finalization-flow-title">triPilot 통합 결과 수령부터 v12·기준선 확정까지</title>
+<desc id="finalization-flow-desc">담당 결과의 필수 근거가 충족되고 통합 시험의 최종 해시가 일치할 때 v12와 단일 기준선을 작성하며, 부족한 근거와 변경된 해시는 각각 보완과 재검증 대기로 종료합니다.</desc>
+<defs><marker id="finalization-flow-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#6b7488"/></marker></defs>
+<rect width="1280" height="720" fill="#fbfcfd"/>
+<g fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#finalization-flow-arrow)">
+<path d="M480 80 V112"/>
+<path d="M480 160 V196"/>
+<path d="M608 236 H864"/>
+<path d="M480 276 V328"/>
+<path d="M480 376 V408"/>
+<path d="M608 448 H864"/>
+<path d="M480 488 V532"/>
+<path d="M480 580 V620"/>
+</g>
+<g>
+<rect x="688" y="212" width="96" height="16" fill="#fbfcfd"/><text class="label" x="736" y="224">보완 필요</text>
+<rect x="488" y="292" width="56" height="16" fill="#fbfcfd"/><text class="label" x="516" y="304">충족</text>
+<rect x="680" y="424" width="112" height="16" fill="#fbfcfd"/><text class="label" x="736" y="436">변경·실패 있음</text>
+<rect x="488" y="500" width="144" height="16" fill="#fbfcfd"/><text class="label" x="560" y="512">통과·해시 일치</text>
+</g>
+<g fill="#fff" stroke="#161c28" stroke-width="1.2">
+<ellipse cx="480" cy="60" rx="128" ry="20"/>
+<rect x="320" y="112" width="320" height="48" rx="6"/>
+<path d="M480 196 L608 236 L480 276 L352 236 Z" fill="#fbfcfd"/>
+<rect x="864" y="216" width="320" height="40" rx="20"/>
+<rect x="320" y="328" width="320" height="48" rx="6"/>
+<path d="M480 408 L608 448 L480 488 L352 448 Z" fill="#fbfcfd"/>
+<rect x="864" y="428" width="320" height="40" rx="20"/>
+<rect x="320" y="532" width="320" height="48" rx="6" stroke="#a8720c" fill="rgba(168,114,12,0.10)"/>
+<ellipse cx="480" cy="640" rx="160" ry="20"/>
+</g>
+<g>
+<text x="480" y="64">담당 결과 도착 · 시작</text>
+<text x="480" y="140">변경 파일·시험 원본 대조</text>
+<text x="480" y="240">필수 근거 충족?</text>
+<text x="1024" y="240">필요한 보완 기록 · 종료</text>
+<text x="480" y="356">공유 접합·통합 시험</text>
+<text x="480" y="452">시험·해시 확인?</text>
+<text x="1024" y="452">영향 시험 대기 · 종료</text>
+<text x="480" y="560">v12·단일 기준선 작성·검토</text>
+<text x="480" y="644">완료 근거 기록 · 종료</text>
+</g>
+<path d="M40 688 H1240" stroke="#dbe0ea"/>
+<text class="label" x="640" y="708">타원: 시작·종료　사각형: 처리　마름모: 판단</text>
+</svg></div>
+<small>다음 회차 시작 조건: 담당 보완 결과 도착 또는 변경된 코드의 영향 검증 완료입니다. 대기 상태를 완료로 바꾸지 않습니다. 배포·실제 업무 DB 변경·커밋·푸시는 별도 범위입니다.</small>
+<small>유형: flowchart · 크기: doc-wide(1280×720) · 프로필: acop · 정적 그림 · 글꼴은 로컬 대체 글꼴을 허용합니다. 상세 제품 흐름·업무팀 내부 구현은 이 절차 그림에서 제외했습니다.</small>
+</main></body></html>

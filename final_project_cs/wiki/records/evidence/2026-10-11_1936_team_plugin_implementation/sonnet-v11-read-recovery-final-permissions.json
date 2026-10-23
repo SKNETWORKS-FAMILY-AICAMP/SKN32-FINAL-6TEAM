@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env*)",
+      "Read(**/*credential*)",
+      "Read(**/*secret*)",
+      "Read(**/.ssh/**)",
+      "Read(**/datasets/**)",
+      "Read(**/memory/**)",
+      "Edit",
+      "Write",
+      "WebFetch",
+      "WebSearch"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:/Users/playdata2/anaconda3/python.exe\" \"C:/Users/playdata2/Documents/final_workspace/final_project_cs/wiki/records/evidence/2026-10-11_1936_team_plugin_implementation/v11-read-recovery-exact-command-hook.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

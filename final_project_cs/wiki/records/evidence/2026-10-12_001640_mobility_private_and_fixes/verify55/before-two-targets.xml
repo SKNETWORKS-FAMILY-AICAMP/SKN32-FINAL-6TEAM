@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="v4_original_target_failures" tests="2" failures="2" errors="0" skipped="0"><testcase classname="tests.unit.travel.mobility.test_verify55_v1" name="test_d_p90_multi_seoul_itaewon" time="8.478"><failure message="AssertionError: This validation run forbids network connections">def test_d_p90_multi_seoul_itaewon():
+&gt;       rt = _runtime()
+             ^^^^^^^^^^
+
+tests\unit\travel\mobility\test_verify55_v1.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_verify55_v1.py:143: in _runtime
+    _RT = build_verifier(quiet=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\runtime.py:267: in build_verifier
+    if rt.info():
+       ^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\car.py:234: in info
+    with urllib.request.urlopen(self.url + "/info", timeout=5) as r:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+..\..\..\anaconda3\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1373: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+..\..\..\anaconda3\Lib\http\client.py:1336: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1382: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1331: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1091: in _send_output
+    self.send(msg)
+..\..\..\anaconda3\Lib\http\client.py:1035: in send
+    self.connect()
+..\..\..\anaconda3\Lib\http\client.py:1001: in connect
+    self.sock = self._create_connection(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (('localhost', 8989), 5, None), k = {}
+
+    def reject(*a,**k):
+&gt;    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError</failure></testcase><testcase classname="tests.unit.travel.mobility.test_verify55_v1" name="test_d_wondeok_no_yangpyeong_transfer" time="6.550"><failure message="AssertionError: This validation run forbids network connections">def test_d_wondeok_no_yangpyeong_transfer():
+&gt;       rt = _runtime()
+             ^^^^^^^^^^
+
+tests\unit\travel\mobility\test_verify55_v1.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\unit\travel\mobility\test_verify55_v1.py:143: in _runtime
+    _RT = build_verifier(quiet=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\runtime.py:267: in build_verifier
+    if rt.info():
+       ^^^^^^^^^
+app\domains\travel_ops\instances\mobility\engine\car.py:234: in info
+    with urllib.request.urlopen(self.url + "/info", timeout=5) as r:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:215: in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:515: in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:532: in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+..\..\..\anaconda3\Lib\urllib\request.py:492: in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1373: in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\anaconda3\Lib\urllib\request.py:1344: in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+..\..\..\anaconda3\Lib\http\client.py:1336: in request
+    self._send_request(method, url, body, headers, encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1382: in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1331: in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+..\..\..\anaconda3\Lib\http\client.py:1091: in _send_output
+    self.send(msg)
+..\..\..\anaconda3\Lib\http\client.py:1035: in send
+    self.connect()
+..\..\..\anaconda3\Lib\http\client.py:1001: in connect
+    self.sock = self._create_connection(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+a = (('localhost', 8989), 5, None), k = {}
+
+    def reject(*a,**k):
+&gt;    raise AssertionError('This validation run forbids network connections')
+E    AssertionError: This validation run forbids network connections
+
+..\.tmp\mobility_finish_20261011\run_validation_v4.py:13: AssertionError</failure></testcase></testsuite></testsuites>

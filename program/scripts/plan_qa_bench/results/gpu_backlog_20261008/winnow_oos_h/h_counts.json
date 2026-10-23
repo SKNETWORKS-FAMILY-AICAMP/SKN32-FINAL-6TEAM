@@ -1,0 +1,208 @@
+{
+  "model": "Winnow-E4B our-travel oos adapter Q8_0 base",
+  "our_training": true,
+  "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+  "saved": 1316,
+  "expected": 1316,
+  "missing": 0,
+  "failed_or_unparsed": 0,
+  "positive": {
+    "total": 461,
+    "correct": 434,
+    "false_pick": 0,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.9161279536504415,
+      0.9594393871641272
+    ],
+    "false_pick_wilson95": [
+      8.673617379884035e-19,
+      0.008264019372196129
+    ]
+  },
+  "negative": {
+    "total": 855,
+    "correct": 714,
+    "false_pick": 141,
+    "failed_or_missing": 0,
+    "correct_wilson95": [
+      0.8087247201356668,
+      0.8584531322083583
+    ],
+    "false_pick_wilson95": [
+      0.1415468677916418,
+      0.19127527986433338
+    ]
+  },
+  "subtypes": {
+    "hard_N1": {
+      "total": 118,
+      "correct": 92,
+      "false_pick": 26,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.6967223270508931,
+        0.8449652121399152
+      ],
+      "false_pick_wilson95": [
+        0.1550347878600848,
+        0.30327767294910696
+      ]
+    },
+    "hard_N2": {
+      "total": 150,
+      "correct": 142,
+      "false_pick": 8,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.8982961216180454,
+        0.9727304600798061
+      ],
+      "false_pick_wilson95": [
+        0.027269539920193826,
+        0.1017038783819546
+      ]
+    },
+    "hard_N3": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N4": {
+      "total": 150,
+      "correct": 145,
+      "false_pick": 5,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9243482038212211,
+        0.9856795681019074
+      ],
+      "false_pick_wilson95": [
+        0.01432043189809255,
+        0.07565179617877894
+      ]
+    },
+    "hard_N5": {
+      "total": 150,
+      "correct": 150,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9750297556319235,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        1.734723475976807e-18,
+        0.0249702443680766
+      ]
+    },
+    "hard_N6": {
+      "total": 137,
+      "correct": 35,
+      "false_pick": 102,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.18980860298037266,
+        0.3344791986299615
+      ],
+      "false_pick_wilson95": [
+        0.6655208013700384,
+        0.8101913970196273
+      ]
+    },
+    "hard_P1": {
+      "total": 118,
+      "correct": 118,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9684716609775057,
+        1.0
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03152833902249433
+      ]
+    },
+    "hard_P2": {
+      "total": 110,
+      "correct": 108,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9361198354061878,
+        0.994999645124672
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.033743935298164184
+      ]
+    },
+    "hard_P3": {
+      "total": 113,
+      "correct": 89,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.7033939238268223,
+        0.8529154603255062
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.03287753216595198
+      ]
+    },
+    "hard_P4": {
+      "total": 120,
+      "correct": 119,
+      "false_pick": 0,
+      "failed_or_missing": 0,
+      "correct_wilson95": [
+        0.9543037087549505,
+        0.998527444266658
+      ],
+      "false_pick_wilson95": [
+        0.0,
+        0.031019166418703486
+      ]
+    }
+  },
+  "failed_records": [],
+  "answer_sha256": "643fc5284a805f32dfab26ff60762cd13f7cbadf83f5d81e9fae53ac7d886238",
+  "gold_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+  "execution": {
+    "job": {
+      "id": "winnow_oos_h",
+      "label": "Winnow-E4B our-travel oos adapter Q8_0 base",
+      "our_training": true,
+      "model": "/workspace/deciders/winnow_e4b/gguf/Winnow-E4B-Q8_0.gguf",
+      "prompts": "/workspace/heavy/all_prompts_h.json",
+      "script": "/workspace/heavy/d_test_llama_lp.py",
+      "tag": "h_backlog_winnow_oos",
+      "port": 8401,
+      "logprobs": "1",
+      "expected": 1316,
+      "publisher_training": "Decision model release; exact publisher training method not reverified in this run",
+      "lora": "/tmp/tripilot-trained-adapters-20261008/winnow_e4b_oos_f16.gguf",
+      "training_base_revision": "aabbd52f5dfce0f7d9d22ca9e53e75259d865239",
+      "base_revision": "1b257e8fa80b270a62338362a8b35e37f7890273",
+      "base_same_blob_across_revisions": true,
+      "adapter_sha256": "3a4f2646ed55ce3758bc0c6e66b6ee005840886c499da4189e2503b2301ef963"
+    },
+    "started": "2026-10-08T05:28:56.342570+00:00",
+    "prompt_sha256": "87b3a45dad94fb08bce7dc73a1df7abe4b9db3b8c81e7c93e13bf614aa93aa26",
+    "script_sha256": "e381d91b9a7bcd65ec102b7924c6137c64b532b009979da9d4a79baec38c9b2a",
+    "engine_version": "version: 0.5.0-dev (build 1, commit 4ebdf2c)\nbuilt with GNU 13.3.0 for Linux x86_64"
+  },
+  "repetitions": 1,
+  "final_ranking": false
+}

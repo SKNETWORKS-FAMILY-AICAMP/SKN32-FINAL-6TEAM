@@ -1,0 +1,8 @@
+........................................................................ [ 50%]
+........................................................................ [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\final_project_cs\wiki\records\evidence\2026-10-09_1039_지하철_접근후열차_선택\after-v2.xml -
+144 passed in 2.38s
+Exception ignored in: <function Console.__del__ at 0x0000018211015DA0>
+Traceback (most recent call last):
+  File "C:\Users\playdata2\anaconda3\Lib\site-packages\pyreadline3\console\console.py", line 255, in __del__
+OSError: [WinError -1073741816] Windows Error 0xc0000008

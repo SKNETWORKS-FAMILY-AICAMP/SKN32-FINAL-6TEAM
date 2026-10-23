@@ -1,0 +1,17 @@
+Underdog Saluki 27B 1
+Copyright 2026 Underdog (ConwayResearch)
+
+This model is a modified version of the following works, both licensed under the Apache License, Version 2.0:
+
+1. Qwen3.8-27B
+   Copyright the Qwen team, Alibaba Cloud
+   https://huggingface.co/Qwen/Qwen3.8-27B
+
+2. Qwen3.8-27B-GSQ-RCO-GGUF (file Qwen3.8-27B-GSQ-RCO-IQ2_XS.gguf)
+   Copyright ISTA-DASLab
+   https://huggingface.co/ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF
+   Underdog Saluki 27B 1 is built on this release.
+
+Modified by Underdog.
+
+Underdog Bench uses tasks from the Berkeley Function Calling Leaderboard (BFCL v4).

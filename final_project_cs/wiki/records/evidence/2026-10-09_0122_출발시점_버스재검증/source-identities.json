@@ -1,0 +1,87 @@
+{
+  "sources": [
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "sha256": "ac3672ff24230e8e730425a6a30919f67ae0dfd7779723354a7a6e2c1aa7bd4b",
+      "bytes": 7768
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/runtime.py",
+      "sha256": "fcb88e9c62732bab6c408429fd811c02a92c278e55ecc83893d286cca78e9120",
+      "bytes": 20770
+    },
+    {
+      "path": "app/domains/travel_ops/instances/mobility/engine/verify_time.py",
+      "sha256": "814d646df4262f000ed993a328ca73a368bfa79c0382e6987c208dde0ece09be",
+      "bytes": 192492
+    },
+    {
+      "path": "app/domains/travel_ops/components/watch/trip_reminders.py",
+      "sha256": "52e893b05732414b28b413266dc08b6b4b4a1f675c05046408f77fb49f7d3fcb",
+      "bytes": 24909
+    },
+    {
+      "path": "tests/unit/travel/mobility/test_departure_observer_v1.py",
+      "sha256": "a186a521e8b966abdefc144f9d609a079447f061f041a94f310fda8a4837d969",
+      "bytes": 9529
+    },
+    {
+      "path": "tests/unit/travel/mobility/test_departure_source_to_notice_v1.py",
+      "sha256": "2f7c4592ab1955684741ac1ed2c74e01e30eba76dda4525862a206ea26951916",
+      "bytes": 1753
+    },
+    {
+      "path": "tests/unit/travel/test_departure_observer_notice_v1.py",
+      "sha256": "3e9050f8dd9b98f96bf0969c7214469a2f90511d19a4fd5e14cf292e81ae5163",
+      "bytes": 2752
+    },
+    {
+      "path": "tests/scenario/test_departure_observer_reminders_v1.py",
+      "sha256": "e6b1ec1a71a76b70b84204cc0406468add2266bc8bff696c79696e53165be75f",
+      "bytes": 2027
+    },
+    {
+      "path": "scripts/mobility/build_readiness_visual_v10.py",
+      "sha256": "f5fdf3853b37400b141cbdfa4ac45a46dd9e0086235e14ccb01f6b25075bc6a2",
+      "bytes": 4669
+    }
+  ],
+  "raw_checks": [
+    {
+      "name": "W03_kakao_walk_forward.json",
+      "bytes": 436,
+      "sha256": "62fb32cc0418939eb707e04bf0f5e838848b75af5b474b0bf7ae084cbe37b706",
+      "current_sha256": "62fb32cc0418939eb707e04bf0f5e838848b75af5b474b0bf7ae084cbe37b706"
+    },
+    {
+      "name": "W03_kakao_walk_forward.png",
+      "bytes": 56805,
+      "sha256": "aa0e983deea9b14aead4529268f55bec98f7b39595f1dd71bda3bb63f56e5dc8",
+      "current_sha256": "aa0e983deea9b14aead4529268f55bec98f7b39595f1dd71bda3bb63f56e5dc8"
+    },
+    {
+      "name": "W03_kakao_walk_forward.txt",
+      "bytes": 4746,
+      "sha256": "ddbaeb8441aa33a5ba647ef86e75170d4fb93484a25da7a3e646e91cb6ca5bff",
+      "current_sha256": "ddbaeb8441aa33a5ba647ef86e75170d4fb93484a25da7a3e646e91cb6ca5bff"
+    },
+    {
+      "name": "W03_naver_walk_forward.json",
+      "bytes": 548,
+      "sha256": "650a59b08542480f440b1fc03075f4ca88754e960be2fe15d7b2d4c271011591",
+      "current_sha256": "650a59b08542480f440b1fc03075f4ca88754e960be2fe15d7b2d4c271011591"
+    },
+    {
+      "name": "W03_naver_walk_forward.png",
+      "bytes": 41573,
+      "sha256": "bebfa433d72fa0e98b0f9369d9c9791da5e2c302947c833972512f223f5ead45",
+      "current_sha256": "bebfa433d72fa0e98b0f9369d9c9791da5e2c302947c833972512f223f5ead45"
+    },
+    {
+      "name": "W03_naver_walk_forward.txt",
+      "bytes": 5592,
+      "sha256": "5722022521618c875b51a9be66ddbe274843cf0e739c53a77ecd36becee13132",
+      "current_sha256": "5722022521618c875b51a9be66ddbe274843cf0e739c53a77ecd36becee13132"
+    }
+  ]
+}

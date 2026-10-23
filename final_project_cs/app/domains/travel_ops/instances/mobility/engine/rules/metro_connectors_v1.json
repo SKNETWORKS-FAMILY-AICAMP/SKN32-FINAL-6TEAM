@@ -1,0 +1,1523 @@
+{
+ "_meta": {
+  "source": "서울교통공사 지하철 연결통로 시설물정보",
+  "where": "공공데이터포털(data.go.kr) 파일데이터 15133973",
+  "as_of": "2025-08 기준 · 포털 수정일 2026-09-17",
+  "license": "이용허락범위 제한 없음",
+  "note": "좌표가 없다 — 역 이름과 시설 이름만으로 「이어진다」를 안다. 걷는 거리는 이 표가 말하지 않는다(추정)"
+ },
+ "rows": [
+  {
+   "line": "1",
+   "station": "서울역",
+   "facility": "세브란스빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "서울역",
+   "facility": "대우빌딩_보도",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "서울역",
+   "facility": "철도공사 서울역",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "서울역",
+   "facility": "서울민자역사",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "시청역",
+   "facility": "소공동 지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "시청역",
+   "facility": "서울시청",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "종각역",
+   "facility": "제일은행 본점",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "종각역",
+   "facility": "영풍빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "종각역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "종각역",
+   "facility": "삼성생명(지하보도)",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "종각역",
+   "facility": "청진지구",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "종로5가역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "동묘앞역",
+   "facility": "롯데캐슬 천지인",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "1",
+   "station": "신설동역",
+   "facility": "지하보도",
+   "form": "전용통로",
+   "manager": "종로구"
+  },
+  {
+   "line": "1",
+   "station": "제기역",
+   "facility": "한솔동의보감",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "시청역",
+   "facility": "유원빌딩",
+   "form": "겸용통로(#9번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "시청역",
+   "facility": "효성2빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "시청역",
+   "facility": "새서울 지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로입구역",
+   "facility": "하나은행 본점",
+   "form": "겸용통로(#1#2번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "2",
+   "station": "을지로입구역",
+   "facility": "내외흥업",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로입구역",
+   "facility": "브릿지증권",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로입구역",
+   "facility": "삼성생명",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로입구역",
+   "facility": "롯데쇼핑",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로입구역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로3가역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로3가역",
+   "facility": "저동1구역",
+   "form": "겸용통로(#12번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로4가역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "을지로4가역",
+   "facility": "세운6-3-1지구",
+   "form": "겸용통로(#9#10번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "동대문역사문화공원역",
+   "facility": "굿모닝시티",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "동대문역사문화공원역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "상왕십리역",
+   "facility": "왕십리뉴타운 3구역",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "2",
+   "station": "상왕십리역",
+   "facility": "왕십리뉴타운 3구역",
+   "form": "겸용통로(#1-1번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "2",
+   "station": "왕십리역",
+   "facility": "민자역사",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "용답역",
+   "facility": "사근동(육교)",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "한양대역",
+   "facility": "한양대학교",
+   "form": "겸용통로(#2번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "성수역",
+   "facility": "업무 및 근생시설(스탈릿 성수)",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "건대입구역",
+   "facility": "한림타워",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "잠실역",
+   "facility": "롯데월드",
+   "form": "겸용통로(#3#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "잠실역",
+   "facility": "올림픽 지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "잠실역",
+   "facility": "제2롯데월드",
+   "form": "겸용통로(#1#2번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "2",
+   "station": "잠실새내역",
+   "facility": "잠실3단지 상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "잠실새내역",
+   "facility": "잠실2단지 상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "잠실새내역",
+   "facility": "잠실1단지 상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "삼성역",
+   "facility": "무역센터",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "삼성역",
+   "facility": "그라스타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "삼성역",
+   "facility": "롯데캐논",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "선릉역",
+   "facility": "상제리제 센터",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "선릉역",
+   "facility": "신도벤처빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "역삼역",
+   "facility": "역삼하이츠",
+   "form": "겸용통로(#9번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "역삼역",
+   "facility": "LG타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "역삼역",
+   "facility": "현대사옥",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "강남역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "교대역",
+   "facility": "서초빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "서초역",
+   "facility": "동일하이빌",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "서초역",
+   "facility": "사랑의 교회",
+   "form": "겸용통로(#3#4번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "2",
+   "station": "낙성대역",
+   "facility": "동림오피스텔",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "서울대입구역",
+   "facility": "에그옐로우",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "신림역",
+   "facility": "르네상스 쇼핑몰",
+   "form": "겸용통로(#7번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "신림역",
+   "facility": "포도몰",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "대림역",
+   "facility": "우성쇼핑",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "신도림역",
+   "facility": "테크노마트",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "홍대입구역",
+   "facility": "춘천빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "홍대입구역",
+   "facility": "미래도시빌딩 에덴프라자빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "홍대입구역",
+   "facility": "LG펠리스",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "홍대입구역",
+   "facility": "파라다이스텔",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "홍대입구역",
+   "facility": "토로스 쇼핑타워",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "2",
+   "station": "신촌역",
+   "facility": "그랜드 마트",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "신촌역",
+   "facility": "현대백화점",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "신촌역",
+   "facility": "엘리트 빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "이대입구역",
+   "facility": "유인빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "아현역",
+   "facility": "e편한세상 APT 상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "충정로역",
+   "facility": "종근당",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "충정로역",
+   "facility": "충정타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "충정로역",
+   "facility": "충정 리시온빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "문래역",
+   "facility": "삼성 홈플러스",
+   "form": "겸용통로(#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "2",
+   "station": "신설동역",
+   "facility": "동대문 베르빌",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "구파발역",
+   "facility": "은평 롯데몰",
+   "form": "겸용통로(#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "구파발역",
+   "facility": "구파발 광역환승센터",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "연신내역",
+   "facility": "메트로타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "안국역",
+   "facility": "선진빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "안국역",
+   "facility": "SK 운현궁",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "종로3가역",
+   "facility": "피카디리",
+   "form": "겸용통로(#2-1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "종로3가역",
+   "facility": "단성사",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "경복궁역",
+   "facility": "현대 적선빌딩",
+   "form": "겸용통로(#6번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "경복궁역",
+   "facility": "중앙박물관",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "동대입구역",
+   "facility": "장충체육관",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "약수역",
+   "facility": "선일빌딩",
+   "form": "겸용통로(#10번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "고속터미널역",
+   "facility": "터미널상가",
+   "form": "겸용통로(#8번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "고속터미널역",
+   "facility": "센터럴시티",
+   "form": "겸용통로(#7번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "남부터미널역",
+   "facility": "오키즈몰",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "남부터미널역",
+   "facility": "국제전자센터",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "압구정역",
+   "facility": "현대백화점",
+   "form": "겸용통로(#6번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "3",
+   "station": "압구정역",
+   "facility": "호텔 Andaz",
+   "form": "겸용통로(#3번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "3",
+   "station": "양재역",
+   "facility": "양재 환승주차장",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "양재역",
+   "facility": "SK 허브 Primo",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "양재역",
+   "facility": "한신 ‘휴’플러스",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "대치역",
+   "facility": "하이마트",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "대청역",
+   "facility": "대청타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "대청역",
+   "facility": "SH공사",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "일원역",
+   "facility": "삼성생명사옥",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "수서역",
+   "facility": "로즈데일빌딩",
+   "form": "겸용통로(#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "3",
+   "station": "수서역",
+   "facility": "벤쳐빌",
+   "form": "겸용통로(#3번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "상계역",
+   "facility": "보도육교",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "상계역",
+   "facility": "벽산아파트",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "수유역",
+   "facility": "가든타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "미아사거리역",
+   "facility": "롯데백화점",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "미아사거리역",
+   "facility": "연이빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "길음역",
+   "facility": "지하보도",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "성신여대역",
+   "facility": "백양빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "성신여대역",
+   "facility": "오스페",
+   "form": "겸용통로(#1#2번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "4",
+   "station": "명동역",
+   "facility": "지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "회현역",
+   "facility": "삼부토건",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "회현역",
+   "facility": "올스타프라자",
+   "form": "겸용통로(#5번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "회현역",
+   "facility": "신세계백화점",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "회현역",
+   "facility": "SK리더스뷰",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "회현역",
+   "facility": "AK C&C",
+   "form": "겸용통로(#7번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "동대문역사문화공원역",
+   "facility": "라모도 쇼핑몰",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "동대문역",
+   "facility": "JW메리어트 호텔",
+   "form": "겸용통로(#9번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "4",
+   "station": "서울역",
+   "facility": "게이트 타워",
+   "form": "겸용통로(#11번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "서울역",
+   "facility": "서울시티타워",
+   "form": "겸용통로(#10번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "서울역",
+   "facility": "동자동 4구역",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "신용산역",
+   "facility": "LS 용산타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "신용산역",
+   "facility": "용성 테크노빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "신용산역",
+   "facility": "용산역 전면 제3구역",
+   "form": "겸용통로(#3#4번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "4",
+   "station": "신용산역",
+   "facility": "아모레 퍼시픽 사옥",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "4",
+   "station": "신용산역",
+   "facility": "아모레 퍼시픽 사옥",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "이수(총신대입구역)",
+   "facility": "태평백화점",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "이수(총신대입구역)",
+   "facility": "방배동 근린생활시설",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "이촌역",
+   "facility": "용산파크타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "이촌역",
+   "facility": "국립중앙박물관",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "충무로역",
+   "facility": "대한극장",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "4",
+   "station": "충무로역",
+   "facility": "빌리브아카이브남산",
+   "form": "겸용통로",
+   "manager": "공사"
+  },
+  {
+   "line": "4",
+   "station": "사당역",
+   "facility": "파스텔시티",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "방화역",
+   "facility": "금강프라자",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "김포공항역",
+   "facility": "스카이파크",
+   "form": "겸용통로(#3번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "김포공항역",
+   "facility": "김포공항(국내선# 국제선)",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "발산역",
+   "facility": "이화여대 부속병원",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "우장산역",
+   "facility": "송화쇼핑",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "신정역",
+   "facility": "금학빌딩",
+   "form": "겸용통로(#2번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "신정역",
+   "facility": "삼진빌딩",
+   "form": "겸용통로(#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "오목교역",
+   "facility": "스카이락",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "오목교역",
+   "facility": "목동푸르지오",
+   "form": "겸용통로(#5번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "오목교역",
+   "facility": "대학학원",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "오목교역",
+   "facility": "현대백화점",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "영등포구청역",
+   "facility": "현대상가",
+   "form": "겸용통로(#6번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "영등포시장역",
+   "facility": "포레나 영등포",
+   "form": "겸용통로(#2번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "5",
+   "station": "여의도역",
+   "facility": "유공빌딩(교보증권)",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "여의도역",
+   "facility": "IFC국제 금융센터",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "마포역",
+   "facility": "한화 오벨리스크",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "공덕역",
+   "facility": "효성빌딩",
+   "form": "겸용통로(#3번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "공덕역",
+   "facility": "롯데캐슬",
+   "form": "겸용통로(#2번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "5",
+   "station": "충정로역",
+   "facility": "종근당 빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "충정로역",
+   "facility": "삼창빌딩",
+   "form": "겸용통로(#8번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "충정로역",
+   "facility": "구세군 기념빌딩",
+   "form": "겸용통로(#7번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "서대문역",
+   "facility": "농협중앙회",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "서대문역",
+   "facility": "센트포인트 돈의문",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "광화문역",
+   "facility": "교보문고",
+   "form": "겸용통로(#3번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "광화문역",
+   "facility": "광화문 광장",
+   "form": "전용통로",
+   "manager": "시설공단"
+  },
+  {
+   "line": "5",
+   "station": "광화문역",
+   "facility": "청진구역 지하보도",
+   "form": "전용통로",
+   "manager": "종로구"
+  },
+  {
+   "line": "5",
+   "station": "행당역",
+   "facility": "한진타운",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "행당역",
+   "facility": "대림상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "왕십리역",
+   "facility": "왕십리 민자역사",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "답십리역",
+   "facility": "우창프라자",
+   "form": "겸용통로(#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "군자역",
+   "facility": "삼원특수지",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "천호역",
+   "facility": "현대백화점",
+   "form": "겸용통로(#3#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "천호역",
+   "facility": "이마트",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "강동역",
+   "facility": "강동C2 특별계획구역 주상복합",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "강동역",
+   "facility": "킴스클럽",
+   "form": "겸용통로(#2번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "강동역",
+   "facility": "신동아 파밀리에 주상복합",
+   "form": "겸용통로(#2-1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "길동역",
+   "facility": "삼환빌딩",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "굽은다리역",
+   "facility": "홈플러스",
+   "form": "겸용통로(#2번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "명일역",
+   "facility": "유한빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "5",
+   "station": "상일동역",
+   "facility": "고덕2단지",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "불광역",
+   "facility": "팜스퀘어",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "합정역",
+   "facility": "메세나폴리스",
+   "form": "겸용통로(#9#10번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "합정역",
+   "facility": "마포한강푸르지오",
+   "form": "겸용통로(#8번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "신당역",
+   "facility": "청계천 두산위브 더제니스",
+   "form": "겸용통로(#11#11-1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "공덕역",
+   "facility": "메트로디오빌",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "삼각지역",
+   "facility": "GS자이",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "한강진역",
+   "facility": "불루스퀘어",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "고려대역",
+   "facility": "고려대학교",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "6",
+   "station": "월곡역",
+   "facility": "코업스타클래스",
+   "form": "겸용통로(#1번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "6",
+   "station": "태릉입구역",
+   "facility": "프레미어스 엠코 아파트",
+   "form": "전용통로",
+   "manager": "공사"
+  },
+  {
+   "line": "7",
+   "station": "도봉산역",
+   "facility": "복합환승센터",
+   "form": "전용통로",
+   "manager": "시설공단"
+  },
+  {
+   "line": "7",
+   "station": "수락산역",
+   "facility": "상계빌딩",
+   "form": "겸용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "노원역",
+   "facility": "롯데백화점",
+   "form": "겸용통로(#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "하계역",
+   "facility": "세이브존",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "건대입구역",
+   "facility": "건국대학교 병원",
+   "form": "겸용통로(#3#4번 출입구)",
+   "manager": "공사"
+  },
+  {
+   "line": "7",
+   "station": "뚝섬유원지역",
+   "facility": "뚝섬한강공원 복합문화시설",
+   "form": "전용통로",
+   "manager": "시설공단"
+  },
+  {
+   "line": "7",
+   "station": "강남구청역",
+   "facility": "SK허브블루",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "강남구청역",
+   "facility": "강남N타워",
+   "form": "겸용통로(#3#3-1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "반포역",
+   "facility": "강남지하상가",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "고속터미널역",
+   "facility": "센트럴시티",
+   "form": "겸용통로(#3#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "이수역",
+   "facility": "구산빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "이수역",
+   "facility": "대우 슈페리움Ⅰ#Ⅱ",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "이수역",
+   "facility": "이수자이 주상복합",
+   "form": "겸용통로(#9번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "신풍역",
+   "facility": "신풍역세권 청년주택",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "대림역",
+   "facility": "88타워",
+   "form": "전용통로",
+   "manager": "공사"
+  },
+  {
+   "line": "7",
+   "station": "가산디지털단지역",
+   "facility": "우림라이온스밸리",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "가산디지털단지역",
+   "facility": "삼성리더스타워",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "가산디지털단지역",
+   "facility": "대륭 포스트타워",
+   "form": "겸용통로(#2#3번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "가산디지털단지역",
+   "facility": "이랜드월드",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "철산역",
+   "facility": "2001아울렛",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "광명사거리역",
+   "facility": "크로앙스",
+   "form": "겸용통로(#10번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "7",
+   "station": "천왕역",
+   "facility": "환승 주차장",
+   "form": "전용통로",
+   "manager": "공사"
+  },
+  {
+   "line": "8",
+   "station": "천호역",
+   "facility": "브라운스톤",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "잠실역",
+   "facility": "제2롯데월드",
+   "form": "겸용통로(#10#11번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "잠실역",
+   "facility": "제2롯데월드(롯데마트)",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "잠실역",
+   "facility": "제2롯데월드(롯데몰)",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "석촌역",
+   "facility": "태문빌딩",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "송파역",
+   "facility": "헬리오시티",
+   "form": "전용통로",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "가락시장역",
+   "facility": "동남권유통단지",
+   "form": "겸용통로(#2-1번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "문정역",
+   "facility": "문정컬쳐밸리 조성사업",
+   "form": "전용통로",
+   "manager": "공사및서울주택도시공사"
+  },
+  {
+   "line": "8",
+   "station": "장지역",
+   "facility": "동남권유통단지",
+   "form": "겸용통로(#4번 출입구)",
+   "manager": "건물주"
+  },
+  {
+   "line": "8",
+   "station": "산성역",
+   "facility": "산성공영주차장",
+   "form": "전용통로",
+   "manager": "성남시"
+  },
+  {
+   "line": "8",
+   "station": "단대오거리",
+   "facility": "삼원프라자",
+   "form": "겸용통로(#6번 출입구)",
+   "manager": "건물주"
+  }
+ ]
+}

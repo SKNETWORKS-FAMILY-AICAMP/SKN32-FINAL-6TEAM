@@ -1,0 +1,17 @@
+{
+  "args": [
+    "-m",
+    "not live",
+    "tests/unit/travel/mobility/test_same_way_uturn_policy_v1.py",
+    "tests/unit/travel/mobility/test_car_turn_restrictions_v1.py",
+    "tests/unit/travel/mobility/test_turn_policy_content_reload_v1.py",
+    "tests/unit/travel/mobility/test_graph_router.py",
+    "-q",
+    "-k",
+    "not real_graph",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_uturn_related_20261011",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-11_1515_\ub2e8\uc77c\ubc29\ud5a5_\uc720\ud134\uae08\uc9c0\\related-v1.xml"
+  ],
+  "exit_code": 0,
+  "network_attempts": 0
+}

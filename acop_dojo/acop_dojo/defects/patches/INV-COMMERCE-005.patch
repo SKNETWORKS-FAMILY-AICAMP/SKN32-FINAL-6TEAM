@@ -1,5 +1,5 @@
---- a/app/modules/travel_ops/_base.py
-+++ b/app/modules/travel_ops/_base.py
+--- a/app/domains/travel_ops/instances/_shared/_base.py
++++ b/app/domains/travel_ops/instances/_shared/_base.py
 @@ -58,8 +58,6 @@
              return self._result(task, outcome="handoff", confidence=1.0,
                                  next_action=NextAction.HANDOFF,

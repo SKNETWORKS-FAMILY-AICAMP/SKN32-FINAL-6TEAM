@@ -20,7 +20,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.composition import _MODULE_IMPLEMENTATIONS, build_classifier
-from app.core.project_config import ProjectConfig, ProjectConfigError
+from app.core.project_config import ProjectConfig
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -37,7 +37,7 @@ def _config(**overrides) -> ProjectConfig:
         "modules": modules,
         "ports": {"team_executor": "local", "message_broker": "outbox", "graph_store": "sql"},
         "teams": [{"team_id": "activity", "active": True,
-                   "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}],
+                   "implementation_ref": "app.domains.travel_ops.instances.activity:ActivityTeam"}],
     })
 
 
@@ -118,18 +118,6 @@ def test_enabled_voc_keeps_the_screen_and_menu():
 
 
 # ── mcp ─────────────────────────────────────────────────────────────────────
-def test_disabled_mcp_refuses_every_tool(monkeypatch):
-    """tool 세 개가 전부 `_mcp_principal` 을 지나므로 여기 하나만 막으면 된다."""
-    import app.core.project_config as project_config
-    from app.presentation.api import cases
-
-    monkeypatch.setattr(project_config, "load_project_config",
-                        lambda *a, **k: _config(mcp=False))
-    for call in (lambda: cases._mcp_cases("c", 10),
-                 lambda: cases._mcp_detail("c", "d"),
-                 lambda: cases._mcp_open("c", "m", "mcp")):
-        with pytest.raises(ProjectConfigError, match="mcp.*disabled"):
-            call()
 
 
 # ── graph_store ─────────────────────────────────────────────────────────────

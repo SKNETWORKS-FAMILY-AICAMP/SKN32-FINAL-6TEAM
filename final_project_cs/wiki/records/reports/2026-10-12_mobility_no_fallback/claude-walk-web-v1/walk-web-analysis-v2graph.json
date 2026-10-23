@@ -1,0 +1,1432 @@
+{
+ "scope": "읽기 전용 진단 — 제품 코드·자료 변경 없음 · 지도 개발자 API 호출 0회",
+ "observation_file": "datasets/mobility/raw/mobility_walk_web_20261012_v3/kakao-walk-observed-v1.json",
+ "observation_sha256": "fecc4e3e33d8f01a153390b3805b9c82b950167bef55d1aabe5d833b1df4c4ce",
+ "transform": {
+  "method": "요청점 8개 최소제곱 아핀(WCONG→위경도)",
+  "fit_residual_m": [
+   0.09,
+   0.31,
+   0.34,
+   0.38,
+   0.22,
+   0.33,
+   0.2,
+   0.11
+  ],
+  "leave_one_out_error_m": [
+   0.3,
+   0.39,
+   0.43,
+   0.5,
+   0.42,
+   0.4,
+   0.42,
+   0.2
+  ]
+ },
+ "rows": [
+  {
+   "id": "W01",
+   "kakao_shortest_m": 672,
+   "kakao_shortest_time_s": 685,
+   "kakao_guides_sum_m": 667,
+   "kakao_polyline_m": 562.5,
+   "kakao_access_start_m": 69.8,
+   "kakao_access_end_m": 39.5,
+   "definition_check": {
+    "first_guide_len": 122,
+    "first_poly_plus_access_m": 121.9,
+    "last_guide_len": 43,
+    "last_poly_plus_access_m": 43.4,
+    "polyline_plus_access_m": 671.8
+   },
+   "product": {
+    "distance_m": 742.65,
+    "snap_m": [
+     8.5,
+     41.0
+    ],
+    "quality": {
+     "access_max_m": 41.0,
+     "arterial_pct": 77.1,
+     "optimistic": true
+    },
+    "network_m": 693.15,
+    "ways": [
+     377289814,
+     1208755360,
+     469260694,
+     1212442535,
+     1212442536,
+     1212442537,
+     506252752,
+     1212442526,
+     1062619345,
+     1062619344,
+     350127794
+    ]
+   },
+   "product_minus_kakao_m": 70.65,
+   "product_minus_kakao_pct": 10.51,
+   "kakao_path_vs_graph": {
+    "samples": 107,
+    "no_foot_edge_within_8m": 1,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [
+     {
+      "at_m": 52.1,
+      "lng": 126.97909,
+      "lat": 37.566919,
+      "any": {
+       "dist_m": 8.9,
+       "way": 184443139,
+       "hw": "secondary",
+       "fmain": true,
+       "len_m": 91.1
+      },
+      "main": {
+       "dist_m": 8.9,
+       "way": 184443139,
+       "hw": "secondary",
+       "fmain": true,
+       "len_m": 91.1
+      }
+     }
+    ],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "122m 이동(세종대로20길)",
+     "kakao_poly_m": 52.1,
+     "kakao_len": 122,
+     "product_m": 62.7,
+     "product_snap_m": [
+      2.7,
+      8.9
+     ],
+     "ratio": 1.2
+    },
+    {
+     "seq": 2,
+     "ment": "경희봄봄 한의원까지 2개의 횡단보도 이용",
+     "kakao_poly_m": 17.7,
+     "kakao_len": 17,
+     "product_m": 24.56,
+     "product_snap_m": [
+      8.9,
+      5.6
+     ],
+     "ratio": 1.38
+    },
+    {
+     "seq": 3,
+     "ment": "경희봄봄 한의원 앞에서 샵힘이나는 커피생활까지 151m 이동(무교로)",
+     "kakao_poly_m": 151.6,
+     "kakao_len": 151,
+     "product_m": 162.51,
+     "product_snap_m": [
+      5.6,
+      5.4
+     ],
+     "ratio": 1.07
+    },
+    {
+     "seq": 4,
+     "ment": "샵힘이나는 커피생활 앞에서 무교동 닭도리탕까지 오른쪽길로 41m 이동",
+     "kakao_poly_m": 41.9,
+     "kakao_len": 41,
+     "product_m": 55.09,
+     "product_snap_m": [
+      5.4,
+      1.1
+     ],
+     "ratio": 1.32
+    },
+    {
+     "seq": 5,
+     "ment": "무교동 닭도리탕 앞에서 일식삼원까지 왼쪽길로 61m 이동(을지로1길)",
+     "kakao_poly_m": 61.4,
+     "kakao_len": 61,
+     "product_m": 63.32,
+     "product_snap_m": [
+      1.1,
+      0.9
+     ],
+     "ratio": 1.03
+    },
+    {
+     "seq": 6,
+     "ment": "일식삼원 앞에서 오른쪽길로 98m 이동",
+     "kakao_poly_m": 98.1,
+     "kakao_len": 98,
+     "product_m": 103.45,
+     "product_snap_m": [
+      0.9,
+      1.9
+     ],
+     "ratio": 1.05
+    },
+    {
+     "seq": 7,
+     "ment": "횡단보도 이용",
+     "kakao_poly_m": 5.2,
+     "kakao_len": 5,
+     "product_m": 42.59,
+     "product_snap_m": [
+      1.9,
+      1.3
+     ],
+     "ratio": 8.15
+    },
+    {
+     "seq": 8,
+     "ment": "4m 이동",
+     "kakao_poly_m": 4.0,
+     "kakao_len": 4,
+     "product_m": 6.19,
+     "product_snap_m": [
+      1.3,
+      0.9
+     ],
+     "ratio": 1.55
+    },
+    {
+     "seq": 9,
+     "ment": "교량 진입",
+     "kakao_poly_m": 24.2,
+     "kakao_len": 24,
+     "product_m": 97.37,
+     "product_snap_m": [
+      0.9,
+      1.9
+     ],
+     "ratio": 4.02
+    },
+    {
+     "seq": 10,
+     "ment": "20m 이동",
+     "kakao_poly_m": 20.0,
+     "kakao_len": 20,
+     "product_m": 24.36,
+     "product_snap_m": [
+      1.9,
+      2.5
+     ],
+     "ratio": 1.22
+    },
+    {
+     "seq": 11,
+     "ment": "이마트24까지 횡단보도 이용",
+     "kakao_poly_m": 11.2,
+     "kakao_len": 11,
+     "product_m": 68.83,
+     "product_snap_m": [
+      2.5,
+      1.5
+     ],
+     "ratio": 6.13
+    },
+    {
+     "seq": 12,
+     "ment": "이마트24 앞에서 55m 이동",
+     "kakao_poly_m": 54.9,
+     "kakao_len": 55,
+     "product_m": 57.35,
+     "product_snap_m": [
+      1.5,
+      1.0
+     ],
+     "ratio": 1.05
+    },
+    {
+     "seq": 13,
+     "ment": "왼쪽길로 15m 이동",
+     "kakao_poly_m": 16.1,
+     "kakao_len": 15,
+     "product_m": 23.37,
+     "product_snap_m": [
+      1.0,
+      1.4
+     ],
+     "ratio": 1.45
+    },
+    {
+     "seq": 14,
+     "ment": "오른쪽길로 43m 이동",
+     "kakao_poly_m": 4.0,
+     "kakao_len": 43,
+     "product_m": 5.2,
+     "product_snap_m": [
+      1.4,
+      2.3
+     ],
+     "ratio": 1.31
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     126.9785105,
+     37.5669798
+    ],
+    [
+     126.9790673,
+     37.5669365
+    ],
+    [
+     126.9790899,
+     37.5669185
+    ],
+    [
+     126.979262,
+     37.5670014
+    ],
+    [
+     126.9792755,
+     37.5674844
+    ],
+    [
+     126.9793207,
+     37.568364
+    ],
+    [
+     126.979796,
+     37.5683604
+    ],
+    [
+     126.979796,
+     37.5686848
+    ],
+    [
+     126.9798232,
+     37.5689119
+    ],
+    [
+     126.9809322,
+     37.5688326
+    ],
+    [
+     126.9809367,
+     37.5688795
+    ],
+    [
+     126.980982,
+     37.5688795
+    ],
+    [
+     126.9810137,
+     37.5690957
+    ],
+    [
+     126.98124,
+     37.5690813
+    ],
+    [
+     126.98124,
+     37.5691822
+    ],
+    [
+     126.9818602,
+     37.569139
+    ],
+    [
+     126.9818013,
+     37.569276
+    ],
+    [
+     126.981833,
+     37.5693012
+    ]
+   ]
+  },
+  {
+   "id": "W02",
+   "kakao_shortest_m": 432,
+   "kakao_shortest_time_s": 426,
+   "kakao_guides_sum_m": 430,
+   "kakao_polyline_m": 394.6,
+   "kakao_access_start_m": 13.0,
+   "kakao_access_end_m": 24.4,
+   "definition_check": {
+    "first_guide_len": 260,
+    "first_poly_plus_access_m": 259.8,
+    "last_guide_len": 39,
+    "last_poly_plus_access_m": 39.6,
+    "polyline_plus_access_m": 432.0
+   },
+   "product": {
+    "distance_m": 592.23,
+    "snap_m": [
+     5.1,
+     39.3
+    ],
+    "quality": {
+     "access_max_m": 39.3,
+     "arterial_pct": 57.8,
+     "optimistic": true
+    },
+    "network_m": 547.83,
+    "ways": [
+     908603619,
+     1153283298,
+     305411252,
+     317763792,
+     223421010
+    ]
+   },
+   "product_minus_kakao_m": 160.23,
+   "product_minus_kakao_pct": 37.09,
+   "kakao_path_vs_graph": {
+    "samples": 76,
+    "no_foot_edge_within_8m": 2,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [
+     {
+      "at_m": 384.5,
+      "lng": 126.973359,
+      "lat": 37.576581,
+      "any": {
+       "dist_m": 9.0,
+       "way": 221423578,
+       "hw": "service",
+       "fmain": true,
+       "len_m": 53.8
+      },
+      "main": {
+       "dist_m": 9.0,
+       "way": 221423578,
+       "hw": "service",
+       "fmain": true,
+       "len_m": 53.8
+      }
+     },
+     {
+      "at_m": 389.5,
+      "lng": 126.973359,
+      "lat": 37.576627,
+      "any": {
+       "dist_m": 14.1,
+       "way": 221423578,
+       "hw": "service",
+       "fmain": true,
+       "len_m": 53.8
+      },
+      "main": {
+       "dist_m": 14.1,
+       "way": 221423578,
+       "hw": "service",
+       "fmain": true,
+       "len_m": 53.8
+      }
+     }
+    ],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "정부서울청사교차로까지 260m 이동",
+     "kakao_poly_m": 246.8,
+     "kakao_len": 260,
+     "product_m": 243.3,
+     "product_snap_m": [
+      2.7,
+      0.9
+     ],
+     "ratio": 0.99
+    },
+    {
+     "seq": 2,
+     "ment": "정부서울청사교차로에서 횡단보도 이용",
+     "kakao_poly_m": 20.9,
+     "kakao_len": 21,
+     "product_m": 35.34,
+     "product_snap_m": [
+      0.9,
+      3.9
+     ],
+     "ratio": 1.69
+    },
+    {
+     "seq": 3,
+     "ment": "구르미한복까지 43m 이동(효자로)",
+     "kakao_poly_m": 43.7,
+     "kakao_len": 43,
+     "product_m": 57.34,
+     "product_snap_m": [
+      3.9,
+      2.6
+     ],
+     "ratio": 1.31
+    },
+    {
+     "seq": 4,
+     "ment": "구르미한복 앞에서 지지배배한복까지 왼쪽길로 67m 이동(자하문로2길)",
+     "kakao_poly_m": 68.0,
+     "kakao_len": 67,
+     "product_m": 74.7,
+     "product_snap_m": [
+      2.6,
+      4.0
+     ],
+     "ratio": 1.1
+    },
+    {
+     "seq": 5,
+     "ment": "지지배배한복 앞에서 오른쪽길로 39m 이동",
+     "kakao_poly_m": 15.2,
+     "kakao_len": 39,
+     "product_m": 23.28,
+     "product_snap_m": [
+      4.0,
+      19.1
+     ],
+     "ratio": 1.53
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     126.9768669,
+     37.5753136
+    ],
+    [
+     126.9768443,
+     37.57531
+    ],
+    [
+     126.9767266,
+     37.5753244
+    ],
+    [
+     126.9758982,
+     37.5757641
+    ],
+    [
+     126.9757397,
+     37.5758146
+    ],
+    [
+     126.9755089,
+     37.5758506
+    ],
+    [
+     126.9745718,
+     37.5759083
+    ],
+    [
+     126.9744541,
+     37.5759624
+    ],
+    [
+     126.974427,
+     37.5761029
+    ],
+    [
+     126.9741916,
+     37.5760813
+    ],
+    [
+     126.9741237,
+     37.5764706
+    ],
+    [
+     126.9739516,
+     37.576467
+    ],
+    [
+     126.9736574,
+     37.5764958
+    ],
+    [
+     126.9733586,
+     37.5765355
+    ],
+    [
+     126.9733586,
+     37.5766724
+    ]
+   ]
+  },
+  {
+   "id": "W03",
+   "kakao_shortest_m": 516,
+   "kakao_shortest_time_s": 488,
+   "kakao_guides_sum_m": 511,
+   "kakao_polyline_m": 500.5,
+   "kakao_access_start_m": 8.5,
+   "kakao_access_end_m": 6.1,
+   "definition_check": {
+    "first_guide_len": 31,
+    "first_poly_plus_access_m": 30.9,
+    "last_guide_len": 22,
+    "last_poly_plus_access_m": 22.1,
+    "polyline_plus_access_m": 515.1
+   },
+   "product": {
+    "distance_m": 590.19,
+    "snap_m": [
+     6.9,
+     3.9
+    ],
+    "quality": {
+     "access_max_m": 6.9,
+     "arterial_pct": 51.0,
+     "optimistic": false
+    },
+    "network_m": 579.39,
+    "ways": [
+     329261504,
+     782892487,
+     1013396415,
+     1013396414,
+     306381847,
+     306381856,
+     306381842
+    ]
+   },
+   "product_minus_kakao_m": 74.19,
+   "product_minus_kakao_pct": 14.38,
+   "kakao_path_vs_graph": {
+    "samples": 88,
+    "no_foot_edge_within_8m": 2,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [
+     {
+      "at_m": 465.9,
+      "lng": 126.98796,
+      "lat": 37.571422,
+      "any": {
+       "dist_m": 10.1,
+       "way": 306381853,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 94.5
+      },
+      "main": {
+       "dist_m": 10.1,
+       "way": 306381853,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 94.5
+      }
+     },
+     {
+      "at_m": 472.1,
+      "lng": 126.988025,
+      "lat": 37.571401,
+      "any": {
+       "dist_m": 10.6,
+       "way": 306381842,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 66.4
+      },
+      "main": {
+       "dist_m": 10.6,
+       "way": 306381842,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 66.4
+      }
+     }
+    ],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "상희헤어샵까지 31m 이동(삼일대로30길)",
+     "kakao_poly_m": 22.4,
+     "kakao_len": 31,
+     "product_m": 26.52,
+     "product_snap_m": [
+      1.1,
+      3.3
+     ],
+     "ratio": 1.19
+    },
+    {
+     "seq": 2,
+     "ment": "상희헤어샵 앞에서 익선스토어까지 왼쪽길로 32m 이동",
+     "kakao_poly_m": 32.9,
+     "kakao_len": 32,
+     "product_m": 38.37,
+     "product_snap_m": [
+      3.3,
+      1.1
+     ],
+     "ratio": 1.17
+    },
+    {
+     "seq": 3,
+     "ment": "익선스토어 앞에서 리얼배틀그라운드 익선동벙커까지 오른쪽길로 145m 이동(돈화문로11나길)",
+     "kakao_poly_m": 146.1,
+     "kakao_len": 145,
+     "product_m": 145.76,
+     "product_snap_m": [
+      1.1,
+      2.2
+     ],
+     "ratio": 1.0
+    },
+    {
+     "seq": 4,
+     "ment": "리얼배틀그라운드 익선동벙커 앞에서 마산아구찜까지 오른쪽길로 94m 이동(수표로28길)",
+     "kakao_poly_m": 93.9,
+     "kakao_len": 94,
+     "product_m": 101.39,
+     "product_snap_m": [
+      2.2,
+      1.2
+     ],
+     "ratio": 1.08
+    },
+    {
+     "seq": 5,
+     "ment": "마산아구찜 앞에서 횡단보도 이용",
+     "kakao_poly_m": 10.8,
+     "kakao_len": 10,
+     "product_m": 28.71,
+     "product_snap_m": [
+      1.2,
+      0.4
+     ],
+     "ratio": 2.65
+    },
+    {
+     "seq": 6,
+     "ment": "JY 엔터티인먼트 앞에서 상록한방 전통찻집까지 15m 이동",
+     "kakao_poly_m": 14.9,
+     "kakao_len": 15,
+     "product_m": 16.13,
+     "product_snap_m": [
+      0.4,
+      0.9
+     ],
+     "ratio": 1.08
+    },
+    {
+     "seq": 7,
+     "ment": "상록한방 전통찻집 앞에서 왼쪽길로 87m 이동(종로17길)",
+     "kakao_poly_m": 87.2,
+     "kakao_len": 87,
+     "product_m": 329.28,
+     "product_snap_m": [
+      0.9,
+      1.8
+     ],
+     "ratio": 3.78
+    },
+    {
+     "seq": 8,
+     "ment": "오른쪽길로 51m 이동",
+     "kakao_poly_m": 51.6,
+     "kakao_len": 51,
+     "product_m": 62.07,
+     "product_snap_m": [
+      1.8,
+      4.5
+     ],
+     "ratio": 1.2
+    },
+    {
+     "seq": 9,
+     "ment": "서울원각사지 십층석탑까지 왼쪽길로 24m 이동",
+     "kakao_poly_m": 24.9,
+     "kakao_len": 24,
+     "product_m": 103.03,
+     "product_snap_m": [
+      4.5,
+      1.1
+     ],
+     "ratio": 4.14
+    },
+    {
+     "seq": 10,
+     "ment": "서울원각사지 십층석탑 앞에서 왼쪽길로 22m 이동",
+     "kakao_poly_m": 15.9,
+     "kakao_len": 22,
+     "product_m": 17.43,
+     "product_snap_m": [
+      1.1,
+      2.2
+     ],
+     "ratio": 1.09
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     126.9897997,
+     37.5742793
+    ],
+    [
+     126.9895462,
+     37.5742685
+    ],
+    [
+     126.9895462,
+     37.5739729
+    ],
+    [
+     126.9893561,
+     37.5739585
+    ],
+    [
+     126.9893787,
+     37.5737314
+    ],
+    [
+     126.9894783,
+     37.5737386
+    ],
+    [
+     126.989501,
+     37.5735656
+    ],
+    [
+     126.9895101,
+     37.5728843
+    ],
+    [
+     126.9893018,
+     37.5728627
+    ],
+    [
+     126.9890212,
+     37.5728663
+    ],
+    [
+     126.9889442,
+     37.5728591
+    ],
+    [
+     126.9888084,
+     37.5728122
+    ],
+    [
+     126.9885595,
+     37.572668
+    ],
+    [
+     126.9885776,
+     37.5726392
+    ],
+    [
+     126.9885776,
+     37.5725419
+    ],
+    [
+     126.9884101,
+     37.5725599
+    ],
+    [
+     126.9881883,
+     37.5721021
+    ],
+    [
+     126.9881204,
+     37.5719363
+    ],
+    [
+     126.9881295,
+     37.5718173
+    ],
+    [
+     126.9880118,
+     37.5717705
+    ],
+    [
+     126.9879258,
+     37.5716948
+    ],
+    [
+     126.987885,
+     37.5715974
+    ],
+    [
+     126.9878941,
+     37.5714424
+    ],
+    [
+     126.9881567,
+     37.5713595
+    ],
+    [
+     126.9881883,
+     37.5714136
+    ],
+    [
+     126.9882472,
+     37.5714352
+    ],
+    [
+     126.9882879,
+     37.5714352
+    ]
+   ]
+  },
+  {
+   "id": "W04",
+   "kakao_shortest_m": 580,
+   "kakao_shortest_time_s": 556,
+   "kakao_guides_sum_m": 578,
+   "kakao_polyline_m": 557.9,
+   "kakao_access_start_m": 1.7,
+   "kakao_access_end_m": 20.0,
+   "definition_check": {
+    "first_guide_len": 50,
+    "first_poly_plus_access_m": 50.3,
+    "last_guide_len": 342,
+    "last_poly_plus_access_m": 342.1,
+    "polyline_plus_access_m": 579.6
+   },
+   "product": {
+    "distance_m": 628.22,
+    "snap_m": [
+     5.6,
+     25.0
+    ],
+    "quality": {
+     "access_max_m": 25.0,
+     "arterial_pct": 3.8,
+     "optimistic": false
+    },
+    "network_m": 597.62,
+    "ways": [
+     967697624,
+     398355703,
+     583453349,
+     1116476969,
+     1116476968,
+     924019559,
+     398355722
+    ]
+   },
+   "product_minus_kakao_m": 48.22,
+   "product_minus_kakao_pct": 8.31,
+   "kakao_path_vs_graph": {
+    "samples": 101,
+    "no_foot_edge_within_8m": 19,
+    "only_non_main_component_within_8m": 0,
+    "gap_samples": [
+     {
+      "at_m": 43.2,
+      "lng": 127.044454,
+      "lat": 37.543775,
+      "any": {
+       "dist_m": 13.4,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      },
+      "main": {
+       "dist_m": 13.4,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      }
+     },
+     {
+      "at_m": 48.6,
+      "lng": 127.044393,
+      "lat": 37.543782,
+      "any": {
+       "dist_m": 18.7,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      },
+      "main": {
+       "dist_m": 18.7,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      }
+     },
+     {
+      "at_m": 54.1,
+      "lng": 127.044374,
+      "lat": 37.543734,
+      "any": {
+       "dist_m": 19.3,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      },
+      "main": {
+       "dist_m": 19.3,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      }
+     },
+     {
+      "at_m": 59.7,
+      "lng": 127.044354,
+      "lat": 37.543687,
+      "any": {
+       "dist_m": 19.9,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      },
+      "main": {
+       "dist_m": 19.9,
+       "way": 1525647292,
+       "hw": "cycleway",
+       "fmain": true,
+       "len_m": 191.0
+      }
+     },
+     {
+      "at_m": 65.2,
+      "lng": 127.044334,
+      "lat": 37.543639,
+      "any": {
+       "dist_m": 15.7,
+       "way": 398355703,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 159.0
+      },
+      "main": {
+       "dist_m": 15.7,
+       "way": 398355703,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 159.0
+      }
+     },
+     {
+      "at_m": 70.8,
+      "lng": 127.044315,
+      "lat": 37.543592,
+      "any": {
+       "dist_m": 10.2,
+       "way": 398355703,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 159.0
+      },
+      "main": {
+       "dist_m": 10.2,
+       "way": 398355703,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 159.0
+      }
+     },
+     {
+      "at_m": 214.8,
+      "lng": 127.042895,
+      "lat": 37.543811,
+      "any": {
+       "dist_m": 10.1,
+       "way": 583453349,
+       "hw": "tertiary",
+       "fmain": true,
+       "len_m": 34.1
+      },
+      "main": {
+       "dist_m": 10.1,
+       "way": 583453349,
+       "hw": "tertiary",
+       "fmain": true,
+       "len_m": 34.1
+      }
+     },
+     {
+      "at_m": 235.7,
+      "lng": 127.042673,
+      "lat": 37.543879,
+      "any": {
+       "dist_m": 10.9,
+       "way": 583453349,
+       "hw": "tertiary",
+       "fmain": true,
+       "len_m": 34.1
+      },
+      "main": {
+       "dist_m": 10.9,
+       "way": 583453349,
+       "hw": "tertiary",
+       "fmain": true,
+       "len_m": 34.1
+      }
+     },
+     {
+      "at_m": 243.8,
+      "lng": 127.042641,
+      "lat": 37.543811,
+      "any": {
+       "dist_m": 11.1,
+       "way": 583453349,
+       "hw": "tertiary",
+       "fmain": true,
+       "len_m": 34.1
+      },
+      "main": {
+       "dist_m": 11.1,
+       "way": 583453349,
+       "hw": "tertiary",
+       "fmain": true,
+       "len_m": 34.1
+      }
+     },
+     {
+      "at_m": 249.6,
+      "lng": 127.04258,
+      "lat": 37.543827,
+      "any": {
+       "dist_m": 15.5,
+       "way": 398355704,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 44.5
+      },
+      "main": {
+       "dist_m": 15.5,
+       "way": 398355704,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 44.5
+      }
+     },
+     {
+      "at_m": 255.3,
+      "lng": 127.042519,
+      "lat": 37.543844,
+      "any": {
+       "dist_m": 15.5,
+       "way": 398355704,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 44.5
+      },
+      "main": {
+       "dist_m": 15.5,
+       "way": 398355704,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 44.5
+      }
+     },
+     {
+      "at_m": 261.0,
+      "lng": 127.042458,
+      "lat": 37.543861,
+      "any": {
+       "dist_m": 15.4,
+       "way": 398355704,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 44.5
+      },
+      "main": {
+       "dist_m": 15.4,
+       "way": 398355704,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 44.5
+      }
+     },
+     {
+      "at_m": 266.7,
+      "lng": 127.042397,
+      "lat": 37.543878,
+      "any": {
+       "dist_m": 10.4,
+       "way": 1116476970,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.8
+      },
+      "main": {
+       "dist_m": 10.4,
+       "way": 1116476970,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 39.8
+      }
+     },
+     {
+      "at_m": 497.8,
+      "lng": 127.03999,
+      "lat": 37.544123,
+      "any": {
+       "dist_m": 10.7,
+       "way": 398355717,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 118.4
+      },
+      "main": {
+       "dist_m": 10.7,
+       "way": 398355717,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 118.4
+      }
+     },
+     {
+      "at_m": 503.2,
+      "lng": 127.039933,
+      "lat": 37.544143,
+      "any": {
+       "dist_m": 14.8,
+       "way": 398355717,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 118.4
+      },
+      "main": {
+       "dist_m": 14.8,
+       "way": 398355717,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 118.4
+      }
+     },
+     {
+      "at_m": 508.6,
+      "lng": 127.039877,
+      "lat": 37.544162,
+      "any": {
+       "dist_m": 19.0,
+       "way": 398355717,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 118.4
+      },
+      "main": {
+       "dist_m": 19.0,
+       "way": 398355717,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 118.4
+      }
+     },
+     {
+      "at_m": 514.0,
+      "lng": 127.039821,
+      "lat": 37.544182,
+      "any": {
+       "dist_m": 17.8,
+       "way": 924019559,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 74.4
+      },
+      "main": {
+       "dist_m": 17.8,
+       "way": 924019559,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 74.4
+      }
+     },
+     {
+      "at_m": 520.5,
+      "lng": 127.039758,
+      "lat": 37.544213,
+      "any": {
+       "dist_m": 12.9,
+       "way": 924019559,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 74.4
+      },
+      "main": {
+       "dist_m": 12.9,
+       "way": 924019559,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 74.4
+      }
+     },
+     {
+      "at_m": 527.1,
+      "lng": 127.039694,
+      "lat": 37.544244,
+      "any": {
+       "dist_m": 8.6,
+       "way": 924019559,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 74.4
+      },
+      "main": {
+       "dist_m": 8.6,
+       "way": 924019559,
+       "hw": "footway",
+       "fmain": true,
+       "len_m": 74.4
+      }
+     }
+    ],
+    "offmain_samples": []
+   },
+   "guide_legs_on_product_graph": [
+    {
+     "seq": 1,
+     "ment": "서울숲역 4번 출구까지 역사 내 이동",
+     "kakao_poly_m": 48.6,
+     "kakao_len": 50,
+     "product_m": 369.13,
+     "product_snap_m": [
+      5.2,
+      18.7
+     ],
+     "ratio": 7.6
+    },
+    {
+     "seq": 2,
+     "ment": "서울숲역 4번 출구 진출 후 33m 이동",
+     "kakao_poly_m": 33.3,
+     "kakao_len": 33,
+     "product_m": 77.52,
+     "product_snap_m": [
+      18.7,
+      0.9
+     ],
+     "ratio": 2.33
+    },
+    {
+     "seq": 3,
+     "ment": "언더스탠드 에비뉴 앞에서 테라스온커피까지 오른쪽길로 133m 이동",
+     "kakao_poly_m": 132.9,
+     "kakao_len": 133,
+     "product_m": 158.6,
+     "product_snap_m": [
+      0.9,
+      10.1
+     ],
+     "ratio": 1.19
+    },
+    {
+     "seq": 4,
+     "ment": "테라스온커피 앞에서 횡단보도 이용",
+     "kakao_poly_m": 21.0,
+     "kakao_len": 20,
+     "product_m": 21.81,
+     "product_snap_m": [
+      10.1,
+      10.9
+     ],
+     "ratio": 1.04
+    },
+    {
+     "seq": 5,
+     "ment": "342m 이동",
+     "kakao_poly_m": 322.1,
+     "kakao_len": 342,
+     "product_m": 375.64,
+     "product_snap_m": [
+      10.9,
+      8.4
+     ],
+     "ratio": 1.17
+    }
+   ],
+   "kakao_polyline_wgs84": [
+    [
+     127.0447191,
+     37.543598
+    ],
+    [
+     127.0447553,
+     37.5437422
+    ],
+    [
+     127.0443932,
+     37.5437818
+    ],
+    [
+     127.0442755,
+     37.5434971
+    ],
+    [
+     127.0429175,
+     37.5438647
+    ],
+    [
+     127.0428948,
+     37.5438106
+    ],
+    [
+     127.042673,
+     37.5438791
+    ],
+    [
+     127.0426413,
+     37.5438106
+    ],
+    [
+     127.0422747,
+     37.5439116
+    ],
+    [
+     127.0422294,
+     37.543807
+    ],
+    [
+     127.0418627,
+     37.5439116
+    ],
+    [
+     127.0412833,
+     37.5440629
+    ],
+    [
+     127.0409257,
+     37.5441675
+    ],
+    [
+     127.0407673,
+     37.5441927
+    ],
+    [
+     127.0405274,
+     37.5441927
+    ],
+    [
+     127.0404051,
+     37.5441711
+    ],
+    [
+     127.0401019,
+     37.5440845
+    ],
+    [
+     127.0398212,
+     37.5441819
+    ],
+    [
+     127.0396311,
+     37.5442756
+    ],
+    [
+     127.0395088,
+     37.5443044
+    ],
+    [
+     127.039364,
+     37.5443224
+    ]
+   ]
+  }
+ ],
+ "graph": {
+  "dir": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\mobility\\processed\\mobility\\road_graph_v2",
+  "source_id": "osm_road_graph_v2@2026-10-03"
+ }
+}

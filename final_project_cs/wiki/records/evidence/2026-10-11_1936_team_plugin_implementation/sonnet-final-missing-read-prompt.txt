@@ -1,0 +1,10 @@
+사용자가 승인한 Sonnet 5.5 마지막 delta 감사의 미수행 읽기 4개 구간만 마무리합니다. 앞선 호출은193/193실제시험을실행했으나review.py만직접읽어미완료였습니다. 새시험·범위확대·소스수정·파일생성·외부요청·DB·키/고객/환경파일접근·하위에이전트·다른모델을금지합니다. Bash는제공하지않습니다. Read/Grep만사용하세요.
+완료조건: 아래6파일을반드시실제Read도구로열고해당구간을읽은후판단하세요. 필요한구간은Grep으로위치를찾은뒤Read offset/limit로읽으세요. 코드를열지않고시험통과만으로정상결론을내리면완료가아닙니다. 기존코드를다시수정하는일은없습니다.
+A app/domains/travel_ops/entry/trip_api.py: _create_trip의UID연결사전관문부터DB쓰기까지, create_plan과plan_and_register의planner사전관문, web_intake_route_shapes의storedNone경계. 알고리즘인자·미완료계산과완료동일요청읽기를확인하세요.
+B app/domains/travel_ops/components/team_hooks/dining_ledger.py: _http_provider/require_planner_factory/require_link_core_place와register의캡처. required Team 관문이정확한조립판의Registry를확인하는지보세요.
+C scripts/run_sweepers.py: _wire_features의성공1회lock/flag,실패재시도와run회차호출구간. 실제읽어서매회초기화방지/상태보존/초기화오염여부를판단하세요.
+D tests/unit/travel/test_plugin_worker_availability.py: 새 실제OllamaItemPointer를외부HTTP없이합성응답으로데워두회차상태를확인하는시험과실패후재시도. 생산의미를숨기지않는지보세요.
+E tests/scenario/test_watch_batch.py: _engine과test_when_nothing_can_be_changed_the_customer_hears_it_once_and_never_again_for_the_same_set. original current_places 정상값유지/추가후보만ROAD라는모든대안통제전제수정이알림1개/다음2회0/판불변/상태단언을약화시키지않는지보세요. 실제DB실행하지마세요.
+F tests/unit/travel/test_trip_api_plugin_boundaries.py: 실제HTTP lookup/planner/uid-link 3상태9건및reviewNone순수읽기2건이B의공통관문을우회하지않는지보세요.
+현재계약은wiki/teams/team-contract/plugin-availability.md를읽으세요. 직전193실행증거sonnet-final-delta-tests.json과모델메타데이터sonnet-final-delta-model-metadata.json을필요하면읽으세요. 그실행은9개고정unit파일193pass·PYTEST_EXIT0,실행시작끝12파일SHA변경0이었고동일소스입니다. 이호출은재실행하지않습니다.
+최종답은한국어존댓말로짧게: 실제읽은6파일/구간,새실제결함이있으면파일/행/영향/확신,없으면읽은범위에서추가지적없음,재실행없음및미검증한운영/정확도범위. 반드시6파일원문을읽은뒤끝내세요.

@@ -1,0 +1,148 @@
+{
+  "searched_at": "2026-10-09T01:11:22.185032+09:00",
+  "cutoff": "2026-10-09",
+  "scope": "관련 공개 논문과 공식 문서 검색; 전세계 문헌 전수검색 아님",
+  "sources": [
+    {
+      "title": "Fast and Delay-Robust Multimodal Journey Planning",
+      "published": "2023-11-03 v2",
+      "url": "https://arxiv.org/html/2310.20554v2",
+      "read_scope": "초록 및 §6 Update Phase 원문",
+      "problem": "실시간 지연 때문에 탑승·환승이 성립하지 않는 후보",
+      "action": "지연으로 무효화된 후보를 제거하고 대체 후보를 다시 계산한다. 기존 정적 환승 인덱스만으로 보장하지 않는다.",
+      "status": "구현 계약 조사; Delay-ULTRA 자체를 제품에 구현한 상태 아님"
+    },
+    {
+      "title": "Real-time Bus Travel Time Prediction and Reliability Quantification: A Hybrid Markov Model",
+      "published": "2025-03-07",
+      "url": "https://arxiv.org/html/2503.05907v1",
+      "read_scope": "초록 및 §4.3 가정 검증·§5 결과 원문",
+      "problem": "평균 운행시간 하나로 불확실성을 표현하는 문제",
+      "action": "구간별 시간 분포와 상태 전이의 불확실성을 분리하는 실험 후보. 서울 반복관측 없이 해외 학습값을 이식하지 않는다.",
+      "status": "후보; 서울 수집 자료로 가정 검증과 새 시각·새 구간 검증 필요"
+    },
+    {
+      "title": "REX: A Realistic Time-Dependent Model for Multimodal Public Transport",
+      "published": "2022-09-06",
+      "url": "https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.ATMOS.2022.12",
+      "read_scope": "출판사 초록·메타",
+      "problem": "차량 사이 이동·대기와 앞차보다 먼저 도착하는 차량을 단순화하는 문제",
+      "action": "접근 걷기를 끝낸 뒤 탈 수 있는 차량을 선택하고 환승시간을 보존한다. 모델 교체 전 원문 알고리즘 추가 검토.",
+      "status": "설계 검토; 출판사의 성능 수치를 우리 성능으로 쓰지 않음"
+    },
+    {
+      "title": "ChatPlanner: A Large Language Model Framework for Personalized Public Transit Routing",
+      "published": "2026-09-06 v3",
+      "url": "https://arxiv.org/abs/2606.15315v3",
+      "read_scope": "2026 개정일·초록 확인",
+      "problem": "사용자 선호를 경로 목적함수에 옮기는 문제",
+      "action": "지금의 거리·운임·실시간 근거 결함을 직접 해결하는 논문으로 채택하지 않음. 숫자 원값은 계산기·공식 자료가 소유.",
+      "status": "오늘까지 검색에서 발견; 현재 결함과 관련성 분리"
+    },
+    {
+      "title": "KAYROS: An Anytime and Exact Open-Source Solver for Duration-Minimization Time-Dependent Vehicle Routing",
+      "published": "2026-07-25",
+      "url": "https://arxiv.org/abs/2607.23116",
+      "read_scope": "2026 제출일·초록 확인",
+      "problem": "출발시각에 따라 비용이 변하는 여러 목적지 차량 최적화",
+      "action": "단일 고객 이동 구간과 여러 차량 최적화는 문제 범위가 다름. 바로 가져올 해법으로 판정하지 않음.",
+      "status": "기술 보고서; 현재 제품 적용 전제 미충족"
+    },
+    {
+      "title": "OpenStreetMap Relation:restriction",
+      "published": "공식 기술 문서; 검색 확인일 2026-10-08",
+      "url": "https://wiki.openstreetmap.org/wiki/Relation:restriction",
+      "read_scope": "from/via/to·no/only·except·conditional 공식 정의",
+      "problem": "들어온 길과 나갈 길의 회전 제약이 현재 노드 단위 탐색에서 누락될 수 있음",
+      "action": "PBF relation을 확보하고 유향 간선 상태에서 검증한다. via-way·조건부·차종 예외의 미지원 범위를 센다.",
+      "status": "실제 자료 추출 중; 경로 적용 완료 아님"
+    },
+    {
+      "title": "Dynamic Replanning for Improved Public Transport Routing",
+      "published": "2025-05-20 v1; IJCAI 2025 accepted",
+      "url": "https://arxiv.org/html/2505.14193v1",
+      "read_scope": "초록·§1 및 §2.1/2.2 원문; 후속 알고리즘 전체 검토는 남음",
+      "problem": "접근도보·환승 이후 도착하는 차량만 탈 수 있으며 새 지연으로 계획이 바뀜",
+      "action": "선행 도착+접근/환승시간 ≤ 다음 출발이라는 시간 성립 조건을 차량 선택에 반영; 공급자 확인시각 기준 구별",
+      "status": "접근 이후 차량 선택의 필요조건 구현·시험; 논문의 전체 재계획 알고리즘 구현은 아님"
+    },
+    {
+      "title": "Early Pruning for Public Transport Routing",
+      "published": "2026-05-26 v4; first 2026-03-13",
+      "url": "https://arxiv.org/abs/2603.12592v4",
+      "read_scope": "공식 초록·개정 이력",
+      "problem": "환승 후보를 임의 수량 제한하면 최적 경로가 없어질 수 있음",
+      "action": "정렬·도착시간 하한 기반 가지치기의 검토 후보. 추가 기준의 단조성·전체 증명을 읽기 전 적용하지 않음",
+      "status": "미적용; RAPTOR의 해외 속도 향상 수치를 우리 성능으로 쓰지 않음"
+    },
+    {
+      "title": "서울특별시 버스도착정보조회 서비스",
+      "published": "공식 등록 페이지 조회 2026-10-09",
+      "url": "https://www.data.go.kr/data/15000314/openapi.do",
+      "read_scope": "공식 서비스 페이지; 단위·필드 검증은 앞 원문·실응답 기록 참조",
+      "problem": "실시간 ETA와 실제 탑승/운행시간 및 메시지 기준시각 혼동",
+      "action": "정확 ID·순번을 유지하고 최초 수신 뒤 캐시 경과만 차감하며 공급 mkTm을 메시지 기준시각으로 지어내지 않음",
+      "status": "자료 조회와 소비 계산 검증; 실제 출발 안내 연결·실제 도착 오차는 남음"
+    },
+    {
+      "title": "Towards Realistic Pedestrian Route Planning",
+      "published": "2015-09-14",
+      "url": "https://drops.dagstuhl.de/entities/document/10.4230/OASIcs.ATMOS.2015.1",
+      "read_scope": "공식 PDF 초록·§3.1 보도/횡단·§3.2 광장·§4 지점 연결 원문",
+      "problem": "도로 중심선·광장 둘레·가까운 점 연결로 보행 경로가 실제와 달라질 수 있음",
+      "action": "보도·횡단·광장 장애물 및 진입점 연결을 독립 검증한다. 광장 폴리곤과 장애물 원문이 필요하다.",
+      "status": "후보; 논문 전수 구현이나 서울 오차 개선을 주장하지 않음"
+    },
+    {
+      "title": "GSoC 2026 Final Report: Routing through pedestrian areas in Valhalla",
+      "published": "2026-08-20",
+      "url": "https://www.openstreetmap.org/user/Paco%20Albacete%20Chicano/diary/409229",
+      "read_scope": "개발자 원문 pipeline·design decisions·limitations; 코드/PR 자체는 아직 미확인",
+      "problem": "광장 둘레만 사용하는 우회 경로",
+      "action": "폴리곤 복원→장애물을 피하는 medial axis→진입점 연결→가상 footway 생성 방식의 구현 후보를 확보했다.",
+      "status": "후보; 기존 내부 보행로 보존·영역 출입/접근 속성·경계 중복과 알려진 제한 검토 전 도입하지 않음"
+    },
+    {
+      "title": "When Shortest Isn't Safest: A Design Science Approach to Senior-Friendly Pedestrian Routing",
+      "published": "2026-06-30 v1",
+      "url": "https://arxiv.org/abs/2607.24795",
+      "read_scope": "arXiv 초록·메타",
+      "problem": "빠른 경로와 고령자 이용 적합성이 다른 문제",
+      "action": "높이와 장애물·기반시설을 경로 설명 및 조건 검증에 분리하는 후보다.",
+      "status": "초록 검토 후보; 논문 현장 선호를 우리 정확도나 사용 수준으로 이식하지 않음"
+    },
+    {
+      "title": "GTFS Realtime Best Practices",
+      "published": "공식 문서; 확인일 2026-10-09",
+      "url": "https://gtfs.org/documentation/realtime/realtime-best-practices/",
+      "read_scope": "Feed Publishing & General Practices 및 FeedHeader 구간 원문",
+      "problem": "응답은 새로 받아도 내부 자료가 오래될 수 있음",
+      "action": "수신·공급시각 나이를 각각 검사한다. GTFS 90초 권장은 서울 API 보장이 아니며 이번90초는 고정 시험 입력의 정책이다.",
+      "status": "별도 시각 검증 코드 적용; 운영 임계값 설정·실제 안내 소비 연결은 남음"
+    },
+    {
+      "title": "GTFS Vehicle Positions",
+      "published": "공식 문서; 확인일 2026-10-09",
+      "url": "https://gtfs.org/documentation/realtime/feed-entities/vehicle-positions/",
+      "read_scope": "도입부의 측정 시각과 feed header 시각 구별 원문",
+      "problem": "도착 예측과 자료 수신 시각을 실제 탑승 관측처럼 표현하는 문제",
+      "action": "서울 정규화 자료의 received_at 원문과 confirmed_at을 보존하고 공급나이를 ETA에서 이중 차감하지 않는다.",
+      "status": "시각 구별 원칙 적용; 서울 mkTm을 ETA 기준시각이라고 확정하지 않음"
+    },
+    {
+      "title": "A Highly Available GTFS-RT Positions System",
+      "published": "2025-08-02 v1",
+      "url": "https://arxiv.org/abs/2508.01121",
+      "read_scope": "초록·메타만 확인",
+      "problem": "공급 데이터 서비스의 가용성",
+      "action": "여러 지역 클러스터의 가용성 연구다. 이번 공급시각 검증의 임계값이나 서울 도착 정확도를 입증하지 않아 직접 해법으로 채택하지 않음.",
+      "status": "관련성 구분; 논문 수치를 우리 성능으로 옮기지 않음"
+    }
+  ],
+  "not_verified": [
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0966692326001420",
+      "reason": "원 출판사 조회 HTTP403; 검색 요약만으로 해법 확정 안 함"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+test_nested_secrets_removed (test_serving_queue.ChecksTests.test_nested_secrets_removed) ... ok
+test_setup_failure_keeps_all_eleven_checks (test_serving_queue.ChecksTests.test_setup_failure_keeps_all_eleven_checks) ... ok
+test_success_records_full_contract_denominator (test_serving_queue.ChecksTests.test_success_records_full_contract_denominator) ... ok
+test_completed_work_replenished_using_measurement (test_serving_queue.QueueTests.test_completed_work_replenished_using_measurement) ... ok
+test_crash_recovery_preserves_unfinished_failure (test_serving_queue.QueueTests.test_crash_recovery_preserves_unfinished_failure) ... ok
+test_failed_front_profile_skipped_not_retried (test_serving_queue.QueueTests.test_failed_front_profile_skipped_not_retried) ... ok
+worker_already_running
+test_lock_prevents_second_worker (test_serving_queue.QueueTests.test_lock_prevents_second_worker) ... ok
+test_no_deployed_app_does_not_send_questions (test_serving_queue.QueueTests.test_no_deployed_app_does_not_send_questions) ... ok
+test_six_hour_budget_and_no_duplicate_refill (test_serving_queue.QueueTests.test_six_hour_budget_and_no_duplicate_refill) ... ok
+test_actual_model_identity_matches (test_adapter.AdapterContract.test_actual_model_identity_matches) ... ok
+test_benchmark_model_switch_cannot_change_app_silently (test_adapter.AdapterContract.test_benchmark_model_switch_cannot_change_app_silently) ... ok
+test_images_refused_without_silent_loss (test_adapter.AdapterContract.test_images_refused_without_silent_loss) ... ok
+test_json_mode (test_adapter.AdapterContract.test_json_mode) ... ok
+test_json_schema_is_enforced_upstream (test_adapter.AdapterContract.test_json_schema_is_enforced_upstream) ... ok
+test_limits_and_seed_preserved (test_adapter.AdapterContract.test_limits_and_seed_preserved) ... ok
+test_stream_refused_without_silent_change (test_adapter.AdapterContract.test_stream_refused_without_silent_change) ... ok
+test_unknown_model_refused (test_adapter.AdapterContract.test_unknown_model_refused) ... ok
+test_failures_keep_previous_images (test_deploy.DeploymentFailureSafety.test_failures_keep_previous_images) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.016s
+
+OK

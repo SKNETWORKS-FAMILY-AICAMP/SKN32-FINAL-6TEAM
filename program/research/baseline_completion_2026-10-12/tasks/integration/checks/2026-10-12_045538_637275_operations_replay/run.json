@@ -1,0 +1,46 @@
+{
+  "started_at_kst": "2026-10-12T04:55:39.040791+09:00",
+  "finished_at_kst": "2026-10-12T04:55:45.311153+09:00",
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-B",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\run_operations_replay_checks.py"
+  ],
+  "pytest_args": [
+    "-m",
+    "not live",
+    "tests/unit/test_operations_diagnostics.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_045538_637275_operations_replay\\tmp",
+    "--junitxml=C:\\Users\\playdata2\\Documents\\final_workspace\\program\\research\\baseline_completion_2026-10-12\\tasks\\integration\\checks\\2026-10-12_045538_637275_operations_replay\\junit.xml",
+    "-o",
+    "faulthandler_timeout=30",
+    "--tb=short"
+  ],
+  "returncode": 0,
+  "source_before": {
+    "final_project_cs/scripts/replay_operations_diagnostics.py": "92010fe37f1f233e6e67abe3b464f1a8e424dafb3df1b16e1793ba63c910bbbb",
+    "final_project_cs/config/operations-policy.yaml": "196c0ff5f22b86f7ed13a99ba46fc9111fe35495c4adca1f36d6c71eacef876b",
+    "final_project_cs/app/application/operations_diagnostics.py": "ffd3c036bb73175cdd289298127dd21bc46d85c0e280775b3558f04ec1361fca",
+    "final_project_cs/tests/unit/test_operations_diagnostics.py": "4beca7f748dcacd5101da2ffc6e4ad564ab20685dfda0ed7c9aa6cbde892e9dc",
+    "final_project_cs/deploy/worker.sh": "7e89c051a5880c3f0d3820b271c34dd4c6efa4b5e767355c0f71e10227848092",
+    "final_project_cs/deploy/docker-compose.yml": "2b5ec54421e91f18111c701f3a0c02b583c528e13e639588e0f1e5baa8ce11e6",
+    "final_project_cs/deploy/docker-compose.admin.yml": "90f9aa209442b69838d16683ba6fb39fa2ac46a5baed80508181e408afdc41b5",
+    "final_project_cs/deploy/arm/compose.yml": "0ec0961d34c8bf965fef909f74356af9f579dbede49f693d7de36011ec312470"
+  },
+  "source_after": {
+    "final_project_cs/scripts/replay_operations_diagnostics.py": "92010fe37f1f233e6e67abe3b464f1a8e424dafb3df1b16e1793ba63c910bbbb",
+    "final_project_cs/config/operations-policy.yaml": "196c0ff5f22b86f7ed13a99ba46fc9111fe35495c4adca1f36d6c71eacef876b",
+    "final_project_cs/app/application/operations_diagnostics.py": "ffd3c036bb73175cdd289298127dd21bc46d85c0e280775b3558f04ec1361fca",
+    "final_project_cs/tests/unit/test_operations_diagnostics.py": "4beca7f748dcacd5101da2ffc6e4ad564ab20685dfda0ed7c9aa6cbde892e9dc",
+    "final_project_cs/deploy/worker.sh": "7e89c051a5880c3f0d3820b271c34dd4c6efa4b5e767355c0f71e10227848092",
+    "final_project_cs/deploy/docker-compose.yml": "2b5ec54421e91f18111c701f3a0c02b583c528e13e639588e0f1e5baa8ce11e6",
+    "final_project_cs/deploy/docker-compose.admin.yml": "90f9aa209442b69838d16683ba6fb39fa2ac46a5baed80508181e408afdc41b5",
+    "final_project_cs/deploy/arm/compose.yml": "0ec0961d34c8bf965fef909f74356af9f579dbede49f693d7de36011ec312470"
+  },
+  "changed_during_run": [],
+  "blocked_connections": [],
+  "scope": "DB denied; only self-bound loopback ports allowed; temporary SQLite and transaction doubles; no HTTP or model; no PostgreSQL"
+}

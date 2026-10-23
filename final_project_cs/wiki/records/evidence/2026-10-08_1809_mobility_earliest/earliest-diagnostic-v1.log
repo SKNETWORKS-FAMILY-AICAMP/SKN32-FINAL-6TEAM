@@ -1,0 +1,5 @@
+.                                                                        [100%]
+- generated xml file: C:\Users\playdata2\Documents\final_workspace\.tmp\mobility_verification_20261008\earliest-diagnostic-v1.xml -
+============================= slowest 1 durations =============================
+73.95s call     tests/unit/travel/mobility/test_earliest_v1.py::test_full_earliest_on_late_gives_earliest_arrival[ntower_namdae]
+1 passed in 83.57s (0:01:23)

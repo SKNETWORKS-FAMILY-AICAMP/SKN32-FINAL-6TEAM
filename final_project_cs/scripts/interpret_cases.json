@@ -1,0 +1,1947 @@
+{
+  "_about": "숙소 · 항공 해석(모델 1번) 정확도 시험 문장. 기준일 today=2026-10-10(토). 기대값은 서버가 근거 확인(ground)까지 한 뒤 팀이 실제로 쓰는 값. {\"one_of\": [...]} 는 그중 하나면 맞음, \"*\" 는 비어 있지만 않으면 맞음. 적지 않은 칸은 보지 않는다. 2026-10-10 작성 — 사람이 정한 정답이다. `set: hard` 는 2026-10-10 밤 추가한 어려운 문장(오타 · 띄어쓰기 없음 · 고쳐 말하기 · 영어 · 섞인 요청 · 연말연시 · 다른 팀 요청). `set: user` 는 2026-10-11 사용자(서유현)가 평소 말투로 쓴 20문장 — 정답은 Claude 가 달고 모호한 칸은 넓히거나 채점에서 뺐다(note).",
+  "today": "2026-10-10",
+  "trip": {
+    "party_size": 3,
+    "first_day": "2026-11-06",
+    "last_day": "2026-11-09",
+    "places": [
+      "경복궁",
+      "남산타워",
+      "명동"
+    ]
+  },
+  "lodging": [
+    {
+      "id": "L01",
+      "text": "11월 6일부터 3박 성인 2명 명동 호텔 찾아줘",
+      "expect": {
+        "task": "search",
+        "keyword": "명동",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 2,
+        "domestic": true,
+        "needs": [],
+        "other_requests": []
+      }
+    },
+    {
+      "id": "L02",
+      "text": "서울에서 3박 할 숙소 추천해줘",
+      "expect": {
+        "task": "search",
+        "keyword": "서울",
+        "check_in": null,
+        "check_out": null,
+        "needs": [
+          "check_in",
+          "check_out",
+          "adults"
+        ]
+      }
+    },
+    {
+      "id": "L03",
+      "text": "다음 달 6일부터 9일까지 부산 해운대 근처 2명",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "해운대",
+            "부산 해운대"
+          ]
+        },
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 2,
+        "domestic": true
+      }
+    },
+    {
+      "id": "L04",
+      "text": "12월 24일 크리스마스 이브에 1박, 홍대 근처 게하 1명 5만원 이하",
+      "expect": {
+        "task": "search",
+        "keyword": "홍대",
+        "check_in": "2026-12-24",
+        "check_out": "2026-12-25",
+        "adults": 1,
+        "max_price_per_night": 50000
+      }
+    },
+    {
+      "id": "L05",
+      "text": "1월 3일부터 2박 3일 오사카 난바 호텔 어른 2명 아이 1명",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "난바",
+            "오사카 난바"
+          ]
+        },
+        "check_in": "2027-01-03",
+        "check_out": "2027-01-05",
+        "adults": 2,
+        "children": 1,
+        "domestic": false
+      }
+    },
+    {
+      "id": "L06",
+      "text": "평점 4점 이상인 제주 숙소 11/20~11/22 3명",
+      "expect": {
+        "task": "search",
+        "keyword": "제주",
+        "check_in": "2026-11-20",
+        "check_out": "2026-11-22",
+        "adults": 3,
+        "min_rating": 4.0
+      }
+    },
+    {
+      "id": "L07",
+      "text": "해밀톤 호텔 11월 6일부터 3박 예약했어. 위치 알려줘",
+      "expect": {
+        "task": "my_stay",
+        "stay_name": "해밀톤 호텔",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "needs": []
+      }
+    },
+    {
+      "id": "L08",
+      "text": "내 숙소 예약 확정됐어?",
+      "expect": {
+        "task": "status",
+        "needs": []
+      }
+    },
+    {
+      "id": "L09",
+      "text": "내일 하루 강남역 근처 호텔 2명",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "강남역",
+            "강남"
+          ]
+        },
+        "check_in": "2026-10-11",
+        "check_out": "2026-10-12",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L10",
+      "text": "다음달 첫째 주 금요일부터 2박 도쿄 신주쿠 커플",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "신주쿠",
+            "도쿄 신주쿠"
+          ]
+        },
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-08",
+        "adults": 2,
+        "domestic": false
+      }
+    },
+    {
+      "id": "L11",
+      "text": "20만원대 호텔 명동 11월 6~8일 성인 2",
+      "expect": {
+        "task": "search",
+        "keyword": "명동",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-08",
+        "adults": 2,
+        "max_price_per_night": 299999
+      }
+    },
+    {
+      "id": "L12",
+      "text": "애 둘이랑 와이프랑 나 해서 4명, 11월 13일부터 2박 강릉 숙소",
+      "expect": {
+        "task": "search",
+        "keyword": "강릉",
+        "check_in": "2026-11-13",
+        "check_out": "2026-11-15",
+        "adults": 2,
+        "children": 2
+      }
+    },
+    {
+      "id": "L13",
+      "text": "이번 여행 숙소 일정 근처로 찾아줘",
+      "trip": true,
+      "expect": {
+        "task": "search",
+        "keyword": "*",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 3,
+        "needs": []
+      }
+    },
+    {
+      "id": "L14",
+      "text": "10월 5일부터 2박 제주 2명",
+      "expect": {
+        "task": "search",
+        "keyword": "제주",
+        "check_in": "2027-10-05",
+        "check_out": "2027-10-07",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L15",
+      "text": "다음 주 화요일부터 수요일까지 판교 1명",
+      "expect": {
+        "task": "search",
+        "keyword": "판교",
+        "check_in": {
+          "one_of": [
+            "2026-10-13",
+            "2026-10-20"
+          ]
+        },
+        "check_out": {
+          "one_of": [
+            "2026-10-14",
+            "2026-10-21"
+          ]
+        },
+        "adults": 1
+      }
+    },
+    {
+      "id": "L16",
+      "text": "hotel in Myeongdong Nov 6-9 for 2 people",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "명동",
+            "Myeongdong"
+          ]
+        },
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L17",
+      "text": "숙소 좀",
+      "expect": {
+        "task": {
+          "one_of": [
+            "search",
+            "unclear"
+          ]
+        },
+        "check_in": null,
+        "check_out": null
+      }
+    },
+    {
+      "id": "L18",
+      "text": "부모님이랑 셋이서 11월 21일 하루 묵을 경주 한옥 숙소",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "경주",
+            "경주 한옥"
+          ]
+        },
+        "check_in": "2026-11-21",
+        "check_out": "2026-11-22",
+        "adults": 3
+      },
+      "note": "「경주 한옥」도 검색어로 맞다고 봄(2026-10-10 22:28 측정 뒤 정답을 넓힘)"
+    },
+    {
+      "id": "L19",
+      "text": "롯데호텔 서울에 11월 6일부터 9일까지 묵어. 일정에 넣어줘",
+      "expect": {
+        "task": "my_stay",
+        "stay_name": "롯데호텔 서울",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09"
+      }
+    },
+    {
+      "id": "L20",
+      "text": "11월 6일 체크인 9일 체크아웃 시부야 2명 1박 30만원 이하",
+      "expect": {
+        "task": "search",
+        "keyword": "시부야",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 2,
+        "max_price_per_night": 300000,
+        "domestic": false
+      }
+    },
+    {
+      "id": "L21",
+      "text": "명동호텔11/6~11/9 2인",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "명동",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L22",
+      "text": "낼모레부터 2박 부산 숙소 혼자",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "부산",
+        "check_in": "2026-10-12",
+        "check_out": "2026-10-14",
+        "adults": 1
+      }
+    },
+    {
+      "id": "L23",
+      "text": "제주 숙소 찾아줘 아 그리고 날짜는 11월 20일부터 22일까지고 2명이야",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "제주",
+        "check_in": "2026-11-20",
+        "check_out": "2026-11-22",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L24",
+      "text": "11월 6일부터 3박 아니 4박으로 명동 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "명동",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-10",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L25",
+      "text": "항공권이랑 숙소 다 알아봐줘 오사카 11월 6~9일 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "오사카",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 2,
+        "domestic": false
+      }
+    },
+    {
+      "id": "L26",
+      "text": "다음주 토요일 하룻밤 강릉 펜션 4명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "강릉",
+        "check_in": {
+          "one_of": [
+            "2026-10-17",
+            "2026-10-24"
+          ]
+        },
+        "check_out": {
+          "one_of": [
+            "2026-10-18",
+            "2026-10-25"
+          ]
+        },
+        "adults": 4
+      }
+    },
+    {
+      "id": "L27",
+      "text": "tokyo hotel near shibuya 11/6-11/8 2 adults",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "시부야",
+            "도쿄 시부야",
+            "shibuya",
+            "Shibuya"
+          ]
+        },
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-08",
+        "adults": 2,
+        "domestic": false
+      }
+    },
+    {
+      "id": "L28",
+      "text": "가족여행이에요 어른 2 초등학생 2 다음달 13~15일 경주",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "경주",
+        "check_in": "2026-11-13",
+        "check_out": "2026-11-15",
+        "adults": 2,
+        "children": 2
+      }
+    },
+    {
+      "id": "L29",
+      "text": "1박에 10만원 넘지 않는 홍대 게스트하우스 11월 1일 1박 1명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "홍대",
+        "check_in": "2026-11-01",
+        "check_out": "2026-11-02",
+        "adults": 1,
+        "max_price_per_night": 100000
+      }
+    },
+    {
+      "id": "L30",
+      "text": "해운대 근처 오션뷰 호텔 크리스마스에 2박 커플",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "해운대",
+            "부산 해운대"
+          ]
+        },
+        "check_in": "2026-12-25",
+        "check_out": "2026-12-27",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L31",
+      "text": "제가 예약한 신라스테이 광화문 위치 좀 알려주세요 11월 6일 체크인 8일 체크아웃",
+      "set": "hard",
+      "expect": {
+        "task": "my_stay",
+        "stay_name": "신라스테이 광화문",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-08"
+      }
+    },
+    {
+      "id": "L32",
+      "text": "숙소 예약된거 맞는지 확인해줘",
+      "set": "hard",
+      "expect": {
+        "task": "status",
+        "needs": []
+      }
+    },
+    {
+      "id": "L33",
+      "text": "명동 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "명동",
+        "adults": 2,
+        "check_in": null,
+        "needs": [
+          "check_in",
+          "check_out"
+        ]
+      }
+    },
+    {
+      "id": "L34",
+      "text": "11월 6일 명동",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "명동",
+        "check_in": "2026-11-06",
+        "needs": [
+          "check_out",
+          "adults"
+        ]
+      }
+    },
+    {
+      "id": "L35",
+      "text": "12/31부터 1/2까지 속초 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "속초",
+        "check_in": "2026-12-31",
+        "check_out": "2027-01-02",
+        "adults": 2
+      }
+    },
+    {
+      "id": "L36",
+      "text": "이번 여행 마지막 날 하루만 공항 근처 호텔",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "*",
+        "check_in": "2026-11-09",
+        "check_out": "2026-11-10"
+      },
+      "trip": true
+    },
+    {
+      "id": "L37",
+      "text": "평점 좋은 곳으로 다낭 11월 6일부터 5박 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "다낭",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-11",
+        "adults": 2,
+        "min_rating": 4.0,
+        "domestic": false
+      }
+    },
+    {
+      "id": "L38",
+      "text": "강남 비즈니스호텔 월요일부터 금요일까지 출장 1명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "강남",
+        "check_in": {
+          "one_of": [
+            "2026-10-12",
+            "2026-10-19"
+          ]
+        },
+        "check_out": {
+          "one_of": [
+            "2026-10-16",
+            "2026-10-23"
+          ]
+        },
+        "adults": 1
+      }
+    },
+    {
+      "id": "L39",
+      "text": "숙소 말고 맛집 추천해줘",
+      "set": "hard",
+      "expect": {
+        "task": "unclear"
+      }
+    },
+    {
+      "id": "L40",
+      "text": "11월6일~9일 명동 2명 호텔 15만원대",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "keyword": "명동",
+        "check_in": "2026-11-06",
+        "check_out": "2026-11-09",
+        "adults": 2,
+        "max_price_per_night": 159999
+      }
+    },
+    {
+      "id": "U-L01",
+      "text": "당장 내일 급하게 잘곳이 필요해서 어디든 좋으니까 가까운 곳으로 잡아줘. 내 위치는 서울 홍대쪽이야.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "홍대",
+            "서울 홍대"
+          ]
+        },
+        "check_in": "2026-10-11",
+        "check_out": {
+          "one_of": [
+            "2026-10-12",
+            null
+          ]
+        },
+        "adults": {
+          "one_of": [
+            null,
+            1
+          ]
+        }
+      },
+      "note": "인원이 없다 → 되묻기. 하룻밤을 뜻하지만 박 수는 말하지 않았다 · 「내 위치」로 혼자라 보고 1명도 맞다고 봄(16:13 측정 뒤)"
+    },
+    {
+      "id": "U-L02",
+      "text": "일주일 뒤에 여자친구랑 2박으로 숙소를 잡으려는데 강남에 좋은 숙소로 골라줘. 가격은 1박에 40까진 쓸게.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": "강남",
+        "check_in": "2026-10-17",
+        "check_out": "2026-10-19",
+        "adults": 2,
+        "max_price_per_night": 400000
+      }
+    },
+    {
+      "id": "U-L03",
+      "text": "2주뒤에 가족4명이 잘 숙소가 필요한데 2박으로 100만원 정도 되는 숙소 골라줘. 위치는 종로야.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": "종로",
+        "check_in": "2026-10-24",
+        "check_out": "2026-10-26",
+        "adults": {
+          "one_of": [
+            4,
+            2
+          ]
+        },
+        "max_price_per_night": 500000
+      },
+      "note": "2박 100만원 → 1박 50만원. 가족 4명 중 아이 수는 모른다"
+    },
+    {
+      "id": "U-L04",
+      "text": "어른 2명 아이 1명. 욕조 있는 숙소. 영등포쪽. 1박 30만원선",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": "영등포",
+        "check_in": null,
+        "check_out": null,
+        "adults": 2,
+        "children": 1,
+        "max_price_per_night": {
+          "one_of": [
+            300000,
+            349999
+          ]
+        },
+        "needs": [
+          "check_in",
+          "check_out"
+        ],
+        "other_requests": "*"
+      },
+      "note": "날짜가 없다 → 되묻기. 욕조는 받는 칸이 없다"
+    },
+    {
+      "id": "U-L05",
+      "text": "1달뒤에친구들이와서3명이잘수있는방이필요한데잠실쪽이고2박예정이괴침대는각각필요해.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": "잠실",
+        "check_in": "2026-11-10",
+        "check_out": "2026-11-12",
+        "adults": 3,
+        "other_requests": "*"
+      },
+      "note": "띄어쓰기 없음 · 오타(예정이괴). 1달 뒤 = 11-10. 침대 각각은 받는 칸이 없다"
+    },
+    {
+      "id": "U-L06",
+      "text": "12월 20일~22일 1인 서초 20만원.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": "서초",
+        "check_in": "2026-12-20",
+        "check_out": "2026-12-22",
+        "adults": 1,
+        "max_price_per_night": 200000
+      }
+    },
+    {
+      "id": "U-L07",
+      "text": "한강이 보이는 좋은 호텔에서 3일정도 있을거고 여의도가 좋을지 잠실이 좋을지 모르겠어. 가격은 1박에 50만원 아래면 되고. 2인이야.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "check_in": null,
+        "adults": 2,
+        "max_price_per_night": {
+          "one_of": [
+            500000,
+            499999
+          ]
+        },
+        "other_requests": "*"
+      },
+      "note": "날짜가 없다 → 되묻기. 지역은 둘 중 고민이라 채점 안 함"
+    },
+    {
+      "id": "U-L08",
+      "text": "강남 조선 팰리스 호텔에 2주뒤에 예약했는데 확인하고 싶어.",
+      "set": "user",
+      "expect": {
+        "task": {
+          "one_of": [
+            "status",
+            "my_stay"
+          ]
+        }
+      },
+      "note": "예약 확인 — 예약 기록 조회(status)도, 내 숙소 등록(my_stay)도 맞다고 본다"
+    },
+    {
+      "id": "U-L09",
+      "text": "강서구에 평점 9.5 이상인 호텔로 2일정도 지낼 예정이고, 2명이고 1월 10일이야.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": "강서구",
+        "check_in": "2027-01-10",
+        "check_out": {
+          "one_of": [
+            "2027-01-12",
+            "2027-01-11"
+          ]
+        },
+        "adults": 2,
+        "min_rating": {
+          "one_of": [
+            4.75,
+            4.8,
+            4.7
+          ]
+        }
+      },
+      "note": "10점 만점 9.5 → 5점 만점 4.75. 「2일정도」는 1박 · 2박 둘 다로 읽힌다"
+    },
+    {
+      "id": "U-L10",
+      "text": "서울 용산에 놀러가는데 11월 12일에 갈거고 얼리체크인으로 3시에 먼저 가서 짐을 두고 싶어. 가격은 하루에 15만원정도로 생각중이야.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "keyword": {
+          "one_of": [
+            "용산",
+            "서울 용산"
+          ]
+        },
+        "check_in": "2026-11-12",
+        "check_out": null,
+        "adults": null,
+        "max_price_per_night": {
+          "one_of": [
+            150000,
+            159999
+          ]
+        },
+        "other_requests": "*"
+      },
+      "note": "체크아웃 · 인원이 없다 → 되묻기. 「3시」는 날짜가 아니다. 얼리체크인은 받는 칸이 없다"
+    }
+  ],
+  "flight": [
+    {
+      "id": "F01",
+      "text": "11월 6일 인천에서 나리타 가는 편도 2명",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "NRT",
+        "depart_date": "2026-11-06",
+        "return_date": null,
+        "adults": 2,
+        "domestic": false,
+        "needs": [],
+        "other_requests": [],
+        "max_price": null,
+        "return_times": null
+      }
+    },
+    {
+      "id": "F02",
+      "text": "김포에서 제주 11월 6일 갔다가 9일에 오는 비행기 성인 1명",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-09",
+        "adults": 1,
+        "domestic": true
+      }
+    },
+    {
+      "id": "F03",
+      "text": "도쿄 가는 비행기",
+      "expect": {
+        "task": "search",
+        "origin": null,
+        "destination": {
+          "one_of": [
+            "NRT",
+            "HND"
+          ]
+        },
+        "depart_date": null,
+        "needs": [
+          "origin",
+          "depart_date",
+          "adults"
+        ]
+      }
+    },
+    {
+      "id": "F04",
+      "text": "11월 20일 서울에서 오사카 오전 출발 2명",
+      "expect": {
+        "task": "search",
+        "origin": {
+          "one_of": [
+            "ICN",
+            "GMP"
+          ]
+        },
+        "destination": "KIX",
+        "depart_date": "2026-11-20",
+        "adults": 2,
+        "depart_times": [
+          "morning"
+        ]
+      }
+    },
+    {
+      "id": "F05",
+      "text": "새벽 비행기는 싫고 12월 1일 부산에서 후쿠오카 1명",
+      "expect": {
+        "task": "search",
+        "origin": "PUS",
+        "destination": "FUK",
+        "depart_date": "2026-12-01",
+        "adults": 1,
+        "depart_times": [
+          "morning",
+          "afternoon",
+          "evening"
+        ]
+      }
+    },
+    {
+      "id": "F06",
+      "text": "비즈니스로 11월 3일 인천-방콕 왕복 7일에 귀국 2명",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "BKK",
+        "depart_date": "2026-11-03",
+        "return_date": {
+          "one_of": [
+            "2026-11-07",
+            "2026-11-10"
+          ]
+        },
+        "adults": 2,
+        "cabin": "BUSINESS"
+      },
+      "note": "「왕복 7일에 귀국」은 11월 7일로도 7일 뒤로도 읽힌다 — 둘 다 맞음(2026-10-10 첫 측정 뒤 정답을 넓힘)"
+    },
+    {
+      "id": "F07",
+      "text": "직항만 11월 6일 타이베이에서 인천 2명",
+      "expect": {
+        "task": "search",
+        "origin": "TPE",
+        "destination": "ICN",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "direct_only": true
+      }
+    },
+    {
+      "id": "F08",
+      "text": "어른 둘 아이 하나 유아 하나 1월 2일 제주 가는 거 김포 출발",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "depart_date": "2027-01-02",
+        "adults": 2,
+        "children": 1,
+        "infants": 1,
+        "domestic": true
+      }
+    },
+    {
+      "id": "F09",
+      "text": "내 항공권 확정됐어?",
+      "expect": {
+        "task": "status",
+        "needs": []
+      }
+    },
+    {
+      "id": "F10",
+      "text": "다음 달 15일 저녁 비행기로 인천에서 다낭 1명",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "DAD",
+        "depart_date": "2026-11-15",
+        "adults": 1,
+        "depart_times": [
+          "evening"
+        ]
+      }
+    },
+    {
+      "id": "F11",
+      "text": "10월 3일 인천에서 홍콩 1명",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "HKG",
+        "depart_date": "2027-10-03",
+        "adults": 1
+      }
+    },
+    {
+      "id": "F12",
+      "text": "11/6 ICN→KIX 1인",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "KIX",
+        "depart_date": "2026-11-06",
+        "adults": 1,
+        "domestic": false
+      }
+    },
+    {
+      "id": "F13",
+      "text": "이번 여행 갈 때 비행기 찾아줘",
+      "trip": true,
+      "expect": {
+        "task": "search",
+        "depart_date": "2026-11-06",
+        "adults": 3
+      }
+    },
+    {
+      "id": "F14",
+      "text": "오후나 저녁에 출발하는 11월 8일 제주에서 김포 2명",
+      "expect": {
+        "task": "search",
+        "origin": "CJU",
+        "destination": "GMP",
+        "depart_date": "2026-11-08",
+        "adults": 2,
+        "depart_times": [
+          "afternoon",
+          "evening"
+        ]
+      }
+    },
+    {
+      "id": "F15",
+      "text": "11월 6일 인천에서 뉴욕 1명",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "JFK",
+        "depart_date": "2026-11-06",
+        "adults": 1
+      }
+    },
+    {
+      "id": "F16",
+      "text": "런던 가는 거 11월 6일 인천에서 혼자",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "LHR",
+        "depart_date": "2026-11-06",
+        "adults": 1
+      }
+    },
+    {
+      "id": "F17",
+      "text": "11월 6일 출발 9일 귀국 인천 오사카 성인 2",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "KIX",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-09",
+        "adults": 2
+      }
+    },
+    {
+      "id": "F18",
+      "text": "10시쯤 출발하는 11월 6일 인천 나리타 1명",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "NRT",
+        "depart_date": "2026-11-06",
+        "adults": 1,
+        "depart_times": [
+          "morning"
+        ]
+      }
+    },
+    {
+      "id": "F19",
+      "text": "제주 가는 비행기 11월 6일 2명",
+      "expect": {
+        "task": "search",
+        "origin": null,
+        "destination": "CJU",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "needs": [
+          "origin"
+        ]
+      }
+    },
+    {
+      "id": "F20",
+      "text": "11월 6일 인천에서 삿포로 갔다가 11월 4일에 돌아와 1명",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "CTS",
+        "depart_date": "2026-11-06",
+        "needs": [
+          "return_date"
+        ]
+      }
+    },
+    {
+      "id": "F21",
+      "text": "인천→후쿠오카 11/6 편도 성인2",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "FUK",
+        "depart_date": "2026-11-06",
+        "return_date": null,
+        "adults": 2
+      }
+    },
+    {
+      "id": "F22",
+      "text": "김포 제주 낼모레 아침 비행기 1명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "depart_date": "2026-10-12",
+        "adults": 1,
+        "depart_times": [
+          "morning"
+        ],
+        "domestic": true
+      }
+    },
+    {
+      "id": "F23",
+      "text": "11월 6일 인천에서 오사카 가는데 경유도 괜찮아 1명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "KIX",
+        "depart_date": "2026-11-06",
+        "adults": 1,
+        "direct_only": false
+      }
+    },
+    {
+      "id": "F24",
+      "text": "도쿄 하네다로 11월 6일 김포 출발 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "HND",
+        "depart_date": "2026-11-06",
+        "adults": 2
+      }
+    },
+    {
+      "id": "F25",
+      "text": "11월 6일에 가서 9일에 오는 인천 방콕 비행기 가족 4명 어른2 애2",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "BKK",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-09",
+        "adults": 2,
+        "children": 2
+      }
+    },
+    {
+      "id": "F26",
+      "text": "부산에서 제주 11월 6일 오후 2명 아니 3명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "PUS",
+        "destination": "CJU",
+        "depart_date": "2026-11-06",
+        "adults": 3,
+        "depart_times": [
+          "afternoon"
+        ]
+      }
+    },
+    {
+      "id": "F27",
+      "text": "flight from Incheon to Taipei on Nov 6 for 1",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "TPE",
+        "depart_date": "2026-11-06",
+        "adults": 1
+      }
+    },
+    {
+      "id": "F28",
+      "text": "11월 6일 인천 출발 하노이 도착 혼자 비즈니스",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "HAN",
+        "depart_date": "2026-11-06",
+        "adults": 1,
+        "cabin": "BUSINESS"
+      }
+    },
+    {
+      "id": "F29",
+      "text": "다음주 금요일 저녁 김포에서 제주 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "depart_date": {
+          "one_of": [
+            "2026-10-16",
+            "2026-10-23"
+          ]
+        },
+        "adults": 2,
+        "depart_times": [
+          "evening"
+        ]
+      }
+    },
+    {
+      "id": "F30",
+      "text": "12월 30일 인천에서 괌 갔다가 1월 3일 귀국 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "GUM",
+        "depart_date": "2026-12-30",
+        "return_date": "2027-01-03",
+        "adults": 2
+      }
+    },
+    {
+      "id": "F31",
+      "text": "제 비행기 예약 상태 알려주세요",
+      "set": "hard",
+      "expect": {
+        "task": "status",
+        "needs": []
+      }
+    },
+    {
+      "id": "F32",
+      "text": "인천에서 나리타 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "NRT",
+        "adults": 2,
+        "depart_date": null,
+        "needs": [
+          "depart_date"
+        ]
+      }
+    },
+    {
+      "id": "F33",
+      "text": "11월 6일 비행기 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "needs": [
+          "origin",
+          "destination"
+        ]
+      }
+    },
+    {
+      "id": "F34",
+      "text": "11월 6일 인천 오사카 새벽 첫 비행기 1명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "KIX",
+        "depart_date": "2026-11-06",
+        "adults": 1,
+        "depart_times": [
+          "dawn"
+        ]
+      }
+    },
+    {
+      "id": "F35",
+      "text": "11월 6일 인천-싱가포르 직항으로 2명 갔다가 10일에",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "SIN",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-10",
+        "adults": 2,
+        "direct_only": true
+      }
+    },
+    {
+      "id": "F36",
+      "text": "11월 6일 청주에서 제주 1명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "CJJ",
+        "destination": "CJU",
+        "depart_date": "2026-11-06",
+        "adults": 1,
+        "domestic": true
+      }
+    },
+    {
+      "id": "F37",
+      "text": "제주에서 부산 11월 9일 밤 비행기 1명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "CJU",
+        "destination": "PUS",
+        "depart_date": "2026-11-09",
+        "adults": 1,
+        "depart_times": [
+          "evening"
+        ]
+      }
+    },
+    {
+      "id": "F38",
+      "text": "11월 6일 인천에서 발리 2명",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "DPS",
+        "depart_date": "2026-11-06",
+        "adults": 2
+      }
+    },
+    {
+      "id": "F39",
+      "text": "항공권 말고 숙소 알아봐줘",
+      "set": "hard",
+      "expect": {
+        "task": "unclear"
+      }
+    },
+    {
+      "id": "F40",
+      "text": "11월 6일 인천 출발 오사카 1명 아 날짜는 7일로 바꿔줘",
+      "set": "hard",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "KIX",
+        "depart_date": "2026-11-07",
+        "adults": 1
+      }
+    },
+    {
+      "id": "U-F01",
+      "text": "인천에서 도쿄으로 여행을 갈건데 10월 27일에 출발해서 10월 31일에 돌아오는 비행기를 찾고있어. 가는날은 새벽에 출발해도 괜찮으니까 가격 괜찮은 곳으로 골라줘. 가격은 왕복으로 50을 안넘었으면 좋겠어. 오는날에는 점심 먹고 출발해도 문제 없게 오후 출발로 할거야. 혼자 여행가는거야.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": {
+          "one_of": [
+            "NRT",
+            "HND"
+          ]
+        },
+        "depart_date": "2026-10-27",
+        "return_date": "2026-10-31",
+        "adults": 1,
+        "depart_times": null,
+        "max_price": 500000,
+        "max_price_basis": "round_trip",
+        "return_times": [
+          "afternoon"
+        ]
+      },
+      "note": "가는 편 「새벽도 괜찮다」는 시간 제한이 아니다(null). 왕복 50만 원 상한 · 오는 편 오후는 받는 칸이 없다"
+    },
+    {
+      "id": "U-F02",
+      "text": "태국을 한번 가보고 싶어서 인천에서 태국으로 갈건데, 혼자 처음 가보는거라 하룻밤만 자고 올거야. 빠르게 다녀오고 싶어서 내일 갔으면 좋겠는데 내일 너무 늦은 시간만 아니면 되니까 오후에 출발하는 비행기로 잡아줘. 오는날에는 시간 상관없어.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "BKK",
+        "depart_date": "2026-10-11",
+        "return_date": "2026-10-12",
+        "adults": 1,
+        "depart_times": [
+          "afternoon"
+        ]
+      },
+      "note": "태국 → 대표 공항 BKK. 하룻밤 자고 → 다음 날 귀국"
+    },
+    {
+      "id": "U-F03",
+      "text": "친구들끼리 일본을 가보려고 하는데 4명이고 12월4일에서 12월 11일까지 장기로 다녀오려고 해. 너무 이른 아침에 출발하면 힘들어서 11시 이후쯤으로 해서 이른 오후 정도 까지로 잡아줘. 오는날에는 12시쯤으로 해서 잡아주고.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": null,
+        "depart_date": "2026-12-04",
+        "return_date": "2026-12-11",
+        "adults": 4,
+        "depart_times": {
+          "one_of": [
+            [
+              "morning",
+              "afternoon"
+            ],
+            [
+              "afternoon"
+            ]
+          ]
+        }
+      },
+      "note": "출발지가 없다 → 되묻기. 「일본」은 나라라 도착 공항은 채점 안 함"
+    },
+    {
+      "id": "U-F04",
+      "text": "유럽여행을 한번 가보려고 하는데 다다음주에 출발하려고 해. 처음 영국을 가보려고 하는데 장시간 비행이다보니까 이코노미석은 너무 쫍아서 힘들어서 비즈니스석을 타보고 싶어. 오는 비행기는 나중에 가서 오고싶을때 잡으려고 지금은 예매 안할거야.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": null,
+        "destination": "LHR",
+        "depart_date": null,
+        "return_date": null,
+        "cabin": "BUSINESS"
+      },
+      "note": "「다다음주」는 날이 없다 → 출발일 되묻기. 출발지 · 인원도 없다"
+    },
+    {
+      "id": "U-F05",
+      "text": "부산을 편하게 가려고 비행기를 타고 가려는데 김포공항에서 출발하려고 지스타 첫날인 11월 19일에 출발할거야. 아침부터 가서 여유있게 즐기려고. 올때는 기차타고 올거라 편도로만 봐줘.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "PUS",
+        "depart_date": "2026-11-19",
+        "return_date": null,
+        "adults": null,
+        "depart_times": [
+          "morning"
+        ],
+        "domestic": true,
+        "needs": [
+          "adults"
+        ]
+      },
+      "note": "인원이 없다 → 되묻기"
+    },
+    {
+      "id": "U-F06",
+      "text": "오사카로 여행을 동생이랑 2명이서 갈꺼고 3일뒤에 일정 끝나고 바로 갈거라 저녁 8시쯤 인천공항에 도착할 수 있을거 같아. 가서 한 3일 즐기고 올건데 오사카가 공항이 여러개던데 어디로 갈지 너가 알아봐줘.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "KIX",
+        "depart_date": "2026-10-13",
+        "adults": 2,
+        "depart_times": [
+          "evening"
+        ]
+      },
+      "note": "3일 뒤 = 10-13. 공항 8시 도착 → 저녁 출발. 귀국일(「3일 즐기고」)은 모호해 채점 안 함"
+    },
+    {
+      "id": "U-F07",
+      "text": "다음달 18일. 인천공항에서 후쿠오카로. 2명. 시간은 새벽이랑 밤시간만 빼면 다 괜찮음. 가격은 편도기준 30만원 까지만. 오는날은 22일. 인천공항으로. 2명. 시간은 갈때랑 똑같이. 가격도.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": "ICN",
+        "destination": "FUK",
+        "depart_date": "2026-11-18",
+        "return_date": "2026-11-22",
+        "adults": 2,
+        "depart_times": {
+          "one_of": [
+            [
+              "morning",
+              "afternoon"
+            ],
+            [
+              "morning",
+              "afternoon",
+              "evening"
+            ]
+          ]
+        },
+        "max_price": 300000,
+        "max_price_basis": "one_way",
+        "return_times": {
+          "one_of": [
+            [
+              "morning",
+              "afternoon"
+            ],
+            [
+              "morning",
+              "afternoon",
+              "evening"
+            ]
+          ]
+        }
+      },
+      "note": "새벽 · 밤 제외 → 오전 · 오후. 가격 상한은 받는 칸이 없다 · 우리 「저녁」(18~24시)에 밤이 섞여 있어 저녁 포함도 맞다고 봄(16:13 측정 뒤)"
+    },
+    {
+      "id": "U-F08",
+      "text": "홍콩으로 여행갈거고, 3명이서, 비행기는 짧은 시간 운행이니 그냥 최대한 저렴하게. 20일 뒤에 갔다가 2일뒤에 돌아올 예정.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": null,
+        "destination": "HKG",
+        "depart_date": "2026-10-30",
+        "return_date": "2026-11-01",
+        "adults": 3
+      },
+      "note": "출발지가 없다 → 되묻기. 20일 뒤 = 10-30, 그 2일 뒤 = 11-01"
+    },
+    {
+      "id": "U-F09",
+      "text": "미국으로 여행갈꺼고 1달정도 있어보려고 하는데 언제 출발해서 어디로 가야지 좋을지 모르겠네. 오래 여행할거라 돈 좀 쓸꺼라서 편의성을 더 중요하게 볼거야.",
+      "set": "user",
+      "expect": {
+        "task": {
+          "one_of": [
+            "search",
+            "unclear"
+          ]
+        },
+        "origin": null,
+        "depart_date": null
+      },
+      "note": "날짜 · 출발지 · 도착 도시가 모두 없다 — 추천 질문에 가깝다"
+    },
+    {
+      "id": "U-F10",
+      "text": "제주도 내년 1월 13일에 갈건데, 여자친구랑 2명이서 갈꺼야. 저가항공 말고 분위기 좀 낼 수 있게 좋은 비행기 타고싶어. 4일동안 여행할거야. 아마 김포에서 가지 않을까 하는데 김포랑 인천이랑 가격차이가 어떤지 모르겠어.",
+      "set": "user",
+      "expect": {
+        "task": "search",
+        "origin": {
+          "one_of": [
+            "GMP",
+            null
+          ]
+        },
+        "destination": "CJU",
+        "depart_date": "2027-01-13",
+        "return_date": {
+          "one_of": [
+            "2027-01-16",
+            "2027-01-17",
+            null
+          ]
+        },
+        "adults": 2,
+        "other_requests": "*"
+      },
+      "note": "「4일동안」 귀국은 16일 · 17일 둘 다로 읽힌다. 저가항공 제외 · 김포/인천 비교는 받는 칸이 없다"
+    },
+    {
+      "id": "T01",
+      "text": "11월 6일 서울에서 부산 가는 KTX 2명 오전 출발",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "return_date": null,
+        "adults": 2,
+        "grade": "KTX",
+        "kind": null,
+        "depart_times": [
+          "morning"
+        ],
+        "needs": []
+      }
+    },
+    {
+      "id": "T02",
+      "text": "내일 동대구역에서 서울역 기차 혼자",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "동대구",
+        "destination": "서울",
+        "depart_date": "2026-10-11",
+        "adults": 1,
+        "grade": null,
+        "needs": []
+      }
+    },
+    {
+      "id": "T03",
+      "text": "다음 달 3일 서울에서 강릉 고속버스 3명, 5일에 오는",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": "express",
+        "origin": "서울",
+        "destination": "강릉",
+        "depart_date": "2026-11-03",
+        "return_date": "2026-11-05",
+        "adults": 3,
+        "needs": []
+      }
+    },
+    {
+      "id": "T04",
+      "text": "서울 광주 시외버스 내일 우등 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": "suburbs",
+        "origin": "서울",
+        "destination": "광주",
+        "grade": "우등",
+        "depart_date": "2026-10-11",
+        "adults": 2,
+        "needs": []
+      }
+    },
+    {
+      "id": "T05",
+      "text": "비행기 말고 기차로 부산 가고 싶어 11월 6일 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": null,
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "needs": [
+          "origin"
+        ]
+      }
+    },
+    {
+      "id": "T06",
+      "text": "기차 말고 비행기 김포 제주 내일 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "flight",
+        "origin": "GMP",
+        "destination": "CJU",
+        "depart_date": "2026-10-11",
+        "adults": 1,
+        "domestic": true,
+        "needs": []
+      }
+    },
+    {
+      "id": "T07",
+      "text": "대구에서 광주 가는 열차 11월 6일 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "대구",
+        "destination": "광주",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "needs": []
+      }
+    },
+    {
+      "id": "T08",
+      "text": "12월 24일 수서에서 부산 SRT 저녁 출발 성인 2명 아이 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "수서",
+        "destination": "부산",
+        "depart_date": "2026-12-24",
+        "adults": 2,
+        "children": 1,
+        "grade": "SRT",
+        "depart_times": [
+          "evening"
+        ],
+        "needs": []
+      }
+    },
+    {
+      "id": "T09",
+      "text": "이번 주 토요일 서울에서 전주 가는 버스 4명, 일요일 저녁에 돌아올게",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": null,
+        "origin": "서울",
+        "destination": "전주",
+        "depart_date": "2026-10-10",
+        "return_date": "2026-10-11",
+        "adults": 4,
+        "return_times": [
+          "evening"
+        ],
+        "needs": []
+      },
+      "note": "기준일 2026-10-10 이 토요일 — 「이번 주 토요일」은 오늘, 「일요일」은 요일만 말함(내일)"
+    },
+    {
+      "id": "T10",
+      "text": "공항버스 말고 11월 6일 인천에서 나리타 가는 비행기 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "flight",
+        "origin": "ICN",
+        "destination": "NRT",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "domestic": false,
+        "needs": []
+      }
+    },
+    {
+      "id": "T11",
+      "text": "다음 주 금요일 용산에서 목포 ITX 1명 오후, 무궁화는 싫어",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "용산",
+        "destination": "목포",
+        "depart_date": "2026-10-16",
+        "adults": 1,
+        "grade": "ITX",
+        "depart_times": [
+          "afternoon"
+        ],
+        "needs": []
+      }
+    },
+    {
+      "id": "T12",
+      "text": "부산에서 서울 가는 기차 11월 20일 2명 새벽 말고",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "부산",
+        "destination": "서울",
+        "depart_date": "2026-11-20",
+        "adults": 2,
+        "depart_times": [
+          "morning",
+          "afternoon",
+          "evening"
+        ],
+        "needs": []
+      }
+    },
+    {
+      "id": "T13",
+      "text": "내일 울산 가는 고속버스 서울에서 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": "express",
+        "origin": "서울",
+        "destination": "울산",
+        "depart_date": "2026-10-11",
+        "adults": 2,
+        "needs": []
+      }
+    },
+    {
+      "id": "T14",
+      "text": "강릉 가는 KTX 알아봐줘",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": null,
+        "destination": "강릉",
+        "depart_date": null,
+        "adults": null,
+        "grade": "KTX",
+        "needs": [
+          "origin",
+          "depart_date",
+          "adults"
+        ]
+      }
+    },
+    {
+      "id": "T15",
+      "text": "11월 6일 서울 부산 프리미엄 고속버스 2명 7시",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": "express",
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "grade": "프리미엄",
+        "depart_times": [
+          "morning"
+        ],
+        "needs": []
+      }
+    },
+    {
+      "id": "T16",
+      "text": "기차 제외하고 버스로 11월 6일 서울에서 부산 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": null,
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "adults": 2,
+        "needs": []
+      },
+      "note": "팀장 점검 LB-06(10-15) — 「제외」도 빼는 말"
+    },
+    {
+      "id": "T17",
+      "text": "11월 6일 서울에서 부산 KTX 2명 오전 출발하고 11월 9일 오후 귀국",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-09",
+        "adults": 2,
+        "grade": "KTX",
+        "depart_times": [
+          "morning"
+        ],
+        "return_times": [
+          "afternoon"
+        ],
+        "needs": []
+      },
+      "note": "팀장 점검 LB-07(10-15) — 「출발」 절은 가는 편"
+    },
+    {
+      "id": "T25",
+      "text": "11월 6일 금요일 서울에서 부산 KTX 오전 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "origin": "서울",
+        "destination": "부산",
+        "depart_date": "2026-11-06",
+        "return_date": null,
+        "adults": 2,
+        "grade": "KTX",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #2 — 날짜 뒤 요일은 그 날짜(귀국일 아님)"
+    },
+    {
+      "id": "T26",
+      "text": "11월 7일 금요일 서울에서 부산 기차 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "depart_date": "2026-11-07",
+        "return_date": null,
+        "adults": 1,
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #2 — 틀린 요일(11-07 은 토)도 날짜 숫자를 믿고, 답에 요일을 알린다"
+    },
+    {
+      "id": "T27",
+      "text": "11월 6일 저녁 서울에서 광주 우등 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "grade": "우등",
+        "origin": "서울",
+        "destination": "광주",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #3 — 「우등」만 말해도 버스(전에는 항공)"
+    },
+    {
+      "id": "T28",
+      "text": "고속버스 말고 시외로 11월 6일 서울에서 천안 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "kind": "suburbs",
+        "origin": "서울",
+        "destination": "천안",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #3 — 「시외로」 · 빼는 말"
+    },
+    {
+      "id": "T29",
+      "text": "11월 6일 동서울에서 속초 버스 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "bus",
+        "origin": "동서울",
+        "destination": "속초",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #7 — 버스 지명 · 터미널 이름"
+    },
+    {
+      "id": "T30",
+      "text": "11월 6일 서울에서 강릉 당일치기 기차 왕복 2명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "depart_date": "2026-11-06",
+        "return_date": "2026-11-06",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #6 — 당일 왕복"
+    },
+    {
+      "id": "T31",
+      "text": "11월 6일 김포에서 제주 왕복 2명",
+      "set": "rules",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "return_date": null,
+        "needs": [
+          "return_date"
+        ]
+      },
+      "note": "검수 10-15 GPT 검토 #6 — 왕복인데 오는 날이 없으면 묻는다"
+    },
+    {
+      "id": "T32",
+      "text": "11월 8일 일요일 부산에서 서울 마지막 기차 1명",
+      "set": "transit",
+      "expect": {
+        "task": "search",
+        "mode": "train",
+        "depart_date": "2026-11-08",
+        "return_date": null,
+        "prefer": "last",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #9 — 막차"
+    },
+    {
+      "id": "T33",
+      "text": "11월 6일 오후 3시 이후 김포에서 제주 1명",
+      "set": "rules",
+      "expect": {
+        "task": "search",
+        "origin": "GMP",
+        "destination": "CJU",
+        "depart_after": "15:00",
+        "needs": []
+      },
+      "note": "검수 10-15 GPT 검토 #9 — 시각 경계"
+    }
+  ]
+}

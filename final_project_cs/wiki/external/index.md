@@ -1,91 +1,39 @@
 ---
 type: guide
-title: External
-description: 바깥과 만나는 면. REST·MCP·A2A와 Trust Boundary
+title: 고객 API·MCP 접속
+description: 현재 고객 접속 계약은 REST 엔드포인트·여행 MCP·권한 경계에서 확인합니다
 status: draft
-domain: neutral
+domain: travel
 ---
 
-# External
+# 고객 API·MCP 접속
 
-> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
-> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
-> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+현재 고객 접속 계약은 [REST 엔드포인트](rest-endpoints.md)·[여행 MCP](mcp-tools.md)·[권한 경계](auth-boundary.md)에서 확인합니다. 개인 AI는 사용자 키로 본인 여행만 다룹니다. 고객 웹·MCP가 새 판정·권한 규칙을 따로 만들지 않도록 공통 API 경계를 사용합니다.
 
-`app/presentation/`
+고정 principal의 옛 Case MCP 도구와 그 수를 고정하던 시험은 현재 접속·관문에서 제외했습니다. 현재 MCP는 [프로토콜 시험](../../tests/e2e/test_mcp_server.py)에서 인증·본인 여행·쓰기 등록·모듈 비활성을 확인합니다.
 
-**Agent Gateway가 유일한 진입점이다.** 여기가 Trust Boundary다.
+개발자용 설정·진단 화면과 고객 요청을 직접 처리하는 상담 역할은 다릅니다. 상주 상담원·운영 관리자 대기를 고객 흐름의 전제로 두지 않습니다. 실제 고객 화면 흐름은 [고객 웹 계약](web-flow-2026-10-09.md)에서 확인합니다.
 
-## 진입 경로 3종
+## 과거 기록
 
-```text
-개인 AI ──── MCP ─────┐
-                      │
-기업 Agent ── A2A ────┼──→ Agent Gateway ──→ Core
-                      │    (Trust Boundary)
-쇼핑몰·UI ── REST ────┘
-```
+[수정 전 문서](../records/commerce_2026-10-11/wiki--external--index.md)는 당시 기록입니다. 현재 여행 제품의 사양·평가·시연·완료 증거로 사용하지 않습니다. 원문 바이트는 같은 폴더의 백업에도 보존했습니다.
 
-## 각 문서
+## 관계
 
-| 문서 | 답하는 질문 | 코드 |
-|---|---|---|
-| [rest-api.md](rest-api.md) | 엔드포인트와 스키마 | `app/presentation/api/` |
-| [mcp-tools.md](mcp-tools.md) | 개인 AI가 쓰는 도구 3종 | `app/presentation/mcp/` |
-| [a2a-protocol.md](a2a-protocol.md) | 기업 Agent에 업무 위임 | `app/presentation/a2a/` |
-| [auth-boundary.md](auth-boundary.md) | 인증·스코프·PII | `app/infrastructure/auth/` |
+- [여행 사양 허브](../../../wiki/index.md) — 현재 정본을 찾는 입구
+- [운영 앱 화면 API](admin-screen-api.md) — 운영 앱 검토 자료 · API 계약 협의 · 백엔드/프론트/통합 상태
+- [사용자 표시 이름 — 변경 계획 2판](user-display-name-plan.md) — 게스트 · 회원에게 겹치지 않는 닉네임을 자동으로 주고 운영 앱은 UUID 옆에 닉네임 칸을 더하는 계획(1판 2026-10-16 · 2판 2026-10-22, 구현 보류)
+- [개발자 콘솔 API](dev-console-api.md) — 관리 앱 오류 검색 · 발생 상세의 표시 요구와 API 협의 · 연결 상태
+- [모델 경로](llm-model-route.md) — 관리 콘솔에서 로컬 모델 · SSH(런팟) · API 고르기, SSH 터널을 앱 밖에서 여는 설치 순서
 
-## 코드 구조
 
-```text
-app/presentation/
-├─ api/       REST
-├─ mcp/       MCP
-├─ a2a/       A2A
-├─ schemas/   요청·응답 스키마
-├─ ui/        운영 UI
-└─ web/       웹
-```
+## 이전 절 링크
 
-## MCP와 A2A를 가르는 기준
-
-| | MCP | A2A |
-|---|---|---|
-| 무엇 | 도구 호출·자원 접근 | **장기 실행 업무 위임** |
-| 상대 | 개인 AI | 독립 배포된 Agent System |
-| 있어야 할 것 | — | Agent Card, Task lifecycle, Artifact |
-
-**단순 데이터 조회는 A2A가 아니다.** REST다.
-
-근거는 [../../../wiki/research/a2a-adoption.md](../../../wiki/research/a2a-adoption.md).
-
-## 이 영역의 불변식
-
-| ID | 불변식 | 판정 |
-|---|---|---|
-| `INV-CS-SEC-001` | 유효하지 않은 토큰은 인증되지 않는다 | automated |
-| `INV-CS-SEC-002` | scope 없는 principal은 거부된다 | automated |
-| `INV-CS-SEC-007` | scope **12개**는 guardrail이 소유한다 `[정정 2026-09-10]` | automated |
-| `INV-CS-SEC-008` | MCP는 정확히 3개의 read scope 도구를 갖는다 | automated |
-
-**`INV-CS-SEC-008`이 MCP 범위를 고정한다.** 도구를 늘리려면 이 테스트를 같이 고쳐야 하고, 그게 의도적 결정임을 강제한다.
-
-## 나가는 방향
-
-| 대상 | 경계 |
-|---|---|
-| 검증 쇼핑몰 | **결제는 쇼핑몰이 실행** → [D-001](../../../wiki/decisions/D-001-payment-ownership.md) |
-| 알림 채널 | Outbox 경유 |
-| A2A Remote Agent | Artifact 근거를 Context/DB와 대조 |
-
-**나가는 모든 것은 [../actions/index.md](../actions/index.md)를 거친다.**
-
-## 인접 영역
-
-- [../actions/index.md](../actions/index.md) — 나가는 경로
-- [../runtime/index.md](../runtime/index.md) — 들어온 요청이 Case가 되는 곳
-- [../../../wiki/architecture/system-context.md](../../../wiki/architecture/system-context.md) — 시스템 경계
-- [introspection.md](introspection.md) — 조립 상태를 보여주는 read-only API
-
-- [rest-endpoints.md](rest-endpoints.md) — 엔드포인트별 요청·응답 필드 계약
-
+<a id="external"></a>
+<a id="진입-경로-3종"></a>
+<a id="각-문서"></a>
+<a id="코드-구조"></a>
+<a id="mcp와-a2a를-가르는-기준"></a>
+<a id="이-영역의-불변식"></a>
+<a id="나가는-방향"></a>
+<a id="인접-영역"></a>

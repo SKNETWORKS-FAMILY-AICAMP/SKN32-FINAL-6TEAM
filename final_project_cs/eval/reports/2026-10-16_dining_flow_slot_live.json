@@ -1,0 +1,1468 @@
+{
+ "summary": {
+  "at": "2026-10-16T12:50:37",
+  "model": "openai:gpt-6-luna",
+  "cases": 15,
+  "called": "15/15 = 100.0%",
+  "llm_accepted": "15/15 = 100.0%",
+  "fallback": [],
+  "preference_hit": "12/12 = 100.0%",
+  "flow_hit": "3/3 = 100.0%",
+  "seconds_avg": 2.03,
+  "repeats": 1,
+  "note": "흐름 3건은 이 측정용 합성 사례 · 각 1회",
+  "config_unchanged": true
+ },
+ "rows": [
+  {
+   "id": "DP-001",
+   "why": "고기를 빼 달라 — 가장 비슷한 고깃집 대신 비빔밥집",
+   "preference": "고기는 빼 주세요. 채식 위주로 먹고 싶어요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 고기구이 대신 채식 위주로 비빔밥을 먹을 수 있어요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "2",
+    "reason": "고기구이 대신 채식 위주로 비빔밥을 먹을 수 있어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "비빔밥"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 3.29
+  },
+  {
+   "id": "DP-002",
+   "why": "날것을 못 먹는다 — 비슷한 횟집 대신 국물 · 면",
+   "preference": "회나 날것은 못 먹어요",
+   "rule_first": "A",
+   "slot2": "C",
+   "slot2_note": "그날 흐름: 회를 피하면서 익힌 칼국수를 먹을 수 있어요.",
+   "slots": [
+    "A",
+    "C",
+    "B"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B",
+     "C"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "2",
+    "reason": "회를 피하면서 익힌 칼국수를 먹을 수 있어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "칼국수"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 2.09
+  },
+  {
+   "id": "DP-003",
+   "why": "국물을 원한다 — 가까운 한상차림 대신 국밥집",
+   "preference": "따뜻한 국물 있는 걸로 먹고 싶어요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 따뜻한 국물을 원하셔서 국밥을 먹을 수 있는 곳으로 골랐어요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "따뜻한 국물을 원하셔서 국밥을 먹을 수 있는 곳으로 골랐어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "국물요리"
+     },
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "국밥"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.92
+  },
+  {
+   "id": "DP-004",
+   "why": "면을 원한다 — 비슷한 국물집 대신 칼국수",
+   "preference": "면 요리가 좋아요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 좋아하시는 면 요리인 칼국수를 먹을 수 있어요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "좋아하시는 면 요리인 칼국수를 먹을 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "칼국수"
+     },
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "면"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.99
+  },
+  {
+   "id": "DP-005",
+   "why": "간단히 브런치 — 한상차림 대신 브런치",
+   "preference": "빵이나 브런치처럼 간단하게 먹을래요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 원하신 브런치처럼 간단한 식사에 잘 맞아요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "원하신 브런치처럼 간단한 식사에 잘 맞아요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "브런치"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.91
+  },
+  {
+   "id": "DP-006",
+   "why": "비슷한 곳을 원한다 — 규칙 1등 그대로",
+   "preference": "원래 먹으려던 것과 비슷한 곳이면 좋겠어요",
+   "rule_first": "A",
+   "slot2": "C",
+   "slot2_note": "그날 흐름: 원래 드시려던 메뉴와 다른 선택지 중에서 초밥을 골라드렸어요.",
+   "slots": [
+    "A",
+    "C",
+    "B"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "A"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "2",
+    "reason": "원래 드시려던 메뉴와 다른 선택지 중에서 초밥을 골라드렸어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "초밥"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.92
+  },
+  {
+   "id": "DP-007",
+   "why": "아무거나 — 바꿀 이유가 없다",
+   "preference": "아무거나 괜찮아요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 원래 국수와 종류가 다른 오므라이스로 식사를 바꿔볼 수 있어요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "A"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "원래 국수와 종류가 다른 오므라이스로 식사를 바꿔볼 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "likeness_to_original",
+      "value": "다른 종류"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.9
+  },
+  {
+   "id": "DP-008",
+   "why": "일식을 원한다 — 한식 국물집 대신 초밥",
+   "preference": "오늘은 일식이 먹고 싶어요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 원하시는 일식을 즐길 수 있는 초밥집이에요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "원하시는 일식을 즐길 수 있는 초밥집이에요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "kind",
+      "value": "일식"
+     },
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "초밥"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.84
+  },
+  {
+   "id": "DP-009",
+   "why": "중식은 싫다 — 비슷한 중식 대신 다른 종류",
+   "preference": "중식 말고 다른 걸로 해 주세요",
+   "rule_first": "A",
+   "slot2": "C",
+   "slot2_note": "그날 흐름: 중식 대신 돈가스로 다른 종류를 즐길 수 있어요.",
+   "slots": [
+    "A",
+    "C",
+    "B"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B",
+     "C"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "2",
+    "reason": "중식 대신 돈가스로 다른 종류를 즐길 수 있어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "돈가스"
+     },
+     {
+      "candidate": "2",
+      "field": "kind",
+      "value": "일식"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 2.36
+  },
+  {
+   "id": "DP-010",
+   "why": "커피 한 잔이면 된다 — 카페",
+   "preference": "배가 안 고파서 커피 한 잔이면 돼요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 배가 고프지 않으시니 식사 대신 커피 한 잔으로 가볍게 즐겨보세요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "배가 고프지 않으시니 식사 대신 커피 한 잔으로 가볍게 즐겨보세요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "커피"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.7
+  },
+  {
+   "id": "DP-011",
+   "why": "든든하게 — 브런치 대신 고깃집",
+   "preference": "배가 많이 고파요. 든든하게 먹고 싶어요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 배고프실 때 갈비로 든든하게 점심을 드실 수 있어요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "B"
+    ],
+    "ok": [
+     "A"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "배고프실 때 갈비로 든든하게 점심을 드실 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "갈비"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.73
+  },
+  {
+   "id": "DP-012",
+   "why": "원하는 종류가 후보에 없다 — 규칙 1등 그대로",
+   "preference": "태국 음식이 먹고 싶어요",
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 태국 음식 후보는 없지만, 기존 국수와 다른 종류인 버거로 바꿔볼 수 있어요.",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "accept": [
+     "A"
+    ]
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "태국 음식 후보는 없지만, 기존 국수와 다른 종류인 버거로 바꿔볼 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "likeness_to_original",
+      "value": "다른 종류"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.92
+  },
+  {
+   "id": "FL-001",
+   "why": "점심 삼겹살(고기구이) — 저녁 갈비집이 닫음. 둘째 칸은 고기구이가 아닌 곳",
+   "preference": null,
+   "rule_first": "A",
+   "slot2": "B",
+   "slot2_note": "그날 흐름: 점심에 삼겹살을 먹었으니 저녁은 국수로 가볍게 바꿔보세요. (1순위보다 이동 1분 더)",
+   "slots": [
+    "A",
+    "B",
+    "C"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "not_style": "고기구이"
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "2",
+    "reason": "점심에 삼겹살을 먹었으니 저녁은 국수로 가볍게 바꿔보세요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "국수"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 2.27
+  },
+  {
+   "id": "FL-002",
+   "why": "점심 국밥(국물요리) — 저녁 순댓국집이 닫음. 둘째 칸은 국물요리가 아닌 곳",
+   "preference": null,
+   "rule_first": "A",
+   "slot2": "C",
+   "slot2_note": "그날 흐름: 점심과 저녁 모두 한식이지만, 저녁은 국물요리 대신 한상차림으로 바꿔 보세요. (1순위보다 이동 2분 더)",
+   "slots": [
+    "A",
+    "C",
+    "B"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "not_style": "국물요리"
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "점심과 저녁 모두 한식이지만, 저녁은 국물요리 대신 한상차림으로 바꿔 보세요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "한상차림"
+     },
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "비빔밥"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.7
+  },
+  {
+   "id": "FL-003",
+   "why": "점심 파스타(양식) — 저녁 피자집이 닫음. 둘째 칸은 양식이 아닌 곳",
+   "preference": null,
+   "rule_first": "A",
+   "slot2": "C",
+   "slot2_note": "그날 흐름: 점심과 저녁의 종류가 겹치지 않는 초밥으로 골랐어요. (1순위보다 이동 2분 더)",
+   "slots": [
+    "A",
+    "C",
+    "B"
+   ],
+   "called": true,
+   "by": "llm",
+   "failure": null,
+   "expect": {
+    "not_style": "양식"
+   },
+   "hit": true,
+   "model_answer": {
+    "pick": "3",
+    "reason": "점심과 저녁의 종류가 겹치지 않는 초밥으로 골랐어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "초밥"
+     },
+     {
+      "candidate": "3",
+      "field": "kind",
+      "value": "일식"
+     }
+    ]
+   },
+   "model_error": null,
+   "seconds": 1.86
+  }
+ ],
+ "calls": [
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "한우마당",
+      "kind": "한식",
+      "style": "고기구이",
+      "menu": "불고기"
+     }
+    },
+    "day": [],
+    "customer_preference": "고기는 빼 주세요. 채식 위주로 먹고 싶어요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "산채비빔밥",
+      "kind": "한식",
+      "style": "한상차림",
+      "menu": "비빔밥",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "모퉁이커피",
+      "kind": "카페",
+      "style": "커피·차",
+      "menu": "커피",
+      "category": "카페디저트",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "2",
+    "reason": "고기구이 대신 채식 위주로 비빔밥을 먹을 수 있어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "비빔밥"
+     }
+    ]
+   },
+   "seconds": 3.29
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "바다횟집",
+      "kind": "한식",
+      "style": "해산물",
+      "menu": "회"
+     }
+    },
+    "day": [],
+    "customer_preference": "회나 날것은 못 먹어요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "손칼국수",
+      "kind": "한식",
+      "style": "면",
+      "menu": "칼국수",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "할매곰탕",
+      "kind": "한식",
+      "style": "국물요리",
+      "menu": "곰탕",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "2",
+    "reason": "회를 피하면서 익힌 칼국수를 먹을 수 있어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "칼국수"
+     }
+    ]
+   },
+   "seconds": 2.09
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "소담정식",
+      "kind": "한식",
+      "style": "한상차림",
+      "menu": "백반"
+     }
+    },
+    "day": [],
+    "customer_preference": "따뜻한 국물 있는 걸로 먹고 싶어요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "돌판구이",
+      "kind": "한식",
+      "style": "고기구이",
+      "menu": "삼겹살",
+      "category": "한식",
+      "walk_from_original_min": 3,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "순대국밥",
+      "kind": "한식",
+      "style": "국물요리",
+      "menu": "국밥",
+      "category": "한식",
+      "walk_from_original_min": 5,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "따뜻한 국물을 원하셔서 국밥을 먹을 수 있는 곳으로 골랐어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "국물요리"
+     },
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "국밥"
+     }
+    ]
+   },
+   "seconds": 1.92
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "진국설렁탕",
+      "kind": "한식",
+      "style": "국물요리",
+      "menu": "설렁탕"
+     }
+    },
+    "day": [],
+    "customer_preference": "면 요리가 좋아요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "떡볶이집",
+      "kind": "한식",
+      "style": "분식",
+      "menu": "떡볶이",
+      "category": "한식",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "명동칼국수",
+      "kind": "한식",
+      "style": "면",
+      "menu": "칼국수",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "좋아하시는 면 요리인 칼국수를 먹을 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "칼국수"
+     },
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "면"
+     }
+    ]
+   },
+   "seconds": 1.99
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "시골밥상",
+      "kind": "한식",
+      "style": "한상차림",
+      "menu": "백반"
+     }
+    },
+    "day": [],
+    "customer_preference": "빵이나 브런치처럼 간단하게 먹을래요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "갈비명가",
+      "kind": "한식",
+      "style": "고기구이",
+      "menu": "갈비",
+      "category": "한식",
+      "walk_from_original_min": 3,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "선데이브런치",
+      "kind": "양식",
+      "style": "브런치",
+      "menu": "브런치",
+      "category": "양식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "원하신 브런치처럼 간단한 식사에 잘 맞아요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "브런치"
+     }
+    ]
+   },
+   "seconds": 1.91
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "토속삼계탕",
+      "kind": "한식",
+      "style": "닭요리",
+      "menu": "삼계탕"
+     }
+    },
+    "day": [],
+    "customer_preference": "원래 먹으려던 것과 비슷한 곳이면 좋겠어요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "초밥한상",
+      "kind": "일식",
+      "style": "초밥",
+      "menu": "초밥",
+      "category": "일식",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "파스타공방",
+      "kind": "양식",
+      "style": "이탈리안",
+      "menu": "파스타",
+      "category": "양식",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "2",
+    "reason": "원래 드시려던 메뉴와 다른 선택지 중에서 초밥을 골라드렸어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "초밥"
+     }
+    ]
+   },
+   "seconds": 1.92
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "동네국수",
+      "kind": "한식",
+      "style": "면",
+      "menu": "국수"
+     }
+    },
+    "day": [],
+    "customer_preference": "아무거나 괜찮아요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "김밥천국",
+      "kind": "한식",
+      "style": "분식",
+      "menu": "김밥",
+      "category": "한식",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "오므라이스",
+      "kind": "양식",
+      "style": "한상차림",
+      "menu": "오므라이스",
+      "category": "양식",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "원래 국수와 종류가 다른 오므라이스로 식사를 바꿔볼 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "likeness_to_original",
+      "value": "다른 종류"
+     }
+    ]
+   },
+   "seconds": 1.9
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "한우곰탕",
+      "kind": "한식",
+      "style": "국물요리",
+      "menu": "곰탕"
+     }
+    },
+    "day": [],
+    "customer_preference": "오늘은 일식이 먹고 싶어요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "홍콩반점",
+      "kind": "중식",
+      "style": "면",
+      "menu": "짬뽕",
+      "category": "중식",
+      "walk_from_original_min": 3,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "스시하루",
+      "kind": "일식",
+      "style": "초밥",
+      "menu": "초밥",
+      "category": "일식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "원하시는 일식을 즐길 수 있는 초밥집이에요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "kind",
+      "value": "일식"
+     },
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "초밥"
+     }
+    ]
+   },
+   "seconds": 1.84
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "만리장성",
+      "kind": "중식",
+      "style": "중식요리",
+      "menu": "짜장"
+     }
+    },
+    "day": [],
+    "customer_preference": "중식 말고 다른 걸로 해 주세요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "카츠야",
+      "kind": "일식",
+      "style": "돈가스·튀김",
+      "menu": "돈가스",
+      "category": "일식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "냉면집",
+      "kind": "한식",
+      "style": "면",
+      "menu": "냉면",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "2",
+    "reason": "중식 대신 돈가스로 다른 종류를 즐길 수 있어요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "돈가스"
+     },
+     {
+      "candidate": "2",
+      "field": "kind",
+      "value": "일식"
+     }
+    ]
+   },
+   "seconds": 2.36
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "정식당",
+      "kind": "한식",
+      "style": "한상차림",
+      "menu": "백반"
+     }
+    },
+    "day": [],
+    "customer_preference": "배가 안 고파서 커피 한 잔이면 돼요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "감자탕",
+      "kind": "한식",
+      "style": "국물요리",
+      "menu": "감자탕",
+      "category": "한식",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "골목카페",
+      "kind": "카페",
+      "style": "커피·차",
+      "menu": "커피",
+      "category": "카페디저트",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "배가 고프지 않으시니 식사 대신 커피 한 잔으로 가볍게 즐겨보세요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "커피"
+     }
+    ]
+   },
+   "seconds": 1.7
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "브런치팩토리",
+      "kind": "양식",
+      "style": "브런치",
+      "menu": "브런치"
+     }
+    },
+    "day": [],
+    "customer_preference": "배가 많이 고파요. 든든하게 먹고 싶어요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "라떼하우스",
+      "kind": "카페",
+      "style": "커피·차",
+      "menu": "커피",
+      "category": "카페디저트",
+      "walk_from_original_min": 2,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "숯불갈비",
+      "kind": "한식",
+      "style": "고기구이",
+      "menu": "갈비",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "배고프실 때 갈비로 든든하게 점심을 드실 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "갈비"
+     }
+    ]
+   },
+   "seconds": 1.73
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "점심",
+     "starts_at": "12:00",
+     "original": {
+      "name": "국수나무",
+      "kind": "한식",
+      "style": "면",
+      "menu": "국수"
+     }
+    },
+    "day": [],
+    "customer_preference": "태국 음식이 먹고 싶어요",
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "순두부",
+      "kind": "한식",
+      "style": "국물요리",
+      "menu": "순두부",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 0,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "12:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "수제버거",
+      "kind": "양식",
+      "style": "버거·샌드위치",
+      "menu": "버거",
+      "category": "양식",
+      "walk_from_original_min": 3,
+      "added_move_min": 0,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "12:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "태국 음식 후보는 없지만, 기존 국수와 다른 종류인 버거로 바꿔볼 수 있어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "likeness_to_original",
+      "value": "다른 종류"
+     }
+    ]
+   },
+   "seconds": 1.92
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "저녁",
+     "starts_at": "18:00",
+     "original": {
+      "name": "명동 갈비집",
+      "kind": "한식",
+      "style": "고기구이",
+      "menu": "갈비"
+     }
+    },
+    "day": [
+     {
+      "time": "12:00",
+      "kind": "한식",
+      "title": "점심",
+      "style": "고기구이",
+      "menu": "삼겹살"
+     }
+    ],
+    "customer_preference": null,
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "할머니 잔치국수",
+      "kind": "한식",
+      "style": "면요리",
+      "menu": "국수",
+      "category": "한식",
+      "walk_from_original_min": 3,
+      "added_move_min": 2,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "18:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "바다 생선구이",
+      "kind": "한식",
+      "style": "한상차림",
+      "menu": "생선구이",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 3,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "18:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "2",
+    "reason": "점심에 삼겹살을 먹었으니 저녁은 국수로 가볍게 바꿔보세요.",
+    "cited": [
+     {
+      "candidate": "2",
+      "field": "menu",
+      "value": "국수"
+     }
+    ]
+   },
+   "seconds": 2.27
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "저녁",
+     "starts_at": "18:00",
+     "original": {
+      "name": "원조 순댓국",
+      "kind": "한식",
+      "style": "국물요리",
+      "menu": "순댓국"
+     }
+    },
+    "day": [
+     {
+      "time": "12:00",
+      "kind": "한식",
+      "title": "점심",
+      "style": "국물요리",
+      "menu": "국밥"
+     }
+    ],
+    "customer_preference": null,
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "손칼국수 집",
+      "kind": "한식",
+      "style": "면요리",
+      "menu": "칼국수",
+      "category": "한식",
+      "walk_from_original_min": 3,
+      "added_move_min": 2,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "18:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "전주 비빔밥",
+      "kind": "한식",
+      "style": "한상차림",
+      "menu": "비빔밥",
+      "category": "한식",
+      "walk_from_original_min": 4,
+      "added_move_min": 3,
+      "likeness_to_original": "같은 큰 종류",
+      "starts_at": "18:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "점심과 저녁 모두 한식이지만, 저녁은 국물요리 대신 한상차림으로 바꿔 보세요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "style",
+      "value": "한상차림"
+     },
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "비빔밥"
+     }
+    ]
+   },
+   "seconds": 1.7
+  },
+  {
+   "user": {
+    "meal": {
+     "title": "저녁",
+     "starts_at": "18:00",
+     "original": {
+      "name": "화덕 피자",
+      "kind": "양식",
+      "style": "양식",
+      "menu": "피자"
+     }
+    },
+    "day": [
+     {
+      "time": "12:00",
+      "kind": "양식",
+      "title": "점심",
+      "style": "양식",
+      "menu": "파스타"
+     }
+    ],
+    "customer_preference": null,
+    "candidates": [
+     {
+      "id": "2",
+      "rule_rank": 2,
+      "name": "골목 한식 백반",
+      "kind": "한식",
+      "style": "한상차림",
+      "menu": "백반",
+      "category": "한식",
+      "walk_from_original_min": 3,
+      "added_move_min": 2,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "18:00"
+     },
+     {
+      "id": "3",
+      "rule_rank": 3,
+      "name": "스시 오마카세",
+      "kind": "일식",
+      "style": "초밥",
+      "menu": "초밥",
+      "category": "일식",
+      "walk_from_original_min": 4,
+      "added_move_min": 3,
+      "likeness_to_original": "다른 종류",
+      "starts_at": "18:00"
+     }
+    ]
+   },
+   "answer": {
+    "pick": "3",
+    "reason": "점심과 저녁의 종류가 겹치지 않는 초밥으로 골랐어요.",
+    "cited": [
+     {
+      "candidate": "3",
+      "field": "menu",
+      "value": "초밥"
+     },
+     {
+      "candidate": "3",
+      "field": "kind",
+      "value": "일식"
+     }
+    ]
+   },
+   "seconds": 1.86
+  }
+ ]
+}

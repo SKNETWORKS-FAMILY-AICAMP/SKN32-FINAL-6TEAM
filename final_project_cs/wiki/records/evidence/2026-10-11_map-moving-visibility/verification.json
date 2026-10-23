@@ -1,0 +1,40 @@
+{
+  "baseTeamCommit": "1e149f1d11cbc7a91108d1cf0a368a9fd1d95c44",
+  "browser": "Chrome",
+  "viewports": [
+    375,
+    1280
+  ],
+  "beforeLoadingReproduced": {
+    "count": 1,
+    "total": 2,
+    "failedViewport": 1280
+  },
+  "uniqueBrowserCases": {
+    "passed": 15,
+    "total": 15
+  },
+  "frameCases": {
+    "passed": 6,
+    "total": 6
+  },
+  "unit": {
+    "passed": 28,
+    "total": 28
+  },
+  "staticChecks": {
+    "tsc": 0,
+    "eslint": 0
+  },
+  "freshProductionBuild": true,
+  "buildId": "jU0MgYfzs3izjSP7PtSSC",
+  "publicCsResponseVerified": false,
+  "productionDeploymentVerified": false,
+  "googleNaverRealSdkVerified": false,
+  "productHashes": {
+    "frontend/apps/web/src/features/map/live-map.tsx": "030f04e525b32e45130e09c2c91804eb4b21cb76c64f957b640cf24e437a75a8",
+    "frontend/apps/web/src/features/map/providers/osm.ts": "a1a6119bc0c8be4f2543a28ef385fc6a4fbb3adaa2361b51628a418c54d00f7d",
+    "frontend/apps/web/src/features/map/providers/google.ts": "372f76f608f52c0b996947898ef5ddd1b7ae56d0ce76c9176bd63289155023b9",
+    "frontend/apps/web/src/features/map/providers/naver.ts": "29e665645c77d538a159fa140e9f0d9f46f917753fe76b5c5651e40921ff1c4c"
+  }
+}

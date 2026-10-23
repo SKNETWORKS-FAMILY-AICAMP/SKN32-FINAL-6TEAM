@@ -1,0 +1,263 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      ".tmp/consent-progress.config.ts",
+      "first-map-reveal-20261011.spec.ts",
+      "survey-release-20261011.spec.ts",
+      "--grep",
+      "375px.*(질문 뒤|수동 확인|5초 자동)",
+      "--workers",
+      "1",
+      "--trace",
+      "off",
+      "--reporter",
+      "line,json",
+      "--output",
+      ".tmp/toast-top-real-time-v2"
+    ],
+    "configFile": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\consent-progress.config.ts",
+    "rootDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/.tmp/toast-top-real-time-v2",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/playdata2/Documents/final_workspace/final_project_cs/frontend/apps/web/tests/live",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 45000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "first-map-reveal-20261011.spec.ts",
+      "file": "first-map-reveal-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 실제 시간의 첫 지도 표시",
+          "file": "first-map-reveal-20261011.spec.ts",
+          "line": 7,
+          "column": 8,
+          "specs": [
+            {
+              "title": "질문 뒤 일정과 마커가 하나씩 등장하고 읽기 화면은 되돌아오지 않는다",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 8113,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\first-map-reveal-20261011.spec.ts:49:56",
+                        "location": {
+                          "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\first-map-reveal-20261011.spec.ts",
+                          "column": 56,
+                          "line": 49
+                        },
+                        "snippet": "  47 |       expect(counts).toContain(1); expect(counts).toContain(2); expect(counts).toContain(3);\n  48 |       expect(frames.find((frame) => frame.count === 3)!.at - frames.find((frame) => frame.count === 1)!.at).toBeGreaterThanOrEqual(600);\n> 49 |       expect(frames.some((frame) => frame.pins === 1)).toBe(true);\n     |                                                        ^\n  50 |       expect(frames.some((frame) => frame.pins === 2)).toBe(true);\n  51 |       await test.info().attach(\"actual-frame-counts\", { body: JSON.stringify(frames), contentType: \"application/json\" });\n  52 |       await page.screenshot({ path: test.info().outputPath(`first-map-done-${width}.png`), animations: \"disabled\" });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\first-map-reveal-20261011.spec.ts",
+                            "column": 56,
+                            "line": 49
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  47 |       expect(counts).toContain(1); expect(counts).toContain(2); expect(counts).toContain(3);\n  48 |       expect(frames.find((frame) => frame.count === 3)!.at - frames.find((frame) => frame.count === 1)!.at).toBeGreaterThanOrEqual(600);\n> 49 |       expect(frames.some((frame) => frame.pins === 1)).toBe(true);\n     |                                                        ^\n  50 |       expect(frames.some((frame) => frame.pins === 2)).toBe(true);\n  51 |       await test.info().attach(\"actual-frame-counts\", { body: JSON.stringify(frames), contentType: \"application/json\" });\n  52 |       await page.screenshot({ path: test.info().outputPath(`first-map-done-${width}.png`), animations: \"disabled\" });\n    at C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\first-map-reveal-20261011.spec.ts:49:56"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T10:30:21.293Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\toast-top-real-time-v2\\first-map-reveal-20261011--3edbe-가-하나씩-등장하고-읽기-화면은-되돌아오지-않는다\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\toast-top-real-time-v2\\first-map-reveal-20261011--3edbe-가-하나씩-등장하고-읽기-화면은-되돌아오지-않는다\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\.tmp\\toast-top-real-time-v2\\first-map-reveal-20261011--3edbe-가-하나씩-등장하고-읽기-화면은-되돌아오지-않는다\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\frontend\\apps\\web\\tests\\live\\first-map-reveal-20261011.spec.ts",
+                        "column": 56,
+                        "line": 49
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d3b3674620ae3b77abf-6d885d7939ccac920ceb",
+              "file": "first-map-reveal-20261011.spec.ts",
+              "line": 9,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "survey-release-20261011.spec.ts",
+      "file": "survey-release-20261011.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "375px 질문 완료 이동",
+          "file": "survey-release-20261011.spec.ts",
+          "line": 67,
+          "column": 8,
+          "specs": [
+            {
+              "title": "수동 확인은 읽기를 재생하지 않고 지도 일정을 순차 표시한다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6252,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T10:30:30.327Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d1680d661cbd3c77cd82-77ccf9e19324fc5978bb",
+              "file": "survey-release-20261011.spec.ts",
+              "line": 69,
+              "column": 5
+            },
+            {
+              "title": "5초 자동 이동도 지도 일정을 순차 표시한다",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 45000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6087,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-11T10:30:36.817Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d1680d661cbd3c77cd82-2763cb6d1fcf54232e6e",
+              "file": "survey-release-20261011.spec.ts",
+              "line": 75,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-11T10:30:19.433Z",
+    "duration": 24416.715,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

@@ -1,141 +1,56 @@
 ---
-type: contract
-title: 스키마
-description: 테이블 관계와 의미. DDL 전문은 옮겨 적지 않고 파일을 가리킨다
+type: guide
+title: 여행 데이터 스키마 안내
+description: 현재 여행 SQL의 역할을 분류한다. 운영 DB 적용 상태는 별도 확인한다
 status: draft
 tags: [data, contract]
-owners: [human:미배정]
-domain: commerce
-domain_note: [2026-09-10] 여행 표가 작업 트리에 생겼다(git 미추적). 아래 명세는 커머스 표 기준이다. 그 전 서술 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain: travel
 ---
 
-# 스키마
+# 여행 데이터 스키마 안내
 
-`app/infrastructure/db/migrations/`
+## 실제 DB 조회 결과
 
-**PostgreSQL이 업무 상태와 Action Transaction의 단일 원천이다.** DDL 전문은 실제 파일에 있다.
+[실측 2026-10-12] 이커머스 표 5개는 백업·복원 검증 후 두 환경에서 삭제했습니다. 로컬 개발 DB 91표·13뷰, x600 서버의 cs 프로젝트 DB 87표·13뷰이며 정확한 옛 표 이름 잔존은 각각 0개입니다. 삭제 대상 밖의 표·열·제약·인덱스·트리거 구조는 전후 동일합니다.
 
-## Core 테이블 (도메인 무관)
+[현재 환경별 현황·관계도·전체 구조 검색](../../../../program/research/sql_retirement_2026-10-12/index.html)에서 조회 시각·범위·원본 JSON·검증 한계를 확인합니다. 여행 6표의 행 수·내용 해시는 두 환경에서 유지됐습니다. 로컬 고객·고객 사건 표는 관측 사이 증가하여 전체 데이터 불변으로 주장하지 않습니다. [2026-10-11 조회본](../../../../program/research/sql_review_2026-10-11/index.html)은 삭제 전 기록입니다.
 
-`001_schema.sql` — 14종
+이 문서는 현재 SQL 파일의 설계 안내입니다. 실행 중인 DB의 전체 테이블 목록이나 적용 완료 선언이 아닙니다.
 
-```text
-tenants
-  └ customers
-      └ customer_cases ──┬─ case_events        UNIQUE(case_id, aggregate_version)
-                         ├─ agent_runs ── team_tasks
-                         └─ action_requests ── action_approvals
-
-knowledge_documents ── knowledge_chunks        vector(1536)
-outbox · prompts · llm_calls · feedback_analytics_reports
-```
-
-| 테이블 | 무엇 | 핵심 제약 |
+| 데이터 역할 | 대표 테이블 | SQL 근거 |
 |---|---|---|
-| `customer_cases` | Case 상태. `version` 보유 | 낙관적 동시성 기준 |
-| `case_events` | append-only 이벤트 | `UNIQUE(case_id, aggregate_version)` |
-| `action_requests` | 실행 요청 | `UNIQUE(tenant_id, idempotency_key)` |
-| `outbox` | 발행 대기 | `UNIQUE(tenant_id, topic, dedupe_key)` — `tenant_id` 가 빠지면 테넌트끼리 충돌한다 |
-| `prompts` | 프롬프트 버전 | `(prompt_key, version)` UNIQUE + sha256 immutable |
-| `llm_calls` | 호출 감사 | `prompt_id` FK로 어떤 프롬프트가 만든 답인지 추적 |
+| 공통 업무 상태·이력 | `customer_cases`, `case_events`, `agent_runs`, `team_tasks` | [001](../../../app/infrastructure/db/migrations/001_schema.sql) |
+| 실행 요청·승인·알림 대기 | `action_requests`, `action_approvals`, `outbox` | [001](../../../app/infrastructure/db/migrations/001_schema.sql), [003](../../../app/infrastructure/db/migrations/003_outbox_tenant_scoped_dedupe.sql) |
+| 장소·예약 | `places`, `bookings`, `supplier_bookings`, `cancellation_terms` | [010](../../../app/infrastructure/db/migrations/010_domain_travel.sql), [023](../../../app/infrastructure/db/migrations/023_cancellation_terms.sql) |
+| 장소 목록·출처·별칭 | `place_catalog`, `source_sync_state`, `place_aliases` | [011](../../../app/infrastructure/db/migrations/011_place_catalog.sql), [030](../../../app/infrastructure/db/migrations/030_place_aliases.sql) |
+| 여행·일정 판본·항목 | `trips`, `itinerary_versions`, `itinerary_items` | [014](../../../app/infrastructure/db/migrations/014_itinerary.sql) |
+| 감시 관측·변경 | `watch_observations`, `watch_changes`, `trip_guardian_changes` | [012](../../../app/infrastructure/db/migrations/012_watch_observations.sql), [050](../../../app/infrastructure/db/migrations/050_trip_guardian_changes.sql) |
+| 접수·확인·대화 | `trip_intakes`, `intake_sources`, `intake_claims`, `intake_reviews`, `trip_chat_turns` | [028](../../../app/infrastructure/db/migrations/028_trip_intakes.sql), [040](../../../app/infrastructure/db/migrations/040_intake_reviews.sql), [034](../../../app/infrastructure/db/migrations/034_trip_chat_turns.sql) |
+| 웹 인증·개인 AI 키 | `web_social_links`, `web_sessions`, `web_agent_keys`, `consent_events` | [043](../../../app/infrastructure/db/migrations/043_web_social_auth.sql), [044](../../../app/infrastructure/db/migrations/044_web_sessions.sql), [045](../../../app/infrastructure/db/migrations/045_web_agent_keys.sql), [046](../../../app/infrastructure/db/migrations/046_consents.sql) |
+| 조회 예산·공유 캐시·회차 제어 | `external_call_budget`, `job_gates`, `source_response_cache` | [027](../../../app/infrastructure/db/migrations/027_external_call_budget.sql), [041](../../../app/infrastructure/db/migrations/041_job_gates.sql), [042](../../../app/infrastructure/db/migrations/042_source_response_cache.sql) |
+| 요식 장소·영업시간·휴무·근거 | `dining.dn_place`, `dining.dn_hours_rule`, `dining.dn_closure_rule`, `dining.dn_source_record` | [200](../../../app/infrastructure/db/migrations/200_dining_schema.sql), 이후 201~225 변경 |
+| 보관기간·감시 실행·개선 작업 기록 | `legal_retention`, `travel_watch_runs`, `travel_watch_checks`, `service_improvement_batches` | [056](../../../app/infrastructure/db/migrations/056_legal_retention.sql), [228](../../../app/infrastructure/db/migrations/228_watch_run_history.sql), [229](../../../app/infrastructure/db/migrations/229_service_improvement.sql) |
+| 후보 이유 문장·장소 임베딩 | `candidate_reasons`, `place_embeddings` | [057](../../../app/infrastructure/db/migrations/057_candidate_reasons.sql), [058](../../../app/infrastructure/db/migrations/058_place_embeddings.sql) |
+| 접수 대안 미리 준비 | `intake_alternatives` | [061](../../../app/infrastructure/db/migrations/061_intake_alternatives.sql) |
+| 시험 여행 보관함 · 「남길 시험 여행」 표시 | `trip_archives`, `trip_archive_marks` | [062](../../../app/infrastructure/db/migrations/062_trip_archives.sql) |
 
-**UNIQUE 제약 셋이 idempotency의 최종 방어선이다.** 애플리케이션 로직만으로는 동시성을 못 막는다.
+위 표는 역할별 대표 목록입니다. 열·외래키·인덱스·이후 변경의 정확한 정의는 [전체 SQL 목록](../migrations.md)을 확인합니다. 파일의 CREATE TABLE 문 개수를 실행 중인 DB 테이블 수로 보고하지 않습니다.
 
-## 도메인 테이블 (커머스)
+## 공통 제약
 
-`002_domain_commerce.sql` · `006_products_catalog.sql`
+- 사건 순서: `case_events UNIQUE(case_id, aggregate_version)`.
+- 실행 중복 방지: `action_requests UNIQUE(tenant_id, idempotency_key)`.
+- 알림 중복 방지: `outbox UNIQUE(tenant_id, topic, dedupe_key)`.
+- 고객 데이터 접근은 [테넌트 격리](../tenancy.md) 계약을 함께 지킵니다.
 
-```text
-orders ──┬─ order_items
-         ├─ shipments
-         └─ returns
-products
-```
+## 쇼핑몰 표와 현재 제품을 구분하기
 
-```sql
-orders      (order_id, tenant_id, customer_id, order_no,
-             total_cents, item_count, status, ordered_at)
-order_items (order_item_id, tenant_id, order_id,
-             sku, name, quantity, unit_cents)
-shipments   (shipment_id, tenant_id, customer_id, order_id,
-             carrier, tracking_no, status, shipped_at, delivered_at)
-returns     (return_id, tenant_id, customer_id, order_id,
-             reason_code, quantity, status, requested_at)
-```
+초기 SQL에는 쇼핑몰 표를 만드는 정의가 남아 있습니다. 파일 존재는 현재 여행 제품에서 사용한다는 뜻이 아닙니다. [D-023](../../../../wiki/decisions/D-023-no-commerce-assets-in-use.md)은 쇼핑몰 자산의 현재 제품 사용을 금지하며, 2026-10-06 로컬 개발 DB에서 5개 쇼핑몰 표를 제거한 기록을 갖고 있습니다. 이를 모든 환경의 현재 상태로 확대하지 않습니다. 현재 runner는 역사 SQL 4개를 명시적으로 제외하며 새 임시 DB 시험에서 옛 5개 표의 미생성을 확인했습니다. 기존 업무 DB의 잔존 표 여부·삭제 여부와는 별개입니다. 초기 SQL 실행 범위는 [SQL 적용 안내](../migrations.md)에서 확인합니다.
 
-## ★ 결제 테이블이 없다
+## 이전 문서
 
-`[실측 2026-09-10]` **마이그레이션은 작업 트리 13개 · git 9개**이고 `pending/` 에 미추적 `011_drop_commerce_domain.sql` 이 하나 있다. 여행 표는 `010_domain_travel.sql`(`places`·`bookings`·`supplier_bookings`)·`011_place_catalog.sql` 에 있다. `[실측]` 그중 어디에도 `payments`가 없다. 의도된 것이다. → [../../../wiki/decisions/D-001-payment-ownership.md](../../../../wiki/decisions/D-001-payment-ownership.md)
+2026-10-11 정정 전 본문은 [보존본](_backup/2026-10-11_193844_current-facts/index.md)에 있습니다. 이전 측정·실험 결과를 현재 제품의 완료 증거로 사용하지 않습니다.
 
-결제 상태는 `orders.status`에 섞여 있다.
+## 관계
 
-```sql
-status text NOT NULL,  -- placed / paid / shipped / delivered / cancelled
-```
-
-**주문 진행 상태와 결제 사건이 한 칸에 있다.** 지저분하지만 지금 틀린 답을 만들지는 않는다.
-
-## ★ 금액 칸이 하나뿐이다 — 그런데 절반은 있다
-
-```sql
-orders.total_cents  int NOT NULL
-```
-
-**정가인지 실결제액인지 구분이 없다.** 할인·포인트·쿠폰이 들어갈 자리가 없다.
-
-**다만 `order_items.unit_cents`가 이미 있다.** 품목별 단가를 안다.
-
-```
-현재 환불 계산: total_cents × 수량 ÷ item_count   ← 균등 분할 가정
-가능한 개선  : order_items.unit_cents 로 품목별 배분
-```
-
-`[실측]` 즉 **"모든 품목 값이 같다"는 가정은 지금 데이터로도 버릴 수 있다.** 남은 문제는 할인 반영이다.
-
-| 문제 | 해결 가능한가 |
-|---|---|
-| 균등 분할 가정 | **가능.** `order_items.unit_cents` 사용 |
-| 할인·쿠폰 미반영 | **불가.** 실결제액 칸이 없다 → 쇼핑몰이 줘야 함 |
-
-## tenant 격리
-
-`[실측]` 인덱스 주석이 규칙을 밝힌다.
-
-```sql
--- ★조회는 항상 tenant_id + customer_id 로 좁힌다(설계 원칙 §1).
-CREATE INDEX orders_tenant_customer_idx    ON orders (tenant_id, customer_id);
-CREATE INDEX shipments_tenant_customer_idx ON shipments (tenant_id, customer_id);
-CREATE INDEX returns_tenant_customer_idx   ON returns (tenant_id, customer_id);
-```
-
-**조건 없는 조회 쿼리는 그 자체가 보안 결함이다.**
-
-| ID | 불변식 | 판정 | 실행 위치 |
-|---|---|---|---|
-| `INV-CS-SEC-005` | 같은 tenant 안에서도 customer 간 누출이 없다 | automated | `tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant` |
-| `INV-CS-SEC-006` | customer 미지정 조회도 tenant를 벗어나지 않는다 | automated | `tests/security/test_query_scope.py::test_case_list_without_customer_stays_inside_the_tenant` |
-
-## 임베딩 차원
-
-`knowledge_chunks.embedding vector(1536)` — `text-embedding-3-small` 기준.
-
-**모델을 바꾸면 DDL과 적재분을 함께 바꿔야 한다.**
-
-## 상태를 바꾸는 법
-
-`customer_cases`를 직접 `UPDATE`하지 않는다. `transition_case()`만이 진입점이다.
-
-`case_events`는 append-only다. `UPDATE`·`DELETE`하지 않는다.
-
-→ [../runtime/case-lifecycle.md](../../runtime/case-lifecycle.md)
-
----
-
-## 필드 전체 명세
-
-`[실측]` 2026-09-03. 계약 원문의 필드·타입·제약을 전부 옮겼다.
-
-→ **[fields.md](fields.md)**
-
-**여기는 개념이고 거기는 명세다.** 구현할 때는 그쪽을 본다.
-
+- [문서 작성 표준](../../../../wiki/governance/document-standard.md) — 정본·근거·이력 분리 규칙

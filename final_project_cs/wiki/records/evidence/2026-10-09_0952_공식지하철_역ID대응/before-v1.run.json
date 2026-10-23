@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/test_subway_line_identity_v1.py",
+    "tests/unit/travel/test_subway_station_extract_v1.py",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\pytest-subway-station-map-before-v1",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0952_공식지하철_역ID대응\\before-v1.xml"
+  ],
+  "time": "2026-10-09T09:55:25.926382+09:00",
+  "exit_code": 1
+}

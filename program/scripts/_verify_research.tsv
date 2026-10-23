@@ -1,0 +1,39 @@
+# research 26건 전건 판정 — 6차 검증에서 이 층이 2/2 실패해 일괄 이관을 막았다
+# 형식: 줄수 / 휴리스틱type / 사람type / 판정 / 목표 / 근거
+줄수	휴리스틱	사람	판정	목표	근거	경로
+371	research	decision	분할	hub/decisions+delivery	0.결론(decision)+현황(report)+7.권고 순서(plan)	_컴포저_UI배포구조_점검_2026-08-29.md
+288	research	report	이관	cs/quality	Claude·codex 두 벌 판정. 헤딩 1~6 이 두 번 나온다	_codex_추적화면_교차검증_2026-09-01.md
+243	research	report	대조필요	architecture/*	"2026-08-19 시점 스냅샷" 자기선언. repository-map 과 대조	_cs_구현현황.md
+214	research	report	이관	hub/governance	문서 드리프트 사후분석. VOC 껍데기 조정의 근거	2026-09-01_VOC가_팀모듈로_흘러간_경위.md
+208	research	research	이관	acop_dojo/wiki	순수 조사. 휴리스틱이 맞음	학습게임_방법론_조사.md
+204	research	research	이관	hub/research	방법론+표 A/B. mt-benchmark.md 와 대조	_번역모델_조사.md
+172	research	decision	이관	hub/decisions	D-005 원형. 표본 D 에서 확인	_3차_인용검증_설계.md
+160	research	guide	제자리	—	program/research 인덱스. CLAUDE.md 가 정본이라 부른다	index.md
+159	research	report	이관	acop_dojo/wiki	설계 검수. 치명적 약점 7+권고 5	학습게임_설계검수_2026-08-30.md
+154	research	reference	이관	hub/research	법령 원문. 조회 방법 재현 가능	_법령원문_2026-08-20.md
+127	research	report	이관	hub/decisions	검토+제안. Composer 계열	_중앙설정저장소_검토_2026-08-29.md
+119	research	plan	제외	—	★작업 지시 티켓. docs/handoff/_prompts/ 와 같은 성격	_prompts/S-TRACE-VIDEO.md
+111	research	report	제외	—	기판정. dod.md 실측 현황으로 대체	_DoD_구현갭_분석.md
+111	research	report	제외	—	기판정. 적용 완료	_정합성_수정제안.md
+102	research	evidence	이관	hub/evaluation	★결함 2건. metrics.md 의 "원인 미상"을 이미 풀었다	_평가harness_결함_2026-08-29.md
+99	research	reference	이관	hub/research	분쟁조정 사례 원문. 법령의 적용례	_분쟁조정사례_2026-08-20.md
+83	research	report	이관	hub/decisions	설계 대비 구현 대조. 판정 "불일치"	_컴포저_설계대비_구현대조.md
+70	research	policy	제자리	—	★CLAUDE.md 21행이 이 경로를 직접 참조한다. 옮기면 깨진다	_prompts/문서병합_지침.md
+61	research	report	제외	—	제출용 엑셀 검수. 완료된 작업	_검수결과_2026-08-17.md
+50	research	report	이관	hub/delivery	브리핑 7건 교차검증. 판정표	dev2_브리핑_교차검증_2026-08-28.md
+42	research	report	제외	—	"(대체됨)" 자기선언. 실측본이 정본	테스트_사각지대_2026-08-30.md
+40	research	report	제외	—	대조 기록. 완료	_정본대조_2026-08-18.md
+39	research	reference	이관	architecture/tech-stack	공식 문서 URL. curl 로 HTTP 200 확인	_기술스택_공식문서_2026-08-17.md
+33	research	reference	대조필요	business/market	병합본. market.md 와 대조	_시장·출처근거.md
+30	research	policy	대조필요	hub/governance	governance/ 의 원형. 반영 확인	_문서관리_전략.md
+26	research	reference	제자리	—	버전 이력. program/plan 옆에 있어야 한다	_버전이력.md
+
+# 집계
+# type 일치        2/26 =  7.7%   ★ 6차 검증의 2/2 실패가 우연이 아니었다
+# 판정 "유지" 유효 13/26 = 50.0%
+#
+# 판정 분포: 이관 13 · 제외 6 · 대조필요 3 · 제자리 3 · 분할 1
+#
+# ★ 실제 type 분포:  report 12 · reference 5 · decision 2 · research 2
+#   research 2건뿐이다. "program/research/ 아래 = research" 라는 추정이
+#   26건 중 24건에서 틀렸다. 이 폴더는 주제가 아니라 작성 경로로 묶인 곳이다.

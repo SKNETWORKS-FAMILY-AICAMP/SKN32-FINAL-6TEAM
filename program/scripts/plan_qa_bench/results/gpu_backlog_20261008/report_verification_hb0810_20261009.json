@@ -1,0 +1,96 @@
+{
+  "report_links_matched": [
+    16,
+    16
+  ],
+  "links": [
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/research/daily_rag_slm/gpu_backlog_2026-10-09.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_completed_hb0754_20261009/archive_verification.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_completed_hb0754_20261009/completion_verification_hb0754.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/completion_summary_hb0754_20261009.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_finch_completed_hb0754_20261009/archive_verification.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../datasets/core/pointing/trainset/train_oos/oos2r_finch_5e5_seed20261012_20261009/REPORT.md",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/A_finch_D3_completed_hb0810_20261009/archive_verification.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/finch_refill_hb0754_20261009.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/saluki_preservation_resume_hb0754_20261009/resume_verification.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/saluki_preservation_resume_hb0754_20261009/B_preservation_final_capture.json",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/backlog_mx_report.py",
+      "exists": true
+    },
+    {
+      "document": "final_project_cs\\wiki\\records\\reports\\2026-10-09_0810_gpu-saluki-cosine-completion-finch-refill.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/recover_A_finch_D3_hb0810_20261009.py",
+      "exists": true
+    },
+    {
+      "document": "datasets\\travel\\train_oos\\oos2r_finch_5e5_seed20261012_20261009\\REPORT.md",
+      "target": "recipe_complete.json",
+      "exists": true
+    },
+    {
+      "document": "datasets\\travel\\train_oos\\oos2r_finch_5e5_seed20261012_20261009\\REPORT.md",
+      "target": "adapter_model.safetensors",
+      "exists": true
+    },
+    {
+      "document": "datasets\\travel\\train_oos\\oos2r_finch_5e5_seed20261012_20261009\\REPORT.md",
+      "target": "oos2r_finch_5e5_20261008_lora_f16.gguf",
+      "exists": true
+    },
+    {
+      "document": "datasets\\travel\\train_oos\\oos2r_finch_5e5_seed20261012_20261009\\REPORT.md",
+      "target": "../../../../program/scripts/plan_qa_bench/results/gpu_backlog_20261008/B_finch_completed_hb0754_20261009/archive_verification.json",
+      "exists": true
+    }
+  ],
+  "FINCH_D3_metadata_matches": [
+    720,
+    720
+  ],
+  "FINCH_D3_SHA_matches": [
+    8,
+    8
+  ]
+}

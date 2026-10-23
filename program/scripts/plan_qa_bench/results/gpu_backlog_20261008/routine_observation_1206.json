@@ -1,0 +1,11 @@
+{
+  "new_completed": 0,
+  "new_failed": 0,
+  "ready_A": 8,
+  "B_existing_base_recipes": 2,
+  "B_automatic_download_recipes": 2,
+  "B_future_download_space_must_be_rechecked": true,
+  "queue_refill": false,
+  "restart": false,
+  "backup": "program/research/daily_rag_slm/_backup/2026-10-08_120742_routine_1206"
+}

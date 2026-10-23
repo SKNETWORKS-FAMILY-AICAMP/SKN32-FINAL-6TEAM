@@ -1,0 +1,14 @@
+{
+  "command": [
+    "C:\\Users\\playdata2\\anaconda3\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/unit/travel/mobility/test_shared_nearest_station_v1.py",
+    "--basetemp",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\.tmp\\mobility_complete_20261008\\shared-nearest-before-v1-temp",
+    "--junitxml",
+    "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\wiki\\records\\evidence\\2026-10-09_0921_\uac19\uc740\ucd5c\uadfc\uc811\uc5ed_\ub2e4\ub978\uc5ed\uc870\ud569\\before-v1.xml"
+  ],
+  "exit_code": 1
+}

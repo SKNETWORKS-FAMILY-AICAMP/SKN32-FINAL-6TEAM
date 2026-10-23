@@ -1,0 +1,38 @@
+{
+  "release": "StandardOne-8B",
+  "version": "v2.2",
+  "base_model": {
+    "repo": "mistralai/Ministral-3-8B-Instruct-2512-BF16",
+    "revision": "f6fae9795746f63c9be8344932f01275f3c63734"
+  },
+  "adapter": {
+    "adapter_model_sha256": "123ddd039f4053e82e8ca18d7c247691dc49cbcabb6e1b7d98077bb7c5c7446e"
+  },
+  "merge_report_summary": {
+    "changed_params": 238,
+    "unchanged_params": 293,
+    "changed_outside_lm_projections": [],
+    "max_abs_delta": 0.002109527587890625
+  },
+  "serving": {
+    "wording": "served",
+    "system_prompt": null,
+    "label_scheme": "upper",
+    "served_model_name": "standard-one-8b",
+    "engine": "SGLang 0.5.20",
+    "context_length": 32768,
+    "default_temperature": 1.65,
+    "selection": "the configuration used for the v2.2 measurements; no temperature was refit for v2.2",
+    "alternative_wording": {
+      "wording": "native",
+      "max_options": 26,
+      "default_temperature": 0.85,
+      "temperature_by_type": {
+        "choice": 0.85,
+        "noul": 0.85,
+        "score": 0.7
+      },
+      "note": "temperatures fitted on v2"
+    }
+  }
+}

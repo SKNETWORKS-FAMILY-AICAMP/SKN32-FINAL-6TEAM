@@ -1,0 +1,1010 @@
+!DOCTYPE html
+html lang=ko
+head
+  meta charset=UTF-8
+  titleguguroute (A-COPilot) 중간 발표 및 시연 기획 슬라이드 덱title
+  style
+    @import url('httpsfonts.googleapis.comcss2family=Pretendardwght@400;600;700;800&display=swap');
+
+     {
+      box-sizing border-box;
+      margin 0;
+      padding 0;
+    }
+
+    body {
+      font-family 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color #0b0f19;
+      color #e2e8f0;
+      padding 40px 20px;
+      display flex;
+      flex-direction column;
+      align-items center;
+      gap 50px;
+    }
+
+    .slide {
+      width 1280px;
+      min-height 720px;
+      background #131b2e;
+      border 1px solid #1e293b;
+      border-radius 16px;
+      padding 48px 56px;
+      box-shadow 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      position relative;
+      display flex;
+      flex-direction column;
+      justify-content space-between;
+      overflow hidden;
+    }
+
+    .slidebefore {
+      content ;
+      position absolute;
+      top 0;
+      left 0;
+      right 0;
+      height 4px;
+      background linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+    }
+
+    .header {
+      margin-bottom 20px;
+    }
+
+    .tag {
+      display inline-block;
+      font-size 13px;
+      font-weight 700;
+      text-transform uppercase;
+      letter-spacing 1px;
+      color #38bdf8;
+      background rgba(56, 189, 248, 0.1);
+      padding 4px 12px;
+      border-radius 9999px;
+      margin-bottom 8px;
+      border 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .title {
+      font-size 30px;
+      font-weight 800;
+      color #ffffff;
+      line-height 1.25;
+    }
+
+    .subtitle {
+      font-size 15px;
+      color #94a3b8;
+      margin-top 6px;
+    }
+
+    .content {
+      flex 1;
+      display flex;
+      flex-direction column;
+      gap 16px;
+      justify-content center;
+    }
+
+    .footer {
+      display flex;
+      justify-content space-between;
+      align-items center;
+      border-top 1px solid #1e293b;
+      padding-top 14px;
+      font-size 13px;
+      color #64748b;
+      margin-top 16px;
+    }
+
+    table {
+      width 100%;
+      border-collapse collapse;
+      font-size 13px;
+      background #0f172a;
+      border-radius 8px;
+      overflow hidden;
+      border 1px solid #1e293b;
+    }
+
+    th, td {
+      padding 10px 14px;
+      text-align left;
+      border-bottom 1px solid #1e293b;
+    }
+
+    th {
+      background #1e293b;
+      color #f1f5f9;
+      font-weight 700;
+    }
+
+    trlast-child td {
+      border-bottom none;
+    }
+
+    .grid-2 {
+      display grid;
+      grid-template-columns 1fr 1fr;
+      gap 20px;
+    }
+
+    .grid-3 {
+      display grid;
+      grid-template-columns 1fr 1fr 1fr;
+      gap 16px;
+    }
+
+    .grid-4 {
+      display grid;
+      grid-template-columns 1fr 1fr 1fr 1fr;
+      gap 14px;
+    }
+
+    .card {
+      background #0f172a;
+      border 1px solid #1e293b;
+      border-radius 12px;
+      padding 16px 18px;
+      display flex;
+      flex-direction column;
+      gap 8px;
+    }
+
+    .card-title {
+      font-size 15px;
+      font-weight 700;
+      color #38bdf8;
+      display flex;
+      align-items center;
+      gap 8px;
+    }
+
+    .highlight { color #38bdf8; font-weight 700; }
+    .warn { color #fbbf24; font-weight 700; }
+    .danger { color #f87171; font-weight 700; }
+    .success { color #34d399; font-weight 700; }
+
+    .mockup-chat {
+      background #020617;
+      border 1px solid #334155;
+      border-radius 12px;
+      padding 14px;
+      font-size 12.5px;
+      display flex;
+      flex-direction column;
+      gap 10px;
+      height 100%;
+    }
+
+    .bubble-user {
+      background #1e293b;
+      color #f8fafc;
+      padding 8px 12px;
+      border-radius 10px 10px 2px 10px;
+      align-self flex-end;
+      max-width 85%;
+    }
+
+    .bubble-ai {
+      background #0f172a;
+      border 1px solid #2563eb;
+      color #f8fafc;
+      padding 10px 12px;
+      border-radius 10px 10px 10px 2px;
+      align-self flex-start;
+      max-width 90%;
+      line-height 1.45;
+    }
+
+    .push-banner {
+      background linear-gradient(135deg, rgba(30, 58, 138, 0.5), rgba(15, 23, 42, 0.8));
+      border-left 4px solid #38bdf8;
+      padding 12px 14px;
+      border-radius 8px;
+      font-size 12.5px;
+      line-height 1.45;
+    }
+
+    .web-plan {
+      background #090d16;
+      border 1px solid #1e293b;
+      border-radius 12px;
+      padding 14px;
+      font-size 12px;
+      display flex;
+      flex-direction column;
+      gap 8px;
+    }
+
+    .timeline-item {
+      padding 8px 10px;
+      background #131d31;
+      border-radius 6px;
+      border-left 3px solid #38bdf8;
+    }
+
+    .timeline-item.canceled {
+      border-left-color #ef4444;
+      text-decoration line-through;
+      opacity 0.6;
+    }
+
+    .timeline-item.selected {
+      border-left-color #10b981;
+      background #13272e;
+    }
+
+    .badge {
+      display inline-block;
+      padding 2px 6px;
+      font-size 11px;
+      font-weight 700;
+      border-radius 4px;
+      margin-right 4px;
+    }
+    .badge-blue { background #1e3a8a; color #93c5fd; }
+    .badge-green { background #064e3b; color #6ee7b7; }
+    .badge-red { background #7f1d1d; color #fca5a5; }
+    .badge-amber { background #78350f; color #fde68a; }
+  style
+head
+body
+
+  !-- SLIDE 01 표지 --
+  div class=slide
+    div class=header
+      span class=tagSK네트웍스 Family AI 캠프 32기 · 최종 프로젝트span
+      h1 class=title style=font-size 40px; margin-top 8px;guguroute 여행 전체를 끝까지 관리하는brspan style=color#38bdf8;Headless Agentic CS 플랫폼spanh1
+      p class=subtitle style=font-size 18px; margin-top 10px;계획 생성이 아닌 strong성립 검증과 선(先)조정 후(後)보고 지속 관리 루프strongp
+    div
+
+    div class=content
+      div class=card style=background rgba(15, 23, 42, 0.6); border 1px solid #2563eb;
+        p style=font-size 15px; line-height 1.6;
+          strong class=highlightCore Value Pitchstrong 가고 싶은 곳과 예약을 주면 현실에서 성립하는지 코드로 검증하고, 
+          여행 중 상황 변화(기상·지연·휴무·통제)를 먼저 감지하여 strong최적 대안으로 자동 선(先)반영 후 즉시 통지strong하며,
+          마음에 들지 않을 때만 고객이 인터럽트하여 다른 안으로 교체하는 strongZero-Contact 지향 여행 비서strong.
+        p
+      div
+
+      div class=grid-4 style=margin-top 6px;
+        div class=card
+          div class=card-title🚀 Team Namediv
+          p style=font-size 15px; font-weight 700; color #fff;6Team A-COPilotp
+          p style=font-size 12px; color #94a3b8;AI Customer Operations Pilotp
+        div
+        div class=card
+          div class=card-title🧭 Project Namediv
+          p style=font-size 15px; font-weight 700; color #fff;guguroute (구구루트)p
+          p style=font-size 12px; color #94a3b8;Trip + Orchestration Pilotp
+        div
+        div class=card
+          div class=card-title📱 Headless UXdiv
+          p style=font-size 14px; font-weight 600; color #fff;No Dedicated Appp
+          p style=font-size 12px; color #94a3b8;개인 AI (MCP) + 동적 웹 링크p
+        div
+        div class=card
+          div class=card-title⚡ Pre-CS Rulediv
+          p style=font-size 14px; font-weight 600; color #fff;선(先)조정 후(後)보고p
+          p style=font-size 12px; color #94a3b8;1위안 선반영 & 수동 인터럽트p
+        div
+      div
+    div
+
+    div class=footer
+      divstrongR&Rstrong 시스템 아키텍처·코어전처리 (PM)  최연우 (Core)  서유현 (Mobility)  정세환 (Dining)  최상욱 (UI·검증·요식지원)  김지혜·송채영 (Activity)div
+      div2026.09 중간 발표div
+    div
+  div
+
+  !-- SLIDE 02 0905 ~ 0910 블로그 작업 로그 및 도메인 피벗 히스토리 --
+  div class=slide
+    div class=header
+      span class=tagEvolution Historyspan
+      h2 class=title0905 ~ 0910 블로그 의사결정 로그 & 도메인 피벗h2
+      p class=subtitle스마트스토어 단순 CS의 한계 인식에서 '인바운드 외국인 여행 지속관리 CS'로의 100% 코어 승계 전면 개편p
+    div
+
+    div class=content
+      div class=grid-3
+        div class=card
+          div class=card-title📅 0905 ~ 0907  커머스 CS 한계div
+          p style=font-size 12.5px; line-height 1.5; color #cbd5e1;
+            • 스마트스토어 주문·반품·취소 도메인 분석br
+            • span class=danger한계 발견span 단순 문의 응대 수준에 매몰, 텔레메트리 부재로 '선제 무인 CS(Zero-Contact)' 입증 불가br
+            • 고객이 불만을 말하기 전에 시스템이 알아서 해결하는 진짜 Pre-CS 도메인 탐색 착수
+          p
+        div
+        div class=card style=border-color #38bdf8;
+          div class=card-title🔄 0908 (v10)  여행 CS 전격 피벗div
+          p style=font-size 12.5px; line-height 1.5; color #cbd5e1;
+            • strong여행 지속관리 CS 플랫폼(A-COP)strong으로 공식 전환br
+            • span class=success코어 12개 영역 100% 승계span 12단계 생명주기, ActionProposal 결정론적 대조, 멱등성, 낙관적 락 무수정 보존br
+            • 대상 한국에 처음 오는 대만인 등 인바운드 자유여행객
+          p
+        div
+        div class=card
+          div class=card-title⚙️ 0909  라우팅 결함 실측 & 2축 정립div
+          p style=font-size 12.5px; line-height 1.5; color #cbd5e1;
+            • span class=warn실측 장애span 5개 단일 의도 라벨 사용 시 Case가 팀에 도달하지 못하고 전량 실패 확인br
+            • strong라우팅 2축 체계 확립strong codecase_typecode(객체 종류) + codeintentcode(요청 종류)br
+            • 멱등 키 바인딩 대상을 codecase_idcode에서 '서버 검증 객체 ID'로 전환
+          p
+        div
+      div
+
+      div class=card style=background rgba(30, 41, 59, 0.7);
+        div class=card-title🎯 0910 (v11)  팀장 위임 16대 최종 결정 동결div
+        div class=grid-4 style=font-size 12px; color #cbd5e1;
+          divstrong1. 기준 상품strong 서울 1도시 49,000원 (VAT포함, 2도시 59,000원에서 인하 조정)div
+          divstrong2. 선(先)결정 원칙strong 최고 대안 1위 선반영 후 통지, 불만 시 인터럽트 교체div
+          divstrong3. 통지 & 링크strong 상태 정본은 웹 토큰 링크, 디스코드 웹훅 푸시 직발송div
+          divstrong4. 적시 출발 안내strong code시작시각 - 실시간이동 - 여유마진code 역산 적시 발송div
+        div
+      div
+    div
+
+    div class=footer
+      divSource devroro.blogspot.com (0905~0910 프로젝트 로그) & 구현계획서 v11 §0-4div
+      divSlide 2  12div
+    div
+  div
+
+  !-- SLIDE 03 문제 정의 및 시장 공백 (Pain & Gap) --
+  div class=slide
+    div class=header
+      span class=tagProblem & Opportunityspan
+      h2 class=title여행 일정은 세우는 것보다 현장에서 지키는 것이 훨씬 어렵습니다h2
+      p class=subtitle일정 생성 AI는 넘쳐나지만, 현장 돌발 상황에서 끝까지 책임을 지는 '여행 CS'는 시장에 부재합니다.p
+    div
+
+    div class=content
+      table
+        thead
+          tr
+            th style=width 20%;비교 구분th
+            th style=width 40%;기존 여행 앱  일정 생성 AI (트리플, Mindtrip 등)th
+            th style=width 40%; color #38bdf8;guguroute (A-COPilot) 지속관리 CSth
+          tr
+        thead
+        tbody
+          tr
+            tdstrong핵심 역할strongtd
+            td초기 장소 추천, 일정표 생성, 리뷰 검색 (출발 전 정적 계획)td
+            td외부 AI가 만든 일정의 strong현실 성립 검증 및 귀가 시까지 지속 관리strongtd
+          tr
+          tr
+            tdstrong돌발 상황 대응strongtd
+            tdstrong사후 수동 검색strong 지연·휴무 시 사용자가 지도 켜고 직접 대안 재탐색td
+            tdstrongPre-CS 선제 감지strong 기상·통제·지연 감지 즉시 대안 선(先)적용 후 통지td
+          tr
+          tr
+            tdstrong의사결정 방식strongtd
+            td단순 선택지 나열 (A, B, C 식당 중 어디로 갈까요) &rarr; 피로도 가중td
+            tdstrong선(先)조정 후(後)보고strong 최적 1위안을 자동 반영하고 불만 시 교체td
+          tr
+          tr
+            tdstrong접근 방식 (UI)strongtd
+            td전용 폐쇄형 인앱 챗봇 및 앱 다운로드 강제td
+            tdstrongHeadlessstrong 사용자 평소 개인 AI(ChatGPTClaude) + 토큰 웹 링크td
+          tr
+          tr
+            tdstrong신뢰성 보장strongtd
+            td단순 생성형 LLM 텍스트 의존 (환각 및 폐업 정보 안내 위험)td
+            tdstrong결정론적 강제 대조strong 코드 기반 시간·예산·동선·휴무 100% 재검증td
+          tr
+        tbody
+      table
+
+      div class=grid-3 style=margin-top 6px;
+        div class=card style=border-left 4px solid #ef4444;
+          strong style=color #fff;Pain 1. 연쇄 붕괴 위험strong
+          p style=font-size 12.5px; color #94a3b8;한 곳에서 30분 지연되면 뒤따르는 식당 브레이크타임, 예약 체험이 연쇄적으로 파탄남p
+        div
+        div class=card style=border-left 4px solid #f59e0b;
+          strong style=color #fff;Pain 2. 언어 장벽 및 정보 비대칭strong
+          p style=font-size 12.5px; color #94a3b8;지하철 화재 무정차, 세종대로 행사 통제 등 한국어 현장 공지를 외국인은 인지 불가p
+        div
+        div class=card style=border-left 4px solid #10b981;
+          strong style=color #fff;guguroute Solutionstrong
+          p style=font-size 12.5px; color #94a3b8;시스템이 84초 주기로 감시하여 일정을 즉시 구제하고, 모국어로 적시 출발 행동을 지시p
+        div
+      div
+    div
+
+    div class=footer
+      divguguroute Value Proposition — PGBBB 분석 모델div
+      divSlide 3  12div
+    div
+  div
+
+  !-- SLIDE 04 전체 시스템 아키텍처 다이어그램 --
+  div class=slide
+    div class=header
+      span class=tagSystem Architecturespan
+      h2 class=title시스템 아키텍처 무수정 격리 Core & Headless Two-Trackh2
+      p class=subtitle개인 AI 접점과 동적 웹 링크, 그리고 3대 도메인 슬롯(Activity, Dining, Mobility)의 완벽한 분리p
+    div
+
+    div class=content
+      div class=card style=background #090d16; border 1px solid #1e293b; padding 14px;
+        div style=font-size 12px; color #38bdf8; font-weight 700; margin-bottom 6px;[LAYER 1] EXTERNAL ACCESS LAYER (HEADLESS TWO-TRACK)div
+        div class=grid-3 style=gap 12px;
+          div style=background #131d31; padding 10px; border-radius 6px; text-align center; border 1px solid #2563eb;
+            strong사용자 개인 AI 에이전트strongbrspan style=font-size 11px; color #94a3b8;Claude  ChatGPT  OpenClaw (MCP  REST)span
+          div
+          div style=background #131d31; padding 10px; border-radius 6px; text-align center; border 1px solid #10b981;
+            strong동적 여행계획서 웹 링크 (정본)strongbrspan style=font-size 11px; color #94a3b8;Token Auth (`t{trip_token}`) 무로그인 최신 조회span
+          div
+          div style=background #131d31; padding 10px; border-radius 6px; text-align center; border 1px solid #f59e0b;
+            strong고객 푸시 알림 채널strongbrspan style=font-size 11px; color #94a3b8;Discord Webhook  시스템 알림 (고객 언어 번역)span
+          div
+        div
+      div
+
+      div class=card style=background #090d16; border 1px solid #2563eb; padding 14px;
+        div style=font-size 12px; color #60a5fa; font-weight 700; margin-bottom 6px;[LAYER 2] BASEMENT CORE (무수정 승계 엔진)div
+        div class=grid-3 style=gap 12px;
+          div style=background #131d31; padding 10px; border-radius 6px; font-size 12px;
+            strong style=color#fff;Core 1. Case Runtimestrongbr
+            • 12단계 상태머신 전이br
+            • 2축 Registry (codecase_type + intentcode)br
+            • Context Broker (여행상태 주입)
+          div
+          div style=background #131d31; padding 10px; border-radius 6px; font-size 12px;
+            strong style=color#fff;Core 2. Action Platformstrongbr
+            • ActionProposal 코드 결정론적 대조br
+            • Outbox 메시지 릴레이br
+            • 객체 ID 기반 멱등성 (Idempotency)
+          div
+          div style=background #131d31; padding 10px; border-radius 6px; font-size 12px;
+            strong style=color#fff;Core 3. Sweeper Enginestrongbr
+            • 84초~2분 주기 감시 루프br
+            • codeFingerprintcode 해시 변화 감지br
+            • 적시 출발 알림 역산 발송기
+          div
+        div
+      div
+
+      div class=card style=background #090d16; border 1px solid #10b981; padding 14px;
+        div style=font-size 12px; color #34d399; font-weight 700; margin-bottom 6px;[LAYER 3] DOMAIN TEAM SLOTS (객체별 검증 & 재계획 모듈)div
+        div class=grid-3 style=gap 12px;
+          div style=background #131d31; padding 10px; border-radius 6px; font-size 12px; border-left 3px solid #38bdf8;
+            strong style=color#fff;Activity Team (김지혜·송채영)strongbr
+            관광·체험·쇼핑 운영공지, 기상청 초단기예보, 야외데크 통제 감지
+          div
+          div style=background #131d31; padding 10px; border-radius 6px; font-size 12px; border-left 3px solid #f59e0b;
+            strong style=color#fff;Dining Team (정세환  지원 최상욱)strongbr
+            식당 영업상태, 브레이크타임, 임시휴무, 카드결제, 노브레이크 대안
+          div
+          div style=background #131d31; padding 10px; border-radius 6px; font-size 12px; border-left 3px solid #10b981;
+            strong style=color#fff;Mobility Team (서유현)strongbr
+            대중교통 운행, 지하철 화재 무정차, 세종대로 도로통제, 우회환승
+          div
+        div
+      div
+    div
+
+    div class=footer
+      divClean Architecture & Separation of Concerns — Core Isolation Guaranteediv
+      divSlide 4  12div
+    div
+  div
+
+  !-- SLIDE 05 팀 아키텍처 및 6인 소유권 분담 --
+  div class=slide
+    div class=header
+      span class=tagTeam Ownershipspan
+      h2 class=title팀 아키텍처 및 6인 R&R 모듈별 소유권h2
+      p class=subtitle판정(코드)과 생성(LLM)의 엄격한 분리, 그리고 데이터 전처리 6인 전원 공통 참여 체계p
+    div
+
+    div class=content
+      div class=card style=background rgba(37, 99, 235, 0.1); border 1px solid #2563eb; padding 10px 16px;
+        span class=highlight💡 모듈화 제1원칙span 도메인 확장은 '객체 종류별'로 나눈다. (서울 &rarr; 부산 등 도시 추가는 데이터 추가일 뿐 코드가 바뀌지 않음)
+      div
+
+      div class=grid-3
+        div class=card
+          div class=card-title🛡️ Core  시스템 아키텍처div
+          p style=font-size 12.5px; color #cbd5e1;
+            • strong최연우 (Core)strong Case 생명주기, 낙관적 락 트랜잭션, Outbox 릴레이, 2축 라우터 구현br
+            • strong시스템 아키텍처 & 코어 전처리 (PM)strong 전체 아키텍처 총괄, 파이프라인 무수정 격리 검증, 코어 도메인 전처리
+          p
+        div
+        div class=card
+          div class=card-title🍽️ Dining Teamdiv
+          p style=font-size 12.5px; color #cbd5e1;
+            • strong정세환 (담당)strong 캐치테이블트립어드바이저 수집, 브레이크타임·임시휴무 검증 규칙br
+            • strong최상욱 (지원)strong 요식업 데이터 정제 지원, 노브레이크 대체 식당 사전 정규화
+          p
+        div
+        div class=card
+          div class=card-title🚇 Mobility Teamdiv
+          p style=font-size 12.5px; color #cbd5e1;
+            • strong서유현 (담당)strong 실시간 대중교통 운행 상태 감시, 도로 통제 수집, 지하철-버스 우회 경로 계산 알고리즘, 적시 출발역산 로직
+          p
+        div
+      div
+
+      div class=grid-3 style=margin-top 4px;
+        div class=card
+          div class=card-title🎡 Activity Teamdiv
+          p style=font-size 12.5px; color #cbd5e1;
+            • strong김지혜 · 송채영 (공동)strong TourAPI 관광지·쇼핑몰 정제, 기상청 초단기예보 연동, 실내실외 활동 적합성 판정, 대체 마트 추천
+          p
+        div
+        div class=card
+          div class=card-title🖥️ UI & 검증div
+          p style=font-size 12.5px; color #cbd5e1;
+            • strong최상욱 (담당)strong 동적 여행계획서 모바일 웹 뷰 구현, 토큰 인증, 버전 롤백 버튼, E2E 시나리오 회귀 테스트 하네스 운영
+          p
+        div
+        div class=card style=background rgba(16, 185, 129, 0.08); border-color #10b981;
+          div class=card-title style=color #34d399;📊 데이터 전처리 공통 참여div
+          p style=font-size 12.5px; color #cbd5e1;
+            • strong6인 전원 참여strong 서울 5대 거점(잠실, 성수, 종로, 서울역, 명동) 시설·영업시간·휴무일 전수 크로스 검증
+          p
+        div
+      div
+    div
+
+    div class=footer
+      divDefined in Implementation Plan v11 §5 & Final Project CS WBSdiv
+      divSlide 5  12div
+    div
+  div
+
+  !-- SLIDE 06 데이터베이스 아키텍처 & ERD --
+  div class=slide
+    div class=header
+      span class=tagDatabase Architecturespan
+      h2 class=title데이터베이스 아키텍처 14개 Core 보존 & 5개 도메인 교체h2
+      p class=subtitle영속적 Trip과 단기적 Case의 생명주기 완벽 분리, Append-only 불변 버전 스냅샷p
+    div
+
+    div class=content
+      div class=grid-2
+        div class=card
+          div class=card-title style=color #60a5fa;📦 코어 보존 14개 테이블 (무수정 승계)div
+          p style=font-size 12px; color #94a3b8;커머스에서 검증된 정합성·동시성 인프라 원형 그대로 유지p
+          div style=display grid; grid-template-columns 1fr 1fr; gap 6px; font-size 11.5px; margin-top 4px;
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• customer_casesdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• case_eventsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• action_requestsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• action_approvalsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• outboxdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• agent_runsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• team_tasksdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• llm_callsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• promptsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• customersdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• tenantsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• knowledge_docsdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• knowledge_chunksdiv
+            div style=background #1e293b; padding 5px 8px; border-radius 4px;• feedback_reportsdiv
+          div
+        div
+
+        div class=card style=border-color #38bdf8;
+          div class=card-title style=color #38bdf8;🔄 교체된 5개 여행 전용 테이블div
+          p style=font-size 12px; color #94a3b8;주문배송 테이블을 여행 상태일정감시 구조로 교체p
+          div style=display flex; flex-direction column; gap 6px; font-size 11.5px; margin-top 4px;
+            div style=background #13272e; padding 6px 8px; border-radius 4px; border-left 3px solid #38bdf8;
+              strong1. tripsstrong 여행 메타데이터, 인원, 여행 토큰, 언어 선호
+            div
+            div style=background #13272e; padding 6px 8px; border-radius 4px; border-left 3px solid #38bdf8;
+              strong2. itinerary_itemsstrong 세부 방문지이동 구간, 시각, 예약ID, 잠김(Locked) 여부
+            div
+            div style=background #13272e; padding 6px 8px; border-radius 4px; border-left 3px solid #10b981;
+              strong3. itinerary_versions (핵심)strong Append-only 스냅샷. 버전별 JSON 저장 &rarr; 100% 롤백 보장
+            div
+            div style=background #13272e; padding 6px 8px; border-radius 4px; border-left 3px solid #f59e0b;
+              strong4. watch_targetsstrong 현재 일정에 걸린 대상 등록 (84초 폴링)
+            div
+            div style=background #13272e; padding 6px 8px; border-radius 4px; border-left 3px solid #f59e0b;
+              strong5. watch_logsstrong 장소 운영상태 해시(codefingerprintcode) 변경 이력 추적
+            div
+          div
+        div
+      div
+
+      div class=card style=background rgba(15, 23, 42, 0.8);
+        div style=display flex; justify-content space-between; font-size 12.5px;
+          divstrong class=highlightTrip vs Case 생명주기 분리strong Trip은 7일간 유지  Case는 돌발 사건 발생 시 생성되어 선반영 완료 후 소멸div
+          divstrong class=success낙관적 락(Optimistic Lock)strong codeUPDATE trips WHERE version = expected_versioncode 충돌 방지div
+        div
+      div
+    div
+
+    div class=footer
+      divSchema Design based on Implementation Plan v11 §7-Bdiv
+      divSlide 6  12div
+    div
+  div
+
+  !-- SLIDE 07 확정 시나리오 & 6대 사건 종합 매핑 --
+  div class=slide
+    div class=header
+      span class=tagPersona & Scenariospan
+      h2 class=title대표 시나리오 대만인 여성 2명의 서울 1일 투어h2
+      p class=subtitle쇼핑과 K-식도락 목적 방문 중 마주치는 6대 돌발 사건과 guguroute 선제 대응 매핑p
+    div
+
+    div class=content
+      div style=background #0f172a; border 1px solid #1e293b; padding 10px 14px; border-radius 8px; font-size 12.5px;
+        strong여행자 페르소나strong 대만인 여성 2명 (친구)  K-콘텐츠 계기 서울 방문  본인 K-푸드마트 쇼핑, 친구 K-뷰티향수 쇼룸br
+        strong원래 계획 동선strong 0900 호텔 &rarr; 1000 잠실 스카이타워 &rarr; 1100 성수동 쇼핑 &rarr; 1300 점심 &rarr; 1530 경복궁 &rarr; 1800 저녁 &rarr; 1930 롯데마트
+      div
+
+      table style=font-size 12.5px; margin-top 2px;
+        thead
+          tr
+            th구간시간th
+            th돌발 사건 (사건 코드)th
+            th인지 주체th
+            thguguroute 선(先)조정 대응 메커니즘 (Action)th
+            th개정 버전th
+          tr
+        thead
+        tbody
+          tr
+            tdstrong1000 잠실strongtd
+            tdstrong액-02 기상 악화strong (미세먼지소나기)td
+            tdspan class=badge badge-blue시스템 선제감지spantd
+            td야외 데크 통제 감지 &rarr; 실내존 관람으로 단축 권장 선반영 및 통지td
+            tdcodev1.1codetd
+          tr
+          tr
+            tdstrong1100 이동strongtd
+            tdstrong이동-B1 성수역 화재 무정차strongtd
+            tdspan class=badge badge-blue시스템 선제감지spantd
+            td건대입구역 하차 후 버스 우회 환승 1위안 선반영 & 출발 알림td
+            tdcodev1.2codetd
+          tr
+          tr
+            tdstrong1300 성수strongtd
+            tdstrong요식-P3 팝업 70분 대기 지연strongtd
+            tdspan class=badge badge-amber사용자 지연신고spantd
+            td1500 브레이크타임 회피 도보 5분 strong성수 퓨전 한식 A 선반영 후 통지strongtd
+            tdcodev1.3codetd
+          tr
+          tr
+            tdstrong1715 이동strongtd
+            tdstrong이동-A6 광화문 도로 통제strongtd
+            tdspan class=badge badge-blue시스템 선제감지spantd
+            td세종대로 버스 지연 회피 &rarr; 지하철 3호선-1호선 우회로 선반영 & 적시 출발 알림td
+            tdcodev1.4codetd
+          tr
+          tr
+            tdstrong1800 저녁strongtd
+            tdstrong요식-P7 식당 당일 임시휴무strongtd
+            tdspan class=badge badge-red사용자 현장신고spantd
+            td카드 결제 가능 도보 8분 검증 대체식당 선반영 & 다음 롯데마트 무영향 보장td
+            tdcodev1.5codetd
+          tr
+          tr
+            tdstrong1930 마트strongtd
+            tdstrong액-08 인기 라면·디저트 품절strongtd
+            tdspan class=badge badge-amber사용자 질의spantd
+            td호텔 복귀 동선 상의 대체 매점(명동 대형점) 120m 우회 안내 후 여행 완결td
+            tdcodev1.6codetd
+          tr
+        tbody
+      table
+    div
+
+    div class=footer
+      divSource 확정_시나리오.md & Implementation Plan v11 §8-Adiv
+      divSlide 7  12div
+    div
+  div
+
+  !-- SLIDE 08 시연 목업 1 - 시스템 감지 & 성수역 화재 우회 선반영 --
+  div class=slide
+    div class=header
+      span class=tagLive Mockup Demo 1span
+      h2 class=title[시스템 감지] 잠실 기상 악화 & 성수역 화재 긴급 우회h2
+      p class=subtitle선(先)조정 후(後)보고 원칙 시스템이 최적 우회로를 먼저 일정에 반영하고 통지합니다.p
+    div
+
+    div class=content
+      div class=grid-3
+        !-- 1. 잠금화면 시스템 푸시 알림 --
+        div class=card
+          div class=card-title🔔 1. 모바일 잠금화면 푸시 (View C)div
+          div class=push-banner
+            strong style=color#38bdf8;[guguroute 긴급 이동 알림]strongbr
+            ⚠️ strong성수역 화재로 열차가 무정차 통과 중입니다.strongbrbr
+            우회 후보 중 되돌아가지 않는 strong[건대입구역 하차 &rarr; 1번 출구 버스(광진05) 환승]strong 경로를 일정에 선반영했습니다.brbr
+            span style=font-size 11px; color #94a3b8; 다른 경로(뚝섬역 경유)를 원하시면 계획서에서 변경하세요.span
+          div
+          div style=font-size 11.5px; color #64748b; margin-top auto;
+            발송 시각 1048 (잠실역 승차 직전 적시 발송)
+          div
+        div
+
+        !-- 2. 동적 여행계획서 웹 뷰 --
+        div class=card
+          div class=card-title🌐 2. 여행계획서 웹 뷰 (View B)div
+          div class=web-plan
+            div style=display flex; justify-content space-between; border-bottom 1px solid #1e293b; padding-bottom 4px;
+              strongSeoul Trip (seoul-8f92)strong
+              span class=badge badge-greenv1.2 선반영됨span
+            div
+            div class=timeline-item1000 잠실 스카이타워 (실내존 관람 완료)div
+            div class=timeline-item canceled1100 2호선 잠실역 &rarr; 성수역 직통 (화재 통제)div
+            div class=timeline-item selected
+              strong[선택 반영] 건대입구 경유 버스 환승strongbr
+              - 2호선 잠실 &rarr; 건대입구 하차 (도보 2분)br
+              - 광진05번 버스 환승 &rarr; 성수 메인거리 도착 (소요 24분)
+            div
+            button style=background #1e293b; border 1px solid #334155; color #94a3b8; padding 5px; border-radius 4px; font-size 11px; cursor pointer;
+              🔄 다른 대안 선택하기 [뚝섬역 경유 도보안]
+            button
+          div
+        div
+
+        !-- 3. 백엔드 결정론적 검증 로그 --
+        div class=card
+          div class=card-title⚙️ 3. Core Engine 백엔드 검증div
+          div style=background #020617; padding 10px; border-radius 6px; font-family monospace; font-size 11px; line-height 1.4; color #a5f3fc;
+            [104712] SWEEPER Subway fire event detectedbr
+            [104713] MobilityTeam(서유현) Direct subway rejectedbr
+            [104714] ROUTE EVALUATIONbr
+            - Candidate A 건대입구 경유 버스 (24분, 도보 180m)br
+            - Candidate B 뚝섬역 경유 도보 (29분, 도보 850m)br
+            span style=color#34d399;[104715] RANKING RULE 바뀐 항목 수 최소 & 도보 최소 원칙에 따라 [Candidate A] 1위 확정spanbr
+            [104715] CoreConstraint(최연우) 성수동 일정 지연마진 35분 유지 확인 통과br
+            [104716] OUTBOX Version bumped to v1.2 & Push Dispatched
+          div
+        div
+      div
+    div
+
+    div class=footer
+      divScene A 이동-B1 성수역 무정차 통과 대응 흐름div
+      divSlide 8  12div
+    div
+  div
+
+  !-- SLIDE 09 시연 목업 2 - 사용자 지연 신고 & 식당 브레이크타임 회피 --
+  div class=slide
+    div class=header
+      span class=tagLive Mockup Demo 2span
+      h2 class=title[선(先)결정 후(後)보고] 팝업 70분 지연 & 브레이크타임 회피h2
+      p class=subtitle선택지를 묻지 않고 1위 식당으로 즉시 변경 후 통지하며, 고객은 불만족 시에만 인터럽트합니다.p
+    div
+
+    div class=content
+      div class=grid-3
+        !-- 1. 개인 AI 메신저 창 (선결정 후보고 대화) --
+        div class=card
+          div class=card-title💬 1. 개인 AI 채팅 (Claude MCP)div
+          div class=mockup-chat
+            div class=bubble-user
+              팝업스토어 줄이 너무 길어서 70분 늦어졌어. 지금 1410인데 점심 어떡하지
+            div
+            div class=bubble-ai
+              원래 예약 식당은 1500 브레이크타임으로 주문 마감되어 이용이 불가합니다.brbr
+              도보 6분 내 노브레이크 대안 2곳(퓨전 한식 A  수제버거 B) 중 이동거리가 가장 짧은 strong'성수 퓨전 한식 A'로 일정을 먼저 변경해 두었습니다.strongbrbr
+              span style=color #6ee7b7;(1530 경복궁 한복 체험 일정은 변동 없이 정상 진행됩니다.)spanbrbr
+              em수제버거 B로 바꾸시려면 지금 말씀해 주세요!em
+            div
+            div class=bubble-user style=background #0f172a; border 1px dashed #475569;
+              (고객이 다른 의견이 없으면 변경된 일정으로 바로 진행)
+            div
+          div
+        div
+
+        !-- 2. 동적 여행계획서 웹 뷰 --
+        div class=card
+          div class=card-title🌐 2. 여행계획서 웹 뷰 (View B)div
+          div class=web-plan
+            div style=display flex; justify-content space-between; border-bottom 1px solid #1e293b; padding-bottom 4px;
+              strongSeoul Trip (seoul-8f92)strong
+              span class=badge badge-greenv1.3 선반영됨span
+            div
+            div class=timeline-item canceled
+              1300 기존 양식당 (1500 브레이크타임 마감 취소)
+            div
+            div class=timeline-item selected
+              strong[선반영 완료] 성수 퓨전 한식 Astrongbr
+              - 1415 착석 예정 (도보 5분, 브레이크타임 없음)br
+              - 1415 ~ 1455 여유로운 식사 보장
+            div
+            div style=background #1e293b; padding 6px; border-radius 4px; font-size 11px; color #94a3b8;
+              대체 후보 2순위 성수 수제버거 B (도보 6분)
+              button style=background #2563eb; color #fff; border none; padding 2px 6px; border-radius 3px; font-size 10px; margin-left 4px; cursor pointer;버거로 교체button
+            div
+            div class=timeline-item1500 성수역 &rarr; 경복궁역 이동 (정상 연결)div
+          div
+        div
+
+        !-- 3. 적시 출발 안내 (Just-in-Time) --
+        div class=card
+          div class=card-title⏰ 3. 적시 출발 안내 (Just-in-Time)div
+          div class=push-banner style=border-left-color #10b981;
+            strong style=color#6ee7b7;[guguroute 이동 안내] 1455 지금 출발하세요!strongbrbr
+            식사 후 1530 경복궁 한복 체험까지 늦지 않도록 지금 나서셔야 합니다.brbr
+            📍 strong이동 경로strong 성수역(2호선) 탑승 &rarr; 을지로3가역(3호선 환승) &rarr; 경복궁역 4번 출구 (총 28분 소요)
+          div
+          div style=font-size 11.5px; color #94a3b8; line-height 1.45; margin-top 8px;
+            strong출발역산 알고리즘strongbr
+            code출발 시각(1455) = 도착 시각(1530) - 이동 시간(28분) - 안전 여유(7분)code
+          div
+        div
+      div
+    div
+
+    div class=footer
+      divScene B 요식-P3 70분 지연 및 선결정 후보고 인터럽트 프로세스div
+      divSlide 9  12div
+    div
+  div
+
+  !-- SLIDE 10 시연 목업 3 - 임시휴무 & 상품품절 안전 종결 --
+  div class=slide
+    div class=header
+      span class=tagLive Mockup Demo 3span
+      h2 class=title[현장 신고 & 질문] 식당 임시휴무 선교체 및 귀가 동선 마트 안내h2
+      p class=subtitle돌발 폐업에 당황하지 않도록 즉시 최적 대안 반영, 여행 종료까지 100% 지속 관리 완결p
+    div
+
+    div class=content
+      div class=grid-2
+        div class=card
+          div class=card-title🍽️ Scene C. 1800 저녁식당 당일 임시휴무 (요식-P7)div
+          div class=mockup-chat style=height auto;
+            div class=bubble-user식당에 도착했는데 '금일 임시휴무' 안내문이 붙어 있어!div
+            div class=bubble-ai
+              당황하지 마세요! 대만 신용카드 결제가 가능하고 도보 8분 거리에 있는 strong'종로 갈비탕 맛집 C'로 일정을 즉시 변경해 두었습니다.strongbrbr
+              1820에 착석하여 식사하시면 1930 롯데마트 서울역점 쇼핑 일정에 전혀 지장이 없습니다.br
+              em(계획서 v1.5 자동 업데이트 완료)em
+            div
+          div
+          div style=font-size 11.5px; color #94a3b8; margin-top 2px;
+            • strongDining Team(정세환) 검증strong 외국인 카드 결제 지원 + 라스트오더 2030 확인
+          div
+        div
+
+        div class=card
+          div class=card-title🛒 Scene D. 1930 롯데마트 라면 품절 (액-08)div
+          div class=mockup-chat style=height auto;
+            div class=bubble-user사려던 인기 라면세트랑 디저트가 다 품절됐어. 근처에 살 수 있는 다른 곳 있어div
+            div class=bubble-ai
+              호텔(명동)로 복귀하시는 귀가 동선 바로 위에 있는 strong'올리브영 명동본점 & 대형 슈퍼'strong에서 해당 디저트와 K-라면 패키지를 취급합니다.brbr
+              기존 귀가 경로에서 120m만 우회하시면 방문 가능합니다. 이동 경로에 추가해 드릴게요!
+            div
+          div
+          div style=font-size 11.5px; color #94a3b8; margin-top 2px;
+            • strongActivity Team(김지혜·송채영) 검증strong 귀가 동선 최적 이탈거리 120m 대안점 도출
+          div
+        div
+      div
+
+      div class=card style=background rgba(16, 185, 129, 0.1); border 1px solid #10b981;
+        div style=display flex; justify-content space-between; align-items center;
+          div
+            strong style=color #6ee7b7; font-size 14.5px;🎉 하루 일정 관리 완료 Version 1.6 최종 종결strong
+            p style=font-size 12px; color #cbd5e1; margin-top 2px;
+              6대 사건(기상악화, 지하철화재, 70분지연, 광화문통제, 당일휴무, 상품품절) 발생에도 취소 위약금 0원, 예약 일정 위반 0건으로 성공적 완결
+            p
+          div
+          span class=badge badge-green style=font-size 12px; padding 4px 10px;DoD 18개 전량 통과span
+        div
+      div
+    div
+
+    div class=footer
+      divScene C & D 현장 사건 완벽 방어 및 지속 관리 루프 종료div
+      divSlide 10  12div
+    div
+  div
+
+  !-- SLIDE 11 비즈니스 모델 & 손익 분석 --
+  div class=slide
+    div class=header
+      span class=tagBusiness Model & Unit Economicsspan
+      h2 class=title비즈니스 모델 팀당 49,000원 & 검증된 공헌이익h2
+      p class=subtitle광고비나 제휴 수수료 없이 단품 판매만으로 흑자를 달성하는 건전한 단위 원가 구조p
+    div
+
+    div class=content
+      div class=grid-3
+        div class=card style=border-color #38bdf8;
+          div class=card-title💵 팀당 이용권 가격div
+          p style=font-size 30px; font-weight 800; color #fff;49,000원p
+          p style=font-size 12.5px; color #94a3b8;VAT 포함 (최대 7일, 4인 기준)brstrong인당 12,250원strong의 압도적 가성비p
+          div style=font-size 11.5px; color #38bdf8; margin-top 4px;
+             2도시 59,000원에서 서울 1도시 49,000원으로 현실적 조정 완료 (0910 결정 13)
+          div
+        div
+
+        div class=card
+          div class=card-title📉 팀당 변동비 구조 (단위 원가)div
+          table style=font-size 11.5px;
+            tbody
+              trtdVAT 제외 순매출 (환불 3% 반영)tdtd style=text-alignright;43,209원tdtr
+              trtdPG 결제 수수료 (일반카드 4%)tdtd style=text-alignright;-1,960원tdtr
+              trtd외부 데이터 (RoutesPlaces)tdtd style=text-alignright;-8,000원tdtr
+              trtdLLM 호출비 (선제 번역·재계획)tdtd style=text-alignright;-1,500원tdtr
+              trtd사람 지원 (평균 6분 인계 대비)tdtd style=text-alignright;-7,500원tdtr
+              trtd고객 획득비 (CAC 가중평균)tdtd style=text-alignright;-8,500원tdtr
+              tr style=font-weight 700; background #1e293b;td style=color#34d399;팀당 공헌이익tdtd style=text-alignright; color#34d399;+14,249원tdtr
+            tbody
+          table
+        div
+
+        div class=card
+          div class=card-title🎯 손익분기점 (BEP) 및 운영div
+          p style=font-size 12.5px; line-height 1.55; color #cbd5e1;
+            • strong기여이익률strong 약 33.0% (CAC 차감 기준, 순마진 건전)br
+            • strong연간 고정비strong 약 1.8억 원 가정 시 연간 약 12,000건 판매로 BEP 달성br
+            • strong절대 원칙strong 판정 결과에 광고나 제휴 식당을 끼워 넣지 않음 (판정의 순수성 보장)
+          p
+          div class=push-banner style=margin-top auto; padding 6px 10px; font-size 11px;
+            무료 폴링은 TourAPI·공공데이터로만 수행하여 API 폭탄 원천 차단
+          div
+        div
+      div
+    div
+
+    div class=footer
+      divSource Implementation Plan v11 §11-A & A-COP_비용과_수익구조.mddiv
+      divSlide 11  12div
+    div
+  div
+
+  !-- SLIDE 12 WBS 로드맵 및 결론 --
+  div class=slide
+    div class=header
+      span class=tagRoadmap & Conclusionspan
+      h2 class=titleWBS 로드맵 및 향후 일정 계획h2
+      p class=subtitle중간 발표 기점 18개 MVP DoD 검증 완료 및 최종 발표(1026)를 향한 6주 4일 계획p
+    div
+
+    div class=content
+      div class=grid-2
+        div class=card
+          div class=card-title📅 주차별 마일스톤 WBSdiv
+          div style=display flex; flex-direction column; gap 8px; font-size 12px;
+            div style=background #13272e; padding 8px 10px; border-radius 4px; border-left 3px solid #10b981;
+              strong1W~2W (완료)strong 도메인 피벗, Core 격리 보존, 2축 라우터, 19개 DB 설계, 확정 시나리오
+            div
+            div style=background #13272e; padding 8px 10px; border-radius 4px; border-left 3px solid #38bdf8;
+              strong3W (현재 - 중간발표)strong Headless 2-Track UX, 선결정 후보고 목업 시연, 6인 R&R 확정
+            div
+            div style=background #1e293b; padding 8px 10px; border-radius 4px;
+              strong4W~5W (예정)strong ActivityDiningMobility 3대 팀 검증 로직 완성, 84초 스위퍼 결합
+            div
+            div style=background #1e293b; padding 8px 10px; border-radius 4px;
+              strong6W~7W (예정)strong 번체 중국어 다국어 출력 검증, McNemar 통계 하네스(60+30건), 최종 데모
+            div
+          div
+        div
+
+        div class=card style=border-color #38bdf8;
+          div class=card-title🏆 결론 guguroute이 제시하는 새로운 표준div
+          p style=font-size 13px; line-height 1.65; color #cbd5e1;
+            1. strong더 이상 앱을 깔지 마세요strong 평소 쓰던 개인 AI와 토큰 웹 링크로 가볍게 시작합니다.br
+            2. strong더 이상 선택지에 피로해지지 마세요strong guguroute이 최선의 1위안을 먼저 반영하고 지킵니다.br
+            3. strong환각 없는 100% 안전 보장strong 코어 엔진의 결정론적 제약 검증이 여행을 실패로부터 방어합니다.
+          p
+          div style=background #020617; border 1px solid #2563eb; padding 10px; border-radius 6px; text-align center; margin-top auto;
+            strong style=color #38bdf8; font-size 15px;끝까지 믿고 맡길 수 있는 진정한 여행 오케스트레이터strong
+          div
+        div
+      div
+    div
+
+    div class=footer
+      divSK네트웍스 Family AI 캠프 32기 6팀 A-COPilot — Q&A 감사합니다.div
+      divSlide 12  12div
+    div
+  div
+
+body
+html

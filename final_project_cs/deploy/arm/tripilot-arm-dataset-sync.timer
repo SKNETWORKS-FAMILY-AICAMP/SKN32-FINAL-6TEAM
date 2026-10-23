@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync guguroute datasets from Google Drive every ten minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=10min
+Persistent=true
+Unit=tripilot-arm-dataset-sync.service
+
+[Install]
+WantedBy=timers.target

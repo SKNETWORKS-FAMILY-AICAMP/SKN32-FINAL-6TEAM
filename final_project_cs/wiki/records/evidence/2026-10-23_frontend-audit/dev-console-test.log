@@ -1,0 +1,13 @@
+
+> @tripilot/dev-console@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.1 D:/FinalProject/Dev/fe-audit-20261023/final_project_cs/frontend/apps/dev-console
+
+
+ Test Files  4 passed (4)
+      Tests  55 passed (55)
+   Start at  01:30:49
+   Duration  1.18s (import 43%, tests 33%, transform 21%, worker 2%)
+

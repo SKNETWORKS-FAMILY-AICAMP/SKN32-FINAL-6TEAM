@@ -3,7 +3,7 @@ type: guide
 title: Decisions (cs)
 description: 이 저장소에만 영향을 주는 결정. 여러 저장소에 걸친 것은 중앙 허브에 있다
 status: draft
-domain: neutral
+domain: travel
 ---
 
 # Decisions (cs)
@@ -24,13 +24,30 @@ domain: neutral
 
 | ID | 결정 | 상태 | 영향 |
 |---|---|---|---|
+| [D-CS-016](D-CS-016-llm-failover-server-key.md) | **모델 서버가 모두 안 되면 서버용 OpenAI 키로 자동 전환한다** `[2026-10-07 사용자]` — 서버키 하나만(개인 키 금지) · 스위치 기본 꺼짐 · 이미지는 기본 제외 · 호출 상한 · 기본 모델은 재생 실측으로 `gpt-4.1`(운영은 환경 파일이 정함) | draft | 모델 호출 · 보안 · 비용 |
+| [D-CS-015](D-CS-015-local-embedding-bge-m3.md) | **임베딩은 로컬 bge-m3 로 쓴다 — 품질 비교 없이 운영 사정으로 정했다** `[2026-10-12]` — OpenAI 크레딧 소진으로 2026-09-22 전환. 다른 모델과 같은 조건 비교는 없었다. 교체 여부는 여행 규정 질의 세트 비교 뒤 | draft | RAG · 임베딩 |
 | [D-CS-001](D-CS-001-composer-ui-removal.md) | `/ui/composer` 폐기 | draft | 인증 경계 |
 | [D-CS-002](D-CS-002-finetuned-model-not-adopted.md) | **파인튜닝 모델 채택 안 함** | draft | 평가·자체호스팅 |
 | [D-CS-003](D-CS-003-composer-scope.md) | **Composer 범위 — 세 층** | draft | Composer·UI |
 | [D-CS-004](D-CS-004-composer-boundary.md) | 모듈 **6종**·Port 3종·Core 9종 경계 `[정정 2026-09-10]` 7종이었다 — `composer_ui` 가 빠졌다 | draft | Composer |
 | [D-CS-007](D-CS-007-ui-operator-login.md) | **운영 화면은 로그인한 운영자만** — 화면이 scope 키를 스스로 만들어 `/ui` 에 닿으면 누구나 승인할 수 있었다. 운영자 계정·서명 쿠키·scope 검사, 승인자를 실제 운영자 id 로 | draft | 인증 경계 |
+| [D-CS-008](D-CS-008-ops-console-separate-app.md) | **운영자 콘솔은 다른 프로세스·127.0.0.1 만**(1단계) — 운영 화면·관리 API·시나리오를 고객 API 앱에서 빼 운영 앱(8070)으로. 고객 API 는 실제 HTTP·키는 운영 앱 설정에만·폼 위조 방지. 2단계(다른 기계) 전엔 「물리 분리 완료」 아님 | accepted | 인증 경계 |
+| [D-CS-014](D-CS-014-routing-reroute.md) | **라우팅이 어긋나면 한 번 더 고른다** `[2026-10-06 사용자]` — 이 제품엔 사람 운영자 큐가 없어 `escalated` 는 아무도 받지 않는다. 등록된 팀이 **실제로 받는 종류** 안에서만 고르고, 돌려받은 답도 등록부에 **다시 물어** 확인한다. Case 당 한 번. 못 고르면 종전대로 `escalated` | accepted | 라우팅 · 모델 비용 |
+| [D-CS-013](D-CS-013-domain-folder-layout.md) | **업무 도메인 폴더는 `app/domains/<도메인>/` 아래 다섯 칸** `[2026-10-06 사용자 · Codex 2회차 합의]` — modules · instances · components · ports · entry(+ scenarios). 옛 `app/domain/`(Case 상태 규칙)은 `app/core/case_lifecycle/` 로 옮겨 `domain`·`domains` 겹침을 없앴다. **옮기기 끝(2026-10-06)** — 여행 외부 데이터 소스도 `ports/data_sources` 로. 칸끼리 규칙 시험(팀 → 다른 팀 0) | accepted | 폴더 구조 · 경계 시험 |
+| [D-CS-012](D-CS-012-agent-auth-claude-style.md) | **에이전트 연결은 클로드 · 클로드 코드 방식** `[2026-10-04 사용자]` — 쿠키는 브라우저 전용이라 에이전트는 키/토큰. 1단계 이름 · 만료 · 개별 폐기 · 권한 범위가 있는 에이전트 키(회원만 · 계정 관리 못 함), 2단계 MCP OAuth(인가 코드 + PKCE · SDK 사용) | accepted | 에이전트 · MCP |
+| [D-CS-011](D-CS-011-browser-session-cookie.md) | **브라우저 세션은 HttpOnly 쿠키 · 로그인 안 한 게스트는 마지막 사용 7일 뒤 삭제** `[2026-10-04 사용자]` — 키를 저장소에 두지 않는다(쿠키보다 나은 방식은 오늘 기준 없다 — DBSC 는 나중에 얹는 보강). 보존 시간 초기값은 재방문 간격 공식으로 구했고(24시간은 54% 만 살린다) 관리 콘솔에서 조절 | accepted | 웹 인증 · 개인정보 |
+| [D-CS-010](D-CS-010-google-calls-in-dawn-batch-only.md) | **구글 API 는 새벽 3시 확인 창에 몰아서만** `[2026-09-29 사용자]` — 채팅에서 바로 부르지 않는다. 비는 값(원장·관광공사가 모르는 영업시간)을 메울 방법은 팀이 정한다 | accepted | 외부 소스 · 비용 |
+| [D-CS-009](D-CS-009-daytime-closure-detection.md) | **낮에 생기는 임시휴무는 시스템이 찾는다 — 구현 대상** `[2026-09-29 사용자]` — 새벽 확인 한 번 + 고객 신고(09-24 팀 결정)에서 방문 전 시스템 확인·대체로. 확인 소스·횟수는 구현 때 비용 상한 안에서 | accepted | 감시 |
 | [D-CS-006](D-CS-006-cancellation-terms-are-structured.md) | **취소 기한·위약금율은 구조화된 표에서 읽는다** — RAG 청크에서 꺼내려던 경로가 구조상 언제나 `None` 이었다. 수치는 `cancellation_terms`(예약→공급자→종류), 문장 근거는 `read.policy` | draft | RAG · 판정 |
 | [D-CS-005](D-CS-005-odsay-not-used.md) | **ODsay 를 쓰지 않는다** — 약관이 결과 데이터 저장·가공을 사전 동의 없이 금지하고 무료 한도가 30회/일. 이동 시간은 일정이 들고 오는 경로 정의로 간다 | draft | 외부 소스 |
+| [D-CS-008](D-CS-008-activity-llm-judgment-experiment.md) | **활동 판정 일부를 LLM(gpt-5.4-nano + 웹 검색)으로 — 실험** — `role-activity-test` 브랜치 한정. 글 해석 판정 4종 + 실시간 운영 상태만 대상, 섀도 모드로 시작(고객 답변은 규칙 결과). 계산 판정은 코드에 남는다 | draft | 판정 · LLM |
+| [D-CS-015](D-CS-015-activity-llm-judgment-on-develop.md) | **활동 판정 LLM — 규칙 먼저, 규칙이 못 읽는 원문만 LLM 으로 한 번 읽어 저장** `[개정 2 · 2026-10-12 사용자]` — 운영시간 · 휴무 · 실내외는 LLM 이 한 번 읽어 저장하고 매일 판정은 규칙(코드)이 한다. 휴무 · 재난에서 LLM 은 조심하는 쪽(휴무다 · 막는다)만. 재난 · 실시간 운영은 저장하지 않는다. 모델은 지금 API, 조건부 sLLM. (개정 1 · 10-09: develop 판에 4종 섀도 · 저장 안 함) | accepted | 판정 · LLM |
+| [D-CS-016](D-CS-016-unregistered-place-web-load.md) | **미등록 장소는 웹 검색으로 정기휴무 · 운영시간 · 실내외를 1회 적재 → 이후 규칙 판정** `[2026-10-14 사용자]` — DB에 없고 카카오로 실재만 확인된 장소. 근거 검증 통과분만 적재, 카카오 응답은 계속 저장 안 함. 재난 · 실시간 운영은 적재 대상 아님. ★개정 1 `[2026-10-14 사용자]` 카카오에 없음 · 카카오 조회 실패(재시도 1회 후) · 좌표 확보 실패는 담당자에게 넘기지 않고 **기준점으로 좌표를 확정**해 대체 후보를 낸다(지역 중심 → 앞뒤 일정 가운데 → 고객이 지도에서 지정). 카카오 결과는 있는데 이름이 안 맞으면 원문 활동 말을 분류로 바꿔 찾는다. 반경은 확인 화면도 활동 기준(1→10km) 구현은 `[미구현]` | accepted | 판정 · LLM · 데이터 |
+| [D-CS-017](D-CS-017-candidates-supplied-by-teams.md) | **확인 화면 「다른 곳」 후보는 팀이 고르고 코어는 조립만** `[2026-10-15 사용자]` — 활동 · 식당 · 숙소 팀 자리(`team_hooks/*_alternatives`)를 먼저 부르고, 비었거나 답하지 못할 때만 자체 고르기(`candidates.py`). 끄는 스위치 `travel.candidates.team_first`. 숙소는 구글 호텔 한도의 25% 까지만. 2026-10-16 세 팀 모두 x600 서버 확인 | accepted | 접수 · 팀 |
+| [D-CS-018](D-CS-018-test-trip-archive.md) | **시험 여행은 지우기 직전에 보관함에 통째로** `[2026-10-20 사용자]` — 시험 코드 여행 · 「남길 시험 여행」 표시를 단 여행만 일정 · 등록 대안 · 채팅 · Case · 알림 문장까지 `trip_archives` 에 담고 지운다. 표시를 단 여행은 감시 · 안내에서 빠진다. 실제 고객 여행은 지금처럼 파기 | accepted | 데이터 · 보관 |
+| [D-CS-021](D-CS-021-place-name-lookup-order.md) | **장소를 이름으로 찾는 길은 모두 같은 순서** `[2026-10-22 사용자 지시 · Codex 합의]` — 고객 별칭 → 대표 장소 정답표 → 우리 자료 정확 일치 → **공용 별칭(활동 팀 CSV + 306 표)** → 자모 오타 → 관광공사 · 요식 원장 → 카카오 → 유료. 계획 읽기 · 확인 화면 검색 · 이름 고치기 · 채팅 고치기가 같은 자리(`team_hooks/place_aliases`)를 부른다. 카카오를 부르는 새 파일은 구조 시험이 막는다. ☆「mmca 서울」이 카카오로만 나왔다 | accepted | 접수 · 장소 · 팀 |
+| [D-CS-019](D-CS-019-deploy-service-notice.md) | **새 판 배포 중에는 정해 둔 문구로 고객에게 공지** `[2026-10-20 사용자 지시]` — x600 서버 자동 배포가 단계마다 공지 상태 파일을 쓰고, 고객 공지 경로(`/v1/web/support/notices`)가 운영자 공지 맨 앞에 고정 한국어·영어 문구의 배포 공지 한 건을 붙인다. 바꾸는 동안 끊기면 웹은 마지막으로 받은 공지를 그대로 둔다. Caddy 점검 응답은 사용자 확인 뒤 | draft | 배포 · 웹 |
+| [D-CS-020](D-CS-020-service-mode-hourly-limits.md) | **서비스 모드를 켜면 회원 · 게스트마다 한 시간 호출 한도** `[2026-10-22 사용자 지시]` — 운영 설정 스위치 하나로 하루 한도와 등급별 한 시간 한도를 함께 켠다. 게스트(로그인 안 함)는 훨씬 적게, 값은 관리 콘솔 「서비스 모드」 칸에서. 지금은 시험 단계라 꺼짐 | accepted | 웹 · 남용 방어 |
 
 `[미확보]` `wiki/records/plans/`·`wiki/records/reports/`에서 이관 대상을 더 골라야 한다.
 

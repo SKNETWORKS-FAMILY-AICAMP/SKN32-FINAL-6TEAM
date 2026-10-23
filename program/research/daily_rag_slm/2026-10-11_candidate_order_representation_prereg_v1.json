@@ -1,0 +1,52 @@
+{
+  "recorded_at_utc": "2026-10-10T17:02:23.361933+00:00",
+  "purpose": "Complete publisher-QAT and HF NF4 position robustness contrasts across fixed existing adapters; identify deployment representation sensitivity without prompt/model tuning",
+  "A_models": [
+    "original",
+    "oos1",
+    "oos2",
+    "oos3",
+    "oos2r",
+    "cosine_s20261014",
+    "finch_s20261014"
+  ],
+  "A_conditions": 14,
+  "A_rows": 30618,
+  "B_models": [
+    "oos1",
+    "oos2",
+    "oos3",
+    "oos2r"
+  ],
+  "B_conditions": 8,
+  "B_rows": 17496,
+  "B_connectivity_rows": 12,
+  "inputs": [
+    {
+      "suite": "d3",
+      "rows": 360,
+      "source_sha256": "4bdeca6aace15d7fa5243985dc9bd66fe0ad81685c32c30f69f5958d1ffca2ea",
+      "prompt_sha256": "7348e3a71f2e8e28ecf8d56b00d32270a41396107ac01a00afc22e4471f041c7",
+      "output": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\travel\\candidate_order_20261010_v3\\processed\\d3.json"
+    },
+    {
+      "suite": "mx",
+      "rows": 4014,
+      "source_sha256": "124cc9952376a72bb87f284754cbbac3da2127d6a8610d59a430a64dc930c087",
+      "prompt_sha256": "b86093846c88a7dbe985ffabcef7275e007f9cf8b66bd43242f9ab61a8bfd65f",
+      "output": "C:\\Users\\playdata2\\Documents\\final_workspace\\datasets\\travel\\candidate_order_20261010_v3\\processed\\mx.json"
+    }
+  ],
+  "diagnostic_limits": {
+    "normal_loss_pp": 2,
+    "false_pick_increase_pp": 1,
+    "pick_agreement": 0.99
+  },
+  "statistical_plan": "paired exact plus itinerary-cluster bootstrap seed7 repeats2000; retain all failures/missing and report fixed original baseline",
+  "not_independent_accuracy": true,
+  "adoption": false,
+  "no_training_or_prompt_tuning": true,
+  "stop_expansion_after_these_representation_contrasts": true,
+  "selection": "All four older adapters and both latest cosine/FINCH pair plus original for QAT; all four older adapters for HF, no best-result selection",
+  "interpretation": "HF NF4 vs llama.cpp GGUF changes engine and quantization together; never attribute contrast solely to quantization or compare cross-machine speed"
+}

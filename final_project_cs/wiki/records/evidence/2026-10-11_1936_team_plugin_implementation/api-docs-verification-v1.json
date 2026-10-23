@@ -1,0 +1,23 @@
+{
+  "documents": {
+    "web-access.md": {
+      "sha256": "561cab6f78e036488d0dec55b11bbdc3f3979ceb728a999d3d7abba806cf2a61",
+      "lines": 130,
+      "waiting_input": true,
+      "team_unavailable": true,
+      "obsolete_scenario_future_merge": false
+    },
+    "web-intakes.md": {
+      "sha256": "f1f1f0b4e8a21f302c133565951cef3cd89c0432e7cdbe70136d2d2ed0ef2ac1",
+      "lines": 272,
+      "waiting_input": true,
+      "team_unavailable": true,
+      "obsolete_scenario_future_merge": false
+    }
+  },
+  "product_sources_changed_during_edit": [],
+  "checked_local_links": 15,
+  "missing_local_links": [],
+  "trailing_whitespace": [],
+  "git_note": "Both target documents are currently untracked; backup-based unified diff verifies this edit."
+}

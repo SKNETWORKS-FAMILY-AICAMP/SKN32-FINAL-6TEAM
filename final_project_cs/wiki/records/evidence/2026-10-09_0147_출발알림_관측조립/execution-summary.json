@@ -1,0 +1,20 @@
+{
+  "departure-assembly-v1": {
+    "tests": 50,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "departure-assembly-v2": {
+    "tests": 44,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "departure-assembly-regression-v1": {
+    "tests": 649,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

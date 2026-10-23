@@ -1,0 +1,870 @@
+{
+  "created_at": "2026-10-09T02:46:12.949621+09:00",
+  "scope": "development: incoming and final edge fixed explicitly; public snap selection and real driving are not measured",
+  "queries": 12,
+  "repeats_per_query": 3,
+  "developer_api_calls": 0,
+  "baseline_target_transition_used": 12,
+  "after_applied_rule_violations": 0,
+  "routed_queries": 11,
+  "no_path_queries": 1,
+  "changed_distance_queries": 11,
+  "observations": [
+    {
+      "relation_id": 3448146,
+      "incoming": 488124,
+      "outgoing": 127207,
+      "start": [
+        126.99758738237122,
+        37.49495325622504
+      ],
+      "end": [
+        126.997418,
+        37.4953676
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 80.29,
+            "model_seconds": 16.539,
+            "query_seconds": 0.00024410001060459763,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 149.69,
+            "model_seconds": 24.866,
+            "query_seconds": 0.044570199999725446
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 80.29,
+            "model_seconds": 16.539,
+            "query_seconds": 8.149999484885484e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 149.69,
+            "model_seconds": 24.866,
+            "query_seconds": 0.0010046999959740788
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 80.29,
+            "model_seconds": 16.539,
+            "query_seconds": 6.980000762268901e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 149.69,
+            "model_seconds": 24.866,
+            "query_seconds": 0.0009444000024814159
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 24.873599555969236
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 24.873599555969236
+        }
+      }
+    },
+    {
+      "relation_id": 3598859,
+      "incoming": 592130,
+      "outgoing": 187610,
+      "start": [
+        126.9038664,
+        37.5630048
+      ],
+      "end": [
+        126.90383600000001,
+        37.562961200000004
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 8.8,
+            "model_seconds": 0.792,
+            "query_seconds": 0.00011160000576637685,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1521.41,
+            "model_seconds": 151.705,
+            "query_seconds": 0.0017809999990276992
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 8.8,
+            "model_seconds": 0.792,
+            "query_seconds": 0.00010150000161956996,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1521.41,
+            "model_seconds": 151.705,
+            "query_seconds": 0.0014682000037282705
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 8.8,
+            "model_seconds": 0.792,
+            "query_seconds": 6.410000787582248e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1521.41,
+            "model_seconds": 151.705,
+            "query_seconds": 0.0012429000053089112
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 151.71471327972412
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 151.71471327972412
+        }
+      }
+    },
+    {
+      "relation_id": 3725931,
+      "incoming": 160634,
+      "outgoing": 160616,
+      "start": [
+        127.03760099555629,
+        37.558872160233534
+      ],
+      "end": [
+        127.03714649225975,
+        37.55910781773219
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 67.08,
+            "model_seconds": 6.037,
+            "query_seconds": 8.13999940874055e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 118.95,
+            "model_seconds": 14.498,
+            "query_seconds": 0.001600300005520694
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 67.08,
+            "model_seconds": 6.037,
+            "query_seconds": 9.669999417383224e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 118.95,
+            "model_seconds": 14.498,
+            "query_seconds": 0.0012202999932924286
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 67.08,
+            "model_seconds": 6.037,
+            "query_seconds": 0.00010990000737365335,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 118.95,
+            "model_seconds": 14.498,
+            "query_seconds": 0.0009831000061240047
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 14.485199990749361
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 14.485199990749361
+        }
+      }
+    },
+    {
+      "relation_id": 3725932,
+      "incoming": 160634,
+      "outgoing": 7395,
+      "start": [
+        127.03760099555629,
+        37.558872160233534
+      ],
+      "end": [
+        127.03705680000002,
+        37.559158
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 62.89,
+            "model_seconds": 5.845,
+            "query_seconds": 7.759999425616115e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 114.76,
+            "model_seconds": 14.306,
+            "query_seconds": 0.00098230000003241
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 62.89,
+            "model_seconds": 5.845,
+            "query_seconds": 6.620000931434333e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 114.76,
+            "model_seconds": 14.306,
+            "query_seconds": 0.000830000004498288
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 62.89,
+            "model_seconds": 5.845,
+            "query_seconds": 7.660000119358301e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 114.76,
+            "model_seconds": 14.306,
+            "query_seconds": 0.0007736999978078529
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 14.296800004482272
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 14.296800004482272
+        }
+      }
+    },
+    {
+      "relation_id": 4627267,
+      "incoming": 185920,
+      "outgoing": 60616,
+      "start": [
+        126.73521680000002,
+        37.576729199999996
+      ],
+      "end": [
+        126.7352156,
+        37.576646399999994
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 24.66,
+            "model_seconds": 2.959,
+            "query_seconds": 7.680000271648169e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 42.68,
+            "model_seconds": 5.555,
+            "query_seconds": 0.0009720999951241538
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 24.66,
+            "model_seconds": 2.959,
+            "query_seconds": 7.439999899361283e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 42.68,
+            "model_seconds": 5.555,
+            "query_seconds": 0.0008967999892774969
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 24.66,
+            "model_seconds": 2.959,
+            "query_seconds": 0.00020349999249447137,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 42.68,
+            "model_seconds": 5.555,
+            "query_seconds": 0.0011193999962415546
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 5.553600044250489
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 5.553600044250489
+        }
+      }
+    },
+    {
+      "relation_id": 4666941,
+      "incoming": 174072,
+      "outgoing": 174592,
+      "start": [
+        126.91381694200587,
+        37.54883086484273
+      ],
+      "end": [
+        126.91392437740201,
+        37.54894753834761
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 33.14,
+            "model_seconds": 4.13,
+            "query_seconds": 8.739999611862004e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 72.89,
+            "model_seconds": 8.218,
+            "query_seconds": 0.0008005999989109114
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 33.14,
+            "model_seconds": 4.13,
+            "query_seconds": 5.360000068321824e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 72.89,
+            "model_seconds": 8.218,
+            "query_seconds": 0.0006932999967830256
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 33.14,
+            "model_seconds": 4.13,
+            "query_seconds": 4.990000161342323e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 72.89,
+            "model_seconds": 8.218,
+            "query_seconds": 0.0007329999934881926
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 8.230628517695836
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 8.230628517695836
+        }
+      }
+    },
+    {
+      "relation_id": 4674491,
+      "incoming": 484868,
+      "outgoing": 187018,
+      "start": [
+        127.0456758,
+        37.4632072
+      ],
+      "end": [
+        127.0459334,
+        37.463165200000006
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 28.58,
+            "model_seconds": 2.666,
+            "query_seconds": 7.320000440813601e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 892.99,
+            "model_seconds": 83.927,
+            "query_seconds": 0.0009322000114480034
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 28.58,
+            "model_seconds": 2.666,
+            "query_seconds": 5.370000144466758e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 892.99,
+            "model_seconds": 83.927,
+            "query_seconds": 0.0008300999907078221
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 28.58,
+            "model_seconds": 2.666,
+            "query_seconds": 5.129999772179872e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 892.99,
+            "model_seconds": 83.927,
+            "query_seconds": 0.0007899999909568578
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 83.92140140206475
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 83.92140140206475
+        }
+      }
+    },
+    {
+      "relation_id": 4674492,
+      "incoming": 140940,
+      "outgoing": 187018,
+      "start": [
+        127.04493292672674,
+        37.463825803238336
+      ],
+      "end": [
+        127.0459334,
+        37.463165200000006
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 122.94,
+            "model_seconds": 11.158,
+            "query_seconds": 7.569999434053898e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 987.35,
+            "model_seconds": 92.42,
+            "query_seconds": 0.0009831999923335388
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 122.94,
+            "model_seconds": 11.158,
+            "query_seconds": 6.02000072831288e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 987.35,
+            "model_seconds": 92.42,
+            "query_seconds": 0.0008500999974785373
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 122.94,
+            "model_seconds": 11.158,
+            "query_seconds": 5.529999907594174e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 987.35,
+            "model_seconds": 92.42,
+            "query_seconds": 0.000887800008058548
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 92.41380159432548
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 92.41380159432548
+        }
+      }
+    },
+    {
+      "relation_id": 4674494,
+      "incoming": 484868,
+      "outgoing": 187021,
+      "start": [
+        127.0456758,
+        37.4632072
+      ],
+      "end": [
+        127.04576472616112,
+        37.46293547432697
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 43.69,
+            "model_seconds": 4.221,
+            "query_seconds": 7.869998808018863e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 922.69,
+            "model_seconds": 86.983,
+            "query_seconds": 0.0010131000017281622
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 43.69,
+            "model_seconds": 4.221,
+            "query_seconds": 6.659999780822545e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 922.69,
+            "model_seconds": 86.983,
+            "query_seconds": 0.0008516999951098114
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 43.69,
+            "model_seconds": 4.221,
+            "query_seconds": 5.629999213851988e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 922.69,
+            "model_seconds": 86.983,
+            "query_seconds": 0.0009218000050168484
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 86.9783156761442
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 86.9783156761442
+        }
+      }
+    },
+    {
+      "relation_id": 4674495,
+      "incoming": 140940,
+      "outgoing": 187021,
+      "start": [
+        127.04493292672674,
+        37.463825803238336
+      ],
+      "end": [
+        127.04576472616112,
+        37.46293547432697
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 138.05,
+            "model_seconds": 12.713,
+            "query_seconds": 7.349999214056879e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1017.05,
+            "model_seconds": 95.475,
+            "query_seconds": 0.000997700000880286
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 138.05,
+            "model_seconds": 12.713,
+            "query_seconds": 6.549998943228275e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1017.05,
+            "model_seconds": 95.475,
+            "query_seconds": 0.0009648000122979283
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 138.05,
+            "model_seconds": 12.713,
+            "query_seconds": 5.869999586138874e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1017.05,
+            "model_seconds": 95.475,
+            "query_seconds": 0.0009241999941878021
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 95.47071586840494
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 95.47071586840494
+        }
+      }
+    },
+    {
+      "relation_id": 4674502,
+      "incoming": 487664,
+      "outgoing": 142503,
+      "start": [
+        127.05166008930163,
+        37.46077685284649
+      ],
+      "end": [
+        127.0500866,
+        37.4613516
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 161.86,
+            "model_seconds": 15.934,
+            "query_seconds": 9.050000517163426e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1022.63,
+            "model_seconds": 94.322,
+            "query_seconds": 0.001161300009698607
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 161.86,
+            "model_seconds": 15.934,
+            "query_seconds": 5.8999998145736754e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1022.63,
+            "model_seconds": 94.322,
+            "query_seconds": 0.0011491999903228134
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 161.86,
+            "model_seconds": 15.934,
+            "query_seconds": 5.18000015290454e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "routed",
+            "distance_m": 1022.63,
+            "model_seconds": 94.322,
+            "query_seconds": 0.001344999996945262
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "routed",
+          "cost": 94.31460145092011
+        },
+        "astar": {
+          "status": "routed",
+          "cost": 94.31460145092011
+        }
+      }
+    },
+    {
+      "relation_id": 4677532,
+      "incoming": 461986,
+      "outgoing": 187174,
+      "start": [
+        126.81659695671017,
+        37.56103677313472
+      ],
+      "end": [
+        126.81649055992263,
+        37.561935578472514
+      ],
+      "repeats": [
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 101.44,
+            "model_seconds": 9.13,
+            "query_seconds": 8.959999831859022e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "no_path",
+            "query_seconds": 0.0007747999916318804
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 101.44,
+            "model_seconds": 9.13,
+            "query_seconds": 6.180000491440296e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "no_path",
+            "query_seconds": 0.0007213000062620267
+          }
+        },
+        {
+          "before": {
+            "status": "routed",
+            "distance_m": 101.44,
+            "model_seconds": 9.13,
+            "query_seconds": 5.669999518431723e-05,
+            "target_transition_used": true
+          },
+          "after": {
+            "status": "no_path",
+            "query_seconds": 0.0007254999945871532
+          }
+        }
+      ],
+      "applied_rule_violations": 0,
+      "astar_dijkstra_equal": true,
+      "reference": {
+        "dijkstra": {
+          "status": "no_path"
+        },
+        "astar": {
+          "status": "no_path"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "path": "final_project_cs/wiki/records/reports/debugs/2026-10-09_1357_지하철_수집실패_완료오인_수정.md",
+    "backup": "final_project_cs/wiki/records/reports/debugs/_backup/2026-10-09_140253_수집결과기록/2026-10-09_1357_지하철_수집실패_완료오인_수정.md",
+    "sha256": "535d72fe92f1b155fe443924c84f324d0b0fee3de6b1af490d6e8fd12c362886"
+  },
+  {
+    "path": "final_project_cs/wiki/teams/mobility.md",
+    "backup": "final_project_cs/wiki/teams/_backup/2026-10-09_140253_수집결과기록/mobility.md",
+    "sha256": "b234efcf356fa025fccd2b46ab0459d6004dfa64abec245f88ea8209230ecaeb"
+  },
+  {
+    "path": "datasets/mobility/REPORT.md",
+    "backup": "datasets/mobility/_backup/2026-10-09_140253_수집결과기록/REPORT.md",
+    "sha256": "75c1cfe0ce0653d1159d24f885fed6ecb1eb3a2013cfe308b4e1c4d0c243e420"
+  },
+  {
+    "path": "datasets/mobility/scripts/README.md",
+    "backup": "datasets/mobility/scripts/_backup/2026-10-09_140253_수집결과기록/README.md",
+    "sha256": "984ea0648ceb99a5a4eebf18d6288fb69c300f7da3c5d97b576776331583d107"
+  }
+]

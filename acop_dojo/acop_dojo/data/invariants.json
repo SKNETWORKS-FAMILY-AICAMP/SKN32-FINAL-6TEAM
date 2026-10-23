@@ -41,7 +41,7 @@
     "INV-CLASSIFY-001",
     "INV-VOC-001"
    ],
-   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/domains/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "분류가 실패하면 조용히 넘기지 않는다 — 빠진 필드도 틀린 라벨도 거부",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
@@ -77,7 +77,7 @@
     "INV-DEGRADED-001",
     "INV-VOC-002"
    ],
-   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/domains/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "신호 없는 축소는 폴백이다 — degraded 면 omissions 를 남기고 확정 답변을 만들지 않는다",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
@@ -240,7 +240,7 @@
    "defects": [
     "INV-COMMERCE-005"
    ],
-   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/domains/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
@@ -257,7 +257,7 @@
    "defects": [
     "INV-OUTBOX-002"
    ],
-   "note": "2026-09-14 문장 교체. 옛 문장 '값을 모르면 비워 둔다' 는 v11 결정 15(대체 소스로 값을 내고, 대체도 실패하면 치명)가 뒤집었다. 결정 15 의 대체 소스 사슬·치명 판정은 cs 의 app/infrastructure/travel/(weather_chain·air_quality·disruptions)에 있다 — 여행 도메인 인프라라 이 코어 규칙의 결함으로는 세지 않는다. '서버를 끈다' 부분은 weather_chain.py 머리말이 감시 쪽 몫이고 아직 없다고 적는다. ☆처음엔 'cs 에 경로가 아직 없다' 로 적었다 — codex 검수 문장을 코드로 확인하지 않고 옮긴 오류다.",
+   "note": "2026-09-14 문장 교체. 옛 문장 '값을 모르면 비워 둔다' 는 v11 결정 15(대체 소스로 값을 내고, 대체도 실패하면 치명)가 뒤집었다. 결정 15 의 대체 소스 사슬·치명 판정은 cs 의 app/domains/travel_ops/ports/data_sources/(weather_chain·air_quality·disruptions)에 있다 — 여행 도메인 인프라라 이 코어 규칙의 결함으로는 세지 않는다. '서버를 끈다' 부분은 weather_chain.py 머리말이 감시 쪽 몫이고 아직 없다고 적는다. ☆처음엔 'cs 에 경로가 아직 없다' 로 적었다 — codex 검수 문장을 코드로 확인하지 않고 옮긴 오류다.",
    "parked_defects": [
     "INV-COMMERCE-003"
    ],

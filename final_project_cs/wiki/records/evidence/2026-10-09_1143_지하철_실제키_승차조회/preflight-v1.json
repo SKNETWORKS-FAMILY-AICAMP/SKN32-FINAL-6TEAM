@@ -1,0 +1,17 @@
+{
+  "created_at": "2026-10-09T11:47:07.138666+09:00",
+  "checks": [
+    {
+      "scope": "source_test_data_hashes",
+      "checked": 254,
+      "matches": 254,
+      "mismatches": []
+    },
+    {
+      "scope": "artifact_hashes",
+      "checked": 29,
+      "matches": 29,
+      "mismatches": []
+    }
+  ]
+}

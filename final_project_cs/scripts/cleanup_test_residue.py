@@ -258,6 +258,7 @@ def main() -> int:
         #   남지 않는다. FK 로 막히면 그 사실이 예외로 그대로 올라온다.
         with conn.transaction():
             with conn.cursor() as cur:
+                cur.execute("SET LOCAL app.case_events_purge = 'on'")     # case_events 는 DB 가 추가만 하게 막는다(904) — 정리 때만 연다
                 for table, where in DELETE_ORDER:
                     for prefix in PREFIXES:
                         cur.execute(f"DELETE FROM {table} WHERE {where}", (prefix + "%",))

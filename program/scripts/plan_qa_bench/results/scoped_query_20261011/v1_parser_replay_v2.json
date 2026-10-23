@@ -1,0 +1,48 @@
+{
+  "kind": "existing_raw_local_parser_replay_not_new_model_evaluation",
+  "n": 3,
+  "passed": 2,
+  "checks": [
+    {
+      "key": "empty_afternoon",
+      "original_strict_pass": false,
+      "seconds": 201.94957681599772,
+      "parser_version": "local_v2",
+      "actual_model_call": false,
+      "semantic_pass": true,
+      "accepted": true,
+      "rendered": "전체 여행 날짜 오후 범위에는 등록된 일정이 없어요. 일정을 바꾸지는 않았어요.",
+      "basis": {
+        "kind": "changeability",
+        "query": {
+          "day": "all",
+          "period": "afternoon",
+          "kind": "all"
+        },
+        "writer": "template",
+        "source": "latest_itinerary",
+        "item_ids": [],
+        "checks": []
+      }
+    },
+    {
+      "key": "day_two_paraphrase",
+      "original_strict_pass": false,
+      "seconds": 378.9047309549642,
+      "parser_version": "local_v2",
+      "actual_model_call": false,
+      "semantic_pass": false,
+      "accepted": false,
+      "error": "목록 조회의 범위·행동이 유효하지 않습니다"
+    },
+    {
+      "key": "existing_time",
+      "original_strict_pass": true,
+      "seconds": 328.0799129270017,
+      "parser_version": "local_v2",
+      "actual_model_call": false,
+      "semantic_pass": true,
+      "accepted": true
+    }
+  ]
+}

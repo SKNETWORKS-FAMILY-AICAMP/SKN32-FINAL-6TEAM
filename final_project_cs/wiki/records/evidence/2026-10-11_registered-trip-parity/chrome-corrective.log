@@ -1,0 +1,17 @@
+[WebServer] (node:18984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:19424) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+(node:6924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 tests\live\day-marker-recovery-20261011.spec.ts:53:3 › 수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 375px (5.6s)
+  ok 2 tests\live\day-marker-recovery-20261011.spec.ts:53:3 › 수정안에서 보던 날짜가 없어지면 첫 유효 날짜로 복귀 1280px (5.4s)
+  ok 3 tests\live\shared-trip-ui-20261011.spec.ts:24:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 375px (4.2s)
+  ok 4 tests\live\shared-trip-ui-20261011.spec.ts:53:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 375px (3.4s)
+  ok 5 tests\live\shared-trip-ui-20261011.spec.ts:24:3 › 등록 여행은 검증 날짜·테두리·스크롤 규칙을 공유한다 1280px (4.6s)
+  ok 6 tests\live\shared-trip-ui-20261011.spec.ts:53:3 › 수정안 전환은 휠 꼬리를 막고 새 스크롤과 일정 추가를 허용한다 1280px (5.8s)
+
+  6 passed (32.9s)

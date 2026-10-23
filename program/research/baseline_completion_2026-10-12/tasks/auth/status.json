@@ -1,0 +1,34 @@
+{
+  "task": "auth",
+  "phase": "ready_for_integration",
+  "updated_at": "2026-10-12T04:47:56+09:00",
+  "implementation": "implemented",
+  "verification": {
+    "run_id": "20261012_044335",
+    "verified_at": "2026-10-12T04:47:56+09:00",
+    "passed": 411,
+    "failed": 0,
+    "skipped": 0,
+    "groups": {
+      "security": 92,
+      "contract": 283,
+      "e2e": 36
+    },
+    "oauth_security": 49,
+    "oauth_postgres_integration": 8,
+    "source_files_unchanged": 12,
+    "database_dropped": true,
+    "postgres_stopped": true
+  },
+  "deployment": "not_deployed",
+  "business_database": "not_modified",
+  "external_personal_ai_connection": "not_tested",
+  "independent_review": "pending",
+  "dependencies_remaining": [
+    "trusted client preregistration and external end-to-end connection",
+    "SQL owner deployment check for 901 migration",
+    "manager/web independent review"
+  ],
+  "report": "report.md",
+  "integration_request": "integration-request.md"
+}

@@ -10,9 +10,9 @@ from datetime import datetime, timedelta
 import httpx
 import pytest
 
-from app.infrastructure.travel.base import TravelSources
-from app.infrastructure.travel.disruptions import DisruptionCheck
-from app.infrastructure.travel.its_traffic import KST, ItsTrafficEvents, classify, parse_message
+from app.domains.travel_ops.ports.data_sources.base import TravelSources
+from app.domains.travel_ops.ports.data_sources.disruptions import DisruptionCheck
+from app.domains.travel_ops.ports.data_sources.its_traffic import KST, ItsTrafficEvents, classify, parse_message
 
 NOW = datetime(2026, 9, 14, 12, 0, tzinfo=KST)
 PLACE = (37.5610, 126.9920)          # 남산1호터널 북측 인근

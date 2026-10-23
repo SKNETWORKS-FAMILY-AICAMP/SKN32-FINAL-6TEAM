@@ -1,0 +1,57 @@
+{
+  "files": [
+    {
+      "relative": "e4bbase_finch_s20261012_d3/started.json",
+      "bytes": 1485,
+      "sha256": "45c01f3122c82556412f55a8bae2b2c8587c3100f11cb54dfa1cab7b9d05ab52"
+    },
+    {
+      "relative": "e4bbase_finch_s20261012_d3/job.log",
+      "bytes": 106,
+      "sha256": "8961f76525b7419657bc5ae1ec5d155c538bc4e782bf8f853ef9c971b8543c07"
+    },
+    {
+      "relative": "e4bbase_finch_s20261012_d3/dtest_server_d3_backlog_e4bbase_finch_s20261012.log",
+      "bytes": 282502,
+      "sha256": "048524567405ee32a90c9601552ff6d7749aaa5204d01ae3af9018c0b30f1cf3"
+    },
+    {
+      "relative": "e4bbase_finch_s20261012_d3/d_test_d3_backlog_e4bbase_finch_s20261012.jsonl",
+      "bytes": 52793,
+      "sha256": "26b6e598d9fae5c97596ff93636ae774b89ec7d07648e888270d4a58cfca2440"
+    },
+    {
+      "relative": "e4bqat_finch_s20261012_d3/started.json",
+      "bytes": 1485,
+      "sha256": "89ede82a0bcd08bf8898b204dc661741ef7423062d7ebf4daf60b3804638cfef"
+    },
+    {
+      "relative": "e4bqat_finch_s20261012_d3/job.log",
+      "bytes": 104,
+      "sha256": "ad4f87ece1ca3ba3dfcfcbfc9db00c4d8d2d801323608391c8e0c44c992d3fef"
+    },
+    {
+      "relative": "e4bqat_finch_s20261012_d3/dtest_server_d3_backlog_e4bqat_finch_s20261012.log",
+      "bytes": 282502,
+      "sha256": "851ebbb3aa6c043aab888d88c8359797b1b7913713ed64ac1880f2bc3a5d3c7a"
+    },
+    {
+      "relative": "e4bqat_finch_s20261012_d3/d_test_d3_backlog_e4bqat_finch_s20261012.jsonl",
+      "bytes": 52781,
+      "sha256": "c54625b81cc3c33cb2c6736e42e9effad3fe13bd995c88c991ba8433cdb49c75"
+    }
+  ],
+  "remote_local_sha_match": [
+    8,
+    8
+  ],
+  "jobs": [
+    "e4bbase_finch_s20261012_d3",
+    "e4bqat_finch_s20261012_d3"
+  ],
+  "saved": 720,
+  "expected": 720,
+  "originals": 0,
+  "our_trained_jobs": 2,
+  "observed_at_utc": "2026-10-08T23:06:45.219102+00:00"
+}

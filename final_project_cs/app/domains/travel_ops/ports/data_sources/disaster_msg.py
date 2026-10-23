@@ -1,0 +1,512 @@
+# -*- coding: utf-8 -*-
+"""행정안전부 긴급재난문자 — **API 판**(`DisasterMsgApi`)과 **샘플 CSV 판**(`DisasterMsgCsv`).
+
+★두 판은 같은 파서(`parse_row`)와 같은 판정(`judge`)을 쓰고 같은 `active()` 모양으로 답한다.
+  조립은 키(`ACOP_DISASTER_MSG_API_KEY`)가 있으면 API 판, 없으면 샘플 판을 붙인다.
+★키가 나오기 전(2026-09-14 까지)에는 사용자가 받아 둔 샘플 CSV 로 **파서와 판정 규칙**을
+  먼저 돌렸다. 샘플 판은 시험과 키 없는 자리를 위해 남긴다.
+
+★★샘플은 **2023-09-16 ~ 09-19 의 100건**뿐이다(실측). 그 기간 밖의 시각을 물으면
+  `covered=False` 로 답한다 — 「그 시각에 재난문자 없음」이라고 답하지 않는다.
+  샘플 기간 밖을 「없음」으로 읽으면 실제 운영에서 늘 조용한 거짓말이 된다.
+
+실측한 샘플 모양(2026-09-14):
+    열  SN · CRT_DT(「2023/09/19 14:24:55」) · MSG_CN · RCPTN_RGN_NM · EMRG_STEP_NM ·
+        DST_SE_NM · …  ★2행이 한국어 열 이름이다(데이터가 아니다)
+    재해구분  호우 61 · 기타 31 · 교통통제 4 · 산사태 4
+    긴급단계  안전안내 99 · 긴급재난 1
+    수신지역  「서울특별시 강남구 역삼동,서울특별시 강남구 삼성동」처럼 쉼표로 잇고,
+              시도 단위는 「부산광역시 전체」로 온다
+
+판정에 넣는 기준(데이터를 보고 정했다):
+    - 「기타」는 넣지 않는다 — 샘플의 기타 31건은 **실종자 찾기**다. 넣으면 실종자
+      문자 한 통으로 서울 전역의 일정이 바뀐다
+    - 본문이 「끝났다」를 말하면 넣지 않는다 — 「통제가 완전 해제되었음」이 실제로 있다. ★`[2026-10-12]` 판정은 공용 `notice_status`
+      (「해제」 낱말 하나가 아니다 — 「집회 종료되어 정상 운행」·「파업 철회」·「모든 차로 개방」도 끝, 「해제 예정」·「그 외 구간 해제」는 끝이 아니다)
+    - 목록에 없는 재해구분은 이상으로 세지 않고 `unclassified` 로 **보이게** 남긴다
+"""
+from __future__ import annotations
+
+import csv
+import io
+from collections import Counter
+from datetime import datetime, timedelta
+import logging
+from pathlib import Path
+import re
+from typing import Any
+from zoneinfo import ZoneInfo
+
+from .base import TravelSource
+from .notice_impact import impact_detail
+from .notice_status import notice_status
+
+logger = logging.getLogger(__name__)
+
+KST = ZoneInfo("Asia/Seoul")
+#: ★저장소 **안의** 합성 픽스처를 읽는다(2026-09-14). 처음엔 저장소 밖
+#:  `datasets/travel/…_sample.csv` 를 읽었는데, 코드가 git 밖 데이터에 기대면 다른
+#:  사람 자리에서 조용히 비고, 원본에는 **실종자 실명·나이·인상착의 31건**이 있어
+#:  그대로 옮기면 공개 저장소에 개인정보가 올라간다. 그래서 기타(실종) 31건의
+#:  본문을 합성 문구로 바꾸고 나머지의 이름·나이·링크 패턴을 가린 사본을 둔다.
+#:  재해구분·지역·시각 분포는 원본 그대로다(호우 61·기타 31·교통통제 4·산사태 4).
+DEFAULT_SAMPLE_PATH = Path(__file__).resolve().parent / "samples" / "disaster_msg_2023-09.csv"
+
+#: ★`[2026-10-13 확인]` 재난문자 재해구분의 **공식 목록 41종**(대분류 4) — 국민안전24 재난문자 조회 화면의 목록을 옮겼다.
+#:   전국 문자 3년치(63,276건)에 나온 이름 36개가 모두 이 안에 있다. 기록: `wiki/records/reports/2026-10-13_재난문자_재해구분_공식목록.md`
+#:   ★이 목록에 없는 이름이 오면 정부가 새로 더한 것이다 — 본문으로 판정하고(`judge` · 규칙 또는 모델) 경고를 남긴다.
+OFFICIAL_KINDS = frozenset({
+    # 자연재난 DST100 · 17
+    "태풍", "홍수", "호우", "대설", "지진해일", "지진", "한파", "황사", "강풍", "건조",
+    "폭염", "산사태", "안개", "풍랑", "미세먼지", "대조기", "가뭄",
+    # 사회재난 DST200 · 18
+    "교통통제", "산불", "화재", "붕괴", "폭발", "교통사고", "환경오염사고", "에너지", "통신",
+    "교통", "금융", "의료", "수도", "전염병", "정전", "가스", "AI", "가축질병",
+    # 비상대비 DST400 · 5
+    "화생방사고", "폭동", "테러", "비상사태", "민방공",
+    # 기타재난 DST500 · 1
+    "기타"})
+#: 날씨가 일으키는 재해 — ★날씨 영향을 받는 장소에만 적용한다(점검이 가른다).
+#:   `[2026-10-13 사용자 승인]` 공식 목록의 안개 · 미세먼지 · 대조기를 더했다. 낙뢰는 공식 이름이 아니지만 해가 없어 둔다
+WEATHER_KINDS = frozenset({"호우", "태풍", "대설", "강풍", "폭염", "한파", "산사태",
+                           "풍랑", "황사", "홍수", "낙뢰", "안개", "미세먼지", "대조기"})
+#: 장소를 가리지 않는 재해 — 가는 길이 막히거나 시설이 닫힌다.
+#: ★`[2026-10-06 사용자 결정 — 재난 시 일정 정지]` 화산 · 원전 · 방사능을 더했다 — 전쟁 · 활화산 폭발 같은 심각한 사건이 「모르는 구분」으로 빠져 정지 판정에 안 닿던 것을 막는다.
+#:   셋은 공식 이름이 아니다 — 본문 낱말(`travel.safety.trip_keywords`)로도 들어온다(`judge`)
+#: ★`[2026-10-13 사용자 승인]` 공식 목록의 교통사고 · 교통 · 환경오염사고 · 화생방사고 · 폭동 · 비상사태 · 민방공을 더했다.
+#:   「민방위」는 공식 이름이 「민방공」이라 바꿨다(옛 이름으로는 민방공 문자가 한 번도 안 걸렸다)
+PLACE_KINDS = frozenset({"교통통제", "화재", "산불", "지진", "지진해일", "붕괴",
+                         "정전", "가스", "폭발", "테러", "민방공", "화산", "원전", "방사능",
+                         "교통사고", "교통", "환경오염사고", "화생방사고", "폭동", "비상사태"})
+DISRUPTIVE_KINDS = WEATHER_KINDS | PLACE_KINDS
+#: `[2026-10-13 사용자 승인]` 이름만으로는 일정을 바꾸지 않는 공식 재해구분 — 생활 기반(수도 · 통신 · 에너지 · 금융 · 의료)이나 여행과 먼 것(가축질병 · 가뭄 · 건조).
+#:   ★본문은 여전히 본다(`judge` — 규칙 또는 모델). 본문에 여행 영향이 없으면 「기타」처럼 걸러진 문자 기록에 남긴다 — 「알아보지 못한 구분」이 아니다.
+#:   전염병: 2023-09~2026-10 서울 26건은 말라리아 경보 같은 생활 안내였다. 「AI」 1건은 실종자 찾기 문자였다(잘못 붙은 구분)
+RECORD_ONLY_KINDS = frozenset({"전염병", "수도", "통신", "에너지", "금융", "의료", "가축질병", "가뭄", "건조", "AI"})
+assert OFFICIAL_KINDS <= DISRUPTIVE_KINDS | RECORD_ONLY_KINDS | {"기타"}, "공식 재해구분이 어느 갈래에도 없다"
+#: 설정(`config/guardrails.yaml`)을 못 읽을 때만 쓰는 값 — 정본은 `travel.safety.*` 한 곳이다
+_FALLBACK_SEVERE = ("공습경보", "경계경보", "화산", "분화", "전쟁", "미사일", "방사능", "생화학")
+_FALLBACK_EXCLUDE = ("훈련", "실제 상황이 아")
+#: 공식 목록에 없는 재해구분을 이미 경고한 이름 — 같은 이름을 회차마다 되풀이해 경고하지 않는다
+_warned_new_kinds: set[str] = set()
+
+
+def _safety_words() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """(심각 낱말, 제외 낱말) — 정본은 `travel.safety`. 설정이 없는 환경(시험 · 옛 설정)에서는 기본값."""
+    try:
+        from app.core.settings import get_guardrails
+
+        guard = get_guardrails()
+        return (tuple(str(w) for w in guard.get("travel.safety.trip_keywords")),
+                tuple(str(w) for w in guard.get("travel.safety.exclude_keywords")))
+    except Exception:                                  # noqa: BLE001 — 설정 오류가 재난문자 판정을 죽이지 않는다
+        return _FALLBACK_SEVERE, _FALLBACK_EXCLUDE
+
+#: 우리 지역 이름 → 재난문자 수신지역 표기.
+REGION_NAMES = {"서울": "서울특별시"}
+
+#: 그 시각 **이전 몇 시간** 안에 온 문자를 본다. ★우리가 고른 값이다(측정 아님).
+DEFAULT_LOOKBACK_HOURS = 6
+
+
+# ── 자치구 정하기 — `[2026-10-08]` role-activity 판(`disaster_msg.py`)에서 합쳤다 ──────────────
+# ★develop 판정은 장소의 구(`district`)를 받아 거른다(`disruptions.py`). 아래는 좌표 · 주소만 아는 호출
+#   (보존한 활동 팀 판 · `read_tools`)을 위한 것이다 — 주소의 「서울특별시 ○○구」가 먼저고, 주소가 없을 때만
+#   대략적 좌표 상자를 쓰되 **겹친 구를 전부** 본다. 겹친 상자 중 앞 구를 고르던 옛 함수(`_lat_lon_to_gu`)는
+#   카탈로그 장소의 32% 를 다른 구로 정해 가져오지 않았다.
+# 서울 25개 자치구 대략적 경계(EPSG:4326) — 위경도 → 구 이름 변환용.
+# ★재난문자 수신지역 문자열("서울특별시 송파구 신천동")에서 구 이름("송파구")으로 좁힌다.
+_SEOUL_GU_BOUNDS: list[tuple[str, float, float, float, float]] = [
+    # (구이름, lat_min, lat_max, lon_min, lon_max)
+    ("강남구",   37.4950, 37.5430, 127.0250, 127.1170),
+    ("강동구",   37.5230, 37.5640, 127.1070, 127.1850),
+    ("강북구",   37.6100, 37.6700, 127.0050, 127.0630),
+    ("강서구",   37.5190, 37.5760, 126.7980, 126.8860),
+    ("관악구",   37.4470, 37.4970, 126.9070, 126.9850),
+    ("광진구",   37.5360, 37.5630, 127.0640, 127.1230),
+    ("구로구",   37.4850, 37.5270, 126.8360, 126.9200),
+    ("금천구",   37.4470, 37.4840, 126.8770, 126.9370),
+    ("노원구",   37.6170, 37.6860, 127.0580, 127.1150),
+    ("도봉구",   37.6470, 37.7150, 127.0160, 127.0720),
+    ("동대문구", 37.5610, 37.5960, 127.0150, 127.0630),
+    ("동작구",   37.4870, 37.5290, 126.9330, 126.9980),
+    ("마포구",   37.5360, 37.5750, 126.8830, 126.9680),
+    ("서대문구", 37.5580, 37.6040, 126.9070, 126.9740),
+    ("서초구",   37.4730, 37.5270, 126.9930, 127.0730),
+    ("성동구",   37.5390, 37.5760, 127.0200, 127.0730),
+    ("성북구",   37.5800, 37.6300, 126.9830, 127.0370),
+    ("송파구",   37.4730, 37.5400, 127.0850, 127.1910),
+    ("양천구",   37.5150, 37.5570, 126.8470, 126.9140),
+    ("영등포구", 37.5040, 37.5380, 126.8840, 126.9510),
+    ("용산구",   37.5180, 37.5530, 126.9580, 127.0120),
+    ("은평구",   37.5910, 37.6420, 126.8820, 126.9570),
+    ("종로구",   37.5650, 37.6200, 126.9520, 127.0190),
+    ("중구",     37.5520, 37.5760, 126.9800, 127.0240),
+    ("중랑구",   37.5840, 37.6260, 127.0580, 127.1180),
+]
+
+
+SEOUL_GU_NAMES = frozenset(name for name, *_ in _SEOUL_GU_BOUNDS)
+#: 「서울특별시 종로구 …」 · 「서울 종로구 …」 · 「서울시 중구 …」
+_ADDRESS_GU = re.compile(r"서울(?:특별시|시)?\s+(\S+?구)(?=\s|$|\()")
+
+
+def seoul_districts(latitude: float | None, longitude: float | None,
+                    address: str | None = None) -> tuple[list[str] | None, str]:
+    """장소 → 재난문자를 거를 서울 자치구 목록과 그 근거. `[2026-10-07]`
+
+    1. **주소**에 「서울특별시 ○○구」가 있으면 그 구 하나(`address`). 카탈로그·CSV 장소는 모두 주소가 있다.
+    2. 없으면 좌표 상자. 상자는 겹친다 — 들어가는 구를 **전부** 본다(`box`, 둘 이상이면 `box_ambiguous`).
+       한쪽을 고르면 진짜 구의 위급재난을 놓친다. 전부 보면 이웃 구 문자로 막을 수 있지만 그쪽이 덜 위험하다.
+    3. 상자에도 없으면 `None`(구를 모름) — 서울 전체로 조회한다(`none`).
+    ★상자는 대략값이라 2 로도 진짜 구가 빠질 수 있다(카탈로그 실측 12%). 주소를 넘기는 것이 기본이다.
+    """
+    if address:
+        match = _ADDRESS_GU.search(address)
+        if match and match.group(1) in SEOUL_GU_NAMES:
+            return [match.group(1)], "address"
+    if latitude is None or longitude is None:
+        return None, "none"
+    hits = [name for name, lat_min, lat_max, lon_min, lon_max in _SEOUL_GU_BOUNDS
+            if lat_min <= latitude <= lat_max and lon_min <= longitude <= lon_max]
+    if not hits:
+        return None, "none"
+    return hits, "box" if len(hits) == 1 else "box_ambiguous"
+
+
+def _regions(text: str) -> list[str]:
+    return [part.strip() for part in str(text or "").split(",") if part.strip()]
+
+
+def _covers(tokens: list[str], region: str, district: str | list[str] | None) -> bool:
+    """`district` 는 구 하나 또는 목록(좌표 상자가 겹칠 때 — 그중 하나라도 걸리면 덮는다). `[2026-10-08]` 목록 허용."""
+    full = REGION_NAMES.get(region, region)
+    districts = [district] if isinstance(district, str) else district
+    for token in tokens:
+        token = token.strip()
+        if not token.startswith(full):
+            continue
+        area = token[len(full):].strip()
+        # ★구까지 알면 구로 좁힌다 — 강남 도로 통제로 종로 일정을 바꾸지 않게.
+        # ‘금천구 전체’의 전체는 해당 구 안에서만 적용한다.
+        if not districts or area in ("", "전체") or any(d in area for d in districts):
+            return True
+    return False
+
+
+def parse_row(raw: dict[str, Any]) -> dict[str, Any] | None:
+    """공급자 한 줄(CSV·API 공통 열 이름) → 판정용 행. 생성 시각을 못 읽으면 `None`.
+
+    ★샘플 CSV 와 API 는 같은 열 이름을 쓴다(샘플이 그 API 에서 받은 것이다).
+      그래서 두 판이 **같은 파서와 같은 판정**을 쓴다 — 규칙이 두 벌로 갈라지지 않게.
+    """
+    try:
+        created = datetime.strptime(str(raw["CRT_DT"]).strip(),
+                                    "%Y/%m/%d %H:%M:%S").replace(tzinfo=KST)
+    except (KeyError, ValueError, AttributeError):
+        return None
+    return {
+        "created_at": created,
+        "kind": (raw.get("DST_SE_NM") or "").strip(),
+        "step": (raw.get("EMRG_STEP_NM") or "").strip(),
+        "regions": _regions(raw.get("RCPTN_RGN_NM", "")),
+        "text": (raw.get("MSG_CN") or "").replace("\r\n", " ").strip(),
+        "serial": raw.get("SN"),
+    }
+
+
+#: `[2026-10-13 사용자 결정]` 여행 영향이 없다고 보고 보내지 않은 「기타」 문자를 넘겨받아 남기는 곳(관리자 웹앱에서 사안 · 건수를 본다).
+#:  조립이 꽂는다(`components/watch/notice_exclusions.register`). 비어 있으면 남기지 않는다(시험 · 조립 전).
+_excluded_sink: Any = None
+_receipt_sink: Any = None
+
+
+def set_receipt_sink(sink: Any) -> None:
+    global _receipt_sink
+    _receipt_sink = sink
+
+
+def set_excluded_sink(sink: Any) -> None:
+    global _excluded_sink
+    _excluded_sink = sink
+
+
+def judge(rows: list[dict[str, Any]], *, region: str, district: str | list[str] | None,
+          window_start: datetime, at: datetime) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """창 안·지역 안의 행 → (이상으로 셀 문자, 모르는 구분). 판정 규칙은 모듈 docstring."""
+    messages, unclassified = [], []
+    severe_words, exclude_words = _safety_words()
+    for row in rows:
+        if not (window_start <= row["created_at"] <= at
+                and _covers(row["regions"], region, district)):
+            continue
+        # ★끝난 사건의 문자(해제 · 종료 · 철회 · 개방 …)는 이상이 아니다 — 공용 판정 `notice_status`. ★`[2026-10-06]` 훈련 문자도 이상이 아니다(`travel.safety.exclude_keywords` — 「민방위 훈련」 한 통으로 일정이 바뀌면 안 된다)
+        if notice_status(row["text"]).ended or any(word in row["text"] for word in exclude_words):
+            continue
+        item = {"kind": row["kind"], "step": row["step"], "text": row["text"],
+                "created_at": row["created_at"].isoformat(),
+                "regions": row["regions"], "serial": row["serial"],
+                "weather": row["kind"] in WEATHER_KINDS}
+        # ★`[2026-10-06]` 재해구분이 모르는 값이어도(기타 · 새 이름) 본문에 심각 낱말(공습경보 · 화산 …)이 있으면 이상이다 — 전쟁 · 화산 폭발이 「모르는 구분」으로 빠지지 않게
+        if row["kind"] in DISRUPTIVE_KINDS or any(word in row["text"] for word in severe_words):
+            messages.append(item)
+            continue
+        # ★`[2026-10-13 사용자 결정]` 「기타」 · 모르는 구분(교통사고 등)은 본문으로 여행 영향을 가른다 — 공용 판정 `notice_impact`(규칙 또는 모델).
+        #   전에는 「기타」를 통째로 버렸다(2026 서울 「기타」 고유 208건 중 189건이 여행에 영향이 있었다). 재해구분은 원값 그대로 두고 `impact` 칸을 붙인다.
+        #   영향 있음 → 이상으로 센다(야외 위험 outdoor 는 날씨형처럼 날씨 영향 장소에만).
+        #   ★영향 없음(규칙과 모델 둘 다) → 「기타」는 에이전트에 보내지 않는다(전과 같다) — 우리가 못 찾은 영향을 에이전트가 찾을 수 없다(사용자 2026-10-13).
+        #     모르는 구분(「기타」가 아닌 새 이름)은 전처럼 `unclassified` 로 보이게 남긴다.
+        detail = impact_detail(row["text"])
+        item = {**item, "impact": detail["impact"], "impact_by": detail["by"]}
+        if detail["impact"] is not None:
+            messages.append({**item, "weather": detail["impact"] == "outdoor"})
+        elif row["kind"] not in OFFICIAL_KINDS:
+            # ★공식 목록(41종)에 없는 이름 — 정부가 새로 더한 구분이다. 보이게 남기고 경고한다(목록을 갱신할 신호)
+            if row["kind"] not in _warned_new_kinds:
+                _warned_new_kinds.add(row["kind"])
+                logger.warning("재난문자 공식 목록에 없는 재해구분 %r — OFFICIAL_KINDS 갱신 필요", row["kind"])
+            unclassified.append(item)
+        elif _excluded_sink is not None:            # 「기타」 · 기록만 구분(`RECORD_ONLY_KINDS`) — 걸러진 문자 기록
+            _excluded_sink({**item, "model_checked": detail.get("model_checked", False), "prompt_version": detail.get("prompt_version")})
+    return messages, unclassified
+
+
+def judge_released(rows: list[dict[str, Any]], *, region: str, district: str | list[str] | None,
+                   window_start: datetime, at: datetime) -> list[dict[str, Any]]:
+    """창 안 · 지역 안의 **해제 문자**(공용 판정 `notice_status` 가 「끝남」 — 근거 조각은 `release_basis`). 재해구분은 가리지 않는다 — 어느 사건의 해제인지는 부르는 쪽이 가른다(`safety_pause._matching_release`)."""
+    out = []
+    for row in rows:
+        if not (window_start <= row["created_at"] <= at and _covers(row["regions"], region, district)):
+            continue
+        status = notice_status(row["text"])
+        if not status.ended:
+            continue
+        out.append({"kind": row["kind"], "step": row["step"], "text": row["text"], "created_at": row["created_at"].isoformat(),
+                    "regions": row["regions"], "serial": row["serial"], "release_basis": status.basis})
+    return out
+
+
+class DisasterMsgCsv:
+    """샘플 CSV 를 읽어 `active()` 로 답한다. 바깥으로 나가지 않는다."""
+
+    name = "disaster_msg_sample"
+    mode = "sample"
+
+    def __init__(self, path: Path | str) -> None:
+        self.path = Path(path)
+        self.misses: Counter[str] = Counter()
+        self.rows = self._load()
+        stamps = [row["created_at"] for row in self.rows]
+        self.coverage = (min(stamps), max(stamps)) if stamps else None
+
+    def _load(self) -> list[dict[str, Any]]:
+        text = self.path.read_bytes().decode("utf-8-sig")
+        rows = []
+        for raw in csv.DictReader(io.StringIO(text)):
+            if raw.get("SN") == "일련번호":          # ★2행은 한국어 열 이름이다
+                continue
+            row = parse_row(raw)
+            if row is None:
+                self.misses["bad_created_at"] += 1   # ★조용히 버리지 않고 센다
+                continue
+            rows.append(row)
+        if self.misses:
+            logger.warning("disaster_msg sample: skipped rows %s", dict(self.misses))
+        return rows
+
+    def active(self, *, region: str, at: datetime, district: str | list[str] | None = None,
+               lookback_hours: int = DEFAULT_LOOKBACK_HOURS) -> dict[str, Any] | None:
+        """`at` 이전 `lookback_hours` 안에 `region` 으로 온 문자. 못 읽었으면 `None`."""
+        if self.coverage is None:
+            return None
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        window_start = at - timedelta(hours=lookback_hours)
+        first, last = self.coverage
+        covered = first <= at <= last + timedelta(hours=lookback_hours)
+        base = {"mode": self.mode, "covered": covered, "region": region,
+                "district": district,
+                "coverage": {"from": first.isoformat(), "to": last.isoformat()},
+                "window": {"from": window_start.isoformat(), "to": at.isoformat()},
+                "source": self.name,
+                "confirmed_at": datetime.now(KST).isoformat()}
+        if not covered:
+            return {**base, "for_region": [], "unclassified": []}
+
+        messages, unclassified = judge(self.rows, region=region, district=district,
+                                       window_start=window_start, at=at)
+        return {**base, "for_region": messages, "unclassified": unclassified}
+
+    def released(self, *, region: str, since: datetime, at: datetime, district: str | None = None) -> list[dict[str, Any]] | None:
+        """`since` 부터 `at` 까지의 **해제 문자**. 샘플 기간 밖이면 `None`(모름 — 「해제 없음」이라고 답하지 않는다)."""
+        if self.coverage is None:
+            return None
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        since = since if since.tzinfo else since.replace(tzinfo=KST)
+        first, last = self.coverage
+        if not (first <= at <= last + timedelta(hours=DEFAULT_LOOKBACK_HOURS)):
+            return None
+        return judge_released(self.rows, region=region, district=district, window_start=since, at=at)
+
+    def near(self, latitude: float, longitude: float,
+             at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
+        """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
+
+        `read_tools.py` 가 `at=` 으로 부른다. `within=` 은 `[2026-10-10]` 지운 활동별 5분 감시(`instances/activity/watch.py`)가 쓰던 이름이다.
+        `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
+        """
+        effective_at = within or at or datetime.now(KST)
+        if not isinstance(effective_at, datetime):
+            effective_at = datetime.now(KST)
+        return _near_by_district(self, latitude, longitude, effective_at, address)
+
+
+def _near_by_district(source: Any, latitude: float, longitude: float, at: datetime,
+                      address: str | None) -> dict[str, Any] | None:
+    """두 판의 `near()` 공통 — 구를 정해 `active()` 로 묻고, 어떻게 정했는지(`district_basis`)를 싣는다."""
+    districts, basis = seoul_districts(latitude, longitude, address)
+    district: str | list[str] | None = districts[0] if districts and len(districts) == 1 else districts
+    result = source.active(region="서울", district=district, at=at)
+    if isinstance(result, dict):
+        result = {**result, "district_basis": basis}
+    return result
+
+
+#: 재난안전데이터공유플랫폼 긴급재난문자 — 2026-09-14 실키로 실호출 확인:
+#:    `{"header":{"resultCode":"00","resultMsg":"NORMAL SERVICE"},"numOfRows":…,"pageNo":…,
+#:      "totalCount":…,"body":[{SN, CRT_DT, MSG_CN, RCPTN_RGN_NM, EMRG_STEP_NM, DST_SE_NM, …}]}`
+#:    건수 0 이면 `body` 가 **null** 이다(결과 코드는 여전히 00).
+#:  ★★`crtDt` 는 「그 날짜의 문자」가 아니라 **「그 날짜부터 지금까지」**다 — 2023-09-19 로
+#:    걸면 62,159건, 오늘로 걸면 4건, 어제로 걸면 42건(오늘 4 포함)이었다. `rgnNm` 은 지역
+#:    거름이다(「경기도 김포시」 488건). **순서는 호출마다 달랐다** — 순서에 기대지 않는다.
+#:  ★키에 IP 제한이 없다(발급 화면 「유저아이피 *.*.*.*」) — 서버 경유가 필요 없다.
+#:  ★`[미확인]` 하루 한도(같은 플랫폼 다른 API 사용기의 100/일을 보수적으로 쓴다).
+API_ENDPOINT = "https://www.safetydata.go.kr/V2/api/DSSP-IF-00247"
+API_PAGE_ROWS = 1000
+
+
+class DisasterMsgApi(TravelSource):
+    """실키 판 — 샘플 CSV 판과 **같은 파서·같은 판정**, 같은 `active()` 모양.
+
+    ★창의 **시작 날짜부터**(`crtDt` 는 하한이다, 실측) 지역(`rgnNm`) 문자를 한 번에 받아
+      창으로 자른다. 장소가 달라도 인자가 같아 캐시를 나눠 쓴다 — 하루 한도(100
+      `[미확인]`)가 낮아서 중요하다.
+    ★창의 끝은 일정 시각과 지금 중 이른 쪽 — 아직 안 온 문자는 없다.
+    ★모르는 모양은 모름(`None`)이다. 줄 하나라도 못 읽거나, 전체 건수가 받은 것보다 많으면
+      (잘림) 목록 전체를 모름으로 둔다 — 못 읽은 것이 바로 그 호우 문자일 수 있다.
+    """
+
+    name = "disaster_msg"
+    mode = "api"
+
+    def __init__(self, *, service_key: str, cache_ttl_seconds: float | None = None,
+                 **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._key = service_key
+        #: ★이 소스만 캐시를 길게 둔다 — `ResponseCache.put(ttl_seconds=…)`.
+        self.cache_ttl_seconds = cache_ttl_seconds
+
+    @staticmethod
+    def _body_error(payload: dict[str, Any]) -> str | None:
+        header = payload.get("header")
+        if isinstance(header, dict):
+            code = str(header.get("resultCode", ""))
+            message = str(header.get("resultMsg", ""))
+            # ★`[미확인]` 「자료 없음」 코드를 아직 못 봤다. 없음 표시는 성공(빈 목록)으로 읽는다.
+            if code in ("00", "0", "0000") or "NODATA" in message.replace("_", "").upper():
+                return None
+            return f"{code} {message}".strip()
+        return TravelSource._body_error(payload)
+
+    def _rows_since(self, region: str, window_start: datetime) -> list[dict[str, Any]] | None:
+        """창 시작 날짜 이후 `region` 으로 온 문자를 **파싱해** 돌려준다. 못 읽으면 `None`(모름) — `active` 와 `released` 가 같이 쓴다."""
+        rows: list[dict[str, Any]] = []
+        # ★`crtDt` 는 하한이다 — 창 시작 날짜로 **한 번** 부르면 지금까지가 온다(실측).
+        payload = self._fetch_json(API_ENDPOINT, {
+            "serviceKey": self._key, "returnType": "json", "pageNo": 1,
+            "numOfRows": API_PAGE_ROWS, "crtDt": window_start.strftime("%Y%m%d"),
+            "rgnNm": REGION_NAMES.get(region, region)})
+        if payload is None:
+            self._record_receipt(region, None)
+            return None
+        body = payload.get("body")
+        if body is None:
+            body = []                                  # ★건수 0 이면 null 로 온다(실측)
+        # ★`[2026-10-13 실측]` 본문이 `{"items": [...]}` 로 싸여 오기도 한다 — 전국 63,276건을 1,000건씩 받을 때 28쪽이 이 모양이었다
+        #   (나머지 쪽은 목록 그대로). 전에는 이 모양을 「모름」으로 버려 그 회차의 재난 문자가 통째로 빠졌다
+        if isinstance(body, dict) and isinstance(body.get("items"), (list, dict)):
+            body = body["items"]
+            if isinstance(body, dict):
+                body = body.get("item") or []
+            if isinstance(body, dict):
+                body = [body]
+        if not isinstance(body, list):
+            self._miss("unexpected_shape", type(body).__name__)
+            self._record_receipt(region, None)
+            return None
+        total = payload.get("totalCount")
+        if isinstance(total, (int, str)) and str(total).isdigit() and int(total) > len(body):
+            self._miss("truncated", f"{total} > {len(body)}")
+            self._record_receipt(region, None)
+            return None
+        for raw in body:
+            row = parse_row(raw) if isinstance(raw, dict) else None
+            if row is None:
+                self._miss("bad_row", repr(raw)[:160])
+                self._record_receipt(region, None)
+                return None
+            rows.append(row)
+        self._record_receipt(region, rows)
+        return rows
+
+    def _record_receipt(self, region: str, rows: list | None) -> None:
+        if _receipt_sink is None:
+            return
+        fetched = getattr(self._fetch_state, "fetched_at", None)
+        _receipt_sink({"source": self.name, "region": region, "status": "received" if rows is not None else "failed",
+                       "fetched_at": fetched.isoformat() if fetched else None,
+                       "from_cache": bool(getattr(self._fetch_state, "from_cache", False)),
+                       "error_code": next(reversed(self.misses), None) if rows is None else None, "rows": rows or []})
+
+    def released(self, *, region: str, since: datetime, at: datetime, district: str | None = None) -> list[dict[str, Any]] | None:
+        """`since` 부터 `at` 까지 `region` 으로 온 **해제 문자**(재해구분은 가리지 않는다). 못 읽으면 `None`. `[2026-10-06]` 재난 정지를 푸는 알림이 쓴다."""
+        now = datetime.now(KST)
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        since = since if since.tzinfo else since.replace(tzinfo=KST)
+        rows = self._rows_since(region, since.astimezone(KST))
+        if rows is None:
+            return None
+        return judge_released(rows, region=region, district=district, window_start=since, at=min(at.astimezone(KST), now))
+
+    def active(self, *, region: str, at: datetime, district: str | list[str] | None = None,
+               lookback_hours: int = DEFAULT_LOOKBACK_HOURS) -> dict[str, Any] | None:
+        now = datetime.now(KST)
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        until = min(at.astimezone(KST), now)
+        window_start = until - timedelta(hours=lookback_hours)
+        rows = self._rows_since(region, window_start)
+        if rows is None:
+            return None
+        messages, unclassified = judge(rows, region=region, district=district,
+                                       window_start=window_start, at=until)
+        return self.stamp({"mode": self.mode, "covered": True, "region": region,
+                           "district": district,
+                           "window": {"from": window_start.isoformat(), "to": until.isoformat()},
+                           "for_region": messages, "unclassified": unclassified},
+                          source=self.name)
+
+    def near(self, latitude: float, longitude: float,
+             at: Any = None, *, within: Any = None, address: str | None = None) -> dict[str, Any] | None:
+        """좌표 · 주소로 자치구를 정해 조회한다 — `[2026-10-08]` role-activity 판에서 합쳤다.
+
+        `read_tools.py` 가 `at=` 으로 부른다. `within=` 은 `[2026-10-10]` 지운 활동별 5분 감시(`instances/activity/watch.py`)가 쓰던 이름이다.
+        `address` 를 주면 주소의 구로 거른다(`seoul_districts`). 구를 못 정하면 시 전체로 조회한다.
+        """
+        effective_at = within or at or datetime.now(KST)
+        if not isinstance(effective_at, datetime):
+            effective_at = datetime.now(KST)
+        return _near_by_district(self, latitude, longitude, effective_at, address)
+
+
+__all__ = ["API_ENDPOINT", "DEFAULT_SAMPLE_PATH", "DISRUPTIVE_KINDS", "DisasterMsgApi",
+           "DisasterMsgCsv", "OFFICIAL_KINDS", "PLACE_KINDS", "RECORD_ONLY_KINDS", "SEOUL_GU_NAMES", "WEATHER_KINDS",
+           "judge", "judge_released", "parse_row", "seoul_districts"]

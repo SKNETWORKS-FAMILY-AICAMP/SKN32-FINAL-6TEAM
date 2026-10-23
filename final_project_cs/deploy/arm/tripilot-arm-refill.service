@@ -1,0 +1,9 @@
+[Unit]
+Description=guguroute ARM replenish six hours of meaningful serving checks
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/tripilot-arm-cd.env
+ExecStart=/usr/bin/python3 ${DEPLOY_BASE}/control/serving_queue.py refill
+MemoryMax=256M
+UMask=0077

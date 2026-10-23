@@ -1,0 +1,866 @@
+{
+  "recorded_at": "2026-10-12T07:59:46.155701+00:00",
+  "source_and_input_files": [
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan.py",
+      "sha256": "fe9542d37f628146895583d9c4cb6eb8dc1a48bc95db9636fc626eda3fe7df37",
+      "bytes": 151646
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/departure_observer.py",
+      "sha256": "1612416dd1ebdb2852728868f6028cfcd136682d51fbd22e205a1e3045bcc583",
+      "bytes": 23058
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/graph_router.py",
+      "sha256": "9c1ebf89d3b71a5eb292b50de4d9260a0726662e7e8adf9ce1be0def5e8d5bb2",
+      "bytes": 34446
+    },
+    {
+      "path": "final_project_cs/app/domains/travel_ops/instances/mobility/engine/plan_estimate.py",
+      "sha256": "6e38d7bffe5cc23759cf5f6c51c9b6dbc9c14c371579363515c4b10db727b9c0",
+      "bytes": 39679
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/test_review_fixes_plan.py",
+      "sha256": "be0a148670fcf56acb5019f46753d2b6d6699287162237b61ef4fc3d522c63b7",
+      "bytes": 11667
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/test_estimate_walk_network_v1.py",
+      "sha256": "ef60b57175530a7dca2a064102cce4b9486498e22c8a495a175947ac72bd69ea",
+      "bytes": 4857
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/test_departure_walk_v1.py",
+      "sha256": "080852526a1d008349f1e260151e231867bf6983ba06a672cbb88a2c339c5b12",
+      "bytes": 5345
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/test_walk_duration_contract_v1.py",
+      "sha256": "46c1090a806b6598f9eca20b77a7964014ff28676d3be55bef674d0939f47c97",
+      "bytes": 4243
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/test_plan_estimate_v1.py",
+      "sha256": "ff2cb72f5f882b22433a251e3dcb1c3e9d16c5fe131c2fc2069f8e77eb714c7d",
+      "bytes": 20723
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/mobility/test_graph_router_goal_heuristic_v1.py",
+      "sha256": "919b6a95b91d23ce8e652a94f992eff1fcdab3e87035bd534ab39dee15a83343",
+      "bytes": 2775
+    },
+    {
+      "path": "final_project_cs/tests/unit/travel/test_departure_walk_no_fallback_v1.py",
+      "sha256": "bdbed026c8c827665d4765968e3184add23f26c9b1f5ebf190ca5dca8fe5b406",
+      "bytes": 2066
+    },
+    {
+      "path": "final_project_cs/wiki/teams/mobility.md",
+      "sha256": "150d69e2243885a3ba35ea97b372c125c767a7bf1be972afa25bc69ef63267f4",
+      "bytes": 56844
+    },
+    {
+      "path": "datasets/mobility/raw/osm_20261012_v1/download-result-v1.json",
+      "sha256": "872d21f81866290dade68cea263ac7c4e9c57473b0ad9fd92802731d82d63d4d",
+      "bytes": 495
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "api-guide/diagram-self-check-v1.log",
+      "sha256": "76da146d0c1e94b12e1d4ce550c0a0546c07e5b15dba0eefdb4a959a7cfc6f75",
+      "bytes": 149
+    },
+    {
+      "path": "api-guide/local-variable-presence-v1.json",
+      "sha256": "105075ad3091f53c4674621d5400d36cde20dfa3092614ee063d8b9bfe1bd213",
+      "bytes": 1225
+    },
+    {
+      "path": "api-guide/manifest-v1.json",
+      "sha256": "e31c7a6c115c00ca9405d0da1b750b9bff332d6457c57865e1e828ee31f3dc94",
+      "bytes": 1470
+    },
+    {
+      "path": "api-guide/official-reference-facts-v1.json",
+      "sha256": "e16848883d3da01d03b868111d0c5eb6ff2201fe9d03e26f337994fef7190b9b",
+      "bytes": 2531
+    },
+    {
+      "path": "api-guide/TMAP-key-preparation-20261012-v1.md",
+      "sha256": "224b3aaf081da1d44ef83a0b61a3e2c870b0105e09a07a60956ec05d0506c80e",
+      "bytes": 9402
+    },
+    {
+      "path": "api-guide/TMAP-preparation-flow-20261012-v1.html",
+      "sha256": "228c51d645f1f35083e3469660b87d6afb6544f117011bc9c1264103f383f844",
+      "bytes": 3985
+    },
+    {
+      "path": "claude-usage-v1.json",
+      "sha256": "053c06f3364b41c9d57ea9fea2962d3e457135731556242f0af47709c3bbe70a",
+      "bytes": 1845
+    },
+    {
+      "path": "claude-walk-result-v3.json",
+      "sha256": "84a46603c58bc6ba2b9dee10e777727f8a21b759ae4fc459df37fd33368d14c2",
+      "bytes": 9532
+    },
+    {
+      "path": "estimate-contract-v1.log",
+      "sha256": "4c810023b4ee9c34ca7728bbc7a7cb4a974f8ab7b5a0662624c8fd28578a9016",
+      "bytes": 524
+    },
+    {
+      "path": "estimate-contract-v1.xml",
+      "sha256": "608af1fcaf9d48672307fbb33123f9d0496e54037cb95f86c22502313e085405",
+      "bytes": 1177
+    },
+    {
+      "path": "example-walk-rejection-v1.json",
+      "sha256": "20fe259db198684e814f6d1ba649c1508c4057f414fe5ed4ec94bba4c3989e9e",
+      "bytes": 1367
+    },
+    {
+      "path": "final-walk-estimate-v4.log",
+      "sha256": "c1bcbd4a99288d235d733da8110ddce14be714f0dcfea09fd30315f0dfaae46d",
+      "bytes": 527
+    },
+    {
+      "path": "final-walk-estimate-v4.xml",
+      "sha256": "28faae5e0ef7bbab8bfa278c0f336b50847c5d673f38c6b4354e871e95b3b42e",
+      "bytes": 9277
+    },
+    {
+      "path": "plan-fixture-delta-v1.json",
+      "sha256": "b08502831dedfa775f70ea394d5906931a0e4dafed035339d7ef0357d747ee81",
+      "bytes": 2295
+    },
+    {
+      "path": "plan-fixture-delta-v1.log",
+      "sha256": "1e03eb31e5933484c7ba9f75a346cdf2769e34a836f0bd094d0599edea1de634",
+      "bytes": 1705
+    },
+    {
+      "path": "plan-regression-v1.log",
+      "sha256": "6b8c0b585d1c0b1e2ed53d62ed97cac8f7614b064155ab7efc770192708dbfc5",
+      "bytes": 5376
+    },
+    {
+      "path": "plan-regression-v1.xml",
+      "sha256": "2eb5bcc0d058cde87b5e76e2c3bf4308d72a8f99b11d4ba81db52a944b1b5ddb",
+      "bytes": 24051
+    },
+    {
+      "path": "REPORT-v2.md",
+      "sha256": "efe10fb047e993f4853584fe8c01a84a816299b1f701ae1d89d9224fc4634c46",
+      "bytes": 11060
+    },
+    {
+      "path": "REPORT.md",
+      "sha256": "b04305b8c1c7a98b8d177163e74c85efd01dea3243a13a4707e62132c257dd62",
+      "bytes": 8612
+    },
+    {
+      "path": "route-diagnosis-v2.png",
+      "sha256": "b12b632033084f1331e8f8e8929ba825ec06f9fe0d02082836530a31a2ea6800",
+      "bytes": 284597
+    },
+    {
+      "path": "route-diagnosis-v2.svg",
+      "sha256": "b287681b2609a3475970ed55b566ba77b871435ee322bb617c19ae0b4fbad2bc",
+      "bytes": 216689
+    },
+    {
+      "path": "taxi-research/electric-annex-web-0-266.txt",
+      "sha256": "a5e3d3cfb98a7ebdcf76276c7340b1fa057a98d10a8a2eca68bf743dce20a561",
+      "bytes": 21902
+    },
+    {
+      "path": "taxi-research/electric-annex-web-90-332.txt",
+      "sha256": "2a42bfbbad2a04887d0999bd78296741bc21188cb7e017f82fc916aac407d789",
+      "bytes": 22260
+    },
+    {
+      "path": "taxi-research/manifest-v1.json",
+      "sha256": "b95016d994029cb25a2fb06eba2e7de17f97ff16da7c36223399a4334996b13c",
+      "bytes": 1387
+    },
+    {
+      "path": "taxi-research/REPORT.md",
+      "sha256": "078f0aeda6ead33e7afe52243b02a24d3d9cb6af7c4134d7747caa33206247f9",
+      "bytes": 8332
+    },
+    {
+      "path": "taxi-research/seoul-announcement.hwp",
+      "sha256": "a5bafaa17635ffc8b796ca1a71b013f6d92cd4b02119eeab9d942e52a4bf7a3c",
+      "bytes": 88576
+    },
+    {
+      "path": "taxi-research/seoul-announcement.txt",
+      "sha256": "c9c0a9eec6f911cba36beed47462182128b58619ad47c0d155749417e18c2034",
+      "bytes": 1360
+    },
+    {
+      "path": "taxi-research/seoul-tariff-decision.hwp",
+      "sha256": "35aa2c43fdb7c74cb8e5ac8fd08d2bfb7f96da4e468c40e31759031b8615ac8f",
+      "bytes": 55808
+    },
+    {
+      "path": "taxi-research/seoul-tariff-decision.txt",
+      "sha256": "cd4e49efdf6d40939af8e188f2eaaf533049122955eef9225bfc6247f7d16b45",
+      "bytes": 3118
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_164345_goal_heuristic_fix/graph_router.py",
+      "sha256": "5d147feb14c4b9b3477aafde8e6517f4ccb96cce7b2a5ebc0920a0bcd322eeb8",
+      "bytes": 34088
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_164345_goal_heuristic_fix/local-topology-v1.json",
+      "sha256": "f89cec9687f5c32e8b1c1769279f97d708638354d986c3fa9b6c0082d0492491",
+      "bytes": 2827
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_164345_goal_heuristic_fix/local-topology-v1.py",
+      "sha256": "5f609e6cef50628760281a0d4b6b01e4d7b9cd3685b1023be3b364126d3637fa",
+      "bytes": 2662
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_164345_goal_heuristic_fix/new-pbf-targeted-v1.json",
+      "sha256": "b12a34c3f9e265d03af01cea67f8b488b1c8f8fe731cb565809c5d5f108796b2",
+      "bytes": 126025
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_164345_goal_heuristic_fix/new-pbf-targeted-v1.py",
+      "sha256": "81d771aba309f64a82ab6c252d732a0bc525fbd4fa499b7929ad4f7f43ea89f3",
+      "bytes": 2459
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_164345_goal_heuristic_fix/test_graph_router_goal_heuristic_v1.py",
+      "sha256": "83b0695ff3f91890acd3b601f5619ac2006a60cfa2967d94847e5cbd0d11a1c3",
+      "bytes": 2039
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_165135_goal_endpoint_boundary/graph_router.py",
+      "sha256": "901222e5a55d57bce44e9b0b2ac71f71ae30bc3512aa21efab5dfcbfe6b56eda",
+      "bytes": 34307
+    },
+    {
+      "path": "walk-engine/_backup/2026-10-12_165135_goal_endpoint_boundary/test_graph_router_goal_heuristic_v1.py",
+      "sha256": "a3ac630d8dcbc742bacee15b9dba0a240f26b4d083b8270bf21487b47c431d3a",
+      "bytes": 2088
+    },
+    {
+      "path": "walk-engine/backup-before-goal-fix-v1.json",
+      "sha256": "b966a6a04e1c1a3caedef6770fe7ef3c650a7aa6480ee59ca6b91e22dc9c482a",
+      "bytes": 1169
+    },
+    {
+      "path": "walk-engine/backup-before-goal-fix-v1.py",
+      "sha256": "4f420f8a844d8f57656d52746f45ecfc3c04807e22be075eaf4be46e01327e2b",
+      "bytes": 1781
+    },
+    {
+      "path": "walk-engine/build-report-v1.py",
+      "sha256": "3cbf3c25a4fc09ed0dfe25e503ad1ae3bf4b03350a034a51b47e574880b3bd27",
+      "bytes": 9729
+    },
+    {
+      "path": "walk-engine/build-report-v2.py",
+      "sha256": "7497cef251b1b75b3609858b311c7a32211a19b752f3e309fb6d0d0bcf83bcb0",
+      "bytes": 10391
+    },
+    {
+      "path": "walk-engine/diagnose-v1.py",
+      "sha256": "b360916a9fede915cbb3960a3c07ed9a4a4a323c79631435f2774d399f987e4e",
+      "bytes": 5194
+    },
+    {
+      "path": "walk-engine/diagnosis-v1.json",
+      "sha256": "bcbece6c71ac1a1d87bd0d61ae32fd8e254fb27bcd36366344509d1d42b8b5ba",
+      "bytes": 250398
+    },
+    {
+      "path": "walk-engine/goal-boundary-final-v4.xml",
+      "sha256": "83f3b1d9caa1b79d5b3ca5d8c480c5ca4ddee468a5ab9a21ae45f3a3b28c2d19",
+      "bytes": 593
+    },
+    {
+      "path": "walk-engine/goal-heuristic-before-v1.xml",
+      "sha256": "b9ce42b304a3d404b5ea861ac4984773765eb7b7681aea3c0159a2d5790813cc",
+      "bytes": 1485
+    },
+    {
+      "path": "walk-engine/goal-heuristic-change-v2.diff",
+      "sha256": "b23519c5a5708e62db9e01186b33d3251a98ab5a459d557cf3f43779ccf2db51",
+      "bytes": 2476
+    },
+    {
+      "path": "walk-engine/graph-router-final-v3.xml",
+      "sha256": "f4fa832c7e6be85f7a6787f134116044bd16ad48e4fa0877d5f787ce7e46a625",
+      "bytes": 9342
+    },
+    {
+      "path": "walk-engine/graph-router-regression-after-v1.xml",
+      "sha256": "f9d45a1eb34bc30095a6e96f8d56d6eb7ba270c5e37fef08f28ce8b2a366516f",
+      "bytes": 88583
+    },
+    {
+      "path": "walk-engine/graph-router-related-after-v2.xml",
+      "sha256": "799d8c44308205726982adb1e89b2203959723c0461d81a2858639f6a48ff639",
+      "bytes": 6216
+    },
+    {
+      "path": "walk-engine/local-topology-v1.json",
+      "sha256": "31aa630b907ea154f9f8c85521af4e40fcf4e6742770dec6555c4182daaf71a7",
+      "bytes": 2839
+    },
+    {
+      "path": "walk-engine/local-topology-v1.py",
+      "sha256": "b4de187413a617c76ab10e099dbdf023c192cbf60cdf8157974884395c3d12ad",
+      "bytes": 2706
+    },
+    {
+      "path": "walk-engine/MANIFEST-v2.json",
+      "sha256": "df457ec6d0ea81ac085e0bbbe7e4e2c973eb539d1f82fe67a5ab1d6c93e5dae8",
+      "bytes": 4861
+    },
+    {
+      "path": "walk-engine/new-pbf-targeted-v1.json",
+      "sha256": "b8e9503f916e8effe8d0077777905bedfc53411a97316d7424fc8b859216826d",
+      "bytes": 126043
+    },
+    {
+      "path": "walk-engine/new-pbf-targeted-v1.py",
+      "sha256": "99999de8051fb0d0a877969e0b300a7cf911b16636906f260304ddeffa27cfb9",
+      "bytes": 2509
+    },
+    {
+      "path": "walk-engine/paired-counterexample-v1.json",
+      "sha256": "57d4478fa955e6bf2d6b028cc359da43d02cdf46cacab608366fdd05bc86422d",
+      "bytes": 4971
+    },
+    {
+      "path": "walk-engine/paired-counterexample-v1.py",
+      "sha256": "da5ccb8ed71b1748ee3297dae0a17e976814ec0f6e3869138b8710ee67ef94b4",
+      "bytes": 2024
+    },
+    {
+      "path": "walk-engine/paired-counterexample-v2.json",
+      "sha256": "a8b868554bb8e1e9c757d0eb1e6cbc987f37b092322e9a13565fa8ad3332f7e7",
+      "bytes": 4971
+    },
+    {
+      "path": "walk-engine/paired-counterexample-v2.py",
+      "sha256": "d47dae9551ac649c0fece4fb56d82359046394a2de98fee56900f27195c8be51",
+      "bytes": 2049
+    },
+    {
+      "path": "walk-engine/pbf-audit-v1.json",
+      "sha256": "f110803818a3b129dfc9a516f3597132a991ac585400a4e5df2d7e5eb4bd0cf9",
+      "bytes": 371575
+    },
+    {
+      "path": "walk-engine/pbf-audit-v1.py",
+      "sha256": "5cb15a21fae093b77452f839b9bdde68b2a93a4c6d39c94216b1622e9c384893",
+      "bytes": 2936
+    },
+    {
+      "path": "walk-engine/plot-v1.py",
+      "sha256": "9b73eee76326fd4d3a4ea12376636f6028beedcab11fd272651e84c971c28869",
+      "bytes": 2878
+    },
+    {
+      "path": "walk-engine/plot-v2.py",
+      "sha256": "b82f457e3c9ff05d46880819d17ccfd784c9fcf2407d210b762595e96b2d89eb",
+      "bytes": 2940
+    },
+    {
+      "path": "walk-engine/postfix-w01-v1.json",
+      "sha256": "43c150d81cd760fb9149b10fb3baae3156d5a261d262823b697afda63659d790",
+      "bytes": 7299
+    },
+    {
+      "path": "walk-engine/postfix-w01-v1.py",
+      "sha256": "50a4866857cf137278b30320b7dedc41c90134595251447a38d67d520e02920e",
+      "bytes": 1642
+    },
+    {
+      "path": "walk-engine/prepare-final-v2.py",
+      "sha256": "9c70bfc38514e849e73de9b9f5fda7d816b2eb37d29bed8f61ce5e9ace36fe27",
+      "bytes": 2635
+    },
+    {
+      "path": "walk-engine/prepare-plot-v2.py",
+      "sha256": "6ed1e400abf9cf99aa9f56d3e9075b6569c05a1b76bfaf8a546c2051291b5f2f",
+      "bytes": 318
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_0/edges.jsonl.gz",
+      "sha256": "85658c41f250f66152b4ffdcd01b264c2d88e99e9fb56c80eac74800c2b3e436",
+      "bytes": 433
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_0/nodes.jsonl.gz",
+      "sha256": "18ef86f6a4bef4aba061a1e36f97a4340532dda0e2c545d7643f719b6cb85b43",
+      "bytes": 168
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_0/turn_restrictions_v1.json",
+      "sha256": "f53a303b2b3e8735448ee4e11e22c3d7e8c9b9f3715a2aab4e7b139f8f915553",
+      "bytes": 262
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_1/edges.jsonl.gz",
+      "sha256": "85658c41f250f66152b4ffdcd01b264c2d88e99e9fb56c80eac74800c2b3e436",
+      "bytes": 433
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_1/nodes.jsonl.gz",
+      "sha256": "18ef86f6a4bef4aba061a1e36f97a4340532dda0e2c545d7643f719b6cb85b43",
+      "bytes": 168
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_1/turn_restrictions_v1.json",
+      "sha256": "021fb596db81e6d02bf3d2586ee3981fe519f275c0ac9ca76bbcf2ebb4097d96",
+      "bytes": 1
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_2/edges.jsonl.gz",
+      "sha256": "85658c41f250f66152b4ffdcd01b264c2d88e99e9fb56c80eac74800c2b3e436",
+      "bytes": 433
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_file_binding_and_removal_2/nodes.jsonl.gz",
+      "sha256": "18ef86f6a4bef4aba061a1e36f97a4340532dda0e2c545d7643f719b6cb85b43",
+      "bytes": 168
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_info_refuses_missing_grap0/MANIFEST.json",
+      "sha256": "f1d7f35e794e53f4bf9ec6fc4921bd005022253fefb32b876c2ec63ec49036d0",
+      "bytes": 67
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_info_reports_manifest_ver0/edges.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_info_reports_manifest_ver0/MANIFEST.json",
+      "sha256": "a3a3e76c84f55252ec6ed3894e8bb078f489296c446189542c225dd82c6306b8",
+      "bytes": 67
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_info_reports_manifest_ver0/nodes.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_info_reports_manifest_ver1/edges.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_info_reports_manifest_ver1/MANIFEST.json",
+      "sha256": "f1d7f35e794e53f4bf9ec6fc4921bd005022253fefb32b876c2ec63ec49036d0",
+      "bytes": 67
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_info_reports_manifest_ver1/nodes.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_metadata_without_manifest0/edges.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_metadata_without_manifest0/nodes.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_missing_file_identity_sti0/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_missing_file_identity_sti0/nodes.jsonl.gz",
+      "sha256": "19f196b5e542cbad9fd4c82b0ec6ecef131ebc9e647c3879d74ce30a244d472a",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_missing_file_identity_sti0/turn_restrictions_v1.json",
+      "sha256": "a35f6a525bc14b8b9b12b827e9907e815762d423c340b774642a62fd7794a878",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_missing_file_identity_sti1/edges.jsonl.gz",
+      "sha256": "f2efc46dea744a66be014599b2e1fbc50b3d488c5be8075895516bee09a1d089",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_missing_file_identity_sti1/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_missing_file_identity_sti1/turn_restrictions_v1.json",
+      "sha256": "58fb8825e8364368906e413c75a35a54a5ea12c1f7142c04a04c03cfbd4c5096",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic0/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic0/nodes.jsonl.gz",
+      "sha256": "19f196b5e542cbad9fd4c82b0ec6ecef131ebc9e647c3879d74ce30a244d472a",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic0/turn_restrictions_v1.json",
+      "sha256": "bd00e25fef00bff9b7583f1bd403464dca9680a307b5c3bc92b7e9fa5c4960fa",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic1/edges.jsonl.gz",
+      "sha256": "f2efc46dea744a66be014599b2e1fbc50b3d488c5be8075895516bee09a1d089",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic1/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic1/turn_restrictions_v1.json",
+      "sha256": "bd00e25fef00bff9b7583f1bd403464dca9680a307b5c3bc92b7e9fa5c4960fa",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic2/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic2/nodes.jsonl.gz",
+      "sha256": "19f196b5e542cbad9fd4c82b0ec6ecef131ebc9e647c3879d74ce30a244d472a",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic2/turn_restrictions_v1.json",
+      "sha256": "a35f6a525bc14b8b9b12b827e9907e815762d423c340b774642a62fd7794a878",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic3/edges.jsonl.gz",
+      "sha256": "f2efc46dea744a66be014599b2e1fbc50b3d488c5be8075895516bee09a1d089",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic3/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_same_size_and_time_atomic3/turn_restrictions_v1.json",
+      "sha256": "58fb8825e8364368906e413c75a35a54a5ea12c1f7142c04a04c03cfbd4c5096",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_unchanged_graph_does_not_0/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_unchanged_graph_does_not_0/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v2/test_unchanged_graph_does_not_0/turn_restrictions_v1.json",
+      "sha256": "bd00e25fef00bff9b7583f1bd403464dca9680a307b5c3bc92b7e9fa5c4960fa",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_0/edges.jsonl.gz",
+      "sha256": "c5c5bf878bbc3fa0d1292d279ee1cae91afd5a4cb083f295576a55d537a45128",
+      "bytes": 433
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_0/nodes.jsonl.gz",
+      "sha256": "694af2860f648a8b8e3fa0f9c3008ba0e138a598ca31ad6cf5835c44d39b5b7f",
+      "bytes": 168
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_0/turn_restrictions_v1.json",
+      "sha256": "2c0f0b7e0221c349dc430ed6a2139c79ff74b6bddc8543995204b632549655e1",
+      "bytes": 262
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_1/edges.jsonl.gz",
+      "sha256": "c5c5bf878bbc3fa0d1292d279ee1cae91afd5a4cb083f295576a55d537a45128",
+      "bytes": 433
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_1/nodes.jsonl.gz",
+      "sha256": "694af2860f648a8b8e3fa0f9c3008ba0e138a598ca31ad6cf5835c44d39b5b7f",
+      "bytes": 168
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_1/turn_restrictions_v1.json",
+      "sha256": "021fb596db81e6d02bf3d2586ee3981fe519f275c0ac9ca76bbcf2ebb4097d96",
+      "bytes": 1
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_2/edges.jsonl.gz",
+      "sha256": "c5c5bf878bbc3fa0d1292d279ee1cae91afd5a4cb083f295576a55d537a45128",
+      "bytes": 433
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_file_binding_and_removal_2/nodes.jsonl.gz",
+      "sha256": "694af2860f648a8b8e3fa0f9c3008ba0e138a598ca31ad6cf5835c44d39b5b7f",
+      "bytes": 168
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_info_refuses_missing_grap0/MANIFEST.json",
+      "sha256": "f1d7f35e794e53f4bf9ec6fc4921bd005022253fefb32b876c2ec63ec49036d0",
+      "bytes": 67
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_info_reports_manifest_ver0/edges.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_info_reports_manifest_ver0/MANIFEST.json",
+      "sha256": "a3a3e76c84f55252ec6ed3894e8bb078f489296c446189542c225dd82c6306b8",
+      "bytes": 67
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_info_reports_manifest_ver0/nodes.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_info_reports_manifest_ver1/edges.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_info_reports_manifest_ver1/MANIFEST.json",
+      "sha256": "f1d7f35e794e53f4bf9ec6fc4921bd005022253fefb32b876c2ec63ec49036d0",
+      "bytes": 67
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_info_reports_manifest_ver1/nodes.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_metadata_without_manifest0/edges.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_metadata_without_manifest0/nodes.jsonl.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_missing_file_identity_sti0/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_missing_file_identity_sti0/nodes.jsonl.gz",
+      "sha256": "19f196b5e542cbad9fd4c82b0ec6ecef131ebc9e647c3879d74ce30a244d472a",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_missing_file_identity_sti0/turn_restrictions_v1.json",
+      "sha256": "a35f6a525bc14b8b9b12b827e9907e815762d423c340b774642a62fd7794a878",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_missing_file_identity_sti1/edges.jsonl.gz",
+      "sha256": "f2efc46dea744a66be014599b2e1fbc50b3d488c5be8075895516bee09a1d089",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_missing_file_identity_sti1/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_missing_file_identity_sti1/turn_restrictions_v1.json",
+      "sha256": "58fb8825e8364368906e413c75a35a54a5ea12c1f7142c04a04c03cfbd4c5096",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic0/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic0/nodes.jsonl.gz",
+      "sha256": "19f196b5e542cbad9fd4c82b0ec6ecef131ebc9e647c3879d74ce30a244d472a",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic0/turn_restrictions_v1.json",
+      "sha256": "bd00e25fef00bff9b7583f1bd403464dca9680a307b5c3bc92b7e9fa5c4960fa",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic1/edges.jsonl.gz",
+      "sha256": "f2efc46dea744a66be014599b2e1fbc50b3d488c5be8075895516bee09a1d089",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic1/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic1/turn_restrictions_v1.json",
+      "sha256": "bd00e25fef00bff9b7583f1bd403464dca9680a307b5c3bc92b7e9fa5c4960fa",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic2/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic2/nodes.jsonl.gz",
+      "sha256": "19f196b5e542cbad9fd4c82b0ec6ecef131ebc9e647c3879d74ce30a244d472a",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic2/turn_restrictions_v1.json",
+      "sha256": "a35f6a525bc14b8b9b12b827e9907e815762d423c340b774642a62fd7794a878",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic3/edges.jsonl.gz",
+      "sha256": "f2efc46dea744a66be014599b2e1fbc50b3d488c5be8075895516bee09a1d089",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic3/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_same_size_and_time_atomic3/turn_restrictions_v1.json",
+      "sha256": "58fb8825e8364368906e413c75a35a54a5ea12c1f7142c04a04c03cfbd4c5096",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_unchanged_graph_does_not_0/edges.jsonl.gz",
+      "sha256": "76a9cd120ba5a391f65fb1a4358ad78b92b16e6c8d963ee096eb9fd256879692",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_unchanged_graph_does_not_0/nodes.jsonl.gz",
+      "sha256": "b2e2f75dafb82fcdc0dc5430f6e616ee6fc6fa3696db8c3e8dd37757ebab75b3",
+      "bytes": 8192
+    },
+    {
+      "path": "walk-engine/pytest-workspace-v3/test_unchanged_graph_does_not_0/turn_restrictions_v1.json",
+      "sha256": "bd00e25fef00bff9b7583f1bd403464dca9680a307b5c3bc92b7e9fa5c4960fa",
+      "bytes": 321
+    },
+    {
+      "path": "walk-engine/REPORT-durable-v2.md",
+      "sha256": "75f0ca4feeb47d018466fcc8ce1c5afe1fdde01e5150b6a2b6ede80ad307d77e",
+      "bytes": 8521
+    },
+    {
+      "path": "walk-engine/REPORT-v2.md",
+      "sha256": "cdf4a1b302fc04d855ff31de514af7b079a4534717bbf41a9d140de03ec9445f",
+      "bytes": 8105
+    },
+    {
+      "path": "walk-engine/route-diagnosis-v1.svg",
+      "sha256": "135257c920401b8e5144d8cea08df170133e8d9aae7810283bbad874def3d375",
+      "bytes": 145181
+    },
+    {
+      "path": "walk-engine/route-diagnosis-v2.png",
+      "sha256": "b12b632033084f1331e8f8e8929ba825ec06f9fe0d02082836530a31a2ea6800",
+      "bytes": 284597
+    },
+    {
+      "path": "walk-engine/route-diagnosis-v2.svg",
+      "sha256": "b287681b2609a3475970ed55b566ba77b871435ee322bb617c19ae0b4fbad2bc",
+      "bytes": 216689
+    },
+    {
+      "path": "walk-engine/summary-v2.json",
+      "sha256": "6c58418c712b78e682c3ce6986c53d645512cc25865a192465cb387aeb9a2329",
+      "bytes": 1611
+    },
+    {
+      "path": "walk-engine/way-tags-v1.json",
+      "sha256": "08bc743bdf9118bbe90d63a6d3c901f937eef2286761a5ae8cd2b21dfbcaf762",
+      "bytes": 99003
+    },
+    {
+      "path": "walk-engine/way-tags-v1.py",
+      "sha256": "3dc2a4e83c0a66113097d14e6c4cb2d9e7804363ec3b81643ce591fe8b07716d",
+      "bytes": 1029
+    },
+    {
+      "path": "walk-no-fallback-v1.log",
+      "sha256": "acc0b9bce9e5a30613fe2a13fa0048c68a2f48dec092fe02248efcf04ae5e02d",
+      "bytes": 1785
+    },
+    {
+      "path": "walk-no-fallback-v1.xml",
+      "sha256": "11f27d15225d4b365b86db58eb5d1f6f87963b2cec50fe1b88933dec8dea22ad",
+      "bytes": 8424
+    },
+    {
+      "path": "walk-no-fallback-v2.log",
+      "sha256": "8f3ef994fceee9eb4a3e5f70e13a6b6c07e999eb5726e0274d7dda36defb3212",
+      "bytes": 509
+    },
+    {
+      "path": "walk-no-fallback-v2.xml",
+      "sha256": "ef7370b5f9ec5cc99771478165cf32c7ebfe12c14fdacad0dadce262310916e7",
+      "bytes": 7817
+    },
+    {
+      "path": "walk-no-fallback-v3.log",
+      "sha256": "d9906d60d435de00b8d56c75a298bbe6a27ea9b2148f7e5e972d62387ab789ca",
+      "bytes": 509
+    },
+    {
+      "path": "walk-no-fallback-v3.xml",
+      "sha256": "fa12b776c80cec742dbfff504b1d119b29b7501a6f5108690f82bc5f42932219",
+      "bytes": 8344
+    }
+  ],
+  "counts": {
+    "direct_walk_estimate_passed": 60,
+    "direct_walk_estimate_total": 60,
+    "graph_regression_passed": 58,
+    "graph_regression_total": 58,
+    "broad_original_passed": 121,
+    "broad_original_total": 126,
+    "broad_failures_still_open": 4,
+    "new_web_observations": 0,
+    "new_web_planned": 3
+  },
+  "limited_developer_api_calls": 0,
+  "raw_osm_product_replacement": false,
+  "whole_21_complete": false
+}

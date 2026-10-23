@@ -1,0 +1,46 @@
+--- before/app/domains/travel_ops/ports/data_sources/seoul_subway.py
++++ after/app/domains/travel_ops/ports/data_sources/seoul_subway.py
+@@ -88,12 +88,23 @@
+ 
+     @staticmethod
+     def _body_error(payload: dict[str, Any]) -> str | None:
+-        """`INFO-200`(빈 결과)은 오류가 아니다. 그 밖의 INFO/ERROR 코드는 문구를 돌려준다."""
++        """정상 빈 결과와 누락·잘못된 목록을 보관 전에 구분한다."""
+         info = payload.get("errorMessage") if isinstance(payload.get("errorMessage"), dict) else payload
+         code = str(info.get("code") or "")
+         if code and code != "INFO-000" and code not in EMPTY_CODES and (code.startswith("ERROR") or code.startswith("INFO")):
+             return f'{code} {info.get("message", "")}'.strip()
+-        return TravelSource._body_error(payload)
++        problem = TravelSource._body_error(payload)
++        if problem is not None:
++            return problem
++        rows = payload.get("realtimeArrivalList")
++        if code in EMPTY_CODES:
++            # 공식 데이터 없음 코드만 누락/null을 허용한다. 열차 목록과 동시에 오면 모순이다.
++            return None if rows is None or rows == [] else "conflicting_empty_arrivals"
++        if rows is None:
++            return "missing_realtimeArrivalList"
++        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
++            return "malformed_realtimeArrivalList"
++        return None
+ 
+     def arrivals(self, station: str, *, line: str | None = None) -> dict[str, Any] | None:
+         """그 역의 **지금 도착 예정 열차**(상·하행). 못 읽으면 `None`, 열차가 없으면 `trains: []`(실패가 아니라 빈 결과).
+@@ -110,12 +121,14 @@
+         payload = self._fetch_json(url, {})
+         if payload is None:
+             return None
++        # 기존 보관 응답은 _fetch_json의 본문 검사를 우회한다. 외부 호출 실패 수는 늘리지 않는다.
++        problem = self._body_error(payload)
++        if problem is not None:
++            self._miss("malformed_arrivals", problem)
++            return None
+         rows = payload.get("realtimeArrivalList")
+         if rows is None:                              # INFO-200 — 빈 결과
+             rows = []
+-        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+-            self._miss("malformed_arrivals")
+-            return None
+         trains = []
+         checked = self._now()
+         if checked.tzinfo is None:
