@@ -231,6 +231,15 @@ class IntakeSurveyIn(BaseModel):
     answers: dict[str, str | dict[str, Any] | None] = Field(min_length=1, max_length=8)
 
 
+class IntakeDiningAnswerIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    run_id: str = Field(min_length=1, max_length=64)
+    question_id: str = Field(min_length=1, max_length=64)
+    item_ids: list[str] = Field(default_factory=list, max_length=500)
+    excluded: bool = False
+
+
 class MoveEndIn(BaseModel):
     """이동 판정의 한쪽 끝 — 일정 항목(`item_id` + 위 `trip_id`)이거나 이름 · 좌표(`lat` · `lon`)."""
     model_config = ConfigDict(extra="forbid")
@@ -1629,6 +1638,25 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
 
     # ── 확인 화면 수정 화면: 대체 후보 · 장소 검색 · 사진 · 전체 자동 추천 · 재검증 (2026-10-02, 계획 확인 시나리오 목업) ─────────
+    @router.post("/v1/web/trip-intakes/{intake_id}/dining-answers")
+    def web_intake_dining_answer(intake_id: UUID, request: IntakeDiningAnswerIn, background: BackgroundTasks,
+                                 who: tuple[str, UUID] = Depends(_web_customer)):
+        from app.domains.travel_ops.components.intake import dining_questions, pipeline
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                dining_questions.save_answer(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                             **request.model_dump(), enabled=dining_ledger.agent_judge_runner() is not None)
+                shown = pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+            _rejudge_later(background, tenant, intake_id, shown)
+            return shown
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except dining_questions.QuestionError as exc:
+            raise _error(exc.status, exc.code, exc.message) from None
+
     def _review_call(intake_id: UUID, customer: UUID, tenant: str, revision: int | None, use):
         """현재 판의 검사를 읽어 `use(conn, found)` 를 부른다. ★남의 접수 404 · 낡은 판 409 · 아직 읽는 중이면 409 — 다른 입구와 같다."""
         from app.domains.travel_ops.components.intake.pipeline import IntakeConflict, IntakeRejected, current_review

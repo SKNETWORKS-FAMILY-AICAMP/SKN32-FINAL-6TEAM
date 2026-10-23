@@ -1030,7 +1030,8 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
             payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
             if mode == "fresh":
                 store(conn, tenant_id, intake_id, revision, payload)
-            return payload
+            from . import dining_review
+            return dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
     previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
                 else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
     if quick:
@@ -1044,6 +1045,15 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
     payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
     store(conn, tenant_id, intake_id, revision, payload)
+    if not quick:
+        from . import dining_review
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+        from app.core.settings import dining_agent_judge
+
+        payload = dining_review.prepare(conn, tenant_id, intake_id, revision, payload,
+                                        enabled=dining_ledger.agent_judge_runner() is not None,
+                                        deadline_s=(dining_agent_judge() or {}).get("deadline_s", dining_review.DEFAULT_DEADLINE_S),
+                                        notes="\n".join(source.get("transcript") or "" for source in sources))
     return payload
 
 

@@ -14,9 +14,43 @@ import type { WebTaxiPricing } from "./taxi-pricing";
 /** ✓ ok · ✎ filled (a rule filled it in) · ! warn · ✕ bad (must be fixed) · – unknown (not known yet). */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown";
 /** `booking` (2026-10-03, server 8b0d4c88): shown only for a booking word or a meal line with no name — 예약 있음 · 예약 없이 간다 · 예약 있다는데 장소 모름 · 예약 여부 모름. */
-export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk";
+export type ItemRow = "place" | "time" | "hours" | "closed" | "booking" | "risk" | "dining_check" | "dietary" | "kids" | "payment" | "business";
 export type MoveRow = "route" | "mode" | "arrival";
-export interface CheckLine<Row extends string = string> { row: Row; result: CheckResult; text: string; can_acknowledge?: boolean }
+export interface CheckLine<Row extends string = string> {
+  row: Row; result: CheckResult; text: string; can_acknowledge?: boolean;
+  requirement?: "required" | "preference";
+  blocks_registration?: boolean;
+}
+
+export interface IntakeDiningJudge {
+  status: "disabled" | "pending" | "running" | "completed" | "failed";
+  revision: number;
+  run_id: string | null;
+  started_at?: string | null;
+  deadline_at?: string | null;
+  completed_at?: string | null;
+  error_code?: string | null;
+  blocks_registration?: boolean;
+}
+
+export interface DiningQuestion {
+  id: string;
+  quote: string;
+  attribute: "halal" | "vegetarian" | "kids" | "card";
+  required: boolean;
+  choices: { item_id: string; date: string | null; starts_at: string | null; title: string | null }[];
+  answer: { item_ids: string[]; excluded: boolean } | null;
+}
+
+export interface DiningAnswer {
+  revision: number; run_id: string; question_id: string; item_ids: string[]; excluded: boolean;
+}
+
+export function answerDiningQuestion(intakeId: string, answer: DiningAnswer, language: Language): Promise<ReviewedIntakeView> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/dining-answers`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(answer),
+  });
+}
 
 /** keep · adjusted (a rule filled it, or the customer changed it) · review (needs the customer). */
 export type ItemStatus = "keep" | "adjusted" | "review";
@@ -114,6 +148,8 @@ export interface Review {
   risk_mode?: "fresh" | "cached";
   risk_checked_at?: string | null;
   risk_schema_version?: number;
+  dining_judge?: IntakeDiningJudge | null;
+  dining_questions?: DiningQuestion[];
   taxi_pricing?: WebTaxiPricing;
   revision: number;
   built_at: string;

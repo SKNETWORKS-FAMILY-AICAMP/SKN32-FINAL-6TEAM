@@ -86,6 +86,8 @@ export interface PlanCheckProps {
   registration?: Registration;
   /** Trip-wide details the server asks for before it can register. */
   tripIssues?: TripIssue[];
+  /** Dynamic meal-condition questions appear inside the result list. */
+  conditionQuestions?: ReactNode;
   /**
    * `[2026-10-04]` The plan as 「전체 자동 추천」 WOULD make it (the server's dry run: nothing saved), once it has been asked for. The screen stands it under `view` and lets the list
    * scroll on into it; `view` stays the plan as it is, so both pictures are held and the customer can go back up to the one before.
@@ -466,7 +468,7 @@ const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit" | "opening">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "conditionQuestions" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit" | "opening">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -476,7 +478,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
+function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], conditionQuestions, previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
   view: PlanCheckView; sourceView: PlanCheckView;
   /** `[2026-10-20 C안]` The card the first check stopped at, and the hook that checks it again after a pick (`useReveal`). */
   stop?: RevealStop | null; stopCheck?: ReturnType<typeof useReveal>["recheck"]; onSay?: (text: string) => void;
@@ -1952,6 +1954,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
               retry={actions.recheck && !frozen ? () => { void run(async () => { await actions.recheck!(); return null; }); } : undefined} busy={Boolean(view.rechecking)}
               onAlternatives={actions.candidates && !registered && !frozen ? (id) => { const item = view.items.find((entry) => entry.id === id); if (item) void startChange(item); } : undefined} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
+            {done && !registered && !previewing && conditionQuestions}
             {done && !registered && !previewing && view.prefill && <PrefillNote notes={view.prefill} />}
             {done && !registered && !previewing && view.taxiPricing && actions.editTrip &&
               <TaxiPricing value={view.taxiPricing} locked={frozen} onSave={(value) => actions.editTrip!("taxi_pricing", value)} />}

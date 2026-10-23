@@ -607,6 +607,7 @@ def _review_of(conn, tenant_id: str, intake_id: UUID, revision: int, sources: li
     ★DB 오류가 바깥 트랜잭션을 망가뜨리지 않게 세이브포인트 안에서 부른다(마이그레이션 040 이 안 올라간 DB 도 읽기는 된다)."""
     try:
         with conn.transaction():
+            review_module.intake_state(conn, tenant_id, intake_id)
             return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
                                         sources=sources, claims=claims, force=force, quick=quick,
                                         previous_revision=revision - 1 if revision > 1 else None, **options), None

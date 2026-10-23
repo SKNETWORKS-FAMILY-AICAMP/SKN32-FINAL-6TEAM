@@ -26,7 +26,9 @@ import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
 import { clearIntakeArrival, forgetIntakeSubmission, intakeArrival, rememberEmptyIntake } from "@/lib/live/intake-start";
-import type { ReviewedIntakeView } from "@/lib/live/intake-review";
+import { answerDiningQuestion, type DiningAnswer, type ReviewedIntakeView } from "@/lib/live/intake-review";
+import { DiningQuestions, diningAnswer, canApplyDiningAnswer } from "./dining-questions";
+import { currentDiningJudge, diningPending, diningRegistrationReason, diningStatusText, intakeRefetchInterval, intakeRegistrationReady } from "@/features/plan-check/dining-status";
 import { getIntakeRouteShapes } from "@/lib/live/route-shapes";
 import { useIntakeRoutes } from "@/features/map/use-intake-routes";
 import { useRouteDetail } from "@/features/map/use-route-detail";
@@ -76,8 +78,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     refetchOnWindowFocus: false,
     // Keep recently read data when reopening; a new submission opens its progress screen before this first GET finishes.
     staleTime: 2_000,
-    refetchInterval: (state) => state.state.data?.status === "review" ? 180_000
-      : polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
+    refetchInterval: (state) => intakeRefetchInterval(state.state.data, polling, state.state.error) || (state.state.data?.status === "review" && !state.state.error ? 180_000 : false),
   });
   const refresh = useRef({ running: false, queued: false });
   const reread = useCallback(() => {
@@ -142,6 +143,14 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
     onSuccess: (result) => registered(result.trip.trip_id),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
+  });
+  const conditionAnswer = useMutation({
+    mutationFn: (answer: DiningAnswer) => answerDiningQuestion(intakeId, answer, language),
+    onMutate: async () => { await queryClient.cancelQueries({ queryKey: key }); },
+    onSuccess: (next, sent) => queryClient.setQueryData<ReviewedIntakeView>(key, (current) => canApplyDiningAnswer(current, next, sent) ? next : current),
+    onError: (error) => {
+      if (error instanceof LiveError && ["stale_revision", "stale_dining_question"].includes(error.code)) void query.refetch();
+    },
   });
 
   // ★`[2026-10-03]` The plan-check screen (mockup `tripilot-plan-check-streaming.html`) shows the server's intake:
@@ -272,8 +281,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const yearNote = year ? t(`날짜에 해가 적혀 있지 않아 ${year}년으로 두었어요. 다르면 일정의 날짜를 고쳐 주세요.`, `Some dates had no year, so ${year} was assumed. Change the date of a stop if that is wrong.`) : null;
   const details = [unchecked, asked, yearNote].filter(Boolean).join("\n");
   const finalNotice: BusToast | null = details ? { text: t("계획 확인 안내", "Plan check notice"), sub: [details, testNote?.text, testNote?.sub].filter(Boolean).join("\n"), stay: Boolean(unchecked) } : testNote;
+  const dining = currentDiningJudge(view);
   return <PlanCheck key="plan" view={result} previewView={previewed ? { ...previewed, dirty: false, rechecking: null } : null} routes={routeDetail.routes} onMapZoom={routeDetail.onZoom} routeState={{ loading: routeShapes.isFetching, error: routeShapes.isError, retry: () => { void routeShapes.refetch(); } }} notice={finalNotice} onBack={() => router.push(routes.newTrip)}
     tripIssues={tripIssuesOf(view)}
+    conditionQuestions={dining && <DiningQuestions key={`${view.revision}-${dining.run_id}`} questions={view.review?.dining_questions ?? []}
+      busy={diningPending(dining) || conditionAnswer.isPending || confirm.isPending} status={diningStatusText(dining, t)}
+      onAnswer={async (question, selected, excluded) => {
+        if (!dining.run_id) throw new Error(t("식당 확인 상태를 다시 불러와 주세요.", "Reload the restaurant check first."));
+        await conditionAnswer.mutateAsync(diningAnswer(view.revision, dining.run_id, question, selected, excluded));
+      }} />}
     actions={view.review ? server.actions : {
       edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
       // `[2026-10-04]` Several stops' new times in ONE request (title · date · place stay as they are; an empty start leaves the start alone).
@@ -294,10 +310,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
     }}
     registration={{
-      ready: view.review ? view.review.ready : Boolean(view.check?.ready), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending || leaving,
+      ready: intakeRegistrationReady(view), previewReady: server.preview?.review ? server.preview.review.ready : undefined, busy: confirm.isPending || leaving || conditionAnswer.isPending,
       // The plan the server holds when it is pressed — a plan saved a moment before (the proposed one, registered from) has a newer revision than this render's.
       onRegister: () => confirm.mutate(queryClient.getQueryData<ReviewedIntakeView>(key)?.revision ?? view.revision),
-      error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
+      error: confirm.error?.message ?? diningRegistrationReason(view, t), problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
       loginRequired: loginRequired(confirm.error),
       loginHref: `${routes.myPageAccount}?returnTo=${encodeURIComponent(routes.intake(intakeId))}`,
       registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,
