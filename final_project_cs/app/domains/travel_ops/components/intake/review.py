@@ -1143,13 +1143,20 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
             payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
             if mode == "fresh":
                 store(conn, tenant_id, intake_id, revision, payload)
-            return payload
+            from . import dining_review
+            return dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
+    answered_review = load(conn, tenant_id, intake_id, revision) if force else None
     previous = (load(conn, tenant_id, intake_id, previous_revision) if previous_revision
                 else _reopened_from(conn, tenant_id, intake_id) if revision == 1 else None)
     if quick:
         options = {**options, "use_engine": False, "engine": None, "engine_for_mode": None}
     payload = build(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision, sources=sources, claims=claims,
                     previous=previous, **options)
+    from .dining_questions import merge_questions, answers
+    saved_answers = answers(answered_review or previous or {})
+    if saved_answers:
+        payload["dining_questions"] = saved_answers
+        merge_questions(payload, [], "\n".join(source.get("transcript") or "" for source in sources))
     payload = {**payload, "checked": not quick, **({"ready": False} if quick else {})}
     from . import risks
 
@@ -1157,6 +1164,15 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
     payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
     store(conn, tenant_id, intake_id, revision, payload)
+    if not quick and any(item.get("kind") == "dining" for item in payload.get("items") or []):
+        from . import dining_review
+        from app.domains.travel_ops.components.team_hooks import dining_ledger
+        from app.core.settings import dining_agent_judge
+
+        payload = dining_review.prepare(conn, tenant_id, intake_id, revision, payload,
+                                        enabled=dining_ledger.agent_judge_runner() is not None,
+                                        deadline_s=(dining_agent_judge() or {}).get("deadline_s", dining_review.DEFAULT_DEADLINE_S),
+                                        notes="\n".join(source.get("transcript") or "" for source in sources))
     return payload
 
 
