@@ -76,6 +76,7 @@ teams:
 | team_hooks.dining_ledger state/states/catalog_state | Dining | 영업 판정 503. 등록 전도 같은 관문 |
 | dining_ledger 근처 목록 보강·이름 찾기 | Dining | 독립 조회의 보강만 생략·이유 기록 |
 | team_hooks.similarity | Activity | 독립 정렬의 선택 신호 생략·이유 기록 |
+| team_hooks.place_aliases 공용 장소 별칭 `[2026-10-22]` | Activity | 이름 찾기의 별칭 단계만 건너뜀(우리 자료 → 오타 → 관광공사 · 원장 → 카카오는 그대로). 계획 읽기 · 확인 화면 검색 · 이름 고치기 · 채팅 고치기가 모두 부른다 — [D-CS-021](../decisions/D-CS-021-place-name-lookup-order.md) |
 | team_hooks.watch_planners | 해당 Team | 해당 종류 감시 미실행 기록 |
 | settings_hook·progress_hook·trip_scope | 선택 모듈 | 기능별 기존 독립 기본값 유지 |
 | ports/data_sources/simulation_hook | 시나리오 어댑터 | 자료 소스 계층이 감시 구현을 직접 import하지 않음 |

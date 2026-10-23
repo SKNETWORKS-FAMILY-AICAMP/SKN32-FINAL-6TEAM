@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Button } from "@/components/ui";
-import { controlsLayout, EdgeChips, MapControls } from "./map-controls";
+import { controlsLayout, EdgeChips, LocateControl, locatePlace, MapControls } from "./map-controls";
 import type { MapAdapter, MapController, MapView, MapViewProps, StayPoint } from "./model";
 import styles from "./map.module.css";
 import { routeLabels } from "./route-labels";
@@ -16,18 +16,27 @@ export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick, onRequestLocation }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me = null, stays = NO_STAYS, onZoom, onInteractionChange, meAvailable = false, coordinatePick, onRequestLocation, focus }: MapViewProps & { adapter: MapAdapter; name: string }) {
   const pointer = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const surface = useRef<HTMLDivElement>(null);
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
   const viewRef = useRef<MapView | null>(null);
-  const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me, stays, onZoom, onInteractionChange });
+  const latest = useRef({ points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, me, stays, onZoom, onInteractionChange, focus });
+  // `[2026-10-22 ST4F-722]` A focus the screen asks for goes to the camera once (`key`), after the pins it names are on the map.
+  const focusedKey = useRef<number | undefined>(undefined);
+  const applyFocus = useCallback(() => {
+    const asked = latest.current.focus, map = controller.current;
+    if (!asked || !map || asked.key === focusedKey.current) return;
+    focusedKey.current = asked.key;
+    const point = latest.current.points.find((item) => item.id === asked.id);
+    if (point) map.focus(point.coordinates, asked.zoom);
+  }, []);
   const refreshLayout = useCallback(() => {
     controller.current?.relayout?.();
     const node = surface.current;
     if (!node) return;
-    const occupied = [...node.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls]")]
+    const occupied = [...node.querySelectorAll<HTMLElement>("[data-pin-body], [data-edge-chip], [data-map-controls], [data-map-locate]")]
       .filter((item) => getComputedStyle(item).visibility !== "hidden").map((item) => item.getBoundingClientRect());
     const frame = node.getBoundingClientRect();
     const currentView = viewRef.current;
@@ -71,9 +80,10 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
 
 
   useLayoutEffect(() => {
-    latest.current = { ...latest.current, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom };
+    latest.current = { ...latest.current, points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom, focus };
     controller.current?.update(points, selectedId, lines, selectedLineId);
-  }, [points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom]);
+    applyFocus();
+  }, [points, selectedId, onSelect, lines, onSelectLine, selectedLineId, topInset, bottomInset, onZoom, focus, applyFocus]);
 
   // `[2026-10-05 사용자 지시]` 「내 위치」 and the stays go to the map on their own: a new position does not redraw the pins.
   useEffect(() => {
@@ -133,6 +143,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       created.update(latest.current.points, latest.current.selectedId, latest.current.lines, latest.current.selectedLineId);
       created.setMe(latest.current.me);
       created.setStays(latest.current.stays);
+      applyFocus();
       observer = new ResizeObserver(([entry]) => {
         if (!entry) return;
         setSize({ width: Math.round(entry.contentRect.width), height: Math.round(entry.contentRect.height) });
@@ -148,26 +159,29 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
       host.remove();
       if (controller.current === instance) controller.current = null;
     };
-  }, [adapter, attempt]);
+  }, [adapter, attempt, applyFocus]);
 
   const ready = state.status === "ready";
   const canFit = points.length > 1;
   const meButton = meAvailable ? (me ? "ready" : "waiting") : "off";
-  const count = 3 + (canFit ? 1 : 0);
-  const layout = controlsLayout(size, topInset ?? 0, count);
+  const count = 2 + (canFit ? 1 : 0);
+  const layout = controlsLayout(size, topInset ?? 0, count, bottomInset ?? 0);
+  const locate = locatePlace(size, topInset ?? 0, bottomInset ?? 0);
   const [controlArea, setControlArea] = useState<{ left: number; top: number; right: number; bottom: number }[]>([]);
   useLayoutEffect(() => {
     const node = surface.current, controls = node?.querySelector<HTMLElement>("[data-map-controls]");
     if (!node || !controls) return;
+    // The fold tab and 「내 위치로」 (ST4F-721): the chips keep clear of both.
+    const obstacles = () => [...node.querySelectorAll<HTMLElement>("[data-map-obstacle]")];
     const measure = () => {
-      const root = node.getBoundingClientRect(), box = controls.querySelector<HTMLElement>("[data-map-obstacle]")!.getBoundingClientRect();
-      const next = [{ left: box.left-root.left, top: box.top-root.top, right: box.right-root.left, bottom: box.bottom-root.top }];
+      const root = node.getBoundingClientRect();
+      const next = obstacles().map((item) => item.getBoundingClientRect()).map((box) => ({ left: box.left-root.left, top: box.top-root.top, right: box.right-root.left, bottom: box.bottom-root.top }));
       setControlArea((old) => JSON.stringify(old) === JSON.stringify(next) ? old : next);
     };
     measure();
-    const observer = new ResizeObserver(measure); observer.observe(controls);
+    const observer = new ResizeObserver(measure); observer.observe(controls); obstacles().forEach((item) => observer.observe(item));
     return () => observer.disconnect();
-  }, [ready, folded, layout, size.width, size.height, topInset]);
+  }, [ready, folded, layout, locate, size.width, size.height, topInset, bottomInset]);
   // 칩과 마커가 같은 결과를 쓴다. layout effect로 브라우저가 그리기 전에
   // 표시를 교대하므로 지도 이동 중에도 같은 일정이 두 번 나타나지 않는다.
   const chips = useMemo(() => ready && view ? edgeChips(view, points, {
@@ -179,7 +193,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
     onPointerDownCapture={event => { pointer.current = { x: event.clientX, y: event.clientY, moved: false }; }}
     onPointerMoveCapture={event => { const start = pointer.current; if (start && Math.hypot(event.clientX-start.x, event.clientY-start.y)>8) start.moved = true; }}
     onClickCapture={event => {
-      if (!coordinatePick || !view || !ready || (event.target as Element).closest('[data-map-controls], [data-map-pick-center], [data-edge-chip], .leaflet-control')) return;
+      if (!coordinatePick || !view || !ready || (event.target as Element).closest('[data-map-controls], [data-map-locate], [data-map-pick-center], [data-edge-chip], .leaflet-control')) return;
       event.stopPropagation(); event.preventDefault();
       if (!pointer.current || pointer.current.moved) return;
       const rect = container.current!.getBoundingClientRect(), x = event.clientX-rect.left, y = event.clientY-rect.top;
@@ -201,11 +215,12 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, on
         onSelect(target.id);
         controller.current?.centerOn(target.coordinates, true);
       }} />}
-    {ready && <MapControls view={view} topInset={topInset ?? 0} layout={layout} folded={folded} onFold={(next) => { setFolded(next); }} canFit={canFit} me={meButton}
-      onZoom={(delta) => controller.current?.zoomBy(delta)} onFit={() => controller.current?.fit()} onLocate={() => {
-        if (me) controller.current?.centerOn(me.coordinates);
-        else onRequestLocation?.((location) => controller.current?.centerOn(location.coordinates));
-      }} />}
+    {ready && <MapControls view={view} topInset={topInset ?? 0} layout={layout} folded={folded} onFold={(next) => { setFolded(next); }} canFit={canFit}
+      onZoom={(delta) => controller.current?.zoomBy(delta)} onFit={() => controller.current?.fit()} />}
+    {ready && <LocateControl place={locate} topInset={topInset ?? 0} bottomInset={bottomInset ?? 0} me={meButton} onLocate={() => {
+      if (me) controller.current?.centerOn(me.coordinates);
+      else onRequestLocation?.((location) => controller.current?.centerOn(location.coordinates));
+    }} />}
     {ready && coordinatePick && view && <>
       {preview && <span className={styles.coordinatePin} data-coordinate-pin aria-hidden="true" style={{ left: preview.x, top: preview.y }}>＋</span>}
       <button type="button" className={styles.pickCenter} data-map-pick-center onClick={() => coordinatePick.onPick(fromPixels(view, { x: view.width/2, y: (view.height+(topInset??0)-(bottomInset??0))/2 }))}>지도 중심 선택</button>

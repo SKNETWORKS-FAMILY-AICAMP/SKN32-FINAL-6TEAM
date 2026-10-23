@@ -6,10 +6,10 @@ import { editsFor, rows } from "@/features/intake-review/model";
 import { translator, type Language, type Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
 import { answerInterpretations, editIntake, restoreIntake, type IntakeEdit } from "@/lib/live/intake";
-import { getMoveOptions, setMoveMode as postMoveMode, type MoveOptions } from "@/lib/live/move-options";
+import { getMoveOptions, getMoveRoutes, setMoveMode as postMoveMode, setMoveRoute as postMoveRoute, type MoveOptions } from "@/lib/live/move-options";
 import { itemEdit } from "@/lib/live/intake-edits";
 import {
-  autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
+  addSearch, autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, streamCandidates,
   type CandidateList, type CandidatePlace, type CandidateUpdate, type ReviewItem, type ReviewedIntakeView,
 } from "@/lib/live/intake-review";
 import { isLodgingReviewItem, planCandidate, safePhotoUrl } from "./from-review";
@@ -275,6 +275,22 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         take(next);
       },
 
+      // `[2026-10-23 사용자 지시]` The routes after the ones shown, asked when the list reaches its end (one leg at a time · nothing is kept: each page is one more count).
+      moveRoutes: (id, offset) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) return Promise.reject(gone());
+        return getMoveRoutes(intakeId, move.from, move.to, offset, 5, language, plan().revision).catch(staleThenRethrow);
+      },
+      setMoveRoute: async (id, key) => {
+        const move = plan().review?.moves.find((entry) => `${entry.from}:${entry.to}` === id);
+        if (!move) throw gone();
+        const answer = await postMoveRoute(intakeId, move.from, move.to, plan().revision, key, language).catch(staleThenRethrow);
+        if (!allUndo.active) return;
+        const next = { ...plan(), revision: answer.revision, review: answer.review };
+        allUndo.advance(next);
+        take(next);
+      },
+
       candidates: async (id, onLive) => {
         const item = itemOf(id);
         // The live cards: the first list as the server sent it, changed in place by each update, drawn again each time (photos as they come).
@@ -315,24 +331,30 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         return cards;
       },
       candidateNotes: (id) => candidateNotes.current.get(id) ?? [],
-      searchToAdd: async (id, words) => {
-        const item = itemOf(id);
-        const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
+      // `[2026-10-23 사용자 지시 — Codex 합의]` Its own search: the stops either side of the gap and the new stop's values — least out of the way first, then best name match.
+      searchToAdd: async (gap, words, signal, form) => {
+        const found = await addSearch(intakeId, plan().revision, { q: words, previous: gap.previousId, next: gap.nextId, ...form }, language, signal).catch(staleThenRethrow);
         if (!allUndo.active) throw gone();
-        assertPlaceSearchComplete(found, t);
-        return found.results.map((result) => ({
-          ...planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source }),
-          pickedPlace: pickedPlace(result.place),
-        }));
+        const both = [...found.results, ...(found.relevance ?? [])];
+        assertPlaceSearchComplete({ results: both, notes: found.notes }, t);
+        const id = `add:${gap.previousId ?? ""}:${gap.nextId ?? ""}`;
+        return both.map((result) => {
+          const card = { ...planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source }),
+            pickedPlace: pickedPlace(result.place) };
+          return result.order ? { ...card, id: `${card.id}:${result.order}`, order: result.order } : card;
+        });
       },
-      search: async (id, words) => {
+      search: async (id, words, signal) => {
         const item = itemOf(id);
-        const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
-        assertPlaceSearchComplete(found, t);
-        return found.results.map((result) => {
+        const found = await searchPlaces(intakeId, item, plan().revision, words, language, signal).catch(staleThenRethrow);
+        // `[2026-10-22 사용자 지시]` Two lists: nearest to the stop being changed, then the best name matches. A place can stand in both, so each list keeps its own card ids.
+        const both = [...found.results, ...(found.relevance ?? [])];
+        assertPlaceSearchComplete({ results: both, notes: found.notes }, t);
+        return both.map((result) => {
           const card = planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source });
-          pickable.current.set(card.id, result.place);
-          return card;
+          const tagged = result.order ? { ...card, id: `${card.id}:${result.order}`, order: result.order } : card;
+          pickable.current.set(tagged.id, result.place);
+          return tagged;
         });
       },
       replace: async (id, choice: PlaceChoice, how) => {

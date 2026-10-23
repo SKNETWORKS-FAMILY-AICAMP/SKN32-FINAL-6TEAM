@@ -615,7 +615,8 @@ travel:
   # -- 여행 화면 · 계획 확인 화면 위험 점검 칸 (2026-10-22 사용자 지시) --
   # 여행 화면 일정 목록 위와 계획 확인 화면(등록 전 · 일정 수정)의 「현재 점검 대상 일정이 없어요 · 지금부터 n시간 이내 대상 · 확인 HH:MM」 칸.
   # 3분 점검 · 재난 경고가 실제로 반영되는지 시험 중에 보려고 둔 칸이라 **기본 꺼짐**(2026-10-22 사용자 지시), 시험 때 **관리 콘솔 「운영 설정」** 의 같은 이름 스위치로 켠다(콘솔 값이 먼저).
-  # 꺼짐: 여행 조회 · 공개 읽기 `GET /v1/web/features` 의 `risk_panel` 이 false — 두 화면의 그 칸만 숨는다. 3분 점검 · 종 표시 · 위험 알림 · 알림 센터 「주의」 탭의 점검 결과는 그대로.
+  # 꺼짐: 여행 조회 · 공개 읽기 `GET /v1/web/features` 의 `risk_panel` 이 false — 두 화면의 그 칸이 숨고 알림 센터 「살펴볼 점」 탭에는 실제 위험 일정만 남는다(2026-10-22).
+  #   3분 점검 · 종의 「위험 n」 · 위험 알림 · 일정 카드의 위험 표시는 그대로.
   # 읽는 곳: `settings_hook.trip_risk_panel_enabled(tenant)`.
   trip_screen:
     now_label_enabled: true
@@ -1062,6 +1063,16 @@ web_guard:
     #   risk_read — 캐시만 읽는 기본 호출(바깥에 안 나가고 하루 한도를 안 쓰지만 서버 DB 조회 · 스레드는 쓴다 — 코덱스 검토 [중간]). 3분마다 한 여행을 계속 읽어도 하루 480번: 키당 600 · 주소당 1800 · 서비스 20000
     risk_read:   {per_key_day: 600, per_ip_day: 1800, service_day: 20000}
     move_judge:  {per_key_day: 200, per_ip_day: 600, service_day: 2000}
+  # ★`[2026-10-22 사용자 지시]` 서비스 모드 — 지금은 시험 단계라 **꺼 둔다.** 켜면 ①위 하루 한도(`limits_enabled` 와 같은 것)가 함께 켜지고
+  #   ②계정 등급별 **한 시간** 한도가 더해진다 — 회원(로그인한 계정, 지금 유료 등급은 없다)과 게스트(로그인 안 함)를 나눠 센다. 게스트는 훨씬 빡빡하게.
+  #   QA 예외 계정(`usage_exempt`)은 등급 한도를 받지 않는다. 값은 관리 콘솔 「운영 설정」에서 바꾼다(`service.*`).
+  #   출처: **우리가 고른 값**(측정 안 함) — 회원은 수정 화면을 여러 번 열어도 막히지 않을 만큼, 게스트는 맛보기(D-CS-011)만큼.
+  #   장소 검색 1번 = 카카오 최대 2건(가까운 순 · 필요할 때만 이름순) · 수정 화면 한 번에 대체 후보 1 + 사진 몇 장도 같은 `place_search` 로 센다.
+  service_mode:
+    enabled: false
+    per_hour:
+      member: {intake: 10, plan: 10, confirm: 20, trip_create: 5, message: 60, warmup: 30, place_search: 120, risk_check: 30, risk_read: 120, move_judge: 120}
+      guest:  {intake: 2,  plan: 2,  confirm: 5,  trip_create: 1, message: 10, warmup: 5,  place_search: 20,  risk_check: 5,  risk_read: 30,  move_judge: 30}
   bounds:
     count: {min: 1, max: 100000}          # 횟수 한도가 받는 범위(0 으로 끄지 않는다 — 끄는 것은 limits_enabled)
     session_per_ip_hour: {min: 1, max: 1000}

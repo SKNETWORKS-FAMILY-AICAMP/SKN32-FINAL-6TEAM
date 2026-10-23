@@ -28,7 +28,7 @@ import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } 
 import { TaxiPricing } from "./taxi-pricing";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import { dampedScrollTo } from "@/lib/damped-scroll";
-import type { MoveOptions, MoveOptionMode } from "@/lib/live/move-options";
+import type { MoveOptions, MoveOptionMode, MoveRoutesPage } from "@/lib/live/move-options";
 import { moveToast } from "./map-description";
 import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { FOLLOW_TOP_PX, useFollowScroll } from "./use-follow-scroll";
@@ -44,12 +44,13 @@ import { formatHm, moveStop, parseHm, type Retime } from "./time-plan";
 import { TimeDragOverlay } from "./time-drag-overlay";
 import { useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
-import { REVEAL_MS, useReveal, type RevealStop } from "./use-reveal";
+import { REVEAL_MS, useReveal, type RevealRowCut, type RevealStop } from "./use-reveal";
 import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type StopOption } from "./stop-questions";
 import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { DoneFooter } from "@/features/survey-questions/reading-footer";
 import { TIMING } from "@/features/survey-questions/use-question-flow";
 import { AddStop, type AddStopPlace, type NewStop } from "./add-stop";
+import type { AddSearchForm } from "./new-stop";
 import type { InsertionPoint } from "./insertion-points";
 import { useCenterFocus } from "./use-center-focus";
 import { useInsertionPoint } from "./use-insertion-point";
@@ -153,7 +154,8 @@ export interface EditHow { flow?: boolean }
 
 export interface PlanCheckActions {
   add?: (draft: NewStop) => Promise<void>;
-  searchToAdd?: (anchorId: string, query: string) => Promise<AddStopPlace[]>;
+  /** `signal` — `[2026-10-22]` aborted when the words change, so a search nobody will read stops there. */
+  searchToAdd?: (gap: { previousId: string | null; nextId: string | null }, query: string, signal?: AbortSignal, form?: AddSearchForm) => Promise<AddStopPlace[]>;
   /** Save one stop's details as drafted (the server looks a typed place up again and checks the plan again). */
   edit?: (id: string, draft: ItemDraft, how?: EditHow) => Promise<void>;
   /**
@@ -172,8 +174,8 @@ export interface PlanCheckActions {
   candidates?: (id: string, onLive?: (cards: PlanCandidate[]) => void) => Promise<PlanCandidate[]>;
   /** Why the list for a stop is short or empty (the server's `notes`: `no_same_kind` · `booked_needs_name` · …) — read after `candidates` has answered. */
   candidateNotes?: (id: string) => string[];
-  /** Places matching words, nearest first (the change screen's search bar). */
-  search?: (id: string, query: string) => Promise<PlanCandidate[]>;
+  /** Places matching words: nearest first, then best name match (the change screen's search bar). `signal` is aborted when the words change. */
+  search?: (id: string, query: string, signal?: AbortSignal) => Promise<PlanCandidate[]>;
   /** Put a place in one stop: a candidate or search result, or a name the server looks up. */
   replace?: (id: string, choice: PlaceChoice, how?: EditHow) => Promise<void>;
   /** `[2026-10-20 C안]` The place the server took for now (one of several, the nearest) is the one: sent back as the customer's pick. */
@@ -223,6 +225,9 @@ export interface PlanCheckActions {
   moveOptions?: (moveId: string) => Promise<MoveOptions | null>;
   /** Take one way for a leg (`"recommended"` = what the calculator chose). The server counts it again and takes it only if it reaches in time; the plan then shown is the server's. No 「다시 제출」 is needed. */
   setMoveMode?: (moveId: string, mode: MoveOptionMode | "recommended") => Promise<void>;
+  /** `[2026-10-23 사용자 지시]` The route candidates after the first `offset` of a leg (asked when its list is scrolled to the end) · take one route (`"recommended"` = the calculator's). */
+  moveRoutes?: (moveId: string, offset: number) => Promise<MoveRoutesPage | null>;
+  setMoveRoute?: (moveId: string, key: string) => Promise<void>;
 }
 
 /** How long the screen stays on what it has drawn before `onCaughtUp` — so the last line read is seen, not skipped. */
@@ -239,7 +244,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   const stops = !result.edit && Boolean(result.actions?.replace || result.actions?.edit);
   // `[2026-10-20 C안 · 이동 확인 C안]` During the first check each card carries the 「도착」 line of the way into it (a late arrival is asked in the card); the result shows the legs as before.
   const target = useMemo(() => stops ? withArrivalRows(latest) : latest, [stops, latest]);
-  const { view: revealed, settled, stop, recheck, watched } = useReveal(target, Boolean(readingExtras), stops);
+  const { view: revealed, settled, stop, rowCut, recheck, watched } = useReveal(target, Boolean(readingExtras), stops);
   const view = revealed.stage === "done" ? latest : revealed;
   // `[2026-10-21]` The 「전체 자동 추천」 dry run waits while the first check is drawn (from its reading lines on) and stopped at its questions — held here, where the page is
   //   from the first moment the server's check is final (the list is not drawn yet then).
@@ -251,7 +256,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   // The result screen reads its own state out: a pick said during the check is not said there — only one made on it (a card's question).
   const [said, setSaid] = useState<{ text: string; done: boolean } | null>(null);
   // Held at a card that needs a look (the server still checks the rest) or stopped at its question: the server's pace is not what the customer waits for there.
-  const notice = (stop || heldAt(revealed, target) ? null : slowNotice) ?? given;
+  const notice = (stop || heldAt(revealed, target, stops) ? null : slowNotice) ?? given;
   const { shown: shownNotice, show: showNotice, hide: hideNotice } = useToastState();
   const onReading = view.stage === "received" || view.stage === "reading" || Boolean(readingExtras);
   // The reading screen owns one notice; the header hands notices to this owner.
@@ -281,7 +286,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   return <DeviceFrame floating={floating} guardianIcon>
     <main id="main-content" tabIndex={-1} className={styles.screen} data-stage={view.stage} data-replay={readingExtras ? "paused" : "playing"} data-floating={floating || undefined}
       {...(readingExtras && { onPointerDownCapture: readingExtras.onActivity, onKeyDownCapture: readingExtras.onActivity, onWheelCapture: readingExtras.onActivity, onTouchStartCapture: readingExtras.onActivity })}>
-      {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} stop={stop} stopCheck={recheck} onSay={(text) => setSaid({ text, done: view.stage === "done" })} watched={watched} {...result} />}
+      {onReading ? <Reading view={readingExtras ? latest : view} onBack={onBack} extras={readingExtras} /> : <Checking view={view} sourceView={latest} stop={stop} rowCut={rowCut} stopCheck={recheck} onSay={(text) => setSaid({ text, done: view.stage === "done" })} watched={watched} {...result} />}
       {onReading && shownNotice && <ToastView key={shownNotice.stamp} toast={shownNotice.toast} onDone={hideNotice} />}
       <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : said && said.done === (view.stage === "done") ? said.text : announce(readingExtras ? latest : view, t)}</p>
     </main>
@@ -476,10 +481,12 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
+function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
   view: PlanCheckView; sourceView: PlanCheckView;
   /** `[2026-10-20 C안]` The card the first check stopped at, and the hook that checks it again after a pick (`useReveal`). */
   stop?: RevealStop | null; stopCheck?: ReturnType<typeof useReveal>["recheck"]; onSay?: (text: string) => void;
+  /** `[2026-10-22 문제 줄에서 멈추기]` How far the checks of the card stopped (or about to stop) at are drawn (`useReveal`). */
+  rowCut?: RevealRowCut | null;
   /** `[2026-10-20 C안]` This page drew the check (the 5-second 「여행 등록」 bar is for it). */
   watched?: boolean;
 } & ResultProps) {
@@ -656,13 +663,17 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     const words = query.trim();
     if (!change || !words) { setSearch(null); return; }
     if (!actions.search) { setSearch({ query: words, list: [], state: "unsupported" }); return; }
+    // `[2026-10-22 사용자 지시]` No search for one letter (the server answers 422 and the map call is wasted), and a search the next letter makes
+    //   stale is aborted instead of left to run: each one costs the map search budget (twice when both lists are asked).
+    if (words.replace(/\s/g, "").length < 2) { setSearch({ query: words, list: [], state: "short" }); return; }
     setSearch({ query: words, list: [], state: "loading" });
     let live = true;
+    const stop = new AbortController();
     const timer = setTimeout(() => {
-      actions.search!(change.id, words).then((list) => { if (live) setSearch({ query: words, list, state: "ready" }); })
+      actions.search!(change.id, words, stop.signal).then((list) => { if (live) setSearch({ query: words, list, state: "ready" }); })
         .catch((error: unknown) => { if (live) setSearch({ query: words, list: [], state: "failed", message: reason(error) }); });
     }, 250);
-    return () => { live = false; clearTimeout(timer); };
+    return () => { live = false; clearTimeout(timer); stop.abort(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a new search only when the words or the stop change
   }, [query, change?.id]);
 
@@ -1607,8 +1618,10 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view, "top", stopRoom);
   // `[2026-10-21 사용자 확인 — ST4F-702]` A time dragged straight from the list (`direct`, no form) keeps the ＋ between the rows: taking them away shrank the list under the finger and the
   //   held dot ran off from under it (2446 → 2038 px). The open time form still hides them.
-  const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !(timeEdit.edit && !timeEdit.edit.direct) && !removed.length;
-  useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
+  // ★`[2026-10-22 사용자 결정 — ST4F-720]` Stops marked for deletion keep the ＋ too (they hid every one since 10-09): the seams around a grey card are worked out without it (`insertion-points.ts`),
+  //   and marking or putting one back picks the ＋ to show again.
+  const canInsert = Boolean(actions.add) && done && !registered && !changing && !filtering && !frozen && !(timeEdit.edit && !timeEdit.edit.direct);
+  useInsertionPoint(bodyBox, canInsert && !inserting, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}|${removed.length}`);
   // `[2026-10-15 사용자 결정 — ST4F-532]` The box at the list's middle (a card or a way) wears a grey border, by the ＋'s measure — chosen apart from the ＋, so both can show.
   useCenterFocus(bodyBox, done && !changing, `${planKey}|${listDay}|${listZoom}|${side}|${previewing}`);
   const closeInsertion = (key: string) => {
@@ -1653,7 +1666,8 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   }, [opening?.key, openingReady]);
   const renderInsertion = (point: InsertionPoint) => {
     // `[2026-10-13 사용자 결정 — 수정 모드]` No ＋ in a gap that is over or going on now: after a stop that is over (or before one, at the start of a day).
-    const stops = shown.items.filter((item) => item.date === point.date);
+    //   `[2026-10-22 ST4F-720]` A stop marked for deletion is not one of the gap's sides.
+    const stops = shown.items.filter((item) => item.date === point.date && !removedSet.has(item.id));
     const at = stops.findIndex((item) => item.id === point.anchorId);
     const before = point.side === "before-stop" ? stops[at - 1] : stops[at];
     if (before?.past || (!before && stops[at]?.past)) return null;
@@ -1732,7 +1746,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     done, open: openAt?.list === list ? openAt.id : null, selected, frozen, actions, explain, rechecking: list === "before" ? cardBusy : null, changed: new Set(Object.keys(was)), was, removed: removedSet, rowsFor,
     question: list === "before" && resultAsks ? cardQuestion : undefined,
     // `[2026-10-21 P6]` Stopped at a question of the reading: its place is the newest row (the list follows it) and holds the question.
-    reveal: done ? undefined : { activeId: stopEntry ? askStopId(stopEntry.id) : readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? (stopEntry ? askStopId(stopEntry.id) : null),
+    reveal: done ? undefined : { activeId: stopEntry ? askStopId(stopEntry.id) : readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? (stopEntry ? askStopId(stopEntry.id) : null), rowCut,
       ask: stopItem && stopAsk && list === "before" ? <StopQuestion id={stopItem.id} kind={stopNeed ?? "place"} ask={stopAsk} loading={stopLoading}
         failed={!stopMove && stopList?.id === stopItem.id && stopList.state === "failed" ? stopList.message ?? null : null} again={pickedFor === `${stopItem.id}:${stopNeed}`} leaving={folding}
         why={frozen} explain={explain} onPick={(option) => stopPick(stopItem, option)}
@@ -1762,6 +1776,16 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
         text: choice.mode === "recommended" ? t("추천 수단으로 돌아갔어요", "Back to the recommended way") : t(`${ro(choice.label)} 바꿨어요`, `Changed to ${choice.label}`),
         sub: t("이 구간만 다시 계산했어요", "Only this leg was counted again"), undo: true,
         revert: () => { void actions.setMoveMode!(move.id, back).catch((error: unknown) => setToast({ text: reason(error), stay: true })); },
+      });
+    },
+    // `[2026-10-23]` A route was taken: the server counted the leg again; 「되돌리기」 takes the route it used before (or the recommended one).
+    onSetRoute: async (move, route) => {
+      const before = move.routeChoice?.state === "kept" && move.routeChoice.key ? move.routeChoice.key : "recommended";
+      await actions.setMoveRoute!(move.id, route.key);
+      setToast({
+        text: route.key === "recommended" ? t("추천 경로로 돌아갔어요", "Back to the recommended route") : t(`${route.label} 경로로 바꿨어요`, `Changed to ${route.label}`),
+        sub: t("이 구간만 다시 계산했어요", "Only this leg was counted again"), undo: true,
+        revert: () => { void actions.setMoveRoute!(move.id, before).catch((error: unknown) => setToast({ text: reason(error), stay: true })); },
       });
     },
     onChange: (item) => void startChange(item),
@@ -1866,7 +1890,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
         <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
           mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
-          search={actions.searchToAdd && inserting.anchorId ? (query) => actions.searchToAdd!(inserting.anchorId, query) : undefined}
+          search={actions.searchToAdd && (inserting.previousId || inserting.nextId) ? (query, signal, form) => actions.searchToAdd!({ previousId: inserting.previousId, nextId: inserting.nextId }, query, signal, form) : undefined}
           onSave={async (draft) => { await actions.add!(draft); setAddingBusy(false); setInserting(null); setSlide("prev"); setToast({ text: t("일정을 추가하고 앞뒤 이동시간을 다시 확인했어요.", "Added the stop and checked travel times around it.") }); }} />
       </div> : changing && change
         ? <PlaceChange item={changing} session={change} search={search} explain={explain} applyWhy={applyWhy} candidatesSupported={Boolean(actions.candidates)}
@@ -2051,7 +2075,7 @@ export function addPointOf(view: PlanCheckView, key: string, add: NonNullable<Pl
   const sameDay = live.filter((item) => item.date === date).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const anchor = [...sameDay].reverse().find((item) => start && item.startsAt && item.startsAt <= start) ?? sameDay[0] ?? live[0];
   const kind = add.kind === "dining" || add.kind === "activity" ? add.kind : undefined;
-  return { key: `chat-add-${key}`, anchorId: anchor?.id ?? "", date, start, end, previous: null, next: null, side: "after-stop",
+  return { key: `chat-add-${key}`, anchorId: anchor?.id ?? "", date, start, end, previous: null, next: null, previousId: anchor?.id ?? null, nextId: null, side: "after-stop",
     prefill: { title: add.title, query: add.query, ...(kind ? { kind } : {}) } };
 }
 

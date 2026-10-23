@@ -348,6 +348,34 @@ describe("`[2026-10-20 C안]` stopping at a card that needs a look, and going on
     expect(done.view).toEqual(reread);
   });
 
+  it("`[2026-10-22 문제 줄에서 멈추기]` draws the stopped card down to its stop row only, keeps it while the card is checked again, and lets go once it passes", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    const seen: (string | null)[] = [];
+    const stopped = run(exampleDone, (result) => { seen.push(result.rowCut ? JSON.stringify(result.rowCut) : null); return result.stop !== null; });
+    expect(stopped.rowCut).toEqual({ id: "b", row: 0, hide: true });
+    expect(stopped.view.items.find((item) => item.id === "b")).toEqual(exampleDone.items[1]);      // the server's own rows and words, only not drawn below row 0
+    expect(seen.filter(Boolean).every((cut) => cut === JSON.stringify({ id: "b", row: 0, hide: true }))).toBe(true);   // before the verdict too: no row below comes and goes
+    stopped.recheck.begin("b");
+    expect(draw(exampleDone, false, true).rowCut).toEqual({ id: "b", row: 0, hide: false });
+    const fixed: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
+      : { ...item, verdict: "keep", checks: item.checks.map((row) => ({ ...row, result: "ok" as const })) }),
+      moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, slackMin: 3, verdict: "keep" as const } : move) };
+    expect(draw(fixed, false, true).rowCut).toEqual({ id: "b", row: 0, hide: false });
+    expect(run(fixed, (result) => result.settled).rowCut).toBeNull();
+  });
+
+  it("`[2026-10-22]` after a pick keeps only the rows the new plan has again in the same place — a row of another check comes as a new one", () => {
+    vi.useFakeTimers();
+    draw(checking, false, true);
+    run(exampleDone, (result) => result.stop !== null).recheck.begin("b");
+    draw(exampleDone, false, true);
+    const reshaped: PlanCheckView = { ...exampleDone, revision: 2, items: exampleDone.items.map((item) => item.id !== "b" ? item
+      : { ...item, verdict: "keep", checks: [{ kind: "arrival", result: "ok", text: "제때 닿아요" }, { kind: "place", result: "ok", text: "고른 곳이에요" }] }),
+      moves: exampleDone.moves.map((move) => move.id === "a-b" ? { ...move, slackMin: 3, verdict: "keep" as const } : move) };
+    expect(draw(reshaped, false, true).rowCut).toEqual({ id: "b", row: -1, hide: false });
+  });
+
   it("does not stop where the page cannot change places", () => {
     vi.useFakeTimers();
     draw(checking);

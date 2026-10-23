@@ -106,6 +106,8 @@ function MenuBoard({ onClose, onHide }: { onClose: () => void; onHide: () => voi
     <ProfileCell profile={profile} onClose={onClose} />
     <Link href={routes.trips} className={styles.row} onClick={onClose}>{row(t("여행 목록 보기", "View trip list"), <TripCount />)}</Link>
     <button type="button" className={styles.row} onClick={openSurvey}>{row(t("여행 취향 설문", "Travel preferences survey"), preferences)}</button>
+    {/* `[2026-10-22 사용자 결정 — ST4F-717]` 이용 방법 — 묻기 전에 먼저 찾아보게 문의함 바로 위. */}
+    <Link href={routes.help} className={styles.row} onClick={onClose}>{row(t("이용 방법", "How to use"), t("기본 사용법 · 화면별 기능 · 자주 묻는 질문", "Basics · screens · FAQ"))}</Link>
     {/* `[2026-10-12 사용자 지시]` 문의함(옛 「문의하기」)은 마이페이지 카드에서 이 메뉴로 옮겼다. */}
     <Link href={routes.support} className={styles.row} onClick={onClose}>{row(t("문의함", "Inquiries"), t("보낸 문의와 답변", "Your inquiries and the answers"))}</Link>
     {/* `[2026-10-17 사용자 결정 — ST4F-604]` 공지사항 게시판 — 배너를 닫았거나 여행 화면 밖(알림 센터가 없는 곳)에서도 공지를 본다. */}

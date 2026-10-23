@@ -39,6 +39,9 @@ for(const width of [375,1280]) {
     expect(a.width).toBe(b.width);expect(a.height).toBeCloseTo(40,3);expect(Math.abs(a.x-b.x)).toBeLessThan(.6);
     await expect(fold).toHaveCSS('height','40px');
     await expect(arrow).toHaveCSS('transition-property','transform');await expect(arrow).toHaveCSS('transition-duration','0.2s');
+    // `[2026-10-23 ST4F-721 · 722 반영]` 세로 배치가 「내 위치로」 자리(8+44+아래 20px)까지 남겨 지도 높이 360px 이상이 필요하다 —
+    //   1280px 기본 목록에서는 지도가 342px 라 가로가 된다. 목록을 한 칸 내려(382px) 세로에서 시작한다.
+    await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowDown');await expect(controls).toHaveAttribute('data-direction','column');
     await expect.poll(async()=>(await arrowGeometry(page)).dy).toBeGreaterThan(3);
     const origin=await arrowGeometry(page);
     expect(Math.abs(origin.x-a.width/2)).toBeLessThan(.6);expect(origin.y).toBeGreaterThan(a.height/2);

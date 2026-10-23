@@ -47,15 +47,24 @@ async function stage(page: Page, state: { brief: unknown; answer?: Record<string
   });
 }
 /**
- * `[2026-10-07 목업 C안]` 재난 뒤 이어가기는 종 아래 알림 칸에 있다. `[2026-10-17 ST4F-606]` 「답이 필요해요」에는 한 장짜리 카드로 서고,
+ * `[2026-10-07 목업 C안]` 재난 뒤 이어가기는 종 아래 알림 칸에 있다. `[2026-10-17 ST4F-606]` 한 장짜리 카드로 서고(`[2026-10-22 ST4F-723 구성 Ⓑ]` 「할 일」 탭 — 옛 「답이 필요해요」),
  *   그 단추(「이어갈 방법 고르기」 · 고른 뒤에는 「고르신 것 보기」)를 누르면 이 패널이 그 자리에 펼쳐진다.
  */
 async function openTrip(page: Page, expand = true) {
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
-  await openNotices(page);
+  await openTodo(page);
   if (expand) await expandRecovery(page);
+}
+/**
+ * `[2026-10-22 ST4F-723 구성 Ⓑ]` 센터를 열고 「할 일」 탭을 고른다. 센터가 처음 여는 탭은 정지 · 고를 선택 · 되돌릴 변경이 있을 때만 「할 일」이고, 이어가기 카드는 그 규칙에
+ *   들지 않아 새 소식(모방 서버 알림 2개)이 있으면 「소식」으로 열린다.
+ */
+async function openTodo(page: Page) {
+  const center = await openNotices(page);
+  await center.getByRole("tab", { name: /^할 일/ }).click();
+  await expect(center.getByRole("tab", { name: /^할 일/ })).toHaveAttribute("aria-selected", "true");
 }
 async function expandRecovery(page: Page) {
   await page.locator("[data-recovery-short]").getByRole("button").click();
@@ -183,7 +192,7 @@ test("「일정 다시 시작」의 답에 꾸러미가 실려 오면 곧바로 
   await expect(panel(page)).toHaveCount(0);                                                                // 정지 중에는 꾸러미가 아직 없다
   await page.getByTestId("safety-panel").getByRole("button", { name: "일정 다시 시작" }).click();
   await expect(page.getByTestId("safety-panel")).toHaveCount(0);
-  await openNotices(page);                                                                                  // 꾸러미는 종 아래 알림 칸에
+  await openTodo(page);                                                                                     // 꾸러미는 종 아래 알림 칸(「할 일」 탭)에
   await expect(page.locator("[data-recovery-short]")).toContainText("어떻게 이어갈지 골라 주세요");             // 먼저 한 장짜리 카드
   await expandRecovery(page);
   await expect(panel(page)).toBeVisible();

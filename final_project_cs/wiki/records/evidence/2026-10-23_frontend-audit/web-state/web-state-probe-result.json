@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-10-22T16:25:29.762Z",
+  "sourceRoot": "D:\\FinalProject\\Dev\\fe-audit-20261023\\final_project_cs\\frontend\\apps\\web\\src",
+  "probes": [
+    {
+      "name": "SSE CRLF split at event line",
+      "expected": [
+        {
+          "name": "result",
+          "data": "{\"status\":\"adjusted\",\"version\":4}"
+        }
+      ],
+      "actual": [
+        {
+          "name": "result",
+          "data": ""
+        },
+        {
+          "name": "message",
+          "data": "{\"status\":\"adjusted\",\"version\":4}"
+        }
+      ],
+      "defectReproduced": true
+    },
+    {
+      "name": "Trip SSE after ready then silent",
+      "observedAfterMs": 35,
+      "actual": "still-pending",
+      "receivedEvents": 1,
+      "note": "Actual function has no timer; short probe confirms it waits only for data/close/abort. Not a real-network duration measurement."
+    },
+    {
+      "name": "Intake headers stalled beyond watchdog",
+      "configuredWatchdogMs": 5,
+      "observedAfterMs": 35,
+      "actual": "still-pending",
+      "defectReproduced": true
+    },
+    {
+      "name": "Guardian rollback after SSE refresh",
+      "expectedVersion": 2,
+      "actualVersion": 1,
+      "actualStop": "before",
+      "defectReproduced": true
+    },
+    {
+      "name": "Alternative photo requests on first and cached openings",
+      "candidateCount": 3,
+      "candidateStreams": 1,
+      "photoRequestsFirstOpen": 6,
+      "photoRequestsTwoOpens": 12,
+      "defectReproduced": true
+    }
+  ]
+}

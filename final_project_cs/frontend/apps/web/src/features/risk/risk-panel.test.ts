@@ -2,12 +2,22 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { itemRiskOf } from "@/lib/live/risks";
-import { RiskPanel, riskTime } from "./risk-panel";
+import { panelRisks, RiskPanel, riskTime } from "./risk-panel";
 
 vi.mock("@/lib/settings", () => ({ useT: () => (ko: string) => ko }));
 const render = (patch: Partial<Parameters<typeof RiskPanel>[0]>) => renderToStaticMarkup(createElement(RiskPanel, { items: [], ...patch }));
 
 describe("위험 안내 카드", () => {
+  // `[2026-10-22 사용자 지시]` 운영자가 점검 칸을 끄면 알림 센터에는 실제 위험만 — 확인 불가 · 위험 없음은 빠진다
+  it("스위치를 끄면 실제 위험 일정만 남긴다", () => {
+    const danger = itemRiskOf({ item_id: "i1", status: "problem", problems: [{ category: "weather", message: "호우 경보" }] })!;
+    const unknown = itemRiskOf({ item_id: "i2", status: "unknown", unknown_categories: [{ label: "교통 통제" }] })!;
+    const clear = itemRiskOf({ item_id: "i3", status: "clear" })!;
+    expect(panelRisks([danger, unknown, clear], true)).toEqual([danger, unknown, clear]);
+    expect(panelRisks([danger, unknown, clear], false)).toEqual([danger]);
+    expect(panelRisks([unknown, clear], false)).toEqual([]);
+  });
+
   it("도로통제 원문과 종료 시각·실내 대안 동작을 첫 화면에 남긴다", () => {
     const item = itemRiskOf({ item_id: "i1", title: "여행 활동", status: "problem", problems: [
       { category: "traffic_control", message: "행사 구간 양방향 전면 통제", source: "UTIC", ends_at: "2026-10-18T23:00:00+09:00" },

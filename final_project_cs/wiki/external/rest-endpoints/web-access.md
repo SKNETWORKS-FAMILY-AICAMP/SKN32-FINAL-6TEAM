@@ -22,9 +22,10 @@ domain: travel
 | `GET /v1/web/trips/{trip_id}` | 키 | 여행 조회 |
 | `GET /v1/web/trips/{trip_id}/proposals` · `POST …/{proposal_id}/choose` | 키 | 위 보류 제안과 같은 규칙 |
 | `POST /v1/web/trips/{trip_id}/messages` | 키 | 자유 문장 접수·추가 답변. 에이전트 입구 `/v1/trips/{trip_id}/messages`와 같은 대화 처리기를 쓰며, 변경·후보 요청·되돌리기·지연·휴무·되묻기 업무는 **Controller → 등록된 담당 Team → 공통 적용 경로**로 진행한다. 추가 답변은 같은 Case를 재개한다. 사실·규정 답변은 별도 읽기 경로이며 일정 변경을 적용하지 않는다. 아래 「채팅 업무와 답변 재개」 참조 |
+| `POST /v1/web/trips/{trip_id}/progress` | 키 | ★`[2026-10-22 ST4F-716]` 여행 화면 「끝났어요」 — 진행 중 일정을 끝내고 다음 일정을 지금 출발로 앞당기거나(`advance_trip`) 끝난 시각만 기록(`complete_item`). 채팅 진행 보고와 **같은 저장 경로**, 모델을 안 거친다. 요청 `{request_id, base_version, item_id, action}` · 다음 일정 운영시간 확인 · 오류는 [실제 여행 진행 계약](../../actions/journey-progress.md) 「웹 진행 단추」 |
 | `POST /v1/web/trips/{trip_id}/reports` · `POST …/items/{item_id}/alternate` | 키 | ★`[2026-10-02]` 에이전트 입구(`/v1/trips/{id}/reports` · `…/alternate`)와 **같은 처리**(신고 지연·휴무·품절 · 다른 안으로 — 요청 몸통도 같다), **그 사용자 본인의 여행만**(남의 것 404). 모델을 안 거치는 구조화 입구다 — 개인 AI(MCP)가 쓴다([MCP 도구](../mcp-tools.md)). 남용 방어는 채팅과 같은 `message` 로 센다 |
 | `POST /v1/web/warmup` | 키 | ★`[2026-09-29]` **모델 예열** — 화면이 여행·채팅 칸을 열 때 부른다(식은 모델의 첫 채팅이 34초 걸렸다). 몸통 없음. 응답 `{status: "warm" \| "warming" \| "unavailable", model, last_attempt: null \| {ok, seconds, at, reason?}, deduped?}` — 이미 올라가 있으면 `warm`(아무것도 안 함), 1분(`web_guard.warmup.dedupe_seconds`) 안 되풀이는 `warming` + `deduped: true`(다시 안 부름), 그 밖엔 응답 뒤 한 토큰 생성으로 깨우고 `warming`. **`last_attempt.ok=false` 면 모델 서버가 못 올린 것**(`reason` 에 서버가 준 이유 — 예: GPU 메모리 부족). 실제로 부를 때만 남용 방어 `warmup` 으로 센다(한도가 켜져 있으면 429/503) |
-| `GET /v1/web/trips/{trip_id}/notices` | 키 | 나간 알림 전부. `type` = `guidance`(하루 시작·다음 일정·이동) · `proposal_request` · `safety_alert` · `change_notice`. ★`[2026-10-06]` `guardian` 칸(늘 있고 없으면 null) — `{changed: true}`(항로 지킴이를 켜 둔 사용자에게 **자동으로 바꿨다**는 표시) · `{offer: {label, via, path, url}}`(꺼 둔 사용자에게 가는 「다른 안」 알림의 **「항로 지킴이 켜기」**) — 아래 「항로 지킴이」 |
+| `GET /v1/web/trips/{trip_id}/notices` | 키 | 나간 알림 전부. `type` = `guidance`(하루 시작·다음 일정·이동) · `proposal_request` · `safety_alert` · `change_notice`. ★`[2026-10-06]` `guardian` 칸(늘 있고 없으면 null) — `{changed: true}`(항로 지킴이를 켜 둔 사용자에게 **자동으로 바꿨다**는 표시) · `{offer: {label, via, path, url}}`(꺼 둔 사용자에게 가는 「다른 안」 알림의 **「항로 지킴이 켜기」**) — 아래 「항로 지킴이」. ★`[2026-10-23 사용자 지시 — ST4F-723]` `changed` 칸(늘 있고 없으면 null) — 그 알림이 바꾼 일정 「무엇 → 무엇」 — 아래 「알림 목록의 `changed`」 |
 | `POST /v1/web/trips/{trip_id}/reopen` | 키 | ★`[2026-10-13]` 「일정 수정」 — 등록한 여행을 확인 화면 접수로 다시 연다 `{version}` → 접수 조회 모양 + `reopen`. 고치기는 기존 `/v1/web/trip-intakes/*`, 「완료」(`/confirm`)는 같은 여행의 새 판, 「취소」는 `/v1/web/trip-intakes/{intake_id}/cancel` — [등록한 여행 고치기](web-intakes.md#등록한-여행-고치기수정-모드--post-v1webtripstrip_idreopen--수정-접수의-confirm-2026-10-13-사용자-결정) |
 | `POST /v1/web/trips/{trip_id}/guardian` | **쿠키 세션만** | ★`[2026-10-06]` 항로 지킴이 켜기 · 끄기 `{enabled, via}` → `{enabled, since, via}`. 여행 조회(`GET …/{trip_id}`)의 `guardian` 도 같은 모양 — 아래 「항로 지킴이」 |
 
@@ -40,6 +41,27 @@ domain: travel
   ★`[2026-09-28]` **DB 에서 센다**(`web_usage`, 마이그레이션 031) — 재시작·여러 프로세스에도 이어진다. 주소는 원문이 아니라
   `HMAC(서버 비밀키, 날짜|주소)` 로만 남고 48시간 뒤 지운다. 역방향 프록시 뒤라면 설정 `ACOP_TRUSTED_PROXIES`(쉼표)에 적힌
   주소에서 온 요청만 `X-Forwarded-For` 의 원 주소를 믿는다(비어 있으면 연결 주소).
+
+### 알림 목록의 `changed` — 바뀐 일정(전 → 후) `[2026-10-23 사용자 지시 — ST4F-723]`
+
+`GET /v1/web/trips/{trip_id}/notices` 의 알림마다 `changed` 칸이 있다(늘 있고, 없으면 `null`). 그 알림이 일정을 「무엇 → 무엇」으로 바꿨을 때만 **목록**이다 — 감시 묶음 알림은 한 통에 여러 일정을 바꾸므로 한 건짜리 알림도 같은 목록 모양(한 줄)으로 낸다.
+
+| 칸 | 형식 | 뜻 |
+|---|---|---|
+| `item_id` | UUID 문자열 · null | 바뀌기 **전** 일정 id. 감시 묶음 알림(항목마다)과 고른 제안의 변경 알림에 있다. 그 밖의 한 건짜리 변경 알림에는 적혀 있지 않아 `null` |
+| `new_item_id` | UUID 문자열 · null | 바뀐 **뒤** 일정 id. 고른 제안(`…/proposals/{id}/choose`)의 변경 알림에만 있다 — 고르면 그 일정이 새 id 로 들어가므로(`Item.replaced_by`) 같은 알림의 `proposal_id` 로 닫힌 제안과 지금 일정을 잇는다 |
+| `from` · `to` | 문자열 · null | 바뀌기 전 · 뒤 이름 — 장소(활동 · 식당 · 숙소 · 항공 후보)면 그 이름, 이동 수단 변경이면 수단 이름 |
+| `at` | ISO 시각(서울 `+09:00`) · null | 바뀐 일정의 시작 시각. 이동 수단 변경 알림에는 없다(`null`). 여행 조회의 `starts_at` 처럼 서울 시각으로 바꿔 낸다(같은 순간) — ISO 시각으로 읽을 수 없는 값은 적힌 그대로 |
+
+- 서버가 알림을 만들 때 적어 둔 값(알림 payload 의 `changed{from, to, at}` · 감시 묶음의 `changes[]{item_id, changed}`)만 옮긴다 — 적혀 있지 않은 칸을 채우지 않는다.
+- `null` 인 알림: 등록 · 안내(하루 시작 · 다음 일정 · 이동) · 선택 요청 · 안전 알림 · 서비스 공지, 그리고 「무엇 → 무엇」이 아닌 변경(되돌리기 `rollback_to` · 진행 「끝났어요」 `progress` · 이름만 받은 목적지 `requested_place` · 일정 수정 「완료」 `edit`).
+- 이 변경 전에 나간 고른 제안 알림에는 `item_id` · `new_item_id` 가 적혀 있지 않다(`null`). 그 판의 일정(`chosen_version`)에서 `replaces_item_id` 가 제안의 `item_id` 인 일정이 바뀐 뒤 일정이지만, 이 칸을 위해 거슬러 찾지는 않는다.
+- 구현 `app/domains/travel_ops/entry/trip_api.py` `_notice_changed` · 고른 제안의 두 id `components/planning/pending.py` `choose` · 시험 `tests/unit/travel/test_notice_center_server_text.py`.
+
+**알림 문장 고침** `[2026-10-23 사용자 지시 — ST4F-723]` — 웹 알림 센터가 서버 문장을 그대로 보이는 자리의 결함:
+- 자동 변경(활동 대체) 「{날} {오전·오후} {장소}{은·는} {이유}, {새 장소}{으로·로} 변경됩니다.」 — **{날}** 은 그 일정의 서울 날짜를 알림을 만든 때와 견줘 `오늘` · `내일` · 그 밖은 `10월 25일(일)`(채팅 답의 날짜 표기 `trip_facts._day_label` 과 같다). 전에는 늘 「오늘」이었다. **조사**는 앞 낱말의 마지막 글자 받침으로 고른다(ㄹ 받침은 「로」 · 한글이 아닌 글자로 끝나면 받침 없음으로 본다 — `components/intake/review.eun` · `ro`, 진행 「끝났어요」 문장과 같은 도우미). 전에는 「는」 · 「으로」 고정이었다.
+- 고객 문장에 마크다운 별표(`**`)를 넣지 않는다 — 감시의 「일정은 그대로 두었어요」 세 문장(`trip_watch_batch._line`)과 조건을 푼 안을 묻는 문장(`watch_relaxed.relaxed_text`)에 남아 있어 웹이 별표를 그대로 보였다.
+- 제안 안의 경고 해요체 · 안 고르기 거절 문장 — [보류 제안](trips.md#보류-제안--v1tripstrip_idproposals-2026-09-24).
 
 ### 채팅 업무와 답변 재개 `[2026-10-11 코드 확인]`
 
@@ -94,6 +116,15 @@ domain: travel
 - 서비스 전체 한도 → `503 service_daily_cap` + `Retry-After`. 사용자 잘못이 아니라 가른다.
 - 제안 기본값과 산정 근거는 `config/guardrails.yaml` `web_guard.limits` 주석(전부 `[추정]`).
 
+**서비스 모드 — 회원 · 게스트 한 시간 한도 `[2026-10-22 사용자 지시]`.** 결정 [D-CS-020](../../decisions/D-CS-020-service-mode-hourly-limits.md).
+- 운영 설정 `service.mode_enabled`(기본 **꺼짐** — 지금은 시험 단계). 켜면 ①위 하루 한도가 함께 켜진다(`web.limits_enabled` 를 따로 켜지 않아도) ②**사람(키) 한 명의 한 시간** 횟수 한도가 더해진다.
+- 등급: **회원**(소셜 로그인이 붙은 계정 — 지금 유료 등급은 없다) · **게스트**(로그인 안 함, `guest_policy.is_guest`). 이름 `service.<member|guest>.<작업>.per_hour`(작업 = 위 하루 한도와 같은 10개). 기본값은 가드레일 `web_guard.service_mode.per_hour`(우리가 고른 값 — 게스트가 늘 더 적다), 범위 1~100000.
+- QA 예외 계정(`usage_exempt`)은 등급 한도를 받지 않는다. 꺼져 있으면 한 시간 칸은 세지도 않는다(DB 를 더 부르지 않는다).
+- 넘으면 → `429 hourly_limit` + `Retry-After`(다음 정시까지 초), 본문 `{limit: member_hour|guest_hour, action, used, cap, retry_after_seconds}`. 막힌 요청은 하루 칸도 올리지 않는다(한 트랜잭션).
+- 화면 문구: 웹 `error-text.ts` `hourly_limit` — 게스트면 「로그인하면 더 쓸 수 있어요」를 붙인다. 관리 콘솔 「운영 설정」의 「서비스 모드」 칸(스위치 + 작업 × 등급 표)에서 바꾼다.
+- 시험 `tests/e2e/test_web_guard_service_mode.py`.
+- `[2026-10-23]` 확인 화면 경로 후보 「더 보기」(`GET …/trip-intakes/{id}/moves/{pair}/routes`)와 경로 고르기(`POST …/route`)는 **`move_judge`** 칸으로 센다 — 카카오 · 유료 소스를 부르지 않고 시간표 계산기만 쓴다([web-intakes 「경로 후보 더 보기 · 고르기」](web-intakes.md)). 수단 고르기(`…/options` · `…/mode`)는 종전대로 `place_search` 다.
+
 **사람 확인(Cloudflare Turnstile).** `POST /v1/web/session`(헤더 `X-Turnstile-Token` 또는 JSON `{"turnstile_token"}`) ·
 `POST /v1/web/trip-intakes`(폼 칸 `turnstile_token`). 서버가 `siteverify` 에 비밀키·토큰·원 주소를 보내 확인한다.
 - 설정 `ACOP_TURNSTILE_SECRET` 이 있으면 **늘 확인한다.** 토큰이 없거나 실패 → `403 human_check_failed`(`reasons` = Cloudflare `error-codes`).
@@ -129,7 +160,8 @@ GET   /admin/limits/events?limit=50      scope limits:read
   200 {"events": [{"at", "revision", "actor", "key_id", "name", "old", "new", "reason"}, …]}   // 새것부터
 ```
 - 이름: `web.limits_enabled` · `web.<intake|plan|confirm|trip_create|message|warmup>.<per_key_day|per_ip_day|service_day>` ·
-  `web.session.per_ip_hour` · `web.guest_idle_hours` · `web.member_idle_hours` · `web.session_max_hours` · `web.guest_cleanup_enabled`(★`[2026-10-04]` 옛 `web.idle_key_*` 를 대신한다). 기본값·범위는 가드레일, 바꾼 값은 `runtime_limits`.
+  `web.session.per_ip_hour` · `web.guest_idle_hours` · `web.member_idle_hours` · `web.session_max_hours` · `web.guest_cleanup_enabled`(★`[2026-10-04]` 옛 `web.idle_key_*` 를 대신한다) ·
+  ★`[2026-10-22]` `service.mode_enabled` · `service.<member|guest>.<작업>.per_hour`(위 「서비스 모드」). 기본값·범위는 가드레일, 바꾼 값은 `runtime_limits`.
 - 바꾼 값은 각 프로세스가 최대 30초 캐시해 늦게 반영된다(`applies_within_seconds`). 감사 줄(`runtime_limit_events`)은 고치지도 지우지도 못한다(트리거).
 - 시험 `tests/e2e/test_web_api.py` 10건.
 

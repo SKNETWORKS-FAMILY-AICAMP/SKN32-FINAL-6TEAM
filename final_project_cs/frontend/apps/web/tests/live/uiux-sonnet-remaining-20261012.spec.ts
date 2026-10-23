@@ -18,13 +18,13 @@ test("scrollend 이벤트가 없는 브라우저에서도 소개 카드 드래�
   await page.goto("/");
   await page.getByRole("button", { name: "다음 화면", exact: true }).first().click();
   const guide = page.getByRole("region", { name: "구구루트 이용 방법", exact: true });
-  const track = guide.getByRole("group", { name: "1 / 4", exact: true }).locator("..");
+  const track = guide.getByRole("group", { name: "1 / 7", exact: true }).locator("..");
   await expect.poll(() => page.locator("main").evaluate(main => Math.abs(main.scrollTop - (main.children[1] as HTMLElement).offsetTop))).toBeLessThan(2);
   const box = (await track.boundingBox())!;
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
   await page.mouse.move(x, y); await page.mouse.down();
   await page.mouse.move(x - 150, y, { steps: 8 }); await page.mouse.up();
-  await expect(guide.getByText("2 / 4", { exact: true })).toBeVisible();
+  await expect(guide.getByText("2 / 7", { exact: true })).toBeVisible();
   await expect.poll(() => track.evaluate(element => getComputedStyle(element).scrollSnapType)).toBe("x mandatory");
 });
 

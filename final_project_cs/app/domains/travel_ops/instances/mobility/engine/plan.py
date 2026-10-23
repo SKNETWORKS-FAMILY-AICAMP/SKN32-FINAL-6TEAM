@@ -140,6 +140,19 @@ EARLIEST_ON_CODES = frozenset({"arrive_late"}) | EARLIEST_WAIT_CODES
 #:   · 생성 추정(est)이 지하철만·버스만 후보의 가장 좋은 값보다 소요 MIX_EST_TOL_MIN 분 · 도보 MIX_WALK_TOL_MIN 분 넘게 뒤지고 환승도
 #:     적지 않으면 판정에 넣지 않는다(추정으로도 앞설 축이 없다). 판정에 넣는 혼합 후보는 구간마다 MIX_VERIFY_MAX 개까지(추정 소요 순).
 MIX_VERIFY_MAX = 3
+#: ☆`[2026-10-23 사용자 지시 — 경로 후보 더 보기]` 「넓게 찾기」(`Planner(wide=True)`) 의 상한. 확인 화면은 보통 계산(위 상한)의 후보 3개를 먼저 싣고,
+#:   고객이 경로 목록을 끝까지 내리면 그때만 이 상한으로 같은 구간을 한 번 더 센다(혼합 판정 · 혼합 싣기 · 버스 직행 싣기 · 역 짝 개수).
+#:   규칙 값이 아니라 탐색 범위(성능)다 — 보통 계산의 결과(계획 수단 · 판정)는 바꾸지 않는다. ★우리가 고른 값(지연은 기록 문서의 실측)
+WIDE_MIX_VERIFY_MAX = 8
+WIDE_MIX_MAX = 8
+WIDE_BUS_MAX = 8
+WIDE_STATION_PAIRS = 3
+#: ☆`[2026-10-23]` 「조금 일찍 떠나면 닿는 다른 경로」 — 계획 출발에서는 불성립이지만 앞 일정이 끝난 뒤의 **더 이른 출발**에서 성립을 확인한 후보(`earlier_departure`)와
+#:   혼합인데 지하철만 · 버스만보다 앞서는 축이 없는 후보(`mix_dominated`). 계획 수단 · `options` 계약(같은 출발)은 그대로 두고, 판정기가 이미 센 이 후보를
+#:   `Planner.more_options`(후보별 출발 시각 `starts_at`)로 따로 낸다 — 확인 화면의 경로 후보 목록이 쓴다(계산 추가 없음). 상한은 보통 · 넓게 찾기.
+MORE_CODES = frozenset({"earlier_departure", "mix_dominated"})
+MORE_MAX = 6
+WIDE_MORE_MAX = 12
 MIX_EST_TOL_MIN = 3
 MIX_WALK_TOL_MIN = 1
 #: 버스 운행 시간 거르기 여유(분) — 구간 [도착 목표 − 추정 소요, 도착 목표] 가 그 노선 첫차~막차 ±이 값과 안 겹치면 판정하지 않는다
@@ -283,7 +296,7 @@ def _multi(oa, ob):
 
 class Planner:
     def __init__(self, runtime, *, stage="planning", modes=None, display=False, taxi_option_fees=None,
-                 taxi_call_product=None, taxi_call_quotes=None):
+                 taxi_call_product=None, taxi_call_quotes=None, wide=False):
         from .taxi_budget import normalize_fees
         from .taxi_pricing import normalize_call_quotes
         from .errors import CaseInputError
@@ -296,6 +309,7 @@ class Planner:
         if self.taxi_call_product is not None and not isinstance(self.taxi_call_product,str):
             raise CaseInputError('택시 호출 상품은 문자열이어야 합니다')
         self.rt = runtime
+        self.wide = bool(wide)                            # 넓게 찾기(WIDE_*) — 경로 후보 「더 보기」만 쓴다
         # 후보 수단 거르기(예: {"subway"}) — None 이면 DEFAULT_MODES(자전거 뺌 · 56).
         #   빈 목록·모르는 수단은 거절한다(GPT 56 #9 — 빈 목록이 조용히 기본으로 넓어지지 않게).
         self.modes = set(DEFAULT_MODES) if modes is None else set(modes)
@@ -303,6 +317,7 @@ class Planner:
         if not self.modes or not self.modes <= KNOWN_MODES:
             raise ValueError(f"modes 는 {sorted(KNOWN_MODES)} 중 하나 이상 — 받은 값 {sorted(self.modes)}")
         self.trace = None                                 # 시험·대조용 — 리스트를 주면 구간마다 내부 값을 적는다
+        self.more_options = []                            # 마지막 leg() 의 「조금 일찍 떠나면 닿는」 후보(MORE_CODES) — 성공한 구간만 채운다
         # 56 ① — 판정기 싱글턴을 요청마다 **얕은 복사본**으로 쓴다(48 plan_estimate 와 같은 방식).
         #   verify_case 가 건마다 재할당하는 상태(_case_date · disr · _leg_cache · lfd_capped)가 복사본에만 남는다 —
         #   sync 엔드포인트(스레드풀)에서 두 요청이 같은 객체를 동시에 쓰면 섞이던 자리(24 ①).
@@ -920,11 +935,14 @@ class Planner:
         best = ((min(o["eta_min"] for o in base), min(o["_transfers"] for o in base), min(o["_walk_min"] for o in base))
                 if base else None)
         mmax = mix_rule(self.v.R, "혼합_최대", MIX_MAX_PROPOSED)
+        vmax = MIX_VERIFY_MAX
+        if getattr(self, "wide", False):
+            mmax, vmax = max(mmax, WIDE_MIX_MAX), max(vmax, WIDE_MIX_VERIFY_MAX)
         ratio = self.v.R["candidates"]["허용_소요_배수"]["value"]
         kept, n_ver, n_est, n_cap, n_none = [], 0, 0, 0, 0
         n_win = len(out_win)
         for i, mc in enumerate(cands):
-            if len(kept) >= mmax or n_ver >= MIX_VERIFY_MAX:
+            if len(kept) >= mmax or n_ver >= vmax:
                 n_cap += 1
                 continue
             if not gen.materialize(mc):
@@ -969,7 +987,7 @@ class Planner:
                          "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"})
         if n_cap:
             left.append({"_o": {"_legs": []}, "label": f"그 밖 혼합 후보 {n_cap}개", "code": "mix_cap",
-                         "reason": f"혼합 상한 {mmax}개(싣는 것) · 판정 {MIX_VERIFY_MAX}개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"})
+                         "reason": f"혼합 상한 {mmax}개(싣는 것) · 판정 {vmax}개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"})
         return kept
 
     def _mixed_sources(self, a_place, b_place, sa, sb, nb, party, first_visit, wlim, when=None):
@@ -1566,6 +1584,7 @@ class Planner:
                 "code": e_why["code"], "reason": e_why["reason"], "searched": e_why.get("searched")}
 
     def leg(self, a_place, b_place, arrive_dt, party, first_visit, case_id, not_before_dt=None, earliest_on_late=False):
+        self.more_options = []
         """장소 a → 장소 b, 도착 목표 arrive_dt. ((route_def, 시작 분, 끝 분, 운행일, 뺀 후보), None) 또는 (None, 이유 dict).
 
         분은 **도착 목표의 운행일 축**이다. 역 도착 목표가 04:00 을 넘어 앞 운행일로 넘어가면(04:00 목표 − 도보 2분)
@@ -1642,7 +1661,10 @@ class Planner:
             visited.append(f"{xa[0]}→{xb[0]}")
             n_mode += nm_
             opts.extend(got)
-            if STATION_PAIR_MODE == "first_feasible" and self._pair_settles(got, nb, arrive_by, party, first_visit, case_id):
+            if getattr(self, "wide", False):
+                if pi + 1 >= WIDE_STATION_PAIRS:            # 넓게 찾기 — 멈추는 짝 대신 가까운 짝 몇 개를 더 본다
+                    break
+            elif STATION_PAIR_MODE == "first_feasible" and self._pair_settles(got, nb, arrive_by, party, first_visit, case_id):
                 break
         # ③ 버스 직행 — **장소 좌표 기준**(23 결정 4). 판정기 verify_multi 의 버스 후보는 역 좌표 기준이라
         #   장소→역→정류장 이중 도보가 붙었다(32 자체 대조 #4 보류). 같은 규칙(정류장_반경_m · route_type_제외 ·
@@ -1770,6 +1792,8 @@ class Planner:
         # 버스 직행 상한(rules candidates.버스_직행_최대) — **실을 자격을 다 본 뒤에** 자른다(GPT 23 #2).
         #   계획 버스는 유지하고, 남은 자리를 도보 짧은 순으로(2차 #6 · 상한이 0 이어도 계획 수단은 남긴다).
         bmax = self.v.R["candidates"]["버스_직행_최대"]["value"]
+        if getattr(self, "wide", False):
+            bmax = max(bmax, WIDE_BUS_MAX)
         buses = [o for o in opts if _is_bus(o)]
         buses.sort(key=lambda o: (o is not planned, o["_walk_m"] if o["_walk_m"] is not None else float("inf"), o["_n"]))
         n_keep = max(bmax, 1 if any(o is planned for o in buses) else 0)
@@ -1778,16 +1802,30 @@ class Planner:
                          "reason": f"버스 직행 상한 {bmax}개 — 계획 버스 유지 후 남은 자리를 도보 짧은 순으로(순위 아님)"})
         cut = {id(o) for o in buses[n_keep:]}
         opts = [o for o in opts if id(o) not in cut]
+        # MORE_CODES 후보 — 앞 일정 끝(nb) 뒤에 떠나는 것만 · 표기 검사 통과 · 실린 후보와 겹치지 않게 · 빨리 닿는 순으로 상한까지(계획 수단 · options 는 안 바뀐다)
+        extras, seen = [], {o.get("_key") for o in opts}
+        for e in left:
+            o = e.get("_o") or {}
+            if e.get("code") not in MORE_CODES or not o.get("_legs") or o.get("_key") in seen or o.get("_start") is None:
+                continue
+            if (nb is not None and o["_start"] < nb) or O.uses_problems(o.get("uses") or []):
+                continue
+            seen.add(o.get("_key"))
+            extras.append(o)
+        extras.sort(key=lambda o: (o["eta_min"], o["_transfers"], o["_walk_min"], o["_n"]))
+        extras = extras[:WIDE_MORE_MAX if getattr(self, "wide", False) else MORE_MAX]
         taken = set()
-        for o in opts:
+        for o in opts + extras:                          # 실린 후보 먼저 — 그 id 는 앞 판과 같다
             o["id"] = "taxi" if o.get("_taxi") and "taxi" not in taken else O.make_id(o["_legs"], taken)
             taken.add(o["id"])
         O.add_reasons(opts)
+        for o in extras:
+            o["label"] = o["_route"]
         for o in opts:
             if o.get("_fallback") == "service_hours":
                 o["label"] = o.get("label") or o["_route"]
                 o["label"] += " · 대중교통 운행 시간 밖이라 택시로 대체"
-        for o in opts:
+        for o in opts + extras:
             if o["_walk_m"] is not None:
                 o["walk_m"] = int(round(o["_walk_m"]))
             if o["_fare"] is not None:
@@ -1831,12 +1869,13 @@ class Planner:
                                            for o in opts],
                                "left_out": left, "left_checks": left_checks, "start_min": start})
         from .departure_context import capture
-        self.departure_context = capture(opts, runtime=self.rt, origin=a_place, destination=b_place,
+        self.departure_context = capture(opts + extras, runtime=self.rt, origin=a_place, destination=b_place,
                                          stage=self.stage, party=party, first_visit=first_visit,
                                          service_date=sdate, start_min=start)
         keys = ("id", "label", "eta_min", "walk_m", "fare_krw", "uses", "transfer_car")
         route = {"from": a_place["name"], "to": b_place["name"], "planned": planned["id"],
                  "options": [{k: o[k] for k in keys if k in o} for o in opts]}
+        self.more_options = [{**{k: o[k] for k in keys if k in o}, "starts_at": iso_of(sdate, o["_start"])} for o in extras]
         return (route, start, end, sdate, left), None
 
 

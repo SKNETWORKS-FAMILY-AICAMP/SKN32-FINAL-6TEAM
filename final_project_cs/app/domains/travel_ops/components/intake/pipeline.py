@@ -271,7 +271,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress,
                         differs=differs_by_line(source.get("differs_json")), agent=agent, agent_mode=reader["mode"],
                         position=int(source["position"]), agent_num_predict=reader["num_predict"],
-                        agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress)
+                        agent_chunk_chars=reader["chunk_chars"], on_reading=reading_progress, connect=connect)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
@@ -722,7 +722,8 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 kind = _item_kind(cur, tenant_id, intake_id, current, source_id, field_name, edits)
                 value, evidence, note = _typed_place(value, our_places, tour, kakao, dining,
                                                      kind_hint="dining" if kind == "dining" else None,
-                                                     near=_edit_place_anchor(cur, tenant_id, intake_id, current, source_id, field_name))
+                                                     near=_edit_place_anchor(cur, tenant_id, intake_id, current, source_id, field_name),
+                                                     conn=conn)
                 # 원래 읽은 이름 → 고객이 고친 이름을 별칭으로 쌓는다(다음 고객은 안 고쳐도 되게)
                 cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
                             "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
@@ -1277,7 +1278,7 @@ def _edit_place_anchor(cur, tenant, intake_id, revision, source_id, field):
             and value.get("longitude") is not None else None)
 
 
-def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, kind_hint: str | None = None, near=None):
+def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, kind_hint: str | None = None, near=None, conn=None):
     """고객이 적은 장소 이름 → 다시 찾아 **하나**. 못 찾으면 받지 않는다(지어내지 않는다)."""
     from .places import resolve
 
@@ -1289,7 +1290,8 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, ki
                 or not SEOUL_LAT[0] <= anchor[0] <= SEOUL_LAT[1] or not SEOUL_LON[0] <= anchor[1] <= SEOUL_LON[1]):
             raise IntakeRejected("invalid_value", "검색 기준 위치는 서울 안의 위도·경도 숫자여야 해요")
         near = tuple(anchor)
-    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao, dining=dining, kind_hint=kind_hint, near=near, choose_near=True)
+    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao, dining=dining, kind_hint=kind_hint, near=near, choose_near=True,
+                    conn=conn)
     if found.status != "resolved":
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
@@ -1347,7 +1349,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 differs: dict[int, dict[str, Any]] | None = None, agent: Any = None, agent_mode: str = "off",
                 position: int = 0, agent_num_predict: int = 3072, agent_chunk_chars: int | None = None,
                 reading_stream: dict[str, Any] | None = None,
-                on_reading: Callable[[dict[str, Any]], None] | None = None) -> list[dict[str, Any]]:
+                on_reading: Callable[[dict[str, Any]], None] | None = None,
+                connect: Callable[[], Any] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·llm_agent·lookup)과 근거가 붙는다.
 
     `agent` · `agent_mode` `[2026-10-16 사용자 지시]` — 읽기 에이전트(`agent_read.py`, 가르친 모델 한 번 호출). `on` 이면 에이전트가 먼저 읽고
@@ -1535,7 +1538,8 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 continue
             resolved[index] = resolve(query, our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint=_place_kind_hint(item), aliases=aliases, dining=dining,
-                                      near=_near_hint(index, items, resolved, dated), at=_visit_at(index, rows, dated))
+                                      near=_near_hint(index, items, resolved, dated), at=_visit_at(index, rows, dated),
+                                      conn=connect)       # 공용 별칭의 DB 표 — 연결을 잡지 않고 여는 함수로(`place_by_name.alias_target`)
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,
@@ -1551,7 +1555,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             if point is not None:
                 resolved[index] = resolve(_lookup_title(items[index]["title"], aliases), our_places=our_places or [], tour=tour, kakao=kakao,
                                           kind_hint=_place_kind_hint(items[index]), aliases=aliases,
-                                          dining=dining, near=point)
+                                          dining=dining, near=point, conn=connect)
     for index in sorted(set(resolved) | nameless):
         if index in early:
             rows.extend(early[index])

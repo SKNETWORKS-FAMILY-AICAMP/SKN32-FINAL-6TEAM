@@ -30,8 +30,9 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
         forward_only: bool = False) -> list[dict[str, Any]]:
     """날짜별 시각순 rows를 앞뒤로 맞추고 시각 claim만 반환한다.
 
-    계산기가 꺼진 경우 기존 이동 계약대로 어림 근거를 남긴다. 켜진 계산기의 오류 · 자료 없음은
-    자동 배치 성공으로 바꾸지 않는다(거절). 운영시간의 확인된 제약도 지킨다.
+    계산기가 꺼진 경우 기존 이동 계약대로 어림 근거를 남긴다. 켜진 계산기의 **오류**는 한 번 더 부르고 그래도 오류면 거절한다(자동 배치 성공으로 바꾸지 않는다).
+    ★`[2026-10-22 사용자 지시]` 계산기가 **답을 못 낸**(자료 없음 · 후보 없음) 구간은 거절하지 않는다 — 몇 번을 제출해도 같아 고객이 그 장소를 못 넣게 되기 때문이다.
+      시간 한도와 같이 어림으로 맞추고 같은 판의 검사가 「확인 필요」로 센다. 운영시간의 확인된 제약도 지킨다.
 
     ★`[2026-10-20 사용자 결정]` 요청 한 번의 이동 계산 시간 한도는 **이동 구간 하나마다** `ENGINE_BUDGET_S`(20초 — 같은 두 곳 사이를 도착 시각만 바꿔
       다시 묻는 것도 그 구간 몫) · 요청 전체 `REQUEST_ENGINE_S` 다(앞 판은 여행 날짜마다 20초). 한도에 닿아 못 구한 구간은 **거절하지 않고** 직선 어림으로 맞춘다 — 그 시각의 근거는 `estimate`(메모 「어림 이동시간」)이고,
@@ -94,12 +95,23 @@ def fit(conn, *, tenant_id: str, rows: list[dict[str, Any]], touched: set[tuple[
             # ★`[2026-10-20 사용자 결정]` 시간 한도에 닿은 것만으로는 거절하지 않는다 — 어림으로 맞추고(근거 estimate) 검사가 시간표로 다시 본다
             log.info("schedule leg estimated after the time limit: %s -> %s", a["place"].get("name"), b["place"].get("name"))
             return got
+        if eng is not None and got.basis == "estimate" and got.why_code == "engine_error":
+            # ★`[2026-10-22]` 계산기 **오류**는 일시적일 수 있다 — 한 번 더 부른다(오류는 기억하지 않으므로 다시 계산한다). 그래도 오류면 거절한다.
+            #   「잠시 뒤 다시 시도」는 이때만 맞는 말이다(앞 판은 자료 없음에도 같은 말을 붙여, 몇 번을 제출해도 같은 이유로 막혔다)
+            got = leg_between(eng, point(a), point(b), a["end_at"], b["start_at"], deep=False)
+            if got.basis != "estimate":
+                return got
+        if eng is not None and got.basis == "estimate" and got.why_code == "engine_error":
+            why = (got.why or "").strip() or "계산기 오류"
+            log.warning("schedule leg engine error: %s -> %s (%s)", a["place"].get("name"), b["place"].get("name"), why)
+            raise ScheduleConflict(f"이동 계산기에서 오류가 나 변경을 저장하지 않았어요({a['place'].get('name')} → {b['place'].get('name')}: {why}). "
+                                   "같은 내용으로 다시 제출해 주세요.", code="schedule_check_failed")
         if eng is not None and got.basis == "estimate":
-            # ★`[2026-10-15]` 이유를 남긴다 — x600 서버 채팅 「토속촌 대신 덕수궁」이 이유 없이 「끝내지 못해」로만 막혀 원인을 가리지 못했다
-            why = (got.why or "").strip() or "계산기가 이 구간을 못 채웠어요"
-            log.warning("schedule leg not computed: %s -> %s (%s)", a["place"].get("name"), b["place"].get("name"), why)
-            raise ScheduleConflict(f"이동 계산을 끝내지 못해 변경을 저장하지 않았어요({a['place'].get('name')} → {b['place'].get('name')}: {why}). "
-                                   "잠시 뒤 다시 시도해 주세요.", code="schedule_check_failed")
+            # ★`[2026-10-22 사용자 지시]` 계산기가 **답을 못 낸**(자료 없음 · 도보 상한 안에 역이 없음 · 성립하는 후보 없음) 구간은 몇 번을 제출해도 같다 —
+            #   거절하면 고객이 그 장소를 못 넣는다. 시간 한도 때와 같이 직선 어림으로 맞추고(근거 `estimate`) 같은 판의 검사(`review.build(estimate_needs_review=True)`)가
+            #   「확인 필요」로 세고 이유를 줄에 적는다(등록은 그 확인 뒤). 이유 코드는 로그에 남긴다.
+            log.info("schedule leg estimated, calculator gave no answer: %s -> %s (%s · %s)", a["place"].get("name"), b["place"].get("name"),
+                     got.why_code, (got.why or "").strip())
         return got
 
     def protected(row):

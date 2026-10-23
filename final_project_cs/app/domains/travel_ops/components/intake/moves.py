@@ -45,6 +45,16 @@ class Leg:
     #: 등록 전후 지도·출발 재검증에 쓰는 내부 선택 문맥. 공개 검사 응답에는 싣지 않는다.
     departure_context: dict[str, Any] | None = None
     selected_option_id: str | None = None
+    #: 어림으로 간 이유의 갈래 — `engine_off`(계산기 꺼짐) · `engine_error`(일시적 오류) · 계산기가 준 코드(`no_data` · `budget` 등). 시간표로 낸 값은 None.
+    #: 부르는 쪽이 「다시 해 보면 풀릴 수 있는 것」과 「몇 번을 해도 같은 것」을 가르는 데 쓴다(응답에는 싣지 않는다)
+    why_code: str | None = None
+    #: `[2026-10-23 사용자 지시 — 경로 후보 먼저 3개 · 내리면 더]` 계산기가 같은 출발로 닿는다고 본 **경로 후보 전부**(`route_rows` 모양 · 계산기가 고른 것이 맨 앞).
+    #: 화면은 앞의 `ROUTES_FIRST` 개를 검사와 함께 받고, 나머지는 「더 보기」(넓게 찾기)로 받는다. 어림 구간은 비어 있다
+    routes: tuple[dict[str, Any], ...] = ()
+    #: 보통 계산이 후보 상한(혼합 · 버스 직행)에 걸려 판정하지 않은 후보가 있다 — 넓게 찾으면 더 나올 수 있다
+    routes_capped: bool = False
+    #: 이 구간이 쓰는 경로 후보의 고르기 열쇠(`route_key`) — 고객이 고른 경로가 이 구간에 실렸는지 부르는 쪽이 본다
+    route_key: str | None = None
 
     @property
     def tight(self) -> bool:
@@ -119,7 +129,67 @@ def mode_of(option: dict[str, Any]) -> tuple[str, str]:
     return "transit", "대중교통"
 
 
-def _estimate(a: dict[str, Any], b: dict[str, Any], a_end: datetime, b_start: datetime, why: str) -> Leg:
+#: `[2026-10-23]` 확인 화면이 검사와 함께 받는 경로 후보 수 — 나머지는 고객이 목록을 끝까지 내리면 받는다(`move_options.routes`)
+ROUTES_FIRST = 3
+#: 보통 계산이 상한 때문에 판정하지 않은 후보가 있다는 표시(계산기 `left_out` 코드) — 넓게 찾으면 후보가 더 나올 수 있다
+CAPPED_CODES = frozenset({"mix_cap", "bus_cap", "bus_more", "mix_skipped"})
+
+
+def route_key(option: dict[str, Any]) -> str:
+    """경로 후보의 **고르기 열쇠** — 다시 세어도 같은 경로면 같은 값. 타는 노선 · 승차역(`uses`)으로 만든다(택시 · 도보는 그 이름).
+    계산기의 `id` 는 같은 구간에서도 함께 나온 후보에 따라 달라질 수 있어(이름 겹침 피하기) 쓰지 않는다."""
+    uses = [str(u) for u in option.get("uses") or ()]
+    if str(option.get("id")) == "taxi":
+        return "taxi"
+    return "u:" + ">".join(uses) if uses else "walk"
+
+
+def _ride_name(use: str) -> str:
+    head, _, rest = str(use).partition(":")
+    return f"버스 {rest}" if head == "버스" else head
+
+
+def _starts(option: dict[str, Any]) -> datetime | None:
+    try:
+        return datetime.fromisoformat(str(option["starts_at"])) if option.get("starts_at") else None
+    except ValueError:
+        return None
+
+
+def route_rows(route: dict[str, Any], depart: datetime, b_start: datetime, more: Any = (),
+               floor: datetime | None = None) -> list[dict[str, Any]]:
+    """계산기 답의 경로 후보 → 화면 줄. `route.options` 는 모두 같은 출발(`depart`)에 떠나도 닿는 것, `more` 는 **조금 일찍 떠나면 닿는** 다른 경로
+    (계산기 `more_options` — 후보마다 `starts_at`, `floor`(앞 일정 끝) 전에 떠나야 하면 뺀다 · `early: true`). 계산기가 고른 것(`planned`)이 맨 앞,
+    나머지는 **빨리 닿는 순 · 환승 적은 순 · 덜 걷는 순**(화면에 보이는 순서일 뿐 — 계획 수단을 정하는 규칙은 계산기의 것 그대로다). 같은 열쇠는 한 줄."""
+    planned = route.get("planned")
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    early_rows = [(o, _starts(o)) for o in more or [] if isinstance(o, dict)]
+    for option, start in [(o, depart) for o in route.get("options") or []] + early_rows:
+        key = route_key(option)
+        if key in seen or start is None or (floor is not None and start < floor):
+            continue
+        seen.add(key)
+        code, label = mode_of(option)
+        minutes = int(option.get("eta_min") or 0)
+        arrive = start + timedelta(minutes=minutes)
+        uses = [str(u) for u in option.get("uses") or ()]
+        rides: list[str] = []
+        for use in uses:
+            name = _ride_name(use)
+            if name and (not rides or rides[-1] != name):
+                rides.append(name)
+        rows.append({"key": key, "mode": code, "mode_label": label, "label": str(option.get("label") or label),
+                     "minutes": minutes, "depart": start.strftime("%H:%M"), "arrive": arrive.strftime("%H:%M"),
+                     "slack_min": int((b_start - arrive).total_seconds() // 60), "fare_krw": option.get("fare_krw"),
+                     "walk_m": option.get("walk_m"), "transfers": max(len(rides) - 1, 0), "lines": rides,
+                     "planned": option.get("id") == planned and not option.get("starts_at"), "early": start < depart})
+    rows.sort(key=lambda r: (not r["planned"], r["minutes"], r["transfers"],
+                             r["walk_m"] if r["walk_m"] is not None else float("inf"), r["key"]))
+    return rows
+
+
+def _estimate(a: dict[str, Any], b: dict[str, Any], a_end: datetime, b_start: datetime, why: str, code: str | None = None) -> Leg:
     from app.domains.travel_ops.components.planning.planner import Cand, _transfer_minutes
 
     here = Cand(a["key"], a["name"], "activity", a["lat"], a["lon"], {}, "intake")
@@ -127,7 +197,7 @@ def _estimate(a: dict[str, Any], b: dict[str, Any], a_end: datetime, b_start: da
     minutes, _basis, _label = _transfer_minutes(here, there)
     arrive = a_end + timedelta(minutes=minutes)
     return Leg("estimate", "직선 어림", f"{a['name']} → {b['name']}", minutes, round(straight_km(a, b), 1), a_end, arrive,
-               int((b_start - arrive).total_seconds() // 60), "estimate", why)
+               int((b_start - arrive).total_seconds() // 60), "estimate", why, why_code=code)
 
 
 #: 「앞 일정이 끝난 뒤 떠나면 닿는 다른 경로」를 깊이 찾을 만큼 아슬아슬한 정도(분) — 가장 늦은 출발이 앞 일정 끝보다 이만큼 이르기까지.
@@ -136,16 +206,18 @@ NEAR_MISS_MIN = 15
 
 
 def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: datetime, b_start: datetime, *,
-                deep: bool = True) -> Leg:
+                deep: bool = True, prefer: str | None = None) -> Leg:
     """`a`·`b` = `{"key","name","lat","lon"}`. `a_end` = 앞 일정이 끝나는 시각, `b_start` = 다음 일정 시작. `engine` 이 None 이면 어림값.
 
     ☆`[2026-10-03 실서버 실측]` 계산기는 닿는 구간이면 0.2~0.5초인데 **못 닿는 구간은 2.7~10.8초**였다(출발 제한을 건 탐색이 모든 경로를 훑는다).
       확인 화면은 못 닿는 구간을 가장 많이 만난다. 그래서 먼저 출발 제한 없이 한 번 묻는다(빠르다) — 가장 늦은 출발이 앞 일정 끝 뒤면 닿는다.
       끝보다 `NEAR_MISS_MIN` 넘게 이르면 어느 경로도 못 닿는다고 보고(늦음 · 걸리는 시간은 이 답으로 낸다), 아슬아슬하면(15분 안) 그때만
       「끝난 뒤 떠나서 닿는 다른 경로」를 깊이 찾는다. `deep=False` 면 깊은 탐색을 아예 안 한다 — 시각을 맞추려고 여러 번 묻는 쪽(자동 추천 ·
-      후보)이 쓴다: 그쪽은 어차피 보수적으로(앞 일정이 끝나는 대로 떠난다고) 맞추고, 최종 판정은 깊은 탐색을 하는 검사가 다시 한다."""
+      후보)이 쓴다: 그쪽은 어차피 보수적으로(앞 일정이 끝나는 대로 떠난다고) 맞추고, 최종 판정은 깊은 탐색을 하는 검사가 다시 한다.
+    `prefer` `[2026-10-23]` 고객이 고른 경로의 열쇠(`route_key`) — 계산기 답의 후보 가운데 그 경로가 있으면 계획 수단 대신 그것을 싣는다
+      (없으면 계산기가 고른 것 · 실린 것은 `Leg.route_key` 로 본다)."""
     if engine is None:
-        return _estimate(a, b, a_end, b_start, "이동 계산기가 꺼져 있어요")
+        return _estimate(a, b, a_end, b_start, "이동 계산기가 꺼져 있어요", "engine_off")
     pa, pb = _place(a["key"], a["name"], a["lat"], a["lon"]), _place(b["key"], b["name"], b["lat"], b["lon"])
     try:
         got, why = engine(pa, pb, b_start, None)
@@ -166,25 +238,45 @@ def leg_between(engine: Any, a: dict[str, Any], b: dict[str, Any], a_end: dateti
     except TeamUnavailable:
         raise
     except Exception as exc:                          # noqa: BLE001 — 일반 계산 오류의 기존 화면 정책 유지
-        return _estimate(a, b, a_end, b_start, f"이동 계산기 오류({type(exc).__name__})")
+        return _estimate(a, b, a_end, b_start, f"이동 계산기 오류({type(exc).__name__})", "engine_error")
     if got is None:
         reason = str((why or {}).get("reason") or (why or {}).get("code") or "계산기가 이 구간을 못 채웠어요")
-        return _estimate(a, b, a_end, b_start, reason)
+        return _estimate(a, b, a_end, b_start, reason, str((why or {}).get("code") or "unfilled"))
     route = got.get("route") or {}
+    more = [o for o in got.get("more_options") or [] if isinstance(o, dict)]
     option = next((o for o in route.get("options") or [] if o.get("id") == route.get("planned")), {})
+    mine = None
+    if prefer:
+        mine = next((o for o in route.get("options") or [] if route_key(o) == prefer), None)
+        early = next((o for o in more if route_key(o) == prefer), None) if mine is None else None
+        start = _starts(early) if early is not None else None
+        if early is not None and start is not None and start >= a_end:
+            mine, verified = early, True                # 조금 일찍 떠나는 경로 — 그 출발이 앞 일정이 끝난 뒤라 시간표로 확인한 값이다
+    if mine is not None:
+        option = mine
     code, label = mode_of(option)
-    minutes = int(got.get("eta_min") or option.get("eta_min") or 0)
-    if got["starts_at"] < a_end:                      # 검증 못 한 값 — 끝나는 대로 떠난다고 본다
+    minutes = int((option.get("eta_min") if mine is not None else None) or got.get("eta_min") or option.get("eta_min") or 0)
+    own = _starts(option) if mine is not None else None
+    if own is not None:                               # 고른 경로가 자기 출발 시각을 가진다(조금 일찍 떠남)
+        depart, arrive = own, own + timedelta(minutes=minutes)
+    elif got["starts_at"] < a_end:                    # 검증 못 한 값 — 끝나는 대로 떠난다고 본다
         depart, arrive = a_end, a_end + timedelta(minutes=minutes)
+    elif mine is not None:                            # 고른 경로도 같은 출발에 떠난다(계산기는 그 출발로 닿는 후보만 싣는다) — 도착은 그 경로의 소요로
+        depart, arrive = got["starts_at"], got["starts_at"] + timedelta(minutes=minutes)
     else:
         depart, arrive = got["starts_at"], got["ends_at"]
     km = (option.get("walk_m") / 1000) if code == "walk" and option.get("walk_m") is not None else straight_km(a, b)
     # 끝나는 대로 떠나는 어림 시각으로 바꾼 경우에는 원래 편성·승차 시각을 재사용하지 않는다.
     context = (selected_context(got.get('departure_context'), option.get('id'))
-               if verified and got['starts_at'] >= a_end else None)
+               if verified and (own is not None or got['starts_at'] >= a_end) else None)
+    if context is not None and own is not None:      # 문맥의 출발 분을 고른 경로의 것으로(등록 · 출발 재검증이 그 분을 읽는다)
+        context['start_min'] = (context.get('options') or {}).get(option.get('id'), {}).get('start_min', context.get('start_min'))
+    capped = any(str(e.get("code")) in CAPPED_CODES for e in got.get("left_out") or [] if isinstance(e, dict))
     return Leg(code, label, str(option.get("label") or f"{a['name']} → {b['name']}"), minutes, round(km, 1), depart, arrive,
                int((b_start - arrive).total_seconds() // 60), "timetable", None, option.get("fare_krw"), verified, latest,
-               tuple(str(u) for u in option.get("uses") or ()), context, option.get('id') if context else None)
+               tuple(str(u) for u in option.get("uses") or ()), context, option.get('id') if context else None,
+               routes=tuple(route_rows(route, got["starts_at"] if got["starts_at"] >= a_end else a_end, b_start, more, a_end)),
+               routes_capped=capped, route_key=route_key(option) if option else None)
 
 
 def late_text(slack: int) -> str:
@@ -195,4 +287,5 @@ def ceil_to(minutes: float, step: int = 5) -> int:
     return int(math.ceil(minutes / step) * step)
 
 
-__all__ = ["Leg", "SAME_PLACE_M", "late_text", "leg_between", "mode_of", "same_place", "straight_km"]
+__all__ = ["CAPPED_CODES", "Leg", "ROUTES_FIRST", "SAME_PLACE_M", "late_text", "leg_between", "mode_of", "route_key", "route_rows",
+           "same_place", "straight_km"]

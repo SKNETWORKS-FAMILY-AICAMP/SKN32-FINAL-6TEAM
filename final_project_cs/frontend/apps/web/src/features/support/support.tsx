@@ -58,6 +58,8 @@ export function SupportPage({ sent = false }: { sent?: boolean }) {
   const shown = all.slice((current - 1) * INQUIRIES_PER_PAGE, current * INQUIRIES_PER_PAGE);
   return <div className={styles.page}>
     <div className={styles.row}><h1>{t("문의함", "Inquiries")}</h1></div>
+    {/* `[2026-10-22 사용자 결정 — ST4F-717]` 묻기 전에 「이용 방법」의 자주 묻는 질문으로 — 한 줄. */}
+    <Link href={`${routes.help}?tab=faq`} className={styles.helpLine}>{t("문의하기 전에 자주 묻는 질문을 확인해 보세요", "Check the FAQ before you ask")}<ChevronRight size={16} aria-hidden="true" /></Link>
     {/* `[2026-10-12 사용자 지시]` 안내 문장은 뺐다. 왼쪽 「여행에서 다시 요청」, 오른쪽 「문의 작성」 — 한 줄(좁으면 왼쪽 글자가 줄바꿈된다). */}
     <div className={styles.actions}>
       <ButtonLink href="/trips">{t("여행에서 다시 요청 · 장소 정보 보완", "Open your trip to retry or correct a place")}</ButtonLink>

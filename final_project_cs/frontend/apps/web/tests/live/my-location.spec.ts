@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { dayTab, mockServer, TRIP_ID, tripScreen } from "./helpers";
+import { chooseDayOne, dayTab, mockServer, TRIP_ID, tripScreen } from "./helpers";
 import { allowLocation, changeLocationConsent, countLocationAsks, locationAsks, north, setPageHidden, startWithLocationConsent } from "./location-kit";
 import { INTAKE, needsBadge } from "./plan-check-kit";
 
@@ -34,6 +34,7 @@ async function openTripMap(page: Page, agreed: boolean) {
   await startWithLocationConsent(page, agreed);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(tripScreen(page)).toBeVisible();
+  await chooseDayOne(page);
   await expect(mapPane(page).locator(".leaflet-marker-icon[title]").first()).toBeVisible();
 }
 
@@ -231,15 +232,14 @@ test("「모든 일정 보기」는 핀만 맞춘다 — 멀리 있는 내 위�
   expect(Math.hypot(last.x - first.x, last.y - first.y)).toBeGreaterThan(40);                       // 핀이 한 점으로 쪼그라들지 않았다(부산까지 맞췄으면 몇 px 에 그친다 · 폰 틀의 시트 위 지도에서는 약 70px)
 });
 
-test("지도 단추의 「내 위치로」: 위치 동의가 있으면 누를 때 지도가 내 위치로 간다", async ({ page, context }) => {
+test("지도 오른쪽 아래 「내 위치로」: 위치 동의가 있으면 누를 때 지도가 내 위치로 간다", async ({ page, context }) => {
   await allowLocation(context, { latitude: 37.5512, longitude: 126.9882 });                         // 일정에서 조금 떨어진 남산 쪽
   await openTripMap(page, true);
   const dot = meDot(mapPane(page));
   await expect(dot).toHaveCount(1);
-  const map = page.getByRole("region", { name: "여행 지도", exact: true });
-  await map.hover({ position: { x: 200, y: 120 } });
-  const open = mapPane(page).getByRole("button", { name: "지도 단추 펼치기" }); if (await open.count()) await open.click();
-  const locate = mapPane(page).getByRole("group", { name: "지도 단추" }).getByRole("button", { name: "내 위치로" });
+  // `[2026-10-23 ST4F-721 · 722 반영]` 「내 위치로」는 접는 「지도 단추」 묶음 밖 지도 오른쪽 아래에 늘 있다 — 묶음을 펼치지 않고 누른다
+  await expect(mapPane(page).getByRole("group", { name: "지도 단추" }).getByRole("button", { name: /내 위치/ })).toHaveCount(0);
+  const locate = mapPane(page).getByRole("button", { name: "내 위치로", exact: true });
   await expect(locate).toBeVisible();
   await locate.click();
   await settled(dot);
@@ -250,14 +250,18 @@ test("지도 단추의 「내 위치로」: 위치 동의가 있으면 누를 �
   await expect(dot).toBeInViewport();
 });
 
-test("위치 동의가 없어도 지도 단추에 「내 위치로」가 있다", async ({ page }) => {
+test("위치 동의가 없어도 지도에 「내 위치로」가 있다(지도 단추 묶음 밖)", async ({ page }) => {
   await openTripMap(page, false);
+  // `[2026-10-23 ST4F-721 · 722 반영]` 「내 위치로」는 묶음 밖 지도 오른쪽 아래 — 묶음을 펼치기 전에도, 펼친 뒤에도 보이고 묶음 안에는 없다
+  const locate = mapPane(page).getByRole("button", { name: "내 위치로", exact: true });
+  await expect(locate).toBeVisible();
   const map = page.getByRole("region", { name: "여행 지도", exact: true });
   await map.hover({ position: { x: 200, y: 120 } });
   const open = mapPane(page).getByRole("button", { name: "지도 단추 펼치기" }); if (await open.count()) await open.click();
   const buttons = mapPane(page).getByRole("group", { name: "지도 단추" });
   await expect(buttons.getByRole("button", { name: "확대" })).toBeVisible();
-  await expect(buttons.getByRole("button", { name: /내 위치/ })).toBeVisible();
+  await expect(buttons.getByRole("button", { name: /내 위치/ })).toHaveCount(0);
+  await expect(locate).toBeVisible();
 });
 
 test("핀이 하나도 없는 날은 내 위치로 지도 가운데를 맞춘다", async ({ page, context, request }) => {

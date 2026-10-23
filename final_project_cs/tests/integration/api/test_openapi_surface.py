@@ -43,6 +43,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/features",
     "/v1/web/trip-intakes/{intake_id}/moves/{pair}/mode",
     "/v1/web/trip-intakes/{intake_id}/moves/{pair}/options",
+    # `[2026-10-23]` 경로 후보 더 보기 · 고르기 — rest-endpoints/web-intakes.md 「경로 후보 더 보기 · 고르기」.
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/routes",
+    "/v1/web/trip-intakes/{intake_id}/moves/{pair}/route",
     "/v1/web/trips/{trip_id}/safety/recovery",
     "/v1/cases",
     "/v1/cases/{case_id}",
@@ -95,6 +98,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/chat",
     "/v1/web/map-load",
     "/v1/web/trips/{trip_id}/rollback",
+    # ★2026-10-22 ST4F-716 여행 화면 「끝났어요」 — 바로 진행 · 그대로 유지(채팅 진행 보고와 같은 저장 경로). `wiki/actions/journey-progress.md` 「웹 진행 단추」
+    "/v1/web/trips/{trip_id}/progress",
     # ★2026-10-13 「일정 수정」 — 등록한 여행을 확인 화면 접수로 다시 연다. `wiki/external/rest-endpoints.md` 「등록한 여행 고치기」
     "/v1/web/trips/{trip_id}/reopen",
     "/v1/web/trip-intakes/{intake_id}/cancel",
@@ -138,6 +143,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/dining-links/apply",
     "/v1/web/trip-intakes/{intake_id}/dining-links/{key}",
     "/v1/web/trip-intakes/{intake_id}/place-search",
+    # ★2026-10-23 일정 추가 폼의 장소 검색(동선순 + 이름순, 새 일정 기준 판정) — `wiki/external/rest-endpoints/web-intakes.md`
+    "/v1/web/trip-intakes/{intake_id}/add-search",
     "/v1/web/trip-intakes/{intake_id}/autofix",
     "/v1/web/trip-intakes/{intake_id}/revalidate",
     "/v1/web/places/photos",

@@ -48,7 +48,9 @@ for (const width of [375,1280]) {
     expect(await search.evaluate(node=>Boolean(node.closest('[data-hide-brand]')))).toBe(true);
     await expect(page.getByRole('region',{name:'일정 추가 화면'}).getByRole('searchbox')).toHaveCount(0);
     await expect(page.getByRole('button',{name:'다시 제출',exact:true})).toHaveCount(0);
-    for(let i=0;i<4;i++) await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
+    // `[2026-10-23 ST4F-721 · 722 반영]` 가로 배치도 「내 위치로」 자리(8+44+아래 20px)를 남겨 지도 높이 204px 이상이 필요하다 —
+    //   1280px 에서 네 칸 올리면 지도가 182px 라 접기 탭만 남는다(`controlsLayout`). 세 칸(222px)이면 목록은 높고 지도 단추는 가로로 펼친다.
+    for(let i=0;i<3;i++) await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
     await search.fill('올리브영');
     const result=page.getByRole('list',{name:'장소 검색 결과'}).getByRole('button',{name:/올리브영 명동 플래그십/});
     await expect(result).toBeVisible(); await capture(page,`01-search-${width}`);

@@ -20,7 +20,8 @@ import { notificationLoginPath, notificationTripAccess } from "./notification-en
  *   서버도 로그인 · 세션 · 동의 길은 동의 없이 받는다(`consents.EXEMPT_PREFIXES`). 로그인한 뒤 서버에 동의가 없으면 가려던 화면에서 약관만 받는다.
  */
 // `[2026-10-17 ST4F-604]` 공지사항 게시판도 연다 — 공지는 누구에게나 보이는 것이고(서버도 세션 없이 준다), 맨 위 배너도 약관 전부터 뜬다.
-const OPEN_PATHS = new Set<string>([routes.home, routes.start, routes.authDone, routes.myPageAccount, routes.notices]);
+// `[2026-10-22 ST4F-717]` 이용 방법도 연다 — 약관 전 화면(소개 · 시작 · 계획 담기)의 (?) 가 이리로 오고, 읽는 것은 운영 스위치(세션 없이 읽음)뿐이다.
+const OPEN_PATHS = new Set<string>([routes.home, routes.start, routes.authDone, routes.myPageAccount, routes.notices, routes.help]);
 /** `[2026-10-12 사용자 지시]` 동의 확인 진행 카드는 확인이 이 시간을 넘게 걸릴 때만 보인다. 빨리 끝나면 아무것도 안 뜬다(「동의하고 다음으로」 뒤 로딩이 바로 뜨던 문제). */
 const CHECK_CARD_AFTER_MS = 3000;
 

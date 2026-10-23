@@ -31,7 +31,9 @@ for (const scene of [{ width: 375, located: false }, { width: 1280, located: fal
   const group = page.getByRole("group", { name: "지도 단추" });
   await group.getByRole("button", { name: "지도 단추 펼치기" }).click();
   await expect(group).toHaveAttribute("data-layout", "row");
-  if (scene.located) { await group.getByRole("button", { name: "내 위치로", exact: true }).click(); await expect(page.getByRole("img", { name: "내 위치", exact: true })).toBeInViewport(); }
+  // `[2026-10-22 ST4F-721]` 「내 위치로」는 묶음 밖 지도 오른쪽 아래
+  const locate = page.getByRole("region", { name: "여행 지도" }).getByRole("button", { name: "내 위치로", exact: true });
+  if (scene.located) { await locate.click(); await expect(page.getByRole("img", { name: "내 위치", exact: true })).toBeInViewport(); }
   await expect(page.getByRole("region", { name: "여행 지도" })).not.toHaveAttribute("data-moving");
   await expect.poll(() => pending).toBe(0);
   expect(missing).toEqual([]);
@@ -42,7 +44,7 @@ for (const scene of [{ width: 375, located: false }, { width: 1280, located: fal
   await mkdir("mockups/location-entry-2026-10-11-v4", { recursive: true });
   await page.screenshot({ path: `mockups/location-entry-2026-10-11-v4/${scene.located ? "located" : "tools"}-${scene.width}.png` });
   if (!scene.located) {
-    await group.getByRole("button", { name: "내 위치로", exact: true }).click();
+    await locate.click();
     await expect(page.getByRole("dialog", { name: "내 위치로 이동" })).toBeVisible();
     await page.screenshot({ path: `mockups/location-entry-2026-10-11-v4/consent-${scene.width}.png` });
   }

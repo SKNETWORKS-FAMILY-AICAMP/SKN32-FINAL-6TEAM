@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useT } from "@/lib/settings";
 import { reason } from "./parts";
-import type { AddStopPlace, NewStop } from "./new-stop";
+import type { AddSearchForm, AddStopPlace, NewStop } from "./new-stop";
 import { PlaceSearch } from "./place-search";
 import styles from "./add-stop.module.css";
 import type { Coordinates } from "@/features/map/model";
@@ -17,7 +17,7 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
   /** `[2026-10-19]` `title` · `kind` · `query` (the place search's words) — the add form opened from the chat comes filled in with what the chat had. */
   date: string; blocked: string | null; initial?: { start: string; end: string; title?: string; kind?: NewStop["kind"]; query?: string };
   onSave: (draft: NewStop) => Promise<void>; onCancel?: () => void;
-  search?: (query: string) => Promise<AddStopPlace[]>;
+  search?: (query: string, signal?: AbortSignal, form?: AddSearchForm) => Promise<AddStopPlace[]>;
   onBusy?: (busy: boolean) => void;
 }) {
   const t = useT();
@@ -115,7 +115,8 @@ export function AddStop({ date, blocked, initial, onSave, onCancel, search, onBu
   const at = mapPicker?.value;
   // cs 프로젝트 서버의 고객 선택 좌표 계약과 동일한 서울 범위다.
   const inSeoul = !!at && Number.isFinite(at.lat) && Number.isFinite(at.lng) && at.lat>=37.4 && at.lat<=37.72 && at.lng>=126.7 && at.lng<=127.3;
-  const placeSearch = search && <PlaceSearch query={query} onQuery={setQuery} inputRef={searchInput} search={search} value={selected} onPick={pick} error={errors.place} onBlur={() => blur("place")} onFocus={() => clear("place")} busy={busy} onCancel={onCancel ? cancel : undefined} />;
+  // `[2026-10-23]` The search is judged as the new stop: its date, times and kind go with the words.
+  const placeSearch = search && <PlaceSearch query={query} onQuery={setQuery} inputRef={searchInput} search={(words, signal) => search(words, signal, { date: draft.date, start: draft.start, end: draft.end, kind: draft.kind })} value={selected} onPick={pick} error={errors.place} onBlur={() => blur("place")} onFocus={() => clear("place")} busy={busy} onCancel={onCancel ? cancel : undefined} />;
   const mapStartButton = mapPicker && <button ref={mapStart} type="button" className={styles.mapPickStart} disabled={busy} onClick={startMap}>{t("지도에서 위치 지정", "Choose a location on the map")}</button>;
   if (mapPicker?.active) return <section className={`${styles.screen} ${styles.mapPicker}`} aria-label={t("지도에서 위치 지정", "Choose a location on the map")} onKeyDown={event => { if (event.key==="Escape") { event.preventDefault(); closeMap(); } }}>
     <h3 ref={mapHeading} tabIndex={-1}>{t("지도에서 위치 지정", "Choose a location on the map")}</h3>

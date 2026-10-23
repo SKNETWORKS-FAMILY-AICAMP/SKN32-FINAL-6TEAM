@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Suspense, useContext, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Bell, ChevronDown, ChevronsRight, OctagonAlert, Pencil } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { OverlayRoot } from "@/components/layout/overlay-root";
@@ -31,13 +31,15 @@ import type { Language, Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, type BusToast } from "@/lib/toast-bus";
 import { browserNotify } from "@/lib/browser-notify";
-import type { Notice, Proposal } from "@/lib/live/extras";
+import { reportProgress, type Notice, type Proposal } from "@/lib/live/extras";
 import { resolveNoticeTarget } from "./notice-target";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { ChatBar, ChatPane, useTripChat } from "./trip-chat";
 import { MapAppsSheet, type MapTarget } from "./map-apps";
 import { LegRow, legSummary, PastLegRow, PastStopRow, StayRow, StopRow } from "./trip-rows";
-import { dayTimeline, entryTimes, seoulKey, tripDays, type TripLeg } from "./trip-timeline";
+import { dayTimeline, entryTimes, seoulKey, tripDays, type SeoulNow, type TripLeg } from "./trip-timeline";
+import { liveStop, progressToast } from "./stop-progress";
+import { ownChange, ownTripNotice } from "./own-changes";
 import { useSeoulNow } from "./use-seoul-now";
 import { NOTICE_LABEL, noticeWhen, TripAttention, type CenterTab } from "./trip-attention";
 import { useSeenNotices } from "./notice-reads";
@@ -47,18 +49,18 @@ import { DetailHeader, TripDetail } from "./trip-detail";
 import { TripEdit } from "./trip-edit";
 import { TitleMenu, TripShare, TripTitle } from "./trip-title";
 import { SafetyPanel, shelterMeta } from "./trip-safety";
-import { creditFacts, tripEnded } from "./ending-credits";
+import { claimCreditsAutoPlay, creditFacts, openingView, tripEnded } from "./ending-credits";
 import { EndCard, TripCredits } from "./trip-credits";
 import { tripKey, useTrip } from "./use-trip";
 import { useRouteShapes } from "./use-route-shapes";
 import { useTripEvents } from "./use-trip-events";
-import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useTripRisks } from "./use-trip-extras";
+import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery, useTripRisks } from "./use-trip-extras";
 import { RiskPanel } from "@/features/risk/risk-panel";
 import { problemText, riskSignature } from "@/lib/live/risks";
 import { useRiskAlternatives } from "./use-risk-alternatives";
 import type { Recovery } from "@/lib/live/recovery";
 import type { Trip, TripPick, TripStop } from "./model";
-import { openChoices, type OpenChoice } from "./attention";
+import { openChoices, proposalText, undoableChange, type OpenChoice } from "./attention";
 import { proposalAvailable } from "./trip-chat-records";
 import { CONSENT_KEY, chooseFailure, chooseOutcome, useChooseProposal } from "./proposal-ask";
 import styles from "./trip-screen.module.css";
@@ -74,6 +76,8 @@ const SHEETS = ["half", "full", "peek"] as const;
 type Sheet = (typeof SHEETS)[number];
 const COMPACT_BELOW = 190;
 const SHEET_MIN = 104;
+/** `[2026-10-22 사용자 결정 — ST4F-722 D안 · 목업 guguroute-map-pin-focus-2026-10-22.html]` The zoom a stop picked in the list or opened in its detail is shown at: 18, the ruler's 10m (about 178 m across a phone) — as close as the maps go now. */
+const FOCUS_ZOOM = 18;
 /** `[2026-10-12]` After the list was last touched (wheel, finger, press) this long, a change of its shape that time brought (a stop going past, a card opening by itself) is shown. */
 const TOUCH_QUIET_MS = 1_200;
 /** Where an entry the screen brings into view stands: just under the floating day chips. */
@@ -90,6 +94,8 @@ export function TripScreen({ tripId }: { tripId: string }) {
   // `[2026-10-13 사용자 결정 — D 수정 모드]` 「일정 수정」: the same page becomes the plan check of this trip (`trip-edit.tsx`) until 「완료」, then the trip is drawn afresh.
   // `[2026-10-19 사용자 결정]` The chat's 「직접 고르기」 opens the edit on a stop or on the add form (`TripPick`); 「일정 수정」 opens it as it is (`pick` null).
   const [editing, setEditing] = useState<{ pick: TripPick | null } | null>(null);
+  // `[2026-10-22 사용자 결정 — ST4F-718 · D5]` The day (or 「전체」) the trip was showing: back from the edit it is shown again, not the opening view.
+  const view = useRef<TripViewState | null>(null);
   // ★A failed re-read keeps the plan already on screen (react-query keeps the last data). Only a trip that never loaded shows the error page — the change bell re-reads often.
   // ★`[2026-10-05]` But a trip that is gone (`not_found`) or a session that ended (`session_expired`) is not drawn from the cache: another account's plan must not stay on the screen.
   const gone = query.error instanceof LiveError && ["not_found", "session_expired"].includes(query.error.code);
@@ -99,8 +105,11 @@ export function TripScreen({ tripId }: { tripId: string }) {
   }
   if (editing) return <TripEdit trip={query.data} pick={editing.pick} onExit={() => setEditing(null)} />;
   // `useTripGuardian` reads the address (`?guardian=on`): wait for it outside the server render.
-  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} onEdit={(pick = null) => setEditing({ pick })} /></Suspense>;
+  return <Suspense fallback={null}><TripView key={query.data.id} trip={query.data} stale={query.isError ? { reload: () => void query.refetch(), fetching: query.isFetching } : null} onEdit={(pick = null) => setEditing({ pick })} view={view} /></Suspense>;
 }
+
+/** What the plan was showing (`TripScreen` keeps it while the edit is open). */
+type TripViewState = { tripId: string; day: string; all: boolean };
 
 const monthDay = (date: string) => `${date.slice(5, 7)}.${date.slice(8, 10)}`;
 const weekday = (date: string, language: Language) =>
@@ -108,7 +117,7 @@ const weekday = (date: string, language: Language) =>
 const dayLabel = (date: string, language: Language) => `${monthDay(date)} ${weekday(date, language)}`;
 const dayName = (index: number, t: Translate) => t(`${index + 1}일차`, `Day ${index + 1}`);
 
-function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: (pick?: TripPick | null) => void }) {
+function TripView({ trip, stale, onEdit, view }: { trip: Trip; stale: { reload: () => void; fetching: boolean } | null; onEdit: (pick?: TripPick | null) => void; view: RefObject<TripViewState | null> }) {
   const t = useT();
   const search = useSearchParams();
   const { language, skipAnimation } = useSettings();
@@ -122,11 +131,11 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const risks = useTripRisks(trip.id, trip.version);
   const currentRisks = risks.data?.items ?? [];
   const riskCount = currentRisks.filter((item) => item.status === "problem").length;
-  const riskAlternatives = useRiskAlternatives(trip.id, () => openCenter("warnings"));
+  const riskAlternatives = useRiskAlternatives(trip.id, () => openCenter("todo"));
   // `[2026-10-21 사용자 결정 — ST4F-704]` The choices the server waits for (the notice center's list): their stops' cards say so and their details answer them.
   const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops).filter((choice) => Boolean(choice.stop) && proposalAvailable(choice.proposal, trip.version));
   const choiceOf = (stopId: string) => choices.find((choice) => choice.stop?.id === stopId);
-  const choose = useChooseProposal(trip.id);
+  const choose = useChooseProposal(trip.id, trip.version);
   // 「예보에 맞게 일정 변경」 · 「다른 곳 찾아보기」: the server finds the options now — the list is greyed and locked until it answers (the plan check's 「서버로 전송중입니다.」 veil).
   const findingOptions = choose.isPending && choose.variables?.key === CONSENT_KEY;
   // `[2026-10-07 목업 C안]` The bell counts the notices this browser has not seen yet (the server keeps no read state — `notice-reads.ts`).
@@ -138,6 +147,15 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const serviceKey = (service.data?.notices ?? []).map((notice) => notice.id).join("\n");
   const serviceUnread = serviceKey ? serviceKey.split("\n").filter((id) => !seenService.includes(id)).length : 0;
   const unread = tripUnread + serviceUnread;
+  // `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ]` What the center opens on: 「할 일」 while something waits for an answer (the pause · going on after it, not chosen yet · a choice · an
+  // undoable change — what its count counts), else 「소식」 with a notice not seen yet (what 「할 일」 holds and a service notice sent as a trip notice are not in it), else 「공지」 with a
+  // new one, else the tab seen last. The going-on brief is the center's own read (same key — read once).
+  const undoable = undoableChange(notices.data ?? [], trip.version);
+  const recovery = useRecovery(trip.id);
+  const waiting = Boolean(trip.safety?.paused) || Boolean(recovery.data && !recovery.data.chosen) || choices.length > 0 || undoable !== null;
+  const feedUnread = (notices.data ?? []).some((notice) => !seen.includes(notice.key) && notice.kind !== "service_notice" && notice.key !== undoable?.key
+    && !(notice.proposalId && choices.some((choice) => choice.proposal.id === notice.proposalId)));
+  const openingTab = (last: CenterTab): CenterTab => waiting ? "todo" : feedUnread ? "feed" : serviceUnread > 0 ? "service" : last;
   // `[2026-10-04]` The lines between the stops (never holding the page up); zoomed in, the detailed lines replace them.
   const routeShapes = useRouteShapes(trip.id, trip.version);
   const routeDetail = useRouteDetail(routeShapes.data, ["trip", trip.id, trip.version ?? 0, language], () => getRouteShapes(trip.id, language, { detail: true }));
@@ -149,9 +167,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const now = useSeoulNow();
   const [shapeNow, setShapeNow] = useState(now);
   const today = days.includes(now.date) ? now.date : null;
-  // On entering: today's day while the trip is on (else the first day).
-  const [day, setDay] = useState(() => days.includes(now.date) ? now.date : days[0] ?? "");
-  const [all, setAll] = useState(false);
+  // On entering — by any way in: today's day while the trip is on (else the first day). `[2026-10-22 사용자 결정 — ST4F-718]` Before it starts and once it is over, 「전체」 (`openingView`);
+  // back from the edit, what it was showing (D5).
+  const [opening] = useState(() => view.current?.tripId === trip.id ? view.current : openingView(trip, now));
+  const [day, setDay] = useState(opening.day);
+  const [all, setAll] = useState(opening.all);
+  useEffect(() => { view.current = { tripId: trip.id, day, all }; }, [view, trip.id, day, all]);
   // `[2026-10-15 사용자 결정 — ST4F-496]` Once the trip is over: the end card at the top of 「전체」 and the ending credits over the screen.
   const [creditsOpen, setCreditsOpen] = useState(false);
   const creditsButton = useRef<HTMLButtonElement>(null);
@@ -160,6 +181,10 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const dayAt = days.indexOf(mapDay);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
+  // `[2026-10-22 사용자 결정 — ST4F-722 D안]` A stop pressed in the list (again too) or opened in its detail: the map puts its pin in the middle of what shows, at zoom 18 (the ruler's 10m).
+  //   A pin pressed on the map only moves there (`pick(…, "map")`).
+  const [mapFocus, setMapFocus] = useState<{ id: string; zoom: number; key: number } | null>(null);
+  const focusMap = (id: string) => setMapFocus((current) => ({ id, zoom: FOCUS_ZOOM, key: (current?.key ?? 0) + 1 }));
   // One thing open in the list at a time: a stop's card or a leg. `[2026-10-13 사용자 결정]` Only the customer opens and closes them — nothing opens on entering or as time passes
   // (it used to open what was going on now and follow it).
   const [openId, setOpenId] = useState<string | null>(null);
@@ -167,7 +192,15 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   const [instant, setInstant] = useState(false);
   const [barOpen, setBarOpen] = useState(false);
   const [centerOpen, setCenterOpen] = useState(() => search.get("notices") === "1");
-  const [centerTab, setCenterTab] = useState<CenterTab>(() => search.get("notices") === "1" ? "notices" : "warnings");
+  const [centerTab, setCenterTab] = useState<CenterTab>("todo");
+  // Opened from a notice's link (`?notices=1`, `plan_link`): the tab is picked by the rule above once the notices and choices are read.
+  const linkTab = useRef(search.get("notices") === "1");
+  const pickLinkTab = useEffectEvent(() => {
+    if (!linkTab.current || !notices.data || !proposals.data) return;
+    linkTab.current = false;
+    setCenterTab(openingTab("todo"));
+  });
+  useEffect(() => { pickLinkTab(); }, [notices.data, proposals.data]);
   const [centerNotice, setCenterNotice] = useState<Notice | null>(null);
   const [centerItemId, setCenterItemId] = useState<string | null>(null);
   // `[2026-10-07 목업 C안 3단계]` The title row (opened · being renamed), the share sheet, and the stop whose detail is open.
@@ -195,7 +228,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     const first = currentRisks.find((item) => item.status === "problem");
     if (first && !centerOpen) showToast({ text: t(`현재 일정에 주의할 점 ${riskCount}개가 있어요`, `${riskCount} current stops need attention`),
       sub: [first.title, ...first.problems.map(problemText)].filter(Boolean).join(" · "),
-      action: { label: t("위험·대안 보기", "See risks and choices"), run: () => openCenter("warnings", undefined, first.itemId) } });
+      action: { label: t("위험·대안 보기", "See risks and choices"), run: () => openCenter("todo", undefined, first.itemId) } });
   });
   useEffect(() => { announceRisk(); }, [risks.data]);
 
@@ -403,6 +436,24 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     const row = Array.from(body.querySelectorAll<HTMLElement>(`[data-entry-id="${CSS.escape(before.id)}"]`)).find((entry) => !entry.closest("[inert]"));
     if (row) body.scrollTop += row.getBoundingClientRect().top - before.top;
   }, [shapeNow]);
+  // `[2026-10-22 사용자 결정 — ST4F-718 · D3]` The last stop ending while the trip is open: the plan turns to 「전체」 (its end card at the top, the last day behind it — D4) and the ending
+  // credits start, once per trip on this device (`claimCreditsAutoPlay`). Read on the list's clock (`shapeNow`), so it waits while the list is touched, and only a minute passing starts it — a
+  // change of the trip itself (a stop added or taken out) never does. With a stop's detail, the notice center or the chat open, only the plan behind them turns: nothing is drawn over them.
+  const shownAt = useRef(shapeNow);
+  const reachEnd = useEffectEvent((before: SeoulNow) => {
+    if (tripEnded(trip, before) || !tripEnded(trip, shapeNow)) return;
+    setSlide(null);
+    setAll(true);
+    setDay(days.at(-1) ?? day);
+    if (pane !== "plan" || detailId || centerOpen) return;
+    bodyBox.current?.scrollTo({ top: 0 });
+    if (claimCreditsAutoPlay(trip.id)) setCreditsOpen(true);
+  });
+  useEffect(() => {
+    const before = shownAt.current;
+    shownAt.current = shapeNow;
+    if (before !== shapeNow) reachEnd(before);
+  }, [shapeNow]);
   // On entering: today's 「지금」 mark 40 % down the list. Only here — time passing never scrolls the list.
   const entered = useRef(false);
   useLayoutEffect(() => {
@@ -427,7 +478,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     setSelectedId(id);
     if (stop.date !== mapDay) showDay(stop.date);
     setOpenId(id);
-    if (from === "list") lowerSheet();
+    if (from === "list") { lowerSheet(); focusMap(id); }
     else if (sheet === "peek") setSheet("half");
     goPane("plan");
     bringUp(id);
@@ -452,18 +503,35 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     void queryClient.invalidateQueries({ queryKey: proposalsKey(trip.id, language) });
     void queryClient.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
   };
+  // ── `[2026-10-22 사용자 결정 — ST4F-716]` 「끝났어요」 on the stop going on now: the server ends it now and, for 「바로 진행」, re-times the way and moves the next stop
+  // (`journey_progress` — the hours of the next stop checked first). The list is greyed until it answers (the plan check's 「서버로 전송중입니다.」 veil); what came of it is the
+  // server's sentence in the notice bar, and the trip is read again. ──
+  const [asking, setAsking] = useState<string | null>(null);
+  // `[2026-10-22 사용자 결정 — A]` The version this device's report writes is its own (`own-changes.ts`): its change notice is not barred again over the result toast.
+  const progress = useMutation({
+    mutationFn: (report: { stop: TripStop; action: "advance_trip" | "complete_item"; requestId: string; expected: number }) =>
+      ownChange(trip.id, report.expected - 1, () => reportProgress(trip.id, { requestId: report.requestId, baseVersion: report.expected - 1, itemId: report.stop.id, action: report.action }, language)),
+    onSuccess: (result) => {
+      setAsking(null);
+      showToast(progressToast(result, t));
+    },
+    onError: (error) => showToast({ text: error.message, stay: true }),
+    onSettled: refresh,
+  });
+  const finish = (stop: TripStop, action: "advance_trip" | "complete_item") => {
+    progress.mutate({ stop, action, requestId: crypto.randomUUID(), expected: (trip.version ?? 1) + 1 });
+  };
   const resumed = (brief: Recovery | null) => {
     queryClient.setQueryData(recoveryKey(trip.id, language), brief);
     showToast({ text: t("일정을 다시 시작했어요", "The itinerary is running again"), sub: brief ? t("재난 뒤 이어가기에서 어떻게 이어갈지 골라 주세요.", "Choose how to go on under 「Going on after the disaster」.") : undefined });
   };
 
-  // ── The notice center: opened by the bell (unread notices first), by a notice's 「알림 보기」, by 「일정 정지 중」. ──
+  // ── The notice center: opened by the bell, by a notice's 「알림 보기」, by 「일정 정지 중」 — on the tab `openingTab` picks unless the opener names one. ──
   function openCenter(tab?: CenterTab, notice?: Notice, itemId?: string) {
     hideToast();
     setCenterNotice(notice ?? null);
     setCenterItemId(itemId ?? null);
-    // `[2026-10-17 ST4F-606]` 처음 보이는 탭: 새 여행 알림 > 새 공지 > 마지막에 본 탭
-    setCenterTab(tab ?? (tripUnread > 0 ? "notices" : serviceUnread > 0 ? "service" : centerTab));
+    setCenterTab(tab ?? openingTab(centerTab));
     setTitleOpen(false);
     setCenterOpen(true);
   }
@@ -500,10 +568,29 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
   function openDetail(id: string) {
     const stop = trip.stops.find((entry) => entry.id === id);
     if (!stop) return;
+    detailFromChat.current = null;
     hideToast();
     closeTitle();
     setBarOpen(false);
     goPane("plan");
+    if (stop.date !== mapDay) showDay(stop.date);
+    setSelectedLine(null);
+    setSelectedId(id);
+    setDetailId(id);
+    focusMap(id);
+    if (sheet === "peek") setSheet("half");
+  }
+  /**
+   * `[2026-10-22 사용자 결정 — ST4F-719]` 「상세 보기」 on an answer card in the chat: the stop's detail over the sheet, as from the list, but the pane stays the chat — ← (or Esc) comes back to the
+   * conversation where it was (the hidden log loses its scroll, so it is kept here).
+   */
+  const detailFromChat = useRef<number | null>(null);
+  function openDetailFromChat(id: string) {
+    const stop = trip.stops.find((entry) => entry.id === id);
+    if (!stop) return;
+    hideToast();
+    closeTitle();
+    detailFromChat.current = chatLog.current?.scrollTop ?? 0;
     if (stop.date !== mapDay) showDay(stop.date);
     setSelectedLine(null);
     setSelectedId(id);
@@ -532,6 +619,12 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     const id = detailId;
     setDetailId(null);
     if (!id) return;
+    const chatAt = detailFromChat.current;
+    if (chatAt !== null) {
+      detailFromChat.current = null;
+      requestAnimationFrame(() => { if (chatLog.current) { chatLog.current.scrollTop = chatAt; chatLog.current.focus({ preventScroll: true }); } });
+      return;
+    }
     setSelectedId(id);
     setOpenId(id);
     bringUp(id);
@@ -540,14 +633,15 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
 
   /** A notice the server sent while the trip is open: one bar, the newest (a new bar replaces the one shown). */
   const announce = useEffectEvent((notice: Notice, targets: Proposal[]) => {
+    // `[2026-10-22 사용자 결정 — ST4F-716 A · ST4F-723 g]` 이 기기에서 누른 것(「끝났어요」 · 대안 고르기 · 대안 받기 · 되돌리기)이 가져온 알림은 막대로 다시 띄우지 않는다 — 누른 자리가
+    //   이미 결과를 말했다(알림 센터 · 다른 기기는 그대로)
+    if (ownTripNotice(trip.id, notice)) return;
     const needsChoice = notice.type === "safety_alert" || notice.type === "proposal_request";
-    // `[2026-10-21 사용자 결정 — 문서 기준]` 「알림 보기」는 받은 알림 탭을 연다(DEVELOPMENT.md 「새 알림 막대」). 선택이 필요한 알림은 넘겨서 그 대안 고르기가 위 「답이 필요해요」에 뜬다.
-    const view = () => openCenter("notices", needsChoice ? notice : undefined);
-    const toast = noticeToast(notice, trip, targets, t, view);
+    const toast = noticeToast(notice, trip, targets, t, { center: openCenter, detail: openDetail });
     if (!centerOpen) showToast(toast);
     else if (needsChoice) { setCenterNotice(notice); setCenterItemId(null); }
-    // `[2026-10-16]` 이 탭을 보고 있지 않으면 브라우저(운영체제) 알림도 — 고객이 「받은 알림」에서 켰을 때만. 누르면 이 화면의 받은 알림으로 온다.
-    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, view);
+    // `[2026-10-16]` 이 탭을 보고 있지 않으면 브라우저(운영체제) 알림도 — 고객이 「소식」에서 켰을 때만. 누르면 막대의 단추와 같은 곳으로 온다.
+    browserNotify(`${trip.title} · ${toast.text}`, notice.text ?? undefined, notice.key, () => toast.action?.run());
   });
   const known = useRef<Set<string> | null>(null);
   const newestNotice = useRef<string | null>(null);
@@ -593,6 +687,8 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
     const times = entryTimes(entries, date, shapeNow);
     const live = times.findIndex((time) => time.state !== "past");
     const pastCount = live < 0 ? entries.length : live;
+    // `[2026-10-22 ST4F-716]` The stop going on now (green · 「아직 진행 중 | 끝났어요」) — not while the trip is paused for a disaster.
+    const going = trip.safety?.paused ? null : liveStop(entries, times);
     return <section key={date} aria-labelledby={`trip-day-${date}`}>
       <h3 id={`trip-day-${date}`} className={pc.day}><button type="button" className={pc.dayButton} aria-pressed={mapDay === date} onClick={() => showDay(date)}>{dayName(index, t)}<small>{dayLabel(date, language)}</small></button>
         {date === today && <em className={pc.todayTag}>{t("오늘", "Today")}</em>}</h3>
@@ -601,12 +697,19 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
         // `[2026-10-13 숙소 B안]` A stay after its check-in day (the 「…에서 출발」 band · the check-out row) — not on the time line's scale; pressing it shows the stay.
         if (entry.type === "stay") return <StayRow key={`${entry.stay.stop.id}:${entry.stay.phase}`} stay={entry.stay} onShow={() => pick(entry.stay.stop.id, "list")} />;
         if (entry.type === "stop") {
-          const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); };
+          const toggle = () => { setSelectedId(entry.stop.id); setSelectedLine(null); setOpenId((current) => current === entry.stop.id ? null : entry.stop.id); focusMap(entry.stop.id); };
           return past && openId !== entry.stop.id
             ? <PastStopRow key={entry.stop.id} stop={entry.stop} onToggle={toggle} />
             : <StopRow key={entry.stop.id} stop={entry.stop} open={openId === entry.stop.id} selected={selectedId === entry.stop.id}
                 past={past} started={times[at].started} onToggle={toggle} onDetail={() => openDetail(entry.stop.id)} onMapApps={openMapApps}
-                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("warnings")} choice={choiceOf(entry.stop.id)} />;
+                risk={currentRisks.find((item) => item.itemId === entry.stop.id)} onRisk={() => openCenter("todo")} choice={choiceOf(entry.stop.id)}
+                live={going?.stop.id === entry.stop.id ? {
+                  asking: asking === entry.stop.id, next: going.next, fixed: going.fixed, busy: progress.isPending,
+                  onStill: () => setAsking(null),
+                  // The day's last stop: nothing to start — only the end is recorded.
+                  onDone: () => going.next ? setAsking(entry.stop.id) : finish(entry.stop, "complete_item"),
+                  onAdvance: () => finish(entry.stop, "advance_trip"), onKeep: () => finish(entry.stop, "complete_item"),
+                } : null} />;
         }
         return past
           ? <PastLegRow key={entry.leg.id} id={entry.leg.id} />
@@ -641,7 +744,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
       <div ref={box} className={pc.checking} data-sheet={custom !== null ? "custom" : sheet} data-dragging={dragging || undefined} data-compact={compact || undefined} {...quietDays.handlers}
         style={custom !== null ? { "--sheet-h": `${custom}px` } as CSSProperties : undefined}>
         <div className={pc.map}>
-          <TripMap stops={mapStops} dayNumber={dayAt + 1} selectedId={detailId ?? selectedId ?? undefined} variant="fill" topInset={64} bottomInset={24} looks={detailLooks}
+          <TripMap stops={mapStops} dayNumber={dayAt + 1} selectedId={detailId ?? selectedId ?? undefined} variant="fill" topInset={64} bottomInset={24} looks={detailLooks} focus={mapFocus ?? undefined}
             routes={detailStop ? undefined : routeDetail.routes} onZoom={routeDetail.onZoom}
             onSelect={(id) => detailStop ? detailTo(id) : pick(id, "map")} onSelectLine={pickLine} selectedLineId={selectedLine ?? undefined} tripId={trip.id} date={mapDay}
             routesError={routeShapes.isError ? t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.") : undefined} />
@@ -656,7 +759,7 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
             onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>
           {/* `[2026-10-07 사용자 결정]` 머리는 날짜 칩 줄 하나: 칩은 옆으로 스크롤되고 오른쪽 버튼은 고정. 「등록 완료」 표시는 두지 않는다.
                `[2026-10-08 사용자 지시 · 2026-10-12 반영 — C]` 「일정 | 채팅」 대신 채팅 버튼 하나: 칩을 누르면 일정 칸, 채팅 버튼은 채팅 칸(채팅 칸에서는 버튼이 눌린 표시, 칩은 선택 표시 없음). */}
-          {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={detailTo}
+          {detailStop && <TripDetail trip={trip} stopId={detailStop.id} dayNumber={days.indexOf(detailStop.date) + 1} onStop={(id) => { detailTo(id); focusMap(id); }}
             onAsk={(stop) => { setDetailId(null); setSelectedId(stop.id); chat.askAbout(stop); }} askBusy={chat.message.isPending} onSheetFull={() => { setCustom(null); setSheet("full"); }}
             choiceOf={choiceOf} past={pastStops(detailStop.date)} chooseBusy={choose.isPending} onChoose={answer} onEdit={editStop} />}
           {/* The list and the chat stay mounted under the detail (their gestures and scroll are kept), only hidden. */}
@@ -721,30 +824,28 @@ function TripView({ trip, stale, onEdit }: { trip: Trip; stale: { reload: () => 
                 </div>
               </div>
               <div ref={chatBox} className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" role="group" aria-label={t("채팅", "Chat")} inert={plan}>
-                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} selected={selected} logRef={chatLog} active={!plan} onPick={onEdit} />
+                <ChatPane trip={trip} chat={chat} day={mapDay} dayText={dayName(dayAt, t)} dayHeading={(date) => `${dayName(days.indexOf(date), t)} ${dayLabel(date, language)}`} now={now}
+                  selected={selected} logRef={chatLog} active={!plan} onPick={onEdit} onDetail={openDetailFromChat} onMapApps={openMapApps} />
               </div>
             </div>
           </div>
         </section>
         {/* `[2026-10-21 사용자 지시 — ST4F-704]` 서버가 대안을 찾는 동안 일정 칸을 회색으로 잠근다(계획 확인 「서버로 전송중입니다.」와 같은 막 · 같은 자리) */}
         {findingOptions && <div className={pc.sendingVeil} data-sending-veil><p role="status">{t("서버로부터 대안을 받고 있습니다.", "Getting alternatives from the server.")}</p></div>}
+        {/* `[2026-10-22 ST4F-716]` 「끝났어요」를 보내는 동안 — 계획 확인과 같은 막 · 같은 문장 */}
+        {progress.isPending && <div className={pc.sendingVeil} data-sending-veil><p role="status">{t("서버로 전송중입니다.", "Sending to the server.")}</p></div>}
       </div>
       {titleOpen && !titleEditing && !detailStop && <TitleMenu planUrl={trip.planUrl ?? null} onShare={() => setShareOpen(true)} onDone={closeTitle} explain={explain} />}
       {shareOpen && trip.planUrl && <TripShare trip={trip} title={tripTitle} planUrl={trip.planUrl} onClose={closeShare} notify={showToast} />}
       {mapTarget && <MapAppsSheet target={mapTarget} onClose={closeMapApps} />}
       {creditsOpen && facts && <TripCredits facts={facts} skipAnimation={skipAnimation} onClose={closeCredits} />}
       {!detailStop && <ChatBar chat={chat} open={barOpen} inChat={!plan} subject={selected ? (selected.place ?? selected.title) : null} onOpen={() => setBarOpen(true)} onClose={() => setBarOpen(false)} onEnterChat={() => goPane("chat")} onLeaveChat={() => goPane("plan")} />}
-      {/* `[2026-10-07 목업 C안 ① 알림 센터]` 할 일(재난 정지 → 재난 뒤 이어가기 → 선택 요청 → 자동 변경) 아래 탭 셋(살펴볼 점 · 받은 알림 · 변경 이력). 여행계획서 링크는 제목을 펼친 줄에 있다. */}
+      {/* `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ]` 탭 셋(할 일 · 소식 · 공지). 여행계획서 링크는 제목을 펼친 줄과 첫 등록 알림 카드에 있다. */}
       {centerOpen && <NoticeCenter onClose={closeCenter}>
         <TripAttention trip={trip} tab={centerTab} onTab={setCenterTab} onResumed={resumed}
           focusItemId={centerItemId}
           focusNotice={centerNotice ?? (!centerItemId && search.get("notices") === "1" ? [...(notices.data ?? [])].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).find((notice) => notice.type === "safety_alert" || notice.type === "proposal_request") ?? null : null)}
-          onGoto={(stopId) => {
-            setCenterOpen(false);
-            setDetailId(null);
-            pick(stopId, "list");
-            requestAnimationFrame(() => (document.getElementById(`stop-button-${stopId}`) ?? document.getElementById("trip-bell"))?.focus({ preventScroll: true }));
-          }} />
+          onDetail={(stopId) => { setCenterOpen(false); openDetail(stopId); }} />
       </NoticeCenter>}
     </main>
     {guardian.overlay}
@@ -796,10 +897,14 @@ function NoticeCenter({ onClose, children }: { onClose: () => void; children: Re
 /** What a pressed route line says, in the one notice bar: from where to where, how, when, what it rides — only what the server gave. */
 /**
  * `[2026-10-07 목업 C안]` A notice the server just sent, in the notice bar: the stop's number and name when the notice is about one (a choice), the kind as a chip, the server's sentence
- * under it, 「알림 보기」 to the center. A safety alert says the pause and the nearest shelter and stays 9 s. ★Nothing is written for the server — no sentence, no stop it did not name.
+ * under it. A safety alert says the pause and the nearest shelter and stays 9 s. ★Nothing is written for the server — no sentence, no stop it did not name.
+ * `[2026-10-22 사용자 결정 — ST4F-723 Ⓣ1]` Its button opens where the notice asks something of the customer: a choice → 「상세 보기」 (the stop's detail, where it is answered —
+ * ST4F-704); a safety alert or an automatic change that can be undone → 「알림 보기」 on 「할 일」; anything else → 「알림 보기」 on 「소식」, its card lit once. The sentence leaves out what
+ * the bar or the detail already shows (the stop's name, the numbered options — `proposalText`) and is cut to a few lines.
  */
-function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[], t: Translate, view: () => void): BusToast {
-  const action = { label: t("알림 보기", "View notices"), run: view };
+function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[], t: Translate,
+  go: { center: (tab: CenterTab, notice: Notice) => void; detail: (stopId: string) => void }): BusToast {
+  const view = (tab: CenterTab) => ({ label: t("알림 보기", "View notices"), run: () => go.center(tab, notice) });
   const label = NOTICE_LABEL[notice.type];
   const kind = label ? t(label[0], label[1]) : notice.type;
   const sub = notice.text ?? undefined;
@@ -808,18 +913,21 @@ function noticeToast(notice: Notice, trip: Trip, proposals: readonly Proposal[],
     const meta = shelter ? shelterMeta(shelter, t) : "";
     // A pause alert (`safety_pause_<level>` — the server pauses with it) says so even before the trip is read again.
     const pausing = trip.safety?.paused || /^safety_pause_/.test(notice.kind ?? "");
-    return { text: pausing ? t("일정 정지 중", "Itinerary paused") : kind, chip: { text: kind, tone: "warn" }, sub,
-      note: shelter ? [t("가까운 대피 장소", "Nearest shelter"), shelter.name, meta].filter(Boolean).join(" · ") : undefined, action, ms: URGENT_MS };
+    return { text: pausing ? t("일정 정지 중", "Itinerary paused") : kind, chip: { text: kind, tone: "warn" }, sub, lines: 3,
+      note: shelter ? [t("가까운 대피 장소", "Nearest shelter"), shelter.name, meta].filter(Boolean).join(" · ") : undefined, action: view("todo"), ms: URGENT_MS };
   }
   if (notice.type === "proposal_request") {
     const proposal = proposals.find((entry) => entry.id === notice.proposalId);
     const stop = trip.stops.find((entry) => entry.id === proposal?.itemId);
     const order = stop ? trip.stops.filter((entry) => entry.date === stop.date).indexOf(stop) + 1 : 0;
-    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, sub,
-      note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined, action };
+    const open = proposal?.status === "open" && proposalAvailable(proposal, trip.version);
+    return { badge: stop ? String(order) : undefined, text: stop?.title ?? kind, chip: { text: kind, tone: "warn" }, lines: 2,
+      sub: notice.text ? proposalText(notice.text, { stopTitle: stop?.title, options: proposal?.options }) : undefined,
+      note: proposal?.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : undefined,
+      action: stop && open ? { label: t("상세 보기", "Details"), run: () => go.detail(stop.id) } : view(open ? "todo" : "feed") };
   }
-  if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, action };
-  return { text: kind, sub, action };
+  if (notice.type === "change_notice") return { text: kind, chip: { text: t("바뀜", "Changed"), tone: "changed" }, sub, lines: 2, action: view(notice.rollback ? "todo" : "feed") };
+  return { text: kind, sub, lines: 2, action: view("feed") };
 }
 
 function legToast(leg: TripLeg, t: Translate, onList: () => void) {

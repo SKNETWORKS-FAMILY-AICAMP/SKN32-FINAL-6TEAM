@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { LiveError } from "@/lib/live/client";
-import { MODE_WORDS, refusalWhy, type MoveOption, type MoveOptions, type MoveOptionMode } from "@/lib/live/move-options";
+import { MODE_WORDS, refusalWhy, retryRoutesPage, ROUTES_RETRY_MS, type MoveOption, type MoveOptions, type MoveOptionMode, type MoveRoute } from "@/lib/live/move-options";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
 import type { PlanItem, PlanMove } from "./model";
@@ -13,6 +13,9 @@ import styles from "./plan-check.module.css";
 /** The searching line says it is still going after this long (the calculator takes 0.2-10 s a leg - the slow ones are the ones that do not reach), and offers to ask again after this. */
 const STILL_MS = 8_000;
 const LONG_MS = 20_000;
+
+/** `[2026-10-23]` The routes after the first ones: nothing asked yet, being asked, all there, or the server could not finish (ask again). */
+type More = { status: "idle" | "done" } | { status: "loading"; again?: boolean } | { status: "error"; message: string };
 
 type Load =
   | { status: "idle" }
@@ -43,6 +46,56 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
   const [gone, setGone] = useState(false);
   const listBox = useRef<HTMLDivElement>(null);
   const ask = ctx.actions.moveOptions;
+  // `[2026-10-23 사용자 지시 — 경로 후보 먼저 3개 · 목록을 내리면 더]` The plan already carries the first routes of the leg; the list's end (seen on the screen) asks the server for the next ones.
+  const [extra, setExtra] = useState<MoveRoute[]>([]);
+  const [more, setMore] = useState<More>({ status: "idle" });
+  const [hasMore, setHasMore] = useState(Boolean(move.routesMore));
+  const [routeBusy, setRouteBusy] = useState<string | null>(null);
+  const end = useRef<HTMLDivElement>(null);
+  const firstRoutes = move.routes ?? [];
+  const routes = [...firstRoutes, ...extra.filter((route) => !firstRoutes.some((shown) => shown.key === route.key))];
+  const askRoutes = ctx.actions.moveRoutes;
+  const canRoute = Boolean(askRoutes && ctx.actions.setMoveRoute) && routes.length > 0;
+
+  // `[2026-10-23]` The one ask-again timer (cleared when the box goes away).
+  const again = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (again.current) clearTimeout(again.current); }, []);
+
+  function loadMore() {
+    if (!askRoutes || more.status === "loading") return;
+    fetchMore(false);
+  }
+
+  /** One page after the routes shown. An empty page the server could not finish in time is asked again once by itself, a few seconds later (`retryRoutesPage`). */
+  function fetchMore(retried: boolean) {
+    if (!askRoutes) return;
+    const offset = routes.length;
+    setMore({ status: "loading", again: retried });
+    void askRoutes(move.id, offset).then(
+      (page) => {
+        if (!page) { setHasMore(false); setMore({ status: "done" }); return; }
+        if (retryRoutesPage(page, retried)) {
+          setMore({ status: "loading", again: true });
+          again.current = setTimeout(() => { again.current = null; fetchMore(true); }, ROUTES_RETRY_MS);
+          return;
+        }
+        setExtra((current) => [...current, ...page.routes.filter((route) => !current.some((shown) => shown.key === route.key))]);
+        setHasMore(page.hasMore);
+        setMore(page.routes.length === 0 && page.why ? { status: "error", message: page.why } : { status: page.hasMore ? "idle" : "done" });
+      },
+      (error: unknown) => setMore({ status: "error", message: error instanceof Error ? error.message : String(error) }),
+    );
+  }
+
+  // The end of the route list coming into view asks for the next routes (once at a time; a refusal waits for 「다시 불러오기」).
+  const watching = list && canRoute && hasMore && more.status === "idle";
+  useEffect(() => {
+    const spot = end.current;
+    if (!watching || !spot || typeof IntersectionObserver === "undefined") return;
+    const seen = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) loadMore(); }, { rootMargin: "120px 0px" });
+    seen.observe(spot);
+    return () => seen.disconnect();
+  });
 
   // The searching line grows a second and third sentence the longer it takes (timers set from the effect, never while drawing).
   const waiting = load.status === "loading";
@@ -93,6 +146,23 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
           : error instanceof Error ? error.message : String(error));
       setLoad({ status: "idle" });
     } finally { setBusy(null); }
+  }
+
+  async function chooseRoute(route: MoveRoute) {
+    if (routeBusy || busy) return;
+    if (route.slackMin !== null && route.slackMin < 0) { ctx.explain(t(`이 경로는 ${Math.abs(route.slackMin)}분 늦어요`, `This route is ${Math.abs(route.slackMin)} min late`)); return; }
+    if (route.key === move.routeKey) { setList(false); return; }
+    setRouteBusy(route.key);
+    setProblem("");
+    try {
+      await ctx.onSetRoute(move, { key: route.key, label: routeName(route, t) });
+      setList(false);
+      setLoad({ status: "idle" });
+    } catch (error) {
+      setProblem(error instanceof LiveError && error.code === "stale_revision" ? t("그 사이 일정이 바뀌었어요. 다시 골라 주세요.", "The plan changed in the meantime. Please choose again.")
+        : error instanceof LiveError && error.code === "mode_not_fit" ? refusalWhy(error) ?? error.message
+          : error instanceof Error ? error.message : String(error));
+    } finally { setRouteBusy(null); }
   }
 
   /** Arrow keys move through the ways, Escape closes the list (the focus goes back to the box). */
@@ -160,7 +230,45 @@ export function MoveModeBox({ move, to, ctx, locked }: { move: PlanMove; to: Pla
         <p>{t("여유 안에 닿는 수단이 없어요. 다음 일정 시작을 늦추면 고를 수 있어요.", "No way reaches in time. Start the next stop later to be able to pick one.")}</p>
         {to && <button type="button" className={styles.modeRetry} onClick={() => { setList(false); ctx.onOpenTime(to); }}>{t("시간 고치기", "Change the time")}</button>}
       </div>}
+      {canRoute && <>
+        <p className={styles.routeHead}>{t("경로 후보", "Routes")}<span>{t("내리면 더 보여요", "Scroll for more")}</span></p>
+        {routes.map((route) => {
+          const on = route.key === move.routeKey;
+          const late = route.slackMin !== null && route.slackMin < 0;
+          const slack = route.slackMin === null ? "" : late ? t(`늦어요 ${Math.abs(route.slackMin)}분`, `${Math.abs(route.slackMin)} min late`) : t(`여유 ${route.slackMin}분`, `${route.slackMin} min to spare`);
+          return <button key={route.key} type="button" role="option" className={styles.modeOption} aria-selected={on} aria-disabled={late || routeBusy !== null ? true : undefined}
+            data-fits={late ? "no" : "yes"} data-busy={routeBusy === route.key || undefined} onClick={() => void chooseRoute(route)}>
+            <span className={styles.modeDot} aria-hidden="true">{on && <Check size={12} strokeWidth={3} />}</span>
+            <span className={styles.modeOptionBody}>
+              <span className={styles.modeOptionTop}>
+                <strong>{routeName(route, t)}</strong>
+                {route.minutes !== null && <span>{t(`${route.minutes}분`, `${route.minutes} min`)}</span>}
+                {route.depart && route.arrive && <span>{`${route.depart} → ${route.arrive}`}</span>}
+                {slack && <span className={styles.modeSlack} data-late={late || undefined}>{slack}</span>}
+              </span>
+              <span className={styles.modeTags}>
+                {route.planned && <em>{t("추천", "Suggested")}</em>}
+                {route.transfers !== null && route.transfers > 0 && <em data-tone="no">{t(`환승 ${route.transfers}회`, `${route.transfers} transfer${route.transfers > 1 ? "s" : ""}`)}</em>}
+                {route.early && <em data-tone="guess">{t("조금 일찍 출발", "Leaves earlier")}</em>}
+                {on && move.routeChoice?.state === "kept" && <em>{t("내가 고름", "My pick")}</em>}
+              </span>
+            </span>
+          </button>;
+        })}
+        {more.status === "loading" && <div className={styles.modeWait} role="status">{more.again ? t("아직 찾고 있어요 · 곧 다시 불러와요", "Still looking - asking again in a moment") : t("경로를 더 찾는 중…", "Looking for more routes…")}</div>}
+        {more.status === "error" && <p className={styles.modeNote} role="alert">{more.message} <button type="button" className={styles.modeRetry} onClick={() => { setMore({ status: "idle" }); loadMore(); }}>{t("다시 불러오기", "Ask again")}</button></p>}
+        {hasMore && more.status === "idle" && <button type="button" className={styles.modeRetry} onClick={loadMore}>{t("경로 더 보기", "More routes")}</button>}
+        {!hasMore && extra.length > 0 && <p className={styles.modeNote}>{t("찾은 경로를 다 보여 드렸어요", "These are all the routes found")}</p>}
+        <div ref={end} aria-hidden="true" />
+      </>}
+      {move.routeChoice?.state === "dropped" && <p className={styles.modeNote}>{t("고른 경로로는 닿지 않아 추천 경로로 돌아왔어요", "The route you picked no longer works, so it went back to the recommended one")}{move.routeChoice.why ? ` · ${move.routeChoice.why}` : ""}</p>}
       {problem && <p className={styles.modeNote} role="alert">{problem}</p>}
     </div>}
   </div>;
+}
+
+/** A route's name: the lines ridden in order (「3호선 → 2호선」), else the server's name for its way. */
+function routeName(route: MoveRoute, t: Translate): string {
+  if (route.lines.length) return route.lines.join(" → ");
+  return route.modeLabel || (route.mode === "walk" ? t("도보", "Walk") : route.mode === "taxi" ? t("택시", "Taxi") : t("대중교통", "Transit"));
 }

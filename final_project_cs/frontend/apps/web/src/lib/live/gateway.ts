@@ -1,7 +1,7 @@
 import type { Trip, TripChange, TripGateway, TripGuardian, TripMessage, TripMessageResume, TripMove, TripPick, TripSafety, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
 import { api, currentSession, hasSession, LiveError } from "./client";
-import { streamApi } from "./stream";
+import { streamApi, type OpProgress } from "./stream";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
 interface ServerItem {
@@ -197,7 +197,7 @@ function warning(row: ServerWarning): TripWarning | null {
 
 interface ServerChoice { label?: unknown; message?: unknown; item_id?: unknown }
 interface ServerTurn { role?: string; text?: string; case_id?: string | null; at?: string; turn_id?: number;
-  reply?: { choices?: ServerChoice[]; choices_title?: unknown; more?: unknown; answer_web?: unknown; pick?: unknown } }
+  reply?: { choices?: ServerChoice[]; choices_title?: unknown; more?: unknown; answer_web?: unknown; pick?: unknown; focus?: { item_id?: unknown } | null } }
 
 /**
  * ★`[2026-09-29]` The conversation is the server's record (`GET /v1/web/trips/{id}/chat`) — it follows the customer to
@@ -226,6 +226,10 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
       ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}),
       ...(kept?.needsLocation ? { needsLocation: true } : {}), ...(kept?.awaitingReply ? { awaitingReply: true } : {}),
       ...(kept?.pick ? { pick: kept.pick } : {}), ...(pickOf(reply?.pick) ? { pick: pickOf(reply?.pick)! } : {}),
+      // `[2026-10-22 ST4F-719]` The answer card's own values from this tab's copy; the stop it is about also from the record (`reply.focus`) when this tab did not say which.
+      ...(kept?.status ? { status: kept.status } : {}), ...(kept?.minutes ? { minutes: true } : {}), ...(kept?.summaryDay ? { summaryDay: kept.summaryDay } : {}),
+      ...(kept?.steps ? { steps: kept.steps, secs: kept.secs } : {}),
+      ...(kept?.focusId ? { focusId: kept.focusId } : typeof reply?.focus?.item_id === "string" && reply.focus.item_id ? { focusId: reply.focus.item_id } : {}),
       ...(reply?.choices ? { choices: choicesOf(reply.choices) } : {}),
       ...(typeof reply?.choices_title === "string" ? { choicesTitle: reply.choices_title } : {}),
       ...(typeof reply?.more === "string" ? { more: reply.more } : {}) };
@@ -304,6 +308,11 @@ export function pickOf(raw: unknown): TripPick | null {
   if (pick.mode !== "add" || !query) return null;
   const prefill = { title: text(fill.title), date: day(fill.date), startsAt: clock(fill.starts_at), endsAt: clock(fill.ends_at), kind: text(fill.kind) };
   return { mode: "add", itemId: null, query, prefill: Object.fromEntries(Object.entries(prefill).filter(([, value]) => value !== undefined)), blocked: pick.blocked === true };
+}
+
+/** `[2026-10-22 ST4F-719]` The server waits for this field of the customer's answer (`required_input_schema.required` — 「몇 분쯤 늦으세요?」 waits for `minutes`). */
+function waitsFor(schema: Record<string, unknown> | null | undefined, field: string): boolean {
+  return Array.isArray(schema?.required) && schema.required.includes(field);
 }
 
 /** 「다음 중 하나인가요?」 — only choices with a sentence to send are kept. */
@@ -417,7 +426,7 @@ export function createLiveGateway(): TripGateway {
       pending.delete(tripId);
       sending.delete(tripId);
     },
-    async sendMessage(tripId, message, language, itemId, location, onProgress, explicitResume, summaryDay) {
+    async sendMessage(tripId, message, language, itemId, location, onProgress, explicitResume, summaryDay, focusId) {
       const t = translator(language);
       const now = new Date().toISOString();
       const waiting = pending.get(tripId);
@@ -430,6 +439,10 @@ export function createLiveGateway(): TripGateway {
         ? earlier.requestId : `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
       const resume = summaryDay ? undefined : retry ? earlier.resume : explicitResume ?? pending.get(tripId)?.resume;
       sending.set(tripId, { message, itemId: itemId ?? null, requestId, resume, summaryDay });
+      // `[2026-10-22 ST4F-719]` The stages the server says it went through, in order, for the answer's 「진행 과정」.
+      const steps: string[] = [];
+      const started = Date.now();
+      const progress = (state: OpProgress) => { if (state.stage && !steps.includes(state.stage)) steps.push(state.stage); onProgress?.(state); };
       // ★`[2026-10-02]` Asked as a stream, the server says what it is doing while the model works (`stream.ts`); a lost line
       //   sends the same `request_id` again, which the server answers without acting twice.
       const result = await streamApi<{ status?: string; case_status?: string; case_id?: string; version?: number; resume_token?: string | null;
@@ -438,7 +451,7 @@ export function createLiveGateway(): TripGateway {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(summaryDay ? { summary_day: summaryDay } : {}), ...(resume ?? {}), ...(itemId ? { item_id: itemId } : {}),
           // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
           ...(location ? { location: { lat: location.lat, lng: location.lng, accuracy_m: location.accuracyM, at: location.at } } : {}) }),
-      }, onProgress);
+      }, progress);
       sending.delete(tripId);
       const awaitingReply = result.case_status === "waiting_input";
       if (awaitingReply && typeof result.case_id === "string" && result.case_id) {
@@ -456,6 +469,10 @@ export function createLiveGateway(): TripGateway {
           ...(result.needs_location === true && !location ? { needsLocation: true } : {}),
           ...(awaitingReply ? { awaitingReply: true } : {}),
           ...(pickOf(result.pick) ? { pick: pickOf(result.pick)! } : {}),
+          ...(typeof result.status === "string" && result.status ? { status: result.status } : {}),
+          ...(awaitingReply && waitsFor(result.required_input_schema, "minutes") ? { minutes: true } : {}),
+          ...(focusId ? { focusId } : {}), ...(summaryDay ? { summaryDay } : {}),
+          ...(steps.length ? { steps, secs: Math.max(1, Math.round((Date.now() - started) / 1000)) } : {}),
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];

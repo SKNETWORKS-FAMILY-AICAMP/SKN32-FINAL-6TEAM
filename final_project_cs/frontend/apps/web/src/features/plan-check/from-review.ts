@@ -1,6 +1,6 @@
 import { compareItems, streamedReview } from "@/features/intake-review/stream-model";
 import type { IntakeView } from "@/lib/live/intake";
-import { modeChoiceOf } from "@/lib/live/move-options";
+import { modeChoiceOf, moveRoutesOf, routeChoiceOf } from "@/lib/live/move-options";
 import { webTaxiPricingOf } from "@/lib/live/taxi-pricing";
 import { itemRiskOf, problemText, type ItemRisk } from "@/lib/live/risks";
 import { proposedTimeOf } from "./risk-candidate-edits";
@@ -83,6 +83,8 @@ function planMove(move: ReviewMove, dayOf: Map<string, number>): PlanMove {
     departAt: move.depart ?? "", mode: move.mode_label ?? "", summary: move.summary,
     minutes: move.minutes ?? null, arriveAt: move.arrive ?? "", slackMin: move.slack_min ?? null, estimated: move.basis === "estimate",
     modeKey: move.mode ?? null, recommendedMode: move.recommended_mode ?? null, modeChoice: modeChoiceOf(move.mode_choice),
+    // `[2026-10-23]` Only a server that sends route candidates adds them (an older plan has none, and the leg looks as before).
+    ...(Array.isArray(move.routes) ? { routes: moveRoutesOf(move.routes), routesMore: move.routes_more === true, routeKey: move.route_key ?? null, routeChoice: routeChoiceOf(move.route_choice) } : {}),
     checks: move.rows.map(row), verdict: verdictOf(move.status),
   };
 }

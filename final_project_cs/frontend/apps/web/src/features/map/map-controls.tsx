@@ -16,14 +16,25 @@ export type ControlsLayout = "column" | "row" | "tab";
  * How the buttons stand, for the room the map has above the sheet. ★`[2026-10-05 사용자 선택 — 지도 단추 접기 · 높이에 따라 자동]` The same buttons, the same places in the order: a column while
  * there is height for it, a single row when the customer has made the list tall (the map is low), and only the fold tab when there is no room at all. (Switching does not change the map's own size,
  * so the choice cannot flicker at the border.) Not measured yet: a column.
+ * ★`[2026-10-22 사용자 지시 — ST4F-721]` 「내 위치로」 is not one of `count`: it stands on its own at the bottom right (`locatePlace`), so a column or a row also leaves it its room above `bottom`.
  */
-export function controlsLayout(room: { width: number; height: number }, top: number, count: number): ControlsLayout {
+export function controlsLayout(room: { width: number; height: number }, top: number, count: number, bottom = 0): ControlsLayout {
   if (!room.width || !room.height) return "column";
-  const column = BUTTON + count * BUTTON + GAP * count + 24 + top;
+  const locate = GAP + BUTTON + bottom;
+  const column = BUTTON + count * BUTTON + GAP * count + 24 + top + locate;
   const row = FOLD + count * BUTTON + GAP * count + 24;
   if (room.height >= column) return "column";
-  if (room.width >= row && room.height >= top + BUTTON + 24) return "row";
+  if (room.width >= row && room.height >= top + BUTTON + 24 + locate) return "row";
   return "tab";
+}
+
+/**
+ * `[2026-10-22 사용자 지시 — ST4F-721]` Where 「내 위치로」 stands: the bottom right corner, above the sheet, while there is height for it under the fold tab; on a map lower than that it stands
+ * beside the fold tab (left of it), so the two never cover each other. Not measured yet: the corner.
+ */
+export function locatePlace(room: { width: number; height: number }, top: number, bottom = 0): "corner" | "beside" {
+  if (!room.height) return "corner";
+  return room.height >= top + 12 + BUTTON + GAP + BUTTON + 12 + bottom ? "corner" : "beside";
 }
 
 export interface MapControlsProps {
@@ -33,18 +44,16 @@ export interface MapControlsProps {
   folded: boolean;
   onFold: (folded: boolean) => void;
   canFit: boolean;
-  /** The entry stays available before consent and after a failed fix. */
-  me: "off" | "waiting" | "ready";
   onZoom: (delta: 1 | -1) => void;
   onFit: () => void;
-  onLocate: () => void;
 }
 
 /**
- * `[2026-10-05 사용자 선택]` The map's own buttons, the same over every provider: ＋ · the scale ruler · － · 「모든 일정 보기」 · 「내 위치」, and a small tab that folds them away.
+ * `[2026-10-05 사용자 선택]` The map's own buttons, the same over every provider: ＋ · the scale ruler · － · 「모든 일정 보기」, and a small tab that folds them away.
  * The ruler says how far a stretch of the map is (it replaces a zoom number nobody can read); it is left out when the provider cannot say what it shows.
+ * 「내 위치로」 is not in the group since 2026-10-22 (ST4F-721) — `LocateControl`.
  */
-export function MapControls({ view, topInset, layout, folded, onFold, canFit, me, onZoom, onFit, onLocate }: MapControlsProps) {
+export function MapControls({ view, topInset, layout, folded, onFold, canFit, onZoom, onFit }: MapControlsProps) {
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const group = useRef<HTMLDivElement>(null);
   const held = useRef(false);
@@ -66,8 +75,18 @@ export function MapControls({ view, topInset, layout, folded, onFold, canFit, me
       <MapTool className={styles.round} label="확대" onClick={() => onZoom(1)}><Plus size={19} strokeWidth={2.2} aria-hidden="true" /></MapTool>
       <MapTool className={styles.round} label="축소" onClick={() => onZoom(-1)}><Minus size={19} strokeWidth={2.2} aria-hidden="true" /></MapTool>
       {canFit && <MapTool className={styles.round} label={FIT_LABEL} onClick={onFit}><Scan size={18} strokeWidth={2} aria-hidden="true" /></MapTool>}
-      <MapTool className={styles.round} label="내 위치로" hint={me === "off" ? "내 위치로 · 위치 이용 동의" : me === "waiting" ? "내 위치로 · 위치 다시 찾기" : undefined} onClick={onLocate}><LocateFixed size={18} strokeWidth={2} aria-hidden="true" /></MapTool>
     </>}
+  </div>;
+}
+
+/**
+ * `[2026-10-22 사용자 지시 — ST4F-721]` 「내 위치로」 on its own, out of the folding group: always shown at the bottom right of the map above the sheet (`locatePlace`), however the group stands.
+ * Pins, edge chips and route labels keep clear of it (`data-map-obstacle`). The entry stays available before consent and after a failed fix.
+ */
+export function LocateControl({ place, topInset, bottomInset, me, onLocate }: { place: "corner" | "beside"; topInset: number; bottomInset: number; me: "off" | "waiting" | "ready"; onLocate: () => void }) {
+  const spot = place === "corner" ? { bottom: `${bottomInset + 12}px` } : { top: `${topInset + 12}px`, marginRight: `${FOLD + GAP}px` };
+  return <div className={styles.locate} data-map-locate data-map-obstacle data-place={place} style={spot}>
+    <MapTool className={styles.round} label="내 위치로" hint={me === "off" ? "내 위치로 · 위치 이용 동의" : me === "waiting" ? "내 위치로 · 위치 다시 찾기" : undefined} onClick={onLocate}><LocateFixed size={18} strokeWidth={2} aria-hidden="true" /></MapTool>
   </div>;
 }
 

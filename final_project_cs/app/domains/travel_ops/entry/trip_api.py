@@ -270,6 +270,11 @@ class IntakeModeIn(IntakeRevisionIn):
     mode: str = Field(min_length=1, max_length=16)
 
 
+class IntakeRouteIn(IntakeRevisionIn):
+    """경로 고르기 — `key` = 검사 · 더 보기가 준 `routes[].key` · `recommended`(추천 경로로 되돌리기). `[2026-10-23]`"""
+    key: str = Field(min_length=1, max_length=600)
+
+
 class IntakeRestoreItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source_id: UUID
@@ -441,6 +446,15 @@ class RollbackIn(BaseModel):
     message: str | None = None
 
 
+class ProgressIn(BaseModel):
+    """`[2026-10-22 ST4F-716]` 여행 화면 「끝났어요」 — 「바로 진행」(`advance_trip`) · 「그대로 유지」(`complete_item`)."""
+    model_config = ConfigDict(extra="forbid")
+    request_id: str = Field(min_length=1)
+    base_version: int = Field(ge=1)
+    item_id: UUID
+    action: Literal["advance_trip", "complete_item"]
+
+
 def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
     """등록 요청 안의 장소를 판정기가 읽는 모양으로. 저장 전이라 DB 를 보지 않는다."""
     if key is None:
@@ -571,6 +585,30 @@ def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]
 
 
 _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version", "mode")
+
+
+def _notice_changed(payload: Mapping[str, Any]) -> list[dict[str, Any]] | None:
+    """알림 목록(`GET /v1/web/trips/{id}/notices`)의 `changed` — 그 알림이 바꾼 일정 「무엇 → 무엇」 `[{item_id, new_item_id, from, to, at}]`, 없으면 None.
+    ★`[2026-10-23 사용자 지시 — ST4F-723]` 「바뀌기 전」 값은 알림 payload 에만 있는데(변경 이력의 원인에서는 빠진다 — 위 `_CAUSE_FIELDS`) 목록이 내보내지 않았다.
+
+    payload 에 **적힌 값만** 옮긴다 — 한 건짜리 변경은 `changed{from, to, at}`(고른 제안이면 `item_id` · `new_item_id` 도, `pending.choose`),
+    감시 묶음은 `changes[]`(항목마다 바뀌기 전 `item_id` + `changed`). `from` · `to` 가 둘 다 없는 변경(되돌리기 · 진행 · 목적지 이름 · 일정 수정 「완료」)은 싣지 않는다.
+    `at` 은 서울 시각으로 바꿔 낸다(여행 조회의 `starts_at` 과 같은 약속 — 같은 순간) · ISO 시각으로 읽을 수 없으면 적힌 그대로."""
+    rows = [(payload.get("changed"), None)]
+    rows += [(entry.get("changed"), entry.get("item_id")) for entry in payload.get("changes") or [] if isinstance(entry, Mapping)]
+    out = []
+    for changed, item_id in rows:
+        if not isinstance(changed, Mapping) or (changed.get("from") is None and changed.get("to") is None):
+            continue
+        at = changed.get("at")
+        if isinstance(at, str):
+            try:
+                at = _seoul(datetime.fromisoformat(at)).isoformat()
+            except ValueError:
+                pass                                   # 적힌 그대로 둔다(계약 「ISO 시각으로 읽을 수 없는 값은 적힌 그대로」)
+        out.append({"item_id": changed.get("item_id") or item_id, "new_item_id": changed.get("new_item_id"),
+                    "from": changed.get("from"), "to": changed.get("to"), "at": at})
+    return out or None
 
 
 def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
@@ -821,7 +859,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             web_guard.count(tenant, action, customer_id=customer, ip=_ip(http))
         except web_guard.UsageRefused as refused:
-            message = ("오늘 이 작업을 할 수 있는 횟수를 다 썼다 — 내일 다시 한다" if refused.status == 429
+            # `[2026-10-22]` 서비스 모드의 한 시간 한도(`hourly_limit`)는 다음 정시에 풀린다
+            message = ("한 시간에 이 작업을 할 수 있는 횟수를 다 썼다 — 다음 정시에 다시 한다" if refused.code == "hourly_limit"
+                       else "오늘 이 작업을 할 수 있는 횟수를 다 썼다 — 내일 다시 한다" if refused.status == 429
                        else "오늘 서비스 전체가 이 작업을 할 수 있는 횟수를 다 썼다 — 내일 다시 한다")
             error = _error(refused.status, refused.code, message, **refused.detail())
             error.headers = {"Retry-After": str(refused.retry_after)}
@@ -1287,7 +1327,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         except ProposalRefused as refused:
             status = {"not_found": 404, "already_decided": 409, "stale": 409, "expired": 409}.get(refused.code, 422)
             # ★상세는 `detail` 아래에 둔다 — 거절 상세에 `status`·`message` 가 들어 있어 펼치면 인자와 부딪힌다
-            raise _error(status, refused.code, "안을 고르지 못했다 — 아무것도 바뀌지 않았다",
+            # ★`[2026-10-23 사용자 지시 — ST4F-723]` 고객에게 보이는 문장이라 해요체(전에는 「…못했다 — …않았다」). 코드 · 상태는 그대로
+            raise _error(status, refused.code, "안을 고르지 못했어요 — 아무것도 바뀌지 않았어요.",
                          detail={k: (v if isinstance(v, (int, float, str, bool, type(None), list, dict))
                                      else str(v)) for k, v in refused.detail.items()}) from None
 
@@ -1444,6 +1485,57 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, "mode_not_fit", exc.why, why=exc.why) from None
         except move_options.NotAvailable:
             raise _error(404, "not_available", "이 구간은 수단을 고를 수 없다") from None
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+
+    @router.get("/v1/web/trip-intakes/{intake_id}/moves/{pair}/routes")
+    def web_intake_move_routes(intake_id: UUID, pair: str, http: Request, revision: int | None = Query(default=None, ge=1),
+                               offset: int = Query(default=3, ge=0, le=100), limit: int = Query(default=5, ge=1, le=20),
+                               who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-23 사용자 지시 — 경로 후보 먼저 3개 · 목록을 내리면 더]` 이동 한 구간의 **경로 후보 다음 쪽**. 검사(`moves[].routes`)가 앞의 3개를 이미 싣고,
+        이 읽기는 후보 상한을 넓힌 계산으로 그 구간을 한 번 더 세어 `offset`(화면이 이미 보인 수) 다음 `limit` 개를 준다 → `{routes[], next_offset, has_more, total}`.
+        줄 모양은 검사의 `routes[]` 와 같다(`key` · 수단 · 소요 · 출발 · 도착 · 여유 · 환승 · 탄 노선). 시간 안에 못 세면 빈 `routes` + `why`(`has_more: true` — 다시 부를 수 있다).
+        읽기 전용. ★남의 접수 404 · 낡은 판 409 · 대상이 아닌 구간 404 `not_available`.
+        횟수는 `move_judge`(이동 판정)로 센다 — 바깥 유료 소스 없이 이 서버의 시간표 계산기만 쓴다(카카오를 부르는 `place_search` 와 나눈다 · D-CS-020 등급 한도도 이 칸)."""
+        from app.domains.travel_ops.components.intake import move_options, pipeline
+
+        tenant, customer = who
+        from_id, _, to_id = pair.partition("~")
+        _count("move_judge", tenant, customer, http)
+        try:
+            with get_connection() as conn:
+                return {"intake_id": str(intake_id), **move_options.read_routes(
+                    conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=revision,
+                    from_id=from_id, to_id=to_id, offset=offset, limit=limit)}
+        except move_options.NotAvailable:
+            raise _error(404, "not_available", "이 구간은 경로를 고를 수 없다") from None
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/moves/{pair}/route")
+    def web_intake_move_route(intake_id: UUID, pair: str, request: IntakeRouteIn, http: Request,
+                              who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-23]` 이동 한 구간의 **경로**를 고른다 → `{revision, review}`(새 판 · 그 구간이 고른 경로로 다시 계산된 확인 결과 전체 · `moves[i].route_choice`).
+        서버가 그 구간을 다시 세어 **그 경로가 있고 다음 일정 안에 닿을 때만** 받는다. `key` = `recommended` 는 되돌리기. 고른 경로가 있는 구간은 고른 수단보다 앞서고,
+        수단을 새로 고르면 고른 경로는 비워진다. ★낡은 판 409 · 없는 경로 · 안 닿는 경로 422 `mode_not_fit`(`why`) · 남의 접수 · 없는 구간 404.
+        횟수는 `move_judge` 로 센다(위 더 보기와 같다)."""
+        from app.domains.travel_ops.components.intake import move_options, pipeline
+
+        tenant, customer = who
+        from_id, _, to_id = pair.partition("~")
+        _count("move_judge", tenant, customer, http)
+        try:
+            with get_connection() as conn:
+                return move_options.choose_route(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                 revision=request.revision, from_id=from_id, to_id=to_id, key=request.key)
+        except move_options.ModeNotFit as exc:
+            raise _error(422, "mode_not_fit", exc.why, why=exc.why) from None
+        except move_options.NotAvailable:
+            raise _error(404, "not_available", "이 구간은 경로를 고를 수 없다") from None
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:
@@ -1692,10 +1784,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.get("/v1/web/trip-intakes/{intake_id}/place-search")
     def web_intake_place_search(intake_id: UUID, http: Request, q: str = Query(min_length=2, max_length=60),
                                 source_id: UUID = Query(), index: int = Query(ge=0, le=500),
-                                revision: int | None = Query(default=None, ge=1),
+                                revision: int | None = Query(default=None, ge=1), relevance: bool = Query(default=True),
                                 who: tuple[str, UUID] = Depends(_web_customer)):
-        """수정 화면의 **장소 검색** — 이름·분류로 관광공사 목록 · 요식 원장 · 카카오를 함께 찾고 앞뒤 일정에서 가까운 순으로 보인다.
-        결과마다 그 일정의 날짜·시각에 맞는지 검사 줄이 붙는다. 읽기 전용."""
+        """수정 화면의 **장소 검색** — 이름·분류로 관광공사 목록 · 요식 원장 · 카카오를 함께 찾는다. 결과마다 그 일정의 날짜·시각에 맞는지 검사 줄이 붙는다. 읽기 전용.
+        ★`[2026-10-22 사용자 지시]` 두 목록 — `results` 는 **고르고 있는 일정의 지금 장소**에서 가까운 순(`order: "distance"`), `relevance` 는 이름이 잘 맞는 순
+        (`order: "relevance"`), `center` 는 거리를 잰 기준(`candidates.search` 의 `around_self` · `by_relevance`).
+        `relevance=false` 면 가까운 순만 — 일정 추가 화면처럼 일치도 목록을 그리지 않는 곳은 카카오 두 번째 호출을 하지 않는다."""
         from app.domains.travel_ops.components.intake import candidates
 
         tenant, customer = who
@@ -1706,7 +1800,31 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             item = _review_item(found, source_id, index)
             _count("place_search", tenant, customer, http)
             return {"revision": found["revision"], **candidates.search(
-                conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory))}
+                conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory),
+                around_self=True, by_relevance=relevance, limit=candidates.WEB_SEARCH_LIMIT)}
+
+        return _review_call(intake_id, customer, tenant, revision, use)
+
+    @router.get("/v1/web/trip-intakes/{intake_id}/add-search")
+    def web_intake_add_search(intake_id: UUID, http: Request, q: str = Query(min_length=2, max_length=60),
+                              previous: str | None = Query(default=None, max_length=40), next_id: str | None = Query(default=None, alias="next", max_length=40),
+                              date: str | None = Query(default=None, max_length=10), start: str | None = Query(default=None, max_length=5),
+                              end: str | None = Query(default=None, max_length=5), kind: str | None = Query(default=None, max_length=12),
+                              revision: int | None = Query(default=None, ge=1), who: tuple[str, UUID] = Depends(_web_customer)):
+        """일정 추가 폼의 **장소 검색** `[2026-10-23 사용자 지시 — Codex 1회차 합의]` — `previous` · `next` 는 끼우는 자리 앞 · 뒤 일정 id(검토 화면의 `items[].id`),
+        `date` · `start` · `end` · `kind` 는 새 일정 폼 값. 응답은 `place-search` 와 같은 모양 — `results` 는 앞 → 후보 → 뒤 **동선순**(`order: "route"`,
+        한쪽만 있으면 `distance`) · `relevance` 이름순 · `center.basis = "between"`. 검사 줄은 새 일정 기준. 읽기 전용(`candidates.add_search`)."""
+        from app.domains.travel_ops.components.intake import candidates
+
+        tenant, customer = who
+        if len(" ".join(q.split())) < 2:
+            raise _error(422, "query_too_short", "검색어는 공백을 뺀 두 글자 이상이어야 한다")
+
+        def use(conn, found):
+            _count("place_search", tenant, customer, http)
+            return {"revision": found["revision"], **candidates.add_search(
+                conn, tenant_id=tenant, review=found, query=q, previous_id=previous, next_id=next_id, date=date,
+                starts_at=start, ends_at=end, kind=kind, kakao=_lazy("kakao", kakao_factory))}
 
         return _review_call(intake_id, customer, tenant, revision, use)
 
@@ -2170,6 +2288,40 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return _outcome(_desk(store).rollback(
             trip_id=trip_id, base_version=request.base_version, to_version=request.to_version,
             message=request.message, request_id=request.request_id))
+
+    @router.post("/v1/web/trips/{trip_id}/progress")
+    def web_progress(trip_id: UUID, request: ProgressIn, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-22 사용자 결정 — ST4F-716]` 여행 화면 「끝났어요」 — 진행 중인 일정을 지금 끝내고 다음 일정을 지금 출발로 앞당기거나
+        (`advance_trip`, 「바로 진행」) 끝난 시각만 기록한다(`complete_item`, 「그대로 유지」). 채팅 진행 보고와 **같은 저장 경로**
+        (`journey_progress.apply` — 이동 재계산 · 운영시간 확인 · 새 판 · 알림)이고 모델을 안 거친다. 그 사용자 본인의 여행만,
+        대상은 오늘 이미 시작한 방문 일정만(아니면 409 `progress_not_current`). 계약 `wiki/actions/journey-progress.md` 「웹 진행 단추」."""
+        from app.domains.travel_ops.components.conversation.decision_unit import Decision
+        from app.domains.travel_ops.components.conversation.journey_progress import apply as apply_progress
+        from app.domains.travel_ops.components.itinerary.itinerary import StaleItinerary
+
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+            _, items = store.latest(conn, trip_id)
+        target = next((i for i in items if i.item_id == request.item_id and i.kind != "mobility"), None)
+        if target is None:
+            raise _error(404, "progress_target_not_found", "그 일정을 찾지 못했어요 — 새로 불러와 주세요")
+        now = datetime.now(KST)
+        if target.starts_at.astimezone(KST).date() != now.date() or target.starts_at > now:
+            raise _error(409, "progress_not_current", "오늘 이미 시작한 일정만 끝낼 수 있어요")
+        _count("message", tenant, customer, http)
+        decision = Decision(action=request.action, item=target, change=None, fact="", minutes=None, question="")
+        try:
+            return apply_progress(store=store, connect=get_connection, trip_id=trip_id, base_version=request.base_version,
+                                  decision=decision, now=now, request_id=request.request_id,
+                                  message=f"웹 「끝났어요」 · {request.action}")
+        except StaleItinerary:
+            with get_connection() as conn:
+                trip, _ = store.latest(conn, trip_id)
+            raise _error(409, "stale_itinerary", "그 사이 일정이 바뀌었어요 — 새로 불러와 주세요", version=trip["version"]) from None
+        except ValueError:
+            raise _error(404, "progress_target_not_found", "그 일정을 찾지 못했어요 — 새로 불러와 주세요") from None
 
     @router.post("/v1/web/trips/{trip_id}/reopen")
     def web_trip_reopen(trip_id: UUID, request: ReopenIn, who: tuple[str, UUID] = Depends(_web_customer)):
@@ -2698,6 +2850,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "guardian": payload.get("guardian") if guardian_on else None,
                              # ★`[2026-10-06]` 재난 안전 알림의 안내(공식 안내 · 가까운 대피 장소 · 「일정 다시 시작」) — 안전 알림(`safety_pause` · `safety_release`)에만 있다
                              "safety": payload.get("guidance") if payload.get("reason") in ("safety_pause", "safety_release") else None,
+                             # ★`[2026-10-23 사용자 지시 — ST4F-723]` 바뀐 일정 「무엇 → 무엇」(늘 있고 없으면 null) — 웹 알림 센터 「소식」의 「바뀐 일정」 줄 · 닫힌 제안 ↔ 지금 일정
+                             "changed": _notice_changed(payload),
                              "at": at.isoformat()} for key, payload, status, at in rows]}
 
     # ── 개인 AI 입구(MCP)의 읽기 도구 둘 — 일정 위험 점검 · 이동 판정 `[2026-10-06 사용자 요청]` ──────────────

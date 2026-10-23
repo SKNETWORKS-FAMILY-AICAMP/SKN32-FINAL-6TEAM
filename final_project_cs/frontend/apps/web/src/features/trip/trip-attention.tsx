@@ -3,26 +3,35 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, ChevronRight, ExternalLink, History, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { MaintenanceItem, NoticeItems, useServiceStatus } from "@/features/support/service-notices";
 import { markServiceNoticesSeen, useSeenServiceNotices } from "@/features/support/service-notice-reads";
 import { routes } from "@/lib/routes";
 import { seoul } from "@/lib/live/gateway";
 import { LiveError } from "@/lib/live/client";
-import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
+import { undoChange, type Notice, type NoticeChange } from "@/lib/live/extras";
 import { useSettings, useT } from "@/lib/settings";
-import { openChoices, recentNotices, undoableChange } from "./attention";
+import type { Translate } from "@/lib/i18n";
+import { causeLines, changeOf, dayBefore, NOTICE_LIMIT, noticeFeed, openChoices, proposalStop, proposalText, undoableChange, withoutPlanLink, type FeedEntry, type OpenChoice } from "./attention";
 import { proposalAvailable } from "./trip-chat-records";
+import { chooseFailure, chooseOutcome, useChooseProposal } from "./proposal-ask";
+import { NoticeCard, noticeKind, ProposalCard } from "./trip-chat-notices";
+import { serverDayLabel } from "./chat-cards";
 import { LinkedText } from "./linked-text";
-import type { Trip } from "./model";
+import type { Trip, TripChange, TripStop } from "./model";
 import { markNoticesSeen, useSeenNotices } from "./notice-reads";
+import { ownChange } from "./own-changes";
+import { tripDays } from "./trip-timeline";
 import { tripKey } from "./use-trip";
+import { useSeoulNow } from "./use-seoul-now";
 import { noticesKey, proposalsKey, recoveryKey, useNotices, useProposals, useRecovery, useTripRisks } from "./use-trip-extras";
-import { RiskPanel } from "@/features/risk/risk-panel";
+import { panelRisks, RiskPanel } from "@/features/risk/risk-panel";
 import { useRiskAlternatives } from "./use-risk-alternatives";
 import { SafetyPanel } from "./trip-safety";
 import { RecoveryPanel } from "./trip-recovery";
 import type { Recovery } from "@/lib/live/recovery";
+import c from "./trip-chat.module.css";
 import styles from "./trip-attention.module.css";
 import { askBrowserNotify, browserNotifyState, type BrowserNotifyState } from "@/lib/browser-notify";
 
@@ -34,37 +43,36 @@ export const NOTICE_LABEL: Record<string, [string, string]> = {
 export const noticeWhen = (iso: string) => { const at = seoul(iso); return `${at.date} ${at.time}`; };
 
 /**
- * The lists of the notice center (`[2026-10-07 목업 C안]`): what the server found, what it sent, what it changed —
- * `[2026-10-17 사용자 결정 — ST4F-606]` and the service's own notices (the admin app's, for everyone), which were a section above 「할 일」.
+ * `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ]` The notice center's three tabs: 「할 일」 (what waits for the customer's answer, then what is worth a look) · 「소식」 (what the server sent and
+ * changed, by day — the old 「받은 알림」 and 「변경 이력」 in one list) · 「공지」 (the service's own notices, `[2026-10-17 ST4F-606]`).
  */
-export type CenterTab = "warnings" | "notices" | "history" | "service";
-const TABS: readonly [CenterTab, string, string][] = [["warnings", "살펴볼 점", "Worth a look"], ["notices", "받은 알림", "Notices"], ["history", "변경 이력", "History"], ["service", "공지", "Announcements"]];
-
-/** Server contract (2026-09-29): a proposal with this reason and no options asks "change it?"; answering with this key makes
- *  the server compute options and fill the same proposal (reason becomes `indoor_unknown_options`). */
-const CONSENT_REASON = "indoor_unknown";
-const FORECAST_REASON = "forecast_advisory";
-const CONSENT_KEY = "change";
+export type CenterTab = "todo" | "feed" | "service";
+const TABS: readonly [CenterTab, string, string][] = [["todo", "할 일", "To do"], ["feed", "소식", "Updates"], ["service", "공지", "Announcements"]];
 
 /**
  * `[2026-10-14 실서버 확인]` The words for the reason the server wrote a version (`append_version(reason=…)`) — 「처음 등록」 was the only one; the others showed the code itself
  * (`customer_request` …) to the customer. A reason not listed here still shows the server's code (the rule above: the screen does not write a line of its own about what it does not know).
+ * `[2026-10-22 ST4F-723]` `customer_report` (「늦어요」 · 「문 닫았어요」 · 「끝났어요」 told by the customer, `journey_progress` · `itinerary_changes`) had none.
  */
 const VERSION_REASON: Record<string, [string, string]> = {
   created: ["처음 등록", "Registered"],
   customer_request: ["직접 고침", "Changed by you"],
   customer_choice: ["고른 안 적용", "Your pick applied"],
+  customer_report: ["알려 주신 대로 바꿈", "Changed as you told us"],
   auto_adjusted: ["자동으로 바꿈", "Changed automatically"],
   rollback: ["되돌림", "Undone"],
 };
+const reasonLabel = (change: TripChange, t: Translate) => VERSION_REASON[change.reason] ? t(...VERSION_REASON[change.reason]) : change.reason;
 
-/**
- * Live only: what the server is waiting for, found and sent about this trip — the body of the notice center the bell opens.
- * `[2026-10-07 사용자 결정 — 목업 C안 ① 알림 센터]` 「할 일」 first (the disaster pause → going on after it → a choice the server waits for → an automatic change that can be undone), then three tabs:
- * 「살펴볼 점」 (`warnings`) · 「받은 알림」 (`/notices`, a dot on those first seen now) · 「변경 이력」 (`history`).
- * ★Every sentence here is the server's — its notice text, its warning reason, its history. Where it sent none, the screen shows the server's own code instead of writing a line of its own.
- * Read state is this browser's (`notice-reads.ts`): the server keeps none yet.
- */
+/** A proposal's state on its card in 「소식」 (`GET …/proposals` status). */
+const PROPOSAL_STATE: Record<string, [string, string, boolean]> = {
+  open: ["선택이 필요해요", "Needs your choice", false], chosen: ["고른 안 적용", "Your pick applied", true], kept: ["그대로 둠", "Kept", true],
+  expired: ["기한 지남", "Expired", true], superseded: ["일정이 바뀌어 닫힘", "Closed — the plan changed", true],
+};
+
+/** A notice this long (a safety alert, a morning guide, a closed proposal's question) is cut to a few lines with 「더 보기」. */
+const LONG_TEXT = 90;
+
 /**
  * `[2026-10-17 사용자 결정 — ST4F-606]` 「공지」 탭 — 운영 앱의 공지(여행과 상관없는 전체 공지)를 맨 위 배너와 같은 모양으로(종류 딱지 · 장애 먼저), 점검 중이면 점검도.
  *   (옛 ST4F-604: 알림 센터 맨 위 「서비스 공지」 칸 — 할 일을 화면 아래로 밀어 탭으로 옮겼다.) 끝에 지난 공지까지 보는 공지사항 게시판으로 가는 길.
@@ -84,12 +92,24 @@ function ServiceNoticeTab() {
   </div>;
 }
 
-export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice = null, focusItemId = null }: {
+/**
+ * Live only: what the server is waiting for, found and sent about this trip — the body of the notice center the bell opens.
+ * `[2026-10-22 사용자 결정 — ST4F-723 구성 Ⓑ · 카드 ⓑ]` Three tabs at the top (the 10-17 「답이 필요해요」 above the tabs pushed the list ~540px down when there was something to answer):
+ * - 「할 일」: the disaster pause → going on after it → the choices the server waits for → the automatic change that can be undone — answered, they move to 「소식」; then 「살펴볼 점」
+ *   (the risk check and what the server found at registration).
+ * - 「소식」: newest first under date heads; a proposal's notices (asked · options · the change it made) on one card with its state, a version on the card of the notice that made it.
+ * - 「공지」: the service's notices.
+ * The cards are the chat's (`trip-chat-notices.tsx` — the same parts, ST4F-719). ★Every sentence on them is the server's — its notice text, its warning reason, its history. A piece of it is left
+ * out only where the card draws the same thing (`proposalText` · `withoutPlanLink`). Read state is this browser's (`notice-reads.ts`): the server keeps none yet.
+ */
+export function TripAttention({ trip, tab, onTab, onDetail, onResumed, focusNotice = null, focusItemId = null }: {
   trip: Trip; tab: CenterTab; onTab: (tab: CenterTab) => void;
+  /** A notice to show: in 「할 일」 a safety alert or a choice (its alternatives are waited for), in 「소식」 the card that carries it (scrolled to, lit once). */
   focusNotice?: Notice | null;
+  /** A stop at risk whose alternatives were asked for (「위험·대안 보기」). */
   focusItemId?: string | null;
-  /** 「일정에서 보기」: close the center and show that stop in the list. */
-  onGoto: (stopId: string) => void;
+  /** 「상세 보기」 on a stop's row: close the center and open that stop's detail (its choice is answered there too, ST4F-704). */
+  onDetail: (stopId: string) => void;
   /** 「일정 다시 시작」 answered with the brief of the disaster just lifted (null when there was nothing to lift). */
   onResumed: (recovery: Recovery | null) => void;
 }) {
@@ -104,14 +124,28 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
   const recovery = useRecovery(trip.id);
   const risks = useTripRisks(trip.id, trip.version);
   const currentRisks = risks.data?.items ?? [];
-  const riskAlternatives = useRiskAlternatives(trip.id, () => onTab("warnings"));
-  const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops)
+  // `[2026-10-22 사용자 지시]` 운영자가 위험 점검 칸을 끄면(`trip.riskPanel`) 「살펴볼 점」에는 실제 위험 일정만 남는다(위험 알림 · 종 · 카드 표시가 여기로 온다).
+  const riskPanelShown = trip.riskPanel !== false;
+  const shownRisks = panelRisks(currentRisks, riskPanelShown);
+  const riskAlternatives = useRiskAlternatives(trip.id, () => onTab("todo"));
+  const all = notices.data ?? [];
+  const history = trip.history ?? [];
+  const choices = openChoices(proposals.data ?? [], all, trip.stops)
     .filter((choice) => Boolean(choice.stop) && proposalAvailable(choice.proposal, trip.version));
-  const targetChoiceId = focusNotice || focusItemId
+  const undoable = undoableChange(all, trip.version);
+  const held = { proposals: new Set(choices.map((choice) => choice.proposal.id)), notices: new Set(undoable ? [undoable.key] : []) };
+  const feed = noticeFeed(all, proposals.data ?? [], held, history);
+  const shownFeed = feed.slice(0, NOTICE_LIMIT);
+  const days = tripDays(trip);
+  const now = useSeoulNow();
+
+  // ── A notice to show (the notice bar's 「알림 보기」, `?notices=1`, 「위험·대안 보기」) ──
+  const waitFor = tab === "todo" && (focusItemId !== null || focusNotice?.type === "safety_alert" || focusNotice?.type === "proposal_request");
+  const targetChoiceId = waitFor
     ? (focusNotice?.proposalId ? choices.find((choice) => choice.proposal.id === focusNotice.proposalId)
       : focusItemId ? choices.find((choice) => choice.proposal.itemId === focusItemId) : choices[0])?.proposal.id
     : undefined;
-  const focusedNoticeKey = focusNotice?.key ?? (focusItemId ? `risk:${focusItemId}` : undefined);
+  const focusedNoticeKey = waitFor ? focusNotice?.key ?? (focusItemId ? `risk:${focusItemId}` : undefined) : undefined;
   const [answeredNoticeKey, setAnsweredNoticeKey] = useState<string | null>(null);
   const choiceAnswered = Boolean(focusedNoticeKey && answeredNoticeKey === focusedNoticeKey);
   const choiceTarget = useRef<HTMLDivElement>(null);
@@ -134,17 +168,28 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
     const bounded = setTimeout(() => clearInterval(poll), 90_000);
     return () => { clearInterval(poll); clearTimeout(bounded); };
   }, [focusedNoticeKey, targetChoiceId, choiceAnswered, refetchProposals, refetchNotices]);
-  const { shown, total, hidden } = recentNotices(notices.data ?? []);
-  const undoable = undoableChange(notices.data ?? [], trip.version);
+  // In 「소식」: the card that carries the notice, scrolled to and lit once.
+  const flashKey = tab === "feed" && focusNotice ? entryKey(feed.find((entry) => carries(entry, focusNotice.key)) ?? null) : null;
+  useEffect(() => {
+    if (!flashKey) return;
+    const frame = requestAnimationFrame(() => document.querySelector(`[data-feed-entry="${CSS.escape(flashKey)}"]`)?.scrollIntoView({ block: "center", behavior: "instant" }));
+    return () => cancelAnimationFrame(frame);
+  }, [flashKey]);
 
-  // A dot stays on the notices first seen in this opening (until the center closes — it is drawn only while open); the tab marks them read.
+  // ── Read state: a tab marks what it shows (a dot stays on what was first seen in this opening, until the center closes) ──
   const seen = useSeenNotices(trip.id);
   const [seenAtOpen] = useState(() => new Set(seen));
-  const keys = (notices.data ?? []).map((notice) => notice.key).join("\n");
-  const unread = (notices.data ?? []).filter((notice) => !seen.includes(notice.key)).length;
+  const isHeld = (notice: Notice) => Boolean(notice.proposalId && held.proposals.has(notice.proposalId)) || held.notices.has(notice.key);
+  const keysOf = (pick: (notice: Notice) => boolean) => all.filter(pick).map((notice) => notice.key).join("\n");
+  const todoKeys = keysOf(isHeld);
+  const feedKeys = keysOf((notice) => !isHeld(notice) && notice.kind !== "service_notice");
+  const serviceTripKeys = keysOf((notice) => notice.kind === "service_notice");
   useEffect(() => {
-    if (tab === "notices" && keys) markNoticesSeen(trip.id, keys.split("\n"));
-  }, [tab, keys, trip.id]);
+    const keys = tab === "todo" ? todoKeys : tab === "feed" ? feedKeys : serviceTripKeys;
+    if (keys) markNoticesSeen(trip.id, keys.split("\n"));
+  }, [tab, todoKeys, feedKeys, serviceTripKeys, trip.id]);
+  const feedUnread = feedKeys.split("\n").some((key) => key && !seen.includes(key));
+  const fresh = (list: readonly Notice[]) => list.some((notice) => !seenAtOpen.has(notice.key)) ? t("새 알림", "New") : null;
   // `[2026-10-17 사용자 결정 — ST4F-606]` 운영 앱 공지도 같다 — 「공지」 탭이 보여 주면 읽음(종 숫자에서 빠진다). 새것이 있으면 탭에 점.
   const service = useServiceStatus();
   const seenService = useSeenServiceNotices();
@@ -154,8 +199,10 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
   useEffect(() => {
     if (tab === "service" && serviceKeys) markServiceNoticesSeen(serviceKeys.split("\n"));
   }, [tab, serviceKeys]);
-  // `[2026-10-17 사용자 결정 — ST4F-606]` 재난 뒤 이어가기는 「답이 필요해요」에 한 장짜리 카드로 — 누르면 지금의 전체 패널을 그 자리에 펼친다.
+  // `[2026-10-17 사용자 결정 — ST4F-606]` 재난 뒤 이어가기는 한 장짜리 카드로 — 누르면 지금의 전체 패널을 그 자리에 펼친다.
   const [recoveryOpen, setRecoveryOpen] = useState(false);
+  const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
+  const toggle = (key: string) => setOpened((before) => { const next = new Set(before); if (!next.delete(key)) next.add(key); return next; });
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: tripKey(trip.id, language) });
@@ -163,26 +210,26 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
     void queryClient.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
   };
   const chosen = () => { refresh(); void queryClient.invalidateQueries({ queryKey: recoveryKey(trip.id, language) }); };
-  const choose = useMutation({
-    mutationFn: ({ proposalId, key }: { proposalId: string; key: string | null; noticeKey?: string }) => chooseProposal(trip.id, proposalId, key, language),
-    onSuccess: (result, variables) => { if (result.status !== "options" && variables.noticeKey) setAnsweredNoticeKey(variables.noticeKey); },
-    // Refused because it was already decided or the trip moved on: nothing changed, so re-read what is true now.
-    onSettled: refresh,
-  });
+  // Refused because it was already decided or the trip moved on: nothing changed, so it re-reads what is true now (`useChooseProposal`).
+  const choose = useChooseProposal(trip.id, trip.version);
+  const answer = (proposalId: string, key: string | null) => {
+    const noticeKey = focusedNoticeKey;
+    choose.mutate({ proposalId, key }, { onSuccess: (result) => { if (result.status !== "options" && noticeKey) setAnsweredNoticeKey(noticeKey); } });
+  };
 
   // ★Undo an automatic change (only customers who chose "change it automatically" get those). 409 = the plan moved on.
   const undo = useMutation({
-    mutationFn: (notice: Notice) => undoChange(trip.id, notice.rollback!, language),
+    mutationFn: (notice: Notice) => ownChange(trip.id, trip.version, () => undoChange(trip.id, notice.rollback!, language)),
     onSettled: refresh,
   });
 
   const readError = proposals.error ?? notices.error;
   const warnings = trip.warnings ?? [];
-  const history = trip.history ?? [];
   const paused = Boolean(trip.safety?.paused);
   const goingOn = !paused && recovery.data ? recovery.data : null;
   const tasks = (paused ? 1 : 0) + (goingOn && !goingOn.chosen ? 1 : 0) + choices.length + (undoable ? 1 : 0);
-  const counts: Record<CenterTab, number> = { warnings: warnings.length + currentRisks.filter((item) => item.status === "problem").length, notices: total, history: history.length, service: serviceNotices.length + (service.data?.maintenance.enabled ? 1 : 0) };
+  const worth = warnings.length + currentRisks.filter((item) => item.status === "problem").length;
+  const serviceCount = serviceNotices.length + (service.data?.maintenance.enabled ? 1 : 0);
 
   function tabKeys(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
@@ -193,122 +240,200 @@ export function TripAttention({ trip, tab, onTab, onGoto, onResumed, focusNotice
     requestAnimationFrame(() => document.getElementById(`trip-center-tab-${next}`)?.focus());
   }
 
+  const dayOf = (stop: TripStop) => t(`${days.indexOf(stop.date) + 1}일차`, `Day ${days.indexOf(stop.date) + 1}`);
+  const stopRow = (stop: TripStop) => <div className={styles.stop}>
+    <span><b>{stop.title}</b><small>{dayOf(stop)} {stop.time}</small></span>
+    <button type="button" className={styles.go} onClick={() => onDetail(stop.id)}>{t("상세 보기", "Details")}<ChevronRight size={14} strokeWidth={2} aria-hidden="true" /></button>
+  </div>;
+  /** The server's sentence; a long one (a safety alert, a guide, a closed proposal's question) is cut to a few lines until 「더 보기」. */
+  const body = (key: string, text: string | null, long: boolean) => {
+    if (!text) return <p className={c.body}>{t("서버가 문장을 보내지 않았어요.", "The server sent no text.")}</p>;
+    const cut = long && text.length > LONG_TEXT;
+    const open = opened.has(key);
+    return <>
+      <p className={c.body}><span className={cut && !open ? styles.clamp : undefined}><LinkedText text={text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /></span></p>
+      {cut && <button type="button" className={styles.more} aria-expanded={open} onClick={() => toggle(key)}>{open ? t("접기", "Show less") : t("더 보기", "Show more")}</button>}
+    </>;
+  };
+  /** Every notice of a proposal, oldest first, folded under its card. */
+  const flow = (list: readonly Notice[]) => list.length > 1 && <details className={styles.flow}>
+    <summary><ChevronDown size={14} strokeWidth={2} aria-hidden="true" />{t(`받은 알림 ${list.length}개 모두 보기`, `All ${list.length} notices`)}</summary>
+    <ol>{list.map((notice) => <li key={notice.key}><b>{noticeWhen(notice.at)} · {noticeKind(notice.type, t).label}</b>
+      {notice.text ? <LinkedText text={notice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /> : t("서버가 문장을 보내지 않았어요.", "The server sent no text.")}</li>)}</ol>
+  </details>;
+  /**
+   * `[2026-10-23 사용자 지시 — ST4F-723]` What a notice changed, from the server's `changed`: one row per stop — when it starts (n일차 HH:MM), 「전 → 후」 — in the chat's 「바뀐 일정」 box.
+   * Only the server's values: a missing name or time is left out, not filled in.
+   */
+  const changedWhen = (iso: string) => {
+    const at = seoul(iso);
+    const index = days.indexOf(at.date);
+    return index >= 0 ? t(`${index + 1}일차 ${at.time}`, `Day ${index + 1} ${at.time}`) : `${t(serverDayLabel(at.date), at.date)} ${at.time}`;
+  };
+  const changedRows = (rows: readonly NoticeChange[]) => rows.length > 0 && <div className={c.diff} data-feed-changed>
+    <h3>{t("바뀐 일정", "What changed")}</h3>
+    {rows.map((row, index) => <div key={`${row.itemId ?? ""}-${index}`} className={c.row}>
+      <span>{row.at ? changedWhen(row.at) : ""}</span>
+      <span>{row.from && <s>{row.from}</s>}{row.from && row.to ? "→ " : ""}{row.to && <span className={c.new}>{row.to}</span>}</span>
+    </div>)}
+  </div>;
+
+  const choiceTask = ({ proposal, stop, text }: OpenChoice) => {
+    const list = all.filter((notice) => notice.proposalId === proposal.id).sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+    const latest = list.at(-1);
+    const kind = noticeKind(latest?.type ?? "proposal_request", t);
+    const meta = [proposal.safety ? t("안전과 관련된 선택이에요.", "This one is about safety.") : "",
+      proposal.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : ""].filter(Boolean).join(" ");
+    return <div key={proposal.id} className={styles.pair} data-center-proposal={proposal.id} tabIndex={-1} ref={proposal.id === targetChoiceId ? choiceTarget : undefined}>
+      <NoticeCard {...kind} state={{ text: t("선택이 필요해요", "Needs your choice") }} unread={fresh(list)} at={latest?.at ?? ""} when={latest ? noticeWhen(latest.at) : ""} data-task>
+        {stop && stopRow(stop)}
+        <p className={c.body}>{text ? <LinkedText text={proposalText(text, { stopTitle: stop?.title, options: proposal.options })} mapLabel={t("지도 앱으로 열기", "Open in maps app")} />
+          : t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
+        {flow(list)}
+      </NoticeCard>
+      <ProposalCard proposal={proposal} title={null} time={null} available busy={choose.isPending} onReload={() => void proposals.refetch()}
+        onChoose={(key) => answer(proposal.id, key)} meta={meta || null} />
+    </div>;
+  };
+
+  const noticeEntry = (notice: Notice) => {
+    const change = changeOf(notice, history);
+    const kind = noticeKind(notice.type, t);
+    const planText = notice.text ? withoutPlanLink(notice.text, trip.planUrl) : null;
+    const causes = change?.reason === "auto_adjusted" ? causeLines(change.causes) : [];
+    return <NoticeCard key={notice.key} {...kind} label={change ? reasonLabel(change, t) : kind.label} unread={fresh([notice])} at={notice.at} when={noticeWhen(notice.at)}
+      data-feed-entry={notice.key} data-flash={flashKey === notice.key || undefined}>
+      {body(notice.key, planText ?? notice.text, notice.type === "safety_alert" || notice.type === "guidance")}
+      {changedRows(notice.changed ?? [])}
+      {(planText !== null || causes.length > 0) && <div className={c.foot}>
+        {causes.length > 0 && <span className={c.footTitle}>{causes.join(" · ")}</span>}
+        {planText !== null && trip.planUrl && <a className={c.button} href={trip.planUrl} target="_blank" rel="noopener noreferrer">
+          <ExternalLink size={15} strokeWidth={1.8} aria-hidden="true" />{t("여행계획서 열기", "Open your trip plan")}</a>}
+      </div>}
+    </NoticeCard>;
+  };
+  const proposalEntry = (entry: Extract<FeedEntry, { kind: "proposal" }>) => {
+    const { proposal } = entry;
+    const latest = entry.notices.at(-1)!;
+    // An open proposal here is one that can no longer be answered (the plan moved on or its stop is gone) — 「할 일」 holds the others.
+    const state = proposal ? proposal.status === "open" ? [t("지난 제안", "Past proposal"), true] as const
+      : PROPOSAL_STATE[proposal.status] ? [t(PROPOSAL_STATE[proposal.status][0], PROPOSAL_STATE[proposal.status][1]), PROPOSAL_STATE[proposal.status][2]] as const : [proposal.status, true] as const : null;
+    const ask = [...entry.notices].reverse().find((notice) => notice.type === "proposal_request" || notice.type === "safety_alert") ?? latest;
+    const kind = noticeKind(ask.type, t);
+    // `[2026-10-23 사용자 지시 — ST4F-723]` The stop it is about now (a picked one: the new stop the server names in `changed[].new_item_id`) — its row and 「상세 보기」; what it changed under it.
+    const stop = proposalStop(entry.notices, proposal, trip.stops);
+    return <NoticeCard key={entry.proposalId} {...kind} tone="muted" state={state && { text: state[0], done: state[1] }} unread={fresh(entry.notices)} at={latest.at} when={noticeWhen(latest.at)}
+      data-feed-entry={entry.proposalId} data-flash={flashKey === entry.proposalId || undefined}>
+      {stop && stopRow(stop)}
+      {body(entry.proposalId, latest.text && stop ? proposalText(latest.text, { stopTitle: stop.title }) : latest.text, true)}
+      {changedRows(entry.notices.flatMap((notice) => notice.changed ?? []))}
+      {flow(entry.notices)}
+    </NoticeCard>;
+  };
+  const versionEntry = (change: TripChange) => <div key={`v${change.version}`} className={styles.version} data-feed-entry={`v${change.version}`}>
+    <p><History size={14} strokeWidth={1.8} aria-hidden="true" /><b>{reasonLabel(change, t)}</b><time>{change.at.slice(11)}</time></p>
+    {causeLines(change.causes).map((cause) => <p key={cause} className={styles.remedy}>{cause}</p>)}
+  </div>;
+  const dayHead = (date: string) => {
+    const label = t(serverDayLabel(date), new Intl.DateTimeFormat("en", { month: "short", day: "numeric", weekday: "short", timeZone: "Asia/Seoul" }).format(new Date(`${date}T12:00:00+09:00`)));
+    return date === now.date ? t(`오늘 · ${label}`, `Today · ${label}`) : date === dayBefore(now.date) ? t(`어제 · ${label}`, `Yesterday · ${label}`) : label;
+  };
+  const byDay: [string, FeedEntry[]][] = [];
+  for (const entry of shownFeed) {
+    const date = seoul(entry.at).date;
+    if (byDay.at(-1)?.[0] === date) byDay.at(-1)![1].push(entry);
+    else byDay.push([date, [entry]]);
+  }
+
   return <div className={styles.wrap}>
     {readError && <div className={styles.error} role="alert">{t("선택과 알림을 읽지 못했어요 — ", "Could not read your choices and notices — ")}{readError instanceof Error ? readError.message : String(readError)}</div>}
 
-    <section className={styles.tasks} aria-labelledby="trip-tasks-title">
-      {/* `[2026-10-17 사용자 결정 — ST4F-606 · 목업 B안]` 「할 일」 → 「답이 필요해요」(선택 · 재난 뒤 이어가기 · 되돌리기 — 답하면 빠진다). */}
-      <h3 id="trip-tasks-title" className={styles.secTitle}>{t("답이 필요해요", "Needs your answer")}{tasks > 0 ? ` ${tasks}` : ""}</h3>
-      {/* `[2026-10-06]` 재난으로 일정이 멈췄으면 맨 위에: 정지 · 안전 안내 · 다시 시작(일정 칸 맨 윗줄에도 같은 패널이 있다). 정지가 없으면 아무것도 그리지 않는다. */}
-      <SafetyPanel trip={trip} notices={notices.data ?? []} onChanged={refresh} onResumed={onResumed} where="center" />
-      {focusedNoticeKey && <section className={styles.act} data-tone="info" data-notice-choice-state>
-        <h4>{focusNotice ? t("알림과 대안 선택", "Notice and alternatives") : t("현재 위험과 대안 선택", "Current risk and alternatives")}</h4>
-        {focusNotice?.text && <p><LinkedText text={focusNotice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /></p>}
-        {!targetChoiceId && !choiceAnswered && <p role="status">{proposals.isFetching || notices.isFetching
-          ? t("대안 제안을 확인하고 있어요.", "Checking for alternative proposals.")
-          : t("아직 선택할 대안을 받지 못했어요. 새 제안이 도착하면 자동으로 보여 드려요.", "No alternative proposal has arrived yet. New proposals appear here automatically.")}</p>}
-      </section>}
-      {/* `[2026-10-06]` 다시 시작한 뒤(72시간 안): 아는 것 · 모르는 것 · 남은 일정의 영향 · 이어가는 세 가지 길. 다시 정지 중이면(새 사건) 그 정지 패널이 먼저다. */}
-      {goingOn && (recoveryOpen ? <RecoveryPanel key={goingOn.pauseId} trip={trip} recovery={goingOn} onChosen={chosen} />
-        : <section className={styles.act} data-tone="safety" aria-labelledby="trip-recovery-short" data-recovery-short>
-          <h4 id="trip-recovery-short">{t("재난 뒤 이어가기", "Going on after the disaster")}</h4>
-          <p>{[goingOn.event.label, goingOn.event.at ? noticeWhen(goingOn.event.at) : null].filter(Boolean).join(" · ")}{" — "}
-            {goingOn.chosen ? t("고르신 것을 다시 보거나 바꿀 수 있어요.", "You can look at or change your choice.") : t("어떻게 이어갈지 골라 주세요.", "Choose how to go on.")}</p>
-          <div className={styles.options}><Button variant={goingOn.chosen ? "secondary" : "primary"} onClick={() => setRecoveryOpen(true)}>
-            {goingOn.chosen ? t("고르신 것 보기", "See your choice") : t("이어갈 방법 고르기", "Choose how to go on")}</Button></div>
-        </section>)}
-
-      {choices.length > 0 && <section className={styles.act} aria-labelledby="trip-choices" data-center-choices>
-        <h4 id="trip-choices">{t("선택이 필요해요", "Your choice is needed")}{choices.length > 1 ? ` ${choices.length}` : ""}</h4>
-        {choices.map(({ proposal, stop, text }) => <div key={proposal.id} className={styles.choice} data-center-proposal={proposal.id} tabIndex={-1}
-          ref={proposal.id === targetChoiceId ? choiceTarget : undefined}>
-          <p className={styles.what}>{stop ? `${stop.time} · ${stop.title}` : t("이 여행의 일정", "A stop on this trip")}</p>
-          <p>{text ?? t("이 일정을 어떻게 할지 골라 주세요.", "Choose what to do with this stop.")}</p>
-          <div className={styles.options}>
-            {/* 2026-09-29: "should we change it?" first (indoor/outdoor unknown). The server computes options only after "change". */}
-            {[CONSENT_REASON, FORECAST_REASON].includes(proposal.reason) && proposal.options.length === 0 && <Button variant="primary" disabled={choose.isPending}
-              onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: CONSENT_KEY })}>{proposal.reason === FORECAST_REASON
-                ? t("예보에 맞게 일정 변경", "Adjust the plan for the forecast")
-                : t("다른 곳 찾아보기", "Show other places")}</Button>}
-            {proposal.options.map((option) => <Button key={option.key} variant="primary" disabled={choose.isPending}
-              onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: option.key })}>{option.note ? `${option.note} · ` : ""}{option.startsAt ? `${seoul(option.startsAt).time} ` : ""}{option.name}
-              {option.warnings.length > 0 && <small className={styles.optionWarning}>{option.warnings.join(" · ")}</small>}</Button>)}
-            <Button disabled={choose.isPending} onClick={() => choose.mutate({ proposalId: proposal.id, noticeKey: focusedNoticeKey, key: null })}>{t("지금 일정 그대로 두기", "Keep the plan as it is")}</Button>
-          </div>
-          {(proposal.expiresAt || proposal.safety || stop) && <p className={styles.meta}>
-            {proposal.safety ? t("안전과 관련된 선택이에요. ", "This one is about safety. ") : ""}{proposal.expiresAt ? t(`${noticeWhen(proposal.expiresAt)} 까지`, `Until ${noticeWhen(proposal.expiresAt)}`) : ""}
-            {stop && <>{proposal.expiresAt || proposal.safety ? " · " : ""}<button type="button" className={styles.link} onClick={() => onGoto(stop.id)}>{t("일정에서 보기", "Show in the plan")}</button></>}</p>}
-        </div>)}
-      </section>}
-      {/* ★Outside the choices card: after a decision the server closes the proposal and the card goes away,
-           but what happened (no other place / already decided) must still be said. */}
-      {choose.error && <div className={styles.error} role="alert">{choose.error instanceof LiveError && (choose.error.code === "already_decided" || choose.error.code === "stale")
-          ? t("이미 정해졌거나 그 사이 일정이 바뀌었어요. 아무것도 바뀌지 않았고, 지금 상태를 다시 불러왔어요.", "It was already decided or the trip changed meanwhile. Nothing was changed; we reloaded the current state.")
-          : choose.error.message}</div>}
-      {choose.data?.status && !choose.error && <p className={styles.said}>{
-          choose.data.status === "options" ? t("다른 곳을 찾았어요 — 위에서 골라 주세요.", "Found other places — pick one above.")
-            : choose.data.status === "no_alternate" ? t("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.", "No other place was found — the plan stays as it is.")
-            : choose.data.status === "adjusted" ? t("고르신 곳으로 일정을 바꿨어요.", "Your plan now uses the place you picked.")
-            : choose.data.status === "kept" ? t("지금 일정을 그대로 두었어요.", "Your plan stays as it is.")
-              : t(`처리 결과: ${choose.data.status}`, `Result: ${choose.data.status}`)}</p>}
-
-      {undoable && <section className={styles.act} data-tone="info" aria-labelledby="trip-undo">
-        <h4 id="trip-undo">{t("자동으로 바꾼 일정", "Changed automatically")}</h4>
-        <p>{undoable.text ?? t("서버가 문장을 보내지 않았어요.", "The server sent no text.")}</p>
-        <div className={styles.options}>
-          <Button disabled={undo.isPending} onClick={() => undo.mutate(undoable)}>{undo.isPending ? t("되돌리는 중…", "Undoing…") : t("되돌리기", "Undo")}</Button>
-        </div>
-      </section>}
-      {undo.error && <div className={styles.error} role="alert">{undo.error instanceof LiveError && ["stale_itinerary", "stale", "invalid_version"].includes(undo.error.code)
-        ? t("그 사이 일정이 다시 바뀌어 되돌리지 않았어요. 지금 상태를 다시 불러왔어요.", "The plan changed again meanwhile, so nothing was undone. We reloaded the current state.")
-        : undo.error.message}</div>}
-      {undo.data && !undo.error && <p className={styles.said}>{undo.data.answer ?? t("바꾸기 전 일정으로 되돌렸어요.", "Your plan is back to how it was.")}</p>}
-
-      {tasks === 0 && !goingOn && !focusedNoticeKey && <p className={styles.empty}>{t("지금 처리할 일은 없어요.", "Nothing to do right now.")}</p>}
-    </section>
-
     <div className={styles.tabs} role="tablist" aria-label={t("알림 종류", "Kinds of notices")} onKeyDown={tabKeys}>
       {TABS.map(([key, ko, en]) => <button key={key} type="button" role="tab" id={`trip-center-tab-${key}`} aria-selected={tab === key} aria-controls="trip-center-panel" tabIndex={tab === key ? 0 : -1}
-        onClick={() => onTab(key)}>{t(ko, en)} {counts[key]}{((key === "notices" && unread > 0) || (key === "service" && serviceUnread)) && <span className={styles.unread} role="img" aria-label={t("읽지 않은 알림", "Unread notices")} />}</button>)}
+        onClick={() => onTab(key)}>{t(ko, en)}{" "}
+        {/* `[2026-10-23 사용자 결정]` 「할 일」 숫자는 늘 답할 것의 수 — 없으면 0(옛: 「살펴볼 점」 수를 흐리게, 「할 일 1」인데 「지금 처리할 일은 없어요.」로 읽혔다) */}
+        {key === "todo" ? <span className={styles.count} data-hot={tasks > 0 || undefined}>{tasks}</span>
+          : <span className={styles.count}>{key === "feed" ? feed.length : serviceCount}</span>}
+        {((key === "feed" && feedUnread) || (key === "service" && serviceUnread)) && <span className={styles.unread} role="img" aria-label={t("읽지 않은 알림", "Unread notices")} />}</button>)}
     </div>
-    <div id="trip-center-panel" role="tabpanel" aria-labelledby={`trip-center-tab-${tab}`}>
-      {tab === "warnings" && <>
-        <RiskPanel items={currentRisks} at={risks.data?.at} mode={risks.data?.mode} scope={risks.data}
-          loading={risks.isPending} busy={risks.isFetching} error={risks.isError} retry={risks.refresh}
-          onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />
+    <div id="trip-center-panel" role="tabpanel" aria-labelledby={`trip-center-tab-${tab}`} className={styles.panel}>
+      {tab === "todo" && <>
+        {/* `[2026-10-06]` 재난으로 일정이 멈췄으면 맨 위에: 정지 · 안전 안내 · 다시 시작(일정 칸 맨 윗줄에도 같은 패널이 있다). 정지가 없으면 아무것도 그리지 않는다. */}
+        <SafetyPanel trip={trip} notices={all} onChanged={refresh} onResumed={onResumed} where="center" />
+        {focusedNoticeKey && !targetChoiceId && !choiceAnswered && <section className={styles.act} data-tone="info" data-notice-choice-state>
+          <h4>{focusNotice ? t("알림과 대안 선택", "Notice and alternatives") : t("현재 위험과 대안 선택", "Current risk and alternatives")}</h4>
+          {focusNotice?.text && <p><LinkedText text={focusNotice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /></p>}
+          <p role="status">{proposals.isFetching || notices.isFetching
+            ? t("대안 제안을 확인하고 있어요.", "Checking for alternative proposals.")
+            : t("아직 선택할 대안을 받지 못했어요. 새 제안이 도착하면 자동으로 보여 드려요.", "No alternative proposal has arrived yet. New proposals appear here automatically.")}</p>
+        </section>}
+        {/* `[2026-10-06]` 다시 시작한 뒤(72시간 안): 아는 것 · 모르는 것 · 남은 일정의 영향 · 이어가는 세 가지 길. 다시 정지 중이면(새 사건) 그 정지 패널이 먼저다. */}
+        {goingOn && (recoveryOpen ? <RecoveryPanel key={goingOn.pauseId} trip={trip} recovery={goingOn} onChosen={chosen} />
+          : <section className={styles.act} data-tone="safety" aria-labelledby="trip-recovery-short" data-recovery-short>
+            <h4 id="trip-recovery-short">{t("재난 뒤 이어가기", "Going on after the disaster")}</h4>
+            <p>{[goingOn.event.label, goingOn.event.at ? noticeWhen(goingOn.event.at) : null].filter(Boolean).join(" · ")}{" — "}
+              {goingOn.chosen ? t("고르신 것을 다시 보거나 바꿀 수 있어요.", "You can look at or change your choice.") : t("어떻게 이어갈지 골라 주세요.", "Choose how to go on.")}</p>
+            <div className={styles.options}><Button variant={goingOn.chosen ? "secondary" : "primary"} onClick={() => setRecoveryOpen(true)}>
+              {goingOn.chosen ? t("고르신 것 보기", "See your choice") : t("이어갈 방법 고르기", "Choose how to go on")}</Button></div>
+          </section>)}
+
+        {choices.map(choiceTask)}
+        {/* ★Outside the choice cards: after a decision the server closes the proposal and the card goes away, but what happened (no other place / already decided) must still be said.
+             `[2026-10-22 사용자 결정 — ST4F-723]` The options coming in say nothing (「다른 곳을 찾았어요 — 위에서 골라 주세요.」 is gone): they stand on the card that asked for them. */}
+        {choose.error && <div className={styles.error} role="alert">{chooseFailure(choose.error, t)}</div>}
+        {choose.data && !choose.error && chooseOutcome(choose.data.status, t) && <p className={styles.said} role="status">{chooseOutcome(choose.data.status, t)}</p>}
+
+        {undoable && (() => {
+          const change = changeOf(undoable, history);
+          const kind = noticeKind(undoable.type, t);
+          return <NoticeCard {...kind} label={change ? reasonLabel(change, t) : kind.label} unread={fresh([undoable])} at={undoable.at} when={noticeWhen(undoable.at)} data-task data-center-undo>
+            {body(undoable.key, undoable.text, false)}
+            {changedRows(undoable.changed ?? [])}
+            <div className={c.foot}>
+              <button type="button" className={c.button} disabled={undo.isPending} onClick={() => undo.mutate(undoable)}>
+                <Undo2 size={15} strokeWidth={1.8} aria-hidden="true" />{undo.isPending ? t("되돌리는 중…", "Undoing…") : t("되돌리기", "Undo")}</button>
+            </div>
+          </NoticeCard>;
+        })()}
+        {undo.error && <div className={styles.error} role="alert">{undo.error instanceof LiveError && ["stale_itinerary", "stale", "invalid_version"].includes(undo.error.code)
+          ? t("그 사이 일정이 다시 바뀌어 되돌리지 않았어요. 지금 상태를 다시 불러왔어요.", "The plan changed again meanwhile, so nothing was undone. We reloaded the current state.")
+          : undo.error.message}</div>}
+        {/* `[2026-10-22 ST4F-723]` 서버는 되돌린 결과를 `notice.text` 로 준다(`answer` 는 없다) */}
+        {undo.data && !undo.error && <p className={styles.said} role="status">{undo.data.notice?.text ?? undo.data.answer ?? t("바꾸기 전 일정으로 되돌렸어요.", "Your plan is back to how it was.")}</p>}
+
+        {tasks === 0 && !goingOn && !focusedNoticeKey && <p className={styles.empty}>{t("지금 처리할 일은 없어요.", "Nothing to do right now.")}</p>}
+
+        {(riskPanelShown || shownRisks.length > 0 || warnings.length > 0) && <h3 className={styles.secTitle}>{t("살펴볼 점", "Worth a look")}{worth > 0 ? ` ${worth}` : ""}</h3>}
+        {(riskPanelShown || shownRisks.length > 0) && <RiskPanel items={shownRisks} at={risks.data?.at} mode={risks.data?.mode} scope={riskPanelShown ? risks.data : undefined}
+          loading={riskPanelShown && risks.isPending} busy={risks.isFetching} error={riskPanelShown && risks.isError} retry={risks.refresh}
+          onAlternatives={riskAlternatives.ask} alternativeBusy={riskAlternatives.busy} alternativeMessage={riskAlternatives.message} />}
         {warnings.length > 0 && <ul className={styles.list}>{warnings.map((warning, index) => <li key={`${warning.code}-${warning.date ?? ""}-${index}`}>
           {warning.date && <span className={styles.tag}>{warning.date}</span>}
           <p>{warning.reason}</p>
           {warning.remedy && <p className={styles.remedy}>{warning.remedy}</p>}
         </li>)}</ul>}
       </>}
+      {tab === "feed" && <>
+        <BrowserNotifyOffer />
+        {notices.isPending ? <p className={styles.empty}>{t("알림을 불러오고 있어요.", "Loading the notices.")}</p>
+          : feed.length === 0 && <p className={styles.empty}>{t("받은 알림이 없어요.", "No notices yet.")}</p>}
+        {byDay.map(([date, entries]) => <section key={date} className={styles.day} aria-label={dayHead(date)}>
+          <h4 className={styles.dayHead}>{dayHead(date)}</h4>
+          {entries.map((entry) => entry.kind === "notice" ? noticeEntry(entry.notice) : entry.kind === "proposal" ? proposalEntry(entry) : versionEntry(entry.change))}
+        </section>)}
+        {feed.length > shownFeed.length && <p className={styles.cut}>{t(`최근 ${shownFeed.length}개만 보여요. 전체 ${feed.length}개 중 ${feed.length - shownFeed.length}개는 화면에 없어요.`,
+          `Showing the latest ${shownFeed.length}. ${feed.length - shownFeed.length} of ${feed.length} are not on screen.`)}</p>}
+      </>}
       {tab === "service" && <ServiceNoticeTab />}
-      {tab === "notices" && <BrowserNotifyOffer />}
-      {tab === "notices" && (total === 0 ? <p className={styles.empty}>{t("받은 알림이 없어요.", "No notices yet.")}</p> : <>
-        <ul className={styles.list}>{shown.map((notice) => {
-          const label = NOTICE_LABEL[notice.type];
-          return <li key={notice.key}>
-            <span className={styles.tag} data-type={notice.type}>{label ? t(label[0], label[1]) : notice.type}</span><time>{noticeWhen(notice.at)}</time>
-            {!seenAtOpen.has(notice.key) && <span className={styles.unread} role="img" aria-label={t("새 알림", "New")} />}
-            {/* A link the server wrote into the notice (the plan's address) is pressable, by the chat's rule: https only. */}
-            <p>{notice.text ? <LinkedText text={notice.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /> : t("서버가 문장을 보내지 않았어요.", "The server sent no text.")}</p>
-          </li>;
-        })}</ul>
-        {hidden > 0 && <p className={styles.cut}>{t(`최근 ${shown.length}개만 보여요. 전체 ${total}개 중 ${hidden}개는 화면에 없어요.`, `Showing the latest ${shown.length}. ${hidden} of ${total} are not on screen.`)}</p>}
-      </>)}
-      {tab === "history" && (history.length === 0 ? <p className={styles.empty}>{t("변경 이력이 없어요.", "No changes yet.")}</p>
-        : <ul className={styles.list}>{[...history].reverse().map((entry) => <li key={entry.version}>
-          <span className={styles.tag} data-type="version">v{entry.version}</span><time>{entry.at} · {VERSION_REASON[entry.reason] ? t(...VERSION_REASON[entry.reason]) : entry.reason}</time>
-          {entry.causes.map((cause) => <p key={cause} className={styles.remedy}>{cause}</p>)}
-        </li>)}</ul>)}
     </div>
-
   </div>;
 }
 
+const entryKey = (entry: FeedEntry | null) => !entry ? null : entry.kind === "notice" ? entry.notice.key : entry.kind === "proposal" ? entry.proposalId : null;
+const carries = (entry: FeedEntry, key: string) => entry.kind === "notice" ? entry.notice.key === key : entry.kind === "proposal" && entry.notices.some((notice) => notice.key === key);
 
 /**
- * 「받은 알림」 위 한 줄 — 브라우저(운영체제) 알림 켜기. `[2026-10-16 사용자 지시]`
+ * 「소식」 위 한 줄 — 브라우저(운영체제) 알림 켜기. `[2026-10-16 사용자 지시]`
  * 권한은 단추를 눌렀을 때만 묻는다. 켜면 여행 화면이 뒤에 있을 때도 새 알림이 운영체제 알림으로 뜬다(탭을 닫으면 오지 않는다).
  */
 const noSubscribe = () => () => undefined;

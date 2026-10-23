@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-22T16:27:08.251Z",
+  "library": "@tanstack/query-core",
+  "version": "5.103.1",
+  "sourceSettingsVerified": true,
+  "adminRemoved": true,
+  "caseRetainedAfterLogout": true,
+  "operatorAReads": 1,
+  "operatorBReads": 0,
+  "operatorBObserver": {
+    "status": "success",
+    "isStale": false,
+    "fetchStatus": "idle",
+    "data": {
+      "case_id": "case-owned-by-authorized-view",
+      "evidence": "synthetic-private-case-evidence"
+    }
+  },
+  "verdict": "REPRODUCED: cached Case data survives logout and is displayed without the new operator query executing",
+  "limitation": "Query-core lifecycle probe only; no React/browser/backend/network execution; synthetic data only"
+}

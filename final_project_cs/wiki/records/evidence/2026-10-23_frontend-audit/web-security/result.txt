@@ -1,0 +1,17 @@
+2026-10-23 01:28:43 KST
+cwd: D:/FinalProject/Dev/fe-audit-20261023
+command: node final_project_cs/frontend/apps/web/node_modules/vitest/vitest.mjs run --config evidence/2026-10-23_frontend-audit/web-security/vitest.config.ts
+exit code: 0
+Test Files: 1 passed (1)
+Tests: 3 passed (3)
+Duration: 4.46s
+
+Interpretation: Assertions reproduce unsafe current behavior, not fixed/safe behavior.
+1. Account A write is retried with account B CSRF token and unchanged body.
+2. A stale 401 response clears the newly installed member session.
+3. Route names survive parser/title generation and reach the installed Leaflet 1.9.4 innerHTML assignment.
+
+Non-blocking warning: Vite configLoader:native future default may not accept ESM syntax in this CommonJS-resolved .ts config. Current test runner completed successfully.
+
+Earlier run before relocating probes: 2026-10-23 01:27:14 KST, same 3/3 passed, duration 8.71s.
+No application server started. No real account or customer data used. No browser event handler execution was tested.

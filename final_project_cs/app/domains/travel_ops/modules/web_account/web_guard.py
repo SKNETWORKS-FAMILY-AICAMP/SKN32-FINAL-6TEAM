@@ -36,6 +36,22 @@ ACTION_LABELS = {"intake": "계획 읽기", "plan": "일정 짜기", "confirm": 
                  "message": "채팅 메시지", "warmup": "모델 예열", "place_search": "장소 검색 · 대체 후보 · 사진",
                  "risk_check": "일정 위험 점검(새로 확인)", "risk_read": "일정 위험 점검(캐시 읽기)", "move_judge": "이동 판정"}
 SCOPE_LABELS = {"per_key_day": "키당 하루", "per_ip_day": "주소당 하루", "service_day": "서비스 전체 하루"}
+#: ★`[2026-10-22 사용자 지시]` 서비스 모드의 계정 등급 — 회원(로그인한 계정 · 지금 유료 등급은 없다) · 게스트(로그인 안 함)
+TIERS = ("member", "guest")
+TIER_LABELS = {"member": "회원(로그인)", "guest": "게스트(로그인 안 함)"}
+SERVICE_MODE_NAME = "service.mode_enabled"
+SERVICE_MODE_HELP = "\n".join([
+    "하는 일: 켜면 서비스 운영 단계로 봅니다 — 아래 「하루 한도」(횟수 제한 켜기와 같은 것)가 함께 켜지고, 계정 등급별 「한 시간 한도」가 더해집니다.",
+    "등급: 회원(로그인한 계정)과 게스트(로그인 안 함)를 따로 셉니다. 게스트는 맛보기라 훨씬 적게 둡니다. QA 예외 계정은 등급 한도를 받지 않습니다.",
+    "넘으면: 그 사람만 다음 정시까지 그 작업이 막히고(429), 화면은 「잠시 뒤 다시」 안내를 보입니다. 다른 사람은 영향이 없습니다.",
+    "끄면(지금 · 시험 단계): 한 시간 한도는 세지도 막지도 않습니다. 하루 한도는 「횟수 제한 켜기」를 따릅니다.",
+    "저장하면 재기동 없이 30초 안에 바뀝니다.",
+])
+
+
+def tier_limit_name(tier: str, action: str) -> str:
+    """등급별 한 시간 한도의 운영 설정 이름 — `service.<등급>.<작업>.per_hour`."""
+    return f"service.{tier}.{action}.per_hour"
 
 
 # ── 제한값 ──────────────────────────────────────────────────────
@@ -96,6 +112,15 @@ def specs() -> dict[str, LimitSpec]:
             name = f"web.{action}.{scope}"
             out[name] = LimitSpec(name, f"{ACTION_LABELS[action]} — {label}", "회", "int",
                                   int(guard.get(f"web_guard.limits.{action}.{scope}")),
+                                  int(count["min"]), int(count["max"]))
+    # ★`[2026-10-22 사용자 지시]` 서비스 모드 · 등급별 한 시간 한도 — 기본 꺼짐(시험 단계). 값은 가드레일 `web_guard.service_mode`
+    out[SERVICE_MODE_NAME] = LimitSpec(SERVICE_MODE_NAME, "서비스 모드(켜면 하루 한도 + 회원 · 게스트 한 시간 한도)", "", "bool",
+                                       guard.get("web_guard.service_mode.enabled") is True, help=SERVICE_MODE_HELP)
+    for tier in TIERS:
+        for action in ACTIONS:
+            name = tier_limit_name(tier, action)
+            out[name] = LimitSpec(name, f"서비스 모드 — {TIER_LABELS[tier]} — {ACTION_LABELS[action]} — 한 시간", "회", "int",
+                                  int(guard.get(f"web_guard.service_mode.per_hour.{tier}.{action}")),
                                   int(count["min"]), int(count["max"]))
     session = guard.get("web_guard.bounds.session_per_ip_hour")
     out["web.session.per_ip_hour"] = LimitSpec(
@@ -168,10 +193,10 @@ def specs() -> dict[str, LimitSpec]:
     # ★`[2026-10-22 사용자 지시]` 여행 화면 일정 목록 위 · 계획 확인 화면의 위험 점검 칸 — 3분 점검 · 재난 경고 확인용이라 기본 꺼짐, 시험 때 켠다.
     #   읽는 곳은 `settings_hook.trip_risk_panel_enabled` 하나다(여행 조회 응답 · 공개 읽기 `GET /v1/web/features` 의 `risk_panel`)
     out["travel.trip_screen.risk_panel_enabled"] = LimitSpec(
-        "travel.trip_screen.risk_panel_enabled", "여행 화면 · 계획 확인 화면 위험 점검 칸(3분 점검 · 재난 경고 확인용 — 시험 때만 켜기)", "", "bool",
+        "travel.trip_screen.risk_panel_enabled", "위험 점검 칸 — 여행 화면 · 알림 센터 · 계획 확인 화면(3분 점검 · 재난 경고 확인용 — 시험 때만 켜기)", "", "bool",
         guard.get("travel.trip_screen.risk_panel_enabled") is True,
-        help="여행 화면 일정 목록 위와 계획 확인 화면(등록 전 · 일정 수정)의 「현재 점검 대상 일정이 없어요 · 일부 확인이 안 된 일정 n개 · 확인 시각」 칸입니다.\n"
-             "끄면 그 칸만 숨습니다. 3분마다 하는 점검 · 종 표시 · 위험 알림 · 알림 센터 「주의」 탭의 점검 결과는 그대로입니다.")
+        help="여행 화면 일정 목록 위 · 알림 센터 「살펴볼 점」 탭 · 계획 확인 화면(등록 전 · 일정 수정)의 「현재 점검 대상 일정이 없어요 · 일부 확인이 안 된 일정 n개 · 확인 시각」 칸입니다.\n"
+             "끄면 이 칸이 숨고, 알림 센터에는 실제 위험이 있는 일정(실내 대안 보기)만 남습니다. 3분마다 하는 점검 · 종의 「위험 n」 · 위험 알림 · 일정 카드의 위험 표시는 그대로입니다.")
     # ★`[2026-10-19 사용자 결정 — ST4F-613]` 항로 지킴이 — 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다. 기본 켜짐.
     #   읽는 곳은 `settings_hook.guardian_enabled` 하나다(판정 · 여행 조회 · 켜기 입구 · 알림 · 공개 읽기)
     out["travel.guardian.enabled"] = LimitSpec(
@@ -412,7 +437,9 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
     now = _now(now)
     day = f"day:{now:%Y-%m-%d}"
     limits = values(tenant_id)
-    enabled = bool(limits["web.limits_enabled"])
+    # ★`[2026-10-22 사용자 지시]` 서비스 모드를 켜면 하루 한도도 함께 켜진다(따로 「횟수 제한 켜기」를 켜지 않아도)
+    service = bool(limits.get(SERVICE_MODE_NAME, False))   # 한도 사전을 손으로 만든 시험 · 옛 호출은 새 키가 없다 → 꺼짐
+    enabled = bool(limits["web.limits_enabled"]) or service
     rows = [("all", "*", "service_day"), ("ip", ip_token(ip, day), "per_ip_day"),
             ("key", str(customer_id), "per_key_day")]
     midnight = datetime.combine(now.date() + timedelta(days=1), datetime.min.time(), tzinfo=KST)
@@ -449,7 +476,20 @@ def count(tenant_id: str, action: str, *, customer_id: UUID | str, ip: str,
                                    limit=scope.replace("_day", ""), action=action, used=current, cap=cap,
                                    retry_after=_seconds_to(midnight, now))
             used[scope] = got
-    return {"enabled": enabled, "used": used}
+        if service and not exempt:
+            # ★`[2026-10-22 사용자 지시]` 등급별 한 시간 한도 — 사람(키) 한 명 단위. 게스트 여부는 이때만 읽는다(꺼져 있으면 DB 를 더 부르지 않는다)
+            from .guest_policy import is_guest
+
+            tier = "guest" if is_guest(conn, tenant_id=tenant_id, customer_id=customer_id) else "member"
+            cap = int(limits[tier_limit_name(tier, action)])
+            got = _bump(cur, tenant_id, "key", str(customer_id), action, f"hour:{now:%Y-%m-%dT%H}", cap)
+            if got is None:
+                next_hour = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+                # ★예외가 트랜잭션을 되돌린다 — 이 요청으로 올린 하루 칸도 올라가지 않는다
+                raise UsageRefused(status=429, code="hourly_limit", limit=f"{tier}_hour", action=action, used=cap, cap=cap,
+                                   retry_after=_seconds_to(next_hour, now))
+            used[f"{tier}_hour"] = got
+    return {"enabled": enabled, "service_mode": service, "used": used}
 
 
 def count_session(tenant_id: str, *, ip: str, now: datetime | None = None) -> None:
@@ -574,7 +614,7 @@ def human_check(token: str | None, *, ip: str, verify: Verify | None = None) -> 
     return "passed"
 
 
-__all__ = ["ACTIONS", "HumanCheckFailed", "HumanCheckUnavailable", "LimitSpec", "UsageRefused",
+__all__ = ["ACTIONS", "SERVICE_MODE_NAME", "TIERS", "HumanCheckFailed", "HumanCheckUnavailable", "LimitSpec", "UsageRefused",
            "assert_human_check_configured", "clear_cache", "client_ip", "count",
            "count_auth", "count_session", "human_check", "human_check_required", "ip_token", "overrides", "prune_usage", "specs",
-           "usage_today", "values"]
+           "tier_limit_name", "usage_today", "values"]

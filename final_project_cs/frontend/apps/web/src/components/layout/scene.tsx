@@ -12,6 +12,8 @@ const layers = [
   ["river", "/images/tripilot-home-01-han-river.png"],
   ["journey", "/images/tripilot-home-03-journey.png"],
 ] as const;
+/** The dark theme's one landscape, at every stage (see `scene.module.css`). */
+const night = "/images/tripilot-home-03-journey-night.png";
 
 /**
  * Decorative landscape behind onboarding and the journey. No form data, storage or network.
@@ -61,6 +63,14 @@ export function Scene({ stage, step = 0, totalSteps = 1, complete = false, pulse
     return () => animation?.cancel();
   }, [pulse]);
 
+  // `[2026-10-22]` A picture the browser already had can finish before hydration, while `onLoad` is not listening yet — it then stayed
+  // transparent on every reload (both themes). Count the ones already in once the scene is mounted.
+  useEffect(() => {
+    const done = [...scene.current?.querySelectorAll("img") ?? []].filter((img) => img.complete && img.naturalWidth > 0)
+      .map((img) => img.parentElement?.dataset.scene).filter((name): name is string => Boolean(name));
+    if (done.length) setLoaded((current) => ({ ...current, ...Object.fromEntries(done.map((name) => [name, true])) }));
+  }, []);
+
   const progress = stage === 2 ? (step / Math.max(1, totalSteps - 1) - .5) * 12 : 0;
   const style = { "--scene-progress": `${progress}px` } as CSSProperties;
 
@@ -71,6 +81,9 @@ export function Scene({ stage, step = 0, totalSteps = 1, complete = false, pulse
           <Image src={src} alt="" fill sizes={sizes} priority={index === 0} draggable={false} onLoad={() => setLoaded((current) => ({ ...current, [name]: true }))} />
         </div>
       ))}
+      <div className={styles.layer} data-scene="night" data-loaded={Boolean(loaded.night)}>
+        <Image src={night} alt="" fill sizes={sizes} draggable={false} onLoad={() => setLoaded((current) => ({ ...current, night: true }))} />
+      </div>
     </div>
     <div className={styles.veil} />
     <div ref={light} className={styles.light} />

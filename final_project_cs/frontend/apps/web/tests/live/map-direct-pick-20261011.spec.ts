@@ -28,6 +28,8 @@ for (const width of [375,1280]) {
     const date=await form(page).getByLabel('날짜',{exact:true}).inputValue();
     const start=await form(page).getByLabel('시작',{exact:true}).inputValue();
     await page.route('**/v1/web/trip-intakes/**/place-search?*',route=>route.fulfill({json:{revision:1,item:'0-0',query:'종로 쉼터',results:[],notes:[]}}));
+    // `[2026-10-23 매니저 2fd352df]` 일정 추가 폼은 전용 검색(`add-search`)을 부른다 — 그 응답도 빈 목록으로
+    await page.route('**/v1/web/trip-intakes/**/add-search?*',route=>route.fulfill({json:{revision:1,item:'__new__',query:'종로 쉼터',results:[],notes:[]}}));
     // 결과 유무와 관계없이 직접 위치를 지정할 수 있다.
     await page.getByRole('searchbox').fill('종로 쉼터');
     await expect(page.getByRole('status').filter({hasText:'검색 결과가 없어요.'})).toBeVisible();
@@ -91,7 +93,9 @@ for (const width of [375,1280]) {
     expect(await api.received('POST','/edits')).toHaveLength(0);
     await page.getByRole('button',{name:'검색어 지우기',exact:true}).click();
     await expect(form(page).getByLabel('일정 이름',{exact:true})).toHaveValue('입력 보존');
-    for(let i=0;i<4;i++) await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
+    // `[2026-10-23 ST4F-721 · 722 반영]` 가로 배치도 「내 위치로」 자리를 남겨 지도 높이 204px 이상이 필요하다 — 1280px 에서 네 칸 올리면
+    //   지도가 182px 라 접기 탭만 남아 펼쳐지지 않는다. 세 칸(222px)이면 가로로 펼친다. 「내 위치로」(묶음 밖)는 묶음의 장애물 수에 들지 않는다.
+    for(let i=0;i<3;i++) await page.getByRole('button',{name:'목록 높이 바꾸기'}).press('ArrowUp');
     const group=page.getByRole('group',{name:'지도 단추',exact:true});
     const unfold=group.getByRole('button',{name:'지도 단추 펼치기',exact:true});
     if(await unfold.count()) await unfold.click();

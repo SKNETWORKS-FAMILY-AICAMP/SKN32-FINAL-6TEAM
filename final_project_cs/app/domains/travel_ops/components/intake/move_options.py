@@ -8,6 +8,9 @@
 쓰기(`choose`): 고른 수단으로 그 구간을 **다시 계산해 닿는지 확인한 뒤에만** 받는다 — 화면이 보낸 `fits` 를 믿지 않는다. 저장은 고객의 값(`moves[{from}~{to}].mode` 값 줄)으로
   새 판(revision+1)에 남는다 — 장소·시간 고치기와 같은 방식이라 앞 판의 근거를 지우지 않는다. `recommended` 는 되돌리기(값을 비운다).
   고른 값이 있는 구간은 앞뒤 일정이 바뀌어도 같은 방식으로 다시 시도한다(`review.build`): 닿으면 유지(`kept`) · 안 닿으면 추천으로 복귀(`dropped` + 이유).
+경로 후보 `[2026-10-23 사용자 지시 — 먼저 3개 · 목록을 내리면 더]`: 검사(`moves[].routes`)가 구간마다 경로 후보 앞의 3개를 이미 싣는다(같은 계산 · 지연 없음).
+  `routes` 읽기는 그 뒤를 준다 — 후보 상한을 넓힌 계산기(`wide`)로 그 구간을 한 번 더 세고, 검사가 이미 보인 후보는 빼고 `offset` · `limit` 만큼.
+  `choose_route` 쓰기는 고른 경로를 그 구간에서 다시 세어 닿을 때만 받는다(`moves[{from}~{to}].route` 값 줄 · 고른 수단 값은 비운다).
 """
 from __future__ import annotations
 
@@ -20,11 +23,17 @@ from typing import Any, Callable
 from uuid import UUID
 
 from . import review as review_module
-from .moves import Leg, leg_between
+from .moves import ROUTES_FIRST, Leg, leg_between
 from .review import MOVE_LABEL, MOVE_MODES, _dt, _hm, mode_fits, why_not
+
+#: 「더 보기」 한 번에 주는 경로 후보 수(기본) · 최대 — 화면이 `limit` 로 고른다
+ROUTES_PAGE = 5
+ROUTES_PAGE_MAX = 20
+#: 넓게 찾기 계산 하나의 기다림 상한(초) — 넓게 찾기는 보통 계산보다 0.3~0.6초 더 걸렸다(2026-10-23 이 PC 실측, 기록 문서). 넘으면 「확인 못 함」
 
 #: 수단 하나의 계산에 기다리는 시간 상한(초) — 못 닿는 구간은 3~11초 걸린다(2026-10-03 실측). 넘으면 그 줄만 「확인 못 함」. ★우리가 고른 값(실서버 재서 다시 정한다 `[미실측]`)
 OPTION_TIMEOUT_S = 14.0
+ROUTES_TIMEOUT_S = 14.0
 SLOW_TEXT = "계산이 오래 걸려 확인하지 못했어요"
 
 
@@ -132,6 +141,59 @@ def options(found: dict[str, Any], from_id: str, to_id: str, *,
             "recommended_mode": move.get("recommended_mode") or current, "options": rows}
 
 
+def _wide_engine(party_size: int | None, pricing=None) -> Any:
+    """후보 상한을 넓힌 기본 계산기(`review.default_engine(wide=True)`). 이동 팀이 없으면 None."""
+    from .review import default_engine
+    from .taxi_pricing import constraints, default
+    selected = constraints(pricing)
+    if pricing == default():
+        selected = {}
+    return default_engine(party_size, constraints=selected, wide=True) if selected else default_engine(party_size, wide=True)
+
+
+def _route_leg(found: dict[str, Any], from_id: str, to_id: str, engine: Any, *, prefer: str | None = None,
+               timeout_s: float = ROUTES_TIMEOUT_S) -> tuple[dict[str, Any], Leg | None]:
+    """(구간 검사 줄, 넓게 센 구간 또는 None = 시간 안에 못 셈). 아침 구간(숙소 → 그날 첫 일정)은 검사와 같은 아침 시각부터 센다."""
+    move, a, b = _find(found, from_id, to_id)
+    pa, pb, a_end, b_start, _ = _inputs(a, b, move)
+    if move.get("from_stay"):
+        from .review import STAY_MORNING_FROM
+        a_end = _dt(b.get("date"), STAY_MORNING_FROM) or a_end
+    if engine is None:
+        raise NotAvailable("이동 계산기가 꺼져 있다")
+    pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="move-routes")
+    future = pool.submit(leg_between, engine, pa, pb, a_end, b_start, prefer=prefer)
+    wait([future], timeout=timeout_s)
+    pool.shutdown(wait=False)
+    if not future.done():
+        return move, None
+    leg = future.result()                                   # TeamUnavailable · 계산 오류는 위로(어림값은 Leg 로 온다)
+    return move, leg
+
+
+def routes(found: dict[str, Any], from_id: str, to_id: str, *, offset: int = ROUTES_FIRST, limit: int = ROUTES_PAGE,
+           engine: Any = None, party_size: int | None = None, timeout_s: float = ROUTES_TIMEOUT_S) -> dict[str, Any]:
+    """구간의 경로 후보 **다음 쪽** — 검사가 이미 보인 후보(`moves[].routes`) 다음부터. 줄 모양은 검사의 `routes[]` 와 같다.
+    `offset` = 화면이 이미 보인 후보 수(검사의 3개 + 앞서 받은 것), `limit` = 이번에 받을 수. 다음이 없으면 `has_more: false`."""
+    if engine is None:
+        engine = _wide_engine(party_size, found.get("taxi_pricing"))
+    move, leg = _route_leg(found, from_id, to_id, engine, timeout_s=timeout_s)
+    shown = [r for r in move.get("routes") or [] if isinstance(r, dict)]
+    head = {"revision": found.get("revision"), "from": from_id, "to": to_id, "route_key": move.get("route_key")}
+    if leg is None:
+        return {**head, "routes": [], "offset": offset, "next_offset": offset, "has_more": True, "total": None, "why": SLOW_TEXT}
+    if leg.basis != "timetable":
+        return {**head, "routes": [], "offset": offset, "next_offset": offset, "has_more": False, "total": len(shown),
+                "why": "이 구간은 시간표로 경로를 찾지 못했어요"}
+    seen = {r.get("key") for r in shown}
+    rest = shown + [dict(r) for r in leg.routes if r.get("key") not in seen]
+    offset = max(int(offset), 0)
+    limit = min(max(int(limit), 1), ROUTES_PAGE_MAX)
+    page = rest[offset:offset + limit]
+    return {**head, "routes": page, "offset": offset, "next_offset": offset + len(page),
+            "has_more": offset + len(page) < len(rest), "total": len(rest)}
+
+
 def _default_factory(party_size: int | None, pricing=None) -> Callable[[str], Any] | None:
     """기본 계산기 팩토리. 이동 팀이 없으면 None."""
     from .review import default_engine
@@ -158,6 +220,48 @@ def party_size_of(conn, *, tenant_id: str, intake_id: UUID, revision: int) -> in
         return int(value) if value is not None else None
     except (TypeError, ValueError):
         return None
+
+
+def read_routes(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int | None, from_id: str, to_id: str,
+                offset: int = ROUTES_FIRST, limit: int = ROUTES_PAGE, engine: Any = None) -> dict[str, Any]:
+    """경로 후보 더 보기 입구 — 남의 접수 `LookupError` · 낡은 판 `IntakeConflict` · 구간 없음 `NotAvailable`."""
+    from . import pipeline
+
+    _, found = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)
+    party = party_size_of(conn, tenant_id=tenant_id, intake_id=intake_id, revision=found["revision"])
+    return routes(found, from_id, to_id, offset=offset, limit=limit, engine=engine, party_size=party)
+
+
+def choose_route(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, from_id: str, to_id: str,
+                 key: str, engine: Any = None) -> dict[str, Any]:
+    """고른 경로를 반영한다 → `{"revision": 새 판, "review": 검사 전체(public)}`. `key` = 경로 열쇠(`routes[].key`) · `"recommended"` = 되돌리기.
+    그 구간을 넓게 다시 세어 **그 경로가 있고 다음 일정 안에 닿을 때만** 받는다(화면이 보낸 값을 믿지 않는다) — 안 닿으면 `ModeNotFit`(422).
+    저장은 `moves[{from}~{to}].route` 와 함께 고른 수단 값(`.mode`)을 비운다 — 경로가 수단을 정한다."""
+    from . import pipeline
+
+    if not isinstance(key, str) or not key.strip():
+        raise ModeNotFit("알 수 없는 경로예요")
+    _, found = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)
+    _find(found, from_id, to_id)
+    pair = f"moves[{from_id}~{to_id}]"
+    if key == "recommended":
+        fields = [(f"{pair}.route", None)]
+    else:
+        if engine is None:
+            party = party_size_of(conn, tenant_id=tenant_id, intake_id=intake_id, revision=found["revision"])
+            engine = _wide_engine(party, found.get("taxi_pricing"))
+        _, leg = _route_leg(found, from_id, to_id, engine, prefer=key)
+        if leg is None:
+            raise ModeNotFit(SLOW_TEXT)
+        if leg.route_key != key:
+            raise ModeNotFit("고른 경로를 지금 시각으로는 찾지 못했어요 · 목록을 다시 불러와 주세요")
+        if not mode_fits(leg):
+            b = next((it for it in found.get("items") or [] if it.get("id") == to_id), {})
+            raise ModeNotFit(why_not("고른 경로", leg, str(b.get("starts_at") or "")))
+        fields = [(f"{pair}.route", key), (f"{pair}.mode", None)]
+    new = _store(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision, fields=fields)
+    _, found2 = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new)
+    return {"revision": new, "review": review_module.public(found2, tenant_id=tenant_id)}
 
 
 def read(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int | None, from_id: str, to_id: str,
@@ -188,14 +292,22 @@ def choose(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision
             raise ModeNotFit(f"{review_module.ro(MOVE_LABEL.get(mode, mode))}는 이 구간을 갈 수 없어요")
         if row.get("fits") is not True:
             raise ModeNotFit(str(row.get("why_not") or "닿지 않는 수단이에요"))
+    # `[2026-10-23]` 수단을 새로 고르면(되돌리기 포함) 앞서 고른 경로는 비운다 — 경로가 수단보다 앞서므로 남기면 고른 수단이 안 먹는다
     new = _store(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision,
-                 field=f"moves[{from_id}~{to_id}].mode", value=None if mode == "recommended" else mode)
+                 fields=[(f"moves[{from_id}~{to_id}].mode", None if mode == "recommended" else mode),
+                         *([(f"moves[{from_id}~{to_id}].route", None)] if _has_route(found, from_id, to_id) else [])])
     _, found2 = pipeline.current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=new)
     return {"revision": new, "review": review_module.public(found2, tenant_id=tenant_id)}
 
 
-def _store(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, field: str, value: Any) -> int:
-    """고객의 값 줄 하나를 얹은 **새 판**을 만든다(`pipeline.edit` 와 같은 방식 — 앞 판을 그대로 옮기고 고친 값을 뒤에 얹는다). 새 판의 검사도 바로 계산한다."""
+def _has_route(found: dict[str, Any], from_id: str, to_id: str) -> bool:
+    move = next((m for m in found.get("moves") or [] if m.get("from") == from_id and m.get("to") == to_id), None)
+    return bool(move and move.get("route_choice"))
+
+
+def _store(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, field: str | None = None, value: Any = None,
+           fields: list[tuple[str, Any]] | None = None) -> int:
+    """고객의 값 줄(하나 · `fields` 면 여럿)을 얹은 **새 판**을 만든다(`pipeline.edit` 와 같은 방식 — 앞 판을 그대로 옮기고 고친 값을 뒤에 얹는다). 새 판의 검사도 바로 계산한다."""
     from . import pipeline
 
     with conn.transaction(), conn.cursor() as cur:
@@ -214,10 +326,11 @@ def _store(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision
                     "evidence, needs_review, note, created_at) SELECT intake_id, tenant_id, %s, source_id, field, "
                     "value_json, method, evidence, needs_review, note, created_at FROM intake_claims "
                     "WHERE tenant_id=%s AND intake_id=%s AND revision=%s", (new, tenant_id, intake_id, current))
-        cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, method, "
-                    "evidence, needs_review, note, created_at) VALUES (%s,%s,%s,NULL,%s,%s,'customer',%s,false,NULL, clock_timestamp())",
-                    (intake_id, tenant_id, new, field, json.dumps(value, ensure_ascii=False),
-                     json.dumps({"via": "move_options"}, ensure_ascii=False)))
+        for name, val in (fields if fields is not None else [(field, value)]):
+            cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, method, "
+                        "evidence, needs_review, note, created_at) VALUES (%s,%s,%s,NULL,%s,%s,'customer',%s,false,NULL, clock_timestamp())",
+                        (intake_id, tenant_id, new, name, json.dumps(val, ensure_ascii=False),
+                         json.dumps({"via": "move_options"}, ensure_ascii=False)))
         cur.execute("UPDATE trip_intakes SET revision=%s, updated_at=now() WHERE tenant_id=%s AND intake_id=%s",
                     (new, tenant_id, intake_id))
     pipeline._review_of(conn, tenant_id, intake_id, new, pipeline._sources(conn, tenant_id, intake_id),
@@ -225,4 +338,5 @@ def _store(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision
     return new
 
 
-__all__ = ["ModeNotFit", "NotAvailable", "OPTION_TIMEOUT_S", "choose", "options", "party_size_of", "read"]
+__all__ = ["ModeNotFit", "NotAvailable", "OPTION_TIMEOUT_S", "ROUTES_PAGE", "choose", "choose_route", "options", "party_size_of", "read",
+           "read_routes", "routes"]

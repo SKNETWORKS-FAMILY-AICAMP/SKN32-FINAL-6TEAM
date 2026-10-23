@@ -10,12 +10,21 @@
   .camera { inset: -16px; }
   .layer img { object-position: 36% bottom; }
   .layer[data-scene="river"] img { object-position: 23% bottom; }
-  .layer[data-scene="journey"] img { object-position: 65% bottom; }
+  .layer[data-scene="journey"] img, .layer[data-scene="night"] img { object-position: 65% bottom; }
   .veil { background: linear-gradient(180deg, #fbfcf4b3 0%, #f9faf54d 48%, #f4f7ec33 100%); }
 }
 @media (prefers-reduced-motion: reduce) {
   .camera, .layer { transform: none; transition: none; }
   .light { display: none; }
 }
-/* The dark theme has no landscape (the survey's pictures are daylight): only the page colour stays. The veil and light colours belong to the green pictures. */
-:global(:root[data-theme="dark"]) .camera { display: none; }
+/*
+ * `[2026-10-22 사용자 지시]` The dark theme has a landscape too, like green: the night picture (the intro's 「서울 불빛」) at every stage — the three survey
+ * pictures are daylight and have no night versions. Hidden in green. The veil and light take the dark page colours
+ * (they used to stay green-white over a bare page and showed as a grey gradient).
+ */
+.layer[data-scene="night"] { display: none; }
+:global(:root[data-theme="dark"]) .layer:not([data-scene="night"]) { display: none; }
+:global(:root[data-theme="dark"]) .layer[data-scene="night"] { display: block; }
+:global(:root[data-theme="dark"]) .layer[data-scene="night"][data-loaded="true"] { opacity: 1; transform: scale(1); }
+:global(:root[data-theme="dark"]) .veil { background: linear-gradient(180deg, color-mix(in srgb, var(--color-paper) 55%, transparent) 0%, color-mix(in srgb, var(--color-paper) 18%, transparent) 50%, transparent 100%); }
+:global(:root[data-theme="dark"]) .light { background: radial-gradient(ellipse at 76% 75%, color-mix(in srgb, var(--color-warning) 45%, transparent), transparent 58%); }
