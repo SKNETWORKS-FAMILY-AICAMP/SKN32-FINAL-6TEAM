@@ -320,24 +320,22 @@ export async function openApi<T>(path: string, language: Language, init: Request
 }
 
 /**
- * A request with the session. The session is made on first use (guest). A write the server refuses for its token (`403 csrf_failed`)
- * gets the token again and goes once more — nothing was done the first time. A 401 means the session ended: it is forgotten and said
+ * `[2026-10-23 F-02]` A request with the session, made on first use (guest). A token refusal refreshes the session and stops:
+ * the cookie may now belong to someone else, so the same body must not be sent again. A 401 means the session ended: it is forgotten and said
  * plainly (see `sessionChecked`); we do NOT quietly make a new one and retry, or the old trips would silently disappear from view.
  */
 export async function api<T>(path: string, language: Language, init: RequestInit = {}): Promise<T> {
-  let session = await ensureSession(language);
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      const response = await send(`${API_BASE}${path}`, withSession(init, session), language);
-      return await response.json() as T;
-    } catch (error) {
-      if (attempt === 0 && error instanceof LiveError && error.code === "csrf_failed") {
-        const fresh = await probeSession(language, true);
-        if (fresh) { session = fresh; continue; }
-      }
-      if (error instanceof LiveError && error.code === "consent_required" && typeof window !== "undefined") window.dispatchEvent(new Event(CONSENT_REQUIRED_EVENT));
-      throw sessionChecked(error, language, session);
+  const session = await ensureSession(language);
+  try {
+    const response = await send(`${API_BASE}${path}`, withSession(init, session), language);
+    return await response.json() as T;
+  } catch (error) {
+    if (error instanceof LiveError && error.code === "csrf_failed") {
+      await probeSession(language, true);
+      throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
     }
+    if (error instanceof LiveError && error.code === "consent_required" && typeof window !== "undefined") window.dispatchEvent(new Event(CONSENT_REQUIRED_EVENT));
+    throw sessionChecked(error, language, session);
   }
 }
 
