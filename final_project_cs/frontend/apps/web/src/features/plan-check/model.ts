@@ -16,7 +16,7 @@ import type { MoveRoute, RouteChoice } from "@/lib/live/move-options";
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pending";
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
 export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival" | "risk";
-export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
+export interface CheckRow { kind: CheckKind; result: CheckResult; text: string; canAcknowledge?: boolean }
 /** `[2026-10-07]` One value read two ways off a photo: the one kept and the other reading. */
 export interface Reread { field: "title" | "booking_no"; current: string; other: string }
 
@@ -425,7 +425,8 @@ export const lateInto = (view: Pick<PlanCheckView, "moves">, id: string): boolea
 };
 
 /** `[2026-10-20 C안]` A card whose verdict is in stops the check: it needs a look, or the way to it arrives late (a place problem is asked first, then the arrival). */
-export const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">) => item.verdict === "review" || (item.verdict !== null && lateInto(view, item.id));
+export const stopsHere = (item: PlanItem, view: Pick<PlanCheckView, "moves">, acknowledged?: (item: PlanItem) => boolean) =>
+  (item.verdict === "review" && !acknowledged?.(item)) || (item.verdict !== null && lateInto(view, item.id));
 
 /**
  * `[2026-10-21 사용자 지적]` The card the check is held at while the server still checks the rest: its verdict needs a look (or its way in is late) and is drawn only once the
@@ -449,8 +450,10 @@ export function heldAt(shown: PlanCheckView, target: PlanCheckView, cutRows = fa
 }
 
 /** `[2026-10-20 C안]` What the stopped card asks about: its place (or what else needs a look) first, then the way to it. */
-export const stopKind = (view: PlanCheckView, id: string): "place" | "arrival" =>
-  view.items.find((item) => item.id === id)?.verdict === "review" ? "place" : "arrival";
+export const stopKind = (view: PlanCheckView, id: string, acknowledged?: (item: PlanItem) => boolean): "place" | "arrival" => {
+  const item = view.items.find((item) => item.id === id);
+  return item?.verdict === "review" && !acknowledged?.(item) ? "place" : "arrival";
+};
 
 /**
  * ★`[2026-10-22 사용자 결정 — 문제 줄에서 멈추기]` (목업 `mockups/tripilot-plan-check-row-stop.html`) The check row a stopped card's question is about: the check stops there, the
@@ -513,7 +516,7 @@ export function revealedRows(rows: CheckRow[], cut: { row: number; hide: boolean
  * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` Where the first check stops to ask: the first card along the days whose drawn verdict is 「확인 필요」 or whose way in arrives late, once the
  * server's check is final. Nothing past it is drawn until the customer picks and the card passes (flow mockup `mockups/tripilot-plan-flow-register.html` 4단계).
  */
-export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | null {
+export function stopAt(shown: PlanCheckView, target: PlanCheckView, acknowledged?: (item: PlanItem) => boolean): string | null {
   if (target.stage !== "done") return null;
   // `[2026-10-21 P6]` Along the plan as the server has it: a question not answered yet stops it once every stop before it is drawn with its verdict (`askStopId`).
   for (const entry of checkOrder(target)) {
@@ -522,7 +525,7 @@ export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | nu
     const item = shown.items.find((candidate) => candidate.id === entry.id);
     // Not drawn yet, or its verdict still to come: the check goes on toward it first.
     if (!item || (item.verdict === null && target.items.find((candidate) => candidate.id === entry.id)?.verdict != null)) return null;
-    if (stopsHere(item, shown)) return entry.id;
+    if (stopsHere(item, shown, acknowledged)) return entry.id;
   }
   return null;
 }
@@ -531,10 +534,10 @@ export function stopAt(shown: PlanCheckView, target: PlanCheckView): string | nu
  * `[2026-10-20 C안]` The finished check cut where it stops: every card and leg up to the first card that needs a look (or arrives late), the rest not drawn yet — what a page shows at
  * once that opens a checked plan with something to fix, or that skips the animation. The whole check when nothing stops it.
  */
-export function cutAtStop(view: PlanCheckView): PlanCheckView {
+export function cutAtStop(view: PlanCheckView, acknowledged?: (item: PlanItem) => boolean): PlanCheckView {
   if (view.stage !== "done") return view;
   const order = checkOrder(view);
-  const at = order.findIndex((entry) => entry.type === "ask" || (entry.type === "item" && stopsHere(view.items.find((item) => item.id === entry.id)!, view)));
+  const at = order.findIndex((entry) => entry.type === "ask" || (entry.type === "item" && stopsHere(view.items.find((item) => item.id === entry.id)!, view, acknowledged)));
   if (at < 0) return view;
   // `[2026-10-21 P6]` At a question, up to the stop before it (the question has no card).
   const drawn = new Set(order.slice(0, order[at].type === "ask" ? at : at + 1).map((entry) => entry.id));

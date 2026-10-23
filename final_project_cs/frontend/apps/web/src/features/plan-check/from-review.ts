@@ -18,7 +18,8 @@ import type { CheckRow, PlaceInfo, PlanAsk, PlanCandidate, PlanCandidateLeg, Pla
  *   screen paces what it draws (`nextStep` in model.ts), the server keeps no pace.
  */
 
-const row = (line: CheckLine<ItemRow | MoveRow>): CheckRow => ({ kind: line.row, result: line.result, text: line.text });
+const row = (line: CheckLine<ItemRow | MoveRow>): CheckRow => ({ kind: line.row, result: line.result, text: line.text,
+  ...(line.can_acknowledge === true ? { canAcknowledge: true } : {}) });
 
 /** keep · adjusted · review. A leg that waits (an end has no place) is settled — it just has nothing to check. */
 const verdictOf = (status: ReviewItem["status"] | ReviewMove["status"]): Verdict | null =>

@@ -80,7 +80,7 @@ def iga(word: str) -> str:
     return word + ("이" if _jong(word) else "가")
 
 
-def _line(row: str, result: str, text: str) -> dict[str, str]:
+def _line(row: str, result: str, text: str) -> dict[str, Any]:
     return {"row": row, "result": result, "text": text}
 
 
@@ -289,7 +289,7 @@ def _live_reference(act: dict[str, Any]) -> str | None:
     return "참고 · 웹 공지에는 임시 휴무로 나와요(확인하는 중이라 판단에는 반영하지 않았어요)"
 
 
-def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, str], dict[str, str]]:
+def _hours_lines(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, Any], dict[str, Any]]:
     """(운영시간 줄, 휴무일 줄). 운영시간 줄에는 화면 문장과 따로 **시작 시각에 열려 있나**(`open_at` ok · bad)를 싣는다 — 알 때만.
     웹 공지 참고(`_live_reference`)는 휴무일 줄 끝에 덧붙인다 — 줄의 결과는 바꾸지 않는다.
 
@@ -334,7 +334,7 @@ def _open_at_start(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]
     return "ok"
 
 
-def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, str], dict[str, str]]:
+def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violation]) -> tuple[dict[str, Any], dict[str, Any]]:
     """(운영시간 줄, 휴무일 줄) — 화면 문장."""
     when = _dt(row["date"], row["start"])
     if when is None or row["place"] is None:
@@ -401,13 +401,17 @@ def _hours_and_closed(row: dict[str, Any], facts: HoursFacts, vios: list[Violati
     if "break_time" in codes:
         brk = facts.attributes.get("break") or ["", ""]
         parts.append(("warn", f"{brk[0]}–{brk[1]} 브레이크 타임에 걸쳐요"))
+    can_acknowledge = not parts and not vios and facts.needs_check and facts.open_at_slot is True and facts.order_ok is not False
     if facts.order_ok is False and facts.open_at_slot:
         parts.append(("warn", "마지막 주문이 지났을 수 있어요"))
     elif facts.needs_check and facts.open_at_slot:
         parts.append(("warn", "닫을 시각이 가까워 마지막 주문을 확인해 주세요"))
     if parts:
         result, text = _worst(parts)
-        return _line("hours", result, text), closed
+        line = _line("hours", result, text)
+        if can_acknowledge:
+            line["can_acknowledge"] = True
+        return line, closed
     brk = facts.attributes.get("break")
     extra = f" · 브레이크 {brk[0]}–{brk[1]}" if isinstance(brk, (list, tuple)) and len(brk) == 2 else ""
     return _line("hours", "ok", f"{opens}–{closes} 안에 머물러요{extra}"), closed

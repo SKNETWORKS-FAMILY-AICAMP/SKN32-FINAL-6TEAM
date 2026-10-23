@@ -80,7 +80,9 @@ export function useFollowScroll(box: RefObject<HTMLElement | null>, find: (box: 
   const onKeyDown = useCallback((event: KeyboardEvent<HTMLElement>) => {
     if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].includes(event.key)) note();
   }, [note]);
-  const resume = useCallback(() => setFollowing(true), []);
+  // `[2026-10-23]` Pressing 「따라가기」 is the customer asking the screen to scroll: forget their last wheel or touch. Otherwise the screen's own scroll that follows,
+  // within `USER_MS` of a wheel just before the press, was read as theirs and turned the following off again (the pill stayed — stop-ask-flow e2e, fast runs only).
+  const resume = useCallback(() => { touched.current = 0; setFollowing(true); }, []);
 
   return { following, resume, handlers: { onScroll, onWheel: note, onTouchMove: note, onPointerDown, onKeyDown } };
 }

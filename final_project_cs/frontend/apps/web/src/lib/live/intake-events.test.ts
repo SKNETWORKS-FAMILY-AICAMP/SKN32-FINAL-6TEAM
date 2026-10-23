@@ -46,6 +46,13 @@ describe("reading the server's progress events", () => {
     expect(event).toMatchObject({ item: { status: "review", place_state: "picked_nearest", candidates_hint: 5, place: { name: "올리브영 인사동점", latitude: 37.5741, source: "kakao" } } });
   });
 
+  it("retains explicit acknowledgement permission from SSE without accepting truthy strings", () => {
+    for (const permission of [true, false, undefined, "true"]) {
+      const event = toIntakeEvent("check", JSON.stringify({ item: "0-1", row: "hours", result: "warn", text: "마지막 주문 확인", can_acknowledge: permission }));
+      expect(event?.type === "check" && event.line.can_acknowledge === true).toBe(permission === true);
+    }
+  });
+
   it("reads the booking row the server added (2026-10-03) like any other check line", () => {
     expect(toIntakeEvent("check", JSON.stringify({ item: "0-1", row: "booking", result: "warn", text: "예약했다고 했는데 장소를 모르겠어요" })))
       .toEqual({ type: "check", item: "0-1", line: { row: "booking", result: "warn", text: "예약했다고 했는데 장소를 모르겠어요" } });

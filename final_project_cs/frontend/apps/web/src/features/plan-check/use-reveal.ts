@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSettings } from "@/lib/settings";
 import { beginRecheck, cutAtStop, nextStep, onlyCard, rebase, rowStop, stopAt, stopRowOf, syncDrawn, type PlanCheckView } from "./model";
+import { canAcknowledgeHours, hoursWarningKey } from "./hours-warning";
+import type { PlanItem } from "./model";
 
 /**
  * ★`[2026-10-04 사용자 지시 · 코덱스 의견]` 확인 표시는 사용자가 「이건 확인됐구나」를 알아볼 속도로 켜진다 — 한 줄이 켜지고 다음 줄이 켜지기까지 300ms
@@ -105,7 +107,7 @@ export interface RevealRowCut { id: string; row: number; hide: boolean }
 export function useReveal(given: PlanCheckView, paused = false, stops = false): {
   view: PlanCheckView; settled: boolean; stop: RevealStop | null;
   rowCut: RevealRowCut | null;
-  recheck: { begin: (id: string) => void; fail: (id: string) => void };
+  recheck: { begin: (id: string) => void; fail: (id: string) => void; acknowledgeHours: (id: string) => void; isHoursAcknowledged: (item: PlanItem) => boolean };
   /** `[2026-10-20 C안]` This page drew the check (it was not finished when the page opened) — the 5-second 「여행 등록」 bar is for such a check only. */
   watched: boolean;
 } {
@@ -118,6 +120,8 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
   // `[2026-10-21 사용자 결정 — P6]` Interpretation questions are asked only where the check stops: elsewhere (a page opened on a finished check, the edit of a trip) they are left as the
   //   server applied them (its first option), and nothing waits at their place.
   const target = useMemo(() => stopping || !given.asks?.length ? given : { ...given, asks: [] }, [stopping, given]);
+  const [hoursAcknowledgements, setHoursAcknowledgements] = useState<Record<string, string>>({});
+  const isHoursAcknowledged = (item: PlanItem) => canAcknowledgeHours(item) && hoursAcknowledgements[item.id] === hoursWarningKey(item);
   const [shown, setShown] = useState(target);
   const [wasPaused, setWasPaused] = useState(paused);
   // `[2026-10-20 C안]` A pick sent for the stopped card, and the revision it was sent on: nothing is drawn until the server answers with another one.
@@ -133,7 +137,7 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
   if (wasPaused !== paused) setWasPaused(paused);
   if (firstMap) setShown({ ...target, stage: "checking", items: [], moves: [] });
   // `[2026-10-20 C안]` Skipping the animation still stops to ask: the check is drawn at once up to the first card that needs a look.
-  const cut = useMemo(() => stopping && reduced ? cutAtStop(target) : target, [stopping, reduced, target]);
+  const cut = stopping && reduced ? cutAtStop(target, isHoursAcknowledged) : target;
   const immediate = !paused && !firstMap && (reduced ? cut === target : shown.stage === "done" && target.stage === "done");
   // Keep the state in step with what is returned before another render can pause or restart the replay.
   // This guarded update adjusts only this hook's component; an effect would leave the old snapshot until after commit.
@@ -147,7 +151,7 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
     setAsked(null); setTicking(asked.id); setTickRow(kept); setShown(rebase(shown, target, asked.id));
   }
   else if (!paused && !immediate && cut !== target && !asked && JSON.stringify(shown) !== JSON.stringify(cut)) setShown(cut);
-  const stopId = stopping && !immediate ? stopAt(shown, target) : null;
+  const stopId = stopping && !immediate ? stopAt(shown, target, isHoursAcknowledged) : null;
   const cardOf = (view: PlanCheckView, id: string) => JSON.stringify(view.items.find((item) => item.id === id));
   if (ticking && cardOf(shown, ticking) === cardOf(target, ticking)) { setTicking(null); setTickRow(null); }
   // ★`[2026-10-21 ST4F-703]` Stopped, nothing picked: what is drawn takes the server's values at once (the card being ticked in again steps on). Skipping the animation draws
@@ -184,6 +188,11 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
   // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
   const live = useMemo(() => (shown.serverProgress === target.serverProgress ? shown : { ...shown, serverProgress: target.serverProgress }), [shown, target.serverProgress]);
   const recheck = {
+    isHoursAcknowledged,
+    acknowledgeHours: (id: string) => {
+      const item = target.items.find((item) => item.id === id);
+      if (item && canAcknowledgeHours(item)) setHoursAcknowledgements((current) => ({ ...current, [id]: hoursWarningKey(item) }));
+    },
     begin: (id: string) => {
       const item = shown.items.find((entry) => entry.id === id);
       setAsked({ id, revision: target.revision, row: item ? stopRowOf(item) : 0 });
