@@ -4,6 +4,7 @@ import { eun, ro } from "@/lib/josa";
 import type { MoveOptions } from "@/lib/live/move-options";
 import type { PlanAsk, PlanCandidate, PlanCheckView, PlanItem, PlanMove } from "./model";
 import { fareText } from "./move-mode";
+import { canAcknowledgeHours } from "./hours-warning";
 
 /**
  * ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` The question asked inside a card the first check stopped at (flow mockup `mockups/tripilot-plan-flow-register.html` 4단계):
@@ -22,7 +23,7 @@ export function basisTag(basis: PlanCandidate["basis"], t: Translate): string | 
     : basis === "meal_inferred" ? t("식사 시간 식당", "Meal-time place") : basis === "lodging" ? t("숙소", "Stay")
       : basis === "lodging_meal" ? t("숙소 안 식사", "Meal at the stay") : basis === "taste" ? t("취향 추천", "For your taste") : null;
 }
-export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "confirm" } | { type: "noplace" }
+export type StopAct = { type: "pick"; candidate: PlanCandidate } | { type: "confirm" } | { type: "noplace" } | { type: "acknowledge-hours" }
   | { type: "taxi"; moveId: string } | { type: "later"; start: string; end: string }
   // `[2026-10-21 P6]` An option of an interpretation question; `search`: the stop is put back and the change screen's place search opens on these words.
   | { type: "interpret"; option: string; search: string | null };
@@ -151,6 +152,12 @@ export function placeQuestion(item: PlanItem, plan: PlanCheckView, candidates: r
       : t(`${quotedEun(item.title)} 이름이 여러 곳이라 가까운 ${quotedRo(place)} 임시로 골랐어요. 어디로 갈까요?`, `Several places match “${item.title}”, so the nearest, “${place}”, was taken for now. Where should we go?`);
     return { need: "confirm", question, options: [...keep, ...picks] };
   }
+  if (canAcknowledgeHours(item)) return { need: "confirm",
+    question: t(`「${item.title}」 영업시간 주의를 읽고 어떻게 할지 골라 주세요`, `Read the opening-hours caution for “${item.title}” and choose how to continue`),
+    options: [{ key: "acknowledge-hours", label: t("주의를 읽었어요 · 이 장소로 계속", "I read the caution · continue with this place"), reason: null,
+      fact: item.checks.find((row) => row.kind === "hours" && row.result === "warn")?.text,
+      effect: t("주의를 남기고 계속해요 · 주문 가능 여부를 확인한 것은 아니에요", "Continues with the caution kept · this does not confirm orders are available"),
+      act: { type: "acknowledge-hours" } }, ...picks] };
   // ★`[2026-10-21 사용자 지적 · ST4F-708]` The server found a place but asks whether it is the one (a warning on its place row, nothing that must change — 「… 부분을 우리 장소 목록 정보로
   //   찾았어요 · 맞는지 확인해 주세요」): the question is 「맞는지 확인」, so its first option ends it there (mockup `tripilot-plan-check-stop-ask.html`), then the alternatives.
   const confirm = Boolean(item.place) && !item.checks.some((row) => row.result === "bad") && item.checks.some((row) => row.kind === "place" && row.result === "warn");

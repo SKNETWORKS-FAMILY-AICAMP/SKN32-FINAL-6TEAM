@@ -47,7 +47,9 @@ export function StopQuestion({ id, kind, ask, loading, failed, again, leaving, w
   useEffect(() => { if (takeFocus) box.current?.focus({ preventScroll: true }); }, [id, again, takeFocus]);
   return <section ref={box} tabIndex={-1} className={styles.box} aria-labelledby={titleId} data-stop-question={id} data-leaving={leaving || undefined} data-details>
     <span className={styles.kind}>{kind === "interpretation" ? t("읽은 뜻", "Reading") : kindLabel(kind, t)}</span>
-    {again && <p className={styles.again}>{t("고른 뒤에도 확인이 필요해요 · 다시 골라 주세요", "It still needs a look after the pick · please choose again")}</p>}
+    {again && <p className={styles.again}>{ask.options.some((option) => option.act.type === "acknowledge-hours")
+      ? t("장소는 정해졌어요 · 영업시간 주의를 읽어 주세요", "The place is set · read the opening-hours caution")
+      : t("고른 뒤에도 확인이 필요해요 · 다시 골라 주세요", "It still needs a look after the pick · please choose again")}</p>}
     <p id={titleId} className={styles.question}>{ask.question}</p>
     {loading && <p className={styles.note} role="status">{kind === "arrival" ? t("찾는 중…", "Looking…") : t("후보를 찾는 중…", "Finding candidates…")}</p>}
     {failed && <p className={styles.note} role="alert">{failed}</p>}

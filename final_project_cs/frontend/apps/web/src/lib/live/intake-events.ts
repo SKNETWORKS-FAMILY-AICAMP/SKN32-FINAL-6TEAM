@@ -87,7 +87,7 @@ function toState(value: unknown): IntakeState | null {
 export function toCheckLine<Row extends string>(value: unknown, rows: readonly string[]): CheckLine<Row> | null {
   if (!isObject(value) || !rows.includes(text(value.row))) return null;
   const result = RESULTS.includes(value.result as CheckResult) ? value.result as CheckResult : "unknown";
-  return { row: value.row as Row, result, text: text(value.text) };
+  return { row: value.row as Row, result, text: text(value.text), ...(value.can_acknowledge === true ? { can_acknowledge: true } : {}) };
 }
 
 function toItem(body: Record<string, unknown>): ReviewItem | null {

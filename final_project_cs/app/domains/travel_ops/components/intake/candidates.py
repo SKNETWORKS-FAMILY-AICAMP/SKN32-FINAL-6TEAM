@@ -28,6 +28,7 @@ from typing import Any, Callable
 from app.domains.travel_ops.components.itinerary.itinerary_checks import Part, check_itinerary
 from .hours import _tenants, facts_for
 from . import lodging_context as stay_context
+from . import meal_request
 from .moves import leg_between, late_text
 from .terms import category_label
 from .places import MEAL_WORDS, distance_m, normalize_full
@@ -1151,7 +1152,20 @@ def gather(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, Any]
                 notes.append("no_same_kind")
     if branch and not (stay or stay_item) and not found and "kakao" not in " ".join(notes):
         notes.append("no_other_branches")
+    words = meal_request.dish_words(item)
+    if words:
+        found = [p for p in found if meal_request.matches(item, p)]
+        if ref is not None and len(found) < limit and item["place_state"] != "needs_name":
+            for word in words:
+                found += _ledger_places(conn, tenant_id, ref, query=word,
+                                        radius_m=int(area["radius_m"]) if area else 2000)
+            if len(found) < limit:
+                query = " ".join(w for w in ((area or {}).get("name"), words[0]) if w)
+                found += _kakao_places(kakao, query, ref, want, notes)
+        found = [p for p in found if meal_request.matches(item, p)]
     found = _dedupe(found, taken)
+    if words and not found:
+        notes.append("no_requested_dish")
     if group and "meal_inferred" not in notes and len([p for p in found if p.get("basis") == "same_kind"]) < limit:
         # ★`[2026-10-07 사용자]` 같은 종류가 모자라면 같은 **경험**의 곳으로 이어 간다(궁궐 → 공원 · 둘레길 / 전시 → 박물관 · 전시관)
         more = _dedupe(_experience_places(conn, tenant_id, ref, group, now), taken + [
@@ -1236,6 +1250,10 @@ def regather(conn, *, tenant_id: str, review: dict[str, Any], item: dict[str, An
     stay = _is_stay_line(item) and item["kind"] != "lodging"
     if stay and (item["place_state"] == "needs_choice" or item["kind"] == "dining" or stay_context.generic(item)):
         limit = limit * 2
+    places = [place for place in places if meal_request.matches(item, place)]
+    notes = list(notes)
+    if meal_request.dish_words(item) and not places and "no_requested_dish" not in notes:
+        notes.append("no_requested_dish")
     pool = [(place, assess(conn, tenant_id, item, place, prev, nxt, None)) for place in places]
     return Gathered(item=item, items=items, prev=prev, nxt=nxt, ref=ref, area=area_of(item), members=members, route_points=route_points,
                     current=item["place"], notes=list(notes), limit=limit, pool=pool)

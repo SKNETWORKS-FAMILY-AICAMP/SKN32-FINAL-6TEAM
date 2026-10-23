@@ -1211,7 +1211,8 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   const [deleting, setDeleting] = useState<PlanItem | null>(null);
   const [pickedFor, setPickedFor] = useState<string | null>(null);
   const asking = Boolean(stop && ((stopItem && !stop.settling) || (stopEntry && askBusy !== stopEntry.id)));
-  const stopNeed = stopItem ? stopKind(view, stopItem.id) : null;
+  const kindOfStop = (view: PlanCheckView, id: string) => stopKind(view, id, stopCheck?.isHoursAcknowledged);
+  const stopNeed = stopItem ? kindOfStop(view, stopItem.id) : null;
   const stopMove = stopItem && stopNeed === "arrival" ? incomingMove(view, stopItem.id) : null;
   const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: LaterStart | null } | null>(null);
   useEffect(() => {
@@ -1248,9 +1249,9 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   //   own box for it (`UnfoundPlace` — `[2026-10-19 사용자 결정]`, with 「직접 고르기」 on the search) once its place is the question; its late arrival is asked here.
   //   So does a line read two ways from a photo (`Rereading` — its two readings to pick from in the opened card).
   const resultAsks = done && !edit && !registered && Boolean(actions.replace || actions.edit);
-  const askCards = resultAsks ? view.items.filter((item) => !removedSet.has(item.id) && stopsHere(item, view)
-    && !((item.unfound || item.rereads?.length) && stopKind(view, item.id) === "place")) : [];
-  const askKeys = askCards.map((item) => `${item.id}:${stopKind(view, item.id)}:${view.revision ?? ""}`);
+  const askCards = resultAsks ? view.items.filter((item) => !removedSet.has(item.id) && stopsHere(item, view, stopCheck?.isHoursAcknowledged)
+    && !((item.unfound || item.rereads?.length) && kindOfStop(view, item.id) === "place")) : [];
+  const askKeys = askCards.map((item) => `${item.id}:${kindOfStop(view, item.id)}:${view.revision ?? ""}`);
   const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: LaterStart | null; message?: string }>>({});
   const [cardBusy, setCardBusy] = useState<string | null>(null);
   useEffect(() => {
@@ -1258,9 +1259,9 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     const timers: ReturnType<typeof setTimeout>[] = [];
     for (const item of askCards) {
       const id = item.id;
-      const key = `${id}:${stopKind(view, id)}:${view.revision ?? ""}`;
+      const key = `${id}:${kindOfStop(view, id)}:${view.revision ?? ""}`;
       if (cardAsks[id]?.key === key) continue;
-      const move = stopKind(view, id) === "arrival" ? incomingMove(view, id) : null;
+      const move = kindOfStop(view, id) === "arrival" ? incomingMove(view, id) : null;
       const set = (next: Omit<(typeof cardAsks)[string], "key">) => { if (live) setCardAsks((current) => ({ ...current, [id]: { key, ...next } })); };
       set({ state: "loading", list: [], ways: null, later: null });
       // Asked a moment later, as for the stopped card (the page's own effects hand the calls the plan on screen first).
@@ -1296,7 +1297,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   /** The question inside a result card that needs a look (none while it is checked again). */
   function cardQuestion(item: PlanItem): ReactNode {
     if (!askCards.some((entry) => entry.id === item.id) || cardBusy === item.id) return null;
-    const need = stopKind(view, item.id);
+    const need = kindOfStop(view, item.id);
     const move = need === "arrival" ? incomingMove(view, item.id) : null;
     const got = cardAsks[item.id]?.key === `${item.id}:${need}:${view.revision ?? ""}` ? cardAsks[item.id] : null;
     const ask = move ? arrivalQuestion(item, move, view.items.find((entry) => entry.id === move.fromId) ?? null, got?.ways ?? null, got?.later ?? null, t)
@@ -1312,7 +1313,7 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
     const why = busyReason();
     if (why) { explain(why); return; }
     follow.resume();
-    setPickedFor(`${item.id}:${stopKind(view, item.id)}`);
+    setPickedFor(`${item.id}:${kindOfStop(view, item.id)}`);
     stopCheck?.begin(item.id);
     changingNow.current = true;
     setWorking(true);
@@ -1321,7 +1322,8 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   }
   /** What an option of a card's question sends (saved with its check, as in the C안 flow). */
   function sendOf(item: PlanItem, act: StopOption["act"]): () => Promise<void> {
-    return act.type === "pick" ? () => actions.replace!(item.id, { candidate: act.candidate }, { flow: true })
+    return act.type === "acknowledge-hours" ? async () => { stopCheck?.acknowledgeHours(item.id); }
+      : act.type === "pick" ? () => actions.replace!(item.id, { candidate: act.candidate }, { flow: true })
       : act.type === "confirm" ? () => actions.confirmPlace!(item.id, { flow: true })
         : act.type === "taxi" ? () => actions.setMoveMode!(act.moveId, "taxi")
           : act.type === "later" ? () => actions.retime!([{ id: item.id, start: act.start, end: act.end }], { flow: true })
@@ -1340,6 +1342,13 @@ function Checking({ view, sourceView, stop = null, stopCheck, onSay, watched = f
   function stopPick(item: PlanItem, option: StopOption) {
     const why = busyReason();
     if (why) { explain(why); return; }
+    if (option.act.type === "acknowledge-hours") {
+      stopCheck?.acknowledgeHours(item.id);
+      setPickedFor(null);
+      follow.resume();
+      onSay?.(sentenceOf(item, option));
+      return;
+    }
     const send = sendOf(item, option.act);
     const sentence = sentenceOf(item, option);
     follow.resume();
