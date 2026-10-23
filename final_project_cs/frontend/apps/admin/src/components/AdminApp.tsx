@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tan
 import { Activity, ArrowRight, Bell, Bug, Gauge, Home, Inbox, ListChecks, LogOut, PanelLeft, RotateCcw, Settings2, ShieldCheck, Users } from 'lucide-react';
 import { createAdminGateway, operatorSession, operatorLogin, operatorLogout } from '../lib/gateway';
 import { isDemoMode } from '../lib/data-mode';
+import { endOperatorQueries } from '../lib/session-cleanup';
 import { DEMO_OPERATOR } from '../lib/demo/fixtures';
 import { INITIAL_INQUIRIES_LIST, INITIAL_USERS_LIST, type AdminCommand, type ScreenProps, type ViewState } from '../lib/model';
 import { HomeScreen, UsersScreen, UserDetailScreen, LimitsScreen, UsageScreen, ServerScreen } from '../features/overview/screens';
@@ -148,7 +149,13 @@ function LiveAdmin(props: AppProps) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const client = useQueryClient();
-  const logout = async () => { await operatorLogout(); client.removeQueries({ queryKey: ['admin'] }); await session.refetch(); };
-  if (session.data?.authenticated) return <Console {...props} mode="live" initialPath={props.initialPath === '/login' ? '/' : props.initialPath} operatorId={session.data.operator || ''} onLogout={logout} />;
-  return <div className={styles.loginPage}><main id="main-content" className={styles.loginMain}><section className={styles.loginCard}><span className="badge">운영자 전용 · 고객 로그인과 분리</span><h1>운영자 로그인</h1><p>발급받은 운영자 계정으로 로그인하세요. 회원가입은 제공하지 않습니다.</p>{session.isPending ? <p role="status">연결 확인 중…</p> : session.isError ? <p role="alert" className="error">{session.error.message}</p> : !session.data?.configured ? <p role="alert">운영자 계정이 설정되지 않아 접근이 닫혀 있습니다.</p> : <form onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); try { await operatorLogin(operatorId, password); setPassword(''); await session.refetch(); } catch (cause) { setError(cause instanceof Error ? cause.message : '로그인하지 못했습니다.'); } finally { setBusy(false); } }}><label>운영자 ID<input value={operatorId} onChange={e => setOperatorId(e.target.value)} autoComplete="username" required maxLength={200} /></label><label>비밀번호<input value={password} onChange={e => setPassword(e.target.value)} type="password" autoComplete="current-password" required maxLength={1024} /></label>{error && <p role="alert" className="error">{error}</p>}<button type="submit" className="primary" disabled={busy}>{busy ? '확인 중…' : '로그인'}</button></form>}<button onClick={() => void session.refetch()}>연결 다시 확인</button></section></main></div>;
+  const logout = async () => {
+    setError('');
+    try { await operatorLogout(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : '로그아웃하지 못했습니다.'); }
+    await endOperatorQueries(client);
+    await session.refetch();
+  };
+  if (session.data?.authenticated) return <>{error && <p role="alert" className="error">{error}</p>}<Console {...props} mode="live" initialPath={props.initialPath === '/login' ? '/' : props.initialPath} operatorId={session.data.operator || ''} onLogout={logout} /></>;
+  return <div className={styles.loginPage}><main id="main-content" className={styles.loginMain}><section className={styles.loginCard}><span className="badge">운영자 전용 · 고객 로그인과 분리</span><h1>운영자 로그인</h1><p>발급받은 운영자 계정으로 로그인하세요. 회원가입은 제공하지 않습니다.</p>{session.isPending ? <p role="status">연결 확인 중…</p> : session.isError ? <p role="alert" className="error">{session.error.message}</p> : !session.data?.configured ? <p role="alert">운영자 계정이 설정되지 않아 접근이 닫혀 있습니다.</p> : <form onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); try { await operatorLogin(operatorId, password); setPassword(''); await endOperatorQueries(client); await session.refetch(); } catch (cause) { setError(cause instanceof Error ? cause.message : '로그인하지 못했습니다.'); } finally { setBusy(false); } }}><label>운영자 ID<input value={operatorId} onChange={e => setOperatorId(e.target.value)} autoComplete="username" required maxLength={200} /></label><label>비밀번호<input value={password} onChange={e => setPassword(e.target.value)} type="password" autoComplete="current-password" required maxLength={1024} /></label>{error && <p role="alert" className="error">{error}</p>}<button type="submit" className="primary" disabled={busy}>{busy ? '확인 중…' : '로그인'}</button></form>}<button onClick={() => void session.refetch()}>연결 다시 확인</button></section></main></div>;
 }
