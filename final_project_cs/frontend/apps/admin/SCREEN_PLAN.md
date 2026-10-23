@@ -165,7 +165,7 @@
 
 ### 5.1 기술 기준 (제안)
 
-- 사용자 웹·개발자 콘솔과 같은 판을 쓴다: Next.js 16.3.5 App Router, React 19.3.0, TypeScript 5.9.3 strict, TanStack Query, Zod, CSS Modules, lucide-react. Node.js 22 · npm · 앱별 `package-lock.json`.
+- 사용자 웹·개발자 콘솔과 같은 판을 쓴다: Next.js 16.4.2(`[2026-10-23 ST4F-724]` 16.3.5 에서 보안 갱신) App Router, React 19.3.0, TypeScript 5.9.3 strict, TanStack Query, Zod, CSS Modules, lucide-react. Node.js 22 · npm · 앱별 `package-lock.json`.
 - 포트: 개발 **3300**, 브라우저 시험 **3301**. 사용자 웹(3100~3102)·개발자 콘솔(3200~3201)과 겹치지 않게 고른 값이다.
 - 데이터 모드: `NEXT_PUBLIC_ADMIN_DATA_MODE=demo`를 명시해야 데모 어댑터가 동작한다. 값이 없거나 다르면 「연결 미설정」 오류를 보인다. 데모로 자동 전환하지 않는다(개발자 콘솔과 같은 방식).
 - 화면은 데이터 경계(`AdminGateway`)를 통해서만 데이터를 받는다. 이번 단계에는 데모 구현만 둔다. 실제 연결은 API 계약 합의 뒤 별도 어댑터로 붙인다.

@@ -8,7 +8,7 @@
 
 ## 기술스택
 
-이용자 웹에서 설치·검증한 버전을 동일하게 사용한다. Next.js 16.3.5 App Router, React 19.3.0, TypeScript 5.9.3 strict, TanStack Query 5.103.1, Zod 4.6.5, CSS Modules, Lucide React. Node.js 22·npm과 앱별 잠금 파일을 사용한다. Vitest·Playwright로 데이터 동작과 브라우저 흐름을 확인한다.
+이용자 웹에서 설치·검증한 버전을 동일하게 사용한다. Next.js 16.4.2(`[2026-10-23 ST4F-724]` 16.3.5 에서 보안 갱신) App Router, React 19.3.0, TypeScript 5.9.3 strict, TanStack Query 5.103.1, Zod 4.6.5, CSS Modules, Lucide React. Node.js 22·npm과 앱별 잠금 파일을 사용한다. Vitest·Playwright로 데이터 동작과 브라우저 흐름을 확인한다.
 
 화면의 선택·입력 상태는 React가 관리하고, 실행·사례·비교 데이터는 TanStack Query가 ID별로 관리한다. 별도 전역 상태 라이브러리는 추가하지 않았다. 실행 조회는 샘플 작업이 진행 중일 때만 350ms 간격으로 갱신한다. 실제 SSE가 연결된 상태로 표현하지 않는다.
 

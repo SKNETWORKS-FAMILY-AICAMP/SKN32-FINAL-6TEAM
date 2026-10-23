@@ -104,6 +104,8 @@ ID는 이 보고서의 통합 번호입니다. 「Codex」 열은 Codex 보고�
 | F-42 | P2 | 한국어 고정 문구 다수: 지도 UI·컨트롤·오류(`live-map.tsx`, `map-controls.tsx`, `sdk-loader.ts`), 시간 편집기 오류 9곳(`use-time-edit.ts:168-189`), lib 오류 문장(`auth.ts`, `agent-keys.ts`, `risks.ts`, `move-options.ts`), 영어 문장 속 「분」·「시간」·「원」, Google SDK `language:"ko"` 고정, `pin.ts:247`이 한국어 `aria-label`을 셀렉터로 사용 | 각 파일 | 리뷰어 | 「국제화」 언급(Google ko·지도 문구) |
 | F-43 | P2 | `TERMS_STATUS = "reviewed"`가 변호사 검토 없이 안내문을 내린 상태를 「검토됨」으로 표현(주석이 스스로 인정) — 운영 판단 사항이나 코드 상태값이 사실과 다름 | `terms-content.ts:19` | 직접 | — |
 
+> `[2026-10-23 09:5x KST 덧붙임 — ST4F-724]` F-39 · §5-4 의 「web 0」은 02시 무렵 audit 결과입니다. 그 뒤 GitHub 권고 DB 에 올라온 Next.js 권고 3건(16.0.0~16.4.0)으로 web 16.4.0 도 critical 이 됐습니다. 세 앱을 16.4.2 로 올린 기록: [Next.js 16.4.2 보안 갱신](2026-10-23_Next보안갱신_16.4.2_ST4F-724.md).
+
 ## 3. P3 — 품질·유지보수 (리뷰어 보고 통합, 영역별)
 
 직접 재확인하지 않은 항목이 대부분입니다. 줄 번호는 리뷰어 보고값입니다.
