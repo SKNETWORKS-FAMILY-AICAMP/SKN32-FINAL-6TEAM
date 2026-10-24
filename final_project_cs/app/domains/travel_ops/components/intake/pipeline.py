@@ -756,6 +756,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         if any(field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None
                for _, field, value, _, _ in rows):
             rows = _link_stay_places(review_module.load(conn, tenant_id, intake_id, current), rows)
+        rows += _kept_ends(source_rows, current_claims, rows)
         # 직접 고른 장소도 자동 추천과 마찬가지로 이동시간을 반영한다. 저장 전에
         # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
@@ -1066,6 +1067,45 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
                    tour=tour, kakao=kakao, via="autofix", dining=dining)
     return {"applied": bool(edits), "dry_run": dry_run, "revision": new, "changed": changed, "kept": got["kept"], **shown_edits,
             **({"view": view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)} if dry_run else {})}
+
+
+def _kept_ends(source_rows: list[dict[str, Any]], current_claims: list[dict[str, Any]],
+               rows: list[tuple[Any, str, Any, dict[str, Any], str | None]]) -> list[tuple[str, str, str, dict[str, Any], str]]:
+    """`[2026-10-25 사용자 결정 — 뒤 일정을 늦출 때 앞 일정 끝은 보이던 그대로]` 이 고치기로 **시작이 늦어지는** 일정마다 같은 날 바로 앞 일정의 **추정 끝**을
+    지금 보이는 값으로 저장할 값 줄(`edit` 의 `rows` 모양).
+
+    원문에 끝이 없는 일정은 `assemble.collect` 가 「시작 + 기본 시간(활동 90 · 식사 60분), 다음 일정 시작은 넘지 않게」로 끝을 **판마다 새로 계산한다** —
+    그대로 두면 다음 일정 시작에 끊겨 있던 끝이 늦춘 시작까지 늘어 출발이 같이 늦어진다(2026-10-25 로컬 접수 37a94e6d: 호텔 끝 10:00 → 경복궁을 10:50 으로
+    늦추자 10:30 · 같은 「도착」 질문이 다시 떴다). 앞당길 때는 고정하지 않는다 — 앞서 이렇게 고정한 끝(`via: kept_end`)이 새 시작보다 늦으면 새 시작으로
+    줄인다(고정이 없을 때 끊기는 것과 같은 값). 날짜를 옮기는 일정 · 같은 요청에서 시각을 고치는 앞 일정 · 고객이 적은 끝 · 자동 추천이 정한 끝은 그대로 둔다."""
+    from .assemble import collect
+
+    starts = {(str(sid), _item_no(f)): v for sid, f, v, _, _ in rows if f.startswith("items[") and f.endswith(".starts_at")}
+    if not starts:
+        return []
+    timed = {(str(sid), _item_no(f)) for sid, f, _, _, _ in rows if f.startswith("items[") and f.endswith((".starts_at", ".ends_at", ".date"))}
+    moved_day = {(str(sid), _item_no(f)) for sid, f, _, _, _ in rows if f.startswith("items[") and f.endswith(".date")}
+    kept = {(str(c["source_id"]), _item_no(c["field"])) for c in current_claims
+            if c["field"].startswith("items[") and c["field"].endswith(".ends_at") and (c.get("evidence") or {}).get("via") == "kept_end"}
+    got = collect(sources=[{**s, "source_id": str(s["source_id"])} for s in source_rows],
+                  claims=[{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None} for c in current_claims])
+    out: list[tuple[str, str, str, dict[str, Any], str]] = []
+    for i, row in enumerate(got.rows):
+        key = (str(row["source_id"]), row["index"])
+        new = starts.get(key)
+        if new is None or key in moved_day or not row["date"] or not row["start"]:
+            continue
+        before = next((r for r in reversed(got.rows[:i]) if r["date"] == row["date"] and r["start"]), None)
+        if before is None or not before["end"] or (str(before["source_id"]), before["index"]) in timed:
+            continue
+        evidence = {"source": "customer", "via": "kept_end"}
+        field = f"items[{before['index']}].ends_at"
+        inferred = ((before.get("provenance") or {}).get("ends_at") or {}).get("rule") == "intake.default_duration"
+        if new > row["start"] and inferred:
+            out.append((str(before["source_id"]), field, before["end"], evidence, "뒤 일정을 늦춰도 앞 일정 끝은 보이던 그대로(추정 끝 고정)"))
+        elif new < row["start"] and (str(before["source_id"]), before["index"]) in kept and before["end"] > new:
+            out.append((str(before["source_id"]), field, new, evidence, "앞당긴 일정과 겹치지 않게 고정한 끝을 그 시작으로 줄임"))
+    return out
 
 
 def _pushed(conn, *, tenant_id: str, intake_id: UUID, revision: int, review: dict[str, Any], item_id: str,
