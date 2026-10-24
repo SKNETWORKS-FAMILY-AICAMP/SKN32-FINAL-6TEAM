@@ -188,6 +188,45 @@ describe("session boundaries before a streamed write opens", () => {
     expect(seen.some((progress) => progress.lost)).toBe(false);
   });
 
+  it("does not reconnect a lost stream once the session has changed meanwhile — the body stays with the account that sent it (F-02 보강)", async () => {
+    const previous = sessionOf({ kind: "member", csrf_token: "csrf-a" })!;
+    const member = sessionOf({ kind: "member", csrf_token: "csrf-b" })!;
+    takeSession(previous);
+    dispatched.length = 0;
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      return new Response("", { status: 504 });                     // the gateway dropped the line: normally sent again after the wait
+    });
+    const seen: OpProgress[] = [];
+    const result = streamApi(path, "ko", init, (progress) => seen.push(progress), fast).catch((caught: unknown) => caught);
+    await vi.advanceTimersByTimeAsync(0);                             // the first attempt has been answered 504 and the reconnect wait is on
+    expect(calls).toHaveLength(1);
+    takeSession(member);                                              // another tab signed in while this request was waiting to reconnect
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(await result).toMatchObject({ code: "session_changed" });
+    expect(currentSession()).toBe(member);
+    expect(calls).toHaveLength(1);                                    // no second POST with the new account's token
+    expect(calls[0].init.headers).toMatchObject({ "X-CSRF-Token": "csrf-a" });
+    expect(seen.some((progress) => progress.lost)).toBe(true);
+  });
+
+  it("reconnects a lost stream as before when the session is unchanged (the F-02 보강 guard does not get in the way)", async () => {
+    takeSession(sessionOf({ kind: "member", csrf_token: "csrf-a" })!);
+    let first = true;
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      if (first) { first = false; return new Response("", { status: 504 }); }
+      return json({ status: "answered", answer: "서버 답" });
+    });
+    const result = streamApi<{ answer: string }>(path, "ko", init, undefined, fast);
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await result).answer).toBe("서버 답");
+    expect(calls).toHaveLength(2);
+    expect(calls[1].init.body).toBe(calls[0].init.body);
+    expect(calls[1].init.headers).toMatchObject({ "X-CSRF-Token": "csrf-a" });
+  });
+
   it("passes on a failed csrf token refresh without resending or reconnecting the stream (F-18)", async () => {
     takeSession(sessionOf({ kind: "member", csrf_token: "csrf-a" })!);
     const detail = { code: "internal_error", message: "서버에서 로그인 상태를 확인하지 못했어요.", request: "session-probe" };

@@ -1,5 +1,5 @@
 import { translator, type Language, type Translate } from "../i18n";
-import { API_BASE, answerWithin, ensureSession, LiveError, probeSession, refusal, sessionChecked, sessionInit, type WebSession } from "./client";
+import { API_BASE, answerWithin, currentSession, ensureSession, LiveError, probeSession, refusal, sessionChecked, sessionInit, type WebSession } from "./client";
 import { refusalSentence } from "./error-text";
 import { eventStreamParser } from "./events";
 import { beginWait, TASK_STEPS } from "./waiting";
@@ -157,8 +157,11 @@ export async function streamApi<T>(path: string, language: Language, init: Reque
     onProgress?.(progress);
   };
   try {
+    // `[2026-10-25 F-02 보강]` Every reconnect sends the same body again — only ever with the session this request began with. A sign-in
+    //   or sign-out meanwhile (another tab, or this one) ends it here with `session_changed` instead of carrying the body to the new account.
+    const session = await ensureSession(language);
     for (let tries = 0; ; tries += 1) {
-      const outcome = await attempt<T>(path, language, init, await ensureSession(language), timing, report, onEvent);
+      const outcome = await attempt<T>(path, language, init, session, timing, report, onEvent);
       if (outcome.kind === "done") return outcome.value;
       if (tries >= timing.reconnectMs.length) {
         const t = translator(language);
@@ -166,6 +169,7 @@ export async function streamApi<T>(path: string, language: Language, init: Reque
       }
       report({ lost: true });
       await new Promise((resolve) => setTimeout(resolve, timing.reconnectMs[tries]));
+      if (currentSession() !== session) throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
     }
   } finally { wait.end(); }
 }
