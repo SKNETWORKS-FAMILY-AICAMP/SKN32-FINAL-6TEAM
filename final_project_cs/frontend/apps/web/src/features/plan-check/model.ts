@@ -2,6 +2,7 @@ import type { Coordinates } from "@/features/map/model";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import type { ItemRisk } from "@/lib/live/risks";
 import type { MoveRoute, RouteChoice } from "@/lib/live/move-options";
+import type { ProgressPhase } from "@/lib/live/intake-events";
 
 /**
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
@@ -246,6 +247,8 @@ export interface PlanCheckView {
    * there the bar and the words come from it alone; when the server sends none (an older server) they come from the rows drawn, as before.
    */
   serverProgress?: ServerProgress | null;
+  /** `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` The last packet of each step the server has sent (`server-steps.ts` draws one cell per step from these). */
+  serverPhases?: Partial<Record<ProgressPhase, ServerProgress>> | null;
   /**
    * `[2026-10-16 D-025]` What the server filled in first and what it understood beyond the stops — drawn as a short note above the list.
    * `questions`: what only the traveller knows. `understood`: the traveller's own words the server read as a move, a condition or a preference.
@@ -260,8 +263,8 @@ export interface PrefillNotes { filledCount: number; questions: string[]; unders
 /** `[2026-10-16 D-025 후속]` A read preference handed to an owner — `mine` true = 「우리가 채움」, false = the traveller's own answer wins. */
 export interface PrefillHandoff { label: string; text: string; owner: string; mine: boolean }
 
-/** What the server's `progress` packet says, with the stop's title to show. */
-export interface ServerProgress { phase: "places" | "hours" | "moves"; done: number; total: number; title: string | null }
+/** What the server's `progress` packet says, with the stop's title to show (`step: "recheck"` — the gaps it filled are being checked again). */
+export interface ServerProgress { phase: ProgressPhase; done: number; total: number; title: string | null; step?: "recheck" }
 
 const stageIndex = (stage: PlanStage) => STAGES.indexOf(stage);
 
@@ -611,22 +614,6 @@ export function expected(view: Pick<PlanCheckView, "lines" | "items" | "moves">)
   const stops = view.lines.flatMap((line) => line.read && line.found?.kind === "item" ? [line.found.day ?? 0] : []);
   const perDay = [...new Set(stops)].map((day) => stops.filter((value) => value === day).length);
   return { places: Math.max(view.items.length, stops.length), moves: Math.max(view.moves.length, perDay.reduce((sum, count) => sum + Math.max(0, count - 1), 0)) };
-}
-
-/** 0–100 along the four steps. Within reading it follows the lines read; within checking, the places and moves done. */
-export function progress(view: PlanCheckView): number {
-  const third = 100 / 3;
-  if (view.stage === "received") return 0;
-  if (view.stage === "done") return 100;
-  // The server's own count, when it sends one: the whole line is split in three phases (places · hours · moves), each as far as `done / total`.
-  //   ★The bar never goes back: the rows drawn so far (lines read; places and legs checked) still count, and the larger of the two is shown.
-  const served = view.serverProgress ? (["places", "hours", "moves"].indexOf(view.serverProgress.phase) + Math.min(1, view.serverProgress.done / Math.max(1, view.serverProgress.total))) * third : 0;
-  if (view.stage === "reading") return Math.max(served, view.lines.length ? third * view.lines.filter((line) => line.read).length / view.lines.length : 0);
-  const total = expected(view);
-  const all = total.places + total.moves;
-  const done = [...view.items, ...view.moves].filter((entity) => entity.verdict !== null).length;
-  // 100 is for the finished check only: the last leg counted is "almost", not "done".
-  return Math.min(99, Math.max(served, third + (all ? third * Math.min(done, all) / all : 0)));
 }
 
 export interface Tally { places: number; placesDone: number; moves: number; movesDone: number; placesReview: number; movesReview: number }

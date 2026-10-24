@@ -54,11 +54,14 @@ def _reusable(previous: dict[str, Any] | None, now: datetime) -> dict[str, tuple
 
 def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
              check: Callable[..., dict[str, Any]] | None = None, now: datetime | None = None,
-             reuse: dict[str, Any] | None = None) -> dict[str, Any]:
+             reuse: dict[str, Any] | None = None,
+             on_event: Callable[[str, dict[str, Any]], None] | None = None) -> dict[str, Any]:
     """위험을 덧붙인 사본. 일정·기존 검사 결과·등록 가능 판정은 바꾸지 않는다.
 
     `reuse` `[2026-10-20]` 앞 판의 검사(위험을 붙인 것) — 새로 점검(`fresh`)할 때 앞 판에서 방금(`REUSE_FRESH_S` 안) 점검한 일정이 그대로면
-    그 결과를 쓴다(바깥 조회를 다시 하지 않는다). 그 결과의 점검 시각(`checked_at`)은 앞 판 값 그대로 남는다."""
+    그 결과를 쓴다(바깥 조회를 다시 하지 않는다). 그 결과의 점검 시각(`checked_at`)은 앞 판 값 그대로 남는다.
+    `on_event(이름, 몸통)` `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 일정을 보기 **전에** `progress{phase: risks, done, total, current}`, 끝에 `current: null` —
+      처음 검사(`pipeline.process`)만 건넨다. 바깥 조회(재난문자 시간 초과 등)가 느리면 같은 `current` 로 머문다. 알림이 던져도 점검은 계속된다."""
     from app.core.settings import get_guardrails
 
     now = now or datetime.now(KST)
@@ -71,12 +74,25 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
     guard = get_guardrails()
     limit = int(guard.get("travel.mcp.risk_check.max_items"))
     snapshot = float(guard.get("travel.mcp.risk_check.snapshot_hours"))
-    items, checked = [], 0
+    items, checked, seen = [], 0, 0
+    total = sum(1 for item in review.get("items", []) if item.get("kind") != "mobility")
+
+    def note(done: int, item: dict[str, Any] | None) -> None:
+        if on_event is None:
+            return
+        try:
+            on_event("progress", {"phase": "risks", "done": done, "total": total,
+                                  "current": {"id": str(item.get("id")), "title": item.get("title")} if item is not None else None})
+        except Exception:  # noqa: BLE001 — 알림 실패가 점검을 막지 않는다
+            pass
+
     for item in review.get("items", []):
         shown = dict(item)
         if item.get("kind") == "mobility":
             items.append(shown)
             continue
+        note(seen, item)
+        seen += 1
         same = earlier.get(str(item.get("id")))
         if same is not None and same[0] == _risk_sig(item):
             shown["risk"] = same[1]
@@ -96,6 +112,8 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
             checked += 1
         shown["risk"] = _present(risk, mode, now)
         items.append(shown)
+    if total:
+        note(total, None)
     return {**review, "items": items, "risk_schema_version": SCHEMA_VERSION, "risk_mode": mode,
             "risk_checked_at": now.isoformat(timespec="seconds")}
 

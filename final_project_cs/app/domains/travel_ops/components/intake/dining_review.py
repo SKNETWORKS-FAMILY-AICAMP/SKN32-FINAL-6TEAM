@@ -93,26 +93,40 @@ def prepare(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[s
 
 def refresh(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str, Any] | None, *,
             now: datetime | None = None) -> dict[str, Any] | None:
-    """현재 토큰을 잠금 안에서 다시 읽고 기한을 넘긴 작업을 failed로 저장한다. 옛 자료는 호환한다."""
+    """현재 토큰을 잠금 안에서 다시 읽고 기한을 넘긴 작업을 failed로 저장한다. 옛 자료는 호환한다.
+    ★`[2026-10-24 사용자 결정 — ST4F-731]` 검사를 읽을 때마다 불리므로 접수 행은 **저장할 일이 있을 때만** 잠근다 — 먼저 잠그지 않고 읽어 보고,
+      실패로 적을 일이 있으면 그때 잠가 다시 읽고 다시 판단한다(그 사이 다른 작업이 합친 줄을 보존한다). 전에는 읽기마다 잠가 쓰기 뒤에 줄을 섰다."""
     if not payload or not isinstance(payload.get("dining_judge"), dict):
         return payload
+    current = review_module.load(conn, tenant_id, intake_id, revision)
+    if current is None or _failure(current, revision, _now(now)) is None:
+        return current or payload
     with conn.transaction():
         state = review_module.intake_state(conn, tenant_id, intake_id)
         current = review_module.load(conn, tenant_id, intake_id, revision)
         if state != ("review", revision) or current is None:
             return current or payload
-        metadata = current.get("dining_judge")
-        if not isinstance(metadata, dict) or metadata.get("status") == "disabled":
-            return current
         stamp = _now(now)
-        error = _deadline_error(metadata, revision, stamp) if metadata.get("status") in ACTIVE else None
-        expected = metadata.get("input_fingerprint")
-        if expected and expected != fingerprint(current, notes_fingerprint=metadata.get("notes_fingerprint")):
-            error = "dining_judge_input_changed"
+        error = _failure(current, revision, stamp)
         if error:
             _failed(current, error, stamp)
             review_module.store(conn, tenant_id, intake_id, revision, current)
         return current
+
+
+def _failure(current: dict[str, Any], revision: int, stamp: datetime) -> str | None:
+    """`refresh` 가 실패로 적을 이유 — 기한이 지났거나 판정 입력이 바뀌었으면 그 코드, 적을 일이 없으면 None.
+    이미 같은 이유로 실패로 적힌 것은 다시 적지 않는다(읽을 때마다 같은 값을 저장하며 잠그지 않게)."""
+    metadata = current.get("dining_judge")
+    if not isinstance(metadata, dict) or metadata.get("status") == "disabled":
+        return None
+    error = _deadline_error(metadata, revision, stamp) if metadata.get("status") in ACTIVE else None
+    expected = metadata.get("input_fingerprint")
+    if expected and expected != fingerprint(current, notes_fingerprint=metadata.get("notes_fingerprint")):
+        error = "dining_judge_input_changed"
+    if error and metadata.get("status") == "failed" and metadata.get("error_code") == error:
+        return None
+    return error
 
 
 def begin(conn, tenant_id: str, intake_id: Any, revision: int, run_id: str, *,

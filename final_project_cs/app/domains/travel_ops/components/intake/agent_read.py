@@ -30,6 +30,7 @@ from typing import Any
 
 from . import fragments as fragments_module
 from .fact_check import recompute_time
+from .reading_prefs import mobility_preference_said, transport_scope
 
 WEEKDAY = "월화수목금토일"
 MODES = ("taxi", "subway", "bus", "transit", "walk", "car", "bike", "cablecar")
@@ -89,7 +90,7 @@ Rules
 - day: 1-based day number. date: YYYY-MM-DD or null. date_quote: the exact text that states that date (a header line is fine) or null.
 - start/end: 24h HH:MM or null. Use PM when the context means it (점심 1시 → 13:00, 저녁 6시 → 18:00, 3시 체크인 → 15:00, afternoon 2~6시 → 14:00~18:00). time_quote: the exact clock text, e.g. "1시쯤". 오전/점심/저녁 without a clock time → null.
 - kind: dining for meals, cafes, food, drinks; lodging for hotel stay/check-in/check-out; otherwise activity.
-- moves: transport the traveller states. scope "all" = whole trip (다 지하철로, 웬만하면 택시), "day" = one day (set day), "segment" = between two stops (from_quote/to_quote = their place_quote, null if unknown). quote = exact transport words.
+- moves: transport the traveller states. scope "all" requires explicit whole-trip words (다 지하철로, 웬만하면 택시), "day" = one stated day (set day), "segment" = between two stops (from_quote/to_quote = their place_quote, null if unknown). 우리 지금 택시로 이동 between stops means only that segment; never infer a whole-trip preference from it. quote = exact transport words including scope words.
 - conditions: code if_rain_indoor (비 오면 실내), if_rain_skip (비 오면 빼기), finish_by:HH:MM (몇 시까지 끝/돌아가기), start_after:HH:MM; quote = exact words.
 - preferences: how the traveller likes to travel, with the exact words. kid_friendly (아이·어린이·애들과 함께), elderly_friendly (부모님·어르신과 함께), avoid_walking (많이 걷기 싫음·다리 아픔), prefer_walking (걷는 것 좋아함), avoid_stairs (계단 힘듦), prefer_taxi / avoid_taxi, prefer_transit (대중교통 위주), late_start (늦게 시작·아침 늦잠), slow_pace (여유롭게·빡빡하지 않게), food_focus (먹는 게 중요·맛집 위주), night_view (야경), nice_restaurants (좋은 식당·분위기 있는 곳).
 - gaps: places WE should choose. meal_place = a meal is wanted but no restaurant is named (저녁은 숙소 근처에서); activity_place = an activity time without a named place (오후엔 근처 구경); free_slot = a day or time block the traveller asks us to fill (둘째 날은 알아서, 오후는 채워 주세요). day/start/end if known; quote = exact words.
@@ -246,7 +247,8 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
                 dropped["move_end"] += 1
                 value = None
             ends[key] = value
-        out.moves.append({"mode": m["mode"], "scope": m.get("scope") if m.get("scope") in ("segment", "day", "all") else "segment",
+        scope = transport_scope(m.get("scope"), m["quote"])
+        out.moves.append({"mode": m["mode"], "scope": scope,
                           "day": m.get("day") if isinstance(m.get("day"), int) else None,
                           "from": ends["from_quote"], "to": ends["to_quote"], "quote": m["quote"]})
     for c in raw.get("conditions") or []:
@@ -256,6 +258,9 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
             dropped["condition"] += 1
     for p in raw.get("preferences") or []:
         if isinstance(p, dict) and p.get("code") in PREFS and _in_text(lines, p.get("quote")):
+            if p["code"] in ("prefer_taxi", "prefer_transit", "prefer_walking") and not mobility_preference_said(p.get("quote")):
+                dropped["preference"] += 1
+                continue
             out.preferences.append({"code": p["code"], "quote": p["quote"]})
         else:
             dropped["preference"] += 1

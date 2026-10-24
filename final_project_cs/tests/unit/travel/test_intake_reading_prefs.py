@@ -115,7 +115,7 @@ def test_customer_answers_stay_answered_next_to_our_fill():
 
 
 def test_the_review_view_marks_customer_answers_first():
-    items = reading_prefs.carry([_agent(preferences=[("prefer_taxi", "택시"), ("slow_pace", "천천히")])])
+    items = reading_prefs.carry([_agent(preferences=[("prefer_taxi", "택시 위주"), ("slow_pace", "천천히")])])
     shown = {v["key"]: v for v in reading_prefs.view(items, survey={"priority_details": {"mobility": ["public"]}})}
     assert shown["survey.priority_details.mobility"]["status"] == "customer"
     assert shown["survey.pace"]["status"] == "filled" and shown["survey.pace"]["owner"] == "일정 짜기"

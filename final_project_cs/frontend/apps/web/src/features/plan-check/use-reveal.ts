@@ -186,7 +186,8 @@ export function useReveal(given: PlanCheckView, paused = false, stops = false): 
     return () => clearTimeout(timer);
   }, [shown, target, immediate, paused, asked, stopId, stopping]);
   // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
-  const live = useMemo(() => (shown.serverProgress === target.serverProgress ? shown : { ...shown, serverProgress: target.serverProgress }), [shown, target.serverProgress]);
+  const live = useMemo(() => (shown.serverProgress === target.serverProgress && shown.serverPhases === target.serverPhases ? shown
+    : { ...shown, serverProgress: target.serverProgress, serverPhases: target.serverPhases }), [shown, target.serverProgress, target.serverPhases]);
   const recheck = {
     isHoursAcknowledged,
     acknowledgeHours: (id: string) => {

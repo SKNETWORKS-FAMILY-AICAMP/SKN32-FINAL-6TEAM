@@ -97,9 +97,20 @@ describe("reading the server's progress events", () => {
     expect(toIntakeEvent("progress", JSON.stringify({ phase: "moves", done: 0, total: 12 }))).toMatchObject({ progress: { phase: "moves", current: null } });
   });
 
+  it("reads every step the server works through — the reading, the weather check, the gaps it fills (0/0 when none, `recheck`) and the answers", () => {
+    // `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]`
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "reading", done: 3, total: 8 }))).toMatchObject({ progress: { phase: "reading", done: 3, total: 8 } });
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "risks", done: 2, total: 7, current: { id: "0-2", title: "광장시장" } })))
+      .toMatchObject({ progress: { phase: "risks", current: { id: "0-2", title: "광장시장" } } });
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "prefill", done: 0, total: 0 }))).toMatchObject({ progress: { phase: "prefill", done: 0, total: 0 } });
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "prefill", done: 2, total: 2, step: "recheck" }))).toMatchObject({ progress: { step: "recheck" } });
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "prefill", done: 1, total: 2, step: "other" }))).not.toHaveProperty("progress.step");
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "answers", done: 1, total: 1 }))).toMatchObject({ progress: { phase: "answers" } });
+  });
+
   it("drops a progress packet that does not make sense instead of guessing", () => {
     for (const body of [{ phase: "weird", done: 1, total: 2 }, { phase: "places", done: 3, total: 2 }, { phase: "places", done: -1, total: 2 },
-      { phase: "places", done: 1, total: 0 }, { phase: "places", done: "1", total: 2 }, { phase: "places" }]) {
+      { phase: "places", done: 1, total: 0 }, { phase: "places", done: 0, total: -1 }, { phase: "places", done: "1", total: 2 }, { phase: "places" }]) {
       expect(toIntakeEvent("progress", JSON.stringify(body)), JSON.stringify(body)).toBeNull();
     }
   });
