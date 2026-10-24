@@ -31,6 +31,7 @@ import { TaxiPricing } from "./taxi-pricing";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import type { MoveOptions, MoveOptionMode, MoveRoutesPage } from "@/lib/live/move-options";
+import type { IntakeEdit } from "@/lib/live/intake";
 import { moveToast } from "./map-description";
 import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { FOLLOW_TOP_PX, useFollowScroll } from "./use-follow-scroll";
@@ -47,7 +48,7 @@ import { TimeDragOverlay } from "./time-drag-overlay";
 import { useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal, type RevealRowCut, type RevealStop } from "./use-reveal";
-import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type StopOption } from "./stop-questions";
+import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type PushedStop, type StopOption } from "./stop-questions";
 import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { DoneFooter } from "@/features/survey-questions/reading-footer";
 import { TIMING } from "@/features/survey-questions/use-question-flow";
@@ -167,6 +168,8 @@ export interface PlanCheckActions {
    * All changes go to the server in ONE request, so the plan is saved and checked again once. A change that changes nothing is skipped.
    */
   retime?: (changes: { id: string; start: string; end: string }[], how?: EditHow) => Promise<void>;
+  /** `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` Save the server's push preview: its edits as they are (the times it showed). */
+  applyPush?: (edits: IntakeEdit[], how?: EditHow) => Promise<void>;
   /** Take one stop out (`[2026-10-20 C안]` `how.flow`: from the first check's question — taken out at once, with its check). */
   remove?: (id: string, how?: EditHow) => Promise<void>;
   /** Answer a trip-wide detail. */
@@ -1246,7 +1249,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   const kindOfStop = (view: PlanCheckView, id: string) => stopKind(view, id, stopCheck?.isHoursAcknowledged);
   const stopNeed = stopItem ? kindOfStop(view, stopItem.id) : null;
   const stopMove = stopItem && stopNeed === "arrival" ? incomingMove(view, stopItem.id) : null;
-  const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: LaterStart | null } | null>(null);
+  const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: LaterStart | null; laterState: "loading" | "ready" } | null>(null);
   useEffect(() => {
     if (!asking || !stopItem) return;
     const id = stopItem.id;
@@ -1254,9 +1257,14 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
     let live = true;
     if (stopMove) {
       // A failed read of a way or of the later start is not shown as an answer: that option is just not offered (「직접 수정」 stays).
-      setStopWays({ id, state: "loading", ways: null, later: null });
-      const timer = setTimeout(() => void Promise.all([actions.moveOptions?.(stopMove.id).catch(() => null) ?? null, actions.laterStart?.(id).catch(() => null) ?? null])
-        .then(([ways, later]) => { if (live) setStopWays({ id, state: "ready", ways, later }); }), 0);
+      // ★`[2026-10-25 사용자 결정 — D5]` The ways first, the later start on its own (pushing the stops after it takes the server 10~17 s — 2026-10-25 local): said under the options meanwhile.
+      setStopWays({ id, state: "loading", ways: null, later: null, laterState: "loading" });
+      const timer = setTimeout(() => {
+        void (actions.moveOptions?.(stopMove.id).catch(() => null) ?? Promise.resolve(null))
+          .then((ways) => { if (live) setStopWays((current) => current?.id === id ? { ...current, state: "ready", ways } : current); });
+        void (actions.laterStart?.(id).catch(() => null) ?? Promise.resolve(null))
+          .then((later) => { if (live) setStopWays((current) => current?.id === id ? { ...current, later, laterState: "ready" } : current); });
+      }, 0);
       return () => { live = false; clearTimeout(timer); };
     }
     if (!actions.candidates) { setStopList({ id, state: "ready", list: [] }); return; }
@@ -1271,7 +1279,8 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   // 「Asked again」 is the same question of the same card (its place, or its arrival) — the arrival asked after its place is a new question.
   useEffect(() => { if (!stop) setPickedFor(null); else if (pickedFor && !pickedFor.startsWith(`${stop.id}:`)) setPickedFor(null); }, [stop, pickedFor]);
   const stopAsk = !stopItem || !asking ? null : stopMove
-    ? arrivalQuestion(stopItem, stopMove, view.items.find((item) => item.id === stopMove.fromId) ?? null, stopWays?.id === stopItem.id ? stopWays.ways : null, stopWays?.id === stopItem.id ? stopWays.later : null, t)
+    ? arrivalQuestion(stopItem, stopMove, view.items.find((item) => item.id === stopMove.fromId) ?? null, stopWays?.id === stopItem.id ? stopWays.ways : null, stopWays?.id === stopItem.id ? stopWays.later : null, t,
+      stopWays?.id === stopItem.id && stopWays.state === "ready" && stopWays.laterState === "loading")
     : placeQuestion(stopItem, sourceView, stopList?.id === stopItem.id ? stopList.list : [], t, language);
   const stopLoading = Boolean(stopItem) && (stopMove ? stopWays?.id !== stopItem!.id || stopWays.state === "loading"
     : stopList?.id === stopItem!.id && stopList.state === "loading" && !stopList.list.length);
@@ -1284,7 +1293,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   const askCards = resultAsks ? view.items.filter((item) => !removedSet.has(item.id) && stopsHere(item, view, stopCheck?.isHoursAcknowledged)
     && !((item.unfound || item.rereads?.length) && kindOfStop(view, item.id) === "place")) : [];
   const askKeys = askCards.map((item) => `${item.id}:${kindOfStop(view, item.id)}:${view.revision ?? ""}`);
-  const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: LaterStart | null; message?: string }>>({});
+  const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: LaterStart | null; laterState: "loading" | "ready"; message?: string }>>({});
   const [cardBusy, setCardBusy] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
@@ -1295,15 +1304,20 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       if (cardAsks[id]?.key === key) continue;
       const move = kindOfStop(view, id) === "arrival" ? incomingMove(view, id) : null;
       const set = (next: Omit<(typeof cardAsks)[string], "key">) => { if (live) setCardAsks((current) => ({ ...current, [id]: { key, ...next } })); };
-      set({ state: "loading", list: [], ways: null, later: null });
+      const patch = (next: Partial<Omit<(typeof cardAsks)[string], "key">>) => {
+        if (live) setCardAsks((current) => current[id]?.key === key ? { ...current, [id]: { ...current[id], ...next } } : current);
+      };
+      set({ state: "loading", list: [], ways: null, later: null, laterState: "loading" });
       // Asked a moment later, as for the stopped card (the page's own effects hand the calls the plan on screen first).
       timers.push(setTimeout(() => {
         if (move) {
-          void Promise.all([actions.moveOptions?.(move.id).catch(() => null) ?? null, actions.laterStart?.(id).catch(() => null) ?? null])
-            .then(([ways, later]) => set({ state: "ready", list: [], ways, later }));
-        } else if (!actions.candidates) set({ state: "ready", list: [], ways: null, later: null });
-        else void actions.candidates(id, (cards) => set({ state: "loading", list: cards, ways: null, later: null }))
-          .then((list) => set({ state: "ready", list, ways: null, later: null }), (error: unknown) => set({ state: "failed", list: [], ways: null, later: null, message: reason(error) }));
+          // `[2026-10-25 사용자 결정 — D5]` The ways first, the later start on its own (as for the stopped card).
+          void (actions.moveOptions?.(move.id).catch(() => null) ?? Promise.resolve(null)).then((ways) => patch({ state: "ready", ways }));
+          void (actions.laterStart?.(id).catch(() => null) ?? Promise.resolve(null)).then((later) => patch({ later, laterState: "ready" }));
+        } else if (!actions.candidates) set({ state: "ready", list: [], ways: null, later: null, laterState: "ready" });
+        else void actions.candidates(id, (cards) => set({ state: "loading", list: cards, ways: null, later: null, laterState: "ready" }))
+          .then((list) => set({ state: "ready", list, ways: null, later: null, laterState: "ready" }),
+            (error: unknown) => set({ state: "failed", list: [], ways: null, later: null, laterState: "ready", message: reason(error) }));
       }, 0));
     }
     return () => { live = false; timers.forEach(clearTimeout); };
@@ -1320,6 +1334,11 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   }
   // The change screen opened from a result card's question (「직접 수정」): what is saved there goes with the check, like the question's options. ✎ on the card saves only, as before.
   const [cardEditing, setCardEditing] = useState<string | null>(null);
+  // ★`[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기 D6]` Stops a push made later, with the start each had: 「원래 hh:mm 시작」 under the name while it still starts where the push put it
+  //   (on this screen only — a page opened again does not know it).
+  const [movedFrom, setMovedFrom] = useState<Readonly<Record<string, { from: string; to: string }>>>({});
+  const markMoved = (changes: PushedStop[]) => setMovedFrom((current) => ({ ...current,
+    ...Object.fromEntries(changes.filter((change) => change.from && change.from !== change.start).map((change) => [change.id, { from: current[change.id]?.from ?? change.from!, to: change.start }])) }));
   const asksOnCard = (item: PlanItem) => cardEditing === item.id && askCards.some((entry) => entry.id === item.id);
   /** 「삭제」 of a result card's question, confirmed: the stop goes at once with the plan's check (as in the C안 flow). */
   function cardDelete(item: PlanItem) {
@@ -1332,7 +1351,8 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
     const need = kindOfStop(view, item.id);
     const move = need === "arrival" ? incomingMove(view, item.id) : null;
     const got = cardAsks[item.id]?.key === `${item.id}:${need}:${view.revision ?? ""}` ? cardAsks[item.id] : null;
-    const ask = move ? arrivalQuestion(item, move, view.items.find((entry) => entry.id === move.fromId) ?? null, got?.ways ?? null, got?.later ?? null, t)
+    const ask = move ? arrivalQuestion(item, move, view.items.find((entry) => entry.id === move.fromId) ?? null, got?.ways ?? null, got?.later ?? null, t,
+      Boolean(got && got.state === "ready" && got.laterState === "loading"))
       : placeQuestion(item, sourceView, got?.list ?? [], t, language);
     const loading = !got || (got.state === "loading" && (Boolean(move) || !got.list.length));
     return <StopQuestion id={item.id} kind={need} ask={ask} loading={loading} failed={!move && got?.state === "failed" ? got.message ?? null : null} again={false} leaving={false} takeFocus={false}
@@ -1358,8 +1378,10 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       : act.type === "pick" ? () => actions.replace!(item.id, { candidate: act.candidate }, { flow: true })
       : act.type === "confirm" ? () => actions.confirmPlace!(item.id, { flow: true })
         : act.type === "taxi" ? () => actions.setMoveMode!(act.moveId, "taxi")
-          : act.type === "later" ? () => actions.retime!([{ id: item.id, start: act.start, end: act.end }], { flow: true })
-            : () => actions.edit!(item.id, { ...draftOfItem(item), noPlace: true }, { flow: true });
+          : act.type === "mode" ? () => actions.setMoveMode!(act.moveId, act.mode)
+            : act.type === "push" ? async () => { await actions.applyPush!(act.edits, { flow: true }); markMoved(act.changes); }
+              : act.type === "later" ? () => actions.retime!([{ id: item.id, start: act.start, end: act.end }], { flow: true })
+                : () => actions.edit!(item.id, { ...draftOfItem(item), noPlace: true }, { flow: true });
   }
   /** The same sentences the screen's notices say for these changes (here only for a screen reader). */
   function sentenceOf(item: PlanItem, option: StopOption): string {
@@ -1368,6 +1390,9 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       ? t(`${eul(item.title)} ${ro(act.candidate.name)} 바꿨어요`, `Changed ${item.title} to ${act.candidate.name}`) + " · " + t("바뀐 장소와 앞뒤 이동을 다시 확인해요", "Checking the new place and the moves either side")
       : act.type === "noplace" ? t(`${item.title} 일정은 장소 없이 두었어요`, `${item.title} is kept without a place`) + " · " + t("앞뒤 이동은 장소가 정해지면 확인해요", "Moves around it are checked once a place is set")
         : act.type === "taxi" ? t(`${ro("택시")} 바꿨어요`, "Changed to taxi") + " · " + t("이 구간만 다시 계산했어요", "Only this leg was counted again")
+          : act.type === "mode" ? t(`${ro(act.name)} 바꿨어요`, `Changed to ${act.name}`) + " · " + t("이 구간만 다시 계산했어요", "Only this leg was counted again")
+          : act.type === "push" ? t(`${act.changes.length}개 일정의 시간을 바꿨어요`, `Changed the time of ${act.changes.length} stop${act.changes.length === 1 ? "" : "s"}`)
+            + act.changes.map((change) => ` · ${change.title} → ${change.start}${change.end ? `–${change.end}` : ""}`).join("")
           : act.type === "later" ? t("1개 일정의 시간을 바꿨어요", "Changed the time of 1 stop") + ` · ${item.title} → ${act.start}${act.end ? `–${act.end}` : ""}`
             : [option.label, option.effect].filter(Boolean).join(" · ");
   }
@@ -1765,7 +1790,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   };
   const contextFor = (was: Readonly<Record<string, string>>, list: "before" | "after"): RowContext => ({
     done, open: openAt?.list === list ? openAt.id : null, selected, frozen, actions, explain, rechecking: list === "before" ? cardBusy : null, changed: new Set(Object.keys(was)), was, removed: removedSet, rowsFor,
-    question: list === "before" && resultAsks ? cardQuestion : undefined,
+    question: list === "before" && resultAsks ? cardQuestion : undefined, movedFrom,
     // `[2026-10-21 P6]` Stopped at a question of the reading: its place is the newest row (the list follows it) and holds the question.
     reveal: done ? undefined : { activeId: stopEntry ? askStopId(stopEntry.id) : readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? (stopEntry ? askStopId(stopEntry.id) : null), rowCut,
       ask: stopItem && stopAsk && list === "before" ? <StopQuestion id={stopItem.id} kind={stopNeed ?? "place"} ask={stopAsk} loading={stopLoading}

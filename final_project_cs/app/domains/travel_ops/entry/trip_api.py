@@ -299,9 +299,18 @@ class IntakeRestoreIn(IntakeRevisionIn):
 
 
 class IntakeAutofixIn(IntakeRevisionIn):
-    """전체 자동 추천 — `dry_run` 이면 **저장하지 않고** 바뀔 모습만(`view.preview`) 돌려준다. `[2026-10-03 ui 세션 요청서 3번]`"""
+    """전체 자동 추천 — `dry_run` 이면 **저장하지 않고** 바뀔 모습만(`view.preview`) 돌려준다. `[2026-10-03 ui 세션 요청서 3번]`
+
+    `push` `[2026-10-25 사용자 결정 — 도착 질문 「뒤 일정까지 함께 미루기」]` 그 일정(`item_id`) 하나로 못 맞추면 그 일정을 앞에서 닿는 시각으로 옮기고 뒤 일정을 늦춘다(`pipeline.autofix`)."""
     dry_run: bool = False
     item_id: str | None = Field(default=None, pattern=r"^\d+-\d+$", max_length=80)
+    push: bool = False
+
+    @model_validator(mode="after")
+    def _push_needs_item(self) -> "IntakeAutofixIn":
+        if self.push and self.item_id is None:
+            raise ValueError("push 는 item_id 와 함께만 보낸다")
+        return self
 
 
 class RecoveryPlanIn(BaseModel):
@@ -1886,7 +1895,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 done = pipeline.autofix(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                         revision=request.revision, tour=_lazy("place", place_factory),
                                         kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run, item_id=request.item_id,
-                                        dining=_dining_lookup())
+                                        push=request.push, dining=_dining_lookup())
                 # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
                 shown = {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
             if done.get("applied"):

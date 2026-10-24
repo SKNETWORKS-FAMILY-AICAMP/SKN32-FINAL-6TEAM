@@ -205,3 +205,36 @@ describe("`[2026-10-21 사용자 지적 — 멈춘 질문 칸이 「후보를 �
     expect(harness.autofix).toHaveBeenCalledOnce();
   });
 });
+
+// `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` 늦추기는 `push` 로 묻고, 서버가 뒤 일정까지 늦춘 판 · 못 늦춘 이유를 그대로 받는다 — 고르면 그 `edits` 를 그대로 저장한다
+describe("`[2026-10-25 사용자 결정 — D1~D6]` the later start of a late arrival, pushing the stops after it", () => {
+  const change = (id: string, from: string, to: string, pushed?: boolean) => ({ id, source_id: "source-a", index: Number(id.slice(2)), title: id === "0-0" ? "경복궁" : "광장시장",
+    from: { place: null, starts_at: from, ends_at: null }, to: { place: null, starts_at: to, ends_at: null }, reason: "time" as const, ...(pushed ? { pushed } : {}) });
+  const edits = [{ source_id: "source-a", field: "items[0].starts_at", value: "12:30" }, { source_id: "source-a", field: "items[1].starts_at", value: "14:30" }];
+
+  it("asks with push, and takes the server's pushed plan with its edits", async () => {
+    const screen = draw(plan(3, true));
+    harness.autofix.mockResolvedValueOnce({ applied: false, revision: 3, kept: [], view: plan(4), edits,
+      changed: [change("0-0", "12:00", "12:30"), change("0-1", "14:00", "14:30", true)] });
+    expect(harness.autofix).not.toHaveBeenCalled();                                         // 확인할 것이 없는 판 — 「전체 자동 추천」 미리 보기는 묻지 않는다
+    const later = await screen.actions.laterStart!("0-0");
+    expect(harness.autofix).toHaveBeenLastCalledWith("deferred-intake", 3, "ko", true, "0-0", true);
+    expect(later).toEqual({ start: "12:30", end: "", push: { edits, stops: [
+      { id: "0-0", title: "경복궁", from: "12:00", start: "12:30", end: "" }, { id: "0-1", title: "광장시장", from: "14:00", start: "14:30", end: "" }] } });
+  });
+
+  it("takes a push the server refused with its sentence", async () => {
+    const screen = draw(plan(3, true));
+    harness.autofix.mockResolvedValueOnce({ applied: false, revision: 3, changed: [], view: plan(3),
+      kept: [{ id: "0-0", title: "경복궁", reason: "push_refused", starts_at: "12:30", ends_at: "14:00", message: "뒤 일정을 미루면 하루를 넘어서 저장하지 않았어요." }] });
+    expect(await screen.actions.laterStart!("0-0")).toEqual({ start: "12:30", end: "14:00", refused: "뒤 일정을 미루면 하루를 넘어서 저장하지 않았어요." });
+  });
+
+  it("saves the pushed plan's edits as they are, checked and keeping their times", async () => {
+    harness.autofix.mockReturnValue(new Promise(() => undefined));
+    harness.edit.mockResolvedValue(plan(4, true));
+    const screen = draw(plan(3, true));
+    await screen.actions.applyPush!(edits, { flow: true });
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3, edits, "ko", { keepTimes: true });
+  });
+});

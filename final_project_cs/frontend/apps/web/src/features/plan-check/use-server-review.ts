@@ -242,6 +242,12 @@ export function useServerReview({ intakeId, view, language, apply, reread, waitW
         await save(edits, true, how);
         undoEdits.current = null;
       },
+      // `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` The edits of the server's push preview, as they are (with the first check's question: checked, the times kept as shown).
+      applyPush: async (edits, how) => {
+        if (!edits.length) return;
+        await save(edits, true, how);
+        undoEdits.current = null;
+      },
       remove: async (id, how) => {
         const item = itemOf(id);
         await save([itemEdit.remove(targetOf(item), true)], true, how);
@@ -385,10 +391,19 @@ export function useServerReview({ intakeId, view, language, apply, reread, waitW
       },
       // `[2026-10-20 사용자 결정 — 계획 확인 C안 · 이동 확인 C안]` The way in arrives late: when could the stop start instead? The server works it out for this stop alone and saves nothing
       //   (`autofix {item_id, dry_run}` — after the stop before ends and the way there is made, rounded up to 5 minutes; its end shortened when it must). Only a change of time is an answer here.
+      // ★`[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기 D1]` Asked with `push`: where this stop alone cannot be made later the server makes it later as long as it was and pushes
+      //   the stops after it (`pushed`), with the edits that make that plan — or says why it cannot (`push_refused`). Where it can, the answer is the same as without `push`.
       laterStart: async (id) => {
-        const result = await autofixIntake(intakeId, plan().revision, language, true, id).catch(staleThenRethrow);
+        const result = await autofixIntake(intakeId, plan().revision, language, true, id, true).catch(staleThenRethrow);
+        const refused = result.kept.find((entry) => entry.id === id && entry.reason === "push_refused");
+        if (refused?.starts_at) return { start: refused.starts_at, end: refused.ends_at ?? "", refused: refused.message ?? null };
         const change = result.changed.find((entry) => entry.id === id && entry.reason === "time");
         if (!change?.to.starts_at) return null;
+        if (result.changed.some((entry) => entry.pushed) && result.edits?.length) {
+          const stops = result.changed.filter((entry) => entry.to.starts_at).map((entry) => ({
+            id: entry.id, title: entry.title, from: entry.from.starts_at, start: entry.to.starts_at!, end: entry.to.ends_at ?? "" }));
+          return { start: change.to.starts_at, end: change.to.ends_at ?? "", push: { stops, edits: result.edits } };
+        }
         // ★`[2026-10-21 사용자 결정]` Only this stop moves (`item_id`): what the stop after it on that day comes to in the preview — overlapped, or reached late (its leg's `slack_min`).
         const review = result.view.review;
         const moved = review?.items.find((entry) => entry.id === id);

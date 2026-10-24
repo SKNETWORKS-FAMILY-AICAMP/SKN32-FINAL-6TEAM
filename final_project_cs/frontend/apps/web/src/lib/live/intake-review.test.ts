@@ -108,4 +108,11 @@ describe("the calls of the check screen", () => {
       ["/v1/web/trip-intakes/i1/revalidate", "POST", JSON.stringify({ revision: 5 })],
     ]);
   });
+
+  // `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` 한 일정의 늦추기는 `push` 를 함께 — `item_id` 없이 보내지 않는다
+  it("sends push with the stop it is for, and never without one", async () => {
+    await autofixIntake("i1", 4, "ko", true, "0-1", true);
+    await autofixIntake("i1", 4, "ko", true, undefined, true);
+    expect(calls.map((call) => call.init.body)).toEqual([JSON.stringify({ revision: 4, dry_run: true, item_id: "0-1", push: true }), JSON.stringify({ revision: 4, dry_run: true })]);
+  });
 });

@@ -31,6 +31,8 @@ export interface RowContext {
   reveal?: { activeId: string | null; waiting: ReadonlySet<string>; stop?: string | null; ask?: ReactNode; rowCut?: RevealRowCut | null };
   /** `[2026-10-21 사용자 지시]` On the result screen before registering: the question a card that needs a look asks (the first check's question box), or null. */
   question?: (item: PlanItem) => ReactNode;
+  /** `[2026-10-25 사용자 결정 — D6]` Stops a push made later: the start each had (`from`) and the one the push gave it (`to`). */
+  movedFrom?: Readonly<Record<string, { from: string; to: string }>>;
   /** The card or move that is open, and the stop picked on the map or in the list. */
   open: string | null;
   selected: string | null;
@@ -193,6 +195,9 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
   const removed = ctx.removed.has(item.id);
   const changed = ctx.changed.has(item.id);
   const changedFrom = ctx.was[item.id];
+  // `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기 D6]` Made later by a push from the first check's question: the start it had, while it still starts where the push put it.
+  const moved = ctx.movedFrom?.[item.id];
+  const movedText = moved && moved.to === item.startsAt ? t(`원래 ${moved.from} 시작`, `Was ${moved.from}`) : null;
   const lockedWhy = t("고정한 일정이라 바꿀 수 없어요 · 잠금을 풀면 수정할 수 있어요", "Locked · unlock it to change it");
   const removedWhy = t("삭제할 일정이에요 · 「되돌리기」를 누르면 다시 쓸 수 있어요", "Marked for deletion · press Undo to keep it");
   const lockWhy = removed ? removedWhy : !actions.lock ? t("잠금은 준비 중이에요", "Locking is coming") : review && !item.locked ? t("확인이 필요한 일정은 먼저 고쳐야 고정할 수 있어요", "Fix this stop before locking it") : frozen;
@@ -257,7 +262,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               <span className={styles.cardName}>
                 <span className={styles.cardTitleLine}><span id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>{changedMark}</span>
                 {stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}
-                {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}
+                {item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}{movedText && <small className={styles.cardWritten} data-moved>{movedText}</small>}
               </span>
             </button></h4>
             {/* 수정·삭제와 확인 중 표시는 제목 옆에, 확인 필요·시간 되돌리기는 하단 한 자리에 둔다. */}
@@ -271,7 +276,7 @@ function ItemRow({ item, ctx, rechecking }: { item: PlanItem; ctx: RowContext; r
               : <Act id={`${ctx.prefix}plan-delete-${item.id}`} className={styles.icon} why={deleteWhy} explain={explain} onPress={() => ctx.onDelete(item)} aria-label={t(`${item.title} 삭제`, `Delete ${item.title}`)} tooltip={t(`${item.title} 삭제`, `Delete ${item.title}`)}><Trash2 size={16} strokeWidth={1.8} aria-hidden="true" /></Act>}
             </span>
           </div>
-        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}</span>{status}</header>}
+        : <header className={styles.cardHead}><span className={styles.cardName}><h4 id={`${ctx.prefix}plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{stayPillOf(item, t) && <small className={styles.pill} data-stay-nights id={`${ctx.prefix}plan-item-${item.id}-stay`}><b className={styles.stayWord}>{t("체크인", "Check in")}</b> · {stayPillOf(item, t)}</small>}{item.written && <small className={styles.cardWritten}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</small>}{movedText && <small className={styles.cardWritten} data-moved>{movedText}</small>}</span>{status}</header>}
       {done && item.unfound && !removed && !checking && ctx.unfound && !question && <UnfoundPlace item={{ ...item, unfound: item.unfound }} prefix={ctx.prefix} candidates={actions.candidates}
         why={changeWhy} explain={explain} on={ctx.unfound} />}
       {editingTime && <TimeEditor item={item} ui={ctx.time!} />}

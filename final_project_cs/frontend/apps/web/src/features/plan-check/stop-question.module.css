@@ -26,6 +26,10 @@
 .line[data-leg] { color: var(--color-text-secondary); }
 /* `[2026-10-21]` 그 질문이 가르는 사실 한 줄(앞말 없음) */
 .line[data-fact] { color: var(--color-text-secondary); }
+/* `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` 밀리는 일정 줄 · 못 미룬 이유(목업 `tripilot-plan-check-arrival-push.html`) */
+.line[data-push] { padding-left: 8px; border-left: 2px solid var(--color-adjusted-border); color: var(--color-text-secondary); }
+.line[data-refused] { color: var(--color-error); }
+.note[data-pending] { margin: 8px 0 0; }
 .option[aria-disabled="true"] { border-style: dashed; background: var(--color-subtle); cursor: not-allowed; }
 .buttons { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 9px; }
 .buttons[data-two] { grid-template-columns: 1fr 1fr; }
