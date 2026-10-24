@@ -177,7 +177,11 @@ export function useServerReview({ intakeId, view, language, apply, reread, waitW
       //   measure the moves or re-place the stops around it now - 「다시 제출」 (`recheck`) checks the whole plan once. A lock or the plan's name is checked as before.
       // ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` A pick inside the first check's question (`how.flow`) is saved WITH its check: the card is checked again where it stands and
       //   the check goes on — no 「다시 제출」 (the plan is not 「changed since the last check」) and no undo (the C안 flow has none).
+      // ★`[2026-10-25 사용자 결정 — 이동 확인 C안대로]` …and the other stops keep their times (`keepTimes`): a leg made late by the pick is asked about by the card it comes into
+      //   (its 「도착」 — taxi · later start · edit by hand). Checked with its re-timing, a pick moved the rest of the day without a word, or was refused whole when the moving reached a stop
+      //   that never fit (a palace at 21:00 — 2026-10-24 local, the same before this branch).
       const next = await (changed && !how.flow ? editIntake(intakeId, before.revision, edits, language, { check: false })
+        : how.flow ? editIntake(intakeId, before.revision, edits, language, { keepTimes: true })
         : editIntake(intakeId, before.revision, edits, language)).catch(staleThenRethrow);
       if (!allUndo.active) throw gone();
       if (!how.flow && edits.some((edit) => !edit.field.endsWith(".locked"))) allUndo.remember(before, next);

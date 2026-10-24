@@ -206,6 +206,8 @@ class IntakeEditIn(BaseModel):
     edits: list[IntakeEditOne] = Field(min_length=1, max_length=50)
     #: `[2026-10-20 사용자 지시]` false = 저장만 하고 검사(이동 계산 · 재배치 · 대안 준비)는 「다시 제출」(`revalidate`) 때 한 번에
     check: bool = True
+    #: `[2026-10-25 사용자 결정 — 이동 확인 C안대로]` true = 검사는 하되 고른 장소에 맞춰 다른 일정의 시각을 옮기지 않는다(늦어지는 구간은 다음 카드가 묻는다)
+    keep_times: bool = False
 
 
 class ReopenIn(BaseModel):
@@ -1655,7 +1657,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                      edits=[e.model_dump() for e in request.edits],
                      tour=_lazy("place", place_factory),
                      kakao=_kakao_raw,
-                     dining=_dining_lookup(_ctx), check=request.check)
+                     dining=_dining_lookup(_ctx), check=request.check, keep_times=request.keep_times)
                 shown = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
             # ★`[2026-10-20 사용자 지시]` 저장만 한 판(`check: false`)은 대안도 다시 준비하지 않는다 — 「다시 제출」(재검증) 뒤에 한다
             if request.check:

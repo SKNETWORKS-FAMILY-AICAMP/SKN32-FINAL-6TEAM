@@ -104,7 +104,8 @@ describe("plan check saves changes and checks them once, when sent again", () =>
     const first = await screen.actions.candidates!("0-0");
     harness.edit.mockResolvedValue(plan(4, true));
     await screen.actions.replace!("0-0", { candidate: first[1] }, { flow: true });
-    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3, expect.any(Array), "ko");
+    // `[2026-10-25 이동 확인 C안대로]` checked, the other stops' times kept — a late leg is asked about by the card it comes into
+    expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3, expect.any(Array), "ko", { keepTimes: true });
     const after = draw(view);
     expect(after.dirty).toBe(false);
     expect(after.actions.canUndo!()).toBe(false);
@@ -119,7 +120,7 @@ describe("plan check saves changes and checks them once, when sent again", () =>
     const screen = draw(taken);
     await screen.actions.confirmPlace!("0-0", { flow: true });
     expect(harness.edit).toHaveBeenLastCalledWith("deferred-intake", 3,
-      [{ source_id: "source-a", field: "items[0].place", value: { name: "올리브영 광화문점", latitude: 37.571, longitude: 126.976, source: "kakao" } }], "ko");
+      [{ source_id: "source-a", field: "items[0].place", value: { name: "올리브영 광화문점", latitude: 37.571, longitude: 126.976, source: "kakao" } }], "ko", { keepTimes: true });
   });
 });
 

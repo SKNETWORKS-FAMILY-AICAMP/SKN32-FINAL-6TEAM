@@ -655,12 +655,14 @@ class IntakeConflict(ValueError):
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
          edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
-         dining: Any = None, learn_aliases: bool = True, reflow: bool = False, check: bool = True) -> int:
+         dining: Any = None, learn_aliases: bool = True, reflow: bool = False, check: bool = True,
+         keep_times: bool = False) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     ★`[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `check=False` 면 **저장만** 한다: 장소를 바꿔도 앞뒤 시각 재배치
     (`direct_schedule.fit` — 이동 계산기를 부른다)를 하지 않고, 새 판의 검사는 계산기 없이(`review.ensure(quick=True)`) `checked: false` 로 남긴다.
     고객이 「다시 제출」을 누르면 `revalidate` 가 계산기로 한 번에 검사한다. 일정 수 · 기간(7일) 같은 값 검사는 그대로 한다.
+    `keep_times=True` `[2026-10-25 사용자 결정 — 이동 확인 C안대로]` 검사는 하되 재배치(`direct_schedule.fit`)는 하지 않는다 — 계획 확인의 질문 칸 고르기.
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
     싣는다. `{"none": true}` 는 「장소 없음」(자유시간 · 이름 없는 호텔). 돌려주는 값은 새 판 번호.
@@ -761,7 +763,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         explicit_times = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
                           if field.startswith("items[") and field.endswith((".starts_at", ".ends_at", ".date"))} if reflow else set()
         touched |= explicit_times
-        if added and not check:
+        if added and (not check or keep_times):
             from ..planning.planner import MAX_DAYS
             from .assemble import collect
             prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
@@ -772,7 +774,10 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             dates = sorted({r["date"] for r in got.rows if r["date"]})
             if dates and (date.fromisoformat(dates[-1]) - date.fromisoformat(dates[0])).days >= MAX_DAYS:
                 raise IntakeRejected("trip_too_long", "서울 여행은 최대 7일까지 추가할 수 있습니다")
-        if (touched or added) and via != "autofix" and check:
+        # ★`[2026-10-25 사용자 결정 — 이동 확인 C안대로]` `keep_times` 면 다른 일정의 시각을 옮기지 않는다 — 검사는 그대로 해서 늦어지는 구간은 「확인 필요」로 남고
+        #   그 구간이 닿는 카드가 「도착」을 묻는다(택시 · 늦추기 · 직접 수정). 전에는 계획 확인의 질문 칸 고르기도 재배치를 돌려, 그날 뒤 일정을 말없이 밀거나
+        #   밀다가 원래부터 운영시간이 안 맞던 일정(밤 창덕궁)에 걸려 고르기 전체를 거절했다(2026-10-24 로컬, 바꾸기 전 코드에서도 같음)
+        if (touched or added) and via != "autofix" and check and not keep_times:
             from . import direct_schedule
             from .assemble import collect
             prospective = [{**c, "source_id": str(c["source_id"]) if c["source_id"] is not None else None}
