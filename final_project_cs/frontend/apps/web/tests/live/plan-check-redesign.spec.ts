@@ -10,23 +10,21 @@ test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 const bodyOf = (page: Page) => page.locator("div[class*=sheetBody]");
 
-// ── 읽는 화면: 단계 점 ─────────────────────────────────────────────────────────
+// ── 읽는 화면: 진행 막대 ───────────────────────────────────────────────────────
 
-test("읽는 화면의 단계 점: 선이 닿은 점만 체크되고(받았어요 → 일정 읽기 …), 선은 동그라미 뒤에 그려진다", async ({ page, request }) => {
+// ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 점 4개(받았어요 · 일정 읽기 · 장소·운영시간 · 정리 완료) 대신 서버 단계마다 한 칸이다
+//   (목업 `mockups/tripilot-plan-check-progress-steps.html` ③). 진행 알림을 안 보내는 서버면 읽는 동안은 첫 칸(일정 읽기)만 현재다 — 단계마다 차는 모습은 progress.spec.ts 가 본다.
+test("읽는 화면의 진행 막대: 서버 단계마다 한 칸이고, 진행 알림이 없으면 첫 칸(일정 읽기)만 현재 · 나머지는 기다림이며 그 칸 아래에 단계 이름이 보인다", async ({ page, request }) => {
   await mockServer(request).scenario({ readingPolls: 99, intakeEvents: "off" });
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
-  const steps = page.locator("ol[class*=steps] li");
-  await expect(steps).toHaveCount(4);
-  await expect(steps.first()).toHaveAttribute("data-state", "done");                              // 받았어요: 서버가 받았으니 채워져 있다
-  await expect(steps.nth(1)).toHaveAttribute("data-state", "current");                            // 일정 읽기: 아직 선이 거기까지 안 찼다
-  await expect(steps.nth(2)).toHaveAttribute("data-state", "waiting");
-  const layers = await page.evaluate(() => {
-    const track = document.querySelector("div[class*=track]")!, list = document.querySelector("ol[class*=steps]")!;
-    return { track: getComputedStyle(track).zIndex, steps: getComputedStyle(list).zIndex, position: getComputedStyle(list).position };
-  });
-  expect(layers.position).toBe("relative");
-  expect(Number(layers.steps)).toBeGreaterThan(Number(layers.track));                              // 점이 선 위에 있어서 동그라미 안에 선이 비치지 않는다
+  const bar = page.locator("div[data-steps][role=progressbar]");
+  const cells = bar.locator("span[class*=cells] > span");
+  await expect(cells.first()).toHaveAttribute("data-state", "current");                           // 일정 읽기
+  const states = await cells.evaluateAll((all) => all.map((cell) => cell.getAttribute("data-state")));
+  expect(states.length).toBeGreaterThanOrEqual(6);                                                 // 일정 읽기 · 장소 · 운영시간 · 이동 · 날씨·도로 · 빈칸 채우기(+ 답 반영)
+  expect(states.slice(1).every((state) => state === "waiting")).toBe(true);
+  await expect(bar.locator("span[class*=cellName]")).toHaveText("일정 읽기");
 });
 
 // ── 상단바 · 계획 이름 ─────────────────────────────────────────────────────────
