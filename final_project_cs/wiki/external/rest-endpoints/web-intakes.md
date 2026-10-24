@@ -8,6 +8,14 @@ domain: travel
 
 # 계획 읽기·설문 API
 
+### 날짜 위험 2차 보완 — 격리 구현 계약 (2026-10-24)
+
+- 시작까지 24시간을 초과하는 일정은 현재상태 경보를 미래의 문제로 세지 않습니다. `as_of_now`가 없어도 현재상태 종류는 동일합니다. 예보와 방문 기간에 겹치는 명시적 통제 기간은 유지합니다(끝만 있으면 시작 이전부터, 시작만 있으면 이후로 해석하며, 양 끝 접촉도 겹침입니다). 잘못된/시간대 없는 시각은 기간 근거로 쓰지 않습니다.
+- `unknown_categories`에서 `too_early`만 분리하고 실제 소스 실패·일부 미확인·위치 없음·점검 오류는 유지합니다. 남은 problem과 실제 unknown이 없을 때만 `status: unknown`, `code: too_early`, 선택 필드 `deferred: true`로 출발 전 재확인임을 밝힙니다. `clear`로 승격하지 않습니다. 뺀 현재 문제 수는 `deferred_current`로 남깁니다.
+- 웹은 deferred만 확인필요 개수/행에서 제외하며 별도 재확인 안내를 보입니다. problem은 deferred 표식보다 우선하고 실제 unknown은 숨기지 않습니다. `risk_panel` 꺼짐은 기존대로 실제 위험만 남깁니다.
+- 10분 재사용·일정 서명·원래 `checked_at`을 유지합니다. 개별 결과의 원래 확인 시각으로도 만료를 검사하여 새 판을 거듭 만들며 수명이 연장되지 않게 합니다. 24시간 경계나 일정 종료 경계를 넘으면 다시 검사합니다. 이 계약은 검색/채팅/공지·등록 가능 판정을 바꾸지 않습니다.
+- 담당: 날짜 위험 구현 에이전트(접수/웹 겸임). 독립 검토·운영 반영은 미완료이며 [격리 검증 기록](../../records/reports/2026-10-24_date-risk-second-pass.md)에 실행 증거를 남깁니다.
+
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 
 `[실측]` `app/domains/travel_ops/components/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·

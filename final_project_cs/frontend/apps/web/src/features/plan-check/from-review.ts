@@ -262,7 +262,7 @@ function legOf(leg: CandidateLeg | null | undefined): PlanCandidateLeg | null {
 }
 
 function riskChecks(risk: ItemRisk | null): CheckRow[] {
-  if (!risk) return [];
+  if (!risk || (risk.deferred && risk.status !== "problem" && !risk.unknownCategories.length)) return [];
   const text = risk.problems.map(problemText).filter(Boolean).join("; ");
   return [{ kind: "risk", result: risk.status === "problem" ? "warn" : risk.status === "clear" ? "ok" : "unknown",
     text: text || (risk.status === "clear" ? "확인한 위험 정보에서 겹치는 문제가 없어요"

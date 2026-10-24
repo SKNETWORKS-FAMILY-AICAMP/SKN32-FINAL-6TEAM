@@ -48,8 +48,28 @@ def _reusable(previous: dict[str, Any] | None, now: datetime) -> dict[str, tuple
         return {}
     if at.tzinfo is None or not timedelta(0) <= now - at <= timedelta(seconds=REUSE_FRESH_S):
         return {}
-    return {str(it.get("id")): (_risk_sig(it), it["risk"]) for it in previous.get("items", [])
-            if isinstance(it.get("risk"), dict) and it["risk"].get("code") not in ("item_limit", "check_error")}
+    from .review import _dt
+
+    reusable = {}
+    for it in previous.get("items", []):
+        risk = it.get("risk")
+        if not isinstance(risk, dict) or risk.get("code") in ("item_limit", "check_error"):
+            continue
+        checked_at = _when(risk.get("checked_at"))
+        if checked_at is None or not timedelta(0) <= now - checked_at <= timedelta(seconds=REUSE_FRESH_S):
+            continue
+        start = _dt(it.get("date"), it.get("starts_at"))
+        if start is not None and ((start - checked_at > timedelta(hours=CURRENT_ALERT_HOURS))
+                                  != (start - now > timedelta(hours=CURRENT_ALERT_HOURS))):
+            continue
+        end = _dt(it.get("end_date") or it.get("date"), it.get("ends_at"))
+        if end is not None and checked_at < end <= now:
+            continue
+        if start is not None:
+            risk = _for_trip_date(risk, far=start - now > timedelta(hours=CURRENT_ALERT_HOURS),
+                                  starts=start, ends=end)
+        reusable[str(it.get("id"))] = (_risk_sig(it), risk)
+    return reusable
 
 
 def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
@@ -92,7 +112,8 @@ def decorate(conn, *, tenant_id: str, review: dict[str, Any], mode: str,
             risk = _unknown(item, "item_limit", "한 번에 확인할 수 있는 일정 수에 닿았어요 · 이 일정은 아직 확인하지 못했어요")
         else:
             risk = risk_report.judge_item(checker, parsed, mode=mode, at=now, snapshot_hours=snapshot)
-            risk = _for_trip_date(risk, far=parsed.starts_at - now > timedelta(hours=CURRENT_ALERT_HOURS))
+            risk = _for_trip_date(risk, far=parsed.starts_at - now > timedelta(hours=CURRENT_ALERT_HOURS),
+                                  starts=parsed.starts_at, ends=parsed.ends_at)
             checked += 1
         shown["risk"] = _present(risk, mode, now)
         items.append(shown)
@@ -244,21 +265,47 @@ def _sensitivity(conn, tenant_id: str, place: dict[str, Any]) -> None:
         place["weather_sensitive"] = None
 
 
-def _for_trip_date(risk: dict[str, Any], *, far: bool) -> dict[str, Any]:
-    """먼 일정이면 「지금 상태」 원인(`as_of_now` — 점검기가 시작이 먼 일정에 붙인다)을 문제에서 뺀다. 예보처럼 그 시각을 본 원인은 남긴다.
+def _when(value: Any) -> datetime | None:
+    try:
+        at = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return at if at.tzinfo is not None else None
 
-    뺀 원인이 있고 남은 문제가 없으면 「문제」가 아니라 「아직 확인 전」(`unknown` · `too_early`)이다 — 「문제 없음」이라고 말하지도 않는다(지금 상태 종류는 그 날짜를 확인하지 못했다).
-    뺀 개수는 `deferred_current` 에 남긴다(조용히 버리지 않는다). 일정 · 등록 가능 판정은 바꾸지 않는다."""
+
+def _current_only(problem: dict[str, Any], starts: datetime, ends: datetime | None) -> bool:
+    if not problem.get("as_of_now") and problem.get("category") not in risk_report.CURRENT_STATE:
+        return False
+    first, last = _when(problem.get("starts_at")), _when(problem.get("ends_at"))
+    if first is not None and last is not None and first > last:
+        return True
+    if first is not None or last is not None:
+        if (first is None or first <= (ends or starts)) and (last is None or last >= starts):
+            return False
+    return True
+
+
+def _for_trip_date(risk: dict[str, Any], *, far: bool,
+                   starts: datetime, ends: datetime | None) -> dict[str, Any]:
+    """먼 일정의 현재경보는 보류하되 예보·겹치는 명시 기간은 보존한다.
+
+    시기상 too_early만 미확인 종류에서 분리한다. 실제 문제·소스 미확인이 없을 때만
+    deferred로 안내하며 clear로 바꾸지 않는다. 뺀 개수·원래 확인시각·등록 판정은 보존한다."""
     if not far:
         return risk
     problems = list(risk.get("problems") or [])
-    dated = [p for p in problems if not p.get("as_of_now")]
-    if len(dated) == len(problems):
+    dated = [p for p in problems if not _current_only(p, starts, ends)]
+    timing = [u for u in risk.get("unknown_categories", []) if u.get("code") == "too_early"]
+    unknown = [u for u in risk.get("unknown_categories", []) if u.get("code") != "too_early"]
+    if len(dated) == len(problems) and not timing:
         return risk
-    out = {**risk, "problems": dated, "deferred_current": len(problems) - len(dated)}
+    out = {**risk, "problems": dated, "unknown_categories": unknown,
+           "deferred_current": risk.get("deferred_current", 0) + len(problems) - len(dated)}
     if dated:
         return out
-    return {**out, "status": "unknown", "code": "too_early", "reason": FAR_REASON}
+    if unknown:
+        return {**out, "status": "unknown"}
+    return {**out, "status": "unknown", "code": "too_early", "reason": FAR_REASON, "deferred": True}
 
 
 def _unknown(item: dict[str, Any], code: str, reason: str) -> dict[str, Any]:

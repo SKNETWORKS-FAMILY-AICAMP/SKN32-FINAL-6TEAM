@@ -32,7 +32,8 @@ export function RiskPanel({ items, at = null, mode = null, loading = false, erro
     return () => clearTimeout(timer);
   }, [loading]);
   const problems = items.filter((item) => item.status === "problem");
-  const unknown = items.filter((item) => item.status === "unknown" || item.unknownCategories.length > 0);
+  const later = items.filter((item) => item.deferred && item.status !== "problem" && !item.unknownCategories.length);
+  const unknown = items.filter((item) => !later.includes(item) && (item.status === "unknown" || item.unknownCategories.length > 0));
   const current = problems.length ? problems : unknown;
   const shown = compact ? current.slice(0, 2) : current;
   const count = problems.length;
@@ -40,13 +41,14 @@ export function RiskPanel({ items, at = null, mode = null, loading = false, erro
   const unchecked = skipped.filter((item) => item.reason !== "mobility");
   const atText = riskTime(at ?? items.find((item) => item.checkedAt)?.checkedAt ?? null);
   if (loading && !items.length && !showLoading) return null;
-  return <section className={styles.panel} data-risk-panel data-tone={count ? "danger" : error || unavailable || unknown.length || unchecked.length ? "unknown" : "clear"}
+  return <section className={styles.panel} data-risk-panel data-tone={count ? "danger" : error || unavailable || unknown.length || unchecked.length || later.length ? "unknown" : "clear"}
     aria-label={t("현재 일정 위험 확인", "Current itinerary risks")} aria-busy={loading || busy}>
     <div className={styles.heading}><strong>{count ? t(`주의할 일정 ${count}개`, `${count} stops need attention`)
       : loading ? t("현재 위험을 확인하고 있어요", "Checking current risks")
       : error || unavailable ? t("현재 위험을 확인하지 못했어요", "Current risks could not be checked")
       : unknown.length ? t(`일부 확인이 안 된 일정 ${unknown.length}개`, `${unknown.length} stops are not fully checked`)
       : unchecked.length ? t("아직 확인하지 못한 일정이 있어요", "Some stops have not been checked yet")
+      : later.length ? t(`출발이 가까워지면 다시 확인할 일정 ${later.length}개`, `${later.length} stops will be checked closer to departure`)
       : !items.length ? t("현재 점검 대상 일정이 없어요", "No stops are currently in the check scope")
       : t("최근 확인에서 겹치는 위험이 없어요", "No overlapping risk in the latest check")}</strong>
       {retry && <button type="button" onClick={retry} disabled={busy || loading}>{t("다시 확인", "Check again")}</button>}</div>
@@ -69,6 +71,7 @@ export function RiskPanel({ items, at = null, mode = null, loading = false, erro
     </li>)}</ul>}
     {compact && current.length > shown.length && <p>{t(`외 ${current.length - shown.length}개 일정도 확인이 필요해요.`, `${current.length - shown.length} more stops need attention.`)}</p>}
     {count > 0 && unknown.some((item) => item.status !== "problem") && <p className={styles.unknown}>{t(`다른 ${unknown.filter((item) => item.status !== "problem").length}개 일정은 일부 확인하지 못했어요.`, "Other stops could not be fully checked.")}</p>}
+    {later.length > 0 && <p className={styles.when}>{t("먼 날짜의 현재 경보는 반영하지 않았어요. 출발이 가까워지면 다시 확인해요.", "Current alerts are not applied to distant visits. Check again closer to departure.")}</p>}
     {alternativeMessage && <p role="status">{alternativeMessage}</p>}
     {scope && <p className={styles.when}>{typeof scope.horizonHours === "number" ? t(`지금부터 ${scope.horizonHours}시간 이내 대상 · `, `Within the next ${scope.horizonHours} hours · `) : ""}
       {t(`${items.length}개 점검`, `${items.length} stops checked`)}{skipped.length > 0 && t(` · 제외 ${skipped.length}개`, ` · ${skipped.length} skipped`)}</p>}

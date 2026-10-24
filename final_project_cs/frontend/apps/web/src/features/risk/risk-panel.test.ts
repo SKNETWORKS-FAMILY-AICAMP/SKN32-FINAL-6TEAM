@@ -1,3 +1,6 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import styles from "./risk-panel.module.css";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -8,6 +11,29 @@ vi.mock("@/lib/settings", () => ({ useT: () => (ko: string) => ko }));
 const render = (patch: Partial<Parameters<typeof RiskPanel>[0]>) => renderToStaticMarkup(createElement(RiskPanel, { items: [], ...patch }));
 
 describe("위험 안내 카드", () => {
+  it("먼 날짜 안내는 미확인 개수와 분리하며 스위치 양쪽에서 실제 문제를 보존한다", () => {
+    const later = itemRiskOf({ item_id: "later", status: "unknown", deferred: true })!;
+    const unknown = itemRiskOf({ item_id: "unknown", status: "unknown", unknown_categories: [{ label: "교통 통제" }] })!;
+    const danger = itemRiskOf({ item_id: "danger", status: "problem", deferred: true, problems: [{ message: "기간 통제" }] })!;
+    const html = render({ items: panelRisks([later], true) });
+    if (process.env.DATE_RISK_RENDER_DIR) {
+      const css = readFileSync(new URL("./risk-panel.module.css", import.meta.url), "utf8")
+        .replace(/\.([a-zA-Z][\w-]*)/g, (selector, name: string) => styles[name] ? `.${styles[name]}` : selector);
+      for (const enabled of [true, false]) {
+        const body = render({ items: panelRisks([later, unknown, danger], enabled) });
+        writeFileSync(join(process.env.DATE_RISK_RENDER_DIR, `risk-panel-${enabled ? "on" : "off"}.html`),
+          `<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>격리 위험 패널</title><style>:root{--color-border:#ccc;--color-surface:#fff;--color-text:#222;--color-error-border:#d33;--color-warning:#c90;--color-muted:#555}body{font-family:sans-serif;margin:16px}${css}</style><body>${body}</body></html>`);
+      }
+    }
+    expect(html).toContain("출발이 가까워지면 다시 확인할 일정 1개");
+    expect(html).not.toContain("일부 확인이 안 된 일정");
+    expect(html).not.toContain("겹치는 위험이 없어요");
+    expect(render({ items: panelRisks([later, unknown], true) })).toContain("일부 확인이 안 된 일정 1개");
+    for (const enabled of [true, false]) {
+      expect(render({ items: panelRisks([later, unknown, danger], enabled) })).toContain("기간 통제");
+    }
+    expect(render({ items: panelRisks([later, unknown, danger], false) })).not.toContain("출발이 가까워지면");
+  });
   // `[2026-10-22 사용자 지시]` 운영자가 점검 칸을 끄면 알림 센터에는 실제 위험만 — 확인 불가 · 위험 없음은 빠진다
   it("스위치를 끄면 실제 위험 일정만 남긴다", () => {
     const danger = itemRiskOf({ item_id: "i1", status: "problem", problems: [{ category: "weather", message: "호우 경보" }] })!;

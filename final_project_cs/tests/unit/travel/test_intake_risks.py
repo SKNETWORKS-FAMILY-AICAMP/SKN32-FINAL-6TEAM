@@ -82,7 +82,9 @@ def test_a_future_snapshot_is_not_called_the_future_weather_warning():
     value = decorated(row(date="2030-01-03"))["items"][0]["risk"]
     assert value["status"] == "unknown" and value["code"] == "too_early"
     assert value["problems"] == [] and value["deferred_current"] >= 1
-    assert any(c["code"] == "too_early" for c in value["unknown_categories"])
+    # 2차 계약: 시기상 보류는 실제 소스 미확인과 구분한다.
+    assert value.get("deferred") is True
+    assert value["unknown_categories"] == []
 
 
 def test_missing_visit_time_and_source_errors_are_visible_unknown(monkeypatch):

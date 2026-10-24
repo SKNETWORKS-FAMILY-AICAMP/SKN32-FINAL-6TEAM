@@ -12,7 +12,7 @@ export interface ItemRisk {
   itemId: string; title: string; status: RiskStatus; problems: RiskProblem[];
   categories: RiskCategory[]; unknownCategories: string[]; reason: string | null;
   checkedAt: string | null; checkedFor: string | null; mode: "fresh" | "cached" | null;
-  dataConfirmedAt: string | null; stale: boolean;
+  dataConfirmedAt: string | null; stale: boolean; deferred?: boolean;
 }
 export interface TripRisks {
   tripId: string; version: number | null; at: string | null; mode: string | null; items: ItemRisk[];
@@ -31,6 +31,7 @@ export function itemRiskOf(value: unknown): ItemRisk | null {
   const status = row.status === "problem" || row.status === "clear" ? row.status : "unknown";
   return {
     itemId: text(row.item_id) ?? "", title: text(row.title) ?? "", status,
+    deferred: row.deferred === true && status !== "problem" && list(row.unknown_categories).length === 0,
     problems: list(row.problems).flatMap((entry): RiskProblem[] => {
       const problem = object(entry);
       return problem ? [{ category: text(problem.category) ?? "", label: text(problem.label) ?? "",
