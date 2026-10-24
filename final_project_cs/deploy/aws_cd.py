@@ -282,7 +282,9 @@ def ready(document):
 def public_health(url):
     result = {}
     for path in ("/health", "/"):
-        with urllib.request.urlopen(url.rstrip("/") + path, timeout=15) as response:
+        request = urllib.request.Request(url.rstrip("/") + path,
+                                         headers={"User-Agent": "Guguroute-Deployment/1.0"})
+        with urllib.request.urlopen(request, timeout=15) as response:
             if response.status != 200:
                 raise DeploymentError("Public endpoint failed")
             if path == "/health" and json.load(response).get("status") != "ok":
