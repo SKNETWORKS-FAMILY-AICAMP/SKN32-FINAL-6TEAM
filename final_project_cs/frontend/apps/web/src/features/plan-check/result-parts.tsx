@@ -6,7 +6,7 @@ import { Check, Send, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
-import { draftOfItem, draftProblem, needs, type ItemDraft, type PlanCheckView, type PlanItem, type TripIssue } from "./model";
+import { draftOfItem, draftProblem, WEEKDAYS, needs, type ItemDraft, type PlanCheckView, type PlanItem, type TripIssue } from "./model";
 import { Act, reason } from "./parts";
 import styles from "./plan-check.module.css";
 import tripStyles from "../trip/trip-screen.module.css";
@@ -37,6 +37,7 @@ export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item:
   }
 
   const message = problem === "title" ? t("일정 이름을 적어 주세요.", "Give the stop a name.")
+    : problem === "hours" ? t("여는·닫는 시각과 쉬는 요일을 확인해 주세요.", "Check opening and closing times and days off.")
     : problem === "time" ? t("끝 시각이 시작보다 빨라요.", "The end is before the start.")
       : problem === "place" ? t("위 검색창에서 장소를 고르거나 「장소 없음」을 선택해 주세요.", "Choose a place above or select “No place”.") : "";
   return <form className={styles.editor} aria-labelledby="plan-editor-title" noValidate
@@ -52,6 +53,16 @@ export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item:
       <label className={styles.field}>{t("시작", "Start")}<input type="time" value={draft.start} aria-invalid={problem === "time"} onChange={(event) => change({ start: event.target.value })} /></label>
       <label className={styles.field}>{t("끝", "End")}<input type="time" value={draft.end} aria-invalid={problem === "time"} onChange={(event) => change({ end: event.target.value })} /></label>
     </div>
+    {draft.hours && !draft.noPlace && draft.place === item.place && <fieldset disabled={saving}>
+      <legend>{t("알려 주신 운영시간", "Hours you tell us")}</legend>
+      <p>{t("다른 출처가 없을 때 이 일정에서만 사용해요. 자정까지는 닫는 시각을 00:00으로 적어 주세요.", "Used only for this stop when official hours are unknown. Midnight closing is 00:00.")}</p>
+      <div className={styles.fieldRow}>
+        <label className={styles.field}>{t("여는 시각", "Opens")}<input type="time" value={draft.hours.open} aria-invalid={problem === "hours"} onChange={(e) => change({hours: {...draft.hours!, open:e.target.value}})} /></label>
+        <label className={styles.field}>{t("닫는 시각", "Closes")}<input type="time" value={draft.hours.close} aria-invalid={problem === "hours"} onChange={(e) => change({hours: {...draft.hours!, close:e.target.value}})} /></label>
+      </div>
+      <div role="group" aria-label={t("쉬는 요일", "Closed days")}>{WEEKDAYS.map((day, i) => <label key={day}><input type="checkbox" checked={draft.hours!.closedDays.includes(day)} onChange={(e) => change({hours: {...draft.hours!, closedDays: e.target.checked ? [...draft.hours!.closedDays,day] : draft.hours!.closedDays.filter(d => d !== day)}})} />{t("월화수목금토일"[i],day)}</label>)}</div>
+      <Button onClick={() => change({hours:{open:"",close:"",closedDays:[]}})}>{t("알려 준 시간 지우기", "Clear hours")}</Button>
+    </fieldset>}
     {(message || refusal) && <p className={styles.editorError} role="alert">{message || refusal}</p>}
     <div className={styles.editorButtons}>
       <Button onClick={onCancel} disabled={saving}>{t("취소", "Cancel")}</Button>

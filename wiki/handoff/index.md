@@ -9,6 +9,8 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 
 # 세션 인계 안내 목차
 
+2026-10-24 — [고객 운영시간 P1 후속 수정](2026-10-24_customer-hours-p1.md): 새 격리 사본·후속 delivery에서 독립 재현 RED와 정식 회귀 편입. 완료 SSE·고객 휴무 전파만 최소 수정하며 별도 독립 재검토 예정입니다.
+
 2026-10-24 — 최신 팀 develop 위 격리 날짜 위험 2차 보완: deferred·기간 겹침·재사용 시간경계·risk_panel 보존. 원본/운영 변경 없이 TDD와 실제 Python·웹·모형 부품 브라우저 검증을 수행했습니다. 전체 관문은 기준본과 같은 Git 실행 권한 실패 3건이 남으며, 최종 수치·실패/한계·인계는 [검증 기록](../../final_project_cs/wiki/records/reports/2026-10-24_date-risk-second-pass.md)을 봅니다.
 
 2026-10-23 — [Dining 모호한 조건 질문·답 저장·재검증 3단계](../../final_project_cs/wiki/records/reports/2026-10-23_dining-clarifications.md): 원문과 현재 식사 선택지로 질문, 본인 접수·revision·run_id·서명 대조 뒤 선택/취소 저장과 새 검사 연결. 조건 정정은 해당 조건 행만 갱신하고 독립 영업 불가 보존, 늦은 웹 응답의 최신 상태 덮어쓰기 차단. 새 서버 29/29 = 100%, 관련 Python 212/214 = 99.1%(기존 실패 2), 웹 79/79 = 100%, 브라우저 모형 부품 6/6 = 100%, 타입·수정 파일 정적 검사 통과. 선택 구조·계약·인증 304/305 = 99.7%(Composer 미설치 1), 전체 계약 수집·전체 웹 lint·실DB 확인은 환경 한계 별도 기록. 백업 `_backup/2026-10-23_dining-clarifications/`. 세 보완 로컬 3/3 = 100%, 커밋·푸시·배포 안 함.

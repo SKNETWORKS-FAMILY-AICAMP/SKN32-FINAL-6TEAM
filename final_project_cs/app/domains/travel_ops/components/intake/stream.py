@@ -117,6 +117,7 @@ class Feed:
                 body = {k: it[k] for k in ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at",
                                             "locked", "status", "can_lock", "place_state", "place", "candidates_hint", "booked",
                                             "parts")}
+                body.update({k: it[k] for k in ("hours_state", "customer_hours") if k in it})
             else:
                 claim = (row["claims"] or {}).get("place")
                 state_name, value = review_module.place_state(row)

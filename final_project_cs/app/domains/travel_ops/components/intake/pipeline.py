@@ -619,7 +619,7 @@ def _review_of(conn, tenant_id: str, intake_id: UUID, revision: int, sources: li
 # ── 고치기 · 등록 준비 (3주차) ───────────────────────────────────────
 #: 고객이 고칠 수 있는 칸. ★값은 서버가 모양을 확인한다 — 받은 글자를 그대로 믿지 않는다
 #: `locked` — 고객이 「꼭 넣을 일정」으로 고정(등록되면 `detail.customer_pinned`). `removed` — true 로 빼고 false 로 되돌린다
-_ITEM_FIELDS = {"title", "date", "starts_at", "ends_at", "kind", "place", "booking_no", "removed", "locked"}
+_ITEM_FIELDS = {"title", "date", "starts_at", "ends_at", "kind", "place", "booking_no", "removed", "locked", "hours"}
 #: 고객이 지도·후보·검색에서 고른 장소를 받는 범위 — 서울 하나(루트 사실표). ★우리가 고른 값(2026-09-30 「지도에서 장소 고르기」 계획과 같다)
 SEOUL_LAT, SEOUL_LON = (37.4, 37.72), (126.7, 127.3)
 _PICK_ORIGINS = ("tour_api", "kakao", "places", "search", "map", "customer_pick")
@@ -740,6 +740,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
         if any(field.endswith(".place") and isinstance(value, dict) and value.get("latitude") is not None
                for _, field, value, _, _ in rows):
             rows = _link_stay_places(review_module.load(conn, tenant_id, intake_id, current), rows)
+        _clear_hours_on_place_change(rows, current_claims)
         # 직접 고른 장소도 자동 추천과 마찬가지로 이동시간을 반영한다. 저장 전에
         # 계산하므로 불가능한 배치는 claim·별칭·revision을 모두 원래대로 유지한다.
         touched = {(str(sid), _item_no(field)) for sid, field, value, _, _ in rows
@@ -1198,6 +1199,10 @@ def _checked(field_name: str, value: Any) -> tuple[Any, dict[str, Any], str | No
     elif name == "locked":
         if value is not True and value is not False:
             raise IntakeRejected("invalid_value", f"{field_name}: 고정은 true, 풀기는 false 입니다")
+    elif name == "hours":
+        if value is None:
+            return None, {"source": "customer", "cleared": True}, "고객이 알려 준 운영시간을 지웠다"
+        return _checked_hours(field_name, value), evidence, "고객이 알려 준 운영시간"
     elif name == "place":
         if isinstance(value, dict) and value.get("none") is True:
             return None, {"source": "customer", "none": True}, "고객이 「장소 없음」으로 두었다"
@@ -1210,6 +1215,37 @@ def _checked(field_name: str, value: Any) -> tuple[Any, dict[str, Any], str | No
     elif not isinstance(value, str) or not value.strip() or len(value) > 80:
         raise IntakeRejected("invalid_value", f"{field_name}: 1~80자 글이어야 합니다")
     return value, evidence, None
+
+
+def _clear_hours_on_place_change(rows, claims) -> None:
+    """A supplied hours value belongs to this edit's place, never its predecessor."""
+    told = {(str(c["source_id"]), _item_no(c["field"])): c["field"] for c in claims
+            if c["field"].startswith("items[") and c["field"].endswith(".hours") and c["value"] is not None}
+    sent = {(str(sid), _item_no(f)) for sid, f, _, _, _ in rows if f.endswith(".hours")}
+    for sid, name, _, _, _ in list(rows):
+        key = (str(sid), _item_no(name))
+        if name.endswith(".place") and key in told and key not in sent:
+            rows.append((sid, told[key], None, {"source": "customer", "cleared": True, "because": "place_changed"},
+                         "장소를 바꿔 앞 장소에 알려 준 운영시간을 지웠다"))
+            sent.add(key)
+
+
+def _checked_hours(field_name: str, value: Any) -> dict[str, Any]:
+    """고객이 알려 준 운영시간 — `{"open": "HH:MM", "close": "HH:MM" | "24:00", "closed_days": ["mon", …]}`. 그 밖의 칸은 받지 않는다.
+    닫는 시각은 여는 시각보다 늦어야 한다(새벽까지 여는 곳은 「24:00」으로 — 판정기가 자정까지로 본다). 이레 모두 쉬는 값은 받지 않는다."""
+    weekdays = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+    if not isinstance(value, dict) or set(value) - {"open", "close", "closed_days"}:
+        raise IntakeRejected("invalid_value", f'{field_name}: 운영시간은 {{"open", "close", "closed_days"}} 모양입니다')
+    opens, closes, off = value.get("open"), value.get("close"), value.get("closed_days", [])
+    if not isinstance(opens, str) or not _HHMM.fullmatch(opens) or not isinstance(closes, str) or not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00", closes):
+        raise IntakeRejected("invalid_value", f"{field_name}: 여는 · 닫는 시각은 HH:MM 입니다")
+    if closes <= opens:
+        raise IntakeRejected("invalid_value", f"{field_name}: 닫는 시각은 여는 시각보다 늦어야 합니다(새벽까지 열면 24:00)")
+    if not isinstance(off, list) or any(day not in weekdays for day in off) or len(set(off)) != len(off):
+        raise IntakeRejected("invalid_value", f"{field_name}: 쉬는 날은 {', '.join(weekdays)} 중에서 겹치지 않게 고릅니다")
+    if len(off) == len(weekdays):
+        raise IntakeRejected("invalid_value", f"{field_name}: 이레 모두 쉬는 날로 둘 수는 없습니다")
+    return {"open": opens, "close": closes, "closed_days": [day for day in weekdays if day in off]}
 
 
 def _checked_pick(field_name: str, value: dict[str, Any]) -> dict[str, Any]:

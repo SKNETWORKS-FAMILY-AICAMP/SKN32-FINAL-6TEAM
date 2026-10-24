@@ -147,6 +147,9 @@ class DawnCheck:
                 result.fatal.append({**entry, "failed": "find_place_id"})
                 return
             if found == "unmatched":
+                told = told_verdict(meal)
+                if told is not None:
+                    return self._apply_verdict(trip_id, meal, day, places, result, *told, source=TOLD_SOURCE)
                 self._record(trip_id, meal, day, "unmatched", "구글에서 이 이름·좌표의 장소를 찾지 못했다")
                 result.checked += 1
                 result.unmatched.append(entry)
@@ -166,6 +169,10 @@ class DawnCheck:
 
     def _apply_verdict(self, trip_id, meal, day, places, result, state, detail, *, source=PROVIDER):
         entry = {"trip_id": str(trip_id), "item": meal.title, "place": meal.place.get("name")}
+        if state in ("unknown", "unmatched"):
+            told = told_verdict(meal)
+            if told is not None:
+                state, detail, source = told[0], f"{detail} · {told[1]}", TOLD_SOURCE
         result.checked += 1
         if state != "closed":
             self._record(trip_id, meal, day, state, detail, source=source)
@@ -231,10 +238,11 @@ class DawnCheck:
             return {row[0] for row in cur.fetchall()}
 
     def _closed_places(self, conn, day) -> set[str]:
-        """★오늘 안 연다고 확인한 곳 — 대체 후보에서 뺀다(닫힌 곳으로 바꾸지 않게)."""
+        """공식 휴무만 공용 대체 후보에서 뺀다. 고객 시간 판정은 해당 항목 한정이다."""
         with conn.cursor() as cur:
             cur.execute("SELECT DISTINCT place_id FROM place_open_checks WHERE tenant_id=%s AND day=%s "
-                        "AND verdict='closed'", (self.store.tenant_id, day))
+                        "AND verdict='closed' AND (source IS NULL OR source<>%s)",
+                        (self.store.tenant_id, day, TOLD_SOURCE))
             return {row[0] for row in cur.fetchall()}
 
     def _price_lookup(self):
@@ -256,6 +264,31 @@ class DawnCheck:
                         "AND provider=%s", (self.store.tenant_id, place_id, PROVIDER))
             row = cur.fetchone()
         return row[0] if row else None
+
+
+#: 고객이 확인 화면에서 알려 준 운영시간으로 낸 판정의 출처(`place_open_checks.source`)
+TOLD_SOURCE = "customer_hours"
+
+
+def told_verdict(item: Item) -> tuple[str, str] | None:
+    """`[2026-10-13 사용자 결정]` 고객이 알려 준 운영시간(장소 보기에 붙은 값, `itinerary.with_told_hours`)으로 계획한 시각에 여는지 — `("open" | "closed", 근거 문장)`.
+    알려 준 값이 아니거나(관광공사 · 원장 값은 바깥 확인을 대신하지 않는다) 그 값으로도 모르면 None."""
+    from app.domains.travel_ops.components.itinerary.itinerary import TOLD_HOURS_SOURCE
+    from app.domains.travel_ops.components.places.place_hours import fits, hours_on
+
+    attributes = (item.place or {}).get("attributes") or {}
+    if (attributes.get("hours_read") or {}).get("source") != TOLD_HOURS_SOURCE:
+        return None
+    start = item.starts_at.astimezone(KST)
+    end = (item.ends_at or item.starts_at + timedelta(hours=1)).astimezone(KST)
+    today = hours_on(attributes, start.date())
+    if today == "closed":
+        return "closed", "알려 주신 운영시간 기준 쉬는 날"
+    open_now = fits(attributes, start, end)
+    if open_now is None:
+        return None
+    hours = f"{today.opens:%H:%M}–{today.closes:%H:%M}" if today is not None and not isinstance(today, str) else ""
+    return ("open", f"알려 주신 운영시간 {hours} 안이다") if open_now else ("closed", f"알려 주신 운영시간 {hours} 밖이다")
 
 
 class _Retry(Exception):

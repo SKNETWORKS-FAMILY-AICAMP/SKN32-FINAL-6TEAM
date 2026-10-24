@@ -74,7 +74,13 @@ export interface ReviewPlace {
   category?: string | null;
 }
 
+export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export interface ToldHours { open: string; close: string; closed_days: Weekday[] }
+export type HoursState = "official" | "customer" | "unknown" | "none";
+
 export interface ReviewItem {
+  hours_state?: HoursState;
+  customer_hours?: ToldHours | null;
   /** The same six-source risk result used by the watcher. Missing on an older deployment. */
   risk?: unknown;
   /** `<source position>-<index>` — the key that events, moves and candidates use to point at each other. */

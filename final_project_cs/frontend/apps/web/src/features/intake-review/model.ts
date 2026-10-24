@@ -2,6 +2,9 @@ import type { IntakeEdit, IntakeItem, IntakeProblem, IntakeSource, IntakeView } 
 import { hasValidCoordinates } from "@/features/map/map-points";
 import type { Coordinates } from "@/features/map/model";
 
+import { toldOf, sameTold, type HoursDraft } from "@/features/plan-check/model";
+import type { ToldHours } from "@/lib/live/intake-review";
+
 export interface ReviewRow {
   source: IntakeSource;
   item: IntakeItem;
@@ -10,7 +13,7 @@ export interface ReviewRow {
   filledStart?: string;
   filledEnd?: string;
 }
-export interface Draft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean }
+export interface Draft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean; hours?: HoursDraft }
 export type ReviewStatus = "ready" | "edited" | "review";
 
 export function rows(view: IntakeView): ReviewRow[] {
@@ -55,5 +58,9 @@ export function editsFor(row: ReviewRow, draft: Draft): IntakeEdit[] {
     if (draft[key].trim() !== base[key]) add(name, draft[key].trim());
   }
   if (draft.noPlace !== base.noPlace || (!draft.noPlace && draft.place.trim() !== base.place)) add("place", draft.noPlace ? { none: true } : { name: draft.place.trim() });
+  if (draft.hours && !draft.noPlace && draft.place.trim() === base.place && draft.noPlace === base.noPlace) {
+    const told = toldOf(draft.hours);
+    if (!sameTold(told, row.item.fields.hours?.value as ToldHours | null | undefined)) add("hours", told);
+  }
   return edits;
 }

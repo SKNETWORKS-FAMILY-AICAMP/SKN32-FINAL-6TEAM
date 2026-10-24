@@ -60,3 +60,21 @@ describe("intake review data and edit boundaries", () => {
     expect(result[0].filledEnd).toBe("12:00");
   });
 });
+
+describe("opening hours the customer tells (2026-10-13)", () => {
+  const box = { open: "10:00", close: "19:00", closedDays: ["sun" as const] };
+  it("sends the hours in the server's shape, midnight as 24:00, and nothing when they did not change", () => {
+    const r = row();
+    expect(editsFor(r, { ...draftOf(r), hours: box })).toEqual([{ source_id: "s1", field: "items[0].hours", value: { open: "10:00", close: "19:00", closed_days: ["sun"] } }]);
+    expect(editsFor(r, { ...draftOf(r), hours: { ...box, close: "00:00" } })[0].value).toEqual({ open: "10:00", close: "24:00", closed_days: ["sun"] });
+    r.item.fields.hours = field({ open: "10:00", close: "19:00", closed_days: ["sun"] }, { method: "customer" });
+    expect(editsFor(r, { ...draftOf(r), hours: box })).toEqual([]);
+  });
+  it("clears told hours with both times empty, and does not send hours with a place change (the server clears them)", () => {
+    const r = row();
+    r.item.fields.hours = field({ open: "10:00", close: "19:00", closed_days: [] }, { method: "customer" });
+    expect(editsFor(r, { ...draftOf(r), hours: { open: "", close: "", closedDays: [] } })).toEqual([{ source_id: "s1", field: "items[0].hours", value: null }]);
+    expect(editsFor(r, { ...draftOf(r), place: "광장시장", hours: box }).map((edit) => edit.field)).toEqual(["items[0].place"]);
+    expect(editsFor(row(), { ...draftOf(row()), hours: { open: "", close: "", closedDays: [] } })).toEqual([]);
+  });
+});

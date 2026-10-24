@@ -10,6 +10,8 @@ domain: travel
 
 # cs 프로젝트 구현 wiki
 
+2026-10-24 — 고객 운영시간 P1 두 건의 격리 후속 수정: 완료·재연결 SSE 보존 및 고객 휴무의 공용 제외집합 전파 차단. 독립 재검토·운영 반영 전이며 [실행 결과와 한계](records/reports/2026-10-24_customer-hours-p1.md)를 확인합니다.
+
 2026-10-24 — 최신 팀 develop 위 격리 날짜 위험 2차 보완: deferred·기간 겹침·재사용 시간경계·risk_panel 보존. 원본/운영 변경 없이 TDD와 실제 Python·웹·모형 부품 브라우저 검증을 수행했습니다. 전체 관문은 기준본과 같은 Git 실행 권한 실패 3건이 남으며, 최종 수치·실패/한계·인계는 [검증 기록](records/reports/2026-10-24_date-risk-second-pass.md)을 봅니다.
 
 2026-10-23 Next.js 보안 갱신(ST4F-724): 02시 리뷰 뒤 공개된 Next.js 권고(16.0.0~16.4.0)로 web 16.4.0 도 critical 이 되어 web · admin · dev-console 을 16.4.2 로 올렸습니다. 운영 의존성 audit 3/3 앱 0건 · check 12/12 · 단위 1,198/1,198 통과, 개발 서버 보안 경고 사라짐. 배포 전입니다. [작업 기록](records/reports/2026-10-23_Next보안갱신_16.4.2_ST4F-724.md).

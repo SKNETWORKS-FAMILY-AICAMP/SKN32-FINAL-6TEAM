@@ -162,6 +162,10 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
             # ★`[2026-10-02 사용자 지시]` 고객이 「꼭 넣을 일정」으로 고정했다 — 등록되면 **감시 루프가 다시 자동으로 바꾸지 않고**
             #   바꾸기 전에 묻는다(`pending.protected_reason` 「customer_pinned」 · `trip_watch`). 되살린 항목과 같은 표시다.
             detail["customer_pinned"] = True
+        if row.get("customer_hours") and row["place"]:
+            from .hours import customer_week
+
+            detail["customer_hours"] = {"hours_week": customer_week(row["customer_hours"]), "told": row["customer_hours"]}
         if row["date"] and row["start"]:
             items.append({"seq": seq, "kind": row["kind"], "title": ((row.get("place") or {}).get("name", "식사") + " 식사" if row["title"] in ("거기", "여기", "식사", "밥") and row["kind"] == "dining" else row["title"] or "(제목 없음)"), "place": key,
                           "starts_at": _at(row["date"], row["start"]).isoformat(),
@@ -234,6 +238,7 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
             "place": place if place and place.get("latitude") is not None else None,
             "booking_no": value("booking_no"), "provenance": _provenance(fields), "where": where,
             "claims": fields, "locked": value("locked") is True, "day": day, "no_place": no_place,
+            "customer_hours": value("hours") if isinstance(value("hours"), dict) else None,
             # 끝이 다른 날인 항목(숙소)만 채운다 — `_stays` · `[2026-10-15]` 수정 접수가 등록한 숙소에서 가져온 체크아웃 날(`end_date` 값 줄)
             "end_date": value("end_date") if kind == "lodging" else None}
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { completionText } from "./model";
+
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowLeftRight, RotateCcw, ChevronDown, ChevronsDown, ChevronsRight, Sparkles, Pencil, Plus, Undo2, LockOpen, X } from "lucide-react";
@@ -2049,7 +2051,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
           {/* `[2026-10-14 실서버 확인]` 시간 고치기 창이 열려 있으면 숨긴다 — 창의 ✓ 「적용」이 아래쪽에 오면 같은 초록 ✓ 인 이 단추가 그 위를 덮어,
               「적용」을 누른 손님이 「완료」(수정 모드면 아무것도 쓰지 않고 닫힘)를 눌렀다. 창을 닫으면(적용 · 취소) 다시 나온다. */}
           {done && !changing && !inserting && !timeEdit.edit && autoRegister === "on" && <div className={styles.registerBar} data-register-bar>
-            <DoneFooter line={t("모두 확인했어요", "All checked")} sub={t(`${Math.round(TIMING.doneMs / 1000)}초 뒤에 여행을 등록해요.`, `The trip is registered in ${Math.round(TIMING.doneMs / 1000)} seconds.`)}
+            <DoneFooter line={completionText(view, t)} sub={t(`${Math.round(TIMING.doneMs / 1000)}초 뒤에 여행을 등록해요.`, `The trip is registered in ${Math.round(TIMING.doneMs / 1000)} seconds.`)}
               ms={TIMING.doneMs} primary={t("여행 등록", "Register trip")} onPrimary={() => { setAutoRegister("off"); registration?.onRegister(); }} onStop={() => setAutoRegister("off")} />
           </div>}
           {done && !changing && !inserting && !timeEdit.edit && autoRegister !== "on" && <ResultFooter footerRef={submitBox} atListEnd={atListEnd} muted={collapsed || (!atListEnd && quietSubmit.hidden) || mapMoving} focusHandlers={quietSubmit.focusHandlers} view={shown} registration={registration} frozen={frozen} explain={explain} needsTotal={needCount} pendingRemovals={removed.length}
@@ -2091,7 +2093,7 @@ function countText(view: PlanCheckView, t: Translate): string {
   const count = tally(view);
   if (view.stage !== "done") return t(`장소 ${count.placesDone}/${count.places} · 이동 ${count.movesDone}/${count.moves}`, `Places ${count.placesDone}/${count.places} · Moves ${count.movesDone}/${count.moves}`);
   const left = needs(view);
-  if (!left.total) return t("모두 확인했어요", "All checked");
+  if (!left.total) return completionText(view, t);
   const parts = [left.places && t(`장소 ${left.places}곳`, `${left.places} place${left.places > 1 ? "s" : ""}`),
     left.moves && t(`이동 ${left.moves}구간`, `${left.moves} move${left.moves > 1 ? "s" : ""}`)].filter(Boolean);
   return t(`${parts.join(" · ")} 확인 필요`, `To check: ${parts.join(" · ")}`);
