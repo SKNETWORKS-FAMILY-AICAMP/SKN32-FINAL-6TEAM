@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="ko" data-theme="green">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계획 확인 — 장소·운영시간 세부 단계 진행</title>
+<!--
+  2026-10-24 목업 · 검토용 · ST4F-730
+  기준: develop 325ba25d8 (가지 feat/web-plan-progress-mockup-20261024)
+  계획 확인 진행 표시(읽기 화면의 바 · 지도 확인 화면 머리글의 작은 바)를 바꾸는 안을 지금 앱과 같은 순간으로 재생한다.
+  ★지금 판(같은 날 사용자 요청): 진행 표시 자리는 지금 앱의 바 높이 안에 두고 아래 「찾은 일정」 · 설문 칸이 지금처럼 이어지게 두 판 —
+    ① 단계 칸 막대: 서버 단계마다 한 칸(칸마다 그 단계 n/m 만큼 참) + 아래 한 줄에 지금 실행 중인 것(「장소 2/7곳 · 북촌한옥마을 확인 중」)
+    ② 한 칸 막대 + 전체 %: 단계마다 같은 몫으로 센 전체 % + 아래 한 줄(①과 같음)
+  지난 안(비교용으로 남김): A안 — 점 4개, 점 = 그 단계가 시작되는 자리 · 단계 목록 — 서버 단계마다 한 줄(세로 목록이 설문 칸을 밀어 화면이 무너져 접음).
+  앱 모양은 소스 CSS(plan-check.module.css · toast-view.module.css · styles/tokens.css)의 값을 옮겨 그렸다(앱을 띄워 뜨지 않음).
+  「지금 앱」 재생 시각은 2026-10-24 로컬 실측(접수 601479d3 · 화면을 0.25초마다 표본)이고, 새 진행 알림 시각은 같은 실측의
+  서버 기록(일정 읽기 n/8줄 · 위험 점검 일정마다 끝난 시각)에 화면 도착 지연(약 0.5 ~ 1.35초)을 더한 값이다.
+  읽기는 이 PC 의 로컬 12B 모델이라 66초 걸렸다(x600 실서버는 더 짧을 것 — 재지 않음).
+  「빈칸 · 답이 있는 경우」의 먼저 채우기 · 해석 반영 시간은 가정이다.
+-->
+<style>
+/* ── 앱 색 역할 — src/styles/tokens.css (develop 325ba25d8) ── */
+:root, [data-theme="green"] {
+  color-scheme: light;
+  --color-text: #24392f; --color-muted: #56645b; --color-border: #dce3dd; --color-surface: #ffffff; --color-background: #f3f5f3;
+  --color-primary: #2e6047; --color-on-primary: #ffffff; --color-soft: #e9f2eb; --color-subtle: #f6f7f5;
+  --color-warning: #82693e; --color-warning-soft: #faf6ec; --color-warning-border: #e5d9c1;
+  --color-text-secondary: #4a5d52; --color-faint: #66746b; --color-divider: #e8ede9; --color-subtle-strong: #e4e9e5; --color-border-strong: #c3cdc6;
+  --color-success: #3d7a56; --color-success-soft: #e3f0e7; --color-warning-surface: #fdfaf3;
+  --color-shadow-soft: #0002;
+  --ease-soft: cubic-bezier(.22, .8, .3, 1);
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+  /* 목업 바깥(설명 칸)만 쓰는 값 */
+  --mk-map-a: #e7eee4; --mk-map-b: #dfe8dc; --mk-new: #3f6a8a; --mk-hl: #fff6d8;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-text: #e4ece7; --color-muted: #a7b7ad; --color-border: #2e3f36; --color-surface: #18251f; --color-background: #0f1a15;
+  --color-primary: #7cbd96; --color-on-primary: #0d1712; --color-soft: #1f3a2c; --color-subtle: #1c2a23;
+  --color-warning: #e3bd78; --color-warning-soft: #2e2615; --color-warning-border: #5a4a26;
+  --color-text-secondary: #c3d1c8; --color-faint: #93a49a; --color-divider: #25342c; --color-subtle-strong: #23332b; --color-border-strong: #43574c;
+  --color-success: #7cc39a; --color-success-soft: #1d3527; --color-warning-surface: #262012;
+  --color-shadow-soft: #0006;
+  --mk-map-a: #17231d; --mk-map-b: #1b2a22; --mk-new: #93bbde; --mk-hl: #2b2a17;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--color-background); color: var(--color-text); font-family: var(--font-sans); font-size: 13px; line-height: 1.65; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+h1, h2, h3, p { margin: 0; }
+[hidden] { display: none !important; }
+
+/* ── 목업 바깥 ── */
+.mk { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+.mk-head h1 { font-size: 21px; font-weight: 800; letter-spacing: -.2px; }
+.mk-meta { margin-top: 4px; font-size: 12px; color: var(--color-muted); }
+.mk-meta b { color: var(--color-text-secondary); font-weight: 700; }
+.mk-lead { margin-top: 10px; max-width: 860px; font-size: 13.5px; color: var(--color-text-secondary); }
+.mk-lead + .mk-lead { margin-top: 6px; }
+.mk-lead strong { color: var(--color-text); }
+.mk-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 18px 0 10px; }
+.mk-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.mk-group > span { font-size: 12px; font-weight: 700; color: var(--color-muted); margin-right: 2px; }
+.mk-chip { padding: 4px 11px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); font-size: 12.5px; font-weight: 650; }
+.mk-chip[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.mk-chip[data-old] { border-style: dashed; }
+.mk-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 650; }
+.mk-scrub { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; }
+.mk-scrub input { flex: 1; min-width: 0; accent-color: var(--color-primary); }
+.mk-clock { flex: none; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mk-now { font-size: 12.5px; color: var(--color-text-secondary); }
+.mk-now b { color: var(--color-text); }
+/* 휴대폰 틀은 실제 휴대폰보다 좁아지지 않게(320px) — 창이 그보다 좁으면 이 칸만 옆으로 넘긴다 */
+.mk-stage { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; overflow-x: auto; }
+.mk-col { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 360px; min-width: 320px; max-width: 100%; }
+.mk-col .phone, .mk-col .mapstrip { min-width: 320px; }
+.mk-col h2 { font-size: 14.5px; font-weight: 800; }
+.mk-col h2 small { display: block; font-size: 11.5px; font-weight: 600; color: var(--color-muted); text-align: center; }
+.mk-state { width: 100%; padding: 8px 12px; border: 1px dashed var(--color-border-strong); border-radius: 10px; font-size: 12px; color: var(--color-text-secondary); }
+.mk-state b { color: var(--color-text); }
+.mk-state [data-bad] { color: var(--color-warning); font-weight: 700; }
+.mk-cap { align-self: flex-start; font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.mk-sec { margin-top: 34px; overflow-x: auto; }
+.mk-sec h2 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.mk-sec p { max-width: 860px; color: var(--color-text-secondary); }
+.mk-sec p + p { margin-top: 6px; }
+.mk-sec details { margin-top: 10px; }
+.mk-sec summary { cursor: pointer; font-weight: 750; color: var(--color-text-secondary); }
+.mk-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+.mk-table th, .mk-table td { padding: 7px 10px; border-bottom: 1px solid var(--color-divider); text-align: left; vertical-align: top; }
+.mk-table th { font-size: 12px; font-weight: 750; color: var(--color-muted); background: var(--color-subtle); }
+.mk-table tr[data-active] td { background: var(--mk-hl); }
+.mk-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mk-table [data-none] { color: var(--color-warning); font-weight: 700; }
+.mk-list { margin: 6px 0 0; padding-left: 20px; color: var(--color-text-secondary); }
+.mk-list li + li { margin-top: 3px; }
+code { font-family: Consolas, "D2Coding", monospace; font-size: 12px; padding: 0 3px; border-radius: 4px; background: var(--color-subtle-strong); }
+/* 앱에 없는 새 문구 · 새 표시 — 점선 밑줄(「새 문구 표시」로 끈다) */
+body[data-mark-new] .nw { text-decoration: underline dotted var(--mk-new); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.mk-legend .nw { text-decoration: underline dotted var(--mk-new); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+
+/* ── 휴대폰 틀 ── */
+.phone { position: relative; width: 360px; max-width: 100%; height: 640px; border: 9px solid #1c1f1d; border-radius: 34px; background: var(--color-background); overflow: hidden; box-shadow: 0 10px 30px var(--color-shadow-soft); display: flex; flex-direction: column; }
+.app-head { display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 10px 6px 14px; background: var(--color-surface); border-bottom: 1px solid var(--color-divider); }
+.brand { display: flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
+.brand-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--color-primary); color: var(--color-on-primary); font-size: 13px; font-weight: 800; }
+.menu { margin-left: auto; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--color-border); border-radius: 10px; }
+.menu i { display: block; width: 14px; height: 1.6px; background: var(--color-text-secondary); box-shadow: 0 -4.5px 0 var(--color-text-secondary), 0 4.5px 0 var(--color-text-secondary); }
+
+/* ── 읽기 화면 — plan-check.module.css ── */
+.back { display: inline-grid; place-items: center; width: 36px; height: 36px; flex: none; border: 0; border-radius: 10px; background: none; color: var(--color-text-secondary); font-size: 19px; }
+/* 목업에서는 스크롤 막대를 숨긴다 — 데스크톱 브라우저의 막대가 폭을 먹어 단계 이름이 겹쳤다(휴대폰 막대는 폭을 차지하지 않는다) */
+.reading { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 8px 16px 20px; background: var(--color-surface); }
+.reading::-webkit-scrollbar { display: none; }
+.head { padding-bottom: 12px; }
+.headRow { display: flex; align-items: center; gap: 6px; min-height: 40px; }
+.title { margin: 0; font-size: 20px; font-weight: 750; }
+.desc { margin: 4px 0 0; font-size: 13.5px; color: var(--color-muted); }
+.found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
+.progress { position: relative; margin: 14px 4px 0; }
+.track { position: absolute; z-index: 0; top: 7.5px; left: 12.5%; right: 12.5%; height: 3px; border-radius: 2px; background: var(--color-border); }
+.fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-success); transition: width .9s cubic-bezier(.3, .7, .4, 1); }
+.steps { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.steps li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
+.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); transition: background-color .4s var(--ease-soft), border-color .4s var(--ease-soft); }
+.steps li[data-state="current"] { color: var(--color-text); }
+.steps li[data-state="current"] .node { border-color: var(--color-muted); }
+.steps li[data-state="done"] { color: var(--color-success); }
+.steps li[data-state="done"] .node { border-color: var(--color-success); background: var(--color-success); }
+.steps li[data-state="done"] .node::after { content: "✓"; color: var(--color-on-primary); font-size: 10px; font-weight: 800; line-height: 1; }
+.stepLabel { white-space: nowrap; }
+.progressAt { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; min-height: 18px; }
+/* A안 새 표시 — 세부 단계 칸 나눔(줄 위에 바탕색 틈 2px) */
+.cut { position: absolute; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: var(--color-surface); z-index: 1; }
+
+/* ── ① · ② 새 표시 — 지금 바 자리 안에서: 막대 하나 + 아래 한 줄 ── */
+.seg { display: flex; gap: 3px; }
+.seg > span { flex: 1; height: 6px; border-radius: 3px; background: var(--color-border); overflow: hidden; }
+.seg > span > i { display: block; height: 100%; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+/* 건너뛴 칸(채울 빈칸 없음)도 끝난 칸과 같은 색으로 찬다 — 회색으로 두었더니 「마지막 칸이 안 찬다」로 보였다(사용자 지적 10-24) */
+.bar1 { display: flex; align-items: center; gap: 10px; }
+.bar1 .tr { flex: 1; height: 6px; border-radius: 3px; background: var(--color-border); overflow: hidden; }
+.bar1 .tr > i { display: block; height: 100%; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.bar1 b { min-width: 36px; text-align: right; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.newbar { margin: 18px 2px 0; }
+.nowline { margin: 10px 0 0; min-height: 20px; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: center; }
+.nowline b { color: var(--color-text); font-weight: 750; }
+/* ③ 추천 조합 — 지금 칸 아래 이름 · 오래 걸리면 아래 줄에 n초째(흐르는 빛은 사용자 결정으로 뺌 10-24) */
+.newbar[data-named] { position: relative; padding-bottom: 20px; }
+.curname { position: absolute; top: 12px; white-space: nowrap; font-size: 11.5px; font-weight: 750; color: var(--color-success); transform: translateX(-50%); transition: left .4s var(--ease-soft); }
+.curname[data-edge="start"] { transform: none; }
+.curname[data-edge="end"] { transform: translateX(-100%); }
+.nowline .el { color: var(--color-warning); font-weight: 700; }
+
+/* ── 지난 안 · 단계 목록 — 단계마다 한 줄 ── */
+.head .seg { margin-top: 14px; }
+.head .newbar .seg { margin-top: 0; }
+.head > .seg > span { height: 4px; border-radius: 2px; }
+.plist { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.plist li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; column-gap: 9px; row-gap: 3px; align-items: center; min-height: 25px; font-size: 13px; color: var(--color-faint); }
+.plist .ic { position: relative; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-border-strong); }
+.plist li[data-state="done"] { color: var(--color-text-secondary); }
+.plist li[data-state="done"] .ic { display: grid; place-items: center; border-color: var(--color-success); background: var(--color-success); }
+.plist li[data-state="done"] .ic::after { content: "✓"; color: var(--color-on-primary); font-size: 9px; font-weight: 800; line-height: 1; }
+.plist li[data-state="current"] { color: var(--color-text); font-weight: 750; }
+.plist li[data-state="current"] .ic { border-color: var(--color-border); border-top-color: var(--color-success); border-right-color: var(--color-success); animation: spin 1s linear infinite; }
+.plist li[data-state="skipped"] .ic { border-style: dashed; }
+.plist .cnt { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--color-muted); white-space: nowrap; }
+.plist .sub { grid-column: 2 / 4; margin-top: -2px; font-size: 12px; font-weight: 600; color: var(--color-muted); }
+.plist .mini { grid-column: 2 / 4; height: 3px; margin-bottom: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
+.plist .mini > span { display: block; height: 100%; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.plist li:not([data-state="current"]) .sub, .plist li:not([data-state="current"]) .mini { display: none; }
+.plist li[data-state="current"] .sub:empty { display: none; }
+
+/* 읽기 화면의 설문 자리 · 아래 단추 — 모양만(이 목업의 주제가 아님) */
+.survey { margin-top: 14px; padding: 12px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); }
+.survey p { font-size: 13px; color: var(--color-text-secondary); }
+.survey .q { margin-top: 10px; height: 92px; border-radius: 10px; background: repeating-linear-gradient(135deg, var(--color-subtle-strong) 0 8px, transparent 8px 16px); display: grid; place-items: center; font-size: 11.5px; color: var(--color-faint); }
+/* 아래 단추 자리 — survey-questions.module.css .footer · .big · .help · .doneLine · .doneSub · .finishTrack · .textButton(reading-footer.tsx) */
+.foot { flex: none; padding: 16px; border-top: 1px solid var(--color-border); background: var(--color-surface); }
+.foot .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; padding: 8px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-subtle-strong); color: var(--color-muted); font-size: 16px; font-weight: 600; }
+.foot .big { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 8px 16px; border: 1px solid var(--color-primary); border-radius: 12px; background: var(--color-primary); color: var(--color-on-primary); font-size: 16px; font-weight: 600; }
+.foot .help { margin: 8px 0 0; text-align: center; font-size: 12px; line-height: 1.5; color: var(--color-muted); }
+.doneLine { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; color: var(--color-success); font-size: 14px; font-weight: 600; }
+.doneSub { margin: 4px 0 0; text-align: center; font-size: 14px; color: var(--color-text-secondary); }
+.finishTrack { height: 4px; margin: 12px 0 16px; overflow: hidden; border-radius: 4px; background: var(--color-subtle-strong); }
+.finishFill { height: 100%; width: 0; background: var(--color-primary); }
+.textBtn { display: block; margin: 8px auto 0; padding: 8px 16px; text-align: center; color: var(--color-muted); font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+/* 5초 뒤 — 목업 바깥 안내(앱 화면 아님) */
+.moved { position: absolute; z-index: 8; inset: 52px 0 0; display: grid; place-content: center; gap: 6px; padding: 24px; background: var(--color-surface); text-align: center; color: var(--color-text-secondary); font-size: 13px; }
+.moved b { font-size: 15px; color: var(--color-text); }
+.spin { width: 16px; height: 16px; border: 2px solid var(--color-border-strong); border-top-color: var(--color-text-secondary); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 늦어짐 알림 — toast-view.module.css(틀 안) ── */
+.toast { --tone: var(--color-warning); position: absolute; z-index: 9; top: 66px; left: 12px; right: 12px; padding: 10px 14px 10px 16px; display: flex; flex-direction: column; gap: 1px;
+  border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); color: var(--color-text-secondary); font-size: 12.5px; line-height: 1.4;
+  box-shadow: inset 4px 0 0 var(--tone), 0 8px 26px color-mix(in srgb, var(--color-text) 20%, transparent); animation: toastIn 340ms var(--ease-soft) both; }
+.toast strong { font-size: 14px; font-weight: 750; color: var(--color-text); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+/* ── 지도 확인 화면 머리글 — plan-check.module.css .headInfo · .headProgress ── */
+.mapstrip { width: 360px; max-width: 100%; padding: 8px 10px 12px; border-radius: 16px; background: linear-gradient(135deg, var(--mk-map-a), var(--mk-map-b)); }
+.mapbar { display: flex; align-items: center; gap: 8px; }
+.headInfo { display: flex; flex: 1; min-width: 0; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 16px; background: color-mix(in srgb, var(--color-surface) 92%, transparent); box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 16%, transparent); }
+.headProgress { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; padding: 6px 0; }
+.headStep { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: 12.5px; font-weight: 750; color: var(--color-text); white-space: nowrap; }
+.headStep b { font-size: 12px; font-weight: 750; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.headTrack { position: relative; display: block; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
+.headTrack > span.f { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.headProgress .seg { gap: 2px; }
+.headProgress .seg > span { height: 4px; border-radius: 2px; }
+.headAt { font-size: 11.5px; font-weight: 600; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 16px; }
+.mapbar .menu { background: color-mix(in srgb, var(--color-surface) 92%, transparent); }
+
+@media (prefers-reduced-motion: reduce) { .fill, .headTrack > span.f, .node, .seg > span > i, .bar1 .tr > i, .plist .mini > span, .curname { transition: none; } .toast { animation: none; } .spin, .plist li[data-state="current"] .ic { animation: none; } }
+</style>
+</head>
+<body data-mark-new>
+<main class="mk">
+  <header class="mk-head">
+    <h1>계획 확인 — 진행 표시: ③ 추천 조합 · ① 단계 칸 막대 · ② 한 칸 막대 + 전체 %</h1>
+    <p class="mk-meta"><b>2026-10-24</b> · ST4F-730 · 기준 develop <b>325ba25d8</b> · <b>결정(같은 날 사용자): ③ 추천 조합</b> — 칸 막대 + 지금 칸 아래 이름 + 8초 넘으면 n초째 · 토스트 없음 · 앱 · 서버 코드는 아직 그대로</p>
+    <p class="mk-lead">지금은 서버가 이동 계산 뒤에 <strong>위험 점검 · 먼저 채우기 · 해석 반영</strong>을 진행 알림 없이 해서, 바가 마지막 수치(6/6)에서 멈춘 것처럼 보이고
+      「장소·운영시간」 점이 운영시간 7/7 에서 이미 채워져 「정리 완료」가 현재 단계로 켜진다. 읽는 동안에도 서버의 「n/8줄」 알림을 버려 「일정 읽기 0%」가 이어진다.</p>
+    <p class="mk-lead">두 판 모두 <strong>지금 바 자리 안에서</strong> 바뀐다 — 아래 「찾은 일정」 · 설문 칸은 지금처럼 이어진다.
+      <strong>①</strong>은 서버 단계(일정 읽기 · 장소 · 운영시간 · 이동 · 날씨·도로 · 빈칸 채우기 · 답 반영)마다 한 칸이고, <strong>②</strong>는 막대 하나에 전체 %다.
+      둘 다 막대 아래 한 줄에 <strong>지금 실행 중인 것</strong>을 「단계 이름 n/m · 지금 보는 일정」으로 보인다.</p>
+    <p class="mk-lead"><strong>③ 추천 조합</strong>은 ① 칸 막대에 <strong>지금 칸 아래 단계 이름</strong>(단계가 바뀌면 옆 칸으로 옮김)을 달고,
+      새 소식이 8초 넘게 없으면 아래 줄 끝에 <strong>「n초째」</strong>를 붙인다. 늦어짐 토스트는 띄우지 않는다(화면을 가리지 않게). 끝나면 지금 앱과 같이 아래 단추 자리가 「계획을 다 읽었어요」 · 5초 막대로 바뀌고 5초 뒤 계획 확인 화면으로 넘어간다.</p>
+    <p class="mk-meta mk-legend" style="margin-top:8px"><span class="nw">점선 밑줄</span> = 앱에 아직 없는 새 문구 · 새 표시(목업에서 지은 것). 나머지 글자는 develop 앱 문구 그대로.</p>
+  </header>
+
+  <div class="mk-controls">
+    <div class="mk-group" role="group" aria-label="보는 화면">
+      <span>보는 화면</span>
+      <button class="mk-chip" data-right="v3" aria-pressed="true">③ 추천 조합</button>
+      <button class="mk-chip" data-right="all3" aria-pressed="false">① + ② + ③</button>
+      <button class="mk-chip" data-right="both" aria-pressed="false">① + ②</button>
+      <button class="mk-chip" data-right="v1" aria-pressed="false">① 단계 칸 막대</button>
+      <button class="mk-chip" data-right="v2" aria-pressed="false">② 한 칸 · 전체 %</button>
+      <button class="mk-chip" data-right="a" data-old aria-pressed="false">지난 안: A안</button>
+      <button class="mk-chip" data-right="list" data-old aria-pressed="false">지난 안: 단계 목록</button>
+    </div>
+    <div class="mk-group" role="group" aria-label="사례">
+      <span>사례</span>
+      <button class="mk-chip" data-scn="real" aria-pressed="true">실측 (10-24 · 채울 빈칸 · 답한 질문 없음)</button>
+      <button class="mk-chip" data-scn="gaps" aria-pressed="false">빈칸 2곳 · 답 1개 있는 경우 (가정)</button>
+    </div>
+    <div class="mk-group" role="group" aria-label="재생">
+      <span>재생</span>
+      <button class="mk-chip" id="play" aria-pressed="false">▶ 재생</button>
+      <button class="mk-chip" id="rewind">처음으로</button>
+      <button class="mk-chip" id="jump">읽기 끝 무렵(64초)으로</button>
+      <button class="mk-chip" data-speed="1" aria-pressed="true">1×</button>
+      <button class="mk-chip" data-speed="2" aria-pressed="false">2×</button>
+      <button class="mk-chip" data-speed="4" aria-pressed="false">4×</button>
+      <button class="mk-chip" data-speed="8" aria-pressed="false">8×</button>
+    </div>
+    <div class="mk-group">
+      <label class="mk-check"><input type="checkbox" id="marknew" checked> 새 문구 표시</label>
+      <button class="mk-chip" id="theme" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+  <div class="mk-scrub">
+    <span class="mk-clock" id="clock">누른 뒤 2.3초</span>
+    <input type="range" id="scrub" min="2.3" max="96" step="0.05" value="2.3" aria-label="재생 위치(「계획 확인하기」 누른 뒤 초)">
+  </div>
+  <p class="mk-now" id="now" style="margin:-8px 0 16px"></p>
+
+  <div class="mk-stage">
+    <section class="mk-col" data-side="cur">
+      <h2>지금 앱<small>develop 325ba25d8 · 실측 화면 그대로</small></h2>
+      <div class="phone"></div>
+      <p class="mk-state" data-state-note></p>
+      <span class="mk-cap">지도 확인 화면이면 머리글에 이렇게(같은 순간)</span>
+      <div class="mapstrip"></div>
+    </section>
+    <section class="mk-col" data-side="v3">
+      <h2>③ 추천 조합<small>칸 막대 + 지금 칸 이름 + n초째 · 토스트 없음</small></h2>
+      <div class="phone"></div>
+      <p class="mk-state" data-state-note></p>
+      <span class="mk-cap">지도 확인 화면이면 머리글에 이렇게(같은 순간)</span>
+      <div class="mapstrip"></div>
+    </section>
+    <section class="mk-col" data-side="v1">
+      <h2>① 단계 칸 막대<small>서버 단계마다 한 칸 + 지금 실행 중인 것 한 줄</small></h2>
+      <div class="phone"></div>
+      <p class="mk-state" data-state-note></p>
+      <span class="mk-cap">지도 확인 화면이면 머리글에 이렇게(같은 순간)</span>
+      <div class="mapstrip"></div>
+    </section>
+    <section class="mk-col" data-side="v2">
+      <h2>② 한 칸 막대 + 전체 %<small>막대 하나 · 전체 % + 지금 실행 중인 것 한 줄</small></h2>
+      <div class="phone"></div>
+      <p class="mk-state" data-state-note></p>
+      <span class="mk-cap">지도 확인 화면이면 머리글에 이렇게(같은 순간)</span>
+      <div class="mapstrip"></div>
+    </section>
+    <section class="mk-col" data-side="a" hidden>
+      <h2>지난 안: A안<small>점 4개 그대로 · 점 = 그 단계가 시작되는 자리</small></h2>
+      <div class="phone"></div>
+      <p class="mk-state" data-state-note></p>
+      <span class="mk-cap">지도 확인 화면이면 머리글에 이렇게(같은 순간)</span>
+      <div class="mapstrip"></div>
+    </section>
+    <section class="mk-col" data-side="list" hidden>
+      <h2>지난 안: 단계 목록<small>단계마다 한 줄 — 설문 칸을 밀어 접음</small></h2>
+      <div class="phone"></div>
+      <p class="mk-state" data-state-note></p>
+      <span class="mk-cap">지도 확인 화면이면 머리글에 이렇게(같은 순간)</span>
+      <div class="mapstrip"></div>
+    </section>
+  </div>
+
+  <section class="mk-sec">
+    <h2>서버가 실제로 하는 일과 진행 알림</h2>
+    <p>시각은 「계획 확인하기」를 누른 뒤 화면 기준(서버 기록 + 약 0.5초). 「지금 앱」 칸은 develop 서버가 보내는 것과 화면이 쓰는 것, 마지막 칸은 ① · ② 의 막대 아래 한 줄(같은 글). 재생 위치의 줄이 칠해진다.</p>
+    <table class="mk-table" id="steps-table">
+      <thead><tr><th>서버 단계</th><th>화면 시각</th><th>걸린 시간</th><th>지금 앱</th><th>① · ② 아래 한 줄</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="mk-sec">
+    <h2>① · ② 표시 규칙</h2>
+    <table class="mk-table">
+      <thead><tr><th>무엇</th><th>① 단계 칸 막대</th><th>② 한 칸 막대 + 전체 %</th></tr></thead>
+      <tbody>
+        <tr><td>자리</td><td colspan="2">지금 바(점 4개 + 아래 글)가 있던 자리 안. 높이가 지금보다 조금 낮아 아래 「찾은 일정」 · 설문 칸이 지금처럼 바로 이어진다</td></tr>
+        <tr><td>막대</td><td>보이는 서버 단계마다 한 칸 — 일정 읽기 · 장소 · 운영시간 · 이동 · 날씨·도로 · 빈칸 채우기(· 답 반영). 칸마다 그 단계 n/m 만큼 찬다. 건너뛴 칸(채울 빈칸 없음)도 끝난 칸과 같은 색으로 찬다</td><td>막대 하나 + 오른쪽 <span class="nw">전체 %</span>. % = (끝난 단계 + 지금 단계의 n/m) ÷ 보이는 단계 수 — 단계마다 같은 몫(우리가 고른 값). 서버가 끝을 알리기 전에는 99% 까지</td></tr>
+        <tr><td>막대 아래 한 줄</td><td colspan="2"><b>지금 실행 중인 것</b>: 「<span class="nw">단계 이름 n/m단위</span> · 지금 보는 일정 확인 중」 — 예: 「일정 읽기 3/8<span class="nw">줄</span>」 · 「장소 2/7<span class="nw">곳</span> · 북촌한옥마을 확인 중」 · 「이동 1/6<span class="nw">구간</span> · 북촌한옥마을 → 광장시장 확인 중」 · 「날씨·도로 2/7곳 · 광장시장 확인 중」 · 「<span class="nw">빈칸 채우기</span> 0/2곳 · 경복궁 <span class="nw">채울 일정 찾는 중</span>」. 지금 앱처럼 끝난 일정을 남기지 않는다</td></tr>
+        <tr><td>보이는 단계</td><td colspan="2">계획에 없는 단계는 처음부터 뺀다 — 사진 · 파일이면 맨 앞에 <span class="nw">글자 옮기기</span>가 붙고, <span class="nw">답 반영</span>은 로딩 중 해석 질문에 답했을 때만. 빈칸 채우기는 늘 있고 서버가 0/0 을 보내면 건너뛴다</td></tr>
+        <tr><td>일정 읽기</td><td colspan="2">서버의 <code>reading</code> 알림(원문 검사를 통과한 줄 / 보낸 줄)을 쓴다. 8/8줄 뒤 모델이 쓰는 동안은 「일정 읽기 8/8줄 · <span class="nw">다 읽고 일정으로 정리하는 중</span>」</td></tr>
+        <tr><td>늦어짐 알림</td><td colspan="2">새 진행 알림이 8초 넘게 안 오면 지금 단계 이름으로 띄우고, 새 알림이 와도 최소 2.8초는 둔다. 읽기 중이면 앱 문구 「읽는 데 시간이 걸리고 있어요」 그대로</td></tr>
+        <tr><td>지도 확인 화면 머리글</td><td>지금 단계 이름 + 그 단계 n/m + 단계 칸 막대 + 지금 보는 일정</td><td>지금 단계 이름 + 전체 % + 한 칸 막대 + 지금 보는 일정(지금 머리글과 같은 모양)</td></tr>
+      </tbody>
+    </table>
+    <table class="mk-table">
+      <thead><tr><th>무엇</th><th>③ 추천 조합 — ① 칸 막대에 더하는 것</th></tr></thead>
+      <tbody>
+        <tr><td>지금 칸 아래 이름</td><td>지금 단계 칸 바로 아래에 그 단계 이름만 작게(초록). 단계가 바뀌면 옆 칸으로 옮긴다. 맨 앞 · 맨 뒤 칸이면 막대 끝에 맞춘다(넘치지 않게)</td></tr>
+        <tr><td>아래 한 줄</td><td>단계 이름은 칸 아래로 빠지고 「<b>2/7곳</b> · 광장시장 확인 중」. 새 알림이 <b>8초</b> 넘게 없으면 끝에 「· <span class="nw">9초째</span>」(그 상태가 이어진 시간)를 붙인다</td></tr>
+        <tr><td>늦어짐 알림</td><td><b>토스트를 띄우지 않는다</b> — 화면(제목 · 설명)을 가리지 않고, 어디서 오래 걸리는지는 아래 줄의 n초째가 말한다. 연결이 끊긴 알림(「서버와 연결이 끊겼어요」)은 지금처럼 띄운다</td></tr>
+        <tr><td>지도 확인 화면 머리글</td><td>지금 단계 이름 + 그 단계 n/m + 칸 막대 + 지금 보는 일정 · n초째</td></tr>
+        <tr><td>끝난 뒤</td><td>칸이 모두 차고(건너뛴 칸도 같은 색) 아래 줄에 「정리 완료」. 아래 단추 자리는 지금 앱 그대로 — ✓ 「계획을 다 읽었어요」 · 「5초 뒤에 계획 확인 화면으로 넘어가요.」 · 5초 막대 · 「읽어 온 계획 확인하기」 · 「자동으로 넘어가지 않기」, 5초 뒤 계획 확인 화면(지도 · 카드)으로 넘어간다. 설문에 답하는 중이면 넘어가지 않고 단추만 켜진다(지금 앱 규칙)</td></tr>
+      </tbody>
+    </table>
+    <details>
+      <summary>지난 안 규칙(A안 · 단계 목록)</summary>
+      <table class="mk-table">
+        <thead><tr><th>무엇</th><th>지금 앱</th><th>A안</th></tr></thead>
+        <tbody>
+          <tr><td>점의 뜻</td><td>줄이 점에 닿으면 그 단계가 끝(✓)</td><td>점에서 그 단계가 시작 — 현재인 점 뒤로 줄이 다음 점을 향해 차고, 다음 점에 닿으면 ✓</td></tr>
+          <tr><td>셋째 점</td><td>운영시간 7/7 에서 완료 · 넷째 점이 현재로 켜짐</td><td>운영시간 → 이동 → 위험 점검 → 먼저 채우기 → 해석 반영이 끝날 때까지 현재</td></tr>
+          <tr><td>줄</td><td>장소 0~33% · 운영시간 33~67% · 이동 67~99%</td><td>접수 0~33% · 읽기와 장소 33~67% · 세부 단계 다섯 67~99%(같은 몫)</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:8px">단계 목록: 서버 단계마다 한 줄인 세로 목록(✓ · 도는 동그라미 · 빈 동그라미 · 점선 동그라미, 지금 단계 아래 지금 보는 일정). 줄이 9개라 설문 칸을 아래로 밀어 화면이 무너져 접었다(같은 날 사용자 지적).</p>
+    </details>
+  </section>
+
+  <section class="mk-sec">
+    <h2>서버가 새로 보낼 진행 알림 (전제)</h2>
+    <p>모양은 지금의 <code>progress {phase, done, total, current: {id, title}}</code> 그대로. 모르는 단계 이름은 지금 화면이 버리므로 서버를 먼저 바꿔도 안전하다(<code>intake-events.ts</code> <code>toIntakeEvent</code>).</p>
+    <table class="mk-table">
+      <thead><tr><th>phase</th><th>센다</th><th>보내는 때</th><th>넣을 곳(develop)</th></tr></thead>
+      <tbody>
+        <tr><td><code>reading</code>(이미 있음)</td><td>원문 검사를 통과한 줄 / 보낸 줄</td><td>지금도 약 5초마다 보낸다 — <b>화면이 쓰기만 하면 된다</b>(지금 화면은 버림). 값이 같으면 실시간 진행이 다시 보내지 않는다(<code>stream.Feed</code> 의 같은 값 거름)</td><td><code>llm_spans.label_lines</code> · <code>pipeline.reading_progress</code></td></tr>
+        <tr><td><code>hours</code> · <code>moves</code>(바꿈)</td><td>그대로</td><td>단계 시작에 0/N 을 먼저 · <code>current</code> 는 끝난 것이 아니라 <b>지금 보는</b> 일정 · 구간</td><td><code>review.build</code>(<code>review.py:641</code> · <code>:805</code>)</td></tr>
+        <tr><td><code>risks</code>(새)</td><td>일정 수(이동 칸 제외)</td><td>일정을 보기 <b>전</b> <code>{done: i, current: 그 일정}</code> · 끝에 <code>{done: total, current: null}</code></td><td><code>risks.decorate</code> 반복(<code>risks.py:75</code>) — <code>review.ensure</code> 가 알림 함수를 위험 점검에도 넘김(<code>review.py:1165</code>)</td></tr>
+        <tr><td><code>prefill</code>(새)</td><td>채울 빈칸 수</td><td>빈칸을 모은 직후 0/N · 빈칸마다 · 채운 판을 다시 볼 때 <code>step: recheck</code> · 빈칸이 없으면 0/0</td><td><code>prefill.run</code>(<code>prefill.py:236</code>) · <code>gaps.settle</code>(<code>gaps.py:113</code>) — <code>pipeline._prefill</code> 에 알림 함수 전달</td></tr>
+        <tr><td><code>answers</code>(새)</td><td>로딩 중 답한 질문 수</td><td>반영 시작 0/N · 다시 검사까지 끝나면 N/N</td><td><code>interpretations.apply_pending</code>(<code>interpretations.py:248</code>)</td></tr>
+      </tbody>
+    </table>
+    <ul class="mk-list">
+      <li>처음 검사(<code>pipeline.process</code>)에서만 보낸다. 고치기 · 재검증 · 자동 추천 미리 보기가 같은 함수를 지날 때는 보내지 않는다.</li>
+      <li>먼저 채우기 · 해석 반영이 판을 다시 검사할 때 운영시간 · 이동 알림을 다시 보내지 않는다 — 같은 단계에서 숫자가 줄면 화면이 낡은 값으로 버린다. <code>step: recheck</code> 로만 알린다.</li>
+      <li>단계 순서: <code>reading &lt; places &lt; hours &lt; moves &lt; risks &lt; prefill &lt; answers</code>.</li>
+      <li>계약을 먼저 고친다: <code>wiki/external/rest-endpoints/web-intakes.md</code> 의 <code>progress</code> 줄 · <code>web-screen-api.md</code> 94행.</li>
+    </ul>
+  </section>
+
+  <section class="mk-sec">
+    <h2>앱에서 바꿀 곳 · 정할 것</h2>
+    <ul class="mk-list">
+      <li>단계 목록 · 순서: <code>lib/live/intake-events.ts</code> <code>PROGRESS_PHASES</code> · <code>furthest</code>(단계마다 마지막 알림은 지금도 <code>phases</code> 에 들고 있다)</li>
+      <li>막대: <code>plan-check.tsx</code> <code>ProgressBar</code>(점 4개) 자리를 ① 칸 막대 또는 ② 한 칸 막대로 · <code>HeaderProgress</code> · 비율 <code>model.ts</code> <code>progress()</code></li>
+      <li>막대 아래 한 줄: <code>plan-check.tsx</code> <code>serverProgressText</code> · 늦어짐 알림: <code>intake-review/intake-review.tsx</code> 237행 근처</li>
+      <li>시험: <code>server-progress.test.ts</code> · <code>intake-events.test.ts</code> · <code>tests/live/completed-progress-20261011.spec.ts</code>(모방 서버가 새 알림을 보냄) · 서버 단위 시험</li>
+      <li>이용 방법 화면(<code>help/content.ts</code> 66 · 82행)의 「네 단계」 설명과 캡처를 새로 맞춘다</li>
+      <li><b>정할 것</b>: ⓪ ① · ② 중 무엇 ① 새 문구 · 단위(줄 · 곳 · 구간 · 개) ② (②) 전체 % 의 몫 — 단계마다 같은 몫 / 걸리는 시간 비례 ③ (①) 칸 아래에 단계 이름을 작게 넣을지 ④ 「찾은 일정 n개」 줄을 그대로 둘지</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(() => {
+  const LABELS = ["받았어요", "일정 읽기", "장소·운영시간", "정리 완료"];
+  const SUB = ["hours", "moves", "risks", "prefill", "answers"];
+  const THIRD = 100 / 3;
+  const nw = (text) => `<span class="nw">${text}</span>`;
+
+  // 서버 단계
+  const PHASES = [
+    { key: "received", name: "받았어요" },
+    { key: "reading", name: "일정 읽기", unit: "줄" },
+    { key: "places", name: "장소", unit: "곳" },
+    { key: "hours", name: "운영시간", unit: "곳" },
+    { key: "moves", name: "이동", unit: "구간" },
+    { key: "risks", name: "날씨·도로", unit: "곳" },
+    { key: "prefill", name: nw("빈칸 채우기"), unit: "곳" },
+    { key: "answers", name: nw("답 반영"), unit: "개" },
+    { key: "done", name: "정리 완료" },
+  ];
+  const SEG_KEYS = ["reading", "places", "hours", "moves", "risks", "prefill", "answers"];
+
+  // 지금 앱 — 2026-10-24 실측 화면(0.25초 표본). p: 받은 진행 알림(current 는 끝난 일정). 읽는 동안의 reading 알림은 화면이 버린다.
+  const CUR_REAL = [
+    { t: 2.31, stage: "received", p: null },
+    { t: 2.56, stage: "reading" },
+    { t: 67.82, stage: "checking", p: { ph: "places", d: 2, n: 7, title: "북촌한옥마을" } },
+    { t: 68.82, p: { ph: "places", d: 7, n: 7, title: "창덕궁" } },
+    { t: 70.32, p: { ph: "hours", d: 7, n: 7, title: "창덕궁" } },
+    { t: 71.57, p: { ph: "moves", d: 1, n: 6, title: "경복궁 → 북촌한옥마을" } },
+    { t: 73.06, p: { ph: "moves", d: 3, n: 6, title: "광장시장 → 국립중앙박물관" } },
+    { t: 74.31, p: { ph: "moves", d: 4, n: 6, title: "국립중앙박물관 → 인사동 쌈지길" } },
+    { t: 77.08, p: { ph: "moves", d: 5, n: 6, title: "인사동 쌈지길 → N서울타워" } },
+    { t: 78.06, p: { ph: "moves", d: 6, n: 6, title: "N서울타워 → 창덕궁" } },
+  ];
+  // 지금 앱의 늦어짐 알림 — 실측(같은 단계 8초 넘김 + 글이 바뀔 때 2.8초)
+  const CUR_TOASTS = [
+    { from: 12.07, to: 15.06, text: "읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요." },
+    { from: 67.82, to: 70.82, text: "「북촌한옥마을」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요." },
+    { from: 77.08, to: 78.06, text: "「인사동 쌈지길 → N서울타워」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요." },
+    { from: 78.06, to: 81.06, text: "「N서울타워 → 창덕궁」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요." },
+  ];
+  // 지난 안 A안 — 같은 실측에 새 알림을 얹음(current 는 지금 보는 일정)
+  const A_BASE = [
+    { t: 2.31, stage: "received", p: null },
+    { t: 2.56, stage: "reading" },
+    { t: 67.82, stage: "checking", p: { ph: "places", d: 2, n: 7, title: "북촌한옥마을" } },
+    { t: 68.82, p: { ph: "places", d: 7, n: 7, title: "창덕궁" } },
+    { t: 70.32, p: { ph: "moves", d: 0, n: 6, title: "경복궁 → 북촌한옥마을" } },
+    { t: 71.57, p: { ph: "moves", d: 1, n: 6, title: "북촌한옥마을 → 광장시장" } },
+    { t: 73.06, p: { ph: "moves", d: 3, n: 6, title: "국립중앙박물관 → 인사동 쌈지길" } },
+    { t: 74.31, p: { ph: "moves", d: 4, n: 6, title: "인사동 쌈지길 → N서울타워" } },
+    { t: 77.08, p: { ph: "moves", d: 5, n: 6, title: "N서울타워 → 창덕궁" } },
+    { t: 78.06, p: { ph: "risks", d: 0, n: 7, title: "경복궁" } },
+    { t: 84.55, p: { ph: "risks", d: 2, n: 7, title: "광장시장" } },
+    { t: 86.46, p: { ph: "risks", d: 4, n: 7, title: "인사동 쌈지길" } },
+    { t: 88.30, p: { ph: "risks", d: 5, n: 7, title: "N서울타워" } },
+    { t: 89.80, p: { ph: "risks", d: 7, n: 7, title: null } },
+  ];
+  const GAPS_TAIL = [
+    { t: 89.90, p: { ph: "prefill", d: 0, n: 2, title: "경복궁", step: "ask" } },
+    { t: 101.90, p: { ph: "prefill", d: 1, n: 2, title: "창덕궁", step: "ask" } },
+    { t: 107.90, p: { ph: "prefill", d: 2, n: 2, title: null, step: "recheck" } },
+    { t: 114.90, p: { ph: "answers", d: 0, n: 1, title: null } },
+    { t: 122.30, p: { ph: "answers", d: 1, n: 1, title: null } },
+  ];
+  // ① · ② · 단계 목록 — 단계마다 마지막 알림을 쓴다. 읽기 n/8줄 = 서버 기록(0.22 · 10.30 · 15.31 · 20.30 · 25.33초) → 화면 도착 약 +0.53초
+  const S_BASE = [
+    { t: 2.31, stage: "received" },
+    { t: 2.56, stage: "reading", p: { ph: "reading", d: 0, n: 8 } },
+    { t: 10.96, p: { ph: "reading", d: 1, n: 8 } },
+    { t: 16.31, p: { ph: "reading", d: 3, n: 8 } },
+    { t: 21.65, p: { ph: "reading", d: 7, n: 8 } },
+    { t: 25.92, p: { ph: "reading", d: 8, n: 8 } },
+    { t: 67.82, p: { ph: "places", d: 2, n: 7, title: "북촌한옥마을" } },
+    { t: 68.82, p: { ph: "places", d: 7, n: 7, title: null } },
+    { t: 70.32, p: { ph: "hours", d: 7, n: 7, title: null } },
+    { t: 70.32, p: { ph: "moves", d: 0, n: 6, title: "경복궁 → 북촌한옥마을" } },
+    { t: 71.57, p: { ph: "moves", d: 1, n: 6, title: "북촌한옥마을 → 광장시장" } },
+    { t: 73.06, p: { ph: "moves", d: 3, n: 6, title: "국립중앙박물관 → 인사동 쌈지길" } },
+    { t: 74.31, p: { ph: "moves", d: 4, n: 6, title: "인사동 쌈지길 → N서울타워" } },
+    { t: 77.08, p: { ph: "moves", d: 5, n: 6, title: "N서울타워 → 창덕궁" } },
+    { t: 78.06, p: { ph: "moves", d: 6, n: 6, title: null } },
+    { t: 78.06, p: { ph: "risks", d: 0, n: 7, title: "경복궁" } },
+    { t: 84.55, p: { ph: "risks", d: 2, n: 7, title: "광장시장" } },
+    { t: 86.46, p: { ph: "risks", d: 4, n: 7, title: "인사동 쌈지길" } },
+    { t: 88.30, p: { ph: "risks", d: 5, n: 7, title: "N서울타워" } },
+    { t: 89.80, p: { ph: "risks", d: 7, n: 7, title: null } },
+  ];
+
+  const ROWS_HEAD = [
+    ["접수 → 읽기 시작", "2.3 – 2.6", "0.1초", "받았어요 → 일정 읽기", "(비어 있음)"],
+    ["일정 읽기 (모델 · 이 PC 는 로컬 12B)", "2.6 – 66.8", "66초 — 8/8줄은 25.9초, 뒤 41초는 읽은 내용 정리", "reading n/8 을 <span data-none>버림</span> — 「일정 읽기 0%」 65초", "「일정 읽기 3/8줄」 → 「일정 읽기 8/8줄 · 다 읽고 일정으로 정리하는 중」"],
+    ["장소 찾기 7곳", "66.9 – 68.6", "1.7초", "places n/7", "「장소 2/7곳 · 북촌한옥마을 확인 중」"],
+    ["운영시간 7곳", "68.9 – 69.0", "0.08초", "hours 7/7 (끝난 일정 이름)", "곧바로 끝나 이동 줄로"],
+    ["이동 6구간", "69.0 – 77.4", "8.4초", "moves n/6 (끝난 구간)", "「이동 1/6구간 · 북촌한옥마을 → 광장시장 확인 중」"],
+  ];
+  const SCN = {
+    real: { end: 98, done: 90.82, cur: CUR_REAL, a: A_BASE, steps: [...S_BASE, { t: 89.85, p: { ph: "prefill", d: 0, n: 0 } }], answersRow: false, rows: [
+      ...ROWS_HEAD,
+      ["위험 점검 7곳 (6곳 조회 · 창덕궁은 한 번에 보는 수 상한)", "77.4 – 89.0", "11.6초 (경복궁 6.3초)", "<span data-none>없음</span>", "「날씨·도로 2/7곳 · 광장시장 확인 중」"],
+      ["먼저 채우기", "89.2 – 89.7", "0.45초 · 채울 빈칸 0", "<span data-none>없음</span>", "칸은 건너뜀(서버 0/0)"],
+      ["해석 반영", "89.7 – 89.8", "답한 질문 없음", "<span data-none>없음</span>", "칸 없음(답한 질문 없음)"],
+      ["완료 → 화면 「정리 완료」", "90.0 / 90.8", "", "done", "칸 모두 참 · 「정리 완료」"],
+      ["(화면) 아래 단추 자리 「계획을 다 읽었어요」 · 5초 막대 → 계획 확인 화면", "90.8 – 95.8", "5초 (앱 값 TIMING.doneMs)", "같음", "같음"],
+    ], spans: [[2.3, 2.6], [2.6, 66.9], [66.9, 68.6], [68.9, 69.1], [69.1, 77.4], [77.4, 89.0], [89.2, 89.7], [89.7, 89.85], [89.85, 90.82], [90.82, 98]] },
+    gaps: { end: 130, done: 122.5, cur: CUR_REAL, a: [...A_BASE, ...GAPS_TAIL], steps: [...S_BASE, ...GAPS_TAIL], answersRow: true, rows: [
+      ...ROWS_HEAD,
+      ["위험 점검 7곳", "77.4 – 89.0", "11.6초", "<span data-none>없음</span>", "「날씨·도로 2/7곳 · 광장시장 확인 중」"],
+      ["먼저 채우기 2곳 (가정: 「경복궁」 쉬는 날 · 「창덕궁」 운영시간 밖)", "89.2 – 114.4", "가정 25초 (찾기 12 · 6 + 다시 확인 7)", "<span data-none>없음</span>", "「빈칸 채우기 0/2곳 · 경복궁 채울 일정 찾는 중」 → 「빈칸 채우기 2/2곳 · 채운 일정 넣고 다시 확인 중」"],
+      ["해석 반영 1개 (가정)", "114.4 – 122.0", "가정 7.5초 (다시 확인 포함)", "<span data-none>없음</span>", "「답 반영 0/1개 · 고른 답 반영하고 다시 확인 중」"],
+      ["완료 → 화면 「정리 완료」", "122.5", "", "done", "칸 모두 참 · 「정리 완료」"],
+      ["(화면) 아래 단추 자리 「계획을 다 읽었어요」 · 5초 막대 → 계획 확인 화면", "122.5 – 127.5", "5초 (앱 값 TIMING.doneMs)", "같음", "같음"],
+    ], spans: [[2.3, 2.6], [2.6, 66.9], [66.9, 68.6], [68.9, 69.1], [69.1, 77.4], [77.4, 89.0], [89.2, 114.4], [114.4, 122.3], [122.3, 122.5], [122.5, 130]] },
+  };
+
+  const START = 2.3;
+  const state = { scn: "real", t: START, playing: false, speed: 1, right: "both" };
+
+  function latest(events, t) {
+    let stage = "received", p = null, at = events[0].t;
+    for (const e of events) { if (e.t > t) break; if (e.stage) stage = e.stage; if ("p" in e) { p = e.p; at = e.t; } }
+    return { stage, p, at };
+  }
+
+  // 새 진행 알림이 8초 넘게 안 오면 띄우고, 새 알림이 와도 최소 2.8초는 둔다
+  function silent(arrivals, t, from) {
+    const list = arrivals.filter((a) => a >= from);
+    for (let i = 0; i < list.length; i += 1) {
+      const a = list[i], next = list[i + 1] ?? Infinity;
+      if (next - a < 8) continue;
+      if (t >= a + 8 && t < Math.max(next, a + 8 + 2.8)) return true;
+    }
+    return false;
+  }
+  function slowText(p) {
+    if (!p || p.ph === "reading") return "읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.";
+    const subj = p.title ? `「${p.title}」 ` : "";
+    const act = p.ph === "risks" ? "날씨·도로 확인이" : p.ph === "prefill" ? (p.step === "recheck" ? "채운 일정 다시 확인이" : "채울 일정 찾기가")
+      : p.ph === "answers" ? "답 반영이" : p.ph === "moves" ? "이동 확인이" : p.ph === "hours" ? "운영시간 확인이" : "확인이";
+    return `${subj}${nw(act)} 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`;
+  }
+
+  // 지금 앱 — model.ts progress() · ProgressBar reached · serverProgressText 그대로
+  function curView(t) {
+    const s = SCN[state.scn];
+    const { stage, p } = latest(s.cur, t);
+    const done = t >= s.done;
+    let exact = 0;
+    if (done) exact = 100;
+    else if (p) {
+      const idx = ["places", "hours", "moves"].indexOf(p.ph);
+      const served = (idx + Math.min(1, p.d / Math.max(1, p.n))) * THIRD;
+      exact = stage === "checking" ? Math.min(99, Math.max(served, THIRD)) : served;
+    }
+    const reached = (i) => done || (i === 0 ? stage !== "received" : i === 3 ? false : exact >= (i / 3) * 100 - 0.05);
+    const what = (ph) => ph === "places" ? "장소 확인" : ph === "hours" ? "운영시간 확인" : "이동 확인";
+    const text = !done && p ? `${p.d}/${p.n} · ${p.title ? `${p.title} ` : ""}${what(p.ph)} 중` : "";
+    const toast = done ? null : CUR_TOASTS.find((x) => t >= x.from && t < x.to);
+    return { stage: done ? "done" : stage, exact, reached, text, headText: p && p.ph !== "places" ? text : "", toast: toast ? toast.text : null, cuts: [], found: p ? 7 : 0 };
+  }
+
+  // 지난 안 A안 — 점은 그 단계가 시작되는 자리(같은 몫)
+  function aView(t) {
+    const s = SCN[state.scn];
+    const { stage, p } = latest(s.a, t);
+    const done = t >= s.done;
+    const startOf = (i) => 2 * THIRD + THIRD * i / SUB.length;
+    const placesDone = Boolean(p && p.ph === "places" && p.d >= p.n);
+    const checking = Boolean(p && (p.ph !== "places" || placesDone));
+    let exact = 0;
+    if (done) exact = 100;
+    else if (p && p.ph !== "places") { const i = SUB.indexOf(p.ph); exact = Math.min(99, startOf(i) + THIRD / SUB.length * Math.min(1, p.d / Math.max(1, p.n))); }
+    else if (placesDone) exact = 2 * THIRD;
+    else if (p) exact = THIRD + THIRD * p.d / p.n;
+    else exact = stage === "reading" ? THIRD : 0;
+    const step = done ? 4 : checking ? 2 : (p || stage === "reading") ? 1 : 0;
+    const reached = (i) => i < step;
+    let text = "";
+    if (!done && p) {
+      if (p.ph === "places") text = placesDone ? `${p.n}/${p.n} · 장소 확인 ${nw("끝")}` : `${p.d}/${p.n} · ${p.title} 장소 확인 중`;
+      else if (p.ph === "hours" || p.ph === "moves") {
+        const w = p.ph === "hours" ? "운영시간 확인" : "이동 확인";
+        text = p.title ? `${p.d}/${p.n} · ${p.title} ${w} 중` : `${p.n}/${p.n} · ${w} ${nw("끝")}`;
+      } else if (p.ph === "risks") text = p.title ? `${p.d}/${p.n} · ${p.title} ${nw("날씨·도로 확인 중")}` : `${p.n}/${p.n} · ${nw("날씨·도로 확인 끝")}`;
+      else if (p.ph === "prefill") text = p.step === "recheck" ? `${p.n}/${p.n} · ${nw("채운 일정 넣고 다시 확인 중")}` : `${p.d}/${p.n} · ${p.title} ${nw("채울 일정 찾는 중")}`;
+      else if (p.ph === "answers") text = `${p.d}/${p.n} · ${nw("고른 답 반영하고 다시 확인 중")}`;
+    }
+    const toast = !done && p && stage === "checking" && silent(s.a.map((e) => e.t), t, 67.8) ? slowText(p) : null;
+    const cuts = [1, 2, 3, 4].map(startOf);
+    return { stage: done ? "done" : checking ? "checking" : "reading", label: LABELS[Math.min(3, step)], exact, reached, text, headText: p && p.ph !== "places" ? text : "", toast, cuts, found: p ? 7 : 0 };
+  }
+
+  // ① · ② · 단계 목록이 함께 쓰는 단계 상태
+  function stepState(t) {
+    const s = SCN[state.scn];
+    const done = t >= s.done;
+    let stage = "received";
+    const last = {};
+    const arrivals = [];
+    for (const e of s.steps) { if (e.t > t) break; if (e.stage) stage = e.stage; if (e.p) last[e.p.ph] = e.p; arrivals.push(e.t); }
+    const visible = PHASES.filter((ph) => ph.key !== "answers" || s.answersRow);
+    const keys = visible.map((ph) => ph.key);
+    let at = stage === "received" ? 0 : 1;
+    keys.forEach((key, i) => { if (last[key]) at = Math.max(at, i); });
+    // 건너뛴 단계(0/0)이거나 m/m 으로 끝난 단계면 서버는 이미 다음 단계에 있다 — 다음 줄이 현재(읽기 8/8 은 모델이 아직 쓰는 중이라 그대로,
+    //   빈칸을 채운 뒤 다시 확인하는 중(step: recheck)도 그 단계가 아직 하는 일이다)
+    while (at < keys.length - 1 && last[keys[at]] && keys[at] !== "reading" && last[keys[at]].step !== "recheck"
+      && (last[keys[at]].n === 0 || last[keys[at]].d >= last[keys[at]].n)) at += 1;
+    if (done) at = keys.length;
+    const rows = visible.map((ph, i) => {
+      const p = last[ph.key];
+      let st;
+      if (ph.key === "done") st = done ? "done" : i === at ? "current" : "waiting";
+      else if (p && p.n === 0) st = "skipped";
+      else if (i < at) st = p || ph.key === "received" ? "done" : "skipped";
+      else if (i === at) st = "current";
+      else st = "waiting";
+      const cnt = p ? (p.n === 0 ? nw("채울 빈칸 없음") : `${p.d}/${p.n}${nw(ph.unit)}`) : st === "skipped" ? nw("건너뜀") : "";
+      // 지금 보는 일정(단계 이름이 앞에 있으므로 「○○ 확인 중」으로 짧게)
+      let sub = "";
+      if (st === "current" && p) {
+        if (ph.key === "reading") sub = p.d >= p.n ? nw("다 읽고 일정으로 정리하는 중") : "";
+        else if (["places", "hours", "moves", "risks"].includes(ph.key)) sub = p.title ? `${p.title} 확인 중` : `확인 ${nw("끝")}`;
+        else if (ph.key === "prefill") sub = p.step === "recheck" ? nw("채운 일정 넣고 다시 확인 중") : `${p.title} ${nw("채울 일정 찾는 중")}`;
+        else if (ph.key === "answers") sub = nw("고른 답 반영하고 다시 확인 중");
+      }
+      const frac = st === "done" || st === "skipped" ? 1 : st === "current" && p && p.n ? Math.min(1, p.d / p.n) : 0;
+      return { key: ph.key, name: ph.name, st, cnt, sub, frac };
+    });
+    const curRow = done ? null : rows.find((r) => r.st === "current") ?? null;
+    const curP = curRow ? last[curRow.key] : null;
+    const toast = !done && silent(arrivals, t, 0) ? slowText(curP ?? (stage === "reading" ? { ph: "reading" } : null)) : null;
+    const segRows = rows.filter((r) => SEG_KEYS.includes(r.key));
+    const pct = done ? 100 : Math.min(99, segRows.reduce((sum, r) => sum + r.frac, 0) / segRows.length * 100);
+    // 막대 아래 한 줄: 「단계 이름 n/m · 지금 보는 일정」
+    let line = done ? "<b>정리 완료</b>" : "";
+    if (curRow && curRow.key === "done") line = nw("결과를 정리하는 중");
+    else if (curRow && curRow.key !== "received") line = `<b>${curRow.name}${curRow.cnt ? ` ${curRow.cnt}` : ""}</b>${curRow.sub ? ` · ${curRow.sub}` : ""}`;
+    const doneCount = rows.filter((r) => r.st === "done" || r.st === "skipped").length;
+    const quiet = arrivals.length ? t - arrivals[arrivals.length - 1] : 0;      // 마지막 새 알림 뒤 지난 시간
+    return { rows, segRows, done, toast, curRow, doneCount, total: rows.length, pct, line, quiet, found: last.places ? 7 : 0 };
+  }
+
+  // ── 그리기: 한 번 만들고 바뀐 곳만 고친다 — 다시 만들면 막대 · 알림의 움직임이 매번 처음부터 돈다 ──
+  // 마지막으로 넣은 값과 비교한다(브라우저가 고쳐 쓴 innerHTML 과 비교하면 매번 다르게 보일 수 있다)
+  const put = (node, key, html) => { if (node[`_${key}`] !== html) { node[`_${key}`] = html; node[key] = html; } };
+  const APP_HEAD = `<div class="app-head"><span class="brand"><span class="brand-mark">G</span>구구루트</span><span class="menu"><i></i></span></div><div data-toast></div>`;
+  const TITLE = `<div class="headRow"><span class="back">←</span><h1 class="title">계획을 확인하고 있어요</h1></div>
+        <p class="desc">사진 한 장은 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.</p>`;
+  const FOUND = `<p class="found">찾은 일정 <b>0</b>개</p>`;
+  const SURVEY = `<div class="survey"><p>기다리는 동안 여행 취향을 하나씩 여쭤볼게요.</p><div class="q">설문 질문 자리 — 이 목업에서는 줄임</div></div>`;
+  // 아래 단추 자리 — reading-footer.tsx: 읽는 중 / 끝(✓ · 5초 막대 · 단추) → 5초 뒤 계획 확인 화면으로
+  const DONE_MS = 5000;                                           // 앱 값 TIMING.doneMs
+  const FOOT = `<div class="foot">
+      <div data-foot="reading"><span class="btn"><span class="spin"></span>계획 읽는 중…</span><p class="help">로딩이 끝나면 단추가 켜져요.</p></div>
+      <div data-foot="done" hidden><p class="doneLine">✓ 계획을 다 읽었어요</p><p class="doneSub">5초 뒤에 계획 확인 화면으로 넘어가요.</p>
+        <div class="finishTrack"><div class="finishFill"></div></div><span class="big">읽어 온 계획 확인하기</span><span class="textBtn">자동으로 넘어가지 않기</span></div>
+    </div>
+    <div class="moved" hidden><b>계획 확인 화면으로 넘어갔어요</b><span>지도와 일정 카드가 차례로 그려지는 화면 — 이 목업의 범위 밖</span></div>`;
+  const SEGS = () => `<div class="seg" aria-hidden="true">${SEG_KEYS.map((k) => `<span data-seg="${k}"><i></i></span>`).join("")}</div>`;
+  const putToast = (el, text) => put(el.querySelector("[data-toast]"), "innerHTML", text ? `<div class="toast" role="status"><strong>서버 응답이 늦어지고 있어요</strong><span>${text}</span></div>` : "");
+  const putFound = (el, n) => put(el.querySelector(".found b"), "textContent", String(n));
+  function putSegs(root, rows) {
+    const byKey = Object.fromEntries(rows.map((r) => [r.key, r]));
+    root.querySelectorAll("[data-seg]").forEach((seg) => {
+      const r = byKey[seg.dataset.seg];
+      seg.hidden = !r;
+      if (!r) return;
+      seg.toggleAttribute("data-skipped", r.st === "skipped");
+      seg.querySelector("i").style.width = `${Math.round(r.frac * 100)}%`;
+    });
+  }
+
+  // 점 4개(지금 앱 · 지난 안 A안)
+  function mountDots(el) {
+    el.innerHTML = `${APP_HEAD}
+      <div class="reading"><header class="head">${TITLE}
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="track"><span class="fill"></span><span data-cuts></span></div>
+          <ol class="steps">${LABELS.map((label) => `<li><span class="node"></span><span class="stepLabel">${label}</span></li>`).join("")}</ol>
+          <p class="progressAt"></p></div>
+      </header>${FOUND}${SURVEY}</div>${FOOT}`;
+  }
+  function updateDots(el, v) {
+    putToast(el, v.toast);
+    el.querySelector(".fill").style.width = `${Math.min(100, v.exact)}%`;
+    put(el.querySelector("[data-cuts]"), "innerHTML", v.cuts.map((x) => `<span class="cut" style="left:${x}%"></span>`).join(""));
+    const waitingAt = LABELS.findIndex((_, i) => !v.reached(i));
+    el.querySelectorAll(".steps li").forEach((li, i) => { li.dataset.state = v.reached(i) ? "done" : i === waitingAt ? "current" : "waiting"; });
+    el.querySelector(".progress").setAttribute("aria-valuenow", String(Math.round(v.exact)));
+    put(el.querySelector(".progressAt"), "innerHTML", v.text);
+    putFound(el, v.found);
+  }
+
+  // ① 단계 칸 막대 · ② 한 칸 막대 + 전체 %
+  function mountNew(el, kind) {
+    const bar = kind === "v1" ? SEGS() : `<div class="bar1"><span class="tr"><i></i></span><b></b></div>`;
+    el.innerHTML = `${APP_HEAD}
+      <div class="reading"><header class="head">${TITLE}
+        <div class="newbar" role="progressbar" aria-label="계획 확인 진행">${bar}</div>
+        <p class="nowline" role="status"></p>
+      </header>${FOUND}${SURVEY}</div>${FOOT}`;
+  }
+  function updateNew(el, v, kind) {
+    putToast(el, v.toast);
+    if (kind === "v1") putSegs(el, v.rows);
+    else { el.querySelector(".bar1 .tr > i").style.width = `${v.pct}%`; put(el.querySelector(".bar1 b"), "innerHTML", nw(`${Math.floor(v.pct)}%`)); }
+    put(el.querySelector(".nowline"), "innerHTML", v.line);
+    putFound(el, v.found);
+  }
+
+  // ③ 추천 조합 — ① 칸 막대 + 지금 칸 아래 이름 + 8초 넘으면 아래 줄에 n초째 · 토스트 없음(흐르는 빛은 사용자 결정으로 뺌 10-24)
+  const LONG_S = 8;                                               // ★우리가 고른 값
+  function v3Line(v) {
+    const r = v.curRow;
+    if (v.done) return "<b>정리 완료</b>";
+    if (!r || r.key === "received") return "";
+    if (r.key === "done") return nw("결과를 정리하는 중");
+    const parts = [r.cnt ? `<b>${r.cnt}</b>` : "", r.sub].filter(Boolean);
+    if (v.quiet >= LONG_S) parts.push(`<span class="el">${nw(`${Math.floor(v.quiet)}초째`)}</span>`);
+    return parts.join(" · ");
+  }
+  function mountV3(el) {
+    el.innerHTML = `${APP_HEAD}
+      <div class="reading"><header class="head">${TITLE}
+        <div class="newbar" data-named role="progressbar" aria-label="계획 확인 진행">${SEGS()}<span class="curname"></span></div>
+        <p class="nowline" role="status"></p>
+      </header>${FOUND}${SURVEY}</div>${FOOT}`;
+  }
+  function updateV3(el, v) {
+    putToast(el, null);                                           // 토스트 없음
+    putSegs(el, v.rows);
+    const name = el.querySelector(".curname");
+    const at = v.curRow ? v.segRows.findIndex((r) => r.key === v.curRow.key) : -1;
+    name.hidden = at < 0;
+    if (at >= 0) {
+      const center = (at + 0.5) / v.segRows.length * 100;
+      put(name, "innerHTML", v.curRow.name);
+      name.dataset.edge = center < 12 ? "start" : center > 88 ? "end" : "mid";
+      name.style.left = `${name.dataset.edge === "start" ? 0 : name.dataset.edge === "end" ? 100 : center}%`;
+    }
+    put(el.querySelector(".nowline"), "innerHTML", v3Line(v));
+    putFound(el, v.found);
+  }
+  function updateV3Strip(el, v) {
+    const r = v.curRow;
+    put(el.querySelector("[data-label]"), "innerHTML", r ? r.name : "정리 완료");
+    put(el.querySelector(".headStep b"), "innerHTML", r ? r.cnt : `${v.total}/${v.total}${nw("단계")}`);
+    putSegs(el, v.rows);
+    const tail =v.quiet >= LONG_S && !v.done ? `${nw(`${Math.floor(v.quiet)}초째`)}` : "";
+    put(el.querySelector(".headAt"), "innerHTML", [r && r.key !== "reading" && r.key !== "places" ? r.sub : "", tail].filter(Boolean).join(" · "));
+  }
+
+  // 지난 안 · 단계 목록
+  function mountList(el) {
+    el.innerHTML = `${APP_HEAD}
+      <div class="reading"><header class="head">${TITLE}${SEGS()}
+        <ol class="plist" aria-label="계획 확인 단계">${PHASES.map((ph) => `<li data-key="${ph.key}"><span class="ic"></span><span class="nm">${ph.name}</span><span class="cnt"></span><span class="sub"></span><span class="mini"><span></span></span></li>`).join("")}</ol>
+      </header>${SURVEY}</div>${FOOT}`;
+  }
+  function updateList(el, v) {
+    putToast(el, v.toast);
+    const byKey = Object.fromEntries(v.rows.map((r) => [r.key, r]));
+    el.querySelectorAll(".plist li").forEach((li) => {
+      const r = byKey[li.dataset.key];
+      li.hidden = !r;
+      if (!r) return;
+      li.dataset.state = r.st;
+      put(li.querySelector(".cnt"), "innerHTML", r.cnt);
+      put(li.querySelector(".sub"), "innerHTML", r.sub);
+      li.querySelector(".mini > span").style.width = `${Math.round(r.frac * 100)}%`;
+    });
+    putSegs(el.querySelector(".head"), v.rows);
+  }
+
+  // 지도 확인 화면 머리글
+  function mountStrip(el, kind) {
+    const bar = kind === "v1" || kind === "list" ? SEGS() : `<span class="headTrack"><span class="f"></span></span>`;
+    el.innerHTML = `<div class="mapbar"><span class="brand-mark">G</span><div class="headInfo"><div class="headProgress" role="progressbar">
+      <span class="headStep"><span data-label></span><b></b></span>${bar}<span class="headAt"></span></div></div><span class="menu"><i></i></span></div>`;
+  }
+  function updateDotsStrip(el, v) {
+    put(el.querySelector("[data-label]"), "textContent", v.label ?? LABELS[v.stage === "received" ? 0 : v.stage === "reading" ? 1 : v.stage === "checking" ? 2 : 3]);
+    put(el.querySelector(".headStep b"), "textContent", `${Math.round(v.exact)}%`);
+    el.querySelector(".headTrack .f").style.width = `${Math.round(v.exact)}%`;
+    put(el.querySelector(".headAt"), "innerHTML", v.headText);
+  }
+  function updateStepStrip(el, v, kind) {
+    const r = v.curRow;
+    put(el.querySelector("[data-label]"), "innerHTML", r ? r.name : "정리 완료");
+    if (kind === "v2") {
+      put(el.querySelector(".headStep b"), "innerHTML", nw(`${Math.floor(v.pct)}%`));
+      el.querySelector(".headTrack .f").style.width = `${v.pct}%`;
+    } else {
+      put(el.querySelector(".headStep b"), "innerHTML", r ? r.cnt : `${v.total}/${v.total}${nw("단계")}`);
+      putSegs(el, v.rows);
+    }
+    put(el.querySelector(".headAt"), "innerHTML", r && r.key !== "reading" && r.key !== "places" ? r.sub : "");
+  }
+
+  function dotsNote(v, side) {
+    const st = (i) => v.reached(i) ? "완료 ✓" : LABELS.findIndex((_, j) => !v.reached(j)) === i ? "현재" : "기다림";
+    const bad = side === "cur" && v.stage === "checking" && v.reached(2);
+    return `셋째 점 「장소·운영시간」: <b ${bad ? "data-bad" : ""}>${st(2)}</b> · 넷째 점 「정리 완료」: <b ${bad ? "data-bad" : ""}>${st(3)}</b> · 줄 <b>${Math.round(v.exact)}%</b>`
+      + (bad ? " — 서버는 아직 검사 중인데 정리 단계처럼 보임" : "");
+  }
+  function stepNote(v, kind) {
+    const r = v.curRow;
+    const head = `지금 단계: <b>${r ? r.name : "정리 완료"}</b>${r && r.cnt ? ` (${r.cnt})` : ""}`;
+    if (kind === "v2") return `${head} · 전체 <b>${Math.floor(v.pct)}%</b>`;
+    const quiet = kind === "v3" && !v.done ? ` · 새 소식 없이 <b>${Math.floor(v.quiet)}초</b>` : "";
+    return `${head} · 끝난 단계 <b>${v.doneCount}/${v.total}</b>${quiet}`;
+  }
+
+  const cols = Object.fromEntries(["cur", "v3", "v1", "v2", "a", "list"].map((side) => [side, document.querySelector(`[data-side="${side}"]`)]));
+  const clock = document.getElementById("clock"), scrub = document.getElementById("scrub"), now = document.getElementById("now");
+  const tbody = document.querySelector("#steps-table tbody");
+
+  function renderTable() {
+    tbody.innerHTML = SCN[state.scn].rows.map((r) => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join("");
+  }
+
+  function render() {
+    const s = SCN[state.scn], t = state.t;
+    const cur = curView(t), a = aView(t), st = stepState(t);
+    for (const [side, v] of [["cur", cur], ["a", a]]) {
+      updateDots(cols[side].querySelector(".phone"), v);
+      updateDotsStrip(cols[side].querySelector(".mapstrip"), v);
+      put(cols[side].querySelector("[data-state-note]"), "innerHTML", dotsNote(v, side));
+    }
+    for (const kind of ["v1", "v2"]) {
+      updateNew(cols[kind].querySelector(".phone"), st, kind);
+      updateStepStrip(cols[kind].querySelector(".mapstrip"), st, kind);
+      put(cols[kind].querySelector("[data-state-note]"), "innerHTML", stepNote(st, kind));
+    }
+    updateV3(cols.v3.querySelector(".phone"), st);
+    updateV3Strip(cols.v3.querySelector(".mapstrip"), st);
+    put(cols.v3.querySelector("[data-state-note]"), "innerHTML", stepNote(st, "v3"));
+    updateList(cols.list.querySelector(".phone"), st);
+    updateStepStrip(cols.list.querySelector(".mapstrip"), st, "list");
+    put(cols.list.querySelector("[data-state-note]"), "innerHTML", stepNote(st, "list"));
+    // 아래 단추 자리 — 모든 화면 같다(지금 앱 규칙): 읽는 중 → 끝(5초 막대) → 계획 확인 화면
+    const since = t - s.done;
+    document.querySelectorAll(".phone").forEach((ph) => {
+      ph.querySelector('[data-foot="reading"]').hidden = since >= 0;
+      ph.querySelector('[data-foot="done"]').hidden = !(since >= 0);
+      ph.querySelector(".finishFill").style.width = `${Math.max(0, Math.min(1, since * 1000 / DONE_MS)) * 100}%`;
+      ph.querySelector(".moved").hidden = since * 1000 < DONE_MS;
+    });
+    clock.textContent = `누른 뒤 ${t.toFixed(1)}초`;
+    scrub.max = s.end; scrub.value = t;
+    const active = s.spans.findIndex(([x, y]) => t >= x && t < y);
+    [...tbody.rows].forEach((row, i) => row.toggleAttribute("data-active", i === active));
+    now.innerHTML = active >= 0 ? `서버: <b>${s.rows[active][0]}</b>` : "";
+  }
+
+  let last = null;
+  function tick(ts) {
+    if (!state.playing) { last = null; return; }
+    if (last !== null) {
+      state.t = Math.min(SCN[state.scn].end, state.t + (ts - last) / 1000 * state.speed);
+      if (state.t >= SCN[state.scn].end) setPlaying(false);
+    }
+    last = ts; render();
+    requestAnimationFrame(tick);
+  }
+  const play = document.getElementById("play");
+  function setPlaying(on) {
+    state.playing = on; play.setAttribute("aria-pressed", String(on)); play.textContent = on ? "❚❚ 멈춤" : "▶ 재생";
+    if (on) { if (state.t >= SCN[state.scn].end) state.t = START; requestAnimationFrame(tick); }
+  }
+  play.addEventListener("click", () => setPlaying(!state.playing));
+  document.getElementById("rewind").addEventListener("click", () => { state.t = START; render(); });
+  document.getElementById("jump").addEventListener("click", () => { state.t = 64; render(); });
+  scrub.addEventListener("input", () => { state.t = Number(scrub.value); render(); });
+  const pressGroup = (attr, apply) => document.querySelectorAll(`[${attr}]`).forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(`[${attr}]`).forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+    apply(b.getAttribute(attr)); render();
+  }));
+  const SHOWN = { v3: ["v3"], all3: ["v3", "v1", "v2"], both: ["v1", "v2"], v1: ["v1"], v2: ["v2"], a: ["a"], list: ["list"] };
+  const showRight = (v) => { state.right = v; for (const side of ["v3", "v1", "v2", "a", "list"]) cols[side].hidden = !SHOWN[v].includes(side); };
+  pressGroup("data-right", showRight);
+  pressGroup("data-scn", (v) => { state.scn = v; state.t = Math.min(state.t, SCN[v].end); renderTable(); });
+  pressGroup("data-speed", (v) => { state.speed = Number(v); });
+  document.getElementById("marknew").addEventListener("change", (e) => { document.body.toggleAttribute("data-mark-new", e.target.checked); });
+  const theme = document.getElementById("theme");
+  const setTheme = (dark) => { document.documentElement.dataset.theme = dark ? "dark" : "green"; theme.setAttribute("aria-pressed", String(dark)); theme.textContent = dark ? "밝게" : "어둡게"; };
+  theme.addEventListener("click", () => setTheme(document.documentElement.dataset.theme !== "dark"));
+  if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) setTheme(true);
+  mountDots(cols.cur.querySelector(".phone")); mountStrip(cols.cur.querySelector(".mapstrip"), "dots");
+  mountV3(cols.v3.querySelector(".phone")); mountStrip(cols.v3.querySelector(".mapstrip"), "v1");
+  mountNew(cols.v1.querySelector(".phone"), "v1"); mountStrip(cols.v1.querySelector(".mapstrip"), "v1");
+  mountNew(cols.v2.querySelector(".phone"), "v2"); mountStrip(cols.v2.querySelector(".mapstrip"), "v2");
+  mountDots(cols.a.querySelector(".phone")); mountStrip(cols.a.querySelector(".mapstrip"), "dots");
+  mountList(cols.list.querySelector(".phone")); mountStrip(cols.list.querySelector(".mapstrip"), "list");
+  showRight("v3"); renderTable(); render();
+})();
+</script>
+</body>
+</html>
