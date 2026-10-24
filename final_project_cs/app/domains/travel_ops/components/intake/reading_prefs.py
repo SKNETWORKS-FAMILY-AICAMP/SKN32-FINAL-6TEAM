@@ -45,9 +45,36 @@ _WHOLE_TRIP_WORDS = frozenset({"다", "늘", "모두", "전부", "항상", "내�
 _WHOLE_TRIP_PHRASES = ("주로", "웬만하면", "웬만해선", "웬만해서는", "대부분", "여행 내내", "모든 이동", "이동은 다")
 
 
+_DAY_TRANSPORT = re.compile(r"오늘|내일|모레|첫날|둘째\s*날|셋째\s*날|\d+\s*일차|하루\s*종일")
+_LOCAL_TRANSPORT = re.compile(r"지금|이번\s*(?:구간|이동)|이번만|[이그]\s*구간|[여거]기서|에서|부터|까지")
+_MOBILITY_PREFERENCE = re.compile(r"위주|선호|좋아|다니|다닐|괜찮")
+
+
+def transport_scope(scope: Any, quote: Any) -> str:
+    """모델이 말한 적용 범위는 원문의 근거가 있을 때만 넓힌다."""
+    if scope == "all" and whole_trip_said(quote):
+        return "all"
+    text = str(quote or "")
+    if scope == "day" and _DAY_TRANSPORT.search(text) and not _LOCAL_TRANSPORT.search(text):
+        if _whole_transport_words(text) or _MOBILITY_PREFERENCE.search(text):
+            return "day"
+    return "segment"
+
+
+def mobility_preference_said(quote: Any) -> bool:
+    """한 번의 이동을 지속적인 이동 성향으로 확대하지 않는다."""
+    text = str(quote or "")
+    return not (_LOCAL_TRANSPORT.search(text) or _DAY_TRANSPORT.search(text)) and (
+        whole_trip_said(text) or bool(_MOBILITY_PREFERENCE.search(text)))
+
+
 def whole_trip_said(quote: Any) -> bool:
     """원문 조각이 여행 전체의 이동을 말하나 — 「다 지하철로」 · 「웬만하면 택시」는 예, 「택시로 이동」 · 「다녀와요」는 아니다."""
     text = str(quote or "")
+    return not (_LOCAL_TRANSPORT.search(text) or _DAY_TRANSPORT.search(text)) and _whole_transport_words(text)
+
+
+def _whole_transport_words(text: str) -> bool:
     if any(phrase in text for phrase in _WHOLE_TRIP_PHRASES):
         return True
     return any(token in _WHOLE_TRIP_WORDS for token in re.split(r"[\s,.!?·~()\[\]「」'\"]+", text))
@@ -94,7 +121,8 @@ def proposals(values: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
         for pref in value.get("preferences") or []:
             code, quote = pref.get("code"), pref.get("quote")
             if code in _MOBILITY_PREF:
-                put("survey.priority_details.mobility", [_MOBILITY_PREF[code]], code, quote, merge_list=True)
+                if mobility_preference_said(quote):
+                    put("survey.priority_details.mobility", [_MOBILITY_PREF[code]], code, quote, merge_list=True)
             elif code in _PACE_PREF:
                 put("survey.pace", "relaxed", code, quote)
             elif code in _FOOD_WORDS:
@@ -236,4 +264,4 @@ def apply(constraints: Mapping[str, Any] | None) -> dict[str, Any]:
 
 
 __all__ = ["CARRY_KEY", "FILLED_KEY", "LABELS", "agent_values", "apply", "carry", "proposals", "status", "value_text", "view",
-           "whole_trip_said"]
+           "mobility_preference_said", "transport_scope", "whole_trip_said"]
