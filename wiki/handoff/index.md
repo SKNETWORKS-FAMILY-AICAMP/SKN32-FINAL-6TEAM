@@ -214,3 +214,8 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 2026-10-25 — [F3 미해결·새 설계 검토 인계](2026-10-25_remaining-non-db-f3-unresolved.md): 원문 probe3실패 유지. 단일955개948통과/3실패/4bind차단. 완료 패키지가 아닌 현재 diff·동결해시·타임라인을 보존했습니다.
 
 2026-10-25 — [F3 독립 설계·회귀 수락 인계](2026-10-25_remaining-non-db-f3-acceptance.md): 새 후보만 변경, 원문·이전 실패 보존, 동등 스케줄 old RED/new GREEN과 정확 단일실행 분모를 분리했습니다. DB/외부실행 금지 유지.
+
+
+## 현재 누적 릴리스 준비 — 2026-10-25
+
+정확 history-preserving 비DB 누적 후보 준비 완료 / 릴리스 HOLD. 원문3실패·bind4차단·strict-budget 미수락 유지; admin/예약OFF는 wiki3경로 clean 병합 가능성만 확인(미적용). [최종 현황](2026-10-25_remaining-non-db-release-preparation.md).

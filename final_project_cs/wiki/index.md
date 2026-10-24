@@ -117,3 +117,8 @@ domain: travel
 2026-10-25 — F3 새 격리 수정은 원문 probe3실패로 **수락 미해결**입니다. 단일955개948통과/원문3실패/기존4bind차단. [타임라인·실패 경로·남은 계약](records/reports/2026-10-25_remaining-non-db-f3-unresolved.md).
 
 2026-10-25 — F3 독립 검토와 동등 스케줄 회귀: 원문3실패를 시험 모순으로 분리하며 제품 logical-dispatch 경계만 수락 검토합니다. [정확 실행 결과·남은 범위](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).
+
+
+## 현재 누적 릴리스 준비 — 2026-10-25
+
+정확 history-preserving 비DB 누적 후보 준비 완료 / 릴리스 HOLD. 원문3실패·bind4차단·strict-budget 미수락 유지; admin/예약OFF는 wiki3경로 clean 병합 가능성만 확인(미적용). [최종 현황](records/reports/2026-10-25_remaining-non-db-release-preparation.md).
