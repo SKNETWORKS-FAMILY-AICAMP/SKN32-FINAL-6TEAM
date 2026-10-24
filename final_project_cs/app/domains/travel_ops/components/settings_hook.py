@@ -47,6 +47,17 @@ def operator_setting(tenant_id: str, name: str) -> Any:
         return None
 
 
+BOOKING = "travel.booking.enabled"
+
+
+def booking_enabled(tenant_id: str) -> bool:
+    """예약 전용 마스터 스위치. 미설정·읽기 실패는 OFF, 명시한 bool true만 ON.
+
+    기존 예약 정보 읽기·수동 저장·locked는 이 스위치의 대상이 아니다.
+    """
+    return operator_setting(tenant_id, BOOKING) is True
+
+
 GOOGLE_PRICE = "travel.dining.google_price_enabled"
 
 

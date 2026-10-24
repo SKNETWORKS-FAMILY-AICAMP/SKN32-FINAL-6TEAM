@@ -292,16 +292,39 @@ npm run dev
 
 값을 바꾸면 `npm run dev`를 다시 띄웁니다.
 
-### 7. 운영 API와 관리자 웹 (포트 8070 · 3300, 선택)
+### 7. 운영 API와 제품 관리자 웹 (포트 8070 · 3300)
+
+고객 API(8042)만 실행해서는 관리자 웹이 생기지 않습니다. **다른 터미널 두 개**에서 각각 실행합니다. 제품 관리자 웹이며 Composer 개발 콘솔이 아닙니다.
+
+운영 API 터미널 — `final_project_cs` 기준:
 
 ```powershell
-python -m app.ops_entrypoint            # final_project_cs 폴더, 127.0.0.1:8070 전용
-cd frontend/apps/admin; npm ci; npm run build; npm run start   # 127.0.0.1:3300
+python -m app.ops_entrypoint --host 127.0.0.1 --port 8070
 ```
 
-운영자 계정은 `ACOP_UI_OPERATORS`에 등록하고, 관리자 웹의 `.env.local`에 `NEXT_PUBLIC_ADMIN_DATA_MODE=live`와 `ADMIN_OPS_API_URL`(루프백 주소만)을 둡니다. 자세한 조건은 [관리자 웹 README](final_project_cs/frontend/apps/admin/README.md)를 봅니다.
+관리자 웹 터미널 — `final_project_cs` 기준:
 
-> 루트의 `triPilot-실행.bat`은 위 네 프로세스(8042 · 8070 · 3100 · 3300)를 한꺼번에 띄우고(`check` 인자는 점검만), `triPilot-종료.bat`은 그 배치가 켠 것만 끕니다. 8042는 저장소 밖의 개인 시작 스크립트(`%USERPROFILE%\.acop-ops\start-acop.ps1`)를 부르므로, 그 파일이 없는 PC에서는 위 5번으로 띄웁니다.
+```powershell
+cd frontend/apps/admin
+npm ci
+# 기존 .env.local은 덮어쓰지 않습니다. 아래 비공개 서버 주소와 live 모드를 확인합니다.
+$env:NEXT_PUBLIC_ADMIN_DATA_MODE = 'live'
+$env:ADMIN_OPS_API_URL = 'http://127.0.0.1:8070'
+npm run dev                          # http://127.0.0.1:3300
+# 생산 빌드가 필요하면 dev 대신: npm run build; npm run start
+```
+
+운영자 계정은 서버 `ACOP_UI_OPERATORS`, 기존 권한키는 `ACOP_OPS_API_KEYS`에 설정합니다. 설정이 비어 있으면 로그인할 수 없습니다. 자세한 조건은 [관리자 웹 README](final_project_cs/frontend/apps/admin/README.md)를 봅니다.
+
+Python 가상환경을 활성화하고 두 프론트의 `npm ci`를 마친 뒤, **저장소 루트**에서 일괄 구성할 수 있습니다:
+
+```powershell
+.\triPilot-실행.bat check             # 파일·실행기 점검만: 서비스/DB/모델 호출 없음
+.\triPilot-실행.bat                   # 별도 실행 승인 후 8042·8070·3100·3300 기동
+.\triPilot-종료.bat                   # 이 배치가 시작하고 소유한 프로세스만 종료
+```
+
+개인 시작 스크립트 `%USERPROFILE%\.acop-ops\start-acop.ps1`가 있으면 기존 감시·알림 경로를 유지합니다. 없으면 5번의 기본 uvicorn으로 고객 API를 띄워 네 앱 구성이 중단되지 않습니다(감시·알림 작업자는 별도). 이미 열린 포트는 정상 앱으로 재사용하지 않고 충돌 실패로 반환합니다. 새 프로세스의 생존·listener 소유권·기존 HTTP 준비 계약을 검사하고 마지막에 전체를 다시 확인합니다. 중간 실패는 소유 기록을 남기며 종료 배치로 정리합니다. DB 시작·마이그레이션·자격증명 생성은 하지 않습니다. 사전 점검 통과는 실제 HTTP·로그인·DB 정상의 증거가 아닙니다. LF·CRLF 전체 cmd 회귀와 독립검토 P1/P2 수정 근거는 [v2 보고서](final_project_cs/wiki/records/reports/2026-10-25_local-admin-3300-v2.md), [상세 실행 계약·승인 경계](final_project_cs/wiki/operations/local-app-bundle.md)를 확인합니다.
 
 ## API 표면
 

@@ -140,6 +140,10 @@ class BookingCancel:
 
     def apply(self, conn: Any, *, tenant_id: str, customer_id: UUID, case_id: UUID,
               arguments: Mapping[str, Any]) -> AppliedAction:
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if not booking_enabled(tenant_id):
+            raise ActionRejected("booking_disabled: 예약 마스터가 꺼져 있습니다")
         booking_id = _booking_id(arguments)
         booking = _lock_booking(conn, tenant_id=tenant_id, customer_id=customer_id, booking_id=booking_id)
         if booking["status"] == "cancelled":
@@ -189,6 +193,10 @@ class BookingChange:
 
     def apply(self, conn: Any, *, tenant_id: str, customer_id: UUID, case_id: UUID,
               arguments: Mapping[str, Any]) -> AppliedAction:
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if not booking_enabled(tenant_id):
+            raise ActionRejected("booking_disabled: 예약 마스터가 꺼져 있습니다")
         booking_id = _booking_id(arguments)
         booking = _lock_booking(conn, tenant_id=tenant_id, customer_id=customer_id, booking_id=booking_id)
         if booking["status"] == "cancelled":
@@ -261,6 +269,10 @@ class BookingRevert:
 
     def apply(self, conn: Any, *, tenant_id: str, customer_id: UUID, case_id: UUID,
               arguments: Mapping[str, Any]) -> AppliedAction:
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if not booking_enabled(tenant_id):
+            raise ActionRejected("booking_disabled: 예약 마스터가 꺼져 있습니다")
         booking_id = _booking_id(arguments)
         booking = _lock_booking(conn, tenant_id=tenant_id, customer_id=customer_id, booking_id=booking_id)
         original = _last_automatic_cancel(conn, tenant_id=tenant_id, booking_id=booking_id)

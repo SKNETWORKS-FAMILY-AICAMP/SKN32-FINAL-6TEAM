@@ -5,6 +5,8 @@
 
 ## 실행
 
+로컬 네 프로세스 일괄 실행은 저장소 루트 `triPilot-실행.bat check`로 먼저 점검합니다. `check`는 서비스·DB를 시작하지 않습니다. 별도 실행 승인 뒤 인자 없이 실행하면 고객 API 8042·운영 API 8070·고객 웹 3100·이 제품 관리자 3300을 구성합니다. [로컬 실행 계약](../../../wiki/operations/local-app-bundle.md)을 확인합니다.
+
 - 운영 앱: 프로젝트 루트에서 `python -m app.ops_entrypoint`. 루프백 전용입니다.
 - 운영자 웹앱: 이 폴더에서 `npm run build`, `npm run start`. 기본 포트 3300, 루프백 전용입니다.
 - 운영용 API 주소 설정: `ADMIN_OPS_API_URL`(비공개 환경 변수). 브라우저에 노출하지 않으며 루프백 주소만 허용합니다.

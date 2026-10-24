@@ -83,13 +83,16 @@ class ToolContext:
     customer_id: UUID
     case_id: UUID
     knowledge_scope: list[str]
+    itinerary_item: bool = False
 
     @classmethod
     def from_pack(cls, pack: ContextPack) -> "ToolContext":
         customer = pack.current_state.get("customer_id")
         if customer is None:
             raise ValueError("ContextPack.current_state.customer_id is required for read tools")
-        return cls(pack.tenant_id, UUID(str(customer)), pack.case_id, pack.knowledge_scope)
+        ref = pack.current_state.get("subject_ref") or {}
+        existing_item = ref.get("kind") == "trip" and bool(ref.get("id")) and bool(ref.get("part_id"))
+        return cls(pack.tenant_id, UUID(str(customer)), pack.case_id, pack.knowledge_scope, existing_item)
 
 
 @dataclass
@@ -1134,6 +1137,10 @@ class ReadToolbox:
         """항공편 비교(booking 모듈) — 마이리얼트립 · Ignav · 구글 항공권을 불러 같은 편끼리 묶은 결과. 소스가 없으면 `None`. `[2026-10-10]`"""
         if not self.travel or not origin or not destination or not depart_date:
             return None
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if not booking_enabled(scope.tenant_id):
+            return {"booking_disabled": True}
         from app.domains.travel_ops.components.booking.offers import search_flights
 
         wanted = ("return_date", "domestic", "direct_only", "cabin", "max_results", "adults", "children", "infants")
@@ -1145,6 +1152,10 @@ class ReadToolbox:
         """열차 · 버스 운행 비교(booking 모듈, TAGO) — 역 · 터미널로 옮겨 그날 운행을 출발 시각순으로. 소스가 없으면 `None`. `[2026-10-14]`"""
         if not self.travel or mode not in ("train", "bus") or not origin or not destination or not depart_date:
             return None
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if not booking_enabled(scope.tenant_id):
+            return {"booking_disabled": True}
         from app.domains.travel_ops.components.booking.offers import search_transit
 
         wanted = ("adults", "kind")
@@ -1156,6 +1167,11 @@ class ReadToolbox:
         """숙소 비교(booking 모듈) — 마이리얼트립 목록 · 구글 호텔 목록 · 다른 곳 링크. 소스가 없으면 `None`. `[2026-10-10]`"""
         if not self.travel or not keyword or not check_in or not check_out:
             return None
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        # 숙소 일정 항목 대안 검토는 예약 신규 검색이 아니다. from_pack이 서버 문맥에서만 구분한다.
+        if not scope.itinerary_item and not booking_enabled(scope.tenant_id):
+            return {"booking_disabled": True}
         from app.domains.travel_ops.components.booking.offers import search_stays
 
         wanted = ("adults", "children", "domestic", "size", "max_price", "min_review_rating", "google_keyword")

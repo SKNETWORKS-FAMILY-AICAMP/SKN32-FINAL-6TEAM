@@ -60,6 +60,14 @@ class BookingHandoffTeam(TravelTeamBase):
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        from app.domains.travel_ops.components.settings_hook import booking_enabled
+
+        if task.capability != "booking.verify" and not booking_enabled(task.context.tenant_id):
+            return self._result(task, outcome="completed", confidence=1.0, next_action=NextAction.RESPOND,
+                                evidence=self._evidence(task, source_id="runtime:travel.booking.enabled",
+                                                        claim="예약 마스터 적용 상태(미설정·읽기 실패 포함 OFF)", value={"enabled": False}),
+                                decisions=[{"booking_disabled": True}],
+                                answer="새 예약 검색·등록·업체 인계 기능은 현재 꺼져 있습니다. 기존 예약 정보와 일정은 그대로 유지됩니다.")
 
         seen: set[str] = set()
         booking = self._read(task, "read.booking", {"case_id": str(task.case_id)}, seen)

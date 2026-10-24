@@ -16,6 +16,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _booking_feature_explicitly_enabled(monkeypatch):
+    """이 폴더는 켠 상태의 예약 기능 회귀다. 기본 OFF/전환은 상위 test_booking_master_*에서 별도 검증한다."""
+    monkeypatch.setattr("app.domains.travel_ops.components.settings_hook.booking_enabled", lambda tenant: True)
+
 HERE = Path(__file__).resolve().parent
 MARK = "booking_full"
 

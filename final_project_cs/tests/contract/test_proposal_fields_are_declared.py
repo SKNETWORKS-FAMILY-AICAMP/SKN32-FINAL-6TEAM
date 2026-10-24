@@ -101,6 +101,12 @@ def _cases() -> list[tuple[str, str]]:
 CASES = _cases()
 
 
+@pytest.fixture(autouse=True)
+def _booking_proposals_explicitly_enabled(monkeypatch):
+    """제안 필드 계약은 기능 ON에서 실제 제안을 만들어 검사한다. 기본 OFF는 별도 스위치 시험이 맡는다."""
+    monkeypatch.setattr("app.domains.travel_ops.components.settings_hook.booking_enabled", lambda tenant: True)
+
+
 def _run(team_id: str, capability: str):
     entry = build_registry(tools=FakeTools(), llm=object()).get(team_id)
     task = _task(team_id, capability, entry.manifest)

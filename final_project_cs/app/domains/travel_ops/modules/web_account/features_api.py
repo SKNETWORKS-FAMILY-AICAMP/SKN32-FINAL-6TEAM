@@ -25,7 +25,8 @@ def build_public_features_router() -> APIRouter:
     @router.get("/v1/web/features")
     def public_features():
         tenant = settings_module.get_settings().tenant_id
-        return {"guardian": settings_hook.guardian_enabled(tenant), "risk_panel": settings_hook.trip_risk_panel_enabled(tenant)}
+        return {"guardian": settings_hook.guardian_enabled(tenant), "risk_panel": settings_hook.trip_risk_panel_enabled(tenant),
+                "booking": settings_hook.booking_enabled(tenant)}
 
     return router
 

@@ -120,7 +120,12 @@ def test_the_tools_are_absent_without_sources():
     toolbox.travel = None
     assert toolbox.booking_search_flights(None, origin="ICN", destination="NRT", depart_date="2026-10-20") is None
     toolbox.travel = TravelSources()
-    found = toolbox.booking_search_stays(None, keyword="명동", check_in="2026-11-06", check_out="2026-11-09")
+    # 예약 ON 기능 시험도 실제 도구 계약의 서버 문맥을 넘긴다. None은 tenant/일정 문맥이 없는 옛 fixture였다.
+    from uuid import uuid4
+    from app.tools.read_tools import ToolContext
+
+    scope = ToolContext(tenant_id="booking-unit", customer_id=uuid4(), case_id=uuid4(), knowledge_scope=["lodging"])
+    found = toolbox.booking_search_stays(scope, keyword="명동", check_in="2026-11-06", check_out="2026-11-09")
     assert found["sources"] == {"myrealtrip": {"status": "failed"}, "google": {"status": "failed"}}
 
 
