@@ -61,7 +61,8 @@ def storage(monkeypatch):
         return saved["state"]
 
     def load(c, tenant, intake, revision):
-        assert conn.locked, "작업 토큰을 읽기 전에 같은 접수 행부터 잠가야 한다"
+        # `[2026-10-24 사용자 결정 — ST4F-731]` 읽기는 잠그지 않아도 된다 — 저장하려면 잠근 뒤 다시 읽어야 한다(아래 `store`)
+        saved["loaded_locked"] = conn.locked
         assert (tenant, intake) == ("tenant", "intake")
         if revision != 2:
             return None                                  # 검사 계산이 앞 판(`previous_revision`)을 읽는 것은 정상이다
@@ -70,6 +71,7 @@ def storage(monkeypatch):
 
     def store(c, tenant, intake, revision, payload):
         assert conn.locked
+        assert saved.get("loaded_locked"), "저장은 같은 접수 행을 잠근 뒤 다시 읽은 값으로만 한다"
         saved["payload"] = deepcopy(payload)
 
     monkeypatch.setattr(review_module, "intake_state", lock)
@@ -330,3 +332,18 @@ def test_force_revalidation_keeps_the_saved_scope_answer(storage, monkeypatch, r
     assert error is None
     assert payload["dining_questions"][0]["answer"] == question["answer"]
     assert payload["dining_questions"][0]["choices"][0]["item_id"] == "0-1"
+
+
+def test_reading_a_token_with_nothing_to_write_does_not_lock_the_intake(storage, monkeypatch):
+    # `[2026-10-24 사용자 결정 — ST4F-731]` 검사를 읽을 때마다 불리는 갱신은 실패로 적을 일이 있을 때만 접수 행을 잠근다
+    conn, saved = storage
+    payload = prepare(storage)
+    locked, lock = [], review_module.intake_state
+    monkeypatch.setattr(review_module, "intake_state", lambda *a: locked.append(a) or lock(*a))
+    refreshed = dining_review.refresh(conn, "tenant", "intake", 2, payload, now=NOW)
+    assert refreshed["dining_judge"]["status"] == "pending" and locked == []
+    expired = datetime.fromisoformat(payload["dining_judge"]["deadline_at"]) + timedelta(seconds=1)
+    assert dining_review.refresh(conn, "tenant", "intake", 2, payload, now=expired)["dining_judge"]["status"] == "failed"
+    assert len(locked) == 1
+    dining_review.refresh(conn, "tenant", "intake", 2, payload, now=expired)       # 이미 같은 이유로 실패로 적혔다 — 다시 적지 않는다
+    assert len(locked) == 1

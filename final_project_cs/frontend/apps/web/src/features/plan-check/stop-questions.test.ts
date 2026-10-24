@@ -144,6 +144,48 @@ describe("`[2026-10-20 이동 확인 C안]` the question asked when the way into
   it("offers nothing it was not given (no ways, no later start): 「직접 수정」 is left", () => {
     expect(arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], null, null, t).options).toEqual([]);
   });
+
+  // `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기 D1 · D3]` 그 일정만으로 못 늦추면 서버가 뒤 일정까지 늦춘 판 — 「고르면:」 아래에 곳마다 한 줄
+  it("offers the server's push (this stop later, the stops after it too) with one line per pushed stop", () => {
+    const edits = [{ source_id: "s", field: "items[1].starts_at", value: "12:05" }];
+    const stops = [{ id: exampleDone.items[1].id, title: "올리브영", from: "11:00", start: "12:05", end: "13:20" },
+      { id: "x2", title: "광장시장", from: "12:30", start: "13:40", end: "14:40" }];
+    const [option] = arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], null, { start: "12:05", end: "13:20", push: { stops, edits } }, t).options;
+    expect(option).toMatchObject({ key: "push", label: "「올리브영」 12:05 시작 · 뒤 일정도 함께 미루기", effect: "12:05–13:20 · 뒤 일정 1곳도 미뤄요",
+      lines: ["광장시장 12:30 → 13:40"], act: { type: "push", edits, changes: stops } });
+    expect(option.why).toBeUndefined();
+  });
+
+  it("lists three pushed stops and says how many more", () => {
+    const stops = [{ id: exampleDone.items[1].id, title: "올리브영", from: "11:00", start: "12:05", end: "13:20" },
+      ...["가", "나", "다", "라", "마"].map((title, at) => ({ id: `p${at}`, title, from: `1${at + 3}:00`, start: `1${at + 3}:30`, end: "" }))];
+    const [option] = arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], null, { start: "12:05", end: "13:20", push: { stops, edits: [] } }, t).options;
+    expect(option.lines).toEqual(["가 13:00 → 13:30", "나 14:00 → 14:30", "다 15:00 → 15:30", "외 2곳"]);
+    expect(option.effect).toBe("12:05–13:20 · 뒤 일정 5곳도 미뤄요");
+  });
+
+  it("greys a push the server refused, with its sentence (D4)", () => {
+    const why = "이동에 맞춰 시각을 옮기면 운영시간에 맞지 않아요. 다른 시각이나 장소를 골라 주세요.";
+    const [option] = arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], null, { start: "12:05", end: "13:20", refused: why }, t).options;
+    expect(option).toMatchObject({ label: "「올리브영」 12:05 시작 · 뒤 일정도 함께 미루기", refused: why, why, effect: "" });
+  });
+
+  it("says the later start is still being counted, under the ways (D5)", () => {
+    expect(arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], ways(way({})), null, t, true).pending).toBe("늦추는 시각을 계산하는 중…");
+    expect(arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], ways(way({})), null, t).pending).toBeNull();
+  });
+
+  // `[2026-10-25 사용자 결정 — D7]` 지금 수단 · 택시가 아닌 닿는 수단도 — 안 닿는 것은 보이지 않는다
+  it("offers another way that reaches in time before the taxi, and not one that does not", () => {
+    const list: MoveOptions = { revision: 1, currentMode: "bus", recommendedMode: "bus", options: [
+      way({ mode: "bus", label: "버스 140", minutes: 40, fareKrw: 1500, slackMin: -10, fits: false }),
+      way({ mode: "subway", label: "지하철 1호선", minutes: 20, fareKrw: 1550, fareIsEstimate: false, slackMin: 6, fits: true }),
+      way({ mode: "walk", label: "도보", minutes: 70, fareKrw: 0, slackMin: -40, fits: false }),
+      way({})] };
+    const ask = arrivalQuestion(exampleDone.items[1], move, exampleDone.items[0], list, null, t);
+    expect(ask.options.map((option) => option.label)).toEqual(["지하철로 바꾸기", "택시로 바꾸기"]);
+    expect(ask.options[0]).toMatchObject({ fact: "지하철 20분 · 6분 여유 · 1,550원", act: { type: "mode", moveId: "a-b", mode: "subway", name: "지하철" } });
+  });
 });
 
 describe("`[2026-10-21 사용자 결정 — P6]` the question of what a line of the plan means", () => {

@@ -123,7 +123,12 @@ def test_an_answer_during_loading_is_kept_and_applied_before_the_check_is_announ
     done = _answer(client, headers, intake_id, 1, "item")
     assert done["interpretation"] == {"applied": False, "pending": True, "revision": 1}       # ②저장만
     assert done["interpretations"][0]["answer"] == "item" and done["interpretations"][0]["applied"] == "reading"
-    pipeline._apply_interpretations(get_connection, reading["tenant"], intake_id, tour=Tour(), kakao=Kakao(), dining=None)
+    sent: list[tuple[str, dict]] = []
+    pipeline._apply_interpretations(get_connection, reading["tenant"], intake_id, tour=Tour(), kakao=Kakao(), dining=None,
+                                    push=lambda name, body: sent.append((name, body)))
+    # `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 답을 넣는 동안 「답 반영 0/1」 → 다시 검사까지 끝나면 「1/1」
+    assert sent == [("progress", {"phase": "answers", "done": 0, "total": 1, "current": None}),
+                    ("progress", {"phase": "answers", "done": 1, "total": 1, "current": None})]
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("UPDATE trip_intakes SET stage='review' WHERE intake_id=%s", (intake_id,))
     view = _view(client, headers, intake_id)

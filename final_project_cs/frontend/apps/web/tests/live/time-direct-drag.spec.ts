@@ -69,9 +69,12 @@ test("폼이 열린 뒤에는 한 줄의 아이콘(되돌리기 · 취소 · 적
   await timeButton(page, "경복궁 관람").click();
   const again = page.getByRole("form", { name: "경복궁 관람 시간 고치기" });
   await expect(again.getByRole("button", { name: "처음 시간으로 되돌리기" })).toBeVisible();
-  const [cancel, apply, undo] = await Promise.all(["취소", "적용", "처음 시간으로 되돌리기"].map((name) => again.getByRole("button", { name }).boundingBox()));
-  expect(Math.abs(cancel!.y - apply!.y)).toBeLessThan(2);                                          // 한 줄이다
-  expect(Math.abs(undo!.y - apply!.y)).toBeLessThan(2);
+  // ★`[2026-10-25]` 세 단추를 **한 번에(같은 그림에서)** 잰다 — 다시 연 칸은 휠 영역이 몇 px 더 자라며 아래 줄이 내려가서, 단추를 하나씩 재면 재는 사이에 줄이 움직여
+  //   y 가 달랐다(CI web live 4/4 에서 17.5px, 로컬 10번 중 2번 — 칸이 한 줄인지와 상관없는 흔들림).
+  const [cancel, apply, undo] = await again.evaluate((form) => ["취소", "적용", "처음 시간으로 되돌리기"].map((name) =>
+    form.querySelector(`button[aria-label="${name}"]`)!.getBoundingClientRect().top));
+  expect(Math.abs(cancel - apply)).toBeLessThan(2);                                                // 한 줄이다
+  expect(Math.abs(undo - apply)).toBeLessThan(2);
 });
 
 test("고정한 일정의 시간은 잡아도 안 움직이고 이유만 말한다", async ({ page, request }) => {

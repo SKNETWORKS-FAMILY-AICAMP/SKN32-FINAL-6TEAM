@@ -16,7 +16,7 @@ import { IdleWarning, ReadingFooter } from "@/features/survey-questions/reading-
 import { ReadingQuestions } from "@/features/survey-questions/reading-questions";
 import { useQuestionFlow } from "@/features/survey-questions/use-question-flow";
 import { assumedYear, candidatesOf, readingOf, resultOf, sendingOf, tripIssuesOf } from "@/features/plan-check/from-intake";
-import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-review";
+import { reviewResultOf, serverProgressOf, streamingViewOf } from "@/features/plan-check/from-review";
 import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
@@ -161,7 +161,12 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   //   come from it and the changes (lock, recommend, search, photos, re-check) go through its calls (`useServerReview`).
   //   Without one (`review: null` — the check failed — or an older server), it says only what the read values say.
   const apply = useCallback((next: ReviewedIntakeView) => { queryClient.setQueryData(["intake", intakeId, language], next); }, [queryClient, intakeId, language]);
-  const server = useServerReview({ intakeId, view: query.data, language, apply, reread });
+  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
+  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
+  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
+  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
+  // `[2026-10-24 ST4F-731]` While the reading screen is up (`flow.shown` — its questions and 「계획을 다 읽었어요」) the 「전체 자동 추천」 dry run waits.
+  const server = useServerReview({ intakeId, view: query.data, language, apply, reread, waitWarmUp: flow.shown });
   // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen also draws that plan; every call still goes with the real one.
   // ★`[2026-10-04 사용자 지시]` The two are held side by side — the plan as it is (`reviewed`) and the one the server proposed (`previewed`) — so the list can scroll from one into the other.
   const shown = query.data;
@@ -173,8 +178,8 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     if (!query.data) return null;
     if (query.data.status === "reading") return streamingViewOf(query.data, stream, server.infos);
     const base = reviewed ?? readingOf(query.data);
-    const last = stream.progress;
-    return last ? { ...base, serverProgress: { phase: last.phase, done: last.done, total: last.total, title: last.current?.title ?? null } } : base;
+    const served = serverProgressOf(stream);
+    return served ? { ...base, ...served } : base;
   }, [query.data, stream, reviewed, server.infos]);
   const result = useMemo(() => {
     if (!query.data || query.data.status === "reading" || query.data.status === "fatal") return null;
@@ -185,10 +190,6 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const routeShapes = useIntakeRoutes(intakeId, query.data?.revision ?? 0, language, Boolean(reviewed));
   // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));
-  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
-  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
-  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
-  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
   const readingExtras = flow.shown ? { top: <><ReadingQuestions flow={flow} />{flow.phase === "idle" && <IdleWarning flow={flow} />}</>, footer: <ReadingFooter flow={flow} />, onActivity: flow.touch } : undefined;
   const [readingSeen, setReadingSeen] = useState(arriving);
   const [readingDrawn, setReadingDrawn] = useState(false);
@@ -233,11 +234,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
     const lostNote: BusToast | null = view.status === "reading" && follow.follow === "lost" ? { text: t("서버와 연결이 끊겼어요", "Lost the connection to the server"), sub: t("다시 연결하는 중이에요…", "Reconnecting…") } : null;
     // `[2026-10-21 사용자 지적]` Slow and quiet are not said while the check is stopped at a question (`slowNotice`); a lost connection still is.
+    // ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` No 「늦어지고 있어요」 toast while the server sends its counts: the line under the bar says what it is at and,
+    //   past 8 s on one step, for how long (「n초째」). It stays for an older server that sends none. The silence notices (no news at all) stay as they are.
     const slowNote: BusToast | null = view.status !== "reading" || lostNote ? null
-      : follow.slow ? { text: t("서버 응답이 늦어지고 있어요", "The server is slow to answer"), sub: stream.progress?.current?.title
-        // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
-        ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
-        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.") }
+      : follow.slow && !stream.progress ? { text: t("서버 응답이 늦어지고 있어요", "The server is slow to answer"),
+        sub: t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.") }
       : silence?.stage === 60 ? { text: t("1분이 넘게 서버 소식이 없어요", "No news from the server for over a minute"), sub: t("이 화면에서 더 기다리거나, 뒤로 가서 잠시 뒤에 다시 보내 주세요.", "Keep waiting here, or go back and send it again shortly."), note: t("60초 이상 새 진행 소식이 없어요.", "No new progress for at least 60 seconds.") }
       : silence?.stage === 30 ? { text: t("서버 소식이 한동안 없어요", "No news from the server for a while"), sub: t("조금 더 기다리거나, 뒤로 가서 다시 보낼 수 있어요.", "Wait a little longer, or go back and send it again."), note: t("30초 이상 새 진행 소식이 없어요.", "No new progress for at least 30 seconds.") }
       : null;

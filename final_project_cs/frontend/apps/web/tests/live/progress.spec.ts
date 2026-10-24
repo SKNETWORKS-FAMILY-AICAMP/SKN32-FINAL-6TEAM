@@ -102,12 +102,16 @@ test("접수 읽기: 서버의 진행 스트림을 따라 다시 읽고(1.5초 �
   expect(streams[0].accept).toContain("text/event-stream");
 });
 
-test("접수 읽기: 서버의 진행 알림(progress)이 오면 머리글 막대에 「3/14 · 광장시장 이동 확인 중」처럼 서버가 말한 대로 보인다", async ({ page, request }) => {
+test("접수 읽기: 서버의 진행 알림(progress)이 오면 머리글 막대에 「날씨·도로 1/3곳 · 올리브영 확인 중」처럼 서버가 말한 단계 · 수 · 지금 보는 일정이 보인다", async ({ page, request }) => {
+  // ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 서버 단계마다 한 칸 — 운영시간 · 이동 뒤의 위험 점검(`risks`)도 칸 하나로 보인다
   const server = mockServer(request);
   await server.scenario({ readingPolls: 3, board: "rich", review: "on" });             // the server's own check on (it streams what it checked and how far); three stops and two legs: the check stays on screen long enough to read
   await upload(page);
-  // the stub ends with the leg phase: "<done>/<total> · <name of the stop it leads to> 이동 확인 중"
-  await expect(page.getByRole("progressbar", { name: "계획 확인 진행" })).toContainText(/\d+\/\d+ · .+ 이동 확인 중/);
+  // the stub stops at the weather check of its second stop: "<step> <done>/<total><unit>" and "<what it looks at> 확인 중"
+  const bar = page.getByRole("progressbar", { name: "계획 확인 진행" });
+  await expect(bar).toContainText(/날씨·도로\s*1\/3곳/);
+  await expect(bar).toContainText("올리브영 확인 중");
+  await expect(bar).toHaveAttribute("aria-valuetext", /^날씨·도로 · \d+% · 1\/3곳 · 올리브영 확인 중/);
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
 });
 
