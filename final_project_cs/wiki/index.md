@@ -111,3 +111,5 @@ domain: travel
 2026-10-18: develop 웹앱 보존 병합의 로컬 검증을 완료했다. 게시·운영 상태와 분리한 [검증 기록](records/reports/2026-10-18_develop-web-merge-review.md).
 
 2026-10-18: develop CI 실패 원인을 보완하고 독립 전체 검증을 완료했다. 게시 후 CI·운영 확인은 별도다. [기록](records/reports/2026-10-18_develop-ci-repair.md).
+
+2026-10-25 — 잔여 비DB3후보 최소 통합·원본 독립probe RED→GREEN. 회귀327/331, 소켓차단4를 유지하며 DB/서비스/운영은 미변경. [최종 기록](records/reports/2026-10-25_remaining-non-db-integration.md).

@@ -208,3 +208,5 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 - 2026-10-18: 재난문자 지역·내용 v2의 양쪽 매니저·운영 반영·실제 문제 카드 확인 완료. [한 일과 확인 범위](2026-10-18_receipt-message-relevance-live.md).
 
 - 2026-10-23 Dining 커밋·푸시 준비: 원격 `7284c42ad` 위 통합, Python 204/204·웹 79/79 통과. [최신 통합 검증](../../final_project_cs/wiki/records/reports/2026-10-23_dining-publish-validation.md).
+
+2026-10-25 — [잔여 비DB3후보 통합](2026-10-25_remaining-non-db-integration.md): 새격리본만 수정, F1/F2수정·실제현재baseline exact4 대조. 통합3/3, 회귀327/331·소켓차단4, 독립수정판검토/운영미검증.

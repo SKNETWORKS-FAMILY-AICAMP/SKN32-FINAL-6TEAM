@@ -26,6 +26,7 @@ import base64
 import contextvars
 import json
 import logging
+import queue
 import threading
 import time
 from dataclasses import dataclass, field
@@ -130,6 +131,22 @@ def breaker_for(name: str, *, threshold: int, open_seconds: float, clock: Callab
 _stats_lock = threading.Lock()
 _counters: dict[str, int] = {}
 _last_switch: dict[str, Any] = {}
+_inflight: dict[tuple[str, str], int] = {}
+
+
+def _local_slot(backend, *, defer_busy=False):
+    key = (str(getattr(backend.chat, "base_url", backend.name)), str(getattr(backend.chat, "model", "")))
+    with _stats_lock:
+        if defer_busy and backend.max_inflight > 0 and _inflight.get(key, 0) >= backend.max_inflight:
+            return None
+        _inflight[key] = _inflight.get(key, 0) + 1
+    return key
+
+
+def _release_slot(key):
+    if key is not None:
+        with _stats_lock:
+            _inflight[key] -= 1
 
 
 def _count(key: str) -> None:
@@ -143,7 +160,8 @@ def snapshot() -> dict[str, Any]:
     with _breakers_lock:
         states = {f"{k[0]}": b.snapshot() for k, b in _breakers.items()}
     with _stats_lock:
-        return {"counters": dict(_counters), "last_switch": dict(_last_switch), "breakers": states}
+        return {"counters": dict(_counters), "last_switch": dict(_last_switch), "breakers": states,
+                "inflight": {f"{url}|{model}": n for (url, model), n in _inflight.items()}}
 
 
 def reset_state() -> None:
@@ -486,6 +504,7 @@ class _Backend:
     timeout: float = 6.0
     #: 이 경로가 호출 하나에 최대로 쓰는 시간(초) — 다시 시도 · 넘김이 전체 시간 안에 드는지 가늠할 때 쓴다
     budget: Callable[[], bool] | None = field(default=None, repr=False)
+    max_inflight: int = 0
 
 
 class FailoverChat:
@@ -493,11 +512,12 @@ class FailoverChat:
 
     def __init__(self, backends: list[_Backend], *, total_seconds: float = 15.0, vision: bool = False,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic,
-                 backoff_seconds: float = 0.4, warm_chat: Any = None) -> None:
+                 backoff_seconds: float = 0.4, warm_chat: Any = None, hedge_seconds: float = 0.0) -> None:
         if not backends:
             raise ValueError("경로가 하나는 있어야 한다")
         self._backends, self.total_seconds, self.vision = backends, float(total_seconds), bool(vision)
         self._sleep, self._clock, self._backoff = sleep, clock, float(backoff_seconds)
+        self.hedge_seconds = max(0.0, float(hedge_seconds))
         first = next((b.chat for b in backends if not b.is_api), backends[0].chat)
         self._primary = first
         #: ★`[2026-10-13]` 예열에 쓸 Ollama — 고객 응답을 기다리는 짧은 시간(`llm_failover_primary_timeout_seconds`)이 아니라
@@ -515,49 +535,176 @@ class FailoverChat:
     def _run(self, op: str, call: Callable[[Any, bool], Any], *, image: bool = False) -> Any:
         started = self._clock()
         reasons: list[tuple[str, str]] = []
-        for index, backend in enumerate(self._backends):
+        plain = image or op.endswith("_stream")
+        pending = [(i, b, False) for i, b in enumerate(self._backends)]
+        consumed: set[int] = set()
+        for index, backend, deferred in pending:
+            if index in consumed:
+                continue
             if backend.is_api and image and not self.vision:
                 reasons.append((backend.name, "vision_off"))
                 _count(f"skip:{backend.name}:vision_off")
                 continue
-            if not backend.breaker.allow():
-                reasons.append((backend.name, "circuit_open"))
-                _count(f"skip:{backend.name}:circuit_open")
+            slot = None
+            if not backend.is_api and not plain:
+                slot = _local_slot(backend, defer_busy=not deferred and index < len(self._backends) - 1)
+                if slot is None:
+                    reasons.append((backend.name, "busy"))
+                    _count(f"skip:{backend.name}:busy")
+                    pending.append((index, backend, True))
+                    continue
+            api_index = next((i for i in range(index + 1, len(self._backends))
+                              if self._backends[i].is_api and i not in consumed), None)
+            if not plain and not backend.is_api and self.hedge_seconds > 0 and api_index is not None:
+                winner, result = self._hedged(backend, index, api_index, call, started, slot, reasons, consumed)
+                if winner is not None:
+                    self._record(op, winner, reasons, self._clock() - started)
+                    return result
                 continue
+            if backend.is_api:
+                consumed.add(index)
+            try:
+                good, result = self._attempt(backend, call, started, index)
+            finally:
+                _release_slot(slot)
+            if good:
+                self._record(op, backend, reasons, self._clock() - started)
+                return result
+            reasons.append((backend.name, result))
+        _path_var.set({"path": None, "backend": None, "op": op, "reasons": reasons, "seconds": round(self._clock() - started, 2)})
+        raise OllamaError("모든 모델 경로가 실패했다: " + ", ".join(f"{b}={r}" for b, r in reasons))
+
+    def _permit(self, backend):
+        if not backend.breaker.allow():
+            _count(f"skip:{backend.name}:circuit_open")
+            return "circuit_open"
+        try:
             if backend.is_api and backend.budget is not None and not backend.budget():
                 backend.breaker.release()
-                reasons.append((backend.name, "budget_exhausted"))
                 _count(f"skip:{backend.name}:budget_exhausted")
-                log.warning("llm_failover op=%s backend=%s skipped: call budget exhausted", op, backend.name)
-                continue
-            later_api = any(b.is_api for b in self._backends[index + 1:])
+                log.warning("llm_failover backend=%s skipped: call budget exhausted", backend.name)
+                return "budget_exhausted"
+        except BaseException:
+            backend.breaker.release()
+            raise
+        return None
+
+    def _hedged(self, backend, index, api_index, call, started, slot, reasons, consumed):
+        """Only the caller reserves API budget and records a winner; workers settle health and slots."""
+        results = queue.Queue()
+        settled = threading.Event()
+
+        def start(b, i, *, local_slot=None, permitted=False):
+            ctx = contextvars.copy_context()
+            def work():
+                try:
+                    outcome = self._attempt(b, call, started, i, permitted=permitted, cancelled=settled)
+                except BaseException as exc:
+                    outcome = exc
+                finally:
+                    _release_slot(local_slot)
+                results.put((b, outcome))
+            try:
+                threading.Thread(target=ctx.run, args=(work,), daemon=True, name="llm-overflow").start()
+            except BaseException:
+                _release_slot(local_slot)
+                if permitted:
+                    b.breaker.release()
+                raise
+
+        def unpack(entry):
+            b, outcome = entry
+            if isinstance(outcome, BaseException):
+                settled.set()
+                raise outcome
+            good, value = outcome
+            if good:
+                settled.set()
+            else:
+                reasons.append((b.name, value))
+            return b if good else None, value
+
+        try:
+            start(backend, index, local_slot=slot)
+            try:
+                entry = results.get(timeout=self.hedge_seconds)
+            except queue.Empty:
+                reasons.append((backend.name, "slow"))
+                # A local result may arrive between the timeout and admission.
+                try:
+                    entry = results.get_nowait()
+                except queue.Empty:
+                    pass
+                else:
+                    return unpack(entry)
+                api = self._backends[api_index]
+                # Request-scoped admission stays on the caller, and can block.
+                denied = self._permit(api)
+                consumed.add(api_index)
+                if denied is not None:
+                    reasons.append((api.name, denied))
+                    return unpack(results.get())
+                try:
+                    entry = results.get_nowait()
+                except queue.Empty:
+                    entry = None
+                if entry is not None:
+                    try:
+                        first = unpack(entry)
+                    except BaseException:
+                        api.breaker.release()
+                        raise
+                    if first[0] is not None:
+                        api.breaker.release()
+                        return first
+                    start(api, api_index, permitted=True)
+                    return unpack(results.get())
+                start(api, api_index, permitted=True)
+                first = unpack(results.get())
+                if first[0] is not None:
+                    return first
+                return unpack(results.get())
+            return unpack(entry)
+        finally:
+            # Every caller exit closes the request, including admission errors.
+            settled.set()
+
+    def _attempt(self, backend, call, started, index, *, permitted=False, cancelled=None):
+        if not permitted:
+            denied = self._permit(backend)
+            if denied is not None:
+                return False, denied
+        try:
             attempt = 0
             while True:
+                if cancelled is not None and cancelled.is_set():
+                    backend.breaker.release()
+                    return False, "cancelled"
                 try:
                     result = call(backend.chat, backend.is_api)
                 except OllamaError as exc:
                     failure = classify(exc)
                     _count(f"fail:{backend.name}:{failure.reason}")
                     elapsed = self._clock() - started
-                    tail = max((b.timeout for b in self._backends[index + 1:]), default=0.0) if later_api else 0.0
-                    if failure.retryable and attempt == 0 and elapsed + self._backoff + backend.timeout + tail <= self.total_seconds:
+                    later = self._backends[index + 1:]
+                    tail = max((b.timeout for b in later), default=0.0) if any(b.is_api for b in later) else 0.0
+                    if (failure.retryable and attempt == 0
+                            and (cancelled is None or not cancelled.is_set())
+                            and elapsed + self._backoff + backend.timeout + tail <= self.total_seconds):
                         attempt += 1
                         self._sleep(self._backoff)
-                        continue
+                        if cancelled is None or not cancelled.is_set():
+                            continue
                     if failure.counts:
                         backend.breaker.failure()
                     else:
-                        backend.breaker.success()            # 서버는 답했다 — 모양만 틀렸다
-                    reasons.append((backend.name, failure.reason))
-                    break
-                except BaseException:                                # 우리가 모르는 예외 — 시험(반쪽) 자리가 잠겨 서버가 영영 안 불리지 않게 돌려주고 그대로 올린다
-                    backend.breaker.release()
-                    raise
+                        backend.breaker.success()
+                    return False, failure.reason
                 backend.breaker.success()
-                self._record(op, backend, reasons, self._clock() - started)
-                return result
-        _path_var.set({"path": None, "backend": None, "op": op, "reasons": reasons, "seconds": round(self._clock() - started, 2)})
-        raise OllamaError("모든 모델 경로가 실패했다: " + ", ".join(f"{b}={r}" for b, r in reasons))
+                return True, result
+        except BaseException:
+            backend.breaker.release()
+            raise
 
     def _record(self, op: str, backend: _Backend, reasons: list[tuple[str, str]], seconds: float) -> None:
         path = "api" if backend.is_api else "local"
@@ -684,7 +831,7 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
                           transport=primary._post if (number == 0 and primary._injected) else None)
         name = "ollama" if number == 0 else f"ollama{number + 1}"
         backends.append(_Backend(name, chat, breaker_for(f"{name}@{url}", threshold=threshold, open_seconds=open_seconds, clock=clock),
-                                 timeout=primary_timeout))
+                                 timeout=primary_timeout, max_inflight=max(0, int(getattr(settings, "llm_overflow_max_inflight", 0)))))
     api_timeout = float(settings.llm_failover_api_timeout_seconds)
     model = (getattr(settings, "llm_failover_model", "") or settings.llm_model).strip()
     gate = budget or (_budget_provider(settings) if _budget_provider is not None else None)
@@ -703,7 +850,8 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
                                              open_seconds=open_seconds, clock=clock),
                                  timeout=float(local_fallback.timeout)))
     return FailoverChat(backends, total_seconds=float(settings.llm_failover_total_seconds), vision=bool(settings.llm_failover_vision),
-                        sleep=sleep, clock=clock, warm_chat=primary)
+                        sleep=sleep, clock=clock, warm_chat=primary,
+                        hedge_seconds=float(getattr(settings, "llm_overflow_hedge_seconds", 0.0)))
 
 
 # ─────────────────────────── 규정 검색의 질문 임베딩 ───────────────────────────

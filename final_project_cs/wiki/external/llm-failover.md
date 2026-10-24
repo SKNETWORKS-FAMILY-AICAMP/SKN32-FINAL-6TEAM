@@ -110,3 +110,13 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 ## 운영 반영 확인 — 2026-10-08
 
 GPT-6 Luna 자동 전환을 운영 환경에 반영했고 실제 Ollama 연결 실패를 거친 응답 3/3이 API로 성공했다. [작업 리포트](../records/reports/2026-10-08_2245_Luna_자동전환_운영반영.md).
+
+## 비스트리밍 부하 동원 — 2026-10-24 격리 후보
+
+2026-10-15 사용자 지시의 부하 동원을 최신 비스트리밍 호출에만 통합합니다. `llm_overflow_max_inflight` · `llm_overflow_hedge_seconds` 기본 0은 기존 직렬 처리 그대로입니다. 양수이면 바쁜 로컬은 마지막에 대기하고, 느린 로컬과 API는 첫 검증 통과 응답을 씁니다. 스트리밍·이미지·예열은 기존 순서와 제한을 유지합니다. API 예산은 호출 스레드에서 예약하며 늦은 응답은 호출자 결과를 바꾸지 않습니다. 운영 설정 변경·실모델 시험·배포는 하지 않았습니다. 독립 검토 대기. [작업 기록](../records/reports/2026-10-24_remaining-shared-contract-review.md).
+
+## 2026-10-25 독립 검토 결함 수정 계약
+
+비스트리밍 hedge의 caller 예산 예약 전후에 완료 local 결과를 다시 확인합니다. 예약 중 local이 완료되면 유료 worker를 시작하지 않고 불필요한 breaker permit을 반환합니다. caller의 모든 종료(예산 예외·worker 시작 실패 포함)는 settled로 표시하여 loser의 새 재시도를 막습니다. 이미 실행 중인 HTTP/SDK를 물리 취소한다는 보장은 없습니다.
+
+boolean budget callback에는 refund가 없어 예약 도중 local이 끝나면 유료 호출0이어도 예약1이 남을 수 있습니다. 이번 최소 수정은 예약 API나 fail-open/attempt accounting을 바꾸지 않으며 엄격 과금 상한을 보장하지 않습니다. max_inflight는 hard cap이 아니라 busy 우회 임계치입니다. 기본0·stream/image/warm 제외는 유지합니다. [최종 검증 기록](../records/reports/2026-10-25_remaining-non-db-integration.md).

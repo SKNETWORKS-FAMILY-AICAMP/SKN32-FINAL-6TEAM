@@ -29,6 +29,216 @@ KEY = "sk-test-NOT-A-REAL-KEY-0123456789"
 URL = "http://ollama.test:11434"
 
 
+def test_overflow_settings_default_off_and_reach_wrapper():
+    from app.core.settings import Settings
+    defaults = Settings(_env_file=None)
+    assert getattr(defaults, "llm_overflow_max_inflight", None) == 0
+    assert getattr(defaults, "llm_overflow_hedge_seconds", None) == 0.0
+    chat, _ = build(Server(ok()), llm_overflow_max_inflight=2, llm_overflow_hedge_seconds=0.05)
+    assert chat.hedge_seconds == 0.05
+    assert chat._backends[0].max_inflight == 2
+
+
+class GatedOverflow:
+    def __init__(self):
+        import threading
+        self.calls = 0
+        self.entered, self.release = threading.Event(), threading.Event()
+
+    def __call__(self, url, payload):
+        self.entered.set()
+        assert self.release.wait(2), "test did not release local fake"
+        self.calls += 1
+        return httpx.Response(200, json={"message": {"content": '{"action":"answer_fact"}'}},
+                              request=httpx.Request("POST", url))
+
+
+def test_busy_overflow_bypasses_local_across_wrappers_and_reclaims_slot():
+    import threading
+    local, api = GatedOverflow(), Api()
+    chat, _ = build(local, api, llm_overflow_max_inflight=1)
+    first = threading.Thread(target=lambda: chat.json("s", "first"))
+    first.start()
+    try:
+        assert local.entered.wait(1)
+        other = lf.wrap_from_settings(OllamaChat(base_url=URL, model="gemma4:12b", transport=local),
+                                     settings(llm_overflow_max_inflight=1), api_client=api, budget=lambda: True)
+        result, done = [], threading.Event()
+        def second_call():
+            try:
+                result.append(other.json("s", "second"))
+            finally:
+                done.set()
+        second = threading.Thread(target=second_call)
+        second.start()
+        assert done.wait(0.5), "busy request queued on the local backend"
+        assert result == [{"action": "other"}]
+        assert len(api.calls) == 1
+    finally:
+        local.release.set()
+        first.join(2)
+        if 'second' in locals():
+            second.join(2)
+    assert not first.is_alive()
+    assert all(n == 0 for n in lf.snapshot()["inflight"].values())
+
+
+def test_hedge_overflow_returns_api_while_local_is_still_running():
+    import time
+    local, api = GatedOverflow(), Api()
+    chat, _ = build(local, api, llm_overflow_hedge_seconds=0.01)
+    try:
+        assert chat.json("s", "서울 여행") == {"action": "other"}
+        assert local.entered.is_set() and not local.release.is_set()
+        path = lf.current_path()
+        assert path["path"] == "api" and ("ollama", "slow") in path["reasons"]
+        assert sum(lf.snapshot()["inflight"].values()) == 1
+    finally:
+        local.release.set()
+        until = time.monotonic() + 2
+        while any(lf.snapshot()["inflight"].values()) and time.monotonic() < until:
+            time.sleep(0.005)
+    assert all(n == 0 for n in lf.snapshot()["inflight"].values())
+    assert lf.current_path() == path
+
+
+def test_busy_deferred_local_does_not_reserve_api_budget_twice():
+    import threading
+    import time
+    local = GatedOverflow()
+    chat, _ = build(local, llm_overflow_max_inflight=1)
+    first = threading.Thread(target=lambda: chat.json("s", "first"))
+    first.start()
+    calls = []
+    def deny():
+        calls.append(1)
+        return False
+    other = lf.wrap_from_settings(OllamaChat(base_url=URL, model="gemma4:12b", transport=local),
+                                 settings(llm_overflow_max_inflight=1, llm_overflow_hedge_seconds=0.01),
+                                 api_client=Api(), budget=deny)
+    def release():
+        time.sleep(0.1)
+        local.release.set()
+    releaser = threading.Thread(target=release)
+    try:
+        assert local.entered.wait(1)
+        releaser.start()
+        assert other.json("s", "second") == {"action": "answer_fact"}
+        assert len(calls) == 1
+    finally:
+        local.release.set()
+        first.join(2)
+        if releaser.ident is not None:
+            releaser.join(2)
+
+
+def test_losing_api_failure_updates_health_without_retrying_after_local_wins():
+    import threading
+    import time
+    class LateApi(Api):
+        def __init__(self):
+            super().__init__()
+            self.entered, self.release, self.exited = threading.Event(), threading.Event(), threading.Event()
+        def _create(self, **kwargs):
+            self.calls.append(kwargs)
+            self.entered.set()
+            assert self.release.wait(2)
+            self.exited.set()
+            raise status_error(openai.InternalServerError, 503)
+    api = LateApi()
+    def transport(url, payload):
+        assert api.entered.wait(1)
+        return Server(ok())(url, payload)
+    chat, _ = build(transport, api, llm_overflow_hedge_seconds=0.01)
+    try:
+        assert chat.json("s", "서울 여행") == {"action": "answer_fact"}
+        before = lf.current_path()
+    finally:
+        api.release.set()
+    until = time.monotonic() + 2
+    while lf.snapshot()["breakers"]["openai"]["failures"] == 0 and time.monotonic() < until:
+        time.sleep(0.005)
+    assert lf.snapshot()["breakers"]["openai"]["failures"] == 1
+    assert len(api.calls) == 1
+    assert lf.current_path() == before
+
+
+def test_fast_overflow_never_reserves_or_calls_api():
+    api, gates = Api(), []
+    chat, _ = build(Server(ok()), api, llm_overflow_hedge_seconds=0.2,
+                    budget=lambda: gates.append(1) or True)
+    assert chat.json("s", "서울 여행") == {"action": "answer_fact"}
+    assert api.calls == [] and gates == []
+
+
+def test_hedge_budget_runs_on_caller_and_workers_copy_context():
+    import contextvars
+    import threading
+    marker = contextvars.ContextVar("overflow_test", default="absent")
+    token = marker.set("request-a")
+    caller, seen = threading.get_ident(), []
+    local = GatedOverflow()
+    def transport(url, payload):
+        seen.append(marker.get())
+        return local(url, payload)
+    def deny():
+        assert threading.get_ident() == caller
+        local.release.set()
+        return False
+    chat, _ = build(transport, budget=deny, llm_overflow_hedge_seconds=0.01)
+    try:
+        assert chat.json("s", "서울 여행") == {"action": "answer_fact"}
+        assert seen == ["request-a"] and marker.get() == "request-a"
+        assert ("openai", "budget_exhausted") in lf.current_path()["reasons"]
+    finally:
+        local.release.set()
+        marker.reset(token)
+
+
+def test_hedge_content_validator_rejects_fast_bad_api_and_waits_for_local():
+    local = GatedOverflow()
+    class BadApi(Api):
+        def _create(self, **kwargs):
+            answer = super()._create(**kwargs)
+            local.release.set()
+            return answer
+    api = BadApi('{"action":"bad"}')
+    chat, _ = build(local, api, llm_overflow_hedge_seconds=0.01)
+    def validate(value):
+        if value["action"] != "answer_fact":
+            raise ValueError("not supported")
+    try:
+        result = chat.structured_validated("s", "서울 여행", {"type":"object", "properties":{"action":{"type":"string"}}}, validator=validate)
+        assert result == {"action":"answer_fact"}
+        assert lf.current_path()["path"] == "local"
+        assert len(api.calls) == 1
+    finally:
+        local.release.set()
+
+
+def test_overflow_unknown_exception_reclaims_inflight():
+    def explode(url, payload):
+        raise RuntimeError("synthetic transport bug")
+    chat, _ = build(explode, llm_overflow_max_inflight=1)
+    with pytest.raises(RuntimeError, match="synthetic transport"):
+        chat.json("s", "서울 여행")
+    assert all(n == 0 for n in lf.snapshot()["inflight"].values())
+
+
+def test_overflow_settings_do_not_hedge_streaming():
+    class Stream:
+        model = "unit"
+        def loaded(self, **kwargs):
+            return True
+        def structured_stream(self, *args, **kwargs):
+            return {"action":"answer_fact"}
+    local = lf._Backend("unit-local", Stream(), lf.CircuitBreaker("unit-local", threshold=3, open_seconds=60), max_inflight=1)
+    api = lf._Backend("unit-api", None, lf.CircuitBreaker("unit-api", threshold=3, open_seconds=60), is_api=True,
+                      budget=lambda: pytest.fail("stream must not hedge"))
+    chat = lf.FailoverChat([local, api], hedge_seconds=0.001)
+    assert chat.structured_stream("s", "서울 여행", {}) == {"action":"answer_fact"}
+
+
 class Clock:
     def __init__(self) -> None:
         self.now = 1000.0

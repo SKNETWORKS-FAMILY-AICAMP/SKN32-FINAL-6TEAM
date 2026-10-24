@@ -188,6 +188,9 @@ class Settings(BaseSettings):
     llm_failover_failures: int = 3
     #:  서킷이 열려 있는 시간(초) — 지나면 한 번만 시험해서(반쯤 열림) 성공하면 닫는다
     llm_failover_open_seconds: float = 60.0
+    #: 비스트리밍 부하 동원만. 0은 꺼짐; 스트리밍·이미지·예열은 기존 동작 유지.
+    llm_overflow_max_inflight: int = 0
+    llm_overflow_hedge_seconds: float = 0.0
     #:  API 로 넘긴 호출의 일 · 월 상한(`external_call_budget` 의 `openai_failover` 줄). 넘으면 더 안 부르고 실패로 올린다 — 비용 폭주 방어
     llm_failover_daily_cap: int = 2000
     llm_failover_monthly_cap: int = 30000
