@@ -128,3 +128,6 @@ domain: travel
 ## 현재 누적 릴리스 준비 — 2026-10-25
 
 정확 history-preserving 비DB 누적 후보 준비 완료 / 릴리스 HOLD. 원문3실패·bind4차단·strict-budget 미수락 유지; admin/예약OFF는 wiki3경로 clean 병합 가능성만 확인(미적용). [최종 현황](records/reports/2026-10-25_remaining-non-db-release-preparation.md).
+
+
+2026-10-25 — 관리자 예약 OFF/로컬 실행기 누적 격리 통합, 실제 실행·OFF 저장은 DB 대기. [최신 인계](records/reports/2026-10-25_final-admin-non-db-integration.md).
