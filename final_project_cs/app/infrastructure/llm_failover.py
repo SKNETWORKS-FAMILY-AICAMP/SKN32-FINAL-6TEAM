@@ -593,17 +593,30 @@ class FailoverChat:
         """Only the caller reserves API budget and records a winner; workers settle health and slots."""
         results = queue.Queue()
         settled = threading.Event()
+        dispatch_lock = threading.Lock()
+
+        def claim_dispatch():
+            # Linearization point: publication/closure first cancels this attempt;
+            # a claim first commits it. Never hold this request lock over I/O.
+            with dispatch_lock:
+                return not settled.is_set()
 
         def start(b, i, *, local_slot=None, permitted=False):
             ctx = contextvars.copy_context()
             def work():
                 try:
-                    outcome = self._attempt(b, call, started, i, permitted=permitted, cancelled=settled)
+                    outcome = self._attempt(b, call, started, i, permitted=permitted, cancelled=settled,
+                                            dispatch_claim=claim_dispatch)
                 except BaseException as exc:
                     outcome = exc
                 finally:
                     _release_slot(local_slot)
-                results.put((b, outcome))
+                with dispatch_lock:
+                    # Publish validated success before another worker can claim
+                    # its first call/retry, independent of caller queue consumption.
+                    if not isinstance(outcome, BaseException) and outcome[0]:
+                        settled.set()
+                    results.put((b, outcome))
             try:
                 threading.Thread(target=ctx.run, args=(work,), daemon=True, name="llm-overflow").start()
             except BaseException:
@@ -615,12 +628,11 @@ class FailoverChat:
         def unpack(entry):
             b, outcome = entry
             if isinstance(outcome, BaseException):
-                settled.set()
+                with dispatch_lock:
+                    settled.set()
                 raise outcome
             good, value = outcome
-            if good:
-                settled.set()
-            else:
+            if not good:
                 reasons.append((b.name, value))
             return b if good else None, value
 
@@ -667,9 +679,10 @@ class FailoverChat:
             return unpack(entry)
         finally:
             # Every caller exit closes the request, including admission errors.
-            settled.set()
+            with dispatch_lock:
+                settled.set()
 
-    def _attempt(self, backend, call, started, index, *, permitted=False, cancelled=None):
+    def _attempt(self, backend, call, started, index, *, permitted=False, cancelled=None, dispatch_claim=None):
         if not permitted:
             denied = self._permit(backend)
             if denied is not None:
@@ -677,7 +690,8 @@ class FailoverChat:
         try:
             attempt = 0
             while True:
-                if cancelled is not None and cancelled.is_set():
+                if (not dispatch_claim() if dispatch_claim is not None
+                        else cancelled is not None and cancelled.is_set()):
                     backend.breaker.release()
                     return False, "cancelled"
                 try:

@@ -1117,3 +1117,7 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 ## 2026-10-18 develop CI 후속 보완
 
 실제 재개 경합·명시적 시험 DB·합성 재난 입력·웹 기대값을 보완했다. [원인·전체 검증·미확인 범위](records/reports/2026-10-18_develop-ci-repair.md). 최초 실패 기록은 보존한다.
+
+## 2026-10-25 — F3 독립 검토
+
+제품 진단 코드 보존, 별도 동등 스케줄 회귀 old RED/new GREEN, 원문 실패·bind 차단 유지. [실행 결과와 scope 판정](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).

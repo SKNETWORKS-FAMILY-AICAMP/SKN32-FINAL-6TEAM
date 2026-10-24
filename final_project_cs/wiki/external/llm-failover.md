@@ -120,3 +120,12 @@ GPT-6 Luna 자동 전환을 운영 환경에 반영했고 실제 Ollama 연결 �
 비스트리밍 hedge의 caller 예산 예약 전후에 완료 local 결과를 다시 확인합니다. 예약 중 local이 완료되면 유료 worker를 시작하지 않고 불필요한 breaker permit을 반환합니다. caller의 모든 종료(예산 예외·worker 시작 실패 포함)는 settled로 표시하여 loser의 새 재시도를 막습니다. 이미 실행 중인 HTTP/SDK를 물리 취소한다는 보장은 없습니다.
 
 boolean budget callback에는 refund가 없어 예약 도중 local이 끝나면 유료 호출0이어도 예약1이 남을 수 있습니다. 이번 최소 수정은 예약 API나 fail-open/attempt accounting을 바꾸지 않으며 엄격 과금 상한을 보장하지 않습니다. max_inflight는 hard cap이 아니라 busy 우회 임계치입니다. 기본0·stream/image/warm 제외는 유지합니다. [최종 검증 기록](../records/reports/2026-10-25_remaining-non-db-integration.md).
+
+
+## F3 요청별 publication / dispatch claim — 2026-10-25 새 격리 수정
+
+검증 통과 성공의 publication과 각 provider 시도의 dispatch claim은 요청별 동일 lock으로 선후를 정합니다. publication이 먼저이면 아직 claim하지 않은 첫 호출과 재시도는 취소합니다. claim이 먼저이면 그 시도는 이미 논리적으로 시작한 것으로 보아 허용하고, 뒤의 성공은 다음 시도만 막습니다. lock은 전역이 아니며 budget callback·Thread.start·provider I/O 동안 잡지 않습니다. queue 소비나 Thread.start는 취소의 기준점이 아닙니다. caller 종료도 같은 lock으로 요청을 닫습니다. 두 성공은 publication 순서대로 queue에 싣고 caller만 결과·경로를 기록합니다.
+
+이 경계는 물리적 HTTP/SDK 취소가 아니며 claim 뒤 전송 직전 스케줄 지연에도 이미 claim한 시도는 남습니다. bool reservation에는 commit/refund가 없으므로 유료 전송 0에도 예약이 남아 다음 fallback을 budget_exhausted로 막을 수 있습니다. 기존 call_budget.reserve의 admission 계약·fail-open·재시도당 과금 정책은 바꾸지 않습니다. 엄격한 실전송/금전 상한은 reserve/commit/release의 별도 설계와 저장소 검증이 필요합니다. 이 작업은 DB 세션 소유 경계를 넘지 않습니다.
+
+독립 원문 probe와 기존 실패는 바꾸지 않고 보존합니다. 후속 독립 검토는 paid_called Event의 유일 설정 경로가 paid.append 뒤임을 확인하여 원문3건의 인과 모순을 판정했습니다. 별도 동등 스케줄 회귀는 실제 enqueue와 worker 완료를 장벽으로 사용하고 원문의 paid-zero 기대를 유지하며 old RED/new GREEN을 검증합니다. 원문 자체가 GREEN이라는 뜻이 아닙니다. 검토 수락은 publication보다 늦은 미claim 시도의 논리 취소 범위이고, claim 선행 시 실제 provider 진입이 publication 뒤일 수 있는 한계는 유지합니다. 기존 4개 HTTP bind 차단과 DB/실모델/외부API/배포는 미검증입니다. [독립 판정과 정확 단일실행 분모](../records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).

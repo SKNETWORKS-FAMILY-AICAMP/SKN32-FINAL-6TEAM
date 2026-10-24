@@ -113,3 +113,7 @@ domain: travel
 2026-10-18: develop CI 실패 원인을 보완하고 독립 전체 검증을 완료했다. 게시 후 CI·운영 확인은 별도다. [기록](records/reports/2026-10-18_develop-ci-repair.md).
 
 2026-10-25 — 잔여 비DB3후보 최소 통합·원본 독립probe RED→GREEN. 회귀327/331, 소켓차단4를 유지하며 DB/서비스/운영은 미변경. [최종 기록](records/reports/2026-10-25_remaining-non-db-integration.md).
+
+2026-10-25 — F3 새 격리 수정은 원문 probe3실패로 **수락 미해결**입니다. 단일955개948통과/원문3실패/기존4bind차단. [타임라인·실패 경로·남은 계약](records/reports/2026-10-25_remaining-non-db-f3-unresolved.md).
+
+2026-10-25 — F3 독립 검토와 동등 스케줄 회귀: 원문3실패를 시험 모순으로 분리하며 제품 logical-dispatch 경계만 수락 검토합니다. [정확 실행 결과·남은 범위](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).

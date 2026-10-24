@@ -210,3 +210,7 @@ impl_scope: cs — 세션 인계는 릴리스 대상 final_project_cs 의 작업
 - 2026-10-23 Dining 커밋·푸시 준비: 원격 `7284c42ad` 위 통합, Python 204/204·웹 79/79 통과. [최신 통합 검증](../../final_project_cs/wiki/records/reports/2026-10-23_dining-publish-validation.md).
 
 2026-10-25 — [잔여 비DB3후보 통합](2026-10-25_remaining-non-db-integration.md): 새격리본만 수정, F1/F2수정·실제현재baseline exact4 대조. 통합3/3, 회귀327/331·소켓차단4, 독립수정판검토/운영미검증.
+
+2026-10-25 — [F3 미해결·새 설계 검토 인계](2026-10-25_remaining-non-db-f3-unresolved.md): 원문 probe3실패 유지. 단일955개948통과/3실패/4bind차단. 완료 패키지가 아닌 현재 diff·동결해시·타임라인을 보존했습니다.
+
+2026-10-25 — [F3 독립 설계·회귀 수락 인계](2026-10-25_remaining-non-db-f3-acceptance.md): 새 후보만 변경, 원문·이전 실패 보존, 동등 스케줄 old RED/new GREEN과 정확 단일실행 분모를 분리했습니다. DB/외부실행 금지 유지.

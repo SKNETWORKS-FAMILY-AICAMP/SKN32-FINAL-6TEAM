@@ -313,3 +313,7 @@ program/
 | `A-COP_문서표준_설계_codex초안.md` | 참고자료. 이관 안 함 | 제외 |
 
 전체 범위 산정은 [governance/migration.md](governance/migration.md).
+
+## 2026-10-25 — F3 독립 검토
+
+새 격리 후보에 독립 동등 스케줄 시험·양 위키 보고/인계를 추가했습니다. 원문 Event 장벽의 모순을 실제 코드·실패 위치로 판정하며 과거 미수락 기록을 보존합니다. [근거](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).

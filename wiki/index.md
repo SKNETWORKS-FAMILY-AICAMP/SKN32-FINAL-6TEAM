@@ -86,3 +86,7 @@ domain: travel
 - 2026-10-18 관리자 여행 상세 운영 반영·실제 5여행 검증 완료: [인계·확인 한계](handoff/2026-10-18_admin-trip-release.md).
 
 2026-10-25 — 잔여 비DB3후보 새 격리 통합3/3, F1/F2수정2/2. 현재baseline과 같은 소켓차단4건 및 새 독립검토는 남았습니다. [결과](../final_project_cs/wiki/records/reports/2026-10-25_remaining-non-db-integration.md) · [인계](handoff/2026-10-25_remaining-non-db-integration.md).
+
+2026-10-25 — F3 새 격리 수정은 원문 probe3실패로 **수락 미해결**입니다. 단일955개948통과/원문3실패/기존4bind차단. [타임라인·실패 경로](records/reports/2026-10-25_remaining-non-db-f3-unresolved.md) · [새 설계 검토 인계](handoff/2026-10-25_remaining-non-db-f3-unresolved.md).
+
+2026-10-25 — F3 독립 설계 검토: 원문 paid-called 장벽의 인과 모순과 제품 결함을 분리하고 동등 스케줄 old RED/new GREEN을 검증했습니다. 원문 실패와 bind 차단은 보존합니다. [최신 근거](records/reports/2026-10-25_remaining-non-db-f3-acceptance.md).
