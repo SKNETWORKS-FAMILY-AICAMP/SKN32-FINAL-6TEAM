@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 from datetime import datetime, timedelta, timezone
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -136,6 +137,28 @@ class PlanTests(unittest.TestCase):
         d = document()
         d["status"]["replicas"] = 2
         self.assertFalse(cd.ready(d))
+
+    def test_public_probe_identifies_itself_to_the_edge(self):
+        requests = []
+
+        def opened(request, *, timeout):
+            requests.append(request)
+            response = io.BytesIO(b'{"status":"ok"}' if request.full_url.endswith("/health") else b"home")
+            response.status = 200
+            return response
+
+        with patch.object(cd.urllib.request, "urlopen", side_effect=opened):
+            self.assertEqual(cd.public_health("https://example.invalid"), {"/health": 200, "/": 200})
+        self.assertEqual([r.full_url for r in requests], ["https://example.invalid/health", "https://example.invalid/"])
+        self.assertTrue(all(r.get_header("User-agent") == "Guguroute-Deployment/1.0" for r in requests))
+
+    def test_identified_probe_still_rejects_unhealthy_api(self):
+        response = io.BytesIO(b'{"status":"degraded"}')
+        response.status = 200
+        with patch.object(cd.urllib.request, "urlopen", return_value=response) as opened, \
+             self.assertRaises(cd.DeploymentError):
+            cd.public_health("https://example.invalid")
+        self.assertEqual(opened.call_count, 1)
 
 
 class RolloutTests(unittest.TestCase):
