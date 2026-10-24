@@ -233,3 +233,23 @@ def test_an_old_or_failed_previous_check_is_not_reused():
         risks.decorate(None, tenant_id="unit", review={"items": [row()]}, now=NOW, mode="fresh", reuse=previous,
                        check=lambda **kw: calls.append(1) or report())
         assert calls == [1]
+
+
+def test_the_first_check_reports_each_stop_before_it_is_looked_at_and_the_end():
+    # `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 위험 점검이 알림 없이 돌아 화면이 6/6 에서 25.5초 멈췄다 — 일정마다 `progress{risks}`
+    events = []
+    review_ = {"items": [row(id="0-0", title="경복궁"), {"id": "m", "kind": "mobility"}, row(id="0-1", title="광장시장", ends_at="14:00")]}
+    risks.decorate(None, tenant_id="unit", review=review_, check=lambda **kw: report(), now=NOW, mode="fresh",
+                   on_event=lambda name, body: events.append((name, body)))
+    assert [name for name, _ in events] == ["progress"] * 3
+    assert [body for _, body in events] == [
+        {"phase": "risks", "done": 0, "total": 2, "current": {"id": "0-0", "title": "경복궁"}},
+        {"phase": "risks", "done": 1, "total": 2, "current": {"id": "0-1", "title": "광장시장"}},   # 끝난 일정도 센다(바로 지나간다)
+        {"phase": "risks", "done": 2, "total": 2, "current": None}]
+
+
+def test_a_failing_listener_does_not_stop_the_risk_check():
+    def boom(*_a):
+        raise RuntimeError("알림 장애")
+    assert risks.decorate(None, tenant_id="unit", review={"items": [row()]}, check=lambda **kw: report(), now=NOW, mode="fresh",
+                          on_event=boom)["items"][0]["risk"]["status"] == "clear"

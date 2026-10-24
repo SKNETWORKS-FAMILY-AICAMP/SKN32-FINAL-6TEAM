@@ -18,10 +18,12 @@ import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { changeLines } from "./change-lines";
-import { askOfStop, askStopId, draftOfItem, foundCount, incomingMove, isInstantRow, needs, heldAt, stopKind, stopsHere, withArrivalRows, withAskSlot, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanAsk, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
+import { askOfStop, askStopId, draftOfItem, foundCount, incomingMove, isInstantRow, needs, heldAt, stopKind, stopsHere, withArrivalRows, withAskSlot, tally, timeline, type CheckRow, type ItemDraft, type PlanAsk, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
+import { quietText, stepCount, stepDetail, stepName, type Steps } from "./server-steps";
+import { useServerSteps } from "./use-server-steps";
 import { DayList, type RowContext } from "./plan-rows";
 import { checkingList } from "./checking-list";
 import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
@@ -305,63 +307,75 @@ function BackButton({ onBack, label }: { onBack: () => void; label?: string }) {
   return <button type="button" className={styles.back} onClick={onBack} aria-label={label ?? t("뒤로", "Back")}><ArrowLeft size={20} strokeWidth={1.6} aria-hidden="true" /></button>;
 }
 
-const stepLabels = (t: Translate) => [t("받았어요", "Received"), t("일정 읽기", "Reading"), t("장소·운영시간", "Places & hours"), t("정리 완료", "Done")];
-
 /**
- * One straight line with four points; the filled part follows the lines read, then the places and moves checked.
- * ★`[2026-10-04 사용자 지시]` A point is checked and filled when the line has filled up to it (not when the stage after it begins), and no line shows
- * through a circle: the points stand over the line, each in the middle of a quarter of the width and the line runs from the first to the last.
+ * ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` One cell per step the server works through (`server-steps.ts` — mockup `mockups/tripilot-plan-check-progress-steps.html` ③),
+ * the name of the step it is at under its cell, and one line under the bar: how far that step is and what it is looking at, past 8 s with no news 「n초째」.
+ * No toast says the server is slow while it sends its counts. Under the questions of the reading screen the bar keeps its height (no list that pushes them down).
+ * ☆Before: four points (받았어요 · 일정 읽기 · 장소·운영시간 · 정리 완료) — the third filled at the last hours count while the weather check and the gaps filled first still ran.
  */
 function ProgressBar({ view }: { view: PlanCheckView }) {
   const t = useT();
-  const labels = stepLabels(t);
-  const current = STAGES.indexOf(view.stage);
-  const exact = progress(view);
-  const value = Math.round(exact);
-  // The line is as far as the points it has reached: point `i` of four sits at `i / 3` of the line (`stops`), and is reached when the line is that far.
-  //   The last point is the screen having drawn everything (the stage 「정리 완료」), however far the server's own count says it is.
-  const last = labels.length - 1;
-  const reached = (index: number) => view.stage === "done" || (index === 0 ? view.stage !== "received" : index === last ? false : exact >= (index / last) * 100 - 0.05);
-  const waitingAt = labels.findIndex((_, index) => !reached(index));
-  // ★`[2026-10-03]` The server's "장소 3/14 · 광장시장" count comes while it reads, so the big bar says it too.
-  // A terminal result supersedes the last partial SSE count; never announce it as still running.
-  const at = view.stage !== "done" && view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
-  return <div className={styles.progress} data-size="large" role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
-    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
-    <div className={styles.track}><span className={styles.fill} style={{ width: `${Math.min(100, exact)}%` }} /></div>
-    <ol className={styles.steps}>{labels.map((label, index) =>
-      <li key={label} data-state={reached(index) ? "done" : index === waitingAt ? "current" : "waiting"}>
-        <span className={styles.node} aria-hidden="true" /><span className={styles.stepLabel}>{label}</span>
-      </li>)}</ol>
-    {/* ★Under the steps, not between them and the track: `.steps` is pulled up over the track (negative margin), so a line there was drawn over the nodes (user's screenshot 2026-10-03). */}
-    {at && <p className={styles.progressAt}>{at}</p>}
+  const { steps, quiet } = useServerSteps(view);
+  const value = Math.round(steps.percent);
+  const line = progressLine(steps, quiet, t);
+  const at = steps.current ? steps.steps.indexOf(steps.current) : -1;
+  const center = at < 0 ? 0 : (at + 0.5) / steps.steps.length * 100;
+  // The name stands centred under its cell, and starts (ends) at the bar's edge for the first (last) cells — it would run out of the screen.
+  const edge = center < 12 ? "start" : center > 88 ? "end" : "mid";
+  return <div className={styles.progress} data-steps role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
+    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={progressValueText(steps, value, line.text, t)}>
+    {/* The name under the current cell has its own line: the words under the bar start below it (they were drawn over it — user's screenshot 2026-10-24). */}
+    <div className={styles.cellRow}>
+      <StepCells steps={steps} />
+      {steps.current && <span className={styles.cellName} data-edge={edge} style={{ left: `${edge === "start" ? 0 : edge === "end" ? 100 : center}%` }}>{stepName(steps.current.key, t)}</span>}
+    </div>
+    <p className={styles.progressAt}>{line.node}</p>
   </div>;
+}
+
+/** The cells: done and passed ones filled, the current one as far as its count. */
+function StepCells({ steps, small = false }: { steps: Steps; small?: boolean }) {
+  return <span className={styles.cells} data-size={small ? "small" : undefined} aria-hidden="true">
+    {steps.steps.map((step) => <span key={step.key} data-state={step.state}><i style={{ width: `${Math.round(step.fraction * 100)}%` }} /></span>)}
+  </span>;
+}
+
+/** The line under the bar — 「**2/7곳** · 북촌한옥마을 확인 중 · 9초째」, 「결과를 정리하는 중」 once every step is over, 「**정리 완료**」 at the end. */
+function progressLine(steps: Steps, quiet: number, t: Translate): { node: ReactNode; text: string } {
+  if (steps.finished) { const done = t("정리 완료", "Done"); return { node: <b>{done}</b>, text: done }; }
+  if (!steps.current) { const text = steps.wrapping ? t("결과를 정리하는 중", "Putting the result together") : ""; return { node: text, text }; }
+  const count = stepCount(steps.current, t), detail = stepDetail(steps.current, t), late = quietText(quiet, t);
+  const parts: ReactNode[] = [count && <b key="count">{count}</b>, detail, late && <span key="late" className={styles.late}>{late}</span>].filter(Boolean);
+  return { node: parts.flatMap((part, index) => index ? [" · ", part] : [part]), text: [count, detail, late].filter(Boolean).join(" · ") };
+}
+
+/** 「이동 · 89% · 5/6구간 · …」 for a screen reader — 「정리 완료 · 100%」 once done. */
+function progressValueText(steps: Steps, value: number, line: string, t: Translate): string {
+  if (steps.finished) return `${t("정리 완료", "Done")} · 100%`;
+  const name = steps.current ? stepName(steps.current.key, t) : steps.wrapping ? t("정리 중", "Wrapping up") : t("받았어요", "Received");
+  return `${name} · ${value}%${line ? ` · ${line}` : ""}`;
 }
 
 /**
  * `[2026-10-03 사용자]` The check's progress beside the brand in the header (it was a white bar of its own under the header):
  * the step the server is at and how far, with a thin line under it. Same `progressbar` as the big one on the reading screen.
+ * ★`[2026-10-24 ST4F-732]` The same cells as the reading screen's bar (③): the step's name and count above, what it is looking at and 「n초째」 under them.
+ *   The reading and the places only count there — they are what the reading screen showed.
  */
 function HeaderProgress({ view }: { view: PlanCheckView }) {
   const t = useT();
-  const labels = stepLabels(t);
-  const current = STAGES.indexOf(view.stage);
-  const value = Math.round(progress(view));
-  // ★`[2026-10-03 사용자 지시]` What the server says it is at ("3/14 · 광장시장 운영시간 확인 중"): only when it sent a `progress` packet.
-  // ★A "places" count belongs to the reading: once the check has begun, a left-over "13/14 · … 장소 확인 중" would keep saying that while the hours and legs are drawn.
-  const at = view.stage !== "done" && view.serverProgress && view.serverProgress.phase !== "places" ? serverProgressText(view.serverProgress, t) : null;
+  const { steps, quiet } = useServerSteps(view);
+  const value = Math.round(steps.percent);
+  const current = steps.current;
+  const label = steps.finished ? t("정리 완료", "Done") : current ? stepName(current.key, t) : steps.wrapping ? t("정리 중", "Wrapping up") : t("받았어요", "Received");
+  const count = current ? stepCount(current, t) : steps.finished ? t(`${steps.steps.length}/${steps.steps.length}단계`, `${steps.steps.length}/${steps.steps.length} steps`) : "";
+  const at = [current && current.key !== "reading" && current.key !== "places" ? stepDetail(current, t) : "", current ? quietText(quiet, t) : ""].filter(Boolean).join(" · ");
   return <div className={styles.headProgress} role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
-    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
-    <span className={styles.headStep}>{labels[current]}<b>{value}%</b></span>
-    <span className={styles.headTrack}><span style={{ width: `${value}%` }} /></span>
+    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={progressValueText(steps, value, [count, at].filter(Boolean).join(" · "), t)}>
+    <span className={styles.headStep}>{label}<b>{count}</b></span>
+    <StepCells steps={steps} small />
     {at && <span className={styles.headAt}>{at}</span>}
   </div>;
-}
-
-/** "3/14 · 광장시장 운영시간 확인 중" — the count and the step the server is at, in its words (no title when the packet names none). */
-export function serverProgressText(at: ServerProgress, t: Translate): string {
-  const what = at.phase === "places" ? t("장소 확인", "place check") : at.phase === "hours" ? t("운영시간 확인", "hours check") : t("이동 확인", "route check");
-  return `${at.done}/${at.total} · ${at.title ? `${at.title} ` : ""}${what}${t(" 중", " in progress")}`;
 }
 
 /**

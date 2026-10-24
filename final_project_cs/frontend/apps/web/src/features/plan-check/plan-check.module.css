@@ -24,6 +24,22 @@
 .steps li[data-state="done"] .node { border-color: var(--color-success); background: var(--color-success); }
 .steps li[data-state="done"] .node::after { content: "✓"; color: var(--color-on-primary); font-size: 10px; font-weight: 800; line-height: 1; }
 .stepLabel { white-space: nowrap; }
+/* ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` The plan check's bar: one cell per step of the server (done and passed cells filled — a grey passed cell read as
+   「the last cell never fills」), the name of the step it is at under its cell, one line under it (mockup `tripilot-plan-check-progress-steps.html` ③). */
+.progress[data-steps] { margin: 18px 2px 0; }
+.cellRow { position: relative; padding-bottom: 20px; }
+.cells { display: flex; gap: 3px; }
+.cells > span { flex: 1; height: 6px; border-radius: 3px; background: var(--color-border); overflow: hidden; }
+.cells > span > i { display: block; height: 100%; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.cells[data-size="small"] { gap: 2px; }
+.cells[data-size="small"] > span { height: 4px; border-radius: 2px; }
+.cellName { position: absolute; top: 12px; white-space: nowrap; font-size: 11.5px; font-weight: 750; color: var(--color-success); transform: translateX(-50%); transition: left .4s var(--ease-soft); }
+.cellName[data-edge="start"] { transform: none; }
+.cellName[data-edge="end"] { transform: translateX(-100%); }
+.progress[data-steps] .progressAt { min-height: 20px; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); }
+.progressAt b { color: var(--color-text); font-weight: 750; }
+.late { color: var(--color-warning); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .cells > span > i, .cellName { transition: none; } }
 
 /* ①② The plan being read (2026-10-07: the per-line list is gone — the bar and the count are what is left) */
 .reading { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 20px; }
@@ -528,8 +544,6 @@ button.moveHead { cursor: pointer; }
 .titleInput { width: 100%; min-width: 0; padding: 4px 8px; border: 1px solid var(--color-border-strong); border-radius: 9px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 15px; font-weight: 750; }
 .progressAt { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; }
 .headAt { font-size: 11.5px; font-weight: 600; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.headTrack { display: block; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
-.headTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
 
 /* 한국관광공사 출처 표시 — 확인 목록의 맨 아래 */
 .credit { --credit-enter: 200ms; --credit-exit: 150ms; margin: 8px 0 4px; font-size: 12px; line-height: 1.6; color: var(--color-muted); transition: opacity var(--credit-enter) var(--ease-soft); }

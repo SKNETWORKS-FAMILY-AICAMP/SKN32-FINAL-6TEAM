@@ -289,10 +289,10 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                         "WHERE tenant_id=%s AND intake_id=%s AND status='reading'",
                         ("checking" if filling or asking else "review", tenant_id, intake_id))
         if filling:
-            _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+            _prefill(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining, push=push)
         if filling or asking:
             # 로딩 중에 받아 둔 해석 답을 첫 검사 · 먼저 채우기 뒤에 반영한다(그 지점부터 다시 검사 — `pipeline.edit`)
-            _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+            _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining, push=push)
             with connect() as conn, conn.transaction(), conn.cursor() as cur:
                 cur.execute("UPDATE trip_intakes SET stage='review', updated_at=now() "
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
@@ -337,13 +337,16 @@ def _has_questions(connect: Callable[[], Any], tenant_id: str, intake_id: UUID) 
         return False
 
 
-def _apply_interpretations(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any) -> None:
-    """`[2026-10-20]` 로딩 중에 저장만 해 둔 해석 답 → 새 판(`interpretations.apply_pending`). 실패해도 확인 화면은 1안(AI 의 읽기)으로 간다."""
+def _apply_interpretations(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any,
+                           push: progress_module.Sink | None = None) -> None:
+    """`[2026-10-20]` 로딩 중에 저장만 해 둔 해석 답 → 새 판(`interpretations.apply_pending`). 실패해도 확인 화면은 1안(AI 의 읽기)으로 간다.
+    `push` `[2026-10-24 ST4F-732]` 처음 검사의 진행 알림(`progress{answers}`)."""
     from . import interpretations
 
     try:
         with connect() as conn:
-            new = interpretations.apply_pending(conn, tenant_id=tenant_id, intake_id=intake_id, tour=tour, kakao=kakao, dining=dining)
+            new = interpretations.apply_pending(conn, tenant_id=tenant_id, intake_id=intake_id, tour=tour, kakao=kakao, dining=dining,
+                                                on_progress=(lambda body: push("progress", {"phase": "answers", **body})) if push else None)
         if new is not None:
             log.info("intake interpretation answers applied intake=%s revision=%s", intake_id, new)
     except Exception:                                  # noqa: BLE001 — 답 반영 장애가 접수를 막지 않는다(고객이 확인 화면에서 다시 고른다)
@@ -388,9 +391,11 @@ def agent_reader_config(tenant_id: str) -> dict[str, Any]:
             "chunk_chars": max(200, chunk_chars), "prefill": prefill if prefill in ("on", "off") else "off"}
 
 
-def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any) -> None:
+def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tour: Any, kakao: Any, dining: Any,
+             push: progress_module.Sink | None = None) -> None:
     """`[2026-10-16 D-025]` 비서처럼 먼저 채우기(`prefill.py`) — 빈칸을 담당에게 보내 제안을 받고 맞춰 본 것만 「우리가 채움」으로 싣는다.
-    ★실패해도 읽은 값 · 확인 화면은 그대로다(채우기만 빠지고 경고가 남는다). 그 사이 고객이 먼저 고쳤으면(판이 바뀌었으면) 하지 않는다."""
+    ★실패해도 읽은 값 · 확인 화면은 그대로다(채우기만 빠지고 경고가 남는다). 그 사이 고객이 먼저 고쳤으면(판이 바뀌었으면) 하지 않는다.
+    `push` `[2026-10-24 ST4F-732]` 처음 검사의 진행 알림(`progress{prefill}`)."""
     from . import prefill as prefill_module
 
     try:
@@ -402,7 +407,8 @@ def _prefill(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, tou
             if row is None or int(row[1]) != 1:
                 return
             prefill_module.run(conn, tenant_id=tenant_id, customer_id=row[0], intake_id=intake_id, revision=1,
-                               tour=tour, kakao=kakao, dining=dining)
+                               tour=tour, kakao=kakao, dining=dining,
+                               on_progress=(lambda body: push("progress", {"phase": "prefill", **body})) if push else None)
     except Exception:                                  # noqa: BLE001 — 채우기 장애가 확인 화면을 막지 않는다
         log.warning("intake prefill failed intake=%s", intake_id, exc_info=True)
 
