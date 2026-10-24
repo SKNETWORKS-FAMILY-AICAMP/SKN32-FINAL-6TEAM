@@ -4,7 +4,7 @@ title: main 검사 성공 뒤 AWS 자동 배포
 description: 같은 main 커밋을 불변 이미지로 게시하고 기존 EKS 앱에 반영하는 계약
 status: draft
 domain: travel
-implementation_status: planned
+implementation_status: implemented
 validation_status: unverified
 ---
 
@@ -18,6 +18,7 @@ validation_status: unverified
 - 현재 main 커밋과 검사한 커밋이 같아야 한다. 경로 조건에 따라 함께 실행된 웹·관리자 검사도 성공할 때까지 기다린다.
 - 빌드·게시·DB 변경 직전에도 같은 main인지 확인한다. 오래된 실행은 새 main을 덮지 않는다. AWS 배포는 한 번에 하나씩 실행한다.
 - GitHub OIDC로 해당 저장소 main에만 단기 AWS 권한을 부여한다. 영구 AWS 키를 GitHub에 등록하지 않는다. 실제 역할·클러스터·주소는 저장소 비공개 설정에만 둔다.
+- main 필수 정적 검사에서 배포 파일의 GitHub 표현식을 actionlint로 검증한다. 검증 도구는 고정 버전과 SHA-256을 확인하며, 실행 기계의 임시 경로는 작업이 시작된 단계에서 설정한다.
 
 ## 빌드와 보존
 

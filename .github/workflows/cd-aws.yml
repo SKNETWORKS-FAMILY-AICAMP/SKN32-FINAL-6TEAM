@@ -61,7 +61,6 @@ jobs:
       CD_RDS_INSTANCE: ${{ secrets.CD_RDS_INSTANCE }}
       CD_WEB_BUILD_ENV: ${{ secrets.CD_WEB_BUILD_ENV }}
       GH_TOKEN: ${{ github.token }}
-      KUBECONFIG: ${{ runner.temp }}/guguroute-kubeconfig
     steps:
       - uses: actions/checkout@v4
         with:
@@ -82,7 +81,9 @@ jobs:
       - name: Connect to the existing EKS cluster
         env:
           CLUSTER: ${{ secrets.CD_EKS_CLUSTER }}
-        run: aws eks update-kubeconfig --name "$CLUSTER" --region "$AWS_REGION"
+        run: |
+          echo "KUBECONFIG=$RUNNER_TEMP/guguroute-kubeconfig" >> "$GITHUB_ENV"
+          aws eks update-kubeconfig --name "$CLUSTER" --region "$AWS_REGION" --kubeconfig "$RUNNER_TEMP/guguroute-kubeconfig"
       - name: Authenticate image publication
         run: aws ecr get-login-password | docker login --username AWS --password-stdin "$CD_ECR_REGISTRY"
       - name: Build and publish the same checked revision
