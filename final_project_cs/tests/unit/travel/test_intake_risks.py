@@ -1,4 +1,5 @@
 """계획 확인에서도 6종 위험을 숨기지 않고 안전 대안만 고객이 고른다."""
+from contextlib import nullcontext
 from copy import deepcopy
 from datetime import datetime
 from uuid import uuid4
@@ -112,9 +113,17 @@ def test_first_review_refreshes_normally_then_polling_is_cache_only(monkeypatch)
         cache.update(payload)
     monkeypatch.setattr(risks, "decorate", decorate)
     monkeypatch.setattr(review, "store", save)
+    locks = []
+    monkeypatch.setattr(review, "intake_state", lambda *a: locks.append("lock") or ("review", 1))
+
+    class Conn:                                     # `[2026-10-24 ST4F-731]` 읽기 길의 저장은 그때만 잠그고(세이브포인트) 다시 읽어 저장한다
+        def transaction(self):
+            return nullcontext()
+
     for _ in range(2):
-        review.ensure(None, tenant_id="unit", intake_id=uuid4(), revision=1, sources=[], claims=[])
+        review.ensure(Conn(), tenant_id="unit", intake_id=uuid4(), revision=1, sources=[], claims=[])
     assert modes == ["fresh", "cached"] and len(writes) == 1
+    assert locks == ["lock"]                        # 캐시만 읽은 둘째 조회는 잠그지 않는다
 
 
 def test_the_existing_candidates_api_dispatches_to_safety_validation(monkeypatch):

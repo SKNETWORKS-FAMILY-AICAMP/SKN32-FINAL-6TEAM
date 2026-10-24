@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Candidate, ReviewedIntakeView } from "@/lib/live/intake-review";
+import { getPlacePhotos, type Candidate, type ReviewedIntakeView } from "@/lib/live/intake-review";
 import { useServerReview } from "./use-server-review";
 
 // `[2026-10-20 사용자 지시]` 수정 화면은 저장만 하고(시각 · 장소 · 대안), 무거운 검사는 「다시 제출」 때 한 번에 — 대안은 다시 제출 전까지 처음 받은 셋을 그대로 보인다.
@@ -44,10 +44,10 @@ function candidate(name: string, rank: number): Candidate {
     rows: [], fits: true, status: "ok", distance_m: null, reference: null, slack: { before: null, after: null }, estimated: false };
 }
 
-function draw(view: ReviewedIntakeView, apply = vi.fn()) {
+function draw(view: ReviewedIntakeView, apply = vi.fn(), waitWarmUp = false) {
   harness.cursor = 0; harness.effects = [];
   // eslint-disable-next-line react-hooks/rules-of-hooks -- Real action boundaries use controlled React storage in this Node harness.
-  const screen = useServerReview({ intakeId: view.intake_id, view, apply, reread: vi.fn(), language: "ko" });
+  const screen = useServerReview({ intakeId: view.intake_id, view, apply, reread: vi.fn(), language: "ko", waitWarmUp });
   for (const run of harness.effects) run();
   return screen;
 }
@@ -167,6 +167,30 @@ describe("`[2026-10-21 사용자 지적 — 멈춘 질문 칸이 「후보를 �
     end({ candidates: [candidate("창덕궁", 1), candidate("덕수궁", 2)], notes: [] });
     await Promise.all([one, two]);
     expect(harness.stream).toHaveBeenCalledOnce();                                  // one live answer for both
+  });
+
+  it("shows prepared alternatives (they come whole) at once, before their photos come", async () => {
+    // `[2026-10-24 ST4F-731]` the stopped question waited for six photo reads after the prepared alternatives had come (89.6 s → 97.3 s)
+    harness.stream.mockResolvedValue({ candidates: [candidate("창덕궁", 1), candidate("덕수궁", 2)], notes: [] });
+    vi.mocked(getPlacePhotos).mockImplementation(() => new Promise(() => undefined));
+    try {
+      const screen = draw(plan());
+      const live = vi.fn();
+      void screen.actions.candidates!("0-0", live);
+      await vi.waitFor(() => expect(live).toHaveBeenCalled());
+      expect(live.mock.calls[0][0].map((card: { name: string }) => card.name)).toEqual(["창덕궁", "덕수궁"]);
+    } finally {
+      vi.mocked(getPlacePhotos).mockResolvedValue({ ref: "", photos: [], source_note: null, reason: null });
+    }
+  });
+
+  it("waits with the dry run while the page still shows the reading, and asks it once the page does not", () => {
+    // `[2026-10-24 ST4F-731]` 「계획을 다 읽었어요」 is drawn without the plan check's calls — the page says so itself
+    harness.autofix.mockReturnValue(new Promise(() => undefined));
+    draw(plan(5, true, 1), vi.fn(), true);
+    expect(harness.autofix).not.toHaveBeenCalled();
+    draw(plan(5, true, 1), vi.fn(), false);
+    expect(harness.autofix).toHaveBeenCalledOnce();
   });
 
   it("holds the 「전체 자동 추천」 dry run back while the page asks it to, and asks it once released", () => {

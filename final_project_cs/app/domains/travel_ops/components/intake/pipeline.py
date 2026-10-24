@@ -298,12 +298,15 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                             "WHERE tenant_id=%s AND intake_id=%s AND status='review' AND stage='checking'", (tenant_id, intake_id))
             # 상태를 바꾸는 사이에 들어온 답(접수 행 잠금으로 순서가 정해진다 — `interpretations.answer`)을 한 번 더 본다
             _apply_interpretations(connect, tenant_id, intake_id, tour=tour, kakao=kakao, dining=dining)
+        # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
+        #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
+        # ★`[2026-10-24 사용자 결정 — ST4F-731]` 요식 판정보다 **먼저** 준비한다(전에는 판정 14~31초 뒤에야 시작해 멈춘 질문의 대안이 늦었다). 식사는 판정이
+        #   「확인 필요」를 바꿀 수 있어 판정 뒤에 준비한다
+        _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat, which="not_meals")
         # ★`[2026-10-19]` 판정은 **지금 판**을 본다 — 먼저 채우기가 새 판을 만들었으면 그 판이다. 전에는 늘 1판을 봐서 채운 판에는 판정이 안 붙었다
         #   (1판 판정은 합치기 직전 「지난 판」으로 막히고 · 1판에서 장소가 없던 이름 없는 식사는 판정 입력조차 못 됐다)
         _dining_judge(connect, tenant_id, intake_id, sources, revision=None)
-        # ★`[2026-10-19 사용자 지시]` 문제 난 일정의 대안을 완성본으로 미리 준비한다(팀 대안 → 두 구간 이동 → 판정 → 이유 문장) — 「바꾸기」가 계산 없이 뜨게.
-        #   확인 화면으로 넘긴 뒤라 고객은 기다리지 않는다. 실패해도 접수 · 확인 화면은 그대로다(「바꾸기」가 그때 계산한다)
-        _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat)
+        _prepare_alternatives(connect, tenant_id, intake_id, kakao=kakao, chat=chat, which="meals")
         return "review"
     except _Abandoned:                               # 읽는 사이 실패로 확정됐다(`reap_stalled`) — 값도 상태도 더 건드리지 않는다
         return "fatal"
@@ -347,8 +350,10 @@ def _apply_interpretations(connect: Callable[[], Any], tenant_id: str, intake_id
         log.warning("intake interpretation answers not applied intake=%s", intake_id, exc_info=True)
 
 
-def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, kakao: Any, chat: Any) -> None:
-    """`[2026-10-19]` 접수 대안 미리 준비(`prepared.prepare`) — 가드레일 `travel.candidates.prepare_on_intake`(기본 켜짐)가 끄면 하지 않는다."""
+def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id: UUID, *, kakao: Any, chat: Any,
+                          which: str = "all") -> None:
+    """`[2026-10-19]` 접수 대안 미리 준비(`prepared.prepare`) — 가드레일 `travel.candidates.prepare_on_intake`(기본 켜짐)가 끄면 하지 않는다.
+    `which` — 식사 일정을 빼고(`not_meals`, 요식 판정 전) · 식사만(`meals`, 판정 뒤) · 모두(`all`) (`prepared.prepare`)."""
     from app.core.settings import get_guardrails
 
     from . import prepared
@@ -356,7 +361,7 @@ def _prepare_alternatives(connect: Callable[[], Any], tenant_id: str, intake_id:
     try:
         if get_guardrails().get("travel.candidates.prepare_on_intake") is False:
             return
-        done = prepared.prepare(connect, tenant_id=tenant_id, intake_id=intake_id, kakao=kakao, chat=chat)
+        done = prepared.prepare(connect, tenant_id=tenant_id, intake_id=intake_id, kakao=kakao, chat=chat, which=which)
         log.info("intake alternatives prepared intake=%s %s", intake_id, done)
     except Exception:                                  # noqa: BLE001 — 준비 장애가 접수를 건드리지 않는다
         log.warning("intake alternatives prepare failed intake=%s", intake_id, exc_info=True)
@@ -604,10 +609,13 @@ def _review_of(conn, tenant_id: str, intake_id: UUID, revision: int, sources: li
                claims: list[dict[str, Any]], *, force: bool = False, quick: bool = False,
                **options: Any) -> tuple[dict[str, Any] | None, str | None]:
     """그 판의 검사(`review.py`) — 저장된 것이 있으면 그것, 없으면 지금 계산한다. 실패하면 (None, 코드): 확인 화면은 읽은 값으로 계속 간다.
-    ★DB 오류가 바깥 트랜잭션을 망가뜨리지 않게 세이브포인트 안에서 부른다(마이그레이션 040 이 안 올라간 DB 도 읽기는 된다)."""
+    ★DB 오류가 바깥 트랜잭션을 망가뜨리지 않게 세이브포인트 안에서 부른다(마이그레이션 040 이 안 올라간 DB 도 읽기는 된다).
+    ★`[2026-10-24 사용자 결정 — ST4F-731]` 접수 행은 **새로 계산해 저장하는 호출(`force`)만** 잠근다 — 읽기(조회 · 실시간 진행 · 후보 · 미리 보기의 추천 계산)는
+      쓰기를 기다리지 않는다(전에는 모든 호출이 잠가 미리 보기 12~29초 뒤에 후보 · 조회가 줄을 섰다). 읽다가 저장이 필요해지면 `review.ensure` 가 그때 잠근다."""
     try:
         with conn.transaction():
-            review_module.intake_state(conn, tenant_id, intake_id)
+            if force:
+                review_module.intake_state(conn, tenant_id, intake_id)
             return review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=revision,
                                         sources=sources, claims=claims, force=force, quick=quick,
                                         previous_revision=revision - 1 if revision > 1 else None, **options), None
@@ -1008,7 +1016,9 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
 
     ★`dry_run` `[2026-10-03 ui 세션 요청서 3번]` — **저장하지 않고** 바뀔 모습만 돌려준다. 실제 적용과 **같은 길**(`edit`)로 새 판을 만들어 `view` 를 읽은 뒤 그 저장 구간을
       되돌린다(세이브포인트 롤백) — 그래서 미리 보기의 검사가 적용한 결과와 같다(따로 흉내 내는 계산이 아니다). 응답의 `view.preview` 가 참이고 `view.revision` 은 적용하면 생길 판 번호다.
-      바꿀 것이 없으면 현재 모습 그대로(`preview` 없음)."""
+      바꿀 것이 없으면 현재 모습 그대로(`preview` 없음).
+      ★`[2026-10-24 사용자 결정 — ST4F-731]` 추천 계산(`autofix.plan` — 시간 대부분)은 접수 행을 잠그지 않는다(`_review_of` 는 읽기를 잠그지 않는다).
+      적용해 보는 세이브포인트 안의 `edit` 만 잠그고 롤백하면 풀린다 — 그동안 후보 · 조회가 기다리지 않는다. 계산하는 사이 판이 바뀌었으면 `edit` 가 `stale_revision` 으로 끝낸다."""
     from . import autofix as autofix_module
 
     _, found = current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)

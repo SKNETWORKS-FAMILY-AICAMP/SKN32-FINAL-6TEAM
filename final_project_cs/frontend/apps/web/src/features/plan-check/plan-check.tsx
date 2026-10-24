@@ -250,10 +250,15 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   const view = revealed.stage === "done" ? latest : revealed;
   // `[2026-10-21]` The 「전체 자동 추천」 dry run waits while the first check is drawn (from its reading lines on) and stopped at its questions — held here, where the page is
   //   from the first moment the server's check is final (the list is not drawn yet then).
+  // ★`[2026-10-24 사용자 결정 — ST4F-731]` Also while the reading screen is up (`readingExtras` — its questions and 「계획을 다 읽었어요」): this same page draws the reading there and
+  //   its check came to 「done」 the moment reading ended, so the dry run went out 5 s before the plan check opened and its stopped question waited behind it
+  //   (2026-10-24 local runs: sent at 90.8 / 92.6 s, the question at 98.3 / 100.0 s — 「후보를 찾는 중」 22.5 / 5.5 s). It goes once the plan check has drawn its first check.
   const warmUp = result.actions?.holdWarmUp;
-  const holding = stops && revealed.stage !== "done";
+  const holding = stops && (Boolean(readingExtras) || revealed.stage !== "done");
   useEffect(() => { warmUp?.(holding); }, [warmUp, holding]);
-  useEffect(() => () => warmUp?.(false), [warmUp]);
+  // ★`[2026-10-24 ST4F-731]` No release when the calls go away: the 5 s of 「계획을 다 읽었어요」 are drawn by this same page without them (`flow.hold` in `intake-review.tsx`),
+  //   and letting go there sent the dry run before the plan check opened (2026-10-24 local run after the first fix: sent at 77.5 s, the plan check at 81.8 s).
+  //   The hold is the page's (`use-server-review.ts`) and goes with it.
   // `[2026-10-20 C안]` What a pick did is not a notice on the screen (the card shows it): a screen reader is told it here instead.
   // The result screen reads its own state out: a pick said during the check is not said there — only one made on it (a card's question).
   const [said, setSaid] = useState<{ text: string; done: boolean } | null>(null);

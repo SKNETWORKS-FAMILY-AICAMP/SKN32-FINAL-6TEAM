@@ -46,7 +46,7 @@ interface CandidateStream {
   listeners: Set<(update: CandidateUpdate) => void>;
 }
 
-export function useServerReview({ intakeId, view, language, apply, reread }: {
+export function useServerReview({ intakeId, view, language, apply, reread, waitWarmUp = false }: {
   intakeId: string;
   /** Undefined until the plan is read; the actions are only used once it is on screen. */
   view: ReviewedIntakeView | undefined;
@@ -55,6 +55,12 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   apply: (next: ReviewedIntakeView) => void;
   /** Read the plan again (an edit was refused as stale). */
   reread: () => void;
+  /**
+   * ★`[2026-10-24 사용자 결정 — ST4F-731]` The page still shows the reading (its questions and 「계획을 다 읽었어요」): the 「전체 자동 추천」 dry run waits as with `holdWarmUp`.
+   * That screen is drawn without the plan check's calls (`flow.hold` in `intake-review.tsx`), so the plan check could not hold it there — it went out the moment
+   * reading ended, five seconds before the plan check opened (2026-10-24 local runs: sent at 77.5 / 72.7 s, the stopped question waited behind it).
+   */
+  waitWarmUp?: boolean;
 }): { actions: PlanCheckActions; dirty: boolean; rechecking: string | null; infos: Readonly<Record<string, PlaceInfo>>; preview: ReviewedIntakeView | null } {
   const [dirtyState, setDirtyState] = useState({ intakeId, value: false });
   // `[2026-10-20 사용자 지시]` A revision only saved (`review.checked === false`) is a change still to send: a reload keeps 「다시 제출」, not 「여행 등록」.
@@ -101,11 +107,11 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const warmHold = useRef(false);
   const [warmHeld, setWarmHeld] = useState(false);
   useEffect(() => {
-    if (warmHold.current || warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
+    if (warmHold.current || waitWarmUp || warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
     const ask = autofixIntake(intakeId, warmRevision, language, true);
     warmed.current = { intakeId, base: warmRevision, ask };
     ask.catch(() => { if (warmed.current?.ask === ask) warmed.current = null; });
-  }, [intakeId, language, warmRevision, needsLook, warmHeld]);
+  }, [intakeId, language, warmRevision, needsLook, warmHeld, waitWarmUp]);
   useEffect(() => { latest.current = view?.intake_id === intakeId ? view : undefined; }, [view, intakeId]);
 
   const actions = useMemo<PlanCheckActions>(() => {
@@ -320,6 +326,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         });
         finished = true;
         candidateNotes.current.set(id, found.notes ?? []);
+        // ★`[2026-10-24 ST4F-731]` Prepared alternatives come whole, with no first list: their cards are shown now and the photos fill them in after — the stopped
+        //   question waited for six photo reads (2026-10-24 local run: alternatives at 89.6 s, the cards at 97.3 s).
+        if (!first && onLive) onLive(found.candidates.map((candidate) => {
+          const card = planCandidate(candidate, id, "candidate", null);
+          pickable.current.set(card.id, candidate.place);
+          return card;
+        }));
         // The stop's own photos fill its 「지금 일정」 card.
         if (item.place) void infoOf({ ...item.place, category: null, address: null }, true).then((info) => setInfos((current) => ({ ...current, [id]: info })));
         const cards = await Promise.all(found.candidates.map(async (candidate, at) => {

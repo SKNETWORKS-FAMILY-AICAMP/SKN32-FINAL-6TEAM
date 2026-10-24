@@ -161,7 +161,12 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   //   come from it and the changes (lock, recommend, search, photos, re-check) go through its calls (`useServerReview`).
   //   Without one (`review: null` — the check failed — or an older server), it says only what the read values say.
   const apply = useCallback((next: ReviewedIntakeView) => { queryClient.setQueryData(["intake", intakeId, language], next); }, [queryClient, intakeId, language]);
-  const server = useServerReview({ intakeId, view: query.data, language, apply, reread });
+  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
+  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
+  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
+  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
+  // `[2026-10-24 ST4F-731]` While the reading screen is up (`flow.shown` — its questions and 「계획을 다 읽었어요」) the 「전체 자동 추천」 dry run waits.
+  const server = useServerReview({ intakeId, view: query.data, language, apply, reread, waitWarmUp: flow.shown });
   // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen also draws that plan; every call still goes with the real one.
   // ★`[2026-10-04 사용자 지시]` The two are held side by side — the plan as it is (`reviewed`) and the one the server proposed (`previewed`) — so the list can scroll from one into the other.
   const shown = query.data;
@@ -185,10 +190,6 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const routeShapes = useIntakeRoutes(intakeId, query.data?.revision ?? 0, language, Boolean(reviewed));
   // `[2026-10-05 사용자 지시]` Zoomed in, the detailed lines (`?detail=true`) replace these short ones - they follow the streets.
   const routeDetail = useRouteDetail(routeShapes.data, ["intake", intakeId, query.data?.revision ?? 0, language], () => getIntakeRouteShapes(intakeId, language, { detail: true }));
-  // ★`[2026-10-06 사용자 지시 — 설문 화면 구현 인계 2단계]` Questions asked while the server reads (`questions[]` of the intake; none from an older server). The screen goes on to the plan check
-  //   when the reading is done unless the customer is in the middle of answering - then it is held (`flow.hold`) until they are done, press the button, or the warning runs out.
-  const questions = useMemo(() => questionsOf(query.data?.questions, language), [query.data?.questions, language]);
-  const flow = useQuestionFlow({ intakeId, language, questions, loadingDone: Boolean(query.data) && query.data?.status !== "reading", fresh: arriving });
   const readingExtras = flow.shown ? { top: <><ReadingQuestions flow={flow} />{flow.phase === "idle" && <IdleWarning flow={flow} />}</>, footer: <ReadingFooter flow={flow} />, onActivity: flow.touch } : undefined;
   const [readingSeen, setReadingSeen] = useState(arriving);
   const [readingDrawn, setReadingDrawn] = useState(false);

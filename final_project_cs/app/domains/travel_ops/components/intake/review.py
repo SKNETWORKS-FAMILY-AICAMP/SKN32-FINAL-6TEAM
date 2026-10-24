@@ -1126,6 +1126,18 @@ def intake_state(conn, tenant_id: str, intake_id: Any) -> tuple[str, int] | None
     return (row[0], int(row[1])) if row else None
 
 
+def _store_read(conn, tenant_id: str, intake_id: Any, revision: int, payload: dict[str, Any], *,
+                base: dict[str, Any] | None) -> bool:
+    """`[2026-10-24 사용자 결정 — ST4F-731]` 읽기 길(`force` 아님)의 저장 — 읽기는 접수 행을 잠그지 않으므로 **저장할 때만** 잠그고 저장본을 다시 읽어,
+    읽은 것(`base`, 없었으면 None)과 같을 때만 저장한다. 그 사이 다른 쓰기가 저장본을 바꿨으면 덮지 않는다(이번 계산은 응답에만 쓴다)."""
+    with conn.transaction():
+        intake_state(conn, tenant_id, intake_id)
+        if load(conn, tenant_id, intake_id, revision) != base:
+            return False
+        store(conn, tenant_id, intake_id, revision, payload)
+        return True
+
+
 def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
            claims: list[dict[str, Any]], force: bool = False, previous_revision: int | None = None,
            quick: bool = False, **options: Any) -> dict[str, Any]:
@@ -1142,7 +1154,7 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
             mode = "cached" if cached.get("risk_schema_version") == risks.SCHEMA_VERSION else "fresh"
             payload = risks.decorate(conn, tenant_id=tenant_id, review=cached, mode=mode)
             if mode == "fresh":
-                store(conn, tenant_id, intake_id, revision, payload)
+                _store_read(conn, tenant_id, intake_id, revision, payload, base=cached)
             from . import dining_review
             return dining_review.refresh(conn, tenant_id, intake_id, revision, payload)
     answered_review = load(conn, tenant_id, intake_id, revision) if force else None
@@ -1163,7 +1175,10 @@ def ensure(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list
     # ★`[2026-10-20 「대안 적용 13.9초」]` 앞 판에서 방금 점검한 일정(장소 · 날짜 · 시각이 같음)은 그 결과를 쓴다 — 바꾼 일정만 바깥 조회를 다시 한다
     # ★`[2026-10-20 사용자 지시]` 미룬 검사(`quick`)는 위험도 저장해 둔 값만 읽는다(`cached` — 바깥 조회 없음). 바깥 조회는 「다시 제출」(재검증)이 한다
     payload = risks.decorate(conn, tenant_id=tenant_id, review=payload, mode="cached" if quick else "fresh", reuse=previous)
-    store(conn, tenant_id, intake_id, revision, payload)
+    if force:
+        store(conn, tenant_id, intake_id, revision, payload)
+    elif not _store_read(conn, tenant_id, intake_id, revision, payload, base=None):
+        return load(conn, tenant_id, intake_id, revision) or payload     # 그 사이 다른 쓰기가 먼저 저장했다 — 그것을 쓴다
     if not quick and any(item.get("kind") == "dining" for item in payload.get("items") or []):
         from . import dining_review
         from app.domains.travel_ops.components.team_hooks import dining_ledger
