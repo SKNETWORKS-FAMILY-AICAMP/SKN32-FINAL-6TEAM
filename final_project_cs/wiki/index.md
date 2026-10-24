@@ -107,3 +107,6 @@ domain: travel
 2026-10-18: develop 웹앱 보존 병합의 로컬 검증을 완료했다. 게시·운영 상태와 분리한 [검증 기록](records/reports/2026-10-18_develop-web-merge-review.md).
 
 2026-10-18: develop CI 실패 원인을 보완하고 독립 전체 검증을 완료했다. 게시 후 CI·운영 확인은 별도다. [기록](records/reports/2026-10-18_develop-ci-repair.md).
+
+
+2026-10-24 한 구간의 택시 이동이 전체로 확대되지 않도록 읽기·구간 생성·성향 전달을 통일했습니다. 매니저 통합·검증과 운영 확인은 [결함 기록](records/reports/debugs/2026-10-24_택시구간_범위수정_매니저반영.md)에서 구분합니다.

@@ -1700,9 +1700,11 @@ def _move_rows(index: int, move: Any, item: dict[str, Any]) -> list[dict[str, An
 def _around_quote(quote: Any, lines: list[str], items: list[dict[str, Any]], dated: Any) -> tuple[int | None, int | None]:
     """원문 조각(「택시로 이동」)이 적힌 자리의 바로 앞 일정과 바로 뒤 일정(같은 날). 자리를 못 찾거나 앞뒤 날이 다르면 (None, None)."""
     text = str(quote or "").strip()
-    spot = next(((n, line.find(text)) for n, line in enumerate(lines, start=1) if text and text in line), None)
-    if spot is None:
+    spots = [(n, match.start()) for n, line in enumerate(lines, start=1)
+             for match in re.finditer(re.escape(text), line)] if text else []
+    if len(spots) != 1:
         return None, None
+    spot = spots[0]
 
     def at(i: int) -> tuple[int, int]:
         line = items[i].get("line") or 0
@@ -1867,6 +1869,7 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
     ★날짜는 에이전트 값이 먼저, 없으면 규칙의 날짜 해석(`resolve_dates`)."""
     from .dates import DayDate, resolve_dates
     from .places import normalize
+    from .reading_prefs import transport_scope
 
     lines = read.lines
     cards_by_line = {card.title.line: card for card in copied_cards or []}
@@ -2039,7 +2042,8 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
         mode = _AGENT_MODE.get(move.get("mode"))
         if mode is None:
             continue
-        if move.get("scope") == "segment":
+        scope = transport_scope(move.get("scope"), move.get("quote"))
+        if scope == "segment":
             a, b = find(move.get("from")), find(move.get("to"))
             if a is None and b is None:
                 # ★`[2026-10-19 사용자 지시]` 에이전트가 앞뒤 장소를 비웠다 — 수단 말이 적힌 원문 자리의 바로 앞 · 뒤 일정 사이로 본다(규칙 길 `_move_segments` 와 같다).
@@ -2049,12 +2053,16 @@ def _agent_rows(read: Any, out: Any, *, position: int, today: date,
                 chosen = [(x, y) for x, y in pairs if y == b and (a is None or x == a)]
             else:
                 chosen = [(x, y) for x, y in pairs if a is not None and x == a]
+        elif scope == "day":
+            day_items = [i for i in order if move.get("day") and items[i].get("day") == move["day"]]
+            if not day_items or dated[day_items[0]].value is None:
+                continue
+            day_value = dated[day_items[0]].value
+            chosen = [(x, y) for x, y in pairs if dated[x].value == day_value]
+        elif scope == "all":
+            chosen = pairs
         else:
-            day_value = None
-            if move.get("scope") == "day" and move.get("day"):
-                day_items = [i for i in order if items[i].get("day") == move["day"]]
-                day_value = dated[day_items[0]].value if day_items else None
-            chosen = [(x, y) for x, y in pairs if day_value is None or dated[x].value == day_value]
+            continue
         for pair in chosen:
             picked[pair] = (mode, move.get("quote") or "")
     for (a, b), (mode, quote) in picked.items():
