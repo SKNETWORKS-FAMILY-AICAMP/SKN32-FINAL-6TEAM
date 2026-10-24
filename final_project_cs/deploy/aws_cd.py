@@ -279,6 +279,15 @@ def ready(document):
             and status.get("replicas", 0) == desired)
 
 
+def wait_for_rollout(namespace, name, timeout=420, interval=3):
+    """Wait with the approved named GET permission, without listing deployments."""
+    deadline = time.monotonic() + timeout
+    while not ready(deployment(namespace, name)):
+        if time.monotonic() >= deadline:
+            raise DeploymentError(f"{name}: rollout timed out")
+        time.sleep(interval)
+
+
 def public_health(url):
     result = {}
     for path in ("/health", "/"):
@@ -377,8 +386,7 @@ def deploy(sha, namespace, images, public_url, database, settle=30):
                 patch.append({"op": "replace", "path": "/spec/replicas", "value": baselines[name]["spec"].get("replicas", 1)})
             kubectl(namespace, "patch", "deployment", name, "--type=json",
                     "-p", json.dumps(patch), "-o", "json")
-            command(["kubectl", "-n", namespace, "rollout", "status", "deployment/" + name, "--timeout=420s"],
-                    capture=False, timeout=450)
+            wait_for_rollout(namespace, name)
         result = verify(namespace, images, sha)
         health = public_health(public_url)
         time.sleep(settle)
@@ -403,8 +411,7 @@ def deploy(sha, namespace, images, public_url, database, settle=30):
                          {"op": "replace", "path": "/spec/template", "value": baselines[name]["spec"]["template"]},
                          {"op": "replace", "path": "/spec/replicas", "value": baselines[name]["spec"].get("replicas", 1)}]
                 kubectl(namespace, "patch", "deployment", name, "--type=json", "-p", json.dumps(patch), "-o", "json")
-                command(["kubectl", "-n", namespace, "rollout", "status", "deployment/" + name, "--timeout=420s"],
-                        capture=False, timeout=450)
+                wait_for_rollout(namespace, name)
             except Exception:
                 recovery_errors.append(name)
         if recovery_errors:

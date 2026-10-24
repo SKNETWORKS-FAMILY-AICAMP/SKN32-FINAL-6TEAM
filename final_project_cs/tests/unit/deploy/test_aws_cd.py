@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 SOURCE = Path(__file__).resolve().parents[3] / "deploy/aws_cd.py"
 SPEC = importlib.util.spec_from_file_location("aws_cd_under_test", SOURCE)
@@ -137,6 +137,25 @@ class PlanTests(unittest.TestCase):
         d = document()
         d["status"]["replicas"] = 2
         self.assertFalse(cd.ready(d))
+
+    def test_rollout_wait_uses_only_named_get(self):
+        pending = document()
+        pending["status"]["availableReplicas"] = 0
+        with patch.object(cd, "kubectl", side_effect=[pending, document()]) as kube, \
+             patch.object(cd, "command", side_effect=AssertionError("A rollout command must not list deployments")), \
+             patch.object(cd.time, "sleep") as sleep:
+            cd.wait_for_rollout("unit", "tripilot-api", timeout=2)
+        self.assertEqual(kube.call_args_list, [call("unit", "get", "deployment", "tripilot-api", "-o", "json")] * 2)
+        sleep.assert_called_once_with(3)
+
+    def test_rollout_wait_stops_when_the_named_deployment_stays_unready(self):
+        pending = document()
+        pending["status"]["availableReplicas"] = 0
+        with patch.object(cd, "kubectl", return_value=pending), \
+             patch.object(cd.time, "monotonic", side_effect=[0, 3]), \
+             patch.object(cd.time, "sleep") as sleep, self.assertRaises(cd.DeploymentError):
+            cd.wait_for_rollout("unit", "tripilot-api", timeout=2)
+        sleep.assert_not_called()
 
     def test_public_probe_identifies_itself_to_the_edge(self):
         requests = []
