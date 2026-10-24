@@ -1486,7 +1486,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
 
     @router.post("/v1/web/trip-intakes/{intake_id}/moves/{pair}/mode")
-    def web_intake_move_mode(intake_id: UUID, pair: str, request: IntakeModeIn, http: Request,
+    def web_intake_move_mode(intake_id: UUID, pair: str, request: IntakeModeIn, http: Request, background: BackgroundTasks,
                              who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-07]` 이동 한 구간의 수단을 고른다 → `{revision, review}`(새 판 · 그 구간이 고른 수단으로 다시 계산된 확인 결과 전체 · `moves[i].mode_choice` · `recommended_mode`).
         서버가 **고른 수단으로 다시 계산해 닿는지 확인한 뒤에만** 받는다(화면이 보낸 값을 믿지 않는다) — 그래서 「다시 제출」이 필요 없다. `mode` = `recommended` 는 되돌리기.
@@ -1499,8 +1499,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         _count("place_search", tenant, customer, http)
         try:
             with get_connection() as conn:
-                return move_options.choose(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                                           revision=request.revision, from_id=from_id, to_id=to_id, mode=request.mode)
+                shown = move_options.choose(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                            revision=request.revision, from_id=from_id, to_id=to_id, mode=request.mode)
+            # ★`[2026-10-25 사용자 지시]` 새 판이다 — 고치기처럼 식사를 뒤에서 다시 판정한다(전에는 안 걸어 새 판의 판정이 기한 뒤 실패로 남았다)
+            _rejudge_later(background, tenant, intake_id, shown)
+            return shown
         except move_options.ModeNotFit as exc:
             raise _error(422, "mode_not_fit", exc.why, why=exc.why) from None
         except move_options.NotAvailable:
@@ -1537,7 +1540,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
 
     @router.post("/v1/web/trip-intakes/{intake_id}/moves/{pair}/route")
-    def web_intake_move_route(intake_id: UUID, pair: str, request: IntakeRouteIn, http: Request,
+    def web_intake_move_route(intake_id: UUID, pair: str, request: IntakeRouteIn, http: Request, background: BackgroundTasks,
                               who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-10-23]` 이동 한 구간의 **경로**를 고른다 → `{revision, review}`(새 판 · 그 구간이 고른 경로로 다시 계산된 확인 결과 전체 · `moves[i].route_choice`).
         서버가 그 구간을 다시 세어 **그 경로가 있고 다음 일정 안에 닿을 때만** 받는다. `key` = `recommended` 는 되돌리기. 고른 경로가 있는 구간은 고른 수단보다 앞서고,
@@ -1550,8 +1553,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         _count("move_judge", tenant, customer, http)
         try:
             with get_connection() as conn:
-                return move_options.choose_route(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
-                                                 revision=request.revision, from_id=from_id, to_id=to_id, key=request.key)
+                shown = move_options.choose_route(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                                  revision=request.revision, from_id=from_id, to_id=to_id, key=request.key)
+            _rejudge_later(background, tenant, intake_id, shown)           # `[2026-10-25]` 수단 고르기와 같다 — 새 판의 식사를 다시 판정
+            return shown
         except move_options.ModeNotFit as exc:
             raise _error(422, "mode_not_fit", exc.why, why=exc.why) from None
         except move_options.NotAvailable:
