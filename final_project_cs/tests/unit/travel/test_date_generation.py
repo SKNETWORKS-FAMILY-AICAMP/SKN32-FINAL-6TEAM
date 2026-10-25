@@ -41,7 +41,8 @@ def schema_for(text=TEXT):
 
 def item(**changes):
     value = dict(place_quote='덕수궁', day=1, date='2030-01-02', date_quote=TEXT,
-                 start='13:30', end='14:30', time_quote=TEXT, kind='activity')
+                 start='13:30', end='14:30', time_quote=TEXT, kind='activity',
+                 locked=None, locked_quote=None)   # L07 I06: 명시 고정 칸은 필수(말이 없으면 null)
     value.update(changes)
     return value
 
