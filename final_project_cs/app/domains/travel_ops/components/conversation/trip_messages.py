@@ -1116,6 +1116,11 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
     item = decision.item
     action = decision.action
     request = {"type": "conversation", "action": action, "at": at.isoformat()}
+    from .edit_intent import requested_setting
+    setting = requested_setting(getattr(decision, "raw", None))
+    if setting and action in ("apply_change", "propose_alternatives", "clarify"):
+        # ★`[2026-10-25 QA]` 새 장소의 실내·야외 조건(인용 확인을 지난 해석)을 팀에 넘긴다 — 전에는 싣지 않아 「야외로」가 실내 다른 안으로 바뀌었다
+        request["setting"] = setting
     if decision.minutes is not None:
         request["minutes"] = decision.minutes
     if decision.question:

@@ -11,6 +11,9 @@ domain: travel
 # cs 프로젝트 구현 wiki
 
 2026-10-25 [전체 과거 normal confirm HTTP 증명·35개 회귀·전체관문 대조](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — 추가 제품 수정 없음, 원격 반영 전.
+2026-10-25 채팅에서 화면으로 고른 일정에 묻는 말이 「어느 일정」 되묻기 · 앞 일정 답으로 끝나던 결함을 격리 후보에서 고쳤습니다(로컬 시험까지, 반영 전): [원인 · 수정 · 실모델 한계](records/reports/2026-10-25_chat-selected-stop-subject.md).
+
+2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](records/reports/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.
 
 2026-10-25 전체 과거 날짜 신규 등록 가드 독립 후보: [날짜 기준·공통 검사·검증 및 미반영 경계](records/reports/2026-10-25_all-past-calendar-hotfix.md). 기존 확정 재시도/reopen 정책과 다른 정상 검사는 보존합니다.
 

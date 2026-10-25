@@ -319,9 +319,11 @@ class ItineraryWork:
                 # ★`[2026-10-05]` 영업 여부를 못 알아 바꾸지 않은 경우(`needs_check`) — 확신을 낮추고(0.5) 계산이 만든 문장과
                 #   주의 문장(warnings)을 그대로 싣는다. 그 밖의 「안 바꿈」 답은 지금처럼 고정 문장
                 checking = plan.status == "needs_check"
+                # ★`[2026-10-25 QA]` 실내·야외를 지정한 바꾸기에 맞는 곳이 없었다 — 그 사실을 말하는 계산 문장(`plan_fresh_alternate`)을 싣는다
+                worded = checking or bool(plan.detail.get("setting") and plan.detail.get("message"))
                 return self._result(task, outcome="completed", confidence=0.5 if checking else 0.9,
                                     evidence=evidence,
-                                    answer=plan.detail.get("message", ANSWERS[plan.status]) if checking
+                                    answer=plan.detail.get("message", ANSWERS[plan.status]) if worded
                                            else ANSWERS[plan.status],
                                     warnings=plan.detail.get("warnings") or [], next_action=NextAction.RESPOND,
                                     decisions=[{"itinerary": plan.status, **self._plain(plan.detail)}])
