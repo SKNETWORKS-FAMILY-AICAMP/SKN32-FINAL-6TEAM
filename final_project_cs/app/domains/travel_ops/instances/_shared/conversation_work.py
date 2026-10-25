@@ -263,6 +263,12 @@ async def run_conversation(work: Any, task: TeamTask, ctx: dict[str, Any]) -> Te
                 version_answer = re.fullmatch(r"\s*(?:v|버전\s*)?(\d+)\s*(?:버전|판)?(?:이요|요)?[.!]?\s*", answer, re.IGNORECASE)
                 if version_answer:
                     to_version = int(version_answer[1])
+        if to_version is None and request.get("nothing_to_undo"):
+            # 되돌릴 변경이 없다는 것은 끝난 답이다 — 버전을 기다리는 입력 대기로 남기지 않는다(일정은 그대로)
+            return work._result(task, outcome="completed", confidence=1, evidence=ctx["evidence"],
+                                answer=request.get("question") or "되돌릴 변경이 없어 일정은 바꾸지 않았어요.",
+                                next_action=NextAction.RESPOND,
+                                decisions=[{"itinerary": "answered", "reason": "nothing_to_undo"}])
         if to_version is None:
             return wait_for_input(work, task, ctx,
                                   request.get("question") or "어느 변경 전 일정으로 되돌릴까요? 버전을 알려 주세요.",

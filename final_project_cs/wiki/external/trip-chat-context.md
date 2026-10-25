@@ -94,7 +94,7 @@ domain: travel
 
 현재 원문 인용·대상 별칭 등 호출자가 제공하는 근거 검증도 structured_validated를 통해 경로 안에서 수행한다. 단순 JSON 모양이 맞아도 근거 검증이 실패하면 기존 대체 경로와 예산 안에서 다음 제공자를 시도한다. 모든 의미 정답을 보증하는 검증기는 아니다.
 
-보완 범위: 새 start의 정확 시각은 time_edit.time을 사용한다. following의 명시 분 이동은 기준 다음 같은 날 미래 항목만 이동하며 잠금·예약·자정 보호를 거친다. end/duration과 다른 날짜를 함께 지정한 요청은 아직 지원하지 않아 명시적으로 거절하며 미완료 목표를 승계하지 않는다. 인용의 숫자 시각은 계획 읽기의 기존 시각 재계산기와 대조하고 시각 없는 인용에서 정확한 시각을 받아들이지 않는다.
+보완 범위: 새 start의 정확 시각은 time_edit.time을 사용한다. following의 명시 분 이동은 기준 다음 같은 날 미래 항목만 이동하며 잠금·예약·자정 보호를 거친다. end/duration과 다른 날짜를 함께 지정한 요청은 2026-10-26부터 그 날의 같은 시작 시각으로 옮겨 처리한다(아래 2026-10-26 절). reflow와 다른 날짜는 계속 명시적으로 거절하며 미완료 목표를 승계하지 않는다. 인용의 숫자 시각은 계획 읽기의 기존 시각 재계산기와 대조하고 시각 없는 인용에서 정확한 시각을 받아들이지 않는다.
 
 
 2026-10-18 상위 검토 후 시간 보호 보완: 새 start의 명시 시각이 현재보다 과거면 종료가 미래여도 그 요청을 거절한다. 이미 시작한 항목의 원래 시작을 유지하며 종료만 늘리는 기능과 원래 끝난 항목 수정 금지는 유지한다. following의 명시 분 이동도 reflow=True로 기존 시간 변경 검증에 연결하며, 요청한 각 항목의 시각은 고정 경계로 지킨다. 이는 기존 이동 재생성 부재를 확정한 수정이 아니다. 실DB 재현에서 이동은 보완 전에도 재생성됐으며, 종료가 미래인 과거 시작을 중앙 저장기가 허용하는 결함만 직접 재현했다.
@@ -131,3 +131,13 @@ domain: travel
 - 한 일정의 성질을 묻는 사실(detail · address · hours · phone · description · price · entry_booking · food)에서 모델이 답 대상도 고른 일정, 기준도 고른 일정(또는 기준 없음)이라고 적고 앞뒤 칸만 before/after 로 채웠으면, 앞뒤를 가리킬 다른 일정이 없다(기준 = 답). 그 칸만 떼고 `relation_dropped` 로 남긴 뒤 고른 일정으로 답한다(2026-10-20 근처 조건의 `near_dropped: anchor_is_target` 와 같은 규칙). 답 대상을 비운 진짜 앞뒤 질문(「그 전 일정 …」)과 next · time · move 는 그대로 계산한다.
 - 고른 일정으로 대신하지 않는 경우: 날짜 · 시각 · 끼니를 말한 문장, 대상 말 없이 가리키기만 하고 모델이 대상을 고르지 않은 문장, 일정 밖 장소 이름을 댄 문장, 위 2026-10-18 weather/outdoor 의 previous 계약(바꾸지 않았다).
 - 기록: [2026-10-25 보고서](../records/reports/2026-10-25_chat-selected-stop-subject.md). 로컬 격리 후보까지 — push · x600 배포 · 로컬 서빙 반영은 그 보고서와 별도 기록으로 판정한다.
+
+## 2026-10-26 절대 시각·날짜 옮기기·되돌릴 것 없음
+
+- 새 시작 시각을 말한 요청(「○○를 오후 2시 10분으로 미뤄줘」)은 미루기·당기기 말이 있어도 `time_edit.boundary=start`, `time=HH:MM`이다. 모델이 `shift`/`item`을 고르고 검증된 `time`(인용·시각 재계산 통과)을 함께 냈으면 실행기(`edit_intent.time_ops`)는 그 시각을 새 시작으로 쓴다. 시각의 분(「11시 30분」의 30분)은 이동 크기가 아니다(`decision_unit.spoken_minutes`). 모델이 시각을 구조로 내지 않으면 문장에서 시각을 만들지 않고 다시 묻는다(`need_time`).
+- 새 시작 시각에 머무는 시간을 더해 자정을 넘으면 옮기지 않고 `crosses_midnight`(`edit_refused`)로 이유를 답한다. 다음 날로 조용히 넘기지 않는다.
+- 다른 날로 옮기기: `at_day`(today/tomorrow/dN)만 있고 시각이 없으면 같은 시작 시각·같은 머무는 시간으로 그 날에 옮긴다(`start`·`time=""` 또는 옛 `none`). 날과 시각을 함께 말하면 둘 다 바꾼다. `start`에 `time`이 비었는데 구형 칸 `anchor_kind=time`·`anchor_time`이 있으면 그 시각을 쓴다(구형 시작 시각 변경 의미 유지). 「다음 날로」처럼 그 일정 날 기준의 날은 일차(dN)이며 오늘 기준 `tomorrow`가 아니다(프롬프트) — 모델이 `tomorrow`로 읽어 여행 밖 날이 되면 `day_outside_trip`으로 거절한다. 같은 날·날 없음에 시각도 없으면 시각을 묻는다. 여행 밖 날·지난 시각은 거절한다.
+- 다른 날 + 체류(end/duration): 그 날의 같은 시작 시각에서 종료 또는 머무는 분수를 맞춘다. 자정·과거·여행 밖 검증은 같다.
+- 되돌리기(`rollback`) 해석에 되돌릴 변경이 없으면(처음 판 그대로, 가리킨 일정이 처음 그대로) 입력 대기(`ask_rollback`)로 남기지 않고 `answered`(reason `nothing_to_undo`)로 「일정은 바꾸지 않았어요」를 답한다(`trip_messages.NothingToUndo`, `conversation_work` rollback 분기). 뒤 변경이 끼어 있어 확인이 필요한 경우는 계속 `ask_rollback`이다. 보류 제안의 승인·거부는 계속 `/proposals/{id}/choose`로만 결정한다.
+- 장소 행동(`apply_change`·`propose_alternatives`·`replace_named`)의 `time_edit`는 실행되지 않는다(`time_ops`는 `change_time`만 읽는다). 그래서 이 칸이 실행할 수 없는 조합(경계와 범위 불일치, reflow가 아닌 `continue_previous`)이어도 해석 전체를 `DecisionFailed`로 버리지 않는다 — 인용·시각·형식 검증은 그대로 한다. 시간·날짜 범위(`change_scope=time|date`)라 `change_time`으로 옮겨지는 경우와 `change_time`은 이 조합을 계속 거절한다(`edit_intent._executes_time_edit`).
+- 대신 그 해석은 장소를 바꾸지 않고 「다른 곳으로 바꿀지, 시각을 옮길지」 되묻는다(`edit_intent.ask_on_conflict` → `clarify`, 기록 `temporal_conflict`, 일정은 그대로). 새 장소 이름(`destination_text`)이나 실내·야외 조건(`place_setting`) 없이 시각만 담긴 `apply_change`·`propose_alternatives`도 같은 되묻기다(`time_without_place` — 실 E4B D04 「N서울타워를 1월 3일 오후 2시에 가는 걸로 바꿔줘」가 덕수궁으로 바뀌었다). 새 장소를 말한 장소+시간 요청(`replace_named`, 이름·조건이 있는 교체)은 그대로 둔다. 근거: 2026-10-26 integ-v10 실 E4B T16 2회, 「네, 제안한 일정 변경을 승인해요」 → `apply_change` + `shift`/`continue_previous=true` → escalated(decision_failed).

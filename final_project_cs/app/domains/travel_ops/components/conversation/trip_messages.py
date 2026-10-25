@@ -173,6 +173,17 @@ def _rule_named(stays: list[Any], text: str):
     return scored[0][1] if scored and scored[0][0] > 0 and (len(scored) == 1 or scored[0][0] > scored[1][0]) else None
 
 
+class NothingToUndo(str):
+    """`_rollback_target`의 「되돌릴 변경이 없음」 — 되묻는 말이 아니라 끝난 답이다. 입력 대기(`ask_rollback`)로 남기지 않는다."""
+
+
+def _undo_outcome(ask: str) -> dict[str, Any]:
+    """되돌릴 것이 없으면 일정은 그대로라는 답(`answered`), 그 밖의 되묻기는 기존 `ask_rollback`."""
+    if isinstance(ask, NothingToUndo):
+        return {"status": "answered", "text": str(ask), "reason": "nothing_to_undo"}
+    return {"status": "ask_rollback", "text": ask}
+
+
 def _rollback_target(store: TripStore, trip_id: UUID, items: list[Any], message: str,
                      selected: UUID | None, at: datetime, target: Any = None,
                      use_rules: bool = True) -> tuple[int | None, str | None]:
@@ -191,14 +202,14 @@ def _rollback_target(store: TripStore, trip_id: UUID, items: list[Any], message:
         history = store.versions(conn, trip_id)
         latest = history[-1]["version"] if history else 1
         if latest <= 1:
-            return None, "되돌릴 변경이 없어요 — 이 여행은 처음 만든 일정 그대로예요."
+            return None, NothingToUndo("되돌릴 변경이 없어요 — 이 여행은 처음 만든 일정 그대로라 일정은 바꾸지 않았어요.")
         if target is None:
             return latest - 1, None
         introduced = latest
         while introduced > 1 and target.item_id in {i.item_id for i in store.items(conn, trip_id, introduced - 1)}:
             introduced -= 1
     if introduced <= 1:
-        return None, f"「{target.title}」은(는) 처음 일정 그대로라 되돌릴 변경이 없어요."
+        return None, NothingToUndo(f"「{target.title}」은(는) 처음 일정 그대로라 되돌릴 변경이 없어요. 일정은 바꾸지 않았어요.")
     if introduced != latest:
         return None, (f"「{target.title}」은(는) {introduced}번 일정에서 바뀌었고, 그 뒤에 다른 변경이 "
                       f"{latest - introduced}번 더 있었어요. 되돌리면 그 변경도 함께 되돌아가요 — 괜찮으시면 "
@@ -557,7 +568,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             current, latest_items = store.latest(conn, trip_id)
         to_version, ask = ((int(report["to_version"]), None) if report.get("to_version")
                            else _rollback_target(store, trip_id, latest_items, message, selected_item_id, at))
-        outcome = ({"status": "ask_rollback", "text": ask} if to_version is None else
+        outcome = (_undo_outcome(ask) if to_version is None else
                    desk.rollback(trip_id=trip_id, base_version=current["version"], to_version=to_version,
                                  message=message, request_id=request_id))
     elif report["type"] == "change":                 # 재요청 — 다른 안으로
@@ -809,6 +820,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from . import edit_intent
     decision = edit_intent.resume(decision, items=context_items, turns=turns, version=current_context["version"],
                                   now=context_now, ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")))
+    # ★`[2026-10-26]` 장소 행동에 실행할 수 없는 시간 수정이 붙었으면(「제안 승인해요」에 shift + 이어 받기) 바꾸지 않고 되묻는다
+    decision = edit_intent.ask_on_conflict(decision)
     # ★`[2026-10-20 x600 실서버 확인]` 근처 찾기는 식사만 바꾼다 — 활동 「북촌한옥마을 다른 데로」가 식사 되물음으로 끝나지 않게 먼저 맞춘다
     from .decision_unit import settle_near_search
     decision = settle_near_search(decision, context_items)
@@ -903,7 +916,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     elif stale_selection:
         outcome = {"status": "clarify", "text": "가리키는 일정 하나를 현재 여행에서 확인하지 못했어요. 최신 일정에서 다시 선택해 주세요."}
     elif action == "clarify":
-        outcome = _clarify_with_choices(decision, items, at=at, selected=selected)
+        lead = decision.question if (decision.raw or {}).get("temporal_conflict") else None
+        outcome = _clarify_with_choices(decision, items, at=at, selected=selected, lead=lead)
     elif action == "other":
         outcome = {"status": "answered", "text": decision.social or trip_replies.other_reply(items, at)}
     elif action == "answer_service":
@@ -1000,7 +1014,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
             outcome = _clarify_with_choices(decision, items, at=at, selected=selected,
                                             lead="그 변경은 지금 일정에 이미 없어요(되돌렸거나 다시 바뀌었어요).")
         else:
-            outcome = ({"status": "ask_rollback", "text": ask} if to_version is None else
+            outcome = (_undo_outcome(ask) if to_version is None else
                        desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                      request_id=request_id))
     elif action == "redo":
@@ -1130,7 +1144,7 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
         request["question"] = decision.question
     if action == "clarify":
         # ★`[2026-10-20]` 근처 조건을 실행할 수 없어 되묻는 경우(`decision_unit.settle_near_search`)는 왜 묻는지 먼저 말한다
-        lead = decision.question if (decision.raw or {}).get("near_guard") else None
+        lead = decision.question if ((decision.raw or {}).get("near_guard") or (decision.raw or {}).get("temporal_conflict")) else None
         question = _clarify_with_choices(decision, current_items, lead=lead, at=at, selected=selected)
         request.update(question=question["text"], choices=question.get("choices") or [])
     if action == "rollback":
@@ -1151,7 +1165,8 @@ def _dispatch_decision(conn, *, controller: Any, tenant: str, trip_id: UUID, cas
         else:
             target, question = _rollback_target(store, trip_id, current_items, message, selected, at,
                                                 target=item, use_rules=False)
-            request.update(to_version=target, question=question, confirmed=question is None)
+            request.update(to_version=target, question=question, confirmed=question is None,
+                           **({"nothing_to_undo": True} if isinstance(question, NothingToUndo) else {}))
     elif action == "redo":
         change = decision.change
         undone = history[-1] if history and history[-1]["reason"] == "rollback" else None
@@ -1203,7 +1218,8 @@ def _report_dispatch_plan(*, report: dict[str, Any], team: str, trip: dict[str, 
     target = _change_target(items, message, selected, at) if action in ("apply_change", "report_closed") else None
     if action == "rollback" and request.get("to_version") is None:
         target_version, question = _rollback_target(store, UUID(str(trip["trip_id"])), items, message, selected, at)
-        request.update(to_version=target_version, question=question, confirmed=question is None)
+        request.update(to_version=target_version, question=question, confirmed=question is None,
+                       **({"nothing_to_undo": True} if isinstance(question, NothingToUndo) else {}))
     owner = target.kind if target is not None else ("activity" if action == "stock_out" else "dining" if action in ("report_delay", "report_closed")
                                                    else team if team in ("dining", "activity") else "activity")
     return case_dispatch.descriptor(trip=trip, team=owner, request=request, item=target), target

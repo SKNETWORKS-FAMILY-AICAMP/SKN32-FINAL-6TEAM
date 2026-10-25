@@ -1207,7 +1207,8 @@ def spoken_minutes(message: str) -> int | None:
     if re.search(r"반\s*시간", message) and not found:
         total += 30
         found = True
-    for number in re.findall(r"(\d+)\s*분", message):
+    # A clock's minute part ("11시 30분") is an absolute boundary, not a shift size.
+    for number in re.findall(r"(\d+)\s*분", re.sub(r"\d+\s*시(?!간)\s*\d+\s*분", " ", message)):
         total += int(number)
         found = True
     if not found:

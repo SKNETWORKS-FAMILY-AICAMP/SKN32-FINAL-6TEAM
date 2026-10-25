@@ -181,6 +181,16 @@ def test_missing_rollback_version_preserves_existing_explanation():
     assert result.evidence and not result.action_proposals
 
 
+def test_nothing_to_undo_answers_instead_of_waiting_for_a_version():
+    """`[2026-10-26]` 「승인하지 않을게. 예약 일정은 그대로 둬」가 rollback 으로 읽혀도 되돌릴 변경이 없으면 끝난 답이다(입력 대기 아님)."""
+    question = "되돌릴 변경이 없어요 — 이 여행은 처음 만든 일정 그대로라 일정은 바꾸지 않았어요."
+    work, task, _ = task_for({"action": "rollback", "to_version": None, "question": question, "nothing_to_undo": True})
+    result = run(work, task)
+    assert result.next_action == NextAction.RESPOND
+    assert result.answer == question and not result.action_proposals
+    assert result.decisions == [{"itinerary": "answered", "reason": "nothing_to_undo"}]
+
+
 def test_clarify_typed_choice_can_supply_action_and_target(monkeypatch):
     work, task, items = task_for({"action": "clarify"}, reply="1번")
     task.context.current_state["subject_ref"]["request"]["choices"] = [

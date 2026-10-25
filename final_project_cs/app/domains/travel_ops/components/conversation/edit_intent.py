@@ -44,6 +44,8 @@ SYSTEM = """
 시간 변경의 뜻은 time_edit, 장소 검색의 기준은 place_search에 별도로 보존한다.
 time_edit.boundary=start(시작),end(체류 종료),duration(머무는 분수),shift(상대 이동),reflow(뒤 일정 재배치),none(시간 변경 없음).
 종료 시각까지 머물겠다는 요청은 end이며 그 시각에 시작하라는 뜻이 아니다. 정확한 시각이 없는 저녁·늦게 등의 표현으로 시각을 만들지 않고 time=""로 낸다.
+새 시작 시각을 말하면 미루기·당기기 말이 함께 있어도 start이며 time=그 시각이다(「점심을 오후 2시 10분으로 미뤄줘」 start, time=14:10). shift는 옮길 크기(30분·1시간)만 말할 때다.
+다른 날로 옮기면 at_day=그 날이다. 「다음 날로」「전날로」처럼 그 일정 날을 기준으로 말하면 일정 줄의 일차로 센 dN이며, 오늘 기준의 tomorrow가 아니다(1일차 일정을 다음 날로 = d2). 날과 새 시작 시각을 함께 말하면 start에 time과 at_day를 함께 내고, 날만 말하면 start, time=""이다.
 scope=item은 target_item 자체, following은 anchor_item 다음의 같은 날 일정 전체이며 기준 항목 자체는 제외한다.
 체류 종료를 바꾸고 뒤 일정도 맞추는 요청은 end/scope=item/cascade=true이며 target_item은 머무는 일정이다.
 새 종료를 말하지 않고 뒤 일정만 맞추는 요청은 reflow/scope=following이며 anchor_item은 기준 일정이다.
@@ -94,9 +96,7 @@ def validate(raw: dict[str, Any], message: str, aliases: set[str]) -> None:
         else:
             if value.get("boundary") not in {"start", "end", "duration", "shift", "reflow"} or value.get("scope") not in {"item", "following"}:
                 raise ValueError("invalid temporal relation")
-            if ((value["boundary"] in {"start", "end", "duration"} and value["scope"] != "item")
-                    or (value["boundary"] == "reflow" and value["scope"] != "following")
-                    or (value.get("continue_previous") and value["boundary"] != "reflow")):
+            if _inconsistent(value) and _executes_time_edit(raw):
                 raise ValueError("inconsistent temporal scope")
             clock = value.get("time", "")
             if not isinstance(clock, str) or (clock and not TIME.fullmatch(clock)):
@@ -122,6 +122,57 @@ def validate(raw: dict[str, Any], message: str, aliases: set[str]) -> None:
                 raise ValueError("invalid stay duration")
             if type(value.get("cascade")) is not bool or type(value.get("continue_previous")) is not bool:
                 raise ValueError("invalid temporal flags")
+
+
+#: 장소를 바꾸는 행동 — 이 행동의 time_edit 은 실행되지 않는다(`time_ops` 는 change_time 만 읽는다)
+PLACE_ACTIONS = frozenset({"apply_change", "propose_alternatives", "replace_named"})
+
+
+def _inconsistent(value: dict[str, Any]) -> bool:
+    """실행할 수 없는 시간 수정 조합 — 범위가 경계와 맞지 않거나, 이어 받기(continue_previous)가 reflow 가 아니다."""
+    return bool((value.get("boundary") in {"start", "end", "duration"} and value.get("scope") != "item")
+                or (value.get("boundary") == "reflow" and value.get("scope") != "following")
+                or (value.get("continue_previous") and value.get("boundary") != "reflow"))
+
+
+def _executes_time_edit(raw: dict[str, Any]) -> bool:
+    """이 해석의 time_edit 이 시각 옮기기로 실행되는가 — change_time, 또는 시간·날짜 범위라 change_time 으로 옮겨지는 장소 행동."""
+    action = raw.get("action")
+    return action not in PLACE_ACTIONS or raw.get("change_scope") in ("time", "date")
+
+
+def temporal_conflict(decision) -> dict[str, Any] | None:
+    """`[2026-10-26]` 장소 행동에 실행할 수 없는 시간 수정이 함께 왔다 — 해석 실패(DecisionFailed)도, 장소 교체 실행도 아니다.
+    장소를 바꿀지 시각을 옮길지 되묻는다(부르는 쪽 `trip_messages._run_decision`). 인용·시각·형식 검증은 `validate` 가 그대로 했다."""
+    raw = decision.raw or {}
+    spec = raw.get("time_edit") or {}
+    if decision.action not in PLACE_ACTIONS or spec.get("boundary", "none") == "none":
+        return None
+    if _inconsistent(spec):
+        reason = "inconsistent_time_edit"
+    elif (decision.action != "replace_named" and not str(raw.get("destination_text") or "").strip()
+          and requested_setting(raw) is None):
+        # 새 장소의 이름·실내외 조건 없이 시각만 말했다 — 장소 교체로 실행하면 말하지 않은 곳으로 바뀐다(실 E4B D04 2026-10-26)
+        reason = "time_without_place"
+    else:
+        return None
+    return {"reason": reason, "action": decision.action, "boundary": spec.get("boundary"), "scope": spec.get("scope"),
+            "continue_previous": bool(spec.get("continue_previous")), "evidence": spec.get("evidence", "")}
+
+
+def ask_on_conflict(decision):
+    """`temporal_conflict` 이면 장소를 바꾸지도 해석 실패로 끝내지도 않고 「다른 곳으로 바꿀지, 시각을 옮길지」 되묻는 clarify 로 바꾼다(일정은 그대로).
+    선택지는 대상의 장소 바꾸기 하나 — 시각 옮기기는 크기나 새 시각이 있어야 하므로 문장으로 안내한다."""
+    conflict = temporal_conflict(decision)
+    if conflict is None:
+        return decision
+    name = f"「{decision.item.title}」을(를) " if decision.item is not None else ""
+    choices = ([{"action": "apply_change", "item": decision.item, "change": None, "fact": "none"}]
+               if decision.item is not None else [])
+    return replace(decision, action="clarify", choices=choices,
+                   question=(f"{name}다른 곳으로 바꿀지, 시각을 옮길지 확실하지 않아 일정은 바꾸지 않았어요. "
+                             "시각이면 「30분 늦춰 줘」처럼 옮길 크기나 새 시각을 말씀해 주세요."),
+                   raw={**(decision.raw or {}), "temporal_conflict": conflict})
 
 
 def resume(decision, *, items, turns, version: int, now: datetime, ttl_seconds: int):
@@ -165,6 +216,9 @@ def time_ops(decision, *, items, now: datetime):
 
     spec = (decision.raw or {}).get("time_edit") or {}
     boundary = spec.get("boundary", "none")
+    if boundary == "shift" and spec.get("scope") == "item" and spec.get("time"):
+        # A validated absolute clock (quoted and recomputed in `validate`) is the new start, not a shift size.
+        boundary = "start"
     if boundary == "none" or (boundary == "shift" and spec.get("scope") != "following"):
         return None
     if decision.raw.get("stale_edit_goal"):
@@ -203,12 +257,16 @@ def time_ops(decision, *, items, now: datetime):
     if boundary == "start":
         from .chat_edit import _day_of, _inside_trip, moved_to
 
+        day = _day_of(decision.raw.get("at_day"), stops, now)
         if not spec.get("time"):
             if decision.raw.get("anchor_kind") == "now":
                 return None
-            raise EditRefused("need_time", f"「{item.title}」을(를) 시작할 시각을 알려 주세요.")
-        day = _day_of(decision.raw.get("at_day"), stops, now)
-        day, begin, until = moved_to(item, day=day, start=spec["time"])
+            if decision.raw.get("anchor_kind") == "time" and TIME.fullmatch(str(decision.raw.get("anchor_time") or "")):
+                return None                     # 구형 시작 시각 칸(anchor_time)만 있으면 기존 시작 시각 변경(`chat_edit.ops_for`)이 날과 함께 쓴다
+            if day is None or day == item.starts_at.astimezone(KST).date().isoformat():
+                raise EditRefused("need_time", f"「{item.title}」을(를) 시작할 시각을 알려 주세요.")
+        # A day-only move keeps the start clock and stay length (`moved_to`).
+        day, begin, until = moved_to(item, day=day, start=spec.get("time") or None)
         if not _inside_trip(day, stops):
             raise EditRefused("day_outside_trip", "이 여행에 없는 날이라 바꾸지 않았어요.")
         _same_day(day, begin, until, item.title)
@@ -220,10 +278,21 @@ def time_ops(decision, *, items, now: datetime):
     from .chat_edit import _day_of
 
     requested_day = _day_of(decision.raw.get("at_day"), stops, now)
-    if requested_day is not None and requested_day != item.starts_at.astimezone(KST).date().isoformat():
-        raise EditRefused("combined_date_boundary", "날짜와 머무는 시간을 함께 바꾸는 요청은 아직 처리하지 못해 바꾸지 않았어요. 일정 수정 화면에서 날짜와 종료 시각을 함께 고쳐 주세요.")
     start = item.starts_at.astimezone(KST)
-    end = item.ends_at.astimezone(KST) if item.ends_at else None
+    moved_day = requested_day is not None and requested_day != start.date().isoformat()
+    if moved_day:
+        # A stay change on another day keeps the start clock on that day, like a day-only move (`moved_to`).
+        from .chat_edit import _inside_trip
+
+        if boundary == "reflow":
+            raise EditRefused("combined_date_boundary", "다른 날로 옮기면서 뒤 일정만 맞추는 요청은 아직 처리하지 못해 바꾸지 않았어요. 옮길 날과 시각을 알려 주세요.")
+        if not _inside_trip(requested_day, stops):
+            raise EditRefused("day_outside_trip", "이 여행에 없는 날이라 바꾸지 않았어요.")
+        new_start = datetime.fromisoformat(f"{requested_day}T{_hm(start)}").replace(tzinfo=KST)
+        end = (new_start + (item.ends_at - item.starts_at)) if item.ends_at else None
+        start = new_start
+    else:
+        end = item.ends_at.astimezone(KST) if item.ends_at else None
     if boundary == "end":
         if not spec.get("time"):
             raise EditRefused("need_end_time", f"「{item.title}」에서 몇 시까지 머무실까요? 종료 시각을 알려 주시면 뒤 일정도 맞출게요.")
@@ -241,5 +310,10 @@ def time_ops(decision, *, items, now: datetime):
     _same_day(start.date().isoformat(), _hm(start), _hm(end), item.title)
     if end <= now:
         raise EditRefused("time_in_past", "이미 지난 종료 시각이라 바꾸지 않았어요. 앞으로 머무실 종료 시각을 알려 주세요.")
+    if moved_day:
+        if start < now:
+            raise EditRefused("time_in_past", "이미 지난 시작 시각으로 옮길 수 없어 바꾸지 않았어요. 앞으로 시작할 날과 시각을 알려 주세요.")
+        return [EditOp("time", item_id=item.item_id, date=requested_day, starts_at=_hm(start), ends_at=_hm(end),
+                       reflow=bool(spec.get("cascade")))], f"{item.title} 날짜·체류 옮기기"
     return [EditOp("time", item_id=item.item_id, ends_at=_hm(end),
                    reflow=bool(spec.get("cascade")) or boundary == "reflow")], f"{item.title} 체류·뒤 일정 맞추기"

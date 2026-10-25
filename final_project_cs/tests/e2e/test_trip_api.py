@@ -617,7 +617,7 @@ def test_a_rollback_of_an_unchanged_item_says_so_instead_of_undoing_something_el
     assert len(api["tick"]("09:00").adjusted) == 1
     first = _detail(api, trip_id)["items"][0]["place"]
     said = _say(api, trip_id, "rollback", request_id="say-back-1", text=f"{first} 되돌려 주세요").json()
-    assert said["status"] == "ask_rollback" and "되돌릴 변경이 없어요" in said["answer"], said
+    assert said["status"] == "answered" and "되돌릴 변경이 없어요" in said["answer"], said   # 끝난 답 — 입력 대기 아님(2026-10-26)
     assert _detail(api, trip_id)["version"] == 2                      # 아무것도 되돌리지 않았다
 
 
