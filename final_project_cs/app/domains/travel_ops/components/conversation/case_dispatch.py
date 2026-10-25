@@ -383,8 +383,10 @@ def _prepare_candidates(desk: Any, *, tenant: str, trip_id: UUID, request: dict[
     if action in ("apply_change", "propose_alternatives") and request.get("at"):
         from app.domains.travel_ops.components.itinerary.itinerary_changes import stored_alternates
 
-        if stored_alternates(item, {str(p["place_id"]): p for p in places}, datetime.fromisoformat(str(request["at"]))):
+        if stored_alternates(item, {str(p["place_id"]): p for p in places}, datetime.fromisoformat(str(request["at"])),
+                             setting=request.get("setting") if request.get("setting") in ("indoor", "outdoor") else None):
             # ★`[2026-10-20]` 들고 있는 「다른 안」(낡지 않은 것)으로 바꾸거나 묻는다 — 새 후보 확보(관광 목록 넓히기 · 원장 근처)는 저장분을 못 쓸 때만
+            #   ★`[2026-10-25 QA]` 실내·야외를 지정했으면 그 조건에 맞는 저장분이 있을 때만 — 없으면 새 후보를 확보한다
             return
     if item.kind == "activity":
         desk._widen_activities(trip_id, item.item_id)

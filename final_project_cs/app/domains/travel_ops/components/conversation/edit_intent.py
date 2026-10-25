@@ -23,7 +23,19 @@ def schemas(aliases: list[str]) -> dict[str, Any]:
                           "continue_previous": {"type": "boolean"}, "evidence": {"type": "string"}}),
         "place_search": obj({"relation": enum(["none", "near"]), "anchor_item": enum(aliases),
                              "place_text": {"type": "string"}, "evidence": {"type": "string"}}),
+        # ★`[2026-10-25 QA]` 바꿀 새 장소의 실내·야외 조건 — 전에는 담을 칸이 없어 「실내를 야외로 바꿔줘」가 또 실내로 바뀌었다
+        "place_setting": obj({"want": enum(list(SETTINGS)), "evidence": {"type": "string"}}),
     }
+
+
+#: 새 장소의 실내·야외 조건 — any(조건 없음) · indoor · outdoor
+SETTINGS = ("any", "indoor", "outdoor")
+
+
+def requested_setting(raw: dict[str, Any] | None) -> str | None:
+    """검증을 지난 해석의 실내·야외 조건 — indoor/outdoor 이거나 None(조건 없음 · 옛 해석)."""
+    want = ((raw or {}).get("place_setting") or {}).get("want")
+    return want if want in ("indoor", "outdoor") else None
 
 
 SYSTEM = """
@@ -41,11 +53,23 @@ place_search.relation=near/anchor_item=기준 일정이다. 주변·근처 같�
 기준이 일정 안이면 그 ID, 일정 밖 지명이면 place_text에 고객이 말한 지명만 원문 그대로 적는다. 기준 불명이면 none/빈 문자열이다.
 후보만 요청하면 propose_alternatives이며 실제 변경은 apply_change다. 주변 식당 읽기 질문으로 바꾸어 해석하지 않는다.
 evidence는 현재 고객 문장의 장소 조건 원문. 검색 조건 없음은 relation=none,anchor_item=none,place_text="",evidence="".
+place_setting은 장소 교체·후보 요청에서 고객이 새 장소를 실내 또는 야외로 지정한 조건이다. 실내로 가자면 want=indoor, 야외·바깥으로 가자면 want=outdoor,
+evidence에 그 조건 원문을 그대로 복사한다. 지금 장소가 실내·야외라는 설명은 새 장소 조건이 아니다. 실내·야외는 장소 이름이나 조건부 요청이 아니므로 destination_text·condition_text에 넣지 않는다.
+조건이 없으면 want=any, evidence="".
+place_setting은 place_search와 별개다. 고객이 주변·근처의 기준 일정이나 지명을 말하지 않았으면 실내·야외 조건이 있든 없든
+place_search는 relation=none,anchor_item=none,place_text="",evidence=""이며, 바꿀 대상 일정을 place_search 기준으로 옮겨 적지 않는다.
 """
 
 
 def validate(raw: dict[str, Any], message: str, aliases: set[str]) -> None:
     """Validate structure and quoted evidence; never infer intent with phrase rules."""
+    setting = raw.get("place_setting")
+    if setting is not None:
+        if not isinstance(setting, dict) or setting.get("want") not in SETTINGS:
+            raise ValueError("invalid place_setting")
+        quote = setting.get("evidence")
+        if setting["want"] != "any" and (not isinstance(quote, str) or not quote.strip() or quote not in message):
+            raise ValueError("unquoted place_setting")
     for field in ("time_edit", "place_search"):
         value = raw.get(field)
         if value is None:

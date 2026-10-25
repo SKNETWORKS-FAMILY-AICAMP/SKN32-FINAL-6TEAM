@@ -234,6 +234,19 @@ async def run_conversation(work: Any, task: TeamTask, ctx: dict[str, Any]) -> Te
             return work._change(task, ctx)
         if action == "propose_alternatives":
             return _propose_alternatives(work, task, ctx, item)
+        setting = _setting(request)
+        if setting is not None and item.detail.get("alternates"):
+            # ★`[2026-10-25 QA]` 실내·야외를 지정한 바꾸기 — 들고 있는 다른 안 가운데 장소 기록이 그와 같은 안만 쓴다.
+            #   ☆전에는 첫째 안(`plan_swap` 의 `alternates[0]`)으로 바꿔 「야외로 바꿔줘」가 실내 다른 안으로 바뀌었다. 없으면 새로 찾는다
+            places = work.catalog(task, ctx)
+            if places is None:
+                return work._unknown(task, "장소 목록", ctx["evidence"])
+            matching = stored_alternates(item, {str(p["place_id"]): p for p in places}, ctx["at"], setting=setting)
+            if not matching:
+                return _fresh_change(work, task, ctx, item)
+            picked = chosen.get("choice") if chosen and chosen.get("choice") is not None else None
+            request["choice"] = picked if picked in {m["key"] for m in matching} else matching[0]["key"]
+            return work._change(task, ctx)
         if item.detail.get("alternates"):
             if chosen and chosen.get("choice") is not None:
                 request["choice"] = chosen["choice"]
@@ -283,7 +296,14 @@ def _fresh_plan(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any, *, re
         message=task.input_text, request_id=task.context.current_state.get("request_id"),
         state_lookup=work._state_lookup(task, ctx) if dining else None,
         price_lookup=work._price_lookup(task, ctx) if dining else None, reported_closed=reported_closed,
-        meal_picker=dining_ledger.meal_picker() if dining and item.kind == "dining" else None)
+        meal_picker=dining_ledger.meal_picker() if dining and item.kind == "dining" else None,
+        setting=_setting(ctx["request"]))
+
+
+def _setting(request: dict[str, Any]) -> str | None:
+    """`[2026-10-25 QA]` 해석이 인용으로 확인한 새 장소의 실내·야외 조건(`trip_messages._dispatch_decision` 이 싣는다). 없으면 None."""
+    value = (request or {}).get("setting")
+    return value if value in ("indoor", "outdoor") else None
 
 
 def _propose_alternatives(work: Any, task: TeamTask, ctx: dict[str, Any], item: Any) -> TeamResult:
@@ -292,7 +312,8 @@ def _propose_alternatives(work: Any, task: TeamTask, ctx: dict[str, Any], item: 
     # ★`[2026-10-20]` 등록 때 남긴 「다른 안」이 있으면 그것을 먼저 묻는다 — 새로 찾는 것은 저장분이 없거나 낡았을 때만(`stored_alternates`).
     #   고르는 둘째 차례도 같은 저장분으로 맞춘다(아래 `selected` 는 이 목록에서 찾는다)
     places = work.catalog(task, ctx)
-    stored = stored_alternates(item, {str(p["place_id"]): p for p in places or []}, ctx["at"]) if places is not None else []
+    stored = (stored_alternates(item, {str(p["place_id"]): p for p in places or []}, ctx["at"], setting=_setting(ctx["request"]))
+              if places is not None else [])
     if stored:
         options = stored
     else:

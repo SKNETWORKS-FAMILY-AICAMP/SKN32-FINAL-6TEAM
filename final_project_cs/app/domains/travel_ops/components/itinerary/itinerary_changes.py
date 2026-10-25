@@ -1256,7 +1256,8 @@ def swap_refusal(name: str, starts: datetime, report: dict[str, Any] | None) -> 
         f"{name}의 {at} {what}를 지금 확인하지 못해 바꾸지 않았어요. 일정은 그대로예요. 잠시 뒤 다시 말씀해 주세요.")})
 
 
-def stored_alternates(item: Item, places_by_id: dict[str, dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
+def stored_alternates(item: Item, places_by_id: dict[str, dict[str, Any]], now: datetime,
+                      setting: str | None = None) -> list[dict[str, Any]]:
     """이 항목이 들고 있는 「다른 안」 가운데 **지금 고를 수 있는 것** — 채팅 「다른 데로 바꿔 줘」 · 「후보 알아봐 줘」가 새로 찾기 전에 먼저 쓴다.
 
     빼는 것(낡음): 지금 적용된 곳과 같은 곳 · 장소 행이 이 여행에 없는 곳(place_id 가 있는데 목록에 없다) · 시작 시각이 이미 지난 안.
@@ -1271,8 +1272,29 @@ def stored_alternates(item: Item, places_by_id: dict[str, dict[str, Any]], now: 
         starts = datetime.fromisoformat(record["starts_at"]) if record.get("starts_at") else item.starts_at
         if starts is not None and starts <= now:
             continue
+        if setting is not None and place_setting(places_by_id.get(place_id)) != setting:
+            continue                      # ★`[2026-10-25 QA]` 고객이 실내·야외를 지정했다 — 장소 기록이 그와 같은 안만
         usable.append(record)
     return usable
+
+
+#: 고객에게 보이는 실내·야외 이름
+SETTING_LABELS = {"indoor": "실내", "outdoor": "야외"}
+
+
+def place_setting(place: dict[str, Any] | None) -> str | None:
+    """장소 기록의 실내·야외 — 출처가 적은 `attributes.indoor` 가 먼저, 없으면 `weather_sensitive`(True 야외 · False 실내). 모르면 None.
+
+    ★`[2026-10-25 QA]` 「실내를 야외로 바꿔줘」의 후보 거르기. 모름은 어느 쪽으로도 치지 않는다(날씨 대체의 「모름은 실내 아님」과 같은 원칙)."""
+    if not place:
+        return None
+    indoor = (place.get("attributes") or {}).get("indoor")
+    if isinstance(indoor, bool):
+        return "indoor" if indoor else "outdoor"
+    sensitive = place.get("weather_sensitive")
+    if isinstance(sensitive, bool):
+        return "outdoor" if sensitive else "indoor"
+    return None
 
 
 def shift_moves_after(items: list[Item], current: Item, ends: datetime | None) -> tuple[dict[UUID, Item], Item | None]:
@@ -1499,7 +1521,8 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
                          request_id: str | None, state_lookup: DiningStateLookup | None = None,
                          price_lookup: PriceLookup | None = None, reported_closed: bool = False,
-                         meal_picker: MealPicker | None = None, search_origin: dict[str, Any] | None = None) -> Plan:
+                         meal_picker: MealPicker | None = None, search_origin: dict[str, Any] | None = None,
+                         setting: str | None = None) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
 
     ★`[2026-10-16]` `reported_closed` — 「○○ 문 닫았대」(지금 식사가 아닌 항목의 휴무 신고)도 같은 계산을 쓴다. 다만 **신고**다:
@@ -1527,6 +1550,9 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
         places = other_sites(places, current.place, items)  # 원래 곳 · 일정의 다른 활동과 같은 곳도 아니다
     else:
         places = other_restaurants(places, current.place)  # 원래 식당의 다른 이름 행도 아니다(`[2026-10-16]` 하동관 명동본점 → 하동관)
+    if setting is not None:
+        # ★`[2026-10-25 QA]` 「실내를 야외로 바꿔줘」 — 장소 기록의 실내·야외가 요청과 같은 곳만 후보다(원래 곳은 각 계산이 뺀다). 모름은 고르지 않는다
+        places = [p for p in places if str(p["place_id"]) == str(current.place["place_id"]) or place_setting(p) == setting]
     cause = with_request(({"category": "customer_report", "type": "closed", "from": current.place["name"],
                            "summary": "문을 닫았다고 알려 주셨어요",          # 묻는 알림의 원인 문장(`pending._cause_text`)
                            "message": message, "evidence": "고객 신고"} if reported_closed else
@@ -1591,6 +1617,12 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
             ask = (f"{radius / 1000:g}km 안에서 {seoul(current.starts_at):%H:%M}에 갈 수 있는 {kind}이 없어요{detail}. "
                    f"대신 이런 곳이 있어요 — {listed}. 고르시면 바꿀게요. 답이 없으면 원래 일정을 그대로 둡니다.")
             return NoChange("relaxed", {"text": ask, "reason": text, "options": options, "causes": [cause], **facts})
+        if setting is not None:
+            # 맞는 곳이 없으면 다른 종류로 조용히 바꾸지 않는다 — 그렇게 답하고 일정은 그대로(`ItineraryWork.settle` 이 `message` 를 싣는다)
+            label = SETTING_LABELS[setting]
+            facts["setting"] = setting
+            facts["message"] = (f"{label}로 확인된 다른 {kind}을 {radius / 1000:g}km 안에서 찾지 못해 일정은 바꾸지 않았어요. "
+                                f"실내·야외가 장소 정보로 확인된 곳만 골라요 — 가고 싶은 곳 이름을 알려 주시면 그곳으로 바꿔 드릴게요.")
         return NoChange("no_alternate", {"reason": text, "text": text, **facts})
     name = best.place["name"] if best.place else best.name
     starts = best.starts_at or current.starts_at

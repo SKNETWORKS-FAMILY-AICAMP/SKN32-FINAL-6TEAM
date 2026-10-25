@@ -423,7 +423,7 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "choices": {"type": "array", "items": choice, "maxItems": 3}},
         # ★되묻는 문장은 모델이 쓰지 않는다 — 서버가 후보로 만든다(답이 길어져 p95 가 7초였다, 재생 시험 2026-09-29)
         # ★`[2026-10-14]` 목적지 · 조건 칸은 **반드시 낸다**(없으면 빈 문자열) — 선택 칸이면 학습 E4B 가 아예 내지 않았다(재생 434건 중 목적지 0/43)
-        "required": ["time_edit", "place_search", "action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
+        "required": ["time_edit", "place_search", "place_setting", "action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
                      "destination_text", "condition_text", "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"]}
 
 
@@ -433,6 +433,21 @@ def default_query(raw: dict[str, Any], stops: list[Stop]) -> dict[str, str]:
 
     day = raw.get("at_day")
     return {"day": day if day in query_days(stops) and day != "none" else "all", "period": "all", "kind": "all", "position": "all"}
+
+
+def _quotes_overlap(first: str, second: str, message: str) -> bool:
+    """두 인용이 같은 말이거나, 고객 원문에서 어느 한 자리끼리라도 구간이 겹치는가(단어를 보지 않고 위치만 본다)."""
+    if first == second:
+        return True
+
+    def spans(quote: str) -> list[tuple[int, int]]:
+        found, start = [], message.find(quote)
+        while start >= 0:
+            found.append((start, start + len(quote)))
+            start = message.find(quote, start + 1)
+        return found
+
+    return any(a < d and c < b for a, b in spans(first) for c, d in spans(second))
 
 
 def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]],
@@ -491,6 +506,13 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     #   「조건이 붙은 변경은 미리 걸어 둘 수 없다」는 엉뚱한 답이 됐다(x600 서버 웹 채팅 재시험 2026-10-14). 다른 안 보여 주기는
     #   일정을 바꾸지 않으므로 진짜 조건부 요청도 미리 바뀌지 않는다.
     condition = str(raw.get("condition_text") or "").strip()[:200]
+    from .edit_intent import requested_setting
+    setting_quote = str((raw.get("place_setting") or {}).get("evidence") or "")
+    if condition and requested_setting(raw) and condition in setting_quote:
+        # ★`[2026-10-25 QA]` 인용 확인을 지난 실내·야외 조건 원문(「야외로」)을 조건 칸에도 옮겨 적었다 — 「~하면」 같은 조건부 요청이 아니다.
+        #   ☆실 E4B(tripilot-pointer:e4b-ft) 「실내를 야외로 바꿔줘」: condition_text=「야외로」 → 바로 바꾸지 않고 다른 안 묻기로 돌았다
+        raw = {**raw, "condition_is_setting": {"text": condition, "evidence": setting_quote}}
+        condition = ""
     if action in {"apply_change", "report_closed"} and condition:
         raw = {**raw, "condition_guard": {"condition": condition, "blocked_action": action}}
         action = "propose_alternatives"
@@ -509,9 +531,22 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     #   ★`[2026-10-15 사용자 지시]` 후보만 보여 주지 않고 **말한 곳을 찾아 그곳으로 바꾼다** — 웹 「일정 수정」의 장소 이름 고치기와 같은 길
     #   (`chat_edit` → `pipeline.edit` 의 이름 찾기: 우리 장소 표 → 관광공사 → 요식 원장 → 카카오). 하나로 못 찾으면 바꾸지 않고 그렇게 답한다.
     destination = str(raw.get("destination_text") or "").strip()[:200]
+    if action == "apply_change" and destination and requested_setting(raw) and destination in setting_quote:
+        # ★`[2026-10-25 QA]` 인용 확인을 지난 실내·야외 조건 원문을 목적지 칸에도 옮겨 적었다 — 장소 이름이 아니다(「야외」라는 곳을 찾지 않는다)
+        raw = {**raw, "destination_is_setting": {"text": destination, "evidence": setting_quote}}
+        destination = ""
     if action == "apply_change" and destination:
         raw = {**raw, "named_destination": {"text": destination, "from_action": action}}
         action = "replace_named"
+    near_search = raw.get("place_search") or {}
+    near_quote = str(near_search.get("evidence") or "")
+    if (near_search.get("relation") == "near" and requested_setting(raw) and near_quote and setting_quote
+            and _quotes_overlap(near_quote, setting_quote, message or "")):
+        # ★`[2026-10-26 QA]` 인용 확인을 지난 실내·야외 조건 원문(또는 그 구간에 걸친 원문)을 근처 검색 근거로도 옮겨 적었다 — 근처 기준이 아니다.
+        #   ☆실 E4B(live-8 · live-9) 「(실내를) 야외로 바꿔줘」: place_search=near · anchor_item=i1 · evidence=조건 원문 → 아래 근처 기준 확인이
+        #   되묻기 선택지를 지워 식사 일정까지 끼운 대체 목록이 나갔고, 대상이 다른 활동이면 「근처로 찾아 바꾸지 못해요」로 막혔다
+        raw = {**raw, "place_search": {**near_search, "relation": "none", "anchor_item": "none", "place_text": ""},
+               "near_is_setting": {"was": near_search, "evidence": setting_quote}}
     by_alias = {s.alias: s.item for s in stops}
     target = raw.get("target_item") or "none"
     if target != "none" and target not in by_alias:

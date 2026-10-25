@@ -40,6 +40,10 @@ def resolve(decision, *, items, message, selected, turns, version, now, ttl_seco
         return replace(decision, item=None), None, True
     named = named_items(items, message)
     reference = decision.reads[0].get("reference") if decision.reads else None
+    # 다른 날·시각·끼니를 명시한 문장에 옛 일정이나 화면 선택을 덮어씌우지 않는다.
+    scoped = bool(re.search(r"\d\s*(?:일차|월|일|시|:)|오늘|내일|아침|점심|저녁|첫|마지막", message))
+    # ★`[2026-10-25 QA]` 화면에서 고른 일정(요청의 `item_id`, 위에서 현재 여행에 있는지 확인했다)
+    picked = by_id[str(selected)] if selected is not None else None
     source, item = None, None
     if reference == "explicit" and decision.item is not None and str(decision.item.item_id) in by_id:
         # 각 질문에서 해석한 명시 대상(별칭 포함)을 다른 질문의 이름으로 덮어쓰지 않는다.
@@ -50,11 +54,12 @@ def resolve(decision, *, items, message, selected, turns, version, now, ttl_seco
         # 배제·출발·도착 등을 해석한 대상이 현재 여행의 항목인지 확인한다.
         if reference == "explicit" and decision.item is not None and str(decision.item.item_id) in by_id:
             source, item = "message", by_id[str(decision.item.item_id)]
+        elif picked is not None and not scoped and any(n.item_id == picked.item_id for n in named):
+            # 같은 이름 일정이 여럿인데 고객이 그중 하나를 화면에서 골랐다 — 고른 것이 그 이름의 일정이다
+            source, item = "selection", picked
         else:
             return replace(decision, item=None), None, True
     else:
-        # 다른 날·시각·끼니를 명시한 문장에 옛 일정을 덮어씌우지 않는다.
-        scoped = bool(re.search(r"\d\s*(?:일차|월|일|시|:)|오늘|내일|아침|점심|저녁|첫|마지막", message))
         bare = not scoped and bool(re.fullmatch(
             r"\s*(?:(?:거기|그거|그곳|저거|그건|거긴|그것)(?:에|은|는|의|을|를)?\s*)?"
             r"(?:(?:좀|더)\s*)?(?:자세히|상세|주소|위치|영업시간|운영시간|전화번호)?\s*"
@@ -67,6 +72,12 @@ def resolve(decision, *, items, message, selected, turns, version, now, ttl_seco
         pointing = bool(re.search(r"거기|거긴|그거|그건|그것|그곳|그쪽|저거|저기|저곳|(?:^|\s)그\s", message))
         fallback = (by_id.get(str(decision.item.item_id))
                     if decision.item is not None and not bare and not pointing else None)
+        # ★`[2026-10-25 QA]` 앞 답 대상이 없는 이어 묻기는 화면에서 고른 일정을 가리킨다 — 문장에 대상이 전혀 없거나(`bare`),
+        #   「거기 · 그거」로 가리켰고 모델이 고른 대상도 그 일정일 때만. 전에는 고른 일정이 있는데도 모델이 「앞에서 말한 것」으로
+        #   적었다는 이유로 「가리키는 일정을 … 확인하지 못했어요」로 되물었다(QA 2026-10-25 「국립중앙박물관에 대해 궁금한 점」).
+        #   이름을 댄 문장(일정 밖 장소 포함)과 날 · 시각 · 끼니를 말한 문장은 고른 일정으로 대신하지 않는다.
+        followup_pick = (picked if picked is not None and not scoped
+                         and (bare or (pointing and decision.item is not None and decision.item.item_id == picked.item_id)) else None)
         if selected is not None and not scoped and reference not in ("explicit", "previous"):
             source, item = "selection", by_id[str(selected)]
         elif bare or ((reference == "previous" or pointing) and not scoped):
@@ -78,13 +89,15 @@ def resolve(decision, *, items, message, selected, turns, version, now, ttl_seco
                 if focus.get("version") == version and 0 <= age <= ttl_seconds:
                     item = by_id.get(str(focus.get("item_id")))
                     source = "previous_fact"
-                if item is None and fallback is None:
+                if item is None and fallback is None and followup_pick is None:
                     return replace(decision, item=None), None, True
             except (KeyError, TypeError, ValueError):
                 # 문맥이 없거나 읽을 수 없으면 짧은 이어 묻기에 모델이 고른 다른 일정을 자동 승계하지 않는다.
-                if fallback is None:
+                if fallback is None and followup_pick is None:
                     return replace(decision, item=None), None, reference == "previous"
-            if item is None:
+            if item is None and followup_pick is not None:
+                source, item = "selection", followup_pick
+            elif item is None:
                 source, item = "decision_without_previous", fallback
         elif decision.item is not None:
             item = by_id.get(str(decision.item.item_id))
