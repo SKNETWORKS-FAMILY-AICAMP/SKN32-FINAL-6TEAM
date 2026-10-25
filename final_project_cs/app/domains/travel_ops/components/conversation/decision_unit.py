@@ -25,7 +25,7 @@ KST = ZoneInfo("Asia/Seoul")
 
 ACTIONS = ("apply_change", "propose_alternatives", "rollback", "redo", "answer_fact", "ask_policy", "answer_service",
            "report_delay", "report_closed", "change_time", "add_item", "remove_item", "swap_order", "lock_item", "unlock_item",
-           "replace_named", "edit_trip", "arrive_item", "complete_item", "advance_trip", "finish_day", "clarify", "other")
+           "replace_named", "edit_trip", "booking_transaction", "arrive_item", "complete_item", "advance_trip", "finish_day", "clarify", "other")
 #: ★`[2026-10-15]` 서버만 쓰는 할 일 — 모델은 고르지 않는다(답 양식에 없다). 고객이 바꿀 곳 이름을 말한 장소 바꾸기(`apply_change` + `destination_text`)를 서버가 이것으로 옮긴다
 SERVER_ACTIONS = ("replace_named",)
 #: ★`[2026-10-15]` 채팅이 웹 「일정 수정」과 같은 길(`chat_edit`)로 실행하는 고치기 — 바꾸는 할 일이라 대상 근거 검사(`guard_target`)를 똑같이 지난다
@@ -41,6 +41,11 @@ EDIT_ACTIONS = ("change_time", "add_item", "remove_item", "swap_order", "lock_it
 #:  「여행 이름을 …로」를 모델이 장소 바꾸기로 끼워 「어느 일정을 바꿀까요?」로 되물었다(엉뚱한 되묻기). 이것만 정직한 안내로 막는다.
 UNSUPPORTED: dict[str, str] = {
     "edit_trip": "여행 인원·이름·기간 같은 여행 설정을 바꾸는 일은 아직 채팅에서 하지 못해 일정은 바꾸지 않았어요.",
+    #: ★`[2026-10-26 사용자 지시 · U01]` 업체에 한 예약의 취소·변경 · 환불 · 결제는 우리가 처리하지 않는다(Booking Handoff 는 MVP 밖).
+    #:  전에는 모델이 규정 질문(ask_policy)으로 읽어 「규정 자료에서 맞는 내용을 찾지 못했다」로 끝났다. 공개 상태 · 계약은 그대로 두고
+    #:  답 문장만 「지원하지 않는 요청」 안내로 닫는다 — 판별은 모델이 고른 할 일이다(문장 낱말 규칙 없음).
+    "booking_transaction": ("업체 예약 취소·변경이나 환불·결제는 지원하지 않는 요청이라 처리하지 않았어요. "
+                            "예약한 업체에 직접 문의해 주세요. 일정은 바꾸지 않았어요."),
 }
 FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move",
          "route_here", "nearby_dining", "nearby_activity", "dining_near", "schedule", "changeability",
@@ -106,6 +111,7 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
 - swap_order: 두 일정의 순서를 바꿔 달라. target_item=한 일정, anchor_kind=item · anchor_item=다른 일정.
 - lock_item: 일정을 고정해 달라(「절대 바꾸지 마」). unlock_item: 고정을 풀어 달라. target_item=그 일정.
 - edit_trip: 인원 수·여행 이름·기간 같은 여행 설정을 바꿔 달라(「인원 4명으로 바꿔줘」). 일정의 장소를 바꾸라는 말이 아니다.
+- booking_transaction: 업체에 한 예약을 취소·변경하거나 환불·결제·카드 청구를 실제로 처리해 달라는 실행 요청이다. 위약금·환불 규정을 묻는 말은 ask_policy, 그런 일을 대신 해 주는지 기능을 묻는 말은 answer_service, 일정에서 항목을 빼 달라는 말은 remove_item이다. target_item=none.
 - clarify: 무엇을 할지나 어느 일정인지 분명하지 않다 — choices 에 **이해한 범위 안의 해석 후보**
   1~3개(가장 그럴듯한 것부터 — 각각 action · target_item · target_change · fact). 「이거」「그거」가 무엇인지 화면 선택이나
   직전 대화로 정할 수 없으면 clarify.
