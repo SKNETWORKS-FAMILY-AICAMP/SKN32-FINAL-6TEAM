@@ -46,6 +46,8 @@ export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitiv
 export async function agree(page: Page, extra: ConsentSeed = {}) {
   await page.addInitScript(([key, version, items]) => {
     if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version, items: { service_terms: true, privacy: true, sensitive: false, location: false, alert_channel: false, service_improvement: false, ...items }, at: "2026-10-05T09:00:00.000Z", synced: true }));
+    // `[2026-10-25]` 첫 여행 안내(덮개)도 본 것으로 — `start()` 없이 `agree()` 만 쓰는 시험(onboarding · registerStubTrip)의 누름을 막지 않게
+    if (!localStorage.getItem("tripilot.web.example-guide.v1")) localStorage.setItem("tripilot.web.example-guide.v1", "done");
   }, [CONSENT_STORAGE, TERMS_VERSION, extra] as const);
 }
 
