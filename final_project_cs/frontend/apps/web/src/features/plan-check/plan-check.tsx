@@ -18,10 +18,12 @@ import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
 import { onToast, pushToast, type BusToast } from "@/lib/toast-bus";
 import { changeLines } from "./change-lines";
-import { askOfStop, askStopId, draftOfItem, foundCount, incomingMove, isInstantRow, needs, heldAt, stopKind, stopsHere, withArrivalRows, withAskSlot, progress, STAGES, tally, timeline, type CheckRow, type ItemDraft, type PlanAsk, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type ServerProgress, type TripIssue } from "./model";
+import { askOfStop, askStopId, draftOfItem, foundCount, incomingMove, isInstantRow, needs, heldAt, stopKind, stopsHere, withArrivalRows, withAskSlot, tally, timeline, type CheckRow, type ItemDraft, type PlanAsk, type PlanCandidate, type PlanCheckView, type PlanDay, type PlanItem, type Reread, type TripIssue } from "./model";
 import { Act, HeadBadges, letter, pinKindLabel, PrefillNote, reason, type ListFilter } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { dayTimes, withTimes } from "./day-times";
+import { quietText, stepCount, stepDetail, stepName, type Steps } from "./server-steps";
+import { useServerSteps } from "./use-server-steps";
 import { DayList, type RowContext } from "./plan-rows";
 import { checkingList } from "./checking-list";
 import { PreviewHint, ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
@@ -29,6 +31,7 @@ import { TaxiPricing } from "./taxi-pricing";
 import type { WebTaxiPricing } from "@/lib/live/taxi-pricing";
 import { dampedScrollTo } from "@/lib/damped-scroll";
 import type { MoveOptions, MoveOptionMode, MoveRoutesPage } from "@/lib/live/move-options";
+import type { IntakeEdit } from "@/lib/live/intake";
 import { moveToast } from "./map-description";
 import { usePlanIntroToast, useReadingToastHandoff } from "./use-plan-intro-toast";
 import { FOLLOW_TOP_PX, useFollowScroll } from "./use-follow-scroll";
@@ -45,7 +48,7 @@ import { TimeDragOverlay } from "./time-drag-overlay";
 import { useTimeEdit } from "./use-time-edit";
 import { useCenterTools } from "./use-center-tools";
 import { REVEAL_MS, useReveal, type RevealRowCut, type RevealStop } from "./use-reveal";
-import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type StopOption } from "./stop-questions";
+import { arrivalQuestion, interpretationQuestion, pickMyselfAnswer, placeQuestion, type LaterStart, type PushedStop, type StopOption } from "./stop-questions";
 import { StopDeleteDialog, StopQuestion } from "./stop-question";
 import { DoneFooter } from "@/features/survey-questions/reading-footer";
 import { TIMING } from "@/features/survey-questions/use-question-flow";
@@ -87,6 +90,8 @@ export interface PlanCheckProps {
   registration?: Registration;
   /** Trip-wide details the server asks for before it can register. */
   tripIssues?: TripIssue[];
+  /** Dynamic meal-condition questions appear inside the result list. */
+  conditionQuestions?: ReactNode;
   /**
    * `[2026-10-04]` The plan as 「전체 자동 추천」 WOULD make it (the server's dry run: nothing saved), once it has been asked for. The screen stands it under `view` and lets the list
    * scroll on into it; `view` stays the plan as it is, so both pictures are held and the customer can go back up to the one before.
@@ -163,6 +168,8 @@ export interface PlanCheckActions {
    * All changes go to the server in ONE request, so the plan is saved and checked again once. A change that changes nothing is skipped.
    */
   retime?: (changes: { id: string; start: string; end: string }[], how?: EditHow) => Promise<void>;
+  /** `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` Save the server's push preview: its edits as they are (the times it showed). */
+  applyPush?: (edits: IntakeEdit[], how?: EditHow) => Promise<void>;
   /** Take one stop out (`[2026-10-20 C안]` `how.flow`: from the first check's question — taken out at once, with its check). */
   remove?: (id: string, how?: EditHow) => Promise<void>;
   /** Answer a trip-wide detail. */
@@ -248,10 +255,15 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice: given, slo
   const view = revealed.stage === "done" ? latest : revealed;
   // `[2026-10-21]` The 「전체 자동 추천」 dry run waits while the first check is drawn (from its reading lines on) and stopped at its questions — held here, where the page is
   //   from the first moment the server's check is final (the list is not drawn yet then).
+  // ★`[2026-10-24 사용자 결정 — ST4F-731]` Also while the reading screen is up (`readingExtras` — its questions and 「계획을 다 읽었어요」): this same page draws the reading there and
+  //   its check came to 「done」 the moment reading ended, so the dry run went out 5 s before the plan check opened and its stopped question waited behind it
+  //   (2026-10-24 local runs: sent at 90.8 / 92.6 s, the question at 98.3 / 100.0 s — 「후보를 찾는 중」 22.5 / 5.5 s). It goes once the plan check has drawn its first check.
   const warmUp = result.actions?.holdWarmUp;
-  const holding = stops && revealed.stage !== "done";
+  const holding = stops && (Boolean(readingExtras) || revealed.stage !== "done");
   useEffect(() => { warmUp?.(holding); }, [warmUp, holding]);
-  useEffect(() => () => warmUp?.(false), [warmUp]);
+  // ★`[2026-10-24 ST4F-731]` No release when the calls go away: the 5 s of 「계획을 다 읽었어요」 are drawn by this same page without them (`flow.hold` in `intake-review.tsx`),
+  //   and letting go there sent the dry run before the plan check opened (2026-10-24 local run after the first fix: sent at 77.5 s, the plan check at 81.8 s).
+  //   The hold is the page's (`use-server-review.ts`) and goes with it.
   // `[2026-10-20 C안]` What a pick did is not a notice on the screen (the card shows it): a screen reader is told it here instead.
   // The result screen reads its own state out: a pick said during the check is not said there — only one made on it (a card's question).
   const [said, setSaid] = useState<{ text: string; done: boolean } | null>(null);
@@ -298,63 +310,75 @@ function BackButton({ onBack, label }: { onBack: () => void; label?: string }) {
   return <button type="button" className={styles.back} onClick={onBack} aria-label={label ?? t("뒤로", "Back")}><ArrowLeft size={20} strokeWidth={1.6} aria-hidden="true" /></button>;
 }
 
-const stepLabels = (t: Translate) => [t("받았어요", "Received"), t("일정 읽기", "Reading"), t("장소·운영시간", "Places & hours"), t("정리 완료", "Done")];
-
 /**
- * One straight line with four points; the filled part follows the lines read, then the places and moves checked.
- * ★`[2026-10-04 사용자 지시]` A point is checked and filled when the line has filled up to it (not when the stage after it begins), and no line shows
- * through a circle: the points stand over the line, each in the middle of a quarter of the width and the line runs from the first to the last.
+ * ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` One cell per step the server works through (`server-steps.ts` — mockup `mockups/tripilot-plan-check-progress-steps.html` ③),
+ * the name of the step it is at under its cell, and one line under the bar: how far that step is and what it is looking at, past 8 s with no news 「n초째」.
+ * No toast says the server is slow while it sends its counts. Under the questions of the reading screen the bar keeps its height (no list that pushes them down).
+ * ☆Before: four points (받았어요 · 일정 읽기 · 장소·운영시간 · 정리 완료) — the third filled at the last hours count while the weather check and the gaps filled first still ran.
  */
 function ProgressBar({ view }: { view: PlanCheckView }) {
   const t = useT();
-  const labels = stepLabels(t);
-  const current = STAGES.indexOf(view.stage);
-  const exact = progress(view);
-  const value = Math.round(exact);
-  // The line is as far as the points it has reached: point `i` of four sits at `i / 3` of the line (`stops`), and is reached when the line is that far.
-  //   The last point is the screen having drawn everything (the stage 「정리 완료」), however far the server's own count says it is.
-  const last = labels.length - 1;
-  const reached = (index: number) => view.stage === "done" || (index === 0 ? view.stage !== "received" : index === last ? false : exact >= (index / last) * 100 - 0.05);
-  const waitingAt = labels.findIndex((_, index) => !reached(index));
-  // ★`[2026-10-03]` The server's "장소 3/14 · 광장시장" count comes while it reads, so the big bar says it too.
-  // A terminal result supersedes the last partial SSE count; never announce it as still running.
-  const at = view.stage !== "done" && view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
-  return <div className={styles.progress} data-size="large" role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
-    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
-    <div className={styles.track}><span className={styles.fill} style={{ width: `${Math.min(100, exact)}%` }} /></div>
-    <ol className={styles.steps}>{labels.map((label, index) =>
-      <li key={label} data-state={reached(index) ? "done" : index === waitingAt ? "current" : "waiting"}>
-        <span className={styles.node} aria-hidden="true" /><span className={styles.stepLabel}>{label}</span>
-      </li>)}</ol>
-    {/* ★Under the steps, not between them and the track: `.steps` is pulled up over the track (negative margin), so a line there was drawn over the nodes (user's screenshot 2026-10-03). */}
-    {at && <p className={styles.progressAt}>{at}</p>}
+  const { steps, quiet } = useServerSteps(view);
+  const value = Math.round(steps.percent);
+  const line = progressLine(steps, quiet, t);
+  const at = steps.current ? steps.steps.indexOf(steps.current) : -1;
+  const center = at < 0 ? 0 : (at + 0.5) / steps.steps.length * 100;
+  // The name stands centred under its cell, and starts (ends) at the bar's edge for the first (last) cells — it would run out of the screen.
+  const edge = center < 12 ? "start" : center > 88 ? "end" : "mid";
+  return <div className={styles.progress} data-steps role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
+    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={progressValueText(steps, value, line.text, t)}>
+    {/* The name under the current cell has its own line: the words under the bar start below it (they were drawn over it — user's screenshot 2026-10-24). */}
+    <div className={styles.cellRow}>
+      <StepCells steps={steps} />
+      {steps.current && <span className={styles.cellName} data-edge={edge} style={{ left: `${edge === "start" ? 0 : edge === "end" ? 100 : center}%` }}>{stepName(steps.current.key, t)}</span>}
+    </div>
+    <p className={styles.progressAt}>{line.node}</p>
   </div>;
+}
+
+/** The cells: done and passed ones filled, the current one as far as its count. */
+function StepCells({ steps, small = false }: { steps: Steps; small?: boolean }) {
+  return <span className={styles.cells} data-size={small ? "small" : undefined} aria-hidden="true">
+    {steps.steps.map((step) => <span key={step.key} data-state={step.state}><i style={{ width: `${Math.round(step.fraction * 100)}%` }} /></span>)}
+  </span>;
+}
+
+/** The line under the bar — 「**2/7곳** · 북촌한옥마을 확인 중 · 9초째」, 「결과를 정리하는 중」 once every step is over, 「**정리 완료**」 at the end. */
+function progressLine(steps: Steps, quiet: number, t: Translate): { node: ReactNode; text: string } {
+  if (steps.finished) { const done = t("정리 완료", "Done"); return { node: <b>{done}</b>, text: done }; }
+  if (!steps.current) { const text = steps.wrapping ? t("결과를 정리하는 중", "Putting the result together") : ""; return { node: text, text }; }
+  const count = stepCount(steps.current, t), detail = stepDetail(steps.current, t), late = quietText(quiet, t);
+  const parts: ReactNode[] = [count && <b key="count">{count}</b>, detail, late && <span key="late" className={styles.late}>{late}</span>].filter(Boolean);
+  return { node: parts.flatMap((part, index) => index ? [" · ", part] : [part]), text: [count, detail, late].filter(Boolean).join(" · ") };
+}
+
+/** 「이동 · 89% · 5/6구간 · …」 for a screen reader — 「정리 완료 · 100%」 once done. */
+function progressValueText(steps: Steps, value: number, line: string, t: Translate): string {
+  if (steps.finished) return `${t("정리 완료", "Done")} · 100%`;
+  const name = steps.current ? stepName(steps.current.key, t) : steps.wrapping ? t("정리 중", "Wrapping up") : t("받았어요", "Received");
+  return `${name} · ${value}%${line ? ` · ${line}` : ""}`;
 }
 
 /**
  * `[2026-10-03 사용자]` The check's progress beside the brand in the header (it was a white bar of its own under the header):
  * the step the server is at and how far, with a thin line under it. Same `progressbar` as the big one on the reading screen.
+ * ★`[2026-10-24 ST4F-732]` The same cells as the reading screen's bar (③): the step's name and count above, what it is looking at and 「n초째」 under them.
+ *   The reading and the places only count there — they are what the reading screen showed.
  */
 function HeaderProgress({ view }: { view: PlanCheckView }) {
   const t = useT();
-  const labels = stepLabels(t);
-  const current = STAGES.indexOf(view.stage);
-  const value = Math.round(progress(view));
-  // ★`[2026-10-03 사용자 지시]` What the server says it is at ("3/14 · 광장시장 운영시간 확인 중"): only when it sent a `progress` packet.
-  // ★A "places" count belongs to the reading: once the check has begun, a left-over "13/14 · … 장소 확인 중" would keep saying that while the hours and legs are drawn.
-  const at = view.stage !== "done" && view.serverProgress && view.serverProgress.phase !== "places" ? serverProgressText(view.serverProgress, t) : null;
+  const { steps, quiet } = useServerSteps(view);
+  const value = Math.round(steps.percent);
+  const current = steps.current;
+  const label = steps.finished ? t("정리 완료", "Done") : current ? stepName(current.key, t) : steps.wrapping ? t("정리 중", "Wrapping up") : t("받았어요", "Received");
+  const count = current ? stepCount(current, t) : steps.finished ? t(`${steps.steps.length}/${steps.steps.length}단계`, `${steps.steps.length}/${steps.steps.length} steps`) : "";
+  const at = [current && current.key !== "reading" && current.key !== "places" ? stepDetail(current, t) : "", current ? quietText(quiet, t) : ""].filter(Boolean).join(" · ");
   return <div className={styles.headProgress} role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
-    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
-    <span className={styles.headStep}>{labels[current]}<b>{value}%</b></span>
-    <span className={styles.headTrack}><span style={{ width: `${value}%` }} /></span>
+    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={progressValueText(steps, value, [count, at].filter(Boolean).join(" · "), t)}>
+    <span className={styles.headStep}>{label}<b>{count}</b></span>
+    <StepCells steps={steps} small />
     {at && <span className={styles.headAt}>{at}</span>}
   </div>;
-}
-
-/** "3/14 · 광장시장 운영시간 확인 중" — the count and the step the server is at, in its words (no title when the packet names none). */
-export function serverProgressText(at: ServerProgress, t: Translate): string {
-  const what = at.phase === "places" ? t("장소 확인", "place check") : at.phase === "hours" ? t("운영시간 확인", "hours check") : t("이동 확인", "route check");
-  return `${at.done}/${at.total} · ${at.title ? `${at.title} ` : ""}${what}${t(" 중", " in progress")}`;
 }
 
 /**
@@ -471,7 +495,7 @@ const SHEET_MIN = 44;
 
 interface Toast { text: string; sub?: string; undo?: boolean; /** An error: it stays until closed or swiped away. */ stay?: boolean; /** Puts back what this toast says was done (a batch of new times), instead of the plan-wide 「되돌리기」. */ revert?: () => void; /** The button's words when it is not 「되돌리기」 (a notice from outside this screen, `lib/toast-bus.ts`). */ undoLabel?: string; /** How long it stays when the default is too short (`lib/toast-bus.ts`). */ ms?: number }
 
-type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit" | "opening">;
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "conditionQuestions" | "previewView" | "routes" | "routeState" | "onMapZoom" | "edit" | "opening">;
 
 /** What still needs a look in a plan, leaving out the stops marked for deletion (they are leaving) and the legs that end at one. */
 function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: ReadonlySet<string>): { places: number; moves: number; total: number } {
@@ -481,7 +505,7 @@ function needsLeft(view: Pick<PlanCheckView, "items" | "moves">, removed: Readon
 }
 
 /** ③④⑤ The map under a floating bar, the sheet over it. Once done, the list and the map are worked together. */
-function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
+function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onSay, watched = false, actions = {}, registration, tripIssues = [], conditionQuestions, previewView = null, routes = null, routeState, onMapZoom, edit, opening = null }: {
   view: PlanCheckView; sourceView: PlanCheckView;
   /** `[2026-10-20 C안]` The card the first check stopped at, and the hook that checks it again after a pick (`useReveal`). */
   stop?: RevealStop | null; stopCheck?: ReturnType<typeof useReveal>["recheck"]; onSay?: (text: string) => void;
@@ -1225,7 +1249,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   const kindOfStop = (view: PlanCheckView, id: string) => stopKind(view, id, stopCheck?.isHoursAcknowledged);
   const stopNeed = stopItem ? kindOfStop(view, stopItem.id) : null;
   const stopMove = stopItem && stopNeed === "arrival" ? incomingMove(view, stopItem.id) : null;
-  const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: LaterStart | null } | null>(null);
+  const [stopWays, setStopWays] = useState<{ id: string; state: "loading" | "ready"; ways: MoveOptions | null; later: LaterStart | null; laterState: "loading" | "ready" } | null>(null);
   useEffect(() => {
     if (!asking || !stopItem) return;
     const id = stopItem.id;
@@ -1233,9 +1257,14 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
     let live = true;
     if (stopMove) {
       // A failed read of a way or of the later start is not shown as an answer: that option is just not offered (「직접 수정」 stays).
-      setStopWays({ id, state: "loading", ways: null, later: null });
-      const timer = setTimeout(() => void Promise.all([actions.moveOptions?.(stopMove.id).catch(() => null) ?? null, actions.laterStart?.(id).catch(() => null) ?? null])
-        .then(([ways, later]) => { if (live) setStopWays({ id, state: "ready", ways, later }); }), 0);
+      // ★`[2026-10-25 사용자 결정 — D5]` The ways first, the later start on its own (pushing the stops after it takes the server 10~17 s — 2026-10-25 local): said under the options meanwhile.
+      setStopWays({ id, state: "loading", ways: null, later: null, laterState: "loading" });
+      const timer = setTimeout(() => {
+        void (actions.moveOptions?.(stopMove.id).catch(() => null) ?? Promise.resolve(null))
+          .then((ways) => { if (live) setStopWays((current) => current?.id === id ? { ...current, state: "ready", ways } : current); });
+        void (actions.laterStart?.(id).catch(() => null) ?? Promise.resolve(null))
+          .then((later) => { if (live) setStopWays((current) => current?.id === id ? { ...current, later, laterState: "ready" } : current); });
+      }, 0);
       return () => { live = false; clearTimeout(timer); };
     }
     if (!actions.candidates) { setStopList({ id, state: "ready", list: [] }); return; }
@@ -1250,7 +1279,8 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   // 「Asked again」 is the same question of the same card (its place, or its arrival) — the arrival asked after its place is a new question.
   useEffect(() => { if (!stop) setPickedFor(null); else if (pickedFor && !pickedFor.startsWith(`${stop.id}:`)) setPickedFor(null); }, [stop, pickedFor]);
   const stopAsk = !stopItem || !asking ? null : stopMove
-    ? arrivalQuestion(stopItem, stopMove, view.items.find((item) => item.id === stopMove.fromId) ?? null, stopWays?.id === stopItem.id ? stopWays.ways : null, stopWays?.id === stopItem.id ? stopWays.later : null, t)
+    ? arrivalQuestion(stopItem, stopMove, view.items.find((item) => item.id === stopMove.fromId) ?? null, stopWays?.id === stopItem.id ? stopWays.ways : null, stopWays?.id === stopItem.id ? stopWays.later : null, t,
+      stopWays?.id === stopItem.id && stopWays.state === "ready" && stopWays.laterState === "loading")
     : placeQuestion(stopItem, sourceView, stopList?.id === stopItem.id ? stopList.list : [], t, language);
   const stopLoading = Boolean(stopItem) && (stopMove ? stopWays?.id !== stopItem!.id || stopWays.state === "loading"
     : stopList?.id === stopItem!.id && stopList.state === "loading" && !stopList.list.length);
@@ -1263,7 +1293,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   const askCards = resultAsks ? view.items.filter((item) => !removedSet.has(item.id) && stopsHere(item, view, stopCheck?.isHoursAcknowledged)
     && !((item.unfound || item.rereads?.length) && kindOfStop(view, item.id) === "place")) : [];
   const askKeys = askCards.map((item) => `${item.id}:${kindOfStop(view, item.id)}:${view.revision ?? ""}`);
-  const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: LaterStart | null; message?: string }>>({});
+  const [cardAsks, setCardAsks] = useState<Record<string, { key: string; state: "loading" | "ready" | "failed"; list: PlanCandidate[]; ways: MoveOptions | null; later: LaterStart | null; laterState: "loading" | "ready"; message?: string }>>({});
   const [cardBusy, setCardBusy] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
@@ -1274,15 +1304,20 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       if (cardAsks[id]?.key === key) continue;
       const move = kindOfStop(view, id) === "arrival" ? incomingMove(view, id) : null;
       const set = (next: Omit<(typeof cardAsks)[string], "key">) => { if (live) setCardAsks((current) => ({ ...current, [id]: { key, ...next } })); };
-      set({ state: "loading", list: [], ways: null, later: null });
+      const patch = (next: Partial<Omit<(typeof cardAsks)[string], "key">>) => {
+        if (live) setCardAsks((current) => current[id]?.key === key ? { ...current, [id]: { ...current[id], ...next } } : current);
+      };
+      set({ state: "loading", list: [], ways: null, later: null, laterState: "loading" });
       // Asked a moment later, as for the stopped card (the page's own effects hand the calls the plan on screen first).
       timers.push(setTimeout(() => {
         if (move) {
-          void Promise.all([actions.moveOptions?.(move.id).catch(() => null) ?? null, actions.laterStart?.(id).catch(() => null) ?? null])
-            .then(([ways, later]) => set({ state: "ready", list: [], ways, later }));
-        } else if (!actions.candidates) set({ state: "ready", list: [], ways: null, later: null });
-        else void actions.candidates(id, (cards) => set({ state: "loading", list: cards, ways: null, later: null }))
-          .then((list) => set({ state: "ready", list, ways: null, later: null }), (error: unknown) => set({ state: "failed", list: [], ways: null, later: null, message: reason(error) }));
+          // `[2026-10-25 사용자 결정 — D5]` The ways first, the later start on its own (as for the stopped card).
+          void (actions.moveOptions?.(move.id).catch(() => null) ?? Promise.resolve(null)).then((ways) => patch({ state: "ready", ways }));
+          void (actions.laterStart?.(id).catch(() => null) ?? Promise.resolve(null)).then((later) => patch({ later, laterState: "ready" }));
+        } else if (!actions.candidates) set({ state: "ready", list: [], ways: null, later: null, laterState: "ready" });
+        else void actions.candidates(id, (cards) => set({ state: "loading", list: cards, ways: null, later: null, laterState: "ready" }))
+          .then((list) => set({ state: "ready", list, ways: null, later: null, laterState: "ready" }),
+            (error: unknown) => set({ state: "failed", list: [], ways: null, later: null, laterState: "ready", message: reason(error) }));
       }, 0));
     }
     return () => { live = false; timers.forEach(clearTimeout); };
@@ -1299,6 +1334,11 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   }
   // The change screen opened from a result card's question (「직접 수정」): what is saved there goes with the check, like the question's options. ✎ on the card saves only, as before.
   const [cardEditing, setCardEditing] = useState<string | null>(null);
+  // ★`[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기 D6]` Stops a push made later, with the start each had: 「원래 hh:mm 시작」 under the name while it still starts where the push put it
+  //   (on this screen only — a page opened again does not know it).
+  const [movedFrom, setMovedFrom] = useState<Readonly<Record<string, { from: string; to: string }>>>({});
+  const markMoved = (changes: PushedStop[]) => setMovedFrom((current) => ({ ...current,
+    ...Object.fromEntries(changes.filter((change) => change.from && change.from !== change.start).map((change) => [change.id, { from: current[change.id]?.from ?? change.from!, to: change.start }])) }));
   const asksOnCard = (item: PlanItem) => cardEditing === item.id && askCards.some((entry) => entry.id === item.id);
   /** 「삭제」 of a result card's question, confirmed: the stop goes at once with the plan's check (as in the C안 flow). */
   function cardDelete(item: PlanItem) {
@@ -1311,7 +1351,8 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
     const need = kindOfStop(view, item.id);
     const move = need === "arrival" ? incomingMove(view, item.id) : null;
     const got = cardAsks[item.id]?.key === `${item.id}:${need}:${view.revision ?? ""}` ? cardAsks[item.id] : null;
-    const ask = move ? arrivalQuestion(item, move, view.items.find((entry) => entry.id === move.fromId) ?? null, got?.ways ?? null, got?.later ?? null, t)
+    const ask = move ? arrivalQuestion(item, move, view.items.find((entry) => entry.id === move.fromId) ?? null, got?.ways ?? null, got?.later ?? null, t,
+      Boolean(got && got.state === "ready" && got.laterState === "loading"))
       : placeQuestion(item, sourceView, got?.list ?? [], t, language);
     const loading = !got || (got.state === "loading" && (Boolean(move) || !got.list.length));
     return <StopQuestion id={item.id} kind={need} ask={ask} loading={loading} failed={!move && got?.state === "failed" ? got.message ?? null : null} again={false} leaving={false} takeFocus={false}
@@ -1337,8 +1378,10 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       : act.type === "pick" ? () => actions.replace!(item.id, { candidate: act.candidate }, { flow: true })
       : act.type === "confirm" ? () => actions.confirmPlace!(item.id, { flow: true })
         : act.type === "taxi" ? () => actions.setMoveMode!(act.moveId, "taxi")
-          : act.type === "later" ? () => actions.retime!([{ id: item.id, start: act.start, end: act.end }], { flow: true })
-            : () => actions.edit!(item.id, { ...draftOfItem(item), noPlace: true }, { flow: true });
+          : act.type === "mode" ? () => actions.setMoveMode!(act.moveId, act.mode)
+            : act.type === "push" ? async () => { await actions.applyPush!(act.edits, { flow: true }); markMoved(act.changes); }
+              : act.type === "later" ? () => actions.retime!([{ id: item.id, start: act.start, end: act.end }], { flow: true })
+                : () => actions.edit!(item.id, { ...draftOfItem(item), noPlace: true }, { flow: true });
   }
   /** The same sentences the screen's notices say for these changes (here only for a screen reader). */
   function sentenceOf(item: PlanItem, option: StopOption): string {
@@ -1347,6 +1390,9 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
       ? t(`${eul(item.title)} ${ro(act.candidate.name)} 바꿨어요`, `Changed ${item.title} to ${act.candidate.name}`) + " · " + t("바뀐 장소와 앞뒤 이동을 다시 확인해요", "Checking the new place and the moves either side")
       : act.type === "noplace" ? t(`${item.title} 일정은 장소 없이 두었어요`, `${item.title} is kept without a place`) + " · " + t("앞뒤 이동은 장소가 정해지면 확인해요", "Moves around it are checked once a place is set")
         : act.type === "taxi" ? t(`${ro("택시")} 바꿨어요`, "Changed to taxi") + " · " + t("이 구간만 다시 계산했어요", "Only this leg was counted again")
+          : act.type === "mode" ? t(`${ro(act.name)} 바꿨어요`, `Changed to ${act.name}`) + " · " + t("이 구간만 다시 계산했어요", "Only this leg was counted again")
+          : act.type === "push" ? t(`${act.changes.length}개 일정의 시간을 바꿨어요`, `Changed the time of ${act.changes.length} stop${act.changes.length === 1 ? "" : "s"}`)
+            + act.changes.map((change) => ` · ${change.title} → ${change.start}${change.end ? `–${change.end}` : ""}`).join("")
           : act.type === "later" ? t("1개 일정의 시간을 바꿨어요", "Changed the time of 1 stop") + ` · ${item.title} → ${act.start}${act.end ? `–${act.end}` : ""}`
             : [option.label, option.effect].filter(Boolean).join(" · ");
   }
@@ -1744,7 +1790,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
   };
   const contextFor = (was: Readonly<Record<string, string>>, list: "before" | "after"): RowContext => ({
     done, open: openAt?.list === list ? openAt.id : null, selected, frozen, actions, explain, rechecking: list === "before" ? cardBusy : null, changed: new Set(Object.keys(was)), was, removed: removedSet, rowsFor,
-    question: list === "before" && resultAsks ? cardQuestion : undefined,
+    question: list === "before" && resultAsks ? cardQuestion : undefined, movedFrom,
     // `[2026-10-21 P6]` Stopped at a question of the reading: its place is the newest row (the list follows it) and holds the question.
     reveal: done ? undefined : { activeId: stopEntry ? askStopId(stopEntry.id) : readingList.activeId, waiting: readingList.waiting, stop: stopItem?.id ?? (stopEntry ? askStopId(stopEntry.id) : null), rowCut,
       ask: stopItem && stopAsk && list === "before" ? <StopQuestion id={stopItem.id} kind={stopNeed ?? "place"} ask={stopAsk} loading={stopLoading}
@@ -1885,8 +1931,9 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
           : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={sourceView.stage === "done" ? sourceView : view} /></>}
       </div>, headerSlot)}
     <section ref={sheetBox} className={styles.sheet} aria-labelledby={inserting ? undefined : changing ? "plan-change-title" : "plan-check-sheet-title"} aria-label={inserting ? t("일정 추가", "Add a stop") : undefined} inert={sendingNow}>
-      {done && <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
-        onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>}
+      {/* `[2026-10-25 사용자 지적]` 검사 단계(「장소·운영시간 확인」)부터 손잡이를 보인다 — 등록한 여행 · 수정 화면처럼 잡고 올리고 내릴 수 있다는 표시(전에는 결과 단계에만 있었다) */}
+      <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
+        onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
         <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
           mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}
@@ -1976,6 +2023,7 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
               retry={actions.recheck && !frozen ? () => { void run(async () => { await actions.recheck!(); return null; }); } : undefined} busy={Boolean(view.rechecking)}
               onAlternatives={actions.candidates && !registered && !frozen ? (id) => { const item = view.items.find((entry) => entry.id === id); if (item) void startChange(item); } : undefined} />}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
+            {done && !registered && !previewing && conditionQuestions}
             {done && !registered && !previewing && view.prefill && <PrefillNote notes={view.prefill} />}
             {done && !registered && !previewing && view.taxiPricing && actions.editTrip &&
               <TaxiPricing value={view.taxiPricing} locked={frozen} onSave={(value) => actions.editTrip!("taxi_pricing", value)} />}

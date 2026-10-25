@@ -14,15 +14,18 @@ import { SLOW_AFTER_MS } from "@/features/intake-review/intake-starting";
 import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
+import { useTrips } from "@/features/trip/use-trip";
 import { LiveError, probeSession, startSession } from "@/lib/live/client";
 import { submitIntake } from "@/lib/live/intake";
 import { beginIntake, clearIntakeFailure, intakeFailure, loginRequiredBy, rememberIntakeArrival, type PlanRequest } from "@/lib/live/intake-start";
 import { previousPath } from "@/lib/nav-history";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { ExampleGuide, exampleGuideSeen } from "./example-guide";
 import { examplePlan } from "./example-plan";
 import { TestPlans } from "./test-plans";
 import { textToSend } from "./test-plan-input";
+import { usePlanInputExtrasShown } from "./availability";
 import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
 import { PlanAskFields } from "./plan-ask-fields";
 import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
@@ -58,15 +61,16 @@ function Preferences() {
   </div><hr /></>;
 }
 
-/** One of the three ways to give a plan: a bordered panel that is marked while it is the one that will be sent. */
-function Pane({ id, title, active, onActivate, children }: { id: RegistrationPane; title: string; active: boolean; onActivate: () => void; children: ReactNode }) {
+/** One of the three ways to give a plan: a bordered panel that is marked while it is the one that will be sent.
+ *  `alone`: `[2026-10-25 ST4F-739]` the only panel on the screen (the operator switched the others off) — there is nothing to choose between, so no 「보낼 칸」 mark. */
+function Pane({ id, title, active, alone = false, onActivate, children }: { id: RegistrationPane; title: string; active: boolean; alone?: boolean; onActivate: () => void; children: ReactNode }) {
   const t = useT();
   // Pressing it, writing in it, choosing in it, or moving the keyboard focus into it makes it the chosen one.
   return <Panel className={styles.pane} data-pane={id} data-active={active || undefined} aria-current={active ? "true" : undefined} aria-labelledby={`pane-${id}-title`}
     onClick={onActivate} onFocus={onActivate}>
     <div className={styles.paneHead}>
       <h2 id={`pane-${id}-title`} className={styles.paneTitle}>{title}</h2>
-      {active && <span className={styles.paneBadge}>{t("보낼 칸", "Will be sent")}</span>}
+      {active && !alone && <span className={styles.paneBadge}>{t("보낼 칸", "Will be sent")}</span>}
     </div>
     {children}
   </Panel>;
@@ -133,6 +137,12 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const [ask, setAsk] = useState<PlanAsk>(() => returned?.plan ? { start: returned.plan.start_date, days: returned.plan.days, party: returned.plan.party_size, wish: returned.plan.wish } : emptyAsk);
   // ★`[2026-10-03 사용자 결정]` The panel touched last is the one that is sent — and only that one .
   const [active, setActive] = useState<RegistrationPane>(() => returned ? paneOfSending(returned) : "text");
+  // ★`[2026-10-25 사용자 지시 — ST4F-739]` The operator's switch for 「파일 선택」 · 「계획 짜 주기」 · 「읽는 기준」 · 「여행 취향」 (`GET /v1/web/features`, off by default):
+  //   「직접 입력」 alone until the server says they are on. Switched off while a file or plan sending came back (or a draft kept before sign-in held one),
+  //   「직접 입력」 is the chosen panel again — nothing hidden is sent.
+  const extras = usePlanInputExtrasShown();
+  const extrasShown = extras === true;
+  if (extras === false && active !== "text") setActive("text");
   useEffect(() => {
     let live = true;
     void takeLoginDraft().then((saved) => {
@@ -212,6 +222,15 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const pending = signUp.isPending || sent || screening;
   // The chosen panel has nothing to send yet: pressing 「계획 확인하기」 says why under the panels and moves the focus there (the button is NOT switched off).
   const reason = paneReason(active, { text: value, files: files.length, ask }, today);
+  // ★`[2026-10-25 사용자 결정 — 예시 불러오기 첫 안내 A안]` Decided once, when this browser's trips are known: a first trip (none registered), an empty box on 「직접 입력」,
+  //   nothing being sent or given back, and the guide never finished here. A draft in the box or a returning customer never sees it.
+  const trips = useTrips();
+  const sampleButton = useRef<HTMLButtonElement>(null);
+  const submitButton = useRef<HTMLButtonElement>(null);
+  const [guide, setGuide] = useState<"wait" | "on" | "off">("wait");
+  if (guide === "wait" && (trips.isSuccess || trips.isError)) {
+    setGuide(trips.isSuccess && trips.data.length === 0 && value === "" && active === "text" && !pending && !returned && !exampleGuideSeen() ? "on" : "off");
+  }
 
   /** The panel the customer touched becomes the chosen one; anything said about the last sending goes with it. */
   function choose(pane: RegistrationPane) {
@@ -364,7 +383,7 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const textBox = <>
     <div className={styles.labelRow}>
       <label htmlFor="plan-source">{t("나의 여행 계획", "Your travel plan")}</label>
-      <Button variant="quiet" className={styles.sample} onClick={() => updateSource(examplePlan(language))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
+      <Button ref={sampleButton} variant="quiet" className={styles.sample} onClick={() => updateSource(examplePlan(language))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
     </div>
     <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
       placeholder={t("예시 — 이런 식으로 적어 주세요\n\n1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "Example — write it like this\n\nDAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
@@ -491,20 +510,22 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
       <div className={styles.layout}>
         <div className={styles.editor}>
           <div className={styles.panes}>
-            <Pane id="text" title={t("직접 입력", "Type it in")} active={active === "text"} onActivate={() => choose("text")}>{textBox}</Pane>
-            <Pane id="files" title={t("파일 선택", "Choose files")} active={active === "files"} onActivate={() => choose("files")}>{filePicker}</Pane>
-            <Pane id="plan" title={t("계획 짜 주기 (테스트)", "Plan it for me (test)")} active={active === "plan"} onActivate={() => choose("plan")}>
-              <PlanAskFields ask={ask} today={today} disabled={pending} onChange={changeAsk} />
-              {active === "plan" && errorNode}
-            </Pane>
+            <Pane id="text" title={t("직접 입력", "Type it in")} active={active === "text"} alone={!extrasShown} onActivate={() => choose("text")}>{textBox}</Pane>
+            {extrasShown && <>
+              <Pane id="files" title={t("파일 선택", "Choose files")} active={active === "files"} onActivate={() => choose("files")}>{filePicker}</Pane>
+              <Pane id="plan" title={t("계획 짜 주기 (테스트)", "Plan it for me (test)")} active={active === "plan"} onActivate={() => choose("plan")}>
+                <PlanAskFields ask={ask} today={today} disabled={pending} onChange={changeAsk} />
+                {active === "plan" && errorNode}
+              </Pane>
+            </>}
           </div>
-          <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />
+          {extrasShown && <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />}
           {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
         </div>
         <aside className={styles.tips}>
           <Panel>
-            <Preferences />
+            {extrasShown && <Preferences />}
             <h2>{t("이렇게 적으면 잘 읽어요", "Tips for writing your plan")}</h2>
             <ol className={styles.tipList}>
               <li>{t("일차 제목에 날짜를 적어요.", "Start each day with a date.")}</li>
@@ -519,9 +540,10 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
         <Button onClick={() => { if (previousPath() !== null) router.back(); else router.push(routes.home); }}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</Button>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
         {/* `[2026-10-06 사용자 지적]` Empty: it LOOKS switched off (grey) but still answers a press - it says what to do. It is not `disabled`, which would say nothing. */}
-        <Button variant="primary" type="submit" disabled={pending && !screening} className={reason ? styles.blocked : ""} aria-disabled={reason || screening ? true : undefined} aria-busy={screening || undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
+        <Button ref={submitButton} variant="primary" type="submit" disabled={pending && !screening} className={reason ? styles.blocked : ""} aria-disabled={reason || screening ? true : undefined} aria-busy={screening || undefined}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>
     </form>
     {card && <GuardianCard kind="start" onPrimary={() => proceed("on")} onSecondary={() => proceed("off")} onClose={() => setCard(false)} />}
+    {guide === "on" && <ExampleGuide sample={sampleButton} submit={submitButton} onLoad={() => updateSource(examplePlan(language))} onDone={() => setGuide("off")} />}
   </>;
 }

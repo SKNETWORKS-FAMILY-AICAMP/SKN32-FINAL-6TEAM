@@ -12,7 +12,7 @@ import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
-from app.domains.travel_ops.components.intake import prepared, survey_answers
+from app.domains.travel_ops.components.intake import dining_review, prepared, survey_answers
 from app.domains.travel_ops.components.itinerary import itinerary_checks as checks
 from app.domains.travel_ops.entry import trip_api
 from app.domains.travel_ops.modules.web_account import web_guard
@@ -103,6 +103,8 @@ def confirm_api(monkeypatch):
     monkeypatch.setattr(survey_answers, "stored", lambda *args, **kwargs: {})
     monkeypatch.setattr(survey_answers, "stored_resolved", lambda *args, **kwargs: {})
     monkeypatch.setattr(prepared, "with_alternates", lambda *args, **kwargs: kwargs["body"])
+    monkeypatch.setattr(dining_review, "refresh", lambda *args: args[-1])
+    monkeypatch.setattr(dining_review, "registration_issue", lambda payload: None)
     def boundary(*args, **kwargs):
         db.boundary += 1
         raise HTTPException(418, {"proof": "passed-calendar-guard-before-write"})

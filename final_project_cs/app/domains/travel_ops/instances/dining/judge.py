@@ -32,6 +32,9 @@ from typing import Any, Callable
 
 from app.domains.travel_ops.instances.dining.agent import CHECKS, VERDICTS, judge_day, shows_verdict
 from app.domains.travel_ops.instances.dining.agent_tools import DiningTools
+from app.domains.travel_ops.instances.dining.completion import merge_missing
+from app.domains.travel_ops.instances.dining.customer_requests import audit_requests
+from app.domains.travel_ops.components.intake.dining_questions import answers, merge_questions
 
 log = logging.getLogger(__name__)
 
@@ -106,7 +109,10 @@ def plans_from_review(review: dict[str, Any], notes: str) -> list[dict[str, Any]
                          "end": f"{day}T{i['ends_at']}" if i.get("ends_at") else None,
                          "place": {k: v for k, v in {"name": place.get("name"), "lat": place.get("latitude"),
                                                      "lng": place.get("longitude")}.items() if v is not None} or None})
-        plans.append({"date": day, "customer_notes": notes or "", "items": rows, "itinerary_context": context})
+        plan = {"date": day, "customer_notes": notes or "", "items": rows, "itinerary_context": context}
+        if answers(review):
+            plan["customer_clarifications"] = answers(review)
+        plans.append(plan)
     return plans
 
 
@@ -208,6 +214,8 @@ def merge(review: dict[str, Any], decided: dict[str, list[dict[str, Any]]]) -> t
                     rows.append(added)
                     changed += 1
         if any(r.get("result") == "bad" for r in rows) and item.get("status") != "review":
+            review.setdefault("before_dining_judge", {"ready": bool(review.get("ready"))})
+            item.setdefault("before_dining_judge", {"status": item.get("status"), "can_lock": item.get("can_lock")})
             item["status"], item["can_lock"] = "review", False
     items = review.get("items") or []
     moves = review.get("moves") or []
@@ -235,6 +243,7 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
     run_id = str(metadata.get("run_id") or uuid.uuid4()) if lifecycle else str(uuid.uuid4())
     records: list[tuple] = []
     decided: dict[str, list[dict[str, Any]]] = {}
+    missing_by_item: dict[str, list[dict[str, Any]]] = defaultdict(list)
     counts = {"days": 0, "checks": 0, "used": 0, "failures": 0, "missing": 0, "changed": 0, "stale": 0}
     error_code = None
 
@@ -263,6 +272,19 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
         review = claimed
 
     rule_of = {str(i["id"]): rule_verdicts(i) for i in review.get("items") or [] if i.get("kind") == "dining"}
+
+    def record_gaps(gaps):
+        nonlocal error_code
+        for (item_id, code, _, _), gap in gaps.items():
+            if item_id not in rule_of:
+                continue
+            failure = gap.get("failure") or "missing_required_check"
+            counts["missing"] += 1
+            error_code = error_code or str(failure)
+            missing_by_item[item_id].append({**gap, "check": code, "failure": failure})
+            records.append((item_id, code, None, rule_of[item_id].get(code), None, failure,
+                            {k: gap[k] for k in ("attribute", "request_id", "quote", "required", "item_ids") if k in gap}))
+
     plans = plans_from_review(review, notes)
     planned_ids = {str(i["item_id"]) for plan in plans for i in plan["items"] if i.get("kind") == "dining"}
     if lifecycle and set(rule_of) - planned_ids:
@@ -292,9 +314,9 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
             if result.failure:
                 counts["failures"] += 1
                 error_code = error_code or str(result.failure)
-                continue
             answered: dict[str, set[str]] = defaultdict(set)
-            for item in result.items:
+            accepted: dict[str, list[dict[str, Any]]] = defaultdict(list)
+            for item in result.items if not result.failure else []:
                 if not isinstance(item, dict) or not isinstance(item.get("checks"), list):
                     raise ValueError("malformed item checks")
                 item_id = str(item.get("item_id"))
@@ -324,6 +346,7 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
                             error_code = error_code or str(failure)
                         continue
                     answered[item_id].add(code)
+                    accepted[item_id].append(check)
                     counts["used"] += 1
                     decided.setdefault(item_id, []).append(
                         {"check": code, "verdict": verdict, "evidence": _tools_of(check, result.tool_calls),
@@ -342,12 +365,11 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
                     for code in need - answered[item_id]:
                         if not any(key[:2] == (item_id, code) for key in gaps):
                             gaps[(item_id, code, None, "missing_required_check")] = {"failure": "missing_required_check"}
-            for (item_id, code, _, _), gap in gaps.items():
-                failure = gap.get("failure") or "missing_required_check"
-                counts["missing"] += 1
-                error_code = error_code or str(failure)
-                records.append((item_id, code, None, rule_of.get(item_id, {}).get(code), None, failure,
-                                {k: gap[k] for k in ("attribute", "request_id", "quote", "required", "item_ids") if k in gap}))
+                # 조건별 누락도 반환 객체의 missing 목록에만 의존하지 않는다.
+                audit = audit_requests(plan, result.requests)
+                for gap in audit.missing([{"item_id": item_id, "checks": checks} for item_id, checks in accepted.items()]):
+                    gaps.setdefault((str(gap["item_id"]), gap["check"], gap.get("request_id"), gap.get("failure")), gap)
+            record_gaps(gaps)
         except Exception as exc:                         # noqa: BLE001 — 상태를 failed로 닫되 앞서 확인한 줄은 보존한다
             counts["failures"] += 1
             failure = "dining_judge_deadline_exceeded" if isinstance(exc, TimeoutError) else "dining_judge_execution_failed"
@@ -357,6 +379,8 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
 
     def apply(current):
         merged, counts["changed"] = merge(current, decided)
+        merge_missing(merged, missing_by_item)
+        merge_questions(merged, [g for gaps in missing_by_item.values() for g in gaps], notes)
         merged["agent_judged"] = {"run_id": run_id, "model": model, "changed_rows": counts["changed"]}
         return merged
 
@@ -369,7 +393,7 @@ def run(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, revision:
                                            error_code=error_code, update=apply)
             if current is None or current["dining_judge"].get("error_code") == "dining_judge_input_changed":
                 counts["stale"] = 1
-        elif decided:
+        elif decided or missing_by_item:
             # 옛 독립 호출도 잠금 뒤에 읽는다. 신규 접수의 tokenless 작업은 현재 토큰을 덮을 수 없다.
             state = review_module.intake_state(conn, tenant_id, intake_id)
             current = review_module.load(conn, tenant_id, intake_id, revision)

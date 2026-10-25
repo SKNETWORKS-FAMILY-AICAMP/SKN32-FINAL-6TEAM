@@ -354,7 +354,9 @@ def plan_edit(*, rows: list[dict[str, Any]], origin_of: dict[tuple[str, int], UU
             detail["customer_pinned"] = True       # 정책 잠금 일정은 다시 열면 늘 잠금이다 — 고객 잠금으로 따로 적지 않는다
         title = row["title"] or "(제목 없음)"
         place_claim = row["claims"].get("place") or {}
-        if place_claim.get("method") == "customer" and row["place"] and row["place"].get("name") and row["place"]["name"] != title:
+        # `[2026-10-25 사용자 결정]` 고객이 수정 화면에서 제목을 직접 고쳤으면(제목 값 줄 `customer`) 그 제목이 먼저다 — 처음 등록(`assemble._item_title`)과 같다
+        written = (row["claims"].get("title") or {}).get("method") == "customer"
+        if place_claim.get("method") == "customer" and not written and row["place"] and row["place"].get("name") and row["place"]["name"] != title:
             # 확인 화면 카드는 고객이 고른 곳(후보 · 검색 · 자동 추천)의 이름을 일정 이름으로 보인다(웹 `from-review.planItem`) — 새 판도
             # 그 이름으로 쓴다. 원래 적힌 말은 근거(`provenance.title`)에 남는다. ☆처음엔 원문을 그대로 써서 장소만 바뀌고 여행 화면엔 옛 이름이 남았다(실화면 확인)
             title = str(row["place"]["name"])

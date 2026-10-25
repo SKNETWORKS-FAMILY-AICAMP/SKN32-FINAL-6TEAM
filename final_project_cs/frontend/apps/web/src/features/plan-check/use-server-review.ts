@@ -46,7 +46,7 @@ interface CandidateStream {
   listeners: Set<(update: CandidateUpdate) => void>;
 }
 
-export function useServerReview({ intakeId, view, language, apply, reread }: {
+export function useServerReview({ intakeId, view, language, apply, reread, waitWarmUp = false }: {
   intakeId: string;
   /** Undefined until the plan is read; the actions are only used once it is on screen. */
   view: ReviewedIntakeView | undefined;
@@ -55,6 +55,12 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   apply: (next: ReviewedIntakeView) => void;
   /** Read the plan again (an edit was refused as stale). */
   reread: () => void;
+  /**
+   * ★`[2026-10-24 사용자 결정 — ST4F-731]` The page still shows the reading (its questions and 「계획을 다 읽었어요」): the 「전체 자동 추천」 dry run waits as with `holdWarmUp`.
+   * That screen is drawn without the plan check's calls (`flow.hold` in `intake-review.tsx`), so the plan check could not hold it there — it went out the moment
+   * reading ended, five seconds before the plan check opened (2026-10-24 local runs: sent at 77.5 / 72.7 s, the stopped question waited behind it).
+   */
+  waitWarmUp?: boolean;
 }): { actions: PlanCheckActions; dirty: boolean; rechecking: string | null; infos: Readonly<Record<string, PlaceInfo>>; preview: ReviewedIntakeView | null } {
   const [dirtyState, setDirtyState] = useState({ intakeId, value: false });
   // `[2026-10-20 사용자 지시]` A revision only saved (`review.checked === false`) is a change still to send: a reload keeps 「다시 제출」, not 「여행 등록」.
@@ -101,11 +107,11 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const warmHold = useRef(false);
   const [warmHeld, setWarmHeld] = useState(false);
   useEffect(() => {
-    if (warmHold.current || warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
+    if (warmHold.current || waitWarmUp || warmRevision === null || !needsLook || (warmed.current?.intakeId === intakeId && warmed.current.base === warmRevision)) return;
     const ask = autofixIntake(intakeId, warmRevision, language, true);
     warmed.current = { intakeId, base: warmRevision, ask };
     ask.catch(() => { if (warmed.current?.ask === ask) warmed.current = null; });
-  }, [intakeId, language, warmRevision, needsLook, warmHeld]);
+  }, [intakeId, language, warmRevision, needsLook, warmHeld, waitWarmUp]);
   useEffect(() => { latest.current = view?.intake_id === intakeId ? view : undefined; }, [view, intakeId]);
 
   const actions = useMemo<PlanCheckActions>(() => {
@@ -171,7 +177,11 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       //   measure the moves or re-place the stops around it now - 「다시 제출」 (`recheck`) checks the whole plan once. A lock or the plan's name is checked as before.
       // ★`[2026-10-20 사용자 결정 — 계획 확인 C안]` A pick inside the first check's question (`how.flow`) is saved WITH its check: the card is checked again where it stands and
       //   the check goes on — no 「다시 제출」 (the plan is not 「changed since the last check」) and no undo (the C안 flow has none).
+      // ★`[2026-10-25 사용자 결정 — 이동 확인 C안대로]` …and the other stops keep their times (`keepTimes`): a leg made late by the pick is asked about by the card it comes into
+      //   (its 「도착」 — taxi · later start · edit by hand). Checked with its re-timing, a pick moved the rest of the day without a word, or was refused whole when the moving reached a stop
+      //   that never fit (a palace at 21:00 — 2026-10-24 local, the same before this branch).
       const next = await (changed && !how.flow ? editIntake(intakeId, before.revision, edits, language, { check: false })
+        : how.flow ? editIntake(intakeId, before.revision, edits, language, { keepTimes: true })
         : editIntake(intakeId, before.revision, edits, language)).catch(staleThenRethrow);
       if (!allUndo.active) throw gone();
       if (!how.flow && edits.some((edit) => !edit.field.endsWith(".locked"))) allUndo.remember(before, next);
@@ -228,6 +238,12 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       // `[2026-10-04]` Several stops' new times in ONE request: the plan is saved and checked once, not once per stop.
       retime: async (changes, how) => {
         const edits = changes.flatMap((change) => retimeEdits(itemOf(change.id), change));
+        if (!edits.length) return;
+        await save(edits, true, how);
+        undoEdits.current = null;
+      },
+      // `[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기]` The edits of the server's push preview, as they are (with the first check's question: checked, the times kept as shown).
+      applyPush: async (edits, how) => {
         if (!edits.length) return;
         await save(edits, true, how);
         undoEdits.current = null;
@@ -320,6 +336,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         });
         finished = true;
         candidateNotes.current.set(id, found.notes ?? []);
+        // ★`[2026-10-24 ST4F-731]` Prepared alternatives come whole, with no first list: their cards are shown now and the photos fill them in after — the stopped
+        //   question waited for six photo reads (2026-10-24 local run: alternatives at 89.6 s, the cards at 97.3 s).
+        if (!first && onLive) onLive(found.candidates.map((candidate) => {
+          const card = planCandidate(candidate, id, "candidate", null);
+          pickable.current.set(card.id, candidate.place);
+          return card;
+        }));
         // The stop's own photos fill its 「지금 일정」 card.
         if (item.place) void infoOf({ ...item.place, category: null, address: null }, true).then((info) => setInfos((current) => ({ ...current, [id]: info })));
         const cards = await Promise.all(found.candidates.map(async (candidate, at) => {
@@ -368,10 +391,19 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       },
       // `[2026-10-20 사용자 결정 — 계획 확인 C안 · 이동 확인 C안]` The way in arrives late: when could the stop start instead? The server works it out for this stop alone and saves nothing
       //   (`autofix {item_id, dry_run}` — after the stop before ends and the way there is made, rounded up to 5 minutes; its end shortened when it must). Only a change of time is an answer here.
+      // ★`[2026-10-25 사용자 결정 — 뒤 일정까지 함께 미루기 D1]` Asked with `push`: where this stop alone cannot be made later the server makes it later as long as it was and pushes
+      //   the stops after it (`pushed`), with the edits that make that plan — or says why it cannot (`push_refused`). Where it can, the answer is the same as without `push`.
       laterStart: async (id) => {
-        const result = await autofixIntake(intakeId, plan().revision, language, true, id).catch(staleThenRethrow);
+        const result = await autofixIntake(intakeId, plan().revision, language, true, id, true).catch(staleThenRethrow);
+        const refused = result.kept.find((entry) => entry.id === id && entry.reason === "push_refused");
+        if (refused?.starts_at) return { start: refused.starts_at, end: refused.ends_at ?? "", refused: refused.message ?? null };
         const change = result.changed.find((entry) => entry.id === id && entry.reason === "time");
         if (!change?.to.starts_at) return null;
+        if (result.changed.some((entry) => entry.pushed) && result.edits?.length) {
+          const stops = result.changed.filter((entry) => entry.to.starts_at).map((entry) => ({
+            id: entry.id, title: entry.title, from: entry.from.starts_at, start: entry.to.starts_at!, end: entry.to.ends_at ?? "" }));
+          return { start: change.to.starts_at, end: change.to.ends_at ?? "", push: { stops, edits: result.edits } };
+        }
         // ★`[2026-10-21 사용자 결정]` Only this stop moves (`item_id`): what the stop after it on that day comes to in the preview — overlapped, or reached late (its leg's `slack_min`).
         const review = result.view.review;
         const moved = review?.items.find((entry) => entry.id === id);

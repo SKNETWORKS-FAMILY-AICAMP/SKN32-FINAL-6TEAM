@@ -235,8 +235,13 @@ def ask_owner(gap: Gap, draft: Mapping[str, Any]) -> Proposal:
 
 def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, tour: Any = None, kakao: Any = None,
         dining: Any = None, plan_slot: Callable[[Gap, Mapping[str, Any]], list[dict[str, Any]]] | None = None,
-        max_rounds: int = gaps_module.MAX_ROUNDS) -> dict[str, Any]:
-    """먼저 채운 결과 `{revision, filled, questions, rounds}`. 바꿀 것이 없으면 판을 만들지 않고 기록만 남긴다."""
+        max_rounds: int = gaps_module.MAX_ROUNDS,
+        on_progress: Callable[[dict[str, Any]], None] | None = None) -> dict[str, Any]:
+    """먼저 채운 결과 `{revision, filled, questions, rounds}`. 바꿀 것이 없으면 판을 만들지 않고 기록만 남긴다.
+
+    `on_progress(몸통)` `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 진행 알림 `progress{phase: prefill}` 의 몸통 `{done, total, current, step?}` —
+      빈칸을 모은 직후 `done: 0`(빈칸이 없으면 `0/0` 하나) · 빈칸마다 담당에게 묻기 · 막힌 조회 다시 찾기 전에 `current` = 그 일정(일정이 아닌 빈칸은 null) ·
+      채운 값을 판에 넣고 다시 검사하는 동안 `step: "recheck"` · 끝에 `done: total`. `total` 은 다시 검사가 새 빈칸을 내면 늘어난다. 알림이 던져도 채우기는 계속된다."""
     from . import autofix as autofix_module
     from . import pipeline
 
@@ -288,9 +293,38 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
         return check_gaps(state["review"], trip=trip)
 
     first = gaps_module.collect(model_gaps(claims, found.get("items") or []), check_gaps(found, trip=trip))
+    keys, asked = {g.key for g in first}, set()
+
+    def note(item_id: Any = None, *, step: str | None = None, final: bool = False) -> None:
+        if on_progress is None:
+            return
+        item = next((i for i in state["review"].get("items") or [] if item_id is not None and i.get("id") == item_id), None)
+        try:
+            on_progress({"done": len(keys) if final else len(asked), "total": len(keys),
+                         "current": {"id": item["id"], "title": item.get("title")} if item is not None else None,
+                         **({"step": step} if step else {})})
+        except Exception:                                     # noqa: BLE001 — 알림 실패가 채우기를 막지 않는다
+            pass
+
+    def counted(owner: Callable[[Gap, Mapping[str, Any]], Proposal]) -> Callable[[Gap, Mapping[str, Any]], Proposal]:
+        def ask(gap: Gap, draft: Mapping[str, Any]) -> Proposal:
+            keys.add(gap.key)
+            note(gap.where.get("item"))
+            try:
+                return owner(gap, draft)
+            finally:
+                asked.add(gap.key)
+        return ask
+
+    def applying(draft: dict[str, Any], proposals: list[Proposal]) -> dict[str, Any]:
+        note(step="recheck")
+        return apply(draft, proposals)
+
+    note()
 
     def refind(item: Mapping[str, Any], query: str) -> bool:
         """막힌 조회를 같은 말로 한 번 더 — 고객이 이름을 고친 길(`pipeline.edit`)과 같다. 찾으면 새 판, 못 찾으면 그대로."""
+        note(item.get("id"))
         try:
             new = pipeline.edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=state["revision"],
                                 edits=[{"source_id": item["source_id"], "field": f"items[{item['index']}].place", "value": {"name": query}}],
@@ -304,8 +338,11 @@ def run(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: i
 
     first, refound, still_blocked = retry_blocked(first, claims=claims, items=found.get("items") or [], refind=refind)
     # 다른 장소를 채우면 전체 동선과 숙소 후보도 바뀐다. 같은 판의 실패를 반복하지 않고 바뀐 판에서만 다시 본다.
-    draft, used, rounds = gaps_module.settle({"revision": state["revision"]}, first, owners, apply, recheck, max_rounds=max_rounds,
+    draft, used, rounds = gaps_module.settle({"revision": state["revision"]}, first, {name: counted(owner) for name, owner in owners.items()},
+                                           applying, recheck, max_rounds=max_rounds,
                                            retry_unfilled=lambda p: p.gap.kind == "lodging_place" and p.owner == "lodging_team")
+    if keys:
+        note(final=True)
     latest = {p.gap.key: p for p in used}
     filled = refound + [_filled_line(p) for p in latest.values() if p.owner != "ask_customer" and p.candidates and p.error is None]
     items_now = {i.get("id"): i for i in (state["review"].get("items") or [])}

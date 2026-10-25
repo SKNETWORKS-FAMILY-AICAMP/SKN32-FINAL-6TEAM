@@ -19,6 +19,19 @@ def test_prefill_retries_both_hotel_breakfasts_after_a_meal_changes_the_route(mo
     assert [p["candidates"] for p in records[0]["proposals"][:2]] == [[], []]
 
 
+def test_prefill_reports_each_gap_the_recheck_and_the_end(monkeypatch):
+    # `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 먼저 채우기가 알림 없이 돌았다 — 빈칸마다 · 다시 검사(`step: recheck`) · 끝(`done: total`)
+    progress = []
+    _prefill(monkeypatch, resolve_meal=True, progress=progress)
+    assert progress[0] == {"done": 0, "total": 3, "current": None}
+    asked = [p for p in progress if p.get("current")]
+    assert {p["current"]["id"] for p in asked} == {"0-0", "0-1", "0-2"} and asked[0]["current"]["title"] in ("호텔", "식당")
+    assert any(p.get("step") == "recheck" for p in progress)
+    assert progress[-1] == {"done": 3, "total": 3, "current": None}
+    dones = [p["done"] for p in progress]
+    assert dones == sorted(dones)                                    # 줄지 않는다
+
+
 def test_prefill_does_not_repeat_a_hotel_search_when_no_place_changed(monkeypatch):
     result, _records, calls = _prefill(monkeypatch, resolve_meal=False)
     assert calls == [False] and result["revision"] == 1
@@ -77,7 +90,7 @@ def test_lodging_retry_does_not_extend_the_two_round_limit():
     assert any(p.gap.key == hotel.key and p.owner == "ask_customer" for p in used)
 
 
-def _prefill(monkeypatch, *, resolve_meal):
+def _prefill(monkeypatch, *, resolve_meal, progress=None):
     initial = {"items": [
         {"id": "0-0", "index": 0, "source_id": "s", "title": "호텔", "kind": "dining", "date": "2030-11-06",
          "place_state": "needs_choice", "place": None, "starts_at": "09:00", "ends_at": "10:00"},
@@ -116,5 +129,5 @@ def _prefill(monkeypatch, *, resolve_meal):
     monkeypatch.setattr(autofix, "plan", plan)
     monkeypatch.setattr(prefill, "_store", lambda conn, **kw: records.append(kw["record"]))
     result = prefill.run(None, tenant_id="test", customer_id=None, intake_id=None, revision=1,
-                         plan_slot=lambda gap, draft: [])
+                         plan_slot=lambda gap, draft: [], on_progress=progress.append if progress is not None else None)
     return result, records, calls

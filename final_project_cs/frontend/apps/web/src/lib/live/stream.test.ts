@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { translator } from "../i18n";
-import { LiveError, resetSessionState } from "./client";
+import { currentSession, LiveError, resetSessionState, SESSION_CHANGED_EVENT, sessionOf, takeSession } from "./client";
 import { answeringSession, CSRF } from "./session-kit";
 import { progressText, streamApi, watchIntake, type IntakeWatchEvent, type OpProgress } from "./stream";
 
@@ -116,6 +116,135 @@ describe("a long request with live progress (POST …/messages · …/plan with 
     replies.push(() => stream([event("accepted", {})], true), () => stream([event("accepted", {})], true), () => stream([event("accepted", {})], true));
     await expect(streamApi("/v1/web/trips/t1/messages", "ko", init, undefined, fast)).rejects.toMatchObject({ code: "connection_lost" });
     expect(calls).toHaveLength(3);
+  });
+});
+
+describe("session boundaries before a streamed write opens", () => {
+  let calls: { url: string; init: RequestInit }[];
+  let dispatched: string[];
+  const path = "/v1/web/trips/t1/messages";
+  const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: "session-boundary-1", message: "안녕" }) };
+
+  beforeEach(() => {
+    resetSessionState();
+    calls = [];
+    dispatched = [];
+    vi.useFakeTimers();
+    vi.stubGlobal("window", {
+      localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+      dispatchEvent: (seen: Event) => { dispatched.push(seen.type); return true; },
+    });
+  });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); resetSessionState(); });
+
+  it("keeps the replacement session and the original late 401 refusal from a stream started with the previous session (F-06)", async () => {
+    const previous = sessionOf({ kind: "member", csrf_token: "csrf-a" })!;
+    const member = sessionOf({ kind: "member", csrf_token: "csrf-b" })!;
+    takeSession(previous);
+    dispatched.length = 0;
+    let answer!: (response: Response) => void;
+    let started!: () => void;
+    const pending = new Promise<void>((resolve) => { started = resolve; });
+    vi.stubGlobal("fetch", (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      started();
+      return new Promise<Response>((resolve) => { answer = resolve; });
+    });
+    const result = streamApi(path, "ko", init, undefined, fast).catch((caught: unknown) => caught);
+    await pending;
+    takeSession(member);
+    const detail = { code: "unauthenticated", message: "이전 요청의 로그인 상태가 끝났어요.", request: "session-a" };
+    answer(json({ error: detail }, 401));
+
+    expect(await result).toMatchObject({ code: "unauthenticated", message: detail.message, detail, status: 401 });
+    expect(currentSession()).toBe(member);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].init.headers).toMatchObject({ "X-CSRF-Token": "csrf-a" });
+    expect(dispatched).toEqual([SESSION_CHANGED_EVENT]);
+  });
+
+  it("refreshes the token once after csrf_failed and reports session_changed without resending or reconnecting the stream (F-18)", async () => {
+    takeSession(sessionOf({ kind: "member", csrf_token: "csrf-a" })!);
+    dispatched.length = 0;
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      if (url.endsWith("/v1/web/auth/me")) return json({ kind: "member", csrf_token: "csrf-b" });
+      return json({ error: { code: "csrf_failed", message: "토큰이 바뀌었어요." } }, 403);
+    });
+    const seen: OpProgress[] = [];
+
+    await expect(streamApi(path, "ko", init, (progress) => seen.push(progress), fast)).rejects.toMatchObject({
+      code: "session_changed", message: "로그인 상태가 바뀌어 요청을 보내지 않았어요. 화면을 확인하고 다시 시도해 주세요.",
+    });
+    expect(currentSession()?.csrf).toBe("csrf-b");
+    expect(dispatched).toEqual([SESSION_CHANGED_EVENT]);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(calls).toHaveLength(2);
+    expect(calls.filter((call) => call.url.endsWith("/v1/web/auth/me"))).toHaveLength(1);
+    const writes = calls.filter((call) => call.init.method === "POST");
+    expect(writes).toHaveLength(1);
+    expect(writes[0].init).toMatchObject({ body: init.body, headers: { "X-CSRF-Token": "csrf-a", Accept: "text/event-stream" } });
+    expect(seen.some((progress) => progress.lost)).toBe(false);
+  });
+
+  it("does not reconnect a lost stream once the session has changed meanwhile — the body stays with the account that sent it (F-02 보강)", async () => {
+    const previous = sessionOf({ kind: "member", csrf_token: "csrf-a" })!;
+    const member = sessionOf({ kind: "member", csrf_token: "csrf-b" })!;
+    takeSession(previous);
+    dispatched.length = 0;
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      return new Response("", { status: 504 });                     // the gateway dropped the line: normally sent again after the wait
+    });
+    const seen: OpProgress[] = [];
+    const result = streamApi(path, "ko", init, (progress) => seen.push(progress), fast).catch((caught: unknown) => caught);
+    await vi.advanceTimersByTimeAsync(0);                             // the first attempt has been answered 504 and the reconnect wait is on
+    expect(calls).toHaveLength(1);
+    takeSession(member);                                              // another tab signed in while this request was waiting to reconnect
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(await result).toMatchObject({ code: "session_changed" });
+    expect(currentSession()).toBe(member);
+    expect(calls).toHaveLength(1);                                    // no second POST with the new account's token
+    expect(calls[0].init.headers).toMatchObject({ "X-CSRF-Token": "csrf-a" });
+    expect(seen.some((progress) => progress.lost)).toBe(true);
+  });
+
+  it("reconnects a lost stream as before when the session is unchanged (the F-02 보강 guard does not get in the way)", async () => {
+    takeSession(sessionOf({ kind: "member", csrf_token: "csrf-a" })!);
+    let first = true;
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      if (first) { first = false; return new Response("", { status: 504 }); }
+      return json({ status: "answered", answer: "서버 답" });
+    });
+    const result = streamApi<{ answer: string }>(path, "ko", init, undefined, fast);
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await result).answer).toBe("서버 답");
+    expect(calls).toHaveLength(2);
+    expect(calls[1].init.body).toBe(calls[0].init.body);
+    expect(calls[1].init.headers).toMatchObject({ "X-CSRF-Token": "csrf-a" });
+  });
+
+  it("passes on a failed csrf token refresh without resending or reconnecting the stream (F-18)", async () => {
+    takeSession(sessionOf({ kind: "member", csrf_token: "csrf-a" })!);
+    const detail = { code: "internal_error", message: "서버에서 로그인 상태를 확인하지 못했어요.", request: "session-probe" };
+    vi.stubGlobal("fetch", async (url: string, sent: RequestInit) => {
+      calls.push({ url, init: sent });
+      if (url.endsWith("/v1/web/auth/me")) return json({ error: detail }, 500);
+      return json({ error: { code: "csrf_failed" } }, 403);
+    });
+    const seen: OpProgress[] = [];
+
+    await expect(streamApi(path, "ko", init, (progress) => seen.push(progress), fast)).rejects.toMatchObject({
+      code: "internal_error", message: detail.message, detail, status: 500,
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(calls).toHaveLength(2);
+    expect(calls.filter((call) => call.url.endsWith("/v1/web/auth/me"))).toHaveLength(1);
+    expect(calls.filter((call) => call.init.method === "POST")).toHaveLength(1);
+    expect(seen.some((progress) => progress.lost)).toBe(false);
   });
 });
 

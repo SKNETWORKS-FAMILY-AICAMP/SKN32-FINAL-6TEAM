@@ -279,6 +279,7 @@ export function ensureSession(language: Language, humanToken?: string | null): P
   creating ??= (async () => {
     const known = await probeSession(language);
     if (known) return known;
+    const beganWith = snapshot;
     // ★Keep `method` inside the call — a reader of this file (the server contract test) takes a call whose method it cannot read for a GET.
     const response = await send(`${API_BASE}/v1/web/auth/session`, {
       method: "POST", credentials: "include",
@@ -286,6 +287,8 @@ export function ensureSession(language: Language, humanToken?: string | null): P
     }, language);
     const session = sessionOf(await response.json());
     if (!session) throw new LiveError("bad_session", translator(language)("서버가 세션 정보를 주지 않았어요.", "The server did not give the session details."));
+    // `[2026-10-23 F-07]` A sign-in completed while the guest request was waiting: keep the member session.
+    if (snapshot !== beganWith && snapshot.session) return snapshot.session;
     setSnapshot({ probed: true, failed: false, session });
     return session;
   })().finally(() => { creating = null; });
@@ -298,8 +301,10 @@ export function startSession(language: Language, humanToken?: string | null): Pr
 }
 
 /** The session ended on the server (a rotated, expired or removed session): forget it and say so plainly. */
-export function sessionChecked(error: unknown, language: Language): unknown {
+export function sessionChecked(error: unknown, language: Language, beganWith: WebSession | null): unknown {
   if (!(error instanceof LiveError) || error.code !== "unauthenticated") return error;
+  // `[2026-10-23 F-06]` A late refusal belongs to the session that sent the request.
+  if (snapshot.session !== beganWith) return error;
   setSnapshot({ probed: true, failed: false, session: null });
   return new LiveError("session_expired", translator(language)("로그인 상태가 끝났어요. 다음 요청부터 새 게스트로 시작해요 — 게스트로 만든 여행은 다시 열 수 없고, 로그인한 계정의 여행은 로그인하면 다시 열려요.", "Your session has ended. The next request starts a new guest session — trips made as a guest cannot be opened again; trips of a signed-in account open again when you sign in."));
 }
@@ -315,30 +320,28 @@ export async function openApi<T>(path: string, language: Language, init: Request
 }
 
 /**
- * A request with the session. The session is made on first use (guest). A write the server refuses for its token (`403 csrf_failed`)
- * gets the token again and goes once more — nothing was done the first time. A 401 means the session ended: it is forgotten and said
+ * `[2026-10-23 F-02]` A request with the session, made on first use (guest). A token refusal refreshes the session and stops:
+ * the cookie may now belong to someone else, so the same body must not be sent again. A 401 means the session ended: it is forgotten and said
  * plainly (see `sessionChecked`); we do NOT quietly make a new one and retry, or the old trips would silently disappear from view.
  */
 export async function api<T>(path: string, language: Language, init: RequestInit = {}): Promise<T> {
-  let session = await ensureSession(language);
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      const response = await send(`${API_BASE}${path}`, withSession(init, session), language);
-      return await response.json() as T;
-    } catch (error) {
-      if (attempt === 0 && error instanceof LiveError && error.code === "csrf_failed") {
-        const fresh = await probeSession(language, true);
-        if (fresh) { session = fresh; continue; }
-      }
-      if (error instanceof LiveError && error.code === "consent_required" && typeof window !== "undefined") window.dispatchEvent(new Event(CONSENT_REQUIRED_EVENT));
-      throw sessionChecked(error, language);
+  const session = await ensureSession(language);
+  try {
+    const response = await send(`${API_BASE}${path}`, withSession(init, session), language);
+    return await response.json() as T;
+  } catch (error) {
+    if (error instanceof LiveError && error.code === "csrf_failed") {
+      await probeSession(language, true);
+      throw new LiveError("session_changed", refusalSentence("session_changed", undefined, undefined, language));
     }
+    if (error instanceof LiveError && error.code === "consent_required" && typeof window !== "undefined") window.dispatchEvent(new Event(CONSENT_REQUIRED_EVENT));
+    throw sessionChecked(error, language, session);
   }
 }
 
 /** The request to open a stream or send a streamed write: the session is made first, then the cookie and (on a write) the token go along. */
-export async function sessionInit(language: Language, init: RequestInit = {}): Promise<RequestInit> {
-  return withSession(init, await ensureSession(language));
+export async function sessionInit(language: Language, init: RequestInit = {}, session?: WebSession): Promise<RequestInit> {
+  return withSession(init, session ?? await ensureSession(language));
 }
 
 /** End the session on the server (`POST /v1/web/auth/logout`) and forget it here. A session that was already over counts as done. */

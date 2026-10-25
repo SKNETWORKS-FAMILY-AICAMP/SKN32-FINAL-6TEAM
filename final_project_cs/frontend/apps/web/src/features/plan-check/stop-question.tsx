@@ -61,7 +61,10 @@ export function StopQuestion({ id, kind, ask, loading, failed, again, leaving, w
         {option.act.type === "pick" && legLines(option.act.candidate, t).map((line) =>
           <span key={line.side} className={styles.line} data-leg data-pending={line.pending || undefined}>{line.text}</span>)}
         {option.effect && <span className={styles.line}>{t("고르면:", "If picked:")} {option.effect}</span>}
+        {option.lines?.map((line) => <span key={line} className={styles.line} data-push>{line}</span>)}
+        {option.refused && <span className={styles.line} data-refused>{option.refused}</span>}
       </Act>)}</div>}
+    {ask.pending && <p className={styles.note} data-pending role="status">{ask.pending}</p>}
     <div className={styles.buttons} data-two={onDelete ? true : undefined}>
       <Act className={styles.button} why={why} explain={explain} onPress={onEdit}>{kind === "interpretation" ? t("직접 선택", "Choose myself") : t("직접 수정", "Edit myself")}</Act>
       {onDelete && <Act className={styles.button} data-danger why={why} explain={explain} onPress={onDelete}>{t("삭제", "Delete")}</Act>}

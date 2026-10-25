@@ -433,7 +433,9 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   // The same for the route lines (`routeShapes: "on"`): a server without `route-shapes` answers 404 and the browser logs it — the screen then draws pins only.
   // And for the consent record (`consents: "on"`): an older server without it answers 404 and the browser logs that (the screen then keeps the browser's own copy).
   // And for the operator's switches (`features: "on"`, ST4F-613): an older server answers `GET /v1/web/features` with 404 (the Course Keeper then shows as before).
-  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on", retention: "on", features: "on" });
+  // And for the current-risk check (`risks: "clear"`, ST4F-715 2026-10-22): an older server answers `GET …/risks` with 404 — read a moment after the screen
+  //   opens, so without it this test failed only when that read fell inside the 1.5 s wait (main CI 2026-10-23, here 1 in 10).
+  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on", consents: "on", retention: "on", features: "on", risks: "clear" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));

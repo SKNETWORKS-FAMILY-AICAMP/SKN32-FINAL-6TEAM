@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exampleDone, exampleSnapshots, readAgain } from "./test-views";
-import { askStopId, beginRecheck, cutAtStop, heldAt, nextStep, onlyCard, progress, rebase, revealedRows, rowStop, stopAt, stopKind, stopRowOf, syncDrawn, tally, timeline, withArrivalRows, withAskSlot, type CheckRow, type PlanAsk, type PlanCheckView, type PlanItem } from "./model";
+import { askStopId, beginRecheck, cutAtStop, heldAt, nextStep, onlyCard, rebase, revealedRows, rowStop, stopAt, stopKind, stopRowOf, syncDrawn, tally, timeline, withArrivalRows, withAskSlot, type CheckRow, type PlanAsk, type PlanCheckView, type PlanItem } from "./model";
 import { stopKindOf } from "./stop-questions";
 
 /** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. `cutRows`: as `nextStep` (where the check stops at cards). */
@@ -76,18 +76,6 @@ describe("plan check — what the screen draws, one change at a time", () => {
     expect(nextStep(exampleDone, fewer)).toBe(fewer);
     expect(nextStep(exampleDone, received)).toBe(received);
     expect(nextStep(exampleDone, exampleDone)).toBeNull();
-  });
-
-  it("moves the bar with the lines read, then with the places and moves checked", () => {
-    const steps = walk(received, exampleDone);
-    expect(progress(received)).toBe(0);
-    const twoLines = steps.find((view) => view.lines.filter((line) => line.read).length === 2 && view.stage === "reading")!;
-    expect(progress(twoLines)).toBeCloseTo(100 / 3 * 2 / 5);
-    const halfChecked = steps.find((view) => view.stage === "checking" && [...view.items, ...view.moves].filter((entity) => entity.verdict !== null).length === 3)!;
-    expect(progress(halfChecked)).toBeCloseTo(100 / 3 + 100 / 3 * 3 / 6);
-    expect(progress(exampleDone)).toBe(100);
-    const values = steps.map(progress);
-    expect(values).toEqual([...values].sort((a, b) => a - b));                 // never goes back
   });
 
   it("counts places and moves done and those to check", () => {

@@ -666,6 +666,18 @@ def trip_risk_panel_enabled() -> bool:
         return False
 
 
+def plan_input_extras_enabled() -> bool:
+    """계획 담기 화면의 보조 칸(파일 선택 · 계획 짜 주기 · 읽는 기준 · 여행 취향)을 보이나 — 가드레일 `travel.plan_input.extras_enabled`. ★기본 꺼짐.
+
+    `[2026-10-25 사용자 지시 — ST4F-739]` 기본은 「직접 입력」 칸만 보이고 관리 콘솔에서 켠다.
+    가드레일을 못 읽어도 **꺼짐**이다 — 켜는 것은 `true` 로 명시한 경우뿐이다.
+    """
+    try:
+        return get_guardrails().get("travel.plan_input.extras_enabled") is True
+    except ConfigError:
+        return False
+
+
 def guardian_enabled() -> bool:
     """항로 지킴이를 쓰나 — 가드레일 `travel.guardian.enabled`. ★기본 꺼짐(`[2026-10-23 사용자 지시]` 테스트 기능이라 — 앞의 기본은 켜짐이었다).
 

@@ -283,6 +283,8 @@ def _run_locked(*, store: Any, connect: Callable[[], Any], tenant: str, customer
             status, _, built = pipeline.draft(conn, tenant_id=tenant, customer_id=customer_id, intake_id=intake_id,
                                               revision=revision)
             reopened = reopen.session(conn, tenant_id=tenant, intake_id=intake_id)
+        # 판정은 접수 잠금을 잡지 않은 상태에서 끝내고, 확정 시 최신 토큰을 다시 확인한다.
+        pipeline.rejudge(connect, tenant, intake_id, revision)
         version, changed, plan = commit(store=store, connect=connect, tenant=tenant, intake_id=intake_id, revision=revision,
                                         reopened=reopened, status=status, built=built, now=now,
                                         cause_extra={"via": "chat", **(cause_extra or {})})

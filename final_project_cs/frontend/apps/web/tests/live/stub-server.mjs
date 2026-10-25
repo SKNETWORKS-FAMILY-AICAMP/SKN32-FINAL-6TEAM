@@ -78,6 +78,9 @@ const DEFAULTS = {
   //   `GET /v1/web/features`, when `features` is not "off"): "absent" (an older server: no field — shown) | "on" | "off" (`risk_panel: false` — only those panels
   //   are hidden; the check, the bell and the notice center stay)
   riskPanel: "absent",
+  // `[2026-10-25 ST4F-739]` the operator's switch for the plan screen's extra panels (`plan_input_extras` of `GET /v1/web/features`, when `features` is not
+  //   "off"): "absent" (an older server: no field — shown) | "on" | "off" (`plan_input_extras: false` — 「직접 입력」 alone; the intake still takes files and plans)
+  planInputExtras: "absent",
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
@@ -647,19 +650,25 @@ function intakeStream() {
     events.push(["line", { source_id: "s1", no: i + 1, text, read: true, found: found && { id: found.id, index: found.index, day: found.day, date: found.date, starts_at: found.starts_at, title: found.title } }]);
   });
   // Like the server (`progress` — one value per phase): the places are counted while it reads, the hours and the legs while it checks.
+  //   ★`[2026-10-24 ST4F-732]` `current` of the hours and the legs is what it looks at now (sent before, null at the end), and the weather and road check follows (`risks`) —
+  //   this stub stops there at its second stop, as a server still checking while the plan is read (the screen draws the cells it has so far).
   const packets = scenario.intakeProgress !== "off";
-  const packet = (phase, done, total, current) => { if (packets) events.push(["progress", { phase, done, total, current: current && { id: current.id, title: current.title } }]); };
+  const packet = (phase, done, total, current) => { if (packets) events.push(["progress", { phase, done, total, current: current ? { id: current.id, title: current.title } : null }]); };
+  const leg = (move) => ({ id: `${move.from}>${move.to}`, title: `${rev.items.find((entry) => entry.id === move.from)?.title ?? move.from} → ${rev.items.find((entry) => entry.id === move.to)?.title ?? move.to}` });
   rev.items.forEach((item, at) => packet("places", at + 1, rev.items.length, item));
   events.push(["stage", { stage: "checking", label: "장소·운영시간 확인", elapsed: 1, state: state("reading") }]);
   rev.items.forEach((item, at) => {
+    packet("hours", at, rev.items.length, item);
     events.push(["item", item]);
     for (const line of item.rows) events.push(["check", { item: item.id, ...line }]);
-    packet("hours", at + 1, rev.items.length, item);
   });
+  packet("hours", rev.items.length, rev.items.length, null);
   rev.moves.forEach((move, at) => {
+    packet("moves", at, rev.moves.length, leg(move));
     events.push(["move", move]);
-    packet("moves", at + 1, rev.moves.length, { id: `${move.from}>${move.to}`, title: `${rev.items.find((entry) => entry.id === move.from)?.title ?? move.from} → ${rev.items.find((entry) => entry.id === move.to)?.title ?? move.to}` });
   });
+  packet("moves", rev.moves.length, rev.moves.length, null);
+  rev.items.slice(0, 2).forEach((item, at) => packet("risks", at, rev.items.length, item));
   events.push(["done", { stage: "review", revision: 1, needs: rev.needs, ready: rev.ready }]);
   events.push(["result", { state: state("review") }]);
   return events.map(([name, body]) => `event: ${name}\ndata: ${JSON.stringify(body)}\n\n`);
@@ -1082,7 +1091,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   if (path === "/v1/web/features" && request.method === "GET") {
     if (scenario.features === "off") return json(response, 404, { detail: "Not Found" }, origin);
     return json(response, 200, { guardian: scenario.features !== "guardian_off",
-      ...(scenario.riskPanel === "absent" ? {} : { risk_panel: scenario.riskPanel === "on" }) }, origin);
+      ...(scenario.riskPanel === "absent" ? {} : { risk_panel: scenario.riskPanel === "on" }),
+      ...(scenario.planInputExtras === "absent" ? {} : { plan_input_extras: scenario.planInputExtras === "on" }) }, origin);
   }
   if (request.method === "GET" && path === "/v1/web/support/notices/board") {
     if (scenario.noticeBoard === "off") return json(response, 404, { detail: "Not Found" }, origin);

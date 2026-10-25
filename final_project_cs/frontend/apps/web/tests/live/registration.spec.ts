@@ -23,7 +23,7 @@ test("작성 중인 계획은 화면을 오가도·새로고침해도 보존되�
   expect(log.filter((entry) => entry.method === "POST")).toEqual([]);
 });
 
-test("「예시 불러오기」는 글칸에 일주일 뒤부터의 서울 이틀 일정을 채울 뿐이다 — 서버에는 아무것도 가지 않고, 고칠 수 있다", async ({ page, request }) => {
+test("「예시 불러오기」는 글칸에 내일부터의 서울 이틀 일정을 채울 뿐이다 — 서버에는 아무것도 가지 않고, 고칠 수 있다", async ({ page, request }) => {
   await openRegistration(page);
   await page.getByRole("button", { name: "예시 불러오기" }).click();
   const plan = page.getByLabel("나의 여행 계획");

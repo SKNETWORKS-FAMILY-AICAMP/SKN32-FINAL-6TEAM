@@ -9,7 +9,7 @@
 .main { padding: 28px 36px 0; }
 .main:focus { outline: none; }
 /* `[2026-10-06]` 휴대폰 틀 안의 본문: 틀 폭에 맞는 안쪽 여백, 틀이 스크롤한다. */
-.phoneMain { padding: 12px 16px 28px; }
+.phoneMain { --main-gutter: 16px; --main-foot: 28px; padding: 12px var(--main-gutter) var(--main-foot); }  /* 변수: 아래 고정 줄이 여백을 넘어 끝까지 덮을 때 쓴다(trip-registration `.actions`) */
 .phoneMain:focus { outline: none; }
 @media (max-width: 1000px) {
   .main { padding: 25px 24px 0; }

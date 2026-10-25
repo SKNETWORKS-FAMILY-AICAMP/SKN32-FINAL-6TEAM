@@ -142,6 +142,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/dining-links/preview",
     "/v1/web/trip-intakes/{intake_id}/dining-links/apply",
     "/v1/web/trip-intakes/{intake_id}/dining-links/{key}",
+    # ★2026-10-23 모호한 식사 조건 질문의 답(적용할 식사 일정 · 제외) — `wiki/external/intake-dining-completion.md` 「모호한 식사 조건 질문·답변」
+    "/v1/web/trip-intakes/{intake_id}/dining-answers",
     "/v1/web/trip-intakes/{intake_id}/place-search",
     # ★2026-10-23 일정 추가 폼의 장소 검색(동선순 + 이름순, 새 일정 기준 판정) — `wiki/external/rest-endpoints/web-intakes.md`
     "/v1/web/trip-intakes/{intake_id}/add-search",

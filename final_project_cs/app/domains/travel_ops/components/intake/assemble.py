@@ -143,6 +143,9 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
     """`sources` = 원본 행(`position` 순), `claims` = 그 판의 값 줄(만든 순서)."""
     got = collect(sources=sources, claims=claims)
     rows, filled, problems, trip, first_day = got.rows, got.filled, got.problems, got.trip, got.first_day
+    # 지역만 적은 줄(「인사동 · 점심」) — 처음 읽은 장소 값 줄이 이름 없는 줄이다. 서버가 채운 그 줄은 적힌 이름을 둔다(`_item_title`)
+    nameless = {(str(c["source_id"]), c["field"]) for c in claims
+                if c["field"].endswith(".place") and (c.get("evidence") or {}).get("method") == "nameless"}
     places: list[dict[str, Any]] = []
     items: list[dict[str, Any]] = []
     for seq, row in enumerate(rows, start=1):
@@ -163,7 +166,8 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
             #   바꾸기 전에 묻는다(`pending.protected_reason` 「customer_pinned」 · `trip_watch`). 되살린 항목과 같은 표시다.
             detail["customer_pinned"] = True
         if row["date"] and row["start"]:
-            items.append({"seq": seq, "kind": row["kind"], "title": ((row.get("place") or {}).get("name", "식사") + " 식사" if row["title"] in ("거기", "여기", "식사", "밥") and row["kind"] == "dining" else row["title"] or "(제목 없음)"), "place": key,
+            items.append({"seq": seq, "kind": row["kind"], "place": key,
+                          "title": _item_title(row, filled=(row["source_id"], f"items[{row['index']}].place") in nameless),
                           "starts_at": _at(row["date"], row["start"]).isoformat(),
                           # 숙소는 끝이 다른 날이다(체크아웃 날 · `_stays`)
                           "ends_at": _at(row.get("end_date") or row["date"], row["end"]).isoformat() if row["end"] else None,
@@ -187,6 +191,27 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
                                 f"인원이 {party}명으로 읽혔습니다 — 1~{MAX_PARTY}명으로 고쳐 주세요"))
     from . import reading_prefs
     return Assembled(body=body, problems=problems, filled=filled, plan=plan, reading=reading_prefs.carry(claims))
+
+
+def _item_title(row: dict[str, Any], *, filled: bool = False) -> str:
+    """등록할 일정 이름. `filled` = 지역만 적은 줄이었다(처음 읽은 장소 값 줄이 `nameless` — `assemble`).
+
+    ★`[2026-10-25 사용자 결정]` 장소가 **바뀐** 일정은 **그 장소 이름**이다 — 고객이 고른 곳(장소 값 줄 `method: customer` — 후보 「○○로 바꾸기」 · 검색 ·
+    「「…」 맞아요」)과 「전체 자동 추천」이 바꾼 곳(근거 `via: autofix`). 확인 화면 카드 · 수정 모드 완료(`reopen.py`)와 같다(원래 적힌 말은 `provenance.title`).
+    지역만 적어 서버가 채운 곳(`filled` + `via: autofix` — 「인사동 · 점심 → 양반댁」)은 적힌 이름 그대로 두고 여행 화면이 장소 이름을 그 아래 줄에 보인다.
+    숙소는 제목이 「체크인」을 말하므로 그대로다. 고객이 제목을 직접 고쳤으면(제목 값 줄도 `customer`) 그 제목이 먼저다.
+    ☆전에는 적힌 이름만 써서 휴무 대안 「쌈지길로 바꾸기」 · 전체 자동 추천 뒤 여행 화면이 「창덕궁」 + 아래 「쌈지길」이었다."""
+    place = row.get("place") or {}
+    if row["title"] in ("거기", "여기", "식사", "밥") and row["kind"] == "dining":
+        return place.get("name", "식사") + " 식사"
+    claims = row.get("claims") or {}
+    claim = claims.get("place") or {}
+    autofix = (claim.get("evidence") or {}).get("via") == "autofix"
+    changed = claim.get("method") == "customer" and not (autofix and filled)
+    written = (claims.get("title") or {}).get("method") == "customer"
+    if changed and not written and row["kind"] in ("activity", "dining") and place.get("name") and place["name"] != row["title"]:
+        return str(place["name"])
+    return row["title"] or "(제목 없음)"
 
 
 # ── 항목 하나 ─────────────────────────────────────────────────────

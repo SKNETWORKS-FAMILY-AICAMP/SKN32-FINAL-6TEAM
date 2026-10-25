@@ -204,6 +204,21 @@ def test_a_new_place_from_our_places_reuses_that_row(api):
     assert "바꾼 일정 인사동 → 덕수궁" in done["trip"]["history"][-1]["causes"][0]["summary"]
 
 
+def test_a_title_the_customer_wrote_in_edit_mode_comes_first_when_the_place_changes_too(api):
+    """`[2026-10-25 사용자 결정]` 수정 화면에서 제목을 직접 고쳤으면 그 제목이 먼저다 — 장소만 바꾼 일정은 위 시험처럼 고른 곳 이름(처음 등록과 같은 규칙)."""
+    key = _user(api)
+    trip = _trip(api, key)
+    view = _reopen(api, key, trip["trip_id"], trip["version"])
+    source = view["sources"][0]["source_id"]
+    at = _index(view, "인사동")
+    view = _edit(api, key, view, {"source_id": source, "field": f"items[{at}].title", "value": "점심 뒤 산책"},
+                 {"source_id": source, "field": f"items[{at}].place", "value": {"name": "덕수궁"}})
+    _confirm(api, key, view)
+    _, after = _stored(api, trip["trip_id"])
+    moved = next(i for i in after if i.kind == "activity" and i.place and i.place.get("name") == "덕수궁")
+    assert moved.title == "점심 뒤 산책"                                   # ★전에는 「덕수궁」(직접 쓴 제목을 장소 이름으로 덮었다)
+
+
 def test_a_stale_trip_version_is_refused_on_open_and_on_done(api):
     key = _user(api)
     trip = _trip(api, key)

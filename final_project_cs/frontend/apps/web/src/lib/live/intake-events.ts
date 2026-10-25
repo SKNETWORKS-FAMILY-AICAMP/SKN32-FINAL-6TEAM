@@ -38,10 +38,14 @@ export interface StreamLine {
  * `[2026-10-03 사용자 지시]` 「어디까지 됐는지」를 알리는 작은 알림(`progress`). The server sends one each time a stop's place or hours check
  * finishes (`places` · `hours`) and for each leg (`moves`): `done` of `total` in that phase, and what it is at now. The screen shows exactly
  * this — no percentage of its own is made up from the rows it has drawn.
+ * ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` Every step the server works through, in its order: the lines the model reads (`reading`, or `reading_api`
+ *   when a paid model reads it again from the start), the places, hours and legs, then the weather and road check (`risks`), the gaps it fills first (`prefill`,
+ *   `0/0` when there is none — `step: "recheck"` while it checks the plan again with them) and the answers given while it read (`answers`). `current` is what it
+ *   is looking at now (null once the step is over).
  */
-export const PROGRESS_PHASES = ["places", "hours", "moves"] as const;
+export const PROGRESS_PHASES = ["reading", "reading_api", "places", "hours", "moves", "risks", "prefill", "answers"] as const;
 export type ProgressPhase = (typeof PROGRESS_PHASES)[number];
-export interface ProgressPacket { phase: ProgressPhase; done: number; total: number; current: { id: string; title: string } | null }
+export interface ProgressPacket { phase: ProgressPhase; done: number; total: number; current: { id: string; title: string } | null; step?: "recheck" }
 
 export type IntakeStreamEvent =
   | { type: "accepted"; state: IntakeState | null }
@@ -154,9 +158,10 @@ export function toIntakeEvent(name: string, data: string): IntakeStreamEvent | n
       const phase = PROGRESS_PHASES.find((name) => name === body.phase);
       const done = maybeNum(body.done), total = maybeNum(body.total);
       // A packet that does not make sense (an unknown phase, no numbers, more done than total) says nothing — it is not guessed at.
-      if (!phase || done === null || total === null || done < 0 || total < 1 || done > total) return null;
+      //   `0/0` says the step had nothing to do (no gap to fill): it is kept, and the step is shown as passed.
+      if (!phase || done === null || total === null || done < 0 || total < 0 || done > total) return null;
       const current = isObject(body.current) && text(body.current.id) ? { id: text(body.current.id), title: text(body.current.title) } : null;
-      return { type: "progress", progress: { phase, done: Math.floor(done), total: Math.floor(total), current } };
+      return { type: "progress", progress: { phase, done: Math.floor(done), total: Math.floor(total), current, ...(body.step === "recheck" && { step: "recheck" as const }) } };
     }
     case "done": {
       const needs = isObject(body.needs) ? body.needs : {};
@@ -188,7 +193,7 @@ export interface StreamState {
 
 export const emptyStream = (): StreamState => ({ stage: null, stageLabel: null, lines: {}, items: {}, checks: {}, moves: {}, order: [], done: null, phases: {}, progress: null });
 
-/** The packet of the furthest phase present (places < hours < moves) — a replay after a reconnect brings every phase's last value in any order. */
+/** The packet of the furthest phase present (in `PROGRESS_PHASES` order) — a replay after a reconnect brings every phase's last value in any order. */
 function furthest(phases: StreamState["phases"]): ProgressPacket | null {
   for (let at = PROGRESS_PHASES.length - 1; at >= 0; at -= 1) { const packet = phases[PROGRESS_PHASES[at]]; if (packet) return packet; }
   return null;

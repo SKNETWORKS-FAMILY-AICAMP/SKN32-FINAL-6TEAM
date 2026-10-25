@@ -154,8 +154,13 @@ exec {SHELLS[shell]} "$WORKER_TEST_ROOT/worker-under-test.sh"
         self.process = subprocess.Popen([self.bash, "--noprofile", "--norc", "--posix",
             _shell_path(directory / "launch.sh")], env=env, stdout=self.stdout, stderr=self.stderr,
             creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
-        _until(lambda: (directory / "worker.pid").is_file(), "worker pid")
-        self.pid = int((directory / "worker.pid").read_text().strip())
+        # ★`[2026-10-23]` `printf … > worker.pid` makes the file before it writes the number: wait for the whole line, not the file.
+        #   Read in between, it was '' and `int` failed (main CI 39901758724 — passed on the same tree's PR run).
+        def written():
+            pid = directory / "worker.pid"
+            text = pid.read_text() if pid.is_file() else ""
+            return text.strip() if text.endswith("\n") else ""
+        self.pid = int(_until(written, "worker pid"))
 
     def events(self):
         return [line.split() for line in self.journal.read_text().splitlines()] if self.journal.exists() else []

@@ -107,7 +107,7 @@ def test_normal_create_api_rejects_before_new_trip_write(monkeypatch):
 def test_cached_review_guard_exempts_confirmed_and_reopened(monkeypatch):
     from contextlib import nullcontext
     from copy import deepcopy
-    from app.domains.travel_ops.components.intake import review, risks
+    from app.domains.travel_ops.components.intake import review, risks, dining_review
     now = datetime(2032, 5, 8, 12, tzinfo=checks.KST)
     cached = {"items": [{"date": (now - timedelta(days=1)).date().isoformat(), "end_date": None,
                          "status": "keep", "can_lock": True, "rows": []}], "moves": [],
@@ -115,6 +115,7 @@ def test_cached_review_guard_exempts_confirmed_and_reopened(monkeypatch):
               "risk_schema_version": risks.SCHEMA_VERSION}
     monkeypatch.setattr(review, "load", lambda *a: deepcopy(cached))
     monkeypatch.setattr(risks, "decorate", lambda *a, **kw: kw["review"])
+    monkeypatch.setattr(dining_review, "refresh", lambda *a: a[-1])
     class Conn:
         state = ("review", None)
         def cursor(self): return nullcontext(self)

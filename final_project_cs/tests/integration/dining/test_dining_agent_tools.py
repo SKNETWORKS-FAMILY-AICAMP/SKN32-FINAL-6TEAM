@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""요식 에이전트 도구(`agent_tools`) — 규칙 도구의 판정이 **지금 규칙 판정과 같은가** · 호출 기록 · 상한 · 반복 거절 · MCP 서버. `[2026-10-13]`
+"""요식 에이전트 도구(`agent_tools`) — 규칙 판정 · 호출 기록 · 상한 · 실행 내 결과 재사용 · MCP 서버.
 
 합성 가게로만 본다(적재한 자료에 기대지 않는다 — `test_dining_judgment` 와 같은 원칙). DB 가 없으면 통째로 건너뛴다.
 """
@@ -81,17 +81,17 @@ def test_find_place_ledger_first_then_map(conn, place):
     assert kakao.asked == ["원장에없는이상한가게이름"]
 
 
-def test_calls_are_recorded_limited_and_not_repeated(conn, place):
+def test_calls_are_recorded_limited_and_confirmed_results_are_reused(conn, place):
     uid = place()
     tools = _tools(conn, max_calls=2)
     first = tools.call("check_business", {"place_uid": uid})
     assert first["call_id"] == "c1" and tools.result_of("c1")["verdict"] == "ok"
-    assert "refused" in tools.call("check_business", {"place_uid": uid})            # 같은 인자 반복
+    assert tools.call("check_business", {"place_uid": uid}) == {**first, "reused": True}
     assert "refused" in tools.call("no_such_tool", {})
     assert "refused" in tools.call("check_open_at", {"place_uid": uid})             # 필수 인자 없음
     tools.call("place_detail", {"place_uid": uid})
     assert "상한" in tools.call("nearby_places", {"lat": 37.5, "lng": 127.0})["refused"]
-    assert len(tools.calls) == 2 and len(tools.refused) == 4
+    assert len(tools.calls) == 2 and len(tools.refused) == 3 and len(tools.reused) == 1
 
 
 def test_nearby_and_detail(conn, place):

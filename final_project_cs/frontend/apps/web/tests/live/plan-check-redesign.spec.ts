@@ -10,23 +10,21 @@ test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 const bodyOf = (page: Page) => page.locator("div[class*=sheetBody]");
 
-// ── 읽는 화면: 단계 점 ─────────────────────────────────────────────────────────
+// ── 읽는 화면: 진행 막대 ───────────────────────────────────────────────────────
 
-test("읽는 화면의 단계 점: 선이 닿은 점만 체크되고(받았어요 → 일정 읽기 …), 선은 동그라미 뒤에 그려진다", async ({ page, request }) => {
+// ★`[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 점 4개(받았어요 · 일정 읽기 · 장소·운영시간 · 정리 완료) 대신 서버 단계마다 한 칸이다
+//   (목업 `mockups/tripilot-plan-check-progress-steps.html` ③). 진행 알림을 안 보내는 서버면 읽는 동안은 첫 칸(일정 읽기)만 현재다 — 단계마다 차는 모습은 progress.spec.ts 가 본다.
+test("읽는 화면의 진행 막대: 서버 단계마다 한 칸이고, 진행 알림이 없으면 첫 칸(일정 읽기)만 현재 · 나머지는 기다림이며 그 칸 아래에 단계 이름이 보인다", async ({ page, request }) => {
   await mockServer(request).scenario({ readingPolls: 99, intakeEvents: "off" });
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
-  const steps = page.locator("ol[class*=steps] li");
-  await expect(steps).toHaveCount(4);
-  await expect(steps.first()).toHaveAttribute("data-state", "done");                              // 받았어요: 서버가 받았으니 채워져 있다
-  await expect(steps.nth(1)).toHaveAttribute("data-state", "current");                            // 일정 읽기: 아직 선이 거기까지 안 찼다
-  await expect(steps.nth(2)).toHaveAttribute("data-state", "waiting");
-  const layers = await page.evaluate(() => {
-    const track = document.querySelector("div[class*=track]")!, list = document.querySelector("ol[class*=steps]")!;
-    return { track: getComputedStyle(track).zIndex, steps: getComputedStyle(list).zIndex, position: getComputedStyle(list).position };
-  });
-  expect(layers.position).toBe("relative");
-  expect(Number(layers.steps)).toBeGreaterThan(Number(layers.track));                              // 점이 선 위에 있어서 동그라미 안에 선이 비치지 않는다
+  const bar = page.locator("div[data-steps][role=progressbar]");
+  const cells = bar.locator("span[class*=cells] > span");
+  await expect(cells.first()).toHaveAttribute("data-state", "current");                           // 일정 읽기
+  const states = await cells.evaluateAll((all) => all.map((cell) => cell.getAttribute("data-state")));
+  expect(states.length).toBeGreaterThanOrEqual(6);                                                 // 일정 읽기 · 장소 · 운영시간 · 이동 · 날씨·도로 · 빈칸 채우기(+ 답 반영)
+  expect(states.slice(1).every((state) => state === "waiting")).toBe(true);
+  await expect(bar.locator("span[class*=cellName]")).toHaveText("일정 읽기");
 });
 
 // ── 상단바 · 계획 이름 ─────────────────────────────────────────────────────────
@@ -511,7 +509,9 @@ test("잠근 일정은 시간이 못 움직이는 벽이다: 그 일정에 막�
   await expect(page.getByRole("button", { name: "경복궁 관람 고정 풀기" })).toBeVisible();
   const form = await openTime(page, "올리브영");
   await expect(form.getByText("가능한 시각 10:39 ~ ")).toBeVisible();                                    // 잠근 경복궁(10:30 끝) + 이동 9분 아래로는 못 당긴다
-  await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).click({ force: true });
+  // `[2026-10-23]` 잠근 시간은 aria-disabled 라 force 클릭이었는데, force 는 목록을 굴려 단추를 보인 뒤 멈추기를 기다리지 않고 그 좌표를 눌러
+  //   올리브영 시간 칸이 열린 목록이 움직이면 빗나갔다(main CI · 로컬 10회 중 4회). 단추에 바로 누름을 보낸다 — 확인하는 것은 「잠근 시간은 왜 못 바꾸는지 알린다」.
+  await page.getByRole("button", { name: /^경복궁 관람 시간 고치기/ }).dispatchEvent("click");
   await expect(toast(page, "고정한 일정이라 바꿀 수 없어요")).toBeVisible();
 });
 

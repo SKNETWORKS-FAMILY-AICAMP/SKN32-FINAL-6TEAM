@@ -72,19 +72,65 @@ describe("the session the browser has (cookie, never a key it keeps)", () => {
     expect((calls[1].init.headers as Record<string, string>)["X-CSRF-Token"]).toBe(CSRF);
   });
 
-  it("gets the token again and goes once more when the server refuses a write for its token — nothing was done the first time", async () => {
+  it("refreshes the session after a token refusal and stops without sending the write again", async () => {
     stub({ has: true });
-    replies.push(json({ error: { code: "csrf_failed", message: "토큰이 맞지 않아요" } }, 403), json({ done: true }));
-    expect(await api("/v1/web/trips/t1/delete", "ko", { method: "POST" })).toEqual({ done: true });
-    expect(calls).toHaveLength(2);
+    replies.push(json({ error: { code: "csrf_failed", message: "토큰이 맞지 않아요" } }, 403));
+    const inner = globalThis.fetch;
+    let probes = 0;
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      if (new URL(url).pathname === "/v1/web/auth/me" && ++probes === 2) {
+        await inner(url, init);
+        return json({ ...sessionBody(), csrf_token: "csrf-fresh" });
+      }
+      return inner(url, init);
+    });
+    await expect(api("/v1/web/trips/t1/delete", "ko", { method: "POST" })).rejects.toMatchObject({
+      code: "session_changed", message: "로그인 상태가 바뀌어 요청을 보내지 않았어요. 화면을 확인하고 다시 시도해 주세요.",
+    });
+    expect(calls.filter((call) => call.init.method === "POST")).toHaveLength(1);
     expect(sessionCalls.map((call) => new URL(call.url).pathname)).toEqual(["/v1/web/auth/me", "/v1/web/auth/me"]);   // known, then asked again for the token
+    expect(currentSession()?.csrf).toBe("csrf-fresh");
   });
 
-  it("does not go round for ever: a second token refusal reaches the screen", async () => {
+  it("passes on a failed session refresh without sending the refused write again", async () => {
     stub({ has: true });
-    replies.push(json({ error: { code: "csrf_failed", message: "no" } }, 403), json({ error: { code: "csrf_failed", message: "no" } }, 403));
-    await expect(api("/v1/web/trips/t1/delete", "ko", { method: "POST" })).rejects.toMatchObject({ code: "csrf_failed" });
-    expect(calls).toHaveLength(2);
+    await ensureSession("ko");
+    const inner = globalThis.fetch;
+    let probes = 0;
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      if (new URL(url).pathname === "/v1/web/auth/me") { probes += 1; return json({ error: { code: "internal_error", message: "서버 오류" } }, 500); }
+      return inner(url, init);
+    });
+    replies.push(json({ error: { code: "csrf_failed", message: "no" } }, 403));
+    await expect(api("/v1/web/trips/t1/delete", "ko", { method: "POST" })).rejects.toMatchObject({ code: "internal_error", status: 500 });
+    expect(calls.filter((call) => call.init.method === "POST")).toHaveLength(1);
+    expect(probes).toBe(1);
+    expect(currentSession()).toBeNull();
+  });
+
+  it("never sends account A's body with account B's token after the cookie changes", async () => {
+    stub({ has: true, kind: "member" });
+    const inner = globalThis.fetch;
+    let probes = 0;
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      if (new URL(url).pathname === "/v1/web/auth/me") {
+        await inner(url, init);
+        return json({ ...sessionBody("member"), csrf_token: ++probes === 1 ? "csrf-a" : "csrf-b" });
+      }
+      return inner(url, init);
+    });
+    await ensureSession("en");
+    events = 0;
+    const body = JSON.stringify({ nickname: "account-a" });
+    replies.push(json({ error: { code: "csrf_failed" } }, 403));
+    await expect(api("/v1/web/profile", "en", { method: "POST", body })).rejects.toMatchObject({
+      code: "session_changed", message: "Your sign-in changed, so the request was not sent. Please check the screen and try again.",
+    });
+    expect(calls.filter((call) => call.init.method === "POST").map((call) => ({ body: call.init.body, token: (call.init.headers as Record<string, string>)["X-CSRF-Token"] })))
+      .toEqual([{ body, token: "csrf-a" }]);
+    expect(currentSession()).toMatchObject({ kind: "member", csrf: "csrf-b" });
+    expect(probes).toBe(2);
+    expect(events).toBe(1);
   });
 
   it("forgets an ended session and says so — it does not quietly start a new guest and retry", async () => {

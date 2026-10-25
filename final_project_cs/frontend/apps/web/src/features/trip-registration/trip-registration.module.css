@@ -5,6 +5,8 @@
 .sample { padding: 8px 10px; }
 .input { display: block; width: 100%; min-height: 300px; padding: 19px; resize: vertical; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); color: var(--color-text); font-size: 13px; line-height: 2; }
 .input::placeholder { color: color-mix(in srgb, var(--color-muted) 85%, var(--color-surface)); opacity: 1; }
+/* `[2026-10-25 사용자 지적]` 「계획 확인하기」로 보내는 동안 잠긴 입력칸은 회색으로 보인다 — 계획 확인 화면의 보내는 중 회색 막과 같은 색. */
+.input:disabled { background: var(--color-subtle-strong); color: var(--color-muted); cursor: not-allowed; }
 .inputMeta { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: var(--color-muted); margin-top: 11px; }
 .error, .warning { margin-top: 12px; padding: 13px 15px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 11px; line-height: 1.8; }
 /* `[2026-10-06 사용자 지적]` 입력칸 바로 아래에 서는 안내: 눈에 띄게 14px · 아이콘과 함께 */
@@ -23,7 +25,8 @@
 .tipList { margin: 0; padding: 0; list-style: none; display: grid; gap: 18px; }
 .tipList li { position: relative; padding-left: 17px; font-size: 12px; line-height: 1.85; color: var(--color-muted); }
 .tipList li::before { content: ""; position: absolute; left: 0; top: .75em; width: 5px; height: 5px; border-radius: 50%; background: var(--color-primary); }
-.actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; padding: 18px 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-paper) 96%, transparent); backdrop-filter: blur(12px); }
+/* `[2026-10-25 사용자 지적 — 옆이 뚫려 보인다]` 아래 고정 줄은 본문 여백(journey-shell `.phoneMain`)을 넘어 화면 양옆 · 맨 아래까지 덮는다. */
+.actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 26px calc(-1 * var(--main-gutter, 0px)) calc(-1 * var(--main-foot, 0px)); padding: 18px var(--main-gutter, 0px); border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-paper) 96%, transparent); backdrop-filter: blur(12px); }
 .actionNote { font-size: 11px; line-height: 1.7; color: var(--color-muted); max-width: 410px; }
 @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1.5fr) minmax(235px, 1fr); } }
 /* `[2026-10-06]` the same rules when the PHONE FRAME is that narrow (a page inside the frame on a wide window): the frame's width decides, not the window's. */
@@ -31,7 +34,7 @@
 @media (max-width: 768px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .input { min-height: 285px; }
-  .actions { flex-wrap: wrap; gap: 10px; padding: 15px 0; }
+  .actions { flex-wrap: wrap; gap: 10px; padding: 15px var(--main-gutter, 0px); }
   .actions > * { padding-left: 12px; padding-right: 12px; }
   .actionNote { display: none; }
   .actions > button { flex: 1; }
@@ -40,7 +43,7 @@
 @container page (max-width: 768px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .input { min-height: 285px; }
-  .actions { flex-wrap: wrap; gap: 10px; padding: 15px 0; }
+  .actions { flex-wrap: wrap; gap: 10px; padding: 15px var(--main-gutter, 0px); }
   .actions > * { padding-left: 12px; padding-right: 12px; }
   .actionNote { display: none; }
   .actions > button { flex: 1; }

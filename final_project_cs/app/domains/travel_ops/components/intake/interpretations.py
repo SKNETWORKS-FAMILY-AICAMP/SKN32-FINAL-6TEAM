@@ -245,9 +245,20 @@ def answer(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision
         return {"applied": True, "pending": False, "revision": new}
 
 
-def apply_pending(conn, *, tenant_id: str, intake_id: UUID, tour: Any = None, kakao: Any = None, dining: Any = None) -> int | None:
-    """로딩 중에 저장만 해 둔 답을 반영한다(읽기 일꾼이 첫 검사 · 먼저 채우기 뒤에 부른다). 바꿀 것이 없으면 None, 있으면 새 판 번호."""
+def apply_pending(conn, *, tenant_id: str, intake_id: UUID, tour: Any = None, kakao: Any = None, dining: Any = None,
+                  on_progress: Callable[[dict[str, Any]], None] | None = None) -> int | None:
+    """로딩 중에 저장만 해 둔 답을 반영한다(읽기 일꾼이 첫 검사 · 먼저 채우기 뒤에 부른다). 바꿀 것이 없으면 None, 있으면 새 판 번호.
+    `on_progress(몸통)` `[2026-10-24 사용자 확정 — 진행 표시 ③ · ST4F-732]` 진행 알림 `progress{phase: answers}` 의 몸통 — 넣을 답이 있을 때만
+      반영 시작에 `{done: 0, total: 답 수}`, 다시 검사까지 끝나면 `{done: total}`."""
     from .pipeline import edit
+
+    def note(done: int, total: int) -> None:
+        if on_progress is None:
+            return
+        try:
+            on_progress({"done": done, "total": total, "current": None})
+        except Exception:                                  # noqa: BLE001 — 알림 실패가 반영을 막지 않는다
+            pass
 
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("SELECT status, revision, customer_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s FOR UPDATE",
@@ -261,8 +272,11 @@ def apply_pending(conn, *, tenant_id: str, intake_id: UUID, tour: Any = None, ka
         changes = edits_for(answers, questions) if answers else []
         if not changes:
             return None
-        return edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=current, edits=changes,
-                    tour=tour, kakao=kakao, dining=dining, via="interpretation", learn_aliases=False)
+        note(0, len(answers))
+        new = edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=current, edits=changes,
+                   tour=tour, kakao=kakao, dining=dining, via="interpretation", learn_aliases=False)
+        note(len(answers), len(answers))
+        return new
 
 
 __all__ = ["ANSWER_FIELD", "QUESTION_FIELD", "InvalidAnswers", "answer", "apply_pending", "check", "contested_lines",

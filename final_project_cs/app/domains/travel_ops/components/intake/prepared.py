@@ -311,22 +311,38 @@ def prepare_one(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, r
     """한 일정을 준비해 저장한다 — `fresh`(이미 맞음) · `saved` · `kakao`(카카오 값에 기대 저장 안 함) · `failed`.
     ★미리 준비는 **카카오를 부르지 않는다**(`kakao` 는 받지만 쓰지 않는다) — 저장할 수 없는 값을 미리 받아 무료 한도만 쓰지 않게."""
     started = time.monotonic()
-    key = _item_key(intake_id, item)
-    mine: Future = Future()
-    with _running_lock:
-        if key in _preparing:
-            return "busy"                                     # 같은 일정을 다른 준비가 하고 있다
-        _preparing[key] = mine
+    mine = _claim(intake_id, item)
+    if mine is None:
+        return "busy"                                     # 같은 일정을 다른 준비 · 「바꾸기」가 하고 있다
     try:
         return _prepare_one(connect, tenant_id=tenant_id, intake_id=intake_id, review=review, item=item, chat=chat, started=started)
     finally:
-        with _running_lock:
-            _preparing.pop(key, None)
-        mine.set_result(True)
+        _release(intake_id, item, mine)
 
 
 def _item_key(intake_id: Any, item: dict[str, Any]) -> tuple[str, str, int]:
     return str(intake_id), str(item["source_id"]), int(item["index"])
+
+
+def _claim(intake_id: Any, item: dict[str, Any]) -> Future | None:
+    """이 일정의 계산을 맡는다(`_preparing` 에 이름을 올린다) — 다른 계산(미리 준비 · 「바꾸기」)이 이미 맡고 있으면 None."""
+    key = _item_key(intake_id, item)
+    with _running_lock:
+        if key in _preparing:
+            return None
+        mine: Future = Future()
+        _preparing[key] = mine
+    return mine
+
+
+def _release(intake_id: Any, item: dict[str, Any], mine: Future | None) -> None:
+    """맡은 계산을 놓는다 — 기다리던 쪽(`wait_preparing`)이 이어 받는다. 맡지 못했으면(None) 할 일이 없다."""
+    if mine is None:
+        return
+    with _running_lock:
+        if _preparing.get(_item_key(intake_id, item)) is mine:
+            del _preparing[_item_key(intake_id, item)]
+    mine.set_result(True)
 
 
 def wait_preparing(intake_id: Any, item: dict[str, Any], timeout: float = WAIT_PREPARE_S) -> bool:
@@ -340,11 +356,6 @@ def wait_preparing(intake_id: Any, item: dict[str, Any], timeout: float = WAIT_P
     except FutureTimeout:
         log.warning("waited %.0fs for the prepared alternatives — computing here", timeout)
     return True
-
-
-def is_preparing(intake_id: Any, item: dict[str, Any]) -> bool:
-    with _running_lock:
-        return _item_key(intake_id, item) in _preparing
 
 
 def _prepare_one(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, review: dict[str, Any], item: dict[str, Any],
@@ -389,9 +400,12 @@ def _current(conn, tenant_id: str, intake_id: Any) -> dict[str, Any] | None:
     return found
 
 
-def prepare(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, kakao: Any = None, chat: Any = None) -> dict[str, Any]:
+def prepare(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, kakao: Any = None, chat: Any = None,
+            which: str = "all") -> dict[str, Any]:
     """지금 판에서 문제 난 일정 · 저장분이 있는 일정 중 **낡은 것만** 준비한다(일정끼리 병렬). 센 값과 걸린 시간을 돌려준다.
-    ★같은 접수를 두 번 겹쳐 돌리지 않는다 — 돌고 있으면 `busy`."""
+    ★같은 접수를 두 번 겹쳐 돌리지 않는다 — 돌고 있으면 `busy`.
+    `which` `[2026-10-24 사용자 결정 — ST4F-731]` `all` · `not_meals`(식사 일정은 빼고) · `meals`(식사 일정만) — 접수 처리가 요식 판정 **전에** `not_meals` 로 먼저 부르고,
+    판정이 식사의 「확인 필요」를 바꿀 수 있어 식사는 판정 뒤 `meals` 로 부른다."""
     key = f"{tenant_id}:{intake_id}"
     with _running_lock:
         if key in _running:
@@ -414,7 +428,7 @@ def prepare(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, kakao
         #   확정 일정의 이유 문장은 틀 문장(모델 호출 없음 — x600 서버 모델을 채팅과 나눠 쓴다). 「바꾸기」 때 저장된 모델 문장이 있으면 그것
         picked = {id(x) for x in problems}
         settled = [x for x in review["items"] if id(x) not in picked and settled_target(x)] if prepare_scope() == "all" else []
-        targets = problems + settled
+        targets = [x for x in problems + settled if which == "all" or (x.get("kind") == "dining") == (which == "meals")]
         with ThreadPoolExecutor(max_workers=max(1, min(WORKERS, len(targets) or 1)), thread_name_prefix="prepare-items") as workers:
             jobs = [workers.submit(copy_context().run, prepare_one, connect, tenant_id=tenant_id, intake_id=intake_id, review=review,
                                    item=x, kakao=kakao, chat=chat if id(x) in picked else None) for x in targets]
@@ -490,7 +504,10 @@ def stream(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, review
         state, sides = usable(row, review, item)
         if state == "fresh":
             return {"revision": review["revision"], **row["body"], "prepared": _meta(row, [])}
-    if is_preparing(intake_id, item):
+    # ★`[2026-10-24 사용자 결정 — ST4F-731]` 이 일정의 계산을 맡는다(`_preparing` 에 이름을 올린다) — 그동안 접수 뒤 미리 준비는 같은 일정을 건너뛴다(`busy`).
+    #   전에는 「바꾸기」가 이름을 올리지 않아 미리 준비가 같은 일정을 따로 또 계산했다(2026-10-24 실측 경복궁 2번)
+    mine = _claim(intake_id, item)
+    if mine is None:
         # ★`[2026-10-19 사용자 지시]` 접수 뒤 준비가 아직 끝나지 않았다 — 어림 카드(바깥 호출 없이 · 모든 줄 「계산 중」)를 먼저 보이고
         #   **같은 계산을 다시 돌리지 않고** 준비 결과를 기다려 이어 받는다. 준비가 저장하지 못했으면(카카오 · 실패) 아래 길로 계산한다
         with connect() as conn:
@@ -505,50 +522,54 @@ def stream(connect: Callable[[], Any], *, tenant_id: str, intake_id: Any, review
             state, sides = usable(row, review, item)
             if state == "fresh":
                 return {"revision": review["revision"], **row["body"], "prepared": _meta(row, [])}
-    with connect() as conn:
-        reused = reuse_row(row, state, item)
-        if reused is not None:
-            gathered = cand.regather(conn, tenant_id=tenant_id, review=review, item=item, places=_without_current(reused, item),
-                                     notes=list(reused["notes"] or []))
-        else:
-            gathered = cand.gather(conn, tenant_id=tenant_id, review=review, item=item, kakao=kakao, now=datetime.now(KST), lodging_team=True)
-        first = cand.finish(conn, tenant_id=tenant_id, gathered=gathered, judged=list(gathered.pool), chat=chat, reason_wait=0)
-    stale = sides if state == "legs" else None
-    shown = {_key(c["place"]): c["rank"] for c in first["candidates"]}
-    kept = {_key(c["place"]): c for c in (row or {}).get("body", {}).get("candidates") or []} if state == "legs" else {}
-    for c in first["candidates"]:
-        c["pending"] = _pending(c, gathered, stale, chat)
-        before = kept.get(_key(c["place"]))
-        for side in ("before", "after"):
-            # 앞뒤 일정만 바뀐 일정 — 바뀌지 않은 쪽 구간은 저장해 둔 실제 값을 그대로 보인다(「계산 중」은 바뀐 쪽만)
-            if before and stale is not None and side not in stale and (before.get("legs") or {}).get(side):
-                c.setdefault("legs", {})[side] = before["legs"][side]
-                c["slack"] = {**(c.get("slack") or {}), side: (before.get("slack") or {}).get(side)}
-    emit("candidates", {"revision": review["revision"], **first, "prepared": None})
-
-    def done(_index: int, place: dict[str, Any], judged: dict[str, Any]) -> None:
-        rank = shown.get(_key(cand._public(place)))
-        if rank is None:
-            return
-        emit("candidate", {"rank": rank, "rows": judged["rows"], "fits": judged["fits"], "status": judged["status"],
-                           "slack": judged["slack"], "estimated": judged["estimated"], "legs": judged.get("legs"),
-                           "pending": {"before": False, "after": False}})
-
-    first_keys = set(shown)
-    first_index = [i for i, (place, _c) in enumerate(gathered.pool) if _key(cand._public(place)) in first_keys]
-    judged = judge_in_turn(connect, tenant_id, gathered, first=first_index, on_done=done)
-    with connect() as conn:
-        final = cand.finish(conn, tenant_id=tenant_id, gathered=gathered, judged=judged, chat=chat, reason_wait=0)
-    _wait_reasons(final, gathered, chat, tenant_id, emit, shown)
-    body = {"revision": review["revision"], **final, "prepared": None}
+        mine = _claim(intake_id, item)                        # 준비가 저장하지 못했다 — 여기서 계산한다
     try:
         with connect() as conn:
-            save(conn, tenant_id=tenant_id, intake_id=intake_id, item=item, revision=int(review["revision"]),
-                 sigs=signatures(review, item), body=final, pool=_public_pool(gathered), notes=gathered.notes,
-                 elapsed_ms=int((time.monotonic() - started) * 1000))
-    except Exception:                                         # noqa: BLE001 — 저장 실패는 다음 「바꾸기」가 다시 계산하면 된다
-        log.warning("intake alternatives store after stream failed", exc_info=True)
-    return body
+            reused = reuse_row(row, state, item)
+            if reused is not None:
+                gathered = cand.regather(conn, tenant_id=tenant_id, review=review, item=item, places=_without_current(reused, item),
+                                         notes=list(reused["notes"] or []))
+            else:
+                gathered = cand.gather(conn, tenant_id=tenant_id, review=review, item=item, kakao=kakao, now=datetime.now(KST), lodging_team=True)
+            first = cand.finish(conn, tenant_id=tenant_id, gathered=gathered, judged=list(gathered.pool), chat=chat, reason_wait=0)
+        stale = sides if state == "legs" else None
+        shown = {_key(c["place"]): c["rank"] for c in first["candidates"]}
+        kept = {_key(c["place"]): c for c in (row or {}).get("body", {}).get("candidates") or []} if state == "legs" else {}
+        for c in first["candidates"]:
+            c["pending"] = _pending(c, gathered, stale, chat)
+            before = kept.get(_key(c["place"]))
+            for side in ("before", "after"):
+                # 앞뒤 일정만 바뀐 일정 — 바뀌지 않은 쪽 구간은 저장해 둔 실제 값을 그대로 보인다(「계산 중」은 바뀐 쪽만)
+                if before and stale is not None and side not in stale and (before.get("legs") or {}).get(side):
+                    c.setdefault("legs", {})[side] = before["legs"][side]
+                    c["slack"] = {**(c.get("slack") or {}), side: (before.get("slack") or {}).get(side)}
+        emit("candidates", {"revision": review["revision"], **first, "prepared": None})
+
+        def done(_index: int, place: dict[str, Any], judged: dict[str, Any]) -> None:
+            rank = shown.get(_key(cand._public(place)))
+            if rank is None:
+                return
+            emit("candidate", {"rank": rank, "rows": judged["rows"], "fits": judged["fits"], "status": judged["status"],
+                               "slack": judged["slack"], "estimated": judged["estimated"], "legs": judged.get("legs"),
+                               "pending": {"before": False, "after": False}})
+
+        first_keys = set(shown)
+        first_index = [i for i, (place, _c) in enumerate(gathered.pool) if _key(cand._public(place)) in first_keys]
+        judged = judge_in_turn(connect, tenant_id, gathered, first=first_index, on_done=done)
+        with connect() as conn:
+            final = cand.finish(conn, tenant_id=tenant_id, gathered=gathered, judged=judged, chat=chat, reason_wait=0)
+        _wait_reasons(final, gathered, chat, tenant_id, emit, shown)
+        body = {"revision": review["revision"], **final, "prepared": None}
+        try:
+            with connect() as conn:
+                save(conn, tenant_id=tenant_id, intake_id=intake_id, item=item, revision=int(review["revision"]),
+                     sigs=signatures(review, item), body=final, pool=_public_pool(gathered), notes=gathered.notes,
+                     elapsed_ms=int((time.monotonic() - started) * 1000))
+        except Exception:                                         # noqa: BLE001 — 저장 실패는 다음 「바꾸기」가 다시 계산하면 된다
+            log.warning("intake alternatives store after stream failed", exc_info=True)
+        return body
+    finally:
+        _release(intake_id, item, mine)
 
 
 def _wait_reasons(final: dict[str, Any], gathered: cand.Gathered, chat: Any, tenant_id: str,

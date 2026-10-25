@@ -238,10 +238,11 @@ export function getIntake(intakeId: string, language: Language): Promise<Reviewe
  * `[2026-10-20 사용자 지시 — 수정 화면은 저장만, 검사는 「다시 제출」 때 한 번]` `check: false` saves the new revision without the heavy check (no move
  * measuring, no re-placing of the stops around a new place): the answer's `review.checked` is false until `revalidateIntake` checks it.
  */
-export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language, options: { check?: boolean } = {}): Promise<ReviewedIntakeView> {
+export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language, options: { check?: boolean; keepTimes?: boolean } = {}): Promise<ReviewedIntakeView> {
+  // `[2026-10-25 사용자 결정 — 이동 확인 C안대로]` `keepTimes`: checked, but the other stops' times stay — a late leg is asked about by the card it comes into (`keep_times`).
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/edits`, language, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(options.check === false ? { revision, edits, check: false } : { revision, edits }),
+    body: JSON.stringify(options.check === false ? { revision, edits, check: false } : options.keepTimes ? { revision, edits, keep_times: true } : { revision, edits }),
   });
 }
 

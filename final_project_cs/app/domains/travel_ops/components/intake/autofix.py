@@ -482,4 +482,31 @@ def _fit_window(conn, tenant_id: str, item: dict[str, Any], place: dict[str, Any
     return "hours"
 
 
-__all__ = ["MIN_STAY_MIN", "earliest_start", "latest_end", "plan"]
+def push_start(review: dict[str, Any], item_id: str) -> tuple[datetime, datetime] | None:
+    """`[2026-10-25 사용자 결정 — 도착 질문 「뒤 일정까지 함께 미루기」 D2]` 이 일정을 앞 일정에서 **시간표로 확인되게 닿는 가장 이른 시각**(5분 올림)으로 옮긴
+    (시작, 끝) — 머무는 시간은 원래 길이 그대로(끝이 없으면 `MIN_STAY_MIN`). 뒤 일정은 보지 않는다(늦추는 것은 `pipeline.autofix(push=True)` 가 한다).
+    그날 앞 일정 · 시각 · 장소가 없거나 닿는 시각을 끝내 못 맞추면 None. 고객이 고른 수단이 살아 있는 구간은 그 수단으로 센다(`plan` 과 같다)."""
+    items = review["items"]
+    at = next((i for i, x in enumerate(items) if x["id"] == item_id), None)
+    if at is None:
+        return None
+    item = items[at]
+    prev = next((x for x in reversed(items[:at]) if x["date"] == item["date"] and x["place"]), None)
+    start = _dt(item["date"], item["starts_at"]) if item["date"] and item["starts_at"] else None
+    prev_end = _dt(prev["date"], prev["ends_at"] or prev["starts_at"]) if prev else None
+    if not item["place"] or start is None or prev_end is None:
+        return None
+    end = _dt(item["date"], item["ends_at"]) if item["ends_at"] else None
+    duration = end - start if end is not None and end > start else timedelta(minutes=MIN_STAY_MIN)
+    mode = next(((m.get("mode_choice") or {}).get("mode") for m in review.get("moves", [])
+                 if m["from"] == prev["id"] and m["to"] == item_id and (m.get("mode_choice") or {}).get("state") == "kept"), None)
+    engine = default_engine(None, [mode]) if mode else default_engine(None)
+    leg_engine = _PerLeg(engine, ENGINE_BUDGET_S, within=_Budgeted(engine, REQUEST_ENGINE_S)) if engine is not None else None
+    begin = earliest_start(leg_engine, prev["place"], item["place"], prev_end)
+    if begin is None:
+        return None
+    begin = max(begin, start)                                   # 앞당기지 않는다 — 늦게 닿는 일정을 늦추는 계산이다
+    return begin, begin + duration
+
+
+__all__ = ["MIN_STAY_MIN", "earliest_start", "latest_end", "plan", "push_start"]

@@ -72,6 +72,7 @@ export type AdminCommand =
   | { type: 'check-server' };
 export interface ScreenProps {
   data: AdminSnapshot;
+  operator: string;
   onCommand: (command: AdminCommand) => Promise<void>;
   navigate: (path: string) => void;
 }

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
+from app.domains.travel_ops.components.intake.dining_questions import apply_inventory
 
 
 ATTRIBUTE_CHECK = {"halal": "dietary", "vegetarian": "dietary", "kids": "kids", "card": "payment"}
@@ -45,6 +46,8 @@ class RequestAudit:
         return None
 
     def source_for(self, check: dict[str, Any]) -> dict[str, Any] | None:
+        if check.get("check") not in CONDITION_CHECKS:
+            return None
         return next((dict(r) for r in self.requests if r["request_id"] == check.get("request_id")), None)
 
     def missing(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -102,7 +105,7 @@ def audit_requests(plan: dict[str, Any], raw: Any) -> RequestAudit:
         issue("request_inventory_missing" if raw is None else "request_inventory_malformed")
         return audit
     seen, invalid = set(), set()
-    for entry in raw:
+    for entry in apply_inventory(plan, raw):
         if not isinstance(entry, dict):
             issue("request_inventory_malformed")
             continue

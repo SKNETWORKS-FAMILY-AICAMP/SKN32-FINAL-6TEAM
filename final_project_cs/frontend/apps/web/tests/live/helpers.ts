@@ -46,6 +46,8 @@ export type ConsentSeed = Partial<Record<"service_terms" | "privacy" | "sensitiv
 export async function agree(page: Page, extra: ConsentSeed = {}) {
   await page.addInitScript(([key, version, items]) => {
     if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version, items: { service_terms: true, privacy: true, sensitive: false, location: false, alert_channel: false, service_improvement: false, ...items }, at: "2026-10-05T09:00:00.000Z", synced: true }));
+    // `[2026-10-25]` 첫 여행 안내(덮개)도 본 것으로 — `start()` 없이 `agree()` 만 쓰는 시험(onboarding · registerStubTrip)의 누름을 막지 않게
+    if (!localStorage.getItem("tripilot.web.example-guide.v1")) localStorage.setItem("tripilot.web.example-guide.v1", "done");
   }, [CONSENT_STORAGE, TERMS_VERSION, extra] as const);
 }
 
@@ -68,6 +70,8 @@ export async function alsoAgree(page: Page, extra: ConsentSeed) {
 export async function start(page: Page, session: string | null = "acop_u_known", seedConsent = true) {
   await page.addInitScript(() => {
     if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko" }));
+    // `[2026-10-25]` 첫 여행 안내(덮개 · 「예시 불러오기」 A안)는 본 것으로 — 덮개가 다른 시험의 누름을 막지 않게. 안내 자체는 `example-guide.spec.ts` 가 지우고 본다.
+    if (!localStorage.getItem("tripilot.web.example-guide.v1")) localStorage.setItem("tripilot.web.example-guide.v1", "done");
   });
   if (session) {
     await page.context().addCookies([{ name: SESSION_COOKIE, value: session === "acop_u_known" ? KNOWN_SESSION : session, url: STUB }]);
