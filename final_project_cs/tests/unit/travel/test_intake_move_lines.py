@@ -100,7 +100,7 @@ class Agent:
 
 
 def _item(quote, start):
-    return {"place_quote": quote, "day": 1, "date": "2030-01-05", "date_quote": "1일차 2030-01-05", "start": start, "end": None,
+    return {"place_quote": quote, "day": 1, "date": "2030-01-05", "date_quote": "1일차 2030-01-05", "year_quote": "2030", "date_form": "explicit_year", "start": start, "end": None,
             "time_quote": start, "kind": "activity"}
 
 

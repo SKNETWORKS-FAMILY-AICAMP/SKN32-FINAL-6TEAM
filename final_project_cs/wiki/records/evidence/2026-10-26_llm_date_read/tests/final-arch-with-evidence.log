@@ -1,0 +1,11 @@
+LLMDATE root: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\mgr-merge-20261026-0045\final_project_cs
+........................................................................ [ 42%]
+........................................................................ [ 85%]
+........................                                                 [100%]
+============================== warnings summary ===============================
+..\..\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51
+  C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\date_risk_env_312\Lib\site-packages\starlette\testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+168 passed, 1 warning in 16.64s

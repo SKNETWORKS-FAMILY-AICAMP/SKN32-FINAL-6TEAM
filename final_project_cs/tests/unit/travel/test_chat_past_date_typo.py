@@ -90,8 +90,9 @@ def test_reader_adds_with_a_yearless_date_use_the_next_such_date_and_a_past_date
     def reader(answer):
         return lambda text, today: agent_read.ground(answer, text.splitlines())
 
-    def item(date_, quote, start):
-        return {"place_quote": "덕수궁", "day": None, "date": date_, "date_quote": quote, "start": start, "end": None,
+    def item(date_, quote, start, form="yearless", year_quote=None):
+        return {"place_quote": "덕수궁", "day": None, "date": date_, "date_quote": quote, "year_quote": year_quote, "date_form": form,
+                "start": start, "end": None,
                 "time_quote": start, "kind": "activity"}
 
     # 연도 없는 「1월 3일」 — 모델이 연도를 붙이지 않은 값(`--01-03`)으로 바뀌어도 넣기가 죽지 않고 다가오는 1월 3일로 넣는다
@@ -102,7 +103,7 @@ def test_reader_adds_with_a_yearless_date_use_the_next_such_date_and_a_past_date
     assert [(o.kind, o.date, o.starts_at) for o in ops] == [("add", "2030-01-03", "18:00")]
     # 연도를 적은 지난 날짜 — 적용하지 않고 되묻는다
     message = "2030년 1월 1일 18:00 덕수궁 넣어줘"
-    answer["items"] = [item("2030-01-01", "2030년 1월 1일", "18:00")]
+    answer["items"] = [item("2030-01-01", "2030년 1월 1일", "18:00", "explicit_year", "2030년")]
     with pytest.raises(EditRefused) as caught:
         ops_for(Decision(action="add_item", item=None, change=None, fact="", minutes=None, question="", raw={}),
                 items=items, now=NOW, message=message, read_plan=reader(answer))

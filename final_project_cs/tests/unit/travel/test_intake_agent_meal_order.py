@@ -13,7 +13,7 @@ class Reader:
 
     def structured(self, system, user, schema, *, num_predict=160):
         return {"items": [
-            {"place_quote": name, "day": 1, "date": "2026-10-23", "date_quote": "10/23",
+            {"place_quote": name, "day": 1, "date": "2026-10-23", "date_quote": "10/23", "year_quote": None, "date_form": "yearless",
              "start": clock, "end": None, "time_quote": clock, "kind": kind}
             for name, kind, clock in zip(("홍대", "돈가스", "라멘"),
                                          ("activity", "dining", "dining"), self.clocks)

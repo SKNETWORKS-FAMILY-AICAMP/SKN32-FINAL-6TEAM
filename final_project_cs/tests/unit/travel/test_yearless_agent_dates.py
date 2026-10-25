@@ -26,8 +26,10 @@ def _answer(items):
             "trip": {"party_size": None, "days": None, "nights": None}}
 
 
-def _item(quote, when, date_quote, start):
-    return {"place_quote": quote, "day": 1, "date": when, "date_quote": date_quote, "start": start, "end": None,
+def _item(quote, when, date_quote, start, form="yearless", year_quote=None):
+    # `[2026-10-26]` 날짜 형식 · 연도 인용은 모델이 낸다(`date_form` · `year_quote`) — 이 대역은 그 계약의 답이다
+    return {"place_quote": quote, "day": 1, "date": when, "date_quote": date_quote, "year_quote": year_quote, "date_form": form,
+            "start": start, "end": None,
             "time_quote": start, "kind": "activity"}
 
 
@@ -43,15 +45,15 @@ def test_ground_keeps_month_day_but_drops_a_year_the_quote_does_not_state():
 
 
 def test_ground_keeps_a_year_written_in_the_quote_or_text():
-    out = agent_read.ground(_answer([_item("경복궁", "2026-10-05", "2026년 10월 5일", "10:00")]), ["2026년 10월 5일 10:00 경복궁"])
+    out = agent_read.ground(_answer([_item("경복궁", "2026-10-05", "2026년 10월 5일", "10:00", "explicit_year", "2026년")]), ["2026년 10월 5일 10:00 경복궁"])
     assert out.items[0].date == "2026-10-05"
     header = ["2026년 여행", "10월 5일 10:00 경복궁"]
-    out = agent_read.ground(_answer([_item("경복궁", "2026-10-05", "10월 5일", "10:00")]), header)
+    out = agent_read.ground(_answer([_item("경복궁", "2026-10-05", "10월 5일", "10:00", "explicit_year", "2026년")]), header)
     assert out.items[0].date == "2026-10-05"         # 연도를 원문 어딘가(머리줄)에 적었다 — 명시한 연도다
 
 
 def test_relative_dates_without_digits_stay_agent_relative():
-    out = agent_read.ground(_answer([_item("경복궁", "2026-10-28", "모레", "10:00")]), ["모레 10:00 경복궁"])
+    out = agent_read.ground(_answer([_item("경복궁", "2026-10-28", "모레", "10:00", "relative")]), ["모레 10:00 경복궁"])
     assert out.items[0].date == "2026-10-28" and out.items[0].date_guessed is True
 
 
@@ -74,7 +76,7 @@ def test_yearless_today_stays_today():
 
 def test_explicit_past_year_stays_past_for_the_all_past_guard():
     text = "2026년 10월 5일 10:00 경복궁"
-    rows = read_source(text, today=TODAY, agent=Agent(_answer([_item("경복궁", "2026-10-05", "2026년 10월 5일", "10:00")])),
+    rows = read_source(text, today=TODAY, agent=Agent(_answer([_item("경복궁", "2026-10-05", "2026년 10월 5일", "10:00", "explicit_year", "2026년")])),
                        agent_mode="on", position=0)
     row = _dates(rows)[0]
     assert row["value"] == "2026-10-05" and row["evidence"]["how"] == "written"

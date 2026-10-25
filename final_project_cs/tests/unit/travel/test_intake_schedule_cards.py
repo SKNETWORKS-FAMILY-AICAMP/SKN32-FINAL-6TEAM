@@ -15,7 +15,7 @@ TEXT = ("1일차 · 2026-10-24\n11:00–12:00\n솔빛공원\n12:34–12:50\n도�
 
 
 def stop(name, start, end, *, quote=None):
-    return {"place_quote": name, "day": 1, "date": DAY.isoformat(), "date_quote": DAY.isoformat(),
+    return {"place_quote": name, "day": 1, "date": DAY.isoformat(), "date_quote": DAY.isoformat(), "year_quote": str(DAY.year), "date_form": "explicit_year",
             "start": start, "end": end, "time_quote": quote or f"{start}–{end}", "kind": "activity"}
 
 

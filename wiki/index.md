@@ -8,6 +8,8 @@ domain: travel
 
 # guguroute wiki
 
+2026-10-26 [날짜 읽기 LLM 판단 전환 인계](handoff/2026-10-26_llm-date-reading.md) — `date_form` · `year_quote` 스키마 · 프롬프트, 정규식 연도 판정 제거; 로컬 E4B 실측 · Codex 논의, 커밋만.
+
 2026-10-26 [과거 날짜 가드레일 확장 인계](handoff/2026-10-26_past-date-guard-extension.md) — 연도 없는 날짜·채팅 되묻기·추가/수정 지금 이후 규칙, 관련 303/303; Codex 검토 미수행(미로그인), 커밋만.
 
 2026-10-25 [전체 과거 normal confirm HTTP 증명·role-manager 21개 회귀](handoff/2026-10-25_allpast-normal-confirm-proof.md) — role-manager 원기능 보존 이식, 격리 21/21 통과; 원격·운영 상태는 연결 기록 참조.

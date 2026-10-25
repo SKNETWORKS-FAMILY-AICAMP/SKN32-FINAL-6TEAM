@@ -1,0 +1,52 @@
+LLMDATE root: C:\Users\kcxsz\AppData\Local\hermes\profiles\guguroute\cache\scratch\mgr-merge-20261026-0045\final_project_cs
+F                                                                        [100%]
+================================== FAILURES ===================================
+___________ test_chat_add_with_number_noise_uses_the_next_such_date ___________
+
+    def test_chat_add_with_number_noise_uses_the_next_such_date():
+        from app.domains.travel_ops.components.conversation import chat_edit
+    
+        message = "3/5 10:00 경복궁 넣어줘, 입장료 2026원"
+        answer = _answer([_item("경복궁", "2026-03-05", "3/5", "yearless")])
+>       ops = chat_edit._read_adds(message, lambda text, today: agent_read.ground(answer, text.splitlines()), stops=[], now=NOW, day=None)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\unit\travel\test_llm_date_form.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = '3/5 10:00 경복궁 넣어줘, 입장료 2026원'
+read_plan = <function test_chat_add_with_number_noise_uses_the_next_such_date.<locals>.<lambda> at 0x000001F5CC4ABBA0>
+
+    def _read_adds(message: str, read_plan: Callable[[str, Any], Any], *, stops: list[Any], now: datetime, day: str | None) -> list[EditOp]:
+        """이해 에이전트가 읽은 메시지 → 넣을 일정들. ★시각이 있는 항목만 넣는다(없으면 묻는 길로) · 이미 일정에 있는 이름은 넣지 않는다 ·
+        날짜는 에이전트 값 → 해석의 날 → 여행 첫날(오늘이 여행 안이면 오늘) 순."""
+        try:
+            got = read_plan(message, now.astimezone(KST).date())
+        except Exception:                                  # noqa: BLE001 — 읽기 실패는 한 곳 넣기로(지금 길)
+            log.info("chat add: reader failed", exc_info=True)
+            return []
+        have = {(s.title or "").strip() for s in stops}
+        first_day = min((s.starts_at.astimezone(KST).date() for s in stops), default=now.astimezone(KST).date())
+        today = now.astimezone(KST).date()
+        fallback_day = day or (today if today >= first_day else first_day).isoformat()
+        ops: list[EditOp] = []
+        for it in getattr(got, "items", []) or []:
+            title = it.title.text.strip()[:80]
+            if not it.start or not title or title in have or _GENERIC_PLACE.fullmatch(title):
+                continue
+            when = it.date or fallback_day
+            if when.startswith("--"):
+                # `[2026-10-26 사용자 확정]` 연도 없는 날짜(이해 에이전트가 원문에 없는 연도를 지운 값) — 오늘 이후 처음 오는 그 날(오늘 포함, 계획서 읽기와 같은 `dates._fill_year`)
+                from app.domains.travel_ops.components.intake.dates import _fill_year
+    
+                when = _fill_year(when, today).isoformat()
+            begin = datetime.fromisoformat(f"{when}T{it.start}").replace(tzinfo=KST)
+            if begin < now.astimezone(KST).replace(second=0, microsecond=0):
+                # 연도를 적은 지난 날짜 · 지난 시각 — 넣지 않고 되묻는다(여러 곳 중 하나라도 지났으면 하나도 넣지 않는다)
+>               raise past_time_refusal(title=title, item_id=None, day=when, begin=it.start, stops=stops, now=now, verb="add")
+E               app.domains.travel_ops.components.conversation.chat_edit.EditRefused: 혹시 오타 아닌가요? 3월 5일(목) 10:00은(는) 이미 지난 때라 「경복궁」 일정은 넣지 않았어요. 아래 가까운 날짜 중에서 골라 주시거나 다른 날짜와 시각을 알려 주세요.
+
+app\domains\travel_ops\components\conversation\chat_edit.py:667: EditRefused
+=========================== short test summary info ===========================
+FAILED tests/unit/travel/test_llm_date_form.py::test_chat_add_with_number_noise_uses_the_next_such_date
+1 failed in 6.63s

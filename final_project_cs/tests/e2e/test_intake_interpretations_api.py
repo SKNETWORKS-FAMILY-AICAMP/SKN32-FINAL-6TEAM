@@ -37,9 +37,9 @@ ANSWER = {
     "guard": {"off_topic": False, "prompt_injection": False, "out_of_scope": False, "quote": None},
     "pieces": [{"kind": "plan_item", "quote": "10시 경복궁"}, {"kind": "plan_ask", "quote": "세 시간 비는데 실내로 뭐 하면 좋을까"}],
     "items": [
-        {"place_quote": "경복궁", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "start": "10:00", "end": None,
+        {"place_quote": "경복궁", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "10:00", "end": None,
          "time_quote": "10시", "kind": "activity"},
-        {"place_quote": "광장시장", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "start": "17:00", "end": None,
+        {"place_quote": "광장시장", "day": 1, "date": "2026-10-15", "date_quote": "2026-10-15", "year_quote": "2026", "date_form": "explicit_year", "start": "17:00", "end": None,
          "time_quote": "17:00", "kind": "dining"}],
     "moves": [], "conditions": [], "preferences": [],
     "gaps": [{"kind": "free_slot", "day": 1, "start": "13:00", "end": "16:00", "quote": "오후 1시~4시 정도"}],
