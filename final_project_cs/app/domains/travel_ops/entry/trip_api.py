@@ -2592,10 +2592,16 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         (`web.dev_mode = on`)일 때만 싣는다. 근거 목록은 `basis_sources: [{source}]` — 규정 조각 id(t_doc_… · #c…) ·
         예약 조건 · 사실 답의 조회 출처. 끄면 세 칸을 뺀다. 고객 문장(`answer`)에는 늘 근거 id 가 없다."""
         from app.domains.travel_ops.modules.web_account import web_guard
+        # L02a: writer 결과(`basis.response`)는 내부 근거다 — 공개 응답에 response_status/question_status 를 싣지 않는다(L02b 보류).
+        #   개발 보기(dev_mode)에서만 근거를 보이며, 그때도 scope · 질문 request 는 뺀다(`developer_basis`).
+        from app.domains.travel_ops.components.response.public import developer_basis
 
         if web_guard.values(tenant).get("web.dev_mode") != "on":
             return {k: v for k, v in result.items() if k not in ("basis", "decision", "basis_sources")}
         basis = result.get("basis") or {}
+        if isinstance(basis, dict):
+            basis = developer_basis(basis)
+            result = {**result, **({"basis": basis} if "basis" in result else {})}
         sources = list(basis.get("sources") or []) if isinstance(basis, dict) else []
         lookup = (basis.get("lookups") or {}) if isinstance(basis, dict) else {}
         if isinstance(lookup, dict) and lookup.get("source"):

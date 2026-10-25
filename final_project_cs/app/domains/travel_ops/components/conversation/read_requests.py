@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import re
 from copy import copy
-from dataclasses import is_dataclass, replace
+from dataclasses import asdict, is_dataclass, replace
 
+from ..response import writing
 from . import fact_context, schedule_query, time_anchor, trip_facts
 
 #: ★`[2026-10-15]` 「지금 몇 시야?」 — 일정이 아니라 **지금 시각**을 묻는 말. 전에는 일정을 찾다 「어느 일정을 물으신 건지 찾지 못했어요」로 끝났다
@@ -67,19 +68,42 @@ def _route(origin, destination, mode):
             f"(시간표 기준, {trip_facts._hm(got['starts_at'])} 출발). 일정은 바꾸지 않았어요."), None
 
 
-def reply(decision, *, items, message, selected, turns, version, now, context_now, ttl_seconds, place_source, weather_lookup=None):
+def reply(decision, *, items, message, selected, turns, version, now, context_now, ttl_seconds, place_source,
+          weather_lookup=None, response_scope=None, change_lookup=None):
     by_alias = {f"i{n}": item for n, item in enumerate(trip_facts._stops(items), 1)}
-    answers, details, evidence = [], [], []
+    questions, evidence = [], []
     focus = None
-    for request in decision.reads:
+
+    def close(request, text, basis, status=None):
+        core, _, more = text.partition(trip_facts.MORE_MARK)
+        unresolved = basis.get("unresolved")
+        closure = ("needs_input" if unresolved in {"target", "place_identity", "origin_identity", "origin",
+                    "ambiguous_origin", "endpoints", "anchor", "weather_target"} else "failed") if unresolved else "answered"
+        questions.append(writing.QuestionResult(
+            question_id=f"q{len(questions) + 1}", request=request, text=core, more=more, status=status or closure,
+            evidence=basis, checked_at=context_now.isoformat(),
+            target={k: basis[k] for k in ("item_id", "item_ids", "origin_item_id", "version", "change_version") if k in basis}))
+        evidence.append(basis)
+
+    for original_request in decision.reads:
+        request = original_request
         fact = request["fact"]
+        if fact == "change_explanation":
+            if change_lookup is None:
+                text, basis, status, resolved = (
+                    "변경 기록을 읽을 수 없어 이유를 확인할 근거가 없어요. 일정은 바꾸지 않았어요.",
+                    {"kind": fact, "version": version, "unresolved": "change_reader_missing"}, "failed", None)
+            else:
+                text, basis, status, resolved = change_lookup(request, turns)
+            close(original_request, text, basis, status)
+            if resolved and status == "answered":
+                focus = resolved
+            continue
         item = by_alias.get(request["target_item"])
         if (fact == "time" and item is None and request.get("anchor_kind", "none") in ("none", "now")
                 and _CLOCK_QUESTION.match(request.get("text") or message or "")):
-            core = _clock_text(now)
-            if core not in answers:
-                answers.append(core)
-            evidence.append({"kind": "clock", "item_id": None, "version": version, "now": now.isoformat()})
+            close(original_request, _clock_text(now),
+                  {"kind": "clock", "item_id": None, "version": version, "now": now.isoformat()})
             continue
         # ★`[2026-10-14]` 앞뒤 · 시각 질문은 모델이 적은 **기준**(일정 · 끼니 · 시각 · 지금 · 앞 답)으로 서버가 답할 일정을 계산한다
         #   (`time_anchor.py`, Codex 와 합의한 D안) — 모델이 고른 일정보다 앞선다. 「다음」 사실은 그 자체로 「기준 바로 뒤」다.
@@ -187,6 +211,8 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
                 basis["item_id"] = str(targets[0].item_id)
                 resolved = {"item_id": str(targets[0].item_id), "version": version,
                             "at": context_now.isoformat(), "source": "weather_target"}
+            if any(f.get("unresolved") for f in forecasts):
+                basis["unresolved"] = "weather_forecast_incomplete"
         elif fact == "outdoor" and request.get("query") is None:
             if item is None:
                 text = "어느 일정의 실내·야외 여부인지 확인할 수 있도록 일정 이름을 알려 주세요."
@@ -298,15 +324,13 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             basis.update(fact_basis)
         if note and not basis.get("unresolved"):
             text = f"{note}\n{text}"
-        core, _, more = text.partition(trip_facts.MORE_MARK)
-        if core not in answers:
-            answers.append(core)
-        if more:
-            details.append(more)
-        evidence.append(basis)
+        close(original_request, text, basis)
         if resolved and not basis.get("unresolved"):
             focus = resolved
-    if decision.social:
-        answers.insert(0, decision.social)
-    return {"status": "answered", "text": "\n\n".join(answers),
-            **({"more": "\n\n".join(details)} if details else {})}, {"kind": "multi_read", "questions": evidence}, focus
+    written = writing.write_response(writing.ResponseInput(
+        source="inquiry", scope=response_scope, version=version,
+        question_ids=tuple(f"q{n}" for n in range(1, len(decision.reads) + 1)), questions=tuple(questions),
+        execution={"status": "read_only"}, workflow={}, followup=focus, social=decision.social))
+    return {"status": "answered", "text": written.answer,
+            **({"more": written.more} if written.more else {})}, {
+                "kind": "multi_read", "questions": evidence, "response": asdict(written)}, focus

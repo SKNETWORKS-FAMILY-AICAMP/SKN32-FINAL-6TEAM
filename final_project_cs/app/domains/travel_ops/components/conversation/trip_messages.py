@@ -942,7 +942,8 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                    if safe_read else chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id)),
             version=base, now=at, context_now=context_now,
             ttl_seconds=int(get_guardrails().get("travel.decision_unit.focus_ttl_seconds")), place_source=place_source,
-            weather_lookup=getattr(desk, "weather", None))
+            weather_lookup=getattr(desk, "weather", None),
+            response_scope={"tenant_id": tenant, "customer_id": str(current["customer_id"]), "trip_id": str(trip_id)})
     elif stale_selection:
         outcome = {"status": "clarify", "text": "가리키는 일정 하나를 현재 여행에서 확인하지 못했어요. 최신 일정에서 다시 선택해 주세요."}
     elif action == "clarify":
