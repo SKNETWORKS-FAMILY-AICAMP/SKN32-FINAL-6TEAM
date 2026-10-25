@@ -25,7 +25,7 @@ test("첫 여행이면 덮개가 「예시 불러오기」를 비추고, 누르�
   await expect(first(page)).toBeVisible();
   await expect(first(page)).toContainText("「예시 불러오기」를 눌러 일정 예시를 불러오고, 「계획 확인하기」로 장소 · 운영시간 · 이동을 검증해 보세요.");
   await first(page).getByRole("button", { name: "예시 불러오기" }).click();
-  await expect(page.getByLabel("나의 여행 계획")).toHaveValue(/^1일차 · \d{4}-\d{2}-\d{2}\n10:00 국립현대미술관 서울/);
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue(/^1일차 · \d{4}-\d{2}-\d{2}\n12:00 인사동 · 점심/);
   await expect(second(page)).toBeVisible();
   await expect(second(page).getByRole("button", { name: "계획 확인하기" })).toBeFocused();
   await second(page).getByRole("button", { name: "닫기" }).click();
