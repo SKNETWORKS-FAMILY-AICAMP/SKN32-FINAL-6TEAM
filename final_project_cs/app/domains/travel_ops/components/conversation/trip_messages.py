@@ -1306,6 +1306,11 @@ def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = No
                                 "fact": choice.get("fact"),
                                 "to_version": choice["change"].version - 1 if choice.get("change") else None})
     generic = not choices
+    if setting and not choices and not lead:
+        # ★`[2026-10-26 x600 c34bd376]` 조건이 붙은 바꾸기인데 바꿀 수 있는 활동이 없다 — 식사가 든 대체 목록(요청 종류를 모를 때의 것)을 내지 않는다
+        note = ((decision.raw or {}).get("setting_guard") or {}).get("note")
+        return {"status": "clarify", "text": " ".join(x for x in (
+            note, f"지금 일정에서 {SETTING_LABELS[setting]} 장소로 바꿀 수 있는 활동 일정을 찾지 못했어요. 바꿀 일정을 이름으로 알려 주세요.") if x)}
     if not choices:
         # ★`[2026-09-29 ui 세션 지적 · 사용자 제안]` 모델이 해석 후보를 못 냈어도 **고를 수 있는 것**을 보인다 —
         #   화면에서 고른 일정 → 지금부터 가까운 식사 · 활동(없으면 앞에서부터) 셋을 「다른 곳으로 바꿔 줘」로

@@ -13,6 +13,7 @@ domain: travel
 2026-10-26 채팅 「실내를 야외로 바꿔줘」 첫 답이 식사 낀 대체 목록이던 결함 — 기준 일정 재확인이 활동 되묻기 선택지를 지운 것, 격리 후보에서 고침(로컬 시험·실 E4B까지, 푸시·배포 전): [보고서](records/reports/2026-10-26_chat-outdoor-anchor-guard-fallback.md)
 2026-10-26 채팅 「실내를 야외로 바꿔줘」가 53c3c273 뒤에도 식사 낀 대체 목록이던 결함 — x600 유료 대체 의심과 남은 빈 선택지 길, 실내·야외 되묻기는 활동 후보로(로컬 시험·실 E4B까지, 푸시·배포 전): [보고서](records/reports/2026-10-26_chat-outdoor-setting-clarify-candidates.md)
 2026-10-26 채팅 실내·야외 바꾸기 da4ccd97 재시험 — 되묻기 선택지에 식사가 남던 것 · 이미 야외인 일정을 또 바꾸던 것 고침, 되돌린 뒤 박물관 운영시간 「모름」은 되돌리기 결함이 아님(로컬 시험·실 E4B까지, 푸시·배포 전): [보고서](records/reports/2026-10-26_chat-outdoor-setting-swap-targets.md)
+2026-10-26 채팅 실내·야외 바꾸기 c34bd376 x600 — 선택 없이 「실내를 야외로 바꿔줘」가 식사 포함 대체 목록으로 되묻던 경로 확정(해석 `place_setting.want=any`) · 조건이 있으면 어느 되묻기든 조건 선택지(로컬 시험·실 E4B까지, 푸시·배포 전): [보고서](records/reports/2026-10-26_chat-outdoor-setting-clarify-paths.md)
 
 2026-10-25 채팅에서 화면으로 고른 일정에 묻는 말이 「어느 일정」 되묻기 · 앞 일정 답으로 끝나던 결함을 격리 후보에서 고쳤습니다(로컬 시험까지, 반영 전): [원인 · 수정 · 실모델 한계](records/reports/2026-10-25_chat-selected-stop-subject.md).
 

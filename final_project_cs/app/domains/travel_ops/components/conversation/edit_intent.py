@@ -24,7 +24,9 @@ def schemas(aliases: list[str]) -> dict[str, Any]:
         "place_search": obj({"relation": enum(["none", "near"]), "anchor_item": enum(aliases),
                              "place_text": {"type": "string"}, "evidence": {"type": "string"}}),
         # ★`[2026-10-25 QA]` 바꿀 새 장소의 실내·야외 조건 — 전에는 담을 칸이 없어 「실내를 야외로 바꿔줘」가 또 실내로 바뀌었다
-        "place_setting": obj({"want": enum(list(SETTINGS)), "evidence": {"type": "string"}}),
+        # ★`[2026-10-26 x600 c34bd376]` 대상을 몰라 clarify 를 고른 해석이 이 칸을 any 로 비웠다 — 엄격 스키마(유료 넘김)는 칸 설명을 그대로 보낸다
+        "place_setting": {**obj({"want": enum(list(SETTINGS)), "evidence": {"type": "string"}}),
+                          "description": "새 장소의 실내·야외 조건. action과 무관하게(바꿀 일정을 몰라 clarify여도) 고객이 말했으면 채운다"},
     }
 
 
@@ -56,6 +58,7 @@ evidence는 현재 고객 문장의 장소 조건 원문. 검색 조건 없음�
 place_setting은 장소 교체·후보 요청에서 고객이 새 장소를 실내 또는 야외로 지정한 조건이다. 실내로 가자면 want=indoor, 야외·바깥으로 가자면 want=outdoor,
 evidence에 그 조건 원문을 그대로 복사한다. 지금 장소가 실내·야외라는 설명은 새 장소 조건이 아니다. 실내·야외는 장소 이름이나 조건부 요청이 아니므로 destination_text·condition_text에 넣지 않는다.
 조건이 없으면 want=any, evidence="".
+place_setting은 action과 무관하게 채운다. 바꿀 일정을 정하지 못해 clarify를 골라도 고객이 새 장소를 실내·야외로 지정했으면 want와 evidence를 낸다.
 place_setting은 place_search와 별개다. 고객이 주변·근처의 기준 일정이나 지명을 말하지 않았으면 실내·야외 조건이 있든 없든
 place_search는 relation=none,anchor_item=none,place_text="",evidence=""이며, 바꿀 대상 일정을 place_search 기준으로 옮겨 적지 않는다.
 """

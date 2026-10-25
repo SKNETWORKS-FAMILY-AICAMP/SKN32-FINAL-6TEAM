@@ -824,6 +824,11 @@ def guard_setting_target(decision: Decision) -> Decision:
     raw = decision.raw or {}
     item = decision.item
     setting = requested_setting(raw)
+    if (setting is not None and decision.action in ("apply_change", "propose_alternatives") and item is None
+            and raw.get("change_scope") not in ("time", "date") and (raw.get("time_edit") or {}).get("boundary", "none") == "none"):
+        # ★`[2026-10-26 x600 c34bd376]` 조건은 있는데 바꿀 일정이 없다 — 팀이 조건 없이 모든 활동을 묻지 않게 대상 되묻기로 돌린다
+        #   (`trip_messages._setting_swap_choices` 가 활동 · 조건으로 거른다. 모델 후보는 그대로 넘긴다)
+        return replace(decision, action="clarify", change=None, raw={**raw, "setting_untargeted": {"action": decision.action}})
     if (setting is None or decision.action not in ("apply_change", "propose_alternatives") or item is None
             or raw.get("change_scope") in ("time", "date") or (raw.get("time_edit") or {}).get("boundary", "none") != "none"
             or place_setting(getattr(item, "place", None)) != setting):
