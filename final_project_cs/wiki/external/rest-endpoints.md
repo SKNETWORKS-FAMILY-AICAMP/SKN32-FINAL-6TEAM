@@ -50,6 +50,7 @@ domain: travel
 <a id="지도-경로선--v1webtripstrip_idroute-shapes--v1webtrip-intakesintake_idroute-shapes-2026-10-04"></a> [지도 경로선 — `/v1/web/trips/{trip_id}/route-shapes` · `/v1/web/trip-intakes/{intake_id}/route-shapes` `[2026-10-04]`](rest-endpoints/web-trips.md#지도-경로선--v1webtripstrip_idroute-shapes--v1webtrip-intakesintake_idroute-shapes-2026-10-04)
 <a id="여행-화면-지금-시각-표시--여행-조회의-now_label-2026-10-15-사용자-결정"></a> [여행 화면 「지금」 시각 표시 — 여행 조회의 `now_label` `[2026-10-15 사용자 결정]`](rest-endpoints/web-trips.md#여행-화면-지금-시각-표시--여행-조회의-now_label-2026-10-15-사용자-결정)
 <a id="여행-화면-위험-점검-칸--여행-조회의-risk_panel-2026-10-22-사용자-지시"></a> [여행 화면 위험 점검 칸 — 여행 조회의 `risk_panel` `[2026-10-22 사용자 지시]`](rest-endpoints/web-trips.md#여행-화면-위험-점검-칸--여행-조회의-risk_panel-2026-10-22-사용자-지시)
+<a id="계획-담기-화면-보조-칸--공개-읽기의-plan_input_extras-2026-10-25-사용자-지시--st4f-739"></a> [계획 담기 화면 보조 칸 — 공개 읽기의 `plan_input_extras` `[2026-10-25 사용자 지시 — ST4F-739]`](rest-endpoints/web-trips.md#계획-담기-화면-보조-칸--공개-읽기의-plan_input_extras-2026-10-25-사용자-지시--st4f-739)
 <a id="위임--v1delegations-2026-09-22"></a> [위임 — `/v1/delegations/*` `[2026-09-22]`](rest-endpoints/delegations.md#위임--v1delegations-2026-09-22)
 
 ## 관계

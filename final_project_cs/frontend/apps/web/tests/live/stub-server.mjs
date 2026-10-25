@@ -78,6 +78,9 @@ const DEFAULTS = {
   //   `GET /v1/web/features`, when `features` is not "off"): "absent" (an older server: no field — shown) | "on" | "off" (`risk_panel: false` — only those panels
   //   are hidden; the check, the bell and the notice center stay)
   riskPanel: "absent",
+  // `[2026-10-25 ST4F-739]` the operator's switch for the plan screen's extra panels (`plan_input_extras` of `GET /v1/web/features`, when `features` is not
+  //   "off"): "absent" (an older server: no field — shown) | "on" | "off" (`plan_input_extras: false` — 「직접 입력」 alone; the intake still takes files and plans)
+  planInputExtras: "absent",
   // an edit the server refuses: "" | "locked" (409 item_locked)
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
@@ -1082,7 +1085,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   if (path === "/v1/web/features" && request.method === "GET") {
     if (scenario.features === "off") return json(response, 404, { detail: "Not Found" }, origin);
     return json(response, 200, { guardian: scenario.features !== "guardian_off",
-      ...(scenario.riskPanel === "absent" ? {} : { risk_panel: scenario.riskPanel === "on" }) }, origin);
+      ...(scenario.riskPanel === "absent" ? {} : { risk_panel: scenario.riskPanel === "on" }),
+      ...(scenario.planInputExtras === "absent" ? {} : { plan_input_extras: scenario.planInputExtras === "on" }) }, origin);
   }
   if (request.method === "GET" && path === "/v1/web/support/notices/board") {
     if (scenario.noticeBoard === "off") return json(response, 404, { detail: "Not Found" }, origin);

@@ -621,6 +621,14 @@ travel:
   trip_screen:
     now_label_enabled: true
     risk_panel_enabled: false
+  # -- 계획 담기 화면 보조 칸 (2026-10-25 사용자 지시 · ST4F-739) --
+  # 웹 「여행 계획 담기」 화면의 「파일 선택」 · 「계획 짜 주기 (테스트)」 · 「읽는 기준」 · 「여행 취향」 안내 칸을 한 스위치로 끄고 켠다.
+  # **기본 꺼짐** — 「직접 입력」 칸만 보인다. 켜려면 **관리 콘솔 「운영 설정」** 의 같은 이름 스위치(콘솔 값이 먼저).
+  # 꺼짐: 공개 읽기 `GET /v1/web/features` 의 `plan_input_extras` 가 false — 화면 · 도움말(/help)의 그 칸 설명만 숨는다.
+  #   접수(`POST /v1/web/intakes`)는 파일 · 계획 짜 주기 요청을 그대로 받는다(다른 입구 · 이미 열린 화면). 설문 답 · 하루 일정의 여유는 그대로 함께 간다.
+  # 읽는 곳: `settings_hook.plan_input_extras_enabled(tenant)`.
+  plan_input:
+    extras_enabled: false
   # -- 항로 지킴이 운영 스위치 (2026-10-19 사용자 결정 · ST4F-613) --
   # 끄면 웹에서 항로 지킴이(계획 담기 카드 · 머리 아이콘 · 여행 화면)를 숨기고 서버의 자동 일정 변경도 멈춘다 — 켠 여행도 끈 동안은 먼저 묻는다.
   # 켠 기록(`constraints.survey.on_disruption` · `trip_guardian_changes`)은 지우지 않아 다시 켜면 원래대로다. **관리 콘솔 「운영 설정」** 의 같은 이름 스위치가 먼저.

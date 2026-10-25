@@ -23,6 +23,7 @@ import { useSettings, useT } from "@/lib/settings";
 import { examplePlan } from "./example-plan";
 import { TestPlans } from "./test-plans";
 import { textToSend } from "./test-plan-input";
+import { usePlanInputExtrasShown } from "./availability";
 import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
 import { PlanAskFields } from "./plan-ask-fields";
 import { clearLoginDraft, keepLoginDraft, takeLoginDraft } from "./login-draft";
@@ -58,15 +59,16 @@ function Preferences() {
   </div><hr /></>;
 }
 
-/** One of the three ways to give a plan: a bordered panel that is marked while it is the one that will be sent. */
-function Pane({ id, title, active, onActivate, children }: { id: RegistrationPane; title: string; active: boolean; onActivate: () => void; children: ReactNode }) {
+/** One of the three ways to give a plan: a bordered panel that is marked while it is the one that will be sent.
+ *  `alone`: `[2026-10-25 ST4F-739]` the only panel on the screen (the operator switched the others off) — there is nothing to choose between, so no 「보낼 칸」 mark. */
+function Pane({ id, title, active, alone = false, onActivate, children }: { id: RegistrationPane; title: string; active: boolean; alone?: boolean; onActivate: () => void; children: ReactNode }) {
   const t = useT();
   // Pressing it, writing in it, choosing in it, or moving the keyboard focus into it makes it the chosen one.
   return <Panel className={styles.pane} data-pane={id} data-active={active || undefined} aria-current={active ? "true" : undefined} aria-labelledby={`pane-${id}-title`}
     onClick={onActivate} onFocus={onActivate}>
     <div className={styles.paneHead}>
       <h2 id={`pane-${id}-title`} className={styles.paneTitle}>{title}</h2>
-      {active && <span className={styles.paneBadge}>{t("보낼 칸", "Will be sent")}</span>}
+      {active && !alone && <span className={styles.paneBadge}>{t("보낼 칸", "Will be sent")}</span>}
     </div>
     {children}
   </Panel>;
@@ -133,6 +135,12 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
   const [ask, setAsk] = useState<PlanAsk>(() => returned?.plan ? { start: returned.plan.start_date, days: returned.plan.days, party: returned.plan.party_size, wish: returned.plan.wish } : emptyAsk);
   // ★`[2026-10-03 사용자 결정]` The panel touched last is the one that is sent — and only that one .
   const [active, setActive] = useState<RegistrationPane>(() => returned ? paneOfSending(returned) : "text");
+  // ★`[2026-10-25 사용자 지시 — ST4F-739]` The operator's switch for 「파일 선택」 · 「계획 짜 주기」 · 「읽는 기준」 · 「여행 취향」 (`GET /v1/web/features`, off by default):
+  //   「직접 입력」 alone until the server says they are on. Switched off while a file or plan sending came back (or a draft kept before sign-in held one),
+  //   「직접 입력」 is the chosen panel again — nothing hidden is sent.
+  const extras = usePlanInputExtrasShown();
+  const extrasShown = extras === true;
+  if (extras === false && active !== "text") setActive("text");
   useEffect(() => {
     let live = true;
     void takeLoginDraft().then((saved) => {
@@ -491,20 +499,22 @@ export function TripRegistration({ onSending }: { onSending?: () => void } = {})
       <div className={styles.layout}>
         <div className={styles.editor}>
           <div className={styles.panes}>
-            <Pane id="text" title={t("직접 입력", "Type it in")} active={active === "text"} onActivate={() => choose("text")}>{textBox}</Pane>
-            <Pane id="files" title={t("파일 선택", "Choose files")} active={active === "files"} onActivate={() => choose("files")}>{filePicker}</Pane>
-            <Pane id="plan" title={t("계획 짜 주기 (테스트)", "Plan it for me (test)")} active={active === "plan"} onActivate={() => choose("plan")}>
-              <PlanAskFields ask={ask} today={today} disabled={pending} onChange={changeAsk} />
-              {active === "plan" && errorNode}
-            </Pane>
+            <Pane id="text" title={t("직접 입력", "Type it in")} active={active === "text"} alone={!extrasShown} onActivate={() => choose("text")}>{textBox}</Pane>
+            {extrasShown && <>
+              <Pane id="files" title={t("파일 선택", "Choose files")} active={active === "files"} onActivate={() => choose("files")}>{filePicker}</Pane>
+              <Pane id="plan" title={t("계획 짜 주기 (테스트)", "Plan it for me (test)")} active={active === "plan"} onActivate={() => choose("plan")}>
+                <PlanAskFields ask={ask} today={today} disabled={pending} onChange={changeAsk} />
+                {active === "plan" && errorNode}
+              </Pane>
+            </>}
           </div>
-          <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />
+          {extrasShown && <ReadingCriteria pace={paceOf(onboarding.complete ? toSurvey(onboarding.answers) : undefined, criteria)} onChange={setPace} />}
           {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
         </div>
         <aside className={styles.tips}>
           <Panel>
-            <Preferences />
+            {extrasShown && <Preferences />}
             <h2>{t("이렇게 적으면 잘 읽어요", "Tips for writing your plan")}</h2>
             <ol className={styles.tipList}>
               <li>{t("일차 제목에 날짜를 적어요.", "Start each day with a date.")}</li>
