@@ -1,5 +1,7 @@
-"""Explicit Activity-only public lookup: search discovers, official JSON-LD supplies facts.
+"""Explicit Activity-only public lookup: search discovers, official pages supply facts.
 
+Facts come from official JSON-LD and, when `official_text` is configured, from hours/closure
+sentences in the official page body read by the rule parser `official_hours_text` (no model).
 No model, customer text, keys, cookies, booking or itinerary input is accepted.
 Operational enablement requires reviewed public identities and separate free-search config.
 """
@@ -15,9 +17,10 @@ import threading
 import time
 from datetime import UTC, datetime
 from html.parser import HTMLParser
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin, urlsplit
 
 from ...instances.activity.place_aliases import key_of
+from . import official_hours_text
 from .base import TravelSource
 from .public_web_transport import (
     PublicWebTransport,
@@ -75,16 +78,21 @@ class _PublicSource(TravelSource):
         self.fetch = fetch
         self.limits = limits
 
-    def read(self, url, hosts, *, search=False):
-        checked_url(url, hosts, self.limits, search=search)
+    def read(self, url, hosts, *, search=False, bounds=None):
+        """`bounds` (official pages only): redirects/http_ok/subdomains opted in by config."""
+        bounds = bounds or {}
+        # Opted-in official reads accept a query string (e.g. `.do?menuNo=`): it comes from the
+        # reviewed homepage or the official page itself, never from customer text.
+        checked_url(url, hosts, self.limits, search=search or bool(bounds),
+                    http_ok=bounds.get("http_ok", False), subdomains=bounds.get("subdomains", False))
         if self._limiter is None:
             raise WebFailure("budget_unconfigured")
         try:
             if isinstance(self.fetch, PublicWebTransport):
-                return self.fetch(url, hosts, allow=self._allow)
+                return self.fetch(url, hosts, allow=self._allow, **bounds)
             if not self._allow():
                 raise WebFailure("budget_blocked")
-            return self.fetch(url, hosts)
+            return self.fetch(url, hosts, **bounds)
         except WebFailure as exc:
             prefix = "search_" if self.name == "activity_web_search" else "extract_"
             self._miss(str(exc))
@@ -209,20 +217,61 @@ class DdgsWebSearch(TravelSource):
         return urls
 
 
+def official_bounds(config):
+    """Opt-in widening for official pages only (search reads never get these)."""
+    redirects = config.get("official_max_redirects") or 0
+    if not config.get("official_http") and not redirects:
+        return {}
+    return {"redirects": int(redirects), "http_ok": config.get("official_http") is True, "subdomains": True}
+
+
+def _text_fact(body, url, identity):
+    """Hours/closure sentences from the official page body (rule parser), or a stable reason."""
+    text, links = official_hours_text.visible(body)
+    names = [key_of(n) for n in [identity["name"], *identity.get("aliases", [])]]
+    if not any(n and n in key_of(text) for n in names):
+        raise WebFailure("identity_unverified")
+    parsed = official_hours_text.parse(text)
+    if "ambiguous" in parsed:
+        if parsed["ambiguous"] != "no_hours":
+            # An official page whose hours this grammar cannot pin down makes the place unknown,
+            # even if another official page reads cleanly (no cherry-picking the readable one).
+            raise WebFailure("ambiguous_hours")
+        return None, links, parsed["ambiguous"]
+    # Server-side position check: every quote must be a verbatim span of this page's text.
+    if not parsed["quotes"] or any(text.find(q) < 0 for q in parsed["quotes"]):
+        raise WebFailure("quote_unverified")
+    value = {k: parsed[k] for k in ("hours", "closed", "open_all_year")}
+    return value, links, [{"quote": q, "offset": text.find(q)} for q in parsed["quotes"]]
+
+
 class OfficialSourceExtract(_PublicSource):
     name = "activity_official_extract"
 
-    def extract(self, url, identity, *, tolerance):
+    def extract(self, url, identity, *, tolerance, config=None):
+        return self.extract_page(url, identity, tolerance=tolerance, config=config)[0]
+
+    def extract_page(self, url, identity, *, tolerance, config=None):
+        """(facts, same-official guide links). Links are only nominated, never trusted as facts."""
+        config = config or {}
+        bounds = official_bounds(config)
         params = {
             "identity": json.dumps(identity, sort_keys=True),
             "tolerance": tolerance,
+            **({"text": True, **bounds} if config.get("official_text") else {}),
         }
         cached = self._from_cache(url, params)
         if cached is not None:
-            return cached
-        body = self.read(url, identity["official_hosts"])
+            return cached, []
+        body = self.read(url, identity["official_hosts"], bounds=bounds)
         if not isinstance(body, str):
             raise WebFailure("page_unreadable")
+        final = getattr(body, "url", "") or url
+        if config.get("official_text"):
+            jsonld = _JsonLD()
+            jsonld.feed(body)
+            if not any(isinstance(n, dict) and "openingHours" in str(n) for n in jsonld.blocks):
+                return self._text_page(body, final, url, identity, params)
         parser = _JsonLD()
         parser.feed(body)
         nodes = []
@@ -277,6 +326,7 @@ class OfficialSourceExtract(_PublicSource):
                 "source_url": url,
                 "format": "jsonld",
                 "field": "openingHours",
+                "source_kind": "official_homepage",
                 "applies_on": None,
                 "checked_at": datetime.now(UTC).isoformat(),
                 "confidence": "official_structured",
@@ -284,7 +334,48 @@ class OfficialSourceExtract(_PublicSource):
             }
         if facts:
             self._remember(url, params, facts)
-        return facts
+        return facts, []
+
+    def _text_page(self, body, final, url, identity, params):
+        value, links, detail = _text_fact(body, final, identity)
+        if value is None:
+            return {}, links
+        facts = {"business_hours": {
+            "value": value,
+            "quotes": detail,
+            "source_url": final,
+            "scheme": urlsplit(final).scheme,
+            "source_kind": "official_homepage",
+            "evidence": "text",
+            "checked_at": datetime.now(UTC).isoformat(),
+            "confidence": "official_text",
+            "body_sha256": hashlib.sha256(body.encode()).hexdigest(),
+        }}
+        self._remember(url, params, facts)
+        return facts, links
+
+
+def _merge_hours(old, new):
+    """Same hours from two official pages may differ only by one page omitting closures."""
+    a, b = old["value"], new["value"]
+    if old.get("evidence") != new.get("evidence"):
+        raise WebFailure("conflicting_sources")
+    if old.get("evidence") != "text":
+        if a != b:
+            raise WebFailure("conflicting_sources")
+        return old
+    if a["hours"] != b["hours"]:
+        raise WebFailure("conflicting_sources")
+    closed = sorted(set(a["closed"]) | set(b["closed"]), key=official_hours_text.DAYS.index)
+    open_all_year = a["open_all_year"] or b["open_all_year"]
+    if open_all_year and closed:
+        raise WebFailure("conflicting_sources")
+    return {**old, "value": {**a, "closed": closed, "open_all_year": open_all_year},
+            "quotes": old["quotes"] + [q for q in new["quotes"] if q not in old["quotes"]],
+            "also_source_url": new["source_url"]}
+
+
+_GUIDE_LINK = official_hours_text.GUIDE_LINK
 
 
 class ActivityPublicWeb:
@@ -341,28 +432,58 @@ class ActivityPublicWeb:
             identity = matches[0]
             if identity.get("provenance") != "public_catalog":
                 raise WebFailure("provenance_rejected")
-            urls = self.search.discover(identity, self.config)
+            bounds = official_bounds(self.config)
+            homepage = identity.get("homepage") if self.config.get("official_text") else None
+            search_failure = None
+            try:
+                urls = self.search.discover(identity, self.config)
+            except WebFailure as exc:
+                # The reviewed homepage is still an official seed; without one, search failure ends here.
+                if not homepage:
+                    raise
+                urls, search_failure = [], str(exc)
+            # Reviewed homepage first, then search nominations; guide links found on official
+            # pages join the same queue. Every URL re-passes the official host/scheme bounds.
+            queue = list(dict.fromkeys(([homepage] if homepage else []) + list(urls)))
+            seen, pages = set(), 0
             facts = {}
             failures = []
-            for url in list(dict.fromkeys(urls))[: self.config["max_pages"]]:
+            while queue and pages < self.config["max_pages"]:
+                url = queue.pop(0)
+                if url in seen:
+                    continue
+                seen.add(url)
                 if time.monotonic() >= deadline:
                     raise WebFailure("web_timeout")
                 try:
-                    checked_url(url, identity["official_hosts"], self.limits)
-                    extracted = self.extract.extract(
-                        url, identity, tolerance=self.config["coordinate_tolerance"]
+                    checked_url(url, identity["official_hosts"], self.limits, search=bool(bounds),
+                                http_ok=bounds.get("http_ok", False), subdomains=bool(bounds))
+                    pages += 1
+                    extracted, links = self.extract.extract_page(
+                        url, identity, tolerance=self.config["coordinate_tolerance"], config=self.config
                     )
                 except WebFailure as exc:
                     failures.append(str(exc))
                     continue
+                for href, label in links:
+                    if not _GUIDE_LINK.search(label or ""):
+                        continue
+                    nominated = urljoin(url, href).split("#", 1)[0]
+                    try:
+                        checked_url(nominated, identity["official_hosts"], self.limits, search=True,
+                                    http_ok=bounds.get("http_ok", False), subdomains=bool(bounds))
+                    except WebFailure:
+                        continue
+                    if nominated not in seen and nominated not in queue:
+                        queue.append(nominated)
                 for field, fact in extracted.items():
-                    if field in facts and facts[field]["value"] != fact["value"]:
-                        raise WebFailure("conflicting_sources")
-                    facts[field] = fact
+                    facts[field] = _merge_hours(facts[field], fact) if field in facts else fact
             for reason in (
                 "address_mismatch",
                 "coordinate_mismatch",
                 "ambiguous_identity",
+                "extract_ambiguous_hours",
+                "ambiguous_hours",
             ):
                 if reason in failures:
                     raise WebFailure(reason)
@@ -370,7 +491,12 @@ class ActivityPublicWeb:
                 # Report the first official-page read failure (robots/redirect/403/identity) ahead of
                 # URLs skipped by the official-host filter, so the real blocker stays visible.
                 read = [f for f in failures if f not in ("source_url_rejected", "invalid_url")]
+                if search_failure:
+                    failures.append(search_failure)
                 raise WebFailure((read or failures or ["no_official_facts"])[0])
+            text = any(f.get("evidence") == "text" for f in facts.values())
+            hours = facts.get("business_hours", {}).get("value")
+            known_closed = text and isinstance(hours, dict) and (hours["closed"] or hours["open_all_year"])
             return {
                 **base,
                 "reason": "date_specific_unverified",
@@ -378,10 +504,11 @@ class ActivityPublicWeb:
                 "canonical_id": identity["canonical_id"],
                 "facts": facts,
                 "checked_at": min(f["checked_at"] for f in facts.values()),
-                "confidence": "official_structured",
+                "confidence": "official_text" if text else "official_structured",
                 "search_backend": self.config.get("backend"),
-                "unknown": ["closed_days", "date_specific"],
+                "unknown": ["date_specific"] if known_closed else ["closed_days", "date_specific"],
                 "source_failures": failures,
+                **({"search_failure": search_failure} if search_failure else {}),
             }
         except WebFailure as exc:
             return {**base, "reason": str(exc)}

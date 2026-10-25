@@ -493,6 +493,12 @@ travel:
       region: kr-kr
       safesearch: moderate
       max_results: 5
+    # 2026-10-26 사용자 결정 — 공식 본문 운영시간·휴무 문장(규칙 파서 official_hours_text, 모델 없음), http 전용 공식 사이트,
+    # 공식 host 안 redirect. 공식 페이지 읽기에만 적용(검색 요청은 그대로 HTTPS·redirect 거절). wiki/external/activity-public-web.md.
+    # ★켜는 기준: 20곳 표본 일치 ≥ 80% · 오답 ≤ 5% — 2026-10-26 실측 미달이라 꺼 둔다(records/reports/2026-10-26_activity-public-web-text-evidence.md).
+    official_text: false
+    official_http: false
+    official_max_redirects: 0
   social_dining:
     max_links: 10
     max_url_chars: 2048

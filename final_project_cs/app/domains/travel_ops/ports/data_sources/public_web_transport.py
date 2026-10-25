@@ -1,4 +1,8 @@
-"""Zero-credential pinned HTTPS transport; config bounds all reads. No redirects."""
+"""Zero-credential pinned transport; config bounds all reads.
+
+Search reads stay HTTPS-only with no redirects. Official-page reads may opt in (per call) to
+plain-HTTP GET and a bounded number of redirects that stay inside the official host set.
+"""
 
 import http.client
 import json
@@ -6,7 +10,7 @@ import socket
 import re
 import threading
 import time
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 from urllib.robotparser import RobotFileParser
 
 from ...components.intake import social_links
@@ -16,7 +20,26 @@ class WebFailure(ValueError):
     """Only stable non-sensitive reason codes cross this boundary."""
 
 
-def checked_url(url, hosts, limits, *, search=False):
+class RedirectFailure(WebFailure):
+    """`redirect_blocked` that keeps the Location for a caller allowed to follow it."""
+
+    def __init__(self, location):
+        super().__init__("redirect_blocked")
+        self.location = location
+
+
+class Page(str):
+    """Decoded official page body that remembers the final URL it was read from."""
+
+    url: str = ""
+
+
+def host_allowed(host, hosts, *, subdomains=False):
+    host = (host or "").lower()
+    return host in hosts or (subdomains and any(host.endswith("." + h) for h in hosts))
+
+
+def checked_url(url, hosts, limits, *, search=False, http_ok=False, subdomains=False):
     if (
         not isinstance(url, str)
         or len(url) > limits["max_url_chars"]
@@ -27,13 +50,13 @@ def checked_url(url, hosts, limits, *, search=False):
     try:
         p = urlsplit(url)
         if (
-            p.scheme != "https"
+            p.scheme not in (("https", "http") if http_ok else ("https",))
             or p.username is not None
             or p.password is not None
-            or p.port not in (None, 443)
+            or p.port not in (None, 443 if p.scheme == "https" else 80)
         ):
             raise WebFailure("invalid_url")
-        if p.hostname not in hosts or p.fragment or (p.query and not search):
+        if not host_allowed(p.hostname, hosts, subdomains=subdomains) or p.fragment or (p.query and not search):
             raise WebFailure("source_url_rejected")
     except ValueError:
         raise WebFailure("source_url_rejected") from None
@@ -89,13 +112,41 @@ def _wildcard_robots_allowed(text, url, agent="triPilot-public-facts"):
     return not matches or max(matches)[1]
 
 
+class _PinnedHTTPConnection(http.client.HTTPConnection):
+    """Plain-HTTP GET to an already public-checked address (official pages only, no cookies)."""
+
+    def __init__(self, host, address, *, timeout):
+        super().__init__(host, timeout=timeout)
+        self._address = address
+        self._transport_socket = None
+
+    def connect(self):
+        self.sock = socket.create_connection((self._address, self.port), self.timeout)
+        self._transport_socket = self.sock
+
+
+_CHARSETS = {"utf-8": "utf-8", "utf8": "utf-8", "euc-kr": "cp949", "cp949": "cp949", "ks_c_5601-1987": "cp949"}
+
+
+def _decode(raw, content_type):
+    """Strict decode by declared charset (header, then <meta>); only UTF-8 and EUC-KR(as CP949)."""
+    declared = re.search(r"charset=([\w-]+)", content_type, re.I)
+    meta = re.search(rb"<meta[^>]+charset=[\"']?([\w-]+)", raw[:4096], re.I)
+    names = {n.lower() for n in (declared and declared.group(1),
+                                  meta and meta.group(1).decode("ascii", "ignore")) if n}
+    codecs = {_CHARSETS.get(n) for n in names}
+    if None in codecs or len(codecs) > 1:
+        raise WebFailure("charset_unsupported")
+    return raw.decode(codecs.pop() if codecs else "utf-8", errors="strict")
+
+
 class PublicWebTransport:
     def __init__(self, limits):
         self.limits = limits
         self.state = threading.local()
 
-    def _wire(self, url, hosts):
-        p = checked_url(url, hosts, self.limits, search=True)
+    def _wire(self, url, hosts, *, http_ok=False, subdomains=False):
+        p = checked_url(url, hosts, self.limits, search=True, http_ok=http_ok, subdomains=subdomains)
         remaining = min(
             self.limits["timeout_seconds"],
             getattr(
@@ -115,9 +166,8 @@ class PublicWebTransport:
         )
         if remaining <= 0:
             raise WebFailure("web_timeout")
-        c = social_links._PinnedHTTPSConnection(
-            p.hostname, addresses[0], timeout=remaining
-        )
+        pinned = social_links._PinnedHTTPSConnection if p.scheme == "https" else _PinnedHTTPConnection
+        c = pinned(p.hostname, addresses[0], timeout=remaining)
 
         def expire():
             sock = getattr(c, "_transport_socket", None) or c.sock
@@ -146,11 +196,9 @@ class PublicWebTransport:
             )
             r = c.getresponse()
             if r.status != 200:
-                raise WebFailure(
-                    "redirect_blocked"
-                    if 300 <= r.status < 400
-                    else "http_" + str(r.status)
-                )
+                if 300 <= r.status < 400:
+                    raise RedirectFailure(r.getheader("Location", ""))
+                raise WebFailure("http_" + str(r.status))
             kind = r.getheader("Content-Type", "").split(";")[0].lower()
             if kind not in (
                 "text/html",
@@ -164,18 +212,45 @@ class PublicWebTransport:
             raw = r.read(self.limits["max_response_bytes"] + 1)
             if len(raw) > self.limits["max_response_bytes"]:
                 raise WebFailure("body_too_large")
-            text = raw.decode("utf-8", errors="strict")
-            return json.loads(text) if kind == "application/json" else text
+            if kind == "application/json":
+                return json.loads(raw.decode("utf-8", errors="strict"))
+            return _decode(raw, r.getheader("Content-Type", ""))
         finally:
             timer.cancel()
             c.close()
 
-    def __call__(self, url, hosts, *, allow=lambda: False):
+    def _follow(self, url, hosts, allow, *, redirects, http_ok, subdomains):
+        """GET with at most `redirects` hops; every hop re-passes the same host/scheme bounds."""
+        for hop in range(redirects + 1):
+            try:
+                opted = {k: v for k, v in (("http_ok", http_ok), ("subdomains", subdomains)) if v}
+                return url, self._wire(url, hosts, **opted)
+            except RedirectFailure as exc:
+                if hop == redirects:
+                    raise WebFailure("redirect_blocked") from None
+                try:
+                    url = urljoin(url, exc.location)
+                    checked_url(url, hosts, self.limits, search=True, http_ok=http_ok, subdomains=subdomains)
+                except WebFailure:
+                    raise WebFailure("redirect_blocked") from None
+                if not allow():
+                    raise WebFailure("budget_blocked") from None
+        raise WebFailure("redirect_blocked")
+
+    def __call__(self, url, hosts, *, allow=lambda: False, redirects=0, http_ok=False, subdomains=False):
         try:
-            p = checked_url(url, hosts, self.limits, search=True)
+            bounds = {"redirects": redirects, "http_ok": http_ok, "subdomains": subdomains}
+            p = checked_url(url, hosts, self.limits, search=True, http_ok=http_ok, subdomains=subdomains)
             if not allow():
                 raise WebFailure("budget_blocked")
-            robots = self._wire("https://" + p.hostname + "/robots.txt", hosts)
+            try:
+                _, robots = self._follow(p.scheme + "://" + p.hostname + "/robots.txt", hosts, allow, **bounds)
+            except WebFailure as exc:
+                # RFC 9309 "unavailable" status: an unavailable (404/410) robots.txt allows crawling. Opt-in
+                # official readers only; 401/403/429/5xx and network errors still stop the read.
+                if not (redirects or http_ok) or str(exc) not in ("http_404", "http_410"):
+                    raise
+                robots = ""
             if not isinstance(robots, str):
                 raise WebFailure("robots_unreadable")
             policy = RobotFileParser()
@@ -185,7 +260,11 @@ class PublicWebTransport:
                 raise WebFailure("robots_blocked")
             if not allow():
                 raise WebFailure("budget_blocked")
-            return self._wire(url, hosts)
+            final, body = self._follow(url, hosts, allow, **bounds)
+            if isinstance(body, str):
+                body = Page(body)
+                body.url = final
+            return body
         except social_links.MetadataError as e:
             raise WebFailure(e.code) from None
         except TimeoutError:

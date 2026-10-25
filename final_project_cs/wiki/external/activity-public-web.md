@@ -12,7 +12,7 @@
 - DB found/ambiguous/짧은 이름, Kakao found이면 보조 search를 부르지 않습니다. Kakao 응답 이름·좌표·주소·id는 저장하지 않습니다.
 - 검색 snippet은 운영 근거가 아니며 저장하지 않습니다. 결과 URL은 후보 발견에만 사용합니다.
 - 공용 설정에서 검토한 canonical_id·정식 이름·별칭·주소·공식 host를 먼저 묶습니다. customer/customer_note 출처를 공용 anchor로 승격하지 않습니다. 같은 이름 여러 곳, 주소·좌표 불일치, 출처 상충은 확인 질문으로 끝납니다.
-- 공식 HTML의 JSON-LD name/address 및 (설정에 있으면) coordinates를 대조합니다. 현재 parser는 엄격한 `openingHours` 문자열만 읽으며, 자유 본문 해석·휴무 추론·날짜별 영업 추정은 **구현하지 않았습니다**. 해당 값은 `unknown`으로 보존합니다. 안내문에서 시각을 만들지 않습니다.
+- 공식 HTML의 JSON-LD name/address 및 (설정에 있으면) coordinates를 대조합니다. JSON-LD는 엄격한 `openingHours` 문자열만 읽습니다. 2026-10-26부터 `official_text: true`이면 **공식 페이지 본문의 운영시간·휴무 문장**도 규칙 파서(`official_hours_text`)로 읽습니다(아래 「공식 본문 근거」 절). 휴무 추론·날짜별 영업 추정은 여전히 하지 않으며 `date_specific`은 항상 `unknown`입니다.
 - 보조 결과는 `status=unknown`, `needs_question=true`, `reason`, `unknown`, `fallback.upstream_status/reason/detail`, 검증된 `facts`를 갖습니다. 웹 확인 실패를 `found=false`/장소 부재로 확정하거나 공원으로 대체하지 않습니다.
 - 각 fact에는 `source_url`, 실제 본문을 읽은 `checked_at`, `confidence=official_structured`, JSON-LD field와 `body_sha256`이 붙습니다. 캐시를 읽은 시각으로 checked_at을 갱신하지 않습니다.
 - 실패는 search_http_403/429, extract_http_403, robots_blocked, timeout, page_unreadable, no_official_facts, conflicting_sources, ambiguous_identity, address_mismatch, coordinates_unverified, provenance_rejected 등으로 구분합니다. HTTP/robots 차단은 다른 서비스로 몰래 우회하지 않습니다.
@@ -40,7 +40,7 @@
 - `travel.source_budget_sources`에 두 meter 추가, `travel.source_budget_shared=true`, `travel.source_budget_on_db_error=refuse`. 공유 DB budget을 세지 못하면 외부 호출하지 않습니다. 캐시 전용 모드는 그대로 외부 호출 금지입니다.
 - HTTP bounds는 기존 `travel.social_dining.timeout_seconds/max_response_bytes/max_url_chars`; TTL은 기존 `travel.source_cache_seconds`를 재사용합니다.
 
-HTTPS·정확 host·userinfo/비표준 port/query/fragment 금지, 모든 DNS 응답의 공인 IP 확인, IP 고정 TLS, 전체 deadline/body 제한을 적용합니다. redirect는 따라가지 않으며 `redirect_blocked`로 공개합니다. robots.txt를 먼저 읽고 허용한 경우에만 본문을 읽습니다(robots 실패도 미확인). robots와 본문 각각 예산을 소비합니다. URL/본문 캐시는 중복 호출을 줄이고 provider lock은 같은 인스턴스의 동시 cache-miss를 직렬화합니다.
+HTTPS·정확 host·userinfo/비표준 port/query/fragment 금지, 모든 DNS 응답의 공인 IP 확인, IP 고정 TLS, 전체 deadline/body 제한을 적용합니다. redirect는 따라가지 않으며 `redirect_blocked`로 공개합니다(검색 요청과 기본 설정의 공식 페이지. 공식 페이지는 아래 opt-in 설정으로만 넓힙니다). robots.txt를 먼저 읽고 허용한 경우에만 본문을 읽습니다(robots 실패도 미확인). robots와 본문 각각 예산을 소비합니다. URL/본문 캐시는 중복 호출을 줄이고 provider lock은 같은 인스턴스의 동시 cache-miss를 직렬화합니다.
 
 ## 기존 계약과 소유권
 
@@ -65,3 +65,40 @@ HTTPS·정확 host·userinfo/비표준 port/query/fragment 금지, 모든 DNS �
 - 실패는 `public_web.reason`으로 드러냅니다: `search_http_429`(rate limit) · `search_web_timeout` · `search_no_results` · `search_failed` · `search_budget_blocked` · `search_proxy_rejected` · `search_query_unconfigured`, 이후 공식 페이지 단계는 기존 `extract_*`/`identity_unverified`/`no_official_facts` 등. 다른 검색 backend·유료 검색·SearXNG로 **몰래 넘어가지 않습니다**.
 - 꺼짐도 관찰 가능합니다: 켜려 했으나 거절된 설정은 `reason=web_not_configured`와 함께 `config_detail`(`backend_unsupported` · `not_approved` · `budget_unconfigured` · `ddgs_package_missing` · `ddgs_backends_unbounded` · `ddgs_options_invalid` · `ddgs_backend_unknown` · `ddgs_backend_host_unlisted` · `limits_or_identities_invalid` · `config_invalid`)를 돌려주고, `TravelSources.unavailable['activity_web']`에도 같은 이유가 붙습니다.
 - 기본값은 계속 `enabled: false`입니다. 켜는 것은 사용자 승인 뒤 배포 담당이 합니다.
+
+## 공식 본문 근거 · redirect · http 공식 사이트 (2026-10-26 사용자 결정)
+
+결정(08:20): 카카오 실패 뒤 ddgs 보조조회의 두 규칙을 넓힌다 — (1) 공식 페이지 **본문**에 적힌 운영시간·휴무 문장도 근거로 인정, (2) 다른 주소로 넘어가는(redirect) 공식 페이지와 http 전용 공식 사이트도 허용. 일반 웹검색 에이전트처럼 본문을 읽고 원문 인용·출처·확인시각을 붙이되, 아래 안전장치로 정확도를 지킨다. 설계 결정은 Codex CLI 검토(규칙 파서만, E4B 미사용)를 따랐다.
+
+설정(`travel.activity_public_web`, 모두 기본 꺼짐):
+
+- `official_text: true` — 본문 근거 사용. 꺼져 있으면 기존처럼 JSON-LD만.
+- `official_http: true` — 공식 페이지(검색 요청 아님)만 `http://` GET 허용. 쿠키·인증 헤더 없음(Accept/Accept-Encoding/User-Agent만), 공인 IP 확인·IP 고정 연결은 같다.
+- `official_max_redirects: N` — 공식 페이지 redirect를 N번까지 따라간다. 매 hop의 대상도 같은 검사(scheme·port·userinfo·공식 host)를 다시 통과해야 하며, 벗어나면 `redirect_blocked`. hop마다 `activity_official_extract` 예산을 쓴다.
+- 위 셋 중 하나라도 켜진 공식 읽기에서는 identity `official_hosts`의 **하위 host**(예: `museum.example` → `www.museum.example`)도 공식으로 본다. 상위·형제 host는 자동 허용하지 않는다(`www.a.kr`과 `a.kr`을 둘 다 쓰려면 둘 다 등록). 등록 도메인 추정(public suffix)은 쓰지 않는다. 같은 opt-in 읽기는 공식 URL의 query(`.do?menuNo=`)를 허용한다 — 검토된 homepage나 공식 페이지 자신에서 나온 값이고 고객 값은 들어가지 않는다.
+- robots.txt가 404/410이면(RFC 9309 「unavailable」 규칙) opt-in 공식 읽기에 한해 허용으로 본다. 401/403/429/5xx·네트워크 오류는 계속 중단한다. 기본 설정의 읽기는 그대로 404도 실패.
+- 본문 문자 집합은 Content-Type → `<meta charset>` 순서의 선언만 따른다. UTF-8과 EUC-KR(CP949로 해석)만 읽고, 선언이 엇갈리거나 다른 문자 집합이면 `charset_unsupported`.
+
+읽는 순서: identity의 검토된 `homepage`(관광공사 homepage 값)를 먼저, 그 다음 ddgs가 찾은 공식 host URL, 그 다음 공식 페이지 안의 안내 링크(링크 글자가 「이용안내·관람안내·운영시간」 같은 형태이고 공식 host 안인 것). 합쳐서 `max_pages`까지. 검색이 실패해도(`search_no_results` 등) homepage가 있으면 읽고, 결과에 `search_failure`로 남긴다.
+
+규칙 파서(`official_hours_text`, 모델 호출 없음):
+
+- 보이는 본문만(script·style 제외, 블록 단위 줄). 운영 라벨(운영·관람·이용·개방·개관·영업 시간) 줄의 `HH:MM~HH:MM` / `오전·오후 H시~H시`와 앞의 요일 표기(평일·주말·매일·월~금·화요일 …)만 읽는다. 라벨 줄에 값이 없으면 바로 다음 줄 하나(표·dl 배치).
+- 휴무는 휴관·휴무·휴장 라벨 줄의 `매주 X요일`(범위·나열 포함), 라벨 바로 뒤 요일, 「연중무휴」만. n째 주·공휴일·명절·「~인 경우」는 요일 휴무로 만들지 않는다.
+- 제외·미확인: 계절·월(하절기, 3월~10월)·공휴일 전용·예약·행사·임시 조건이 붙은 시간 → 페이지 전체 `conditional_hours`; 휴게·준비·점심·입장마감 시간은 운영시간으로 쓰지 않음; 같은 요일에 다른 시간 → `conflicting_hours`; 한 요일만 적힌 시간과 같은 요일 휴무 → `closed_conflict`. 평일·주말·범위 같은 묶음은 매주 휴무 요일을 빼서 읽는다. 요일 없이 적힌 시간은 「요일 미표기」(`days: null`)로 두고 모든 요일로 넓히지 않는다.
+- 페이지 본문에 identity 이름(또는 별칭)이 있어야 한다(`identity_unverified`). 모든 인용은 그 페이지 본문 안에 그대로 있어야 하며 서버가 위치(offset)를 다시 찾는다(`quote_unverified`).
+- 두 공식 페이지의 시간이 다르면 `conflicting_sources`로 미확인. 같은 시간이고 한쪽만 휴무를 적었으면 합친다. JSON-LD와 본문 근거가 섞여도 충돌로 본다.
+
+결과 모양: `facts.business_hours = {value: {hours: [{days, open, close}], closed: [...], open_all_year}, quotes: [{quote, offset}], source_url(redirect 뒤 최종 URL), scheme, evidence: "text", checked_at, confidence: "official_text", body_sha256}`; JSON-LD 근거는 기존 모양(`evidence` 없음 = jsonld, `confidence: official_structured`). 결과 `confidence`는 본문 근거가 있으면 `official_text`. `status=unknown`·`needs_question=true`는 그대로이고, 접수 검토 줄은 「공식 홈페이지 기준 운영시간 … (확인 시각 YYYY-MM-DD HH:MM, 출처 URL) · 방문일 운영 여부는 확정하지 않았어요」로 보여준다(`review.public_web_hours_text`). 장소 자체는 확정하지 않는다.
+
+### 출처 표시와 출처 우선순위 (2026-10-26 사용자 제안: 카카오 미확인을 밝히고 믿을 출처를 붙인다)
+
+- 보조조회로 얻은 사실의 문장에는 (a) 왜 웹까지 갔는지 — 「카카오에서 확인되지 않음」(카카오 미일치) 또는 「카카오 조회가 막혀 확인되지 않음」(장애·차단, `upstream_status=unknown`/`upstream_blocked`) — 과 (b) 출처 종류(`source_kind`: `official_homepage` → 「공식 홈페이지」, `google_places` → 「구글 지도」)·출처 URL·확인 시각을 붙인다(`review.kakao_unverified_text` · `review.public_web_hours_text`). 이번 후보가 만드는 사실은 `official_homepage`뿐이다.
+- 운영시간 출처 우선순위 체인(앞이 있으면 뒤로 가지 않는다):
+  1. **관광공사**(`activity.ac_place` 원장의 `hours_week`/`hours_read`) — 우리 원장.
+  2. **카카오**(장소 확인만 — 카카오 로컬은 운영시간을 주지 않는다. 미일치/장애를 보존해 다음 단계로).
+  3. **구글 Places(New) `regularOpeningHours`** — 이미 `ports/data_sources/google_places.py` + `composition.build_google_places` + `travel.google_budget`(enterprise 월 1000)로 있으나 x600 키가 비어 있다. **키가 있을 때만**. Activity 보조조회에 연결하는 일은 이번 커밋 범위가 아니다 — TODO: 연결 시 `source_kind=google_places`, 같은 출처·확인시각 모양, 유료 예산 meter 공유.
+  4. **공식 홈페이지 웹**(이 문서의 ddgs 발견 + 공식 페이지 JSON-LD/본문).
+- 쓰지 않는 출처: 네이버 지역검색 API(영업시간 필드 없음 — 이름·주소·좌표·link만), 네이버 플레이스 페이지 스크래핑(약관 위험, 금지). TMAP POI 상세(`weekdayBusinessHour` 등)는 2차 출처로 미검증 — 검토 전 미사용.
+
+정확도(2026-10-26 실측, 보고서 `records/reports/2026-10-26_activity-public-web-text-evidence.md`): 관광공사 운영시간이 있는 서울 20곳 표본에서 일치·오답·미확인을 쟀다. 켜는 기준은 일치 ≥ 80%·오답 ≤ 5%. 기준 미달이면 설정은 꺼진 채 둔다.

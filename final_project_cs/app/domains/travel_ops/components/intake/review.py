@@ -134,6 +134,47 @@ def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
     return "found", value
 
 
+_WEB_DAY = dict(zip(("mon", "tue", "wed", "thu", "fri", "sat", "sun"), "월화수목금토일"))
+# Source kinds a public-web fact may carry (wiki external/activity-public-web.md 출처 우선순위).
+_WEB_SOURCE_KIND = {"official_homepage": "공식 홈페이지", "google_places": "구글 지도"}
+
+
+def public_web_hours_text(web: dict[str, Any] | None) -> str | None:
+    """「공식 홈페이지 기준 …(확인 시각 …)」 for a verified public-web hours fact, else None.
+
+    Only values the provider already verified (quote on page, official host) are shown; the visit
+    day itself stays unconfirmed, so callers keep the question open.
+    """
+    fact = ((web or {}).get("facts") or {}).get("business_hours")
+    if not isinstance(fact, dict) or not fact.get("source_url") or not fact.get("checked_at"):
+        return None
+    value = fact.get("value")
+    if isinstance(value, dict):
+        parts = [("".join(_WEB_DAY[d] for d in h["days"]) + " " if h.get("days") else "")
+                 + f"{h['open']}~{h['close']}" for h in value.get("hours") or []]
+        hours = ", ".join(parts)
+        if value.get("closed"):
+            hours += " · 휴무 매주 " + "·".join(_WEB_DAY[d] for d in value["closed"])
+        elif value.get("open_all_year"):
+            hours += " · 연중무휴"
+    else:
+        hours = str(value)
+    try:
+        seen = datetime.fromisoformat(str(fact["checked_at"])).astimezone(ZoneInfo("Asia/Seoul"))
+        checked = seen.strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        checked = str(fact["checked_at"])
+    kind = _WEB_SOURCE_KIND.get(str(fact.get("source_kind") or "official_homepage"), "공식 홈페이지")
+    return f"{kind} 기준 운영시간 {hours} (확인 시각 {checked}, 출처 {fact['source_url']})"
+
+
+def kakao_unverified_text(web: dict[str, Any] | None) -> str:
+    """Kakao state that sent the lookup to public web: 「카카오에서 확인되지 않음」 (or blocked)."""
+    if (web or {}).get("upstream_blocked") or (web or {}).get("upstream_status") == "unknown":
+        return "카카오 조회가 막혀 확인되지 않음"
+    return "카카오에서 확인되지 않음"
+
+
 def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -> dict[str, str]:
     claim = (row["claims"] or {}).get("place") or {}
     evidence = claim.get("evidence") or {}
@@ -162,6 +203,10 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
             facts = web.get("facts") or {}
             sources = sorted({str(f["source_url"]) for f in facts.values()
                               if isinstance(f, dict) and f.get("source_url")})
+            official = public_web_hours_text(web)
+            if official:
+                return _line("place", "bad", kakao_unverified_text(web) + " · 장소는 아직 확정하지 않았어요 · " + official
+                             + " · 방문일 운영 여부는 확정하지 않았어요 — 장소를 확인해 주세요")
             return _line("place", "bad", "공개 웹 보조조회도 미확인이에요 · 없는 곳이라는 뜻이 아니에요"
                          + f" · 사유: {web.get('reason') or 'unknown'} · 확인: {web.get('checked_at') or '미확인'}"
                          + (" · 공식 출처: " + ", ".join(sources) if sources else " · 공식 본문 근거 미확인")
