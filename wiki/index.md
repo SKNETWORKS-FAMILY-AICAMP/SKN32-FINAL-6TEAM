@@ -8,7 +8,9 @@ domain: travel
 
 # guguroute wiki
 
-2026-10-26 [통합 HEAD 전체 시험 · push/서빙 보류 인계](handoff/2026-10-26_merged-head-push-serving-decision.md) — 시험 실패 0, 원격 전진으로 push 중단, 로컬 서빙 v9 유지; Codex 동의.
+2026-10-26 [원격 role-manager a465c6022 위 재병합 인계](handoff/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — HEAD `92541686d`, 시험 범위 실패 0, fast-forward 가능(ahead 10/behind 0) · push 0.
+
+2026-10-26 (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 보류 인계](handoff/2026-10-26_merged-head-push-serving-decision.md) — 시험 실패 0, 원격 전진으로 push 중단, 로컬 서빙 v9 유지; Codex 동의.
 
 2026-10-26 [날짜 읽기 LLM 판단 전환 인계](handoff/2026-10-26_llm-date-reading.md) — `date_form` · `year_quote` 스키마 · 프롬프트, 정규식 연도 판정 제거; 로컬 E4B 실측 · Codex 논의, 커밋만.
 2026-10-26 [지난 일정은 삭제만 인계](handoff/2026-10-26_past-edit-delete-only.md) — 서버·웹·채팅 일관, Codex 2회 검토, 관련 320/320 · vitest 1183/1183; 커밋만.

@@ -1,0 +1,40 @@
+## integ-877e6723b
+root=C:/Users/kcxsz/AppData/Local/hermes/profiles/guguroute/cache/scratch/integ-mgr-a465c6022-20261026/final_project_cs head=877e6723bd94783583171e21e6c1ffb83f86d733
+unit_exit=0
+gates_exit=0
+unit_rest_exit=1
+==> fullrun-20261026/integ-877e6723b/unit-travel.log <==
+7733 passed, 128 skipped, 503 deselected, 7 warnings in 88.12s (0:01:28)
+
+==> fullrun-20261026/integ-877e6723b/gates.log <==
+608 passed, 29 deselected, 1 warning in 95.21s (0:01:35)
+
+==> fullrun-20261026/integ-877e6723b/unit-rest.log <==
+4 failed, 1657 passed, 46 skipped, 5 deselected, 1 warning in 37.68s
+## integ-92541686d
+root=C:/Users/kcxsz/AppData/Local/hermes/profiles/guguroute/cache/scratch/integ-mgr-a465c6022-20261026/final_project_cs head=92541686d0cfb0723c873ef7100403c203340e68
+unit_exit=0
+gates_exit=0
+unit_rest_exit=1
+==> fullrun-20261026/integ-92541686d/unit-travel.log <==
+7740 passed, 128 skipped, 503 deselected, 7 warnings in 93.02s (0:01:33)
+
+==> fullrun-20261026/integ-92541686d/gates.log <==
+608 passed, 29 deselected, 1 warning in 83.13s (0:01:23)
+
+==> fullrun-20261026/integ-92541686d/unit-rest.log <==
+4 failed, 1657 passed, 46 skipped, 5 deselected, 1 warning in 31.51s
+## web 877e6723b
+v26.7.0
+tsc=0
+eslint=0
+vitest=0
+{'numTotalTestSuites': 380, 'numTotalTests': 1205, 'numPassedTests': 1205, 'numFailedTests': 0, 'numPendingTests': 0, 'numTodoTests': 0, 'success': True} files 134
+['src/lib/live/all-past-refusal.test.ts', 'src/lib/live/intake-all-past-return.test.ts', 'src/features/plan-check/all-past-dates.test.ts', 'src/features/plan-check/past-edit.test.ts', 'src/features/plan-check/use-pull-past-end.test.ts']
+failed files: []
+## RED
+E       AssertionError: assert ('2026-10-05' is None)
+E       AssertionError: assert ('2025-10-05' is None)
+2 failed, 5 passed in 3.05s
+## GREEN
+51 passed in 3.58s

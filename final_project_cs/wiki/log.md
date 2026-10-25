@@ -1,6 +1,7 @@
 ---
 
-- 2026-10-26: [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — DB 없는 전체 시험 실패 0(이전 가지도 0), 원격 role-manager `1e4e3b246` 전진으로 push · PR 안 함, 로컬 서빙 교체 보류. Codex 1회 동의.
+- 2026-10-26: [원격 role-manager a465c6022 위 재병합 · 전체 시험](records/reports/2026-10-26_rebase-merge-on-role-manager-a465c6022.md) — `07dcebe35`를 `a465c6022`에 병합(`877e6723b`, rebase 아님), wiki 4파일 수동 해결 · 충돌 표시 0, 에이전트의 달력에 없는 날짜를 「모름」으로(`92541686d`, Codex 2회차 지적 · 3회차 OK). DB 없는 시험 범위 실패 0, push 안 함.
+- 2026-10-26: (당시 HEAD `2cccbfaef`) [통합 HEAD 전체 시험 · push/서빙 결정](records/reports/2026-10-26_merged-head-fulltest-push-serving-decision.md) — DB 없는 전체 시험 실패 0(이전 가지도 0), 원격 role-manager `1e4e3b246` 전진으로 push · PR 안 함, 로컬 서빙 교체 보류. Codex 1회 동의.
 - 2026-10-26: [날짜 읽기를 모델(E4B) 판단으로](records/reports/2026-10-26_llm-date-reading.md) — 계획 읽기 에이전트 스키마에 `year_quote` · `date_form`, 프롬프트 날짜 절 재작성(예시 날짜는 오늘에서 계산), `_year_written`(본문 아무 줄의 연도 숫자) · 숫자 없는 인용 = 상대 판정 제거. 2/29 다음 윤년 · 없는 날짜는 모름. 로컬 실측 · 단위 시험 · 커밋만, 서빙 교체 · 실서버 확인 전.
 - 2026-10-26: [「예시 불러오기」 1일차 오늘 · 2일차 내일](records/reports/2026-10-26_웹_예시불러오기_오늘내일.md) — 누른 날(서울) · 그다음 날 날짜로, 사용자가 준 형식(하루 세 곳 · 끝 시각 없음)으로 채운다. 오늘 지난 시각 일정은 서버가 등록하되 위험 점검에서 뺀다.
 
