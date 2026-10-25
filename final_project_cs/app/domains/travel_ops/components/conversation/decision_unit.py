@@ -764,8 +764,14 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
     # 검색 기준과 변경 대상을 각각 검증한다. 근처 조건을 상호명 조회로 넘기지 않는다.
     search = raw.get("place_search") or {}
     temporal = raw.get("time_edit") or {}
+    # ★`[2026-10-26 x600 QA]` 시각을 바꾸지 않는 해석(boundary=none — 검증·실행 모두 무시하는 칸)의 scope=following 은 기준이 아니다.
+    #   근처 기준이 바꿀 일정 자신이면 그 일정은 바로 위에서 확인했다 — 다시 확인하면 그 되묻기(활동 후보)를 선택지 없는 되묻기로 덮어
+    #   「말씀을 정확히 알아듣지 못했어요」 대체 목록(식사 포함)이 나갔다(test12 「실내를 야외로 바꿔줘」). 근처 조건은 `settle_near_search` 가 뗀다.
     anchor_alias = (search.get("anchor_item") if search.get("relation") == "near" else
-                    raw.get("anchor_item") if temporal.get("scope") == "following" else None)
+                    raw.get("anchor_item") if temporal.get("scope") == "following"
+                    and temporal.get("boundary", "none") != "none" else None)
+    if search.get("relation") == "near" and action in _NEAR_CHANGING and anchor_alias == (raw.get("target_item") or "none"):
+        anchor_alias = None
     anchor = by_alias.get(anchor_alias)
     if anchor is not None:
         checked = guard_target(replace(decision, action="change_time", item=anchor), stops=stops, changes=changes,

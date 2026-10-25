@@ -116,6 +116,7 @@ domain: travel
 - 같은 원문을 `destination_text` 나 `condition_text` 에도 옮겨 적은 경우 그 칸은 장소 이름·조건부 요청으로 쓰지 않는다(`destination_is_setting` · `condition_is_setting` 기록). 「비 오면」 같은 실제 조건은 그대로 조건부 막기를 지난다.
 - 서버는 조건을 팀 요청 `setting` 에 싣는다(되묻기 후 고객이 고른 바꾸기 포함). 팀은 등록 때 남긴 다른 안과 새 후보 모두 장소 기록의 실내·야외(`attributes.indoor` → `weather_sensitive`, 모름 제외)가 요청과 같은 곳만 고른다.
 - 맞는 곳이 없으면 다른 종류로 조용히 바꾸지 않는다 — 「야외로 확인된 다른 활동을 … 찾지 못해 일정은 바꾸지 않았어요」로 답하고 일정은 그대로 둔다(`no_alternate` + `setting`).
+- 바꿀 일정이 모호해 대상 되묻기(활동 후보)가 나왔으면, 근처 기준이 바꿀 일정 자신이거나 시각을 바꾸지 않는 해석(`time_edit.boundary=none`)의 `scope=following` 일 때 기준 확인으로 그 선택지를 지우지 않는다 — 지우면 식사까지 낀 대체 목록이 나갔다(2026-10-26 x600 test12, [보고서](../records/reports/2026-10-26_chat-outdoor-anchor-guard-fallback.md)).
 - 기록: [보고서](../records/reports/2026-10-25_채팅_실내를_야외로_바꿔줘가_실내로_바뀐다.md). 로컬 후보 · mock 시험 · 실 E4B 해석 확인까지 — 커밋·푸시·x600 배포·실서버 확인은 아니다.
 
 ## 2026-10-25 화면에서 고른 일정에 묻는 말 (QA 「국립중앙박물관에 대해 궁금한 점」 · 격리 후보)
