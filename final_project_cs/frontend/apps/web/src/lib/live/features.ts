@@ -11,11 +11,13 @@ import { openApi } from "./client";
  * ★Not readable (an older server without the read — 404 — or no connection): ON, as before. The server decides either way.
  * `[2026-10-22 사용자 지시]` `risk_panel`: whether the plan check (before registering · editing a trip) shows its risk check panel — the same operator switch
  * as the trip screen's panel (which reads `risk_panel` of its own trip view). The check itself runs either way.
- * Contract: `wiki/external/rest-endpoints/web-trips.md` 「항로 지킴이 운영 스위치」 · 「여행 화면 위험 점검 칸」.
+ * `[2026-10-25 사용자 지시 — ST4F-739]` `plan_input_extras`: whether the plan screen shows its extra panels (「파일 선택」 · 「계획 짜 주기 (테스트)」 ·
+ * 「읽는 기준」 · 「여행 취향」) next to 「직접 입력」. Off by default on the server; the intake takes files and plans either way.
+ * Contract: `wiki/external/rest-endpoints/web-trips.md` 「항로 지킴이 운영 스위치」 · 「여행 화면 위험 점검 칸」 · 「계획 담기 화면 보조 칸」.
  */
-export interface WebFeatures { guardian: boolean; riskPanel: boolean }
+export interface WebFeatures { guardian: boolean; riskPanel: boolean; planInputExtras: boolean }
 
-const AS_BEFORE: WebFeatures = { guardian: true, riskPanel: true };
+const AS_BEFORE: WebFeatures = { guardian: true, riskPanel: true, planInputExtras: true };
 
 let known: WebFeatures | null = null;
 let loading: Promise<WebFeatures> | null = null;
@@ -43,8 +45,8 @@ export function loadFeatures(language: Language): Promise<WebFeatures> {
   loading ??= (async () => {
     let next = AS_BEFORE;
     try {
-      const body = await openApi<{ guardian?: unknown; risk_panel?: unknown }>("/v1/web/features", language);
-      next = { guardian: body.guardian !== false, riskPanel: body.risk_panel !== false };       // only a plain `false` switches one off
+      const body = await openApi<{ guardian?: unknown; risk_panel?: unknown; plan_input_extras?: unknown }>("/v1/web/features", language);
+      next = { guardian: body.guardian !== false, riskPanel: body.risk_panel !== false, planInputExtras: body.plan_input_extras !== false };       // only a plain `false` switches one off
     } catch { /* older server (404) · no connection: as before */ }
     set(next);
     return next;
