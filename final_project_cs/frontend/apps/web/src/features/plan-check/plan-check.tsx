@@ -1931,8 +1931,9 @@ function Checking({ view, sourceView, stop = null, rowCut = null, stopCheck, onS
           : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={sourceView.stage === "done" ? sourceView : view} /></>}
       </div>, headerSlot)}
     <section ref={sheetBox} className={styles.sheet} aria-labelledby={inserting ? undefined : changing ? "plan-change-title" : "plan-check-sheet-title"} aria-label={inserting ? t("일정 추가", "Add a stop") : undefined} inert={sendingNow}>
-      {done && <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
-        onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>}
+      {/* `[2026-10-25 사용자 지적]` 검사 단계(「장소·운영시간 확인」)부터 손잡이를 보인다 — 등록한 여행 · 수정 화면처럼 잡고 올리고 내릴 수 있다는 표시(전에는 결과 단계에만 있었다) */}
+      <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")} title={t("눌러서 높이를 바꾸고, 잡고 끌어 원하는 높이로 맞춰요", "Press to change the height, or drag it to any height")}
+        onClick={cycleSheet} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet} onKeyDown={nudgeSheet}><span aria-hidden="true" /></button>
       {inserting ? <div className={`${styles.change} ${styles.page}`} data-slide="next">
         <AddStop key={inserting.key} date={inserting.date} initial={{ start: inserting.start, end: inserting.end, ...inserting.prefill }} blocked={frozen} onBusy={setAddingBusy} onCancel={() => closeInsertion(inserting.key)}
           mapPicker={{ active: mapPicking, value: mapCoordinate, onStart: () => { setMapCoordinate(null); setMapPicking(true); }, onClose: () => setMapPicking(false) }}

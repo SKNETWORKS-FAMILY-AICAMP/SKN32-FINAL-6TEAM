@@ -55,6 +55,9 @@
 .checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
 /* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
 .map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom 380ms var(--soft); }
+/* `[2026-10-25 사용자 지적 — 지도 오른쪽 아래 흰 바탕]` 지도 아래 20px 는 시트 밑에 깔려 Leaflet 저작권 줄(흰 80% 배경)이 그 자리에 놓인다. 시트 오른쪽 위 둥근
+   모서리 틈으로 그 흰 배경만 비쳐서, 이 화면(계획 확인 · 여행 화면)의 지도에서는 배경을 투명하게 둔다. */
+.map :global(.leaflet-container .leaflet-control-attribution) { background: transparent; }
 .bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .bar .progress { flex: 1; min-width: 0; }
 .barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

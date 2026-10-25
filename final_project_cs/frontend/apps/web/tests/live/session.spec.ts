@@ -149,16 +149,19 @@ test("서버가 모르는 세션(끝났거나 지워진 쿠키)이면 조용히 
   expect(cookies.find((cookie) => cookie.name === SESSION_COOKIE)).toBeUndefined();
 });
 
-test("쓰기가 보안 토큰 때문에 한 번 거절되면(403 csrf_failed) 토큰을 다시 받아 한 번 더 보내고, 사용자는 모른다", async ({ page, request }) => {
+// ★`[2026-10-23 F-02]` 토큰 거절 뒤에는 세션만 다시 받고 같은 쓰기를 다시 보내지 않는다 — 쿠키가 그 사이 다른 사람 것이 됐을 수 있다(`lib/live/client.ts`).
+//   ☆이 시험은 옛 동작(한 번 더 보냄)을 보고 있어 F-02 뒤 CI (web) live 에서 실패했다(PR #96, 2026-10-25) — 새 동작으로 바꿨다.
+test("쓰기가 보안 토큰 때문에 거절되면(403 csrf_failed) 세션을 다시 받고, 같은 요청은 다시 보내지 않으며 화면은 하지 못했다고 알린다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
   await page.goto("/trips");
   await server.scenario({ csrfRefuse: 1 });
   await page.locator("#main-content li").first().getByRole("button").click();
   await page.getByRole("alertdialog").getByRole("button", { name: "삭제", exact: true }).click();
-  await expect.poll(async () => (await server.received("POST", `/v1/web/trips/${TRIP_ID}/delete`)).length).toBe(2);   // 거절된 것 + 다시 보낸 것
+  await expect(page.getByRole("alert").filter({ hasText: "삭제하지 못했어요. 다시 시도해 주세요." })).toBeVisible();   // 목록의 삭제 칸은 자기 문구로 알린다
+  expect((await server.received("POST", `/v1/web/trips/${TRIP_ID}/delete`)).length).toBe(1);   // 거절된 것뿐 — 다시 보내지 않았다
   const asks = await server.received("GET", "/v1/web/auth/me");
-  expect(asks.length).toBeGreaterThanOrEqual(2);                          // 처음 + 토큰을 다시 받으려고
+  expect(asks.length).toBeGreaterThanOrEqual(2);                          // 처음 + 세션을 다시 받으려고
 });
 
 test("게스트의 제한에 걸리면(403 guest_trip_limit · login_required) 서버 문장 그대로 알리고, 계정을 연결하러 가는 길을 보인다 — 읽은 계획은 그대로다", async ({ page, request }) => {

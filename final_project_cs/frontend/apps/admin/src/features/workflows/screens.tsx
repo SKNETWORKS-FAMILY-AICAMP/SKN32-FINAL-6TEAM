@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { INITIAL_INQUIRIES_LIST, chatLimitFor, chatLimitText, formatNumber, type AdminCommand, type Inquiry, type InquiryStatus, type InquiriesListState, type Notice, type ScreenProps } from '../../lib/model';
-import { DEMO_OPERATOR } from '../../lib/demo/fixtures';
+import { adminCopy } from '../../lib/copy';
 import { operationNoticeDeliveries } from '../../lib/gateway';
 import type { NoticeDeliveryResult } from '../../lib/model';
 import styles from './screens.module.css';
@@ -67,13 +67,13 @@ function WorkflowDialog({ children, titleId, locked, onClose }: { children: Reac
   return <dialog ref={ref} className={styles.dialog} aria-labelledby={titleId} onCancel={event => { event.preventDefault(); if (!locked) onClose(); }}>{children}</dialog>;
 }
 
-export function InquiriesScreen({ data, onCommand, navigate, inquiryId, listState, onListStateChange }: ScreenProps & { inquiryId?: string; listState: InquiriesListState; onListStateChange: (state: InquiriesListState) => void }) {
+export function InquiriesScreen({ data, operator, onCommand, navigate, inquiryId, listState, onListStateChange }: ScreenProps & { inquiryId?: string; listState: InquiriesListState; onListStateChange: (state: InquiriesListState) => void }) {
   const { status, query, owner } = listState;
   const setStatus = (status: InquiriesListState['status']) => onListStateChange({ ...listState, status });
   const setQuery = (query: string) => onListStateChange({ ...listState, query });
   const setOwner = (owner: string) => onListStateChange({ ...listState, owner });
   const [manageTemplates, setManageTemplates] = useState(false);
-  const operators = [...new Set([DEMO_OPERATOR, ...data.inquiries.map(item => item.assignee), ...data.audit.map(item => item.actor)])].filter(Boolean).sort();
+  const operators = [...new Set([operator, ...data.inquiries.map(item => item.assignee), ...data.audit.map(item => item.actor)])].filter(Boolean).sort();
   const statuses: Inquiry['status'][] = data.inquiries.some(item => item.status === '기록 완료') ? [...INQUIRY_STATUSES, '기록 완료'] : INQUIRY_STATUSES;
   const filtered = data.inquiries.filter(item => (status === '전체' || item.status === status) && (owner === 'all' || (owner === 'unassigned' ? !item.assignee : item.assignee === owner)) && `${item.title} ${item.body} ${item.userId}`.toLowerCase().includes(query.toLowerCase().trim()));
   const requestedInquiry = inquiryId ? data.inquiries.find(item => item.id === inquiryId) : undefined;
@@ -84,16 +84,16 @@ export function InquiriesScreen({ data, onCommand, navigate, inquiryId, listStat
     <div className={styles.inbox}>
       <section className={`panel ${styles.inboxList}`} aria-label="문의 목록">
         <div className={styles.tabs} aria-label="문의 상태 필터">{(['전체', ...statuses] as const).map(value => <button key={value} type="button" aria-pressed={status === value} className={status === value ? styles.activeTab : ''} onClick={() => setStatus(value)}>{value}<span>{value === '전체' ? data.inquiries.length : data.inquiries.filter(item => item.status === value).length}</span></button>)}</div>
-        <div className={styles.listFilters}><label>문의 찾기<input value={query} onChange={event => setQuery(event.target.value)} placeholder="제목, 내용 또는 사용자 ID" /></label><label>담당자 필터<select value={owner} onChange={event => setOwner(event.target.value)}><option value="all">담당 전체</option><option value="unassigned">미지정</option><option value={DEMO_OPERATOR}>내 담당</option>{operators.filter(operator => operator !== DEMO_OPERATOR).map(operator => <option key={operator}>{operator}</option>)}</select></label></div>
+        <div className={styles.listFilters}><label>문의 찾기<input value={query} onChange={event => setQuery(event.target.value)} placeholder="제목, 내용 또는 사용자 ID" /></label><label>담당자 필터<select value={owner} onChange={event => setOwner(event.target.value)}><option value="all">담당 전체</option><option value="unassigned">미지정</option><option value={operator}>내 담당</option>{operators.filter(candidate => candidate !== operator).map(operator => <option key={operator}>{operator}</option>)}</select></label></div>
         <div className={styles.inquiryItems}>{filtered.length ? filtered.map(item => <button key={item.id} type="button" className={`${styles.inquiryItem} ${selected?.id === item.id ? styles.selectedItem : ''}`} aria-pressed={selected?.id === item.id} onClick={() => navigate(`/inquiries/${item.id}`)}><div className={styles.row}><span className={`badge ${item.status === '접수' ? styles.warmBadge : ''}`}>{item.status}</span><time className={styles.small}>{displayTime(item.receivedAt)}</time></div><strong>{item.title}</strong><span className={styles.excerpt}>{item.body}</span><span className={styles.small}>{item.userId} · {item.assignee || '담당 미지정'}</span></button>) : <Empty>조건에 맞는 문의가 없습니다.</Empty>}</div>
       </section>
-      {selected ? <InquiryDetail key={selected.id} inquiry={selected} data={data} onCommand={onCommand} navigate={navigate} operators={operators} onManageTemplates={() => setManageTemplates(true)} /> : <section className="panel"><Empty>{requestedInquiry ? '선택한 문의가 현재 필터에 포함되지 않습니다.' : inquiryId ? '요청한 문의를 찾을 수 없습니다.' : '문의가 접수되면 여기에서 내용을 확인할 수 있습니다.'}</Empty>{requestedInquiry ? <button type="button" onClick={() => onListStateChange(INITIAL_INQUIRIES_LIST)}>문의 필터 초기화</button> : inquiryId && <button type="button" onClick={() => navigate('/inquiries')}>문의 목록으로 돌아가기</button>}</section>}
+      {selected ? <InquiryDetail key={selected.id} inquiry={selected} data={data} operator={operator} onCommand={onCommand} navigate={navigate} operators={operators} onManageTemplates={() => setManageTemplates(true)} /> : <section className="panel"><Empty>{requestedInquiry ? '선택한 문의가 현재 필터에 포함되지 않습니다.' : inquiryId ? '요청한 문의를 찾을 수 없습니다.' : '문의가 접수되면 여기에서 내용을 확인할 수 있습니다.'}</Empty>{requestedInquiry ? <button type="button" onClick={() => onListStateChange(INITIAL_INQUIRIES_LIST)}>문의 필터 초기화</button> : inquiryId && <button type="button" onClick={() => navigate('/inquiries')}>문의 목록으로 돌아가기</button>}</section>}
     </div>
     {manageTemplates && <TemplateManager data={data} onCommand={onCommand} onClose={() => setManageTemplates(false)} />}
   </div>;
 }
 
-function InquiryDetail({ inquiry, data, onCommand, navigate, operators, onManageTemplates }: ScreenProps & { inquiry: Inquiry; operators: string[]; onManageTemplates: () => void }) {
+function InquiryDetail({ inquiry, data, operator, onCommand, navigate, operators, onManageTemplates }: ScreenProps & { inquiry: Inquiry; operators: string[]; onManageTemplates: () => void }) {
   const [status, setStatus] = useState<InquiryStatus>(inquiry.status === '기록 완료' ? '접수' : inquiry.status);
   const [assignee, setAssignee] = useState(inquiry.assignee);
   const [reason, setReason] = useState('');
@@ -110,7 +110,7 @@ function InquiryDetail({ inquiry, data, onCommand, navigate, operators, onManage
   async function sendReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!reply.trim()) return feedback.invalid('답변 내용을 입력해 주세요.');
-    if (await feedback.run({ type: 'reply', inquiryId: inquiry.id, body: reply }, '답변을 저장했습니다. 상태가 답변 완료로 바뀌었습니다.')) { setReply(''); setTemplate(''); setStatus('답변 완료'); setAssignee(DEMO_OPERATOR); }
+    if (await feedback.run({ type: 'reply', inquiryId: inquiry.id, body: reply }, '답변을 저장했습니다. 상태가 답변 완료로 바뀌었습니다.')) { setReply(''); setTemplate(''); setStatus('답변 완료'); setAssignee(operator); }
   }
   return <section className={`panel ${styles.detail}`} aria-label="문의 상세">
     <div className={styles.row}><span className="badge">{inquiry.status}</span><span className={styles.small}>{inquiry.id}</span></div>
@@ -238,21 +238,21 @@ export function OpsScreen({ data, onCommand, navigate }: ScreenProps) {
   const [showHandled, setShowHandled] = useState(false);
   const pendingApprovals = data.approvals.filter(item => item.status === '대기');
   const outbox = data.outbox.filter(item => showHandled || !item.resolution);
-  return <div className={styles.stack}><header className={styles.heading}><div><p className={styles.eyebrow}>OPERATIONS</p><h1>예약 승인 · 위임 · 발송 확인</h1><p className="muted">사람의 확인이 필요한 작업을 처리합니다.</p></div><span className="badge">임시 포함</span></header><div className="notice">이번 범위에 둘지는 팀에서 정합니다. 모든 처리는 데모 상태에만 반영됩니다.</div>
+  return <div className={styles.stack}><header className={styles.heading}><div><p className={styles.eyebrow}>OPERATIONS</p><h1>예약 승인 · 위임 · 발송 확인</h1><p className="muted">사람의 확인이 필요한 작업을 처리합니다.</p></div><span className="badge">임시 포함</span></header><div className="notice">{adminCopy(data.live === true).opsNotice}</div>
     <section className={`panel ${styles.card}`}><div className={styles.row}><h2>예약 승인 대기</h2><span className="badge">{pendingApprovals.length}건</span></div><p className="muted">근거를 확인한 뒤 승인하거나 거절하세요. 두 동작 모두 사유를 남깁니다.</p>{pendingApprovals.length ? <div className={styles.tableWrap}><table><thead><tr><th>요청 / 사용자</th><th>여행 / 요청 시각</th><th>근거</th><th>처리</th></tr></thead><tbody>{pendingApprovals.map(item => <tr key={item.id}><td><strong>{item.request}</strong><button type="button" className={styles.cellLink} onClick={() => navigate(`/users/${item.userId}`)}>{item.userId} ↗</button></td><td>{item.trip}<time className={styles.cellSecondary}>{displayTime(item.at)}</time></td><td><details><summary>근거 보기</summary><p className={styles.evidence}>{item.evidence}</p></details></td><td><div className={styles.actions}>{[false, true].map(approve => <button key={String(approve)} type="button" className={approve ? 'primary' : ''} onClick={() => setConfirmation({ title: `예약 ${approve ? '승인' : '거절'}`, target: `${item.userId} · ${item.trip}`, description: `${item.request} 요청을 ${approve ? '승인' : '거절'}합니다. 근거: ${item.evidence}`, button: `${approve ? '승인' : '거절'} 확정`, command: { type: 'approval', approvalId: item.id, approve, reason: '' } })}>{approve ? '승인' : '거절'}</button>)}</div></td></tr>)}</tbody></table></div> : <Empty>승인을 기다리는 예약 요청이 없습니다.</Empty>}</section>
     <section className={`panel ${styles.card}`}><div className={styles.row}><h2>위임</h2><span className="muted">자동 실행 허용 범위</span></div><p className="muted">서버 설정이 허용한 범위 안에서만 위임합니다. 변경한 운영자와 사유를 기록합니다.</p>{data.delegations.length ? <div className={styles.tableWrap}><table><thead><tr><th>사용자</th><th>상태</th><th>맡긴 범위</th><th>처리</th></tr></thead><tbody>{data.delegations.map(item => <tr key={item.id}><td><button type="button" className={styles.textButton} onClick={() => navigate(`/users/${item.userId}`)}>{item.userId} ↗</button></td><td><span className="badge">{item.active ? '위임 중' : '없음'}</span></td><td>{item.scope}</td><td><button type="button" onClick={() => setConfirmation({ title: item.active ? '위임 거두기' : '위임 주기', target: item.userId, description: `${item.scope} 범위의 자동 실행을 ${item.active ? '중지' : '허용'}합니다.`, button: item.active ? '위임 회수 확정' : '위임 부여 확정', command: { type: 'delegation', delegationId: item.id, active: !item.active, reason: '' } })}>{item.active ? '거두기' : '주기'}</button></td></tr>)}</tbody></table></div> : <Empty>위임을 확인할 사용자가 없습니다.</Empty>}</section>
     <section className={`panel ${styles.card}`}><div className={styles.row}><h2>알림 발송 결과 미확인</h2><label className={styles.checkbox}><input type="checkbox" checked={showHandled} onChange={event => setShowHandled(event.target.checked)} /> 확인 완료 포함</label></div><p className="muted">보냈는지 알 수 없는 알림(unknown)에 확인한 결과만 기록합니다.<br />다시 보내거나 원래 발송 상태를 성공으로 바꾸지 않습니다.</p>{outbox.length ? <div className={styles.tableWrap}><table><thead><tr><th>주제 / 발송 상태</th><th>시도</th><th>마지막 오류</th><th>확인 결과</th></tr></thead><tbody>{outbox.map(item => <tr key={item.id}><td><strong>{item.topic}</strong><span className={styles.cellSecondary}>{item.status}</span></td><td>{item.attempts}회</td><td>{item.error}</td><td>{item.resolution ? <><span className="badge">{item.resolution === 'confirmed_delivered' ? '전달 확인' : '미전달 확인'}</span><span className={styles.cellSecondary}>{item.resolvedBy} · {item.note}</span></> : <div className={styles.actions}>{(['confirmed_not_delivered', 'confirmed_delivered'] as const).map(resolution => <button type="button" key={resolution} className={resolution === 'confirmed_delivered' ? 'primary' : ''} onClick={() => setConfirmation({ title: resolution === 'confirmed_delivered' ? '전달 확인' : '미전달 확인', target: item.topic, description: '외부 채널에서 확인한 결과와 근거를 남기세요. 기록 후에도 원래 발송 상태는 unknown으로 유지되며 재발송하지 않습니다.', button: '확인 결과 기록', command: { type: 'resolve-outbox', outboxId: item.id, resolution, reason: '' } })}>{resolution === 'confirmed_delivered' ? '전달 확인' : '미전달 확인'}</button>)}</div>}</td></tr>)}</tbody></table></div> : <Empty>확인이 필요한 알림이 없습니다.</Empty>}</section>
-    {confirmation && <ReasonConfirmation confirmation={confirmation} onCommand={onCommand} onClose={() => setConfirmation(null)} />}
+    {confirmation && <ReasonConfirmation confirmation={confirmation} live={data.live === true} onCommand={onCommand} onClose={() => setConfirmation(null)} />}
   </div>;
 }
 
-function ReasonConfirmation({ confirmation, onCommand, onClose }: { confirmation: Confirmation; onCommand: ScreenProps['onCommand']; onClose: () => void }) {
+function ReasonConfirmation({ confirmation, live, onCommand, onClose }: { confirmation: Confirmation; live: boolean; onCommand: ScreenProps['onCommand']; onClose: () => void }) {
   const [reason, setReason] = useState('');
   const feedback = useCommandFeedback(onCommand);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!reason.trim()) return feedback.invalid('사유 또는 확인한 근거를 입력해 주세요.');
-    if (await feedback.run({ ...confirmation.command, reason }, '확인 결과를 데모에 기록했습니다.')) onClose();
+    if (await feedback.run({ ...confirmation.command, reason }, adminCopy(live).confirmationDone)) onClose();
   }
   return <WorkflowDialog titleId="confirmation-title" locked={feedback.pending} onClose={onClose}><span className={styles.eyebrow}>확인 후 기록</span><h2 id="confirmation-title">{confirmation.title}</h2><strong>{confirmation.target}</strong><p className={styles.preserve}>{confirmation.description}</p><form onSubmit={submit} noValidate className={styles.stack}><label>사유 · 확인 근거 (필수)<textarea rows={4} value={reason} onChange={event => setReason(event.target.value)} placeholder="확인한 사실과 판단의 이유를 적어 주세요." /></label><p className="muted">현재 로그인한 운영자 ID로 운영 기록에 남습니다.</p><Feedback {...feedback} /><div className={styles.actions}><button type="button" onClick={onClose} disabled={feedback.pending}>취소</button><button type="submit" className="primary" disabled={feedback.pending}>{feedback.pending ? '기록 중…' : confirmation.button}</button></div></form></WorkflowDialog>;
 }
