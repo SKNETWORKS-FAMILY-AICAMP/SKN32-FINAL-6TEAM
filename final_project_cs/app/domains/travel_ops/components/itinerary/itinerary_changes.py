@@ -473,6 +473,37 @@ def other_sites(places: list[dict[str, Any]], original: dict[str, Any] | None,
             or not (same_site(original, p) or any(same_site(o, p) for o in others))]
 
 
+#: 쇼핑 분류 — 관광공사 종류 번호 38 · 분류체계 대분류 SH. 브랜드 매장 출처(`itinerary.BRAND_SOURCES`)도 상점이다
+SHOPPING_TYPE, SHOPPING_CLASS = "38", "SH"
+
+
+def is_shopping(place: dict[str, Any] | None) -> bool | None:
+    """장소 기록의 분류 코드로 본 쇼핑 여부 — True · False · None(분류 모름). 이름 낱말은 보지 않는다."""
+    from app.domains.travel_ops.components.itinerary.itinerary import BRAND_SOURCES
+
+    if not place:
+        return None
+    attributes = place.get("attributes") or {}
+    content_type = str(attributes.get("source_content_type_id") or place.get("content_type_id") or "")
+    top_class = str((place.get("catalog_class") or {}).get("lcls1") or "")
+    if (content_type == SHOPPING_TYPE or top_class == SHOPPING_CLASS
+            or attributes.get("catalog_source") in BRAND_SOURCES or attributes.get("source") in BRAND_SOURCES):
+        return True
+    return False if content_type or top_class else None
+
+
+def same_family(places: list[dict[str, Any]], original: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """★`[2026-10-26 x600 c34bd376 · Codex 결정]` 활동 대체 후보에서 원래 장소가 쇼핑이 아니면(분류 모름 포함) 쇼핑 분류 후보를 뺀다.
+
+    ☆국립중앙박물관 「다른 곳으로 바꿔줘」의 다른 안 셋이 CU 편의점 · 올리브영 · 정관장(관광공사 종류 38)이었다. 계획 읽기 후보 계산
+      (`intake.candidates._catalog_places` — 분류 모름이면 쇼핑 38 제외)과 같은 규칙이다. 모자라도 쇼핑으로 채우지 않는다.
+    원래 장소 자신과 활동이 아닌 행은 남긴다(각 계산이 뺀다)."""
+    if is_shopping(original) is True:
+        return places
+    keep = str((original or {}).get("place_id"))
+    return [p for p in places if str(p.get("place_id")) == keep or p.get("kind") != "activity" or is_shopping(p) is not True]
+
+
 def same_restaurant(a: dict[str, Any], b: dict[str, Any]) -> bool:
     """두 식당 장소가 **같은 가게**인가 — 카카오 「하동관 명동본점」 ↔ 요식 원장 「하동관」(4.6m).
 
@@ -1548,6 +1579,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     places = unused_places(places, items, current)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
     if current.kind == "activity":
         places = other_sites(places, current.place, items)  # 원래 곳 · 일정의 다른 활동과 같은 곳도 아니다
+        places = same_family(places, current.place)         # 쇼핑이 아닌 활동을 상점(편의점 · 화장품 매장)으로 바꾸지 않는다
     else:
         places = other_restaurants(places, current.place)  # 원래 식당의 다른 이름 행도 아니다(`[2026-10-16]` 하동관 명동본점 → 하동관)
     if setting is not None:
