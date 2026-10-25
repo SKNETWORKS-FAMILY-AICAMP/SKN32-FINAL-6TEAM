@@ -157,6 +157,15 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
             return _line("place", "bad", f"예약하신 {what}의 이름이 적혀 있지 않아요 — 이름을 알려 주세요")
         return _line("place", "bad", f"{area + ' 지역 ' if area else ''}{what}의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요")
     if state == "unresolved":
+        web = evidence.get("public_web")
+        if isinstance(web, dict):
+            facts = web.get("facts") or {}
+            sources = sorted({str(f["source_url"]) for f in facts.values()
+                              if isinstance(f, dict) and f.get("source_url")})
+            return _line("place", "bad", "공개 웹 보조조회도 미확인이에요 · 없는 곳이라는 뜻이 아니에요"
+                         + f" · 사유: {web.get('reason') or 'unknown'} · 확인: {web.get('checked_at') or '미확인'}"
+                         + (" · 공식 출처: " + ", ".join(sources) if sources else " · 공식 본문 근거 미확인")
+                         + " · 운영시간·휴무·방문일은 확정하지 않았어요 — 장소를 확인해 주세요")
         blocked = evidence.get("blocked") or []
         why = " · 장소 조회가 막혀 있어서 못 찾은 것일 수 있어요" if blocked else ""
         return _line("place", "bad", f"장소를 정하지 못했어요 — 이름을 고치거나 후보에서 골라 주세요{why}")

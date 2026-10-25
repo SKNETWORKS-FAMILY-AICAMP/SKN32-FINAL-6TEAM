@@ -25,23 +25,32 @@ from .db_search.place_by_name import find_place_by_name
 
 
 def lookup_place(connection_factory: Callable[[], Any], tenant_id: str, name: str | None,
-                 kakao: Any | None, *, fuzzy: bool = False) -> dict[str, Any]:
+                 kakao: Any | None, *, fuzzy: bool = False, web: Any | None = None) -> dict[str, Any]:
     """항상 `status` 가 있는 dict. `status`: found · ambiguous · exists_unregistered · not_found · unknown.
 
     `fuzzy=True` 면 원장 조회가 어순 · 오타로도 찾는다(결과에 `needs_review` · `match`). 기본은 꺼짐.
+    `web` 명시 주입 시 Kakao 미일치/장애를 보존한 공개 웹 보조조회를 한다.
+    원장/Kakao hit에는 보조조회하지 않는다. 자세한 계약은 wiki/external/activity-public-web.md.
     """
     found = find_place_by_name(connection_factory, tenant_id, name, fuzzy=fuzzy)
     if found["status"] != "not_found" or found.get("reason") == "name_too_short":
         return found
 
     if kakao is None:
-        # ★키가 없어 못 물었다 — 「없다」고 말할 근거가 없다
-        return {"status": "unknown", "via": "place_catalog", "reason": "kakao_unavailable"}
-    hits = kakao.search((name or "").strip())
-    if hits is None:
-        misses = getattr(kakao, "misses", None) or {}
-        return {"status": "unknown", "via": "kakao", "reason": "kakao_blocked",
-                "detail": max(misses, key=misses.get) if misses else None}
-    if _kakao_match((name or "").strip(), hits) is not None:
-        return {"status": "exists_unregistered", "via": "kakao"}
-    return {"status": "not_found", "via": "kakao"}
+        upstream = {"status": "unknown", "via": "place_catalog", "reason": "kakao_unavailable"}
+    else:
+        hits = kakao.search((name or "").strip())
+        if hits is None:
+            misses = getattr(kakao, "misses", None) or {}
+            upstream = {"status": "unknown", "via": "kakao", "reason": "kakao_blocked",
+                        "detail": max(misses, key=misses.get) if misses else None}
+        elif _kakao_match((name or "").strip(), hits) is not None:
+            return {"status": "exists_unregistered", "via": "kakao"}
+        else:
+            upstream = {"status": "not_found", "via": "kakao"}
+    if web is None:
+        return upstream
+    out = web.lookup((name or "").strip())
+    return {**out, "fallback": {"used": True, "upstream_status": upstream["status"],
+            "upstream_via": upstream["via"], "upstream_reason": upstream.get("reason"),
+            "upstream_detail": upstream.get("detail")}}

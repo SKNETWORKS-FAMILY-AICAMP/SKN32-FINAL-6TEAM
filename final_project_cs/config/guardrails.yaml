@@ -450,6 +450,17 @@ travel:
   # max_seconds — 채팅은 식은 모델 첫 호출 34초 + 모델 시간 제한 20초 여유로 90초, 일정 짜기는 생성기가 더 오래 걸려 240초, 접수 읽기는 사진·PDF 라 600초.
   # 한 사용자가 열 수 있는 실시간 작업 3개(채팅 · 일정 짜기 · 접수 읽기 동시). intake_stalled_seconds — 읽는 일꾼이 갱신 없이 이만큼 조용하면 죽은 것으로 본다.
   # 고객이 보낸 공개 SNS 맛집 링크. 수치는 첫 범위의 요청/조회 예산으로 고른 값이다.
+  # User-requested Activity lookup supplement. OFF until a reviewed zero-cost
+  # public search endpoint, public identity anchors and shared budgets are supplied.
+  activity_public_web:
+    enabled: false
+    backend: searxng
+    paid: false
+    approved_public_queries: false
+    search_endpoint: ""
+    search_hosts: []
+    identities: []
+    daily_limits: {}
   social_dining:
     max_links: 10
     max_url_chars: 2048

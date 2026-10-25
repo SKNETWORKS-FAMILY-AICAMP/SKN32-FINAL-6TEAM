@@ -87,6 +87,7 @@ class Resolved:
     #: `[2026-10-19 사용자 지시]` 「광장시장 점심」처럼 장소 근처에서 고른 식당이면 그 **기준 장소** — `{name, kind: "landmark", latitude, longitude, radius_m}`.
     #: 대안(후보 · 전체 자동 추천)이 앞뒤 일정의 가운데가 아니라 이 둘레에서 찾게 한다(`candidates.area_of`). 그 밖에는 None
     near_area: dict[str, Any] | None = None
+    public_web: dict[str, Any] | None = None
 
     def evidence(self) -> dict[str, Any]:
         source = {"places": "places", "typo": "places", "tour_api": "tour_api", "kakao": "kakao",
@@ -94,6 +95,8 @@ class Resolved:
         out = {"source": source, "method": self.method, "name": self.name, "query": self.query,
                "place_id": self.place_id, "content_id": self.content_id, "tried": self.tried,
                "blocked": self.blocked}
+        if self.public_web is not None:
+            out.update(source="public_web", method="public_web_supplement", public_web=self.public_web)
         if self.near_area:
             out["near_area"] = dict(self.near_area)
         return out
@@ -168,6 +171,37 @@ def narrowings(title: str) -> list[str]:
 def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,
             kind_hint: str | None = None, aliases: dict[str, str] | None = None, dining: Any = None,
             near: tuple[float, float] | None = None, at: Any = None, choose_near: bool = False,
+            conn: Any = None, team_alias: bool = True, activity_web: Any = None) -> Resolved:
+    """Preserve normal resolution; public facts supplement unresolved Activity only.
+
+    The provider locally maps the label to a reviewed public anchor before egress.
+    Facts never select a different place or assert operational/date certainty.
+    """
+    found = _resolve_existing(title, our_places=our_places, tour=tour, kakao=kakao,
+        kind_hint=kind_hint, aliases=aliases, dining=dining, near=near, at=at,
+        choose_near=choose_near, conn=conn, team_alias=team_alias)
+    from .landmarks import is_lodging_text
+    words = title.split()
+    corrected = (aliases or {}).get(normalize(title))
+    if (activity_web is None or found.status != "unresolved" or found.candidates
+            or kind_hint in ("dining", "lodging") or is_lodging_text(title)
+            or (words and words[0] in MEAL_WORDS)
+            or (corrected and normalize(corrected) != normalize(title))):
+        return found
+    from datetime import UTC, datetime
+    supplement = activity_web.lookup(title)
+    found.public_web = {**supplement,
+        "checked_at": supplement.get("checked_at") or datetime.now(UTC).isoformat(),
+        "upstream_status": "unknown" if found.blocked or kakao is None else "not_found",
+        "upstream_blocked": list(found.blocked)}
+    found.tried.append("public_web")
+    found.needs_review = True
+    return found
+
+
+def _resolve_existing(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,
+            kind_hint: str | None = None, aliases: dict[str, str] | None = None, dining: Any = None,
+            near: tuple[float, float] | None = None, at: Any = None, choose_near: bool = False,
             conn: Any = None, team_alias: bool = True) -> Resolved:
     """원문 조각 → 장소 하나. ★`[2026-10-22 사용자 지시 · Codex 1회차 합의]` 이름 찾기 순서(모든 경로가 같다 — 결정 D-CS-021):
 
@@ -214,7 +248,12 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
         return _resolve_lodging(title, our_places=our_places, tour=tour, kakao=kakao, hit=hit)
     if hit is not None and not (meal and hit.landmark.kind == "place"):
         # ★한 곳(관광지)의 끼니(「경복궁 점심」)는 지금 길 그대로 — 식사는 요식 원장이 먼저다(「경복궁」은 고깃집 체인 이름이기도 하다)
-        return _resolve_landmark(hit, title, our_places=our_places, tour=tour, kakao=kakao, meal=meal)
+        canonical = None
+        if team_alias:
+            from ..team_hooks import place_aliases as alias_hook
+            canonical = alias_hook.target(conn, title)
+        return _resolve_landmark(hit, title, our_places=our_places, tour=tour, kakao=kakao, meal=meal,
+                                 canonical=canonical)
     tried: list[str] = []
     blocked: list[str] = []
     candidates: list[dict[str, Any]] = []
@@ -532,19 +571,29 @@ def _resolve_lodging(title: str, *, our_places: list[dict[str, Any]], tour: Any,
 
 
 def _resolve_landmark(hit: Any, title: str, *, our_places: list[dict[str, Any]], tour: Any, kakao: Any,
-                      meal: bool) -> Resolved:
+                      meal: bool, canonical: dict[str, Any] | None = None) -> Resolved:
     """대표 장소 정답표에 있는 곳 — 정답 이름 **하나**로 찾고, 자료가 낸 이름이 정답과 같을 때만 받는다. `[2026-10-19 진단 포인트 2]`
 
     ☆창덕궁 → 서울 운현궁 · 국립중앙박물관 → 서울아프리카페스티벌 · 국립민속박물관 → 오촌댁. 비슷한 이름 · 앞부분 맞추기 · 원장 이름 찾기가 다른 곳을 냈다.
     우리 장소 표 → 관광공사 → 카카오(음식점 · 카페가 아닌 곳) 순. 못 찾으면 **정하지 않는다** — 엉뚱한 곳을 붙이느니 못 찾았다고 말한다.
     구역(시장 · 거리 · 동네)은 `_zone` 으로 가게 하나로 좁히지 않는다. 한 곳(관광지)의 끼니는 여기 오지 않는다(`resolve` 의 지금 길)."""
     landmark = hit.landmark
-    query = landmark.name
+    canonical_title = ((canonical or {}).get("title")
+                       if (canonical or {}).get("content_id") else None)
+    query = canonical_title or landmark.name
+    # Registered Activity alias authority may use a different canonical catalog
+    # title (N서울타워 -> 남산서울타워). Do not let the landmark display label hide it.
+    def same_place(name):
+        return (normalize_full(name or "") == normalize_full(canonical_title)
+                if canonical_title else landmark.same_place(name))
+
     tried: list[str] = [f"landmark:{hit.phrase}→{landmark.name}"]
+    if canonical_title:
+        tried.append(f"team_alias:{title}→{canonical_title}")
     blocked: list[str] = []
     out: Resolved | None = None
     for place in our_places:
-        if landmark.same_place(place.get("name")) and place.get("kind") != "dining":
+        if same_place(place.get("name")) and place.get("kind") != "dining":
             tried.append(f"places:{query}")
             out = Resolved("resolved", "places", place["name"], query, place.get("kind") or "activity", place.get("latitude"),
                            place.get("longitude"), place_id=str(place["place_id"]), tried=tried)
@@ -553,7 +602,7 @@ def _resolve_landmark(hit: Any, title: str, *, our_places: list[dict[str, Any]],
         tried.append(f"places:{query}")
         found = _tour(tour, query, blocked)
         tried.append(f"tour_api:{query}")
-        if found is not None and landmark.same_place(found.get("matched_title")) and str(found.get("content_type_id")) != "39":
+        if found is not None and same_place(found.get("matched_title")) and str(found.get("content_type_id")) != "39":
             out = _from_tour(found, query, query, tried)
     if out is None and kakao is not None:
         hits = kakao.search(query)
@@ -561,12 +610,21 @@ def _resolve_landmark(hit: Any, title: str, *, our_places: list[dict[str, Any]],
         if hits is None:
             blocked.append("kakao:" + (max(kakao.misses, key=kakao.misses.get) if getattr(kakao, "misses", None) else "unavailable"))
             hits = []
-        same = [h for h in hits if landmark.same_place(h.get("name")) and h.get("category_group") not in FOOD_GROUPS
+        same = [h for h in hits if same_place(h.get("name")) and h.get("category_group") not in FOOD_GROUPS
                 and h.get("latitude") is not None]
         if same:
             pick = same[0]
             out = Resolved("resolved", "kakao", pick["name"], query, "activity", pick["latitude"], pick["longitude"], tried=tried,
                            note="카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다")
+    if out is None and canonical_title and query != landmark.name:
+        # Keep registered canonical authority first, but a title-only resolver
+        # can use the landmark table's existing exact name instead. This does
+        # not accept arbitrary aliases or manufacture a catalog/coordinate hit.
+        out = _resolve_landmark(hit, title, our_places=our_places, tour=tour,
+                                kakao=kakao, meal=meal)
+        out.tried = tried + out.tried
+        out.blocked = list(dict.fromkeys(blocked + out.blocked))
+        return out
     if out is None:
         note = f"대표 장소 「{landmark.name}」를 자료에서 찾지 못했다 — 이름이 비슷한 다른 곳은 붙이지 않는다. 고객이 고친다"
         if blocked:

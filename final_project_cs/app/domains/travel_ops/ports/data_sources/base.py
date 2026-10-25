@@ -347,6 +347,8 @@ class TravelSources:
     limiter: Any | None = None
     #: 응답 캐시 — 제한기처럼 소스 전부가 하나를 공유한다(`cache.py`).
     cache: Any | None = None
+    #: Explicit free public lookup; no customer text or LLM inference.
+    activity_web: Any | None = None
 
 
 def _public_data_key(settings: Any, field: str) -> str:
@@ -449,6 +451,12 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
     burst = max(1, int(guardrails.get("travel.rate_burst") or 1))
     limits = (settings.source_rate_limits()
               if hasattr(settings, "source_rate_limits") else {})
+    web_config = guardrails.get('travel.activity_public_web') or {}
+    if web_config.get('enabled'):
+        for name in ('activity_web_search', 'activity_official_extract'):
+            cap = (web_config.get('daily_limits') or {}).get(name)
+            if isinstance(cap, int) and not isinstance(cap, bool) and cap > 0:
+                limits[name] = cap
     by_source = guardrails.get("travel.rate_burst_by_source") or {}
     bursts = {name: max(1, int(by_source.get(name) or burst)) for name in limits}
     intervals = {name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()}
@@ -492,6 +500,10 @@ def build_travel_sources(settings: Any, *, cache_only: bool = False, low_priorit
         cache = ResponseCache(ttl_seconds=ttl)
 
     sources = TravelSources(limiter=limiter, cache=cache)
+    from .activity_public_web import build_activity_public_web
+    sources.activity_web = build_activity_public_web(settings, guardrails, limiter=limiter, cache=cache)
+    if not sources.activity_web.config.get('enabled'):
+        sources.unavailable['activity_web'] = 'public free-search provider not configured/approved/budgeted; lookup remains unknown'
     # ★키를 안 보고 붙인다 — 이 소스는 인증 파라미터 자체가 없다.
     sources.heritage = HeritageSource(limiter=limiter, cache=cache)
     # ★`[2026-10-07]` 숙소·항공 검색(마이리얼트립 MCP) — 키가 없다. 응답은 캐시에 담지 않는다(가격·잔여).
