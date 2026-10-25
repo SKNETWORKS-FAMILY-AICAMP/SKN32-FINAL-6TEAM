@@ -18,7 +18,8 @@ def schemas(aliases: list[str]) -> dict[str, Any]:
 
     return {
         "time_edit": obj({"boundary": enum(["none", "start", "end", "duration", "shift", "reflow"]),
-                          "scope": enum(["item", "following"]), "time": {"type": "string"},
+                          "scope": enum(["item", "following", "range"]),
+                          "time": {"type": "string", "pattern": "^(|([01][0-9]|2[0-3]):[0-5][0-9])$"},
                           "duration_minutes": {"type": "integer"}, "cascade": {"type": "boolean"},
                           "continue_previous": {"type": "boolean"}, "evidence": {"type": "string"}}),
         "place_search": obj({"relation": enum(["none", "near"]), "anchor_item": enum(aliases),
@@ -42,11 +43,18 @@ def requested_setting(raw: dict[str, Any] | None) -> str | None:
 
 SYSTEM = """
 시간 변경의 뜻은 time_edit, 장소 검색의 기준은 place_search에 별도로 보존한다.
+상대 이동과 절대 시각 수정은 다르다. 기존 시각에서 몇 분/시간 미룸·당김은 boundary=shift, minutes=부호 있는 이동 분수, time="",duration_minutes=0,cascade=false다. 일정표의 시각을 새 시각으로 복사하지 않는다. 체류 유지도 shift다.
+방문 하나 상대 이동은 scope=item,target_item=그 방문,anchor_kind=none,anchor_item=none,anchor_time=""다.
+특정 날짜 전체 또는 시각/방문 이전·이후 범위의 상대 이동은 scope=range,target_item=none,query={day,period,kind,position} 필수다. 날짜는 query.day로 고르며 at_day=none이다. 달력 날짜는 일정 목록의 월-일과 일차를 대조한다. 지금 날짜가 아니면 today가 아니다.
+시각 전후 범위는 anchor_kind=time,anchor_time=고객이 말한 기준 시각,relation=before/after다. 기준 시각은 옮길 새 시작이나 종료가 아니므로 time_edit.time=""다. 방문 전후 범위는 anchor_kind=item,anchor_item=기준 방문,relation=before/after이며 기준 방문 자체와 다른 날은 제외한다. 날짜 전체는 anchor_kind=none,anchor_time="",relation=at다.
+정확한 새 시작/종료 시각 자체를 요청할 때만 start/end다. 체류 분수를 바꿀 때만 duration이다. 이 세 경계의 minutes는 0이며 상대 이동과 함께 생성하지 않는다. 일반 읽기 질문의 앞뒤 한 항목 선택과 여러 일정 이동 범위를 혼동하지 않는다.
 time_edit.boundary=start(시작),end(체류 종료),duration(머무는 분수),shift(상대 이동),reflow(뒤 일정 재배치),none(시간 변경 없음).
 종료 시각까지 머물겠다는 요청은 end이며 그 시각에 시작하라는 뜻이 아니다. 정확한 시각이 없는 저녁·늦게 등의 표현으로 시각을 만들지 않고 time=""로 낸다.
 새 시작 시각을 말하면 미루기·당기기 말이 함께 있어도 start이며 time=그 시각이다(「점심을 오후 2시 10분으로 미뤄줘」 start, time=14:10). shift는 옮길 크기(30분·1시간)만 말할 때다.
 다른 날로 옮기면 at_day=그 날이다. 「다음 날로」「전날로」처럼 그 일정 날을 기준으로 말하면 일정 줄의 일차로 센 dN이며, 오늘 기준의 tomorrow가 아니다(1일차 일정을 다음 날로 = d2). 날과 새 시작 시각을 함께 말하면 start에 time과 at_day를 함께 내고, 날만 말하면 start, time=""이다.
 scope=item은 target_item 자체, following은 anchor_item 다음의 같은 날 일정 전체이며 기준 항목 자체는 제외한다.
+following 상대 이동에서 anchor_item은 고객이 가리킨 기준 방문이며 target_item도 같은 기준 방문이다. 옮겨질 첫 번째 뒤 방문을 anchor_item으로 고르면 그 방문이 제외되므로 그렇게 고르지 않는다. 기준 방문 뒤의 모든 방문이 대상이다.
+장소 변경 자체는 근처 검색 조건이 아니다. 고객이 현재 문장에서 별도의 공간 관계·검색 기준을 요청하지 않았으면 place_search.relation=none이며 anchor_item=none,place_text="",evidence=""다. 기존 장소를 다른 곳으로 바꾸라는 요청만으로 near를 만들지 않는다.
 체류 종료를 바꾸고 뒤 일정도 맞추는 요청은 end/scope=item/cascade=true이며 target_item은 머무는 일정이다.
 새 종료를 말하지 않고 뒤 일정만 맞추는 요청은 reflow/scope=following이며 anchor_item은 기준 일정이다.
 직전 실패·확인 질문의 변경 목표를 이어 실행하라는 요청에서만 continue_previous=true. 제공된 edit_goal만 이어받으며 새 시각·대상을 명시하면 false.
@@ -64,6 +72,91 @@ place_setting은 action과 무관하게 채운다. 바꿀 일정을 정하지 �
 place_setting은 place_search와 별개다. 고객이 주변·근처의 기준 일정이나 지명을 말하지 않았으면 실내·야외 조건이 있든 없든
 place_search는 relation=none,anchor_item=none,place_text="",evidence=""이며, 바꿀 대상 일정을 place_search 기준으로 옮겨 적지 않는다.
 """
+
+
+def generation_variants(variants, aliases, query_schema, message, *, quoted_days, quoted_items):
+    """Disjoint generation modes; no natural-language parsing or output repair."""
+    from copy import deepcopy
+
+    result = []
+    template = None
+    for original in variants:
+        actions = original["properties"]["action"]["enum"]
+        if "change_time" not in actions:
+            result.append(original)
+            continue
+        if template is None:
+            template = original
+        other = [action for action in actions if action != "change_time"]
+        if other:
+            branch = deepcopy(original)
+            branch["properties"]["action"]["enum"] = other
+            result.append(branch)
+        temporal = original["properties"]["time_edit"]
+        # Existing following/reflow schema already binds the quoted anchor. Its
+        # legacy duration/cascade metadata does not change the delta consumer;
+        # preserve that contract rather than retroactively rejecting saved shapes.
+        if temporal.get("properties", {}).get("scope", {}).get("enum") == ["following"]:
+            result.append(original)
+            continue
+        for spec in temporal.get("anyOf", [temporal]):
+            for boundary in spec["properties"]["boundary"]["enum"]:
+                branch = deepcopy(original)
+                fields = branch["properties"]
+                fields["action"]["enum"] = ["change_time"]
+                fields["time_edit"] = deepcopy(spec)
+                edit = fields["time_edit"]["properties"]
+                edit["boundary"]["enum"] = [boundary]
+                if boundary in {"none", "start", "end", "duration"}:
+                    fields["minutes"] = {"type": "integer", "enum": [0]}
+                if boundary in {"shift", "reflow"}:
+                    edit["time"] = {"type": "string", "enum": [""]}
+                    edit["duration_minutes"] = {"type": "integer", "enum": [0]}
+                    fields["anchor_time"] = {"type": "string", "enum": [""]}
+                    if edit["scope"]["enum"] == ["item"]:
+                        fields["anchor_kind"]["enum"] = ["none"]
+                        fields["anchor_item"]["enum"] = ["none"]
+                    if boundary == "shift":
+                        fields["minutes"] = {"anyOf": [{"type": "integer", "minimum": 1},
+                                                       {"type": "integer", "maximum": -1}]}
+                        edit["cascade"] = {"type": "boolean", "enum": [False]}
+                        edit["continue_previous"] = {"type": "boolean", "enum": [False]}
+                result.append(branch)
+    if template is not None and message.strip():
+        for kind in ("none", "time", "item"):
+            branch = deepcopy(template)
+            fields = branch["properties"]
+            fields["action"]["enum"] = ["change_time"]
+            fields["target_item"]["enum"] = ["none"]
+            fields["target_change"]["enum"] = ["none"]
+            fields["fact"]["enum"] = ["none"]
+            fields["minutes"] = {"anyOf": [{"type": "integer", "minimum": 1},
+                                           {"type": "integer", "maximum": -1}]}
+            fields["anchor_kind"]["enum"] = [kind]
+            fields["anchor_item"]["enum"] = quoted_items if kind == "item" else ["none"]
+            if not fields["anchor_item"]["enum"]:
+                continue
+            fields["anchor_time"] = ({"type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"}
+                                     if kind == "time" else {"type": "string", "enum": [""]})
+            fields["at_day"]["enum"] = ["none"]
+            fields["relation"]["enum"] = ["at"] if kind == "none" else ["before", "after"]
+            fields["query"] = deepcopy(query_schema)
+            fields["query"]["properties"]["day"]["enum"] = quoted_days or ["all"]
+            fields["query"]["properties"]["position"]["enum"] = ["all"]
+            if kind in {"time", "item"}:
+                fields["query"]["properties"]["period"]["enum"] = ["all"]
+            if "query" not in branch["required"]:
+                branch["required"].append("query")
+            fields["time_edit"] = schemas(aliases)["time_edit"]
+            edit = fields["time_edit"]["properties"]
+            for key, value in {"boundary": "shift", "scope": "range", "time": "", "duration_minutes": 0,
+                               "cascade": False, "continue_previous": False, "evidence": message}.items():
+                edit[key] = {"type": "boolean" if type(value) is bool else "integer" if type(value) is int else "string", "enum": [value]}
+            # The discriminator precedes the fields whose meaning it selects.
+            fields_order = ("action", "time_edit", "anchor_kind", "relation", "query")
+            branch["properties"] = {**{key: fields[key] for key in fields_order}, **fields}
+            result.append(branch)
+    return result
 
 
 def validate(raw: dict[str, Any], message: str, aliases: set[str]) -> None:
@@ -94,11 +187,17 @@ def validate(raw: dict[str, Any], message: str, aliases: set[str]) -> None:
             if not isinstance(text, str) or (text and text not in message):
                 raise ValueError("unquoted spatial origin")
         else:
-            if value.get("boundary") not in {"start", "end", "duration", "shift", "reflow"} or value.get("scope") not in {"item", "following"}:
+            if value.get("boundary") not in {"start", "end", "duration", "shift", "reflow"} or value.get("scope") not in {"item", "following", "range"}:
                 raise ValueError("invalid temporal relation")
             if _inconsistent(value) and _executes_time_edit(raw):
                 raise ValueError("inconsistent temporal scope")
-            clock = value.get("time", "")
+            if value.get("scope") == "range" and (
+                    value["boundary"] != "shift" or raw.get("target_item") != "none"
+                    or raw.get("anchor_kind") not in {"none", "time", "item"}
+                    or value.get("time") or value.get("duration_minutes")
+                    or value.get("cascade") or value.get("continue_previous")):
+                raise ValueError("inconsistent temporal scope")
+            clock = raw.get("anchor_time", "") if value.get("scope") == "range" else value.get("time", "")
             if not isinstance(clock, str) or (clock and not TIME.fullmatch(clock)):
                 raise ValueError("invalid temporal clock")
             if clock:
@@ -219,6 +318,57 @@ def time_ops(decision, *, items, now: datetime):
     if boundary == "shift" and spec.get("scope") == "item" and spec.get("time"):
         # A validated absolute clock (quoted and recomputed in `validate`) is the new start, not a shift size.
         boundary = "start"
+    if boundary == "shift" and spec.get("scope") == "range":
+        if decision.raw.get("stale_edit_goal"):
+            # ★`[2026-10-26 L05 이식 · Codex]` 범위 옮기기도 오래된 변경 목표 거절을 먼저 지난다(아래 한 일정 · 뒤 일정 경로와 같다)
+            raise EditRefused("need_time_goal", "이전 변경 요청을 현재 일정에서 확인하지 못했어요. 어느 일정에서 몇 시까지 머물지 다시 알려 주세요.")
+        from .schedule_query import matching, valid_query
+        from .decision_unit import stops_of
+        from .chat_edit import shifted
+
+        if not decision.minutes:
+            raise EditRefused("need_minutes", "일정을 얼마나 옮길지 알려 주세요.")
+        if not valid_query(decision.query, stops_of(items)):
+            raise EditRefused("need_target", "옮길 일정의 날짜와 범위를 알려 주세요.")
+        targets, _ = matching(decision.query, items=items, now=now)
+        anchor_kind = decision.raw.get("anchor_kind")
+        relation = decision.raw.get("relation")
+        if anchor_kind == "item":
+            by_alias = {f"i{n}": stop for n, stop in enumerate(_stops(items), 1)}
+            anchor = by_alias.get(decision.raw.get("anchor_item"))
+            if anchor is None or relation not in {"before", "after"}:
+                raise EditRefused("need_target", "기준으로 삼을 일정을 알려 주세요.")
+            targets = [stop for stop in targets if stop.item_id != anchor.item_id
+                       and stop.starts_at.astimezone(KST).date() == anchor.starts_at.astimezone(KST).date()
+                       and ((stop.starts_at < anchor.starts_at) if relation == "before" else (stop.starts_at > anchor.starts_at))]
+        elif anchor_kind == "time":
+            clock = decision.raw.get("anchor_time", "")
+            if not TIME.fullmatch(clock) or relation not in {"before", "after"}:
+                raise EditRefused("need_time", "기준 시각과 이전·이후 범위를 알려 주세요.")
+            # An item starting exactly at the boundary clock is not decided by before/after alone.
+            on_boundary = [stop for stop in targets if _hm(stop.starts_at) == clock]
+            if on_boundary:
+                names = "·".join(f"「{stop.title}」" for stop in on_boundary)
+                raise EditRefused("need_time_boundary", f"{clock}에 시작하는 {names}도 함께 옮길까요? 포함할지 빼고 옮길지 알려 주세요.")
+            targets = [stop for stop in targets if (_hm(stop.starts_at) < clock if relation == "before" else _hm(stop.starts_at) >= clock)]
+        elif anchor_kind != "none" or relation != "at":
+            raise EditRefused("need_target", "옮길 일정의 범위를 알려 주세요.")
+        if not targets:
+            raise EditRefused("need_target", "말씀하신 범위에 옮길 일정이 없어요.")
+        ops = []
+        for stop in targets:
+            if stop.kind not in {"activity", "dining"} or stop.booking_id or stop.locked:
+                raise EditRefused("locked_item", "범위에 예약·고정된 항목이 있어 바꾸지 않았어요.")
+            if (stop.ends_at or stop.starts_at) <= now:
+                raise EditRefused("item_in_past", "범위에 이미 끝난 일정이 있어 바꾸지 않았어요.")
+            day, begin, until = shifted(stop, decision.minutes)
+            if day != stop.starts_at.astimezone(KST).date().isoformat():
+                raise EditRefused("crosses_midnight", "일정이 자정을 넘게 돼 바꾸지 않았어요.")
+            _same_day(day, begin, until, stop.title)
+            if datetime.fromisoformat(f"{day}T{begin}").replace(tzinfo=KST) < now:
+                raise EditRefused("time_in_past", "이미 지난 시각으로 옮길 수 없어 바꾸지 않았어요.")
+            ops.append(EditOp("time", item_id=stop.item_id, date=day, starts_at=begin, ends_at=until, reflow=True))
+        return ops, f"일정 {len(ops)}개 시각 옮기기"
     if boundary == "none" or (boundary == "shift" and spec.get("scope") != "following"):
         return None
     if decision.raw.get("stale_edit_goal"):
@@ -228,7 +378,11 @@ def time_ops(decision, *, items, now: datetime):
     item = (by_alias.get(decision.raw.get("anchor_item")) if spec.get("scope") == "following" else decision.item)
     if item is None:
         raise EditRefused("need_target", "머무는 시각을 바꿀 기준 일정을 알려 주세요.")
-    if boundary == "shift":
+    # decision.minutes is source-validated by decision_unit (not raw model minutes).
+    # A following reflow must not discard an explicit relative delta; zero-delta
+    # reflow/continuation retains the existing anchor-end behavior below.
+    if boundary == "shift" or (boundary == "reflow" and spec.get("scope") == "following"
+                               and decision.minutes and not spec.get("continue_previous")):
         from .chat_edit import shifted
 
         if not decision.minutes:

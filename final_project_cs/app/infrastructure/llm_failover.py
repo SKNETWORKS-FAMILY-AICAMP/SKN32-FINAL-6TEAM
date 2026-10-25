@@ -397,8 +397,10 @@ class OpenAIChat:
     def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
                                     validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
                                     on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
-                                    max_seconds: float = 180.0) -> dict[str, Any]:
-        """`structured_validated` 를 조금씩 받기로 — 받은 답을 `structured` 와 같이 스키마로 검사하고 근거 검사를 한다. `[2026-10-26 사용자 승인]`"""
+                                    max_seconds: float = 180.0, api_schema: dict[str, Any] | None = None) -> dict[str, Any]:
+        """`structured_validated` 를 조금씩 받기로 — 받은 답을 `structured` 와 같이 스키마로 검사하고 근거 검사를 한다. `[2026-10-26 사용자 승인]`
+        ★`[2026-10-26 L05 이식]` 이 클라이언트는 늘 유료 경로다 — `api_schema`(문장 없는 스키마)가 있으면 그것을 보낸다(`FailoverChat` 과 같은 규칙)."""
+        schema = api_schema if api_schema is not None else schema
         value = self.structured_stream(system, user, schema, num_predict=num_predict, on_piece=on_piece, first_wait=first_wait,
                                        stall=stall, max_seconds=max_seconds)
         return validate_content(validate_structured(value, schema), validator)
@@ -479,7 +481,9 @@ class OpenAIChat:
         return validate_structured(self._object(text), schema)
 
     def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
-                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
+                             api_schema: dict[str, Any] | None = None) -> dict[str, Any]:
+        schema = api_schema if api_schema is not None else schema       # 늘 유료 경로 — 위 `structured_stream_validated` 와 같다
         return validate_content(self.structured(system, user, schema, num_predict=num_predict), validator)
 
     def see(self, prompt: str, image: bytes, *, timeout: float = 60.0) -> str:
@@ -695,16 +699,23 @@ class FailoverChat:
     def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
                                     validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
                                     on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
-                                    stall: float = 5.0, max_seconds: float = 180.0) -> dict[str, Any]:
+                                    stall: float = 5.0, max_seconds: float = 180.0,
+                                    api_schema: dict[str, Any] | None = None) -> dict[str, Any]:
         """채팅 해석(`decision_unit.decide`)의 **조금씩 받기 + 멈춤 감시** — `structured_validated` 와 같은 검사(스키마 · 근거)를 경로 안에서 한다. `[2026-10-26 사용자 승인]`
         ★넘김 규칙은 `json_stream` 과 같다 — 로컬이 끊기거나(조각 감시) 모양 · 근거가 틀리면 받다 만 답을 버리고 다음 경로(유료)가 처음부터 다시 답한다.
         로컬 모델이 안 올라와 있으면 곧바로 다음 경로로 간다. 고정 대기 호출(`structured`)로 다시 부르지 않는다.
-        ☆이 메서드가 없으면 `__getattr__` 이 첫 Ollama 의 것을 돌려 넘김 없이 로컬로만 갔다."""
-        return self._run("structured_stream", self._streaming(
-            lambda chat, text, relay: chat.structured_stream_validated(system, text, schema, validator=validator, num_predict=num_predict,
-                                                                       on_piece=relay, first_wait=first_wait, stall=stall,
-                                                                       max_seconds=max_seconds),
-            user, on_piece, api_only=False))
+        ☆이 메서드가 없으면 `__getattr__` 이 첫 Ollama 의 것을 돌려 넘김 없이 로컬로만 갔다.
+        ★`[2026-10-26 L05 이식]` `api_schema` 가 있으면 유료 경로는 그 스키마로 답한다 — 로컬 생성 문법(`schema`)은 고객 문장 인용을
+        enum 으로 싣는다. 그 문법을 밖으로 보내지 않는다(`masked(user)` 는 스키마를 거치지 않는다). 근거 검사(`validator`)는 두 경로 같다."""
+        def with_schema(shape: dict[str, Any]) -> Callable[[Any, bool], Any]:
+            return self._streaming(
+                lambda chat, text, relay: chat.structured_stream_validated(system, text, shape, validator=validator, num_predict=num_predict,
+                                                                           on_piece=relay, first_wait=first_wait, stall=stall,
+                                                                           max_seconds=max_seconds),
+                user, on_piece, api_only=False)
+
+        local, paid = with_schema(schema), with_schema(api_schema if api_schema is not None else schema)
+        return self._run("structured_stream", lambda chat, api: (paid if api else local)(chat, api))
 
     def _streaming(self, call: Callable[[Any, str, Any], Any], user: str, on_piece: Callable[[str, str], None] | None, *,
                    api_only: bool) -> Callable[[Any, bool], Any]:
@@ -727,9 +738,12 @@ class FailoverChat:
         return self._run("structured", lambda chat, api: chat.structured(system, masked(user) if api else user, schema, num_predict=num_predict))
 
     def structured_validated(self, system: str, user: str, schema: dict[str, Any], *,
-                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160) -> dict[str, Any]:
+                             validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
+                             api_schema: dict[str, Any] | None = None) -> dict[str, Any]:
+        """`api_schema` 는 `structured_stream_validated` 와 같다 — 유료 경로에는 문장 없는 스키마만 보낸다. `[2026-10-26 L05 이식]`"""
         def call(chat: Any, api: bool) -> dict[str, Any]:
-            result = chat.structured(system, masked(user) if api else user, schema, num_predict=num_predict)
+            shape = api_schema if api and api_schema is not None else schema
+            result = chat.structured(system, masked(user) if api else user, shape, num_predict=num_predict)
             return validate_content(result, validator)
 
         return self._run("structured", call)

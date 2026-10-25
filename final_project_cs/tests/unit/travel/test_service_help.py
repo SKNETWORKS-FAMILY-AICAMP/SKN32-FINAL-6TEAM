@@ -77,7 +77,8 @@ class ServiceModel:
         self.overrides = overrides
 
     def structured(self, system, user, schema, **_):
-        assert "answer_service" in schema["properties"]["action"]["enum"]
+        # contract_correction(L05 port): the generation grammar sends {"anyOf": branches}; the action must be offered in one
+        assert "answer_service" in set().union(*(branch["properties"]["action"]["enum"] for branch in schema.get("anyOf", [schema])))
         assert "너가 할 수 있는 게 뭐야?" in system and "서비스 기능·사용법·정체 질문은 answer_service" in system
         return {"action": "answer_service", "target_item": "none", "target_change": "none",
                 "fact": "none", "choices": [], "minutes": 0, **self.overrides}

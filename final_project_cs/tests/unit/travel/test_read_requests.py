@@ -145,7 +145,8 @@ def test_general_request_answer_is_preserved_beside_a_travel_read():
     a=item("솔빛전시관",1)
     class Chat:
         def structured(self, system, prompt, schema, **kwargs):
-            assert "general_requests" in schema["required"]
+            # v9: with a message the schema is {"anyOf": variants}; every generated branch must require it
+            assert schema["anyOf"] and all("general_requests" in v["required"] for v in schema["anyOf"])
             return dict(action="answer_fact",target_item="i1",target_change="none",fact="time",minutes=0,
                         choices=[],reads=[read("time")],social="바쁜 날이셨군요.",
                         general_requests=[dict(question="편한 책 하나 권해줘",answer="짧은 에세이를 권해요. 잠깐씩 읽기 좋아요.")])

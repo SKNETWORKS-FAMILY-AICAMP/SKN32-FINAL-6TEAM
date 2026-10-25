@@ -371,10 +371,42 @@ def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, An
             + f"\n\n직전 대화:\n{talk}{goal_line}\n구조화된 직전 답변 대상: {focus_alias}\n\n화면에서 고른 일정: {selected}\n\n고객 문장: {message}")
 
 
-def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
+#: 목록 읽기 — 범위(`query`)로 서버가 일정을 고르는 사실. 대상 · 변경 대상은 비우고 범위는 반드시 낸다(SYSTEM 의 목록 조회 규칙)
+LIST_READ_FACTS = ("schedule", "changeability", "day")
+
+
+def quoted_calendar_days(stops: list[Stop], message: str | None) -> list[str]:
+    """문장에 **일정의 달력 날짜**(「1월 2일」·「1월2일」·`2030-01-02`)가 그대로 적힌 날의 `dN` — 문장 근거로 생성만 제한한다.
+
+    `[2026-10-26 수용 C02]` 「1월 2일 일정을 전부 보여줘」에 모델이 범위의 날을 「오늘」로 골랐다(지금은 여행 하루 전).
+    숫자 경계를 지킨다 — 「11월 2일」·「1월 22일」은 「1월 2일」이 아니다. 적힌 날이 없으면 빈 목록이다(날을 추측하지 않는다)."""
+    if not stops or not message:
+        return []
+    first_day = min(_local(stop.item.starts_at).date() for stop in stops)
+    out = []
+    for day in sorted({_local(stop.item.starts_at).date() for stop in stops}):
+        labels = (rf"(?<!\d){day.month}월 ?{day.day}일", rf"(?<!\d){re.escape(day.isoformat())}(?!\d)")
+        if any(re.search(label, message) for label in labels):
+            out.append(f"d{(day - first_day).days + 1}")
+    return out
+
+
+def _schema(stops: list[Stop], changes: list[Change], *, message: str | None = None, plain: bool = False) -> dict[str, Any]:
     from .schedule_query import query_days, query_schema
     items = [s.alias for s in stops] + ["none"]
     change_ids = sorted({c.alias for c in changes}) + ["none"]
+    # ★`[2026-10-26 수용 C02]` 문장에 일정의 달력 날짜가 적혔으면 조회 범위의 날은 그 날(과 문장에 적힌 오늘 · 내일)만 낼 수 있다.
+    #   생성 문법만 좁힌다 — 모델 답을 서버가 고쳐 쓰지 않는다(아래 시각 범위 옮기기의 `day_quotes` 와 같은 근거).
+    calendar_days = quoted_calendar_days(stops, message)
+    spoken_days = [token for token, label in (("today", "오늘"), ("tomorrow", "내일")) if message and label in message]
+    scope_days = [*calendar_days, *(d for d in spoken_days if d not in calendar_days)] if calendar_days else None
+
+    def scope_schema() -> dict[str, Any]:
+        scope = query_schema(stops)
+        if scope_days:
+            scope["properties"]["day"]["enum"] = list(scope_days)
+        return scope
+
     choice = {"type": "object", "properties": {
         "action": {"type": "string", "enum": [a for a in ACTIONS if a != "clarify" and a not in UNSUPPORTED
                                                and a not in SERVER_ACTIONS]},
@@ -400,9 +432,21 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         "steps": {"type": "integer"}},
         "required": ["fact", "target_item", "origin_item", "origin_text", "transport_mode", "reference", "query", "text", "advice",
                      "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"], "additionalProperties": False}
+    # 목록 읽기(schedule · changeability · day)는 대상 · 변경 대상 none 과 범위를 반드시 낸다(SYSTEM 의 목록 조회 규칙) —
+    #   읽기 항목 안에서 `fact` 가 `target_item` 보다 먼저 생성되므로 문법이 둘을 묶을 수 있다. 범위의 날은 문장에 적힌 달력 날짜로 좁힌다.
+    from copy import deepcopy as _copy
+    other_read = _copy(read)
+    other_read["properties"]["fact"]["enum"] = [f for f in read["properties"]["fact"]["enum"] if f not in LIST_READ_FACTS]
+    other_read["properties"]["query"] = {"anyOf": [scope_schema(), {"type": "null"}]}
+    list_read = _copy(read)
+    list_read["properties"].update(
+        target_change={"type": "string", "enum": ["none"]},
+        fact={"type": "string", "enum": list(LIST_READ_FACTS)},
+        target_item={"type": "string", "enum": ["none"]},
+        query=scope_schema())
     from .edit_intent import schemas
 
-    return {"type": "object", "properties": {
+    schema = {"type": "object", "properties": {
         **schemas(items),
         "action": {"type": "string", "enum": [a for a in ACTIONS if a not in SERVER_ACTIONS]},   # 서버 전용 할 일은 모델이 고르지 않는다
         "target_item": {"type": "string", "enum": items},
@@ -431,6 +475,99 @@ def _schema(stops: list[Stop], changes: list[Change]) -> dict[str, Any]:
         # ★`[2026-10-14]` 목적지 · 조건 칸은 **반드시 낸다**(없으면 빈 문자열) — 선택 칸이면 학습 E4B 가 아예 내지 않았다(재생 434건 중 목적지 0/43)
         "required": ["time_edit", "place_search", "place_setting", "action", "target_item", "target_change", "fact", "minutes", "choices", "reads", "social", "general_requests",
                      "destination_text", "condition_text", "anchor_kind", "anchor_item", "anchor_time", "at_day", "relation", "steps"]}
+    if plain:
+        # 유료 넘김 경로용 — 생성 문법(갈래 · 문장 인용 enum) 없이 칸 모양만(`_api_schema_kwargs`)
+        return schema
+    # Generate action before edit details. A read cannot activate a time mutation;
+    # keep both full branches so Ollama's grammar need not implement if/then.
+    from copy import deepcopy
+    variants = []
+    temporal = {"change_time", "apply_change", "add_item"}
+    for editing in (False, True):
+        branch = deepcopy(schema)
+        props = branch["properties"]
+        props["action"]["enum"] = [a for a in props["action"]["enum"] if (a in temporal) == editing]
+        if not editing:
+            props["time_edit"]["properties"]["boundary"]["enum"] = ["none"]
+        branch["properties"] = {"action": props["action"], **props}
+        if message is not None:
+            # Constrain generation, not the completed answer: active edit objects
+            # must quote this request. Whole-message evidence is an exact quote,
+            # including multilingual requests, with no keyword inference.
+            for field, selector in (("time_edit", "boundary"), ("place_search", "relation")):
+                inactive = deepcopy(props[field])
+                inactive["properties"][selector]["enum"] = ["none"]
+                inactive["properties"]["evidence"] = {"type": "string", "enum": [""]}
+                active = deepcopy(props[field])
+                active["properties"][selector]["enum"] = [
+                    value for value in active["properties"][selector]["enum"] if value != "none"]
+                active["properties"]["evidence"] = {"type": "string", "enum": [message]}
+                branch["properties"][field] = {"anyOf": [inactive, active]} if (
+                    message.strip() and active["properties"][selector]["enum"]) else inactive
+        if message is not None:
+            # 목록 읽기 항목은 아래 목록 읽기 갈래에서만 낸다(바꾸는 할 일의 읽기 항목은 어차피 쓰지 않거나 거부된다)
+            branch["properties"]["reads"] = {"type": "array", "items": other_read}
+        if message is not None and not editing:
+            # ★`[2026-10-26 수용 C02]` 목록 읽기는 따로 낸 갈래에서만 생성한다 — 그 갈래는 대상 none · 범위 필수(`list_read`)이고
+            #   후보(choices)를 내지 않는다(SYSTEM: reads 가 있으면 choices=[]). 다른 갈래의 읽기 항목은 한 일정 사실만 낸다.
+            #   ☆실제 E4B 가 「1월 2일 일정을 전부 보여줘」에 schedule 읽기 + 대상 i2 + 범위 today + 같은 후보(i2)를 내
+            #   서버가 계약대로 해석 실패로 끝냈다. 답을 고쳐 쓰지 않고 이런 조합을 생성하지 못하게 한다.
+            branch["properties"]["query"] = scope_schema()
+            listed = deepcopy(branch)
+            listed["properties"]["action"] = {"type": "string", "enum": ["answer_fact"]}
+            listed["properties"]["reads"] = {"type": "array", "minItems": 1, "items": {"anyOf": [list_read, other_read]}}
+            listed["properties"]["choices"] = {"type": "array", "items": choice, "maxItems": 0}
+            variants.append(listed)
+        if message is not None and editing:
+            temporal_schema = branch["properties"]["time_edit"]
+            if "anyOf" in temporal_schema:
+                inactive, active = temporal_schema["anyOf"]
+                item_edit = deepcopy(active)
+                item_edit["properties"]["scope"]["enum"] = ["item"]
+                item_edit["properties"]["boundary"]["enum"] = [
+                    value for value in item_edit["properties"]["boundary"]["enum"] if value != "reflow"]
+                branch["properties"]["time_edit"] = {"anyOf": [inactive, item_edit]}
+                # Bind an unambiguous verbatim named reference before generation.
+                # Equal target/anchor aliases alone can still name the first
+                # follower (and silently exclude it). Do not reinterpret scope,
+                # repair model output, or choose among multiple/implicit names.
+                named = [s.alias for s in stops if any(
+                    len(name) >= 2 and name in message
+                    for name in (str(getattr(s.item, "title", "") or ""),
+                                 str((getattr(s.item, "place", None) or {}).get("name") or "")))]
+                anchors = named if len(named) == 1 else items
+                for alias in anchors:
+                    if alias == "none":
+                        continue
+                    following = deepcopy(branch)
+                    fields = following["properties"]
+                    fields["action"]["enum"] = ["change_time"]
+                    fields["target_item"]["enum"] = [alias]
+                    fields["anchor_item"]["enum"] = [alias]
+                    fields["time_edit"] = deepcopy(active)
+                    fields["time_edit"]["properties"]["scope"]["enum"] = ["following"]
+                    fields["time_edit"]["properties"]["boundary"]["enum"] = ["shift", "reflow"]
+                    variants.append(following)
+        variants.append(branch)
+    # Do not combine a permissive properties object with anyOf: the local
+    # grammar converter can choose that object and skip the alternatives.
+    if message is not None:
+        from .edit_intent import generation_variants
+        # Lexical evidence admission only: enumerate existing calendar labels and
+        # visit names, exactly as following-anchor binding above. Never parse or
+        # rewrite the model answer, or guess a date when no label is quoted.
+        # ★`[2026-10-26 L05 이식 · Codex]` 목록 읽기와 같은 숫자 경계 판정(`quoted_calendar_days`) — 부분 문자열이면 「11월 2일」이 「1월 2일」 근거가 됐다
+        day_quotes = quoted_calendar_days(stops, message)
+        for token, label in (("today", "오늘"), ("tomorrow", "내일")):
+            if label in message:
+                day_quotes.append(token)
+        named_quotes = [s.alias for s in stops if any(len(name) >= 2 and name in message for name in (
+            str(getattr(s.item, "title", "") or ""),
+            str((getattr(s.item, "place", None) or {}).get("name") or "")))]
+        return {"anyOf": generation_variants(variants, items, query_schema(stops), message,
+                                             quoted_days=day_quotes, quoted_items=named_quotes)}
+    schema["anyOf"] = variants
+    return schema
 
 
 def default_query(raw: dict[str, Any], stops: list[Stop]) -> dict[str, str]:
@@ -456,6 +593,23 @@ def _quotes_overlap(first: str, second: str, message: str) -> bool:
     return any(a < d and c < b for a, b in spans(first) for c, d in spans(second))
 
 
+def _api_schema_kwargs(chat: Any, stops: list[Stop], changes: list[Change]):
+    """넘김 장치(`FailoverChat`)가 유료 경로용 스키마(`api_schema`)를 받으면 **문장 없는** 스키마를 준다. `[2026-10-26 L05 이식]`
+
+    생성 문법은 고객 문장(인용)과 일정 이름을 enum 으로 싣는다. 로컬 모델 문법에만 쓰고, 유료 경로는 문장이 없는 같은 칸의 스키마로 답한다
+    (인용 검사는 `validate` 가 두 경로 모두 한다). 받는 칸이 없는 모델(로컬만 · 시험 대역)에는 아무것도 더하지 않는다."""
+    import inspect
+
+    def kwargs(method: Any) -> dict[str, Any]:
+        try:
+            accepted = "api_schema" in inspect.signature(method).parameters
+        except (TypeError, ValueError):
+            accepted = False
+        return {"api_schema": _schema(stops, changes, plain=True)} if accepted else {}
+
+    return kwargs
+
+
 def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]],
            selected_item_id: UUID | None, message: str, num_predict: int = 400, now: datetime | None = None,
            stream: dict[str, Any] | None = None) -> Decision:
@@ -468,26 +622,48 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
 
     selected = next((s.alias for s in stops if selected_item_id and s.item.item_id == selected_item_id), "none")
     started = time.monotonic()
+    evidence_failure = None
+
+    def validate_response(value):
+        nonlocal evidence_failure
+        # Keep a bounded diagnostic before the provider hides ValueError details.
+        # Never retain model values, quoted customer text or arbitrary exception text.
+        known = {
+            "invalid time_edit", "invalid place_search", "unquoted time_edit", "unquoted place_search",
+            "invalid spatial relation", "unquoted spatial origin", "invalid temporal relation",
+            "inconsistent temporal scope", "invalid temporal clock", "unquoted temporal clock",
+            "temporal clock contradicts quoted meridian", "temporal clock disagrees with evidence",
+            "invalid stay duration", "invalid temporal flags",
+        }
+        try:
+            validate(value, message or "", {s.alias for s in stops} | {"none"})
+        except ValueError as error:
+            reason = str(error)
+            evidence_failure = reason.replace(" ", "_") if reason in known else "unspecified"
+            raise
+
     try:
         from .edit_intent import SYSTEM as EDIT_SYSTEM, validate
 
+        # ★`[2026-10-26 L05 이식]` 생성 문법(`_schema(message=…)`)은 로컬 모델 전용이다 — 문장 인용을 enum 으로 실어
+        #   유료 넘김 경로로는 보내지 않는다(`api_schema`: 문장이 없는 같은 모양의 스키마). 인용 검사는 두 경로 모두 `validate` 가 한다.
         arguments = (SYSTEM + EDIT_SYSTEM, _prompt(stops, changes, history, selected, masked(message), now),
-                     _schema(stops, changes))
+                     _schema(stops, changes, message=masked(message or "")))
+        split = _api_schema_kwargs(chat, stops, changes)
         validated = getattr(chat, "structured_validated", None)
         streamer = getattr(chat, "structured_stream_validated", None) if stream else None
         if callable(streamer):
-            raw = streamer(*arguments, num_predict=num_predict,
-                           validator=lambda value: validate(value, message or "", {s.alias for s in stops} | {"none"}),
+            raw = streamer(*arguments, num_predict=num_predict, validator=validate_response,
                            first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
-                           max_seconds=float(stream["max_seconds"]))
+                           max_seconds=float(stream["max_seconds"]), **split(streamer))
         elif callable(validated):
-            raw = validated(*arguments, num_predict=num_predict,
-                            validator=lambda value: validate(value, message or "", {s.alias for s in stops} | {"none"}))
+            raw = validated(*arguments, num_predict=num_predict, validator=validate_response, **split(validated))
         else:
             # Existing in-process callers/test doubles remain compatible; checks below still apply.
             raw = chat.structured(*arguments, num_predict=num_predict)
     except Exception as exc:                          # noqa: BLE001 — 모델 장애는 부르는 쪽이 「바꾸지 않고 묻기」로 답한다
-        raise DecisionFailed(f"{type(exc).__name__}: {str(exc)[:160]}") from exc
+        detail = f" [evidence_validation:{evidence_failure}]" if evidence_failure else ""
+        raise DecisionFailed(f"{type(exc).__name__}: {str(exc)[:160]}{detail}") from exc
     seconds = time.monotonic() - started
     from .edit_intent import validate
     try:
