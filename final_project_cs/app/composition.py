@@ -812,7 +812,10 @@ def _dining_meal_picker():
     elif kind == "ollama" and (settings.ollama_base_url or "").strip():
         from app.infrastructure.ollama_chat import OllamaChat
 
-        chat = OllamaChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model, timeout=60.0)
+        # 해석과 같은 모델이면 같은 문맥 길이를 보낸다 — 다르면 Ollama 가 부를 때마다 모델을 다시 올린다
+        shared = (model or settings.ollama_model) == settings.ollama_model
+        chat = OllamaChat(base_url=settings.ollama_base_url, model=model or settings.ollama_model, timeout=60.0,
+                          num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0) if shared else 0)
     else:
         logging.getLogger(__name__).warning("dining meal_pick enabled but model %s has no key/address — rule pick only",
                                             pick_settings["model"])
