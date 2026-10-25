@@ -5,7 +5,7 @@
  * `at`: where a numbered point sits on the screen's capture (780×1594, the intro's pictures — `features/intro/guide-steps.ts`).
  */
 export type Pair = readonly [ko: string, en: string];
-export type Switch = "guardian" | "riskPanel";
+export type Switch = "guardian" | "riskPanel" | "planInputExtras";
 export type ScreenId = "input" | "reading" | "check" | "result" | "trip" | "notices" | "chat" | "menu" | "settings" | "support";
 export type FaqCategory = "register" | "trip" | "during" | "account" | "other";
 
@@ -40,7 +40,7 @@ export const SCREENS: readonly HelpScreen[] = [
     note: ["약관에 아직 동의하지 않았으면 「약관 동의」 카드가 먼저 열려요.", "If you have not agreed to the terms yet, the “Terms & consent” card opens first."],
     points: [
       { at: [250, 198], label: ["「계획 담기」 · 「계획 확인」 · 「여행 시작」", "“Add plan” · “Check plan” · “Start trip”"], desc: ["지금 몇 번째 단계인지 보여 줘요.", "Shows which step you are on."] },
-      { at: [652, 601], label: ["「보낼 칸」", "“Will be sent”"],
+      { at: [652, 601], label: ["「보낼 칸」", "“Will be sent”"], needs: "planInputExtras",
         desc: ["계획을 넣는 칸은 「직접 입력」 · 「파일 선택」 · 「계획 짜 주기 (테스트)」 세 가지예요. 마지막에 누르거나 쓴 칸에 「보낼 칸」 표시가 붙고, 그 칸의 내용만 보내요.", "There are three ways in: “Type it”, “Choose files” and “Plan it for me (test)”. The one you touched last is marked “Will be sent”, and only that one is sent."],
         rule: ["파일은 사진 · PDF · 워드 · 엑셀 · 텍스트를 최대 5개, 한 개 10MB까지 올려요. 다시 고르면 앞의 선택에 더해지지 않고 바뀌어요.", "Files: photos, PDF, Word, Excel or text — up to 5, 10 MB each. Choosing again replaces the earlier choice rather than adding to it."] },
       { at: [610, 695], label: ["「예시 불러오기」", "“Load example”"], desc: ["서울 2일짜리 예시 계획을 입력란에 채워요. 그대로 보내거나 고쳐서 보내도 돼요.", "Fills the box with a two-day Seoul example. Send it as it is or change it first."] },
@@ -54,9 +54,9 @@ export const SCREENS: readonly HelpScreen[] = [
     more: [
       { label: ["「추천 항로 지킴이」", "“Recommended Course Keeper”"], needs: "guardian",
         desc: ["처음 「계획 확인하기」를 누르면 뜨는 카드예요. 「켜고 진행」 또는 「건너뛰기 — 끄고 진행」을 골라 주세요. 바깥을 누르거나 닫으면 아무것도 정하지 않고 닫혀요.", "The card that opens the first time you press “Check my plan”. Choose “Turn on and go on” or “Skip — turn off and go on”. Closing it decides nothing."] },
-      { label: ["「읽는 기준」", "“How to read it”"], desc: ["「하루 일정의 여유」를 「여유롭게」 · 「적당히」 · 「꽉 차게」 중에서 골라요. 처음엔 「적당히」예요.", "Pick “How full a day is”: “Relaxed”, “Balanced” or “Packed”. It starts on “Balanced”."] },
+      { label: ["「읽는 기준」", "“How to read it”"], needs: "planInputExtras", desc: ["「하루 일정의 여유」를 「여유롭게」 · 「적당히」 · 「꽉 차게」 중에서 골라요. 처음엔 「적당히」예요.", "Pick “How full a day is”: “Relaxed”, “Balanced” or “Packed”. It starts on “Balanced”."] },
       { label: ["「이렇게 적으면 잘 읽어요」", "“Tips for writing your plan”"], desc: ["입력 요령 세 줄이 입력란 옆(좁은 화면은 아래)에 있어요.", "Three tips next to the box (below it on a narrow screen)."] },
-      { label: ["「여행 취향 설문 하기」", "“Take the survey”"], desc: ["설문을 하지 않았으면 이 여행은 설문 답 없이 등록돼요. 설문은 메뉴에서 언제든 할 수 있어요.", "Without the survey, this trip is registered without your answers. The survey is in the menu any time."] },
+      { label: ["「여행 취향 설문 하기」", "“Take the survey”"], needs: "planInputExtras", desc: ["설문을 하지 않았으면 이 여행은 설문 답 없이 등록돼요. 설문은 메뉴에서 언제든 할 수 있어요.", "Without the survey, this trip is registered without your answers. The survey is in the menu any time."] },
     ] },
   { id: "reading", name: ["읽는 중", "Reading"], shot: "2-reading",
     where: ["「계획 확인하기」를 누른 바로 다음", "Right after “Check my plan”"],
@@ -218,11 +218,11 @@ export const FAQ: readonly Faq[] = [
     a: ["지금은 서울 여행, 최대 7일 · 4명까지예요. 계획에 범위를 넘는 내용(5명 이상, 8일 이상, 서울 밖 장소)이 있으면 막지 않고 계획 확인 화면에서 확인을 부탁드려요.", "Seoul trips for now, up to 7 days and 4 people. If the plan goes beyond that (5 or more people, 8 or more days, places outside Seoul), it is not refused — the plan check asks you to confirm."] },
   { id: "format", category: "register", screens: ["input"], q: ["계획은 어떤 형식으로 적어야 하나요?", "How should I write my plan?"],
     a: ["정해진 형식은 없어요. 일차 제목에 날짜를 적고(‘1일차 · 2026-10-29’), 그 아래에 시작 시간과 장소를 한 줄씩 적으면(‘09:00 경복궁’) 가장 잘 읽어요. 예약한 일정은 ‘예약 있음’으로 표시해 주세요. 「예시 불러오기」를 누르면 예시가 채워져요.", "Any way you like. It reads best with the date in each day’s heading (‘Day 1 · 2026-10-29’) and one line per stop with its start time and place (‘09:00 Gyeongbokgung’). Mark booked stops ‘booked’. “Load example” fills in an example."] },
-  { id: "files", category: "register", screens: ["input", "reading"], q: ["사진이나 파일로 된 계획도 올릴 수 있나요?", "Can I upload a photo or a file?"],
+  { id: "files", category: "register", screens: ["input", "reading"], needs: "planInputExtras", q: ["사진이나 파일로 된 계획도 올릴 수 있나요?", "Can I upload a photo or a file?"],
     a: ["「파일 선택」 칸에서 사진 · PDF · 워드 · 엑셀 · 텍스트 파일을 최대 5개, 한 개 10MB까지 올릴 수 있어요. 다시 고르면 앞의 선택에 더해지지 않고 바뀌니 한 번에 골라 주세요. 사진 한 장은 읽는 데 1분쯤 걸려요.", "In “Choose files”: photos, PDF, Word, Excel or text — up to 5, 10 MB each. Choosing again replaces the earlier choice, so pick them all at once. A photo takes about a minute to read."] },
-  { id: "which-box", category: "register", screens: ["input"], q: ["세 칸에 모두 적으면 어느 것을 보내나요?", "I filled in more than one box. Which is sent?"],
+  { id: "which-box", category: "register", screens: ["input"], needs: "planInputExtras", q: ["세 칸에 모두 적으면 어느 것을 보내나요?", "I filled in more than one box. Which is sent?"],
     a: ["마지막에 누르거나 쓴 칸 하나만 보내요. 그 칸에 「보낼 칸」 표시가 붙어 있어요. 다른 칸에 적은 내용은 지워지지 않고 남아 있어요.", "Only the one you touched last — it is marked “Will be sent”. The others keep what you wrote."] },
-  { id: "plan-for-me", category: "register", screens: ["input"], q: ["일정을 대신 짜 주기도 하나요?", "Can you plan the trip for me?"],
+  { id: "plan-for-me", category: "register", screens: ["input"], needs: "planInputExtras", q: ["일정을 대신 짜 주기도 하나요?", "Can you plan the trip for me?"],
     a: ["「계획 짜 주기 (테스트)」 칸에서 첫날 · 일수(1~7일) · 인원(1~4명)과 원하는 여행(선택, 500자까지)을 적으면 서울 일정을 짜 드려요. 짠 일정이 확인을 통과하면 중간 확인 화면 없이 바로 여행으로 등록돼요. 아직 시험 중인 기능이에요.", "In “Plan it for me (test)”, give the first day, days (1–7), people (1–4) and, if you like, what you want (up to 500 characters), and we plan a Seoul trip. Once it passes the check it is registered right away, without the check screen. Still being tried out."] },
   { id: "questions", category: "register", screens: ["reading"], q: ["읽는 동안 나오는 질문에 꼭 답해야 하나요?", "Do I have to answer the questions while you read?"],
     a: ["아니요. 답하지 않아도 계획 확인으로 넘어가요. 계획서에서 이미 읽은 것과 시작 설문에서 답한 것은 다시 묻지 않고, 남은 질문은 다음에 계획을 읽을 때 다시 답할 수 있어요.", "No — the plan check opens either way. We never ask what your plan or the survey already told us, and questions left can be answered the next time we read a plan."] },

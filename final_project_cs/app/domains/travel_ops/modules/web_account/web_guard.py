@@ -197,6 +197,13 @@ def specs() -> dict[str, LimitSpec]:
         guard.get("travel.trip_screen.risk_panel_enabled") is True,
         help="여행 화면 일정 목록 위 · 알림 센터 「살펴볼 점」 탭 · 계획 확인 화면(등록 전 · 일정 수정)의 「현재 점검 대상 일정이 없어요 · 일부 확인이 안 된 일정 n개 · 확인 시각」 칸입니다.\n"
              "끄면 이 칸이 숨고, 알림 센터에는 실제 위험이 있는 일정(실내 대안 보기)만 남습니다. 3분마다 하는 점검 · 종의 「위험 n」 · 위험 알림 · 일정 카드의 위험 표시는 그대로입니다.")
+    # ★`[2026-10-25 사용자 지시 — ST4F-739]` 계획 담기 화면의 보조 칸 — 기본 꺼짐(「직접 입력」만), 켜면 파일 선택 · 계획 짜 주기 · 읽는 기준 · 여행 취향 안내가 함께 보인다.
+    #   읽는 곳은 `settings_hook.plan_input_extras_enabled` 하나다(공개 읽기 `GET /v1/web/features` 의 `plan_input_extras`)
+    out["travel.plan_input.extras_enabled"] = LimitSpec(
+        "travel.plan_input.extras_enabled", "계획 담기 화면 보조 칸 — 파일 선택 · 계획 짜 주기 · 읽는 기준 · 여행 취향(끄면 「직접 입력」만)", "", "bool",
+        guard.get("travel.plan_input.extras_enabled") is True,
+        help="웹 「여행 계획 담기」 화면에서 「직접 입력」 아래의 「파일 선택」 · 「계획 짜 주기 (테스트)」 칸, 「읽는 기준(하루 일정의 여유)」 칸, 옆의 「여행 취향」 안내를 함께 끄고 켭니다.\n"
+             "끄면 그 칸들과 「이용 방법」의 해당 설명이 숨습니다. 설문 답과 하루 일정의 여유(손대지 않으면 설문 답 · 「적당히」)는 그대로 계획과 함께 갑니다. 이미 받은 접수 · 다른 입구는 막지 않습니다.")
     # ★`[2026-10-19 사용자 결정 — ST4F-613]` 항로 지킴이 — 끄면 웹에서 숨기고 서버의 자동 일정 변경도 멈춘다. 기본 켜짐.
     #   읽는 곳은 `settings_hook.guardian_enabled` 하나다(판정 · 여행 조회 · 켜기 입구 · 알림 · 공개 읽기)
     out["travel.guardian.enabled"] = LimitSpec(
