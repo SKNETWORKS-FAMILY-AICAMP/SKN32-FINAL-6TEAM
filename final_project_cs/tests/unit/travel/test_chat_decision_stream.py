@@ -270,6 +270,7 @@ def test_ollama_streams_with_the_schema_as_format_and_rejects_an_answer_outside_
         return fake
 
     chat = OllamaChat(base_url="http://ollama.test:11434", model="tripilot-pointer:e4b-ft")
+    monkeypatch.setattr(chat, "loaded", lambda *, timeout=5.0: True)       # 올라와 있는 모델 — 식은 모델의 고정 대기 갈래는 test_cold_model_warm_and_keep_alive
     monkeypatch.setattr(ollama_chat.httpx, "stream", stream_of('{"action": "a"}'))
     assert chat.structured_stream_validated("sys", "u", SCHEMA, validator=_ok, num_predict=1200, first_wait=1, stall=1,
                                             max_seconds=5) == {"action": "a"}

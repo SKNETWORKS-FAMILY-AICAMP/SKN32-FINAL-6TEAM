@@ -47,7 +47,7 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 | 규정 검색의 질문 임베딩 | `rag/retriever.py` | 예(1536 칸이 채워져 있을 때만 — 아래) |
 | 사진 · 스캔 받아쓰기 | `intake/sources.py` → `see` | **아니오(기본)** — 이미지를 가릴 수 없다. `llm_failover_vision` 을 따로 켜면 넘긴다 |
 | 일정 항목 짚기 가르친 모델 | `item_pointer.py` | 따로 필요 없음 — 이미 모델이 못 불리면 낱말 규칙으로 돌아간다 |
-| 모델 예열 | `model_warmup.py` | 아니오 — 첫 Ollama 만 데운다(API 는 데울 것이 없다) |
+| 모델 예열 | `model_warmup.py` (화면 예열 · `[2026-10-26]` 넘김 장치의 식은 첫 Ollama 뒤 예열이 같은 중복 억제를 쓴다) | 아니오 — 첫 Ollama 만 데운다(API 는 데울 것이 없다) |
 
 `[미확인]` 후보 장소 비슷함 계산(`intake/embeddings.py`, 다른 세션이 작업 중)은 Ollama 임베딩을 직접 부르므로 이 장치에 안 걸려 있다.
 
@@ -61,6 +61,9 @@ domain_note: 모델 호출 경로(Ollama · OpenAI)의 신뢰성 장치라 도�
 2. **넘기는 조건.** 연결 실패 · 시간 초과 · 5xx · 429 · 빈 답. 429 · 5xx 는 **한 번만** 0.4초 쉬었다가 다시 시도한다(전체 시간 안에 다 들어갈 때만). 모양이 틀린 답(JSON 이 아님)은 그 한 호출만 넘기고 서킷에는 세지 않는다 — 서버는 살아 있다.
 3. **시간.** Ollama 는 9초(`llm_failover_primary_timeout_seconds`, 2026-10-14 에 6초에서 올렸다. 연결은 5초), OpenAI 는 8초, 한 호출 전체 15초 안에 끝나게 한다(고객 응답 SLA).
    `[2026-10-26 사용자 승인]` **채팅 해석(`decision_unit.decide`)은 고정 9초 대신 답 조각 감시**다 — `structured_stream_validated`(스키마 `format` · 스키마 검사 · 근거 검사 그대로)로 조금씩 받으며 첫 조각 · 조각 사이(5초) · 맨 위 상한(가드레일 `travel.chat_decision_stream`)을 보고, 끊기면 받다 만 답을 버리고 다음 경로(유료)가 처음부터 다시 답한다(계획 읽기 `json_stream` 과 같은 넘김 계약 · 조용히 고정 대기 호출로 되돌아가지 않는다). 로컬 모델이 안 올라와 있으면 곧바로 다음 경로로 간다.
+   `[2026-10-26]` **식은 첫 Ollama 는 뒤에서 한 번 예열한다** — 조각 감시 경로(`json_stream` · `structured_stream` · `structured_stream_validated`)가 첫 Ollama 의 `loaded`(`/api/ps`) 에서 모델이 없다고 보면 이번 요청은 기다리지 않고 다음 경로로 넘기고(`not_loaded`, 서킷에 안 셈), 데몬 스레드에서 예열을 시작한다. 예열 장치는 조립 루트(`composition._llm_failover_warm`)가 꽂는 **화면 예열과 같은 `model_warmup.warmup`** 이다 — 이미 올라가 있으면 아무것도 안 하고, 가드레일 `web_guard.warmup.dedupe_seconds` 안의 되풀이는 한 번으로(웹 `/v1/web/warmup` 과 같은 상태), 실제 적재는 `FailoverChat.warm`(긴 제한시간 `ollama_timeout_seconds` 의 첫 Ollama). 예열이 도는 동안 온 식은 요청은 스레드를 더 만들지 않는다. 예열 실패는 경고 로그(`llm_failover background warm failed`)만 남기고 고객 응답은 그대로다. 두 번째 이후 Ollama(`ollama_fallback_base_urls`)는 데우지 않는다. 고객 남용 방어(`web_guard.count("warmup")`)는 고객 요청을 세는 장치라 이 내부 예열은 세지 않는다.
+   `[2026-10-26]` **넘김이 꺼진 로컬 서빙**(`from_settings` 가 `OllamaChat` 을 그대로 돌려줌)은 다음 경로가 없다. 그래서 `OllamaChat.structured_stream_validated` 는 모델이 식어 있으면 조각 감시 대신 **적재를 기다리는 고정 대기 호출**(`structured_validated`, 제한시간 `ollama_timeout_seconds`)로 답하고 검사를 지난 최종 글을 `on_piece` 에 한 번 준다(10-26 이전과 같은 동작). 상태를 못 물으면 그대로 조금씩 받는다.
+   `[2026-10-26]` **붙잡아 둘 시간(`keep_alive`)은 같은 모델이면 하나다** — Ollama 는 요청마다 만료를 다시 정하므로, 일정 짚기(`item_pointer.register_from_settings`)가 해석과 같은 모델(`ollama_pointer_model == ollama_model`)이면 `ollama_pointer_keep_alive` 대신 해석의 `ollama_keep_alive` 를 보낸다(문맥 길이 `num_ctx` 와 같은 규칙, 따로 적힌 값은 경고 후 무시). 둘 다 기본은 빈 값 = 보내지 않음 = 서버 `OLLAMA_KEEP_ALIVE` 를 따른다. 일정 짚기만 `30m` 를 보내 서버 `-1` 을 덮어 30분 뒤 모델이 내려간 것이 x600 `not_loaded` 의 원인 후보였다(`records/reports/2026-10-26_x600_채팅해석_유료넘김_원인.md`).
 4. **회로 차단기.** 한 서버가 **연속 3번** 서버 문제로 실패하면 60초 동안 **건너뛴다**(바로 다음 경로로). 60초가 지나면 한 호출만 시험해서 성공하면 닫고 실패하면 다시 60초를 연다. 상태는 프로세스 안 전역이라 요청마다 `from_settings` 를 불러도 이어진다. OpenAI 쪽도 같은 서킷이 있다(키가 틀렸을 때 매번 8초씩 기다리지 않게).
 5. **넘긴 답도 같은 검증.** 목록 밖 번호 거부(`decide`) · 분류 라벨 검사 · 번역의 숫자 · 단위 대조는 모델이 달라도 그대로 돈다. 이 장치는 모양만 맞춘다(스키마를 `response_format` 으로 주고, 거부되면 글로 적은 JSON 모드로 한 번 더).
 6. **개인정보.** OpenAI 로 보내는 글은 `redaction.masked` 로 한 번 더 가린다(전화 · 카드 · 이메일 · `sk-` 키). 호출부가 이미 가린 글이라 보통 달라지지 않는다. 일정 제목 · 시각 같은 판단에 필요한 칸만 이미 프롬프트에 들어 있고 이름 · 연락처 칸은 처음부터 없다. **이미지는 가릴 수 없다** — 그래서 기본은 안 넘긴다.

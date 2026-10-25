@@ -52,10 +52,22 @@ def _llm_failover_budget(settings: Any):
     return allowed
 
 
+def _llm_failover_warm(chat: Any) -> Any:
+    """`[2026-10-26]` 넘김 장치가 식은 첫 Ollama 를 만났을 때 뒤에서 부른다 — 화면 예열(`/v1/web/warmup`)과 같은 장치 · 같은 중복 억제 상태.
+    이미 올라가 있으면 아무것도 안 한다. 고객 남용 방어(`web_guard`)는 고객 요청을 세는 것이라 여기서는 세지 않는다(채팅 한 마디가 이미 세어진다).
+    이미 뒤 스레드에서 불리므로 예열은 그 자리에서 한다."""
+    from app.core.settings import get_guardrails
+    from app.domains.travel_ops.modules.live_progress import model_warmup
+
+    return model_warmup.warmup(chat, count=lambda: None, defer=lambda job: job(),
+                               dedupe_seconds=float(get_guardrails().get("web_guard.warmup.dedupe_seconds")))
+
+
 def _register_llm_failover() -> None:
-    from app.infrastructure.llm_failover import register_budget_provider
+    from app.infrastructure.llm_failover import register_budget_provider, register_warm_starter
 
     register_budget_provider(_llm_failover_budget)
+    register_warm_starter(_llm_failover_warm)
 
 
 _register_llm_failover()           # import 때 한 번 — 꽂기만 한다(I/O 없음, 부를 때 일한다)

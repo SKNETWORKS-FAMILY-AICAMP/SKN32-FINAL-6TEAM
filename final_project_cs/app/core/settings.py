@@ -209,6 +209,7 @@ class Settings(BaseSettings):
     model_route_chat: Literal["local", "ssh", "api"] = "local"
     model_route_pointer: Literal["local", "ssh"] = "local"
     model_route_notice: Literal["local", "ssh"] = "local"
+    #: ★`[2026-10-26]` 일정 짚기 모델이 `ollama_model` 과 같으면 이 값은 무시되고 `ollama_keep_alive` 를 함께 쓴다(같은 모델의 만료는 하나 — `item_pointer.register_from_settings`)
     ollama_pointer_keep_alive: str = ""
     #: 일정이 바뀐 첫 문장은 고객을 기다리게 하지 않고 규칙으로 답하며 모델은 뒤에서 그 일정을 읽어 둔다(`item_pointer.py` 머리). 끄면 첫 문장도 모델을 기다린다.
     ollama_pointer_background_warm: bool = True

@@ -214,12 +214,18 @@ def register_from_settings(settings: Any, *, base_url_for: Callable[[], str] | N
         value = {True: "on", False: "off"}.get(raw, str(raw or "off")) if isinstance(raw, bool) else str(raw or "off")      # ★따옴표 없는 on/off 는 YAML 이 참/거짓으로 읽는다
         return value if value in ("off", "shadow", "on") else "off"
 
+    # ★`[2026-10-26]` 요청 해석과 **같은 모델**이면 붙잡아 둘 시간도 해석 값(`ollama_keep_alive`)을 따른다 — Ollama 는 요청마다 만료를 다시 정해서,
+    #  일정 짚기만 `30m` 를 보내면 서버 기본(`OLLAMA_KEEP_ALIVE=-1`)을 덮어 30분 뒤 해석 모델까지 내려갔다(x600 `not_loaded`). num_ctx 와 같은 규칙.
+    same_model = model == (getattr(settings, "ollama_model", "") or "").strip()
+    keep_alive = str(getattr(settings, "ollama_keep_alive" if same_model else "ollama_pointer_keep_alive", "") or "")
+    own = str(getattr(settings, "ollama_pointer_keep_alive", "") or "")
+    if same_model and own and own != keep_alive:
+        logger.warning("ACOP_OLLAMA_POINTER_KEEP_ALIVE is ignored: the pointer shares the interpreter model, so it follows ACOP_OLLAMA_KEEP_ALIVE")
     pointer = OllamaItemPointer(base_url=base, model=model, timeout=float(getattr(settings, "ollama_pointer_timeout_seconds", 30.0)),
-                                keep_alive=str(getattr(settings, "ollama_pointer_keep_alive", "") or ""), mode=mode,
+                                keep_alive=keep_alive, mode=mode,
                                 background_warm=bool(getattr(settings, "ollama_pointer_background_warm", True)),
                                 warm_timeout=float(getattr(settings, "ollama_pointer_warm_timeout_seconds", 180.0)),
-                                num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0)
-                                if model == (getattr(settings, "ollama_model", "") or "").strip() else 0)
+                                num_ctx=int(getattr(settings, "ollama_num_ctx", 0) or 0) if same_model else 0)
     pointer.base_url_for = base_url_for
     itinerary_team.set_item_pointer(pointer)
     logger.info("일정 항목 짚기 모델 연결: %s (mode=%s)", model, mode())

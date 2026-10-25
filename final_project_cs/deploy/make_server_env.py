@@ -87,6 +87,8 @@ def main() -> None:
         "ACOP_OLLAMA_MODEL=tripilot-pointer:e4b-ft",
         "ACOP_OLLAMA_POINTER_MODEL=tripilot-pointer:e4b-ft",
         "ACOP_OLLAMA_NUM_CTX=8192",
+        # ★`[2026-10-26]` keep_alive 줄은 일부러 안 쓴다 — 빈 값이면 보내지 않아 Ollama 서버의 OLLAMA_KEEP_ALIVE(x600 -1)를 따른다.
+        #   일정 짚기가 해석과 같은 모델이면 ACOP_OLLAMA_POINTER_KEEP_ALIVE 는 무시되고 ACOP_OLLAMA_KEEP_ALIVE 를 함께 쓴다(item_pointer.register_from_settings)
         # ★`[2026-10-14 x600 실측]` 학습 E4B 해석 한 건 5.1~7.3초(지시문 읽기 약 2초는 문장마다 다시 든다) — 6초면 8건 중 6건이 유료 대체로 넘어갔다.
         #   9초면 8/8 로컬(같은 날 코드 기본값도 6 → 9초로 올렸다 — 줄은 명시적으로 남긴다). 넘어가도 유료 대체(2~3초)까지 고객 응답 15초 안이다
         "ACOP_LLM_FAILOVER_PRIMARY_TIMEOUT_SECONDS=9",

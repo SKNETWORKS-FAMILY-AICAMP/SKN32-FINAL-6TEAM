@@ -19,6 +19,8 @@
 ★실패는 `OllamaError` 로 올린다(부르는 쪽이 이미 이것을 「모름」으로 바꾼다). 키 값은 어떤 메시지에도 싣지 않는다 — 상태 코드와 이유 이름만.
 ★`[2026-10-16]` `json_stream` — 답을 조금씩 받으며 첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(`model_stream.py`). 한 답은 한 경로가 처음부터 끝까지 쓰고,
   로컬이 멈추면 유료가 처음부터 다시 읽는다. 로컬 모델이 안 올라와 있으면 곧바로 유료로 간다(`ModelNotLoaded`). 다른 메서드의 동작은 그대로다.
+★`[2026-10-26]` 첫 Ollama 가 안 올라와 있어 넘길 때는 **뒤에서 예열을 한 번 시작한다**(`register_warm_starter` — 조립 루트가 `model_warmup` 의 중복 억제를 꽂는다).
+  고객 요청은 예열을 기다리지 않는다. 안 올리면 runner 가 내려간 동안 다음 요청도 계속 유료였다(x600 `not_loaded`).
 """
 from __future__ import annotations
 
@@ -616,13 +618,14 @@ class FailoverChat:
                                                                        max_seconds=max_seconds),
             user, on_piece, api_only=False))
 
-    @staticmethod
-    def _streaming(call: Callable[[Any, str, Any], Any], user: str, on_piece: Callable[[str, str], None] | None, *,
+    def _streaming(self, call: Callable[[Any, str, Any], Any], user: str, on_piece: Callable[[str, str], None] | None, *,
                    api_only: bool) -> Callable[[Any, bool], Any]:
         def run(chat: Any, api: bool) -> Any:
             if not api and api_only:
                 raise ModelSkipped("유료만 쓰는 호출이다")
             if not api and hasattr(chat, "loaded") and not chat.loaded(timeout=2.0):
+                if chat is self._primary:                     # 예열은 첫 Ollama 만(`warm` 과 같다) — 이번 요청은 기다리지 않고 다음 경로로
+                    _start_warm(self)
                 raise ModelNotLoaded(f"모델이 올라와 있지 않다: {getattr(chat, 'model', '')}")
             path = "api" if api else "local"
             relay = (lambda text: on_piece(text, path)) if on_piece is not None else None
@@ -666,6 +669,47 @@ def register_budget_provider(provider: Callable[[Any], Callable[[], bool]] | Non
     _budget_provider = provider
 
 
+#: 식은 첫 Ollama 를 뒤에서 데우는 함수 `(chat) -> Any` — **조립 루트가 꽂는다**(기존 `model_warmup.warmup` 의 중복 억제 · 웹 예열과 같은 상태).
+#: 안 꽂혔으면(스크립트 · 좁은 시험) 데우지 않는다. `[2026-10-26]`
+_warm_starter: Callable[[Any], Any] | None = None
+_warm_lock = threading.Lock()
+_warm_running = False
+
+
+def register_warm_starter(starter: Callable[[Any], Any] | None) -> None:
+    global _warm_starter
+    _warm_starter = starter
+
+
+def _start_warm(chat: Any) -> None:
+    """뒤에서(데몬 스레드) 예열을 한 번 시작한다. 이미 하나가 도는 중이면 스레드를 더 만들지 않는다. 실패는 경고 로그만 — 요청은 그대로 다음 경로로 간다."""
+    global _warm_running
+    starter = _warm_starter
+    if starter is None:
+        return
+    with _warm_lock:
+        if _warm_running:
+            return
+        _warm_running = True
+
+    def job() -> None:
+        global _warm_running
+        try:
+            starter(chat)
+        except Exception as exc:                                  # noqa: BLE001 — 예열 실패가 고객 응답을 깨지 않게
+            log.warning("llm_failover background warm failed: %s", type(exc).__name__)
+        finally:
+            with _warm_lock:
+                _warm_running = False
+
+    try:
+        threading.Thread(target=job, name="llm-failover-warm", daemon=True).start()
+    except RuntimeError as exc:                                   # 스레드를 못 만들면 자리를 돌려준다
+        with _warm_lock:
+            _warm_running = False
+        log.warning("llm_failover background warm not started: %s", type(exc).__name__)
+
+
 def budget_gate(settings: Any) -> Callable[[], bool] | None:
     """`[2026-10-15]` 유료 호출을 해도 되나를 답하는 함수. 상한을 셀 장치(조립 루트가 꽂는다)가 없으면 `None` — 부르는 쪽이 유료 호출을 안 한다."""
     return _budget_provider(settings) if _budget_provider is not None else None
@@ -703,7 +747,7 @@ def wrap_from_settings(primary: OllamaChat, settings: Any, *, budget: Callable[[
             + [u.strip().rstrip("/") for u in (getattr(settings, "ollama_fallback_base_urls", "") or "").split(",") if u.strip()])
     for number, url in enumerate(dict.fromkeys(urls)):
         chat = OllamaChat(base_url=url, model=primary.model, timeout=primary_timeout, keep_alive=primary.keep_alive,
-                          num_ctx=getattr(primary, "num_ctx", 0),
+                          num_ctx=getattr(primary, "num_ctx", 0), wait_when_cold=False,
                           transport=primary._post if (number == 0 and primary._injected) else None)
         name = "ollama" if number == 0 else f"ollama{number + 1}"
         backends.append(_Backend(name, chat, breaker_for(f"{name}@{url}", threshold=threshold, open_seconds=open_seconds, clock=clock),
@@ -764,5 +808,5 @@ def record_fallback(op: str, reason: str, *, backend: str = "openai") -> None:
     log.warning("llm_failover op=%s path=api backend=%s reasons=ollama:%s", op, backend, reason)
 
 
-__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "ModelNotLoaded", "ModelSkipped", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "reset_state",
+__all__ = ["CircuitBreaker", "FailoverChat", "ModelCallError", "ModelNotLoaded", "ModelSkipped", "OpenAIChat", "breaker_for", "budget_gate", "classify", "clear_path", "current_path", "embed_with_api", "embedding_failover_enabled", "record_fallback", "register_budget_provider", "register_warm_starter", "reset_state",
            "snapshot", "wrap_from_settings"]
