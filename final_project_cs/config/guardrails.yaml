@@ -504,6 +504,22 @@ travel:
     output_tokens_base: 1024
     output_tokens_per_line: 30
     output_tokens_per_char: 2
+  # -- 채팅 해석(`decision_unit.decide`) 모델 호출 — 계획 읽기처럼 답을 조금씩 받으며 멈춤을 본다 (2026-10-26 사용자 승인 — `trip_messages._try_decide` 가 읽는다) --
+  # 전에는 로컬 9초(`llm_failover_primary_timeout_seconds`) 고정 대기 뒤 유료 대체 1회였다 — 학습 E4B 해석 한 건이 5.1~7.3초(x600 실측,
+  #   wiki/records/reports/2026-10-14_채팅해석_근본개선_1차.md) · 8.9초(로컬 실측, 2026-10-26_chat-outdoor-setting-clarify-candidates.md)라
+  #   9초 경계에서 정상으로 답을 쓰던 호출도 끊겨 유료로 넘어갔다(x600 첫 턴 20초). 끊기면 넘김 장치가 유료로 **처음부터** 다시 답한다(`structured_stream_validated`).
+  # ★출처: 실측 — 로컬 실 E4B(tripilot-pointer:e4b-ft · 127.0.0.1:11434 · ctx 8192) 「실내를 야외로 바꿔줘」 3회(2026-10-26_chat-decision-stream.md):
+  #   조금씩 받기 12.02초(지시문 캐시 없음 · 첫 조각 3.5초) · 고정 대기 8.52초 · 조금씩 받기 8.64초(첫 조각 0.9초) — 세 번 모두 같은 원출력 · 같은 결정, 조각 220개 · 조각 사이 최대 0.22초.
+  #   ☆첫 번째(12.0초)는 예전 9초 고정 대기였다면 유료로 넘어갔을 정상 답이다.
+  #   first_token_seconds 8 — 첫 조각까지 실측 0.9~3.5초(지시문 읽기 · x600 약 2초). 두 배 넘게 두되 예전 9초보다 짧게 — 죽었거나 막힌 로컬을 예전보다 늦게 알지 않는다.
+  #   stall_seconds 5 — 사용자 승인 값(계획 읽기와 같다). 조각 사이 실측 최대 0.22초(계획 읽기 0.17~0.7초).
+  #   max_seconds 15 — 맨 위 상한(호출 하나) = 고객 응답 SLA `llm_failover_total_seconds`(15). 정상 답 실측 최대 12.0초를 끊지 않고, 그보다 길게 쓰는 답(되풀이)은 유료로 넘긴다.
+  #     ★SLA 와의 관계: 정상 답은 15초 안에 로컬로 끝난다. 로컬이 15초를 다 쓰고 넘어가는 최악은 15초 + 유료(실측 2~3초 · 한도 8초)라 SLA 를 넘는다 —
+  #       예전(9초 + 유료 8초 한도 = 17초)도 넘었다. 넘김 장치의 15초는 다시 시도(429 · 5xx) 판단에만 쓰는 목표값이고 강제로 끊지 않는다.
+  chat_decision_stream:
+    first_token_seconds: 8
+    stall_seconds: 5
+    max_seconds: 15
   # -- 고객 연락처 시험 발송 (2026-10-01 — `customer_profile.py`, `POST /v1/web/profile/discord/test`) --
   # 고객이 「시험 보내기」를 누를 때만 그 고객의 디스코드 웹훅으로 한 줄을 보낸다. ★출처: **우리가 고른 값** — 20초 간격이면 분당 최대 3회(ui 세션 요청),
   #  사람이 누르기에 충분하고 연타 · 남의 채널 도배(주소를 알면 누구나 쓸 수 있는 웹훅)를 막는다. 마지막 시도 시각은 DB 에서 센다(프로세스가 여럿이어도 맞다)

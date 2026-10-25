@@ -135,6 +135,16 @@ class OllamaChat:
         return self._stream(system, user, schema, num_predict, on_piece=on_piece, first_wait=first_wait, stall=stall,
                             max_seconds=max_seconds)
 
+    def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                                    validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
+                                    on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
+                                    max_seconds: float = 180.0) -> dict[str, Any]:
+        """`structured_validated` 를 **조금씩 받기 + 멈춤 감시**로 — 채팅 해석(`decision_unit.decide`)이 쓴다. `[2026-10-26 사용자 승인]`
+        스키마는 `format` 으로 그대로 보내고, 받은 답을 `structured` 와 같이 스키마로 검사한 뒤 부르는 쪽 근거 검사(`validator`)를 한다."""
+        value = self.structured_stream(system, user, schema, num_predict=num_predict, on_piece=on_piece, first_wait=first_wait,
+                                       stall=stall, max_seconds=max_seconds)
+        return validate_content(validate_structured(value, schema), validator)
+
     def _stream(self, system: str, user: str, fmt: Any, max_tokens: int, *, on_piece: Callable[[str], None] | None,
                 first_wait: float, stall: float, max_seconds: float) -> dict[str, Any]:
         from app.infrastructure.model_stream import collect

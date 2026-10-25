@@ -385,6 +385,15 @@ class OpenAIChat:
                            + json.dumps(schema, ensure_ascii=False)}
             return self._object(self._stream_text(messages, {"type": "json_object"}, budget, **watch))
 
+    def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                                    validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
+                                    on_piece: Callable[[str], None] | None = None, first_wait: float = 15.0, stall: float = 5.0,
+                                    max_seconds: float = 180.0) -> dict[str, Any]:
+        """`structured_validated` 를 조금씩 받기로 — 받은 답을 `structured` 와 같이 스키마로 검사하고 근거 검사를 한다. `[2026-10-26 사용자 승인]`"""
+        value = self.structured_stream(system, user, schema, num_predict=num_predict, on_piece=on_piece, first_wait=first_wait,
+                                       stall=stall, max_seconds=max_seconds)
+        return validate_content(validate_structured(value, schema), validator)
+
     def _stream_text(self, messages: list[dict[str, Any]], response_format: dict[str, Any], max_tokens: int, *,
                      on_piece: Callable[[str], None] | None, first_wait: float, stall: float, max_seconds: float) -> str:
         from app.infrastructure.model_stream import collect
@@ -592,6 +601,20 @@ class FailoverChat:
             lambda chat, text, relay: chat.structured_stream(system, text, schema, num_predict=num_predict, on_piece=relay,
                                                              first_wait=first_wait, stall=stall, max_seconds=max_seconds),
             user, on_piece, api_only=api_only))
+
+    def structured_stream_validated(self, system: str, user: str, schema: dict[str, Any], *,
+                                    validator: Callable[[dict[str, Any]], None], num_predict: int = 160,
+                                    on_piece: Callable[[str, str], None] | None = None, first_wait: float = 15.0,
+                                    stall: float = 5.0, max_seconds: float = 180.0) -> dict[str, Any]:
+        """채팅 해석(`decision_unit.decide`)의 **조금씩 받기 + 멈춤 감시** — `structured_validated` 와 같은 검사(스키마 · 근거)를 경로 안에서 한다. `[2026-10-26 사용자 승인]`
+        ★넘김 규칙은 `json_stream` 과 같다 — 로컬이 끊기거나(조각 감시) 모양 · 근거가 틀리면 받다 만 답을 버리고 다음 경로(유료)가 처음부터 다시 답한다.
+        로컬 모델이 안 올라와 있으면 곧바로 다음 경로로 간다. 고정 대기 호출(`structured`)로 다시 부르지 않는다.
+        ☆이 메서드가 없으면 `__getattr__` 이 첫 Ollama 의 것을 돌려 넘김 없이 로컬로만 갔다."""
+        return self._run("structured_stream", self._streaming(
+            lambda chat, text, relay: chat.structured_stream_validated(system, text, schema, validator=validator, num_predict=num_predict,
+                                                                       on_piece=relay, first_wait=first_wait, stall=stall,
+                                                                       max_seconds=max_seconds),
+            user, on_piece, api_only=False))
 
     @staticmethod
     def _streaming(call: Callable[[Any, str, Any], Any], user: str, on_piece: Callable[[str, str], None] | None, *,

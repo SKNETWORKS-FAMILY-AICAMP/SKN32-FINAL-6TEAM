@@ -457,8 +457,13 @@ def _quotes_overlap(first: str, second: str, message: str) -> bool:
 
 
 def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list[dict[str, Any]],
-           selected_item_id: UUID | None, message: str, num_predict: int = 400, now: datetime | None = None) -> Decision:
-    """모델 한 번. 스키마 밖 · 목록 밖 값이면 `DecisionFailed`."""
+           selected_item_id: UUID | None, message: str, num_predict: int = 400, now: datetime | None = None,
+           stream: dict[str, Any] | None = None) -> Decision:
+    """모델 한 번. 스키마 밖 · 목록 밖 값이면 `DecisionFailed`.
+
+    ★`[2026-10-26 사용자 승인]` `stream`(가드레일 `travel.chat_decision_stream` 값 — `trip_messages._try_decide` 가 읽는다)이 있고 모델이
+      `structured_stream_validated` 를 가지면 고정 대기 대신 답을 **조금씩 받으며** 첫 조각 · 조각 사이 · 맨 위 상한으로 멈춤을 본다(계획 읽기와 같은 장치).
+      끊기면 넘김 장치가 유료로 처음부터 다시 답하고, 끝내 못 답하면 `DecisionFailed` — 고정 대기 호출로 다시 부르지 않는다."""
     from app.domains.travel_ops.components.core_hooks.feedback import masked
 
     selected = next((s.alias for s in stops if selected_item_id and s.item.item_id == selected_item_id), "none")
@@ -469,7 +474,13 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
         arguments = (SYSTEM + EDIT_SYSTEM, _prompt(stops, changes, history, selected, masked(message), now),
                      _schema(stops, changes))
         validated = getattr(chat, "structured_validated", None)
-        if callable(validated):
+        streamer = getattr(chat, "structured_stream_validated", None) if stream else None
+        if callable(streamer):
+            raw = streamer(*arguments, num_predict=num_predict,
+                           validator=lambda value: validate(value, message or "", {s.alias for s in stops} | {"none"}),
+                           first_wait=float(stream["first_token_seconds"]), stall=float(stream["stall_seconds"]),
+                           max_seconds=float(stream["max_seconds"]))
+        elif callable(validated):
             raw = validated(*arguments, num_predict=num_predict,
                             validator=lambda value: validate(value, message or "", {s.alias for s in stops} | {"none"}))
         else:

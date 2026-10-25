@@ -671,11 +671,14 @@ def _try_decide(conn, *, store: TripStore, tenant: str, trip_id: UUID, items: li
     from app.domains.travel_ops.components.conversation import chat_log
     from app.domains.travel_ops.components.conversation import decision_unit
 
+    guard = get_guardrails()
+    # ★`[2026-10-26 사용자 승인]` 고정 9초 대신 답 조각 감시 — 값과 근거는 가드레일 `travel.chat_decision_stream` 주석(없는 키는 그대로 오류)
+    stream = {key: guard.get(f"travel.chat_decision_stream.{key}") for key in ("first_token_seconds", "stall_seconds", "max_seconds")}
     try:
         decision = decision_unit.decide(
             chat, stops=decision_unit.stops_of(items), changes=decision_unit.changes_of(store, conn, trip_id, items),
             history=chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id), selected_item_id=selected,
-            message=message, num_predict=int(get_guardrails().get("travel.decision_unit.num_predict") or 160), now=now)
+            message=message, num_predict=int(guard.get("travel.decision_unit.num_predict") or 160), now=now, stream=stream)
         return decision, None
     except decision_unit.DecisionFailed as exc:
         return None, str(exc)
