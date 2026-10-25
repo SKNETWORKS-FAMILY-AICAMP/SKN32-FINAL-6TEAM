@@ -1215,21 +1215,55 @@ def _confirmed_rollback(conn, tenant: str, trip_id: UUID, change: Any) -> bool:
     return bool(last and last["text"].startswith(f"그 변경({change.line})") and "되돌릴까요" in last["text"])
 
 
+def _setting_swap(decision: Any) -> str | None:
+    """되묻기로 끝난 해석이 「실내·야외 조건이 붙은 장소 바꾸기」인가 — 그 조건(indoor/outdoor) 또는 None. 칸만 본다(낱말을 보지 않는다).
+    조건 = 검증을 지난 `place_setting`(인용 확인) · 할 일이 되묻기 · 시각/날짜 바꾸기가 아님(`change_scope` · `time_edit.boundary`)."""
+    from .edit_intent import requested_setting
+
+    raw = getattr(decision, "raw", None) or {}
+    setting = requested_setting(raw)
+    if (setting is None or getattr(decision, "action", None) != "clarify" or raw.get("change_scope") in ("time", "date")
+            or (raw.get("time_edit") or {}).get("boundary", "none") != "none"):
+        return None
+    return setting
+
+
 def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = None, *,
                           at: datetime | None = None, selected: UUID | None = None) -> dict[str, Any]:
     """★`[2026-09-29 사용자 제안]` 이해하지 못했으면 **이해한 범위 안에서** 「다음 중 하나인가요?」 — 번호 목록과 버튼용 문장.
     고객이 「1번」이라고 답하면 결정 단위가 앞 대화(이 목록)로 푼다. 후보가 없으면 되묻는 한 문장."""
     from app.domains.travel_ops.components.conversation.decision_unit import choice_message
+    from app.domains.travel_ops.components.itinerary.itinerary_changes import SETTING_LABELS, place_setting
 
     first = min((i.starts_at for i in items if i.kind != "mobility"), default=None)
+    setting = _setting_swap(decision)
+    options = decision.choices
+    if setting:
+        # 장소 기록이 이미 그 조건(실내·야외)인 일정을 그 조건으로 바꾸자는 후보는 묻지 않는다 — 모름은 남긴다
+        options = [c for c in options if not (c.get("action") in ("apply_change", "propose_alternatives")
+                                              and c.get("item") is not None and place_setting(c["item"].place) == setting)]
     choices = []
-    for choice in decision.choices:
+    for choice in options:
         text = choice_message(choice, first)
         if text and all(text != c["message"] for c in choices):
             choices.append({"label": text, "message": text, "action": choice["action"],
                             "item_id": str(choice["item"].item_id) if choice.get("item") else None,
                             "fact": choice.get("fact"),
                             "to_version": choice["change"].version - 1 if choice.get("change") else None})
+    if not choices and setting:
+        # ★`[2026-10-26 x600 QA]` 해석이 「실내·야외 조건이 붙은 장소 바꾸기 + 대상 미확정」으로 끝났다(검증을 지난 `place_setting`) —
+        #   요청 종류를 모르는 아래 대체 목록(식사 포함)이 아니라 **바꿀 수 있는 활동**을 묻는다. 장소 기록이 이미 그 조건인 활동은 뺀다.
+        #   ☆x600 test12 「실내를 야외로 바꿔줘」: 모델 되묻기·후보 없음 → 「말씀을 정확히 알아듣지 못했어요 … 광장시장」이 나갔다
+        action = decision.raw.get("action") if decision.raw.get("action") in ("apply_change", "propose_alternatives") else "apply_change"
+        stops = sorted((i for i in items if i.kind == "activity" and i.place and place_setting(i.place) != setting),
+                       key=lambda i: (i.starts_at, i.seq))
+        picked = [i for i in stops if selected is not None and i.item_id == selected]
+        ahead = [i for i in stops if at is None or i.starts_at >= at] or stops
+        for item in (picked + [i for i in ahead if i not in picked])[:3]:
+            text = choice_message({"action": action, "item": item, "change": None, "fact": "none"}, first)
+            if text:
+                choices.append({"label": text, "message": text, "action": action, "item_id": str(item.item_id)})
+    generic = not choices
     if not choices:
         # ★`[2026-09-29 ui 세션 지적 · 사용자 제안]` 모델이 해석 후보를 못 냈어도 **고를 수 있는 것**을 보인다 —
         #   화면에서 고른 일정 → 지금부터 가까운 식사 · 활동(없으면 앞에서부터) 셋을 「다른 곳으로 바꿔 줘」로
@@ -1246,6 +1280,11 @@ def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = No
     if not choices:
         return {"status": "clarify", "text": " ".join(x for x in (lead, decision.question or _CLARIFY) if x)}
     listed = "\n".join(f"{n}) {c['label']}" for n, c in enumerate(choices, start=1))
+    if setting and not lead and not generic:
+        # 무엇을 원하는지(실내·야외 장소로 바꾸기)는 알아들었다 — 「알아듣지 못했어요」가 아니라 바꿀 일정만 묻는다
+        ask = f"어느 일정을 {SETTING_LABELS[setting]} 장소로 바꿀까요?"
+        return {"status": "clarify", "choices": choices, "text_web": ask,
+                "text": f"{ask}\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}
     head = lead or "말씀을 정확히 알아듣지 못했어요."
     return {"status": "clarify", "choices": choices, "text_web": f"{head} 다음 중 하나인가요?",
             "text":f"{head} 다음 중 하나인가요?\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}

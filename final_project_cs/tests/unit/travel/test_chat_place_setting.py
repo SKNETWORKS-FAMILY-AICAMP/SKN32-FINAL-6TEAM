@@ -341,7 +341,10 @@ def test_setting_quote_copied_into_place_search_still_asks_between_the_two_activ
                               desk=None, prepare_only=True)
     request = plan["subject_ref"]["request"]
     assert request["setting"] == "outdoor"
-    assert [c["item_id"] for c in request["choices"]] == [str(items[0].item_id), str(items[2].item_id)]   # 식사 일정 빠짐
+    # 식사 일정 빠짐 · ★`[2026-10-26]` 장소 기록이 이미 야외(indoor=False)인 남산공원은 「야외로 바꿀」 후보에서도 빠진다
+    #   (`trip_messages._clarify_with_choices` — test_chat_setting_clarify_candidates). 결정 단위 후보(위)는 둘 그대로다
+    assert [c["item_id"] for c in request["choices"]] == [str(items[0].item_id)]
+    assert request["question"].startswith("어느 일정을 야외 장소로 바꿀까요?")
 
 
 @pytest.mark.parametrize("message,raw", _LIVE)
