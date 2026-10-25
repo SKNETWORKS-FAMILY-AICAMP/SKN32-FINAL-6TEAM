@@ -115,6 +115,19 @@ def reply(decision, *, items, message, selected, turns, version, now, context_no
             target=(None if fact in {"weather", "outdoor"} and anchor_read.get("anchor_kind") == "previous"
                     and anchor_read.get("relation", "at") == "at" else item))
         anchor_conflict = bool(anchor_basis and anchor_basis.get("time_anchor") == "anchor_conflict")
+        named_subjects = fact_context.named_items(items, clause)
+        origin_quote = request.get("origin_text") or ""
+        if not named_subjects and origin_quote and origin_quote in message:
+            # Validate the existing read's source quote when extraction omitted its
+            # subject. Never borrow a name from another question or invent a target.
+            named_subjects = fact_context.named_items(items, origin_quote)
+        if (fact in _ONE_ITEM_FACTS
+                and request.get("reference") == "previous" and previous is None
+                and named_subjects and anchored is not None
+                and all(anchored.item_id != subject.item_id for subject in named_subjects)):
+            # ★`[2026-10-26 L05 이식 · 수용 F02]` A missing previous reference cannot turn a named factual subject into
+            # its neighbour. Preserve the conflict and ask; do not repair model intent.
+            anchor_conflict = True
         if anchored is not None:
             item, fact = anchored, ("time" if fact == "next" else fact)
             request = {**request, "fact": fact, "reference": "explicit",
