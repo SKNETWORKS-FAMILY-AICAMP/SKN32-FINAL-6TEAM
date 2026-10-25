@@ -159,6 +159,7 @@ class AgentItem:
     role: str = "visit"
     time_from_rule: bool = False             # 같은 줄의 규칙 시각으로 맞췄다(`pipeline._agent_rows`)
     year_unverified: bool = False            # 모델이 연도를 적었다(explicit_year)고 했지만 연도 인용이 원문에 없어 연도 없는 날로 뒀다(`_grounded_date`)
+    date_invalid: str | None = None          # 모델 날짜가 달력에 없는 날이었다 — 그 날짜 인용(원문). 날짜 해석이 첫날로 채우지 않고 「모름」으로 둔다(`dates.resolve_dates`)
 
 
 @dataclass
@@ -212,8 +213,8 @@ def _in_text(lines: list[str], text: Any) -> bool:
     return " ".join(text.split()) in " ".join(flat.split())
 
 
-def _grounded_date(it: dict[str, Any], dq: Quote | None, lines: list[str], dropped: dict[str, int]) -> tuple[str | None, bool, bool]:
-    """모델 날짜 → (받을 값, 상대 날짜인가, 연도 근거를 못 찾아 연도 없는 날로 뒀나). `[2026-10-26 사용자 지시 · Codex 검토]` 날짜 형식은 **모델 판단**(`date_form`)이다 —
+def _grounded_date(it: dict[str, Any], dq: Quote | None, lines: list[str], dropped: dict[str, int]) -> tuple[str | None, bool, bool, str | None]:
+    """모델 날짜 → (받을 값, 상대 날짜인가, 연도 근거를 못 찾아 연도 없는 날로 뒀나, 달력에 없는 날이면 그 날짜 인용). `[2026-10-26 사용자 지시 · Codex 검토]` 날짜 형식은 **모델 판단**(`date_form`)이다 —
     코드는 고객 원문을 숫자 · 낱말로 다시 읽지 않고, 인용이 원문에 있는지 · 필드끼리 맞는지 · 달력에 있는 날인지만 본다.
 
     explicit_year  연도 인용(`year_quote`)이 원문에 있으면 모델 날짜 그대로(지난 날이어도 — 전부 과거 가드 대상). 연도 인용이 원문에 없으면
@@ -231,14 +232,14 @@ def _grounded_date(it: dict[str, Any], dq: Quote | None, lines: list[str], dropp
     if not when:
         if "date_form" not in it:
             dropped["date_form"] += 1                                         # 옛 형식 답 — 날짜가 비어도 계약 위반은 센다
-        return None, False, False
+        return None, False, False, None
     if dq is None:
         dropped["date"] += 1
-        return None, False, False
+        return None, False, False, None
     form = it.get("date_form")
     if form not in DATE_FORMS:
         dropped["date_form"] += 1
-        return None, False, False
+        return None, False, False, None
     from .dates import LEAP_YEAR
 
     try:
@@ -246,16 +247,17 @@ def _grounded_date(it: dict[str, Any], dq: Quote | None, lines: list[str], dropp
         date(LEAP_YEAR, int(when[5:7]), int(when[8:10])) if form == "yearless" else date.fromisoformat(when)
     except ValueError:
         dropped["date"] += 1                                                  # 달력에 없는 날 — 지어내지 않는다
-        return None, False, False
+        # `[2026-10-26 병합 검토 · Codex]` 버린 날짜를 다른 일정의 첫날로 채우면(`day_offset`) 지어낸 날이 전부 과거 관문(`review.wholly_past`)을 연다 — 「모름」으로 표시
+        return None, False, False, dq.text
     year_grounded = _find(lines, it.get("year_quote")) is not None or _in_text(lines, it.get("year_quote"))
     if form == "explicit_year" and not year_grounded:
         dropped["date_year"] += 1
-        return "--" + when[5:], False, True
+        return "--" + when[5:], False, True, None
     if form != "explicit_year" and year_grounded:
         dropped["date_mismatch"] += 1
     if form == "yearless":
-        return "--" + when[5:], False, False
-    return when, form == "relative", False
+        return "--" + when[5:], False, False, None
+    return when, form == "relative", False, None
 
 
 def _guessed_pm(value: str, quote: str) -> bool:
@@ -297,10 +299,10 @@ def ground(raw: dict[str, Any], lines: list[str], *, allowed: set[int] | None = 
         if start and tq is not None:
             start, fixed = recompute_time(start, tq.text)
         dq = _find(lines, it.get("date_quote"), near=title.line)
-        when, relative, unverified = _grounded_date(it, dq, lines, dropped)
+        when, relative, unverified, invalid = _grounded_date(it, dq, lines, dropped)
         out.items.append(AgentItem(
             title=title, day=it.get("day") if isinstance(it.get("day"), int) else None, date=when, date_quote=dq if when else None,
-            date_guessed=relative, year_unverified=unverified, start=start, end=end, time_quote=tq if start else None,
+            date_guessed=relative, year_unverified=unverified, date_invalid=invalid, start=start, end=end, time_quote=tq if start else None,
             time_guessed=bool(start and tq and _guessed_pm(start, tq.text)), time_fixed=fixed,
             kind=it.get("kind") if it.get("kind") in ("activity", "dining", "lodging") else "activity",
             role="origin" if it.get("role") == "origin" else "visit"))

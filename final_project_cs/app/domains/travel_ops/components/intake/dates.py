@@ -59,6 +59,10 @@ def resolve_dates(items: list[dict[str, Any]], *, today: date, departure: date |
                                f"연도를 원문에서 확인하지 못해 오늘 기준 다가오는 날로 두었다({filled.year}년) — 다르면 고쳐 주세요"
                                if item.get("year_unverified") else f"해가 적혀 있지 않아 오늘 기준 다가오는 날로 두었다({filled.year}년)"))
             continue
+        if item.get("date_invalid"):
+            # `[2026-10-26]` 읽기 에이전트가 달력에 없는 날로 버린 날짜(`agent_read._grounded_date`) — 다른 일정의 첫날로 채우지 않고 모른다고 둔다
+            out.append(DayDate(None, "unknown", True, f"「{item['date_invalid']}」 — 달력에 없는 날짜예요. 날짜를 확인해 주세요"))
+            continue
         relative = _relative_for_item(lines, item)
         if relative is not None:
             value = today + timedelta(days=relative[1])
